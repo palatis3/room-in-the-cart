@@ -108,15 +108,20 @@ struct PickupOfferEditorView: View {
                         .frame(minHeight: 44)
                 }
             } else {
+                if original != nil { retailerResponseFields }
                 draftFields
-                Button(pTr("Review offer changes")) { review() }
-                    .accessibilityIdentifier("pickup.offer.review").frame(minHeight: 44)
-                    .disabled(model.saving || model.hasPendingSave)
+                if original == nil {
+                    retailerResponseFields
+                    reviewChangesButton
+                }
             }
             if let formError { Text(formError).foregroundStyle(.red).accessibilityIdentifier("pickup.offer.error") }
         }
         .navigationTitle(pTr(original == nil ? "New store offer" : "Review or edit saved offer"))
         .toolbar {
+            if original != nil, scopeMatches, reviewed == nil {
+                ToolbarItem(placement: .confirmationAction) { reviewChangesButton }
+            }
             ToolbarItem(placement: .cancellationAction) {
                 Button(pTr("Cancel")) { dismiss() }.accessibilityIdentifier("pickup.offer.cancel")
             }
@@ -175,6 +180,15 @@ struct PickupOfferEditorView: View {
             Text(pTr("A line ceiling does not establish that the whole checkout fits. Review combined charges separately."))
         }
         PickupOfferForecastEditor(draft: $forecast, journey: journey, lineID: draft.lineID, offerID: offerID)
+    }
+
+    private var reviewChangesButton: some View {
+        Button(pTr("Review offer changes")) { review() }
+            .accessibilityIdentifier("pickup.offer.review").frame(minHeight: 44)
+            .disabled(model.saving || model.hasPendingSave)
+    }
+
+    private var retailerResponseFields: some View {
         Section(pTr("Retailer response")) {
             DatePicker(pTr("Retailer response cutoff"), selection: $draft.deadline)
                 .environment(\.timeZone, TimeZone(identifier: draft.zone) ?? .current)

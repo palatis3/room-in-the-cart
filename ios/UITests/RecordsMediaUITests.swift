@@ -59,9 +59,20 @@ import XCTest
         XCTAssertEqual(disclosure.value as? String, "0")
         XCTAssertTrue(disclosure.label.contains("private source details"))
         enableSwitch(disclosure)
+        reveal(prepare)
+        XCTAssertTrue(prepare.isEnabled, "Prepare must become available after the selected-media privacy disclosure")
+        capture("F07 Prepare available after private-content disclosure")
         tap(prepare)
+        let saveDeadline = ProcessInfo.processInfo.systemUptime + 12
         let save = element("records.saveFile")
-        XCTAssertTrue(save.waitForExistence(timeout: 12))
+        capture("F07 Form immediately after Prepare")
+        if !save.exists {
+            // The Form can reflow after preparation and omit offscreen rows from accessibility.
+            scrollContent(upward: true, distanceFraction: 0.35)
+        }
+        let remaining = saveDeadline - ProcessInfo.processInfo.systemUptime
+        XCTAssertTrue(remaining > 0 && save.waitForExistence(timeout: remaining),
+                      "Save file must appear within 12 seconds after Prepare")
         reveal(save)
         XCTAssertTrue(app.staticTexts["Private owner file ready"].exists)
         capture("F07 encrypted recovery prepared after private-content disclosure")
@@ -96,10 +107,12 @@ import XCTest
         XCTAssertTrue(recovered.label.contains("Recovered copy: F07 source pickup"))
         tap(recovered)
         tap(button("records.mediaPreview." + photoID))
+        let kind = app.staticTexts["Package reference"]
+        reveal(kind, requiresHitTarget: false)
+        XCTAssertTrue(kind.exists)
         reveal(element("records.mediaImage." + photoID), requiresHitTarget: false)
         reveal(element("records.mediaWording." + photoID), requiresHitTarget: false)
         XCTAssertTrue(element("records.mediaWording." + photoID).label.contains("F07 package wording: 8 wraps per pack"))
-        XCTAssertTrue(app.staticTexts["Package reference"].exists)
         capture("F07 readable recovered source photo beside newer separate work")
         assertEvidence(copies: 2)
         tap(app.buttons["Delete this recovered copy"])
@@ -156,10 +169,11 @@ import XCTest
         let top = navigation.exists && navigation.isHittable ? navigation.frame.maxY : bounds.minY + 88
         return CGRect(x: bounds.minX, y: top, width: bounds.width, height: max(0, min(keyboardTop, tabTop) - top - 4))
     }
-    private func scrollContent(upward: Bool) {
+    private func scrollContent(upward: Bool, distanceFraction: CGFloat = 0.6) {
         let viewport = touchableArea(), bounds = app.frame
         let drag = viewport.insetBy(dx: 24, dy: 16)
-        let high = drag.minY + drag.height * 0.2, low = drag.minY + drag.height * 0.8
+        let halfDistance = drag.height * distanceFraction / 2
+        let high = drag.midY - halfDistance, low = drag.midY + halfDistance
         let origin = app.coordinate(withNormalizedOffset: .zero)
         origin.withOffset(CGVector(dx: drag.midX - bounds.minX, dy: (upward ? low : high) - bounds.minY)).press(forDuration: 0.05,
             thenDragTo: origin.withOffset(CGVector(dx: drag.midX - bounds.minX, dy: (upward ? high : low) - bounds.minY)))

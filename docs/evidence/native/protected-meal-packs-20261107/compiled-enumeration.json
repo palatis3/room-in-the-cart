@@ -1,0 +1,2039 @@
+{
+  "errors" : [
+
+  ],
+  "values" : [
+    {
+      "disabledTests" : [
+        {
+          "identifier" : "RoomInTheCartTests/StoreKitScenarioTests/testAskToBuyApprovalRemainsUndelivered()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/StoreKitScenarioTests/testAskToBuyDeclineGrantsNothing()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/StoreKitScenarioTests/testBillingGraceStillRequiresServiceVerification()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/StoreKitScenarioTests/testBillingRetryWithoutGraceDoesNotGrantPaidAccess()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/StoreKitScenarioTests/testExpirationRemovesCurrentEntitlementAndPreservesFree()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/StoreKitScenarioTests/testLocalAnnualOfferUsesStoreKitPriceAndLocale()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/StoreKitScenarioTests/testPurchaseDoesNotFinishOrGrantAccessWithoutDurableServiceDelivery()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/StoreKitScenarioTests/testRealTransactionObserverAttemptsDeliveryWithoutUnlock()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/StoreKitScenarioTests/testRefundRevokesTransactionAndPreservesFree()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/StoreKitScenarioTests/testRelaunchAndExplicitRestoreReplayUnfinishedWithoutUnlock()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/StoreKitScenarioTests/testRenewalKeepsOriginalPurchaseAndNoLocalUnlock()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/StoreKitScenarioTests/testRestoredSubscriptionThenCancelledAndDeclinedRepurchasesStayFree()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/StoreKitScenarioTests/testSimulatedPurchaseCancellationGrantsNothing()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/StoreKitScenarioTests/testUnavailableProductKeepsFreeRoute()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/StoreKitScenarioTests/testUnverifiedLocalTransactionGrantsNothing()"
+        }
+      ],
+      "enabledTests" : [
+        {
+          "identifier" : "RoomInTheCartTests/AcceptedDinnerOptionsTests/testActualScheduleEnumeratesAcceptedUnchosenDinnersAndPricesThreePepperPacksWithLunchInBoth()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/AcceptedDinnerOptionsTests/testExactReplacementRequiresUnchangedWholeOccurrenceAndAppliesOnceWithoutAnExtraDinner()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/AcceptedDinnerOptionsTests/testLatestUsableCorrectionChangesSmallestTopupWhilePreservingProtectedLunch()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/AcceptedDinnerOptionsTests/testPairingLinksOnlyConfirmedUnreservedRemainderAndReplacesSupersededYield()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/AcceptedDinnerOptionsTests/testRepairRanksOnHandBeforeTopupAndPreservesCompetingUnfilledReservation()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/AcceptedDinnerOptionsTests/testReviewedUnequalGroupsPriceTheSameProtectedFiveUnitsThatApplyRetains()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/AcceptedDinnerOptionsTests/testTimeLimitChangesBestTopUpAndRequiresAgreementForTheNewDinner()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/AcceptedDinnerOptionsTests/testTripConsentOnlyAuthorizesReviewedDraftAndExactRepairAtSelection()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/AcceptedDinnerOptionsTests/testUncheckedWrongLateUnconfirmedAndExcludedFoodStayUnusableAndRepeatAndSeatAreIndependent()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/AccountDeletionFlowTests/testExitRejectsChildErasureAndStaleAuthAndRequiresNewReviewAfterConflict()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/AccountDeletionFlowTests/testGuardianWithdrawalAfterLostReplyRefreshesScopedConsentAndRejectsStaleConfirmation()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/AccountDeletionFlowTests/testIdenticalShopAndChildIDsInDifferentHouseholdsRequireIndependentConsent()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/AccountDeletionFlowTests/testLostHouseholdExitRetriesOriginalBytesWithoutADeviceAfterMembershipIsGone()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/AccountDeletionFlowTests/testLostResponseSurvivesRecreationAndSignedOutStatusIsReadOnly()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/AccountDeletionFlowTests/testRetryRequiresReceiptCheckFreshChoicesAndSameKey()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/AccountDeletionFlowTests/testUnavailableChildStaleAuthLockAndReceiptWriteFailureCannotSubmit()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/AppModelTests/testAnswerFromDifferentPriceIsRejectedWithoutDeletion()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/AppModelTests/testDamagedComparisonDoesNotHideHealthyRecordAfterRelaunch()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/AppModelTests/testDecimalQuantityParsingIsExactAndRetainsSourceLiteral()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/AppModelTests/testFailedSaveRetainsDraftAndComputedResult()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/AppModelTests/testInvalidEditClearsPreviousAnswer()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/AppModelTests/testKnownComparisonSaveCloseReopenRecomputesIdenticalAnswer()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/AppModelTests/testLegacyDraftOnlyV1RemainsReadableWithoutRewritingRecord()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/AppModelTests/testNormalizedRequestMismatchIsRejectedWithoutDeletion()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/AppModelTests/testParserRejectsSignsGroupingExponentsAndMalformedNumbers()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/AppModelTests/testSavedPayloadRejectsFutureFormatAndDifferentRecordIdentity()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/AppModelTests/testSnapshotDraftMismatchIsRejectedWithoutDeletion()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/AppModelTests/testUSDParserUsesExactCentsAndRejectsMoreThanTwoDecimalPlaces()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/AppModelTests/testUnavailableStoreLeavesEditableDraftIntact()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/AppModelTests/testUnknownComparisonSaveCloseReopenStaysUnresolved()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/AppModelTests/testUnsupportedCalculationVersionIsRejectedWithoutMutation()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/CaptureCorrectionTests/testConnectedSpellingFilesIsolateMembersAndAccountErasure()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/CaptureCorrectionTests/testCorrectionsCannotRewriteNumbersOrNegation()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/CaptureCorrectionTests/testEraseProfileRejectsLateRecreationAcrossLocalesAndRestart()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/CaptureCorrectionTests/testExplicitRememberPreviewForgetAndOptOut()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/CaptureCorrectionTests/testNoOptInMeansNoCorrectionWrites()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/CaptureCorrectionTests/testProfileAndLocaleIsolationAndInvalidation()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/CaptureCorrectionTests/testRawEmailIsNotAValidProfileScope()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/CaptureCorrectionTests/testUITestCorrectionDirectoryNeverSelectsDevelopmentProfiles()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/CaptureTests/testActualVisionOCRReadsLocalSyntheticImage()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/CaptureTests/testDiscardCapturePreservesTypedDraft()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/CaptureTests/testEditingInvalidatesConfirmation()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/CaptureTests/testExclusionWordsUseWholeTokensAndBothLanguages()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/CaptureTests/testImageEvidencePreservedWhileCorrectingRecognizedText()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/CaptureTests/testLateOCRAfterCloseCannotRestoreImageOrText()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/CaptureTests/testLateSpeechPermissionAfterCloseCannotRestoreDraft()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/CaptureTests/testOversizedDraftAndImageFailWithoutReplacingExistingDraft()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/CaptureTests/testPasteIsCandidateUntilExplicitlyAccepted()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/CaptureTests/testPermissionDeniedPreservesTypedFallback()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/CaptureTests/testRepeatedSpeechCallbackDoesNotAppendOrApply()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/CaptureTests/testThreeNearbyOCRRowsHaveDeterministicOrderAcrossPermutations()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/CaptureTests/testTypedReviewRequiresConfirmationAndDeliversExactlyOnce()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/CaptureTests/testUnavailableOnDeviceLanguageNeverStartsOnlineFallback()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ContextualNavigationTests/testInboxRequiresAssignedShopperAndAllPreviewCapabilities()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ContextualNavigationTests/testManagingViewsDoesNotGrantAComposerOrHouseholdAuthorityToHelpers()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ContextualNavigationTests/testOpenDestinationCannotFollowAnotherAccountHouseholdMemberShopOrRole()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ContextualReminderTests/testAcceptedNextShopRetiresPreviousContextualTargetsWithoutChangingOldPurchase()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ContextualReminderTests/testConfirmedReminderIsWithdrawnWhenOfferChangesDuringOSRegistration()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ContextualReminderTests/testConfirmedReminderSurvivesBackgroundDuringOSRegistration()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ContextualReminderTests/testContextualOpeningKeepsTypedIdentityAndCreatesNoReminderOrShopMutation()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ContextualReminderTests/testContextualResolutionRejectsOtherWorkspaceShopKindRevisionAndPassedCutoff()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ContextualReminderTests/testEditedSourceAndLockedWorkspaceInvalidatePreviouslyReviewedReminder()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ContextualReminderTests/testExplicitSaveDeniedAndOffRemainSeparateFromPendingOfferAndDeferral()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ContextualReminderTests/testLaunchDelegateBuffersOnlyTheValidatedDefaultActionUntilBinding()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ContextualReminderTests/testObservedOrderLineCannotBeReopenedAsAnUnknownFill()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ContextualReminderTests/testQueuedTapCannotOpenChangedOfferOrExposeItWhileLocked()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ContextualReminderTests/testTapWaitsForForegroundAndOpensTheUnchangedOfferAfterCutoff()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ContributorRequestCaptureTests/testAcceptedAccountDeletionRetriesSpellingCleanupAfterSignOut()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ContributorRequestCaptureTests/testChangedDraftRouteOrBackgroundInvalidatesReviewAndCancellationIsLocal()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ContributorRequestCaptureTests/testColdContributorCaptureURLDoesNotNeedAdultStoresAndRejectsPrivateHandle()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ContributorRequestCaptureTests/testDraftMutationWhilePreparingCannotSendAnUnreviewedBody()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ContributorRequestCaptureTests/testImmediateInactiveContributorEntrySurvivesBindingThenClearsOnLock()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ContributorRequestCaptureTests/testInactiveContributorGenericEntrySurvivesSettledReconciliation()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ContributorRequestCaptureTests/testLostReplyRestartUsesExactProtectedRequestAndNeverChangesBasket()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ContributorRequestCaptureTests/testOfflineBeforeSendQueuesExactRequestUntilAnAuthorizedRetryAfterRestart()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ContributorRequestCaptureTests/testOfflineWithoutUsableWindowAndExplicitDenialNeverQueue()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ContributorRequestCaptureTests/testOversizedMultipleAndWrongDestinationStopWithoutTruncation()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ContributorRequestCaptureTests/testReviewedFieldsPreserveOriginalPacksPurposeAndExclusionsWithoutSending()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ContributorRequestCaptureTests/testRevokedEnrollmentAfterLostReplyAndRestartClearsRetryAndHidesAcceptedRequest()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ContributorRequestCaptureTests/testRevokedEnrollmentClearsAnOfflineRequestBeforeSending()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ContributorRequestCaptureTests/testSpellingScopeRequiresTheCurrentContributorReview()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/CookReadbackTests/testDeniedSourceAndPrivateBudgetCannotPlay()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/CookReadbackTests/testExpiredAuthorityStopsCurrentPlayback()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/CookReadbackTests/testPlaybackUsesExactAuthorizedDatedProjection()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/CookReadbackTests/testResumeRechecksAuthorityAndRequiresExplicitAction()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/CookReadbackTests/testRouteCloseCannotBeReactivated()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/CookReadbackTests/testSourceRevisionChangeStopsAndOldFinishCannotStopNewPlayback()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/CookReadbackTests/testUnavailableLocalVoiceKeepsVisibleTextWithoutFallback()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/CookReadbackTests/testVoiceOverIsExclusiveAndDoesNotAutoResume()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/CorrectionSettingsOutcomeTests/testForgetAccessibilityLabelIdentifiesBothProductSpellingsAndTheTarget()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/CorrectionSettingsOutcomeTests/testForgetSuccessRequiresConfirmedPostOperationAbsenceAndKeepsTheDeletedTargetInResult()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/CorrectionSettingsOutcomeTests/testOptOutSuccessRequiresDisabledEmptyReloadAndDoesNotMislabelFailure()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DeviceSurfaceIntegrationTests/testCompiledSurfaceConfigurationResolvesSeparateSimulatorContainers()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DeviceSurfaceIntegrationTests/testSelectedTextPersistsInActualAppGroupWithoutMutatingWidgetContainer()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testActiveAdultGenericCaptureKeepsLedgerUnchanged()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testBackgroundAgainCancelsDeferredURL()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testBackgroundDuringConfirmedImportDoesNotRepublishReviewAndStillRecoversOnce()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testBindingBeforePickupLoadPreservesDurablePickupSurfaceState()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testCancelledSelectedTextChoicesAndLineEditsDoNotBecomeSavedReview()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testColdCurrentURLWaitsForActiveAndReadyModels()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testColdGenericCaptureWaitsForAdultModels()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testDeferredURLCannotOpenAfterAuthorityLossBeforeActivation()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testDeferredURLRevalidatesStalePickupAfterSwitch()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testLargeListSearchLeavesWidgetAloneAndCommittedChangesRefreshIt()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testLockedGenericEntryDoesNotPublishPrivateWidgetOrChangeLedger()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testQueuedOpaqueURLDoesNotSurviveBackgroundThenForeground()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testReadyGenericURLDoesNotReactivateAfterBackgroundBeforeTaskRuns()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testReadyOpaqueURLDoesNotReactivateAfterBackgroundBeforeTaskRuns()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testResolvedWidgetDestinationDoesNotReselectAfterPickupChanges()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testRetainedWidgetRouteCannotOpenPreviouslySelectedShop()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testURLReceivedDuringLaterInactivityWaitsForActivation()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerAwayCarryoverTests/testAppliedCarryoverKeepsNamedReservationsOutOfNewDinnerIdeaAvailability()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerAwayCarryoverTests/testCancelBeforeApplyChangesNeitherPhysicalFoodNorCalendar()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerAwayCarryoverTests/testDatedTargetPinsPhysicalFoodOnceAndPreservesPurchaseAndProtectedLunch()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerAwayCarryoverTests/testFailedCalendarWriteSurvivesRestartAndOverlappingReviewIsBlocked()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerAwayCarryoverTests/testInsufficientCountAndProtectedSourceAreRejectedWithoutWrites()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerAwayCarryoverTests/testLaterSourceCorrectionDoesNotBorrowAnotherLotForPinnedCarryover()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerAwayCarryoverTests/testLostCalendarReceiptReconcilesExistingStableTargetWithoutSecondWrite()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerAwayCarryoverTests/testReceivedPhysicalIdentityIsRecountedWithoutNewStockOrChangingReceipt()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerAwayCarryoverTests/testRecoveryRejectsChangedCalendarTargetEvenWhenLinkAndDateMatch()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerAwayCarryoverTests/testReservedCarryoverReconcilesAfterUnrelatedSettlementAndRestart()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerAwayCarryoverTests/testReservedReconciliationRefusesChangedPhysicalSourceWithoutRebasing()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerAwayCarryoverTests/testUnrelatedUnresolvedFoodDoesNotBlockKnownPhysicalCarryover()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerDraftBindingTests/testBindingsFollowIdentityAcrossRemovalAndReordering()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerDraftBindingTests/testCurrentReadsRemainLiveAndIdentityChangingWritesAreIgnored()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerDraftBindingTests/testIngredientBindingSurvivesRemovalWithoutRedirectingTextOrUnitEdits()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerDraftBindingTests/testRemovedBindingCannotReadOrWriteReplacementAtSameIndex()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerDraftBindingTests/testRetainedProtectedToggleReadsFallbackAfterEditorCollectionIsCleared()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerFeatureModelTests/testAuthRevocationIsRecheckedBeforeApply()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerFeatureModelTests/testAwayNoteDoesNotRemoveDinner()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerFeatureModelTests/testBundledFreeIdeasAreEditableAndApprovalKeepsShoppingListUntouched()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerFeatureModelTests/testCancellingContextualReviewRestoresOnlyTheStillCurrentPendingDecision()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerFeatureModelTests/testChangedLedgerRejectsReviewedApply()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerFeatureModelTests/testEditorBaseChangeRejectsRatherThanOverwritingCurrentAmounts()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerFeatureModelTests/testFailedDurableSaveRetainsExactPreviewAndSavedWorkspace()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerFeatureModelTests/testFreeManualPreviewIsReadonlyCancelAndApplyOnce()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerFeatureModelTests/testFreeRotationCannotSaveButManualStillWorks()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerFeatureModelTests/testGuestBindingsAreRequiredAndFreeExplorationCannotApply()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerFeatureModelTests/testIdeaAcceptDoesNotChooseAndFreeSlotSwitchIsExplicit()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerFeatureModelTests/testIdeaGenerateSaveAndAcceptRecheckDeniedRuntimeWithoutAnyCommit()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerFeatureModelTests/testIdeaPreparationAbandonRepeatSaveAcceptAndChooseHaveSeparateEffects()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerFeatureModelTests/testInvalidReplacementPreviewClearsPreviousPendingPreview()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerFeatureModelTests/testLegacyTemplatesAndChosenOccurrencesRemainReadableWithoutAdoption()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerFeatureModelTests/testLocalBindingCannotUseImportedWorkspaceIdentity()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerFeatureModelTests/testLockedBasketPreviewOnlyAndCalendarRemainsManual()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerFeatureModelTests/testParsingExactFractionSpanishDecimalAndUnknown()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerFeatureModelTests/testQuoteProofSavedThenBasisAdoptionIsExplicitAndStalesOnEdit()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerFeatureModelTests/testRetryAcceptedDinnerPreservesOriginalTimestampAndOneCommit()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerFeatureModelTests/testReviewedGuestTotalChangesOnlySelectedUnprotectedGroup()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerFeatureModelTests/testRuntimePublisherRefreshesVisibleFeatureState()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerFeatureModelTests/testSharedEvenAuthorizedFlagCannotApplyThroughLocalAdapter()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerFeatureModelTests/testStoreDraftNeverInventsChargesOrTravel()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerFeatureModelTests/testSwitchingShopHidesOldPreviewAndCannotApplyIt()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerFeatureModelTests/testTemplateRevisionPreservedUntilAnExplicitEdit()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerFeatureModelTests/testUndatedOccurrenceGetsCivilDateWithoutNewNeeds()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerIdeaSupplyTests/testDraftShopUsesNamedListReservationsBeforeCheckout()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerIdeaSupplyTests/testProtectedLunchIsSubtractedBeforeRoundUpAndIdeaAcceptanceDoesNotSpendOrAllocate()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerIdeaSupplyTests/testRepeatedFoodUsesStockOnceAndNeverReusesForeignOrIncompatiblePackTerms()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerScenarioDraftTests/testBlankFoodChoiceDoesNotGuessFromEqualNames()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerScenarioDraftTests/testConfirmedStockCannotIgnoreUnreviewedOutsideReservations()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerScenarioDraftTests/testEveryDemandRetainsExplicitRecipeIngredientIdentity()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerScenarioDraftTests/testExcludedFoodAndPackLabelsCannotPassAnExplicitMatch()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerScenarioDraftTests/testIncompleteUnchangedBasketPreventsExactCheckout()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerScenarioDraftTests/testPortionChangeRequiresNewReviewAndScalesExactRecipeQuantities()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerScenarioDraftTests/testProtectedRecipeDoesNotAutomaticallyScaleAllGroups()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerScenarioDraftTests/testStaleLedgerBlocksEvidenceBuiltBeforeEdit()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerScenarioDraftTests/testTwoDinnerDemandsUseOneConfirmedStockLotOnlyOnce()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/DinnerScenarioDraftTests/testUnknownPackYieldAndPriceNeverBecomeZeroOrCoverage()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/FamilyDecisionTests/testPrivateRepairInstructionNeverImpliesThatMealWasCookedOrCreatesSharedRecord()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/FamilyDecisionTests/testRetriedDecisionKeepsIdentityAndErasurePreventsLateCompletion()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/FreeJourneyAcceptanceTests/testConcurrentPickupChangesAndCompetingNextShopsRequireAFreshReview()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/FreeJourneyAcceptanceTests/testCurrentDinnerFeatureFreeReusableChoiceProjectsLunchAndSurvivesNewShopRestart()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/FreeJourneyAcceptanceTests/testFreeManualJourneySurvivesRestartFromMealsThroughNextShop()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/FreeJourneyAcceptanceTests/testFreshHandledAndDismissedChoicesDoNotReviveLinkedMealNeeds()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/FreeJourneyAcceptanceTests/testHandledAndDismissedCarryoversUseSourceIdentityInsteadOfName()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/FreeJourneyAcceptanceTests/testInjectedNestedPickupCreatesItsOwnDirectoryAndSurvivesResetArguments()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/FreeJourneyAcceptanceTests/testInjectedPickupLocationNeverResolvesDefaultSupportOrHonorsResetFlags()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/FreeJourneyAcceptanceTests/testReviewedNextShopDispositionIsScopedAndNeverRewritesSource()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/FreeJourneyAcceptanceTests/testWrongItemCannotFeedLunchAndLateSegmentRetryNeverDuplicatesFood()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/GuardianChildBoundaryTests/testChildBoundarySynchronouslyClearsWidgetAndExitKeepsAdultLocked()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/GuardianChildBoundaryTests/testMarkerColdLaunchAndCorruptionFailToChildRootInsteadOfAdultTabs()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/GuardianChildTests/testAcceptedFinishArrivingAfterCleanupCannotInstallOrRestoreSecrets()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/GuardianChildTests/testBackgroundScopeChangeDropsLateApprovedStatusAndNeverInstalls()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/GuardianChildTests/testClaimShowsDevicePairingButCannotFinishWithoutGuardianApproval()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/GuardianChildTests/testLostClaimAndFinishRetryUseSameRandomMaterialAcrossRestart()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/GuardianChildTests/testSameSubjectNewSessionCannotExposeSavedPairingOrResumeClaim()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/GuardianEnrollmentTests/testFailedProtectedSaveSendsNothingAndScopeChangeHidesLateRead()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/GuardianEnrollmentTests/testGrantNeedsSeparateCurrentNoticeReviewAndPairingNeedsActualCode()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/GuardianEnrollmentTests/testInvitationRetainsSecretUntilExplicitStatusCheckedRetirementAndRevocationPurges()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/GuardianEnrollmentTests/testLostResponseRetainsExactIntentAcrossRestartAndReconciliation()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/GuardianEnrollmentTests/testUnavailableNoticePreventsSetupAndVerificationIsNotPermission()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/GuardianEnrollmentTests/testUncertainVerificationCannotPrepareANewEmailAction()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/GuardianNativeAuthenticationTests/testLostStartResumesExactSecretAndCodeVerificationUsesReviewedEmail()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/GuardianNativeAuthenticationTests/testSuspensionHidesDraftAndForegroundReloadDoesNotResendEmail()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/GuardianNativeAuthenticationTests/testUnavailableGateDoesNotPrepareOrSendEmail()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/GuardianRootPrivacyTests/testColdPrivacyBoundaryClearsPriorShortcutWithoutOpeningAdultStoresOrTouchingInbox()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/GuardianRootPrivacyTests/testUnreadableChildMarkerCannotReopenAdultRoot()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HelpConfigurationTests/testBareSupportEmailOpensOnlyAddressWithoutHeadersOrEncodedPayload()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HelpConfigurationTests/testHelpPagesRequireLiteralHTTPSWithoutCredentialsOrTestHosts()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HelpConfigurationTests/testMissingConfigurationStaysUnavailableAndSummaryRejectsInjectedLines()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HelpConfigurationTests/testSuppliedOperatorNameIsPreservedAndRejectsControlOrFormatCharacters()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HelpConfigurationTests/testSupportSummaryAllowlistCannotIncludeArbitraryBundleData()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HistoryFlowTests/testAuthorityFingerprintChangeStopsPreparationAndClearsVisibleFacts()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HistoryFlowTests/testBudgetGrantAloneCannotBeginOrReviewPriceObservationAndDoesNotGateFuturePeriodDraft()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HistoryFlowTests/testConfirmedReceiptCleanupRetryDoesNotResend()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HistoryFlowTests/testExplicitReviewApprovalAndPersistenceBeforeNetwork()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HistoryFlowTests/testExplicitStatusClearDoesNotSendOrInventConfirmation()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HistoryFlowTests/testLostResponseRestoresExactIntentWithoutAutomaticSend()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HistoryFlowTests/testMoneyUnknownPackAndTerminalReservationEvidenceRemainDistinct()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HistoryFlowTests/testOriginalPeriodRevisionAndBytesSurviveUncertainRetry()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HistoryFlowTests/testPaidLapseClearsAnalysisAndRawPathNeedsFreshRead()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HistoryFlowTests/testPartialPeriodClearsFullEnvelopeBeforeAwaitAndHidesPendingPlan()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HistoryFlowTests/testPartialResponseHidesPendingPrivatePlanAndBlocksNewWrite()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HistoryFlowTests/testPendingPlanIsNotExposedAfterLostPaidOrSourceAuthority()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HistoryFlowTests/testPricePaginationFilterAndAuthorizationFailureDoNotRetainHistory()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HistoryFlowTests/testPurgeDuringPreparationCannotRecreatePrivatePending()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HistoryFlowTests/testRealPendingStoreEpochAndAtomicCompletion()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HistoryFlowTests/testRepeatedCursorIsRejectedWithoutDuplicateRows()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HistoryFlowTests/testSaveFailureNeverSendsAndDraftEditInvalidatesReview()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HistoryFlowTests/testSavedObservationReferencesUseReadGrantsWithoutAddingWritableShops()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HistoryFlowTests/testSavedReferenceAccessPaginationAndRevokedRecordClearVisibleFacts()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HistoryFlowTests/testSelectedGrantedShopIsNeverDefaultedIntoObservationWhenAnotherShopIsOwned()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HistoryFlowTests/testStatusClearNeedsFreshAuthorityAndPreservesPrivateRetryOnDenial()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HouseholdDevicesTests/testBackgroundClearsProtectedRowsAndResumesWithSameAuthorizedRetry()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HouseholdDevicesTests/testCurrentDeviceAndUnlistedTargetNeverSend()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HouseholdDevicesTests/testLostResponseRetainsExactIntentAndFreshModelReconcilesSameTarget()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HouseholdDevicesTests/testPurgeDuringSendCannotResurrectReceiptOrPendingAction()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HouseholdDevicesTests/testRevokedContextDropsInventoryAndPendingWithoutShowingPriorReceipt()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HouseholdDevicesTests/testScopeChangeDuringInventoryOrPreparationCannotExposeRowsOrSend()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HouseholdDevicesTests/testScopedPurgeInvalidatesAlreadyPreparedRetryBeforeTransmission()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HouseholdHelperReviewFlowTests/testChangedDraftOrStaleServerSnapshotCannotApplyOldApproval()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HouseholdHelperReviewFlowTests/testClearingUncertainRetryNeedsFreshAuthorizedStatus()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HouseholdHelperReviewFlowTests/testConfirmedReceiptCleanupRetryDoesNotSendAgain()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HouseholdHelperReviewFlowTests/testExplicitReviewAndApprovalPersistBeforeSending()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HouseholdHelperReviewFlowTests/testPersistenceFailureNeverSends()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HouseholdHelperReviewFlowTests/testPurgeAfterReviewRejectsLatePrivateSave()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HouseholdHelperReviewFlowTests/testScopeChangeDuringPreparationCannotPersistOrSendAndClearsVisibleData()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HouseholdHelperReviewFlowTests/testUncertainResultRestoresAndReplaysOriginalBytesAfterRevisionChanges()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HouseholdRequestMealContextTests/testCancelAndServiceScopeLossClearMealContextWithoutWrites()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HouseholdRequestMealContextTests/testCerealPreviewIncludesTwoNamedProtectedLunchesFromItsCurrentShopRevision()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HouseholdRequestMealContextTests/testContextRejectsAnotherShopOrRevisionAndRefreshRequiresFreshReview()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HouseholdRequestMealContextTests/testMissingMealsStayUnknownWhileKnownEmptyMealsStayEmpty()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HouseholdRequestMealContextTests/testUnchangedDecisionBindingCommitsKeepPreviewAndExplicitAcknowledgments()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HouseholdRequestMealContextTests/testUnchangedPriceCommitDuringReviewKeepsResponseButChangedPriceDiscardsIt()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HouseholdRequestPackReviewTests/testCheapestUsesWholePacksAndUsableYieldRatherThanStickerPrice()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HouseholdRequestPackReviewTests/testFixtureInterceptsEveryRequestAndRejectsUnexpectedNetworkDestinations()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HouseholdRequestPackReviewTests/testRefreshScopeAndAccessLossInvalidatePackSelectionAndLinkStaysZeroAddition()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HouseholdRequestPackReviewTests/testReviewedSelectionFeedsActualPreviewAndRequiresExplicitOverageBeforeAtomicApply()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HouseholdRequestPackReviewTests/testTiesAndExplicitFreePriceRemainDifferentFromUnknown()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HouseholdRequestPackReviewTests/testUnavailableInsufficientUnknownAndUnmatchedAreNotCertifiedCheapest()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HouseholdRequestPackReviewTests/testUnknownConversionAndYieldNeverInferProductQuantityOrPrice()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/HouseholdRequestPackReviewTests/testUnknownSelectedPriceAndManualPathKeepExplicitUnknownAcknowledgment()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/LargeListPerformanceTests/testFiveHundredLineListChecksSearchesAndReopensWithoutLosingIdentity()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/LedgerCheckoutAdapterTests/testBasisOnlyChangeRequiresReviewClearsQuoteAndLeavesOldSnapshotImmutable()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/LedgerCheckoutAdapterTests/testCalendarMoveUpdatesCookCorrectionWithoutChangingPlacedPickup()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/LedgerCheckoutAdapterTests/testGuestApplyCarriesFiveBoundPeppersThroughPackAndCheckoutWithoutChangingReportedPurchase()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/LedgerCheckoutAdapterTests/testGuestCheckoutReviewRequiresSameLedgerBasketAndBranch()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/LedgerCheckoutAdapterTests/testNamedServingGroupsPartitionOneMealAndKeepStableNeedIdentities()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/LedgerCheckoutAdapterTests/testNextShopBridgeAndRepeatedOriginActionCreateOneEditableShop()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/LedgerCheckoutAdapterTests/testSameLinesStillReviewRetailerSourceAndZoneChanges()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/LedgerCheckoutAdapterTests/testSourceChangesAfterPreviewAreRejectedEvenWhenQuantitiesStayTheSame()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/LedgerCheckoutAdapterTests/testTwelveExistingWrapsProjectSixFourTwoExactlyOnce()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/LedgerCheckoutAdapterTests/testUnknownAmountsBlockProjectionAndMissingContextStaysMissing()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/LedgerListLayoutTests/testStoreOrderShopOverrideSearchAndOriginalIdentitySurviveRelaunch()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/LedgerListLayoutTests/testSystemPrintFormatterPaginatesAndOmitsPrivateNotesAndInactiveItems()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/LedgerModelPerformanceSafetyTests/testCommittedCandidateMatchesDurableBytesAndReopenedWorkspace()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/LedgerModelPerformanceSafetyTests/testDecodedDomainCorruptionStillRejectsOpenAndReload()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/LedgerModelPerformanceSafetyTests/testExternalHeadRemainsAuthoritativeAfterStaleSaveAndDiscard()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/LedgerPackBridgeTests/testArchiveScopePreservesOnlySelectedShopPackEvidenceAndEarlierLedgerFilesRemainReadable()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/LedgerPackBridgeTests/testChangedSourceRejectsReviewAndStalePackCostCannotLeakIntoUnchangedQuantity()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/LedgerPackBridgeTests/testEarlierPickupArchiveDefaultsPackEvidenceWithoutAcceptingExtraAuthority()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/LedgerPackBridgeTests/testExactSelectionRetryAndUnchangedCheckoutReviewDoNotCreateRevisionsOrClearFreshQuote()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/LedgerPackBridgeTests/testPackChoiceKeepsSavedCheckoutUntilExplicitReviewThenSuppliesWholePacksWithoutInventingDemand()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/LedgerPackBridgeTests/testPackEvidenceRestartAndPlacedOrderBoundaryRemainDurable()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/LedgerPackStockReviewTests/testAnAppliedStockSelectionCannotBeAdoptedForAnotherCheckoutChange()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/LedgerPackStockReviewTests/testCachedCheckoutRejectsChangedStockButRecordsAnExplicitAlreadyPlacedOriginalOrder()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/LedgerPackStockReviewTests/testChangedBatchRejectsUnsavedReviewAndInvalidatesSavedSelection()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/LedgerPackStockReviewTests/testChangedJourneyRevisionListOrWorkspaceRequiresFreshReview()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/LedgerPackStockReviewTests/testFullyCoveredProducesDurableStockOnlyPlanWithoutFakePurchaseOrPlacement()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/LedgerPackStockReviewTests/testMixedStockOnlyAndPurchasedFoodKeepsAllDemandsWhenTheActualOrderIsReported()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/LedgerPackStockReviewTests/testProtectedFoodElsewhereIsUnavailableForThePackReview()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/LedgerPackStockReviewTests/testReviewedStockReducesWholePacksButDoesNotNetLedgerOrCheckoutMealDemand()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/LedgerPackStockReviewTests/testStockAddedAfterNoStockReviewRejectsOldChoiceAndNoStockStillBuysTwo()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/LedgerPackStockReviewTests/testStockAddedToCachedVersionOneBasketRequiresNewReview()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/LedgerSelectedTextPortTests/testActualLedgerScopeLossPreventsMutationAndLeavesInboxPending()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/LedgerSelectedTextPortTests/testRealLedgerRestartAcknowledgesExactReceiptWithoutDuplicate()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testActualNewAttemptClearsOnlyPurchaseOwnedVerificationAndErrorEvidence()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testAllUnresolvedDeliveryPendingTransactionsGateSubscribeUntilExactRecovery()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testConcurrentDoubleCallbackCommitsOnlyOnce()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testCoordinatorAuthorizationRejectionStopsObserverUntilNewProjection()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testCoordinatorCredentialsCannotFollowAnotherAuthenticatedSubject()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testCoordinatorDiscardsModelConstructedAfterSignOut()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testCoordinatorHouseholdSwitchRejectsOldInFlightDelivery()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testCoordinatorIdentityChangeWaitsForNewAuthorizedProjection()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testCoordinatorLockSynchronouslyClearsModelAndCancelsObservation()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testCoordinatorReenrollmentInSameHouseholdReplacesObserver()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testCoordinatorStartsWithoutScreenAndForegroundReusesOneObserver()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testDeliveryHistoryAndUnresolvedFailureSurviveGenericRefreshRestoreAndRevocation()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testDurableServiceDeliveryPrecedesFinish()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testEqualRevisionCannotReplaceRefundWithActiveSnapshot()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testEquivalentDeliveryFailuresRenderOnceWithoutErasingTransactionEvidence()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testExpiryBoundaryDoesNotWaitForCachedLeaseDeadline()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testHTTPAdapterIncludesEnrolledDeviceAndDecodesServerDates()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testHTTPAdapterRejectsUntrustedBaseURLs()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testHTTPAdapterRequiresDeviceBeforeSendingPurchaseContext()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testHTTPAdapterUsesSpecificServerFailureCodes()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testHistoricalDeliveryAcknowledgementDoesNotExtendActualSubscriptionExpiry()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testInterruptedDeliveryRemainsUnfinishedAndRetries()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testLatePendingAndVerifiedDeliveryFailureRemainSimultaneouslyVisible()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testLatePendingDoesNotDenyAccessEstablishedByDurableVerifiedDelivery()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testMismatchedAccountRestoreSurvivesSuccessfulFreeProjection()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testMismatchedAccountTokenNeverReachesService()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testMissingDeploymentConfigurationKeepsPurchaseDisabled()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testNamedAdultSeatsDoNotGrantShopBudgetOrPlanningAuthority()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testNewActualAttemptClearsOldOperationCopyButRetainsStructuredDeliveryErrors()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testNonDurableAndMismatchedAcknowledgmentsNeverFinish()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testOlderSameAccountTransactionDoesNotResolveDifferentPendingRequest()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testOrdinaryPendingCancellationAndPurchaseExceptionKeepExistingPolicies()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testPendingCancellationAndUnverifiedNeverGrantSeatsOrFinish()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testPendingDeliveryKeepsSubscribeClosedUntilRestoreReconciles()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testPendingFirstThenVerifiedFailureKeepsBothObservations()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testPerTransactionRetryUpdatesOnlyThatTransactionAndPreservesOtherFailures()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testPriorDeliveryFailureSurvivesNewPendingAttemptWithoutBecomingItsOutcome()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testPurchaseReportResetsOnlyAtNewActualAttemptOrStopNotRefreshOrRestore()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testRefreshDoesNotPromptAppleSyncAndRestoreDoes()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testRefundWinsOverOlderActiveReceiptAndPreservesFreeRights()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testRejectedCallbackHistorySurvivesActualPendingAndCancelledPurchases()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testRejectedRestoreSurvivesSuccessfulFreeProjection()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testSameReasonHistoricalCallbackAndOwnedRejectionRemainDistinctWithoutDuplication()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testSameRevisionMayRefreshVerifiedLeaseButCannotChangeSeats()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testSecondNamedAdultRecoversSeatWithoutPurchaserTokenOrAppleSubmission()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testSessionRejectionImmediatelyClearsPaidProjection()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testStatusMessagesHaveUniqueStableSemanticIdentityWithoutTransactionIdentity()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testStopDiscardsObservationsAndIgnoresLatePurchaseAndServiceCallbacks()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testStopDuringDeliveryDiscardsLateResultWithoutFinishing()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testStoppedScopeCannotBeReactivatedByQueuedCallback()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testStorefrontMetadataIsUsedWithoutReplacingLocalizedPrice()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testSubscribeRecoversAnUnfinishedPurchaseBeforeAskingAppleForAnother()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testThirdSeatChildAndDuplicateSeatAreRejected()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testUnrelatedRejectedAndUnverifiedCallbacksCannotClearPurchaseOrAdmittedDeliveryEvidence()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testUnseatedAdultNeverGetsPaidAccessFromSharedSnapshot()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testVerifiedGraceEndsAtKnownDeadlineAndNoInfiniteOfflineAccess()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/MembershipTests/testWrongHouseholdRestoreCannotGrantOrFinish()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/NavigationRestorationTests/testBackgroundHidesHouseholdPathUntilExplicitFreshScopeAndNeverRestoresComposerConsent()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/NavigationRestorationTests/testDeletedRecordAndRetiredLedgerCannotBeRestoredOrFollowNewWorkspace()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/NavigationRestorationTests/testEmptyStartPickupRouteAcquiresCommittedShopIdentityWithoutSavingSheetDraft()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/NavigationRestorationTests/testHouseholdLocatorWaitsForFreshEnrollmentAndRevocationRemovesItDurably()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/NavigationRestorationTests/testHouseholdScopeChangeAndContributorEntryDiscardAdultPaths()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/NavigationRestorationTests/testIncomingLinkBeforeOpenAlwaysTakesPrecedenceOverSavedTabAndPath()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/NavigationRestorationTests/testLocalPathsDoNotCrossInstallationActorOrSelectedShop()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/NavigationRestorationTests/testMissingMalformedAndFutureNavigationFilesUseOrdinaryShopRoot()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/NavigationRestorationTests/testRelaunchRestoresSelectedTabIndependentPathsAndStableSavedSources()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/NavigationRestorationTests/testRestoredHouseholdLocatorRejectsDifferentFreshIdentityScopeOrPermissions()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupCheckoutDraftTests/testComponentHydrationUsesSavedQuoteCostsAndEveryEditableCharge()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupCheckoutDraftTests/testDirtyDraftCannotFollowAnotherSelectedPickupAndCanReturnToItsOriginalSource()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupCheckoutDraftTests/testDirtyDraftKeepsEditsAndOriginalDisplayLinesWhenBasketRevisionChanges()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupCheckoutDraftTests/testEachUnsupportedComponentShapeRequiresReviewBeforeReplacement()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupCheckoutDraftTests/testEditingOnePricePreservesOtherUnknownReasonsAndRuleIdentities()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupCheckoutDraftTests/testEditingPriceDoesNotInventMissingFeesOrDiscounts()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupCheckoutDraftTests/testEverySourcePricingAndCapEditPreventsAutomaticRefresh()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupCheckoutDraftTests/testInclusiveHydrationKeepsQuoteAndCapScopesAndCommitmentsIndependent()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupCheckoutDraftTests/testPristineDraftRefreshesForRevisionSelectionAndSavedSourceChanges()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupCheckoutDraftTests/testRichPricingRoundTripsAndRequiresExplicitReplacementBeforeScalarEdits()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupCheckoutDraftTests/testScreenPrivateReviewBlocksRefreshUntilExplicitDiscard()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupCheckoutDraftTests/testStaleQuoteDoesNotHydrateAndChangedSourceCannotBeOverwritten()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupCheckoutDraftTests/testUnchangedEditorSavePreservesInclusiveAndComponentQuotesThroughTwoRestarts()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupCheckoutDraftTests/testUnchangedLargeMoneyDoesNotRequireReparsingThroughTheEntryParser()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupCheckoutDraftTests/testUnknownInclusiveReasonAndObservedZeroRemainDistinct()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupCookProjectionTests/testBindingIsNeverRestoredFromSameText()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupCookProjectionTests/testBindingRechecksIdentityHouseholdMemberRoleAndLocalActor()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupCookProjectionTests/testBindingRequiresUnlockedPermittedRuntimeScopeAndCleanSaveState()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupCookProjectionTests/testBudgetIsOmittedUnlessExplicitlyIncludedAndDoesNotEnterBinding()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupCookProjectionTests/testCarriedStockRemainsUnconfirmedAndSavedNotesDoNotSupplyInstruction()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupCookProjectionTests/testCurrentDemandSetIncludesPreplacementPlanAndStockOnlyProtectedCommitmentsOnce()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupCookProjectionTests/testFormatterPreservesProtectedPortionsConfirmedSupplyAndUnresolvedNeed()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupCookProjectionTests/testFormatterUsesSuppliedTimeAndLanguagePreservesOriginalFields()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupCookProjectionTests/testFractionalAllocatedAmountRemainsExactInBothLanguages()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupCookProjectionTests/testPlacedInstructionUsesCurrentNeedsRatherThanOutdatedPreplacementPlan()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupCookProjectionTests/testReadbackCanFinishPastStartDeadlineButStillStopsWhenWorkspaceLocks()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupCookProjectionTests/testSourceRevisionTextLocaleBudgetAndSaveChangesInvalidateBinding()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupCookProjectionTests/testSplitServingsRepeatQuantitiesButShareOneSetOfIngredientInstructions()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupCookProjectionTests/testStockOnlyCarryoverUsesPinnedCoverageWithoutBorrowingAnotherBatch()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupCookProjectionTests/testUnknownCurrentAllocationNeverTreatsInitialObservationAsCurrentSupply()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupCookProjectionTests/testUnresolvedPrivateBudgetUsesRecipientLanguage()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupModelTests/testArchivedDeletionIsDurableAndExactRetrySafe()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupModelTests/testConfirmedFreezerLotCoversOrderNeedsAndNextShopCarriesOnlyShortfall()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupModelTests/testFailedPersistenceNeverPublishesCandidateAndRetryKeepsIdentity()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupModelTests/testFeedbackRequiresClosedPlacedPickupAndConsentAndSurvivesRestart()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupModelTests/testInvalidPersistedJourneyDoesNotReplaceReadableState()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupModelTests/testKnownAndUnknownQuoteSurviveRestart()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupModelTests/testLegacyFeedbackDecodePreservesChoicesWithoutManufacturingConsent()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupModelTests/testLocalFeedbackConsentIsVersionedWorkspaceScopedAndCannotComeFromLegacyBoolean()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupModelTests/testRevisionOverflowRejectsCandidateAndArchiveContainsDurableRecord()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupModelTests/testUrgentCarryRebuildsDemandWithoutAssumingOldStock()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupModelTests/testUrgentOfflineHasNoOrderReceiptOrMoneyAfterRestart()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupOfferEvaluationTests/testBasketWithinCapDoesNotOverrideManualOfferCeilingAndMissingProvenanceFails()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupOfferEvaluationTests/testCutoffExpiryDoesNotConfirmFillResponseOrMoneyAndOldOfferDecodes()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupOfferEvaluationTests/testKnownLineMaximumConstrainsRetailerNoteWithoutWholeCheckoutCap()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupOfferEvaluationTests/testProtectedReservationsDeclinedAndExcludedDishesDoNotReuseSupply()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupOfferEvaluationTests/testRetainedOriginalAndExplicitFixedFeesConsumeJointAndLineHeadroom()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupOfferEvaluationTests/testSavedForecastAndEffectiveNoteCeilingSurviveSQLiteAndRejectStaleSaveAndCopy()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupOfferEvaluationTests/testSimultaneousOffersShareAllowanceAndCannotDuplicateOneOriginalLine()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupOfferEvaluationTests/testSourceChangesInvalidateButCopyEventsAndSavingDoNot()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupOfferEvaluationTests/testUnknownChargesNeverInventZeroAndBoundedCrossingStaysConditional()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupOfferEvaluationTests/testUnknownYieldConversionAndDishApprovalRemainConditional()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupOfferReviewTests/testCeilingEvidenceNeverConvertsUnknownToZeroOrConditionalToAffordable()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupOfferReviewTests/testCopyEventsRequireExactReviewedOfferAndJourneyAndReplayOnce()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupOfferReviewTests/testFailedPersistenceKeepsPriorOfferAndBlocksFurtherChanges()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupOfferReviewTests/testReviewedUpdateSurvivesSQLiteRestartAndPreservesUnrelatedFacts()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupOfferReviewTests/testStaleOfferAndWrongJourneyCannotOverwriteAndNewDraftUsesDistinctID()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupOfferReviewTests/testValidationRejectsIncompatibleExcessiveAndUnboundedEvidence()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupRecipientHandoffTests/testFullFallbackForUnknownWrongRecipientContextAndLapseAndPrivateCopies()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupRecipientHandoffTests/testRetailerCorrectionComparesTwoFrozenVersionsAndOmitsPriceReasons()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupRecipientHandoffTests/testSentAndAcknowledgedSurviveRestartAndEraseWithPickup()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupRecipientHandoffTests/testSpanishCookUsesOnlyTheSelectedRecipientsLastExplicitVersionAndLiveSeat()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupRecipientHandoffTests/testSystemHandoffResultsKeepTheirOriginalVersionsAfterPickupChanges()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupRecipientHandoffTests/testTypedChangesKeepSameNameQuantitiesAndUnresolvedNeedsSeparate()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupStockBatchTests/testBatchQuantityPluralFormsFollowTheRecipientLanguage()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupStockBatchTests/testDatedStockCanReserveAnIngredientBeforePlacementWithoutCreatingAReceipt()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupStockBatchTests/testReviewedCorrectionReallocatesOnceAndCarriesOnlyFreshlyCountedFood()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupStockBatchTests/testUnassignedBatchOnFreshInstallNeedsExplicitMatchEvenWithSameFoodName()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupStockBatchTests/testUseFirstReservesPreferredLotAndLegacyBytesDecodeWithoutAHint()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupStockPrivateScopeIntegrationTests/testActualDeviceLockAndChildPresentationRemainDenied()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupStockPrivateScopeIntegrationTests/testActualLiveContributorHelperAndEditorProjectionsDenyLocalScope()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupStockPrivateScopeIntegrationTests/testActualSignedInHouseholdLockThenOwnerUnlockPostconditionAllowsPrivateCorrectionOffline()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupStockPrivateScopeIntegrationTests/testReminderSurvivesHouseholdSuspensionButSignOutCancelsIt()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupStockPrivateScopeTests/testAccountAndHouseholdLockABAInvalidateModelReviewWithoutChangingStock()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupStockPrivateScopeTests/testAnyLiveContributorHelperOrEditorProjectionRemainsDenied()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupStockPrivateScopeTests/testLockedDeviceInactiveSceneAndChildBoundaryCannotMintPrivateReview()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupStockPrivateScopeTests/testOwnerUnlockedPrivateScopeAllowsRetainedAccountWhileHouseholdRemainsLocked()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupStockPrivateScopeTests/testSessionFailsClosedBeforeObservedBoundaryAndRotatesForAccountLockAndProjectionChanges()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupStockReviewTests/testCarriedBatchReviewExpiresWhenItsOriginalShopChanges()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupStockReviewTests/testChangedRevisionSelectedShopAndEveryLiveScopeFieldInvalidatePreview()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupStockReviewTests/testMultiMealPreviewCancelAndExplicitApplyOnceKeepProtectedLunch()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupStockReviewTests/testOtherProcessCommitRejectsOtherwiseCurrentPreviewWithoutOverwritingItsMeal()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PickupStockReviewTests/testUrgentAddThenCorrectProjectsCurrentExactNeedAndReadbackAfterRestart()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PlacementFlowTests/testAbsentExpiredStatusPreservesOriginalEvidenceWithoutAssumingSuccess()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PlacementFlowTests/testAuthorityScopeChangeDuringCaptureCannotPersistLateSnapshot()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PlacementFlowTests/testCaptureNeedsExplicitApprovalAndPersistsOriginalSnapshotBeforeExternalAction()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PlacementFlowTests/testDeletionEpochRejectsLateCaptureAndLateReportSeal()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PlacementFlowTests/testExpiredReportNeverMintsAnotherWindowAndRecoversMinimalStatus()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PlacementFlowTests/testFormerShopperRetriesOriginalReportWithoutFetchingNewShopperFacts()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PlacementFlowTests/testKnownHandledReconciliationStatusPreventsResendAndExplicitRetirementKeepsEvidence()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PlacementFlowTests/testLocalLoadNeverFetchesCurrentShopperDataOrSends()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PlacementFlowTests/testMismatchedFrozenReportCannotApplyButCanExplicitlyReject()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PlacementFlowTests/testNewAccountCannotReadOldActorsCapture()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PlacementFlowTests/testOfflineReportSealsExactTimeIdentityAndBytesBeforeFirstSend()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PlacementFlowTests/testOnlyExplicitUnreportedDiscardAllowsFreshCaptureOfSameSnapshot()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PlacementFlowTests/testPersistingConfirmedReportReceiptCanRetryWithoutResending()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PlacementFlowTests/testReconciliationLostResponsePreservesExactBaseAndRetry()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PlacementFlowTests/testReconciliationRequiresCurrentFrozenMatchAndExplicitReview()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PlacementFlowTests/testReviewerTransferClearsLiveDataButKeepsOriginalReporterEvidence()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PlacementFlowTests/testSealFailureNeverSendsAndTimeEditInvalidatesApproval()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PlacementFlowTests/testSealedTimeCannotBeRewrittenAndScopedPurgePreservesOtherActors()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/PlacementFlowTests/testStatusFailureCannotRetirePendingReconciliation()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RecipeCaptureAdapterTests/testBilingualHeadingsSeparateIngredientsAndInstructions()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RecipeCaptureAdapterTests/testReviewedRecipeKeepsOriginalSeparateAndDoesNotChooseAMeal()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RecipeCaptureAdapterTests/testUnknownServingsAndUnreviewedRowsRequireCorrection()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RecipeCaptureIntegrationTests/testEditingRecipePreservesOriginalEvidenceAndRevisionRules()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RecordsAdapterTests/testComparisonNativeRoundTripAndNestedAuthorityFieldRejection()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RecordsAdapterTests/testConfirmedLedgerDeletionSurvivesRestartAndRetriesOriginalReceiptUntilCleanup()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RecordsAdapterTests/testEarlierLedgerV1DefaultsPlanningButRejectsInjectedAccessFlags()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RecordsAdapterTests/testFailedDeletionIntentWriteNeverCallsDestructiveStoreOperation()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RecordsAdapterTests/testFailedRecipeImportPreservesEditableDinnerAndWeeklyAllocationsAcrossRestart()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RecordsAdapterTests/testFileImportRechecksAccessBeforeValidatingExternalContents()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RecordsAdapterTests/testHelperExportDropsNativeFinanceAndPersonalExportRequiresWorkingKey()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RecordsAdapterTests/testHelperOnlyImportReconcilesRetiredOriginBeforeReview()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RecordsAdapterTests/testLedgerCanonicalRoundTripPreservesOriginalImportAndUUIDDecisionMap()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RecordsAdapterTests/testPickupCanonicalRoundTripOrdersSetAndUUIDQuoteMapWithoutChangingValues()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RecordsAdapterTests/testRecipeImportWithOnlyDuplicatesAndSkippedRowsPublishesANewOutcome()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RecordsAdapterTests/testRetiredModelCannotSaveOldWorkspaceIntoReplacement()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RecordsAdapterTests/testScopedDinnerPlanningRecoveryRetainsSourceReferencesWithoutAuthority()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RecordsAdapterTests/testSourceErasureBetweenSelectionAndExportCannotExportCachedPrivateData()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RecordsAdapterTests/testStaleEntireLedgerReviewDeletesNothingAndAllowsFreshReview()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RecordsAdapterTests/testUnsupportedNativeImportStagesNothingAndPreservesRegistryBytes()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RecordsAdapterTests/testWholeLedgerErasurePurgesAllReviewedHistoryAndRecoveryOriginOnly()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RecordsErasureCleanupTests/testFailedPrivateProjectionCleanupKeepsExactRetirementPendingAcrossRestart()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RecordsListingTests/testUnreadableNativeSiblingsAreReportedAndExcludedFromHealthyExportWithoutChangingBytes()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RecordsMediaTests/testActionOutcomeAnchorChangesOnlyAfterCompletedDeletionAndClearsOnFailure()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RecordsMediaTests/testCaptureArchiveListingCannotEscapeLiveNamespaceAndHonorsRemovalMarkers()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RecordsMediaTests/testCorruptOptionalSidecarIsReportedWithoutBlockingHealthyRecordBackupOrReplacingBytes()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RecordsMediaTests/testLiveScopeChangeDuringValidationClearsPrivateExportAndStagedImport()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RecordsMediaTests/testReceiptAndRecipeEvidenceStayBoundToTheirOwnedRecord()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RecordsMediaTests/testRecoveredEditProjectionFiltersMediaForRemovedTargetsNewShopsAndMealLibrary()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RecordsMediaTests/testSelectedReducedJPEGRoundTripAndCorruptImageRejectsWholeBatch()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RecordsMediaTests/testSelectionDefaultsOffHelperExcludesEvidenceAndSelectedEncryptedRecoveryWorksBesideNewer()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RecordsMediaTests/testUntrustedNestedAuthorityWrongOwnerUnsupportedImageAndVersionFailWithoutRegistryMutation()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RecordsRecoveryCaptureTests/testActualRecoveredLedgerNewPhotoReexportSiblingAndCleanupPreservePhysicalIdentity()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RecordsRecoveryCaptureTests/testCancelledOpenCannotReplaceCompletedDeletionOutcomeAndDeniedDeletionCannotMutateRegistry()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RecordsRecoveryCaptureTests/testDeletionCancelsInFlightLeaseAndDrainPreventsLateFolderRecreation()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RecordsRecoveryCaptureTests/testDrainWaitsForCancelledInFlightUser()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RecordsRecoveryCaptureTests/testJournalIsBoundToActualDatabaseAndCopyAndUnknownFieldsFailClosed()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RecordsRecoveryCaptureTests/testMediaScrubRetainsCopyDirectoryAndReopensUsingFreshReceipt()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RecordsRecoveryCaptureTests/testRecoveredPickupReceiptAndRecipeSourceUseActualStoreAndRetainNativeBinding()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RecordsRecoveryCaptureTests/testSymlinksAndDeniedAuthorizationCannotCreateRecoveryStores()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RecordsRecoveryCaptureTests/testWrongPhysicalMappingRejectedAndImportedUnrelatedMappingNeverMintsLiveScope()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RequestDuplicateComparisonTests/testAuthorizationShopIdentityAndEmptyNamesCannotCreatePrivateOrFalseGroups()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RequestDuplicateComparisonTests/testClarificationUsesOnlySelectedRequestThenReviewedLinkKeepsOtherAuthorUntouched()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RequestDuplicateComparisonTests/testCursorOverlapUsesOneLatestRevisionPerRequestAndGroupIdentityStaysStable()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RequestDuplicateComparisonTests/testDuplicateAcrossPageBoundaryCanBeReadWithoutChangingSelectedRequestOrWriting()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RequestDuplicateComparisonTests/testExplicitDecisionsKeepSeparateOutcomesAndLinkNeverAddsOrSumsPacks()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RequestDuplicateComparisonTests/testFixtureInterceptsUnexpectedNetworkDestinations()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RequestDuplicateComparisonTests/testMatchingChangesOnlyCaseWhitespaceAndCanonicalUnicodeNotMeaningfulWords()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/RequestDuplicateComparisonTests/testNonAdjacentNamesBecomeAdjacentWithoutLosingAuthorsUsesOrCompletedOutcomes()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ScanMediaStoreTests/testDEBUGStoreIsolation()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ScanMediaStoreTests/testErasureAndRemovalRejectLateCallbacksAfterRestart()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ScanMediaStoreTests/testExactReplayAndCurrentNamespaceAndTargetBinding()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ScanMediaStoreTests/testPersistedImageCountBoundAndNoAutomaticEviction()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ScanMediaStoreTests/testPickupRecordErasurePreservesOtherJourneys()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ScanMediaStoreTests/testScopeInvalidationDuringSaveLeavesNoNewEvidence()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ScanMediaStoreTests/testSymlinkEvidenceFileCannotEscapeStore()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ScanModelTests/testLatePhotoCompletionCannotRestoreClosedSource()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ScanModelTests/testPasteKeepsOriginalAfterUserCorrection()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ScanModelTests/testRevokingAcceptedPhotosRestoresTheEarlierTypedOrPastedDraft()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ScanModelTests/testRevokingPhotoConsentRejectsLateResultAndKeepsTyping()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ScanModelTests/testTypedFallbackAndExactlyOneReviewedCallback()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ScanParsingTests/testGTINCheckDigitDoesNotConferProductIdentity()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ScanParsingTests/testImageNormalizationStripsLocationAndRejectsUnsupportedBytes()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ScanParsingTests/testRealVisionFindsCodeWithoutInventingAProduct()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ScanParsingTests/testReceiptLinesKeepPrintedTextAndUnknownAmounts()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/ScanParsingTests/testSelectedFileReadRejectsOversizeAndSymlink()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedMealChangeTests/testAssignedShopperSeedRequiresExactFreshSourceAndNeverSendsPlannerProposal()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedMealChangeTests/testChangedNativeIdentityOrRoleCannotPublishLateReadOrSendReview()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedMealChangeTests/testExplicitLocalRetryClearDoesNotClaimUndoOrSendAnything()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedMealChangeTests/testFormerPlannerNowShopperCanClearOwnHiddenRetryButCannotTransmitIt()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedMealChangeTests/testGuestSeedUsesResultingBindingsAndNeverMutatesReviewedPlanningState()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedMealChangeTests/testLostResponseRestartsWithSameExactBytesAndNeverReprepares()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedMealChangeTests/testNativeSeedUsesExactContributionIDsAndDoesNotInferGroupBindings()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedMealChangeTests/testOldMealEncodingRemainsCompatibleAndUnknownQuantityIsExplicitNull()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedMealChangeTests/testPaidLapseHidesPrivatePendingPayloadAndProposalProjection()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedMealChangeTests/testProtectedRetrySurvivesRestartAndScopedPurgeRejectsLateWrites()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedMealChangeTests/testReenrolledActorCanExplicitlyClearHiddenOldDeviceRetryWithoutSendingOrExposingIt()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedMealChangeTests/testSameActorReenrollmentStillInvalidatesReviewedProposal()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedMealChangeTests/testScopeChangeDuringStatusReadCannotClearAnotherRuntimePending()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedMealChangeTests/testStoredBytesCannotBeAlteredWithoutMatchingReviewedPayload()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedMealCivilDateTests/testDateLabelsUseGregorianCivilDayEvenWhenLocalePrefersAnotherCalendar()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedMealCivilDateTests/testLocalizedCivilDayKeepsTheExactGregorianWireDayAcrossUSDSTBoundaries()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedMealCivilDateTests/testMalformedOrImpossibleCivilDaysDoNotProduceADifferentDayLabel()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedMealCivilDateTests/testRenderingDoesNotAlterTheMealOrEncodedWireDay()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedMealIdeaTests/testApprovalCannotBeSentForUnsavedOrUnreviewedIdea()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedMealIdeaTests/testApprovedFractionalPageRetainsExactSupplyAndProposedQuantity()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedMealIdeaTests/testChangingAccountOrEnrollmentScopeDiscardsLateReadAndBlocksWrite()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedMealIdeaTests/testFractionEntryRejectsInvalidOrOutOfRangeEvidenceWithoutRounding()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedMealIdeaTests/testFractionalEvidenceSurvivesLostResponseRetryExactly()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedMealIdeaTests/testLostResponseBlocksEditedWriteAndRetriesExactOriginalKeyAndEvidence()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedMealIdeaTests/testNewProposalRequiresExplicitApprovedIdeaAndEncodesNullOriginalRevision()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedMealIdeaTests/testOunceAndFluidOunceStayDistinctAcrossHouseholdAndProposalRoundTrip()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedMealIdeaTests/testUnknownHouseholdEvidenceEncodesAsExplicitNullNotPrivateDefaults()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedShopFlowTests/testChangedShopperAuthorityClearsPrivateViewsBeforeRequestListFailure()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedShopFlowTests/testConfirmedCreationSurvivesReadFailureAndCannotCreateAnotherShop()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedShopFlowTests/testFinancialEvidenceStaysWithTheAssignedShopperAndClearsOnTransfer()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedShopFlowTests/testFreshHouseholdNativeFlowCreatesInvitesReceivesApprovesFreezesAndReopens()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedShopFlowTests/testLockClearsSharedBudgetAndPreventsRetainedModelFromPublishing()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedShopFlowTests/testLostCreateResponseCanRecoverOriginalOperationWithoutSecondShop()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedShopFlowTests/testOrganizerReviewsTransferAndLosesShopperBudgetAfterConfirmation()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedShopFlowTests/testSharedMealReviewBindsPacksDateAndRevisionAndRejectsAStaleEditor()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedShopFlowTests/testShopDraftRequiresExplicitReviewAndEditsInvalidateIt()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedStoreQuoteTests/testAccountOrEnrollmentChangeDiscardsLateReadAndBlocksSend()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedStoreQuoteTests/testFrozenShopDoesNotPrepareNewPrivateSave()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedStoreQuoteTests/testFrozenShopperCanReviewRevokingNamedBudgetAccessWithoutBasketWrite()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedStoreQuoteTests/testLostReplySurvivesRestartRetriesSameBytesAndBlocksEditedSave()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedStoreQuoteTests/testMissingChargesUnavailableAndUnreviewedEligibilityCannotCrownWinner()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedStoreQuoteTests/testNativeCoreEngineShowsOneDollarMoreEighteenMinutesAndThreeDollarBreakEven()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedStoreQuoteTests/testNewShopperEpochHidesOldPendingAndAllowsExplicitLocalClearWithoutRebase()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedStoreQuoteTests/testPurgeAdvancesEpochAndRejectsPreDeletionWrite()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SharedStoreQuoteTests/testRevocationHidesProtectedRetryAndCannotReplayPriorSuccess()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/StructuredCaptureTests/testCaptureBoundsRejectOversizedInput()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/StructuredCaptureTests/testConflictingTotalAndPackEvidenceFailsAtomically()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/StructuredCaptureTests/testDestinationMustBeExplicitlyTheHostDestination()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/StructuredCaptureTests/testEnglishAndSpanishQuantitiesRemainExact()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/StructuredCaptureTests/testGuestWordingCannotImplicitlyBecomeAList()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/StructuredCaptureTests/testMassAndFluidOuncesAreNotInterchanged()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/StructuredCaptureTests/testMaterialEditInvalidatesConfirmationAndPreservesIdentity()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/StructuredCaptureTests/testNegationIsVisibleAndNeverDeletesOrSilentlyBecomesQuantity()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/StructuredCaptureTests/testPackEvidenceCommitsTogetherWithExclusionsAndOriginal()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/StructuredCaptureTests/testPackWithoutUsableAmountStaysUnknown()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/StructuredCaptureTests/testRepeatedCaptureCallbackKeepsOneReceiptAndChangedBodyFails()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/StructuredCaptureTests/testSpanishPackParsingAndSuffixOrder()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/StructuredCaptureTests/testUndoneCaptureCannotBeResubmittedByOldCallback()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/StructuredCaptureTests/testUnknownMeasureAndAmbiguousCommaNeverBecomeKnownCount()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SurfaceIntegrationTests/testAuthorityChangingDuringCommitDoesNotAcknowledge()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SurfaceIntegrationTests/testChangedScopeCannotReadOrCommitReview()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SurfaceIntegrationTests/testCommitPersistsFullReviewAndAcknowledgesOnce()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SurfaceIntegrationTests/testErasureAndExpiryRemovePrivateReviewCopies()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SurfaceIntegrationTests/testExplicitStaleReviewRetainsOperationAndPriorConfirmedAttempt()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SurfaceIntegrationTests/testFutureReviewSchemaFailsClosedWithoutReplacingBytes()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SurfaceIntegrationTests/testInterruptedAcknowledgmentReopensReceiptWithoutRestaging()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SurfaceIntegrationTests/testInterruptedBeforeCommitKeepsAllIDsAndDecisions()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SurfaceIntegrationTests/testJournalRejectsChangedIdentityWithoutReplacingHealthyDraft()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SurfaceIntegrationTests/testRacingOldReceiptIsRecognizedAfterExplicitFreshReview()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SurfaceIntegrationTests/testReceiptMismatchCannotConsumeInbox()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SurfaceIntegrationTests/testRouteStoreIdempotencyAndExactScopeRemoval()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SurfaceReconciliationGateTests/testPreReadyLedgerPreservesDurableRouteAndReminder()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SurfaceReconciliationGateTests/testPreReadyPickupPreservesDurableRouteAndReminder()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SurfaceReconciliationGateTests/testSavingPendingAndRetirementSnapshotsNeverInferOrphans()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SurfaceReconciliationGateTests/testSourceChangingAcrossAwaitPreventsCleanupUntilFreshCompleteReview()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SurfaceRuntimeIsolationTests/testDefaultUIFlagUsesOwnedTestRootOnlyInDebug()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SurfaceRuntimeIsolationTests/testInjectedDirectoryWinsAndCanNeverBeResetByFlags()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SurfaceRuntimeIsolationTests/testNormalRuntimeUsesExplicitLiveFactoriesAndEffects()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SurfaceRuntimeIsolationTests/testRedirectedTestRootCannotDeleteDevelopmentState()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SurfaceRuntimeIsolationTests/testResetDeletesOnlyOwnedTestDirectoryAndPreservesDevelopmentFiles()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SurfaceRuntimeIsolationTests/testResetFlagWithoutUITestingNeverDeletesLiveDirectory()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SurfaceRuntimeIsolationTests/testUITestFactoriesCannotOpenLiveGroupsOrInvokeSystemEffects()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/SurfaceRuntimeIsolationTests/testUITestReminderCannotRequestRegisterOrRemoveRealNotifications()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/WorkspaceAccessTests/testFirstPrivateUseDoesNotRequireAnAccountOrDeviceAuthentication()"
+        },
+        {
+          "identifier" : "RoomInTheCartTests/WorkspaceAccessTests/testSharedPersonaProtectionSurvivesRelaunch()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/ContextualNavigationUITests/testAuthorizationHoldIsOptionalAndSeparateFromCheckoutCap()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/ContextualNavigationUITests/testDinnerOnlyCapAndCancelledSlotChangeSurviveRelaunch()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/ContextualNavigationUITests/testEnteredStoreQuotesKeepTripCostsSeparateAndAdoptOnlyReviewedSavedProof()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/ContextualNavigationUITests/testFreeContextualRoutesKeepPrivateAndSharedWorkSeparate()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/ContextualNavigationUITests/testLargeTextKeepsLongNativePasteEditableAndReviewReachable()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/ContextualNavigationUITests/testMissingStorePricesAndAvailabilityRemainConditionalAfterSaving()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/ContextualNavigationUITests/testUnknownProduceWeightUsesSavedWholePickupCapAndBillingIncrement()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/ContextualNavigationUITests/testUnknownTaxKeepsWeighedPickupUnresolved()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/ContextualReminderUITests/testNextShopDeferralRequestsReminderOnlyAfterExplicitScheduleAndCanCancel()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/ContextualReminderUITests/testSavedOfferRequestsDeadlineReminderFromThatOfferAndCancelKeepsDecisionPending()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/FreeJourneyUITests/testCancelledImportAndIngredientReturnPreserveLongFilteredListContext()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareKeepsTheFrozenPickupUnplaced()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/FreeJourneyUITests/testCorrectFreezerBatchAndReadReservationsAfterRestart()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/FreeJourneyUITests/testDinnerMoveAcrossDisplayedWeeksKeepsLunchAndOccurrence()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/FreeJourneyUITests/testEnglishMealWeekListAndGridShowDatedProtectedLunch()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/FreeJourneyUITests/testFirstPickupCanStartFromDinnersAndReviewAnEditablePattern()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/FreeJourneyUITests/testFreeCookCorrectionAndExplicitRecipientAcknowledgment()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/FreeJourneyUITests/testFreePickupRepairKeepsTheNeedOpenWhenAcceptedFallbackToolsAreUnavailable()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/FreeJourneyUITests/testListCaptureOpensWithTypedDraftAndReopensAfterCancel()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/FreeJourneyUITests/testManualListOrderSurvivesRestartAndOpensLargePrint()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekReservationDraftCannotFollowAnotherPickup()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/FreeJourneyUITests/testNextShopCanCancelThenOpenOneFreshShoppingList()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/FreeJourneyUITests/testPairingEnumerationUsesTheChosenScheduleAndDoesNotOfferItAgain()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/FreeJourneyUITests/testRecipeCaptureOpensOnFirstAttemptAndReopensAfterCancel()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/FreeJourneyUITests/testSpanishMealWeekListAndGridShowDatedProtectedLunch()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/FreeJourneyUITests/testStagedListCanReturnToOriginalAndMergeADuplicateAfterRestart()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/FreeJourneyUITests/testTypedBarcodeNeedsACodeAndFreshMatchConfirmation()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/FreeJourneyUITests/testUnavailableRecipeSourceLeavesServingsAndPortionAllocationEditableAfterRestart()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/FreeJourneyUITests/testUrgentRepairWithoutAnOrderPersistsAcrossRestart()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testFullyCoveredSavesUseAtHomePlanWithoutPurchasedItemOrRetailerOrder()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testHidingProtectedLunchKeepsTotalAndTwoWholePacksWithoutStock()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testTwelveNeededEightConfirmedEightPerPackReviewsOneWholePack()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/NavigationRestorationUITests/testKillRelaunchRestoresRecordsDetailAndIndependentShoppingList()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/NavigationRestorationUITests/testKillRelaunchRestoresSelectedDinnersTabWithoutRestoringUnsavedComparison()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/PickupCheckoutRestoreUITests/testInclusiveCheckoutFieldsAndResultSurviveRestartAndUnchangedSave()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/PickupOfferUITests/testSavedOfferReopensAndUpdatesResponseAfterRestart()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/RoomInTheCartUITests/testAccountDeletionSettingsExplainsScopeInEnglishAndSpanishBeforeSignIn()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/RoomInTheCartUITests/testAutomatedAccessibilityAuditOnShopAndKnownResults()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/RoomInTheCartUITests/testComparisonSaveStaysInsideViewportAboveTabBar()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/RoomInTheCartUITests/testConfirmedComparisonDeletionSurvivesRestart()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/RoomInTheCartUITests/testKnownComparisonSavesAndReopensWithItemOnlyLimit()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/RoomInTheCartUITests/testLargestDynamicTypeAndDarkAppearanceComparisonSmoke()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/RoomInTheCartUITests/testLargestTextEditActionGrowsInContentAndReturnsToEntry()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/RoomInTheCartUITests/testLargestTextShopRepairShortcutRemainsInsideViewportAndOpens()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/RoomInTheCartUITests/testLargestTextSourceAndSavedDetailsAreFullyReadableAboveTabs()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/RoomInTheCartUITests/testOwnerExportReviewAndCancelledDeletionPreserveComparisonAfterRestart()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/RoomInTheCartUITests/testShopPhoneShortcutsHaveACompleteTouchTargetAndReturnToShop()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/RoomInTheCartUITests/testShopRepairShortcutRemainsInsideViewportAndOpens()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/RoomInTheCartUITests/testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer()"
+        },
+        {
+          "identifier" : "RoomInTheCartUITests/RoomInTheCartUITests/testUnknownPackAmountRemainsUnresolvedAfterSaveAndRestart()"
+        }
+      ],
+      "testPlan" : "RoomInTheCart"
+    }
+  ]
+}

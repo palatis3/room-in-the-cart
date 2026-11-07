@@ -12,10 +12,11 @@ import XCTest
         if testRun?.failureCount ?? 0 > 0 { capture("S17-shared-meal-failure") }
         app.terminate()
     }
-    private func launch(shopperSeed: Bool = false) {
-        app.launchArguments = ["--ui-testing", "--shared-meal-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"] + (shopperSeed ? ["--shopper-meal-seed"] : [])
+    private func launch(shopperSeed: Bool = false, deadline: Bool = false) {
+        app.launchArguments = ["--ui-testing", "--shared-meal-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"] + (shopperSeed ? ["--shopper-meal-seed"] : []) + (deadline ? ["--shared-meal-deadline-fixture"] : [])
         app.launch()
-        XCTAssertTrue(element("meal-change-occurrence").waitForExistence(timeout: 25))
+        let ready = deadline ? app.navigationBars["Shared household shop"] : element("meal-change-occurrence")
+        XCTAssertTrue(ready.waitForExistence(timeout: 25))
     }
     private func chooseOccurrence() {
         tap(element("meal-change-occurrence"))
@@ -74,6 +75,65 @@ import XCTest
         approveSharedDraft()
         XCTAssertEqual(element("fixture.s17.proposals").label, "Fixture shared proposals: 0")
     }
+    func testShopperReviewsRepeatedClockTimeThenMovesDayWithoutExtendingDeadline() {
+        launch(deadline: true)
+        tap(app.buttons["Edit shared items and quote"])
+        tap(app.buttons["Edit this meal"])
+        tap(element("sharedMeal.editDeadline"))
+        let preview = element("sharedMeal.deadlinePreview")
+        assertElementContains("sharedMeal.deadlinePreview", "November 1, 2026")
+        XCTAssertTrue(preview.label.contains("1:30"))
+        XCTAssertTrue(preview.label.contains("America/New_York (UTC−04:00)"))
+        tap(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Repeated clock time")).firstMatch)
+        tap(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "UTC−05:00")).firstMatch)
+        assertElementContains("sharedMeal.deadlinePreview", "1:30")
+        XCTAssertTrue(preview.label.contains("America/New_York (UTC−05:00)"))
+        tap(element("sharedMeal.useDeadline"))
+        tap(app.buttons["Review entered shared shop"])
+        assertText("Previously planned")
+        assertText("Proposed meal")
+        assertDeadline("previous", contains: "America/New_York (UTC−04:00)")
+        assertDeadline("proposed", contains: "America/New_York (UTC−05:00)")
+        let apply = app.buttons["Publish reviewed items and quote"]
+        reveal(apply)
+        XCTAssertFalse(apply.isEnabled)
+        enableSwitch("I reviewed these exact shared fields and this action")
+        tap(apply)
+        let count = element("fixture.s17.applications")
+        let published = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Fixture shared applications: 1"), object: count)
+        XCTAssertEqual(XCTWaiter.wait(for: [published], timeout: 10), .completed)
+
+        tap(app.buttons["Edit shared items and quote"])
+        tap(app.buttons["Edit this meal"])
+        let picker = element("sharedMeal.day")
+        reveal(picker)
+        let dateButton = picker.buttons.firstMatch
+        if dateButton.exists { tap(dateButton) }
+        else { picker.coordinate(withNormalizedOffset: CGVector(dx: 0.82, dy: 0.5)).tap() }
+        let nextDay = app.datePickers.collectionViews.buttons.matching(NSPredicate(format: "label CONTAINS %@", "November 2")).firstMatch
+        XCTAssertTrue(nextDay.waitForExistence(timeout: 5))
+        nextDay.tap()
+        if nextDay.exists {
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.07)).tap()
+            XCTAssertTrue(nextDay.waitForNonExistence(timeout: 5))
+        }
+        assertText("The new day has no deadline until you set one.")
+        tap(app.buttons["Review entered shared shop"])
+        assertText("Previously planned")
+        assertDeadline("previous", contains: "America/New_York (UTC−05:00)")
+        assertText("Proposed meal")
+        assertText("November 2, 2026")
+        assertDeadline("proposed", contains: "Unknown")
+        XCTAssertEqual(count.label, "Fixture shared applications: 1")
+        capture("S09-shopper-reviewed-day-move-without-deadline")
+    }
+
+    private func assertDeadline(_ position: String, contains expected: String) {
+        let row = element("sharedMeal.review." + position + "Deadline")
+        reveal(row)
+        XCTAssertTrue((row.label + " " + (row.value as? String ?? "")).contains(expected), row.debugDescription)
+    }
+
     private func element(_ id: String) -> XCUIElement { app.descendants(matching: .any).matching(identifier: id).firstMatch }
     private func tap(_ target: XCUIElement) { reveal(target); XCTAssertTrue(target.isHittable, target.debugDescription); target.tap() }
     private func enableSwitch(_ label: String) {

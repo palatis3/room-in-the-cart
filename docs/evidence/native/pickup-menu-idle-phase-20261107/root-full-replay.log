@@ -1,0 +1,16 @@
+Executed 6 of 6 selected tests.
+
+| Test | Result | Seconds |
+|---|---|---|
+| RoomInTheCartUITests/FreeJourneyUITests/testDinnerMoveAcrossDisplayedWeeksKeepsLunchAndOccurrence | Passed | 385.07 |
+| RoomInTheCartUITests/ContextualNavigationUITests/testDinnerOnlyCapAndCancelledSlotChangeSurviveRelaunch | Passed | 241.45 |
+| RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareKeepsTheFrozenPickupUnplaced | Passed | 223.18 |
+| RoomInTheCartUITests/FreeJourneyUITests/testFreeCookCorrectionAndExplicitRecipientAcknowledgment | Passed | 205.21 |
+| RoomInTheCartUITests/RoomInTheCartUITests/testComparisonSaveStaysInsideViewportAboveTabBar | Passed | 131.34 |
+| RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges | Passed | 107.39 |
+The XCTest log confirms one start and one passing completion per selected test.
+
+The XCTest test export recorded 2 runtime warning occurrences across 6 examined tests.
+The XCTest summary does not expose a runtime warnings field.
+- `RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges` recorded 2 warning(s), with 2 allowed. Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.
+

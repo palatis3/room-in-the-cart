@@ -5537,6 +5537,118 @@
           }
         }
       }
+    },
+    "Show protected needs": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show protected needs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar necesidades protegidas"
+          }
+        }
+      }
+    },
+    "Hidden protected needs still count toward the total and whole packs.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hidden protected needs still count toward the total and whole packs."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las necesidades protegidas ocultas siguen contando para el total y los paquetes completos."
+          }
+        }
+      }
+    },
+    "Bought by someone else": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bought by someone else"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otra persona lo compró"
+          }
+        }
+      }
+    },
+    "Item bought on this list": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item bought on this list"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artículo comprado de esta lista"
+          }
+        }
+      }
+    },
+    "Choose a list item": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a list item"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir un artículo de la lista"
+          }
+        }
+      }
+    },
+    "Mark this list item handled": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark this list item handled"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marcar este artículo como resuelto"
+          }
+        }
+      }
+    },
+    "All remaining items are marked handled. Applying this review removes them from the checkout copy.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All remaining items are marked handled. Applying this review removes them from the checkout copy."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los artículos restantes están marcados como resueltos. Aplicar esta revisión los quita de la copia para la compra."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

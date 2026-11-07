@@ -202,6 +202,69 @@ import DeviceSurfaces
         let remaining = try await OperationOutbox(url: queue).operations()
         XCTAssertTrue(remaining.isEmpty)
     }
+    func testRevokedEnrollmentAfterLostReplyAndRestartClearsRetryAndHidesAcceptedRequest() async throws {
+        let queue = location(), directory = queue.deletingLastPathComponent()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let pickupURL = directory.appendingPathComponent("pickup.sqlite")
+        let pickup = PickupModel(databaseURL: pickupURL)
+        let shopID = UUID()
+        let context = CheckoutContext(storeID: "Local store", branchID: "Main", mode: .pickup, slot: "5 PM",
+                                      commitmentsID: shopID, observedAt: Date(), source: "Private basket")
+        let line = BasketLine(id: UUID(), name: "Private basket item",
+                              quantity: Quantity(amount: .one, unit: .count, originalLiteral: "1"), expectedCost: .exact(.zero))
+        let saved = await pickup.start(from: [line], shopID: shopID, context: context)
+        XCTAssertTrue(saved)
+        let savedPickup = try await pickup.archiveSnapshot()
+        XCTAssertEqual(savedPickup.records.map(\.id), [shopID])
+
+        let fixture = ContributorCaptureFixture(), device = ContributorCaptureVault()
+        let outbox = OperationOutbox(url: queue)
+        let pending: PendingOperation
+        let committedRequest: OwnRequest
+        do {
+            let first = try await model(fixture, queue: queue, deviceVault: device)
+            let scope = try XCTUnwrap(first.contributorRequestScope)
+            let review = try ContributorRequestReview.captured(captured("2 packs of 8 wraps for lunch", scope: scope), scope: scope)
+            fixture.loseReply = true
+            await first.sendRequest(reviewed: review, approved: true)
+            XCTAssertEqual(fixture.rows.count, 1)
+            XCTAssertTrue(first.requests.isEmpty)
+            let operations = try await outbox.operations()
+            pending = try XCTUnwrap(operations.first)
+            XCTAssertEqual(operations.count, 1)
+            XCTAssertEqual(first.delivery, .waiting(operationID: pending.id))
+            XCTAssertEqual(fixture.commands, [pending.bytes])
+            let accepted = try XCTUnwrap(fixture.rows.first)
+            committedRequest = try JSONDecoder().decode(OwnRequest.self, from: JSONSerialization.data(withJSONObject: accepted))
+            XCTAssertEqual(committedRequest.originalItem, review.item)
+        }
+
+        let reopened = try await model(fixture, queue: queue, deviceVault: device)
+        XCTAssertEqual(reopened.delivery, .waiting(operationID: pending.id))
+        XCTAssertEqual(reopened.requests, [committedRequest])
+
+        fixture.enrollmentRevoked = true
+        await reopened.retry()
+        await reopened.retry()
+
+        XCTAssertEqual(fixture.revokedBootstrapChecks, 1)
+        XCTAssertEqual(reopened.delivery, .accessEnded)
+        XCTAssertTrue(reopened.locked)
+        XCTAssertNil(reopened.projection)
+        XCTAssertNil(reopened.contributorRequestScope)
+        XCTAssertTrue(reopened.requests.isEmpty)
+        XCTAssertEqual(fixture.commands, [pending.bytes])
+        XCTAssertEqual(fixture.privateReads, 0)
+        let remaining = try await outbox.operations()
+        XCTAssertTrue(remaining.isEmpty)
+        let committedRows = try JSONSerialization.data(withJSONObject: fixture.rows)
+        XCTAssertEqual(try JSONDecoder().decode([OwnRequest].self, from: committedRows), [committedRequest])
+
+        let reopenedPickup = PickupModel(databaseURL: pickupURL)
+        let persistedPickup = try await reopenedPickup.archiveSnapshot()
+        XCTAssertEqual(persistedPickup.workspaceID, savedPickup.workspaceID)
+        XCTAssertEqual(persistedPickup.records, savedPickup.records)
+    }
     func testDraftMutationWhilePreparingCannotSendAnUnreviewedBody() async throws {
         let queue = location(); defer { try? FileManager.default.removeItem(at: queue.deletingLastPathComponent()) }
         let fixture = ContributorCaptureFixture(), model = try await model(fixture, queue: queue)
@@ -320,7 +383,7 @@ private final class ContributorCaptureFixture: @unchecked Sendable {
     let household = UUID().uuidString.lowercased(), member = UUID().uuidString.lowercased(), shop = UUID().uuidString.lowercased()
     let windowID = UUID().uuidString.lowercased()
     var windowExpiry = "2099-01-01T00:00:00.000Z", windowFailure: WindowFailure?
-    var enrollmentRevoked = false
+    var enrollmentRevoked = false, revokedBootstrapChecks = 0
     var commands: [Data] = [], rows: [[String: Any]] = [], receipts: [String: [String: Any]] = [:]
     var loseReply = false, privateReads = 0
     var replayStarted: XCTestExpectation?, replayGate: DispatchSemaphore?
@@ -337,10 +400,19 @@ private final class ContributorCaptureFixture: @unchecked Sendable {
         if path == "/v1/me/workspaces" { return try response(["workspaces":[["householdId":household,"label":"Home","role":"contributor"]]]) }
         if path.hasSuffix("/devices") { return try response(["deviceId":"sam-device","deviceToken":"sam-device-token"],201) }
         if path.hasSuffix("/bootstrap") {
-            if enrollmentRevoked { return try response(["error": ["code": "access_ended"]], 403) }
+            if enrollmentRevoked {
+                revokedBootstrapChecks += 1
+                return try response(["error": ["code": "access_ended"]], 403)
+            }
             return try response(["household":["id":household,"label":"Home"],"memberId":member,"role":"contributor","shopId":shop,"enrolled":true,"queueConsent":false,"capabilities":["own_requests"]])
         }
-        if path.hasSuffix("/requests/mine") { return try response(["requests":rows,"nextCursor":NSNull()]) }
+        if path.hasSuffix("/requests/mine") {
+            if enrollmentRevoked {
+                privateReads += 1
+                return try response(["error": ["code": "access_ended"]], 403)
+            }
+            return try response(["requests":rows,"nextCursor":NSNull()])
+        }
         if path.hasSuffix("/replay-windows") {
             replayStarted?.fulfill(); _ = replayGate?.wait(timeout: .now() + 5)
             if windowFailure == .offline { throw URLError(.notConnectedToInternet) }
@@ -349,6 +421,7 @@ private final class ContributorCaptureFixture: @unchecked Sendable {
         }
         if path.hasSuffix("/commands") {
             commands.append(data)
+            if enrollmentRevoked { return try response(["error": ["code": "access_ended"]], 403) }
             let key = json["clientKey"] as! String
             if let receipt = receipts[key] { return try response(receipt) }
             XCTAssertEqual(json["kind"] as? String, "request.send")

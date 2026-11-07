@@ -1,0 +1,199 @@
+{
+  "candidateRevision": "fa93f60534918ce8e040c706e80163e5d6959153",
+  "previousCandidateRevision": "911343c7b2d274e925421434749e7635a06e18b1",
+  "runtime": {
+    "node": "22.23.4",
+    "postgres": "17.11"
+  },
+  "applicationSourceRootsCompared": [
+    "api",
+    "service/src",
+    "service/migrations",
+    "service/journal-authority",
+    "web/src",
+    "web/public",
+    "config",
+    "vercel.json"
+  ],
+  "sourceChangesWithinComparedRoots": [
+    "config/README.md"
+  ],
+  "sourceInterpretation": "Only config/README.md changed in these roots. Node engines/pin changed separately. Service/web dependency resolutions are unchanged after excluding root engine metadata. New test harness files do not alter service runtime logic.",
+  "migrationCount": 29,
+  "allMigrationHashesMatchPriorReview": true,
+  "migrationHashes": [
+    {
+      "version": "001_household_requests.sql",
+      "sha256": "e919302e353eae03f5cf63425ad82924c3c6315321b8b4b07e1253185e79ef5b"
+    },
+    {
+      "version": "002_apple_billing.sql",
+      "sha256": "2f819c06c49f47e32c0093c636bacdfd95ad299ed159337b39041d173385ca6e"
+    },
+    {
+      "version": "003_web_session.sql",
+      "sha256": "dd2b9967be0364bf313afba035e8a60fec948a94aa1cf182e9fea14e269888cb"
+    },
+    {
+      "version": "004_household_lock.sql",
+      "sha256": "65fef08a239f4ea122133c335d56918e9d2ef2c4455418f36e18b6442a473250"
+    },
+    {
+      "version": "005_session_and_policy_hardening.sql",
+      "sha256": "3504fec9398d40cad639aa50c931d7cbe6b585e7cf2dc5059f227b3e87727d45"
+    },
+    {
+      "version": "006_household_lifecycle.sql",
+      "sha256": "7f293a0b681627cccb2d5bdc943eb3ea5c6e1436b063857f4a33f981cced296c"
+    },
+    {
+      "version": "007_selected_helper_session.sql",
+      "sha256": "422f3b0cafc482adb3708689c11bbbab1d026aac69555a8dafcbd3a525f2fca5"
+    },
+    {
+      "version": "008_browser_email_auth.sql",
+      "sha256": "5ad8c46d4146e1ce980e4f8809afa00512b9ed6ae6e41fd76637e0d86a713e1e"
+    },
+    {
+      "version": "009_auth_maintenance.sql",
+      "sha256": "b4e33a77bc0a9576a763062e8f3dddf00c019ecbe5464ad300b1e5fa0e872b6e"
+    },
+    {
+      "version": "010_account_lifecycle.sql",
+      "sha256": "e35ebbc6a2d1fcc3f7d03420542eb4ce588c3708e8bb31fcfc3ec0cc283daa22"
+    },
+    {
+      "version": "011_helper_review_and_shop_selection.sql",
+      "sha256": "23457cac7c614eb8794ec0268641cd1130558ce8d8c576c4ce8bd994253d07b9"
+    },
+    {
+      "version": "012_price_budget_history.sql",
+      "sha256": "dad295084f43a58cd15f58524575e98df66a77bdb0a17bd0f9555b3eac05c5c2"
+    },
+    {
+      "version": "013_shared_meal_occurrences.sql",
+      "sha256": "f574ff8a6b73f0959c622053b9ebd3408d05629d653709a40d631cc58259e1d5"
+    },
+    {
+      "version": "014_shared_meal_moves.sql",
+      "sha256": "2673ea349e6a7cd4df823e4128e4059533049b46071b03a1a1dc90a0d6e90a95"
+    },
+    {
+      "version": "015_family_decisions.sql",
+      "sha256": "c9779d5c19bcbb2e2bc5b3f4ffe0793e459375892d9616d5c0db2ac82686def1"
+    },
+    {
+      "version": "016_shared_meal_changes.sql",
+      "sha256": "362138035995832cc6b1bbffb6e9c0528ee2576945a908a14db03104355da6b0"
+    },
+    {
+      "version": "017_shared_meal_ideas.sql",
+      "sha256": "fe61e6528a38cc9c6c4315587d12ee540ea624422a8e89f8933f05e75addab63"
+    },
+    {
+      "version": "018_shared_store_quotes.sql",
+      "sha256": "ad18c9602e2f3c16d30f1f504ed833995bd2d09231ec405d50c7db592622b849"
+    },
+    {
+      "version": "019_optional_measurement.sql",
+      "sha256": "11cf0700dd146331a6997cca80b011a04fc8028c403745dd9e6b1d8121e959a2"
+    },
+    {
+      "version": "020_operations_health.sql",
+      "sha256": "daa858b576a969c5c8297a87ed88deeb4cda5c24a0b9f588f5a3429e92a0c2e7"
+    },
+    {
+      "version": "021_guardian_enrollment.sql",
+      "sha256": "73e33d596776a1874aeb4715b16abed3f18829d1415ed6b0dd2799e356df4c04"
+    },
+    {
+      "version": "022_privacy_journal.sql",
+      "sha256": "d64716764dd1e9b1131c7aab53faa1e67cf518875011271452ee0120d4ead5cb"
+    },
+    {
+      "version": "023_device_enrollment_fence.sql",
+      "sha256": "16f737590b2d90c6ae2942b2e4983d1455f42077d477382320773b15a6629b5d"
+    },
+    {
+      "version": "024_privacy_journal_source.sql",
+      "sha256": "98733f9b4a8fd8c7f7804d9be2c42a2d8a351f931a4ee820b62540c48b270185"
+    },
+    {
+      "version": "025_privacy_restore_capacity.sql",
+      "sha256": "2b1788b53ee26a88d9d4e5036993e0746544c2e9b4b263449e944ff4938a2bbc"
+    },
+    {
+      "version": "026_privacy_worker_capacity.sql",
+      "sha256": "5816ae80de618870134f77eefcc8cf5cdf2d667a48c8c2f25f2aa57f14a1da6c"
+    },
+    {
+      "version": "027_privacy_runtime_binding.sql",
+      "sha256": "adeb438a0699c73759fc1323282efdbb416f2cef887684466dbe0b2bc02d3d0d"
+    },
+    {
+      "version": "028_privacy_journal_rotation.sql",
+      "sha256": "52811aa4db7295e947c870578f1b1ba50560f43ba2dc54fc25565cb0f2f6baac"
+    },
+    {
+      "version": "029_privacy_restore_window.sql",
+      "sha256": "b43b876b1da041d4cea234f6834255c7c5e7584597da2b61f67d7d0134e85ef2"
+    }
+  ],
+  "compiledWebSHA256": {
+    "icon.png": "dd8314efcedbe096fbce5c43f09af13a335d713a1dcfae43f82b4904d9e58914",
+    "index.html": "30f57c05d5fcf6f632b3a84bd471287feb4d79b4d0eb22d7cbb541ef11d1112e",
+    "apple-touch-icon.png": "e69ddd65f0718ffef895c0b82a63873d580722b920af40e86b1478a5cd9427e3",
+    "assets/index-DfcLasv-.js": "474ead6ca42c2d16feaa4bb2fafb755308774e5489b0b81cb02d18401a1f2989",
+    "assets/index-B9I61_lh.css": "7cf18dacddae715ef01363daf5f2770fb9562762a10d2d2e4d41daf406224cee"
+  },
+  "priorWebHTMLCSSJSMatch": true,
+  "upgradeRestore": {
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "test": "Populated fictional 008 baseline, exact 009\u2013029 upgrade, idempotent rerun, original household/device access, worker denial and original dump restore into isolated database.",
+    "scope": "Local disposable PostgreSQL; not a backup or restore of actual staging."
+  },
+  "hostedReadOnly": {
+    "checkedAt": "2026-11-05T04:47:41.831991+00:00",
+    "url": "https://room-in-the-cart-staging.vercel.app",
+    "apiBoundaryChecksPassed": 6,
+    "candidateWebChecksPassed": 2,
+    "candidateWebChecksFailed": 19,
+    "observation": "Older root HTML; 16 slash/non-slash routes and two current assets return404; both icons match.",
+    "connector": "Exact project metadata request denied permission; current hosted schema/backup not reverified."
+  },
+  "sha256": {
+    "upgrade-restore.tap": "76caca47638dcd28930f990e8b9c170ae23eab6fc9fdf1bef00db701ad091c54",
+    "toolchain.txt": "0575ae7a4401e7de112f5a2e0586f77f4fce285e001d7bbb1ef837e33980cc35",
+    "service-build.log": "441395328eef3f9a5f1e21646dddbbe4fdb76fceddcd7cc76224c3b463d3a7e3",
+    "web-build.log": "922d13381f4d32992b8c8e338dab0a8e45df629d541a805b023ad7dc99fe6032",
+    "hosted-readonly.json": "84f0c8941d3df14342053e57ed8b3e9973dbb3b1ca47899b85ef65bdc0a13f3c",
+    "hosted-readonly.log": "b2bf2d9dba8c5de8e1149771fd9d867e26b96304f0379ed7b3d423918f5064f5",
+    "changelog.md": "e0c7128cf15f0836b0c567e9d0c10fb03796cd25bbd5f8b54a5dcc7389de880f",
+    "backup-restore.md": "655afc26b33a66c45f63ab82088ac997fdc985db41ec499f675a8a2b4a239db1"
+  },
+  "remaining": [
+    "Protected current hosted backup and isolated restore",
+    "Fresh hosted registry/role check",
+    "Owner rollout review before migrations/provider or deletion activation",
+    "SMTP and paid Apple setup remain explicitly deferred"
+  ],
+  "references": [
+    "https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore",
+    "https://supabase.com/changelog/supabase-cli-v3",
+    "https://supabase.com/changelog/cbc-tls-ciphers-deprecated"
+  ],
+  "documentationReview": "CLI v3 defaults local and requires explicit remote targeting. No Supabase CLI installed or upgraded and no CLI mutation performed. SQL migration runner is unchanged. Hosted HTTP cipher deprecation does not apply to direct PostgreSQL connections; this review does not certify live client TLS acceptance.",
+  "dotReview": {
+    "result": "No concrete discrepancy in supplied candidate comparison",
+    "verified": [
+      "All29 migration filenames and bytes match both revisions and manifest",
+      "Lockfiles match after excluding only root engine metadata",
+      "Both public builds byte-identical,all5 hashes match",
+      "Only config/README.md changed in compared production roots",
+      "Supplied local TAP,toolchain and proof hashes match"
+    ],
+    "scope": "Personal review of exported evidence; no independent compile, database run or hosted access. Hosted backup and registry remain unverified."
+  }
+}

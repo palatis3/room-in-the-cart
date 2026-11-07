@@ -182,23 +182,36 @@ private final class S27Protocol: URLProtocol, @unchecked Sendable {
 struct S27StoreQuotesFixtureRoot: View {
     @StateObject private var state = S27FixtureState()
     @State private var shopperMode = false
+    @State private var showsControls = false
     var body: some View {
         VStack(spacing: 2) {
             HStack { Text("Saves: \(state.saves)").accessibilityIdentifier("fixture.s27.saves"); Text("Proposals: \(state.proposals)").accessibilityIdentifier("fixture.s27.proposals"); Text("Adoptions: \(state.adoptions)").accessibilityIdentifier("fixture.s27.adoptions"); Text("POSTs: \(state.posts)").accessibilityIdentifier("fixture.s27.posts") }.font(.caption).dynamicTypeSize(.large)
             HStack {
                 Button(shopperMode ? "Use budget adult":"Use shopper") { shopperMode.toggle() }.accessibilityIdentifier("fixture.s27.switch")
-                Menu("Fixture controls") {
-                    Button("Lose next save reply",action:state.loseNext)
-                    Button("Advance shared revision",action:state.stale)
-                    Button("Freeze shared shop",action:state.freeze)
-                    Button("Revoke adult budget access",action:state.revoke)
-                }.accessibilityIdentifier("fixture.s27.controls")
+                Button("Fixture controls") { showsControls.toggle() }
+                    .accessibilityIdentifier("fixture.s27.showControls")
+                    .accessibilityValue(showsControls ? "Expanded" : "Collapsed")
             }.dynamicTypeSize(.large)
+            if showsControls {
+                VStack {
+                    fixtureAction("Lose next save reply", action: state.loseNext)
+                    fixtureAction("Advance shared revision", action: state.stale)
+                    fixtureAction("Freeze shared shop", action: state.freeze)
+                    fixtureAction("Revoke adult budget access", action: state.revoke)
+                }.buttonStyle(.bordered).dynamicTypeSize(.large)
+            }
             if let adult = state.adult, let shopper = state.shopper {
                 NavigationStack { HouseholdSettingsView(model:shopperMode ? shopper:adult) }.id(shopperMode)
             } else if let failure = state.failure { Text(failure).accessibilityIdentifier("fixture.failure") }
             else { ProgressView("Opening isolated store quote fixture") }
         }.tint(Theme.action).task { await state.start() }
+    }
+
+    private func fixtureAction(_ title: LocalizedStringKey, action: @escaping () -> Void) -> some View {
+        Button(title) {
+            action()
+            showsControls = false
+        }
     }
 }
 #endif

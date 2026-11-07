@@ -1,0 +1,825 @@
+{
+  "checks": [
+    {
+      "export": "failed-ui",
+      "mutation": "original",
+      "caseResult": "Failed",
+      "evidence": {
+        "status": "passed",
+        "summaryWarningCount": 1,
+        "runtimeWarningCount": 1,
+        "examinedTestCount": 1,
+        "detailExportCount": 1,
+        "activityExportCount": 1,
+        "warnings": [
+          {
+            "selector": "RoomInTheCartUITests/FreeJourneyUITests/testManualListOrderSurvivesRestartAndOpensLargePrint",
+            "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+            "count": 1,
+            "maximum": 1,
+            "menuActivity": {
+              "tap": "Tap \"ledgerListOptions\" Button[0.50, 0.50]",
+              "phase": "Synthesize event"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "export": "failed-ui",
+      "mutation": "optional-url-omitted",
+      "accepted": true
+    },
+    {
+      "export": "failed-ui",
+      "mutation": "wrong-device-id",
+      "rejected": "XCTest detail run came from another device",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "failed-ui",
+      "mutation": "wrong-configuration-id",
+      "rejected": "XCTest detail run came from another test or configuration",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "failed-ui",
+      "mutation": "wrong-optional-url",
+      "rejected": "XCTest detail run came from another test or configuration",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "failed-ui",
+      "mutation": "extra-device-run",
+      "rejected": "Expected one XCTest detail device/configuration run",
+      "baselineOutcome": "Runtime warning details disagree with test tree: RoomInTheCartUITests/FreeJourneyUITests/testManualListOrderSurvivesRestartAndOpensLargePrint"
+    },
+    {
+      "export": "failed-ui",
+      "mutation": "extra-configuration-run",
+      "rejected": "Expected one XCTest detail configuration run",
+      "baselineOutcome": "Runtime warning details disagree with test tree: RoomInTheCartUITests/FreeJourneyUITests/testManualListOrderSurvivesRestartAndOpensLargePrint"
+    },
+    {
+      "export": "failed-ui",
+      "mutation": "mixed-device-run",
+      "rejected": "Expected one XCTest detail device/configuration run",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "failed-ui",
+      "mutation": "mixed-nested-device",
+      "rejected": "Unexpected nested XCTest detail device/configuration run",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "failed-ui",
+      "mutation": "mixed-nested-configuration",
+      "rejected": "Unexpected nested XCTest detail device/configuration run",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "failed-ui",
+      "mutation": "outer-configuration-mismatch",
+      "rejected": "XCTest warning details came from another test configuration",
+      "baselineOutcome": "XCTest warning details came from another test configuration"
+    },
+    {
+      "export": "failed-ui",
+      "mutation": "wrong-root-schema",
+      "rejected": "XCTest detail run came from another device",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "failed-ui",
+      "mutation": "wrong-child-schema",
+      "rejected": "XCTest detail run came from another test or configuration",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "failed-ui",
+      "mutation": "outer-result",
+      "rejected": "XCTest selected case and detail run results disagree",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "failed-ui",
+      "mutation": "device-result",
+      "rejected": "XCTest selected case and detail run results disagree",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "failed-ui",
+      "mutation": "configuration-result",
+      "rejected": "XCTest selected case and detail run results disagree",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "failed-ui",
+      "mutation": "all-detail-results-against-tree",
+      "rejected": "XCTest selected case and detail run results disagree",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "model",
+      "mutation": "original",
+      "caseResult": "Passed",
+      "evidence": {
+        "status": "passed",
+        "summaryWarningCount": 0,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 1,
+        "detailExportCount": 1,
+        "activityExportCount": 0,
+        "warnings": []
+      }
+    },
+    {
+      "export": "model",
+      "mutation": "optional-url-omitted",
+      "accepted": true
+    },
+    {
+      "export": "model",
+      "mutation": "wrong-device-id",
+      "rejected": "XCTest detail run came from another device",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "model",
+      "mutation": "wrong-configuration-id",
+      "rejected": "XCTest detail run came from another test or configuration",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "model",
+      "mutation": "wrong-optional-url",
+      "rejected": "XCTest detail run came from another test or configuration",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "model",
+      "mutation": "extra-device-run",
+      "rejected": "Expected one XCTest detail device/configuration run",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "model",
+      "mutation": "extra-configuration-run",
+      "rejected": "Expected one XCTest detail configuration run",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "model",
+      "mutation": "mixed-device-run",
+      "rejected": "Expected one XCTest detail device/configuration run",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "model",
+      "mutation": "mixed-nested-device",
+      "rejected": "Unexpected nested XCTest detail device/configuration run",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "model",
+      "mutation": "mixed-nested-configuration",
+      "rejected": "Unexpected nested XCTest detail device/configuration run",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "model",
+      "mutation": "outer-configuration-mismatch",
+      "rejected": "XCTest warning details came from another test configuration",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "model",
+      "mutation": "wrong-root-schema",
+      "rejected": "XCTest detail run came from another device",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "model",
+      "mutation": "wrong-child-schema",
+      "rejected": "XCTest detail run came from another test or configuration",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "model",
+      "mutation": "outer-result",
+      "rejected": "XCTest selected case and detail run results disagree",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "model",
+      "mutation": "device-result",
+      "rejected": "XCTest selected case and detail run results disagree",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "model",
+      "mutation": "configuration-result",
+      "rejected": "XCTest selected case and detail run results disagree",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "model",
+      "mutation": "all-detail-results-against-tree",
+      "rejected": "XCTest selected case and detail run results disagree",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "storekit-en",
+      "mutation": "original",
+      "caseResult": "Passed",
+      "evidence": {
+        "status": "passed",
+        "summaryWarningCount": 0,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 1,
+        "detailExportCount": 1,
+        "activityExportCount": 0,
+        "warnings": []
+      }
+    },
+    {
+      "export": "storekit-en",
+      "mutation": "optional-url-omitted",
+      "accepted": true
+    },
+    {
+      "export": "storekit-en",
+      "mutation": "wrong-device-id",
+      "rejected": "XCTest detail run came from another device",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "storekit-en",
+      "mutation": "wrong-configuration-id",
+      "rejected": "XCTest detail run came from another test or configuration",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "storekit-en",
+      "mutation": "wrong-optional-url",
+      "rejected": "XCTest detail run came from another test or configuration",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "storekit-en",
+      "mutation": "extra-device-run",
+      "rejected": "Expected one XCTest detail device/configuration run",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "storekit-en",
+      "mutation": "extra-configuration-run",
+      "rejected": "Expected one XCTest detail configuration run",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "storekit-en",
+      "mutation": "mixed-device-run",
+      "rejected": "Expected one XCTest detail device/configuration run",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "storekit-en",
+      "mutation": "mixed-nested-device",
+      "rejected": "Unexpected nested XCTest detail device/configuration run",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "storekit-en",
+      "mutation": "mixed-nested-configuration",
+      "rejected": "Unexpected nested XCTest detail device/configuration run",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "storekit-en",
+      "mutation": "outer-configuration-mismatch",
+      "rejected": "XCTest warning details came from another test configuration",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "storekit-en",
+      "mutation": "wrong-root-schema",
+      "rejected": "XCTest detail run came from another device",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "storekit-en",
+      "mutation": "wrong-child-schema",
+      "rejected": "XCTest detail run came from another test or configuration",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "storekit-en",
+      "mutation": "outer-result",
+      "rejected": "XCTest selected case and detail run results disagree",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "storekit-en",
+      "mutation": "device-result",
+      "rejected": "XCTest selected case and detail run results disagree",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "storekit-en",
+      "mutation": "configuration-result",
+      "rejected": "XCTest selected case and detail run results disagree",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "storekit-en",
+      "mutation": "all-detail-results-against-tree",
+      "rejected": "XCTest selected case and detail run results disagree",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "storekit-es",
+      "mutation": "original",
+      "caseResult": "Passed",
+      "evidence": {
+        "status": "passed",
+        "summaryWarningCount": 0,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 1,
+        "detailExportCount": 1,
+        "activityExportCount": 0,
+        "warnings": []
+      }
+    },
+    {
+      "export": "storekit-es",
+      "mutation": "optional-url-omitted",
+      "accepted": true
+    },
+    {
+      "export": "storekit-es",
+      "mutation": "wrong-device-id",
+      "rejected": "XCTest detail run came from another device",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "storekit-es",
+      "mutation": "wrong-configuration-id",
+      "rejected": "XCTest detail run came from another test or configuration",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "storekit-es",
+      "mutation": "wrong-optional-url",
+      "rejected": "XCTest detail run came from another test or configuration",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "storekit-es",
+      "mutation": "extra-device-run",
+      "rejected": "Expected one XCTest detail device/configuration run",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "storekit-es",
+      "mutation": "extra-configuration-run",
+      "rejected": "Expected one XCTest detail configuration run",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "storekit-es",
+      "mutation": "mixed-device-run",
+      "rejected": "Expected one XCTest detail device/configuration run",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "storekit-es",
+      "mutation": "mixed-nested-device",
+      "rejected": "Unexpected nested XCTest detail device/configuration run",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "storekit-es",
+      "mutation": "mixed-nested-configuration",
+      "rejected": "Unexpected nested XCTest detail device/configuration run",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "storekit-es",
+      "mutation": "outer-configuration-mismatch",
+      "rejected": "XCTest warning details came from another test configuration",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "storekit-es",
+      "mutation": "wrong-root-schema",
+      "rejected": "XCTest detail run came from another device",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "storekit-es",
+      "mutation": "wrong-child-schema",
+      "rejected": "XCTest detail run came from another test or configuration",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "storekit-es",
+      "mutation": "outer-result",
+      "rejected": "XCTest selected case and detail run results disagree",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "storekit-es",
+      "mutation": "device-result",
+      "rejected": "XCTest selected case and detail run results disagree",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "storekit-es",
+      "mutation": "configuration-result",
+      "rejected": "XCTest selected case and detail run results disagree",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "storekit-es",
+      "mutation": "all-detail-results-against-tree",
+      "rejected": "XCTest selected case and detail run results disagree",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "hosted-omitted-url-fixture-control",
+      "mutation": "original",
+      "caseResult": "Passed",
+      "evidence": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 1,
+        "detailExportCount": 1,
+        "activityExportCount": 0,
+        "warnings": []
+      }
+    },
+    {
+      "export": "hosted-omitted-url-fixture-control",
+      "mutation": "optional-url-omitted",
+      "accepted": true
+    },
+    {
+      "export": "hosted-omitted-url-fixture-control",
+      "mutation": "wrong-device-id",
+      "rejected": "XCTest detail run came from another device",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "hosted-omitted-url-fixture-control",
+      "mutation": "wrong-configuration-id",
+      "rejected": "XCTest detail run came from another test or configuration",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "hosted-omitted-url-fixture-control",
+      "mutation": "wrong-optional-url",
+      "rejected": "XCTest detail run came from another test or configuration",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "hosted-omitted-url-fixture-control",
+      "mutation": "extra-device-run",
+      "rejected": "Expected one XCTest detail device/configuration run",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "hosted-omitted-url-fixture-control",
+      "mutation": "extra-configuration-run",
+      "rejected": "Expected one XCTest detail configuration run",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "hosted-omitted-url-fixture-control",
+      "mutation": "mixed-device-run",
+      "rejected": "Expected one XCTest detail device/configuration run",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "hosted-omitted-url-fixture-control",
+      "mutation": "mixed-nested-device",
+      "rejected": "Unexpected nested XCTest detail device/configuration run",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "hosted-omitted-url-fixture-control",
+      "mutation": "mixed-nested-configuration",
+      "rejected": "Unexpected nested XCTest detail device/configuration run",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "hosted-omitted-url-fixture-control",
+      "mutation": "outer-configuration-mismatch",
+      "rejected": "XCTest warning details came from another test configuration",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "hosted-omitted-url-fixture-control",
+      "mutation": "wrong-root-schema",
+      "rejected": "XCTest detail run came from another device",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "hosted-omitted-url-fixture-control",
+      "mutation": "wrong-child-schema",
+      "rejected": "XCTest detail run came from another test or configuration",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "hosted-omitted-url-fixture-control",
+      "mutation": "outer-result",
+      "rejected": "XCTest selected case and detail run results disagree",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "hosted-omitted-url-fixture-control",
+      "mutation": "device-result",
+      "rejected": "XCTest selected case and detail run results disagree",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "hosted-omitted-url-fixture-control",
+      "mutation": "configuration-result",
+      "rejected": "XCTest selected case and detail run results disagree",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "hosted-omitted-url-fixture-control",
+      "mutation": "all-detail-results-against-tree",
+      "rejected": "XCTest selected case and detail run results disagree",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "hosted-omitted-url-pickup-open",
+      "mutation": "original",
+      "caseResult": "Passed",
+      "evidence": {
+        "status": "unexpected-warnings",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 2,
+        "examinedTestCount": 1,
+        "detailExportCount": 1,
+        "activityExportCount": 1,
+        "warnings": [
+          {
+            "selector": "MenuRuntimeDiagnosticUITests/MenuRuntimeDiagnosticUITests/testOpenAndCancelSinglePickupMenu",
+            "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+            "count": 2,
+            "maximum": 0
+          }
+        ]
+      }
+    },
+    {
+      "export": "hosted-omitted-url-pickup-open",
+      "mutation": "optional-url-omitted",
+      "accepted": true
+    },
+    {
+      "export": "hosted-omitted-url-pickup-open",
+      "mutation": "wrong-device-id",
+      "rejected": "XCTest detail run came from another device",
+      "baselineOutcome": "unexpected-warnings"
+    },
+    {
+      "export": "hosted-omitted-url-pickup-open",
+      "mutation": "wrong-configuration-id",
+      "rejected": "XCTest detail run came from another test or configuration",
+      "baselineOutcome": "unexpected-warnings"
+    },
+    {
+      "export": "hosted-omitted-url-pickup-open",
+      "mutation": "wrong-optional-url",
+      "rejected": "XCTest detail run came from another test or configuration",
+      "baselineOutcome": "unexpected-warnings"
+    },
+    {
+      "export": "hosted-omitted-url-pickup-open",
+      "mutation": "extra-device-run",
+      "rejected": "Expected one XCTest detail device/configuration run",
+      "baselineOutcome": "XCTest warning activities and detailed results disagree"
+    },
+    {
+      "export": "hosted-omitted-url-pickup-open",
+      "mutation": "extra-configuration-run",
+      "rejected": "Expected one XCTest detail configuration run",
+      "baselineOutcome": "XCTest warning activities and detailed results disagree"
+    },
+    {
+      "export": "hosted-omitted-url-pickup-open",
+      "mutation": "mixed-device-run",
+      "rejected": "Expected one XCTest detail device/configuration run",
+      "baselineOutcome": "unexpected-warnings"
+    },
+    {
+      "export": "hosted-omitted-url-pickup-open",
+      "mutation": "mixed-nested-device",
+      "rejected": "Unexpected nested XCTest detail device/configuration run",
+      "baselineOutcome": "unexpected-warnings"
+    },
+    {
+      "export": "hosted-omitted-url-pickup-open",
+      "mutation": "mixed-nested-configuration",
+      "rejected": "Unexpected nested XCTest detail device/configuration run",
+      "baselineOutcome": "unexpected-warnings"
+    },
+    {
+      "export": "hosted-omitted-url-pickup-open",
+      "mutation": "outer-configuration-mismatch",
+      "rejected": "XCTest warning details came from another test configuration",
+      "baselineOutcome": "XCTest warning details came from another test configuration"
+    },
+    {
+      "export": "hosted-omitted-url-pickup-open",
+      "mutation": "wrong-root-schema",
+      "rejected": "XCTest detail run came from another device",
+      "baselineOutcome": "unexpected-warnings"
+    },
+    {
+      "export": "hosted-omitted-url-pickup-open",
+      "mutation": "wrong-child-schema",
+      "rejected": "XCTest detail run came from another test or configuration",
+      "baselineOutcome": "unexpected-warnings"
+    },
+    {
+      "export": "hosted-omitted-url-pickup-open",
+      "mutation": "outer-result",
+      "rejected": "XCTest selected case and detail run results disagree",
+      "baselineOutcome": "unexpected-warnings"
+    },
+    {
+      "export": "hosted-omitted-url-pickup-open",
+      "mutation": "device-result",
+      "rejected": "XCTest selected case and detail run results disagree",
+      "baselineOutcome": "unexpected-warnings"
+    },
+    {
+      "export": "hosted-omitted-url-pickup-open",
+      "mutation": "configuration-result",
+      "rejected": "XCTest selected case and detail run results disagree",
+      "baselineOutcome": "unexpected-warnings"
+    },
+    {
+      "export": "hosted-omitted-url-pickup-open",
+      "mutation": "all-detail-results-against-tree",
+      "rejected": "XCTest selected case and detail run results disagree",
+      "baselineOutcome": "unexpected-warnings"
+    },
+    {
+      "export": "warned-ui10",
+      "mutation": "original",
+      "caseResult": "Passed",
+      "evidence": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 2,
+        "examinedTestCount": 1,
+        "detailExportCount": 1,
+        "activityExportCount": 1,
+        "warnings": [
+          {
+            "selector": "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekReservationDraftCannotFollowAnotherPickup",
+            "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+            "count": 2,
+            "maximum": 2,
+            "menuActivity": {
+              "tap": "Tap \"ledgerShopPicker\" Button",
+              "phase": "Synthesize event"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "export": "warned-ui10",
+      "mutation": "optional-url-omitted",
+      "accepted": true
+    },
+    {
+      "export": "warned-ui10",
+      "mutation": "wrong-device-id",
+      "rejected": "XCTest detail run came from another device",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "warned-ui10",
+      "mutation": "wrong-configuration-id",
+      "rejected": "XCTest detail run came from another test or configuration",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "warned-ui10",
+      "mutation": "wrong-optional-url",
+      "rejected": "XCTest detail run came from another test or configuration",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "warned-ui10",
+      "mutation": "extra-device-run",
+      "rejected": "Expected one XCTest detail device/configuration run",
+      "baselineOutcome": "XCTest warning activities and detailed results disagree"
+    },
+    {
+      "export": "warned-ui10",
+      "mutation": "extra-configuration-run",
+      "rejected": "Expected one XCTest detail configuration run",
+      "baselineOutcome": "XCTest warning activities and detailed results disagree"
+    },
+    {
+      "export": "warned-ui10",
+      "mutation": "mixed-device-run",
+      "rejected": "Expected one XCTest detail device/configuration run",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "warned-ui10",
+      "mutation": "mixed-nested-device",
+      "rejected": "Unexpected nested XCTest detail device/configuration run",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "warned-ui10",
+      "mutation": "mixed-nested-configuration",
+      "rejected": "Unexpected nested XCTest detail device/configuration run",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "warned-ui10",
+      "mutation": "outer-configuration-mismatch",
+      "rejected": "XCTest warning details came from another test configuration",
+      "baselineOutcome": "XCTest warning details came from another test configuration"
+    },
+    {
+      "export": "warned-ui10",
+      "mutation": "wrong-root-schema",
+      "rejected": "XCTest detail run came from another device",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "warned-ui10",
+      "mutation": "wrong-child-schema",
+      "rejected": "XCTest detail run came from another test or configuration",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "warned-ui10",
+      "mutation": "outer-result",
+      "rejected": "XCTest selected case and detail run results disagree",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "warned-ui10",
+      "mutation": "device-result",
+      "rejected": "XCTest selected case and detail run results disagree",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "warned-ui10",
+      "mutation": "configuration-result",
+      "rejected": "XCTest selected case and detail run results disagree",
+      "baselineOutcome": "passed"
+    },
+    {
+      "export": "warned-ui10",
+      "mutation": "all-detail-results-against-tree",
+      "rejected": "XCTest selected case and detail run results disagree",
+      "baselineOutcome": "passed"
+    }
+  ],
+  "sourceSHA256": {
+    "shapes/storekit-es/summary.json": "216f6c2c1e8219c937f6eb942afcb8ecae449dd18001b9439e5355763070f1dc",
+    "shapes/storekit-es/detail.json": "e19b5f70b450295bf95212ecb25d4c665b49c484cc4891fa86fbb5b2ea845a4f",
+    "shapes/storekit-es/tree.json": "b633cae979ac42d7369f452b6c9ed52e3bc3d5c026ad1d7733c1b31237f78b73",
+    "shapes/storekit-en/summary.json": "51f67b7a03b968eaee5e56342e1311c0b418eb32ed401b06c5bad4798da1a7ee",
+    "shapes/storekit-en/detail.json": "163ef43f07e59cbae6c6322f9d717d967cd93919e380d5f7c5f6cbee755116c0",
+    "shapes/storekit-en/tree.json": "ee83bd6fc8d2bb8d02523cd42f5c6a4196784cf6774f730993cc7bad5b59c750",
+    "shapes/failed-ui/summary.json": "c637e7853507308a808c09b161a336d22efbcc081063db245231d47367bb2289",
+    "shapes/failed-ui/detail.json": "123b4c4cbf9c4876680c509a9fc967725ce3d7f20c511211568c2e10b75abfcb",
+    "shapes/failed-ui/activities.json": "53b0acefd24b10e34f1db4856a5ee6f662c307f111bf7d859348a2660f15f0ea",
+    "shapes/failed-ui/tree.json": "1c4298f9e30e176227f41d5cf328e7de6486493bdc34f4bccb402d6e6346ef4f",
+    "shapes/model/summary.json": "12885530b285ab08881f6dc75b8e1239d21aae3c2c4da20581b961d633be603e",
+    "shapes/model/detail.json": "b63ba8e79af3adab87e47102312e29822ea8446d9ce711a7a99044d0c18b0e23",
+    "shapes/model/tree.json": "50bc553e099e19ebb659dc885c463e16884833157920e5194aaaf35bff5ed79b",
+    "representative-exports/warned-ui10/summary.json": "dee236f66b966fe839fd6cec7dacc635ccd423b856e7502e86dde2c04075ca37",
+    "representative-exports/warned-ui10/detail.json": "40174f234589189c4542582eef33728b8ca324ac470904231a0ce53610a4c308",
+    "representative-exports/warned-ui10/activities.json": "296a99d8fd3801c42217dbc627757029efbbb477edce56c25e56bba43bf575c1",
+    "representative-exports/warned-ui10/tree.json": "801ea068c0d0f5d6dea08ca381b30015e43a13a0058a384f238c26fa09656a76",
+    "representative-exports/hosted-omitted-url-pickup-open/testOpenAndCancelSinglePickupMenu-activities.json": "1be11d91d8fabf1e7080149908e9e6c85b09dddcc821d9c3ebf82472aedafd12",
+    "representative-exports/hosted-omitted-url-pickup-open/testOpenAndCancelSinglePickupMenu-details.json": "2fd8a36c2b92f3736c5d73ed8f541ac3234b9fac1223d0626b13258a2856ac58",
+    "representative-exports/hosted-omitted-url-pickup-open/test-tree.json": "82e049d0b9fb096c9013b34453e0a38d16c03e92a909939ee75eb496d2e6bc1b",
+    "representative-exports/hosted-omitted-url-pickup-open/test-summary.json": "c67406fe9192d9d966bf5ed00681c57fc6f49cfb96dad4213fbfa86af7829628",
+    "representative-exports/hosted-omitted-url-pickup-open/input-provenance.json": "5be8823cfa472e3a3ea600be6a680b98b8752cd416153c18b9a4948eddb21e87",
+    "representative-exports/hosted-omitted-url-fixture-control/test-tree.json": "f1c4c9179164e09b474f3ac4b210aca1995e6246edb86bcb3e52d9a784703c26",
+    "representative-exports/hosted-omitted-url-fixture-control/test-summary.json": "ebe86352231a865e1c1b4247512ec4e631846bdf06f1d57c44003498b984c631",
+    "representative-exports/hosted-omitted-url-fixture-control/input-provenance.json": "5be8823cfa472e3a3ea600be6a680b98b8752cd416153c18b9a4948eddb21e87",
+    "representative-exports/hosted-omitted-url-fixture-control/testFixtureControlWithoutOpeningMenu-activities.json": "eabff0939e6acdfc55d64aa5427abdafa5c11829f94af71ae39ec604c0b3e593",
+    "representative-exports/hosted-omitted-url-fixture-control/testFixtureControlWithoutOpeningMenu-details.json": "cfafb98f0829b5b6dbc95f0c87886e3396c0df77c6c6679eefcf31323e6646a2"
+  }
+}

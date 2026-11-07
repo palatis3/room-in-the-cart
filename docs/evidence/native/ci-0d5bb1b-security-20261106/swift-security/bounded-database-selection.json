@@ -1,0 +1,18 @@
+{
+  "selectedMembers": [
+    {
+      "name": "db-swift/codeql-database.yml",
+      "bytes": 384,
+      "compressedBytes": 265,
+      "CRC": 3902050062
+    },
+    {
+      "name": "db-swift/src.zip",
+      "bytes": 821837,
+      "compressedBytes": 762201,
+      "CRC": 2240386938
+    }
+  ],
+  "scope": "Only exact bounded database metadata and source archive members read with CRC/size/ratio/path checks. Database payload including previously refused pageDump remains unread; this is not full database archive acceptance.",
+  "defaultGuardRefusalRetained": "archive-guard-refusal.json"
+}

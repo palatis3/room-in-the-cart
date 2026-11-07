@@ -1,0 +1,113 @@
+{
+  "scope": "Focused Debug import-editor regression on one small simulator at the largest accessibility text size.",
+  "baseCommit": "117180152acde2bd8d38fe6f92c7a0fc03e8b110",
+  "productFixSourceCommit": "8d5e0fbbd0309b74c7a98bf6f599f4eceee4d678",
+  "productFixCherryPick": "025d998e4276d309dc21023917db0767ead6b7c8",
+  "testedSourceSHA256": {
+    "ios/Features/Ledger/LedgerSheets.swift": "ed8fedf68f925bf7f70b02cf799acbd2f46d6d9b527bf8ee7aa6800f96e06849",
+    "ios/UITests/ContextualNavigationUITests.swift": "471b52aacf1186dc4c0dc3e8a69a948b96aacef57f1e8bc5db09c33e73072be2"
+  },
+  "xcode": "Xcode 27.1\nBuild version 27A9275",
+  "simulator": {
+    "modelName": "iPhone SE (3rd generation)",
+    "osVersion": "26.2",
+    "osBuildNumber": "23C52",
+    "architecture": "arm64",
+    "platform": "iOS Simulator"
+  },
+  "dynamicType": "accessibility-extra-extra-extra-large",
+  "configuration": "Debug",
+  "testSelector": "RoomInTheCartUITests/ContextualNavigationUITests/testLargeTextKeepsLongNativePasteEditableAndReviewReachable",
+  "fixture": {
+    "file": "ios/UITests/Fixtures/ReleaseLedger500.txt",
+    "lines": 500,
+    "sha256": "7411eb3a8a10911d6599237e1f2f618c0c3508667909a4766a4b5b14bef6e3b8"
+  },
+  "candidateViewport": {
+    "baseHeightPoints": 180,
+    "maximumHeightPoints": 240
+  },
+  "assertions": [
+    "Native Paste preserves all fixture text.",
+    "The editor viewport stays bounded after paste.",
+    "Typing and deleting a character restores the exact original text.",
+    "The visible Done action dismisses the software keyboard.",
+    "Review has a tap point inside the unobscured form after at most three margin drags.",
+    "The tap opens an editable staged row. The test ends before committing the batch."
+  ],
+  "attempts": [
+    {
+      "label": "CandidateFirst",
+      "result": "Failed",
+      "seconds": 56.7457389831543,
+      "note": "XCTest selected the TextEditor activation point in its top padding; keyboard did not open.",
+      "resultBundle": ".build/EditorEvidence/CandidateFirst.xcresult",
+      "summarySHA256": "8201b370e496ee8257ec6ea81c538145c1613db7c3b6cbfe05e7654ac8effd5f",
+      "logSHA256": "834034a24931cc0c97d35e1930e7132b2a8db7c70ec146b71d72e27ce940a81a"
+    },
+    {
+      "label": "CandidateSecond",
+      "result": "Failed",
+      "seconds": 52.05770707130432,
+      "note": "One inset tap did not open the keyboard; exact paste and stable viewport passed.",
+      "resultBundle": ".build/EditorEvidence/CandidateSecond.xcresult",
+      "summarySHA256": "505dcf8676c0db814e883adbc3efedca9fee084ed3fee93639ac8f19bffe7845",
+      "logSHA256": "650298911bf3f4f5ff55b1b198ea315465137ae3774fa9e7857847888acb4f89"
+    },
+    {
+      "label": "CandidateThird",
+      "result": "Failed",
+      "seconds": 74.12858402729034,
+      "note": "Editing, Done, and the visible Review tap succeeded; the preview heading was above the retained scroll position.",
+      "resultBundle": ".build/EditorEvidence/CandidateThird.xcresult",
+      "summarySHA256": "a360ab7e1fc8d970edb3e8eb5533a1901797d10ebad40aa31572d65cb29a243b",
+      "logSHA256": "c51f55eca285277739b2bc5555a1ef1fc990030f63225f7bdcec7af6d623dc84"
+    },
+    {
+      "label": "CandidateFourth",
+      "result": "Passed",
+      "seconds": 67.92209804058075,
+      "note": "Final regression with editable staged-row verification.",
+      "resultBundle": ".build/EditorEvidence/CandidateFourth.xcresult",
+      "summarySHA256": "c8abfe7b5bfa9daaded7df2bd8c02ba810ade25d1e599b51ab781febeadc70b0",
+      "logSHA256": "e60167e66efdf42a3b1402aeb58585d2e850ad99019468e81014bdbb7a63250f"
+    },
+    {
+      "label": "ExpectedFailureOldEditor",
+      "result": "Failed",
+      "seconds": 46.24249505996704,
+      "note": "Expected viewport regression with the previous minimum-only editor.",
+      "resultBundle": ".build/EditorEvidence/ExpectedFailureOldEditor.xcresult",
+      "summarySHA256": "b8fe2d2133e85115ffa37c59a83b6eb611ce33003d83d653644037c89ecec25c",
+      "logSHA256": "51e71618c1ac3dd375b912a087974511241705cd7b08b9a95acf1621efd69605",
+      "editorHeightPoints": {
+        "beforePaste": 180,
+        "afterPaste": 92612
+      },
+      "exitCode": 65
+    },
+    {
+      "label": "CandidateRestored",
+      "result": "Passed",
+      "seconds": 65.88687908649445,
+      "note": "Final pass after restoring the exact candidate source.",
+      "resultBundle": ".build/EditorEvidence/CandidateRestored.xcresult",
+      "summarySHA256": "4dc09efcaf328d6364c66d67f17503b1202a12500b7a1089e6ab06c0662a3ca4",
+      "logSHA256": "9f8257b4726664478d75f7b31949662bd7c675539cdf3a103077abec067ee6e3"
+    }
+  ],
+  "restoredCandidateScreenshots": {
+    "S02-editable-staged-preview-at-largest-text": {
+      "file": ".build/EditorEvidence/S02-editable-staged-preview-at-largest-text.png",
+      "sha256": "c4d8c623a8477081550a4bcdae6bbbacbaf8f3e904a6e0228d44a30c16102697"
+    },
+    "S02-review-action-reachable-at-largest-text": {
+      "file": ".build/EditorEvidence/S02-review-action-reachable-at-largest-text.png",
+      "sha256": "06dd3a2f9b2aef4daa26a2e8a5ebb12d784e0fa544f3348077df6f41760b057e"
+    },
+    "S02-500-line-native-paste-at-largest-text": {
+      "file": ".build/EditorEvidence/S02-500-line-native-paste-at-largest-text.png",
+      "sha256": "f44153d553e088593c9c8e829c73ffea4ad43e4f881ba3435a11995ab7dd49cc"
+    }
+  }
+}

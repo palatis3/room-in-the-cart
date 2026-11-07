@@ -1,0 +1,17 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "0AC5EAA9-B519-46C8-B810-03E60ACDBBA5",
+        "deviceName" : "RITC-ImportRecovery-CI-20261106",
+        "exportedFileName" : "E33C5734-9BFA-45F4-8E0D-79CCC144DDC4.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Recovery-independent-durable-readback_0_38A1F48B-ECEC-4DA2-9299-B15A4289F72D.txt",
+        "timestamp" : 1794024782.886
+      }
+    ],
+    "testIdentifier" : "ImportRecoveryUITests/testRetryPersistsOneImportAndDismissesThroughItsCallback()",
+    "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/ImportRecoveryUITests/testRetryPersistsOneImportAndDismissesThroughItsCallback"
+  }
+]

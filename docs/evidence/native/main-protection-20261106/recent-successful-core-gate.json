@@ -1,0 +1,14 @@
+[
+  {
+    "id": 127391324161,
+    "name": "CI gate",
+    "head_sha": "4a0f7f3a25ae01b6efba5e984ceb464c4ca1d157",
+    "conclusion": "success",
+    "completed_at": "2026-11-05T16:53:04Z",
+    "html_url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42048736422/job/127391324161",
+    "app": {
+      "id": 15368,
+      "slug": "github-actions"
+    }
+  }
+]

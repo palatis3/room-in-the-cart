@@ -27,7 +27,19 @@ import HouseholdClient
         #endif
     }
     @ViewBuilder private var standardFixtureContent: some View {
-        if ProcessInfo.processInfo.arguments.contains("--shared-meal-fixture") { S17SharedMealFixtureRoot() }
+        if ProcessInfo.processInfo.arguments.contains("--import-recovery-fixture") { ImportRecoveryUIFixtureRoot() }
+        else if ProcessInfo.processInfo.arguments.contains("--staple-recall-fixture") {
+            #if targetEnvironment(simulator)
+            StapleRecallUIFixture()
+            #endif
+        }
+        else if ProcessInfo.processInfo.arguments.contains("--paid-pickup-recovery") {
+            #if targetEnvironment(simulator)
+            PaidPickupRecoveryFixtureRoot()
+            #endif
+        }
+        else if ProcessInfo.processInfo.arguments.contains("--shared-delivery-fixture") { SharedDeliveryFixtureRoot() }
+        else if ProcessInfo.processInfo.arguments.contains("--shared-meal-fixture") { S17SharedMealFixtureRoot() }
         else if ProcessInfo.processInfo.arguments.contains("--shared-store-quotes-fixture") { S27StoreQuotesFixtureRoot() }
         else if ProcessInfo.processInfo.arguments.contains("--records-media-fixture") { RecordsMediaUIFixtureRoot() }
         else if ProcessInfo.processInfo.arguments.contains("--measurement-fixture") { MeasurementUIFixtureRoot() }
@@ -62,6 +74,15 @@ import HouseholdClient
             let directory = FileManager.default.temporaryDirectory.appendingPathComponent("UITestWorkspace/ContributorRequest-" + UUID().uuidString, isDirectory: true)
             let model = HouseholdModel(auth: auth, service: service, outboxURL: directory.appendingPathComponent("outbox.json"), deletionVault: ContributorRequestUIFixtureVault(), exitVault: ContributorRequestUIFixtureVault())
             model.email = "sam@example.invalid"; model.code = "123456"; await model.verifyCode()
+            if server.helperReadback, let lifecycle = model.lifecycle {
+                lifecycle.keepLocalPrivate = true
+                lifecycle.adultAttestation = true
+                lifecycle.invitationCode = server.grant + "." + String(repeating: "a", count: 43)
+                await lifecycle.redeemInvitation()
+                guard lifecycle.isHelper else { setupFailure = true; return }
+                household = model
+                return
+            }
             guard let workspace = model.workspaces.first else { setupFailure = true; return }
             model.keepLocalPrivate = true; await model.join(workspace)
             guard model.contributorRequestScope != nil else { setupFailure = true; return }
@@ -88,6 +109,9 @@ private final class ContributorRequestUIFixtureVault: RefreshTokenVault, @unchec
 }
 private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
     let household = UUID().uuidString.lowercased(), member = UUID().uuidString.lowercased(), shop = UUID().uuidString.lowercased()
+    let helperReadback = ProcessInfo.processInfo.arguments.contains("--helper-revision-fixture")
+    let grant = UUID().uuidString.lowercased()
+    private var helperReads = 0
     private var rows: [[String: Any]] = [], receipts: [String: [String: Any]] = [:], posts = 0
     var changed: ((Int, Int) -> Void)?
     func respond(_ request: URLRequest) throws -> (Int, Data) {
@@ -101,9 +125,34 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
         func response(_ value: Any, _ status: Int = 200) throws -> (Int, Data) { (status, try JSONSerialization.data(withJSONObject: value, options: [.sortedKeys])) }
         if path == "/auth/v1/verify" { return try response(["access_token":"fixture-sam","refresh_token":"fixture-refresh","expires_in":3600,"user":["id":"fixture-sam","email_confirmed_at":"date"]]) }
         if path == "/auth/v1/user" { return try response(["id":"fixture-sam","email_confirmed_at":"date"]) }
-        if path == "/v1/me/workspaces" { return try response(["workspaces":[["householdId":household,"label":"Fixture home","role":"contributor"]]]) }
+        if path == "/v1/me/workspaces" { return try response(["workspaces": helperReadback ? [] : [["householdId":household,"label":"Fixture home","role":"contributor"]]]) }
         if path.hasSuffix("/devices") { return try response(["deviceId":"fixture-device","deviceToken":"fixture-token"],201) }
+        if helperReadback {
+            if path == "/v1/invites/redeem" { return try response(["householdId": household, "memberId": member, "role": "helper", "grantId": grant]) }
+            if path.hasSuffix("/bootstrap") {
+                return try response(["household": ["id": household, "label": "Fixture home"], "memberId": member,
+                    "role": "helper", "grantId": grant, "shopId": shop, "enrolled": true, "queueConsent": false, "capabilities": ["helper_view"]])
+            }
+            if path == "/v1/views/" + grant + "/current" {
+                helperReads += 1
+                let first = helperReads == 1
+                return try response(["grantId": grant, "shopId": shop, "shopLabel": "Tuesday", "mode": "read", "canPropose": false,
+                    "revision": first ? 12 : 13, "asOf": first ? "2026-11-03T12:00:00Z" : "2026-11-05T12:00:00Z",
+                    "expiresAt": "2099-01-01T00:00:00Z", "language": "en", "items": [["label": "Wraps", "action": first ? "Save two" : "Save three"]]])
+            }
+        }
         if path.hasSuffix("/bootstrap") { return try response(["household":["id":household,"label":"Fixture home"],"memberId":member,"role":"contributor","shopId":shop,"enrolled":true,"queueConsent":false,"capabilities":["own_requests"]]) }
+        if path.hasSuffix("/requests/mine"), ProcessInfo.processInfo.arguments.contains("--own-purchases-fixture") {
+            let rice: [String: Any] = ["requestId": "aaaaaaaa-1111-4111-8111-111111111111", "shopId": shop, "revision": 3,
+                "originalItem": "Arroz", "ownQuantity": "Una bolsa", "status": "added", "route": "current",
+                "authoredAt": "2026-11-07T09:00:00Z", "receivedAt": "2026-11-07T09:01:00Z",
+                "ownActionAllowed": false, "purchaseOutcome": "bought"]
+            var fruit = rice
+            fruit["requestId"] = "bbbbbbbb-1111-4111-8111-111111111111"
+            fruit["originalItem"] = "Fruta"
+            fruit["purchaseOutcome"] = nil
+            return try response(["requests": [rice, fruit], "nextCursor": NSNull()])
+        }
         if path.hasSuffix("/requests/mine") { return try response(["requests":rows,"nextCursor":NSNull()]) }
         if path.hasSuffix("/replay-windows") { return try response(["id":UUID().uuidString.lowercased(),"expiresAt":"2099-01-01T00:00:00Z"]) }
         if path.hasSuffix("/commands") {

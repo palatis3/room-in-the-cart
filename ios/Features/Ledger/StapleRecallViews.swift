@@ -131,6 +131,9 @@ private struct StapleReviewSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var amount: String
     @State private var unit: UnitOfMeasure
+    @State private var handledLineID: UUID?
+    @State private var buyer = ""
+
     init(ledger: LedgerModel, item: ReviewedStaple, authorize: @escaping () -> Bool) {
         self.ledger = ledger; self.item = item; self.authorize = authorize
         let source = ledger.workspace.shops.first { $0.id == item.source.shopID }
@@ -151,18 +154,38 @@ private struct StapleReviewSheet: View {
             let duplicate = ledger.shop?.matchingStapleLine(named:item.line.name) != nil
             if duplicate { Text(ledgerText("This name is already on this pickup, including its history. Inspect the existing item before changing it.")) }
             Button(ledgerText("Add reviewed need to this pickup")) { apply(.needed) }.disabled(duplicate)
-            Button(ledgerText("Already handled for this pickup")) { apply(.alreadyHandled) }
+            if let shop = ledger.shop, !shop.openStapleMatches(named: item.line.name).isEmpty {
+                Section(ledgerText("Bought by someone else")) {
+                    Picker(ledgerText("Item bought on this list"), selection: $handledLineID) {
+                        Text(ledgerText("Choose a list item")).tag(nil as UUID?)
+                        ForEach(shop.openStapleMatches(named: item.line.name)) { line in
+                            let title = ledgerFormat("Item %lld: %@", Int64(line.originalOrder + 1), line.name)
+                            let quantity = ledgerQuantity(try? shop.quantity(forLineID: line.id))
+                            let purposes = shop.contributions(forLineID: line.id).filter { $0.source.isMeal || $0.source.isProtected }
+                                .map { ledgerSourceLabel($0, shop: shop) }.joined(separator: ", ")
+                            Text(verbatim: [title, quantity, line.notes, purposes].filter { !$0.isEmpty }.joined(separator: " · ")).tag(Optional(line.id))
+                        }
+                    }
+                    TextField(ledgerText("Handled by"), text: $buyer).submitLabel(.done)
+                    Button(ledgerText("Mark this list item handled")) {
+                        guard let handledLineID else { return }
+                        apply(.alreadyHandled, handledLine: .init(lineID: handledLineID, boughtBy: buyer))
+                    }.disabled(handledLineID == nil || buyer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || buyer.trimmingCharacters(in: .whitespacesAndNewlines).utf8.count > 512)
+                }
+            } else {
+                Button(ledgerText("Already handled for this pickup")) { apply(.alreadyHandled) }
+            }
             Button(ledgerText("Skip on this pickup")) { apply(.skip) }
             LedgerSaveStatus(model:ledger, onRetried:{ dismiss() })
         }.navigationTitle(ledgerText("Review staple")).disabled(ledger.saving || !authorize())
             .toolbar { ToolbarItem(placement:.cancellationAction) { Button(ledgerText("Cancel")) { dismiss() } } }
     }
-    private func apply(_ choice: StapleChoice) {
+    private func apply(_ choice: StapleChoice, handledLine: HandledStapleLine? = nil) {
         Task {
             let saved = await ledger.change(key:"recall-\(item.targetID)-\(item.line.id)") { workspace in
                 guard authorize() else { throw LedgerError.stalePreview }
                 let quantity = choice == .needed ? try ComparisonModel.quantity(amount,unit) : nil
-                try workspace.applyStaple(item,choice:choice,quantity:quantity,at:Date())
+                try workspace.applyStaple(item,choice:choice,quantity:quantity,handledLine:handledLine,at:Date())
             }
             if saved { dismiss() }
         }

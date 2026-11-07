@@ -1,0 +1,28 @@
+{
+  "priorWMOCommit": "1fbfacaae919d780af7bceff3101a6fdad815f20",
+  "priorWMORunID": 42083442419,
+  "priorConclusion": "failure",
+  "runtimeSourceCommit": "ab1779c515f925b51ffdf8dabbaf65ae2bbee3d0",
+  "purpose": "One bounded measurement of full intended-source WMO compilation and security-analysis completion; not production CI acceptance.",
+  "compileCapMinutes": {
+    "before": 30,
+    "after": 45
+  },
+  "jobCapMinutes": {
+    "before": 45,
+    "after": 60
+  },
+  "onlyBudgetAndRunIdentityChanges": true,
+  "resourceSamplerInstalled": false,
+  "workflowSHA256": "42282db0c90b66cc9dabcdfcd0a4cdfe9d5cc101d7f0e6b51d0404b97dfbe7e2",
+  "review": "Root, Lumpy and Astra source/evidence review support measuring completion. No claim that this meets the original limit or solves known semantic extraction errors.",
+  "limits": [
+    "Different hosted VM timing prevents a causal performance comparison.",
+    "Another timeout remains failed/inconclusive; do not automatically keep extending budgets.",
+    "A completed scan must still verify actual intended source inventory and report extraction/AST diagnostics."
+  ],
+  "candidate": "75e18ffcc938edf2de018e7aa060952b1e95a41f",
+  "runID": 42105722998,
+  "branch": "codex/swift-codeql-completion",
+  "status": "in_progress"
+}

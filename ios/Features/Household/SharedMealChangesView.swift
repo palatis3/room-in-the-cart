@@ -31,9 +31,27 @@ struct SharedMealChangesView: View {
     }
 }
 
+struct SharedMealPreparationFacts: View {
+    let planning: SharedMealPlanning
+    var body: some View {
+        if let exclusions = planning.exclusions, !exclusions.isEmpty {
+            LabeledContent(ht("Meal exclusions"), value: exclusions.joined(separator: ", "))
+                .accessibilityIdentifier("shared-meal-exclusions")
+        }
+        if let minutes = planning.leadTimeMinutes {
+            LabeledContent(ht("Preparation time in minutes"), value: minutes.formatted())
+                .accessibilityIdentifier("shared-meal-preparation-minutes")
+        }
+        if let steps = planning.completedSteps, !steps.isEmpty {
+            LabeledContent(ht("Completed preparation steps"), value: steps.joined(separator: "\n"))
+        }
+    }
+}
+
 struct SharedMealPlanningFacts: View {
     let planning: SharedMealPlanning
     var body: some View {
+        SharedMealPreparationFacts(planning: planning)
         if let id = planning.sourceOccurrenceId { LabeledContent(ht("Mapped local occurrence"), value: id.uuidString) }
         ForEach(planning.groups) { group in
             LabeledContent(group.name, value: "\(group.servings.numerator)/\(group.servings.denominator)")
@@ -138,7 +156,11 @@ private struct SharedMealChangeContent: View {
             }.accessibilityIdentifier("meal-change-occurrence")
             .onChange(of: selected) { _, id in
                 candidate = page.meals.first(where: { $0.id == id })?.meal
-                if let seed, candidate != nil { candidate?.title = seed.title; candidate?.portions = seed.portions; candidate?.planning = seed.planning }
+                if let seed, let original = candidate {
+                    var replacement = seed.planning
+                    replacement.deadline = original.planning?.deadline
+                    candidate?.title = seed.title; candidate?.portions = seed.portions; candidate?.planning = replacement
+                }
                 reason = ""; model.cancelReview()
             }
             if page.phase != "draft" { Text(ht("The order is frozen or placed. This remains an amendment proposal; it cannot change the placed basket.")) }
@@ -148,6 +170,7 @@ private struct SharedMealChangeContent: View {
                 TextField(ht("Meal name"), text: field(\.title))
                 Stepper(value: field(\.portions), in: 1...1000) { LabeledContent(ht("Portions"), value: candidate.portions.formatted()) }
                 Text(ht("The shared date stays unchanged. Use the separate date proposal for a calendar move."))
+                if let planning = candidate.planning { SharedMealPreparationFacts(planning: planning) }
                 SharedMealPlanningEditor(planning: Binding(get: { self.candidate?.planning ?? .init(groups: [], ingredients: []) }, set: { self.candidate?.planning = $0 }))
                 TextField(ht("Reason for change"), text: $reason, axis: .vertical).accessibilityIdentifier("meal-change-reason")
                 Text(ht("Changing portions does not scale ingredient quantities or calculate packs here. Review each entered amount."))

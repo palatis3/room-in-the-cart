@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
+import {mealPlanning,preserveProtectedMeal} from '../dist/shared-meal-planning.js';
 import {sharedIdeaDraftSchema,evaluateSharedIdea,sharedIdeaWriteSchema} from '../dist/shared-meal-ideas.js';
 const ingredient=()=>({id:randomUUID(),name:'Rice',required:600,unit:'gram',stock:500,reservations:[{name:'Tuesday lunch',amount:250}],pack:400,usableNumerator:3,usableDenominator:4,evidence:'Household pantry checked and package label entered'});
 const draft=()=>({title:'Rice bowl',source:'manual',servings:2,minutes:20,assumedExtras:[],exclusions:[],ingredients:[ingredient()]});
@@ -23,4 +24,43 @@ test('fractional packs, ounce and fluid ounce stay distinct without unit convers
 test('invalid fractions fail closed and unrepresentable exact previews stay unresolved',()=>{
  for(const amount of [{numerator:1,denominator:0},{numerator:-1,denominator:2},0.5]){const value=draft();value.ingredients[0].required=amount;assert.equal(sharedIdeaDraftSchema.safeParse(value).success,false);}
  const value=draft();value.ingredients[0].reservations=[999983,999979,999961,999959].map(denominator=>({name:'Reserved',amount:{numerator:1,denominator}}));const result=evaluateSharedIdea(sharedIdeaDraftSchema.parse(value));assert.equal(result.canApprove,false);assert.equal(result.ingredients[0].arithmeticUnavailable,true);assert.equal(result.ingredients[0].remaining,null);assert.equal(result.ingredients[0].wholePacks,null);
+});
+
+test('reviewed exclusion phrases match whole words in entered ingredient names in either language',()=>{
+ const value=draft(),ingredient=value.ingredients[0];
+ for(const [restriction,name,conflict] of [
+   ['No nuts','Mixed NUTS',true],['sin sésamo','Semillas de SESAMO',true],
+   ['without rice','Brown rice flour',true],['No nuts','Donuts',false],
+   ['rice','Licorice',false],['Sin nueces','Beans',false],
+ ]){
+   value.exclusions=[restriction];ingredient.name=name;
+   const preview=evaluateSharedIdea(value);
+   assert.equal(preview.ingredients[0].excluded,conflict);assert.equal(preview.canApprove,!conflict);
+ }
+});
+
+test('optional reviewed meal planning details retain their bounds and leave legacy plans unchanged',()=>{
+ const base={groups:[],ingredients:[]};
+ assert.deepEqual(mealPlanning.parse(base),base);
+ for(const minutes of [0,1_000_000]){
+   const plan={...base,exclusions:['No nuts'],leadTimeMinutes:minutes,completedSteps:Array(100).fill('x'.repeat(240))};
+   assert.deepEqual(mealPlanning.parse(plan),plan);
+ }
+ for(const change of [{leadTimeMinutes:-1},{leadTimeMinutes:1.1},{leadTimeMinutes:1_000_001},
+   {completedSteps:['  ']},{completedSteps:['x'.repeat(241)]},{completedSteps:Array(101).fill('done')},
+   {exclusions:['']},{exclusions:Array(21).fill('nuts')}]){
+   assert.equal(mealPlanning.safeParse({...base,...change}).success,false);
+ }
+});
+
+test('meal-wide restrictions cover protected whole meals and individually protected portions',()=>{
+ for(const whole of [true,false]){
+   const original={title:'Supper',day:'2026-11-09',kind:'dinner',portions:2,protected:whole,planning:{
+     groups:whole?[]:[{id:randomUUID(),name:'Lunch',servings:{numerator:1,denominator:1},protected:true}],
+     ingredients:[],exclusions:['No nuts','sin sésamo']}};
+   for(const exclusions of [undefined,[],['No nuts']]){
+     assert.throws(()=>preserveProtectedMeal(original,{...original,planning:{...original.planning,exclusions}}),{code:'protected_meal'});
+   }
+   assert.doesNotThrow(()=>preserveProtectedMeal(original,{...original,planning:{...original.planning,exclusions:[...original.planning.exclusions,'soy']}}));
+ }
 });

@@ -1,0 +1,145 @@
+{
+  "sourceCommit": "f0e2ac37383e76ac3812407384bf2eda968de3c4",
+  "run": "https://github.com/palatis3/room-in-the-cart/actions/runs/41944207882",
+  "job": "https://github.com/palatis3/room-in-the-cart/actions/runs/41944207882/job/126977497620",
+  "shard": "ui-09",
+  "artifact": {
+    "id": 13383340792,
+    "sizeBytes": 41618739,
+    "sha256": "6e64b9b852fcf898b86e690c73185b826f40508a6b4ca992da284a5953e6ee6e"
+  },
+  "artifactAndExportsLocalDirectory": ".build/CIResearch20261104/candidate-f0e2ac3/ui-09",
+  "environment": {
+    "xcode": "26.3",
+    "device": {
+      "architecture": "arm64",
+      "deviceId": "8C9F4118-331E-4250-B1FC-194972BA6726",
+      "deviceName": "iPhone 17",
+      "modelName": "iPhone 17",
+      "osBuildNumber": "23C54",
+      "osVersion": "26.2",
+      "platform": "iOS Simulator"
+    }
+  },
+  "failedTest": {
+    "selector": "RoomInTheCartUITests/ContextualNavigationUITests/testLargeTextKeepsLongNativePasteEditableAndReviewReachable",
+    "durationSeconds": 99.24065601825714,
+    "failureText": "Failed to get matching snapshot: No matches found for Descendants matching type TextView from input {(\n    Application, pid: 6559, label: 'Room in the Cart'\n)}",
+    "firstTapAtSeconds": 87.29,
+    "firstTapScreenPoint": [
+      99.60000000000001,
+      96.13333333333333
+    ],
+    "attemptedRetryAtSeconds": 93.21
+  },
+  "observed": [
+    "The exact 500-line native Paste and editor height assertions completed before the focus step.",
+    "The focus helper checked the editor center, then tapped a different point. The synthesized tap was at y=96.13 points, at navigation header height on this sheet.",
+    "The first AX hierarchy after the tap has the active pickup list navigation title and import button, with no editor. The failure screenshot shows the same pickup list. The retry cannot resolve the editor."
+  ],
+  "diagnosis": "The observed failure is a wrong-surface automation tap. It is consistent with activating the sheet's Cancel toolbar, although the XCTest evidence does not record the receiving control. Editing and Review assertions were not reached.",
+  "evidenceSha256": {
+    "Tests.log": "7d6947ae0a9e0311bbf514068b45945e1b4b530a7d6032978530df49cdcf4cd1",
+    "test-summary.json": "a17894303306a94e5d22a761d3fd5e490a9aaa0875ae861c26e981b71a1b8c0e",
+    "test-details.json": "311d3277606a9c6fe57843946ce0f4304171f5065c8fa8b8d6c468b29751b46f",
+    "reexported-summary.json": "5c46a7c02130639c447cd047bb628bc8931b31dcc715cd51d2588416412b796e",
+    "reexported-details.json": "311d3277606a9c6fe57843946ce0f4304171f5065c8fa8b8d6c468b29751b46f",
+    "large-paste-activities.json": "672730e1ecdacf9902cb331d2aedd9e68df69780fb0aadab8879583c47887300",
+    "large-paste-details.json": "3975f5c06d7b4bc3d586f9255a19f729b5e01feb60ce3b69e4274c9539efddfa",
+    "large-paste-attachments/E05316A1-D863-4223-9B6E-F299F84DD076": "3f38966bf52271dab91304f34691cd56f570907e8e58ae9a1ce3f37b1e1e76e0",
+    "large-paste-attachments/E2678AAB-E4F8-4203-88BA-0E89DAB6BE25.txt": "f49a7685f428a7a8b9151d4c2833b4493c13f3dcdb0909c8211aff31e68566b5",
+    "large-paste-attachments/8B126A52-9DD9-4FD5-B082-0ABB751C77A4.png": "c9848478e07c2af07ea0a707090d15056ae0f213e971998b0826abd1055629cd",
+    "test-runtime-warnings.json": "164101b3617b5a480ab6ed4801832728ced1e7364c911c8051ed9e509d2547b7"
+  },
+  "candidate": {
+    "patch": "large-paste-focus.patch",
+    "patchSha256": "e158ef05af0b7e75d0b844ef91cc860995f1afcf2216f988ce2b9ac6397f5175",
+    "sourceSha256": "4d48351fdc8a09111484426583c69e23de6cac04553883ba461c15209b71812f",
+    "scope": "Validate the actual text focus coordinate against the named capture-sheet navigation bar, its Form viewport and any keyboard before tapping. Use at most three short drags in the Form margin when that point is obscured. Require the sheet to remain open before retrying focus. Preserve the native Paste, exact value and height, edit and delete, Done, and staged Review assertions and existing test time allowances.",
+    "staticValidation": [
+      "git apply --check",
+      "Swift frontend parse"
+    ],
+    "nativeValidation": "Passed exact 1/1 on local iPhone 17 iOS 26.2 (23C52) with zero recorded runtime warnings. Hosted confirmation remains pending."
+  },
+  "localCandidateRun": {
+    "directory": ".build/CIResearch20261104/candidate-f0e2ac3/ui-09/local-candidate",
+    "source": "Frozen f0e2ac3 tree plus only the reviewed test patch.",
+    "configuration": "ARM64 ordinary Debug",
+    "xcode": [
+      "Xcode 27.1",
+      "Build version 27A9275"
+    ],
+    "device": {
+      "architecture": "arm64",
+      "deviceId": "C9D599DE-3937-484E-9522-FB731A404E9A",
+      "deviceName": "CI Large Paste Focus Candidate 20261105",
+      "modelName": "iPhone 17",
+      "osBuildNumber": "23C52",
+      "osVersion": "26.2",
+      "platform": "iOS Simulator"
+    },
+    "buildPassed": true,
+    "selector": "RoomInTheCartUITests/ContextualNavigationUITests/testLargeTextKeepsLongNativePasteEditableAndReviewReachable",
+    "durationSeconds": 63.99421811103821,
+    "counts": {
+      "totalTestCount": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "runtimeWarnings": {
+      "status": "passed",
+      "summaryWarningCount": 0,
+      "runtimeWarningCount": 0,
+      "examinedTestCount": 1,
+      "detailExportCount": 0,
+      "warnings": []
+    },
+    "simulatorShutdown": true,
+    "observed": {
+      "nativePasteAtSeconds": 34.21,
+      "focusMarginDragAtSeconds": 37.55,
+      "focusMarginDragFromToPoints": [
+        [
+          390.0,
+          443.0
+        ],
+        [
+          390.0,
+          563.0
+        ]
+      ],
+      "focusTapAtSeconds": 40.51,
+      "focusTapScreenPoint": [
+        99.6,
+        192.8
+      ],
+      "focusTapCount": 1,
+      "editAtSeconds": 51.42,
+      "doneAtSeconds": 53.77,
+      "stagedPreviewCapturedAtSeconds": 62.74,
+      "assertions": "All original assertions passed. Native Paste matched all 500 lines, the editor viewport stayed at the same height, the edit and delete preserved the original text, Done dismissed the keyboard, and Review exposed an editable staged row."
+    },
+    "productSha256": {
+      "xctestrun": "d959d8e1e0d23733c2ad501eeda8508db48225106bb6df72e0d04ce0fdd760ae",
+      "appExecutable": "f79f02bae9ad7b4eb9f093dde396c6883dd04219be102a3f97eb79614e4394e6",
+      "uiTestExecutable": "85e595a0e668a3063fe81bf61d9ebb703f31663f5343d2b71231096a0f830711"
+    },
+    "evidenceSha256": {
+      "Tests.log": "5589035dca63d2fa2ee7d3a7bfa8a5b6dd360b3a9c768bf6f7d60868a1667bec",
+      "test-summary.json": "2fc86a8a92ec3b0b006506ec42f4cd322c1e1abbc5a810c1e4257aa8b7d5148b",
+      "test-details.json": "50dbf4ea058437e92d96f5d9309e5e1e8f4a87b6d89faf45d2b1119a6a24d163",
+      "test-runtime-warnings.json": "955556fd81a165e62da2e42608590d8317dbef54adabef42fc53467066088a55",
+      "root-verification.txt": "8c9d2d67141e3eb7eef5ca4a98927fb35cd4a5e9b208fb8ae2e84ef78a9dfab4",
+      "activities.json": "8369461c83b12b929c1d4c6da39d5c46f2014e85012a5c208a1bffb8ab13a062",
+      "selector-details.json": "08a892ac0d46b8a4417ddcc42cc7f6d0c185fe810e1fac27ae8c310cb417a5d0",
+      "s02-attachments/manifest.json": "8937eb6948623e05ef831806d760c2d8df3d51936c5ae22654e911720b8d5dee",
+      "s02-attachments/7BE26766-9B52-426E-8D6D-02A0DBAF50A0.png": "0762b9d09bbbcc5ca8a591c1bad498c0955bab29bbb6375b0b6a96a8562d163b",
+      "s02-attachments/BE99FA9A-AD00-4639-90D7-1C3DDB78D113.png": "284cab4abf132500c32b6d5efbedb2b24d765a6c02141d0dc8afa49c8621a724",
+      "s02-attachments/C0D9728E-5710-4136-9F8B-994D0E25E980.png": "2880763177cfc8f18db064deb5e550142748b450313b3cfcdc1afb37b82b4f3e"
+    },
+    "scope": "One execution of the original selector. Local Xcode 27.1 and iOS 26.2 build 23C52 differ from hosted Xcode 26.3 and runtime 23C54. Durations are XCTest test times."
+  }
+}

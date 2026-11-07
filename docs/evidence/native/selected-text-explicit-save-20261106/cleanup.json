@@ -1,0 +1,17 @@
+{
+  "simulator": "368F5956-50EF-40F6-89C6-CE991CCB5E9C",
+  "commands": [
+    {
+      "command": "shutdown",
+      "exit": 0,
+      "output": ""
+    },
+    {
+      "command": "delete",
+      "exit": 0,
+      "output": ""
+    }
+  ],
+  "time": 1794026828.991832,
+  "retainedCheckpoints": 10
+}

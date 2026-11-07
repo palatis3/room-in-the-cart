@@ -1,0 +1,15 @@
+{
+  "candidate": "4a0f7f3a25ae01b6efba5e984ceb464c4ca1d157",
+  "runID": 42048736422,
+  "jobID": 127327009603,
+  "artifactID": 13427798895,
+  "sha256": "ea67f54c732e2bbd2e39647ab94ddbf4b420bd9b0762f11fd76e77961591dc5e",
+  "githubDigestVerified": true,
+  "selected": 598,
+  "passed": 598,
+  "failed": 0,
+  "skipped": 0,
+  "strictReplayExit": 0,
+  "runtimeWarnings": 0,
+  "rawLogSHA256": "2029faf20c5b711272cf4dfe0c46bfe217dce5627c74ad5e5cd6b80cbce9a778"
+}

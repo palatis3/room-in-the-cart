@@ -1,0 +1,33 @@
+{
+  "head": "f019f16124a1edf4d825c2a860efb0c2ca1488cd",
+  "base": "804030e68473d022e72b464940061c01c611a0bd",
+  "files": {
+    ".github/workflows/ios-fixtures.yml": {
+      "sha256": "ed4d310f026f05d6d62e5e4d5a650d8af62c24fc4c3099ea3e7c16715da1c44f"
+    },
+    "scripts/check_ios_test_results.py": {
+      "sha256": "17b8af9e6fcee857e14a3b3ea92baf8b5e410468c7e8482c89aa62c8edfdd990",
+      "identicalToBase804": true
+    },
+    "scripts/plan_ios_fixture_tests.py": {
+      "sha256": "a242b92a643d6b8d59ef3b394442b1a81c75be51e24d490b149989d560b6e63b",
+      "identicalToBase804": true
+    },
+    "diagnostics/measurement-consent/hosted/harness.py": {
+      "sha256": "605e3a5bedcea8c64a66ca669631eb36a735f7f0fff279e406b7b4f2c28c6eb3"
+    },
+    "diagnostics/measurement-consent/hosted/reconcile_consent_logs.py": {
+      "sha256": "7baf6e6cf975b2311ecf80129da6c7ce7dbdb860ac40e26b293d8406911b9786"
+    },
+    "diagnostics/measurement-consent/hosted/reference-plan.json": {
+      "sha256": "cfad55cc6c410deed282cff65d6d19bf40f6a75050a1a9c5a40619225ba67122"
+    },
+    "diagnostics/measurement-consent/hosted/selectors.txt": {
+      "sha256": "a1c7c40d5a429d6f57a85ee8b5e39cdfefa842e028be492c0157fa285ec98034"
+    },
+    "diagnostics/measurement-consent/hosted/overlay-index.json": {
+      "sha256": "11a59503f7b34a61561760be83e3ddb4303ec375ff9ee5200f424de20c38f4c3"
+    }
+  },
+  "sharedSourceEdits": false
+}

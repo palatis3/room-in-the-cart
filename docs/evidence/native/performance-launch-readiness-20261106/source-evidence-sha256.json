@@ -1,0 +1,11 @@
+{
+  "ios/UITests/ReleasePerformanceUITests.swift": "c7954233968072b97fd5845d5c28877c9251495cfee33675169a960839d2625f",
+  ".build/CIResearch20261106/performance-setup-f117439/candidate-verifiers/ios/UITests/ReleasePerformanceUITests.swift": "bde26f21c934c1f7d0c8ff885592c2715c494cfb7ab832e286b8f1a93641484b",
+  ".build/CIResearch20261106/performance-setup-f117439/source-proof.json": "38b98e57a0f53b197ccb1d5545649698cde4e422ef8caa2526fe1caa7016f7fc",
+  ".build/CIResearch20261106/performance-setup-f117439/iphone-performance-rendered-1/Performance.log": "9c80076c36efcb6b73dab56294ab86be68aa424a348d379028db3be672111921",
+  ".build/CIResearch20261106/performance-setup-f117439/iphone-performance-rendered-1/test-summary.json": "4c42afd354ffff47fab9f3ab2320219d7c05790febb30ec8b10de7698a96da49",
+  ".build/CIResearch20261106/performance-setup-f117439/iphone-performance-rendered-1/attachments/manifest.json": "f01eb7ec25f5dc8cf29366f2bdd0a443487e4e3e3f6047a011b12c407c141804",
+  ".build/CIResearch20261106/performance-setup-f117439/iphone-performance-rendered-1/attachments/49226ACC-46D3-418E-AC16-B17113955A66.txt": "57db721d5b0224356ba4ace1fcabc3ca9d3383414baef8ce5736237d12540892",
+  ".build/CIResearch20261106/performance-setup-f117439/iphone-performance-rendered-1/toolchain.txt": "bb7fc9a8f5e063e81975b33054b3a526c91bcccff263ad11d5bd8bcdbe8f0973",
+  ".build/CIResearch20261106/performance-setup-f117439/iphone-performance-rendered-1/metrics-csv/manifest.json": "ace810d7e2cbb4f8c40ce09dc8e191ae466adb4e1a7d49c59f2215b411d38b05"
+}

@@ -1,0 +1,8 @@
+{
+  "sourcePath": "ios/UITests/FreeJourneyUITests.swift",
+  "sourceSHA256": "95fdc9cd634864757db3a5289ee31bedb7688af57b734f3a36fcc63170afc707",
+  "patchSHA256": "45da25f553acad6d72564b75e84bfce07682018c703483076a5f775322f80362",
+  "typecheckExit": 0,
+  "nativeExecution": "pending hosted run",
+  "productCodeUnchanged": true
+}

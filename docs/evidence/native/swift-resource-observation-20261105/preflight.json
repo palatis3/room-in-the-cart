@@ -1,0 +1,25 @@
+{
+  "baseRuntimeSource": "ab1779c515f925b51ffdf8dabbaf65ae2bbee3d0",
+  "scope": "Isolated perturbed diagnostic; production CI unchanged.",
+  "samplerSHA256": "5ae647d9ebbd5cfd938f456396357e22f24efe079494da6d9969d19dae4408a6",
+  "wrapperSHA256": "33e038fd176cd7d2a506e7054181af6458b869375b300626be4b47975e216127",
+  "workflowSHA256": "e0f3c9b85a29e5474269843eb94385794db67deebfcdb6dc0e1eb4ddfa5ea3f2",
+  "focusedTests": 21,
+  "failureInjectionCases": "sleep,printf,jobs,entire cleanup crossed with original pipeline0/7; tee failure also preserved",
+  "originalGuardsBuildArgsAndTimeoutsPreserved": true,
+  "review": "Root reviewed exact source/wrapper; Lumpy source review found and then accepted the corrected cleanup-status path. Twenty-one focused tests and actionlint pass. Experiment scope only.",
+  "observerLimits": [
+    "Sampler inherits CodeQL tracing; startup/probe/cleanup overhead can alter observed timing.",
+    "Nominal probe/cleanup time limits cannot interrupt every OS/tracer process-creation stall.",
+    "Only verified descendant categories counted; reparented/unknown work may be omitted and coverage remains partial.",
+    "Host counters and summed RSS do not establish process attribution or root cause."
+  ],
+  "rawEvidence": ".build/CIResearch20261105/swift-resource-telemetry",
+  "unchangedJobAfterRemovingInstrumentation": true,
+  "runtimeSourceAndProjectByteIdenticalToBase": true,
+  "candidate": "122a1925d9862337f23ca416278f9cc300a9cf14",
+  "runID": 42097495695,
+  "branch": "codex/swift-codeql-resource-observation",
+  "status": "queued",
+  "countsAsRequiredCandidateAcceptance": false
+}

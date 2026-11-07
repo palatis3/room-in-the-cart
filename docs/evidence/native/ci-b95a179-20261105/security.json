@@ -1,0 +1,295 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-11-05T21:33:19.014Z",
+  "candidate": "b95a1796b684b0f52c1188b4d2d26aafb2c9ec2d",
+  "runID": 42113018868,
+  "runAttempt": 1,
+  "event": "pull_request",
+  "status": "completed",
+  "conclusion": "success",
+  "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42113018868",
+  "identity": {
+    "pr": 1,
+    "head": "b95a1796b684b0f52c1188b4d2d26aafb2c9ec2d",
+    "merge": "74726237e2d7f89e71a330e527a0249b76422dd4",
+    "candidateTree": "23db0db1192ebe2a3a027d91bfaa91b8e354ca07",
+    "mergeTree": "23db0db1192ebe2a3a027d91bfaa91b8e354ca07",
+    "treeEqual": true,
+    "mergeParents": [
+      "1a2530a7ad006b5939f87a08a1964b5fc863383e",
+      "b95a1796b684b0f52c1188b4d2d26aafb2c9ec2d"
+    ]
+  },
+  "analyses": [
+    {
+      "ref": "refs/pull/1/merge",
+      "commit_sha": "74726237e2d7f89e71a330e527a0249b76422dd4",
+      "analysis_key": ".github/workflows/security.yml:codeql",
+      "environment": "{\"language\":\"javascript-typescript\"}",
+      "category": "/language:javascript-typescript",
+      "error": "",
+      "created_at": "2026-11-05T21:30:14Z",
+      "results_count": 0,
+      "rules_count": 87,
+      "id": 2107417190,
+      "url": "https://api.github.com/repos/palatis3/room-in-the-cart/code-scanning/analyses/2107417190",
+      "sarif_id": "165e446a-d960-11f1-953d-6509bcafaa54",
+      "tool": {
+        "name": "CodeQL",
+        "guid": null,
+        "version": "2.27.4"
+      },
+      "deletable": true,
+      "warning": ""
+    },
+    {
+      "ref": "refs/pull/1/merge",
+      "commit_sha": "74726237e2d7f89e71a330e527a0249b76422dd4",
+      "analysis_key": ".github/workflows/security.yml:codeql",
+      "environment": "{\"language\":\"actions\"}",
+      "category": "/language:actions",
+      "error": "",
+      "created_at": "2026-11-05T21:29:33Z",
+      "results_count": 0,
+      "rules_count": 17,
+      "id": 2107412093,
+      "url": "https://api.github.com/repos/palatis3/room-in-the-cart/code-scanning/analyses/2107412093",
+      "sarif_id": "fdc4852c-d95f-11f1-84c3-37ed02621d1e",
+      "tool": {
+        "name": "CodeQL",
+        "guid": null,
+        "version": "2.27.4"
+      },
+      "deletable": true,
+      "warning": ""
+    }
+  ],
+  "jobs": [
+    {
+      "id": 127545261553,
+      "name": "CodeQL (actions)",
+      "head_sha": "b95a1796b684b0f52c1188b4d2d26aafb2c9ec2d",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-05T21:28:58Z",
+      "completed_at": "2026-11-05T21:29:43Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 127545262009,
+      "name": "Dependency review",
+      "head_sha": "b95a1796b684b0f52c1188b4d2d26aafb2c9ec2d",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-05T21:28:58Z",
+      "completed_at": "2026-11-05T21:29:05Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 127545262080,
+      "name": "CodeQL (javascript-typescript)",
+      "head_sha": "b95a1796b684b0f52c1188b4d2d26aafb2c9ec2d",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-05T21:28:57Z",
+      "completed_at": "2026-11-05T21:30:23Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "alerts": {
+    "prMergeRef": "refs/pull/1/merge",
+    "prMerge": [
+      {
+        "number": 1,
+        "html_url": "https://github.com/palatis3/room-in-the-cart/security/code-scanning/1",
+        "state": "fixed",
+        "updated_at": "2026-11-05T21:30:14Z",
+        "fixed_at": "2026-11-05T21:30:14Z",
+        "dismissed_at": null,
+        "dismissed_by": null,
+        "rule": {
+          "id": "js/incomplete-sanitization",
+          "severity": "warning",
+          "security_severity_level": "high"
+        },
+        "most_recent_instance": {
+          "ref": "refs/pull/1/merge",
+          "analysis_key": ".github/workflows/security.yml:codeql",
+          "environment": "{\"language\":\"javascript-typescript\"}",
+          "category": "/language:javascript-typescript",
+          "state": "fixed",
+          "commit_sha": "5d067d6703373741c85ce64c5b07abafce276534",
+          "message": {
+            "text": "This replaces only the first occurrence of '{{'."
+          },
+          "location": {
+            "path": "service/tests/privacy-journal.test.mjs",
+            "start_line": 110,
+            "end_line": 110,
+            "start_column": 28,
+            "end_column": 41
+          },
+          "classifications": [
+            "test"
+          ]
+        }
+      }
+    ],
+    "exactRefInstances": [
+      {
+        "ref": "refs/pull/1/merge",
+        "analysis_key": ".github/workflows/security.yml:codeql",
+        "environment": "{\"language\":\"javascript-typescript\"}",
+        "category": "/language:javascript-typescript",
+        "state": "fixed",
+        "commit_sha": "5d067d6703373741c85ce64c5b07abafce276534",
+        "message": {
+          "text": "This replaces only the first occurrence of '{{'."
+        },
+        "location": {
+          "path": "service/tests/privacy-journal.test.mjs",
+          "start_line": 110,
+          "end_line": 110,
+          "start_column": 28,
+          "end_column": 41
+        },
+        "classifications": [
+          "test"
+        ]
+      }
+    ],
+    "openPRMergeCount": 0,
+    "headBranchRef": "refs/heads/codex/parallel-ios-ci",
+    "headBranchAlerts": [],
+    "headBranchAnalyses": [],
+    "interpretation": "PR-event analyses are on the merge ref. Empty head-branch endpoints are not independent proof of a scan. Exact PR-ref alert1 is fixed, without dismissal. The instance commit is the last detected occurrence; the current zero-result analysis and fixed_at identify the candidate scan that fixed it."
+  },
+  "dependencyReview": {
+    "executed": true,
+    "failOnSeverity": "high",
+    "jobID": 127545262009,
+    "result": "Dependency review did not detect any vulnerable packages with severity level high or higher; no denied packages reported.",
+    "reportedChangedManifests": [
+      ".github/workflows/ios-performance.yml",
+      ".github/workflows/security.yml"
+    ],
+    "scope": "GitHub dependency-review changed-dependency comparison only. Successful job is not proof of full transitive dependency inventory or absence of lower-severity vulnerabilities."
+  },
+  "semanticChecks": {
+    "fixtureFileExtractionLogged": true,
+    "originalRuleInterpreted": true,
+    "fixtureFixPresentInCandidate": true,
+    "uploadedResults": true,
+    "analysesNoErrors": true
+  },
+  "limits": [
+    "Actions and JavaScript/TypeScript only. Swift remains a separate required core check in run42113018695; no Swift completion is claimed.",
+    "Both jobs warn that the full PR diff could not be retrieved because there are too many (300) changed files, then explicitly skip diff-informed analysis. Extraction and normal analysis complete; this is not a statement that only300 files were analyzed.",
+    "CodeQL file coverage metrics are unavailable on this unprotected PR; complete per-file coverage is not claimed.",
+    "This is source-scanning and dependency-review evidence, not exhaustive security or release acceptance."
+  ],
+  "mutations": {
+    "dismissals": false,
+    "workflowReruns": false,
+    "pushes": false,
+    "sourceEdits": false
+  }
+}

@@ -1,0 +1,223 @@
+{
+  "allTenRequestsAndAcknowledgementsVerified": true,
+  "dismissGesture": {
+    "end": "(201.0, 654.1)",
+    "header": "(0.0, 78.0, 402.0, 54.0)",
+    "start": "(201.0, 86.0)",
+    "window": "(0.0, 0.0, 402.0, 874.0)"
+  },
+  "final": {
+    "consumedReceipt": {
+      "bytes": 0,
+      "digest": "7280993c908e633ef0a6aed20823728c66af4797cf6cf2557d1b701911fbb9b4",
+      "disposition": "consumed",
+      "id": "16311E05-9B2A-4B5F-99AE-C3CCEA933F87"
+    },
+    "contributionCount": 3,
+    "duplicateAllocationCount": 1,
+    "editedCleared": true,
+    "effectiveCounts": {
+      "Pears": 3,
+      "Wraps": 2
+    },
+    "finalRestartExactEquality": true,
+    "ledgerRevision": 3,
+    "lineCount": 2,
+    "operationID": "16311E05-9B2A-4B5F-99AE-C3CCEA933F87",
+    "originalCleared": true,
+    "reviewJournalRemoved": true,
+    "selectedTextBatches": 1,
+    "shopRevision": 2,
+    "totalImportBatches": 2
+  },
+  "observedChoices": {
+    "cancel-reset": [
+      {
+        "frame": "(32.0, 128.0, 338.0, 34.33332824707031)",
+        "hittable": true,
+        "label": "How to add this line, Choose how to add",
+        "value": ""
+      },
+      {
+        "frame": "(32.0, 408.8333435058594, 195.6666717529297, 58.833343505859375)",
+        "hittable": true,
+        "label": "How to add this line, Add as a separate line",
+        "value": ""
+      }
+    ],
+    "initial-review": [
+      {
+        "frame": "(32.0, 128.0, 338.0, 34.33332824707031)",
+        "hittable": true,
+        "label": "How to add this line, Choose how to add",
+        "value": ""
+      },
+      {
+        "frame": "(32.0, 408.8333435058594, 195.6666717529297, 58.833343505859375)",
+        "hittable": true,
+        "label": "How to add this line, Add as a separate line",
+        "value": ""
+      }
+    ],
+    "restarted-before-add": [
+      {
+        "frame": "(32.0, 97.16666412353516, 223.0, 58.833335876464844)",
+        "hittable": true,
+        "label": "How to add this line, Merge same need: Wraps",
+        "value": ""
+      },
+      {
+        "frame": "(32.0, 408.8333435058594, 195.6666717529297, 58.833343505859375)",
+        "hittable": true,
+        "label": "How to add this line, Add as a separate line",
+        "value": ""
+      }
+    ],
+    "saved-merge": [
+      {
+        "frame": "(32.0, 134.1666717529297, 223.0, 58.83332824707031)",
+        "hittable": true,
+        "label": "How to add this line, Merge same need: Wraps",
+        "value": ""
+      },
+      {
+        "frame": "(32.0, 445.8333435058594, 195.6666717529297, 58.833343505859375)",
+        "hittable": true,
+        "label": "How to add this line, Add as a separate line",
+        "value": ""
+      }
+    ],
+    "unsaved-skip": [
+      {
+        "frame": "(32.0, 128.0, 338.0, 34.33332824707031)",
+        "hittable": true,
+        "label": "How to add this line, Skip this line",
+        "value": ""
+      },
+      {
+        "frame": "(32.0, 408.8333435058594, 195.6666717529297, 58.833343505859375)",
+        "hittable": true,
+        "label": "How to add this line, Add as a separate line",
+        "value": ""
+      }
+    ]
+  },
+  "phases": [
+    {
+      "ackUTC": "2026-11-07T04:38:15.293558+00:00",
+      "phase": "bootstrap",
+      "requestID": "DAD15BC2-E9DB-48D5-A5B2-A7B8598AD5C4",
+      "requestUTC": "2026-11-07T04:38:11.511758+00:00",
+      "sequence": 0,
+      "state": "bound"
+    },
+    {
+      "ackUTC": "2026-11-07T04:38:43.043251+00:00",
+      "ledgerHead": 2,
+      "ledgerPayloadSHA256": "19a187e421bfd217619b777cdf8bf19f077943723b2e6a4d66f920cba7f9bf1d",
+      "phase": "baseline",
+      "receiptState": null,
+      "requestID": "EC3200C2-2D48-49A8-857E-A48660F44033",
+      "requestUTC": "2026-11-07T04:38:41.234253+00:00",
+      "reviewSHA256": null,
+      "sequence": 1,
+      "state": "verified"
+    },
+    {
+      "ackUTC": "2026-11-07T04:39:08.687041+00:00",
+      "ledgerHead": 2,
+      "ledgerPayloadSHA256": "19a187e421bfd217619b777cdf8bf19f077943723b2e6a4d66f920cba7f9bf1d",
+      "phase": "initial-review",
+      "receiptState": "pending",
+      "requestID": "7FE19B73-97A1-490A-9A7C-7139A88C165B",
+      "requestUTC": "2026-11-07T04:39:07.224116+00:00",
+      "reviewSHA256": "79076089f906e75be353ee20aeb06b987bf81d3bd02ed2f5f059b869335f7fbc",
+      "sequence": 2,
+      "state": "verified"
+    },
+    {
+      "ackUTC": "2026-11-07T04:39:34.729786+00:00",
+      "ledgerHead": 2,
+      "ledgerPayloadSHA256": "19a187e421bfd217619b777cdf8bf19f077943723b2e6a4d66f920cba7f9bf1d",
+      "phase": "cancel-reset",
+      "receiptState": "pending",
+      "requestID": "C8779C48-C64D-42AB-B851-008DCD0D9878",
+      "requestUTC": "2026-11-07T04:39:32.918768+00:00",
+      "reviewSHA256": "79076089f906e75be353ee20aeb06b987bf81d3bd02ed2f5f059b869335f7fbc",
+      "sequence": 3,
+      "state": "verified"
+    },
+    {
+      "ackUTC": "2026-11-07T04:39:54.251003+00:00",
+      "ledgerHead": 2,
+      "ledgerPayloadSHA256": "19a187e421bfd217619b777cdf8bf19f077943723b2e6a4d66f920cba7f9bf1d",
+      "phase": "saved-merge",
+      "receiptState": "pending",
+      "requestID": "CCE7E632-A82A-4F57-A661-461484B8873C",
+      "requestUTC": "2026-11-07T04:39:52.112768+00:00",
+      "reviewSHA256": "aee8c9e367b74554e7fb4d4548ef7bcfa4d9d0decb9d3b6390a6ee08c2b2826b",
+      "sequence": 4,
+      "state": "verified"
+    },
+    {
+      "ackUTC": "2026-11-07T04:40:10.595472+00:00",
+      "ledgerHead": 2,
+      "ledgerPayloadSHA256": "19a187e421bfd217619b777cdf8bf19f077943723b2e6a4d66f920cba7f9bf1d",
+      "phase": "unsaved-skip",
+      "receiptState": "pending",
+      "requestID": "DB6245D5-C249-4556-86AE-2742617A5C1A",
+      "requestUTC": "2026-11-07T04:40:08.255025+00:00",
+      "reviewSHA256": "aee8c9e367b74554e7fb4d4548ef7bcfa4d9d0decb9d3b6390a6ee08c2b2826b",
+      "sequence": 5,
+      "state": "verified"
+    },
+    {
+      "ackUTC": "2026-11-07T04:40:20.213224+00:00",
+      "ledgerHead": 2,
+      "ledgerPayloadSHA256": "19a187e421bfd217619b777cdf8bf19f077943723b2e6a4d66f920cba7f9bf1d",
+      "phase": "swipe-dismissed",
+      "receiptState": "pending",
+      "requestID": "31FB456F-82EA-4618-A062-C359AAE0DD1A",
+      "requestUTC": "2026-11-07T04:40:17.842868+00:00",
+      "reviewSHA256": "aee8c9e367b74554e7fb4d4548ef7bcfa4d9d0decb9d3b6390a6ee08c2b2826b",
+      "sequence": 6,
+      "state": "verified"
+    },
+    {
+      "ackUTC": "2026-11-07T04:40:44.180991+00:00",
+      "ledgerHead": 2,
+      "ledgerPayloadSHA256": "19a187e421bfd217619b777cdf8bf19f077943723b2e6a4d66f920cba7f9bf1d",
+      "phase": "restarted-before-add",
+      "receiptState": "pending",
+      "requestID": "94CFC11C-8835-423D-BB38-C5D68DC03E5F",
+      "requestUTC": "2026-11-07T04:40:41.944392+00:00",
+      "reviewSHA256": "aee8c9e367b74554e7fb4d4548ef7bcfa4d9d0decb9d3b6390a6ee08c2b2826b",
+      "sequence": 7,
+      "state": "verified"
+    },
+    {
+      "ackUTC": "2026-11-07T04:40:49.655303+00:00",
+      "ledgerHead": 3,
+      "ledgerPayloadSHA256": "c925284821da232512159fc61b93e51b07a310873b0bd2f48137027017b6c0d1",
+      "phase": "added",
+      "receiptState": "consumed",
+      "requestID": "F711B986-F5B8-4978-B233-90D8705BAEEA",
+      "requestUTC": "2026-11-07T04:40:47.510091+00:00",
+      "reviewSHA256": null,
+      "sequence": 8,
+      "state": "verified"
+    },
+    {
+      "ackUTC": "2026-11-07T04:41:06.212344+00:00",
+      "ledgerHead": 3,
+      "ledgerPayloadSHA256": "c925284821da232512159fc61b93e51b07a310873b0bd2f48137027017b6c0d1",
+      "phase": "final-restart",
+      "receiptState": "consumed",
+      "requestID": "4D8BDEBF-063C-4659-B51B-47265229BFF3",
+      "requestUTC": "2026-11-07T04:41:03.727747+00:00",
+      "reviewSHA256": null,
+      "sequence": 9,
+      "state": "verified"
+    }
+  ]
+}

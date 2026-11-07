@@ -1,0 +1,41 @@
+{
+  "checkedAt": "2026-11-06T22:33:58.282061+00:00",
+  "status": "READY, promoted and public checks passed",
+  "project": "prj_MsdHyy06CKCuFeAvoOCpnJRQ1vGa",
+  "team": "team_zkjaW5rtwPK9URZDeSoybwXB",
+  "deployment": "dpl_2tfRmEfTGLW63sSTksJ6xJ9MZ97P",
+  "url": "https://room-in-the-cart-staging.vercel.app",
+  "sourceCommit": "9d2bf477e2111d57f80e101d9d6a33b2a6a0392a",
+  "codeChangeCommit": "bb9cb7e",
+  "serverRuntimeIdenticalTo": "d0b0b12ee0cb8412f17e82c92a91013217560670",
+  "serverCompiledFilesCompared": 94,
+  "rollbackDeployment": "dpl_5WrPFnhZhcp51X9UWU919sULJaTh",
+  "nodeVersion": "22.x",
+  "protectedChecks": {
+    "passed": 29,
+    "selected": 29
+  },
+  "publicChecks": {
+    "passed": 29,
+    "selected": 29
+  },
+  "webBundleMatchesActualAndroidTestedBundle": true,
+  "databaseMigrationsExecuted": false,
+  "environmentChanged": false,
+  "providerActivation": false,
+  "protectionPreserved": true,
+  "cron": {
+    "deploymentID": "dpl_2tfRmEfTGLW63sSTksJ6xJ9MZ97P",
+    "path": "/internal/maintenance",
+    "schedule": "0 8 * * *",
+    "enabled": true,
+    "scheduledInvocationUnderNewDeploymentObserved": false
+  },
+  "connector": "Vercel connector lacked team scope; existing previously authorized CLI session verified intended Room in the Cart owner/project and completed staged deployment/check/promotion. No new login/access grants.",
+  "sourceProvenance": "All138 uploaded files matched the exact source manifest. Only runtime source delta from prior approved snapshot is web/src/app.ts; included migration030 was already applied previously and no migration command ran. Explicit sourceCommit metadata verified; CLI inherited parent checkout Git metadata is not treated as source authority.",
+  "limitations": [
+    "Synthetic Android and120web tests establish the access-recovery behavior; actual authenticated live household journey remains separate.",
+    "iOS native fixes and CI acceptance are outside this deployment.",
+    "Paid Apple,SMTP,KWS,provider erasure and independent journal activation remain deferred/separate."
+  ]
+}

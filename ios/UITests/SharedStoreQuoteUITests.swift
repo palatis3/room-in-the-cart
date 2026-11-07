@@ -84,18 +84,39 @@ import XCTest
         counter("saves",0); counter("adoptions",0)
         assertText("Changed revisions need a new review")
         capture("S27-stale-action-preserved-without-rebase")
+        XCTAssertTrue(element("sharedQuotes.retry").exists)
         tap(app.buttons["Refresh and clear local retry"])
-        tap(app.buttons.matching(identifier:"Refresh and clear local retry").allElementsBoundByIndex.last!)
+        // The first tap opens a confirmation dialog. Resolve its action in
+        // that current state, without scrolling or retaining an indexed match.
+        let dialog = app.sheets.containing(.staticText,identifier:"Clear local retry?").firstMatch
+        XCTAssertTrue(dialog.waitForExistence(timeout:8),app.debugDescription)
+        XCTAssertTrue(dialog.staticTexts["Clearing cannot undo a comparison, proposal, grant, or store adoption already received. Review the refreshed household result."].exists)
+        let clearRetry = dialog.buttons["Refresh and clear local retry"]
+        XCTAssertTrue(clearRetry.exists && clearRetry.isHittable)
+        capture("S27-confirm-exact-local-retry-clear")
+        clearRetry.tap()
+        let cleared = XCTNSPredicateExpectation(predicate:NSPredicate(format:"exists == true AND label == %@","Local retry cleared after refreshing. A change already received by the household is preserved."),object:element("sharedQuotes.notice"))
+        XCTAssertEqual(XCTWaiter.wait(for:[cleared],timeout:12),.completed)
+        XCTAssertFalse(element("sharedQuotes.retry").exists)
+        XCTAssertFalse(app.buttons["Refresh and clear local retry"].exists)
+        XCTAssertTrue(element("sharedQuotes.enter").waitForExistence(timeout:8))
+        XCTAssertTrue(element("sharedQuotes.enter").isEnabled)
+        counter("saves",0); counter("proposals",0); counter("adoptions",0)
+        capture("S27-local-retry-cleared-without-shared-write")
         fixture("Freeze shared shop"); tap(element("sharedQuotes.refresh"))
         assertText("Saved proof is read-only")
         XCTAssertFalse(element("sharedQuotes.enter").exists)
         counter("saves",0)
+        counter("proposals",0); counter("adoptions",0)
+        // Freeze republishes the fixture counters, including the rejected
+        // stale POST. Clearing the retry must not send another command.
+        counter("posts",1)
     }
     func testSpanishLargestTextKeepsRealQuoteEntryDiscoverable() {
         app.launchArguments = ["--ui-testing","--shared-store-quotes-fixture","-AppleLanguages","(es)","-AppleLocale","es_US","-UIPreferredContentSizeCategoryName","UICTContentSizeCategoryAccessibilityXXXL"]
         openAdult(); tap(element("sharedQuotes.enter"))
-        fill("Tienda del barrio",into:"sharedQuotes.first.label")
-        fill("Sucursal del barrio",into:"sharedQuotes.first.branch")
+        fill("Tienda del barrio",into:"sharedQuotes.first.label",requireDone:true)
+        fill("Sucursal del barrio",into:"sharedQuotes.first.branch",requireDone:true)
         reveal(element("sharedQuotes.first.source"))
         XCTAssertTrue(element("sharedQuotes.first.source").exists)
         capture("S27-spanish-largest-text-native-fields")
@@ -153,8 +174,21 @@ import XCTest
         fill(trip,into:prefix+"tripCash")
         fill(minutes,into:prefix+"extraMinutes")
     }
-    private func confirm() { enableSwitch("sharedQuotes.acknowledged"); tap(element("sharedQuotes.confirm")) }
-    private func fixture(_ label: String) { tap(element("fixture.s27.controls")); tap(app.buttons[label]) }
+    private func confirm() {
+        let acknowledgment = app.buttons["sharedQuotes.acknowledged"]
+        let confirm = app.buttons["sharedQuotes.confirm"]
+        // The unknown-trip explanation can push the confirmation row outside the lazy Form.
+        reveal(confirm)
+        XCTAssertFalse(confirm.isEnabled)
+        reveal(acknowledgment)
+        XCTAssertFalse(acknowledgment.isSelected)
+        tap(acknowledgment)
+        XCTAssertTrue(acknowledgment.isSelected)
+        reveal(confirm)
+        XCTAssertTrue(confirm.isEnabled)
+        tap(confirm)
+    }
+    private func fixture(_ label: String) { tap(element("fixture.s27.showControls")); tap(app.buttons[label]) }
     private func counter(_ id: String, _ n: Int) {
         let label = id == "saves" ? "Saves":id == "proposals" ? "Proposals":id == "adoptions" ? "Adoptions":"POSTs"
         let expectation = XCTNSPredicateExpectation(predicate:NSPredicate(format:"exists == true AND label == %@","\(label): \(n)"),object:element("fixture.s27."+id))
@@ -163,43 +197,148 @@ import XCTest
     private func element(_ id: String) -> XCUIElement { app.descendants(matching:.any).matching(identifier:id).firstMatch }
     private func tap(_ target: XCUIElement) { reveal(target); XCTAssertTrue(target.isHittable,target.debugDescription); target.tap() }
     private func enableSwitch(_ id: String) {
-        let target = app.switches.matching(identifier:id).firstMatch; reveal(target,fullyVisible:true)
-        if target.value as? String == "0" { target.coordinate(withNormalizedOffset:CGVector(dx:0.92,dy:0.5)).tap() }
-        XCTAssertEqual(target.value as? String,"1",id)
+        for attempt in 0..<30 {
+            // A review transition can remove a lazy Form row between live
+            // exists/frame queries. Locate the switch and its viewport in one tree.
+            guard let snapshot = try? app.snapshot() else {
+                XCTFail("Could not snapshot the app while revealing switch: "+id)
+                return
+            }
+            let area = scrollableArea(snapshot:snapshot)
+            var elements = [snapshot]
+            var matches: [XCUIElementSnapshot] = []
+            while let element = elements.popLast() {
+                if element.elementType == .switch && element.identifier == id { matches.append(element) }
+                elements.append(contentsOf:element.children)
+            }
+            guard matches.count <= 1 else {
+                XCTFail("Ambiguous switch identifier: "+id)
+                return
+            }
+            if let match = matches.first, !match.frame.isEmpty {
+                let point = CGPoint(x:match.frame.minX+match.frame.width*0.92,y:match.frame.midY)
+                if match.frame.minY >= area.minY && match.frame.maxY <= area.maxY && area.contains(point) {
+                    // Resolve the current editable control only after its snapshot
+                    // tap point is visible, then verify the actual touch coordinate.
+                    let target = app.switches.matching(identifier:id).firstMatch
+                    let coordinate = target.coordinate(withNormalizedOffset:CGVector(dx:0.92,dy:0.5))
+                    let currentPoint = coordinate.screenPoint
+                    if !area.contains(currentPoint) {
+                        scrollContent(upward:currentPoint.y > area.midY,area:area)
+                        continue
+                    }
+                    guard target.isEnabled && target.isHittable else {
+                        XCTFail("Visible switch must be editable and hittable: "+id)
+                        return
+                    }
+                    if target.value as? String == "0" { coordinate.tap() }
+                    XCTAssertEqual(target.value as? String,"1",id)
+                    return
+                }
+                scrollContent(upward:point.y > area.midY,area:area)
+            } else {
+                scrollContent(upward:(attempt / 6) % 2 == 0,area:area)
+            }
+        }
+        XCTFail("No visible switch tap point after 30 reveal attempts: "+id)
     }
     private func fill(_ text: String, into id: String, replacing: Bool = false, requireDone: Bool = false) {
-        let field = app.textFields.matching(identifier:id).firstMatch; tap(field)
-        if replacing, let old = field.value as? String, old != field.placeholderValue { app.typeText(String(repeating:XCUIKeyboardKey.delete.rawValue,count:old.count)) }
-        if !text.isEmpty { app.typeText(text) }
-        let done = app.buttons.matching(identifier:"Done").firstMatch
+        let field = app.textFields.matching(identifier:id).firstMatch
+        tap(field)
+        dismissBilingualKeyboardCardIfPresent()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout:5), "Show the keyboard for \(id)")
+        // Targeted typing requires this field to have keyboard focus.
+        if replacing, let old = field.value as? String, !old.isEmpty, old != field.placeholderValue {
+            field.typeText(String(repeating:XCUIKeyboardKey.delete.rawValue,count:old.count))
+            assertFieldValue(field,text:"")
+        }
+        if !text.isEmpty { field.typeText(text) }
+        dismissBilingualKeyboardCardIfPresent()
+        assertFieldValue(app.textFields.matching(identifier:id).firstMatch,text:text)
+        let done = app.buttons.matching(NSPredicate(format:"identifier IN %@",["Done","Listo"])).firstMatch
         if requireDone { XCTAssertTrue(done.waitForExistence(timeout: 5) && done.isHittable, "Done must be reachable from \(id)") }
         if done.exists && done.isHittable { done.tap() }
+        assertFieldValue(app.textFields.matching(identifier:id).firstMatch,text:text)
+    }
+    private func assertFieldValue(_ field: XCUIElement, text: String) {
+        guard let value = field.value as? String else {
+            XCTFail("The input must expose its value: \(field.identifier)")
+            return
+        }
+        if text.isEmpty {
+            XCTAssertTrue(value == "" || value == field.placeholderValue,"The input must be empty: \(field.identifier)")
+        } else {
+            XCTAssertEqual(value,text,"The input must retain the exact entered value: \(field.identifier)")
+        }
+    }
+    private func dismissBilingualKeyboardCardIfPresent() {
+        let title = app.staticTexts["Type español e inglés"]
+        guard title.waitForExistence(timeout: 2) else {
+            XCTContext.runActivity(named: "Bilingual keyboard onboarding absent") { _ in }
+            return
+        }
+        // This is the observed iOS keyboard onboarding card, not an arbitrary
+        // Continue button or a product consent dialog.
+        XCTAssertTrue(app.staticTexts["Type both languages on the same keyboard. Customize in Settings."].exists)
+        let next = app.buttons["Continue"]
+        XCTAssertTrue(next.exists && next.isHittable)
+        XCTContext.runActivity(named: "Dismiss the identified bilingual keyboard onboarding card") { _ in
+            capture("Bilingual-keyboard-card-before-dismissal")
+            next.tap()
+            let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: title)
+            XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed)
+            capture("Bilingual-keyboard-card-dismissed")
+        }
     }
     private func assertLabel(_ id: String, contains text: String) { let target = element(id); reveal(target); XCTAssertTrue(target.label.contains(text),target.label) }
     private func assertText(_ text: String) {
-        let target = app.staticTexts.containing(NSPredicate(format:"label CONTAINS %@",text)).firstMatch
+        let target = app.staticTexts.matching(NSPredicate(format:"label CONTAINS %@",text)).firstMatch
         reveal(target); XCTAssertTrue(target.exists && target.isHittable,"Missing visible text: "+text)
     }
     private func reveal(_ target: XCUIElement, fullyVisible: Bool = false) {
         for attempt in 0..<30 {
+            let exists = target.exists
+            let hittable = exists && target.isHittable
+            if hittable && !fullyVisible { return }
             let area = scrollableArea()
-            if target.exists && target.isHittable, !fullyVisible || (target.frame.minY >= area.minY && target.frame.maxY <= area.maxY) { return }
+            let frame = exists ? target.frame : .zero
+            if hittable && frame.minY >= area.minY && frame.maxY <= area.maxY { return }
             let up: Bool
-            if target.exists && !target.frame.isEmpty { up = target.frame.midY > area.midY }
+            if exists && !frame.isEmpty { up = frame.midY > area.midY }
             else { up = (attempt / 6) % 2 == 0 }
-            scrollContent(upward:up)
+            scrollContent(upward:up,area:area)
         }
-        XCTAssertTrue(target.exists && target.isHittable,"Missing actionable UI element: "+target.debugDescription)
+        let exists = target.exists
+        let hittable = exists && target.isHittable
+        if fullyVisible {
+            let area = scrollableArea(), frame = exists ? target.frame : .zero
+            XCTAssertTrue(hittable && frame.minY >= area.minY && frame.maxY <= area.maxY,
+                          "Missing fully visible UI element: "+target.debugDescription)
+        } else {
+            XCTAssertTrue(hittable,"Missing actionable UI element: "+target.debugDescription)
+        }
     }
-    private func scrollableArea() -> CGRect {
-        let bounds = app.frame
-        let keyboardTop = app.keyboards.allElementsBoundByIndex.filter(\.exists).map { $0.frame.minY }.min() ?? bounds.maxY
-        let barBottom = app.navigationBars.allElementsBoundByIndex.filter { $0.exists && $0.isHittable }.map { $0.frame.maxY }.max() ?? bounds.minY+90
+    private func scrollableArea(snapshot suppliedSnapshot: XCUIElementSnapshot? = nil) -> CGRect {
+        // Measure bars and keyboard from one tree so transitions cannot replace
+        // an element between separate live existence, hittability and frame queries.
+        let snapshot = suppliedSnapshot ?? (try? app.snapshot())
+        let bounds = snapshot?.frame ?? app.frame
+        var keyboardTop = bounds.maxY
+        var barBottom = bounds.minY+90
+        var elements = snapshot.map { [$0] } ?? []
+        while let element = elements.popLast() {
+            let frame = element.frame
+            if frame.height > 0 && frame.intersects(bounds) {
+                if element.elementType == .keyboard { keyboardTop = min(keyboardTop,frame.minY) }
+                if element.elementType == .navigationBar { barBottom = max(barBottom,frame.maxY) }
+            }
+            elements.append(contentsOf:element.children)
+        }
         let top = max(bounds.minY+95,min(barBottom+12,keyboardTop-140)), bottom = min(bounds.maxY-70,keyboardTop-16)
         return CGRect(x:bounds.minX+24,y:top,width:bounds.width-48,height:max(80,bottom-top))
     }
-    private func scrollContent(upward: Bool) {
-        let area = scrollableArea(), bounds = app.frame, high = area.minY+area.height*0.18, low = area.minY+area.height*0.82
+    private func scrollContent(upward: Bool, area: CGRect) {
+        let bounds = app.frame, high = area.minY+area.height*0.18, low = area.minY+area.height*0.82
         let origin = app.coordinate(withNormalizedOffset:.zero)
         let start = origin.withOffset(CGVector(dx:area.midX-bounds.minX,dy:(upward ? low:high)-bounds.minY))
         let end = origin.withOffset(CGVector(dx:area.midX-bounds.minX,dy:(upward ? high:low)-bounds.minY))

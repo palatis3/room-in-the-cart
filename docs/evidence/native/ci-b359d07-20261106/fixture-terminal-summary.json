@@ -1,0 +1,190 @@
+{
+  "candidate": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+  "attempt": 1,
+  "runs": {
+    "42184705317": {
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    "42184705027": {
+      "status": "completed",
+      "conclusion": "success"
+    }
+  },
+  "observedAt": "2026-11-06T10:24:11.318357+00:00",
+  "sourceInventoryCount": 45,
+  "candidateVerifierAndHarnessSourceMatchesGit": true,
+  "verifiedSourceFileCount": 37,
+  "compiledSelectorUnionMatchesAll45SourceCases": true,
+  "executedAndCancelledSelectorsAccountForAll45": true,
+  "cancelledBeforeExecution": {
+    "SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable": {
+      "candidate": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+      "runID": 42184705317,
+      "jobID": 127793433731,
+      "conclusion": "cancelled",
+      "createdAt": "2026-11-06T08:30:37Z",
+      "startedAtField": "2026-11-06T08:30:37Z",
+      "completedAt": "2026-11-06T10:15:58Z",
+      "runnerID": 0,
+      "runnerName": "",
+      "steps": [],
+      "annotations": [
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/palatis3/room-in-the-cart/blob/b359d0743c2db77bb81a00a1c7e69036aa12ab77/.github",
+          "start_line": 1,
+          "start_column": null,
+          "end_line": 1,
+          "end_column": null,
+          "annotation_level": "failure",
+          "title": "",
+          "message": "The job was not acquired by Runner of type hosted even after multiple attempts",
+          "raw_details": ""
+        },
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/palatis3/room-in-the-cart/blob/b359d0743c2db77bb81a00a1c7e69036aa12ab77/.github",
+          "start_line": 1,
+          "start_column": null,
+          "end_line": 1,
+          "end_column": null,
+          "annotation_level": "notice",
+          "title": "",
+          "message": "Due to capacity constraints, jobs targeting macOS arm64 runners may experience longer queue times.",
+          "raw_details": ""
+        },
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/palatis3/room-in-the-cart/blob/b359d0743c2db77bb81a00a1c7e69036aa12ab77/.github",
+          "start_line": 1,
+          "start_column": null,
+          "end_line": 1,
+          "end_column": null,
+          "annotation_level": "notice",
+          "title": "",
+          "message": "Due to capacity constraints, jobs targeting macOS arm64 runners may experience longer queue times.",
+          "raw_details": ""
+        },
+        {
+          "path": ".github",
+          "blob_href": "https://github.com/palatis3/room-in-the-cart/blob/b359d0743c2db77bb81a00a1c7e69036aa12ab77/.github",
+          "start_line": 1,
+          "start_column": null,
+          "end_line": 1,
+          "end_column": null,
+          "annotation_level": "notice",
+          "title": "",
+          "message": "Due to capacity constraints, jobs targeting macOS arm64 runners may experience longer queue times.",
+          "raw_details": ""
+        }
+      ],
+      "checkOutput": {
+        "title": null,
+        "summary": null,
+        "text": null,
+        "annotations_count": 4,
+        "annotations_url": "https://api.github.com/repos/palatis3/room-in-the-cart/check-runs/127793433731/annotations"
+      },
+      "logFetchExit": 1,
+      "logResponseSHA256": "17a242d72427d77b993dc41f8700bbdb7a18e66039c59e0b5742968413634546",
+      "classification": "Cancelled before runner assignment; no steps or test execution evidenced.",
+      "testFailureCounted": false,
+      "retryAuthorized": false
+    }
+  },
+  "cancelledSelectors": [
+    "RoomInTheCartUITests/SharedStoreQuoteUITests/testSpanishLargestTextKeepsRealQuoteEntryDiscoverable"
+  ],
+  "unexecutedCount": 1,
+  "expectedFixtureShards": 14,
+  "collectedFixtureShards": 13,
+  "missingShards": [],
+  "unexpectedShards": [],
+  "collectionErrors": {},
+  "resolvedCollectionErrors": {
+    "SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave": {
+      "initialError": "AssertionError",
+      "resolution": "Original generic50MB member bound rejected one72,216,589-byte xcresult member; exact artifact ID/digest/member/size exception independently reviewed, all other bounds unchanged. No test retry."
+    }
+  },
+  "allEvidenceCollected": true,
+  "allRequestedChecksPassing": false,
+  "selected": 44,
+  "totalPassedIncludingRedactedRecords": 41,
+  "totalFailed": 3,
+  "ordinaryFixturePassed": 40,
+  "ordinaryFixtureFailed": 3,
+  "ordinaryFixtureSkipped": 0,
+  "strictPassingFixtureCases": 40,
+  "strictFailures": {
+    "SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption": {
+      "hostedConclusion": "failure",
+      "selected": 1,
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "strictReplayExit": 1,
+      "runtimeWarnings": 0,
+      "artifactID": 13493718537,
+      "jobID": 127793433866
+    },
+    "SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave": {
+      "hostedConclusion": "failure",
+      "selected": 1,
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "strictReplayExit": 1,
+      "runtimeWarnings": 2,
+      "artifactID": 13494181617,
+      "jobID": 127793433855
+    },
+    "SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction": {
+      "hostedConclusion": "failure",
+      "selected": 1,
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "strictReplayExit": 1,
+      "runtimeWarnings": 0,
+      "artifactID": 13494402796,
+      "jobID": 127793433792
+    }
+  },
+  "recordsRedactedPassed": true,
+  "recordsScope": "Only exact allowlisted redacted report and compiled plan; no raw Records download/read or independent native replay.",
+  "nativeWirePassed": true,
+  "nativeWire": {
+    "valid": true,
+    "integrationCases": 4,
+    "swiftPassedInvocations": 6,
+    "exactScenarios": [
+      "history-free HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres",
+      "history-paid HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres",
+      "meal-planner HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres",
+      "meal-shopper HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres",
+      "quote-adult HouseholdClientTests.StoreQuoteNativeWireTests/testStoreQuoteClientAgainstPostgres",
+      "quote-shopper HouseholdClientTests.StoreQuoteNativeWireTests/testStoreQuoteClientAgainstPostgres"
+    ],
+    "databaseStopped": true
+  },
+  "scope": "Read-only candidate-source, API provenance, digest/bounds/compiled-plan verification, and strict recorded-result parsing. No dispatch, rerun, native test execution, Git or production changes. Raw Records media was never downloaded/read.",
+  "evidenceSHA256": {
+    "SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption.json": "5b41389d2032501c93daf37cffdc39d3e01e36ea8a7b611251698accbb8c17c2",
+    "SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction.json": "9a04e1b6714d47cce91494e2f8ea1126865e1f4d109939aee2941eefeb075ffb",
+    "SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn.json": "642a2cfc3bc75a3c0e69bc38c9f7ec1cb18ab74c80162d39c475eef8e798c225",
+    "contributor-balanced-01.json": "9f32a9c65896be926c40fe476aa7c9ce90c4cb1e0f4cbd5e7ddb5e61e77ab90d",
+    "SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult.json": "fb7cd68557acb5fb494134408f93a7c8835ee1b8999ae9c5f4ff53ad894e347c",
+    "SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview.json": "2288ab3caa2beee93152dab7f91ac88955ca338a9b37d69663eea6cb08c5a575",
+    "SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave.json": "f150de3217d3c6fc35d5a7ef5f2771af36b21989daaf2bcafce27e9a6dad9349",
+    "contributor-balanced-03.json": "25da4ed9e3358ccbf242a14bc5acc7e83a6cf9c5b8dc92aae7e0d751664c7d24",
+    "contributor-balanced-02.json": "e76f930d044e300959b3b4582c2ffa4d780907a9220dcd2cbaa9f4b4a644c644",
+    "fixture-inventory.json": "ad41a31611b2bf56b76e24afcc7a090987308e7585261aa148f21b0193361cb7",
+    "contributor-balanced-05.json": "b5d365c879554b73d70455ace7b5ac275bd8e6b0b3521e4dccba86edecac8d2d",
+    "RecordsMediaUITests.json": "9e8f9d654e30493634d1abd6057eee8902e5d43120e62e363f87255e067de9c8",
+    "contributor-balanced-04.json": "a76e279b213dd08504f8af08ce99cdb3396895a518eac0a427988a4def1f603a",
+    "DinnerDecisionSheetUITests.json": "da2a57993c91aa72eb4c1eccc0aa049f443dd8523e9657d3855c54719848dfa3",
+    "native-wire.json": "e721ee82ba57602bbbb6dc9c046a3dd827aec91452b8c9d8ac6608360021afbe"
+  }
+}

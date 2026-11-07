@@ -1,0 +1,427 @@
+{
+  "metrics": {
+    "events-live.ndjson": {
+      "36828/8AD68CA9-B297-3C0F-9092-F2C021288CE5": {
+        "pid": 36828,
+        "imageUUID": "8AD68CA9-B297-3C0F-9092-F2C021288CE5",
+        "requests": 0,
+        "replies": 163,
+        "unmatchedStops": 64,
+        "keyboardMessages": 119,
+        "sequenceSummary": {
+          "count": 128,
+          "first": 1,
+          "last": 128,
+          "strictlyIncreasing": true,
+          "missingWithinObservedRange": [],
+          "eventLimitMarkers": 1,
+          "eventCounts": {
+            "appear": 3,
+            "scene.change": 3,
+            "focus.change": 15,
+            "keyboard.willChangeFrame": 23,
+            "keyboard.willShow": 16,
+            "keyboard.didChangeFrame": 23,
+            "keyboard.didShow": 15,
+            "done.enter": 7,
+            "done.exit": 7,
+            "keyboard.willHide": 7,
+            "keyboard.didHide": 7,
+            "disappear": 2
+          }
+        }
+      },
+      "37385/8AD68CA9-B297-3C0F-9092-F2C021288CE5": {
+        "pid": 37385,
+        "imageUUID": "8AD68CA9-B297-3C0F-9092-F2C021288CE5",
+        "requests": 0,
+        "replies": 163,
+        "unmatchedStops": 64,
+        "keyboardMessages": 119,
+        "sequenceSummary": {
+          "count": 128,
+          "first": 1,
+          "last": 128,
+          "strictlyIncreasing": true,
+          "missingWithinObservedRange": [],
+          "eventLimitMarkers": 1,
+          "eventCounts": {
+            "appear": 3,
+            "scene.change": 3,
+            "focus.change": 15,
+            "keyboard.willChangeFrame": 23,
+            "keyboard.willShow": 16,
+            "keyboard.didChangeFrame": 23,
+            "keyboard.didShow": 15,
+            "done.enter": 7,
+            "done.exit": 7,
+            "keyboard.willHide": 7,
+            "keyboard.didHide": 7,
+            "disappear": 2
+          }
+        }
+      }
+    },
+    "events-persisted.ndjson": {
+      "36828/8AD68CA9-B297-3C0F-9092-F2C021288CE5": {
+        "pid": 36828,
+        "imageUUID": "8AD68CA9-B297-3C0F-9092-F2C021288CE5",
+        "requests": 163,
+        "replies": 163,
+        "unmatchedStops": 64,
+        "keyboardMessages": 119,
+        "sequenceSummary": {
+          "count": 0,
+          "first": null,
+          "last": null,
+          "strictlyIncreasing": true,
+          "missingWithinObservedRange": [],
+          "eventLimitMarkers": 0,
+          "eventCounts": {}
+        }
+      },
+      "37385/8AD68CA9-B297-3C0F-9092-F2C021288CE5": {
+        "pid": 37385,
+        "imageUUID": "8AD68CA9-B297-3C0F-9092-F2C021288CE5",
+        "requests": 163,
+        "replies": 163,
+        "unmatchedStops": 64,
+        "keyboardMessages": 119,
+        "sequenceSummary": {
+          "count": 8,
+          "first": 121,
+          "last": 128,
+          "strictlyIncreasing": true,
+          "missingWithinObservedRange": [],
+          "eventLimitMarkers": 1,
+          "eventCounts": {
+            "focus.change": 1,
+            "keyboard.willChangeFrame": 2,
+            "keyboard.willShow": 2,
+            "keyboard.didChangeFrame": 2,
+            "keyboard.didShow": 1
+          }
+        }
+      }
+    }
+  },
+  "firstDoneChains": {
+    "36828/8AD68CA9-B297-3C0F-9092-F2C021288CE5": [
+      {
+        "payload": {
+          "event": "done.enter",
+          "focus": 1,
+          "kind": "event",
+          "previousFocus": -1,
+          "previousScene": -1,
+          "scene": -1,
+          "schema": 1,
+          "sequence": 12,
+          "uptime": "849133.8011157917"
+        },
+        "timestamp": "2026-11-07 02:25:40.948307-0500",
+        "sourceLine": 71
+      },
+      {
+        "payload": {
+          "event": "done.exit",
+          "focus": 1,
+          "kind": "event",
+          "previousFocus": -1,
+          "previousScene": -1,
+          "scene": -1,
+          "schema": 1,
+          "sequence": 13,
+          "uptime": "849133.8012623751"
+        },
+        "timestamp": "2026-11-07 02:25:40.948419-0500",
+        "sourceLine": 72
+      },
+      {
+        "payload": {
+          "event": "keyboard.willChangeFrame",
+          "focus": -1,
+          "keyboardCurve": 7,
+          "keyboardDuration": "0.0",
+          "keyboardEndFrame": [
+            "0.0",
+            "874.0",
+            "402.0",
+            "335.0"
+          ],
+          "keyboardIsLocal": true,
+          "kind": "event",
+          "previousFocus": -1,
+          "previousScene": -1,
+          "scene": -1,
+          "schema": 1,
+          "sequence": 14,
+          "uptime": "849133.8288389584"
+        },
+        "timestamp": "2026-11-07 02:25:40.976062-0500",
+        "sourceLine": 75
+      },
+      {
+        "payload": {
+          "event": "keyboard.willHide",
+          "focus": -1,
+          "keyboardCurve": 7,
+          "keyboardDuration": "0.0",
+          "keyboardEndFrame": [
+            "0.0",
+            "874.0",
+            "402.0",
+            "335.0"
+          ],
+          "keyboardIsLocal": true,
+          "kind": "event",
+          "previousFocus": -1,
+          "previousScene": -1,
+          "scene": -1,
+          "schema": 1,
+          "sequence": 15,
+          "uptime": "849133.8290517083"
+        },
+        "timestamp": "2026-11-07 02:25:40.976274-0500",
+        "sourceLine": 76
+      },
+      {
+        "payload": {
+          "event": "focus.change",
+          "focus": 0,
+          "kind": "event",
+          "previousFocus": 1,
+          "previousScene": -1,
+          "scene": -1,
+          "schema": 1,
+          "sequence": 16,
+          "uptime": "849133.8342825001"
+        },
+        "timestamp": "2026-11-07 02:25:40.981469-0500",
+        "sourceLine": 77
+      },
+      {
+        "payload": {
+          "event": "keyboard.didChangeFrame",
+          "focus": -1,
+          "keyboardCurve": 7,
+          "keyboardDuration": "0.0",
+          "keyboardEndFrame": [
+            "0.0",
+            "874.0",
+            "402.0",
+            "335.0"
+          ],
+          "keyboardIsLocal": true,
+          "kind": "event",
+          "previousFocus": -1,
+          "previousScene": -1,
+          "scene": -1,
+          "schema": 1,
+          "sequence": 17,
+          "uptime": "849134.2352205"
+        },
+        "timestamp": "2026-11-07 02:25:41.382443-0500",
+        "sourceLine": 78
+      },
+      {
+        "payload": {
+          "event": "keyboard.didHide",
+          "focus": -1,
+          "keyboardCurve": 7,
+          "keyboardDuration": "0.0",
+          "keyboardEndFrame": [
+            "0.0",
+            "874.0",
+            "402.0",
+            "335.0"
+          ],
+          "keyboardIsLocal": true,
+          "kind": "event",
+          "previousFocus": -1,
+          "previousScene": -1,
+          "scene": -1,
+          "schema": 1,
+          "sequence": 18,
+          "uptime": "849134.2355637917"
+        },
+        "timestamp": "2026-11-07 02:25:41.382767-0500",
+        "sourceLine": 79
+      },
+      {
+        "payload": {
+          "event": "focus.change",
+          "focus": 2,
+          "kind": "event",
+          "previousFocus": 0,
+          "previousScene": -1,
+          "scene": -1,
+          "schema": 1,
+          "sequence": 19,
+          "uptime": "849137.1955227917"
+        },
+        "timestamp": "2026-11-07 02:25:44.342742-0500",
+        "sourceLine": 83
+      }
+    ],
+    "37385/8AD68CA9-B297-3C0F-9092-F2C021288CE5": [
+      {
+        "payload": {
+          "event": "done.enter",
+          "focus": 1,
+          "kind": "event",
+          "previousFocus": -1,
+          "previousScene": -1,
+          "scene": -1,
+          "schema": 1,
+          "sequence": 12,
+          "uptime": "849340.6512115417"
+        },
+        "timestamp": "2026-11-07 02:29:07.796475-0500",
+        "sourceLine": 546
+      },
+      {
+        "payload": {
+          "event": "done.exit",
+          "focus": 1,
+          "kind": "event",
+          "previousFocus": -1,
+          "previousScene": -1,
+          "scene": -1,
+          "schema": 1,
+          "sequence": 13,
+          "uptime": "849340.6513720417"
+        },
+        "timestamp": "2026-11-07 02:29:07.796605-0500",
+        "sourceLine": 547
+      },
+      {
+        "payload": {
+          "event": "keyboard.willChangeFrame",
+          "focus": -1,
+          "keyboardCurve": 7,
+          "keyboardDuration": "0.0",
+          "keyboardEndFrame": [
+            "0.0",
+            "874.0",
+            "402.0",
+            "335.0"
+          ],
+          "keyboardIsLocal": true,
+          "kind": "event",
+          "previousFocus": -1,
+          "previousScene": -1,
+          "scene": -1,
+          "schema": 1,
+          "sequence": 14,
+          "uptime": "849340.6790179167"
+        },
+        "timestamp": "2026-11-07 02:29:07.824311-0500",
+        "sourceLine": 550
+      },
+      {
+        "payload": {
+          "event": "keyboard.willHide",
+          "focus": -1,
+          "keyboardCurve": 7,
+          "keyboardDuration": "0.0",
+          "keyboardEndFrame": [
+            "0.0",
+            "874.0",
+            "402.0",
+            "335.0"
+          ],
+          "keyboardIsLocal": true,
+          "kind": "event",
+          "previousFocus": -1,
+          "previousScene": -1,
+          "scene": -1,
+          "schema": 1,
+          "sequence": 15,
+          "uptime": "849340.6792112917"
+        },
+        "timestamp": "2026-11-07 02:29:07.824513-0500",
+        "sourceLine": 551
+      },
+      {
+        "payload": {
+          "event": "focus.change",
+          "focus": 0,
+          "kind": "event",
+          "previousFocus": 1,
+          "previousScene": -1,
+          "scene": -1,
+          "schema": 1,
+          "sequence": 16,
+          "uptime": "849340.6841468334"
+        },
+        "timestamp": "2026-11-07 02:29:07.829400-0500",
+        "sourceLine": 552
+      },
+      {
+        "payload": {
+          "event": "keyboard.didChangeFrame",
+          "focus": -1,
+          "keyboardCurve": 7,
+          "keyboardDuration": "0.0",
+          "keyboardEndFrame": [
+            "0.0",
+            "874.0",
+            "402.0",
+            "335.0"
+          ],
+          "keyboardIsLocal": true,
+          "kind": "event",
+          "previousFocus": -1,
+          "previousScene": -1,
+          "scene": -1,
+          "schema": 1,
+          "sequence": 17,
+          "uptime": "849341.088177"
+        },
+        "timestamp": "2026-11-07 02:29:08.233528-0500",
+        "sourceLine": 553
+      },
+      {
+        "payload": {
+          "event": "keyboard.didHide",
+          "focus": -1,
+          "keyboardCurve": 7,
+          "keyboardDuration": "0.0",
+          "keyboardEndFrame": [
+            "0.0",
+            "874.0",
+            "402.0",
+            "335.0"
+          ],
+          "keyboardIsLocal": true,
+          "kind": "event",
+          "previousFocus": -1,
+          "previousScene": -1,
+          "scene": -1,
+          "schema": 1,
+          "sequence": 18,
+          "uptime": "849341.0888675001"
+        },
+        "timestamp": "2026-11-07 02:29:08.234196-0500",
+        "sourceLine": 554
+      },
+      {
+        "payload": {
+          "event": "focus.change",
+          "focus": 2,
+          "kind": "event",
+          "previousFocus": 0,
+          "previousScene": -1,
+          "scene": -1,
+          "schema": 1,
+          "sequence": 19,
+          "uptime": "849343.687077"
+        },
+        "timestamp": "2026-11-07 02:29:10.832361-0500",
+        "sourceLine": 558
+      }
+    ]
+  },
+  "scope": "Both narrow capture hashes verified. First-Done chronology uses live envelope timestamps only; no cross-capture fine timing splice."
+}

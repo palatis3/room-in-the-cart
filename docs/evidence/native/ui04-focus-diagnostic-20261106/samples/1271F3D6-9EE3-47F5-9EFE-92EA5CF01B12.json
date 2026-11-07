@@ -1,0 +1,44 @@
+{
+  "bQuantity" : {
+    "enabled" : true,
+    "exists" : true,
+    "frame" : "(32.0, 532.0000000000001, 338.0, 64.0)",
+    "hittable" : true
+  },
+  "bQuantityMatches" : 1,
+  "collection" : {
+    "enabled" : true,
+    "exists" : true,
+    "frame" : "(0.0, 0.0, 402.0, 874.0000000000005)",
+    "hittable" : true
+  },
+  "done" : {
+    "exists" : false
+  },
+  "doneCount" : 0,
+  "field" : {
+    "enabled" : true,
+    "exists" : true,
+    "frame" : "(32.0, 532.0000000000001, 338.0, 64.0)",
+    "hittable" : true
+  },
+  "keyboard" : {
+    "exists" : false
+  },
+  "keyboardCount" : 0,
+  "navigation" : {
+    "enabled" : true,
+    "exists" : true,
+    "frame" : "(0.0, 62.0, 402.0, 54.0)",
+    "hittable" : true
+  },
+  "phase" : "B-before-tap",
+  "sampleFinishedUptime" : 827289.83319154172,
+  "sampleStartedUptime" : 827287.155604125,
+  "tabs" : {
+    "enabled" : true,
+    "exists" : true,
+    "frame" : "(0.0, 791.0, 402.0, 83.0)",
+    "hittable" : true
+  }
+}

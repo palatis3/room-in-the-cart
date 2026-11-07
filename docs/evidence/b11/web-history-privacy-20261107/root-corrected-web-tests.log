@@ -1,0 +1,801 @@
+
+> @room-in-the-cart/web@0.1.0 test
+> npm run build && node --test tests/*.test.mjs
+
+
+> @room-in-the-cart/web@0.1.0 build
+> tsc -p tsconfig.json && vite build
+
+vite v6.4.5 building for production...
+transforming...
+✓ 16 modules transformed.
+rendering chunks...
+computing gzip size...
+public-build/index.html                   0.59 kB │ gzip:  0.33 kB
+public-build/assets/index-B9I61_lh.css    3.93 kB │ gzip:  1.46 kB
+public-build/assets/index-CS4HFC9t.js   122.94 kB │ gzip: 36.07 kB
+✓ built in 355ms
+TAP version 13
+# Subtest: email login remains distinct from invitation acceptance and retains no credentials in browser storage
+ok 1 - email login remains distinct from invitation acceptance and retains no credentials in browser storage
+  ---
+  duration_ms: 133.846958
+  type: 'test'
+  ...
+# Subtest: unconfigured email service is honest and cannot display a sent-code success
+ok 2 - unconfigured email service is honest and cannot display a sent-code success
+  ---
+  duration_ms: 14.167375
+  type: 'test'
+  ...
+# Subtest: wrong code and rate limits remain recoverable failures with Spanish copy
+ok 3 - wrong code and rate limits remain recoverable failures with Spanish copy
+  ---
+  duration_ms: 42.487375
+  type: 'test'
+  ...
+# Subtest: auth API sends only same-origin code requests and ignores unexpected private response fields
+ok 4 - auth API sends only same-origin code requests and ignores unexpected private response fields
+  ---
+  duration_ms: 19.34525
+  type: 'test'
+  ...
+# Subtest: fresh root with disabled email has no draft-save failure or invented invitation
+ok 5 - fresh root with disabled email has no draft-save failure or invented invitation
+  ---
+  duration_ms: 11.496542
+  type: 'test'
+  ...
+# Subtest: transient bootstrap failure describes loading and clears after successful Refresh into disabled email
+ok 6 - transient bootstrap failure describes loading and clears after successful Refresh into disabled email
+  ---
+  duration_ms: 25.868541
+  type: 'test'
+  ...
+# Subtest: default API fetch preserves the browser global receiver instead of binding the API instance
+ok 7 - default API fetch preserves the browser global receiver instead of binding the API instance
+  ---
+  duration_ms: 1.904
+  type: 'test'
+  ...
+# Subtest: all static interface labels and outcomes have US Spanish copy
+ok 8 - all static interface labels and outcomes have US Spanish copy
+  ---
+  duration_ms: 100.398
+  type: 'test'
+  ...
+# Subtest: configured covered flow uses guardian-approved auth, server pairing confirmation and exact scoped handoff
+ok 9 - configured covered flow uses guardian-approved auth, server pairing confirmation and exact scoped handoff
+  ---
+  duration_ms: 174.807333
+  type: 'test'
+  ...
+# Subtest: generic authenticated account cannot display covered OTP, claim or own-request access
+ok 10 - generic authenticated account cannot display covered OTP, claim or own-request access
+  ---
+  duration_ms: 14.203666
+  type: 'test'
+  ...
+# Subtest: interrupted child sign-out hides pairing after reload and retries using current identity
+ok 11 - interrupted child sign-out hides pairing after reload and retries using current identity
+  ---
+  duration_ms: 52.229125
+  type: 'test'
+  ...
+# Subtest: wrong guardian-approved email cannot claim that an OTP was sent
+ok 12 - wrong guardian-approved email cannot claim that an OTP was sent
+  ---
+  duration_ms: 14.481833
+  type: 'test'
+  ...
+# Subtest: uncertain covered OTP send has explicit code checking and no automatic resend on refresh
+ok 13 - uncertain covered OTP send has explicit code checking and no automatic resend on refresh
+  ---
+  duration_ms: 23.328958
+  type: 'test'
+  ...
+# Subtest: lost verify response reconciles cookie-bound admission without another OTP or verification
+ok 14 - lost verify response reconciles cookie-bound admission without another OTP or verification
+  ---
+  duration_ms: 21.513208
+  type: 'test'
+  ...
+# Subtest: lost claim response retries the original pairing and key, then shows confirmed pairing
+ok 15 - lost claim response retries the original pairing and key, then shows confirmed pairing
+  ---
+  duration_ms: 29.786416
+  type: 'test'
+  ...
+# Subtest: lost finish response with no cookie retries exact original finish and device secret
+ok 16 - lost finish response with no cookie retries exact original finish and device secret
+  ---
+  duration_ms: 31.203875
+  type: 'test'
+  ...
+# Subtest: lost finish body with installed cookie recovers access without another finish POST
+ok 17 - lost finish body with installed cookie recovers access without another finish POST
+  ---
+  duration_ms: 55.290291
+  type: 'test'
+  ...
+# Subtest: awaiting_guardian cold reload shows missing original pairing and never creates replacement intent
+ok 18 - awaiting_guardian cold reload shows missing original pairing and never creates replacement intent
+  ---
+  duration_ms: 33.282
+  type: 'test'
+  ...
+# Subtest: approved cold reload shows missing original pairing and never creates replacement intent
+ok 19 - approved cold reload shows missing original pairing and never creates replacement intent
+  ---
+  duration_ms: 23.363334
+  type: 'test'
+  ...
+# Subtest: active cold reload without a scoped cookie does not infer credentials or finish again
+ok 20 - active cold reload without a scoped cookie does not infer credentials or finish again
+  ---
+  duration_ms: 29.563375
+  type: 'test'
+  ...
+# Subtest: accepted finish with malformed 200 and no cookie deterministically blocks cold-reload access without a second POST
+ok 21 - accepted finish with malformed 200 and no cookie deterministically blocks cold-reload access without a second POST
+  ---
+  duration_ms: 29.031416
+  type: 'test'
+  ...
+# Subtest: withdrawal and a changed session purge pairing and block finish
+ok 22 - withdrawal and a changed session purge pairing and block finish
+  ---
+  duration_ms: 24.999792
+  type: 'test'
+  ...
+# Subtest: a mismatched scoped household cannot expose the own-request handoff
+ok 23 - a mismatched scoped household cannot expose the own-request handoff
+  ---
+  duration_ms: 25.177916
+  type: 'test'
+  ...
+# Subtest: availability and child session parsers reject invented authority and narrow unexpected fields
+ok 24 - availability and child session parsers reject invented authority and narrow unexpected fields
+  ---
+  duration_ms: 1.346167
+  type: 'test'
+  ...
+# Subtest: prepared caller has no claim authority without an approved live child session
+ok 25 - prepared caller has no claim authority without an approved live child session
+  ---
+  duration_ms: 2.196458
+  type: 'test'
+  ...
+# Subtest: claim uncertainty retries the exact key and device-generated base32 pairing, never another token
+ok 26 - claim uncertainty retries the exact key and device-generated base32 pairing, never another token
+  ---
+  duration_ms: 1.524458
+  type: 'test'
+  ...
+# Subtest: guardian confirmation is server authority; finish checks it again and retains only an exact uncertain retry
+ok 27 - guardian confirmation is server authority; finish checks it again and retains only an exact uncertain retry
+  ---
+  duration_ms: 1.462041
+  type: 'test'
+  ...
+# Subtest: already active claim cannot finish without the original finish intent
+ok 28 - already active claim cannot finish without the original finish intent
+  ---
+  duration_ms: 0.609917
+  type: 'test'
+  ...
+# Subtest: refresh of active claim without an original finish intent requires restart and purges material
+ok 29 - refresh of active claim without an original finish intent requires restart and purges material
+  ---
+  duration_ms: 0.766959
+  type: 'test'
+  ...
+# Subtest: scope change during an awaited claim discards all secrets and late response
+ok 30 - scope change during an awaited claim discards all secrets and late response
+  ---
+  duration_ms: 9.910541
+  type: 'test'
+  ...
+# Subtest: sign-out clearing prevents a late finish receipt from escaping
+ok 31 - sign-out clearing prevents a late finish receipt from escaping
+  ---
+  duration_ms: 1.702208
+  type: 'test'
+  ...
+# Subtest: expired and withdrawn claims purge retry material and never finish
+ok 32 - expired and withdrawn claims purge retry material and never finish
+  ---
+  duration_ms: 1.064667
+  type: 'test'
+  ...
+# Subtest: prepared transport uses only child v1 endpoints, same-origin cookies and narrow projections
+ok 33 - prepared transport uses only child v1 endpoints, same-origin cookies and narrow projections
+  ---
+  duration_ms: 20.372833
+  type: 'test'
+  ...
+# Subtest: prepared transport rejects mismatched child response and preserves server unavailable gate
+ok 34 - prepared transport rejects mismatched child response and preserves server unavailable gate
+  ---
+  duration_ms: 1.239875
+  type: 'test'
+  ...
+# Subtest: unavailable production child entry scrubs secrets before availability and has no account, mutation or store access
+ok 35 - unavailable production child entry scrubs secrets before availability and has no account, mutation or store access
+  ---
+  duration_ms: 101.207375
+  type: 'test'
+  ...
+# Subtest: new entry isolates exact child path and main hook preserves public and helper dispatch
+ok 36 - new entry isolates exact child path and main hook preserves public and helper dispatch
+  ---
+  duration_ms: 35.145333
+  type: 'test'
+  ...
+# Subtest: invitation secrets leave URL before a request and never enter storage
+ok 37 - invitation secrets leave URL before a request and never enter storage
+  ---
+  duration_ms: 81.899375
+  type: 'test'
+  ...
+# Subtest: companion links accept the trailing slashes served by the host
+ok 38 - companion links accept the trailing slashes served by the host
+  ---
+  duration_ms: 79.645833
+  type: 'test'
+  ...
+# Subtest: API is same-origin, no-store, CSRF protected; own projection discards private keys
+ok 39 - API is same-origin, no-store, CSRF protected; own projection discards private keys
+  ---
+  duration_ms: 22.120416
+  type: 'test'
+  ...
+# Subtest: server errors never become successful receipts
+ok 40 - server errors never become successful receipts
+  ---
+  duration_ms: 1.440042
+  type: 'test'
+  ...
+# Subtest: outbox requires enrollment, server permission, and explicit local consent
+ok 41 - outbox requires enrollment, server permission, and explicit local consent
+  ---
+  duration_ms: 10.731625
+  type: 'test'
+  ...
+# Subtest: Spanish request review preserves original food names and unknown quantity
+ok 42 - Spanish request review preserves original food names and unknown quantity
+  ---
+  duration_ms: 26.008291
+  type: 'test'
+  ...
+# Subtest: offline unconsented send is not saved and retry preserves operation key
+ok 43 - offline unconsented send is not saved and retry preserves operation key
+  ---
+  duration_ms: 34.895292
+  type: 'test'
+  ...
+# Subtest: explicitly consented disconnected request is durably queued, never labeled received
+ok 44 - explicitly consented disconnected request is durably queued, never labeled received
+  ---
+  duration_ms: 25.509417
+  type: 'test'
+  ...
+# Subtest: a request reviewed after disconnect survives reload and retries only after fresh authorization
+ok 45 - a request reviewed after disconnect survives reload and retries only after fresh authorization
+  ---
+  duration_ms: 69.708417
+  type: 'test'
+  ...
+# Subtest: offline queueing still requires consent and an unexpired replay window
+ok 46 - offline queueing still requires consent and an unexpired replay window
+  ---
+  duration_ms: 47.753583
+  type: 'test'
+  ...
+# Subtest: refresh hides the previous member as soon as the server reports a different or ended session
+ok 47 - refresh hides the previous member as soon as the server reports a different or ended session
+  ---
+  duration_ms: 53.950584
+  type: 'test'
+  ...
+# Subtest: a command refusal hides private content even if the saved outbox cannot be removed
+ok 48 - a command refusal hides private content even if the saved outbox cannot be removed
+  ---
+  duration_ms: 42.689542
+  type: 'test'
+  ...
+# Subtest: an explicit access refusal cannot queue against the earlier session
+ok 49 - an explicit access refusal cannot queue against the earlier session
+  ---
+  duration_ms: 26.928542
+  type: 'test'
+  ...
+# Subtest: authorized Refresh clears an old mutation access denial without discarding storage warnings
+ok 50 - authorized Refresh clears an old mutation access denial without discarding storage warnings
+  ---
+  duration_ms: 90.6035
+  type: 'test'
+  ...
+# Subtest: pending edit carries request revision; withdrawal requires confirmation
+ok 51 - pending edit carries request revision; withdrawal requires confirmation
+  ---
+  duration_ms: 39.428959
+  type: 'test'
+  ...
+# Subtest: received is retained if refresh fails after a committed send
+ok 52 - received is retained if refresh fails after a committed send
+  ---
+  duration_ms: 16.265459
+  type: 'test'
+  ...
+# Subtest: revocation purges household display and exposes no cached request
+ok 53 - revocation purges household display and exposes no cached request
+  ---
+  duration_ms: 16.504833
+  type: 'test'
+  ...
+# Subtest: helper content is inert text, read-only grants cannot propose or show adult routes
+ok 54 - helper content is inert text, read-only grants cannot propose or show adult routes
+  ---
+  duration_ms: 7.448916
+  type: 'test'
+  ...
+# Subtest: editor proposal is submitted against displayed revision and cannot apply a basket change
+ok 55 - editor proposal is submitted against displayed revision and cannot apply a basket change
+  ---
+  duration_ms: 13.860333
+  type: 'test'
+  ...
+# Subtest: a 200 response without the durable author receipt is not accepted
+ok 56 - a 200 response without the durable author receipt is not accepted
+  ---
+  duration_ms: 0.599417
+  type: 'test'
+  ...
+# Subtest: a replay window change leaves the queued intent unsent for fresh review
+ok 57 - a replay window change leaves the queued intent unsent for fresh review
+  ---
+  duration_ms: 22.660125
+  type: 'test'
+  ...
+# Subtest: storage quota errors never turn an offline request into saved or received
+ok 58 - storage quota errors never turn an offline request into saved or received
+  ---
+  duration_ms: 16.353042
+  type: 'test'
+  ...
+# Subtest: denying access to indexedDB itself still lets an invite open and a contributor send online
+ok 59 - denying access to indexedDB itself still lets an invite open and a contributor send online
+  ---
+  duration_ms: 22.328958
+  type: 'test'
+  ...
+# Subtest: eviction during an open session replaces the waiting notice after refresh
+ok 60 - eviction during an open session replaces the waiting notice after refresh
+  ---
+  duration_ms: 25.992458
+  type: 'test'
+  ...
+# Subtest: a cold reload under a different contributor cannot recover the previous queue
+ok 61 - a cold reload under a different contributor cannot recover the previous queue
+  ---
+  duration_ms: 23.202125
+  type: 'test'
+  ...
+# Subtest: a confirmed queued retry keeps its receipt if browser storage fails during cleanup
+ok 62 - a confirmed queued retry keeps its receipt if browser storage fails during cleanup
+  ---
+  duration_ms: 21.445
+  type: 'test'
+  ...
+# Subtest: retrying local cleanup after a confirmed receipt: live replay window
+ok 63 - retrying local cleanup after a confirmed receipt: live replay window
+  ---
+  duration_ms: 22.5365
+  type: 'test'
+  ...
+# Subtest: retrying local cleanup after a confirmed receipt: expired replay window
+ok 64 - retrying local cleanup after a confirmed receipt: expired replay window
+  ---
+  duration_ms: 30.001166
+  type: 'test'
+  ...
+# Subtest: retrying local cleanup after a confirmed receipt: changed member
+ok 65 - retrying local cleanup after a confirmed receipt: changed member
+  ---
+  duration_ms: 23.377042
+  type: 'test'
+  ...
+# Subtest: expired helper content is removed without requiring a network response
+ok 66 - expired helper content is removed without requiring a network response
+  ---
+  duration_ms: 8.593125
+  type: 'test'
+  ...
+# Subtest: new sends reauthenticate and cannot publish a private draft as another member
+ok 67 - new sends reauthenticate and cannot publish a private draft as another member
+  ---
+  duration_ms: 20.40775
+  type: 'test'
+  ...
+# Subtest: uncertain memory retry cannot cross identities or silently make another operation
+ok 68 - uncertain memory retry cannot cross identities or silently make another operation
+  ---
+  duration_ms: 22.813958
+  type: 'test'
+  ...
+# Subtest: revoked queue permission prevents replay even for the same household and member
+ok 69 - revoked queue permission prevents replay even for the same household and member
+  ---
+  duration_ms: 20.964167
+  type: 'test'
+  ...
+# Subtest: failed sign-out clears private content and background reload cannot restore it
+ok 70 - failed sign-out clears private content and background reload cannot restore it
+  ---
+  duration_ms: 27.217584
+  type: 'test'
+  ...
+# Subtest: an interrupted sign-out stays private across a cold reload and retries with the current session
+ok 71 - an interrupted sign-out stays private across a cold reload and retries with the current session
+  ---
+  duration_ms: 22.639834
+  type: 'test'
+  ...
+# Subtest: a lost successful sign-out response can be confirmed after reload without posting a second logout
+ok 72 - a lost successful sign-out response can be confirmed after reload without posting a second logout
+  ---
+  duration_ms: 22.640583
+  type: 'test'
+  ...
+# Subtest: failed helper loading never falls back to the contributor form
+ok 73 - failed helper loading never falls back to the contributor form
+  ---
+  duration_ms: 7.892541
+  type: 'test'
+  ...
+# Subtest: narrow session validation rejects malformed identity and expiry
+ok 74 - narrow session validation rejects malformed identity and expiry
+  ---
+  duration_ms: 1.416209
+  type: 'test'
+  ...
+# Subtest: own request pagination rejects cursor loops and malformed projected fields
+ok 75 - own request pagination rejects cursor loops and malformed projected fields
+  ---
+  duration_ms: 2.146541
+  type: 'test'
+  ...
+# Subtest: receipt must match the actual shop and requested edit
+ok 76 - receipt must match the actual shop and requested edit
+  ---
+  duration_ms: 0.675542
+  type: 'test'
+  ...
+# Subtest: helper projection verifies its grant and never retains adult fields
+ok 77 - helper projection verifies its grant and never retains adult fields
+  ---
+  duration_ms: 0.452875
+  type: 'test'
+  ...
+# Subtest: proposal requires an identified pending receipt for the viewed grant and revision
+ok 78 - proposal requires an identified pending receipt for the viewed grant and revision
+  ---
+  duration_ms: 0.296208
+  type: 'test'
+  ...
+# Subtest: outbox purges other identities and rejects non-request operations
+ok 79 - outbox purges other identities and rejects non-request operations
+  ---
+  duration_ms: 2.869917
+  type: 'test'
+  ...
+# Subtest: typed field limits match the service request contract
+ok 80 - typed field limits match the service request contract
+  ---
+  duration_ms: 10.790416
+  type: 'test'
+  ...
+# Subtest: unknown and adult routes do not fetch or display household data
+ok 81 - unknown and adult routes do not fetch or display household data
+  ---
+  duration_ms: 6.061416
+  type: 'test'
+  ...
+# Subtest: invitation requires explicit adult review and validates the redemption receipt
+ok 82 - invitation requires explicit adult review and validates the redemption receipt
+  ---
+  duration_ms: 0.967458
+  type: 'test'
+  ...
+# Subtest: session activation requires an authenticated response for the redeemed household
+ok 83 - session activation requires an authenticated response for the redeemed household
+  ---
+  duration_ms: 0.31775
+  type: 'test'
+  ...
+# Subtest: joined invitation retries session activation without redeeming a single-use token twice
+ok 84 - joined invitation retries session activation without redeeming a single-use token twice
+  ---
+  duration_ms: 23.249667
+  type: 'test'
+  ...
+# Subtest: child enrollment unavailable is an explicit failure in Spanish
+ok 85 - child enrollment unavailable is an explicit failure in Spanish
+  ---
+  duration_ms: 17.495334
+  type: 'test'
+  ...
+# Subtest: confirmed receipt remains received when deleting a queued copy fails
+ok 86 - confirmed receipt remains received when deleting a queued copy fails
+  ---
+  duration_ms: 19.515416
+  type: 'test'
+  ...
+# Subtest: confirmed logout reports a local storage cleanup failure without exposing records
+ok 87 - confirmed logout reports a local storage cleanup failure without exposing records
+  ---
+  duration_ms: 18.926416
+  type: 'test'
+  ...
+# Subtest: redeeming a helper link never opens a different most-recent grant
+ok 88 - redeeming a helper link never opens a different most-recent grant
+  ---
+  duration_ms: 17.43875
+  type: 'test'
+  ...
+# Subtest: helper session activation sends and verifies the selected grant
+ok 89 - helper session activation sends and verifies the selected grant
+  ---
+  duration_ms: 0.832208
+  type: 'test'
+  ...
+# Subtest: successful Refresh preserves an actual failed-save notice and unsent draft
+ok 90 - successful Refresh preserves an actual failed-save notice and unsent draft
+  ---
+  duration_ms: 22.374959
+  type: 'test'
+  ...
+# Subtest: a reviewed request cannot silently move to a newly selected shop
+ok 91 - a reviewed request cannot silently move to a newly selected shop
+  ---
+  duration_ms: 24.173541
+  type: 'test'
+  ...
+# Subtest: a helper correction draft is cleared when refresh opens a different grant
+ok 92 - a helper correction draft is cleared when refresh opens a different grant
+  ---
+  duration_ms: 17.1855
+  type: 'test'
+  ...
+# Subtest: lost editor reply retries identical reviewed bytes after refresh advances instructions and recovers current status
+ok 93 - lost editor reply retries identical reviewed bytes after refresh advances instructions and recovers current status
+  ---
+  duration_ms: 43.829792
+  type: 'test'
+  ...
+# Subtest: stale unaccepted suggestion requires explicit current review and then a different key
+ok 94 - stale unaccepted suggestion requires explicit current review and then a different key
+  ---
+  duration_ms: 32.479041
+  type: 'test'
+  ...
+# Subtest: editor exact retry stops and clears private intent after grant, shop, actor or role changes
+ok 95 - editor exact retry stops and clears private intent after grant, shop, actor or role changes
+  ---
+  duration_ms: 99.892083
+  type: 'test'
+  ...
+# Subtest: late proposal receipt cannot restore private text after displayed grant expires
+ok 96 - late proposal receipt cannot restore private text after displayed grant expires
+  ---
+  duration_ms: 23.313334
+  type: 'test'
+  ...
+# Subtest: own suggestion status rejects mismatched proposal body or resolution and prepared bodies cannot be tampered
+ok 97 - own suggestion status rejects mismatched proposal body or resolution and prepared bodies cannot be tampered
+  ---
+  duration_ms: 1.020875
+  type: 'test'
+  ...
+# Subtest: revoked editor status clears original text and Spanish lost reply stays honest
+ok 98 - revoked editor status clears original text and Spanish lost reply stays honest
+  ---
+  duration_ms: 39.512959
+  type: 'test'
+  ...
+# Subtest: status network failure never downgrades a confirmed suggestion to not saved
+ok 99 - status network failure never downgrades a confirmed suggestion to not saved
+  ---
+  duration_ms: 24.830416
+  type: 'test'
+  ...
+# Subtest: key-reused conflict cannot silently replace the original envelope or reopen an editable form
+ok 100 - key-reused conflict cannot silently replace the original envelope or reopen an editable form
+  ---
+  duration_ms: 32.243166
+  type: 'test'
+  ...
+# Subtest: render-time grant expiry clears a pending suggestion before the timer can run
+ok 101 - render-time grant expiry clears a pending suggestion before the timer can run
+  ---
+  duration_ms: 29.775041
+  type: 'test'
+  ...
+# Subtest: own status matches server whitespace normalization while retries retain exact original text bytes
+ok 102 - own status matches server whitespace normalization while retries retain exact original text bytes
+  ---
+  duration_ms: 0.8975
+  type: 'test'
+  ...
+# Subtest: full app recreation recovers received suggestions from the service without a local intent or submission
+ok 103 - full app recreation recovers received suggestions from the service without a local intent or submission
+  ---
+  duration_ms: 24.589333
+  type: 'test'
+  ...
+# Subtest: failed discovery blocks a new suggestion until explicit recovery succeeds and permits read-only own status
+ok 104 - failed discovery blocks a new suggestion until explicit recovery succeeds and permits read-only own status
+  ---
+  duration_ms: 23.416916
+  type: 'test'
+  ...
+# Subtest: late received-page response cannot expose old actor data after account switch or local expiry
+ok 105 - late received-page response cannot expose old actor data after account switch or local expiry
+  ---
+  duration_ms: 49.366959
+  type: 'test'
+  ...
+# Subtest: expiry during Refresh keeps its current denial after the received-page response finishes
+ok 106 - expiry during Refresh keeps its current denial after the received-page response finishes
+  ---
+  duration_ms: 54.429667
+  type: 'test'
+  ...
+# Subtest: received pages reject wrong grants, duplicate rows, wrong cursors and private projection fields are discarded
+ok 107 - received pages reject wrong grants, duplicate rows, wrong cursors and private projection fields are discarded
+  ---
+  duration_ms: 3.540792
+  type: 'test'
+  ...
+# Subtest: pagination appends only distinct own rows and receipt recovery avoids duplicate received cards
+ok 108 - pagination appends only distinct own rows and receipt recovery avoids duplicate received cards
+  ---
+  duration_ms: 38.052042
+  type: 'test'
+  ...
+# Subtest: debug can remain disconnected without manufacturing a live service
+ok 109 - debug can remain disconnected without manufacturing a live service
+  ---
+  duration_ms: 1.44875
+  type: 'test'
+  ...
+# Subtest: public configuration excludes arbitrary private input
+ok 110 - public configuration excludes arbitrary private input
+  ---
+  duration_ms: 0.19675
+  type: 'test'
+  ...
+# Subtest: deployed environments reject missing, credentialed, and non-HTTPS origins
+ok 111 - deployed environments reject missing, credentialed, and non-HTTPS origins
+  ---
+  duration_ms: 0.734833
+  type: 'test'
+  ...
+# Subtest: Vercel serves direct child invitation links through the web entry point
+ok 112 - Vercel serves direct child invitation links through the web entry point
+  ---
+  duration_ms: 6.451
+  type: 'test'
+  ...
+# Subtest: history suspension hides own request and draft until delayed same-actor authority succeeds
+ok 113 - history suspension hides own request and draft until delayed same-actor authority succeeds
+  ---
+  duration_ms: 163.37425
+  type: 'test'
+  ...
+# Subtest: history network failure stays closed; explicit fresh authorization recovers the same-actor draft
+ok 114 - history network failure stays closed; explicit fresh authorization recovers the same-actor draft
+  ---
+  duration_ms: 39.015375
+  type: 'test'
+  ...
+# Subtest: changed actor on history return clears the previous draft and request
+ok 115 - changed actor on history return clears the previous draft and request
+  ---
+  duration_ms: 24.031833
+  type: 'test'
+  ...
+# Subtest: history restore during an existing load waits and then revalidates instead of uncovering stale content
+ok 116 - history restore during an existing load waits and then revalidates instead of uncovering stale content
+  ---
+  duration_ms: 26.51425
+  type: 'test'
+  ...
+# Subtest: helper history return remains closed after revocation
+ok 117 - helper history return remains closed after revocation
+  ---
+  duration_ms: 31.850458
+  type: 'test'
+  ...
+# Subtest: editor history return remains closed after revocation
+ok 118 - editor history return remains closed after revocation
+  ---
+  duration_ms: 19.079291
+  type: 'test'
+  ...
+# Subtest: history identity denial exposes available sign-in immediately even when the scope cookie keeps returning 401
+ok 119 - history identity denial exposes available sign-in immediately even when the scope cookie keeps returning 401
+  ---
+  duration_ms: 24.066542
+  type: 'test'
+  ...
+# Subtest: history 401 email and code recovery preserves same-actor draft
+ok 120 - history 401 email and code recovery preserves same-actor draft
+  ---
+  duration_ms: 39.161458
+  type: 'test'
+  ...
+# Subtest: history 401 email and code recovery clears changed-actor draft
+ok 121 - history 401 email and code recovery clears changed-actor draft
+  ---
+  duration_ms: 45.652875
+  type: 'test'
+  ...
+# Subtest: public routes are exact and do not claim invited or private routes
+ok 122 - public routes are exact and do not claim invited or private routes
+  ---
+  duration_ms: 120.09975
+  type: 'test'
+  ...
+# Subtest: every public page renders both languages, one main, named navigation and accessible sections
+ok 123 - every public page renders both languages, one main, named navigation and accessible sections
+  ---
+  duration_ms: 152.522417
+  type: 'test'
+  ...
+# Subtest: public help never calls account APIs, reads credentials or opens browser storage
+ok 124 - public help never calls account APIs, reads credentials or opens browser storage
+  ---
+  duration_ms: 12.31
+  type: 'test'
+  ...
+# Subtest: language selection updates public links, text and address without losing focus or storing data
+ok 125 - language selection updates public links, text and address without losing focus or storing data
+  ---
+  duration_ms: 14.624333
+  type: 'test'
+  ...
+# Subtest: privacy and terms disclose remaining operator gates and support uses the supplied address
+ok 126 - privacy and terms disclose remaining operator gates and support uses the supplied address
+  ---
+  duration_ms: 50.29025
+  type: 'test'
+  ...
+# Subtest: only a configured public HTTPS contact appears and unsafe configuration is never made clickable
+ok 127 - only a configured public HTTPS contact appears and unsafe configuration is never made clickable
+  ---
+  duration_ms: 67.087417
+  type: 'test'
+  ...
+# Subtest: support mailto accepts only a bare address with no headers, query or encoded payload
+ok 128 - support mailto accepts only a bare address with no headers, query or encoded payload
+  ---
+  duration_ms: 80.432792
+  type: 'test'
+  ...
+# Subtest: supplied operator identity appears on both policy pages in both languages and matches native public defaults
+ok 129 - supplied operator identity appears on both policy pages in both languages and matches native public defaults
+  ---
+  duration_ms: 116.525125
+  type: 'test'
+  ...
+1..129
+# tests 129
+# suites 0
+# pass 129
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2544.619375

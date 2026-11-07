@@ -1,0 +1,1 @@
+{"batchContributionIDs":[],"batchCount":0,"batchIDs":[],"contributionIDs":[],"lineIDs":[],"matchesBaseline":true,"names":[],"originalTexts":[],"payloadSHA256":"d87ca41c39a8d47dd2dfb0502cbc5728f7e101ec51308b3870dfc6cebd448fed","pending":false,"previewIDs":[],"proposedLineIDs":[],"quantities":[],"revision":1,"saving":false,"sequence":1,"stagedContributionIDs":[]}

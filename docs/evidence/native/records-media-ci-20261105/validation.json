@@ -1,0 +1,60 @@
+{
+  "sourceCommit": "f0e2ac37383e76ac3812407384bf2eda968de3c4",
+  "run": "https://github.com/palatis3/room-in-the-cart/actions/runs/41944207865",
+  "job": {
+    "id": 126980954160,
+    "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/41944207865/job/126980954160",
+    "conclusion": "failure",
+    "startedAt": "2026-11-05T02:09:36Z",
+    "completedAt": "2026-11-05T02:16:49Z"
+  },
+  "failedSelector": "RoomInTheCartUITests/RecordsMediaUITests/testSelectedPhotoDisclosureEncryptedPreviewCancelSiblingRecoveryAndReadablePhoto",
+  "result": {
+    "selected": 1,
+    "executed": 1,
+    "passed": 0,
+    "failed": 1,
+    "seconds": 31.02
+  },
+  "resultArtifact": {
+    "id": 13382621569,
+    "name": "iphone-fixture-results-RecordsMediaUITests-1",
+    "verifiedZIPSHA256": "99eb33acd93e65210b23987315788be1839eb60712947d9d88ab415584cf02cc"
+  },
+  "retainedEvidenceSHA256": {
+    "job.log": "d8f901debeac6094c2be728096ffa6606cf9128019691bf7dc7535f7216fed91",
+    "artifact/records-test-report.md": "c82c95ccaa0c3882f9033aa2602a44bfcf840c2cb888a514e55a281d88cb902a",
+    "artifact/test-plan/RecordsMediaUITests.txt": "1cd1b7dadf0cef4f124e88261cd491a0e960a2e874b6938c80e288c5fb07927b",
+    "artifact/test-plan/manifest.json": "15d893bedb77ec432ed74cd662db82eebefb7bbff4159bbe4a04fa9c53c75f46"
+  },
+  "hostedWarningEvidence": "The original summary-based report printed zero warnings. Structured per-test runtime warnings are unavailable from the retained artifact.",
+  "unavailableHostedEvidence": [
+    "Assertion text and source location",
+    "Screenshot",
+    "Accessibility hierarchy",
+    "XCTest activities",
+    "Raw XCTest output and result bundle"
+  ],
+  "privacyBoundary": "The hosted workflow uploaded its report and test plan. Raw outputs were confined to the worker because they can contain the synthetic recovery key.",
+  "classification": "Unclassified. The retained report proves a test failure but does not locate the failed assertion or distinguish product behavior from XCTest automation.",
+  "preparedReplay": {
+    "status": "Products verified and extracted. No native replay performed.",
+    "artifact": 13378004520,
+    "name": "iphone-fixture-products-contributor-1",
+    "verifiedZIPSHA256": "182ab493623f4124c7456ab0655c38c4a161ea5cb3a54733ca43ba761fdf5604",
+    "tarSHA256": "40b8e22739a48595af763c88878f298d423cc8fcad33ff8f36f8349b304f16e5",
+    "appExecutableSHA256": "34fe1baab2c38f4cef58b307012de11afd66b4ed16c69856748055b18522c87d",
+    "profile": "contributor",
+    "scheme": "RoomInTheCart",
+    "configuration": "Debug",
+    "swiftCompilationConditions": [
+      "DEBUG",
+      "CONTRIBUTOR_CAPTURE_UI_FIXTURE",
+      "STOCK_REVIEW_UI_FIXTURE",
+      "AWAY_CARRYOVER_UI_FIXTURE"
+    ],
+    "testRun": "RoomInTheCart_iphonesimulator26.2-arm64.xctestrun",
+    "selector": "RoomInTheCartUITests/RecordsMediaUITests/testSelectedPhotoDisclosureEncryptedPreviewCancelSiblingRecoveryAndReadablePhoto",
+    "procedure": "Replay the unchanged selector with the retained products on a fresh owned iPhone 17 simulator. Keep screenshots, AX, logs and activities private and verify the first failed assertion before proposing a test or app change."
+  }
+}

@@ -1,0 +1,391 @@
+[
+  {
+    "attempt": 1,
+    "classification": "Harness setup: installed runner container replaced; driver FileNotFoundError before writer lock.",
+    "hostResult": {
+      "appBundleID": "dev.roominthecart.app.debug",
+      "appContainer": "/Users/palatis/Library/Developer/CoreSimulator/Devices/44120B32-10A5-46DE-B255-C462B4E711D1/data/Containers/Data/Application/10FEE937-100A-4682-83B9-FE3AD08CDC49",
+      "appInfoPlist": "/Users/palatis/Room in the Cart/.build/S04ProtectedVisibility20261106/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/Info.plist",
+      "appInfoPlistSHA256": "16c73fc926e9c3aa9d88e5547f86f331000e4418606956acf0b4abbdc492cad0",
+      "containerIdentities": {
+        "app": {
+          "device": 16777234,
+          "inode": 19360068
+        },
+        "runner": {
+          "device": 16777234,
+          "inode": 19360248
+        }
+      },
+      "database": "/Users/palatis/Library/Developer/CoreSimulator/Devices/44120B32-10A5-46DE-B255-C462B4E711D1/data/Containers/Data/Application/10FEE937-100A-4682-83B9-FE3AD08CDC49/Library/Application Support/UITestWorkspace/ledger.sqlite",
+      "elapsedSeconds": 4.455516542,
+      "error": "[Errno 2] No such file or directory: '/Users/palatis/Library/Developer/CoreSimulator/Devices/44120B32-10A5-46DE-B255-C462B4E711D1/data/Containers/Data/Application/FB11F517-9DC4-4276-8551-392AA450B1AA'",
+      "errorType": "FileNotFoundError",
+      "finishedUnixUTC": 1794020786.626695,
+      "nativeExitCode": null,
+      "runnerBundleID": "dev.roominthecart.RoomInTheCartUITests.xctrunner",
+      "runnerContainer": "/Users/palatis/Library/Developer/CoreSimulator/Devices/44120B32-10A5-46DE-B255-C462B4E711D1/data/Containers/Data/Application/FB11F517-9DC4-4276-8551-392AA450B1AA",
+      "simulator": "44120B32-10A5-46DE-B255-C462B4E711D1",
+      "status": "failed",
+      "supervisorPID": 53457,
+      "supervisorStart": "Fri Nov 6 22:06:21 2026",
+      "token": "01a7b181-f06c-4756-808c-26a1c283d8b0"
+    }
+  },
+  {
+    "attempt": 2,
+    "classification": "Harness bootstrap mismatch: protocol marker arrived before bootstrap; retry-ready acknowledgement failed.",
+    "hostResult": {
+      "appBundleID": "dev.roominthecart.app.debug",
+      "appInfoPlist": "/Users/palatis/Room in the Cart/.build/S04ProtectedVisibility20261106/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/Info.plist",
+      "appInfoPlistSHA256": "16c73fc926e9c3aa9d88e5547f86f331000e4418606956acf0b4abbdc492cad0",
+      "elapsedSeconds": 48.901483833,
+      "error": "Protocol marker arrived before bootstrap",
+      "errorType": "ProtocolError",
+      "finishedUnixUTC": 1794021257.4981802,
+      "nativeExitCode": null,
+      "runnerBundleID": "dev.roominthecart.RoomInTheCartUITests.xctrunner",
+      "simulator": "44120B32-10A5-46DE-B255-C462B4E711D1",
+      "status": "failed",
+      "supervisorPID": 54944,
+      "supervisorStart": "Fri Nov 6 22:13:28 2026",
+      "token": "796270b2-41ac-4dfa-85e7-cef851400797"
+    },
+    "nativeResult": {
+      "nativeExitCode": 65,
+      "driverExitCode": 1,
+      "elapsedSeconds": 80.48254725,
+      "endUnixUTC": 1794021289.011598,
+      "originalTestSourceRestored": true
+    },
+    "nativeCounts": {
+      "passedTests": 0,
+      "failedTests": 1,
+      "skippedTests": 0
+    },
+    "failures": [
+      "XCTAssertEqual failed: (\"XCTWaiterResult(rawValue: 2)\") is not equal to (\"XCTWaiterResult(rawValue: 1)\") - Host acknowledgement must match this exact run, phase and lock state: retry-ready"
+    ]
+  },
+  {
+    "attempt": 3,
+    "classification": "Harness bootstrap acknowledgement timeout; no successful bound protocol.",
+    "hostResult": {
+      "appBundleID": "dev.roominthecart.app.debug",
+      "appInfoPlist": "/Users/palatis/Room in the Cart/.build/S04ProtectedVisibility20261106/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/Info.plist",
+      "appInfoPlistSHA256": "16c73fc926e9c3aa9d88e5547f86f331000e4418606956acf0b4abbdc492cad0",
+      "elapsedSeconds": 61.471208292,
+      "error": "Native process exited unsuccessfully: 65",
+      "errorType": "ProtocolError",
+      "finishedUnixUTC": 1794021604.764908,
+      "nativeExitCode": 65,
+      "runnerBundleID": "dev.roominthecart.RoomInTheCartUITests.xctrunner",
+      "simulator": "48614DBF-29F9-44F5-AED3-F997C75A83B2",
+      "status": "failed",
+      "supervisorPID": 57267,
+      "supervisorStart": "Fri Nov 6 22:19:02 2026",
+      "token": "56a5ad0a-3bb5-4ef6-b8bb-682ed9ad3124"
+    },
+    "nativeResult": {
+      "nativeExitCode": 65,
+      "driverExitCode": 1,
+      "elapsedSeconds": 61.669631,
+      "endUnixUTC": 1794021604.8122182,
+      "originalTestSourceRestored": true
+    },
+    "nativeCounts": {
+      "passedTests": 0,
+      "failedTests": 1,
+      "skippedTests": 0
+    },
+    "failures": [
+      "XCTAssertEqual failed: (\"XCTWaiterResult(rawValue: 2)\") is not equal to (\"XCTWaiterResult(rawValue: 1)\") - Host acknowledgement must match this exact run, phase and lock state: bootstrap"
+    ]
+  },
+  {
+    "attempt": 4,
+    "classification": "UI query ambiguity: two global Retry matches; later test scopes recovery to the presented Form.",
+    "hostResult": {
+      "appBundleID": "dev.roominthecart.app.debug",
+      "appContainer": "/Users/palatis/Library/Developer/CoreSimulator/Devices/6511B44F-AB61-4CEE-BCE8-3D2C902124D9/data/Containers/Data/Application/948EEC21-433C-4118-9840-15B34892009E",
+      "appInfoPlist": "/Users/palatis/Room in the Cart/.build/S04ProtectedVisibility20261106/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/Info.plist",
+      "appInfoPlistSHA256": "16c73fc926e9c3aa9d88e5547f86f331000e4418606956acf0b4abbdc492cad0",
+      "bootstrapRequestSHA256": "641d2dd1b747a9be24e4f1d60fecc7c7b32f20fbed9f6be2864137bec325a199",
+      "containerIdentities": {
+        "app": {
+          "device": 16777234,
+          "inode": 19427778
+        },
+        "documents": {
+          "device": 16777234,
+          "inode": 19423865
+        },
+        "exchange": {
+          "device": 16777234,
+          "inode": 19427229
+        },
+        "runner": {
+          "device": 16777234,
+          "inode": 19423860
+        }
+      },
+      "database": "/Users/palatis/Library/Developer/CoreSimulator/Devices/6511B44F-AB61-4CEE-BCE8-3D2C902124D9/data/Containers/Data/Application/948EEC21-433C-4118-9840-15B34892009E/Library/Application Support/UITestWorkspace/ledger.sqlite",
+      "elapsedSeconds": 103.032158166,
+      "error": "Native process exited unsuccessfully: 65",
+      "errorType": "ProtocolError",
+      "exchangeDirectory": "/Users/palatis/Library/Developer/CoreSimulator/Devices/6511B44F-AB61-4CEE-BCE8-3D2C902124D9/data/Containers/Data/Application/D37B71A5-8B32-409B-B2A0-44C97A60D5CE/Documents/ImportRecovery-cfcef2f4-b28a-42a9-be89-e35375e8b27f",
+      "finishedUnixUTC": 1794021845.106868,
+      "nativeExitCode": 65,
+      "runnerBundleID": "dev.roominthecart.RoomInTheCartUITests.xctrunner",
+      "runnerContainer": "/Users/palatis/Library/Developer/CoreSimulator/Devices/6511B44F-AB61-4CEE-BCE8-3D2C902124D9/data/Containers/Data/Application/D37B71A5-8B32-409B-B2A0-44C97A60D5CE",
+      "simulator": "6511B44F-AB61-4CEE-BCE8-3D2C902124D9",
+      "status": "failed",
+      "supervisorPID": 59190,
+      "supervisorStart": "Fri Nov 6 22:22:21 2026",
+      "token": "cfcef2f4-b28a-42a9-be89-e35375e8b27f"
+    },
+    "nativeResult": {
+      "nativeExitCode": 65,
+      "driverExitCode": 1,
+      "elapsedSeconds": 103.18799312499999,
+      "endUnixUTC": 1794021845.132262,
+      "originalTestSourceRestored": true
+    },
+    "nativeCounts": {
+      "passedTests": 0,
+      "failedTests": 1,
+      "skippedTests": 0
+    },
+    "failures": [
+      "Failed to get matching snapshot: Find single matching element. Multiple matching elements found for <XCUIElementQuery: 0x600002122c10>.\nSparse tree of matches:\n\u2192Application, pid: 59732, label: 'Room in the Cart'\n  \u21b3Window (Main)\n    \u21b3Other\n    \u22c5 \u21b3Other\n    \u22c5   \u21b3Other\n    \u22c5     \u21b3Other\n    \u22c5       \u21b3Other\n    \u22c5         \u21b3Other\n    \u22c5           \u21b3Other\n    \u22c5             \u21b3Other\n    \u22c5               \u21b3Other\n    \u22c5                 \u21b3Other\n    \u22c5                   \u21b3Other\n    \u22c5                     \u21b3CollectionView\n    \u22c5                       \u21b3Cell\n    \u22c5                         \u21b3Other\n    \u22c5                           \u21b3Other\n    \u22c5                             \u21b3Other\n    \u22c5                               \u21b3Button, identifier: 'ledgerRetrySave', label: 'Retry save'\n    \u21b3Other\n      \u21b3Other\n        \u21b3Other\n          \u21b3Other\n            \u21b3Other\n              \u21b3Other\n                \u21b3Other\n                  \u21b3Other\n                    \u21b3Other\n                      \u21b3Other\n                        \u21b3Other\n                          \u21b3Other\n                            \u21b3Other\n                              \u21b3Other\n                                \u21b3Other\n                                  \u21b3CollectionView\n                                    \u21b3Cell\n                                      \u21b3Other\n                                        \u21b3Other\n                                          \u21b3Other\n                                            \u21b3Button, identifier: 'ledgerRetrySave', label: 'Retry save'"
+    ]
+  },
+  {
+    "attempt": 5,
+    "classification": "UI visibility/readback assertion: retried row count0 after restart; not evidence that Retry failed to persist.",
+    "hostResult": {
+      "appBundleID": "dev.roominthecart.app.debug",
+      "appContainer": "/Users/palatis/Library/Developer/CoreSimulator/Devices/CBDDFF0F-2CF7-42DF-A64E-2DE5A1062BFD/data/Containers/Data/Application/9B243ED0-6CD7-456F-B2F5-290ABB52161C",
+      "appInfoPlist": "/Users/palatis/Room in the Cart/.build/S04ProtectedVisibility20261106/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/Info.plist",
+      "appInfoPlistSHA256": "16c73fc926e9c3aa9d88e5547f86f331000e4418606956acf0b4abbdc492cad0",
+      "bootstrapRequestSHA256": "1b667f6e4d1c12f764d4a191d51cdfc8968063a031a3eb76335c234af93be84f",
+      "containerIdentities": {
+        "app": {
+          "device": 16777234,
+          "inode": 19467748
+        },
+        "documents": {
+          "device": 16777234,
+          "inode": 19466804
+        },
+        "exchange": {
+          "device": 16777234,
+          "inode": 19467464
+        },
+        "runner": {
+          "device": 16777234,
+          "inode": 19466799
+        }
+      },
+      "database": "/Users/palatis/Library/Developer/CoreSimulator/Devices/CBDDFF0F-2CF7-42DF-A64E-2DE5A1062BFD/data/Containers/Data/Application/9B243ED0-6CD7-456F-B2F5-290ABB52161C/Library/Application Support/UITestWorkspace/ledger.sqlite",
+      "elapsedSeconds": 104.074526875,
+      "error": "Native process exited unsuccessfully: 65",
+      "errorType": "ProtocolError",
+      "exchangeDirectory": "/Users/palatis/Library/Developer/CoreSimulator/Devices/CBDDFF0F-2CF7-42DF-A64E-2DE5A1062BFD/data/Containers/Data/Application/1FD0F165-C533-4F26-A6AE-253E0B2BEFB8/Documents/ImportRecovery-abacc7fa-10bd-4f37-a29a-58a81346972b",
+      "finishedUnixUTC": 1794022231.935807,
+      "nativeExitCode": 65,
+      "runnerBundleID": "dev.roominthecart.RoomInTheCartUITests.xctrunner",
+      "runnerContainer": "/Users/palatis/Library/Developer/CoreSimulator/Devices/CBDDFF0F-2CF7-42DF-A64E-2DE5A1062BFD/data/Containers/Data/Application/1FD0F165-C533-4F26-A6AE-253E0B2BEFB8",
+      "simulator": "CBDDFF0F-2CF7-42DF-A64E-2DE5A1062BFD",
+      "status": "failed",
+      "supervisorPID": 61899,
+      "supervisorStart": "Fri Nov 6 22:28:47 2026",
+      "token": "abacc7fa-10bd-4f37-a29a-58a81346972b"
+    },
+    "nativeResult": {
+      "nativeExitCode": 65,
+      "driverExitCode": 1,
+      "elapsedSeconds": 104.20130112499999,
+      "endUnixUTC": 1794022231.961746,
+      "originalTestSourceRestored": true
+    },
+    "nativeCounts": {
+      "passedTests": 0,
+      "failedTests": 1,
+      "skippedTests": 0
+    },
+    "failures": [
+      "XCTAssertEqual failed: (\"0\") is not equal to (\"1\") - The retried import is visible after restart"
+    ]
+  },
+  {
+    "attempt": 6,
+    "classification": "Real negative application outcome: Discard followed by an unwanted durable second import; test failed on vanished Form.",
+    "hostResult": {
+      "appBundleID": "dev.roominthecart.app.debug",
+      "appContainer": "/Users/palatis/Library/Developer/CoreSimulator/Devices/CD36F253-27EF-4500-A3F2-163F5541C990/data/Containers/Data/Application/7C160D84-C0B2-4A79-8D4F-63988A98E98F",
+      "appInfoPlist": "/Users/palatis/Room in the Cart/.build/S04ProtectedVisibility20261106/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/Info.plist",
+      "appInfoPlistSHA256": "16c73fc926e9c3aa9d88e5547f86f331000e4418606956acf0b4abbdc492cad0",
+      "bootstrapRequestSHA256": "6f2cc30fc1e4b56257f8c8a084ec3ddef502a6127b8fd4e57600708733d238da",
+      "containerIdentities": {
+        "app": {
+          "device": 16777234,
+          "inode": 19504962
+        },
+        "documents": {
+          "device": 16777234,
+          "inode": 19497968
+        },
+        "exchange": {
+          "device": 16777234,
+          "inode": 19504542
+        },
+        "runner": {
+          "device": 16777234,
+          "inode": 19497963
+        }
+      },
+      "database": "/Users/palatis/Library/Developer/CoreSimulator/Devices/CD36F253-27EF-4500-A3F2-163F5541C990/data/Containers/Data/Application/7C160D84-C0B2-4A79-8D4F-63988A98E98F/Library/Application Support/UITestWorkspace/ledger.sqlite",
+      "elapsedSeconds": 263.47153525,
+      "error": "Native process exited unsuccessfully: 65",
+      "errorType": "ProtocolError",
+      "exchangeDirectory": "/Users/palatis/Library/Developer/CoreSimulator/Devices/CD36F253-27EF-4500-A3F2-163F5541C990/data/Containers/Data/Application/25337E18-830E-461A-8887-4D03B1530CB9/Documents/ImportRecovery-8ad3e195-1321-4a95-9e53-eb24d28fd61c",
+      "finishedUnixUTC": 1794022770.223124,
+      "nativeExitCode": 65,
+      "runnerBundleID": "dev.roominthecart.RoomInTheCartUITests.xctrunner",
+      "runnerContainer": "/Users/palatis/Library/Developer/CoreSimulator/Devices/CD36F253-27EF-4500-A3F2-163F5541C990/data/Containers/Data/Application/25337E18-830E-461A-8887-4D03B1530CB9",
+      "simulator": "CD36F253-27EF-4500-A3F2-163F5541C990",
+      "status": "failed",
+      "supervisorPID": 64175,
+      "supervisorStart": "Fri Nov 6 22:35:06 2026",
+      "token": "8ad3e195-1321-4a95-9e53-eb24d28fd61c"
+    },
+    "nativeResult": {
+      "nativeExitCode": 65,
+      "driverExitCode": 1,
+      "elapsedSeconds": 263.62967125,
+      "endUnixUTC": 1794022770.2627351,
+      "originalTestSourceRestored": true
+    },
+    "nativeCounts": {
+      "passedTests": 0,
+      "failedTests": 1,
+      "skippedTests": 0
+    },
+    "failures": [
+      "XCTAssertEqual failed: (\"0\") is not equal to (\"1\") - Recovery belongs to the single presented import Form"
+    ]
+  },
+  {
+    "attempt": 7,
+    "classification": "Fixed app, incomplete regression: second import entry failed before Discard was exercised; no fixed success claim.",
+    "hostResult": {
+      "appBundleID": "dev.roominthecart.app.debug",
+      "appContainer": "/Users/palatis/Library/Developer/CoreSimulator/Devices/A8545D50-91A7-4DD8-A0F9-A89257129C79/data/Containers/Data/Application/F400338A-31C6-476D-B36B-A6775867FB4E",
+      "appInfoPlist": "/Users/palatis/Room in the Cart/.build/S04ProtectedVisibility20261106/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/Info.plist",
+      "appInfoPlistSHA256": "16c73fc926e9c3aa9d88e5547f86f331000e4418606956acf0b4abbdc492cad0",
+      "bootstrapRequestSHA256": "c005d294101e5d6bac60736ea19eee8d8188b41e789be46966c9d6414e908c92",
+      "containerIdentities": {
+        "app": {
+          "device": 16777234,
+          "inode": 19550391
+        },
+        "documents": {
+          "device": 16777234,
+          "inode": 19549524
+        },
+        "exchange": {
+          "device": 16777234,
+          "inode": 19550130
+        },
+        "runner": {
+          "device": 16777234,
+          "inode": 19549519
+        }
+      },
+      "database": "/Users/palatis/Library/Developer/CoreSimulator/Devices/A8545D50-91A7-4DD8-A0F9-A89257129C79/data/Containers/Data/Application/F400338A-31C6-476D-B36B-A6775867FB4E/Library/Application Support/UITestWorkspace/ledger.sqlite",
+      "elapsedSeconds": 313.255400208,
+      "error": "Native process exited unsuccessfully: 65",
+      "errorType": "ProtocolError",
+      "exchangeDirectory": "/Users/palatis/Library/Developer/CoreSimulator/Devices/A8545D50-91A7-4DD8-A0F9-A89257129C79/data/Containers/Data/Application/9B66FCE9-821E-4AA5-B13E-589FD2782555/Documents/ImportRecovery-80df837c-0618-48f8-8145-e2bffddf64af",
+      "finishedUnixUTC": 1794023329.755887,
+      "nativeExitCode": 65,
+      "runnerBundleID": "dev.roominthecart.RoomInTheCartUITests.xctrunner",
+      "runnerContainer": "/Users/palatis/Library/Developer/CoreSimulator/Devices/A8545D50-91A7-4DD8-A0F9-A89257129C79/data/Containers/Data/Application/9B66FCE9-821E-4AA5-B13E-589FD2782555",
+      "simulator": "A8545D50-91A7-4DD8-A0F9-A89257129C79",
+      "status": "failed",
+      "supervisorPID": 67762,
+      "supervisorStart": "Fri Nov 6 22:43:34 2026",
+      "token": "80df837c-0618-48f8-8145-e2bffddf64af"
+    },
+    "nativeResult": {
+      "nativeExitCode": 65,
+      "driverExitCode": 1,
+      "elapsedSeconds": 313.516107042,
+      "endUnixUTC": 1794023329.8027442,
+      "originalTestSourceRestored": true
+    },
+    "nativeCounts": {
+      "passedTests": 0,
+      "failedTests": 1,
+      "skippedTests": 0
+    },
+    "failures": [
+      "failed - Content tap point is obscured: Query chain:\n \u2192Find: Target Application 'dev.roominthecart.app.debug'\n  \u21aa\ufe0eFind: Descendants matching type Any\n    \u21aa\ufe0eFind: Elements matching predicate '\"ledgerImportText\" IN identifiers'\n      \u21aa\ufe0eFind: First Match\nNo matches found for first query match sequence: `Descendants matching type Any` -> `Elements matching predicate '\"ledgerImportText\" IN identifiers'`, given input Application, pid: 68900, label: 'Room in the Cart'\n"
+    ]
+  },
+  {
+    "attempt": 8,
+    "classification": "Fixed app and corrected import entry: complete protocol, native and strict success.",
+    "hostResult": {
+      "appBundleID": "dev.roominthecart.app.debug",
+      "appContainer": "/Users/palatis/Library/Developer/CoreSimulator/Devices/EF2CF945-20C5-4BF4-ACA1-A2D6F9C89C01/data/Containers/Data/Application/BF7E67F1-F966-4897-B13B-A2583173C7F5",
+      "appInfoPlist": "/Users/palatis/Room in the Cart/.build/S04ProtectedVisibility20261106/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/Info.plist",
+      "appInfoPlistSHA256": "16c73fc926e9c3aa9d88e5547f86f331000e4418606956acf0b4abbdc492cad0",
+      "bootstrapRequestSHA256": "1d872c55c2c597552f97b0b8aef19f7c9eb5fb3a81185dbfb1b27f18a8007461",
+      "containerIdentities": {
+        "app": {
+          "device": 16777234,
+          "inode": 19581954
+        },
+        "documents": {
+          "device": 16777234,
+          "inode": 19579046
+        },
+        "exchange": {
+          "device": 16777234,
+          "inode": 19581479
+        },
+        "runner": {
+          "device": 16777234,
+          "inode": 19579041
+        }
+      },
+      "database": "/Users/palatis/Library/Developer/CoreSimulator/Devices/EF2CF945-20C5-4BF4-ACA1-A2D6F9C89C01/data/Containers/Data/Application/BF7E67F1-F966-4897-B13B-A2583173C7F5/Library/Application Support/UITestWorkspace/ledger.sqlite",
+      "elapsedSeconds": 269.23844087500004,
+      "exchangeDirectory": "/Users/palatis/Library/Developer/CoreSimulator/Devices/EF2CF945-20C5-4BF4-ACA1-A2D6F9C89C01/data/Containers/Data/Application/70471C4D-C950-448E-A671-C4C67048E708/Documents/ImportRecovery-11bae1df-0205-44b6-8ac7-727af8a8132b",
+      "finishedUnixUTC": 1794023768.166218,
+      "nativeExitCode": 0,
+      "runnerBundleID": "dev.roominthecart.RoomInTheCartUITests.xctrunner",
+      "runnerContainer": "/Users/palatis/Library/Developer/CoreSimulator/Devices/EF2CF945-20C5-4BF4-ACA1-A2D6F9C89C01/data/Containers/Data/Application/70471C4D-C950-448E-A671-C4C67048E708",
+      "simulator": "EF2CF945-20C5-4BF4-ACA1-A2D6F9C89C01",
+      "status": "protocol-and-native-exit-success",
+      "supervisorPID": 71406,
+      "supervisorStart": "Fri Nov 6 22:51:38 2026",
+      "token": "11bae1df-0205-44b6-8ac7-727af8a8132b"
+    },
+    "nativeResult": {
+      "nativeExitCode": 0,
+      "driverExitCode": 0,
+      "elapsedSeconds": 269.35874233299995,
+      "endUnixUTC": 1794023768.183187,
+      "originalTestSourceRestored": true
+    },
+    "nativeCounts": {
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0
+    },
+    "failures": []
+  }
+]

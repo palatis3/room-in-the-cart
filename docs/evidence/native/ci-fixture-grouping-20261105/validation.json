@@ -1,0 +1,20 @@
+{
+  "originalCandidate": "23a73a890afbaa23d3c58ae6b0cf63a8b2e2fb71",
+  "originalRunID": 42021894739,
+  "change": "13 whole contributor suites grouped into five balanced jobs;22 total fixture jobs become14.",
+  "rootChecks": {
+    "completePythonSuiteTests": 147,
+    "compiledProfileReplay": "Both original enumerations conserve44selectors exactly once",
+    "protectedManifestsAndSelectorFilesByteIdentical": true,
+    "sourceIsolationReviewHashesMatchCurrent": true,
+    "workflowLint": "passed",
+    "diffCheck": "passed"
+  },
+  "patchSHA256": "c3330a559c08b703b5be1a1624324c1ae8d0ed0dbef725dfe0c8fa65cb459cd2",
+  "reportSHA256": "27f728dd3d74e7d0d20094fdbe21c550f3d7e615bfbe8c7b8ae3c320aa44c7fd",
+  "implementationReviewSHA256": "bca2fd00578c02413a871ac8e83172154632f542d897004332b26b362449fd22",
+  "contributorPlanSHA256": "589b6d214e03c39265d831b5108bcfc21850a3687586de9ef1a3e9d48af89860",
+  "dinnerPlanSHA256": "acd16e775e4f3d0b26cff902288c64824b84ff1ae96a71d825a57b608ac5ff31",
+  "estimatedSetupSavingRunnerMinutes": 47.8,
+  "limitations": "Estimated from prior per-job overhead, not measured speedup. Grouped suites now share simulator/XCTest state; fresh hosted execution required. Seven shared-editor singleton cases, Records redacted-only output, dinner profile, five-way matrix concurrency, all44selectors and existing timeouts/execution/warning guards preserved."
+}

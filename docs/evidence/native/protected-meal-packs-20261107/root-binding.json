@@ -1,0 +1,17 @@
+{
+  "baseCommit": "07c2c9444c0c159dad9ac780355d97837fea87ec",
+  "installedTestSHA256": "939929a83d02f1041f3cab38d36ce8252eddb898df2f645eec60229d1121a571",
+  "integratedSourceFilesMatching": 459,
+  "modelClassPassed": 10,
+  "modelMethodsExtended": 1,
+  "newTestSelectors": 0,
+  "productionCodeChanged": false,
+  "modelStrictExit": 0,
+  "modelRuntimeWarnings": 0,
+  "hostedUIOriginalCandidate": "8d1a79b22981148839c6e3d0827c6710f877a369",
+  "hostedUICasePassed": 1,
+  "hostedUIShardPassed": 5,
+  "hostedUIStrictExit": 0,
+  "buildLogSHA256": "cd479fcdebb64e659510039cae5fa84fa4540f4b1c239b043c52ff5d50110d3c",
+  "scope": "S04.01 named6/4/2 no-stock pack persistence is local model proof; S04.02 hide/unhide is independent original hosted UI proof. Neither establishes physical delivered16/leftover4 or full release."
+}

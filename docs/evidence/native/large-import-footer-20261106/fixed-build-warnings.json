@@ -1,0 +1,34 @@
+[
+  {
+    "line": 264,
+    "text": "/Users/palatis/Room in the Cart/ios/Tests/HouseholdRequestPackFixtureSupport.swift:93:57: warning: 'S24FixtureProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]"
+  },
+  {
+    "line": 268,
+    "text": "    |             |                                           `- warning: 'S24FixtureProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]"
+  },
+  {
+    "line": 273,
+    "text": "/Users/palatis/Room in the Cart/ios/Tests/MembershipTests.swift:1294:68: warning: 'MembershipURLProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]"
+  },
+  {
+    "line": 277,
+    "text": "     |                     |                                              `- warning: 'MembershipURLProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]"
+  },
+  {
+    "line": 282,
+    "text": "/Users/palatis/Room in the Cart/ios/Tests/NavigationRestorationTests.swift:245:66: warning: 'RestorationProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]"
+  },
+  {
+    "line": 286,
+    "text": "    |                     |                                            `- warning: 'RestorationProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]"
+  },
+  {
+    "line": 291,
+    "text": "/Users/palatis/Room in the Cart/ios/Tests/PickupStockPrivateScopeIntegrationTests.swift:43:65: warning: 'StockScopeProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]"
+  },
+  {
+    "line": 295,
+    "text": "    |                     |                                           `- warning: 'StockScopeProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]"
+  }
+]

@@ -1,0 +1,29 @@
+{
+  "changedFixedJob": "ios-swift-codeql",
+  "oldSlot": 2,
+  "newSlot": 4,
+  "allOtherWorkflowSemanticsIdentical": true,
+  "matrixAndSelectorProducersUnchangedFrom0d5": [
+    "scripts/ci_mac_slots.py",
+    "scripts/plan_ios_tests.py",
+    "scripts/plan_ios_fixture_tests.py",
+    "scripts/plan_ios_performance_tests.py"
+  ],
+  "fiveSharedSlotsPreserved": true,
+  "validatedNativeDefinitions": 14,
+  "testsPassed": {
+    "workflowGuards": 17,
+    "slotPolicy": 4,
+    "planners": 23
+  },
+  "actionlintPassed": true,
+  "limits": [
+    "One-cohort workload redistribution, not predicted wall-time speedup.",
+    "ApprovedProposal and StaleReviewedSave still share slot2; no direct fixture override.",
+    "No current workflow was cancelled, retried, superseded or dispatched."
+  ],
+  "sourceHashes": {
+    ".github/workflows/ci.yml": "32050e785e9e447b809821c9cca04ea851a2f4549ba6f59f4b84e059e3880faa",
+    "scripts/check_ci_workflows.py": "4eebda05322d01251fece1aa94297a3dbe24309076456116af0e4b717dcb0157"
+  }
+}

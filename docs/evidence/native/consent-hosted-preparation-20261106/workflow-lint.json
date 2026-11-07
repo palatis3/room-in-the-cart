@@ -1,0 +1,62 @@
+{
+  "passed": true,
+  "actionlintVersion": "1.7.12\ninstalled by downloading from release page\nbuilt with go1.26.1 compiler for darwin/arm64",
+  "validationErrors": [],
+  "exemptedQueueDiagnostics": [
+    {
+      "message": "unexpected key \"queue\" for \"concurrency\" section. expected one of \"cancel-in-progress\", \"group\"",
+      "filepath": ".build/MeasurementConsentReview20261106/hosted-proposal/source/.github/workflows/ios-fixtures.yml",
+      "line": 23,
+      "column": 7,
+      "kind": "syntax-check",
+      "snippet": "      queue: max\n      ^~~~~~",
+      "end_column": 12
+    },
+    {
+      "message": "unexpected key \"queue\" for \"concurrency\" section. expected one of \"cancel-in-progress\", \"group\"",
+      "filepath": ".build/MeasurementConsentReview20261106/hosted-proposal/source/.github/workflows/ios-fixtures.yml",
+      "line": 76,
+      "column": 7,
+      "kind": "syntax-check",
+      "snippet": "      queue: max\n      ^~~~~~",
+      "end_column": 12
+    }
+  ],
+  "unexpectedDiagnostics": [],
+  "sourceSHA256": {
+    ".build/MeasurementConsentReview20261106/hosted-proposal/source/.github/workflows/ios-fixtures.yml": "ed4d310f026f05d6d62e5e4d5a650d8af62c24fc4c3099ea3e7c16715da1c44f"
+  },
+  "actionlintArguments": [
+    "/tmp/ritc-actionlint-2ttcdxxn/actionlint",
+    "-no-color",
+    "-shellcheck=",
+    "-pyflakes=",
+    "-format",
+    "{{json .}}",
+    ".build/MeasurementConsentReview20261106/hosted-proposal/source/.github/workflows/ios-fixtures.yml"
+  ],
+  "actionlintExit": 1,
+  "actionlintStderr": "",
+  "actionlintStdout": "[{\"message\":\"unexpected key \\\"queue\\\" for \\\"concurrency\\\" section. expected one of \\\"cancel-in-progress\\\", \\\"group\\\"\",\"filepath\":\".build/MeasurementConsentReview20261106/hosted-proposal/source/.github/workflows/ios-fixtures.yml\",\"line\":23,\"column\":7,\"kind\":\"syntax-check\",\"snippet\":\"      queue: max\\n      ^~~~~~\",\"end_column\":12},{\"message\":\"unexpected key \\\"queue\\\" for \\\"concurrency\\\" section. expected one of \\\"cancel-in-progress\\\", \\\"group\\\"\",\"filepath\":\".build/MeasurementConsentReview20261106/hosted-proposal/source/.github/workflows/ios-fixtures.yml\",\"line\":76,\"column\":7,\"kind\":\"syntax-check\",\"snippet\":\"      queue: max\\n      ^~~~~~\",\"end_column\":12}]\n",
+  "actionlintDiagnostics": [
+    {
+      "message": "unexpected key \"queue\" for \"concurrency\" section. expected one of \"cancel-in-progress\", \"group\"",
+      "filepath": ".build/MeasurementConsentReview20261106/hosted-proposal/source/.github/workflows/ios-fixtures.yml",
+      "line": 23,
+      "column": 7,
+      "kind": "syntax-check",
+      "snippet": "      queue: max\n      ^~~~~~",
+      "end_column": 12
+    },
+    {
+      "message": "unexpected key \"queue\" for \"concurrency\" section. expected one of \"cancel-in-progress\", \"group\"",
+      "filepath": ".build/MeasurementConsentReview20261106/hosted-proposal/source/.github/workflows/ios-fixtures.yml",
+      "line": 76,
+      "column": 7,
+      "kind": "syntax-check",
+      "snippet": "      queue: max\n      ^~~~~~",
+      "end_column": 12
+    }
+  ],
+  "dispatchAndDeadlineAssertionsPassed": true
+}

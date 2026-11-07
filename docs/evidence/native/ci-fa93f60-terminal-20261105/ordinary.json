@@ -1,0 +1,344 @@
+{
+  "candidate": "fa93f60534918ce8e040c706e80163e5d6959153",
+  "run": 41968854906,
+  "modelCasePasses": 565,
+  "uiCasePasses": 48,
+  "uiCaseFailures": 2,
+  "originalRun": "failure",
+  "rows": [
+    {
+      "shard": "models",
+      "artifactID": 13390956384,
+      "artifactSHA256": "2a2041f7bf2a7dfdffc638ebf588a26a81becce1be826ef0fd631346d4c41f23",
+      "passed": 565,
+      "failed": 0,
+      "skipped": 0,
+      "expectedFailures": 0,
+      "executionLogErrors": [
+        "SQLite reported an API misuse diagnostic at log line 263.",
+        "SQLite reported an API misuse diagnostic at log line 265.",
+        "SQLite reported an API misuse diagnostic at log line 266.",
+        "SQLite reported an API misuse diagnostic at log line 267.",
+        "SQLite reported an API misuse diagnostic at log line 273.",
+        "SQLite reported an API misuse diagnostic at log line 275.",
+        "SQLite reported an API misuse diagnostic at log line 283.",
+        "Unrecognized or out-of-order XCTest case record at log line 283.",
+        "SQLite reported an API misuse diagnostic at log line 285.",
+        "SQLite reported an API misuse diagnostic at log line 286.",
+        "SQLite reported an API misuse diagnostic at log line 293.",
+        "SQLite reported an API misuse diagnostic at log line 294.",
+        "SQLite reported an API misuse diagnostic at log line 297.",
+        "SQLite reported an API misuse diagnostic at log line 299.",
+        "SQLite reported an API misuse diagnostic at log line 307.",
+        "SQLite reported an API misuse diagnostic at log line 308.",
+        "SQLite reported an API misuse diagnostic at log line 309.",
+        "SQLite reported an API misuse diagnostic at log line 313.",
+        "SQLite reported an API misuse diagnostic at log line 317.",
+        "SQLite reported an API misuse diagnostic at log line 318.",
+        "SQLite reported an API misuse diagnostic at log line 320.",
+        "SQLite reported an API misuse diagnostic at log line 327.",
+        "SQLite reported an API misuse diagnostic at log line 328.",
+        "SQLite reported an API misuse diagnostic at log line 329.",
+        "SQLite reported an API misuse diagnostic at log line 332.",
+        "SQLite reported an API misuse diagnostic at log line 341.",
+        "SQLite reported an API misuse diagnostic at log line 342.",
+        "SQLite reported an API misuse diagnostic at log line 344.",
+        "SQLite reported an API misuse diagnostic at log line 346.",
+        "SQLite reported an API misuse diagnostic at log line 354.",
+        "SQLite reported an API misuse diagnostic at log line 355.",
+        "SQLite reported an API misuse diagnostic at log line 360.",
+        "SQLite reported an API misuse diagnostic at log line 361.",
+        "SQLite reported an API misuse diagnostic at log line 366.",
+        "SQLite reported an API misuse diagnostic at log line 367.",
+        "SQLite reported an API misuse diagnostic at log line 374.",
+        "SQLite reported an API misuse diagnostic at log line 376.",
+        "SQLite reported an API misuse diagnostic at log line 380.",
+        "SQLite reported an API misuse diagnostic at log line 381.",
+        "SQLite reported an API misuse diagnostic at log line 388.",
+        "SQLite reported an API misuse diagnostic at log line 389.",
+        "SQLite reported an API misuse diagnostic at log line 396.",
+        "SQLite reported an API misuse diagnostic at log line 397.",
+        "SQLite reported an API misuse diagnostic at log line 402.",
+        "SQLite reported an API misuse diagnostic at log line 406.",
+        "SQLite reported an API misuse diagnostic at log line 408.",
+        "SQLite reported an API misuse diagnostic at log line 764.",
+        "SQLite reported an API misuse diagnostic at log line 765.",
+        "SQLite reported an API misuse diagnostic at log line 772.",
+        "SQLite reported an API misuse diagnostic at log line 773.",
+        "SQLite reported an API misuse diagnostic at log line 778.",
+        "SQLite reported an API misuse diagnostic at log line 780.",
+        "SQLite reported an API misuse diagnostic at log line 784.",
+        "SQLite reported an API misuse diagnostic at log line 785.",
+        "SQLite reported an API misuse diagnostic at log line 793.",
+        "SQLite reported an API misuse diagnostic at log line 794.",
+        "SQLite reported an API misuse diagnostic at log line 799.",
+        "SQLite reported an API misuse diagnostic at log line 800.",
+        "SQLite reported an API misuse diagnostic at log line 807.",
+        "SQLite reported an API misuse diagnostic at log line 808.",
+        "SQLite reported an API misuse diagnostic at log line 815.",
+        "SQLite reported an API misuse diagnostic at log line 817.",
+        "SQLite reported an API misuse diagnostic at log line 821.",
+        "SQLite reported an API misuse diagnostic at log line 822.",
+        "SQLite reported an API misuse diagnostic at log line 827.",
+        "SQLite reported an API misuse diagnostic at log line 828.",
+        "SQLite reported an API misuse diagnostic at log line 833.",
+        "SQLite reported an API misuse diagnostic at log line 834.",
+        "SQLite reported an API misuse diagnostic at log line 839.",
+        "SQLite reported an API misuse diagnostic at log line 840.",
+        "SQLite reported an API misuse diagnostic at log line 934.",
+        "SQLite reported an API misuse diagnostic at log line 936.",
+        "SQLite reported an API misuse diagnostic at log line 940.",
+        "SQLite reported an API misuse diagnostic at log line 941.",
+        "SQLite reported an API misuse diagnostic at log line 946.",
+        "SQLite reported an API misuse diagnostic at log line 948.",
+        "SQLite reported an API misuse diagnostic at log line 952.",
+        "SQLite reported an API misuse diagnostic at log line 953.",
+        "SQLite reported an API misuse diagnostic at log line 962.",
+        "SQLite reported an API misuse diagnostic at log line 964.",
+        "SQLite reported an API misuse diagnostic at log line 970.",
+        "XCTest log requires one start then one pass for RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testColdGenericCaptureWaitsForAdultModels; found ['start'].",
+        "XCTest log requires one start then one pass for RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testDeferredURLCannotOpenAfterAuthorityLossBeforeActivation; found ['pass']."
+      ],
+      "originalRuntimeWarningReport": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 565,
+        "detailExportCount": 565,
+        "activityExportCount": 0,
+        "warnings": []
+      }
+    },
+    {
+      "shard": "ui-01",
+      "artifactID": 13391392240,
+      "artifactSHA256": "04614695f357a83f145d81b073781d07a03de22460461ea8010bcad4d9cd3ccc",
+      "passed": 2,
+      "failed": 1,
+      "skipped": 0,
+      "expectedFailures": 0,
+      "executionLogErrors": [
+        "XCTest restarted its runner at log line 2985.",
+        "XCTest log requires one start then one pass for RoomInTheCartUITests/PickupOfferUITests/testSavedOfferReopensAndUpdatesResponseAfterRestart; found ['start', 'timeout'].",
+        "XCTest log requires one successful result banner; found ['FAILED']."
+      ],
+      "originalRuntimeWarningReport": {
+        "status": "unexpected-warnings",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 2,
+        "examinedTestCount": 3,
+        "detailExportCount": 3,
+        "activityExportCount": 1,
+        "warnings": [
+          {
+            "selector": "RoomInTheCartUITests/FreeJourneyUITests/testManualListOrderSurvivesRestartAndOpensLargePrint",
+            "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+            "count": 2,
+            "maximum": 1,
+            "menuActivity": {
+              "tap": "Tap \"ledgerListOptions\" Button[0.50, 0.50]",
+              "phase": "Synthesize event"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "shard": "ui-02",
+      "artifactID": 13391023081,
+      "artifactSHA256": "648fc29029002bcb68db587c59f4d9e8e0a0c051e1fe9b3fcdfec324aebe2561",
+      "passed": 3,
+      "failed": 1,
+      "skipped": 0,
+      "expectedFailures": 0,
+      "executionLogErrors": [
+        "XCTest restarted its runner at log line 2312.",
+        "XCTest log requires one start then one pass for RoomInTheCartUITests/FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop; found ['start', 'timeout'].",
+        "XCTest log requires one successful result banner; found ['FAILED']."
+      ],
+      "originalRuntimeWarningReport": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 4,
+        "detailExportCount": 4,
+        "activityExportCount": 0,
+        "warnings": []
+      }
+    },
+    {
+      "shard": "ui-03",
+      "artifactID": 13391983123,
+      "artifactSHA256": "82de045ddbb0eee74217d34f398f1830c2be9ce24d1ddc29f66a4621a8b40892",
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "expectedFailures": 0,
+      "executionLogErrors": [],
+      "originalRuntimeWarningReport": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 5,
+        "detailExportCount": 5,
+        "activityExportCount": 0,
+        "warnings": []
+      }
+    },
+    {
+      "shard": "ui-04",
+      "artifactID": 13391786555,
+      "artifactSHA256": "55d77eb5d8ebcb945a6da3c7b7062106fe86a2613b179caea336ca925c627e26",
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "expectedFailures": 0,
+      "executionLogErrors": [],
+      "originalRuntimeWarningReport": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 5,
+        "detailExportCount": 5,
+        "activityExportCount": 0,
+        "warnings": []
+      }
+    },
+    {
+      "shard": "ui-05",
+      "artifactID": 13391732720,
+      "artifactSHA256": "bb4bd98330268712b412e569878f4626ed33217dbe138b371af9113cc00d0832",
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "expectedFailures": 0,
+      "executionLogErrors": [],
+      "originalRuntimeWarningReport": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 1,
+        "examinedTestCount": 6,
+        "detailExportCount": 6,
+        "activityExportCount": 1,
+        "warnings": [
+          {
+            "selector": "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges",
+            "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+            "count": 1,
+            "maximum": 2,
+            "menuActivity": {
+              "tap": "Tap \"ledgerShopPicker\" Button",
+              "phase": "Synthesize event"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "shard": "ui-06",
+      "artifactID": 13392692627,
+      "artifactSHA256": "9b6f6b7df6422611149d4b9df5ece714d6083644297195d8e1861717ecc90c17",
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "expectedFailures": 0,
+      "executionLogErrors": [],
+      "originalRuntimeWarningReport": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 2,
+        "examinedTestCount": 5,
+        "detailExportCount": 5,
+        "activityExportCount": 1,
+        "warnings": [
+          {
+            "selector": "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekReservationDraftCannotFollowAnotherPickup",
+            "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+            "count": 2,
+            "maximum": 2,
+            "menuActivity": {
+              "tap": "Tap \"ledgerShopPicker\" Button",
+              "phase": "Synthesize event"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "shard": "ui-07",
+      "artifactID": 13393472572,
+      "artifactSHA256": "bcaf276cb5bac56a46a97719e3fd6dd492c9c196dc0a8e02f822e71c63e23c3c",
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "expectedFailures": 0,
+      "executionLogErrors": [],
+      "originalRuntimeWarningReport": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 5,
+        "detailExportCount": 5,
+        "activityExportCount": 0,
+        "warnings": []
+      }
+    },
+    {
+      "shard": "ui-08",
+      "artifactID": 13392914525,
+      "artifactSHA256": "d6009bc6891b3ec0d09cc2e4ca0202f7a9dcf076c3b9207db8bf50a73c859c30",
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "expectedFailures": 0,
+      "executionLogErrors": [],
+      "originalRuntimeWarningReport": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 5,
+        "detailExportCount": 5,
+        "activityExportCount": 0,
+        "warnings": []
+      }
+    },
+    {
+      "shard": "ui-09",
+      "artifactID": 13393538069,
+      "artifactSHA256": "c919927ab13c30c9bf7fe36a34a8030c586d2d3c12c230a18a46c4b676e3dd19",
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "expectedFailures": 0,
+      "executionLogErrors": [],
+      "originalRuntimeWarningReport": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 6,
+        "detailExportCount": 6,
+        "activityExportCount": 0,
+        "warnings": []
+      }
+    },
+    {
+      "shard": "ui-10",
+      "artifactID": 13393268610,
+      "artifactSHA256": "5c18e7441f0adb87e438c82c5da0f692182677324f1199413899f63366beb508",
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "expectedFailures": 0,
+      "executionLogErrors": [],
+      "originalRuntimeWarningReport": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 6,
+        "detailExportCount": 6,
+        "activityExportCount": 0,
+        "warnings": []
+      }
+    }
+  ]
+}

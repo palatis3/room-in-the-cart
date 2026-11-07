@@ -1,0 +1,172 @@
+{
+  "candidate": "23a73a890afbaa23d3c58ae6b0cf63a8b2e2fb71",
+  "observedAt": "2026-11-05T13:23:45.007820+00:00",
+  "run": 42021894668,
+  "coverageComplete": false,
+  "independentlyVerifiedPassingCases": 33,
+  "shards": {
+    "ui-01": {
+      "artifactID": 13413598318,
+      "sha256": "5e0dd8d94783a1f912e2d12c9206cb16e472fddb6cb11f4b31b42caa7c357fa7",
+      "githubDigestVerified": true,
+      "selected": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "selectors": [
+        "RoomInTheCartUITests/PickupCheckoutRestoreUITests/testInclusiveCheckoutFieldsAndResultSurviveRestartAndUnchangedSave"
+      ],
+      "rawLogSHA256": "249d612f2a96ca7d227da3c4e10e1d320c9b590b57af3a9092bf15fece6fba12"
+    },
+    "ui-03": {
+      "artifactID": 13413813323,
+      "sha256": "05c1dcaaafaea953b50bdb810e84c0b4d45d0c0d8658c96f842f4e3e617b5d14",
+      "githubDigestVerified": true,
+      "selected": 5,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "selectors": [
+        "RoomInTheCartUITests/FreeJourneyUITests/testFreeCookCorrectionAndExplicitRecipientAcknowledgment",
+        "RoomInTheCartUITests/FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop",
+        "RoomInTheCartUITests/FreeJourneyUITests/testTypedBarcodeNeedsACodeAndFreshMatchConfirmation",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testLargestTextShopRepairShortcutRemainsInsideViewportAndOpens",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer"
+      ],
+      "rawLogSHA256": "d056a227699f19bfa5fbc238483ceda030c81c663a0d1e8278f9bbe75b2a3f24"
+    },
+    "ui-02": {
+      "artifactID": 13414367829,
+      "sha256": "ed5a6283e42feb6fbdcfe00d8fd292224a73fcb7753911dd3e4a30831b19471b",
+      "githubDigestVerified": true,
+      "selected": 4,
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 2,
+      "warningScope": [
+        {
+          "selector": "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges",
+          "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+          "count": 2,
+          "maximum": 2,
+          "menuActivity": {
+            "tap": "Tap \"ledgerShopPicker\" Button",
+            "phase": "Synthesize event"
+          }
+        }
+      ],
+      "selectors": [
+        "RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareKeepsTheFrozenPickupUnplaced",
+        "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges",
+        "RoomInTheCartUITests/PickupOfferUITests/testSavedOfferReopensAndUpdatesResponseAfterRestart",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testShopPhoneShortcutsHaveACompleteTouchTargetAndReturnToShop"
+      ],
+      "rawLogSHA256": "968652d3738391f2db6fea0a5211ffcb409b262bc47dd86446c49d5fe2acce56"
+    },
+    "ui-04": {
+      "jobID": 127231601996,
+      "artifactID": 13413749809,
+      "sha256": "34cbd3fc7dba604f59c269776e8b23049bc0ff51467ccde60bffe913fc875c81",
+      "githubDigestVerified": true,
+      "selected": 5,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "warningScope": [],
+      "selectors": [
+        "RoomInTheCartUITests/ContextualNavigationUITests/testEnteredStoreQuotesKeepTripCostsSeparateAndAdoptOnlyReviewedSavedProof",
+        "RoomInTheCartUITests/ContextualNavigationUITests/testMissingStorePricesAndAvailabilityRemainConditionalAfterSaving",
+        "RoomInTheCartUITests/FreeJourneyUITests/testPairingEnumerationUsesTheChosenScheduleAndDoesNotOfferItAgain",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testAutomatedAccessibilityAuditOnShopAndKnownResults",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testLargestDynamicTypeAndDarkAppearanceComparisonSmoke"
+      ],
+      "rawLogSHA256": "4719f5480cdb475df3ae269052471c0c064e257cc000243ed996bf33e7d67aa5"
+    },
+    "ui-06": {
+      "jobID": 127231601973,
+      "artifactID": 13415467744,
+      "sha256": "c9ef84852899b436ca9d730c5049bef2ca08c7fcd115140083a487717621e273",
+      "githubDigestVerified": true,
+      "selected": 6,
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 2,
+      "warningScope": [
+        {
+          "selector": "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekReservationDraftCannotFollowAnotherPickup",
+          "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+          "count": 2,
+          "maximum": 2,
+          "menuActivity": {
+            "tap": "Tap \"ledgerShopPicker\" Button",
+            "phase": "Synthesize event"
+          }
+        }
+      ],
+      "selectors": [
+        "RoomInTheCartUITests/ContextualNavigationUITests/testLargeTextKeepsLongNativePasteEditableAndReviewReachable",
+        "RoomInTheCartUITests/ContextualReminderUITests/testSavedOfferRequestsDeadlineReminderFromThatOfferAndCancelKeepsDecisionPending",
+        "RoomInTheCartUITests/FreeJourneyUITests/testListCaptureOpensWithTypedDraftAndReopensAfterCancel",
+        "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekReservationDraftCannotFollowAnotherPickup",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testComparisonSaveStaysInsideViewportAboveTabBar",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testConfirmedComparisonDeletionSurvivesRestart"
+      ],
+      "rawLogSHA256": "57379b67224cd4c4ed223cf46f18b739aae9d785200ffb10d72072975c1fdfb5"
+    },
+    "ui-08": {
+      "jobID": 127231601867,
+      "artifactID": 13417737159,
+      "sha256": "b78f6821527a1cf12280b45ae80ef408b8b0986b1c813d2a2918a4aadb57129d",
+      "githubDigestVerified": true,
+      "selected": 6,
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "warningScope": [],
+      "selectors": [
+        "RoomInTheCartUITests/ContextualNavigationUITests/testUnknownProduceWeightUsesSavedWholePickupCapAndBillingIncrement",
+        "RoomInTheCartUITests/FreeJourneyUITests/testEnglishMealWeekListAndGridShowDatedProtectedLunch",
+        "RoomInTheCartUITests/FreeJourneyUITests/testFreePickupRepairKeepsTheNeedOpenWhenAcceptedFallbackToolsAreUnavailable",
+        "RoomInTheCartUITests/FreeJourneyUITests/testRecipeCaptureOpensOnFirstAttemptAndReopensAfterCancel",
+        "RoomInTheCartUITests/FreeJourneyUITests/testStagedListCanReturnToOriginalAndMergeADuplicateAfterRestart",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testLargestTextSourceAndSavedDetailsAreFullyReadableAboveTabs"
+      ],
+      "rawLogSHA256": "ba552ce4388c596254e6a34e78349ae9fd4fbbe15feb857f18e85bb2b92c18d9"
+    },
+    "ui-09": {
+      "jobID": 127231601812,
+      "artifactID": 13418541517,
+      "sha256": "fca72f5f38c7c3afe6737c3c9946bb3e42eea480f1b6688caec8c6979494570e",
+      "githubDigestVerified": true,
+      "selected": 6,
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "warningScope": [],
+      "selectors": [
+        "RoomInTheCartUITests/ContextualReminderUITests/testNextShopDeferralRequestsReminderOnlyAfterExplicitScheduleAndCanCancel",
+        "RoomInTheCartUITests/FreeJourneyUITests/testFirstPickupCanStartFromDinnersAndReviewAnEditablePattern",
+        "RoomInTheCartUITests/FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval",
+        "RoomInTheCartUITests/NavigationRestorationUITests/testKillRelaunchRestoresRecordsDetailAndIndependentShoppingList",
+        "RoomInTheCartUITests/NavigationRestorationUITests/testKillRelaunchRestoresSelectedDinnersTabWithoutRestoringUnsavedComparison",
+        "RoomInTheCartUITests/RoomInTheCartUITests/testLargestTextEditActionGrowsInContentAndReturnsToEntry"
+      ],
+      "rawLogSHA256": "5637c0e7b918dea8cd5480deccc66e256eb33ffcc63e0c393b6ad70a522462ff"
+    }
+  },
+  "limits": "Only these terminal artifacts are independently verified. Other ordinary UI groups remain queued/running. Original f20 failures remain recorded; no full green candidate claim."
+}

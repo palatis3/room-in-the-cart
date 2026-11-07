@@ -1,0 +1,39 @@
+{
+  "sourceCommit": "ab1779c515f925b51ffdf8dabbaf65ae2bbee3d0",
+  "sourceRunID": 42071958899,
+  "originalFailurePreserved": true,
+  "artifactID": 13437571219,
+  "artifactZIPDigest": "297f258fa92a44e5ac5e22fb1a69ea871b67a4e9603a1019ba7f4d8483325b41",
+  "workflowSHA256": "ed3b3063d1ac948edc0a50be978fd28fb25d8c449dbe305c9225e62ec86ea6af",
+  "sourceHarnessAndProductsUnchanged": true,
+  "arms": [
+    "unprelaunched",
+    "settings-prelaunch"
+  ],
+  "compileOrNativeLocalExecution": false,
+  "testStepMinutes": 40,
+  "jobMinutes": 55,
+  "testDefaultSeconds": 720,
+  "testMaximumSeconds": 900,
+  "fixtureTests": 7,
+  "rootActionlint": "passed",
+  "rootRealMetadataAndHarnessHashes": "passed",
+  "review": "Root reviewed full workflow and verified actual retained-run/artifact metadata. Astra prepared and tested scratch helpers; Lumpy independently found no scoped blocker.",
+  "limits": [
+    "Exploratory pair; no reliability or root-cause claim and no production harness change.",
+    "Selected available shutdown simulators on separate ephemeral hosted workers are not explicitly erased; their untouched state is not independently proven.",
+    "One successful simctl launch is process-launch acceptance, not AX readiness or native preference proof.",
+    "Inspect actual original test results and teardown before claiming real preference restoration.",
+    "Any infrastructure retry invalidates assigned setup even if later tests pass."
+  ],
+  "scratch": ".build/CIResearch20261105/settings-preflight-comparison",
+  "worktree": ".build/CIResearch20261105/settings-preflight-experiment-worktree",
+  "experimentCommit": "cfd42e45f0acc5a3125fb729133be74147b59d26",
+  "runID": 42109366497,
+  "jobIDs": {
+    "settings-prelaunch": 127532537558,
+    "unprelaunched": 127532538115
+  },
+  "trigger": "one branch push; no dispatch or rerun",
+  "hostedStatusAtPublication": "in_progress"
+}

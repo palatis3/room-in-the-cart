@@ -1,0 +1,466 @@
+{
+  "selector": "RoomInTheCartUITests/MeasurementUITests/testLocalSettingsConsentIgnoresLegacyBooleanPersistsRestartAndStaysWorkspaceScoped",
+  "case": {
+    "startLine": 3021,
+    "pids": [
+      43139,
+      44107,
+      45345
+    ],
+    "endLine": 3348,
+    "passedSeconds": 57.863
+  },
+  "testLogActionEvidence": [
+    {
+      "line": 3022,
+      "text": "t =     0.00s Start Test at 2026-11-06 21:39:56.575"
+    },
+    {
+      "line": 3025,
+      "text": "t =     0.09s     Launch dev.roominthecart.app.debug"
+    },
+    {
+      "line": 3081,
+      "text": "t =    10.48s Tap \"Offer optional feedback after a pickup\" Switch[0.92, 0.50]"
+    },
+    {
+      "line": 3095,
+      "text": "t =    12.78s Terminate dev.roominthecart.app.debug:43139"
+    },
+    {
+      "line": 3097,
+      "text": "t =    13.82s     Launch dev.roominthecart.app.debug"
+    },
+    {
+      "line": 3198,
+      "text": "t =    30.62s Tap \"Offer optional feedback after a pickup\" Switch[0.92, 0.50]"
+    },
+    {
+      "line": 3241,
+      "text": "t =    37.24s Tap \"Offer optional feedback after a pickup\" Switch[0.92, 0.50]"
+    },
+    {
+      "line": 3251,
+      "text": "t =    39.28s Terminate dev.roominthecart.app.debug:44107"
+    },
+    {
+      "line": 3253,
+      "text": "t =    40.32s     Launch dev.roominthecart.app.debug"
+    },
+    {
+      "line": 3347,
+      "text": "t =    56.72s     Terminate dev.roominthecart.app.debug:45345"
+    }
+  ],
+  "appProcessCorrelation": "Explicit PID in original XCTest terminate records, not wall-clock timezone inference.",
+  "positiveObservedProcesses": [
+    {
+      "pid": 43139,
+      "expected": false,
+      "observed": true,
+      "activationObserved": true,
+      "missingPrefixRange": null,
+      "internalGapRanges": [],
+      "conflictingSequences": [],
+      "pidReuseOrCorruptionPossible": false,
+      "observedEventNames": {
+        "binding.enter": 1,
+        "binding.exit": 1,
+        "consent.set.enter": 1,
+        "consent.set.exit": 1,
+        "fixture.ready": 1
+      },
+      "bindingEnterObserved": true,
+      "records": [
+        {
+          "sequence": 1,
+          "conflict": false,
+          "observations": [
+            {
+              "source": "live",
+              "line": 6,
+              "timestampRaw": "2026-11-06 21:39:59.937",
+              "pid": 43139,
+              "sequence": 1,
+              "uptime": "1201.118594",
+              "event": "fixture.ready",
+              "requested": -1,
+              "ready": 1,
+              "workspacePresent": 1,
+              "enabledValue": -1,
+              "sameWorkspace": -1,
+              "otherReady": 1,
+              "otherWorkspacePresent": 1,
+              "workspacesDistinct": 1
+            }
+          ]
+        },
+        {
+          "sequence": 2,
+          "conflict": false,
+          "observations": [
+            {
+              "source": "live",
+              "line": 7,
+              "timestampRaw": "2026-11-06 21:40:07.559",
+              "pid": 43139,
+              "sequence": 2,
+              "uptime": "1208.740283",
+              "event": "binding.enter",
+              "requested": 1,
+              "ready": 1,
+              "workspacePresent": 1,
+              "enabledValue": 0,
+              "sameWorkspace": -1,
+              "otherReady": -1,
+              "otherWorkspacePresent": -1,
+              "workspacesDistinct": -1
+            }
+          ]
+        },
+        {
+          "sequence": 3,
+          "conflict": false,
+          "observations": [
+            {
+              "source": "live",
+              "line": 8,
+              "timestampRaw": "2026-11-06 21:40:07.559",
+              "pid": 43139,
+              "sequence": 3,
+              "uptime": "1208.740479",
+              "event": "consent.set.enter",
+              "requested": 1,
+              "ready": -1,
+              "workspacePresent": 1,
+              "enabledValue": 0,
+              "sameWorkspace": -1,
+              "otherReady": -1,
+              "otherWorkspacePresent": -1,
+              "workspacesDistinct": -1
+            }
+          ]
+        },
+        {
+          "sequence": 4,
+          "conflict": false,
+          "observations": [
+            {
+              "source": "live",
+              "line": 9,
+              "timestampRaw": "2026-11-06 21:40:07.560",
+              "pid": 43139,
+              "sequence": 4,
+              "uptime": "1208.741807",
+              "event": "consent.set.exit",
+              "requested": 1,
+              "ready": -1,
+              "workspacePresent": 1,
+              "enabledValue": 1,
+              "sameWorkspace": -1,
+              "otherReady": -1,
+              "otherWorkspacePresent": -1,
+              "workspacesDistinct": -1
+            }
+          ]
+        },
+        {
+          "sequence": 5,
+          "conflict": false,
+          "observations": [
+            {
+              "source": "live",
+              "line": 10,
+              "timestampRaw": "2026-11-06 21:40:07.560",
+              "pid": 43139,
+              "sequence": 5,
+              "uptime": "1208.741904",
+              "event": "binding.exit",
+              "requested": 1,
+              "ready": 1,
+              "workspacePresent": 1,
+              "enabledValue": 1,
+              "sameWorkspace": 1,
+              "otherReady": -1,
+              "otherWorkspacePresent": -1,
+              "workspacesDistinct": -1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "pid": 44107,
+      "expected": false,
+      "observed": true,
+      "activationObserved": true,
+      "missingPrefixRange": null,
+      "internalGapRanges": [],
+      "conflictingSequences": [],
+      "pidReuseOrCorruptionPossible": false,
+      "observedEventNames": {
+        "binding.enter": 2,
+        "binding.exit": 2,
+        "consent.set.enter": 2,
+        "consent.set.exit": 2,
+        "fixture.ready": 1
+      },
+      "bindingEnterObserved": true,
+      "records": [
+        {
+          "sequence": 1,
+          "conflict": false,
+          "observations": [
+            {
+              "source": "live",
+              "line": 11,
+              "timestampRaw": "2026-11-06 21:40:13.249",
+              "pid": 44107,
+              "sequence": 1,
+              "uptime": "1214.430795",
+              "event": "fixture.ready",
+              "requested": -1,
+              "ready": 1,
+              "workspacePresent": 1,
+              "enabledValue": -1,
+              "sameWorkspace": -1,
+              "otherReady": 1,
+              "otherWorkspacePresent": 1,
+              "workspacesDistinct": 1
+            }
+          ]
+        },
+        {
+          "sequence": 2,
+          "conflict": false,
+          "observations": [
+            {
+              "source": "live",
+              "line": 12,
+              "timestampRaw": "2026-11-06 21:40:27.616",
+              "pid": 44107,
+              "sequence": 2,
+              "uptime": "1228.797992",
+              "event": "binding.enter",
+              "requested": 1,
+              "ready": 1,
+              "workspacePresent": 1,
+              "enabledValue": 0,
+              "sameWorkspace": -1,
+              "otherReady": -1,
+              "otherWorkspacePresent": -1,
+              "workspacesDistinct": -1
+            }
+          ]
+        },
+        {
+          "sequence": 3,
+          "conflict": false,
+          "observations": [
+            {
+              "source": "live",
+              "line": 13,
+              "timestampRaw": "2026-11-06 21:40:27.617",
+              "pid": 44107,
+              "sequence": 3,
+              "uptime": "1228.798174",
+              "event": "consent.set.enter",
+              "requested": 1,
+              "ready": -1,
+              "workspacePresent": 1,
+              "enabledValue": 0,
+              "sameWorkspace": -1,
+              "otherReady": -1,
+              "otherWorkspacePresent": -1,
+              "workspacesDistinct": -1
+            }
+          ]
+        },
+        {
+          "sequence": 4,
+          "conflict": false,
+          "observations": [
+            {
+              "source": "live",
+              "line": 14,
+              "timestampRaw": "2026-11-06 21:40:27.617",
+              "pid": 44107,
+              "sequence": 4,
+              "uptime": "1228.798899",
+              "event": "consent.set.exit",
+              "requested": 1,
+              "ready": -1,
+              "workspacePresent": 1,
+              "enabledValue": 1,
+              "sameWorkspace": -1,
+              "otherReady": -1,
+              "otherWorkspacePresent": -1,
+              "workspacesDistinct": -1
+            }
+          ]
+        },
+        {
+          "sequence": 5,
+          "conflict": false,
+          "observations": [
+            {
+              "source": "live",
+              "line": 15,
+              "timestampRaw": "2026-11-06 21:40:27.617",
+              "pid": 44107,
+              "sequence": 5,
+              "uptime": "1228.798985",
+              "event": "binding.exit",
+              "requested": 1,
+              "ready": 1,
+              "workspacePresent": 1,
+              "enabledValue": 1,
+              "sameWorkspace": 1,
+              "otherReady": -1,
+              "otherWorkspacePresent": -1,
+              "workspacesDistinct": -1
+            }
+          ]
+        },
+        {
+          "sequence": 6,
+          "conflict": false,
+          "observations": [
+            {
+              "source": "live",
+              "line": 16,
+              "timestampRaw": "2026-11-06 21:40:34.230",
+              "pid": 44107,
+              "sequence": 6,
+              "uptime": "1235.411481",
+              "event": "binding.enter",
+              "requested": 0,
+              "ready": 1,
+              "workspacePresent": 1,
+              "enabledValue": 1,
+              "sameWorkspace": -1,
+              "otherReady": -1,
+              "otherWorkspacePresent": -1,
+              "workspacesDistinct": -1
+            }
+          ]
+        },
+        {
+          "sequence": 7,
+          "conflict": false,
+          "observations": [
+            {
+              "source": "live",
+              "line": 17,
+              "timestampRaw": "2026-11-06 21:40:34.230",
+              "pid": 44107,
+              "sequence": 7,
+              "uptime": "1235.411627",
+              "event": "consent.set.enter",
+              "requested": 0,
+              "ready": -1,
+              "workspacePresent": 1,
+              "enabledValue": 1,
+              "sameWorkspace": -1,
+              "otherReady": -1,
+              "otherWorkspacePresent": -1,
+              "workspacesDistinct": -1
+            }
+          ]
+        },
+        {
+          "sequence": 8,
+          "conflict": false,
+          "observations": [
+            {
+              "source": "live",
+              "line": 18,
+              "timestampRaw": "2026-11-06 21:40:34.231",
+              "pid": 44107,
+              "sequence": 8,
+              "uptime": "1235.412264",
+              "event": "consent.set.exit",
+              "requested": 0,
+              "ready": -1,
+              "workspacePresent": 1,
+              "enabledValue": 0,
+              "sameWorkspace": -1,
+              "otherReady": -1,
+              "otherWorkspacePresent": -1,
+              "workspacesDistinct": -1
+            }
+          ]
+        },
+        {
+          "sequence": 9,
+          "conflict": false,
+          "observations": [
+            {
+              "source": "live",
+              "line": 19,
+              "timestampRaw": "2026-11-06 21:40:34.231",
+              "pid": 44107,
+              "sequence": 9,
+              "uptime": "1235.412355",
+              "event": "binding.exit",
+              "requested": 0,
+              "ready": 1,
+              "workspacePresent": 1,
+              "enabledValue": 0,
+              "sameWorkspace": 1,
+              "otherReady": -1,
+              "otherWorkspacePresent": -1,
+              "workspacesDistinct": -1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "pid": 45345,
+      "expected": false,
+      "observed": true,
+      "activationObserved": true,
+      "missingPrefixRange": null,
+      "internalGapRanges": [],
+      "conflictingSequences": [],
+      "pidReuseOrCorruptionPossible": false,
+      "observedEventNames": {
+        "fixture.ready": 1
+      },
+      "bindingEnterObserved": false,
+      "records": [
+        {
+          "sequence": 1,
+          "conflict": false,
+          "observations": [
+            {
+              "source": "live",
+              "line": 20,
+              "timestampRaw": "2026-11-06 21:40:40.039",
+              "pid": 45345,
+              "sequence": 1,
+              "uptime": "1241.21992",
+              "event": "fixture.ready",
+              "requested": -1,
+              "ready": 1,
+              "workspacePresent": 1,
+              "enabledValue": -1,
+              "sameWorkspace": -1,
+              "otherReady": 1,
+              "otherWorkspacePresent": 1,
+              "workspacesDistinct": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "firstSetterDurationSeconds": "0.001621",
+  "firstToggleObservedWriteAndReadbackSucceeded": true,
+  "failureReproduced": false,
+  "appFixEstablished": false,
+  "wallClockCorrelationUsedForCausalClaim": false,
+  "liveWallTimeZone": "unknown",
+  "noAbsenceInferencePermitted": true
+}

@@ -1,0 +1,14 @@
+--- attempt6/test-method.swift
++++ attempt8/test-method.swift
+@@ -64,7 +64,10 @@
+             XCTFail("Recovery target must be unobscured through ordinary Form scrolling: \(target.identifier)")
+         }
+         func stage(_ text: String) {
+-            tap(element("ledgerImport"))
++            let openImport = element("ledgerImport")
++            revealContent(openImport)
++            openImport.tap()
++            XCTAssertTrue(app.navigationBars["Bring the list"].waitForExistence(timeout: 8), "Opening the import sheet must succeed before editing")
+             fill(text, into: "ledgerImportText")
+             tap(element("ledgerReviewImport"))
+             let commit = element("ledgerCommitImport")

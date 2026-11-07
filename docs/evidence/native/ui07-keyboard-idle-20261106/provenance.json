@@ -1,0 +1,52 @@
+{
+  "candidate": "804030e68473d022e72b464940061c01c611a0bd",
+  "artifactID": 13542915084,
+  "zipSHA256": "835f6b3e3f1067f7c4363d28023dac23d8396998cf5e95a39b41037bb5d2d5b1",
+  "zipPath": "/Users/palatis/Room in the Cart/.build/CIResearch20261106/candidate-804030e/core-collection/iphone-results-ui-07-1.zip",
+  "originalBundle": "/Users/palatis/Room in the Cart/.build/CIResearch20261106/candidate-804030e/core-collection/iphone-results-ui-07-1/Tests.xcresult",
+  "copyBundle": "/Users/palatis/Room in the Cart/.build/UI07NextShopReview20261106/Tests.xcresult",
+  "bundleFiles": 90,
+  "bundleBytes": 20173464,
+  "rawLogSHA256": "72caaf24bb9637870ca7ca8599ff071eb3324e7f4f0d50c3dbc32854e1484a9f",
+  "sourceSHA256": "b3dc1d03c808aae5638fbeb326be107306bea621791fbec711e7eb309d716f7d",
+  "rawRecordsRead": false,
+  "nativeExecution": false,
+  "originalZipBytes": 19360086,
+  "originalBundleBytesAndModificationTimesUnchanged": true,
+  "originalZipAndLogHashesUnchanged": true,
+  "xcresulttoolOnlyUsedOnCopy": true,
+  "queriedSelector": "RoomInTheCartUITests/FreeJourneyUITests/testNextShopCanCancelThenOpenOneFreshShoppingList",
+  "sourceFiles": {
+    "ios/UITests/FreeJourneyUITests.swift": {
+      "frozenCopy": "FreeJourneyUITests.swift.804030e",
+      "sha256": "b3dc1d03c808aae5638fbeb326be107306bea621791fbec711e7eb309d716f7d"
+    },
+    "ios/App/RoomInTheCartApp.swift": {
+      "frozenCopy": "RoomInTheCartApp.swift.804030e",
+      "sha256": "ab900dab2551a8929b22180405dac978fe6049bdaa03d109ee3d6f46ec8c8ed8"
+    },
+    "ios/Features/Pickup/PickupRepairView.swift": {
+      "frozenCopy": "PickupRepairView.swift.804030e",
+      "sha256": "e1130b2976c8f63e4239fb4eb06aa70220f433a24ad8a48b630750eb5f3a6614"
+    },
+    "ios/App/Theme.swift": {
+      "frozenCopy": "Theme.swift.804030e",
+      "sha256": "2d77ecf6ce6bed132275b3a9a33853cf4af311b81e2b7f9892bffe939defaa01"
+    }
+  },
+  "retainedAttachmentEvidence": {
+    "spindump": {
+      "path": "spindump/C9935D8F-8CA2-46E3-AF36-827EE6FB84B5.txt",
+      "bytes": 6200655,
+      "sha256": "4f089e522074ef910918f26f1d05d6fffc752d1177a1146145cfb63133fc8369"
+    },
+    "recordingStub": {
+      "path": "video/0BF4C422-B642-4E76-AC15-4142350370BA",
+      "bytes": 60,
+      "sha256": "710db784bd0594025e4f83a838d59fda6cc1e2a4cfe85ce53f758964423d2bb9",
+      "contents": "Unexpected Error: Finished test run with pending attachment."
+    },
+    "synthesizedEventCount": 12,
+    "screenshotOrHierarchyAttachments": 0
+  }
+}

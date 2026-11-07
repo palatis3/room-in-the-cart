@@ -1,0 +1,236 @@
+{
+  "events.log": [
+    {
+      "uptime": 916.49264,
+      "event": "observer.installed",
+      "site": "RoomInTheCart/Theme.swift:116"
+    },
+    {
+      "uptime": 921.779428,
+      "event": "textField.beginEditing",
+      "site": "RoomInTheCart/Theme.swift:113"
+    },
+    {
+      "uptime": 923.462482,
+      "event": "stock.focus.on",
+      "site": "RoomInTheCart/PickupSavedStockSection.swift:180"
+    },
+    {
+      "uptime": 923.46266,
+      "event": "focusIndicator.on",
+      "site": "RoomInTheCart/PickupSavedStockSection.swift:190"
+    },
+    {
+      "uptime": 923.901939,
+      "event": "keyboard.willChangeFrame",
+      "site": "RoomInTheCart/Theme.swift:113"
+    },
+    {
+      "uptime": 924.238486,
+      "event": "keyboard.willShow",
+      "site": "RoomInTheCart/Theme.swift:113"
+    },
+    {
+      "uptime": 924.712168,
+      "event": "keyboard.didChangeFrame",
+      "site": "RoomInTheCart/Theme.swift:113"
+    },
+    {
+      "uptime": 924.771675,
+      "event": "keyboard.didShow",
+      "site": "RoomInTheCart/Theme.swift:113"
+    },
+    {
+      "uptime": 927.45739,
+      "event": "keyboard.willChangeFrame",
+      "site": "RoomInTheCart/Theme.swift:113"
+    },
+    {
+      "uptime": 927.457752,
+      "event": "keyboard.willShow",
+      "site": "RoomInTheCart/Theme.swift:113"
+    },
+    {
+      "uptime": 927.45848,
+      "event": "keyboard.didChangeFrame",
+      "site": "RoomInTheCart/Theme.swift:113"
+    },
+    {
+      "uptime": 927.458853,
+      "event": "keyboard.didShow",
+      "site": "RoomInTheCart/Theme.swift:113"
+    },
+    {
+      "uptime": 927.52335,
+      "event": "stock.reset.amount",
+      "site": "RoomInTheCart/PickupSavedStockSection.swift:156"
+    },
+    {
+      "uptime": 928.484675,
+      "event": "done.enter",
+      "site": "RoomInTheCart/PickupSavedStockSection.swift:190"
+    },
+    {
+      "uptime": 928.484844,
+      "event": "done.exit",
+      "site": "RoomInTheCart/PickupSavedStockSection.swift:190"
+    },
+    {
+      "uptime": 928.525449,
+      "event": "keyboard.willChangeFrame",
+      "site": "RoomInTheCart/Theme.swift:113"
+    },
+    {
+      "uptime": 928.526655,
+      "event": "keyboard.willHide",
+      "site": "RoomInTheCart/Theme.swift:113"
+    },
+    {
+      "uptime": 928.536367,
+      "event": "textField.endEditing",
+      "site": "RoomInTheCart/Theme.swift:113"
+    },
+    {
+      "uptime": 928.551168,
+      "event": "stock.focus.off",
+      "site": "RoomInTheCart/PickupSavedStockSection.swift:180"
+    },
+    {
+      "uptime": 928.551517,
+      "event": "focusIndicator.off",
+      "site": "RoomInTheCart/PickupSavedStockSection.swift:190"
+    },
+    {
+      "uptime": 929.149764,
+      "event": "keyboard.didChangeFrame",
+      "site": "RoomInTheCart/Theme.swift:113"
+    },
+    {
+      "uptime": 929.18903,
+      "event": "keyboard.didHide",
+      "site": "RoomInTheCart/Theme.swift:113"
+    },
+    {
+      "uptime": 931.841983,
+      "event": "stock.toggle.setter.true",
+      "site": "RoomInTheCart/PickupSavedStockSection.swift:201"
+    }
+  ],
+  "events-export.log": [
+    {
+      "uptime": 916.49264,
+      "event": "observer.installed",
+      "site": "RoomInTheCart/Theme.swift:116"
+    },
+    {
+      "uptime": 921.779428,
+      "event": "textField.beginEditing",
+      "site": "RoomInTheCart/Theme.swift:113"
+    },
+    {
+      "uptime": 923.462482,
+      "event": "stock.focus.on",
+      "site": "RoomInTheCart/PickupSavedStockSection.swift:180"
+    },
+    {
+      "uptime": 923.46266,
+      "event": "focusIndicator.on",
+      "site": "RoomInTheCart/PickupSavedStockSection.swift:190"
+    },
+    {
+      "uptime": 923.901939,
+      "event": "keyboard.willChangeFrame",
+      "site": "RoomInTheCart/Theme.swift:113"
+    },
+    {
+      "uptime": 924.238486,
+      "event": "keyboard.willShow",
+      "site": "RoomInTheCart/Theme.swift:113"
+    },
+    {
+      "uptime": 924.712168,
+      "event": "keyboard.didChangeFrame",
+      "site": "RoomInTheCart/Theme.swift:113"
+    },
+    {
+      "uptime": 924.771675,
+      "event": "keyboard.didShow",
+      "site": "RoomInTheCart/Theme.swift:113"
+    },
+    {
+      "uptime": 927.45739,
+      "event": "keyboard.willChangeFrame",
+      "site": "RoomInTheCart/Theme.swift:113"
+    },
+    {
+      "uptime": 927.457752,
+      "event": "keyboard.willShow",
+      "site": "RoomInTheCart/Theme.swift:113"
+    },
+    {
+      "uptime": 927.45848,
+      "event": "keyboard.didChangeFrame",
+      "site": "RoomInTheCart/Theme.swift:113"
+    },
+    {
+      "uptime": 927.458853,
+      "event": "keyboard.didShow",
+      "site": "RoomInTheCart/Theme.swift:113"
+    },
+    {
+      "uptime": 927.52335,
+      "event": "stock.reset.amount",
+      "site": "RoomInTheCart/PickupSavedStockSection.swift:156"
+    },
+    {
+      "uptime": 928.484675,
+      "event": "done.enter",
+      "site": "RoomInTheCart/PickupSavedStockSection.swift:190"
+    },
+    {
+      "uptime": 928.484844,
+      "event": "done.exit",
+      "site": "RoomInTheCart/PickupSavedStockSection.swift:190"
+    },
+    {
+      "uptime": 928.525449,
+      "event": "keyboard.willChangeFrame",
+      "site": "RoomInTheCart/Theme.swift:113"
+    },
+    {
+      "uptime": 928.526655,
+      "event": "keyboard.willHide",
+      "site": "RoomInTheCart/Theme.swift:113"
+    },
+    {
+      "uptime": 928.536367,
+      "event": "textField.endEditing",
+      "site": "RoomInTheCart/Theme.swift:113"
+    },
+    {
+      "uptime": 928.551168,
+      "event": "stock.focus.off",
+      "site": "RoomInTheCart/PickupSavedStockSection.swift:180"
+    },
+    {
+      "uptime": 928.551517,
+      "event": "focusIndicator.off",
+      "site": "RoomInTheCart/PickupSavedStockSection.swift:190"
+    },
+    {
+      "uptime": 929.149764,
+      "event": "keyboard.didChangeFrame",
+      "site": "RoomInTheCart/Theme.swift:113"
+    },
+    {
+      "uptime": 929.18903,
+      "event": "keyboard.didHide",
+      "site": "RoomInTheCart/Theme.swift:113"
+    },
+    {
+      "uptime": 931.841983,
+      "event": "stock.toggle.setter.true",
+      "site": "RoomInTheCart/PickupSavedStockSection.swift:201"
+    }
+  ]
+}

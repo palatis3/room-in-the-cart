@@ -1,0 +1,489 @@
+{
+  "candidate": "5376a01227d9ccf2cba53123b7887c83531088de",
+  "runID": 42261730525,
+  "attempt": 1,
+  "logSHA256": "c7e8eabdf62ac8c86008134406b744790e1485ae4ecb6e56a98d75adb8d6c1d1",
+  "strictRuntimeWarnings": 0,
+  "cases": [
+    {
+      "case": "RoomInTheCartUITests.FreeJourneyUITests/testRecipeCaptureOpensOnFirstAttemptAndReopensAfterCancel",
+      "startLine": 19,
+      "endLine": 164,
+      "result": "passed",
+      "durationSeconds": 152.35,
+      "largestConsecutiveLogTimestampGaps": [
+        {
+          "seconds": 40.14,
+          "precedingEvent": {
+            "line": 23,
+            "seconds": 1.51,
+            "text": "Launch dev.roominthecart.app.debug"
+          },
+          "nextEvent": {
+            "line": 26,
+            "seconds": 41.65,
+            "text": "Setting up automation session"
+          }
+        },
+        {
+          "seconds": 15.86,
+          "precedingEvent": {
+            "line": 57,
+            "seconds": 77.3,
+            "text": "Find the \"ledgerShopName\" TextField"
+          },
+          "nextEvent": {
+            "line": 58,
+            "seconds": 93.16,
+            "text": "Check for interrupting elements affecting \"ledgerShopName\" TextField"
+          }
+        },
+        {
+          "seconds": 10.14,
+          "precedingEvent": {
+            "line": 85,
+            "seconds": 120.73,
+            "text": "Wait for dev.roominthecart.app.debug to idle"
+          },
+          "nextEvent": {
+            "line": 86,
+            "seconds": 130.87,
+            "text": "Waiting 8.0s for \"Photo and scan review\" NavigationBar to exist"
+          }
+        },
+        {
+          "seconds": 8.42,
+          "precedingEvent": {
+            "line": 61,
+            "seconds": 96.97,
+            "text": "Checking existence of `Button (First Match)`"
+          },
+          "nextEvent": {
+            "line": 62,
+            "seconds": 105.39,
+            "text": "Checking existence of `\"ledgerCreateShop\" Any`"
+          }
+        },
+        {
+          "seconds": 6.4,
+          "precedingEvent": {
+            "line": 54,
+            "seconds": 70.74,
+            "text": "Wait for dev.roominthecart.app.debug to idle"
+          },
+          "nextEvent": {
+            "line": 55,
+            "seconds": 77.14,
+            "text": "Type 'Recipe review pick...' into \"ledgerShopName\" TextField"
+          }
+        },
+        {
+          "seconds": 4.94,
+          "precedingEvent": {
+            "line": 27,
+            "seconds": 45.34,
+            "text": "Wait for dev.roominthecart.app.debug to idle"
+          },
+          "nextEvent": {
+            "line": 28,
+            "seconds": 50.28,
+            "text": "Waiting 15.0s for \"Shop\" Button to exist"
+          }
+        },
+        {
+          "seconds": 4.11,
+          "precedingEvent": {
+            "line": 39,
+            "seconds": 56.3,
+            "text": "Checking existence of `\"dinnerStartPickup\" Any`"
+          },
+          "nextEvent": {
+            "line": 40,
+            "seconds": 60.41,
+            "text": "Find the \"dinnerStartPickup\" Any"
+          }
+        },
+        {
+          "seconds": 3.81,
+          "precedingEvent": {
+            "line": 40,
+            "seconds": 60.41,
+            "text": "Find the \"dinnerStartPickup\" Any"
+          },
+          "nextEvent": {
+            "line": 41,
+            "seconds": 64.22,
+            "text": "Tap \"dinnerStartPickup\" Button"
+          }
+        }
+      ],
+      "idleWaitLogEntries": 25,
+      "timedEventCount": 142,
+      "rawPatternMatches": [],
+      "synchronizationDiagnostics": [],
+      "otherTextMatches": []
+    },
+    {
+      "case": "RoomInTheCartUITests.PickupOfferUITests/testSavedOfferReopensAndUpdatesResponseAfterRestart",
+      "startLine": 168,
+      "endLine": 2292,
+      "result": "passed",
+      "durationSeconds": 694.714,
+      "largestConsecutiveLogTimestampGaps": [
+        {
+          "seconds": 5.06,
+          "precedingEvent": {
+            "line": 175,
+            "seconds": 4.16,
+            "text": "Setting up automation session"
+          },
+          "nextEvent": {
+            "line": 176,
+            "seconds": 9.22,
+            "text": "Wait for dev.roominthecart.app.debug to idle"
+          }
+        },
+        {
+          "seconds": 4.45,
+          "precedingEvent": {
+            "line": 1258,
+            "seconds": 379.59,
+            "text": "Setting up automation session"
+          },
+          "nextEvent": {
+            "line": 1259,
+            "seconds": 384.04,
+            "text": "Wait for dev.roominthecart.app.debug to idle"
+          }
+        },
+        {
+          "seconds": 4.2,
+          "precedingEvent": {
+            "line": 1898,
+            "seconds": 569.06,
+            "text": "Setting up automation session"
+          },
+          "nextEvent": {
+            "line": 1899,
+            "seconds": 573.26,
+            "text": "Wait for dev.roominthecart.app.debug to idle"
+          }
+        },
+        {
+          "seconds": 3.97,
+          "precedingEvent": {
+            "line": 1514,
+            "seconds": 461.87,
+            "text": "Find the Button (First Match)"
+          },
+          "nextEvent": {
+            "line": 1515,
+            "seconds": 465.84,
+            "text": "Find the Button (First Match) (retry 1)"
+          }
+        },
+        {
+          "seconds": 3.95,
+          "precedingEvent": {
+            "line": 172,
+            "seconds": 0.21,
+            "text": "Launch dev.roominthecart.app.debug"
+          },
+          "nextEvent": {
+            "line": 175,
+            "seconds": 4.16,
+            "text": "Setting up automation session"
+          }
+        },
+        {
+          "seconds": 3.75,
+          "precedingEvent": {
+            "line": 1899,
+            "seconds": 573.26,
+            "text": "Wait for dev.roominthecart.app.debug to idle"
+          },
+          "nextEvent": {
+            "line": 1900,
+            "seconds": 577.01,
+            "text": "Waiting 15.0s for \"newComparison\" Any to exist"
+          }
+        },
+        {
+          "seconds": 3.55,
+          "precedingEvent": {
+            "line": 176,
+            "seconds": 9.22,
+            "text": "Wait for dev.roominthecart.app.debug to idle"
+          },
+          "nextEvent": {
+            "line": 177,
+            "seconds": 12.77,
+            "text": "Waiting 15.0s for \"newComparison\" Any to exist"
+          }
+        },
+        {
+          "seconds": 3.55,
+          "precedingEvent": {
+            "line": 1259,
+            "seconds": 384.04,
+            "text": "Wait for dev.roominthecart.app.debug to idle"
+          },
+          "nextEvent": {
+            "line": 1260,
+            "seconds": 387.59,
+            "text": "Waiting 15.0s for \"newComparison\" Any to exist"
+          }
+        }
+      ],
+      "idleWaitLogEntries": 359,
+      "timedEventCount": 2117,
+      "rawPatternMatches": [],
+      "synchronizationDiagnostics": [],
+      "otherTextMatches": []
+    },
+    {
+      "case": "RoomInTheCartUITests.RoomInTheCartUITests/testConfirmedComparisonDeletionSurvivesRestart",
+      "startLine": 2296,
+      "endLine": 2725,
+      "result": "passed",
+      "durationSeconds": 193.709,
+      "largestConsecutiveLogTimestampGaps": [
+        {
+          "seconds": 4.23,
+          "precedingEvent": {
+            "line": 2706,
+            "seconds": 180.79,
+            "text": "Setting up automation session"
+          },
+          "nextEvent": {
+            "line": 2707,
+            "seconds": 185.02,
+            "text": "Wait for dev.roominthecart.app.debug to idle"
+          }
+        },
+        {
+          "seconds": 3.83,
+          "precedingEvent": {
+            "line": 2303,
+            "seconds": 2.62,
+            "text": "Setting up automation session"
+          },
+          "nextEvent": {
+            "line": 2304,
+            "seconds": 6.45,
+            "text": "Wait for dev.roominthecart.app.debug to idle"
+          }
+        },
+        {
+          "seconds": 3.6,
+          "precedingEvent": {
+            "line": 2304,
+            "seconds": 6.45,
+            "text": "Wait for dev.roominthecart.app.debug to idle"
+          },
+          "nextEvent": {
+            "line": 2305,
+            "seconds": 10.05,
+            "text": "Waiting 15.0s for \"Shop\" Button to exist"
+          }
+        },
+        {
+          "seconds": 3.33,
+          "precedingEvent": {
+            "line": 2707,
+            "seconds": 185.02,
+            "text": "Wait for dev.roominthecart.app.debug to idle"
+          },
+          "nextEvent": {
+            "line": 2708,
+            "seconds": 188.35,
+            "text": "Waiting 15.0s for \"Shop\" Button to exist"
+          }
+        },
+        {
+          "seconds": 2.99,
+          "precedingEvent": {
+            "line": 2703,
+            "seconds": 177.8,
+            "text": "Launch dev.roominthecart.app.debug"
+          },
+          "nextEvent": {
+            "line": 2706,
+            "seconds": 180.79,
+            "text": "Setting up automation session"
+          }
+        },
+        {
+          "seconds": 2.5,
+          "precedingEvent": {
+            "line": 2300,
+            "seconds": 0.12,
+            "text": "Launch dev.roominthecart.app.debug"
+          },
+          "nextEvent": {
+            "line": 2303,
+            "seconds": 2.62,
+            "text": "Setting up automation session"
+          }
+        },
+        {
+          "seconds": 2.42,
+          "precedingEvent": {
+            "line": 2688,
+            "seconds": 168.07,
+            "text": "Wait for dev.roominthecart.app.debug to idle"
+          },
+          "nextEvent": {
+            "line": 2689,
+            "seconds": 170.49,
+            "text": "Checking existence of `StaticText (First Match)`"
+          }
+        },
+        {
+          "seconds": 2.29,
+          "precedingEvent": {
+            "line": 2464,
+            "seconds": 88.2,
+            "text": "Find the \"bPrice\" Any"
+          },
+          "nextEvent": {
+            "line": 2465,
+            "seconds": 90.49,
+            "text": "Tap \"bPrice\" TextField"
+          }
+        }
+      ],
+      "idleWaitLogEntries": 98,
+      "timedEventCount": 424,
+      "rawPatternMatches": [],
+      "synchronizationDiagnostics": [],
+      "otherTextMatches": []
+    },
+    {
+      "case": "RoomInTheCartUITests.RoomInTheCartUITests/testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer",
+      "startLine": 2726,
+      "endLine": 3078,
+      "result": "passed",
+      "durationSeconds": 172.104,
+      "largestConsecutiveLogTimestampGaps": [
+        {
+          "seconds": 6.8,
+          "precedingEvent": {
+            "line": 2747,
+            "seconds": 14.77,
+            "text": "Checking existence of `\"itemName\" Any`"
+          },
+          "nextEvent": {
+            "line": 2748,
+            "seconds": 21.57,
+            "text": "Find the \"itemName\" Any"
+          }
+        },
+        {
+          "seconds": 4.13,
+          "precedingEvent": {
+            "line": 3004,
+            "seconds": 136.34,
+            "text": "Setting up automation session"
+          },
+          "nextEvent": {
+            "line": 3005,
+            "seconds": 140.47,
+            "text": "Wait for dev.roominthecart.app.debug to idle"
+          }
+        },
+        {
+          "seconds": 4.11,
+          "precedingEvent": {
+            "line": 3005,
+            "seconds": 140.47,
+            "text": "Wait for dev.roominthecart.app.debug to idle"
+          },
+          "nextEvent": {
+            "line": 3006,
+            "seconds": 144.58,
+            "text": "Waiting 15.0s for \"Compras\" Button to exist"
+          }
+        },
+        {
+          "seconds": 3.6,
+          "precedingEvent": {
+            "line": 2931,
+            "seconds": 92.34,
+            "text": "Find the \"compare\" Button"
+          },
+          "nextEvent": {
+            "line": 2932,
+            "seconds": 95.94,
+            "text": "Tap \"compare\" Button"
+          }
+        },
+        {
+          "seconds": 3.28,
+          "precedingEvent": {
+            "line": 2740,
+            "seconds": 8.64,
+            "text": "Find the \"newComparison\" Any"
+          },
+          "nextEvent": {
+            "line": 2741,
+            "seconds": 11.92,
+            "text": "Tap \"newComparison\" Button"
+          }
+        },
+        {
+          "seconds": 2.54,
+          "precedingEvent": {
+            "line": 2930,
+            "seconds": 89.8,
+            "text": "Checking existence of `\"compare\" Button`"
+          },
+          "nextEvent": {
+            "line": 2931,
+            "seconds": 92.34,
+            "text": "Find the \"compare\" Button"
+          }
+        },
+        {
+          "seconds": 2.53,
+          "precedingEvent": {
+            "line": 2734,
+            "seconds": 3.45,
+            "text": "Wait for dev.roominthecart.app.debug to idle"
+          },
+          "nextEvent": {
+            "line": 2735,
+            "seconds": 5.98,
+            "text": "Waiting 15.0s for \"Compras\" Button to exist"
+          }
+        },
+        {
+          "seconds": 2.53,
+          "precedingEvent": {
+            "line": 2934,
+            "seconds": 95.98,
+            "text": "Find the \"compare\" Button"
+          },
+          "nextEvent": {
+            "line": 2935,
+            "seconds": 98.51,
+            "text": "Check for interrupting elements affecting \"compare\" Button"
+          }
+        }
+      ],
+      "idleWaitLogEntries": 58,
+      "timedEventCount": 347,
+      "rawPatternMatches": [],
+      "synchronizationDiagnostics": [],
+      "otherTextMatches": []
+    }
+  ],
+  "exactSearchPattern": "timed out|timedout|animation|notification|warning: (case-insensitive)",
+  "outsideCaseMatches": [
+    {
+      "line": 10,
+      "text": "--- xcodebuild: WARNING: Using the first of multiple matching destinations:"
+    }
+  ],
+  "scope": "Raw log only. Ordinary idle-wait entries are not classified as runtime warnings. Timestamp gaps do not establish a root cause."
+}

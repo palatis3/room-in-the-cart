@@ -1,0 +1,92 @@
+{
+  "sourceBase": "233f6d94f356fdcd62821437278296efce49d42f",
+  "patchSha256": "b1b28a4a1f6787fcdec01bb818b531d9ac783029cb6c020cdfbd558cda0d18a0",
+  "sourceSha256": {
+    "scripts/check_ios_test_results.py": "de9e50cf85fbe82923d4a1b04e97d847a12e1100de7bd194e2e68888c4accaf5",
+    "scripts/test_check_ios_test_results.py": "67c3f7c295f6b7523e22327968536a4b1529d17bce37252a18aecfb02f231961",
+    "scripts/run_ios_test_shard.sh": "45319a4e14c3e238b44cef3e3b2ab6666676592a99cf8897b1bce62039a8147e",
+    ".github/workflows/ios-performance.yml": "28ce798180085478ae3c633ac4021d5ba17db4a555adaf6b6ba6339a435a4b1f"
+  },
+  "evidenceSha256": {
+    "execution-log-guard.patch": "b1b28a4a1f6787fcdec01bb818b531d9ac783029cb6c020cdfbd558cda0d18a0",
+    "unit-validation.log": "cb28443fad3efd00303cd2df3c114bbde7c29750d99df8c112008a0ad6c03526",
+    "artifact-replay.json": "30e9c3b412fcc123fc5a58806f1ba68cd5766d709dd50d78ddcbd122cfcd2e44",
+    "artifact-replay.log": "fa0ad518f41ffecc50a8e1a37bf9863f39258a32f3ba1b08f4549032182c8f14",
+    "menu-single-case-projection/validation.json": "d62ea968c6bc780a9360c4dca7395fa7f2d2c1025a3125aeb654f1b8950035d1",
+    "retry-wiring/validation.json": "4a1bd0fd01076b06eeb466a73cd8ad86b0b685938bc79c031873f89358b94614",
+    "retry-wiring.log": "d4ffabacec09ee1c30fc985c86ab505d6727efb3cc5e4c959593070fcf7328e5"
+  },
+  "testValidation": {
+    "focusedTestsPassed": 16,
+    "gitApplyCheck": "passed",
+    "bashSyntax": "passed",
+    "actionlint": "passed"
+  },
+  "replayCounts": {
+    "ordinary": {
+      "logs": {
+        "passed": 10,
+        "failed": 1
+      },
+      "summaryCountsForLogsRead": {
+        "totalTestCount": 615,
+        "passedTests": 614,
+        "failedTests": 1,
+        "skippedTests": 0,
+        "expectedFailures": 0
+      }
+    },
+    "fixture": {
+      "logs": {
+        "passed": 10,
+        "failed": 6,
+        "unavailable": 1
+      },
+      "summaryCountsForLogsRead": {
+        "totalTestCount": 43,
+        "passedTests": 31,
+        "failedTests": 12,
+        "skippedTests": 0,
+        "expectedFailures": 0
+      }
+    },
+    "performance": {
+      "logs": {
+        "passed": 7
+      },
+      "summaryCountsForLogsRead": {
+        "totalTestCount": 7,
+        "passedTests": 7,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0
+      }
+    },
+    "diagnostic": {
+      "logs": {
+        "failed": 1
+      },
+      "summaryCountsForLogsRead": {
+        "totalTestCount": 4,
+        "passedTests": 3,
+        "failedTests": 1,
+        "skippedTests": 0,
+        "expectedFailures": 0
+      }
+    }
+  },
+  "originalRunFindings": {
+    "ordinary": "All ten f0e2ac3 UI shards and 565-model artifact checked. No hidden duplicate execution in a passing result summary. UI09 has its recorded assertion failure. UI10 lifecycle passes and its existing runtime warning rejection remains independent.",
+    "fixtures": "All sixteen available public raw fixture logs checked. Original failed SharedMealIdea log records an implicit XCTest runner restart after a time allowance failure. Records intentionally provides no public raw log or bundle.",
+    "performance": "Seven retained hosted performance executions passed the exact log inventory. This does not evaluate performance metrics or baseline status.",
+    "menu": "Original entire failed diagnostic contains two starts each for the pickup control and pickup Menu, one restart and both timeout patterns. A labeled single-case projection of the originally passing no-open case with original detail bundle passes the old result-only check and fails the new log check."
+  },
+  "scope": "No native app was built or run. The existing explicit pre-start infrastructure retry was verified using the actual shard script, mocked native commands and retained logs. Ordinary and fixture jobs share the shard script. Release performance passes its single attempt log directly. Runtime-warning allowances are unchanged.",
+  "rootValidation": {
+    "allPythonTestsPassed": 108,
+    "actionlint": "passed",
+    "bashSyntax": "passed",
+    "gitDiffCheck": "passed",
+    "allScratchEvidenceHashes": "matched"
+  }
+}

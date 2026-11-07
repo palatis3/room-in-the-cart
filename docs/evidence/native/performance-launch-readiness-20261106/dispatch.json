@@ -1,0 +1,14 @@
+{
+  "head": "807aa3c73ed872d4a83f6cbd71f7633797bb6fc8",
+  "base": "f117439994835e0090376f4a29d81c478a6b86b4",
+  "branch": "codex/verify-performance-readiness-f117439",
+  "runID": 42304515547,
+  "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42304515547",
+  "createdAt": "2026-11-06T22:24:49Z",
+  "workflow": "ios-performance.yml",
+  "enforce_baselines": true,
+  "dispatchCount": 1,
+  "pullRequestOpened": false,
+  "scope": "Exactf117 plus four test-helper readiness lines. App/fixtures/metrics/checkers/baselines/workflow unchanged. Reviewed source SHA matches main532d26f.",
+  "nativeValidation": "pending"
+}

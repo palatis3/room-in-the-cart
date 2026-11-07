@@ -183,6 +183,7 @@ struct LedgerHomeView: View {
                     Text("\(moneyText(cap)) · \(shop.basis.capScope.ledgerLabel)")
                 } else { Text(ledgerText("No spending cap entered")) }
             }.frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 5)
+                .contentShape(Rectangle())
         }.buttonStyle(.plain).accessibilityIdentifier("ledgerFacts")
             .disabled(model.saving || model.hasPendingSave)
     }
@@ -228,9 +229,12 @@ struct LedgerSaveStatus: View {
             }
             if model.saving { ProgressView(ledgerText("Saving…")) }
             if model.hasPendingSave {
+                // Keep each recovery action independent inside Form and List rows.
                 Button(ledgerText("Retry save")) { Task { if await model.retrySave() { onRetried?() } } }
+                    .buttonStyle(.borderless)
                     .disabled(model.saving).accessibilityIdentifier("ledgerRetrySave")
                 Button(ledgerText("Discard unsaved change"), role: .destructive) { Task { await model.discardPendingSave() } }
+                    .buttonStyle(.borderless)
                     .disabled(model.saving)
             } else if let savedAt = model.savedAt {
                 Label(ledgerText("Saved on this iPhone"), systemImage: "checkmark.circle")

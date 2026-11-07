@@ -1,0 +1,32 @@
+{
+  "artifactID": 13494402796,
+  "artifactName": "iphone-fixture-results-SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction-1",
+  "sha256": "90310deb31b1f8aa03de14980591bb13f2925d9d13d21add8a139808aded0b01",
+  "size": 6198574,
+  "digestVerified": true,
+  "candidate": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+  "runID": 42184705317,
+  "jobID": 127793433792,
+  "hostedConclusion": "failure",
+  "selected": 1,
+  "passed": 0,
+  "failed": 1,
+  "skipped": 0,
+  "strictReplayExit": 1,
+  "planByteIdentical": true,
+  "runtimeWarnings": 0,
+  "warnings": {
+    "status": "passed",
+    "summaryWarningCount": null,
+    "runtimeWarningCount": 0,
+    "examinedTestCount": 1,
+    "detailExportCount": 1,
+    "activityExportCount": 0,
+    "warnings": []
+  },
+  "selectors": [
+    "RoomInTheCartUITests/SharedStoreQuoteUITests/testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction"
+  ],
+  "rawLogSHA256": "8be41db98cbdfb74bf16a0448e782f031a2b076a75a66b75e0341064e2d42660",
+  "replayedBundle": "Tests.xcresult"
+}

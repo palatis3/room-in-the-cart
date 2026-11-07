@@ -1,0 +1,60 @@
+{
+  "candidate": "5376a01227d9ccf2cba53123b7887c83531088de",
+  "runID": 42261730525,
+  "attempt": 1,
+  "jobID": 128057841463,
+  "artifactID": 13526949819,
+  "strictXCTestReplayExit": 0,
+  "passed": 1,
+  "failed": 0,
+  "skipped": 0,
+  "runtimeWarnings": 0,
+  "testDurationSeconds": 453.087,
+  "missingRequiredMetric": "com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.duration",
+  "availableMetrics": [
+    "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical",
+    "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_absolute",
+    "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_peak"
+  ],
+  "memorySeries": {
+    "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical": {
+      "samples": 5,
+      "originalUnitAndFiniteRulesPassed": true,
+      "zeroDeltaAllowedByOriginalRule": true
+    },
+    "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_absolute": {
+      "samples": 5,
+      "originalUnitAndFiniteRulesPassed": true,
+      "zeroDeltaAllowedByOriginalRule": false
+    },
+    "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_peak": {
+      "samples": 5,
+      "originalUnitAndFiniteRulesPassed": true,
+      "zeroDeltaAllowedByOriginalRule": false
+    }
+  },
+  "requiredMetricGate": "failed; unchanged original validator independently reproduced ValueError",
+  "sqliteReadback": {
+    "status": "not reached",
+    "reason": "check_metrics raised before ledger_readback in the unchanged performance checker",
+    "sourceCallLines": {
+      "ledger_readback": 270,
+      "check_metrics": 265
+    },
+    "databaseFailureObserved": false,
+    "databaseValidity": "not established by this qualification",
+    "calibrationJSONProduced": false,
+    "rawDatabaseDownloaded": false
+  },
+  "releaseAcceptance": false,
+  "originalZIPPreserved": true,
+  "sourceAndEvidenceSHA256": {
+    "qualification-scroll-1.zip": "06b89fd235aa764d0afcfc2d5d6e3f848c72ce860476d5be0db47d2a738c7db5",
+    "candidate-source/scripts/check_ios_performance.py": "199a08ef43a9cc85fdb22a98b9c0143ab401fe9d98554c6e5919d283cdaddc38",
+    "qualification-scroll-1/scroll/metrics.json": "9d675775757a99f74f6927233a9496a18dfb668027f0a63b1243ab4ea716f07f",
+    "qualification-scroll-1/scroll/Tests.log": "36ecb21bbe39e50454a1c10b64701974fa6c197fda6810a5342cf34e8ea90dd2",
+    "qualification-scroll-1/scroll/test-summary.json": "5d9da5de9a20f20d6292745511ce263b3f4c2d9a1e053a741341b741048cf6af",
+    "qualification-scroll-1/scroll/structural-calibration.log": "bb9423088e601335cfcf95d25c7c5038f2683b83ccf1f6fd877f86e82a98bc7c"
+  },
+  "scope": "Same unwrapped native test and required metric gate as 8f; no new wrapper, fallback, baseline change or repeat."
+}

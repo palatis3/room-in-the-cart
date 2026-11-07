@@ -1,0 +1,73 @@
+{
+  "candidate": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+  "run": 42184704871,
+  "attempt": 1,
+  "job": 127786281795,
+  "artifact": 13493056188,
+  "archiveSHA256": "abe8ff43bc1d72ea8ceb6cf9e538d7e89229086ff632096fea09e3cb3c0ee91d",
+  "test": "LedgerConfirmedStockPackUITests/testTwelveNeededEightConfirmedEightPerPackReviewsOneWholePack",
+  "durationSeconds": 72.182,
+  "group": {
+    "selected": 6,
+    "passed": 5,
+    "failed": 1,
+    "strictExit": 1,
+    "warnings": 0
+  },
+  "source": "source-LedgerConfirmedStockPackUITests.swift",
+  "sourceSHA256": "e317be1e4049a9d54f60a7addc727d8edc4536bb10573a8cb23a910d40548ed5",
+  "sourceLocations": {
+    "call": 80,
+    "anyFirstSelector": 98,
+    "fillTapAndType": 101
+  },
+  "lastCompletedBusinessCheck": "Imported12wraps input readback at34.85s; subsequent reviewed checkout applied50.60s and Confirm pantry or freezer food opened59.12s",
+  "firstUnexpectedAction": "At62.49s tap resolves Actual food or freezer batch as StaticText instead of TextField",
+  "actualTapPoint": [
+    138.33333333333331,
+    233.5
+  ],
+  "tapEvent": "ui07-stock-attachments/15B946F7-1473-4448-BE40-15922E30F0D1",
+  "tapSnapshot": "ui07-stock-attachments/924BE9BD-1A21-4C04-AD51-66EB816728F7",
+  "failureAX": "ui07-stock-attachments/908A0F40-335C-4E29-84FB-1CE90A3AF9EF.txt",
+  "failureAXFrames": {
+    "labelStaticText": [
+      32,
+      223.3,
+      212.7,
+      20.3
+    ],
+    "editableTextField": [
+      32,
+      249.7,
+      338,
+      22
+    ],
+    "tabBar": [
+      0,
+      791,
+      402,
+      83
+    ],
+    "app": [
+      0,
+      0,
+      402,
+      874
+    ]
+  },
+  "frameInterpretation": "Actual tap matches center of static label, above editable field. Failure AX has empty text field with placeholder; no keyboard focus. No occlusion or offscreen tap evidence. Tap snapshot itself contains root only; detailed frames are from failure AX after typing attempts.",
+  "failureChronology": [
+    "app.typeText at63.344s",
+    "first no-focus error64.88s",
+    "XCTest internal event retries66.04s and68.57s repeat same failure; these are framework retries within one original test invocation",
+    "final failure69.77s; teardown70.70s"
+  ],
+  "idleAnimationTimeoutCount": 0,
+  "recording": "ui07-stock-attachments/226D9F27-87F1-4F7A-8C59-22E36E8E99CF.mp4",
+  "limits": [
+    "No product assertion about confirmed stock quantities or pack result was reached.",
+    "No retained PNG; screenshot-named failure attachment is textual AX hierarchy. Video retained but not decoded for this proof.",
+    "Original strict failure preserved; no source changes, native test actions or CI retry."
+  ]
+}

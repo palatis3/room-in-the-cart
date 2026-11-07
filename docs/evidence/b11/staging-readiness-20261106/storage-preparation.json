@@ -1,0 +1,18 @@
+{
+  "keyRecoveredInFreshProcess": true,
+  "liveBackupCaptured": false,
+  "imageInfoWithoutPassphrase": "diskutil image info timed out at 15 seconds. Subsequent noninteractive hdiutil isencrypted confirmed encryption.",
+  "readOnlyWriteError": 30,
+  "detached": true,
+  "encryptionInspection": {
+    "blocksize": 512,
+    "encrypted": true,
+    "max-key-count": 20,
+    "passphrase-count": 1,
+    "private-key-count": 0,
+    "version": 2
+  },
+  "scope": "Actual owner-approved encrypted storage and login Keychain recovery; database capture remains pending.",
+  "helperSHA256": "2295f21c7f18bb80891fcce88e42920f72208a9110e85da4202da07516c61bd9",
+  "archiveVirtualSizeMiB": 512
+}

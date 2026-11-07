@@ -12,6 +12,49 @@ import XCTest
         if testRun?.failureCount ?? 0 > 0 { capture("Contributor-request-failure") }
         app.terminate()
     }
+    func testHelperSeesCurrentInstructionRevisionAndDateAfterRefreshInBothLanguages() {
+        for (language, entry, label, refresh) in [
+            ("en", "Cook instructions", "Current instruction revision", "Refresh instructions"),
+            ("es", "Instrucciones para cocinar", "Versión actual de las instrucciones", "Actualizar instrucciones")
+        ] {
+            app.launchArguments = ["--ui-testing", "--helper-revision-fixture", "-AppleLanguages", "(\(language))", "-AppleLocale", language + "_US"]
+            app.launch()
+            let open = app.buttons[entry]
+            XCTAssertTrue(open.waitForExistence(timeout: 30))
+            tap(open)
+            func read(_ number: Int, _ action: String) {
+                let instruction = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", action)).firstMatch
+                XCTAssertTrue(instruction.waitForExistence(timeout: 10))
+                let revision = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@ AND (value == %@ OR label CONTAINS %@)", label, String(number), String(number))).firstMatch
+                XCTAssertTrue(revision.exists, app.debugDescription)
+            }
+            read(12, "Save two")
+            let updated = element("helper.instructions.asOf")
+            func timestamp() -> String { updated.label + (updated.value as? String ?? "") }
+            let before = timestamp()
+            XCTAssertTrue(before.contains("2026"), before)
+            tap(app.buttons[refresh])
+            read(13, "Save three")
+            XCTAssertNotEqual(timestamp(), before)
+            app.terminate()
+        }
+    }
+
+    func testSpanishContributorReadsOnlyExplicitPurchaseStatusOnTheirOwnRequests() {
+        app.launchArguments = ["--ui-testing", "--own-purchases-fixture", "-AppleLanguages", "(es)", "-AppleLocale", "es_US"]
+        app.launch()
+        XCTAssertTrue(app.navigationBars["Hogar"].waitForExistence(timeout: 20))
+        let bought = element("household.ownRequest.aaaaaaaa-1111-4111-8111-111111111111")
+        let unconfirmed = element("household.ownRequest.bbbbbbbb-1111-4111-8111-111111111111")
+        reveal(bought)
+        XCTAssertTrue(bought.label.contains("Arroz"), bought.label)
+        XCTAssertTrue(bought.label.contains("La persona que hizo la compra confirm\u{00f3} que se compr\u{00f3}"), bought.label)
+        reveal(unconfirmed)
+        XCTAssertTrue(unconfirmed.label.contains("Fruta"), unconfirmed.label)
+        XCTAssertFalse(unconfirmed.label.contains("se compr\u{00f3}"), unconfirmed.label)
+        XCTAssertFalse(element("delivery.requestPurchases").exists)
+    }
+
     func testSpanishLargeTextReviewStartsAtTheOriginalWording() {
         if ProcessInfo.processInfo.operatingSystemVersion.majorVersion == 17 {
             app.launchEnvironment["OS_ACTIVITY_MODE"] = "disable"
@@ -34,6 +77,7 @@ import XCTest
         }, object: element("capture.structured.original"))
         XCTAssertEqual(XCTWaiter.wait(for: [atTop], timeout: 12), .completed)
         XCTAssertEqual(element("capture.structured.original").label, original)
+        capture("Spanish-large-text-original-at-top")
     }
 
     func testTypedAndStructuredReviewCancelThenSendOnlyOwnRequest() throws {
@@ -97,19 +141,98 @@ import XCTest
     private func tap(_ target: XCUIElement) { reveal(target); XCTAssertTrue(target.isHittable, target.debugDescription); target.tap() }
     private func enableSwitch(_ label: String) {
         let control = app.switches[label]
-        reveal(control, fullyVisible: true)
-        if control.value as? String == "0" {
-            // The accessibility frame includes the Form label. Tap the trailing switch itself.
-            control.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+        for attempt in 0..<24 {
+            var area = scrollableArea()
+            let done = app.buttons.matching(NSPredicate(format: "label IN %@", ["Done", "Listo"])).firstMatch
+            if app.keyboards.firstMatch.exists && done.exists {
+                area.size.height = max(0, min(area.maxY, done.frame.minY) - area.minY)
+            }
+            XCTAssertGreaterThanOrEqual(area.height, 80, "Need visible form content before acknowledging \(label)")
+            if control.exists && !control.frame.isEmpty {
+                // The accessibility row includes a multiline label. Its actual
+                // trailing switch can be visible while part of that label is not.
+                let coordinate = control.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5))
+                let point = coordinate.screenPoint
+                if control.isEnabled && control.isHittable && area.contains(point) {
+                    print("CONTRIBUTOR_SWITCH_TAP label=\(label) point=\(point) area=\(area)")
+                    if control.value as? String == "0" { coordinate.tap() }
+                    XCTAssertEqual(control.value as? String, "1", "The reviewed switch must be on: \(label)")
+                    return
+                }
+                scrollContent(upward: point.y > area.midY, distance: abs(point.y - area.midY))
+            } else {
+                scrollContent(upward: attempt < 16)
+            }
         }
-        XCTAssertEqual(control.value as? String, "1", "The reviewed switch must be on: \(label)")
+        XCTFail("No visible switch tap point after 24 reveal attempts: \(label)")
     }
     private func fill(_ text: String, into id: String, replacing: Bool = false) {
-        let field = element(id); tap(field)
-        if replacing, let old = field.value as? String, old != field.placeholderValue { app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count)) }
-        app.typeText(text)
+        // A Form can expose both its StaticText label and its input with the
+        // same name. Never let a label become the typing target.
+        let field = id == "capture.editor" ? app.textViews[id] : app.textFields[id]
+        tap(field)
+        dismissBilingualKeyboardCardIfPresent()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5), "The input must have a software keyboard before typing")
+        if replacing, let old = field.value as? String, !old.isEmpty, old != field.placeholderValue {
+            // Tapping a multiline editor does not put the caret at its end.
+            // Select the whole value through the real edit menu before replacing it.
+            field.press(forDuration: 1.2)
+            let labels = ["Select All", "Seleccionar todo"]
+            let menuItem = app.menuItems.matching(NSPredicate(format: "label IN %@", labels)).firstMatch
+            let button = app.buttons.matching(NSPredicate(format: "label IN %@", labels)).firstMatch
+            let selectAll = menuItem.exists ? menuItem : button
+            XCTAssertTrue(selectAll.waitForExistence(timeout: 5), app.debugDescription)
+            XCTAssertTrue(selectAll.isHittable)
+            selectAll.tap()
+            field.typeText(XCUIKeyboardKey.delete.rawValue)
+            let cleared = field.value as? String
+            XCTAssertTrue(cleared == "" || cleared == field.placeholderValue, "The entire input must be cleared: \(cleared ?? "nil")")
+        }
+        field.typeText(text)
+        dismissBilingualKeyboardCardIfPresent()
+        XCTAssertEqual(field.value as? String, text, "Typed input must exactly replace the draft before review")
+        if id == "capture.editor" {
+            dismissCaptureKeyboard()
+            // Large text can move this Form row offscreen during dismissal.
+            // Reveal it again before reading the virtualized editor's value.
+            reveal(field)
+            XCTAssertFalse(app.keyboards.firstMatch.exists, "Revealing the editor must not reopen the keyboard")
+            XCTAssertEqual(field.value as? String, text, "Dismissing the keyboard must preserve the draft")
+        }
         let done = app.buttons.matching(NSPredicate(format: "label == %@", "Done")).firstMatch
         if done.exists && done.isHittable { done.tap() }
+    }
+    private func dismissCaptureKeyboard() {
+        let keyboard = app.keyboards.firstMatch
+        guard keyboard.exists else { return }
+        // The source TextEditor has no Done action. Use the Form's existing
+        // interactive dismissal, starting in its margin outside the editor.
+        let bounds = app.frame, area = scrollableArea()
+        let origin = app.coordinate(withNormalizedOffset: .zero)
+        let start = origin.withOffset(CGVector(dx: 8, dy: area.minY + area.height * 0.25 - bounds.minY))
+        let end = origin.withOffset(CGVector(dx: 8, dy: bounds.height - 30))
+        start.press(forDuration: 0.05, thenDragTo: end)
+        let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: keyboard)
+        XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed)
+    }
+    private func dismissBilingualKeyboardCardIfPresent() {
+        let title = app.staticTexts["Type español e inglés"]
+        guard title.waitForExistence(timeout: 2) else {
+            XCTContext.runActivity(named: "Bilingual keyboard onboarding absent") { _ in }
+            return
+        }
+        // This is the observed iOS keyboard onboarding card, not an arbitrary
+        // Continue button or a product consent dialog.
+        XCTAssertTrue(app.staticTexts["Type both languages on the same keyboard. Customize in Settings."].exists)
+        let next = app.buttons["Continue"]
+        XCTAssertTrue(next.exists && next.isHittable)
+        XCTContext.runActivity(named: "Dismiss the identified bilingual keyboard onboarding card") { _ in
+            capture("Bilingual-keyboard-card-before-dismissal")
+            next.tap()
+            let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: title)
+            XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed)
+            capture("Bilingual-keyboard-card-dismissed")
+        }
     }
     private func reveal(_ target: XCUIElement, fullyVisible: Bool = false) {
         for attempt in 0..<24 {
@@ -122,9 +245,16 @@ import XCTest
             if target.exists && !target.frame.isEmpty {
                 upward = target.frame.midY > area.midY
             } else { upward = attempt < 16 }
-            scrollContent(upward: upward)
+            // A tall accessibility row may fit the viewport but not tolerate
+            // another full swipe. Center it with a measured, bounded drag.
+            let distance = fullyVisible && target.exists && !target.frame.isEmpty
+                ? abs(target.frame.midY - area.midY) : nil
+            scrollContent(upward: upward, distance: distance)
         }
-        XCTAssertTrue(target.exists && target.isHittable, "Missing actionable UI element: \(target.debugDescription)")
+        let area = scrollableArea()
+        XCTAssertTrue(target.exists && target.isHittable &&
+            (!fullyVisible || (target.frame.minY >= area.minY && target.frame.maxY <= area.maxY)),
+            "Missing actionable UI element: \(target.debugDescription)")
     }
     private func scrollableArea() -> CGRect {
         let bounds = app.frame
@@ -134,11 +264,12 @@ import XCTest
         let bottom = min(bounds.maxY - 100, keyboardTop - 16)
         return CGRect(x: bounds.minX + 24, y: top, width: bounds.width - 48, height: max(80, bottom - top))
     }
-    private func scrollContent(upward: Bool) {
+    private func scrollContent(upward: Bool, distance: CGFloat? = nil) {
         // Whole-app swipes can start on the software keyboard. Drag only in
         // the observed unobscured content, and still require real hittability.
         let area = scrollableArea(), bounds = app.frame
-        let high = area.minY + area.height * 0.2, low = area.minY + area.height * 0.8
+        let travel = min(area.height * 0.6, max(20, distance ?? area.height * 0.6))
+        let high = area.midY - travel / 2, low = area.midY + travel / 2
         let origin = app.coordinate(withNormalizedOffset: .zero)
         let start = origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: (upward ? low : high) - bounds.minY))
         let end = origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: (upward ? high : low) - bounds.minY))

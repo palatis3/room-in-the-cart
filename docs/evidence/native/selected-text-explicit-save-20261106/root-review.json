@@ -1,0 +1,11 @@
+{
+  "preparedFilesVerified": 12,
+  "retainedInputsVerified": 91,
+  "preparedManifestSHA256": "34e998b276ad0486cf58c737ab54b350fc65469e7a2688cb0e7716e9864664aa",
+  "rootStrictExit": 0,
+  "nativeExit": 0,
+  "driverExit": 0,
+  "rootSourceAndProductsRehashed": true,
+  "ownedSimulatorRemovedAfterEvidenceRetained": true,
+  "publication": "Local native acceptance proof only; no hosted pass or permanent CI claim"
+}

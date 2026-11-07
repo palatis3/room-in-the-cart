@@ -181,16 +181,30 @@ import XCTest
                 forward = false; reversed = true; unmoved = 0
             }
             if attempt == 0 || attempt % 8 == 0 { capture("S23-reveal-\(attempt)-\(description)") }
-            scroll(in:container,area:area,forward:forward)
+            scroll(in:area,forward:forward)
         }
         capture("S23-reveal-exhausted-\(description)")
         return false
     }
     private func activeScrollableContent()->XCUIElement? {
+        let viewport = app.frame
+        let cancelFrame = expectsDecisionSheet ? element("household.decision.cancel").frame : nil
         for candidates in [app.collectionViews.allElementsBoundByIndex,app.tables.allElementsBoundByIndex,app.scrollViews.allElementsBoundByIndex] {
-            if let active = candidates.last(where: { element in
-                element.exists && element.isHittable && element.frame.intersection(app.frame).height >= 80
-            }) { return active }
+            let visible = candidates.filter { candidate in
+                guard candidate.exists else { return false }
+                let frame = candidate.frame.intersection(viewport)
+                guard frame.width >= 80, frame.height >= 80 else { return false }
+                if let cancelFrame {
+                    // The sheet's form extends behind its toolbar. Exclude the
+                    // inbox, which is still in the tree below the fixture counters.
+                    return !cancelFrame.isEmpty && frame.minY <= cancelFrame.midY && frame.maxY > cancelFrame.maxY
+                }
+                return true
+            }
+            // A native list can contain visible rows and accept a viewport drag
+            // even when XCTest cannot resolve a hit point for the list itself.
+            if visible.count == 1 { return visible.first }
+            if let active = visible.last(where: { $0.isHittable }) { return active }
         }
         return nil
     }
@@ -220,12 +234,13 @@ import XCTest
             $0.exists && $0.frame.intersects(area)
         }.map { "\($0.label)@\(Int($0.frame.minY))" }.joined(separator:"|")
     }
-    private func scroll(in container:XCUIElement,area:CGRect,forward:Bool) {
+    private func scroll(in area:CGRect,forward:Bool) {
         let distance = min(240,area.height*0.42)
         let high = area.midY-distance/2, low = area.midY+distance/2
-        let origin = container.coordinate(withNormalizedOffset:.zero)
-        let start = origin.withOffset(CGVector(dx:area.midX-container.frame.minX,dy:(forward ? low : high)-container.frame.minY))
-        let end = origin.withOffset(CGVector(dx:area.midX-container.frame.minX,dy:(forward ? high : low)-container.frame.minY))
+        let frame = app.frame
+        let origin = app.coordinate(withNormalizedOffset:.zero)
+        let start = origin.withOffset(CGVector(dx:area.midX-frame.minX,dy:(forward ? low : high)-frame.minY))
+        let end = origin.withOffset(CGVector(dx:area.midX-frame.minX,dy:(forward ? high : low)-frame.minY))
         start.press(forDuration:0.05,thenDragTo:end)
     }
     private func capture(_ name:String) {

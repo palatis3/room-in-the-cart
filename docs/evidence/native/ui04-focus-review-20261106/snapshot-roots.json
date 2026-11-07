@@ -1,0 +1,314 @@
+[
+  {
+    "timestamp": 1794012113.677,
+    "file": "AB91A412-2041-438C-8D8E-5732C547424B",
+    "identifier": "",
+    "label": "Room in the Cart",
+    "frame": {
+      "NS.rectval": "{{0, 0}, {402, 874}}",
+      "NS.special": 3
+    },
+    "hasKeyboardFocus": false,
+    "elementType": 2,
+    "enabled": true
+  },
+  {
+    "timestamp": 1794012115.246,
+    "file": "9718F3AC-D6AE-4DE3-A6CE-F7B5F48E4CA4",
+    "identifier": "",
+    "label": "Room in the Cart",
+    "frame": {
+      "NS.rectval": "{{0, 0}, {402, 874}}",
+      "NS.special": 3
+    },
+    "hasKeyboardFocus": false,
+    "elementType": 2,
+    "enabled": true
+  },
+  {
+    "timestamp": 1794012111.1,
+    "file": "5293FA24-A1D6-4077-8E93-A47D9BF176CC",
+    "identifier": "",
+    "label": "Room in the Cart",
+    "frame": {
+      "NS.rectval": "{{0, 0}, {402, 874}}",
+      "NS.special": 3
+    },
+    "hasKeyboardFocus": false,
+    "elementType": 2,
+    "enabled": true
+  },
+  {
+    "timestamp": 1794012112.415,
+    "file": "4F254598-D7E7-4605-8A05-398ED1299919",
+    "identifier": "",
+    "label": "Room in the Cart",
+    "frame": {
+      "NS.rectval": "{{0, 0}, {402, 874}}",
+      "NS.special": 3
+    },
+    "hasKeyboardFocus": false,
+    "elementType": 2,
+    "enabled": true
+  },
+  {
+    "timestamp": 1794012108.554,
+    "file": "323951B5-F8AA-4394-A7CD-119C64595913",
+    "identifier": "",
+    "label": "Room in the Cart",
+    "frame": {
+      "NS.rectval": "{{0, 0}, {402, 874}}",
+      "NS.special": 3
+    },
+    "hasKeyboardFocus": false,
+    "elementType": 2,
+    "enabled": true
+  },
+  {
+    "timestamp": 1794012109.897,
+    "file": "F18520B5-7B08-4938-95B9-DAC8C3F37CB9",
+    "identifier": "",
+    "label": "Room in the Cart",
+    "frame": {
+      "NS.rectval": "{{0, 0}, {402, 874}}",
+      "NS.special": 3
+    },
+    "hasKeyboardFocus": false,
+    "elementType": 2,
+    "enabled": true
+  },
+  {
+    "timestamp": 1794012108.002,
+    "file": "63E4263F-4D86-4855-8A56-4F4FF924976A",
+    "identifier": "",
+    "label": "Room in the Cart",
+    "frame": {
+      "NS.rectval": "{{0, 0}, {402, 874}}",
+      "NS.special": 3
+    },
+    "hasKeyboardFocus": false,
+    "elementType": 2,
+    "enabled": true
+  },
+  {
+    "timestamp": 1794012100.186,
+    "file": "4A4F1AC7-279F-4BB7-8E82-26FB4CA71F18",
+    "identifier": "",
+    "label": "Room in the Cart",
+    "frame": {
+      "NS.rectval": "{{0, 0}, {402, 874}}",
+      "NS.special": 3
+    },
+    "hasKeyboardFocus": false,
+    "elementType": 2,
+    "enabled": true
+  },
+  {
+    "timestamp": 1794012095.182,
+    "file": "84EFA31E-5E5F-4FB8-BEA3-0D996DB4744E",
+    "identifier": "",
+    "label": "Room in the Cart",
+    "frame": {
+      "NS.rectval": "{{0, 0}, {402, 874}}",
+      "NS.special": 3
+    },
+    "hasKeyboardFocus": false,
+    "elementType": 2,
+    "enabled": true
+  },
+  {
+    "timestamp": 1794012093.11,
+    "file": "0D0632A4-6CED-4630-8689-4A97A14F2280",
+    "identifier": "",
+    "label": "Room in the Cart",
+    "frame": {
+      "NS.rectval": "{{0, 0}, {402, 874}}",
+      "NS.special": 3
+    },
+    "hasKeyboardFocus": false,
+    "elementType": 2,
+    "enabled": true
+  },
+  {
+    "timestamp": 1794012091.393,
+    "file": "D5793C2C-FCAF-45A7-8FA4-974EE72AFD30",
+    "identifier": "",
+    "label": "Room in the Cart",
+    "frame": {
+      "NS.rectval": "{{0, 0}, {402, 874}}",
+      "NS.special": 3
+    },
+    "hasKeyboardFocus": false,
+    "elementType": 2,
+    "enabled": true
+  },
+  {
+    "timestamp": 1794012086.458,
+    "file": "E07711B1-90CA-4479-8E55-465598E9556F",
+    "identifier": "",
+    "label": "Room in the Cart",
+    "frame": {
+      "NS.rectval": "{{0, 0}, {402, 874}}",
+      "NS.special": 3
+    },
+    "hasKeyboardFocus": false,
+    "elementType": 2,
+    "enabled": true
+  },
+  {
+    "timestamp": 1794012083.203,
+    "file": "6001B352-D72F-4D8C-800F-64D500A04DBA",
+    "identifier": "",
+    "label": "Room in the Cart",
+    "frame": {
+      "NS.rectval": "{{0, 0}, {402, 874}}",
+      "NS.special": 3
+    },
+    "hasKeyboardFocus": false,
+    "elementType": 2,
+    "enabled": true
+  },
+  {
+    "timestamp": 1794012080.685,
+    "file": "C917432A-66D2-41D9-8FC7-72590E8A4D97",
+    "identifier": "",
+    "label": "Room in the Cart",
+    "frame": {
+      "NS.rectval": "{{0, 0}, {402, 874}}",
+      "NS.special": 3
+    },
+    "hasKeyboardFocus": false,
+    "elementType": 2,
+    "enabled": true
+  },
+  {
+    "timestamp": 1794012079.585,
+    "file": "6BE2BDCE-15FD-4C32-BAC7-9BF603ADD9F6",
+    "identifier": "",
+    "label": "Room in the Cart",
+    "frame": {
+      "NS.rectval": "{{0, 0}, {402, 874}}",
+      "NS.special": 3
+    },
+    "hasKeyboardFocus": false,
+    "elementType": 2,
+    "enabled": true
+  },
+  {
+    "timestamp": 1794012075.019,
+    "file": "6ACC677F-F9D7-45BC-9367-4C1F5EDCBE6D",
+    "identifier": "",
+    "label": "Room in the Cart",
+    "frame": {
+      "NS.rectval": "{{0, 0}, {402, 874}}",
+      "NS.special": 3
+    },
+    "hasKeyboardFocus": false,
+    "elementType": 2,
+    "enabled": true
+  },
+  {
+    "timestamp": 1794012071.452,
+    "file": "98A201D5-8E26-4FBA-B32E-8129CE3A0B7C",
+    "identifier": "",
+    "label": "Room in the Cart",
+    "frame": {
+      "NS.rectval": "{{0, 0}, {402, 874}}",
+      "NS.special": 3
+    },
+    "hasKeyboardFocus": false,
+    "elementType": 2,
+    "enabled": true
+  },
+  {
+    "timestamp": 1794012067.477,
+    "file": "2A8343EB-2B3E-455B-9B34-566AFEF7A85D",
+    "identifier": "",
+    "label": "Room in the Cart",
+    "frame": {
+      "NS.rectval": "{{0, 0}, {402, 874}}",
+      "NS.special": 3
+    },
+    "hasKeyboardFocus": false,
+    "elementType": 2,
+    "enabled": true
+  },
+  {
+    "timestamp": 1794012064.709,
+    "file": "7BE219C6-7F30-4A4F-B192-0CEFCA45C718",
+    "identifier": "",
+    "label": "Room in the Cart",
+    "frame": {
+      "NS.rectval": "{{0, 0}, {402, 874}}",
+      "NS.special": 3
+    },
+    "hasKeyboardFocus": false,
+    "elementType": 2,
+    "enabled": true
+  },
+  {
+    "timestamp": 1794012062.074,
+    "file": "D66BED39-6AAF-46CD-802D-ABFE2651F775",
+    "identifier": "",
+    "label": "Room in the Cart",
+    "frame": {
+      "NS.rectval": "{{0, 0}, {402, 874}}",
+      "NS.special": 3
+    },
+    "hasKeyboardFocus": false,
+    "elementType": 2,
+    "enabled": true
+  },
+  {
+    "timestamp": 1794012060.887,
+    "file": "6404B641-4529-434E-971E-54E0C3FE4A3A",
+    "identifier": "",
+    "label": "Room in the Cart",
+    "frame": {
+      "NS.rectval": "{{0, 0}, {402, 874}}",
+      "NS.special": 3
+    },
+    "hasKeyboardFocus": false,
+    "elementType": 2,
+    "enabled": true
+  },
+  {
+    "timestamp": 1794012056.208,
+    "file": "CD3D0AE1-3B99-455C-9B87-0708E9EC8168",
+    "identifier": "",
+    "label": "Room in the Cart",
+    "frame": {
+      "NS.rectval": "{{0, 0}, {402, 874}}",
+      "NS.special": 3
+    },
+    "hasKeyboardFocus": false,
+    "elementType": 2,
+    "enabled": true
+  },
+  {
+    "timestamp": 1794012053.364,
+    "file": "23FC5EC6-26DA-4F08-AEFC-F39250D50853",
+    "identifier": "",
+    "label": "Room in the Cart",
+    "frame": {
+      "NS.rectval": "{{0, 0}, {402, 874}}",
+      "NS.special": 3
+    },
+    "hasKeyboardFocus": false,
+    "elementType": 2,
+    "enabled": true
+  },
+  {
+    "timestamp": 1794012115.364,
+    "file": "7477D9E8-649B-4EDD-AE70-3D7239E495B9",
+    "identifier": "",
+    "label": "Room in the Cart",
+    "frame": {
+      "NS.rectval": "{{0, 0}, {402, 874}}",
+      "NS.special": 3
+    },
+    "hasKeyboardFocus": false,
+    "elementType": 2,
+    "enabled": true
+  }
+]

@@ -1,0 +1,45 @@
+{
+  "sourceSHA256": "7e5bbe3087a6dc8ca13a48ec3f0dfeaab0c91142ee372e36fe1682360ff06286",
+  "proposedSHA256": "0c32312815fb9de54ba411840d1a6300a15ce4163b8c25544c7e916dc1e73a67",
+  "testUnchanged": true,
+  "execution": "not run",
+  "scope": "Notes only; persistent localized purpose label, no value-based test fallback",
+  "siblingsReviewed": [
+    {
+      "field": "Hard exclusions, one per line",
+      "line": 167,
+      "pattern": "same component, multiline placeholder without explicit label",
+      "runtimeFailureObserved": false
+    },
+    {
+      "field": "Completed steps, one per line",
+      "line": 169,
+      "pattern": "same component, multiline placeholder without explicit label",
+      "runtimeFailureObserved": false
+    },
+    {
+      "field": "Ingredient notes",
+      "line": 180,
+      "pattern": "same component, multiline placeholder without explicit label",
+      "runtimeFailureObserved": false
+    },
+    {
+      "field": "Ingredient exclusions, one per line",
+      "line": 181,
+      "pattern": "same component, already has explicit localized accessibilityLabel",
+      "runtimeFailureObserved": false
+    },
+    {
+      "field": "Assumptions, one per line",
+      "line": 117,
+      "pattern": "separate idea branch, multiline placeholder without explicit label",
+      "runtimeFailureObserved": false
+    },
+    {
+      "field": "Hard exclusions, one per line (idea generation)",
+      "line": 278,
+      "pattern": "separate idea screen, multiline placeholder without explicit label",
+      "runtimeFailureObserved": false
+    }
+  ]
+}

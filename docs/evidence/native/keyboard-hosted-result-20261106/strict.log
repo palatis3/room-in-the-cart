@@ -1,0 +1,14 @@
+Executed 6 of 6 selected tests.
+
+| Test | Result | Seconds |
+|---|---|---|
+| RoomInTheCartUITests/FreeJourneyUITests/testSpanishMealWeekListAndGridShowDatedProtectedLunch | Passed | 228.89 |
+| RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testTwelveNeededEightConfirmedEightPerPackReviewsOneWholePack | Passed | 190.30 |
+| RoomInTheCartUITests/ContextualNavigationUITests/testMissingStorePricesAndAvailabilityRemainConditionalAfterSaving | Passed | 136.47 |
+| RoomInTheCartUITests/FreeJourneyUITests/testFreeCookCorrectionAndExplicitRecipientAcknowledgment | Passed | 132.35 |
+| RoomInTheCartUITests/FreeJourneyUITests/testNextShopCanCancelThenOpenOneFreshShoppingList | Passed | 79.97 |
+| RoomInTheCartUITests/NavigationRestorationUITests/testKillRelaunchRestoresSelectedDinnersTabWithoutRestoringUnsavedComparison | Passed | 31.62 |
+The XCTest log confirms one start and one passing completion per selected test.
+
+The XCTest test export recorded 0 runtime warning occurrences across 6 examined tests.
+

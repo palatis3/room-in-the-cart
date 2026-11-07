@@ -1,0 +1,274 @@
+{
+  "originalHostedOrderMatches": true,
+  "order": [
+    "testAskToBuyApprovalRemainsUndelivered",
+    "testAskToBuyDeclineGrantsNothing",
+    "testBillingGraceStillRequiresServiceVerification",
+    "testBillingRetryWithoutGraceDoesNotGrantPaidAccess",
+    "testExpirationRemovesCurrentEntitlementAndPreservesFree",
+    "testLocalAnnualOfferUsesStoreKitPriceAndLocale",
+    "testPurchaseDoesNotFinishOrGrantAccessWithoutDurableServiceDelivery",
+    "testRealTransactionObserverAttemptsDeliveryWithoutUnlock",
+    "testRefundRevokesTransactionAndPreservesFree",
+    "testRelaunchAndExplicitRestoreReplayUnfinishedWithoutUnlock",
+    "testRenewalKeepsOriginalPurchaseAndNoLocalUnlock",
+    "testRestoredSubscriptionThenCancelledAndDeclinedRepurchasesStayFree",
+    "testSimulatedPurchaseCancellationGrantsNothing",
+    "testUnavailableProductKeepsFreeRoute",
+    "testUnverifiedLocalTransactionGrantsNothing"
+  ],
+  "markers": [
+    {
+      "sequence": 1,
+      "elapsed": "2.083e-06 seconds",
+      "stage": "setup.super.begin"
+    },
+    {
+      "sequence": 2,
+      "elapsed": "0.001374 seconds",
+      "stage": "setup.super.end"
+    },
+    {
+      "sequence": 3,
+      "elapsed": "0.002038833 seconds",
+      "stage": "setup.session-and-configuration.begin"
+    },
+    {
+      "sequence": 4,
+      "elapsed": "0.010723458 seconds",
+      "stage": "setup.session-and-configuration.end"
+    },
+    {
+      "sequence": 5,
+      "elapsed": "0.011366958 seconds",
+      "stage": "setup.sync.begin"
+    },
+    {
+      "sequence": 6,
+      "elapsed": "0.047136 seconds",
+      "stage": "setup.sync.end"
+    },
+    {
+      "sequence": 7,
+      "elapsed": "0.048672666 seconds",
+      "stage": "body.begin"
+    },
+    {
+      "sequence": 8,
+      "elapsed": "0.049209458 seconds",
+      "stage": "model.start.begin"
+    },
+    {
+      "sequence": 9,
+      "elapsed": "0.049696375 seconds",
+      "stage": "storefront.load.begin"
+    },
+    {
+      "sequence": 10,
+      "elapsed": "0.081198 seconds",
+      "stage": "storefront.load.end"
+    },
+    {
+      "sequence": 11,
+      "elapsed": "0.082186708 seconds",
+      "stage": "storefront.updates.begin"
+    },
+    {
+      "sequence": 12,
+      "elapsed": "0.082822875 seconds",
+      "stage": "storefront.updates.end"
+    },
+    {
+      "sequence": 13,
+      "elapsed": "0.083289791 seconds",
+      "stage": "storefront.unfinished.begin"
+    },
+    {
+      "sequence": 14,
+      "elapsed": "0.089894 seconds",
+      "stage": "storefront.unfinished.end"
+    },
+    {
+      "sequence": 15,
+      "elapsed": "0.090529916 seconds",
+      "stage": "storefront.current.begin"
+    },
+    {
+      "sequence": 16,
+      "elapsed": "0.097134541 seconds",
+      "stage": "storefront.current.end"
+    },
+    {
+      "sequence": 17,
+      "elapsed": "0.097841416 seconds",
+      "stage": "model.start.end"
+    },
+    {
+      "sequence": 18,
+      "elapsed": "0.098423333 seconds",
+      "stage": "observer-yield.begin"
+    },
+    {
+      "sequence": 19,
+      "elapsed": "0.098947875 seconds",
+      "stage": "observer-yield.end"
+    },
+    {
+      "sequence": 20,
+      "elapsed": "0.099403208 seconds",
+      "stage": "simulated-error.begin"
+    },
+    {
+      "sequence": 21,
+      "elapsed": "0.100282375 seconds",
+      "stage": "simulated-error.end"
+    },
+    {
+      "sequence": 22,
+      "elapsed": "0.100807291 seconds",
+      "stage": "model.purchase.begin"
+    },
+    {
+      "sequence": 23,
+      "elapsed": "0.101258125 seconds",
+      "stage": "storefront.unfinished.begin"
+    },
+    {
+      "sequence": 24,
+      "elapsed": "0.107968458 seconds",
+      "stage": "storefront.unfinished.end"
+    },
+    {
+      "sequence": 25,
+      "elapsed": "0.108616083 seconds",
+      "stage": "storefront.purchase.begin"
+    },
+    {
+      "sequence": 26,
+      "elapsed": "0.202101291 seconds",
+      "stage": "storefront.purchase.end"
+    },
+    {
+      "sequence": 27,
+      "elapsed": "0.202888666 seconds",
+      "stage": "model.purchase.end"
+    },
+    {
+      "sequence": 28,
+      "elapsed": "0.203387208 seconds",
+      "stage": "history.begin"
+    },
+    {
+      "sequence": 29,
+      "elapsed": "0.204802666 seconds",
+      "stage": "history.end"
+    },
+    {
+      "sequence": 30,
+      "elapsed": "0.205278791 seconds",
+      "stage": "storefront.current.begin"
+    },
+    {
+      "sequence": 31,
+      "elapsed": "0.213228291 seconds",
+      "stage": "storefront.current.end"
+    },
+    {
+      "sequence": 32,
+      "elapsed": "0.213814583 seconds",
+      "stage": "storefront.unfinished.begin"
+    },
+    {
+      "sequence": 33,
+      "elapsed": "0.221199416 seconds",
+      "stage": "storefront.unfinished.end"
+    },
+    {
+      "sequence": 34,
+      "elapsed": "0.223870625 seconds",
+      "stage": "body.end"
+    },
+    {
+      "sequence": 35,
+      "elapsed": "0.224453958 seconds",
+      "stage": "model.stop.begin"
+    },
+    {
+      "sequence": 36,
+      "elapsed": "0.225012083 seconds",
+      "stage": "model.stop.end"
+    },
+    {
+      "sequence": 37,
+      "elapsed": "0.225958875 seconds",
+      "stage": "teardown.begin"
+    },
+    {
+      "sequence": 38,
+      "elapsed": "0.22642325 seconds",
+      "stage": "teardown.reset.begin"
+    },
+    {
+      "sequence": 39,
+      "elapsed": "0.227583958 seconds",
+      "stage": "teardown.reset.end"
+    },
+    {
+      "sequence": 40,
+      "elapsed": "0.228064458 seconds",
+      "stage": "teardown.unfinished.begin"
+    },
+    {
+      "sequence": 41,
+      "elapsed": "0.238520166 seconds",
+      "stage": "teardown.unfinished.end"
+    },
+    {
+      "sequence": 42,
+      "elapsed": "0.239122041 seconds",
+      "stage": "teardown.clear.begin"
+    },
+    {
+      "sequence": 43,
+      "elapsed": "0.240223625 seconds",
+      "stage": "teardown.clear.end"
+    },
+    {
+      "sequence": 44,
+      "elapsed": "0.240812416 seconds",
+      "stage": "teardown.sync.begin"
+    },
+    {
+      "sequence": 45,
+      "elapsed": "0.261836375 seconds",
+      "stage": "teardown.sync.end"
+    },
+    {
+      "sequence": 46,
+      "elapsed": "0.262531041 seconds",
+      "stage": "teardown.final-reset.begin"
+    },
+    {
+      "sequence": 47,
+      "elapsed": "0.263336208 seconds",
+      "stage": "teardown.final-reset.end"
+    },
+    {
+      "sequence": 48,
+      "elapsed": "0.263823458 seconds",
+      "stage": "teardown.super.begin"
+    },
+    {
+      "sequence": 49,
+      "elapsed": "0.264264625 seconds",
+      "stage": "teardown.super.end"
+    },
+    {
+      "sequence": 50,
+      "elapsed": "0.264692833 seconds",
+      "stage": "teardown.end"
+    }
+  ],
+  "strictExit": 0,
+  "scope": "Local instrumented nonreproduction; original hosted timeout unresolved"
+}

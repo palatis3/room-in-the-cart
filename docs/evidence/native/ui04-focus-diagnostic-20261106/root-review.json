@@ -1,0 +1,84 @@
+{
+  "sourceBase": "0d5bb1b22e9e84cd4b8c2b07317f91cfc703b60c",
+  "sourceManifestSHA256": "50a411333fcdfa800627ffe6d602fe491d3fe155dd8eab3b26d8661bfb6023fd",
+  "patchSHA256": "4cd3a15a2870891880b4074afa2edc7a5d845f0faec7cf9e6452a56762a0b5e5",
+  "sourceFilesUnchangedDuringExecution": 457,
+  "scope": "Only diagnostic test changed from original published source; shipping source unchanged. Prepared overlay remains scratch-only.",
+  "compilerAndCoordinator": "Xcode27.1/27A9275",
+  "runtime": "iOS26.2/23C54",
+  "hostedCompilerAndCoordinator": "Xcode26.3/17C529",
+  "nativePassed": 1,
+  "nativeFailed": 0,
+  "strictExit": 0,
+  "warnings": 0,
+  "restarts": 0,
+  "initialBuildFailedBeforeAnyTests": true,
+  "firstExecutedDiagnosticTestPassed": true,
+  "publicSamples": {
+    "B-after-tap": {
+      "file": "attachments/9913B171-1D54-4938-89AD-5E41DC370298.json",
+      "sha256": "c18f193813082564893c7a041f2b54161b76da915503a2d9627ae096dfaabbf2",
+      "durationSeconds": 3.0085455833468586,
+      "keyboardCount": 1,
+      "doneCount": 1,
+      "field": {
+        "enabled": true,
+        "exists": true,
+        "frame": "(32.0, 437.66666666666714, 338.0, 65.0)",
+        "hittable": true
+      },
+      "bQuantityMatches": 1
+    },
+    "B-before-tap": {
+      "file": "attachments/1271F3D6-9EE3-47F5-9EFE-92EA5CF01B12.json",
+      "sha256": "6bacd1f955530b5993eb3da8408db254e246f0550f3551d28528642a82c2225a",
+      "durationSeconds": 2.677587416721508,
+      "keyboardCount": 0,
+      "doneCount": 0,
+      "field": {
+        "enabled": true,
+        "exists": true,
+        "frame": "(32.0, 532.0000000000001, 338.0, 64.0)",
+        "hittable": true
+      },
+      "bQuantityMatches": 1
+    },
+    "A-before-Done": {
+      "file": "attachments/1952A559-34DE-4774-9866-8CC9664C46ED.json",
+      "sha256": "bd0b0c9a4c2541c7954fb89288afb16e9b2348400aa499e9d774ed2e63c25a30",
+      "durationSeconds": 3.0866900000255555,
+      "keyboardCount": 1,
+      "doneCount": 1,
+      "field": {
+        "enabled": true,
+        "exists": true,
+        "frame": "(32.0, 302.33333333333314, 338.0, 65.00000000000006)",
+        "hittable": true
+      },
+      "bQuantityMatches": 0
+    },
+    "A-after-Done": {
+      "file": "attachments/92351EC6-56BD-4029-B055-067133BEC230.json",
+      "sha256": "653e9ed9b409ddb2101776daae27ea81eaa66dca80f0754e43ee30cf74b6a86e",
+      "durationSeconds": 1.6219993333797902,
+      "keyboardCount": 0,
+      "doneCount": 0,
+      "field": {
+        "enabled": true,
+        "exists": true,
+        "frame": "(32.0, 302.33333333333314, 338.0, 65.00000000000006)",
+        "hittable": true
+      },
+      "bQuantityMatches": 0
+    }
+  },
+  "screenshotsViewed": 2,
+  "originalFailureResolved": false,
+  "limitations": [
+    "Sequential accessibility observations take 1.6\u20133.1 seconds each and can perturb timing.",
+    "Keyboard/Done presence is not direct UIKit first-responder identity.",
+    "Local rebuilt products and coordinator differ from hosted binaries/toolchain.",
+    "Passing diagnostic validates capture but is not a fix or reproduction of the original failure."
+  ],
+  "durationSecondsRounded": 151.23
+}

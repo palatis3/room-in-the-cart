@@ -1,0 +1,39 @@
+{
+  "candidate": "8d1a79b22981148839c6e3d0827c6710f877a369",
+  "runID": 42337977971,
+  "artifactID": 13562748210,
+  "archiveDigest": "d8999fc56ba05984924b1addd3e263bc68bfc392385656da3cca651af7f8e8fb",
+  "archivesRehashed": 1,
+  "strictExit": 0,
+  "shardSelected": 5,
+  "selector": "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testHidingProtectedLunchKeepsTotalAndTwoWholePacksWithoutStock",
+  "result": {
+    "duration": "4m 5s",
+    "durationInSeconds": 245.4894790649414,
+    "name": "testHidingProtectedLunchKeepsTotalAndTwoWholePacksWithoutStock()",
+    "nodeIdentifier": "LedgerConfirmedStockPackUITests/testHidingProtectedLunchKeepsTotalAndTwoWholePacksWithoutStock()",
+    "nodeIdentifierURL": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testHidingProtectedLunchKeepsTotalAndTwoWholePacksWithoutStock",
+    "nodeType": "Test Case",
+    "result": "Passed"
+  },
+  "logEvents": [
+    {
+      "line": 819,
+      "text": "Test Case '-[RoomInTheCartUITests.LedgerConfirmedStockPackUITests testHidingProtectedLunchKeepsTotalAndTwoWholePacksWithoutStock]' started."
+    },
+    {
+      "line": 1492,
+      "text": "Test Case '-[RoomInTheCartUITests.LedgerConfirmedStockPackUITests testHidingProtectedLunchKeepsTotalAndTwoWholePacksWithoutStock]' passed (245.489 seconds)."
+    }
+  ],
+  "currentSourcesMatchingPublished": {
+    "ios/UITests/LedgerConfirmedStockPackUITests.swift": "1c675c450f8ac6a6ba4729dba38234fcc84f8c3dd781a81af6015c734b003d05",
+    "ios/Features/Ledger/LedgerIngredientView.swift": "288ef8f8bcb5a8fd3e1da1dce5219d442615b418e781e0485037dab418411fd4",
+    "ios/Features/Ledger/Ledger.xcstrings": "6fe648e2937ecb6495169305cab35764507c92f1c71e9e6aa3f446d2ff749fe9",
+    "ios/Features/Ledger/LedgerPackReview.swift": "bcf5b58a08f398e4695e24074049656d506f47af85f3853dca3bb96e2f807284",
+    "ios/Features/Ledger/LedgerPackStockReview.swift": "657e86c2beeb7d561ffa0642fb60a5061096a28c24181f759c51e290531dd2b7",
+    "ios/Features/Ledger/LedgerModel.swift": "77df98d6a518bed6b1abf46aff9dcd6c5ff838655707daf76d15c19db1fb65f5",
+    "ios/App/LedgerCheckoutEntry.swift": "1e10e2501a74b128609241b00825993b97c31d66d8810aa798e26ce4df5a9222"
+  },
+  "scope": "Exact original hosted protected-need visibility case; not the new local named-six/four/two model extension or whole cohort success."
+}

@@ -1,0 +1,24 @@
+{
+  "originalArchiveMember": "scroll/Tests.xcresult/database.sqlite3",
+  "originalArchiveMemberSHA256": "c3549a3a5a8ec52e8b7f38e596b39e573af39e4a2b7de82c887423aa7f00e7d3",
+  "query": "SELECT identifier, unitOfMeasurement, measurements FROM PerformanceMetrics",
+  "readOnly": true,
+  "rows": [
+    {
+      "identifier": "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_peak",
+      "unit": "kB",
+      "measurementsText": "106568.128,106863.04,107223.488,107141.568,107108.8"
+    },
+    {
+      "identifier": "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical",
+      "unit": "kB",
+      "measurementsText": "81.92,147.456,196.608,32.768,0.0"
+    },
+    {
+      "identifier": "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_absolute",
+      "unit": "kB",
+      "measurementsText": "106469.824,106863.04,107092.416,107059.648,107026.88"
+    }
+  ],
+  "requiredScrollSeriesPresent": false
+}

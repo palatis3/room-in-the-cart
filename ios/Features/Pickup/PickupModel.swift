@@ -12,18 +12,27 @@ func pCook(_ key: String, language: String) -> String {
 }
 func pMoney(_ money: Money) -> String { Decimal(money.minorUnits).dividing(by: 100).formatted(.currency(code: "USD")) }
 private extension Decimal { func dividing(by value: Decimal) -> Decimal { self / value } }
+func pExclusions(_ values: [String]) -> String {
+    var seen = Set<String>()
+    return values.filter { seen.insert($0).inserted }.joined(separator: ", ")
+}
 func pQuantity(_ quantity: Quantity, language: String? = nil) -> String {
     pQuantity(quantity.amount, unit: quantity.unit, language: language)
 }
 func pQuantity(_ amount: Rational, unit: UnitOfMeasure, language: String? = nil) -> String {
+    pQuantity(amount.description, unit: unit, singular: amount == .one, language: language)
+}
+
+// Coverage from the shared service can contain exact fractions larger than Int64.
+func pQuantity(_ exactAmount: String, unit: UnitOfMeasure, singular: Bool, language: String?) -> String {
     let key: String
     if unit == .count {
-        key = amount == .one ? "One count unit" : "count"
+        key = singular ? "One count unit" : "count"
     } else {
-        key = amount == .one ? unit.rawValue : "Quantity plural " + unit.rawValue
+        key = singular ? unit.rawValue : "Quantity plural " + unit.rawValue
     }
     let label = language.map { pCook(key, language: $0) } ?? pTr(key)
-    return "\(amount.description) \(label)"
+    return "\(exactAmount) \(label)"
 }
 
 enum NextShopDisposition: String, Codable, CaseIterable {
@@ -104,6 +113,10 @@ struct PickupOffer: Codable, Equatable, Identifiable {
     var retailerResponse: String
     var evaluation: PickupOfferEvaluationEvidence? = nil
 }
+struct PickupRecoveryPreparation: Codable, Equatable {
+    let requiredLeadMinutes: Int?
+    let advanceComplete: Bool
+}
 struct PickupNeedDetail: Codable, Equatable, Identifiable {
     let id: UUID
     let mealName: String
@@ -112,6 +125,13 @@ struct PickupNeedDetail: Codable, Equatable, Identifiable {
     let leadTimeMinutes: Int?
     let completedSteps: [String]
     var sourceContributionID: UUID? = nil
+    var sourceOccurrenceID: UUID? = nil
+    var sourceGroupID: UUID? = nil
+    var sourceLedgerRevisionID: UUID? = nil
+    var due: Date? = nil
+    var preparationNotes: [String]? = nil
+    var recoveryPreparation: PickupRecoveryPreparation? = nil
+    var sourceURL: String? = nil
 }
 struct PickupJourney: Codable, Equatable, Identifiable {
     let id: UUID
@@ -127,6 +147,8 @@ struct PickupJourney: Codable, Equatable, Identifiable {
     var needs: [AllocationNeed] = []
     var plannedNeeds: [AllocationNeed] = []
     var needDetails: [PickupNeedDetail] = []
+    var mealSource: PickupCheckoutMealSource?
+    var mealRecovery: PickupMealRecoveryHistory?
     var ledgerBasis: ShopBasis?
     var ledgerSourceRevisionID: UUID?
     var ledgerPackSelections: [LedgerPackSelection] = []
@@ -156,19 +178,19 @@ struct PickupJourney: Codable, Equatable, Identifiable {
 // New optional local projections can be absent in an earlier version-one document.
 // Required identity/version/date still fail closed, and validate checks all links.
 extension PickupJourney {
-    var unfilledOffers: [PickupOffer] {
+    func unfilledOffers(at instant: Date) -> [PickupOffer] {
         guard closedAt == nil else { return [] }
-        let observed = Set(pickup?.receipts.map(\.key.orderLineID) ?? [])
+        let observed = Set(pickup?.receipts.filter { $0.receivedAt <= instant }.map(\.key.orderLineID) ?? [])
         return offers.filter { !observed.contains($0.lineID) }
     }
 
     func nextUnfilledOffer(at date: Date) -> PickupOffer? {
-        let outstanding = unfilledOffers.sorted { $0.deadline.cutoff < $1.deadline.cutoff }
+        let outstanding = unfilledOffers(at: date).sorted { $0.deadline.cutoff < $1.deadline.cutoff }
         return outstanding.first { date < $0.deadline.cutoff } ?? outstanding.last
     }
 
     private enum CodingKeys: String, CodingKey {
-        case recipientSends
+        case recipientSends, mealSource, mealRecovery
         case awayCarryovers, id, savedAt, version, revision, basket, context, cap, quote, quotedRevisionID, frozenQuotes, pickup, needs, plannedNeeds, needDetails, ledgerBasis, ledgerSourceRevisionID, ledgerPackSelections, originShopID, nextShopReview, carriedMeals, urgent, stockLots, stockNeeds, repairs, deferred, flexible, proposals, undoneProposals, offers, offerActions, notes, cookShareEvents, settlement, closedAt, feedback
     }
     init(from decoder: Decoder) throws {
@@ -205,6 +227,8 @@ extension PickupJourney {
         if let decoded = try container.decodeIfPresent([PickupOfferAction].self, forKey: .offerActions) { offerActions = decoded }
         if let decoded = try container.decodeIfPresent([PickupCookNote].self, forKey: .notes) { notes = decoded }
         recipientSends = try container.decodeIfPresent([RecipientSend].self, forKey: .recipientSends)
+        mealSource = try container.decodeIfPresent(PickupCheckoutMealSource.self, forKey: .mealSource)
+        mealRecovery = try container.decodeIfPresent(PickupMealRecoveryHistory.self, forKey: .mealRecovery)
         if let decoded = try container.decodeIfPresent([PickupCookShareEvent].self, forKey: .cookShareEvents) { cookShareEvents = decoded }
         if let decoded = try container.decodeIfPresent(SettlementLedger.self, forKey: .settlement) { settlement = decoded }
         feedback = try container.decodeIfPresent(PickupFeedback.self, forKey: .feedback)
@@ -255,6 +279,8 @@ struct PickupPersistenceLocation {
         let payload: Data
         let requiredRevisions: [UUID: Int64]
         let selectsPickup: Bool
+        let recoveryOperationID: UUID?
+        let authorize: (@MainActor () -> Bool)?
     }
     private var pending: Pending?
     // Ephemeral review receipts allow an exact double tap to succeed without another write.
@@ -264,6 +290,15 @@ struct PickupPersistenceLocation {
         self.store = store; self.databaseURL = databaseURL; self.clock = clock; self.launchArguments = launchArguments
     }
     var sourceWorkspaceID: UUID? { store?.workspaceID }
+    var recoveryLedger: LedgerModel? { cookLedger }
+    func saveRecoveryCandidate(_ value: PickupJourney, operationID: UUID,
+                               authorize: @escaping @MainActor () -> Bool) async -> Bool {
+        await save(value, selecting: false, recoveryOperationID: operationID, authorize: authorize)
+    }
+    func retryRecoveryCandidate(operationID: UUID, matches: (PickupJourney) -> Bool) async -> Bool {
+        guard let pending, pending.recoveryOperationID == operationID, matches(pending.value) else { return false }
+        return await retrySave()
+    }
     var journey: PickupJourney? { journeys.first { $0.id == selectedID } }
     var cookJourney: PickupJourney? {
         guard let journey else { return nil }
@@ -296,7 +331,7 @@ struct PickupPersistenceLocation {
     }
     var allocation: StockAllocationResult? {
         guard let value = journey else { return nil }
-        return try? value.carryoverAllocation()
+        return try? value.carryoverAllocation(at: clock())
     }
     var stockAllocation: StockAllocationResult? { allocation }
     var stockReviewDate: Date { clock() }
@@ -379,7 +414,7 @@ struct PickupPersistenceLocation {
         }
     }
     @discardableResult func start(from lines: [BasketLine], shopID: UUID, context: CheckoutContext, cap: CheckoutCap? = nil, plannedNeeds: [AllocationNeed] = [], ledgerBasis: ShopBasis? = nil,
-                                  ledgerSourceRevisionID: UUID? = nil, needDetails: [PickupNeedDetail] = [], ledgerPackSelections: [LedgerPackSelection] = []) async -> Bool {
+                                  ledgerSourceRevisionID: UUID? = nil, needDetails: [PickupNeedDetail] = [], ledgerPackSelections: [LedgerPackSelection] = [], mealSource: PickupCheckoutMealSource? = nil) async -> Bool {
         if !ready { await load() }
         guard ready, !saving, pending == nil else { return false }
         if journeys.contains(where: { $0.id == shopID }) { selectedID = shopID; return true }
@@ -388,14 +423,17 @@ struct PickupPersistenceLocation {
             var value = PickupJourney(id: shopID, savedAt: clock())
             value.basket = basket; value.context = context; value.cap = cap; value.plannedNeeds = plannedNeeds
             value.ledgerBasis = ledgerBasis; value.ledgerSourceRevisionID = ledgerSourceRevisionID; value.needDetails = needDetails
-            value.ledgerPackSelections = ledgerPackSelections
+            value.ledgerPackSelections = ledgerPackSelections; value.mealSource = mealSource
             return await save(value)
         } catch { self.error = pTr("Check the amounts and units. Your saved pickup has not changed."); return false }
     }
-    @discardableResult private func save(_ value: PickupJourney, reviewing source: UUID? = nil, selecting: Bool = true) async -> Bool {
-        guard ready, !saving, pending == nil else { return false }
+    @discardableResult private func save(_ value: PickupJourney, reviewing source: UUID? = nil, selecting: Bool = true,
+        recoveryOperationID: UUID? = nil, authorize: (@MainActor () -> Bool)? = nil) async -> Bool {
+        guard ready, !saving, pending == nil, authorize?() != false else { return false }
         do {
-            var candidate = value; candidate.savedAt = clock()
+            let instant = clock()
+            var candidate = value; candidate.savedAt = instant
+            try candidate.synchronizeRecoveryOutside(at: instant)
             let increment = candidate.revision.addingReportingOverflow(1)
             guard !increment.overflow else { throw PickupModelError.invalid }
             candidate.revision = increment.partialValue
@@ -406,13 +444,18 @@ struct PickupPersistenceLocation {
                 guard let revision = storeRevisions[source] else { throw PickupModelError.missing }
                 revisions[source] = revision
             }
-            pending = Pending(value: candidate, payload: try encoder.encode(candidate), requiredRevisions: revisions, selectsPickup: selecting)
+            pending = Pending(value: candidate, payload: try encoder.encode(candidate), requiredRevisions: revisions, selectsPickup: selecting,
+                recoveryOperationID: recoveryOperationID, authorize: authorize)
             hasPendingSave = true
             return await retrySave()
         } catch { self.error = pTr("Could not prepare this change. Your saved pickup has not changed."); return false }
     }
     @discardableResult func retrySave() async -> Bool {
         guard !saving, let pending, let store else { return false }
+        guard pending.authorize?() != false else {
+            error = recoveryText("Your access or selection changed. Discard this pending recovery and review it again.")
+            return false
+        }
         saving = true; defer { saving = false }
         do {
             let saved = try await store.save(id: pending.value.id, title: "Pickup", payload: pending.payload,
@@ -548,7 +591,17 @@ struct PickupPersistenceLocation {
         }
     }
     @discardableResult func receive(_ fragment: ReceiptFragment, usable: UsableObservation?) async -> Bool {
-        await change { value in
+        let observedAt = clock()
+        let receiptExists = journey?.pickup?.receipts.contains(fragment) == true
+        let observationAllowed = usable.map {
+            journey?.pickup?.usableObservations.contains($0) == true ||
+                ($0.receipt == fragment.key && fragment.receivedAt <= observedAt && $0.confirmedAt <= observedAt)
+        } ?? true
+        guard (receiptExists || fragment.receivedAt <= observedAt), observationAllowed else {
+            error = pTr("Record an arrival or usable confirmation only after it has happened.")
+            return false
+        }
+        return await change { value in
             guard var pickup = value.pickup else { throw PickupModelError.missing }
             try pickup.receive(fragment)
             if let usable { try pickup.confirmUsable(usable) }
@@ -556,7 +609,14 @@ struct PickupPersistenceLocation {
         }
     }
     @discardableResult func confirmUsable(_ observation: UsableObservation) async -> Bool {
-        await change { value in
+        let observedAt = clock()
+        let alreadyRecorded = journey?.pickup?.usableObservations.contains(observation) == true
+        guard alreadyRecorded || (observation.confirmedAt <= observedAt &&
+            journey?.pickup?.receipts.first(where: { $0.key == observation.receipt }).map { $0.receivedAt <= observedAt } == true) else {
+            error = pTr("Record an arrival or usable confirmation only after it has happened.")
+            return false
+        }
+        return await change { value in
             guard var pickup = value.pickup else { throw PickupModelError.missing }
             try pickup.confirmUsable(observation); value.pickup = pickup
         }
@@ -615,6 +675,11 @@ struct PickupPersistenceLocation {
               Set(value.repairs.map(\.id)).count == value.repairs.count,
               Set(value.deferred.map(\.id)).count == value.deferred.count else { throw PickupModelError.invalid }
         try value.validateRecipientSends()
+        try value.mealSource?.validate()
+        if let history = value.mealRecovery {
+            try history.validate()
+            try value.validateRecoveryRawBasis(history)
+        }
         try value.validateAwayCarryovers()
         try value.ledgerBasis?.validate()
         guard value.ledgerPackSelections.count <= 10_000,
@@ -631,8 +696,14 @@ struct PickupPersistenceLocation {
                   review.choices.values.allSatisfy({ $0 != .keep }) else { throw PickupModelError.invalid }
         }
         for detail in value.needDetails {
+            let hasMealProvenance = detail.sourceOccurrenceID != nil || detail.sourceGroupID != nil || detail.sourceLedgerRevisionID != nil
+            if hasMealProvenance {
+                guard detail.sourceContributionID != nil, detail.sourceOccurrenceID != nil, detail.sourceLedgerRevisionID != nil else { throw PickupModelError.invalid }
+            }
             try detail.scheduledDay?.validate()
-            guard detail.leadTimeMinutes.map({ $0 >= 0 && $0 <= 525_600 }) ?? true else { throw PickupModelError.invalid }
+            guard detail.due.map({ $0.timeIntervalSince1970.isFinite }) ?? true else { throw PickupModelError.invalid }
+            guard [detail.leadTimeMinutes, detail.recoveryPreparation?.requiredLeadMinutes]
+                .compactMap({ $0 }).allSatisfy({ (0...525_600).contains($0) }) else { throw PickupModelError.invalid }
         }
         let plannedLineIDs = Set(value.basket?.current.lines.map(\.id) ?? []).union(noPurchaseLineIDs)
         guard Set(value.plannedNeeds.map(\.id)).count == value.plannedNeeds.count,
@@ -710,7 +781,7 @@ struct PickupPersistenceLocation {
                                                     expectedCost: .unknown(reason: pTr("Recheck the price for this shop"))),
                                    status: closing[need.id]?.rawValue ?? "review")
             }
-            next.urgent = previous.urgent.filter { !$0.resolved }.compactMap { original in
+            next.urgent = previous.recoveryCurrentUrgent.filter { !$0.resolved }.compactMap { original in
                 var need = original
                 if let coverage = allocation?.demands.first(where: { $0.id == original.id }), let shortfall = coverage.shortfall {
                     if shortfall == .zero { return nil }
@@ -723,16 +794,23 @@ struct PickupPersistenceLocation {
             next.stockNeeds = next.urgent.map { need in
                 StockNeed(id: need.id, foodID: need.id, name: need.meal, amount: need.required, priority: .required)
             }
-            let handledLineIDs = Set(previous.deferred.filter { ["handled", "dismissed"].contains($0.status) }.map { $0.line.id })
+            let handledLineIDs = Set(previous.deferred.filter { need in
+                // Apply this review's closing choices without rewriting prior history.
+                ["handled", "dismissed"].contains(closing[need.id]?.rawValue ?? need.status)
+            }.map { $0.line.id })
             next.carriedMeals = previous.carriedMeals.filter { !handledLineIDs.contains($0.orderLineID) }
             if let coverage = allocation {
-                for unmet in coverage.demands where unmet.shortfall != .zero {
-                    if let original = previous.needs.first(where: { $0.id == unmet.id }), !handledLineIDs.contains(original.orderLineID) {
+                let urgentIDs = Set(previous.recoveryCurrentUrgent.map(\.id))
+                for unmet in coverage.demands where unmet.shortfall != .zero && !urgentIDs.contains(unmet.id) {
+                    if let original = previous.recoveryCurrentAllocationNeeds.first(where: { $0.id == unmet.id }), !handledLineIDs.contains(original.orderLineID) {
                         let remaining = unmet.shortfall.map { Quantity(amount: $0, unit: unmet.unit, originalLiteral: $0.description) } ?? original.amount
+                        next.carriedMeals.removeAll { $0.id == original.id }
                         next.carriedMeals.append(AllocationNeed(id: original.id, orderLineID: original.orderLineID, name: original.name, amount: remaining, priority: original.priority))
                     }
                 }
             }
+            let carriedIDs = Set(next.carriedMeals.map(\.id) + next.stockNeeds.map(\.id))
+            next.needDetails = previous.recoveryCurrentDetails.filter { carriedIDs.contains($0.id) }
             return await save(next, reviewing: previous.id)
         } catch { self.error = pTr("Could not prepare this change. Your saved pickup has not changed."); return false }
     }

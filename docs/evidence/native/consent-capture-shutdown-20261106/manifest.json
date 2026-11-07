@@ -1,0 +1,69 @@
+{
+  "baseCommit": "f019f16124a1edf4d825c2a860efb0c2ca1488cd",
+  "installationTarget": "/Users/palatis/.codex/worktrees/consent-history-diagnostic/Room in the Cart",
+  "scope": "Unpublished diagnostic-branch collector follow-up only; main preparation remains historical and unmodified.",
+  "files": {
+    "diagnostics/measurement-consent/hosted/harness.py": {
+      "baseSHA256": "605e3a5bedcea8c64a66ca669631eb36a735f7f0fff279e406b7b4f2c28c6eb3",
+      "proposedSHA256": "2339772f3b4484204ca6dd1a4b07c79d5a8581cf81aa6f694816220a5b5b84fe"
+    },
+    "diagnostics/measurement-consent/hosted/test_harness.py": {
+      "baseSHA256": "c99c6d9cf2b444c783dbcb538acfc09caf57bba5726f2f039d3d7d116b79fd3e",
+      "proposedSHA256": "4d7999e6528ad00021c2cb2adeb0defa7c288398e6a886404cfd735e68b7403e"
+    },
+    "diagnostics/measurement-consent/hosted/overlay-index.json": {
+      "baseSHA256": "11a59503f7b34a61561760be83e3ddb4303ec375ff9ee5200f424de20c38f4c3",
+      "proposedSHA256": "99eb5602d20bc061281650df3b570d29ebb6737dee8a18277649aceed29e90ec"
+    }
+  },
+  "patchSHA256": "8f08b735b93d605934389dc9003d54d0d9bfa8f5078025e8318bd019f71c6a7b",
+  "unchangedFunctionBodies": [
+    "run",
+    "source_snapshot",
+    "verify_source",
+    "prepare",
+    "boot",
+    "build",
+    "copy_xctestrun",
+    "freeze",
+    "extract_transport",
+    "restore",
+    "stream_command",
+    "test_command",
+    "verify_frozen",
+    "order_from_log",
+    "validate_test_runtime"
+  ],
+  "collectAndCleanupOnlyChange": "Named append-only stop receipt phases; all other collection/runtime/strict/simulator cleanup code identical.",
+  "unchangedWorkflowSHA256": "ed4d310f026f05d6d62e5e4d5a650d8af62c24fc4c3099ea3e7c16715da1c44f",
+  "nativeExecutionLimitsSeconds": [
+    720,
+    900
+  ],
+  "nativeStepMinutes": 40,
+  "parentStopBudgetSeconds": 17,
+  "parentNominalWaitPhasesSeconds": [
+    12,
+    2,
+    3
+  ],
+  "priorParentWaitPhasesSeconds": [
+    12,
+    5
+  ],
+  "childStopBudgetSeconds": 10,
+  "priorChildWaitPhasesSeconds": [
+    5,
+    5
+  ],
+  "identityChecksIncludedInNewDeadlines": true,
+  "approvedSwiftOverlayAndSelectorsUnchanged": true,
+  "offlineTestsPassed": 57,
+  "testLogSHA256": "7b84d547bfe9eec0fad6ea86cab1d1d807c76540679d11e4a84314b3e7476d81",
+  "installed": false,
+  "nativeExecution": false,
+  "hostedExecution": false,
+  "gitMutations": false,
+  "patchDryRunPassed": true,
+  "reviewSHA256": "3d99444e7d8cb2dedcc814db666f75f4d263d99b92d4e308e82889660a99cdd7"
+}

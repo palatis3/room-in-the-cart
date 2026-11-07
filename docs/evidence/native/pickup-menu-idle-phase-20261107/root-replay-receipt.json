@@ -1,0 +1,8 @@
+{
+  "fullSixCaseStrictReplayExit": 0,
+  "runtimeWarnings": 2,
+  "warningReportSHA256": "688b5373e6a20273b146a93a528baaeac37dd459aaa08192aa93a984bf1b0a36",
+  "originalFreezeFilesReverified": 202,
+  "originalHostedFailureUnchanged": true,
+  "outputPlacementCorrection": "Checker writes sibling test-runtime-warnings.json beside --tests. First root replay mistakenly used original report paths; its generated report was moved to root-full-replay and original report restored byte-for-byte from separately frozen pristine small-member copy. Full original freeze reverified. Bundle reads used inspection-copy, raw archive/bundle unchanged."
+}

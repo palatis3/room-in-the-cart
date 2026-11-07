@@ -1,0 +1,18 @@
+Executed 10 of 10 selected tests.
+
+| Test | Result | Seconds |
+|---|---|---|
+| RoomInTheCartTests/LedgerCheckoutAdapterTests/testBasisOnlyChangeRequiresReviewClearsQuoteAndLeavesOldSnapshotImmutable | Passed | 0.45 |
+| RoomInTheCartTests/LedgerCheckoutAdapterTests/testCalendarMoveUpdatesCookCorrectionWithoutChangingPlacedPickup | Passed | 0.15 |
+| RoomInTheCartTests/LedgerCheckoutAdapterTests/testGuestApplyCarriesFiveBoundPeppersThroughPackAndCheckoutWithoutChangingReportedPurchase | Passed | 0.10 |
+| RoomInTheCartTests/LedgerCheckoutAdapterTests/testTwelveExistingWrapsProjectSixFourTwoExactlyOnce | Passed | 0.09 |
+| RoomInTheCartTests/LedgerCheckoutAdapterTests/testNextShopBridgeAndRepeatedOriginActionCreateOneEditableShop | Passed | 0.05 |
+| RoomInTheCartTests/LedgerCheckoutAdapterTests/testSourceChangesAfterPreviewAreRejectedEvenWhenQuantitiesStayTheSame | Passed | 0.02 |
+| RoomInTheCartTests/LedgerCheckoutAdapterTests/testSameLinesStillReviewRetailerSourceAndZoneChanges | Passed | 0.00 |
+| RoomInTheCartTests/LedgerCheckoutAdapterTests/testGuestCheckoutReviewRequiresSameLedgerBasketAndBranch | Passed | 0.00 |
+| RoomInTheCartTests/LedgerCheckoutAdapterTests/testNamedServingGroupsPartitionOneMealAndKeepStableNeedIdentities | Passed | 0.00 |
+| RoomInTheCartTests/LedgerCheckoutAdapterTests/testUnknownAmountsBlockProjectionAndMissingContextStaysMissing | Passed | 0.00 |
+The XCTest log confirms one start and one passing completion per selected test.
+
+The XCTest test export recorded 0 runtime warning occurrences across 10 examined tests.
+

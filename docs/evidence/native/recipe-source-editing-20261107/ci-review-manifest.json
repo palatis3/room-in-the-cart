@@ -1,0 +1,28 @@
+{
+  "policyChangesRequired": [],
+  "sources": {
+    "scripts/plan_ios_tests.py": "eff8122356457031fc25f3fcbcc0636e050613b356db830061ebbd249ea182cf",
+    "scripts/discover_ios_tests.py": "6a9ca46bbef2e39e0414c238414c2b9f9ffdac8ce88068200980ad8e3716e948",
+    "scripts/check_ios_test_results.py": "17b8af9e6fcee857e14a3b3ea92baf8b5e410468c7e8482c89aa62c8edfdd990",
+    "scripts/run_ios_test_shard.sh": "d76fe05dcfb42d3a64313af0c5e7ff5f4daf59f3e2fd4f6a23c61438b86ae347",
+    "scripts/ios_test_durations.json": "e2845b92db67176e6bc93b10dcaeac1d3f2ec2a1775e32a0dc2ae9f3c2d81cfe",
+    "scripts/generate_xcode_project.py": "e7bc7e17e20b2d64ebb03b766df0be100b6293f9756ab3890007c2c28eadc907",
+    "scripts/test_ci_trigger_coverage.py": "7ab80d7b292117c56c9e7ff47d77d482996d4111a22dd5c3294ab487b8ff644a",
+    ".github/workflows/ci.yml": "f61604147574ed246bb5d31648afe7a55b6d8011ad7dec1db130b02d9bc3a204",
+    ".github/workflows/ios-fixtures.yml": "226f618f4ff84e83d5ca54c5c2103bdae5977c6f6d2c055a626266958031975d",
+    ".github/workflows/ios-deep.yml": "d5fe2f5afee8eaa363a7dbc0ed3cb064ddb26d2668a3ef9913fffa8f104605f2"
+  },
+  "outputs": {
+    "result-verifier-unit.log": "53af10d174e2205d6577c2258b1beaedcb200933503380fc5ec676d8f8b3a728",
+    "localization-check.log": "a56b5e24a20f3ff5119c47193e6b87ebee6dde60b75f1fb4ff346f2a6f0ceaea",
+    "trigger-coverage-unit.log": "e9dbc1a31936475165af55356b566005547a03914ab93e4739e4aa9949799201",
+    "ui-automation-contract.log": "b5d60f9cf290c92111f9ab63678371e24861312262d57baf5092eb5d8dca5096",
+    "offline-integration-check.py": "f82269b54c6d6559c0b4d0ddaf0cf88886b5b10efa0da6cebb4c4d6ea8e4a3c9",
+    "project-check.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "offline-integration-result.json": "ae95955b3dfe55f50379c61febe883a736c6a715908dd14e0bea0ffcc20194d5",
+    "planner-unit.log": "6af0e6c6e142de031548a49370fc459b42338e0aaa08f9ee61ac48282b1b5942",
+    "REVIEW.md": "099ffe0b5b17a913581b7a3c62a737c13dd545967b8f79c61954886063c4386d"
+  },
+  "nativeExecution": false,
+  "ongoingNativeOutcomeAccepted": false
+}

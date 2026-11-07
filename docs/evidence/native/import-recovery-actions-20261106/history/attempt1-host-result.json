@@ -1,0 +1,29 @@
+{
+  "appBundleID": "dev.roominthecart.app.debug",
+  "appContainer": "/Users/palatis/Library/Developer/CoreSimulator/Devices/44120B32-10A5-46DE-B255-C462B4E711D1/data/Containers/Data/Application/10FEE937-100A-4682-83B9-FE3AD08CDC49",
+  "appInfoPlist": "/Users/palatis/Room in the Cart/.build/S04ProtectedVisibility20261106/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/Info.plist",
+  "appInfoPlistSHA256": "16c73fc926e9c3aa9d88e5547f86f331000e4418606956acf0b4abbdc492cad0",
+  "containerIdentities": {
+    "app": {
+      "device": 16777234,
+      "inode": 19360068
+    },
+    "runner": {
+      "device": 16777234,
+      "inode": 19360248
+    }
+  },
+  "database": "/Users/palatis/Library/Developer/CoreSimulator/Devices/44120B32-10A5-46DE-B255-C462B4E711D1/data/Containers/Data/Application/10FEE937-100A-4682-83B9-FE3AD08CDC49/Library/Application Support/UITestWorkspace/ledger.sqlite",
+  "elapsedSeconds": 4.455516542,
+  "error": "[Errno 2] No such file or directory: '/Users/palatis/Library/Developer/CoreSimulator/Devices/44120B32-10A5-46DE-B255-C462B4E711D1/data/Containers/Data/Application/FB11F517-9DC4-4276-8551-392AA450B1AA'",
+  "errorType": "FileNotFoundError",
+  "finishedUnixUTC": 1794020786.626695,
+  "nativeExitCode": null,
+  "runnerBundleID": "dev.roominthecart.RoomInTheCartUITests.xctrunner",
+  "runnerContainer": "/Users/palatis/Library/Developer/CoreSimulator/Devices/44120B32-10A5-46DE-B255-C462B4E711D1/data/Containers/Data/Application/FB11F517-9DC4-4276-8551-392AA450B1AA",
+  "simulator": "44120B32-10A5-46DE-B255-C462B4E711D1",
+  "status": "failed",
+  "supervisorPID": 53457,
+  "supervisorStart": "Fri Nov 6 22:06:21 2026",
+  "token": "01a7b181-f06c-4756-808c-26a1c283d8b0"
+}

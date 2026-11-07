@@ -17,107 +17,154 @@ struct LedgerImportView: View {
     @State private var captured: ReviewedCapture?
     @State private var captureBinding: LedgerCaptureBinding?
     @State private var capturePresentation: LedgerCapturePresentation?
+    @ScaledMetric(relativeTo: .body) private var importEditorHeight: CGFloat = 180
     @FocusState private var originalFocused: Bool
     private enum Focus: Hashable { case preview, status }
     @AccessibilityFocusState private var focus: Focus?
     private var shop: ShoppingLedger? { model.workspace.shops.first { $0.id == shopID } }
 
     var body: some View {
-        Form {
-            if let preview {
-                Section(ledgerText("Original wording")) {
-                    Text(original).textSelection(.enabled).accessibilityFocused($focus, equals: .preview)
-                    if let data = captured?.previewImageData ?? captured?.sourceImageData, let image = UIImage(data: data) {
-                        Image(uiImage: image).resizable().scaledToFit().frame(maxHeight: 240)
-                            .accessibilityLabel(captureText("Selected source photo"))
-                    }
+        ScrollViewReader { scroll in
+            Form {
+                if showingImportStatus {
+                    Section { importSaveStatus }
+                        .id("ledgerImportSaveStatus")
                 }
-                Section {
-                    let rows = Binding<[StagedImportLine]>(get: {
-                        guard let current = self.preview, current.id == preview.id else { return [] }
-                        return current.lines
-                    }, set: { updated in
-                        guard self.preview?.id == preview.id else { return }
-                        self.preview?.lines = updated
-                    })
-                    ForEach(preview.lines) { row in
-                        LedgerImportRowView(line: captureDraftBinding(row, in: rows),
-                                            matches: matches(for: row, preview: preview),
-                                            choice: Binding(get: { choices[row.id] ?? "" }, set: { setChoice($0, for: row) }),
-                                            onEdited: { refreshMatches(changedID: row.id) })
-                    }
-                } header: { Text(ledgerText("Review every line")) } footer: {
-                    Text(ledgerText("Merge confirms the same need. Add amount keeps an additional contribution. Unresolved amounts remain visibly unknown."))
-                }.disabled(model.saving || model.hasPendingSave)
-                Section {
-                    Button(ledgerText("Add reviewed list")) {
-                        Task {
-                            guard captured == nil || captureAuthorized else {
-                                model.error = captureText("This capture belongs to an earlier workspace or list revision. Review it again before adding anything.")
-                                focus = .status; return
-                            }
-                            let decisions = Dictionary(uniqueKeysWithValues: preview.lines.map { row in
-                                (row.id, resolution(choices[row.id] ?? "new"))
-                            })
-                            if await model.editShop(key: "import-\(preview.id)", shopID: shopID, { try $0.commitImport(preview, decisions: decisions) }) {
-                                dismiss()
-                            } else { focus = .status }
+                if let preview {
+                    Section(ledgerText("Original wording")) {
+                        Text(original).textSelection(.enabled).accessibilityFocused($focus, equals: .preview)
+                        if let data = captured?.previewImageData ?? captured?.sourceImageData, let image = UIImage(data: data) {
+                            Image(uiImage: image).resizable().scaledToFit().frame(maxHeight: 240)
+                                .accessibilityLabel(captureText("Selected source photo"))
                         }
-                    }.buttonStyle(PrimaryAction()).disabled(model.saving || !allDecided(preview))
-                        .accessibilityIdentifier("ledgerCommitImport")
-                    if captured != nil {
-                        Button(captureText("Edit captured fields")) { beginCapture() }
-                            .disabled(model.saving || model.hasPendingSave || !captureAuthorized)
-                    } else {
-                        Button(ledgerText("Edit original text")) { self.preview = nil; choices = [:]; importID = UUID() }
-                            .disabled(model.saving || model.hasPendingSave)
+                    }
+                    Section {
+                        let rows = Binding<[StagedImportLine]>(get: {
+                            guard let current = self.preview, current.id == preview.id else { return [] }
+                            return current.lines
+                        }, set: { updated in
+                            guard self.preview?.id == preview.id else { return }
+                            self.preview?.lines = updated
+                        })
+                        ForEach(preview.lines) { row in
+                            LedgerImportRowView(line: captureDraftBinding(row, in: rows),
+                                                matches: matches(for: row, preview: preview),
+                                                choice: Binding(get: { choices[row.id] ?? "" }, set: { setChoice($0, for: row) }),
+                                                onEdited: { refreshMatches(changedID: row.id) })
+                        }
+                    } header: { Text(ledgerText("Review every line")) } footer: {
+                        Text(ledgerText("Merge confirms the same need. Add amount keeps an additional contribution. Unresolved amounts remain visibly unknown."))
+                    }.disabled(model.saving || model.hasPendingSave)
+                    Section {
+
+                        if captured != nil {
+                            Button(captureText("Edit captured fields")) { beginCapture() }
+                                .disabled(model.saving || model.hasPendingSave || !captureAuthorized)
+                        } else {
+                            Button(ledgerText("Edit original text")) { self.preview = nil; choices = [:]; importID = UUID() }
+                                .disabled(model.saving || model.hasPendingSave)
+                        }
+                    }
+                } else {
+                    Section {
+                        Text(ledgerText("One item per line. For example: 12 wraps or 2 kg rice."))
+                        TextEditor(text: $original)
+                            .frame(height: min(importEditorHeight, 240))
+                            .focused($originalFocused)
+                            .accessibilityLabel(ledgerText("List to review")).accessibilityIdentifier("ledgerImportText")
+                        PasteButton(payloadType: String.self) { values in
+                            original = values.joined(separator: "\n")
+                            source = .paste
+                        }.accessibilityLabel(ledgerText("Paste list"))
+                    }.disabled(model.saving || model.hasPendingSave)
+                    Section {
+                        Button(captureText("Capture and review fields")) { beginCapture() }
+                            .disabled(model.saving || model.hasPendingSave || liveCaptureBinding == nil)
+                            .accessibilityIdentifier("ledger.capture")
+                        Text(captureText("Capture is for this private list. Guest changes use the dinner preview.")).font(.footnote)
+                        Button(ledgerText("Review list")) {
+                            guard let shop else { return }
+                            originalFocused = false
+                            let staged = shop.stageImport(text: original, source: source, importID: importID)
+                            preview = staged
+                            choices = Dictionary(uniqueKeysWithValues: staged.lines.filter { $0.duplicateLineIDs.isEmpty }.map { ($0.id, "new") })
+                            focus = .preview
+                        }.buttonStyle(PrimaryAction()).disabled(original.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                            .accessibilityIdentifier("ledgerReviewImport")
                     }
                 }
-            } else {
-                Section {
-                    Text(ledgerText("One item per line. For example: 12 wraps or 2 kg rice."))
-                    TextEditor(text: $original).frame(minHeight: 180)
-                        .focused($originalFocused)
-                        .accessibilityLabel(ledgerText("List to review")).accessibilityIdentifier("ledgerImportText")
-                    PasteButton(payloadType: String.self) { values in
-                        original = values.joined(separator: "\n")
-                        source = .paste
-                    }.accessibilityLabel(ledgerText("Paste list"))
-                }.disabled(model.saving || model.hasPendingSave)
-                Section {
-                    Button(captureText("Capture and review fields")) { beginCapture() }
-                        .disabled(model.saving || model.hasPendingSave || liveCaptureBinding == nil)
-                        .accessibilityIdentifier("ledger.capture")
-                    Text(captureText("Capture is for this private list. Guest changes use the dinner preview.")).font(.footnote)
-                    Button(ledgerText("Review list")) {
-                        guard let shop else { return }
-                        originalFocused = false
-                        let staged = shop.stageImport(text: original, source: source, importID: importID)
-                        preview = staged
-                        choices = Dictionary(uniqueKeysWithValues: staged.lines.filter { $0.duplicateLineIDs.isEmpty }.map { ($0.id, "new") })
-                        focus = .preview
-                    }.buttonStyle(PrimaryAction()).disabled(original.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                        .accessibilityIdentifier("ledgerReviewImport")
+                if !showingImportStatus {
+                    Section { importSaveStatus }
                 }
-            }
-            Section { LedgerSaveStatus(model: model, onRetried: { dismiss() }).accessibilityFocused($focus, equals: .status) }
-        }.scrollDismissesKeyboard(.interactively).workingSurface().navigationTitle(ledgerText("Bring the list"))
-            .keyboardDoneAction(visible: originalFocused, title: ledgerText("Done")) { originalFocused = false }
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Cancel")) { dismiss() }.disabled(model.saving) } }
-            .interactiveDismissDisabled(model.saving)
-            .sheet(item: $capturePresentation) { presentation in
-                let binding = presentation.binding
-                NavigationStack {
-                    CaptureReviewView(initialText: presentation.text, initialSource: presentation.source, localeIdentifier: binding.localeIdentifier,
-                        destination: presentation.destination, existingCapture: presentation.reviewed,
-                        correctionScope: CaptureCorrectionScope(profileID: "local:" + binding.workspaceID.uuidString, localeIdentifier: binding.localeIdentifier),
-                        authorize: { liveCaptureBinding == binding }, onReviewed: { receiveCapture($0, binding: binding) })
+            }.accessibilityIdentifier("ledgerImportForm")
+                .scrollDismissesKeyboard(.interactively).workingSurface().navigationTitle(ledgerText("Bring the list"))
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    if let preview {
+                        importConfirmation(preview)
+                            .padding(.horizontal, 16).padding(.vertical, 12)
+                            .background(Theme.canvas)
+                    }
                 }
+                .keyboardDoneAction(visible: originalFocused, title: ledgerText("Done")) { originalFocused = false }
+                .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Cancel")) { dismiss() }.disabled(model.saving) } }
+                .interactiveDismissDisabled(model.saving)
+                .sheet(item: $capturePresentation) { presentation in
+                    let binding = presentation.binding
+                    NavigationStack {
+                        CaptureReviewView(initialText: presentation.text, initialSource: presentation.source, localeIdentifier: binding.localeIdentifier,
+                            destination: presentation.destination, existingCapture: presentation.reviewed,
+                            correctionScope: CaptureCorrectionScope(profileID: "local:" + binding.workspaceID.uuidString, localeIdentifier: binding.localeIdentifier),
+                            authorize: { liveCaptureBinding == binding }, onReviewed: { receiveCapture($0, binding: binding) })
+                    }
+                }
+                .onChange(of: liveCaptureBinding) { _, current in
+                    if let binding = capturePresentation?.binding ?? captureBinding, current != binding { invalidateCapture() }
+                }
+                .onChange(of: scenePhase) { _, phase in if phase == .background { invalidateCapture() } }
+                .task(id: ImportStatusFocusKey(previewID: preview?.id, error: model.error,
+                                               saving: model.saving, pending: model.hasPendingSave)) {
+                    guard showingImportStatus else { return }
+                    // Let the newly inserted status section mount before scrolling to it.
+                    await Task.yield()
+                    guard !Task.isCancelled, showingImportStatus else { return }
+                    scroll.scrollTo("ledgerImportSaveStatus", anchor: .top)
+                    focus = .status
+                }
+        }
+    }
+
+    private struct ImportStatusFocusKey: Equatable {
+        let previewID: UUID?
+        let error: String?
+        let saving: Bool
+        let pending: Bool
+    }
+
+    private var showingImportStatus: Bool {
+        preview != nil && (model.saving || model.hasPendingSave || model.error != nil)
+    }
+
+    private var importSaveStatus: some View {
+        LedgerSaveStatus(model: model, onRetried: { dismiss() })
+            .accessibilityFocused($focus, equals: .status)
+    }
+
+    private func importConfirmation(_ preview: StagedListImport) -> some View {
+        Button(ledgerText("Add reviewed list")) {
+            Task {
+                guard captured == nil || captureAuthorized else {
+                    model.error = captureText("This capture belongs to an earlier workspace or list revision. Review it again before adding anything.")
+                    focus = .status; return
+                }
+                let decisions = Dictionary(uniqueKeysWithValues: preview.lines.map { row in
+                    (row.id, resolution(choices[row.id] ?? "new"))
+                })
+                if await model.editShop(key: "import-\(preview.id)", shopID: shopID, { try $0.commitImport(preview, decisions: decisions) }) {
+                    dismiss()
+                } else { focus = .status }
             }
-            .onChange(of: liveCaptureBinding) { _, current in
-                if let binding = capturePresentation?.binding ?? captureBinding, current != binding { invalidateCapture() }
-            }
-            .onChange(of: scenePhase) { _, phase in if phase == .background { invalidateCapture() } }
+        }.buttonStyle(PrimaryAction()).disabled(model.saving || model.hasPendingSave || !allDecided(preview))
+            .accessibilityIdentifier("ledgerCommitImport")
     }
 
     private var liveCaptureBinding: LedgerCaptureBinding? {
@@ -321,6 +368,8 @@ struct LedgerFactsView: View {
     @State private var reviewedRevision: Int
     @State private var reviewedBase: ShopBasis
     @State private var validation: String?
+    private enum Input: Hashable { case branch, timeZone, cap, reserve, fees, retailerTotal, retailerSource, includedCharges }
+    @FocusState private var inputFocus: Input?
     init(model: LedgerModel, shop: ShoppingLedger) {
         self.model = model
         self.shop = shop
@@ -357,6 +406,7 @@ struct LedgerFactsView: View {
             } else {
                 Section(ledgerText("Store and timing")) {
                     TextField(ledgerText("Store branch"), text: $basis.branch, axis: .vertical).accessibilityIdentifier("ledgerBranch")
+                        .focused($inputFocus, equals: .branch)
                     Picker(ledgerText("How you will shop"), selection: $basis.mode) {
                         Text(FulfillmentMode.pickup.ledgerLabel).tag(FulfillmentMode.pickup)
                         Text(FulfillmentMode.delivery.ledgerLabel).tag(FulfillmentMode.delivery)
@@ -369,10 +419,12 @@ struct LedgerFactsView: View {
                     }
                     TextField(ledgerText("Time zone, for example America/New_York"), text: $basis.timeZoneIdentifier)
                         .textInputAutocapitalization(.never).autocorrectionDisabled()
+                        .focused($inputFocus, equals: .timeZone)
                 }.disabled(model.saving || model.hasPendingSave)
                 Section {
                     TextField(ledgerText("Spending cap (USD, optional)"), text: $cap).keyboardType(.decimalPad)
                         .accessibilityIdentifier("ledgerCap")
+                        .focused($inputFocus, equals: .cap)
                     Picker(ledgerText("What the cap covers"), selection: $basis.capScope) {
                         Text(BudgetScope.wholeShop.ledgerLabel).tag(BudgetScope.wholeShop)
                         Text(BudgetScope.dinnersOnly.ledgerLabel).tag(BudgetScope.dinnersOnly)
@@ -383,7 +435,9 @@ struct LedgerFactsView: View {
                         Text(ledgerText("Flexible limit")).tag(CapFirmness.flexible)
                     }
                     TextField(ledgerText("Fixed reserve (USD, optional)"), text: $reserve).keyboardType(.decimalPad)
+                        .focused($inputFocus, equals: .reserve)
                     TextField(ledgerText("Known fees (USD, unknown if blank)"), text: $fees).keyboardType(.decimalPad)
+                        .focused($inputFocus, equals: .fees)
                     Text(ledgerText("Currency: USD"))
                 } header: { Text(ledgerText("Spending cap")) } footer: {
                     Text(ledgerText("A dinner-only cap does not cover the whole pickup. Missing prices and fees remain unknown."))
@@ -392,10 +446,13 @@ struct LedgerFactsView: View {
                     Toggle(ledgerText("Record a retailer preview"), isOn: $hasRetailerPreview)
                     if hasRetailerPreview {
                         TextField(ledgerText("Retailer total (USD, unknown if blank)"), text: $retailerTotal).keyboardType(.decimalPad)
+                            .focused($inputFocus, equals: .retailerTotal)
                         TextField(ledgerText("Source of the retailer preview"), text: $retailerSource, axis: .vertical)
+                            .focused($inputFocus, equals: .retailerSource)
                         DatePicker(ledgerText("When this preview was shown"), selection: $retailerDate)
                             .environment(\.timeZone, TimeZone(identifier: basis.timeZoneIdentifier) ?? .current)
                         TextField(ledgerText("Included charges, separated by commas"), text: $includedCharges, axis: .vertical)
+                            .focused($inputFocus, equals: .includedCharges)
                         Text(ledgerText("This records what the retailer displayed. It is not a calculated whole-pickup quote."))
                     }
                 }.disabled(model.saving || model.hasPendingSave)
@@ -408,10 +465,12 @@ struct LedgerFactsView: View {
             if let validation { Text(validation).foregroundStyle(Theme.warning) }
             LedgerSaveStatus(model: model, onRetried: { dismiss() })
         }.scrollDismissesKeyboard(.interactively).workingSurface().navigationTitle(ledgerText("Describe this pickup"))
+            .keyboardDoneAction(visible: inputFocus != nil, title: ledgerText("Done"), identifier: "ledgerFactsKeyboardDone") { inputFocus = nil }
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Cancel")) { dismiss() }.disabled(model.saving) } }
             .interactiveDismissDisabled(model.saving)
     }
     private func review() {
+        inputFocus = nil
         do {
             guard TimeZone(identifier: basis.timeZoneIdentifier) != nil else {
                 validation = ledgerText("Enter a valid time zone, such as America/New_York.")

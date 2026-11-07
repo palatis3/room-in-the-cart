@@ -1,0 +1,24 @@
+[
+  {
+    "command": [
+      "xcrun",
+      "simctl",
+      "shutdown",
+      "B7C06557-2E53-4BAF-A963-A5F9866351C4"
+    ],
+    "exitCode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "xcrun",
+      "simctl",
+      "delete",
+      "B7C06557-2E53-4BAF-A963-A5F9866351C4"
+    ],
+    "exitCode": 0,
+    "stdout": "",
+    "stderr": ""
+  }
+]

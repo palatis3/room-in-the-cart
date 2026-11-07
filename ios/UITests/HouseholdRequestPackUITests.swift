@@ -19,6 +19,74 @@ import XCTest
         }
         app.terminate()
     }
+    func testShopperCarriesEarlierRequestOnceAndReviewsCurrentPackPrice() {
+        app.launchArguments = ["--ui-testing", "--request-pack-fixture", "--deferred-request-fixture",
+                               "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        let open = element("household.deferred.open")
+        let source = element("household.deferred.88888888-5555-4555-8555-555555555555")
+        let successor = element("household.request.44444444-4444-4444-8444-444444444444")
+        XCTAssertTrue(open.waitForExistence(timeout: 10))
+        XCTAssertFalse(successor.exists)
+        tap(open)
+        tap(source)
+        assertText("8 wraps")
+        tap(element("household.deferred.keep"))
+        XCTAssertTrue(source.waitForExistence(timeout: 5))
+        XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 0")
+        XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 0")
+
+        tap(source)
+        tap(element("household.deferred.confirm"))
+        let retry = app.buttons["Retry the same decision"]
+        XCTAssertTrue(retry.waitForExistence(timeout: 5))
+        XCTAssertFalse(retry.isEnabled)
+        tap(app.buttons["Refresh current requests"])
+        XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 1")
+        let eligible = XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == true"), object: retry)
+        XCTAssertEqual(XCTWaiter.wait(for: [eligible], timeout: 12), .completed)
+        tap(retry)
+        XCTAssertTrue(successor.waitForExistence(timeout: 8))
+        XCTAssertTrue(successor.label.contains("From an earlier pickup"))
+        XCTAssertTrue(successor.label.contains("Received, waiting for review"))
+        XCTAssertEqual(app.buttons.matching(identifier: successor.identifier).count, 1)
+        XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 2")
+        XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 0")
+        tap(open)
+        assertText("No earlier requests are waiting for this pickup.")
+        tap(app.navigationBars["Saved from earlier pickups"].buttons.firstMatch)
+
+        func openAddDecision() {
+            tap(successor)
+            tap(element("household.decision.choice"))
+            tap(app.buttons["Add packs to this shop"])
+        }
+        openAddDecision()
+        let price = element("household.decision.price")
+        reveal(price)
+        XCTAssertTrue((price.value as? String ?? "").isEmpty || price.value as? String == price.placeholderValue)
+        tap(element("household.decision.review"))
+        let apply = element("household.decision.apply")
+        reveal(apply)
+        XCTAssertFalse(apply.isEnabled)
+        tap(element("household.decision.cancel"))
+        XCTAssertTrue(successor.waitForExistence(timeout: 5))
+        XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 0")
+        openAddDecision()
+        reveal(price, fullyVisible: true)
+        price.tap()
+        price.typeText("4.25")
+        dismissKeyboardIfPresent()
+        tap(element("household.decision.review"))
+        assertElementContains("household.decision.after-total", "$4.25")
+        tap(apply)
+        tap(element("household.decision.cancel"))
+        XCTAssertTrue(successor.waitForExistence(timeout: 5))
+        XCTAssertTrue(successor.label.contains("Added"))
+        XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 1")
+        XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 3")
+    }
+
     func testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite() {
         openCerealReview()
         let sam = element("household.decision.meal.88888888-8888-4888-8888-888888888888")
@@ -119,7 +187,8 @@ import XCTest
     private func tap(_ target: XCUIElement) { reveal(target); XCTAssertTrue(target.isHittable, target.debugDescription); target.tap() }
     private func enableSwitch(_ label: String) {
         let control = app.switches[label]
-        reveal(control)
+        dismissKeyboardIfPresent()
+        reveal(control, fullyVisible: true)
         if control.value as? String == "0" {
             // The accessibility frame includes the Form label. Tap the trailing switch itself.
             control.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
@@ -133,17 +202,32 @@ import XCTest
         let done = app.buttons.matching(NSPredicate(format: "label == %@", "Done")).firstMatch
         if done.exists && done.isHittable { done.tap() }
     }
-    private func reveal(_ target: XCUIElement) {
+    private func dismissKeyboardIfPresent() {
+        let keyboard = app.keyboards.firstMatch
+        guard keyboard.exists else { return }
+        let bounds = app.frame, area = scrollableArea()
+        let origin = app.coordinate(withNormalizedOffset: .zero)
+        let start = origin.withOffset(CGVector(dx: 8, dy: area.minY + area.height * 0.25 - bounds.minY))
+        let end = origin.withOffset(CGVector(dx: 8, dy: bounds.height - 30))
+        start.press(forDuration: 0.05, thenDragTo: end)
+        let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: keyboard)
+        XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed)
+    }
+    private func reveal(_ target: XCUIElement, fullyVisible: Bool = false) {
         for attempt in 0..<24 {
-            if target.exists && target.isHittable { return }
             let area = scrollableArea()
+            if target.exists && target.isHittable &&
+                (!fullyVisible || (target.frame.minY >= area.minY && target.frame.maxY <= area.maxY)) { return }
             let upward: Bool
             if target.exists && !target.frame.isEmpty {
                 upward = target.frame.midY > area.midY
             } else { upward = attempt < 16 }
             scrollContent(upward: upward)
         }
-        XCTAssertTrue(target.exists && target.isHittable, "Missing actionable UI element: \(target.debugDescription)")
+        let area = scrollableArea()
+        XCTAssertTrue(target.exists && target.isHittable &&
+            (!fullyVisible || (target.frame.minY >= area.minY && target.frame.maxY <= area.maxY)),
+            "Missing fully actionable UI element: \(target.debugDescription)")
     }
     private func revealTogether(_ targets: [XCUIElement]) {
         guard let first = targets.first, let last = targets.last else { return }

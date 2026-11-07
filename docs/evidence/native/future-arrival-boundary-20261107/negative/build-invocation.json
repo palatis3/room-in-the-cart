@@ -1,0 +1,25 @@
+{
+  "command": [
+    "xcodebuild",
+    "-project",
+    "ios/RoomInTheCart.xcodeproj",
+    "-scheme",
+    "RoomInTheCart",
+    "-configuration",
+    "Debug",
+    "-destination",
+    "platform=iOS Simulator,id=33B5EEE4-882B-4829-84E9-087AE4870A58",
+    "-jobs",
+    "1",
+    "-parallel-testing-enabled",
+    "NO",
+    "-derivedDataPath",
+    "/Users/palatis/Room in the Cart/.build/CheckoutAcceptanceReview20261107/validation/workspace/DerivedData",
+    "CODE_SIGNING_ALLOWED=YES",
+    "CODE_SIGN_IDENTITY=-",
+    "build-for-testing"
+  ],
+  "cwd": "/Users/palatis/Room in the Cart/.build/CheckoutAcceptanceReview20261107/validation/workspace/source",
+  "start": 1794038651.042839,
+  "scope": "Build-only, one compile job; no install/test/boot action. Existing owned UI simulator is used only to resolve destination architecture. UI run1 remains unchanged."
+}

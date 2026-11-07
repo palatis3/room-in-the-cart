@@ -37,12 +37,33 @@ final class NativeServiceWireTests: XCTestCase {
         _ = try await auth.verifyEmailCode(email: "wire@example.invalid", code: XCTUnwrap(env["RITC_WIRE_CODE"]))
         let householdID = try XCTUnwrap(env["RITC_WIRE_HOUSEHOLD"])
         let shop = try XCTUnwrap(env["RITC_WIRE_SHOP"])
-        let other = try XCTUnwrap(env["RITC_WIRE_OTHER"])
         let vault = MemoryVault(), config = try ServiceConfiguration(baseURL: base)
         let service = HouseholdService(configuration: config, auth: auth, deviceVault: vault, transport: transport)
         _ = try await service.enroll(householdID: householdID)
         let scope = try await service.selectShop(XCTUnwrap(UUID(uuidString: shop)))
         XCTAssertEqual(scope.shopId, shop)
+        if let earlierRequest = env["RITC_WIRE_DEFERRED_REQUEST"] {
+            try await exerciseDeferredRequest(service, scope: scope, shopID: shop, earlierRequestID: earlierRequest)
+            return
+        }
+        if let request = env["RITC_WIRE_PURCHASE_REQUEST"] {
+            if env["RITC_WIRE_PURCHASE_READER"] == "1" {
+                XCTAssertEqual(scope.role, "contributor")
+                XCTAssertFalse(scope.capabilities.contains("request_purchase_confirmation"))
+                let mine = try await service.ownRequests()
+                XCTAssertEqual(mine.requests.map(\.id), [request])
+                let own = try XCTUnwrap(mine.requests.first)
+                XCTAssertEqual(own.originalItem, "Fictional cereal")
+                XCTAssertEqual(own.purchaseOutcome, .notBought)
+                XCTAssertEqual(own.status, "added")
+                XCTAssertNil(own.linkedLineId)
+                XCTAssertNil(own.authorAlias)
+            } else {
+                try await exercisePurchaseConfirmation(service, scope: scope, shopID: shop, requestID: request)
+            }
+            return
+        }
+        let other = try XCTUnwrap(env["RITC_WIRE_OTHER"])
         let mealPlan = try await service.mealPlan(shopID: XCTUnwrap(UUID(uuidString: shop)))
         XCTAssertTrue(mealPlan.shopper)
         let observation = try await service.priceObservation(observationID: XCTUnwrap(env["RITC_WIRE_OBSERVATION"]))
@@ -155,5 +176,116 @@ final class NativeServiceWireTests: XCTestCase {
         XCTAssertEqual(placedDetail.report.occurredAt, occurredAt)
         let minimal = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(placementStatus)) as? [String: Any])
         XCTAssertEqual(Set(minimal.keys), ["clientKey", "operationId", "reportId", "shopId", "reportedRevision", "reportedAuthorityEpoch", "occurredAt", "receivedAt", "source", "state"])
+    }
+
+    private func exerciseDeferredRequest(_ service: HouseholdService, scope: HouseholdBootstrap, shopID: String,
+                                         earlierRequestID: String) async throws {
+        XCTAssertTrue(scope.capabilities.contains("deferred_requests"))
+        let draft = try await service.shopperShop(shopID: shopID)
+        let available = try await service.deferredRequests(shopID: shopID)
+        XCTAssertEqual(available.requests.count, 1)
+        let source = try XCTUnwrap(available.requests.first)
+        XCTAssertEqual(source.id.uuidString.lowercased(), earlierRequestID)
+        XCTAssertEqual(source.authorAlias, "Alex")
+        let earlierShop = source.sourceShopId.uuidString.lowercased()
+        _ = try await service.selectShop(source.sourceShopId)
+        let placed = try await service.shopperShop(shopID: earlierShop)
+        let oldLine = try XCTUnwrap(placed.lines.first { $0.originalItem == source.originalItem })
+        XCTAssertEqual(oldLine.unitPriceMinor, 3720)
+        XCTAssertEqual(placed.phase, "placed")
+        _ = try await service.selectShop(UUID(uuidString: shopID))
+        let before = try await service.shopperInbox(shopID: shopID)
+        XCTAssertTrue(before.requests.isEmpty)
+        XCTAssertTrue(draft.lines.isEmpty)
+        let window = try await service.replayWindow()
+        let base = CommandBase(shopRevision: available.shopRevision, authorityEpoch: available.authorityEpoch,
+                               requestRevision: source.requestRevision)
+        let op = try await service.prepare(envelope: .init(replayWindow: window.id, shopId: shopID, kind: "request.carry",
+            base: base, body: ["requestId": .string(earlierRequestID), "sourceShopId": .string(earlierShop),
+                               "sourceAuthorityEpoch": .integer(source.sourceAuthorityEpoch)]), bootstrap: scope)
+        let receipt = try await service.executeShopper(op)
+        let retried = try await service.executeShopper(op)
+        XCTAssertEqual(receipt, retried)
+        let successorID = try XCTUnwrap(receipt.requestId)
+        XCTAssertEqual(receipt.operationId, successorID)
+        let afterCarry = try await service.shopperShop(shopID: shopID)
+        XCTAssertEqual(afterCarry, draft)
+        let remaining = try await service.deferredRequests(shopID: shopID)
+        XCTAssertTrue(remaining.requests.isEmpty)
+        let inbox = try await service.shopperInbox(shopID: shopID)
+        XCTAssertEqual(inbox.requests.map(\.id), [successorID])
+        let successor = try XCTUnwrap(inbox.requests.first)
+        XCTAssertEqual(successor.fromPreviousShop, true)
+        XCTAssertEqual(successor.status, "pending")
+        XCTAssertEqual(successor.originalItem, source.originalItem)
+        XCTAssertEqual(successor.authorAlias, source.authorAlias)
+        XCTAssertEqual(successor.ownQuantity, source.ownQuantity)
+
+        let requestBase = CommandBase(shopRevision: draft.shopRevision, authorityEpoch: draft.authorityEpoch,
+                                      requestRevision: successor.revision)
+        let newLineID = UUID()
+        func previewLine(_ price: Int?) async throws -> ShopperPreview {
+            let line = ShopperBasketLine(lineId: newLineID, originalItem: successor.originalItem, packs: 1,
+                                         unitPriceMinor: price, feeEligible: true)
+            return try await service.shopperPreview(shopID: shopID, requestID: successorID, base: requestBase,
+                                                    decision: .add(line: line, promote: false))
+        }
+        let unknown = try await previewLine(nil)
+        XCTAssertTrue(unknown.requiresUnknownAcceptance)
+        XCTAssertNil(unknown.after.totalMinor)
+        let priced = try await previewLine(425)
+        XCTAssertFalse(priced.requiresUnknownAcceptance)
+        XCTAssertEqual(priced.after.totalMinor, 425)
+        let apply = try await service.prepare(envelope: .init(replayWindow: window.id, shopId: shopID, kind: "request.apply",
+            base: priced.base, body: ["requestId": .string(successorID), "previewId": .string(priced.previewId),
+                                      "acceptOverage": .bool(false), "acceptUnknown": .bool(false)]), bootstrap: scope)
+        let applied = try await service.executeShopper(apply)
+        XCTAssertEqual(applied.disposition, "added")
+        let lateRetry = try await service.executeShopper(op)
+        XCTAssertEqual(lateRetry, receipt)
+        let saved = try await service.shopperShop(shopID: shopID)
+        XCTAssertEqual(saved.lines.map(\.unitPriceMinor), [425])
+        XCTAssertEqual(saved.lines.map(\.originalItem), [source.originalItem])
+        _ = try await service.selectShop(source.sourceShopId)
+        let original = try await service.shopperShop(shopID: earlierShop)
+        XCTAssertEqual(original, placed)
+        let history = try await service.shopperInbox(shopID: earlierShop)
+        XCTAssertEqual(history.requests.map(\.id), [earlierRequestID])
+        XCTAssertEqual(history.requests.first?.carriedForward, true)
+    }
+
+    private func exercisePurchaseConfirmation(_ service: HouseholdService, scope: HouseholdBootstrap,
+                                              shopID: String, requestID: String) async throws {
+        XCTAssertTrue(scope.capabilities.contains("request_purchase_confirmation"))
+        let shop = try await service.shopperShop(shopID: shopID)
+        let placed = try await service.deliveryEvidence(shopID: shopID)
+        let window = try await service.replayWindow()
+        var expected: ConfirmedRequestPurchase?
+        for outcome: ConfirmedRequestPurchase? in [.bought, nil, .notBought] {
+            let page = try await service.shopperInbox(shopID: shopID)
+            let request = try XCTUnwrap(page.requests.first { $0.id == requestID })
+            let match = try XCTUnwrap(RequestPurchaseMatch(request: request, shop: shop, placed: placed))
+            XCTAssertEqual(match.request.originalItem, "Fictional cereal")
+            XCTAssertEqual(match.request.authorAlias, "Alex")
+            XCTAssertEqual(match.request.ownQuantity, "one box")
+            XCTAssertEqual(match.request.purchaseOutcome, expected)
+            XCTAssertEqual(match.line.name, "Original basket")
+            XCTAssertEqual(match.line.packs, 1)
+            let op = try await service.prepare(envelope: .init(replayWindow: window.id, shopId: shopID,
+                kind: "request.confirmPurchase", base: match.base, body: match.body(outcome: outcome)), bootstrap: scope)
+            XCTAssertFalse(op.targetsShop(nil))
+            XCTAssertFalse(op.targetsShop(UUID().uuidString))
+            let first = try await service.executeShopper(op)
+            let retry = try await service.executeShopper(op)
+            XCTAssertEqual(first, retry)
+            XCTAssertEqual(first.purchaseOutcome, outcome?.rawValue ?? "unknown")
+            XCTAssertEqual(first.requestRevision, request.revision + 1)
+            expected = outcome
+        }
+        let final = try await service.shopperInbox(shopID: shopID)
+        let saved = try XCTUnwrap(final.requests.first { $0.id == requestID })
+        XCTAssertEqual(saved.purchaseOutcome, .notBought)
+        XCTAssertEqual(saved.status, "added")
+        XCTAssertEqual(saved.linkedLineId, placed.lines.first?.id)
     }
 }

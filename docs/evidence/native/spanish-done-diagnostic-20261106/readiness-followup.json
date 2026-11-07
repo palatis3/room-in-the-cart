@@ -1,0 +1,29 @@
+{
+  "sourceCommit": "4bff9599a3619bfc5efa79a7a533fd12e08250fc",
+  "previousCommit": "ead836577a81ad499a610baffe8e8136eb2f2a7f",
+  "syntheticTestsPassed": 32,
+  "sourcePreservationPassed": true,
+  "actionlintPassed": true,
+  "initialInventorySeconds": 180,
+  "otherSimctlControlCommandsSeconds": 90,
+  "unrelatedCommandSeconds": 30,
+  "testcaseDefaultMaximumSeconds": [
+    720,
+    900
+  ],
+  "workflowPrepareBuildExecuteCollectCleanupMinutes": [
+    8,
+    30,
+    21,
+    8,
+    3
+  ],
+  "workflowTotalMinutes": 70,
+  "queryRetries": 0,
+  "swiftAndTestInstrumentationUnchangedFrom": "161ab6497daa560e8b9c3b2dc133cd2777e3c53f",
+  "commandLedger": "Completed/interrupted-in-Python calls append UTC start/end, monotonic elapsed, timeout and outcome in finally. Stdout and environment omitted.",
+  "ledgerLimit": "External hard kill can prevent the finally record; missing final evidence remains incomplete/failure, never a pass. The review recommended pre-execution ledger records as additional observability; this revision does not include those.",
+  "patchSHA256": "e23e8ecd92c28079a53e86aadc66285170d25b9a3d7b851293741672e460f990",
+  "externalContext": "https://github.com/actions/runner-images/issues/15247",
+  "causalClaim": null
+}

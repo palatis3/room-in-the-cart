@@ -1,0 +1,624 @@
+[
+  {
+    "group": "ordinary",
+    "shard": "models",
+    "archiveSha256": "a55164dbee978dff1f8debc009f83f06f6b592a6e95966c48ca9d67f68b1f502",
+    "logSha256": "3d2e85c23baff673361f184b66f0213aa5fc9ed67eebd3106995f2e9cf69f941",
+    "summaryResult": "Passed",
+    "summaryCounts": {
+      "totalTestCount": 565,
+      "passedTests": 565,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "logGate": "passed",
+    "logFindings": []
+  },
+  {
+    "group": "ordinary",
+    "shard": "ui-01",
+    "archiveSha256": "f60c036c86c258922afb3ac961946bd13d8c6505395f04e66abc6ecbced548e0",
+    "logSha256": "3065cbb63a503539bbea710964698057db786893f7b26d152da2f7312793dc6f",
+    "summaryResult": "Passed",
+    "summaryCounts": {
+      "totalTestCount": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "logGate": "passed",
+    "logFindings": []
+  },
+  {
+    "group": "ordinary",
+    "shard": "ui-02",
+    "archiveSha256": "d92964ace004b1d9837a9a439ceda47552f521c883ae9e621bac18acaad2c782",
+    "logSha256": "53976f3e1a62b79d9ce1902eb8521cb7ee6559292c4870dea04f23bf831b7edb",
+    "summaryResult": "Passed",
+    "summaryCounts": {
+      "totalTestCount": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "logGate": "passed",
+    "logFindings": []
+  },
+  {
+    "group": "ordinary",
+    "shard": "ui-03",
+    "archiveSha256": "dc64183e00c79f03d9441fbd474a7c5b7b61666f832b8856e6708e81282a4dff",
+    "logSha256": "bc1924a992ac41cbe1ef91e307c1c25febdfe001f5f3632e018ac61d57200b3d",
+    "summaryResult": "Passed",
+    "summaryCounts": {
+      "totalTestCount": 5,
+      "passedTests": 5,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "logGate": "passed",
+    "logFindings": []
+  },
+  {
+    "group": "ordinary",
+    "shard": "ui-04",
+    "archiveSha256": "d7ad21552a48dca89dc3e6b310f0675ad57d6e32463536aacd1f7b19469566f9",
+    "logSha256": "dc6ff9e546f8f2b07ac84561db3a18b442696320365b456398d328b00e797079",
+    "summaryResult": "Passed",
+    "summaryCounts": {
+      "totalTestCount": 6,
+      "passedTests": 6,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "logGate": "passed",
+    "logFindings": []
+  },
+  {
+    "group": "ordinary",
+    "shard": "ui-05",
+    "archiveSha256": "73855318a983b75a22fa7f22fb6d416d2e4cccbd45af659160141e27518a247d",
+    "logSha256": "1c07ed0bc50ef2d1bc0773aa292f32491091f7174ed5ff4fbacfc1d0b9adff53",
+    "summaryResult": "Passed",
+    "summaryCounts": {
+      "totalTestCount": 6,
+      "passedTests": 6,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "logGate": "passed",
+    "logFindings": []
+  },
+  {
+    "group": "ordinary",
+    "shard": "ui-06",
+    "archiveSha256": "dff6b946aac0aeb87c25a1d0e140cd403b74cc9b9c119881109facf106741d71",
+    "logSha256": "ab4ceb5c627d5b62eeb0e17f2819a038c6a648e90b23dd221c9bb6da9c2917c7",
+    "summaryResult": "Passed",
+    "summaryCounts": {
+      "totalTestCount": 6,
+      "passedTests": 6,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "logGate": "passed",
+    "logFindings": []
+  },
+  {
+    "group": "ordinary",
+    "shard": "ui-07",
+    "archiveSha256": "9dd19b2b57f1972d4ee211334dd874a2d02e29113e200682cec67bc67bab154e",
+    "logSha256": "15988721033fecd814896a2932af87076bc6dc21bb01fc1f1645688b7c196d04",
+    "summaryResult": "Passed",
+    "summaryCounts": {
+      "totalTestCount": 7,
+      "passedTests": 7,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "logGate": "passed",
+    "logFindings": []
+  },
+  {
+    "group": "ordinary",
+    "shard": "ui-08",
+    "archiveSha256": "bc2debeaa29d38874ac509be7a294383254a48b191e3612941b3360145539a4e",
+    "logSha256": "08d12ca74a8a85fd8dc673e9b22dafac4ce2702af1abe93602b1866536095584",
+    "summaryResult": "Passed",
+    "summaryCounts": {
+      "totalTestCount": 6,
+      "passedTests": 6,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "logGate": "passed",
+    "logFindings": []
+  },
+  {
+    "group": "ordinary",
+    "shard": "ui-09",
+    "archiveSha256": "6e64b9b852fcf898b86e690c73185b826f40508a6b4ca992da284a5953e6ee6e",
+    "logSha256": "7d6947ae0a9e0311bbf514068b45945e1b4b530a7d6032978530df49cdcf4cd1",
+    "summaryResult": "Failed",
+    "summaryCounts": {
+      "totalTestCount": 6,
+      "passedTests": 5,
+      "failedTests": 1,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "logGate": "failed",
+    "logFindings": [
+      "XCTest logged a failure for RoomInTheCartUITests/ContextualNavigationUITests/testLargeTextKeepsLongNativePasteEditableAndReviewReachable at log line 753.",
+      "XCTest log requires one start then one pass for RoomInTheCartUITests/ContextualNavigationUITests/testLargeTextKeepsLongNativePasteEditableAndReviewReachable; found ['start', 'non-passing or unrecognized completion'].",
+      "XCTest log requires one successful result banner; found ['FAILED']."
+    ],
+    "summaryPassedWithLogRejection": false
+  },
+  {
+    "group": "ordinary",
+    "shard": "ui-10",
+    "archiveSha256": "542ada499d9d5c67ec95e0551ccf9e341e3a1d05db102fc50de7212580bfbf00",
+    "logSha256": "7a8e5a1c9c0c11e41bdce23751b8f2bb10665969b8cc013e53153b5e080770fd",
+    "summaryResult": "Passed",
+    "summaryCounts": {
+      "totalTestCount": 6,
+      "passedTests": 6,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "logGate": "passed",
+    "logFindings": []
+  },
+  {
+    "group": "fixture",
+    "shard": "CorrectionPrivacyAcceptanceUITests",
+    "archiveSha256": "7a1458bcf08c0b4869661a27751ffbd8416cf2c4a45c36f9307c3d2f4cb1b93b",
+    "logSha256": "0de72e28e37b90af23317acea0b32de1e7eee1abf6f63399a243e53594a81d44",
+    "summaryResult": "Passed",
+    "summaryCounts": {
+      "totalTestCount": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "logGate": "passed",
+    "logFindings": []
+  },
+  {
+    "group": "fixture",
+    "shard": "DinnerAwayCarryoverUITests",
+    "archiveSha256": "b84b232e275489ab68fdb397e5d5c2a60c520140f852f7d64e3449ce84aefa3c",
+    "logSha256": "34bfe79793e67539d0870693c32a5ca9577546864860d6c78d267e886665ff9c",
+    "summaryResult": "Passed",
+    "summaryCounts": {
+      "totalTestCount": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "logGate": "passed",
+    "logFindings": []
+  },
+  {
+    "group": "fixture",
+    "shard": "GuardianEnrollmentUITests",
+    "archiveSha256": "c9b890ed8729c5d2398e9c51dce0787f6c97b8995cc2bbb58913c18c45c9f798",
+    "logSha256": "87843d904196047c1a01c88eea79d802e75f76ace93a466df1f7037a7ce9b4f7",
+    "summaryResult": "Passed",
+    "summaryCounts": {
+      "totalTestCount": 8,
+      "passedTests": 8,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "logGate": "passed",
+    "logFindings": []
+  },
+  {
+    "group": "fixture",
+    "shard": "HistoryGrantReadUITests",
+    "archiveSha256": "7904d7efde23c7cb0b449da5fdc7e04e3d66ab3cad7382b0430b7c6dab0a0ca8",
+    "logSha256": "fdf86b51c348e413d1cd564d75c5f02ed6d0da3678a2a3c1ba99a466f0f24df9",
+    "summaryResult": "Passed",
+    "summaryCounts": {
+      "totalTestCount": 2,
+      "passedTests": 2,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "logGate": "passed",
+    "logFindings": []
+  },
+  {
+    "group": "fixture",
+    "shard": "HouseholdDevicesUITests",
+    "archiveSha256": "5122f1a500b46e946beea90fe462d330578cac052a9e1549c40df0a6dfafcb32",
+    "logSha256": "5056791ae1ab86f5b18a51cedb5360a9adbab774905a6278a596bddf6fc3e4af",
+    "summaryResult": "Passed",
+    "summaryCounts": {
+      "totalTestCount": 2,
+      "passedTests": 2,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "logGate": "passed",
+    "logFindings": []
+  },
+  {
+    "group": "fixture",
+    "shard": "MeasurementUITests",
+    "archiveSha256": "4c60f475ce8348aef0f15f6f74e75e0013c4ceaaa8f4d7de6d111a32a5ac1aba",
+    "logSha256": "8162b28147c9047c5130ce128f26d4e393dbc9c8c24f0c8185e84167e359bd53",
+    "summaryResult": "Passed",
+    "summaryCounts": {
+      "totalTestCount": 2,
+      "passedTests": 2,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "logGate": "passed",
+    "logFindings": []
+  },
+  {
+    "group": "fixture",
+    "shard": "RecipeLibraryAcceptanceUITests",
+    "archiveSha256": "f337f41fb54db6fee7e323ac0c199a43f5fdac0c45a7e59ec45e046af23d2539",
+    "logSha256": "ec328d211eabe2bfb22eaad7ea2f93fb789c0e61d72468b093d5b413eae552e0",
+    "summaryResult": "Passed",
+    "summaryCounts": {
+      "totalTestCount": 2,
+      "passedTests": 2,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "logGate": "passed",
+    "logFindings": []
+  },
+  {
+    "group": "fixture",
+    "shard": "SharedMealChangeUITests",
+    "archiveSha256": "c30b49027e2d519464196f0700caafe5ff929beb2a56a30a9e591ba52b7dffb9",
+    "logSha256": "57c2f10928d9adb28b71d6d6d0326dd09717203d4ffdf77fa7bcb1d00a7a173d",
+    "summaryResult": "Passed",
+    "summaryCounts": {
+      "totalTestCount": 2,
+      "passedTests": 2,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "logGate": "passed",
+    "logFindings": []
+  },
+  {
+    "group": "fixture",
+    "shard": "SharedMealCivilDateUITests",
+    "archiveSha256": "64b54e88ed2e5772381720a83eec15b9ea9dc5cfc883e728fce380753910ea42",
+    "logSha256": "07e1a0ba2229c4ff94b3f9063533fea0fa38ed4fb5ea11a5b098fe6dc4b82e67",
+    "summaryResult": "Passed",
+    "summaryCounts": {
+      "totalTestCount": 2,
+      "passedTests": 2,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "logGate": "passed",
+    "logFindings": []
+  },
+  {
+    "group": "fixture",
+    "shard": "StockReviewUITests",
+    "archiveSha256": "2ade6e98097bbeec19726ba7b7cd3cda7d2d9389145b38cc234512e93e01f56f",
+    "logSha256": "647aea8926b392d9c63b2d055e0c53a65b746170d31946b65d46cabd19b54fb9",
+    "summaryResult": "Passed",
+    "summaryCounts": {
+      "totalTestCount": 2,
+      "passedTests": 2,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "logGate": "passed",
+    "logFindings": []
+  },
+  {
+    "group": "fixture",
+    "shard": "ContributorRequestUITests",
+    "archiveSha256": "4f0bfda02280b20f3e5b874c58e512a398410a416549b95483de186fb27f85a7",
+    "logSha256": "6a3e8dc140976a7d085ed26d5b399358d41dd9e63d3fda68f5c345219ea32444",
+    "summaryResult": "Failed",
+    "summaryCounts": {
+      "totalTestCount": 2,
+      "passedTests": 0,
+      "failedTests": 2,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "logGate": "failed",
+    "logFindings": [
+      "XCTest logged a failure for RoomInTheCartUITests/ContributorRequestUITests/testSpanishLargeTextReviewStartsAtTheOriginalWording at log line 1297.",
+      "XCTest logged a failure for RoomInTheCartUITests/ContributorRequestUITests/testTypedAndStructuredReviewCancelThenSendOnlyOwnRequest at log line 2450.",
+      "XCTest log requires one start then one pass for RoomInTheCartUITests/ContributorRequestUITests/testSpanishLargeTextReviewStartsAtTheOriginalWording; found ['start', 'non-passing or unrecognized completion'].",
+      "XCTest log requires one start then one pass for RoomInTheCartUITests/ContributorRequestUITests/testTypedAndStructuredReviewCancelThenSendOnlyOwnRequest; found ['start', 'non-passing or unrecognized completion'].",
+      "XCTest log requires one successful result banner; found ['FAILED']."
+    ],
+    "summaryPassedWithLogRejection": false
+  },
+  {
+    "group": "fixture",
+    "shard": "DinnerDecisionSheetUITests",
+    "archiveSha256": "7b9cfc4891ed7e5eb65521de5bcc4765aacbcb2893db7b284f1cb85894446a45",
+    "logSha256": "824c54a86ab2424b7a6acccdb8a59301dbc14175246a4bbc8dc7fabc6f7ba66c",
+    "summaryResult": "Failed",
+    "summaryCounts": {
+      "totalTestCount": 5,
+      "passedTests": 1,
+      "failedTests": 4,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "logGate": "failed",
+    "logFindings": [
+      "XCTest logged a failure for RoomInTheCartUITests/DinnerDecisionSheetUITests/testEnglishGuestPackageBoundaryCheckoutAndCancel at log line 249.",
+      "XCTest logged a failure for RoomInTheCartUITests/DinnerDecisionSheetUITests/testEnglishPaidGroupReplacementAndGuestCancellation at log line 512.",
+      "XCTest logged a failure for RoomInTheCartUITests/DinnerDecisionSheetUITests/testSpanishGuestPackageBoundaryCheckoutAndCancel at log line 811.",
+      "XCTest logged a failure for RoomInTheCartUITests/DinnerDecisionSheetUITests/testSpanishPaidGroupReplacementAndGuestCancellation at log line 1074.",
+      "XCTest log requires one start then one pass for RoomInTheCartUITests/DinnerDecisionSheetUITests/testEnglishGuestPackageBoundaryCheckoutAndCancel; found ['start', 'non-passing or unrecognized completion'].",
+      "XCTest log requires one start then one pass for RoomInTheCartUITests/DinnerDecisionSheetUITests/testEnglishPaidGroupReplacementAndGuestCancellation; found ['start', 'non-passing or unrecognized completion'].",
+      "XCTest log requires one start then one pass for RoomInTheCartUITests/DinnerDecisionSheetUITests/testSpanishGuestPackageBoundaryCheckoutAndCancel; found ['start', 'non-passing or unrecognized completion'].",
+      "XCTest log requires one start then one pass for RoomInTheCartUITests/DinnerDecisionSheetUITests/testSpanishPaidGroupReplacementAndGuestCancellation; found ['start', 'non-passing or unrecognized completion'].",
+      "XCTest log requires one successful result banner; found ['FAILED']."
+    ],
+    "summaryPassedWithLogRejection": false
+  },
+  {
+    "group": "fixture",
+    "shard": "HouseholdRequestPackUITests",
+    "archiveSha256": "bfbe926ad76e83781b109363bf7a4bfa6bcef99a7d29bd56d3693ca90db69372",
+    "logSha256": "75ebc9648725dcef9d79ba9d671e8c9ad7cc539ce9fe93a7c907347d7677068a",
+    "summaryResult": "Failed",
+    "summaryCounts": {
+      "totalTestCount": 3,
+      "passedTests": 2,
+      "failedTests": 1,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "logGate": "failed",
+    "logFindings": [
+      "XCTest logged a failure for RoomInTheCartUITests/HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite at log line 539.",
+      "XCTest log requires one start then one pass for RoomInTheCartUITests/HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite; found ['start', 'non-passing or unrecognized completion'].",
+      "XCTest log requires one successful result banner; found ['FAILED']."
+    ],
+    "summaryPassedWithLogRejection": false
+  },
+  {
+    "group": "fixture",
+    "shard": "RequestDuplicateComparisonUITests",
+    "archiveSha256": "b367bde6bb985ee3e85f9fadfbddaaa373641d194f1a0f7c6c228c91145e4394",
+    "logSha256": "cc23602bed21ed1b5d64deea2befee4fd29015721c295078a7e1dea17aba3ce2",
+    "summaryResult": "Failed",
+    "summaryCounts": {
+      "totalTestCount": 2,
+      "passedTests": 0,
+      "failedTests": 2,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "logGate": "failed",
+    "logFindings": [
+      "XCTest logged a failure for RoomInTheCartUITests/RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison at log line 48.",
+      "XCTest logged a failure for RoomInTheCartUITests/RequestDuplicateComparisonUITests/testSplitPageComparisonPreservesBothUsesAndCancelHasNoWriteThenDecidesOnlySam at log line 359.",
+      "XCTest log requires one start then one pass for RoomInTheCartUITests/RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison; found ['start', 'non-passing or unrecognized completion'].",
+      "XCTest log requires one start then one pass for RoomInTheCartUITests/RequestDuplicateComparisonUITests/testSplitPageComparisonPreservesBothUsesAndCancelHasNoWriteThenDecidesOnlySam; found ['start', 'non-passing or unrecognized completion'].",
+      "XCTest log requires one successful result banner; found ['FAILED']."
+    ],
+    "summaryPassedWithLogRejection": false
+  },
+  {
+    "group": "fixture",
+    "shard": "SharedMealIdeaUITests",
+    "archiveSha256": "4350537d4f9af622a06305bd8d2dcf0a02aae9e9fad373d94529e7938dbb8bdc",
+    "logSha256": "c419ec77975832460820a8b4bd7987e7221be79f4a211e8ec89b916c84d16021",
+    "summaryResult": "Failed",
+    "summaryCounts": {
+      "totalTestCount": 2,
+      "passedTests": 1,
+      "failedTests": 1,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "logGate": "failed",
+    "logFindings": [
+      "XCTest restarted its runner at log line 1060.",
+      "XCTest log requires one start then one pass for RoomInTheCartUITests/SharedMealIdeaUITests/testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview; found ['start', 'timeout'].",
+      "XCTest log requires one successful result banner; found ['FAILED']."
+    ],
+    "summaryPassedWithLogRejection": false
+  },
+  {
+    "group": "fixture",
+    "shard": "SharedStoreQuoteUITests",
+    "archiveSha256": "97d5f1d3a1f2cb11c1c0bb666f5e2c903ed587170093360fd6ee137e826502a3",
+    "logSha256": "26008c1c5d8fb8eceec73ff891f8de99153f7d9ecbdfe2936feaf14087c440ae",
+    "summaryResult": "Failed",
+    "summaryCounts": {
+      "totalTestCount": 5,
+      "passedTests": 3,
+      "failedTests": 2,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "logGate": "failed",
+    "logFindings": [
+      "XCTest logged a failure for RoomInTheCartUITests/SharedStoreQuoteUITests/testSpanishLargestTextKeepsRealQuoteEntryDiscoverable at log line 5443.",
+      "XCTest logged a failure for RoomInTheCartUITests/SharedStoreQuoteUITests/testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction at log line 7242.",
+      "XCTest log requires one start then one pass for RoomInTheCartUITests/SharedStoreQuoteUITests/testSpanishLargestTextKeepsRealQuoteEntryDiscoverable; found ['start', 'non-passing or unrecognized completion'].",
+      "XCTest log requires one start then one pass for RoomInTheCartUITests/SharedStoreQuoteUITests/testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction; found ['start', 'non-passing or unrecognized completion'].",
+      "XCTest log requires one successful result banner; found ['FAILED']."
+    ],
+    "summaryPassedWithLogRejection": false
+  },
+  {
+    "group": "fixture",
+    "shard": "RecordsMediaUITests",
+    "summaryResult": "Failed",
+    "logGate": "unavailable",
+    "scope": "The public artifact intentionally contains no raw XCTest log or result bundle."
+  },
+  {
+    "group": "performance",
+    "shard": "native-performance/launch",
+    "archiveSha256": null,
+    "logSha256": "4c6325489b9f80ec00c142f267f51cf7a20ffd8b281f1899936df9cacfb0f90f",
+    "summaryResult": "Passed",
+    "summaryCounts": {
+      "totalTestCount": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "logGate": "passed",
+    "logFindings": []
+  },
+  {
+    "group": "performance",
+    "shard": "native-performance/rendered",
+    "archiveSha256": null,
+    "logSha256": "2af0c6a2bdedc51101dd4cb88108ec53d42deb4a44b30f01aa27b2167f098c9a",
+    "summaryResult": "Passed",
+    "summaryCounts": {
+      "totalTestCount": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "logGate": "passed",
+    "logFindings": []
+  },
+  {
+    "group": "performance",
+    "shard": "native-performance/scroll",
+    "archiveSha256": null,
+    "logSha256": "eaecffc583251b379d45a435d101a285206c3341e0c1ad6a0a395bd6cd90defe",
+    "summaryResult": "Passed",
+    "summaryCounts": {
+      "totalTestCount": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "logGate": "passed",
+    "logFindings": []
+  },
+  {
+    "group": "performance",
+    "shard": "native-performance-attempt2/launch",
+    "archiveSha256": null,
+    "logSha256": "f71c8d9a83e2e99758d0dfd02873dd8557ae25c224061c60b6dd92fe0d1e95b0",
+    "summaryResult": "Passed",
+    "summaryCounts": {
+      "totalTestCount": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "logGate": "passed",
+    "logFindings": []
+  },
+  {
+    "group": "performance",
+    "shard": "native-performance-attempt2/rendered",
+    "archiveSha256": null,
+    "logSha256": "2ff7e65925c19349a5c1c11523b6de3b4f29c642caae158d5710f6545a38cf9c",
+    "summaryResult": "Passed",
+    "summaryCounts": {
+      "totalTestCount": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "logGate": "passed",
+    "logFindings": []
+  },
+  {
+    "group": "performance",
+    "shard": "native-performance-attempt2/scroll",
+    "archiveSha256": null,
+    "logSha256": "880abe2444d4194ad927b2c50aa6ce38e1bdb02bd466e8d95a6580d6e592993c",
+    "summaryResult": "Passed",
+    "summaryCounts": {
+      "totalTestCount": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "logGate": "passed",
+    "logFindings": []
+  },
+  {
+    "group": "performance",
+    "shard": "performance-scroll-repeat",
+    "archiveSha256": "d23734c310eb3aeef86f465172888578927dd64528c0da8b02809352be66946f",
+    "logSha256": "50a0a8e18f353193d65e720483c751bfbb66e500d64886ce8e328cc43ea2fd2b",
+    "summaryResult": "Passed",
+    "summaryCounts": {
+      "totalTestCount": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "logGate": "passed",
+    "logFindings": []
+  },
+  {
+    "group": "diagnostic",
+    "shard": "hosted-menu",
+    "archiveSha256": "8a5e31d38a7b337de99d14d17a8a82ddf10b56175ab3fe16d73b6024692f8fd4",
+    "logSha256": "6139c0807b16ebec8caa29eefd0717f30ccddf381b9d291903027c2d021dac67",
+    "summaryResult": "Failed",
+    "summaryCounts": {
+      "totalTestCount": 4,
+      "passedTests": 3,
+      "failedTests": 1,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "logGate": "failed",
+    "logFindings": [
+      "XCTest logged a failure for MenuRuntimeDiagnosticUITests/MenuRuntimeDiagnosticUITests/testOpenAndCancelSinglePickupMenu at log line 1029.",
+      "XCTest restarted its runner at log line 1045.",
+      "XCTest log requires one start then one pass for MenuRuntimeDiagnosticUITests/MenuRuntimeDiagnosticUITests/testOpenAndCancelFixtureControlsMenu; found ['start', 'timeout', 'pass'].",
+      "XCTest log requires one start then one pass for MenuRuntimeDiagnosticUITests/MenuRuntimeDiagnosticUITests/testOpenAndCancelSinglePickupMenu; found ['start', 'timeout', 'non-passing or unrecognized completion', 'start', 'pass'].",
+      "XCTest log requires one start then one pass for MenuRuntimeDiagnosticUITests/MenuRuntimeDiagnosticUITests/testPickupControlWithoutOpeningMenu; found ['start', 'start', 'pass'].",
+      "XCTest log requires one successful result banner; found ['FAILED']."
+    ],
+    "summaryPassedWithLogRejection": false
+  }
+]

@@ -1,0 +1,11 @@
+{
+  "sourcePath": "ios/UITests/ContextualNavigationUITests.swift",
+  "baseSHA256": "ac70599b0e770d1c7eeb408c00912606c838fb27038671eadeea3ad9a13817fc",
+  "candidateSHA256": "6c2488c18df0addd74491190db6094aba7553a671b2c110ce117bfa27a4c7eb1",
+  "patchSHA256": "339f21ebe45279f53cc38ab6bee738f2c8be05477b43be2b814af11b6bdff7e2",
+  "selector": "RoomInTheCartUITests/ContextualNavigationUITests/testEnteredStoreQuotesKeepTripCostsSeparateAndAdoptOnlyReviewedSavedProof",
+  "exactOriginalRestoredByRemovingOnlyAdditions": true,
+  "nativeExecution": "not run",
+  "changes": "two public-state/screenshot captures around original trailing tap; all original assertions, waits, swipes, coordinates unchanged",
+  "maximumAddedAttachments": 4
+}

@@ -1,0 +1,32 @@
+[
+  {
+    "name": "WORKER_DATABASE_URL",
+    "environment": "production",
+    "sensitive": true,
+    "exit": 0
+  },
+  {
+    "name": "WORKER_DATABASE_CA_PEM",
+    "environment": "production",
+    "sensitive": true,
+    "exit": 0
+  },
+  {
+    "name": "CRON_SECRET",
+    "environment": "production",
+    "sensitive": true,
+    "exit": 0
+  },
+  {
+    "name": "PRIVACY_DELETION_ACCEPTANCE",
+    "environment": "production",
+    "sensitive": false,
+    "exit": 0
+  },
+  {
+    "name": "PRIVACY_DELETION_PROCESSING",
+    "environment": "production",
+    "sensitive": false,
+    "exit": 0
+  }
+]

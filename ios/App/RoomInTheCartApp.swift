@@ -16,6 +16,9 @@ import DeviceSurfaces
     @StateObject private var navigation = NavigationRestorationModel()
     @StateObject private var guardianChild = GuardianChildCoordinator()
     @Environment(\.scenePhase) private var scenePhase
+    #if DEBUG && targetEnvironment(simulator)
+    @StateObject private var recoveryFixture = PrivatePickupRecoveryFixture()
+    #endif
     @AppStorage("appearance") private var appearance = "system"
     init() {
         // Keep inactive navigation labels legible against both system bar appearances.
@@ -26,7 +29,7 @@ import DeviceSurfaces
             Group {
                 if scenePhase != .active && access.isProtected {
                     Theme.canvas.ignoresSafeArea()
-                } else { RootView() }
+                } else { root }
             }.environment(\.pickupLedger, ledger)
                 .environmentObject(model)
                 .environmentObject(ledger).environmentObject(pickup)
@@ -68,8 +71,7 @@ import DeviceSurfaces
                         .environmentObject(household).environmentObject(access)
                         .environmentObject(membership).environmentObject(surfaces).environmentObject(navigation)
                 }
-                .onChange(of: household.identity?.subject) { _, subject in if subject != nil { access.protect() } }
-                .onChange(of: household.projection?.memberId) { _, id in if id != nil { access.protect() } }
+                .modifier(HouseholdWorkspaceProtection(household: household, access: access))
                 .onChange(of: household.deviceReminderPersona) { _, _ in surfaces.scopeChanged() }
                 .onChange(of: guardianChild.presented) { _, childActive in
                     if childActive {
@@ -97,6 +99,17 @@ import DeviceSurfaces
                 }
         }
     }
+    @ViewBuilder private var root: some View {
+        #if DEBUG && targetEnvironment(simulator)
+        if recoveryFixture.requested && recoveryFixture.phase != .ready {
+            if recoveryFixture.phase == .failed { Text(verbatim: "Recovery fixture setup failed") }
+            else { ProgressView() }
+        } else { RootView() }
+        #else
+        RootView()
+        #endif
+    }
+
     @MainActor private func openAdultWorkspace() async {
         guard scenePhase == .active, !guardianChild.presented, access.unlocked else { return }
         if !model.ready { await model.open() }
@@ -105,6 +118,9 @@ import DeviceSurfaces
         guard !guardianChild.presented, access.unlocked else { return }
         if !pickup.ready { await pickup.load() }
         guard scenePhase == .active, !guardianChild.presented, access.unlocked else { return }
+        #if DEBUG && targetEnvironment(simulator)
+        await recoveryFixture.prepare(ledger: ledger, pickup: pickup)
+        #endif
         navigation.resume()
         await surfaces.foreground()
     }
@@ -175,7 +191,8 @@ struct ShopView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 if let journey = pickup.resumableJourney(for: ledger.shop?.id) {
-                    TimelineView(.explicit([Date()] + journey.offers.map(\.deadline.cutoff).filter { $0 > Date() }.sorted())) { context in
+                    let timelineStart = Date()
+                    TimelineView(.explicit([timelineStart] + (journey.offers.map(\.deadline.cutoff) + (journey.pickup?.receipts.map(\.receivedAt) ?? [])).filter { $0 > timelineStart }.sorted())) { context in
                         if let offer = journey.nextUnfilledOffer(at: context.date) {
                             let expired = context.date >= offer.deadline.cutoff
                             VStack(alignment: .leading, spacing: 8) {
@@ -382,7 +399,7 @@ struct SettingsView: View {
                 }.frame(minHeight: 44)
             }
             Section(tr("Household")) {
-                NavigationLink(tr("Household requests")) { HouseholdSettingsView(model: household) }
+                NavigationLink(tr("Household requests")) { HouseholdSettingsView(model: household, fromPrivateSettings: true) }
                 NavigationLink(tr("Household membership")) { MembershipEntryView(household: household) }
             }
             if surfaces.privateAuthorized {

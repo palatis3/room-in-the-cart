@@ -1,0 +1,56 @@
+{
+  "source": "Original ui-06 test tree, summary and detailed results retained; only a scratch copy of the actual activity export changed.",
+  "selector": "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges",
+  "originalWarningCount": 2,
+  "mutations": [
+    {
+      "mutation": "hosted-parent-type-omitted",
+      "status": "passed",
+      "count": 2,
+      "maximum": 2
+    },
+    {
+      "mutation": "moved-warning",
+      "status": "unexpected-warnings",
+      "count": 2,
+      "maximum": 0
+    },
+    {
+      "mutation": "same-count-message-change",
+      "status": "rejected-evidence",
+      "error": "XCTest warning activities and detailed results disagree"
+    },
+    {
+      "mutation": "wrong-control",
+      "status": "unexpected-warnings",
+      "count": 2,
+      "maximum": 0
+    },
+    {
+      "mutation": "wrong-phase",
+      "status": "unexpected-warnings",
+      "count": 2,
+      "maximum": 0
+    },
+    {
+      "mutation": "wrong-device",
+      "status": "rejected-evidence",
+      "error": "XCTest warning activity run came from another device or configuration"
+    },
+    {
+      "mutation": "wrong-config",
+      "status": "rejected-evidence",
+      "error": "XCTest warning activity run came from another device or configuration"
+    },
+    {
+      "mutation": "malformed-issue",
+      "status": "rejected-evidence",
+      "error": "Malformed XCTest runtime warning activity"
+    },
+    {
+      "mutation": "missing-warning",
+      "status": "rejected-evidence",
+      "error": "XCTest warning activities and detailed results disagree"
+    }
+  ]
+}

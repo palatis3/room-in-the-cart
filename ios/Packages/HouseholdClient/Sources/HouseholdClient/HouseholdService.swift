@@ -2,6 +2,7 @@ import Foundation
 
 /// A service grant never follows from account login alone. Enrollment is an explicit UI action.
 public actor HouseholdService {
+    public nonisolated var baseURL: URL { configuration.baseURL }
     private let configuration: ServiceConfiguration
     private let transport: HTTPTransport
     private let auth: AdultAuth
@@ -12,7 +13,7 @@ public actor HouseholdService {
     private var memberID: String?
     private var selectedShopID: UUID?
     private var selectedGrantID: String?
-    private var generation = UUID()
+    private(set) var generation = UUID()
     private var childAdoptionBinding: ChildInvitationBinding?
     public init(configuration: ServiceConfiguration, auth: AdultAuth, deviceVault: any RefreshTokenVault,
                 transport: HTTPTransport = .init()) {
@@ -135,15 +136,19 @@ public actor HouseholdService {
     public func replayWindow() async throws -> ReplayWindow { try await perform("replay-windows", method: "POST", body: Data("{}".utf8)) }
     public func ownRequests(cursor: String? = nil) async throws -> OwnRequestsPage {
         if let cursor, UUID(uuidString: cursor) == nil { throw ClientError.configuration }
-        return try await perform("requests/mine", method: "GET", query: cursor.map { [.init(name: "cursor", value: $0)] } ?? [])
+        let page: OwnRequestsPage = try await perform("requests/mine", method: "GET", query: cursor.map { [.init(name: "cursor", value: $0)] } ?? [])
+        guard page.requests.allSatisfy({ $0.linkedLineId == nil }) else { throw ClientError.invalidResponse }
+        return page
     }
-    private func authorizeShopper(shopID: String) async throws {
+    @discardableResult func authorizeShopper(shopID: String, capability: String? = nil) async throws -> HouseholdBootstrap {
         guard UUID(uuidString: shopID) != nil else { throw ClientError.configuration }
         let projection = try await bootstrap()
-        guard projection.role == "shopper", projection.shopId == shopID,
+        guard projection.role == "shopper", projection.grantId == nil, projection.shopId == shopID,
+              capability.map(projection.capabilities.contains) ?? true,
               ["shopper_inbox", "request_preview", "shopper_commands"].allSatisfy(projection.capabilities.contains) else {
             throw ClientError.accessEnded
         }
+        return projection
     }
     public func selectableShops(closedAndOwned: Bool, cursor: UUID?) async throws -> HouseholdShopChoices {
         guard selectedGrantID == nil else { throw ClientError.accessEnded }
@@ -369,12 +374,132 @@ public actor HouseholdService {
         guard start == generation else { throw ClientError.cancelled }
         return try await perform("shops/\(shopID)", method: "GET")
     }
+    public func deliveryEvidence(shopID: String) async throws -> SharedDeliveryPage {
+        let start = generation
+        try await authorizeShopper(shopID: shopID)
+        var record: SharedDeliveryPage?
+        var seen = Set<UUID>()
+        repeat {
+            guard start == generation else { throw ClientError.cancelled }
+            let page: SharedDeliveryPage = try await perform("shops/\(shopID)/delivery-evidence", method: "GET",
+                query: record?.nextCursor.map { [.init(name: "cursor", value: $0.uuidString.lowercased())] } ?? [])
+            guard page.shopId == UUID(uuidString: shopID), page.sources.count <= 50, page.placedRevision > 0,
+                  page.authorityEpoch > 0, page.shopRevision >= page.placedRevision, page.supplyRevision >= 0, (page.recoveryRevision ?? 0) >= 0,
+                  Set(page.lines.map(\.id)).count == page.lines.count, page.lines.count <= 200,
+                  page.lines.allSatisfy({ $0.packs.map((1...10_000).contains) ?? true }),
+                  page.sources.allSatisfy({ seen.insert($0.id).inserted }),
+                  page.nextCursor == nil || (page.sources.count == 50 && page.nextCursor == page.sources.last?.id) else { throw ClientError.invalidResponse }
+            try page.sources.forEach { try $0.validate() }
+            if record != nil {
+                guard page.supplyRevision == record?.supplyRevision, page.recoveryRevision == record?.recoveryRevision, page.shopRevision == record?.shopRevision,
+                      page.authorityEpoch == record?.authorityEpoch, page.placedRevision == record?.placedRevision else {
+                    throw ClientError.service(status: 409, code: "stale_supply", correlationID: nil, retryAfter: nil)
+                }
+                guard page.lines.isEmpty, page.meals?.isEmpty != false, page.reservationsAvailable == record?.reservationsAvailable else { throw ClientError.invalidResponse }
+                record?.sources.append(contentsOf: page.sources)
+                record?.nextCursor = page.nextCursor
+            } else { record = page }
+        } while record?.nextCursor != nil
+        guard let record else { throw ClientError.invalidResponse }
+        let meals = record.meals ?? []
+        guard Set(meals.map(\.id)).count == meals.count else { throw ClientError.invalidResponse }
+        var targets = Set<SharedDeliveryPage.IngredientMatch>()
+        for occurrence in meals {
+            guard (1...record.placedRevision).contains(occurrence.revision) else { throw ClientError.invalidResponse }
+            for ingredient in occurrence.meal.planning?.ingredients ?? [] {
+                guard targets.insert(.init(occurrence: occurrence, ingredient: ingredient)).inserted else { throw ClientError.invalidResponse }
+            }
+        }
+        for source in record.sources {
+            let matches = source.matches ?? []
+            guard Set(matches).count == matches.count, targets.isSuperset(of: matches) else { throw ClientError.invalidResponse }
+        }
+        try record.validateReservations()
+        return record
+    }
+    public func deliveryCoverage(reviewed page: SharedDeliveryPage) async throws -> SharedDeliveryCoverage {
+        guard page.coverageAvailable == true else { throw ClientError.configuration }
+        let id = page.shopId.uuidString.lowercased(), start = generation
+        try await authorizeShopper(shopID: id)
+        guard start == generation else { throw ClientError.cancelled }
+        let result: SharedDeliveryCoverage = try await perform("shops/\(id)/delivery-evidence/coverage", method: "GET")
+        guard start == generation else { throw ClientError.cancelled }
+        try result.validate(reviewed: page)
+        return result
+    }
+    public func cookCopies(occurrence: SharedMealOccurrence, reviewed page: SharedDeliveryPage) async throws -> [SharedCookCopy] {
+        guard page.nextCursor == nil, page.meals?.contains(occurrence) == true else { throw ClientError.configuration }
+        let shopID = page.shopId.uuidString.lowercased(), start = generation
+        try await authorizeShopper(shopID: shopID, capability: "cook_copies")
+        var copies = [SharedCookCopy]()
+        var seen = Set<UUID>()
+        var cursor: UUID?
+        repeat {
+            guard start == generation else { throw ClientError.cancelled }
+            var query = [URLQueryItem(name: "occurrenceId", value: occurrence.id.uuidString.lowercased())]
+            if let cursor { query.append(.init(name: "cursor", value: cursor.uuidString.lowercased())) }
+            let result: SharedCookCopyPage = try await perform("shops/\(shopID)/cook-copies", method: "GET", query: query)
+            guard result.copies.count <= 20, cursor == nil || !result.copies.isEmpty,
+                  result.nextCursor == nil || (result.copies.count == 20 && result.nextCursor == result.copies.last?.id) else {
+                throw ClientError.invalidResponse
+            }
+            for copy in result.copies {
+                try copy.validate(occurrence: occurrence, reviewed: page)
+                guard seen.insert(copy.id).inserted, copies.last.map({ copy.version < $0.version }) ?? true else {
+                    throw ClientError.invalidResponse
+                }
+                copies.append(copy)
+            }
+            cursor = result.nextCursor
+        } while cursor != nil
+        return copies
+    }
+    public func cookCopyBaseline(recipient: String, occurrence: SharedMealOccurrence, reviewed page: SharedDeliveryPage) async throws -> SharedCookCopyBaseline? {
+        guard page.nextCursor == nil, page.meals?.contains(occurrence) == true else { throw ClientError.configuration }
+        let label = try SharedCookCopyEdit.recipientLabel(recipient)
+        let shopID = page.shopId.uuidString.lowercased(), start = generation
+        try await authorizeShopper(shopID: shopID, capability: "cook_copies")
+        guard start == generation else { throw ClientError.cancelled }
+        let body = ["occurrenceId": occurrence.id.uuidString.lowercased(), "recipient": label]
+        let result: SharedCookCopyBaselineResult = try await perform("shops/\(shopID)/cook-copies/baseline", method: "POST", body: encoded(body))
+        guard let baseline = result.baseline else { return nil }
+        try baseline.copy.validate(occurrence: occurrence, reviewed: page)
+        guard baseline.send.copyId == baseline.copy.id, baseline.send.sendId != baseline.copy.id,
+              baseline.send.recipient.utf8.elementsEqual(label.utf8), validHelperTimestamp(baseline.send.sentAt) else {
+            throw ClientError.invalidResponse
+        }
+        return baseline
+    }
+    public func cookCorrection(copy: SharedCookCopy, baseline: SharedCookCopyBaseline, recipient: String,
+                               destinationConfirmed: Bool, occurrence: SharedMealOccurrence,
+                               reviewed page: SharedDeliveryPage) async throws -> SharedCookCorrectionReview {
+        let label = try SharedCookCopyEdit.recipientLabel(recipient)
+        guard destinationConfirmed, page.nextCursor == nil, page.meals?.contains(occurrence) == true,
+              baseline.send.recipient.utf8.elementsEqual(label.utf8), baseline.send.copyId == baseline.copy.id else { throw ClientError.configuration }
+        try copy.validate(occurrence: occurrence, reviewed: page)
+        try baseline.copy.validate(occurrence: occurrence, reviewed: page)
+        let start = generation, shopID = page.shopId.uuidString.lowercased()
+        try await authorizeShopper(shopID: shopID, capability: "cook_corrections")
+        guard start == generation else { throw ClientError.cancelled }
+        let fields: [String: JSONValue] = ["occurrenceId": .string(occurrence.id.uuidString.lowercased()),
+            "copyId": .string(copy.id.uuidString.lowercased()), "previousCopyId": .string(baseline.copy.id.uuidString.lowercased()),
+            "previousSendId": .string(baseline.send.sendId.uuidString.lowercased()), "recipient": .string(label), "destinationConfirmed": .bool(true)]
+        let result: SharedCookCorrectionReview = try await perform("shops/\(shopID)/cook-copies/correction", method: "POST", body: encoded(fields))
+        guard start == generation else { throw ClientError.cancelled }
+        guard result.copyId == copy.id, result.previousCopyId == baseline.copy.id, result.previousSendId == baseline.send.sendId,
+              result.recipient.utf8.elementsEqual(label.utf8) else { throw ClientError.invalidResponse }
+        return result
+    }
+
     public func shopperFinancialEvidence(shopID: String) async throws -> [ShopperFinancialEntry] {
+        try await shopperFinancialRecord(shopID: shopID).entries
+    }
+    public func shopperFinancialRecord(shopID: String) async throws -> ShopperFinancialRecord {
         let start = generation
         try await authorizeShopper(shopID: shopID)
         var entries: [ShopperFinancialEntry] = []
         var seen = Set<UUID>()
-        var version: ShopperFinancialPage.Version?
+        var version: HistorySourceVersion?
         var cursor: UUID?
         repeat {
             guard start == generation else { throw ClientError.cancelled }
@@ -385,12 +510,35 @@ public actor HouseholdService {
                   page.entries.allSatisfy({ $0.currency == "USD" && $0.amountMinor >= 0 && seen.insert($0.id).inserted }),
                   page.nextCursor == nil || (page.entries.count == 50 && page.nextCursor == page.entries.last?.id)
             else { throw ClientError.invalidResponse }
+            try page.sourceVersion.validate()
             if let version, version != page.sourceVersion { throw ClientError.service(status: 409, code: "source_changed", correlationID: nil, retryAfter: nil) }
             version = page.sourceVersion
             entries += page.entries
             cursor = page.nextCursor
         } while cursor != nil
-        return entries
+        guard generation == start, let version, let id = UUID(uuidString: shopID) else { throw ClientError.cancelled }
+        return ShopperFinancialRecord(shopID: id, version: version, entries: entries)
+    }
+    public func prepareFinancial(_ action: ShopperFinancialAction, reviewed record: ShopperFinancialRecord) async throws -> ShopperFinancialIntent {
+        let start = generation
+        let scope = try await authorizeShopper(shopID: record.shopID.uuidString.lowercased())
+        guard start == generation, let subject, let enrollment else { throw ClientError.cancelled }
+        return .init(clientKey: UUID(), subject: subject, householdID: scope.household.id, memberID: scope.memberId,
+                     deviceID: enrollment.deviceId, shopID: record.shopID, version: record.version, action: action)
+    }
+    public func executeFinancial(_ intent: ShopperFinancialIntent) async throws {
+        let start = generation
+        try matchesHistory(subject: intent.subject, household: intent.householdID, member: intent.memberID, device: intent.deviceID)
+        let id = intent.shopID.uuidString.lowercased()
+        _ = try await authorizeShopper(shopID: id)
+        guard start == generation else { throw ClientError.cancelled }
+        try matchesHistory(subject: intent.subject, household: intent.householdID, member: intent.memberID, device: intent.deviceID)
+        // Closing the sole active shop removes it from automatic selection. Keep the
+        // reviewed shop selected for its receipt, including a lost-response retry.
+        if intent.action == .close && selectedShopID == nil { selectedShopID = intent.shopID }
+        let receipt: ShopperFinancialReceipt = try await perform("shops/\(id)/" + intent.endpoint, method: "POST", body: encoded(intent.body))
+        guard start == generation else { throw ClientError.cancelled }
+        try receipt.validate(intent)
     }
     public func shopperInbox(shopID: String, cursor: String? = nil) async throws -> OwnRequestsPage {
         if let cursor, UUID(uuidString: cursor) == nil { throw ClientError.configuration }
@@ -398,6 +546,17 @@ public actor HouseholdService {
         try await authorizeShopper(shopID: shopID)
         guard start == generation else { throw ClientError.cancelled }
         return try await perform("shops/\(shopID)/inbox", method: "GET", query: cursor.map { [.init(name: "cursor", value: $0)] } ?? [])
+    }
+    public func deferredRequests(shopID: String, after cursor: UUID? = nil) async throws -> DeferredRequestsPage {
+        guard let destination = UUID(uuidString: shopID) else { throw ClientError.configuration }
+        let start = generation
+        try await authorizeShopper(shopID: shopID, capability: "deferred_requests")
+        guard start == generation else { throw ClientError.cancelled }
+        let page: DeferredRequestsPage = try await perform("shops/\(shopID)/deferred-requests", method: "GET",
+            query: cursor.map { [.init(name: "cursor", value: $0.uuidString.lowercased())] } ?? [])
+        guard start == generation else { throw ClientError.cancelled }
+        try page.validate(destination: destination)
+        return page
     }
     public func shopperPreview(shopID: String, requestID: String, base: CommandBase, decision: ShopperDecision) async throws -> ShopperPreview {
         guard UUID(uuidString: requestID) != nil, base.shopRevision > 0, base.authorityEpoch > 0,
@@ -412,11 +571,39 @@ public actor HouseholdService {
         let start = generation
         guard let enrollment, operation.householdID == householdID, operation.deviceID == enrollment.deviceId else { throw ClientError.accessEnded }
         let envelope = try JSONDecoder().decode(CommandEnvelope.self, from: operation.bytes)
-        guard envelope.clientKey == operation.clientKey, ["request.apply", "request.clarify"].contains(envelope.kind) else { throw ClientError.configuration }
-        try await authorizeShopper(shopID: envelope.shopId)
+        let confirming = envelope.kind == "request.confirmPurchase"
+        let capability: String?
+        switch envelope.kind {
+        case "request.carry": capability = "deferred_requests"
+        case "request.confirmPurchase": capability = "request_purchase_confirmation"
+        case "request.apply", "request.clarify": capability = nil
+        default: throw ClientError.configuration
+        }
+        guard envelope.clientKey == operation.clientKey else { throw ClientError.configuration }
+        try await authorizeShopper(shopID: envelope.shopId, capability: capability)
         guard start == generation else { throw ClientError.cancelled }
         guard operation.memberID == memberID else { throw ClientError.accessEnded }
-        return try await perform("commands", method: "POST", body: operation.bytes)
+        let receipt: ShopperReceipt = try await perform("commands", method: "POST", body: operation.bytes)
+        if confirming {
+            guard let revision = envelope.base.requestRevision, revision > 0, revision < Int.max,
+                  UUID(uuidString: receipt.operationId) != nil, receipt.kind == envelope.kind,
+                  receipt.shopId == envelope.shopId, receipt.shopRevision == envelope.base.shopRevision,
+                  receipt.authorityEpoch == envelope.base.authorityEpoch, receipt.disposition == "recorded",
+                  receipt.requestRevision == revision + 1, let request = receipt.requestId,
+                  envelope.body["requestId"] == .string(request), let outcome = receipt.purchaseOutcome,
+                  ["bought", "notBought", "unknown"].contains(outcome), envelope.body["outcome"] == .string(outcome)
+            else { throw ClientError.invalidResponse }
+        }
+        if envelope.kind == "request.carry" {
+            guard let operationID = UUID(uuidString: receipt.operationId),
+                  receipt.requestId.flatMap(UUID.init(uuidString:)) == operationID,
+                  receipt.kind == envelope.kind, receipt.shopId == envelope.shopId,
+                  receipt.shopRevision == envelope.base.shopRevision, receipt.authorityEpoch == envelope.base.authorityEpoch,
+                  receipt.disposition == "recorded", receipt.requestRevision == 1,
+                  let source = receipt.sourceRequestId, envelope.body["requestId"] == .string(source)
+            else { throw ClientError.invalidResponse }
+        }
+        return receipt
     }
     /// Shop creation is organizer-only; updates remain restricted to the currently assigned shopper.
     /// A retry retains its original shop ID, replay window, base and exact command bytes.
@@ -426,16 +613,47 @@ public actor HouseholdService {
               operation.deviceID == enrollment.deviceId else { throw ClientError.accessEnded }
         let envelope = try JSONDecoder().decode(CommandEnvelope.self, from: operation.bytes)
         guard envelope.clientKey == operation.clientKey, UUID(uuidString: envelope.shopId) != nil,
-              ["shop.create", "shop.patch", "shop.freeze", "shop.reopen", "shop.transferAuthority"].contains(envelope.kind) else { throw ClientError.configuration }
+              ["shop.create", "shop.patch", "shop.freeze", "shop.reopen", "shop.transferAuthority",
+               "delivery.register", "delivery.arrival", "delivery.usable", "delivery.match", "delivery.reserve",
+               "cookCopy.save", "cookCopy.markSent", "pantry.create", "pantry.storeDelivery", "pantry.observe",
+               "pantry.select", "pantry.match", "pantry.reserve", "mealRecovery.apply"].contains(envelope.kind) else { throw ClientError.configuration }
         if envelope.kind == "shop.create" {
             guard envelope.base.shopRevision == 0, envelope.base.authorityEpoch == 0 else { throw ClientError.configuration }
             try await authorizeAdmin()
         } else if envelope.kind == "shop.transferAuthority" {
             try await authorizeAdmin()
-        } else { try await authorizeShopper(shopID: envelope.shopId) }
+        } else {
+            let capability = envelope.kind.hasPrefix("pantry.") ? "pantry_lots" : (envelope.kind.hasPrefix("cookCopy.") ? "cook_copies" : nil)
+            let live = try await authorizeShopper(shopID: envelope.shopId, capability: capability)
+            if envelope.kind == "cookCopy.save", envelope.body["factIndex"] != nil,
+               !live.capabilities.contains("cook_corrections") { throw ClientError.accessEnded }
+            if envelope.kind == "mealRecovery.apply" || (envelope.kind == "cookCopy.save" && envelope.body["recoveryRevision"] != nil) {
+                guard live.capabilities.contains("meal_recovery") else { throw ClientError.accessEnded }
+            }
+            // The command transaction distinguishes a saved receipt from a new assisted write.
+            // A former seat holder may reconcile the first while the server requires a live seat for the second.
+            if envelope.kind == "mealRecovery.apply", case .object(let intent) = envelope.body["intent"], intent["fallback"] != nil,
+               !live.capabilities.contains("accepted_fallbacks") { throw ClientError.accessEnded }
+            if envelope.kind == "cookCopy.save", envelope.body["pantryRevision"] != nil,
+               !live.capabilities.contains("pantry_lots") { throw ClientError.accessEnded }
+        }
         guard start == generation else { throw ClientError.cancelled }
         guard operation.memberID == memberID else { throw ClientError.accessEnded }
-        return try await perform("commands", method: "POST", body: operation.bytes, creatingShop: envelope.kind == "shop.create")
+        let receipt: ShopperReceipt = try await perform("commands", method: "POST", body: operation.bytes, creatingShop: envelope.kind == "shop.create")
+        if envelope.kind == "mealRecovery.apply" { try receipt.validateRecovery(envelope) }
+        if envelope.kind.hasPrefix("pantry.") { try receipt.validatePantry(envelope) }
+        if envelope.kind.hasPrefix("cookCopy.") { try receipt.validateCookCopy(envelope) }
+        if envelope.kind.hasPrefix("delivery.") {
+            guard case .integer(let revision) = envelope.body["supplyRevision"], (0..<Int(Int32.max)).contains(revision),
+                  let sourceID = receipt.sourceId, receipt.supplyRevision == revision + 1, receipt.disposition == "recorded",
+                  receipt.shopId == envelope.shopId, receipt.kind == envelope.kind, receipt.authorityEpoch == envelope.base.authorityEpoch,
+                  receipt.shopRevision == envelope.base.shopRevision else { throw ClientError.invalidResponse }
+            if envelope.kind == "delivery.reserve", UUID(uuidString: receipt.operationId) == nil { throw ClientError.invalidResponse }
+            if envelope.kind == "delivery.register" {
+                guard UUID(uuidString: receipt.operationId) == sourceID else { throw ClientError.invalidResponse }
+            } else if envelope.body["sourceId"] != .string(sourceID.uuidString.lowercased()) { throw ClientError.invalidResponse }
+        }
+        return receipt
     }
     /// For other native service adapters; returning a token never grants a role.
     public func currentDeviceToken(householdID: String, memberID: String) async throws -> String {
@@ -518,7 +736,8 @@ public actor HouseholdService {
     public func currentHelperView(grantID: String) async throws -> HelperView {
         guard UUID(uuidString: grantID) != nil, selectedGrantID == grantID else { throw ClientError.accessEnded }
         let value: HelperView = try await perform("v1/views/\(grantID)/current", method: "GET", absolutePath: true)
-        guard value.grantId == grantID else { throw ClientError.invalidResponse }
+        guard value.grantId == grantID, value.revision > 0, validHelperTimestamp(value.asOf),
+              validHelperTimestamp(value.expiresAt) else { throw ClientError.invalidResponse }
         return value
     }
     public func prepareHelperProposal(grantID: String, baseRevision: Int, correction: String) async throws -> HelperProposalIntent {
@@ -534,12 +753,14 @@ public actor HouseholdService {
         let start = generation
         guard intent.householdID == householdID, intent.memberID == memberID, intent.deviceID == enrollment?.deviceId,
               intent.grantID == selectedGrantID else { throw ClientError.accessEnded }
-        struct Key: Decodable { let clientKey: String }
-        guard try JSONDecoder().decode(Key.self, from: intent.bytes).clientKey == intent.id else { throw ClientError.configuration }
+        guard let baseRevision = intent.reviewedRevision else { throw ClientError.configuration }
         let view = try await currentHelperView(grantID: intent.grantID)
         guard start == generation else { throw ClientError.cancelled }
         guard view.canPropose else { throw ClientError.accessEnded }
-        return try await perform("v1/views/\(intent.grantID)/proposals", method: "POST", body: intent.bytes, absolutePath: true)
+        let receipt: HelperProposalReceipt = try await perform("v1/views/\(intent.grantID)/proposals", method: "POST", body: intent.bytes, absolutePath: true)
+        guard receipt.grantId == intent.grantID, receipt.baseRevision == baseRevision, receipt.status == "pending",
+              UUID(uuidString: receipt.proposalId) != nil else { throw ClientError.invalidResponse }
+        return receipt
     }
     public func managedHelperProjection(grantID: String, shopID: String) async throws -> ManagedHelperProjection {
         guard UUID(uuidString: grantID) != nil, selectedGrantID == nil else { throw ClientError.configuration }
@@ -872,7 +1093,7 @@ public actor HouseholdService {
         generation = UUID(); enrollment = nil; householdID = nil; subject = nil; memberID = nil; selectedGrantID = nil; selectedShopID = nil; childAdoptionBinding = nil
         try? deviceVault.clear()
     }
-    private func perform<T: Decodable & Sendable>(_ path: String, method: String, body: Data? = nil,
+    func perform<T: Decodable & Sendable>(_ path: String, method: String, body: Data? = nil,
                                                  query: [URLQueryItem] = [], absolutePath: Bool = false, creatingShop: Bool = false, reportingShopID: String? = nil) async throws -> T {
         let start = generation
         guard let householdID, let enrollment else { throw ClientError.sessionNeeded }

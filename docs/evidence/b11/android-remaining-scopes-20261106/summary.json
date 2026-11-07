@@ -1,0 +1,91 @@
+{
+  "checkedAt": "2026-11-06T22:47:07.734302+00:00",
+  "browser": "Chrome156.0.8078.79",
+  "browserSource": "Google Play installed com.android.chrome; actual CDP browser version checked",
+  "android": "14/API34",
+  "emulator": "emulator-5554 / RITC_Chrome_API34",
+  "fixture": "Synthetic localhost only; no real provider/accounts",
+  "bundleMatchesStagingDeployment": "dpl_2tfRmEfTGLW63sSTksJ6xJ9MZ97P",
+  "observedDOMStates": 19,
+  "allAt411CSSPixelsWithoutHorizontalOverflow": true,
+  "cases": {
+    "queuePermissionRevoked": {
+      "pass": true,
+      "queuedBefore": 1,
+      "afterFenceAndReload": 0,
+      "commands": 0,
+      "effects": 0,
+      "scope": "Only queue permission revoked; authorized online contributor form can return after fresh load, without offline-save control."
+    },
+    "freshHelperInvitation": {
+      "pass": true,
+      "authStarts": 1,
+      "verifies": 1,
+      "redeems": 1,
+      "activations": 1,
+      "mutations": 0,
+      "readOnlyENESAndReload": true
+    },
+    "editorUnsentDraftReload": {
+      "pass": true,
+      "localeChangePreservedDraft": true,
+      "reloadClearedDraft": true,
+      "proposalPosts": 0,
+      "proposalEffects": 0
+    },
+    "childWrongHousehold": {
+      "pass": true,
+      "claimEffects": 1,
+      "finishEffects": 1,
+      "ownReads": 0,
+      "ownLinkAbsentAfterFinishAndReload": true
+    },
+    "childUnconfirmedFinishNoCookie": {
+      "pass": true,
+      "claimEffects": 1,
+      "finishPosts": 1,
+      "finishEffects": 1,
+      "ownReads": 0,
+      "coldPageDoesNotCreateNewFinishOrRecoverRetryIntent": true
+    },
+    "childUnconfigured": {
+      "pass": true,
+      "allChildEffectCounters": 0,
+      "noFormOrAccessLinkENESAndReload": true
+    }
+  },
+  "driverCorrection": "Fresh helper driver first queried nonexistent Email code label and timed out15s. Actual label Six-digit code was inspected; continued same page/session without a second email/code request. Recorded1start/1verify/1redeem/1activation. No product assertion or timeout relaxed.",
+  "limitations": [
+    "Synthetic household and guardian protocol, not live SMTP/KWS or real child account.",
+    "Emulated Android, not physical phone/TalkBack/human Spanish review.",
+    "API-offline mode leaves static shell available, not radio-offline/PWA verification.",
+    "No comprehensive console-error claim; this driver recorded DOM/state/counters and screenshots.",
+    "Language selection is in-page; reload returned English and is recorded rather than claimed persistent."
+  ],
+  "cleanup": {
+    "ownedFixtureServerPIDs": [
+      81368,
+      81568,
+      81887,
+      82046,
+      82293,
+      82429
+    ],
+    "allStopped": true,
+    "ownedReversePorts": [
+      58570,
+      58677,
+      58845,
+      58941,
+      59117,
+      59237
+    ],
+    "allRemoved": true,
+    "ownedCDPForward": 52889,
+    "forwardRemoved": true,
+    "closedRemainingOwnedTabs": 0,
+    "publicHelpRestored": true,
+    "otherTabsPreserved": true,
+    "browserVersion": "156.0.8078.79"
+  }
+}

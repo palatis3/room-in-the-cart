@@ -22,6 +22,8 @@ struct LedgerIngredientView: View {
     let shopID: UUID
     let lineID: UUID
     @State private var sheet: IngredientSheet?
+    // Presentation only: quantities and pack reviews always use the complete ledger.
+    @State private var showProtectedNeeds = true
     private var shop: ShoppingLedger? { model.workspace.shops.first { $0.id == shopID } }
     private var line: ShoppingLine? { shop?.lines.first { $0.id == lineID } }
     private enum Focus: Hashable { case status }
@@ -32,6 +34,7 @@ struct LedgerIngredientView: View {
                 Section {
                     Text(line.name).font(.title2.bold())
                     Text(ledgerQuantity(try? shop.quantity(forLineID: lineID))).font(.headline)
+                        .accessibilityIdentifier("ledgerIngredientTotal")
                     if !line.notes.isEmpty { Text(line.notes) }
                     if !line.aisle.isEmpty { Text(line.aisle) }
                     NavigationLink(ledgerText("Staple for future pickups")) { StapleApprovalView(ledger: model, shop: shop, line: line) }
@@ -69,9 +72,18 @@ struct LedgerIngredientView: View {
                     }.accessibilityIdentifier("ledger.scanReferences")
                 }
                 Section(ledgerText("Where this need came from")) {
-                    ForEach(shop.contributions(forLineID: lineID), id: \.id) { contribution in
+                    let contributions = shop.contributions(forLineID: lineID)
+                    if contributions.contains(where: { $0.source.isProtected }) {
+                        Toggle(ledgerText("Show protected needs"), isOn: $showProtectedNeeds)
+                            .accessibilityIdentifier("ledgerShowProtectedNeeds")
+                        if !showProtectedNeeds {
+                            Text(ledgerText("Hidden protected needs still count toward the total and whole packs."))
+                                .font(.footnote).foregroundStyle(Theme.secondary)
+                        }
+                    }
+                    ForEach(contributions.filter { showProtectedNeeds || !$0.source.isProtected }, id: \.id) { contribution in
                         VStack(alignment: .leading, spacing: 8) {
-                            Text(sourceLabel(contribution, shop: shop)).font(.headline)
+                            Text(ledgerSourceLabel(contribution, shop: shop)).font(.headline)
                             Text(ledgerQuantity(contribution.quantity))
                             Text(contribution.originalText).font(.footnote).foregroundStyle(Theme.secondary)
                             if !contribution.notes.isEmpty { Text(ledgerContributionNote(contribution.notes)) }
@@ -83,7 +95,7 @@ struct LedgerIngredientView: View {
                                     .font(.footnote)
                             }
                             Button(ledgerText("Edit this contribution")) { sheet = .contribution(contribution.id) }
-                                .accessibilityLabel(ledgerFormat("Edit contribution: %@", sourceLabel(contribution, shop: shop)))
+                                .accessibilityLabel(ledgerFormat("Edit contribution: %@", ledgerSourceLabel(contribution, shop: shop)))
                             if contribution.source.isMeal || contribution.source.isProtected {
                                 Button(ledgerText("Link within an existing amount")) { sheet = .link(contribution.id) }
                             }
@@ -124,6 +136,8 @@ struct LedgerIngredientView: View {
                 }
             }
             .onChange(of: model.error) { _, value in if value != nil { focus = .status } }
+            .onChange(of: shopID) { _, _ in showProtectedNeeds = true }
+            .onChange(of: lineID) { _, _ in showProtectedNeeds = true }
     }
     private func currentSelection(shop: ShoppingLedger, workspaceID: UUID) -> LedgerPackSelection? {
         model.workspace.packSelections.reversed().first { selection in
@@ -133,14 +147,7 @@ struct LedgerIngredientView: View {
                 bindings: model.workspace.dinnerPlanning.portionBindings)) == true
         }
     }
-    private func sourceLabel(_ contribution: LedgerContribution, shop: ShoppingLedger) -> String {
-        switch contribution.source {
-        case .manual: return ledgerText("Manually added")
-        case .imported: return ledgerText("Imported list")
-        case .meal(let id): return shop.mealOccurrences.first { $0.id == id }?.title ?? ledgerText("Dinner")
-        case .protectedNeed(let purpose): return ledgerFormat("Protected: %@", purpose)
-        }
-    }
+
 }
 
 private struct LedgerLineEditor: View {
@@ -287,7 +294,7 @@ private struct LedgerProtectedNeedView: View {
                     ForEach(shop.contributions(forLineID: line.id).filter { $0.source.canSupplyExistingQuantity }, id: \.id) { contribution in
                         Text(ledgerFormat("Within %@", ledgerQuantity(contribution.quantity))).tag(Optional(contribution.id))
                     }
-                }
+                }.accessibilityIdentifier("ledgerProtectedReservation")
             }.disabled(model.saving || model.hasPendingSave)
             Button(ledgerText("Save protected need")) {
                 do {

@@ -1,0 +1,47 @@
+{
+  "scope": "disposable synthetic loopback cluster only",
+  "checks": {
+    "capture_conninfo_TLS_parser": {
+      "accepted": true,
+      "conninfo": "You are connected to database \"postgres\" as user \"tls_probe\" on host \"localhost\" (address \"127.0.0.1\") at port \"65098\".\nSSL connection (protocol: TLSv1.3, cipher: TLS_AES_256_GCM_SHA384, compression: off, ALPN: postgresql)",
+      "ssl_lines": [
+        "SSL connection (protocol: TLSv1.3, cipher: TLS_AES_256_GCM_SHA384, compression: off, ALPN: postgresql)"
+      ]
+    },
+    "capture_conninfo_unencrypted_socket_rejected": {
+      "accepted": false,
+      "conninfo": "You are connected to database \"postgres\" as user \"tls_probe\" via socket in \"/private/tmp/ritc-pgssl-9616tyj4/sock\" at port \"65098\".",
+      "ssl_lines": []
+    },
+    "tls": "170011|true|TLSv1.3",
+    "wrong_hostname": {
+      "rejected": true,
+      "exit_code": 2,
+      "diagnostic": "psql: error: connection to server at \"127.0.0.1\", port 65098 failed: server certificate for \"localhost\" (and 1 other name) does not match host name \"wrong.invalid\""
+    },
+    "untrusted_certificate": {
+      "rejected": true,
+      "exit_code": 2,
+      "diagnostic": "psql: error: connection to server at \"127.0.0.1\", port 65098 failed: SSL error: certificate verify failed"
+    },
+    "plaintext": {
+      "rejected": true,
+      "exit_code": 2,
+      "diagnostic": "psql: error: connection to server at \"127.0.0.1\", port 65098 failed: FATAL:  pg_hba.conf rejects connection for host \"127.0.0.1\", user \"tls_probe\", database \"postgres\", no encryption"
+    },
+    "dump_restore": {
+      "pg_dump_SSL": true,
+      "pg_dumpall_SSL": true,
+      "pg_restore_SSL": true,
+      "row_verified": true,
+      "dump_sha256": "8e43d70ef82019fe61aca0029bb8402f581ad7e1a7ab199b8c8b23ff6f64bd93"
+    }
+  },
+  "capture_source_sha256": "e8132b620a1627ed40173fe141ac8d2dc6de71ae7142c1b8f94091c46866b3f4",
+  "status": "passed",
+  "server_stop_exit": 0,
+  "cleanup": {
+    "temporary_cluster_certificates_and_keys_removed": true,
+    "owned_server_stopped": true
+  }
+}

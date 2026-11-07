@@ -1,0 +1,161 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {};
+	objectVersion = 56;
+	objects = {
+		100000000000000000000001 = {
+			isa = PBXProject;
+			buildConfigurationList = 100000000000000000000010;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			knownRegions = (en, Base);
+			mainGroup = 100000000000000000000002;
+			productRefGroup = 100000000000000000000003;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (100000000000000000000004, 100000000000000000000005);
+			attributes = {
+				TargetAttributes = {
+					100000000000000000000005 = { TestTargetID = 100000000000000000000004; };
+				};
+			};
+		};
+		100000000000000000000002 = {
+			isa = PBXGroup;
+			children = (100000000000000000000006, 100000000000000000000007, 100000000000000000000003);
+			sourceTree = "<group>";
+		};
+		100000000000000000000003 = {
+			isa = PBXGroup;
+			children = (100000000000000000000008, 100000000000000000000009);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		100000000000000000000004 = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 100000000000000000000011;
+			buildPhases = (10000000000000000000000C);
+			buildRules = ();
+			dependencies = ();
+			name = FormToggleDiagnostic;
+			productName = FormToggleDiagnostic;
+			productReference = 100000000000000000000008;
+			productType = "com.apple.product-type.application";
+		};
+		100000000000000000000005 = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 100000000000000000000012;
+			buildPhases = (10000000000000000000000D);
+			buildRules = ();
+			dependencies = (10000000000000000000000E);
+			name = FormToggleDiagnosticUITests;
+			productName = FormToggleDiagnosticUITests;
+			productReference = 100000000000000000000009;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		100000000000000000000006 = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = FormToggleDiagnostic.swift;
+			sourceTree = "<group>";
+		};
+		100000000000000000000007 = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = FormToggleDiagnosticUITests.swift;
+			sourceTree = "<group>";
+		};
+		100000000000000000000008 = {
+			isa = PBXFileReference;
+			explicitFileType = wrapper.application;
+			path = FormToggleDiagnostic.app;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		100000000000000000000009 = {
+			isa = PBXFileReference;
+			explicitFileType = wrapper.cfbundle;
+			path = FormToggleDiagnosticUITests.xctest;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		10000000000000000000000A = { isa = PBXBuildFile; fileRef = 100000000000000000000006; };
+		10000000000000000000000B = { isa = PBXBuildFile; fileRef = 100000000000000000000007; };
+		10000000000000000000000C = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (10000000000000000000000A);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		10000000000000000000000D = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (10000000000000000000000B);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		10000000000000000000000E = {
+			isa = PBXTargetDependency;
+			target = 100000000000000000000004;
+			targetProxy = 10000000000000000000000F;
+		};
+		10000000000000000000000F = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 100000000000000000000001;
+			proxyType = 1;
+			remoteGlobalIDString = 100000000000000000000004;
+			remoteInfo = FormToggleDiagnostic;
+		};
+		100000000000000000000010 = {
+			isa = XCConfigurationList;
+			buildConfigurations = (100000000000000000000013);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		100000000000000000000011 = {
+			isa = XCConfigurationList;
+			buildConfigurations = (100000000000000000000014);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		100000000000000000000012 = {
+			isa = XCConfigurationList;
+			buildConfigurations = (100000000000000000000015);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		100000000000000000000013 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				SDKROOT = iphoneos;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		100000000000000000000014 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.roominthecart.diagnostics.formtoggle;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		100000000000000000000015 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = org.roominthecart.diagnostics.formtoggle.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_TARGET_NAME = FormToggleDiagnostic;
+			};
+			name = Debug;
+		};
+	};
+	rootObject = 100000000000000000000001;
+}

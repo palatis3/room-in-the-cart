@@ -1,0 +1,95 @@
+{
+  "purpose": "Prevent unchanged checkout saves from replacing restored pricing evidence. First implementation snapshot; dirty-draft follow-up is separate and pending.",
+  "compiledInventory": {
+    "models": 575,
+    "ordinaryUI": 51
+  },
+  "frozenSourceManifestSHA256": "1c0a892b86f9c4c438ff64aa09da20238b8e288dbd9955afe187f36beaf96801",
+  "productIdentities": {
+    ".build/CIResearch20261105/checkout-restoration/products-initial/RoomInTheCart_iphonesimulator27.1-arm64-x86_64.xctestrun": "9bcfcd54dc032c5f450a6b0b8b03178d3833ae20254160d4ae4b3ea1159dc2ca",
+    ".build/CIResearch20261105/checkout-restoration/products-initial/Debug-iphonesimulator/RoomInTheCartUITests-Runner.app/PlugIns/RoomInTheCartUITests.xctest/RoomInTheCartUITests": "10d16b8d6d17ca2b935bcf9a58f26500b0154215ac8790269891dd5ee9753dad",
+    ".build/CIResearch20261105/checkout-restoration/products-initial/Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart": "b842f820b333854432664af0c0ffbeefd168b49f8004a4fbe34b087c58fe49ed",
+    ".build/CIResearch20261105/checkout-restoration/baseline-products/RoomInTheCart_iphonesimulator27.1-arm64-x86_64.xctestrun": "9bcfcd54dc032c5f450a6b0b8b03178d3833ae20254160d4ae4b3ea1159dc2ca",
+    ".build/CIResearch20261105/checkout-restoration/baseline-products/Debug-iphonesimulator/RoomInTheCartUITests-Runner.app/PlugIns/RoomInTheCartUITests.xctest/RoomInTheCartUITests": "10d16b8d6d17ca2b935bcf9a58f26500b0154215ac8790269891dd5ee9753dad",
+    ".build/CIResearch20261105/checkout-restoration/baseline-products/Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart": "342b48d4bc5997eeb25d0ed5b6a3d2f23565a0573248c19058cfa58091af423e"
+  },
+  "phases": {
+    "models": {
+      "result": "Passed",
+      "executed": 31,
+      "passed": 31,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "xcodeExit": 0,
+      "guardExit": 0,
+      "hashes": {
+        ".build/CIResearch20261105/checkout-restoration/models/Tests.log": "2210d57eda805013d05ba0b0bf9e35582aeb99100ebc37fd15ca12c5cb03933f",
+        ".build/CIResearch20261105/checkout-restoration/models/test-summary.json": "1260085f0ef45a4a56cc2ae2c1ec6276ef83af3b45ab5339189755e773714671",
+        ".build/CIResearch20261105/checkout-restoration/models/test-details.json": "f48d3b16c7e75c018872214acaca9263d27b57d8dca19057c0af2277c0f8ad3d",
+        ".build/CIResearch20261105/checkout-restoration/models/test-runtime-warnings.json": "5215689f3c6f26ac3236b590f2a7c97c88dd0b295f080629664e9aad988b833a",
+        ".build/CIResearch20261105/checkout-restoration/models/verification.txt": "456e9f338f6439ecc28e3b90ea9eebaf79ecef62cb01ad71df70867597314390"
+      }
+    },
+    "baseline-ui": {
+      "result": "Failed",
+      "executed": 1,
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "xcodeExit": 65,
+      "guardExit": 1,
+      "hashes": {
+        ".build/CIResearch20261105/checkout-restoration/baseline-ui/Tests.log": "09e785e6ae0e3d453cd2acc46fb1955e38ae484776dc6f6d7dad1e72c833172e",
+        ".build/CIResearch20261105/checkout-restoration/baseline-ui/test-summary.json": "bb0e3ce29648973ccbc362eb52370961541688e3ce1463cb4873aa53b4521425",
+        ".build/CIResearch20261105/checkout-restoration/baseline-ui/test-details.json": "a734f6e1b1af2829ef855da1e1ef234f4090ab622cbab8985bba3eb8012bf853",
+        ".build/CIResearch20261105/checkout-restoration/baseline-ui/test-runtime-warnings.json": "ce5f63a49527481ca5704f8996eb8eea682d8688c3381353dd8f23ad6759bffb",
+        ".build/CIResearch20261105/checkout-restoration/baseline-ui/verification.txt": "c8753b7dc107406f78b38aa91a0085d0029f6aaaff4a6eab4020ae3eff276fbe"
+      },
+      "seconds": 78.512,
+      "expectedFailure": "Preserved pre-fix app reopened inclusive mode as 0 instead of 1. The exact assertion failed; this run is retained as failed, not counted as a pass."
+    },
+    "fixed-ui": {
+      "result": "Passed",
+      "executed": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "xcodeExit": 0,
+      "guardExit": 0,
+      "hashes": {
+        ".build/CIResearch20261105/checkout-restoration/fixed-ui/Tests.log": "cca338a6d2627e89568a5ccd9cb362b235b44d998cfebc849144db8dd8515176",
+        ".build/CIResearch20261105/checkout-restoration/fixed-ui/test-summary.json": "76ef94ef12775f71fd94a0da04037511e5e606998b568c3ecb76a7ffe5f70ba9",
+        ".build/CIResearch20261105/checkout-restoration/fixed-ui/test-details.json": "2db5cb517b6465ca1e68a45811695fe8f5be63df25b0cb9487e3d9533fc88428",
+        ".build/CIResearch20261105/checkout-restoration/fixed-ui/test-runtime-warnings.json": "ce5f63a49527481ca5704f8996eb8eea682d8688c3381353dd8f23ad6759bffb",
+        ".build/CIResearch20261105/checkout-restoration/fixed-ui/verification.txt": "b98aa51b1df2e0098e8fe7069211c1a26afd622f59dcffb3b005a3ff1a3a98a0"
+      },
+      "seconds": 241.897,
+      "assertions": "Same new runner and unchanged public-label test passed on fixed app: saved inclusive mode, total, context, cap and result survive restart, unchanged save and second restart."
+    },
+    "related-ui": {
+      "result": "Passed",
+      "executed": 2,
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "guardExit": 0,
+      "selectors": [
+        "RoomInTheCartUITests/ContextualNavigationUITests/testAuthorizationHoldIsOptionalAndSeparateFromCheckoutCap",
+        "RoomInTheCartUITests/ContextualNavigationUITests/testDinnerOnlyCapAndCancelledSlotChangeSurviveRelaunch"
+      ],
+      "hashes": {
+        ".build/CIResearch20261105/checkout-restoration/related-ui/Tests.log": "5f4a4eea738eef811c83e614e135ab7ecae005ed2d6aa76d84699dc0e82fc6a8",
+        ".build/CIResearch20261105/checkout-restoration/related-ui/test-summary.json": "965d0132925784ebb42f8ca7f2e99fd204b61ef86e7312f27431a93fb7fba883",
+        ".build/CIResearch20261105/checkout-restoration/related-ui/test-details.json": "e9c4f3c8edb754e758b5ac920a1a197ca21fa5f258a8c7e7d873e26c9d113428",
+        ".build/CIResearch20261105/checkout-restoration/related-ui/test-runtime-warnings.json": "f8ad96fa2dba1663cb8ecf3e532759170a56556bd8646ffa1bd97a8aa0aa78f8",
+        ".build/CIResearch20261105/checkout-restoration/related-ui/verification.txt": "b93a9a8af01b4fdb450263addd2b65d279151ecb059599c1431b9278bf1c4528"
+      }
+    }
+  },
+  "limits": "Xcode27.1/local iOS26.2 build23C52. No hosted acceptance or animation-cause conclusion. Both existing related UI cases passed. Dirty-draft review follow-up has not been compiled/tested.",
+  "frozenSourceRoot": ".build/CIResearch20261105/checkout-restoration/source-initial"
+}

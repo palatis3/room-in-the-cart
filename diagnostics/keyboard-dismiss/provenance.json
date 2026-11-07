@@ -1,0 +1,25 @@
+{
+  "base": "804030e68473d022e72b464940061c01c611a0bd",
+  "referenceCommit": "9e9b3644385673507be49f3483c7c6a77e9c5b5c",
+  "referenceRepository": "/Users/palatis/.codex/worktrees/consent-history-diagnostic/Room in the Cart",
+  "referenceFiles": {
+    "harness.py": "2339772f3b4484204ca6dd1a4b07c79d5a8581cf81aa6f694816220a5b5b84fe",
+    "overlay-index.json": "99eb5602d20bc061281650df3b570d29ebb6737dee8a18277649aceed29e90ec",
+    "reconcile_consent_logs.py": "7baf6e6cf975b2311ecf80129da6c7ce7dbdb860ac40e26b293d8406911b9786",
+    "reference-plan.json": "cfad55cc6c410deed282cff65d6d19bf40f6a75050a1a9c5a40619225ba67122",
+    "selectors.txt": "a1c7c40d5a429d6f57a85ee8b5e39cdfefa842e028be492c0157fa285ec98034",
+    "test_harness.py": "4d7999e6528ad00021c2cb2adeb0defa7c288398e6a886404cfd735e68b7403e",
+    "test_reconcile_consent_logs.py": "6cdc463a9e5c022a64e48a8a0d3f09fc1f9d3775613494869c3961daeeddd919"
+  },
+  "sourcePath": "ios/Features/Pickup/PickupRepairView.swift",
+  "originalSourceSHA256": "e1130b2976c8f63e4239fb4eb06aa70220f433a24ad8a48b630750eb5f3a6614",
+  "proposedSourceSHA256": "afb8323925cc88ba1ec0d192d0488126b3dcc8b5e28fbcc3dc629796565add94",
+  "patchSHA256": "8aa530381307cb9ac5903663095a1920a5945b1c4210afc9cddfcbf7222b7a05",
+  "selectorsSHA256": "2d443930e5b225e8de035d6045a021531e7db0c27b6a4914fa87b5db388e4c51",
+  "oldDiagnosticBase": "d0b0b12ee0cb8412f17e82c92a91013217560670",
+  "originalFailureReview": "/Users/palatis/Room in the Cart/.build/UI07NextShopReview20261106/REVIEW.md",
+  "originalFailureReviewSHA256": "9c2b1d59c8eaa2eceb8caa195f17c505b822d0a726c05e617aa6828f2f119487",
+  "preparationOnly": true,
+  "nativeExecuted": false,
+  "releaseAcceptance": false
+}

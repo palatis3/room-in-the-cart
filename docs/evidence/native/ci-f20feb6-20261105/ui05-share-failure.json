@@ -1,0 +1,43 @@
+{
+  "candidate": "f20feb685f95e7da1c7a23f26eff499d2696329f",
+  "run": 41994028642,
+  "job": 127139510033,
+  "artifact": 13403508256,
+  "artifactSHA256": "ea3290f120a919c60d53b626086ac34bbd6b4744bd712d97990dea4657dab06b",
+  "githubDigestVerified": true,
+  "selectorPlanMatched": true,
+  "passed": 5,
+  "failed": 1,
+  "skipped": 0,
+  "runtimeWarnings": 1,
+  "independentGuardExit": 1,
+  "testFailures": [
+    {
+      "failureText": "XCTAssertEqual failed: (\"Optional(\"0\")\") is not equal to (\"Optional(\"1\")\") - The reviewed switch must be on: Retailer total already includes all charges",
+      "targetName": "RoomInTheCartUITests",
+      "testIdentifier": 3,
+      "testIdentifierString": "FreeJourneyUITests/testCancellingSystemShareKeepsTheFrozenPickupUnplaced()",
+      "testIdentifierURL": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareKeepsTheFrozenPickupUnplaced",
+      "testName": "testCancellingSystemShareKeepsTheFrozenPickupUnplaced()"
+    }
+  ],
+  "observation": "After Done at81.74s, XCTest logged five60-second app-animation completion waits surrounding the following scroll and switch tap. The reviewed switch remained0. Cause not yet established; Dot is reviewing screenshots and activity frames.",
+  "rawLogSHA256": "25a8fcc45cf03d0320d11f74ef09545df6d41ee90aa391e458c104dc9df68d7d",
+  "limits": "No animation or idleness checks disabled, no retry, no timeout change. Hosted case remains failed.",
+  "dotPersonalReview": {
+    "tapPoints": [
+      356.4,
+      179.5
+    ],
+    "approximateVisibleSwitchRectPoints": [
+      309,
+      166,
+      372,
+      194
+    ],
+    "softwareKeyboardVisibleAtTap": false,
+    "interpretation": "Recording and saved event argue against a clipped/offscreen tap. Event establishes injection intent, not delivery or binding transition. Immediate snapshot exposes only app root; enabled/hit-test hierarchy remains unknown. Video alignment/scaling uncertainty retained.",
+    "source": "UI05 isolated exports and lossless plist-to-JSON handoff bf35ade6afd2d9690e980d3c16f599738f4f962ce45176b8b417f1cc1d8b6ca5"
+  },
+  "nextDiagnostic": "Narrow pre/post screenshot, AX, geometry and state attachments around existing single tap, keeping required value1. Native diagnostic run pending; instrumentation can affect timing and does not by itself fix or explain the hosted failure."
+}

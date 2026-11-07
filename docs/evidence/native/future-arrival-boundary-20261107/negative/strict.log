@@ -1,0 +1,46 @@
+Executed 5 of 5 selected tests.
+
+| Test | Result | Seconds |
+|---|---|---|
+| RoomInTheCartTests/ContextualReminderTests/testRetainedFutureReceiptKeepsOfferAndReminderPendingUntilItsActualInstant | Failed | 0.49 |
+| RoomInTheCartTests/DinnerAwayCarryoverTests/testImportedFutureReceiptCannotAuthorizePhysicalCarryoverBeforeArrival | Failed | 0.46 |
+| RoomInTheCartTests/PickupModelTests/testFutureArrivalAndUsableWritesLeaveProtectedFoodUnconfirmed | Failed | 0.27 |
+| RoomInTheCartTests/PickupModelTests/testImportedFutureEvidenceIsRetainedButExcludedFromCurrentFoodAndCookProjection | Failed | 0.08 |
+| RoomInTheCartTests/PickupModelTests/testStockReviewExpiresWhenRetainedFutureFoodBecomesCurrentWithoutRevisionChange | Failed | 0.06 |
+
+The XCTest test export recorded 0 runtime warning occurrences across 5 examined tests.
+Executed and passing counts do not match the selected tests
+The shard contains failures, expected failures or skipped tests
+Every selected test must individually report Passed
+XCTest logged a failure for RoomInTheCartTests/ContextualReminderTests/testRetainedFutureReceiptKeepsOfferAndReminderPendingUntilItsActualInstant at log line 12.
+XCTest logged a failure for RoomInTheCartTests/ContextualReminderTests/testRetainedFutureReceiptKeepsOfferAndReminderPendingUntilItsActualInstant at log line 13.
+XCTest logged a failure for RoomInTheCartTests/ContextualReminderTests/testRetainedFutureReceiptKeepsOfferAndReminderPendingUntilItsActualInstant at log line 14.
+XCTest logged a failure for RoomInTheCartTests/DinnerAwayCarryoverTests/testImportedFutureReceiptCannotAuthorizePhysicalCarryoverBeforeArrival at log line 20.
+XCTest logged a failure for RoomInTheCartTests/DinnerAwayCarryoverTests/testImportedFutureReceiptCannotAuthorizePhysicalCarryoverBeforeArrival at log line 21.
+XCTest logged a failure for RoomInTheCartTests/PickupModelTests/testFutureArrivalAndUsableWritesLeaveProtectedFoodUnconfirmed at log line 27.
+XCTest logged a failure for RoomInTheCartTests/PickupModelTests/testFutureArrivalAndUsableWritesLeaveProtectedFoodUnconfirmed at log line 28.
+XCTest logged a failure for RoomInTheCartTests/PickupModelTests/testFutureArrivalAndUsableWritesLeaveProtectedFoodUnconfirmed at log line 29.
+XCTest logged a failure for RoomInTheCartTests/PickupModelTests/testFutureArrivalAndUsableWritesLeaveProtectedFoodUnconfirmed at log line 30.
+XCTest logged a failure for RoomInTheCartTests/PickupModelTests/testFutureArrivalAndUsableWritesLeaveProtectedFoodUnconfirmed at log line 31.
+XCTest logged a failure for RoomInTheCartTests/PickupModelTests/testFutureArrivalAndUsableWritesLeaveProtectedFoodUnconfirmed at log line 32.
+XCTest logged a failure for RoomInTheCartTests/PickupModelTests/testFutureArrivalAndUsableWritesLeaveProtectedFoodUnconfirmed at log line 33.
+XCTest logged a failure for RoomInTheCartTests/PickupModelTests/testFutureArrivalAndUsableWritesLeaveProtectedFoodUnconfirmed at log line 34.
+XCTest logged a failure for RoomInTheCartTests/PickupModelTests/testFutureArrivalAndUsableWritesLeaveProtectedFoodUnconfirmed at log line 35.
+XCTest logged a failure for RoomInTheCartTests/PickupModelTests/testFutureArrivalAndUsableWritesLeaveProtectedFoodUnconfirmed at log line 36.
+XCTest logged a failure for RoomInTheCartTests/PickupModelTests/testImportedFutureEvidenceIsRetainedButExcludedFromCurrentFoodAndCookProjection at log line 39.
+XCTest logged a failure for RoomInTheCartTests/PickupModelTests/testImportedFutureEvidenceIsRetainedButExcludedFromCurrentFoodAndCookProjection at log line 40.
+XCTest logged a failure for RoomInTheCartTests/PickupModelTests/testImportedFutureEvidenceIsRetainedButExcludedFromCurrentFoodAndCookProjection at log line 41.
+XCTest logged a failure for RoomInTheCartTests/PickupModelTests/testImportedFutureEvidenceIsRetainedButExcludedFromCurrentFoodAndCookProjection at log line 42.
+XCTest logged a failure for RoomInTheCartTests/PickupModelTests/testImportedFutureEvidenceIsRetainedButExcludedFromCurrentFoodAndCookProjection at log line 43.
+XCTest logged a failure for RoomInTheCartTests/PickupModelTests/testImportedFutureEvidenceIsRetainedButExcludedFromCurrentFoodAndCookProjection at log line 44.
+XCTest logged a failure for RoomInTheCartTests/PickupModelTests/testStockReviewExpiresWhenRetainedFutureFoodBecomesCurrentWithoutRevisionChange at log line 47.
+XCTest logged a failure for RoomInTheCartTests/PickupModelTests/testStockReviewExpiresWhenRetainedFutureFoodBecomesCurrentWithoutRevisionChange at log line 48.
+XCTest logged a failure for RoomInTheCartTests/PickupModelTests/testStockReviewExpiresWhenRetainedFutureFoodBecomesCurrentWithoutRevisionChange at log line 49.
+XCTest logged a failure for RoomInTheCartTests/PickupModelTests/testStockReviewExpiresWhenRetainedFutureFoodBecomesCurrentWithoutRevisionChange at log line 50.
+XCTest log requires one start then one pass for RoomInTheCartTests/ContextualReminderTests/testRetainedFutureReceiptKeepsOfferAndReminderPendingUntilItsActualInstant; found ['start', 'non-passing or unrecognized completion'].
+XCTest log requires one start then one pass for RoomInTheCartTests/DinnerAwayCarryoverTests/testImportedFutureReceiptCannotAuthorizePhysicalCarryoverBeforeArrival; found ['start', 'non-passing or unrecognized completion'].
+XCTest log requires one start then one pass for RoomInTheCartTests/PickupModelTests/testFutureArrivalAndUsableWritesLeaveProtectedFoodUnconfirmed; found ['start', 'non-passing or unrecognized completion'].
+XCTest log requires one start then one pass for RoomInTheCartTests/PickupModelTests/testImportedFutureEvidenceIsRetainedButExcludedFromCurrentFoodAndCookProjection; found ['start', 'non-passing or unrecognized completion'].
+XCTest log requires one start then one pass for RoomInTheCartTests/PickupModelTests/testStockReviewExpiresWhenRetainedFutureFoodBecomesCurrentWithoutRevisionChange; found ['start', 'non-passing or unrecognized completion'].
+XCTest log requires one successful result banner; found ['FAILED'].
+

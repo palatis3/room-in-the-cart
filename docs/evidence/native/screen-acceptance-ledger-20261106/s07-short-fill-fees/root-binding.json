@@ -1,0 +1,68 @@
+{
+  "source": "804030e68473d022e72b464940061c01c611a0bd",
+  "run": 42272379454,
+  "attempt": 1,
+  "proof": [
+    {
+      "selector": "RoomInTheCartTests/PickupOfferEvaluationTests/testRetainedOriginalAndExplicitFixedFeesConsumeJointAndLineHeadroom",
+      "sourcePath": "ios/Tests/PickupOfferEvaluationTests.swift",
+      "methodSHA256": "9d175da8bc6c99fea8d62757637cb697c848bdf73bfdffa12c93cc12ec52992b",
+      "exact804MethodUnchanged": true,
+      "result": {
+        "duration": "0.0045s",
+        "durationInSeconds": 0.004487037658691406,
+        "name": "testRetainedOriginalAndExplicitFixedFeesConsumeJointAndLineHeadroom()",
+        "nodeIdentifier": "PickupOfferEvaluationTests/testRetainedOriginalAndExplicitFixedFeesConsumeJointAndLineHeadroom()",
+        "nodeIdentifierURL": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/PickupOfferEvaluationTests/testRetainedOriginalAndExplicitFixedFeesConsumeJointAndLineHeadroom",
+        "nodeType": "Test Case",
+        "result": "Passed"
+      }
+    },
+    {
+      "selector": "RoomInTheCartTests/FreeJourneyAcceptanceTests/testFreeManualJourneySurvivesRestartFromMealsThroughNextShop",
+      "sourcePath": "ios/Tests/FreeJourneyAcceptanceTests.swift",
+      "methodSHA256": "a34a4c12b1a6e038cb1a76df3490cad6251988cc23226616e178bc82c5a026c1",
+      "exact804MethodUnchanged": true,
+      "result": {
+        "duration": "0.31s",
+        "durationInSeconds": 0.3127720355987549,
+        "name": "testFreeManualJourneySurvivesRestartFromMealsThroughNextShop()",
+        "nodeIdentifier": "FreeJourneyAcceptanceTests/testFreeManualJourneySurvivesRestartFromMealsThroughNextShop()",
+        "nodeIdentifierURL": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/FreeJourneyAcceptanceTests/testFreeManualJourneySurvivesRestartFromMealsThroughNextShop",
+        "nodeType": "Test Case",
+        "result": "Passed"
+      }
+    },
+    {
+      "selector": "RoomInTheCartTests/AcceptedDinnerOptionsTests/testLatestUsableCorrectionChangesSmallestTopupWhilePreservingProtectedLunch",
+      "sourcePath": "ios/Tests/AcceptedDinnerOptionsTests.swift",
+      "methodSHA256": "64713f2728ed89966c2c3d0099c32e877a58505fe0c495a6d839923d3cd50b48",
+      "exact804MethodUnchanged": true,
+      "result": {
+        "duration": "0.025s",
+        "durationInSeconds": 0.024731040000915527,
+        "name": "testLatestUsableCorrectionChangesSmallestTopupWhilePreservingProtectedLunch()",
+        "nodeIdentifier": "AcceptedDinnerOptionsTests/testLatestUsableCorrectionChangesSmallestTopupWhilePreservingProtectedLunch()",
+        "nodeIdentifierURL": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/AcceptedDinnerOptionsTests/testLatestUsableCorrectionChangesSmallestTopupWhilePreservingProtectedLunch",
+        "nodeType": "Test Case",
+        "result": "Passed"
+      }
+    },
+    {
+      "selector": "RoomInTheCartTests/AcceptedDinnerOptionsTests/testTripConsentOnlyAuthorizesReviewedDraftAndExactRepairAtSelection",
+      "sourcePath": "ios/Tests/AcceptedDinnerOptionsTests.swift",
+      "methodSHA256": "9f3ff0721bcfb328a008112ff74b6248b33be77179f5b7ea30759c4ecb69a66d",
+      "exact804MethodUnchanged": true,
+      "result": {
+        "duration": "0.0044s",
+        "durationInSeconds": 0.004387974739074707,
+        "name": "testTripConsentOnlyAuthorizesReviewedDraftAndExactRepairAtSelection()",
+        "nodeIdentifier": "AcceptedDinnerOptionsTests/testTripConsentOnlyAuthorizesReviewedDraftAndExactRepairAtSelection()",
+        "nodeIdentifierURL": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartTests/AcceptedDinnerOptionsTests/testTripConsentOnlyAuthorizesReviewedDraftAndExactRepairAtSelection",
+        "nodeType": "Test Case",
+        "result": "Passed"
+      }
+    }
+  ],
+  "scope": "Scoped assertions plus current source review; no new test execution or complete whole-clause acceptance claim"
+}

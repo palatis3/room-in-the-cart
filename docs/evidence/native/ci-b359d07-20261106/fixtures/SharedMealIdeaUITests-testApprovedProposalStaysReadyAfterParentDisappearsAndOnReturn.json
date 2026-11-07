@@ -1,0 +1,32 @@
+{
+  "artifactID": 13494117371,
+  "artifactName": "iphone-fixture-results-SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn-1",
+  "sha256": "c4248dcd7380772cddf90aeeaf6e65bfa0a2f2d655428ef2878b07c26b49c9a0",
+  "size": 5265755,
+  "digestVerified": true,
+  "candidate": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+  "runID": 42184705317,
+  "jobID": 127793433913,
+  "hostedConclusion": "success",
+  "selected": 1,
+  "passed": 1,
+  "failed": 0,
+  "skipped": 0,
+  "strictReplayExit": 0,
+  "planByteIdentical": true,
+  "runtimeWarnings": 0,
+  "warnings": {
+    "status": "passed",
+    "summaryWarningCount": null,
+    "runtimeWarningCount": 0,
+    "examinedTestCount": 1,
+    "detailExportCount": 1,
+    "activityExportCount": 0,
+    "warnings": []
+  },
+  "selectors": [
+    "RoomInTheCartUITests/SharedMealIdeaUITests/testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn"
+  ],
+  "rawLogSHA256": "6d1062a116bd868494727a7657e220ec09931c98bc1c3cb5c36355ee9bf9cd43",
+  "replayedBundle": "Tests.xcresult"
+}

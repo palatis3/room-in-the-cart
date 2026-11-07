@@ -1,0 +1,40 @@
+{
+  "status": "verified",
+  "source": "pinned staging project uwjxrotnocxxomqdetzk, 030",
+  "sourceCommit": "eae1e721cb08b8d678200a2345f5c3abb18df6c6",
+  "capture": {
+    "projectDatabaseReadOnly": true,
+    "transientPlatformLogin": "previously approved pinned bridge; backup/inventory only",
+    "fullDatabaseDumpExit": 0,
+    "selectedTables": 109,
+    "selectedRows": 112,
+    "relations": 84,
+    "policies": 69,
+    "functions": 89,
+    "migrationContentChecksums": 30,
+    "snapshotScope": "REPEATABLE READ READ ONLY; verified client TLS, selected and full dumps use same snapshot, role globals compared separately",
+    "selectedDumpSHA256": "8252dc99695a1166b64540726b96381314e838a02469866714b46209cb1a5918",
+    "fullDumpSHA256": "6abd975edb85dc23f5a73d874e03aee4f39cd9eb35ab98098b0d7e1dc86b3a41"
+  },
+  "recovery": {
+    "twoSeparateEncryptedImages": true,
+    "freshKeychainReadOnlyAttachVerifiedForBoth": true,
+    "imagesDetached": true,
+    "pre008ArchiveByteIdentical": true
+  },
+  "verification": {
+    "independentRestores": 2,
+    "baselineByteIdenticalAfterCloneUpgrade": true,
+    "selectedDataAndSchema": "Source and local auth/public/ritc row counts, content hashes, relations, policies, functions, columns, role grants and normalized schema matched",
+    "upgradeDelta": "031\u2013040 only on second local clone",
+    "upgradedMigrationContentChecksums": 40,
+    "oldTablesComparedExcludingRegistry": 108,
+    "localOnlyPrivateSockets": true,
+    "bothServersStopped": true
+  },
+  "limits": [
+    "Role passwords are excluded by design.",
+    "Restored scope is auth, public and ritc. Full raw dump succeeded. Provider-managed internals, external storage object bytes and Vault key recovery were not exercised.",
+    "Privacy deletion journal capture/replay is separate from a database-only restore."
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "command": [
+    "xcrun",
+    "swiftc",
+    "-typecheck",
+    "-swift-version",
+    "5",
+    "-D",
+    "DEBUG",
+    "-target",
+    "arm64-apple-ios17.0-simulator",
+    "-sdk",
+    "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.1.sdk",
+    "-F",
+    "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks",
+    "-I",
+    "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib",
+    "-module-cache-path",
+    "/Users/palatis/Room in the Cart/.build/UI04CIReview20261107/switch-boundary-diagnostic/root-typecheck/module-cache",
+    "/Users/palatis/Room in the Cart/.build/UI04CIReview20261107/switch-boundary-diagnostic/ContextualNavigationUITests.swift"
+  ],
+  "sourceSHA256": "6c2488c18df0addd74491190db6094aba7553a671b2c110ce117bfa27a4c7eb1",
+  "start": 1794042144.164868
+}

@@ -1,0 +1,35 @@
+{
+  "status": "verified",
+  "scope": "actual auth/public/ritc schema+rows; app ownership/ACL/RLS/functions/column grants/eight checksums; full roles/memberships and effective runtime boundary",
+  "selected_schema_normalization": "same pg_restore renderer; omit blank/descriptive comment lines/random restrict tokens; sort only independent default GRANT runs after exact schema/default ACL facts comparison",
+  "source_capture_sha256": "a4352ec31ce67baeb803101548c3a751f26521f620e648b679f0e1478de6929d",
+  "supplemental_schema_facts_sha256": "ef9fba82f24396a068ccd499650ff6fcde2a73410725c3379bd15cd58a723928",
+  "supplemental_schema_facts_provenance": "read-only MCP observation after capture07; supplemental source schema ACL/default privileges",
+  "prior_failed_restore": "restore-33b3c6f2f9eb retained unchanged; lost PUBLIC USAGE from dropping pristine public, plus comparison rendering/order differences",
+  "source_database_owner": "postgres",
+  "limits": [
+    "Role passwords were not captured and require independent reprovisioning; local trust is private Unix socket only.",
+    "Provider services, Storage/Vault, provider extensions, external object bytes and settings are not restored or verified by this subset.",
+    "Empty hosted app rows do not exercise cross-household populated behavior; existing synthetic coverage is separate."
+  ],
+  "restoreDirectoryName": "restore-890bf3fc641a",
+  "selectedTablesVerified": 58,
+  "sourceRowsVerified": 90,
+  "appRelationsVerified": 32,
+  "appPoliciesVerified": 33,
+  "appFunctionsVerified": 6,
+  "migrationChecksumsVerified": 8,
+  "cleanup": {
+    "server_stopped": true,
+    "encrypted_pgdata_and_logs_retained": true,
+    "socket_removed": true
+  },
+  "artifactHashes": {
+    "restored-inventory.json": "c105b9f3af958c28e6860cdbd48f51ed4dcbe8d3b1e3c36e50755dcd00a59221",
+    "source-schema.canonical.sql": "008260cd84d2aa6116b6845042c801e7911f270b7f82e8e71a7eb380423035f6",
+    "restored-schema.canonical.sql": "008260cd84d2aa6116b6845042c801e7911f270b7f82e8e71a7eb380423035f6",
+    "restored-schema-facts.json": "1ec12410e9ae747c6726ce695482a2cf8ede9b88d8bd2c7e8f5767a9cf771a6f",
+    "cleanup.json": "a024021cb920decdfdc1058eaea90074972863fbc60ca3272676cef16ec00e14",
+    "toc-selection.json": "dea4086cc998452af9d39257b6087c4f1516b71d470035cf51304ee99a0bbae3"
+  }
+}

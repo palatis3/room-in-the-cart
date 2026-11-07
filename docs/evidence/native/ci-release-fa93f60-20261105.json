@@ -1,0 +1,20 @@
+{
+  "sourceCommit": "fa93f60534918ce8e040c706e80163e5d6959153",
+  "run": "https://github.com/palatis3/room-in-the-cart/actions/runs/41968854906",
+  "job": 127052108025,
+  "artifact": 13389043261,
+  "artifactDigest": "45f2eaa11d958f2b7f0de78b54413903a04e38dd04c33eb98b433c9e249afdad",
+  "configuration": "Release",
+  "sdk": "iphoneos26.2",
+  "architecture": "arm64",
+  "deploymentTarget": "iOS17.0",
+  "signed": false,
+  "result": "Build and compiled app/extension verification passed",
+  "verificationEvidence": "GitHub job log independently read through connector: Compiled Release iPhone app verified: executable, assets, privacy, environment, and embedded extensions.",
+  "productionMetadataRequired": false,
+  "buildWarnings": [
+    "Metadata extraction skipped. No AppIntents.framework dependency found."
+  ],
+  "buildLogSHA256": "bff771e3bb7b3fe0e48b7fe1ec726f8f39d2e6dd911a6396cec4eb50795ad921",
+  "scope": "Compiled optimized unsigned app; no distribution artifact uploaded. Production endpoint/product configuration, signing, live providers and App Store acceptance remain separate gates."
+}

@@ -1,0 +1,37 @@
+{
+  "candidate": "23a73a890afbaa23d3c58ae6b0cf63a8b2e2fb71",
+  "run": 42021894579,
+  "configurations": {
+    "address": {
+      "artifactID": 13411738787,
+      "sha256": "52074af06b477db3626822b963755279224a13edfd2ff84d70d21a45befd536b",
+      "githubDigestVerified": true,
+      "independentInventoryAndExecutionVerifierExit": 0,
+      "passed": 389,
+      "deliberateNativeWireSkips": 3,
+      "packages": {
+        "CoreDomain": 171,
+        "DeviceSurfaces": 29,
+        "HouseholdClient": 82,
+        "LocalStore": 74,
+        "RecordArchive": 33
+      }
+    },
+    "thread": {
+      "artifactID": 13412692553,
+      "sha256": "721443c1b2f78ace40d3dd8ef444be52dbc0634d21cf6234c62c5fe156a47b89",
+      "githubDigestVerified": true,
+      "independentInventoryAndExecutionVerifierExit": 0,
+      "passed": 389,
+      "deliberateNativeWireSkips": 3,
+      "packages": {
+        "CoreDomain": 171,
+        "DeviceSurfaces": 29,
+        "HouseholdClient": 82,
+        "LocalStore": 74,
+        "RecordArchive": 33
+      }
+    }
+  },
+  "limits": "Swift package sanitizer coverage; three deliberate opt-in native transport skips are covered separately by the six-scenario native wire lane. This does not establish hosted app UI or live-provider acceptance."
+}

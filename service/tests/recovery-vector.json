@@ -1,0 +1,1069 @@
+{
+  "version": 1,
+  "name": "Tuesday shortage survives Wednesday recovery",
+  "asOf": "2026-11-10T17:00:00.000Z",
+  "basis": {
+    "householdId": "00000000-0000-4000-8000-000000000001",
+    "shopId": "00000000-0000-4000-8000-000000000002",
+    "base": {
+      "shopRevision": 4,
+      "authorityEpoch": 1,
+      "recoveryRevision": 0,
+      "supplyRevision": 4,
+      "contextRevision": 0
+    },
+    "foods": [
+      {
+        "id": "00000000-0000-4000-8000-000000000005",
+        "name": "wraps",
+        "exclusionTags": []
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000006",
+        "name": "freezer portions",
+        "exclusionTags": []
+      }
+    ],
+    "sources": [
+      {
+        "householdId": "00000000-0000-4000-8000-000000000001",
+        "shopId": "00000000-0000-4000-8000-000000000002",
+        "id": "00000000-0000-4000-8000-000000000040",
+        "foodId": "00000000-0000-4000-8000-000000000005",
+        "identityRevision": 1,
+        "origin": {
+          "kind": "delivery",
+          "sealedOrderRevision": 3,
+          "orderLineId": "00000000-0000-4000-8000-000000000140",
+          "segmentKey": "00000000-0000-4000-8000-000000000240"
+        }
+      },
+      {
+        "householdId": "00000000-0000-4000-8000-000000000001",
+        "shopId": "00000000-0000-4000-8000-000000000002",
+        "id": "00000000-0000-4000-8000-000000000041",
+        "foodId": "00000000-0000-4000-8000-000000000006",
+        "identityRevision": 1,
+        "origin": {
+          "kind": "delivery",
+          "sealedOrderRevision": 3,
+          "orderLineId": "00000000-0000-4000-8000-000000000141",
+          "segmentKey": "00000000-0000-4000-8000-000000000241"
+        }
+      }
+    ],
+    "arrivals": [
+      {
+        "householdId": "00000000-0000-4000-8000-000000000001",
+        "shopId": "00000000-0000-4000-8000-000000000002",
+        "id": "00000000-0000-4000-8000-000000000050",
+        "sourceId": "00000000-0000-4000-8000-000000000040",
+        "identityRevision": 1,
+        "revision": 1,
+        "predecessorId": null,
+        "recordedAt": "2026-11-10T16:00:00.000Z",
+        "actorId": "00000000-0000-4000-8000-000000000003",
+        "operationId": "00000000-0000-4000-8000-000000005050",
+        "arrivedAt": "2026-11-10T15:00:00.000Z",
+        "received": {
+          "amount": {
+            "numerator": 8,
+            "denominator": 1
+          },
+          "unit": "count",
+          "originalLiteral": "8/1 count"
+        }
+      },
+      {
+        "householdId": "00000000-0000-4000-8000-000000000001",
+        "shopId": "00000000-0000-4000-8000-000000000002",
+        "id": "00000000-0000-4000-8000-000000000051",
+        "sourceId": "00000000-0000-4000-8000-000000000041",
+        "identityRevision": 1,
+        "revision": 3,
+        "predecessorId": null,
+        "recordedAt": "2026-11-10T16:00:00.000Z",
+        "actorId": "00000000-0000-4000-8000-000000000003",
+        "operationId": "00000000-0000-4000-8000-000000005051",
+        "arrivedAt": "2026-11-10T15:00:00.000Z",
+        "received": {
+          "amount": {
+            "numerator": 5,
+            "denominator": 1
+          },
+          "unit": "count",
+          "originalLiteral": "5/1 count"
+        }
+      }
+    ],
+    "usable": [
+      {
+        "householdId": "00000000-0000-4000-8000-000000000001",
+        "shopId": "00000000-0000-4000-8000-000000000002",
+        "id": "00000000-0000-4000-8000-000000000060",
+        "sourceId": "00000000-0000-4000-8000-000000000040",
+        "identityRevision": 1,
+        "revision": 2,
+        "predecessorId": null,
+        "recordedAt": "2026-11-10T16:00:00.000Z",
+        "actorId": "00000000-0000-4000-8000-000000000003",
+        "operationId": "00000000-0000-4000-8000-000000005060",
+        "arrivalObservationId": "00000000-0000-4000-8000-000000000050",
+        "confirmedAt": "2026-11-10T16:00:00.000Z",
+        "usable": {
+          "amount": {
+            "numerator": 6,
+            "denominator": 1
+          },
+          "unit": "count",
+          "originalLiteral": "6/1 count"
+        }
+      },
+      {
+        "householdId": "00000000-0000-4000-8000-000000000001",
+        "shopId": "00000000-0000-4000-8000-000000000002",
+        "id": "00000000-0000-4000-8000-000000000061",
+        "sourceId": "00000000-0000-4000-8000-000000000041",
+        "identityRevision": 1,
+        "revision": 4,
+        "predecessorId": null,
+        "recordedAt": "2026-11-10T16:00:00.000Z",
+        "actorId": "00000000-0000-4000-8000-000000000003",
+        "operationId": "00000000-0000-4000-8000-000000005061",
+        "arrivalObservationId": "00000000-0000-4000-8000-000000000051",
+        "confirmedAt": "2026-11-10T16:00:00.000Z",
+        "usable": {
+          "amount": {
+            "numerator": 5,
+            "denominator": 1
+          },
+          "unit": "count",
+          "originalLiteral": "5/1 count"
+        }
+      }
+    ],
+    "meals": [
+      {
+        "occurrenceId": "00000000-0000-4000-8000-000000000020",
+        "revisionId": "00000000-0000-4000-8000-000000000120",
+        "sourceMealRevision": 1,
+        "title": "Dinner",
+        "notes": "",
+        "sourceURL": null,
+        "portions": 4,
+        "day": "2026-11-10",
+        "zone": "America/New_York",
+        "due": "2026-11-10T18:00:00.000Z",
+        "exclusions": [],
+        "template": null,
+        "groups": [
+          {
+            "id": "00000000-0000-4000-8000-000000000010",
+            "name": "Dinner",
+            "servings": {
+              "numerator": 4,
+              "denominator": 1
+            },
+            "protected": false,
+            "exclusions": []
+          },
+          {
+            "id": "00000000-0000-4000-8000-000000000011",
+            "name": "Protected lunch",
+            "servings": {
+              "numerator": 4,
+              "denominator": 1
+            },
+            "protected": true,
+            "exclusions": []
+          }
+        ],
+        "needs": [
+          {
+            "id": "00000000-0000-4000-8000-000000000030",
+            "foodId": "00000000-0000-4000-8000-000000000005",
+            "ingredientId": "00000000-0000-4000-8000-000000001030",
+            "groupId": "00000000-0000-4000-8000-000000000010",
+            "name": "entered food",
+            "notes": "",
+            "quantity": {
+              "amount": {
+                "numerator": 6,
+                "denominator": 1
+              },
+              "unit": "count",
+              "originalLiteral": "6/1 count"
+            },
+            "priority": "required",
+            "due": "2026-11-10T18:00:00.000Z",
+            "exclusions": []
+          },
+          {
+            "id": "00000000-0000-4000-8000-000000000031",
+            "foodId": "00000000-0000-4000-8000-000000000005",
+            "ingredientId": "00000000-0000-4000-8000-000000001031",
+            "groupId": "00000000-0000-4000-8000-000000000011",
+            "name": "entered food",
+            "notes": "",
+            "quantity": {
+              "amount": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "unit": "count",
+              "originalLiteral": "2/1 count"
+            },
+            "priority": "protected",
+            "due": "2026-11-10T18:00:00.000Z",
+            "exclusions": []
+          }
+        ],
+        "remainingElapsedMinutes": 20,
+        "requiredLeadMinutes": null,
+        "advanceStepsCompleted": false
+      },
+      {
+        "occurrenceId": "00000000-0000-4000-8000-000000000021",
+        "revisionId": "00000000-0000-4000-8000-000000000121",
+        "sourceMealRevision": 1,
+        "title": "Dinner",
+        "notes": "",
+        "sourceURL": null,
+        "portions": 4,
+        "day": "2026-11-11",
+        "zone": "America/New_York",
+        "due": "2026-11-11T18:00:00.000Z",
+        "exclusions": [],
+        "template": null,
+        "groups": [
+          {
+            "id": "00000000-0000-4000-8000-000000000012",
+            "name": "Dinner",
+            "servings": {
+              "numerator": 4,
+              "denominator": 1
+            },
+            "protected": false,
+            "exclusions": []
+          }
+        ],
+        "needs": [
+          {
+            "id": "00000000-0000-4000-8000-000000000032",
+            "foodId": "00000000-0000-4000-8000-000000000005",
+            "ingredientId": "00000000-0000-4000-8000-000000001032",
+            "groupId": "00000000-0000-4000-8000-000000000012",
+            "name": "entered food",
+            "notes": "",
+            "quantity": {
+              "amount": {
+                "numerator": 4,
+                "denominator": 1
+              },
+              "unit": "count",
+              "originalLiteral": "4/1 count"
+            },
+            "priority": "required",
+            "due": "2026-11-11T18:00:00.000Z",
+            "exclusions": []
+          }
+        ],
+        "remainingElapsedMinutes": 20,
+        "requiredLeadMinutes": null,
+        "advanceStepsCompleted": false
+      }
+    ],
+    "outsideNeeds": [],
+    "reservations": [
+      {
+        "id": "00000000-0000-4000-8000-000000000070",
+        "sourceId": "00000000-0000-4000-8000-000000000040",
+        "needId": "00000000-0000-4000-8000-000000000031",
+        "quantity": {
+          "amount": {
+            "numerator": 2,
+            "denominator": 1
+          },
+          "unit": "count",
+          "originalLiteral": "2/1 count"
+        }
+      }
+    ],
+    "usedNeedIds": [
+      "00000000-0000-4000-8000-000000000030",
+      "00000000-0000-4000-8000-000000000031",
+      "00000000-0000-4000-8000-000000000032"
+    ],
+    "usedRevisionIds": [
+      "00000000-0000-4000-8000-000000000120",
+      "00000000-0000-4000-8000-000000000121"
+    ],
+    "knownTemplateIds": [],
+    "commitmentInventoryComplete": true
+  },
+  "request": {
+    "v": 1,
+    "base": {
+      "shopRevision": 4,
+      "authorityEpoch": 1,
+      "recoveryRevision": 0,
+      "supplyRevision": 4,
+      "contextRevision": 0
+    },
+    "intent": {
+      "occurrenceId": "00000000-0000-4000-8000-000000000021",
+      "targetDigest": "63a4b1a2bd957f596814cecccb2b624c60837334f6ac96e6a4920ba3efe4192f",
+      "replacement": {
+        "occurrenceId": "00000000-0000-4000-8000-000000000021",
+        "revisionId": "00000000-0000-4000-8000-000000000200",
+        "sourceMealRevision": 1,
+        "title": "Reviewed fallback",
+        "notes": "",
+        "sourceURL": null,
+        "portions": 4,
+        "day": "2026-11-11",
+        "zone": "America/New_York",
+        "due": "2026-11-11T18:00:00.000Z",
+        "exclusions": [],
+        "template": null,
+        "groups": [
+          {
+            "id": "00000000-0000-4000-8000-000000000012",
+            "name": "Dinner",
+            "servings": {
+              "numerator": 4,
+              "denominator": 1
+            },
+            "protected": false,
+            "exclusions": []
+          }
+        ],
+        "needs": [
+          {
+            "id": "00000000-0000-4000-8000-000000000201",
+            "foodId": "00000000-0000-4000-8000-000000000006",
+            "ingredientId": "00000000-0000-4000-8000-000000001201",
+            "groupId": "00000000-0000-4000-8000-000000000012",
+            "name": "entered food",
+            "notes": "",
+            "quantity": {
+              "amount": {
+                "numerator": 4,
+                "denominator": 1
+              },
+              "unit": "count",
+              "originalLiteral": "4/1 count"
+            },
+            "priority": "required",
+            "due": "2026-11-11T18:00:00.000Z",
+            "exclusions": []
+          }
+        ],
+        "remainingElapsedMinutes": 20,
+        "requiredLeadMinutes": null,
+        "advanceStepsCompleted": false
+      },
+      "reviewedAt": "2026-11-10T17:00:00.000Z",
+      "repeatOfOccurrenceId": null,
+      "agreesToRepeat": false,
+      "proposesExtraTrip": false,
+      "agreesToExtraTrip": false,
+      "acceptsUnresolved": false
+    }
+  },
+  "before": {
+    "asOf": "2026-11-10T17:00:00.000Z",
+    "base": {
+      "shopRevision": 4,
+      "authorityEpoch": 1,
+      "recoveryRevision": 0,
+      "supplyRevision": 4,
+      "contextRevision": 0
+    },
+    "meals": [
+      {
+        "occurrenceId": "00000000-0000-4000-8000-000000000020",
+        "revisionId": "00000000-0000-4000-8000-000000000120",
+        "sourceMealRevision": 1,
+        "title": "Dinner",
+        "notes": "",
+        "sourceURL": null,
+        "portions": 4,
+        "day": "2026-11-10",
+        "zone": "America/New_York",
+        "due": "2026-11-10T18:00:00.000Z",
+        "exclusions": [],
+        "template": null,
+        "groups": [
+          {
+            "id": "00000000-0000-4000-8000-000000000010",
+            "name": "Dinner",
+            "servings": {
+              "numerator": 4,
+              "denominator": 1
+            },
+            "protected": false,
+            "exclusions": []
+          },
+          {
+            "id": "00000000-0000-4000-8000-000000000011",
+            "name": "Protected lunch",
+            "servings": {
+              "numerator": 4,
+              "denominator": 1
+            },
+            "protected": true,
+            "exclusions": []
+          }
+        ],
+        "needs": [
+          {
+            "id": "00000000-0000-4000-8000-000000000030",
+            "foodId": "00000000-0000-4000-8000-000000000005",
+            "ingredientId": "00000000-0000-4000-8000-000000001030",
+            "groupId": "00000000-0000-4000-8000-000000000010",
+            "name": "entered food",
+            "notes": "",
+            "quantity": {
+              "amount": {
+                "numerator": 6,
+                "denominator": 1
+              },
+              "unit": "count",
+              "originalLiteral": "6/1 count"
+            },
+            "priority": "required",
+            "due": "2026-11-10T18:00:00.000Z",
+            "exclusions": []
+          },
+          {
+            "id": "00000000-0000-4000-8000-000000000031",
+            "foodId": "00000000-0000-4000-8000-000000000005",
+            "ingredientId": "00000000-0000-4000-8000-000000001031",
+            "groupId": "00000000-0000-4000-8000-000000000011",
+            "name": "entered food",
+            "notes": "",
+            "quantity": {
+              "amount": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "unit": "count",
+              "originalLiteral": "2/1 count"
+            },
+            "priority": "protected",
+            "due": "2026-11-10T18:00:00.000Z",
+            "exclusions": []
+          }
+        ],
+        "remainingElapsedMinutes": 20,
+        "requiredLeadMinutes": null,
+        "advanceStepsCompleted": false
+      },
+      {
+        "occurrenceId": "00000000-0000-4000-8000-000000000021",
+        "revisionId": "00000000-0000-4000-8000-000000000121",
+        "sourceMealRevision": 1,
+        "title": "Dinner",
+        "notes": "",
+        "sourceURL": null,
+        "portions": 4,
+        "day": "2026-11-11",
+        "zone": "America/New_York",
+        "due": "2026-11-11T18:00:00.000Z",
+        "exclusions": [],
+        "template": null,
+        "groups": [
+          {
+            "id": "00000000-0000-4000-8000-000000000012",
+            "name": "Dinner",
+            "servings": {
+              "numerator": 4,
+              "denominator": 1
+            },
+            "protected": false,
+            "exclusions": []
+          }
+        ],
+        "needs": [
+          {
+            "id": "00000000-0000-4000-8000-000000000032",
+            "foodId": "00000000-0000-4000-8000-000000000005",
+            "ingredientId": "00000000-0000-4000-8000-000000001032",
+            "groupId": "00000000-0000-4000-8000-000000000012",
+            "name": "entered food",
+            "notes": "",
+            "quantity": {
+              "amount": {
+                "numerator": 4,
+                "denominator": 1
+              },
+              "unit": "count",
+              "originalLiteral": "4/1 count"
+            },
+            "priority": "required",
+            "due": "2026-11-11T18:00:00.000Z",
+            "exclusions": []
+          }
+        ],
+        "remainingElapsedMinutes": 20,
+        "requiredLeadMinutes": null,
+        "advanceStepsCompleted": false
+      }
+    ],
+    "demands": [
+      {
+        "needId": "00000000-0000-4000-8000-000000000030",
+        "due": "2026-11-10T18:00:00.000Z",
+        "deadlineStatus": "notPastDue",
+        "allocated": {
+          "numerator": "4",
+          "denominator": "1"
+        },
+        "shortfall": {
+          "numerator": "2",
+          "denominator": "1"
+        },
+        "unit": "count",
+        "issues": []
+      },
+      {
+        "needId": "00000000-0000-4000-8000-000000000031",
+        "due": "2026-11-10T18:00:00.000Z",
+        "deadlineStatus": "notPastDue",
+        "allocated": {
+          "numerator": "2",
+          "denominator": "1"
+        },
+        "shortfall": {
+          "numerator": "0",
+          "denominator": "1"
+        },
+        "unit": "count",
+        "issues": []
+      },
+      {
+        "needId": "00000000-0000-4000-8000-000000000032",
+        "due": "2026-11-11T18:00:00.000Z",
+        "deadlineStatus": "notPastDue",
+        "allocated": {
+          "numerator": "0",
+          "denominator": "1"
+        },
+        "shortfall": {
+          "numerator": "4",
+          "denominator": "1"
+        },
+        "unit": "count",
+        "issues": []
+      }
+    ],
+    "allocations": [
+      {
+        "needId": "00000000-0000-4000-8000-000000000031",
+        "sourceId": "00000000-0000-4000-8000-000000000040",
+        "amount": {
+          "numerator": "2",
+          "denominator": "1"
+        },
+        "unit": "count"
+      },
+      {
+        "needId": "00000000-0000-4000-8000-000000000030",
+        "sourceId": "00000000-0000-4000-8000-000000000040",
+        "amount": {
+          "numerator": "4",
+          "denominator": "1"
+        },
+        "unit": "count"
+      }
+    ],
+    "commitmentInventoryComplete": true
+  },
+  "expected": {
+    "asOf": "2026-11-10T17:00:00.000Z",
+    "base": {
+      "shopRevision": 4,
+      "authorityEpoch": 1,
+      "recoveryRevision": 0,
+      "supplyRevision": 4,
+      "contextRevision": 0
+    },
+    "intent": {
+      "occurrenceId": "00000000-0000-4000-8000-000000000021",
+      "targetDigest": "63a4b1a2bd957f596814cecccb2b624c60837334f6ac96e6a4920ba3efe4192f",
+      "replacement": {
+        "occurrenceId": "00000000-0000-4000-8000-000000000021",
+        "revisionId": "00000000-0000-4000-8000-000000000200",
+        "sourceMealRevision": 1,
+        "title": "Reviewed fallback",
+        "notes": "",
+        "sourceURL": null,
+        "portions": 4,
+        "day": "2026-11-11",
+        "zone": "America/New_York",
+        "due": "2026-11-11T18:00:00.000Z",
+        "exclusions": [],
+        "template": null,
+        "groups": [
+          {
+            "id": "00000000-0000-4000-8000-000000000012",
+            "name": "Dinner",
+            "servings": {
+              "numerator": 4,
+              "denominator": 1
+            },
+            "protected": false,
+            "exclusions": []
+          }
+        ],
+        "needs": [
+          {
+            "id": "00000000-0000-4000-8000-000000000201",
+            "foodId": "00000000-0000-4000-8000-000000000006",
+            "ingredientId": "00000000-0000-4000-8000-000000001201",
+            "groupId": "00000000-0000-4000-8000-000000000012",
+            "name": "entered food",
+            "notes": "",
+            "quantity": {
+              "amount": {
+                "numerator": 4,
+                "denominator": 1
+              },
+              "unit": "count",
+              "originalLiteral": "4/1 count"
+            },
+            "priority": "required",
+            "due": "2026-11-11T18:00:00.000Z",
+            "exclusions": []
+          }
+        ],
+        "remainingElapsedMinutes": 20,
+        "requiredLeadMinutes": null,
+        "advanceStepsCompleted": false
+      },
+      "reviewedAt": "2026-11-10T17:00:00.000Z",
+      "repeatOfOccurrenceId": null,
+      "agreesToRepeat": false,
+      "proposesExtraTrip": false,
+      "agreesToExtraTrip": false,
+      "acceptsUnresolved": false
+    },
+    "evidenceDigest": "19cf8b1b400c2ff9be960289e3f294180ac94a52a44003d53f8d4fd3fe4dee02",
+    "before": {
+      "meals": [
+        {
+          "occurrenceId": "00000000-0000-4000-8000-000000000020",
+          "revisionId": "00000000-0000-4000-8000-000000000120",
+          "sourceMealRevision": 1,
+          "title": "Dinner",
+          "notes": "",
+          "sourceURL": null,
+          "portions": 4,
+          "day": "2026-11-10",
+          "zone": "America/New_York",
+          "due": "2026-11-10T18:00:00.000Z",
+          "exclusions": [],
+          "template": null,
+          "groups": [
+            {
+              "id": "00000000-0000-4000-8000-000000000010",
+              "name": "Dinner",
+              "servings": {
+                "numerator": 4,
+                "denominator": 1
+              },
+              "protected": false,
+              "exclusions": []
+            },
+            {
+              "id": "00000000-0000-4000-8000-000000000011",
+              "name": "Protected lunch",
+              "servings": {
+                "numerator": 4,
+                "denominator": 1
+              },
+              "protected": true,
+              "exclusions": []
+            }
+          ],
+          "needs": [
+            {
+              "id": "00000000-0000-4000-8000-000000000030",
+              "foodId": "00000000-0000-4000-8000-000000000005",
+              "ingredientId": "00000000-0000-4000-8000-000000001030",
+              "groupId": "00000000-0000-4000-8000-000000000010",
+              "name": "entered food",
+              "notes": "",
+              "quantity": {
+                "amount": {
+                  "numerator": 6,
+                  "denominator": 1
+                },
+                "unit": "count",
+                "originalLiteral": "6/1 count"
+              },
+              "priority": "required",
+              "due": "2026-11-10T18:00:00.000Z",
+              "exclusions": []
+            },
+            {
+              "id": "00000000-0000-4000-8000-000000000031",
+              "foodId": "00000000-0000-4000-8000-000000000005",
+              "ingredientId": "00000000-0000-4000-8000-000000001031",
+              "groupId": "00000000-0000-4000-8000-000000000011",
+              "name": "entered food",
+              "notes": "",
+              "quantity": {
+                "amount": {
+                  "numerator": 2,
+                  "denominator": 1
+                },
+                "unit": "count",
+                "originalLiteral": "2/1 count"
+              },
+              "priority": "protected",
+              "due": "2026-11-10T18:00:00.000Z",
+              "exclusions": []
+            }
+          ],
+          "remainingElapsedMinutes": 20,
+          "requiredLeadMinutes": null,
+          "advanceStepsCompleted": false
+        },
+        {
+          "occurrenceId": "00000000-0000-4000-8000-000000000021",
+          "revisionId": "00000000-0000-4000-8000-000000000121",
+          "sourceMealRevision": 1,
+          "title": "Dinner",
+          "notes": "",
+          "sourceURL": null,
+          "portions": 4,
+          "day": "2026-11-11",
+          "zone": "America/New_York",
+          "due": "2026-11-11T18:00:00.000Z",
+          "exclusions": [],
+          "template": null,
+          "groups": [
+            {
+              "id": "00000000-0000-4000-8000-000000000012",
+              "name": "Dinner",
+              "servings": {
+                "numerator": 4,
+                "denominator": 1
+              },
+              "protected": false,
+              "exclusions": []
+            }
+          ],
+          "needs": [
+            {
+              "id": "00000000-0000-4000-8000-000000000032",
+              "foodId": "00000000-0000-4000-8000-000000000005",
+              "ingredientId": "00000000-0000-4000-8000-000000001032",
+              "groupId": "00000000-0000-4000-8000-000000000012",
+              "name": "entered food",
+              "notes": "",
+              "quantity": {
+                "amount": {
+                  "numerator": 4,
+                  "denominator": 1
+                },
+                "unit": "count",
+                "originalLiteral": "4/1 count"
+              },
+              "priority": "required",
+              "due": "2026-11-11T18:00:00.000Z",
+              "exclusions": []
+            }
+          ],
+          "remainingElapsedMinutes": 20,
+          "requiredLeadMinutes": null,
+          "advanceStepsCompleted": false
+        }
+      ],
+      "demands": [
+        {
+          "needId": "00000000-0000-4000-8000-000000000030",
+          "due": "2026-11-10T18:00:00.000Z",
+          "deadlineStatus": "notPastDue",
+          "allocated": {
+            "numerator": "4",
+            "denominator": "1"
+          },
+          "shortfall": {
+            "numerator": "2",
+            "denominator": "1"
+          },
+          "unit": "count",
+          "issues": []
+        },
+        {
+          "needId": "00000000-0000-4000-8000-000000000031",
+          "due": "2026-11-10T18:00:00.000Z",
+          "deadlineStatus": "notPastDue",
+          "allocated": {
+            "numerator": "2",
+            "denominator": "1"
+          },
+          "shortfall": {
+            "numerator": "0",
+            "denominator": "1"
+          },
+          "unit": "count",
+          "issues": []
+        },
+        {
+          "needId": "00000000-0000-4000-8000-000000000032",
+          "due": "2026-11-11T18:00:00.000Z",
+          "deadlineStatus": "notPastDue",
+          "allocated": {
+            "numerator": "0",
+            "denominator": "1"
+          },
+          "shortfall": {
+            "numerator": "4",
+            "denominator": "1"
+          },
+          "unit": "count",
+          "issues": []
+        }
+      ],
+      "allocations": [
+        {
+          "needId": "00000000-0000-4000-8000-000000000031",
+          "sourceId": "00000000-0000-4000-8000-000000000040",
+          "amount": {
+            "numerator": "2",
+            "denominator": "1"
+          },
+          "unit": "count"
+        },
+        {
+          "needId": "00000000-0000-4000-8000-000000000030",
+          "sourceId": "00000000-0000-4000-8000-000000000040",
+          "amount": {
+            "numerator": "4",
+            "denominator": "1"
+          },
+          "unit": "count"
+        }
+      ]
+    },
+    "after": {
+      "meals": [
+        {
+          "occurrenceId": "00000000-0000-4000-8000-000000000020",
+          "revisionId": "00000000-0000-4000-8000-000000000120",
+          "sourceMealRevision": 1,
+          "title": "Dinner",
+          "notes": "",
+          "sourceURL": null,
+          "portions": 4,
+          "day": "2026-11-10",
+          "zone": "America/New_York",
+          "due": "2026-11-10T18:00:00.000Z",
+          "exclusions": [],
+          "template": null,
+          "groups": [
+            {
+              "id": "00000000-0000-4000-8000-000000000010",
+              "name": "Dinner",
+              "servings": {
+                "numerator": 4,
+                "denominator": 1
+              },
+              "protected": false,
+              "exclusions": []
+            },
+            {
+              "id": "00000000-0000-4000-8000-000000000011",
+              "name": "Protected lunch",
+              "servings": {
+                "numerator": 4,
+                "denominator": 1
+              },
+              "protected": true,
+              "exclusions": []
+            }
+          ],
+          "needs": [
+            {
+              "id": "00000000-0000-4000-8000-000000000030",
+              "foodId": "00000000-0000-4000-8000-000000000005",
+              "ingredientId": "00000000-0000-4000-8000-000000001030",
+              "groupId": "00000000-0000-4000-8000-000000000010",
+              "name": "entered food",
+              "notes": "",
+              "quantity": {
+                "amount": {
+                  "numerator": 6,
+                  "denominator": 1
+                },
+                "unit": "count",
+                "originalLiteral": "6/1 count"
+              },
+              "priority": "required",
+              "due": "2026-11-10T18:00:00.000Z",
+              "exclusions": []
+            },
+            {
+              "id": "00000000-0000-4000-8000-000000000031",
+              "foodId": "00000000-0000-4000-8000-000000000005",
+              "ingredientId": "00000000-0000-4000-8000-000000001031",
+              "groupId": "00000000-0000-4000-8000-000000000011",
+              "name": "entered food",
+              "notes": "",
+              "quantity": {
+                "amount": {
+                  "numerator": 2,
+                  "denominator": 1
+                },
+                "unit": "count",
+                "originalLiteral": "2/1 count"
+              },
+              "priority": "protected",
+              "due": "2026-11-10T18:00:00.000Z",
+              "exclusions": []
+            }
+          ],
+          "remainingElapsedMinutes": 20,
+          "requiredLeadMinutes": null,
+          "advanceStepsCompleted": false
+        },
+        {
+          "occurrenceId": "00000000-0000-4000-8000-000000000021",
+          "revisionId": "00000000-0000-4000-8000-000000000200",
+          "sourceMealRevision": 1,
+          "title": "Reviewed fallback",
+          "notes": "",
+          "sourceURL": null,
+          "portions": 4,
+          "day": "2026-11-11",
+          "zone": "America/New_York",
+          "due": "2026-11-11T18:00:00.000Z",
+          "exclusions": [],
+          "template": null,
+          "groups": [
+            {
+              "id": "00000000-0000-4000-8000-000000000012",
+              "name": "Dinner",
+              "servings": {
+                "numerator": 4,
+                "denominator": 1
+              },
+              "protected": false,
+              "exclusions": []
+            }
+          ],
+          "needs": [
+            {
+              "id": "00000000-0000-4000-8000-000000000201",
+              "foodId": "00000000-0000-4000-8000-000000000006",
+              "ingredientId": "00000000-0000-4000-8000-000000001201",
+              "groupId": "00000000-0000-4000-8000-000000000012",
+              "name": "entered food",
+              "notes": "",
+              "quantity": {
+                "amount": {
+                  "numerator": 4,
+                  "denominator": 1
+                },
+                "unit": "count",
+                "originalLiteral": "4/1 count"
+              },
+              "priority": "required",
+              "due": "2026-11-11T18:00:00.000Z",
+              "exclusions": []
+            }
+          ],
+          "remainingElapsedMinutes": 20,
+          "requiredLeadMinutes": null,
+          "advanceStepsCompleted": false
+        }
+      ],
+      "demands": [
+        {
+          "needId": "00000000-0000-4000-8000-000000000030",
+          "due": "2026-11-10T18:00:00.000Z",
+          "deadlineStatus": "notPastDue",
+          "allocated": {
+            "numerator": "4",
+            "denominator": "1"
+          },
+          "shortfall": {
+            "numerator": "2",
+            "denominator": "1"
+          },
+          "unit": "count",
+          "issues": []
+        },
+        {
+          "needId": "00000000-0000-4000-8000-000000000031",
+          "due": "2026-11-10T18:00:00.000Z",
+          "deadlineStatus": "notPastDue",
+          "allocated": {
+            "numerator": "2",
+            "denominator": "1"
+          },
+          "shortfall": {
+            "numerator": "0",
+            "denominator": "1"
+          },
+          "unit": "count",
+          "issues": []
+        },
+        {
+          "needId": "00000000-0000-4000-8000-000000000201",
+          "due": "2026-11-11T18:00:00.000Z",
+          "deadlineStatus": "notPastDue",
+          "allocated": {
+            "numerator": "4",
+            "denominator": "1"
+          },
+          "shortfall": {
+            "numerator": "0",
+            "denominator": "1"
+          },
+          "unit": "count",
+          "issues": []
+        }
+      ],
+      "allocations": [
+        {
+          "needId": "00000000-0000-4000-8000-000000000031",
+          "sourceId": "00000000-0000-4000-8000-000000000040",
+          "amount": {
+            "numerator": "2",
+            "denominator": "1"
+          },
+          "unit": "count"
+        },
+        {
+          "needId": "00000000-0000-4000-8000-000000000030",
+          "sourceId": "00000000-0000-4000-8000-000000000040",
+          "amount": {
+            "numerator": "4",
+            "denominator": "1"
+          },
+          "unit": "count"
+        },
+        {
+          "needId": "00000000-0000-4000-8000-000000000201",
+          "sourceId": "00000000-0000-4000-8000-000000000041",
+          "amount": {
+            "numerator": "4",
+            "denominator": "1"
+          },
+          "unit": "count"
+        }
+      ]
+    },
+    "foodConfirmed": true,
+    "timingConfirmed": true,
+    "repeatRequired": false,
+    "feasible": true,
+    "consentSatisfied": true,
+    "previewDigest": "67c061d9f56b5fc1838cda5d43a08379bddfceffb35c4566f1128220e80273b6"
+  }
+}

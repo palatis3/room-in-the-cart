@@ -1,0 +1,23 @@
+{
+  "uploadedFiles": 138,
+  "emptyDirectoryEntries": [
+    "service/dist",
+    "service/scripts",
+    "service/src/billing/tests",
+    "service/tests",
+    "web/dist",
+    "web/public-build",
+    "web/tests"
+  ],
+  "allMatchFrozenGitSource": true,
+  "webMatchesActualAndroidTestedSourceAndModules": true,
+  "serverCompiledFilesIdentical": 94,
+  "changesFromOriginalStagingSource": [
+    "service/migrations/030_measurement_trigger_search_path.sql",
+    "web/src/app.ts"
+  ],
+  "migrationExecution": false,
+  "environmentChange": false,
+  "databaseChange": false,
+  "newWebAssetSHA256": "df99574e742b11478f4cd422d59481a8cbdf112b8b7e33622976efb2fa3b121a"
+}

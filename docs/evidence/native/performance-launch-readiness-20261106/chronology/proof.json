@@ -1,0 +1,122 @@
+{
+  "scope": "Offline source/activity/retained-signpost-summary analysis only; no native execution or network; no frozen writes.",
+  "freezes": {
+    "f117": {
+      "path": "/Users/palatis/Room in the Cart/.build/CIResearch20261106/performance-setup-f117439/freeze.json",
+      "sha256": "56d431ee346583a4f22dd0e94ffeb7e45ab68c5ff668ad8772caca89aa8709c5",
+      "filesVerified": 357,
+      "mismatches": []
+    },
+    "807": {
+      "path": "/Users/palatis/Room in the Cart/.build/CIResearch20261106/performance-readiness-807aa3c/freeze.json",
+      "sha256": "077a351934a6af515db860f6ad79a49ac066688c5f265098b0a4f07d7341a3e2",
+      "filesVerified": 359,
+      "mismatches": []
+    }
+  },
+  "sourceComparisons": {
+    "testScrollingPerformanceOnFiveHundredItemPickup": {
+      "identical": true,
+      "sha256": {
+        "f117": "ee5b8ec81ca505788f7638b05596f73c02da0c95701a9c66fbff2f1337437d02",
+        "807": "ee5b8ec81ca505788f7638b05596f73c02da0c95701a9c66fbff2f1337437d02"
+      }
+    },
+    "importFixture": {
+      "identical": true,
+      "sha256": {
+        "f117": "2c11ed1032f8d0bf24a02b7a66d373d6b24c24ad1b4e13516395fa8faad9a7af",
+        "807": "2c11ed1032f8d0bf24a02b7a66d373d6b24c24ad1b4e13516395fa8faad9a7af"
+      }
+    },
+    "measurementOptions": {
+      "identical": true,
+      "sha256": {
+        "f117": "90c98650274535bee17487c2f66fbb6452cfe2400c725b1b7f578988a679fce4",
+        "807": "90c98650274535bee17487c2f66fbb6452cfe2400c725b1b7f578988a679fce4"
+      }
+    },
+    "ios/UITests/Fixtures/ReleaseLedger500.txt": {
+      "identical": true,
+      "sha256": "7411eb3a8a10911d6599237e1f2f618c0c3508667909a4766a4b5b14bef6e3b8"
+    },
+    "scripts/scroll_signpost_diagnostic.py": {
+      "identical": true,
+      "sha256": "e8fa85d6ceee7eb9c9a098338a002ea577df7605165d7b7b76b7cc9deb5aefa1"
+    }
+  },
+  "inputs": {
+    "/Users/palatis/Room in the Cart/.build/CIResearch20261106/performance-setup-f117439/candidate-verifiers/ios/UITests/ReleasePerformanceUITests.swift": {
+      "sha256": "bde26f21c934c1f7d0c8ff885592c2715c494cfb7ab832e286b8f1a93641484b",
+      "bytes": 14682
+    },
+    "/Users/palatis/Room in the Cart/.build/CIResearch20261106/performance-setup-f117439/candidate-verifiers/ios/UITests/Fixtures/ReleaseLedger500.txt": {
+      "sha256": "7411eb3a8a10911d6599237e1f2f618c0c3508667909a4766a4b5b14bef6e3b8",
+      "bytes": 16099
+    },
+    "/Users/palatis/Room in the Cart/.build/CIResearch20261106/performance-setup-f117439/candidate-verifiers/scripts/scroll_signpost_diagnostic.py": {
+      "sha256": "e8fa85d6ceee7eb9c9a098338a002ea577df7605165d7b7b76b7cc9deb5aefa1",
+      "bytes": 5253
+    },
+    "/Users/palatis/Room in the Cart/.build/CIResearch20261106/performance-setup-f117439/candidate-verifiers/.github/workflows/ios-performance.yml": {
+      "sha256": "7f320c5b1dc5e0f8b1b3250fa4ae00b937222f22b8e9088a2dbeea209166a978",
+      "bytes": 11406
+    },
+    "/Users/palatis/Room in the Cart/.build/CIResearch20261106/performance-setup-f117439/iphone-performance-scroll-1/scroll-signpost-diagnostic.json": {
+      "sha256": "18f731a106a6a4d09e0dbb5518f750759a023fc57e226e849e4eee787010a853",
+      "bytes": 1496
+    },
+    "/Users/palatis/Room in the Cart/.build/CIResearch20261106/performance-setup-f117439/metric-sqlite-inspection/database.sqlite3": {
+      "sha256": "1cd02b9184f9bd04e143fee809244989627f31540d35d63e078f6dceb0e4de32",
+      "bytes": 327680
+    },
+    "/Users/palatis/Room in the Cart/.build/CIResearch20261106/performance-readiness-807aa3c/candidate-verifiers/ios/UITests/ReleasePerformanceUITests.swift": {
+      "sha256": "c7954233968072b97fd5845d5c28877c9251495cfee33675169a960839d2625f",
+      "bytes": 15008
+    },
+    "/Users/palatis/Room in the Cart/.build/CIResearch20261106/performance-readiness-807aa3c/candidate-verifiers/ios/UITests/Fixtures/ReleaseLedger500.txt": {
+      "sha256": "7411eb3a8a10911d6599237e1f2f618c0c3508667909a4766a4b5b14bef6e3b8",
+      "bytes": 16099
+    },
+    "/Users/palatis/Room in the Cart/.build/CIResearch20261106/performance-readiness-807aa3c/candidate-verifiers/scripts/scroll_signpost_diagnostic.py": {
+      "sha256": "e8fa85d6ceee7eb9c9a098338a002ea577df7605165d7b7b76b7cc9deb5aefa1",
+      "bytes": 5253
+    },
+    "/Users/palatis/Room in the Cart/.build/CIResearch20261106/performance-readiness-807aa3c/candidate-verifiers/.github/workflows/ios-performance.yml": {
+      "sha256": "7f320c5b1dc5e0f8b1b3250fa4ae00b937222f22b8e9088a2dbeea209166a978",
+      "bytes": 11406
+    },
+    "/Users/palatis/Room in the Cart/.build/CIResearch20261106/performance-readiness-807aa3c/iphone-performance-scroll-1/scroll-signpost-diagnostic.json": {
+      "sha256": "1d7be830f3858bca6b671ddfd74213063c850063950fe6cf8ee4c69eabe3e267",
+      "bytes": 1379
+    },
+    "/Users/palatis/Room in the Cart/.build/CIResearch20261106/performance-readiness-807aa3c/metric-sqlite-inspection/database.sqlite3": {
+      "sha256": "ba2d0c735aacb9a941fd4f842b897ab6f701d7bce8a306e081b003c9e67b9f65",
+      "bytes": 327680
+    }
+  },
+  "sqlite": {
+    "f117": {
+      "quickCheck": "ok",
+      "activityRows": 493,
+      "attachments": [
+        [
+          "Populated pickup list after measured scroll",
+          "public.png"
+        ]
+      ],
+      "scratchCopyMatchesOriginal": true
+    },
+    "807": {
+      "quickCheck": "ok",
+      "activityRows": 496,
+      "attachments": [
+        [
+          "Populated pickup list after measured scroll",
+          "public.png"
+        ]
+      ],
+      "scratchCopyMatchesOriginal": true
+    }
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "status": "installed_and_locally_verified",
+  "bin_path": ".tools/postgres-app-2.9.6-17.11-ssl/Postgres.app/Contents/Versions/17/bin",
+  "version": "17.11 (Postgres.app)",
+  "distribution_release": "https://github.com/PostgresApp/PostgresApp/releases/tag/v2.9.6",
+  "distribution_download": "https://github.com/PostgresApp/PostgresApp/releases/download/v2.9.6/Postgres-2.9.6-17.dmg",
+  "distribution_sha256": "b38bb00b8c8702a568270aab85995c550f7f93d1503b818efdc5ff9a519b7168",
+  "asset_digest_matched": true,
+  "image_verify_exit": 0,
+  "codesign_deep_strict_exit": 0,
+  "signer": "Developer ID Application: Jakob Egger (ZF84SJ5A3G)",
+  "architectures": [
+    "arm64",
+    "x86_64"
+  ],
+  "ssl_configuration": "--with-ssl=openssl; bundled libssl.3/libcrypto.3 via @loader_path",
+  "file_sha256": {
+    "bin/psql": "329b8a0d0d40e5a606ff693702114883e543b19743139c4b94185f641d10ab3e",
+    "bin/pg_dump": "45692854004feb4f88fcdcdca58842d29d53bd915f500d5f2727a770fc09fc11",
+    "bin/pg_dumpall": "5e989dd8aff6ccb77f53dd7763c46cded5d9e49521a327fd75dd32870e0cc0e9",
+    "bin/pg_restore": "9aab2bb4e8e8c82c3f847827b03b4d7756d58f69a5d9e440f6355090fef98dd6",
+    "bin/initdb": "991a1821b0b621a4c89580fb3643cca620b675ddbe5386fdb2b7f668235ba3b1",
+    "bin/pg_ctl": "cbf539d3da49ed3de554dbcfcaec518096cf76537a83a9591a612e055ee9153d",
+    "bin/postgres": "55876b0c92f90a293b8a0ba779fea3598b48fee7f36ede1efb06d67f98e92cd2",
+    "bin/pg_config": "6dca9ca905355de63649834fca3df2ca77b67d5933e5bd8ecf0e6c712bce003d",
+    "lib/libpq.5.dylib": "5a048308150b6a3eac97972f24eb3833b67a40a2c36bf7772446ea9700f9ec0f",
+    "lib/libssl.3.dylib": "cdc0074247ad27854534882f1bbf2befb98fd728e4cedf81ebadec8dc60fa272",
+    "lib/libcrypto.3.dylib": "957b45e63a1cbcb8a26621166560c51ae59cd82a8995b1b89e73e42c0b4bbd5a"
+  },
+  "local_tls_result": {
+    "scope": "disposable synthetic loopback cluster only",
+    "checks": {
+      "tls": "170011|true|TLSv1.3",
+      "wrong_hostname": {
+        "rejected": true,
+        "exit_code": 2,
+        "diagnostic": "psql: error: connection to server at \"127.0.0.1\", port 64672 failed: server certificate for \"localhost\" (and 1 other name) does not match host name \"wrong.invalid\""
+      },
+      "untrusted_certificate": {
+        "rejected": true,
+        "exit_code": 2,
+        "diagnostic": "psql: error: connection to server at \"127.0.0.1\", port 64672 failed: SSL error: certificate verify failed"
+      },
+      "plaintext": {
+        "rejected": true,
+        "exit_code": 2,
+        "diagnostic": "psql: error: connection to server at \"127.0.0.1\", port 64672 failed: FATAL:  pg_hba.conf rejects connection for host \"127.0.0.1\", user \"tls_probe\", database \"postgres\", no encryption"
+      },
+      "dump_restore": {
+        "pg_dump_SSL": true,
+        "pg_dumpall_SSL": true,
+        "pg_restore_SSL": true,
+        "row_verified": true,
+        "dump_sha256": "66d55ca8a437ca465159200609ff78a23cbe6ece996530374004328fa161d9ee"
+      }
+    },
+    "status": "passed",
+    "server_stop_exit": 0,
+    "cleanup": {
+      "temporary_cluster_certificates_and_keys_removed": true,
+      "owned_server_stopped": true
+    }
+  },
+  "unchanged_existing_install": ".tools/postgres",
+  "hosted_operations": false,
+  "credential_reads_or_minting": false
+}

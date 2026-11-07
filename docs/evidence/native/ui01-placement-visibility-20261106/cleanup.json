@@ -1,0 +1,17 @@
+{
+  "simulator": "385D4DCB-72BE-4DEA-9C6C-8AA229CFA7D4",
+  "actions": [
+    {
+      "action": "shutdown",
+      "exit": 0,
+      "stderr": ""
+    },
+    {
+      "action": "delete",
+      "exit": 0,
+      "stderr": ""
+    }
+  ],
+  "removed": true,
+  "protectedPreviewUntouched": "5FDE1E82-1FF7-4556-9C14-0746F6295944"
+}

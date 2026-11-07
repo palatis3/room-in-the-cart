@@ -1,0 +1,9 @@
+# Isolated keyboard-dismissal hosted diagnostic
+
+Root reviewed and installed the exact804 plus12-file diagnostic overlay as `efc1bfc5393cb21caeb3089f237619ef53cb1adc`. The sole app delta is compile-guarded UrgentRepair structural logging. Normal app sources, original test bodies, six-case UI07 history, warnings, runtime pins and native deadlines are unchanged. The isolated branch replaces its fixture workflow with a manual-only diagnostic. No PR was opened or main PR branch pushed.
+
+Root independently replayed73 mocked tests, rehashed19 execution and29 preparation files, confirmed12 unchanged process lifecycle functions plus the private exception, and verified all2348 tracked sources against exact base plus overlay. Independent review resolved the receipt provenance defect. The exact regular-file product exception is documented separately; no result/download limit changed. Full generic arm64 simulator Debug build-for-testing passed on local Xcode27.1, retaining18 build-warning lines. Hosted26.3 integration, callback behavior and complete log delivery remain unverified.
+
+One [run42309239002](https://github.com/palatis3/room-in-the-cart/actions/runs/42309239002) was dispatched with its exact SHA at23:03:39UTC. The initial checkpoint shows an acquired runner checking source; no native verdict exists yet. Agent `ci_fixtures_resume` owns read-only collection under `.build/KeyboardHostedCollection20261106/`. Do not repeat dispatch on an observation timeout.
+
+The package review and manifest retain historical preparation status; root-review.json and dispatch.json record subsequent installation/execution authorization and actions. No passing diagnostic alone establishes a causal fix or release acceptance. Missing logs never establish that Done did not execute. Original804 UI07/UI06 failures remain open.

@@ -1,0 +1,24 @@
+{
+  "command": [
+    "xcrun",
+    "swiftc",
+    "-I",
+    "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib",
+    "-typecheck",
+    "-swift-version",
+    "5",
+    "-sdk",
+    "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.1.sdk",
+    "-target",
+    "arm64-apple-ios17.0-simulator",
+    "-F",
+    "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks",
+    "-D",
+    "RELEASE",
+    ".build/ScrollMeasurementBoundaryProposal20261106/files/ios/UITests/ReleasePerformanceUITests.swift"
+  ],
+  "exitCode": 0,
+  "diagnosticBytes": 0,
+  "sourceSHA256": "b75b9ede2ff8da817b13fc503792de1f81fb0d22adbe8987f16c8ec01d3ad877",
+  "scope": "Full test-file typecheck using actual local Xcode27.1 XCTest overlay; no target build/native execution/hosted26.3 qualification."
+}

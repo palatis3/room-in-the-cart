@@ -1,0 +1,10 @@
+13: Test Case '-[RoomInTheCartUITests.FreeJourneyUITests testSystemSelectedTextReviewCancelSaveAndDismissPreserveExplicitDraft]' started.
+196:     t =    49.06s Tap "Save for review" Button
+309:     t =    71.58s Tap "Merge same need: Wraps" Button
+340:     t =    76.79s     Check for interrupting elements affecting "Cancel" Button
+444:     t =    97.36s Tap "Merge same need: Wraps" Button
+492:     t =   105.29s Tap "Save review draft" Button
+546:     t =   117.71s Tap "Skip this line" Button
+588:     t =   127.96s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 86.0) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 654.1) with velocity of 250.00 pixels per second, and then hold for 0.0 seconds 
+716:     t =   161.33s Tap "Add reviewed list" Button
+797: Test Case '-[RoomInTheCartUITests.FreeJourneyUITests testSystemSelectedTextReviewCancelSaveAndDismissPreserveExplicitDraft]' passed (185.619 seconds).

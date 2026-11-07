@@ -1,0 +1,220 @@
+name: iOS fixture checks
+
+on:
+  pull_request:
+    paths:
+      - 'ios/**'
+      - 'scripts/**'
+      - 'shared/**'
+      - 'config/**'
+      - '.github/workflows/ios-fixtures.yml'
+      - 'scripts/check_ios_test_results.py'
+      - 'scripts/test_check_ios_test_results.py'
+      - 'scripts/run_ios_test_shard.sh'
+      - 'scripts/plan_ios_fixture_tests.py'
+      - 'scripts/test_plan_ios_fixture_tests.py'
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fixture-ios-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+
+jobs:
+  fixture-plan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      test_matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Validate fixture coverage and balanced contributor groups
+        id: plan
+        run: |
+          python3 scripts/test_ui_automation_contract.py
+          python3 scripts/generate_xcode_project.py --check
+          python3 scripts/test_plan_ios_fixture_tests.py
+          matrix=$(python3 scripts/plan_ios_fixture_tests.py matrix)
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
+  build-contributor:
+    concurrency:
+      group: ritc-macos-slot-0
+      queue: max
+      cancel-in-progress: false
+    name: Build contributor, stock and carryover fixtures
+    needs: fixture-plan
+    runs-on: macos-15
+    timeout-minutes: 35
+    env:
+      FIXTURE_PROFILE: contributor
+    outputs:
+      artifact: ${{ steps.upload.outputs.artifact-id }}
+    steps: &fixture-build-steps
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Record Xcode and select an iPhone simulator
+        run: |
+          xcodebuild -version
+          xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
+      - name: Build fixture app and UI tests for iPhone
+        shell: bash
+        run: |
+          conditions=$(python3 scripts/plan_ios_fixture_tests.py conditions "$FIXTURE_PROFILE")
+          xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart \
+            -configuration Debug -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
+            -parallel-testing-enabled NO -jobs 2 -derivedDataPath .build/DerivedData \
+            CODE_SIGN_IDENTITY=- "SWIFT_ACTIVE_COMPILATION_CONDITIONS=$conditions" build-for-testing
+      - name: Enumerate compiled tests and package fixture products
+        shell: bash
+        run: |
+          test_runs=(.build/DerivedData/Build/Products/RoomInTheCart_iphonesimulator*.xctestrun)
+          test "${#test_runs[@]}" -eq 1
+          test -f "${test_runs[0]}"
+          python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"
+          xcodebuild -xctestrun "${test_runs[0]}" \
+            -destination "platform=iOS Simulator,id=$SIMULATOR_ID" -parallel-testing-enabled NO \
+            -enumerate-tests -test-enumeration-style flat -test-enumeration-format json \
+            -test-enumeration-output-path "$PWD/.build/test-enumeration.json" test-without-building \
+            2>&1 | tee .build/test-enumeration.log
+          python3 scripts/plan_ios_fixture_tests.py plan "$FIXTURE_PROFILE" \
+            --enumeration .build/test-enumeration.json --output-dir .build/test-plan \
+            2>&1 | tee .build/test-planning.log
+          cp .build/test-enumeration.json .build/test-plan/
+          tar -czf "$RUNNER_TEMP/iphone-fixture-products.tar.gz" \
+            -C .build/DerivedData/Build Products -C "$GITHUB_WORKSPACE/.build" test-plan
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        id: upload
+        with:
+          name: iphone-fixture-products-${{ env.FIXTURE_PROFILE }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/iphone-fixture-products.tar.gz
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: error
+      - name: Retain fixture discovery diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: iphone-fixture-discovery-${{ env.FIXTURE_PROFILE }}-${{ github.run_attempt }}
+          include-hidden-files: true
+          path: |
+            .build/test-enumeration.json
+            .build/test-enumeration.log
+            .build/test-planning.log
+          retention-days: 7
+          if-no-files-found: ignore
+
+  build-dinner:
+    concurrency:
+      group: ritc-macos-slot-1
+      queue: max
+      cancel-in-progress: false
+    name: Build dinner decision fixture
+    needs: fixture-plan
+    runs-on: macos-15
+    timeout-minutes: 35
+    env:
+      FIXTURE_PROFILE: dinner
+    outputs:
+      artifact: ${{ steps.upload.outputs.artifact-id }}
+    steps: *fixture-build-steps
+
+  fixture-tests:
+    concurrency:
+      group: ritc-macos-slot-${{ matrix.macos_slot }}
+      queue: max
+      cancel-in-progress: false
+    name: Fixture (${{ matrix.shard }})
+    needs: [fixture-plan, build-contributor, build-dinner]
+    runs-on: macos-15
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix: ${{ fromJSON(needs.fixture-plan.outputs.test_matrix) }}
+    env:
+      FIXTURE_PROFILE: ${{ matrix.profile }}
+      TEST_SHARD: ${{ matrix.shard }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          artifact-ids: ${{ matrix.profile == 'contributor' && needs.build-contributor.outputs.artifact || needs.build-dinner.outputs.artifact }}
+          path: .build/download
+          merge-multiple: true
+      - name: Restore matching fixture products and selector list
+        run: |
+          mkdir -p .build/DerivedData/Build
+          tar -xzf .build/download/iphone-fixture-products.tar.gz -C .build/DerivedData/Build
+          mv .build/DerivedData/Build/test-plan .build/test-plan
+          python3 - <<'PY' >> "$GITHUB_ENV"
+          import json, os
+          from pathlib import Path
+
+          plan = json.loads(Path(".build/test-plan/manifest.json").read_text())
+          if plan["profile"] != os.environ["FIXTURE_PROFILE"]:
+              raise SystemExit("The fixture product profile does not match this job.")
+          expected = len(plan["shards"][os.environ["TEST_SHARD"]]["test_identifiers"])
+          if expected < 1:
+              raise SystemExit("The fixture selector list is empty.")
+          print(f"EXPECTED_TEST_COUNT={expected}")
+          PY
+      - name: Select an iPhone simulator
+        run: xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
+      - name: Boot the iPhone simulator
+        timeout-minutes: 8
+        run: python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"
+      - name: Run selected fixture tests and require complete execution
+        timeout-minutes: 40
+        shell: bash
+        run: |
+          # Records remains a named standalone shard outside balanced groups.
+          if [[ "$TEST_SHARD" == RecordsMediaUITests ]]; then
+            # The synthetic recovery key can appear in screenshots and UI trees.
+            status=0
+            private_log="$RUNNER_TEMP/records-fixture.log"
+            GITHUB_STEP_SUMMARY= bash scripts/run_ios_test_shard.sh > "$private_log" 2>&1 || status=$?
+            report_status=0
+            python3 scripts/report_records_media_test.py .build "$status" \
+              > .build/records-test-report.md 2>> "$private_log" || report_status=$?
+            if [[ -s .build/records-test-report.md ]]; then
+              tee -a "$GITHUB_STEP_SUMMARY" < .build/records-test-report.md
+            fi
+            if (( status == 0 )); then
+              status=$report_status
+            fi
+            if (( status != 0 )); then
+              echo '::error::Records media fixture failed. Raw output contains private fixture material.'
+            fi
+            exit "$status"
+          fi
+          bash scripts/run_ios_test_shard.sh
+      - name: Retain fixture results and timing
+        if: always() && matrix.shard != 'RecordsMediaUITests'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: iphone-fixture-results-${{ matrix.shard }}-${{ github.run_attempt }}
+          include-hidden-files: true
+          path: |
+            .build/Tests*.xcresult
+            .build/Tests*.log
+            .build/test-*.json
+            .build/test-plan/
+          retention-days: 7
+          if-no-files-found: ignore
+      - name: Retain Records media result counts and timing
+        if: always() && matrix.shard == 'RecordsMediaUITests'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: iphone-fixture-results-${{ matrix.shard }}-${{ github.run_attempt }}
+          include-hidden-files: true
+          path: |
+            .build/records-test-report.md
+            .build/test-plan/
+          retention-days: 7
+          if-no-files-found: ignore

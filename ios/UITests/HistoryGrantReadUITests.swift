@@ -83,8 +83,56 @@ import XCTest
         tap(app.buttons.containing(NSPredicate(format:"label CONTAINS %@",allowed)).firstMatch)
     }
     private func openRawPlan() { tap(element("history.openRawPeriod")) }
-    private func periodTab() { tap(app.segmentedControls.buttons["Period budgets"]) }
-    private func pricesTab() { tap(app.segmentedControls.buttons["Price records"]) }
+    private func periodTab() { selectRecordsTab("Period budgets", destination: "history.loadPeriods") }
+    private func pricesTab() { selectRecordsTab("Price records", destination: "history.newObservation") }
+    private func selectRecordsTab(_ label: String, destination: String) {
+        let control = app.segmentedControls.buttons[label]
+        // Like tapWeekRow, require a visible action center: a clipped segment can
+        // report hittable while XCTest's activation point lies under the header.
+        for attempt in 0..<24 {
+            let area = historyContentArea().insetBy(dx: 0, dy: 8)
+            guard area.width > 0, area.height > 44 else {
+                XCTFail("No unobscured content area for records tab"); return
+            }
+            let exists = control.exists
+            if exists && control.isHittable {
+                let frame = control.frame
+                if area.contains(CGPoint(x: frame.midX, y: frame.midY)) {
+                    control.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+                    let selected = XCTNSPredicateExpectation(predicate: NSPredicate(format: "selected == true"), object: control)
+                    XCTAssertEqual(XCTWaiter.wait(for: [selected], timeout: 8), .completed, "The requested records tab must be selected")
+                    XCTAssertTrue(element(destination).waitForExistence(timeout: 8), "The requested records tab must expose its destination")
+                    return
+                }
+            }
+            let frame = exists ? control.frame : .zero
+            let upward = !frame.isEmpty ? frame.midY > area.midY : attempt < 12
+            let bounds = app.frame, high = area.minY + area.height * 0.18, low = area.minY + area.height * 0.82
+            let origin = app.coordinate(withNormalizedOffset: .zero)
+            origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: (upward ? low : high) - bounds.minY))
+                .press(forDuration: 0.05, thenDragTo: origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: (upward ? high : low) - bounds.minY)))
+        }
+        XCTFail("No visible center for records tab: " + control.debugDescription)
+    }
+    private func historyContentArea() -> CGRect {
+        // One tree keeps the measured navigation/header and keyboard consistent.
+        let snapshot = try? app.snapshot()
+        let bounds = snapshot?.frame ?? app.frame
+        var keyboardTop = bounds.maxY, barBottom = bounds.minY + 100
+        var elements = snapshot.map { [$0] } ?? []
+        while let value = elements.popLast() {
+            let frame = value.frame
+            if !frame.isEmpty && frame.intersects(bounds) {
+                if value.elementType == .keyboard { keyboardTop = min(keyboardTop, frame.minY) }
+                if value.elementType == .navigationBar || value.identifier == "fixture.h09.revoke" {
+                    barBottom = max(barBottom, frame.maxY)
+                }
+            }
+            elements.append(contentsOf: value.children)
+        }
+        let top = barBottom + 16, bottom = min(bounds.maxY - 70, keyboardTop - 20)
+        return CGRect(x: bounds.minX + 24, y: top, width: max(0, bounds.width - 48), height: max(0, bottom - top))
+    }
     private func element(_ id: String) -> XCUIElement { app.descendants(matching:.any).matching(identifier:id).firstMatch }
     private func tap(_ value: XCUIElement) { reveal(value); XCTAssertTrue(value.isHittable,value.debugDescription); value.tap() }
     private func fill(_ text: String, field: XCUIElement) { tap(field); app.typeText(text); let done = app.buttons.matching(identifier:"Done").firstMatch; if done.exists && done.isHittable { done.tap() } else { app.swipeDown() } }

@@ -1,0 +1,24 @@
+{
+  "preparationManifestSHA256": "2a299e00626ce883b181bb4e24085a364127878e52298bb9af9f525b9928c9b3",
+  "files": {
+    "REVIEW.md": "187e73e8e59b02866ec71b8e357734f83508e2d59d8d299b4c48c3fd118f821a",
+    "execution.patch": "1a2684776119a0f6ad7f11a3901e1d42310e39ca9174b8efe3a237f85644651f",
+    "finalize_package.py": "99ac49f26b321e35734042007dc77467ed0a244d36c4e65314f0dcdb20389c50",
+    "offline-tests.log": "ea11e5d6754b64cf8243202d8ec44b944b14357eddb5a190ef1cbb633e5216fa",
+    "overlay/.github/workflows/ios-fixtures.yml": "5dda6c299cc4c946a22d1cf5a290678dd7f2684f97f7eff59b689103e50bb85e",
+    "overlay/diagnostics/keyboard-dismiss/hosted/PRODUCT-EXCEPTION.md": "98f58badb3343ab39267113f9789bf41f2b01e0777a0a0e6e9f30cf247040d53",
+    "overlay/diagnostics/keyboard-dismiss/hosted/README.md": "08a3cdcc2d83c3b8d30c5b899cca83133586db96aec8c00397bf99db0cf5e401",
+    "overlay/diagnostics/keyboard-dismiss/hosted/harness.py": "57335f775613c285bd967535f4d38092323cc2ca983cb0f18b94b748516d35c1",
+    "overlay/diagnostics/keyboard-dismiss/hosted/overlay-index.json": "430557336f68516b388f50f91bb28d5a81a8f187df2c3289e7b4a735e30fb9ad",
+    "overlay/diagnostics/keyboard-dismiss/hosted/reconcile_keyboard_logs.py": "f224fb3dd0fc2a6feb1341f46f31fdf716e3a2550d509d4cb7bb06822097f835",
+    "overlay/diagnostics/keyboard-dismiss/hosted/reference-plan.json": "edbef405dfeff96f1c21ac26790b44c1fabbdaf074da3c0cd40abbc872e7617a",
+    "overlay/diagnostics/keyboard-dismiss/hosted/selectors.txt": "2d443930e5b225e8de035d6045a021531e7db0c27b6a4914fa87b5db388e4c51",
+    "overlay/diagnostics/keyboard-dismiss/hosted/test_harness.py": "edc556f195d5d1383bcdad129c1e4d59804940e25d492ea616f2ed0ad3af7d19",
+    "overlay/diagnostics/keyboard-dismiss/hosted/test_keyboard_provenance.py": "e56564f8955e310fd10af9809e51e875def3839d49d46b611e1323b0eb0a0204",
+    "overlay/diagnostics/keyboard-dismiss/hosted/test_reconcile_keyboard_logs.py": "30681745f4ee436c88cee7f7b9c703ae8408cffdb2fcd1e6b60fc7a873c24fe4",
+    "overlay/ios/Features/Pickup/PickupRepairView.swift": "afb8323925cc88ba1ec0d192d0488126b3dcc8b5e28fbcc3dc629796565add94",
+    "patch-dry-run.log": "871fc2901ae0f05c09b52602d6dd45d13b67968b5411ed261bc2425c82e638c4",
+    "validation.json": "b2e9a01d3f985706bdeecfbb3084b16b30417d42f878440c0cfacaf8607e6fb7",
+    "workflow-parsed.json": "c58f4642eab21b0c840b8b2ac0bd0d9416c2e32ba995332bf4e7bea67575afbe"
+  }
+}

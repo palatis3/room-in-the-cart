@@ -1,0 +1,88 @@
+{
+  "hostedFailure": {
+    "run": 41930998628,
+    "attempt": 1,
+    "job": 126937759017,
+    "source": "1fd2b962d77a7459ffe2a73db6d3d8a0557cda45",
+    "diagnosis": ".build/UI02Quiescence20261104/hosted-diagnosis.json"
+  },
+  "localComparison": {
+    "unchangedHostedProducerSource": "1fd2b962d77a7459ffe2a73db6d3d8a0557cda45",
+    "artifact": "iphone-test-products-1",
+    "reviewWorktreeBase": "117180152acde2bd8d38fe6f92c7a0fc03e8b110",
+    "sourceSHA256": {
+      "ios/UITests/FreeJourneyUITests.swift": "1c9221ea25df9454c07e6bedff9525b1699248153fc9b951855f990dd4fd6630",
+      "ios/Features/Dinners/DinnerEditors.swift": "7074227d5f4ad8b13e1b3a39874b7b7713d2629436a1e24b6f44ddca94816b95",
+      "ios/App/Theme.swift": "5c22cb54e31caa827b83d87497aff950ba8cea73cb38df430ecd3fe57511e627"
+    },
+    "binarySHA256": {
+      "current-hosted-products/iphone-test-products.tar.gz": "467baa9c27eb3774e6adcb3fe2c34828d1fe58ce0baccdb13f1c3bf1d2fb46e1",
+      "current-hosted-products/Products/RoomInTheCart_iphonesimulator26.2-arm64.xctestrun": "77926a4df6196a6798e34ccd4a5f2041b28d3e5609caceeede07783b7a8d7742",
+      "current-hosted-products/Products/Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart": "8d61b835e8446160643b4b1fec5794b850fdef72aee4397548de93b21877f286",
+      "current-hosted-products/Products/Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart.debug.dylib": "5167d47de0979cb516302d22bda8af165c9243d2d31c0905cac8335d45facca7",
+      "current-hosted-products/Products/Debug-iphonesimulator/RoomInTheCartUITests-Runner.app/RoomInTheCartUITests-Runner": "f5853dcb8ae0f8d1789602910b5a3e8815f0bf4809a6b3d60e779eb46d8d9678",
+      "current-hosted-products/Products/Debug-iphonesimulator/RoomInTheCartUITests-Runner.app/PlugIns/RoomInTheCartUITests.xctest/RoomInTheCartUITests": "012038ef7ec1e7c28906bc3b7c55f3955dd2719146641a46fa32efdcd73adb78"
+    },
+    "localDriver": [
+      "Xcode 27.1",
+      "Build version 27A9275"
+    ],
+    "device": {
+      "architecture": "arm64",
+      "deviceId": "13104ED9-4FA6-480F-8863-36F785C04A1A",
+      "deviceName": "RITC UI02 Quiescence 20261104",
+      "modelName": "iPhone 17",
+      "osBuildNumber": "23C52",
+      "osVersion": "26.2",
+      "platform": "iOS Simulator"
+    },
+    "selector": "RoomInTheCartUITests/FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "durationSeconds": 460.37556397914886,
+    "runtimeWarnings": [],
+    "animationIdleTimeouts": 0,
+    "checkpoints": [
+      {
+        "second": 89.45,
+        "name": "Free-dinner-and-protected-lunch"
+      },
+      {
+        "second": 162.22,
+        "name": "Free-whole-packs-saved-for-checkout-review"
+      },
+      {
+        "second": 208.88,
+        "name": "Free-frozen-placement-unconfirmed"
+      },
+      {
+        "second": 249.2,
+        "name": "Free-observed-short-fill"
+      },
+      {
+        "second": 308.6,
+        "name": "Free-complete-cook-note"
+      },
+      {
+        "second": 367.55,
+        "name": "Free-settlement-keeps-food-separate"
+      },
+      {
+        "second": 393.33,
+        "name": "Free-one-dinner-reused-for-next-shop"
+      },
+      {
+        "second": 458.19,
+        "name": "Free-saved-repair-decision-without-inferred-outcome"
+      }
+    ],
+    "log": ".build/UI02Quiescence20261104/local-baseline.log",
+    "logSHA256": "d8e48ab6cdbdde028c4fa3411b469b62fef2440fe4d27f9111643b3a09ead9a0",
+    "resultBundle": ".build/UI02Quiescence20261104/LocalHostedProductBaseline.xcresult",
+    "testSummary": ".build/UI02Quiescence20261104/local-baseline-summary.json",
+    "testDetails": ".build/UI02Quiescence20261104/local-baseline-details.json"
+  },
+  "comparisonScope": "Original ARM64 app and test binaries compiled with Xcode 26.3. Local XCTest driver is Xcode 27.1 (27A9275) and iOS 26.2 runtime 23C52. GitHub used Xcode 26.3 (17C529), runtime 23C54 and a VM. The failure did not recur in this different execution environment.",
+  "nextVerification": "Run UI02 on a fresh GitHub ARM64 iPhone 17 iOS 26.2 job for the exact immutable follow-up candidate, with normal idle checks and the existing allowance. Verify its complete selector result and checkpoint attachments. Preserve attempt 1 independently."
+}

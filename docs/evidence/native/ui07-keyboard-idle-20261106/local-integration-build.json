@@ -1,0 +1,56 @@
+{
+  "base": "804030e68473d022e72b464940061c01c611a0bd",
+  "worktree": "/Users/palatis/.codex/worktrees/keyboard-idle-diagnostic/Room in the Cart",
+  "scope": "Generic arm64 iOS Simulator Debug build-for-testing; no simulator or test execution. Exact reviewed one-file diagnostic patch.",
+  "xcode": "27.1",
+  "xcodeBuild": "27A9275",
+  "compilationConditions": [
+    "DEBUG",
+    "KEYBOARD_DISMISS_DIAGNOSTIC"
+  ],
+  "result": "TEST BUILD SUCCEEDED",
+  "sessionHandle": "7868 (subsequently unavailable; terminal success confirmed in retained log)",
+  "logSHA256": "5237643718b056a9cfb0483276a1341dbd8e0aaffe24d1cb0c1d28b8fc7a5540",
+  "logPath": "/Users/palatis/.codex/worktrees/keyboard-idle-diagnostic/Room in the Cart/.build/Integration/build.log",
+  "appSourceSHA256": "afb8323925cc88ba1ec0d192d0488126b3dcc8b5e28fbcc3dc629796565add94",
+  "warningLines": [
+    "2026-11-06 17:49:22.135 appintentsmetadataprocessor[83815:19112481] warning: Metadata extraction skipped, no AppIntents.framework dependency found",
+    "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.1.sdk/Developer/Library/Frameworks/StoreKitTest.framework/Headers/SKTestTransaction.h:34:32: warning: 'SKPaymentTransactionState' is deprecated: first deprecated in iOS 18.0 - Use PurchaseResult from Product.purchase(confirmIn:options:).",
+    "   |                                `- warning: 'SKPaymentTransactionState' is deprecated: first deprecated in iOS 18.0 - Use PurchaseResult from Product.purchase(confirmIn:options:).",
+    "/Users/palatis/.codex/worktrees/keyboard-idle-diagnostic/Room in the Cart/ios/Tests/HouseholdRequestPackFixtureSupport.swift:93:57: warning: 'S24FixtureProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]",
+    "    |             |                                           `- warning: 'S24FixtureProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]",
+    "/Users/palatis/.codex/worktrees/keyboard-idle-diagnostic/Room in the Cart/ios/Tests/MembershipTests.swift:1294:68: warning: 'MembershipURLProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]",
+    "     |                     |                                              `- warning: 'MembershipURLProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]",
+    "/Users/palatis/.codex/worktrees/keyboard-idle-diagnostic/Room in the Cart/ios/Tests/NavigationRestorationTests.swift:245:66: warning: 'RestorationProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]",
+    "    |                     |                                            `- warning: 'RestorationProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]",
+    "/Users/palatis/.codex/worktrees/keyboard-idle-diagnostic/Room in the Cart/ios/Tests/PickupStockPrivateScopeIntegrationTests.swift:43:65: warning: 'StockScopeProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]",
+    "    |                     |                                           `- warning: 'StockScopeProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]",
+    "/Users/palatis/.codex/worktrees/keyboard-idle-diagnostic/Room in the Cart/ios/Tests/RecordsMediaTests.swift:9:50: warning: immutable property will not be decoded because it is declared with an initial value which cannot be overwritten",
+    "    |                                                  |- warning: immutable property will not be decoded because it is declared with an initial value which cannot be overwritten",
+    "/Users/palatis/.codex/worktrees/keyboard-idle-diagnostic/Room in the Cart/ios/Tests/NativeCompositionStartupTest.swift:281:23: warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]",
+    "    |                       `- warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]",
+    "warning: not stripping binary because it is signed: /Users/palatis/.codex/worktrees/keyboard-idle-diagnostic/Room in the Cart/.build/Integration/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCartWidget.appex/RoomInTheCartWidget.debug.dylibwarning: not stripping binary because it is signed: /Users/palatis/.codex/worktrees/keyboard-idle-diagnostic/Room in the Cart/.build/Integration/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCartWidget.appex/RoomInTheCartWidgetwarning: not stripping binary because it is signed: /Users/palatis/.codex/worktrees/keyboard-idle-diagnostic/Room in the Cart/.build/Integration/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCartWidget.appex/__preview.dylib (in target 'RoomInTheCart' from project 'RoomInTheCart')",
+    "warning: not stripping binary because it is signed: /Users/palatis/.codex/worktrees/keyboard-idle-diagnostic/Room in the Cart/.build/Integration/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCartShare.appex/RoomInTheCartShare.debug.dylibwarning: not stripping binary because it is signed: /Users/palatis/.codex/worktrees/keyboard-idle-diagnostic/Room in the Cart/.build/Integration/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCartShare.appex/RoomInTheCartSharewarning: not stripping binary because it is signed: /Users/palatis/.codex/worktrees/keyboard-idle-diagnostic/Room in the Cart/.build/Integration/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCartShare.appex/__preview.dylib (in target 'RoomInTheCart' from project 'RoomInTheCart')",
+    "2026-11-06 17:51:01.348 appintentsmetadataprocessor[84276:19116586] warning: Metadata extraction skipped, no AppIntents.framework dependency found"
+  ],
+  "warningScope": "All observed build warnings retained; not a zero-warning build. No diagnostic source warnings observed. No base rebuild comparison made in this verification.",
+  "limitations": [
+    "Hosted Xcode26.3 integration not established",
+    "MainActor callback runtime precondition not executed",
+    "Original UI07 timeout remains unresolved"
+  ],
+  "compiledDiagnostic": {
+    "product": "Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart.debug.dylib",
+    "sha256": "522bb4d244d00e033bcd95465dfead43da0e9b06fc67de439699e2e1aedb3f6a",
+    "bytes": 52752832,
+    "nmDiagnosticSymbolLines": 141,
+    "recordFunctionObserved": true,
+    "scope": "Read-only symbol inspection; no binary execution."
+  },
+  "localProductInventory": {
+    "regularFiles": 179,
+    "totalBytes": 149056492,
+    "largestRegularFileBytes": 52752832,
+    "interpretation": "Exceeds generic50MB transport member bound. Separate narrowly bounded product exception is under review; hosted26.3 size remains unknown."
+  }
+}

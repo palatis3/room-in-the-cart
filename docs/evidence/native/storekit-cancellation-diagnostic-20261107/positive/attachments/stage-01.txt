@@ -1,0 +1,1 @@
+StoreKitCancellationTrace seq=1 elapsed=2.083e-06 seconds stage=setup.super.begin

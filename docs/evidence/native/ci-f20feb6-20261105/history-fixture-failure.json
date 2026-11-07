@@ -1,0 +1,71 @@
+{
+  "runId": 41994028672,
+  "jobId": 127143124046,
+  "artifactId": 13402184641,
+  "candidate": "f20feb685f95e7da1c7a23f26eff499d2696329f",
+  "artifactSha256": "1f5724a09c2253abcb128e410e4e7b36d220fc508e9f84b0ba692e9b1b4848f3",
+  "result": {
+    "passedTests": 1,
+    "failedTests": 1,
+    "runtimeWarnings": 0
+  },
+  "failure": {
+    "test": "testRevokedBudgetGrantClearsPreviouslyOpenedRawPeriodAndRememberedSource",
+    "stage": "first openRawPlan on line 52; revoke action on line 53 was not reached",
+    "sourceAssertionLine": 123,
+    "missingIdentifier": "history.openRawPeriod"
+  },
+  "tapEvidence": {
+    "logLine": 926,
+    "timeSeconds": 57.75,
+    "target": "Period budgets",
+    "pointerCoordinates": [
+      {
+        "x": 285.5,
+        "y": 102.33333333333331
+      },
+      {
+        "x": 285.5,
+        "y": 102.33333333333331
+      }
+    ],
+    "appFrame": {
+      "width": 402,
+      "height": 874
+    },
+    "earlierHierarchyNavigationBar": {
+      "minY": 110.7,
+      "maxY": 216.7
+    },
+    "fixedFixtureRevokeHeader": {
+      "minY": 78.3,
+      "maxY": 98.6
+    },
+    "synthesizedEvent": "attachments-revocation/E705809F-77B3-45A4-B1E3-3E18900B9A5C"
+  },
+  "failureScreenshot": {
+    "path": "attachments-revocation/DE45105C-64C6-4786-B078-8A6902C4A9AF.png",
+    "visibleSection": "Price history \u00b7 Household",
+    "counters": {
+      "reads": 3,
+      "paidDenied": 0,
+      "denied": 0,
+      "writes": 0
+    }
+  },
+  "diagnosis": "The segmented-control driver accepts XCUI hittability while the segment activation point is clipped beneath the fixed fixture header/navigation. The tab never switches, then reveal performs 30 ineffective drags for a control from the absent periods section.",
+  "proposal": "Guard records-tab center against one-tree measured navigation/header/keyboard viewport, tap explicit visible center, assert selected state and tab-only destination before proceeding.",
+  "scratchPatch": "history-tab-center.patch",
+  "sharedSourceEdited": false,
+  "nativeBuildOrTestsRun": false,
+  "hostedMutations": false,
+  "authorizationAssertionsPreservedByteForByte": true,
+  "verification": [
+    "Artifact digest matched expected SHA-256.",
+    "All 119 ZIP entries passed path traversal and symlink checks before extraction.",
+    "Candidate and current History source files have no diff.",
+    "Scratch patch passed git apply --check.",
+    "No source modification or native execution performed."
+  ],
+  "scope": "Read-only assistant diagnosis; root reviewed and installed local test-only tab-center guard with selected/destination checks. Focused native validation pending. Revoke was never reached in the failed hosted case; no claim of passing permission acceptance."
+}

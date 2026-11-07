@@ -8,7 +8,10 @@ import DeviceSurfaces
 
 @MainActor final class DeviceSurfacesComposition: ObservableObject {
     @Published private(set) var entries: [SelectedTextEntry] = []
-    @Published var draft: SurfaceImportDraft?
+    @Published var draft: SurfaceImportDraft? {
+        didSet { if draft == nil { reviewBaseline = nil } }
+    }
+    private var reviewBaseline: SurfaceImportDraft?
     @Published var destination: SurfacePresentedDestination?
     @Published private(set) var busy = false
     @Published private(set) var message: String?
@@ -250,13 +253,21 @@ import DeviceSurfaces
         guard !busy, let bridge else { message = SurfaceCopy.text("Selected text is unavailable on this installation."); return }
         busy = true; defer { busy = false }
         let start = nonce
-        do { let result = try await bridge.open(entry, shopID: shopID); guard nonce == start else { return }; draft = result; await sourceDidChange() }
+        do { let result = try await bridge.open(entry, shopID: shopID); guard nonce == start else { return }; draft = result; reviewBaseline = result; await sourceDidChange() }
         catch { message = SurfaceCopy.text("Review could not finish. Reopen this entry to check its saved result.") }
     }
     func saveDraft(_ updated: SurfaceImportDraft) {
         guard let previous = draft, let bridge else { return }
-        do { try bridge.saveReview(updated, replacing: previous); draft = updated; message = nil }
+        do { try bridge.validateReview(updated, replacing: previous); draft = updated; message = nil }
         catch { message = SurfaceCopy.text("This list changed. Reopen the saved list before reviewing again.") }
+    }
+    func saveReviewDraft() {
+        guard !busy, let draft, let reviewBaseline, let bridge else { return }
+        do {
+            try bridge.saveReview(draft, replacing: reviewBaseline)
+            self.reviewBaseline = draft
+            message = SurfaceCopy.text("Review draft saved on this iPhone.")
+        } catch { message = SurfaceCopy.text("This list changed. Reopen the saved list before reviewing again.") }
     }
     func editDraftLine(_ id: UUID, name: String, amount: String, unit: UnitOfMeasure) {
         guard var next = draft, next.phase == .review, let index = next.preview.lines.firstIndex(where: { $0.id == id }), let shop = shop(next.preview.shopID) else { return }
@@ -276,9 +287,22 @@ import DeviceSurfaces
         } catch { message = SurfaceCopy.text("Review the item name, amount and matching lines before continuing.") }
     }
     func addReviewedList() async {
-        guard !busy, let draft, let bridge else { return }; busy = true; defer { busy = false }
-        do { try await bridge.commit(draft); self.draft = nil; await sourceDidChange() }
-        catch { self.draft = try? journal?.read(draft.id); message = SurfaceCopy.text("Review could not finish. Reopen this entry to check its saved result.") }
+        guard !busy, let draft, let reviewBaseline, let bridge else { return }; busy = true; defer { busy = false }
+        let start = nonce
+        do {
+            // An explicit Add confirms these edits. Persist before committing so
+            // interruption/retry still recognizes the exact reviewed operation.
+            if draft.phase == .review { try bridge.saveReview(draft, replacing: reviewBaseline) }
+            try await bridge.commit(draft)
+            guard nonce == start else { return }
+            self.draft = nil; await sourceDidChange()
+        } catch {
+            // A completion from an earlier presentation must not restore private
+            // review state cleared by background or an authority change.
+            guard nonce == start else { return }
+            self.draft = try? journal?.read(draft.id); self.reviewBaseline = self.draft
+            message = SurfaceCopy.text("Review could not finish. Reopen this entry to check its saved result.")
+        }
     }
     func cancelReview() { guard !busy else { return }; draft = nil }
     func recoverImport() async {
@@ -286,7 +310,7 @@ import DeviceSurfaces
         busy = true; defer { busy = false }; let start = nonce
         do {
             let refreshed = try await bridge.refreshReview(draft.id)
-            guard nonce == start else { return }; self.draft = refreshed
+            guard nonce == start else { return }; self.draft = refreshed; reviewBaseline = refreshed
             await sourceDidChange()
         } catch { message = SurfaceCopy.text("This list changed. Reopen the saved list before reviewing again.") }
     }
@@ -387,7 +411,7 @@ import DeviceSurfaces
             return scope?.workspaceID == workspace && ledger?.shop?.id == shopID && shop(shopID) != nil
         case .offer(let workspace, let journeyID, let offerID):
             guard pickupWorkspaceID == workspace, let journey = eligible?.first(where: { $0.id == journeyID }),
-                  journey.unfilledOffers.contains(where: { $0.id == offerID }) else { return false }
+                  journey.unfilledOffers(at: clock()).contains(where: { $0.id == offerID }) else { return false }
             return !requireRevision || journey.revision == row.sourceRevision
         case .deferral(let workspace, let journeyID, let needID):
             guard pickupWorkspaceID == workspace, let journey = eligible?.first(where: { $0.id == journeyID }), journey.deferred.contains(where: { $0.id == needID && $0.status == "review" }) else { return false }
@@ -442,13 +466,15 @@ import DeviceSurfaces
         guard let role = household?.deviceReminderPersona.role else { return true }
         return ["shopper", "organizer"].contains(role)
     }
+    var reminderEvaluationDate: Date { clock() }
     var reminderTargets: [SurfaceReminderTarget] {
         privateAuthorized && reminderRoleAuthorized ? currentReminderTargets : []
     }
     private var currentReminderTargets: [SurfaceReminderTarget] {
         guard let pickup, let workspace = pickupWorkspaceID, pickup.sourceWorkspaceID == workspace else { return [] }
+        let projectionInstant = clock()
         return pickup.reminderJourneys.flatMap { journey in
-            journey.unfilledOffers.map { SurfaceReminderTarget(target: .offer(workspaceID: workspace, journeyID: journey.id, offerID: $0.id), title: $0.replacement, revision: journey.revision, cutoff: $0.deadline.cutoff, timeZoneID: $0.deadline.timeZoneID) }
+            journey.unfilledOffers(at: projectionInstant).map { SurfaceReminderTarget(target: .offer(workspaceID: workspace, journeyID: journey.id, offerID: $0.id), title: $0.replacement, revision: journey.revision, cutoff: $0.deadline.cutoff, timeZoneID: $0.deadline.timeZoneID) }
             + journey.deferred.filter { $0.status == "review" }.map { SurfaceReminderTarget(target: .deferral(workspaceID: workspace, journeyID: journey.id, needID: $0.id), title: $0.line.name, revision: journey.revision, cutoff: nil, timeZoneID: TimeZone.current.identifier) }
         }
     }

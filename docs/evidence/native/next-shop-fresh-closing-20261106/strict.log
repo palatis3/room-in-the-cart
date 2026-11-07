@@ -1,0 +1,17 @@
+Executed 9 of 9 selected tests.
+
+| Test | Result | Seconds |
+|---|---|---|
+| RoomInTheCartTests/FreeJourneyAcceptanceTests/testConcurrentPickupChangesAndCompetingNextShopsRequireAFreshReview | Passed | 0.69 |
+| RoomInTheCartTests/FreeJourneyAcceptanceTests/testFreeManualJourneySurvivesRestartFromMealsThroughNextShop | Passed | 0.26 |
+| RoomInTheCartTests/FreeJourneyAcceptanceTests/testCurrentDinnerFeatureFreeReusableChoiceProjectsLunchAndSurvivesNewShopRestart | Passed | 0.15 |
+| RoomInTheCartTests/FreeJourneyAcceptanceTests/testWrongItemCannotFeedLunchAndLateSegmentRetryNeverDuplicatesFood | Passed | 0.04 |
+| RoomInTheCartTests/FreeJourneyAcceptanceTests/testHandledAndDismissedCarryoversUseSourceIdentityInsteadOfName | Passed | 0.02 |
+| RoomInTheCartTests/FreeJourneyAcceptanceTests/testFreshHandledAndDismissedChoicesDoNotReviveLinkedMealNeeds | Passed | 0.02 |
+| RoomInTheCartTests/FreeJourneyAcceptanceTests/testReviewedNextShopDispositionIsScopedAndNeverRewritesSource | Passed | 0.02 |
+| RoomInTheCartTests/FreeJourneyAcceptanceTests/testInjectedNestedPickupCreatesItsOwnDirectoryAndSurvivesResetArguments | Passed | 0.01 |
+| RoomInTheCartTests/FreeJourneyAcceptanceTests/testInjectedPickupLocationNeverResolvesDefaultSupportOrHonorsResetFlags | Passed | 0.00 |
+The XCTest log confirms one start and one passing completion per selected test.
+
+The XCTest test export recorded 0 runtime warning occurrences across 9 examined tests.
+

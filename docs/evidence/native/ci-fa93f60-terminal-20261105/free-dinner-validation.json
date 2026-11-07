@@ -1,0 +1,40 @@
+{
+  "baselineHostedCandidate": "fa93f60534918ce8e040c706e80163e5d6959153",
+  "selector": "RoomInTheCartUITests/FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop",
+  "changes": "Reduce duplicate existence/hittability queries and reuse measured scroll area/frame. Full original dinner, protected lunch, partial fill, repair, settlement, feedback, next-shop reuse, restarts and saved-record assertions retained.",
+  "sourceSHA256": "4688cfcaa89cafc81710d865f04d7d466d200f8397d9ed0f82bdf172c8655b44",
+  "testResult": "Passed",
+  "durationSeconds": 492.5,
+  "rawExecutionGuardExit": 0,
+  "runtimeWarnings": 0,
+  "defaultExecutionAllowanceSeconds": 720,
+  "maximumExecutionAllowanceSeconds": 900,
+  "deviceAndConfiguration": [
+    {
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "3DD8B7CF-812D-4483-B539-126EC029212E",
+        "deviceName": "RITC CI fixes 20261105",
+        "modelName": "iPhone 17",
+        "osBuildNumber": "23C52",
+        "osVersion": "26.2",
+        "platform": "iOS Simulator"
+      },
+      "expectedFailures": 0,
+      "failedTests": 0,
+      "passedTests": 1,
+      "skippedTests": 0,
+      "testPlanConfiguration": {
+        "configurationId": "1",
+        "configurationName": "Test Scheme Action"
+      }
+    }
+  ],
+  "evidenceHashes": {
+    "Tests.log": "61b8fdcbeb876da1204fa11958927b943a0d70e47e94fbe3e0d5776f55952134",
+    "test-summary.json": "46c760e4f969a777e9a441ff6066465b89e5ca5ca76e3c95b1c2faaa49ecba8f",
+    "test-details.json": "fcdf97f3d6e1c954a69836babc560f4de22ae4884d5e00c2a5e17b3cfcb0fc83",
+    "verification.txt": "31985e4a116003860185d58aa9dbd118bf0ec8c2067c0e9dee37488aa1ff8e0c"
+  },
+  "limits": "Local pass on iOS26.2 build23C52 does not relabel original hosted720-second timeout or prove hosted speedup. Fresh hosted validation remains required."
+}

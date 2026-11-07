@@ -1,0 +1,52 @@
+{
+  "status": "capture_not_completed",
+  "failure": "inventory_sort_error_corrected_and_locally_verified",
+  "temporaryPasswordFilePresent": false,
+  "liveCliRolesObservedAfterAttempt": 1,
+  "liveDatabaseCaptured": false,
+  "restoreVerified": false,
+  "signInVerified": true,
+  "targetProject": "uwjxrotnocxxomqdetzk",
+  "credentialOrDatabaseOutputPublished": false,
+  "limitation": "No live dump or actual restore exists. Corrected clientTLS observation and inventory routine passed local fixture checks. Resume requires a fresh capture name and the exact verified target/client.",
+  "ownerKeychainAccessApproved": true,
+  "attempts": [
+    {
+      "capture": "capture-20261106",
+      "outcome": "credential_reader_timeout",
+      "cliRolesObservedAfter": 0
+    },
+    {
+      "capture": "capture-20261106-02",
+      "outcome": "psql_has_no_SSL_support",
+      "temporaryLoginTTLSeconds": 300,
+      "temporaryRole": "cli_login_postgres",
+      "observedRoleExpiryUTC": "2026-11-06T02:25:01.304116Z"
+    },
+    {
+      "capture": "capture-20261106-03",
+      "outcome": "credential_reader_timeout_before_return"
+    },
+    {
+      "capture": "capture-20261106-04",
+      "outcome": "credential_reader_timeout_before_return",
+      "interactionLimitSeconds": 600
+    },
+    {
+      "capture": "capture-20261106-05",
+      "outcome": "backend_hop_TLS_check_rejected_session_pooler"
+    },
+    {
+      "capture": "capture-20261106-06",
+      "outcome": "inventory_ORDER_BY_alias_expression_error",
+      "publicTLS": "TLSv1.3 with verify-full"
+    }
+  ],
+  "TLSClientVerified": true,
+  "bothEncryptedImagesDetached": true,
+  "temporaryLoginPasswordExpired": true,
+  "backupConnections": 0,
+  "ownerSecondKeychainResponseReceived": true,
+  "inventoryPreflightPassed": true,
+  "pausedAtOwnerRequest": true
+}

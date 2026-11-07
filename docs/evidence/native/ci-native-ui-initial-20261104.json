@@ -1,0 +1,151 @@
+{
+  "sourceCommit": "1fd2b962d77a7459ffe2a73db6d3d8a0557cda45",
+  "run": "https://github.com/palatis3/room-in-the-cart/actions/runs/41930998628",
+  "jobs": {
+    "ui-01": {
+      "job": 126937759026,
+      "passedTests": 1,
+      "failedTests": 1,
+      "skippedTests": 0,
+      "failures": [
+        {
+          "test": "PickupOfferUITests/testSavedOfferReopensAndUpdatesResponseAfterRestart()",
+          "message": "XCTAssertTrue failed - Missing actionable UI element: Query chain:\n \u2192Find: Target Application 'dev.roominthecart.app.debug'\n  \u21aa\ufe0eFind: Descendants matching type Button\n    \u21aa\ufe0eFind: Elements matching predicate '\"Review whole checkout\" IN identifiers'\nNo matches found for Elements matching predicate '\"Review whole checkout\" IN identifiers' from input {(\n    Button, {{68.0, 795.0}, {94.0, 54.0}}, identifier: 'cart', label: 'Shop', Selected,\n    Button, {{154.0, 795.0}, {94.0, 54.0}}, identifier: 'fork.knife', label: 'Dinners',\n    Button, {{240.0, 795.0}, {94.0, 54.0}}, identifier: 'clock.arrow.circlepath', label: 'Records',\n    Button, {{16.0, 62.0}, {44.0, 44.0}}, identifier: 'BackButton', label: 'Shop',\n    Button, {{16.0, 301.7}, {370.0, 52.0}}, label: 'Review store, slot and budget',\n    Button, {{16.0, 411.7}, {370.0, 72.7}}, label: 'wraps, 2 units'\n)}\n"
+        }
+      ],
+      "evidenceSHA256": {
+        "test-summary.json": "108e271c5321207ecf55c052afe725142c768316cf6a34aeb8f863b2434bd2df",
+        "test-details.json": "c8b03232fe7c9257deead0b6f5115333dab98dcb811a1dd5ab2024aaa1c18217",
+        "Tests.log": "d69b92360709a5fe7fcdb15b1a2ad6acd95a30e4128e5a53c82d1dda9c81782b"
+      },
+      "diagnosis": "Synthesized Apply tap landed below the helper\u2019s unobscured viewport. The checkout-copy preview remained visible; downstream checkout was never reached. Visible-center correction passed the full isolated iOS27 journey (507.232s); hosted validation is pending. See checkout-apply-hitarea-regression-20261105/validation.json."
+    },
+    "ui-02": {
+      "job": 126937759017,
+      "passedTests": 1,
+      "failedTests": 1,
+      "skippedTests": 0,
+      "failures": [
+        {
+          "test": "FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop()",
+          "message": "Test exceeded execution time allowance of 12 minutes"
+        }
+      ],
+      "evidenceSHA256": {
+        "test-summary.json": "06d69dbcc613e4c89073a71648458be332223001e1e971a1acdb560fdc64400b",
+        "test-details.json": "fcf7169249c9390c04696775a030d6876b18547a8f25d894b88ae235921296f9",
+        "Tests.log": "8ff699123e1c1b59b71500bfaf607aa10e7e505c5c5ca5602a39e405b9a1a067"
+      },
+      "diagnosis": "Ten waits for the app animation-completion signal consumed approximately600.44s after multiline Done. Sampled main thread was idle. Exact hosted app/test binaries passed the complete local journey1/1 in460.376s with no idle timeouts; local driver27.1/runtime23C52 differ from hosted26.3/23C54. No source workaround. Next hosted run must verify the unchanged selector. See dinner-quiescence-diagnostic-20261105/comparison.json."
+    },
+    "ui-03": {
+      "job": 126937759010,
+      "passedTests": 5,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "evidenceSHA256": {
+        "test-summary.json": "669c9c056f99b747b79052d0e429aef24729558011d78f031d4f9a6f73410e42",
+        "test-details.json": "2862e230e1e5855246bdd51e28bbfb7aef7cbb958066598a3e7f69260244228b",
+        "Tests.log": "b021feff9328df61407368844cb25d67c7c684798d18fb3ab9b9df49714d33df"
+      }
+    },
+    "ui-04": {
+      "job": 126937759073,
+      "passedTests": 4,
+      "failedTests": 1,
+      "skippedTests": 0,
+      "evidenceSHA256": {
+        "test-summary.json": "70bba71adb1da8d29c5d5243266f31e2b379879c5b74bd5860d237c4ffd1cbe6",
+        "test-details.json": "01b794957af890275387e3ba7e25aed4250a8c132105bb7b0fdf8f120e52f52b",
+        "Tests.log": "9f93fea86af0119ac4f6818a84008d9539424b9d064db85d7b986ebd04f3dff1"
+      },
+      "diagnosis": "Native print preview rendered in Milk/Apples order; UIKit Options exposed Close while test queried Cancel. Scoped Close-or-Cancel test correction passed1/1 locally70.226s, including native and app preview dismissals. One UIKit _UIReparentingView warning during earlier List options tap is retained. Hosted rerun pending; see print-dismissal-regression-20261105/validation.json."
+    },
+    "ui-05": {
+      "job": 126937759217,
+      "passedTests": 6,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "evidenceSHA256": {
+        "test-summary.json": "35fb60861b2d5c1335bce24093bed4e054cd8ec5827e6fce1764ada8e595ea06",
+        "test-details.json": "85845ba5f5e934966836a4b04b4413500f9e5e018c2b2a3cd507ba7546ced589",
+        "Tests.log": "afdbd1cd71f8007cf4d618dd1746c0ace8daf520f75d13a6b097c9b8863550a5"
+      }
+    },
+    "ui-06": {
+      "job": 126937759241,
+      "passedTests": 4,
+      "failedTests": 1,
+      "selector": "FreeJourneyUITests/testEnglishMealWeekListAndGridShowDatedProtectedLunch",
+      "durationSeconds": 290.456,
+      "jobLogSHA256": "a7c3b6381510ff8af557cabca8030aa593d7154ecd1951a08aef3bca9664d74e",
+      "artifactLimitation": "CreateArtifact failed after five request timeouts; no screenshot/result bundle artifact is available. Counts and sequence are read from retained job log.",
+      "sequenceUTC": {
+        "started": "2026-11-04T23:57:54Z",
+        "dinnerDateAssigned": "2026-11-04T23:58:48Z",
+        "lunchDateAssigned": "2026-11-04T23:59:43Z",
+        "bothIDsVisibleInGrid": "2026-11-05T00:00:23Z",
+        "dayNoteSelected": "2026-11-05T00:00:52Z (November5)",
+        "relaunch": "2026-11-05T00:01:00Z",
+        "oldLunchMissingInFreshWeek": "2026-11-05T00:01:20Z"
+      },
+      "diagnosis": "Strong date-range inference: default rolling week starts at Date() on cold launch. Test saved November4 entries, crossed midnight, then searched after default range advanced to November5. No persisted-file readback survived artifact upload failure, so record loss is not proven or ruled out. Preparing deterministic previous-day native picker/relaunch/original-week readback without changing product date semantics."
+    },
+    "ui-07": {
+      "job": 126937759030,
+      "passedTests": 5,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0,
+      "evidenceSHA256": {
+        "test-summary.json": "2ef47f5548bc2a8b83f5823a719068b36f96500ce2667e227a07b70f8961b249",
+        "test-details.json": "613f81d4de6941bbdcd7e7626c76aa768377fe895d954c5b7d1f396789a76e3b",
+        "Tests.log": "b51dbd756d5aea9ddb56df0bd7ab017fa60d3c7db5235eaf7f4b1088420c6075"
+      }
+    },
+    "ui-08": {
+      "job": 126937759111,
+      "passedTests": 5,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0,
+      "evidenceSHA256": {
+        "test-summary.json": "9c14c4181af399f7ab24be164017d9a3ef2122fe13747a539cb14e69a9f356a9",
+        "test-details.json": "7192927bbb2f594c455b4ae6108aa36413cf083b6c1d0fc1cae1d9c1147fc304",
+        "Tests.log": "00364a179eddacb258284247f13095151ad7218683e5da56371a775bf00293c2"
+      }
+    },
+    "ui-09": {
+      "job": 126937759016,
+      "passedTests": 6,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0,
+      "evidenceSHA256": {
+        "test-summary.json": "d3c664d47a600d2bf443d514fe984840d8718cfb6eb7d7dc82193274e18f4d9e",
+        "test-details.json": "5d59cc79d8105180befe863e6b25cb04690d4b252f684dfd699f8764b3943932",
+        "Tests.log": "742cb876efe2552e8fa41e439077bfe5550983018c5402422289dcacffdf6923"
+      }
+    },
+    "ui-10": {
+      "job": 126937759087,
+      "passedTests": 5,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0,
+      "evidenceSHA256": {
+        "test-summary.json": "c6ac6193d43d678fef0a5503293ab3f89c413f9ad9647ba8ea7ac48f05d91902",
+        "test-details.json": "bce7b2d61d1ba0b4a8ecf65f8bc03f9827e3d7406856587296bb3633de6166e2",
+        "Tests.log": "c1b82c38a4fe6d7b27b37a7a594f2479e6f5c02a8f0dac33c9e41f5d511006bd"
+      }
+    }
+  },
+  "scope": "All ten original ordinary UI groups completed:42 passed,4 failed,46 executed. Original core run and CI gate failed; local focused verification is separate. UI06 result bundle upload failed, and its counts/sequence come from retained job log.",
+  "totals": {
+    "executedUITests": 46,
+    "passedUITests": 42,
+    "failedUITests": 4,
+    "coreConclusion": "failure",
+    "gateJob": 126965528842
+  }
+}

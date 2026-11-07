@@ -1,0 +1,212 @@
+{
+  "base": "80d8727069e2a9f42218b9a635b7a252e56a7263",
+  "reviewedSource": {
+    "ios/RoomInTheCart.xcodeproj/project.pbxproj": "b9dc97d002a598ed527e30177ee9a48d0f90c853880ca7010156563332a7980d",
+    "ios/UITestSupport/ContributorRequestUIFixture.swift": "029d1d3e42867962b6f8e6d7bab07e1a72537893265840c86b52fae17d2520d0",
+    "ios/UITestSupport/ImportRecoveryUIFixture.swift": "1f07b0c1e6680bdd80633dadeb77d44095b43b8ca36ba52f914cd15f9ef5821a",
+    "ios/UITests/ImportRecoveryUITests.swift": "f4c1288d0483f12aae34f3147db0574582da5e2a67d8f69fab483579bbc265c8",
+    "scripts/plan_ios_fixture_tests.py": "1aecca10c8cc04d3f4baed1ee357a2829856b7e488f688dd23f95c2eba745fa6",
+    "scripts/test_plan_ios_fixture_tests.py": "ed982ca2ba89726d3ff8402fd9457a5ca4bed9884c9fffbb848ab592cc6b7d81"
+  },
+  "fixedSourceManifestSHA256": "4c2cf1808643b66adb319194d4c12a3777c0ca74e1c24bce56107ec48da47e6a",
+  "fixedSourceInputsMatched": 519,
+  "archivedProductsManifestSHA256": "fb4b79298a9b64dad938261fdbfb83187738891261d47b9c7a12c827c3e5639e",
+  "archivedFixedProductsMatched": 161,
+  "currentDerivedDataUsed": false,
+  "compiledPlanReplayedExactly": true,
+  "compiledContributorCases": 42,
+  "allProfilesSourceCases": 47,
+  "newSelectors": [
+    "RoomInTheCartUITests/ImportRecoveryUITests/testDiscardKeepsPendingImportUncommittedAndReviewPresented",
+    "RoomInTheCartUITests/ImportRecoveryUITests/testRetryPersistsOneImportAndDismissesThroughItsCallback"
+  ],
+  "projectAddedObjects": {
+    "1F9A551F2C663C314A28E3BA": {
+      "isa": "PBXBuildFile",
+      "fileRef": "0F6C4A4C28484CEAE26F29B3"
+    },
+    "6E3A9442D7E9986A3D6E29A2": {
+      "path": "UITests/ImportRecoveryUITests.swift",
+      "isa": "PBXFileReference",
+      "lastKnownFileType": "sourcecode.swift",
+      "sourceTree": "<group>"
+    },
+    "83DE172251819247F47F2464": {
+      "isa": "PBXBuildFile",
+      "fileRef": "6E3A9442D7E9986A3D6E29A2"
+    },
+    "0F6C4A4C28484CEAE26F29B3": {
+      "path": "UITestSupport/ImportRecoveryUIFixture.swift",
+      "isa": "PBXFileReference",
+      "lastKnownFileType": "sourcecode.swift",
+      "sourceTree": "<group>"
+    }
+  },
+  "projectChangedObjects": {
+    "C7DEC6FCCD74FC72557EBA8A": {
+      "isa": "PBXSourcesBuildPhase",
+      "fields": [
+        "files"
+      ]
+    },
+    "B163B2B27B191635FF8E9FC8": {
+      "isa": "PBXSourcesBuildPhase",
+      "fields": [
+        "files"
+      ]
+    },
+    "0D6E4079E36703EBD37C0072": {
+      "isa": "PBXGroup",
+      "fields": [
+        "children"
+      ]
+    }
+  },
+  "offlineChecks": {
+    "planner-tests": {
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "scripts",
+        "-p",
+        "test_plan_ios*.py"
+      ],
+      "exit": 0
+    },
+    "slot-tests": {
+      "command": [
+        "python3",
+        "scripts/test_ci_mac_slots.py"
+      ],
+      "exit": 0
+    },
+    "workflow-tests": {
+      "command": [
+        ".build/CIResearch20261106/scheduling-proposal/venv/bin/python",
+        "scripts/test_check_ci_workflows.py"
+      ],
+      "exit": 0
+    },
+    "project-generation": {
+      "command": [
+        "python3",
+        "scripts/generate_xcode_project.py",
+        "--check"
+      ],
+      "exit": 0
+    },
+    "actionlint": {
+      "command": [
+        ".build/CIResearch20261106/scheduling-proposal/venv/bin/python",
+        "scripts/check_ci_workflows.py",
+        "--actionlint",
+        "/tmp/ritc-actionlint-2ttcdxxn/actionlint",
+        "--report",
+        ".build/ImportRecoveryNative20261106/ci-native-fixed/actionlint-report.json"
+      ],
+      "exit": 0
+    }
+  },
+  "actionlint": {
+    "passedViaNarrowBridge": true,
+    "rawExit": 1,
+    "recognizedQueueDiagnostics": 14,
+    "unexpectedDiagnostics": 0,
+    "workflowHashesMatched": true
+  },
+  "evidenceHashes": {
+    "native-result.json": "20bcecc020c82964f509bdb4995469c950284259c888a2ad5890a1a7fba2aacd",
+    "native-invocation.json": "96c1398f4ca905ea380d9e5bc6bd58385452a08ad92a3b482e1542b370c4584d",
+    "inspection/summary.json": "e34cba7018e7e889af5cb3261f8f09c33b99205df63ad047661e83b4cd7cd3f4",
+    "inspection/tests.json": "b489287d3eb4a8ec56318353e3a133d98a5f947daf5cdd0aa93ddcf2a104cde7",
+    "inspection/strict.log": "a0ec5cc1f4ec5dd33a7c7ee855507cc418a028fef24133385a562ce3a3af3141",
+    "inspection/test-runtime-warnings.json": "f8ad96fa2dba1663cb8ecf3e532759170a56556bd8646ffa1bd97a8aa0aa78f8",
+    "enumeration.json": "090b940ab38c7e23623b0f3860c6d7df4f8514d116bac7226615334119cb36c0",
+    "test-plan/manifest.json": "bca8125a1d50d2598b51dc444c0499807ab85ef5bf32bb0a8cbd15662f0345c6",
+    "offline-checks.json": "cbc133c05badf55488f052f4e7d598d5981f8338a2fa78af58979dbd4a55821e",
+    "planner-tests.log": "a58aa68c437d80aca7d12bffd738de963dd54a1f92c66c8a01c880e2d330d365",
+    "slot-tests.log": "256e590ba9183f73cc663d8cfa132c3c8611787f5bb806ea54e951f3d8a7d3ca",
+    "workflow-tests.log": "b7648b45e74c1baa95c367088c6cc6cdeeee8efa5bed8034fc79fd46c51f5dd6",
+    "actionlint-report.json": "b2a70d0e9a770aa3cda23f1d88bfa5396db01ea2df6efb1b1c68cd8087f11887"
+  },
+  "scope": "Read-only source/evidence review, pure planner and lifecycle evidence replay. Negative terminal evidence inspected after root authorization; no native/offline test execution or simulator interaction.",
+  "negativeControl": {
+    "nativeExit": 65,
+    "expectedSingleFailure": "XCTAssertTrue failed - Discard must preserve the independent durable record",
+    "onlySourceDifference": {
+      "file": "ios/Features/Ledger/LedgerHomeView.swift",
+      "fixedSHA256": "d9def6771397cf509d9b4c2ed59366b464b58e2f84ba2186999b28fbf013b559",
+      "negativeSHA256": "bef414f5ba04a20662471d60ced254b54bb22817eca18b3c682a8676ccdd6d57",
+      "change": "Remove only both explicit borderless recovery button modifiers; fixture and assertions unchanged."
+    },
+    "testBinarySHA256IdenticalFixedAndNegative": "aebc948f741a5154194555bba8996fcb76dbd8aa729908d030a33f2f99d55422",
+    "durableReadback": {
+      "batchContributionIDs": [
+        "D8DDB9D3-89F3-4E61-B54B-959D1F94DDC6"
+      ],
+      "batchCount": 1,
+      "batchIDs": [
+        "8ED3361C-BCB3-4CFB-AC7D-4D0F71EE4DD1"
+      ],
+      "contributionIDs": [
+        "D8DDB9D3-89F3-4E61-B54B-959D1F94DDC6"
+      ],
+      "lineIDs": [
+        "D883B65A-CEDC-434D-8867-DA37B1BA7016"
+      ],
+      "matchesBaseline": false,
+      "names": [
+        "discarded oat jars"
+      ],
+      "originalTexts": [
+        "4 discarded oat jars"
+      ],
+      "payloadSHA256": "3aee287f5c160fc548711ea445ad2159caab35b32cfd384eadacebf3954d497a",
+      "pending": false,
+      "previewIDs": [
+        "8ED3361C-BCB3-4CFB-AC7D-4D0F71EE4DD1"
+      ],
+      "proposedLineIDs": [
+        "D883B65A-CEDC-434D-8867-DA37B1BA7016"
+      ],
+      "quantities": [
+        "discarded oat jars=4/1 count"
+      ],
+      "revision": 2,
+      "saving": false,
+      "sequence": 1,
+      "stagedContributionIDs": [
+        "D8DDB9D3-89F3-4E61-B54B-959D1F94DDC6"
+      ]
+    },
+    "attachmentMapping": {
+      "configurationName": "Test Scheme Action",
+      "deviceId": "79A8A00E-A5C8-4EA4-906E-56B1A854BF7A",
+      "deviceName": "RITC-ImportRecovery-Negative-20261106",
+      "exportedFileName": "39E292FD-DA1E-4A60-BCA1-0B804401AF44.txt",
+      "isAssociatedWithFailure": false,
+      "suggestedHumanReadableName": "Recovery-independent-durable-readback_0_51933697-EFF6-42A5-AE7C-61F204374018.txt",
+      "timestamp": 1794025025.452
+    },
+    "artifactHashes": {
+      "inspection/summary.json": "d5e6ff6b1aabe438fb88e49632f563cce84ae7248d5ab02a529ae056cbb2d02c",
+      "inspection/tests.json": "eb388929fcf47cd6ccd5024a25049beb7c8bbae79274a3c81c042eaa2e1d447d",
+      "inspection/readback/manifest.json": "8ed9dcb35e57fb6f9f0d8ab184ab31f0f97d0a2fb0b11fb594d69024ff3cb2f7",
+      "inspection/readback/39E292FD-DA1E-4A60-BCA1-0B804401AF44.txt": "425c9c7f7b43e80472c4041d4d3995dba6b1695022476cdd87178da671e45b3b",
+      "source-difference.json": "c1929b727d0034a83e6208f06e2bf96000d3013beff0575fb9b7b18468f42523",
+      "build-result.json": "849aece1d4616044b600a02d8ee3148521d5816b6875927af1c2224fff93383b",
+      "native-result.json": "c23b60242c80ad09f406bc4027801918bc9c77d5b6c601dbfda118519ac5e585",
+      "products-manifest.json": "e443c1669fa7b7859fc601bab97a7871eeffc74a5066b7a47de7285162be5735",
+      "build_negative.py": "9f2d472bd71a46f0b74a8f2720d435926fe06068ecafc773b5e9d4a5dac47efe"
+    },
+    "readbackScope": "Independent LedgerStore load of synthetic durable head emitted by fixture; no second local raw SQLite read performed for this review."
+  },
+  "fixedRawLifecycleIndependentlyVerified": true,
+  "fixedObservedTestDurations": {
+    "RoomInTheCartUITests/ImportRecoveryUITests/testDiscardKeepsPendingImportUncommittedAndReviewPresented": 47.130833983421326,
+    "RoomInTheCartUITests/ImportRecoveryUITests/testRetryPersistsOneImportAndDismissesThroughItsCallback": 37.46089494228363
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "candidate": "8d1a79b22981148839c6e3d0827c6710f877a369",
+  "scope": "Local diagnostic-only nonreproduction; original hosted timeout unresolved",
+  "auditedAtUTC": "2026-11-07T05:03:13.374556+00:00",
+  "originalHosted": {
+    "runID": 42337977943,
+    "attempt": 1,
+    "jobID": 128299120073,
+    "artifactID": 13560692753,
+    "passed": 14,
+    "failed": 1,
+    "timeoutSeconds": 120,
+    "runnerRestart": true,
+    "originalBundleFilesUnchanged": 78
+  },
+  "localPositive": {
+    "passed": 15,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "strictExit": 0,
+    "cancellationDurationSeconds": 0.266,
+    "markers": 50,
+    "originalHostedOrderMatches": true,
+    "originalBundleFilesUnchanged": 173
+  },
+  "rehashCounts": {
+    "source": 459,
+    "positive-products": 167,
+    "executedProducts": 167
+  },
+  "builtTestSourceMatchesProposal": true,
+  "attachmentAudit": {
+    "allowlistedTextPayloads": 51,
+    "markerPayloads": 50,
+    "allMatchOriginalBundle": true,
+    "allMarkersExactlyMatchRawLog": true,
+    "otherMediaExported": false
+  },
+  "rootOwnedCleanup": {
+    "simulator": "A37FB5B8-67B6-4485-B5E3-C18D6D85E1E6",
+    "shutdownExit": 0,
+    "deleteExit": 0,
+    "receiptSHA256": "d8d202829dc0a99961084f2f74e6f1a2369a1f566e2b25fdbc683e0dbab48770",
+    "scope": "Only the locally owned positive diagnostic simulator; investigator performed no simulator action"
+  },
+  "inputReceiptHashes": {
+    "native.log": "b6f5525ff6b172554f1a238c2d5b2a466a4b8b93e6d4402fdbbb9ebff7d0e5d2",
+    "build.log": "6b576e0930e4b37e0864df682c7a6c7e13ef28165bc83f2315ce17763db85e6a",
+    "trace-review.json": "e60ea2bffe7e7f4012c3d79d0f9f645342023b2b9995f72393c9a55f7024a970",
+    "source-manifest.json": "400c69d5e44dcb26d684e76be7ce72f13222cf7fe5c883710482c6113c5fbc0f",
+    "products-manifest.json": "41ad98e2d5490c486f795742b2ee5ccc12c398f1a61ee98b898021ca108e91df",
+    "inspection/strict.log": "03b2427e8959436757e07bee3ab2ba8ebe387964d53dd1c68d81414e4471d0a2"
+  },
+  "limitations": [
+    "This run cannot locate or explain the original suspended await.",
+    "Instrumentation changes scheduling.",
+    "Local iOS26.2/23C54 matches hosted runtime; local Xcode27.1 differs from hosted Xcode26.3 and local iPhone17Pro differs from hosted iPhone17.",
+    "Positive completion proves normal-path marker persistence, not timeout/crash persistence.",
+    "No Spanish diagnostic run is included. Same-source original Spanish15/15 does not clear English.",
+    "Zero runtime warnings is not a warning-free build claim.",
+    "Negative supervisor/invocations/results are outside this audit.",
+    "Cleanup receipt covers only the root-owned positive diagnostic simulator; no product-fix/release-acceptance claim is included."
+  ],
+  "investigatorActions": {
+    "nativeCommands": false,
+    "buildOrTestExecution": false,
+    "simulatorActions": false,
+    "gitOrTrackedSourceChanges": false,
+    "hostedActions": false
+  },
+  "releaseAcceptance": false,
+  "productFixEstablished": false
+}

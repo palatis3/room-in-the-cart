@@ -1,0 +1,53 @@
+{
+  "candidate": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+  "artifactID": 13494181617,
+  "case": "SharedStoreQuoteUITests/testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave()",
+  "targetPID": 23491,
+  "parentWindow": [
+    402,
+    874
+  ],
+  "pointerEvents": [
+    {
+      "coordinate.x": 201.0,
+      "coordinate.y": 595.6666666666665,
+      "offset": 0.0,
+      "eventType": 1
+    },
+    {
+      "coordinate.x": 201.0,
+      "coordinate.y": 595.6666666666665,
+      "offset": 0.05,
+      "eventType": 3
+    }
+  ],
+  "reviewSaveTapStartSeconds": 355.96,
+  "reviewSaveSynthesizeSeconds": 357.15,
+  "postTapIdleSeconds": 357.47,
+  "acknowledgedExistenceQuerySeconds": 357.94,
+  "firstMissingTargetFindSeconds": 358.86,
+  "failureSeconds": 365.66,
+  "teardownSeconds": 367.45,
+  "reviewOpened": true,
+  "firstFactsFrame": [
+    16,
+    164.7,
+    370,
+    455.3
+  ],
+  "secondFactsFrame": [
+    16,
+    620,
+    370,
+    455.3
+  ],
+  "scrollbar": "4 pages, 28%",
+  "acknowledgementInRetainedHierarchy": false,
+  "visibleValidationError": false,
+  "visibleKeyboard": false,
+  "scrollBetweenReviewSaveAndFailure": false,
+  "preTapButtonFrameRecoverable": false,
+  "sourceReference": "ios/Features/Household/SharedStoreQuotesView.swift",
+  "sourceSHA256": "8e8a915be21df2e023c2c2f8f1970f136532b75be1d14ace7da32554e4075017",
+  "limits": "The pre-tap UI snapshot contains only a childless app root. Teardown establishes successful review entry and offscreen facts, not exact temporal causation of the missing live target snapshot. No save/relaunch assertion was reached."
+}

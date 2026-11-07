@@ -1,0 +1,78 @@
+{
+  "classification": "Recommend the bounded setup policy below; this is not a diagnosis of the simulator service or authorization for another dispatch.",
+  "initialInventory": {
+    "command": [
+      "xcrun",
+      "simctl",
+      "list",
+      "-j"
+    ],
+    "timeoutSeconds": 180,
+    "invocations": 1,
+    "purpose": "Use the returned inventory for actual exact runtime/build selection; no throwaway warm-up or repeated query."
+  },
+  "sharedControlPlane": {
+    "commands": [
+      "list devices for owned identity",
+      "create one uniquely named owned device",
+      "getenv SIMULATOR_RUNTIME_BUILD_VERSION",
+      "get_app_container for the selected app"
+    ],
+    "timeoutSeconds": 90,
+    "attemptsPerRequiredOperation": 1,
+    "failure": "Timeout, nonzero exit, unknown/mismatched runtime, or ownership mismatch fails the phase. No replacement device, sleep, query retry, or runtime substitution."
+  },
+  "unchanged": {
+    "unrelatedGitToolchainCommandTimeoutSeconds": 30,
+    "bootstatusCommandTimeoutSeconds": 420,
+    "defaultXCTestSeconds": 720,
+    "maximumXCTestSeconds": 900,
+    "parallelTesting": "NO",
+    "strictWarningGuard": "unchanged",
+    "originalSelectorActionsAssertions": "unchanged",
+    "jobMinutes": 70,
+    "prepareStepMinutes": 8,
+    "buildStepMinutes": 30,
+    "collectionStepMinutes": 8
+  },
+  "changedWorkflowOverheadCeilings": {
+    "executeMinutes": 21,
+    "cleanupMinutes": 3,
+    "purpose": "Accommodate bounded simulator metadata and owned cleanup overhead only; no XCTest deadline changes."
+  },
+  "composition": {
+    "execute": "Three90-second metadata operations plus900-second maximum testcase equal1170seconds, leaving90seconds in the1260-second execution step for process startup/finalization. This is a reasonable hard ceiling, not a guarantee that every maximum and arbitrary overhead fit.",
+    "cleanup": "Owned identity90seconds plus shutdown30seconds leaves60seconds within a180-second step for orchestration and proof writes. Retain shutdown command30seconds.",
+    "prepare": "The8-minute hard ceiling remains; the180/90second command ceilings do not promise every sequential worst case can complete. Timeout remains setup failure.",
+    "overall": "Existing70-minute job cap remains authoritative. Step ceilings are maxima, not reserved slots; their sum and runner/upload overhead do not guarantee collection if every phase reaches its cap. Preserve any interruption or absent evidence as failure/incomplete; never fabricate a result or extend tests."
+  },
+  "commandEvidence": [
+    "A shared wrapper writes a unique record before each command and finalizes it in finally.",
+    "Record phase/operation, fixed command identity, owned device UUID where applicable, UTC start/end, monotonic elapsed, configured deadline, exit/timeout/signal and whether output parsed successfully.",
+    "Capture no stdout or secrets in the command ledger. Keep bounded inventory/runtime proof separately.",
+    "On timeout preserve any existing failure proof and write the command failure before raising. A hard external kill may leave a started-only record: label it interrupted/incomplete.",
+    "Do not report a timeout as an observed wrong runtime. Distinguish unknown readback, mismatched returned value, command failure and parser failure.",
+    "Raw test outcome must still be written before capture validation. Capture completeness and strict XCTest status remain independent."
+  ],
+  "offlineAcceptanceChecksBeforeAnyRun": [
+    "Verify only initial inventory receives180seconds; identity/create/getenv/get_app_container receive90seconds; unrelated commands remain30seconds.",
+    "Prove one command invocation on timeout/nonzero/parse failure, with duration/deadline evidence retained.",
+    "Prove runtime/identity mismatch still prevents build/test and cleanup touches only the owned UUID.",
+    "Prove cancellation and missing capture cannot turn raw failure or notInvoked into success.",
+    "Confirm exact original selector, source normalization,720/900, warning guard,70-minute job and new21/3minute overhead caps.",
+    "Keep original failed runs42203081911 and42204324021 unchanged."
+  ],
+  "evidence": "evidence.json and core-ui09-selection-excerpt.log",
+  "evidenceBasis": [
+    "Original b359 successful core simulator-selection pipeline bracket143.17944seconds; API step144seconds.8of11 core selections exceeded30seconds.",
+    "Original fixture selections8\u201380seconds;5of12 non-Records selection steps exceeded30seconds.",
+    "Original CI uses no30-second per-command wrapper; core selection and boot each have8-minute step ceilings.",
+    "Primary upstream report15247 reports macOS15 initial calls up to152.9seconds; context supports180seconds without establishing the cause of these two diagnostic failures."
+  ],
+  "limits": [
+    "Do not install a different CoreSimulator, change Xcode/runtime, add waiting sleeps or infer service readiness merely from elapsed time.",
+    "Original failed run42203081911 had a post-boot getenv timeout. The upstream first-call explanation does not establish its cause.",
+    "The later run used a different runner image; preserve that fact without causal attribution.",
+    "No source implementation, native operation, Git mutation, hosted action or dispatch was performed for this review."
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "id": 13553643194,
+  "node_id": "MDg6QXJ0aWZhY3QxMzU1MzY0MzE5NA==",
+  "name": "debug-artifacts",
+  "size_in_bytes": 37882210,
+  "url": "https://api.github.com/repos/palatis3/room-in-the-cart/actions/artifacts/13553643194",
+  "archive_download_url": "https://api.github.com/repos/palatis3/room-in-the-cart/actions/artifacts/13553643194/zip",
+  "expired": false,
+  "digest": "sha256:0b6c6db7b05f231a7f8b45d9e2a91b3bf01ae3595e57c935f601fff6ed578e2a",
+  "created_at": "2026-11-07T01:10:51Z",
+  "updated_at": "2026-11-07T01:10:51Z",
+  "expires_at": "2026-11-14T01:10:47Z",
+  "workflow_run": {
+    "id": 42316648565,
+    "repository_id": 1445928007,
+    "head_repository_id": 1445928007,
+    "head_branch": "codex/parallel-ios-ci",
+    "head_sha": "0d5bb1b22e9e84cd4b8c2b07317f91cfc703b60c"
+  }
+}

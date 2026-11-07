@@ -5,7 +5,6 @@ import CoreDomain
 final class LedgerPackStockReviewTests: XCTestCase {
     @MainActor func testReviewedStockReducesWholePacksButDoesNotNetLedgerOrCheckoutMealDemand() async throws {
         let f = try await fixture(stock: 8)
-        defer { try? FileManager.default.removeItem(at: f.directory) }
         let original = try XCTUnwrap(f.pickup.journey)
         let review = try packReview(f)
         XCTAssertEqual(review.request.needed?.amount, try Rational(12))
@@ -32,7 +31,6 @@ final class LedgerPackStockReviewTests: XCTestCase {
 
     @MainActor func testFullyCoveredProducesDurableStockOnlyPlanWithoutFakePurchaseOrPlacement() async throws {
         let f = try await fixture(stock: 12)
-        defer { try? FileManager.default.removeItem(at: f.directory) }
         let review = try LedgerPackReview.prepare(ledger: f.ledger, shopID: f.shop, lineID: f.line,
             offerA: PackOffer(id: "a", label: "Confirmed at home", usableQuantity: nil, price: nil),
             offerB: PackOffer(id: "b", label: "Confirmed at home", usableQuantity: nil, price: nil),
@@ -52,6 +50,7 @@ final class LedgerPackStockReviewTests: XCTestCase {
         try rejected(await f.pickup.reportPlaced())
         let reopenedLedger = LedgerModel(databaseURL: f.directory.appendingPathComponent("ledger.sqlite"))
         let reopenedPickup = PickupModel(databaseURL: f.directory.appendingPathComponent("pickup.sqlite"))
+        f.cleanup.track(reopenedLedger, reopenedPickup)
         await reopenedLedger.open(); await reopenedPickup.load()
         XCTAssertEqual(reopenedLedger.workspace.packSelections, f.ledger.workspace.packSelections)
         XCTAssertTrue(try XCTUnwrap(reopenedPickup.journey).isAtHomeOnlyPlan)
@@ -80,7 +79,6 @@ final class LedgerPackStockReviewTests: XCTestCase {
 
     @MainActor func testChangedBatchRejectsUnsavedReviewAndInvalidatesSavedSelection() async throws {
         let f = try await fixture(stock: 8)
-        defer { try? FileManager.default.removeItem(at: f.directory) }
         let stale = try packReview(f)
         try await updateStock(f, amount: 4)
         do { _ = try await stale.save(offerID: "a", ledger: f.ledger, pickup: f.pickup); XCTFail("Changed batch must invalidate the open review") }
@@ -96,7 +94,6 @@ final class LedgerPackStockReviewTests: XCTestCase {
 
     @MainActor func testChangedJourneyRevisionListOrWorkspaceRequiresFreshReview() async throws {
         let f = try await fixture(stock: 8)
-        defer { try? FileManager.default.removeItem(at: f.directory) }
         let review = try packReview(f)
         try accepted(try await review.save(offerID: "a", ledger: f.ledger, pickup: f.pickup))
         let selection = try XCTUnwrap(f.ledger.workspace.packSelections.first), shop = try XCTUnwrap(f.ledger.shop)
@@ -121,7 +118,6 @@ final class LedgerPackStockReviewTests: XCTestCase {
 
     @MainActor func testProtectedFoodElsewhereIsUnavailableForThePackReview() async throws {
         let f = try await fixture(stock: 8)
-        defer { try? FileManager.default.removeItem(at: f.directory) }
         try accepted(await f.pickup.change { value in
             value.stockNeeds.append(StockNeed(id: UUID(), foodID: f.line, name: "Protected lunches elsewhere", amount: self.q(8), priority: .protected))
         })
@@ -132,7 +128,6 @@ final class LedgerPackStockReviewTests: XCTestCase {
 
     @MainActor func testStockAddedAfterNoStockReviewRejectsOldChoiceAndNoStockStillBuysTwo() async throws {
         let f = try await fixture(stock: nil)
-        defer { try? FileManager.default.removeItem(at: f.directory) }
         let review = try packReview(f)
         XCTAssertNil(review.stockEvidence)
         XCTAssertEqual(review.result.offerA.packsToBuy, 2)
@@ -146,7 +141,6 @@ final class LedgerPackStockReviewTests: XCTestCase {
 
     @MainActor func testCachedCheckoutRejectsChangedStockButRecordsAnExplicitAlreadyPlacedOriginalOrder() async throws {
         let f = try await fixture(stock: 8)
-        defer { try? FileManager.default.removeItem(at: f.directory) }
         try accepted(try await packReview(f).save(offerID: "a", ledger: f.ledger, pickup: f.pickup))
         let checkout = try self.checkout(f)
         try accepted(try await LedgerCheckoutAdapter.apply(checkout, ledger: f.ledger, pickup: f.pickup))
@@ -182,7 +176,6 @@ final class LedgerPackStockReviewTests: XCTestCase {
 
     @MainActor func testStockAddedToCachedVersionOneBasketRequiresNewReview() async throws {
         let f = try await fixture(stock: nil)
-        defer { try? FileManager.default.removeItem(at: f.directory) }
         try accepted(try await packReview(f).save(offerID: "a", ledger: f.ledger, pickup: f.pickup))
         let checkout = try self.checkout(f)
         try accepted(try await LedgerCheckoutAdapter.apply(checkout, ledger: f.ledger, pickup: f.pickup))
@@ -202,7 +195,6 @@ final class LedgerPackStockReviewTests: XCTestCase {
 
     @MainActor func testAnAppliedStockSelectionCannotBeAdoptedForAnotherCheckoutChange() async throws {
         let f = try await fixture(stock: 8)
-        defer { try? FileManager.default.removeItem(at: f.directory) }
         try accepted(await f.ledger.editShop(key: "second-food", shopID: f.shop) { value in
             _ = try value.addManualLine(name: "Rice", quantity: self.q(12))
         })
@@ -226,7 +218,6 @@ final class LedgerPackStockReviewTests: XCTestCase {
 
     @MainActor func testMixedStockOnlyAndPurchasedFoodKeepsAllDemandsWhenTheActualOrderIsReported() async throws {
         let f = try await fixture(stock: 12)
-        defer { try? FileManager.default.removeItem(at: f.directory) }
         try accepted(await f.ledger.editShop(key: "rice", shopID: f.shop) { value in
             _ = try value.addManualLine(name: "Rice", quantity: self.q(2))
         })
@@ -253,12 +244,14 @@ final class LedgerPackStockReviewTests: XCTestCase {
         XCTAssertEqual(f.pickup.journey?.needs.count, 3)
     }
 
-    private struct Fixture { let ledger: LedgerModel; let pickup: PickupModel; let directory: URL; let shop: UUID; let line: UUID }
+    private struct Fixture { let cleanup: SQLiteFixtureDirectory; let ledger: LedgerModel; let pickup: PickupModel; let directory: URL; let shop: UUID; let line: UUID }
     @MainActor private func fixture(stock: Int64?) async throws -> Fixture {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let cleanup = SQLiteFixtureDirectory(directory, test: self)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let ledger = LedgerModel(databaseURL: directory.appendingPathComponent("ledger.sqlite"))
         let pickup = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"))
+        cleanup.track(ledger, pickup)
         await ledger.open(); await pickup.load()
         try accepted(await ledger.startShop(title: "Stock-aware packs"))
         let shop = try XCTUnwrap(ledger.shop?.id)
@@ -274,7 +267,7 @@ final class LedgerPackStockReviewTests: XCTestCase {
             let lot = ConfirmedStockLot(id: UUID(), foodID: line, name: "Wraps at home", usable: q(stock), confirmedAt: Date().addingTimeInterval(-1), source: .freezer)
             try accepted(await pickup.saveStockLot(lot, in: shop))
         }
-        return Fixture(ledger: ledger, pickup: pickup, directory: directory, shop: shop, line: line)
+        return Fixture(cleanup: cleanup, ledger: ledger, pickup: pickup, directory: directory, shop: shop, line: line)
     }
     @MainActor private func packReview(_ f: Fixture) throws -> LedgerPackReview {
         try LedgerPackReview.prepare(ledger: f.ledger, shopID: f.shop, lineID: f.line,

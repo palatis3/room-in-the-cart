@@ -1,0 +1,13 @@
+{
+  "baseHead": "1e1f71390cef723bad9854fe1a5405aaf2a8d108",
+  "exactInstalledFiles": {
+    "ios/Packages/CoreDomain/Sources/CoreDomain/MealRecovery.swift": "c3808eb22a921728a0b34f192919e470eb3133332c551678ec8fee52ed4cf6cd",
+    "ios/Packages/CoreDomain/Tests/CoreDomainTests/MealRecoveryTests.swift": "10859dfdf2c1044367115cec6fdad3fe069f15d0df2fcd17d415e9ccc7ed89a5"
+  },
+  "all41ManifestEntriesVerified": true,
+  "existingSourcesAndFixturesMatchMain": true,
+  "uniquePassedTests": 180,
+  "uniqueNewPassedTests": 9,
+  "scope": "Pure domain component only. No app Apply route, shared API or S09.01 acceptance. Pending model CAS/full provenance/context revisions/current projections/native and shared service integration.",
+  "verification": "Root read engine and all new tests, independently hashed complete source/fixtures/log/patch and counted unique passed cases. Did not rerun identical tested package."
+}

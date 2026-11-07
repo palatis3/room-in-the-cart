@@ -1,0 +1,12 @@
+[
+  {
+    "action": "shutdown",
+    "exit": 0,
+    "output": ""
+  },
+  {
+    "action": "delete",
+    "exit": 0,
+    "output": ""
+  }
+]

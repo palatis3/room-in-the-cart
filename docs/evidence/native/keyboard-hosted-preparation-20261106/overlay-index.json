@@ -1,0 +1,16 @@
+{
+  "base": "804030e68473d022e72b464940061c01c611a0bd",
+  "files": {
+    ".github/workflows/ios-fixtures.yml": "5dda6c299cc4c946a22d1cf5a290678dd7f2684f97f7eff59b689103e50bb85e",
+    "diagnostics/keyboard-dismiss/hosted/PRODUCT-EXCEPTION.md": "98f58badb3343ab39267113f9789bf41f2b01e0777a0a0e6e9f30cf247040d53",
+    "diagnostics/keyboard-dismiss/hosted/README.md": "08a3cdcc2d83c3b8d30c5b899cca83133586db96aec8c00397bf99db0cf5e401",
+    "diagnostics/keyboard-dismiss/hosted/harness.py": "57335f775613c285bd967535f4d38092323cc2ca983cb0f18b94b748516d35c1",
+    "diagnostics/keyboard-dismiss/hosted/reconcile_keyboard_logs.py": "f224fb3dd0fc2a6feb1341f46f31fdf716e3a2550d509d4cb7bb06822097f835",
+    "diagnostics/keyboard-dismiss/hosted/reference-plan.json": "edbef405dfeff96f1c21ac26790b44c1fabbdaf074da3c0cd40abbc872e7617a",
+    "diagnostics/keyboard-dismiss/hosted/selectors.txt": "2d443930e5b225e8de035d6045a021531e7db0c27b6a4914fa87b5db388e4c51",
+    "diagnostics/keyboard-dismiss/hosted/test_harness.py": "edc556f195d5d1383bcdad129c1e4d59804940e25d492ea616f2ed0ad3af7d19",
+    "diagnostics/keyboard-dismiss/hosted/test_keyboard_provenance.py": "e56564f8955e310fd10af9809e51e875def3839d49d46b611e1323b0eb0a0204",
+    "diagnostics/keyboard-dismiss/hosted/test_reconcile_keyboard_logs.py": "30681745f4ee436c88cee7f7b9c703ae8408cffdb2fcd1e6b60fc7a873c24fe4",
+    "ios/Features/Pickup/PickupRepairView.swift": "afb8323925cc88ba1ec0d192d0488126b3dcc8b5e28fbcc3dc629796565add94"
+  }
+}

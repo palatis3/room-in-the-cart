@@ -1,0 +1,41 @@
+{
+  "scope": "Exact warned case only; warning policy replay, not a new native run or original hosted verdict rewrite",
+  "results": {
+    "old": {
+      "status": "unexpected-warnings",
+      "summaryWarningCount": null,
+      "runtimeWarningCount": 2,
+      "examinedTestCount": 1,
+      "detailExportCount": 1,
+      "activityExportCount": 1,
+      "warnings": [
+        {
+          "selector": "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges",
+          "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+          "count": 2,
+          "maximum": 0
+        }
+      ]
+    },
+    "candidate": {
+      "status": "passed",
+      "summaryWarningCount": null,
+      "runtimeWarningCount": 2,
+      "examinedTestCount": 1,
+      "detailExportCount": 1,
+      "activityExportCount": 1,
+      "warnings": [
+        {
+          "selector": "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges",
+          "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+          "count": 2,
+          "maximum": 2,
+          "menuActivity": {
+            "tap": "Tap \"ledgerShopPicker\" Button",
+            "phase": "Wait for dev.roominthecart.app.debug to idle"
+          }
+        }
+      ]
+    }
+  }
+}

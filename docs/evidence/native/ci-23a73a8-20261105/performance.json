@@ -1,0 +1,201 @@
+{
+  "candidate": "23a73a890afbaa23d3c58ae6b0cf63a8b2e2fb71",
+  "runID": 42021894768,
+  "cases": {
+    "launch": {
+      "artifactID": 13415141528,
+      "sha256": "b45c5241f91823d0fdab7621aec8e0e87099402c90566b8824588b6328503fd7",
+      "digestVerified": true,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "measurementsIndependentlyRecomputed": true,
+      "comparisons": {
+        "responsiveLaunchMedianSeconds": {
+          "measured": 3.643131916,
+          "maximum": 5.5,
+          "passed": true
+        }
+      },
+      "rawLogSHA256": "47b9ac20ec871d30fd106c516d345f590f0aa3e22882bf1608381d08e7b48ddd",
+      "calibrationSHA256": "54f8ee888a24fb8e17c1ad36f424dacae2e0feed1c0d6f5017c830153db4e1b1",
+      "hostedPickupReadback": null,
+      "simulatorHitches": null
+    },
+    "scroll": {
+      "artifactID": 13416535448,
+      "sha256": "9d04d14d8c7f9346502fab7a02c233f3efd9ea5d0dfffe275353559f7f5d9655",
+      "digestVerified": true,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "measurementsIndependentlyRecomputed": true,
+      "comparisons": {
+        "scrollMedianSeconds": {
+          "measured": 2.5834422910000003,
+          "maximum": 3.25,
+          "passed": true
+        },
+        "absoluteMemoryMedianKilobytes": {
+          "measured": 107782.016,
+          "maximum": 150000,
+          "passed": true
+        },
+        "peakMemoryMedianKilobytes": {
+          "measured": 108076.928,
+          "maximum": 155000,
+          "passed": true
+        },
+        "maximumPeakMemoryKilobytes": {
+          "measured": 108109.696,
+          "maximum": 160000,
+          "passed": true
+        }
+      },
+      "rawLogSHA256": "5b3ac719e6fbbaa3257d5d37b946d2cc2bf05ae2d9e2427b814b23891e37960f",
+      "calibrationSHA256": "43c773fe26926685a3e46602dfb6b1c5d829b0bba0dfee4fb86ebfe8c44c4fe1",
+      "hostedPickupReadback": {
+        "sqliteQuickCheck": "ok",
+        "revision": 2,
+        "payloadSHA256": "0a2ea3182d7de8f1b3c67ea804a50b77b389ce19d15c718c7fe62ad93ddee55c",
+        "lineCount": 500,
+        "contributionCount": 500,
+        "importCount": 1,
+        "source": "paste",
+        "checkedCount": 0,
+        "checkedRowIDs": []
+      },
+      "simulatorHitches": {
+        "status": "unavailable",
+        "detail": "XCTest emitted scroll duration and memory, but no animation hitch samples on this simulator. This run cannot evaluate frame hitches."
+      },
+      "signpostDiagnostic": {
+        "sha256": "42bb700a2f46cec19ff7361c1201065beaa3fb6672f1f7effee9cfc07a51a673",
+        "status": "captured",
+        "diagnosticOnly": true,
+        "captureStatus": "ok",
+        "activityStatus": "ok",
+        "windows": [
+          {
+            "case": "warm-up",
+            "eventCount": 2,
+            "pairCount": 1,
+            "pairs": [
+              {
+                "durationSeconds": 2.583
+              }
+            ]
+          },
+          {
+            "case": "measured swipe 1",
+            "eventCount": 2,
+            "pairCount": 1,
+            "pairs": [
+              {
+                "durationSeconds": 2.581
+              }
+            ]
+          },
+          {
+            "case": "measured swipe 2",
+            "eventCount": 2,
+            "pairCount": 1,
+            "pairs": [
+              {
+                "durationSeconds": 2.583
+              }
+            ]
+          },
+          {
+            "case": "measured swipe 3",
+            "eventCount": 2,
+            "pairCount": 1,
+            "pairs": [
+              {
+                "durationSeconds": 2.583
+              }
+            ]
+          },
+          {
+            "case": "measured swipe 4",
+            "eventCount": 2,
+            "pairCount": 1,
+            "pairs": [
+              {
+                "durationSeconds": 2.6
+              }
+            ]
+          },
+          {
+            "case": "measured swipe 5",
+            "eventCount": 2,
+            "pairCount": 1,
+            "pairs": [
+              {
+                "durationSeconds": 2.601
+              }
+            ]
+          }
+        ],
+        "limits": "The normalized signpost report is diagnostic only and cannot satisfy frame-hitch or required performance gates; raw signpost logs are intentionally not retained."
+      }
+    },
+    "rendered": {
+      "artifactID": 13415072585,
+      "sha256": "3219f77f1b98e266103e08b3ed1de4a2e189151898b88fcc1d1738dac6fa5e45",
+      "digestVerified": true,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0,
+      "measurementsIndependentlyRecomputed": true,
+      "comparisons": {
+        "searchP95Milliseconds": {
+          "measured": 2750.451541666621,
+          "maximum": 4750,
+          "passed": true
+        },
+        "checkP95Milliseconds": {
+          "measured": 2112.7924166665935,
+          "maximum": 3750,
+          "passed": true
+        }
+      },
+      "rawLogSHA256": "77e8d1ae989a4905ac2c2e7d6cccf63a7a297f0719224bbcd39825de29dde7dc",
+      "calibrationSHA256": "4f5c0d5188fc2613e0193e10d595a6dfa622ae6d9f2990257fbc566f3e899c18",
+      "hostedPickupReadback": {
+        "sqliteQuickCheck": "ok",
+        "revision": 22,
+        "payloadSHA256": "dd58c5b6c983ded73c5b3ab0ce7baba2762a1a9cfff2d23abb3f3e532be3a2eb",
+        "lineCount": 500,
+        "contributionCount": 500,
+        "importCount": 1,
+        "source": "paste",
+        "checkedCount": 20,
+        "checkedRowIDs": [
+          "1df97a56-39cb-44d9-8446-c12f4d902923",
+          "21ebd582-f956-49a0-b697-2886278be8b2",
+          "350a1b84-fcd6-4006-8dd0-5eafd6807018",
+          "4bef029f-0036-4256-9769-8dfb1676e6de",
+          "540d841c-6222-4281-914f-6c64ecdbf02f",
+          "58b9de3f-2871-4d18-968a-36399d59520e",
+          "689c2480-2be1-418b-99d2-ab0b02125265",
+          "8e591aad-68e6-43bf-8586-124f9eb8dd8a",
+          "978c4b1b-70a0-4136-bec9-d133315ac6a3",
+          "a0150b35-329a-4301-aa8b-45f4225c8ed7",
+          "a151ba66-9b46-42fe-ba63-19c81830cb37",
+          "a6351215-d8dd-448f-8168-1b73c735f787",
+          "ada2c07b-8f52-419a-b9d1-a35df5482f5c",
+          "ba03061d-90d0-4c43-b9c1-561a60faaff4",
+          "c2ada246-14b6-4a41-ab78-1816d78b8202",
+          "cb369792-0f73-47ff-aea4-1bf5b9134d52",
+          "cdbafa9a-198f-4010-bfc7-3f5f02f21018",
+          "ce69aa5c-641f-473b-85d0-40a007866a58",
+          "d2962bee-4d70-4700-abec-1da590750404",
+          "d2e7328e-64ac-44c3-8480-1f6120adecd3"
+        ]
+      },
+      "simulatorHitches": null
+    }
+  },
+  "limits": [
+    "Simulator evidence only; no frame-hitch samples were emitted.",
+    "Pickup SQLite was checked on the hosted runner. Its database is not retained, so local replay verifies metrics/attachments and reported baseline comparison, not a second database read."
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "sourceBaseCommit": "c909a46",
+  "changedSource": "ios/UITests/FreeJourneyUITests.swift",
+  "changedSourceSHA256": "ab2e2d4bfef95dd8a33ecaa8d3c09fcf86a74d8c8450c05795c0ec1975a52d91",
+  "selector": "RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced",
+  "toolchain": "Xcode 27.1, iPhone 17, iOS 27.0 simulator",
+  "passedTests": 1,
+  "failedTests": 0,
+  "skippedTests": 0,
+  "expectedFailures": 0,
+  "durationSeconds": 185.21,
+  "checks": [
+    "Native Settings Reduce Motion changed from off to on",
+    "UIKit independently confirmed the actual OS preference before launch and after app relaunch",
+    "Frozen dated pickup text stayed exact, including two wraps",
+    "Share cancellation stayed visible and the pickup remained unplaced after relaunch",
+    "XCTest teardown restored the original off setting, verified through Settings, UIKit and independent simulator preference readback"
+  ],
+  "evidence": {
+    "test-summary.json": "479712019c0c66d7d58ef2af5caec140cd96b907f8fb7aeaedd4fb71bc3f4da3",
+    "test-details.json": "2a2e2378243b26ee0402e182d938cd6726d865151ca688bd79b60a53351e16e0",
+    "reduce-motion-observed.tsv": "e428ab3f02cbae42f1748ff8b8f75ff00d24a0ff475cffda686b86ef1c39ea00",
+    "result-check.log": "0866945b2397f17406a8e75776f3930ff138e8c7efc46c1c45e7bfb0eccf616f"
+  },
+  "localResultBundle": ".build/ReduceMotionRegression20261104/ReduceMotionHandoff.xcresult",
+  "limits": [
+    "Functional Reduce Motion coverage; no frame-hitch or physical-device visual acceptance claim.",
+    "Teardown is registered before mutation; this run verified the passing restore path, not an intentionally forced assertion failure.",
+    "GitHub Xcode 26.3 / iOS 26.2 execution of this new case remains pending."
+  ]
+}

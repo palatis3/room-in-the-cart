@@ -1,0 +1,23 @@
+{
+  "id": 42206008187,
+  "head_sha": "4bff9599a3619bfc5efa79a7a533fd12e08250fc",
+  "head_branch": "codex/diagnostic-spanish-done-b359d07",
+  "run_attempt": 1,
+  "workflow_id": 407500252,
+  "event": "workflow_dispatch",
+  "status": "completed",
+  "conclusion": "success",
+  "created_at": "2026-11-06T10:52:49Z",
+  "html_url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42206008187",
+  "diagDispatchesForThisCommit": 1,
+  "releaseAcceptance": false,
+  "previousSetupFailures": [
+    42203081911,
+    42204324021
+  ],
+  "terminalStatus": "completed",
+  "terminalConclusion": "success",
+  "verification": "hosted-4bff959-result.json",
+  "collectionComplete": true,
+  "dispatchObservedStatus": "in_progress"
+}

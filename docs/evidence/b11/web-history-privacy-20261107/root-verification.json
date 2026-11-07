@@ -1,0 +1,27 @@
+{
+  "baseHead": "8d1a79b22981148839c6e3d0827c6710f877a369",
+  "installedSourcesMatchAstraCandidate": true,
+  "installedBuildMatchesReviewedBundle": true,
+  "originalEvidenceFilesRehashed": 43,
+  "correctedEvidenceFilesRehashed": 11,
+  "unit": {
+    "exit": 0,
+    "pass": 129,
+    "fail": 0,
+    "skip": 0
+  },
+  "browser": {
+    "exit": 0,
+    "passIncludingParent": 14,
+    "historySubcases": 12,
+    "persistedRestoreCases": 6,
+    "coldHistoryControls": 6,
+    "durationMilliseconds": 9651.646042
+  },
+  "workflow": {
+    "unitPass": 17,
+    "validatorExit": 0,
+    "note": "Known actionlint queue-schema diagnostics remain independently validated by repository checker; not raw actionlint exit0."
+  },
+  "scope": "Installed and verified locally; not deployed or a full S22/V1 acceptance claim"
+}

@@ -1,0 +1,13 @@
+{
+  "simulator": "B7C06557-2E53-4BAF-A963-A5F9866351C4",
+  "runtimeRoot": "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot",
+  "version": {
+    "BuildID": "28797834-D251-11F0-A935-FBAB4C799B22",
+    "ProductBuildVersion": "23C54",
+    "ProductCopyright": "1983-2025 Apple Inc.",
+    "ProductName": "iPhone OS",
+    "ProductVersion": "26.2",
+    "SystemImageID": "5A79EE63-AF0F-43EF-884D-7F08B93ED590"
+  },
+  "xcode": "Xcode 27.1\nBuild version 27A9275\n"
+}

@@ -1,0 +1,49 @@
+--- a/web/src/app.ts
++++ b/web/src/app.ts
+@@ -190,7 +190,11 @@
+       this.notice='Sign in again to continue. Your text stays on this page.';
+       this.codeRequested=false;this.loginCode='';
+       this.render();
++      const historyGeneration=this.historyGeneration;
+       this.browserAuth=await this.api.authState().catch(()=>null);
++      // An explicit identity denial has removed the private projection. Allow
++      // sign-in recovery even when the retained household cookie keeps returning 401.
++      if(!this.historyAway&&historyGeneration===this.historyGeneration)this.historySuspended=false;
+     }
+     else if(e.code==='login_unavailable')this.notice='Email sign-in is not available yet. Your invitation stays on this page.';
+     else if(e.code==='code_not_accepted')this.notice='That code was not accepted. Check the latest code or request another one.';
+--- a/web/tests/history-lifecycle.test.mjs
++++ b/web/tests/history-lifecycle.test.mjs
+@@ -43,3 +43,32 @@
+  assert.match(root.textContent,/PRIVATE COOK INSTRUCTION/);app.suspendForHistory();api.session=async()=>{throw new ApiError('access_ended',403);};app.resumeFromHistory();await settle(root);
+  assert.doesNotMatch(root.textContent,/PRIVATE COOK INSTRUCTION|Household a/);assert.equal(root.querySelector('#correction'),null);assert.equal(root.querySelector('#item'),null);
+ });
++
++
++test('history identity denial exposes available sign-in immediately even when the scope cookie keeps returning 401',async t=>{
++ const {app,api,root,dom}=await setup(t);draft(dom);let attempts=0;
++ api.session=async()=>{attempts++;throw new ApiError('session_needed',401);};
++ api.authState=async()=>({available:true,authenticated:false,csrf:'fresh-challenge'});
++ app.suspendForHistory();app.resumeFromHistory();await settle(root);
++ assert.equal(attempts,1);assert.doesNotMatch(root.textContent,/PRIVATE OWN REQUEST|Household a/);
++ assert.equal(root.querySelector('#item'),null);assert.ok(root.querySelector('#login-email'),'401 recovery must expose sign-in without another Refresh');
++ const buttons=[...root.querySelectorAll('button')].map(button=>button.textContent);assert.ok(buttons.includes('Send sign-in code'));
++});
++
++for(const actor of ['a','b'])test(`history 401 email and code recovery ${actor==='a'?'preserves same-actor':'clears changed-actor'} draft`,async t=>{
++ const {app,api,root,dom}=await setup(t);draft(dom);let expired=true;const login=[];
++ api.session=async()=>{if(expired)throw new ApiError('session_needed',401);return session(actor);};
++ api.authState=async()=>({available:true,authenticated:false,csrf:'fresh-challenge'});
++ api.requests=async()=>actor==='a'?[row()]:[];
++ api.sendEmailCode=async(email,csrf)=>{login.push(['email',email,csrf]);};
++ api.verifyEmailCode=async(code,csrf)=>{login.push(['code',code,csrf]);expired=false;return {available:true,authenticated:true,csrf:'verified-challenge'};};
++ app.suspendForHistory();app.resumeFromHistory();await settle(root);
++ const email=root.querySelector('#login-email');assert.ok(email,'sign-in must be reachable without Refresh');email.value='fixture@example.test';email.dispatchEvent(new dom.window.Event('input'));
++ root.querySelector('form').dispatchEvent(new dom.window.Event('submit',{cancelable:true}));await settle(root);
++ const code=root.querySelector('#login-code');assert.ok(code);code.value='123456';code.dispatchEvent(new dom.window.Event('input'));
++ root.querySelector('form').dispatchEvent(new dom.window.Event('submit',{cancelable:true}));await settle(root);
++ assert.deepEqual(login,[['email','fixture@example.test','fresh-challenge'],['code','123456','fresh-challenge']]);
++ assert.equal(root.querySelector('#login-email'),null);assert.equal(root.querySelector('#login-code'),null);
++ assert.equal(root.querySelector('#item')?.value,actor==='a'?'UNSENT PRIVATE DRAFT':'');
++ if(actor==='a')assert.match(root.textContent,/PRIVATE OWN REQUEST/);else assert.doesNotMatch(root.textContent,/PRIVATE OWN REQUEST|Household a/);
++});

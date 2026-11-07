@@ -1,0 +1,60 @@
+{
+  "files": {
+    "typecheck-invocation.json": {
+      "bytes": 966,
+      "sha256": "20d06c02e20893c8a364ba8b91466864f6942532871a2f107b03d71b72fe681f"
+    },
+    "hosted-failure-excerpt.log": {
+      "bytes": 7648,
+      "sha256": "9600bb6c3f39e1a33186b1aa0faf6d038a61fb1d2a676d6c8dab09a5fbb8a1b3"
+    },
+    "hosted-REVIEW.md": {
+      "bytes": 1619,
+      "sha256": "eed8b5b3ab7c07c0df687bfa01f8564aaab46a3791c46ba8e4acb9dd0379577e"
+    },
+    "installation.json": {
+      "bytes": 332,
+      "sha256": "b07bdb455c1e3e69ff15e89559a7269bb636248d0e61cd13a41acc5a850011bb"
+    },
+    "typecheck-typecheck.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "closest-passing-source-comparison.json": {
+      "bytes": 5929,
+      "sha256": "d12f2403f079b43c7f30b93a57d1322dcb6ad6973dd07ad81b1c3c51c865ba88"
+    },
+    "diagnostic-manifest.json": {
+      "bytes": 563,
+      "sha256": "696dbf18418c5c0c4ea562edff8d89c96ac58a9a9a40b1787ec13090495cb81e"
+    },
+    "hosted-verification.json": {
+      "bytes": 21862,
+      "sha256": "32e963ff2318e8e4b4896898a301defc6892644b4e4d55f41c7bae32e7eeb126"
+    },
+    "README.md": {
+      "bytes": 1492,
+      "sha256": "99c219e02d365cac39461e52fd3b1a869d66ea19fef831e18d4bf185a3340094"
+    },
+    "typecheck-result.json": {
+      "bytes": 45,
+      "sha256": "03040c8a7b2b62aa26d3f5a32ddf638e505d6c0febfa6719580bb901370e964d"
+    },
+    "s14-failed-value-diagnostic.patch": {
+      "bytes": 1686,
+      "sha256": "12d57c85049fd957b5d046d7569c3d98309c9d160ce93dbd01935340c6474b22"
+    },
+    "REVIEW.md": {
+      "bytes": 5630,
+      "sha256": "e3edd0cfd9df244cc11c63a269092e0dfa04c967f139a102fd31e528031d01f9"
+    },
+    "source-comparison.json": {
+      "bytes": 2719,
+      "sha256": "8ed2d01a1b0157b4c6ec539b4c74d50a8785364b54a11fd21be56a65e7e39248"
+    },
+    "hosted-freeze.json": {
+      "bytes": 22411,
+      "sha256": "246a6edd0dbbfb308ece43de13c693a5944912197c2f78dd0b2cc4e49730dd28"
+    }
+  }
+}

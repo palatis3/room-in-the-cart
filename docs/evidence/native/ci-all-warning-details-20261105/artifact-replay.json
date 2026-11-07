@@ -1,0 +1,219 @@
+[
+  {
+    "shard": "models",
+    "artifactId": 13380030352,
+    "archiveSha256": "a55164dbee978dff1f8debc009f83f06f6b592a6e95966c48ca9d67f68b1f502",
+    "expectedTestCount": 565,
+    "overheadSeconds": 30.985,
+    "baseline": {
+      "seconds": 0.068,
+      "exitCode": 0,
+      "warningEvidence": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 565,
+        "detailExportCount": 0,
+        "warnings": []
+      },
+      "warningReportSha256": "731be5a7f04014c9eb7ccd31e3a43f9df38819a7bc5edb1a4ad58e8bfbea769f",
+      "verificationLogSha256": "2e6af6c71c7b1b3e63a78a31fc9972ee36a0d4f3c8cf5f7a1853bef483e70fdb"
+    },
+    "candidate": {
+      "seconds": 31.053,
+      "exitCode": 0,
+      "warningEvidence": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 565,
+        "detailExportCount": 565,
+        "warnings": []
+      },
+      "warningReportSha256": "fb952f95f0a05571ab20fb1c66e050327f74c546cbb6ae6edb49d7c5a9b0bcb7",
+      "verificationLogSha256": "2e6af6c71c7b1b3e63a78a31fc9972ee36a0d4f3c8cf5f7a1853bef483e70fdb"
+    }
+  },
+  {
+    "shard": "ui-03",
+    "artifactId": 13379813911,
+    "archiveSha256": "dc64183e00c79f03d9441fbd474a7c5b7b61666f832b8856e6708e81282a4dff",
+    "expectedTestCount": 5,
+    "overheadSeconds": 0.846,
+    "baseline": {
+      "seconds": 0.07,
+      "exitCode": 0,
+      "warningEvidence": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 5,
+        "detailExportCount": 0,
+        "warnings": []
+      },
+      "warningReportSha256": "ac1b400487892a69c9ff53d1fe652f33be4237a35dc9bf24b2dbb5d57a788639",
+      "verificationLogSha256": "d39c6a689d4fa3c94b66a275a50131e0fb915ee74fd70899a53c9a3bab08d25a"
+    },
+    "candidate": {
+      "seconds": 0.916,
+      "exitCode": 0,
+      "warningEvidence": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 5,
+        "detailExportCount": 5,
+        "warnings": []
+      },
+      "warningReportSha256": "eaa043fa43cad88ac5d164d4979ef6c49d66af5ccc83e4226bd3b791eb4c19ae",
+      "verificationLogSha256": "d39c6a689d4fa3c94b66a275a50131e0fb915ee74fd70899a53c9a3bab08d25a"
+    }
+  },
+  {
+    "shard": "ui-04",
+    "artifactId": 13379403205,
+    "archiveSha256": "d7ad21552a48dca89dc3e6b310f0675ad57d6e32463536aacd1f7b19469566f9",
+    "expectedTestCount": 6,
+    "overheadSeconds": 0.466,
+    "baseline": {
+      "seconds": 0.146,
+      "exitCode": 0,
+      "warningEvidence": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 1,
+        "examinedTestCount": 6,
+        "detailExportCount": 1,
+        "warnings": [
+          {
+            "selector": "RoomInTheCartUITests/FreeJourneyUITests/testManualListOrderSurvivesRestartAndOpensLargePrint",
+            "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+            "count": 1,
+            "maximum": 1
+          }
+        ]
+      },
+      "warningReportSha256": "ada30c1e11085ab58dd21e2130b254f790cf01328d56a002e3e1be77501cf997",
+      "verificationLogSha256": "ae0dd757c91b13de92cc1c427c4219499d7f736039597e4c9edaebe00f64e51f"
+    },
+    "candidate": {
+      "seconds": 0.612,
+      "exitCode": 0,
+      "warningEvidence": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 1,
+        "examinedTestCount": 6,
+        "detailExportCount": 6,
+        "warnings": [
+          {
+            "selector": "RoomInTheCartUITests/FreeJourneyUITests/testManualListOrderSurvivesRestartAndOpensLargePrint",
+            "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+            "count": 1,
+            "maximum": 1
+          }
+        ]
+      },
+      "warningReportSha256": "3fe85e77d8fc7986b4d384a8489196d7fecf3e685240b275b4a189f17e5d40ef",
+      "verificationLogSha256": "ae0dd757c91b13de92cc1c427c4219499d7f736039597e4c9edaebe00f64e51f"
+    }
+  },
+  {
+    "shard": "ui-06",
+    "artifactId": 13382326131,
+    "archiveSha256": "dff6b946aac0aeb87c25a1d0e140cd403b74cc9b9c119881109facf106741d71",
+    "expectedTestCount": 6,
+    "overheadSeconds": 0.333,
+    "baseline": {
+      "seconds": 0.118,
+      "exitCode": 0,
+      "warningEvidence": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 2,
+        "examinedTestCount": 6,
+        "detailExportCount": 1,
+        "warnings": [
+          {
+            "selector": "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges",
+            "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+            "count": 2,
+            "maximum": 2
+          }
+        ]
+      },
+      "warningReportSha256": "0ad38b44a7a313d3b50d1fb777178f8621306dc2ef284c8cfc3b3cfb9719af54",
+      "verificationLogSha256": "74268dc19efd8c7e5384e5c9ed099f530cd5931c23f3a37248edb264c40fa38b"
+    },
+    "candidate": {
+      "seconds": 0.451,
+      "exitCode": 0,
+      "warningEvidence": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 2,
+        "examinedTestCount": 6,
+        "detailExportCount": 6,
+        "warnings": [
+          {
+            "selector": "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges",
+            "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+            "count": 2,
+            "maximum": 2
+          }
+        ]
+      },
+      "warningReportSha256": "35fa49c0a96c0b4a594a69621986f68c27fb9c8a894a3dd858c9d3b509fceedd",
+      "verificationLogSha256": "74268dc19efd8c7e5384e5c9ed099f530cd5931c23f3a37248edb264c40fa38b"
+    }
+  },
+  {
+    "shard": "ui-10",
+    "artifactId": 13382893914,
+    "archiveSha256": "542ada499d9d5c67ec95e0551ccf9e341e3a1d05db102fc50de7212580bfbf00",
+    "expectedTestCount": 6,
+    "overheadSeconds": 0.297,
+    "baseline": {
+      "seconds": 0.164,
+      "exitCode": 1,
+      "warningEvidence": {
+        "status": "unexpected-warnings",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 2,
+        "examinedTestCount": 6,
+        "detailExportCount": 1,
+        "warnings": [
+          {
+            "selector": "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekReservationDraftCannotFollowAnotherPickup",
+            "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+            "count": 2,
+            "maximum": 0
+          }
+        ]
+      },
+      "warningReportSha256": "ef4b1e4f303f143178b3b316a2285d7951e5df6e3778947140ca2f5769bc5cd3",
+      "verificationLogSha256": "847d18d8f7f102629c5d01aca31edaf8ba26a06a0db2d4b5acba48f30ccfaa48"
+    },
+    "candidate": {
+      "seconds": 0.461,
+      "exitCode": 1,
+      "warningEvidence": {
+        "status": "unexpected-warnings",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 2,
+        "examinedTestCount": 6,
+        "detailExportCount": 6,
+        "warnings": [
+          {
+            "selector": "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekReservationDraftCannotFollowAnotherPickup",
+            "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+            "count": 2,
+            "maximum": 0
+          }
+        ]
+      },
+      "warningReportSha256": "a3ff0e52e8bdd6128a7968a4c3e758e5c291809bfbf5483195d8ea411679977e",
+      "verificationLogSha256": "847d18d8f7f102629c5d01aca31edaf8ba26a06a0db2d4b5acba48f30ccfaa48"
+    }
+  }
+]

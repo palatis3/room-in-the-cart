@@ -1,0 +1,56 @@
+{
+  "change": "Single reviewed-list confirmation in preview-only safe-area footer; scrollable active save/recovery status; pending save disables duplicate confirmation",
+  "negative": {
+    "nativeExit": 65,
+    "strictExit": 1,
+    "selected": 1,
+    "failed": 1,
+    "runtimeWarnings": 0,
+    "elapsedSeconds": 69.934,
+    "failure": "New immediate confirmation-action presence assertion, after original500-line Paste/edit/Review checks"
+  },
+  "fixed": {
+    "nativeExit": 0,
+    "strictExit": 0,
+    "selected": 3,
+    "passed": 3,
+    "runtimeWarnings": 0,
+    "runnerRestarts": 0,
+    "cases": [
+      {
+        "selector": "RoomInTheCartUITests/ContextualNavigationUITests/testLargeTextKeepsLongNativePasteEditableAndReviewReachable",
+        "seconds": 54.915
+      },
+      {
+        "selector": "RoomInTheCartUITests/FreeJourneyUITests/testCancelledImportAndIngredientReturnPreserveLongFilteredListContext",
+        "seconds": 69.775
+      },
+      {
+        "selector": "RoomInTheCartUITests/FreeJourneyUITests/testStagedListCanReturnToOriginalAndMergeADuplicateAfterRestart",
+        "seconds": 100.237
+      }
+    ],
+    "buildDiagnostics": "Four existing unavailable-Sendable diagnostics, printed as eight warning lines"
+  },
+  "sourceFilesVerified": 457,
+  "sourceChangesBetweenRuns": [
+    "ios/Features/Ledger/LedgerSheets.swift"
+  ],
+  "regressionTestIdenticalBetweenRuns": true,
+  "sourceHashes": {
+    "ios/Features/Ledger/LedgerSheets.swift": "5de62273f7549831cdfd44268cc24953d19e7507fc840d632d0a81a21551c878",
+    "ios/UITests/ContextualNavigationUITests.swift": "ac70599b0e770d1c7eeb408c00912606c838fb27038671eadeea3ad9a13817fc"
+  },
+  "visualInspection": {
+    "source": "preview/84929DF6-A3C8-4265-B42F-F2FA550D83E5.png",
+    "sha256": "578ec3017ef95bbadc879126c993341a9d020e6bf9c182747ed981a3ee65a08f",
+    "observedBy": "root",
+    "observation": "One wrapped full confirmation label is visible below reserved Form space at largest Dynamic Type; no footer clipping."
+  },
+  "limits": [
+    "Failed-save status scroll/focus and Retry/Discard layout remain a distinct native follow-up.",
+    "No retained-preview-keyboard, physical VoiceOver or minimum-OS/Spanish footer claim.",
+    "No Release performance metric or hosted CI result changed by these local runs."
+  ],
+  "cleanup": "Owned CF6099BC-F92B-427C-8985-895AF8D24F8D shutdown/deleted; protected preview untouched"
+}

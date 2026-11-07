@@ -1,0 +1,71 @@
+{
+  "selector": "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges",
+  "source": "Retained ui-06 original result bundle and unmodified summary/tree/details. Only a scratch copy of the activity export changes.",
+  "originalActivitySHA256": "72aa7faf7f4d724c9cf40de0398148e9f18fc57f09857168d6e3282778897c18",
+  "mutatedActivitySHA256": "48bcc5df5735334d86f829ed90db652525b78adbb84ee96d3e6c713c470a3fa3",
+  "originalIssueIds": [
+    "098DC6EC-90D4-40A9-8363-2BF5B66767FE",
+    "C2356A60-61FD-4962-920B-05FC780F3A40"
+  ],
+  "substitutedIssueIds": [
+    "098DC6EC-90D4-40A9-8363-2BF5B66767FE",
+    "098DC6EC-90D4-40A9-8363-2BF5B66767FE"
+  ],
+  "trials": [
+    {
+      "activity": "original-distinct",
+      "baseline": {
+        "status": "passed",
+        "warningCount": 2
+      },
+      "candidate": {
+        "status": "passed",
+        "warningCount": 2
+      }
+    },
+    {
+      "activity": "duplicate-substitution",
+      "baseline": {
+        "status": "passed",
+        "warningCount": 2
+      },
+      "candidate": {
+        "status": "rejected",
+        "reason": "Duplicated XCTest runtime warning activity attachment UUID"
+      }
+    },
+    {
+      "activity": "duplicate-other-letter-case",
+      "baseline": {
+        "status": "passed",
+        "warningCount": 2
+      },
+      "candidate": {
+        "status": "rejected",
+        "reason": "Duplicated XCTest runtime warning activity attachment UUID"
+      }
+    },
+    {
+      "activity": "missing-uuid",
+      "baseline": {
+        "status": "passed",
+        "warningCount": 2
+      },
+      "candidate": {
+        "status": "rejected",
+        "reason": "Invalid XCTest runtime warning activity attachment UUID"
+      }
+    },
+    {
+      "activity": "malformed-uuid",
+      "baseline": {
+        "status": "passed",
+        "warningCount": 2
+      },
+      "candidate": {
+        "status": "rejected",
+        "reason": "Invalid XCTest runtime warning activity attachment UUID"
+      }
+    }
+  ]
+}

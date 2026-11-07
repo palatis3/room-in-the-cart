@@ -1,0 +1,82 @@
+{
+  "releases": [
+    {
+      "name": "chrome/platforms/android/channels/stable/versions/158.0.8127.22/releases/1793906411",
+      "serving": {
+        "startTime": "2026-11-05T19:20:11.523268Z"
+      },
+      "fraction": 0.0025,
+      "version": "158.0.8127.22",
+      "fractionGroup": "61",
+      "pinnable": true,
+      "rolloutData": []
+    },
+    {
+      "name": "chrome/platforms/android/channels/stable/versions/157.0.8103.47/releases/1793906411",
+      "serving": {
+        "startTime": "2026-11-05T19:20:11.523268Z"
+      },
+      "fraction": 0.0025,
+      "version": "157.0.8103.47",
+      "fractionGroup": "61",
+      "pinnable": true,
+      "rolloutData": []
+    },
+    {
+      "name": "chrome/platforms/android/channels/stable/versions/157.0.8103.46/releases/1793905286",
+      "serving": {
+        "startTime": "2026-11-05T19:01:26.177612Z"
+      },
+      "fraction": 0.0995,
+      "version": "157.0.8103.46",
+      "fractionGroup": "61",
+      "pinnable": true,
+      "rolloutData": []
+    },
+    {
+      "name": "chrome/platforms/android/channels/stable/versions/157.0.8103.38/releases/1793904900",
+      "serving": {
+        "startTime": "2026-11-05T18:55:00Z"
+      },
+      "fraction": 0,
+      "version": "157.0.8103.38",
+      "fractionGroup": "61",
+      "pinnable": true,
+      "rolloutData": []
+    },
+    {
+      "name": "chrome/platforms/android/channels/stable/versions/156.0.8078.81/releases/1793905286",
+      "serving": {
+        "startTime": "2026-11-05T19:01:26.177612Z"
+      },
+      "fraction": 0.0995,
+      "version": "156.0.8078.81",
+      "fractionGroup": "61",
+      "pinnable": true,
+      "rolloutData": []
+    },
+    {
+      "name": "chrome/platforms/android/channels/stable/versions/156.0.8078.80/releases/1793904900",
+      "serving": {
+        "startTime": "2026-11-05T18:55:00Z"
+      },
+      "fraction": 0,
+      "version": "156.0.8078.80",
+      "fractionGroup": "61",
+      "pinnable": true,
+      "rolloutData": []
+    },
+    {
+      "name": "chrome/platforms/android/channels/stable/versions/156.0.8078.79/releases/1793905286",
+      "serving": {
+        "startTime": "2026-11-05T19:01:26.177612Z"
+      },
+      "fraction": 0.796,
+      "version": "156.0.8078.79",
+      "fractionGroup": "61",
+      "pinnable": true,
+      "rolloutData": []
+    }
+  ],
+  "nextPageToken": ""
+}

@@ -1,0 +1,17 @@
+{
+  "id": 42293938170,
+  "head_sha": "f019f16124a1edf4d825c2a860efb0c2ca1488cd",
+  "head_branch": "codex/diagnose-consent-history-804030e",
+  "event": "workflow_dispatch",
+  "run_attempt": 1,
+  "status": "in_progress",
+  "conclusion": null,
+  "html_url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42293938170",
+  "created_at": "2026-11-06T21:06:20Z",
+  "workflow_id": 407500252,
+  "diagnosticOnly": true,
+  "releaseAcceptance": false,
+  "manualDispatchCount": 1,
+  "originalCandidateUnchanged": "804030e68473d022e72b464940061c01c611a0bd",
+  "decision": "Original remaining core UI07 and fixture stale-save both use slot2; separate diagnostic uses slot0 and does not supersede or cancel original jobs."
+}

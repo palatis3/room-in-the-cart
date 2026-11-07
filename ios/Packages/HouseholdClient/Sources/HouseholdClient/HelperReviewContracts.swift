@@ -79,11 +79,13 @@ extension HelperProjection {
                   ($0.amount.map { text($0, 80) } ?? true) && ($0.unit.map { text($0, 80) } ?? true) }) else { throw ClientError.configuration }
     }
 }
-func validHelperTimestamp(_ value: String?) -> Bool {
-    guard let value else { return false }
+func validHelperTimestamp(_ value: String?) -> Bool { householdTimestamp(value) != nil }
+
+func householdTimestamp(_ value: String?) -> Date? {
+    guard let value else { return nil }
     let formatter = ISO8601DateFormatter()
     formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-    if formatter.date(from: value) != nil { return true }
+    if let result = formatter.date(from: value) { return result }
     formatter.formatOptions = [.withInternetDateTime]
-    return formatter.date(from: value) != nil
+    return formatter.date(from: value)
 }

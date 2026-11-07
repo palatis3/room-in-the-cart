@@ -1,0 +1,36 @@
+{
+  "artifactID": 13493099711,
+  "artifactName": "iphone-fixture-results-DinnerDecisionSheetUITests-1",
+  "sha256": "3dfdab66b0b378a535b4d3848fccaed0103b8310e0a87609321226b400def8ee",
+  "size": 4654733,
+  "digestVerified": true,
+  "candidate": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+  "runID": 42184705317,
+  "jobID": 127793433828,
+  "hostedConclusion": "success",
+  "selected": 5,
+  "passed": 5,
+  "failed": 0,
+  "skipped": 0,
+  "strictReplayExit": 0,
+  "planByteIdentical": true,
+  "runtimeWarnings": 0,
+  "warnings": {
+    "status": "passed",
+    "summaryWarningCount": null,
+    "runtimeWarningCount": 0,
+    "examinedTestCount": 5,
+    "detailExportCount": 5,
+    "activityExportCount": 0,
+    "warnings": []
+  },
+  "selectors": [
+    "RoomInTheCartUITests/DinnerDecisionSheetUITests/testEnglishGuestPackageBoundaryCheckoutAndCancel",
+    "RoomInTheCartUITests/DinnerDecisionSheetUITests/testEnglishPaidGroupReplacementAndGuestCancellation",
+    "RoomInTheCartUITests/DinnerDecisionSheetUITests/testLargestTypePairingSheetReturnsToItsInitiatingControl",
+    "RoomInTheCartUITests/DinnerDecisionSheetUITests/testSpanishGuestPackageBoundaryCheckoutAndCancel",
+    "RoomInTheCartUITests/DinnerDecisionSheetUITests/testSpanishPaidGroupReplacementAndGuestCancellation"
+  ],
+  "rawLogSHA256": "6969b8fc9cc03736adb3cd0560c984054189fe5dbdc96165752dc9ef1262940f",
+  "replayedBundle": "Tests.xcresult"
+}

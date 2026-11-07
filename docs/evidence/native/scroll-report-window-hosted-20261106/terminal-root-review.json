@@ -1,0 +1,101 @@
+{
+  "candidate": "ab149a7f27d9366db61c4fe2d9047095f166be3d",
+  "runID": 42332357700,
+  "conclusion": "success",
+  "rootVerifiedFrozenFiles": 696,
+  "freezeSHA256": "79d02f076b02906b533c3287bcbe14c1af58c4ed3a289270d34261f3813771e2",
+  "finalAuditSHA256": "c771b83e24ab782881bbd04399051a889869e5938b472a93134979bbca4e33e5",
+  "cases": {
+    "launch": {
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": 0,
+      "strictReplayExit": 0,
+      "comparisons": {
+        "responsiveLaunchMedianSeconds": {
+          "measured": 3.9523122500000003,
+          "maximum": 5.5,
+          "passed": true
+        }
+      },
+      "environment": {
+        "osVersion": "26.2",
+        "osBuildNumber": "23C54",
+        "modelName": "iPhone 17",
+        "architecture": "arm64",
+        "xcode": "Xcode 26.3\nBuild version 17C529",
+        "buildConfiguration": "Release",
+        "testConfiguration": "Test Scheme Action"
+      }
+    },
+    "scroll": {
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": 0,
+      "strictReplayExit": 0,
+      "comparisons": {
+        "scrollMedianSeconds": {
+          "measured": 2.5836895,
+          "maximum": 3.25,
+          "passed": true
+        },
+        "absoluteMemoryMedianKilobytes": {
+          "measured": 111058.816,
+          "maximum": 150000,
+          "passed": true
+        },
+        "peakMemoryMedianKilobytes": {
+          "measured": 111124.352,
+          "maximum": 155000,
+          "passed": true
+        },
+        "maximumPeakMemoryKilobytes": {
+          "measured": 111468.416,
+          "maximum": 160000,
+          "passed": true
+        }
+      },
+      "environment": {
+        "osVersion": "26.2",
+        "osBuildNumber": "23C54",
+        "modelName": "iPhone 17",
+        "architecture": "arm64",
+        "xcode": "Xcode 26.3\nBuild version 17C529",
+        "buildConfiguration": "Release",
+        "testConfiguration": "Test Scheme Action"
+      }
+    },
+    "rendered": {
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": 0,
+      "strictReplayExit": 0,
+      "comparisons": {
+        "searchP95Milliseconds": {
+          "measured": 2298.720249999974,
+          "maximum": 4750,
+          "passed": true
+        },
+        "checkP95Milliseconds": {
+          "measured": 2254.1523749999897,
+          "maximum": 3750,
+          "passed": true
+        }
+      },
+      "environment": {
+        "osVersion": "26.2",
+        "osBuildNumber": "23C54",
+        "modelName": "iPhone 17",
+        "architecture": "arm64",
+        "xcode": "Xcode 26.3\nBuild version 17C529",
+        "buildConfiguration": "Release",
+        "testConfiguration": "Test Scheme Action"
+      }
+    }
+  },
+  "rootVerifiedAtUTC": "2026-11-07T03:34:30.018456+00:00",
+  "scope": "All three unchanged performance gates passed for isolated instrumented diagnostic only. Original uninstrumented failures remain unresolved; no release acceptance."
+}

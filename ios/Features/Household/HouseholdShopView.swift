@@ -29,6 +29,10 @@ private struct SharedShopContent: View {
                         .accessibilityIdentifier("sharedShop.placementReports")
                 }
                 delivery
+                if model.canReadDelivery, let shop = model.shop, shop.placedRevision != nil, ["placed", "closed"].contains(shop.phase) {
+                    NavigationLink(ht("What came home")) { SharedDeliveryView(model: model, household: household, shopID: shop.shopId) }
+                        .accessibilityIdentifier("sharedShop.deliveryEvidence")
+                }
                 if model.pending == nil {
                     if let shop = model.shop {
                         Section(ht("Current shared shop")) {
@@ -46,7 +50,8 @@ private struct SharedShopContent: View {
                                 ForEach(meals) { SharedMealFacts(meal: $0.meal) }
                             }
                             if model.canManage {
-                                NavigationLink(ht("Shared financial evidence")) { SharedFinancialEvidenceView(model: model) }
+                                NavigationLink(ht("Shared financial evidence")) { SharedFinancialEvidenceView(model: model, shopID: shop.shopId) }
+                                    .accessibilityIdentifier("sharedShop.financial")
                             }
                             if model.canManage, shop.phase == "closed", shop.placedRevision != nil, let id = UUID(uuidString: shop.shopId) {
                                 NavigationLink(pTr("Optional pickup feedback")) { SharedMeasurementFeedbackView(household: household, shopID: id) }
@@ -89,9 +94,9 @@ private struct SharedShopContent: View {
                             }
                             if let edit = review.mealEdit {
                                 if let previous = model.shop?.meals?.first(where: { $0.id == edit.occurrenceID }) {
-                                    Text(ht("Previously planned")); SharedMealFacts(meal: previous.meal)
+                                    Text(ht("Previously planned")); SharedMealFacts(meal: previous.meal, deadlineIdentifier: "sharedMeal.review.previousDeadline")
                                 }
-                                if let meal = edit.meal { Text(ht("Proposed meal")); SharedMealFacts(meal: meal) }
+                                if let meal = edit.meal { Text(ht("Proposed meal")); SharedMealFacts(meal: meal, deadlineIdentifier: "sharedMeal.review.proposedDeadline") }
                                 else { Text(ht("Remove this occurrence from the shared plan.")) }
                             }
                             if let candidate = review.candidate { SharedShopFields(quote: candidate.quote, lines: candidate.lines) }
@@ -207,47 +212,5 @@ private struct SharedShopFields: View {
         LabeledContent(ht("Discounts"), value: householdMoney(quote.discountsMinor, currency: quote.currency))
         LabeledContent(ht("Quote recorded"), value: householdTime(quote.observedAt))
         LabeledContent(ht("Quote expires"), value: householdTime(quote.expiresAt))
-    }
-}
-
-private struct SharedFinancialEvidenceView: View {
-    @ObservedObject var model: HouseholdShopModel
-
-    var body: some View {
-        List {
-            if model.canManage {
-                Text(ht("Charges, credits and holds entered by the shopper for this shared shop."))
-                if let entries = model.financialEntries {
-                    if entries.isEmpty { Text(ht("No financial evidence has been entered for this shop.")) }
-                    ForEach(entries.reversed()) { entry in
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(label(entry.kind)).font(.headline)
-                            Text((Decimal(entry.amountMinor) / 100).formatted(.currency(code: "USD")))
-                            Text(entry.sourceText)
-                            if let date = try? Date(entry.occurredAt, strategy: .iso8601.time(includingFractionalSeconds: true)) {
-                                Text(date.formatted(date: .abbreviated, time: .shortened)).font(.footnote)
-                            } else { Text(entry.occurredAt).font(.footnote) }
-                        }
-                    }
-                }
-                if model.busy { ProgressView(ht("Checking service…")) }
-                if let notice = model.notice { Text(notice) }
-                Button(ht("Refresh shared shop")) { Task { await model.loadFinancialEntries() } }.disabled(model.busy)
-            } else { Text(ht("Shared shop access has ended. Return to household settings.")) }
-        }
-        .navigationTitle(ht("Shared financial evidence"))
-        .task(id: model.scope.shopId) { await model.loadFinancialEntries() }
-    }
-
-    private func label(_ kind: ShopperFinancialEntry.Kind) -> String {
-        switch kind {
-        case .postedCharge: pTr("Posted charge")
-        case .postedTopUp: pTr("Posted top-up purchase")
-        case .pendingCredit: pTr("Pending credit")
-        case .postedCredit: pTr("Posted credit")
-        case .includedCredit: pTr("Credit already included in net charge")
-        case .paymentHold: pTr("Payment hold")
-        case .holdRelease: pTr("Confirmed full hold release")
-        }
     }
 }

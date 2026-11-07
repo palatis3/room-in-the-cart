@@ -1,0 +1,35 @@
+Executed 27 of 27 selected tests.
+
+| Test | Result | Seconds |
+|---|---|---|
+| RoomInTheCartTests/DinnerFeatureModelTests/testBundledFreeIdeasAreEditableAndApprovalKeepsShoppingListUntouched | Passed | 0.03 |
+| RoomInTheCartTests/DinnerFeatureModelTests/testAwayNoteDoesNotRemoveDinner | Passed | 0.03 |
+| RoomInTheCartTests/DinnerFeatureModelTests/testAuthRevocationIsRecheckedBeforeApply | Passed | 0.03 |
+| RoomInTheCartTests/DinnerFeatureModelTests/testChangedLedgerRejectsReviewedApply | Passed | 0.02 |
+| RoomInTheCartTests/DinnerFeatureModelTests/testCancellingContextualReviewRestoresOnlyTheStillCurrentPendingDecision | Passed | 0.02 |
+| RoomInTheCartTests/DinnerFeatureModelTests/testFailedDurableSaveRetainsExactPreviewAndSavedWorkspace | Passed | 0.01 |
+| RoomInTheCartTests/DinnerFeatureModelTests/testRuntimePublisherRefreshesVisibleFeatureState | Passed | 0.01 |
+| RoomInTheCartTests/DinnerFeatureModelTests/testIdeaGenerateSaveAndAcceptRecheckDeniedRuntimeWithoutAnyCommit | Passed | 0.01 |
+| RoomInTheCartTests/DinnerFeatureModelTests/testLegacyTemplatesAndChosenOccurrencesRemainReadableWithoutAdoption | Passed | 0.01 |
+| RoomInTheCartTests/DinnerFeatureModelTests/testQuoteProofSavedThenBasisAdoptionIsExplicitAndStalesOnEdit | Passed | 0.01 |
+| RoomInTheCartTests/DinnerFeatureModelTests/testParsingExactFractionSpanishDecimalAndUnknown | Passed | 0.00 |
+| RoomInTheCartTests/DinnerFeatureModelTests/testIdeaPreparationAbandonRepeatSaveAcceptAndChooseHaveSeparateEffects | Passed | 0.00 |
+| RoomInTheCartTests/DinnerFeatureModelTests/testFreeRotationCannotSaveButManualStillWorks | Passed | 0.00 |
+| RoomInTheCartTests/DinnerFeatureModelTests/testReviewedGuestTotalChangesOnlySelectedUnprotectedGroup | Passed | 0.00 |
+| RoomInTheCartTests/DinnerFeatureModelTests/testLockedBasketPreviewOnlyAndCalendarRemainsManual | Passed | 0.00 |
+| RoomInTheCartTests/DinnerFeatureModelTests/testGuestBindingsAreRequiredAndFreeExplorationCannotApply | Passed | 0.00 |
+| RoomInTheCartTests/DinnerFeatureModelTests/testIdeaAcceptDoesNotChooseAndFreeSlotSwitchIsExplicit | Passed | 0.00 |
+| RoomInTheCartTests/DinnerFeatureModelTests/testRetryAcceptedDinnerPreservesOriginalTimestampAndOneCommit | Passed | 0.00 |
+| RoomInTheCartTests/DinnerFeatureModelTests/testUndatedOccurrenceGetsCivilDateWithoutNewNeeds | Passed | 0.00 |
+| RoomInTheCartTests/DinnerFeatureModelTests/testFreeManualPreviewIsReadonlyCancelAndApplyOnce | Passed | 0.00 |
+| RoomInTheCartTests/DinnerFeatureModelTests/testSharedEvenAuthorizedFlagCannotApplyThroughLocalAdapter | Passed | 0.00 |
+| RoomInTheCartTests/DinnerFeatureModelTests/testStoreDraftNeverInventsChargesOrTravel | Passed | 0.00 |
+| RoomInTheCartTests/DinnerFeatureModelTests/testEditorBaseChangeRejectsRatherThanOverwritingCurrentAmounts | Passed | 0.00 |
+| RoomInTheCartTests/DinnerFeatureModelTests/testInvalidReplacementPreviewClearsPreviousPendingPreview | Passed | 0.00 |
+| RoomInTheCartTests/DinnerFeatureModelTests/testSwitchingShopHidesOldPreviewAndCannotApplyIt | Passed | 0.00 |
+| RoomInTheCartTests/DinnerFeatureModelTests/testLocalBindingCannotUseImportedWorkspaceIdentity | Passed | 0.00 |
+| RoomInTheCartTests/DinnerFeatureModelTests/testTemplateRevisionPreservedUntilAnExplicitEdit | Passed | 0.00 |
+The XCTest log confirms one start and one passing completion per selected test.
+
+The XCTest test export recorded 0 runtime warning occurrences across 27 examined tests.
+

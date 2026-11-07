@@ -55,6 +55,49 @@ struct UrgentRepairView: View {
     }
 }
 
+struct PickupRepairDraft {
+    struct Fields: Equatable {
+        var needID: UUID?
+        var instruction = ""
+        var minutes = ""
+        var knownDue = false
+        var due = Date()
+    }
+
+    let shopID: UUID?
+    let id = UUID()
+    var fields = Fields() {
+        didSet {
+            if fields != oldValue {
+                extraTrip = false
+                repeatMeal = false
+            }
+        }
+    }
+    var extraTrip = false
+    var repeatMeal = false
+
+    mutating func synchronize(with journey: PickupJourney?) {
+        if shopID != journey?.id {
+            self = PickupRepairDraft(shopID: journey?.id)
+        } else if journey?.repairs.contains(where: { $0.id == id }) == true {
+            var next = PickupRepairDraft(shopID: shopID, fields: fields)
+            next.fields.instruction = ""
+            self = next
+        }
+    }
+
+    func instruction(in journey: PickupJourney, at now: Date) -> PickupRepair? {
+        guard shopID == journey.id, let needID = fields.needID,
+              !fields.instruction.isEmpty,
+              fields.minutes.isEmpty || Int(fields.minutes).map({ (0...10080).contains($0) }) == true else { return nil }
+        let savedDue = journey.savedMealDeadline(for: needID)
+        return PickupRepair(id: id, needID: needID, instruction: fields.instruction, createdAt: now,
+                            extraTripAgreed: extraTrip, repeatMealAgreed: repeatMeal, elapsedMinutes: Int(fields.minutes),
+                            due: fields.knownDue ? min(fields.due, savedDue ?? fields.due) : savedDue)
+    }
+}
+
 struct PickupRepairView: View {
     @Environment(\.pickupLedger) private var fallbackLedger
     @ObservedObject var model: PickupModel
@@ -65,14 +108,8 @@ struct PickupRepairView: View {
     @State private var purpose = ""
     @State private var amount = ""
     @State private var priority: AllocationPriority = .required
-    @State private var needID: UUID?
-    @State private var instruction = ""
-    @State private var extraTrip = false
-    @State private var repeatMeal = false
-    @State private var minutes = ""
-    @State private var knownDue = false
-    @State private var due = Date()
-    @State private var repairID = UUID()
+    @State private var repairDraft = PickupRepairDraft(shopID: nil)
+    @State private var submittingRepair = false
     var body: some View {
         Form {
             PickupSaveStatus(model: model)
@@ -91,10 +128,10 @@ struct PickupRepairView: View {
                         Text(pTr("Flexible")).tag(AllocationPriority.flexible)
                     }
                     Button(pTr("Add reviewed need")) { addNeed() }
-                    ForEach(model.journey?.needs ?? []) { need in
+                    ForEach(model.journey?.currentRepairNeeds ?? []) { need in
                         VStack(alignment: .leading) {
                             Text("\(need.name): \(pQuantity(need.amount))")
-                            if let detail = model.journey?.needDetails.first(where: { $0.id == need.id }) {
+                            if let detail = model.journey?.recoveryCurrentDetails.first(where: { $0.id == need.id }) {
                                 if !detail.exclusions.isEmpty { Text("\(pTr("Keep these exclusions")): \(detail.exclusions.joined(separator: ", "))") }
                                 if let day = detail.scheduledDay { Text("\(day.iso8601) · \(day.timeZoneIdentifier)") }
                                 if let minutes = detail.leadTimeMinutes { Text("\(pTr("Saved elapsed preparation minutes")): \(minutes)") }
@@ -107,7 +144,7 @@ struct PickupRepairView: View {
                     }
                 }
             }
-            ForEach(model.journey?.urgent ?? []) { need in
+            ForEach(model.journey?.recoveryCurrentUrgent ?? []) { need in
                 Section(need.meal) {
                     Text(need.food)
                     Text("\(pTr("Required")): \(pQuantity(need.required))")
@@ -129,31 +166,36 @@ struct PickupRepairView: View {
             }
             if model.journey?.closedAt == nil { PickupNewStockSection(model: model, field: $stockField).id(model.selectedID) }
             if let journey = model.journey { PickupSavedStockSection(model: model, journey: journey) }
+            if let ledger = fallbackLedger, let pickupID = model.journey?.id,
+               model.journey?.basket?.phase == .reportedPlaced {
+                NavigationLink(recoveryText("Current dinners after arrival")) {
+                    PickupMealRecoveryEntry(model: model, ledger: ledger, pickupID: pickupID)
+                }.accessibilityIdentifier("pickup.mealRecovery")
+            }
             if let ledger = fallbackLedger {
                 NavigationLink(dinnerText("Recover with an accepted dinner")) {
-                    PickupFallbackReviewEntry(model: model, ledger: ledger) { option, target, deadline in
-                        needID = target; instruction = option.instruction
-                        minutes = String(option.minutes); due = deadline; knownDue = true
-                        extraTrip = option.requiresTrip; repeatMeal = option.repeatRequired
+                    PickupFallbackReviewEntry(model: model, ledger: ledger) { selected in
+                        guard selected.shopID == model.journey?.id else { return }
+                        repairDraft = selected
                     }
                 }
             }
             Section(pTr("Free manual meal repair")) {
-                Picker(pTr("Affected meal need"), selection: $needID) {
+                Picker(pTr("Affected meal need"), selection: $repairDraft.fields.needID) {
                     Text(pTr("Choose a need")).tag(UUID?.none)
-                    ForEach(model.journey?.needs ?? []) { Text($0.name).tag(Optional($0.id)) }
-                    ForEach(model.journey?.urgent ?? []) { Text($0.meal).tag(Optional($0.id)) }
+                    ForEach(model.journey?.currentRepairNeeds ?? []) { Text($0.name).tag(Optional($0.id)) }
+                    ForEach(model.journey?.recoveryCurrentUrgent ?? []) { Text($0.meal).tag(Optional($0.id)) }
                 }
-                TextField(pTr("Exact food, portions, exclusions and instructions"), text: $instruction, axis: .vertical).focused($field, equals: .instruction)
-                Toggle(pTr("I agree to an extra top-up trip for this repair"), isOn: $extraTrip)
-                Toggle(pTr("I agree to repeat a meal for this repair"), isOn: $repeatMeal)
-                TextField(pTr("Remaining elapsed preparation minutes (optional)"), text: $minutes).keyboardType(.numberPad).focused($field, equals: .minutes)
-                Toggle(pTr("Meal deadline is known"), isOn: $knownDue)
-                if knownDue { DatePicker(pTr("Meal deadline"), selection: $due) }
+                TextField(pTr("Exact food, portions, exclusions and instructions"), text: $repairDraft.fields.instruction, axis: .vertical).focused($field, equals: .instruction)
+                Toggle(pTr("I agree to an extra top-up trip for this repair"), isOn: $repairDraft.extraTrip)
+                Toggle(pTr("I agree to repeat a meal for this repair"), isOn: $repairDraft.repeatMeal)
+                TextField(pTr("Remaining elapsed preparation minutes (optional)"), text: $repairDraft.fields.minutes).keyboardType(.numberPad).focused($field, equals: .minutes)
+                Toggle(pTr("Meal deadline is known"), isOn: $repairDraft.fields.knownDue)
+                if repairDraft.fields.knownDue { DatePicker(pTr("Meal deadline"), selection: $repairDraft.fields.due) }
                 Text(pTr("Include thawing, soaking and marinating time unless those steps are already complete. A note does not confirm new stock or settle a shortage."))
                 Button(pTr("Save reviewed repair instructions")) { saveRepair() }
-            }
-            ForEach(model.journey?.repairs ?? []) { repair in
+            }.disabled(submittingRepair || model.saving || model.hasPendingSave)
+            ForEach(model.journey?.currentRepairInstructions ?? []) { repair in
                 Section(pTr("Saved meal instruction")) {
                     Text(repair.instruction)
                     Text(pTr(repair.timingConfirmed ? "Entered preparation time fits the deadline" : "Timing conditional or deadline missed · review before cooking"))
@@ -162,6 +204,8 @@ struct PickupRepairView: View {
             }
             NavigationLink(pTr("Preview a dated cook instruction")) { PickupCookView(model: model) }
         }.navigationTitle(pTr("Repair the meal"))
+            .onChange(of: model.journey?.id, initial: true) { _, _ in repairDraft.synchronize(with: model.journey) }
+            .onChange(of: model.journey?.repairs.last?.id) { _, _ in repairDraft.synchronize(with: model.journey) }
             .scrollDismissesKeyboard(.interactively)
             .keyboardDoneAction(visible: field != nil || stockField != nil, title: tr("Done")) {
                 field = nil
@@ -187,9 +231,22 @@ struct PickupRepairView: View {
         } catch { model.error = pTr("Choose the food, purpose and a valid quantity.") }
     }
     private func saveRepair() {
-        guard let needID, !instruction.isEmpty, minutes.isEmpty || (Int(minutes).map { $0 >= 0 && $0 <= 10080 } ?? false) else { model.error = pTr("Choose a need and enter instructions and valid preparation minutes."); return }
-        let repair = PickupRepair(id: repairID, needID: needID, instruction: instruction, createdAt: Date(), extraTripAgreed: extraTrip, repeatMealAgreed: repeatMeal, elapsedMinutes: Int(minutes), due: knownDue ? due : nil)
-        Task { if await model.change({ value in if !value.repairs.contains(where: { $0.id == repair.id }) { value.repairs.append(repair) } }) { repairID = UUID(); instruction = "" } }
+        guard !submittingRepair, !model.saving, !model.hasPendingSave, let journey = model.journey else { return }
+        repairDraft.synchronize(with: journey)
+        guard let repair = repairDraft.instruction(in: journey, at: Date()) else {
+            model.error = pTr("Choose a need and enter instructions and valid preparation minutes.")
+            return
+        }
+        submittingRepair = true
+        Task {
+            defer { submittingRepair = false }
+            if await model.change({ value in
+                guard value.id == journey.id else { throw MealRecoveryError.stale }
+                try value.recordRepair(repair)
+            }) {
+                repairDraft.synchronize(with: model.journey)
+            }
+        }
     }
 }
 

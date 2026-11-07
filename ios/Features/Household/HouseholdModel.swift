@@ -45,7 +45,7 @@ struct DeviceReminderPersona: Equatable {
     let configured: Bool
     let guardianChildOnly: Bool
     let emailOTPEnabled: Bool
-    private(set) var serviceURL: URL?
+    var serviceURL: URL? { service?.baseURL }
     var onScopeChange: (() -> Void)?
     private(set) var accountDeletion: AccountDeletionModel?
     private(set) var householdExit: HouseholdExitModel?
@@ -56,6 +56,7 @@ struct DeviceReminderPersona: Equatable {
     private let sharedShopOutbox: OperationOutbox
     private let lifecycleStore: LifecycleIntentStore
     private let historyStore: HistoryPendingStore
+    let fallbackPendingStore: FallbackPendingStore
     private let quotePendingStore: StoreQuotesPendingStore
     let guardianIntentStore: GuardianIntentStore
     private let deviceRevocationStore: DeviceRevocationStore
@@ -76,6 +77,8 @@ struct DeviceReminderPersona: Equatable {
     private var attempts = 0
     private var retryAfter = Date.distantPast
     private var generation = UUID()
+    // An explicit OTP from private Settings may continue on the protected root for this session.
+    @Published private var verifiedHouseholdSubject: String?
     private var contributorEnrollmentRevision = UUID()
     private var contributorDeviceID: String?
     private var contributorReplayWindow: (value: ReplayWindow, expiresAt: Date)?
@@ -94,6 +97,7 @@ struct DeviceReminderPersona: Equatable {
         lifecycleStore = LifecycleIntentStore(url: queueURL.deletingPathExtension().appendingPathExtension("lifecycle.json"))
         historyStore = HistoryPendingStore(url: queueURL.deletingPathExtension().appendingPathExtension("history.json"))
         placementStore = PlacementPendingStore(url: queueURL.deletingPathExtension().appendingPathExtension("placement.json"))
+        fallbackPendingStore = FallbackPendingStore(url: queueURL.deletingPathExtension().appendingPathExtension("fallback-recipes.json"))
         quotePendingStore = StoreQuotesPendingStore(url: queueURL.deletingPathExtension().appendingPathExtension("store-quotes.json"))
         deviceRevocationStore = DeviceRevocationStore(url: queueURL.deletingPathExtension().appendingPathExtension("devices.json"))
         let guardianNamespace = (bundle.bundleIdentifier ?? "RoomInTheCart") + (guardianChildOnly ? ".covered-child.guardian." : ".guardian.") + (bundle.object(forInfoDictionaryKey: "HouseholdServiceURL") as? String ?? "injected")
@@ -114,7 +118,6 @@ struct DeviceReminderPersona: Equatable {
         }
         let namespace = (bundle.bundleIdentifier ?? "RoomInTheCart") + "." + (projectURL.host ?? "auth")
         let managedAuth = AdultAuth(configuration: authConfig, vault: KeychainRefreshTokenVault(service: namespace))
-        self.serviceURL = serviceURL
         self.auth = managedAuth
         let householdService = HouseholdService(configuration: serviceConfig, auth: managedAuth,
             deviceVault: KeychainRefreshTokenVault(service: namespace, account: "household-device"))
@@ -135,7 +138,18 @@ struct DeviceReminderPersona: Equatable {
             notice = ht("Check your email for a sign-in code.") }
         catch { await show(error, start: start) }
     }
-    func verifyCode() async {
+    var showingVerifiedHousehold: Bool {
+        guard let verifiedHouseholdSubject else { return false }
+        return !locked && verifiedHouseholdSubject == identity?.subject
+    }
+    func dismissVerifiedHousehold() { verifiedHouseholdSubject = nil }
+
+    private func invalidateSessionActions() {
+        generation = UUID()
+        dismissVerifiedHousehold()
+    }
+
+    func verifyCode(continueInHousehold: () -> Bool = { false }) async {
         guard !guardianChildOnly, emailOTPEnabled else { notice = ht("Email sign-in is not ready yet. Your private shopping tools work without an account."); return }
         guard let auth, let service, !busy else { return }
         busy = true; notice = nil; defer { busy = false }
@@ -143,6 +157,7 @@ struct DeviceReminderPersona: Equatable {
         do {
             let access = try await auth.verifyEmailCode(email: email.trimmingCharacters(in: .whitespacesAndNewlines), code: code)
             guard start == generation else { return }
+            verifiedHouseholdSubject = identity == nil && continueInHousehold() ? access.identity.subject : nil
             identity = access.identity; code = ""; locked = false
             configureLifecycle(access.identity)
             let result = try await service.workspaces()
@@ -427,7 +442,7 @@ struct DeviceReminderPersona: Equatable {
             placementEvidenceIdentity = (identity.subject, scope.household.id, scope.memberId)
         }
         accountDeletion?.clearReview(); householdExit?.clear()
-        onScopeChange?(); generation = UUID(); locked = identity != nil
+        onScopeChange?(); invalidateSessionActions(); locked = identity != nil
         clearProjection(preservePlacementEvidence: true); lifecycle?.clear(); lifecycle = nil; workspaces = []; code = ""; notice = nil
     }
     func unlock() async {
@@ -460,11 +475,11 @@ struct DeviceReminderPersona: Equatable {
         guard let identity, identity.subject == intent.subject else { return }
         if let saved = placementEvidenceIdentity, saved.subject == intent.subject,
            saved.householdID == intent.householdID, saved.memberID == intent.memberID {
-            generation = UUID(); placementEvidenceIdentity = nil; placementEvidenceUnlocked = false
+            invalidateSessionActions(); placementEvidenceIdentity = nil; placementEvidenceUnlocked = false
         }
         workspaces.removeAll { $0.householdId == intent.householdID }
         if projection?.household.id == intent.householdID, projection?.memberId == intent.memberID {
-            generation = UUID(); onScopeChange?(); clearProjection()
+            invalidateSessionActions(); onScopeChange?(); clearProjection()
             await service?.clearScope()
             if self.identity == identity, !locked { configureLifecycle(identity) }
         }
@@ -481,6 +496,7 @@ struct DeviceReminderPersona: Equatable {
         do { try await lifecycleStore.purge(householdID: householdID, memberID: intent.memberID, subject: subject) } catch { cleanupFailed = true }
         do { try await historyStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
         do { try await placementStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
+        do { try await fallbackPendingStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
         do { try await quotePendingStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
         do { try await guardianIntentStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
         do { try await deviceRevocationStore.purge(householdID: householdID, subject: subject) } catch { cleanupFailed = true }
@@ -532,7 +548,7 @@ struct DeviceReminderPersona: Equatable {
         busy = true; defer { busy = false }
         onScopeChange?()
         accountDeletion?.clearReview(); householdExit?.clear()
-        generation = UUID(); identity = nil; workspaces = []; clearProjection(); lifecycle?.clear(); lifecycle = nil
+        invalidateSessionActions(); identity = nil; workspaces = []; clearProjection(); lifecycle?.clear(); lifecycle = nil
         delivery = .localDraft; code = ""; email = ""; item = ""; quantity = ""; codeSent = false; locked = false
         keepLocalPrivate = false; editing = nil
         var failed = false
@@ -544,6 +560,7 @@ struct DeviceReminderPersona: Equatable {
         do { try await lifecycleStore.purge() } catch { failed = true }
         do { try await historyStore.purge() } catch { failed = true }
         do { try await placementStore.purge() } catch { failed = true }
+        do { try await fallbackPendingStore.purge() } catch { failed = true }
         do { try await quotePendingStore.purge() } catch { failed = true }
         do { try await guardianIntentStore.purge() } catch { failed = true }
         do { try await deviceRevocationStore.purge() } catch { failed = true }
@@ -629,7 +646,9 @@ struct DeviceReminderPersona: Equatable {
     private func configureShopperInbox(_ projection: HouseholdBootstrap) {
         guard canReviewHouseholdRequests, let service else { shopperInbox?.clear(); shopperInbox = nil; return }
         if let shopperInbox, shopperInbox.authorized, shopperInbox.householdID == projection.household.id,
-           shopperInbox.memberID == projection.memberId, shopperInbox.shopID == projection.shopId { return }
+           shopperInbox.memberID == projection.memberId, shopperInbox.shopID == projection.shopId,
+           shopperInbox.supportsPurchaseConfirmation == projection.capabilities.contains("request_purchase_confirmation"),
+           shopperInbox.supportsDeferredRequests == projection.capabilities.contains("deferred_requests") { return }
         shopperInbox?.clear()
         let start = generation
         shopperInbox = HouseholdInboxModel(bootstrap: projection, service: service, outbox: shopperOutbox) { [weak self] in
@@ -646,7 +665,7 @@ struct DeviceReminderPersona: Equatable {
         }
         sharedShop?.clear()
         let start = generation
-        sharedShop = HouseholdShopModel(scope: projection, service: service, outbox: sharedShopOutbox) { [weak self] in
+        sharedShop = HouseholdShopModel(scope: projection, service: service, outbox: sharedShopOutbox, financialStore: historyStore, financialSubject: identity?.subject) { [weak self] in
             guard let self, self.generation == start else { return }; await self.refresh()
         } onAccessEnded: { [weak self] in await self?.show(ClientError.accessEnded, start: start) }
     }
@@ -655,7 +674,7 @@ struct DeviceReminderPersona: Equatable {
         switch error as? ClientError {
         case .accessEnded, .sessionNeeded:
             onScopeChange?()
-            generation = UUID(); clearProjection(); workspaces = []; delivery = .accessEnded; locked = identity != nil
+            invalidateSessionActions(); clearProjection(); workspaces = []; delivery = .accessEnded; locked = identity != nil
             notice = ht("Access needs to be checked again. Your private work stays on this phone.")
             await service?.clearScope()
             do { try await outbox.purge() }
@@ -669,6 +688,8 @@ struct DeviceReminderPersona: Equatable {
             do { try await historyStore.purge() }
             catch { notice = ht("Access has ended. Local retry cleanup could not be confirmed.") }
             do { try await placementStore.purge() }
+            catch { notice = ht("Access has ended. Local retry cleanup could not be confirmed.") }
+            do { try await fallbackPendingStore.purge() }
             catch { notice = ht("Access has ended. Local retry cleanup could not be confirmed.") }
             do { try await quotePendingStore.purge() }
             catch { notice = ht("Access has ended. Local retry cleanup could not be confirmed.") }

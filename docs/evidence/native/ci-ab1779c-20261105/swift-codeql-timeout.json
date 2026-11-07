@@ -1,0 +1,67 @@
+{
+  "candidate": "ab1779c515f925b51ffdf8dabbaf65ae2bbee3d0",
+  "runID": 42071958899,
+  "jobID": 127401986014,
+  "conclusion": "failure",
+  "reason": "Compile Release Swift sources for CodeQL exceeded its unchanged30-minute step limit; Analyze Swift security findings skipped.",
+  "toolchain": {
+    "xcode": "26.3/17C529",
+    "swift": "6.2.4",
+    "codeql": "2.27.4",
+    "host": "arm64",
+    "runtimeTarget": "arm64-apple-ios17.0"
+  },
+  "artifacts": [
+    {
+      "id": 13439601520,
+      "name": "iphone-swift-codeql-build-logs-1",
+      "size_in_bytes": 12115,
+      "digest": "sha256:460afad3a9124c3199e0a48ec2d322c6a5840168b77a82a06c776fe67f16822b"
+    },
+    {
+      "id": 13439691685,
+      "name": "debug-artifacts",
+      "size_in_bytes": 262915062,
+      "digest": "sha256:5f7291bffc3e388327587ecec1010839a5960d03a87f8f018ee8074028a2176b"
+    }
+  ],
+  "artifactDigestsVerified": true,
+  "jobLogSHA256": "530efbcaf96fb6bceb80f9d2d327792c0a494cd043c47d00084c4202d816fcb3",
+  "buildTracerSHA256": "7d92ad70cf3dd38b4333325af35387a1ac016761ceb8af4f2572cf6008892530",
+  "rawEvidence": ".build/CIResearch20261105/candidate-ab1779c",
+  "comparison": {
+    "priorSuccessfulCandidate": "4a0f7f3a25ae01b6efba5e984ceb464c4ca1d157",
+    "successfulCompileSeconds": 1154,
+    "failedLimitSeconds": 1800,
+    "sameRuntimeInputUnion": true,
+    "repositoryRuntimeInputs": 253,
+    "generatedRuntimeInputs": 1,
+    "modules": 8,
+    "priorRuntimeExtractorInvocations": 32,
+    "bothRecompiledFiveBuildManifests": true,
+    "priorManifestFrontendToExtractorStartSeconds": 206,
+    "failedManifestFrontendToExtractorStartSeconds": 464
+  },
+  "findings": [
+    "Build and extractor work was still progressing at timeout; no isolated app compiler hang or single root cause is established.",
+    "PhotosPicker/type-check/macro extractor diagnostics also exist in the successful baseline. That does not establish semantic analysis completeness.",
+    "A whole-module compilation experiment retains all runtime inputs, Release conditions, -Onone, arm64, cache-off, legacy driver and existing guards/time limits. It is not yet a verified hosted fix."
+  ],
+  "pending": [
+    "Fresh hosted build/analysis, exact input/extraction coverage, timing and extractor diagnostic review."
+  ],
+  "reviewEvidence": ".build/CIResearch20261105/swift-scan-runtime-review/REPORT.txt",
+  "localControl": "../swift-wholemodule-control-20261105/validation.json",
+  "knownSemanticLimitation": {
+    "successfulBaseline": true,
+    "compilerDiagnostics": 24,
+    "affectedViews": [
+      "CaptureReviewView.swift",
+      "ScanReviewView.swift",
+      "MembershipView.swift"
+    ],
+    "unresolvedASTNodes": 292,
+    "interpretation": "Operational success and complete input/file inventory do not prove complete AST/dataflow semantics; no supported remedy established. Whole-module timing experiment is separate.",
+    "review": ".build/CIResearch20261105/swift-scan-runtime-review/SEMANTIC-COMPLETENESS.txt"
+  }
+}

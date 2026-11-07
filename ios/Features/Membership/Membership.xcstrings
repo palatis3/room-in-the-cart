@@ -900,6 +900,210 @@
           }
         }
       }
+    },
+    "Apple reported a pending purchase status. Use Restore Purchases to check current membership access.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple reported a pending purchase status. Use Restore Purchases to check current membership access."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple devolvió un estado de compra pendiente. Usa Restaurar compras para consultar el acceso actual a la suscripción."
+          }
+        }
+      }
+    },
+    "Apple reported a canceled purchase. Current membership access is shown above.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple reported a canceled purchase. Current membership access is shown above."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple informó que se canceló una compra. El acceso actual a la suscripción aparece arriba."
+          }
+        }
+      }
+    },
+    "An App Store transaction could not be verified. Use Restore Purchases or contact support. Current membership access is shown above.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An App Store transaction could not be verified. Use Restore Purchases or contact support. Current membership access is shown above."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo verificar una transacción del App Store. Usa Restaurar compras o contacta con soporte. El acceso actual a la suscripción aparece arriba."
+          }
+        }
+      }
+    },
+    "That membership operation could not be completed. Try again or use Restore Purchases; current access is shown above.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That membership operation could not be completed. Try again or use Restore Purchases; current access is shown above."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo completar esa operación de suscripción. Inténtalo de nuevo o usa Restaurar compras; el acceso actual aparece arriba."
+          }
+        }
+      }
+    },
+    "An App Store transaction was saved by your household service. Current membership access is shown above.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An App Store transaction was saved by your household service. Current membership access is shown above."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servicio de tu hogar guardó una transacción del App Store. El acceso actual a la suscripción aparece arriba."
+          }
+        }
+      }
+    },
+    "Apple’s purchase response needs review.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple’s purchase response needs review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es necesario revisar la respuesta de compra de Apple."
+          }
+        }
+      }
+    },
+    "A verified App Store transaction is being delivered to your household service.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A verified App Store transaction is being delivered to your household service."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se está entregando una transacción verificada del App Store al servicio de tu hogar."
+          }
+        }
+      }
+    },
+    "A verified App Store transaction needs delivery review.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A verified App Store transaction needs delivery review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es necesario revisar la entrega de una transacción verificada del App Store."
+          }
+        }
+      }
+    },
+    "An App Store transaction or membership response does not match this account or household. Use the purchasing account to restore it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An App Store transaction or membership response does not match this account or household. Use the purchasing account to restore it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una transacción del App Store o respuesta de suscripción no coincide con esta cuenta u hogar. Usa la cuenta que hizo la compra para restaurarla."
+          }
+        }
+      }
+    },
+    "An earlier App Store update did not match this account or household. Use its purchasing account to restore it. Current membership access is shown above.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An earlier App Store update did not match this account or household. Use its purchasing account to restore it. Current membership access is shown above."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una actualización anterior del App Store no coincidía con esta cuenta u hogar. Usa la cuenta que la compró para restaurarla. El acceso actual a la suscripción aparece arriba."
+          }
+        }
+      }
+    },
+    "An earlier App Store update could not be verified. Use Restore Purchases or contact support. Current membership access is shown above.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An earlier App Store update could not be verified. Use Restore Purchases or contact support. Current membership access is shown above."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo verificar una actualización anterior del App Store. Usa Restaurar compras o contacta con soporte. El acceso actual a la suscripción aparece arriba."
+          }
+        }
+      }
+    },
+    "An earlier App Store update could not be used.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An earlier App Store update could not be used."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo usar una actualización anterior del App Store."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

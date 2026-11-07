@@ -1,0 +1,133 @@
+{
+  "purpose": "Standalone Form control for the unresolved f20 share switch failure; local validation only.",
+  "toolchain": "Xcode 27.1\nBuild version 27A9275",
+  "runtime": "iOS 26.2 / 23C52",
+  "hostedRuntimeRequired": "iOS 26.2 / 23C54",
+  "initialControl": {
+    "nativePassed": true,
+    "seconds": 29.69,
+    "runtimeWarnings": 0,
+    "driverExit": 1,
+    "reason": "Reporter expected a quoted Optional value, but actual Any? state text is Optional(0)/Optional(1). Corrected read-only capture replay passes. This source did not guarantee a scroll, so it is not acceptance of the refined control."
+  },
+  "refinedControl": {
+    "nativePassed": true,
+    "seconds": 35.11,
+    "strictGuardExit": 0,
+    "runtimeWarnings": 0,
+    "explicitScrollActivities": 1,
+    "switchTaps": 1,
+    "beforeValue": 0,
+    "afterValue": 1,
+    "captures": {
+      "status": "passed",
+      "captures": {
+        "before-state": {
+          "file": "102A45AB-3693-434E-ACF7-4521FD7B19FA.txt",
+          "sha256": "424344b62da8498dd690fcc7954ac429641d53426b34ef13b1969ee3683af653"
+        },
+        "before-AX": {
+          "file": "FFE24323-8252-43FD-AA51-425063C8CAC3.txt",
+          "sha256": "ee09438b5593f18008511245325f85632d8a40da92fcaaa1a4e8450285e20f0d"
+        },
+        "before-screen": {
+          "file": "2F247E6D-0D2F-43D3-8751-F206351B597B.png",
+          "sha256": "6d948dff89c2d317b3831c3a06c22c16dd0ca5ab4ef1bc1fc8999bb681b0948f"
+        },
+        "after-state": {
+          "file": "D5A7C9E5-F1E6-4D7B-A2C4-6DF8C159A316.txt",
+          "sha256": "8524f6901e29223e75173f0f3d7b4ce6aba1b75b0cb3d2e972e56fbf4278d2c0"
+        },
+        "after-AX": {
+          "file": "C47E0910-FC7F-4DB5-A5B8-157F2ADAC363.txt",
+          "sha256": "74ee6105c5b8d65deb631cf57b6cc89d12785140cfff4abfcc46a77c7d418aa6"
+        },
+        "after-screen": {
+          "file": "4E7096CC-24BD-4E72-A0DE-BA5A7B1923E7.png",
+          "sha256": "f46032c5341fea64200f82c090ca4a09ba8b21f54715a93435c55d633f1300d7"
+        }
+      },
+      "scope": "Standalone control only; not proof of the app failure's cause or a release gate."
+    },
+    "screenshotsVisuallyReviewed": true,
+    "simulatorID": "B807E4F6-6A14-4D10-824B-88845DCCF097",
+    "driverExit": 0,
+    "scope": "Requested drag recorded; actual displacement was not measured until the final control."
+  },
+  "sourceReview": "Lumpy prepared the control and reviewed workflow identity, time budgets, cleanup ownership and unavailable-export reporting. Root adapted four input sequences/pickers and guaranteed one normal drag. Diagnostics are outside production targets. Final Lumpy review passed six capture-verifier tests and shell syntax. Root fixed its final empty-creation-ID finding: cleanup records unavailable and never guesses a device.",
+  "checks": {
+    "pythonTestsPassed": 136,
+    "actionlint": "passed",
+    "shellSyntax": "passed"
+  },
+  "limits": "Local Xcode/runtime differ from hosted. No cause or app fix is established. Optional hosted workflow has not run. Original f20 failure stays failed. No native allowance, animation behavior or product gate relaxed.",
+  "hashes": {
+    ".build/CIResearch20261105/form-toggle-control/attempt-2/Tests.log": "df33f343ee9f155e962b0ccb04218ba3be1220b72d67b9e04176ce937145406f",
+    ".build/CIResearch20261105/form-toggle-control/attempt-2/test-summary.json": "8c38667479667091d3171fc4932c752971717a11628de8b2c14a95b3a96047c4",
+    ".build/CIResearch20261105/form-toggle-control/attempt-2/test-details.json": "77b4fc110dba88fff4d26c5d7d058bee61f8bef2b6debc1524cc0fac6c3af643",
+    ".build/CIResearch20261105/form-toggle-control/attempt-2/test-runtime-warnings.json": "ce5f63a49527481ca5704f8996eb8eea682d8688c3381353dd8f23ad6759bffb",
+    ".build/CIResearch20261105/form-toggle-control/attempt-2/verification.txt": "cdbac12fe7ab42a8cd95780b79c6fb176c2d65969b4d17f8160be8773cbc6be2",
+    ".build/CIResearch20261105/form-toggle-control/attempt-2/capture-verification.json": "a5f878ceb986fc70e80906a355742b28cddf8b6083bba053914384462651ee31",
+    ".build/CIResearch20261105/form-toggle-control/driver.log": "81c5c398315b8edb2ec4c75b8d605ab604691f506d7d53ce28bd35c389c9475e",
+    ".build/CIResearch20261105/form-toggle-control/capture-verification-replay.json": "0e71cfe4026c481cd05132e811f159c16d20966fa29345764876f95e9f118a9a",
+    "diagnostics/swiftui-toggle/FormToggleDiagnostic.swift": "d7cb036e2e4f769886f7f3d1e19c8a8e5e6fa479efebcabe29f37e59b04e09d3",
+    "diagnostics/swiftui-toggle/FormToggleDiagnostic.xcodeproj/project.pbxproj": "13df653056a22044a758843c251e55b22ddc38d5302abdb143654f2eafb4da43",
+    "diagnostics/swiftui-toggle/FormToggleDiagnostic.xcodeproj/xcshareddata/xcschemes/FormToggleDiagnostic.xcscheme": "ce22287233b3c19bb351ca9f92c7261d7bf25a13943f9ec8d8e1ce13702327f9",
+    "diagnostics/swiftui-toggle/FormToggleDiagnosticUITests.swift": "cd6b9a5517a063c9a0a1b3b4638882333938f00fcaa299d5906e5076eb85bde1",
+    "diagnostics/swiftui-toggle/README.md": "7e9ccddb50f0f08ee980589769e42023ae83e924f0bbd887a5c130098d05f775",
+    "diagnostics/swiftui-toggle/require-environment.sh": "5b8e4ab210cf176bfda4148ab76843ef5c75b053ca63adb9ba289444b95db304",
+    "diagnostics/swiftui-toggle/run-test.sh": "7feb2c91dd7130bdf41f6d6a5627cad008ce603935a658fc55b5f50d633969ea",
+    "diagnostics/swiftui-toggle/verify-captures.py": "c4f5a099e989eb940f5b06e8a5d444d7cac763b6c4d06dd8cc51222531d7c329",
+    ".build/CIResearch20261105/form-toggle-control/attempt-3/Tests.log": "05784b5e1a497de2a701957561b3662e84ce90f85beebfc8af3cbe0dfce02e7f",
+    ".build/CIResearch20261105/form-toggle-control/attempt-3/test-summary.json": "d02f2e68b8ef08ec6cadfa9e04abfbeb26dc6230943d7432cc8361307e91e176",
+    ".build/CIResearch20261105/form-toggle-control/attempt-3/test-details.json": "3cca571b1160c6fc8773b806b212b925ea8b1807d359629886d99b8dd9423470",
+    ".build/CIResearch20261105/form-toggle-control/attempt-3/test-runtime-warnings.json": "ce5f63a49527481ca5704f8996eb8eea682d8688c3381353dd8f23ad6759bffb",
+    ".build/CIResearch20261105/form-toggle-control/attempt-3/verification.txt": "02c16b4a1f4c029399722284866657b5f73b4b0f535e28f5e6c047896866ac5d",
+    ".build/CIResearch20261105/form-toggle-control/attempt-3/capture-verification.json": "510763a1179072488df94e25c4e6149d30c8677178b0bd6061a6eac192ad0a9d",
+    ".github/workflows/ios-toggle-diagnostic.yml": "bff688c47659e8404cdf0a0928c60e4e9b8eadf88b0a34d5be46954cb09ad72c"
+  },
+  "movementVerifiedControl": {
+    "nativePassed": true,
+    "seconds": 36.44,
+    "strictGuardExit": 0,
+    "runtimeWarnings": 0,
+    "driverExit": 0,
+    "switchTaps": 1,
+    "captures": {
+      "status": "passed",
+      "captures": {
+        "before-state": {
+          "file": "DB64A628-6E24-482F-9596-B753C879EEF0.txt",
+          "sha256": "2f45aaf55d76304d593dd29e69fbc96add536f3517653fdb93474113afe47135"
+        },
+        "before-AX": {
+          "file": "39B96B98-D9FC-4185-8AC6-FDA95580CBDF.txt",
+          "sha256": "41b1a6d9ef24a916cbc371507311591c7d3e719ea61ca8fdc2c7ab155ed705b2"
+        },
+        "before-screen": {
+          "file": "7B72089A-E004-4238-A120-F3F0FAA9EA3D.png",
+          "sha256": "afd85c4a1f48a084be56752a931762f9ba344ec4b61045b359cfc89da89ba825"
+        },
+        "after-state": {
+          "file": "6CB29198-9695-4EB5-B4C0-8344F9742D63.txt",
+          "sha256": "521ca7eac97e331c29674e001dcb29a60d1e2dde86d172d0296d060f1e36f7b9"
+        },
+        "after-AX": {
+          "file": "95FA4C2D-F7BA-4D45-B596-CCF8161FE5F9.txt",
+          "sha256": "28ffe6755ea7212f0b646c8a19e855d815b424162585643233d66f1bb13d9394"
+        },
+        "after-screen": {
+          "file": "8810A256-B18D-4984-BB82-2930D29B5B2A.png",
+          "sha256": "57d27d5887a4a9670b568db663ef2bf8e340f4ca857ef229add23e05d84cb4c1"
+        }
+      },
+      "scrollMidpointY": {
+        "before": 732.5,
+        "after": 238.16666666666674
+      },
+      "scope": "Standalone control only; not proof of the app failure's cause or a release gate."
+    },
+    "simulatorID": "0F09A578-1782-496B-A232-473D7852177D",
+    "scope": "Same switch position sampled directly around the one drag; movement required. Still a local standalone comparison, not the hosted app."
+  }
+}

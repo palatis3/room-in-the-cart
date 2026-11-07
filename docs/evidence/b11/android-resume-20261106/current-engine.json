@@ -1,0 +1,40 @@
+{
+  "host_utc": "2026-11-06T18:54:23.277522+00:00",
+  "checks": {
+    "boot": {
+      "exit": 0,
+      "value": "1"
+    },
+    "clock": {
+      "exit": 0,
+      "value": "2026-11-06T18:54:22Z"
+    },
+    "auto_time": {
+      "exit": 0,
+      "value": "1"
+    },
+    "com.android.chrome": {
+      "exit": 0,
+      "version_lines": [
+        "versionCode=782700532 minSdk=29 targetSdk=36",
+        "versionName=149.0.7827.5",
+        "versionCode=567263634 minSdk=24 targetSdk=34",
+        "versionName=113.0.5672.136"
+      ]
+    },
+    "com.android.vending": {
+      "exit": 0,
+      "version_lines": [
+        "versionCode=83561110 minSdk=21 targetSdk=33",
+        "versionName=35.6.11-21 [0] [PR] 528895992"
+      ]
+    },
+    "com.google.android.gms": {
+      "exit": 0,
+      "version_lines": [
+        "versionCode=231818044 minSdk=31 targetSdk=33",
+        "versionName=23.18.18 (190400-535401451)"
+      ]
+    }
+  }
+}

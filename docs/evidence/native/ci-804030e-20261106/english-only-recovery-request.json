@@ -1,0 +1,11 @@
+{
+  "utc": "2026-11-06T21:30:14.254577+00:00",
+  "runID": 42272379472,
+  "originalJobID": 128079949194,
+  "candidate": "804030e68473d022e72b464940061c01c611a0bd",
+  "scope": "Only never-started English local StoreKit job. Original acquisition failure preserved. No executed case rerun requested.",
+  "requestedAttempt": 2,
+  "nativeTestsPreviouslyStarted": 0,
+  "manualRecoveryRequestCount": 1,
+  "requestExit": 0
+}

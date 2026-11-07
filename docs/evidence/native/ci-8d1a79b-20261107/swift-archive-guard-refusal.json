@@ -1,0 +1,16 @@
+{
+  "candidate": "8d1a79b22981148839c6e3d0827c6710f877a369",
+  "archive": "13561720538.zip",
+  "archiveSHA256": "63e3fa55d3f59ef3a1430a908ce91e63c18e0e958661772b37bfe205e9524725",
+  "originalAudit": "audit.py",
+  "originalAuditExit": 1,
+  "refusedMember": "db-swift/db-swift/default/pools/1/pageDump/page-000000000",
+  "uncompressedBytes": 1048592,
+  "compressedBytes": 1046,
+  "maximumRatio": 1000,
+  "maximumMemberBytesExclusive": 50000000,
+  "fullDatabaseArchiveGuardPassed": false,
+  "refusedMemberPayloadRead": false,
+  "databasePayloadUninspected": true,
+  "scope": "Original default guard refusal preserved. Only directory metadata inspected to record refusal; exact bounded metadata/source selection remains separate."
+}

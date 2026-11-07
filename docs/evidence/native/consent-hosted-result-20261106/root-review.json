@@ -1,0 +1,6 @@
+{
+  "verifiedFiles": 10,
+  "manifestSHA256": "7cfbda293f5cf0b4cbe66a45f5b7ed61e0dbb8ab7883b8b7ad0282f618fb1ef2",
+  "allMatched": true,
+  "result": "7/7 native cases, zero runtime warnings, original failure not reproduced; incomplete capture shutdown and zero persisted events limit logging conclusions."
+}

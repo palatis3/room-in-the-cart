@@ -1,0 +1,5 @@
+{
+  "integrationExit": 0,
+  "sourceFiles": 126,
+  "scope": "Real PostgreSQL + local HTTP + synthetic identity/billing; no live provider or hosted database"
+}

@@ -1,0 +1,20 @@
+{
+  "baseCommit": "8f864eafc3887ea16be996124d55fa2ca2708706",
+  "diagnosticCommit": "c34a473f2b0d62678da3a6eebb1bcbd2900cbdc6",
+  "branch": "codex/qualify-xcode-26-4-1-8f864ea",
+  "runID": 42259468210,
+  "attempt": 1,
+  "workflowID": 407500253,
+  "dispatchCount": 1,
+  "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42259468210",
+  "checkedAt": "2026-11-06T17:12:33.918220+00:00",
+  "proposalPatchSHA256": "2b0f87bcc0354d9e97e3363596389c4e2db2dab1c32d4377ebfff0c0684e076f",
+  "rootGuardTests": 12,
+  "rootGuardTestsPassed": true,
+  "shellSyntaxPassed": true,
+  "workflowYAMLParsed": true,
+  "all4AppliedFilesMatchReviewedProposal": true,
+  "appAndTestBodiesChanged": false,
+  "releaseAcceptance": false,
+  "mainBranchPushed": false
+}

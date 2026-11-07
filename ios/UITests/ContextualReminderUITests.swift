@@ -60,7 +60,7 @@ import XCTest
         tap(app.buttons["Cancel"])
     }
 
-    func testSavedOfferRequestsDeadlineReminderFromThatOfferAndCancelKeepsDecisionPending() {
+    func testSavedOfferRequestsDeadlineReminderFromThatOfferAndCancelKeepsDecisionPending() throws {
         launch(reset: true)
         tap(element("openPickupList")); tap(element("ledgerStartShop"))
         fill("Offer reminder pickup", into: "ledgerShopName"); tap(element("ledgerCreateShop"))
@@ -84,11 +84,20 @@ import XCTest
         fill("4.00", into: "pickup.offer.price")
         let forecast = element("pickup.offer.forecast.enabled"); reveal(forecast)
         if forecast.value as? String == "1" { forecast.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap() }
-        chooseFutureOfferCutoff()
+        let chosenCutoffDay = try chooseFutureOfferCutoff()
         tap(element("pickup.offer.review")); enableSwitch("pickup.offer.approve"); tap(element("pickup.offer.save"))
         tap(app.buttons["Request an offer deadline reminder"])
         XCTAssertEqual(element("reminder.subject").label, "Large wrap pack")
         assertText("Offer cutoff")
+        let date = DateFormatter()
+        date.locale = Locale(identifier: "en_US")
+        date.calendar = Calendar(identifier: .gregorian)
+        date.timeZone = .current
+        date.dateStyle = .full
+        // This is the saved offer's cutoff in the actual reminder context,
+        // not merely the date that happened to be visible in the popover.
+        reveal(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", date.string(from: chosenCutoffDay))).firstMatch)
+        XCTAssertGreaterThan(chosenCutoffDay, Date())
         tap(element("reminder.openEditor"))
         assertElementContains("reminder.status", "Nothing is scheduled")
         XCTAssertTrue(element("reminder.time").exists)
@@ -101,21 +110,53 @@ import XCTest
         capture("S07-cancel-reminder-keeps-pending-store-offer")
     }
 
-    private func chooseFutureOfferCutoff() {
+    private func chooseFutureOfferCutoff() throws -> Date {
         let picker = element("pickup.offer.cutoff"); reveal(picker)
         // Compact native date controls expose the date and time as separate buttons.
         let dateButton = picker.buttons.firstMatch
         XCTAssertTrue(dateButton.exists, app.debugDescription)
         dateButton.tap()
+        let monthHeader = app.buttons.matching(NSPredicate(format: "identifier == %@ OR label == %@", "DatePicker.Show", "Month")).firstMatch
+        XCTAssertTrue(monthHeader.waitForExistence(timeout: 8), app.debugDescription)
+        let month = DateFormatter()
+        month.locale = Locale(identifier: "en_US_POSIX")
+        month.calendar = Calendar(identifier: .gregorian)
+        month.timeZone = .current
+        month.dateFormat = "MMMM yyyy"
+        let displayedMonth = try XCTUnwrap(monthHeader.value as? String)
+        let displayedDate = try XCTUnwrap(month.date(from: displayedMonth), displayedMonth)
+        let calendar = month.calendar!
+        let start = try XCTUnwrap(calendar.dateInterval(of: .month, for: displayedDate)?.start)
+        let nextMonth = try XCTUnwrap(calendar.date(byAdding: .month, value: 1, to: start))
+        // Mid-month stays safely future even if this journey spans midnight
+        // on the last day of the current month. Calendar handles year rollover.
+        let target = try XCTUnwrap(calendar.date(byAdding: .day, value: 14, to: nextMonth))
+        XCTAssertGreaterThan(target, Date())
         let next = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] %@ OR identifier CONTAINS[c] %@", "Next Month", "NextMonth")).firstMatch
         XCTAssertTrue(next.waitForExistence(timeout: 5), app.debugDescription)
         next.tap()
-        // iOS 17 day controls use the complete spoken date, for example
-        // "Tuesday, December 1", rather than the child text's numeral.
-        let firstDay = app.datePickers.collectionViews.buttons.matching(NSPredicate(format: "label ENDSWITH %@", " 1")).firstMatch
-        XCTAssertTrue(firstDay.exists, app.debugDescription)
-        firstDay.tap()
+        let displayed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", month.string(from: nextMonth)), object: monthHeader)
+        XCTAssertEqual(XCTWaiter.wait(for: [displayed], timeout: 8), .completed)
+        let spoken = DateFormatter()
+        spoken.locale = Locale(identifier: "en_US")
+        spoken.calendar = calendar
+        spoken.timeZone = .current
+        spoken.dateFormat = "EEEE, MMMM d"
+        // The native calendar can be a separate popover subtree. Match its
+        // exact spoken date across the app, then require one actionable match.
+        let days = app.buttons.matching(NSPredicate(format: "label == %@", spoken.string(from: target)))
+        let day = days.firstMatch
+        let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND hittable == true AND enabled == true"), object: day)
+        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 8), .completed)
+        XCTAssertEqual(days.count, 1)
+        day.tap()
         app.navigationBars["New store offer"].tap()
+        // Dismissing the calendar can restore the prior text field's keyboard
+        // and scroll the compact picker out of the lazy Form hierarchy.
+        reveal(picker)
+        let evidence = XCTAttachment(string: "Target day: \(spoken.string(from: target)); target month: \(month.string(from: nextMonth))\nCompact date label: \(dateButton.label)\nCompact date value: \(String(describing: dateButton.value))\nPicker value: \(String(describing: picker.value))")
+        evidence.name = "Offer-future-cutoff-selection"; evidence.lifetime = .keepAlways; add(evidence)
+        return target
     }
 
     private func launch(reset: Bool) {

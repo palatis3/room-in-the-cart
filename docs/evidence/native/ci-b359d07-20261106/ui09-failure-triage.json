@@ -1,0 +1,49 @@
+{
+  "candidate": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+  "run": 42184704871,
+  "attempt": 1,
+  "job": 127786281679,
+  "artifact": 13493552336,
+  "archiveSHA256": "e1c638c3fea0a7b82f7112d39a708742cbe239ccc6d2f10208a478ac0fdc9767",
+  "group": {
+    "selected": 6,
+    "passed": 5,
+    "failed": 1,
+    "strictExit": 1,
+    "warnings": 0
+  },
+  "test": "ContextualNavigationUITests/testUnknownProduceWeightUsesSavedWholePickupCapAndBillingIncrement",
+  "source": "source-ContextualNavigationUITests.swift",
+  "sourceSHA256": "4d48351fdc8a09111484426583c69e23de6cac04553883ba461c15209b71812f",
+  "sourceLocations": {
+    "test": 16,
+    "depositsFill": 252,
+    "taxFill": 253,
+    "saveAndEvaluate": 254,
+    "weightReview": 255,
+    "doneTap": 490
+  },
+  "firstUnexpectedWait": "After Deposits and other charges0 typing197.92\u2013198.67s, Done tap198.976s/synthesis199.310s; post-tap idle199.61\u2192259.648s lacks app animations complete notification. Earlier Done189.93s after Eligible discount returned normally.",
+  "actualEventPoint": [
+    364,
+    544
+  ],
+  "tapEvent": "ui09-weight-attachments/21B70E18-DBD0-453F-82B3-5958DF97288E",
+  "snapshot": "ui09-weight-attachments/03806729-D998-4B29-93B0-8CB17A05FCFE",
+  "appFrame": [
+    0,
+    0,
+    402,
+    874
+  ],
+  "subsequent": "Tax tap264.42s\u2192pre/post60s idle; typing0 at387.71s\u2192pre/post60s idle; Done511.27s\u2192pre/post60s idle; Save and evaluate checkout633.14s\u2192pre/post60s idle; original720s deadline exceeded during save post-action idle.",
+  "animationIdleTimeoutCount": 9,
+  "postDeadlineContinuation": "At758.32s idle timeout; checkout.weightReview exists checks758.35/762.86s then drag767.38s; runner restarted. No maximum-weight/cost assertions or passing completion reached.",
+  "captureLimits": "No retained PNG. Screen Recording attachment is60byte Unexpected Error: Finished test run with pending attachment. Tap snapshot contains app root only. Exact Done frame/focus/keyboard visibility cannot be established; actual point is in app bounds, not evidence that the intended action succeeded.",
+  "pendingRecording": "ui09-weight-attachments/8189D5ED-EA7B-4754-A8AB-60AA79369E5B",
+  "limits": [
+    "Original failure and720s deadline preserved. No retry or source changes.",
+    "Similar animation-idle symptom to UI02 Spanish does not establish shared root cause.",
+    "Root local fixes and proposed diagnostics remain separate from original b359 hosted results."
+  ]
+}

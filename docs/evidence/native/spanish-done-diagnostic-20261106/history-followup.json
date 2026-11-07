@@ -1,0 +1,247 @@
+{
+  "patchSHA256": "d51b4915dd65aa70a5dd07c9628d4e7a419ed38c8f3bfd3c7d5d8024d6c096de",
+  "reviewedFileHashesMatch": true,
+  "files": {
+    ".github/workflows/ios-fixtures.yml": {
+      "sha256": "397f39993c66a2d6bd92e8bb78147e347a621566d99a9d02d668bce40ae99179",
+      "baseSHA256": "923ae73f9bfd92655d2e41a63dfecae7ceb3536baa4caecac54dc5f4302700b1",
+      "bytes": 4840
+    },
+    "diagnostics/spanish-done/run.py": {
+      "sha256": "9e896eb13e1bc31d0d980bcb0b9b3931f81720d1358994e81cc26bb9cd12351a",
+      "baseSHA256": "a009e5fd9e7645e783a3d05fc8020495b9a10249b758605890afede223d863c1",
+      "bytes": 24593
+    },
+    "diagnostics/spanish-done/history.py": {
+      "sha256": "ce987614f44ceb21b9b5c8c056a21c82ce3bd53655204443cc77977f783e9366",
+      "baseSHA256": null,
+      "bytes": 13674
+    },
+    "diagnostics/spanish-done/history_protocol.py": {
+      "sha256": "77d8c73aa18926d36ceffaf87b34c4e42a8896a9ba12b9c97d79735a5659ad5b",
+      "baseSHA256": null,
+      "bytes": 7638
+    },
+    "diagnostics/spanish-done/history_archive.py": {
+      "sha256": "c6e9028c67bc50dfcd33e504f340baf28fb0c298a0a416d407191b274367ca5c",
+      "baseSHA256": null,
+      "bytes": 5480
+    },
+    "diagnostics/spanish-done/test_history.py": {
+      "sha256": "a72f0d3655aaad3bca92907702dd8fd98c5758a4487023bdad368460643eb222",
+      "baseSHA256": null,
+      "bytes": 11032
+    },
+    "diagnostics/spanish-done/HISTORY.md": {
+      "sha256": "7ca66e47599d78e3f9e24a508fb8e34945fd0d227fff10d89756f13db7aa9f9d",
+      "baseSHA256": null,
+      "bytes": 8170
+    }
+  },
+  "rootSyntheticTestsPassed": 48,
+  "rootActionlint": "passed",
+  "rootSourcePreservation": "passed",
+  "singletonExecuteByteIdentical": true,
+  "compiledSelectorCounts": {
+    "RoomInTheCartUITests/FreeJourneyUITests/testRecipeCaptureOpensOnFirstAttemptAndReopensAfterCancel": 1,
+    "RoomInTheCartUITests/PickupOfferUITests/testSavedOfferReopensAndUpdatesResponseAfterRestart": 1,
+    "RoomInTheCartUITests/RoomInTheCartUITests/testConfirmedComparisonDeletionSurvivesRestart": 1,
+    "RoomInTheCartUITests/RoomInTheCartUITests/testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer": 1
+  },
+  "rootArchiveRestore": {
+    "productSourceCommit": "4bff9599a3619bfc5efa79a7a533fd12e08250fc",
+    "artifactRun": 42206008187,
+    "artifactID": 13497202263,
+    "artifactSHA256": "390a0662b9907ed319c390675964c091f2130cb5d5d174865f0f77abc95f6117",
+    "productArchiveSHA256": "96ffe997f5d8798efaca7da7079970a9aa438bfff9cceb5508f0365b8c69aeb3",
+    "originalSourceCount": 528,
+    "productCount": 238,
+    "expandedProductBytes": 190293773,
+    "xctestrunRewritten": false,
+    "rebuilt": false,
+    "metadataExcluded": [
+      "._Products",
+      "Products/._Debug-iphonesimulator",
+      "Products/Debug-iphonesimulator/._PackageFrameworks"
+    ],
+    "xctestrunSHA256": "77926a4df6196a6798e34ccd4a5f2041b28d3e5609caceeede07783b7a8d7742",
+    "executableModesVerified": true,
+    "nativeToolsOrAppInvoked": false,
+    "scratchRemoved": true,
+    "archiveModuleSHA256": "c6e9028c67bc50dfcd33e504f340baf28fb0c298a0a416d407191b274367ca5c"
+  },
+  "nativeTestsRunForHostOnlyChange": false,
+  "independentReviewPending": false,
+  "independentReview": {
+    "classification": "No blocking finding in immutable v1; suitable for root final review of one history dispatch, not automatic execution approval",
+    "patchSHA256": "d51b4915dd65aa70a5dd07c9628d4e7a419ed38c8f3bfd3c7d5d8024d6c096de",
+    "patchBytes": 55048,
+    "baseCommit": "4bff9599a3619bfc5efa79a7a533fd12e08250fc",
+    "filesVerified": 7,
+    "syntheticTestsPassed": 48,
+    "originalFailedLogReplay": "Four ordered starts/three prefix completions recognized; target timeout/restart stays incomplete, no synthetic completion",
+    "sourceAndProducts": {
+      "noSwiftEdits": true,
+      "noPlistEdits": true,
+      "noBuildOrSigningStepInHistory": true,
+      "original528SourceHashesBoundTo4bff959": true,
+      "newHarnessCommitAndManifestSeparate": true,
+      "product238HashesFrozenBeforeAndAfter": true,
+      "rootRealRestoreProofRead": "../history-root-review/restore-verification.json",
+      "duplicateRestoreNotPerformed": true
+    },
+    "resolvedFindings": [
+      {
+        "id": "PID-attribution",
+        "resolution": "Unique fresh focus candidate requires first post-marker Spanish termination PID equality. Missing/conflicting corroboration fails complete attribution; separate candidate reasoning retained."
+      },
+      {
+        "id": "cross-origin-video-timing",
+        "resolution": "Removed readiness arithmetic; host receipt metadata remains separate from XCTest elapsed time. Prelaunch/first-frame coverage remains unknown."
+      }
+    ],
+    "failureRetention": {
+      "rawExitAndSignalRetained": true,
+      "strictExpectedCount": 4,
+      "prefixFailureNeverReclassified": true,
+      "partialJournalsAndOriginalLogsRetained": true,
+      "noRetry": true,
+      "cancellationExitRaceCovered": true
+    },
+    "caseAndCapture": {
+      "fourExactSelectors": true,
+      "actualOrderOneStartAndEndRequired": true,
+      "runnerRestartRejected": true,
+      "allPIDSinksComparedBeforeSelection": true,
+      "sameTargetPIDPostReturnCoverageRequired": true,
+      "videoStartsAtSpanishBoundary": true,
+      "stillsStartOnlyAtSpanishBeforeMarker": true,
+      "wholeRunNarrowLiveLog": true,
+      "exportWindowMinutes": 90,
+      "windowAgeCheckedBeforeAndAfter": true
+    },
+    "limits": {
+      "XCTestSeconds": [
+        720,
+        900
+      ],
+      "historyInternalMinutes": 65,
+      "historyExecuteStepMinutes": 70,
+      "historyJobMinutes": 100,
+      "singletonExecuteStepMinutes": 21,
+      "singletonJobMinutes": 70,
+      "singletonExportMinutes": 25
+    },
+    "workflowBoundary": {
+      "manualOnly": true,
+      "exactHeadRequired": true,
+      "attempt1Only": true,
+      "historyOptIn": true,
+      "singletonDefaultUnchanged": true,
+      "fetchesOnlyArtifact13497202263": true
+    },
+    "limitsAndAcceptanceChecks": [
+      "Actual four-case start order and every prefix outcome must be independently verified from retained log/xcresult; flags do not establish order.",
+      "A prefix failure keeps full strict result failed even if Spanish and capture pass.",
+      "Recorder liveness/host receipt is not proof of first/pre-Done frames; root must decode and review video before asserting visual coverage.",
+      "If target times out before after-marker/termination/end, attribution stays incomplete; retain candidate evidence without causal or absence inference.",
+      "65-minute alarm leaves cleanup space under70-minute execute;100-minute job remains final hard stop and can prevent upload under worst-case step totals.",
+      "Read-only static/synthetic review does not establish runtime behavior."
+    ],
+    "actionsPerformed": "Scratch-only reconstruction, hash/AST/static comparison, synthetic tests and cached-log replay. No native tools/app/tests, Git changes, hosted requests or source edits."
+  },
+  "harnessCommit": "0beb28ecb6637a8f12e6be851781dcb38625f19c",
+  "productCommit": "4bff9599a3619bfc5efa79a7a533fd12e08250fc",
+  "dispatch": {
+    "runID": 42211149900,
+    "attempt": 1,
+    "workflowID": 407500252,
+    "mode": "history",
+    "createdUTC": "2026-11-06T11:33:35Z",
+    "observedStatus": "completed",
+    "dispatchCountForCommit": 1,
+    "inertPushRunCount": 0,
+    "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42211149900",
+    "conclusion": "success",
+    "terminalEvidence": "hosted-0beb28e-history-result.json"
+  },
+  "originalBoundaryReplay": {
+    "complete": false,
+    "errors": [
+      "Unrecognized test boundary at line 1816",
+      "XCTest runner restart at line 1849",
+      "Missing case/start/end; four complete ordered cases required"
+    ],
+    "cases": [
+      {
+        "case": [
+          "FreeJourneyUITests",
+          "testRecipeCaptureOpensOnFirstAttemptAndReopensAfterCancel"
+        ],
+        "startLine": 18,
+        "markers": [],
+        "terminations": [
+          {
+            "pid": 7041,
+            "line": 176,
+            "markerCount": 0
+          }
+        ],
+        "outcome": "passed",
+        "endLine": 177,
+        "durationSeconds": 95.857
+      },
+      {
+        "case": [
+          "PickupOfferUITests",
+          "testSavedOfferReopensAndUpdatesResponseAfterRestart"
+        ],
+        "startLine": 181,
+        "markers": [],
+        "terminations": [
+          {
+            "pid": 9003,
+            "line": 1165,
+            "markerCount": 0
+          }
+        ],
+        "outcome": "failed",
+        "endLine": 1166,
+        "durationSeconds": 303.939
+      },
+      {
+        "case": [
+          "RoomInTheCartUITests",
+          "testConfirmedComparisonDeletionSurvivesRestart"
+        ],
+        "startLine": 1170,
+        "markers": [],
+        "terminations": [
+          {
+            "pid": 20052,
+            "line": 1573,
+            "markerCount": 0
+          },
+          {
+            "pid": 25688,
+            "line": 1594,
+            "markerCount": 0
+          }
+        ],
+        "outcome": "passed",
+        "endLine": 1595,
+        "durationSeconds": 152.49
+      },
+      {
+        "case": [
+          "RoomInTheCartUITests",
+          "testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer"
+        ],
+        "startLine": 1596,
+        "markers": [],
+        "terminations": [],
+        "outcome": null
+      }
+    ]
+  }
+}

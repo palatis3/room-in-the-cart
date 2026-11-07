@@ -31,6 +31,7 @@ import XCTest
         tap(element("fixture.s26.open"))
         tap(app.buttons["Use editable household idea template"])
         fill("Fractional chickpea supper", into: "Meal name", replacing: true)
+        fill("Peanuts\nMilk", into: "Shared household exclusions, one per line")
         // Start with the real editable template, then retain and correct one ingredient.
         tap(app.buttons.matching(identifier: "Remove ingredient").firstMatch)
         // The retained ingredient is above the removed row's scroll position.
@@ -50,9 +51,7 @@ import XCTest
         XCTAssertEqual(app.textFields["household-idea-evidence"].value as? String, "Household measured cup and reviewed drained yield")
         tap(element("household-idea-save"))
         waitCounter("ideas", "Fixture idea writes: 1")
-        assertText("Remaining household stock")
-        assertText("1/8"); assertText("3/8")
-        assertText("Price unresolved")
+        assertVisibleSupplyPreview()
         capture("S26-exact-fraction-household-supply-preview")
         enableSwitch("I reviewed these household quantities, exclusions, reservations, and usable packs")
         openAdultApproval()
@@ -99,6 +98,8 @@ import XCTest
         assertText("Fixture shared soup")
         assertText("Fractional chickpea supper")
         assertText("1/2 cup")
+        assertMealFact("shared-meal-exclusions", contains: "Peanuts, Milk")
+        assertMealFact("shared-meal-preparation-minutes", contains: "25")
         waitCounter("ideas", "Fixture idea writes: 2")
         waitCounter("proposals", "Fixture meal proposals: 1")
         waitCounter("basket", "Fixture basket writes: 1")
@@ -219,6 +220,36 @@ import XCTest
         let start = origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: (upward ? low : high) - bounds.minY))
         let end = origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: (upward ? high : low) - bounds.minY))
         start.press(forDuration: 0.05, thenDragTo: end)
+    }
+    private func assertVisibleSupplyPreview() {
+        let expected = [
+            "Remaining household stock, 1/8",
+            "Uncovered quantity, 3/8",
+            "Price unresolved. The shopper must separately review shared packs and budget.",
+        ]
+        for attempt in 0...3 {
+            let viewport = scrollableArea()
+            let missing = expected.filter { text in
+                !app.staticTexts.matching(NSPredicate(format: "label == %@", text)).allElementsBoundByIndex.contains {
+                    guard $0.exists else { return false }
+                    let frame = $0.frame
+                    return viewport.intersects(frame) && frame.minY >= viewport.minY && frame.maxY <= viewport.maxY
+                }
+            }
+            if missing.isEmpty { return }
+            guard attempt < 3 else {
+                XCTFail("Missing visible household supply text: \(missing.joined(separator: ", "))")
+                return
+            }
+            // The passive supply rows follow the editor. Scan forward without
+            // reversing when a visible label does not expose an actionable hit point.
+            scrollContent(upward: true)
+        }
+    }
+    private func assertMealFact(_ identifier: String, contains expected: String) {
+        let fact = element(identifier)
+        reveal(fact)
+        XCTAssertTrue((fact.label + " " + (fact.value as? String ?? "")).contains(expected), fact.debugDescription)
     }
     private func assertText(_ text: String) {
         let matches = app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", text))

@@ -20,6 +20,10 @@ struct ShopperInboxContent: View {
         List {
             if model.authorized {
                 ShopperDeliverySection(model: model)
+                if model.canReviewDeferred, model.pending == nil {
+                    NavigationLink(ht("Saved from earlier pickups")) { DeferredRequestsView(model: model) }
+                        .accessibilityIdentifier("household.deferred.open")
+                }
                 Section {
                     Button(ht("Refresh requests")) { Task { await model.load() } }.disabled(model.busy)
                     Text(ht("Each request keeps its own outcome. Linking a line does not add another pack."))
@@ -36,6 +40,7 @@ struct ShopperInboxContent: View {
                                     Text(request.originalItem).font(.headline)
                                     if let alias = request.authorAlias { Text(alias).font(.subheadline) }
                                     if let quantity = request.ownQuantity { Text(quantity) }
+                                    if request.fromPreviousShop == true { Text(ht("From an earlier pickup")) }
                                     Text(shopperRequestStatus(request)).foregroundStyle(.secondary)
                                     Text(householdTime(request.receivedAt)).font(.caption)
                                 }
@@ -58,6 +63,62 @@ struct ShopperInboxContent: View {
                 .presentationDetents([.large])
         }
         .onChange(of: model.authorized) { _, allowed in if !allowed { decisionRequest = nil } }
+    }
+}
+private struct DeferredRequestsView: View {
+    @ObservedObject var model: HouseholdInboxModel
+    @State private var reviewed: DeferredRequest?
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        List {
+            if model.canReviewDeferred, model.pending == nil {
+                if let row = reviewed, model.deferredRequests.contains(row) {
+                    Section {
+                        Text(row.originalItem).font(.headline)
+                        Text(row.authorAlias)
+                        if let amount = row.ownQuantity { Text(amount) }
+                        Text(householdTime(row.receivedAt))
+                        Text(ht("Bring this request to the current inbox. Review the price and quantity there before changing the basket."))
+                        Button(ht("Bring to this inbox")) {
+                            Task {
+                                await model.carryForReview(row)
+                                reviewed = nil
+                            }
+                        }.disabled(model.busy)
+                            .accessibilityIdentifier("household.deferred.confirm")
+                        Button(ht("Keep for later")) { reviewed = nil }
+                            .accessibilityIdentifier("household.deferred.keep")
+                    }
+                } else {
+                    ForEach(model.deferredRequests) { row in
+                        Button { reviewed = row } label: {
+                            VStack(alignment: .leading) {
+                                Text(row.originalItem).font(.headline)
+                                Text(row.authorAlias)
+                                if let amount = row.ownQuantity { Text(amount) }
+                                Text(householdTime(row.receivedAt)).font(.caption)
+                            }
+                        }.accessibilityIdentifier("household.deferred.\(row.id.uuidString.lowercased())")
+                    }
+                    if model.deferredPage != nil && model.deferredRequests.isEmpty {
+                        Text(ht("No earlier requests are waiting for this pickup."))
+                    }
+                    if model.deferredPage?.nextCursor != nil {
+                        Button(ht("Load more requests")) { Task { await model.loadDeferred(more: true) } }
+                    }
+                    Button(ht("Refresh requests")) { Task { await model.load(); await model.loadDeferred() } }
+                }
+            } else if model.pending != nil { ShopperDeliverySection(model: model) }
+            if let notice = model.notice { Text(notice) }
+            if model.busy { ProgressView(ht("Checking service…")) }
+        }
+        .navigationTitle(ht("Saved from earlier pickups"))
+        .task { await model.loadDeferred() }
+        .onChange(of: model.delivery) { _, delivery in
+            if case .confirmed(let receipt) = delivery, receipt.kind == "request.carry" { dismiss() }
+        }
+        .onDisappear { model.forgetDeferred() }
     }
 }
 struct HouseholdRequestDecisionView: View {
@@ -186,15 +247,31 @@ struct HouseholdRequestDecisionView: View {
         .task { model.select(request) }
     }
 }
-private struct ShopperDeliverySection: View {
+struct ShopperDeliverySection: View {
     @ObservedObject var model: HouseholdInboxModel
+    @State private var reachedRetryDeadline: Date?
     var body: some View {
         switch model.delivery {
         case .none: EmptyView()
         case .waiting, .needsReview:
             Section(ht("Pending decision")) {
                 Text(ht("The result is not confirmed. Refresh current requests before creating another decision."))
-                if model.delivery == .waiting { Button(ht("Retry the same decision")) { Task { await model.retry() } }.disabled(model.busy) }
+                if model.delivery == .waiting {
+                    Button(ht("Retry the same decision")) { Task { await model.retry() } }
+                        .disabled(model.busy || (reachedRetryDeadline != model.retryAfter && Date.now < model.retryAfter))
+                        .task(id: model.retryAfter) {
+                            let deadline = model.retryAfter
+                            do {
+                                while deadline > .now {
+                                    try await Task.sleep(for: .seconds(max(0, deadline.timeIntervalSinceNow)))
+                                }
+                                try Task.checkCancellation()
+                                reachedRetryDeadline = deadline
+                            } catch is CancellationError {
+                                // A new deadline or a dismissed action cancels this wait.
+                            } catch { return }
+                        }
+                }
                 Button(ht("Refresh current requests")) { Task { await model.load() } }.disabled(model.busy)
                 Button(ht("I reviewed the current requests; clear this retry")) { Task { await model.clearPendingAfterReview() } }
                     .disabled(model.busy || !model.reviewedCurrentFacts)
@@ -202,7 +279,11 @@ private struct ShopperDeliverySection: View {
         case .confirmed(let receipt):
             Section {
                 Label(ht("Decision confirmed by the household"), systemImage: "checkmark.circle")
-                Text(shopperDisposition(receipt.disposition))
+                if receipt.kind == "request.carry" {
+                    Text(ht("Ready for review in this pickup"))
+                } else if receipt.kind != "request.confirmPurchase" {
+                    Text(shopperDisposition(receipt.disposition))
+                }
                 Text(ht("This records a household decision. It does not place an order with the retailer."))
             }
         }
@@ -236,6 +317,7 @@ func householdScope(_ value: String) -> String {
     case "dinner": return ht("Dinner only"); default: return ht("Unknown scope") }
 }
 func shopperRequestStatus(_ request: OwnRequest) -> String {
+    if request.carriedForward == true { return ht("Moved to a later pickup for review") }
     if request.status == "pending" { return request.route == "next" ? ht("Received for next shop") : ht("Received, waiting for review") }
     return shopperDisposition(request.status)
 }

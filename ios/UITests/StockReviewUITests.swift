@@ -69,6 +69,44 @@ import XCTest
         XCTAssertEqual(element("fixture.stock.savedUnits").label, "Saved batch units: 5")
         capture("E06-stale-dependent-meal-review-blocked")
     }
+    // Each point gets a fresh form and one tap within the comfortable 44-point target.
+    func testKeyboardDoneAcceptsCenterAndTargetMargins() throws {
+        var results: [[String: Any]] = []
+        let probes: [(String, CGFloat, CGFloat)] = [
+            ("center", 0, 0), ("topLeft", -18, -18), ("topRight", 18, -18),
+            ("bottomLeft", -18, 18), ("bottomRight", 18, 18)
+        ]
+        for (name, dx, dy) in probes {
+            app.terminate(); launch(reset: true)
+            XCTAssertTrue(element("fixture.stock.savedUnits").waitForExistence(timeout: 20))
+            tap(element("stockBatch-77777777-7777-4777-8777-777777777777"))
+            tap(element("stockReview.amount")); app.typeText("3")
+            XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+            let done = app.buttons["Done"]
+            XCTAssertTrue(done.waitForExistence(timeout: 5) && done.isHittable)
+            let frame = done.frame, bounds = app.frame
+            let point = CGPoint(x: frame.midX + dx, y: frame.midY + dy)
+            let started = Date().timeIntervalSince1970
+            print("RITC_DONE_POINT \(name) \(started) x=\(point.x) y=\(point.y)")
+            capture("Done-target-\(name)-before")
+            app.coordinate(withNormalizedOffset: .zero)
+                .withOffset(CGVector(dx: point.x - bounds.minX, dy: point.y - bounds.minY)).tap()
+            let gone = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: app.keyboards.firstMatch)
+            let dismissed = XCTWaiter.wait(for: [gone], timeout: 4) == .completed
+            let record: [String: Any] = ["probe": name, "epoch": started,
+                "point": [Double(point.x), Double(point.y)],
+                "exposedFrame": [Double(frame.minX), Double(frame.minY), Double(frame.width), Double(frame.height)],
+                "keyboardDismissed": dismissed]
+            results.append(record)
+            let data = try JSONSerialization.data(withJSONObject: record, options: [.sortedKeys])
+            let attachment = XCTAttachment(data: data, uniformTypeIdentifier: "public.json")
+            attachment.name = "Done-target-\(name)-result"; attachment.lifetime = .keepAlways; add(attachment)
+            capture("Done-target-\(name)-after")
+            app.terminate()
+        }
+        XCTAssertTrue(results.allSatisfy { $0["keyboardDismissed"] as? Bool == true }, "Each independently focused probe must dismiss on its single tap: \(results)")
+    }
+
     private func launch(reset: Bool) {
         app.launchArguments = ["--ui-testing", "--stock-review-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         if reset { app.launchArguments.append("--reset-stock-review-fixture") }

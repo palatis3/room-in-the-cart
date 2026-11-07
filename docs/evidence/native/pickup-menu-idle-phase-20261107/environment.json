@@ -1,0 +1,46 @@
+{
+  "actualResultRuntime": [
+    {
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+        "deviceName": "iPhone 17",
+        "modelName": "iPhone 17",
+        "osBuildNumber": "23C54",
+        "osVersion": "26.2",
+        "platform": "iOS Simulator"
+      },
+      "expectedFailures": 0,
+      "failedTests": 0,
+      "passedTests": 6,
+      "skippedTests": 0,
+      "testPlanConfiguration": {
+        "configurationId": "1",
+        "configurationName": "Test Scheme Action"
+      }
+    }
+  ],
+  "activityRuntime": {
+    "device": {
+      "architecture": "arm64",
+      "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+      "deviceName": "iPhone 17",
+      "modelName": "iPhone 17",
+      "osBuildNumber": "23C54",
+      "osVersion": "26.2",
+      "platform": "iOS Simulator"
+    },
+    "testPlanConfiguration": {
+      "configurationId": "1",
+      "configurationName": "Test Scheme Action"
+    }
+  },
+  "configuredXcodeDeveloperPath": "/Applications/Xcode_26.3.app/Contents/Developer",
+  "developerPathObservedInHostedJobLog": true,
+  "actualCommandLines": [
+    "    /Applications/Xcode_26.3.app/Contents/Developer/usr/bin/xcodebuild -xctestrun .build/DerivedData/Build/Products/RoomInTheCart_iphonesimulator26.2-arm64.xctestrun -destination \"platform=iOS Simulator,id=BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06\" -resultBundlePath .build/Tests.xcresult -parallel-testing-enabled NO -test-timeouts-enabled YES -default-test-execution-time-allowance 720 -maximum-test-execution-time-allowance 900 -collect-test-diagnostics never \"-only-testing:RoomInTheCartUITests/ContextualNavigationUITests/testDinnerOnlyCapAndCancelledSlotChangeSurviveRelaunch\" \"-only-testing:RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareKeepsTheFrozenPickupUnplaced\" \"-only-testing:RoomInTheCartUITests/FreeJourneyUITests/testDinnerMoveAcrossDisplayedWeeksKeepsLunchAndOccurrence\" \"-only-testing:RoomInTheCartUITests/FreeJourneyUITests/testFreeCookCorrectionAndExplicitRecipientAcknowledgment\" \"-only-testing:RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges\" \"-only-testing:RoomInTheCartUITests/RoomInTheCartUITests/testComparisonSaveStaysInsideViewportAboveTabBar\" test-without-building"
+  ],
+  "hostedXcodeBuildNumberIndependentlyProbedInThisProof": false,
+  "localMetadataReaderVersion": "xcresulttool version 25115, schema version: 0.4.0 (legacy commands format version: 3.60)",
+  "scope": "Result runtime/configuration exact; Xcode26.3 path observed in actual invocation. Explicit hosted Xcode build-number probe is outside this consumer proof."
+}

@@ -1,0 +1,148 @@
+{
+  "observedAt": "2026-11-05T11:47:13.556354+00:00",
+  "basePublishedCandidate": "f20feb685f95e7da1c7a23f26eff499d2696329f",
+  "change": "Use exact matching text queries, return early for already actionable targets and measure navigation/keyboard bounds from one accessibility snapshot. Fully-visible callers retain full vertical bounds even after the final scroll attempt. Original test methods and assertions are byte-identical to f20.",
+  "buildExit": 0,
+  "driverExit": 1,
+  "sourceManifestSHA256": "9f568451cc180f98f263550abe86cf5b8bd40ddeea1fd359714915943abe0c7c",
+  "sourceFilesVerified": 494,
+  "productHashes": {
+    ".build/CIResearch20261105/shared-store-navigation/DerivedData/Build/Products/RoomInTheCart_iphonesimulator27.1-arm64.xctestrun": "d959d8e1e0d23733c2ad501eeda8508db48225106bb6df72e0d04ce0fdd760ae",
+    ".build/CIResearch20261105/shared-store-navigation/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCartUITests-Runner.app/PlugIns/RoomInTheCartUITests.xctest/RoomInTheCartUITests": "4d473ab49a2904c64bcdcc373c384c9752b8cc67beab2834453ad21d19c913e9",
+    ".build/CIResearch20261105/shared-store-navigation/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart": "b413c5418ef3c12cf4b69c59c2cfa1e59ffc4c7788f7fdf7a242d9a1b7f1a541"
+  },
+  "defaultAllowanceSeconds": 720,
+  "maximumAllowanceSeconds": 900,
+  "phases": {
+    "known-trip": {
+      "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption",
+      "result": "Passed",
+      "executed": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "nativeExit": 0,
+      "strictGuardExit": 1,
+      "rawExecutionFailures": [],
+      "seconds": [
+        401.376
+      ],
+      "warningReport": {
+        "status": "unexpected-warnings",
+        "summaryWarningCount": 1,
+        "runtimeWarningCount": 1,
+        "examinedTestCount": 1,
+        "detailExportCount": 1,
+        "activityExportCount": 1,
+        "warnings": [
+          {
+            "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption",
+            "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+            "count": 1,
+            "maximum": 0
+          }
+        ]
+      },
+      "warningActivities": [
+        [
+          "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+          [
+            [
+              "com.apple.dt.xctest.activity-type.internal",
+              "Tap \"fixture.s27.controls\" Button"
+            ],
+            [
+              "com.apple.dt.xctest.activity-type.internal",
+              "Synthesize event"
+            ]
+          ]
+        ]
+      ],
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "E09386B0-EFC8-4ECE-9E3C-3092A66464C8",
+        "deviceName": "RITC-Quote-known-trip-20261105",
+        "modelName": "iPhone 17",
+        "osBuildNumber": "23C52",
+        "osVersion": "26.2",
+        "platform": "iOS Simulator"
+      },
+      "hashes": {
+        ".build/CIResearch20261105/shared-store-navigation/known-trip/Tests.log": "338f2bc67c9347c88d03f5aa30389bd42ae92db73da5bc909aa87657124a9ea6",
+        ".build/CIResearch20261105/shared-store-navigation/known-trip/test-summary.json": "1a0984461828226f474817f2d065245b38001c1f8cbc64b2bed9d1c53ed957a9",
+        ".build/CIResearch20261105/shared-store-navigation/known-trip/test-details.json": "85885e25185f55fd4872ccda0c6ccb0621baa2f5308a59106371d954d8b6c3f1",
+        ".build/CIResearch20261105/shared-store-navigation/known-trip/test-runtime-warnings.json": "0136c2f4af617b0a6eca89925bf5ba618c26d0f88c210baba0688f21f5738cc7",
+        ".build/CIResearch20261105/shared-store-navigation/known-trip/selected-test-detail.json": "b52b1d38186892bd4bbdd8a0b8e6ccf47687ca4e8d8a555737b28b97c45da91f",
+        ".build/CIResearch20261105/shared-store-navigation/known-trip/selected-test-activities.json": "b83d03ee97baae1688ab64ce0cca5aa9f2a1556b70d0fd7a8d0b6f99d4d28e4b",
+        ".build/CIResearch20261105/shared-store-navigation/known-trip/verification.txt": "2502fded68dcf6aeea82786f0f590b0278ed6c3f8ad2afbc97e93a48afc3d8c4",
+        ".build/CIResearch20261105/shared-store-navigation/known-trip/selectors.txt": "380682e67299ec7ba70f71d0145ecf85ee441acdc4d75dbde70808a4a17cc8de"
+      }
+    },
+    "lost-reply": {
+      "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave",
+      "result": "Passed",
+      "executed": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "nativeExit": 0,
+      "strictGuardExit": 1,
+      "rawExecutionFailures": [],
+      "seconds": [
+        246.824
+      ],
+      "warningReport": {
+        "status": "unexpected-warnings",
+        "summaryWarningCount": 1,
+        "runtimeWarningCount": 1,
+        "examinedTestCount": 1,
+        "detailExportCount": 1,
+        "activityExportCount": 1,
+        "warnings": [
+          {
+            "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave",
+            "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+            "count": 1,
+            "maximum": 0
+          }
+        ]
+      },
+      "warningActivities": [
+        [
+          "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+          [
+            [
+              "com.apple.dt.xctest.activity-type.internal",
+              "Tap \"fixture.s27.controls\" Button"
+            ],
+            [
+              "com.apple.dt.xctest.activity-type.internal",
+              "Synthesize event"
+            ]
+          ]
+        ]
+      ],
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "19002FEF-7297-42BF-985A-DC2B474A8278",
+        "deviceName": "RITC-Quote-lost-reply-20261105",
+        "modelName": "iPhone 17",
+        "osBuildNumber": "23C52",
+        "osVersion": "26.2",
+        "platform": "iOS Simulator"
+      },
+      "hashes": {
+        ".build/CIResearch20261105/shared-store-navigation/lost-reply/Tests.log": "3d22756b84b9eb86510a6201bc089d668dd3a8f48003e3e56797e3b4b8105546",
+        ".build/CIResearch20261105/shared-store-navigation/lost-reply/test-summary.json": "f876a7be70afebd97aaf0cc956296fc81d8db603a622eaa860a370eaa3414930",
+        ".build/CIResearch20261105/shared-store-navigation/lost-reply/test-details.json": "14a521c6469a6c6467b87c95beed7f08dad6f81eb8f098a3c09c0c7674a14afd",
+        ".build/CIResearch20261105/shared-store-navigation/lost-reply/test-runtime-warnings.json": "406c1d5252fb1ad4ccfff1810e483f3c1b41753baadcb09824dedcf179dd2d7a",
+        ".build/CIResearch20261105/shared-store-navigation/lost-reply/selected-test-detail.json": "8eb17ed6f608ba1b5691614eaaf8fe9f8eff84f57bdc42c801c304254d922313",
+        ".build/CIResearch20261105/shared-store-navigation/lost-reply/selected-test-activities.json": "1e7cefc84b49281ac58f2b6dfebd61db4817966685e1c4e4ccb5958d7936bff1",
+        ".build/CIResearch20261105/shared-store-navigation/lost-reply/verification.txt": "e58cd5433efd234457b526ff36bf2aa339a5d65d8dddaed62add6f5568980b19",
+        ".build/CIResearch20261105/shared-store-navigation/lost-reply/selectors.txt": "084109585400456bdcaf3eb1e4e6538890162b118755bafb6883a5ff40350889"
+      }
+    }
+  },
+  "review": "Sol 6.1 xhigh traced the retained hosted timeout and prepared the helper correction. Root reviewed and executed both original journeys. Lumpy identified the final fully-visible fallback gap; root corrected it before freezing and testing.",
+  "limits": "Local Xcode27.1/iOS26.2 build23C52 differs from hosted23C54. Original hosted failures remain failed. A native assertion pass does not override a failed warning guard. No allowance, timeout or product assertion was relaxed for these local attempts. Synthetic household transport does not establish live-provider acceptance."
+}

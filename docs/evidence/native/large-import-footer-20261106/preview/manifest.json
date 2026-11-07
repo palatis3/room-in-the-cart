@@ -1,0 +1,17 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "CF6099BC-F92B-427C-8985-895AF8D24F8D",
+        "deviceName" : "RITC Large Import Footer 20261106",
+        "exportedFileName" : "84929DF6-A3C8-4265-B42F-F2FA550D83E5.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S02-editable-staged-preview-at-largest-text_0_7BC2B945-647B-49E4-8F86-9D9924708DFA.png",
+        "timestamp" : 1794018903.703
+      }
+    ],
+    "testIdentifier" : "ContextualNavigationUITests/testLargeTextKeepsLongNativePasteEditableAndReviewReachable()",
+    "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/ContextualNavigationUITests/testLargeTextKeepsLongNativePasteEditableAndReviewReachable"
+  }
+]

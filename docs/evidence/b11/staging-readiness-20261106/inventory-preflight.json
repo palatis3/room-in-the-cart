@@ -1,0 +1,36 @@
+{
+  "scope": "disposable synthetic001-008 SQL/metadata preflight; not hosted capture or actual managed Auth restore",
+  "capture_source_sha256": "5eee2c22be6f4050de12826a9707d221bf1465bdea3bffe99e48461ae6351871",
+  "checks": {
+    "old_alias_expression_rejected": {
+      "exit": 3,
+      "diagnostic": "ERROR:  column \"row_value\" does not exist\nLINE 1: ...(t)::text AS row_value FROM auth.users t ORDER BY row_value ...\n                                                             ^"
+    },
+    "actual_functions_passed": {
+      "tables": 35,
+      "ritc_tables": 30,
+      "registry_rows": 8,
+      "row_count_total": 31,
+      "relations": 32,
+      "policies": 33,
+      "functions": 6,
+      "column_entries": 420,
+      "role_facts": 18,
+      "memberships": 4,
+      "expected_per_table_counts_matched": true,
+      "null_and_explicit_column_ACL_shapes_verified": true,
+      "managed_count_query_verified": true,
+      "same_exported_snapshot_dump_verified": true,
+      "before_after_global_role_facts_equal": true,
+      "synthetic_restore_inventory_exact_equal": true,
+      "special_characters_remain_one_row_per_COPY_record": true
+    }
+  },
+  "status": "passed",
+  "server_stop_exit": 0,
+  "cleanup": {
+    "temporary_cluster_removed": true,
+    "owned_server_stopped": true,
+    "live_volumes_accessed": false
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "candidate": "0d5bb1b22e9e84cd4b8c2b07317f91cfc703b60c",
+  "artifactID": 13554828191,
+  "sourceSQLite": "iphone-performance-scroll-1/Performance.xcresult/database.sqlite3",
+  "sourceSQLiteSHA256": "8d6bead0881744b3a2ee76672bde0c3b4da326456f7ee16a52482506d7c5df50",
+  "copy": "metric-sqlite-inspection/database.sqlite3",
+  "openedReadOnly": true,
+  "quickCheck": "ok",
+  "rows": [
+    {
+      "identifier": "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical",
+      "displayName": "Memory Physical (app)",
+      "unitOfMeasurement": "kB",
+      "measurements": "-16.384,-16.384,-49.152,131.072,-180.224",
+      "testCaseRun_fk": 1,
+      "samples": [
+        -16.384,
+        -16.384,
+        -49.152,
+        131.072,
+        -180.224
+      ],
+      "sampleCount": 5,
+      "matchesJSON": true
+    },
+    {
+      "identifier": "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_absolute",
+      "displayName": "Absolute Memory Physical (app)",
+      "unitOfMeasurement": "kB",
+      "measurements": "109207.36,109403.968,109289.28,109354.816,109256.512",
+      "testCaseRun_fk": 1,
+      "samples": [
+        109207.36,
+        109403.968,
+        109289.28,
+        109354.816,
+        109256.512
+      ],
+      "sampleCount": 5,
+      "matchesJSON": true
+    },
+    {
+      "identifier": "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_peak",
+      "displayName": "Memory Peak Physical (app)",
+      "unitOfMeasurement": "kB",
+      "measurements": "109567.808,109731.648,109649.728,109535.04,109748.032",
+      "testCaseRun_fk": 1,
+      "samples": [
+        109567.808,
+        109731.648,
+        109649.728,
+        109535.04,
+        109748.032
+      ],
+      "sampleCount": 5,
+      "matchesJSON": true
+    }
+  ],
+  "requiredScrollDurationPresent": false,
+  "jsonExactSampleEquality": true,
+  "interpretation": "Independent read-only copy of original XCTest result metadata, not app-ledger data. Current presence or absence does not rewrite historical failures or establish their cause."
+}

@@ -1,0 +1,77 @@
+[
+  {
+    "probe": "center",
+    "pid": 77840,
+    "coordinates": [
+      {
+        "x": 365.16666666666663,
+        "y": 544.1666666666666
+      },
+      {
+        "x": 365.16666666666663,
+        "y": 544.1666666666666
+      }
+    ],
+    "attachment": ".build/KeyboardDiagnostic20261106/baseline-independent-review/attachments/668A7EB2-66A7-409C-B469-9C35D9B0D986"
+  },
+  {
+    "probe": "topLeft",
+    "pid": 77933,
+    "coordinates": [
+      {
+        "x": 347.16666666666663,
+        "y": 526.1666666666666
+      },
+      {
+        "x": 347.16666666666663,
+        "y": 526.1666666666666
+      }
+    ],
+    "attachment": ".build/KeyboardDiagnostic20261106/baseline-independent-review/attachments/F0D07238-CAAB-4B66-BB27-BC4F909D0031"
+  },
+  {
+    "probe": "topRight",
+    "pid": 77989,
+    "coordinates": [
+      {
+        "x": 383.16666666666663,
+        "y": 526.1666666666666
+      },
+      {
+        "x": 383.16666666666663,
+        "y": 526.1666666666666
+      }
+    ],
+    "attachment": ".build/KeyboardDiagnostic20261106/baseline-independent-review/attachments/EB856365-9D5B-4D2A-8AAC-9D8B935BFCD4"
+  },
+  {
+    "probe": "bottomRight",
+    "pid": 78102,
+    "coordinates": [
+      {
+        "x": 383.16666666666663,
+        "y": 562.1666666666666
+      },
+      {
+        "x": 383.16666666666663,
+        "y": 562.1666666666666
+      }
+    ],
+    "attachment": ".build/KeyboardDiagnostic20261106/baseline-independent-review/attachments/D2DFB6D4-09B1-4568-84C2-950D847A7E90"
+  },
+  {
+    "probe": "bottomLeft",
+    "pid": 78052,
+    "coordinates": [
+      {
+        "x": 347.16666666666663,
+        "y": 562.1666666666666
+      },
+      {
+        "x": 347.16666666666663,
+        "y": 562.1666666666666
+      }
+    ],
+    "attachment": ".build/KeyboardDiagnostic20261106/baseline-independent-review/attachments/CB53A188-5B23-456B-AFB3-8A42DB7E2235"
+  }
+]

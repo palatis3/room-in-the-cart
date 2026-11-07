@@ -1,0 +1,162 @@
+{
+  "appSourceCommit": "2e16427c932f115e617e1e148a91628c67347afe",
+  "appConfiguration": "Release, UI-only test target; debugger, coverage and app sanitizers disabled",
+  "toolchain": "Xcode 27.1 (27A9275)",
+  "device": "iPhone SE, iOS 17.0 (21A328), arm64 simulator",
+  "testSourceSHA256": "ccde83965292e8ef2ae82d249c28f19427a027948fe0505062a4d0d22540c77f",
+  "fixtureSHA256": "7411eb3a8a10911d6599237e1f2f618c0c3508667909a4766a4b5b14bef6e3b8",
+  "launch": {
+    "result": ".build/RenderedLedger50020261104/TrackedPerformanceLaunchReady.xcresult",
+    "metrics": [
+      {
+        "testIdentifier": "ReleasePerformanceUITests/testColdLaunchPerformance()",
+        "testIdentifierURL": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/ReleasePerformanceUITests/testColdLaunchPerformance",
+        "testRuns": [
+          {
+            "device": {
+              "deviceId": "81EFAC23-F35E-4D12-84EA-0AC8438CCAE2",
+              "deviceName": "RITC Rendered 500 Item Pickup 20261104"
+            },
+            "metrics": [
+              {
+                "baselineAverage": 0,
+                "baselineName": "",
+                "displayName": "Duration (ApplicationFirstFramePresentationResponsive)",
+                "identifier": "com.apple.dt.XCTMetric_ApplicationLaunch-ApplicationFirstFramePresentationResponsive.duration",
+                "maxPercentRegression": 10,
+                "maxPercentRelativeStandardDeviation": 10,
+                "maxRegression": 0,
+                "maxStandardDeviation": 10,
+                "measurements": [
+                  1.169286042,
+                  1.114069125,
+                  1.079931417,
+                  1.096386416,
+                  1.110412792
+                ],
+                "polarity": "prefers smaller",
+                "unitOfMeasurement": "s"
+              }
+            ],
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "scroll": {
+    "result": ".build/RenderedLedger50020261104/TrackedPerformanceMetrics.xcresult",
+    "metrics": [
+      {
+        "testIdentifier": "ReleasePerformanceUITests/testScrollingPerformanceOnFiveHundredItemPickup()",
+        "testIdentifierURL": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/ReleasePerformanceUITests/testScrollingPerformanceOnFiveHundredItemPickup",
+        "testRuns": [
+          {
+            "device": {
+              "deviceId": "81EFAC23-F35E-4D12-84EA-0AC8438CCAE2",
+              "deviceName": "RITC Rendered 500 Item Pickup 20261104"
+            },
+            "metrics": [
+              {
+                "baselineAverage": 0,
+                "baselineName": "",
+                "displayName": "Absolute Memory Physical (app)",
+                "identifier": "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_absolute",
+                "maxPercentRegression": 10,
+                "maxPercentRelativeStandardDeviation": 10,
+                "maxRegression": 0,
+                "maxStandardDeviation": 10,
+                "measurements": [
+                  119965.592,
+                  120129.432,
+                  120129.432,
+                  120162.2,
+                  120178.584
+                ],
+                "polarity": "prefers smaller",
+                "unitOfMeasurement": "kB"
+              },
+              {
+                "baselineAverage": 0,
+                "baselineName": "",
+                "displayName": "Memory Peak Physical (app)",
+                "identifier": "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_peak",
+                "maxPercentRegression": 10,
+                "maxPercentRelativeStandardDeviation": 10,
+                "maxRegression": 0,
+                "maxStandardDeviation": 10,
+                "measurements": [
+                  120194.968,
+                  120358.808,
+                  120342.424,
+                  120358.808,
+                  120391.576
+                ],
+                "polarity": "prefers smaller",
+                "unitOfMeasurement": "kB"
+              },
+              {
+                "baselineAverage": 0,
+                "baselineName": "",
+                "displayName": "Duration (Scroll_DraggingAndDeceleration)",
+                "identifier": "com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.duration",
+                "maxPercentRegression": 10,
+                "maxPercentRelativeStandardDeviation": 10,
+                "maxRegression": 0,
+                "maxStandardDeviation": 10,
+                "measurements": [
+                  2.56496025,
+                  2.57603325,
+                  2.5753366250000003,
+                  2.574033083,
+                  2.576089541
+                ],
+                "polarity": "prefers smaller",
+                "unitOfMeasurement": "s"
+              },
+              {
+                "baselineAverage": 0,
+                "baselineName": "",
+                "displayName": "Memory Physical (app)",
+                "identifier": "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical",
+                "maxPercentRegression": 10,
+                "maxPercentRelativeStandardDeviation": 10,
+                "maxRegression": 0,
+                "maxStandardDeviation": 10,
+                "measurements": [
+                  -16.384,
+                  -16.384,
+                  0,
+                  16.384,
+                  0
+                ],
+                "polarity": "prefers smaller",
+                "unitOfMeasurement": "kB"
+              }
+            ],
+            "testPlanConfiguration": {
+              "configurationId": "1",
+              "configurationName": "Test Scheme Action"
+            }
+          }
+        ]
+      }
+    ],
+    "hitchSamples": "Not emitted on this simulator; this is not a frame-hitch acceptance result."
+  },
+  "rendered": {
+    "result": ".build/RenderedLedger50020261104/TrackedPerformanceRendered.xcresult",
+    "seconds": 275.555,
+    "readback": ".build/RenderedLedger50020261104/tracked-performance-rendered-readback.json",
+    "readbackSHA256": "5bd161e9ad6ff45004200c7eeed1dc7a5ee8840f929b0d0c8ef24152710d408c",
+    "passed": 1,
+    "failed": 0,
+    "runtimeWarnings": [],
+    "assertions": "Native Paste text matches the exact 500-line fixture. SQLite contains 500 unique lines and 500 contributions with one paste batch. All 20 checked UUIDs match the UI attachment after relaunch."
+  },
+  "limits": "Local measurements do not calibrate GitHub Intel runners. Strict hosted performance baselines remain unset. XCTest round-trip search/check timings include automation overhead. The first launch attempt recorded 4 of 5 samples and is retained as incomplete; the final launch has 5 of 5.",
+  "appBinarySHA256": "3767c8482f90305e1322fe3c80ed822e7a3a2acc68499a96145c2586b7c5e320"
+}

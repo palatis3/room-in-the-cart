@@ -1,0 +1,21 @@
+{
+  "observedAt": "2026-11-06T20:01:46.669125+00:00",
+  "candidate": "804030e68473d022e72b464940061c01c611a0bd",
+  "checks": [
+    {
+      "artifact": "iphone-results-models-1",
+      "originalZipSHA256": "eb007de4dbcf09d5b9b8490460a3c31d38ca31181e3ff305a1066873a7c37f8c",
+      "everyPristineMemberMatches": true,
+      "verifiedFileCount": 1249,
+      "originalInspectedCopyRetained": true
+    },
+    {
+      "artifact": "iphone-results-ui-03-1",
+      "originalZipSHA256": "6c78f632f8de8fdab3826d946acf69415ac92ed46b4b274281ab4c0bfd2ed509",
+      "everyPristineMemberMatches": true,
+      "verifiedFileCount": 69,
+      "originalInspectedCopyRetained": true
+    }
+  ],
+  "scope": "Root independently rehashed original ZIPs, compared every pristine extracted file byte-for-byte, and confirmed retained inspected SQLite hashes. No xcresulttool invoked; no mutation."
+}

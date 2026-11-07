@@ -102,8 +102,12 @@ private struct PickupBatchReview: View {
                             ForEach(model.journey?.reviewedStockMatches ?? []) { Text($0.name).tag(Optional($0.id)) }
                         }
                     }
-                    TextField(pTr("Confirmed usable amount"), text: $amount).keyboardType(.decimalPad).focused($amountFocused)
-                        .accessibilityIdentifier("stockReview.amount")
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(pTr("Confirmed usable amount"))
+                        TextField(pTr("Confirmed usable amount"), text: $amount)
+                            .keyboardType(.decimalPad).focused($amountFocused)
+                            .accessibilityIdentifier("stockReview.amount")
+                    }
                     Text(pTr(lot.usable.unit.rawValue))
                     DatePicker(pTr("Batch observed at"), selection: $observedAt, in: ...Date())
                     Toggle(pTr("Use this batch first"), isOn: $useFirst)
@@ -265,8 +269,15 @@ struct PickupNewStockSection: View {
                     ForEach(model.journey?.reviewedStockMatches ?? []) { Text($0.name).tag(Optional($0.id)) }
                 }
             }
-            TextField(pTr("Actual food or freezer batch"), text: $stockName).focused(field, equals: .stockName)
-            TextField(pTr("Confirmed usable amount"), text: $stockAmount).keyboardType(.decimalPad).focused(field, equals: .stockAmount)
+            VStack(alignment: .leading, spacing: 6) {
+                Text(pTr("Actual food or freezer batch"))
+                TextField(pTr("Actual food or freezer batch"), text: $stockName).focused(field, equals: .stockName)
+            }
+            VStack(alignment: .leading, spacing: 6) {
+                Text(pTr("Confirmed usable amount"))
+                TextField(pTr("Confirmed usable amount"), text: $stockAmount)
+                    .keyboardType(.decimalPad).focused(field, equals: .stockAmount)
+            }
             Picker(pTr("Unit"), selection: $stockUnit) { ForEach(UnitOfMeasure.allCases, id: \.self) { Text(pTr($0.rawValue)).tag($0) } }
             Picker(pTr("Stock source"), selection: $stockSource) {
                 Text(pTr("Freezer")).tag(ConfirmedStockSource.freezer)

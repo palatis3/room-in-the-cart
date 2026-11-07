@@ -1,0 +1,32 @@
+[
+  {
+    "source": ".build/DinnerThemeReview20261107/run5-event-diagnostic/inspection/attachments/Dinner-theme-dark-reusable-review_0_1731B101-56BD-4BCC-B8AB-E86C0DD3B6A8.png",
+    "copied": "screens/dark-reusable-review.png",
+    "sha256": "51e1dce9773dc17dd66e6529a9673e1a956ad36fa9c3aaac0f8a4b491020186a"
+  },
+  {
+    "source": ".build/DinnerThemeReview20261107/run5-event-diagnostic/inspection/attachments/Dinner-theme-dark-reusable-completion_0_A4F7DE73-D499-4816-975D-29738739D008.png",
+    "copied": "screens/dark-reusable-completion.png",
+    "sha256": "80c1e88fc563f90226413aa3d1bca1b0bbf32a8456ccf5678c19f092d35c8c25"
+  },
+  {
+    "source": ".build/DinnerThemeReview20261107/run5-event-diagnostic/inspection/attachments/Dinner-theme-dark-idea-review-actions_0_881E3274-6341-417E-921A-480F1E59A3D4.png",
+    "copied": "screens/dark-idea-review-actions.png",
+    "sha256": "aded5339e44d0d1faefc495d805346632375e19956c1063f276342d50e9e8bb6"
+  },
+  {
+    "source": ".build/DinnerThemeReview20261107/run5-event-diagnostic/inspection/attachments/Dinner-theme-light-reusable-review_0_5B1B5C9F-5A05-4776-8F25-119139847DC4.png",
+    "copied": "screens/light-reusable-review.png",
+    "sha256": "4f105632ce993901a8f68f0c7ee24e7089f8a9323cfbc10c5a95370b66bd7183"
+  },
+  {
+    "source": ".build/DinnerThemeReview20261107/run5-event-diagnostic/inspection/attachments/Dinner-theme-light-reusable-completion_0_95601385-C337-44B6-9C32-A3B3EC20506D.png",
+    "copied": "screens/light-reusable-completion.png",
+    "sha256": "778c297bf89d809d9c9972590103b71268ab92bb44eb618743d52096113cf6bb"
+  },
+  {
+    "source": ".build/DinnerThemeReview20261107/run5-event-diagnostic/inspection/attachments/Dinner-theme-light-idea-review-actions_0_4ABAB190-19E0-44CC-833B-4BA95ED1C011.png",
+    "copied": "screens/light-idea-review-actions.png",
+    "sha256": "b0b91d72afed3b1641129c2125c6014d6bdf31d8710ad8c2131e2c0a583d76c6"
+  }
+]

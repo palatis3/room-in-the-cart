@@ -1,12 +1,12 @@
 import XCTest
-import SwiftUI
+import Combine
 import DeviceSurfaces
 @testable import RoomInTheCart
 
 #if DEBUG
 @MainActor final class DeviceSurfacesCompositionStartupTests: XCTestCase {
     func testQueuedOpaqueURLDoesNotSurviveBackgroundThenForeground() async throws {
-        let f = try await coldURLFixture(); defer { f.cleanup() }
+        let f = try await coldURLFixture()
         let saved = f.ledger.workspace, revision = f.ledger.revision
         let url = f.codec.url(handle: f.handle)
         f.composition.handle(url: url)
@@ -27,7 +27,7 @@ import DeviceSurfaces
     }
 
     func testReadyGenericURLDoesNotReactivateAfterBackgroundBeforeTaskRuns() async throws {
-        let f = try await coldURLFixture(); defer { f.cleanup() }
+        let f = try await coldURLFixture()
         let saved = f.ledger.workspace, revision = f.ledger.revision
         f.composition.handle(url: f.codec.url(handle: nil)); f.composition.background()
         try await Task.sleep(for: .milliseconds(200))
@@ -38,7 +38,7 @@ import DeviceSurfaces
         XCTAssertEqual(f.ledger.workspace, saved); XCTAssertEqual(f.ledger.revision, revision)
     }
     func testActiveAdultGenericCaptureKeepsLedgerUnchanged() async throws {
-        let f = try await coldURLFixture(); defer { f.cleanup() }
+        let f = try await coldURLFixture()
         let saved = f.ledger.workspace, revision = f.ledger.revision
         f.composition.handle(url: f.codec.url(handle: nil)); await waitForSurfaceDestination(f.composition)
         guard case .capture = f.composition.destination else { return XCTFail("Active adult generic entry should open capture") }
@@ -46,7 +46,7 @@ import DeviceSurfaces
         XCTAssertEqual(f.ledger.workspace, saved); XCTAssertEqual(f.ledger.revision, revision)
     }
     func testLockedGenericEntryDoesNotPublishPrivateWidgetOrChangeLedger() async throws {
-        let f = try await coldURLFixture(); defer { f.cleanup() }
+        let f = try await coldURLFixture()
         let saved = f.ledger.workspace, revision = f.ledger.revision
         f.access.protect(); f.composition.background(); f.composition.handle(url: f.codec.url(handle: nil))
         try await Task.sleep(for: .milliseconds(200))
@@ -60,7 +60,7 @@ import DeviceSurfaces
     }
 
     func testReadyOpaqueURLDoesNotReactivateAfterBackgroundBeforeTaskRuns() async throws {
-        let f = try await coldURLFixture(); defer { f.cleanup() }
+        let f = try await coldURLFixture()
         let saved = f.ledger.workspace, revision = f.ledger.revision
         XCTAssertTrue(f.composition.privateAuthorized)
         f.composition.handle(url: f.codec.url(handle: f.handle))
@@ -76,10 +76,11 @@ import DeviceSurfaces
     }
 
     func testColdCurrentURLWaitsForActiveAndReadyModels() async throws {
-        let f = try await coldURLFixture(); defer { f.cleanup() }
+        let f = try await coldURLFixture()
         let coldLedger = LedgerModel(databaseURL: f.base.appendingPathComponent("ledger.sqlite"))
         let coldPickup = PickupModel(databaseURL: f.base.appendingPathComponent("pickup.sqlite"), launchArguments: [])
         let cold = DeviceSurfacesComposition(directory: f.base.appendingPathComponent("surfaces"), bundle: f.bundle, launchArguments: ["--ui-testing"])
+        f.cleanup.track(coldLedger, coldPickup, cold)
         cold.bind(ledger: coldLedger, pickup: coldPickup, household: f.household, access: f.access, sceneActive: false)
         cold.handle(url: f.codec.url(handle: f.handle))
         XCTAssertNil(cold.destination, "Inactive startup must not present or prematurely reject a known adult URL")
@@ -91,10 +92,11 @@ import DeviceSurfaces
         XCTAssertEqual(id, saved.selectedShopID); XCTAssertEqual(coldLedger.workspace, saved); XCTAssertEqual(coldLedger.revision, revision)
     }
     func testColdGenericCaptureWaitsForAdultModels() async throws {
-        let f = try await coldURLFixture(); defer { f.cleanup() }
+        let f = try await coldURLFixture()
         let coldLedger = LedgerModel(databaseURL: f.base.appendingPathComponent("ledger.sqlite"))
         let coldPickup = PickupModel(databaseURL: f.base.appendingPathComponent("pickup.sqlite"), launchArguments: [])
         let cold = DeviceSurfacesComposition(directory: f.base.appendingPathComponent("surfaces"), bundle: f.bundle, launchArguments: ["--ui-testing"])
+        f.cleanup.track(coldLedger, coldPickup, cold)
         cold.bind(ledger: coldLedger, pickup: coldPickup, household: f.household, access: f.access, sceneActive: false)
         cold.handle(url: f.codec.url(handle: nil))
         try await Task.sleep(for: .milliseconds(100))
@@ -103,7 +105,7 @@ import DeviceSurfaces
         guard case .capture = cold.destination else { return XCTFail("Generic cold widget must open capture only after the local models are ready") }
     }
     func testURLReceivedDuringLaterInactivityWaitsForActivation() async throws {
-        let f = try await coldURLFixture(); defer { f.cleanup() }
+        let f = try await coldURLFixture()
         let saved = f.ledger.workspace, revision = f.ledger.revision
         f.composition.background()
         f.composition.handle(url: f.codec.url(handle: f.handle))
@@ -114,7 +116,7 @@ import DeviceSurfaces
         XCTAssertEqual(id, saved.selectedShopID); XCTAssertEqual(f.ledger.workspace, saved); XCTAssertEqual(f.ledger.revision, revision)
     }
     func testDeferredURLCannotOpenAfterAuthorityLossBeforeActivation() async throws {
-        let f = try await coldURLFixture(); defer { f.cleanup() }
+        let f = try await coldURLFixture()
         let saved = f.ledger.workspace, revision = f.ledger.revision
         f.composition.background(); f.composition.handle(url: f.codec.url(handle: f.handle))
         f.access.protect(); await f.composition.sourceDidChange(); await f.composition.foreground()
@@ -123,7 +125,7 @@ import DeviceSurfaces
         XCTAssertEqual(f.ledger.workspace, saved); XCTAssertEqual(f.ledger.revision, revision)
     }
     func testDeferredURLRevalidatesStalePickupAfterSwitch() async throws {
-        let f = try await coldURLFixture(); defer { f.cleanup() }
+        let f = try await coldURLFixture()
         f.composition.background(); f.composition.handle(url: f.codec.url(handle: f.handle))
         let madeB = await f.ledger.startShop(title: "Fictional deferred B"); XCTAssertTrue(madeB)
         let saved = f.ledger.workspace, revision = f.ledger.revision
@@ -132,12 +134,136 @@ import DeviceSurfaces
         XCTAssertEqual(f.ledger.workspace, saved); XCTAssertEqual(f.ledger.revision, revision)
     }
     func testBackgroundAgainCancelsDeferredURL() async throws {
-        let f = try await coldURLFixture(); defer { f.cleanup() }
+        let f = try await coldURLFixture()
         f.composition.background(); f.composition.handle(url: f.codec.url(handle: f.handle)); f.composition.background()
         await f.composition.foreground()
         try await Task.sleep(for: .milliseconds(100))
         XCTAssertNil(f.composition.destination)
     }
+    func testCancelledSelectedTextChoicesAndLineEditsDoNotBecomeSavedReview() async throws {
+        let f = try await coldURLFixture()
+        let now = Date(timeIntervalSince1970: 1_793_664_000)
+        let shopID = try XCTUnwrap(f.ledger.shop?.id)
+        let original = try XCTUnwrap(f.ledger.shop).stageImport(text: "2 wraps")
+        let imported = await f.ledger.editShop(key: "original-wraps", shopID: shopID) { try $0.commitImport(original) }
+        XCTAssertTrue(imported)
+        let savedWorkspace = f.ledger.workspace, savedRevision = f.ledger.revision
+        let inbox = try SelectedTextInbox(url: f.base.appendingPathComponent("surfaces/TestInbox/selected-text.sqlite"))
+        _ = try await inbox.stage(operationID: UUID(), originalText: "2 wraps\n3 pears", now: now)
+        let pending = try await inbox.pending(now: now)
+        let entry = try XCTUnwrap(pending.first)
+        await f.composition.review(entry, shopID: shopID)
+        let baseline = try XCTUnwrap(f.composition.draft)
+        let duplicate = try XCTUnwrap(baseline.preview.lines.first { !$0.duplicateLineIDs.isEmpty })
+        let pear = try XCTUnwrap(baseline.preview.lines.first { $0.name == "pears" })
+        let targetID = try XCTUnwrap(duplicate.duplicateLineIDs.first)
+        let journal = try SurfaceImportJournal(directory: f.base.appendingPathComponent("surfaces/Reviews"))
+        XCTAssertNil(baseline.decisions[duplicate.id])
+
+        for interactiveDismissal in [false, true] {
+            var changed = try XCTUnwrap(f.composition.draft)
+            changed.decisions[duplicate.id] = .skip
+            f.composition.saveDraft(changed)
+            f.composition.editDraftLine(pear.id, name: "Changed pears", amount: "9", unit: .count)
+            XCTAssertEqual(f.composition.draft?.decisions[duplicate.id], .skip)
+            XCTAssertEqual(f.composition.draft?.preview.lines.first { $0.id == pear.id }?.name, "Changed pears")
+            // The sheet binding writes nil on an interactive dismissal; Cancel uses its action.
+            if interactiveDismissal { f.composition.draft = nil }
+            else { f.composition.cancelReview() }
+            XCTAssertNil(f.composition.draft)
+            guard try journal.read(entry.id) == baseline else {
+                return XCTFail("Cancelling an unconfirmed review must not persist its choices or line edits")
+            }
+            XCTAssertEqual(f.ledger.workspace, savedWorkspace)
+            XCTAssertEqual(f.ledger.revision, savedRevision)
+            let retained = try await inbox.pending(now: now)
+            XCTAssertEqual(retained, [entry], "Cancel must retain the explicitly staged source without importing it")
+            await f.composition.review(entry, shopID: shopID)
+            XCTAssertEqual(f.composition.draft, baseline)
+        }
+
+        var explicitlySaved = try XCTUnwrap(f.composition.draft)
+        explicitlySaved.decisions[duplicate.id] = .skip
+        f.composition.saveDraft(explicitlySaved)
+        f.composition.saveReviewDraft()
+        XCTAssertEqual(try journal.read(entry.id), explicitlySaved)
+        f.composition.editDraftLine(pear.id, name: "Another unsaved edit", amount: "7", unit: .count)
+        f.composition.cancelReview()
+        await f.composition.review(entry, shopID: shopID)
+        XCTAssertEqual(f.composition.draft, explicitlySaved, "Cancel must preserve the last explicitly saved draft")
+        XCTAssertEqual(f.ledger.workspace, savedWorkspace)
+
+        var confirmed = try XCTUnwrap(f.composition.draft)
+        confirmed.decisions[duplicate.id] = .mergeDuplicate(targetID)
+        f.composition.saveDraft(confirmed)
+        await f.composition.addReviewedList()
+        XCTAssertNil(f.composition.draft)
+        let receipt = try await inbox.receipt(entry.id)
+        XCTAssertEqual(receipt?.disposition, .consumed)
+        XCTAssertNil(try journal.read(entry.id))
+        XCTAssertEqual(f.ledger.shop?.importBatches.last?.decisions, confirmed.decisions)
+        XCTAssertEqual(f.ledger.shop?.lines.count, 2)
+        XCTAssertEqual(f.ledger.shop?.importBatches.count, 2)
+        XCTAssertEqual(f.ledger.revision, savedRevision + 1)
+    }
+
+    func testBackgroundDuringConfirmedImportDoesNotRepublishReviewAndStillRecoversOnce() async throws {
+        let now = Date(timeIntervalSince1970: 1_793_664_000)
+        var interruptSave: (() -> Void)?
+        let f = try await coldURLFixture(ledgerClock: { interruptSave?(); return now })
+        defer { interruptSave = nil }
+        let shopID = try XCTUnwrap(f.ledger.shop?.id)
+        let inbox = try SelectedTextInbox(url: f.base.appendingPathComponent("surfaces/TestInbox/selected-text.sqlite"))
+        _ = try await inbox.stage(operationID: UUID(), originalText: "3 pears", now: now)
+        let pending = try await inbox.pending(now: now)
+        let entry = try XCTUnwrap(pending.first)
+        await f.composition.review(entry, shopID: shopID)
+        let approved = try XCTUnwrap(f.composition.draft)
+        let previousRevision = f.ledger.revision
+        var interrupted = false
+        var republished: [UUID] = []
+        let observation = f.composition.$draft.sink { draft in
+            if interrupted, let draft { republished.append(draft.id) }
+        }
+        defer { observation.cancel() }
+        // The injected ledger clock runs at the real save boundary, after the
+        // journal records confirmation and before the SQLite write is awaited.
+        interruptSave = {
+            guard !interrupted else { return }
+            interrupted = true
+            f.composition.background()
+        }
+        await f.composition.addReviewedList()
+        interruptSave = nil
+        XCTAssertTrue(interrupted)
+        guard republished.isEmpty else {
+            return XCTFail("An old import completion must not republish a review after background clears it")
+        }
+        XCTAssertFalse(f.composition.privateAuthorized)
+        XCTAssertNil(f.composition.draft)
+        let journal = try SurfaceImportJournal(directory: f.base.appendingPathComponent("surfaces/Reviews"))
+        let confirmed = try XCTUnwrap(journal.read(entry.id))
+        XCTAssertEqual(confirmed.phase, .committing)
+        XCTAssertEqual(confirmed.preview, approved.preview)
+        XCTAssertEqual(confirmed.decisions, approved.decisions)
+        let unacknowledged = try await inbox.receipt(entry.id)
+        XCTAssertEqual(unacknowledged?.disposition, .pending)
+        XCTAssertEqual(f.ledger.shop?.importBatches.count, 1)
+        XCTAssertEqual(f.ledger.revision, previousRevision + 1)
+
+        // Return explicitly, reconcile the exact saved receipt, and never import twice.
+        await f.composition.foreground()
+        XCTAssertTrue(f.composition.privateAuthorized)
+        await f.composition.review(entry, shopID: shopID)
+        XCTAssertNil(f.composition.draft)
+        XCTAssertNil(try journal.read(entry.id))
+        let acknowledged = try await inbox.receipt(entry.id)
+        XCTAssertEqual(acknowledged?.disposition, .consumed)
+        XCTAssertEqual(f.ledger.shop?.importBatches.count, 1)
+        XCTAssertEqual(f.ledger.shop?.lines.count, 1)
+        XCTAssertEqual(f.ledger.revision, previousRevision + 1)
+    }
+
     private func waitForSurfaceDestination(_ surfaces: DeviceSurfacesComposition) async {
         for _ in 0..<100 {
             if surfaces.destination != nil { return }
@@ -145,39 +271,42 @@ import DeviceSurfaces
         }
     }
     private struct ColdURLFixture {
-        let base: URL, bundle: Bundle, suite: String, defaults: UserDefaults
+        let cleanup: SQLiteFixtureDirectory
+        let base: URL, bundle: Bundle
         let ledger: LedgerModel, pickup: PickupModel, household: HouseholdModel, access: WorkspaceAccess
         let composition: DeviceSurfacesComposition, codec: SurfaceURLCodec, handle: RouteHandle
-        func cleanup() { defaults.removePersistentDomain(forName: suite); try? FileManager.default.removeItem(at: base) }
     }
-    private func coldURLFixture() async throws -> ColdURLFixture {
+    private func coldURLFixture(ledgerClock: @escaping () -> Date = Date.init) async throws -> ColdURLFixture {
         let base = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let cleanup = SQLiteFixtureDirectory(base, test: self)
         let bundleURL = base.appendingPathComponent("Surface.bundle")
         try FileManager.default.createDirectory(at: bundleURL, withIntermediateDirectories: true)
         try PropertyListSerialization.data(fromPropertyList: ["CFBundleIdentifier": "invalid.fixture.cold", SurfaceInfo.schemeKey: "roominthecart-fixture"], format: .xml, options: 0).write(to: bundleURL.appendingPathComponent("Info.plist"))
         let bundle = try XCTUnwrap(Bundle(url: bundleURL))
-        let ledger = LedgerModel(databaseURL: base.appendingPathComponent("ledger.sqlite")); await ledger.open()
+        let ledger = LedgerModel(databaseURL: base.appendingPathComponent("ledger.sqlite"), clock: ledgerClock); cleanup.track(ledger); await ledger.open()
         let started = await ledger.startShop(title: "Fictional cold A"); XCTAssertTrue(started)
-        let pickup = PickupModel(databaseURL: base.appendingPathComponent("pickup.sqlite"), launchArguments: []); await pickup.load()
+        let pickup = PickupModel(databaseURL: base.appendingPathComponent("pickup.sqlite"), launchArguments: []); cleanup.track(pickup); await pickup.load()
         let household = HouseholdModel(bundle: bundle, outboxURL: base.appendingPathComponent("outbox.json"))
         let suite = "ColdSurface." + UUID().uuidString, now = Date(timeIntervalSince1970: 1_793_664_000)
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suite)), access = WorkspaceAccess(defaults: defaults)
+        addTeardownBlock { defaults.removePersistentDomain(forName: suite) }
         let composition = DeviceSurfacesComposition(directory: base.appendingPathComponent("surfaces"), bundle: bundle, clock: { now }, launchArguments: ["--ui-testing"])
+        cleanup.track(composition)
         composition.bind(ledger: ledger, pickup: pickup, household: household, access: access)
         let widget = try WidgetProjectionFile(directory: base.appendingPathComponent("surfaces/TestWidget"))
         let projection = try await publishedWidget(widget, at: now)
-        return ColdURLFixture(base: base, bundle: bundle, suite: suite, defaults: defaults, ledger: ledger, pickup: pickup, household: household, access: access, composition: composition, codec: try SurfaceURLCodec(scheme: "roominthecart-fixture"), handle: try XCTUnwrap(projection.routeHandle))
+        return ColdURLFixture(cleanup: cleanup, base: base, bundle: bundle, ledger: ledger, pickup: pickup, household: household, access: access, composition: composition, codec: try SurfaceURLCodec(scheme: "roominthecart-fixture"), handle: try XCTUnwrap(projection.routeHandle))
     }
 
     func testRetainedWidgetRouteCannotOpenPreviouslySelectedShop() async throws {
         let base = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-        defer { try? FileManager.default.removeItem(at: base) }
+        let cleanup = SQLiteFixtureDirectory(base, test: self)
         let surfaceDirectory = base.appendingPathComponent("surfaces")
         var now = Date(timeIntervalSince1970: 1_793_664_000)
-        let ledger = LedgerModel(databaseURL: base.appendingPathComponent("ledger.sqlite")); await ledger.open()
+        let ledger = LedgerModel(databaseURL: base.appendingPathComponent("ledger.sqlite")); cleanup.track(ledger); await ledger.open()
         let madeA = await ledger.startShop(title: "Fictional widget A"); XCTAssertTrue(madeA)
         let shopA = try XCTUnwrap(ledger.shop?.id)
-        let pickup = PickupModel(databaseURL: base.appendingPathComponent("pickup.sqlite"), launchArguments: []); await pickup.load()
+        let pickup = PickupModel(databaseURL: base.appendingPathComponent("pickup.sqlite"), launchArguments: []); cleanup.track(pickup); await pickup.load()
         let bundle = Bundle(for: DeviceSurfacesCompositionStartupTests.self)
         let household = HouseholdModel(bundle: bundle, outboxURL: base.appendingPathComponent("outbox.json"))
         let suite = "RetainedWidget." + UUID().uuidString
@@ -187,6 +316,7 @@ import DeviceSurfaces
         let widget = try WidgetProjectionFile(directory: surfaceDirectory.appendingPathComponent("TestWidget"))
         let composition = DeviceSurfacesComposition(directory: surfaceDirectory, bundle: bundle,
             clock: { now }, launchArguments: ["--ui-testing"])
+        cleanup.track(composition)
         composition.bind(ledger: ledger, pickup: pickup, household: household, access: access)
         let projectionA = try await publishedWidget(widget, at: now)
         let handleA = try XCTUnwrap(projectionA.routeHandle)
@@ -214,22 +344,26 @@ import DeviceSurfaces
 
     func testResolvedWidgetDestinationDoesNotReselectAfterPickupChanges() async throws {
         let base = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-        defer { try? FileManager.default.removeItem(at: base) }
+        let cleanup = SQLiteFixtureDirectory(base, test: self)
         let surfaceDirectory = base.appendingPathComponent("surfaces")
         var now = Date(timeIntervalSince1970: 1_793_664_000)
-        let ledger = LedgerModel(databaseURL: base.appendingPathComponent("ledger.sqlite")); await ledger.open()
-        let madeA = await ledger.startShop(title: "Fictional widget A"); XCTAssertTrue(madeA)
-        let shopA = try XCTUnwrap(ledger.shop?.id)
-        let pickup = PickupModel(databaseURL: base.appendingPathComponent("pickup.sqlite"), launchArguments: []); await pickup.load()
+        let ledger = LedgerModel(databaseURL: base.appendingPathComponent("ledger.sqlite"))
+        cleanup.track(ledger)
+        let pickup = PickupModel(databaseURL: base.appendingPathComponent("pickup.sqlite"), launchArguments: [])
+        cleanup.track(pickup)
         let bundle = Bundle(for: DeviceSurfacesCompositionStartupTests.self)
         let household = HouseholdModel(bundle: bundle, outboxURL: base.appendingPathComponent("outbox.json"))
         let suite = "WidgetPresentation." + UUID().uuidString
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
         let access = WorkspaceAccess(defaults: defaults)
-        let widget = try WidgetProjectionFile(directory: surfaceDirectory.appendingPathComponent("TestWidget"))
         let composition = DeviceSurfacesComposition(directory: surfaceDirectory, bundle: bundle,
             clock: { now }, launchArguments: ["--ui-testing"])
+        cleanup.track(composition)
+        await ledger.open(); await pickup.load()
+        let madeA = await ledger.startShop(title: "Fictional widget A"); XCTAssertTrue(madeA)
+        let shopA = try XCTUnwrap(ledger.shop?.id)
+        let widget = try WidgetProjectionFile(directory: surfaceDirectory.appendingPathComponent("TestWidget"))
         composition.bind(ledger: ledger, pickup: pickup, household: household, access: access)
         let projectionA = try await publishedWidget(widget, at: now)
         await composition.open(try XCTUnwrap(projectionA.routeHandle))
@@ -237,34 +371,33 @@ import DeviceSurfaces
         guard case .shop(let resolvedID) = resolvedA else { return XCTFail("A must resolve while it is current") }
         XCTAssertEqual(resolvedID, shopA)
 
-        // Deliberately change selection after successful resolution, before the
-        // real SwiftUI destination mounts and runs its presentation task.
+        // Change selection after successful resolution but before the destination's
+        // presentation action runs.
         now += 60
         let madeB = await ledger.startShop(title: "Fictional widget B"); XCTAssertTrue(madeB)
         _ = try await publishedWidget(widget, at: now)
         let saved = ledger.workspace, revision = ledger.revision
-        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
-        let previous = scene.windows.first(where: \.isKeyWindow)
-        let window = UIWindow(windowScene: scene)
-        let appeared = expectation(description: "Resolved widget destination appeared")
-        let view = DeviceSurfacesDestination(composition: composition, destination: resolvedA,
-            ledger: ledger, pickup: pickup, household: household).onAppear { appeared.fulfill() }
-        window.rootViewController = UIHostingController(rootView: view)
-        window.makeKeyAndVisible()
-        defer { window.isHidden = true; window.rootViewController = nil; previous?.makeKeyAndVisible() }
-        await fulfillment(of: [appeared], timeout: 5)
-        // Permit the real destination's asynchronous presentation task to run.
-        try await Task.sleep(for: .seconds(1))
+        let presentation = DeviceSurfacesDestination(composition: composition, destination: resolvedA,
+            ledger: ledger, pickup: pickup, household: household)
+        let began = await presentation.prepareForPresentation()
+        XCTAssertTrue(began)
         XCTAssertEqual(ledger.workspace, saved, "Presentation must not reselect the formerly current pickup")
         XCTAssertEqual(ledger.revision, revision, "Opening a widget must not create a ledger commit")
+
+        composition.background()
+        let beganAfterBackground = await presentation.prepareForPresentation()
+        XCTAssertFalse(beganAfterBackground, "The retained destination must lose presentation authority in the background")
+        XCTAssertEqual(ledger.workspace, saved)
+        XCTAssertEqual(ledger.revision, revision)
     }
 
     func testLargeListSearchLeavesWidgetAloneAndCommittedChangesRefreshIt() async throws {
         let base = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-        defer { try? FileManager.default.removeItem(at: base) }
+        let cleanup = SQLiteFixtureDirectory(base, test: self)
         let privateDirectory = base.appendingPathComponent("isolated-surfaces")
         var now = Date(timeIntervalSince1970: 1_793_664_000)
         let ledger = LedgerModel(databaseURL: base.appendingPathComponent("ledger.sqlite"))
+        cleanup.track(ledger)
         await ledger.open()
         let started = await ledger.startShop(title: "Fictional pickup")
         XCTAssertTrue(started)
@@ -279,6 +412,7 @@ import DeviceSurfaces
         XCTAssertEqual(savedShop.lines.count, 500)
 
         let pickup = PickupModel(databaseURL: base.appendingPathComponent("pickup.sqlite"), launchArguments: [])
+        cleanup.track(pickup)
         await pickup.load()
         let bundle = Bundle(for: DeviceSurfacesCompositionStartupTests.self)
         let household = HouseholdModel(bundle: bundle, outboxURL: base.appendingPathComponent("outbox.json"))
@@ -289,6 +423,7 @@ import DeviceSurfaces
         let widget = try WidgetProjectionFile(directory: privateDirectory.appendingPathComponent("TestWidget"))
         let composition = DeviceSurfacesComposition(directory: privateDirectory, bundle: bundle,
             clock: { now }, launchArguments: ["--ui-testing"])
+        cleanup.track(composition)
         composition.bind(ledger: ledger, pickup: pickup, household: household, access: access)
         let original = try await publishedWidget(widget, at: now)
         let route = try XCTUnwrap(original.routeHandle)
@@ -334,11 +469,13 @@ import DeviceSurfaces
 
     func testBindingBeforePickupLoadPreservesDurablePickupSurfaceState() async throws {
         let base = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let cleanup = SQLiteFixtureDirectory(base, test: self)
         let privateDirectory = base.appendingPathComponent("isolated-surfaces")
         let date = Date(timeIntervalSince1970: 1_793_664_000)
-        let ledger = LedgerModel(databaseURL: base.appendingPathComponent("ledger.sqlite")); await ledger.open()
+        let ledger = LedgerModel(databaseURL: base.appendingPathComponent("ledger.sqlite")); cleanup.track(ledger); await ledger.open()
         XCTAssertTrue(ledger.ready)
         let pickup = PickupModel(databaseURL: base.appendingPathComponent("pickup.sqlite"), launchArguments: [])
+        cleanup.track(pickup)
         XCTAssertFalse(pickup.ready)
         let testBundle = Bundle(for: DeviceSurfacesCompositionStartupTests.self)
         let household = HouseholdModel(bundle: testBundle, outboxURL: base.appendingPathComponent("outbox.json"))
@@ -347,6 +484,7 @@ import DeviceSurfaces
         let access = WorkspaceAccess(defaults: defaults)
         let routes = try SurfaceRouteStore(url: privateDirectory.appendingPathComponent("routes.json"))
         let reminderStore = try ReminderStore(url: privateDirectory.appendingPathComponent("reminders.sqlite"))
+        cleanup.track(reminderStore)
         let target = UUID(), handle = RouteHandle.random(), reminderID = UUID()
         let route = try PrivateRoute(handle: handle, personaID: access.localActorID, targetID: target, generation: UUID(), destination: .shoppingList, expiresAt: .distantFuture)
         let savedRoute = SurfaceRouteRecord(route: route, target: .offer(workspaceID: UUID(), journeyID: UUID(), offerID: target), sourceRevision: 1, reminderID: reminderID)
@@ -357,6 +495,7 @@ import DeviceSurfaces
         _ = try await reminderStore.put(intent, expectedVersion: nil, now: date)
         // Both the directory and the policy are explicit: no live group/notification ports.
         let composition = DeviceSurfacesComposition(directory: privateDirectory, bundle: testBundle, clock: { date }, launchArguments: ["--ui-testing"])
+        cleanup.track(composition)
         composition.bind(ledger: ledger, pickup: pickup, household: household, access: access)
         await composition.foreground()
         XCTAssertFalse(composition.available)

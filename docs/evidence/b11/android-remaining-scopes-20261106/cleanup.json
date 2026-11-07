@@ -1,0 +1,26 @@
+{
+  "ownedFixtureServerPIDs": [
+    81368,
+    81568,
+    81887,
+    82046,
+    82293,
+    82429
+  ],
+  "allStopped": true,
+  "ownedReversePorts": [
+    58570,
+    58677,
+    58845,
+    58941,
+    59117,
+    59237
+  ],
+  "allRemoved": true,
+  "ownedCDPForward": 52889,
+  "forwardRemoved": true,
+  "closedRemainingOwnedTabs": 0,
+  "publicHelpRestored": true,
+  "otherTabsPreserved": true,
+  "browserVersion": "156.0.8078.79"
+}

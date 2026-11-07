@@ -73,6 +73,40 @@
         "filteredRow": {"path": ".build/LedgerAccessibleLayout20261104/validated-attachments/4037F893-C70B-4EB1-B172-C0AFD4B394FA.png", "sha256": "c731ee86d67c19a1a08ce9157b32973e660bcd9577308582250cff573479252a"}
       },
       "scope": "The full pickup title and add-list action each scrolled into view. The separately labeled field received focus and Return dismissed its keyboard. The filtered item and its independent 44-point check target fit inside the visible list. Checking moved it to Recently checked. Simulator preferences were restored after the test. Physical assistive access remains open."
+    },
+    "spanishLargestText": {
+      "result": ".build/LedgerAccessibleLayout20261104/LedgerAccessibleSpanishLocalizedItem.xcresult",
+      "logSHA256": "e033417e5ebcb88fc89068cc13eea291cf5d50ee91aae3f65181df2b4aa4ba3b",
+      "summarySHA256": "91ee7c778a126a4f43d801404e33f02d99180c2bcb55fa536335f2821acd68d2",
+      "testHarnessSHA256": "56fad59be8e5c0c9da9426e477807d9007b004ab02aebcb3d5d6da1c6a0aef0b",
+      "preferences": {"language": "es", "locale": "es_US", "contentSize": "accessibility-extra-extra-extra-large", "appearance": "dark", "increaseContrast": "enabled"},
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": [],
+      "seconds": 28.966,
+      "earlierAttempts": [
+        {"result": ".build/LedgerAccessibleLayout20261104/LedgerAccessibleSpanish.xcresult", "logSHA256": "e7dc9ea61e4f624489d753054937f35aa6a4c3f28e5b3de0b68c56b5351b97e0", "finding": "The default XCTest tap on the pickup selector did not open the menu."},
+        {"result": ".build/LedgerAccessibleLayout20261104/LedgerAccessibleSpanishMenuTap.xcresult", "logSHA256": "ff04637a3804ab82d9747bf8a49cef08ce71491f169d1eb70811851b2af69290", "finding": "In-row coordinate taps opened the menus and search accepted input. The test still expected the wrong Spanish label for item details."}
+      ],
+      "captures": {
+        "priorStaples": {"path": ".build/LedgerAccessibleLayout20261104/spanish-validated-attachments/07C89DC5-2A6B-4670-9AD3-A8CB35599A6B.png", "sha256": "1ca83d13717435c17ef82d5a4235fb1b887e65709e2d1f6c623b7ed428460709"},
+        "search": {"path": ".build/LedgerAccessibleLayout20261104/spanish-validated-attachments/8D100B67-FADE-4C7E-99A4-4FC68BA18574.png", "sha256": "5e21610499c9f207008ab7eaee1091a651976e867c5a73bbf53178de1de2fa07"},
+        "filteredRow": {"path": ".build/LedgerAccessibleLayout20261104/spanish-validated-attachments/DD0FB4CF-6DD2-42B2-9819-B04B90350D4C.png", "sha256": "4313e396fb0392919bf46ca7a58c5352abf116683fe570e72d5896371e9bb0d7"}
+      },
+      "scope": "The same Release app opened and canceled the new-pickup form, reached prior staples through List options, returned with native Back and accepted search input. Return dismissed the keyboard. The result used the localized item-details label and preserved the original food name."
+    },
+    "deviceArchive": {
+      "path": ".build/LedgerAccessibleLayout20261104/DeviceRelease/RoomInTheCart-LedgerAccessibility.xcarchive",
+      "sourceCommit": "8e1f2021157b12f7485cab0d7fd92f229edb9c13",
+      "architecture": "arm64 iphoneos",
+      "binaryUUID": "AA705ABB-7394-37AF-B7C2-300E84D1A07D",
+      "executableSHA256": "67cfb584749681fbce608d105ad4b165c84bb71cddefde05b877f3dc13e22716",
+      "archiveLogSHA256": "bb856f5ed7300b365bbb9dff44b1c213719db898732348d89b2236dff5806683",
+      "bundleVerification": "passed",
+      "missingReleaseMetadata": ["HouseholdSubscriptionProductID", "PrivacyPolicyURL", "TermsOfUseURL", "SupportURL"],
+      "signed": false,
+      "installedOnDevice": false
     }
   },
   "scope": "The bound app coordinator keeps the existing widget file through search and form errors. Checking a line refreshes the existing route, starting a new pickup changes the route, and backgrounding clears it. The tests use isolated app stores with denied notification scheduling. Rendered typing latency, OS widget reload timing and physical-device performance remain separate."

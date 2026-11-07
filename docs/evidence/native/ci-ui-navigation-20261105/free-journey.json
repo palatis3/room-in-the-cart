@@ -1,0 +1,31 @@
+{
+  "observedAt": "2026-11-05T10:01:06.292065+00:00",
+  "basePublishedCandidate": "f20feb685f95e7da1c7a23f26eff499d2696329f",
+  "executedSourceSHA256": "3dbbf2c4eaae2106a8874693d52286ef24ce6806d30390b9533c4d78d2d62c5b",
+  "changes": "Resolve existence once before hittability for bounded scrolling; directly match exact Next shop title after restart. Full pickup, protected lunch, short fill, repair, cook note, settlement, feedback, reuse and saved history assertions retained.",
+  "result": "Passed",
+  "durationSeconds": 404.833,
+  "passed": 1,
+  "failed": 0,
+  "skipped": 0,
+  "runtimeWarnings": 0,
+  "buildExit": 0,
+  "xcodeExit": 0,
+  "strictGuardExit": 0,
+  "defaultAllowanceSeconds": 720,
+  "maximumAllowanceSeconds": 900,
+  "device": {
+    "architecture": "arm64",
+    "deviceId": "90CD1EED-66F3-4402-A218-2782AE2B15F1",
+    "deviceName": "RITC-UI-Existence-20261105",
+    "modelName": "iPhone 17",
+    "osBuildNumber": "23C52",
+    "osVersion": "26.2",
+    "platform": "iOS Simulator"
+  },
+  "rawLogSHA256": "ed5972f8ae0b4612915854eaf66366d90ed062dc5b47b8c93d104701f97b7c7c",
+  "sourceManifestSHA256": "14934747a749596212bec4c50bf06e13304c3d60647913568e811a745caf9dd9",
+  "productManifestSHA256": "12453fa23bade1006505fdfaecc76502219932546de09a9876f69b9b3874fd56",
+  "review": "Dot personally traced the terminal query and production title. Sol6.1xhigh found no concrete regression/assertion weakening in the narrow changes.",
+  "limits": "Local Xcode27.1/iOS26.2 build23C52 differs from hosted environment. Later optional diagnostics only in separate share tests are absent from this source snapshot. Failed f20 hosted case remains failed."
+}

@@ -4,7 +4,7 @@ This is the narrow mobile web client, not the adult shopping app. It uses native
 
 ## Run
 
-Use Node 22.14.0 and `npm ci`, then `npm run dev` in `web/`. The development server binds to loopback and proxies `/v1` to the actual backend at `http://127.0.0.1:3001`. Set `RITC_SERVICE_ORIGIN` to change that server-side development proxy target. The browser never receives that variable or a service credential.
+Use Node 22.23.4 and `npm ci`, then `npm run dev` in `web/`. The development server binds to loopback and proxies `/v1` to the actual backend at `http://127.0.0.1:3001`. Set `RITC_SERVICE_ORIGIN` to change that server-side development proxy target. The browser never receives that variable or a service credential.
 
 `npm run build` type-checks modules into `dist/` and builds deployable static content into `public-build/`. `npm test` runs that build and Node/jsdom/IndexedDB tests. `npm run preview` previews the static bundle; use the actual reverse proxy for session API integration.
 

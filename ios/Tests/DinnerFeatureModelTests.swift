@@ -32,6 +32,79 @@ import CoreDomain
         }, phase: { _ in .draft }, ideaCatalog: catalog, clock: { self.now })
         return (store, model)
     }
+    func testTotalServingsValidationNamesTheFieldAndRetainsDraftAndStore() throws {
+        let (store, model) = fixture()
+        var original = try recipe()
+        original.notes = "Keep the beans separate."
+        original.sourceURL = "https://example.invalid/unavailable-recipe"
+        original.servingGroups = [ServingGroup(name: "Dinner", servings: .one)]
+        let before = store.workspace
+        for input in ["", "0", "-1", "beans", "1/0"] {
+            var draft = DinnerTemplateDraft(original)
+            draft.servings = input
+            XCTAssertThrowsError(try draft.template()) { failure in
+                XCTAssertEqual(failure as? DinnerDraftValidationError, .totalServings)
+                model.report(failure)
+            }
+            XCTAssertEqual(model.error, dinnerText("Total servings: enter a number greater than zero."))
+            XCTAssertEqual(draft.servings, input)
+            XCTAssertEqual(draft.title, original.title)
+            XCTAssertEqual(draft.notes, original.notes)
+            XCTAssertEqual(draft.source, original.sourceURL)
+            XCTAssertEqual(draft.ingredients.map(\.id), original.ingredients.map(\.id))
+            XCTAssertEqual(draft.groups.map(\.id), original.servingGroups.map(\.id))
+            XCTAssertEqual(draft.original, original)
+            XCTAssertEqual(store.workspace, before)
+            XCTAssertEqual(store.commits, 0)
+            XCTAssertNil(model.preview)
+        }
+    }
+
+    func testCorrectedServingsReviewClearsStaleFeedbackAndSavesRetainedDraft() async throws {
+        let (store, model) = fixture()
+        var original = try recipe()
+        original.notes = "Keep the beans separate."
+        original.sourceURL = "https://example.invalid/unavailable-recipe"
+        var draft = DinnerTemplateDraft(original)
+        draft.servings = "0"
+        do { _ = try draft.template(); XCTFail("Zero servings must reject") }
+        catch { model.report(error) }
+        XCTAssertNotNil(model.error)
+        let before = store.workspace
+        draft.servings = "1,5"
+        let reviewed = try draft.template()
+        model.clearErrorAfterSuccessfulReview()
+        XCTAssertNil(model.error)
+        XCTAssertEqual(store.workspace, before)
+        XCTAssertEqual(store.commits, 0)
+        XCTAssertEqual(reviewed.servings, try Rational(3, 2))
+        XCTAssertEqual(reviewed.notes, original.notes)
+        XCTAssertEqual(reviewed.sourceURL, original.sourceURL)
+        XCTAssertEqual(reviewed.ingredients, original.ingredients)
+        let saved = await model.accept(reviewed, id: UUID(), fallback: false)
+        XCTAssertTrue(saved)
+        XCTAssertNil(model.error)
+        XCTAssertEqual(store.workspace.dinnerPlanning.acceptedDinners.map(\.template), [reviewed])
+        XCTAssertEqual(store.workspace.shops, before.shops)
+        XCTAssertEqual(store.commits, 1)
+    }
+
+    func testOtherInvalidNumericFieldsAreNotReportedAsTotalServings() throws {
+        let (_, model) = fixture()
+        var draft = DinnerTemplateDraft(try recipe())
+        draft.ingredients[0].amount = "not an amount"
+        XCTAssertThrowsError(try draft.template()) { failure in
+            XCTAssertNil(failure as? DinnerDraftValidationError)
+            model.report(failure)
+        }
+        XCTAssertEqual(model.error, dinnerText("Check the entered amounts, dates and required fields. Nothing has been applied."))
+        for input in ["2", "1/2", "1,5"] {
+            var valid = DinnerTemplateDraft(try recipe())
+            valid.servings = input
+            XCTAssertGreaterThan(try valid.template().servings, .zero)
+        }
+    }
+
     func testBundledFreeIdeasAreEditableAndApprovalKeepsShoppingListUntouched() async throws {
         let patterns = DinnerPatternCatalog.patterns
         let (store, model) = fixture(catalog: patterns)
@@ -60,6 +133,101 @@ import CoreDomain
         XCTAssertEqual(store.workspace.dinnerPlanning.acceptedDinners.count, 1)
         XCTAssertEqual(store.workspace.shops, before.shops)
     }
+    func testIdeaPreparationAbandonRepeatSaveAcceptAndChooseHaveSeparateEffects() async throws {
+        // Preparation is synchronous: abandoning means dropping an unsaved value,
+        // not cancelling an invented asynchronous generator or persistence job.
+        let (store, model) = fixture(catalog: DinnerPatternCatalog.patterns)
+        let before = store.workspace
+        var abandoned: DinnerIdeaDraft? = try model.newIdea(seed: 0, exclusions: [])
+        let abandonedID = try XCTUnwrap(abandoned).id
+        let preparedTemplate = try XCTUnwrap(abandoned).template
+        XCTAssertEqual(store.workspace, before); XCTAssertEqual(store.commits, 0)
+        abandoned = nil
+        XCTAssertNil(abandoned)
+        XCTAssertEqual(store.workspace, before); XCTAssertEqual(store.commits, 0)
+
+        var draft = try model.newIdea(seed: 0, exclusions: [])
+        XCTAssertNotEqual(draft.id, abandonedID)
+        XCTAssertEqual(draft.template, preparedTemplate)
+        XCTAssertEqual(store.workspace, before); XCTAssertEqual(store.commits, 0)
+        draft.availabilityConfirmed = true; draft.yieldConfirmed = true
+        XCTAssertTrue(DinnerIdeaEngine.review(draft).canAccept)
+        let saved = await model.saveIdea(draft); XCTAssertTrue(saved)
+        let afterSave = store.workspace
+        XCTAssertEqual(afterSave.dinnerPlanning.ideas.map(\.id), [draft.id])
+        XCTAssertTrue(afterSave.dinnerPlanning.acceptedDinners.isEmpty)
+        XCTAssertEqual(afterSave.shops, before.shops); XCTAssertEqual(store.commits, 1)
+        let savedAgain = await model.saveIdea(draft); XCTAssertTrue(savedAgain)
+        XCTAssertEqual(store.workspace, afterSave); XCTAssertEqual(store.commits, 1)
+
+        let acceptedID = UUID()
+        let accepted = await model.acceptIdea(draft, acceptedID: acceptedID); XCTAssertTrue(accepted)
+        let afterAccept = store.workspace
+        XCTAssertEqual(afterAccept.dinnerPlanning.ideas.map(\.id), [draft.id])
+        XCTAssertEqual(afterAccept.dinnerPlanning.acceptedDinners.map(\.id), [acceptedID])
+        XCTAssertEqual(afterAccept.dinnerPlanning.freeReusableDinnerID, acceptedID)
+        XCTAssertEqual(afterAccept.shops, before.shops); XCTAssertEqual(store.commits, 2)
+        let acceptedAgain = await model.acceptIdea(draft, acceptedID: acceptedID); XCTAssertTrue(acceptedAgain)
+        XCTAssertEqual(store.workspace, afterAccept); XCTAssertEqual(store.commits, 2)
+
+        // Only a separately reviewed choose may create grocery needs.
+        let acceptedDinner = try XCTUnwrap(model.state.acceptedDinners.first)
+        let choice = PlannedDinner(acceptedDinnerID: acceptedID, template: acceptedDinner.template)
+        XCTAssertTrue(model.prepare([.choose(choice)]))
+        XCTAssertEqual(store.workspace, afterAccept); XCTAssertEqual(store.commits, 2)
+        model.cancelPreview()
+        XCTAssertEqual(store.workspace, afterAccept); XCTAssertEqual(store.commits, 2)
+        XCTAssertTrue(model.prepare([.choose(choice)]))
+        let applied = await model.applyPreview(); XCTAssertTrue(applied)
+        let afterChoose = store.workspace
+        let shop = try XCTUnwrap(model.shop)
+        XCTAssertEqual(shop.mealOccurrences.map(\.id), [choice.occurrenceID])
+        XCTAssertEqual(Set(shop.contributions.map(\.id)), Set(choice.contributionIDs))
+        XCTAssertEqual(shop.contributions.count, choice.contributionIDs.count)
+        XCTAssertEqual(afterChoose.dinnerPlanning.applyReceipts.count, 1)
+        XCTAssertEqual(store.commits, 3)
+        let appliedAgain = await model.applyPreview(); XCTAssertFalse(appliedAgain)
+        XCTAssertEqual(store.workspace, afterChoose); XCTAssertEqual(store.commits, 3)
+    }
+
+    func testIdeaGenerateSaveAndAcceptRecheckDeniedRuntimeWithoutAnyCommit() async throws {
+        let (store, _) = fixture()
+        var runtimeAvailable = true
+        var canPlan = true
+        let model = DinnerFeatureModel(store: store, access: { id in
+            guard runtimeAvailable else { return nil }
+            return DinnerAccessContext(scope: .local(workspaceID: store.sourceWorkspaceID!), actorID: "adult", shopID: id,
+                assignedShopperID: "adult", canPlan: canPlan, canReadBudget: true, hasPaidTools: false,
+                roleRevision: 1, verifiedAt: self.now, validUntil: self.now.addingTimeInterval(3600))
+        }, phase: { _ in .draft }, ideaCatalog: DinnerPatternCatalog.patterns, clock: { self.now })
+        var draft = try model.newIdea(seed: 0, exclusions: [])
+        draft.availabilityConfirmed = true; draft.yieldConfirmed = true
+        XCTAssertTrue(DinnerIdeaEngine.review(draft).canAccept)
+        let baseline = store.workspace
+        let acceptedID = UUID()
+        for missingContext in [true, false] {
+            runtimeAvailable = !missingContext; canPlan = false
+            XCTAssertThrowsError(try model.newIdea(seed: 0, exclusions: [])) { error in
+                XCTAssertEqual(error as? DinnerPlanningError, .forbidden)
+            }
+            XCTAssertEqual(store.workspace, baseline); XCTAssertEqual(store.commits, 0)
+            let saved = await model.saveIdea(draft); XCTAssertFalse(saved)
+            XCTAssertEqual(store.workspace, baseline); XCTAssertEqual(store.commits, 0)
+            let accepted = await model.acceptIdea(draft, acceptedID: acceptedID); XCTAssertFalse(accepted)
+            XCTAssertEqual(store.workspace, baseline); XCTAssertEqual(store.commits, 0)
+        }
+        // Identical draft and accepted ID succeed once genuine access is restored;
+        // malformed content or a store that rejects everything cannot satisfy this test.
+        runtimeAvailable = true; canPlan = true
+        XCTAssertNoThrow(try model.newIdea(seed: 0, exclusions: []))
+        XCTAssertEqual(store.workspace, baseline); XCTAssertEqual(store.commits, 0)
+        let saved = await model.saveIdea(draft); XCTAssertTrue(saved)
+        let accepted = await model.acceptIdea(draft, acceptedID: acceptedID); XCTAssertTrue(accepted)
+        XCTAssertEqual(model.state.ideas.map(\.id), [draft.id])
+        XCTAssertEqual(model.state.acceptedDinners.map(\.id), [acceptedID])
+        XCTAssertEqual(store.workspace.shops, baseline.shops); XCTAssertEqual(store.commits, 2)
+    }
+
     private func recipe() throws -> MealTemplate {
         MealTemplate(title: "Wraps", servings: try Rational(2), ingredients: [MealIngredient(name: "Wraps",
             quantity: Quantity(amount: try Rational(6), unit: .count, originalLiteral: "6"))])

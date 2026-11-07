@@ -1,0 +1,45 @@
+{
+  "baseCommit": "f0e2ac37383e76ac3812407384bf2eda968de3c4",
+  "patchSHA256": "a55d1c68852d68a81e30e905d9332390aafb1a99800d5c5935afb72300da0dc1",
+  "installedSourceSHA256": {
+    ".github/workflows/ios-native-wire.yml": "f3b6a10fdd14e7ccf1c799b3089b9b4ef5aaa13d0ad8f2b471848b5a465c8016",
+    ".github/workflows/release-checks.yml": "e056b193ad811e2ad503cfec4f4b993e67937bac5588413cb05a1d4d1229ebe3",
+    "scripts/run_ios_native_wire.sh": "fe0d27f3c5d71c1a42ce197e2172080606814276bea3d3ff54fe0b38f520b986",
+    "service/scripts/test-native-wire.mjs": "af02e58589cfc316bf8eac680ea9ccc26b6810bcb6da514dd5be07195ba5cb43",
+    "service/tests/native-wire.mjs": "80c6f7eeaee1535361367331d126cee0f0e1b240b861fdefdafd7b5511d9a7aa",
+    "service/tests/privacy-journal-fixture.mjs": "625c620a95c1f5045f554a69581d0ad32c44d01ea26c144f54b8d6c961added3",
+    "service/tests/run-native-wire-test.mjs": "6387ed6aca5824fced1f87e4b6532da11fb0e89db4ac532e83c632c44f80cb1e",
+    "service/tests/shared-meal-native-wire.mjs": "69774790fd034a3b8a863ac52fed2bbbd00f86bf18879ceeedca752d8f5dfe36",
+    "service/tests/shared-store-quotes-native-wire.mjs": "4d8127e605071dfe75b9d75a3bb68ad4732fd2efe862d080795ebcc91a359dd3"
+  },
+  "evidenceDirectory": ".build/NativeWireCIReview/.build/native-wire-results",
+  "evidenceSHA256": {
+    "swift-build.log": "2080ce3148297cddb3540096df31d2942371f94aa92e307b26f8723a65878271",
+    "tests.tap": "024ab6a9a2ec6c73fe563fc4f1ddf520293819c51a86d6652176bab7da7e98ec",
+    "postgres.log": "72372b20c54003aaad72dd0e9e43cf25bca4cea573ae3812d89801c9e47c52f8",
+    "negative-xctest.log": "ba97c0568e5aa0aa6f2bda4121fbb99290b799c9e111a0a4f091ddf782a6b074"
+  },
+  "validation": {
+    "nodeCasesPassed": 4,
+    "swiftScenarioInvocationsPassed": 6,
+    "skipped": 0,
+    "failed": 0,
+    "cancelled": 0,
+    "wallSeconds": 42.5,
+    "coldSwiftBuildSeconds": 26.95,
+    "nodeCasesSeconds": 12.0,
+    "negativeProbes": [
+      "An actual XCTest skip was rejected despite Swift returning success.",
+      "A nonexistent selector was rejected despite Swift returning success."
+    ],
+    "localToolchain": "Xcode27.1 / Swift6.4 / Node22.14.0 / PostgreSQL17.11",
+    "cleanup": "Owned PostgreSQL cluster stopped and private temporary state removed by EXIT trap."
+  },
+  "scope": "Existing native client calls across pinned loopback HTTPS to the real local HTTP service and disposable PostgreSQL. Free/paid history, separate meal planner/shopper and quote proposer/shopper are covered. Test-only runners and fixtures changed; no app/service product behavior or hosted database changed. Hosted Xcode26.3 execution remains pending.",
+  "postValidationWorkflowChange": {
+    "path": ".github/workflows/ios-native-wire.yml",
+    "change": "Artifact names include github.run_attempt, giving every attempt an unambiguous evidence lookup name.",
+    "currentSHA256": "fb2b6c6808cd63c985d607799e53b2c35c35d6c2521b3ef2eb874ef505ee80ed",
+    "validation": "actionlint; local native execution scripts and fixtures are unchanged from the tested patch."
+  }
+}

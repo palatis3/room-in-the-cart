@@ -1,0 +1,36 @@
+{
+  "base": "804030e68473d022e72b464940061c01c611a0bd",
+  "candidate": "f117439994835e0090376f4a29d81c478a6b86b4",
+  "overlayCommit": "0500ca3fe6c02a6bcb9d2b9c5c6ec4eb09fd1ebd",
+  "candidateParentEqualsBase": true,
+  "changedFiles": [
+    ".github/workflows/ios-performance.yml",
+    "docs/evidence/native/performance-setup-20261106/README.md",
+    "docs/evidence/native/performance-setup-20261106/REVIEW.md",
+    "docs/evidence/native/performance-setup-20261106/validation.json",
+    "scripts/prepare_ios_performance_simulator.py",
+    "scripts/test_prepare_ios_performance_simulator.py"
+  ],
+  "changedBlobsEqualReviewedOverlay": true,
+  "sourceHashes": {
+    ".github/workflows/ios-performance.yml": "7f320c5b1dc5e0f8b1b3250fa4ae00b937222f22b8e9088a2dbeea209166a978",
+    "docs/evidence/native/performance-setup-20261106/README.md": "1b0dbedc3569388dae3888591f2db17952aa09bb5c990d0cdc2ae726c3f46ad3",
+    "docs/evidence/native/performance-setup-20261106/REVIEW.md": "0a39e694f9571f8d340e6beb386d2be7ad7937e236d080e7c4eba15d896aad7e",
+    "docs/evidence/native/performance-setup-20261106/validation.json": "0e0f5010101f35c6cf2a104eff3a3bf59a78de3c419f39e63520c0f9a66cb3e4",
+    "scripts/prepare_ios_performance_simulator.py": "10b677c778802bbd8fc3e5ff1aaf9f5542b5e5f7a0565cf68e13d44f0445b020",
+    "scripts/test_prepare_ios_performance_simulator.py": "a059f4bfebc75ffa505371cfd0912e66e82de9d217046ed390ffca390cfb7164"
+  },
+  "unchangedCriticalPaths": [
+    "ios/",
+    "shared/",
+    "config/",
+    "scripts/check_ios_test_results.py",
+    "scripts/check_ios_performance.py",
+    "scripts/ios_performance_baselines.json",
+    "scripts/plan_ios_performance_tests.py",
+    "scripts/ci_mac_slots.py",
+    "scripts/boot_ios_simulator.py",
+    "scripts/select_ci_iphone.py"
+  ],
+  "scope": "Read-only static review. No tests, native execution, source/Git changes, or remote actions by reviewer."
+}

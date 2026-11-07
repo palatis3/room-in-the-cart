@@ -68,6 +68,15 @@ private actor IdeaServiceFixture: SharedMealIdeasServing {
         XCTAssertTrue(raw["baseMealRevision"] is NSNull); XCTAssertEqual(raw["approvedIdeaId"] as? String,id.uuidString)
         XCTAssertThrowsError(try SharedMealChangeRequest(occurrenceId: UUID(), baseMealRevision: nil, shopRevision: 1, authorityEpoch: 1, grantRevision: 0, meal: value, reason: "Unapproved").validate())
         XCTAssertTrue(value.planning?.groups.isEmpty == true)
+        let legacy = try XCTUnwrap(value.planning)
+        let planningJSON = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(legacy)) as? [String:Any])
+        for key in ["exclusions", "leadTimeMinutes", "completedSteps"] { XCTAssertNil(planningJSON[key]) }
+        var malformed = legacy
+        malformed.leadTimeMinutes = -1
+        XCTAssertThrowsError(try malformed.validate())
+        malformed.leadTimeMinutes = 0
+        malformed.completedSteps = ["   "]
+        XCTAssertThrowsError(try malformed.validate())
         XCTAssertFalse(String(decoding: try JSONEncoder().encode(value), as: UTF8.self).contains("Shared stock checked"))
     }
 
@@ -81,7 +90,13 @@ private actor IdeaServiceFixture: SharedMealIdeasServing {
         let model = SharedMealIdeaModel(scope: scope, service: service, runtime: { scope })
         await model.load(); await service.setLost(true)
         let id = UUID(), original = fractionalDraft()
-        await model.write(ideaID: id, draft: original, approve: false, reviewed: false)
+        var entered = original
+        entered.title += " "
+        entered.ingredients[0].name += " "
+        entered.ingredients[0].evidence += " "
+        entered.ingredients[0].reservations[0].name += " "
+        entered.exclusions = [" ", ""]
+        await model.write(ideaID: id, draft: entered, approve: false, reviewed: false)
         let pending = try XCTUnwrap(model.pending)
         var edited = original; edited.ingredients[0].required = .init(3, 4)
         await model.write(ideaID: id, draft: edited, approve: false, reviewed: false)
@@ -96,7 +111,10 @@ private actor IdeaServiceFixture: SharedMealIdeasServing {
         XCTAssertNil(model.pending); XCTAssertEqual(model.savedID, id)
     }
     func testApprovedFractionalPageRetainsExactSupplyAndProposedQuantity() throws {
-        let scope = scope(), draft = fractionalDraft(), ideaID = UUID()
+        let scope = scope(), ideaID = UUID()
+        var draft = fractionalDraft()
+        draft.exclusions = ["no peanuts", "sin leche"]
+        draft.minutes = 120
         let rawDraft = try JSONSerialization.jsonObject(with: JSONEncoder().encode(draft))
         let payload: [String: Any] = ["shopId": scope.shopID.uuidString, "shopRevision": 1, "authorityEpoch": 1,
             "grantRevision": 1, "shopper": false, "ideas": [["ideaId": ideaID.uuidString, "revision": 2,
@@ -111,7 +129,11 @@ private actor IdeaServiceFixture: SharedMealIdeasServing {
         XCTAssertEqual(preview.reserved?.text, "1/8"); XCTAssertEqual(preview.remaining?.text, "1/8")
         XCTAssertEqual(preview.shortage?.text, "3/8"); XCTAssertEqual(preview.wholePacks, 1)
         let meal = try idea.draft.proposedMeal(day: "2026-11-09")
-        let quantity = try XCTUnwrap(meal.planning?.ingredients.first?.quantity)
+        let planning = try XCTUnwrap(meal.planning)
+        XCTAssertEqual(planning.exclusions, draft.exclusions)
+        XCTAssertEqual(planning.leadTimeMinutes, 120)
+        XCTAssertNil(planning.completedSteps)
+        let quantity = try XCTUnwrap(planning.ingredients.first?.quantity)
         XCTAssertEqual(quantity.amount, .init(numerator: 1, denominator: 2)); XCTAssertEqual(quantity.unit, "cup")
         XCTAssertEqual(quantity.originalLiteral, "1/2 cup")
         let encodedMeal = String(decoding: try JSONEncoder().encode(meal), as: UTF8.self)

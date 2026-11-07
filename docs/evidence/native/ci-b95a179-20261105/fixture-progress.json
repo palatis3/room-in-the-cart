@@ -1,0 +1,318 @@
+{
+  "candidate": "b95a1796b684b0f52c1188b4d2d26aafb2c9ec2d",
+  "runID": 42113019067,
+  "shards": {
+    "contributor-balanced-01": {
+      "artifactID": 13459927221,
+      "jobID": 127559367544,
+      "sha256": "7067f8420760e50978bb8fd048811fe094b4bfa84b461cc4adf90fb56b1f04d3",
+      "digestVerified": true,
+      "planByteIdentical": true,
+      "strictReplayExit": 0,
+      "hostedConclusion": "success",
+      "selected": 3,
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "warningScope": [],
+      "selectors": [
+        "RoomInTheCartUITests/DinnerAwayCarryoverUITests/testPhysicalCarryoverCancelApplyAndRestartKeepOriginalPurchase",
+        "RoomInTheCartUITests/RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison",
+        "RoomInTheCartUITests/RequestDuplicateComparisonUITests/testSplitPageComparisonPreservesBothUsesAndCancelHasNoWriteThenDecidesOnlySam"
+      ],
+      "rawLogSHA256": "006fc89aed1ac4381b78de33c01826ea58ef226205ab70c6c6c51a7bc929b38b"
+    },
+    "contributor-balanced-05": {
+      "artifactID": 13459868388,
+      "jobID": 127559367511,
+      "sha256": "0200f386d14cb12bb2f4d91be27472e4d355c345f8546f8d6b11e85b766bdf45",
+      "digestVerified": true,
+      "planByteIdentical": true,
+      "strictReplayExit": 0,
+      "hostedConclusion": "success",
+      "selected": 11,
+      "passed": 11,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "warningScope": [],
+      "selectors": [
+        "RoomInTheCartUITests/CorrectionPrivacyAcceptanceUITests/testSettingsNamedForgetLastEntryOutcomeConfirmedOptOutAndDisconnectedHelp",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testCancelSetupDialogHasExplicitCancelAndForegroundRestoresStatus",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testChildForgetCancelAndForegroundKeepTheSamePairingWithoutActivation",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testNoticeDeclarationVerificationPermissionPairingAndDialogCancellation",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testRealRootColdChildMarkerAndSyntheticVaultCleanupPreserveAdultData",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testRealRootLeaveCancelAndConfirmedExitRestoreLockedAdultAccess",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testSpanishLargestTextUnavailableGateRemainsReadableAndClosed",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testUnavailableNeverOffersCreationOrAdultVerification",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testUncertainAttemptCanRefreshButCannotSendAnotherVerification",
+        "RoomInTheCartUITests/SharedMealChangeUITests/testAssignedShopperMapsLocalSeedWithoutPlannerPostAndCanCancel",
+        "RoomInTheCartUITests/SharedMealChangeUITests/testPlannerCancelThenSendAndSeparateShopperCancelThenApplyExactlyOnce"
+      ],
+      "rawLogSHA256": "cc7c4b80dd6f802ecc4d3696828817eec1d921bb5f271e72434e76a917e86c7a"
+    },
+    "contributor-balanced-02": {
+      "artifactID": 13461407032,
+      "jobID": 127559367637,
+      "sha256": "3f7f9228644119425b69342581674f7c1e99ca092c40f2c7f386842e3973b86d",
+      "digestVerified": true,
+      "planByteIdentical": true,
+      "strictReplayExit": 0,
+      "hostedConclusion": "success",
+      "selected": 6,
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "warningScope": [],
+      "selectors": [
+        "RoomInTheCartUITests/ContributorRequestUITests/testSpanishLargeTextReviewStartsAtTheOriginalWording",
+        "RoomInTheCartUITests/ContributorRequestUITests/testTypedAndStructuredReviewCancelThenSendOnlyOwnRequest",
+        "RoomInTheCartUITests/MeasurementUITests/testAuthenticatedNoticeConsentExplicitClosedShopSendDeleteAndWithdrawal",
+        "RoomInTheCartUITests/MeasurementUITests/testLocalSettingsConsentIgnoresLegacyBooleanPersistsRestartAndStaysWorkspaceScoped",
+        "RoomInTheCartUITests/StockReviewUITests/testChangedMealRevisionDisablesPreviewWithoutApplyingBatch",
+        "RoomInTheCartUITests/StockReviewUITests/testPreviewCancelThenConfirmShowsEveryMealAndFreshCookInstructionAfterRestart"
+      ],
+      "rawLogSHA256": "478761ee9ed766cfde81593b9dc7e0938d9057b0bb515b89caa07947f4433203"
+    },
+    "contributor-balanced-03": {
+      "artifactID": 13461261953,
+      "jobID": 127559367737,
+      "sha256": "49d63dc92b33c0b20f4c0c422c3281f8b60371b52467fcbd2662337c632abe08",
+      "digestVerified": true,
+      "planByteIdentical": true,
+      "strictReplayExit": 0,
+      "hostedConclusion": "success",
+      "selected": 7,
+      "passed": 7,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "warningScope": [],
+      "selectors": [
+        "RoomInTheCartUITests/HouseholdDevicesUITests/testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess",
+        "RoomInTheCartUITests/HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke",
+        "RoomInTheCartUITests/HouseholdRequestPackUITests/testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite",
+        "RoomInTheCartUITests/HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite",
+        "RoomInTheCartUITests/HouseholdRequestPackUITests/testUnavailableMealFactsRemainUnknownInRequestDecision",
+        "RoomInTheCartUITests/SharedMealCivilDateUITests/testEnglishCivilDaysStayExactUnderUSTimeZoneEnvironments",
+        "RoomInTheCartUITests/SharedMealCivilDateUITests/testSpanishCivilDaysStayExactUnderUSTimeZoneEnvironments"
+      ],
+      "rawLogSHA256": "35b4c5186661de04e438f159060bae206b6ed7181f3a10e30d4b8a78bc276088"
+    },
+    "contributor-balanced-04": {
+      "artifactID": 13460867263,
+      "jobID": 127559367588,
+      "sha256": "bb39a87a99267ac0dbb50610d43aac0b9e1fe72806a9799740572708316d8983",
+      "digestVerified": true,
+      "planByteIdentical": true,
+      "strictReplayExit": 0,
+      "hostedConclusion": "success",
+      "selected": 4,
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "warningScope": [],
+      "selectors": [
+        "RoomInTheCartUITests/HistoryGrantReadUITests/testFreeGrantDiscoversReadOnlyShopOpensRawRecordsAndRejectsPaidAndForeignAccess",
+        "RoomInTheCartUITests/HistoryGrantReadUITests/testRevokedBudgetGrantClearsPreviouslyOpenedRawPeriodAndRememberedSource",
+        "RoomInTheCartUITests/RecipeLibraryAcceptanceUITests/testDocumentedLibraryPreviewCancelCorruptPreservationApplyAndWholeBatchUndo",
+        "RoomInTheCartUITests/RecipeLibraryAcceptanceUITests/testImportedRecipeQuantityDismissesKeyboardAndRequiresExplicitPickupChoice"
+      ],
+      "rawLogSHA256": "7084d2677ed7bc546c2db3c3d2c3a31de34308d65c70d8c9e82824693be8f539"
+    },
+    "SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview": {
+      "artifactID": 13460709755,
+      "jobID": 127559367639,
+      "sha256": "47cfa836059167372f746f398b0fac038df4084b01617c3accadb2864ae03253",
+      "digestVerified": true,
+      "planByteIdentical": true,
+      "strictReplayExit": 0,
+      "hostedConclusion": "success",
+      "selected": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "warningScope": [],
+      "selectors": [
+        "RoomInTheCartUITests/SharedMealIdeaUITests/testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview"
+      ],
+      "rawLogSHA256": "042371ddc51f4506bc2d2c86a9166312f4b1a8025262aa3af05aee34aef08fd0"
+    },
+    "SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult": {
+      "artifactID": 13462475961,
+      "jobID": 127559367640,
+      "sha256": "506690cce1d804db938e7780c61d062dab9333277d53e566e56d152bd3bfc0d9",
+      "digestVerified": true,
+      "planByteIdentical": true,
+      "strictReplayExit": 0,
+      "hostedConclusion": "success",
+      "selected": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "warningScope": [],
+      "selectors": [
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult"
+      ],
+      "rawLogSHA256": "6a88972edc908f33a20f459757013e4448f8192d735de0d797a18d40391e25da"
+    },
+    "SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn": {
+      "artifactID": 13461673642,
+      "jobID": 127559367561,
+      "sha256": "e8dc291f4814c09ac3a543b0641d42a92a4acb87d1a9581e1fb6e2cfc05ded09",
+      "digestVerified": true,
+      "planByteIdentical": true,
+      "strictReplayExit": 0,
+      "hostedConclusion": "success",
+      "selected": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "warningScope": [],
+      "selectors": [
+        "RoomInTheCartUITests/SharedMealIdeaUITests/testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn"
+      ],
+      "rawLogSHA256": "c2e3d6b8da86900fa5b4144e66d640cbeabf6025a1bf4fbd13d4ee6345bf86ed"
+    },
+    "SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave": {
+      "artifactID": 13462977376,
+      "jobID": 127559367654,
+      "sha256": "26608be5bbc1532b113f7ada1dc7efe222b40b91b11782e4caa4ba7f2ce390a1",
+      "digestVerified": true,
+      "planByteIdentical": true,
+      "strictReplayExit": 0,
+      "hostedConclusion": "success",
+      "selected": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 1,
+      "warningScope": [
+        {
+          "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave",
+          "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+          "count": 1,
+          "maximum": 2,
+          "menuActivity": {
+            "tap": "Tap \"fixture.s27.controls\" Button",
+            "phase": "Synthesize event"
+          }
+        }
+      ],
+      "selectors": [
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave"
+      ],
+      "rawLogSHA256": "e523d1c7788424ef90ea9cfe3461304423505a71329f3d7837f92237ac67d2e5"
+    },
+    "SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption": {
+      "artifactID": 13463381025,
+      "jobID": 127559367897,
+      "sha256": "4891c77da8ba164b157afbb8599da2d70008c1b5adc9c1dab41b176a1ddd17e6",
+      "digestVerified": true,
+      "planByteIdentical": true,
+      "strictReplayExit": 0,
+      "hostedConclusion": "success",
+      "selected": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 2,
+      "warningScope": [
+        {
+          "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption",
+          "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+          "count": 2,
+          "maximum": 2,
+          "menuActivity": {
+            "tap": "Tap \"fixture.s27.controls\" Button",
+            "phase": "Wait for dev.roominthecart.app.debug to idle"
+          }
+        }
+      ],
+      "selectors": [
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption"
+      ],
+      "rawLogSHA256": "a2074da1bc5ea80e1eeb16ebbfc764e2c06d3351a1f1ea0e6f384d3865e6712e"
+    },
+    "SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable": {
+      "artifactID": 13463142174,
+      "jobID": 127559367651,
+      "sha256": "71fbe4e8d09f8f96901a7dbd45dadd0c943cd75faabc33008542ad85bfe3e7d8",
+      "digestVerified": true,
+      "planByteIdentical": true,
+      "strictReplayExit": 0,
+      "hostedConclusion": "success",
+      "selected": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "warningScope": [],
+      "selectors": [
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testSpanishLargestTextKeepsRealQuoteEntryDiscoverable"
+      ],
+      "rawLogSHA256": "b25e069604ba6012e5c51f18d2c88ab5b44455f022a4159fd323fceb1e3ebbf5"
+    },
+    "SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction": {
+      "artifactID": 13464270409,
+      "jobID": 127559367776,
+      "sha256": "835cc89c2d7fc969065c630f59ae772de0209be890c39f2286d6f98d068a64cf",
+      "digestVerified": true,
+      "planByteIdentical": true,
+      "strictReplayExit": 0,
+      "hostedConclusion": "success",
+      "selected": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 2,
+      "warningScope": [
+        {
+          "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction",
+          "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+          "count": 2,
+          "maximum": 2,
+          "menuActivity": {
+            "tap": "Tap \"fixture.s27.controls\" Button",
+            "phase": "Synthesize event"
+          }
+        }
+      ],
+      "selectors": [
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction"
+      ],
+      "rawLogSHA256": "2dfdf5e9489d0d50d9e2fb7a30f91dc7d849fc2691e1d3b129f3d5a16e6afa84"
+    },
+    "DinnerDecisionSheetUITests": {
+      "artifactID": 13463592056,
+      "jobID": 127559367690,
+      "sha256": "f621b502d3f988aaf769fbb2099fa7c808983da223f4de4864fa114de23d0462",
+      "digestVerified": true,
+      "planByteIdentical": true,
+      "strictReplayExit": 0,
+      "hostedConclusion": "success",
+      "selected": 5,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "warningScope": [],
+      "selectors": [
+        "RoomInTheCartUITests/DinnerDecisionSheetUITests/testEnglishGuestPackageBoundaryCheckoutAndCancel",
+        "RoomInTheCartUITests/DinnerDecisionSheetUITests/testEnglishPaidGroupReplacementAndGuestCancellation",
+        "RoomInTheCartUITests/DinnerDecisionSheetUITests/testLargestTypePairingSheetReturnsToItsInitiatingControl",
+        "RoomInTheCartUITests/DinnerDecisionSheetUITests/testSpanishGuestPackageBoundaryCheckoutAndCancel",
+        "RoomInTheCartUITests/DinnerDecisionSheetUITests/testSpanishPaidGroupReplacementAndGuestCancellation"
+      ],
+      "rawLogSHA256": "5cefc002b597389d62091550a2d648796e1111e91068cd7662716ca1fca4b8d0"
+    }
+  },
+  "observedAt": "2026-11-05T23:46:40.569832+00:00",
+  "independentlyVerifiedPassingCases": 43
+}

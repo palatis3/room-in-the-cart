@@ -1,0 +1,12 @@
+{
+  "candidate": "0d5bb1b22e9e84cd4b8c2b07317f91cfc703b60c",
+  "frozenFilesRehashed": 15,
+  "repositorySourceFilesIndependentlyMatched": 258,
+  "databaseMetadataFinalised": true,
+  "databasePayloadRead": false,
+  "archiveSHA256": "0b6c6db7b05f231a7f8b45d9e2a91b3bf01ae3595e57c935f601fff6ed578e2a",
+  "freezeSHA256": "f5c5eb9efb7c31ab7fdeabdd1eb9e2ad16f9a51c8dec9d5002fa7ffb209de507",
+  "rules": 27,
+  "findings": 0,
+  "semanticLimitationsRetained": true
+}

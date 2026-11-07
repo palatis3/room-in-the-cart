@@ -1,0 +1,3 @@
+# Support domain DNS observation
+
+At November6,2026 19:03UTC, public DNS for `roominthecart.com` returned five MX records under `eforward*.registrar-servers.com` and an SPF record referencing `spf.efwd.registrar-servers.com`. The retained [DNS responses](dns.json) are a prerequisite observation only. They do not establish that `hello@roominthecart.com` is configured, forwards to the operator, accepts mail, is monitored, or can send replies. No SMTP connection, test message, provider login or configuration change occurred. Email setup remains owner-deferred and delivery/monitoring remain a release gate.

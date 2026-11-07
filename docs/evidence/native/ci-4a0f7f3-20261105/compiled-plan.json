@@ -1,0 +1,24 @@
+{
+  "candidate": "4a0f7f3a25ae01b6efba5e984ceb464c4ca1d157",
+  "runID": 42048736422,
+  "artifactID": 13427705972,
+  "sha256": "991476d9c0ac5aec6448e01ba1881398df45c08fb31cdcf81d59211a87fe629b",
+  "githubDigestVerified": true,
+  "generatedPlanByteIdentical": true,
+  "models": 598,
+  "ordinaryUI": 51,
+  "groupCounts": {
+    "models": 598,
+    "ui-01": 3,
+    "ui-02": 4,
+    "ui-03": 5,
+    "ui-04": 5,
+    "ui-05": 5,
+    "ui-06": 5,
+    "ui-07": 6,
+    "ui-08": 6,
+    "ui-09": 6,
+    "ui-10": 6
+  },
+  "limits": "Compiled discovery/build proof only; execution still pending."
+}

@@ -1,0 +1,508 @@
+{
+  "sourceCommit": "f0e2ac37383e76ac3812407384bf2eda968de3c4",
+  "run": "https://github.com/palatis3/room-in-the-cart/actions/runs/41944207865",
+  "completeWorkflow": true,
+  "verifiedPassedSoFar": 24,
+  "shards": {
+    "DinnerAwayCarryoverUITests": {
+      "job": 126980954173,
+      "artifact": 13379594589,
+      "selectors": [
+        "RoomInTheCartUITests/DinnerAwayCarryoverUITests/testPhysicalCarryoverCancelApplyAndRestartKeepOriginalPurchase"
+      ],
+      "counts": {
+        "totalTestCount": 1,
+        "passedTests": 1,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0
+      },
+      "runtimeWarnings": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 1,
+        "detailExportCount": 0,
+        "warnings": []
+      },
+      "sha256": {
+        "results.zip": "b84b232e275489ab68fdb397e5d5c2a60c520140f852f7d64e3449ce84aefa3c",
+        "test-summary.json": "df9fb6a3595e8327d4977fa3c8bdfc791ea5b58bbd4d8569693fef55041ecf41",
+        "test-details.json": "aed01c741f1451200c04a86029349cf38279a17480ec7592861c14e44400ce0a",
+        "test-runtime-warnings.json": "8d9c0044b0fa67989c83d6463e3f433df5e5d8a288bddfc20e6cc278ac231c77",
+        "root-verification.txt": "c544325b5ff2c75db593b415537e91f8ac861f584e6d9779a2329e281a662470"
+      }
+    },
+    "GuardianEnrollmentUITests": {
+      "job": 126980954594,
+      "artifact": 13379479911,
+      "selectors": [
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testCancelSetupDialogHasExplicitCancelAndForegroundRestoresStatus",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testChildForgetCancelAndForegroundKeepTheSamePairingWithoutActivation",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testNoticeDeclarationVerificationPermissionPairingAndDialogCancellation",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testRealRootColdChildMarkerAndSyntheticVaultCleanupPreserveAdultData",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testRealRootLeaveCancelAndConfirmedExitRestoreLockedAdultAccess",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testSpanishLargestTextUnavailableGateRemainsReadableAndClosed",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testUnavailableNeverOffersCreationOrAdultVerification",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testUncertainAttemptCanRefreshButCannotSendAnotherVerification"
+      ],
+      "counts": {
+        "totalTestCount": 8,
+        "passedTests": 8,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0
+      },
+      "runtimeWarnings": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 8,
+        "detailExportCount": 0,
+        "warnings": []
+      },
+      "sha256": {
+        "results.zip": "c9b890ed8729c5d2398e9c51dce0787f6c97b8995cc2bbb58913c18c45c9f798",
+        "test-summary.json": "fdf6d506d665501ec570975ef82f82ecc424beb1741e1c507cde2c41ff2f590f",
+        "test-details.json": "d3ba4818c3075921ddf2c86740742f25c0156bf45e943aae9240ca5abd462bf4",
+        "test-runtime-warnings.json": "c646d29d64f3404b789f0125e1731af120b549a53cd003fb41a790244a9de404",
+        "root-verification.txt": "7f96fa26dde0e45e45f9137db80013151707210714fd9dd5f69a25e5b64d8614"
+      }
+    },
+    "CorrectionPrivacyAcceptanceUITests": {
+      "job": 126980954182,
+      "artifact": 13379069719,
+      "selectors": [
+        "RoomInTheCartUITests/CorrectionPrivacyAcceptanceUITests/testSettingsNamedForgetLastEntryOutcomeConfirmedOptOutAndDisconnectedHelp"
+      ],
+      "counts": {
+        "totalTestCount": 1,
+        "passedTests": 1,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0
+      },
+      "runtimeWarnings": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 1,
+        "detailExportCount": 0,
+        "warnings": []
+      },
+      "sha256": {
+        "results.zip": "7a1458bcf08c0b4869661a27751ffbd8416cf2c4a45c36f9307c3d2f4cb1b93b",
+        "test-summary.json": "8350923d71d8bc3b49a80b4723af854e01a2f0de943c09f433fbbf79d7338547",
+        "test-details.json": "41bf8080c60af93c91becfabe701ed54e03d52761094f68cbe46f739f803bfc0",
+        "test-runtime-warnings.json": "8d9c0044b0fa67989c83d6463e3f433df5e5d8a288bddfc20e6cc278ac231c77",
+        "root-verification.txt": "df8824c54132ff43d4081a269bdd8b73d157cab14ee9578d782a1e1024410ddb"
+      }
+    },
+    "HistoryGrantReadUITests": {
+      "job": 126980958206,
+      "artifact": 13380324117,
+      "selectors": [
+        "RoomInTheCartUITests/HistoryGrantReadUITests/testFreeGrantDiscoversReadOnlyShopOpensRawRecordsAndRejectsPaidAndForeignAccess",
+        "RoomInTheCartUITests/HistoryGrantReadUITests/testRevokedBudgetGrantClearsPreviouslyOpenedRawPeriodAndRememberedSource"
+      ],
+      "counts": {
+        "totalTestCount": 2,
+        "passedTests": 2,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0
+      },
+      "runtimeWarnings": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 2,
+        "detailExportCount": 0,
+        "warnings": []
+      },
+      "sha256": {
+        "results.zip": "7904d7efde23c7cb0b449da5fdc7e04e3d66ab3cad7382b0430b7c6dab0a0ca8",
+        "test-summary.json": "1aad9db4b7a95140313b5a40be627601f8aa556b183ada3d302e168cf25f3595",
+        "test-details.json": "61cc569d0bbf6a156824864f9e002f9bf89e232b0fec0ff2e448d09dd145add2",
+        "test-runtime-warnings.json": "8a07425e151587173077e2e8ca29c2844d7078dbbd23315f07cab881f362c1ff",
+        "root-verification.txt": "cc90110b992ad13a54ff8c052ca5676cd653a74f2572ad88ba0edee23dc8bab4"
+      }
+    },
+    "HouseholdDevicesUITests": {
+      "job": 126980955296,
+      "artifact": 13381077949,
+      "selectors": [
+        "RoomInTheCartUITests/HouseholdDevicesUITests/testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess",
+        "RoomInTheCartUITests/HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke"
+      ],
+      "counts": {
+        "totalTestCount": 2,
+        "passedTests": 2,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0
+      },
+      "runtimeWarnings": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 2,
+        "detailExportCount": 0,
+        "warnings": []
+      },
+      "sha256": {
+        "results.zip": "5122f1a500b46e946beea90fe462d330578cac052a9e1549c40df0a6dfafcb32",
+        "test-summary.json": "ca06d6b76068fa4189b8a7f2d826046a5a1d3d849f86eff8bb75a67bc9284d52",
+        "test-details.json": "187daeea5f18eab3ddf96cf8a412e45fd9414288b12e21229d4ed3c215203eea",
+        "test-runtime-warnings.json": "8a07425e151587173077e2e8ca29c2844d7078dbbd23315f07cab881f362c1ff",
+        "root-verification.txt": "050f34ff0e804cb38760addc4f8eae993d15dd025b5e1bd44d2525987065b66c"
+      }
+    },
+    "MeasurementUITests": {
+      "job": 126980957758,
+      "artifact": 13382452201,
+      "selectors": [
+        "RoomInTheCartUITests/MeasurementUITests/testAuthenticatedNoticeConsentExplicitClosedShopSendDeleteAndWithdrawal",
+        "RoomInTheCartUITests/MeasurementUITests/testLocalSettingsConsentIgnoresLegacyBooleanPersistsRestartAndStaysWorkspaceScoped"
+      ],
+      "counts": {
+        "totalTestCount": 2,
+        "passedTests": 2,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0
+      },
+      "runtimeWarnings": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 2,
+        "detailExportCount": 0,
+        "warnings": []
+      },
+      "reexport": "Summary and test tree match original hosted exports. Local Xcode27.1 adds runtimeWarnings empty array, which hosted26.3 omitted; structured guard independently verified zero.",
+      "sha256": {
+        "results.zip": "4c60f475ce8348aef0f15f6f74e75e0013c4ceaaa8f4d7de6d111a32a5ac1aba",
+        "test-summary.json": "d4f25dfd07db94c88c855da31c4b41e54a17bca2b89670aec94d7b5fb4b5f608",
+        "test-details.json": "e86f7aae6a1630686c906b9db43ae5cc9455e539b2827f02039fcd04209c27ed",
+        "test-runtime-warnings.json": "8a07425e151587173077e2e8ca29c2844d7078dbbd23315f07cab881f362c1ff",
+        "root-verification.txt": "b8d9f3fb5849b0dc7d35ea580c44aae30de4d2febe8a7911079dfe4a989a1355"
+      }
+    },
+    "RecipeLibraryAcceptanceUITests": {
+      "job": 126980958012,
+      "artifact": 13381953522,
+      "selectors": [
+        "RoomInTheCartUITests/RecipeLibraryAcceptanceUITests/testDocumentedLibraryPreviewCancelCorruptPreservationApplyAndWholeBatchUndo",
+        "RoomInTheCartUITests/RecipeLibraryAcceptanceUITests/testImportedRecipeQuantityDismissesKeyboardAndRequiresExplicitPickupChoice"
+      ],
+      "counts": {
+        "totalTestCount": 2,
+        "passedTests": 2,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0
+      },
+      "durationsSeconds": {
+        "RoomInTheCartUITests/RecipeLibraryAcceptanceUITests/testDocumentedLibraryPreviewCancelCorruptPreservationApplyAndWholeBatchUndo": 365.05089700222015,
+        "RoomInTheCartUITests/RecipeLibraryAcceptanceUITests/testImportedRecipeQuantityDismissesKeyboardAndRequiresExplicitPickupChoice": 175.81348395347595
+      },
+      "runtimeWarnings": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 2,
+        "detailExportCount": 0,
+        "warnings": []
+      },
+      "reexport": "The locally exported test tree matches the hosted tree. The summary matches after excluding the locally exposed empty runtimeWarnings array. The producer manifest, enumeration, and class selectors also match the independently downloaded MeasurementUITests artifact.",
+      "sha256": {
+        "results.zip": "f337f41fb54db6fee7e323ac0c199a43f5fdac0c45a7e59ec45e046af23d2539",
+        "test-summary.json": "700c7d2d4ee7a5fc9e8c1caa2c21af93ea03672ca1b2097a12e156ebd692d992",
+        "test-details.json": "e5c91ad1fc3ec4fd327d8cc22915e87c37fc207caf5efb85e27925304f44e24c",
+        "test-runtime-warnings.json": "8a07425e151587173077e2e8ca29c2844d7078dbbd23315f07cab881f362c1ff",
+        "root-verification.txt": "5833e34af08e070bb6ebce735c7d3207aa80b520bc11d76183f5bc845a92189c",
+        "reexported-summary.json": "e62a44cafd5099e91acdd7c08a424ee1f1e2b54e56a2d95cb087ab9197f9e38b",
+        "reexported-tests.json": "3fa83179050258d088295a07b7ddf58189f8875edc23ffb8f622d9313a2fb744",
+        "test-plan/manifest.json": "15d893bedb77ec432ed74cd662db82eebefb7bbff4159bbe4a04fa9c53c75f46",
+        "test-plan/test-enumeration.json": "1cd23b849e3de319c277624d095060ecd5ca98c7d8841a5f1d58617e0c8d4d17",
+        "test-plan/RecipeLibraryAcceptanceUITests.txt": "2291db12f1bd33ba4e44601e0a8d07d5e2587c529f6fb26475863b0ad4a47770"
+      }
+    },
+    "SharedMealChangeUITests": {
+      "job": 126980954241,
+      "artifact": 13382243717,
+      "selectors": [
+        "RoomInTheCartUITests/SharedMealChangeUITests/testAssignedShopperMapsLocalSeedWithoutPlannerPostAndCanCancel",
+        "RoomInTheCartUITests/SharedMealChangeUITests/testPlannerCancelThenSendAndSeparateShopperCancelThenApplyExactlyOnce"
+      ],
+      "counts": {
+        "totalTestCount": 2,
+        "passedTests": 2,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0
+      },
+      "durationsSeconds": {
+        "RoomInTheCartUITests/SharedMealChangeUITests/testAssignedShopperMapsLocalSeedWithoutPlannerPostAndCanCancel": 173.16884195804596,
+        "RoomInTheCartUITests/SharedMealChangeUITests/testPlannerCancelThenSendAndSeparateShopperCancelThenApplyExactlyOnce": 242.04647409915924
+      },
+      "runtimeWarnings": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 2,
+        "detailExportCount": 0,
+        "warnings": []
+      },
+      "reexport": "The local and hosted test trees match. The summaries match after excluding the locally exposed empty runtimeWarnings array. The producer manifest, enumeration, and class selectors match the independent MeasurementUITests archive.",
+      "sha256": {
+        "results.zip": "c30b49027e2d519464196f0700caafe5ff929beb2a56a30a9e591ba52b7dffb9",
+        "test-summary.json": "7803f29ab01d2352220ba336df9a10be85e690ca956c7a82badc9c70ec1820e7",
+        "test-details.json": "f7a5f9b19d12b83bbcf49817875d91d79ad42f97eb04cb0601c5c8eb5817099c",
+        "test-runtime-warnings.json": "8a07425e151587173077e2e8ca29c2844d7078dbbd23315f07cab881f362c1ff",
+        "root-verification.txt": "4116e267be2489de9ca4ec30198060bd78a04671b123ee0924e57ebd29590b61",
+        "reexported-summary.json": "38893cc33a5d871bf50e238796b6d8f2034dff794a6c510d49aaecf1634a928a",
+        "reexported-tests.json": "83939f8bbd90e65583ea3aab39919e9d529e49578ae24bcaf28940fc51f4163c",
+        "test-plan/manifest.json": "15d893bedb77ec432ed74cd662db82eebefb7bbff4159bbe4a04fa9c53c75f46",
+        "test-plan/test-enumeration.json": "1cd23b849e3de319c277624d095060ecd5ca98c7d8841a5f1d58617e0c8d4d17",
+        "test-plan/SharedMealChangeUITests.txt": "d078c98cb99783206cb28e32b87ad98cb7b0185a0ce8125cb215f94e0c850fd2"
+      }
+    },
+    "SharedMealCivilDateUITests": {
+      "job": 126980958982,
+      "artifact": 13382379158,
+      "selectors": [
+        "RoomInTheCartUITests/SharedMealCivilDateUITests/testEnglishCivilDaysStayExactUnderUSTimeZoneEnvironments",
+        "RoomInTheCartUITests/SharedMealCivilDateUITests/testSpanishCivilDaysStayExactUnderUSTimeZoneEnvironments"
+      ],
+      "counts": {
+        "totalTestCount": 2,
+        "passedTests": 2,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0
+      },
+      "durationsSeconds": {
+        "RoomInTheCartUITests/SharedMealCivilDateUITests/testEnglishCivilDaysStayExactUnderUSTimeZoneEnvironments": 65.03951692581177,
+        "RoomInTheCartUITests/SharedMealCivilDateUITests/testSpanishCivilDaysStayExactUnderUSTimeZoneEnvironments": 46.592711091041565
+      },
+      "runtimeWarnings": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 2,
+        "detailExportCount": 0,
+        "warnings": []
+      },
+      "reexport": "The local and hosted test trees match. The summaries match after excluding the locally exposed empty runtimeWarnings array. The producer manifest, enumeration, and class selectors match the independent MeasurementUITests archive.",
+      "sha256": {
+        "results.zip": "64b54e88ed2e5772381720a83eec15b9ea9dc5cfc883e728fce380753910ea42",
+        "test-summary.json": "fccab625f8216de51c7797be5ed6ee9e21e6c98b3b02255f67505a1508c86877",
+        "test-details.json": "cdcb96f847a99f7960f410208fb5d880a9d5be5b8692cd2344ad42a54bd3ceff",
+        "test-runtime-warnings.json": "8a07425e151587173077e2e8ca29c2844d7078dbbd23315f07cab881f362c1ff",
+        "root-verification.txt": "01815d66d7f8f9f403bc06f6b7952ffc68ff773a6c4c1e449019262019a99485",
+        "reexported-summary.json": "61c0ab626eee7ffa726aa7cf2bfd34389a1e4ed71b3e922254fbfe1ccdbe3a37",
+        "reexported-tests.json": "8e9a02e4c393d12b648d378659f4141bd557a3604b9311d30113238a7255be7b",
+        "test-plan/manifest.json": "15d893bedb77ec432ed74cd662db82eebefb7bbff4159bbe4a04fa9c53c75f46",
+        "test-plan/test-enumeration.json": "1cd23b849e3de319c277624d095060ecd5ca98c7d8841a5f1d58617e0c8d4d17",
+        "test-plan/SharedMealCivilDateUITests.txt": "934320663aa67637e7c449a8c31ec79745287e46c7ef4a0859c276e54d249672"
+      }
+    },
+    "StockReviewUITests": {
+      "job": 126980959810,
+      "artifact": 13383351919,
+      "selectors": [
+        "RoomInTheCartUITests/StockReviewUITests/testChangedMealRevisionDisablesPreviewWithoutApplyingBatch",
+        "RoomInTheCartUITests/StockReviewUITests/testPreviewCancelThenConfirmShowsEveryMealAndFreshCookInstructionAfterRestart"
+      ],
+      "counts": {
+        "totalTestCount": 2,
+        "passedTests": 2,
+        "failedTests": 0,
+        "skippedTests": 0,
+        "expectedFailures": 0
+      },
+      "runtimeWarnings": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 2,
+        "detailExportCount": 0,
+        "warnings": []
+      },
+      "sha256": {
+        "results.zip": "2ade6e98097bbeec19726ba7b7cd3cda7d2d9389145b38cc234512e93e01f56f",
+        "test-summary.json": "37358af17b04bd7be0afeda107da5ee1b3957620b460ee6f374f20902ac7880f",
+        "test-details.json": "0eff80b9d40f00c1e09135e9ed6b4dea231025e9ba4f0546d257a8192471aba0",
+        "test-runtime-warnings.json": "8a07425e151587173077e2e8ca29c2844d7078dbbd23315f07cab881f362c1ff",
+        "root-verification.txt": "c727dbd9d9ac1f572b61b7caeec16aeb9906d9f66cff38403516a8f282279da0"
+      }
+    }
+  },
+  "knownFailure": {
+    "shard": "ContributorRequestUITests",
+    "job": 126980954166,
+    "failed": 2,
+    "status": "Test-only correction installed locally as73a0935; original hosted two failures retained. Fresh local pair and same-binary Spanish no-card control pass exact identity/count/warning verification; hosted validation pending."
+  },
+  "scope": "All 17 fixture jobs are terminal. Ten wholly passing shards contribute 24 individually verified cases with zero structured runtime warnings. Seven more XCTest passes occur within failed shards. Aggregate counts preserve the original hosted results; local corrections do not relabel them.",
+  "otherKnownFailure": {
+    "shard": "HouseholdRequestPackUITests",
+    "job": 126980959058,
+    "artifact": 13382356028,
+    "archiveSHA256": "bfbe926ad76e83781b109363bf7a4bfa6bcef99a7d29bd56d3693ca90db69372",
+    "failingSelector": "testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite",
+    "status": "Original hosted failure retained. Exact local three-case run passed with zero warnings after test-only keyboard/visibility correction installed as 40a274d. Fresh hosted validation pending."
+  },
+  "workflowConclusion": "failure",
+  "selectedInProducer": 44,
+  "executionTotals": {
+    "totalTestCount": 44,
+    "passedTests": 31,
+    "failedTests": 13,
+    "skippedTests": 0,
+    "expectedFailures": 0
+  },
+  "failedShards": {
+    "ContributorRequestUITests": {
+      "job": 126980954166,
+      "passed": 0,
+      "failed": 2,
+      "status": "Test-only correction 73a0935 passed exact local pair plus Spanish control; hosted pending."
+    },
+    "RequestDuplicateComparisonUITests": {
+      "job": 126980954137,
+      "passed": 0,
+      "failed": 2,
+      "status": "Test-only correction b9d5ffa passed exact local pair with zero warnings; hosted pending."
+    },
+    "HouseholdRequestPackUITests": {
+      "job": 126980959058,
+      "passed": 2,
+      "failed": 1,
+      "status": "Test-only correction 40a274d passed all three local cases with zero warnings; hosted pending."
+    },
+    "RecordsMediaUITests": {
+      "job": 126980954160,
+      "passed": 0,
+      "failed": 1,
+      "status": "Original hosted and first local candidate failures retained. Test-only visibility correction installed as 233f6d9 after the full original case passed in 287.423 seconds against unchanged hosted app bytes, with zero runtime warnings and exact-once execution. Fresh hosted validation pending.",
+      "localCorrection": {
+        "commit": "233f6d9",
+        "evidence": "records-media-ci-20261105/visibility-v2-validation.json",
+        "originalSelectorsPassed": 1,
+        "hostedConfirmation": "pending"
+      }
+    },
+    "DinnerDecisionSheetUITests": {
+      "job": 126980957450,
+      "artifact": 13384221439,
+      "artifactSHA256": "7b9cfc4891ed7e5eb65521de5bcc4765aacbcb2893db7b284f1cb85894446a45",
+      "selectors": [
+        "RoomInTheCartUITests/DinnerDecisionSheetUITests/testEnglishGuestPackageBoundaryCheckoutAndCancel",
+        "RoomInTheCartUITests/DinnerDecisionSheetUITests/testEnglishPaidGroupReplacementAndGuestCancellation",
+        "RoomInTheCartUITests/DinnerDecisionSheetUITests/testLargestTypePairingSheetReturnsToItsInitiatingControl",
+        "RoomInTheCartUITests/DinnerDecisionSheetUITests/testSpanishGuestPackageBoundaryCheckoutAndCancel",
+        "RoomInTheCartUITests/DinnerDecisionSheetUITests/testSpanishPaidGroupReplacementAndGuestCancellation"
+      ],
+      "counts": {
+        "totalTestCount": 5,
+        "passedTests": 1,
+        "failedTests": 4,
+        "skippedTests": 0,
+        "expectedFailures": 0
+      },
+      "runtimeWarnings": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 5,
+        "detailExportCount": 0,
+        "warnings": []
+      },
+      "localCorrection": {
+        "commit": "2c1ff46",
+        "result": "All five original selectors passed locally with zero recorded warnings. Existing chosen-dinner destination and back navigation are exercised; all original package, fee, cancellation, replacement and protected-lunch assertions remain.",
+        "evidence": "dinner-decision-navigation-20261105/validation.json",
+        "hostedConfirmation": "Pending"
+      }
+    },
+    "SharedMealIdeaUITests": {
+      "job": 126980958833,
+      "artifact": 13382978902,
+      "artifactSHA256": "4350537d4f9af622a06305bd8d2dcf0a02aae9e9fad373d94529e7938dbb8bdc",
+      "selectors": [
+        "RoomInTheCartUITests/SharedMealIdeaUITests/testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview",
+        "RoomInTheCartUITests/SharedMealIdeaUITests/testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn"
+      ],
+      "counts": {
+        "totalTestCount": 2,
+        "passedTests": 1,
+        "failedTests": 1,
+        "skippedTests": 0,
+        "expectedFailures": 0
+      },
+      "runtimeWarnings": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 2,
+        "detailExportCount": 0,
+        "warnings": []
+      }
+    },
+    "SharedStoreQuoteUITests": {
+      "job": 126980958747,
+      "artifact": 13383693888,
+      "artifactSHA256": "97d5f1d3a1f2cb11c1c0bb666f5e2c903ed587170093360fd6ee137e826502a3",
+      "selectors": [
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult",
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption",
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave",
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testSpanishLargestTextKeepsRealQuoteEntryDiscoverable",
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction"
+      ],
+      "counts": {
+        "totalTestCount": 5,
+        "passedTests": 3,
+        "failedTests": 2,
+        "skippedTests": 0,
+        "expectedFailures": 0
+      },
+      "runtimeWarnings": {
+        "status": "unexpected-warnings",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 6,
+        "examinedTestCount": 5,
+        "detailExportCount": 3,
+        "warnings": [
+          {
+            "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption",
+            "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+            "count": 2,
+            "maximum": 0
+          },
+          {
+            "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave",
+            "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+            "count": 2,
+            "maximum": 0
+          },
+          {
+            "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction",
+            "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+            "count": 2,
+            "maximum": 0
+          }
+        ]
+      },
+      "localCorrection": {
+        "result": "Five original cases passed once locally; strict warning gate still failed for three unallowed occurrences. Test-only correction installed; original hosted two assertion failures and six warnings retained.",
+        "evidence": "shared-quote-ci-20261105/validation.json",
+        "hostedConfirmation": "pending"
+      }
+    }
+  },
+  "warningScope": "SharedStoreQuote has six unallowed occurrences of the known _UIReparentingView message across three exact selectors; it fails the new strict guard in addition to its two assertion failures. The 24 cases in wholly passing shards retain their separate zero-warning verification. Records raw warning evidence is not publicly available."
+}

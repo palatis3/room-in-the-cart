@@ -1,0 +1,497 @@
+{
+  "source": "f0e2ac37383e76ac3812407384bf2eda968de3c4",
+  "test": "PickupOfferUITests/testSavedOfferReopensAndUpdatesResponseAfterRestart",
+  "testSeconds": 714.8037250041962,
+  "log": ".build/CIResearch20261104/candidate-f0e2ac3/ui-01/Tests.log",
+  "logSHA256": "3065cbb63a503539bbea710964698057db786893f7b26d152da2f7312793dc6f",
+  "resultBundle": ".build/CIResearch20261104/candidate-f0e2ac3/ui-01/Tests.xcresult",
+  "topLevelActivities": 2014,
+  "keyboardEnumerations": 161,
+  "repeatedViewportAcquisitions": 80,
+  "repeatedViewportAXActivities": 590,
+  "repeatedViewportObservedSeconds": 47.016,
+  "repeatedViewportMedianSeconds": 0.64,
+  "samples": [
+    {
+      "dragSeconds": 66.962,
+      "duplicateStartSeconds": 66.542,
+      "duplicateEndSeconds": 66.907,
+      "interveningAXActivities": 6
+    },
+    {
+      "dragSeconds": 71.269,
+      "duplicateStartSeconds": 70.685,
+      "duplicateEndSeconds": 71.197,
+      "interveningAXActivities": 6
+    },
+    {
+      "dragSeconds": 116.603,
+      "duplicateStartSeconds": 116.025,
+      "duplicateEndSeconds": 116.553,
+      "interveningAXActivities": 6
+    },
+    {
+      "dragSeconds": 132.724,
+      "duplicateStartSeconds": 132.234,
+      "duplicateEndSeconds": 132.591,
+      "interveningAXActivities": 6
+    },
+    {
+      "dragSeconds": 161.803,
+      "duplicateStartSeconds": 160.787,
+      "duplicateEndSeconds": 161.731,
+      "interveningAXActivities": 10
+    },
+    {
+      "dragSeconds": 176.303,
+      "duplicateStartSeconds": 175.312,
+      "duplicateEndSeconds": 176.222,
+      "interveningAXActivities": 10
+    },
+    {
+      "dragSeconds": 190.073,
+      "duplicateStartSeconds": 188.856,
+      "duplicateEndSeconds": 189.97,
+      "interveningAXActivities": 10
+    },
+    {
+      "dragSeconds": 211.088,
+      "duplicateStartSeconds": 210.208,
+      "duplicateEndSeconds": 211.026,
+      "interveningAXActivities": 10
+    },
+    {
+      "dragSeconds": 226.237,
+      "duplicateStartSeconds": 225.437,
+      "duplicateEndSeconds": 226.183,
+      "interveningAXActivities": 10
+    },
+    {
+      "dragSeconds": 233.058,
+      "duplicateStartSeconds": 232.258,
+      "duplicateEndSeconds": 232.99,
+      "interveningAXActivities": 10
+    },
+    {
+      "dragSeconds": 245.088,
+      "duplicateStartSeconds": 244.288,
+      "duplicateEndSeconds": 245.027,
+      "interveningAXActivities": 10
+    },
+    {
+      "dragSeconds": 252.305,
+      "duplicateStartSeconds": 251.28,
+      "duplicateEndSeconds": 252.241,
+      "interveningAXActivities": 10
+    },
+    {
+      "dragSeconds": 264.257,
+      "duplicateStartSeconds": 263.219,
+      "duplicateEndSeconds": 264.185,
+      "interveningAXActivities": 10
+    },
+    {
+      "dragSeconds": 285.356,
+      "duplicateStartSeconds": 284.339,
+      "duplicateEndSeconds": 285.288,
+      "interveningAXActivities": 10
+    },
+    {
+      "dragSeconds": 297.605,
+      "duplicateStartSeconds": 296.72,
+      "duplicateEndSeconds": 297.545,
+      "interveningAXActivities": 10
+    },
+    {
+      "dragSeconds": 305.306,
+      "duplicateStartSeconds": 304.648,
+      "duplicateEndSeconds": 305.252,
+      "interveningAXActivities": 8
+    },
+    {
+      "dragSeconds": 311.211,
+      "duplicateStartSeconds": 310.582,
+      "duplicateEndSeconds": 311.16,
+      "interveningAXActivities": 8
+    },
+    {
+      "dragSeconds": 318.636,
+      "duplicateStartSeconds": 317.968,
+      "duplicateEndSeconds": 318.577,
+      "interveningAXActivities": 8
+    },
+    {
+      "dragSeconds": 323.74,
+      "duplicateStartSeconds": 323.018,
+      "duplicateEndSeconds": 323.689,
+      "interveningAXActivities": 8
+    },
+    {
+      "dragSeconds": 334.217,
+      "duplicateStartSeconds": 333.779,
+      "duplicateEndSeconds": 334.175,
+      "interveningAXActivities": 6
+    },
+    {
+      "dragSeconds": 337.525,
+      "duplicateStartSeconds": 337.011,
+      "duplicateEndSeconds": 337.46,
+      "interveningAXActivities": 6
+    },
+    {
+      "dragSeconds": 340.976,
+      "duplicateStartSeconds": 340.538,
+      "duplicateEndSeconds": 340.901,
+      "interveningAXActivities": 6
+    },
+    {
+      "dragSeconds": 343.935,
+      "duplicateStartSeconds": 343.572,
+      "duplicateEndSeconds": 343.898,
+      "interveningAXActivities": 6
+    },
+    {
+      "dragSeconds": 386.71,
+      "duplicateStartSeconds": 386.441,
+      "duplicateEndSeconds": 386.669,
+      "interveningAXActivities": 6
+    },
+    {
+      "dragSeconds": 393.806,
+      "duplicateStartSeconds": 393.429,
+      "duplicateEndSeconds": 393.769,
+      "interveningAXActivities": 6
+    },
+    {
+      "dragSeconds": 397.512,
+      "duplicateStartSeconds": 397.112,
+      "duplicateEndSeconds": 397.474,
+      "interveningAXActivities": 6
+    },
+    {
+      "dragSeconds": 402.715,
+      "duplicateStartSeconds": 402.345,
+      "duplicateEndSeconds": 402.675,
+      "interveningAXActivities": 6
+    },
+    {
+      "dragSeconds": 408.926,
+      "duplicateStartSeconds": 408.538,
+      "duplicateEndSeconds": 408.887,
+      "interveningAXActivities": 6
+    },
+    {
+      "dragSeconds": 418.556,
+      "duplicateStartSeconds": 417.692,
+      "duplicateEndSeconds": 418.47,
+      "interveningAXActivities": 8
+    },
+    {
+      "dragSeconds": 425.912,
+      "duplicateStartSeconds": 424.892,
+      "duplicateEndSeconds": 425.815,
+      "interveningAXActivities": 8
+    },
+    {
+      "dragSeconds": 432.94,
+      "duplicateStartSeconds": 431.772,
+      "duplicateEndSeconds": 432.827,
+      "interveningAXActivities": 8
+    },
+    {
+      "dragSeconds": 439.801,
+      "duplicateStartSeconds": 439.014,
+      "duplicateEndSeconds": 439.726,
+      "interveningAXActivities": 8
+    },
+    {
+      "dragSeconds": 444.854,
+      "duplicateStartSeconds": 444.062,
+      "duplicateEndSeconds": 444.771,
+      "interveningAXActivities": 8
+    },
+    {
+      "dragSeconds": 449.508,
+      "duplicateStartSeconds": 448.726,
+      "duplicateEndSeconds": 449.441,
+      "interveningAXActivities": 8
+    },
+    {
+      "dragSeconds": 455.743,
+      "duplicateStartSeconds": 454.93,
+      "duplicateEndSeconds": 455.666,
+      "interveningAXActivities": 8
+    },
+    {
+      "dragSeconds": 467.558,
+      "duplicateStartSeconds": 466.478,
+      "duplicateEndSeconds": 467.479,
+      "interveningAXActivities": 10
+    },
+    {
+      "dragSeconds": 476.455,
+      "duplicateStartSeconds": 475.639,
+      "duplicateEndSeconds": 476.386,
+      "interveningAXActivities": 8
+    },
+    {
+      "dragSeconds": 481.084,
+      "duplicateStartSeconds": 480.255,
+      "duplicateEndSeconds": 480.987,
+      "interveningAXActivities": 8
+    },
+    {
+      "dragSeconds": 485.882,
+      "duplicateStartSeconds": 485.099,
+      "duplicateEndSeconds": 485.819,
+      "interveningAXActivities": 8
+    },
+    {
+      "dragSeconds": 490.645,
+      "duplicateStartSeconds": 489.844,
+      "duplicateEndSeconds": 490.581,
+      "interveningAXActivities": 8
+    },
+    {
+      "dragSeconds": 503.405,
+      "duplicateStartSeconds": 503.01,
+      "duplicateEndSeconds": 503.344,
+      "interveningAXActivities": 6
+    },
+    {
+      "dragSeconds": 506.701,
+      "duplicateStartSeconds": 506.332,
+      "duplicateEndSeconds": 506.648,
+      "interveningAXActivities": 6
+    },
+    {
+      "dragSeconds": 509.923,
+      "duplicateStartSeconds": 509.52,
+      "duplicateEndSeconds": 509.884,
+      "interveningAXActivities": 6
+    },
+    {
+      "dragSeconds": 513.641,
+      "duplicateStartSeconds": 513.246,
+      "duplicateEndSeconds": 513.586,
+      "interveningAXActivities": 6
+    },
+    {
+      "dragSeconds": 517.934,
+      "duplicateStartSeconds": 517.62,
+      "duplicateEndSeconds": 517.889,
+      "interveningAXActivities": 6
+    },
+    {
+      "dragSeconds": 522.913,
+      "duplicateStartSeconds": 522.528,
+      "duplicateEndSeconds": 522.864,
+      "interveningAXActivities": 6
+    },
+    {
+      "dragSeconds": 526.244,
+      "duplicateStartSeconds": 525.843,
+      "duplicateEndSeconds": 526.184,
+      "interveningAXActivities": 6
+    },
+    {
+      "dragSeconds": 530.677,
+      "duplicateStartSeconds": 530.128,
+      "duplicateEndSeconds": 530.608,
+      "interveningAXActivities": 6
+    },
+    {
+      "dragSeconds": 535.09,
+      "duplicateStartSeconds": 534.657,
+      "duplicateEndSeconds": 535.019,
+      "interveningAXActivities": 6
+    },
+    {
+      "dragSeconds": 538.642,
+      "duplicateStartSeconds": 538.292,
+      "duplicateEndSeconds": 538.604,
+      "interveningAXActivities": 6
+    },
+    {
+      "dragSeconds": 541.929,
+      "duplicateStartSeconds": 541.58,
+      "duplicateEndSeconds": 541.884,
+      "interveningAXActivities": 6
+    },
+    {
+      "dragSeconds": 545.177,
+      "duplicateStartSeconds": 544.83,
+      "duplicateEndSeconds": 545.142,
+      "interveningAXActivities": 6
+    },
+    {
+      "dragSeconds": 547.911,
+      "duplicateStartSeconds": 547.577,
+      "duplicateEndSeconds": 547.866,
+      "interveningAXActivities": 6
+    },
+    {
+      "dragSeconds": 553.352,
+      "duplicateStartSeconds": 552.968,
+      "duplicateEndSeconds": 553.31,
+      "interveningAXActivities": 6
+    },
+    {
+      "dragSeconds": 556.892,
+      "duplicateStartSeconds": 556.538,
+      "duplicateEndSeconds": 556.845,
+      "interveningAXActivities": 6
+    },
+    {
+      "dragSeconds": 560.619,
+      "duplicateStartSeconds": 560.311,
+      "duplicateEndSeconds": 560.585,
+      "interveningAXActivities": 6
+    },
+    {
+      "dragSeconds": 563.807,
+      "duplicateStartSeconds": 563.479,
+      "duplicateEndSeconds": 563.764,
+      "interveningAXActivities": 6
+    },
+    {
+      "dragSeconds": 567.628,
+      "duplicateStartSeconds": 567.306,
+      "duplicateEndSeconds": 567.591,
+      "interveningAXActivities": 6
+    },
+    {
+      "dragSeconds": 580.543,
+      "duplicateStartSeconds": 580.285,
+      "duplicateEndSeconds": 580.504,
+      "interveningAXActivities": 6
+    },
+    {
+      "dragSeconds": 588.321,
+      "duplicateStartSeconds": 587.949,
+      "duplicateEndSeconds": 588.279,
+      "interveningAXActivities": 6
+    },
+    {
+      "dragSeconds": 591.575,
+      "duplicateStartSeconds": 591.238,
+      "duplicateEndSeconds": 591.539,
+      "interveningAXActivities": 6
+    },
+    {
+      "dragSeconds": 594.48,
+      "duplicateStartSeconds": 594.12,
+      "duplicateEndSeconds": 594.439,
+      "interveningAXActivities": 6
+    },
+    {
+      "dragSeconds": 597.919,
+      "duplicateStartSeconds": 597.599,
+      "duplicateEndSeconds": 597.879,
+      "interveningAXActivities": 6
+    },
+    {
+      "dragSeconds": 602.327,
+      "duplicateStartSeconds": 602.008,
+      "duplicateEndSeconds": 602.291,
+      "interveningAXActivities": 6
+    },
+    {
+      "dragSeconds": 609.995,
+      "duplicateStartSeconds": 609.208,
+      "duplicateEndSeconds": 609.922,
+      "interveningAXActivities": 8
+    },
+    {
+      "dragSeconds": 616.734,
+      "duplicateStartSeconds": 615.786,
+      "duplicateEndSeconds": 616.664,
+      "interveningAXActivities": 8
+    },
+    {
+      "dragSeconds": 621.519,
+      "duplicateStartSeconds": 620.61,
+      "duplicateEndSeconds": 621.45,
+      "interveningAXActivities": 8
+    },
+    {
+      "dragSeconds": 626.938,
+      "duplicateStartSeconds": 626.004,
+      "duplicateEndSeconds": 626.855,
+      "interveningAXActivities": 8
+    },
+    {
+      "dragSeconds": 631.656,
+      "duplicateStartSeconds": 630.836,
+      "duplicateEndSeconds": 631.581,
+      "interveningAXActivities": 8
+    },
+    {
+      "dragSeconds": 636.485,
+      "duplicateStartSeconds": 635.709,
+      "duplicateEndSeconds": 636.411,
+      "interveningAXActivities": 8
+    },
+    {
+      "dragSeconds": 641.477,
+      "duplicateStartSeconds": 640.695,
+      "duplicateEndSeconds": 641.406,
+      "interveningAXActivities": 8
+    },
+    {
+      "dragSeconds": 646.621,
+      "duplicateStartSeconds": 645.705,
+      "duplicateEndSeconds": 646.539,
+      "interveningAXActivities": 8
+    },
+    {
+      "dragSeconds": 668.232,
+      "duplicateStartSeconds": 667.067,
+      "duplicateEndSeconds": 668.127,
+      "interveningAXActivities": 8
+    },
+    {
+      "dragSeconds": 678.252,
+      "duplicateStartSeconds": 677.301,
+      "duplicateEndSeconds": 678.159,
+      "interveningAXActivities": 8
+    },
+    {
+      "dragSeconds": 684.882,
+      "duplicateStartSeconds": 683.778,
+      "duplicateEndSeconds": 684.796,
+      "interveningAXActivities": 8
+    },
+    {
+      "dragSeconds": 689.708,
+      "duplicateStartSeconds": 688.909,
+      "duplicateEndSeconds": 689.636,
+      "interveningAXActivities": 8
+    },
+    {
+      "dragSeconds": 694.083,
+      "duplicateStartSeconds": 693.327,
+      "duplicateEndSeconds": 694.015,
+      "interveningAXActivities": 8
+    },
+    {
+      "dragSeconds": 698.938,
+      "duplicateStartSeconds": 698.134,
+      "duplicateEndSeconds": 698.867,
+      "interveningAXActivities": 8
+    },
+    {
+      "dragSeconds": 703.632,
+      "duplicateStartSeconds": 702.837,
+      "duplicateEndSeconds": 703.556,
+      "interveningAXActivities": 8
+    },
+    {
+      "dragSeconds": 709.119,
+      "duplicateStartSeconds": 708.322,
+      "duplicateEndSeconds": 709.04,
+      "interveningAXActivities": 8
+    }
+  ],
+  "scope": "Elapsed intervals between recorded activity starts on one hosted run. No application interaction occurred between the paired viewport scans. This is observational evidence of duplicate query cost. It does not establish the patch savings."
+}

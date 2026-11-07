@@ -1,0 +1,17 @@
+{
+  "observedUTC": "2026-11-05T04:17:04.234616+00:00",
+  "device": "A0FE6565-F825-49E9-8DCA-BE89B797E070",
+  "appPID": 63743,
+  "runnerPID": 62424,
+  "xcodebuildPID": 62333,
+  "readOnlyProbe": "Three-second process samples, screenshot of owned test simulator; no UI actions or source change.",
+  "observation": "App main thread sampled idle in CFRunLoop; runner sampled in pre-event quiescence wait. Screenshot shows existing evidence text with caret at start and native Select/Select All/AutoFill menu above keyboard. Does not identify cause or prove absence of a product defect.",
+  "sha256": {
+    "app.sample.txt": "0e0b98c84ff5cf2124fa44f090e9f6dd57fee038ec27a1ef075eadf022f8a26d",
+    "screen.png": "27b3966dd579386e38ef5891cc56bed27cd426f3d119e7c096304fe402ef5a13",
+    "runner.sample.txt": "98be55bb4bef8dea9d0be0cd4286def3c374d91acbb87df21750325f7a8bfba9"
+  },
+  "onset": "Sibling first missing animation notification at123.00s, after yield-denominator Done post-event wait began62.97s. Keyboard absence predicate succeeded. Native edit menu appeared later, so it does not establish the initial cause.",
+  "comparison": "Original hosted fractional case also began missing animation notifications after a Done event on another field. Current first case passed254.798s; current sibling source is unchanged by the passive-preview correction.",
+  "next": "Preserve complete terminal result and original limits. Investigate keyboard-transition/XCTest quiescence only from evidence; do not attribute a product hang or disable waiting."
+}

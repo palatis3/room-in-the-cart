@@ -1,0 +1,16 @@
+{
+  "archiveSHA256": "0b6c6db7b05f231a7f8b45d9e2a91b3bf01ae3595e57c935f601fff6ed578e2a",
+  "artifactID": 13553643194,
+  "defaultRatioLimit": 1000,
+  "offendingMembers": [
+    {
+      "name": "db-swift/db-swift/default/pools/1/pageDump/page-000000000",
+      "bytes": 1048592,
+      "compressedBytes": 1046,
+      "ratio": 1002.4780114722753
+    }
+  ],
+  "members": 1955,
+  "expandedBytes": 149621597,
+  "status": "Default nested archive guard refused before reading these members. No limits changed; source coverage audit incomplete."
+}

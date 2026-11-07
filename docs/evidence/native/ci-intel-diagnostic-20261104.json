@@ -1,0 +1,45 @@
+{
+  "run": "https://github.com/palatis3/room-in-the-cart/actions/runs/41922121507",
+  "headCommit": "6977b00165dec2138e41a4d58550017bbb4ddc72",
+  "configuration": "macos-15-intel; Xcode26.3; ordinary Debug UI, traced unsigned Release device build",
+  "completedChecks": [
+    "source-checks",
+    "typescript (web)",
+    "typescript (service)",
+    "service-postgres",
+    "swift-packages",
+    "ios-build"
+  ],
+  "models": {
+    "passed": 562,
+    "failed": 1,
+    "total": 563,
+    "failure": "DeviceSurfacesCompositionStartupTests/testResolvedWidgetDestinationDoesNotReselectAfterPickupChanges: onAppear expectation timeout; revised action-based regression passes focused local suite and detects a deliberately restored mutation.",
+    "logSHA256": "61ae3d6c8267959a8fd75d2a49250ea9fd8c7517d36aedc88f01b02927172fa2"
+  },
+  "release": {
+    "result": "Job time limit reached; no compiler error diagnostic observed before cancellation. Swift CodeQL analysis did not run.",
+    "logSHA256": "f9cb390cbac3a84c5c12e3afb1d30e0c82ea7f68f1d110a96a7f4b8d009217cf",
+    "lastProgress": "EmitSwiftModule22:24:29; further SwiftCompile output22:50:20; cancellation22:50:49UTC."
+  },
+  "ui": {
+    "result": "Partial, not accepted as passing.",
+    "observedFailure": "Live authenticated job126908196157 showed PickupOfferUITests/testSavedOfferReopensAndUpdatesResponseAfterRestart exceed720seconds while still progressing through checkout-form input.",
+    "remaining": "Cancelled obsolete Intel execution after preserving model/build diagnostics; corrected native-runner validation required.",
+    "preservedLogsSHA256": {
+      "iphone-results-ui-04-1": "a80a1d1edd01d556a88df1c2e32204526db2be6a8a4bf4699e6037a31442aa8b",
+      "iphone-results-ui-03-1": "083f9cbff62dbae4d615d0bcdfcbc75027f36483e6d61d2d8ed0c39fc4a72779",
+      "iphone-results-ui-01-1": "9053457279d16d0d1c66987e471217013975c2289bdb768277f4083773ac70c6",
+      "iphone-results-ui-05-1": "075525f2cc22fb8691965d5698de6d3aa0ef8b4bc242fe4955a197d9a16878b9"
+    },
+    "completedShard03": {
+      "passed": 3,
+      "failed": 2,
+      "failures": [
+        "ContextualNavigationUITests/testEnteredStoreQuotesKeepTripCostsSeparateAndAdoptOnlyReviewedSavedProof: tap event synthesis timeout.",
+        "FreeJourneyUITests/testListCaptureOpensWithTypedDraftAndReopensAfterCancel: accessibility snapshot evaluation timeout."
+      ]
+    },
+    "partialShard04Failure": "FreeJourneyUITests/testCancellingSystemShareKeepsTheFrozenPickupUnplaced: keyboard focus missing after tapping ledgerImportText. Needs native-runner revalidation; no cause assumed."
+  }
+}

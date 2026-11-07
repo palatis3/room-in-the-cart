@@ -1,0 +1,68 @@
+{
+  "reviewedAt": "2026-11-07T03:03:31.131280+00:00",
+  "baseCommit": "0d5bb1b22e9e84cd4b8c2b07317f91cfc703b60c",
+  "branch": "codex/scroll-report-window-20261106",
+  "headAtReview": "0d5bb1b22e9e84cd4b8c2b07317f91cfc703b60c",
+  "overlayNotYetCommitted": true,
+  "changedPaths": [
+    "ios/UITests/ReleasePerformanceUITests.swift",
+    "scripts/scroll_signpost_diagnostic.py",
+    "scripts/test_scroll_signpost_diagnostic.py"
+  ],
+  "files": [
+    {
+      "path": "ios/UITests/ReleasePerformanceUITests.swift",
+      "baseSHA256": "c7954233968072b97fd5845d5c28877c9251495cfee33675169a960839d2625f",
+      "candidateSHA256": "d1f2c40dfbf1603366ecf6309d264c3372ddce260ca97d4cfd7806b00622c06b",
+      "qualifiedCopy": "/Users/palatis/Room in the Cart/.build/ScrollReportWindowWitness20261106/ReleasePerformanceUITests.swift"
+    },
+    {
+      "path": "scripts/scroll_signpost_diagnostic.py",
+      "baseSHA256": "e8fa85d6ceee7eb9c9a098338a002ea577df7605165d7b7b76b7cc9deb5aefa1",
+      "candidateSHA256": "be4a3f473c7e5dc6bc952df4c82e350a8ad58c4c2fb8721e71efabfa441f7de9",
+      "qualifiedCopy": "/Users/palatis/Room in the Cart/.build/ScrollReportWindowWitness20261106/endpoint-parser/scroll_signpost_diagnostic.py"
+    },
+    {
+      "path": "scripts/test_scroll_signpost_diagnostic.py",
+      "baseSHA256": "c2e59c37b3527ff86f326f0e3798f5f7c72ee985db0f8a2d13342083108e0a1d",
+      "candidateSHA256": "a3b94cec9424acfed37a1e102c5f79ef240d984154ecc80ee31e6dbd78942c4c",
+      "qualifiedCopy": "/Users/palatis/Room in the Cart/.build/ScrollReportWindowWitness20261106/endpoint-parser/test_scroll_signpost_diagnostic.py"
+    }
+  ],
+  "patchSHA256": "cd2e3fc0687122fbc06d9cdf8efcca279b18f17c29986467780fc7a6fcc174d3",
+  "measuredBodyByteIdentical": true,
+  "measurementOptionsByteIdentical": true,
+  "builtInMetricsConstructionAndOrderByteIdentical": true,
+  "protectedFileSHA256": {
+    "scripts/check_ios_performance.py": "f203f21510455a8a83300ee6968e8c5ac2bb14dd8c6afd5a6adb5caa7ce8a4c7",
+    "scripts/ios_performance_baselines.json": "38742a9b5f5eea668c608f117db602ac6a2b73aa56691c3ec3f90c291d15c38e",
+    "scripts/check_ios_test_results.py": "17b8af9e6fcee857e14a3b3ea92baf8b5e410468c7e8482c89aa62c8edfdd990",
+    "scripts/prepare_ios_performance_simulator.py": "10b677c778802bbd8fc3e5ff1aaf9f5542b5e5f7a0565cf68e13d44f0445b020",
+    "scripts/plan_ios_performance_tests.py": "708685decfd580f1b33dd949f893f54ec08ec3d424a51b538edd9da5eedd5f6a",
+    "scripts/plan_ios_fixture_tests.py": "a242b92a643d6b8d59ef3b394442b1a81c75be51e24d490b149989d560b6e63b",
+    "scripts/plan_ios_tests.py": "eff8122356457031fc25f3fcbcc0636e050613b356db830061ebbd249ea182cf",
+    "scripts/ci_mac_slots.py": "23e5dae583f1fc10b523348d034f66fad39196a16b7df179e5720221c22ec41a",
+    "scripts/select_ci_iphone.py": "8ebdee4db935d8b8039f17fb8b23909043b3095486e35ecfd713199d6a1b3c67",
+    "ios/UITests/Fixtures/ReleaseLedger500.txt": "7411eb3a8a10911d6599237e1f2f618c0c3508667909a4766a4b5b14bef6e3b8",
+    ".github/workflows/ci.yml": "12b1df6bf660aa404dca51e477683eed71f416cbc3a4e37fee8f3fa8b747e13c",
+    ".github/workflows/ios-deep.yml": "d5fe2f5afee8eaa363a7dbc0ed3cb064ddb26d2668a3ef9913fffa8f104605f2",
+    ".github/workflows/ios-fixtures.yml": "226f618f4ff84e83d5ca54c5c2103bdae5977c6f6d2c055a626266958031975d",
+    ".github/workflows/ios-native-wire.yml": "e1cc36dc552458deeee2f78ce7ae33c76d512d797835d9ecd7d7da5ee18f86d8",
+    ".github/workflows/ios-performance.yml": "7f320c5b1dc5e0f8b1b3250fa4ae00b937222f22b8e9088a2dbeea209166a978",
+    ".github/workflows/ios-toggle-diagnostic.yml": "a5b7024f0f171f20c1c45252ade36b05007e9c6643414893a95384f413d301f2",
+    ".github/workflows/release-checks.yml": "e056b193ad811e2ad503cfec4f4b993e67937bac5588413cb05a1d4d1229ebe3",
+    ".github/workflows/security.yml": "06aa8d5942f88e546c8cbbcdf0476fcab6cd21ed1a9fc7883e9276b4c9757897"
+  },
+  "localQualificationScope": "Xcode27.1/27A9275, iOS26.2/23C54; instrumented nonreproduction only, not hosted26.3 qualification",
+  "qualificationFreezeSHA256": "80929cc724ad05e65a32606b4e3b5c687fd02aad9f13df7849302fb44377b505",
+  "qualifiedSourceEntriesReverified": [
+    "ReleasePerformanceUITests.swift",
+    "endpoint-parser/scroll_signpost_diagnostic.py",
+    "endpoint-parser/test_scroll_signpost_diagnostic.py",
+    "local-result-corrected.json",
+    "runtime-review.md",
+    "post-run-identity.json"
+  ],
+  "nativeOrTestExecutionByReviewer": false,
+  "releaseAcceptance": false
+}

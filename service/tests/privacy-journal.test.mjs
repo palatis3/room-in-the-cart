@@ -103,11 +103,13 @@ test('noncanonical NDJSON spelling and duplicate keys are rejected before use', 
   const fixture = chain(a.entries);
   const first = canonical(fixture.records[0]);
   const second = canonical(fixture.records[1]);
+  assert.equal(first[0],'{');
   const spellings = [
     ['leading whitespace',' '+first],
     ['trailing whitespace',first+' '],
     ['unsorted keys',JSON.stringify(fixture.records[0])],
-    ['duplicate outer key',first.replace('{','{"version":1,')],
+    // Insert a duplicate outer key deliberately; this is not a sanitizer.
+    ['duplicate outer key','{"version":1,'+first.slice(1)],
     ['duplicate event key',first.replace('"event":{','"event":{"eventId":'+JSON.stringify(a.accepted.eventId)+',')],
     ['duplicate payload key',first.replace('"payload":{','"payload":{"version":1,')],
     ['duplicate data key',first.replace('"data":{}','"data":{"x":1,"x":1}')],

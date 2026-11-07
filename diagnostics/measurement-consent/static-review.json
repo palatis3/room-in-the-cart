@@ -1,0 +1,14 @@
+{
+  "baseSourcesMatchExactCandidate": true,
+  "manifestHashesMatch": true,
+  "patchDryRunPassed": true,
+  "testSourceIdenticalExceptOptInForwarding": true,
+  "originalBindingGetterPreserved": true,
+  "singleOriginalBindingWritePreserved": true,
+  "originalConsentDictionaryAndDefaultsWritesPreserved": true,
+  "loggerAPIHasNoIdentityOrFreeformStringParameter": true,
+  "sharedCheckoutStatus": "",
+  "swiftParseTypecheckOrCompile": "not performed; root must validate in selected toolchain before execution",
+  "nativeExecution": false,
+  "hostedExecution": false
+}

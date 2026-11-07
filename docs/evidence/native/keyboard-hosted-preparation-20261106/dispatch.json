@@ -1,0 +1,22 @@
+{
+  "id": 42309239002,
+  "head_sha": "efc1bfc5393cb21caeb3089f237619ef53cb1adc",
+  "head_branch": "codex/diagnose-keyboard-idle-804030e",
+  "event": "workflow_dispatch",
+  "created_at": "2026-11-06T23:03:39Z",
+  "run_attempt": 1,
+  "html_url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42309239002",
+  "path": ".github/workflows/ios-fixtures.yml",
+  "inputs": {
+    "expected_sha": "efc1bfc5393cb21caeb3089f237619ef53cb1adc"
+  },
+  "observedStatus": "in_progress",
+  "observedJob": {
+    "id": 128206290465,
+    "name": "Build exact keyboard diagnostic products",
+    "activeStep": "Verify exact source and create owned build simulator"
+  },
+  "dispatchCount": 1,
+  "nativeTestResult": null,
+  "releaseAcceptance": false
+}

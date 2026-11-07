@@ -1,0 +1,32 @@
+{
+  "candidate": "23a73a890afbaa23d3c58ae6b0cf63a8b2e2fb71",
+  "runID": 42021894739,
+  "jobID": 127238290542,
+  "artifactID": 13421910845,
+  "sha256": "95dc99ecce471a885fa0f100585d64a2ad267990446d3112e70481275e62fd81",
+  "digestVerified": true,
+  "selected": 1,
+  "passed": 1,
+  "failed": 0,
+  "skipped": 0,
+  "strictReplayExit": 1,
+  "runtimeWarnings": {
+    "status": "unexpected-warnings",
+    "summaryWarningCount": null,
+    "runtimeWarningCount": 2,
+    "examinedTestCount": 1,
+    "detailExportCount": 1,
+    "activityExportCount": 1,
+    "warnings": [
+      {
+        "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption",
+        "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+        "count": 2,
+        "maximum": 0
+      }
+    ]
+  },
+  "rawLogSHA256": "ec0559b95f2951f60af59f02cc3eb652d0ce32598bcd84de14a096e708901861",
+  "interpretation": "Native assertions pass, strict guard fails. Both warnings under exact fixture.s27.controls Menu tap/Synthesize event. Existing known-trip allowance covers idle phase only; same-candidate stale-save allows synthesis and lost-reply allows both. The source is a standard fixture-only SwiftUI Menu; this association does not establish application misuse or OS causality. Original result remains failed; allowance not expanded.",
+  "review": "Dot personally compared isolated detailed issues/activity exports of three digest-verified artifacts; root reviewed exact current guard mapping."
+}

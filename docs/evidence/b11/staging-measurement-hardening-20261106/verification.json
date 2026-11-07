@@ -1,0 +1,117 @@
+{
+  "checkedAt": "2026-11-06T08:21:01.136613+00:00",
+  "project": "uwjxrotnocxxomqdetzk",
+  "projectName": "Room in the Cart Staging",
+  "sourceCommit": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+  "authorization": "Owner standing authorization to fix app issues; separate additive follow-up after completed explicitly approved009\u2013029rollout.",
+  "migration": {
+    "version": "030_measurement_trigger_search_path.sql",
+    "checksum": "8706c4ae16b6670c43b7360bb7dcd563ac1413aee9c2c0ebce1204bdc1abb97f",
+    "applied_at": "2026-11-06T08:19:03.202319+00:00"
+  },
+  "providerAuditVersion": "20261106081903",
+  "providerAuditName": "ritc_030_measurement_trigger_search_path",
+  "applicationMethod": "Supabase apply_migration, whole reviewed transactional SQL; same app runner advisory key737462120 and exact application registry checksum.",
+  "applicationSHA256": "603b208389b96a4760bcec895e3b2fcd84a43f6f786f39b3c8946200d5c87a7b",
+  "rollbackSHA256": "a3c263af84e6a378ac07de057234d6bec0859b602ca6f28e8db8afb6c73a17a5",
+  "beforeCount": 29,
+  "afterCount": 30,
+  "priorRegistryPreserved": true,
+  "all30RepositoryChecksumsMatch": true,
+  "functionProof": [
+    {
+      "name": "measurement_consent_immutable",
+      "oid": "19024",
+      "bodyMD5": "126059994c8a38f05c36d338bd581389",
+      "owner": "postgres",
+      "acl": null,
+      "securityDefiner": false,
+      "priorConfig": null,
+      "currentConfig": [
+        "search_path=pg_catalog"
+      ],
+      "preservedMetadata": true
+    },
+    {
+      "name": "measurement_feedback_eligible",
+      "oid": "19026",
+      "bodyMD5": "5b8a4878f49ab3879ec65dea08ec304b",
+      "owner": "postgres",
+      "acl": null,
+      "securityDefiner": false,
+      "priorConfig": null,
+      "currentConfig": [
+        "search_path=pg_catalog"
+      ],
+      "preservedMetadata": true
+    }
+  ],
+  "tableSecurityCount": 81,
+  "allTableSecurityPreserved": true,
+  "securityAdvisor": {
+    "targetedWarningsBefore": 2,
+    "targetedWarningsAfter": 0,
+    "remainingIntentionalDefaultDenyInformationalTables": 16,
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable"
+  },
+  "publicChecks": {
+    "count": 27,
+    "passed": 27,
+    "checkedAt": "2026-11-06T08:20:09.408679+00:00",
+    "url": "https://room-in-the-cart-staging.vercel.app",
+    "deployment": "dpl_5WrPFnhZhcp51X9UWU919sULJaTh",
+    "scope": "HTTP API/page/asset checks only; browser deferred"
+  },
+  "rehearsal": {
+    "localOnly": true,
+    "migrations": {
+      "before": 29,
+      "applied": 30,
+      "rolledBack": 29,
+      "name": "030_measurement_trigger_search_path.sql",
+      "checksum": "8706c4ae16b6670c43b7360bb7dcd563ac1413aee9c2c0ebce1204bdc1abb97f"
+    },
+    "baselineDigest": "e045b01e0446988527005eae6be125c4276b44f77c272a4696fa498884882532",
+    "appliedDigest": "6810492177c30ec803168a7b4bfc0517684a365ffc638bc88995b2f6aa3f32fa",
+    "rollbackDigest": "e045b01e0446988527005eae6be125c4276b44f77c272a4696fa498884882532",
+    "appTables": 81,
+    "appRowsDigest": "e6fb2097da67a2f575ff5bd013cc0d9f35e436af5dcfd233b8f67be32536cf1f",
+    "afterRollbackAppRowsDigest": "e6fb2097da67a2f575ff5bd013cc0d9f35e436af5dcfd233b8f67be32536cf1f",
+    "lockRefusalMs": 2003,
+    "driftRefusal": [
+      "settings",
+      "advisory lock",
+      "registry timestamp",
+      "function body",
+      "table security",
+      "rollback checksum"
+    ],
+    "atomicInsertFaultReverted": true,
+    "normalRunnerAccepted030": true,
+    "applyRerunRefused": true,
+    "rollbackRerunRefused": true
+  },
+  "evidenceSHA256": {
+    "preflight-exact.json": "cd0d768c3fcffdd78d29cdef19bb0ac374faa2f094209c806e5adcf7a9ea008c",
+    "postflight-exact.json": "1be8d479c7e2e8284f1f04c8a11f523225a52ff398016ba3d983cc059757eefc",
+    "apply-result.json": "5ec9e6a0ce0b96e161f07551da8f1bbeb018126662aa02019835691dcee6a386",
+    "advisors-before.json": "c33fe57d9a76d74b007f62c8d13e2532274f5ab616b822a5c9aa55b1bcfc7e79",
+    "advisors-after.json": "bea1f432c1dd0560080e6e866dcabc305956bfc51e19b166517104a1e69785bc",
+    "provider-history-after.json": "0052111bdef38ff339ee77e81f0183ad1ae358421a66cb5f93c91ebf559c6c4e",
+    "public-checks.json": "fdbf343b1926095e701bc7383fa12e849856fbc89cd93b0f1224cd87dccc6137",
+    "rehearsal.log": "6b3f43d3b15d630f4df90b5e9033e5d540ace25371761e44ebab039917ab01e7",
+    "prepare-wrapper.py": "34a0d04440182fbc4d09db6ea0737c47f42d698d3b95bfefaf43999568545704",
+    "rehearse.mjs": "c215b44455cd8aa2294a11957a8447d84c16b72fb614a2d5c90ab76dcf04f599",
+    "rehearse.sh": "d1b5648c94b9b14537d4c0e096fe44ddb14a0f303340e6fef87fe26080eabfe1"
+  },
+  "limits": [
+    "The local rehearsal used an isolated schema fixture, not a new full managed-provider restore. Earlier verified backup and actual029restore remain detached.",
+    "The hosted operation changes only2function configurations and the application/provider migration records; no app rows are written by its SQL. Local rehearsal verified all81app table rowsets unchanged.",
+    "No server redeployment, credential rotation, provider activation, email setup or distribution change was performed.",
+    "The separate rollback SQL was tested locally and was not executed on staging."
+  ],
+  "scratchDirectory": ".build/Measurement030StagingReview20261106",
+  "references": [
+    "https://www.postgresql.org/docs/17/sql-alterfunction.html"
+  ]
+}

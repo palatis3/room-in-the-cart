@@ -98,10 +98,19 @@ public struct HelperProposals: Codable, Equatable, Sendable {
 public struct HelperProposalIntent: Codable, Equatable, Identifiable, Sendable {
     public let id: String; public let householdID: String; public let memberID: String; public let deviceID: String
     public let grantID: String; public let bytes: Data
+    private struct Input: Codable {
+        let clientKey: String
+        let baseRevision: Int
+        let correction: String
+    }
+    /// Read the reviewed revision from the exact saved request, including intents from older app versions.
+    public var reviewedRevision: Int? {
+        guard let input = try? JSONDecoder().decode(Input.self, from: bytes), input.clientKey == id, input.baseRevision > 0 else { return nil }
+        return input.baseRevision
+    }
     init(householdID: String, memberID: String, deviceID: String, grantID: String, baseRevision: Int, correction: String) throws {
         guard baseRevision > 0, !correction.isEmpty, correction.count <= 1000 else { throw ClientError.configuration }
         id = UUID().uuidString.lowercased(); self.householdID = householdID; self.memberID = memberID; self.deviceID = deviceID; self.grantID = grantID
-        struct Input: Encodable { let clientKey: String; let baseRevision: Int; let correction: String }
         bytes = try encoded(Input(clientKey: id, baseRevision: baseRevision, correction: correction))
     }
 }

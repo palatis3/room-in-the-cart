@@ -1,0 +1,16 @@
+{
+  "simulator": "79A8A00E-A5C8-4EA4-906E-56B1A854BF7A",
+  "outcomes": [
+    {
+      "command": "shutdown",
+      "exit": 0,
+      "output": ""
+    },
+    {
+      "command": "delete",
+      "exit": 0,
+      "output": ""
+    }
+  ],
+  "time": 1794025171.9840882
+}

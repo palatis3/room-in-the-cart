@@ -1,0 +1,47 @@
+{
+  "baselineHostedCandidate": "fa93f60534918ce8e040c706e80163e5d6959153",
+  "localChanges": "Five model suites use deferred teardown after weak SQLite owners release. A retained owner fails cleanup without unlinking live files. No product behavior changed.",
+  "passed": 565,
+  "failed": 0,
+  "skipped": 0,
+  "expectedFailures": 0,
+  "rawExecutionGuardExit": 0,
+  "runtimeWarningCount": 0,
+  "sqliteAPIMisuseDiagnostics": 0,
+  "deviceAndConfiguration": [
+    {
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "3DD8B7CF-812D-4483-B539-126EC029212E",
+        "deviceName": "RITC CI fixes 20261105",
+        "modelName": "iPhone 17",
+        "osBuildNumber": "23C52",
+        "osVersion": "26.2",
+        "platform": "iOS Simulator"
+      },
+      "expectedFailures": 0,
+      "failedTests": 0,
+      "passedTests": 565,
+      "skippedTests": 0,
+      "testPlanConfiguration": {
+        "configurationId": "1",
+        "configurationName": "Test Scheme Action"
+      }
+    }
+  ],
+  "changedTestHashes": {
+    "ios/Tests/DinnerAwayCarryoverTests.swift": "8be5b71e2a209fb15620cf8944e58a833059a280452161f59b00944cf542c299",
+    "ios/Tests/LedgerPackBridgeTests.swift": "89a1fb83583c60cd685877a27ff8da0a7174de34024b626bb70a37da2e7730c2",
+    "ios/Tests/LedgerPackStockReviewTests.swift": "42c617f6a5cb95d284bbaa208d076357fd0b5f53f658cc0a7e745cbedfc92079",
+    "ios/Tests/NativeCompositionStartupTest.swift": "8f88949e994ad983dd51e9482dbf9857633515dd21406ee0b1036bb265b568c2",
+    "ios/Tests/NavigationRestorationTests.swift": "dd8d43e713cd8190b52dc6e8e93feff9e0eb1e2fef7941c063379183495fab89",
+    "ios/Tests/SQLiteFixtureDirectory.swift": "1a4a5fd4d6497065f707ced23ba07e32e95167acb3b072b356cb1d75dbe6593f"
+  },
+  "evidenceHashes": {
+    "Tests.log": "73a5fdd79b6e9622d413756ef8b8ffec6e4defee5c0cfee7b0ce0917ee149f69",
+    "test-summary.json": "0723657d62d6cf88591b1b99d4f0456db495e36cb10ad55b00440ff231927f0e",
+    "test-details.json": "2bd9fbec3cb91020bac8830d167765112f87d20f813c8f8c06877e3e4013fd30",
+    "verification.txt": "68bf549d2aa5e6a05703436d82a08bbd0734192c9b0ff80002db1ef23d03a629"
+  },
+  "limits": "Local Xcode and iOS26.2 build23C52 differ from hosted26.3/23C54; fresh hosted validation remains required. Original hosted models job remains failed."
+}

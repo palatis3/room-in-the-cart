@@ -33,6 +33,7 @@ private func mealKind(_ kind: String) -> String {
 
 struct SharedMealFacts: View {
     let meal: SharedMeal
+    var deadlineIdentifier = "sharedMeal.deadlineFact"
     @Environment(\.locale) private var locale
     var body: some View {
         VStack(alignment: .leading) {
@@ -43,6 +44,9 @@ struct SharedMealFacts: View {
                 // Resolve this civil day first so an environment override cannot move it.
                 Text(verbatim: day).accessibilityIdentifier("shared-meal-civil-date")
             }
+            LabeledContent(sharedRecoveryText("Meal deadline"), value: meal.planning?.deadline?.display(locale: locale) ?? ht("Unknown"))
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier(deadlineIdentifier)
             LabeledContent(ht("Portions"), value: meal.portions.formatted())
             if meal.protected { Label(ht("Protected portions"), systemImage: "lock") }
             if let planning = meal.planning { SharedMealPlanningFacts(planning: planning) }
@@ -92,8 +96,21 @@ struct SharedMealEditor: View {
             ForEach(["dinner","lunch","side"], id: \.self) { Text(mealKind($0)).tag($0) }
         }
         DatePicker(ht("Meal day"), selection: Binding(get: { sharedMealDate(meal.day) ?? Date() },
-            set: { field(id, meal, \.day).wrappedValue = sharedMealDay($0) }), displayedComponents: .date)
+            set: { date in
+                guard let edit = model.draft.mealEdit, edit.occurrenceID == id, var current = edit.meal else { return }
+                current.move(to: sharedMealDay(date)); start(id, current)
+            }), displayedComponents: .date)
             .environment(\.timeZone, mealCalendar().timeZone)
+            .accessibilityIdentifier("sharedMeal.day")
+        if let original = meals.first(where: { $0.id == id })?.meal, original.day != meal.day,
+           original.planning?.deadline != nil && meal.planning?.deadline == nil {
+            Text(sharedRecoveryText("The new day has no deadline until you set one."))
+        }
+        SharedMealDeadlineEditor(meal: meal) { deadline in
+            guard let edit = model.draft.mealEdit, edit.occurrenceID == id, var current = edit.meal, current.day == meal.day,
+                  (try? current.setDeadline(deadline)) != nil else { return }
+            start(id, current)
+        }.id(id)
         Stepper(value: field(id, meal, \.portions), in: 1...1000) { LabeledContent(ht("Portions"), value: meal.portions.formatted()) }
         Toggle(ht("Protect these portions"), isOn: field(id, meal, \.protected))
     }
@@ -227,7 +244,7 @@ struct SharedMealMovesView: View {
         }
         model.beginEditing()
         guard model.editing else { return }
-        var meal = occurrence.meal; meal.day = move.day
+        var meal = occurrence.meal; meal.move(to: move.day)
         model.draft.mealEdit = .init(occurrenceID: occurrence.id, meal: meal, proposalID: move.id)
         dismiss(); onReviewOpened()
     }

@@ -1,0 +1,29 @@
+{
+  "shard": "ui-06",
+  "mutation": "Remove the one aggregate Runtime Warning marker from a copy of test-details.json. Original hosted summary omitted the runtimeWarnings field; original .xcresult retains the two individual warnings.",
+  "removedMarkers": [
+    "Multiple Runtime Warnings"
+  ],
+  "results": [
+    {
+      "version": "baseline",
+      "exitCode": 0,
+      "warningEvidence": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 6,
+        "detailExportCount": 0,
+        "warnings": []
+      }
+    },
+    {
+      "version": "candidate",
+      "exitCode": 1,
+      "warningEvidence": {
+        "status": "unavailable",
+        "error": "Runtime warning details disagree with test tree: RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges"
+      }
+    }
+  ]
+}

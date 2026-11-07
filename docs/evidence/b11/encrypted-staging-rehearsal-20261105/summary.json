@@ -1,0 +1,63 @@
+{
+  "status": "passed",
+  "scope": "Synthetic local PostgreSQL 17.11 / macOS diskutil AES-256 backup rehearsal.",
+  "sourceAndTarget": "Separate fresh clusters on disjoint local Unix sockets, TCP disabled. pg_dumpall roles-only without passwords plus pg_dump custom format, both written into encrypted mounted image. Source quiescent and default transaction read-only before dumps.",
+  "proof": {
+    "keyBits": 256,
+    "algorithm": "AES-CBC",
+    "wrongPassphraseRejected": true,
+    "readonlyMountFlagAndEROFSWriteProbeVerified": true,
+    "matchingArtifactSHA256AfterRemount": {
+      "roles.sql": "e9f45987299ef436128f876ea748efc5e92958e96f73288742eb5ab011f210a3",
+      "database.dump": "bf2235c11f8bba1838c3332654182bd145b16993d455f097c621d7b67f53519e"
+    },
+    "tablesChecked": 32,
+    "semanticFixtureRowsChecked": 18,
+    "registryBaselineChecksumsChecked": 8,
+    "registryAfterUpgradeChecksumsChecked": 29,
+    "retained008CopyVerifiedAfter009Through029": true,
+    "roleCatalogAndActiveIsolation": {
+      "matchedRelationOwnersRLSACL": 34,
+      "matchedPolicies": 33,
+      "matchedFunctionOwnersSecurityDefinerACL": 6,
+      "matchedColumnPrivilegeEntries": 1496,
+      "effectiveApplicationRoleChecks": "Non-owner login inherits ritc_app, cannot bypass RLS, read registry or DELETE household. No-scope reads return zero; each of two scopes returns only its own household and request."
+    },
+    "roleDumpReplay": {
+      "sameSourceAndRestoredBootstrapRoleName": true,
+      "targetBootstrapOID": 10,
+      "skippedExactlyOneExistingBootstrapCreation": true,
+      "alterRoleAndOriginalGrantorsReplayed": true,
+      "roleBackupFileModified": false
+    },
+    "cleanup": {
+      "temporaryTreeRemoved": true,
+      "privateServersStopped": true,
+      "imageAndMountRemoved": true,
+      "noKeyPersistedByScript": true
+    }
+  },
+  "priorAttempts": [
+    "1. A differently named bootstrap role failed on the original role membership grantor. Matching source bootstrap identity and omitting its one redundant CREATE allowed restoring all ALTER and original grantor clauses under ON_ERROR_STOP.",
+    "2. Raw ACL equality failed on a restored baseline object.",
+    "3. Sorting ACLs alone still compared a PostgreSQL default NULL ACL to its explicit equivalent. Evidence isolated the registry table. Final comparison expanded NULL ACLs with PostgreSQL acldefault; ownership, each effective ACL and policies continued to be compared."
+  ],
+  "limits": [
+    "Synthetic Auth tables emulate only the minimum provider relations. Hosted role mappings and Auth/Storage customizations, Storage object bytes, Vault key recovery, provider settings, credentials, external journal and post-backup erasure replay require separate recovery evidence.",
+    "Single-use random key passed via stdin; independent recoverable key custody, protected backup retention, disaster-domain separation and production restore permissions require owner decisions.",
+    "The restore drill used local pg_dump and pg_dumpall on an idle disposable source. Separate roles and database dumps require a consistent real capture window. No live backup, hosted access, or rollout performed."
+  ],
+  "sources": [
+    "https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore",
+    "https://supabase.com/docs/guides/platform/backups",
+    "https://supabase.com/docs/guides/database/vault#key-portability-and-migration",
+    "https://www.postgresql.org/docs/17/app-pg-dumpall.html"
+  ],
+  "evidenceSHA256": {
+    "rehearsal-result.json": "2375a2c770a3f688b4d914d0aaadd94706783cd7cb8df9c27eb9604598159622",
+    "rehearse.py": "d0707c92c96ca069a975eeefd34c213cba8531037c0ba30ba6f6d28290595a9a",
+    "first-attempt.json": "8d49c69d1dd58d28dfb121f23d006306bc94c3cbb72062ae5c41af120fb61450",
+    "second-attempt.json": "464d848fb6d96243d40cb72b02c27063e64afcbf979cabff21cef23c6db9646d",
+    "third-attempt.json": "f2a3c7ee63af9497f6093422a49e68db688b0d5d11f263fd62584905ae37056d"
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "candidate": "ab1779c515f925b51ffdf8dabbaf65ae2bbee3d0",
+  "scope": "Bounded diagnostic v2, instrumented local nonreproduction; not a hosted fix. All original test predicate, assertions, SDK calls and timing constants remain. No production changes.",
+  "rawEvidence": ".build/CIResearch20261105/storekit-approval-ab-diagnostic-v2",
+  "sourceFiles": 494,
+  "productFiles": 167,
+  "manifestsRecheckedUnchanged": true,
+  "buildExit": 0,
+  "driverExit": 0,
+  "patchSHA256": "32708d0a074080329fe8a22857d42625998d50d9e11c54c02b85b143fd3872e1",
+  "proposedSourceSHA256": "181bbbea2391771a55f1f1e345fdc0118b64eeeef4639aff6f01e78003d17764",
+  "sourceManifestSHA256": "4af6384a5ce7cce8b715135ec0fea53aa39a64d1e7c5ed6b8bd80c70a5051ff8",
+  "productsManifestSHA256": "edb28a24604f0cc6ec2d4046fb2eb4785b24703a6b746b02af82b5408e77413b",
+  "limits": {
+    "retainedObservations": 128,
+    "collectionSamples": 8,
+    "predicateSeconds": 10,
+    "pollMilliseconds": 100,
+    "nativeCaseSeconds": 120
+  },
+  "review": "Lumpy reviewed source-only and approved as instrumented candidate subject to native checks; no independent native execution by reviewer.",
+  "runs": [
+    {
+      "locale": "es",
+      "selected": 15,
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "nativeExit": 0,
+      "strictExit": 0,
+      "simulatorStateAfter": "Shutdown",
+      "configuration": "US Spanish app \u00b7 Spanish (Mexico) offer \u00b7 USA storefront",
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "4CBB5427-13FA-444D-85B0-FCCF136CD6C6",
+        "deviceName": "RITC Ask Approval V2 es",
+        "modelName": "iPhone 17",
+        "osBuildNumber": "23C52",
+        "osVersion": "26.2",
+        "platform": "iOS Simulator"
+      },
+      "observationHeader": "sampleLimit=128 collectionLimit=8 droppedSamples=0",
+      "retainedObservations": 67,
+      "firstMatchingObservation": "6.45169425 seconds stage=current-read finished=true busy=false report=pending deliveryTotal=1 deliverySample=[failed.not-configured] deliveryTruncated=false callbackTotal=0 callbackSample=[] callbacksTruncated=false currentRead=true currentTotal=1 sampleCount=1 sampleTruncated=false sampleVerified=1 sampleProductMatches=1 sampleTokenMatches=1 sampleNilTokens=0 sampleUnverified=0 approvedCount=1 matchingOutcome=failed.not-configured",
+      "observationAttachmentSHA256": "ed94e653dcc0aa99678e64e11f9a5a1d870973405ba07505e0cd3b0eac8e5ad3",
+      "files": {
+        "Tests.log": "926983f980c2352c6c5eaf1afd17b6996163b749d395e3736fe4c8b357d53ef7",
+        "test-summary.json": "63a193ea7f5f81235f501e01abc05ad23a4ede1ba3cc65b9883c7a15d034d67f",
+        "test-details.json": "091e7c9516fd6195bdc2acec57c496aae7df7739945617a39d0a5c8a868d812a",
+        "test-runtime-warnings.json": "fc1d9bc7aa17b457de8f1992a46b576761ae6955ea1ffc573066bf97e16cc9dc",
+        "verification.txt": "5b4d8d9c8ab349b6200b63b85048765bb991cac7f7d8768b0b917d2468a6a809",
+        "attachments/manifest.json": "37259b03c34c7e0e58ca1a49ab45bba8af88d87c46ebe7baf4244cac72c3b38c"
+      },
+      "firstSatisfiedDeliveryObservation": "6.45169425 seconds stage=current-read finished=true busy=false report=pending deliveryTotal=1 deliverySample=[failed.not-configured] deliveryTruncated=false callbackTotal=0 callbackSample=[] callbacksTruncated=false currentRead=true currentTotal=1 sampleCount=1 sampleTruncated=false sampleVerified=1 sampleProductMatches=1 sampleTokenMatches=1 sampleNilTokens=0 sampleUnverified=0 approvedCount=1 matchingOutcome=failed.not-configured"
+    },
+    {
+      "locale": "en",
+      "selected": 15,
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "nativeExit": 0,
+      "strictExit": 0,
+      "simulatorStateAfter": "Shutdown",
+      "configuration": "US English \u2014 local StoreKit",
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "E9A5976B-A9B1-4BEE-A747-63019E4DD90D",
+        "deviceName": "RITC Ask Approval V2 en",
+        "modelName": "iPhone 17",
+        "osBuildNumber": "23C52",
+        "osVersion": "26.2",
+        "platform": "iOS Simulator"
+      },
+      "observationHeader": "sampleLimit=128 collectionLimit=8 droppedSamples=0",
+      "retainedObservations": 9,
+      "firstMatchingObservation": "0.515688875 seconds stage=current-read finished=true busy=false report=pending deliveryTotal=0 deliverySample=[] deliveryTruncated=false callbackTotal=0 callbackSample=[] callbacksTruncated=false currentRead=true currentTotal=1 sampleCount=1 sampleTruncated=false sampleVerified=1 sampleProductMatches=1 sampleTokenMatches=1 sampleNilTokens=0 sampleUnverified=0 approvedCount=1 matchingOutcome=absent",
+      "observationAttachmentSHA256": "bb94df9fefba05f4c64d36ca7c7141086fb7d5bd6016b71924876f72b04fc1d7",
+      "files": {
+        "Tests.log": "9e57e0d2ce325fa99c4e6e8a64dc56d4b105599469e9a382ef8fe25982426f79",
+        "test-summary.json": "85f1a108ce3ae70ef1068bc0a7ceb92923b8e5ce3db6b9a95c2f27096bc2f9af",
+        "test-details.json": "a3b2a6508a1271c2a39483d624ed0cfb7e0367181bbcba6560a510321f451357",
+        "test-runtime-warnings.json": "fc1d9bc7aa17b457de8f1992a46b576761ae6955ea1ffc573066bf97e16cc9dc",
+        "verification.txt": "6a65c376d77a79e5cb5a63cb9fbbdcdf310475b387a9c8e5bf5c2bbf929e4c36",
+        "attachments/manifest.json": "7ad39a37e269e755a7aa87b38687b64aca8ec38972ac703af6f99965a01f39ad"
+      },
+      "firstSatisfiedDeliveryObservation": "0.644064875 seconds stage=current-read finished=true busy=false report=pending deliveryTotal=1 deliverySample=[failed.not-configured] deliveryTruncated=false callbackTotal=0 callbackSample=[] callbacksTruncated=false currentRead=true currentTotal=1 sampleCount=1 sampleTruncated=false sampleVerified=1 sampleProductMatches=1 sampleTokenMatches=1 sampleNilTokens=0 sampleUnverified=0 approvedCount=1 matchingOutcome=failed.not-configured"
+    }
+  ],
+  "limitations": [
+    "Observation work changes scheduling; local passes do not identify original hosted failure branch.",
+    "Local Xcode27.1/iOS26.2build23C52 differs from hosted Xcode26.3/build23C54.",
+    "A full log can omit exit observation; header reports dropped samples."
+  ],
+  "previewState": "Booted"
+}

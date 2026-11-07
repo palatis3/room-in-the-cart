@@ -1,0 +1,12 @@
+{
+  "changed_archived_files": [
+    "ios/UITests/ContributorRequestUITests.swift"
+  ],
+  "missing_archived_files": [],
+  "products": {
+    "DerivedData/Build/Products/RoomInTheCart_iphonesimulator27.1-arm64.xctestrun": "d959d8e1e0d23733c2ad501eeda8508db48225106bb6df72e0d04ce0fdd760ae",
+    "DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCartUITests-Runner.app/PlugIns/RoomInTheCartUITests.xctest/RoomInTheCartUITests": "e1f3bb374a034df634828f993b41579780d8e671b8942189d2f8a84b8dd99fa6",
+    "DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart.debug.dylib": "fc6c71821eda9960519d8f9670742a404547d350046ee28763e39ef794893867",
+    "DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart": "55cbf5f8afad7a8720f4d836cb4bcfe65201b25f0c77a224caf0429c3012b5d4"
+  }
+}

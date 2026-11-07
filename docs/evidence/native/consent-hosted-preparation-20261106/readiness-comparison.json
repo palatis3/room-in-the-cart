@@ -1,0 +1,30 @@
+{
+  "initialInventorySeconds": 180,
+  "createIdentityGetenvSeconds": 90,
+  "shutdownDeleteSeconds": 30,
+  "queryRetries": 0,
+  "sleepCalls": 0,
+  "originalSelectionSeconds": 143.17944,
+  "correctedDiagnosticControlSeconds": 47.655259083000004,
+  "nativeAllowancesSeconds": [
+    720,
+    900
+  ],
+  "buildRunJobMinutes": [
+    35,
+    55
+  ],
+  "prepareBootExecuteCleanupMinutes": [
+    8,
+    8,
+    40,
+    3
+  ],
+  "causalClaim": null,
+  "evidenceSHA256": {
+    "docs/evidence/native/spanish-done-diagnostic-20261106/readiness-followup.json": "8c17017b98b78141e6671eecf949a3258aba7a90784608bd2a14b35168c1a472",
+    "docs/evidence/native/spanish-done-diagnostic-20261106/readiness-recommendation.md": "9cf673f9138c4101b7fad3a2da0c2f34063a7b58dd6348007875c5b73cb5681b",
+    "docs/evidence/native/spanish-done-diagnostic-20261106/readiness-evidence.json": "35ec96d7e72bad72fff30f1c5db80948de7531b77dbbc878b0b72a43d5167b79",
+    "docs/evidence/native/spanish-done-diagnostic-20261106/hosted-4bff959-result.json": "2d4209d2ada70d3f7d2f47b7cf6c15efc2e952c5dba9768a79bfba9aff222858"
+  }
+}

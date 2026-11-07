@@ -1,0 +1,26 @@
+{
+  "package": "PyYAML",
+  "version": "6.0.3",
+  "metadataSource": "https://pypi.org/pypi/PyYAML/6.0.3/json",
+  "installerFlags": [
+    "--require-hashes",
+    "--only-binary=:all:",
+    "--no-deps",
+    "--no-cache-dir"
+  ],
+  "isolatedLocalPython": "3.9.6",
+  "hostedRunnerPythonSource": "https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md",
+  "hostedDefaultPython": "3.12.3",
+  "wheels": [
+    {
+      "filename": "pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+      "sha256": "ba1cc08a7ccde2d2ec775841541641e4548226580ab850948cbfda66a1befcdc",
+      "url": "https://files.pythonhosted.org/packages/8b/9d/b3589d3877982d4f2329302ef98a8026e7f4443c765c46cfecc8858c6b4b/pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
+    },
+    {
+      "filename": "pyyaml-6.0.3-cp39-cp39-macosx_11_0_arm64.whl",
+      "sha256": "c3355370a2c156cffb25e876646f149d5d68f5e0a3ce86a5084dd0b64a994917",
+      "url": "https://files.pythonhosted.org/packages/ae/92/861f152ce87c452b11b9d0977952259aa7df792d71c1053365cc7b09cc08/pyyaml-6.0.3-cp39-cp39-macosx_11_0_arm64.whl"
+    }
+  ]
+}

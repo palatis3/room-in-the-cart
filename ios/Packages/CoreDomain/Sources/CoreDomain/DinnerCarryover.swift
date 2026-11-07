@@ -24,22 +24,43 @@ public struct DinnerCarryoverLink: Codable, Equatable, Sendable {
     }
 }
 
+extension MealOccurrence {
+    /// Snapshot used for the new dated target. Checkout keeps its original occurrence.
+    public func carryoverSource(meal: RecoveryMeal, notes: String, sourceURL: String?,
+                                evidence: RecipeSourceEvidence?, groups: [ServingGroup]) -> MealOccurrence {
+        MealOccurrence(id: id, templateID: meal.templateID, templateRevision: meal.templateVersion,
+            title: meal.title, servings: meal.servings, notes: notes, sourceURL: sourceURL,
+            sourceEvidence: evidence, exclusions: meal.exclusions, servingGroups: groups,
+            leadTimeMinutes: meal.requiredLeadMinutes, completedSteps: [], ingredientContributionIDs: [],
+            scheduledDay: meal.scheduledDay, isHidden: isHidden, removedAt: removedAt)
+    }
+}
+
 public struct DinnerCarryoverPlan: Codable, Equatable, Sendable {
     public let occurrenceID: UUID
     public let revisionID: UUID
     public let baseRevisionID: UUID
+    public let ingredientExclusions: [String]?
+    public var targetExclusions: [String] {
+        source.exclusions + (ingredientExclusions ?? []).filter { !source.exclusions.contains($0) }
+    }
+    public let purchasedSource: MealOccurrence?
     public let source: MealOccurrence
     public let day: MealDay
     public let servings: Rational
     public let link: DinnerCarryoverLink
     public init(occurrenceID: UUID, revisionID: UUID, baseRevisionID: UUID, source: MealOccurrence,
-                day: MealDay, servings: Rational, link: DinnerCarryoverLink) {
+                day: MealDay, servings: Rational, link: DinnerCarryoverLink, purchasedSource: MealOccurrence? = nil,
+                ingredientExclusions: [String]? = nil) {
         self.occurrenceID = occurrenceID; self.revisionID = revisionID; self.baseRevisionID = baseRevisionID
+        self.ingredientExclusions = ingredientExclusions
+        self.purchasedSource = purchasedSource
         self.source = source; self.day = day; self.servings = servings; self.link = link
     }
     public func validate() throws {
         try link.validate(); try day.validate()
-        guard source.id == link.sourceOccurrenceID, source.carryover == nil, source.removedAt == nil,
+        guard purchasedSource.map({ $0.id == source.id && $0.carryover == nil && $0.removedAt == nil }) ?? true,
+              source.id == link.sourceOccurrenceID, source.carryover == nil, source.removedAt == nil,
               occurrenceID != source.id, servings > .zero, day.date != nil else { throw PickupError.invalidEvidence }
     }
 }

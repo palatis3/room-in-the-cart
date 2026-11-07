@@ -1,0 +1,29 @@
+{
+  "utc": "2026-11-06T18:58:25.892146+00:00",
+  "url": "https://versionhistory.googleapis.com/v1/chrome/platforms/android/channels/stable/versions?pageSize=5",
+  "data": {
+    "versions": [
+      {
+        "name": "chrome/platforms/android/channels/stable/versions/158.0.8127.22",
+        "version": "158.0.8127.22"
+      },
+      {
+        "name": "chrome/platforms/android/channels/stable/versions/157.0.8103.47",
+        "version": "157.0.8103.47"
+      },
+      {
+        "name": "chrome/platforms/android/channels/stable/versions/157.0.8103.46",
+        "version": "157.0.8103.46"
+      },
+      {
+        "name": "chrome/platforms/android/channels/stable/versions/157.0.8103.39",
+        "version": "157.0.8103.39"
+      },
+      {
+        "name": "chrome/platforms/android/channels/stable/versions/157.0.8103.38",
+        "version": "157.0.8103.38"
+      }
+    ],
+    "nextPageToken": "26610504"
+  }
+}

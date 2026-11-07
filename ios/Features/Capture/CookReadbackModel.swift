@@ -15,6 +15,7 @@ struct CookReadbackInstruction: Equatable, Sendable {
 
 @MainActor protocol CookSpeechPlayback: AnyObject {
     var onEnd: ((UUID) -> Void)? { get set }
+    func prepareAudio(for id: UUID, completion: @escaping @MainActor @Sendable (Bool) -> Void)
     func speak(_ text: String, localeIdentifier: String, playbackID: UUID) throws
     func pause() -> Bool
     func resume() throws -> Bool
@@ -22,7 +23,7 @@ struct CookReadbackInstruction: Equatable, Sendable {
 }
 
 @MainActor final class CookReadbackModel: ObservableObject {
-    enum State: Equatable { case stopped, speaking, paused }
+    enum State: Equatable { case stopped, preparing, speaking, paused }
     @Published private(set) var state = State.stopped
     @Published private(set) var voiceOverActive = false
     @Published private(set) var unavailable = false
@@ -68,11 +69,28 @@ struct CookReadbackInstruction: Equatable, Sendable {
         guard canStart else { checkCurrent(); return }
         stop(); unavailable = false
         let id = UUID(); playbackID = id
-        do {
-            try speech.speak(instruction.text, localeIdentifier: instruction.localeIdentifier, playbackID: id)
-            state = .speaking
-            watch(id)
-        } catch { stop(); unavailable = true }
+        watch(id)
+        prepareAudio(for: id, resuming: false)
+    }
+    private func prepareAudio(for id: UUID, resuming: Bool) {
+        state = .preparing
+        speech.prepareAudio(for: id) { [weak self] ready in
+            guard let self, self.playbackID == id, self.state == .preparing else { return }
+            // While the session was activating, this note, its authority, or the route may have changed.
+            guard resuming ? self.canContinue : self.canStart else { self.stop(); return }
+            do {
+                guard ready else { throw CaptureFailure.audioUnavailable }
+                if resuming {
+                    guard try self.speech.resume() else { throw CaptureFailure.audioUnavailable }
+                } else {
+                    try self.speech.speak(self.instruction.text, localeIdentifier: self.instruction.localeIdentifier, playbackID: id)
+                }
+                self.state = .speaking
+            } catch {
+                self.stop()
+                self.unavailable = true
+            }
+        }
     }
     func pause() {
         guard state == .speaking else { return }
@@ -81,11 +99,9 @@ struct CookReadbackInstruction: Equatable, Sendable {
         else { stop() }
     }
     func resume() {
-        guard canResume else { stop(); return }
-        do {
-            if try speech.resume() { state = .speaking }
-            else { stop(); unavailable = true }
-        } catch { stop(); unavailable = true }
+        guard state == .paused else { return }
+        guard canResume, let playbackID else { stop(); return }
+        prepareAudio(for: playbackID, resuming: true)
     }
     /// Parent may call synchronously on an authority/source change; the watchdog also checks during playback.
     func checkCurrent() { if !canContinue { stop() } }

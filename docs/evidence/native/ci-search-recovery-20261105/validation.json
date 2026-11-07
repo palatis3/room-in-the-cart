@@ -1,0 +1,128 @@
+{
+  "basePublishedCandidate": "f20feb685f95e7da1c7a23f26eff499d2696329f",
+  "observedAt": "2026-11-05T09:03:26.746992+00:00",
+  "implementation": "Dot proposed the functional scenario; root added post-timing placement, exact field clearing/replacement, stable row identity and required attachment/SQLite validation. Product code and performance limits unchanged.",
+  "sourceHashes": {
+    "ios/UITests/ReleasePerformanceUITests.swift": "bde26f21c934c1f7d0c8ff885592c2715c494cfb7ab832e286b8f1a93641484b",
+    "scripts/check_ios_performance.py": "199a08ef43a9cc85fdb22a98b9c0143ab401fe9d98554c6e5919d283cdaddc38",
+    "scripts/test_check_ios_performance.py": "9195e7655f87f8547496c7b31eacf1a3224060947b6b1d7eec81b63003caceeb"
+  },
+  "proposalArchiveSHA256": "7c5d9d07bc3da666c4823a4000d9deb61614f4554b85dda3e64579dc1f813b7f",
+  "originalFailedAttempt": {
+    "result": "Failed",
+    "durationSeconds": 313.834,
+    "cause": "Middle tap placed caret within long query. Backspace replacement left m000x987654321; the app correctly returned no matches.",
+    "sourceSHA256": "45702c5d2326aa24ebe7e39ebebb844cbfbdb0b7efb71309d7efb2b6c4757359",
+    "sourceLocation": "source-attempt-1",
+    "guardExit": 1,
+    "evidenceHashes": {
+      "Tests.log": "a20192195ffd8330244d98a3aacaedd575169f8d77f6668b2f237a425645b312",
+      "test-summary.json": "c1b25a32af3d684348f9aa7c03a2623833bf573199e7a431c8f14936744ecae7",
+      "verification.txt": "3f7e2e73d6ea0064c55867fedc695b9354239f1e013fda63e16410241933e901",
+      "source-hashes.json": "bf55e99c68072c85fb743795cb7be1bcfe8cabba155fcd16be06d06e029818a0"
+    }
+  },
+  "correctedAttempt": {
+    "result": "Passed",
+    "durationSeconds": 368.978,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "buildExit": 0,
+    "rawExecutionAndWarningGuardExit": 0,
+    "renderedEvidenceGuardExit": 0,
+    "runtimeWarnings": 0,
+    "deviceAndConfiguration": [
+      {
+        "device": {
+          "architecture": "arm64",
+          "deviceId": "FDD72F77-29DE-413E-9077-244CD38D67E2",
+          "deviceName": "RITC-Search-Recovery-2-20261105",
+          "modelName": "iPhone 17",
+          "osBuildNumber": "23C52",
+          "osVersion": "26.2",
+          "platform": "iOS Simulator"
+        },
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "passedTests": 1,
+        "skippedTests": 0,
+        "testPlanConfiguration": {
+          "configurationId": "1",
+          "configurationName": "Test Scheme Action"
+        }
+      }
+    ],
+    "toolchain": "Xcode 27.1\nBuild version 27A9275",
+    "functionalSearch": {
+      "afterRelaunch": {
+        "checkedRowAbsent": true,
+        "sameUncheckedRowFound": true,
+        "unmatchedEmpty": true
+      },
+      "beforeRelaunch": {
+        "clearedListRestored": true,
+        "replacementFoundUncheckedRow": true,
+        "unmatchedEmpty": true
+      },
+      "fixtureLineCount": 500,
+      "uncheckedRowID": "F0E039DE-C488-46BA-BF56-0B92E82E4B43",
+      "unmatchedQuery": "zz-no-such-fixture-item-987654321"
+    },
+    "persistedPickup": {
+      "sqliteQuickCheck": "ok",
+      "revision": 22,
+      "payloadSHA256": "fe7432e291226633aac8f89fcaad4bf886112033e7bc31814678e7d7ef0333a7",
+      "lineCount": 500,
+      "contributionCount": 500,
+      "importCount": 1,
+      "source": "paste",
+      "checkedCount": 20,
+      "checkedRowIDs": [
+        "0b8dd4f0-7477-4efb-8d8e-1764bf8ab77f",
+        "12e75151-2d37-458c-a43b-ebef4ec3fbcc",
+        "2a041d37-ba2b-4876-beaa-2c49dcabd74e",
+        "2fd942ab-a5b3-418f-8f2b-222340c188f5",
+        "3e9346a6-8055-402f-a53f-205a2b5b8f8a",
+        "463ff15a-c2a7-49e6-9d17-cd2d4940b87e",
+        "53883769-29d6-462a-8f8b-03bb0c174a3e",
+        "55bf3948-ef88-4eea-a24a-45d25bac9a7d",
+        "57c66a14-8d35-4d56-bde3-bbc6f72bf498",
+        "73316546-af6b-4aa3-bea1-e26185e768dd",
+        "76989984-35a1-43de-bd97-e2c98953d193",
+        "8a3a2ecc-8324-433f-9fb0-c73f2658d3d0",
+        "973ddacd-8ced-423f-aa89-d083bf1463e9",
+        "9fdfd82c-5bac-4a78-97ce-76bf6756e85b",
+        "a6c97f12-8c4d-4e5b-abd1-d983f6fa0f4e",
+        "c15cd9a7-d107-45ca-b448-89450633a4c0",
+        "c919b14d-80c1-4bcf-bcc2-ae5912f5e9bc",
+        "cb4a6c87-e04b-4674-9fd5-ef1ffd92e3c5",
+        "ea4aa2ef-6260-482f-9383-e7a8f7f74b7c",
+        "fdef7107-b559-46ea-9a9f-a8a2e3b0a399"
+      ]
+    },
+    "roundTrips": {
+      "searchP95Milliseconds": 2126.456083380617,
+      "checkP95Milliseconds": 1645.2673332532868
+    },
+    "evidenceHashes": {
+      "Tests.log": "606a7d0087d60bf7901bad20fc4733c1da79e85516edbaee3452ece11ea59e6d",
+      "test-summary.json": "0efbb7c3f480efa3f28bf452ccce2f80f746cfa1c9a007e61596ee15ff41b533",
+      "test-details.json": "a822a650443a795e14b1aff34782e3c1dd526df5514f8d7ebc2ce1178460d3bb",
+      "verification.txt": "d021b787c5f938d1c1b833f7fa253364e6fe448f28e32174d657a66ea941f8e5",
+      "calibration.json": "2c9715708acefc94ebdf53d51c1ed843f92d191eeb0a434acb667906499cd0c5",
+      "source-hashes.json": "927fc55d0458e7ee3cf6c570044c6c73f9712ddfaab29111af096ed44b01eb0b",
+      "products-sha256.txt": "b806e7b95337d6bd7c8a0f8b85ad0d6ce3d98024abefa5c68e4424bf6ef89820"
+    }
+  },
+  "verification": {
+    "pythonTests": 129,
+    "skippedPythonTests": 0,
+    "compiledReleaseBundle": "passed",
+    "compiledPerformanceInventory": "same three selectors",
+    "originalTwentySampleLoop": "byte-identical to f20feb6",
+    "dotReview": "Personally reviewed refined assertions and helper correction; eight validator tests independently passed before the helper-only correction. No concrete source defect found.",
+    "nativeLane": "Both owned simulators shut down; preview simulator remained booted and untouched."
+  },
+  "limits": "Local Xcode 27.1 / iOS 26.2 build 23C52 differs from hosted Xcode 26.3 / build 23C54. Local measurements are calibration-only; no hosted baseline was applied or changed. New assertions are not yet pushed or hosted. The first failure remains failed."
+}

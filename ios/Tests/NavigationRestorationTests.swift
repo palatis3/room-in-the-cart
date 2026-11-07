@@ -7,6 +7,7 @@ import HouseholdClient
 @MainActor final class NavigationRestorationTests: XCTestCase {
     private struct Fixture {
         let directory: URL
+        let cleanup: SQLiteFixtureDirectory
         let defaults: UserDefaults
         let access: WorkspaceAccess
         let app: AppModel
@@ -16,12 +17,14 @@ import HouseholdClient
     }
     private func fixture() async throws -> Fixture {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let cleanup = SQLiteFixtureDirectory(directory, test: self)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let defaults = try XCTUnwrap(UserDefaults(suiteName: "NavigationRestorationTests." + UUID().uuidString))
         let app = AppModel(databaseURL: directory.appendingPathComponent("comparisons.sqlite"))
         let ledger = LedgerModel(databaseURL: directory.appendingPathComponent("ledger.sqlite"))
+        cleanup.track(app, ledger)
         await app.open(); await ledger.open()
-        return Fixture(directory: directory, defaults: defaults, access: WorkspaceAccess(defaults: defaults), app: app,
+        return Fixture(directory: directory, cleanup: cleanup, defaults: defaults, access: WorkspaceAccess(defaults: defaults), app: app,
             ledger: ledger, household: HouseholdModel(outboxURL: directory.appendingPathComponent("outbox.json")),
             routes: NavigationSnapshotStore(url: directory.appendingPathComponent("navigation.json")))
     }
@@ -42,7 +45,7 @@ import HouseholdClient
         .comparison(actorID: fixture.access.localActorID, workspaceID: try XCTUnwrap(fixture.app.store?.workspaceID), recordID: record.id)
     }
     func testRelaunchRestoresSelectedTabIndependentPathsAndStableSavedSources() async throws {
-        let f = try await fixture(); defer { try? FileManager.default.removeItem(at: f.directory) }
+        let f = try await fixture()
         let created = await f.ledger.startShop(title: "Saturday pickup"); XCTAssertTrue(created)
         let shop = try XCTUnwrap(f.ledger.shop?.id), workspace = try XCTUnwrap(f.ledger.sourceWorkspaceID)
         let record = try await saveComparison(f)
@@ -53,6 +56,7 @@ import HouseholdClient
         try await f.app.store?.close()
         let reopenedApp = AppModel(databaseURL: f.directory.appendingPathComponent("comparisons.sqlite"))
         let reopenedLedger = LedgerModel(databaseURL: f.directory.appendingPathComponent("ledger.sqlite"))
+        f.cleanup.track(reopenedApp, reopenedLedger)
         let reopenedAccess = WorkspaceAccess(defaults: f.defaults)
         let second = NavigationRestorationModel(store: f.routes)
         second.bind(app: reopenedApp, ledger: reopenedLedger, household: f.household, access: reopenedAccess)
@@ -66,7 +70,7 @@ import HouseholdClient
         XCTAssertEqual(NavigationRestorationModel(store: f.routes).selection, .dinners)
     }
     func testDeletedRecordAndRetiredLedgerCannotBeRestoredOrFollowNewWorkspace() async throws {
-        let f = try await fixture(); defer { try? FileManager.default.removeItem(at: f.directory) }
+        let f = try await fixture()
         let record = try await saveComparison(f)
         let created = await f.ledger.startShop(title: "Delete this source"); XCTAssertTrue(created)
         let oldWorkspace = try XCTUnwrap(f.ledger.sourceWorkspaceID)
@@ -88,7 +92,7 @@ import HouseholdClient
         XCTAssertTrue(router(f).recordsPath.isEmpty)
     }
     func testLocalPathsDoNotCrossInstallationActorOrSelectedShop() async throws {
-        let f = try await fixture(); defer { try? FileManager.default.removeItem(at: f.directory) }
+        let f = try await fixture()
         let record = try await saveComparison(f)
         let first = router(f); first.setPath([try comparisonRoute(f, record)], for: .records)
         let anotherDefaults = try XCTUnwrap(UserDefaults(suiteName: UUID().uuidString))
@@ -100,7 +104,7 @@ import HouseholdClient
         first.reconcile(); XCTAssertTrue(first.shopPath.isEmpty)
     }
     func testEmptyStartPickupRouteAcquiresCommittedShopIdentityWithoutSavingSheetDraft() async throws {
-        let f = try await fixture(); defer { try? FileManager.default.removeItem(at: f.directory) }
+        let f = try await fixture()
         let model = router(f), workspace = try XCTUnwrap(f.ledger.sourceWorkspaceID)
         model.setPath([.shoppingList(actorID: f.access.localActorID, workspaceID: workspace, shopID: nil)], for: .shop)
         let created = await f.ledger.startShop(title: "Created through Start pickup"); XCTAssertTrue(created)
@@ -108,7 +112,7 @@ import HouseholdClient
         XCTAssertEqual(f.routes.load().shop, [.shoppingList(actorID: f.access.localActorID, workspaceID: workspace, shopID: f.ledger.shop?.id)])
     }
     func testIncomingLinkBeforeOpenAlwaysTakesPrecedenceOverSavedTabAndPath() async throws {
-        let f = try await fixture(); defer { try? FileManager.default.removeItem(at: f.directory) }
+        let f = try await fixture()
         let record = try await saveComparison(f), first = router(f)
         first.setPath([try comparisonRoute(f, record)], for: .records); first.select(.records)
         let incoming = NavigationRestorationModel(store: f.routes)
@@ -129,7 +133,7 @@ import HouseholdClient
     }
 
     func testHouseholdLocatorWaitsForFreshEnrollmentAndRevocationRemovesItDurably() async throws {
-        let f = try await fixture(); defer { try? FileManager.default.removeItem(at: f.directory) }
+        let f = try await fixture()
         let server = RestorationServer(), household = try householdModel(server, directory: f.directory)
         try await enroll(household)
         let scope = try XCTUnwrap(contextualScope(household))
@@ -149,7 +153,7 @@ import HouseholdClient
         XCTAssertTrue(relaunched.shopPath.isEmpty, "A revoked route must not resurrect on later authorized enrollment")
     }
     func testBackgroundHidesHouseholdPathUntilExplicitFreshScopeAndNeverRestoresComposerConsent() async throws {
-        let f = try await fixture(); defer { try? FileManager.default.removeItem(at: f.directory) }
+        let f = try await fixture()
         let server = RestorationServer(), household = try householdModel(server, directory: f.directory)
         try await enroll(household)
         let identity = HouseholdNavigationIdentity(try XCTUnwrap(contextualScope(household)))
@@ -164,7 +168,7 @@ import HouseholdClient
         XCTAssertTrue(first.shopPath.isEmpty); XCTAssertTrue(f.routes.load().shop.isEmpty)
     }
     func testHouseholdScopeChangeAndContributorEntryDiscardAdultPaths() async throws {
-        let f = try await fixture(); defer { try? FileManager.default.removeItem(at: f.directory) }
+        let f = try await fixture()
         let server = RestorationServer(), household = try householdModel(server, directory: f.directory)
         try await enroll(household)
         let route = RestorableDestination.household(.inbox, HouseholdNavigationIdentity(try XCTUnwrap(contextualScope(household))))
@@ -177,7 +181,7 @@ import HouseholdClient
         XCTAssertEqual(first.selection, .shop); XCTAssertTrue(first.recordsPath.isEmpty); XCTAssertEqual(f.routes.load(), .empty)
     }
     func testRestoredHouseholdLocatorRejectsDifferentFreshIdentityScopeOrPermissions() async throws {
-        let f = try await fixture(); defer { try? FileManager.default.removeItem(at: f.directory) }
+        let f = try await fixture()
         let baseline = try householdModel(RestorationServer(), directory: f.directory)
         try await enroll(baseline)
         let route = RestorableDestination.household(.inbox, HouseholdNavigationIdentity(try XCTUnwrap(contextualScope(baseline))))
@@ -195,6 +199,30 @@ import HouseholdClient
             try await enroll(fresh); restored.reconcile()
             XCTAssertTrue(restored.shopPath.isEmpty); XCTAssertTrue(f.routes.load().shop.isEmpty)
         }
+    }
+    func testVerifiedChooserIsScopedToTheExplicitEntryAndInitialAccount() async throws {
+        let f = try await fixture()
+        let server = RestorationServer()
+        let household = try householdModel(server, directory: f.directory)
+        household.email = "shopper@example.invalid"; household.code = "123456"
+        await household.verifyCode { true }
+        XCTAssertTrue(household.showingVerifiedHousehold)
+        XCTAssertEqual(household.workspaces.count, 1)
+        XCTAssertNil(household.projection)
+        XCTAssertFalse(household.keepLocalPrivate)
+
+        // Even a successful verification for a different adult cannot reuse that presentation.
+        server.subject = "second-adult"
+        household.code = "654321"
+        await household.verifyCode { true }
+        XCTAssertEqual(household.identity?.subject, "second-adult")
+        XCTAssertFalse(household.showingVerifiedHousehold)
+
+        let dismissed = try householdModel(server, directory: f.directory)
+        dismissed.email = "shopper@example.invalid"; dismissed.code = "123456"
+        await dismissed.verifyCode { false } // The entry disappeared before verification completed.
+        XCTAssertNotNil(dismissed.identity)
+        XCTAssertFalse(dismissed.showingVerifiedHousehold)
     }
     private func householdModel(_ server: RestorationServer, directory: URL) throws -> HouseholdModel {
         RestorationProtocol.server = server

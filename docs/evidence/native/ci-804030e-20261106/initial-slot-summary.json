@@ -1,0 +1,103 @@
+{
+  "at": "2026-11-06T18:38:57.818298+00:00",
+  "slots": [
+    {
+      "slot": 0,
+      "members": [
+        {
+          "run_id": 42272379472,
+          "status": "in_progress",
+          "job_id": 128079948353,
+          "job_name": "sanitizers (thread)"
+        },
+        {
+          "run_id": 42272379454,
+          "status": "pending",
+          "job_id": 128079949224,
+          "job_name": "swift-packages"
+        },
+        {
+          "run_id": 42272379477,
+          "status": "pending",
+          "job_id": 128080039031,
+          "job_name": "Build contributor, stock and carryover fixtures"
+        }
+      ]
+    },
+    {
+      "slot": 1,
+      "members": [
+        {
+          "run_id": 42272379472,
+          "status": "in_progress",
+          "job_id": 128079947828,
+          "job_name": "sanitizers (address)"
+        },
+        {
+          "run_id": 42272379454,
+          "status": "pending",
+          "job_id": 128079949373,
+          "job_name": "ios-release"
+        },
+        {
+          "run_id": 42272379477,
+          "status": "pending",
+          "job_id": 128080039679,
+          "job_name": "Build dinner decision fixture"
+        }
+      ]
+    },
+    {
+      "slot": 2,
+      "members": [
+        {
+          "run_id": 42272379490,
+          "status": "in_progress",
+          "job_id": 128079947517,
+          "job_name": "Build optimized iPhone test products"
+        },
+        {
+          "run_id": 42272379472,
+          "status": "pending",
+          "job_id": 128079949194,
+          "job_name": "storekit (en, US English \u2014 local StoreKit)"
+        },
+        {
+          "run_id": 42272379454,
+          "status": "pending",
+          "job_id": 128079949243,
+          "job_name": "ios-swift-codeql"
+        }
+      ]
+    },
+    {
+      "slot": 3,
+      "members": [
+        {
+          "run_id": 42272379472,
+          "status": "in_progress",
+          "job_id": 128079948617,
+          "job_name": "storekit (es, US Spanish app \u00b7 Spanish (Mexico) offer \u00b7 USA storefront)"
+        },
+        {
+          "run_id": 42272379454,
+          "status": "pending",
+          "job_id": 128079949075,
+          "job_name": "ios-build"
+        }
+      ]
+    },
+    {
+      "slot": 4,
+      "members": [
+        {
+          "run_id": 42272379461,
+          "status": "in_progress",
+          "job_id": 128079947669,
+          "job_name": "native-wire"
+        }
+      ]
+    }
+  ],
+  "scope": "Point-in-time admission snapshot; not proof of runner availability or full-run concurrency."
+}

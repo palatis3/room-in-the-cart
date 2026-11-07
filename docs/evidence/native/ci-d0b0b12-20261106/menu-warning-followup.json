@@ -1,0 +1,53 @@
+{
+  "originalHostedFailure": {
+    "candidate": "d0b0b12ee0cb8412f17e82c92a91013217560670",
+    "artifactID": 13476134229,
+    "group": "ui-08",
+    "selected": 6,
+    "passed": 6,
+    "failed": 0,
+    "strictReplayExit": 1,
+    "warnings": [
+      {
+        "selector": "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekReservationDraftCannotFollowAnotherPickup",
+        "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+        "count": 2,
+        "maximum": 0
+      }
+    ],
+    "activityPath": [
+      "Tap \"ledgerShopPicker\" Button",
+      "Wait for dev.roominthecart.app.debug to idle"
+    ],
+    "warningTimes": [
+      1793937875.745,
+      1793937875.761
+    ],
+    "activitySHA256": "e3db1fb310b2be660660b6d4fd01a080540c81d3b7219acad342a6efa4ec4509",
+    "scope": "Both warnings recorded while opening ledgerShopPicker in the reservation source-switch case. Exact tests pass; strict warning acceptance fails. No suppression or retry.",
+    "source": {
+      "caller": "ios/UITests/FreeJourneyUITests.swift:680",
+      "helper": "ios/UITests/FreeJourneyUITests.swift:1216",
+      "productionMenu": "ios/Features/Ledger/LedgerHomeView.swift:123",
+      "guard": "scripts/check_ios_test_results.py:97"
+    },
+    "guardDistinction": "This exact selector and pickup Menu already has a cap2 exemption only for Synthesize event. The new warnings are under post-tap idle, so this phase is rejected with allowed0. No exemption changed."
+  },
+  "reviewedVerifierReplay": {
+    "candidate": "d0b0b12ee0cb8412f17e82c92a91013217560670",
+    "originalHostedStrictFailurePreserved": true,
+    "originalArtifactID": 13476134229,
+    "revisedVerifierExit": 0,
+    "selected": 6,
+    "warningCount": 2,
+    "scope": "Same observed reservation pickup Menu warning, selector, exact iPhone17/iOS26.2/23C54 environment and cap2. Add only observed post-tap idle phase; no new warning text, broad suppression, threshold increase or test retry.",
+    "verifierSHA256": "17b8af9e6fcee857e14a3b3ea92baf8b5e410468c7e8482c89aa62c8edfdd990",
+    "negativeValidation": "31 verifier tests pass; reservation idle case also rejects third issue, other control/phase/app/selector/device/activity kind and changed warning text."
+  },
+  "sourceChanges": [
+    "scripts/check_ios_test_results.py",
+    "scripts/test_check_ios_test_results.py"
+  ],
+  "runtimeWarningExportSHA256": "8366c51f8bdc52025eff21c842b4c7fb0d5e959bca3ed4d44f68bd7fa5f707a1",
+  "classification": "Verifier follow-up only; original run remains failed, no app fix or fresh hosted acceptance claimed."
+}

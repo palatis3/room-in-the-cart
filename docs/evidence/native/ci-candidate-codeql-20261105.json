@@ -1,0 +1,70 @@
+{
+  "sourceCommit": "f0e2ac37383e76ac3812407384bf2eda968de3c4",
+  "analysisCommit": "fa769fe379f89e317102ab4bcc925e72c00d5696",
+  "identicalTreeSHA": "3e99470f07ea0e8191c9cf518c3ca5902fe39ad3",
+  "treeVerification": "GitHub merge-commit tree equals local git rev-parse f0e2ac3^{tree}; the analysis uses refs/pull/1/merge.",
+  "run": "https://github.com/palatis3/room-in-the-cart/actions/runs/41944207882",
+  "job": 126972254591,
+  "result": "success",
+  "artifact": 13379931787,
+  "settings": {
+    "CONFIGURATION": "Release",
+    "PLATFORM_NAME": "iphoneos",
+    "ARCHS": "arm64",
+    "SWIFT_OPTIMIZATION_LEVEL": "-Onone",
+    "SWIFT_ACTIVE_COMPILATION_CONDITIONS": [
+      "RELEASE"
+    ]
+  },
+  "compiledFileCount": 252,
+  "extractedASTNodes": 1888463,
+  "buildStepSeconds": 1674.336315,
+  "buildStepStartedUTC": "2026-11-05T00:59:59.1698430Z",
+  "buildSucceededUTC": "2026-11-05T01:27:53.5061580Z",
+  "analysisCompletedUTC": "2026-11-05T01:29:45Z",
+  "languageAnalyses": [
+    {
+      "category": "/language:swift",
+      "commit_sha": "fa769fe379f89e317102ab4bcc925e72c00d5696",
+      "created_at": "2026-11-05T01:29:39Z",
+      "error": "",
+      "id": 2099913394,
+      "ref": "refs/pull/1/merge",
+      "results_count": 0,
+      "rules_count": 27,
+      "warning": ""
+    },
+    {
+      "category": "/language:javascript-typescript",
+      "commit_sha": "fa769fe379f89e317102ab4bcc925e72c00d5696",
+      "created_at": "2026-11-05T00:50:46Z",
+      "error": "",
+      "id": 2099737611,
+      "ref": "refs/pull/1/merge",
+      "results_count": 0,
+      "rules_count": 87,
+      "warning": ""
+    },
+    {
+      "category": "/language:actions",
+      "commit_sha": "fa769fe379f89e317102ab4bcc925e72c00d5696",
+      "created_at": "2026-11-05T00:50:22Z",
+      "error": "",
+      "id": 2099735677,
+      "ref": "refs/pull/1/merge",
+      "results_count": 0,
+      "rules_count": 17,
+      "warning": ""
+    }
+  ],
+  "sha256": {
+    "logs.zip": "91436269105b92dc008d03d33d8da84f032884bc6aa7c7b14569874b1a675717",
+    "job.log": "7925ee3fdb71ae126cc7bcbd96a6758efcfe815e0908d46201918cd8794e5958",
+    "SwiftCodeQLBuild.log": "6cc1dfe6f727ea326f6ca5af4b4b386241cca947e3b447f6d200bd99fd119637",
+    "SwiftCodeQLSettings.log": "de90fc58a01d9da825dbda7c91ba47489e0ae868afbbec7e251070071375b61e",
+    "SwiftCodeQLToolchain.log": "f379de58a83ddd4a38b2921266f9aef2606d7d1871a3078f47283c460b0d7a45",
+    "compiled-files.json": "a13482d13034e5998ae8f90dc0f546c628b0f5e3b6d8db4b638389736698e8f4",
+    "swift.sarif": "91d36ddd09898ef2c739e135fedcd8ac2d92db8f2542321799842ec71ffdc4cd"
+  },
+  "scope": "Real traced arm64 iPhoneOS Release source compilation with optimization disabled, nonempty Swift extraction and successful CodeQL evaluation/upload. Build log lists 252 distinct Swift compile inputs; this is not exact per-file extraction coverage. CodeQL omits file-coverage reporting on this unprotected PR. The API reported 27 Swift rules and zero findings/errors/warnings at this snapshot; this does not establish absence of all vulnerabilities. Optimized distribution build was validated independently; no signed release or App Store submission."
+}

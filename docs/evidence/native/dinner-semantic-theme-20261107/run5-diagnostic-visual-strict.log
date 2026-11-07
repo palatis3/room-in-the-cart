@@ -1,0 +1,10 @@
+Executed 2 of 2 selected tests.
+
+| Test | Result | Seconds |
+|---|---|---|
+| RoomInTheCartUITests/FreeJourneyUITests/testDinnerEditorSemanticThemeDarkVisualAcceptance | Passed | 211.67 |
+| RoomInTheCartUITests/FreeJourneyUITests/testDinnerEditorSemanticThemeLightVisualAcceptance | Passed | 196.96 |
+The XCTest log confirms one start and one passing completion per selected test.
+
+The XCTest test export recorded 0 runtime warning occurrences across 2 examined tests.
+

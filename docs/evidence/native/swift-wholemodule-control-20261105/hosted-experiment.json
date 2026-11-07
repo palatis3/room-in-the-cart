@@ -1,0 +1,61 @@
+{
+  "candidate": "1fbfacaae919d780af7bceff3101a6fdad815f20",
+  "baseRuntimeSource": "ab1779c515f925b51ffdf8dabbaf65ae2bbee3d0",
+  "runID": 42083442419,
+  "jobID": 127442199030,
+  "conclusion": "failure",
+  "compileDurationSeconds": 1806,
+  "analysis": "skipped",
+  "countsAsRequiredCandidateAcceptance": false,
+  "proposedMainWorkflowChangeWithdrawn": true,
+  "runtimeSourceAndProjectByteIdenticalToBase": true,
+  "artifacts": [
+    {
+      "artifactID": 13445167548,
+      "name": "iphone-swift-codeql-build-logs-1",
+      "sha256": "7d9d8eb49f8b85c1c321cc9cdd2d1f0a560c29a520d0ba0fa4cd5d721c676ba9",
+      "bytes": 9345,
+      "digestVerified": true
+    },
+    {
+      "artifactID": 13445497531,
+      "name": "debug-artifacts",
+      "sha256": "d1afbfe34a696b3e4eacbab2a1c7be232e90d53a5881f71c1be9b260964f976b",
+      "bytes": 172130997,
+      "digestVerified": true
+    }
+  ],
+  "configuration": {
+    "Release": true,
+    "arm64IPhoneOS": true,
+    "optimization": "-Onone",
+    "mode": "wholemodule",
+    "runtimeModules": 8,
+    "compilerCacheDisabled": true,
+    "legacyDriver": true,
+    "compileTimeoutMinutes": 30,
+    "jobTimeoutMinutes": 45
+  },
+  "runtimeExtractorInvocations": 8,
+  "baselineRuntimeExtractorInvocations": 32,
+  "manifestExtractorInvocations": 5,
+  "scope": {
+    "directlyLoggedPackageAndExtensionInputs": 60,
+    "expectedAppInputs": 194,
+    "appFilelistRetained": false,
+    "completedAppExtractionProven": false,
+    "note": "Unretained temporary response file prevents independent verification of app inputs. Identical source/project proves intended scope only; do not interpret unlogged inputs as deliberate exclusions."
+  },
+  "timing": {
+    "stepToBuildServiceSeconds": 902,
+    "stepToAppFrontendSeconds": 1289,
+    "manifestFrontendToFirstExtractorSeconds": 468,
+    "extractorWrapperHelperToExtractorRealSilentGapSeconds": 385,
+    "appExtractorToTimeoutSeconds": 312
+  },
+  "interpretation": "Fewer extractor invocations did not remove startup delay or allow analysis to complete. Translation, memory pressure and host contention remain unmeasured. Existing semantic diagnostics persist. This is not evidence of an app-code regression.",
+  "followup": "Measure unchanged build with bounded privacy-preserving resource telemetry; no supported manifest cache/concurrency fix established.",
+  "rawEvidence": ".build/CIResearch20261105/experiments/wholemodule-1fbfaca",
+  "reviewSHA256": "5d3f23da00100234029645f713aefe0d07c77da315af321f6b94d395ab49cb7c",
+  "setupReviewSHA256": "c00a9e4e3d20d0cf665587daffa97bb8611e90182bdc3e6e756ebb74438cb7f4"
+}

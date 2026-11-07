@@ -60,8 +60,8 @@ struct MembershipView: View {
                     Text(mtr("Purchases are not available in this build."))
                 }
                 if model.isBusy { ProgressView(mtr("Checking with Apple and your household…")) }
-                if let notice = model.notice {
-                    Text(noticeText(notice)).accessibilityIdentifier("membership.notice")
+                ForEach(model.statusMessages) { message in
+                    Text(membershipStatusMessageText(message)).accessibilityIdentifier(message.id)
                 }
             }
             if let seats = model.state.snapshot?.seats {
@@ -123,24 +123,50 @@ struct MembershipView: View {
         }
     }
 
-    private func noticeText(_ notice: MembershipModel.Notice) -> String {
-        switch notice {
-        case .pending: return mtr("Purchase pending Apple approval. Paid access has not been added.")
-        case .cancelled: return mtr("Purchase canceled. No paid access was added.")
-        case .restored: return mtr("Your verified Household membership was restored.")
-        case .delivered: return mtr("Apple’s transaction was saved by your household service. Your membership status is shown above.")
-        case .failed(let failure):
-            switch failure {
-            case .signInRequired: return mtr("Sign in to an adult account and select its household to restore or subscribe.")
-            case .wrongHousehold, .accountMismatch: return mtr("This purchase belongs to another account or household. Use the original purchasing account to restore it.")
-            case .unverified, .invalidReceipt, .invalidSnapshot, .serverRejected: return mtr("The purchase could not be verified. Paid access has not been added. Try Restore Purchases or contact support.")
-            case .notConfigured: return mtr("Purchases are not available in this build.")
-            case .unavailable: return mtr("No active membership was found, or Apple’s offer is unavailable. Try again. Free access remains available.")
-            case .membershipInactive: return mtr("Household access is inactive. Your Free work remains available.")
-            case .notPurchaser: return mtr("Your named seat uses this household’s membership. Only its purchaser can subscribe or change seats.")
-            case .refreshRequired: return mtr("Membership changed. Refresh its status and review the seat change again.")
-            case .deliveryPending: return mtr("Purchase delivery is pending. Use Restore Purchases when connected. You can use Free while waiting.")
-            }
+}
+
+func membershipStatusMessageText(_ message: MembershipModel.StatusMessage) -> String {
+    switch message {
+    case .pendingReport: return membershipNoticeText(.pending)
+    case .cancelledReport: return membershipNoticeText(.cancelled)
+    case .unverifiedReport: return membershipNoticeText(.failed(.unverified))
+    case .purchaseFailure(let issue):
+        return mtr("Apple’s purchase response needs review.") + " " + membershipNoticeText(.failed(issue))
+    case .deliveryInFlight:
+        return mtr("A verified App Store transaction is being delivered to your household service.")
+    case .deliverySaved: return membershipNoticeText(.delivered)
+    case .deliveryFailure(let issue):
+        return mtr("A verified App Store transaction needs delivery review.") + " " + membershipNoticeText(.failed(issue))
+    case .callbackRejection(let issue):
+        switch issue {
+        case .accountMismatch, .wrongHousehold:
+            return mtr("An earlier App Store update did not match this account or household. Use its purchasing account to restore it. Current membership access is shown above.")
+        case .unverified:
+            return mtr("An earlier App Store update could not be verified. Use Restore Purchases or contact support. Current membership access is shown above.")
+        default:
+            return mtr("An earlier App Store update could not be used.") + " " + membershipNoticeText(.failed(issue))
+        }
+    case .otherNotice(let notice): return membershipNoticeText(notice)
+    }
+}
+
+func membershipNoticeText(_ notice: MembershipModel.Notice) -> String {
+    switch notice {
+    case .pending: return mtr("Apple reported a pending purchase status. Use Restore Purchases to check current membership access.")
+    case .cancelled: return mtr("Apple reported a canceled purchase. Current membership access is shown above.")
+    case .restored: return mtr("Your verified Household membership was restored.")
+    case .delivered: return mtr("An App Store transaction was saved by your household service. Current membership access is shown above.")
+    case .failed(let failure):
+        switch failure {
+        case .signInRequired: return mtr("Sign in to an adult account and select its household to restore or subscribe.")
+        case .wrongHousehold, .accountMismatch: return mtr("An App Store transaction or membership response does not match this account or household. Use the purchasing account to restore it.")
+        case .unverified, .invalidReceipt, .invalidSnapshot, .serverRejected: return mtr("An App Store transaction could not be verified. Use Restore Purchases or contact support. Current membership access is shown above.")
+        case .notConfigured: return mtr("Purchases are not available in this build.")
+        case .unavailable: return mtr("That membership operation could not be completed. Try again or use Restore Purchases; current access is shown above.")
+        case .membershipInactive: return mtr("Household access is inactive. Your Free work remains available.")
+        case .notPurchaser: return mtr("Your named seat uses this household’s membership. Only its purchaser can subscribe or change seats.")
+        case .refreshRequired: return mtr("Membership changed. Refresh its status and review the seat change again.")
+        case .deliveryPending: return mtr("Purchase delivery is pending. Use Restore Purchases when connected. You can use Free while waiting.")
         }
     }
 }

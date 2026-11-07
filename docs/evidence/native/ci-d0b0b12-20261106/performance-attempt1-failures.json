@@ -1,0 +1,161 @@
+{
+  "candidate": "d0b0b12ee0cb8412f17e82c92a91013217560670",
+  "run": 42149899549,
+  "artifactProof": {
+    "scroll": {
+      "artifactID": 13473835632,
+      "zipSHA256": "d134402d7527b89c8fa6b56ab19f54c0872f6d94ae3026467501601255610cad",
+      "digestMatched": true,
+      "archiveBytes": 4934377
+    },
+    "rendered": {
+      "artifactID": 13472964024,
+      "zipSHA256": "bc4d695215e1614dbdb7455a769faff25578b2e91d493d0f2621ca0a8eee8a7f",
+      "digestMatched": true,
+      "archiveBytes": 364
+    }
+  },
+  "scroll": {
+    "job": 127672626907,
+    "xctest": "one selected test passed, one start, one completion, zero runtime warnings",
+    "strictReplayedRejection": "Missing required performance metric: com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.duration",
+    "calibrationAbsentReason": "check_metrics raises before write_report, before ledger readback or baseline comparison",
+    "metricIDs": [
+      "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_peak",
+      "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical",
+      "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_absolute"
+    ],
+    "signpostDiagnostic": {
+      "schemaVersion": 1,
+      "diagnosticOnly": true,
+      "captureStatus": "ok",
+      "activityStatus": "ok",
+      "metric": "com.apple.UIKit:ScrollView Scroll_DraggingAndDeceleration",
+      "windows": [
+        {
+          "case": "warm-up",
+          "eventCount": 2,
+          "pairCount": 1,
+          "pairs": [
+            {
+              "durationSeconds": 2.617
+            }
+          ]
+        },
+        {
+          "case": "measured swipe 1",
+          "eventCount": 2,
+          "pairCount": 1,
+          "pairs": [
+            {
+              "durationSeconds": 2.582
+            }
+          ]
+        },
+        {
+          "case": "measured swipe 2",
+          "eventCount": 2,
+          "pairCount": 1,
+          "pairs": [
+            {
+              "durationSeconds": 2.566
+            }
+          ]
+        },
+        {
+          "case": "measured swipe 3",
+          "eventCount": 2,
+          "pairCount": 1,
+          "pairs": [
+            {
+              "durationSeconds": 2.567
+            }
+          ]
+        },
+        {
+          "case": "measured swipe 4",
+          "eventCount": 2,
+          "pairCount": 1,
+          "pairs": [
+            {
+              "durationSeconds": 2.585
+            }
+          ]
+        },
+        {
+          "case": "measured swipe 5",
+          "eventCount": 2,
+          "pairCount": 1,
+          "pairs": [
+            {
+              "durationSeconds": 2.584
+            }
+          ]
+        }
+      ],
+      "parsedEventCount": 104,
+      "candidateLineCount": 104,
+      "unparsedCandidateCount": 0,
+      "timeZoneOfLog": "UTC",
+      "matchedProcessCount": 1,
+      "status": "captured"
+    },
+    "priorSameEnvironment": "3d26f1f scroll calibration baseline-passed with required XCTest duration median2.578204s; performance test,workflow,validator,selector unchanged throughd0b0b12.",
+    "interpretation": "UIKit produced measured-swipe signposts but XCTest duration series is absent. The missing mandatory performance measurement remains a failure. Diagnostic durations retain diagnostic-only status.",
+    "jobURL": "https://github.com/palatis3/room-in-the-cart/actions/runs/42149899549/job/127672626907"
+  },
+  "rendered": {
+    "job": 127672626902,
+    "failedStep": "Boot and verify a fresh Release installation",
+    "exit": 60,
+    "testStep": "skipped",
+    "hostedStrictStep": "skipped",
+    "archiveContents": [
+      "selector.txt",
+      "toolchain.txt"
+    ],
+    "bootFinishedUTC": "2026-11-06T03:04:40.046064Z",
+    "failureUTC": "2026-11-06T03:06:16.064272Z",
+    "error": "NSPOSIXErrorDomain60 Operation timed out",
+    "inference": "pbcopy is the remaining unsuppressed failing command after successful Finished; get_app_container output is redirected and its nonzero result occurs within if. Exact stage commands were not traced.",
+    "secondaryLocalError": "Strict replay raises FileNotFoundError because test-summary.json does not exist. No rendered XCTest ran.",
+    "jobURL": "https://github.com/palatis3/room-in-the-cart/actions/runs/42149899549/job/127672626902"
+  },
+  "bootstrapComparison": {
+    "renderedBootSeconds": 99,
+    "scrollBootSeconds": 99,
+    "renderedPostBootToStepFailureSecondsApprox": 98,
+    "scrollPostBootToNextStepSecondsApprox": 122
+  },
+  "nextAction": "Root will decide and perform one targeted rendered-job retry because no XCTest began, preserving the original failed attempt. Scroll remains unresolved with its required XCTest duration series missing; no diagnostic substitution or rerun to obtain passing status.",
+  "existingRecoveryReview": "scripts/discover_ios_tests.py handles an exact missing Debug host registration error by installing that compiled app. That signature and affected service are absent here. There is no scripts/run_ios_performance.sh in current checkout or d0b0b12.",
+  "changes": "Read-only diagnosis and scratch evidence only; no native executions, retries,source changes,or limit changes.",
+  "evidenceSHA256": {
+    "rendered-job.log": "e39ba3683528509ae5bba3bd6003a6937a92ca4ad524a2c902814b581e42ded4",
+    "scroll-job.log": "c42a1daf63bbb20e87997db267375f7b907869c809e5db8f605ad56cdff64aab",
+    "rendered-excerpt.txt": "05bc0f9a2d584b9db15735b1152d03cf873100bad0f56b582cbb5eb1cc155228",
+    "scroll-excerpt.txt": "7f9aa2fbd0649b3d457cc245d99fb6a8f91538b360de6bd758409dbbdedd3445"
+  },
+  "sourceComparison": {
+    "priorHead": "3d26f1f2316586de89060b7ed2310c193206371f",
+    "candidateHead": "d0b0b12ee0cb8412f17e82c92a91013217560670",
+    "files": {
+      "ios/UITests/ReleasePerformanceUITests.swift": {
+        "identical": true,
+        "sha256": "bde26f21c934c1f7d0c8ff885592c2715c494cfb7ab832e286b8f1a93641484b"
+      },
+      ".github/workflows/ios-performance.yml": {
+        "identical": true,
+        "sha256": "15d9861f35391a6ce1f1037c342a11e324f44050c96f78c86aa9a275541b8027"
+      },
+      "scripts/check_ios_performance.py": {
+        "identical": true,
+        "sha256": "199a08ef43a9cc85fdb22a98b9c0143ab401fe9d98554c6e5919d283cdaddc38"
+      },
+      "scripts/select_ci_iphone.py": {
+        "identical": true,
+        "sha256": "8ebdee4db935d8b8039f17fb8b23909043b3095486e35ecfd713199d6a1b3c67"
+      }
+    }
+  }
+}

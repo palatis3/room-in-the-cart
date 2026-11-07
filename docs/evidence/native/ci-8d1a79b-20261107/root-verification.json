@@ -1,0 +1,8 @@
+{
+  "candidate": "8d1a79b22981148839c6e3d0827c6710f877a369",
+  "manifestSHA256": "f1092ab46ea283aaec249e53bda19287ec19aa034f6b4995a7d775c86a9d0204",
+  "verifiedFiles": 9472,
+  "verifiedBytes": 1611237149,
+  "allExact": true,
+  "scope": "Root independently rehashed every frozen file; no artifacts or raw media were extracted"
+}

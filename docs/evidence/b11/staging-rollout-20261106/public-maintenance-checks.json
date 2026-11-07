@@ -1,0 +1,87 @@
+{
+  "checkedAt": "2026-11-06T06:25:43.427320+00:00",
+  "url": "https://room-in-the-cart-staging.vercel.app",
+  "checks": [
+    {
+      "path": "/internal/maintenance",
+      "method": "GET",
+      "authenticated": false,
+      "status": 401,
+      "expected": 401,
+      "pass": true,
+      "result": {
+        "error": "unauthorized"
+      }
+    },
+    {
+      "path": "/api/maintenance",
+      "method": "GET",
+      "authenticated": false,
+      "status": 401,
+      "expected": 401,
+      "pass": true,
+      "result": {
+        "error": "unauthorized"
+      }
+    },
+    {
+      "path": "/internal/maintenance",
+      "method": "POST",
+      "authenticated": true,
+      "status": 405,
+      "expected": 405,
+      "pass": true,
+      "result": {
+        "error": "method_not_allowed"
+      }
+    },
+    {
+      "path": "/internal/maintenance",
+      "method": "GET",
+      "authenticated": true,
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "result": {
+        "event": "operations_result",
+        "mode": "run",
+        "durationMs": 77,
+        "batchSize": 25,
+        "logoutProviderConfigured": false,
+        "privacyJobProcessingEnabled": false,
+        "privacyJournal": {
+          "state": "disabled",
+          "capacity": null
+        },
+        "auth": {
+          "expiredQueued": 0,
+          "emailsCleared": 0,
+          "authPurged": 0,
+          "rateBucketsPurged": 0,
+          "logoutCompleted": 0,
+          "logoutRetryScheduled": 0,
+          "logoutExpiredUnconfirmed": 0,
+          "leaseLost": 0
+        },
+        "privacy": {
+          "receiptsCleared": 0,
+          "jobsPurged": 0
+        },
+        "guardian": {
+          "expired": 0,
+          "purged": 0,
+          "retentionConfigured": false
+        },
+        "health": {
+          "authDue": 0,
+          "authRetryPending": 0,
+          "authExpiredUnconfirmed": 0,
+          "privacyPending": 0,
+          "privacyDue": 0
+        },
+        "attentionRequired": false
+      }
+    }
+  ],
+  "executionSource": "manual HTTP verification; not a scheduled invocation"
+}

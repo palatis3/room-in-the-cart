@@ -1,0 +1,176 @@
+{
+  "synthetic": true,
+  "lane": "adult",
+  "mode": "online",
+  "primedRole": null,
+  "counts": {
+    "authStarts": 0,
+    "verifies": 0,
+    "redeems": 0,
+    "activations": 0,
+    "commandPosts": 4,
+    "commandEffects": 3,
+    "exactCommandRetries": 1,
+    "proposalPosts": 0,
+    "proposalEffects": 0,
+    "exactProposalRetries": 0,
+    "logoutAttempts": 1,
+    "logoutEffects": 1,
+    "forbidden": 0
+  },
+  "events": [
+    {
+      "control": "prime contributor"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/households/fixture-house/requests/mine",
+      "bodySHA256": null
+    },
+    {
+      "control": "mode offline-api"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/session",
+      "bodySHA256": null
+    },
+    {
+      "control": "mode online"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/households/fixture-house/requests/mine",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "POST",
+      "path": "/v1/households/fixture-house/commands",
+      "bodySHA256": "50f18191c9ff3d9c648e44b85954167b844cbbaf8edcd48988c86e40b0fe1681"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/households/fixture-house/requests/mine",
+      "bodySHA256": null
+    },
+    {
+      "control": "lose command"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "POST",
+      "path": "/v1/households/fixture-house/commands",
+      "bodySHA256": "1da4521868cbd401b6edf8304e27b46472b72b55253eee2362c67e51e9b988d1"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "POST",
+      "path": "/v1/households/fixture-house/commands",
+      "bodySHA256": "1da4521868cbd401b6edf8304e27b46472b72b55253eee2362c67e51e9b988d1"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/households/fixture-house/requests/mine",
+      "bodySHA256": null
+    },
+    {
+      "control": "lose command"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "POST",
+      "path": "/v1/households/fixture-house/commands",
+      "bodySHA256": "edc3fa00acb7d71eb5ae74e7f9737b4aabcc654a5028a93ea327cde9bcf9d9ae"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "GET",
+      "path": "/v1/households/fixture-house/requests/mine",
+      "bodySHA256": null
+    },
+    {
+      "control": "mode offline-delete"
+    },
+    {
+      "method": "DELETE",
+      "path": "/v1/session",
+      "bodySHA256": null
+    },
+    {
+      "control": "rotate-csrf"
+    },
+    {
+      "control": "mode online"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/session",
+      "bodySHA256": null
+    },
+    {
+      "method": "DELETE",
+      "path": "/v1/session",
+      "bodySHA256": null
+    }
+  ],
+  "requestCount": 3,
+  "proposalCount": 0,
+  "childCounts": {
+    "starts": 0,
+    "verifies": 0,
+    "claimPosts": 0,
+    "claims": 0,
+    "finishPosts": 0,
+    "finishes": 0,
+    "ownReads": 0,
+    "forbidden": 0,
+    "exactClaimRetries": 0,
+    "exactFinishRetries": 0
+  }
+}

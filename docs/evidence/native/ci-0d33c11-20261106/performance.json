@@ -1,0 +1,151 @@
+{
+  "candidate": "0d33c11d43a97d670bf56d104d3260cad9b3f202",
+  "runID": 42215222404,
+  "cases": {
+    "launch": {
+      "attempt": 1,
+      "artifactID": 13502910462,
+      "sha256": "e8f64df7a1a42619a6ef6c018dce9f5d033a41eb702076748ea9263b6c2e4420",
+      "digestVerified": true,
+      "strictReplayExit": 0,
+      "measurementReplay": "passed",
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": 0,
+      "metricIdentifiers": [
+        "com.apple.dt.XCTMetric_ApplicationLaunch-ApplicationFirstFramePresentationResponsive.duration"
+      ],
+      "comparisons": {
+        "responsiveLaunchMedianSeconds": {
+          "measured": 3.598833834,
+          "maximum": 5.5,
+          "passed": true
+        }
+      },
+      "calibrationSHA256": "f5e711a2be1d6666ab18164e53511a78c969cb72e8d0f43f98afeec06697894a",
+      "hostedPickupReadback": null,
+      "simulatorHitches": null,
+      "rawLogSHA256": "2e5e29665fae541f282c274d68d69f8bc8194c8a540ae3124cb077ce6a83e3be"
+    },
+    "scroll": {
+      "attempt": 1,
+      "artifactID": 13502513337,
+      "sha256": "e8511c7e1defecc4d6b4a2ea1e9bc51cf3654abf831a9f5264da229b14593ccc",
+      "digestVerified": true,
+      "strictReplayExit": 0,
+      "measurementReplay": "passed",
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": 0,
+      "metricIdentifiers": [
+        "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical",
+        "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_absolute",
+        "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_peak",
+        "com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.duration"
+      ],
+      "comparisons": {
+        "scrollMedianSeconds": {
+          "measured": 2.5789600000000004,
+          "maximum": 3.25,
+          "passed": true
+        },
+        "absoluteMemoryMedianKilobytes": {
+          "measured": 108420.992,
+          "maximum": 150000,
+          "passed": true
+        },
+        "peakMemoryMedianKilobytes": {
+          "measured": 108699.52,
+          "maximum": 155000,
+          "passed": true
+        },
+        "maximumPeakMemoryKilobytes": {
+          "measured": 108945.28,
+          "maximum": 160000,
+          "passed": true
+        }
+      },
+      "calibrationSHA256": "a24bd0ce30a5a00f16552332cf0a7cc0e0ed99e97a18f4d2ed049235d6e61de6",
+      "hostedPickupReadback": {
+        "sqliteQuickCheck": "ok",
+        "revision": 2,
+        "payloadSHA256": "56f73bcbcd28fb70628a52ea509c0a443df79f8638dad0f2e357c24f959b1e0a",
+        "lineCount": 500,
+        "contributionCount": 500,
+        "importCount": 1,
+        "source": "paste",
+        "checkedCount": 0,
+        "checkedRowIDs": []
+      },
+      "simulatorHitches": {
+        "status": "unavailable",
+        "detail": "XCTest emitted scroll duration and memory, but no animation hitch samples on this simulator. This run cannot evaluate frame hitches."
+      },
+      "rawLogSHA256": "0f2eb0dc62f55daf6c1e189bbe76a1d94507d58b9d39f4b689787569043e127e"
+    },
+    "rendered": {
+      "attempt": 1,
+      "artifactID": 13503895032,
+      "sha256": "79cb6d75f1f729d955c6e980ad9504cfa81141b3febf5af39b1d3aeb3191c081",
+      "digestVerified": true,
+      "strictReplayExit": 0,
+      "measurementReplay": "passed",
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": 0,
+      "comparisons": {
+        "searchP95Milliseconds": {
+          "measured": 2449.788541666635,
+          "maximum": 4750,
+          "passed": true
+        },
+        "checkP95Milliseconds": {
+          "measured": 2039.435874999981,
+          "maximum": 3750,
+          "passed": true
+        }
+      },
+      "calibrationSHA256": "c651f7baf101c49e4c4d7d2f4b9d0708b7b06e7cc731433e3d3eac824da20046",
+      "hostedPickupReadback": {
+        "sqliteQuickCheck": "ok",
+        "revision": 22,
+        "payloadSHA256": "af34c0b47ffef79cbafba0ac4551893edbe17387977614c9236c5e9712654490",
+        "lineCount": 500,
+        "contributionCount": 500,
+        "importCount": 1,
+        "source": "paste",
+        "checkedCount": 20,
+        "checkedRowIDs": [
+          "03a206d6-635e-4155-9e87-fdea7dcc4791",
+          "1abbafd6-96dc-45ca-9feb-2ad0206c1e71",
+          "22d4d858-66ed-4557-998b-26522c0cb46d",
+          "4b2fdf08-b256-4dea-967a-c2f66f16add6",
+          "4f66d525-ecae-4200-9f9f-b3bfd291121b",
+          "5293eaa6-9554-4b68-b7f2-a1c23844636c",
+          "57ff9078-e454-481f-b470-b39044df7f98",
+          "5d6643df-9675-49f0-93a4-8335cf4b3b01",
+          "7be4055d-a85b-4a24-a68c-c7eb3659a5d8",
+          "8041d198-93f2-4cba-990a-419020e7b20a",
+          "93a5350d-ff28-46eb-9e06-e12dc1c217f5",
+          "981d541b-9e7d-429c-b03f-331c033b0586",
+          "b0240c39-66df-45c3-a713-84b2995bd2e0",
+          "b2842642-5de7-4321-bf36-2941b5cc0dc3",
+          "bbdffea9-5e7e-43dd-bd22-a82235f18e14",
+          "bcc51b33-9064-4e14-86b3-99e44a3a3e6a",
+          "d1210512-8e01-47e1-807e-5c19c8ee478e",
+          "e0722acc-1846-493c-9857-07367aeb0a5c",
+          "e83f363b-b252-4658-82cb-62d8b6baf339",
+          "ed955549-b539-421f-a4b9-075df5612863"
+        ]
+      },
+      "simulatorHitches": null,
+      "rawLogSHA256": "932e086569ae150c6ff4efab1a3ba5cca0d86419efc40f4b365279b3e1ebe7fd"
+    }
+  },
+  "limits": [
+    "Simulator evidence only. Hosted SQLite reported readback is verified from retained report, not a second local database read."
+  ]
+}

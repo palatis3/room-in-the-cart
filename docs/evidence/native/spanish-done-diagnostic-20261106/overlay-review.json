@@ -1,0 +1,17 @@
+{
+  "baseCommit": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+  "patchSHA256": "9d761dff5a769a95c7bcc7237e92633aa312beeae5da889b6e435e72be294aef",
+  "patchBytes": 90227,
+  "fileCount": 11,
+  "syntheticTestsPassed": 27,
+  "actionlintExit": 0,
+  "bashSyntaxExit": 0,
+  "pythonASTParsingPassed": true,
+  "exactB359SourceNormalizationPassed": true,
+  "swiftCompiled": false,
+  "nativeOperationsPerformed": false,
+  "hostedOperationsPerformed": false,
+  "gitMutationsPerformed": false,
+  "workflow": "Diagnostic-branch replacement of registered ios-fixtures.yml; manual dispatch only.",
+  "revision": "v2: explicit runtime build and actual checks; target-PID coverage; cancellation remains failure; accurate strict replay limitation"
+}

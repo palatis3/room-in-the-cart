@@ -1,0 +1,48 @@
+{
+  "exercise": "Hosted b95a179, core 42113018695 ui-08/127552846046 late system share presentation",
+  "design": "One Debug binary and runner. Same SwiftUI handoff screen, fixed dated three-line Wraps text and callback reporter. Direct variant calls present from the foreground scene root. SwiftUI variant presents the production UIViewControllerRepresentable via .sheet(item:). Both use one Share tap, one 15-second wait for an actionable English Close, exact frozen text, one Close tap if ready, and up to 8 seconds for a single cancellation callback and visible snapshot. No app prelaunch, retries, private selectors or destination selection. Fresh iPhone 17, iOS 26.2 build 23C54 per variant, sequential execution, 720/900 limits.",
+  "toolchain": "Local Xcode 27.1; hosted Xcode 26.3.",
+  "variants": {
+    "uikit": {
+      "device": "E18E4B64-04F2-4050-B65E-3BE2231CC33A",
+      "selector": "ShareControlUITests/ShareControlUITests/testUIKitPresentation",
+      "result": "Failed",
+      "xcodeExit": 65,
+      "strictExit": 1,
+      "XCTestRuntimeWarnings": 0,
+      "strictReport": "Executed 1 of 1 selected tests.\n\n| Test | Result | Seconds |\n|---|---|---|\n| ShareControlUITests/ShareControlUITests/testUIKitPresentation | Failed | 37.92 |\n\nThe XCTest test export recorded 0 runtime warning occurrences across 1 examined tests.\nExecuted and passing counts do not match the selected tests\nThe shard contains failures, expected failures or skipped tests\nEvery selected test must individually report Passed\nXCTest logged a failure for ShareControlUITests/ShareControlUITests/testUIKitPresentation at log line 82.\nXCTest log requires one start then one pass for ShareControlUITests/ShareControlUITests/testUIKitPresentation; found ['start', 'non-passing or unrecognized completion'].\nXCTest log requires one successful result banner; found ['FAILED'].\n\n",
+      "videoSHA256": "f3ccb700547a62f134d3b7f7d9dd144df3ea3bfea6e3811c0313ab93d97012a8",
+      "phases": {
+        "readiness-failure-state_0_62DC84F9-B92E-4CD2-AD8E-C57538DDD23D.txt": "0F034AC4-12F1-4AE2-9F31-AAA5E840CA3A.txt",
+        "readiness-failure-screen_0_79AF11AC-656F-4C1F-B9A3-BD4F9C83181E.png": "BC06464E-B51A-46F3-9CD3-C71C080FC852.png",
+        "before-state_0_CE6BC92A-ADA6-4D65-8B69-6F22612B2ABF.txt": "587D7563-92A6-4C08-917F-BBA5C9862360.txt",
+        "before-screen_0_7034DBAB-6118-4042-9398-4C3589FC9803.png": "122D2869-80E9-4F34-829C-C256B5FA4141.png"
+      },
+      "finding": "The app presented a populated compact native popover, with the matching caption, Reminders, More, Copy, Save to Files and an accessibility element labelled dismiss popup. There was no Close button. Captured state at 17.58s after initial tap request. The 15-second Close guard failed; no attempt at dismissal or callback verification followed."
+    },
+    "swiftui": {
+      "device": "4097C4C5-B6F0-491E-9FEF-2659B8F126BD",
+      "selector": "ShareControlUITests/ShareControlUITests/testSwiftUISheet",
+      "result": "Passed",
+      "xcodeExit": 0,
+      "strictExit": 0,
+      "XCTestRuntimeWarnings": 0,
+      "strictReport": "Executed 1 of 1 selected tests.\n\n| Test | Result | Seconds |\n|---|---|---|\n| ShareControlUITests/ShareControlUITests/testSwiftUISheet | Passed | 23.95 |\nThe XCTest log confirms one start and one passing completion per selected test.\n\nThe XCTest test export recorded 0 runtime warning occurrences across 1 examined tests.\n\n",
+      "videoSHA256": "eddbbd65ddfd07af80948a35b94a1b96db8bdc2c8100357e1b6cc9d99425897f",
+      "phases": {
+        "cancelled-state_0_7F3C34A7-7069-4F07-ACAB-AE7EBC167B61.txt": "5F70A7D1-B821-474E-9AE5-8FD580349416.txt",
+        "cancelled-screen_0_8FF7FAC7-0E67-4BB8-BF8E-4DE6A5622A05.png": "C30906F2-3B82-4999-A82B-F6D534632770.png",
+        "ready-state_0_921DCC08-CE15-49FB-973F-91856631FD1B.txt": "8BC336D5-FCF4-4FEE-B92E-6A044B7ADA5F.txt",
+        "ready-screen_0_7315468F-612D-4283-9335-3CCDA90F25B9.png": "36D47AE8-19FB-479A-ACC6-5B942402AF68.png",
+        "before-state_0_6ABE9E32-6EBF-47B3-8468-B9C404606DC4.txt": "9B30915A-B4D8-42C6-A014-AAB33E841557.txt",
+        "before-screen_0_AE99C164-C34E-4CB5-9999-98BCBC5B6321.png": "9439B349-9369-4D34-97BD-26E12CF40757.png"
+      },
+      "finding": "A full-size native sheet displayed the matching caption, four native actions and a visible Close. Ready phase at 10.15s after original tap request. One Close tap returned to the exact handoff, one callback (completed false, activity none) at 14.99s; strict pass, 23.95s."
+    }
+  },
+  "sourceManifestSHA256": "d6dd30ee526c981ca1e6ab43115cf4b5ae2c4a5360203b3b63edbe1381312bd9",
+  "productsManifestSHA256": "8de5ea77296f6a4cd4e0dc9215c0c8689f2dec44978e02af48569f806fc89f09",
+  "interpretation": "Neither isolated case reproduced the original hosted blank, dimmed handoff page with an empty remote container at the deadline. The UIKit Close failure is a different presentation shape. The production-style wrapper completed normally in this one matched-runtime local run. These samples establish neither the cause nor reliability of hosted presentation.",
+  "documentation": "Apple UIActivityViewController overview requires modal presentation on iPhone and describes providing activity items. It offers no evidence of an intrinsic prohibition on wrapping this controller in a SwiftUI sheet, or an alternative that addresses the hosted blank remote content. https://developer.apple.com/documentation/uikit/uiactivityviewcontroller",
+  "reproduce": "From a clean copy of the share-control source directory, run the scheme ShareControl build-for-testing for generic/platform=iOS Simulator into share-control/DerivedData, then execute share-control/run-pair.sh at repo root. The runner refuses to overwrite the recorded attempts."
+}

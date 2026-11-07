@@ -1,0 +1,16 @@
+{
+  "appBundleID": "dev.roominthecart.app.debug",
+  "appInfoPlist": "/Users/palatis/Room in the Cart/.build/S04ProtectedVisibility20261106/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/Info.plist",
+  "appInfoPlistSHA256": "16c73fc926e9c3aa9d88e5547f86f331000e4418606956acf0b4abbdc492cad0",
+  "elapsedSeconds": 48.901483833,
+  "error": "Protocol marker arrived before bootstrap",
+  "errorType": "ProtocolError",
+  "finishedUnixUTC": 1794021257.4981802,
+  "nativeExitCode": null,
+  "runnerBundleID": "dev.roominthecart.RoomInTheCartUITests.xctrunner",
+  "simulator": "44120B32-10A5-46DE-B255-C462B4E711D1",
+  "status": "failed",
+  "supervisorPID": 54944,
+  "supervisorStart": "Fri Nov 6 22:13:28 2026",
+  "token": "796270b2-41ac-4dfa-85e7-cef851400797"
+}

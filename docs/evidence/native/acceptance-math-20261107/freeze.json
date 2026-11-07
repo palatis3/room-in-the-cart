@@ -1,0 +1,14 @@
+{
+  "files": {
+    "source-manifest.json": "f224c392aef4f0c02f8fb682e62055810664abd9c9a33064ee32f3f0317fa5de",
+    "CoreDomain.inventory.txt": "9fe0f7000e5324040254d0f825f46565d5fa17ac465350c5211ab866ef767010",
+    "inventory-build.log": "c3cc079e0aa4af596e6a8fc8f675897c663d4f49030ed895d2eb3a964225c297",
+    "changes.patch": "09959e62c706d97534e47e72b0c96b9a6e850785651d92936bedd4cb47580cc6",
+    "production-inputs.json": "c391c260fdb19f90d12d652d7914aa1b2056d65703c6dd465f6a83f0d91b033e",
+    "service-build.log": "441395328eef3f9a5f1e21646dddbbe4fdb76fceddcd7cc76224c3b463d3a7e3",
+    "README.md": "eec5b4a884404306aa5424307db38384ae015afd3f7aaa865e1ecf5e6ccb410f",
+    "core-domain.log": "be47e938ff2625e5a866fe16d405914558bc64c67115a456adca060c6f73ea6f",
+    "service-checkout.log": "ba7ba8829f732c64c934ffdd28bfda2c66a8a2f580402456ca95b441e8129b93",
+    "verification.json": "38dae1bfc0b17e19227d5519a8439c603dd209c90be9edea820d7d645ca6e4a8"
+  }
+}

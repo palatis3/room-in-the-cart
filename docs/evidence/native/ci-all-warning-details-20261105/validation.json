@@ -1,0 +1,43 @@
+{
+  "sourceBase": "c941985814de80354b8da6c03847fc0fab77e657",
+  "patch": "full-runtime-warning-details.patch",
+  "patchSha256": "0b8aef9cfebc31da53c196154587193191454548ad4b046eec8f05ff44d02857",
+  "sourceSha256": {
+    "check_ios_test_results.py": "c8c5dcf31054f7c5f2791de7cf524f99cb6f0fd121a9df078c53bb1610f372f3",
+    "test_check_ios_test_results.py": "1ed20fbbb55f1d75f9cc4a6594768fb8ec654ecd23c86bb59cca8efe0525c57b"
+  },
+  "scope": "Read each selected XCTest case's detail export and match its identity, devices and exact warning occurrences against the existing test tree and any exposed summary. A clean test tree requires a valid clean detail export. The existing narrow allowances and legacy CLI behavior without --result-bundle are unchanged.",
+  "unitValidation": {
+    "passingTests": 12,
+    "logSha256": "da8aac59c4758843c8f3a5a52f3f8cc77e77f02a65368fb392575c4392f9b4ca"
+  },
+  "artifactReplay": {
+    "dataFile": "artifact-replay.json",
+    "sha256": "306af8e52752154fbffb4a8c2c97b70a3b0c450c9699be6870efd4a036f0bfef",
+    "artifactSource": "f0e2ac37383e76ac3812407384bf2eda968de3c4",
+    "reader": "Local Xcode 27.1 xcresulttool; original hosted result bundles were read without rerunning tests.",
+    "measurements": "One serial invocation per checker and retained bundle on the local Mac. Elapsed times include Python and all xcresulttool invocations.",
+    "overheadSeconds": {
+      "models": 30.985,
+      "ui-03": 0.846,
+      "ui-04": 0.466,
+      "ui-06": 0.333,
+      "ui-10": 0.297
+    }
+  },
+  "negativeReplay": {
+    "file": "mutation-replay.json",
+    "sha256": "bf7e2ba351416ef10e3bd0f4de9f1e88a5ad7e4b43f45c3c4db655e1bfaf0276",
+    "observed": "Removing only the aggregate tree marker from the ui-06 export left two warnings in the real original bundle. Baseline falsely reported zero; candidate rejected the inconsistent evidence."
+  },
+  "rootIndependentValidation": {
+    "allPythonTests": 104,
+    "result": "passed",
+    "logSHA256": "504f3a15fecb16926cb4a21a5ea6be0c23eae20ce70201ff5b1c200f0f9f08e3",
+    "patchApplyCheck": "passed",
+    "newSourceHashes": {
+      "check_ios_test_results.py": "c8c5dcf31054f7c5f2791de7cf524f99cb6f0fd121a9df078c53bb1610f372f3",
+      "test_check_ios_test_results.py": "1ed20fbbb55f1d75f9cc4a6594768fb8ec654ecd23c86bb59cca8efe0525c57b"
+    }
+  }
+}

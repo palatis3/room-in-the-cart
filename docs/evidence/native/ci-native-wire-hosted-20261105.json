@@ -1,0 +1,37 @@
+{
+  "sourceCommit": "fa93f60534918ce8e040c706e80163e5d6959153",
+  "run": "https://github.com/palatis3/room-in-the-cart/actions/runs/41968854936",
+  "job": 127052107123,
+  "artifact": 13388452600,
+  "artifactDigest": "5c161088828ece871a98dddd171232c49ea45f0d0c8f42ccb07ad4a96ef7b918",
+  "artifactDigestIndependentlyMatched": true,
+  "result": "Passed",
+  "nodeIntegrationCases": 4,
+  "nativeScenarios": [
+    "history-free HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres",
+    "history-paid HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres",
+    "meal-planner HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres",
+    "meal-shopper HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres",
+    "quote-adult HouseholdClientTests.StoreQuoteNativeWireTests/testStoreQuoteClientAgainstPostgres",
+    "quote-shopper HouseholdClientTests.StoreQuoteNativeWireTests/testStoreQuoteClientAgainstPostgres"
+  ],
+  "nativeScenarioCount": 6,
+  "skipped": 0,
+  "failed": 0,
+  "databaseShutdownVerified": true,
+  "toolchain": [
+    "Xcode 26.3",
+    "Build version 17C529",
+    "swift-driver version: 1.127.15 Apple Swift version 6.2.4 (swiftlang-6.2.4.1.4 clang-1700.6.4.2)",
+    "Target: arm64-apple-macosx15.0",
+    "v22.23.4",
+    "postgres (PostgreSQL) 17.11 (Homebrew)",
+    "OpenSSL 1.1.1w  11 Sep 2023"
+  ],
+  "sha256": {
+    "tests.tap": "138d7dcaa61e19f6d850a0a65bed60187ef2eaf727e84b6f50416e34653c553a",
+    "swift-build.log": "0704c40422ca1421602970ae361d7fd38f47e6b1fb3759dfc0d8473bea8e7376",
+    "postgres.log": "a55afbbda92b67643ff6f2fb66bf6c965518af006c4cdd31c430c3fe9f4c9a18"
+  },
+  "scope": "Real compiled Swift clients and actual service over pinned loopback HTTPS, real disposable PostgreSQL and isolated synthetic identity/journal/provider fixtures. First hosted execution of this new lane. Does not certify deployed backend, live provider or signed iPhone network behavior."
+}

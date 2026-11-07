@@ -1,0 +1,72 @@
+{
+  "observedAt": "2026-11-05T10:23:14.946600+00:00",
+  "basePublishedCandidate": "f20feb685f95e7da1c7a23f26eff499d2696329f",
+  "sourceSHA256": "4a13eba6256c396576e3a9e9de13a4d07754223137b37ff09e3a64f663331b06",
+  "change": "Read actual calendar header, advance Gregorian month with year rollover, select a unique full spoken mid-month day and verify that exact saved cutoff in the actual reminder context. All original pending/unscheduled/cancel assertions remain. Day15 avoids month-end midnight ambiguity.",
+  "buildExit": 0,
+  "defaultAllowanceSeconds": 720,
+  "maximumAllowanceSeconds": 900,
+  "cases": [
+    {
+      "environment": "reminder-calendar",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "xcodeExit": 0,
+      "strictGuardExit": 0,
+      "durationSeconds": 180.946,
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "90CD1EED-66F3-4402-A218-2782AE2B15F1",
+        "deviceName": "RITC-UI-Existence-20261105",
+        "modelName": "iPhone 17",
+        "osBuildNumber": "23C52",
+        "osVersion": "26.2",
+        "platform": "iOS Simulator"
+      },
+      "selectionEvidence": [
+        "Target day: Tuesday, December 15; target month: December 2026",
+        "Compact date label: Date and Time Picker",
+        "Compact date value: Optional(5:17\u202fAM, Dec 15, 2026)",
+        "Picker value: Optional()"
+      ],
+      "selectionEvidenceSHA256": "ef9d609653d44809dfd7a8e79bcda01bbd68d94738238c1e88444fb56f729fc4",
+      "rawLogSHA256": "32e8ccdf99432b902768feaaf288ba54cfbdbe1715ca071a898854632056d680",
+      "sourceManifestSHA256": "820a3a83c5623a28a09509dc52bfc4f91186e1a1e922b09cb2e18d1cc4a6846a",
+      "productManifestSHA256": "b94926421cc332e4e87d76296a5de0d0a0273c9f44e29b5aaeca0cb304bb2d61"
+    },
+    {
+      "environment": "reminder-calendar-ios17",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": 0,
+      "xcodeExit": 0,
+      "strictGuardExit": 0,
+      "durationSeconds": 116.594,
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "BCB593ED-6434-4A54-A28B-67DC87F40C1A",
+        "deviceName": "RITC-Reminder-Calendar-iOS17-20261105",
+        "modelName": "iPhone SE (3rd generation)",
+        "osBuildNumber": "21A328",
+        "osVersion": "17.0",
+        "platform": "iOS Simulator"
+      },
+      "selectionEvidence": [
+        "Target day: Tuesday, December 15; target month: December 2026",
+        "Compact date label: Date and Time Picker",
+        "Compact date value: Optional(5:21\u202fAM, Dec 15, 2026)",
+        "Picker value: Optional()"
+      ],
+      "selectionEvidenceSHA256": "b1eb0b8a0b26ec54a486dcb50fb95476715b62c8bb9e27b4baff9203a11d90a7",
+      "rawLogSHA256": "0d834d6264c6594c755d9f6a68525dc5178869c571f990b269e50aec3b452470",
+      "sourceManifestSHA256": "820a3a83c5623a28a09509dc52bfc4f91186e1a1e922b09cb2e18d1cc4a6846a",
+      "productManifestSHA256": "b94926421cc332e4e87d76296a5de0d0a0273c9f44e29b5aaeca0cb304bb2d61"
+    }
+  ],
+  "review": "Dot personally diagnosed original artifact and reviewed exact draft; Sol6.1xhigh static review found no concrete regression. Root verified local results, strict warnings and compact selected-date evidence.",
+  "historicalEvidenceLimit": "An older iOS17 test could select January1 after initially locating December1 and still pass; that old result did not establish intended month identity. New saved-date assertion closes that evidence gap.",
+  "limits": "Local Xcode27.1. iOS26.2 build23C52 differs from hosted23C54; local iOS17.0 is minimum-OS coverage. No physical notification delivery, live provider acceptance or hosted rerun is implied. Original f20 UI07 remains failed."
+}

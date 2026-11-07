@@ -1,0 +1,72 @@
+{
+  "sourceBase": "29b781da6ac79b168575252ddce46dddf64ae575",
+  "patch": "distinct-warning-issue-identity.patch",
+  "patchSha256": "7e9b28b740f9a443295fbb8058d17c7f577ddbd4e3be41213b52c2e81486a523",
+  "sourceSha256": {
+    "check_ios_test_results.py": "94f463250fe70487723a24486bfbe4dab249489ffeabc11c04c42c2e4a426646",
+    "test_check_ios_test_results.py": "028379a256a5999bc07f8170364506d41fe67c471e5ce6070f4bd3f9439a737b"
+  },
+  "finding": "With the same exact message, Menu path and multiplicity, 29b781d accepts copying one warning activity in place of the other. The duplicate reuses its original issue attachment UUID.",
+  "correction": "Require a canonical hyphenated UUID on the sole Complete Issue Description.txt attachment and reject repeat UUIDs case-insensitively within the warning activity run. Detail and activity attachment identifiers are independent.",
+  "focusedTestsPassed": 22,
+  "gitApplyCheck": "passed",
+  "replayOutcomes": [
+    {
+      "bundle": "prior-ui-02",
+      "originalTestResult": "Failed",
+      "checkerExitCode": 1,
+      "warningCount": 2
+    },
+    {
+      "bundle": "prior-ui-04",
+      "originalTestResult": "Failed",
+      "checkerExitCode": 1,
+      "warningCount": 1
+    },
+    {
+      "bundle": "ui-04",
+      "originalTestResult": "Passed",
+      "checkerExitCode": 0,
+      "warningCount": 1
+    },
+    {
+      "bundle": "ui-06",
+      "originalTestResult": "Passed",
+      "checkerExitCode": 0,
+      "warningCount": 2
+    },
+    {
+      "bundle": "ui-10",
+      "originalTestResult": "Passed",
+      "checkerExitCode": 0,
+      "warningCount": 2
+    },
+    {
+      "bundle": "shared-store-quote",
+      "originalTestResult": "Failed",
+      "checkerExitCode": 1,
+      "warningCount": 6
+    },
+    {
+      "bundle": "clean-ui-03",
+      "originalTestResult": "Passed",
+      "checkerExitCode": 0,
+      "warningCount": 0
+    }
+  ],
+  "hostedSchemaValidation": "Both fresh unmodified Xcode 26.3 positive Menu exports had distinct UUIDs and passed identity validation with their omitted optional parent activityType. Standalone diagnostic selectors are outside the product allowance.",
+  "realMutation": "The candidate rejects same-count repeated attachment UUIDs, including with different letter casing, and missing or malformed UUIDs. Both checkers accept the original two distinct activities.",
+  "evidenceSha256": {
+    "distinct-warning-issue-identity.patch": "7e9b28b740f9a443295fbb8058d17c7f577ddbd4e3be41213b52c2e81486a523",
+    "unit-validation.log": "8f20ed41d1e6b017339ce5e9d77e8b9fbac0cc45662a42dfcd548683df504476",
+    "bundle-replay.json": "44a36e34ab1e5763170f8d9d38796ebfcf3a9b39af61d6de70db398f80fa1c20",
+    "hosted-schema-replay.json": "f29239e9ec16b40f00365f153520f0095b64f74e22f7e917b07873a6ec78dd83",
+    "identity-mutation-replay.json": "464dd305877c43381e18bcbd58278c5b3e060e88726df53d0afd905383e297ad"
+  },
+  "scope": "Installed after root review; saved evidence replay only. Fresh hosted verification pending.",
+  "rootValidation": {
+    "pythonTestsPassed": 114,
+    "actionlint": "passed",
+    "allEvidenceHashes": "matched"
+  }
+}

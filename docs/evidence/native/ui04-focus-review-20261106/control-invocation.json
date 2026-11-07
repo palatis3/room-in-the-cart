@@ -1,0 +1,26 @@
+{
+  "command": [
+    "xcodebuild",
+    "-xctestrun",
+    "/Users/palatis/Room in the Cart/.build/UI04FocusReview20261106/products/Products/RoomInTheCart_iphonesimulator26.2-arm64.xctestrun",
+    "-destination",
+    "platform=iOS Simulator,id=385D4DCB-72BE-4DEA-9C6C-8AA229CFA7D4",
+    "-resultBundlePath",
+    "/Users/palatis/Room in the Cart/.build/UI04FocusReview20261106/ExactProductControl.xcresult",
+    "-parallel-testing-enabled",
+    "NO",
+    "-test-timeouts-enabled",
+    "YES",
+    "-default-test-execution-time-allowance",
+    "720",
+    "-maximum-test-execution-time-allowance",
+    "900",
+    "-collect-test-diagnostics",
+    "never",
+    "-only-testing:RoomInTheCartUITests/RoomInTheCartUITests/testLargestTextEditActionGrowsInContentAndReturnsToEntry",
+    "test-without-building"
+  ],
+  "start": 1794012688.595882,
+  "candidate": "0d5bb1b22e9e84cd4b8c2b07317f91cfc703b60c",
+  "scope": "Unmodified hosted products; original single selector on fresh iOS26.2/23C54. Local coordinator Xcode27.1 differs from hosted26.3; no new app/test compile."
+}

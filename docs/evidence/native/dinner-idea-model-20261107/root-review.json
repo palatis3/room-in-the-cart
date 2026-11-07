@@ -1,0 +1,7 @@
+{
+  "strictExit": 0,
+  "nativeExit": 0,
+  "expectedCount": 27,
+  "selectionSource": "compiled enumeration, exact DinnerFeatureModelTests class matching original -only-testing argument",
+  "initialInspectionError": "File-wide regex incorrectly prefixed ten DinnerScenarioDraftTests methods with DinnerFeatureModelTests. Original 37-selector strict rejection retained; no native rerun, assertion or filter changed."
+}

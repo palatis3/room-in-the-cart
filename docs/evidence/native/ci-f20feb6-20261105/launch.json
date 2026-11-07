@@ -1,0 +1,48 @@
+{
+  "candidate": "f20feb685f95e7da1c7a23f26eff499d2696329f",
+  "observedAt": "2026-11-05T08:46:58.387171+00:00",
+  "run": 41994028865,
+  "job": 127138449660,
+  "case": "launch",
+  "hostedJobConclusion": "success",
+  "artifact": {
+    "id": 13400632207,
+    "sha256": "f7a2c899cf1fb23c0ada02036c4573b1616e2642d925bb074be4ca370c79e604",
+    "githubDigestVerified": true
+  },
+  "independentReplay": {
+    "exactExecutionAndWarningGuard": "passed",
+    "measurementAndBaselineGuard": "passed",
+    "runtimeWarnings": 0
+  },
+  "environment": {
+    "osVersion": "26.2",
+    "osBuildNumber": "23C54",
+    "modelName": "iPhone 17",
+    "architecture": "arm64",
+    "xcode": "Xcode 26.3\nBuild version 17C529",
+    "buildConfiguration": "Release",
+    "testConfiguration": "Test Scheme Action"
+  },
+  "measurements": {
+    "com.apple.dt.XCTMetric_ApplicationLaunch-ApplicationFirstFramePresentationResponsive.duration": {
+      "unit": "s",
+      "samples": [
+        3.858890208,
+        3.9144931670000003,
+        3.4463062910000004,
+        3.6760180410000003,
+        4.354207917
+      ],
+      "median": 3.858890208
+    }
+  },
+  "comparisons": {
+    "responsiveLaunchMedianSeconds": {
+      "measured": 3.858890208,
+      "maximum": 5.5,
+      "passed": true
+    }
+  },
+  "limits": "This result covers the hosted Release simulator cold-launch case only; rendered and scrolling cases are separate."
+}

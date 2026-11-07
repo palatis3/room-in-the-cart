@@ -1,0 +1,68 @@
+{
+  "baseCommit": "8c62d6b932917cc2bf90d73a337e3d834a50c0c7",
+  "sourceSHA256": {
+    "ios/UITests/FreeJourneyUITests.swift": "57d82ed65f570867cb3f9796e755218a6c7bc17ab27249f60dc05763902ababb",
+    "ios/Packages/CoreDomain/Tests/CoreDomainTests/DinnerWeekRolloverTests.swift": "78a9cecd301b96bc143a63880bea6e01fe6c2e8757777ecb51afd0d11a9c50fa"
+  },
+  "hostedFailure": {
+    "sourceCommit": "1fd2b962d77a7459ffe2a73db6d3d8a0557cda45",
+    "run": "https://github.com/palatis3/room-in-the-cart/actions/runs/41930998628",
+    "job": 126937759241,
+    "selector": "FreeJourneyUITests/testEnglishMealWeekListAndGridShowDatedProtectedLunch",
+    "log": ".build/CIResearch20261104/native-ui-results/ui-06/job.log",
+    "logSHA256": "a7c3b6381510ff8af557cabca8030aa593d7154ecd1951a08aef3bca9664d74e",
+    "timeline": [
+      "The test assigned the dinner and protected lunch before UTC midnight on November 4.",
+      "Both List and Grid displayed the reservation after midnight. The November 5 day note reported GMT.",
+      "The exact protected lunch identifier was still visible immediately before app termination at 00:00:58 UTC.",
+      "After relaunch the test opened the fresh week and failed to find the old reservation identifier."
+    ],
+    "result": "One failed selector and four passed selectors. Artifact upload timed out, so no hosted store readback or xcresult is available."
+  },
+  "package": {
+    "command": "swift test --filter DinnerWeekRolloverTests",
+    "log": ".build/UI06MealWeek20261104/rollover-package.log",
+    "logSHA256": "f61c4bf00f3212a425468df8fc511237adbd4a3b39e0cbf963d18b8737e00670",
+    "passed": 3,
+    "failed": 0,
+    "scope": "Ordinary midnight, December-to-January rollover, and a New York fall-back that changes the UTC offset. Each case applies a meal and lunch, encodes and decodes the workspace, verifies both IDs are outside the new default range, and verifies the same IDs, two-unit quantity, and purpose in the original week."
+  },
+  "native": {
+    "configuration": "Ordinary Debug",
+    "device": {
+      "architecture": "arm64",
+      "deviceId": "98CF35E7-6C8E-4C8A-BDFA-6AEAAFA2348D",
+      "deviceName": "RITC UI06 Civil Day",
+      "modelName": "iPhone 17",
+      "osBuildNumber": "23C52",
+      "osVersion": "26.2",
+      "platform": "iOS Simulator"
+    },
+    "toolchain": "Xcode 27.1\nBuild version 27A9275",
+    "resultBundle": ".build/UI06MealWeek20261104/NativeCivilDay.xcresult",
+    "log": ".build/UI06MealWeek20261104/native-test.log",
+    "logSHA256": "7d1cfa44b5f9c68c182c7e9a646e7712851a93c2e48c8811e8f4d6fc89cf3fab",
+    "summarySHA256": "92451e0e98d11971ca19df041a441e6cb0c592b260001f68aec4293f78653e5b",
+    "detailsSHA256": "04b73b15cbfe91e6c6bcef0d30446c982cb083be5d19c7cc266a4d6c3e1285d4",
+    "cases": [
+      {
+        "selector": "FreeJourneyUITests/testDinnerMoveAcrossDisplayedWeeksKeepsLunchAndOccurrence()",
+        "seconds": 260.2361900806427
+      },
+      {
+        "selector": "FreeJourneyUITests/testEnglishMealWeekListAndGridShowDatedProtectedLunch()",
+        "seconds": 153.67556500434875
+      },
+      {
+        "selector": "FreeJourneyUITests/testSpanishMealWeekListAndGridShowDatedProtectedLunch()",
+        "seconds": 163.58246409893036
+      }
+    ],
+    "runtimeWarnings": 0,
+    "animationIdleTimeouts": 0,
+    "fixtureDay": "2026-11-03",
+    "movedDay": "2027-01-15",
+    "scope": "English and Spanish native picker entry, List and Grid, original day note, default-range exclusion and exact dinner and lunch readback after relaunch. The move case also verified that the lunch remained in its original week after the same dinner moved across the year boundary."
+  },
+  "limits": "The local runtime build 23C52 and Xcode 27.1 driver differ from the hosted build 23C54 and Xcode 26.3. The native run observed forward month navigation across the year boundary and same-month restoration of the prior day. The model cases cover past-day filtering across month, year, and DST boundaries. The original hosted persistence state remains unobserved."
+}

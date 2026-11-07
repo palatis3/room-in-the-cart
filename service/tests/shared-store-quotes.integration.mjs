@@ -224,12 +224,22 @@ test('proposal/adoption transaction rolls back if its durable receipt cannot be 
  assert.equal(ok(await call(f.owner,f.quotes+'/adoptions','POST',adoption)).shopRevision,2);
 });
 
+// Shared integration fixtures can leave earlier jobs eligible for the same worker.
+async function finishDeletion(receipt) {
+ const until=Date.now()+10000;
+ do {
+  await maintenance.run({batchSize:1});
+  if ((await privacy.status(receipt.clientKey,receipt.statusToken)).status==='complete') return;
+ } while(Date.now()<until);
+ assert.fail('The submitted deletion receipt did not reach complete');
+}
+
 test('real account deletion worker removes proposed/adopted private pair, copies, grant and retries without restoring old prices',async()=>{
  const f=await fixture(),adult=await f.join();await f.grant(adult);const saved=await f.save(adult,entered(),1,1,1),proposal=f.input({pairId:saved.pairId,choice:'second'},1,1,1);
  ok(await call(adult,f.quotes+'/proposals','POST',proposal));ok(await call(f.owner,f.quotes+'/adoptions','POST',f.input({pairId:saved.pairId,choice:'second',proposalId:proposal.operationId})));
  const deletion={clientKey:randomUUID(),statusToken:randomBytes(32).toString('base64url'),confirm:true,households:[{householdId:f.h,organizer:'none',shops:[],eraseChildProfiles:[]}]};
  ok(await call(adult,'/v1/privacy/deletions','POST',deletion),202);
- assert.equal((await maintenance.run({batchSize:1})).completed,1);
+ await finishDeletion(deletion);
  for(const table of ['store_quote_pair','store_quote_proposal','store_quote_adoption','shop_budget_grant'])assert.equal((await admin.query(`SELECT count(*)::int n FROM ritc.${table} WHERE household_id=$1`,[f.h])).rows[0].n,0);
  assert.equal((await admin.query('SELECT count(*)::int n FROM ritc.store_quote_mutation WHERE household_id=$1 AND actor_id=$2',[f.h,adult.id])).rows[0].n,0);
  assert.equal(ok(await call(f.owner,f.quotes)).currentBasis,null);assert.equal(ok(await call(f.owner,f.path)).lines[0].unitPriceMinor,null);assert.equal((await call(adult,f.quotes+'/pairs','POST',saved.body)).status,401);
@@ -289,4 +299,52 @@ if(process.env.RITC_TEST_NATIVE_WIRE==='1')test('real Swift adult proposal and s
  assert.equal(ok(await call(f.owner,f.quotes)).currentBasis.branch,'West branch');
  assert.equal((await admin.query('SELECT count(*)::int n FROM ritc.store_quote_pair WHERE household_id=$1',[f.h])).rows[0].n,2);
  assert.equal((await admin.query('SELECT count(*)::int n FROM ritc.store_quote_adoption WHERE household_id=$1',[f.h])).rows[0].n,1);
+});
+
+test('account erasure removes a later shopper’s delivery copy linked to a redacted sealed line', async () => {
+  const f=await fixture(), contributor=await f.join(), commands=f.base+'/commands', evidence=f.path+'/delivery-evidence';
+  const save=(actor,command)=>call(actor,commands,'POST',{...command,replayWindow:actor.window});
+  ok(await save(f.owner,f.command('shop.transferAuthority',{newShopperId:contributor.id})));
+  const line={...f.lines[0],originalItem:'Source description supplied by the former shopper'};
+  ok(await save(contributor,f.command('shop.patch',{quote:f.quote,lines:[line]},1,2)));
+  ok(await save(f.owner,f.command('shop.transferAuthority',{newShopperId:f.owner.id},2,2)));
+  const occurrenceId=randomUUID(),meal={title:'Later shopper meal',day:'2026-11-07',kind:'dinner',portions:2,protected:false};
+  ok(await save(f.owner,f.command('shop.patch',{quote:f.quote,lines:[line],mealEdit:{occurrenceId,baseMealRevision:null,meal}},2,3)));
+  ok(await save(f.owner,f.command('shop.reportPlaced',{occurredAt:new Date().toISOString()},3,3)));
+  const body={placedRevision:3,supplyRevision:0,lineId:line.lineId,segmentKey:randomUUID(),foodName:line.originalItem,exclusionTags:[]};
+  const retained=f.command('delivery.register',body,4,3);
+  ok(await save(f.owner,retained));
+  assert.equal(ok(await call(f.owner,evidence)).sources[0].foodName,line.originalItem);
+  const cook=f.command('cookCopy.save',{occurrenceId,mealRevision:3,placedRevision:3,supplyRevision:1,language:'en',text:line.originalItem},4,3);
+  const {copyId}=ok(await save(f.owner,cook));
+  const mark=f.command('cookCopy.markSent',{copyId,recipient:'Cook',previousSendId:null},4,3);
+  ok(await save(f.owner,mark));
+  const list=async()=>ok(await call(f.owner,f.path+'/cook-copies?occurrenceId='+occurrenceId)).copies;
+  const baseline=async()=>ok(await call(f.owner,f.path+'/cook-copies/baseline','POST',{occurrenceId,recipient:'Cook'})).baseline;
+  const deletion={clientKey:randomUUID(),statusToken:randomBytes(32).toString('base64url'),confirm:true,
+    households:[{householdId:f.h,organizer:'none',shops:[],eraseChildProfiles:[]}]};
+  const earlier=await f.join('Other adult');
+  const otherDeletion={...deletion,clientKey:randomUUID(),statusToken:randomBytes(32).toString('base64url')};
+  ok(await call(earlier,'/v1/privacy/deletions','POST',otherDeletion),202);
+  ok(await call(contributor,'/v1/privacy/deletions','POST',deletion),202);
+  await maintenance.run({batchSize:1});
+  assert.notEqual((await privacy.status(deletion.clientKey,deletion.statusToken)).status,'complete');
+  await finishDeletion(deletion);
+  assert.deepEqual(await list(),[]);assert.equal(await baseline(),null);
+  assert.equal((await save(f.owner,cook)).data.error.code,'refresh_required');
+  assert.equal((await save(f.owner,mark)).data.error.code,'refresh_required');
+  const erased=ok(await call(f.owner,evidence));
+  assert.equal(erased.meals[0].occurrenceId,occurrenceId);
+
+  assert.deepEqual(erased.sources,[]);
+  assert.deepEqual(erased.lines,[]);
+  assert.equal(erased.supplyRevision,2);
+  const fresh=ok(await save(f.owner,f.command('cookCopy.save',{...cook.body,text:'Only the remaining meal facts',supplyRevision:2},4,3)));
+  const unrelated=await f.join('Later adult');
+  const laterDeletion={...deletion,clientKey:randomUUID(),statusToken:randomBytes(32).toString('base64url')};
+  ok(await call(unrelated,'/v1/privacy/deletions','POST',laterDeletion),202);
+  await finishDeletion(laterDeletion);
+  assert.deepEqual((await list()).map(c=>[c.copyId,c.version]),[[fresh.copyId,2]]);
+  assert.equal((await save(f.owner,retained)).data.error.code,'refresh_required');
+  assert.equal((await save(f.owner,f.command('delivery.register',{...body,supplyRevision:2},4,3))).status,404);
 });

@@ -70,6 +70,12 @@ def verify_built_app(app, configuration, *, require_production_metadata=False):
         require(configuration == "Debug" and test_bundle == debug_test_bundle,
                 f"Unexpected test bundle: {test_bundle.relative_to(app)}")
 
+    if configuration in ("Release", "Staging"):
+        fixture_names = {path.name for path in (ROOT / "ios/UITests/Fixtures").rglob("*") if path.is_file()}
+        for path in app.rglob("*"):
+            require(path.name not in fixture_names and path.suffix.lower() != ".storekit",
+                    f"Test resource embedded in {configuration} app: {path.relative_to(app)}")
+
     icon = info.get("CFBundleIcons", {}).get("CFBundlePrimaryIcon", {}).get("CFBundleIconName")
     require(icon == "AppIcon", "Missing app icon")
     require(nonempty_file(app / "Assets.car"), "Missing compiled asset catalog")

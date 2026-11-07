@@ -1,0 +1,82 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -xctestrun "/Users/palatis/Room in the Cart/.build/S14BrokenRecipeLinkReview20261107/run2/DerivedData/Build/Products/RoomInTheCart_iphonesimulator27.1-arm64.xctestrun" -destination "platform=iOS Simulator,id=87F93DE8-670E-463D-8FAA-E3A256326B94" -parallel-testing-enabled NO -resultBundlePath "/Users/palatis/Room in the Cart/.build/S14BrokenRecipeLinkReview20261107/run2/S26.xcresult" -collect-test-diagnostics never -test-timeouts-enabled YES -default-test-execution-time-allowance 120 -maximum-test-execution-time-allowance 120 "-only-testing:RoomInTheCartTests/DinnerFeatureModelTests" test-without-building
+
+Writing result bundle at path:
+	/Users/palatis/Room in the Cart/.build/S14BrokenRecipeLinkReview20261107/run2/S26.xcresult
+
+2026-11-07 00:38:14.345 xcodebuild[10663:20361986] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+Test Suite 'Selected tests' started at 2026-11-07 00:38:19.115.
+Test Suite 'RoomInTheCartTests.xctest' started at 2026-11-07 00:38:19.116.
+Test Suite 'DinnerFeatureModelTests' started at 2026-11-07 00:38:19.116.
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testAuthRevocationIsRecheckedBeforeApply]' started.
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testAuthRevocationIsRecheckedBeforeApply]' passed (0.026 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testAwayNoteDoesNotRemoveDinner]' started.
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testAwayNoteDoesNotRemoveDinner]' passed (0.031 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testBundledFreeIdeasAreEditableAndApprovalKeepsShoppingListUntouched]' started.
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testBundledFreeIdeasAreEditableAndApprovalKeepsShoppingListUntouched]' passed (0.035 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testCancellingContextualReviewRestoresOnlyTheStillCurrentPendingDecision]' started.
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testCancellingContextualReviewRestoresOnlyTheStillCurrentPendingDecision]' passed (0.019 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testChangedLedgerRejectsReviewedApply]' started.
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testChangedLedgerRejectsReviewedApply]' passed (0.021 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testEditorBaseChangeRejectsRatherThanOverwritingCurrentAmounts]' started.
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testEditorBaseChangeRejectsRatherThanOverwritingCurrentAmounts]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testFailedDurableSaveRetainsExactPreviewAndSavedWorkspace]' started.
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testFailedDurableSaveRetainsExactPreviewAndSavedWorkspace]' passed (0.014 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testFreeManualPreviewIsReadonlyCancelAndApplyOnce]' started.
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testFreeManualPreviewIsReadonlyCancelAndApplyOnce]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testFreeRotationCannotSaveButManualStillWorks]' started.
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testFreeRotationCannotSaveButManualStillWorks]' passed (0.003 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testGuestBindingsAreRequiredAndFreeExplorationCannotApply]' started.
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testGuestBindingsAreRequiredAndFreeExplorationCannotApply]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testIdeaAcceptDoesNotChooseAndFreeSlotSwitchIsExplicit]' started.
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testIdeaAcceptDoesNotChooseAndFreeSlotSwitchIsExplicit]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testIdeaGenerateSaveAndAcceptRecheckDeniedRuntimeWithoutAnyCommit]' started.
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testIdeaGenerateSaveAndAcceptRecheckDeniedRuntimeWithoutAnyCommit]' passed (0.010 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testIdeaPreparationAbandonRepeatSaveAcceptAndChooseHaveSeparateEffects]' started.
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testIdeaPreparationAbandonRepeatSaveAcceptAndChooseHaveSeparateEffects]' passed (0.003 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testInvalidReplacementPreviewClearsPreviousPendingPreview]' started.
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testInvalidReplacementPreviewClearsPreviousPendingPreview]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testLegacyTemplatesAndChosenOccurrencesRemainReadableWithoutAdoption]' started.
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testLegacyTemplatesAndChosenOccurrencesRemainReadableWithoutAdoption]' passed (0.008 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testLocalBindingCannotUseImportedWorkspaceIdentity]' started.
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testLocalBindingCannotUseImportedWorkspaceIdentity]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testLockedBasketPreviewOnlyAndCalendarRemainsManual]' started.
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testLockedBasketPreviewOnlyAndCalendarRemainsManual]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testParsingExactFractionSpanishDecimalAndUnknown]' started.
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testParsingExactFractionSpanishDecimalAndUnknown]' passed (0.004 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testQuoteProofSavedThenBasisAdoptionIsExplicitAndStalesOnEdit]' started.
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testQuoteProofSavedThenBasisAdoptionIsExplicitAndStalesOnEdit]' passed (0.006 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testRetryAcceptedDinnerPreservesOriginalTimestampAndOneCommit]' started.
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testRetryAcceptedDinnerPreservesOriginalTimestampAndOneCommit]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testReviewedGuestTotalChangesOnlySelectedUnprotectedGroup]' started.
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testReviewedGuestTotalChangesOnlySelectedUnprotectedGroup]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testRuntimePublisherRefreshesVisibleFeatureState]' started.
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testRuntimePublisherRefreshesVisibleFeatureState]' passed (0.013 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testSharedEvenAuthorizedFlagCannotApplyThroughLocalAdapter]' started.
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testSharedEvenAuthorizedFlagCannotApplyThroughLocalAdapter]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testStoreDraftNeverInventsChargesOrTravel]' started.
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testStoreDraftNeverInventsChargesOrTravel]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testSwitchingShopHidesOldPreviewAndCannotApplyIt]' started.
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testSwitchingShopHidesOldPreviewAndCannotApplyIt]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testTemplateRevisionPreservedUntilAnExplicitEdit]' started.
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testTemplateRevisionPreservedUntilAnExplicitEdit]' passed (0.001 seconds).
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testUndatedOccurrenceGetsCivilDateWithoutNewNeeds]' started.
+Test Case '-[RoomInTheCartTests.DinnerFeatureModelTests testUndatedOccurrenceGetsCivilDateWithoutNewNeeds]' passed (0.002 seconds).
+Test Suite 'DinnerFeatureModelTests' passed at 2026-11-07 00:38:19.351.
+	 Executed 27 tests, with 0 failures (0 unexpected) in 0.216 (0.234) seconds
+Test Suite 'RoomInTheCartTests.xctest' passed at 2026-11-07 00:38:19.351.
+	 Executed 27 tests, with 0 failures (0 unexpected) in 0.216 (0.235) seconds
+Test Suite 'Selected tests' passed at 2026-11-07 00:38:19.351.
+	 Executed 27 tests, with 0 failures (0 unexpected) in 0.216 (0.236) seconds
+2026-11-07 00:38:19.376 xcodebuild[10663:20361986] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-07 00:38:19.377 xcodebuild[10663:20361986] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-07 00:38:19.671 xcodebuild[10663:20361986] [MT] IDETestOperationsObserverDebug: 5.477 elapsed -- Testing started completed.
+2026-11-07 00:38:19.671 xcodebuild[10663:20361986] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-11-07 00:38:19.671 xcodebuild[10663:20361986] [MT] IDETestOperationsObserverDebug: 5.477 sec, +5.477 sec -- end
+
+Test session results, code coverage, and logs:
+	/Users/palatis/Room in the Cart/.build/S14BrokenRecipeLinkReview20261107/run2/S26.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

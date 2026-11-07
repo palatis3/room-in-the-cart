@@ -1,0 +1,9 @@
+# Staging web access-recovery fix
+
+The reviewed four-line web fix from bb9cb7e is now deployed at https://room-in-the-cart-staging.vercel.app as dpl_2tfRmEfTGLW63sSTksJ6xJ9MZ97P. It clears a stale ordinary access-denial message only after successful authorization for the still-current session. The unchanged anonymous and storage-warning behavior and concurrent-expiry protection retain their regression tests.
+
+Root rebuilt the isolated frozen9d2bf47source package, verified all138uploaded files, matched all94compiled server files against the previous approved staging build, and matched the complete web bundle against actual Android-tested output. The120web tests and negative controls were already recorded with the source fix. The isolated packaging builds both pass. The package contains previously applied030; installation/build never invokes database migrations.
+
+The existing authorized CLI session verified the Room in the Cart team and staging project after the connector returned a missing-scope error. A protected production-target build in this **staging project** was created without assigning its public alias. All29exact route/asset/anonymous-boundary checks passed before promotion and all29passed on the public alias afterward. Deployment metadata pins the exact uploaded source; Node22.x and the expected project were verified. The maintenance schedule now references the new deployment with the same daily path/time. Deployment protection, environment variables and database were not changed.
+
+Rollback target remains dpl_5WrPFnhZhcp51X9UWU919sULJaTh. No credentials or protection bypasses are recorded in this proof. Temporary response headers/bodies were destroyed after each request. These HTTP/byte checks do not stand in for a real authenticated household journey, provider activation, physical-device or App Store acceptance.

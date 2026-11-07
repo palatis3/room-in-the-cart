@@ -1,0 +1,34 @@
+{
+  "base": "804030e68473d022e72b464940061c01c611a0bd",
+  "head": "efc1bfc5393cb21caeb3089f237619ef53cb1adc",
+  "patchSHA256": "1a2684776119a0f6ad7f11a3901e1d42310e39ca9174b8efe3a237f85644651f",
+  "executionManifestSHA256": "ec0fea4c51648a7498398687305ab00d7d072b1e97c318c93a6ab6ecfe628b3f",
+  "rootRehashedExecutionFiles": 19,
+  "rootRehashedPreparationFiles": 29,
+  "rootReplayedOfflineTests": 73,
+  "rootUnchangedLifecycleFunctions": 12,
+  "privateStopExceptionUnchanged": true,
+  "rootReadEntireWorkflow": true,
+  "lint": {
+    "version": "1.7.12",
+    "exit": 1,
+    "diagnostics": [
+      {
+        "line": 23,
+        "reason": "Known unsupported queue:max concurrency key"
+      },
+      {
+        "line": 78,
+        "reason": "Known unsupported queue:max concurrency key"
+      }
+    ],
+    "otherDiagnostics": 0,
+    "qualification": "Known pinned-linter syntax gap already exercised by hosted workflows. Not a clean raw-lint exit."
+  },
+  "appSourceSHA256": "afb8323925cc88ba1ec0d192d0488126b3dcc8b5e28fbcc3dc629796565add94",
+  "localIntegrationBuild": "../ui07-keyboard-idle-20261106/local-integration-build.json",
+  "releaseAcceptance": false,
+  "nativeDiagnosticExecution": "Single hosted run dispatched; native test execution pending at checkpoint",
+  "verifiedTrackedSources": 2348,
+  "basePlusOverlayVerified": true
+}

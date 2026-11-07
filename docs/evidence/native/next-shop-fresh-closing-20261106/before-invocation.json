@@ -1,0 +1,28 @@
+{
+  "command": [
+    "xcodebuild",
+    "-project",
+    "ios/RoomInTheCart.xcodeproj",
+    "-scheme",
+    "RoomInTheCart",
+    "-configuration",
+    "Debug",
+    "-destination",
+    "platform=iOS Simulator,id=789A7C41-16B3-4C42-AC3E-B65EC5423104",
+    "-jobs",
+    "2",
+    "-parallel-testing-enabled",
+    "NO",
+    "-derivedDataPath",
+    "/Users/palatis/Room in the Cart/.build/S04ProtectedVisibility20261106/DerivedData",
+    "-resultBundlePath",
+    "/Users/palatis/Room in the Cart/.build/NextShopFreshClosing20261106/BeforeFix.xcresult",
+    "-collect-test-diagnostics",
+    "never",
+    "CODE_SIGNING_ALLOWED=NO",
+    "-only-testing:RoomInTheCartTests/FreeJourneyAcceptanceTests/testFreshHandledAndDismissedChoicesDoNotReviveLinkedMealNeeds",
+    "test"
+  ],
+  "cwd": "/Users/palatis/Room in the Cart",
+  "start": 1794012156.5354629
+}

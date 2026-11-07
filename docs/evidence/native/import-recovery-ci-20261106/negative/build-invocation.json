@@ -1,0 +1,23 @@
+{
+  "command": [
+    "xcodebuild",
+    "-project",
+    "ios/RoomInTheCart.xcodeproj",
+    "-scheme",
+    "RoomInTheCart",
+    "-configuration",
+    "Debug",
+    "-destination",
+    "platform=iOS Simulator,id=79A8A00E-A5C8-4EA4-906E-56B1A854BF7A",
+    "-parallel-testing-enabled",
+    "NO",
+    "-jobs",
+    "2",
+    "-derivedDataPath",
+    "/Users/palatis/Room in the Cart/.build/ImportRecoveryNative20261106/ci-native-fixed/DerivedData",
+    "CODE_SIGNING_ALLOWED=NO",
+    "SWIFT_ACTIVE_COMPILATION_CONDITIONS=DEBUG CONTRIBUTOR_CAPTURE_UI_FIXTURE STOCK_REVIEW_UI_FIXTURE AWAY_CARRYOVER_UI_FIXTURE",
+    "build-for-testing"
+  ],
+  "start": 1794024821.294017
+}

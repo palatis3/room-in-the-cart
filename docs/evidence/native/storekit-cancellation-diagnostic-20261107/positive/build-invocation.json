@@ -1,0 +1,33 @@
+{
+  "command": [
+    "xcodebuild",
+    "-project",
+    "ios/RoomInTheCart.xcodeproj",
+    "-scheme",
+    "RoomInTheCart-LocalStoreKit",
+    "-configuration",
+    "Debug",
+    "-destination",
+    "platform=iOS Simulator,id=A37FB5B8-67B6-4485-B5E3-C18D6D85E1E6",
+    "-only-test-configuration",
+    "US English \u2014 local StoreKit",
+    "-parallel-testing-enabled",
+    "NO",
+    "-test-timeouts-enabled",
+    "YES",
+    "-default-test-execution-time-allowance",
+    "120",
+    "-maximum-test-execution-time-allowance",
+    "120",
+    "-collect-test-diagnostics",
+    "never",
+    "-derivedDataPath",
+    "/Users/palatis/Room in the Cart/.build/StoreKitCancellation20261106/local-diagnostic/DerivedData",
+    "-jobs",
+    "2",
+    "CODE_SIGN_IDENTITY=-",
+    "build-for-testing"
+  ],
+  "cwd": "/Users/palatis/Room in the Cart/.build/StoreKitCancellation20261106/local-diagnostic/source",
+  "start": 1794026628.3456051
+}

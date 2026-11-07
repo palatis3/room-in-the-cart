@@ -135,6 +135,49 @@ test('offline queueing still requires consent and an unexpired replay window',as
  }
 });
 
+test('refresh hides the previous member as soon as the server reports a different or ended session',async()=>{
+ for(const next of [null,{...session(),memberId:'member-b'}]){
+  let current=session(),observed;
+  const outbox=new Outbox(new IDBFactory());
+  const {root,app}=await setup(fakeAPI({
+   session:async()=>current,
+   requests:async()=>current?.memberId==='member-a'?[own()]:[],
+   authState:async()=>{observed=root.textContent;return {authenticated:false,available:true};}
+  }),'en',outbox);
+  assert.match(root.textContent,/No-salt frijoles/);
+  outbox.retainScope=async()=>{observed=root.textContent;};
+  current=next;await app.start();
+  assert.equal(typeof observed,'string');
+  assert.doesNotMatch(observed,/No-salt frijoles/);
+  assert.doesNotMatch(root.textContent,/No-salt frijoles/);
+ }
+});
+
+test('a command refusal hides private content even if the saved outbox cannot be removed',async()=>{
+ for(const status of [401,403]){
+  const outbox=new Outbox(new IDBFactory());
+  const s={...session(),queueConsent:true};
+  let duringRecovery,puts=0;
+  const put=outbox.put.bind(outbox);
+  outbox.put=async(...args)=>{await put(...args);puts++;};
+  outbox.remove=async()=>{throw new DOMException('Storage denied','SecurityError');};
+  const api=fakeAPI({
+   session:async()=>s,
+   command:async()=>{throw new ApiError(status===403?'access_ended':'session_needed',status);},
+   authState:async()=>{duringRecovery=root.textContent;return {authenticated:false,available:true};}
+  });
+  const {root,dom}=await setup(api,'en',outbox);
+  outbox.clear=async()=>{duringRecovery=root.textContent;throw new DOMException('Storage denied','SecurityError');};
+  root.querySelector('input[type=checkbox]').click();
+  type(dom,'item','Private test wording');submit(root,dom);submit(root,dom);await waitForIdle(root);
+  assert.equal(puts,1);
+  assert.doesNotMatch(root.textContent,/Private test wording|Ask the shopper/);
+  assert.equal(typeof duringRecovery,'string');
+  assert.doesNotMatch(duringRecovery,/Private test wording|Ask the shopper/);
+  assert.match(root.textContent,status===403?/Access has ended.*Clear site data/:/Sign in again/);
+ }
+});
+
 test('an explicit access refusal cannot queue against the earlier session',async()=>{
  const s={...session(),queueConsent:true},outbox=new Outbox(new IDBFactory());
  let revoked=false;
@@ -147,6 +190,39 @@ test('an explicit access refusal cannot queue against the earlier session',async
  assert.deepEqual(await outbox.list(scopeFor(s)),[]);
  assert.doesNotMatch(root.textContent,/Private draft|Waiting to send from this browser/);
  assert.match(root.textContent,/Access has ended/);
+});
+
+test('authorized Refresh clears an old mutation access denial without discarding storage warnings',async t=>{
+ for(const storageClearFails of [false,true]){
+  const original={...session(),queueConsent:true},outbox=new Outbox(new IDBFactory());
+  let current=original,connected=true,commands=0;
+  const {root,dom}=await setup(fakeAPI({
+   session:async()=>{if(!connected)throw new ApiError('network',0);return current;},
+   command:async()=>{commands++;assert.fail('A previous actor request must never be delivered');},
+   authState:async()=>({available:false,authenticated:false})
+  }),'en',outbox);
+  t.after(()=>dom.window.close());
+  root.querySelector('input[type=checkbox]').click();
+  type(dom,'item','Previous actor private request');submit(root,dom);
+  connected=false;submit(root,dom);await waitForIdle(root);
+  assert.equal((await outbox.list(scopeFor(original))).length,1);
+  current={...original,memberId:'member-b'};connected=true;
+  if(storageClearFails)outbox.clear=async()=>{throw new DOMException('Storage denied','SecurityError');};
+  click(root,'Retry');await waitForIdle(root);
+  assert.match(root.textContent,/Access has ended/);
+  assert.doesNotMatch(root.textContent,/Previous actor private request|Ask the shopper/);
+  if(!storageClearFails)assert.deepEqual(await outbox.list(scopeFor(original)),[]);
+
+  current=null;click(root,'Refresh');await waitForIdle(root);
+  assert.match(root.textContent,/Access has ended/,'Anonymous refresh must not dismiss the denial');
+  assert.equal(root.querySelector('#item'),null);
+  current={...original,memberId:'member-b'};click(root,'Refresh');await waitForIdle(root);
+  assert.ok(root.querySelector('#item'),'The newly authorized contributor can draft their own request');
+  assert.doesNotMatch(root.textContent,/Previous actor private request/);
+  if(storageClearFails)assert.match(root.textContent,/Access has ended.*Clear site data/);
+  else assert.doesNotMatch(root.textContent,/Access has ended/,'Successful authenticated refresh must remove the stale denial');
+  assert.equal(commands,0);
+ }
 });
 
 test('pending edit carries request revision; withdrawal requires confirmation',async()=>{
@@ -167,7 +243,11 @@ test('revocation purges household display and exposes no cached request',async()
 });
 
 test('helper content is inert text, read-only grants cannot propose or show adult routes',async()=>{
- const {root}=await setup(fakeAPI({session:async()=>({...session(),role:'helper',grantId:'grant-a'}),view:async()=>({grantId:'grant-a',shopId:'shop-a',shopLabel:'Tuesday',revision:2,asOf:'2026-01-01T12:00:00Z',expiresAt:'2099-01-01T00:00:00Z',canPropose:false,instructions:[{item:'<img src=x onerror=alert(1)>',amount:'4 wraps',action:'Reserve two for lunch'}]})}));
+ const api=fakeAPI({session:async()=>({...session(),role:'helper',grantId:'grant-a'}),view:async()=>({grantId:'grant-a',shopId:'shop-a',shopLabel:'Tuesday',revision:2,asOf:'2026-01-01T12:00:00Z',expiresAt:'2099-01-01T00:00:00Z',canPropose:false,instructions:[{item:'<img src=x onerror=alert(1)>',amount:'4 wraps',action:'Reserve two for lunch'}]})});
+ const {root}=await setup(api);
+ assert.match(root.textContent,/Revision: 2/);assert.match(root.textContent,/As of: [^:]*2026/);
+ const spanish=await setup(api,'es-US');
+ assert.match(spanish.root.textContent,/Versión: 2/);assert.match(spanish.root.textContent,/Actualizado: [^:]*2026/);
  assert.equal(root.querySelector('img'),null);assert.match(root.textContent,/Reserve two for lunch/);assert.match(root.textContent,/read-only/);assert.doesNotMatch(root.textContent,/Ask the shopper|Send proposal/);
 });
 
@@ -197,6 +277,108 @@ test('storage quota errors never turn an offline request into saved or received'
  await app.start();const consent=root.querySelector('input[type=checkbox]');consent.checked=true;consent.dispatchEvent(new dom.window.Event('change'));
  type(dom,'item','Milk');submit(root,dom);submit(root,dom);await waitForIdle(root);assert.match(root.textContent,/Not saved/);assert.match(root.textContent,/Milk/);assert.doesNotMatch(root.textContent,/Waiting to send from this browser|Received by the shopper/);
 });
+
+test('denying access to indexedDB itself still lets an invite open and a contributor send online',async(t)=>{
+ const previous=Object.getOwnPropertyDescriptor(globalThis,'indexedDB');
+ Object.defineProperty(globalThis,'indexedDB',{configurable:true,get(){throw new DOMException('Storage denied','SecurityError');}});
+ t.after(()=>{if(previous)Object.defineProperty(globalThis,'indexedDB',previous);else delete globalThis.indexedDB;});
+ const dom=new JSDOM('<div id="app"></div>',{url:'https://food.example/invite#token=invite-code'});
+ t.after(()=>dom.window.close());
+ const root=dom.window.document.getElementById('app');
+ const joined={...session(),queueConsent:true};
+ let current=null;const sent=[];
+ const api=fakeAPI({session:async()=>current,redeem:async token=>{
+  assert.equal(token,'invite-code');return {householdId:joined.household.id,memberId:joined.memberId,role:'contributor'};
+ },activateSession:async()=>{current=joined;},command:async(_s,c)=>sent.push(c)});
+ const token=consumeInvitation(dom.window.location,dom.window.history);
+ const app=new WebApp(root,api,undefined,token);
+ await app.start();assert.equal(dom.window.location.hash,'');
+ root.querySelector('#adult-attestation').click();submit(root,dom);await waitForIdle(root);
+ assert.match(root.textContent,/Ask the shopper/);assert.match(root.textContent,/pending requests could not be opened/);
+ root.querySelector('input[type=checkbox]').click();
+ type(dom,'item','Rolled oats');submit(root,dom);submit(root,dom);await waitForIdle(root);
+ assert.equal(sent.length,1);assert.equal(sent[0].body.originalItem,'Rolled oats');
+ assert.match(root.textContent,/Received by the shopper/);
+});
+
+test('eviction during an open session replaces the waiting notice after refresh',async()=>{
+ const s={...session(),queueConsent:true},factory=new IDBFactory(),outbox=new Outbox(factory);
+ let attempts=0;
+ const api=fakeAPI({session:async()=>s,command:async()=>{attempts++;throw new ApiError('network',0);}});
+ const {dom,root,app}=await setup(api,'en',outbox);
+ root.querySelector('input[type=checkbox]').click();
+ type(dom,'item','Queued oats');submit(root,dom);submit(root,dom);await waitForIdle(root);
+ assert.match(root.textContent,/Waiting to send from this browser/);
+ const [database]=await factory.databases();
+ await new Promise((resolve,reject)=>{
+  const deletion=factory.deleteDatabase(database.name);
+  deletion.onsuccess=resolve;deletion.onerror=()=>reject(deletion.error);
+ });
+ await app.start();assert.match(root.textContent,/no longer stored on this browser/);
+ assert.doesNotMatch(root.textContent,/Waiting to send|Queued oats|Received by the shopper/);
+ const reloaded=await setup(api,'en',outbox);
+ assert.doesNotMatch(reloaded.root.textContent,/Waiting to send|Queued oats|Received by the shopper/);
+ assert.equal(attempts,1);
+});
+
+test('a cold reload under a different contributor cannot recover the previous queue',async()=>{
+ const original={...session(),queueConsent:true},outbox=new Outbox(new IDBFactory());
+ let current=original,attempts=0;
+ const api=fakeAPI({session:async()=>current,command:async()=>{attempts++;throw new ApiError('network',0);}});
+ const {root,dom}=await setup(api,'en',outbox);
+ root.querySelector('input[type=checkbox]').click();
+ type(dom,'item','Private oats');submit(root,dom);submit(root,dom);await waitForIdle(root);
+ assert.equal((await outbox.list(scopeFor(original))).length,1);
+ current={...original,memberId:'second-member'};
+ const reloaded=await setup(api,'en',outbox);
+ assert.match(reloaded.root.textContent,/Ask the shopper/);
+ assert.doesNotMatch(reloaded.root.textContent,/Private oats|Waiting to send|Pending requests/);
+ assert.equal(reloaded.root.querySelector('input[type=checkbox]').checked,false);
+ assert.deepEqual(await outbox.list(scopeFor(original)),[]);assert.equal(attempts,1);
+});
+
+test('a confirmed queued retry keeps its receipt if browser storage fails during cleanup',async()=>{
+ const s={...session(),queueConsent:true},outbox=new Outbox(new IDBFactory());
+ let attempts=0;
+ const api=fakeAPI({session:async()=>s,command:async()=>{if(++attempts===1)throw new ApiError('network',0);}});
+ const {dom,root}=await setup(api,'en',outbox);
+ root.querySelector('input[type=checkbox]').click();
+ type(dom,'item','Queued rice');submit(root,dom);submit(root,dom);await waitForIdle(root);
+ outbox.remove=async()=>{throw new DOMException('Storage denied','SecurityError');};
+ click(root,'Retry');await waitForIdle(root);
+ assert.match(root.textContent,/Received by the shopper/);
+ assert.match(root.textContent,/Received; local cleanup pending/);
+ assert.doesNotMatch(root.textContent,/Not saved|Waiting to send from this browser/);
+});
+
+for(const scenario of ['live replay window','expired replay window','changed member']){
+ test(`retrying local cleanup after a confirmed receipt: ${scenario}`,async()=>{
+  const original={...session(),queueConsent:true},outbox=new Outbox(new IDBFactory());
+  let current=original,posts=0,removals=0;
+  const remove=outbox.remove.bind(outbox);
+  outbox.remove=async id=>{
+   if(++removals===1)throw new DOMException('Storage denied','SecurityError');
+   await remove(id);
+  };
+  const api=fakeAPI({session:async()=>current,command:async()=>{posts++;}});
+  const {dom,root}=await setup(api,'en',outbox);
+  root.querySelector('input[type=checkbox]').click();
+  type(dom,'item','Confirmed rice');submit(root,dom);submit(root,dom);await waitForIdle(root);
+  assert.match(root.textContent,/Received; local cleanup pending/);
+  if(scenario==='expired replay window')current={...original,replayWindow:{...original.replayWindow,expiresAt:'2020-01-01T00:00:00Z'}};
+  if(scenario==='changed member')current={...original,memberId:'second-member'};
+  click(root,'Retry');await waitForIdle(root);
+  assert.equal(posts,1);
+  if(scenario==='changed member'){
+   assert.equal(removals,1);assert.match(root.textContent,/Access has ended/);
+   assert.doesNotMatch(root.textContent,/Confirmed rice|Received by the shopper/);
+  }else{
+   assert.equal(removals,2);assert.match(root.textContent,/Received by the shopper/);
+   assert.doesNotMatch(root.textContent,/Confirmed rice|needs a new review|local cleanup pending/);
+  }
+  assert.deepEqual(await outbox.list(scopeFor(original)),[]);
+ });
+}
 
 test('expired helper content is removed without requiring a network response',async()=>{
  const view={grantId:'grant-a',shopId:'shop-a',shopLabel:'Private shop',revision:1,asOf:'2026-01-01T12:00:00Z',expiresAt:'2099-01-01T00:00:00Z',canPropose:false,instructions:[{item:'Private ingredient',amount:'one',action:'Use today'}]};
@@ -422,11 +604,12 @@ test('a helper correction draft is cleared when refresh opens a different grant'
  let grantId='grant-a';
  const {root,dom}=await setup(fakeAPI({
   session:async()=>({...session(),role:'editor',grantId}),
-  view:async()=>({grantId,shopId:'shop-a',shopLabel:grantId,revision:1,asOf:'2026-01-01T00:00:00Z',expiresAt:'2099-01-01T00:00:00Z',canPropose:true,instructions:[]})
+  view:async()=>({grantId,shopId:'shop-a',shopLabel:grantId,revision:grantId==='grant-a'?1:4,asOf:'2026-01-01T00:00:00Z',expiresAt:'2099-01-01T00:00:00Z',canPropose:true,instructions:[]})
  }));
+ assert.match(root.textContent,/Revision: 1/);
  type(dom,'correction','A note for the first cook');
  grantId='grant-b';click(root,'Refresh');await waitForIdle(root);
- assert.match(root.textContent,/grant-b/);
+ assert.match(root.textContent,/grant-b/);assert.match(root.textContent,/Revision: 4/);assert.doesNotMatch(root.textContent,/Revision: 1/);
  assert.equal(dom.window.document.getElementById('correction').value,'');
 });
 
@@ -454,7 +637,7 @@ test('lost editor reply retries identical reviewed bytes after refresh advances 
  assert.match(root.textContent,/receipt is unconfirmed/);assert.doesNotMatch(root.textContent,/Not saved/);
  assert.equal(root.querySelector('#correction'),null);assert.match(root.textContent,/only kept on this page/);
  revision=8;click(root,'Refresh');await waitForIdle(root);
- assert.match(root.textContent,/Reviewed revision: 7/);click(root,'Retry original suggestion');await waitForIdle(root);
+ assert.match(root.textContent,/Revision: 8/);assert.match(root.textContent,/Reviewed revision: 7/);click(root,'Retry original suggestion');await waitForIdle(root);
  assert.equal(commits,1);assert.equal(requests.length,2);assert.equal(requests[0],requests[1]);
  assert.match(root.textContent,/Suggestion received for shopper review/);
  click(root,'Check suggestion status');await waitForIdle(root);
@@ -583,6 +766,22 @@ test('late received-page response cannot expose old actor data after account swi
  }
 });
 
+test('expiry during Refresh keeps its current denial after the received-page response finishes',async t=>{
+ for(const role of ['helper','editor']){
+  let release;const view={...cookView(),canPropose:role==='editor'};
+  const api=fakeAPI({session:async()=>({...editorSession(),role}),view:async()=>view,receivedProposals:async()=>({proposals:[],nextCursor:null})});
+  const {root,dom,app}=await setup(api);t.after(()=>dom.window.close());
+  api.receivedProposals=async()=>new Promise(resolve=>{release=()=>resolve({proposals:[receivedSuggestion()],nextCursor:null});});
+  click(root,'Refresh');
+  const deadline=Date.now()+3000;
+  while(!release){assert.ok(Date.now()<deadline,'Refresh must reach suggestion loading');await new Promise(r=>setTimeout(r,5));}
+  view.expiresAt='2020-01-01T00:00:00Z';app.checkExpiry();release();await waitForIdle(root);
+  assert.match(root.textContent,/Access has ended/);
+  assert.doesNotMatch(root.textContent,/Previously received private suggestion|Family A|Current instructions/);
+  assert.equal(root.querySelector('#correction'),null);
+ }
+});
+
 test('received pages reject wrong grants, duplicate rows, wrong cursors and private projection fields are discarded',async()=>{
  const view=cookView(),s=editorSession();
  for(const page of [{proposals:[receivedSuggestion({grantId:'other'})],nextCursor:null},{proposals:[receivedSuggestion(),receivedSuggestion()],nextCursor:null},
@@ -599,4 +798,57 @@ test('pagination appends only distinct own rows and receipt recovery avoids dupl
  click(root,'Show older suggestions');await waitForIdle(root);assert.equal(root.querySelectorAll('[data-proposal-id]').length,2);assert.deepEqual(requests,[null,'proposal-a']);
  type(dom,'correction','Previously received private suggestion');submit(root,dom);await waitForIdle(root);
  assert.equal(root.querySelector('[data-proposal-id="proposal-a"]'),null);assert.match(root.textContent,/Your reviewed suggestion/);assert.ok(root.querySelector('[data-proposal-id="proposal-b"]'));
+});
+
+test('only an added own request may carry an explicit purchase outcome',async()=>{
+ const row={...own(),status:'added',ownActionAllowed:false};
+ const read=async fields=>{
+  const api=new API(async()=>Response.json({requests:[{...row,...fields}],nextCursor:null}));
+  return (await api.requests(session()))[0];
+ };
+ for(const outcome of ['bought','notBought']){
+  const parsed=await read({purchaseOutcome:outcome,linkedLineId:'shopper-only',priceMinor:399});
+  assert.equal(parsed.purchaseOutcome,outcome);
+  assert.equal('linkedLineId' in parsed,false);
+  assert.equal('priceMinor' in parsed,false);
+ }
+ assert.equal('purchaseOutcome' in await read({}),false);
+ for(const fields of [{purchaseOutcome:'unknown'},{purchaseOutcome:null},{purchaseOutcome:'bought',status:'deferred'}]){
+  await assert.rejects(()=>read(fields),ApiError);
+ }
+});
+
+for(const [language,refresh,unconfirmed,bought,notBought] of [
+ ['en','Refresh','Purchase not confirmed','Shopper confirmed purchase','Shopper confirmed the item was not bought'],
+ ['es','Actualizar','Compra sin confirmar','La persona que hizo la compra confirmó que compró el artículo','La persona que hizo la compra confirmó que no compró el artículo']
+]){
+ test('own receipt refresh follows the shopper purchase correction in '+language,async t=>{
+  let row=own();
+  const {root,dom}=await setup(fakeAPI({requests:async()=>[row]}),language);
+  t.after(()=>dom.window.close());
+  assert.ok(!root.textContent.includes(unconfirmed));
+  row={...row,status:'added',ownActionAllowed:false};
+  for(const [outcome,expected] of [[undefined,unconfirmed],['bought',bought],['notBought',notBought],[undefined,unconfirmed]]){
+   row={...row,revision:row.revision+1,purchaseOutcome:outcome};
+   click(root,refresh);await waitForIdle(root);
+   const labels=[...root.querySelectorAll('p')].map(p=>p.textContent);
+   assert.deepEqual(labels.filter(label=>[unconfirmed,bought,notBought].includes(label)),[expected]);
+  }
+ });
+}
+
+test('a carried request keeps its own source and later trip legible without disclosing a shop link',async t=>{
+ const source={...own(),route:'next',status:'deferred',ownActionAllowed:false,carriedForward:true,sourceShopId:'private-source'};
+ const next={...own(),requestId:'next-request',shopId:'next-shop',fromPreviousShop:true};
+ const api=new API(async()=>Response.json({requests:[source,next],nextCursor:null}));
+ const rows=await api.requests(session());
+ assert.equal(rows[0].carriedForward,true);
+ assert.equal('sourceShopId' in rows[0],false);
+ assert.equal(rows[1].fromPreviousShop,true);
+ const {dom,root}=await setup(fakeAPI({requests:async()=>rows}),'es');
+ t.after(()=>dom.window.close());
+ assert.match(root.textContent,/Se pasó a una compra posterior para su revisión/);
+ assert.match(root.textContent,/De una compra anterior/);
+ const malformed=new API(async()=>Response.json({requests:[{...source,ownActionAllowed:true}],nextCursor:null}));
+ await assert.rejects(()=>malformed.requests(session()),ApiError);
 });

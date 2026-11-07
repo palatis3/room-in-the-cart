@@ -1,0 +1,60 @@
+{
+  "candidate": "804030e68473d022e72b464940061c01c611a0bd",
+  "test": "FreeJourneyUITests/testNextShopCanCancelThenOpenOneFreshShoppingList",
+  "result": "timeout at unchanged720s",
+  "normalSpeedLastOperationBeforeOnset": {
+    "action": "Type Dinner into Meal or purpose",
+    "startSeconds": 39.05,
+    "postEventWaitSeconds": 40.57,
+    "subsequentQuerySeconds": 40.62,
+    "sourceTestLine": 536,
+    "caveat": "Completed automation operation, no independent value assertion or screenshot."
+  },
+  "firstStalledOperation": {
+    "action": "Post-event app-idle wait after second Done tap",
+    "tapSeconds": 41.58,
+    "synthesizedEventSeconds": 42.06,
+    "idleWaitSeconds": 42.38,
+    "firstDiagnosticSeconds": 102.42,
+    "originalLogLines": [
+      1511,
+      1516,
+      1517
+    ],
+    "sourceHelperLine": 1196,
+    "tapCoordinate": [
+      364,
+      517
+    ]
+  },
+  "normalFirstDone": {
+    "tapSeconds": 34.53,
+    "postEventWaitSeconds": 35.44,
+    "nextQuerySeconds": 35.82,
+    "tapCoordinate": [
+      364,
+      517
+    ]
+  },
+  "furthestObservedProgress": "Typing available amount1 synthesized at658.48s; next Done query at718.79s and timeout before tap logged720.05s. No confirmation toggle, save, explicit app restart, next-shop dialog/cancel/create/open, or Records tab reached.",
+  "synchronizationMessages": {
+    "before720s": 11,
+    "afterTimeout": 1,
+    "total": 12
+  },
+  "spindump": {
+    "sampleStart": "2026-11-06T21:11:06.233Z",
+    "sampleEnd": "2026-11-06T21:11:11.218Z",
+    "durationSampledSeconds": 3.33,
+    "samples": 307,
+    "appPID": 18435,
+    "appMainThread": "307/307samples CFRunLoop service mach port / mach_msg2_trap",
+    "appAnimationManager": "307/307samples semaphore wait",
+    "runnerPID": 6304,
+    "runnerStack": "fill -> XCUIElement.tap -> _waitForQuiescenceAsPreEvent -> waitForQuiescenceIncludingAnimationsIdle -> XCTWaiter",
+    "interpretation": "Supports a sampled automation synchronization wait while app main loop was waiting for events; no sampled app CPU loop or app-call lock stack. Does not identify underlying unfinished-animation cause or establish framework versus app responsibility."
+  },
+  "causeEstablished": false,
+  "rawRecordsRead": false,
+  "nextDiagnostic": "Same804 app/runtime and unchangedgates: observe exact Rice/Done->Dinner/Done prefix with timestamps for Done handler, FocusState transitions, keyboard will/didHide, main-thread heartbeat and finalized independent screen recording. Compare fresh prefix and original precedingUI07 case history; preserve XCTest idle waiting and720/900 allowances. Distinguish failure to clear focus/dismiss from completed visible dismissal with continued XCTest quiescence wait."
+}

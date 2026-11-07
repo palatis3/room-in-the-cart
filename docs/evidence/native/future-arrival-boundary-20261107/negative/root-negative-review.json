@@ -1,0 +1,167 @@
+{
+  "nativeExit": 65,
+  "strictExit": 1,
+  "testCount": 5,
+  "allFiveFailAsExpected": true,
+  "rootInterpretation": {
+    "futureWrites": "Future receive and confirmation incorrectly succeed and mutate saved journey.",
+    "currentFood": "Future receipt/latest correction/freezer stock incorrectly cover current protected needs.",
+    "carryover": "Imported future arrival incorrectly permits physical carryover review.",
+    "stockPreview": "Timeless allocation sees future food prematurely and incorrectly allows old review after eligibility changes.",
+    "offerReminder": "Future receipt prematurely removes pending offer and its reminder target."
+  },
+  "failureLocations": [
+    {
+      "file": "ContextualReminderTests.swift",
+      "line": 346,
+      "test": "testRetainedFutureReceiptKeepsOfferAndReminderPendingUntilItsActualInstant",
+      "assertion": "XCTAssertEqual failed: (\"nil\") is not equal to (\"Optional(C5CAF380-46FB-44B8-9D0D-A00EB5B6AE45)\")"
+    },
+    {
+      "file": "ContextualReminderTests.swift",
+      "line": 347,
+      "test": "testRetainedFutureReceiptKeepsOfferAndReminderPendingUntilItsActualInstant",
+      "assertion": "XCTAssertTrue failed"
+    },
+    {
+      "file": "ContextualReminderTests.swift",
+      "line": 278,
+      "test": "testRetainedFutureReceiptKeepsOfferAndReminderPendingUntilItsActualInstant",
+      "assertion": "XCTUnwrap failed: expected non-nil value of type \"SurfaceReminderTarget\""
+    },
+    {
+      "file": "DinnerAwayCarryoverTests.swift",
+      "line": 301,
+      "test": "testImportedFutureReceiptCannotAuthorizePhysicalCarryoverBeforeArrival",
+      "assertion": "XCTAssertFalse failed - A recount cannot reserve food whose saved actual arrival is still in the future"
+    },
+    {
+      "file": "DinnerAwayCarryoverTests.swift",
+      "line": 302,
+      "test": "testImportedFutureReceiptCannotAuthorizePhysicalCarryoverBeforeArrival",
+      "assertion": "XCTAssertNil failed: \"AwayCarryoverIntent(workspaceID: 6FFFCFDD-5EE3-4060-AF53-B8938E1B44A4, actorID: \"local\", pickupRevision: 7, planningRevisionID: 00000000-0000-0000-0000-000000000001, sourceNeed: CoreDomain.AllocationNeed(id: 6A181F21-69BB-4901-A"
+    },
+    {
+      "file": "PickupModelTests.swift",
+      "line": 272,
+      "test": "testFutureArrivalAndUsableWritesLeaveProtectedFoodUnconfirmed",
+      "assertion": "XCTAssertFalse failed"
+    },
+    {
+      "file": "PickupModelTests.swift",
+      "line": 272,
+      "test": "testFutureArrivalAndUsableWritesLeaveProtectedFoodUnconfirmed",
+      "assertion": "XCTAssertFalse failed"
+    },
+    {
+      "file": "PickupModelTests.swift",
+      "line": 273,
+      "test": "testFutureArrivalAndUsableWritesLeaveProtectedFoodUnconfirmed",
+      "assertion": "XCTAssertEqual failed: (\"Optional(RoomInTheCart.PickupJourney(id: 7F44B5F3-4AF8-44D6-9983-32B33DC687DA, version: 1, revision: 6, basket: Optional(CoreDomain.BasketPlan(id: 7F44B5F3-4AF8-44D6-9983-32B33DC687DA, revisions: [CoreDomain.BasketRevision(id"
+    },
+    {
+      "file": "PickupModelTests.swift",
+      "line": 275,
+      "test": "testFutureArrivalAndUsableWritesLeaveProtectedFoodUnconfirmed",
+      "assertion": "XCTAssertEqual failed: (\"Optional(0)\") is not equal to (\"Optional(2)\")"
+    },
+    {
+      "file": "PickupModelTests.swift",
+      "line": 280,
+      "test": "testFutureArrivalAndUsableWritesLeaveProtectedFoodUnconfirmed",
+      "assertion": "XCTAssertEqual failed: (\"Optional(RoomInTheCart.PickupJourney(id: 7F44B5F3-4AF8-44D6-9983-32B33DC687DA, version: 1, revision: 6, basket: Optional(CoreDomain.BasketPlan(id: 7F44B5F3-4AF8-44D6-9983-32B33DC687DA, revisions: [CoreDomain.BasketRevision(id"
+    },
+    {
+      "file": "PickupModelTests.swift",
+      "line": 282,
+      "test": "testFutureArrivalAndUsableWritesLeaveProtectedFoodUnconfirmed",
+      "assertion": "XCTAssertTrue failed"
+    },
+    {
+      "file": "PickupModelTests.swift",
+      "line": 285,
+      "test": "testFutureArrivalAndUsableWritesLeaveProtectedFoodUnconfirmed",
+      "assertion": "XCTAssertFalse failed"
+    },
+    {
+      "file": "PickupModelTests.swift",
+      "line": 286,
+      "test": "testFutureArrivalAndUsableWritesLeaveProtectedFoodUnconfirmed",
+      "assertion": "XCTAssertEqual failed: (\"Optional(RoomInTheCart.PickupJourney(id: 7F44B5F3-4AF8-44D6-9983-32B33DC687DA, version: 1, revision: 7, basket: Optional(CoreDomain.BasketPlan(id: 7F44B5F3-4AF8-44D6-9983-32B33DC687DA, revisions: [CoreDomain.BasketRevision(id"
+    },
+    {
+      "file": "PickupModelTests.swift",
+      "line": 287,
+      "test": "testFutureArrivalAndUsableWritesLeaveProtectedFoodUnconfirmed",
+      "assertion": "XCTAssertEqual failed: (\"Optional(0)\") is not equal to (\"Optional(4)\")"
+    },
+    {
+      "file": "PickupModelTests.swift",
+      "line": 292,
+      "test": "testFutureArrivalAndUsableWritesLeaveProtectedFoodUnconfirmed",
+      "assertion": "XCTAssertTrue failed"
+    },
+    {
+      "file": "PickupModelTests.swift",
+      "line": 339,
+      "test": "testImportedFutureEvidenceIsRetainedButExcludedFromCurrentFoodAndCookProjection",
+      "assertion": "XCTAssertEqual failed: (\"Optional(0)\") is not equal to (\"Optional(2)\")"
+    },
+    {
+      "file": "PickupModelTests.swift",
+      "line": 340,
+      "test": "testImportedFutureEvidenceIsRetainedButExcludedFromCurrentFoodAndCookProjection",
+      "assertion": "XCTAssertEqual failed: (\"Optional(0)\") is not equal to (\"Optional(4)\") - A future latest correction must not resurrect its superseded four-wrap observation"
+    },
+    {
+      "file": "PickupModelTests.swift",
+      "line": 344,
+      "test": "testImportedFutureEvidenceIsRetainedButExcludedFromCurrentFoodAndCookProjection",
+      "assertion": "XCTAssertTrue failed"
+    },
+    {
+      "file": "PickupModelTests.swift",
+      "line": 349,
+      "test": "testImportedFutureEvidenceIsRetainedButExcludedFromCurrentFoodAndCookProjection",
+      "assertion": "XCTAssertEqual failed: (\"Optional(0)\") is not equal to (\"Optional(2)\")"
+    },
+    {
+      "file": "PickupModelTests.swift",
+      "line": 353,
+      "test": "testImportedFutureEvidenceIsRetainedButExcludedFromCurrentFoodAndCookProjection",
+      "assertion": "XCTAssertFalse failed - An imported future receipt does not authorize a new premature usable confirmation"
+    },
+    {
+      "file": "PickupModelTests.swift",
+      "line": 354,
+      "test": "testImportedFutureEvidenceIsRetainedButExcludedFromCurrentFoodAndCookProjection",
+      "assertion": "XCTAssertEqual failed: (\"Optional(CoreDomain.PickupLedger(orderID: 05457109-7B75-4C8C-B1F4-75AD364BD93F, orderLines: [CoreDomain.PickupOrderLine(id: B924248D-FECE-4EF0-86AA-20C958F6B2AD, branchID: \"Main\", name: \"Wraps\", ordered: CoreDomain.Quantity(a"
+    },
+    {
+      "file": "PickupModelTests.swift",
+      "line": 378,
+      "test": "testStockReviewExpiresWhenRetainedFutureFoodBecomesCurrentWithoutRevisionChange",
+      "assertion": "XCTAssertEqual failed: (\"Optional(0)\") is not equal to (\"Optional(2)\")"
+    },
+    {
+      "file": "PickupModelTests.swift",
+      "line": 383,
+      "test": "testStockReviewExpiresWhenRetainedFutureFoodBecomesCurrentWithoutRevisionChange",
+      "assertion": "XCTAssertFalse failed - Food availability changed after this review even though no saved record changed"
+    },
+    {
+      "file": "PickupModelTests.swift",
+      "line": 385,
+      "test": "testStockReviewExpiresWhenRetainedFutureFoodBecomesCurrentWithoutRevisionChange",
+      "assertion": "XCTAssertFalse failed"
+    },
+    {
+      "file": "PickupModelTests.swift",
+      "line": 386,
+      "test": "testStockReviewExpiresWhenRetainedFutureFoodBecomesCurrentWithoutRevisionChange",
+      "assertion": "XCTAssertEqual failed: (\"Optional(RoomInTheCart.PickupJourney(id: 2231D3BD-97FF-4CC3-A378-E90EBF50CFD6, version: 1, revision: 6, basket: Optional(CoreDomain.BasketPlan(id: 2231D3BD-97FF-4CC3-A378-E90EBF50CFD6, revisions: [CoreDomain.BasketRevision(id"
+    }
+  ],
+  "originalSourceProductsPreserved": true,
+  "scope": "Negative control proves these regressions detect old behavior. No positive-fix claim."
+}

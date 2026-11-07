@@ -1,0 +1,15 @@
+{
+  "baseCommit": "161ab6497daa560e8b9c3b2dc133cd2777e3c53f",
+  "followupCommit": "ead836577a81ad499a610baffe8e8136eb2f2a7f",
+  "failedRun": 42203081911,
+  "failure": "Runtime metadata query timed out after30seconds following successful boot; actual build unknown; no compilation or test execution.",
+  "change": "Single runtime-build metadata query gets90seconds instead of30; deadline and elapsed time recorded. Unknown or mismatched builds still fail, with no query retry.",
+  "syntheticChecksPassed": 29,
+  "originalSwiftAndTestInstrumentationUnchanged": true,
+  "workflowStepAndJobLimitsUnchanged": true,
+  "xctest720And900LimitsUnchanged": true,
+  "originalLocalSourcesPreserved": ".build/SpanishDoneDiagnostic20261106/local-source-161ab64",
+  "sourceFilesPreservedAndHashVerified": 528,
+  "patchSHA256": "a49844b816715381562e2c2e78c8dda6e6a63e163a01a5b749e4a36a1df70936",
+  "rootReview": "Only run.py, two focused setup-guard cases and README changed. No acceptance branch push or test-result reclassification."
+}

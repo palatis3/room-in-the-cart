@@ -1,0 +1,42 @@
+{
+  "artifactID": 13491627858,
+  "artifactName": "iphone-fixture-results-contributor-balanced-05-1",
+  "sha256": "d66573cb783bfc2ba6d64824bcf34d683a12149011412601f8c969fd5c44d28f",
+  "size": 15344959,
+  "digestVerified": true,
+  "candidate": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+  "runID": 42184705317,
+  "jobID": 127793433863,
+  "hostedConclusion": "success",
+  "selected": 11,
+  "passed": 11,
+  "failed": 0,
+  "skipped": 0,
+  "strictReplayExit": 0,
+  "planByteIdentical": true,
+  "runtimeWarnings": 0,
+  "warnings": {
+    "status": "passed",
+    "summaryWarningCount": null,
+    "runtimeWarningCount": 0,
+    "examinedTestCount": 11,
+    "detailExportCount": 11,
+    "activityExportCount": 0,
+    "warnings": []
+  },
+  "selectors": [
+    "RoomInTheCartUITests/CorrectionPrivacyAcceptanceUITests/testSettingsNamedForgetLastEntryOutcomeConfirmedOptOutAndDisconnectedHelp",
+    "RoomInTheCartUITests/GuardianEnrollmentUITests/testCancelSetupDialogHasExplicitCancelAndForegroundRestoresStatus",
+    "RoomInTheCartUITests/GuardianEnrollmentUITests/testChildForgetCancelAndForegroundKeepTheSamePairingWithoutActivation",
+    "RoomInTheCartUITests/GuardianEnrollmentUITests/testNoticeDeclarationVerificationPermissionPairingAndDialogCancellation",
+    "RoomInTheCartUITests/GuardianEnrollmentUITests/testRealRootColdChildMarkerAndSyntheticVaultCleanupPreserveAdultData",
+    "RoomInTheCartUITests/GuardianEnrollmentUITests/testRealRootLeaveCancelAndConfirmedExitRestoreLockedAdultAccess",
+    "RoomInTheCartUITests/GuardianEnrollmentUITests/testSpanishLargestTextUnavailableGateRemainsReadableAndClosed",
+    "RoomInTheCartUITests/GuardianEnrollmentUITests/testUnavailableNeverOffersCreationOrAdultVerification",
+    "RoomInTheCartUITests/GuardianEnrollmentUITests/testUncertainAttemptCanRefreshButCannotSendAnotherVerification",
+    "RoomInTheCartUITests/SharedMealChangeUITests/testAssignedShopperMapsLocalSeedWithoutPlannerPostAndCanCancel",
+    "RoomInTheCartUITests/SharedMealChangeUITests/testPlannerCancelThenSendAndSeparateShopperCancelThenApplyExactlyOnce"
+  ],
+  "rawLogSHA256": "cf6aaf971577d9e4837a57e2e666814ee91db5c86ed630bc5151475823e324fe",
+  "replayedBundle": "Tests.xcresult"
+}

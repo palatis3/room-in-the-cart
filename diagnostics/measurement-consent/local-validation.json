@@ -1,0 +1,60 @@
+{
+  "base": "804030e68473d022e72b464940061c01c611a0bd",
+  "overlaySHA256": "4ce4dbed931a195613bc7ce2b439c42208ca8f67cf04cffae2c503087de0c681",
+  "finishedAt": "2026-11-06T20:10:01.777851+00:00",
+  "buildExit": 0,
+  "buildForTesting": "passed",
+  "toolchain": "Xcode 27.1\nBuild version 27A9275",
+  "architectures": [
+    "arm64",
+    "x86_64"
+  ],
+  "configuration": "Debug",
+  "conditions": "DEBUG CONTRIBUTOR_CAPTURE_UI_FIXTURE STOCK_REVIEW_UI_FIXTURE AWAY_CARRYOVER_UI_FIXTURE",
+  "codeSigningAllowed": false,
+  "sourceFiles": 519,
+  "sourceHashesUnchanged": true,
+  "productFiles": 201,
+  "nativeTestExecution": false,
+  "simulatorBootOrCreation": false,
+  "hostedExecution": false,
+  "scope": "Compilation of exact804 plus four-file diagnostic overlay only; no fix or acceptance claim. Hosted Xcode26.3 differs from local27.1.",
+  "buildLogSHA256": "f5d88ad6a128ca4832bf5287a4fa63812019cbcad656ca73c23777350c465f38",
+  "warningLines": [
+    "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.1.sdk/Developer/Library/Frameworks/StoreKitTest.framework/Headers/SKTestTransaction.h:34:32: warning: 'SKPaymentTransactionState' is deprecated: first deprecated in iOS 18.0 - Use PurchaseResult from Product.purchase(confirmIn:options:).",
+    "ios/Tests/HouseholdRequestPackFixtureSupport.swift:93:57: warning: 'S24FixtureProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]",
+    "ios/Tests/MembershipTests.swift:1294:68: warning: 'MembershipURLProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]",
+    "ios/Tests/NativeCompositionStartupTest.swift:281:23: warning: no calls to throwing functions occur within 'try' expression [#UnnecessaryEffectMarker]",
+    "ios/Tests/NavigationRestorationTests.swift:245:66: warning: 'RestorationProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]",
+    "ios/Tests/PickupStockPrivateScopeIntegrationTests.swift:43:65: warning: 'StockScopeProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]",
+    "ios/Tests/RecordsMediaTests.swift:9:50: warning: immutable property will not be decoded because it is declared with an initial value which cannot be overwritten",
+    "ios/UITestSupport/HistoryGrantReadUIFixture.swift:75:58: warning: 'H09Protocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]",
+    "ios/UITestSupport/HouseholdRequestPackUIFixture.swift:163:53: warning: 'appendInterpolation' is deprecated: Localized string interpolation produces an unlocalized, debug description for this type of value. Use a type supported by LocalizedStringKey.StringInterpolation or initialize a LocalizedStringResource instead with an interpolated value that conforms to CustomLocalizedStringResourceConvertible. [#DeprecatedDeclaration]",
+    "ios/UITestSupport/HouseholdRequestPackUIFixture.swift:94:57: warning: 'S24FixtureProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]",
+    "ios/UITestSupport/MeasurementUIFixture.swift:103:73: warning: 'MeasurementFixtureProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]",
+    "ios/UITestSupport/RecordsMediaUIFixture.swift:129:57: warning: immutable property will not be decoded because it is declared with an initial value which cannot be overwritten",
+    "ios/UITestSupport/RequestDuplicateFixtureSupport.swift:137:66: warning: 'S23DuplicateFixtureProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]",
+    "ios/UITestSupport/SharedMealChangeUIFixture.swift:81:65: warning: 'S17FixtureProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]",
+    "ios/UITestSupport/SharedMealIdeaUIFixture.swift:154:65: warning: 'S26FixtureProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]",
+    "ios/UITestSupport/StoreQuotesUIFixture.swift:130:58: warning: 'S27Protocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]"
+  ],
+  "warningComparison": {
+    "baseline": "unchanged local control on same Xcode27.1",
+    "baselineUniqueLines": 21,
+    "diagnosticUniqueLines": 16,
+    "added": [],
+    "absent": [
+      "ios/Packages/CoreDomain/Package.swift: CoreDomaindynamic-product: clang: warning: using sysroot for 'macOS 27.0' but targeting 'arm64-apple-ios17.0.0-simulator' [-Wincompatible-sysroot]",
+      "ios/Packages/DeviceSurfaces/Package.swift: DeviceSurfacesdynamic-product: clang: warning: using sysroot for 'macOS 27.0' but targeting 'arm64-apple-ios17.0.0-simulator' [-Wincompatible-sysroot]",
+      "ios/Packages/HouseholdClient/Package.swift: HouseholdClientdynamic-product: clang: warning: using sysroot for 'macOS 27.0' but targeting 'arm64-apple-ios17.0.0-simulator' [-Wincompatible-sysroot]",
+      "ios/Packages/LocalStore/Package.swift: LocalStoredynamic-product: clang: warning: using sysroot for 'macOS 27.0' but targeting 'arm64-apple-ios17.0.0-simulator' [-Wincompatible-sysroot]",
+      "ios/Packages/RecordArchive/Package.swift: RecordArchivedynamic-product: clang: warning: using sysroot for 'macOS 27.0' but targeting 'arm64-apple-ios17.0.0-simulator' [-Wincompatible-sysroot]"
+    ],
+    "scope": "Normalized source-root paths only; diagnostic generic build includes arm64 and x86_64, baseline targeted arm64."
+  },
+  "offlineReconcilerTests": {
+    "passed": 19,
+    "rootReplayLogSHA256": "75b45abd72536aa00e1ce40467992026989d463ece9fb703a0fc7ef268694ddc",
+    "scope": "Synthetic parsing/reconciliation and CLI only, no actual capture or test run."
+  }
+}

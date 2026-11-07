@@ -1,3 +1,9 @@
+import {rankSharedFallbacks,requireAssistance} from './shared-fallback-options.js';
+import {previewCurrentPantryObservation,readSharedRecoveryCoverage} from './shared-recovery-basis.js';
+import {loadRecoveryPublication,previewSharedRecovery,readRecoveryDesk} from './shared-recovery-publication.js';
+import { cookCorrectionFacts, cookCopyBaseline, cookCopyHistory } from './cook-copy.js';
+import { readPantry, readJointCoverage } from './pantry-lots.js';
+import { readDelivery, readDeliveryCoverage } from './delivery-evidence.js';
 import { createServer, type IncomingMessage } from 'node:http';
 import { randomUUID, timingSafeEqual } from 'node:crypto';
 import { z } from 'zod';
@@ -22,6 +28,7 @@ import {PrivacyService,deletionSchema,exitSchema} from './privacy.js';
 import {privacyHTTPCall,type PrivacyCall} from './privacy-call.js';
 import {GuardianEnrollmentService,guardianCreateSchema,guardianActionSchema,guardianConsentSchema,guardianInvitationSchema,guardianConfirmSchema,childClaimSchema,childFinishSchema,childAuthStartSchema,childNativeStartSchema,childNativeAdmitSchema} from './guardian.js';
 import {viewReplacementSchema,proposalResolutionSchema,householdCreateSchema,inviteCreateSchema,inviteRedeemSchema,viewCreateSchema,viewUpdateSchema,proposalSchema,revocationSchema, parseCommand,previewSchema,uuid } from './contracts.js';
+import { SharedFallbackRegistry } from './shared-fallback-registry.js';
 export interface HTTPOptions { repository:HouseholdRepository; verifier?:IdentityVerifier; webOrigin?:string; maxRequestsPerMinute?:number; billing?:BillingService; browserAuth?:BrowserAuthService; privacy?:PrivacyService; guardian?:GuardianEnrollmentService; clientAddress?:(request:IncomingMessage)=>string|undefined }
 async function rawBody(req:IncomingMessage,maxBytes=65_536):Promise<Buffer> {
   if(!/^application\/json(?:\s*;|$)/i.test(req.headers['content-type']??''))throw new ServiceError(415,'json_required','Send a JSON command.');
@@ -31,6 +38,20 @@ async function rawBody(req:IncomingMessage,maxBytes=65_536):Promise<Buffer> {
 }
 async function body(req:IncomingMessage,maxBytes=65_536):Promise<unknown>{try{return JSON.parse((await rawBody(req,maxBytes)).toString('utf8'));}catch(error){if(error instanceof ServiceError)throw error;throw invalid();}}
 
+// A disclosed recipe may be larger than an ordinary command. Keep the
+// command's byte limit for every other kind, including JSON whitespace.
+async function householdBody(req:IncomingMessage,path:string) {
+  if(path.endsWith('/accepted-fallbacks')) return body(req,540_000);
+  if(path.endsWith('/meal-recovery/options') || path.endsWith('/meal-recovery/preview')) return body(req,1_800_000);
+  if(path!=='/commands') return body(req);
+  const raw=await rawBody(req,1_800_000);
+  let payload:unknown;
+  try {payload=JSON.parse(raw.toString('utf8'));} catch {throw invalid();}
+  if(raw.length>65_536 && !(typeof payload==='object' && payload && 'kind' in payload && payload.kind==='mealRecovery.apply'))
+    throw new ServiceError(413,'body_too_large','Send one bounded command.');
+  return payload;
+}
+
 function equal(a:string,b:string){const aa=Buffer.from(a),bb=Buffer.from(b);return aa.length===bb.length&&timingSafeEqual(aa,bb);}
 function cookie(req:IncomingMessage,name='ritc_session'):string|null {
   return req.headers.cookie?.split(';').map(s=>s.trim()).find(s=>s.startsWith(name+'='))?.slice(name.length+1)??null;
@@ -39,6 +60,7 @@ export function createHTTPServer(options:HTTPOptions) {
   const repository=options.repository,verifier=options.verifier??new DenyIdentityVerifier();
   const lifecycle=new HouseholdLifecycle(repository),helperReview=new HelperReview(lifecycle),history=new PriceBudgetHistory(repository,options.billing);
   const decisions = new DecisionHistory(options.billing);
+  const fallbacks = new SharedFallbackRegistry(repository,options.billing);
   const mealMoves = new MealMoves(repository,options.billing);
   const mealIdeas = new SharedMealIdeas(repository,mealMoves);
   const mealChanges = new SharedMealChanges(repository,mealMoves);
@@ -187,7 +209,7 @@ export function createHTTPServer(options:HTTPOptions) {
       }
       const verificationRoute=/^\/guardian\/enrollments\/([^/]+)\/verification$/.exec(path);
       if(verificationRoute&&method==='POST'){send(200,await guardian.verification(householdId,auth,uuid.parse(verificationRoute[1]),guardianActionSchema.parse(await body(req,4096))));return;}
-      const payload=method==='POST'||method==='PUT'||(method==='DELETE'&&/\/measurement-feedback$/.test(path))?await body(req):undefined;
+      const payload=method==='POST'||method==='PUT'||(method==='DELETE'&&/\/measurement-feedback$/.test(path))?await householdBody(req,path):undefined;
       const ownPlacement=/^\/shops\/([^/]+)\/placement-reports\/mine\/([^/]+)$/.exec(path);
       const placementCommand=path==='/commands'&&method==='POST'&&typeof payload==='object'&&payload!==null&&'kind' in payload&&(payload.kind==='shop.reportPlaced'||payload.kind==='shop.reconcileReport')?parseCommand(payload):undefined;
       const placementRead=method==='GET'?/^\/shops\/([^/]+)\/placement-reports(?:\/[^/]+)?$/.exec(path):null;
@@ -269,7 +291,7 @@ export function createHTTPServer(options:HTTPOptions) {
           const cursor=url.searchParams.get('cursor');if(cursor)uuid.parse(cursor);
           return repository.requests(ctx,cursor);
         }
-        if(path==='/commands'&&method==='POST')return repository.execute(ctx,parseCommand(payload));
+        if(path==='/commands'&&method==='POST')return repository.execute(ctx,parseCommand(payload),options.billing);
         const shopMatch=/^\/shops\/([^/]+)(.*)$/.exec(path);
         if(shopMatch) {
           const shopId=uuid.parse(shopMatch[1]),tail=shopMatch[2];
@@ -299,6 +321,50 @@ export function createHTTPServer(options:HTTPOptions) {
           if(tail==='/placement-reports/current-shop'&&method==='GET')return placementReports.currentShop(ctx,shopId);
           const placementDetail=/^\/placement-reports\/([^/]+)$/.exec(tail??'');
           if(placementDetail&&method==='GET')return placementReports.detail(ctx,shopId,uuid.parse(placementDetail[1]));
+          if(tail==='/accepted-fallbacks' && method==='GET')return fallbacks.read(ctx,shopId.toLowerCase(),url.searchParams.get('cursor'));
+          if(tail==='/accepted-fallbacks' && method==='POST')return fallbacks.change(ctx,shopId.toLowerCase(),payload);
+          if(tail==='/accepted-fallbacks/source' && method==='POST')return fallbacks.source(ctx,shopId.toLowerCase(),payload);
+          if(tail==='/meal-recovery/options' && method==='POST') {
+            const shop=await repository.shop(ctx,shopId.toLowerCase());
+            repository.requireShopper(ctx,shop);
+            await requireAssistance(ctx,options.billing);
+            return rankSharedFallbacks(ctx,shop,payload,loadRecoveryPublication);
+          }
+          if((tail==='/meal-recovery' || tail==='/meal-recovery/coverage') && method==='GET' || tail==='/meal-recovery/preview' && method==='POST') {
+            const shop=await repository.shop(ctx,shopId.toLowerCase());
+            repository.requireShopper(ctx,shop);
+            if(tail==='/meal-recovery/coverage') return readSharedRecoveryCoverage(ctx,shop,loadRecoveryPublication);
+            return method==='GET' ? readRecoveryDesk(ctx,shop) : previewSharedRecovery(ctx,shop,payload,options.billing);
+          }
+          if((tail==='/pantry-lots' || tail==='/pantry-lots/coverage') && method==='GET' ||
+             tail==='/pantry-lots/observation-preview' && method==='POST'){
+            const shop=await repository.shop(ctx,shopId.toLowerCase());repository.requireShopper(ctx,shop);
+            if(tail==='/pantry-lots/coverage') return readJointCoverage(ctx,shop);
+            if(tail==='/pantry-lots/observation-preview') return previewCurrentPantryObservation(ctx,shop,payload,loadRecoveryPublication);
+            const cursor=url.searchParams.get('cursor');
+            return readPantry(ctx,shop,cursor===null?null:uuid.parse(cursor));
+          }
+          if(tail==='/cook-copies' && method==='GET') {
+            const shop=await repository.shop(ctx,shopId.toLowerCase());repository.requireShopper(ctx,shop);
+            const cursor=url.searchParams.get('cursor');
+            return cookCopyHistory(ctx,shop,uuid.parse(url.searchParams.get('occurrenceId')),cursor===null?null:uuid.parse(cursor));
+          }
+          if(tail==='/cook-copies/correction' && method==='POST') {
+            const shop=await repository.shop(ctx,shopId.toLowerCase());repository.requireShopper(ctx,shop);
+            if(!options.billing) throw new ServiceError(503,'billing_unavailable','Try again when membership can be verified.');
+            await options.billing.requirePaidSeat(ctx);
+            return cookCorrectionFacts(ctx,shop,payload);
+          }
+          if(tail==='/cook-copies/baseline' && method==='POST') {
+            const shop=await repository.shop(ctx,shopId.toLowerCase());repository.requireShopper(ctx,shop);
+            return cookCopyBaseline(ctx,shop,payload);
+          }
+          if((tail==='/delivery-evidence' || tail==='/delivery-evidence/coverage') && method==='GET'){
+            const shop=await repository.shop(ctx,shopId.toLowerCase());repository.requireShopper(ctx,shop);
+            if(tail==='/delivery-evidence/coverage') return readDeliveryCoverage(ctx,shop);
+            const cursor=url.searchParams.get('cursor');
+            return readDelivery(ctx,shop,cursor===null?null:uuid.parse(cursor));
+          }
           if(tail==='/shopper-assignment'&&method==='GET')return repository.shopperAssignment(ctx,shopId);
           if(tail==='/meal-plan/ideas'&&method==='GET')return mealIdeas.read(ctx,shopId);
           if(tail==='/meal-plan/ideas'&&method==='POST')return mealIdeas.write(ctx,shopId,sharedIdeaWriteSchema.parse(payload));
@@ -310,6 +376,7 @@ export function createHTTPServer(options:HTTPOptions) {
           if(tail==='/meal-plan/dismissals'&&method==='POST')return mealMoves.dismiss(ctx,shopId,dismissMove.parse(payload));
           if(tail==='/meal-plan/proposals'&&method==='POST')return mealMoves.propose(ctx,shopId,moveRequest.parse(payload));
           if(tail===''&&method==='GET')return repository.adultShop(ctx,shopId);
+          if(tail==='/deferred-requests'&&method==='GET'){const cursor=url.searchParams.get('cursor');if(cursor!==null)uuid.parse(cursor);return repository.deferredRequests(ctx,shopId,cursor);}
           if(tail==='/inbox'&&method==='GET'){const cursor=url.searchParams.get('cursor');if(cursor)uuid.parse(cursor);return repository.requests(ctx,cursor,shopId);}
           if(tail==='/previews'&&method==='POST')return repository.preview(ctx,shopId,previewSchema.parse(payload));
         }

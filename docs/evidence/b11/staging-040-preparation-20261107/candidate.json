@@ -1,0 +1,50 @@
+{
+  "runtimeSource": "eae1e721cb08b8d678200a2345f5c3abb18df6c6",
+  "project": "room-in-the-cart-staging",
+  "currentRollbackDeployment": "dpl_2tfRmEfTGLW63sSTksJ6xJ9MZ97P",
+  "verifiedHostedSchema": 30,
+  "preparedSchema": 40,
+  "vercelDryRun": {
+    "pinnedRegularFiles": 162,
+    "regularFileBytes": 1587635,
+    "pathAndSHA256Manifest": "5f9dc2c19c1c054d7caa1e1643688aca833caa63ec133b1247c8649d2c620b8c"
+  },
+  "migrationSHA256": {
+    "031_delivery_evidence.sql": "30d916701cd863479552e659eedacf8c41cc78daac1d4cbd005968d4a5c79a02",
+    "032_delivery_ingredient_matches.sql": "3c8e0c30de0e9a9d21c9e7a70faeb4d237b3304fa3834b5163cbedcc3a30a49c",
+    "033_delivery_reservations.sql": "4e9dd6ab91bab336e13a38ba749fc83f33f1d3e7b3c022619fddccf3c67e96cf",
+    "034_dated_cook_copies.sql": "3c50ebacd52361f162b5592310cb975f92571d2e6075e9c330b46ae9b99f6e44",
+    "035_household_pantry.sql": "b9a509545eb12383223b9be0eba8f042add8b59d390293c20fb13d74e778511c",
+    "036_shared_meal_recovery.sql": "b89f980905df450d3b9f6814eff0405914641dbb91b976208adb7f2c66b0cae3",
+    "037_cook_correction_facts.sql": "a9d643d25cfef657362996a4a28a24d683679247a90f300a9520d9595fd75394",
+    "038_accepted_fallbacks.sql": "1be88c1dd673168d7e3862859b52c349be7645289b5db482437414463facf4de",
+    "039_request_purchase_confirmation.sql": "d135b1e5ad59946f0dfb102451af78654be5efa12dff1a18d9ea43f0bec8d635",
+    "040_deferred_request_carry.sql": "36931b5d0bd60f72c89ca6578417579aebaddf88979ce96ffae3d2085f6229ae"
+  },
+  "webAssetsSHA256": {
+    "apple-touch-icon.png": "e69ddd65f0718ffef895c0b82a63873d580722b920af40e86b1478a5cd9427e3",
+    "assets/index-B9I61_lh.css": "7cf18dacddae715ef01363daf5f2770fb9562762a10d2d2e4d41daf406224cee",
+    "assets/index-HSra-CB9.js": "5b60298ff2d903b3baf0cb530df28d07169a98f896793357204260d54b6b87fa",
+    "icon.png": "dd8314efcedbe096fbce5c43f09af13a335d713a1dcfae43f82b4904d9e58914",
+    "index.html": "8c78f1c7e449e411256117015b7c73ac73f80f939bffe113a822ccb5abba7347"
+  },
+  "localChecks": {
+    "postgres": {
+      "passed": 236,
+      "tapSHA256": "ca1740aa3fc75df074aab5975c173c1489781d84de152f2968d7ba18bba29180"
+    },
+    "service": {
+      "passed": 454,
+      "tapSHA256": "0237f7d8320a932d52357c9f9f770c2fc6af180c56570fa1b55ce6b65973c44c"
+    },
+    "web": {
+      "passed": 133,
+      "tapSHA256": "fab30ee287d1c2f9f2582662edad66f6cb4e8064f32357f0a3d01db505180abd"
+    },
+    "chrome": {
+      "passed": 14,
+      "tapSHA256": "b2559f8e8aabccd89eb465fef09221fe1ea9588fec1e07c7b02a991c3ef50ae5"
+    }
+  },
+  "scope": "Pinned and built locally. The deployment dry run enumerated inputs without uploading. PostgreSQL tests used a synthetic local database."
+}

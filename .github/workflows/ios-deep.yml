@@ -1,0 +1,136 @@
+name: iOS deep checks
+on:
+  pull_request:
+    paths:
+      - 'ios/**'
+      - 'scripts/**'
+      - 'shared/**'
+      - 'config/**'
+      - '.github/workflows/ios-deep.yml'
+      - 'scripts/check_ios_test_results.py'
+      - 'scripts/test_check_ios_test_results.py'
+      - 'scripts/ios_storekit_test_selectors.txt'
+      - 'scripts/check_swift_package_results.py'
+      - 'scripts/test_check_swift_package_results.py'
+      - 'scripts/swift_package_test_inventory.json'
+      - 'ios/Tests/StoreKitScenarioTests.swift'
+      - 'ios/Tests/LocalStoreKit.xctestplan'
+      - 'ios/Features/Membership/**'
+      - 'ios/RoomInTheCart.xcodeproj/xcshareddata/xcschemes/RoomInTheCart-LocalStoreKit.xcscheme'
+  workflow_dispatch:
+  workflow_call:
+permissions:
+  contents: read
+concurrency:
+  group: deep-ios-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  sanitizers:
+    name: sanitizers (${{ matrix.sanitizer }})
+    concurrency:
+      group: ritc-macos-slot-${{ matrix.macos_slot }}
+      queue: max
+      cancel-in-progress: false
+    runs-on: macos-15
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - sanitizer: thread
+            macos_slot: 0
+          - sanitizer: address
+            macos_slot: 1
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+      SANITIZER: ${{ matrix.sanitizer }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Check package tests for memory errors or data races
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p .build/sanitizer-results
+          for manifest in ios/Packages/*/Package.swift; do
+            package="$(dirname "$manifest")"
+            name="$(basename "$package")"
+            swift test --package-path "$package" --sanitize="$SANITIZER" 2>&1 | tee ".build/sanitizer-results/$name.log"
+            swift test --package-path "$package" --sanitize="$SANITIZER" list --skip-build > ".build/sanitizer-results/$name.inventory.txt"
+          done
+          python3 scripts/check_swift_package_results.py --results .build/sanitizer-results
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: swift-${{ matrix.sanitizer }}-${{ github.run_attempt }}
+          include-hidden-files: true
+          path: .build/sanitizer-results/
+          retention-days: 7
+  storekit:
+    name: storekit (${{ matrix.locale }}, ${{ matrix.configuration }})
+    concurrency:
+      group: ritc-macos-slot-${{ matrix.macos_slot }}
+      queue: max
+      cancel-in-progress: false
+    runs-on: macos-15
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - locale: en
+            macos_slot: 2
+            configuration: US English — local StoreKit
+          - locale: es
+            macos_slot: 3
+            configuration: US Spanish app · Spanish (Mexico) offer · USA storefront
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+      STOREKIT_CONFIGURATION: ${{ matrix.configuration }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Select iPhone
+        run: xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
+      - name: Run purchase, restore, renewal and revocation scenarios
+        timeout-minutes: 35
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p .build
+          python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"
+          xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart-LocalStoreKit \
+            -configuration Debug -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
+            -only-test-configuration "$STOREKIT_CONFIGURATION" -parallel-testing-enabled NO \
+            -test-timeouts-enabled YES -default-test-execution-time-allowance 120 \
+            -maximum-test-execution-time-allowance 120 -collect-test-diagnostics never \
+            -derivedDataPath .build/StoreKitDerivedData -resultBundlePath .build/StoreKit.xcresult \
+            CODE_SIGN_IDENTITY=- test 2>&1 | tee .build/StoreKit.log
+      - name: Export StoreKit results even after a failed scenario
+        id: storekit-results
+        if: always()
+        shell: bash
+        run: |
+          test -d .build/StoreKit.xcresult
+          xcrun xcresulttool get test-results summary --path .build/StoreKit.xcresult --compact > .build/storekit-summary.json
+          xcrun xcresulttool get test-results tests --path .build/StoreKit.xcresult --compact > .build/storekit-tests.json
+      - name: Verify exact StoreKit configuration and all scenario results
+        if: always() && steps.storekit-results.outcome == 'success'
+        shell: bash
+        run: |
+          set -o pipefail
+          python3 -c 'import json, os; from pathlib import Path; s=json.loads(Path(".build/storekit-summary.json").read_text()); assert {c["testPlanConfiguration"]["configurationName"] for c in s["devicesAndConfigurations"]} == {os.environ["STOREKIT_CONFIGURATION"]}, s'
+          python3 scripts/check_ios_test_results.py --selectors scripts/ios_storekit_test_selectors.txt --expected-count 15 \
+            --summary .build/storekit-summary.json --tests .build/storekit-tests.json \
+            --result-bundle .build/StoreKit.xcresult --test-log .build/StoreKit.log 2>&1 | tee .build/storekit-verification.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: storekit-${{ matrix.locale }}-${{ github.run_attempt }}
+          include-hidden-files: true
+          path: |
+            .build/StoreKit.xcresult
+            .build/StoreKit.log
+            .build/storekit-summary.json
+            .build/storekit-tests.json
+            .build/storekit-verification.txt
+            .build/test-runtime-warnings.json
+          retention-days: 7

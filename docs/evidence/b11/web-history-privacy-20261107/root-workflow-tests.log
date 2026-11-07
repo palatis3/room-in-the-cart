@@ -1,0 +1,17 @@
+E
+======================================================================
+ERROR: test_check_ci_workflows (unittest.loader._FailedTest)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_check_ci_workflows
+Traceback (most recent call last):
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/unittest/loader.py", line 154, in loadTestsFromName
+    module = __import__(module_name)
+  File "/Users/palatis/Room in the Cart/scripts/test_check_ci_workflows.py", line 7, in <module>
+    from check_ci_workflows import MATRIX_GROUP, POLICY, QUEUE_ERROR, lint_workflows, parse_workflow, validate_workflows
+ModuleNotFoundError: No module named 'check_ci_workflows'
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.001s
+
+FAILED (errors=1)

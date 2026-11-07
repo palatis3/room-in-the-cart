@@ -1,0 +1,652 @@
+{
+  "candidate": "775961d11315eb5c0eeed94b4ce3da62a6eec285",
+  "runID": 42309808686,
+  "jobs": [
+    {
+      "id": 128208158538,
+      "name": "Build optimized iPhone test products",
+      "status": "completed",
+      "conclusion": "success",
+      "runner_id": 1000004088,
+      "started_at": "2026-11-06T23:18:36Z",
+      "completed_at": "2026-11-06T23:29:19Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-06T23:18:37Z",
+          "completed_at": "2026-11-06T23:18:37Z"
+        },
+        {
+          "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-06T23:18:37Z",
+          "completed_at": "2026-11-06T23:18:41Z"
+        },
+        {
+          "name": "Check performance evidence validation",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-06T23:18:41Z",
+          "completed_at": "2026-11-06T23:18:42Z"
+        },
+        {
+          "name": "Record Xcode and select an iPhone simulator",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-06T23:18:42Z",
+          "completed_at": "2026-11-06T23:19:43Z"
+        },
+        {
+          "name": "Build the Release app and dedicated performance tests",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-06T23:19:43Z",
+          "completed_at": "2026-11-06T23:28:53Z"
+        },
+        {
+          "name": "Check the compiled XCTest inventory and plan performance jobs",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-06T23:28:53Z",
+          "completed_at": "2026-11-06T23:28:58Z"
+        },
+        {
+          "name": "Verify and package Release test products",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-06T23:28:58Z",
+          "completed_at": "2026-11-06T23:29:12Z"
+        },
+        {
+          "name": "Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-06T23:29:12Z",
+          "completed_at": "2026-11-06T23:29:14Z"
+        },
+        {
+          "name": "Retain Release build log",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-06T23:29:14Z",
+          "completed_at": "2026-11-06T23:29:15Z"
+        },
+        {
+          "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 18,
+          "started_at": "2026-11-06T23:29:15Z",
+          "completed_at": "2026-11-06T23:29:16Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19,
+          "started_at": "2026-11-06T23:29:16Z",
+          "completed_at": "2026-11-06T23:29:18Z"
+        }
+      ],
+      "logSHA256": "458a589825ddb1daff059d1cc1d241818fa3c6392a644cd4a167b867e480eff1",
+      "checkoutCommits": [
+        "775961d11315eb5c0eeed94b4ce3da62a6eec285"
+      ],
+      "checkoutExpected": true,
+      "pinnedDeveloperPathObserved": true
+    },
+    {
+      "id": 128216207075,
+      "name": "Release performance (launch)",
+      "status": "completed",
+      "conclusion": "success",
+      "runner_id": 1000004090,
+      "started_at": "2026-11-06T23:29:23Z",
+      "completed_at": "2026-11-06T23:37:42Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-06T23:29:24Z",
+          "completed_at": "2026-11-06T23:29:26Z"
+        },
+        {
+          "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-06T23:29:26Z",
+          "completed_at": "2026-11-06T23:29:31Z"
+        },
+        {
+          "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-06T23:29:31Z",
+          "completed_at": "2026-11-06T23:29:33Z"
+        },
+        {
+          "name": "Restore Release products and record the toolchain",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-06T23:29:33Z",
+          "completed_at": "2026-11-06T23:29:37Z"
+        },
+        {
+          "name": "Select an iPhone simulator",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-06T23:29:37Z",
+          "completed_at": "2026-11-06T23:30:08Z"
+        },
+        {
+          "name": "Boot and verify a fresh Release installation",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-06T23:30:08Z",
+          "completed_at": "2026-11-06T23:32:17Z"
+        },
+        {
+          "name": "Run one Release performance case",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-06T23:32:17Z",
+          "completed_at": "2026-11-06T23:36:55Z"
+        },
+        {
+          "name": "Export available XCTest metrics, attachments and test results",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-06T23:36:55Z",
+          "completed_at": "2026-11-06T23:37:08Z"
+        },
+        {
+          "name": "Capture scroll signpost diagnostic",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 9,
+          "started_at": "2026-11-06T23:37:08Z",
+          "completed_at": "2026-11-06T23:37:08Z"
+        },
+        {
+          "name": "Require exact test execution and complete performance evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-06T23:37:08Z",
+          "completed_at": "2026-11-06T23:37:09Z"
+        },
+        {
+          "name": "Retain Release performance evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-06T23:37:09Z",
+          "completed_at": "2026-11-06T23:37:12Z"
+        },
+        {
+          "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 22,
+          "started_at": "2026-11-06T23:37:12Z",
+          "completed_at": "2026-11-06T23:37:13Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 23,
+          "started_at": "2026-11-06T23:37:13Z",
+          "completed_at": "2026-11-06T23:37:41Z"
+        }
+      ],
+      "logSHA256": "a0ec270f9e6f955e32abb1267f46dca7e9c4e36212d51250580572ae8667fb0a",
+      "checkoutCommits": [
+        "775961d11315eb5c0eeed94b4ce3da62a6eec285"
+      ],
+      "checkoutExpected": true,
+      "pinnedDeveloperPathObserved": true,
+      "observedBaselineEnforcementValues": [
+        "true"
+      ],
+      "explicitBaselineEnforcementObserved": true
+    },
+    {
+      "id": 128216207159,
+      "name": "Release performance (rendered)",
+      "status": "completed",
+      "conclusion": "success",
+      "runner_id": 1000004091,
+      "started_at": "2026-11-06T23:29:22Z",
+      "completed_at": "2026-11-06T23:48:34Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-06T23:29:23Z",
+          "completed_at": "2026-11-06T23:29:24Z"
+        },
+        {
+          "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-06T23:29:24Z",
+          "completed_at": "2026-11-06T23:29:29Z"
+        },
+        {
+          "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-06T23:29:29Z",
+          "completed_at": "2026-11-06T23:29:31Z"
+        },
+        {
+          "name": "Restore Release products and record the toolchain",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-06T23:29:31Z",
+          "completed_at": "2026-11-06T23:29:41Z"
+        },
+        {
+          "name": "Select an iPhone simulator",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-06T23:29:41Z",
+          "completed_at": "2026-11-06T23:30:22Z"
+        },
+        {
+          "name": "Boot and verify a fresh Release installation",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-06T23:30:22Z",
+          "completed_at": "2026-11-06T23:32:03Z"
+        },
+        {
+          "name": "Run one Release performance case",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-06T23:32:03Z",
+          "completed_at": "2026-11-06T23:48:02Z"
+        },
+        {
+          "name": "Export available XCTest metrics, attachments and test results",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-06T23:48:02Z",
+          "completed_at": "2026-11-06T23:48:10Z"
+        },
+        {
+          "name": "Capture scroll signpost diagnostic",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 9,
+          "started_at": "2026-11-06T23:48:10Z",
+          "completed_at": "2026-11-06T23:48:10Z"
+        },
+        {
+          "name": "Require exact test execution and complete performance evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-06T23:48:10Z",
+          "completed_at": "2026-11-06T23:48:15Z"
+        },
+        {
+          "name": "Retain Release performance evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-06T23:48:15Z",
+          "completed_at": "2026-11-06T23:48:18Z"
+        },
+        {
+          "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 22,
+          "started_at": "2026-11-06T23:48:18Z",
+          "completed_at": "2026-11-06T23:48:18Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 23,
+          "started_at": "2026-11-06T23:48:18Z",
+          "completed_at": "2026-11-06T23:48:33Z"
+        }
+      ],
+      "logSHA256": "929b5120c1ca5d79a6d70b50df1c1b7d22d9ce43bcb7d1d2c57785730d47f6eb",
+      "checkoutCommits": [
+        "775961d11315eb5c0eeed94b4ce3da62a6eec285"
+      ],
+      "checkoutExpected": true,
+      "pinnedDeveloperPathObserved": true,
+      "observedBaselineEnforcementValues": [
+        "true"
+      ],
+      "explicitBaselineEnforcementObserved": true
+    },
+    {
+      "id": 128216207641,
+      "name": "Release performance (scroll)",
+      "status": "completed",
+      "conclusion": "success",
+      "runner_id": 1000004092,
+      "started_at": "2026-11-06T23:51:55Z",
+      "completed_at": "2026-11-07T00:03:12Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-06T23:51:55Z",
+          "completed_at": "2026-11-06T23:51:56Z"
+        },
+        {
+          "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-06T23:51:56Z",
+          "completed_at": "2026-11-06T23:52:02Z"
+        },
+        {
+          "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-06T23:52:02Z",
+          "completed_at": "2026-11-06T23:52:06Z"
+        },
+        {
+          "name": "Restore Release products and record the toolchain",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-06T23:52:06Z",
+          "completed_at": "2026-11-06T23:52:10Z"
+        },
+        {
+          "name": "Select an iPhone simulator",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-06T23:52:10Z",
+          "completed_at": "2026-11-06T23:52:25Z"
+        },
+        {
+          "name": "Boot and verify a fresh Release installation",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-06T23:52:25Z",
+          "completed_at": "2026-11-06T23:55:05Z"
+        },
+        {
+          "name": "Run one Release performance case",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-06T23:55:05Z",
+          "completed_at": "2026-11-07T00:02:25Z"
+        },
+        {
+          "name": "Export available XCTest metrics, attachments and test results",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-07T00:02:25Z",
+          "completed_at": "2026-11-07T00:02:32Z"
+        },
+        {
+          "name": "Capture scroll signpost diagnostic",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-07T00:02:32Z",
+          "completed_at": "2026-11-07T00:02:42Z"
+        },
+        {
+          "name": "Require exact test execution and complete performance evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-07T00:02:42Z",
+          "completed_at": "2026-11-07T00:02:44Z"
+        },
+        {
+          "name": "Retain Release performance evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-07T00:02:44Z",
+          "completed_at": "2026-11-07T00:02:47Z"
+        },
+        {
+          "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 22,
+          "started_at": "2026-11-07T00:02:47Z",
+          "completed_at": "2026-11-07T00:02:49Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 23,
+          "started_at": "2026-11-07T00:02:49Z",
+          "completed_at": "2026-11-07T00:03:10Z"
+        }
+      ],
+      "logSHA256": "a69b0c541f0d0665931f55aadcd1e808eb2388504c406368de842bccc1a68d18",
+      "checkoutCommits": [
+        "775961d11315eb5c0eeed94b4ce3da62a6eec285"
+      ],
+      "checkoutExpected": true,
+      "pinnedDeveloperPathObserved": true,
+      "observedBaselineEnforcementValues": [
+        "true"
+      ],
+      "explicitBaselineEnforcementObserved": true
+    }
+  ],
+  "cases": {
+    "launch": {
+      "jobID": 128216207075,
+      "conclusion": "success",
+      "runnerID": 1000004090,
+      "setupReceiptPresent": true,
+      "nativeStep": {
+        "name": "Run one Release performance case",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 7,
+        "started_at": "2026-11-06T23:32:17Z",
+        "completed_at": "2026-11-06T23:36:55Z"
+      },
+      "validationStep": {
+        "name": "Require exact test execution and complete performance evidence",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 10,
+        "started_at": "2026-11-06T23:37:08Z",
+        "completed_at": "2026-11-06T23:37:09Z"
+      },
+      "resultBundlePresent": true,
+      "setupReceipt": {
+        "schemaVersion": 1,
+        "case": "launch",
+        "status": "passed",
+        "stages": [
+          {
+            "stage": "boot",
+            "status": "passed",
+            "exitCode": 0,
+            "elapsedSeconds": 106.624
+          },
+          {
+            "stage": "list-installed-apps",
+            "status": "passed",
+            "exitCode": 0,
+            "elapsedSeconds": 18.872
+          },
+          {
+            "stage": "verify-app-absent",
+            "status": "passed",
+            "exitCode": 0,
+            "elapsedSeconds": 0.798
+          }
+        ]
+      },
+      "setupReceiptSHA256": "ffb5fc44278278bddc27a689ccb8e490a07fa1a4047207f0c444d44ab29186ae",
+      "stageOrderVerified": true
+    },
+    "rendered": {
+      "jobID": 128216207159,
+      "conclusion": "success",
+      "runnerID": 1000004091,
+      "setupReceiptPresent": true,
+      "nativeStep": {
+        "name": "Run one Release performance case",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 7,
+        "started_at": "2026-11-06T23:32:03Z",
+        "completed_at": "2026-11-06T23:48:02Z"
+      },
+      "validationStep": {
+        "name": "Require exact test execution and complete performance evidence",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 10,
+        "started_at": "2026-11-06T23:48:10Z",
+        "completed_at": "2026-11-06T23:48:15Z"
+      },
+      "resultBundlePresent": true,
+      "setupReceipt": {
+        "schemaVersion": 1,
+        "case": "rendered",
+        "status": "passed",
+        "stages": [
+          {
+            "stage": "boot",
+            "status": "passed",
+            "exitCode": 0,
+            "elapsedSeconds": 91.728
+          },
+          {
+            "stage": "list-installed-apps",
+            "status": "passed",
+            "exitCode": 0,
+            "elapsedSeconds": 5.317
+          },
+          {
+            "stage": "verify-app-absent",
+            "status": "passed",
+            "exitCode": 0,
+            "elapsedSeconds": 0.887
+          },
+          {
+            "stage": "seed-pasteboard",
+            "status": "passed",
+            "exitCode": 0,
+            "elapsedSeconds": 2.28
+          }
+        ]
+      },
+      "setupReceiptSHA256": "6d92a9aa867ffa06fdd48526eeaaa1c114aab8e959bb02daa8c015838e2c5805",
+      "stageOrderVerified": true
+    },
+    "scroll": {
+      "jobID": 128216207641,
+      "conclusion": "success",
+      "runnerID": 1000004092,
+      "setupReceiptPresent": true,
+      "nativeStep": {
+        "name": "Run one Release performance case",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 7,
+        "started_at": "2026-11-06T23:55:05Z",
+        "completed_at": "2026-11-07T00:02:25Z"
+      },
+      "validationStep": {
+        "name": "Require exact test execution and complete performance evidence",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 10,
+        "started_at": "2026-11-07T00:02:42Z",
+        "completed_at": "2026-11-07T00:02:44Z"
+      },
+      "resultBundlePresent": true,
+      "setupReceipt": {
+        "schemaVersion": 1,
+        "case": "scroll",
+        "status": "passed",
+        "stages": [
+          {
+            "stage": "boot",
+            "status": "passed",
+            "exitCode": 0,
+            "elapsedSeconds": 83.446
+          },
+          {
+            "stage": "list-installed-apps",
+            "status": "passed",
+            "exitCode": 0,
+            "elapsedSeconds": 72.278
+          },
+          {
+            "stage": "verify-app-absent",
+            "status": "passed",
+            "exitCode": 0,
+            "elapsedSeconds": 0.241
+          },
+          {
+            "stage": "seed-pasteboard",
+            "status": "passed",
+            "exitCode": 0,
+            "elapsedSeconds": 2.406
+          }
+        ]
+      },
+      "setupReceiptSHA256": "8411c62452773c3226cb163b0074861a4d7c7fbb886a9c57d705a8028ffe1c70",
+      "stageOrderVerified": true
+    }
+  },
+  "allAvailableCheckoutLogsExpected": true,
+  "scope": "Explicit setup stages and baseline-enforcement evidence remain separate from native/measurement/persistence gates. Missing or interrupted evidence is not a pass."
+}

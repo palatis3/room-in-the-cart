@@ -1,0 +1,88 @@
+TAP version 13
+# Subtest: independent checkout vector: s05-defer-coffee-retains-salsa-and-fee-waiver
+ok 1 - independent checkout vector: s05-defer-coffee-retains-salsa-and-fee-waiver
+  ---
+  duration_ms: 1.417291
+  type: 'test'
+  ...
+# Subtest: independent checkout vector: s05-defer-coffee-and-salsa-restores-pickup-fee
+ok 2 - independent checkout vector: s05-defer-coffee-and-salsa-restores-pickup-fee
+  ---
+  duration_ms: 0.222917
+  type: 'test'
+  ...
+# Subtest: independent checkout vector: cereal-over-cap
+ok 3 - independent checkout vector: cereal-over-cap
+  ---
+  duration_ms: 0.103417
+  type: 'test'
+  ...
+# Subtest: independent checkout vector: existing-box-linked-once
+ok 4 - independent checkout vector: existing-box-linked-once
+  ---
+  duration_ms: 0.234458
+  type: 'test'
+  ...
+# Subtest: independent checkout vector: fee-reversal-still-29-cents-over
+ok 5 - independent checkout vector: fee-reversal-still-29-cents-over
+  ---
+  duration_ms: 0.404333
+  type: 'test'
+  ...
+# Subtest: independent checkout vector: price-and-fee-unknown
+ok 6 - independent checkout vector: price-and-fee-unknown
+  ---
+  duration_ms: 0.102917
+  type: 'test'
+  ...
+# Subtest: independent checkout vector: fee-unknown-never-under
+ok 7 - independent checkout vector: fee-unknown-never-under
+  ---
+  duration_ms: 0.068709
+  type: 'test'
+  ...
+# Subtest: independent checkout vector: item-cap-cannot-certify-whole-pickup
+ok 8 - independent checkout vector: item-cap-cannot-certify-whole-pickup
+  ---
+  duration_ms: 0.05875
+  type: 'test'
+  ...
+# Subtest: independent checkout vector: dinner-cap-not-whole-checkout-cap
+ok 9 - independent checkout vector: dinner-cap-not-whole-checkout-cap
+  ---
+  duration_ms: 0.367875
+  type: 'test'
+  ...
+# Subtest: independent checkout vector: unpriced-original-lines-remain-unknown
+ok 10 - independent checkout vector: unpriced-original-lines-remain-unknown
+  ---
+  duration_ms: 0.455833
+  type: 'test'
+  ...
+# Subtest: independent checkout vector: threshold-uses-only-eligible-goods
+ok 11 - independent checkout vector: threshold-uses-only-eligible-goods
+  ---
+  duration_ms: 0.159541
+  type: 'test'
+  ...
+# Subtest: independent checkout vector: tax-deposit-discount-all-included
+ok 12 - independent checkout vector: tax-deposit-discount-all-included
+  ---
+  duration_ms: 0.070334
+  type: 'test'
+  ...
+# Subtest: typed command boundary rejects forged actors, totals and unrecognized command kinds
+ok 13 - typed command boundary rejects forged actors, totals and unrecognized command kinds
+  ---
+  duration_ms: 6.9495
+  type: 'test'
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 13
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 155.808167

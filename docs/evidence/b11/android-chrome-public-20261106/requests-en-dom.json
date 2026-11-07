@@ -1,0 +1,28 @@
+{
+  "url": "https://room-in-the-cart-staging.vercel.app/requests?lang=en",
+  "language": "en",
+  "width": 411,
+  "scrollWidth": 411,
+  "text": "Room in the Cart\n\nEnglish\nSpanish\n\nSign in to continue\n\nEmail sign-in is not available yet.\n\nRefresh",
+  "selects": [
+    {
+      "id": "language",
+      "options": [
+        {
+          "text": "English",
+          "value": "en"
+        },
+        {
+          "text": "Spanish",
+          "value": "es"
+        }
+      ]
+    }
+  ],
+  "buttons": [
+    {
+      "text": "Refresh",
+      "disabled": false
+    }
+  ]
+}

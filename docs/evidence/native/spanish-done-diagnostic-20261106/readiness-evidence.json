@@ -1,0 +1,592 @@
+{
+  "base": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+  "sourceSHA256": {
+    ".github/workflows/ci.yml": "f1ac28f1b6fedf0778ab330345493709747e4936d12924e297f7ba1d34008171",
+    ".github/workflows/ios-fixtures.yml": "9942031a411a732f3482b73c2bb78ca8ec4dffb7046066ab9d5460ce8643ff32",
+    "scripts/discover_ios_tests.py": "a41301ba247ff48fc94a98db1bfbbfd1ddc1681184db8c449b1c7bf5cf37aed4",
+    "scripts/select_ci_iphone.py": "8ebdee4db935d8b8039f17fb8b23909043b3095486e35ecfd713199d6a1b3c67",
+    "scripts/run_ios_test_shard.sh": "45319a4e14c3e238b44cef3e3b2ab6666676592a99cf8897b1bce62039a8147e"
+  },
+  "metadataSHA256": {
+    ".build/CIResearch20261105/candidate-b359d07/core-collection/42184704871-jobs.json": "a4e67036c0a502805b406d87c2661743ca24122ad6176212f5a50bfa49c85b79",
+    ".build/CIResearch20261105/candidate-b359d07/fixture-42184705317-jobs.json": "7b1e061bdc549566fd670b2e4511fb2484745ffadda31ef6ff59cf27cb1b81a0"
+  },
+  "stepTimings": [
+    {
+      "lane": "core",
+      "jobID": 127782170833,
+      "job": "ios-build",
+      "step": "Record toolchain and select iPhone",
+      "startedAt": "2026-11-06T08:01:24Z",
+      "completedAt": "2026-11-06T08:02:26Z",
+      "seconds": 62.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "core",
+      "jobID": 127782170833,
+      "job": "ios-build",
+      "step": "Discover compiled tests and balance UI groups",
+      "startedAt": "2026-11-06T08:05:44Z",
+      "completedAt": "2026-11-06T08:11:12Z",
+      "seconds": 328.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "core",
+      "jobID": 127786281659,
+      "job": "ios-tests (ui-01, 3)",
+      "step": "Select and boot iPhone simulator",
+      "startedAt": "2026-11-06T08:19:42Z",
+      "completedAt": "2026-11-06T08:20:25Z",
+      "seconds": 43.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "core",
+      "jobID": 127786281659,
+      "job": "ios-tests (ui-01, 3)",
+      "step": "Wait for simulator boot",
+      "startedAt": "2026-11-06T08:20:25Z",
+      "completedAt": "2026-11-06T08:22:10Z",
+      "seconds": 105.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "core",
+      "jobID": 127786281679,
+      "job": "ios-tests (ui-09, 6)",
+      "step": "Select and boot iPhone simulator",
+      "startedAt": "2026-11-06T09:29:36Z",
+      "completedAt": "2026-11-06T09:32:00Z",
+      "seconds": 144.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "core",
+      "jobID": 127786281679,
+      "job": "ios-tests (ui-09, 6)",
+      "step": "Wait for simulator boot",
+      "startedAt": "2026-11-06T09:32:00Z",
+      "completedAt": "2026-11-06T09:33:50Z",
+      "seconds": 110.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "core",
+      "jobID": 127786281695,
+      "job": "ios-tests (ui-06, 5)",
+      "step": "Select and boot iPhone simulator",
+      "startedAt": "2026-11-06T09:21:51Z",
+      "completedAt": "2026-11-06T09:22:24Z",
+      "seconds": 33.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "core",
+      "jobID": 127786281695,
+      "job": "ios-tests (ui-06, 5)",
+      "step": "Wait for simulator boot",
+      "startedAt": "2026-11-06T09:22:24Z",
+      "completedAt": "2026-11-06T09:24:08Z",
+      "seconds": 104.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "core",
+      "jobID": 127786281725,
+      "job": "ios-tests (ui-08, 6)",
+      "step": "Select and boot iPhone simulator",
+      "startedAt": "2026-11-06T09:28:27Z",
+      "completedAt": "2026-11-06T09:28:40Z",
+      "seconds": 13.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "core",
+      "jobID": 127786281725,
+      "job": "ios-tests (ui-08, 6)",
+      "step": "Wait for simulator boot",
+      "startedAt": "2026-11-06T09:28:40Z",
+      "completedAt": "2026-11-06T09:30:30Z",
+      "seconds": 110.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "core",
+      "jobID": 127786281734,
+      "job": "ios-tests (ui-10, 6)",
+      "step": "Select and boot iPhone simulator",
+      "startedAt": "2026-11-06T09:43:57Z",
+      "completedAt": "2026-11-06T09:44:50Z",
+      "seconds": 53.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "core",
+      "jobID": 127786281734,
+      "job": "ios-tests (ui-10, 6)",
+      "step": "Wait for simulator boot",
+      "startedAt": "2026-11-06T09:44:50Z",
+      "completedAt": "2026-11-06T09:46:22Z",
+      "seconds": 92.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "core",
+      "jobID": 127786281737,
+      "job": "ios-tests (models, 601)",
+      "step": "Select and boot iPhone simulator",
+      "startedAt": "2026-11-06T08:30:49Z",
+      "completedAt": "2026-11-06T08:31:01Z",
+      "seconds": 12.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "core",
+      "jobID": 127786281737,
+      "job": "ios-tests (models, 601)",
+      "step": "Wait for simulator boot",
+      "startedAt": "2026-11-06T08:31:01Z",
+      "completedAt": "2026-11-06T08:32:57Z",
+      "seconds": 116.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "core",
+      "jobID": 127786281782,
+      "job": "ios-tests (ui-04, 5)",
+      "step": "Select and boot iPhone simulator",
+      "startedAt": "2026-11-06T08:29:09Z",
+      "completedAt": "2026-11-06T08:30:32Z",
+      "seconds": 83.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "core",
+      "jobID": 127786281782,
+      "job": "ios-tests (ui-04, 5)",
+      "step": "Wait for simulator boot",
+      "startedAt": "2026-11-06T08:30:32Z",
+      "completedAt": "2026-11-06T08:32:31Z",
+      "seconds": 119.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "core",
+      "jobID": 127786281795,
+      "job": "ios-tests (ui-07, 6)",
+      "step": "Select and boot iPhone simulator",
+      "startedAt": "2026-11-06T09:26:40Z",
+      "completedAt": "2026-11-06T09:27:49Z",
+      "seconds": 69.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "core",
+      "jobID": 127786281795,
+      "job": "ios-tests (ui-07, 6)",
+      "step": "Wait for simulator boot",
+      "startedAt": "2026-11-06T09:27:49Z",
+      "completedAt": "2026-11-06T09:29:21Z",
+      "seconds": 92.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "core",
+      "jobID": 127786281811,
+      "job": "ios-tests (ui-02, 4)",
+      "step": "Select and boot iPhone simulator",
+      "startedAt": "2026-11-06T08:35:36Z",
+      "completedAt": "2026-11-06T08:37:20Z",
+      "seconds": 104.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "core",
+      "jobID": 127786281811,
+      "job": "ios-tests (ui-02, 4)",
+      "step": "Wait for simulator boot",
+      "startedAt": "2026-11-06T08:37:20Z",
+      "completedAt": "2026-11-06T08:38:55Z",
+      "seconds": 95.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "core",
+      "jobID": 127786281818,
+      "job": "ios-tests (ui-03, 5)",
+      "step": "Select and boot iPhone simulator",
+      "startedAt": "2026-11-06T08:39:46Z",
+      "completedAt": "2026-11-06T08:40:21Z",
+      "seconds": 35.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "core",
+      "jobID": 127786281818,
+      "job": "ios-tests (ui-03, 5)",
+      "step": "Wait for simulator boot",
+      "startedAt": "2026-11-06T08:40:21Z",
+      "completedAt": "2026-11-06T08:42:03Z",
+      "seconds": 102.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "core",
+      "jobID": 127786281984,
+      "job": "ios-tests (ui-05, 5)",
+      "step": "Select and boot iPhone simulator",
+      "startedAt": "2026-11-06T09:05:20Z",
+      "completedAt": "2026-11-06T09:05:30Z",
+      "seconds": 10.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "core",
+      "jobID": 127786281984,
+      "job": "ios-tests (ui-05, 5)",
+      "step": "Wait for simulator boot",
+      "startedAt": "2026-11-06T09:05:30Z",
+      "completedAt": "2026-11-06T09:07:12Z",
+      "seconds": 102.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "fixtures",
+      "jobID": 127782225735,
+      "job": "Build contributor, stock and carryover fixtures",
+      "step": "Record Xcode and select an iPhone simulator",
+      "startedAt": "2026-11-06T08:16:55Z",
+      "completedAt": "2026-11-06T08:17:26Z",
+      "seconds": 31.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "fixtures",
+      "jobID": 127782225735,
+      "job": "Build contributor, stock and carryover fixtures",
+      "step": "Enumerate compiled tests and package fixture products",
+      "startedAt": "2026-11-06T08:21:41Z",
+      "completedAt": "2026-11-06T08:28:16Z",
+      "seconds": 395.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "fixtures",
+      "jobID": 127782225775,
+      "job": "Build dinner decision fixture",
+      "step": "Record Xcode and select an iPhone simulator",
+      "startedAt": "2026-11-06T08:19:00Z",
+      "completedAt": "2026-11-06T08:20:00Z",
+      "seconds": 60.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "fixtures",
+      "jobID": 127782225775,
+      "job": "Build dinner decision fixture",
+      "step": "Enumerate compiled tests and package fixture products",
+      "startedAt": "2026-11-06T08:23:57Z",
+      "completedAt": "2026-11-06T08:29:56Z",
+      "seconds": 359.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "fixtures",
+      "jobID": 127793433718,
+      "job": "Fixture (contributor-balanced-01)",
+      "step": "Select an iPhone simulator",
+      "startedAt": "2026-11-06T08:35:49Z",
+      "completedAt": "2026-11-06T08:36:21Z",
+      "seconds": 32.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "fixtures",
+      "jobID": 127793433718,
+      "job": "Fixture (contributor-balanced-01)",
+      "step": "Boot the iPhone simulator",
+      "startedAt": "2026-11-06T08:36:21Z",
+      "completedAt": "2026-11-06T08:38:17Z",
+      "seconds": 116.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "fixtures",
+      "jobID": 127793433736,
+      "job": "Fixture (contributor-balanced-03)",
+      "step": "Select an iPhone simulator",
+      "startedAt": "2026-11-06T08:56:33Z",
+      "completedAt": "2026-11-06T08:56:44Z",
+      "seconds": 11.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "fixtures",
+      "jobID": 127793433736,
+      "job": "Fixture (contributor-balanced-03)",
+      "step": "Boot the iPhone simulator",
+      "startedAt": "2026-11-06T08:56:44Z",
+      "completedAt": "2026-11-06T08:58:24Z",
+      "seconds": 100.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "fixtures",
+      "jobID": 127793433748,
+      "job": "Fixture (SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult)",
+      "step": "Select an iPhone simulator",
+      "startedAt": "2026-11-06T09:48:35Z",
+      "completedAt": "2026-11-06T09:48:44Z",
+      "seconds": 9.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "fixtures",
+      "jobID": 127793433748,
+      "job": "Fixture (SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult)",
+      "step": "Boot the iPhone simulator",
+      "startedAt": "2026-11-06T09:48:44Z",
+      "completedAt": "2026-11-06T09:50:18Z",
+      "seconds": 94.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "fixtures",
+      "jobID": 127793433792,
+      "job": "Fixture (SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction)",
+      "step": "Select an iPhone simulator",
+      "startedAt": "2026-11-06T10:01:49Z",
+      "completedAt": "2026-11-06T10:02:19Z",
+      "seconds": 30.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "fixtures",
+      "jobID": 127793433792,
+      "job": "Fixture (SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction)",
+      "step": "Boot the iPhone simulator",
+      "startedAt": "2026-11-06T10:02:19Z",
+      "completedAt": "2026-11-06T10:04:07Z",
+      "seconds": 108.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "fixtures",
+      "jobID": 127793433795,
+      "job": "Fixture (SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview)",
+      "step": "Select an iPhone simulator",
+      "startedAt": "2026-11-06T09:37:21Z",
+      "completedAt": "2026-11-06T09:38:41Z",
+      "seconds": 80.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "fixtures",
+      "jobID": 127793433795,
+      "job": "Fixture (SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview)",
+      "step": "Boot the iPhone simulator",
+      "startedAt": "2026-11-06T09:38:41Z",
+      "completedAt": "2026-11-06T09:40:24Z",
+      "seconds": 103.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "fixtures",
+      "jobID": 127793433828,
+      "job": "Fixture (DinnerDecisionSheetUITests)",
+      "step": "Select an iPhone simulator",
+      "startedAt": "2026-11-06T10:08:32Z",
+      "completedAt": "2026-11-06T10:08:40Z",
+      "seconds": 8.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "fixtures",
+      "jobID": 127793433828,
+      "job": "Fixture (DinnerDecisionSheetUITests)",
+      "step": "Boot the iPhone simulator",
+      "startedAt": "2026-11-06T10:08:40Z",
+      "completedAt": "2026-11-06T10:10:07Z",
+      "seconds": 87.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "fixtures",
+      "jobID": 127793433829,
+      "job": "Fixture (contributor-balanced-02)",
+      "step": "Select an iPhone simulator",
+      "startedAt": "2026-11-06T09:01:34Z",
+      "completedAt": "2026-11-06T09:01:58Z",
+      "seconds": 24.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "fixtures",
+      "jobID": 127793433829,
+      "job": "Fixture (contributor-balanced-02)",
+      "step": "Boot the iPhone simulator",
+      "startedAt": "2026-11-06T09:01:58Z",
+      "completedAt": "2026-11-06T09:04:06Z",
+      "seconds": 128.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "fixtures",
+      "jobID": 127793433846,
+      "job": "Fixture (contributor-balanced-04)",
+      "step": "Select an iPhone simulator",
+      "startedAt": "2026-11-06T09:09:14Z",
+      "completedAt": "2026-11-06T09:09:43Z",
+      "seconds": 29.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "fixtures",
+      "jobID": 127793433846,
+      "job": "Fixture (contributor-balanced-04)",
+      "step": "Boot the iPhone simulator",
+      "startedAt": "2026-11-06T09:09:43Z",
+      "completedAt": "2026-11-06T09:11:21Z",
+      "seconds": 98.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "fixtures",
+      "jobID": 127793433855,
+      "job": "Fixture (SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave)",
+      "step": "Select an iPhone simulator",
+      "startedAt": "2026-11-06T09:51:03Z",
+      "completedAt": "2026-11-06T09:52:10Z",
+      "seconds": 67.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "fixtures",
+      "jobID": 127793433855,
+      "job": "Fixture (SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave)",
+      "step": "Boot the iPhone simulator",
+      "startedAt": "2026-11-06T09:52:10Z",
+      "completedAt": "2026-11-06T09:53:53Z",
+      "seconds": 103.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "fixtures",
+      "jobID": 127793433863,
+      "job": "Fixture (contributor-balanced-05)",
+      "step": "Select an iPhone simulator",
+      "startedAt": "2026-11-06T09:04:42Z",
+      "completedAt": "2026-11-06T09:05:06Z",
+      "seconds": 24.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "fixtures",
+      "jobID": 127793433863,
+      "job": "Fixture (contributor-balanced-05)",
+      "step": "Boot the iPhone simulator",
+      "startedAt": "2026-11-06T09:05:06Z",
+      "completedAt": "2026-11-06T09:06:55Z",
+      "seconds": 109.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "fixtures",
+      "jobID": 127793433866,
+      "job": "Fixture (SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption)",
+      "step": "Select an iPhone simulator",
+      "startedAt": "2026-11-06T09:50:11Z",
+      "completedAt": "2026-11-06T09:50:42Z",
+      "seconds": 31.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "fixtures",
+      "jobID": 127793433866,
+      "job": "Fixture (SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption)",
+      "step": "Boot the iPhone simulator",
+      "startedAt": "2026-11-06T09:50:42Z",
+      "completedAt": "2026-11-06T09:52:21Z",
+      "seconds": 99.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "fixtures",
+      "jobID": 127793433913,
+      "job": "Fixture (SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn)",
+      "step": "Select an iPhone simulator",
+      "startedAt": "2026-11-06T10:01:18Z",
+      "completedAt": "2026-11-06T10:01:49Z",
+      "seconds": 31.0,
+      "conclusion": "success"
+    },
+    {
+      "lane": "fixtures",
+      "jobID": 127793433913,
+      "job": "Fixture (SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn)",
+      "step": "Boot the iPhone simulator",
+      "startedAt": "2026-11-06T10:01:49Z",
+      "completedAt": "2026-11-06T10:03:07Z",
+      "seconds": 78.0,
+      "conclusion": "success"
+    }
+  ],
+  "selectionSummary": {
+    "core": {
+      "count": 11,
+      "minSeconds": 10.0,
+      "maxSeconds": 144.0,
+      "over30Seconds": 8
+    },
+    "fixturesExcludingRecords": {
+      "count": 12,
+      "minSeconds": 8.0,
+      "maxSeconds": 80.0,
+      "over30Seconds": 5
+    }
+  },
+  "exactCachedLogExample": {
+    "jobID": 127786281679,
+    "command": "xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py",
+    "groupStartUTC": "2026-11-06T09:29:36.8135100Z",
+    "selectionOutputUTC": "2026-11-06T09:31:59.9929500Z",
+    "pipelineBracketSeconds": 143.17944,
+    "sourceLog": ".build/CIResearch20261105/candidate-b359d07/core-collection/42184704871-job-127786281679.log",
+    "sourceLogSHA256": "eb2428c834f8ec5bf6e93efa629848eb1b7cbc5dd0967379f2f62652d5981795",
+    "limits": "This brackets the command pipeline including shell/selector overhead, not an isolated simctl stopwatch."
+  },
+  "discovery": {
+    "coreStages": "Checking compiled test run and simulator ID\nbootstatus\nbootstatus: exit 0\nenumeration 1\nenumeration 1: exit 0\n",
+    "coreStepSeconds": 328,
+    "fixtureContributorStepSeconds": 395,
+    "fixtureDinnerStepSeconds": 359,
+    "limits": "Discovery timings include boot/enumeration/planning (and fixture packaging); they are not inventory command timings. Exact host-registration recovery exists in core but was not used by this b359 discovery."
+  },
+  "sourcePolicy": {
+    "coreSelection": "8-minute step; no per-command timeout wrapper.",
+    "coreBoot": "Separate8-minute step.",
+    "fixtureSelection": "No per-command or explicit step timeout; bounded by35-minute build or55-minute test job.",
+    "fixtureBoot": "8-minute step.",
+    "coreDiscovery": "subprocess.run without per-command timeout; bounded by35-minute ios-build job.",
+    "diagnosticDifference": "Generic Python30-second command timeout is narrower than these accepted setup steps; this does not prove the reason for any particular timeout."
+  },
+  "upstreamContext": {
+    "url": "https://github.com/actions/runner-images/issues/15247",
+    "opened": "2026-11-04",
+    "reporterMacOS15FirstCallSeconds": {
+      "range": [
+        6.6,
+        152.9
+      ],
+      "median": 33.7,
+      "trials": 30
+    },
+    "laterCallsReportedUnderSeconds": 2.5,
+    "image": "20261028.0489.1",
+    "CoreSimulator": "1051.17.8",
+    "maintainerResponse": "Acknowledged and investigating",
+    "interpretation": "Primary reported measurements support a bounded allowance for initial simulator service startup. They do not establish the cause of our initial-list or post-boot-getenv timeouts. No CoreSimulator/Xcode/runtime replacement recommended."
+  }
+}

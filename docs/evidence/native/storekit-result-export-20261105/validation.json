@@ -1,0 +1,23 @@
+{
+  "workflowSHA256": "17c57c47e89c524e94d0b76857c89779e7177f6a9fb3ea50c49b65495e0ea95c",
+  "scope": "Execute exact new export and verification shell bodies against retained original hosted bundles; no native re-execution. actionlint passes. Existing native step remains independently failing without continue-on-error.",
+  "cases": [
+    {
+      "locale": "es",
+      "exportExit": 0,
+      "strictExit": 1,
+      "passed": 14,
+      "failed": 1,
+      "reportRetained": true
+    },
+    {
+      "locale": "en",
+      "exportExit": 0,
+      "strictExit": 0,
+      "passed": 15,
+      "failed": 0,
+      "reportRetained": true
+    }
+  ],
+  "result": "Failed Spanish bundle exports successfully and remains rejected; passing English bundle exports and validates."
+}

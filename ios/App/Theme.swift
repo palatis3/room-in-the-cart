@@ -7,16 +7,54 @@ enum Theme {
     static let secondary = Color("secondary")
     static let action = Color("accent")
     static let onAction = Color("on_accent")
+    static let error = Color("error")
     static let warning = Color("warning")
     static let warningSurface = Color("warning_surface")
 }
 
-struct PrimaryAction: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label.font(.headline).fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, minHeight: 44)
+/// Native form chrome uses the app's semantic colors in either appearance.
+/// Keep row styling on the content, where Form consumes list-row preferences.
+struct WorkingForm<Content: View>: View {
+    private let content: Content
+
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+
+    var body: some View {
+        Form {
+            Group { content }
+                .listRowBackground(Theme.surface)
+        }.workingSurface()
+    }
+}
+
+/// Explicit prompt color keeps native empty-field purposes readable. Return the
+/// native TextField so callers retain their existing focus and input modifiers.
+func workingTextField(_ title: String, text: Binding<String>) -> TextField<Text> {
+    TextField(title, text: text, prompt: Text(title).foregroundStyle(Theme.secondary))
+}
+
+func workingTextField(_ title: String, text: Binding<String>, axis: Axis) -> TextField<Text> {
+    TextField(title, text: text, prompt: Text(title).foregroundStyle(Theme.secondary), axis: axis)
+}
+
+struct PrimaryActionLabel<Label: View>: View {
+    let label: Label
+    var isPressed = false
+    @Environment(\.isEnabled) private var isEnabled
+
+    var body: some View {
+        label.font(.headline).fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, minHeight: 44)
             .padding(.horizontal, 12).padding(.vertical, 4)
             .foregroundStyle(Theme.onAction).background(Theme.action, in: RoundedRectangle(cornerRadius: 14))
-            .opacity(configuration.isPressed ? 0.8 : 1)
+            .opacity(isEnabled ? (isPressed ? 0.8 : 1) : 0.45)
+    }
+}
+
+struct PrimaryAction: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        PrimaryActionLabel(label: configuration.label, isPressed: configuration.isPressed)
     }
 }
 
@@ -26,9 +64,13 @@ extension View {
             if visible {
                 HStack {
                     Spacer()
-                    Button(title, action: dismiss)
-                        .font(.body.weight(.semibold)).frame(minHeight: 44)
-                        .accessibilityIdentifier(identifier ?? title)
+                    Button(action: dismiss) {
+                        Text(title)
+                            .font(.body.weight(.semibold))
+                            .frame(minWidth: 44, minHeight: 44)
+                            .contentShape(Rectangle())
+                    }
+                    .accessibilityIdentifier(identifier ?? title)
                 }
                 .padding(.horizontal).background(.bar)
             }

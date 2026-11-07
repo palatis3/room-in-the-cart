@@ -1,0 +1,32 @@
+{
+  "artifactID": 13493106382,
+  "artifactName": "iphone-fixture-results-SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview-1",
+  "sha256": "f4c495de811d297116c2591d899c903298477e186f62306b05ae1d31625634be",
+  "size": 7500573,
+  "digestVerified": true,
+  "candidate": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+  "runID": 42184705317,
+  "jobID": 127793433795,
+  "hostedConclusion": "success",
+  "selected": 1,
+  "passed": 1,
+  "failed": 0,
+  "skipped": 0,
+  "strictReplayExit": 0,
+  "planByteIdentical": true,
+  "runtimeWarnings": 0,
+  "warnings": {
+    "status": "passed",
+    "summaryWarningCount": null,
+    "runtimeWarningCount": 0,
+    "examinedTestCount": 1,
+    "detailExportCount": 1,
+    "activityExportCount": 0,
+    "warnings": []
+  },
+  "selectors": [
+    "RoomInTheCartUITests/SharedMealIdeaUITests/testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview"
+  ],
+  "rawLogSHA256": "7989c2e84289512e97bcf97277600292f2df056b7a15695f8a3746c25b140a23",
+  "replayedBundle": "Tests.xcresult"
+}

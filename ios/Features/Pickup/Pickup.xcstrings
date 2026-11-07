@@ -1,6 +1,40 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Record an arrival or usable confirmation only after it has happened.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Record an arrival or usable confirmation only after it has happened."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registra una llegada o una confirmación de cantidad utilizable solo después de que haya ocurrido."
+          }
+        }
+      }
+    },
+    "Future-dated evidence is not counted as available food.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Future-dated evidence is not counted as available food."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los registros con fecha futura no se cuentan como comida disponible."
+          }
+        }
+      }
+    },
     "A credit does not add food or repair a meal. A credit already included in a net charge is not subtracted again.": {
       "extractionState": "manual",
       "localizations": {
@@ -609,6 +643,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Al cerrar se conservan las comidas pendientes y los créditos para corregirlos después. Los comentarios son opcionales."
+          }
+        }
+      }
+    },
+    "Compare an authorization hold": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compare an authorization hold"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparar una retención de pago"
           }
         }
       }
@@ -11130,6 +11181,448 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cancelar la vista previa del lote"
+          }
+        }
+      }
+    },
+    "Spending cap scope": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spending cap scope"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alcance del límite de gasto"
+          }
+        }
+      }
+    },
+    "Pricing details to preserve": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pricing details to preserve"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detalles de precios que se conservarán"
+          }
+        }
+      }
+    },
+    "These pricing details stay intact when you save. Review them before starting replacement pricing.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These pricing details stay intact when you save. Review them before starting replacement pricing."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estos detalles de precios se conservan al guardar. Revísalos antes de empezar a reemplazarlos."
+          }
+        }
+      }
+    },
+    "Replace pricing after review": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace pricing after review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reemplazar los precios después de revisarlos"
+          }
+        }
+      }
+    },
+    "Saved checkout result": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved checkout result"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resultado guardado de la compra"
+          }
+        }
+      }
+    },
+    "Replace saved pricing?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace saved pricing?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Reemplazar los precios guardados?"
+          }
+        }
+      }
+    },
+    "Start replacement pricing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start replacement pricing"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empezar a reemplazar los precios"
+          }
+        }
+      }
+    },
+    "Review the saved details above first. New pricing starts blank and replaces them only when you save. Cancel or go back to keep the saved checkout.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the saved details above first. New pricing starts blank and replaces them only when you save. Cancel or go back to keep the saved checkout."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Primero revisa los detalles guardados de arriba. Los precios nuevos empiezan en blanco y solo los reemplazan al guardar. Cancela o vuelve atrás para conservar la compra guardada."
+          }
+        }
+      }
+    },
+    "This checkout changed. Go back and reopen its current details before saving.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This checkout changed. Go back and reopen its current details before saving."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta compra cambió. Vuelve atrás y abre sus detalles actuales antes de guardar."
+          }
+        }
+      }
+    },
+    "Review the saved pricing before starting a replacement.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the saved pricing before starting a replacement."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa los precios guardados antes de empezar a reemplazarlos."
+          }
+        }
+      }
+    },
+    "Original items are not fully represented": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original items are not fully represented"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No están representados todos los productos originales"
+          }
+        }
+      }
+    },
+    "Included in fee threshold": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Included in fee threshold"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incluido en el subtotal para el umbral del cargo"
+          }
+        }
+      }
+    },
+    "Excluded from fee threshold": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Excluded from fee threshold"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Excluido del subtotal para el umbral del cargo"
+          }
+        }
+      }
+    },
+    "Fee waiver threshold": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fee waiver threshold"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Umbral para eximir el cargo"
+          }
+        }
+      }
+    },
+    "Fee threshold uses eligible items before discounts": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fee threshold uses eligible items before discounts"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El umbral del cargo usa los productos elegibles antes de los descuentos"
+          }
+        }
+      }
+    },
+    "Fee threshold uses eligible items after eligible discounts": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fee threshold uses eligible items after eligible discounts"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El umbral del cargo usa los productos elegibles después de los descuentos elegibles"
+          }
+        }
+      }
+    },
+    "Discount reduces fee threshold subtotal": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discount reduces fee threshold subtotal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El descuento reduce el subtotal para el umbral del cargo"
+          }
+        }
+      }
+    },
+    "Discount does not reduce fee threshold subtotal": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discount does not reduce fee threshold subtotal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El descuento no reduce el subtotal para el umbral del cargo"
+          }
+        }
+      }
+    },
+    "Your unsaved checkout edits are kept, but this pickup or its saved evidence changed. Reopen current details before saving.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your unsaved checkout edits are kept, but this pickup or its saved evidence changed. Reopen current details before saving."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tus cambios sin guardar se conservan, pero esta compra o sus datos guardados cambiaron. Abre los detalles actuales antes de guardar."
+          }
+        }
+      }
+    },
+    "Reopen current checkout": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reopen current checkout"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a abrir la compra actual"
+          }
+        }
+      }
+    },
+    "Discard unsaved checkout edits?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discard unsaved checkout edits?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Descartar los cambios sin guardar de la compra?"
+          }
+        }
+      }
+    },
+    "Discard edits and reopen": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discard edits and reopen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descartar los cambios y volver a abrir"
+          }
+        }
+      }
+    },
+    "This only discards the edits shown here. The saved checkout stays unchanged.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This only discards the edits shown here. The saved checkout stays unchanged."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esto solo descarta los cambios que aparecen aquí. La compra guardada no cambia."
+          }
+        }
+      }
+    },
+    "Remaining preparation time unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remaining preparation time unknown"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se desconoce el tiempo de preparación restante"
+          }
+        }
+      }
+    },
+    "Required advance preparation (minutes)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Required advance preparation (minutes)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparación previa necesaria (minutos)"
+          }
+        }
+      }
+    },
+    "Advance preparation confirmed complete": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Advance preparation confirmed complete"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparación previa confirmada como completada"
           }
         }
       }

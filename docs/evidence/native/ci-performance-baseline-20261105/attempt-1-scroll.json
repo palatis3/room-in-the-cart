@@ -1,0 +1,89 @@
+{
+  "case": "scroll",
+  "status": "baseline-unavailable",
+  "device": {
+    "architecture": "arm64",
+    "deviceId": "8C9F4118-331E-4250-B1FC-194972BA6726",
+    "deviceName": "iPhone 17",
+    "modelName": "iPhone 17",
+    "osBuildNumber": "23C54",
+    "osVersion": "26.2",
+    "platform": "iOS Simulator"
+  },
+  "environment": {
+    "osVersion": "26.2",
+    "osBuildNumber": "23C54",
+    "modelName": "iPhone 17",
+    "architecture": "arm64",
+    "xcode": "Xcode 26.3\nBuild version 17C529",
+    "buildConfiguration": "Release",
+    "testConfiguration": "Test Scheme Action"
+  },
+  "metrics": {
+    "com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.duration": {
+      "unit": "s",
+      "samples": [
+        2.5837615,
+        2.583409541,
+        2.566337833,
+        2.5991544170000003,
+        2.5666581670000004
+      ],
+      "median": 2.583409541
+    },
+    "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical": {
+      "unit": "kB",
+      "samples": [
+        -131.072,
+        0,
+        49.152,
+        49.152,
+        131.072
+      ],
+      "median": 49.152
+    },
+    "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_absolute": {
+      "unit": "kB",
+      "samples": [
+        108846.976,
+        108846.976,
+        108928.896,
+        108994.432,
+        109125.504
+      ],
+      "median": 108928.896
+    },
+    "com.apple.dt.XCTMetric_Memory-dev.roominthecart.app.physical_peak": {
+      "unit": "kB",
+      "samples": [
+        109289.344,
+        109158.272,
+        109191.04,
+        109256.576,
+        109305.728
+      ],
+      "median": 109256.576
+    }
+  },
+  "simulatorHitches": {
+    "status": "unavailable",
+    "detail": "XCTest emitted scroll duration and memory, but no animation hitch samples on this simulator. This run cannot evaluate frame hitches."
+  },
+  "persistedPickup": {
+    "sqliteQuickCheck": "ok",
+    "revision": 2,
+    "payloadSHA256": "16fb65f10cc17b3ac19ab0b533f2b2db9dc92900e89d1b4ea4f988bd69e49a89",
+    "lineCount": 500,
+    "contributionCount": 500,
+    "importCount": 1,
+    "source": "paste",
+    "checkedCount": 0,
+    "checkedRowIDs": []
+  },
+  "baselineValues": {
+    "scrollMedianSeconds": 2.583409541,
+    "absoluteMemoryMedianKilobytes": 108928.896,
+    "peakMemoryMedianKilobytes": 109256.576
+  },
+  "baselineError": "Approved performance baseline does not exist: scripts/ios_performance_baselines.json"
+}

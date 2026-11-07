@@ -35,7 +35,7 @@ const es: Record<string, string> = {
   'Signed out of this browser. Provider sign-out could not be confirmed.':'Cerraste la sesión en este navegador. No se pudo confirmar el cierre de sesión con el proveedor.',
 
   'Received; local cleanup pending':'Recibida; limpieza local pendiente',
-  'Received by the shopper. A local pending copy remains; retry it to confirm and clear it.':'Recibida por quien hace la compra. Queda una copia local pendiente; reintenta para confirmar y eliminarla.',
+  'Received by the shopper. Retry to clear the copy on this browser.':'Recibida por quien hace la compra. Vuelve a intentarlo para eliminar la copia de este navegador.',
   'You are signed out, but browser storage could not be cleared. Clear site data before sharing this browser.':'Cerraste la sesión, pero no se pudo borrar el almacenamiento del navegador. Borra los datos del sitio antes de compartir este navegador.',
   'Your display name (optional)':'Tu nombre para mostrar (opcional)',
   'I am 18 or older.':'Tengo 18 años o más.',
@@ -59,6 +59,11 @@ const es: Record<string, string> = {
   'Review request':'Revisar solicitud', 'Review before sending':'Revisar antes de enviar', 'Send request':'Enviar solicitud',
   'Back to edit':'Volver a editar', 'Edit':'Editar', 'Withdraw':'Retirar', 'Cancel':'Cancelar',
   'Follow up':'Enviar aclaración', 'Received':'Recibida', 'Needs clarification':'Necesita aclaración',
+  'Moved to a later pickup for review':'Se pasó a una compra posterior para su revisión',
+  'From an earlier pickup':'De una compra anterior',
+  'Shopper confirmed purchase':'La persona que hizo la compra confirmó que compró el artículo',
+  'Shopper confirmed the item was not bought':'La persona que hizo la compra confirmó que no compró el artículo',
+  'Purchase not confirmed':'Compra sin confirmar',
   'Added to the pickup':'Agregada al pedido', 'Saved for next shop':'Guardada para la próxima compra',
   'Handled':'Resuelta', 'Dismissed':'Descartada', 'Withdrawn':'Retirada', 'Sending…':'Enviando…',
   'Received by the shopper.':'Recibida por quien hace la compra.',
@@ -83,6 +88,8 @@ const es: Record<string, string> = {
   'You are signed out.':'Cerraste la sesión.', 'Save changes':'Guardar cambios',
   'Confirm withdrawal':'Confirmar retirada', 'Withdraw this pending request?':'¿Retirar esta solicitud pendiente?',
   'Household':'Familia', 'No automatic translation of food names.':'Los nombres de alimentos no se traducen automáticamente.',
+  'Access has ended. Clear site data before sharing this browser.':'Tu acceso ha terminado. Borra los datos del sitio antes de compartir este navegador.',
+  'A pending request is no longer stored on this browser. Check Your requests for its status.':'Una solicitud pendiente ya no está guardada en este navegador. Consulta su estado en Tus solicitudes.',
   'Stored pending requests could not be opened.':'No se pudieron abrir las solicitudes pendientes guardadas.',
   'Browser storage is unavailable. Requests will remain editable but will not be saved offline.':'El almacenamiento del navegador no está disponible. Puedes seguir editando las solicitudes, pero no se guardarán sin conexión.'
 };

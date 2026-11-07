@@ -1,6 +1,6 @@
 # App Review walkthrough and fictional demo handoff
 
-Prepared from native source on 2026-11-03. This is a reviewer script and release-owner handoff, not a completed review run. The repository has local native/service test evidence, but this document does not establish an Apple-distributed build, live email sign-in, production guardian verification or a successful sandbox purchase. Fill the build, device, locale, tester and result fields for the actual candidate; a source route is not evidence that it passed on that candidate.
+Prepared from native source on 2026-11-03; staging status updated on 2026-11-06. This is a reviewer script and release-owner handoff, not a completed review run. The repository has local native/service test evidence, but this document does not establish an Apple-distributed build, live email sign-in, production guardian verification or a successful sandbox purchase. Fill the build, device, locale, tester and result fields for the actual candidate; a source route is not evidence that it passed on that candidate.
 
 ## Review package supplied by the release owner
 
@@ -8,7 +8,7 @@ Prepared from native source on 2026-11-03. This is a reviewer script and release
 | --- | --- |
 | Submitted build/version and bundle | Record from the actual signed candidate |
 | Operator business | Venture House Group LLC, explicitly supplied by the user. This does not establish policy/terms approval, jurisdiction, address or retention. |
-| Operating support owner and public destination | User-supplied contact: hello@roominthecart.com. Verify delivery/monitoring with the operating owner before release; no test email has been sent |
+| Operating support owner and public destination | User-supplied contact: hello@roominthecart.com. [Public mail-routing DNS exists](evidence/b11/support-dns-20261106/README.md), but verify this exact mailbox’s delivery/monitoring with the operating owner before release; no test email has been sent |
 | Privacy and terms pages | Supply operator-reviewed HTTPS URLs and both launch languages |
 | Demo environment | State the exact isolated service environment; use fictional records only |
 | Demo adult accounts | Provide two verified adults through App Store Connect's private review fields, outside this repository |
@@ -18,7 +18,7 @@ Prepared from native source on 2026-11-03. This is a reviewer script and release
 | Apple product | Supply the actual product ID, storefront and reviewer purchase/restore instructions |
 | Open gates | List unconfigured or failed behavior explicitly; exclude its claim from the listing |
 
-Release metadata is wired through [the native configuration guide](../config/README.md). Blank URLs produce visible unavailable states. The current staging `/help`, `/privacy`, `/terms` and `/support` paths returned HTTP 404 on 2026-11-03 and must not be represented as published policies or support. The owner must finish the public pages, identity/email setup, signing and actual App Store configuration before a distribution submission that advertises those paths.
+Release metadata is wired through [the native configuration guide](../config/README.md). Blank URLs produce visible unavailable states. The staging `/help`, `/privacy`, `/terms` and `/support` paths now resolve after the approved 2026-11-06 deployment; all 27 public API/page/asset checks passed. [Staging rollout evidence](evidence/b11/staging-rollout-20261106/summary.json). After the owner re-enabled browser access, the public pages were also checked in English and Spanish at narrow and wide widths, including keyboard skip navigation, section links and the support contact. The invited sign-in screens correctly remain unavailable while email setup is deferred; authenticated journeys were not exercised. [Rendered browser scope and evidence](evidence/b11/staging-browser-walkthrough-20261106/REVIEW.md). These checks do not establish operator policy approval, production URL readiness or a functioning support mailbox. The owner must finish those operating checks, identity/email setup, signing and actual App Store configuration before a distribution submission that advertises those paths.
 
 ## Fictional local demo, no account required
 
@@ -32,6 +32,14 @@ Use a fresh isolated test installation. Do not erase a person's existing workspa
 6. Open **Records → Recovery, exports and saved records**. Preview a narrow helper copy and a private owner export separately. Review an encrypted recovery file; include evidence photos only through the explicit selection/review path. Reopen a recovery file beside existing work and inspect conflicts before importing. Cancel deletion and verify persistence, then delete only the named fictional scope. Confirm that prior exported copies remain separate.
 7. Open the **Settings** gear on a tab root. Read **Help**, **Privacy and data**, and **Support** offline. Verify the missing-policy/page states if metadata is blank. The supplied support email opens a composer without sending; cancel it during this local walkthrough. Inspect **Review support summary** before opening its system share sheet. The summary must contain only version/build/iOS/language/environment/configuration booleans; verify that it includes none of the demo food, prices, names, photos, identifiers, codes or links.
 8. Open **Settings → Device shortcuts** with optional permissions denied and use typed paths. Review capture output before it becomes saved data. Exercise the actual signed share/widget/notification surfaces separately on a device; source compilation or a simulator run does not establish their distribution behavior.
+
+## Verify an update on an existing installation
+
+Use a dedicated test device and fictional groceries. Install the previous distributed build, save an offline pack comparison, and record the entered quantities, prices, result and revision. Install the signed candidate over it using the distribution update path. Keep the existing app data throughout.
+
+Launch the candidate from the Home Screen. Open the comparison in Records and check the original values. Change the confirmed quantity at home, save, quit and reopen. Verify the new costs, both saved revisions and the original record identity. Record the device OS, both build numbers, the candidate commit and the results. When a release changes the database schema, include a store created with the previous schema.
+
+The pre-release simulator check exercised this sequence on iOS 27.0 with two schema-v2 builds. The old $6 and $4 totals reopened intact, and entering six items at home produced $3 and $2 in revision two. [Update evidence](evidence/native/in-place-update-20261105/summary.json).
 
 ## Connected review, after the real environment is configured
 

@@ -21,10 +21,15 @@ export class WebApp {
   private requests:OwnRequest[] = [];
   private view:CookView|null = null;
   private pending:Pending[] = [];
+  private queueState:'ready'|'unavailable'|'missing' = 'ready';
   private confirmedOperations = new Set<string>();
   private draft = blank();
   private review = false;
   private busy = false;
+  private historySuspended = false;
+  private historyAway = false;
+  private historyGeneration = 0;
+  private historyResumePending = false;
   private notice = '';
   private failurePurpose:'load'|'mutation'|null=null;
   private language:Language;
@@ -57,8 +62,11 @@ export class WebApp {
   }
   private async run(action:()=>Promise<void>,purpose:'load'|'mutation'='mutation',retryingSignOut=false):Promise<void> {
     if(this.busy||(this.signOutPending&&!retryingSignOut))return; this.busy=true; this.render();
-    try { await action(); if(purpose==='load'&&this.failurePurpose==='load'){this.notice='';this.failurePurpose=null;} } catch(error) { await this.fail(error,purpose); }
-    finally {this.busy=false;this.render();this.root.querySelector<HTMLElement>('[role="status"]')?.focus();}
+    const historyGeneration=this.historyGeneration;
+    try { await action(); if(purpose==='load'&&!this.historyAway&&historyGeneration===this.historyGeneration)this.historySuspended=false; if(purpose==='load'&&this.failurePurpose==='load'){this.notice='';this.failurePurpose=null;} } catch(error) { await this.fail(error,purpose); }
+    finally {this.busy=false;this.render();this.root.querySelector<HTMLElement>('[role="status"]')?.focus();
+      if(this.historyResumePending){this.historyResumePending=false;void this.start();}
+    }
   }
   private supportedRoute():boolean {
     const path=this.root.ownerDocument.defaultView?.location.pathname??'/';
@@ -66,13 +74,24 @@ export class WebApp {
     return ['/requests','/invite','/view'].includes(path.endsWith('/')?path.slice(0,-1):path);
   }
   private get signOutPending():boolean {return this.logoutPending||browserSignOutPending(this.root.ownerDocument.defaultView);}
+  suspendForHistory():void {
+    // Remove private DOM before the browser can retain a history snapshot. Keep
+    // unsent work in memory until a fresh session confirms the same scope.
+    this.historyAway=true;this.historySuspended=true;this.historyGeneration++;this.render();
+  }
+  resumeFromHistory():void {
+    this.historyAway=false;
+    if(this.busy){this.historyResumePending=true;return;}
+    void this.start();
+  }
   async start():Promise<void> {
+    if(this.historyAway)return;
     if(!this.supportedRoute()){this.render();return;}
     if(this.signOutPending){this.hideWhileSigningOut();this.render();return;}
     await this.run(()=>this.load(),'load');
   }
   private clearPrivate():void {
-    this.session=null;this.reviewedScope=null;this.requests=[];this.view=null;this.pending=[];this.draft=blank();
+    this.session=null;this.reviewedScope=null;this.requests=[];this.view=null;this.pending=[];this.queueState='ready';this.draft=blank();
     this.retryCommand=null;this.uncertainSend=false;this.consent=false;this.review=false;this.correction='';
     this.receivedSuggestions=[];this.suggestionsCursor=null;this.suggestionsState='unchecked';
     this.proposalGeneration++;this.proposalIntent=null;this.proposalReceipt=null;this.proposalStatus=null;this.proposalConflict=false;this.withdrawn=null;this.withdrawalCommand=null;this.confirmedOperations.clear();
@@ -88,11 +107,11 @@ export class WebApp {
     const start=this.proposalGeneration,fresh=await this.api.session();
     if(start!==this.proposalGeneration)return;
     if(this.reviewedScope && fresh && this.reviewedScope!==reviewScope(fresh)) {
-      this.clearPrivate();this.notice='';
+      this.clearPrivate();this.notice='';this.render();
       await this.outbox.retainScope(scopeFor(fresh)).catch(()=>{});
     }
     this.session=fresh;
-    if(!fresh){this.requests=[];this.view=null;this.pending=[];this.receivedSuggestions=[];this.suggestionsState='unchecked';this.consent=false;this.browserAuth=await this.api.authState();return;}
+    if(!fresh){this.requests=[];this.view=null;this.pending=[];this.receivedSuggestions=[];this.suggestionsState='unchecked';this.consent=false;this.render();this.browserAuth=await this.api.authState();return;}
     this.reviewedScope=reviewScope(fresh);
     if(fresh.role==='helper'||fresh.role==='editor') {
       this.requests=[];this.view=null;this.pending=[];this.draft=blank();this.retryCommand=null;this.uncertainSend=false;this.consent=false;
@@ -104,10 +123,25 @@ export class WebApp {
       if(Date.parse(view.expiresAt)<=Date.now())throw new ApiError('access_ended',403);
       await this.readReceivedSuggestions(fresh,null);
     } else {this.view=null;this.requests=await this.api.requests(fresh);}
+    this.queueState='ready';
     if(isContributorSession(fresh)&&fresh.queueConsent&&fresh.enrolled) {
-      try {await this.outbox.retainScope(scopeFor(fresh));this.pending=await this.outbox.list(scopeFor(fresh));}
-      catch {this.pending=[];this.notice='Stored pending requests could not be opened.';}
+      try {
+        await this.outbox.retainScope(scopeFor(fresh));
+        const stored=await this.outbox.list(scopeFor(fresh));
+        const storedIDs=new Set(stored.map(row=>row.id));
+        if(this.pending.some(row=>!this.confirmedOperations.has(row.id)&&!storedIDs.has(row.id))) {
+          this.queueState='missing';
+        }
+        this.pending=stored;
+      } catch {
+        this.pending=[];this.queueState='unavailable';
+      }
     } else {this.pending=[];await this.outbox.clear().catch(()=>{});}
+    if(!this.pending.length&&this.notice==='Waiting to send from this browser')this.notice='';
+    // Fresh authorized content supersedes a prior access denial, not receipt or storage warnings.
+    if(this.session===fresh&&this.notice==='Access has ended. Ask your household for a new invitation.') {
+      this.notice='';this.failurePurpose=null;
+    }
   }
   private async reauthenticate(command?:Command, grantId?:string):Promise<Session> {
     const fresh=await this.api.session();
@@ -136,13 +170,32 @@ export class WebApp {
       if(identityCSRF)this.browserAuth=await this.api.authState().catch(()=>null);
     } catch { /* Keep the private view closed until a confirmed retry. */ }
   }
-  private async fail(error:unknown,purpose:'load'|'mutation'='mutation'):Promise<void> {
+  private async fail(error:unknown,purpose:'load'|'mutation'='mutation',rejectedPendingID?:string):Promise<void> {
     this.failurePurpose=purpose;
     const e=error instanceof ApiError ? error:new ApiError('unavailable',500);
     if(e.status===403||e.code==='access_ended'||(e.status===404&&(this.proposalIntent!==null||['editor','helper'].includes(this.session?.role??'')))) {
       this.clearPrivate();
-      await this.outbox.clear().catch(()=>{});this.notice='Access has ended. Ask your household for a new invitation.';
-    } else if(e.status===401) {this.session=null;this.requests=[];this.view=null;this.pending=[];this.receivedSuggestions=[];this.suggestionsState='unchecked';this.notice='Sign in again to continue. Your text stays on this page.';this.browserAuth=await this.api.authState().catch(()=>null);this.codeRequested=false;this.loginCode='';}
+      this.render();
+      try {
+        await this.outbox.clear();
+        this.notice='Access has ended. Ask your household for a new invitation.';
+      } catch {
+        this.notice='Access has ended. Clear site data before sharing this browser.';
+      }
+      return;
+    }
+    if(e.status===401) {
+      this.session=null;this.requests=[];this.view=null;this.pending=[];
+      this.receivedSuggestions=[];this.suggestionsState='unchecked';
+      this.notice='Sign in again to continue. Your text stays on this page.';
+      this.codeRequested=false;this.loginCode='';
+      this.render();
+      const historyGeneration=this.historyGeneration;
+      this.browserAuth=await this.api.authState().catch(()=>null);
+      // An explicit identity denial has removed the private projection. Allow
+      // sign-in recovery even when the retained household cookie keeps returning 401.
+      if(!this.historyAway&&historyGeneration===this.historyGeneration)this.historySuspended=false;
+    }
     else if(e.code==='login_unavailable')this.notice='Email sign-in is not available yet. Your invitation stays on this page.';
     else if(e.code==='code_not_accepted')this.notice='That code was not accepted. Check the latest code or request another one.';
     else if(e.code==='login_rate_limited')this.notice='Wait before requesting or checking another code.';
@@ -154,6 +207,8 @@ export class WebApp {
     else if(this.proposalReceipt)this.notice='Suggestion status could not be checked. Its earlier receipt is still confirmed. Try again.';
     else if(this.proposalIntent)this.notice='Suggestion receipt is unconfirmed. Retry the original suggestion. It is only kept on this page; closing or reloading loses this local copy.';
     else this.notice=this.uncertainSend?'Not saved in this browser. Receipt is unconfirmed. Your text is still here. Retry to check.':'Not saved. Your text is still here. Reconnect and try again.';
+    // The server's decision remains authoritative if deleting a rejected copy fails.
+    if(rejectedPendingID)await this.outbox.remove(rejectedPendingID).catch(()=>{});
   }
   private date(value:string):string {
     const d=new Date(value);return Number.isFinite(d.getTime())?new Intl.DateTimeFormat(this.language==='es'?'es-US':'en-US',{dateStyle:'full',timeStyle:'short'}).format(d):value;
@@ -168,12 +223,17 @@ export class WebApp {
     const status=this.el('p',this.busy?this.t('Loading…'):this.t(this.notice));status.className='notice';status.setAttribute('role','status');status.setAttribute('tabindex','-1');main.append(status);
     if(!this.supportedRoute()){main.append(this.el('h1',this.t('This page is not available.')));const link=this.el('a',this.t('Open your requests'));link.href='/requests';main.append(link);return;}
     if(this.signOutPending){main.append(this.el('h1',this.t('Finish signing out')),this.button('Retry sign-out',()=>void this.run(()=>this.signOut(),'mutation',true),true));return;}
+    if(this.historySuspended){main.append(this.button('Refresh',()=>void this.start()));return;}
     if(this.invitation!==null || !this.session) {this.renderInvite(main);return;}
     const context=this.el('section');context.append(this.el('p',this.session.household.label));
     const actions=this.el('div');actions.className='actions';actions.append(this.button('Refresh',()=>void this.run(()=>this.load(),'load')),this.button('Sign out',()=>void this.run(()=>this.signOut(this.session??undefined))));context.append(actions);main.append(context);
     if(this.session.role==='helper'||this.session.role==='editor'){
       if(this.view)this.renderCook(main);else main.append(this.el('p',this.t('No instructions are available.')));
-    } else this.renderContributor(main);
+    } else {
+      if(!this.busy&&this.queueState==='unavailable')status.append(' ',this.t('Stored pending requests could not be opened.'));
+      if(!this.busy&&this.queueState==='missing')status.append(' ',this.t('A pending request is no longer stored on this browser. Check Your requests for its status.'));
+      this.renderContributor(main);
+    }
   }
   private renderLogin(main:HTMLElement):void{
     main.append(this.el('h1',this.t('Sign in to continue')));
@@ -255,7 +315,13 @@ export class WebApp {
     const own=this.el('section');own.append(this.el('h2',this.t('Your requests')));
     if(!this.requests.length)own.append(this.el('p',this.t('No requests yet.')));
     for(const r of this.requests){const card=this.el('article');card.className='card';card.dataset.requestId=r.requestId;
-      card.append(this.el('h3',r.originalItem),this.el('p',r.ownQuantity??this.t('Unknown amount')),this.el('p',this.t(statuses[r.status]??'Status unavailable')),this.el('p',this.t(r.route==='next'?'Next shop':'This pickup')),this.el('p',this.date(r.receivedAt)));
+      card.append(this.el('h3',r.originalItem),this.el('p',r.ownQuantity??this.t('Unknown amount')),this.el('p',this.t(r.carriedForward?'Moved to a later pickup for review':statuses[r.status]??'Status unavailable')),this.el('p',this.t(r.route==='next'?'Next shop':'This pickup')),this.el('p',this.date(r.receivedAt)));
+      if(r.fromPreviousShop)card.append(this.el('p',this.t('From an earlier pickup')));
+      if(r.status==='added'){
+        const purchaseLabel=r.purchaseOutcome==='bought'?'Shopper confirmed purchase':
+          r.purchaseOutcome==='notBought'?'Shopper confirmed the item was not bought':'Purchase not confirmed';
+        card.append(this.el('p',this.t(purchaseLabel)));
+      }
       if(r.clarification)card.append(this.el('p',r.clarification));
       if(r.ownActionAllowed){card.append(this.button('Edit',()=>{if(this.uncertainSend)return;this.draft={item:r.originalItem,amount:r.ownQuantity??'',route:r.route,editing:r,followup:null};this.review=false;this.retryCommand=null;this.render();this.root.querySelector<HTMLElement>('#item')?.focus();}),this.button('Withdraw',()=>{this.withdrawn=r;this.withdrawalCommand=null;this.render();}));}
       else if(r.status!=='withdrawn')card.append(this.button('Follow up',()=>{if(this.uncertainSend)return;this.draft={...blank(),item:r.originalItem,amount:r.ownQuantity??'',route:r.route,followup:r.requestId};this.review=false;this.retryCommand=null;this.render();this.root.querySelector<HTMLElement>('#item')?.focus();}));
@@ -303,11 +369,27 @@ export class WebApp {
       if(persisted && error instanceof ApiError && (error.status===0||error.status>=500||error.status===429)) {
         this.showQueued(p);return;
       }
-      if(persisted)await this.outbox.remove(p.id);throw error;
+      if(persisted) {
+        await this.fail(error,'mutation',p.id);
+        return;
+      }
+      throw error;
     }
-    this.confirmedOperations.add(command.clientKey);
-    let cleanupFailed=false;if(persisted){try{await this.outbox.remove(p.id);}catch{cleanupFailed=true;}}
-    this.draft=blank();this.retryCommand=null;this.uncertainSend=false;this.review=false;this.notice=cleanupFailed?'Received by the shopper. A local pending copy remains; retry it to confirm and clear it.':'Received by the shopper.';
+    this.draft=blank();this.retryCommand=null;this.uncertainSend=false;this.review=false;
+    await this.finishReceived(p,persisted);
+  }
+  private async finishReceived(p:Pending,persisted:boolean):Promise<void> {
+    this.notice='Received by the shopper.';
+    if(persisted) {
+      try {
+        await this.outbox.remove(p.id);
+        this.pending=this.pending.filter(row=>row.id!==p.id);
+        this.confirmedOperations.delete(p.id);
+      } catch {
+        this.confirmedOperations.add(p.id);
+        this.notice='Received by the shopper. Retry to clear the copy on this browser.';
+      }
+    }
     // A successful command is received even if the subsequent refresh disconnects.
     try{await this.load();}catch(error){if(error instanceof ApiError&&(error.status===401||error.status===403))throw error;}
   }
@@ -319,8 +401,11 @@ export class WebApp {
   private async retry(p:Pending):Promise<void>{
     const fresh=await this.api.session();
     if(this.signOutPending||!fresh||reviewScope(fresh)!==this.reviewedScope||scopeFor(fresh)!==p.scope||!isContributorSession(fresh)||!fresh.enrolled||!fresh.queueConsent)throw new ApiError('access_ended',403);
-    if(fresh.replayWindow.id!==p.command.replayWindow||Date.parse(fresh.replayWindow.expiresAt)<=Date.now()) {this.notice='This queued request needs a new review. It was not resent.';return;}
-    await this.api.command(fresh,p.command);await this.outbox.remove(p.id);this.session=fresh;this.pending=this.pending.filter(x=>x.id!==p.id);this.notice='Received by the shopper.';await this.load();
+    if(!this.confirmedOperations.has(p.id)) {
+      if(fresh.replayWindow.id!==p.command.replayWindow||Date.parse(fresh.replayWindow.expiresAt)<=Date.now()) {this.notice='This queued request needs a new review. It was not resent.';return;}
+      await this.api.command(fresh,p.command);
+    }
+    this.session=fresh;await this.finishReceived(p,true);
   }
   private resetProposal():void {
     this.proposalGeneration++;this.proposalIntent=null;this.proposalReceipt=null;this.proposalStatus=null;this.proposalConflict=false;

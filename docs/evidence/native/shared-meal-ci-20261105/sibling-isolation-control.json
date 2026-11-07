@@ -1,0 +1,47 @@
+{
+  "scope": "One controlled sibling-only invocation on a fresh simulator using exact app and test runner from failed pair. This is separate evidence, not a reclassification of the original failure.",
+  "result": "Passed",
+  "tests": 1,
+  "seconds": 215.335,
+  "xcodebuildExit": 0,
+  "strictGuardExit": 0,
+  "runtimeWarnings": 0,
+  "animationNotificationTimeouts": 0,
+  "runnerRestarts": 0,
+  "appAndRunner": "Root rehashed all inputs and matched installed launcher, dylib, runner and test binary; identical to prior pair.",
+  "device": "7FE033B2-69D3-4367-9CFD-36923630E36E",
+  "finalDeviceState": "Shutdown",
+  "profile": [
+    {
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "7FE033B2-69D3-4367-9CFD-36923630E36E",
+        "deviceName": "RITC Shared Meal Sibling Isolation Control",
+        "modelName": "iPhone 17",
+        "osBuildNumber": "23C52",
+        "osVersion": "26.2",
+        "platform": "iOS Simulator"
+      },
+      "expectedFailures": 0,
+      "failedTests": 0,
+      "passedTests": 1,
+      "skippedTests": 0,
+      "testPlanConfiguration": {
+        "configurationId": "1",
+        "configurationName": "Test Scheme Action"
+      }
+    }
+  ],
+  "artifacts": ".build/CIResearch20261104/candidate-f0e2ac3/shared-meal-idea-diagnostic/private-sibling-isolation-control",
+  "sha256": {
+    "Tests.log": "53b2130b601cb5f9650b3a296b26d9f827e7ae9721fa905ae933e0f1a357f34e",
+    "test-summary.json": "86df890f7e110fe09cbd455df97658b0765f2e72b75ec3e3643c411fceef2d5d",
+    "test-details.json": "5e253aaf516683b94960c535fdb16ec7c0e77e4be8ed095d3a3ee33a6c4a2744",
+    "test.patch": "1a6b9fdd320f8e0b3686a67b842f42afdd9bde1a557b61f550f5bf6e6e4653c4",
+    "input-checksums.txt": "86927440561f401e25d9717d9e3d3283c811cbc133f245615841493acab80d6b",
+    "installed-checksums.txt": "d99b066fc75842b50cb4ca496d287c70f35dd3f3f511ac20cf69877a917e83a6",
+    "current-guard.log": "fe485e4e36c013ab5fef6e3ee3be14d6b935ea03f820253632186a647acec281"
+  },
+  "interpretation": "Fresh journey isolation completed. One control does not prove order dependence, identify a framework defect or certify future reliability. Keep original failure and verify each isolated hosted job.",
+  "installationDecision": "The passive-label test correction is supported by the complete first-case pass. Its unmodified sibling has a complete same-binary isolated pass. Install the correction with isolated CI journey jobs; supersedes earlier provisional same-invocation installation condition. No product behavior, assertions or time budgets relaxed."
+}

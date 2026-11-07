@@ -1,0 +1,40 @@
+{
+  "sourcePath": "ios/Features/Dinners/DinnerEditors.swift",
+  "parentSHA256": "cb78021561d2745779da9dd67312ad9f67ecd10b843c1ff746c33196eb2da7f9",
+  "candidateSHA256": "d2229461c3454f676bb43bc186a8b3ec88b6e6ef5e8bb9d46c122d7cf86b9277",
+  "patchSHA256": "81975c8982b82339360d156329b84e6aec55c6efbaffa55098507e4ee06f3d71",
+  "inputs": {
+    ".build/DinnerThemeReview20261107/action-followup/DinnerEditors.swift": "cb78021561d2745779da9dd67312ad9f67ecd10b843c1ff746c33196eb2da7f9",
+    ".build/DinnerThemeReview20261107/action-followup/Theme.swift": "f280b780d90d9513b7c3a40c25eafa00e2d0566f1d288b05cc28dcfa608805dc",
+    ".build/DinnerThemeReview20261107/action-followup/DinnerIdeaSupplyViews.swift": "c734eedc6975b608329c65c505fae3c92cffa0d970fc8c380e7c4f93f505c6b4",
+    ".build/DinnerThemeReview20261107/visual-v4/FreeJourneyUITests.swift": "8370fd4695405ef7f40c9823006a89772aac9c8289a714a625677755e261b13c",
+    "diagnostics/keyboard-dismiss/instrumentation.patch": "8aa530381307cb9ac5903663095a1920a5945b1c4210afc9cddfcbf7222b7a05",
+    "diagnostics/keyboard-dismiss/REVIEW.md": "3b9f923e1d75809134b2f6b9e8930465fe4a96bdef06657a7913f5b9fa8fc09d"
+  },
+  "flags": {
+    "required": [
+      "DEBUG",
+      "DINNER_KEYBOARD_DIAGNOSTIC"
+    ],
+    "optionalAdditional": "DINNER_KEYBOARD_LAYER_DIAGNOSTIC",
+    "runtimeRequired": "--ui-testing already supplied by unchanged v4 harness"
+  },
+  "bounds": {
+    "eventsPerProcess": 128,
+    "layerSnapshotsPerProcess": 12,
+    "windowsPerSnapshot": 8,
+    "layersPerSnapshot": 512,
+    "layerDepth": 64,
+    "animationConfigurationsIncludingGroupChildrenPerSnapshot": 64,
+    "groupDepth": 4,
+    "sampleConfigurationsInPayload": 8
+  },
+  "checks": {
+    "disabledOverlayMatchesParentIgnoringWhitespaceOnly": true,
+    "reviewAndAllLaterProductSourceByteIdentical": true,
+    "allDiagnosticChangesCompileConditional": true,
+    "v4HarnessUnmodified": true,
+    "noAnimationWritesOrPrivateAPIs": true
+  },
+  "validation": "Prepared source and static preservation checks only. No compile, typecheck, native run or simulator action. Root must review/compile this diagnostic separately after terminal run4 evidence."
+}

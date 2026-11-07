@@ -1,0 +1,8 @@
+{
+  "originalArchiveDigestVerified": true,
+  "originalXCResultMembersRehashed": 90,
+  "originalSizesAndMTimesUnchanged": true,
+  "reviewSHA256": "9c2b1d59c8eaa2eceb8caa195f17c505b822d0a726c05e617aa6828f2f119487",
+  "nativeExecution": false,
+  "conclusion": "Failure precedes next-shop behavior; first prolonged idle follows second Done tap. Sampled app main thread waits for events; root cause unproven."
+}

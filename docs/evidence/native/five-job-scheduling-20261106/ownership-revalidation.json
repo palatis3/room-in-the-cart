@@ -1,0 +1,17 @@
+{
+  "rejectedComputedCollisions": 1620,
+  "scopes": [
+    "root-map",
+    "root-string",
+    "linux-map",
+    "linux-string",
+    "caller-map",
+    "caller-string"
+  ],
+  "allFiveSlots": true,
+  "allLiteralSplitPositions": true,
+  "caseVariants": 3,
+  "originalWorkflowsValidated": 14,
+  "validatorSHA256": "f2f7eba7c69cf5304a97aedfcb789b916c25a00096514f80494528bd2b6fd449",
+  "patchSHA256": "1e915426e4a158896f5fde2a88c95e1d2a1cde95fbb382f2655f39bfacb4796b"
+}

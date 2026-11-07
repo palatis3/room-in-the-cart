@@ -1,0 +1,32 @@
+{
+  "artifactID": 13493171759,
+  "artifactName": "iphone-fixture-results-SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult-1",
+  "sha256": "94b38ba12085adddaff2d0c7fdbad67559035f8c3d10bbc98b349229cc179741",
+  "size": 2800445,
+  "digestVerified": true,
+  "candidate": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+  "runID": 42184705317,
+  "jobID": 127793433748,
+  "hostedConclusion": "success",
+  "selected": 1,
+  "passed": 1,
+  "failed": 0,
+  "skipped": 0,
+  "strictReplayExit": 0,
+  "planByteIdentical": true,
+  "runtimeWarnings": 0,
+  "warnings": {
+    "status": "passed",
+    "summaryWarningCount": null,
+    "runtimeWarningCount": 0,
+    "examinedTestCount": 1,
+    "detailExportCount": 1,
+    "activityExportCount": 0,
+    "warnings": []
+  },
+  "selectors": [
+    "RoomInTheCartUITests/SharedStoreQuoteUITests/testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult"
+  ],
+  "rawLogSHA256": "bad8166463ca5b9988af2f4c5184abee9faac0178986dedabd3d1cf75eebd859",
+  "replayedBundle": "Tests.xcresult"
+}

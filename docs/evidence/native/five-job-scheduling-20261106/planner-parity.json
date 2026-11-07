@@ -1,0 +1,50 @@
+{
+  "baseCommit": "afce8b8e88bfca7b562ea121e2d3dcfe88865706",
+  "onlyMatrixDifference": "macos_slot field on existing ordered rows",
+  "allOtherPlanDataExactlyEqual": true,
+  "matrixRows": {
+    "core": 11,
+    "fixtureMatrix": 14,
+    "performance": 3
+  },
+  "slots": {
+    "core": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      0,
+      1,
+      2,
+      3,
+      4,
+      0
+    ],
+    "fixtureMatrix": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      0,
+      1,
+      2,
+      3,
+      4,
+      0,
+      1,
+      2,
+      3
+    ],
+    "performance": [
+      0,
+      1,
+      2
+    ]
+  },
+  "coreModelCases": 601,
+  "coreUICases": 51,
+  "fixtureCases": 45,
+  "performanceCases": 3
+}

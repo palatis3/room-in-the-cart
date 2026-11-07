@@ -1,0 +1,91 @@
+{
+  "hostedRun": 41930998628,
+  "hostedJob": 126937759017,
+  "source": "1fd2b962d77a7459ffe2a73db6d3d8a0557cda45",
+  "device": "iPhone 17, iOS 26.2 (23C54), arm64",
+  "toolchain": "Xcode 26.3",
+  "selectedTest": "FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop",
+  "originalLog": ".build/CIResearch20261104/native-ui-results/ui-02/Tests.log",
+  "animationWaits": [
+    {
+      "waitLogLine": 285,
+      "resumedLogLine": 286,
+      "waitStartedSeconds": 111.06,
+      "resumedSeconds": 171.12,
+      "elapsedSeconds": 60.06
+    },
+    {
+      "waitLogLine": 291,
+      "resumedLogLine": 292,
+      "waitStartedSeconds": 172.49,
+      "resumedSeconds": 232.54,
+      "elapsedSeconds": 60.05
+    },
+    {
+      "waitLogLine": 296,
+      "resumedLogLine": 297,
+      "waitStartedSeconds": 233.22,
+      "resumedSeconds": 293.25,
+      "elapsedSeconds": 60.03
+    },
+    {
+      "waitLogLine": 302,
+      "resumedLogLine": 303,
+      "waitStartedSeconds": 297.29,
+      "resumedSeconds": 357.34,
+      "elapsedSeconds": 60.05
+    },
+    {
+      "waitLogLine": 307,
+      "resumedLogLine": 308,
+      "waitStartedSeconds": 358.96,
+      "resumedSeconds": 418.98,
+      "elapsedSeconds": 60.02
+    },
+    {
+      "waitLogLine": 310,
+      "resumedLogLine": 311,
+      "waitStartedSeconds": 419.0,
+      "resumedSeconds": 479.04,
+      "elapsedSeconds": 60.04
+    },
+    {
+      "waitLogLine": 316,
+      "resumedLogLine": 317,
+      "waitStartedSeconds": 480.52,
+      "resumedSeconds": 540.57,
+      "elapsedSeconds": 60.05
+    },
+    {
+      "waitLogLine": 321,
+      "resumedLogLine": 322,
+      "waitStartedSeconds": 541.73,
+      "resumedSeconds": 601.78,
+      "elapsedSeconds": 60.05
+    },
+    {
+      "waitLogLine": 326,
+      "resumedLogLine": 327,
+      "waitStartedSeconds": 603.77,
+      "resumedSeconds": 663.81,
+      "elapsedSeconds": 60.04
+    },
+    {
+      "waitLogLine": 332,
+      "resumedLogLine": 334,
+      "waitStartedSeconds": 665.96,
+      "resumedSeconds": 726.01,
+      "elapsedSeconds": 60.05
+    }
+  ],
+  "totalAnimationWaitSeconds": 600.44,
+  "lastInput": "Group servings",
+  "hostedAllowanceSeconds": 720,
+  "earlierLocalIOS27PassSeconds": 414.199,
+  "failureAttachment": "hosted-attachments/B4B38333-3989-49C3-94D0-ACA2DF09E41B.txt",
+  "sample": {
+    "total": 315,
+    "appMainThread": "UIKit run loop waiting for Mach message",
+    "testRunner": "XCUIAutomation waitForQuiescenceIncludingAnimationsIdle via XCTWaiter"
+  }
+}

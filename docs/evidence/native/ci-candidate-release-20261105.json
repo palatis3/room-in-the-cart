@@ -1,0 +1,17 @@
+{
+  "sourceCommit": "f0e2ac37383e76ac3812407384bf2eda968de3c4",
+  "run": "https://github.com/palatis3/room-in-the-cart/actions/runs/41944207882",
+  "job": 126972254452,
+  "result": "success",
+  "configuration": "Release, arm64, iphoneos, unsigned",
+  "toolchain": "Xcode 26.3, build17C529",
+  "artifact": {
+    "id": 13377733727,
+    "name": "iphone-release-build-log-1",
+    "sha256": "e800db56107775119819144f4ff3ee2f53a18ef7ca2d1a8324dfd89975e49be0",
+    "buildLogSHA256": "707ff5236cfb51dda31b079dc9d58c096cd1d317544e4e6cae2fea60bbdc7d8b"
+  },
+  "compiledVerification": "Independent job step succeeded: executable, assets, privacy, environment, and embedded extensions.",
+  "strictProductionMetadata": false,
+  "scope": "Ordinary optimized Release compilation and standard bundle verification only. Swift CodeQL uses its own build and remains pending. No signing, production product ID, live provider acceptance or App Store upload is established."
+}

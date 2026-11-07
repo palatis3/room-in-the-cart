@@ -20,9 +20,29 @@ private final class GuardianRootFixtureProtocol: URLProtocol {
             client?.urlProtocol(self,didFailWithError:URLError(.unsupportedURL)); return
         }
         let availability = url.path == "/v1/guardian/availability"
-        let body: [String:Any] = availability ? ["available":false,"reason":"provider_configuration_required"] : ["error":["code":"fixture_session_rejected"]]
+        var body: [String:Any] = ["error":["code":"fixture_session_rejected"]]
+        var status = 401
+        if availability {
+            body = ["available":false,"reason":"provider_configuration_required"]
+            status = 200
+        } else if ProcessInfo.processInfo.arguments.contains("--household-first-sign-in") {
+            let user = ["id":"fixture-first-shopper","email_confirmed_at":"date"]
+            let home = "10000000-0000-4000-8000-000000000001"
+            switch url.path {
+            case "/auth/v1/otp": body = [:]
+            case "/auth/v1/verify": body = ["access_token":"fictional-access","refresh_token":"fictional-refresh","expires_in":3600,"user":user]
+            case "/auth/v1/user": body = user
+            case "/v1/me/workspaces": body = ["workspaces":[["householdId":home,"label":"Fixture family","role":"shopper"]]]
+            case "/v1/households/\(home)/devices": body = ["deviceId":"fixture-device","deviceToken":"fictional-device-access"]
+            case "/v1/households/\(home)/bootstrap":
+                body = ["household":["id":home,"label":"Fixture family"],"memberId":"fixture-shopper","role":"shopper",
+                    "enrolled":true,"queueConsent":false,"capabilities":[]]
+            default: break
+            }
+            if body["error"] == nil { status = 200 }
+        }
         let data = try! JSONSerialization.data(withJSONObject:body,options:[.sortedKeys])
-        let response = HTTPURLResponse(url:url,statusCode:availability ? 200 : 401,httpVersion:nil,headerFields:["Content-Type":"application/json"])!
+        let response = HTTPURLResponse(url:url,statusCode:status,httpVersion:nil,headerFields:["Content-Type":"application/json"])!
         client?.urlProtocol(self,didReceive:response,cacheStoragePolicy:.notAllowed)
         client?.urlProtocol(self,didLoad:data); client?.urlProtocolDidFinishLoading(self)
     }
@@ -52,7 +72,8 @@ private final class GuardianRootFixtureProtocol: URLProtocol {
     init() {
         let arguments = ProcessInfo.processInfo.arguments
         let synthetic = arguments.contains("--guardian-root-synthetic-vaults")
-        let suffix = synthetic ? "synthetic" : "empty"
+        let firstSignIn = arguments.contains("--household-first-sign-in")
+        let suffix = firstSignIn ? "first-sign-in" : (synthetic ? "synthetic" : "empty")
         let support = FileManager.default.urls(for:.applicationSupportDirectory,in:.userDomainMask)[0]
         let directory = support.appendingPathComponent("UITestWorkspace/GuardianRootTransition/" + suffix,isDirectory:true)
         self.directory = directory
@@ -71,13 +92,17 @@ private final class GuardianRootFixtureProtocol: URLProtocol {
         app = AppModel(databaseURL:directory.appendingPathComponent("unopened-comparisons.sqlite"))
         ledger = LedgerModel(databaseURL:directory.appendingPathComponent("private-ledger.sqlite"))
         pickup = PickupModel(databaseURL:directory.appendingPathComponent("unopened-pickup.sqlite"))
-        household = HouseholdModel(bundle:disconnected,outboxURL:directory.appendingPathComponent("unused-adult-outbox.json"),
+        let config = URLSessionConfiguration.ephemeral; config.protocolClasses = [GuardianRootFixtureProtocol.self]
+        let transport = HTTPTransport(session:URLSession(configuration:config))
+        let auth = firstSignIn ? AdultAuth(configuration: try! .init(projectURL: URL(string:"https://identity.guardian-root-fixture.invalid")!,
+            publishableKey:"sb_publishable_guardian_root_fixture"), vault:GuardianRootMemoryVault(), transport:transport) : nil
+        let service = auth.map { HouseholdService(configuration:try! .init(baseURL:URL(string:"https://guardian-root-fixture.invalid")!),
+            auth:$0, deviceVault:GuardianRootMemoryVault(), transport:transport) }
+        household = HouseholdModel(bundle:disconnected,auth:auth,service:service,outboxURL:directory.appendingPathComponent("unused-adult-outbox.json"),
             deletionVault:GuardianRootMemoryVault(),exitVault:GuardianRootMemoryVault(),guardianVault:GuardianRootMemoryVault())
         access = WorkspaceAccess(defaults:defaults)
         surfaces = DeviceSurfacesComposition(directory:directory.appendingPathComponent("surfaces"),bundle:disconnected,launchArguments:arguments)
         navigation = NavigationRestorationModel(store:NavigationSnapshotStore(url:directory.appendingPathComponent("unused-navigation.json")))
-        let config = URLSessionConfiguration.ephemeral; config.protocolClasses = [GuardianRootFixtureProtocol.self]
-        let transport = HTTPTransport(session:URLSession(configuration:config))
         let syntheticMaterial = synthetic && (reset || FileManager.default.fileExists(atPath:directory.appendingPathComponent("child-root-marker.json").path))
         identityVault = GuardianRootMemoryVault(syntheticMaterial ? "fictional-refresh-which-cannot-authenticate" : nil)
         deviceVault = GuardianRootMemoryVault(syntheticMaterial ? "fictional-device-which-cannot-enroll" : nil)
@@ -87,7 +112,7 @@ private final class GuardianRootFixtureProtocol: URLProtocol {
             authConfiguration:try! .init(projectURL:URL(string:"https://identity.guardian-root-fixture.invalid")!,publishableKey:"sb_publishable_guardian_root_fixture"),
             serviceConfiguration:try! .init(baseURL:URL(string:"https://guardian-root-fixture.invalid")!),
             identityVault:identityVault,deviceVault:deviceVault,setupVault:setupVault,transport:transport)
-        if reset { access.protect() }
+        if reset && !firstSignIn { access.protect() }
     }
     func start() async {
         do {
@@ -160,6 +185,7 @@ private final class GuardianRootFixtureProtocol: URLProtocol {
                 Text(state.preservation).accessibilityIdentifier("guardian.fixture.preservation")
             }.font(.caption).padding(4).frame(maxWidth:.infinity).background(.regularMaterial)
         }
+            .modifier(HouseholdWorkspaceProtection(household: state.household, access: state.access))
             .task { await state.start() }
             .onChange(of:phase) { _, value in state.phaseChanged(value) }
     }

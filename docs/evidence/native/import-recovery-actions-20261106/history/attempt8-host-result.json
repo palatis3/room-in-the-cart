@@ -1,0 +1,37 @@
+{
+  "appBundleID": "dev.roominthecart.app.debug",
+  "appContainer": "/Users/palatis/Library/Developer/CoreSimulator/Devices/EF2CF945-20C5-4BF4-ACA1-A2D6F9C89C01/data/Containers/Data/Application/BF7E67F1-F966-4897-B13B-A2583173C7F5",
+  "appInfoPlist": "/Users/palatis/Room in the Cart/.build/S04ProtectedVisibility20261106/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/Info.plist",
+  "appInfoPlistSHA256": "16c73fc926e9c3aa9d88e5547f86f331000e4418606956acf0b4abbdc492cad0",
+  "bootstrapRequestSHA256": "1d872c55c2c597552f97b0b8aef19f7c9eb5fb3a81185dbfb1b27f18a8007461",
+  "containerIdentities": {
+    "app": {
+      "device": 16777234,
+      "inode": 19581954
+    },
+    "documents": {
+      "device": 16777234,
+      "inode": 19579046
+    },
+    "exchange": {
+      "device": 16777234,
+      "inode": 19581479
+    },
+    "runner": {
+      "device": 16777234,
+      "inode": 19579041
+    }
+  },
+  "database": "/Users/palatis/Library/Developer/CoreSimulator/Devices/EF2CF945-20C5-4BF4-ACA1-A2D6F9C89C01/data/Containers/Data/Application/BF7E67F1-F966-4897-B13B-A2583173C7F5/Library/Application Support/UITestWorkspace/ledger.sqlite",
+  "elapsedSeconds": 269.23844087500004,
+  "exchangeDirectory": "/Users/palatis/Library/Developer/CoreSimulator/Devices/EF2CF945-20C5-4BF4-ACA1-A2D6F9C89C01/data/Containers/Data/Application/70471C4D-C950-448E-A671-C4C67048E708/Documents/ImportRecovery-11bae1df-0205-44b6-8ac7-727af8a8132b",
+  "finishedUnixUTC": 1794023768.166218,
+  "nativeExitCode": 0,
+  "runnerBundleID": "dev.roominthecart.RoomInTheCartUITests.xctrunner",
+  "runnerContainer": "/Users/palatis/Library/Developer/CoreSimulator/Devices/EF2CF945-20C5-4BF4-ACA1-A2D6F9C89C01/data/Containers/Data/Application/70471C4D-C950-448E-A671-C4C67048E708",
+  "simulator": "EF2CF945-20C5-4BF4-ACA1-A2D6F9C89C01",
+  "status": "protocol-and-native-exit-success",
+  "supervisorPID": 71406,
+  "supervisorStart": "Fri Nov 6 22:51:38 2026",
+  "token": "11bae1df-0205-44b6-8ac7-727af8a8132b"
+}

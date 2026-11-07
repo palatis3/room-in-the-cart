@@ -1,0 +1,16 @@
+{
+  "docs/product/APP-BASELINE.md": "9422442e284dbbf0179db1df23793a6872708481e3ffd913c1933f49ec38aaf3",
+  "docs/product/foundation-gen2.1/03-screens.md": "c8110a8f8f2d6f2d36f32305a158ecd9b2e1a34f998abbd79f38a95debf7c7e7",
+  "ios/Features/Ledger/LedgerIngredientView.swift": "288ef8f8bcb5a8fd3e1da1dce5219d442615b418e781e0485037dab418411fd4",
+  "ios/Features/Ledger/LedgerPackChoiceView.swift": "02a8f27255231194b5439e0b85adf873efb7ae6763c3d85da33eb4c6e738c534",
+  "ios/Features/Ledger/LedgerPackReview.swift": "bcf5b58a08f398e4695e24074049656d506f47af85f3853dca3bb96e2f807284",
+  "ios/Features/Ledger/LedgerPackStockReview.swift": "657e86c2beeb7d561ffa0642fb60a5061096a28c24181f759c51e290531dd2b7",
+  "ios/Packages/CoreDomain/Sources/CoreDomain/LedgerPackSelection.swift": "2b9db4372ae7338d5f140c75ad9edccd8709c85f5f4b4cdb5e463c718c27288f",
+  "ios/Tests/LedgerCheckoutAdapterTests.swift": "c741df2d987039a4b5ee39ef99e8d2e0156cf8c07fe4a4e8ef8beafbeacc6410",
+  "ios/Tests/FreeJourneyAcceptanceTests.swift": "736ddc0813453f3fa7fef7930ec0ae8197b8049e85f11d301176c701cd0d34cd",
+  "ios/UITests/LedgerConfirmedStockPackUITests.swift": "1c675c450f8ac6a6ba4729dba38234fcc84f8c3dd781a81af6015c734b003d05",
+  "docs/evidence/native/protected-need-visibility-20261106/root-review.json": "e8e74e969c38369645e6bd6b54aa1aa1b648b3492a8c66f91a5cc92b6567e496",
+  "ios/App/LedgerCheckoutEntry.swift": "1e10e2501a74b128609241b00825993b97c31d66d8810aa798e26ce4df5a9222",
+  "ios/Features/Ledger/LedgerModel.swift": "77df98d6a518bed6b1abf46aff9dcd6c5ff838655707daf76d15c19db1fb65f5",
+  "ios/Tests/SQLiteFixtureDirectory.swift": "1a4a5fd4d6497065f707ced23ba07e32e95167acb3b072b356cb1d75dbe6593f"
+}

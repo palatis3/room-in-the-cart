@@ -1,0 +1,19 @@
+{
+  "count": 129,
+  "classes": [
+    "AcceptedDinnerOptionsTests",
+    "ContextualReminderTests",
+    "DinnerAwayCarryoverTests",
+    "FreeJourneyAcceptanceTests",
+    "PickupCheckoutDraftTests",
+    "PickupCookProjectionTests",
+    "PickupModelTests",
+    "PickupOfferEvaluationTests",
+    "PickupOfferReviewTests",
+    "PickupRecipientHandoffTests",
+    "PickupStockBatchTests",
+    "PickupStockPrivateScopeIntegrationTests",
+    "PickupStockPrivateScopeTests",
+    "PickupStockReviewTests"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "candidate": "f117439994835e0090376f4a29d81c478a6b86b4",
+  "runID": 42301547684,
+  "freezeSHA256": "56d431ee346583a4f22dd0e94ffeb7e45ab68c5ff668ad8772caca89aa8709c5",
+  "rehashedFiles": 357,
+  "allMatch": true,
+  "scrollSQLiteCopyQuickCheck": "ok",
+  "scrollMetricRowsMatchIndependentAudit": true,
+  "metricRowCount": 4,
+  "originalFailurePreserved": true,
+  "appLedgerRawDatabaseReopened": false,
+  "limits": "Simulator only; animation hitch samples unavailable. Earlier missing metric run is not explained by this passing execution."
+}

@@ -1,0 +1,158 @@
+{
+  "stage": "verified",
+  "migrationConnections": [
+    {
+      "current_user": "postgres",
+      "session_user": "cli_login_postgres",
+      "current_database": "postgres",
+      "server_version": "170011",
+      "tlsAuthorized": true,
+      "tlsProtocol": "TLSv1.3"
+    }
+  ],
+  "registry": [
+    {
+      "version": "001_household_requests.sql",
+      "checksum": "e919302e353eae03f5cf63425ad82924c3c6315321b8b4b07e1253185e79ef5b"
+    },
+    {
+      "version": "002_apple_billing.sql",
+      "checksum": "2f819c06c49f47e32c0093c636bacdfd95ad299ed159337b39041d173385ca6e"
+    },
+    {
+      "version": "003_web_session.sql",
+      "checksum": "dd2b9967be0364bf313afba035e8a60fec948a94aa1cf182e9fea14e269888cb"
+    },
+    {
+      "version": "004_household_lock.sql",
+      "checksum": "65fef08a239f4ea122133c335d56918e9d2ef2c4455418f36e18b6442a473250"
+    },
+    {
+      "version": "005_session_and_policy_hardening.sql",
+      "checksum": "3504fec9398d40cad639aa50c931d7cbe6b585e7cf2dc5059f227b3e87727d45"
+    },
+    {
+      "version": "006_household_lifecycle.sql",
+      "checksum": "7f293a0b681627cccb2d5bdc943eb3ea5c6e1436b063857f4a33f981cced296c"
+    },
+    {
+      "version": "007_selected_helper_session.sql",
+      "checksum": "422f3b0cafc482adb3708689c11bbbab1d026aac69555a8dafcbd3a525f2fca5"
+    },
+    {
+      "version": "008_browser_email_auth.sql",
+      "checksum": "5ad8c46d4146e1ce980e4f8809afa00512b9ed6ae6e41fd76637e0d86a713e1e"
+    },
+    {
+      "version": "009_auth_maintenance.sql",
+      "checksum": "b4e33a77bc0a9576a763062e8f3dddf00c019ecbe5464ad300b1e5fa0e872b6e"
+    },
+    {
+      "version": "010_account_lifecycle.sql",
+      "checksum": "e35ebbc6a2d1fcc3f7d03420542eb4ce588c3708e8bb31fcfc3ec0cc283daa22"
+    },
+    {
+      "version": "011_helper_review_and_shop_selection.sql",
+      "checksum": "23457cac7c614eb8794ec0268641cd1130558ce8d8c576c4ce8bd994253d07b9"
+    },
+    {
+      "version": "012_price_budget_history.sql",
+      "checksum": "dad295084f43a58cd15f58524575e98df66a77bdb0a17bd0f9555b3eac05c5c2"
+    },
+    {
+      "version": "013_shared_meal_occurrences.sql",
+      "checksum": "f574ff8a6b73f0959c622053b9ebd3408d05629d653709a40d631cc58259e1d5"
+    },
+    {
+      "version": "014_shared_meal_moves.sql",
+      "checksum": "2673ea349e6a7cd4df823e4128e4059533049b46071b03a1a1dc90a0d6e90a95"
+    },
+    {
+      "version": "015_family_decisions.sql",
+      "checksum": "c9779d5c19bcbb2e2bc5b3f4ffe0793e459375892d9616d5c0db2ac82686def1"
+    },
+    {
+      "version": "016_shared_meal_changes.sql",
+      "checksum": "362138035995832cc6b1bbffb6e9c0528ee2576945a908a14db03104355da6b0"
+    },
+    {
+      "version": "017_shared_meal_ideas.sql",
+      "checksum": "fe61e6528a38cc9c6c4315587d12ee540ea624422a8e89f8933f05e75addab63"
+    },
+    {
+      "version": "018_shared_store_quotes.sql",
+      "checksum": "ad18c9602e2f3c16d30f1f504ed833995bd2d09231ec405d50c7db592622b849"
+    },
+    {
+      "version": "019_optional_measurement.sql",
+      "checksum": "11cf0700dd146331a6997cca80b011a04fc8028c403745dd9e6b1d8121e959a2"
+    },
+    {
+      "version": "020_operations_health.sql",
+      "checksum": "daa858b576a969c5c8297a87ed88deeb4cda5c24a0b9f588f5a3429e92a0c2e7"
+    },
+    {
+      "version": "021_guardian_enrollment.sql",
+      "checksum": "73e33d596776a1874aeb4715b16abed3f18829d1415ed6b0dd2799e356df4c04"
+    },
+    {
+      "version": "022_privacy_journal.sql",
+      "checksum": "d64716764dd1e9b1131c7aab53faa1e67cf518875011271452ee0120d4ead5cb"
+    },
+    {
+      "version": "023_device_enrollment_fence.sql",
+      "checksum": "16f737590b2d90c6ae2942b2e4983d1455f42077d477382320773b15a6629b5d"
+    },
+    {
+      "version": "024_privacy_journal_source.sql",
+      "checksum": "98733f9b4a8fd8c7f7804d9be2c42a2d8a351f931a4ee820b62540c48b270185"
+    },
+    {
+      "version": "025_privacy_restore_capacity.sql",
+      "checksum": "2b1788b53ee26a88d9d4e5036993e0746544c2e9b4b263449e944ff4938a2bbc"
+    },
+    {
+      "version": "026_privacy_worker_capacity.sql",
+      "checksum": "5816ae80de618870134f77eefcc8cf5cdf2d667a48c8c2f25f2aa57f14a1da6c"
+    },
+    {
+      "version": "027_privacy_runtime_binding.sql",
+      "checksum": "adeb438a0699c73759fc1323282efdbb416f2cef887684466dbe0b2bc02d3d0d"
+    },
+    {
+      "version": "028_privacy_journal_rotation.sql",
+      "checksum": "52811aa4db7295e947c870578f1b1ba50560f43ba2dc54fc25565cb0f2f6baac"
+    },
+    {
+      "version": "029_privacy_restore_window.sql",
+      "checksum": "b43b876b1da041d4cea234f6834255c7c5e7584597da2b61f67d7d0134e85ef2"
+    }
+  ],
+  "objectOwnershipAndRLS": true,
+  "worker": {
+    "identity": {
+      "current_user": "ritc_maintenance",
+      "session_user": "ritc_maintenance",
+      "current_database": "postgres",
+      "worker": true,
+      "application": false
+    },
+    "memberships": [
+      {
+        "rolname": "ritc_worker"
+      }
+    ],
+    "rawTablePrivileges": [],
+    "extraFunctions": [],
+    "runtimeGuardPassed": true,
+    "health": [
+      {
+        "auth_due": "0",
+        "auth_retry_pending": "0",
+        "auth_expired_unconfirmed": "0",
+        "privacy_pending": "0",
+        "privacy_due": "0"
+      }
+    ]
+  }
+}

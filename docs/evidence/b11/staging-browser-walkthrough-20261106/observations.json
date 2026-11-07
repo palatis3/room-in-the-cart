@@ -1,0 +1,751 @@
+[
+  {
+    "name": "privacy-es-narrow",
+    "url": "https://room-in-the-cart-staging.vercel.app/privacy?lang=es",
+    "headings": [
+      "Privacidad y datos",
+      "En esta página",
+      "Tu espacio privado",
+      "Información conectada",
+      "Fotos y voz",
+      "Comentarios y medición opcionales",
+      "Almacenamiento del navegador y rastreo",
+      "Exportación y eliminación",
+      "Información de soporte"
+    ],
+    "language": "es",
+    "links": [
+      {
+        "href": "#public-main",
+        "text": "Saltar al contenido"
+      },
+      {
+        "href": "/help?lang=es",
+        "text": "Room in the Cart"
+      },
+      {
+        "href": "/help?lang=es",
+        "text": "Ayuda"
+      },
+      {
+        "href": "/privacy?lang=es",
+        "text": "Privacidad y datos"
+      },
+      {
+        "href": "/terms?lang=es",
+        "text": "Términos de uso"
+      },
+      {
+        "href": "/support?lang=es",
+        "text": "Soporte"
+      },
+      {
+        "href": "#public-section-0",
+        "text": "Tu espacio privado"
+      },
+      {
+        "href": "#public-section-1",
+        "text": "Información conectada"
+      },
+      {
+        "href": "#public-section-2",
+        "text": "Fotos y voz"
+      },
+      {
+        "href": "#public-section-3",
+        "text": "Comentarios y medición opcionales"
+      },
+      {
+        "href": "#public-section-4",
+        "text": "Almacenamiento del navegador y rastreo"
+      },
+      {
+        "href": "#public-section-5",
+        "text": "Exportación y eliminación"
+      },
+      {
+        "href": "#public-section-6",
+        "text": "Información de soporte"
+      },
+      {
+        "href": "/requests",
+        "text": "Abrir la app por invitación"
+      }
+    ],
+    "scrollWidth": 319,
+    "width": 319
+  },
+  {
+    "name": "privacy-en-narrow",
+    "url": "https://room-in-the-cart-staging.vercel.app/privacy?lang=en",
+    "headings": [
+      "Privacy and data",
+      "On this page",
+      "Your private workspace",
+      "Connected information",
+      "Photos and speech",
+      "Optional feedback and measurement",
+      "Browser storage and tracking",
+      "Export and deletion",
+      "Support information"
+    ],
+    "language": "en",
+    "links": [
+      {
+        "href": "#public-main",
+        "text": "Skip to content"
+      },
+      {
+        "href": "/help?lang=en",
+        "text": "Room in the Cart"
+      },
+      {
+        "href": "/help?lang=en",
+        "text": "Help"
+      },
+      {
+        "href": "/privacy?lang=en",
+        "text": "Privacy and data"
+      },
+      {
+        "href": "/terms?lang=en",
+        "text": "Terms of use"
+      },
+      {
+        "href": "/support?lang=en",
+        "text": "Support"
+      },
+      {
+        "href": "#public-section-0",
+        "text": "Your private workspace"
+      },
+      {
+        "href": "#public-section-1",
+        "text": "Connected information"
+      },
+      {
+        "href": "#public-section-2",
+        "text": "Photos and speech"
+      },
+      {
+        "href": "#public-section-3",
+        "text": "Optional feedback and measurement"
+      },
+      {
+        "href": "#public-section-4",
+        "text": "Browser storage and tracking"
+      },
+      {
+        "href": "#public-section-5",
+        "text": "Export and deletion"
+      },
+      {
+        "href": "#public-section-6",
+        "text": "Support information"
+      },
+      {
+        "href": "/requests",
+        "text": "Open the invited app"
+      }
+    ],
+    "scrollWidth": 319,
+    "width": 319
+  },
+  {
+    "name": "terms-en-narrow",
+    "url": "https://room-in-the-cart-staging.vercel.app/terms?lang=en",
+    "headings": [
+      "Terms of use",
+      "On this page",
+      "What the app does",
+      "Shared access",
+      "Free tools and Household membership",
+      "Data controls"
+    ],
+    "language": "en",
+    "links": [
+      {
+        "href": "#public-main",
+        "text": "Skip to content"
+      },
+      {
+        "href": "/help?lang=en",
+        "text": "Room in the Cart"
+      },
+      {
+        "href": "/help?lang=en",
+        "text": "Help"
+      },
+      {
+        "href": "/privacy?lang=en",
+        "text": "Privacy and data"
+      },
+      {
+        "href": "/terms?lang=en",
+        "text": "Terms of use"
+      },
+      {
+        "href": "/support?lang=en",
+        "text": "Support"
+      },
+      {
+        "href": "#public-section-0",
+        "text": "What the app does"
+      },
+      {
+        "href": "#public-section-1",
+        "text": "Shared access"
+      },
+      {
+        "href": "#public-section-2",
+        "text": "Free tools and Household membership"
+      },
+      {
+        "href": "#public-section-3",
+        "text": "Data controls"
+      },
+      {
+        "href": "/requests",
+        "text": "Open the invited app"
+      }
+    ],
+    "scrollWidth": 319,
+    "width": 319
+  },
+  {
+    "name": "terms-es-narrow",
+    "url": "https://room-in-the-cart-staging.vercel.app/terms?lang=es",
+    "headings": [
+      "Términos de uso",
+      "En esta página",
+      "Qué hace la app",
+      "Acceso compartido",
+      "Herramientas gratuitas y membresía del hogar",
+      "Controles de datos"
+    ],
+    "language": "es",
+    "links": [
+      {
+        "href": "#public-main",
+        "text": "Saltar al contenido"
+      },
+      {
+        "href": "/help?lang=es",
+        "text": "Room in the Cart"
+      },
+      {
+        "href": "/help?lang=es",
+        "text": "Ayuda"
+      },
+      {
+        "href": "/privacy?lang=es",
+        "text": "Privacidad y datos"
+      },
+      {
+        "href": "/terms?lang=es",
+        "text": "Términos de uso"
+      },
+      {
+        "href": "/support?lang=es",
+        "text": "Soporte"
+      },
+      {
+        "href": "#public-section-0",
+        "text": "Qué hace la app"
+      },
+      {
+        "href": "#public-section-1",
+        "text": "Acceso compartido"
+      },
+      {
+        "href": "#public-section-2",
+        "text": "Herramientas gratuitas y membresía del hogar"
+      },
+      {
+        "href": "#public-section-3",
+        "text": "Controles de datos"
+      },
+      {
+        "href": "/requests",
+        "text": "Abrir la app por invitación"
+      }
+    ],
+    "scrollWidth": 319,
+    "width": 319
+  },
+  {
+    "name": "support-es-narrow",
+    "url": "https://room-in-the-cart-staging.vercel.app/support?lang=es",
+    "headings": [
+      "Soporte",
+      "En esta página",
+      "Obtener ayuda",
+      "Un guardado o una solicitud sin confirmar",
+      "Recuperación y eliminación",
+      "Ayuda con la membresía"
+    ],
+    "language": "es",
+    "links": [
+      {
+        "href": "#public-main",
+        "text": "Saltar al contenido"
+      },
+      {
+        "href": "/help?lang=es",
+        "text": "Room in the Cart"
+      },
+      {
+        "href": "/help?lang=es",
+        "text": "Ayuda"
+      },
+      {
+        "href": "/privacy?lang=es",
+        "text": "Privacidad y datos"
+      },
+      {
+        "href": "/terms?lang=es",
+        "text": "Términos de uso"
+      },
+      {
+        "href": "/support?lang=es",
+        "text": "Soporte"
+      },
+      {
+        "href": "mailto:hello@roominthecart.com",
+        "text": "Enviar correo a soporte · hello@roominthecart.com"
+      },
+      {
+        "href": "#public-section-0",
+        "text": "Obtener ayuda"
+      },
+      {
+        "href": "#public-section-1",
+        "text": "Un guardado o una solicitud sin confirmar"
+      },
+      {
+        "href": "#public-section-2",
+        "text": "Recuperación y eliminación"
+      },
+      {
+        "href": "#public-section-3",
+        "text": "Ayuda con la membresía"
+      },
+      {
+        "href": "/requests",
+        "text": "Abrir la app por invitación"
+      }
+    ],
+    "scrollWidth": 319,
+    "width": 319
+  },
+  {
+    "name": "support-en-narrow",
+    "url": "https://room-in-the-cart-staging.vercel.app/support?lang=en",
+    "headings": [
+      "Support",
+      "On this page",
+      "Get help",
+      "An uncertain save or request",
+      "Recovery and deletion",
+      "Membership help"
+    ],
+    "language": "en",
+    "links": [
+      {
+        "href": "#public-main",
+        "text": "Skip to content"
+      },
+      {
+        "href": "/help?lang=en",
+        "text": "Room in the Cart"
+      },
+      {
+        "href": "/help?lang=en",
+        "text": "Help"
+      },
+      {
+        "href": "/privacy?lang=en",
+        "text": "Privacy and data"
+      },
+      {
+        "href": "/terms?lang=en",
+        "text": "Terms of use"
+      },
+      {
+        "href": "/support?lang=en",
+        "text": "Support"
+      },
+      {
+        "href": "mailto:hello@roominthecart.com",
+        "text": "Email support · hello@roominthecart.com"
+      },
+      {
+        "href": "#public-section-0",
+        "text": "Get help"
+      },
+      {
+        "href": "#public-section-1",
+        "text": "An uncertain save or request"
+      },
+      {
+        "href": "#public-section-2",
+        "text": "Recovery and deletion"
+      },
+      {
+        "href": "#public-section-3",
+        "text": "Membership help"
+      },
+      {
+        "href": "/requests",
+        "text": "Open the invited app"
+      }
+    ],
+    "scrollWidth": 319,
+    "width": 319
+  },
+  {
+    "name": "help-en-narrow",
+    "url": "https://room-in-the-cart-staging.vercel.app/help?lang=en",
+    "headings": [
+      "Help",
+      "On this page",
+      "Invited browser access",
+      "Compare two packs",
+      "Build a list and check the budget",
+      "Plan dinners and protect lunches",
+      "Hand off a pickup and record what arrived",
+      "Requests, shared shops and cook views",
+      "Export, recover and delete records",
+      "Capture, reminders and device shortcuts",
+      "Free tools and Household membership"
+    ],
+    "language": "en",
+    "links": [
+      {
+        "href": "#public-main",
+        "text": "Skip to content"
+      },
+      {
+        "href": "/help?lang=en",
+        "text": "Room in the Cart"
+      },
+      {
+        "href": "/help?lang=en",
+        "text": "Help"
+      },
+      {
+        "href": "/privacy?lang=en",
+        "text": "Privacy and data"
+      },
+      {
+        "href": "/terms?lang=en",
+        "text": "Terms of use"
+      },
+      {
+        "href": "/support?lang=en",
+        "text": "Support"
+      },
+      {
+        "href": "#public-section-0",
+        "text": "Invited browser access"
+      },
+      {
+        "href": "#public-section-1",
+        "text": "Compare two packs"
+      },
+      {
+        "href": "#public-section-2",
+        "text": "Build a list and check the budget"
+      },
+      {
+        "href": "#public-section-3",
+        "text": "Plan dinners and protect lunches"
+      },
+      {
+        "href": "#public-section-4",
+        "text": "Hand off a pickup and record what arrived"
+      },
+      {
+        "href": "#public-section-5",
+        "text": "Requests, shared shops and cook views"
+      },
+      {
+        "href": "#public-section-6",
+        "text": "Export, recover and delete records"
+      },
+      {
+        "href": "#public-section-7",
+        "text": "Capture, reminders and device shortcuts"
+      },
+      {
+        "href": "#public-section-8",
+        "text": "Free tools and Household membership"
+      },
+      {
+        "href": "/requests",
+        "text": "Open the invited app"
+      }
+    ],
+    "scrollWidth": 319,
+    "width": 319
+  },
+  {
+    "name": "help-es-narrow",
+    "url": "https://room-in-the-cart-staging.vercel.app/help?lang=es",
+    "headings": [
+      "Ayuda",
+      "En esta página",
+      "Acceso por invitación en el navegador",
+      "Comparar dos paquetes",
+      "Crear una lista y revisar el presupuesto",
+      "Planificar cenas y reservar almuerzos",
+      "Compartir la lista de recogida y registrar lo que llegó",
+      "Solicitudes, compras compartidas y vistas para quien cocina",
+      "Exportar, recuperar y eliminar registros",
+      "Captura, recordatorios y accesos del dispositivo",
+      "Herramientas gratuitas y membresía del hogar"
+    ],
+    "language": "es",
+    "links": [
+      {
+        "href": "#public-main",
+        "text": "Saltar al contenido"
+      },
+      {
+        "href": "/help?lang=es",
+        "text": "Room in the Cart"
+      },
+      {
+        "href": "/help?lang=es",
+        "text": "Ayuda"
+      },
+      {
+        "href": "/privacy?lang=es",
+        "text": "Privacidad y datos"
+      },
+      {
+        "href": "/terms?lang=es",
+        "text": "Términos de uso"
+      },
+      {
+        "href": "/support?lang=es",
+        "text": "Soporte"
+      },
+      {
+        "href": "#public-section-0",
+        "text": "Acceso por invitación en el navegador"
+      },
+      {
+        "href": "#public-section-1",
+        "text": "Comparar dos paquetes"
+      },
+      {
+        "href": "#public-section-2",
+        "text": "Crear una lista y revisar el presupuesto"
+      },
+      {
+        "href": "#public-section-3",
+        "text": "Planificar cenas y reservar almuerzos"
+      },
+      {
+        "href": "#public-section-4",
+        "text": "Compartir la lista de recogida y registrar lo que llegó"
+      },
+      {
+        "href": "#public-section-5",
+        "text": "Solicitudes, compras compartidas y vistas para quien cocina"
+      },
+      {
+        "href": "#public-section-6",
+        "text": "Exportar, recuperar y eliminar registros"
+      },
+      {
+        "href": "#public-section-7",
+        "text": "Captura, recordatorios y accesos del dispositivo"
+      },
+      {
+        "href": "#public-section-8",
+        "text": "Herramientas gratuitas y membresía del hogar"
+      },
+      {
+        "href": "/requests",
+        "text": "Abrir la app por invitación"
+      }
+    ],
+    "scrollWidth": 319,
+    "width": 319
+  },
+  {
+    "name": "help-es-wide",
+    "url": "https://room-in-the-cart-staging.vercel.app/help?lang=es#public-main",
+    "headings": [
+      "Ayuda",
+      "En esta página",
+      "Acceso por invitación en el navegador",
+      "Comparar dos paquetes",
+      "Crear una lista y revisar el presupuesto",
+      "Planificar cenas y reservar almuerzos",
+      "Compartir la lista de recogida y registrar lo que llegó",
+      "Solicitudes, compras compartidas y vistas para quien cocina",
+      "Exportar, recuperar y eliminar registros",
+      "Captura, recordatorios y accesos del dispositivo",
+      "Herramientas gratuitas y membresía del hogar"
+    ],
+    "language": "es",
+    "links": [
+      {
+        "href": "#public-main",
+        "text": "Saltar al contenido"
+      },
+      {
+        "href": "/help?lang=es",
+        "text": "Room in the Cart"
+      },
+      {
+        "href": "/help?lang=es",
+        "text": "Ayuda"
+      },
+      {
+        "href": "/privacy?lang=es",
+        "text": "Privacidad y datos"
+      },
+      {
+        "href": "/terms?lang=es",
+        "text": "Términos de uso"
+      },
+      {
+        "href": "/support?lang=es",
+        "text": "Soporte"
+      },
+      {
+        "href": "#public-section-0",
+        "text": "Acceso por invitación en el navegador"
+      },
+      {
+        "href": "#public-section-1",
+        "text": "Comparar dos paquetes"
+      },
+      {
+        "href": "#public-section-2",
+        "text": "Crear una lista y revisar el presupuesto"
+      },
+      {
+        "href": "#public-section-3",
+        "text": "Planificar cenas y reservar almuerzos"
+      },
+      {
+        "href": "#public-section-4",
+        "text": "Compartir la lista de recogida y registrar lo que llegó"
+      },
+      {
+        "href": "#public-section-5",
+        "text": "Solicitudes, compras compartidas y vistas para quien cocina"
+      },
+      {
+        "href": "#public-section-6",
+        "text": "Exportar, recuperar y eliminar registros"
+      },
+      {
+        "href": "#public-section-7",
+        "text": "Captura, recordatorios y accesos del dispositivo"
+      },
+      {
+        "href": "#public-section-8",
+        "text": "Herramientas gratuitas y membresía del hogar"
+      },
+      {
+        "href": "/requests",
+        "text": "Abrir la app por invitación"
+      }
+    ],
+    "scrollWidth": 1024,
+    "width": 1024
+  },
+  {
+    "name": "support-en-wide",
+    "url": "https://room-in-the-cart-staging.vercel.app/support?lang=en",
+    "headings": [
+      "Support",
+      "On this page",
+      "Get help",
+      "An uncertain save or request",
+      "Recovery and deletion",
+      "Membership help"
+    ],
+    "language": "en",
+    "links": [
+      {
+        "href": "#public-main",
+        "text": "Skip to content"
+      },
+      {
+        "href": "/help?lang=en",
+        "text": "Room in the Cart"
+      },
+      {
+        "href": "/help?lang=en",
+        "text": "Help"
+      },
+      {
+        "href": "/privacy?lang=en",
+        "text": "Privacy and data"
+      },
+      {
+        "href": "/terms?lang=en",
+        "text": "Terms of use"
+      },
+      {
+        "href": "/support?lang=en",
+        "text": "Support"
+      },
+      {
+        "href": "mailto:hello@roominthecart.com",
+        "text": "Email support · hello@roominthecart.com"
+      },
+      {
+        "href": "#public-section-0",
+        "text": "Get help"
+      },
+      {
+        "href": "#public-section-1",
+        "text": "An uncertain save or request"
+      },
+      {
+        "href": "#public-section-2",
+        "text": "Recovery and deletion"
+      },
+      {
+        "href": "#public-section-3",
+        "text": "Membership help"
+      },
+      {
+        "href": "/requests",
+        "text": "Open the invited app"
+      }
+    ],
+    "scrollWidth": 1024,
+    "width": 1024
+  },
+  {
+    "name": "requests-en-unavailable",
+    "url": "https://room-in-the-cart-staging.vercel.app/requests",
+    "headings": [
+      "Sign in to continue"
+    ],
+    "language": "en",
+    "links": [],
+    "scrollWidth": 319,
+    "width": 319
+  },
+  {
+    "name": "requests-es-unavailable",
+    "url": "https://room-in-the-cart-staging.vercel.app/requests",
+    "headings": [
+      "Inicia sesión para continuar"
+    ],
+    "language": "es",
+    "links": [],
+    "scrollWidth": 319,
+    "width": 319
+  }
+]

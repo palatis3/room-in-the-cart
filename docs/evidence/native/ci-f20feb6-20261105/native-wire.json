@@ -1,0 +1,20 @@
+{
+  "candidate": "f20feb685f95e7da1c7a23f26eff499d2696329f",
+  "observedAt": "2026-11-05T08:31:47.896916+00:00",
+  "run": 41994028772,
+  "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/41994028772",
+  "hostedConclusion": "success",
+  "artifact": {
+    "id": 13399362393,
+    "name": "native-wire-results-1",
+    "sha256": "200adc5eb4d4e3fb561758e352581cd0c2c1e5fb22db45ce1c95874515c36504",
+    "githubDigestVerified": true
+  },
+  "independentArtifactReadback": {
+    "integrationCases": 4,
+    "swiftPassedInvocations": 6,
+    "failed": 0,
+    "skipped": 0
+  },
+  "scope": "Actual Swift transport over pinned loopback HTTPS and disposable PostgreSQL; does not establish deployed provider or production acceptance."
+}

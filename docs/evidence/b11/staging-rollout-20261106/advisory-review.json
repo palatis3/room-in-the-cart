@@ -1,0 +1,328 @@
+{
+  "advisors": [
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created.",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy",
+      "count": 16,
+      "findings": [
+        {
+          "detail": "Table \\`public.ritc_schema_migration\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "ritc_schema_migration",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-06T06:19:32.260Z"
+        },
+        {
+          "detail": "Table \\`ritc.guardian_child_principal\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "guardian_child_principal",
+            "type": "table",
+            "schema": "ritc"
+          },
+          "observed_at": "2026-11-06T06:19:32.260Z"
+        },
+        {
+          "detail": "Table \\`ritc.household_exit\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "household_exit",
+            "type": "table",
+            "schema": "ritc"
+          },
+          "observed_at": "2026-11-06T06:19:32.260Z"
+        },
+        {
+          "detail": "Table \\`ritc.identity_erasure\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "identity_erasure",
+            "type": "table",
+            "schema": "ritc"
+          },
+          "observed_at": "2026-11-06T06:19:32.260Z"
+        },
+        {
+          "detail": "Table \\`ritc.privacy_job\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "privacy_job",
+            "type": "table",
+            "schema": "ritc"
+          },
+          "observed_at": "2026-11-06T06:19:32.260Z"
+        },
+        {
+          "detail": "Table \\`ritc.privacy_journal_ack\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "privacy_journal_ack",
+            "type": "table",
+            "schema": "ritc"
+          },
+          "observed_at": "2026-11-06T06:19:32.260Z"
+        },
+        {
+          "detail": "Table \\`ritc.privacy_journal_origin\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "privacy_journal_origin",
+            "type": "table",
+            "schema": "ritc"
+          },
+          "observed_at": "2026-11-06T06:19:32.260Z"
+        },
+        {
+          "detail": "Table \\`ritc.privacy_journal_outbox\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "privacy_journal_outbox",
+            "type": "table",
+            "schema": "ritc"
+          },
+          "observed_at": "2026-11-06T06:19:32.260Z"
+        },
+        {
+          "detail": "Table \\`ritc.privacy_journal_target\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "privacy_journal_target",
+            "type": "table",
+            "schema": "ritc"
+          },
+          "observed_at": "2026-11-06T06:19:32.260Z"
+        },
+        {
+          "detail": "Table \\`ritc.privacy_restore_effect_context\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "privacy_restore_effect_context",
+            "type": "table",
+            "schema": "ritc"
+          },
+          "observed_at": "2026-11-06T06:19:32.260Z"
+        },
+        {
+          "detail": "Table \\`ritc.privacy_restore_job\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "privacy_restore_job",
+            "type": "table",
+            "schema": "ritc"
+          },
+          "observed_at": "2026-11-06T06:19:32.260Z"
+        },
+        {
+          "detail": "Table \\`ritc.privacy_restore_receipt\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "privacy_restore_receipt",
+            "type": "table",
+            "schema": "ritc"
+          },
+          "observed_at": "2026-11-06T06:19:32.260Z"
+        },
+        {
+          "detail": "Table \\`ritc.privacy_restore_run\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "privacy_restore_run",
+            "type": "table",
+            "schema": "ritc"
+          },
+          "observed_at": "2026-11-06T06:19:32.260Z"
+        },
+        {
+          "detail": "Table \\`ritc.privacy_restore_target\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "privacy_restore_target",
+            "type": "table",
+            "schema": "ritc"
+          },
+          "observed_at": "2026-11-06T06:19:32.260Z"
+        },
+        {
+          "detail": "Table \\`ritc.privacy_target\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "privacy_target",
+            "type": "table",
+            "schema": "ritc"
+          },
+          "observed_at": "2026-11-06T06:19:32.260Z"
+        },
+        {
+          "detail": "Table \\`ritc.retired_purchase\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "retired_purchase",
+            "type": "table",
+            "schema": "ritc"
+          },
+          "observed_at": "2026-11-06T06:19:32.260Z"
+        }
+      ]
+    },
+    {
+      "name": "function_search_path_mutable",
+      "title": "Function Search Path Mutable",
+      "level": "WARN",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects functions where the search_path parameter is not set.",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable",
+      "count": 2,
+      "findings": [
+        {
+          "detail": "Function \\`ritc.measurement_consent_immutable\\` has a role mutable search_path",
+          "metadata": {
+            "name": "measurement_consent_immutable",
+            "type": "function",
+            "schema": "ritc"
+          },
+          "observed_at": "2026-11-06T06:19:32.260Z"
+        },
+        {
+          "detail": "Function \\`ritc.measurement_feedback_eligible\\` has a role mutable search_path",
+          "metadata": {
+            "name": "measurement_feedback_eligible",
+            "type": "function",
+            "schema": "ritc"
+          },
+          "observed_at": "2026-11-06T06:19:32.260Z"
+        }
+      ]
+    }
+  ],
+  "internalTables": [
+    {
+      "relname": "ritc_schema_migration",
+      "relrowsecurity": true,
+      "relforcerowsecurity": false,
+      "owner": "postgres",
+      "app_raw": false,
+      "worker_raw": false
+    },
+    {
+      "relname": "guardian_child_principal",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true,
+      "owner": "postgres",
+      "app_raw": false,
+      "worker_raw": false
+    },
+    {
+      "relname": "household_exit",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true,
+      "owner": "postgres",
+      "app_raw": false,
+      "worker_raw": false
+    },
+    {
+      "relname": "identity_erasure",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true,
+      "owner": "postgres",
+      "app_raw": false,
+      "worker_raw": false
+    },
+    {
+      "relname": "privacy_job",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true,
+      "owner": "postgres",
+      "app_raw": false,
+      "worker_raw": false
+    },
+    {
+      "relname": "privacy_journal_ack",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true,
+      "owner": "postgres",
+      "app_raw": false,
+      "worker_raw": false
+    },
+    {
+      "relname": "privacy_journal_origin",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true,
+      "owner": "postgres",
+      "app_raw": false,
+      "worker_raw": false
+    },
+    {
+      "relname": "privacy_journal_outbox",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true,
+      "owner": "postgres",
+      "app_raw": false,
+      "worker_raw": false
+    },
+    {
+      "relname": "privacy_journal_target",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true,
+      "owner": "postgres",
+      "app_raw": false,
+      "worker_raw": false
+    },
+    {
+      "relname": "privacy_restore_effect_context",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true,
+      "owner": "postgres",
+      "app_raw": false,
+      "worker_raw": false
+    },
+    {
+      "relname": "privacy_restore_job",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true,
+      "owner": "postgres",
+      "app_raw": false,
+      "worker_raw": false
+    },
+    {
+      "relname": "privacy_restore_receipt",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true,
+      "owner": "postgres",
+      "app_raw": false,
+      "worker_raw": false
+    },
+    {
+      "relname": "privacy_restore_run",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true,
+      "owner": "postgres",
+      "app_raw": false,
+      "worker_raw": false
+    },
+    {
+      "relname": "privacy_restore_target",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true,
+      "owner": "postgres",
+      "app_raw": false,
+      "worker_raw": false
+    },
+    {
+      "relname": "privacy_target",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true,
+      "owner": "postgres",
+      "app_raw": false,
+      "worker_raw": false
+    },
+    {
+      "relname": "retired_purchase",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true,
+      "owner": "postgres",
+      "app_raw": false,
+      "worker_raw": false
+    }
+  ],
+  "review": {
+    "noPolicyTables": "Intentional default deny; all16 have no raw app or maintenance table grants.",
+    "mutableSearchPath": "Both SECURITY INVOKER trigger functions; schema-qualified table access. No elevated-privilege path demonstrated. New additive search_path=pg_catalog hardening migration remains to prepare/test; applied019 is immutable."
+  }
+}

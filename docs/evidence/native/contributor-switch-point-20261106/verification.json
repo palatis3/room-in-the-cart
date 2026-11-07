@@ -1,0 +1,74 @@
+{
+  "checkedAt": "2026-11-06T13:32:51.989461+00:00",
+  "hostedBaseline": "0d33c11d43a97d670bf56d104d3260cad9b3f202",
+  "strictPassed": 2,
+  "failed": 0,
+  "skipped": 0,
+  "runtimeWarnings": 0,
+  "tests": [
+    {
+      "test": "testSpanishLargeTextReviewStartsAtTheOriginalWording",
+      "seconds": 86.896
+    },
+    {
+      "test": "testTypedAndStructuredReviewCancelThenSendOnlyOwnRequest",
+      "seconds": 231.411
+    }
+  ],
+  "sourceFilesVerified": 514,
+  "productsVerified": 179,
+  "runtimeBuild": "23C54",
+  "toolchain": "Xcode 27.1\nBuild version 27A9275",
+  "ownedSimulator": "6F63FDD0-BA9F-43F9-95B1-90212296D78D",
+  "ownedSimulatorDeleted": true,
+  "tapPointRecords": [
+    "CONTRIBUTOR_SWITCH_TAP label=Revis\u00e9 el texto, las cantidades, las unidades y las exclusiones. point=(356.40000000000003, 663.9999999999998) area=(24.0, 144.0, 354.0, 630.0)",
+    "CONTRIBUTOR_SWITCH_TAP label=I checked the wording, amounts, units and exclusions. point=(356.40000000000003, 703.1666666666667) area=(24.0, 144.0, 354.0, 630.0)",
+    "CONTRIBUTOR_SWITCH_TAP label=I reviewed this item, amounts, packs, purpose, destination and exclusions, including any unknowns. point=(342.96000000000004, 469.00001525878906) area=(24.0, 144.0, 354.0, 630.0)",
+    "CONTRIBUTOR_SWITCH_TAP label=I checked the wording, amounts, units and exclusions. point=(356.40000000000003, 702.8333333333335) area=(24.0, 144.0, 354.0, 630.0)",
+    "CONTRIBUTOR_SWITCH_TAP label=I reviewed this item, amounts, packs, purpose, destination and exclusions, including any unknowns. point=(342.96000000000004, 469.00001525878906) area=(24.0, 144.0, 354.0, 630.0)"
+  ],
+  "preflight": {
+    "baseline": "0d33c11d43a97d670bf56d104d3260cad9b3f202",
+    "path": "ios/UITests/ContributorRequestUITests.swift",
+    "baseSHA256": "f70f064360948a8195e94511b021208fadb2f177c358b20843e590181a179ce3",
+    "candidateSHA256": "ed14c9ea44e318e1dfd169d2fa857387b10191386a79042cf9ce677ecdad3e50",
+    "patchSHA256": "cc8fc03c9004996e25ff487d1adb1f1d20f8838accd0f8c6b69e3de1a07db045",
+    "onlyEnableSwitchChanged": true,
+    "bothOriginalTestBodiesByteIdentical": true,
+    "revealAttemptBound": 24,
+    "sameTrailingCoordinate": [
+      0.92,
+      0.5
+    ],
+    "pointRequiredInsideUnobscuredArea": true,
+    "keyboardDoneStripExcluded": true,
+    "maximumTapsPerSwitch": 1,
+    "exactValueOneAssertionRetained": true,
+    "caseTimeoutsSeconds": [
+      720,
+      900
+    ],
+    "productionSourceChanged": false,
+    "knownLimits": [
+      "This checks the actual trailing switch point, not simultaneous visibility of the full multiline label.",
+      "Original-wording position/text and send/cancel/write-count assertions remain unchanged.",
+      "Local Xcode27.1 differs from hosted26.3; hosted validation still required."
+    ]
+  },
+  "limits": [
+    "Local Xcode27.1 differs from hosted26.3; no hosted acceptance of this follow-up yet.",
+    "The original hosted full-row reveal failure remains retained.",
+    "Only switch interaction helper changes; both complete original test bodies and all consent/cancel/write-count/original-wording assertions are unchanged."
+  ],
+  "evidenceSHA256": {
+    "Tests.log": "db3ed61d5d347dcedf6839e943196ea0aed21aedaf6a5feca60bb0f2fdfc6215",
+    "strict.log": "f4fd1b3cbbcb61ba1ecf74db0a0d3a54862ca0b65b6efebd0ed38a79870ba2d3",
+    "test-summary.json": "c82b32e840da0af1a61658f41dbaf18342db6adb1117baa1bff2c5f08e581521",
+    "test-details.json": "6a2dc64dd676ef448c57b63937fde167aad80303a5a3fad172910e3a1ee8def3",
+    "source-sha256.json": "4babbdb2c698cec4b1b83b6a05ad56e29fbe8271477000f2168f7f4bff8f51eb",
+    "product-sha256.json": "92a822c9ba314be6e4b4534dfc45f0c1090942c50c687d899fb8b6aeaf7cb208",
+    "frozen-inputs-unchanged.json": "f1c405d0ae92d064ecb5666a609e13071b5086dbc6165494b575745e3dfc3a18",
+    "boot.log": "c746eae142dfa92497c5b5f2f512bec18c5b218b7211b880fca5ea654d66539a"
+  }
+}

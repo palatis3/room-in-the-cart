@@ -1,0 +1,9 @@
+Executed 2 of 2 selected tests.
+
+| Test | Result | Seconds |
+|---|---|---|
+| RoomInTheCartUITests/ContributorRequestUITests/testTypedAndStructuredReviewCancelThenSendOnlyOwnRequest | Passed | 247.24 |
+| RoomInTheCartUITests/ContributorRequestUITests/testSpanishLargeTextReviewStartsAtTheOriginalWording | Passed | 143.60 |
+
+The XCTest test export recorded 0 runtime warning occurrences across 2 examined tests.
+

@@ -1,0 +1,39 @@
+{
+  "appBundleID": "dev.roominthecart.app.debug",
+  "appContainer": "/Users/palatis/Library/Developer/CoreSimulator/Devices/6511B44F-AB61-4CEE-BCE8-3D2C902124D9/data/Containers/Data/Application/948EEC21-433C-4118-9840-15B34892009E",
+  "appInfoPlist": "/Users/palatis/Room in the Cart/.build/S04ProtectedVisibility20261106/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/Info.plist",
+  "appInfoPlistSHA256": "16c73fc926e9c3aa9d88e5547f86f331000e4418606956acf0b4abbdc492cad0",
+  "bootstrapRequestSHA256": "641d2dd1b747a9be24e4f1d60fecc7c7b32f20fbed9f6be2864137bec325a199",
+  "containerIdentities": {
+    "app": {
+      "device": 16777234,
+      "inode": 19427778
+    },
+    "documents": {
+      "device": 16777234,
+      "inode": 19423865
+    },
+    "exchange": {
+      "device": 16777234,
+      "inode": 19427229
+    },
+    "runner": {
+      "device": 16777234,
+      "inode": 19423860
+    }
+  },
+  "database": "/Users/palatis/Library/Developer/CoreSimulator/Devices/6511B44F-AB61-4CEE-BCE8-3D2C902124D9/data/Containers/Data/Application/948EEC21-433C-4118-9840-15B34892009E/Library/Application Support/UITestWorkspace/ledger.sqlite",
+  "elapsedSeconds": 103.032158166,
+  "error": "Native process exited unsuccessfully: 65",
+  "errorType": "ProtocolError",
+  "exchangeDirectory": "/Users/palatis/Library/Developer/CoreSimulator/Devices/6511B44F-AB61-4CEE-BCE8-3D2C902124D9/data/Containers/Data/Application/D37B71A5-8B32-409B-B2A0-44C97A60D5CE/Documents/ImportRecovery-cfcef2f4-b28a-42a9-be89-e35375e8b27f",
+  "finishedUnixUTC": 1794021845.106868,
+  "nativeExitCode": 65,
+  "runnerBundleID": "dev.roominthecart.RoomInTheCartUITests.xctrunner",
+  "runnerContainer": "/Users/palatis/Library/Developer/CoreSimulator/Devices/6511B44F-AB61-4CEE-BCE8-3D2C902124D9/data/Containers/Data/Application/D37B71A5-8B32-409B-B2A0-44C97A60D5CE",
+  "simulator": "6511B44F-AB61-4CEE-BCE8-3D2C902124D9",
+  "status": "failed",
+  "supervisorPID": 59190,
+  "supervisorStart": "Fri Nov 6 22:22:21 2026",
+  "token": "cfcef2f4-b28a-42a9-be89-e35375e8b27f"
+}

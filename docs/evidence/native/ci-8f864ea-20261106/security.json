@@ -1,0 +1,33 @@
+{
+  "sha": "8f864eafc3887ea16be996124d55fa2ca2708706",
+  "merge": "74f41b06614e91d14974051afad08523ee8824c0",
+  "tree": "493f1324d6474cb23aab3142c15c665a1361e531",
+  "checkedAt": "2026-11-06T14:34:39.068669+00:00",
+  "runID": 42234316864,
+  "attempt": 1,
+  "analyses": [
+    {
+      "category": "/language:javascript-typescript",
+      "id": 2112577909,
+      "error": "",
+      "warning": "",
+      "rules_count": 87,
+      "results_count": 0
+    },
+    {
+      "category": "/language:actions",
+      "id": 2112574116,
+      "error": "",
+      "warning": "",
+      "rules_count": 17,
+      "results_count": 0
+    }
+  ],
+  "openPRAlerts": [],
+  "jobs": {
+    "Dependency review": "success",
+    "CodeQL (javascript-typescript)": "success",
+    "CodeQL (actions)": "success"
+  },
+  "scope": "JavaScript/TypeScript, Actions and dependency review; separate Swift coverage review pending."
+}

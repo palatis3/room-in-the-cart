@@ -1,0 +1,56 @@
+{
+  "reviewedAt": "2026-11-06T10:21:13.115114+00:00",
+  "baseCommit": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+  "patchSHA256": "9d761dff5a769a95c7bcc7237e92633aa312beeae5da889b6e435e72be294aef",
+  "patchBytes": 90227,
+  "classification": "No remaining static blocker to one reviewed local wiring run; not native validation, a product fix, or hosted dispatch authorization.",
+  "all11FilesReconstructedAndHashVerified": true,
+  "allThreeInstrumentedSourcesUnchangedFromReviewedV1": true,
+  "exactBaseSourceNormalizationPassed": true,
+  "syntheticTestsPassed": 27,
+  "syntheticTestLog": "immutable-v2-synthetic-tests.log",
+  "bashSyntaxScriptsPassed": 2,
+  "pythonASTFilesPassed": 4,
+  "findings": [
+    {
+      "id": "R1",
+      "status": "closed",
+      "proof": "Unique app PID must contain comparison bQuantity focus at/before the before-marker and an event strictly after the returned Done marker. Another PID cannot supply coverage. Missing Done/hide remains diagnosable without absence inference."
+    },
+    {
+      "id": "R2",
+      "status": "closed",
+      "proof": "execute and collect share invocation_succeeded, rejecting signal/interrupted/harnessError even when xcodebuild exit is0. The late post-zero cancellation mock passes."
+    },
+    {
+      "id": "R3",
+      "status": "closed by accurate documentation",
+      "proof": "Raw invocation status is retained on frozen-source/ownership refusal, with validationNotRun rather than an unsupported strict replay claim."
+    }
+  ],
+  "reviewedBoundaries": {
+    "source": "Only reviewed diagnostic instrumentation in three Swift/test files; original button geometry, focus write, typing, waits, assertions, selector and business checks remain.",
+    "capture": "Bounded per-PID journals, independently collected live/persisted events, host-owned video and two decoded stills. Sink disagreement and missing markers fail capture; causalConclusion null and absenceInferenceAllowed false.",
+    "runtime": "Explicit local expected build; retained inventory candidates and exact-build match; actual runtime build checked after boot and before build/test. A different actual build fails without substitution/retry.",
+    "lifecycle": "One newly named owned simulator, identity checked before device actions. Only capture child objects are signaled; forced recording stop fails capture. Owned device shut down; no erase/delete.",
+    "outcome": "Raw test, strict verifier and capture status stay separate. Failures cannot become passes through capture completeness. Refused validation remains explicitly uncomputed.",
+    "dispatch": "Workflow dispatch is sole trigger; exact SHA and run attempt1 required. One original selector, parallel testingNO, timeouts720/900, no automatic retry or helper dispatch/push. Root owns the once-only manual-dispatch boundary."
+  },
+  "requiredLocalWiringAcceptanceChecks": [
+    "Commit and all11 overlay hashes match the reviewed patch; no acceptance-source changes.",
+    "Explicit runtime identifier/build; post-boot, pre-build and pre-test actual-build observations match. Retain any mismatch and stop.",
+    "Swift instrumentation compiles in original core Debug profile without fixture-condition override; compiled inventory contains original selector exactly once.",
+    "The fresh simulator has an app container available before execute, and no existing diagnostic journals. Build/enumeration registration is a wiring precondition not proven by mocks.",
+    "Frozen source/product inventories match before and after the one original-selector invocation. Keep original720/900 deadlines and strict warning guard.",
+    "Opt-in reaches test runner and both original app launches; fixed tokens only; unique target PID bound to original before/after markers.",
+    "All three event sinks agree; both external PNGs validate; video ends normally and is separately inspected if used for visual claims. No inference from missing events without retained capture completeness.",
+    "Preserve raw test exit and strict verdict independently from capture status, including failures or cancellation. Mark incomplete evidence honestly; do not retry automatically.",
+    "Only owned capture children stop and only owned simulator shuts down; retain cleanup outcome."
+  ],
+  "limits": [
+    "This review ran only Python synthetic mocks, shell syntax checks, parsing, hashing and scratch reconstruction. No native simulator/Xcode/test or hosted commands, Git mutation, or acceptance source changes.",
+    "Root separately reports commit161ab64 and its own actionlint checks; this report pins the immutable patch, not a native result for that commit.",
+    "Video is not machine-decoded by the harness; structural capture completeness does not establish touch delivery or a causal explanation.",
+    "Instrumentation and external recording can change scheduling. A pass is nonreproduction, not a product fix."
+  ]
+}

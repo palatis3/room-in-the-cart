@@ -1,0 +1,15 @@
+{
+  "candidate": "ab149a7f27d9366db61c4fe2d9047095f166be3d",
+  "base": "0d5bb1b22e9e84cd4b8c2b07317f91cfc703b60c",
+  "runID": 42332357700,
+  "runURL": "https://github.com/palatis3/room-in-the-cart/actions/runs/42332357700",
+  "event": "workflow_dispatch",
+  "statusAtCapture": "in_progress",
+  "capturedAtUTC": "2026-11-07T03:07:26.585988+00:00",
+  "dispatchInputs": {
+    "enforce_baselines": "true"
+  },
+  "inputEvidence": "Root CLI invocation retained in chat; GitHub run endpoint binds branch, event and commit, not input value. Per-job enforcement must be verified from logs.",
+  "dispatchCount": 1,
+  "scope": "Original performance workflow, all three cases. No main PR push or workflow/baseline/app change. Outcome pending."
+}

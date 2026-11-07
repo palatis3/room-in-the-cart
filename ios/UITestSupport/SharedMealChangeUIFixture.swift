@@ -16,6 +16,10 @@ private final class S17FixtureServer: @unchecked Sendable {
     static let shop = "44444444-4444-4444-8444-444444444444"
     static let occurrence = "55555555-5555-4555-8555-555555555555"
     private let lock = NSRecursiveLock()
+    private let deliveries = ProcessInfo.processInfo.arguments.contains("--shared-delivery-fixture") ? SharedDeliveryFixtureRecords() : nil
+    private let purchases = ProcessInfo.processInfo.arguments.contains("--request-purchase-fixture") ? RequestPurchaseFixture() : nil
+    private let fallbacks = SharedFallbackUIFixture()
+    private let financial = ProcessInfo.processInfo.arguments.contains("--financial-closeout-fixture") ? SharedFinancialFixture() : nil
     private var revision = 2
     private let quoteObservedAt = Date().addingTimeInterval(-60)
     private let quoteExpiresAt = Date().addingTimeInterval(3600)
@@ -24,6 +28,14 @@ private final class S17FixtureServer: @unchecked Sendable {
     private var receipts: [String:[String:Any]] = [:]
     private var posts = 0
     var changed: (@Sendable (Int,Int) -> Void)?
+    init() {
+        if ProcessInfo.processInfo.arguments.contains("--shared-meal-deadline-fixture") {
+            meal["day"] = "2026-11-01"
+            meal["planning"] = ["groups": [], "ingredients": [],
+                                "deadline": ["at": "2026-11-01T05:30:00Z", "zone": "America/New_York"]] as [String:Any]
+        }
+    }
+
     func respond(_ request: URLRequest) throws -> (Int,Data) {
         lock.lock(); defer { lock.unlock() }
         guard request.url?.host?.hasSuffix(".invalid") == true else { throw URLError(.unsupportedURL) }
@@ -43,8 +55,118 @@ private final class S17FixtureServer: @unchecked Sendable {
         }
         if path == "/auth/v1/user" { return try json(["id":shopper ? "native-shopper":"native-planner","email_confirmed_at":"date"]) }
         if path == "/v1/me/workspaces" { return try json(["workspaces":[["householdId":Self.household,"label":"Isolated shared meals","role":"contributor"]]]) }
-        if path.hasSuffix("/devices") { return try json(["deviceId":shopper ? "shopper-device":"planner-device","deviceToken":shopper ? "shopper-token":"planner-token"],status:201) }
-        if path.hasSuffix("/bootstrap") { return try json(["household":["id":Self.household,"label":"Isolated shared meals"],"memberId":shopper ? Self.shopper:Self.planner,"role":shopper ? "shopper":"contributor","shopId":Self.shop,"enrolled":true,"queueConsent":false,"capabilities":shopper ? ["shopper_commands","shopper_inbox","request_preview"]:["meal_proposals"]]) }
+        if path.hasSuffix("/devices") { return try json(["deviceId":shopper ? (fallbacks != nil ? "dddddddd-dddd-4ddd-8ddd-dddddddddddd" : "shopper-device") : "planner-device","deviceToken":shopper ? "shopper-token":"planner-token"],status:201) }
+        if path.hasSuffix("/bootstrap") {
+            var capabilities = shopper ? ["shopper_commands","shopper_inbox","request_preview"] : ["meal_proposals"]
+            if shopper, let deliveries {
+                capabilities.append("delivery_evidence")
+                if purchases != nil { capabilities.append("request_purchase_confirmation") }
+                if fallbacks != nil { capabilities.append("accepted_fallbacks") }
+                if deliveries.recovery != nil { capabilities.append("meal_recovery") }
+                if deliveries.pantry != nil { capabilities.append("pantry_lots") }
+                if deliveries.supportsCookCopies { capabilities += ["cook_copies", "cook_corrections"] }
+            }
+            return try json(["household":["id":Self.household,"label":"Isolated shared meals"],"memberId":shopper ? Self.shopper:Self.planner,
+                             "role":shopper ? "shopper":"contributor","shopId":Self.shop,"enrolled":true,"queueConsent":false,"capabilities":capabilities])
+        }
+        if path == "/v1/households/\(Self.household)/entitlements", request.httpMethod == "GET" {
+            guard request.value(forHTTPHeaderField: "Authorization") == "Bearer fixture-shopper",
+                  request.value(forHTTPHeaderField: "X-Device-Token") == "shopper-token" else { return try denied() }
+            let now = Date(), format = ISO8601DateFormatter()
+            let end = format.string(from: now.addingTimeInterval(3600))
+            let expired = ProcessInfo.processInfo.arguments.contains("--expired-recovery-seat")
+            return try json(["householdID": Self.household, "purchaserID": Self.planner, "revision": expired ? 2 : 1,
+                "status": expired ? "expired" : "active", "expiresAt": expired ? format.string(from: now) : end,
+                "verifiedAt": format.string(from: now), "validUntil": end,
+                "seats": [["userID": Self.shopper, "displayName": "Fixture shopper", "isAdult": true]]])
+        }
+        let scoped = "/v1/households/" + Self.household
+        let deliveryPath = scoped + "/shops/" + Self.shop
+        if let financial, path == deliveryPath + "/financial-evidence" || path == deliveryPath + "/financial-reviews" {
+            guard request.value(forHTTPHeaderField: "Authorization") == "Bearer fixture-shopper",
+                  request.value(forHTTPHeaderField: "X-Device-Token") == "shopper-token" else { return try denied() }
+            return try financial.respond(shop: Self.shop, method: request.httpMethod, path: path, body: input, revision: &revision)
+        }
+        let pantryPath = deliveryPath + "/pantry-lots"
+        let cookPath = deliveryPath + "/cook-copies"
+        let recoveryPath = deliveryPath + "/meal-recovery"
+        if let fallbacks, path == deliveryPath || path.hasPrefix(deliveryPath + "/") || path == scoped + "/commands" {
+            guard request.value(forHTTPHeaderField: "Authorization") == "Bearer fixture-shopper",
+                  request.value(forHTTPHeaderField: "X-Device-Token") == "shopper-token" else { return try denied() }
+            let route = path == scoped + "/commands" ? "/commands" : String(path.dropFirst(deliveryPath.count))
+            if let result = try fallbacks.respond(route, method: request.httpMethod ?? "GET", input: input, bytes: bytes) { return result }
+        }
+        if let deliveries, [deliveryPath + "/delivery-evidence", deliveryPath + "/delivery-evidence/coverage",
+                            pantryPath, pantryPath + "/coverage", pantryPath + "/observation-preview",
+                            recoveryPath, recoveryPath + "/coverage", recoveryPath + "/preview",
+                            cookPath, cookPath + "/baseline", cookPath + "/correction", scoped + "/commands"].contains(path) {
+            guard request.value(forHTTPHeaderField: "Authorization") == "Bearer fixture-shopper",
+                  request.value(forHTTPHeaderField: "X-Device-Token") == "shopper-token" else { return try denied() }
+            if path.hasSuffix("/delivery-evidence/coverage") {
+                var coverage = try deliveries.coverage(shop: Self.shop)
+                if financial != nil { coverage["shopRevision"] = revision }
+                return try json(coverage)
+            }
+            if path.hasSuffix("/delivery-evidence") {
+                var page = deliveries.page(shop: Self.shop)
+                if financial != nil { page["shopRevision"] = revision }
+                return try json(page)
+            }
+            do {
+                if path == recoveryPath || path.hasPrefix(recoveryPath + "/") {
+                    guard let recovery = deliveries.recovery else { return try denied() }
+                    switch (request.httpMethod, path) {
+                    case ("GET", recoveryPath): return try json(recovery.desk(shop: Self.shop))
+                    case ("GET", recoveryPath + "/coverage"): return try json(recovery.coverage(shop: Self.shop))
+                    case ("POST", recoveryPath + "/preview"): return try json(recovery.preview(shop: Self.shop, input: input))
+                    default: return try denied()
+                    }
+                }
+                if path == pantryPath || path.hasPrefix(pantryPath + "/") {
+                    guard let pantry = deliveries.pantry else { return try denied() }
+                    switch (request.httpMethod, path) {
+                    case ("GET", pantryPath): return try json(pantry.page(shop: Self.shop, supply: deliveries.revision))
+                    case ("GET", pantryPath + "/coverage"): return try json(pantry.coverage(shop: Self.shop, supply: deliveries.revision))
+                    case ("POST", pantryPath + "/observation-preview"):
+                        return try json(pantry.preview(shop: Self.shop, supply: deliveries.revision, body: input))
+                    default: return try denied()
+                    }
+                }
+                if path == cookPath {
+                    guard deliveries.supportsCookCopies, request.httpMethod == "GET",
+                          let query = URLComponents(url: request.url!, resolvingAgainstBaseURL: false)?.queryItems else { return try denied() }
+                    return try json(deliveries.cookCopies(occurrenceID: query.first { $0.name == "occurrenceId" }?.value, cursor: query.first { $0.name == "cursor" }?.value))
+                }
+                guard request.httpMethod == "POST" else { return try denied() }
+                if path == cookPath + "/correction" {
+                    guard deliveries.supportsCookCopies else { return try denied() }
+                    return try json(deliveries.correction(input))
+                }
+                if path == cookPath + "/baseline" {
+                    guard deliveries.supportsCookCopies else { return try denied() }
+                    return try json(deliveries.cookBaseline(input))
+                }
+                if (input["kind"] as? String)?.hasPrefix("pantry.") == true, deliveries.pantry == nil { return try denied() }
+                if (input["kind"] as? String)?.hasPrefix("cookCopy.") == true, !deliveries.supportsCookCopies { return try denied() }
+                if input["kind"] as? String == "request.confirmPurchase", let purchases {
+                    return try json(purchases.record(shop: Self.shop, command: input, bytes: bytes))
+                }
+                return try json(deliveries.record(shop: Self.shop, command: input))
+            } catch let failure as SharedDeliveryFixtureRecords.CookFailure {
+                let code: String
+                switch failure {
+                case .invalid: return try json(["error":["code":"invalid_request"]], status:400)
+                case .staleSupply: code = "stale_supply"
+                case .staleBase: code = "stale_base"
+                case .replayConflict: code = "key_reused"
+                }
+                return try json(["error":["code":code]], status:409)
+            }
+        }
+        if path == deliveryPath + "/inbox", let purchases {
+            guard shopper, request.value(forHTTPHeaderField: "X-Device-Token") == "shopper-token" else { return try denied() }
+            return try json(purchases.page(shop: Self.shop))
+        }
         if path.hasSuffix("/inbox") { return try json(["requests":[],"nextCursor":NSNull()]) }
         if path.hasSuffix("/requests/mine") { return try json(["requests":[],"nextCursor":NSNull()]) }
         let occurrence: [String:Any] = ["occurrenceId":Self.occurrence,"revision":revision,"meal":meal]
@@ -59,7 +181,8 @@ private final class S17FixtureServer: @unchecked Sendable {
         if path.hasSuffix("/shops/"+Self.shop) {
             guard shopper else { return try denied() }
             let quote = try ShopperQuote(scope:"wholeCheckout",complete:true,capMinor:1000,capScope:"wholeCheckout",fee:.fixed(0),taxesMinor:0,depositsMinor:0,discountsMinor:0,observedAt:quoteObservedAt,expiresAt:quoteExpiresAt)
-            return try json(["shopId":Self.shop,"shopRevision":revision,"authorityEpoch":1,"phase":"draft","meals":[occurrence],"quote":try JSONSerialization.jsonObject(with:JSONEncoder().encode(quote)),"lines":[["lineId":"66666666-6666-4666-8666-666666666666","originalItem":"Entered soup packs","packs":1,"unitPriceMinor":500,"feeEligible":true]]])
+            let placedMeals = deliveries?.page(shop: Self.shop)["meals"] as? [[String:Any]]
+            return try json(["shopId":Self.shop,"shopRevision":revision,"authorityEpoch":1,"phase":deliveries == nil ? "draft" : (financial?.closed == true ? "closed" : "placed"),"placedRevision":deliveries == nil ? NSNull() as Any : 1 as Any,"meals":placedMeals ?? [occurrence],"quote":try JSONSerialization.jsonObject(with:JSONEncoder().encode(quote)),"lines":[["lineId":"66666666-6666-4666-8666-666666666666","originalItem":"Entered soup packs","packs":1,"unitPriceMinor":500,"feeEligible":true]]])
         }
         if path.hasSuffix("/replay-windows") { return try json(["id":"77777777-7777-4777-8777-777777777777","expiresAt":"2099-01-01T00:00:00Z"]) }
         if path.hasSuffix("/commands"), let key = input["clientKey"] as? String {
@@ -91,7 +214,7 @@ private final class S17FixtureProtocol: URLProtocol, @unchecked Sendable {
     }
     override func stopLoading() {}
 }
-@MainActor private final class S17FixtureState: ObservableObject {
+@MainActor final class S17FixtureState: ObservableObject {
     @Published var planner: HouseholdModel?
     @Published var shopper: HouseholdModel?
     @Published var proposals = 0
@@ -106,6 +229,24 @@ private final class S17FixtureProtocol: URLProtocol, @unchecked Sendable {
             planner = try await make(role:"planner"); shopper = try await make(role:"shopper")
         } catch { failure = "Fixture setup failed" }
     }
+    static func recoveryShopper() async throws -> HouseholdModel {
+        let state = S17FixtureState()
+        S17FixtureProtocol.server = state.server
+        return try await state.make(role: "shopper")
+    }
+
+    static func recoveryMembership() -> MembershipCoordinator {
+        MembershipCoordinator { session, credentials in
+            let config = URLSessionConfiguration.ephemeral
+            config.protocolClasses = [S17FixtureProtocol.self]
+            let service = try HTTPMembershipEntitlementService(baseURL: session.serviceURL, session: URLSession(configuration: config),
+                deviceToken: credentials.deviceToken, token: credentials.accessToken)
+            let context = MembershipContext(purchaserID: session.memberID, purchaserName: session.accountName,
+                householdID: session.householdID, householdName: session.householdName, appAccountToken: nil)
+            return MembershipModel(configuration: .init(productID: nil, privacyURL: nil, termsURL: nil), context: context, service: service)
+        }
+    }
+
     private func make(role: String) async throws -> HouseholdModel {
         let config = URLSessionConfiguration.ephemeral; config.protocolClasses = [S17FixtureProtocol.self]
         let transport = HTTPTransport(session:URLSession(configuration:config))
@@ -123,9 +264,9 @@ private final class S17FixtureProtocol: URLProtocol, @unchecked Sendable {
 }
 struct S17SharedMealFixtureRoot: View {
     @StateObject private var state = S17FixtureState()
-    @State private var shopperMode = ProcessInfo.processInfo.arguments.contains("--shopper-meal-seed")
+    @State private var shopperMode = ProcessInfo.processInfo.arguments.contains("--shopper-meal-seed") || ProcessInfo.processInfo.arguments.contains("--shared-meal-deadline-fixture")
     @State private var directSeed = ProcessInfo.processInfo.arguments.contains("--shopper-meal-seed")
-    @State private var directShopReview = false
+    @State private var directShopReview = ProcessInfo.processInfo.arguments.contains("--shared-meal-deadline-fixture")
     private var seed: SharedMealChangeSeed { .init(localOccurrenceID: UUID(uuidString:"88888888-8888-4888-8888-888888888888")!, title:"Fixture guest soup",portions:6,planning:.init(groups:[],ingredients:[])) }
     @ViewBuilder var body: some View {
         if ProcessInfo.processInfo.arguments.contains("--shared-meal-civil-date-fixture") {

@@ -1,0 +1,24 @@
+{
+  "candidate": "ab1779c515f925b51ffdf8dabbaf65ae2bbee3d0",
+  "runID": 42071959013,
+  "hostedConclusion": "success",
+  "artifactID": 13436712193,
+  "sha256": "3648255cdb0ef7c9d29ca4cac04eed1011b49ec3c4ecc9a442576ef5f4765dea",
+  "githubDigestVerified": true,
+  "independentReadback": {
+    "integrationCases": 4,
+    "swiftPassedInvocations": 6,
+    "exactScenarios": [
+      "history-free HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres",
+      "history-paid HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres",
+      "meal-planner HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres",
+      "meal-shopper HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres",
+      "quote-adult HouseholdClientTests.StoreQuoteNativeWireTests/testStoreQuoteClientAgainstPostgres",
+      "quote-shopper HouseholdClientTests.StoreQuoteNativeWireTests/testStoreQuoteClientAgainstPostgres"
+    ],
+    "failed": 0,
+    "skipped": 0,
+    "databaseStopped": true
+  },
+  "scope": "Actual Swift transport over pinned loopback HTTPS and disposable PostgreSQL; identity/provider fixtures synthetic. No deployed-provider acceptance."
+}

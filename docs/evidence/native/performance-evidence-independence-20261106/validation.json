@@ -1,0 +1,39 @@
+{
+  "scope": "Pure Python subprocess validation and fictional SQLite fixtures; no native or hosted execution.",
+  "oldSourceCommit": "329c0a126bc6dee556650e6f8b296d4b159c9651",
+  "files": {
+    "scripts/check_ios_performance.py": "f203f21510455a8a83300ee6968e8c5ac2bb14dd8c6afd5a6adb5caa7ce8a4c7",
+    "scripts/test_check_ios_performance.py": "6b585ce99dc734e1a69c69146a68552d83ba177496fb84b5295ce5cdd7e842bd",
+    "ios/UITests/Fixtures/ReleaseLedger500.txt": "7411eb3a8a10911d6599237e1f2f618c0c3508667909a4766a4b5b14bef6e3b8"
+  },
+  "old": {
+    "exitCode": 1,
+    "log": "old-tests.log",
+    "logSHA256": "203eeb1fc14e6f0545b8303d42a850154c64d7c3a65a5414d3c946e8116de98b"
+  },
+  "new": {
+    "exitCode": 0,
+    "log": "new-tests.log",
+    "logSHA256": "8a794ca91ac4e71189a020c062000a1fe415328c7d6832a471a66e66650a1bee"
+  },
+  "allRequiredMetricsAndThresholdsUnchanged": true,
+  "unchangedAcceptanceDefinitions": [
+    "check_metrics",
+    "ledger_readback",
+    "rendered_measurements",
+    "baseline_values",
+    "compare_baseline",
+    "sample_series",
+    "only_case",
+    "attachment",
+    "unique_ids",
+    "SUITE",
+    "METHODS",
+    "LAUNCH_METRIC",
+    "SCROLL_METRIC",
+    "MEMORY_METRIC",
+    "LINE_COUNT",
+    "CHECKOFF_COUNT",
+    "XCTEST_ITERATIONS"
+  ]
+}

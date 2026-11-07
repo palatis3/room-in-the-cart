@@ -1,0 +1,75 @@
+[
+  {
+    "name": "fresh-v1",
+    "summary": {
+      "result": "Failed",
+      "passedTests": 1,
+      "failedTests": 1,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "cases": [
+      [
+        "-[RoomInTheCartUITests.ContributorRequestUITests testSpanishLargeTextReviewStartsAtTheOriginalWording]",
+        "failed",
+        "174.543"
+      ],
+      [
+        "-[RoomInTheCartUITests.ContributorRequestUITests testTypedAndStructuredReviewCancelThenSendOnlyOwnRequest]",
+        "passed",
+        "244.165"
+      ]
+    ],
+    "card_dismissals": 1,
+    "card_absence_checks": 13,
+    "recorded_runtime_warning_nodes": [],
+    "xcresult_manifest_sha256": "45b73522084a9b08bb0dbabbfd547bfbd8a9e6e80ab2403d94ef0f2093dbf8da"
+  },
+  {
+    "name": "fresh-v2",
+    "summary": {
+      "result": "Passed",
+      "passedTests": 2,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "cases": [
+      [
+        "-[RoomInTheCartUITests.ContributorRequestUITests testSpanishLargeTextReviewStartsAtTheOriginalWording]",
+        "passed",
+        "143.599"
+      ],
+      [
+        "-[RoomInTheCartUITests.ContributorRequestUITests testTypedAndStructuredReviewCancelThenSendOnlyOwnRequest]",
+        "passed",
+        "247.244"
+      ]
+    ],
+    "card_dismissals": 1,
+    "card_absence_checks": 13,
+    "recorded_runtime_warning_nodes": [],
+    "xcresult_manifest_sha256": "64e909b51517f28ed4ec8086d190f1c38f79e58a3116d254fd6b6a908d55b9ec"
+  },
+  {
+    "name": "no-card-v2",
+    "summary": {
+      "result": "Passed",
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0
+    },
+    "cases": [
+      [
+        "-[RoomInTheCartUITests.ContributorRequestUITests testSpanishLargeTextReviewStartsAtTheOriginalWording]",
+        "passed",
+        "142.760"
+      ]
+    ],
+    "card_dismissals": 0,
+    "card_absence_checks": 2,
+    "recorded_runtime_warning_nodes": [],
+    "xcresult_manifest_sha256": "b3c9818961b7a929e59e60acbb75d3976ce8c198c91551e9230f81782bf47644"
+  }
+]

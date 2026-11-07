@@ -1,0 +1,127 @@
+{
+  "status": "prepared-not-submitted",
+  "fileCount": 28,
+  "checks": [
+    "Original retained archive hashes matched",
+    "JSON/archived-database metric identifiers and samples matched",
+    "All retained metric series have five samples",
+    "All three full test-source hashes match",
+    "Excluded setup failure executed zero tests",
+    "Only curated text file types packaged",
+    "No common private-key/API-token patterns in curated text"
+  ],
+  "files": {
+    "UnwrappedScrollExcerpt.swift": {
+      "sha256": "34632b2691ac78db2aba10906f7c68c222006bc1244e05830b7928c14d99a1ec",
+      "bytes": 1956
+    },
+    "REPORT.md": {
+      "sha256": "85eb98b5dec951b9dfac85f5a104630926dc46626e32f9122504b4a1dc8cf926",
+      "bytes": 5717
+    },
+    "ReleaseLedger500.txt": {
+      "sha256": "7411eb3a8a10911d6599237e1f2f618c0c3508667909a4766a4b5b14bef6e3b8",
+      "bytes": 16099
+    },
+    "evidence-map.json": {
+      "sha256": "c6333a3bf60a36067d0991a1471827e1d40f0fe2cf7f23098e0b1746c2336759",
+      "bytes": 26373
+    },
+    "EVIDENCE-MAP.md": {
+      "sha256": "2ec9f33cf2837fd2562c7e2bd5dff0281c2c584a88fbb04aed110e979d62ea66",
+      "bytes": 3091
+    },
+    "prepare.py": {
+      "sha256": "f8595900c9b3f6514c9c0d0fd99c1524a8f1ba2e01c277b062e9d9bc11f1fa45",
+      "bytes": 10752
+    },
+    "qualification-5376/metrics.json": {
+      "sha256": "9d675775757a99f74f6927233a9496a18dfb668027f0a63b1243ab4ea716f07f",
+      "bytes": 1680
+    },
+    "qualification-5376/metrics.csv": {
+      "sha256": "b7e4b6c4f81ae69c25019c00f91e9aad26dbb1a35ccdf7c40406a493c6fbd2d4",
+      "bytes": 664
+    },
+    "qualification-5376/toolchain.txt": {
+      "sha256": "bbe969e3e1760bbc982b73129dcb3b303aa7e410a7a6d7f666d20df96e601bdf",
+      "bytes": 34
+    },
+    "qualification-5376/test-summary.json": {
+      "sha256": "5d9da5de9a20f20d6292745511ce263b3f4c2d9a1e053a741341b741048cf6af",
+      "bytes": 860
+    },
+    "qualification-5376/console-excerpt.json": {
+      "sha256": "7aa1b921021800cb424665cbe85c82793b7e4f7f500e77e56b3a154a29c55c8c",
+      "bytes": 3250
+    },
+    "qualification-5376/original-xcresult-metrics-readback.json": {
+      "sha256": "dfc2d78a11648a5d25c10fc38a1f0d4fe0b9bc156f17d1fc9131d927675a1cb5",
+      "bytes": 925
+    },
+    "original-8f/metrics.json": {
+      "sha256": "f9bf210d25ac6439accf3fd8ae2213a5848defbc8a57c80a39305c18e7bfa50c",
+      "bytes": 1637
+    },
+    "original-8f/metrics.csv": {
+      "sha256": "8aca5585194d9b076f8e911f55703d0e5befe30441cc2a0762832f1abf280003",
+      "bytes": 671
+    },
+    "original-8f/toolchain.txt": {
+      "sha256": "bb7fc9a8f5e063e81975b33054b3a526c91bcccff263ad11d5bd8bcdbe8f0973",
+      "bytes": 32
+    },
+    "original-8f/build-provenance.json": {
+      "sha256": "38fea2039f78b5335c67049cc4fd1caa42190ce6ab89ee1fd179656bc99b830f",
+      "bytes": 1245
+    },
+    "original-8f/scroll-signpost-diagnostic.json": {
+      "sha256": "07eecbdf29d5b2429983b3b4a133cbc3b06d720c666064f346fcf07316cbe2d5",
+      "bytes": 1492
+    },
+    "original-8f/test-summary.json": {
+      "sha256": "4881a2c0f3c75edcdb25de22d55e8563afcbbb0f70bd20f2dc994960eaffe712",
+      "bytes": 803
+    },
+    "original-8f/console-excerpt.json": {
+      "sha256": "c0b863830155330e19c3657be3f7a279bb4a1bb1c1015ea6fca2c7a4bd0d880e",
+      "bytes": 3241
+    },
+    "original-8f/original-xcresult-metrics-readback.json": {
+      "sha256": "122821590c2291ffccffa62459eafdfad5264ce3161a6e50e7b3baca219d78bf",
+      "bytes": 932
+    },
+    "comparator-0d33/metrics.json": {
+      "sha256": "f560d7a32d33d5473b65aa1a12c2e289dc5eabc10e1b9649fcd61b339d6e32b1",
+      "bytes": 2084
+    },
+    "comparator-0d33/metrics.csv": {
+      "sha256": "f7c924aa51c3dd32ed944c857ad1675d4e85a8ced67cfbdbf16e2394ba6cb3b2",
+      "bytes": 943
+    },
+    "comparator-0d33/toolchain.txt": {
+      "sha256": "bb7fc9a8f5e063e81975b33054b3a526c91bcccff263ad11d5bd8bcdbe8f0973",
+      "bytes": 32
+    },
+    "comparator-0d33/build-provenance.json": {
+      "sha256": "8eaf4da1165d631116e9480c5fd812f4a8cc4598d86e04d97d94c35e623f1ac6",
+      "bytes": 1234
+    },
+    "comparator-0d33/scroll-signpost-diagnostic.json": {
+      "sha256": "b86622ebc509488ff3645912ee4fe266a3db4b1555d3da1b6ddd1ea24c5b6c75",
+      "bytes": 1496
+    },
+    "comparator-0d33/test-summary.json": {
+      "sha256": "c6956cb47d5a88beea6ca1dd4e7ffd8eca171325509ab0e979bfed8f84e6ce52",
+      "bytes": 803
+    },
+    "comparator-0d33/console-excerpt.json": {
+      "sha256": "748640682906141f6dac3109104f6070225cad60c1e57d4cbb67f07f2f281b75",
+      "bytes": 3952
+    },
+    "comparator-0d33/original-xcresult-metrics-readback.json": {
+      "sha256": "b64936907e82f3622f37ede77f45b892115fe0de639e1532c085e6309f88567b",
+      "bytes": 1167
+    }
+  }
+}

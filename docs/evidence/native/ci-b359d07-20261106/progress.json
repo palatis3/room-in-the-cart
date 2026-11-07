@@ -1,0 +1,115 @@
+{
+  "head": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+  "checkedAt": "2026-11-06T10:04:20.106819+00:00",
+  "acceptance": "in_progress_with_retained_failure",
+  "runs": [
+    {
+      "attempt": 1,
+      "conclusion": "success",
+      "databaseId": 42184705128,
+      "headSha": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+      "name": "Security checks",
+      "status": "completed",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42184705128"
+    },
+    {
+      "attempt": 1,
+      "conclusion": null,
+      "databaseId": 42184704871,
+      "headSha": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+      "name": "Build and test",
+      "status": "in_progress",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42184704871",
+      "metadataSnapshot": ".build/CIResearch20261105/candidate-b359d07/core-collection/42184704871-run.json",
+      "snapshotFileModifiedAt": "2026-11-06T09:58:06.425370+00:00"
+    },
+    {
+      "attempt": 1,
+      "conclusion": "success",
+      "databaseId": 42184705113,
+      "headSha": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+      "name": "iOS Release performance",
+      "status": "completed",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42184705113",
+      "metadataSnapshot": ".build/CIResearch20261105/candidate-b359d07/core-collection/42184705113-run.json",
+      "snapshotFileModifiedAt": "2026-11-06T09:09:28.735494+00:00"
+    },
+    {
+      "attempt": 1,
+      "conclusion": null,
+      "databaseId": 42184705317,
+      "headSha": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+      "name": "iOS fixture checks",
+      "status": "queued",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42184705317",
+      "metadataSnapshot": ".build/CIResearch20261105/candidate-b359d07/fixture-42184705317-run.json",
+      "snapshotFileModifiedAt": "2026-11-06T09:58:09.639281+00:00"
+    },
+    {
+      "attempt": 1,
+      "conclusion": "success",
+      "databaseId": 42184705027,
+      "headSha": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+      "name": "Native Swift HTTPS and PostgreSQL",
+      "status": "completed",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42184705027",
+      "metadataSnapshot": ".build/CIResearch20261105/candidate-b359d07/fixture-42184705027-run.json",
+      "snapshotFileModifiedAt": "2026-11-06T09:58:09.313626+00:00"
+    },
+    {
+      "attempt": 1,
+      "conclusion": "success",
+      "databaseId": 42184704881,
+      "headSha": "b359d0743c2db77bb81a00a1c7e69036aa12ab77",
+      "name": "iOS deep checks",
+      "status": "completed",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42184704881",
+      "metadataSnapshot": ".build/CIResearch20261105/candidate-b359d07/core-collection/42184704881-run.json",
+      "snapshotFileModifiedAt": "2026-11-06T08:23:11.328076+00:00"
+    }
+  ],
+  "verifiedFilesSHA256": {
+    "ordinary-ui.json": "3d38c61dafe9ce877021ff6204453a424c3070efa46a19f6bd0caf553bf75495",
+    "models.json": "c4bb58c51509aede81291f5c33f69b573bbb6c527b2eb99479281ab4a061ca70",
+    "swift-security.json": "4b1646687bd45b4c1b43ec2c77eed555df83c9f94927bc71babcef7e15d49918",
+    "ui10-failure-triage.json": "f8dabd13728a92f0105a0e8d8abcafdf1a7fb364f95eb2525ef273337741fd88",
+    "performance-inventory.json": "eb626aeed799517d1aa389beddc8a91858fe776d2badc02fc93d683f7dbe233e",
+    "contributor-balanced-01.json": "9f32a9c65896be926c40fe476aa7c9ce90c4cb1e0f4cbd5e7ddb5e61e77ab90d",
+    "ui07-failure-triage.json": "cd2deace5a5f06e394ebdaac520f33b832111d2bad17584307e1c54f640e9a6b",
+    "SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult.json": "fb7cd68557acb5fb494134408f93a7c8835ee1b8999ae9c5f4ff53ad894e347c",
+    "storekit.json": "a93e4602a223fe221f9fd99c0f0dd2852862ee2f166c76abb48c733144475233",
+    "SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview.json": "2288ab3caa2beee93152dab7f91ac88955ca338a9b37d69663eea6cb08c5a575",
+    "packages-sanitizers.json": "beb00ae63a4a4ca9bc1dc031850fceac1c2ac783dc3ec1d6561cba04a354c5b4",
+    "security.json": "c3664393542b2b0e42834b2d9893286c2d95754d4435950a362574c3c35c74dd",
+    "ui02-failure-triage.json": "eda77b23d874918494855dff9100df731bd7005d826da88406b30c71310b90db",
+    "performance.json": "79f7dff83f5e3b62b2eddc5a178cc36f24fcba41ba0697cacafe1db505cfa4b9",
+    "contributor-balanced-03.json": "25da4ed9e3358ccbf242a14bc5acc7e83a6cf9c5b8dc92aae7e0d751664c7d24",
+    "contributor-balanced-02.json": "e76f930d044e300959b3b4582c2ffa4d780907a9220dcd2cbaa9f4b4a644c644",
+    "compiled-plan.json": "684b616c3d0b3101c0b5eddd2661acbde3eecafcc945499b5d14c48adb40a574",
+    "ui02-extraction.json": "57056c3e7b9f84cd84686bf4deb5ee179f8fcfa55255b3a0857bab7eed044674",
+    "fixture-inventory.json": "ad41a31611b2bf56b76e24afcc7a090987308e7585261aa148f21b0193361cb7",
+    "records.json": "9e8f9d654e30493634d1abd6057eee8902e5d43120e62e363f87255e067de9c8",
+    "ui01-journey-timeout.json": "7a4e4f780404937f9366f2c6ec290f3ad43ae1a0a0c5671d3c3a1f69530ed87c",
+    "contributor-balanced-05.json": "b5d365c879554b73d70455ace7b5ac275bd8e6b0b3521e4dccba86edecac8d2d",
+    "contributor-balanced-04.json": "a76e279b213dd08504f8af08ce99cdb3396895a518eac0a427988a4def1f603a",
+    "native-wire.json": "e721ee82ba57602bbbb6dc9c046a3dd827aec91452b8c9d8ac6608360021afbe"
+  },
+  "limits": [
+    "Remaining UI and fixture cases have not all completed. All3performance cases passed within their retained scope. This is not combined release acceptance.",
+    "UI01 retains its720-second failure; UI02 retains offscreen approval and Spanish animation waits; UI07 and UI10 retain the static-label stock-input failures. Later local corrections do not relabel hosted failures.",
+    "All recorded candidate results use b359d07 pinned validators; new local boot-guard and navigation changes are outside this candidate.",
+    "Swift scanning retains11compiler diagnostics and292unresolved AST nodes. Scroll hitch data was unavailable; physical-device performance is not established.",
+    "No manual retry or duplicate workflow dispatch. Raw Records media artifacts are excluded."
+  ],
+  "collectors": {
+    "coreDeepPerformance": ".build/CIResearch20261105/candidate-b359d07/core-collection",
+    "fixturesNative": ".build/CIResearch20261105/candidate-b359d07/fixture-evidence"
+  },
+  "staging": "Migration030 and first scheduled housekeeping are independently verified; browser explicitly deferred.",
+  "fixtureCheckpoint": {
+    "strictlyReplayed": 34,
+    "redactedRecordsReportPassed": 1,
+    "rawRecordsRead": false,
+    "plannedTotal": 45
+  }
+}

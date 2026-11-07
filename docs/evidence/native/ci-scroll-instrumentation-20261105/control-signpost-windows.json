@@ -1,0 +1,103 @@
+{
+  "source": "Retrospective simulator unified log joined to XCTest activities. Diagnostic only.",
+  "timeZoneOfLog": "America/New_York",
+  "metric": "com.apple.UIKit:ScrollView Scroll_DraggingAndDeceleration",
+  "windows": [
+    {
+      "case": "warm-up",
+      "eventSynthesisUTC": "2026-11-05T01:35:39.717+00:00",
+      "nextAccessibilityActivityUTC": "2026-11-05T01:35:44.023+00:00",
+      "matchedPairs": [
+        {
+          "pid": 10180,
+          "signpostId": "0x357dace239709e00",
+          "beginUTC": "2026-11-05T01:35:39.823+00:00",
+          "endUTC": "2026-11-05T01:35:42.356+00:00",
+          "observedDurationSeconds": 2.533,
+          "beginMessage": "enableTelemetry=YES  isAnimation=YES",
+          "endMessage": "enableTelemetry=YES offsets=__##__signpost.telemetry#____#number1#_##_#138##__##, highRateDuration=__##__signpost.telemetry#____#number2#_##_#2.199391541653313##__##, sx=0.000000, sy=620.666667, id=0x10c869e00"
+        }
+      ]
+    },
+    {
+      "case": "measured swipe 1",
+      "eventSynthesisUTC": "2026-11-05T01:35:45.839+00:00",
+      "nextAccessibilityActivityUTC": "2026-11-05T01:35:49.648+00:00",
+      "matchedPairs": [
+        {
+          "pid": 10180,
+          "signpostId": "0x357dace239709e00",
+          "beginUTC": "2026-11-05T01:35:45.923+00:00",
+          "endUTC": "2026-11-05T01:35:48.506+00:00",
+          "observedDurationSeconds": 2.583,
+          "beginMessage": "enableTelemetry=YES  isAnimation=YES",
+          "endMessage": "enableTelemetry=YES offsets=__##__signpost.telemetry#____#number1#_##_#139##__##, highRateDuration=__##__signpost.telemetry#____#number2#_##_#2.200703291688114##__##, sx=0.000000, sy=645.333333, id=0x10c869e00"
+        }
+      ]
+    },
+    {
+      "case": "measured swipe 2",
+      "eventSynthesisUTC": "2026-11-05T01:35:51.811+00:00",
+      "nextAccessibilityActivityUTC": "2026-11-05T01:35:55.618+00:00",
+      "matchedPairs": [
+        {
+          "pid": 10180,
+          "signpostId": "0x357dace239709e00",
+          "beginUTC": "2026-11-05T01:35:51.923+00:00",
+          "endUTC": "2026-11-05T01:35:54.506+00:00",
+          "observedDurationSeconds": 2.583,
+          "beginMessage": "enableTelemetry=YES  isAnimation=YES",
+          "endMessage": "enableTelemetry=YES offsets=__##__signpost.telemetry#____#number1#_##_#139##__##, highRateDuration=__##__signpost.telemetry#____#number2#_##_#2.200322208344005##__##, sx=0.000000, sy=647.333333, id=0x10c869e00"
+        }
+      ]
+    },
+    {
+      "case": "measured swipe 3",
+      "eventSynthesisUTC": "2026-11-05T01:35:57.333+00:00",
+      "nextAccessibilityActivityUTC": "2026-11-05T01:36:01.138+00:00",
+      "matchedPairs": [
+        {
+          "pid": 10180,
+          "signpostId": "0x357dace239709e00",
+          "beginUTC": "2026-11-05T01:35:57.439+00:00",
+          "endUTC": "2026-11-05T01:36:00.023+00:00",
+          "observedDurationSeconds": 2.584,
+          "beginMessage": "enableTelemetry=YES  isAnimation=YES",
+          "endMessage": "enableTelemetry=YES offsets=__##__signpost.telemetry#____#number1#_##_#139##__##, highRateDuration=__##__signpost.telemetry#____#number2#_##_#2.200771666597575##__##, sx=0.000000, sy=645.333333, id=0x10c869e00"
+        }
+      ]
+    },
+    {
+      "case": "measured swipe 4",
+      "eventSynthesisUTC": "2026-11-05T01:36:02.848+00:00",
+      "nextAccessibilityActivityUTC": "2026-11-05T01:36:06.649+00:00",
+      "matchedPairs": [
+        {
+          "pid": 10180,
+          "signpostId": "0x357dace239709e00",
+          "beginUTC": "2026-11-05T01:36:02.956+00:00",
+          "endUTC": "2026-11-05T01:36:05.539+00:00",
+          "observedDurationSeconds": 2.583,
+          "beginMessage": "enableTelemetry=YES  isAnimation=YES",
+          "endMessage": "enableTelemetry=YES offsets=__##__signpost.telemetry#____#number1#_##_#139##__##, highRateDuration=__##__signpost.telemetry#____#number2#_##_#2.200717999832705##__##, sx=0.000000, sy=645.333333, id=0x10c869e00"
+        }
+      ]
+    },
+    {
+      "case": "measured swipe 5",
+      "eventSynthesisUTC": "2026-11-05T01:36:08.787+00:00",
+      "nextAccessibilityActivityUTC": "2026-11-05T01:36:12.566+00:00",
+      "matchedPairs": [
+        {
+          "pid": 10180,
+          "signpostId": "0x357dace239709e00",
+          "beginUTC": "2026-11-05T01:36:08.889+00:00",
+          "endUTC": "2026-11-05T01:36:11.456+00:00",
+          "observedDurationSeconds": 2.567,
+          "beginMessage": "enableTelemetry=YES  isAnimation=YES",
+          "endMessage": "enableTelemetry=YES offsets=__##__signpost.telemetry#____#number1#_##_#139##__##, highRateDuration=__##__signpost.telemetry#____#number2#_##_#2.202550375135615##__##, sx=0.000000, sy=645.333333, id=0x10c869e00"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "zipSHA256": "19a4f56b006c56a686066b8d9acf1c20499e83356359b9ce87cde85b4ea1f4c8",
+  "artifactID": 13552159373,
+  "memberCount": 283,
+  "expandedBytes": 110296443,
+  "scopedMemberLimit": 128000000,
+  "scope": "Root isolated inspection of exact digest-verified result; collector default50MB member guard unchanged. Export only failed FreeJourney case evidence; no Records media viewed.",
+  "oversizedMembers": [
+    {
+      "name": "Tests.xcresult/Data/data.0~S_Zm4qvFZ8dsqhQ178vSwurwfaX8b9gZ4hILTuYR73DKEZXrfDztgRah20WUKd5QRzuKnh8iYI3mp35ByTpsNg==",
+      "bytes": 97779296
+    }
+  ]
+}

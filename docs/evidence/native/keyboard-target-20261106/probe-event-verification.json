@@ -1,0 +1,401 @@
+{
+  "baseline-path-fixed": {
+    "probes": {
+      "bottomRight": {
+        "epoch": 1793948535.942394,
+        "exposedFrame": [
+          344.3333333333333,
+          534,
+          41.666666666666686,
+          20.333333333333258
+        ],
+        "keyboardDismissed": false,
+        "point": [
+          383.16666666666663,
+          562.1666666666666
+        ],
+        "probe": "bottomRight",
+        "pid": "78102",
+        "events": {
+          "observer.installed": 1,
+          "textField.beginEditing": 1,
+          "stock.focus.on": 1,
+          "focusIndicator.on": 1,
+          "keyboard.willChangeFrame": 2,
+          "keyboard.willShow": 2,
+          "keyboard.didChangeFrame": 2,
+          "keyboard.didShow": 2,
+          "stock.reset.amount": 1
+        },
+        "attachment": ".build/KeyboardDiagnostic20261106/baseline-independent-review/attachments/69488EA2-EB2B-41EB-9655-FDEA33A8B67D.json",
+        "attachment_sha256": "80f504455f19df6f5e3ef7cb0801c7fb35b0d4784a2e7cdb23f8afb1230220b2"
+      },
+      "bottomLeft": {
+        "epoch": 1793948518.250749,
+        "exposedFrame": [
+          344.3333333333333,
+          534,
+          41.666666666666686,
+          20.333333333333258
+        ],
+        "keyboardDismissed": false,
+        "point": [
+          347.16666666666663,
+          562.1666666666666
+        ],
+        "probe": "bottomLeft",
+        "pid": "78052",
+        "events": {
+          "observer.installed": 1,
+          "textField.beginEditing": 1,
+          "stock.focus.on": 1,
+          "focusIndicator.on": 1,
+          "keyboard.willChangeFrame": 2,
+          "keyboard.willShow": 2,
+          "keyboard.didChangeFrame": 2,
+          "keyboard.didShow": 2,
+          "stock.reset.amount": 1
+        },
+        "attachment": ".build/KeyboardDiagnostic20261106/baseline-independent-review/attachments/B8AD0903-9EAC-4AB8-85B8-9D0371692413.json",
+        "attachment_sha256": "151575c4fa3e6c5e8bafc97616ee04e0709a561376d2a991f6c61e6e58aa275e"
+      },
+      "topRight": {
+        "epoch": 1793948501.152138,
+        "exposedFrame": [
+          344.3333333333333,
+          534,
+          41.666666666666686,
+          20.333333333333258
+        ],
+        "keyboardDismissed": false,
+        "point": [
+          383.16666666666663,
+          526.1666666666666
+        ],
+        "probe": "topRight",
+        "pid": "77989",
+        "events": {
+          "observer.installed": 1,
+          "textField.beginEditing": 1,
+          "stock.focus.on": 1,
+          "focusIndicator.on": 1,
+          "keyboard.willChangeFrame": 2,
+          "keyboard.willShow": 2,
+          "keyboard.didChangeFrame": 2,
+          "keyboard.didShow": 2,
+          "stock.reset.amount": 1
+        },
+        "attachment": ".build/KeyboardDiagnostic20261106/baseline-independent-review/attachments/9ABDC29E-E7D8-433E-A8A6-4C64033DD11E.json",
+        "attachment_sha256": "34076a254e17917d70acd69bb16971d5303815f3d468f79cf1fdd47e4b137535"
+      },
+      "topLeft": {
+        "epoch": 1793948483.992642,
+        "exposedFrame": [
+          344.3333333333333,
+          534,
+          41.666666666666686,
+          20.333333333333258
+        ],
+        "keyboardDismissed": false,
+        "point": [
+          347.16666666666663,
+          526.1666666666666
+        ],
+        "probe": "topLeft",
+        "pid": "77933",
+        "events": {
+          "observer.installed": 1,
+          "textField.beginEditing": 1,
+          "stock.focus.on": 1,
+          "focusIndicator.on": 1,
+          "keyboard.willChangeFrame": 2,
+          "keyboard.willShow": 2,
+          "keyboard.didChangeFrame": 2,
+          "keyboard.didShow": 2,
+          "stock.reset.amount": 1
+        },
+        "attachment": ".build/KeyboardDiagnostic20261106/baseline-independent-review/attachments/3AFDAAC2-E196-445F-868F-8F9AAB454051.json",
+        "attachment_sha256": "95eeef5564bb700ae2786e70575c54d8acd270cb4677e9c0faeb6fe00833e683"
+      },
+      "center": {
+        "epoch": 1793948468.04669,
+        "exposedFrame": [
+          344.3333333333333,
+          534,
+          41.666666666666686,
+          20.333333333333258
+        ],
+        "keyboardDismissed": true,
+        "point": [
+          365.16666666666663,
+          544.1666666666666
+        ],
+        "probe": "center",
+        "pid": "77840",
+        "events": {
+          "observer.installed": 1,
+          "textField.beginEditing": 1,
+          "stock.focus.on": 1,
+          "focusIndicator.on": 1,
+          "keyboard.willChangeFrame": 3,
+          "keyboard.willShow": 2,
+          "keyboard.didChangeFrame": 3,
+          "keyboard.didShow": 2,
+          "stock.reset.amount": 1,
+          "done.enter": 1,
+          "done.exit": 1,
+          "keyboard.willHide": 1,
+          "textField.endEditing": 1,
+          "stock.focus.off": 1,
+          "focusIndicator.off": 1,
+          "keyboard.didHide": 1
+        },
+        "attachment": ".build/KeyboardDiagnostic20261106/baseline-independent-review/attachments/DB60FCEA-CC10-440E-8DBC-108ED5BAF885.json",
+        "attachment_sha256": "612a7ccd5d61632a225fbca3b9322b97a2b60895ed1348758cd5d998deb7f600"
+      }
+    },
+    "live_count": 74,
+    "export_count": 39,
+    "live_pids": [
+      "77840",
+      "77933",
+      "77989",
+      "78052",
+      "78102"
+    ],
+    "export_pids": [
+      "77989",
+      "78052",
+      "78102"
+    ],
+    "export_events_absent_from_live": [],
+    "live_events_absent_from_export_count": 35,
+    "capture_alive_before_stop": "1",
+    "strict_exit": "1",
+    "selector": "RoomInTheCartUITests/StockReviewUITests/testDiagnosticDoneTouchTargetMargins",
+    "runtime": "23C54",
+    "runtime_warnings": {
+      "status": "passed",
+      "summaryWarningCount": 0,
+      "runtimeWarningCount": 0,
+      "examinedTestCount": 1,
+      "detailExportCount": 1,
+      "activityExportCount": 0,
+      "warnings": []
+    }
+  },
+  "candidate": {
+    "probes": {
+      "bottomRight": {
+        "epoch": 1793948796.449298,
+        "exposedFrame": [
+          342,
+          522,
+          44,
+          44
+        ],
+        "keyboardDismissed": true,
+        "point": [
+          382,
+          562
+        ],
+        "probe": "bottomRight",
+        "pid": "79426",
+        "events": {
+          "observer.installed": 1,
+          "textField.beginEditing": 1,
+          "stock.focus.on": 1,
+          "focusIndicator.on": 1,
+          "keyboard.willChangeFrame": 3,
+          "keyboard.willShow": 2,
+          "keyboard.didChangeFrame": 3,
+          "keyboard.didShow": 2,
+          "stock.reset.amount": 1,
+          "done.enter": 1,
+          "done.exit": 1,
+          "keyboard.willHide": 1,
+          "textField.endEditing": 1,
+          "stock.focus.off": 1,
+          "focusIndicator.off": 1,
+          "keyboard.didHide": 1
+        },
+        "attachment": ".build/KeyboardDiagnostic20261106/baseline-independent-review/candidate-attachments/3B9D8E69-F36A-483D-AC5D-DA515663BA85.json",
+        "attachment_sha256": "797d1148090b7f3748b3955f4be5b70c84562866ea6ac8230d7abdad2d25dbcb"
+      },
+      "bottomLeft": {
+        "epoch": 1793948782.373882,
+        "exposedFrame": [
+          342,
+          522,
+          44,
+          44
+        ],
+        "keyboardDismissed": true,
+        "point": [
+          346,
+          562
+        ],
+        "probe": "bottomLeft",
+        "pid": "79387",
+        "events": {
+          "observer.installed": 1,
+          "textField.beginEditing": 1,
+          "stock.focus.on": 1,
+          "focusIndicator.on": 1,
+          "keyboard.willChangeFrame": 3,
+          "keyboard.willShow": 2,
+          "keyboard.didChangeFrame": 3,
+          "keyboard.didShow": 2,
+          "stock.reset.amount": 1,
+          "done.enter": 1,
+          "done.exit": 1,
+          "keyboard.willHide": 1,
+          "textField.endEditing": 1,
+          "stock.focus.off": 1,
+          "focusIndicator.off": 1,
+          "keyboard.didHide": 1
+        },
+        "attachment": ".build/KeyboardDiagnostic20261106/baseline-independent-review/candidate-attachments/A95000A9-82B5-4EBA-A81A-E9E98C9A7AD5.json",
+        "attachment_sha256": "d2ebfa657fb7ac4785f30d3a95fcd8458cf5a075e3662a03586c87d35eaf7fe6"
+      },
+      "topRight": {
+        "epoch": 1793948768.377027,
+        "exposedFrame": [
+          342,
+          522,
+          44,
+          44
+        ],
+        "keyboardDismissed": true,
+        "point": [
+          382,
+          526
+        ],
+        "probe": "topRight",
+        "pid": "79351",
+        "events": {
+          "observer.installed": 1,
+          "textField.beginEditing": 1,
+          "stock.focus.on": 1,
+          "focusIndicator.on": 1,
+          "keyboard.willChangeFrame": 3,
+          "keyboard.willShow": 2,
+          "keyboard.didChangeFrame": 3,
+          "keyboard.didShow": 2,
+          "stock.reset.amount": 1,
+          "done.enter": 1,
+          "done.exit": 1,
+          "keyboard.willHide": 1,
+          "textField.endEditing": 1,
+          "stock.focus.off": 1,
+          "focusIndicator.off": 1,
+          "keyboard.didHide": 1
+        },
+        "attachment": ".build/KeyboardDiagnostic20261106/baseline-independent-review/candidate-attachments/E093C162-8E6C-4BDD-AC01-C5909B84B37D.json",
+        "attachment_sha256": "a6662f264fd78d2b8a0c5bcc47b4c4ff57a11dbc3f96ca553e04e8f404da083d"
+      },
+      "topLeft": {
+        "epoch": 1793948754.654293,
+        "exposedFrame": [
+          342,
+          522,
+          44,
+          44
+        ],
+        "keyboardDismissed": true,
+        "point": [
+          346,
+          526
+        ],
+        "probe": "topLeft",
+        "pid": "79303",
+        "events": {
+          "observer.installed": 1,
+          "textField.beginEditing": 1,
+          "stock.focus.on": 1,
+          "focusIndicator.on": 1,
+          "keyboard.willChangeFrame": 3,
+          "keyboard.willShow": 2,
+          "keyboard.didChangeFrame": 3,
+          "keyboard.didShow": 2,
+          "stock.reset.amount": 1,
+          "done.enter": 1,
+          "done.exit": 1,
+          "keyboard.willHide": 1,
+          "textField.endEditing": 1,
+          "stock.focus.off": 1,
+          "focusIndicator.off": 1,
+          "keyboard.didHide": 1
+        },
+        "attachment": ".build/KeyboardDiagnostic20261106/baseline-independent-review/candidate-attachments/71640D80-5B33-4CE0-BAB6-A5C3B60B0C46.json",
+        "attachment_sha256": "1ee509a4cbb2c9e7443e8791576cc8a8ea0788658aa77d6d901d0ca77994d1c6"
+      },
+      "center": {
+        "epoch": 1793948734.1887789,
+        "exposedFrame": [
+          342,
+          522,
+          44,
+          44
+        ],
+        "keyboardDismissed": true,
+        "point": [
+          364,
+          544
+        ],
+        "probe": "center",
+        "pid": "79228",
+        "events": {
+          "observer.installed": 1,
+          "textField.beginEditing": 1,
+          "stock.focus.on": 1,
+          "focusIndicator.on": 1,
+          "keyboard.willChangeFrame": 3,
+          "keyboard.willShow": 2,
+          "keyboard.didChangeFrame": 3,
+          "keyboard.didShow": 2,
+          "stock.reset.amount": 1,
+          "done.enter": 1,
+          "done.exit": 1,
+          "keyboard.willHide": 1,
+          "textField.endEditing": 1,
+          "stock.focus.off": 1,
+          "focusIndicator.off": 1,
+          "keyboard.didHide": 1
+        },
+        "attachment": ".build/KeyboardDiagnostic20261106/baseline-independent-review/candidate-attachments/38A767D5-2BCF-4493-8803-90112657C0A4.json",
+        "attachment_sha256": "89b63dab198b650e558702d504db21cf7c09f0f0ae631bfbd991601e99c1a4dd"
+      }
+    },
+    "live_count": 110,
+    "export_count": 87,
+    "live_pids": [
+      "79228",
+      "79303",
+      "79351",
+      "79387",
+      "79426"
+    ],
+    "export_pids": [
+      "79303",
+      "79351",
+      "79387",
+      "79426"
+    ],
+    "export_events_absent_from_live": [],
+    "live_events_absent_from_export_count": 23,
+    "capture_alive_before_stop": "1",
+    "strict_exit": "0",
+    "selector": "RoomInTheCartUITests/StockReviewUITests/testDiagnosticDoneTouchTargetMargins",
+    "runtime": "23C54",
+    "runtime_warnings": {
+      "status": "passed",
+      "summaryWarningCount": 0,
+      "runtimeWarningCount": 0,
+      "examinedTestCount": 1,
+      "detailExportCount": 1,
+      "activityExportCount": 0,
+      "warnings": []
+    }
+  }
+}

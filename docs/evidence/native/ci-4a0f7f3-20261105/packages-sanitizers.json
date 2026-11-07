@@ -1,0 +1,35 @@
+{
+  "candidate": "4a0f7f3a25ae01b6efba5e984ceb464c4ca1d157",
+  "checks": {
+    "swift-address-1": {
+      "runID": 42048736340,
+      "artifactID": 13424679283,
+      "sha256": "a58e6f5a6b70efb31eb17b1b680bed1c223052677f9994061f915fb096d31274",
+      "strictReplayExit": 0,
+      "passed": 389,
+      "expectedNativeWireSkips": 3,
+      "result": "CoreDomain: 171 passed, 0 deliberately skipped\nDeviceSurfaces: 29 passed, 0 deliberately skipped\nHouseholdClient: 82 passed, 3 deliberately skipped\nLocalStore: 74 passed, 0 deliberately skipped\nRecordArchive: 33 passed, 0 deliberately skipped"
+    },
+    "swift-thread-1": {
+      "runID": 42048736340,
+      "artifactID": 13424629407,
+      "sha256": "58b9d5ef6163ab6e800966d6b9b519a60bf0c30e726f316513a2458bc581b13e",
+      "strictReplayExit": 0,
+      "passed": 389,
+      "expectedNativeWireSkips": 3,
+      "result": "CoreDomain: 171 passed, 0 deliberately skipped\nDeviceSurfaces: 29 passed, 0 deliberately skipped\nHouseholdClient: 82 passed, 3 deliberately skipped\nLocalStore: 74 passed, 0 deliberately skipped\nRecordArchive: 33 passed, 0 deliberately skipped"
+    },
+    "swift-package-results-1": {
+      "runID": 42048736422,
+      "artifactID": 13425948893,
+      "sha256": "87cefdbcd28db2a811848e67d1a2daa4656ab7fbd392300cd7f91481ac2a5183",
+      "strictReplayExit": 0,
+      "passed": 389,
+      "expectedNativeWireSkips": 3,
+      "result": "CoreDomain: 171 passed, 0 deliberately skipped\nDeviceSurfaces: 29 passed, 0 deliberately skipped\nHouseholdClient: 82 passed, 3 deliberately skipped\nLocalStore: 74 passed, 0 deliberately skipped\nRecordArchive: 33 passed, 0 deliberately skipped"
+    }
+  },
+  "limits": [
+    "Each package lane deliberately skips three opt-in native-wire cases; separate HTTPS/PostgreSQL evidence covers their integration scenarios."
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "baseline-path-fixed": {
+    "product_archive_sha256": "11a0f1f43669e826d43694e162d57772c74e0c8cd239560da8de533845483734",
+    "manifest_sha256": "107b2c994d3f0b1efc047fb9bf41467c8fc86d6b6afdd23747335346e1943ca4",
+    "product_count": 179,
+    "verified_count": 179,
+    "missing": [],
+    "mismatched": [],
+    "source_manifest_count": 532,
+    "source_verified_count": 532,
+    "source_mismatched": []
+  },
+  "candidate": {
+    "product_archive_sha256": "c4c9db02ce9cc402d337331e9acd4191d810325d049a43dc02a4e087089b4f80",
+    "manifest_sha256": "5bfcf045ab072a4591dbea21c78c7e082658283f68b38ab99e163599f394c5a9",
+    "product_count": 179,
+    "verified_count": 179,
+    "missing": [],
+    "mismatched": [],
+    "source_manifest_count": 532,
+    "source_verified_count": 532,
+    "source_mismatched": []
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "artifactID": 13499889307,
+  "artifactName": "native-wire-results-1",
+  "sha256": "c601ea14cc121d957b34661dbac1592e3219d4fd268b2536fd35ae0a3d9a31bd",
+  "size": 2389,
+  "digestVerified": true,
+  "candidate": "0d33c11d43a97d670bf56d104d3260cad9b3f202",
+  "runID": 42215222459,
+  "jobID": 127883421254,
+  "hostedConclusion": "success",
+  "independentReadback": {
+    "valid": true,
+    "integrationCases": 4,
+    "swiftPassedInvocations": 6,
+    "exactScenarios": [
+      "history-free HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres",
+      "history-paid HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres",
+      "meal-planner HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres",
+      "meal-shopper HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres",
+      "quote-adult HouseholdClientTests.StoreQuoteNativeWireTests/testStoreQuoteClientAgainstPostgres",
+      "quote-shopper HouseholdClientTests.StoreQuoteNativeWireTests/testStoreQuoteClientAgainstPostgres"
+    ],
+    "databaseStopped": true
+  },
+  "scope": "Recorded Swift transport over pinned loopback HTTPS and disposable PostgreSQL; no deployed-provider acceptance."
+}

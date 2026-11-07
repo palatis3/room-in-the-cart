@@ -45,9 +45,21 @@ struct DinnerAwayCarryoverView: View {
     }
     private var journey: PickupJourney? { pickup.journeys.first { $0.id == dinner.shop?.id } }
     private var meals: [MealOccurrence] {
-        (dinner.shop?.mealOccurrences ?? []).filter { $0.removedAt == nil && $0.carryover == nil && $0.scheduledDay != nil && (day == nil || $0.scheduledDay == day) }
+        let current = (dinner.shop?.mealOccurrences ?? []).compactMap { original -> MealOccurrence? in
+            guard let journey else { return original }
+            return try? AwayCarryoverEngine.currentMeal(original, in: journey)
+        }
+        return current.filter { $0.removedAt == nil && $0.carryover == nil && $0.scheduledDay != nil && (day == nil || $0.scheduledDay == day) }
     }
     private var meal: MealOccurrence? { meals.first { $0.id == mealID } }
+    private var earliestTargetDate: Date {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: dinner.shop?.basis.timeZoneIdentifier ?? "") ?? .current
+        let today = calendar.startOfDay(for: Date())
+        guard let source = meal?.scheduledDay?.date,
+              let next = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: source)) else { return today }
+        return max(today, next)
+    }
     private var needs: [AllocationNeed] {
         guard let meal, let journey else { return [] }; return AwayCarryoverEngine.sourceNeeds(meal, in: journey)
     }
@@ -68,7 +80,7 @@ struct DinnerAwayCarryoverView: View {
                 pendingSection(pending)
             } else if let review = model.review {
                 reviewSection(review)
-            } else if !completed {
+            } else if !completed && journey?.closedAt == nil {
                 inputSections
             }
             if let message = model.message { Text(message).accessibilityIdentifier("awayCarryover.status") }
@@ -97,6 +109,9 @@ struct DinnerAwayCarryoverView: View {
         .toolbar { ToolbarItem(placement: .cancellationAction) { Button(pTr("Close")) { dismiss() } } }
         .dinnerAccess(dinner)
         .environment(\.timeZone, TimeZone(identifier: dinner.shop?.basis.timeZoneIdentifier ?? "") ?? .current)
+        .onChange(of: earliestTargetDate, initial: true) { _, firstDay in
+            if targetDate < firstDay { targetDate = firstDay }
+        }
         .onChange(of: mealID) { _, _ in needID = nil; supplyID = nil; resetApproval() }
         .onChange(of: needID) { _, _ in supplyID = nil; resetApproval() }
         .onChange(of: supplyID) { _, _ in counted = ""; reserved = ""; resetApproval() }
@@ -135,15 +150,15 @@ struct DinnerAwayCarryoverView: View {
                     Text(pTr("Amount to reserve from this dinner portion")).font(.caption)
                     TextField(pTr("Amount to reserve from this dinner portion"), text: $reserved).accessibilityIdentifier("awayCarryover.reserved")
                     Text(pTr(need.amount.unit.rawValue))
-                    if let detail = journey?.needDetails.first(where: { $0.id == need.id }), !detail.exclusions.isEmpty {
-                        Text("\(pTr("Keep these exclusions")): \(detail.exclusions.joined(separator: ", "))")
+                    if let detail = journey?.recoveryCurrentDetails.first(where: { $0.id == need.id }), !detail.exclusions.isEmpty {
+                        Text("\(pTr("Keep these exclusions")): \(pExclusions(detail.exclusions))")
                     }
                     Toggle(pTr("I physically checked this same food, its identity, exclusions, and remaining usable amount."), isOn: $physicallyChecked)
                         .accessibilityIdentifier("awayCarryover.checked")
                 }
             }
             Section(pTr("Real dated dinner target")) {
-                DatePicker(pTr("Carryover dinner date"), selection: $targetDate, displayedComponents: .date)
+                DatePicker(pTr("Carryover dinner date"), selection: $targetDate, in: earliestTargetDate..., displayedComponents: .date)
                     .accessibilityIdentifier("awayCarryover.date")
                 Text(dinner.shop?.basis.timeZoneIdentifier ?? "")
                 Text(pTr("Planned servings, not verified whole-meal coverage")).font(.caption)
@@ -165,7 +180,7 @@ struct DinnerAwayCarryoverView: View {
             Text(dinnerDay(intent.plan.day))
             Text("\(pTr("Planned servings")): \(intent.plan.servings.description)")
             Text(pTr("The selected amount moves from the eligible original dinner need to one pinned physical-food reservation. It is not added twice. Protected lunches stay reserved on their original dates."))
-            ForEach(journey?.needs.filter { $0.priority == .protected } ?? []) { need in Text("\(need.name) · \(pQuantity(need.amount))") }
+            ForEach(journey?.recoveryCurrentAllocationNeeds.filter { $0.priority == .protected } ?? []) { need in Text("\(need.name) · \(pQuantity(need.amount))") }
             Toggle(pTr("I approve this physical reservation and its dated carryover target."), isOn: $approved)
                 .accessibilityIdentifier("awayCarryover.approve")
             Button(pTr("Save physical reservation and dated dinner")) { Task { if await model.apply() { completed = true } } }
@@ -227,7 +242,7 @@ struct DinnerCarryoverDetailsView: View {
                     Text(record.intent.supply.name)
                     Text("\(pTr("Original dinner")): \(record.intent.plan.source.title)")
                     if let sourceDay = record.intent.plan.source.scheduledDay { Text(dinnerDay(sourceDay)) }
-                    if let demand = try? journey.carryoverAllocation().demands.first(where: { $0.id == link.reservationID }) {
+                    if let demand = try? journey.carryoverAllocation(at: pickup.stockReviewDate).demands.first(where: { $0.id == link.reservationID }) {
                         Text("\(pTr("Currently allocated from confirmed food")): \(demand.allocated.map { pQuantity($0, unit: demand.unit) } ?? pTr("Unresolved"))")
                         Text("\(pTr("Still short")): \(demand.shortfall.map { pQuantity($0, unit: demand.unit) } ?? pTr("Unresolved"))")
                     } else { Text(pTr("The physical reservation needs review. Do not assume this dinner is covered.")) }

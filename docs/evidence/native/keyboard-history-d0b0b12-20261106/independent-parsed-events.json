@@ -1,0 +1,565 @@
+{
+  "streams": {
+    "events.log": [
+      {
+        "pid": 43417,
+        "uptime": "1234.443250",
+        "event": "observer.installed",
+        "site": "RoomInTheCart/Theme.swift:116"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1237.791926",
+        "event": "textField.beginEditing",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1238.293971",
+        "event": "stock.focus.on",
+        "site": "RoomInTheCart/PickupSavedStockSection.swift:180"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1238.294278",
+        "event": "focusIndicator.on",
+        "site": "RoomInTheCart/PickupSavedStockSection.swift:190"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1238.595684",
+        "event": "keyboard.willChangeFrame",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1238.631145",
+        "event": "keyboard.willShow",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1239.088853",
+        "event": "keyboard.didChangeFrame",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1239.092567",
+        "event": "keyboard.didShow",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1239.858038",
+        "event": "keyboard.willChangeFrame",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1239.859578",
+        "event": "keyboard.willShow",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1239.862032",
+        "event": "keyboard.didChangeFrame",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1239.864321",
+        "event": "keyboard.didShow",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1239.927610",
+        "event": "stock.reset.amount",
+        "site": "RoomInTheCart/PickupSavedStockSection.swift:156"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1240.751263",
+        "event": "done.enter",
+        "site": "RoomInTheCart/PickupSavedStockSection.swift:190"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1240.751443",
+        "event": "done.exit",
+        "site": "RoomInTheCart/PickupSavedStockSection.swift:190"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1240.801049",
+        "event": "keyboard.willChangeFrame",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1240.801405",
+        "event": "keyboard.willHide",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1240.806792",
+        "event": "textField.endEditing",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1240.816128",
+        "event": "stock.focus.off",
+        "site": "RoomInTheCart/PickupSavedStockSection.swift:180"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1240.816299",
+        "event": "focusIndicator.off",
+        "site": "RoomInTheCart/PickupSavedStockSection.swift:190"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1241.292989",
+        "event": "keyboard.didChangeFrame",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1241.293534",
+        "event": "keyboard.didHide",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1242.705728",
+        "event": "stock.toggle.setter.true",
+        "site": "RoomInTheCart/PickupSavedStockSection.swift:201"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1271.967976",
+        "event": "observer.installed",
+        "site": "RoomInTheCart/Theme.swift:116"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1275.174542",
+        "event": "textField.beginEditing",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1275.431885",
+        "event": "stock.focus.on",
+        "site": "RoomInTheCart/PickupSavedStockSection.swift:180"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1275.432034",
+        "event": "focusIndicator.on",
+        "site": "RoomInTheCart/PickupSavedStockSection.swift:190"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1275.617275",
+        "event": "keyboard.willChangeFrame",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1275.621348",
+        "event": "keyboard.willShow",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1276.047565",
+        "event": "keyboard.didChangeFrame",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1276.048293",
+        "event": "keyboard.didShow",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1276.662466",
+        "event": "keyboard.willChangeFrame",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1276.663549",
+        "event": "keyboard.willShow",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1276.665439",
+        "event": "keyboard.didChangeFrame",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1276.666616",
+        "event": "keyboard.didShow",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1276.736721",
+        "event": "stock.reset.amount",
+        "site": "RoomInTheCart/PickupSavedStockSection.swift:156"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1277.985234",
+        "event": "done.enter",
+        "site": "RoomInTheCart/PickupSavedStockSection.swift:190"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1277.985426",
+        "event": "done.exit",
+        "site": "RoomInTheCart/PickupSavedStockSection.swift:190"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1278.039050",
+        "event": "keyboard.willChangeFrame",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1278.040391",
+        "event": "keyboard.willHide",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1278.049277",
+        "event": "textField.endEditing",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1278.062286",
+        "event": "stock.focus.off",
+        "site": "RoomInTheCart/PickupSavedStockSection.swift:180"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1278.062496",
+        "event": "focusIndicator.off",
+        "site": "RoomInTheCart/PickupSavedStockSection.swift:190"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1278.511759",
+        "event": "keyboard.didChangeFrame",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1278.513096",
+        "event": "keyboard.didHide",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1279.771457",
+        "event": "stock.toggle.setter.true",
+        "site": "RoomInTheCart/PickupSavedStockSection.swift:201"
+      }
+    ],
+    "events-export.log": []
+  },
+  "perPID": {
+    "43417": [
+      {
+        "pid": 43417,
+        "uptime": "1234.443250",
+        "event": "observer.installed",
+        "site": "RoomInTheCart/Theme.swift:116"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1237.791926",
+        "event": "textField.beginEditing",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1238.293971",
+        "event": "stock.focus.on",
+        "site": "RoomInTheCart/PickupSavedStockSection.swift:180"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1238.294278",
+        "event": "focusIndicator.on",
+        "site": "RoomInTheCart/PickupSavedStockSection.swift:190"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1238.595684",
+        "event": "keyboard.willChangeFrame",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1238.631145",
+        "event": "keyboard.willShow",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1239.088853",
+        "event": "keyboard.didChangeFrame",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1239.092567",
+        "event": "keyboard.didShow",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1239.858038",
+        "event": "keyboard.willChangeFrame",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1239.859578",
+        "event": "keyboard.willShow",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1239.862032",
+        "event": "keyboard.didChangeFrame",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1239.864321",
+        "event": "keyboard.didShow",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1239.927610",
+        "event": "stock.reset.amount",
+        "site": "RoomInTheCart/PickupSavedStockSection.swift:156"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1240.751263",
+        "event": "done.enter",
+        "site": "RoomInTheCart/PickupSavedStockSection.swift:190"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1240.751443",
+        "event": "done.exit",
+        "site": "RoomInTheCart/PickupSavedStockSection.swift:190"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1240.801049",
+        "event": "keyboard.willChangeFrame",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1240.801405",
+        "event": "keyboard.willHide",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1240.806792",
+        "event": "textField.endEditing",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1240.816128",
+        "event": "stock.focus.off",
+        "site": "RoomInTheCart/PickupSavedStockSection.swift:180"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1240.816299",
+        "event": "focusIndicator.off",
+        "site": "RoomInTheCart/PickupSavedStockSection.swift:190"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1241.292989",
+        "event": "keyboard.didChangeFrame",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1241.293534",
+        "event": "keyboard.didHide",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 43417,
+        "uptime": "1242.705728",
+        "event": "stock.toggle.setter.true",
+        "site": "RoomInTheCart/PickupSavedStockSection.swift:201"
+      }
+    ],
+    "44473": [
+      {
+        "pid": 44473,
+        "uptime": "1271.967976",
+        "event": "observer.installed",
+        "site": "RoomInTheCart/Theme.swift:116"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1275.174542",
+        "event": "textField.beginEditing",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1275.431885",
+        "event": "stock.focus.on",
+        "site": "RoomInTheCart/PickupSavedStockSection.swift:180"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1275.432034",
+        "event": "focusIndicator.on",
+        "site": "RoomInTheCart/PickupSavedStockSection.swift:190"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1275.617275",
+        "event": "keyboard.willChangeFrame",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1275.621348",
+        "event": "keyboard.willShow",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1276.047565",
+        "event": "keyboard.didChangeFrame",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1276.048293",
+        "event": "keyboard.didShow",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1276.662466",
+        "event": "keyboard.willChangeFrame",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1276.663549",
+        "event": "keyboard.willShow",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1276.665439",
+        "event": "keyboard.didChangeFrame",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1276.666616",
+        "event": "keyboard.didShow",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1276.736721",
+        "event": "stock.reset.amount",
+        "site": "RoomInTheCart/PickupSavedStockSection.swift:156"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1277.985234",
+        "event": "done.enter",
+        "site": "RoomInTheCart/PickupSavedStockSection.swift:190"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1277.985426",
+        "event": "done.exit",
+        "site": "RoomInTheCart/PickupSavedStockSection.swift:190"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1278.039050",
+        "event": "keyboard.willChangeFrame",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1278.040391",
+        "event": "keyboard.willHide",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1278.049277",
+        "event": "textField.endEditing",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1278.062286",
+        "event": "stock.focus.off",
+        "site": "RoomInTheCart/PickupSavedStockSection.swift:180"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1278.062496",
+        "event": "focusIndicator.off",
+        "site": "RoomInTheCart/PickupSavedStockSection.swift:190"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1278.511759",
+        "event": "keyboard.didChangeFrame",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1278.513096",
+        "event": "keyboard.didHide",
+        "site": "RoomInTheCart/Theme.swift:113"
+      },
+      {
+        "pid": 44473,
+        "uptime": "1279.771457",
+        "event": "stock.toggle.setter.true",
+        "site": "RoomInTheCart/PickupSavedStockSection.swift:201"
+      }
+    ]
+  }
+}

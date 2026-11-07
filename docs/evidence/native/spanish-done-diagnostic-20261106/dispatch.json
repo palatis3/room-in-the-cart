@@ -1,0 +1,18 @@
+{
+  "id": 42203081911,
+  "head_sha": "161ab6497daa560e8b9c3b2dc133cd2777e3c53f",
+  "head_branch": "codex/diagnostic-spanish-done-b359d07",
+  "event": "workflow_dispatch",
+  "run_attempt": 1,
+  "status": "in_progress",
+  "conclusion": null,
+  "workflow_id": 407500252,
+  "path": ".github/workflows/ios-fixtures.yml",
+  "html_url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42203081911",
+  "created_at": "2026-11-06T10:29:40Z",
+  "dispatchesIssued": 1,
+  "diagnosticOnly": true,
+  "releaseAcceptance": false,
+  "localWiringProof": "local-wiring.json",
+  "inertBranchPushVerified": true
+}

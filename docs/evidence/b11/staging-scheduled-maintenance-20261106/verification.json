@@ -1,0 +1,109 @@
+{
+  "verifiedAt": "2026-11-06T08:24:01.133520+00:00",
+  "scheduledInvocationObserved": true,
+  "manualInvocationInObservationWindow": false,
+  "cronConfiguration": {
+    "crons": [
+      {
+        "path": "/internal/maintenance",
+        "schedule": "0 8 * * *",
+        "host": "room-in-the-cart-staging-kuoy0dz9r-doorframe-staging.vercel.app"
+      }
+    ],
+    "undeployed": [],
+    "modified": [],
+    "enabled": true
+  },
+  "request": {
+    "timestamp": "2026-11-06T08:21:00.171Z",
+    "projectId": "prj_MsdHyy06CKCuFeAvoOCpnJRQ1vGa",
+    "requestId": "g5298-1793953260171-0531178e1fc5",
+    "deploymentId": "dpl_5WrPFnhZhcp51X9UWU919sULJaTh",
+    "environment": "production",
+    "requestHostname": "room-in-the-cart-staging-kuoy0dz9r-doorframe-staging.vercel.app",
+    "requestPath": "/internal/maintenance",
+    "requestMethod": "GET",
+    "httpStatus": 200,
+    "route": "/api/maintenance",
+    "pathType": "streaming_func",
+    "cacheResult": "BYPASS",
+    "edgeNetworkRegion": "iad1",
+    "service": "/internal/maintenance",
+    "clientIpCountry": "US",
+    "clientUserAgent": "vercel-cron/1.0",
+    "wafAction": "allow"
+  },
+  "runtime": {
+    "timestamp": "2026-11-06T08:21:01.385Z",
+    "requestId": "g5298-1793953260171-0531178e1fc5",
+    "deploymentId": "dpl_5WrPFnhZhcp51X9UWU919sULJaTh",
+    "projectId": "prj_MsdHyy06CKCuFeAvoOCpnJRQ1vGa",
+    "runtime": "nodejs22.x",
+    "level": "info",
+    "truncated": false
+  },
+  "result": {
+    "event": "operations_result",
+    "mode": "run",
+    "durationMs": 390,
+    "batchSize": 25,
+    "logoutProviderConfigured": false,
+    "privacyJobProcessingEnabled": false,
+    "privacyJournal": {
+      "state": "disabled",
+      "capacity": null
+    },
+    "auth": {
+      "expiredQueued": 0,
+      "emailsCleared": 0,
+      "authPurged": 0,
+      "rateBucketsPurged": 0,
+      "logoutCompleted": 0,
+      "logoutRetryScheduled": 0,
+      "logoutExpiredUnconfirmed": 0,
+      "leaseLost": 0
+    },
+    "privacy": {
+      "receiptsCleared": 0,
+      "jobsPurged": 0
+    },
+    "guardian": {
+      "expired": 0,
+      "purged": 0,
+      "retentionConfigured": false
+    },
+    "health": {
+      "authDue": 0,
+      "authRetryPending": 0,
+      "authExpiredUnconfirmed": 0,
+      "privacyPending": 0,
+      "privacyDue": 0
+    },
+    "attentionRequired": false
+  },
+  "observationWindow": {
+    "from": "2026-11-06T07:58:00Z",
+    "through": "2026-11-06T08:23:08Z",
+    "paginationComplete": true,
+    "excludedIntervals": []
+  },
+  "plan": "hobby",
+  "sourceCommit": "d0b0b12ee0cb8412f17e82c92a91013217560670",
+  "databaseMigrationCountAtInvocation": 30,
+  "evidenceSHA256": {
+    "20261106T082308Z-runtime.jsonl": "e468ceda80d2181e4093eeb6be729a5a26b711eb3473d02aa5683d7d6217f0a1",
+    "20261106T082308Z-requests.jsonl": "653e35eadfb2259e444aa550685022bece3c58e5304843492dca8c53461bedc3",
+    "cron-config.json": "6ed1f74ac39fdbbd46fc9804cee524aaccfa2695763ff622e720467a7fab280b",
+    "deployment-runtime-summary.json": "94a37455e5962c0e574774c73987b5752b5487eb0563b312cacd06dd90904dc2",
+    "observe.py": "efe7859d0032852ec3b9ad25b4af63c99288b3e0f0b33ee6c252c4859e103c58"
+  },
+  "limits": [
+    "This observes one successful authenticated scheduled housekeeping invocation, not future delivery guarantees or provider/journal activation.",
+    "Browser rendering and mixed-device journeys remain owner-deferred or outstanding.",
+    "Guardian retention configuration and provider processing remain disabled."
+  ],
+  "references": [
+    "https://vercel.com/docs/cron-jobs",
+    "https://vercel.com/docs/cron-jobs/manage-cron-jobs#cron-jobs-accuracy"
+  ]
+}

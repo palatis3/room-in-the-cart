@@ -7,8 +7,8 @@ extension HouseholdClientTests {
     private func helperBootstrap() -> Data {
         Data("{\"household\":{\"id\":\"\(household)\",\"label\":\"Home\"},\"memberId\":\"\(member)\",\"role\":\"editor\",\"shopId\":\"\(lifecycleShop)\",\"grantId\":\"\(lifecycleGrant)\",\"enrolled\":true,\"queueConsent\":false,\"capabilities\":[\"helper_view\",\"helper_propose\"]}".utf8)
     }
-    private func helperViewBytes() -> Data {
-        Data("{\"grantId\":\"\(lifecycleGrant)\",\"shopId\":\"\(lifecycleShop)\",\"revision\":2,\"asOf\":\"2026-11-03T00:00:00Z\",\"expiresAt\":\"2099-01-01T00:00:00Z\",\"mode\":\"edit\",\"canPropose\":true,\"shopLabel\":\"Tuesday pickup\",\"language\":\"en\",\"items\":[{\"label\":\"Wraps\",\"amount\":\"6\",\"unit\":null,\"action\":\"Save two for lunch.\"}]}".utf8)
+    private func helperViewBytes(revision: Int = 2) -> Data {
+        Data("{\"grantId\":\"\(lifecycleGrant)\",\"shopId\":\"\(lifecycleShop)\",\"revision\":\(revision),\"asOf\":\"2026-11-03T00:00:00Z\",\"expiresAt\":\"2099-01-01T00:00:00Z\",\"mode\":\"edit\",\"canPropose\":true,\"shopLabel\":\"Tuesday pickup\",\"language\":\"en\",\"items\":[{\"label\":\"Wraps\",\"amount\":\"6\",\"unit\":null,\"action\":\"Save two for lunch.\"}]}".utf8)
     }
     private func lifecycleBytes(_ request: URLRequest) -> Data {
         if let data = request.httpBody { return data }
@@ -91,23 +91,42 @@ extension HouseholdClientTests {
     }
     func testHelperProposalRetriesExactBytesAndStopsAfterRevocation() async throws {
         let auth = try auth(); var bodies: [Data] = []; var revoked = false
+        var revision = 2, receiptRevision: Int?
+        let proposalID = UUID().uuidString
         let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!), auth: auth, deviceVault: MemoryVault(), transport: transport())
         MockURLProtocol.handler = { request in
             if let result = self.authResponse(request) { return result }
             if request.url!.path.hasSuffix("/devices") { return (200, Data(#"{"deviceId":"device","deviceToken":"device-token"}"#.utf8)) }
             if request.url!.path.hasSuffix("/bootstrap") { return (200, self.helperBootstrap()) }
             if revoked { return (404, Data()) }
-            if request.url!.path.hasSuffix("/current") { return (200, self.helperViewBytes()) }
-            bodies.append(self.lifecycleBytes(request)); throw URLError(.networkConnectionLost)
+            if request.url!.path.hasSuffix("/current") { return (200, self.helperViewBytes(revision: revision)) }
+            bodies.append(self.lifecycleBytes(request))
+            if let receiptRevision {
+                return (200, try JSONSerialization.data(withJSONObject: ["grantId": self.lifecycleGrant, "proposalId": proposalID,
+                    "baseRevision": receiptRevision, "status": "pending"]))
+            }
+            throw URLError(.networkConnectionLost)
         }
         _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456")
         _ = try await service.enroll(householdID: household, grantID: lifecycleGrant)
         let intent = try await service.prepareHelperProposal(grantID: lifecycleGrant, baseRevision: 2, correction: "Keep three wraps for lunch.")
         for _ in 0..<2 { do { _ = try await service.executeHelperProposal(intent); XCTFail("Expected lost response") } catch { XCTAssertEqual(error as? ClientError, .transport) } }
         XCTAssertEqual(bodies, [intent.bytes, intent.bytes])
+        revision = 3
+        let current = try await service.currentHelperView(grantID: lifecycleGrant)
+        XCTAssertEqual(current.revision, 3)
+        let restored = try JSONDecoder().decode(HelperProposalIntent.self, from: encoded(intent))
+        XCTAssertEqual(restored.reviewedRevision, 2)
+        receiptRevision = 3
+        do { _ = try await service.executeHelperProposal(restored); XCTFail("Acknowledged a different instruction revision") }
+        catch { XCTAssertEqual(error as? ClientError, .invalidResponse) }
+        receiptRevision = 2
+        let receipt = try await service.executeHelperProposal(restored)
+        XCTAssertEqual(receipt.baseRevision, 2)
+        XCTAssertEqual(bodies, Array(repeating: intent.bytes, count: 4))
         revoked = true
         do { _ = try await service.executeHelperProposal(intent); XCTFail("Revoked suggestion replay") } catch {}
-        XCTAssertEqual(bodies.count, 2)
+        XCTAssertEqual(bodies.count, 4)
     }
     func testNullableWireFieldsAreExplicitAndHelperProjectionHasNoPrivateKeys() throws {
         let projection = try HelperProjection(shopLabel: "Pickup", language: "es", items: [.init(label: "Tortillas", amount: nil, unit: nil, action: "Guardar dos.")])

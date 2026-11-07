@@ -1,0 +1,142 @@
+{
+  "sha256": "e37fcdd84953e5cd2b622d7a158b6f810ba8916c9813241051f4e54d39515fad",
+  "bytes": 80971,
+  "completeRecords": 120,
+  "incompleteTrailingBytes": 0,
+  "samplesStarted": 60,
+  "samplesCompleted": 60,
+  "firstSampleHeaderUTC": "2026-11-05T20:00:28.950+00:00",
+  "lastSampleHeaderUTC": "2026-11-05T20:29:59.495+00:00",
+  "probeStatusCounts": {
+    "processes": {
+      "ok": 49,
+      "timeout": 11
+    },
+    "virtual_memory": {
+      "ok": 49,
+      "timeout": 11
+    },
+    "swap": {
+      "ok": 49,
+      "timeout": 11
+    },
+    "physical_memory": {
+      "ok": 49,
+      "timeout": 11
+    }
+  },
+  "maximumCollectionSeconds": 75.614,
+  "maximumProbeSeconds": {
+    "processes": 9.318,
+    "virtual_memory": 30.849,
+    "swap": 19.425,
+    "physical_memory": 11.572
+  },
+  "maximumObservedCategoryValues": {
+    "build_service": {
+      "count": 6,
+      "rss_kib": 168176,
+      "cpu_percent": 172.5
+    },
+    "compiler": {
+      "count": 15,
+      "rss_kib": 864708,
+      "cpu_percent": 193.6
+    },
+    "extractor": {
+      "count": 6,
+      "rss_kib": 2307408,
+      "cpu_percent": 285.0
+    }
+  },
+  "firstAndLastHostMetrics": {
+    "virtual_memory": [
+      {
+        "sampleIndex": 0,
+        "headerUTC": "2026-11-05T20:00:28.951+00:00",
+        "metrics": {
+          "page_size_bytes": 16384,
+          "pages_free": 4707,
+          "pages_active": 162085,
+          "pages_inactive": 139287,
+          "pages_speculative": 22451,
+          "pages_wired": 104020,
+          "pages_purgeable": 214,
+          "pages_stored_in_compressor": 80792,
+          "pages_compressor": 25149,
+          "decompressions": 27620,
+          "compressions": 115107,
+          "pageins": 367162,
+          "pageouts": 909,
+          "swapins": 0,
+          "swapouts": 0
+        }
+      },
+      {
+        "sampleIndex": 59,
+        "headerUTC": "2026-11-05T20:29:59.497+00:00",
+        "metrics": {
+          "page_size_bytes": 16384,
+          "pages_free": 29934,
+          "pages_active": 138526,
+          "pages_inactive": 118609,
+          "pages_speculative": 19523,
+          "pages_wired": 109723,
+          "pages_purgeable": 695,
+          "pages_stored_in_compressor": 159003,
+          "pages_compressor": 41091,
+          "decompressions": 6510007,
+          "compressions": 7824031,
+          "pageins": 1430677,
+          "pageouts": 12415,
+          "swapins": 307382,
+          "swapouts": 386505
+        }
+      }
+    ],
+    "swap": [
+      {
+        "sampleIndex": 0,
+        "headerUTC": "2026-11-05T20:00:28.951+00:00",
+        "metrics": {
+          "total_bytes": 0,
+          "used_bytes": 0,
+          "free_bytes": 0
+        }
+      },
+      {
+        "sampleIndex": 59,
+        "headerUTC": "2026-11-05T20:29:59.497+00:00",
+        "metrics": {
+          "total_bytes": 2147483648,
+          "used_bytes": 396162498,
+          "free_bytes": 1751321149
+        }
+      }
+    ],
+    "physical_memory": [
+      {
+        "sampleIndex": 0,
+        "headerUTC": "2026-11-05T20:00:28.951+00:00",
+        "metrics": {
+          "physical_memory_bytes": 7516192768
+        }
+      },
+      {
+        "sampleIndex": 59,
+        "headerUTC": "2026-11-05T20:29:59.497+00:00",
+        "metrics": {
+          "physical_memory_bytes": 7516192768
+        }
+      }
+    ]
+  },
+  "limits": [
+    "Perturbed observation from a traced sampler, not a controlled uninstrumented build.",
+    "Process coverage is partial even for status ok; reparented work may be absent.",
+    "RSS sums may double-count shared memory and CPU is a recent point average.",
+    "Host counters and swap allocation do not establish cause or process attribution.",
+    "Completed-record header time precedes probes; collection duration describes observer time.",
+    "Thirty-second sampling can miss bursts; missing or late probes are not zero utilization."
+  ]
+}

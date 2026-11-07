@@ -1,0 +1,23 @@
+{
+  "candidate": "23a73a890afbaa23d3c58ae6b0cf63a8b2e2fb71",
+  "run": 42021958365,
+  "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42021958365",
+  "hostedConclusion": "failure",
+  "failedStage": "Verify source and hosted environment; create a fresh simulator",
+  "observedToolchain": "Xcode 16.4 / 16F6",
+  "requiredToolchain": "Xcode 26.3 / 17C529",
+  "appBuilt": false,
+  "testExecuted": false,
+  "simulatorCreated": false,
+  "artifact": {
+    "id": 13412745694,
+    "sha256": "9c39c6f7ddbe07b884449252758afebd0472c670a823a5192b93ca4386e50abd",
+    "githubDigestVerified": true,
+    "members": [
+      "toolchain.txt"
+    ]
+  },
+  "cause": "The workflow omitted DEVELOPER_DIR and selected the hosted image default. Environment verification correctly stopped before build or simulator creation.",
+  "localCorrection": "Set DEVELOPER_DIR to /Applications/Xcode_26.3.app/Contents/Developer, matching the required native workflows. actionlint passes. Not yet hosted.",
+  "scope": "Optional standalone diagnostic only. No evidence about the original sharing-switch behavior. Original failure remains failed; active required candidate runs are not cancelled."
+}

@@ -1,0 +1,41 @@
+{
+  "repository": "palatis3/room-in-the-cart",
+  "branch": "main",
+  "verifiedAt": "2026-11-06T20:20:59.791752+00:00",
+  "before": "unprotected; no rulesets",
+  "requestSHA256": "7dbd589cb139a8c9c2ef60ac5138c73872bc023bce89948826a3b9d133855013",
+  "readbackMatchesIntendedPolicy": true,
+  "schemaCorrection": "Use checks-only after live API422 rejected checks+contexts; same four app-bound checks.",
+  "checks": [
+    {
+      "context": "CI gate",
+      "app_id": 15368
+    },
+    {
+      "context": "CodeQL (javascript-typescript)",
+      "app_id": 15368
+    },
+    {
+      "context": "CodeQL (actions)",
+      "app_id": 15368
+    },
+    {
+      "context": "Dependency review",
+      "app_id": 15368
+    }
+  ],
+  "upToDateBranchRequired": true,
+  "adminsEnforced": true,
+  "pullRequestRequired": true,
+  "requiredHumanApprovals": 0,
+  "conversationResolutionRequired": true,
+  "forcePushesAllowed": false,
+  "deletionAllowed": false,
+  "branchLocked": false,
+  "mainRefUnchanged": "1a2530a7ad006b5939f87a08a1964b5fc863383e",
+  "pr1HeadUnchanged": "804030e68473d022e72b464940061c01c611a0bd",
+  "pr1StillDraft": true,
+  "mergeOrPushPerformed": false,
+  "scope": "Baseline core/security PR protection only. Full pre-release workflow, signing, provider and human/device gates remain separate and incomplete.",
+  "enforcementProof": "API configuration and independent GET readback; no forbidden push/merge attempt used as a test."
+}

@@ -1,0 +1,27 @@
+{
+  "command": [
+    "xcrun",
+    "swiftc",
+    "-I",
+    "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib",
+    "-typecheck",
+    "-swift-version",
+    "5",
+    "-sdk",
+    "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.1.sdk",
+    "-target",
+    "arm64-apple-ios17.0-simulator",
+    "-F",
+    "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks",
+    "-D",
+    "DEBUG",
+    "ios/UITests/FreeJourneyUITests.swift"
+  ],
+  "exitCode": 0,
+  "sourceSHA256": "44b99fdf50ef9d62a962f52d1e48cea3c32c836719de668976fb9b9cc3236256",
+  "nativeExecution": false,
+  "scope": "Standalone full FreeJourneyUITests file typecheck with actual XCTest Swift overlay; not target build or test execution",
+  "initialFailure": "First command omitted developer usr/lib import path and could not resolve XCTest Swift APIs; original log retained.",
+  "diagnosticLines": [],
+  "captureCorrection": "Bind weak self to an immutable strong local before entering the actor-isolated closure."
+}

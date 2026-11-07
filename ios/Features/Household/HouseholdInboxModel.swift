@@ -20,6 +20,9 @@ enum ShopperDelivery: Equatable {
     @Published private(set) var busy = false
     @Published private(set) var shop: ShopperShop?
     @Published private(set) var requests: [OwnRequest] = []
+    @Published private(set) var deferredRequests: [DeferredRequest] = []
+    @Published private(set) var deferredPage: DeferredRequestsPage?
+    private var deferredLoad = UUID()
     @Published private(set) var nextCursor: String?
     @Published private(set) var selected: OwnRequest?
     @Published private(set) var preview: ShopperPreview?
@@ -50,7 +53,7 @@ enum ShopperDelivery: Equatable {
     private var generation = UUID()
     private var draftGeneration = UUID()
     private var attempts = 0
-    private var retryAfter = Date.distantPast
+    @Published private(set) var retryAfter = Date.distantPast
 
     init(bootstrap: HouseholdBootstrap, service: HouseholdService, outbox: OperationOutbox,
          onAccessEnded: @escaping @MainActor () async -> Void) {
@@ -58,8 +61,69 @@ enum ShopperDelivery: Equatable {
         shopID = bootstrap.shopId ?? ""; self.service = service; self.outbox = outbox; self.onAccessEnded = onAccessEnded
         authorized = bootstrap.role == "shopper" && bootstrap.shopId != nil
     }
+    var supportsPurchaseConfirmation: Bool {
+        authorized && bootstrap.grantId == nil && bootstrap.capabilities.contains("request_purchase_confirmation")
+    }
+    func purchaseMatches(placed: SharedDeliveryPage) -> [RequestPurchaseMatch] {
+        guard supportsPurchaseConfirmation, let shop, shop.shopId == shopID else { return [] }
+        return requests.compactMap { RequestPurchaseMatch(request: $0, shop: shop, placed: placed) }
+    }
+    func purchaseMatch(_ requestID: String, placed: SharedDeliveryPage) -> RequestPurchaseMatch? {
+        guard supportsPurchaseConfirmation, let shop, shop.shopId == shopID,
+              let request = requests.first(where: { $0.id == requestID }) else { return nil }
+        return RequestPurchaseMatch(request: request, shop: shop, placed: placed)
+    }
+    func confirmPurchase(_ match: RequestPurchaseMatch, outcome: ConfirmedRequestPurchase?, placed: SharedDeliveryPage) async {
+        guard purchaseMatch(match.request.id, placed: placed) == match, match.request.purchaseOutcome != outcome else { return }
+        await enqueue(kind: "request.confirmPurchase", base: match.base, body: match.body(outcome: outcome))
+    }
+    var supportsDeferredRequests: Bool {
+        authorized && bootstrap.grantId == nil && bootstrap.capabilities.contains("deferred_requests")
+    }
+    var canReviewDeferred: Bool { supportsDeferredRequests && shop?.phase == "draft" }
+    func forgetDeferred() {
+        deferredLoad = UUID()
+        deferredPage = nil
+        deferredRequests = []
+    }
+    func loadDeferred(more: Bool = false) async {
+        guard canReviewDeferred, !busy, pending == nil else { return }
+        let cursor = more ? deferredPage?.nextCursor : nil
+        if more && cursor == nil { return }
+        if !more { forgetDeferred() }
+        busy = true
+        defer { busy = false }
+        let scope = generation, load = deferredLoad
+        do {
+            let page = try await service.deferredRequests(shopID: shopID, after: cursor)
+            guard generation == scope, deferredLoad == load, canReviewDeferred else { return }
+            guard page.shopRevision == shop?.shopRevision, page.authorityEpoch == shop?.authorityEpoch else {
+                throw ClientError.service(status: 409, code: "stale_base", correlationID: nil, retryAfter: nil)
+            }
+            guard Set(deferredRequests.map(\.id)).isDisjoint(with: page.requests.map(\.id)) else {
+                throw ClientError.invalidResponse
+            }
+            deferredRequests += page.requests
+            deferredPage = page
+        } catch {
+            guard generation == scope, deferredLoad == load else { return }
+            forgetDeferred()
+            await handle(error, start: scope)
+        }
+    }
+    func carryForReview(_ request: DeferredRequest) async {
+        guard canReviewDeferred, !busy, pending == nil, deferredRequests.contains(request), let page = deferredPage,
+              shop?.shopRevision == page.shopRevision, shop?.authorityEpoch == page.authorityEpoch else { return }
+        forgetDeferred()
+        await enqueue(kind: "request.carry", base: .init(shopRevision: page.shopRevision,
+            authorityEpoch: page.authorityEpoch, requestRevision: request.requestRevision),
+            body: ["requestId": .string(request.id.uuidString.lowercased()),
+                   "sourceShopId": .string(request.sourceShopId.uuidString.lowercased()),
+                   "sourceAuthorityEpoch": .integer(request.sourceAuthorityEpoch)])
+    }
     var availableChoices: [ShopperChoice] {
         guard let selected, let shop else { return [] }
+        if selected.carriedForward == true { return [] }
         if selected.status == "deferred" { return shop.phase == "draft" ? [.add, .link] : [] }
         guard selected.ownActionAllowed else { return [] }
         return shop.phase == "draft" ? ShopperChoice.allCases : [.deferRequest, .dismiss, .handled]
@@ -79,6 +143,7 @@ enum ShopperDelivery: Equatable {
                 guard let cursor = nextCursor else { return }
                 let page = try await service.shopperInbox(shopID: shopID, cursor: cursor)
                 guard start == generation else { return }
+                guard page.requests.allSatisfy({ $0.shopId == shopID }) else { throw ClientError.invalidResponse }
                 for request in page.requests { requests.removeAll { $0.id == request.id }; requests.append(request) }
                 nextCursor = page.nextCursor
             } else {
@@ -92,7 +157,9 @@ enum ShopperDelivery: Equatable {
                         pending = operation
                         let matches = await service.matches(operation, memberID: memberID)
                         guard start == generation else { return }
-                        delivery = matches && envelope.shopId == shopID ? .waiting : .needsReview
+                        let permitted = (envelope.kind != "request.confirmPurchase" || supportsPurchaseConfirmation) &&
+                            (envelope.kind != "request.carry" || supportsDeferredRequests)
+                        delivery = matches && permitted && envelope.shopId == shopID ? .waiting : .needsReview
                         notice = ht("An earlier decision is waiting for confirmation. Review the current requests before retrying or clearing it.")
                     }
                 }
@@ -105,6 +172,7 @@ enum ShopperDelivery: Equatable {
         let page = try await service.shopperInbox(shopID: shopID)
         guard start == generation else { throw ClientError.cancelled }
         guard value.shopId == shopID, page.requests.allSatisfy({ $0.shopId == shopID }) else { throw ClientError.invalidResponse }
+        forgetDeferred()
         shop = value; requests = page.requests; nextCursor = page.nextCursor; invalidatePreview()
         if let selected { self.selected = requests.first { $0.id == selected.id } }
     }
@@ -256,6 +324,7 @@ enum ShopperDelivery: Equatable {
         } catch { await handle(error, start: start) }
     }
     func clear() {
+        forgetDeferred()
         generation = UUID(); authorized = false; shop = nil; requests = []; selected = nil; nextCursor = nil
         pending = nil; delivery = .none; notice = nil; clarification = ""; lineItem = ""; price = ""; linkedLineID = ""; invalidatePreview()
     }

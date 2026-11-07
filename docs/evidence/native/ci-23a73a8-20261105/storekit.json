@@ -1,0 +1,38 @@
+{
+  "candidate": "23a73a890afbaa23d3c58ae6b0cf63a8b2e2fb71",
+  "observedAt": "2026-11-05T12:08:38.989057+00:00",
+  "run": 42021894579,
+  "hostedConclusion": "failure",
+  "locales": {
+    "en": {
+      "artifactID": 13412951795,
+      "sha256": "4973e5d9a422ede3122097ce98aecafbd64dfe3c878ae4f5256342d837a6b28b",
+      "githubDigestVerified": true,
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0,
+      "strictReplayExit": 0,
+      "runtimeWarnings": 0
+    },
+    "es": {
+      "artifactID": 13413165683,
+      "sha256": "077190f715e9c5192bf69e9982afdd051e43d8964b18e80b67dcc023723d7cd8",
+      "githubDigestVerified": true,
+      "passed": 14,
+      "failed": 1,
+      "skipped": 0,
+      "strictReplayExit": 1,
+      "runtimeWarnings": 0
+    }
+  },
+  "limits": "Real local StoreKit configurations on hosted Xcode26.3; not live Apple billing. The Spanish failure remains unresolved and is not relabeled. Native reproduction and callback-order review are pending.",
+  "failure": {
+    "selector": "RoomInTheCartTests/StoreKitScenarioTests/testAskToBuyApprovalRemainsUndelivered",
+    "seconds": 13.351,
+    "condition": "purchase.finished && model.notice == .failed(.notConfigured)",
+    "eventualWaitSeconds": 10,
+    "nativeCaseLimitSeconds": 120,
+    "reportedMessage": "Approval completes the purchase flow and attempts durable delivery",
+    "originalStateTrace": "Not recorded; cannot distinguish a late purchase result from a missed observer update from this assertion alone."
+  }
+}

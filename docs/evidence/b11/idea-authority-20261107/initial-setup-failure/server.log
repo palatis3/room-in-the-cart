@@ -1,0 +1,6 @@
+2026-11-07 00:21:20.079 EST [5194] LOG:  starting PostgreSQL 17.11 on aarch64-apple-darwin27.2.0, compiled by Apple clang version 21.0.0 (clang-2100.3.34.2), 64-bit
+2026-11-07 00:21:20.080 EST [5194] LOG:  listening on IPv4 address "127.0.0.1", port 61819
+2026-11-07 00:21:20.080 EST [5194] LOG:  Unix-domain socket path "/Users/palatis/Room in the Cart/.build/S26AcceptanceInvestigation20261107/postgres-run/socket/.s.PGSQL.61819" is too long (maximum 103 bytes)
+2026-11-07 00:21:20.080 EST [5194] WARNING:  could not create Unix-domain socket in directory "/Users/palatis/Room in the Cart/.build/S26AcceptanceInvestigation20261107/postgres-run/socket"
+2026-11-07 00:21:20.081 EST [5194] FATAL:  could not create any Unix-domain sockets
+2026-11-07 00:21:20.082 EST [5194] LOG:  database system is shut down

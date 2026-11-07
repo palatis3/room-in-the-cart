@@ -1,0 +1,47 @@
+{
+  "failedCandidate": "b95a179",
+  "failedJob": 127552845703,
+  "originalFailure": "Exceeded 720s; first long idle wait after Done between Branch and Pickup slot.",
+  "change": "Use the four real checkout fields in succession. Check keyboard presence, each final value, then dismiss and verify disappearance once.",
+  "nativeSummary": {
+    "devicesAndConfigurations": [
+      {
+        "device": {
+          "architecture": "arm64",
+          "deviceId": "107DAC87-3ED1-44CC-87FF-6B9E1EC7F624",
+          "deviceName": "RITC Free Journey Checkout Direct Entry",
+          "modelName": "iPhone 17",
+          "osBuildNumber": "23C54",
+          "osVersion": "26.2",
+          "platform": "iOS Simulator"
+        },
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "passedTests": 1,
+        "skippedTests": 0,
+        "testPlanConfiguration": {
+          "configurationId": "1",
+          "configurationName": "Test Scheme Action"
+        }
+      }
+    ],
+    "environmentDescription": "RoomInTheCart \u00b7 Built with macOS 27.2",
+    "expectedFailures": 0,
+    "failedTests": 0,
+    "finishTime": 1793917763.612,
+    "passedTests": 1,
+    "result": "Passed",
+    "runtimeWarnings": [],
+    "skippedTests": 0,
+    "startTime": 1793917285.644,
+    "statistics": [],
+    "testFailures": [],
+    "title": "Test - RoomInTheCart",
+    "topInsights": [],
+    "totalTestCount": 1
+  },
+  "strictReplay": "Executed 1 of 1 selected tests.\n\n| Test | Result | Seconds |\n|---|---|---|\n| RoomInTheCartUITests/FreeJourneyUITests/testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop | Passed | 448.31 |\nThe XCTest log confirms one start and one passing completion per selected test.\n\nThe XCTest test export recorded 0 runtime warning occurrences across 1 examined tests.",
+  "testSourceSHA256": "bba969ddbac5a97d956db7412556ac9cf74f2b29208b74689a226b8130ddf910",
+  "rawLogSHA256": "6c7e286cf43553300dd9549c4edf2f7b596989ec388ec9f69b3e932e7e3139df",
+  "limits": "Local Xcode 27.1; hosted Xcode 26.3. Fresh hosted validation required."
+}

@@ -1,0 +1,190 @@
+{
+  "candidate": "804030e68473d022e72b464940061c01c611a0bd",
+  "runID": 42272379454,
+  "jobID": 128116417997,
+  "attempt": 1,
+  "artifact": {
+    "artifactID": 13542915084,
+    "sha256": "835f6b3e3f1067f7c4363d28023dac23d8396998cf5e95a39b41037bb5d2d5b1",
+    "digestVerified": true,
+    "selectors": [
+      "RoomInTheCartUITests/ContextualNavigationUITests/testMissingStorePricesAndAvailabilityRemainConditionalAfterSaving",
+      "RoomInTheCartUITests/FreeJourneyUITests/testFreeCookCorrectionAndExplicitRecipientAcknowledgment",
+      "RoomInTheCartUITests/FreeJourneyUITests/testNextShopCanCancelThenOpenOneFreshShoppingList",
+      "RoomInTheCartUITests/FreeJourneyUITests/testSpanishMealWeekListAndGridShowDatedProtectedLunch",
+      "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testTwelveNeededEightConfirmedEightPerPackReviewsOneWholePack",
+      "RoomInTheCartUITests/NavigationRestorationUITests/testKillRelaunchRestoresSelectedDinnersTabWithoutRestoringUnsavedComparison"
+    ],
+    "selected": 6,
+    "passed": 5,
+    "failed": 1,
+    "skipped": 0,
+    "strictReplayExit": 1,
+    "runtimeWarnings": 0,
+    "rawLogSHA256": "72caaf24bb9637870ca7ca8599ff071eb3324e7f4f0d50c3dbc32854e1484a9f"
+  },
+  "failures": [
+    {
+      "failureText": "Test exceeded execution time allowance of 12 minutes",
+      "targetName": "RoomInTheCartUITests",
+      "testIdentifier": 3,
+      "testIdentifierString": "FreeJourneyUITests/testNextShopCanCancelThenOpenOneFreshShoppingList()",
+      "testIdentifierURL": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/FreeJourneyUITests/testNextShopCanCancelThenOpenOneFreshShoppingList",
+      "testName": "testNextShopCanCancelThenOpenOneFreshShoppingList()"
+    }
+  ],
+  "nativeExecution": {
+    "artifact": "iphone-results-ui-07-1",
+    "summarySHA256": "d60e4a2f62b74e7f816415c4255f8fbe13097dbab0ee268d18dfe85b0300c1f5",
+    "rawLogSHA256": "72caaf24bb9637870ca7ca8599ff071eb3324e7f4f0d50c3dbc32854e1484a9f",
+    "devicesAndConfigurations": [
+      {
+        "device": {
+          "architecture": "arm64",
+          "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+          "deviceName": "iPhone 17",
+          "modelName": "iPhone 17",
+          "osBuildNumber": "23C54",
+          "osVersion": "26.2",
+          "platform": "iOS Simulator"
+        },
+        "expectedFailures": 0,
+        "failedTests": 1,
+        "passedTests": 5,
+        "skippedTests": 0,
+        "testPlanConfiguration": {
+          "configurationId": "1",
+          "configurationName": "Test Scheme Action"
+        }
+      }
+    ],
+    "runtimeExpected": true,
+    "selectedCount": 6,
+    "startCount": 6,
+    "exactStartOrder": [
+      "RoomInTheCartUITests/ContextualNavigationUITests/testMissingStorePricesAndAvailabilityRemainConditionalAfterSaving",
+      "RoomInTheCartUITests/FreeJourneyUITests/testFreeCookCorrectionAndExplicitRecipientAcknowledgment",
+      "RoomInTheCartUITests/FreeJourneyUITests/testNextShopCanCancelThenOpenOneFreshShoppingList",
+      "RoomInTheCartUITests/FreeJourneyUITests/testSpanishMealWeekListAndGridShowDatedProtectedLunch",
+      "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testTwelveNeededEightConfirmedEightPerPackReviewsOneWholePack",
+      "RoomInTheCartUITests/NavigationRestorationUITests/testKillRelaunchRestoresSelectedDinnersTabWithoutRestoringUnsavedComparison"
+    ],
+    "selectorFileOrderMatched": true,
+    "selectorOrderRequiredByAudit": true,
+    "serialOverlaps": [
+      {
+        "line": 1586,
+        "previousCaseStillActive": "RoomInTheCartUITests/FreeJourneyUITests/testNextShopCanCancelThenOpenOneFreshShoppingList",
+        "nextCase": "RoomInTheCartUITests/FreeJourneyUITests/testSpanishMealWeekListAndGridShowDatedProtectedLunch"
+      }
+    ],
+    "rawLifecycleFailures": [
+      "XCTest restarted its runner at log line 1581.",
+      "XCTest log requires one start then one pass for RoomInTheCartUITests/FreeJourneyUITests/testNextShopCanCancelThenOpenOneFreshShoppingList; found ['start', 'timeout'].",
+      "XCTest log requires one successful result banner; found ['FAILED']."
+    ],
+    "implicitRunnerRestartLines": [
+      1581
+    ],
+    "cases": [
+      {
+        "selector": "RoomInTheCartUITests/ContextualNavigationUITests/testMissingStorePricesAndAvailabilityRemainConditionalAfterSaving",
+        "startLine": 20,
+        "synchronizationDiagnostics": [],
+        "completion": "passed (200.582 seconds).",
+        "endLine": 631,
+        "durationSeconds": 200.582
+      },
+      {
+        "selector": "RoomInTheCartUITests/FreeJourneyUITests/testFreeCookCorrectionAndExplicitRecipientAcknowledgment",
+        "startLine": 635,
+        "synchronizationDiagnostics": [],
+        "completion": "passed (230.719 seconds).",
+        "endLine": 1454,
+        "durationSeconds": 230.719
+      },
+      {
+        "selector": "RoomInTheCartUITests/FreeJourneyUITests/testNextShopCanCancelThenOpenOneFreshShoppingList",
+        "startLine": 1455,
+        "synchronizationDiagnostics": [
+          {
+            "line": 1517,
+            "text": "    t =   102.42s App animations complete notification not received, will attempt to continue."
+          },
+          {
+            "line": 1522,
+            "text": "    t =   165.56s App animations complete notification not received, will attempt to continue."
+          },
+          {
+            "line": 1527,
+            "text": "    t =   227.11s App animations complete notification not received, will attempt to continue."
+          },
+          {
+            "line": 1530,
+            "text": "    t =   287.18s App animations complete notification not received, will attempt to continue."
+          },
+          {
+            "line": 1535,
+            "text": "    t =   351.97s App animations complete notification not received, will attempt to continue."
+          },
+          {
+            "line": 1540,
+            "text": "    t =   412.92s App animations complete notification not received, will attempt to continue."
+          },
+          {
+            "line": 1545,
+            "text": "    t =   474.04s App animations complete notification not received, will attempt to continue."
+          },
+          {
+            "line": 1550,
+            "text": "    t =   535.45s App animations complete notification not received, will attempt to continue."
+          },
+          {
+            "line": 1555,
+            "text": "    t =   596.98s App animations complete notification not received, will attempt to continue."
+          },
+          {
+            "line": 1558,
+            "text": "    t =   657.04s App animations complete notification not received, will attempt to continue."
+          },
+          {
+            "line": 1563,
+            "text": "    t =   718.78s App animations complete notification not received, will attempt to continue."
+          },
+          {
+            "line": 1569,
+            "text": "    t =   780.08s App animations complete notification not received, will attempt to continue."
+          }
+        ]
+      },
+      {
+        "selector": "RoomInTheCartUITests/FreeJourneyUITests/testSpanishMealWeekListAndGridShowDatedProtectedLunch",
+        "startLine": 1586,
+        "synchronizationDiagnostics": [],
+        "completion": "passed (276.269 seconds).",
+        "endLine": 2349,
+        "durationSeconds": 276.269
+      },
+      {
+        "selector": "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testTwelveNeededEightConfirmedEightPerPackReviewsOneWholePack",
+        "startLine": 2353,
+        "synchronizationDiagnostics": [],
+        "completion": "passed (261.754 seconds).",
+        "endLine": 3038,
+        "durationSeconds": 261.754
+      },
+      {
+        "selector": "RoomInTheCartUITests/NavigationRestorationUITests/testKillRelaunchRestoresSelectedDinnersTabWithoutRestoringUnsavedComparison",
+        "startLine": 3042,
+        "synchronizationDiagnostics": [],
+        "completion": "passed (37.458 seconds).",
+        "endLine": 3120,
+        "durationSeconds": 37.458
+      }
+    ],
+    "outsideCaseSynchronizationDiagnostics": [],
+    "completeExpectedLifecycle": false,
+    "synchronizationDiagnosticCount": 12
+  },
+  "interpretation": "The next-shop cancel/open-fresh-list case exceeded the original 720-second allowance. All twelve animation-completion synchronization diagnostics belong to this case. XCTest implicitly restarted; remaining cases passed, but strict execution/lifecycle gate remains failed. No manual retry occurred."
+}

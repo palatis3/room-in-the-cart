@@ -1,0 +1,48 @@
+{
+  "scope": "The one-line localized accessibility-label fix passes the new post-typing name/value assertion; the full journey remains failed at a later newly batched field.",
+  "passedTests": 0,
+  "failedTests": 1,
+  "strictExit": 1,
+  "durationSeconds": 59.163,
+  "runtimeWarnings": 0,
+  "labelAssertionPassed": true,
+  "laterFailure": "Group servings tap did not focus that field. Group name retained focus, so the field-specific type action correctly failed instead of typing into the wrong field.",
+  "targetFrame": [
+    32.0,
+    503.0,
+    338.0,
+    22.0
+  ],
+  "visibleEvidence": "Retained teardown screenshot shows Lunch focused and the Done strip covering the following Group servings row.",
+  "screenshot": "flow-image/E8C2F8E9-68AF-4A6C-A78C-CE1E5747E631.png",
+  "nextCorrection": "Only the adjacent-field helper now excludes the observed Done strip from its content area and requires the actual centered tap point inside that area before a single tap. Original field values, final keyboard-dismissal and all journey assertions remain.",
+  "ownedSimulatorDeleted": true,
+  "frozenInputsUnchanged": {
+    "source": true,
+    "products": true
+  },
+  "device": {
+    "architecture": "arm64",
+    "deviceId": "884605B9-CA91-40D2-8291-550F5899C111",
+    "deviceName": "RITC Free journey navigation 20261106",
+    "modelName": "iPhone 17",
+    "osBuildNumber": "23C54",
+    "osVersion": "26.2",
+    "platform": "iOS Simulator"
+  },
+  "scratchDirectory": ".build/FreeJourneyNavigation20261106/validation-label-fix",
+  "sha256": {
+    "Tests.log": "4f337ec65ad9e81974263f63f3ccaef432f512387cf44adf89589e30a17b3410",
+    "test-summary.json": "af201c9986a9a32e64af173d8c681146e63d71799ed4cbb4a3f25eb7e1310007",
+    "test-details.json": "62c92ad853b7c5bc6c58ff9318a7b2c47999bbd16ea32c1deaefa5c74fb5c2cc",
+    "source-sha256.json": "c504ee41c9b5a92c4c8db05588b9eccd4099a95341620008b22b1e2dc8e79b99",
+    "product-sha256.json": "460f2ede4efa10f905f24dd524f8f4136dbd6db1268a71a2c6be4b27a169b928",
+    "strict.log": "3755e36688ceaa9e6bc11d61e2656f6297034762e7a52d4b5d330e4b87ad9aa1",
+    "flow-image/E8C2F8E9-68AF-4A6C-A78C-CE1E5747E631.png": "73cd1091ce917262ceacea929b5a5e900142469d29c0decba67ff84e61800d49"
+  },
+  "limits": [
+    "This is still a failed complete journey, not green acceptance.",
+    "The screenshot is from teardown, after the failed typing attempt; it is not an exact touch-instant frame.",
+    "No inference that this local clipped-field failure caused the independent hosted Spanish animation waits."
+  ]
+}

@@ -1,0 +1,179 @@
+{
+  "observedUTC": "2026-11-06T02:02:37.986829+00:00",
+  "baseCommit": "3c502bba7b00e23b31d8b181e2fc8b9b6c69ba4a",
+  "failedHostedCandidate": "3d26f1f",
+  "buildExit": 0,
+  "runnerExit": 0,
+  "frozenSourceFiles": 457,
+  "iosSourceManifestSHA256": "af17b57c42c21e53cf2492414a39bc75de6c217fc430712b95f9958f56835e38",
+  "testSourceSHA256": {
+    "ios/UITests/SharedStoreQuoteUITests.swift": "ad1872af521245c4fac3a98931013055325f93551fec0fb67e257b7f343c00ad",
+    "ios/UITests/ContributorRequestUITests.swift": "f70f064360948a8195e94511b021208fadb2f177c358b20843e590181a179ce3"
+  },
+  "productsManifestSHA256": "85c7febe9304af6f31cbe484de1fc5222783fb574cb6b0b1e4d9a893f6aa6bf8",
+  "productFilesVerified": 179,
+  "toolchain": "Xcode 27.1\nBuild version 27A9275",
+  "hostedToolchain": "Xcode 26.3",
+  "limits": {
+    "defaultSeconds": 720,
+    "maximumSeconds": 900,
+    "softwareKeyboardWaitSeconds": 5,
+    "parallelTesting": false,
+    "retries": 0,
+    "runtimeBuild": "23C54"
+  },
+  "phases": {
+    "quote-known": {
+      "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "seconds": 362.57,
+      "xcodeExit": 0,
+      "strictExit": 0,
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "F63DE5D0-939F-4DF9-ABEA-1DB5C7290BF9",
+        "deviceName": "RITC Quote Public Keyboard 3d26f1f",
+        "modelName": "iPhone 17",
+        "osBuildNumber": "23C54",
+        "osVersion": "26.2",
+        "platform": "iOS Simulator"
+      },
+      "ownedSimulatorState": "Shutdown",
+      "warnings": {
+        "status": "passed",
+        "summaryWarningCount": 1,
+        "runtimeWarningCount": 1,
+        "examinedTestCount": 1,
+        "detailExportCount": 1,
+        "activityExportCount": 1,
+        "warnings": [
+          {
+            "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption",
+            "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+            "count": 1,
+            "maximum": 2,
+            "menuActivity": {
+              "tap": "Tap \"fixture.s27.controls\" Button",
+              "phase": "Synthesize event"
+            }
+          }
+        ]
+      },
+      "logSHA256": "b6415f9001ab7d2b744ddfbb27420b4eb62cf04bbdf1bb090aad6922f7d8c2ae",
+      "summarySHA256": "464e5dbe9351a7949b1758299765f9bf3d7e00e74f2ad06f0dcbfe4fb5d98f8b",
+      "strictReportSHA256": "769da3f6db9c86acaa1aba60c59db6f34b61ef8d85df4833744ebda2c0bc0d93",
+      "evidenceDirectory": ".build/CIResearch20261105/quotes-3d26f1f/quote-known"
+    },
+    "quote-financial": {
+      "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "seconds": 89.58,
+      "xcodeExit": 0,
+      "strictExit": 0,
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "2943DE4E-67B5-430A-9613-3DABA510E86F",
+        "deviceName": "RITC quote-financial public keyboard",
+        "modelName": "iPhone 17",
+        "osBuildNumber": "23C54",
+        "osVersion": "26.2",
+        "platform": "iOS Simulator"
+      },
+      "ownedSimulatorState": "Shutdown",
+      "warnings": {
+        "status": "passed",
+        "summaryWarningCount": 0,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 1,
+        "detailExportCount": 1,
+        "activityExportCount": 0,
+        "warnings": []
+      },
+      "logSHA256": "feb528e6a30df672b410b9d0295aa13a5c9a59f3f12c6fff73904645519f744e",
+      "summarySHA256": "c5975cf84b285abae130dfa7e49c4a46aea120961ff20089905b1e2401043ee6",
+      "strictReportSHA256": "2e4c4b13fb4de8158c460ead0dd7722322e8082a8b9726fddcc00d7b586d8dfd",
+      "evidenceDirectory": ".build/CIResearch20261105/quotes-3d26f1f/quote-financial"
+    },
+    "contributor-en": {
+      "selector": "RoomInTheCartUITests/ContributorRequestUITests/testTypedAndStructuredReviewCancelThenSendOnlyOwnRequest",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "seconds": 275.66,
+      "xcodeExit": 0,
+      "strictExit": 0,
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "96ECE374-C460-42C7-9605-997BF443DC99",
+        "deviceName": "RITC contributor-en public keyboard",
+        "modelName": "iPhone 17",
+        "osBuildNumber": "23C54",
+        "osVersion": "26.2",
+        "platform": "iOS Simulator"
+      },
+      "ownedSimulatorState": "Shutdown",
+      "warnings": {
+        "status": "passed",
+        "summaryWarningCount": 0,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 1,
+        "detailExportCount": 1,
+        "activityExportCount": 0,
+        "warnings": []
+      },
+      "logSHA256": "4811761f0448744cbe8057655435230fb21f9f57f291d3704211baeadc9ea974",
+      "summarySHA256": "cc0fcfd16a35f5b28d9802b67e8877b2d930c4f2ebaa9a81ed18dc96dc429039",
+      "strictReportSHA256": "489a4d100c41dcd49196a96c7739ca0c5e601ff298aa4b3f58e9e1851fbd84fb",
+      "evidenceDirectory": ".build/CIResearch20261105/quotes-3d26f1f/contributor-en"
+    },
+    "contributor-es": {
+      "selector": "RoomInTheCartUITests/ContributorRequestUITests/testSpanishLargeTextReviewStartsAtTheOriginalWording",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "seconds": 104.57,
+      "xcodeExit": 0,
+      "strictExit": 0,
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "4B4FF4AD-2E80-4682-940A-A7C968D0D9F9",
+        "deviceName": "RITC contributor-es public keyboard",
+        "modelName": "iPhone 17",
+        "osBuildNumber": "23C54",
+        "osVersion": "26.2",
+        "platform": "iOS Simulator"
+      },
+      "ownedSimulatorState": "Shutdown",
+      "warnings": {
+        "status": "passed",
+        "summaryWarningCount": 0,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 1,
+        "detailExportCount": 1,
+        "activityExportCount": 0,
+        "warnings": []
+      },
+      "logSHA256": "d7916fbc603570244f57c7cccf102663a5e5e226028d553179faf22bb9371bf0",
+      "summarySHA256": "164914a91f98b34c93f6613635b9ed73dafebcce4594c987f37597bb485b0cdb",
+      "strictReportSHA256": "15d0d00c3f5705df7707152f8de2e818a18944a6efd23cf3280f419ee6e6901e",
+      "evidenceDirectory": ".build/CIResearch20261105/quotes-3d26f1f/contributor-es"
+    }
+  },
+  "visualInspection": "Known-trip final capture shows one adoption, old-price invalidation and frozen read-only proof. Financial final grant capture shows Second adult and revoke action; an earlier cap capture has an OS Apple Intelligence notification at the top. Contributor English shows original wording, corrected own request and exactly one POST/row. Spanish largest-text capture shows original wording at review top.",
+  "limitations": [
+    "Local Xcode 27.1 differs from hosted Xcode 26.3.",
+    "Bilingual onboarding absent in all four runs; its existing dismissal path was not re-exercised.",
+    "One known-trip UIKit menu warning matched the pre-existing exact scoped warning exception; the other three runs had zero runtime warnings."
+  ],
+  "nativeLane": "released; all four owned simulators Shutdown; protected preview untouched",
+  "fastGuard": {
+    "pythonTestsPassed": 162,
+    "actionlintPassed": true,
+    "historicalSourcesRejected": 2,
+    "timeoutOrWarningLimitsRelaxed": false
+  }
+}

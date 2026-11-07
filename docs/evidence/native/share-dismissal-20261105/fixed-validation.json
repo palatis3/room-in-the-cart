@@ -1,0 +1,36 @@
+{
+  "change": "System-share cancellation uses actionable underlying UI and saved cancellation evidence instead of requiring the remote accessibility element to disappear. Readiness and dismissal failures throw.",
+  "sourceSHA256": "10f6b7214fa73e04a614ba7d47454337cee4060f6f71b602ae34e6d707ccb8e4",
+  "sourceManifestSHA256": "2ea16353a0bd5f9888b26e8872b1068e995eac9ba702101760ce141bf77a4ec1",
+  "productManifestSHA256": "a5966155257fe76ad10c617c92c7594d99f29c65c14e31fac1de6f475975684b",
+  "sourceFilesUnchanged": 499,
+  "productFilesUnchanged": 179,
+  "buildExit": 0,
+  "nativeExit": 0,
+  "strictExit": 0,
+  "selected": 2,
+  "passed": 2,
+  "failed": 0,
+  "skipped": 0,
+  "runtimeWarnings": 0,
+  "cases": [
+    {
+      "selector": "RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareKeepsTheFrozenPickupUnplaced",
+      "result": "Passed",
+      "seconds": 117.80041599273682
+    },
+    {
+      "selector": "RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced",
+      "result": "Passed",
+      "seconds": 124.11108100414276
+    }
+  ],
+  "simulator": "13F901E7-C34E-4C15-BE91-06E223A12AF2",
+  "simulatorFinalState": "Shutdown",
+  "previewFinalState": "Booted",
+  "environment": "Xcode27.1; iPhone17/iOS26.2 build23C52. Hosted candidate usedXcode26.3/build23C54.",
+  "constraints": "One planned run per original selector;15s readiness,4s initial dismissal,8s conditional second dismissal,720/900case limits preserved. Normal animations/idleness; no automatic retry-until-green. Require exact frozen snapshot and visible saved Share cancelled row before restart, plus original persisted checks afterward.",
+  "rawLogSHA256": "4d932daded867e488e4fabf9559894a8f85362c95c0e69325753b9329ca13ee4",
+  "strictReportSHA256": "3b5a9330ba7bf700b9d3c41050297ea75e86e871468e97271650643a3c432ecb",
+  "limitations": "Local proof only. Original local1pass/1fail and hosted Reduce Motion delayed-presentation failure remain retained. This test correction does not establish or fix the hosted system presentation delay. Frozen checker precedes the later known-trip phase addition; neither sharing test recorded any runtime warnings."
+}

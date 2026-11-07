@@ -2,11 +2,12 @@ import { validateOwnCommand, isContributorSession, type Command, type Session } 
 export interface Pending { id: string; scope: string; command: Command; createdAt: string }
 export function scopeFor(session: Session): string { return `${session.household.id}/${session.memberId}`; }
 export class Outbox {
-  constructor(private readonly factory: IDBFactory | undefined = globalThis.indexedDB) {}
+  constructor(private readonly factory?: IDBFactory) {}
   private async open(): Promise<IDBDatabase> {
-    if (!this.factory) throw new Error('storage_unavailable');
+    const factory = this.factory ?? globalThis.indexedDB;
+    if (!factory) throw new Error('storage_unavailable');
     return new Promise((resolve, reject) => {
-      const request = this.factory!.open('room-in-the-cart-own-outbox-v1', 1);
+      const request = factory.open('room-in-the-cart-own-outbox-v1', 1);
       request.onupgradeneeded = () => request.result.createObjectStore('pending', {keyPath:'id'});
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);

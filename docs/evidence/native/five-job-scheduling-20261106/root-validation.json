@@ -1,0 +1,40 @@
+{
+  "at": "2026-11-06T18:34:30.442808+00:00",
+  "baseMainCommit": "17ab18c315c060bcce76c5b31e29d3e9cad3b35e",
+  "patchSHA256": "1e915426e4a158896f5fde2a88c95e1d2a1cde95fbb382f2655f39bfacb4796b",
+  "workerManifestFilesIndependentlyVerified": 43,
+  "installedFiles": {
+    ".github/workflows/ci.yml": "12b1df6bf660aa404dca51e477683eed71f416cbc3a4e37fee8f3fa8b747e13c",
+    ".github/workflows/ios-deep.yml": "d5fe2f5afee8eaa363a7dbc0ed3cb064ddb26d2668a3ef9913fffa8f104605f2",
+    ".github/workflows/ios-fixtures.yml": "226f618f4ff84e83d5ca54c5c2103bdae5977c6f6d2c055a626266958031975d",
+    ".github/workflows/ios-native-wire.yml": "e1cc36dc552458deeee2f78ce7ae33c76d512d797835d9ecd7d7da5ee18f86d8",
+    ".github/workflows/ios-performance.yml": "1ed55580574c9e511724858a52f854b8649be76a591729d7f73c3dcce66fe404",
+    ".github/workflows/ios-toggle-diagnostic.yml": "a5b7024f0f171f20c1c45252ade36b05007e9c6643414893a95384f413d301f2",
+    "scripts/check_ci_workflows.py": "f2f7eba7c69cf5304a97aedfcb789b916c25a00096514f80494528bd2b6fd449",
+    "scripts/ci_mac_slots.py": "23e5dae583f1fc10b523348d034f66fad39196a16b7df179e5720221c22ec41a",
+    "scripts/ci_yaml_requirements.txt": "59c8dfb0d6897c88befa0b57ffd59a8ca2ef32f02500c32909228fe58752170e",
+    "scripts/plan_ios_fixture_tests.py": "a242b92a643d6b8d59ef3b394442b1a81c75be51e24d490b149989d560b6e63b",
+    "scripts/plan_ios_performance_tests.py": "708685decfd580f1b33dd949f893f54ec08ec3d424a51b538edd9da5eedd5f6a",
+    "scripts/plan_ios_tests.py": "eff8122356457031fc25f3fcbcc0636e050613b356db830061ebbd249ea182cf",
+    "scripts/test_check_ci_workflows.py": "36a267e5bdbe3e0284a2834ae176680c5702800653ce9ceeb26561a1b4886530",
+    "scripts/test_ci_mac_slots.py": "2cb742378b1515485d14262b73de6084e5cff2e2e2dac858776ffa9b3f6de020",
+    "scripts/test_plan_ios_performance_tests.py": "08a125f12243851f713b75c8de85d89de18bfd47eff3e6f8d5a430c1a242cedd",
+    "scripts/test_plan_ios_tests.py": "5b5e2d1322770dc9b70b0dc42fea4ec7b43c0ea09a3fe78de5f0fc4c10e1ee80"
+  },
+  "rootScriptTests": {
+    "collected": 199,
+    "passed": 199,
+    "failed": 0
+  },
+  "rootWorkflowLint": {
+    "passed": true,
+    "validatedQueueNodes": 14,
+    "unexpectedDiagnostics": 0
+  },
+  "rootGeneratedChecks": {
+    "theme": "passed",
+    "project": "passed",
+    "localization": "passed"
+  },
+  "scope": "Local static validation only. No hosted scheduler execution, capacity repair, native acceptance or runtime adoption established."
+}

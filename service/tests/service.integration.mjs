@@ -1,4 +1,5 @@
 import test,{before,after} from 'node:test';
+import {grocery30Routing} from './grocery30-routing.mjs';
 import assert from 'node:assert/strict';
 import pg from 'pg';
 import {randomUUID,randomBytes} from 'node:crypto';
@@ -67,6 +68,88 @@ async function fixture() {
   }
   return{h,shopId,lineId,line,quote,actors,http,envelope,command,send,preview};
 }
+
+if(process.env.RITC_TEST_NATIVE_WIRE==='1') test('assigned iPhone shopper carries a prior request and reprices it over pinned HTTPS',async()=>{
+  const f=await deferredFixture('Alex',{originalItem:'Original basket'});
+  const {exerciseNativeClient}=await import('./native-wire.mjs');
+  await exerciseNativeClient({service:server,owner:f.actors.Mia,householdId:f.h,shopId:f.dest,
+    deferredRequestId:f.original.requestId});
+});
+
+test('Foundation Grocery 30 routing and replay vectors over four authenticated HTTP clients',
+  t=>grocery30Routing(t,fixture,admin,origin));
+
+async function purchaseFixture(author='Sam') {
+  const f=await fixture(),sent=await f.send(author),requestId=sent.request.requestId;
+  const preview=await f.preview(sent.request,{choice:'link',lineId:f.lineId,promote:false});
+  assert.equal(preview.status,200,JSON.stringify(preview.data));
+  const applied=await f.command('Mia','request.apply',{requestId,previewId:preview.data.previewId,acceptOverage:false,acceptUnknown:false},
+    {shopRevision:1,authorityEpoch:1,requestRevision:1});
+  assert.equal(applied.status,200,JSON.stringify(applied.data));
+  assert.equal((await f.http('Mia','GET','/shops/'+f.shopId+'/inbox')).data.requests[0].linkedLineId,undefined);
+  const early=await f.command('Mia','request.confirmPurchase',{requestId,lineId:f.lineId,placedRevision:2,outcome:'bought'},
+    {shopRevision:2,authorityEpoch:1,requestRevision:applied.data.requestRevision});
+  assert.equal(early.data.error.code,'placed_order_required');
+  assert.equal((await f.command('Mia','shop.freeze',{}, {shopRevision:applied.data.shopRevision,authorityEpoch:1})).status,200);
+  const placed=await f.command('Mia','shop.reportPlaced',{occurredAt:new Date().toISOString()},{shopRevision:3,authorityEpoch:1});
+  assert.equal(placed.status,200,JSON.stringify(placed.data));
+  const state=(await f.http('Mia','GET','/shops/'+f.shopId)).data;
+  return {...f,requestId,placedRevision:state.placedRevision,shopRevision:state.shopRevision,requestRevision:applied.data.requestRevision};
+}
+
+test('only first-hand shopper confirmation changes the added request purchase outcome on its sealed line',async()=>{
+  const f=await purchaseFixture(),other=await purchaseFixture(),inbox='/shops/'+f.shopId+'/inbox';
+  const mine=async()=>(await f.http('Sam','GET','/requests/mine')).data.requests[0];
+  const shopper=async(actor='Mia')=>(await f.http(actor,'GET',inbox)).data.requests[0];
+  const before=(await f.http('Mia','GET','/shops/'+f.shopId)).data;
+  const base={shopRevision:f.shopRevision,authorityEpoch:1,requestRevision:f.requestRevision};
+  const body={requestId:f.requestId,lineId:f.lineId,placedRevision:f.placedRevision,outcome:'bought'};
+  const cmd=(extra={},version=base,actor='Mia')=>f.envelope(actor,'request.confirmPurchase',{...body,...extra},version);
+  const send=(c,a='Mia')=>f.http(a,'POST','/commands',c);
+  const ownBefore=await mine();assert.equal(ownBefore.status,'added');assert.equal(ownBefore.purchaseOutcome,undefined);
+  assert.equal((await shopper()).linkedLineId,f.lineId);assert.equal(ownBefore.linkedLineId,undefined);
+  assert((await f.http('Mia','GET','/bootstrap')).data.capabilities.includes('request_purchase_confirmation'));
+  assert(!(await f.http('Sam','GET','/bootstrap')).data.capabilities.includes('request_purchase_confirmation'));
+  assert.equal((await f.http('Alex','GET',inbox)).status,404);
+  for(const actor of ['Sam','Jo','Alex'])assert.equal((await send(cmd({},base,actor),actor)).status,404);
+  assert.equal((await f.http(other.actors.Mia,'POST','/commands',cmd())).status,404);
+  assert.equal((await send(cmd({requestId:other.requestId,lineId:other.lineId}))).status,404);
+  assert.equal((await send(cmd({lineId:randomUUID()}))).status,404);
+  assert.equal((await send(cmd({placedRevision:f.placedRevision+1}))).status,409);
+  assert.equal((await send(cmd({}, {...base,requestRevision:1}))).status,409);
+  assert.equal((await send(cmd({outcome:'refunded'}))).status,422);
+  const first=cmd(),[a,b]=await Promise.all([send(first),send(first)]);
+  assert.equal(a.status,200,JSON.stringify(a.data));assert.deepEqual(a.data,b.data);
+  assert.deepEqual(a.data,{operationId:a.data.operationId,kind:'request.confirmPurchase',shopId:f.shopId,
+    shopRevision:f.shopRevision,authorityEpoch:1,disposition:'recorded',requestId:f.requestId,requestRevision:3,purchaseOutcome:'bought'});
+  assert.deepEqual(await mine(),{...ownBefore,revision:3,purchaseOutcome:'bought'});
+  assert.equal((await send({...first,body:{...body,outcome:'unknown'}})).data.error.code,'key_reused');
+  const correction=cmd({outcome:'notBought'},{...base,requestRevision:3});
+  assert.equal((await send(correction)).data.purchaseOutcome,'notBought');
+  assert.deepEqual(await mine(),{...ownBefore,revision:4,purchaseOutcome:'notBought'});
+  assert.deepEqual((await send(first)).data,a.data); // A late retry cannot restore the earlier answer.
+  assert.equal((await send(cmd({}, {...base,requestRevision:3}))).data.error.code,'stale_base');
+  const clear=await send(cmd({outcome:'unknown'},{...base,requestRevision:4}));
+  assert.equal(clear.data.purchaseOutcome,'unknown');assert.deepEqual(await mine(),{...ownBefore,revision:5});
+  assert.deepEqual((await f.http('Jo','GET','/requests/mine')).data.requests,[]);
+  assert.deepEqual((await f.http('Mia','GET','/shops/'+f.shopId)).data,before);
+  const transfer=(newShopperId,epoch)=>f.command('Mia','shop.transferAuthority',{newShopperId},{shopRevision:f.shopRevision,authorityEpoch:epoch});
+  assert.equal((await transfer(f.actors.Alex.id,1)).status,200);
+  assert.equal((await send(first)).status,404);
+  assert.equal((await send(cmd({}, {...base,requestRevision:5},'Alex'),'Alex')).data.error.code,'authority_changed');
+  assert.equal((await shopper('Alex')).linkedLineId,f.lineId);
+  assert.equal((await transfer(f.actors.Mia.id,2)).status,200);
+  assert.equal((await send(first)).data.error.code,'refresh_required');
+  const closed=await f.http('Mia','POST','/shops/'+f.shopId+'/financial-reviews',{clientKey:randomUUID(),
+    sourceVersion:{shopRevision:f.shopRevision,authorityEpoch:3,financialRevision:0},allEvidenceEntered:false,closeShop:true});
+  assert.equal(closed.status,200,JSON.stringify(closed.data));
+  assert.deepEqual(await mine(),{...ownBefore,revision:5}); // Closing and reviewing money cannot confirm a request.
+  const access=await f.http('Mia','GET','/bootstrap',undefined,{'X-Shop-Id':f.shopId});
+  assert(access.data.capabilities.includes('request_purchase_confirmation'));
+  const late=await send(cmd({}, {shopRevision:closed.data.sourceVersion.shopRevision,authorityEpoch:3,requestRevision:5}));
+  assert.equal(late.status,200,JSON.stringify(late.data));assert.equal((await mine()).purchaseOutcome,'bought');
+  assert.equal((await admin.query('SELECT 1 FROM ritc.request_purchase_review WHERE household_id=$1',[f.h])).rowCount,4);
+});
 
 test('real JWT auth denies missing, forged, expired, wrong issuer and wrong audience tokens',async()=>{
   const f=await fixture();
@@ -545,4 +628,227 @@ test('S24 reviewed pack source persists in private exact preview and atomic appl
   const persisted=(await admin.query('SELECT decision FROM ritc.preview WHERE household_id=$1 AND preview_id=$2',[f.h,preview.data.previewId])).rows[0];assert.deepEqual(persisted.decision.reviewedPackEvidence,evidence);
   const shop=await f.http('Mia','GET','/shops/'+f.shopId);assert.equal(shop.data.lines.length,2);assert.deepEqual(shop.data.lines.find(l=>l.lineId===line.lineId),line);
   const own=await f.http('Sam','GET','/requests/mine');assert.equal(own.data.requests[0].status,'added');assert.equal(JSON.stringify(own.data).includes('quoteSource'),false);assert.equal(JSON.stringify(own.data).includes('Private reviewed shelf source'),false);
+});
+
+test('two contributor web sessions see only their own purchase receipt through shopper corrections',
+  {skip:process.env.RITC_TEST_WEB_WIRE!=='1'}, async t=>{
+  const [{JSDOM},{IDBFactory},{WebApp},{API},{Outbox}]=await Promise.all([
+    import('../../web/node_modules/jsdom/lib/api.js'),import('../../web/node_modules/fake-indexeddb/build/esm/index.js'),
+    import('../../web/dist/app.js'),import('../../web/dist/api.js'),import('../../web/dist/outbox.js')
+  ]);
+  const f=await purchaseFixture('Alex'),other=await fixture();
+  const outsider=other.actors.Alex;
+  const invitation=await f.http('Mia','POST','/invites',{kind:'adult_contributor',expiresInHours:1});
+  assert.equal(invitation.status,200);
+  const joined=await f.http(outsider,'POST','/v1/invites/redeem',{token:invitation.data.token,intent:'join',adultAttestation:true,alias:'Second contributor'});
+  assert.equal(joined.status,200);
+
+  async function openBrowser(actor,language){
+    const active=await f.http(actor,'POST','/v1/session',{householdId:f.h,shopId:f.shopId});
+    assert.equal(active.status,200,JSON.stringify(active.data));
+    assert.equal(active.data.role,'contributor');
+    const cookie=active.headers.get('set-cookie').split(';')[0];
+    let rows;
+    const api=new API(async(path,options)=>{
+      const res=await fetch(origin+path,{...options,headers:{...options.headers,Cookie:cookie,Origin:'https://web.fixture.invalid'}});
+      if(path.includes('/requests/mine') && res.ok)rows=(await res.clone().json()).requests;
+      return res;
+    });
+    const dom=new JSDOM('<div id="app"></div>',{url:'https://web.fixture.invalid/requests'});
+    t.after(()=>dom.window.close());
+    Object.defineProperty(dom.window.navigator,'language',{value:language});
+    const root=dom.window.document.querySelector('#app');
+    const app=new WebApp(root,api,new Outbox(new IDBFactory()));
+    await app.start();
+    return {root,rows:()=>rows,refresh:async()=>{
+      const id=language==='es'?'Actualizar':'Refresh';
+      const refresh=[...root.querySelectorAll('button')].find(b=>b.textContent===id);
+      assert.ok(refresh);refresh.click();
+      const deadline=Date.now()+5000;
+      while(root.querySelector('main')?.getAttribute('aria-busy')==='true'){
+        assert.ok(Date.now()<deadline);await new Promise(resolve=>setTimeout(resolve,5));
+      }
+    }};
+  }
+  const alex=await openBrowser('Alex','es'),observer=await openBrowser(outsider,'en');
+  let revision=f.requestRevision;
+  for(const [outcome,label] of [
+    [null,'Compra sin confirmar'],['bought','La persona que hizo la compra confirmó que compró el artículo'],
+    ['notBought','La persona que hizo la compra confirmó que no compró el artículo'],['unknown','Compra sin confirmar']
+  ]){
+    if(outcome){
+      const saved=await f.command('Mia','request.confirmPurchase',
+        {requestId:f.requestId,lineId:f.lineId,placedRevision:f.placedRevision,outcome},
+        {shopRevision:f.shopRevision,authorityEpoch:1,requestRevision:revision});
+      assert.equal(saved.status,200,JSON.stringify(saved.data));revision=saved.data.requestRevision;
+    }
+    await Promise.all([alex.refresh(),observer.refresh()]);
+    assert.deepEqual(alex.rows().map(r=>r.requestId),[f.requestId]);
+    const [own]=alex.rows();
+    assert.equal(own.revision,revision);assert.equal(own.status,'added');
+    assert.equal(own.purchaseOutcome,outcome==='bought'||outcome==='notBought'?outcome:undefined);
+    assert.equal(Object.hasOwn(own,'linkedLineId'),false);
+    assert.equal(Object.hasOwn(own,'unitPriceMinor'),false);
+    assert.ok([...alex.root.querySelectorAll('p')].some(p=>p.textContent===label));
+    assert.deepEqual(observer.rows(),[]);
+    assert.doesNotMatch(observer.root.textContent,/Fictional cereal|Shopper confirmed|Purchase not confirmed/);
+  }
+});
+
+if(process.env.RITC_TEST_NATIVE_WIRE==='1') test('assigned iPhone shopper confirms and corrects a placed request over pinned HTTPS',async()=>{
+  const f=await purchaseFixture('Alex');
+  const {exerciseNativeClient}=await import('./native-wire.mjs');
+  await exerciseNativeClient({service:server,owner:f.actors.Mia,householdId:f.h,shopId:f.shopId,purchaseRequestId:f.requestId});
+  await exerciseNativeClient({service:server,owner:f.actors.Alex,householdId:f.h,shopId:f.shopId,purchaseRequestId:f.requestId,purchaseReader:true});
+  const mine=(await f.http('Alex','GET','/requests/mine')).data.requests;
+  assert.equal(mine.length,1);assert.equal(mine[0].requestId,f.requestId);
+  assert.equal(mine[0].status,'added');assert.equal(mine[0].revision,f.requestRevision+3);
+  assert.equal(mine[0].purchaseOutcome,'notBought');assert.equal(mine[0].linkedLineId,undefined);
+});
+
+async function nextDraft(f) {
+  const shopId=randomUUID();
+  const created=await f.http('Mia','POST','/commands',{...f.envelope('Mia','shop.create',
+    {quote:f.quote,lines:[]},{shopRevision:0,authorityEpoch:0}),shopId});
+  assert.equal(created.status,200,JSON.stringify(created.data));
+  return shopId;
+}
+
+async function deferredFixture(actor='Sam',requestDetails={}) {
+  const f=await fixture(),original=(await f.send(actor,requestDetails)).request;
+  const placed=await f.command('Mia','shop.reportPlaced',{occurredAt:new Date().toISOString()});
+  assert.equal(placed.status,200);
+  const dest=await nextDraft(f);
+  const page=(id=dest,member='Mia',cursor='')=>f.http(member,'GET','/shops/'+id+'/deferred-requests'+(cursor?'?cursor='+cursor:''),undefined,{'X-Shop-ID':id});
+  const candidate=(await page()).data.requests[0];
+  const carry=(id=dest,source=candidate)=>({...f.envelope('Mia','request.carry',
+    {sourceShopId:source.sourceShopId,sourceAuthorityEpoch:source.sourceAuthorityEpoch,requestId:source.requestId},
+    {shopRevision:1,authorityEpoch:1,requestRevision:source.requestRevision}),shopId:id});
+  const run=(e,actor='Mia')=>f.http(actor,'POST','/commands',e,{'X-Shop-ID':e.shopId});
+  const inbox=async(id,member='Mia')=>(await f.http(member,'GET','/shops/'+id+'/inbox',undefined,{'X-Shop-ID':id})).data.requests;
+  return {...f,original,dest,page,candidate,carry,run,inbox};
+}
+
+test('deferred request enters a later blank shop only once, with original authorship and a fresh price decision',async()=>{
+  const f=await deferredFixture(),candidate=f.candidate,source=f.original;
+  assert.deepEqual(candidate,{sourceShopId:f.shopId,sourceAuthorityEpoch:1,requestId:source.requestId,requestRevision:2,
+    originalItem:source.originalItem,ownQuantity:source.ownQuantity,authorAlias:'Sam',authoredAt:source.authoredAt,receivedAt:source.receivedAt});
+  assert.deepEqual((await f.page()).data,{shopId:f.dest,shopRevision:1,authorityEpoch:1,requests:[candidate],nextCursor:null});
+  const before=(await f.http('Mia','GET','/shops/'+f.shopId)).data;
+  const sourcePreview=await f.preview(source,{choice:'handled'},'Mia',{shopRevision:2,authorityEpoch:1,requestRevision:2});
+  assert.equal(sourcePreview.status,200);
+  assert.deepEqual(await f.inbox(f.dest),[]);
+  const draftBefore=(await f.http('Mia','GET','/shops/'+f.dest)).data;
+  assert.deepEqual(draftBefore.lines,[]);
+  const cmd=f.carry(),[first,retry]=await Promise.all([f.run(cmd),f.run(cmd)]);
+  assert.equal(first.status,200,JSON.stringify(first.data));
+  const id=first.data.operationId;
+  assert.deepEqual(first.data,{operationId:id,kind:'request.carry',shopId:f.dest,shopRevision:1,authorityEpoch:1,
+    disposition:'recorded',requestId:id,requestRevision:1,sourceRequestId:source.requestId});
+  assert.deepEqual(first.data,retry.data);assert.notEqual(id,source.requestId);
+  assert.deepEqual((await f.page()).data.requests,[]);
+  assert.deepEqual((await f.http('Mia','GET','/shops/'+f.dest)).data,draftBefore);
+  assert.deepEqual((await f.http('Mia','GET','/shops/'+f.shopId)).data,before);
+  const [old]=await f.inbox(f.shopId),[copy]=await f.inbox(f.dest);
+  assert.equal(old.carriedForward,true);assert.equal(old.revision,2);assert.equal(old.ownActionAllowed,false);
+  assert.deepEqual(copy,{requestId:id,shopId:f.dest,revision:1,originalItem:source.originalItem,ownQuantity:source.ownQuantity,
+    authoredAt:source.authoredAt,receivedAt:copy.receivedAt,route:'current',status:'pending',fromPreviousShop:true,
+    ownActionAllowed:true,clarification:null,followupTo:null,authorAlias:'Sam'});
+  assert(Date.parse(copy.receivedAt)>=Date.parse(source.receivedAt));
+  assert.deepEqual((await f.http('Jo','GET','/requests/mine')).data.requests,[]);
+  assert.deepEqual((await f.http('Sam','GET','/requests/mine')).data.requests.map(r=>[r.shopId,r.ownActionAllowed]),[[f.shopId,false],[f.dest,true]]);
+  for(const [kind,body] of [['request.edit',{originalItem:'Changed',ownQuantity:null}],['request.withdraw',{}]]){
+    const r=await f.command('Sam',kind,{requestId:source.requestId,...body},{shopRevision:0,authorityEpoch:0,requestRevision:2});
+    assert.equal(r.data.error.code,'followup_required');
+  }
+  assert.equal((await f.send('Sam',{followupTo:source.requestId})).request.followupTo,source.requestId);
+  const body={requestId:source.requestId,previewId:sourcePreview.data.previewId,acceptOverage:false,acceptUnknown:false};
+  assert.equal((await f.command('Mia','request.apply',body,{shopRevision:2,authorityEpoch:1,requestRevision:2})).data.error.code,'already_handled');
+  assert.equal((await f.run({...f.envelope('Mia','request.apply',{...body,requestId:id},{shopRevision:1,authorityEpoch:1,requestRevision:1}),shopId:f.dest})).status,404);
+  const base={shopRevision:1,authorityEpoch:1,requestRevision:1};
+  const preview=await f.http('Mia','POST','/shops/'+f.dest+'/previews',{requestId:id,base,decision:{choice:'add',
+    line:{lineId:randomUUID(),originalItem:copy.originalItem,packs:1,unitPriceMinor:4000,feeEligible:true}}});
+  assert.equal(preview.data.requiresOverageAcceptance,true);assert.equal(preview.data.after.overCapMinor,200);
+  const apply={...f.envelope('Mia','request.apply',{...body,requestId:id,previewId:preview.data.previewId},base),shopId:f.dest};
+  assert.equal((await f.run(apply)).data.error.code,'overage_acceptance_required');
+  apply.body.acceptOverage=true;assert.equal((await f.run(apply)).data.disposition,'added');
+  assert.equal((await f.run({...f.envelope('Mia','shop.reportPlaced',{occurredAt:new Date().toISOString()},{shopRevision:2,authorityEpoch:1}),shopId:f.dest})).status,200);
+  assert.deepEqual((await f.run(cmd)).data,first.data);
+  assert.deepEqual((await f.http('Mia','GET','/shops/'+f.shopId)).data,before);
+});
+
+test('deferred request rejects ungranted sources, stale reviews, concurrent destinations and transferred receipt authority',async()=>{
+  for(const side of ['source','destination']) {
+    const f=await deferredFixture(),g=await fixture(),other=await nextDraft(f),cmd=f.carry();
+    for(const member of ['Sam','Jo','Alex'])assert.equal((await f.page(f.dest,member)).status,404);
+    assert.equal((await f.page(f.dest,g.actors.Mia)).status,404);
+    assert.equal((await f.http('Mia','GET','/shops/'+f.dest+'/deferred-requests',undefined,{'X-Shop-ID':f.shopId})).status,404);
+    for(const update of [{body:{...cmd.body,sourceShopId:g.shopId}},{body:{...cmd.body,requestId:randomUUID()}}])assert.equal((await f.run({...cmd,...update})).status,404);
+    assert.equal((await f.run({...cmd,base:{...cmd.base,requestRevision:1}})).data.error.code,'stale_base');
+    assert.equal((await f.run({...cmd,body:{...cmd.body,sourceAuthorityEpoch:2}})).data.error.code,'authority_changed');
+    assert.equal((await f.run({...cmd,base:{...cmd.base,shopRevision:2}})).data.error.code,'stale_base');
+    const rival=f.carry(other),results=await Promise.all([f.run(cmd),f.run(rival)]);
+    assert.deepEqual(results.map(r=>r.status).sort(),[200,404]);
+    const winner=results[0].status===200?cmd:rival;
+    assert.equal((await f.run(winner)).status,200);
+    const selected=side==='source'?f.shopId:winner.shopId,revision=side==='source'?2:1;
+    const transfer=(member,epoch)=>f.run({...f.envelope('Mia','shop.transferAuthority',{newShopperId:f.actors[member].id},
+      {shopRevision:revision,authorityEpoch:epoch}),shopId:selected});
+    assert.equal((await transfer('Alex',1)).status,200);
+    assert.notEqual((await f.run(winner)).status,200);
+    assert.equal((await transfer('Mia',2)).status,200);
+    assert.equal((await f.run(winner)).data.error.code,'refresh_required');
+    assert.deepEqual((await f.page(other)).data.requests,[]);
+  }
+});
+
+test('deferred request can be explicitly carried again after another deferral, and consent loss blocks the full chain',async()=>{
+  const f=await deferredFixture(),first=f.carry(),firstReceipt=await f.run(first),id=firstReceipt.data.requestId;
+  const base={shopRevision:1,authorityEpoch:1,requestRevision:1};
+  const pv=await f.http('Mia','POST','/shops/'+f.dest+'/previews',{requestId:id,base,decision:{choice:'defer'}});
+  assert.equal((await f.run({...f.envelope('Mia','request.apply',{requestId:id,previewId:pv.data.previewId,acceptOverage:false,acceptUnknown:false},base),shopId:f.dest})).data.disposition,'deferred');
+  assert.equal((await f.run({...f.envelope('Mia','shop.reportPlaced',{occurredAt:new Date().toISOString()}),shopId:f.dest})).status,200);
+  const third=await nextDraft(f),candidates=(await f.page(third)).data.requests;
+  assert.deepEqual(candidates.map(r=>r.requestId),[id]);
+  const second=f.carry(third,candidates[0]);assert.equal((await f.run(second)).status,200);
+  const rows=await f.inbox(f.dest);assert.equal(rows[0].carriedForward,true);assert.equal(rows[0].fromPreviousShop,true);
+  assert.deepEqual((await f.page(third)).data.requests,[]);
+  const consent=(await admin.query('SELECT consent_id FROM ritc.consent WHERE household_id=$1 AND child_id=$2',[f.h,f.actors.Sam.id])).rows[0].consent_id;
+  assert.equal((await f.http('Mia','POST','/guardian/consents/'+consent+'/revoke',{})).status,200);
+  for(const shop of [f.shopId,f.dest,third])assert.deepEqual(await f.inbox(shop),[]);
+  for(const command of [first,second])assert.equal((await f.run(command)).data.error.code,'refresh_required');
+});
+
+test('deferred request pages contain only eligible current grants and exclude older drafts and withdrawn authors',async()=>{
+  const f=await fixture(),older=await nextDraft(f);
+  const sourceId=await nextDraft(f);
+  const request=async(actor,name)=>{
+    const sent=await f.http(actor,'POST','/commands',{...f.envelope(actor,'request.send',
+      {clientRequestId:randomUUID(),originalItem:name,ownQuantity:null,authoredAt:new Date().toISOString()}),shopId:sourceId});
+    assert.equal(sent.status,200);return sent.data.request;
+  };
+  const names=[];
+  for(let i=0;i<52;i++)names.push((await request('Alex','Eligible '+i)).requestId);
+  const missing=await request('Jo','Withheld request');
+  const consent=(await admin.query('SELECT consent_id FROM ritc.consent WHERE household_id=$1 AND child_id=$2',[f.h,f.actors.Jo.id])).rows[0].consent_id;
+  assert.equal((await f.http('Mia','POST','/guardian/consents/'+consent+'/revoke',{})).status,200);
+  const perform=cmd=>f.http('Mia','POST','/commands',{...cmd,shopId:sourceId});
+  assert.equal((await perform(f.envelope('Mia','shop.reportPlaced',{occurredAt:new Date().toISOString()}))).status,200);
+  const dest=await nextDraft(f), page=(id,after='')=>f.http('Mia','GET','/shops/'+id+'/deferred-requests'+after);
+  assert.deepEqual((await page(older)).data.requests,[]);
+  const first=(await page(dest)).data;
+  assert.deepEqual(first.requests.map(r=>r.requestId),names.sort().slice(0,50));
+  assert.equal(first.nextCursor,names[49]);
+  const second=(await page(dest,'?cursor='+first.nextCursor)).data;
+  assert.deepEqual(second.requests.map(r=>r.requestId),names.slice(50));assert.equal(second.nextCursor,null);
+  assert.equal((await page(dest,'?cursor='+missing.requestId)).status,404);
+  const candidate=first.requests[0],carry={...f.envelope('Mia','request.carry',
+    {sourceShopId:sourceId,sourceAuthorityEpoch:1,requestId:candidate.requestId},{shopRevision:1,authorityEpoch:1,requestRevision:2}),shopId:dest};
+  const transfer=(name,epoch)=>perform(f.envelope('Mia','shop.transferAuthority',{newShopperId:f.actors[name].id},{shopRevision:2,authorityEpoch:epoch}));
+  assert.equal((await transfer('Alex',1)).status,200);
+  assert.deepEqual((await page(dest)).data.requests,[]);
+  assert.equal((await f.http('Mia','POST','/commands',carry)).status,404);
+  assert.equal((await transfer('Mia',2)).status,200);
+  assert.equal((await f.http('Mia','POST','/commands',carry)).data.error.code,'authority_changed');
+  assert.equal((await page(dest)).data.requests[0].sourceAuthorityEpoch,3);
 });

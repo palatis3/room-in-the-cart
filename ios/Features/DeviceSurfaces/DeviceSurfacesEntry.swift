@@ -72,6 +72,9 @@ private struct SurfaceImportReview: View {
                         }
                     }
                     Section {
+                        Button(SurfaceCopy.text("Save review draft")) { composition.saveReviewDraft() }
+                            .disabled(draft.phase == .committing)
+                        Text(SurfaceCopy.text("Cancel discards unsaved review changes."))
                         Button(SurfaceCopy.text(draft.phase == .committing ? "Retry reviewed import" : "Add reviewed list")) { Task { await composition.addReviewedList() } }
                             .disabled(!draft.preview.lines.allSatisfy { draft.decisions[$0.id] != nil } || draft.preview.lines.isEmpty)
                         Button(SurfaceCopy.text("Reopen saved list before retry")) { Task { await composition.recoverImport() } }
@@ -143,7 +146,7 @@ struct DeviceSurfacesDestination: View {
                 if composition.privateAuthorized, selected, ledger.shop?.id == id { LedgerHomeView(model: ledger) }
                 else { SurfaceUnavailableView() }
             case .offer(let journey, let offerID):
-                if composition.privateAuthorized, selected, pickup.journey?.id == journey, let offer = pickup.journey?.unfilledOffers.first(where: { $0.id == offerID }) {
+                if composition.privateAuthorized, selected, pickup.journey?.id == journey, let offer = pickup.journey?.unfilledOffers(at: composition.reminderEvaluationDate).first(where: { $0.id == offerID }) {
                     Form {
                         Text(offer.replacement)
                         TimelineView(.periodic(from: .now, by: 30)) { context in
@@ -160,14 +163,19 @@ struct DeviceSurfacesDestination: View {
             }
         }.modifier(PickupNextShopRoute(model: pickup, requested: $nextShopRequested) { nextShopFocused = true })
         .task {
-            guard composition.privateAuthorized else { return }
-            // A newer pickup selection can arrive after route resolution. The
-            // shop view above checks identity; presentation must never reselect.
-            switch destination {
-            case .offer(let id, _), .deferral(let id, _): if composition.privateAuthorized { pickup.selectedID = id }
-            default: break }
-            selected = true
+            if await prepareForPresentation() { selected = true }
         }
+    }
+
+    func prepareForPresentation() async -> Bool {
+        guard composition.privateAuthorized else { return false }
+        // A newer pickup selection can arrive after route resolution. The
+        // shop view above checks identity; presentation must never reselect.
+        switch destination {
+        case .offer(let id, _), .deferral(let id, _): pickup.selectedID = id
+        default: break
+        }
+        return true
     }
 }
 
