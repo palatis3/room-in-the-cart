@@ -304,7 +304,8 @@ export class HouseholdRepository {
   async execute(ctx:Context,command:Envelope,billing?:BillingService,queueGrant?:string):Promise<unknown> {
     if(ctx.selectedShopId && command.shopId!==ctx.selectedShopId) throw unavailable();
     const window=(await ctx.db.query('SELECT 1 FROM ritc.replay_window WHERE household_id=$1 AND window_id=$2 AND member_id=$3 AND device_id=$4 AND revoked_at IS NULL AND expires_at>$5',[ctx.householdId,command.replayWindow,ctx.member.member_id,ctx.deviceId,ctx.now])).rowCount;
-    if(!window)throw refresh();
+    const queueEnded=()=>new ServiceError(409,'queue_permission_ended','Review current received requests before sending a new request.');
+    if(!window)throw queueGrant ? queueEnded() : refresh();
     const payloadDigest=queueGrant ? digest({command,queueGrant}) : digest(command);
     const prior=(await ctx.db.query(`SELECT o.*,r.response FROM ritc.operation o LEFT JOIN ritc.operation_response r USING(household_id,operation_id)
       WHERE o.household_id=$1 AND o.actor_id=$2 AND o.client_key=$3`,[ctx.householdId,ctx.member.member_id,command.clientKey])).rows[0];
@@ -346,7 +347,7 @@ export class HouseholdRepository {
       return prior.response;
     }
     if(queueGrant && (await this.bootstrap(ctx)).requestQueueGrant!==queueGrant) {
-      throw new ServiceError(409,'queue_permission_ended','Review current received requests before sending a new request.');
+      throw queueEnded();
     }
     const operationId=randomUUID();
     let scope:'own'|'shopper'|'organizer'|'reporter'='shopper';
