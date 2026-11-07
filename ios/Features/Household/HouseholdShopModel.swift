@@ -580,10 +580,12 @@ struct SharedShopTransfer: Equatable {
         do {
             guard draft.expiresAt > Date(), draft.observedAt <= Date().addingTimeInterval(300) else { throw ClientError.configuration }
             let enteredCandidate = try draft.candidate()
-            let candidate = try ShopperShopCandidate(quote: enteredCandidate.quote, lines: enteredCandidate.lines,
-                                                     reviewedStoreBasisRevision: shop?.storeBasisRevision)
-            if canCreate || (creatingAnother && canStartAnother) { review = .init(shopID: UUID().uuidString.lowercased(), kind: "shop.create", base: .init(shopRevision: 0, authorityEpoch: 0), candidate: candidate) }
-            else if canManage, let shop, shop.phase == "draft" {
+            if canCreate || (creatingAnother && canStartAnother) {
+                review = .init(shopID: UUID().uuidString.lowercased(), kind: "shop.create",
+                               base: .init(shopRevision: 0, authorityEpoch: 0), candidate: enteredCandidate)
+            } else if canManage, let shop, shop.phase == "draft" {
+                let candidate = try ShopperShopCandidate(quote: enteredCandidate.quote, lines: enteredCandidate.lines,
+                                                         reviewedStoreBasisRevision: shop.storeBasisRevision)
                 var reviewedMeal = draft.mealEdit
                 if let edit = reviewedMeal {
                     guard let meals = shop.meals else { throw ClientError.configuration }

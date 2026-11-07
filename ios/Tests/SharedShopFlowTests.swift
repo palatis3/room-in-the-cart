@@ -63,6 +63,38 @@ import HouseholdClient
         XCTAssertEqual(fixture.kinds.filter { $0 == "shop.reopen" }.count, 1)
         XCTAssertEqual(fixture.privateReads, 0)
     }
+    func testNewSharedShopStartsWithoutThePreviousStoresReviewOrPrices() async throws {
+        let fixture = SharedFlowService()
+        let adult = try await createdHousehold(fixture)
+        let shared = try XCTUnwrap(adult.sharedShop)
+        enterShop(shared)
+        await shared.applyReviewed()
+        let previousID = try XCTUnwrap(shared.shop?.shopId)
+
+        fixture.canSelectShop = true
+        fixture.storeBasisRevision = 7
+        await shared.load()
+        shared.beginEditing()
+        shared.reviewDraft()
+        XCTAssertEqual(shared.review?.candidate?.reviewedStoreBasisRevision, 7)
+        shared.cancelEditing()
+
+        shared.beginAnotherShop()
+        XCTAssertTrue(shared.draft.lines.isEmpty)
+        XCTAssertTrue(shared.draft.cap.isEmpty)
+        shared.draft.lines = [.init(item: "Coffee at the market", price: "3.10")]
+        shared.reviewDraft()
+        let review = try XCTUnwrap(shared.review)
+        XCTAssertEqual(review.kind, "shop.create")
+        XCTAssertNotEqual(review.shopID, previousID)
+        let candidate = try XCTUnwrap(review.candidate)
+        XCTAssertNil(try candidate.commandBody()["reviewedStoreBasisRevision"])
+        XCTAssertEqual(candidate.lines.map(\.unitPriceMinor), [310])
+        shared.acknowledged = true
+        await shared.applyReviewed()
+        XCTAssertEqual(fixture.sharedShopCreates, 2)
+        XCTAssertEqual(shared.shop?.shopId, review.shopID)
+    }
     func testFallbackLibrarySurvivesBillingOutageAndClosesOnShopperTransferDuringSeatCheck() async throws {
         let fixture = SharedFlowService()
         let adult = try await createdHousehold(fixture)
@@ -245,6 +277,8 @@ private final class SharedFlowService {
     var loseCreateResponse = false
     var shopperTransferred = false
     var fallbackBillingUnavailable = false
+    var canSelectShop = false
+    var storeBasisRevision: Int?
     var transferAfterLibraryRead = false
     var ownRequestsUnavailable = false
     var readFailureAfterCreate: Int?
@@ -274,7 +308,7 @@ private final class SharedFlowService {
             if shopID != nil, let status = readFailureAfterCreate { return try ok(["error":["code":"access_ended","correlationId":"test"]],status) }
             let shopper = actor == "mia" && shopID != nil && !shopperTransferred
             return try ok(["household":["id":household,"label":"Our home"],"memberId":actor == "mia" ? miaID : samID,
-                "role":shopper ? "shopper" : actor == "mia" ? "organizer" : "contributor", "shopId":shopID as Any? ?? NSNull(),"enrolled":true,"queueConsent":false,
+                "role":shopper ? "shopper" : actor == "mia" ? "organizer" : "contributor", "canSelectShop":canSelectShop, "shopId":shopID as Any? ?? NSNull(),"enrolled":true,"queueConsent":false,
                 "capabilities":["own_requests"] + (actor == "mia" ? ["household_admin"] : []) + (shopper ? ["shopper_inbox","request_preview","shopper_commands","accepted_fallbacks"] : [])])
         }
         if path.hasSuffix("/accepted-fallbacks"), let shopID {
@@ -296,7 +330,7 @@ private final class SharedFlowService {
                 "currency": "USD", "occurredAt": "2026-01-01T12:00:00.000Z", "sourceText": "Hold on the entered receipt"]], "nextCursor": NSNull()])
         }
         if path.hasSuffix("/inbox") { return try ok(["requests":requests.map { $0.merging(["authorAlias":"Sam"]) { _, new in new } },"nextCursor":NSNull()]) }
-        if path.contains("/shops/"), request.httpMethod == "GET" { return try ok(["shopId":shopID!,"shopRevision":revision,"authorityEpoch":1,"phase":phase,"quote":quote,"lines":lines,"meals":meals,"frozenRevision":phase == "frozen" ? revision : NSNull(),"placedRevision":NSNull()]) }
+        if path.contains("/shops/"), request.httpMethod == "GET" { return try ok(["shopId":shopID!,"shopRevision":revision,"authorityEpoch":1,"phase":phase,"quote":quote,"lines":lines,"meals":meals,"storeBasisRevision":storeBasisRevision as Any? ?? NSNull(),"frozenRevision":phase == "frozen" ? revision : NSNull(),"placedRevision":NSNull()]) }
         if path.hasSuffix("/previews") {
             let id = UUID().uuidString.lowercased(); previews[id] = json
             let total = lines.reduce(0) { $0 + ($1["packs"] as! Int) * ($1["unitPriceMinor"] as? Int ?? 0) }
