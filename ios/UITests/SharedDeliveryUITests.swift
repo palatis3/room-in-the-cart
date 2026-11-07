@@ -70,14 +70,19 @@ import XCTest
             "identifier BEGINSWITH %@ AND (label CONTAINS %@ OR value CONTAINS %@)", "delivery.confirmed.", text, text)).firstMatch
         return row.waitForExistence(timeout: 8)
     }
+    private func enterRecovery(_ text: String, field: String) {
+        enter(text, in: app.textFields["recovery." + field])
+        tap(app.buttons["recovery.finishEditing"])
+    }
+
     func testShopperLeavesOriginalDinnerOpenAfterAnUnresolvedReplacementPreview() {
         launch("en", locale: "en_US", recovery: true)
         let wednesday = "EEEEEEEE-EEEE-4EEE-8EEE-000000000002"
         tap(app.buttons["recovery.open"])
         tap(app.buttons["recovery.meal." + wednesday])
-        enter("Rice alternative", in: app.textFields["recovery.title"])
-        enter("Rice", in: app.textFields["recovery.ingredient"])
-        enter("4", in: app.textFields["recovery.quantity"])
+        enterRecovery("Rice alternative", field: "title")
+        enterRecovery("Rice", field: "ingredient")
+        enterRecovery("4", field: "quantity")
         tap(app.buttons["recovery.preview"])
         assertFact("Food coverage", "Still unresolved")
         tap(app.buttons["recovery.keepCurrent"])
@@ -103,9 +108,9 @@ import XCTest
         }
         tap(app.buttons["recovery.open"])
         tap(app.buttons["recovery.meal." + wednesday])
-        enter("Wednesday rice", in: app.textFields["recovery.title"])
-        enter("Cooked rice", in: app.textFields["recovery.ingredient"])
-        enter("4", in: app.textFields["recovery.quantity"])
+        enterRecovery("Wednesday rice", field: "title")
+        enterRecovery("Cooked rice", field: "ingredient")
+        enterRecovery("4", field: "quantity")
         enable("recovery.extraTrip")
         tap(app.buttons["recovery.preview"])
         reveal(app.staticTexts["Tuesday tortillas · Protected lunch"])

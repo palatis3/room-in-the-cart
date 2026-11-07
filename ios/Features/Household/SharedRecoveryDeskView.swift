@@ -102,6 +102,11 @@ private struct SharedRecoveryEditor: View {
     let finish: (Bool) -> Void
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scene
+    private enum Input: Hashable {
+        case title, notes, remaining, lead
+        case ingredient(UUID), quantity(UUID)
+    }
+    @FocusState private var input: Input?
     @State private var draft: SharedRecoveryDraft
     @State private var decision: RecoveryDecision?
     @State private var checking = false
@@ -151,8 +156,10 @@ private struct SharedRecoveryEditor: View {
                         }
                     }.accessibilityIdentifier("recovery.method")
                     if draft.repeatID == nil {
-                        TextField(sharedRecoveryText("Replacement meal"), text: $draft.title).accessibilityIdentifier("recovery.title")
+                        TextField(sharedRecoveryText("Replacement meal"), text: $draft.title)
+                            .focused($input, equals: .title).accessibilityIdentifier("recovery.title")
                         TextField(sharedRecoveryText("Preparation notes"), text: $draft.notes, axis: .vertical)
+                            .focused($input, equals: .notes)
                     } else { Text(verbatim: draft.title).font(.headline) }
                 }
                 ForEach($draft.ingredients) { $row in
@@ -166,9 +173,11 @@ private struct SharedRecoveryEditor: View {
                 }
                 Section {
                     TextField(sharedRecoveryText("Remaining preparation minutes"), text: $draft.remaining).keyboardType(.numberPad)
+                        .focused($input, equals: .remaining)
                         .accessibilityIdentifier("recovery.remaining")
                     if draft.repeatID == nil {
                         TextField(sharedRecoveryText("Required lead time in minutes"), text: $draft.lead).keyboardType(.numberPad)
+                        .focused($input, equals: .lead)
                     } else {
                         LabeledContent(sharedRecoveryText("Required lead time in minutes"), value: draft.lead.isEmpty ? ht("Unknown") : draft.lead)
                     }
@@ -182,6 +191,9 @@ private struct SharedRecoveryEditor: View {
                     .accessibilityIdentifier("recovery.preview")
                 if checking { ProgressView() }
             } else { Text(sharedRecoveryText("Refresh the current meal record.")) }
+        }
+        .keyboardDoneAction(visible: input != nil, title: ht("Done"), identifier: "recovery.finishEditing") {
+            input = nil
         }
         .navigationTitle(sharedRecoveryText("Replace meal"))
         .navigationBarTitleDisplayMode(.inline)
@@ -207,8 +219,10 @@ private struct SharedRecoveryEditor: View {
         let value = row.wrappedValue
         Section {
             if draft.repeatID == nil {
-                TextField(ht("Ingredient"), text: row.name).accessibilityIdentifier("recovery.ingredient")
-                TextField(ht("Ingredient quantity"), text: row.literal).accessibilityIdentifier("recovery.quantity")
+                TextField(ht("Ingredient"), text: row.name)
+                    .focused($input, equals: .ingredient(value.id)).accessibilityIdentifier("recovery.ingredient")
+                TextField(ht("Ingredient quantity"), text: row.literal)
+                    .focused($input, equals: .quantity(value.id)).accessibilityIdentifier("recovery.quantity")
                 Picker(sharedRecoveryText("Unit"), selection: row.unit) {
                     ForEach(UnitOfMeasure.allCases, id: \.self) { unit in Text(dinnerUnit(unit)).tag(unit) }
                 }
