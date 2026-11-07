@@ -267,7 +267,7 @@ struct DeviceReminderPersona: Equatable {
             }
             // Revoke the old view as soon as authority is known, even if the request list cannot load.
             projection = fresh
-            try await clearExpiredQueuedRequests(fresh)
+            try await clearExpiredQueuedRequests(fresh, permissionChanged: prior.requestQueueGrant != fresh.requestQueueGrant)
             guard start == generation else { return }
             configureShopperInbox(fresh); configureSharedShop(fresh); lifecycle?.setScope(fresh)
             notice = nil
@@ -319,9 +319,15 @@ struct DeviceReminderPersona: Equatable {
         }
         contributorReplayWindow = (window, expiresAt)
     }
-    private func clearExpiredQueuedRequests(_ current: HouseholdBootstrap) async throws {
-        for operation in try await outbox.operations() where operation.householdID == current.household.id && operation.memberID == current.memberId {
-            guard let grant = operation.requestQueueGrant, grant != current.requestQueueGrant else { continue }
+    private func clearExpiredQueuedRequests(_ current: HouseholdBootstrap, permissionChanged: Bool = false) async throws {
+        let stored = try await outbox.operations()
+        // A direct online attempt without permission lives only in this session. A changed
+        // permission ends that retry, but older protected receipts still use their original key.
+        if permissionChanged, let pending, pending.requestQueueGrant == nil, !stored.contains(where: { $0.id == pending.id }) {
+            self.pending = nil; delivery = .localDraft
+        }
+        for operation in stored where operation.householdID == current.household.id && operation.memberID == current.memberId {
+            guard let grant = operation.requestQueueGrant, !current.requestQueueEnabled || grant != current.requestQueueGrant else { continue }
             try await outbox.remove(operation.id)
             if pending?.id == operation.id { pending = nil; delivery = .localDraft }
         }
@@ -335,7 +341,7 @@ struct DeviceReminderPersona: Equatable {
             let updated = try await service.setRequestQueuePermission(enabled)
             guard start == generation, projection == prior, updated.memberId == prior.memberId, updated.household.id == prior.household.id else { return }
             projection = updated
-            try await clearExpiredQueuedRequests(updated)
+            try await clearExpiredQueuedRequests(updated, permissionChanged: !enabled || prior.requestQueueGrant != updated.requestQueueGrant)
             if enabled { try await prefetchContributorReplayWindow(service, start: start) }
             notice = nil
         } catch { await show(error, start: start) }
@@ -391,13 +397,9 @@ struct DeviceReminderPersona: Equatable {
             }
             let envelope = CommandEnvelope(replayWindow: window.id, shopId: scope.targetShopID, kind: kind,
                 base: .init(shopRevision: 0, authorityEpoch: 0, requestRevision: scope.editing?.revision), body: body)
-            let operation = try await service.prepare(envelope: envelope, bootstrap: projection, requestQueueGrant: offline ? projection.requestQueueGrant : nil)
+            let operation = try await service.prepare(envelope: envelope, bootstrap: projection, requestQueueGrant: projection.requestQueueEnabled ? projection.requestQueueGrant : nil)
             guard start == generation, currentContributorRequestScope() == scope else { return }
-            try await outbox.append(operation)
-            guard start == generation else { return }
-            pending = operation; attempts = 0; retryAfter = .distantPast; delivery = .waiting(operationID: operation.id)
-            if offline { notice = ht("Saved on this iPhone. Retry when you are connected.") }
-            else { await deliver(operation, start: start) }
+            try await submitRequest(operation, projection: projection, offline: offline, start: start)
         } catch { await show(error, start: start) }
     }
     func edit(_ request: OwnRequest) {
@@ -418,13 +420,27 @@ struct DeviceReminderPersona: Equatable {
             guard start == generation else { return }
             let envelope = CommandEnvelope(replayWindow: window.id, shopId: request.shopId, kind: "request.withdraw",
                 base: .init(shopRevision: 0, authorityEpoch: 0, requestRevision: request.revision), body: ["requestId": .string(request.requestId)])
-            let operation = try await service.prepare(envelope: envelope, bootstrap: projection)
+            let operation = try await service.prepare(envelope: envelope, bootstrap: projection,
+                requestQueueGrant: projection.requestQueueEnabled ? projection.requestQueueGrant : nil)
             guard start == generation else { return }
+            try await submitRequest(operation, projection: projection, offline: false, start: start)
+        } catch { await show(error, start: start) }
+    }
+    private func submitRequest(_ operation: PendingOperation, projection: HouseholdBootstrap, offline: Bool, start: UUID) async throws {
+        let durableGrant = projection.requestQueueEnabled && operation.requestQueueGrant != nil
+        if offline && !durableGrant {
+            notice = ht("Enable offline requests while connected before saving a request offline.")
+            return
+        }
+        // Older service enrollments and guardian-managed online submissions retain their
+        // protected same-key recovery. A capable adult needs a live generation to write to disk.
+        if durableGrant || projection.canSetRequestQueue == nil || guardianChildOnly {
             try await outbox.append(operation)
             guard start == generation else { return }
-            pending = operation; attempts = 0; delivery = .waiting(operationID: operation.id)
-            await deliver(operation, start: start)
-        } catch { await show(error, start: start) }
+        }
+        pending = operation; attempts = 0; retryAfter = .distantPast; delivery = .waiting(operationID: operation.id)
+        if offline { notice = ht("Saved on this iPhone. Retry when you are connected.") }
+        else { await deliver(operation, start: start) }
     }
     func retry() async {
         guard let pending, !busy, !locked, case .waiting = delivery else { return }
@@ -443,11 +459,11 @@ struct DeviceReminderPersona: Equatable {
             catch { if start == generation { notice = ht("Received by the household. Local retry cleanup needs another attempt.") } }
         } catch {
             guard start == generation else { return }
-            if case .service(_, "queue_permission_ended", _, _) = error as? ClientError {
+            if case .service(_, "queue_permission_ended", _, _) = error as? ClientError, let endedGrant = operation.requestQueueGrant {
                 contributorReplayWindow = nil
                 do {
                     for queued in try await outbox.operations() where queued.householdID == operation.householdID &&
-                        queued.memberID == operation.memberID && queued.requestQueueGrant == operation.requestQueueGrant {
+                        queued.memberID == operation.memberID && queued.deviceID == operation.deviceID && queued.requestQueueGrant == endedGrant {
                         try await outbox.remove(queued.id)
                     }
                     guard start == generation else { return }

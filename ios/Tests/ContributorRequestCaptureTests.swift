@@ -198,7 +198,116 @@ import DeviceSurfaces
         let afterRotation = try await outbox.operations()
         XCTAssertTrue(afterRotation.isEmpty)
         XCTAssertEqual(model.delivery, .localDraft)
-        XCTAssertTrue(fixture.commands.isEmpty)
+        XCTAssertEqual(fixture.commands, waiting.map(\.bytes)); XCTAssertTrue(fixture.rows.isEmpty)
+        XCTAssertEqual(fixture.attemptedGrants, waiting.map(\.requestQueueGrant))
+    }
+
+    func testOnlineWindowThenDisconnectedPostIsBoundAndRemovedByExplicitOptOut() async throws {
+        let queue = location(); defer { try? FileManager.default.removeItem(at: queue.deletingLastPathComponent()) }
+        let fixture = ContributorCaptureFixture(), grant = UUID()
+        fixture.offersQueuePermission = true; fixture.queueGrant = grant
+        let model = try await model(fixture, queue: queue)
+        let outbox = OperationOutbox(url: queue)
+        model.item = "Rice"; fixture.dropBeforeCommit = true
+        await model.sendRequest()
+        let saved = try await outbox.operations()
+        XCTAssertEqual(saved.count, 1); XCTAssertEqual(saved.first?.requestQueueGrant, grant)
+        XCTAssertEqual(fixture.attemptedGrants, [grant]); XCTAssertTrue(fixture.rows.isEmpty)
+        await model.setRequestQueuePermission(false)
+        await model.setRequestQueuePermission(true)
+        XCTAssertNotEqual(fixture.queueGrant, grant)
+        let remaining = try await outbox.operations()
+        XCTAssertTrue(remaining.isEmpty); XCTAssertEqual(model.delivery, .localDraft)
+        await model.retry()
+        XCTAssertEqual(fixture.attemptedGrants.count, 1); XCTAssertTrue(fixture.rows.isEmpty)
+    }
+
+    func testRotatedGrantFencesOnlineWithdrawalAfterDisconnectedPost() async throws {
+        let queue = location(); defer { try? FileManager.default.removeItem(at: queue.deletingLastPathComponent()) }
+        let fixture = ContributorCaptureFixture(), grant = UUID(), device = ContributorCaptureVault()
+        fixture.offersQueuePermission = true; fixture.queueGrant = grant
+        let model = try await model(fixture, queue: queue, deviceVault: device)
+        model.item = "Apples"; await model.sendRequest()
+        let received = try XCTUnwrap(model.requests.first)
+        fixture.dropBeforeCommit = true
+        await model.withdraw(received)
+        let saved = try await OperationOutbox(url: queue).operations()
+        XCTAssertEqual(saved.count, 1); XCTAssertEqual(saved.first?.requestQueueGrant, grant)
+        XCTAssertEqual(fixture.attemptedGrants, [grant, grant])
+        fixture.queueGrant = UUID()
+        let reopened = try await self.model(fixture, queue: queue, deviceVault: device)
+        await reopened.retry()
+        let remaining = try await OperationOutbox(url: queue).operations()
+        XCTAssertTrue(remaining.isEmpty); XCTAssertEqual(fixture.attemptedGrants.count, 2)
+        XCTAssertEqual(fixture.rows.first?["status"] as? String, "pending")
+    }
+
+    func testExpiredGrantDoesNotWriteGenerationFreeOnlineRetries() async throws {
+        let queue = location(); defer { try? FileManager.default.removeItem(at: queue.deletingLastPathComponent()) }
+        let fixture = ContributorCaptureFixture()
+        fixture.offersQueuePermission = true; fixture.queueGrant = UUID()
+        fixture.queueExpiry = "2000-01-01T00:00:00.000Z"
+        let model = try await model(fixture, queue: queue)
+        fixture.dropBeforeCommit = true; model.item = "Beans"
+        await model.sendRequest()
+        let saved = try await OperationOutbox(url: queue).operations()
+        XCTAssertTrue(saved.isEmpty); XCTAssertTrue(fixture.rows.isEmpty)
+    }
+
+    func testCommittedOnlineSendCanRecoverBoundReceiptAfterRemoteGrantRevocation() async throws {
+        let queue = location(); defer { try? FileManager.default.removeItem(at: queue.deletingLastPathComponent()) }
+        let fixture = ContributorCaptureFixture(), grant = UUID(), device = ContributorCaptureVault()
+        fixture.offersQueuePermission = true; fixture.queueGrant = grant
+        let first = try await model(fixture, queue: queue, deviceVault: device)
+        fixture.loseReply = true; first.item = "Carrots"
+        await first.sendRequest()
+        let saved = try await OperationOutbox(url: queue).operations()
+        let original = try XCTUnwrap(saved.first)
+        XCTAssertEqual(original.requestQueueGrant, grant)
+        let reopened = try await model(fixture, queue: queue, deviceVault: device)
+        fixture.queueGrant = nil
+        await reopened.retry()
+        guard case .received = reopened.delivery else { return XCTFail("Exact committed receipt should remain recoverable") }
+        XCTAssertEqual(fixture.commands, [original.bytes, original.bytes])
+        XCTAssertEqual(fixture.attemptedGrants, [grant, grant]); XCTAssertEqual(fixture.rows.count, 1)
+        let remaining = try await OperationOutbox(url: queue).operations()
+        XCTAssertTrue(remaining.isEmpty)
+    }
+
+    func testOnlineWithoutOptInCanSendAndReconcileReceivedRequestAfterRestart() async throws {
+        let queue = location(); defer { try? FileManager.default.removeItem(at: queue.deletingLastPathComponent()) }
+        let fixture = ContributorCaptureFixture(), device = ContributorCaptureVault()
+        fixture.offersQueuePermission = true
+        let first = try await model(fixture, queue: queue, deviceVault: device)
+        fixture.loseReply = true; first.item = "Rice"
+        await first.sendRequest()
+        let saved = try await OperationOutbox(url: queue).operations()
+        XCTAssertTrue(saved.isEmpty); XCTAssertEqual(fixture.attemptedGrants, [nil])
+        let reopened = try await model(fixture, queue: queue, deviceVault: device)
+        XCTAssertEqual(reopened.requests.map(\.originalItem), ["Rice"])
+        await reopened.retry()
+        XCTAssertEqual(fixture.commands.count, 1)
+    }
+
+    func testOnlineEditWithDroppedPostClearsOnExpiryEvenWhenGrantIDIsUnchanged() async throws {
+        let queue = location(); defer { try? FileManager.default.removeItem(at: queue.deletingLastPathComponent()) }
+        let fixture = ContributorCaptureFixture(), grant = UUID()
+        fixture.offersQueuePermission = true; fixture.queueGrant = grant
+        let model = try await model(fixture, queue: queue)
+        model.item = "Apples"; await model.sendRequest()
+        model.edit(try XCTUnwrap(model.requests.first))
+        model.item = "Pears"; fixture.dropBeforeCommit = true
+        await model.sendRequest()
+        let outbox = OperationOutbox(url: queue)
+        let stored = try await outbox.operations()
+        let edit = try XCTUnwrap(stored.first)
+        let envelope = try JSONDecoder().decode(CommandEnvelope.self, from: edit.bytes)
+        XCTAssertEqual(envelope.kind, "request.edit"); XCTAssertEqual(edit.requestQueueGrant, grant)
+        fixture.queueExpiry = "2000-01-01T00:00:00.000Z"
+        await model.refresh(); await model.retry()
+        let remaining = try await outbox.operations()
+        XCTAssertTrue(remaining.isEmpty); XCTAssertEqual(fixture.attemptedGrants, [grant, grant])
+        XCTAssertEqual(model.requests.first?.originalItem, "Apples")
     }
 
     func testOfflineWithoutUsableWindowAndExplicitDenialNeverQueue() async throws {
@@ -419,9 +528,11 @@ private final class ContributorCaptureFixture: @unchecked Sendable {
     let household = UUID().uuidString.lowercased(), member = UUID().uuidString.lowercased(), shop = UUID().uuidString.lowercased()
     let windowID = UUID().uuidString.lowercased()
     var windowExpiry = "2099-01-01T00:00:00.000Z", windowFailure: WindowFailure?
-    var offersQueuePermission = false, queueGrant: UUID?
+    var offersQueuePermission = false, queueGrant: UUID?, queueExpiry: String?
+    var dropBeforeCommit = false, attemptedGrants: [UUID?] = []
     var enrollmentRevoked = false, revokedBootstrapChecks = 0
     var commands: [Data] = [], rows: [[String: Any]] = [], receipts: [String: [String: Any]] = [:]
+    var receiptGrants: [String: UUID] = [:]
     var loseReply = false, privateReads = 0
     var replayStarted: XCTestExpectation?, replayGate: DispatchSemaphore?
     func respond(_ request: URLRequest) throws -> (Int, Data) {
@@ -436,7 +547,10 @@ private final class ContributorCaptureFixture: @unchecked Sendable {
         if path == "/auth/v1/user" { return try response(["id":"sam","email_confirmed_at":"date"]) }
         if path == "/v1/me/workspaces" { return try response(["workspaces":[["householdId":household,"label":"Home","role":"contributor"]]]) }
         if path.hasSuffix("/devices") { return try response(["deviceId":"sam-device","deviceToken":"sam-device-token"],201) }
-        if path.hasSuffix("/bootstrap") {
+        if path.hasSuffix("/bootstrap") || path.hasSuffix("/devices/current/request-queue") {
+            if path.hasSuffix("/devices/current/request-queue"), let enabled = json["enabled"] as? Bool {
+                queueGrant = enabled ? (queueGrant ?? UUID()) : nil
+            }
             if enrollmentRevoked {
                 revokedBootstrapChecks += 1
                 return try response(["error": ["code": "access_ended"]], 403)
@@ -445,7 +559,7 @@ private final class ContributorCaptureFixture: @unchecked Sendable {
             if offersQueuePermission { value["canSetRequestQueue"] = true; value["capabilities"] = ["own_requests", "request_queue_permission"] }
             if let queueGrant {
                 value["requestQueueGrant"] = queueGrant.uuidString
-                value["requestQueueUntil"] = windowExpiry
+                value["requestQueueUntil"] = queueExpiry ?? windowExpiry
             }
             return try response(value)
         }
@@ -463,10 +577,24 @@ private final class ContributorCaptureFixture: @unchecked Sendable {
             return try response(["id":windowID,"expiresAt":windowExpiry])
         }
         if path.hasSuffix("/commands") {
-            commands.append(data)
+            let grant = request.value(forHTTPHeaderField: "X-Request-Queue-Grant").flatMap(UUID.init(uuidString:))
+            attemptedGrants.append(grant)
+            if dropBeforeCommit { dropBeforeCommit = false; throw URLError(.notConnectedToInternet) }
             if enrollmentRevoked { return try response(["error": ["code": "access_ended"]], 403) }
             let key = json["clientKey"] as! String
-            if let receipt = receipts[key] { return try response(receipt) }
+            commands.append(data)
+            if let receipt = receipts[key] {
+                guard receiptGrants[key] == grant else { return try response(["error":["code":"key_reused"]],409) }
+                return try response(receipt)
+            }
+            if let grant, grant != queueGrant { return try response(["error":["code":"queue_permission_ended"]],409) }
+            receiptGrants[key] = grant
+            if json["kind"] as? String == "request.withdraw" {
+                guard let target = json["body"] as? [String:Any], let i = rows.firstIndex(where: { $0["requestId"] as? String == target["requestId"] as? String }) else { throw URLError(.badServerResponse) }
+                rows[i]["status"] = "withdrawn"; rows[i]["ownActionAllowed"] = false
+                let receipt: [String:Any] = ["operationId":key,"kind":"request.withdraw","request":rows[i]]
+                receipts[key] = receipt; return try response(receipt)
+            }
             XCTAssertEqual(json["kind"] as? String, "request.send")
             let body = json["body"] as! [String: Any]
             let row: [String: Any] = ["requestId":UUID().uuidString.lowercased(),"shopId":shop,"revision":1,"originalItem":body["originalItem"]!,"ownQuantity":body["ownQuantity"]!,"authoredAt":body["authoredAt"]!,"receivedAt":"2026-11-03T00:00:00Z","route":body["route"]!,"status":"pending","ownActionAllowed":true,"clarification":NSNull(),"followupTo":NSNull()]
