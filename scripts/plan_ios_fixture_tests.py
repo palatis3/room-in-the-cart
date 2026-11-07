@@ -47,7 +47,8 @@ ISOLATED_SUITES = {"SharedMealIdeaUITests", "SharedStoreQuoteUITests"}
 BALANCED_SUITES = {
     "contributor-balanced-01": ("DinnerAwayCarryoverUITests", "RequestDuplicateComparisonUITests"),
     "contributor-balanced-02": ("ContributorRequestUITests", "ImportRecoveryUITests", "MeasurementUITests", "StockReviewUITests"),
-    "contributor-balanced-03": ("HouseholdDevicesUITests", "HouseholdRequestPackUITests", "SharedMealCivilDateUITests", "SharedDeliveryUITests"),
+    # The six delivery, freezer and cook journeys run together on a dedicated runner.
+    "contributor-balanced-03": ("HouseholdDevicesUITests", "HouseholdRequestPackUITests", "SharedMealCivilDateUITests"),
     "contributor-balanced-04": ("HistoryGrantReadUITests", "RecipeLibraryAcceptanceUITests", "PaidPickupRecoveryUITests"),
     "contributor-balanced-05": ("CorrectionPrivacyAcceptanceUITests", "GuardianEnrollmentUITests", "SharedMealChangeUITests"),
 }

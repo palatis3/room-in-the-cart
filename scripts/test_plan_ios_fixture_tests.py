@@ -38,7 +38,7 @@ class PlanIOSFixtureTests(unittest.TestCase):
         isolated = {f"{suite}-{method.rsplit('/', 1)[1]}"
                     for suite in ISOLATED_SUITES for method in self.inventory[suite]}
         self.assertCountEqual(actual, grouped | isolated)
-        self.assertEqual(len(actual), 14)
+        self.assertEqual(len(actual), 15)
         self.assertIn("RecipeLibraryAcceptanceUITests", suites_for("contributor"))
         self.assertIn("CorrectionPrivacyAcceptanceUITests", suites_for("contributor"))
         self.assertNotIn("LibraryPrivacyUITestCase", actual)
@@ -83,13 +83,20 @@ class PlanIOSFixtureTests(unittest.TestCase):
         self.assertEqual(plans["dinner"]["shards"]["DinnerDecisionSheetUITests"]["suite"], "DinnerDecisionSheetUITests")
         self.assertEqual(sum(len(shard["test_identifiers"]) for plan in plans.values()
                              for shard in plan["shards"].values()), 55)
-        pantry_case = f"{UI_TARGET}/SharedDeliveryUITests/testShopperReviewsFreezerBatchCoverageBeforeCorrectingFiveToThree"
-        pantry_group = plans["contributor"]["shards"]["contributor-balanced-03"]
-        self.assertIn(pantry_case, [identifier.removesuffix("()") for identifier in pantry_group["test_identifiers"]])
-        recovery_case = f"{UI_TARGET}/SharedDeliveryUITests/testShopperReplacesWednesdayAfterPickupAndKeepsTuesdaysShortage"
-        self.assertIn(recovery_case, [identifier.removesuffix("()") for identifier in pantry_group["test_identifiers"]])
-        keep_case = f"{UI_TARGET}/SharedDeliveryUITests/testShopperLeavesOriginalDinnerOpenAfterAnUnresolvedReplacementPreview"
-        self.assertIn(keep_case, [identifier.removesuffix("()") for identifier in pantry_group["test_identifiers"]])
+        delivery = plans["contributor"]["shards"]["SharedDeliveryUITests"]
+        self.assertEqual(delivery["suite"], "SharedDeliveryUITests")
+        self.assertEqual({identifier.removesuffix("()") for identifier in delivery["test_identifiers"]},
+                         self.inventory["SharedDeliveryUITests"])
+        expected_delivery_methods = {
+            "testShopperReviewsFreezerBatchCoverageBeforeCorrectingFiveToThree",
+            "testShopperReplacesWednesdayAfterPickupAndKeepsTuesdaysShortage",
+            "testShopperLeavesOriginalDinnerOpenAfterAnUnresolvedReplacementPreview",
+            "testShopperSavesDatedCookCopyAndReopensRecipientSendRecord",
+            "testShopperRecordsAndCorrectsDeliveryThenReopensIt",
+            "testSpanishShopperDistinguishesFractionalUsableFoodZeroAndUnknown",
+        }
+        self.assertEqual({identifier.rsplit("/", 1)[1].removesuffix("()") for identifier in delivery["test_identifiers"]},
+                         expected_delivery_methods)
         paid_case = f"{UI_TARGET}/PaidPickupRecoveryUITests/testNamedSeatCanApplyAcceptedRecipeAndExpiredSeatCanReadSavedCookCopy"
         group = plans["contributor"]["shards"]["contributor-balanced-04"]
         self.assertIn(paid_case, [identifier.removesuffix("()") for identifier in group["test_identifiers"]])
