@@ -37,7 +37,7 @@ import XCTest
             "label CONTAINS %@ AND (label CONTAINS %@ OR value CONTAINS %@)", label, value, value)).firstMatch
         reveal(row, file: file, line: line)
     }
-    private func checkCookCopy(_ fragments: [String], openShare: Bool = false,
+    private func checkCookCopy(in title: String, fragments: [String], openShare: Bool = false,
                                file: StaticString = #filePath, line: UInt = #line) {
         let link = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "delivery.cook.")).firstMatch
         tap(link, file: file, line: line)
@@ -56,7 +56,7 @@ import XCTest
             reveal(preview, file: file, line: line)
             XCTAssertEqual(preview.label, copy, file: file, line: line)
         }
-        tap(app.navigationBars.buttons.firstMatch, file: file, line: line)
+        tap(app.navigationBars[title].buttons.firstMatch, file: file, line: line)
     }
     private func enter(_ input: String, in field: XCUIElement) {
         tap(field)
@@ -121,7 +121,7 @@ import XCTest
         assertFact("Still backed by this delivery", "1 unit")
         let evidence = XCTAttachment(screenshot: app.screenshot())
         evidence.name = "Set-aside lunch after a delivery correction"; evidence.lifetime = .keepAlways; add(evidence)
-        checkCookCopy(["Lunch wraps", "School lunch", "peanuts", "sesame", "Beans soaked", "Kitchen wraps",
+        checkCookCopy(in: "Tell the cook", fragments: ["Lunch wraps", "School lunch", "peanuts", "sesame", "Beans soaked", "Kitchen wraps",
                        "Amount set aside: 2 units", "Still backed by this delivery: 1 unit"], openShare: true)
         tap(app.buttons["Done"])
         tap(openMatches)
@@ -176,7 +176,7 @@ import XCTest
         tap(app.buttons["Alimentos entregados por comida"])
         assertFact("Cantidad apartada", "1/4 unidades")
         assertFact("Cantidad que aún cubre esta entrega", "0 unidades")
-        checkCookCopy(["Lunch wraps", "School lunch", "Tortillas de maíz", "Cantidad apartada: 1/4 unidades",
+        checkCookCopy(in: "Avisar a quien cocina", fragments: ["Lunch wraps", "School lunch", "Tortillas de maíz", "Cantidad apartada: 1/4 unidades",
                        "Cantidad que aún cubre esta entrega: 0 unidades", "peanuts", "sesame"])
         tap(app.buttons["Listo"])
         tap(record)
