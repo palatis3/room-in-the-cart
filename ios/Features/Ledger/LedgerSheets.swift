@@ -96,7 +96,8 @@ struct LedgerImportView: View {
                 if !showingImportStatus {
                     Section { importSaveStatus }
                 }
-            }.scrollDismissesKeyboard(.interactively).workingSurface().navigationTitle(ledgerText("Bring the list"))
+            }.accessibilityIdentifier("ledgerImportForm")
+                .scrollDismissesKeyboard(.interactively).workingSurface().navigationTitle(ledgerText("Bring the list"))
                 .safeAreaInset(edge: .bottom, spacing: 0) {
                     if let preview {
                         importConfirmation(preview)

@@ -1,0 +1,457 @@
+{
+  "matchesSavedRetry": false,
+  "before": {
+    "contributionCount": 2,
+    "headRevision": 2,
+    "history": [
+      {
+        "revision": 1,
+        "sha256": "f0781fbf743e500d2e3b5121faeb831f1739f1f6c9747509689a604936e971dc",
+        "workspaceID": "8447F148-F5E1-4D24-AAB7-DCD774EE17CC"
+      },
+      {
+        "revision": 2,
+        "sha256": "ec4cd39ad1764c0c6218eb395c6f83675bb146fe292f3d6e8d3433ccc26e8cf5",
+        "workspaceID": "8447F148-F5E1-4D24-AAB7-DCD774EE17CC"
+      }
+    ],
+    "importBatchCount": 1,
+    "lineNames": [
+      "recovery pears",
+      "recovery wraps"
+    ],
+    "payloadSHA256": "ec4cd39ad1764c0c6218eb395c6f83675bb146fe292f3d6e8d3433ccc26e8cf5",
+    "quantities": [
+      {
+        "denominator": 1,
+        "name": "recovery pears",
+        "numerator": 3,
+        "unit": "count"
+      },
+      {
+        "denominator": 1,
+        "name": "recovery wraps",
+        "numerator": 2,
+        "unit": "count"
+      }
+    ],
+    "revisionCount": 2,
+    "shop": {
+      "allocations": [],
+      "basis": {
+        "branch": "",
+        "capFirmness": "firm",
+        "capScope": "wholeShop",
+        "currency": "USD",
+        "mode": "pickup",
+        "timeZoneIdentifier": "America/New_York"
+      },
+      "basisRevision": 0,
+      "contributions": [
+        {
+          "exclusions": [],
+          "id": "96030FA0-CF2E-479E-873C-0887726208DA",
+          "lineID": "2876E445-041D-4D39-946F-EDEB2C2A00CE",
+          "notes": "",
+          "originalText": "2 recovery wraps",
+          "productName": "recovery wraps",
+          "quantity": {
+            "amount": {
+              "denominator": 1,
+              "numerator": 2
+            },
+            "originalLiteral": "2 recovery wraps",
+            "unit": "count"
+          },
+          "source": {
+            "imported": {
+              "batchID": "95260139-0B89-4829-872E-7274A4228BF5"
+            }
+          }
+        },
+        {
+          "exclusions": [],
+          "id": "23821D6E-5898-407A-902E-DD920F569865",
+          "lineID": "3C16DC90-F515-4C5E-8C6E-51994A0C6D80",
+          "notes": "",
+          "originalText": "3 recovery pears",
+          "productName": "recovery pears",
+          "quantity": {
+            "amount": {
+              "denominator": 1,
+              "numerator": 3
+            },
+            "originalLiteral": "3 recovery pears",
+            "unit": "count"
+          },
+          "source": {
+            "imported": {
+              "batchID": "95260139-0B89-4829-872E-7274A4228BF5"
+            }
+          }
+        }
+      ],
+      "id": "ED105B30-EA38-4A2D-BB67-AE9D6F94052E",
+      "importBatches": [
+        {
+          "contributionIDs": [
+            "96030FA0-CF2E-479E-873C-0887726208DA",
+            "23821D6E-5898-407A-902E-DD920F569865"
+          ],
+          "createdAt": 815715410.953008,
+          "decisions": [
+            "96030FA0-CF2E-479E-873C-0887726208DA",
+            {
+              "addNew": {}
+            },
+            "23821D6E-5898-407A-902E-DD920F569865",
+            {
+              "addNew": {}
+            }
+          ],
+          "id": "95260139-0B89-4829-872E-7274A4228BF5",
+          "preview": {
+            "baseRevision": 0,
+            "id": "95260139-0B89-4829-872E-7274A4228BF5",
+            "lines": [
+              {
+                "duplicateLineIDs": [],
+                "exclusions": [],
+                "id": "96030FA0-CF2E-479E-873C-0887726208DA",
+                "name": "recovery wraps",
+                "originalText": "2 recovery wraps",
+                "proposedLineID": "2876E445-041D-4D39-946F-EDEB2C2A00CE",
+                "quantity": {
+                  "amount": {
+                    "denominator": 1,
+                    "numerator": 2
+                  },
+                  "originalLiteral": "2 recovery wraps",
+                  "unit": "count"
+                }
+              },
+              {
+                "duplicateLineIDs": [],
+                "exclusions": [],
+                "id": "23821D6E-5898-407A-902E-DD920F569865",
+                "name": "recovery pears",
+                "originalText": "3 recovery pears",
+                "proposedLineID": "3C16DC90-F515-4C5E-8C6E-51994A0C6D80",
+                "quantity": {
+                  "amount": {
+                    "denominator": 1,
+                    "numerator": 3
+                  },
+                  "originalLiteral": "3 recovery pears",
+                  "unit": "count"
+                }
+              }
+            ],
+            "originalText": "2 recovery wraps\n3 recovery pears",
+            "shopID": "ED105B30-EA38-4A2D-BB67-AE9D6F94052E",
+            "source": "typed"
+          }
+        }
+      ],
+      "lines": [
+        {
+          "aisle": "",
+          "id": "2876E445-041D-4D39-946F-EDEB2C2A00CE",
+          "name": "recovery wraps",
+          "notes": "",
+          "originalOrder": 0
+        },
+        {
+          "aisle": "",
+          "id": "3C16DC90-F515-4C5E-8C6E-51994A0C6D80",
+          "name": "recovery pears",
+          "notes": "",
+          "originalOrder": 1
+        }
+      ],
+      "mealOccurrences": [],
+      "revision": 1,
+      "revisionID": "58E7CB97-C705-4D9A-94A5-21D7A7356257",
+      "revisions": [
+        {
+          "basisRevision": 0,
+          "createdAt": 815715410.953008,
+          "id": "58E7CB97-C705-4D9A-94A5-21D7A7356257",
+          "number": 1,
+          "operation": "commitImport"
+        }
+      ],
+      "title": "Recovery check"
+    }
+  },
+  "after": {
+    "headRevision": 3,
+    "payloadSHA256": "019a227f3faaa5b942a70b0a31a0cd5821b0a3515d056f53e1add94ca58a68a0",
+    "revisionCount": 3,
+    "lineNames": [
+      "discarded oat jars",
+      "recovery pears",
+      "recovery wraps"
+    ],
+    "contributionCount": 3,
+    "quantities": [
+      {
+        "name": "discarded oat jars",
+        "numerator": 4,
+        "denominator": 1,
+        "unit": "count"
+      },
+      {
+        "name": "recovery pears",
+        "numerator": 3,
+        "denominator": 1,
+        "unit": "count"
+      },
+      {
+        "name": "recovery wraps",
+        "numerator": 2,
+        "denominator": 1,
+        "unit": "count"
+      }
+    ],
+    "importBatchCount": 2,
+    "history": [
+      {
+        "workspaceID": "8447F148-F5E1-4D24-AAB7-DCD774EE17CC",
+        "revision": 1,
+        "sha256": "f0781fbf743e500d2e3b5121faeb831f1739f1f6c9747509689a604936e971dc"
+      },
+      {
+        "workspaceID": "8447F148-F5E1-4D24-AAB7-DCD774EE17CC",
+        "revision": 2,
+        "sha256": "ec4cd39ad1764c0c6218eb395c6f83675bb146fe292f3d6e8d3433ccc26e8cf5"
+      },
+      {
+        "workspaceID": "8447F148-F5E1-4D24-AAB7-DCD774EE17CC",
+        "revision": 3,
+        "sha256": "019a227f3faaa5b942a70b0a31a0cd5821b0a3515d056f53e1add94ca58a68a0"
+      }
+    ],
+    "shop": {
+      "allocations": [],
+      "basis": {
+        "branch": "",
+        "capFirmness": "firm",
+        "capScope": "wholeShop",
+        "currency": "USD",
+        "mode": "pickup",
+        "timeZoneIdentifier": "America/New_York"
+      },
+      "basisRevision": 0,
+      "contributions": [
+        {
+          "exclusions": [],
+          "id": "96030FA0-CF2E-479E-873C-0887726208DA",
+          "lineID": "2876E445-041D-4D39-946F-EDEB2C2A00CE",
+          "notes": "",
+          "originalText": "2 recovery wraps",
+          "productName": "recovery wraps",
+          "quantity": {
+            "amount": {
+              "denominator": 1,
+              "numerator": 2
+            },
+            "originalLiteral": "2 recovery wraps",
+            "unit": "count"
+          },
+          "source": {
+            "imported": {
+              "batchID": "95260139-0B89-4829-872E-7274A4228BF5"
+            }
+          }
+        },
+        {
+          "exclusions": [],
+          "id": "23821D6E-5898-407A-902E-DD920F569865",
+          "lineID": "3C16DC90-F515-4C5E-8C6E-51994A0C6D80",
+          "notes": "",
+          "originalText": "3 recovery pears",
+          "productName": "recovery pears",
+          "quantity": {
+            "amount": {
+              "denominator": 1,
+              "numerator": 3
+            },
+            "originalLiteral": "3 recovery pears",
+            "unit": "count"
+          },
+          "source": {
+            "imported": {
+              "batchID": "95260139-0B89-4829-872E-7274A4228BF5"
+            }
+          }
+        },
+        {
+          "exclusions": [],
+          "id": "25873827-3417-4FBE-8097-2A0A581C5A8F",
+          "lineID": "106D105D-1958-43DE-96C6-F4EE6549D1A5",
+          "notes": "",
+          "originalText": "4 discarded oat jars",
+          "productName": "discarded oat jars",
+          "quantity": {
+            "amount": {
+              "denominator": 1,
+              "numerator": 4
+            },
+            "originalLiteral": "4 discarded oat jars",
+            "unit": "count"
+          },
+          "source": {
+            "imported": {
+              "batchID": "419BF4F7-34E9-49C5-B9E9-3FE0D7D84311"
+            }
+          }
+        }
+      ],
+      "id": "ED105B30-EA38-4A2D-BB67-AE9D6F94052E",
+      "importBatches": [
+        {
+          "contributionIDs": [
+            "96030FA0-CF2E-479E-873C-0887726208DA",
+            "23821D6E-5898-407A-902E-DD920F569865"
+          ],
+          "createdAt": 815715410.953008,
+          "decisions": [
+            "96030FA0-CF2E-479E-873C-0887726208DA",
+            {
+              "addNew": {}
+            },
+            "23821D6E-5898-407A-902E-DD920F569865",
+            {
+              "addNew": {}
+            }
+          ],
+          "id": "95260139-0B89-4829-872E-7274A4228BF5",
+          "preview": {
+            "baseRevision": 0,
+            "id": "95260139-0B89-4829-872E-7274A4228BF5",
+            "lines": [
+              {
+                "duplicateLineIDs": [],
+                "exclusions": [],
+                "id": "96030FA0-CF2E-479E-873C-0887726208DA",
+                "name": "recovery wraps",
+                "originalText": "2 recovery wraps",
+                "proposedLineID": "2876E445-041D-4D39-946F-EDEB2C2A00CE",
+                "quantity": {
+                  "amount": {
+                    "denominator": 1,
+                    "numerator": 2
+                  },
+                  "originalLiteral": "2 recovery wraps",
+                  "unit": "count"
+                }
+              },
+              {
+                "duplicateLineIDs": [],
+                "exclusions": [],
+                "id": "23821D6E-5898-407A-902E-DD920F569865",
+                "name": "recovery pears",
+                "originalText": "3 recovery pears",
+                "proposedLineID": "3C16DC90-F515-4C5E-8C6E-51994A0C6D80",
+                "quantity": {
+                  "amount": {
+                    "denominator": 1,
+                    "numerator": 3
+                  },
+                  "originalLiteral": "3 recovery pears",
+                  "unit": "count"
+                }
+              }
+            ],
+            "originalText": "2 recovery wraps\n3 recovery pears",
+            "shopID": "ED105B30-EA38-4A2D-BB67-AE9D6F94052E",
+            "source": "typed"
+          }
+        },
+        {
+          "contributionIDs": [
+            "25873827-3417-4FBE-8097-2A0A581C5A8F"
+          ],
+          "createdAt": 815715551.571069,
+          "decisions": [
+            "25873827-3417-4FBE-8097-2A0A581C5A8F",
+            {
+              "addNew": {}
+            }
+          ],
+          "id": "419BF4F7-34E9-49C5-B9E9-3FE0D7D84311",
+          "preview": {
+            "baseRevision": 1,
+            "id": "419BF4F7-34E9-49C5-B9E9-3FE0D7D84311",
+            "lines": [
+              {
+                "duplicateLineIDs": [],
+                "exclusions": [],
+                "id": "25873827-3417-4FBE-8097-2A0A581C5A8F",
+                "name": "discarded oat jars",
+                "originalText": "4 discarded oat jars",
+                "proposedLineID": "106D105D-1958-43DE-96C6-F4EE6549D1A5",
+                "quantity": {
+                  "amount": {
+                    "denominator": 1,
+                    "numerator": 4
+                  },
+                  "originalLiteral": "4 discarded oat jars",
+                  "unit": "count"
+                }
+              }
+            ],
+            "originalText": "4 discarded oat jars",
+            "shopID": "ED105B30-EA38-4A2D-BB67-AE9D6F94052E",
+            "source": "typed"
+          }
+        }
+      ],
+      "lines": [
+        {
+          "aisle": "",
+          "id": "2876E445-041D-4D39-946F-EDEB2C2A00CE",
+          "name": "recovery wraps",
+          "notes": "",
+          "originalOrder": 0
+        },
+        {
+          "aisle": "",
+          "id": "3C16DC90-F515-4C5E-8C6E-51994A0C6D80",
+          "name": "recovery pears",
+          "notes": "",
+          "originalOrder": 1
+        },
+        {
+          "aisle": "",
+          "id": "106D105D-1958-43DE-96C6-F4EE6549D1A5",
+          "name": "discarded oat jars",
+          "notes": "",
+          "originalOrder": 2
+        }
+      ],
+      "mealOccurrences": [],
+      "revision": 2,
+      "revisionID": "61A20A0F-EDAF-4020-BE5F-FDE50D089D5D",
+      "revisions": [
+        {
+          "basisRevision": 0,
+          "createdAt": 815715410.953008,
+          "id": "58E7CB97-C705-4D9A-94A5-21D7A7356257",
+          "number": 1,
+          "operation": "commitImport"
+        },
+        {
+          "basisRevision": 0,
+          "createdAt": 815715551.571069,
+          "id": "61A20A0F-EDAF-4020-BE5F-FDE50D089D5D",
+          "number": 2,
+          "operation": "commitImport",
+          "parentID": "58E7CB97-C705-4D9A-94A5-21D7A7356257"
+        }
+      ],
+      "title": "Recovery check"
+    }
+  }
+}

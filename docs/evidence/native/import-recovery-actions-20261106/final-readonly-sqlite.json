@@ -1,0 +1,54 @@
+{
+  "observedAt": "2026-11-07T04:08:32.374206+00:00",
+  "openedMode": "ro",
+  "queryOnly": true,
+  "singleReadTransaction": true,
+  "databaseIdentityMatched": {
+    "device": 16777234,
+    "inode": 19584822
+  },
+  "quickCheck": "ok",
+  "allHistoricalPayloadHashesVerified": true,
+  "savedRetryEqualsDiscardVerified": true,
+  "finalFullShopEqualsSavedRetry": true,
+  "finalHistoryEqualsSavedRetry": true,
+  "snapshot": {
+    "contributionCount": 2,
+    "headRevision": 2,
+    "history": [
+      {
+        "revision": 1,
+        "sha256": "9a5ae965be1fead30ceed367b7cb53d44016359bf4585f2a9e859a8e78c698cf",
+        "workspaceID": "80D2DC38-ADDD-4BE1-A64D-0F4EF4636C7C"
+      },
+      {
+        "revision": 2,
+        "sha256": "a4a1b0a9fde8a8cf36e82be694603e6b615a9da7d088e393acc6d12d3f4059c3",
+        "workspaceID": "80D2DC38-ADDD-4BE1-A64D-0F4EF4636C7C"
+      }
+    ],
+    "importBatchCount": 1,
+    "lineNames": [
+      "recovery pears",
+      "recovery wraps"
+    ],
+    "payloadSHA256": "a4a1b0a9fde8a8cf36e82be694603e6b615a9da7d088e393acc6d12d3f4059c3",
+    "quantities": [
+      {
+        "denominator": 1,
+        "name": "recovery pears",
+        "numerator": 3,
+        "unit": "count"
+      },
+      {
+        "denominator": 1,
+        "name": "recovery wraps",
+        "numerator": 2,
+        "unit": "count"
+      }
+    ],
+    "revisionCount": 2
+  },
+  "databasePath": "/Users/palatis/Library/Developer/CoreSimulator/Devices/EF2CF945-20C5-4BF4-ACA1-A2D6F9C89C01/data/Containers/Data/Application/BF7E67F1-F966-4897-B13B-A2583173C7F5/Library/Application Support/UITestWorkspace/ledger.sqlite",
+  "scope": "Exact owned synthetic UITestWorkspace only. No database mutation, backup, simulator action or raw Records media access."
+}

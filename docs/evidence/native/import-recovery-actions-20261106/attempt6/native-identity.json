@@ -1,0 +1,9 @@
+{
+  "token": "8ad3e195-1321-4a95-9e53-eb24d28fd61c",
+  "simulator": "CD36F253-27EF-4500-A3F2-163F5541C990",
+  "appID": "dev.roominthecart.app.debug",
+  "runnerID": "dev.roominthecart.RoomInTheCartUITests.xctrunner",
+  "sourceXCTestRun": "/Users/palatis/Room in the Cart/.build/S04ProtectedVisibility20261106/DerivedData/Build/Products/RoomInTheCart_iphonesimulator27.1-arm64.xctestrun",
+  "sourceXCTestRunSHA256": "5ed3a5e407ea6f8bcdffe3fee21ca7e29f634623a9afa1618499a39b744074ce",
+  "testXCTestRunSHA256": "3594f310f1d7be0ddf981571ef1bda1e862c4d298a6604dad9d78f72b299a8e5"
+}

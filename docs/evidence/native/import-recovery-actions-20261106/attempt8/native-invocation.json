@@ -1,0 +1,42 @@
+{
+  "command": [
+    "xcodebuild",
+    "-xctestrun",
+    "/Users/palatis/Room in the Cart/.build/ImportRecoveryNative20261106/attempt8/Recovery.xctestrun",
+    "-destination",
+    "platform=iOS Simulator,id=EF2CF945-20C5-4BF4-ACA1-A2D6F9C89C01",
+    "-parallel-testing-enabled",
+    "NO",
+    "-resultBundlePath",
+    "/Users/palatis/Room in the Cart/.build/ImportRecoveryNative20261106/attempt8/Recovery.xcresult",
+    "-collect-test-diagnostics",
+    "never",
+    "-test-timeouts-enabled",
+    "YES",
+    "-default-test-execution-time-allowance",
+    "720",
+    "-maximum-test-execution-time-allowance",
+    "900",
+    "-only-testing:RoomInTheCartUITests/ContextualNavigationUITests/testImportRecoveryUsesRealWriterContentionAndKeepsOneCommit",
+    "test-without-building"
+  ],
+  "driverCommand": [
+    "/Applications/Xcode.app/Contents/Developer/usr/bin/python3",
+    "/Users/palatis/Room in the Cart/.build/ImportRecoveryNative20261106/attempt8/native_recovery_driver.py",
+    "--simulator",
+    "EF2CF945-20C5-4BF4-ACA1-A2D6F9C89C01",
+    "--runner-bundle-id",
+    "dev.roominthecart.RoomInTheCartUITests.xctrunner",
+    "--app-info-plist",
+    "/Users/palatis/Room in the Cart/.build/S04ProtectedVisibility20261106/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/Info.plist",
+    "--token",
+    "11bae1df-0205-44b6-8ac7-727af8a8132b",
+    "--report-directory",
+    "/Users/palatis/Room in the Cart/.build/ImportRecoveryNative20261106/attempt8/host-run",
+    "--watch-pid",
+    "71406",
+    "--overall-seconds",
+    "840"
+  ],
+  "startUnixUTC": 1794023498.822586
+}

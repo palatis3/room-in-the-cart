@@ -1,0 +1,9 @@
+{
+  "candidateFreezeSHA256": "d814df3f703ecda2752294278cd080e4dbb51a1093e9d7e2ff5d1f164d50c305",
+  "candidateFilesRehashed": 97,
+  "rootNativeSessionTerminal": 66807,
+  "nativeExit": 0,
+  "driverExit": 0,
+  "rootIndependentStrictExit": 0,
+  "scope": "Production Retry and Discard fix; full ordinary-app native contention/restart journey. Permanent fixture regression validation remains separate."
+}

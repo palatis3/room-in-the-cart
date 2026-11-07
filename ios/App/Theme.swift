@@ -12,11 +12,13 @@ enum Theme {
 }
 
 struct PrimaryAction: ButtonStyle {
+    @Environment(\.isEnabled) private var isEnabled
+
     func makeBody(configuration: Configuration) -> some View {
         configuration.label.font(.headline).fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, minHeight: 44)
             .padding(.horizontal, 12).padding(.vertical, 4)
             .foregroundStyle(Theme.onAction).background(Theme.action, in: RoundedRectangle(cornerRadius: 14))
-            .opacity(configuration.isPressed ? 0.8 : 1)
+            .opacity(isEnabled ? (configuration.isPressed ? 0.8 : 1) : 0.45)
     }
 }
 

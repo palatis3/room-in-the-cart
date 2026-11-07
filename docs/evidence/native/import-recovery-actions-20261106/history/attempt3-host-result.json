@@ -1,0 +1,16 @@
+{
+  "appBundleID": "dev.roominthecart.app.debug",
+  "appInfoPlist": "/Users/palatis/Room in the Cart/.build/S04ProtectedVisibility20261106/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/Info.plist",
+  "appInfoPlistSHA256": "16c73fc926e9c3aa9d88e5547f86f331000e4418606956acf0b4abbdc492cad0",
+  "elapsedSeconds": 61.471208292,
+  "error": "Native process exited unsuccessfully: 65",
+  "errorType": "ProtocolError",
+  "finishedUnixUTC": 1794021604.764908,
+  "nativeExitCode": 65,
+  "runnerBundleID": "dev.roominthecart.RoomInTheCartUITests.xctrunner",
+  "simulator": "48614DBF-29F9-44F5-AED3-F997C75A83B2",
+  "status": "failed",
+  "supervisorPID": 57267,
+  "supervisorStart": "Fri Nov 6 22:19:02 2026",
+  "token": "56a5ad0a-3bb5-4ef6-b8bb-682ed9ad3124"
+}
