@@ -14,6 +14,12 @@ An installed Staging build on an iPhone 17 Pro simulator running iOS 26.2 reache
 
 The Staging scheme now uses Staging for testing, launching, profiling, analysis and archiving. A generic iPhone archive built from `b0565fb` contained the arm64 staging app, widget and share extension. The archive check verified its assets, privacy declarations and embedded environment. This was an unsigned archive. The explicit pre-release workflow now includes the installed staging journey. [Staging tests and archive evidence](evidence/b11/staging-040-preparation-20261107/native-iphone.json)
 
+## Local offline-request update through schema 041
+
+The candidate gives an enrolled adult contributor an explicit, per-device option to retain pending requests for up to 24 hours. The web client now confirms a successful change using the grant and expiry for that household member. Earlier clients can still send immediate requests. The compatibility test loaded the originally released 040 JavaScript, which declined offline storage when talking to the corrected 041 service. Another test restored an older snapshot that still contained a withdrawn grant. The verified recovery procedure clears queue grants before the service starts accepting traffic again. The rehearsal preserved all 103 original tables on upgrade and all 104 on restore. [Compatibility and restore checks](evidence/b11/offline-requests-20261107/restore-and-compatibility.json)
+
+The browser suite exercised enabling retention, losing a send response and then losing the IndexedDB entry. On refresh the contributor saw the missing-request message and the browser issued no second command. All 14 Chrome cases and 136 web cases passed locally. Hosted staging remains at 040.
+
 ## November 7 release verification through schema 040
 
 The pinned staging candidate at `eae1e72` builds from clean dependency installs. Vercel’s local deployment inspection enumerated 162 regular input files. Each matched the pinned Git revision byte for byte. At the time of this rehearsal the staging alias pointed to ready deployment `dpl_2tfRmEfTGLW63sSTksJ6xJ9MZ97P` and passed six public boundary checks. The live registry then ended at 030. No 031–040 migration or candidate deployment was applied during preparation. [Candidate inputs, ten migration checksums and build evidence](evidence/b11/staging-040-preparation-20261107/candidate.json)
