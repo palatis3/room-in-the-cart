@@ -1,0 +1,332 @@
+{
+  "source": "First scratch candidate; expired-sign-in correction still pending",
+  "retainedEvidenceRehashed": 43,
+  "installedCandidateInputsRehashed": 41,
+  "rootUnitChecks": {
+    "passed": 126,
+    "failed": 0,
+    "skipped": 0
+  },
+  "visuallyInspected": [
+    "original-private-max-age-zero-revoked-offline-pending.png",
+    "fixed-private-max-age-zero-revoked-offline-pending.png"
+  ],
+  "lanes": {
+    "original-private-max-age-zero": {
+      "resultSHA256": "fe362208eaaee1f827a9a205b4d65efefdb166998a2197192e1dbb74739f7f04",
+      "headers": {
+        "html": "private, max-age=0",
+        "api": "no-store",
+        "neutral": "max-age=0"
+      },
+      "commands": 0,
+      "cleanup": {
+        "browserClosed": true,
+        "serverClosed": true
+      },
+      "scenarios": [
+        {
+          "scenario": "unchanged",
+          "bfcacheObserved": true,
+          "sessionRequestsAfterBack": 2,
+          "assertions": {
+            "privateMarkersAbsent": true,
+            "priorActorHiddenBeforeAuth": false,
+            "priorActorAbsentThroughoutRestore": false,
+            "expectedFinal": true,
+            "sameActorDraftPreserved": true,
+            "changedActorDraftCleared": true,
+            "neutralForward": true,
+            "secondBackCorrect": true,
+            "noCommands": true
+          }
+        },
+        {
+          "scenario": "changed-delayed",
+          "bfcacheObserved": true,
+          "sessionRequestsAfterBack": 2,
+          "assertions": {
+            "privateMarkersAbsent": true,
+            "priorActorHiddenBeforeAuth": false,
+            "priorActorAbsentThroughoutRestore": false,
+            "expectedFinal": true,
+            "sameActorDraftPreserved": true,
+            "changedActorDraftCleared": true,
+            "neutralForward": true,
+            "secondBackCorrect": true,
+            "noCommands": true
+          }
+        },
+        {
+          "scenario": "revoked-delayed",
+          "bfcacheObserved": true,
+          "sessionRequestsAfterBack": 2,
+          "assertions": {
+            "privateMarkersAbsent": true,
+            "priorActorHiddenBeforeAuth": false,
+            "priorActorAbsentThroughoutRestore": false,
+            "expectedFinal": true,
+            "sameActorDraftPreserved": true,
+            "changedActorDraftCleared": true,
+            "neutralForward": true,
+            "secondBackCorrect": true,
+            "noCommands": true
+          }
+        },
+        {
+          "scenario": "revoked-offline",
+          "bfcacheObserved": true,
+          "sessionRequestsAfterBack": 5,
+          "assertions": {
+            "privateMarkersAbsent": true,
+            "priorActorHiddenBeforeAuth": false,
+            "priorActorAbsentThroughoutRestore": false,
+            "expectedFinal": false,
+            "sameActorDraftPreserved": true,
+            "changedActorDraftCleared": false,
+            "neutralForward": true,
+            "secondBackCorrect": false,
+            "noCommands": true
+          }
+        }
+      ]
+    },
+    "fixed-private-max-age-zero": {
+      "resultSHA256": "bdc88ee9a9bf973272efd125b16579b60f8e9a7babe024166be9a173013d57ff",
+      "headers": {
+        "html": "private, max-age=0",
+        "api": "no-store",
+        "neutral": "max-age=0"
+      },
+      "commands": 0,
+      "cleanup": {
+        "browserClosed": true,
+        "serverClosed": true
+      },
+      "scenarios": [
+        {
+          "scenario": "unchanged",
+          "bfcacheObserved": true,
+          "sessionRequestsAfterBack": 2,
+          "assertions": {
+            "privateMarkersAbsent": true,
+            "priorActorHiddenBeforeAuth": true,
+            "priorActorAbsentThroughoutRestore": true,
+            "expectedFinal": true,
+            "sameActorDraftPreserved": true,
+            "changedActorDraftCleared": true,
+            "neutralForward": true,
+            "secondBackCorrect": true,
+            "noCommands": true
+          }
+        },
+        {
+          "scenario": "changed-delayed",
+          "bfcacheObserved": true,
+          "sessionRequestsAfterBack": 2,
+          "assertions": {
+            "privateMarkersAbsent": true,
+            "priorActorHiddenBeforeAuth": true,
+            "priorActorAbsentThroughoutRestore": true,
+            "expectedFinal": true,
+            "sameActorDraftPreserved": true,
+            "changedActorDraftCleared": true,
+            "neutralForward": true,
+            "secondBackCorrect": true,
+            "noCommands": true
+          }
+        },
+        {
+          "scenario": "revoked-delayed",
+          "bfcacheObserved": true,
+          "sessionRequestsAfterBack": 2,
+          "assertions": {
+            "privateMarkersAbsent": true,
+            "priorActorHiddenBeforeAuth": true,
+            "priorActorAbsentThroughoutRestore": true,
+            "expectedFinal": true,
+            "sameActorDraftPreserved": true,
+            "changedActorDraftCleared": true,
+            "neutralForward": true,
+            "secondBackCorrect": true,
+            "noCommands": true
+          }
+        },
+        {
+          "scenario": "revoked-offline",
+          "bfcacheObserved": true,
+          "sessionRequestsAfterBack": 5,
+          "assertions": {
+            "privateMarkersAbsent": true,
+            "priorActorHiddenBeforeAuth": true,
+            "priorActorAbsentThroughoutRestore": true,
+            "expectedFinal": true,
+            "sameActorDraftPreserved": true,
+            "changedActorDraftCleared": true,
+            "neutralForward": true,
+            "secondBackCorrect": true,
+            "noCommands": true
+          }
+        }
+      ]
+    },
+    "original-no-store": {
+      "resultSHA256": "2030c109abcc71c734da24abb27c39e6020d7bfba0873be77ab333335adbc281",
+      "headers": {
+        "html": "no-store",
+        "api": "no-store",
+        "neutral": "max-age=0"
+      },
+      "commands": 0,
+      "cleanup": {
+        "browserClosed": true,
+        "serverClosed": true
+      },
+      "scenarios": [
+        {
+          "scenario": "unchanged",
+          "bfcacheObserved": false,
+          "sessionRequestsAfterBack": 2,
+          "assertions": {
+            "privateMarkersAbsent": true,
+            "priorActorHiddenBeforeAuth": true,
+            "priorActorAbsentThroughoutRestore": true,
+            "expectedFinal": true,
+            "sameActorDraftPreserved": true,
+            "changedActorDraftCleared": true,
+            "neutralForward": true,
+            "secondBackCorrect": true,
+            "noCommands": true
+          }
+        },
+        {
+          "scenario": "changed-delayed",
+          "bfcacheObserved": false,
+          "sessionRequestsAfterBack": 2,
+          "assertions": {
+            "privateMarkersAbsent": true,
+            "priorActorHiddenBeforeAuth": true,
+            "priorActorAbsentThroughoutRestore": true,
+            "expectedFinal": true,
+            "sameActorDraftPreserved": true,
+            "changedActorDraftCleared": true,
+            "neutralForward": true,
+            "secondBackCorrect": true,
+            "noCommands": true
+          }
+        },
+        {
+          "scenario": "revoked-delayed",
+          "bfcacheObserved": false,
+          "sessionRequestsAfterBack": 2,
+          "assertions": {
+            "privateMarkersAbsent": true,
+            "priorActorHiddenBeforeAuth": true,
+            "priorActorAbsentThroughoutRestore": true,
+            "expectedFinal": true,
+            "sameActorDraftPreserved": true,
+            "changedActorDraftCleared": true,
+            "neutralForward": true,
+            "secondBackCorrect": true,
+            "noCommands": true
+          }
+        },
+        {
+          "scenario": "revoked-offline",
+          "bfcacheObserved": false,
+          "sessionRequestsAfterBack": 6,
+          "assertions": {
+            "privateMarkersAbsent": true,
+            "priorActorHiddenBeforeAuth": true,
+            "priorActorAbsentThroughoutRestore": true,
+            "expectedFinal": true,
+            "sameActorDraftPreserved": true,
+            "changedActorDraftCleared": true,
+            "neutralForward": true,
+            "secondBackCorrect": true,
+            "noCommands": true
+          }
+        }
+      ]
+    },
+    "fixed-no-store": {
+      "resultSHA256": "1bee22e907b7aeaaf0c1d65fe43a4c7aa4b3f7a2c74ead2aedc0089e6291a568",
+      "headers": {
+        "html": "no-store",
+        "api": "no-store",
+        "neutral": "max-age=0"
+      },
+      "commands": 0,
+      "cleanup": {
+        "browserClosed": true,
+        "serverClosed": true
+      },
+      "scenarios": [
+        {
+          "scenario": "unchanged",
+          "bfcacheObserved": false,
+          "sessionRequestsAfterBack": 2,
+          "assertions": {
+            "privateMarkersAbsent": true,
+            "priorActorHiddenBeforeAuth": true,
+            "priorActorAbsentThroughoutRestore": true,
+            "expectedFinal": true,
+            "sameActorDraftPreserved": true,
+            "changedActorDraftCleared": true,
+            "neutralForward": true,
+            "secondBackCorrect": true,
+            "noCommands": true
+          }
+        },
+        {
+          "scenario": "changed-delayed",
+          "bfcacheObserved": false,
+          "sessionRequestsAfterBack": 2,
+          "assertions": {
+            "privateMarkersAbsent": true,
+            "priorActorHiddenBeforeAuth": true,
+            "priorActorAbsentThroughoutRestore": true,
+            "expectedFinal": true,
+            "sameActorDraftPreserved": true,
+            "changedActorDraftCleared": true,
+            "neutralForward": true,
+            "secondBackCorrect": true,
+            "noCommands": true
+          }
+        },
+        {
+          "scenario": "revoked-delayed",
+          "bfcacheObserved": false,
+          "sessionRequestsAfterBack": 2,
+          "assertions": {
+            "privateMarkersAbsent": true,
+            "priorActorHiddenBeforeAuth": true,
+            "priorActorAbsentThroughoutRestore": true,
+            "expectedFinal": true,
+            "sameActorDraftPreserved": true,
+            "changedActorDraftCleared": true,
+            "neutralForward": true,
+            "secondBackCorrect": true,
+            "noCommands": true
+          }
+        },
+        {
+          "scenario": "revoked-offline",
+          "bfcacheObserved": false,
+          "sessionRequestsAfterBack": 6,
+          "assertions": {
+            "privateMarkersAbsent": true,
+            "priorActorHiddenBeforeAuth": true,
+            "priorActorAbsentThroughoutRestore": true,
+            "expectedFinal": true,
+            "sameActorDraftPreserved": true,
+            "changedActorDraftCleared": true,
+            "neutralForward": true,
+            "secondBackCorrect": true,
+            "noCommands": true
+          }
+        }
+      ]
+    }
+  }
+}

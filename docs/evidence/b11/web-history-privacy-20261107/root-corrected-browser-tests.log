@@ -1,0 +1,113 @@
+
+> @room-in-the-cart/web@0.1.0 test:browser
+> node --test --test-concurrency=1 --test-timeout=45000 tests/browser/outbox-eviction.test.mjs tests/browser/history-privacy.test.mjs
+
+TAP version 13
+# Subtest: history restoration conceals private content until fresh authority succeeds
+    # Subtest: private, max-age=0: unchanged
+    ok 1 - private, max-age=0: unchanged
+      ---
+      duration_ms: 709.038333
+      type: 'test'
+      ...
+    # persisted BFCache restore; HTML Cache-Control:private, max-age=0
+    # Subtest: private, max-age=0: changed-delayed
+    ok 2 - private, max-age=0: changed-delayed
+      ---
+      duration_ms: 394.342958
+      type: 'test'
+      ...
+    # persisted BFCache restore; HTML Cache-Control:private, max-age=0
+    # Subtest: private, max-age=0: revoked-delayed
+    ok 3 - private, max-age=0: revoked-delayed
+      ---
+      duration_ms: 354.64825
+      type: 'test'
+      ...
+    # persisted BFCache restore; HTML Cache-Control:private, max-age=0
+    # Subtest: private, max-age=0: revoked-offline
+    ok 4 - private, max-age=0: revoked-offline
+      ---
+      duration_ms: 366.84225
+      type: 'test'
+      ...
+    # persisted BFCache restore; HTML Cache-Control:private, max-age=0
+    # Subtest: private, max-age=0: expired-identity-same
+    ok 5 - private, max-age=0: expired-identity-same
+      ---
+      duration_ms: 636.562084
+      type: 'test'
+      ...
+    # persisted BFCache restore; HTML Cache-Control:private, max-age=0
+    # Subtest: private, max-age=0: expired-identity-changed
+    ok 6 - private, max-age=0: expired-identity-changed
+      ---
+      duration_ms: 744.900166
+      type: 'test'
+      ...
+    # persisted BFCache restore; HTML Cache-Control:private, max-age=0
+    # Subtest: no-store: unchanged
+    ok 7 - no-store: unchanged
+      ---
+      duration_ms: 542.011875
+      type: 'test'
+      ...
+    # cold history navigation; BFCache unavailable; HTML Cache-Control:no-store
+    # Subtest: no-store: changed-delayed
+    ok 8 - no-store: changed-delayed
+      ---
+      duration_ms: 432.439625
+      type: 'test'
+      ...
+    # cold history navigation; BFCache unavailable; HTML Cache-Control:no-store
+    # Subtest: no-store: revoked-delayed
+    ok 9 - no-store: revoked-delayed
+      ---
+      duration_ms: 461.992542
+      type: 'test'
+      ...
+    # cold history navigation; BFCache unavailable; HTML Cache-Control:no-store
+    # Subtest: no-store: revoked-offline
+    ok 10 - no-store: revoked-offline
+      ---
+      duration_ms: 448.424
+      type: 'test'
+      ...
+    # cold history navigation; BFCache unavailable; HTML Cache-Control:no-store
+    # Subtest: no-store: expired-identity-same
+    ok 11 - no-store: expired-identity-same
+      ---
+      duration_ms: 606.26325
+      type: 'test'
+      ...
+    # cold history navigation; BFCache unavailable; HTML Cache-Control:no-store
+    # Subtest: no-store: expired-identity-changed
+    ok 12 - no-store: expired-identity-changed
+      ---
+      duration_ms: 652.932666
+      type: 'test'
+      ...
+    # cold history navigation; BFCache unavailable; HTML Cache-Control:no-store
+    1..12
+ok 1 - history restoration conceals private content until fresh authority succeeds
+  ---
+  duration_ms: 7473.439167
+  type: 'test'
+  ...
+# Chrome 158.0.8127.18; synthetic loopback authority; API Cache-Control:no-store
+# Subtest: Refresh reconciles a queued request after IndexedDB eviction without resending it
+ok 2 - Refresh reconciles a queued request after IndexedDB eviction without resending it
+  ---
+  duration_ms: 1348.313875
+  type: 'test'
+  ...
+# Chrome 158.0.8127.18
+1..2
+# tests 14
+# suites 0
+# pass 14
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 9651.646042

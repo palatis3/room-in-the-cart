@@ -1,0 +1,2407 @@
+{
+  "lane": "original",
+  "cacheMode": "no-store",
+  "syntheticAuthority": true,
+  "fixtureForbiddenServerOnly": [
+    "OTHER_AUTHOR_ONLY_3ab2",
+    "BUDGET_PRIVATE_814e",
+    "PRIVATE_NOTE_9c7d"
+  ],
+  "headers": {
+    "html": "no-store",
+    "api": "no-store",
+    "neutral": "max-age=0"
+  },
+  "forbiddenResponseMarkersAbsent": true,
+  "results": [
+    {
+      "scenario": "unchanged",
+      "initial": {
+        "instance": "796fbbeb-4282-4ab5-8116-4ba6361c2913",
+        "text": "Room in the Cart\n\nEnglish\nSpanish\n\nSynthetic household A\n\nRefresh\nSign out\nAsk the shopper\nItem\n\nKeep the food name and any restrictions as written.\n\nAmount or pack count (optional)\nIntended trip\nThis pickup\nNext shop\nReview request\nSave pending requests on this browser\n\nOnly enable this on your own device. Queued requests are not yet received.\n\nYour requests\nOWN_ACTOR_A_HISTORY_7d91\n\none\n\nReceived\n\nThis pickup\n\nFriday, November 6, 2026 at 7:00 AM\n\nEditWithdraw"
+      },
+      "pending": {
+        "instance": "5730d6ac-d50a-4552-b2b1-f89fb1790724",
+        "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+        "item": null,
+        "url": "http://127.0.0.1:58840/requests",
+        "state": null,
+        "entries": [
+          {
+            "kind": "DOMContentLoaded",
+            "persisted": null,
+            "at": 1794027154005,
+            "instance": "5730d6ac-d50a-4552-b2b1-f89fb1790724",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "pageshow",
+            "persisted": false,
+            "at": 1794027154006,
+            "instance": "5730d6ac-d50a-4552-b2b1-f89fb1790724",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "pageshow-microtask",
+            "persisted": false,
+            "at": 1794027154006,
+            "instance": "5730d6ac-d50a-4552-b2b1-f89fb1790724",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "pending-reauthorization",
+            "persisted": null,
+            "at": 1794027154146,
+            "instance": "5730d6ac-d50a-4552-b2b1-f89fb1790724",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          }
+        ],
+        "navigation": [
+          {
+            "name": "http://127.0.0.1:58840/requests",
+            "entryType": "navigation",
+            "startTime": 0,
+            "duration": 35.5,
+            "navigationId": 8160,
+            "initiatorType": "navigation",
+            "deliveryType": "",
+            "nextHopProtocol": "http/1.1",
+            "renderBlockingStatus": "non-blocking",
+            "contentType": "text/html",
+            "contentEncoding": "",
+            "workerStart": 0,
+            "workerRouterEvaluationStart": 0,
+            "workerCacheLookupStart": 0,
+            "workerMatchedSourceType": "",
+            "workerFinalSourceType": "",
+            "redirectStart": 0,
+            "redirectEnd": 0,
+            "fetchStart": 0.8000000715255737,
+            "domainLookupStart": 0.8000000715255737,
+            "domainLookupEnd": 0.8000000715255737,
+            "connectStart": 0.8000000715255737,
+            "secureConnectionStart": 0,
+            "connectEnd": 0.8000000715255737,
+            "requestStart": 2.8000000715255737,
+            "responseStart": 7.700000047683716,
+            "firstInterimResponseStart": 0,
+            "finalResponseHeadersStart": 7.700000047683716,
+            "responseEnd": 7.899999976158142,
+            "transferSize": 886,
+            "encodedBodySize": 586,
+            "decodedBodySize": 586,
+            "responseStatus": 200,
+            "serverTiming": [],
+            "unloadEventStart": 13,
+            "unloadEventEnd": 13,
+            "domInteractive": 19.200000047683716,
+            "domContentLoadedEventStart": 34.10000002384186,
+            "domContentLoadedEventEnd": 35,
+            "domComplete": 35.5,
+            "loadEventStart": 35.5,
+            "loadEventEnd": 35.5,
+            "type": "back_forward",
+            "redirectCount": 0,
+            "activationStart": 0,
+            "criticalCHRestart": 0,
+            "notRestoredReasons": {
+              "src": null,
+              "id": null,
+              "url": "http://127.0.0.1:58840/requests",
+              "name": null,
+              "reasons": [
+                {
+                  "reason": "masked"
+                },
+                {
+                  "reason": "response-cache-control-no-store"
+                },
+                {
+                  "reason": "response-cache-control-no-store-with-js-network-request"
+                }
+              ],
+              "children": []
+            },
+            "confidence": {
+              "randomizedTriggerRate": 0.4994798,
+              "value": "low"
+            }
+          }
+        ]
+      },
+      "after": {
+        "instance": "5730d6ac-d50a-4552-b2b1-f89fb1790724",
+        "text": "Room in the Cart\n\nEnglish\nSpanish\n\nSynthetic household A\n\nRefresh\nSign out\nAsk the shopper\nItem\n\nKeep the food name and any restrictions as written.\n\nAmount or pack count (optional)\nIntended trip\nThis pickup\nNext shop\nReview request\nSave pending requests on this browser\n\nOnly enable this on your own device. Queued requests are not yet received.\n\nYour requests\nOWN_ACTOR_A_HISTORY_7d91\n\none\n\nReceived\n\nThis pickup\n\nFriday, November 6, 2026 at 7:00 AM\n\nEditWithdraw",
+        "item": "",
+        "url": "http://127.0.0.1:58840/requests",
+        "state": null,
+        "entries": [
+          {
+            "kind": "DOMContentLoaded",
+            "persisted": null,
+            "at": 1794027154005,
+            "instance": "5730d6ac-d50a-4552-b2b1-f89fb1790724",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "pageshow",
+            "persisted": false,
+            "at": 1794027154006,
+            "instance": "5730d6ac-d50a-4552-b2b1-f89fb1790724",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "pageshow-microtask",
+            "persisted": false,
+            "at": 1794027154006,
+            "instance": "5730d6ac-d50a-4552-b2b1-f89fb1790724",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "pending-reauthorization",
+            "persisted": null,
+            "at": 1794027154146,
+            "instance": "5730d6ac-d50a-4552-b2b1-f89fb1790724",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "mutation",
+            "persisted": null,
+            "at": 1794027154234,
+            "instance": "5730d6ac-d50a-4552-b2b1-f89fb1790724",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nSynthetic household A\n\nRefresh\nSign out\nAsk the shopper\nItem\n\nKeep the food name and any restrictions as written.\n\nAmount or pack count (optional)\nIntended trip\nThis pickup\nNext shop\nReview request\nSave pending requests on this browser\n\nOnly enable this on your own device. Queued requests are not yet received.\n\nYour requests\nOWN_ACTOR_A_HISTORY_7d91\n\none\n\nReceived\n\nThis pickup\n\nFriday, November 6, 2026 at 7:00 AM\n\nEditWithdraw",
+            "a": true,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "after-reauthorization",
+            "persisted": null,
+            "at": 1794027154629,
+            "instance": "5730d6ac-d50a-4552-b2b1-f89fb1790724",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nSynthetic household A\n\nRefresh\nSign out\nAsk the shopper\nItem\n\nKeep the food name and any restrictions as written.\n\nAmount or pack count (optional)\nIntended trip\nThis pickup\nNext shop\nReview request\nSave pending requests on this browser\n\nOnly enable this on your own device. Queued requests are not yet received.\n\nYour requests\nOWN_ACTOR_A_HISTORY_7d91\n\none\n\nReceived\n\nThis pickup\n\nFriday, November 6, 2026 at 7:00 AM\n\nEditWithdraw",
+            "a": true,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          }
+        ]
+      },
+      "forward": {
+        "url": "http://127.0.0.1:58840/neutral",
+        "entries": [
+          {
+            "kind": "DOMContentLoaded",
+            "persisted": null,
+            "at": 1794027154648,
+            "instance": "1418e07b-2778-4e00-9731-63f58c785462",
+            "url": "http://127.0.0.1:58840/neutral",
+            "state": null,
+            "text": "Neutral navigation control",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "pageshow",
+            "persisted": false,
+            "at": 1794027154648,
+            "instance": "1418e07b-2778-4e00-9731-63f58c785462",
+            "url": "http://127.0.0.1:58840/neutral",
+            "state": null,
+            "text": "Neutral navigation control",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "pageshow-microtask",
+            "persisted": false,
+            "at": 1794027154648,
+            "instance": "1418e07b-2778-4e00-9731-63f58c785462",
+            "url": "http://127.0.0.1:58840/neutral",
+            "state": null,
+            "text": "Neutral navigation control",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          }
+        ],
+        "text": "Neutral navigation control"
+      },
+      "secondBack": {
+        "url": "http://127.0.0.1:58840/requests",
+        "entries": [
+          {
+            "kind": "DOMContentLoaded",
+            "persisted": null,
+            "at": 1794027154695,
+            "instance": "deef3105-bfe3-4703-b8f3-eaffcad12355",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "pageshow",
+            "persisted": false,
+            "at": 1794027154695,
+            "instance": "deef3105-bfe3-4703-b8f3-eaffcad12355",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "pageshow-microtask",
+            "persisted": false,
+            "at": 1794027154695,
+            "instance": "deef3105-bfe3-4703-b8f3-eaffcad12355",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "mutation",
+            "persisted": null,
+            "at": 1794027154707,
+            "instance": "deef3105-bfe3-4703-b8f3-eaffcad12355",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nSynthetic household A\n\nRefresh\nSign out\nAsk the shopper\nItem\n\nKeep the food name and any restrictions as written.\n\nAmount or pack count (optional)\nIntended trip\nThis pickup\nNext shop\nReview request\nSave pending requests on this browser\n\nOnly enable this on your own device. Queued requests are not yet received.\n\nYour requests\nOWN_ACTOR_A_HISTORY_7d91\n\none\n\nReceived\n\nThis pickup\n\nFriday, November 6, 2026 at 7:00 AM\n\nEditWithdraw",
+            "a": true,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          }
+        ],
+        "text": "Room in the Cart\n\nEnglish\nSpanish\n\nSynthetic household A\n\nRefresh\nSign out\nAsk the shopper\nItem\n\nKeep the food name and any restrictions as written.\n\nAmount or pack count (optional)\nIntended trip\nThis pickup\nNext shop\nReview request\nSave pending requests on this browser\n\nOnly enable this on your own device. Queued requests are not yet received.\n\nYour requests\nOWN_ACTOR_A_HISTORY_7d91\n\none\n\nReceived\n\nThis pickup\n\nFriday, November 6, 2026 at 7:00 AM\n\nEditWithdraw"
+      },
+      "bfcacheObserved": false,
+      "sessionRequestsAfterBack": 2,
+      "assertions": {
+        "privateMarkersAbsent": true,
+        "priorActorHiddenBeforeAuth": true,
+        "priorActorAbsentThroughoutRestore": true,
+        "expectedFinal": true,
+        "sameActorDraftPreserved": true,
+        "changedActorDraftCleared": true,
+        "neutralForward": true,
+        "secondBackCorrect": true,
+        "noCommands": true
+      }
+    },
+    {
+      "scenario": "changed-delayed",
+      "initial": {
+        "instance": "4d0dfc37-36e6-4985-b221-2b883063327d",
+        "text": "Room in the Cart\n\nEnglish\nSpanish\n\nSynthetic household A\n\nRefresh\nSign out\nAsk the shopper\nItem\n\nKeep the food name and any restrictions as written.\n\nAmount or pack count (optional)\nIntended trip\nThis pickup\nNext shop\nReview request\nSave pending requests on this browser\n\nOnly enable this on your own device. Queued requests are not yet received.\n\nYour requests\nOWN_ACTOR_A_HISTORY_7d91\n\none\n\nReceived\n\nThis pickup\n\nFriday, November 6, 2026 at 7:00 AM\n\nEditWithdraw"
+      },
+      "pending": {
+        "instance": "fc8134d3-8a59-47f0-81ac-5e9ba7fd3b4f",
+        "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+        "item": null,
+        "url": "http://127.0.0.1:58840/requests",
+        "state": null,
+        "entries": [
+          {
+            "kind": "DOMContentLoaded",
+            "persisted": null,
+            "at": 1794027155363,
+            "instance": "fc8134d3-8a59-47f0-81ac-5e9ba7fd3b4f",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "pageshow",
+            "persisted": false,
+            "at": 1794027155364,
+            "instance": "fc8134d3-8a59-47f0-81ac-5e9ba7fd3b4f",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "pageshow-microtask",
+            "persisted": false,
+            "at": 1794027155364,
+            "instance": "fc8134d3-8a59-47f0-81ac-5e9ba7fd3b4f",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "pending-reauthorization",
+            "persisted": null,
+            "at": 1794027155509,
+            "instance": "fc8134d3-8a59-47f0-81ac-5e9ba7fd3b4f",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          }
+        ],
+        "navigation": [
+          {
+            "name": "http://127.0.0.1:58840/requests",
+            "entryType": "navigation",
+            "startTime": 0,
+            "duration": 17.299999952316284,
+            "navigationId": 9883,
+            "initiatorType": "navigation",
+            "deliveryType": "",
+            "nextHopProtocol": "http/1.1",
+            "renderBlockingStatus": "non-blocking",
+            "contentType": "text/html",
+            "contentEncoding": "",
+            "workerStart": 0,
+            "workerRouterEvaluationStart": 0,
+            "workerCacheLookupStart": 0,
+            "workerMatchedSourceType": "",
+            "workerFinalSourceType": "",
+            "redirectStart": 0,
+            "redirectEnd": 0,
+            "fetchStart": 0.6000000238418579,
+            "domainLookupStart": 0.6000000238418579,
+            "domainLookupEnd": 0.6000000238418579,
+            "connectStart": 0.6000000238418579,
+            "secureConnectionStart": 0,
+            "connectEnd": 0.6000000238418579,
+            "requestStart": 1.2999999523162842,
+            "responseStart": 2.299999952316284,
+            "firstInterimResponseStart": 0,
+            "finalResponseHeadersStart": 2.299999952316284,
+            "responseEnd": 2.5,
+            "transferSize": 886,
+            "encodedBodySize": 586,
+            "decodedBodySize": 586,
+            "responseStatus": 200,
+            "serverTiming": [],
+            "unloadEventStart": 4.799999952316284,
+            "unloadEventEnd": 4.799999952316284,
+            "domInteractive": 8.100000023841858,
+            "domContentLoadedEventStart": 16.299999952316284,
+            "domContentLoadedEventEnd": 17.100000023841858,
+            "domComplete": 17.299999952316284,
+            "loadEventStart": 17.299999952316284,
+            "loadEventEnd": 17.299999952316284,
+            "type": "back_forward",
+            "redirectCount": 0,
+            "activationStart": 0,
+            "criticalCHRestart": 0,
+            "notRestoredReasons": {
+              "src": null,
+              "id": null,
+              "url": "http://127.0.0.1:58840/requests",
+              "name": null,
+              "reasons": [
+                {
+                  "reason": "masked"
+                },
+                {
+                  "reason": "response-cache-control-no-store"
+                },
+                {
+                  "reason": "response-cache-control-no-store-with-js-network-request"
+                }
+              ],
+              "children": []
+            },
+            "confidence": {
+              "randomizedTriggerRate": 0.4994798,
+              "value": "high"
+            }
+          }
+        ]
+      },
+      "after": {
+        "instance": "fc8134d3-8a59-47f0-81ac-5e9ba7fd3b4f",
+        "text": "Room in the Cart\n\nEnglish\nSpanish\n\nSynthetic household B\n\nRefresh\nSign out\nAsk the shopper\nItem\n\nKeep the food name and any restrictions as written.\n\nAmount or pack count (optional)\nIntended trip\nThis pickup\nNext shop\nReview request\nSave pending requests on this browser\n\nOnly enable this on your own device. Queued requests are not yet received.\n\nYour requests\nOWN_ACTOR_B_HISTORY_f51e\n\none\n\nReceived\n\nThis pickup\n\nFriday, November 6, 2026 at 7:00 AM\n\nEditWithdraw",
+        "item": "",
+        "url": "http://127.0.0.1:58840/requests",
+        "state": null,
+        "entries": [
+          {
+            "kind": "DOMContentLoaded",
+            "persisted": null,
+            "at": 1794027155363,
+            "instance": "fc8134d3-8a59-47f0-81ac-5e9ba7fd3b4f",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "pageshow",
+            "persisted": false,
+            "at": 1794027155364,
+            "instance": "fc8134d3-8a59-47f0-81ac-5e9ba7fd3b4f",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "pageshow-microtask",
+            "persisted": false,
+            "at": 1794027155364,
+            "instance": "fc8134d3-8a59-47f0-81ac-5e9ba7fd3b4f",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "pending-reauthorization",
+            "persisted": null,
+            "at": 1794027155509,
+            "instance": "fc8134d3-8a59-47f0-81ac-5e9ba7fd3b4f",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "mutation",
+            "persisted": null,
+            "at": 1794027155581,
+            "instance": "fc8134d3-8a59-47f0-81ac-5e9ba7fd3b4f",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nSynthetic household B\n\nRefresh\nSign out\nAsk the shopper\nItem\n\nKeep the food name and any restrictions as written.\n\nAmount or pack count (optional)\nIntended trip\nThis pickup\nNext shop\nReview request\nSave pending requests on this browser\n\nOnly enable this on your own device. Queued requests are not yet received.\n\nYour requests\nOWN_ACTOR_B_HISTORY_f51e\n\none\n\nReceived\n\nThis pickup\n\nFriday, November 6, 2026 at 7:00 AM\n\nEditWithdraw",
+            "a": false,
+            "b": true,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "after-reauthorization",
+            "persisted": null,
+            "at": 1794027155976,
+            "instance": "fc8134d3-8a59-47f0-81ac-5e9ba7fd3b4f",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nSynthetic household B\n\nRefresh\nSign out\nAsk the shopper\nItem\n\nKeep the food name and any restrictions as written.\n\nAmount or pack count (optional)\nIntended trip\nThis pickup\nNext shop\nReview request\nSave pending requests on this browser\n\nOnly enable this on your own device. Queued requests are not yet received.\n\nYour requests\nOWN_ACTOR_B_HISTORY_f51e\n\none\n\nReceived\n\nThis pickup\n\nFriday, November 6, 2026 at 7:00 AM\n\nEditWithdraw",
+            "a": false,
+            "b": true,
+            "forbidden": [],
+            "visibility": "visible"
+          }
+        ]
+      },
+      "forward": {
+        "url": "http://127.0.0.1:58840/neutral",
+        "entries": [
+          {
+            "kind": "DOMContentLoaded",
+            "persisted": null,
+            "at": 1794027155992,
+            "instance": "c4966d78-5805-4340-a215-9113a57c5bf6",
+            "url": "http://127.0.0.1:58840/neutral",
+            "state": null,
+            "text": "Neutral navigation control",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "pageshow",
+            "persisted": false,
+            "at": 1794027155992,
+            "instance": "c4966d78-5805-4340-a215-9113a57c5bf6",
+            "url": "http://127.0.0.1:58840/neutral",
+            "state": null,
+            "text": "Neutral navigation control",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "pageshow-microtask",
+            "persisted": false,
+            "at": 1794027155992,
+            "instance": "c4966d78-5805-4340-a215-9113a57c5bf6",
+            "url": "http://127.0.0.1:58840/neutral",
+            "state": null,
+            "text": "Neutral navigation control",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          }
+        ],
+        "text": "Neutral navigation control"
+      },
+      "secondBack": {
+        "url": "http://127.0.0.1:58840/requests",
+        "entries": [
+          {
+            "kind": "DOMContentLoaded",
+            "persisted": null,
+            "at": 1794027156031,
+            "instance": "10366178-a319-4c0c-b0be-4593bc4dd56c",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "pageshow",
+            "persisted": false,
+            "at": 1794027156032,
+            "instance": "10366178-a319-4c0c-b0be-4593bc4dd56c",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "pageshow-microtask",
+            "persisted": false,
+            "at": 1794027156032,
+            "instance": "10366178-a319-4c0c-b0be-4593bc4dd56c",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "mutation",
+            "persisted": null,
+            "at": 1794027156041,
+            "instance": "10366178-a319-4c0c-b0be-4593bc4dd56c",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nSynthetic household B\n\nRefresh\nSign out\nAsk the shopper\nItem\n\nKeep the food name and any restrictions as written.\n\nAmount or pack count (optional)\nIntended trip\nThis pickup\nNext shop\nReview request\nSave pending requests on this browser\n\nOnly enable this on your own device. Queued requests are not yet received.\n\nYour requests\nOWN_ACTOR_B_HISTORY_f51e\n\none\n\nReceived\n\nThis pickup\n\nFriday, November 6, 2026 at 7:00 AM\n\nEditWithdraw",
+            "a": false,
+            "b": true,
+            "forbidden": [],
+            "visibility": "visible"
+          }
+        ],
+        "text": "Room in the Cart\n\nEnglish\nSpanish\n\nSynthetic household B\n\nRefresh\nSign out\nAsk the shopper\nItem\n\nKeep the food name and any restrictions as written.\n\nAmount or pack count (optional)\nIntended trip\nThis pickup\nNext shop\nReview request\nSave pending requests on this browser\n\nOnly enable this on your own device. Queued requests are not yet received.\n\nYour requests\nOWN_ACTOR_B_HISTORY_f51e\n\none\n\nReceived\n\nThis pickup\n\nFriday, November 6, 2026 at 7:00 AM\n\nEditWithdraw"
+      },
+      "bfcacheObserved": false,
+      "sessionRequestsAfterBack": 2,
+      "assertions": {
+        "privateMarkersAbsent": true,
+        "priorActorHiddenBeforeAuth": true,
+        "priorActorAbsentThroughoutRestore": true,
+        "expectedFinal": true,
+        "sameActorDraftPreserved": true,
+        "changedActorDraftCleared": true,
+        "neutralForward": true,
+        "secondBackCorrect": true,
+        "noCommands": true
+      }
+    },
+    {
+      "scenario": "revoked-delayed",
+      "initial": {
+        "instance": "bf323291-e391-4526-917b-46ea0f418964",
+        "text": "Room in the Cart\n\nEnglish\nSpanish\n\nSynthetic household A\n\nRefresh\nSign out\nAsk the shopper\nItem\n\nKeep the food name and any restrictions as written.\n\nAmount or pack count (optional)\nIntended trip\nThis pickup\nNext shop\nReview request\nSave pending requests on this browser\n\nOnly enable this on your own device. Queued requests are not yet received.\n\nYour requests\nOWN_ACTOR_A_HISTORY_7d91\n\none\n\nReceived\n\nThis pickup\n\nFriday, November 6, 2026 at 7:00 AM\n\nEditWithdraw"
+      },
+      "pending": {
+        "instance": "3517d179-f32c-4e71-91d6-8cb3c03fb914",
+        "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+        "item": null,
+        "url": "http://127.0.0.1:58840/requests",
+        "state": null,
+        "entries": [
+          {
+            "kind": "DOMContentLoaded",
+            "persisted": null,
+            "at": 1794027156647,
+            "instance": "3517d179-f32c-4e71-91d6-8cb3c03fb914",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "pageshow",
+            "persisted": false,
+            "at": 1794027156647,
+            "instance": "3517d179-f32c-4e71-91d6-8cb3c03fb914",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "pageshow-microtask",
+            "persisted": false,
+            "at": 1794027156647,
+            "instance": "3517d179-f32c-4e71-91d6-8cb3c03fb914",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "pending-reauthorization",
+            "persisted": null,
+            "at": 1794027156790,
+            "instance": "3517d179-f32c-4e71-91d6-8cb3c03fb914",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          }
+        ],
+        "navigation": [
+          {
+            "name": "http://127.0.0.1:58840/requests",
+            "entryType": "navigation",
+            "startTime": 0,
+            "duration": 22.200000047683716,
+            "navigationId": 7522,
+            "initiatorType": "navigation",
+            "deliveryType": "",
+            "nextHopProtocol": "http/1.1",
+            "renderBlockingStatus": "non-blocking",
+            "contentType": "text/html",
+            "contentEncoding": "",
+            "workerStart": 0,
+            "workerRouterEvaluationStart": 0,
+            "workerCacheLookupStart": 0,
+            "workerMatchedSourceType": "",
+            "workerFinalSourceType": "",
+            "redirectStart": 0,
+            "redirectEnd": 0,
+            "fetchStart": 0.7000000476837158,
+            "domainLookupStart": 0.7000000476837158,
+            "domainLookupEnd": 0.7000000476837158,
+            "connectStart": 0.7000000476837158,
+            "secureConnectionStart": 0,
+            "connectEnd": 0.7000000476837158,
+            "requestStart": 1.7000000476837158,
+            "responseStart": 3.200000047683716,
+            "firstInterimResponseStart": 0,
+            "finalResponseHeadersStart": 3.200000047683716,
+            "responseEnd": 3.600000023841858,
+            "transferSize": 886,
+            "encodedBodySize": 586,
+            "decodedBodySize": 586,
+            "responseStatus": 200,
+            "serverTiming": [],
+            "unloadEventStart": 7.5,
+            "unloadEventEnd": 7.5,
+            "domInteractive": 10.900000095367432,
+            "domContentLoadedEventStart": 21.100000023841858,
+            "domContentLoadedEventEnd": 22,
+            "domComplete": 22.200000047683716,
+            "loadEventStart": 22.200000047683716,
+            "loadEventEnd": 22.200000047683716,
+            "type": "back_forward",
+            "redirectCount": 0,
+            "activationStart": 0,
+            "criticalCHRestart": 0,
+            "notRestoredReasons": {
+              "src": null,
+              "id": null,
+              "url": "http://127.0.0.1:58840/requests",
+              "name": null,
+              "reasons": [
+                {
+                  "reason": "masked"
+                },
+                {
+                  "reason": "response-cache-control-no-store"
+                },
+                {
+                  "reason": "response-cache-control-no-store-with-js-network-request"
+                }
+              ],
+              "children": []
+            },
+            "confidence": {
+              "randomizedTriggerRate": 0.4994798,
+              "value": "high"
+            }
+          }
+        ]
+      },
+      "after": {
+        "instance": "3517d179-f32c-4e71-91d6-8cb3c03fb914",
+        "text": "Room in the Cart\n\nEnglish\nSpanish\n\nAccess has ended. Ask your household for a new invitation.\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+        "item": null,
+        "url": "http://127.0.0.1:58840/requests",
+        "state": null,
+        "entries": [
+          {
+            "kind": "DOMContentLoaded",
+            "persisted": null,
+            "at": 1794027156647,
+            "instance": "3517d179-f32c-4e71-91d6-8cb3c03fb914",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "pageshow",
+            "persisted": false,
+            "at": 1794027156647,
+            "instance": "3517d179-f32c-4e71-91d6-8cb3c03fb914",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "pageshow-microtask",
+            "persisted": false,
+            "at": 1794027156647,
+            "instance": "3517d179-f32c-4e71-91d6-8cb3c03fb914",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "pending-reauthorization",
+            "persisted": null,
+            "at": 1794027156790,
+            "instance": "3517d179-f32c-4e71-91d6-8cb3c03fb914",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "mutation",
+            "persisted": null,
+            "at": 1794027156856,
+            "instance": "3517d179-f32c-4e71-91d6-8cb3c03fb914",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "mutation",
+            "persisted": null,
+            "at": 1794027156859,
+            "instance": "3517d179-f32c-4e71-91d6-8cb3c03fb914",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nAccess has ended. Ask your household for a new invitation.\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "after-reauthorization",
+            "persisted": null,
+            "at": 1794027157257,
+            "instance": "3517d179-f32c-4e71-91d6-8cb3c03fb914",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nAccess has ended. Ask your household for a new invitation.\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          }
+        ]
+      },
+      "forward": {
+        "url": "http://127.0.0.1:58840/neutral",
+        "entries": [
+          {
+            "kind": "DOMContentLoaded",
+            "persisted": null,
+            "at": 1794027157269,
+            "instance": "ffd36025-7313-4fc6-9cb6-c9ccbd2ad32c",
+            "url": "http://127.0.0.1:58840/neutral",
+            "state": null,
+            "text": "Neutral navigation control",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "pageshow",
+            "persisted": false,
+            "at": 1794027157269,
+            "instance": "ffd36025-7313-4fc6-9cb6-c9ccbd2ad32c",
+            "url": "http://127.0.0.1:58840/neutral",
+            "state": null,
+            "text": "Neutral navigation control",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "pageshow-microtask",
+            "persisted": false,
+            "at": 1794027157269,
+            "instance": "ffd36025-7313-4fc6-9cb6-c9ccbd2ad32c",
+            "url": "http://127.0.0.1:58840/neutral",
+            "state": null,
+            "text": "Neutral navigation control",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          }
+        ],
+        "text": "Neutral navigation control"
+      },
+      "secondBack": {
+        "url": "http://127.0.0.1:58840/requests",
+        "entries": [
+          {
+            "kind": "DOMContentLoaded",
+            "persisted": null,
+            "at": 1794027157303,
+            "instance": "18a74ea1-158c-43f4-85bb-a51a7cc2f55d",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "pageshow",
+            "persisted": false,
+            "at": 1794027157304,
+            "instance": "18a74ea1-158c-43f4-85bb-a51a7cc2f55d",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "pageshow-microtask",
+            "persisted": false,
+            "at": 1794027157304,
+            "instance": "18a74ea1-158c-43f4-85bb-a51a7cc2f55d",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "mutation",
+            "persisted": null,
+            "at": 1794027157304,
+            "instance": "18a74ea1-158c-43f4-85bb-a51a7cc2f55d",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "mutation",
+            "persisted": null,
+            "at": 1794027157307,
+            "instance": "18a74ea1-158c-43f4-85bb-a51a7cc2f55d",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nAccess has ended. Ask your household for a new invitation.\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          }
+        ],
+        "text": "Room in the Cart\n\nEnglish\nSpanish\n\nAccess has ended. Ask your household for a new invitation.\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh"
+      },
+      "bfcacheObserved": false,
+      "sessionRequestsAfterBack": 2,
+      "assertions": {
+        "privateMarkersAbsent": true,
+        "priorActorHiddenBeforeAuth": true,
+        "priorActorAbsentThroughoutRestore": true,
+        "expectedFinal": true,
+        "sameActorDraftPreserved": true,
+        "changedActorDraftCleared": true,
+        "neutralForward": true,
+        "secondBackCorrect": true,
+        "noCommands": true
+      }
+    },
+    {
+      "scenario": "revoked-offline",
+      "initial": {
+        "instance": "85352410-f352-4829-9bca-b7bc9769169f",
+        "text": "Room in the Cart\n\nEnglish\nSpanish\n\nSynthetic household A\n\nRefresh\nSign out\nAsk the shopper\nItem\n\nKeep the food name and any restrictions as written.\n\nAmount or pack count (optional)\nIntended trip\nThis pickup\nNext shop\nReview request\nSave pending requests on this browser\n\nOnly enable this on your own device. Queued requests are not yet received.\n\nYour requests\nOWN_ACTOR_A_HISTORY_7d91\n\none\n\nReceived\n\nThis pickup\n\nFriday, November 6, 2026 at 7:00 AM\n\nEditWithdraw"
+      },
+      "pending": {
+        "instance": "c5de2542-797c-4fce-b292-8535991c3f9c",
+        "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+        "item": null,
+        "url": "http://127.0.0.1:58840/requests",
+        "state": null,
+        "entries": [
+          {
+            "kind": "DOMContentLoaded",
+            "persisted": null,
+            "at": 1794027158008,
+            "instance": "c5de2542-797c-4fce-b292-8535991c3f9c",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "pageshow",
+            "persisted": false,
+            "at": 1794027158008,
+            "instance": "c5de2542-797c-4fce-b292-8535991c3f9c",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "pageshow-microtask",
+            "persisted": false,
+            "at": 1794027158008,
+            "instance": "c5de2542-797c-4fce-b292-8535991c3f9c",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "pending-reauthorization",
+            "persisted": null,
+            "at": 1794027158155,
+            "instance": "c5de2542-797c-4fce-b292-8535991c3f9c",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          }
+        ],
+        "navigation": [
+          {
+            "name": "http://127.0.0.1:58840/requests",
+            "entryType": "navigation",
+            "startTime": 0,
+            "duration": 15.5,
+            "navigationId": 3644,
+            "initiatorType": "navigation",
+            "deliveryType": "",
+            "nextHopProtocol": "http/1.1",
+            "renderBlockingStatus": "non-blocking",
+            "contentType": "text/html",
+            "contentEncoding": "",
+            "workerStart": 0,
+            "workerRouterEvaluationStart": 0,
+            "workerCacheLookupStart": 0,
+            "workerMatchedSourceType": "",
+            "workerFinalSourceType": "",
+            "redirectStart": 0,
+            "redirectEnd": 0,
+            "fetchStart": 1.4000000953674316,
+            "domainLookupStart": 1.4000000953674316,
+            "domainLookupEnd": 1.4000000953674316,
+            "connectStart": 1.4000000953674316,
+            "secureConnectionStart": 0,
+            "connectEnd": 1.4000000953674316,
+            "requestStart": 1.9000000953674316,
+            "responseStart": 2.600000023841858,
+            "firstInterimResponseStart": 0,
+            "finalResponseHeadersStart": 2.600000023841858,
+            "responseEnd": 2.8000000715255737,
+            "transferSize": 886,
+            "encodedBodySize": 586,
+            "decodedBodySize": 586,
+            "responseStatus": 200,
+            "serverTiming": [],
+            "unloadEventStart": 5.100000023841858,
+            "unloadEventEnd": 5.100000023841858,
+            "domInteractive": 9.200000047683716,
+            "domContentLoadedEventStart": 14.600000023841858,
+            "domContentLoadedEventEnd": 15.300000071525574,
+            "domComplete": 15.5,
+            "loadEventStart": 15.5,
+            "loadEventEnd": 15.5,
+            "type": "back_forward",
+            "redirectCount": 0,
+            "activationStart": 0,
+            "criticalCHRestart": 0,
+            "notRestoredReasons": {
+              "src": null,
+              "id": null,
+              "url": "http://127.0.0.1:58840/requests",
+              "name": null,
+              "reasons": [
+                {
+                  "reason": "masked"
+                },
+                {
+                  "reason": "response-cache-control-no-store"
+                },
+                {
+                  "reason": "response-cache-control-no-store-with-js-network-request"
+                }
+              ],
+              "children": []
+            },
+            "confidence": {
+              "randomizedTriggerRate": 0.4994798,
+              "value": "low"
+            }
+          }
+        ]
+      },
+      "after": {
+        "instance": "c5de2542-797c-4fce-b292-8535991c3f9c",
+        "text": "Room in the Cart\n\nEnglish\nSpanish\n\nCould not load your account. Refresh to try again.\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+        "item": null,
+        "url": "http://127.0.0.1:58840/requests",
+        "state": null,
+        "entries": [
+          {
+            "kind": "DOMContentLoaded",
+            "persisted": null,
+            "at": 1794027158008,
+            "instance": "c5de2542-797c-4fce-b292-8535991c3f9c",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "pageshow",
+            "persisted": false,
+            "at": 1794027158008,
+            "instance": "c5de2542-797c-4fce-b292-8535991c3f9c",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "pageshow-microtask",
+            "persisted": false,
+            "at": 1794027158008,
+            "instance": "c5de2542-797c-4fce-b292-8535991c3f9c",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "pending-reauthorization",
+            "persisted": null,
+            "at": 1794027158155,
+            "instance": "c5de2542-797c-4fce-b292-8535991c3f9c",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "mutation",
+            "persisted": null,
+            "at": 1794027158213,
+            "instance": "c5de2542-797c-4fce-b292-8535991c3f9c",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nCould not load your account. Refresh to try again.\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "after-reauthorization",
+            "persisted": null,
+            "at": 1794027158615,
+            "instance": "c5de2542-797c-4fce-b292-8535991c3f9c",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nCould not load your account. Refresh to try again.\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          }
+        ]
+      },
+      "forward": {
+        "url": "http://127.0.0.1:58840/neutral",
+        "entries": [
+          {
+            "kind": "DOMContentLoaded",
+            "persisted": null,
+            "at": 1794027158632,
+            "instance": "543f6430-0dc2-42ee-a4bb-2c7e514a273e",
+            "url": "http://127.0.0.1:58840/neutral",
+            "state": null,
+            "text": "Neutral navigation control",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "pageshow",
+            "persisted": false,
+            "at": 1794027158632,
+            "instance": "543f6430-0dc2-42ee-a4bb-2c7e514a273e",
+            "url": "http://127.0.0.1:58840/neutral",
+            "state": null,
+            "text": "Neutral navigation control",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "pageshow-microtask",
+            "persisted": false,
+            "at": 1794027158632,
+            "instance": "543f6430-0dc2-42ee-a4bb-2c7e514a273e",
+            "url": "http://127.0.0.1:58840/neutral",
+            "state": null,
+            "text": "Neutral navigation control",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          }
+        ],
+        "text": "Neutral navigation control"
+      },
+      "secondBack": {
+        "url": "http://127.0.0.1:58840/requests",
+        "entries": [
+          {
+            "kind": "DOMContentLoaded",
+            "persisted": null,
+            "at": 1794027158688,
+            "instance": "b3a69a27-a0f0-413b-a2d7-0302ac5801ae",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "pageshow",
+            "persisted": false,
+            "at": 1794027158689,
+            "instance": "b3a69a27-a0f0-413b-a2d7-0302ac5801ae",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "pageshow-microtask",
+            "persisted": false,
+            "at": 1794027158689,
+            "instance": "b3a69a27-a0f0-413b-a2d7-0302ac5801ae",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nLoading…\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          },
+          {
+            "kind": "mutation",
+            "persisted": null,
+            "at": 1794027158691,
+            "instance": "b3a69a27-a0f0-413b-a2d7-0302ac5801ae",
+            "url": "http://127.0.0.1:58840/requests",
+            "state": null,
+            "text": "Room in the Cart\n\nEnglish\nSpanish\n\nCould not load your account. Refresh to try again.\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh",
+            "a": false,
+            "b": false,
+            "forbidden": [],
+            "visibility": "visible"
+          }
+        ],
+        "text": "Room in the Cart\n\nEnglish\nSpanish\n\nCould not load your account. Refresh to try again.\n\nSign in to continue\n\nConnect to load sign-in options.\n\nRefresh"
+      },
+      "bfcacheObserved": false,
+      "sessionRequestsAfterBack": 6,
+      "assertions": {
+        "privateMarkersAbsent": true,
+        "priorActorHiddenBeforeAuth": true,
+        "priorActorAbsentThroughoutRestore": true,
+        "expectedFinal": true,
+        "sameActorDraftPreserved": true,
+        "changedActorDraftCleared": true,
+        "neutralForward": true,
+        "secondBackCorrect": true,
+        "noCommands": true
+      }
+    }
+  ],
+  "events": [
+    {
+      "at": 1794027153626,
+      "method": "GET",
+      "path": "/requests",
+      "actor": "A",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027153701,
+      "method": "GET",
+      "path": "/assets/index-DyqgPDmw.js",
+      "actor": "A",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027153707,
+      "method": "GET",
+      "path": "/assets/index-B9I61_lh.css",
+      "actor": "A",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027153739,
+      "method": "GET",
+      "path": "/v1/session",
+      "actor": "A",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027153766,
+      "method": "GET",
+      "path": "/v1/households/household-A/requests/mine",
+      "actor": "A",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027153778,
+      "method": "GET",
+      "path": "/icon.png",
+      "actor": "A",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027153922,
+      "method": "GET",
+      "path": "/neutral",
+      "actor": "A",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027153973,
+      "method": "GET",
+      "path": "/requests",
+      "actor": "A",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027153974,
+      "method": "GET",
+      "path": "/favicon.ico",
+      "actor": "A",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027153989,
+      "method": "GET",
+      "path": "/assets/index-B9I61_lh.css",
+      "actor": "A",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027153989,
+      "method": "GET",
+      "path": "/assets/index-DyqgPDmw.js",
+      "actor": "A",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027154003,
+      "method": "GET",
+      "path": "/v1/session",
+      "actor": "A",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027154013,
+      "method": "GET",
+      "path": "/icon.png",
+      "actor": "A",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027154224,
+      "method": "GET",
+      "path": "/v1/households/household-A/requests/mine",
+      "actor": "A",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027154676,
+      "method": "GET",
+      "path": "/requests",
+      "actor": "A",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027154685,
+      "method": "GET",
+      "path": "/assets/index-B9I61_lh.css",
+      "actor": "A",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027154685,
+      "method": "GET",
+      "path": "/assets/index-DyqgPDmw.js",
+      "actor": "A",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027154695,
+      "method": "GET",
+      "path": "/v1/session",
+      "actor": "A",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027154696,
+      "method": "GET",
+      "path": "/v1/households/household-A/requests/mine",
+      "actor": "A",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027154700,
+      "method": "GET",
+      "path": "/icon.png",
+      "actor": "A",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027155218,
+      "method": "GET",
+      "path": "/requests",
+      "actor": "A",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027155232,
+      "method": "GET",
+      "path": "/assets/index-DyqgPDmw.js",
+      "actor": "A",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027155232,
+      "method": "GET",
+      "path": "/assets/index-B9I61_lh.css",
+      "actor": "A",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027155244,
+      "method": "GET",
+      "path": "/v1/session",
+      "actor": "A",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027155260,
+      "method": "GET",
+      "path": "/v1/households/household-A/requests/mine",
+      "actor": "A",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027155265,
+      "method": "GET",
+      "path": "/icon.png",
+      "actor": "A",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027155320,
+      "method": "GET",
+      "path": "/neutral",
+      "actor": "A",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027155348,
+      "method": "GET",
+      "path": "/requests",
+      "actor": "B",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027155354,
+      "method": "GET",
+      "path": "/assets/index-B9I61_lh.css",
+      "actor": "B",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027155354,
+      "method": "GET",
+      "path": "/assets/index-DyqgPDmw.js",
+      "actor": "B",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027155363,
+      "method": "GET",
+      "path": "/v1/session",
+      "actor": "B",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027155368,
+      "method": "GET",
+      "path": "/icon.png",
+      "actor": "B",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027155577,
+      "method": "GET",
+      "path": "/v1/households/household-B/requests/mine",
+      "actor": "B",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027156014,
+      "method": "GET",
+      "path": "/requests",
+      "actor": "B",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027156020,
+      "method": "GET",
+      "path": "/assets/index-B9I61_lh.css",
+      "actor": "B",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027156021,
+      "method": "GET",
+      "path": "/assets/index-DyqgPDmw.js",
+      "actor": "B",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027156031,
+      "method": "GET",
+      "path": "/v1/session",
+      "actor": "B",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027156033,
+      "method": "GET",
+      "path": "/v1/households/household-B/requests/mine",
+      "actor": "B",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027156037,
+      "method": "GET",
+      "path": "/icon.png",
+      "actor": "B",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027156495,
+      "method": "GET",
+      "path": "/requests",
+      "actor": "A",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027156505,
+      "method": "GET",
+      "path": "/assets/index-DyqgPDmw.js",
+      "actor": "A",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027156505,
+      "method": "GET",
+      "path": "/assets/index-B9I61_lh.css",
+      "actor": "A",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027156520,
+      "method": "GET",
+      "path": "/v1/session",
+      "actor": "A",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027156536,
+      "method": "GET",
+      "path": "/v1/households/household-A/requests/mine",
+      "actor": "A",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027156536,
+      "method": "GET",
+      "path": "/icon.png",
+      "actor": "A",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027156602,
+      "method": "GET",
+      "path": "/neutral",
+      "actor": "A",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027156627,
+      "method": "GET",
+      "path": "/requests",
+      "actor": "revoked",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027156635,
+      "method": "GET",
+      "path": "/assets/index-B9I61_lh.css",
+      "actor": "revoked",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027156635,
+      "method": "GET",
+      "path": "/assets/index-DyqgPDmw.js",
+      "actor": "revoked",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027156646,
+      "method": "GET",
+      "path": "/v1/session",
+      "actor": "revoked",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027156652,
+      "method": "GET",
+      "path": "/icon.png",
+      "actor": "revoked",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027157288,
+      "method": "GET",
+      "path": "/requests",
+      "actor": "revoked",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027157294,
+      "method": "GET",
+      "path": "/assets/index-B9I61_lh.css",
+      "actor": "revoked",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027157294,
+      "method": "GET",
+      "path": "/assets/index-DyqgPDmw.js",
+      "actor": "revoked",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027157303,
+      "method": "GET",
+      "path": "/v1/session",
+      "actor": "revoked",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027157306,
+      "method": "GET",
+      "path": "/icon.png",
+      "actor": "revoked",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027157851,
+      "method": "GET",
+      "path": "/requests",
+      "actor": "A",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027157872,
+      "method": "GET",
+      "path": "/assets/index-DyqgPDmw.js",
+      "actor": "A",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027157873,
+      "method": "GET",
+      "path": "/assets/index-B9I61_lh.css",
+      "actor": "A",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027157885,
+      "method": "GET",
+      "path": "/v1/session",
+      "actor": "A",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027157902,
+      "method": "GET",
+      "path": "/v1/households/household-A/requests/mine",
+      "actor": "A",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027157902,
+      "method": "GET",
+      "path": "/icon.png",
+      "actor": "A",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027157967,
+      "method": "GET",
+      "path": "/neutral",
+      "actor": "A",
+      "mode": "ready"
+    },
+    {
+      "at": 1794027157995,
+      "method": "GET",
+      "path": "/requests",
+      "actor": "revoked",
+      "mode": "offline"
+    },
+    {
+      "at": 1794027158001,
+      "method": "GET",
+      "path": "/assets/index-B9I61_lh.css",
+      "actor": "revoked",
+      "mode": "offline"
+    },
+    {
+      "at": 1794027158002,
+      "method": "GET",
+      "path": "/assets/index-DyqgPDmw.js",
+      "actor": "revoked",
+      "mode": "offline"
+    },
+    {
+      "at": 1794027158008,
+      "method": "GET",
+      "path": "/v1/session",
+      "actor": "revoked",
+      "mode": "offline"
+    },
+    {
+      "at": 1794027158019,
+      "method": "GET",
+      "path": "/icon.png",
+      "actor": "revoked",
+      "mode": "offline"
+    },
+    {
+      "at": 1794027158210,
+      "method": "GET",
+      "path": "/v1/session",
+      "actor": "revoked",
+      "mode": "offline"
+    },
+    {
+      "at": 1794027158211,
+      "method": "GET",
+      "path": "/v1/session",
+      "actor": "revoked",
+      "mode": "offline"
+    },
+    {
+      "at": 1794027158665,
+      "method": "GET",
+      "path": "/requests",
+      "actor": "revoked",
+      "mode": "offline"
+    },
+    {
+      "at": 1794027158672,
+      "method": "GET",
+      "path": "/assets/index-DyqgPDmw.js",
+      "actor": "revoked",
+      "mode": "offline"
+    },
+    {
+      "at": 1794027158673,
+      "method": "GET",
+      "path": "/assets/index-B9I61_lh.css",
+      "actor": "revoked",
+      "mode": "offline"
+    },
+    {
+      "at": 1794027158688,
+      "method": "GET",
+      "path": "/v1/session",
+      "actor": "revoked",
+      "mode": "offline"
+    },
+    {
+      "at": 1794027158688,
+      "method": "GET",
+      "path": "/v1/session",
+      "actor": "revoked",
+      "mode": "offline"
+    },
+    {
+      "at": 1794027158689,
+      "method": "GET",
+      "path": "/v1/session",
+      "actor": "revoked",
+      "mode": "offline"
+    },
+    {
+      "at": 1794027158698,
+      "method": "GET",
+      "path": "/icon.png",
+      "actor": "revoked",
+      "mode": "offline"
+    }
+  ],
+  "responses": [
+    {
+      "at": 1794027153739,
+      "method": "GET",
+      "path": "/v1/session",
+      "actor": "A",
+      "mode": "ready",
+      "status": 200,
+      "body": {
+        "authenticated": true,
+        "role": "contributor",
+        "household": {
+          "id": "household-A",
+          "label": "Synthetic household A"
+        },
+        "memberId": "actor-A",
+        "shopId": "shop-A",
+        "replayWindow": {
+          "id": "window-A",
+          "expiresAt": "2099-01-01T00:00:00Z"
+        },
+        "csrf": "synthetic-A",
+        "enrolled": true,
+        "queueConsent": true
+      }
+    },
+    {
+      "at": 1794027153766,
+      "method": "GET",
+      "path": "/v1/households/household-A/requests/mine",
+      "actor": "A",
+      "mode": "ready",
+      "status": 200,
+      "body": {
+        "requests": [
+          {
+            "requestId": "request-A",
+            "shopId": "shop-A",
+            "revision": 1,
+            "originalItem": "OWN_ACTOR_A_HISTORY_7d91",
+            "ownQuantity": "one",
+            "authoredAt": "2026-11-06T12:00:00Z",
+            "receivedAt": "2026-11-06T12:00:01Z",
+            "route": "current",
+            "status": "pending",
+            "ownActionAllowed": true,
+            "clarification": null,
+            "followupTo": null
+          }
+        ],
+        "nextCursor": null
+      }
+    },
+    {
+      "at": 1794027154003,
+      "method": "GET",
+      "path": "/v1/session",
+      "actor": "A",
+      "mode": "ready",
+      "status": 200,
+      "body": {
+        "authenticated": true,
+        "role": "contributor",
+        "household": {
+          "id": "household-A",
+          "label": "Synthetic household A"
+        },
+        "memberId": "actor-A",
+        "shopId": "shop-A",
+        "replayWindow": {
+          "id": "window-A",
+          "expiresAt": "2099-01-01T00:00:00Z"
+        },
+        "csrf": "synthetic-A",
+        "enrolled": true,
+        "queueConsent": true
+      }
+    },
+    {
+      "at": 1794027154224,
+      "method": "GET",
+      "path": "/v1/households/household-A/requests/mine",
+      "actor": "A",
+      "mode": "ready",
+      "status": 200,
+      "body": {
+        "requests": [
+          {
+            "requestId": "request-A",
+            "shopId": "shop-A",
+            "revision": 1,
+            "originalItem": "OWN_ACTOR_A_HISTORY_7d91",
+            "ownQuantity": "one",
+            "authoredAt": "2026-11-06T12:00:00Z",
+            "receivedAt": "2026-11-06T12:00:01Z",
+            "route": "current",
+            "status": "pending",
+            "ownActionAllowed": true,
+            "clarification": null,
+            "followupTo": null
+          }
+        ],
+        "nextCursor": null
+      }
+    },
+    {
+      "at": 1794027154695,
+      "method": "GET",
+      "path": "/v1/session",
+      "actor": "A",
+      "mode": "ready",
+      "status": 200,
+      "body": {
+        "authenticated": true,
+        "role": "contributor",
+        "household": {
+          "id": "household-A",
+          "label": "Synthetic household A"
+        },
+        "memberId": "actor-A",
+        "shopId": "shop-A",
+        "replayWindow": {
+          "id": "window-A",
+          "expiresAt": "2099-01-01T00:00:00Z"
+        },
+        "csrf": "synthetic-A",
+        "enrolled": true,
+        "queueConsent": true
+      }
+    },
+    {
+      "at": 1794027154696,
+      "method": "GET",
+      "path": "/v1/households/household-A/requests/mine",
+      "actor": "A",
+      "mode": "ready",
+      "status": 200,
+      "body": {
+        "requests": [
+          {
+            "requestId": "request-A",
+            "shopId": "shop-A",
+            "revision": 1,
+            "originalItem": "OWN_ACTOR_A_HISTORY_7d91",
+            "ownQuantity": "one",
+            "authoredAt": "2026-11-06T12:00:00Z",
+            "receivedAt": "2026-11-06T12:00:01Z",
+            "route": "current",
+            "status": "pending",
+            "ownActionAllowed": true,
+            "clarification": null,
+            "followupTo": null
+          }
+        ],
+        "nextCursor": null
+      }
+    },
+    {
+      "at": 1794027155244,
+      "method": "GET",
+      "path": "/v1/session",
+      "actor": "A",
+      "mode": "ready",
+      "status": 200,
+      "body": {
+        "authenticated": true,
+        "role": "contributor",
+        "household": {
+          "id": "household-A",
+          "label": "Synthetic household A"
+        },
+        "memberId": "actor-A",
+        "shopId": "shop-A",
+        "replayWindow": {
+          "id": "window-A",
+          "expiresAt": "2099-01-01T00:00:00Z"
+        },
+        "csrf": "synthetic-A",
+        "enrolled": true,
+        "queueConsent": true
+      }
+    },
+    {
+      "at": 1794027155260,
+      "method": "GET",
+      "path": "/v1/households/household-A/requests/mine",
+      "actor": "A",
+      "mode": "ready",
+      "status": 200,
+      "body": {
+        "requests": [
+          {
+            "requestId": "request-A",
+            "shopId": "shop-A",
+            "revision": 1,
+            "originalItem": "OWN_ACTOR_A_HISTORY_7d91",
+            "ownQuantity": "one",
+            "authoredAt": "2026-11-06T12:00:00Z",
+            "receivedAt": "2026-11-06T12:00:01Z",
+            "route": "current",
+            "status": "pending",
+            "ownActionAllowed": true,
+            "clarification": null,
+            "followupTo": null
+          }
+        ],
+        "nextCursor": null
+      }
+    },
+    {
+      "at": 1794027155363,
+      "method": "GET",
+      "path": "/v1/session",
+      "actor": "B",
+      "mode": "ready",
+      "status": 200,
+      "body": {
+        "authenticated": true,
+        "role": "contributor",
+        "household": {
+          "id": "household-B",
+          "label": "Synthetic household B"
+        },
+        "memberId": "actor-B",
+        "shopId": "shop-B",
+        "replayWindow": {
+          "id": "window-B",
+          "expiresAt": "2099-01-01T00:00:00Z"
+        },
+        "csrf": "synthetic-B",
+        "enrolled": true,
+        "queueConsent": true
+      }
+    },
+    {
+      "at": 1794027155577,
+      "method": "GET",
+      "path": "/v1/households/household-B/requests/mine",
+      "actor": "B",
+      "mode": "ready",
+      "status": 200,
+      "body": {
+        "requests": [
+          {
+            "requestId": "request-B",
+            "shopId": "shop-B",
+            "revision": 1,
+            "originalItem": "OWN_ACTOR_B_HISTORY_f51e",
+            "ownQuantity": "one",
+            "authoredAt": "2026-11-06T12:00:00Z",
+            "receivedAt": "2026-11-06T12:00:01Z",
+            "route": "current",
+            "status": "pending",
+            "ownActionAllowed": true,
+            "clarification": null,
+            "followupTo": null
+          }
+        ],
+        "nextCursor": null
+      }
+    },
+    {
+      "at": 1794027156031,
+      "method": "GET",
+      "path": "/v1/session",
+      "actor": "B",
+      "mode": "ready",
+      "status": 200,
+      "body": {
+        "authenticated": true,
+        "role": "contributor",
+        "household": {
+          "id": "household-B",
+          "label": "Synthetic household B"
+        },
+        "memberId": "actor-B",
+        "shopId": "shop-B",
+        "replayWindow": {
+          "id": "window-B",
+          "expiresAt": "2099-01-01T00:00:00Z"
+        },
+        "csrf": "synthetic-B",
+        "enrolled": true,
+        "queueConsent": true
+      }
+    },
+    {
+      "at": 1794027156033,
+      "method": "GET",
+      "path": "/v1/households/household-B/requests/mine",
+      "actor": "B",
+      "mode": "ready",
+      "status": 200,
+      "body": {
+        "requests": [
+          {
+            "requestId": "request-B",
+            "shopId": "shop-B",
+            "revision": 1,
+            "originalItem": "OWN_ACTOR_B_HISTORY_f51e",
+            "ownQuantity": "one",
+            "authoredAt": "2026-11-06T12:00:00Z",
+            "receivedAt": "2026-11-06T12:00:01Z",
+            "route": "current",
+            "status": "pending",
+            "ownActionAllowed": true,
+            "clarification": null,
+            "followupTo": null
+          }
+        ],
+        "nextCursor": null
+      }
+    },
+    {
+      "at": 1794027156520,
+      "method": "GET",
+      "path": "/v1/session",
+      "actor": "A",
+      "mode": "ready",
+      "status": 200,
+      "body": {
+        "authenticated": true,
+        "role": "contributor",
+        "household": {
+          "id": "household-A",
+          "label": "Synthetic household A"
+        },
+        "memberId": "actor-A",
+        "shopId": "shop-A",
+        "replayWindow": {
+          "id": "window-A",
+          "expiresAt": "2099-01-01T00:00:00Z"
+        },
+        "csrf": "synthetic-A",
+        "enrolled": true,
+        "queueConsent": true
+      }
+    },
+    {
+      "at": 1794027156536,
+      "method": "GET",
+      "path": "/v1/households/household-A/requests/mine",
+      "actor": "A",
+      "mode": "ready",
+      "status": 200,
+      "body": {
+        "requests": [
+          {
+            "requestId": "request-A",
+            "shopId": "shop-A",
+            "revision": 1,
+            "originalItem": "OWN_ACTOR_A_HISTORY_7d91",
+            "ownQuantity": "one",
+            "authoredAt": "2026-11-06T12:00:00Z",
+            "receivedAt": "2026-11-06T12:00:01Z",
+            "route": "current",
+            "status": "pending",
+            "ownActionAllowed": true,
+            "clarification": null,
+            "followupTo": null
+          }
+        ],
+        "nextCursor": null
+      }
+    },
+    {
+      "at": 1794027156646,
+      "method": "GET",
+      "path": "/v1/session",
+      "actor": "revoked",
+      "mode": "ready",
+      "status": 403,
+      "body": {
+        "error": {
+          "code": "access_ended"
+        }
+      }
+    },
+    {
+      "at": 1794027157303,
+      "method": "GET",
+      "path": "/v1/session",
+      "actor": "revoked",
+      "mode": "ready",
+      "status": 403,
+      "body": {
+        "error": {
+          "code": "access_ended"
+        }
+      }
+    },
+    {
+      "at": 1794027157885,
+      "method": "GET",
+      "path": "/v1/session",
+      "actor": "A",
+      "mode": "ready",
+      "status": 200,
+      "body": {
+        "authenticated": true,
+        "role": "contributor",
+        "household": {
+          "id": "household-A",
+          "label": "Synthetic household A"
+        },
+        "memberId": "actor-A",
+        "shopId": "shop-A",
+        "replayWindow": {
+          "id": "window-A",
+          "expiresAt": "2099-01-01T00:00:00Z"
+        },
+        "csrf": "synthetic-A",
+        "enrolled": true,
+        "queueConsent": true
+      }
+    },
+    {
+      "at": 1794027157902,
+      "method": "GET",
+      "path": "/v1/households/household-A/requests/mine",
+      "actor": "A",
+      "mode": "ready",
+      "status": 200,
+      "body": {
+        "requests": [
+          {
+            "requestId": "request-A",
+            "shopId": "shop-A",
+            "revision": 1,
+            "originalItem": "OWN_ACTOR_A_HISTORY_7d91",
+            "ownQuantity": "one",
+            "authoredAt": "2026-11-06T12:00:00Z",
+            "receivedAt": "2026-11-06T12:00:01Z",
+            "route": "current",
+            "status": "pending",
+            "ownActionAllowed": true,
+            "clarification": null,
+            "followupTo": null
+          }
+        ],
+        "nextCursor": null
+      }
+    }
+  ],
+  "commands": [],
+  "error": null,
+  "cleanup": {
+    "browserClosed": true,
+    "serverClosed": true
+  }
+}

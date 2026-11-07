@@ -1,0 +1,33 @@
+{
+  "files": {
+    "source-manifest.json": "ee8f2f718a2d0f5cf7d06c3ef6c446a7b14dc7a75db16f3e640a000480e19ff5",
+    "root-workflow-tests-corrected.log": "906493846a7890773cdb883ae5645073c39841c1aa61d2f99efac73cb0b1924d",
+    "original-private-max-age-zero-results.json": "fe362208eaaee1f827a9a205b4d65efefdb166998a2197192e1dbb74739f7f04",
+    "root-verification.json": "6727eb2816ff6c550a01d035133531827521ca3edab63dfa1fc1c6e03ce9a0d1",
+    "permanent-browser-regression.patch": "c571e94408735ff355de97f965bc1b178be85dec0edf2b0d7f9e07847bd529d2",
+    "root-workflow-validation.log": "22e889a1f7c0b55f81780e082aa20e41410fd3d22a26181f13af406902d52abc",
+    "original-private-max-age-zero-revoked-offline-pending.png": "e8645aa8425a9a82c997267ed3e8cb09ea536350b963b867a511cb5aec13dbb2",
+    "root-lifecycle-review.json": "71de74f3a16463fcb3bdc3f5276726594e822e70e02eaac6eb359c471287ea98",
+    "original-private-max-age-zero-runtime.json": "54281dcba8900fc540d3975e43bbcc08757b0684679fb1099f3dd3ca0895735f",
+    "FOLLOWUP-REVIEW.md": "8e5f64c937c6415448586a66992154aa5aef725ed25bc12afbb41db966314a53",
+    "original-no-store-results.json": "2030c109abcc71c734da24abb27c39e6020d7bfba0873be77ab333335adbc281",
+    "evidence-manifest.json": "35280623af98079d70c51e5ca4ce2477d19c71d073c48227a4c335d0029c63be",
+    "fixed-no-store-results.json": "1bee22e907b7aeaaf0c1d65fe43a4c7aa4b3f7a2c74ead2aedc0089e6291a568",
+    "permanent-fixed-recovery-browser.log": "d840569a63a85dcce6fc271c212535129e4592dec41bd24db116c07712b9cc2c",
+    "corrected-evidence-manifest.json": "fd3fb4fbfe5dc6c0341e887715c8946fde3b5d4a2232964ccf3598f413b5ec91",
+    "history-privacy.patch": "a22d015e4ef53fc45c668ac0dbbd06db4613288a1aad34ec044dcab73d39fe2c",
+    "README.md": "80dc1edde01df2984ed99f579942364b9205c2678709f1ccf79397d19c881f80",
+    "root-workflow-validation.json": "c1944e374e6f579c20a6b2178e7e4450a77fdb64016d8bfc78f49cd030aa80a7",
+    "execution-summary.json": "02b01864605777350470130d22ed799037e57480f982de48865501cb28a78d59",
+    "candidate-401-recovery-negative.log": "7a0eac02683544a930b04ad463e216eb6b9911e118f280eba9c2db623a59b070",
+    "root-corrected-browser-tests.log": "264e19a3b187c2ecc192765f152d6d947f061dd99a6f515ac9d099b0d2cc5da2",
+    "corrected-source-manifest.json": "e6841b38a5d5af3577c1d6cab51eafa96a7a019235fe8d41057077eb135c1a31",
+    "history-privacy-401-followup.patch": "956720cd02280ffd4d3436dfc2555704878ce98412decc571180d50bb8bec93e",
+    "fixed-private-max-age-zero-results.json": "bdc88ee9a9bf973272efd125b16579b60f8e9a7babe024166be9a173013d57ff",
+    "fixed-private-max-age-zero-revoked-offline-pending.png": "956958de0b2627ffd3b1361003373ae8576575fa639d8e23b0dc48782a219271",
+    "REVIEW.md": "501ad919dd939599e337916d660f0de0a984cdf96a9f28ba6c55582f60192565",
+    "root-corrected-web-tests.log": "47c2ea3dda2879622483268dae751768d45fbf589acdfbba3604bcaa088967d4",
+    "fixed-private-max-age-zero-runtime.json": "b87cb78c849ff25778793072f2e1725434c122bdd2c8a56016200488c01a8468",
+    "root-workflow-tests.log": "edb436b97ef336704d58b788118d9e7ad87b73559fbe4cbf7b975735c7aa9e39"
+  }
+}

@@ -32,7 +32,7 @@ jobs:
         working-directory: ${{ matrix.package }}
       - run: npm test
         working-directory: ${{ matrix.package }}
-      - name: Check contributor outbox eviction in Chrome
+      - name: Check contributor outbox and history privacy in Chrome
         if: matrix.package == 'web'
         timeout-minutes: 2
         run: npm run test:browser

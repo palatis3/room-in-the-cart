@@ -1,0 +1,76 @@
+{
+  "original-private-max-age-zero": {
+    "scenarioCount": 4,
+    "bfcacheObserved": true,
+    "assertionsPassed": false,
+    "forbiddenResponseMarkersAbsent": true,
+    "commands": 0,
+    "cleanup": {
+      "browserClosed": true,
+      "serverClosed": true
+    },
+    "error": null,
+    "headers": {
+      "html": "private, max-age=0",
+      "api": "no-store",
+      "neutral": "max-age=0"
+    }
+  },
+  "original-no-store": {
+    "scenarioCount": 4,
+    "bfcacheObserved": false,
+    "assertionsPassed": true,
+    "forbiddenResponseMarkersAbsent": true,
+    "commands": 0,
+    "cleanup": {
+      "browserClosed": true,
+      "serverClosed": true
+    },
+    "error": null,
+    "headers": {
+      "html": "no-store",
+      "api": "no-store",
+      "neutral": "max-age=0"
+    }
+  },
+  "fixed-private-max-age-zero": {
+    "scenarioCount": 4,
+    "bfcacheObserved": true,
+    "assertionsPassed": true,
+    "forbiddenResponseMarkersAbsent": true,
+    "commands": 0,
+    "cleanup": {
+      "browserClosed": true,
+      "serverClosed": true
+    },
+    "error": null,
+    "headers": {
+      "html": "private, max-age=0",
+      "api": "no-store",
+      "neutral": "max-age=0"
+    }
+  },
+  "fixed-no-store": {
+    "scenarioCount": 4,
+    "bfcacheObserved": false,
+    "assertionsPassed": true,
+    "forbiddenResponseMarkersAbsent": true,
+    "commands": 0,
+    "cleanup": {
+      "browserClosed": true,
+      "serverClosed": true
+    },
+    "error": null,
+    "headers": {
+      "html": "no-store",
+      "api": "no-store",
+      "neutral": "max-age=0"
+    }
+  },
+  "unitChecks": {
+    "pass": 126,
+    "fail": 0,
+    "log": "fixed-web-tests-complete.log"
+  },
+  "scope": "synthetic local browser; no hosted/mobile/physical-device or full V1 acceptance claim"
+}

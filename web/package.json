@@ -10,7 +10,7 @@
     "dev": "vite --host 127.0.0.1",
     "build": "tsc -p tsconfig.json && vite build",
     "test": "npm run build && node --test tests/*.test.mjs",
-    "test:browser": "node --test --test-timeout=45000 tests/browser/outbox-eviction.test.mjs",
+    "test:browser": "node --test --test-concurrency=1 --test-timeout=45000 tests/browser/outbox-eviction.test.mjs tests/browser/history-privacy.test.mjs",
     "preview": "vite preview --host 127.0.0.1"
   },
   "devDependencies": {

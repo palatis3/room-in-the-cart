@@ -26,6 +26,10 @@ export class WebApp {
   private draft = blank();
   private review = false;
   private busy = false;
+  private historySuspended = false;
+  private historyAway = false;
+  private historyGeneration = 0;
+  private historyResumePending = false;
   private notice = '';
   private failurePurpose:'load'|'mutation'|null=null;
   private language:Language;
@@ -58,8 +62,11 @@ export class WebApp {
   }
   private async run(action:()=>Promise<void>,purpose:'load'|'mutation'='mutation',retryingSignOut=false):Promise<void> {
     if(this.busy||(this.signOutPending&&!retryingSignOut))return; this.busy=true; this.render();
-    try { await action(); if(purpose==='load'&&this.failurePurpose==='load'){this.notice='';this.failurePurpose=null;} } catch(error) { await this.fail(error,purpose); }
-    finally {this.busy=false;this.render();this.root.querySelector<HTMLElement>('[role="status"]')?.focus();}
+    const historyGeneration=this.historyGeneration;
+    try { await action(); if(purpose==='load'&&!this.historyAway&&historyGeneration===this.historyGeneration)this.historySuspended=false; if(purpose==='load'&&this.failurePurpose==='load'){this.notice='';this.failurePurpose=null;} } catch(error) { await this.fail(error,purpose); }
+    finally {this.busy=false;this.render();this.root.querySelector<HTMLElement>('[role="status"]')?.focus();
+      if(this.historyResumePending){this.historyResumePending=false;void this.start();}
+    }
   }
   private supportedRoute():boolean {
     const path=this.root.ownerDocument.defaultView?.location.pathname??'/';
@@ -67,7 +74,18 @@ export class WebApp {
     return ['/requests','/invite','/view'].includes(path.endsWith('/')?path.slice(0,-1):path);
   }
   private get signOutPending():boolean {return this.logoutPending||browserSignOutPending(this.root.ownerDocument.defaultView);}
+  suspendForHistory():void {
+    // Remove private DOM before the browser can retain a history snapshot. Keep
+    // unsent work in memory until a fresh session confirms the same scope.
+    this.historyAway=true;this.historySuspended=true;this.historyGeneration++;this.render();
+  }
+  resumeFromHistory():void {
+    this.historyAway=false;
+    if(this.busy){this.historyResumePending=true;return;}
+    void this.start();
+  }
   async start():Promise<void> {
+    if(this.historyAway)return;
     if(!this.supportedRoute()){this.render();return;}
     if(this.signOutPending){this.hideWhileSigningOut();this.render();return;}
     await this.run(()=>this.load(),'load');
@@ -172,7 +190,11 @@ export class WebApp {
       this.notice='Sign in again to continue. Your text stays on this page.';
       this.codeRequested=false;this.loginCode='';
       this.render();
+      const historyGeneration=this.historyGeneration;
       this.browserAuth=await this.api.authState().catch(()=>null);
+      // An explicit identity denial has removed the private projection. Allow
+      // sign-in recovery even when the retained household cookie keeps returning 401.
+      if(!this.historyAway&&historyGeneration===this.historyGeneration)this.historySuspended=false;
     }
     else if(e.code==='login_unavailable')this.notice='Email sign-in is not available yet. Your invitation stays on this page.';
     else if(e.code==='code_not_accepted')this.notice='That code was not accepted. Check the latest code or request another one.';
@@ -201,6 +223,7 @@ export class WebApp {
     const status=this.el('p',this.busy?this.t('Loading…'):this.t(this.notice));status.className='notice';status.setAttribute('role','status');status.setAttribute('tabindex','-1');main.append(status);
     if(!this.supportedRoute()){main.append(this.el('h1',this.t('This page is not available.')));const link=this.el('a',this.t('Open your requests'));link.href='/requests';main.append(link);return;}
     if(this.signOutPending){main.append(this.el('h1',this.t('Finish signing out')),this.button('Retry sign-out',()=>void this.run(()=>this.signOut(),'mutation',true),true));return;}
+    if(this.historySuspended){main.append(this.button('Refresh',()=>void this.start()));return;}
     if(this.invitation!==null || !this.session) {this.renderInvite(main);return;}
     const context=this.el('section');context.append(this.el('p',this.session.household.label));
     const actions=this.el('div');actions.className='actions';actions.append(this.button('Refresh',()=>void this.run(()=>this.load(),'load')),this.button('Sign out',()=>void this.run(()=>this.signOut(this.session??undefined))));context.append(actions);main.append(context);
