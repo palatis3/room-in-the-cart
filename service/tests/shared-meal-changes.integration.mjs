@@ -862,6 +862,26 @@ test('trusted recovery basis carries a genuine foreign delivery once and publish
  assert.equal(after.basis.foreignHolds[0].quantity.amount.numerator,'2');
  assert.equal(after.projection.demands[0].allocated.numerator,'3');
  assert.equal(after.coverage.needs[0].freezer.numerator,'3');
+ // Different shops can issue identical client observation UUIDs for independent
+ // physical lots. Each usable count must still bind to its actual shop/source.
+ const local=ok(await f.send(other.envelope('delivery.register',{supplyRevision:0,placedRevision:2,lineId:initial.lines[0].lineId,
+   segmentKey:randomUUID(),foodName:'Separate local wraps',exclusionTags:[]}))).sourceId;
+ ok(await f.send(other.envelope('delivery.arrival',{sourceId:local,supplyRevision:1,observationId:f.usable.arrivalObservationId,predecessorId:null,
+   arrivedAt:p.time,received:q(1)})));
+ ok(await f.send(other.envelope('delivery.usable',{sourceId:local,supplyRevision:2,observationId:f.usable.observationId,predecessorId:null,
+   confirmedAt:p.time,arrivalObservationId:f.usable.arrivalObservationId,usable:q(1)})));
+ const colliding=await realRecoveryRead(f,otherId,loaded);
+ assert.equal(colliding.basis.usable.filter(r=>r.id===f.usable.observationId).length,2);
+ assert.equal(colliding.projection.demands[0].allocated.numerator,'3');
+ // A deliberately removed selection cannot leak its previous food ID through
+ // a retained replacement. The meal stays readable with its shortage open.
+ await other.edit('pantry.match',{lotId:f.sourceId,...p.match,mealRevision:2,matched:false});
+ await other.edit('pantry.select',{lotId:f.sourceId,selected:false});
+ const later=before.context.meals[0],saved={...later,revisionId:randomUUID(),needs:later.needs.map(n=>({...n,id:randomUUID(),foodId:f.sourceId,matchedSourceIds:[f.sourceId]}))};
+ loaded.set(otherId,{...emptyRecoveryPublication(),recoveryRevision:1,meals:[saved]});
+ const removed=await realRecoveryRead(f,otherId,loaded);
+ assert.equal(removed.basis.meals[0].needs[0].foodId,null);assert.deepEqual(removed.basis.meals[0].needs[0].matchedSourceIds,[]);
+ assert.equal(removed.projection.demands[0].shortfall.numerator,'4');
 });
 
 test('trusted recovery basis guards retired legacy targets and previews the current recipe before recording a correction',async()=>{

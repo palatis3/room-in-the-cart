@@ -78,7 +78,8 @@ async function effectiveMeals(ctx:Context,stock:Stock,load:RecoveryPublicationLo
         const retained=original.needs.find(old=>old.id===n.id);
         const nativeFood=stock.deliverySources.find(s=>s.shopId===shopId && s.physical.foodId===n.foodId);
         const accepted=n.matchedSourceIds??(nativeFood?[nativeFood.physical.sourceId]:[]);
-        return {...n,matchedSourceIds:retained?.matchedSourceIds??accepted.filter(id=>eligibleOrigin(stock,shopId,id))};
+        return {...n,foodId:n.foodId && eligibleOrigin(stock,shopId,n.foodId)?n.foodId:null,
+          matchedSourceIds:retained?.matchedSourceIds??accepted.filter(id=>eligibleOrigin(stock,shopId,id))};
       })}):original;
     return {shopId,sealed,original,current};
   });
