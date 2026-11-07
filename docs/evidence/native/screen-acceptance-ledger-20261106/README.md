@@ -73,3 +73,5 @@ Root independently verified all six original package hashes and 96 input hashes,
 ## Subsequent evidence binding
 
 The [S14 whole-batch undo addendum](s14-undo/README.md) binds existing exact-804 native assertions and a per-case pass to S14.02. Root reviewed its assertions and rehashed all 22 referenced inputs. With that scoped addendum, this snapshot has 16 scoped-proof clauses and 102 indirect/unmapped clauses; no new product test was required and no broad release acceptance is implied. The original ledger JSON remains unchanged for provenance.
+
+The [S07 short-fill fee addendum](s07-short-fill-fees/REVIEW.md) binds four existing exact-804 model passes to retained-charge arithmetic, short-fill settlement, separate top-up costs and scoped trip consent. Root verified the retained result nodes, unchanged test method bodies and principal source hashes, and inspected the receipt/usable/settlement mutation paths. No new fee defect was found. This adds scoped evidence without promoting the entire clause or the original ledger totals to complete acceptance; exact before/after quote identity and real retailer billing remain outside those assertions.

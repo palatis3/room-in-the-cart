@@ -1,0 +1,12 @@
+{
+  "files": [
+    {
+      "path": "REVIEW.md",
+      "sha256": "a171a1b6b54290a9b77d1e649d8a47da3511d0403254aa7622a81e678a35dea4"
+    },
+    {
+      "path": "root-binding.json",
+      "sha256": "292700fed60cd176590340d7ffebdf18b81f29711dac7b4c660554508c67bf60"
+    }
+  ]
+}
