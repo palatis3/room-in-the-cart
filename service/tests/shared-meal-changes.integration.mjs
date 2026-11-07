@@ -266,7 +266,7 @@ test('placed delivery corrections, split arrivals, replay and shopper changes pr
   ok(await save(command('shop.reportPlaced',{occurredAt:new Date().toISOString()},1)));
   const sealed=ok(await call(f.owner,path));
   assert.ok(ok(await call(f.owner,f.base+'/bootstrap')).capabilities.includes('delivery_evidence'));
-  assert.deepEqual((await read()).lines,[{lineId,name:shop.lines[0].originalItem}]);
+  assert.deepEqual((await read()).lines,[{lineId,name:shop.lines[0].originalItem,packs:shop.lines[0].packs}]);
   assert.deepEqual((await read()).sources,[]);
   assert.equal((await save(command('delivery.register',{...segment,lineId:randomUUID()}))).status,404);
   const create=command('delivery.register',segment), created=ok(await save(create)), id=created.sourceId;

@@ -386,6 +386,7 @@ public actor HouseholdService {
             guard page.shopId == UUID(uuidString: shopID), page.sources.count <= 50, page.placedRevision > 0,
                   page.authorityEpoch > 0, page.shopRevision >= page.placedRevision, page.supplyRevision >= 0, (page.recoveryRevision ?? 0) >= 0,
                   Set(page.lines.map(\.id)).count == page.lines.count, page.lines.count <= 200,
+                  page.lines.allSatisfy({ $0.packs.map((1...10_000).contains) ?? true }),
                   page.sources.allSatisfy({ seen.insert($0.id).inserted }),
                   page.nextCursor == nil || (page.sources.count == 50 && page.nextCursor == page.sources.last?.id) else { throw ClientError.invalidResponse }
             try page.sources.forEach { try $0.validate() }

@@ -103,6 +103,7 @@ private struct RequestPurchaseEditor: View {
             }
             Section(ht("Matched line in the placed order")) {
                 Text(match.line.name)
+                LabeledContent(ht("Whole packs"), value: match.line.packs?.formatted() ?? ht("Unknown"))
                 LabeledContent(ht("Placed revision"), value: match.placedRevision.formatted())
             }
             Section(ht("Current purchase status")) { Text(purchaseStatus(match.request.purchaseOutcome)) }

@@ -56,7 +56,7 @@ final class SharedDeliveryFixtureRecords {
             "ingredients":[["id":ingredient,"name":"Tortillas","quantity":quantity,"groupIds":[group],"exclusions":["sesame"]]]]
         let meal: [String:Any] = ["title":"Lunch wraps","day":"2026-11-08","kind":"lunch","portions":2,"protected":true,"planning":plan]
         return ["shopId":shop, "coverageAvailable":true,"reservationsAvailable":true,"recoveryRevision":recovery?.revision ?? 0,"meals":recovery?.sealedMeals ?? pantry?.meals ?? [["occurrenceId":occurrence,"revision":1,"meal":meal]], "placedRevision":1, "shopRevision":2, "authorityEpoch":1, "supplyRevision":revision,
-         "lines":[["lineId":line,"name":"Ordered wraps"]], "sources":source.map { [$0] } ?? [], "nextCursor":NSNull()]
+         "lines":[["lineId":line,"name":"Ordered wraps","packs":2]], "sources":source.map { [$0] } ?? [], "nextCursor":NSNull()]
     }
     func coverage(shop: String) throws -> [String:Any] {
         if let pantry { return try pantry.coverage(shop: shop, supply: revision, deliveryOnly: true) }

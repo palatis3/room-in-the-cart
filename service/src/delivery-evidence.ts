@@ -97,11 +97,16 @@ export async function readDeliveryCoverage(ctx:Context,shop:Shop) {
 
 export async function readDelivery(ctx: Context, shop: Shop, cursor: string|null) {
   requirePlaced(shop, true);
-  const lines = cursor === null ? (await ctx.db.query(`SELECT lower(line->>'lineId') AS "lineId", line->>'originalItem' AS name
+  const sealed = cursor === null ? (await ctx.db.query<{lineId:string;name:string;packs:unknown}>(`SELECT
+    lower(line->>'lineId') AS "lineId", line->>'originalItem' AS name, line->'packs' AS packs
     FROM ritc.shop_snapshot ss CROSS JOIN LATERAL jsonb_array_elements(ss.snapshot->'lines') WITH ORDINALITY AS item(line,position)
     WHERE ss.household_id=$1 AND ss.shop_id=$2 AND ss.revision=$3
       AND NOT (ss.digest=repeat('0',64) AND line->>'originalItem'='Removed item') ORDER BY position`,
     [ctx.householdId,shop.shop_id,shop.placed_revision])).rows : [];
+  const lines = sealed.map(({lineId,name,packs}) => {
+    const known = typeof packs === 'number' && Number.isInteger(packs) && packs >= 1 && packs <= 10_000;
+    return {lineId,name,...(known ? {packs} : {})};
+  });
   const meals = cursor === null ? (await ctx.db.query(sealedMeals+" ORDER BY m.meal->>'day',m.occurrence_id",
     [ctx.householdId,shop.shop_id,shop.placed_revision])).rows : [];
   const result = await ctx.db.query<SourceRow>(heads+' AND ($3::uuid IS NULL OR s.source_id>$3) ORDER BY s.source_id LIMIT 51',

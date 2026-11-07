@@ -193,6 +193,7 @@ extension HouseholdClientTests {
         for phase in ["placed", "closed"] {
             let match = try XCTUnwrap(RequestPurchaseMatch(request: own, shop: shop(phase), placed: snapshot))
             XCTAssertEqual(match.line.name, "Original line")
+            XCTAssertNil(match.line.packs, "A legacy sealed line carries no ordered pack count")
             XCTAssertEqual(match.base, .init(shopRevision: 8, authorityEpoch: 3, requestRevision: 2))
             XCTAssertEqual(match.body(outcome: nil)["outcome"], .string("unknown"))
         }

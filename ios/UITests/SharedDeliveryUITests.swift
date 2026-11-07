@@ -146,6 +146,7 @@ import XCTest
         assertFact("Requested by", "Sam")
         assertFact("Quantity", "four wraps")
         reveal(app.staticTexts["Ordered wraps"])
+        assertFact("Whole packs", "2")
         tap(app.buttons["purchase.choice.bought"])
         tap(app.buttons["Cancel"])
         reveal(row)

@@ -4,6 +4,7 @@ public struct SharedDeliveryPage: Decodable, Equatable, Sendable {
     public struct Line: Decodable, Equatable, Identifiable, Sendable {
         public let lineId: UUID
         public let name: String
+        public let packs: Int?
         public var id: UUID { lineId }
     }
     public struct Arrival: Decodable, Equatable, Sendable {

@@ -190,6 +190,7 @@ final class NativeServiceWireTests: XCTestCase {
             XCTAssertEqual(match.request.ownQuantity, "one box")
             XCTAssertEqual(match.request.purchaseOutcome, expected)
             XCTAssertEqual(match.line.name, "Original basket")
+            XCTAssertEqual(match.line.packs, 1)
             let op = try await service.prepare(envelope: .init(replayWindow: window.id, shopId: shopID,
                 kind: "request.confirmPurchase", base: match.base, body: match.body(outcome: outcome)), bootstrap: scope)
             XCTAssertFalse(op.targetsShop(nil))

@@ -145,6 +145,8 @@ export interface DeliveryReservationCoverage {
   requested: {numerator: string; denominator: string};
   backed: {numerator: string; denominator: string}; // Exact fractions in the row's required unit.
 }
+/** A shopper-only line in the sealed order. Older projections may omit the ordered whole-pack count. */
+export interface DeliveryEvidenceLine { lineId: string; name: string; packs?: number }
 /** Additive fields for evidence pages, their sources, and coverage needs. */
 export interface DeliveryEvidencePageReservations { reservationsAvailable?: boolean }
 export interface DeliverySourceReservations { reservations?: DeliveryReservationHead[] }
