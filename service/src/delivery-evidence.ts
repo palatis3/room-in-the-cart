@@ -72,12 +72,12 @@ export async function storedDeliveryEvidence(ctx:Context,ids:string[],shopId:str
 
 // Resolve the connected shops in two queries; unrelated delivery lines are not
 // brought into the shared-stock graph.
-export async function jointDeliveryInputs(ctx:Context,shopIds:string[],lotIds:string[]){
+export async function jointDeliveryInputs(ctx:Context,shopIds:string[],lotIds:string[],includeInventory=false){
   const meals=await ctx.db.query<SealedMeal & {shopId:string}>(`SELECT ss.shop_id AS "shopId",${mealFields} ${sealedJoin}
     JOIN ritc.shop sh ON (sh.household_id,sh.shop_id,sh.placed_revision)=(ss.household_id,ss.shop_id,ss.revision)
     WHERE ss.household_id=$1 AND ss.shop_id=ANY($2::uuid[]) ORDER BY sh.created_at,sh.shop_id,m.meal->>'day',m.occurrence_id`,[ctx.householdId,shopIds]);
   const sources=await ctx.db.query<SourceRow>(sourceHeads+` WHERE s.household_id=$1 AND s.shop_id=ANY($2::uuid[])
-    AND (s.source_id=ANY($3::uuid[]) OR jsonb_array_length(matches.current)>0) ORDER BY s.source_id`,[ctx.householdId,shopIds,lotIds]);
+    AND ($4::boolean OR s.source_id=ANY($3::uuid[]) OR jsonb_array_length(matches.current)>0) ORDER BY s.source_id`,[ctx.householdId,shopIds,lotIds,includeInventory]);
   return {meals:meals.rows,sources:sources.rows.map(r=>({shopId:r.shop_id,physical:sourceEvidence(r,ctx.now.toISOString())}))};
 }
 async function coverageInputs(ctx:Context,shop:Shop) {

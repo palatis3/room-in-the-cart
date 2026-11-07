@@ -68,7 +68,7 @@ export async function readPantry(ctx:Context,shop:Shop,cursor:string|null) {
 const scoped=(shopId:string,id:string)=>shopId+'/'+id;
 const unscoped=(id:string)=>id.slice(id.indexOf('/')+1);
 function targetKey(sourceId:string,m:Match){return [sourceId,m.occurrenceId,m.mealRevision,m.ingredientId].join('/');}
-async function linkedComponent(ctx:Context,shop:Shop,focus:string|null){
+export async function linkedComponent(ctx:Context,shop:Shop,focus:string|null){
   const {rows:edges}=await ctx.db.query<{lot_id:string;shop_id:string}>(`SELECT lot_id,shop_id FROM (
     SELECT DISTINCT ON(lot_id,shop_id) lot_id,shop_id,enabled FROM ritc.pantry_event WHERE household_id=$1 AND kind='select'
     ORDER BY lot_id,shop_id,pantry_revision DESC) current WHERE enabled
@@ -96,10 +96,10 @@ export async function trackCookStockProvenance(ctx:Context,shop:Shop,copyId:stri
       UNION SELECT actor_id FROM ritc.shared_meal_revision WHERE household_id=$1 AND shop_id=ANY($4::uuid[])
     ) origins`,[ctx.householdId,copyId,[...lots],[...shops]]);
 }
-async function jointInputs(ctx:Context,shop:Shop,focus:string|null=null){
+export async function jointInputs(ctx:Context,shop:Shop,focus:string|null=null,includeInventory=false){
   const {shops,lots}=await linkedComponent(ctx,shop,focus);
   const mealRows:SealedMeal[]=[],sources=new Map<string,DeliverySource>(),kinds=new Map<string,'delivery'|Location>();
-  const delivery=await jointDeliveryInputs(ctx,[...shops],[...lots]);
+  const delivery=await jointDeliveryInputs(ctx,[...shops],[...lots],includeInventory);
   const sourceRows=new Map<string,Delivery>();
   for(const {shopId,...meal} of delivery.meals) mealRows.push({...meal,occurrenceId:scoped(shopId,meal.occurrenceId)});
   for(const {shopId,physical} of delivery.sources){
@@ -130,7 +130,7 @@ async function jointInputs(ctx:Context,shop:Shop,focus:string|null=null){
   }
   const preferences=new Map(rows.filter(l=>l.use_first_at!==null).map(l=>[l.lot_id,l.use_first_at!.getTime()]));
   const ordered=[...sources.values()].sort((a,b)=>(preferences.get(a.sourceId)??Infinity)-(preferences.get(b.sourceId)??Infinity));
-  return {meals:mealRows,sources:ordered,kinds,heads,rows};
+  return {meals:mealRows,sources:ordered,kinds,heads,rows,shopIds:[...shops],deliverySources:delivery.sources};
 }
 type Inputs=Awaited<ReturnType<typeof jointInputs>>;
 type Needs=ReturnType<typeof deliveryCoverage>['needs'];

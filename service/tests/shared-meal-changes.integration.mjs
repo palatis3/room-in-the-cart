@@ -400,10 +400,11 @@ test('a shopper can record completed prep and zero lead time without removing a 
  assert.deepEqual(protectedMeal,meal);
 });
 
-async function reservationFixture({excluded=false,split=true,rival=false}={}) {
+async function reservationFixture({excluded=false,split=true,rival=false,day,rivalDay}={}) {
  const f=await mealFixture(),commands=f.base+'/commands',path=f.path+'/delivery-evidence';
  const quantity=n=>({amount:{numerator:n,denominator:1},unit:'count',originalLiteral:String(n)});
  const meal=structuredClone(f.meal),[plates,lunch]=meal.planning.groups,ingredient=meal.planning.ingredients[0];
+ if(day) meal.day=day;
  ingredient.quantity=quantity(6);
  if(split) meal.planning.bindings.forEach((b,i)=>b.quantity=quantity(i===0?4:2));
  else delete meal.planning.bindings;
@@ -413,6 +414,7 @@ async function reservationFixture({excluded=false,split=true,rival=false}={}) {
  const rivalOccurrence=randomUUID();
  if(rival){
    const other=structuredClone(meal);
+   if(rivalDay) other.day=rivalDay;
    other.title='Another supper';other.planning.groups=[plates];other.planning.ingredients[0].groupIds=[plates.id];
    other.planning.ingredients[0].quantity=quantity(4);delete other.planning.bindings;
    ok(await call(f.owner,commands,'POST',f.patch(3,{occurrenceId:rivalOccurrence,baseMealRevision:null,meal:other})));
@@ -776,4 +778,88 @@ test('shared pantry corrections serialize competing reviews, reject stale predec
    for(const table of ['pantry_lot','pantry_event']) assert.equal((await db.query('SELECT 1 FROM ritc.'+table+' WHERE household_id=$1',[f.h])).rowCount,0);
    await assert.rejects(db.query('DELETE FROM ritc.pantry_event'),e=>e.code==='42501');
  }finally{await db.query('ROLLBACK');db.release();}
+});
+
+const emptyRecoveryPublication=()=>({recoveryRevision:0,contextRevision:0,meals:[],usedNeedIds:[],usedRevisionIds:[]});
+async function realRecoveryRead(f,shopId=f.shopId,publications=new Map(),actor=f.owner) {
+ const {loadSharedRecoveryBasis,readSharedRecoveryContext,readSharedRecoveryCoverage}=await import('../dist/shared-recovery-basis.js');
+ const {projectRecovery}=await import('../dist/recovery-domain.js');
+ return repo.transaction(f.h,async(db,now)=>{
+   const member=await repo.member(db,f.h,{issuer,subject:actor.subject}),ctx={db,now,householdId:f.h,member,selectedShopId:shopId};
+   const shop=await repo.shop(ctx,shopId),load=async(_,id)=>publications.get(id)??emptyRecoveryPublication();
+   const basis=await loadSharedRecoveryBasis(ctx,shop,load);
+   return {basis,projection:projectRecovery(basis,now.toISOString()),context:await readSharedRecoveryContext(ctx,shop,load),coverage:await readSharedRecoveryCoverage(ctx,shop,load)};
+ });
+}
+
+test('trusted recovery basis reads real freezer history, preserves Tuesday and protects two lunch portions on Wednesday',async()=>{
+ const f=await reservationFixture({rival:true,rivalDay:'2026-11-03',day:'2026-11-04'}),p=pantryHarness(f),q=f.quantity;
+ ok(await f.write('delivery.match',{...f.match,supplyRevision:4,matched:false}));
+ const {lotId}=await p.create('Frozen wraps');
+ const unused=(await p.create('Unselected private batch')).lotId;
+ await p.edit('pantry.select',{lotId,selected:true});
+ await p.edit('pantry.match',{lotId,...p.match,matched:true});
+ const first=await p.preview(lotId,q(5));ok(await p.send(first.cmd));
+ const reservation=await p.edit('pantry.reserve',{lotId,...p.match,groupId:f.lunch.id,predecessorId:null,quantity:q(2)});
+ const before=await realRecoveryRead(f),wed=before.basis.meals.find(m=>m.occurrenceId===p.match.occurrenceId),
+   tue=before.basis.meals.find(m=>m.occurrenceId===f.rivalOccurrence);
+ assert.equal(wed.day,'2026-11-04');assert.equal(tue.day,'2026-11-03');assert.equal(wed.due,null);assert.equal(wed.zone,null);
+ assert.equal(before.basis.arrivals.filter(a=>a.sourceId===lotId).length,0);
+ assert.equal(before.basis.pantryObservations.length,1);assert.equal(before.basis.pantryObservations[0].id,(await p.stock()).lots.find(l=>l.lotId===lotId).observation.observationId);
+ assert(!before.context.sourceOptions.some(o=>o.sourceId===unused));
+ assert.equal(before.context.sourceOptions.find(o=>o.sourceId===lotId).kind,'freezer');
+ const [ordinary,protectedLunch]=wed.needs;
+ assert.equal(protectedLunch.priority,'protected');assert.deepEqual(before.basis.reservations,[{id:reservation.operationId,sourceId:lotId,needId:protectedLunch.id,quantity:q(2)}]);
+ const demands=m=>before.projection.demands.filter(d=>m.needs.some(n=>n.id===d.needId));
+ assert.deepEqual(demands(wed).map(d=>[d.allocated.numerator,d.shortfall.numerator]),[['3','1'],['2','0']]);
+ const {previewRecovery,recoveryDigest}=await import('../dist/recovery-domain.js');
+ const next={...wed,title:'Repaired Wednesday',revisionId:randomUUID(),needs:[{...ordinary,id:randomUUID(),quantity:q(3)},protectedLunch]};
+ const intent={occurrenceId:wed.occurrenceId,targetDigest:recoveryDigest(wed),replacement:next,reviewedAt:before.context.asOf,repeatOfOccurrenceId:null,
+   agreesToRepeat:false,proposesExtraTrip:false,agreesToExtraTrip:false,acceptsUnresolved:true};
+ const preview=previewRecovery(before.basis,{v:1,base:before.basis.base,intent},before.context.asOf);
+ assert.equal(preview.timingConfirmed,false);assert.equal(preview.consentSatisfied,true);
+ assert.deepEqual(preview.after.meals.find(m=>m.occurrenceId===tue.occurrenceId),tue);
+ assert.deepEqual(preview.after.demands.filter(d=>tue.needs.some(n=>n.id===d.needId)),demands(tue));
+ const published=new Map([[f.shopId,{...emptyRecoveryPublication(),recoveryRevision:1,meals:[next],usedNeedIds:[ordinary.id],usedRevisionIds:[wed.revisionId]}]]);
+ const current=await realRecoveryRead(f,f.shopId,published);
+ assert.equal(current.context.meals.find(m=>m.occurrenceId===wed.occurrenceId).title,next.title);
+ assert.deepEqual(current.coverage.needs.filter(n=>n.occurrenceId===wed.occurrenceId).map(n=>n.missing.numerator),['0','0']);
+ assert.equal((await f.delivery()).meals.find(m=>m.occurrenceId===wed.occurrenceId).meal.title,f.meal.title);
+ const edit=await p.preview(lotId,q(1));ok(await p.send(edit.cmd));
+ const reduced=await realRecoveryRead(f,f.shopId,published);
+ assert.deepEqual(reduced.basis.pantryObservations.map(h=>h.predecessorId),[null,current.basis.pantryObservations[0].id]);
+ assert.equal(reduced.coverage.needs.find(n=>n.needId===protectedLunch.id).reservations[0].backed.numerator,'1');
+ await assert.rejects(realRecoveryRead(f,f.shopId,published,f.planner),e=>e.status===404);
+ const erased=new Map([[f.shopId,{...emptyRecoveryPublication(),recoveryRevision:2,removedOccurrences:[wed.occurrenceId]}]]);
+ assert(!(await realRecoveryRead(f,f.shopId,erased)).context.meals.some(m=>m.occurrenceId===wed.occurrenceId));
+});
+
+test('trusted recovery basis carries a genuine foreign delivery once and publishes only scoped current needs and stock',async()=>{
+ const f=await reservationFixture(),p=pantryHarness(f),q=f.quantity;
+ await p.edit('pantry.storeDelivery',{sourceId:f.sourceId,location:'freezer',storedAt:null,useFirstAt:null});
+ const otherId=await f.shop(),otherBase={shopRevision:1,authorityEpoch:1},other=pantryHarness(f,otherId,otherBase);
+ const initial=ok(await call(f.owner,f.base+'/shops/'+otherId)),meal=structuredClone(f.meal);
+ meal.title='Later household dinner';meal.planning.groups=[f.plates];meal.planning.ingredients[0].groupIds=[f.plates.id];
+ meal.planning.ingredients[0].quantity=q(4);delete meal.planning.bindings;
+ ok(await f.send(other.envelope('shop.patch',{quote:initial.quote,lines:initial.lines,mealEdit:{occurrenceId:p.match.occurrenceId,baseMealRevision:null,meal}})));
+ otherBase.shopRevision++;ok(await f.send(other.envelope('shop.reportPlaced',{occurredAt:p.time})));otherBase.shopRevision++;
+ assert.deepEqual((await realRecoveryRead(f,otherId)).context.sourceOptions,[]);
+ await other.edit('pantry.select',{lotId:f.sourceId,selected:true});
+ await other.edit('pantry.match',{lotId:f.sourceId,...p.match,mealRevision:2,matched:true});
+ const before=await realRecoveryRead(f,otherId);
+ assert.equal(before.basis.sources[0].shopId,f.shopId);assert.equal(before.basis.sources[0].origin.kind,'delivery');
+ assert.equal(before.basis.arrivals[0].shopId,f.shopId);assert.equal(before.basis.usable[0].arrivalObservationId,f.usable.arrivalObservationId);
+ assert.deepEqual(before.basis.selectedCarrySourceIds,[f.sourceId]);assert.deepEqual(before.basis.carrySupplyRevisions,[{shopId:f.shopId,supplyRevision:4}]);
+ assert.deepEqual(before.basis.foreignHolds,[{sourceId:f.sourceId,quantity:{unit:'count',amount:{numerator:'5',denominator:'1'}}}]);
+ assert.equal(before.projection.demands[0].shortfall.numerator,'4');
+ for(const response of [before.context,before.coverage,before.projection]){
+   assert(!JSON.stringify(response).includes(f.shopId));assert(!JSON.stringify(response).includes(f.usable.observationId));
+ }
+ const old=(await realRecoveryRead(f)).context.meals.find(m=>m.occurrenceId===p.match.occurrenceId);
+ const accepted={...old,revisionId:randomUUID(),needs:old.needs.map(n=>n.priority==='protected'?n:{...n,id:randomUUID(),matchedSourceIds:[]})};
+ const loaded=new Map([[f.shopId,{...emptyRecoveryPublication(),recoveryRevision:1,meals:[accepted]}]]);
+ const after=await realRecoveryRead(f,otherId,loaded);
+ assert.equal(after.basis.foreignHolds[0].quantity.amount.numerator,'2');
+ assert.equal(after.projection.demands[0].allocated.numerator,'3');
+ assert.equal(after.coverage.needs[0].freezer.numerator,'3');
 });
