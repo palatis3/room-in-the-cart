@@ -82,7 +82,7 @@ public struct SharedMealPlanning: Codable, Equatable, Sendable {
         }
     }
 }
-private func sharedMealText(_ value: String, _ limit: Int) -> Bool {
+func sharedMealText(_ value: String, _ limit: Int) -> Bool {
     !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && value.utf16.count <= limit
 }
 extension SharedMeal {

@@ -109,3 +109,35 @@ export interface SharedMealChangePage {
   meals: Array<{occurrenceId:string;revision:number;meal:SharedMeal}>;
   proposals: Array<{proposalId:string;request:SharedMealChangeRequest;original:SharedMeal|null;state:'pending'|'applied'|'dismissed'}>;
 }
+
+/** Named reservation for one source and one exact group requirement in a placed meal. */
+export interface DeliveryReservationTarget {
+  occurrenceId: string;
+  mealRevision: number;
+  ingredientId: string;
+  groupId: string;
+}
+export interface DeliveryReserveBody extends DeliveryReservationTarget {
+  supplyRevision: number;
+  sourceId: string;
+  predecessorId: string | null;
+  quantity: SharedMealQuantity | null; // Release the current reservation with explicit null.
+}
+export interface DeliveryReserveCommand extends Omit<CommandEnvelope, 'kind' | 'body'> {
+  kind: 'delivery.reserve';
+  body: DeliveryReserveBody;
+}
+export interface DeliveryReservationHead extends DeliveryReservationTarget {
+  reservationId: string; // operationId in the accepted command receipt, including releases.
+  quantity: SharedMealQuantity | null;
+}
+export interface DeliveryReservationCoverage {
+  sourceId: string;
+  reservationId: string;
+  requested: {numerator: string; denominator: string};
+  backed: {numerator: string; denominator: string}; // Exact fractions in the row's required unit.
+}
+/** Additive fields for evidence pages, their sources, and coverage needs. */
+export interface DeliveryEvidencePageReservations { reservationsAvailable?: boolean }
+export interface DeliverySourceReservations { reservations?: DeliveryReservationHead[] }
+export interface DeliveryNeedReservations { reservations?: DeliveryReservationCoverage[] }

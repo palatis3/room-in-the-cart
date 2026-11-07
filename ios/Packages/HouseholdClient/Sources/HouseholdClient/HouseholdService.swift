@@ -390,7 +390,7 @@ public actor HouseholdService {
                       page.authorityEpoch == record?.authorityEpoch, page.placedRevision == record?.placedRevision else {
                     throw ClientError.service(status: 409, code: "stale_supply", correlationID: nil, retryAfter: nil)
                 }
-                guard page.lines.isEmpty, page.meals?.isEmpty != false else { throw ClientError.invalidResponse }
+                guard page.lines.isEmpty, page.meals?.isEmpty != false, page.reservationsAvailable == record?.reservationsAvailable else { throw ClientError.invalidResponse }
                 record?.sources.append(contentsOf: page.sources)
                 record?.nextCursor = page.nextCursor
             } else { record = page }
@@ -409,6 +409,7 @@ public actor HouseholdService {
             let matches = source.matches ?? []
             guard Set(matches).count == matches.count, targets.isSuperset(of: matches) else { throw ClientError.invalidResponse }
         }
+        try record.validateReservations()
         return record
     }
     public func deliveryCoverage(reviewed page: SharedDeliveryPage) async throws -> SharedDeliveryCoverage {
@@ -479,7 +480,7 @@ public actor HouseholdService {
         let envelope = try JSONDecoder().decode(CommandEnvelope.self, from: operation.bytes)
         guard envelope.clientKey == operation.clientKey, UUID(uuidString: envelope.shopId) != nil,
               ["shop.create", "shop.patch", "shop.freeze", "shop.reopen", "shop.transferAuthority",
-               "delivery.register", "delivery.arrival", "delivery.usable", "delivery.match"].contains(envelope.kind) else { throw ClientError.configuration }
+               "delivery.register", "delivery.arrival", "delivery.usable", "delivery.match", "delivery.reserve"].contains(envelope.kind) else { throw ClientError.configuration }
         if envelope.kind == "shop.create" {
             guard envelope.base.shopRevision == 0, envelope.base.authorityEpoch == 0 else { throw ClientError.configuration }
             try await authorizeAdmin()
@@ -494,6 +495,7 @@ public actor HouseholdService {
                   let sourceID = receipt.sourceId, receipt.supplyRevision == revision + 1, receipt.disposition == "recorded",
                   receipt.shopId == envelope.shopId, receipt.kind == envelope.kind, receipt.authorityEpoch == envelope.base.authorityEpoch,
                   receipt.shopRevision == envelope.base.shopRevision else { throw ClientError.invalidResponse }
+            if envelope.kind == "delivery.reserve", UUID(uuidString: receipt.operationId) == nil { throw ClientError.invalidResponse }
             if envelope.kind == "delivery.register" {
                 guard UUID(uuidString: receipt.operationId) == sourceID else { throw ClientError.invalidResponse }
             } else if envelope.body["sourceId"] != .string(sourceID.uuidString.lowercased()) { throw ClientError.invalidResponse }

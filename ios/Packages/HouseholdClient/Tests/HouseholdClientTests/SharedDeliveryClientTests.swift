@@ -8,7 +8,7 @@ extension HouseholdClientTests {
         let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!),
                                        auth: actor, deviceVault: MemoryVault(), transport: transport())
         let ids = (0..<51).map { _ in UUID().uuidString.lowercased() }.sorted()
-        var changed = false, duplicate = false, orphanedMatch = false
+        var changed = false, duplicate = false, orphanedMatch = false, changedCapability = false
         MockURLProtocol.handler = { request in
             if let reply = self.authResponse(request) { return reply }
             let url = try XCTUnwrap(request.url)
@@ -26,10 +26,12 @@ extension HouseholdClientTests {
             let slice = cursor == nil ? Array(ids.prefix(50)) : [duplicate ? ids[0] : ids[50]]
             let rows: [[String:Any]] = slice.map { ["sourceId":$0,"foodId":$0,"lineId":line,"segmentKey":$0,"foodName":"Beans",
                 "exclusionTags":[],"matches":orphanedMatch ? [["occurrenceId":line,"mealRevision":1,"ingredientId":line]] : [],"arrival":NSNull(),"usable":NSNull(),"confirmed":NSNull()] }
-            return try response(["shopId":id,"shopRevision":4,"placedRevision":3,"authorityEpoch":1,
+            var page: [String: Any] = ["shopId":id,"shopRevision":4,"placedRevision":3,"authorityEpoch":1,
                 "supplyRevision":cursor != nil && changed ? 52 : 51,"sources":rows,
                 "lines":cursor == nil ? [["lineId":line,"name":"Sealed beans"]] : [],
-                "nextCursor":cursor == nil ? ids[49] as Any : NSNull() as Any])
+                "nextCursor":cursor == nil ? ids[49] as Any : NSNull() as Any]
+            if changedCapability && cursor != nil { page["reservationsAvailable"] = true }
+            return try response(page)
         }
         _ = try await actor.verifyEmailCode(email:"adult@example.test",code:"123456")
         _ = try await service.enroll(householdID: household)
@@ -37,6 +39,10 @@ extension HouseholdClientTests {
         XCTAssertEqual(record.sources.map { $0.id.uuidString.lowercased() }, ids)
         XCTAssertEqual(record.lines.first?.name, "Sealed beans")
         XCTAssertNil(record.nextCursor)
+        changedCapability = true
+        do { _ = try await service.deliveryEvidence(shopID: id); XCTFail("Accepted a changed reservation capability across pages") }
+        catch { XCTAssertEqual(error as? ClientError, .invalidResponse) }
+        changedCapability = false
         changed = true
         do { _ = try await service.deliveryEvidence(shopID: id); XCTFail("Accepted different supply revisions") }
         catch { XCTAssertEqual(error as? ClientError, .service(status:409, code:"stale_supply", correlationID:nil, retryAfter:nil)) }

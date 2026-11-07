@@ -31,10 +31,41 @@ public struct SharedDeliveryPage: Decodable, Equatable, Sendable {
         public let mealRevision: Int
         public let ingredientId: UUID
 
+        init(occurrenceId: UUID, mealRevision: Int, ingredientId: UUID) {
+            self.occurrenceId = occurrenceId
+            self.mealRevision = mealRevision
+            self.ingredientId = ingredientId
+        }
+
         public init(occurrence: SharedMealOccurrence, ingredient: SharedMealPlanning.Ingredient) {
             occurrenceId = occurrence.id
             mealRevision = occurrence.revision
             ingredientId = ingredient.id
+        }
+    }
+    public struct Reservation: Decodable, Equatable, Sendable {
+        public let occurrenceId: UUID
+        public let mealRevision: Int
+        public let ingredientId: UUID
+        public let groupId: UUID
+        public let reservationId: UUID
+        public let quantity: SharedMealQuantity?
+
+        // A missing quantity must never turn an active reservation into a release.
+        private enum CodingKeys: CodingKey { case occurrenceId, mealRevision, ingredientId, groupId, reservationId, quantity }
+        public init(from decoder: Decoder) throws {
+            let values = try decoder.container(keyedBy: CodingKeys.self)
+            occurrenceId = try values.decode(UUID.self, forKey: .occurrenceId)
+            mealRevision = try values.decode(Int.self, forKey: .mealRevision)
+            ingredientId = try values.decode(UUID.self, forKey: .ingredientId)
+            groupId = try values.decode(UUID.self, forKey: .groupId)
+            reservationId = try values.decode(UUID.self, forKey: .reservationId)
+            quantity = try values.decode(SharedMealQuantity?.self, forKey: .quantity)
+        }
+
+        func belongs(to target: IngredientMatch, group: UUID) -> Bool {
+            occurrenceId == target.occurrenceId && mealRevision == target.mealRevision &&
+                ingredientId == target.ingredientId && groupId == group
         }
     }
     public struct Source: Decodable, Equatable, Identifiable, Sendable {
@@ -45,6 +76,7 @@ public struct SharedDeliveryPage: Decodable, Equatable, Sendable {
         public let foodName: String
         public let exclusionTags: [String]
         public let matches: [IngredientMatch]?
+        public let reservations: [Reservation]?
         public let arrival: Arrival?
         public let usable: Usable?
         public let confirmed: Lot?
@@ -65,6 +97,7 @@ public struct SharedDeliveryPage: Decodable, Equatable, Sendable {
     public let authorityEpoch: Int
     public let supplyRevision: Int
     public let coverageAvailable: Bool?
+    public let reservationsAvailable: Bool?
     public let meals: [SharedMealOccurrence]?
     public let lines: [Line]
     public internal(set) var sources: [Source]
@@ -73,13 +106,20 @@ public struct SharedDeliveryPage: Decodable, Equatable, Sendable {
 
 /// Every edit retains the reviewed observation head. Null is distinct from a confirmed zero.
 public enum SharedDeliveryEdit: Equatable, Sendable {
+    case reserve(source: UUID, ingredient: SharedDeliveryPage.IngredientMatch, group: UUID, previous: UUID?, quantity: SharedMealQuantity?)
     case match(source: UUID, ingredient: SharedDeliveryPage.IngredientMatch, matched: Bool)
     case register(lineID: UUID, segment: UUID, name: String, exclusions: [String])
     case arrival(source: UUID, previous: UUID?, observation: UUID, date: Date?, received: SharedMealQuantity?)
     case usable(source: UUID, previous: UUID?, arrival: UUID, observation: UUID, date: Date, quantity: SharedMealQuantity?)
 
     public var kind: String {
-        switch self { case .match: return "delivery.match"; case .register: return "delivery.register"; case .arrival: return "delivery.arrival"; case .usable: return "delivery.usable" }
+        switch self {
+        case .reserve: return "delivery.reserve"
+        case .match: return "delivery.match"
+        case .register: return "delivery.register"
+        case .arrival: return "delivery.arrival"
+        case .usable: return "delivery.usable"
+        }
     }
     public func body(reviewed page: SharedDeliveryPage) throws -> [String: JSONValue] {
         func id(_ value: UUID?) -> JSONValue { value.map { .string($0.uuidString.lowercased()) } ?? .null }
@@ -93,7 +133,37 @@ public enum SharedDeliveryEdit: Equatable, Sendable {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         switch self {
+        case let .reserve(source, target, group, previous, value):
+            guard page.reservationsAvailable == true, page.nextCursor == nil,
+                  let row = page.sources.first(where: { $0.id == source }), let heads = row.reservations,
+                  row.matches?.contains(target) == true,
+                  let required = page.reservableQuantity(for: target, group: group) else { throw ClientError.configuration }
+            let head = heads.first { $0.belongs(to: target, group: group) }
+            guard head?.reservationId == previous else { throw ClientError.configuration }
+            if let value {
+                try value.amount.validate()
+                guard sharedMealText(value.originalLiteral, 240), DeliveryUnit.compatible(value.unit, required.unit) else {
+                    throw ClientError.configuration
+                }
+                // Reducing an existing promise is valid after the physical count becomes unknown.
+                if !DeliveryUnit.isReduction(value, from: head?.quantity) {
+                    guard let stock = row.confirmed?.quantity, DeliveryUnit.compatible(value.unit, stock.unit) else {
+                        throw ClientError.configuration
+                    }
+                }
+            } else if head?.quantity == nil { throw ClientError.configuration }
+            body["sourceId"] = id(source)
+            body["occurrenceId"] = id(target.occurrenceId)
+            body["mealRevision"] = .integer(target.mealRevision)
+            body["ingredientId"] = id(target.ingredientId)
+            body["groupId"] = id(group)
+            body["predecessorId"] = id(previous)
+            body["quantity"] = try quantity(value)
         case let .match(source, target, matched):
+            if !matched, page.sources.first(where: { $0.id == source })?.reservations?.contains(where: {
+                $0.quantity != nil && $0.occurrenceId == target.occurrenceId &&
+                    $0.mealRevision == target.mealRevision && $0.ingredientId == target.ingredientId
+            }) == true { throw ClientError.configuration }
             guard let matches = page.sources.first(where: { $0.id == source })?.matches,
                   matches.contains(target) != matched, let occurrence = page.meals?.first(where: { $0.id == target.occurrenceId }),
                   occurrence.revision == target.mealRevision,
@@ -136,6 +206,12 @@ public struct SharedDeliveryCoverage: Decodable, Sendable {
             return digits(numerator) && digits(denominator) && denominator != "0"
         }
     }
+    public struct Reservation: Decodable, Sendable {
+        public let sourceId: UUID
+        public let reservationId: UUID
+        public let requested: Fraction
+        public let backed: Fraction
+    }
     public struct Allocation: Decodable, Sendable {
         public let sourceId: UUID
         public let amount: Fraction
@@ -151,6 +227,7 @@ public struct SharedDeliveryCoverage: Decodable, Sendable {
         public let missing: Fraction?
         public let allocations: [Allocation]
         public let issues: [String]
+        public let reservations: [Reservation]?
 
         fileprivate func validateAmounts(eligible: Set<UUID>) throws {
             if required == nil {
@@ -189,6 +266,15 @@ public struct SharedDeliveryCoverage: Decodable, Sendable {
         for source in page.sources where source.confirmed != nil {
             for target in source.matches ?? [] { eligibleSources[target, default: []].insert(source.id) }
         }
+        let sources = Dictionary(page.sources.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        guard sources.count == page.sources.count else { throw ClientError.invalidResponse }
+        try page.validateReservations()
+        var claims = [DeliveryReservationTarget: [UUID: SharedDeliveryPage.Reservation]]()
+        for source in page.sources {
+            for head in source.reservations ?? [] where head.quantity != nil {
+                claims[head.target, default: [:]][source.id] = head
+            }
+        }
         var remaining = Dictionary(grouping: needs, by: { $0.occurrenceId })
         for occurrence in meals {
             let rows = remaining.removeValue(forKey: occurrence.id) ?? []
@@ -206,12 +292,17 @@ public struct SharedDeliveryCoverage: Decodable, Sendable {
                           row.mealRevision == occurrence.revision,
                           row.protected == (occurrence.meal.protected || !protectedGroups.isEmpty) else { throw ClientError.invalidResponse }
                     try row.validateAmounts(eligible: eligibleSources[target] ?? [])
+                    var expected = [UUID: SharedDeliveryPage.Reservation]()
+                    if row.groupIds.count == 1, let group = row.groupIds.first {
+                        expected = claims.removeValue(forKey: .init(ingredient: target, group: group)) ?? [:]
+                    }
+                    try row.validateReservations(expected: expected, sources: sources)
                     parts.remove(at: index)
                 }
                 guard parts.isEmpty else { throw ClientError.invalidResponse }
             }
             guard byIngredient.isEmpty else { throw ClientError.invalidResponse }
         }
-        guard remaining.isEmpty else { throw ClientError.invalidResponse }
+        guard remaining.isEmpty, claims.isEmpty else { throw ClientError.invalidResponse }
     }
 }

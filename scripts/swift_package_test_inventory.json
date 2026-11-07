@@ -292,6 +292,8 @@
       "HouseholdClientTests.HouseholdClientTests/testMeasurementCodesKeepUnverifiedBenefitUnknownAndKnownLateTieZero",
       "HouseholdClientTests.HouseholdClientTests/testMeasurementConsentSendRemovalAndWithdrawalUseOnlyExplicitAllowlistedFields",
       "HouseholdClientTests.HouseholdClientTests/testMembershipCreationRetriesExactIntentAndRejectsWrongAccount",
+      "HouseholdClientTests.HouseholdClientTests/testNamedDeliveryCoverageChecksEveryReservationAndKeepsZeroBackedClaims",
+      "HouseholdClientTests.HouseholdClientTests/testNamedDeliveryReservationBindsReviewedGroupHeadMatchAndExplicitRelease",
       "HouseholdClientTests.HouseholdClientTests/testNativeHelperBindingSurvivesResumeAndNeverFetchesBroadRoutes",
       "HouseholdClientTests.HouseholdClientTests/testNullableWireFieldsAreExplicitAndHelperProjectionHasNoPrivateKeys",
       "HouseholdClientTests.HouseholdClientTests/testOTPVerifiesIdentityAndRotatesRefreshOnlyInVault",
