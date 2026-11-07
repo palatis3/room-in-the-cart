@@ -1,0 +1,55 @@
+{
+  "source": "1ed8b6a721d7b8bb2688f1db31c8e9ddf1b2d181",
+  "db": "PostgreSQL 17.11, migrated through 040",
+  "shopper": "Mia",
+  "contributor": "Alex",
+  "browser": "156.0.8078.79",
+  "android": "14",
+  "requestId": "582a1fa6-2788-499c-a6c4-6c0878cd2b52",
+  "carryRequestId": "0b1ae925-2933-4d83-b957-c416cf87feda",
+  "contributorSendCount": 1,
+  "basketBeforeMinor": 3720,
+  "capMinor": 3800,
+  "pricePreviewMinor": 349,
+  "previewTotalMinor": 4069,
+  "previewOverageMinor": 269,
+  "sourceBasketAfterDeferMinor": 3720,
+  "destinationPreviewPricesMinor": [
+    329
+  ],
+  "destinationStatus": "pending",
+  "destinationLines": [],
+  "shopperRouteDenials": 2,
+  "syntheticIdentity": "Scoped, independently issued ES256 credentials and local provider session rows. Chrome used a production session cookie issued to Alex with a one-use local static bootstrap. Mia signed in through native local synthetic OTP. No external identity provider.",
+  "destinationContributor": {
+    "requestId": "0b1ae925-2933-4d83-b957-c416cf87feda",
+    "fromPreviousShop": true,
+    "visibleStatus": "Received",
+    "scopeActivation": "Contributor session selected the later pickup via real API, then the normal Chrome requests screen reloaded."
+  },
+  "setup": "Original placement and empty next-shop creation were performed by a separate synthetic shopper setup device using public authenticated service commands. All cereal submission, deferral, carry and fresh preview actions came from installed clients.",
+  "environment": {
+    "iPhone": "iPhone 17 Pro simulator, iOS 26.2",
+    "Android": "Android 14 emulator, Chrome 156.0.8078.79",
+    "database": "PostgreSQL 17.11, migrated through 040",
+    "transport": "Loopback HTTPS",
+    "identity": "Scoped, independently issued ES256 credentials and local provider session rows. Chrome used a production session cookie issued to Alex with a one-use local static bootstrap. Mia signed in through native local synthetic OTP. No external identity provider."
+  },
+  "nativeStrictRuns": {
+    "original": {
+      "attempt": 3,
+      "selector": "testAndroidContributorAndIPhoneShopperDecideOnCereal",
+      "passed": 1,
+      "runtimeWarnings": 0,
+      "verificationSHA256": "922caa0b09f7e4e0e1d50c17e9f18a72657caf2acc9c422fe2c7fb3eb8047e24"
+    },
+    "later": {
+      "attempt": 4,
+      "selector": "testShopperReviewsCarryAndFreshPrice",
+      "passed": 1,
+      "runtimeWarnings": 0,
+      "verificationSHA256": "1a00bdcd1e46339cab903c0c6af9a71753d112358b75969740bb98c739673bef"
+    }
+  },
+  "evidenceFileSHA256": "33c0cda14dc4d81a6f65b91f53d1d4e3df573593adeb24aafc146ce7d012a8c4"
+}
