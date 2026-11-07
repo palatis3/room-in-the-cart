@@ -139,6 +139,73 @@ import DeviceSurfaces
         try await Task.sleep(for: .milliseconds(100))
         XCTAssertNil(f.composition.destination)
     }
+    func testCancelledSelectedTextChoicesAndLineEditsDoNotBecomeSavedReview() async throws {
+        let f = try await coldURLFixture()
+        let now = Date(timeIntervalSince1970: 1_793_664_000)
+        let shopID = try XCTUnwrap(f.ledger.shop?.id)
+        let original = try XCTUnwrap(f.ledger.shop).stageImport(text: "2 wraps")
+        let imported = await f.ledger.editShop(key: "original-wraps", shopID: shopID) { try $0.commitImport(original) }
+        XCTAssertTrue(imported)
+        let savedWorkspace = f.ledger.workspace, savedRevision = f.ledger.revision
+        let inbox = try SelectedTextInbox(url: f.base.appendingPathComponent("surfaces/TestInbox/selected-text.sqlite"))
+        _ = try await inbox.stage(operationID: UUID(), originalText: "2 wraps\n3 pears", now: now)
+        let pending = try await inbox.pending(now: now)
+        let entry = try XCTUnwrap(pending.first)
+        await f.composition.review(entry, shopID: shopID)
+        let baseline = try XCTUnwrap(f.composition.draft)
+        let duplicate = try XCTUnwrap(baseline.preview.lines.first { !$0.duplicateLineIDs.isEmpty })
+        let pear = try XCTUnwrap(baseline.preview.lines.first { $0.name == "pears" })
+        let targetID = try XCTUnwrap(duplicate.duplicateLineIDs.first)
+        let journal = try SurfaceImportJournal(directory: f.base.appendingPathComponent("surfaces/Reviews"))
+        XCTAssertNil(baseline.decisions[duplicate.id])
+
+        for interactiveDismissal in [false, true] {
+            var changed = try XCTUnwrap(f.composition.draft)
+            changed.decisions[duplicate.id] = .skip
+            f.composition.saveDraft(changed)
+            f.composition.editDraftLine(pear.id, name: "Changed pears", amount: "9", unit: .count)
+            XCTAssertEqual(f.composition.draft?.decisions[duplicate.id], .skip)
+            XCTAssertEqual(f.composition.draft?.preview.lines.first { $0.id == pear.id }?.name, "Changed pears")
+            // The sheet binding writes nil on an interactive dismissal; Cancel uses its action.
+            if interactiveDismissal { f.composition.draft = nil }
+            else { f.composition.cancelReview() }
+            XCTAssertNil(f.composition.draft)
+            guard try journal.read(entry.id) == baseline else {
+                return XCTFail("Cancelling an unconfirmed review must not persist its choices or line edits")
+            }
+            XCTAssertEqual(f.ledger.workspace, savedWorkspace)
+            XCTAssertEqual(f.ledger.revision, savedRevision)
+            let retained = try await inbox.pending(now: now)
+            XCTAssertEqual(retained, [entry], "Cancel must retain the explicitly staged source without importing it")
+            await f.composition.review(entry, shopID: shopID)
+            XCTAssertEqual(f.composition.draft, baseline)
+        }
+
+        var explicitlySaved = try XCTUnwrap(f.composition.draft)
+        explicitlySaved.decisions[duplicate.id] = .skip
+        f.composition.saveDraft(explicitlySaved)
+        f.composition.saveReviewDraft()
+        XCTAssertEqual(try journal.read(entry.id), explicitlySaved)
+        f.composition.editDraftLine(pear.id, name: "Another unsaved edit", amount: "7", unit: .count)
+        f.composition.cancelReview()
+        await f.composition.review(entry, shopID: shopID)
+        XCTAssertEqual(f.composition.draft, explicitlySaved, "Cancel must preserve the last explicitly saved draft")
+        XCTAssertEqual(f.ledger.workspace, savedWorkspace)
+
+        var confirmed = try XCTUnwrap(f.composition.draft)
+        confirmed.decisions[duplicate.id] = .mergeDuplicate(targetID)
+        f.composition.saveDraft(confirmed)
+        await f.composition.addReviewedList()
+        XCTAssertNil(f.composition.draft)
+        let receipt = try await inbox.receipt(entry.id)
+        XCTAssertEqual(receipt?.disposition, .consumed)
+        XCTAssertNil(try journal.read(entry.id))
+        XCTAssertEqual(f.ledger.shop?.importBatches.last?.decisions, confirmed.decisions)
+        XCTAssertEqual(f.ledger.shop?.lines.count, 2)
+        XCTAssertEqual(f.ledger.shop?.importBatches.count, 2)
+        XCTAssertEqual(f.ledger.revision, savedRevision + 1)
+    }
+
     private func waitForSurfaceDestination(_ surfaces: DeviceSurfacesComposition) async {
         for _ in 0..<100 {
             if surfaces.destination != nil { return }

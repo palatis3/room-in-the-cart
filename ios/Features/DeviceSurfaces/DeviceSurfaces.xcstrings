@@ -1328,6 +1328,54 @@
           }
         }
       }
+    },
+    "Save review draft": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save review draft"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar borrador de revisión"
+          }
+        }
+      }
+    },
+    "Review draft saved on this iPhone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review draft saved on this iPhone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borrador de revisión guardado en este iPhone."
+          }
+        }
+      }
+    },
+    "Cancel discards unsaved review changes.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel discards unsaved review changes."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelar descarta los cambios de revisión sin guardar."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -1,0 +1,28 @@
+{
+  "sourceBase": "2e0f60f391c74abb08f1fcc6c0d35958bac3206f",
+  "negativeControl": {
+    "executed": 1,
+    "failed": 1,
+    "reason": "Cancelling an unconfirmed review must not persist its choices or line edits",
+    "runtimeWarnings": 0,
+    "scope": "Original product with new regression; returns at first post-Cancel failure before nil-dismissal branch."
+  },
+  "fixed": {
+    "executed": 30,
+    "passed": 30,
+    "strictExit": 0,
+    "runtimeWarnings": 0,
+    "restarts": 0,
+    "sourceFilesUnchanged": 457,
+    "nativeCompilerWarningLines": 5,
+    "scope": "Actual composition and SQLite model paths; nil binding exercises dismissal model path, not a native swipe."
+  },
+  "recoveryCommitAndRefreshTailByteIdentical": true,
+  "localizationExit": 0,
+  "compilerAndCoordinator": "Xcode27.1/27A9275",
+  "runtime": "iPhone17 iOS26.2/23C54",
+  "systemExtensionActivationRetested": false,
+  "newSaveButtonNativeVisibilityRetested": false,
+  "hostedCandidateContainsFix": false,
+  "releaseAcceptance": false
+}

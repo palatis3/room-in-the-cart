@@ -1,0 +1,14 @@
+Executed 1 of 1 selected tests.
+
+| Test | Result | Seconds |
+|---|---|---|
+| RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testCancelledSelectedTextChoicesAndLineEditsDoNotBecomeSavedReview | Failed | 0.37 |
+
+The XCTest test export recorded 0 runtime warning occurrences across 1 examined tests.
+Executed and passing counts do not match the selected tests
+The shard contains failures, expected failures or skipped tests
+Every selected test must individually report Passed
+XCTest logged a failure for RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testCancelledSelectedTextChoicesAndLineEditsDoNotBecomeSavedReview at log line 305.
+XCTest log requires one start then one pass for RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testCancelledSelectedTextChoicesAndLineEditsDoNotBecomeSavedReview; found ['start', 'non-passing or unrecognized completion'].
+XCTest log requires one successful result banner; found ['FAILED'].
+

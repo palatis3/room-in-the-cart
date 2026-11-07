@@ -171,6 +171,11 @@ final class SurfaceImportJournal {
         return draft
     }
     func saveReview(_ draft: SurfaceImportDraft, replacing previous: SurfaceImportDraft) throws {
+        try validateReview(draft, replacing: previous)
+        try journal.save(draft, replacing: previous)
+    }
+    /// Validate a sheet edit without making an unconfirmed choice durable.
+    func validateReview(_ draft: SurfaceImportDraft, replacing previous: SurfaceImportDraft) throws {
         guard port.scope == draft.scope, port.generation != nil, !port.hasPendingSave, previous.phase == .review,
               draft.phase == .review, draft.id == previous.id, draft.inboxDigest == previous.inboxDigest,
               draft.scope == previous.scope, draft.confirmedAttempts == previous.confirmedAttempts, draft.originalText == previous.originalText, draft.editedText == previous.editedText,
@@ -179,7 +184,6 @@ final class SurfaceImportJournal {
               draft.preview.lines.map(\.id) == previous.preview.lines.map(\.id),
               draft.preview.lines.map(\.proposedLineID) == previous.preview.lines.map(\.proposedLineID),
               draft.preview.lines.map(\.originalText) == previous.preview.lines.map(\.originalText) else { throw SurfaceError.stale }
-        try journal.save(draft, replacing: previous)
     }
     func commit(_ draft: SurfaceImportDraft) async throws {
         guard let generation = port.generation, port.scope == draft.scope, draft.expiresAt > clock(),

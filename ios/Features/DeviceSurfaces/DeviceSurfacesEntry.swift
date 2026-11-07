@@ -72,6 +72,9 @@ private struct SurfaceImportReview: View {
                         }
                     }
                     Section {
+                        Button(SurfaceCopy.text("Save review draft")) { composition.saveReviewDraft() }
+                            .disabled(draft.phase == .committing)
+                        Text(SurfaceCopy.text("Cancel discards unsaved review changes."))
                         Button(SurfaceCopy.text(draft.phase == .committing ? "Retry reviewed import" : "Add reviewed list")) { Task { await composition.addReviewedList() } }
                             .disabled(!draft.preview.lines.allSatisfy { draft.decisions[$0.id] != nil } || draft.preview.lines.isEmpty)
                         Button(SurfaceCopy.text("Reopen saved list before retry")) { Task { await composition.recoverImport() } }

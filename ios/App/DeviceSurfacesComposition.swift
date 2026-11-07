@@ -8,7 +8,10 @@ import DeviceSurfaces
 
 @MainActor final class DeviceSurfacesComposition: ObservableObject {
     @Published private(set) var entries: [SelectedTextEntry] = []
-    @Published var draft: SurfaceImportDraft?
+    @Published var draft: SurfaceImportDraft? {
+        didSet { if draft == nil { reviewBaseline = nil } }
+    }
+    private var reviewBaseline: SurfaceImportDraft?
     @Published var destination: SurfacePresentedDestination?
     @Published private(set) var busy = false
     @Published private(set) var message: String?
@@ -250,13 +253,21 @@ import DeviceSurfaces
         guard !busy, let bridge else { message = SurfaceCopy.text("Selected text is unavailable on this installation."); return }
         busy = true; defer { busy = false }
         let start = nonce
-        do { let result = try await bridge.open(entry, shopID: shopID); guard nonce == start else { return }; draft = result; await sourceDidChange() }
+        do { let result = try await bridge.open(entry, shopID: shopID); guard nonce == start else { return }; draft = result; reviewBaseline = result; await sourceDidChange() }
         catch { message = SurfaceCopy.text("Review could not finish. Reopen this entry to check its saved result.") }
     }
     func saveDraft(_ updated: SurfaceImportDraft) {
         guard let previous = draft, let bridge else { return }
-        do { try bridge.saveReview(updated, replacing: previous); draft = updated; message = nil }
+        do { try bridge.validateReview(updated, replacing: previous); draft = updated; message = nil }
         catch { message = SurfaceCopy.text("This list changed. Reopen the saved list before reviewing again.") }
+    }
+    func saveReviewDraft() {
+        guard !busy, let draft, let reviewBaseline, let bridge else { return }
+        do {
+            try bridge.saveReview(draft, replacing: reviewBaseline)
+            self.reviewBaseline = draft
+            message = SurfaceCopy.text("Review draft saved on this iPhone.")
+        } catch { message = SurfaceCopy.text("This list changed. Reopen the saved list before reviewing again.") }
     }
     func editDraftLine(_ id: UUID, name: String, amount: String, unit: UnitOfMeasure) {
         guard var next = draft, next.phase == .review, let index = next.preview.lines.firstIndex(where: { $0.id == id }), let shop = shop(next.preview.shopID) else { return }
@@ -276,9 +287,16 @@ import DeviceSurfaces
         } catch { message = SurfaceCopy.text("Review the item name, amount and matching lines before continuing.") }
     }
     func addReviewedList() async {
-        guard !busy, let draft, let bridge else { return }; busy = true; defer { busy = false }
-        do { try await bridge.commit(draft); self.draft = nil; await sourceDidChange() }
-        catch { self.draft = try? journal?.read(draft.id); message = SurfaceCopy.text("Review could not finish. Reopen this entry to check its saved result.") }
+        guard !busy, let draft, let reviewBaseline, let bridge else { return }; busy = true; defer { busy = false }
+        do {
+            // An explicit Add confirms these edits. Persist before committing so
+            // interruption/retry still recognizes the exact reviewed operation.
+            if draft.phase == .review { try bridge.saveReview(draft, replacing: reviewBaseline) }
+            try await bridge.commit(draft); self.draft = nil; await sourceDidChange()
+        } catch {
+            self.draft = try? journal?.read(draft.id); self.reviewBaseline = self.draft
+            message = SurfaceCopy.text("Review could not finish. Reopen this entry to check its saved result.")
+        }
     }
     func cancelReview() { guard !busy else { return }; draft = nil }
     func recoverImport() async {
@@ -286,7 +304,7 @@ import DeviceSurfaces
         busy = true; defer { busy = false }; let start = nonce
         do {
             let refreshed = try await bridge.refreshReview(draft.id)
-            guard nonce == start else { return }; self.draft = refreshed
+            guard nonce == start else { return }; self.draft = refreshed; reviewBaseline = refreshed
             await sourceDidChange()
         } catch { message = SurfaceCopy.text("This list changed. Reopen the saved list before reviewing again.") }
     }
