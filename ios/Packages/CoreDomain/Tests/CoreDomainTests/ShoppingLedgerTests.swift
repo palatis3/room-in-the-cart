@@ -111,6 +111,82 @@ final class ShoppingLedgerTests: XCTestCase {
         XCTAssertEqual(ledger, undone)
     }
 
+    func testAdditionalImportNeedsAnOpenLineAndPreservesCompletedEvidence() throws {
+        for checked in [true, false] {
+            var ledger = ShoppingLedger()
+            let line = try ledger.addManualLine(name: "wraps", quantity: q(12))
+            if checked { try ledger.setChecked(lineID: line, checked: true, at: instant) }
+            else { try ledger.handle(lineID: line, by: "Mia", at: instant) }
+            let preview = ledger.stageImport(text: "1 pear\n12 wraps", source: .paste)
+            let entry = preview.lines[1]
+            let before = ledger
+            XCTAssertThrowsError(try ledger.commitImport(preview, decisions: [entry.id: .addToLine(line)])) {
+                XCTAssertEqual($0 as? LedgerError, .incompatibleMatch)
+            }
+            XCTAssertEqual(ledger, before)
+
+            let merge = [entry.id: ImportResolution.mergeDuplicate(line)]
+            let batch = try ledger.commitImport(preview, decisions: merge)
+            ledger = try roundTrip(ledger)
+            XCTAssertEqual(try ledger.commitImport(preview, decisions: merge), batch)
+            XCTAssertEqual(try ledger.quantity(forLineID: line)?.amount, try Rational(12))
+            XCTAssertEqual(ledger.lines.first, before.lines.first)
+            try ledger.undoImport(batchID: batch)
+            XCTAssertEqual(ledger.lines.first, before.lines.first)
+            let fresh = ledger.stageImport(text: "12 wraps")
+            try ledger.commitImport(fresh, decisions: [fresh.lines[0].id: .addNew])
+            let newLine = try XCTUnwrap(ledger.lines.last)
+            XCTAssertFalse(newLine.isChecked)
+            XCTAssertFalse(newLine.isHandled)
+            XCTAssertNotEqual(newLine.id, line)
+            XCTAssertEqual(ledger.lines.first, before.lines.first)
+        }
+    }
+
+    func testImportOptionsTrackOriginalSuppliesAndEarlierDecisions() throws {
+        var ledger = ShoppingLedger()
+        let target = try ledger.addManualLine(name: "flour", quantity: q(1, unit: .kilogram))
+        let preview = ledger.stageImport(text: "500 g flour\n500 g flour\n1 kg flour\n1 cup flour\nflour")
+        let rows = preview.lines
+        let decisions: [UUID: ImportResolution] = [rows[0].id: .addToLine(target)]
+        let choices = ledger.importMatchOptions(for: preview, decisions: decisions)
+        let both = ImportMatchOption(lineID: target, canMerge: true, canAdd: true)
+        let add = ImportMatchOption(lineID: target, canMerge: false, canAdd: true)
+        let neither = ImportMatchOption(lineID: target, canMerge: false, canAdd: false)
+        XCTAssertEqual(choices[rows[0].id], [add])
+        XCTAssertEqual(choices[rows[1].id], [both])
+        XCTAssertEqual(choices[rows[2].id], [both])
+        XCTAssertEqual(choices[rows[3].id], [neither])
+        XCTAssertEqual(choices[rows[4].id], [neither])
+        XCTAssertEqual(ledger.importMatchOptions(for: preview, decisions: [rows[0].id: .skip])[rows[1].id], [add])
+        let earlier = rows[0].proposedLineID
+        XCTAssertEqual(ledger.importMatchOptions(for: preview, decisions: [rows[0].id: .addNew])[rows[1].id],
+                       [add, ImportMatchOption(lineID: earlier, canMerge: true, canAdd: true)])
+        var edited = preview
+        edited.lines[0].exclusions = ["flour"]
+        let editedOptions = ledger.importMatchOptions(for: edited, decisions: decisions)
+        XCTAssertEqual(editedOptions[rows[0].id], [neither])
+        XCTAssertEqual(editedOptions[rows[1].id], [add])
+        try ledger.setChecked(lineID: target, checked: true)
+        XCTAssertTrue(ledger.importMatchOptions(for: preview, decisions: decisions).isEmpty)
+        let fresh = ledger.stageImport(text: "1000 g flour")
+        XCTAssertEqual(ledger.importMatchOptions(for: fresh, decisions: [:])[fresh.lines[0].id],
+                       [ImportMatchOption(lineID: target, canMerge: true, canAdd: false)])
+    }
+
+    func testCommittedAdditionalImportCanReplayAfterLineHandled() throws {
+        var ledger = ShoppingLedger()
+        let line = try ledger.addManualLine(name: "wraps", quantity: q(12))
+        let preview = ledger.stageImport(text: "3 wraps")
+        let decisions = [preview.lines[0].id: ImportResolution.addToLine(line)]
+        let batch = try ledger.commitImport(preview, decisions: decisions)
+        try ledger.handle(lineID: line, by: "Mia")
+        ledger = try roundTrip(ledger)
+        let saved = ledger
+        XCTAssertEqual(try ledger.commitImport(preview, decisions: decisions), batch)
+        XCTAssertEqual(ledger, saved)
+    }
+
     func testTwoDuplicatesInSamePreviewRequireChoiceAndCanMergeOrAdd() throws {
         var ledger = ShoppingLedger()
         let preview = ledger.stageImport(text: "12 wraps\n12 wraps")

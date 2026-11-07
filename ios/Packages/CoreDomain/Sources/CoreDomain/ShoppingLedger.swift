@@ -251,11 +251,17 @@ public struct ShoppingLine: Codable, Equatable, Sendable, Identifiable {
 }
 
 public enum ImportSource: String, Codable, CaseIterable, Sendable { case typed, paste, selectedText, voice, photoOCR }
-public enum ImportResolution: Codable, Equatable, Sendable {
+public enum ImportResolution: Codable, Hashable, Sendable {
     case addNew
     case addToLine(UUID)
     case mergeDuplicate(UUID)
     case skip
+}
+
+public struct ImportMatchOption: Equatable, Sendable {
+    public let lineID: UUID
+    public let canMerge: Bool
+    public let canAdd: Bool
 }
 
 public struct StagedImportLine: Codable, Equatable, Sendable, Identifiable {
@@ -288,6 +294,16 @@ public struct StagedImportLine: Codable, Equatable, Sendable, Identifiable {
         duplicateLineIDs = try c.decode([UUID].self, forKey: .duplicateLineIDs)
         exclusions = try c.decodeIfPresent([String].self, forKey: .exclusions) ?? []
         capture = try c.decodeIfPresent(CaptureImportMetadata.self, forKey: .capture)
+    }
+}
+
+private extension StagedImportLine {
+    func contribution(lineID: UUID, batchID: UUID) -> LedgerContribution {
+        LedgerContribution(id: id, lineID: lineID, source: .imported(batchID: batchID),
+            productName: name, quantity: quantity, originalText: originalText,
+            notes: [capture?.purpose, capture?.destination, unresolvedReason]
+                .compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: "\n"),
+            exclusions: exclusions, removedAt: nil, capture: capture)
     }
 }
 
@@ -558,6 +574,57 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         return candidates
     }
 
+    /// Project choices in import order so a later row can use only supplies the
+    /// shopper actually kept. Names in the preview remain hints; commit rechecks the ledger.
+    public func importMatchOptions(for preview: StagedListImport, decisions: [UUID: ImportResolution])
+        -> [UUID: [ImportMatchOption]] {
+        guard preview.shopID == id, preview.baseRevision == revision else { return [:] }
+        let candidateIDs = Set(preview.lines.flatMap(\.duplicateLineIDs))
+        guard !candidateIDs.isEmpty else { return [:] }
+
+        struct Target {
+            let name: String
+            let acceptsAdditional: Bool
+            var sources: [LedgerContribution] = []
+        }
+        var targets: [UUID: Target] = [:]
+        for line in lines where candidateIDs.contains(line.id) && !line.isTrashed {
+            targets[line.id] = Target(name: line.name, acceptsAdditional: !line.isChecked && !line.isHandled)
+        }
+        for source in contributions where source.removedAt == nil {
+            targets[source.lineID]?.sources.append(source)
+        }
+
+        var result: [UUID: [ImportMatchOption]] = [:]
+        for entry in preview.lines {
+            let options = entry.duplicateLineIDs.compactMap { id -> ImportMatchOption? in
+                guard let target = targets[id] else { return nil }
+                let compatible = (try? Self.requireMatch(name: entry.name, quantity: entry.quantity,
+                    exclusions: entry.exclusions, targetName: target.name, sources: target.sources)) != nil
+                let merge = compatible && (try? Self.duplicateSupply(for: entry, in: target.sources)) != nil
+                return ImportMatchOption(lineID: id, canMerge: merge, canAdd: compatible && target.acceptsAdditional)
+            }
+            if !options.isEmpty { result[entry.id] = options }
+            if let capture = entry.capture, !capture.blockingFields.isEmpty { continue }
+            let lineID: UUID
+            switch decisions[entry.id] ?? (entry.duplicateLineIDs.isEmpty ? .addNew : .skip) {
+            case .addNew:
+                guard candidateIDs.contains(entry.proposedLineID) else { continue }
+                lineID = entry.proposedLineID
+                targets[lineID] = Target(name: entry.name, acceptsAdditional: true)
+            case let .addToLine(id):
+                guard options.contains(where: { $0.lineID == id && $0.canAdd }) else { continue }
+                lineID = id
+            case let .mergeDuplicate(id):
+                guard options.contains(where: { $0.lineID == id && $0.canMerge }) else { continue }
+                lineID = id
+            case .skip: continue
+            }
+            targets[lineID]?.sources.append(entry.contribution(lineID: lineID, batchID: preview.id))
+        }
+        return result
+    }
+
     @discardableResult
     public mutating func commitImport(_ preview: StagedListImport, decisions: [UUID: ImportResolution] = [:],
                                        at: Date = Date()) throws -> UUID {
@@ -587,24 +654,17 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
                     lineID = next.appendLine(id: entry.proposedLineID, name: entry.name)
                     existingNames.insert(name)
                 case let .addToLine(target):
+                    let line = next.lines[try next.lineIndex(target)]
+                    guard !line.isChecked, !line.isHandled else { throw LedgerError.incompatibleMatch }
                     try next.requireMatch(name: entry.name, quantity: entry.quantity, exclusions: entry.exclusions, lineID: target)
                     lineID = target
                 case let .mergeDuplicate(target):
                     try next.requireMatch(name: entry.name, quantity: entry.quantity, exclusions: entry.exclusions, lineID: target)
-                    guard let quantity = entry.quantity,
-                          let source = try next.contributions(forLineID: target).first(where: { candidate in
-                              guard candidate.source.canSupplyExistingQuantity, let original = candidate.quantity,
-                                    let amount = try quantity.converted(to: original.unit) else { return false }
-                              return amount == original.amount
-                          }) else { throw LedgerError.incompatibleMatch }
-                    duplicateSupply = source; lineID = target
+                    duplicateSupply = try Self.duplicateSupply(for: entry, in: next.contributions(forLineID: target))
+                    lineID = target
                 case .skip: continue
                 }
-                next.contributions.append(LedgerContribution(id: entry.id, lineID: lineID, source: .imported(batchID: preview.id),
-                    productName: entry.name, quantity: entry.quantity, originalText: entry.originalText,
-                    notes: [entry.capture?.purpose, entry.capture?.destination, entry.unresolvedReason]
-                        .compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: "\n"),
-                    exclusions: entry.exclusions, removedAt: nil, capture: entry.capture))
+                next.contributions.append(entry.contribution(lineID: lineID, batchID: preview.id))
                 if let supply = duplicateSupply, let quantity = entry.quantity {
                     next.allocations.append(AllocationEdge(id: UUID(), demandContributionID: entry.id,
                         supplyContributionID: supply.id, quantity: quantity, kind: .duplicate))
@@ -1057,9 +1117,24 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
 
     private func requireMatch(name: String, quantity: Quantity?, exclusions: [String], lineID: UUID) throws {
         let line = lines[try lineIndex(lineID)]
-        guard !line.isTrashed, normalizedProduct(line.name) == normalizedProduct(name) else { throw LedgerError.incompatibleMatch }
-        try permittedProduct(line.name, exclusions: exclusions)
-        let sources = contributions(forLineID: lineID)
+        guard !line.isTrashed else { throw LedgerError.incompatibleMatch }
+        try Self.requireMatch(name: name, quantity: quantity, exclusions: exclusions, targetName: line.name,
+                              sources: contributions(forLineID: lineID))
+    }
+
+    private static func duplicateSupply(for entry: StagedImportLine, in sources: [LedgerContribution]) throws -> LedgerContribution {
+        guard let quantity = entry.quantity, let supply = try sources.first(where: { candidate in
+            guard candidate.source.canSupplyExistingQuantity, let original = candidate.quantity,
+                  let amount = try quantity.converted(to: original.unit) else { return false }
+            return amount == original.amount
+        }) else { throw LedgerError.incompatibleMatch }
+        return supply
+    }
+
+    private static func requireMatch(name: String, quantity: Quantity?, exclusions: [String],
+                                     targetName: String, sources: [LedgerContribution]) throws {
+        guard normalizedProduct(targetName) == normalizedProduct(name) else { throw LedgerError.incompatibleMatch }
+        try permittedProduct(targetName, exclusions: exclusions)
         guard !sources.isEmpty, let quantity else { throw LedgerError.incompatibleMatch }
         for source in sources {
             try permittedProduct(name, exclusions: source.exclusions)
