@@ -329,7 +329,9 @@ import DeviceSurfaces
     }
     func testRevokedEnrollmentClearsAnOfflineRequestBeforeSending() async throws {
         let queue = location(); defer { try? FileManager.default.removeItem(at: queue.deletingLastPathComponent()) }
-        let fixture = ContributorCaptureFixture(), model = try await model(fixture, queue: queue)
+        let fixture = ContributorCaptureFixture()
+        fixture.offersQueuePermission = true; fixture.queueGrant = UUID()
+        let model = try await model(fixture, queue: queue)
         model.item = "Rice"
         let review = try ContributorRequestReview.typed(scope: XCTUnwrap(model.contributorRequestScope))
         fixture.windowFailure = .offline
