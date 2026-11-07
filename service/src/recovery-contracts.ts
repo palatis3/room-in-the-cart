@@ -92,3 +92,17 @@ export type RecoveryMeal=z.infer<typeof recoveryMealSchema>;
 export type RecoveryNeed=z.infer<typeof recoveryNeedSchema>;
 export type RecoveryIntent=z.infer<typeof recoveryIntentSchema>;
 export type Quantity=z.infer<typeof usableQuantitySchema>;
+
+const pantryScope = {pantryRevision:revision,supplyRevision:revision};
+const storage = {location:z.enum(['pantry','freezer']),storedAt:time.nullable(),useFirstAt:time.nullable()};
+const lot = {...pantryScope,lotId:id};
+const target = {occurrenceId:id,mealRevision:revision.min(1),ingredientId:id};
+export const pantryObservation = z.object({...lot,predecessorId:id.nullable(),confirmedAt:time,quantity:usableQuantitySchema.nullable()}).strict();
+export const pantryBodies = {
+  'pantry.create':z.object({...pantryScope,...storage,foodName:label,exclusionTags:z.array(label).max(20)}).strict(),
+  'pantry.storeDelivery':z.object({...pantryScope,...storage,sourceId:id}).strict(),
+  'pantry.observe':pantryObservation.extend({previewDigest:hash}),
+  'pantry.select':z.object({...lot,selected:z.boolean()}).strict(),
+  'pantry.match':z.object({...lot,...target,matched:z.boolean()}).strict(),
+  'pantry.reserve':z.object({...lot,...target,groupId:id,predecessorId:id.nullable(),quantity:mealQuantity.nullable()}).strict(),
+};

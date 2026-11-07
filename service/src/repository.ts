@@ -1,5 +1,6 @@
 import { sharedMealSchema, preserveProtectedMeal } from './shared-meal-planning.js';
 import { cookCopyStillExists, recordCookCopy } from './cook-copy.js';
+import { isPantryCommand, recordPantry, pantryOperationExists, guardDeliveryEdit } from './pantry-lots.js';
 import { recordDelivery } from './delivery-evidence.js';
 import { consumeSharedMealChange } from './shared-meal-changes.js';
 import { randomBytes, randomUUID } from 'node:crypto';
@@ -150,7 +151,7 @@ export class HouseholdRepository {
     return{household:{id:ctx.householdId,label:house.label as string},memberId:ctx.member.member_id,
       canSelectShop:!helperRole&&!ctx.viewGrantId&&ctx.member.kind==='adult'&&(ctx.member.can_contribute||ctx.member.organizer||isShopper||hasBudgetAccess),
       selectionRequired:!helperRole&&!ctx.viewGrantId&&!ctx.selectedShopId&&candidates.length>1,role:isShopper?'shopper':ctx.member.organizer?'organizer':helperRole?(helper.mode==='edit'?'editor':'helper'):'contributor',shopId:helperRole?helper.shop_id:shop?.shop_id??null,...(helperRole?{grantId:helper.grant_id}:{}),enrolled:true,queueConsent:false,
-      capabilities:[...(!helperRole&&!ctx.viewGrantId&&(isShopper||shop?.budget_access)?['store_quotes']:[]),...(isShopper && shop?.placed_revision!=null?['delivery_evidence','cook_copies']:[]),...(planning?['meal_proposals']:[]),...(ctx.member.can_contribute?['own_requests']:[]),...(isShopper?['shopper_inbox','request_preview','shopper_commands']:[]),...(ctx.member.organizer?['household_admin']:[]),...(helperRole?['helper_view',...(helper.mode==='edit'?['helper_propose']:[])]:[])]};
+      capabilities:[...(!helperRole&&!ctx.viewGrantId&&(isShopper||shop?.budget_access)?['store_quotes']:[]),...(isShopper && shop?.placed_revision!=null?['delivery_evidence','cook_copies','pantry_lots']:[]),...(planning?['meal_proposals']:[]),...(ctx.member.can_contribute?['own_requests']:[]),...(isShopper?['shopper_inbox','request_preview','shopper_commands']:[]),...(ctx.member.organizer?['household_admin']:[]),...(helperRole?['helper_view',...(helper.mode==='edit'?['helper_propose']:[])]:[])]};
   }
   async shops(ctx:Context,scope:'active'|'owned',after:string|null){
     if(ctx.viewGrantId||ctx.member.kind!=='adult')throw unavailable();
@@ -276,6 +277,7 @@ export class HouseholdRepository {
           if(prior.response?.authorityEpoch!==shop.authority_epoch ||
              !await cookCopyStillExists(ctx,shop,prior.kind,prior.operation_id)) throw refresh();
         }
+        if(isPantryCommand(prior.kind) && (prior.response?.authorityEpoch!==shop.authority_epoch || !await pantryOperationExists(ctx,prior.operation_id))) throw refresh();
         if(prior.kind.startsWith('delivery.')) {
           if(prior.response?.authorityEpoch!==shop.authority_epoch) throw refresh();
           const source=await ctx.db.query('SELECT 1 FROM ritc.delivery_source WHERE household_id=$1 AND shop_id=$2 AND source_id=$3',
@@ -361,12 +363,18 @@ export class HouseholdRepository {
     return{operationId,kind:c.kind,request:ownRequest(await this.request(ctx,id,shop.shop_id,true))};
   }
   private async shopperCommand(ctx:Context,shop:Shop,c:Envelope,operationId:string) {
+    if(isPantryCommand(c.kind)) {
+      const lot=await recordPantry(ctx,shop,c.kind,c.body,operationId);
+      return {...await this.receipt(ctx,c,operationId,'recorded'),...lot};
+    }
     if(c.kind==='cookCopy.save' || c.kind==='cookCopy.markSent') {
       const copyId=await recordCookCopy(ctx,shop,c.kind,c.body,operationId);
       return {...await this.receipt(ctx,c,operationId,'recorded'),copyId};
     }
     if(c.kind==='delivery.reserve'||c.kind==='delivery.match'||c.kind==='delivery.register'||c.kind==='delivery.arrival'||c.kind==='delivery.usable'){
+      const validate=await guardDeliveryEdit(ctx,shop,c.kind,c.body);
       const delivery=await recordDelivery(ctx,shop,c.kind,c.body,operationId);
+      await validate?.();
       return {...await this.receipt(ctx,c,operationId,'recorded'),...delivery};
     }
     if(c.kind==='request.clarify') {

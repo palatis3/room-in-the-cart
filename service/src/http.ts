@@ -1,4 +1,5 @@
 import { cookCopyBaseline, cookCopyHistory } from './cook-copy.js';
+import { readPantry, readJointCoverage, previewPantryObservation } from './pantry-lots.js';
 import { readDelivery, readDeliveryCoverage } from './delivery-evidence.js';
 import { createServer, type IncomingMessage } from 'node:http';
 import { randomUUID, timingSafeEqual } from 'node:crypto';
@@ -301,6 +302,14 @@ export function createHTTPServer(options:HTTPOptions) {
           if(tail==='/placement-reports/current-shop'&&method==='GET')return placementReports.currentShop(ctx,shopId);
           const placementDetail=/^\/placement-reports\/([^/]+)$/.exec(tail??'');
           if(placementDetail&&method==='GET')return placementReports.detail(ctx,shopId,uuid.parse(placementDetail[1]));
+          if((tail==='/pantry-lots' || tail==='/pantry-lots/coverage') && method==='GET' ||
+             tail==='/pantry-lots/observation-preview' && method==='POST'){
+            const shop=await repository.shop(ctx,shopId.toLowerCase());repository.requireShopper(ctx,shop);
+            if(tail==='/pantry-lots/coverage') return readJointCoverage(ctx,shop);
+            if(tail==='/pantry-lots/observation-preview') return previewPantryObservation(ctx,shop,payload);
+            const cursor=url.searchParams.get('cursor');
+            return readPantry(ctx,shop,cursor===null?null:uuid.parse(cursor));
+          }
           if(tail==='/cook-copies' && method==='GET') {
             const shop=await repository.shop(ctx,shopId.toLowerCase());repository.requireShopper(ctx,shop);
             const cursor=url.searchParams.get('cursor');

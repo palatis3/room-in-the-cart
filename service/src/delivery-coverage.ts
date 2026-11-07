@@ -4,7 +4,7 @@ import { exclusionConflict } from './recovery-domain.js';
 import { type Rat, zero, add, sub, min, amount, dimension, inUnit } from './physical-quantity.js';
 
 export interface SealedMeal { occurrenceId:string; revision:number; meal:SharedMealValue }
-interface Match { occurrenceId:string; mealRevision:number; ingredientId:string }
+export interface Match { occurrenceId:string; mealRevision:number; ingredientId:string }
 export interface ReservationHead extends Match {
   groupId:string; reservationId:string; quantity:Quantity|null;
 }

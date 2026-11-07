@@ -195,3 +195,42 @@ test('new helper/history data joins the bounded erasure path without deleting an
  const current=ok(await call(other,`/v1/households/${f.h}/shops/${s}/financial-evidence`));assert.equal(current.entries[0].amountMinor,1234);assert.equal(JSON.stringify(current).includes('Owner private'),false);
  await assert.rejects(()=>runtime.query('SELECT ritc.privacy_erase_extension($1,$2)',[f.h,other.id]),e=>e.code==='42501');
 });
+
+test('account erasure removes household stock and observed corrections without reviving earlier counts or joint cook text',async()=>{
+ const f=await fresh(),editor=await invite(f,await actor()),s=await shop(f),base='/v1/households/'+f.h+'/shops/'+s;
+ const initial=ok(await call(f.owner,base)),occurrenceId=randomUUID(),now=new Date(Date.now()-1000).toISOString();
+ let epoch=1;
+ const write=(actor,kind,body,revision=3)=>send(f,actor,command(actor,s,kind,body,revision,epoch));
+ ok(await write(f.owner,'shop.patch',{quote:initial.quote,lines:initial.lines,mealEdit:{occurrenceId,baseMealRevision:null,
+   meal:{title:'Household soup',day:'2026-11-07',kind:'dinner',portions:4,protected:false}}},1));
+ ok(await write(f.owner,'shop.reportPlaced',{occurredAt:now},2));
+ const page=async actor=>ok(await call(actor,base+'/pantry-lots'));
+ const review=async actor=>{const {pantryRevision,supplyRevision}=await page(actor);return {pantryRevision,supplyRevision};};
+ const make=async(actor,name)=>ok(await write(actor,'pantry.create',{...await review(actor),location:'pantry',storedAt:null,useFirstAt:null,foodName:name,exclusionTags:[]}));
+ const lot=await make(f.owner,'Retained shared stock');
+ ok(await write(f.owner,'pantry.select',{...await review(f.owner),lotId:lot.lotId,selected:true}));
+ const observe=async(actor,qty)=>{
+   const p=await page(actor),current=p.lots.find(l=>l.lotId===lot.lotId);
+   const row={lotId:lot.lotId,predecessorId:current.observation?.observationId??null,confirmedAt:now,
+     quantity:{amount:{numerator:qty,denominator:1},unit:'count',originalLiteral:String(qty)},pantryRevision:p.pantryRevision,supplyRevision:p.supplyRevision};
+   const preview=ok(await call(actor,base+'/pantry-lots/observation-preview','POST',row));
+   ok(await write(actor,'pantry.observe',{...row,previewDigest:preview.previewDigest}));
+ };
+ await observe(f.owner,5);
+ ok(await write(f.owner,'shop.transferAuthority',{newShopperId:editor.id}));epoch++;
+ await observe(editor,2);
+ await make(editor,'Removed private batch');
+ ok(await write(f.owner,'shop.transferAuthority',{newShopperId:f.owner.id}));epoch++;
+ const original=command(f.owner,s,'cookCopy.save',{placedRevision:2,...await review(f.owner),occurrenceId,mealRevision:2,language:'en',text:'Use the revised shared stock.'},3,epoch);
+ const saved=ok(await send(f,f.owner,original));
+ ok(await write(f.owner,'cookCopy.markSent',{copyId:saved.copyId,recipient:'Cook',previousSendId:null}));
+ assert.equal(ok(await call(f.owner,base+'/cook-copies/baseline','POST',{occurrenceId,recipient:'Cook'})).baseline.copy.copyId,saved.copyId);
+ const deletion=request([disposition(f.h)]);
+ ok(await call(editor,'/v1/privacy/deletions','POST',deletion),202);
+ assert.equal((await maintenance.run({batchSize:1})).completed,1);
+ const retained=await page(f.owner);assert.equal(retained.lots.length,1);assert.equal(retained.lots[0].lotId,lot.lotId);
+ assert.equal(retained.lots[0].observation,null);assert.equal(retained.lots[0].selected,true);
+ assert.deepEqual(ok(await call(f.owner,base+'/cook-copies?occurrenceId='+occurrenceId)),{copies:[],nextCursor:null});
+ assert.equal(ok(await call(f.owner,base+'/cook-copies/baseline','POST',{occurrenceId,recipient:'Cook'})).baseline,null);
+ assert.equal((await send(f,f.owner,original)).status,409);
+});

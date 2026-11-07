@@ -1,3 +1,4 @@
+import {pantryRevision,trackCookStockProvenance} from './pantry-lots.js';
 import type {Context,Shop} from './repository.js';
 import {cookCopyBaselineBody,cookCopySaveBody,cookCopySendBody} from './contracts.js';
 import {ServiceError,unavailable} from './errors.js';
@@ -12,7 +13,7 @@ function placedRevision(shop:Shop):number {
 
 const copyFields=`c.copy_id AS "copyId",c.shop_id AS "shopId",c.shop_revision AS "shopRevision",
   c.placed_revision AS "placedRevision",c.authority_epoch AS "authorityEpoch",c.supply_revision AS "supplyRevision",
-  c.occurrence_id AS "occurrenceId",c.meal_revision AS "mealRevision",c.version,c.language,c.reviewed_text AS text,c.created_at AS "createdAt"`;
+  c.pantry_revision AS "pantryRevision",c.occurrence_id AS "occurrenceId",c.meal_revision AS "mealRevision",c.version,c.language,c.reviewed_text AS text,c.created_at AS "createdAt"`;
 
 export async function cookCopyHistory(ctx:Context,shop:Shop,occurrenceId:string,cursor:string|null) {
   placedRevision(shop);
@@ -28,6 +29,7 @@ export async function cookCopyHistory(ctx:Context,shop:Shop,occurrenceId:string,
     WHERE c.household_id=$1 AND c.shop_id=$2 AND c.occurrence_id=$3 AND ($4::int IS NULL OR c.version<$4)
     ORDER BY c.version DESC LIMIT 21`,[...scope,before]);
   const copies=result.rows.slice(0,20);
+  for(const copy of copies) if(copy.pantryRevision===null) delete copy.pantryRevision;
   return {copies,nextCursor:result.rows.length>20?copies.at(-1)!.copyId:null};
 }
 
@@ -41,6 +43,7 @@ export async function cookCopyBaseline(ctx:Context,shop:Shop,input:unknown) {
     [ctx.householdId,shop.shop_id,occurrenceId,recipient])).rows[0];
   if(!row) return {baseline:null};
   const {sendId,sentAt,recipient:name,...copy}=row;
+  if(copy.pantryRevision===null) delete copy.pantryRevision;
   return {baseline:{copy,send:{sendId,sentAt,recipient:name,copyId:copy.copyId}}};
 }
 
@@ -58,7 +61,8 @@ export async function recordCookCopy(ctx:Context,shop:Shop,kind:Kind,input:unkno
   const placed=placedRevision(shop), scope=[ctx.householdId,shop.shop_id];
   if(kind==='cookCopy.save') {
     const row=cookCopySaveBody.parse(input);
-    if(placed!==row.placedRevision || shop.supply_revision!==row.supplyRevision) {
+    if(placed!==row.placedRevision || shop.supply_revision!==row.supplyRevision ||
+      row.pantryRevision!==undefined && row.pantryRevision!==await pantryRevision(ctx)) {
       throw new ServiceError(409,'stale_supply','Review the currently placed meal and delivery facts.');
     }
     const sealed=await ctx.db.query(`SELECT 1 FROM ritc.shared_meal_revision m,ritc.shop_snapshot ss WHERE (ss.household_id,ss.shop_id,ss.revision)=($1,$2,$3)
@@ -70,10 +74,11 @@ export async function recordCookCopy(ctx:Context,shop:Shop,kind:Kind,input:unkno
       VALUES($1,$2,$3,1) ON CONFLICT(household_id,shop_id,occurrence_id)
       DO UPDATE SET last_version=series.last_version+1 RETURNING last_version`,[...scope,row.occurrenceId]);
     await ctx.db.query(`INSERT INTO ritc.dated_cook_copy(household_id,shop_id,copy_id,occurrence_id,meal_revision,version,
-      shop_revision,placed_revision,authority_epoch,supply_revision,language,reviewed_text,actor_id,created_at)
-      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+      shop_revision,placed_revision,authority_epoch,supply_revision,language,reviewed_text,actor_id,created_at,pantry_revision)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
       [...scope,operationId,row.occurrenceId,row.mealRevision,series.rows[0]!.last_version,shop.revision,placed,shop.authority_epoch,
-        row.supplyRevision,row.language,row.text,ctx.member.member_id,ctx.now]);
+        row.supplyRevision,row.language,row.text,ctx.member.member_id,ctx.now,row.pantryRevision??null]);
+    if(row.pantryRevision!==undefined) await trackCookStockProvenance(ctx,shop,operationId);
     return operationId;
   }
   const mark=cookCopySendBody.parse(input);

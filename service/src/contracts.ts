@@ -1,4 +1,4 @@
-import { deliveryReservationBody, deliveryMatchBody, deliverySourceBody, deliveryArrivalBody, deliveryUsableBody } from './recovery-contracts.js';
+import { pantryBodies, deliveryReservationBody, deliveryMatchBody, deliverySourceBody, deliveryArrivalBody, deliveryUsableBody } from './recovery-contracts.js';
 import { z } from 'zod';
 import { sharedMealSchema } from './shared-meal-planning.js';
 import {reviewedPackEvidenceSchema,matchesReviewedPack} from './request-pack-evidence.js';
@@ -27,7 +27,7 @@ export const decisionSchema = z.discriminatedUnion('choice', [
 export const previewSchema = z.object({ requestId: uuid, base: z.object({ shopRevision: z.number().int().positive(), authorityEpoch: z.number().int().positive(), requestRevision: z.number().int().positive() }).strict(), decision: decisionSchema }).strict();
 export const envelopeSchema = z.object({
   v: z.literal(1), replayWindow: uuid, clientKey: uuid, shopId: uuid,
-  kind: z.enum(['cookCopy.save','cookCopy.markSent','delivery.reserve','delivery.match','delivery.register','delivery.arrival','delivery.usable','shop.create','shop.patch','shop.freeze','shop.reopen','shop.reportPlaced','shop.reconcileReport','shop.transferAuthority','request.send','request.edit','request.withdraw','request.clarify','request.apply']),
+  kind: z.enum(['pantry.create','pantry.storeDelivery','pantry.observe','pantry.select','pantry.match','pantry.reserve','cookCopy.save','cookCopy.markSent','delivery.reserve','delivery.match','delivery.register','delivery.arrival','delivery.usable','shop.create','shop.patch','shop.freeze','shop.reopen','shop.reportPlaced','shop.reconcileReport','shop.transferAuthority','request.send','request.edit','request.withdraw','request.clarify','request.apply']),
   base: z.object({ shopRevision: z.number().int().min(0), authorityEpoch: z.number().int().min(0), requestRevision: z.number().int().positive().optional() }).strict(),
   body: z.record(z.string(),z.unknown()),
 }).strict();
@@ -41,11 +41,12 @@ const unicodeText = (maximum:number) => z.string().min(1).max(maximum)
 const recipient = z.string().trim().pipe(unicodeText(80)).refine(value=>!/[\u0000-\u001F\u007F]/u.test(value));
 export const cookCopyBaselineBody = z.object({occurrenceId:copyId,recipient}).strict();
 export const cookCopySaveBody = z.object({
-  placedRevision:copyRevision, supplyRevision:z.number().int().min(0).max(2_147_483_647),
+  placedRevision:copyRevision, pantryRevision:z.number().int().min(0).max(2_147_483_647).optional(), supplyRevision:z.number().int().min(0).max(2_147_483_647),
   occurrenceId:copyId, mealRevision:copyRevision, language:z.enum(['en','es']), text:unicodeText(16000),
 }).strict();
 export const cookCopySendBody = z.object({copyId,recipient,previousSendId:copyId.nullable()}).strict();
 export const bodySchemas = {
+  ...pantryBodies,
   'cookCopy.save':cookCopySaveBody, 'cookCopy.markSent':cookCopySendBody,
   'delivery.reserve': deliveryReservationBody, 'delivery.match': deliveryMatchBody, 'delivery.register': deliverySourceBody, 'delivery.arrival': deliveryArrivalBody, 'delivery.usable': deliveryUsableBody,
   'shop.create': z.object({ quote: quoteSchema, lines: z.array(lineSchema).max(200) }).strict(),
