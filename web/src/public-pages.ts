@@ -8,13 +8,9 @@ const labels = {
   navigation: { en: 'Information pages', es: 'Páginas de información' },
   contents: { en: 'On this page', es: 'En esta página' },
   invited: { en: 'Open the invited app', es: 'Abrir la app por invitación' },
-  support: { en: 'Open the configured support destination', es: 'Abrir el destino de soporte configurado' },
+  support: { en: 'Contact support', es: 'Contactar con soporte' },
   emailSupport: { en: 'Email support', es: 'Enviar correo a soporte' },
   operator: { en: 'Operator', es: 'Operador' },
-  configuredSupport: {
-    en: 'Use the operator’s configured destination to contact support. This page itself does not submit requests or upload files.',
-    es: 'Usa el destino configurado del operador para contactar a soporte. Esta página no envía solicitudes ni sube archivos.'
-  },
   footer: {
     en: 'Public implementation information. These pages do not sign you in or load household data.',
     es: 'Información pública de la implementación. Estas páginas no inician sesión ni cargan datos del hogar.'
@@ -110,12 +106,13 @@ export function mountPublicPage(root: HTMLElement, configuration: PublicSiteConf
       const operator = element('p', labels.operator[language] + ': ' + operatorName);
       operator.className = 'public-operator'; main.append(operator);
     }
-    const notice = element('aside', key === 'support' && supportURL ? labels.configuredSupport[language] : page.notice[language]);
-    notice.className = 'notice'; notice.setAttribute('role', 'note'); main.append(notice);
     if (key === 'support' && supportURL) {
       const contact = element('a', supportURL.protocol === 'mailto:' ? labels.emailSupport[language] + ' · ' + supportURL.pathname : labels.support[language]);
       contact.href = supportURL.href; contact.rel = 'noreferrer';
       contact.className = 'public-contact'; main.append(contact);
+    } else {
+      const notice = element('aside', page.notice[language]);
+      notice.className = 'notice'; notice.setAttribute('role', 'note'); main.append(notice);
     }
     const contents = element('nav'); contents.className = 'public-contents'; contents.setAttribute('aria-label', labels.contents[language]);
     const contentsTitle = element('h2', labels.contents[language]); const contentsList = element('ul');
