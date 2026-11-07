@@ -144,6 +144,19 @@ final class SharedMealNativeWireTests: XCTestCase {
         XCTAssertEqual(backed.requested.formatted, "4")
         XCTAssertEqual(backed.backed.formatted, "4")
 
+        let reviewedText = "Almuerzo · 4 g reservados\nMantener aparte del cacahuate.  "
+        let initialCookCopy = try await writeCookCopy(.save(text: reviewedText, language: "es", occurrence: occurrence),
+                                                      service: service, scope: scope, page: reserved)
+        let saved = try await service.cookCopies(occurrence: occurrence, reviewed: reserved)
+        let original = try XCTUnwrap(saved.first)
+        XCTAssertEqual(saved.count, 1)
+        XCTAssertEqual(original.copyId, initialCookCopy.copyId)
+        XCTAssertEqual(original.version, 1)
+        XCTAssertEqual(original.supplyRevision, reserved.supplyRevision)
+        XCTAssertEqual(Array(original.text.utf8), Array(reviewedText.utf8))
+        let unsent = try await service.cookCopyBaseline(recipient: "Ana", occurrence: occurrence, reviewed: reserved)
+        XCTAssertNil(unsent)
+
         let earlierCount = try XCTUnwrap(reserved.sources.first?.usable?.observationId)
         let correction = UUID()
         _ = try await save(.usable(source: source, previous: earlierCount, arrival: arrival, observation: correction,
@@ -154,6 +167,19 @@ final class SharedMealNativeWireTests: XCTestCase {
         XCTAssertEqual(shortRow.reservations?.first?.requested.formatted, "4")
         XCTAssertEqual(shortRow.reservations?.first?.backed.formatted, "2")
         XCTAssertTrue(shortRow.issues.contains("reservationShortfall"))
+        let updatedCookCopy = try await writeCookCopy(.save(text: "Only 2 g backed.", language: "en", occurrence: occurrence),
+                                                      service: service, scope: scope, page: short)
+        let versions = try await service.cookCopies(occurrence: occurrence, reviewed: short)
+        XCTAssertEqual(versions.map(\.version), [2, 1])
+        XCTAssertEqual(versions.first?.id, updatedCookCopy.copyId)
+        XCTAssertEqual(versions.last, original)
+        let sent = try await writeCookCopy(.markSent(copy: original, recipient: "Ana", previousSendId: nil),
+                                           service: service, scope: scope, page: short)
+        let baseline = try await service.cookCopyBaseline(recipient: "Ana", occurrence: occurrence, reviewed: short)
+        XCTAssertEqual(baseline?.copy, original)
+        XCTAssertEqual(baseline?.send.sendId, UUID(uuidString: sent.operationId))
+        let otherCook = try await service.cookCopyBaseline(recipient: "Luis", occurrence: occurrence, reviewed: short)
+        XCTAssertNil(otherCook)
         let unknown = UUID()
         _ = try await save(.usable(source: source, previous: correction, arrival: arrival, observation: unknown,
                                    date: Date(), quantity: nil), page: short)
@@ -187,6 +213,17 @@ final class SharedMealNativeWireTests: XCTestCase {
         XCTAssertTrue(unlinked.needs.allSatisfy { $0.covered?.formatted == "0" && $0.issues.contains("noMatch") })
         do { _ = try await service.deliveryCoverage(reviewed: matched); XCTFail("Displayed stale counts after removing match") }
         catch { XCTAssertEqual(error as? ClientError, .service(status: 409, code: "stale_supply", correlationID: nil, retryAfter: nil)) }
+    }
+    private func writeCookCopy(_ change: SharedCookCopyEdit, service: HouseholdService, scope: HouseholdBootstrap,
+                               page: SharedDeliveryPage) async throws -> ShopperReceipt {
+        let window = try await service.replayWindow()
+        let operation = try await service.prepare(envelope: .init(replayWindow: window.id, shopId: page.shopId.uuidString.lowercased(),
+            kind: change.kind, base: .init(shopRevision: page.shopRevision, authorityEpoch: page.authorityEpoch),
+            body: change.body(reviewed: page)), bootstrap: scope)
+        let first = try await service.executeSharedShop(operation)
+        let replay = try await service.executeSharedShop(operation)
+        XCTAssertEqual(replay, first)
+        return first
     }
 
 }

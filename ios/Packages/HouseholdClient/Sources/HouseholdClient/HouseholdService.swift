@@ -138,10 +138,11 @@ public actor HouseholdService {
         if let cursor, UUID(uuidString: cursor) == nil { throw ClientError.configuration }
         return try await perform("requests/mine", method: "GET", query: cursor.map { [.init(name: "cursor", value: $0)] } ?? [])
     }
-    private func authorizeShopper(shopID: String) async throws {
+    private func authorizeShopper(shopID: String, capability: String? = nil) async throws {
         guard UUID(uuidString: shopID) != nil else { throw ClientError.configuration }
         let projection = try await bootstrap()
-        guard projection.role == "shopper", projection.shopId == shopID,
+        guard projection.role == "shopper", projection.grantId == nil, projection.shopId == shopID,
+              capability.map(projection.capabilities.contains) ?? true,
               ["shopper_inbox", "request_preview", "shopper_commands"].allSatisfy(projection.capabilities.contains) else {
             throw ClientError.accessEnded
         }
@@ -422,6 +423,49 @@ public actor HouseholdService {
         try result.validate(reviewed: page)
         return result
     }
+    public func cookCopies(occurrence: SharedMealOccurrence, reviewed page: SharedDeliveryPage) async throws -> [SharedCookCopy] {
+        guard page.nextCursor == nil, page.meals?.contains(occurrence) == true else { throw ClientError.configuration }
+        let shopID = page.shopId.uuidString.lowercased(), start = generation
+        try await authorizeShopper(shopID: shopID, capability: "cook_copies")
+        var copies = [SharedCookCopy]()
+        var seen = Set<UUID>()
+        var cursor: UUID?
+        repeat {
+            guard start == generation else { throw ClientError.cancelled }
+            var query = [URLQueryItem(name: "occurrenceId", value: occurrence.id.uuidString.lowercased())]
+            if let cursor { query.append(.init(name: "cursor", value: cursor.uuidString.lowercased())) }
+            let result: SharedCookCopyPage = try await perform("shops/\(shopID)/cook-copies", method: "GET", query: query)
+            guard result.copies.count <= 20, cursor == nil || !result.copies.isEmpty,
+                  result.nextCursor == nil || (result.copies.count == 20 && result.nextCursor == result.copies.last?.id) else {
+                throw ClientError.invalidResponse
+            }
+            for copy in result.copies {
+                try copy.validate(occurrence: occurrence, reviewed: page)
+                guard seen.insert(copy.id).inserted, copies.last.map({ copy.version < $0.version }) ?? true else {
+                    throw ClientError.invalidResponse
+                }
+                copies.append(copy)
+            }
+            cursor = result.nextCursor
+        } while cursor != nil
+        return copies
+    }
+    public func cookCopyBaseline(recipient: String, occurrence: SharedMealOccurrence, reviewed page: SharedDeliveryPage) async throws -> SharedCookCopyBaseline? {
+        guard page.nextCursor == nil, page.meals?.contains(occurrence) == true else { throw ClientError.configuration }
+        let label = try SharedCookCopyEdit.recipientLabel(recipient)
+        let shopID = page.shopId.uuidString.lowercased(), start = generation
+        try await authorizeShopper(shopID: shopID, capability: "cook_copies")
+        guard start == generation else { throw ClientError.cancelled }
+        let body = ["occurrenceId": occurrence.id.uuidString.lowercased(), "recipient": label]
+        let result: SharedCookCopyBaselineResult = try await perform("shops/\(shopID)/cook-copies/baseline", method: "POST", body: encoded(body))
+        guard let baseline = result.baseline else { return nil }
+        try baseline.copy.validate(occurrence: occurrence, reviewed: page)
+        guard baseline.send.copyId == baseline.copy.id, baseline.send.sendId != baseline.copy.id,
+              baseline.send.recipient.utf8.elementsEqual(label.utf8), validHelperTimestamp(baseline.send.sentAt) else {
+            throw ClientError.invalidResponse
+        }
+        return baseline
+    }
     public func shopperFinancialEvidence(shopID: String) async throws -> [ShopperFinancialEntry] {
         let start = generation
         try await authorizeShopper(shopID: shopID)
@@ -480,16 +524,18 @@ public actor HouseholdService {
         let envelope = try JSONDecoder().decode(CommandEnvelope.self, from: operation.bytes)
         guard envelope.clientKey == operation.clientKey, UUID(uuidString: envelope.shopId) != nil,
               ["shop.create", "shop.patch", "shop.freeze", "shop.reopen", "shop.transferAuthority",
-               "delivery.register", "delivery.arrival", "delivery.usable", "delivery.match", "delivery.reserve"].contains(envelope.kind) else { throw ClientError.configuration }
+               "delivery.register", "delivery.arrival", "delivery.usable", "delivery.match", "delivery.reserve",
+               "cookCopy.save", "cookCopy.markSent"].contains(envelope.kind) else { throw ClientError.configuration }
         if envelope.kind == "shop.create" {
             guard envelope.base.shopRevision == 0, envelope.base.authorityEpoch == 0 else { throw ClientError.configuration }
             try await authorizeAdmin()
         } else if envelope.kind == "shop.transferAuthority" {
             try await authorizeAdmin()
-        } else { try await authorizeShopper(shopID: envelope.shopId) }
+        } else { try await authorizeShopper(shopID: envelope.shopId, capability: envelope.kind.hasPrefix("cookCopy.") ? "cook_copies" : nil) }
         guard start == generation else { throw ClientError.cancelled }
         guard operation.memberID == memberID else { throw ClientError.accessEnded }
         let receipt: ShopperReceipt = try await perform("commands", method: "POST", body: operation.bytes, creatingShop: envelope.kind == "shop.create")
+        if envelope.kind.hasPrefix("cookCopy.") { try receipt.validateCookCopy(envelope) }
         if envelope.kind.hasPrefix("delivery.") {
             guard case .integer(let revision) = envelope.body["supplyRevision"], (0..<Int(Int32.max)).contains(revision),
                   let sourceID = receipt.sourceId, receipt.supplyRevision == revision + 1, receipt.disposition == "recorded",

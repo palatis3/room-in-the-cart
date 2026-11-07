@@ -85,6 +85,10 @@ struct SharedShopTransfer: Equatable {
     private var generation = UUID()
     private var attempts = 0
     private var retryAfter = Date.distantPast
+    private var reviewedCookRecipient: (page: SharedDeliveryPage, occurrence: UUID, label: String, sendId: UUID?)?
+    private var baselineReadID = UUID()
+    private var pendingMarkOccurrence: UUID?
+    private var reviewedCookOperation: String?
     init(scope: HouseholdBootstrap, service: HouseholdService, outbox: OperationOutbox,
          onConfirmed: @escaping @MainActor () async -> Void, onAccessEnded: @escaping @MainActor () async -> Void) {
         self.scope = scope; self.service = service; self.outbox = outbox; self.onConfirmed = onConfirmed; self.onAccessEnded = onAccessEnded
@@ -93,6 +97,7 @@ struct SharedShopTransfer: Equatable {
     var canCreate: Bool { authorized && !requiresRefresh && scope.grantId == nil && scope.role == "organizer" && scope.capabilities.contains("household_admin") && scope.shopId == nil && scope.selectionRequired != true }
     var canManage: Bool { authorized && !requiresRefresh && scope.grantId == nil && scope.role == "shopper" && scope.capabilities.contains("shopper_commands") && scope.shopId != nil }
     var canReadDelivery: Bool { canManage && scope.capabilities.contains("delivery_evidence") }
+    var canReadCookCopies: Bool { canReadDelivery && scope.capabilities.contains("cook_copies") }
     var canStartAnother: Bool {
         authorized && !requiresRefresh && scope.canSelectShop == true && scope.grantId == nil &&
         scope.capabilities.contains("household_admin") && !canCreate
@@ -105,6 +110,8 @@ struct SharedShopTransfer: Equatable {
         guard value.household.id == householdID, value.memberId == memberID, value.grantId == nil else { clear(); return }
         if scope.shopId != value.shopId || scope.role != value.role || Set(scope.capabilities) != Set(value.capabilities) {
             financialEntries = nil; deliveryRecord = nil; review = nil; acknowledged = false
+            reviewedCookRecipient = nil; pendingMarkOccurrence = nil; reviewedCookOperation = nil
+            if scope.shopId != value.shopId, pendingCookCopy { pending = nil; delivery = .none; reviewedCurrentFacts = false }
             draft = .init()
             editing = false; creatingAnother = false
             shop = nil
@@ -126,8 +133,13 @@ struct SharedShopTransfer: Equatable {
                     delivery = matches ? .waiting : .needsReview
                 }
             }
-            if pendingDelivery && !canReadDelivery { delivery = .needsReview }
-            reviewedCurrentFacts = pending != nil && (!pendingDelivery || !canReadDelivery)
+            if pendingCookCopy {
+                if !canReadCookCopies { delivery = .needsReview }
+                reviewedCurrentFacts = !canReadCookCopies || reviewedCookOperation == pending?.id
+            } else {
+                if pendingDelivery && !canReadDelivery { delivery = .needsReview }
+                reviewedCurrentFacts = pending != nil && (!pendingDelivery || !canReadDelivery)
+            }
         } catch { await handle(error, start: start) }
     }
     private func refreshFacts(start: UUID) async throws {
@@ -178,27 +190,96 @@ struct SharedShopTransfer: Equatable {
         guard canReadDelivery, start == generation, deliveryRecord == page else { throw ClientError.cancelled }
         return result
     }
-    var pendingDelivery: Bool {
-        guard let pending, let envelope = try? JSONDecoder().decode(CommandEnvelope.self, from: pending.bytes) else { return false }
-        return envelope.kind.hasPrefix("delivery.")
+    private var pendingEnvelope: CommandEnvelope? {
+        pending.flatMap { try? JSONDecoder().decode(CommandEnvelope.self, from: $0.bytes) }
     }
+    var pendingDelivery: Bool { pendingEnvelope?.kind.hasPrefix("delivery.") == true }
+    private var pendingCookCopy: Bool { pendingEnvelope?.kind.hasPrefix("cookCopy.") == true }
 
+    func cookCopies(occurrence: SharedMealOccurrence, reviewed page: SharedDeliveryPage) async throws -> [SharedCookCopy] {
+        guard canReadCookCopies, deliveryRecord == page else { throw ClientError.cancelled }
+        let start = generation
+        do {
+            let copies = try await service.cookCopies(occurrence: occurrence, reviewed: page)
+            guard !Task.isCancelled, start == generation, canReadCookCopies, deliveryRecord == page else { throw ClientError.cancelled }
+            if let envelope = pendingEnvelope, envelope.shopId == scope.shopId {
+                if envelope.kind == "cookCopy.save", envelope.body["occurrenceId"] == .string(occurrence.id.uuidString.lowercased()) {
+                    reviewedCookOperation = pending?.id; reviewedCurrentFacts = true
+                } else if envelope.kind == "cookCopy.markSent", copies.contains(where: { envelope.body["copyId"] == .string($0.id.uuidString.lowercased()) }) {
+                    pendingMarkOccurrence = occurrence.id
+                }
+            }
+            return copies
+        } catch {
+            if deliveryRecord == page { await handleCookCopyRead(error, start: start) }
+            throw error
+        }
+    }
+    func pendingCookRecipient(for occurrence: SharedMealOccurrence) -> String? {
+        guard pendingMarkOccurrence == occurrence.id, let envelope = pendingEnvelope, envelope.kind == "cookCopy.markSent",
+              case .string(let label) = envelope.body["recipient"] else { return nil }
+        return label
+    }
+    func cookCopyBaseline(recipient: String, occurrence: SharedMealOccurrence, reviewed page: SharedDeliveryPage) async throws -> SharedCookCopyBaseline? {
+        guard canReadCookCopies, deliveryRecord == page else { throw ClientError.cancelled }
+        reviewedCookRecipient = nil
+        let start = generation, readID = UUID()
+        baselineReadID = readID
+        do {
+            let baseline = try await service.cookCopyBaseline(recipient: recipient, occurrence: occurrence, reviewed: page)
+            guard !Task.isCancelled, start == generation, canReadCookCopies, deliveryRecord == page else { throw ClientError.cancelled }
+            guard readID == baselineReadID else { throw ClientError.cancelled }
+            let label = try SharedCookCopyEdit.recipientLabel(recipient)
+            reviewedCookRecipient = (page, occurrence.id, label, baseline?.send.sendId)
+            if pendingCookRecipient(for: occurrence)?.utf8.elementsEqual(label.utf8) == true {
+                reviewedCookOperation = pending?.id; reviewedCurrentFacts = true
+            }
+            return baseline
+        } catch {
+            if deliveryRecord == page { await handleCookCopyRead(error, start: start) }
+            throw error
+        }
+    }
+    private func handleCookCopyRead(_ error: Error, start: UUID) async {
+        switch error as? ClientError {
+        case .accessEnded, .sessionNeeded: await handle(error, start: start)
+        default: break
+        }
+    }
+    func saveCookCopy(text: String, language: String, occurrence: SharedMealOccurrence, reviewed page: SharedDeliveryPage) async -> Bool {
+        let edit = SharedCookCopyEdit.save(text: text, language: language, occurrence: occurrence)
+        return await saveReviewedChange(kind: edit.kind, reviewed: page) { try edit.body(reviewed: page) }
+    }
+    func markCookCopySent(_ copy: SharedCookCopy, recipient: String, previousSendId: UUID?, reviewed page: SharedDeliveryPage) async -> Bool {
+        guard let label = try? SharedCookCopyEdit.recipientLabel(recipient), let baseline = reviewedCookRecipient, baseline.page == page, baseline.occurrence == copy.occurrenceId,
+              baseline.label.utf8.elementsEqual(label.utf8), baseline.sendId == previousSendId else { return false }
+        let edit = SharedCookCopyEdit.markSent(copy: copy, recipient: recipient, previousSendId: previousSendId)
+        return await saveReviewedChange(kind: edit.kind, reviewed: page) { try edit.body(reviewed: page) }
+    }
     func saveDelivery(_ edit: SharedDeliveryEdit, reviewed page: SharedDeliveryPage) async -> Bool {
-        guard canReadDelivery, !busy, pending == nil, let shop, shop.phase == "placed", scope.shopId == shop.shopId,
+        await saveReviewedChange(kind: edit.kind, reviewed: page) { try edit.body(reviewed: page) }
+    }
+    private func saveReviewedChange(kind: String, reviewed page: SharedDeliveryPage, body: () throws -> [String: JSONValue]) async -> Bool {
+        let cookCopy = kind.hasPrefix("cookCopy.")
+        guard canReadDelivery, !busy, pending == nil, let shop, scope.shopId == shop.shopId,
+              cookCopy ? (canReadCookCopies && ["placed", "closed"].contains(shop.phase)) : shop.phase == "placed",
               page == deliveryRecord, UUID(uuidString: shop.shopId) == page.shopId, page.shopRevision == shop.shopRevision,
               page.authorityEpoch == shop.authorityEpoch, page.placedRevision == shop.placedRevision else { return false }
-        busy = true; let start = generation
+        busy = true; let start = generation, actorScope = scope
         defer { busy = false }
         do {
-            let body = try edit.body(reviewed: page)
+            let fields = try body()
             let window = try await service.replayWindow()
-            guard start == generation, scope.shopId == shop.shopId, self.shop == shop, deliveryRecord == page, canReadDelivery else { return false }
-            let envelope = CommandEnvelope(replayWindow: window.id, shopId: shop.shopId, kind: edit.kind,
-                base: .init(shopRevision: page.shopRevision, authorityEpoch: page.authorityEpoch), body: body)
+            guard start == generation, scope == actorScope, self.shop == shop, deliveryRecord == page, canReadDelivery else { return false }
+            let envelope = CommandEnvelope(replayWindow: window.id, shopId: shop.shopId, kind: kind,
+                base: .init(shopRevision: page.shopRevision, authorityEpoch: page.authorityEpoch), body: fields)
             try await queueAndDeliver(envelope, start: start)
-            guard start == generation else { return false }
-            if case .confirmed = delivery { deliveryRecord = nil; return true }
-            return pending != nil
+            guard start == generation, scope.shopId == shop.shopId else { return false }
+            if case .confirmed = delivery {
+                if !cookCopy { deliveryRecord = nil }
+                return true
+            }
+            return !cookCopy && pending != nil
         } catch { await handle(error, start: start); return false }
     }
     func loadFinancialEntries() async {
@@ -290,10 +371,13 @@ struct SharedShopTransfer: Equatable {
         try await outbox.append(operation)
         guard start == generation, scope == actorScope else { throw ClientError.cancelled }
         pending = operation; delivery = .waiting; attempts = 0; reviewedCurrentFacts = false
+        pendingMarkOccurrence = nil; reviewedCookOperation = nil
+        if envelope.kind == "cookCopy.markSent" { reviewedCookRecipient = nil; baselineReadID = UUID() }
         await deliver(operation, start: start)
     }
     func retry() async {
         guard authorized, !busy, let pending, delivery == .waiting else { return }
+        if pendingCookCopy && (!canReadCookCopies || pendingEnvelope?.shopId != scope.shopId) { return }
         guard Date() >= retryAfter, attempts < 5 else { notice = ht("Wait before retrying, or review this action after several failed attempts."); return }
         busy = true; defer { busy = false }; await deliver(pending, start: generation)
     }
@@ -302,8 +386,13 @@ struct SharedShopTransfer: Equatable {
         do {
             let envelope = try JSONDecoder().decode(CommandEnvelope.self, from: operation.bytes)
             let receipt = try await service.executeSharedShop(operation); guard start == generation else { return }
+            let cookCopy = envelope.kind.hasPrefix("cookCopy.")
+            if cookCopy, pending != operation || !canReadCookCopies || scope.shopId != envelope.shopId { return }
             guard receipt.shopId == envelope.shopId, receipt.kind == envelope.kind else { throw ClientError.invalidResponse }
-            delivery = .confirmed(receipt); pending = nil; editing = false; creatingAnother = false; review = nil; acknowledged = false; requiresRefresh = true
+            delivery = .confirmed(receipt); pending = nil; editing = false; creatingAnother = false; review = nil; acknowledged = false
+            // A copy receipt leaves every reviewed shop and delivery revision intact.
+            requiresRefresh = !cookCopy
+            if cookCopy { notice = nil }
             do { try await outbox.remove(operation.id) } catch { notice = ht("The shared shop change was confirmed. Local retry cleanup needs another attempt.") }
             guard start == generation else { return }
             do {
@@ -317,11 +406,14 @@ struct SharedShopTransfer: Equatable {
                 switch error as? ClientError {
                 case .accessEnded, .sessionNeeded, .service(status: 404, code: _, correlationID: _, retryAfter: _): await handle(error, start: start)
                 case .cancelled: break
-                default: notice = ht("The shared shop change was confirmed. Refresh the household to see the latest state.")
+                default:
+                    requiresRefresh = true
+                    notice = ht("The shared shop change was confirmed. Refresh the household to see the latest state.")
                 }
             }
         } catch {
             guard start == generation else { return }
+            guard pending == operation else { return }
             if let error = error as? ClientError, let delay = RetryPolicy().delay(attempt: attempts, error: error) { retryAfter = Date().addingTimeInterval(delay) }
             else { delivery = .needsReview; reviewedCurrentFacts = false }
             await handle(error, start: start)
@@ -332,10 +424,16 @@ struct SharedShopTransfer: Equatable {
         busy = true; defer { busy = false }; let start = generation
         do {
             try await outbox.remove(pending.id); guard start == generation else { return }
+            reviewedCookOperation = nil; pendingMarkOccurrence = nil
             self.pending = nil; delivery = .none; review = nil; acknowledged = false; attempts = 0
         } catch { await handle(error, start: start) }
     }
-    func clear() { generation = UUID(); lastShopSync = nil; financialEntries = nil; deliveryRecord = nil; authorized = false; shop = nil; review = nil; pending = nil; draft = .init(); notice = nil; editing = false; acknowledged = false; delivery = .none }
+    func clear() {
+        reviewedCookRecipient = nil; pendingMarkOccurrence = nil; reviewedCookOperation = nil
+        generation = UUID(); lastShopSync = nil; financialEntries = nil; deliveryRecord = nil
+        authorized = false; shop = nil; review = nil; pending = nil; draft = .init()
+        notice = nil; editing = false; acknowledged = false; delivery = .none
+    }
     private func handle(_ error: Error, start: UUID) async {
         guard start == generation else { return }
         switch error as? ClientError {
