@@ -168,8 +168,9 @@ final class SharedFallbackUITests: XCTestCase {
                 "Withdraw household approval", "fallback.withdraw")).firstMatch
             tap(system)
         }
-        if app.navigationBars[title].exists { back(title) }
-        reveal(has("Reviewed supper"))
+        let retained = app.buttons["Reviewed supper"]
+        reveal(retained)
+        captureScreen("Expired shopper retained the other recipe after withdrawal")
         XCTAssertFalse(app.buttons.matching(NSPredicate(format:"label CONTAINS %@",title)).firstMatch.exists)
     }
 }
