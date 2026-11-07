@@ -1,0 +1,13 @@
+# Independent review — UI01 placement control correction
+
+**Approved in this one-test scope; no blocking finding.** Read the current one-file diff and surrounding code. No native execution, test run, tracked edit or Git mutation performed. The owner's in-progress journey is not reported as passed by this review.
+
+- Only `testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop` changes, at `ios/UITests/FreeJourneyUITests.swift:406–431`. Production code and the shared generic reveal/back helpers remain untouched. Earlier/later long-journey assertions and real input paths remain.
+- The target first uses the existing reveal, then a bounded 12-scroll loop brings its full vertical bounds into the measured content area. Final checks independently require hittable/enabled, top/bottom containment and horizontal containment in the app viewport. Using app width avoids conflating the inset drag corridor with full-row button width. The captured fully visible control makes the final geometry reviewable.
+- Exactly one `placeOrder.tap()` remains; the loop performs only scrolling, never report retries. There is no direct model call, injected data, suppressed failure, or production placement-gate change. `continueAfterFailure=false` remains set in test setup, so failed geometry assertions cannot be silently passed over.
+- Back is scoped to the exact “Retailer handoff” navigation bar and performed at most once. If the conditional destination has already disappeared, it does not pop Pickup. If it disappears between the existence read and the scoped tap, the scoped query can fail rather than resolve an arbitrary new root's Back button; this is fail-closed behavior, not an overshoot path. The first button matches the existing single native Back control for this destination (also shown in retained frames).
+- The following Pickup-navigation assertion (8 seconds) and exact positive “Placement reported · original order locked” assertion (10 seconds) test the completed outcome. They do not mistake transient `model.saving` disabling or stale-stock disabling for success. Existing arrival tap uses the real action and normal helper; all arrival/repair/settlement/next-shop checks remain downstream.
+
+Limits: this adds bounded targeted visibility work and outcome waits, not a claim that the old synthesized tap invoked placement. No migration or broader UI geometry fix is implied. The local run uses the parent's stated Xcode27.1 with iOS26.2; it is not identical-toolchain reproduction of hosted Xcode26.3. Final runtime outcome and source/build binding remain owner/collector work.
+
+Reviewed file SHA256: `c6b5fc4c3fe808e7859616b70d966fd59e2eac72edb0a46760f54d8241753d5a`.

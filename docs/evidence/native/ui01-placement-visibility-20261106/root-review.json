@@ -1,0 +1,16 @@
+{
+  "changed": "One targeted UI case; no production source, shared helper, retry, native timeout or warning-policy change",
+  "localPassed": 1,
+  "seconds": 404.969269990921,
+  "strictExit": 0,
+  "recordedRuntimeWarnings": 0,
+  "restarts": 0,
+  "placementTaps": 1,
+  "positivePlacedStateVerified": true,
+  "sourceUnchangedDuringRun": true,
+  "originalHosted": "3/4pass,1failed,2existingallowed runtime warnings; default collector50MB per-member guard retained",
+  "nativeLogSHA256": "e3c126a8395a6aabb9ad4329928ea9b7e98448451763da8279a196f71ce1186c",
+  "freezeFiles": 318,
+  "freezeSHA256": "e581a7a771621720e44afe9ccd23313b1f671e728818d4fae4ca7cdc4c05bd42",
+  "scope": "Full original Free journey on iOS26.2/23C54 with local Xcode27.1. Published CI0d5 usesXcode26.3; no hosted follow-up acceptance claimed."
+}

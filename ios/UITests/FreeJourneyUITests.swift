@@ -403,8 +403,29 @@ import XCTest
         tap(app.buttons["Pickup, repairs and handoffs"])
         assertText("Frozen · placement unconfirmed")
         tap(app.buttons["Prepare retailer handoff"])
-        tap(app.buttons["I placed this order"])
-        back(to: "Record what came home")
+        let placeOrder = app.buttons["I placed this order"]
+        reveal(placeOrder)
+        // A sliver above the floating tab bar can report hittable. Bring the
+        // complete control into the content area before the single native tap.
+        for _ in 0..<12 {
+            let area = scrollableArea(), frame = placeOrder.frame
+            if placeOrder.isHittable && frame.minY >= area.minY && frame.maxY <= area.maxY { break }
+            scrollContent(upward: frame.midY > area.midY, area: area)
+        }
+        let placementArea = scrollableArea(), placementFrame = placeOrder.frame
+        XCTAssertTrue(placeOrder.isHittable && placeOrder.isEnabled)
+        XCTAssertGreaterThanOrEqual(placementFrame.minY, placementArea.minY)
+        XCTAssertLessThanOrEqual(placementFrame.maxY, placementArea.maxY)
+        XCTAssertGreaterThanOrEqual(placementFrame.minX, app.frame.minX)
+        XCTAssertLessThanOrEqual(placementFrame.maxX, app.frame.maxX)
+        capture("Free-order-report-control-fully-visible")
+        placeOrder.tap()
+        // Return only from this destination. Never keep popping because an
+        // asynchronously created arrival action is not in the hierarchy yet.
+        let handoff = app.navigationBars["Retailer handoff"]
+        if handoff.exists { handoff.buttons.element(boundBy: 0).tap() }
+        XCTAssertTrue(app.navigationBars["Pickup"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.staticTexts["Placement reported · original order locked"].waitForExistence(timeout: 10))
         tap(app.buttons["Record what came home"])
         choose("Original order line", value: "Wraps")
         choose("What happened", value: "Partial fill")
