@@ -142,6 +142,17 @@ private final class ContributorRequestUIFixtureServer: @unchecked Sendable {
             }
         }
         if path.hasSuffix("/bootstrap") { return try response(["household":["id":household,"label":"Fixture home"],"memberId":member,"role":"contributor","shopId":shop,"enrolled":true,"queueConsent":false,"capabilities":["own_requests"]]) }
+        if path.hasSuffix("/requests/mine"), ProcessInfo.processInfo.arguments.contains("--own-purchases-fixture") {
+            let rice: [String: Any] = ["requestId": "aaaaaaaa-1111-4111-8111-111111111111", "shopId": shop, "revision": 3,
+                "originalItem": "Arroz", "ownQuantity": "Una bolsa", "status": "added", "route": "current",
+                "authoredAt": "2026-11-07T09:00:00Z", "receivedAt": "2026-11-07T09:01:00Z",
+                "ownActionAllowed": false, "purchaseOutcome": "bought"]
+            var fruit = rice
+            fruit["requestId"] = "bbbbbbbb-1111-4111-8111-111111111111"
+            fruit["originalItem"] = "Fruta"
+            fruit["purchaseOutcome"] = nil
+            return try response(["requests": [rice, fruit], "nextCursor": NSNull()])
+        }
         if path.hasSuffix("/requests/mine") { return try response(["requests":rows,"nextCursor":NSNull()]) }
         if path.hasSuffix("/replay-windows") { return try response(["id":UUID().uuidString.lowercased(),"expiresAt":"2099-01-01T00:00:00Z"]) }
         if path.hasSuffix("/commands") {

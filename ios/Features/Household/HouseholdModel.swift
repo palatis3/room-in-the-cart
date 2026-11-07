@@ -632,7 +632,8 @@ struct DeviceReminderPersona: Equatable {
     private func configureShopperInbox(_ projection: HouseholdBootstrap) {
         guard canReviewHouseholdRequests, let service else { shopperInbox?.clear(); shopperInbox = nil; return }
         if let shopperInbox, shopperInbox.authorized, shopperInbox.householdID == projection.household.id,
-           shopperInbox.memberID == projection.memberId, shopperInbox.shopID == projection.shopId { return }
+           shopperInbox.memberID == projection.memberId, shopperInbox.shopID == projection.shopId,
+           shopperInbox.supportsPurchaseConfirmation == projection.capabilities.contains("request_purchase_confirmation") { return }
         shopperInbox?.clear()
         let start = generation
         shopperInbox = HouseholdInboxModel(bootstrap: projection, service: service, outbox: shopperOutbox) { [weak self] in

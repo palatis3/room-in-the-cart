@@ -40,6 +40,21 @@ import XCTest
         }
     }
 
+    func testSpanishContributorReadsOnlyExplicitPurchaseStatusOnTheirOwnRequests() {
+        app.launchArguments = ["--ui-testing", "--own-purchases-fixture", "-AppleLanguages", "(es)", "-AppleLocale", "es_US"]
+        app.launch()
+        XCTAssertTrue(app.navigationBars["Hogar"].waitForExistence(timeout: 20))
+        let bought = element("household.ownRequest.aaaaaaaa-1111-4111-8111-111111111111")
+        let unconfirmed = element("household.ownRequest.bbbbbbbb-1111-4111-8111-111111111111")
+        reveal(bought)
+        XCTAssertTrue(bought.label.contains("Arroz"), bought.label)
+        XCTAssertTrue(bought.label.contains("La persona que hizo la compra confirm\u{00f3} que se compr\u{00f3}"), bought.label)
+        reveal(unconfirmed)
+        XCTAssertTrue(unconfirmed.label.contains("Fruta"), unconfirmed.label)
+        XCTAssertFalse(unconfirmed.label.contains("se compr\u{00f3}"), unconfirmed.label)
+        XCTAssertFalse(element("delivery.requestPurchases").exists)
+    }
+
     func testSpanishLargeTextReviewStartsAtTheOriginalWording() {
         if ProcessInfo.processInfo.operatingSystemVersion.majorVersion == 17 {
             app.launchEnvironment["OS_ACTIVITY_MODE"] = "disable"

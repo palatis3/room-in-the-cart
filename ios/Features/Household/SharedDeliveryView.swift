@@ -42,6 +42,12 @@ struct SharedDeliveryView: View {
         Form {
             if model.canReadDelivery, model.scope.shopId == shopID {
                 if let page = model.deliveryRecord, page.shopId == UUID(uuidString: shopID) {
+                    if let inbox = household.shopperInbox, inbox.supportsPurchaseConfirmation,
+                       model.scope.capabilities.contains("request_purchase_confirmation"), inbox.shopID == shopID {
+                        NavigationLink(ht("Family request purchases")) {
+                            RequestPurchasesView(model: model, inbox: inbox, shopID: shopID)
+                        }.accessibilityIdentifier("delivery.requestPurchases")
+                    }
                     if model.shop?.phase == "placed", model.pending == nil, !page.lines.isEmpty {
                         Button(ht("Add a delivery")) { choosingLine = true }
                     }

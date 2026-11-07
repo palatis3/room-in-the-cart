@@ -58,6 +58,22 @@ enum ShopperDelivery: Equatable {
         shopID = bootstrap.shopId ?? ""; self.service = service; self.outbox = outbox; self.onAccessEnded = onAccessEnded
         authorized = bootstrap.role == "shopper" && bootstrap.shopId != nil
     }
+    var supportsPurchaseConfirmation: Bool {
+        authorized && bootstrap.grantId == nil && bootstrap.capabilities.contains("request_purchase_confirmation")
+    }
+    func purchaseMatches(placed: SharedDeliveryPage) -> [RequestPurchaseMatch] {
+        guard supportsPurchaseConfirmation, let shop, shop.shopId == shopID else { return [] }
+        return requests.compactMap { RequestPurchaseMatch(request: $0, shop: shop, placed: placed) }
+    }
+    func purchaseMatch(_ requestID: String, placed: SharedDeliveryPage) -> RequestPurchaseMatch? {
+        guard supportsPurchaseConfirmation, let shop, shop.shopId == shopID,
+              let request = requests.first(where: { $0.id == requestID }) else { return nil }
+        return RequestPurchaseMatch(request: request, shop: shop, placed: placed)
+    }
+    func confirmPurchase(_ match: RequestPurchaseMatch, outcome: ConfirmedRequestPurchase?, placed: SharedDeliveryPage) async {
+        guard purchaseMatch(match.request.id, placed: placed) == match, match.request.purchaseOutcome != outcome else { return }
+        await enqueue(kind: "request.confirmPurchase", base: match.base, body: match.body(outcome: outcome))
+    }
     var availableChoices: [ShopperChoice] {
         guard let selected, let shop else { return [] }
         if selected.status == "deferred" { return shop.phase == "draft" ? [.add, .link] : [] }
@@ -79,6 +95,7 @@ enum ShopperDelivery: Equatable {
                 guard let cursor = nextCursor else { return }
                 let page = try await service.shopperInbox(shopID: shopID, cursor: cursor)
                 guard start == generation else { return }
+                guard page.requests.allSatisfy({ $0.shopId == shopID }) else { throw ClientError.invalidResponse }
                 for request in page.requests { requests.removeAll { $0.id == request.id }; requests.append(request) }
                 nextCursor = page.nextCursor
             } else {
@@ -92,7 +109,8 @@ enum ShopperDelivery: Equatable {
                         pending = operation
                         let matches = await service.matches(operation, memberID: memberID)
                         guard start == generation else { return }
-                        delivery = matches && envelope.shopId == shopID ? .waiting : .needsReview
+                        let permitted = envelope.kind != "request.confirmPurchase" || supportsPurchaseConfirmation
+                        delivery = matches && permitted && envelope.shopId == shopID ? .waiting : .needsReview
                         notice = ht("An earlier decision is waiting for confirmation. Review the current requests before retrying or clearing it.")
                     }
                 }

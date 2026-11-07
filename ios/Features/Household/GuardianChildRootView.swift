@@ -147,6 +147,7 @@ struct GuardianChildRequestsView: View {
                             Text(request.originalItem).font(.headline)
                             if let quantity = request.ownQuantity { Text(quantity) }
                             Text(requestStatus(request)).foregroundStyle(.secondary)
+                            if let outcome = request.purchaseOutcome { Text(purchaseStatus(outcome)) }
                             if let clarification = request.clarification { Text(clarification) }
                             if request.ownActionAllowed {
                                 HStack {

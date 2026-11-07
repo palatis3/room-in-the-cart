@@ -84,6 +84,7 @@ struct HouseholdSettingsView: View {
                                     Text(request.originalItem).font(.headline)
                                     if let quantity = request.ownQuantity { Text(quantity) }
                                     Text(status(request)).foregroundStyle(.secondary)
+                                    if let outcome = request.purchaseOutcome { Text(purchaseStatus(outcome)) }
                                     if let clarification = request.clarification { Text(clarification) }
                                     if request.ownActionAllowed {
                                         HStack {
@@ -94,6 +95,7 @@ struct HouseholdSettingsView: View {
                                         Button(ht("Send a follow-up")) { model.followUp(request) }.buttonStyle(.borderless)
                                     }
                                 }.accessibilityElement(children: .combine)
+                                .accessibilityIdentifier("household.ownRequest." + request.id)
                             }
                             if model.requests.isEmpty { Text(ht("No received requests in this view.")) }
                             if model.nextRequestCursor != nil {

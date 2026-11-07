@@ -129,6 +129,37 @@ import XCTest
         tap(app.buttons["delivery.cook.cancelReadback"])
     }
 
+    func testShopperConfirmsCorrectsAndClearsTheLinkedFamilyPurchase() {
+        app.launchArguments = ["--ui-testing", "--shared-delivery-fixture", "--request-purchase-fixture",
+                               "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        tap(app.buttons["sharedShop.deliveryEvidence"])
+        tap(app.buttons["delivery.requestPurchases"])
+        let row = app.buttons["purchase.request.aaaaaaaa-1111-4111-8111-111111111111"]
+        reveal(row)
+        XCTAssertTrue(row.label.contains("Purchase unconfirmed"))
+        XCTAssertFalse(app.buttons["purchase.request.bbbbbbbb-1111-4111-8111-111111111111"].exists)
+        tap(row)
+        let received = app.staticTexts["purchase.review.original"]
+        reveal(received)
+        XCTAssertEqual(received.label, "Wraps for lunches")
+        assertFact("Requested by", "Sam")
+        assertFact("Quantity", "four wraps")
+        reveal(app.staticTexts["Ordered wraps"])
+        tap(app.buttons["purchase.choice.bought"])
+        tap(app.buttons["Cancel"])
+        reveal(row)
+        XCTAssertTrue(row.label.contains("Purchase unconfirmed"))
+        for (choice, expected) in [("bought", "Shopper confirmed bought"),
+                                   ("notBought", "Shopper confirmed not bought"), ("unknown", "Purchase unconfirmed")] {
+            tap(row)
+            tap(app.buttons["purchase.choice." + choice])
+            tap(app.buttons["purchase.save"])
+            let saved = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND label CONTAINS %@", expected), object: row)
+            XCTAssertEqual(XCTWaiter.wait(for: [saved], timeout: 8), .completed)
+        }
+    }
+
     func testShopperLeavesOriginalDinnerOpenAfterAnUnresolvedReplacementPreview() {
         launch("en", locale: "en_US", recovery: true)
         let wednesday = "EEEEEEEE-EEEE-4EEE-8EEE-000000000002"

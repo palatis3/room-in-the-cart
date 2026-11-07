@@ -17,6 +17,7 @@ private final class S17FixtureServer: @unchecked Sendable {
     static let occurrence = "55555555-5555-4555-8555-555555555555"
     private let lock = NSRecursiveLock()
     private let deliveries = ProcessInfo.processInfo.arguments.contains("--shared-delivery-fixture") ? SharedDeliveryFixtureRecords() : nil
+    private let purchases = ProcessInfo.processInfo.arguments.contains("--request-purchase-fixture") ? RequestPurchaseFixture() : nil
     private let fallbacks = SharedFallbackUIFixture()
     private var revision = 2
     private let quoteObservedAt = Date().addingTimeInterval(-60)
@@ -58,6 +59,7 @@ private final class S17FixtureServer: @unchecked Sendable {
             var capabilities = shopper ? ["shopper_commands","shopper_inbox","request_preview"] : ["meal_proposals"]
             if shopper, let deliveries {
                 capabilities.append("delivery_evidence")
+                if purchases != nil { capabilities.append("request_purchase_confirmation") }
                 if fallbacks != nil { capabilities.append("accepted_fallbacks") }
                 if deliveries.recovery != nil { capabilities.append("meal_recovery") }
                 if deliveries.pantry != nil { capabilities.append("pantry_lots") }
@@ -132,6 +134,9 @@ private final class S17FixtureServer: @unchecked Sendable {
                 }
                 if (input["kind"] as? String)?.hasPrefix("pantry.") == true, deliveries.pantry == nil { return try denied() }
                 if (input["kind"] as? String)?.hasPrefix("cookCopy.") == true, !deliveries.supportsCookCopies { return try denied() }
+                if input["kind"] as? String == "request.confirmPurchase", let purchases {
+                    return try json(purchases.record(shop: Self.shop, command: input, bytes: bytes))
+                }
                 return try json(deliveries.record(shop: Self.shop, command: input))
             } catch let failure as SharedDeliveryFixtureRecords.CookFailure {
                 let code: String
@@ -143,6 +148,10 @@ private final class S17FixtureServer: @unchecked Sendable {
                 }
                 return try json(["error":["code":code]], status:409)
             }
+        }
+        if path == deliveryPath + "/inbox", let purchases {
+            guard shopper, request.value(forHTTPHeaderField: "X-Device-Token") == "shopper-token" else { return try denied() }
+            return try json(purchases.page(shop: Self.shop))
         }
         if path.hasSuffix("/inbox") { return try json(["requests":[],"nextCursor":NSNull()]) }
         if path.hasSuffix("/requests/mine") { return try json(["requests":[],"nextCursor":NSNull()]) }

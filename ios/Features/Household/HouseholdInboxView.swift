@@ -186,7 +186,7 @@ struct HouseholdRequestDecisionView: View {
         .task { model.select(request) }
     }
 }
-private struct ShopperDeliverySection: View {
+struct ShopperDeliverySection: View {
     @ObservedObject var model: HouseholdInboxModel
     var body: some View {
         switch model.delivery {
@@ -202,7 +202,9 @@ private struct ShopperDeliverySection: View {
         case .confirmed(let receipt):
             Section {
                 Label(ht("Decision confirmed by the household"), systemImage: "checkmark.circle")
-                Text(shopperDisposition(receipt.disposition))
+                if receipt.kind != "request.confirmPurchase" {
+                    Text(shopperDisposition(receipt.disposition))
+                }
                 Text(ht("This records a household decision. It does not place an order with the retailer."))
             }
         }
