@@ -72,7 +72,9 @@ final class ReleasePerformanceUITests: XCTestCase {
         // Exercise search recovery after the timed samples so these extra
         // queries do not warm up or change the measured search/checkoff loop.
         let unmatched = "zz-no-such-fixture-item-987654321"
-        func replaceQuery(_ old: String, with new: String) {
+        let emptyState = app.staticTexts[noSearchResults]
+        func replaceQuery(_ old: String, with new: String, showing result: XCUIElement,
+                          file: StaticString = #filePath, line: UInt = #line) {
             tap(field)
             if !old.isEmpty {
                 XCTAssertEqual(field.value as? String, old, "Replace the complete preceding query")
@@ -89,39 +91,43 @@ final class ReleasePerformanceUITests: XCTestCase {
             XCTAssertTrue(cleared == "" || (cleared != nil && cleared == field.placeholderValue),
                           "Search must be completely cleared before replacement")
             field.typeText(new + "\n")
-            let entered = field.value as? String
-            XCTAssertTrue(entered == new || (new.isEmpty && entered != nil && entered == field.placeholderValue),
-                          "The search field must contain exactly the requested query")
+            // Return dismisses the keyboard while SwiftUI filters the list. Observe
+            // the exact field value and its rendered result within the same budget.
+            let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+                guard result.exists, let value = field.value as? String else { return false }
+                return value == new || (new.isEmpty && value == field.placeholderValue)
+            }, object: nil)
+            XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 8), .completed,
+                           "Expected query \(new.debugDescription) and its result. Field value: \(String(describing: field.value))",
+                           file: file, line: line)
         }
         func fixtureResult(_ token: String) -> XCUIElement {
             app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label ENDSWITH %@", inspectPrefix, " " + token)).firstMatch
         }
         func requireNoResults() {
-            XCTAssertTrue(app.staticTexts[noSearchResults].waitForExistence(timeout: 8))
+            XCTAssertTrue(emptyState.exists)
             XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", inspectPrefix)).count, 0,
                            "An unmatched query must not retain a stale item")
         }
-        replaceQuery("m499x", with: unmatched)
+        replaceQuery("m499x", with: unmatched, showing: emptyState)
         requireNoResults()
-        replaceQuery(unmatched, with: "m000x")
-        XCTAssertTrue(fixtureResult("m000x").waitForExistence(timeout: 8))
+        replaceQuery(unmatched, with: "m000x", showing: fixtureResult("m000x"))
         let uncheckedRowID = try XCTUnwrap(UUID(uuidString: String(fixtureResult("m000x").identifier.dropFirst(inspectPrefix.count))))
         XCTAssertFalse(checkedRowIDs.contains(uncheckedRowID.uuidString))
-        replaceQuery("m000x", with: "")
-        XCTAssertTrue(fixtureResult("m000x").waitForExistence(timeout: 8))
-        XCTAssertTrue(fixtureResult("m001x").waitForExistence(timeout: 8), "Clearing must restore more than the previous single result")
+        replaceQuery("m000x", with: "", showing: fixtureResult("m001x"))
+        XCTAssertTrue(fixtureResult("m000x").exists && fixtureResult("m001x").exists,
+                      "Clearing must restore more than the previous single result")
         XCTAssertFalse(app.staticTexts[noSearchResults].exists)
 
         app.terminate()
         app.launch()
         openPickupList()
-        replaceQuery("", with: unmatched)
+        replaceQuery("", with: unmatched, showing: emptyState)
         requireNoResults()
-        replaceQuery(unmatched, with: "m000x")
-        XCTAssertTrue(fixtureResult("m000x").waitForExistence(timeout: 8))
+        replaceQuery(unmatched, with: "m000x", showing: fixtureResult("m000x"))
         XCTAssertEqual(fixtureResult("m000x").identifier, inspectPrefix + uncheckedRowID.uuidString,
                        "Query replacement and relaunch must preserve the unchecked item identity")
-        replaceQuery("m000x", with: "m499x")
+        replaceQuery("m000x", with: "m499x", showing: emptyState)
         requireNoResults()
         tap(element("ledgerHistory"))
         XCTAssertTrue(app.navigationBars["List history"].waitForExistence(timeout: 8))
