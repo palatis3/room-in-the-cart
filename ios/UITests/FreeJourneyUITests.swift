@@ -932,12 +932,23 @@ import XCTest
     }
 
     func testUrgentRepairWithoutAnOrderPersistsAcrossRestart() throws {
+        func enterNeed(food: String, meal: String, required: String, available: String) {
+            // Enter a need in one editing session, then dismiss the keyboard for review.
+            for (label, value) in [("Food that is short", food), ("Meal or purpose", meal),
+                                   ("Required amount", required), ("Usable amount available now", available)] {
+                let field = app.textFields[label]
+                tap(field)
+                field.typeText(value)
+                XCTAssertEqual(field.value as? String, value, "Review the entered value for \(label)")
+            }
+            let done = app.buttons.matching(NSPredicate(format: "identifier == %@", "Done")).firstMatch
+            tap(done)
+            XCTAssertTrue(done.waitForNonExistence(timeout: 5), "End amount entry before confirming the need")
+        }
+
         launch(reset: true)
         tap(element("urgentRepairShortcut"))
-        fill("Tortillas", into: "Food that is short")
-        fill("Wednesday supper", into: "Meal or purpose")
-        fill("6", into: "Required amount")
-        fill("2", into: "Usable amount available now")
+        enterNeed(food: "Tortillas", meal: "Wednesday supper", required: "6", available: "2")
         enableSwitch("I checked this food’s identity and usable amount")
         fill("3", into: "Usable amount available now", replacing: true)
         XCTAssertFalse(app.buttons["Save need and repair meal"].isEnabled)
@@ -947,19 +958,27 @@ import XCTest
         assertText("Wednesday supper")
         capture("Free-urgent-need-before-shopping")
         app.navigationBars.buttons.element(boundBy: 0).tap()
-        fill("Beans", into: "Food that is short")
-        fill("Thursday lunch", into: "Meal or purpose")
-        fill("4", into: "Required amount")
-        fill("1", into: "Usable amount available now")
+        enterNeed(food: "Beans", meal: "Thursday lunch", required: "4", available: "1")
+        let save = app.buttons["Save need and repair meal"]
+        XCTAssertTrue(save.waitForExistence(timeout: 5))
+        XCTAssertFalse(save.isEnabled, "The second need requires its own confirmation")
         enableSwitch("I checked this food’s identity and usable amount")
-        tap(app.buttons["Save need and repair meal"])
+        tap(save)
         assertText("Thursday lunch")
         restart()
         tap(app.buttons["Pickup, repairs and handoffs"])
         tap(app.buttons["Repair a meal"])
         assertText("Open meal need")
         assertText("Wednesday supper")
+        assertText("Tortillas")
+        assertText("Required: 6")
+        assertText("Confirmed available: 3")
+        capture("Free-urgent-Wednesday-after-restart")
         assertText("Thursday lunch")
+        assertText("Beans")
+        assertText("Required: 4")
+        assertText("Confirmed available: 1")
+        capture("Free-urgent-Thursday-after-restart")
     }
 
     func testStagedListCanReturnToOriginalAndMergeADuplicateAfterRestart() throws {
