@@ -1,0 +1,733 @@
+diff --git a/ios/App/DeviceSurfacesComposition.swift b/ios/App/DeviceSurfacesComposition.swift
+index 3eb6f1a..e781577 100644
+--- a/ios/App/DeviceSurfacesComposition.swift
++++ b/ios/App/DeviceSurfacesComposition.swift
+@@ -411,7 +411,7 @@ import DeviceSurfaces
+             return scope?.workspaceID == workspace && ledger?.shop?.id == shopID && shop(shopID) != nil
+         case .offer(let workspace, let journeyID, let offerID):
+             guard pickupWorkspaceID == workspace, let journey = eligible?.first(where: { $0.id == journeyID }),
+-                  journey.unfilledOffers.contains(where: { $0.id == offerID }) else { return false }
++                  journey.unfilledOffers(at: clock()).contains(where: { $0.id == offerID }) else { return false }
+             return !requireRevision || journey.revision == row.sourceRevision
+         case .deferral(let workspace, let journeyID, let needID):
+             guard pickupWorkspaceID == workspace, let journey = eligible?.first(where: { $0.id == journeyID }), journey.deferred.contains(where: { $0.id == needID && $0.status == "review" }) else { return false }
+@@ -466,13 +466,15 @@ import DeviceSurfaces
+         guard let role = household?.deviceReminderPersona.role else { return true }
+         return ["shopper", "organizer"].contains(role)
+     }
++    var reminderEvaluationDate: Date { clock() }
+     var reminderTargets: [SurfaceReminderTarget] {
+         privateAuthorized && reminderRoleAuthorized ? currentReminderTargets : []
+     }
+     private var currentReminderTargets: [SurfaceReminderTarget] {
+         guard let pickup, let workspace = pickupWorkspaceID, pickup.sourceWorkspaceID == workspace else { return [] }
++        let projectionInstant = clock()
+         return pickup.reminderJourneys.flatMap { journey in
+-            journey.unfilledOffers.map { SurfaceReminderTarget(target: .offer(workspaceID: workspace, journeyID: journey.id, offerID: $0.id), title: $0.replacement, revision: journey.revision, cutoff: $0.deadline.cutoff, timeZoneID: $0.deadline.timeZoneID) }
++            journey.unfilledOffers(at: projectionInstant).map { SurfaceReminderTarget(target: .offer(workspaceID: workspace, journeyID: journey.id, offerID: $0.id), title: $0.replacement, revision: journey.revision, cutoff: $0.deadline.cutoff, timeZoneID: $0.deadline.timeZoneID) }
+             + journey.deferred.filter { $0.status == "review" }.map { SurfaceReminderTarget(target: .deferral(workspaceID: workspace, journeyID: journey.id, needID: $0.id), title: $0.line.name, revision: journey.revision, cutoff: nil, timeZoneID: TimeZone.current.identifier) }
+         }
+     }
+diff --git a/ios/App/RoomInTheCartApp.swift b/ios/App/RoomInTheCartApp.swift
+index 76170d1..ddb1b02 100644
+--- a/ios/App/RoomInTheCartApp.swift
++++ b/ios/App/RoomInTheCartApp.swift
+@@ -175,7 +175,8 @@ struct ShopView: View {
+         ScrollView {
+             VStack(alignment: .leading, spacing: 24) {
+                 if let journey = pickup.resumableJourney(for: ledger.shop?.id) {
+-                    TimelineView(.explicit([Date()] + journey.offers.map(\.deadline.cutoff).filter { $0 > Date() }.sorted())) { context in
++                    let timelineStart = Date()
++                    TimelineView(.explicit([timelineStart] + (journey.offers.map(\.deadline.cutoff) + (journey.pickup?.receipts.map(\.receivedAt) ?? [])).filter { $0 > timelineStart }.sorted())) { context in
+                         if let offer = journey.nextUnfilledOffer(at: context.date) {
+                             let expired = context.date >= offer.deadline.cutoff
+                             VStack(alignment: .leading, spacing: 8) {
+diff --git a/ios/Features/DeviceSurfaces/DeviceSurfacesEntry.swift b/ios/Features/DeviceSurfaces/DeviceSurfacesEntry.swift
+index 345a2bc..9f462e2 100644
+--- a/ios/Features/DeviceSurfaces/DeviceSurfacesEntry.swift
++++ b/ios/Features/DeviceSurfaces/DeviceSurfacesEntry.swift
+@@ -146,7 +146,7 @@ struct DeviceSurfacesDestination: View {
+                 if composition.privateAuthorized, selected, ledger.shop?.id == id { LedgerHomeView(model: ledger) }
+                 else { SurfaceUnavailableView() }
+             case .offer(let journey, let offerID):
+-                if composition.privateAuthorized, selected, pickup.journey?.id == journey, let offer = pickup.journey?.unfilledOffers.first(where: { $0.id == offerID }) {
++                if composition.privateAuthorized, selected, pickup.journey?.id == journey, let offer = pickup.journey?.unfilledOffers(at: composition.reminderEvaluationDate).first(where: { $0.id == offerID }) {
+                     Form {
+                         Text(offer.replacement)
+                         TimelineView(.periodic(from: .now, by: 30)) { context in
+diff --git a/ios/Features/Dinners/DinnerAwayCarryoverView.swift b/ios/Features/Dinners/DinnerAwayCarryoverView.swift
+index 67b7bed..1ff6b39 100644
+--- a/ios/Features/Dinners/DinnerAwayCarryoverView.swift
++++ b/ios/Features/Dinners/DinnerAwayCarryoverView.swift
+@@ -227,7 +227,7 @@ struct DinnerCarryoverDetailsView: View {
+                     Text(record.intent.supply.name)
+                     Text("\(pTr("Original dinner")): \(record.intent.plan.source.title)")
+                     if let sourceDay = record.intent.plan.source.scheduledDay { Text(dinnerDay(sourceDay)) }
+-                    if let demand = try? journey.carryoverAllocation().demands.first(where: { $0.id == link.reservationID }) {
++                    if let demand = try? journey.carryoverAllocation(at: pickup.stockReviewDate).demands.first(where: { $0.id == link.reservationID }) {
+                         Text("\(pTr("Currently allocated from confirmed food")): \(demand.allocated.map { pQuantity($0, unit: demand.unit) } ?? pTr("Unresolved"))")
+                         Text("\(pTr("Still short")): \(demand.shortfall.map { pQuantity($0, unit: demand.unit) } ?? pTr("Unresolved"))")
+                     } else { Text(pTr("The physical reservation needs review. Do not assume this dinner is covered.")) }
+diff --git a/ios/Features/Pickup/Pickup.xcstrings b/ios/Features/Pickup/Pickup.xcstrings
+index e155616..e5ec245 100644
+--- a/ios/Features/Pickup/Pickup.xcstrings
++++ b/ios/Features/Pickup/Pickup.xcstrings
+@@ -1,6 +1,40 @@
+ {
+   "sourceLanguage": "en",
+   "strings": {
++    "Record an arrival or usable confirmation only after it has happened.": {
++      "extractionState": "manual",
++      "localizations": {
++        "en": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Record an arrival or usable confirmation only after it has happened."
++          }
++        },
++        "es": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Registra una llegada o una confirmación de cantidad utilizable solo después de que haya ocurrido."
++          }
++        }
++      }
++    },
++    "Future-dated evidence is not counted as available food.": {
++      "extractionState": "manual",
++      "localizations": {
++        "en": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Future-dated evidence is not counted as available food."
++          }
++        },
++        "es": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Los registros con fecha futura no se cuentan como comida disponible."
++          }
++        }
++      }
++    },
+     "A credit does not add food or repair a meal. A credit already included in a net charge is not subtracted again.": {
+       "extractionState": "manual",
+       "localizations": {
+diff --git a/ios/Features/Pickup/PickupArrivalView.swift b/ios/Features/Pickup/PickupArrivalView.swift
+index 3fc12c2..fca3b2a 100644
+--- a/ios/Features/Pickup/PickupArrivalView.swift
++++ b/ios/Features/Pickup/PickupArrivalView.swift
+@@ -39,7 +39,7 @@ struct PickupArrivalView: View {
+                 Toggle(pTr("I checked the identity, units and meal constraints"), isOn: $matched)
+                 TextField(pTr("Delivery or receipt evidence ID"), text: $eventID)
+                 TextField(pTr("Segment ID (distinct for each split delivery)"), text: $segment)
+-                DatePicker(pTr("Actual arrival"), selection: $occurred)
++                DatePicker(pTr("Actual arrival"), selection: $occurred, in: ...model.stockReviewDate)
+                 Button(pTr("Save observed arrival")) { save() }.buttonStyle(.borderedProminent)
+                 if let formError { Text(formError).foregroundStyle(.red) }
+                 Button(pTr("Start another actual delivery segment")) {
+@@ -54,6 +54,9 @@ struct PickupArrivalView: View {
+                         Text("\(receipt.key.sourceEventID) / \(receipt.key.segmentID)").font(.caption)
+                         if let observation = model.journey?.pickup?.usableObservations.last(where: { $0.receipt == receipt.key }) {
+                             Text("\(pTr("Usable")): \(pQuantity(observation.usable))")
++                            if receipt.receivedAt > model.stockReviewDate || observation.confirmedAt > model.stockReviewDate {
++                                Text(pTr("Future-dated evidence is not counted as available food."))
++                            }
+                         } else { Text(pTr("Usable amount unverified")) }
+                         NavigationLink(pTr("Correct usable amount")) { PickupUsableCorrectionView(model: model, receipt: receipt) }
+                     }
+diff --git a/ios/Features/Pickup/PickupAwayCarryover.swift b/ios/Features/Pickup/PickupAwayCarryover.swift
+index ef1df9d..6cf977d 100644
+--- a/ios/Features/Pickup/PickupAwayCarryover.swift
++++ b/ios/Features/Pickup/PickupAwayCarryover.swift
+@@ -104,8 +104,9 @@ enum AwayCarryoverEngine {
+     }
+     /// Reconciles the original sealed result by content, not a global revision.
+     /// Unrelated settlement or other-lot writes do not change these identities.
+-    static func assertReserved(_ intent: AwayCarryoverIntent, in value: PickupJourney) throws {
++    static func assertReserved(_ intent: AwayCarryoverIntent, in value: PickupJourney, at instant: Date) throws {
+         try validate(intent)
++        guard intent.plan.link.observedAt <= instant else { throw AwayCarryoverError.invalid }
+         guard value.id == intent.plan.link.sourceShopID,
+               value.awayCarryovers.first(where: { $0.id == intent.id }) == AwayCarryoverRecord(intent: intent, phase: .reserved),
+               value.needs.first(where: { $0.id == intent.sourceNeed.id }) == (try reducedNeed(intent)),
+@@ -121,12 +122,13 @@ enum AwayCarryoverEngine {
+             guard value.pickup?.receipts.contains(receipt) == true,
+                   value.pickup?.usableObservations.last(where: { $0.receipt == receipt.key }) == expected else { throw AwayCarryoverError.stale }
+         }
+-        guard try value.carryoverAllocation().demands.first(where: { $0.id == intent.plan.link.reservationID })?.shortfall == .zero else { throw AwayCarryoverError.insufficient }
++        guard try value.carryoverAllocation(at: instant).demands.first(where: { $0.id == intent.plan.link.reservationID })?.shortfall == .zero else { throw AwayCarryoverError.insufficient }
+     }
+     /// Recounts an existing identity and transfers one eligible demand quantity.
+     /// Original purchase facts and protected demands are never changed.
+-    static func reserving(_ intent: AwayCarryoverIntent, in original: PickupJourney) throws -> PickupJourney {
++    static func reserving(_ intent: AwayCarryoverIntent, in original: PickupJourney, at instant: Date) throws -> PickupJourney {
+         try validate(intent)
++        guard intent.plan.link.observedAt <= instant else { throw AwayCarryoverError.invalid }
+         guard original.id == intent.plan.link.sourceShopID, original.pickup != nil,
+               original.needs.first(where: { $0.id == intent.sourceNeed.id }) == intent.sourceNeed,
+               intent.supply.matches(original),
+@@ -149,7 +151,7 @@ enum AwayCarryoverEngine {
+         value.stockNeeds.append(targetNeed(intent))
+         if let record = value.awayCarryovers.firstIndex(where: { $0.id == intent.id }) { value.awayCarryovers[record].phase = .reserved }
+         else { value.awayCarryovers.append(AwayCarryoverRecord(intent: intent, phase: .reserved)) }
+-        let before = try original.carryoverAllocation(), after = try value.carryoverAllocation()
++        let before = try original.carryoverAllocation(at: instant), after = try value.carryoverAllocation(at: instant)
+         guard after.demands.first(where: { $0.id == intent.plan.link.reservationID })?.shortfall == .zero else { throw AwayCarryoverError.insufficient }
+         for demand in before.demands where demand.foodID == intent.sourceNeed.orderLineID && demand.id != intent.sourceNeed.id {
+             guard let previous = demand.allocated, let next = after.demands.first(where: { $0.id == demand.id })?.allocated,
+@@ -166,21 +168,28 @@ extension PickupJourney {
+                 lotID: $0.intent.supply.currentID(in: self) ?? $0.intent.plan.link.confirmedSupplyID)
+         }
+     }
+-    var confirmedPhysicalLots: [ConfirmedStockLot] {
+-        var lots = stockLots
++    var confirmedPhysicalLots: [ConfirmedStockLot] { physicalLots(at: nil) }
++    private func physicalLots(at instant: Date?) -> [ConfirmedStockLot] {
++        var lots = instant.map { at in stockLots.filter { $0.confirmedAt <= at } } ?? stockLots
+         for receipt in pickup?.receipts ?? [] {
+-            if let observation = pickup?.usableObservations.last(where: { $0.receipt == receipt.key }), observation.confirmedMatchToOrderLine {
+-                lots.append(ConfirmedStockLot(id: observation.id, foodID: receipt.key.orderLineID, name: receipt.itemName,
+-                    usable: observation.usable, confirmedAt: observation.confirmedAt))
+-            }
++            if let instant, receipt.receivedAt > instant { continue }
++            guard let observation = pickup?.usableObservations.last(where: { $0.receipt == receipt.key }),
++                  observation.confirmedMatchToOrderLine else { continue }
++            // Do not resurrect a superseded usable amount when the latest
++            // observation is not yet current. Keep the original history intact.
++            if let instant, observation.confirmedAt > instant { continue }
++            lots.append(ConfirmedStockLot(id: observation.id, foodID: receipt.key.orderLineID, name: receipt.itemName,
++                usable: observation.usable, confirmedAt: observation.confirmedAt))
+         }
+         return lots
+     }
+     var physicalStockNeeds: [StockNeed] {
+         (pickup == nil ? plannedNeeds : needs).map { StockNeed(id: $0.id, foodID: $0.orderLineID, name: $0.name, amount: $0.amount, priority: $0.priority) } + stockNeeds
+     }
+-    func carryoverAllocation() throws -> StockAllocationResult {
+-        try ConfirmedCarryoverAllocator.allocate(lots: confirmedPhysicalLots, needs: physicalStockNeeds, reservations: carryoverStockReservations)
++    /// Omit the instant only for structural/history validation. Live projections
++    /// and business decisions supply their injected clock.
++    func carryoverAllocation(at instant: Date? = nil) throws -> StockAllocationResult {
++        try ConfirmedCarryoverAllocator.allocate(lots: physicalLots(at: instant), needs: physicalStockNeeds, reservations: carryoverStockReservations)
+     }
+     func validateAwayCarryovers() throws {
+         guard awayCarryovers.count <= 1_000, Set(awayCarryovers.map(\.id)).count == awayCarryovers.count,
+@@ -242,7 +251,7 @@ extension PickupJourney {
+                 source: meal, day: day, servings: servings, link: link)
+             let intent = AwayCarryoverIntent(workspaceID: workspaceID, actorID: authority.actorID, pickupRevision: journey.revision,
+                 planningRevisionID: dinner.state.revisionID, sourceNeed: need, supply: supply, counted: counted, plan: plan)
+-            _ = try AwayCarryoverEngine.reserving(intent, in: journey)
++            _ = try AwayCarryoverEngine.reserving(intent, in: journey, at: clock())
+             var ledgerPreview = shop; try ledgerPreview.appendConfirmedCarryover(plan, at: clock())
+             review = intent; message = nil; return true
+         } catch { review = nil; message = pTr("Recount the existing physical food and choose a later real date. The carryover must not take food reserved for another meal."); return false }
+@@ -273,11 +282,11 @@ extension PickupJourney {
+             if stored.phase == .prepared {
+                 _ = try access(intent.plan.link.sourceShopID, workspaceID: intent.workspaceID, actorID: intent.actorID)
+                 guard dinner.shop?.revisionID == intent.plan.baseRevisionID, dinner.state.revisionID == intent.planningRevisionID else { throw AwayCarryoverError.stale }
+-                guard await pickup.change({ value in value = try AwayCarryoverEngine.reserving(intent, in: value) }) else { throw AwayCarryoverError.pending }
++                guard await pickup.change({ value in value = try AwayCarryoverEngine.reserving(intent, in: value, at: self.clock()) }) else { throw AwayCarryoverError.pending }
+             }
+             _ = try access(intent.plan.link.sourceShopID, workspaceID: intent.workspaceID, actorID: intent.actorID)
+             guard let current = pickup.journey else { throw AwayCarryoverError.stale }
+-            try AwayCarryoverEngine.assertReserved(intent, in: current)
++            try AwayCarryoverEngine.assertReserved(intent, in: current, at: clock())
+             let alreadyCreated = dinner.shop?.mealOccurrences.contains(where: { $0.id == intent.plan.occurrenceID && $0.carryover == intent.plan.link }) == true
+             if !alreadyCreated {
+                 guard dinner.state.revisionID == intent.planningRevisionID else { throw AwayCarryoverError.stale }
+@@ -291,10 +300,10 @@ extension PickupJourney {
+             _ = try access(intent.plan.link.sourceShopID, workspaceID: intent.workspaceID, actorID: intent.actorID)
+             guard let settled = pickup.journey, var target = dinner.shop,
+                   target.mealOccurrences.contains(where: { $0.id == intent.plan.occurrenceID }) else { throw AwayCarryoverError.stale }
+-            try AwayCarryoverEngine.assertReserved(intent, in: settled)
++            try AwayCarryoverEngine.assertReserved(intent, in: settled, at: clock())
+             try target.appendConfirmedCarryover(intent.plan, at: clock())
+             guard await pickup.change({ value in
+-                try AwayCarryoverEngine.assertReserved(intent, in: value)
++                try AwayCarryoverEngine.assertReserved(intent, in: value, at: self.clock())
+                 guard let index = value.awayCarryovers.firstIndex(where: { $0.id == intent.id }) else { throw AwayCarryoverError.stale }
+                 value.awayCarryovers[index].phase = .completed
+             }) else { throw AwayCarryoverError.pending }
+diff --git a/ios/Features/Pickup/PickupModel.swift b/ios/Features/Pickup/PickupModel.swift
+index e6d0514..cfb635d 100644
+--- a/ios/Features/Pickup/PickupModel.swift
++++ b/ios/Features/Pickup/PickupModel.swift
+@@ -156,14 +156,14 @@ struct PickupJourney: Codable, Equatable, Identifiable {
+ // New optional local projections can be absent in an earlier version-one document.
+ // Required identity/version/date still fail closed, and validate checks all links.
+ extension PickupJourney {
+-    var unfilledOffers: [PickupOffer] {
++    func unfilledOffers(at instant: Date) -> [PickupOffer] {
+         guard closedAt == nil else { return [] }
+-        let observed = Set(pickup?.receipts.map(\.key.orderLineID) ?? [])
++        let observed = Set(pickup?.receipts.filter { $0.receivedAt <= instant }.map(\.key.orderLineID) ?? [])
+         return offers.filter { !observed.contains($0.lineID) }
+     }
+ 
+     func nextUnfilledOffer(at date: Date) -> PickupOffer? {
+-        let outstanding = unfilledOffers.sorted { $0.deadline.cutoff < $1.deadline.cutoff }
++        let outstanding = unfilledOffers(at: date).sorted { $0.deadline.cutoff < $1.deadline.cutoff }
+         return outstanding.first { date < $0.deadline.cutoff } ?? outstanding.last
+     }
+ 
+@@ -296,7 +296,7 @@ struct PickupPersistenceLocation {
+     }
+     var allocation: StockAllocationResult? {
+         guard let value = journey else { return nil }
+-        return try? value.carryoverAllocation()
++        return try? value.carryoverAllocation(at: clock())
+     }
+     var stockAllocation: StockAllocationResult? { allocation }
+     var stockReviewDate: Date { clock() }
+@@ -548,7 +548,17 @@ struct PickupPersistenceLocation {
+         }
+     }
+     @discardableResult func receive(_ fragment: ReceiptFragment, usable: UsableObservation?) async -> Bool {
+-        await change { value in
++        let observedAt = clock()
++        let receiptExists = journey?.pickup?.receipts.contains(fragment) == true
++        let observationAllowed = usable.map {
++            journey?.pickup?.usableObservations.contains($0) == true ||
++                ($0.receipt == fragment.key && fragment.receivedAt <= observedAt && $0.confirmedAt <= observedAt)
++        } ?? true
++        guard (receiptExists || fragment.receivedAt <= observedAt), observationAllowed else {
++            error = pTr("Record an arrival or usable confirmation only after it has happened.")
++            return false
++        }
++        return await change { value in
+             guard var pickup = value.pickup else { throw PickupModelError.missing }
+             try pickup.receive(fragment)
+             if let usable { try pickup.confirmUsable(usable) }
+@@ -556,7 +566,14 @@ struct PickupPersistenceLocation {
+         }
+     }
+     @discardableResult func confirmUsable(_ observation: UsableObservation) async -> Bool {
+-        await change { value in
++        let observedAt = clock()
++        let alreadyRecorded = journey?.pickup?.usableObservations.contains(observation) == true
++        guard alreadyRecorded || (observation.confirmedAt <= observedAt &&
++            journey?.pickup?.receipts.first(where: { $0.key == observation.receipt }).map { $0.receivedAt <= observedAt } == true) else {
++            error = pTr("Record an arrival or usable confirmation only after it has happened.")
++            return false
++        }
++        return await change { value in
+             guard var pickup = value.pickup else { throw PickupModelError.missing }
+             try pickup.confirmUsable(observation); value.pickup = pickup
+         }
+diff --git a/ios/Features/Pickup/PickupStockReview.swift b/ios/Features/Pickup/PickupStockReview.swift
+index 39e3322..d848a03 100644
+--- a/ios/Features/Pickup/PickupStockReview.swift
++++ b/ios/Features/Pickup/PickupStockReview.swift
+@@ -168,10 +168,11 @@ extension PickupModel {
+         guard ready, !saving, !hasPendingSave, scope.permitsReview, scope.workspaceID == sourceWorkspaceID,
+               let current = journey, current.id == journeyID else { throw PickupStockReviewError.stale }
+         let previous = journeys.first { $0.id == current.originShopID }
++        let instant = stockReviewDate
+         let candidate = try PickupStockReviewEngine.candidate(lot, current: current, replacing: original,
+-            carriedFrom: priorLot, previous: previous, at: stockReviewDate)
++            carriedFrom: priorLot, previous: previous, at: instant)
+         try Self.validate(candidate)
+-        let before = try current.carryoverAllocation(), after = try candidate.carryoverAllocation()
++        let before = try current.carryoverAllocation(at: instant), after = try candidate.carryoverAllocation(at: instant)
+         let affectedFoods = Set([lot.foodID, original?.foodID, priorLot?.foodID].compactMap { $0 })
+         let meals = candidate.physicalStockNeeds.filter { affectedFoods.contains($0.foodID) }.map { need in
+             PickupStockMealEffect(need: need, before: before.demands.first { $0.id == need.id }, after: after.demands.first { $0.id == need.id })
+@@ -188,7 +189,7 @@ extension PickupModel {
+         if let applied = appliedStockReviewRevisions[review.id] {
+             return current.revision == applied && current.stockLots.first { $0.id == review.lot.id } == review.lot
+         }
+-        guard current.revision == review.revision else { return false }
++        guard current.revision == review.revision, (try? current.carryoverAllocation(at: stockReviewDate)) == review.before else { return false }
+         if let carriedFrom = review.carriedFrom {
+             guard let previous = journeys.first(where: { $0.id == current.originShopID }),
+                   previous.revision == review.sourceRevision, previous.stockLots.contains(carriedFrom) else { return false }
+diff --git a/ios/Tests/ContextualReminderTests.swift b/ios/Tests/ContextualReminderTests.swift
+index a944e81..f0d1207 100644
+--- a/ios/Tests/ContextualReminderTests.swift
++++ b/ios/Tests/ContextualReminderTests.swift
+@@ -322,3 +322,63 @@ private actor PausedReminderScheduler: NotificationScheduling {
+     func release() { adding?.resume(); adding = nil }
+ }
+ #endif
++
++#if DEBUG
++extension ContextualReminderTests {
++    func testRetainedFutureReceiptKeepsOfferAndReminderPendingUntilItsActualInstant() async throws {
++        var currentTime = now
++        let f = try await fixture(clock: { currentTime })
++        let line = try XCTUnwrap(f.pickup.journey?.pickup?.orderLines.first)
++        let offer = try XCTUnwrap(f.pickup.journey?.offers.first)
++        let arrivalAt = now.addingTimeInterval(7200)
++        let key = ReceiptKey(sourceEventID: "retained-future-delivery", orderLineID: line.id, branchID: line.branchID, segmentID: "one")
++        let receipt = ReceiptFragment(key: key, itemName: line.name,
++            received: Quantity(amount: try Rational(1), unit: .count, originalLiteral: "1"), disposition: .partial, receivedAt: arrivalAt)
++        // Simulate a structurally valid old/imported receipt. This intentionally
++        // does not use the new-write arrival API or manufacture a usable amount.
++        let imported = await f.pickup.change { value in
++            guard var pickup = value.pickup else { throw PickupError.invalidEvidence }
++            try pickup.receive(receipt)
++            value.pickup = pickup
++        }
++        XCTAssertTrue(imported)
++        await f.surfaces.sourceDidChange()
++        XCTAssertEqual(f.pickup.journey?.nextUnfilledOffer(at: currentTime)?.id, offer.id)
++        XCTAssertTrue(f.surfaces.reminderTargets.contains { $0.id == offer.id })
++        let intent = try await storedOfferReminder(in: f)
++        let target = try XCTUnwrap(f.surfaces.reminderTargets.first { $0.id == offer.id })
++        XCTAssertNotNil(f.surfaces.reminderAuthorization(target))
++        let before = try XCTUnwrap(f.pickup.journey)
++
++        f.surfaces.background()
++        f.surfaces.receiveReminderTap(intent.routeHandle)
++        await f.surfaces.foreground()
++        await settle { f.surfaces.destination != nil }
++        guard case .offer(let journeyID, let offerID) = f.surfaces.destination else {
++            return XCTFail("A retained future receipt prematurely suppressed the pending offer reminder")
++        }
++        XCTAssertEqual(journeyID, before.id); XCTAssertEqual(offerID, offer.id)
++        let pending = try await f.surfaces.reminderStore?.get(intent.id)
++        XCTAssertEqual(pending?.intent, intent, "Reconciliation must retain this exact reminder before the observed arrival instant")
++        XCTAssertNotEqual(pending?.status, .cancelled)
++        XCTAssertEqual(f.pickup.journey, before)
++        XCTAssertEqual(before.nextUnfilledOffer(at: arrivalAt.addingTimeInterval(-0.001))?.id, offer.id)
++        XCTAssertNil(before.nextUnfilledOffer(at: arrivalAt))
++
++        // An actual partial arrival retires the unknown-fill offer at the
++        // boundary; this does not claim that its food was confirmed usable.
++        f.surfaces.background()
++        currentTime = arrivalAt
++        f.surfaces.receiveReminderTap(intent.routeHandle)
++        await f.surfaces.foreground()
++        await settle { f.surfaces.destination != nil }
++        guard case .unavailable = f.surfaces.destination else { return XCTFail("An observed fill reopened as an unknown offer") }
++        XCTAssertFalse(f.surfaces.reminderTargets.contains { $0.id == offer.id })
++        XCTAssertNil(f.surfaces.reminderAuthorization(target))
++        let retired = try await f.surfaces.reminderStore?.get(intent.id)
++        XCTAssertNil(retired, "Existing reconciliation retires the now-observed offer's reminder")
++        XCTAssertEqual(f.pickup.journey, before, "Time-based projections must preserve original receipts, offer, revision and money")
++        XCTAssertTrue(try XCTUnwrap(f.pickup.journey?.pickup?.usableObservations).isEmpty)
++    }
++}
++#endif
+diff --git a/ios/Tests/DinnerAwayCarryoverTests.swift b/ios/Tests/DinnerAwayCarryoverTests.swift
+index eda87ed..49d4f42 100644
+--- a/ios/Tests/DinnerAwayCarryoverTests.swift
++++ b/ios/Tests/DinnerAwayCarryoverTests.swift
+@@ -281,3 +281,27 @@ import LocalStore
+     }
+ 
+ }
++
++extension DinnerAwayCarryoverTests {
++    func testImportedFutureReceiptCannotAuthorizePhysicalCarryoverBeforeArrival() async throws {
++        let f = try await fixture(receivedSource: true)
++        guard case let .received(receipt, observation) = f.supply else { return XCTFail("Expected received source") }
++        let futureReceipt = ReceiptFragment(key: receipt.key, itemName: receipt.itemName, received: receipt.received,
++            disposition: receipt.disposition, receivedAt: now.addingTimeInterval(86_400))
++        let previous = try XCTUnwrap(f.pickup.journey?.pickup)
++        var imported = try PickupLedger(orderID: previous.orderID, orderLines: previous.orderLines)
++        try imported.receive(futureReceipt)
++        try imported.confirmUsable(observation)
++        let saved = await f.pickup.change { $0.pickup = imported }
++        XCTAssertTrue(saved)
++        let before = f.pickup.journey, workspace = f.ledger.workspace
++        let accepted = f.coordinator.prepare(id: UUID(), occurrenceID: f.mealID, needID: f.needID,
++            supply: .received(futureReceipt, observation), counted: q(6), reserved: q(2), servings: .one,
++            day: try MealDay(date: now.addingTimeInterval(86_400), timeZoneIdentifier: "America/New_York"), observedAt: now)
++        XCTAssertFalse(accepted, "A recount cannot reserve food whose saved actual arrival is still in the future")
++        XCTAssertNil(f.coordinator.review)
++        XCTAssertEqual(f.pickup.journey, before)
++        XCTAssertEqual(f.ledger.workspace, workspace)
++        XCTAssertTrue(f.coordinator.records.isEmpty)
++    }
++}
+diff --git a/ios/Tests/FreeJourneyAcceptanceTests.swift b/ios/Tests/FreeJourneyAcceptanceTests.swift
+index 3afc662..ec75031 100644
+--- a/ios/Tests/FreeJourneyAcceptanceTests.swift
++++ b/ios/Tests/FreeJourneyAcceptanceTests.swift
+@@ -81,7 +81,7 @@ final class FreeJourneyAcceptanceTests: XCTestCase {
+         let frozen = try XCTUnwrap(pickup.frozenSnapshot)
+         try requireSaved(await pickup.recordHandoff(.copied))
+         XCTAssertNil(pickup.journey?.pickup, "Copying does not report an external placement")
+-        pickup = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"))
++        pickup = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"), clock: { self.now })
+         await pickup.load()
+         XCTAssertEqual(pickup.frozenSnapshot, frozen)
+         XCTAssertEqual(pickup.journey?.ledgerPackSelections, selectedPacks)
+@@ -125,7 +125,7 @@ final class FreeJourneyAcceptanceTests: XCTestCase {
+         try requireSaved(await pickup.change { $0.notes.append(note) })
+         try requireSaved(await pickup.change { $0.cookShareEvents.append(PickupCookShareEvent(id: UUID(), noteID: note.id, occurredAt: self.now, action: .shareCancelled, destination: nil)) })
+         XCTAssertNil(pickup.journey?.notes.first?.sentAt)
+-        pickup = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"))
++        pickup = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"), clock: { self.now })
+         await pickup.load()
+         XCTAssertEqual(pickup.journey?.notes.first, note)
+         XCTAssertEqual(pickup.journey?.repairs.first, repair)
+@@ -168,7 +168,7 @@ final class FreeJourneyAcceptanceTests: XCTestCase {
+         XCTAssertEqual(pickup.journey?.id, next.id)
+         XCTAssertEqual(pickup.journeys.first { $0.id == shopID }, closed)
+         ledger = LedgerModel(databaseURL: directory.appendingPathComponent("ledger.sqlite"))
+-        pickup = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"))
++        pickup = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"), clock: { self.now })
+         await ledger.open(); await pickup.load()
+         XCTAssertEqual(ledger.shop?.id, next.id)
+         XCTAssertEqual(ledger.shop?.mealOccurrences.first?.id, nextMeal.id)
+@@ -183,7 +183,8 @@ final class FreeJourneyAcceptanceTests: XCTestCase {
+     @MainActor func testWrongItemCannotFeedLunchAndLateSegmentRetryNeverDuplicatesFood() async throws {
+         let directory = try temporaryDirectory()
+         defer { try? FileManager.default.removeItem(at: directory) }
+-        let pickup = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"))
++        var actualTime = now
++        let pickup = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"), clock: { actualTime })
+         let shopID = UUID(), lineID = UUID(), lunchID = UUID(), dinnerID = UUID()
+         let context = CheckoutContext(storeID: "Store", branchID: "Main", mode: .pickup, slot: "Tuesday", commitmentsID: shopID, observedAt: now, source: "Reviewed")
+         try requireSaved(await pickup.start(from: [BasketLine(id: lineID, name: "Wraps", quantity: quantity(8), expectedCost: .exact(Money(minorUnits: 400)))], shopID: shopID, context: context,
+@@ -196,8 +197,9 @@ final class FreeJourneyAcceptanceTests: XCTestCase {
+         let lateKey = ReceiptKey(sourceEventID: "receipt", orderLineID: lineID, branchID: "Main", segmentID: "actual-second-segment")
+         let fragment = ReceiptFragment(key: lateKey, itemName: "Correct wraps", received: quantity(6), disposition: .late, receivedAt: now.addingTimeInterval(3600))
+         let usable = UsableObservation(id: UUID(), receipt: lateKey, usable: quantity(6), confirmedAt: now.addingTimeInterval(3600), confirmedMatchToOrderLine: true)
++        actualTime = now.addingTimeInterval(3600)
+         try requireSaved(await pickup.receive(fragment, usable: usable))
+-        let reopened = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"))
++        let reopened = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"), clock: { actualTime })
+         await reopened.load()
+         try requireSaved(await reopened.receive(fragment, usable: usable))
+         XCTAssertEqual(reopened.journey?.pickup?.receipts.count, 2)
+@@ -236,11 +238,11 @@ final class FreeJourneyAcceptanceTests: XCTestCase {
+         defer { try? FileManager.default.removeItem(at: directory) }
+         let url = directory.appendingPathComponent("previously-missing/isolated/pickup.sqlite")
+         let arguments = ["--ui-testing", "--reset-test-workspace"]
+-        let first = PickupModel(databaseURL: url, launchArguments: arguments)
++        let first = PickupModel(databaseURL: url, clock: { self.now }, launchArguments: arguments)
+         try requireSaved(await first.addUrgent(UrgentMealNeed(id: UUID(), food: "Rice", meal: "Dinner", required: quantity(4), available: quantity(2), due: nil, confirmedAt: now)))
+         let saved = try XCTUnwrap(first.journey)
+         XCTAssertTrue(FileManager.default.fileExists(atPath: url.path))
+-        let reopened = PickupModel(databaseURL: url, launchArguments: arguments)
++        let reopened = PickupModel(databaseURL: url, clock: { self.now }, launchArguments: arguments)
+         await reopened.load()
+         XCTAssertTrue(reopened.ready)
+         XCTAssertEqual(reopened.journey, saved)
+@@ -250,7 +252,7 @@ final class FreeJourneyAcceptanceTests: XCTestCase {
+         let directory = try temporaryDirectory()
+         defer { try? FileManager.default.removeItem(at: directory) }
+         let url = directory.appendingPathComponent("pickup.sqlite")
+-        let pickup = PickupModel(databaseURL: url)
++        let pickup = PickupModel(databaseURL: url, clock: { self.now })
+         try requireSaved(await pickup.addUrgent(UrgentMealNeed(id: UUID(), food: "Rice", meal: "Dinner", required: quantity(4), available: quantity(4), due: nil, confirmedAt: now)))
+         let origin = try XCTUnwrap(pickup.journey?.id)
+         let lines = (0..<3).map { _ in BasketLine(id: UUID(), name: "Coffee", quantity: quantity(1), expectedCost: .exact(Money(minorUnits: 460))) }
+@@ -264,7 +266,7 @@ final class FreeJourneyAcceptanceTests: XCTestCase {
+         XCTAssertEqual(next.deferred.map(\.id), [decisions[2].id])
+         XCTAssertEqual(next.deferred.first?.line.quantity, decisions[2].line.quantity)
+         guard case .unknown = next.deferred.first?.line.expectedCost else { return XCTFail("A new trip needs fresh pricing") }
+-        let reopened = PickupModel(databaseURL: url)
++        let reopened = PickupModel(databaseURL: url, clock: { self.now })
+         await reopened.load()
+         reopened.selectedID = origin
+         try requireSaved(await reopened.startNextShop(accept: []))
+@@ -277,7 +279,7 @@ final class FreeJourneyAcceptanceTests: XCTestCase {
+         let directory = try temporaryDirectory()
+         defer { try? FileManager.default.removeItem(at: directory) }
+         let url = directory.appendingPathComponent("pickup.sqlite")
+-        let pickup = PickupModel(databaseURL: url)
++        let pickup = PickupModel(databaseURL: url, clock: { self.now })
+         try requireSaved(await pickup.addUrgent(UrgentMealNeed(id: UUID(), food: "Rice", meal: "Dinner", required: quantity(4), available: quantity(4), due: nil, confirmedAt: now)))
+         let origin = try XCTUnwrap(pickup.journey?.id)
+         let lines = (0..<3).map { _ in BasketLine(id: UUID(), name: "Coffee", quantity: quantity(1), expectedCost: .exact(Money(minorUnits: 460))) }
+@@ -292,7 +294,7 @@ final class FreeJourneyAcceptanceTests: XCTestCase {
+         XCTAssertEqual(next.deferred.map(\.status), ["handled", "dismissed", "review"])
+         XCTAssertEqual(next.deferred.map(\.id), deferred.map(\.id))
+         XCTAssertTrue(try XCTUnwrap(next.basket?.current.lines).isEmpty)
+-        let reopened = PickupModel(databaseURL: url)
++        let reopened = PickupModel(databaseURL: url, clock: { self.now })
+         await reopened.load()
+         XCTAssertEqual(reopened.journeys.first { $0.id == next.id }, next)
+         reopened.selectedID = origin
+@@ -305,7 +307,7 @@ final class FreeJourneyAcceptanceTests: XCTestCase {
+     @MainActor func testReviewedNextShopDispositionIsScopedAndNeverRewritesSource() async throws {
+         let directory = try temporaryDirectory()
+         defer { try? FileManager.default.removeItem(at: directory) }
+-        let model = PickupModel(databaseURL: directory.appendingPathComponent("next.sqlite"))
++        let model = PickupModel(databaseURL: directory.appendingPathComponent("next.sqlite"), clock: { self.now })
+         try requireSaved(await model.addUrgent(UrgentMealNeed(id: UUID(), food: "Coffee", meal: "Breakfast", required: quantity(1), available: quantity(0), due: nil, confirmedAt: now)))
+         let sourceID = try XCTUnwrap(model.journey?.id), key = UUID()
+         let line = BasketLine(id: UUID(), name: "Coffee", quantity: quantity(1), expectedCost: .exact(Money(minorUnits: 460)))
+@@ -325,7 +327,7 @@ final class FreeJourneyAcceptanceTests: XCTestCase {
+         let directory = try temporaryDirectory()
+         defer { try? FileManager.default.removeItem(at: directory) }
+         let database = directory.appendingPathComponent("shared-pickup.sqlite")
+-        let first = PickupModel(databaseURL: database), second = PickupModel(databaseURL: database)
++        let first = PickupModel(databaseURL: database, clock: { self.now }), second = PickupModel(databaseURL: database, clock: { self.now })
+         try requireSaved(await first.addUrgent(UrgentMealNeed(id: UUID(), food: "Milk", meal: "Breakfast", required: quantity(2), available: quantity(0), due: nil, confirmedAt: now)))
+         await second.load()
+         let source = try XCTUnwrap(first.journey?.id)
+@@ -359,7 +361,7 @@ final class FreeJourneyAcceptanceTests: XCTestCase {
+         defer { try? FileManager.default.removeItem(at: directory) }
+         let ledgerURL = directory.appendingPathComponent("ledger.sqlite")
+         var ledger = LedgerModel(databaseURL: ledgerURL)
+-        let pickup = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"))
++        let pickup = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"), clock: { self.now })
+         await ledger.open(); await pickup.load()
+         try requireSaved(await ledger.startShop(title: "First shop"))
+         var feature = dinnerFeature(ledger: ledger, pickup: pickup)
+diff --git a/ios/Tests/PickupModelTests.swift b/ios/Tests/PickupModelTests.swift
+index bac6ef4..a99913e 100644
+--- a/ios/Tests/PickupModelTests.swift
++++ b/ios/Tests/PickupModelTests.swift
+@@ -235,3 +235,155 @@ final class PickupModelTests: XCTestCase {
+         Quantity(amount: try! Rational(count), unit: .count, originalLiteral: String(count))
+     }
+ }
++
++extension PickupModelTests {
++    @MainActor private func arrivalFixture(url: URL, clock: @escaping () -> Date) async throws -> (PickupModel, UUID, UUID, UUID) {
++        let model = PickupModel(databaseURL: url, clock: clock)
++        let shopID = UUID(), foodID = UUID(), lunchID = UUID(), dinnerID = UUID()
++        let context = CheckoutContext(storeID: "Synthetic market", branchID: "Main", mode: .pickup,
++            slot: "Evening", commitmentsID: shopID, observedAt: clock(), source: "Reviewed fixture")
++        let started = await model.start(from: [BasketLine(id: foodID, name: "Wraps", quantity: quantity(6), expectedCost: .exact(.zero))],
++            shopID: shopID, context: context, plannedNeeds: [
++                AllocationNeed(id: lunchID, orderLineID: foodID, name: "Protected lunch", amount: quantity(2), priority: .protected),
++                AllocationNeed(id: dinnerID, orderLineID: foodID, name: "Tacos", amount: quantity(4), priority: .required)
++            ])
++        let quoted = await model.setQuote(CheckoutQuote(scope: .wholeCheckout, context: context,
++            pricing: .inclusiveTotal(.exact(.zero))), cap: nil)
++        let frozen = await model.freeze(), placed = await model.reportPlaced()
++        XCTAssertTrue(started && quoted && frozen && placed)
++        return (model, foodID, lunchID, dinnerID)
++    }
++
++    @MainActor func testFutureArrivalAndUsableWritesLeaveProtectedFoodUnconfirmed() async throws {
++        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
++        defer { try? FileManager.default.removeItem(at: directory) }
++        let url = directory.appendingPathComponent("arrival.sqlite")
++        // Absolute instants cross a local calendar boundary; authorization does not
++        // compare formatted dates, device time zones, or the host's current date.
++        var instant = Date(timeIntervalSince1970: 1_800_000_000)
++        let (model, food, lunch, dinner) = try await arrivalFixture(url: url, clock: { instant })
++        let before = try XCTUnwrap(model.journey)
++        let key = ReceiptKey(sourceEventID: "actual-delivery", orderLineID: food, branchID: "Main", segmentID: "one")
++        let future = instant.addingTimeInterval(3600)
++        let later = ReceiptFragment(key: key, itemName: "Wraps", received: quantity(6), disposition: .late, receivedAt: future)
++        let laterUsable = UsableObservation(id: UUID(), receipt: key, usable: quantity(6), confirmedAt: future, confirmedMatchToOrderLine: true)
++        let prematureReceipt = await model.receive(later, usable: nil)
++        let prematureComplete = await model.receive(later, usable: laterUsable)
++        XCTAssertFalse(prematureReceipt); XCTAssertFalse(prematureComplete)
++        XCTAssertEqual(model.journey, before, "A future arrival must not persist even without a usable amount")
++        XCTAssertFalse(model.hasPendingSave)
++        XCTAssertEqual(model.allocation?.demands.first { $0.id == lunch }?.shortfall, try Rational(2))
++
++        let actual = ReceiptFragment(key: key, itemName: "Wraps", received: quantity(6), disposition: .received, receivedAt: instant)
++        let atomicReject = await model.receive(actual, usable: laterUsable)
++        XCTAssertFalse(atomicReject)
++        XCTAssertEqual(model.journey, before, "Rejecting usable evidence must not commit half the arrival")
++        let savedReceipt = await model.receive(actual, usable: nil)
++        XCTAssertTrue(savedReceipt)
++        let receiptOnly = try XCTUnwrap(model.journey)
++        let prematureConfirmation = await model.confirmUsable(laterUsable)
++        XCTAssertFalse(prematureConfirmation)
++        XCTAssertEqual(model.journey, receiptOnly)
++        XCTAssertEqual(model.allocation?.demands.first { $0.id == dinner }?.shortfall, try Rational(4))
++
++        instant = future
++        let confirmed = await model.confirmUsable(laterUsable)
++        let replay = await model.receive(actual, usable: laterUsable)
++        XCTAssertTrue(confirmed && replay)
++        XCTAssertEqual(model.journey?.pickup?.receipts.count, 1)
++        XCTAssertEqual(model.journey?.pickup?.usableObservations.count, 1)
++        XCTAssertEqual(model.allocation?.demands.first { $0.id == lunch }?.allocated, try Rational(2))
++        XCTAssertEqual(model.allocation?.demands.first { $0.id == dinner }?.allocated, try Rational(4))
++        let reopened = PickupModel(databaseURL: url, clock: { instant })
++        await reopened.load()
++        XCTAssertEqual(reopened.journey, model.journey)
++        XCTAssertEqual(reopened.allocation, model.allocation)
++        XCTAssertTrue(try XCTUnwrap(reopened.journey?.settlement.entries).isEmpty)
++    }
++
++    @MainActor func testImportedFutureEvidenceIsRetainedButExcludedFromCurrentFoodAndCookProjection() async throws {
++        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
++        defer { try? FileManager.default.removeItem(at: directory) }
++        let url = directory.appendingPathComponent("historical.sqlite")
++        let instant = Date(timeIntervalSince1970: 1_800_000_000)
++        let future = instant.addingTimeInterval(86_400)
++        let (model, food, lunch, dinner) = try await arrivalFixture(url: url, clock: { instant })
++        var imported = try XCTUnwrap(model.journey)
++        let key = ReceiptKey(sourceEventID: "old-import", orderLineID: food, branchID: "Main", segmentID: "one")
++        let actual = ReceiptFragment(key: key, itemName: "Wraps", received: quantity(6), disposition: .partial, receivedAt: instant)
++        let old = UsableObservation(id: UUID(), receipt: key, usable: quantity(4), confirmedAt: instant, confirmedMatchToOrderLine: true)
++        let futureCorrection = UsableObservation(id: UUID(), receipt: key, usable: quantity(6), confirmedAt: future,
++            supersedesID: old.id, confirmedMatchToOrderLine: true)
++        try imported.pickup?.receive(actual)
++        try imported.pickup?.confirmUsable(old)
++        try imported.pickup?.confirmUsable(futureCorrection)
++        let laterKey = ReceiptKey(sourceEventID: "old-import", orderLineID: food, branchID: "Main", segmentID: "two")
++        let later = ReceiptFragment(key: laterKey, itemName: "Later wraps", received: quantity(2), disposition: .late, receivedAt: future)
++        let laterObservation = UsableObservation(id: UUID(), receipt: laterKey, usable: quantity(2), confirmedAt: instant, confirmedMatchToOrderLine: true)
++        try imported.pickup?.receive(later)
++        try imported.pickup?.confirmUsable(laterObservation)
++        imported.stockLots = [ConfirmedStockLot(id: UUID(), foodID: food, name: "Future freezer count", usable: quantity(3), confirmedAt: future, source: .freezer)]
++        // Loading historical data validates its structure without inventing a
++        // wall-clock-dependent decoding failure or rewriting its dated records.
++        XCTAssertEqual(try JSONDecoder().decode(PickupJourney.self, from: JSONEncoder().encode(imported)), imported)
++        let saved = await model.change { $0 = imported }
++        XCTAssertTrue(saved)
++        let retained = try XCTUnwrap(model.journey)
++        let reopened = PickupModel(databaseURL: url, clock: { instant })
++        await reopened.load()
++        XCTAssertTrue(reopened.ready)
++        XCTAssertEqual(reopened.journey, retained)
++        XCTAssertEqual(reopened.journey?.pickup?.usableObservations.count, 3)
++        XCTAssertEqual(reopened.journey?.stockLots.count, 1)
++        XCTAssertTrue(PickupFallbackOptions.lots(retained, at: instant).isEmpty)
++        XCTAssertEqual(reopened.allocation?.demands.first { $0.id == lunch }?.shortfall, try Rational(2))
++        XCTAssertEqual(reopened.allocation?.demands.first { $0.id == dinner }?.shortfall, try Rational(4),
++            "A future latest correction must not resurrect its superseded four-wrap observation")
++        let text = PickupCookProjection.text(journey: retained, allocation: reopened.allocation, result: reopened.result,
++            language: "en-US", at: instant, timeZone: TimeZone(identifier: "America/New_York")!)
++        XCTAssertTrue(text.contains("Short or unverified amount. Review."))
++        let receiptReplay = await reopened.receive(later, usable: laterObservation)
++        let correctionReplay = await reopened.confirmUsable(futureCorrection)
++        XCTAssertTrue(receiptReplay && correctionReplay, "Exact historical retries preserve evidence identities")
++        XCTAssertEqual(reopened.journey?.pickup, retained.pickup)
++        XCTAssertEqual(reopened.allocation?.demands.first { $0.id == lunch }?.shortfall, try Rational(2))
++        let newEarlyConfirmation = UsableObservation(id: UUID(), receipt: laterKey, usable: quantity(2), confirmedAt: instant,
++            supersedesID: laterObservation.id, confirmedMatchToOrderLine: true)
++        let rejected = await reopened.confirmUsable(newEarlyConfirmation)
++        XCTAssertFalse(rejected, "An imported future receipt does not authorize a new premature usable confirmation")
++        XCTAssertEqual(reopened.journey?.pickup, retained.pickup)
++        let laterView = PickupModel(databaseURL: url, clock: { future })
++        await laterView.load()
++        XCTAssertEqual(laterView.allocation?.demands.first { $0.id == dinner }?.shortfall, .zero)
++        XCTAssertEqual(reopened.journey?.stockLots, retained.stockLots)
++        XCTAssertEqual(reopened.journey?.settlement, retained.settlement)
++    }
++}
++
++extension PickupModelTests {
++    @MainActor func testStockReviewExpiresWhenRetainedFutureFoodBecomesCurrentWithoutRevisionChange() async throws {
++        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
++        defer { try? FileManager.default.removeItem(at: directory) }
++        var instant = Date(timeIntervalSince1970: 1_800_000_000)
++        let future = instant.addingTimeInterval(3600)
++        let (model, food, lunch, _) = try await arrivalFixture(url: directory.appendingPathComponent("review.sqlite"), clock: { instant })
++        let imported = ConfirmedStockLot(id: UUID(), foodID: food, name: "Later freezer count", usable: quantity(2), confirmedAt: future, source: .freezer)
++        let saved = await model.change { $0.stockLots.append(imported) }
++        XCTAssertTrue(saved)
++        let before = try XCTUnwrap(model.journey)
++        let scope = PickupStockReviewScope(workspaceID: try XCTUnwrap(model.sourceWorkspaceID), localActorID: UUID(),
++            accountSubject: nil, householdID: nil, memberID: nil, role: nil)
++        let newLot = ConfirmedStockLot(id: UUID(), foodID: food, name: "New checked batch", usable: quantity(2), confirmedAt: instant, source: .freezer)
++        let review = try model.previewStockLot(newLot, in: before.id, scope: scope)
++        XCTAssertEqual(review.before.demands.first { $0.id == lunch }?.shortfall, try Rational(2))
++        XCTAssertEqual(review.after.demands.first { $0.id == lunch }?.shortfall, .zero)
++        XCTAssertTrue(model.isCurrentStockLotReview(review, scope: scope))
++        instant = future
++        XCTAssertEqual(model.journey?.revision, before.revision)
++        XCTAssertFalse(model.isCurrentStockLotReview(review, scope: scope), "Food availability changed after this review even though no saved record changed")
++        let applied = await model.applyStockLotReview(review, scope: scope, confirmed: true)
++        XCTAssertFalse(applied)
++        XCTAssertEqual(model.journey, before)
++        XCTAssertFalse(model.hasPendingSave)
++    }
++}

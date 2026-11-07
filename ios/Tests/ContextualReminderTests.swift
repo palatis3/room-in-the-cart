@@ -322,3 +322,63 @@ private actor PausedReminderScheduler: NotificationScheduling {
     func release() { adding?.resume(); adding = nil }
 }
 #endif
+
+#if DEBUG
+extension ContextualReminderTests {
+    func testRetainedFutureReceiptKeepsOfferAndReminderPendingUntilItsActualInstant() async throws {
+        var currentTime = now
+        let f = try await fixture(clock: { currentTime })
+        let line = try XCTUnwrap(f.pickup.journey?.pickup?.orderLines.first)
+        let offer = try XCTUnwrap(f.pickup.journey?.offers.first)
+        let arrivalAt = now.addingTimeInterval(7200)
+        let key = ReceiptKey(sourceEventID: "retained-future-delivery", orderLineID: line.id, branchID: line.branchID, segmentID: "one")
+        let receipt = ReceiptFragment(key: key, itemName: line.name,
+            received: Quantity(amount: try Rational(1), unit: .count, originalLiteral: "1"), disposition: .partial, receivedAt: arrivalAt)
+        // Simulate a structurally valid old/imported receipt. This intentionally
+        // does not use the new-write arrival API or manufacture a usable amount.
+        let imported = await f.pickup.change { value in
+            guard var pickup = value.pickup else { throw PickupError.invalidEvidence }
+            try pickup.receive(receipt)
+            value.pickup = pickup
+        }
+        XCTAssertTrue(imported)
+        await f.surfaces.sourceDidChange()
+        XCTAssertEqual(f.pickup.journey?.nextUnfilledOffer(at: currentTime)?.id, offer.id)
+        XCTAssertTrue(f.surfaces.reminderTargets.contains { $0.id == offer.id })
+        let intent = try await storedOfferReminder(in: f)
+        let target = try XCTUnwrap(f.surfaces.reminderTargets.first { $0.id == offer.id })
+        XCTAssertNotNil(f.surfaces.reminderAuthorization(target))
+        let before = try XCTUnwrap(f.pickup.journey)
+
+        f.surfaces.background()
+        f.surfaces.receiveReminderTap(intent.routeHandle)
+        await f.surfaces.foreground()
+        await settle { f.surfaces.destination != nil }
+        guard case .offer(let journeyID, let offerID) = f.surfaces.destination else {
+            return XCTFail("A retained future receipt prematurely suppressed the pending offer reminder")
+        }
+        XCTAssertEqual(journeyID, before.id); XCTAssertEqual(offerID, offer.id)
+        let pending = try await f.surfaces.reminderStore?.get(intent.id)
+        XCTAssertEqual(pending?.intent, intent, "Reconciliation must retain this exact reminder before the observed arrival instant")
+        XCTAssertNotEqual(pending?.status, .cancelled)
+        XCTAssertEqual(f.pickup.journey, before)
+        XCTAssertEqual(before.nextUnfilledOffer(at: arrivalAt.addingTimeInterval(-0.001))?.id, offer.id)
+        XCTAssertNil(before.nextUnfilledOffer(at: arrivalAt))
+
+        // An actual partial arrival retires the unknown-fill offer at the
+        // boundary; this does not claim that its food was confirmed usable.
+        f.surfaces.background()
+        currentTime = arrivalAt
+        f.surfaces.receiveReminderTap(intent.routeHandle)
+        await f.surfaces.foreground()
+        await settle { f.surfaces.destination != nil }
+        guard case .unavailable = f.surfaces.destination else { return XCTFail("An observed fill reopened as an unknown offer") }
+        XCTAssertFalse(f.surfaces.reminderTargets.contains { $0.id == offer.id })
+        XCTAssertNil(f.surfaces.reminderAuthorization(target))
+        let retired = try await f.surfaces.reminderStore?.get(intent.id)
+        XCTAssertNil(retired, "Existing reconciliation retires the now-observed offer's reminder")
+        XCTAssertEqual(f.pickup.journey, before, "Time-based projections must preserve original receipts, offer, revision and money")
+        XCTAssertTrue(try XCTUnwrap(f.pickup.journey?.pickup?.usableObservations).isEmpty)
+    }
+}
+#endif

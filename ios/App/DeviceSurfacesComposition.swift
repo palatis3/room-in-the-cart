@@ -411,7 +411,7 @@ import DeviceSurfaces
             return scope?.workspaceID == workspace && ledger?.shop?.id == shopID && shop(shopID) != nil
         case .offer(let workspace, let journeyID, let offerID):
             guard pickupWorkspaceID == workspace, let journey = eligible?.first(where: { $0.id == journeyID }),
-                  journey.unfilledOffers.contains(where: { $0.id == offerID }) else { return false }
+                  journey.unfilledOffers(at: clock()).contains(where: { $0.id == offerID }) else { return false }
             return !requireRevision || journey.revision == row.sourceRevision
         case .deferral(let workspace, let journeyID, let needID):
             guard pickupWorkspaceID == workspace, let journey = eligible?.first(where: { $0.id == journeyID }), journey.deferred.contains(where: { $0.id == needID && $0.status == "review" }) else { return false }
@@ -466,13 +466,15 @@ import DeviceSurfaces
         guard let role = household?.deviceReminderPersona.role else { return true }
         return ["shopper", "organizer"].contains(role)
     }
+    var reminderEvaluationDate: Date { clock() }
     var reminderTargets: [SurfaceReminderTarget] {
         privateAuthorized && reminderRoleAuthorized ? currentReminderTargets : []
     }
     private var currentReminderTargets: [SurfaceReminderTarget] {
         guard let pickup, let workspace = pickupWorkspaceID, pickup.sourceWorkspaceID == workspace else { return [] }
+        let projectionInstant = clock()
         return pickup.reminderJourneys.flatMap { journey in
-            journey.unfilledOffers.map { SurfaceReminderTarget(target: .offer(workspaceID: workspace, journeyID: journey.id, offerID: $0.id), title: $0.replacement, revision: journey.revision, cutoff: $0.deadline.cutoff, timeZoneID: $0.deadline.timeZoneID) }
+            journey.unfilledOffers(at: projectionInstant).map { SurfaceReminderTarget(target: .offer(workspaceID: workspace, journeyID: journey.id, offerID: $0.id), title: $0.replacement, revision: journey.revision, cutoff: $0.deadline.cutoff, timeZoneID: $0.deadline.timeZoneID) }
             + journey.deferred.filter { $0.status == "review" }.map { SurfaceReminderTarget(target: .deferral(workspaceID: workspace, journeyID: journey.id, needID: $0.id), title: $0.line.name, revision: journey.revision, cutoff: nil, timeZoneID: TimeZone.current.identifier) }
         }
     }

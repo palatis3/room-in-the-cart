@@ -227,7 +227,7 @@ struct DinnerCarryoverDetailsView: View {
                     Text(record.intent.supply.name)
                     Text("\(pTr("Original dinner")): \(record.intent.plan.source.title)")
                     if let sourceDay = record.intent.plan.source.scheduledDay { Text(dinnerDay(sourceDay)) }
-                    if let demand = try? journey.carryoverAllocation().demands.first(where: { $0.id == link.reservationID }) {
+                    if let demand = try? journey.carryoverAllocation(at: pickup.stockReviewDate).demands.first(where: { $0.id == link.reservationID }) {
                         Text("\(pTr("Currently allocated from confirmed food")): \(demand.allocated.map { pQuantity($0, unit: demand.unit) } ?? pTr("Unresolved"))")
                         Text("\(pTr("Still short")): \(demand.shortfall.map { pQuantity($0, unit: demand.unit) } ?? pTr("Unresolved"))")
                     } else { Text(pTr("The physical reservation needs review. Do not assume this dinner is covered.")) }

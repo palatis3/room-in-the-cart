@@ -104,8 +104,9 @@ enum AwayCarryoverEngine {
     }
     /// Reconciles the original sealed result by content, not a global revision.
     /// Unrelated settlement or other-lot writes do not change these identities.
-    static func assertReserved(_ intent: AwayCarryoverIntent, in value: PickupJourney) throws {
+    static func assertReserved(_ intent: AwayCarryoverIntent, in value: PickupJourney, at instant: Date) throws {
         try validate(intent)
+        guard intent.plan.link.observedAt <= instant else { throw AwayCarryoverError.invalid }
         guard value.id == intent.plan.link.sourceShopID,
               value.awayCarryovers.first(where: { $0.id == intent.id }) == AwayCarryoverRecord(intent: intent, phase: .reserved),
               value.needs.first(where: { $0.id == intent.sourceNeed.id }) == (try reducedNeed(intent)),
@@ -121,12 +122,13 @@ enum AwayCarryoverEngine {
             guard value.pickup?.receipts.contains(receipt) == true,
                   value.pickup?.usableObservations.last(where: { $0.receipt == receipt.key }) == expected else { throw AwayCarryoverError.stale }
         }
-        guard try value.carryoverAllocation().demands.first(where: { $0.id == intent.plan.link.reservationID })?.shortfall == .zero else { throw AwayCarryoverError.insufficient }
+        guard try value.carryoverAllocation(at: instant).demands.first(where: { $0.id == intent.plan.link.reservationID })?.shortfall == .zero else { throw AwayCarryoverError.insufficient }
     }
     /// Recounts an existing identity and transfers one eligible demand quantity.
     /// Original purchase facts and protected demands are never changed.
-    static func reserving(_ intent: AwayCarryoverIntent, in original: PickupJourney) throws -> PickupJourney {
+    static func reserving(_ intent: AwayCarryoverIntent, in original: PickupJourney, at instant: Date) throws -> PickupJourney {
         try validate(intent)
+        guard intent.plan.link.observedAt <= instant else { throw AwayCarryoverError.invalid }
         guard original.id == intent.plan.link.sourceShopID, original.pickup != nil,
               original.needs.first(where: { $0.id == intent.sourceNeed.id }) == intent.sourceNeed,
               intent.supply.matches(original),
@@ -149,7 +151,7 @@ enum AwayCarryoverEngine {
         value.stockNeeds.append(targetNeed(intent))
         if let record = value.awayCarryovers.firstIndex(where: { $0.id == intent.id }) { value.awayCarryovers[record].phase = .reserved }
         else { value.awayCarryovers.append(AwayCarryoverRecord(intent: intent, phase: .reserved)) }
-        let before = try original.carryoverAllocation(), after = try value.carryoverAllocation()
+        let before = try original.carryoverAllocation(at: instant), after = try value.carryoverAllocation(at: instant)
         guard after.demands.first(where: { $0.id == intent.plan.link.reservationID })?.shortfall == .zero else { throw AwayCarryoverError.insufficient }
         for demand in before.demands where demand.foodID == intent.sourceNeed.orderLineID && demand.id != intent.sourceNeed.id {
             guard let previous = demand.allocated, let next = after.demands.first(where: { $0.id == demand.id })?.allocated,
@@ -166,21 +168,28 @@ extension PickupJourney {
                 lotID: $0.intent.supply.currentID(in: self) ?? $0.intent.plan.link.confirmedSupplyID)
         }
     }
-    var confirmedPhysicalLots: [ConfirmedStockLot] {
-        var lots = stockLots
+    var confirmedPhysicalLots: [ConfirmedStockLot] { physicalLots(at: nil) }
+    private func physicalLots(at instant: Date?) -> [ConfirmedStockLot] {
+        var lots = instant.map { at in stockLots.filter { $0.confirmedAt <= at } } ?? stockLots
         for receipt in pickup?.receipts ?? [] {
-            if let observation = pickup?.usableObservations.last(where: { $0.receipt == receipt.key }), observation.confirmedMatchToOrderLine {
-                lots.append(ConfirmedStockLot(id: observation.id, foodID: receipt.key.orderLineID, name: receipt.itemName,
-                    usable: observation.usable, confirmedAt: observation.confirmedAt))
-            }
+            if let instant, receipt.receivedAt > instant { continue }
+            guard let observation = pickup?.usableObservations.last(where: { $0.receipt == receipt.key }),
+                  observation.confirmedMatchToOrderLine else { continue }
+            // Do not resurrect a superseded usable amount when the latest
+            // observation is not yet current. Keep the original history intact.
+            if let instant, observation.confirmedAt > instant { continue }
+            lots.append(ConfirmedStockLot(id: observation.id, foodID: receipt.key.orderLineID, name: receipt.itemName,
+                usable: observation.usable, confirmedAt: observation.confirmedAt))
         }
         return lots
     }
     var physicalStockNeeds: [StockNeed] {
         (pickup == nil ? plannedNeeds : needs).map { StockNeed(id: $0.id, foodID: $0.orderLineID, name: $0.name, amount: $0.amount, priority: $0.priority) } + stockNeeds
     }
-    func carryoverAllocation() throws -> StockAllocationResult {
-        try ConfirmedCarryoverAllocator.allocate(lots: confirmedPhysicalLots, needs: physicalStockNeeds, reservations: carryoverStockReservations)
+    /// Omit the instant only for structural/history validation. Live projections
+    /// and business decisions supply their injected clock.
+    func carryoverAllocation(at instant: Date? = nil) throws -> StockAllocationResult {
+        try ConfirmedCarryoverAllocator.allocate(lots: physicalLots(at: instant), needs: physicalStockNeeds, reservations: carryoverStockReservations)
     }
     func validateAwayCarryovers() throws {
         guard awayCarryovers.count <= 1_000, Set(awayCarryovers.map(\.id)).count == awayCarryovers.count,
@@ -242,7 +251,7 @@ extension PickupJourney {
                 source: meal, day: day, servings: servings, link: link)
             let intent = AwayCarryoverIntent(workspaceID: workspaceID, actorID: authority.actorID, pickupRevision: journey.revision,
                 planningRevisionID: dinner.state.revisionID, sourceNeed: need, supply: supply, counted: counted, plan: plan)
-            _ = try AwayCarryoverEngine.reserving(intent, in: journey)
+            _ = try AwayCarryoverEngine.reserving(intent, in: journey, at: clock())
             var ledgerPreview = shop; try ledgerPreview.appendConfirmedCarryover(plan, at: clock())
             review = intent; message = nil; return true
         } catch { review = nil; message = pTr("Recount the existing physical food and choose a later real date. The carryover must not take food reserved for another meal."); return false }
@@ -273,11 +282,11 @@ extension PickupJourney {
             if stored.phase == .prepared {
                 _ = try access(intent.plan.link.sourceShopID, workspaceID: intent.workspaceID, actorID: intent.actorID)
                 guard dinner.shop?.revisionID == intent.plan.baseRevisionID, dinner.state.revisionID == intent.planningRevisionID else { throw AwayCarryoverError.stale }
-                guard await pickup.change({ value in value = try AwayCarryoverEngine.reserving(intent, in: value) }) else { throw AwayCarryoverError.pending }
+                guard await pickup.change({ value in value = try AwayCarryoverEngine.reserving(intent, in: value, at: self.clock()) }) else { throw AwayCarryoverError.pending }
             }
             _ = try access(intent.plan.link.sourceShopID, workspaceID: intent.workspaceID, actorID: intent.actorID)
             guard let current = pickup.journey else { throw AwayCarryoverError.stale }
-            try AwayCarryoverEngine.assertReserved(intent, in: current)
+            try AwayCarryoverEngine.assertReserved(intent, in: current, at: clock())
             let alreadyCreated = dinner.shop?.mealOccurrences.contains(where: { $0.id == intent.plan.occurrenceID && $0.carryover == intent.plan.link }) == true
             if !alreadyCreated {
                 guard dinner.state.revisionID == intent.planningRevisionID else { throw AwayCarryoverError.stale }
@@ -291,10 +300,10 @@ extension PickupJourney {
             _ = try access(intent.plan.link.sourceShopID, workspaceID: intent.workspaceID, actorID: intent.actorID)
             guard let settled = pickup.journey, var target = dinner.shop,
                   target.mealOccurrences.contains(where: { $0.id == intent.plan.occurrenceID }) else { throw AwayCarryoverError.stale }
-            try AwayCarryoverEngine.assertReserved(intent, in: settled)
+            try AwayCarryoverEngine.assertReserved(intent, in: settled, at: clock())
             try target.appendConfirmedCarryover(intent.plan, at: clock())
             guard await pickup.change({ value in
-                try AwayCarryoverEngine.assertReserved(intent, in: value)
+                try AwayCarryoverEngine.assertReserved(intent, in: value, at: self.clock())
                 guard let index = value.awayCarryovers.firstIndex(where: { $0.id == intent.id }) else { throw AwayCarryoverError.stale }
                 value.awayCarryovers[index].phase = .completed
             }) else { throw AwayCarryoverError.pending }

@@ -175,7 +175,8 @@ struct ShopView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 if let journey = pickup.resumableJourney(for: ledger.shop?.id) {
-                    TimelineView(.explicit([Date()] + journey.offers.map(\.deadline.cutoff).filter { $0 > Date() }.sorted())) { context in
+                    let timelineStart = Date()
+                    TimelineView(.explicit([timelineStart] + (journey.offers.map(\.deadline.cutoff) + (journey.pickup?.receipts.map(\.receivedAt) ?? [])).filter { $0 > timelineStart }.sorted())) { context in
                         if let offer = journey.nextUnfilledOffer(at: context.date) {
                             let expired = context.date >= offer.deadline.cutoff
                             VStack(alignment: .leading, spacing: 8) {

@@ -281,3 +281,27 @@ import LocalStore
     }
 
 }
+
+extension DinnerAwayCarryoverTests {
+    func testImportedFutureReceiptCannotAuthorizePhysicalCarryoverBeforeArrival() async throws {
+        let f = try await fixture(receivedSource: true)
+        guard case let .received(receipt, observation) = f.supply else { return XCTFail("Expected received source") }
+        let futureReceipt = ReceiptFragment(key: receipt.key, itemName: receipt.itemName, received: receipt.received,
+            disposition: receipt.disposition, receivedAt: now.addingTimeInterval(86_400))
+        let previous = try XCTUnwrap(f.pickup.journey?.pickup)
+        var imported = try PickupLedger(orderID: previous.orderID, orderLines: previous.orderLines)
+        try imported.receive(futureReceipt)
+        try imported.confirmUsable(observation)
+        let saved = await f.pickup.change { $0.pickup = imported }
+        XCTAssertTrue(saved)
+        let before = f.pickup.journey, workspace = f.ledger.workspace
+        let accepted = f.coordinator.prepare(id: UUID(), occurrenceID: f.mealID, needID: f.needID,
+            supply: .received(futureReceipt, observation), counted: q(6), reserved: q(2), servings: .one,
+            day: try MealDay(date: now.addingTimeInterval(86_400), timeZoneIdentifier: "America/New_York"), observedAt: now)
+        XCTAssertFalse(accepted, "A recount cannot reserve food whose saved actual arrival is still in the future")
+        XCTAssertNil(f.coordinator.review)
+        XCTAssertEqual(f.pickup.journey, before)
+        XCTAssertEqual(f.ledger.workspace, workspace)
+        XCTAssertTrue(f.coordinator.records.isEmpty)
+    }
+}

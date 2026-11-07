@@ -156,14 +156,14 @@ struct PickupJourney: Codable, Equatable, Identifiable {
 // New optional local projections can be absent in an earlier version-one document.
 // Required identity/version/date still fail closed, and validate checks all links.
 extension PickupJourney {
-    var unfilledOffers: [PickupOffer] {
+    func unfilledOffers(at instant: Date) -> [PickupOffer] {
         guard closedAt == nil else { return [] }
-        let observed = Set(pickup?.receipts.map(\.key.orderLineID) ?? [])
+        let observed = Set(pickup?.receipts.filter { $0.receivedAt <= instant }.map(\.key.orderLineID) ?? [])
         return offers.filter { !observed.contains($0.lineID) }
     }
 
     func nextUnfilledOffer(at date: Date) -> PickupOffer? {
-        let outstanding = unfilledOffers.sorted { $0.deadline.cutoff < $1.deadline.cutoff }
+        let outstanding = unfilledOffers(at: date).sorted { $0.deadline.cutoff < $1.deadline.cutoff }
         return outstanding.first { date < $0.deadline.cutoff } ?? outstanding.last
     }
 
@@ -296,7 +296,7 @@ struct PickupPersistenceLocation {
     }
     var allocation: StockAllocationResult? {
         guard let value = journey else { return nil }
-        return try? value.carryoverAllocation()
+        return try? value.carryoverAllocation(at: clock())
     }
     var stockAllocation: StockAllocationResult? { allocation }
     var stockReviewDate: Date { clock() }
@@ -548,7 +548,17 @@ struct PickupPersistenceLocation {
         }
     }
     @discardableResult func receive(_ fragment: ReceiptFragment, usable: UsableObservation?) async -> Bool {
-        await change { value in
+        let observedAt = clock()
+        let receiptExists = journey?.pickup?.receipts.contains(fragment) == true
+        let observationAllowed = usable.map {
+            journey?.pickup?.usableObservations.contains($0) == true ||
+                ($0.receipt == fragment.key && fragment.receivedAt <= observedAt && $0.confirmedAt <= observedAt)
+        } ?? true
+        guard (receiptExists || fragment.receivedAt <= observedAt), observationAllowed else {
+            error = pTr("Record an arrival or usable confirmation only after it has happened.")
+            return false
+        }
+        return await change { value in
             guard var pickup = value.pickup else { throw PickupModelError.missing }
             try pickup.receive(fragment)
             if let usable { try pickup.confirmUsable(usable) }
@@ -556,7 +566,14 @@ struct PickupPersistenceLocation {
         }
     }
     @discardableResult func confirmUsable(_ observation: UsableObservation) async -> Bool {
-        await change { value in
+        let observedAt = clock()
+        let alreadyRecorded = journey?.pickup?.usableObservations.contains(observation) == true
+        guard alreadyRecorded || (observation.confirmedAt <= observedAt &&
+            journey?.pickup?.receipts.first(where: { $0.key == observation.receipt }).map { $0.receivedAt <= observedAt } == true) else {
+            error = pTr("Record an arrival or usable confirmation only after it has happened.")
+            return false
+        }
+        return await change { value in
             guard var pickup = value.pickup else { throw PickupModelError.missing }
             try pickup.confirmUsable(observation); value.pickup = pickup
         }

@@ -1,6 +1,40 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Record an arrival or usable confirmation only after it has happened.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Record an arrival or usable confirmation only after it has happened."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registra una llegada o una confirmación de cantidad utilizable solo después de que haya ocurrido."
+          }
+        }
+      }
+    },
+    "Future-dated evidence is not counted as available food.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Future-dated evidence is not counted as available food."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los registros con fecha futura no se cuentan como comida disponible."
+          }
+        }
+      }
+    },
     "A credit does not add food or repair a meal. A credit already included in a net charge is not subtracted again.": {
       "extractionState": "manual",
       "localizations": {

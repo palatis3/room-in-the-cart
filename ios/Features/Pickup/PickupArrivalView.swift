@@ -39,7 +39,7 @@ struct PickupArrivalView: View {
                 Toggle(pTr("I checked the identity, units and meal constraints"), isOn: $matched)
                 TextField(pTr("Delivery or receipt evidence ID"), text: $eventID)
                 TextField(pTr("Segment ID (distinct for each split delivery)"), text: $segment)
-                DatePicker(pTr("Actual arrival"), selection: $occurred)
+                DatePicker(pTr("Actual arrival"), selection: $occurred, in: ...model.stockReviewDate)
                 Button(pTr("Save observed arrival")) { save() }.buttonStyle(.borderedProminent)
                 if let formError { Text(formError).foregroundStyle(.red) }
                 Button(pTr("Start another actual delivery segment")) {
@@ -54,6 +54,9 @@ struct PickupArrivalView: View {
                         Text("\(receipt.key.sourceEventID) / \(receipt.key.segmentID)").font(.caption)
                         if let observation = model.journey?.pickup?.usableObservations.last(where: { $0.receipt == receipt.key }) {
                             Text("\(pTr("Usable")): \(pQuantity(observation.usable))")
+                            if receipt.receivedAt > model.stockReviewDate || observation.confirmedAt > model.stockReviewDate {
+                                Text(pTr("Future-dated evidence is not counted as available food."))
+                            }
                         } else { Text(pTr("Usable amount unverified")) }
                         NavigationLink(pTr("Correct usable amount")) { PickupUsableCorrectionView(model: model, receipt: receipt) }
                     }

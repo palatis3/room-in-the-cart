@@ -235,3 +235,155 @@ final class PickupModelTests: XCTestCase {
         Quantity(amount: try! Rational(count), unit: .count, originalLiteral: String(count))
     }
 }
+
+extension PickupModelTests {
+    @MainActor private func arrivalFixture(url: URL, clock: @escaping () -> Date) async throws -> (PickupModel, UUID, UUID, UUID) {
+        let model = PickupModel(databaseURL: url, clock: clock)
+        let shopID = UUID(), foodID = UUID(), lunchID = UUID(), dinnerID = UUID()
+        let context = CheckoutContext(storeID: "Synthetic market", branchID: "Main", mode: .pickup,
+            slot: "Evening", commitmentsID: shopID, observedAt: clock(), source: "Reviewed fixture")
+        let started = await model.start(from: [BasketLine(id: foodID, name: "Wraps", quantity: quantity(6), expectedCost: .exact(.zero))],
+            shopID: shopID, context: context, plannedNeeds: [
+                AllocationNeed(id: lunchID, orderLineID: foodID, name: "Protected lunch", amount: quantity(2), priority: .protected),
+                AllocationNeed(id: dinnerID, orderLineID: foodID, name: "Tacos", amount: quantity(4), priority: .required)
+            ])
+        let quoted = await model.setQuote(CheckoutQuote(scope: .wholeCheckout, context: context,
+            pricing: .inclusiveTotal(.exact(.zero))), cap: nil)
+        let frozen = await model.freeze(), placed = await model.reportPlaced()
+        XCTAssertTrue(started && quoted && frozen && placed)
+        return (model, foodID, lunchID, dinnerID)
+    }
+
+    @MainActor func testFutureArrivalAndUsableWritesLeaveProtectedFoodUnconfirmed() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appendingPathComponent("arrival.sqlite")
+        // Absolute instants cross a local calendar boundary; authorization does not
+        // compare formatted dates, device time zones, or the host's current date.
+        var instant = Date(timeIntervalSince1970: 1_800_000_000)
+        let (model, food, lunch, dinner) = try await arrivalFixture(url: url, clock: { instant })
+        let before = try XCTUnwrap(model.journey)
+        let key = ReceiptKey(sourceEventID: "actual-delivery", orderLineID: food, branchID: "Main", segmentID: "one")
+        let future = instant.addingTimeInterval(3600)
+        let later = ReceiptFragment(key: key, itemName: "Wraps", received: quantity(6), disposition: .late, receivedAt: future)
+        let laterUsable = UsableObservation(id: UUID(), receipt: key, usable: quantity(6), confirmedAt: future, confirmedMatchToOrderLine: true)
+        let prematureReceipt = await model.receive(later, usable: nil)
+        let prematureComplete = await model.receive(later, usable: laterUsable)
+        XCTAssertFalse(prematureReceipt); XCTAssertFalse(prematureComplete)
+        XCTAssertEqual(model.journey, before, "A future arrival must not persist even without a usable amount")
+        XCTAssertFalse(model.hasPendingSave)
+        XCTAssertEqual(model.allocation?.demands.first { $0.id == lunch }?.shortfall, try Rational(2))
+
+        let actual = ReceiptFragment(key: key, itemName: "Wraps", received: quantity(6), disposition: .received, receivedAt: instant)
+        let atomicReject = await model.receive(actual, usable: laterUsable)
+        XCTAssertFalse(atomicReject)
+        XCTAssertEqual(model.journey, before, "Rejecting usable evidence must not commit half the arrival")
+        let savedReceipt = await model.receive(actual, usable: nil)
+        XCTAssertTrue(savedReceipt)
+        let receiptOnly = try XCTUnwrap(model.journey)
+        let prematureConfirmation = await model.confirmUsable(laterUsable)
+        XCTAssertFalse(prematureConfirmation)
+        XCTAssertEqual(model.journey, receiptOnly)
+        XCTAssertEqual(model.allocation?.demands.first { $0.id == dinner }?.shortfall, try Rational(4))
+
+        instant = future
+        let confirmed = await model.confirmUsable(laterUsable)
+        let replay = await model.receive(actual, usable: laterUsable)
+        XCTAssertTrue(confirmed && replay)
+        XCTAssertEqual(model.journey?.pickup?.receipts.count, 1)
+        XCTAssertEqual(model.journey?.pickup?.usableObservations.count, 1)
+        XCTAssertEqual(model.allocation?.demands.first { $0.id == lunch }?.allocated, try Rational(2))
+        XCTAssertEqual(model.allocation?.demands.first { $0.id == dinner }?.allocated, try Rational(4))
+        let reopened = PickupModel(databaseURL: url, clock: { instant })
+        await reopened.load()
+        XCTAssertEqual(reopened.journey, model.journey)
+        XCTAssertEqual(reopened.allocation, model.allocation)
+        XCTAssertTrue(try XCTUnwrap(reopened.journey?.settlement.entries).isEmpty)
+    }
+
+    @MainActor func testImportedFutureEvidenceIsRetainedButExcludedFromCurrentFoodAndCookProjection() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appendingPathComponent("historical.sqlite")
+        let instant = Date(timeIntervalSince1970: 1_800_000_000)
+        let future = instant.addingTimeInterval(86_400)
+        let (model, food, lunch, dinner) = try await arrivalFixture(url: url, clock: { instant })
+        var imported = try XCTUnwrap(model.journey)
+        let key = ReceiptKey(sourceEventID: "old-import", orderLineID: food, branchID: "Main", segmentID: "one")
+        let actual = ReceiptFragment(key: key, itemName: "Wraps", received: quantity(6), disposition: .partial, receivedAt: instant)
+        let old = UsableObservation(id: UUID(), receipt: key, usable: quantity(4), confirmedAt: instant, confirmedMatchToOrderLine: true)
+        let futureCorrection = UsableObservation(id: UUID(), receipt: key, usable: quantity(6), confirmedAt: future,
+            supersedesID: old.id, confirmedMatchToOrderLine: true)
+        try imported.pickup?.receive(actual)
+        try imported.pickup?.confirmUsable(old)
+        try imported.pickup?.confirmUsable(futureCorrection)
+        let laterKey = ReceiptKey(sourceEventID: "old-import", orderLineID: food, branchID: "Main", segmentID: "two")
+        let later = ReceiptFragment(key: laterKey, itemName: "Later wraps", received: quantity(2), disposition: .late, receivedAt: future)
+        let laterObservation = UsableObservation(id: UUID(), receipt: laterKey, usable: quantity(2), confirmedAt: instant, confirmedMatchToOrderLine: true)
+        try imported.pickup?.receive(later)
+        try imported.pickup?.confirmUsable(laterObservation)
+        imported.stockLots = [ConfirmedStockLot(id: UUID(), foodID: food, name: "Future freezer count", usable: quantity(3), confirmedAt: future, source: .freezer)]
+        // Loading historical data validates its structure without inventing a
+        // wall-clock-dependent decoding failure or rewriting its dated records.
+        XCTAssertEqual(try JSONDecoder().decode(PickupJourney.self, from: JSONEncoder().encode(imported)), imported)
+        let saved = await model.change { $0 = imported }
+        XCTAssertTrue(saved)
+        let retained = try XCTUnwrap(model.journey)
+        let reopened = PickupModel(databaseURL: url, clock: { instant })
+        await reopened.load()
+        XCTAssertTrue(reopened.ready)
+        XCTAssertEqual(reopened.journey, retained)
+        XCTAssertEqual(reopened.journey?.pickup?.usableObservations.count, 3)
+        XCTAssertEqual(reopened.journey?.stockLots.count, 1)
+        XCTAssertTrue(PickupFallbackOptions.lots(retained, at: instant).isEmpty)
+        XCTAssertEqual(reopened.allocation?.demands.first { $0.id == lunch }?.shortfall, try Rational(2))
+        XCTAssertEqual(reopened.allocation?.demands.first { $0.id == dinner }?.shortfall, try Rational(4),
+            "A future latest correction must not resurrect its superseded four-wrap observation")
+        let text = PickupCookProjection.text(journey: retained, allocation: reopened.allocation, result: reopened.result,
+            language: "en-US", at: instant, timeZone: TimeZone(identifier: "America/New_York")!)
+        XCTAssertTrue(text.contains("Short or unverified amount. Review."))
+        let receiptReplay = await reopened.receive(later, usable: laterObservation)
+        let correctionReplay = await reopened.confirmUsable(futureCorrection)
+        XCTAssertTrue(receiptReplay && correctionReplay, "Exact historical retries preserve evidence identities")
+        XCTAssertEqual(reopened.journey?.pickup, retained.pickup)
+        XCTAssertEqual(reopened.allocation?.demands.first { $0.id == lunch }?.shortfall, try Rational(2))
+        let newEarlyConfirmation = UsableObservation(id: UUID(), receipt: laterKey, usable: quantity(2), confirmedAt: instant,
+            supersedesID: laterObservation.id, confirmedMatchToOrderLine: true)
+        let rejected = await reopened.confirmUsable(newEarlyConfirmation)
+        XCTAssertFalse(rejected, "An imported future receipt does not authorize a new premature usable confirmation")
+        XCTAssertEqual(reopened.journey?.pickup, retained.pickup)
+        let laterView = PickupModel(databaseURL: url, clock: { future })
+        await laterView.load()
+        XCTAssertEqual(laterView.allocation?.demands.first { $0.id == dinner }?.shortfall, .zero)
+        XCTAssertEqual(reopened.journey?.stockLots, retained.stockLots)
+        XCTAssertEqual(reopened.journey?.settlement, retained.settlement)
+    }
+}
+
+extension PickupModelTests {
+    @MainActor func testStockReviewExpiresWhenRetainedFutureFoodBecomesCurrentWithoutRevisionChange() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        var instant = Date(timeIntervalSince1970: 1_800_000_000)
+        let future = instant.addingTimeInterval(3600)
+        let (model, food, lunch, _) = try await arrivalFixture(url: directory.appendingPathComponent("review.sqlite"), clock: { instant })
+        let imported = ConfirmedStockLot(id: UUID(), foodID: food, name: "Later freezer count", usable: quantity(2), confirmedAt: future, source: .freezer)
+        let saved = await model.change { $0.stockLots.append(imported) }
+        XCTAssertTrue(saved)
+        let before = try XCTUnwrap(model.journey)
+        let scope = PickupStockReviewScope(workspaceID: try XCTUnwrap(model.sourceWorkspaceID), localActorID: UUID(),
+            accountSubject: nil, householdID: nil, memberID: nil, role: nil)
+        let newLot = ConfirmedStockLot(id: UUID(), foodID: food, name: "New checked batch", usable: quantity(2), confirmedAt: instant, source: .freezer)
+        let review = try model.previewStockLot(newLot, in: before.id, scope: scope)
+        XCTAssertEqual(review.before.demands.first { $0.id == lunch }?.shortfall, try Rational(2))
+        XCTAssertEqual(review.after.demands.first { $0.id == lunch }?.shortfall, .zero)
+        XCTAssertTrue(model.isCurrentStockLotReview(review, scope: scope))
+        instant = future
+        XCTAssertEqual(model.journey?.revision, before.revision)
+        XCTAssertFalse(model.isCurrentStockLotReview(review, scope: scope), "Food availability changed after this review even though no saved record changed")
+        let applied = await model.applyStockLotReview(review, scope: scope, confirmed: true)
+        XCTAssertFalse(applied)
+        XCTAssertEqual(model.journey, before)
+        XCTAssertFalse(model.hasPendingSave)
+    }
+}

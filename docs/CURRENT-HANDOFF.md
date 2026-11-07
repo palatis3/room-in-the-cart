@@ -2,7 +2,19 @@
 
 Updated November 7, 2026 UTC. The owner resumed and explicitly approved the reviewed hosted staging update; the full first-version goal is active and release acceptance remains incomplete. Historical snapshots are preserved in [the handoff archive](CURRENT-HANDOFF-HISTORY-20261106.md).
 
-## Current work: published 8d1a79b and verified local follow-ups
+## Current work: published 1080fad and local future-arrival fix
+
+Published head is `1080fad4999cb6c4ff34c20e99e5b72247e23e23` on `codex/parallel-ios-ci`, PR1. The prior thirteen local commits through shared Dinner styling and the share-readiness failure capture are now pushed. Hosted candidate pins live in `.build/CIResearch20261107/candidate-1080fad/monitor/`; its merge tree matches the published candidate. Sol6.1 owns read-only CI monitoring; Astra High owns fix preparation; root owns integration, Git and native execution. Dot/Lumpy is not used.
+
+Deep and Security are terminal success. Root independently rehashed all920 retained Deep proof files: English and Spanish StoreKit each15/15, both sanitizer suites389passes plus3expected wire skips, exact checkout/runtime identity retained. The instrumented cancellation passes once per locale with unchanged120-second allowances; this does not establish the earlier timeout's cause. Core ui-01 has a newly identified S14 immediate-entry value assertion failure (`Current amount for this group` expected8), before Save/restart. Astra is investigating with Sol's pinned evidence. Other cohort work remains in progress; no full-cohort acceptance is claimed.
+
+The [future-arrival boundary fix](evidence/native/future-arrival-boundary-20261107/README.md) is installed locally. Five identical new regressions fail on the original product at intended temporal assertions; the fixed build passes all129 tests across14 affected classes, native0/strict0, zero skips/runtime warnings. New future receipt/confirmation writes are rejected, current food/carryover and offer/reminder decisions use explicit time boundaries, and imported history remains intact. English/Spanish localization structure passes3752entries. Native date-picker interaction and the ordinary arrival UI path remain to be verified. This change is not part of published1080fad CI.
+
+The separate Dinner supply-sheet/error palette proposal remains scratch-only. Run1's English cases failed a test-only modal viewport measurement; Spanish largest text failed the bounded return scroll to an earlier field after reaching validation. Original three failures are preserved. Root measured and viewed the actual English zero-servings error rows: correct paired foreground/background in both modes, with5.929/7.220contrast. The remaining states are unverified. Corrected scratch run2 uses actual modal scroll clipping and the existing explicit backwards scroll direction, preserving all value/hittability assertions and limits. Its supervisor is session22153, owned simulator444EE89F-F975-4D83-BC21-EB029AEBF81C; inspect its current receipts before continuing native work. The preview simulator5FDE1E82-1FF7-4556-9C14-0746F6295944 is protected. Both future-arrival model simulators and the original sheet simulator were deleted.
+
+The complete first-version goal remains active. Provider activation, owner-deferred account/service setup and physical/human acceptance remain distinct unresolved release gates. Historical paragraphs below preserve prior observations; old active-candidate, unpushed and no-running-process statements are superseded by this section.
+
+## Historical checkpoint before publishing 1080fad
 
 The [shared Dinner editor styling](evidence/native/dinner-semantic-theme-20261107/README.md) is installed locally. It adds semantic form surfaces, readable prompts, persistent localized field labels and clearer primary/secondary/destructive actions while preserving bindings, validation and authority checks. Both unchanged normal-build regressions pass: unavailable-source recipe editing across restart and Spanish idea approval with an empty shopping list. Static contrast, localization structure and the five-slot workflow checks pass.
 

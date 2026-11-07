@@ -81,7 +81,7 @@ final class FreeJourneyAcceptanceTests: XCTestCase {
         let frozen = try XCTUnwrap(pickup.frozenSnapshot)
         try requireSaved(await pickup.recordHandoff(.copied))
         XCTAssertNil(pickup.journey?.pickup, "Copying does not report an external placement")
-        pickup = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"))
+        pickup = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"), clock: { self.now })
         await pickup.load()
         XCTAssertEqual(pickup.frozenSnapshot, frozen)
         XCTAssertEqual(pickup.journey?.ledgerPackSelections, selectedPacks)
@@ -125,7 +125,7 @@ final class FreeJourneyAcceptanceTests: XCTestCase {
         try requireSaved(await pickup.change { $0.notes.append(note) })
         try requireSaved(await pickup.change { $0.cookShareEvents.append(PickupCookShareEvent(id: UUID(), noteID: note.id, occurredAt: self.now, action: .shareCancelled, destination: nil)) })
         XCTAssertNil(pickup.journey?.notes.first?.sentAt)
-        pickup = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"))
+        pickup = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"), clock: { self.now })
         await pickup.load()
         XCTAssertEqual(pickup.journey?.notes.first, note)
         XCTAssertEqual(pickup.journey?.repairs.first, repair)
@@ -168,7 +168,7 @@ final class FreeJourneyAcceptanceTests: XCTestCase {
         XCTAssertEqual(pickup.journey?.id, next.id)
         XCTAssertEqual(pickup.journeys.first { $0.id == shopID }, closed)
         ledger = LedgerModel(databaseURL: directory.appendingPathComponent("ledger.sqlite"))
-        pickup = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"))
+        pickup = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"), clock: { self.now })
         await ledger.open(); await pickup.load()
         XCTAssertEqual(ledger.shop?.id, next.id)
         XCTAssertEqual(ledger.shop?.mealOccurrences.first?.id, nextMeal.id)
@@ -183,7 +183,8 @@ final class FreeJourneyAcceptanceTests: XCTestCase {
     @MainActor func testWrongItemCannotFeedLunchAndLateSegmentRetryNeverDuplicatesFood() async throws {
         let directory = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
-        let pickup = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"))
+        var actualTime = now
+        let pickup = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"), clock: { actualTime })
         let shopID = UUID(), lineID = UUID(), lunchID = UUID(), dinnerID = UUID()
         let context = CheckoutContext(storeID: "Store", branchID: "Main", mode: .pickup, slot: "Tuesday", commitmentsID: shopID, observedAt: now, source: "Reviewed")
         try requireSaved(await pickup.start(from: [BasketLine(id: lineID, name: "Wraps", quantity: quantity(8), expectedCost: .exact(Money(minorUnits: 400)))], shopID: shopID, context: context,
@@ -196,8 +197,9 @@ final class FreeJourneyAcceptanceTests: XCTestCase {
         let lateKey = ReceiptKey(sourceEventID: "receipt", orderLineID: lineID, branchID: "Main", segmentID: "actual-second-segment")
         let fragment = ReceiptFragment(key: lateKey, itemName: "Correct wraps", received: quantity(6), disposition: .late, receivedAt: now.addingTimeInterval(3600))
         let usable = UsableObservation(id: UUID(), receipt: lateKey, usable: quantity(6), confirmedAt: now.addingTimeInterval(3600), confirmedMatchToOrderLine: true)
+        actualTime = now.addingTimeInterval(3600)
         try requireSaved(await pickup.receive(fragment, usable: usable))
-        let reopened = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"))
+        let reopened = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"), clock: { actualTime })
         await reopened.load()
         try requireSaved(await reopened.receive(fragment, usable: usable))
         XCTAssertEqual(reopened.journey?.pickup?.receipts.count, 2)
@@ -236,11 +238,11 @@ final class FreeJourneyAcceptanceTests: XCTestCase {
         defer { try? FileManager.default.removeItem(at: directory) }
         let url = directory.appendingPathComponent("previously-missing/isolated/pickup.sqlite")
         let arguments = ["--ui-testing", "--reset-test-workspace"]
-        let first = PickupModel(databaseURL: url, launchArguments: arguments)
+        let first = PickupModel(databaseURL: url, clock: { self.now }, launchArguments: arguments)
         try requireSaved(await first.addUrgent(UrgentMealNeed(id: UUID(), food: "Rice", meal: "Dinner", required: quantity(4), available: quantity(2), due: nil, confirmedAt: now)))
         let saved = try XCTUnwrap(first.journey)
         XCTAssertTrue(FileManager.default.fileExists(atPath: url.path))
-        let reopened = PickupModel(databaseURL: url, launchArguments: arguments)
+        let reopened = PickupModel(databaseURL: url, clock: { self.now }, launchArguments: arguments)
         await reopened.load()
         XCTAssertTrue(reopened.ready)
         XCTAssertEqual(reopened.journey, saved)
@@ -250,7 +252,7 @@ final class FreeJourneyAcceptanceTests: XCTestCase {
         let directory = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
         let url = directory.appendingPathComponent("pickup.sqlite")
-        let pickup = PickupModel(databaseURL: url)
+        let pickup = PickupModel(databaseURL: url, clock: { self.now })
         try requireSaved(await pickup.addUrgent(UrgentMealNeed(id: UUID(), food: "Rice", meal: "Dinner", required: quantity(4), available: quantity(4), due: nil, confirmedAt: now)))
         let origin = try XCTUnwrap(pickup.journey?.id)
         let lines = (0..<3).map { _ in BasketLine(id: UUID(), name: "Coffee", quantity: quantity(1), expectedCost: .exact(Money(minorUnits: 460))) }
@@ -264,7 +266,7 @@ final class FreeJourneyAcceptanceTests: XCTestCase {
         XCTAssertEqual(next.deferred.map(\.id), [decisions[2].id])
         XCTAssertEqual(next.deferred.first?.line.quantity, decisions[2].line.quantity)
         guard case .unknown = next.deferred.first?.line.expectedCost else { return XCTFail("A new trip needs fresh pricing") }
-        let reopened = PickupModel(databaseURL: url)
+        let reopened = PickupModel(databaseURL: url, clock: { self.now })
         await reopened.load()
         reopened.selectedID = origin
         try requireSaved(await reopened.startNextShop(accept: []))
@@ -277,7 +279,7 @@ final class FreeJourneyAcceptanceTests: XCTestCase {
         let directory = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
         let url = directory.appendingPathComponent("pickup.sqlite")
-        let pickup = PickupModel(databaseURL: url)
+        let pickup = PickupModel(databaseURL: url, clock: { self.now })
         try requireSaved(await pickup.addUrgent(UrgentMealNeed(id: UUID(), food: "Rice", meal: "Dinner", required: quantity(4), available: quantity(4), due: nil, confirmedAt: now)))
         let origin = try XCTUnwrap(pickup.journey?.id)
         let lines = (0..<3).map { _ in BasketLine(id: UUID(), name: "Coffee", quantity: quantity(1), expectedCost: .exact(Money(minorUnits: 460))) }
@@ -292,7 +294,7 @@ final class FreeJourneyAcceptanceTests: XCTestCase {
         XCTAssertEqual(next.deferred.map(\.status), ["handled", "dismissed", "review"])
         XCTAssertEqual(next.deferred.map(\.id), deferred.map(\.id))
         XCTAssertTrue(try XCTUnwrap(next.basket?.current.lines).isEmpty)
-        let reopened = PickupModel(databaseURL: url)
+        let reopened = PickupModel(databaseURL: url, clock: { self.now })
         await reopened.load()
         XCTAssertEqual(reopened.journeys.first { $0.id == next.id }, next)
         reopened.selectedID = origin
@@ -305,7 +307,7 @@ final class FreeJourneyAcceptanceTests: XCTestCase {
     @MainActor func testReviewedNextShopDispositionIsScopedAndNeverRewritesSource() async throws {
         let directory = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
-        let model = PickupModel(databaseURL: directory.appendingPathComponent("next.sqlite"))
+        let model = PickupModel(databaseURL: directory.appendingPathComponent("next.sqlite"), clock: { self.now })
         try requireSaved(await model.addUrgent(UrgentMealNeed(id: UUID(), food: "Coffee", meal: "Breakfast", required: quantity(1), available: quantity(0), due: nil, confirmedAt: now)))
         let sourceID = try XCTUnwrap(model.journey?.id), key = UUID()
         let line = BasketLine(id: UUID(), name: "Coffee", quantity: quantity(1), expectedCost: .exact(Money(minorUnits: 460)))
@@ -325,7 +327,7 @@ final class FreeJourneyAcceptanceTests: XCTestCase {
         let directory = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
         let database = directory.appendingPathComponent("shared-pickup.sqlite")
-        let first = PickupModel(databaseURL: database), second = PickupModel(databaseURL: database)
+        let first = PickupModel(databaseURL: database, clock: { self.now }), second = PickupModel(databaseURL: database, clock: { self.now })
         try requireSaved(await first.addUrgent(UrgentMealNeed(id: UUID(), food: "Milk", meal: "Breakfast", required: quantity(2), available: quantity(0), due: nil, confirmedAt: now)))
         await second.load()
         let source = try XCTUnwrap(first.journey?.id)
@@ -359,7 +361,7 @@ final class FreeJourneyAcceptanceTests: XCTestCase {
         defer { try? FileManager.default.removeItem(at: directory) }
         let ledgerURL = directory.appendingPathComponent("ledger.sqlite")
         var ledger = LedgerModel(databaseURL: ledgerURL)
-        let pickup = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"))
+        let pickup = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"), clock: { self.now })
         await ledger.open(); await pickup.load()
         try requireSaved(await ledger.startShop(title: "First shop"))
         var feature = dinnerFeature(ledger: ledger, pickup: pickup)
