@@ -94,7 +94,7 @@ final class LedgerCheckoutAdapterTests: XCTestCase {
         XCTAssertEqual(pickup.journey, reported)
     }
 
-    func testTwelveExistingWrapsProjectSixFourTwoExactlyOnce() throws {
+    @MainActor func testTwelveExistingWrapsProjectSixFourTwoExactlyOnce() async throws {
         let shop = try wrapShop()
         let review = try LedgerCheckoutAdapter.review(shop: shop, workspaceRevision: 1, previous: nil)
         XCTAssertEqual(review.lines.count, 1)
@@ -108,6 +108,57 @@ final class LedgerCheckoutAdapterTests: XCTestCase {
         XCTAssertEqual(Set(review.needs.map(\.orderLineID)), Set(review.lines.map(\.id)))
         let repeated = try LedgerCheckoutAdapter.review(shop: shop, workspaceRevision: 1, previous: nil)
         XCTAssertEqual(review.needs, repeated.needs)
+
+        // Use the ingredient screen's actual pack-review path with the same
+        // six/four/two partition, rather than a separate twelve-item fixture.
+        let directory = try temporaryDirectory()
+        let cleanup = SQLiteFixtureDirectory(directory, test: self)
+        let ledger = LedgerModel(databaseURL: directory.appendingPathComponent("ledger.sqlite"))
+        let pickup = PickupModel(databaseURL: directory.appendingPathComponent("pickup.sqlite"))
+        cleanup.track(ledger, pickup)
+        await ledger.open(); await pickup.load()
+        let seeded = await ledger.change(key: "six-four-two-pack-review") {
+            $0.shops = [shop]; $0.selectedShopID = shop.id
+        }
+        XCTAssertTrue(seeded)
+        XCTAssertTrue(pickup.journeys.isEmpty, "No pantry, freezer or receipt stock was supplied")
+        let lineID = review.lines[0].id
+        let before = ledger.workspace
+        let beforeRevision = ledger.revision
+        let packs = try LedgerPackReview.prepare(ledger: ledger, shopID: shop.id, lineID: lineID,
+            offerA: PackOffer(id: "eight", label: "Eight wraps", usableQuantity: quantity(8), price: Money(minorUnits: 300)),
+            offerB: PackOffer(id: "six", label: "Six wraps", usableQuantity: quantity(6), price: Money(minorUnits: 250)),
+            itemCap: nil, at: Date(timeIntervalSince1970: 1_800_000_000), source: "Reviewed shelf", pickup: pickup)
+        XCTAssertEqual(packs.requirement.quantity.amount, try Rational(12))
+        XCTAssertEqual(packs.requirement.protectedQuantity.amount, try Rational(2))
+        XCTAssertNil(packs.stockEvidence)
+        XCTAssertNil(packs.request.confirmedAtHome)
+        XCTAssertEqual(packs.result.offerA.packsToBuy, 2)
+        XCTAssertEqual(packs.result.offerA.purchasedAmount, try Rational(16))
+        XCTAssertEqual(packs.result.offerA.leftover, try Rational(4))
+        XCTAssertEqual(packs.result.offerA.totalCost, Money(minorUnits: 600))
+        XCTAssertEqual(ledger.workspace, before, "Preparing packs must not change dinner or lunch demand")
+        XCTAssertEqual(ledger.revision, beforeRevision)
+        let saved = try await packs.save(offerID: "eight", ledger: ledger, pickup: pickup)
+        XCTAssertTrue(saved)
+        XCTAssertEqual(ledger.shop, shop)
+        XCTAssertTrue(pickup.journeys.isEmpty, "Choosing packs must not silently apply or place a checkout")
+        let checkout = try LedgerCheckoutAdapter.review(shop: XCTUnwrap(ledger.shop), workspaceRevision: ledger.revision,
+            previous: nil, packSelections: ledger.workspace.packSelections, workspaceID: ledger.sourceWorkspaceID)
+        XCTAssertEqual(checkout.lines.count, 1)
+        XCTAssertEqual(checkout.lines[0].quantity.amount, try Rational(16))
+        XCTAssertEqual(checkout.lines[0].expectedCost, .exact(Money(minorUnits: 600)))
+        XCTAssertEqual(checkout.needs, review.needs, "Whole packs supply twelve needed wraps without inventing four more meal portions")
+
+        let reopened = LedgerModel(databaseURL: directory.appendingPathComponent("ledger.sqlite"))
+        cleanup.track(reopened)
+        await reopened.open()
+        XCTAssertEqual(reopened.shop, shop)
+        XCTAssertEqual(reopened.workspace.packSelections, ledger.workspace.packSelections)
+        let restored = try LedgerCheckoutAdapter.review(shop: XCTUnwrap(reopened.shop), workspaceRevision: reopened.revision,
+            previous: nil, packSelections: reopened.workspace.packSelections, workspaceID: reopened.sourceWorkspaceID)
+        XCTAssertEqual(restored.lines, checkout.lines)
+        XCTAssertEqual(restored.needs, review.needs)
     }
 
     @MainActor func testCalendarMoveUpdatesCookCorrectionWithoutChangingPlacedPickup() async throws {

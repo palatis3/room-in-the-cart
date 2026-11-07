@@ -1,5 +1,7 @@
 # Current implementation and acceptance map
 
+S04 now has complementary exact evidence for the six/four/two meal split and hiding protected needs. [Ten native model cases pass locally, and the unchanged protected-lunch UI case passes on hosted CI](evidence/native/protected-meal-packs-20261107/README.md). The strengthened existing test verifies two eight-packs and SQLite reopen without converting the mathematical remainder into confirmed stock.
+
 An [additive evidence refresh](evidence/native/screen-evidence-refresh-20261107/README.md) binds nine previously indirect Check clauses to exact current-source assertions and retained passing outcomes: checkout thresholds, usable-food correction and arrival replay, pending/included credits, and unavailable-source recipe editing. The historical 123-clause ledger is preserved; calculation proof remains distinct from native screen and release acceptance.
 
 The ordinary S14 recipe journey now verifies editing with an unavailable source, explicit portion bindings, restart persistence and separation from the reusable recipe. It also exposed and verifies a persistent localized name for filled Notes. [The unchanged complete case passes locally](evidence/native/recipe-source-editing-20261107/README.md) and is installed as permanent ordinary CI coverage; human accessibility and hosted acceptance remain separate.

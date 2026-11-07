@@ -1,0 +1,49 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -xctestrun "/Users/palatis/Room in the Cart/.build/S04ProtectedNeedsReview20261107/run1/DerivedData/Build/Products/RoomInTheCart_iphonesimulator27.1-arm64.xctestrun" -destination "platform=iOS Simulator,id=4DF538F7-EB97-43C1-A5E4-42406793AB1C" -parallel-testing-enabled NO -resultBundlePath "/Users/palatis/Room in the Cart/.build/S04ProtectedNeedsReview20261107/run1/S04.xcresult" -collect-test-diagnostics never -test-timeouts-enabled YES -default-test-execution-time-allowance 120 -maximum-test-execution-time-allowance 120 "-only-testing:RoomInTheCartTests/LedgerCheckoutAdapterTests" test-without-building
+
+Writing result bundle at path:
+	/Users/palatis/Room in the Cart/.build/S04ProtectedNeedsReview20261107/run1/S04.xcresult
+
+2026-11-07 00:56:45.698 xcodebuild[15580:20418726] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-07 00:56:49.200195-0500 RoomInTheCart[15587:20419002] [General] Failed to send CA Event for app launch measurements for ca_event_type: 0 event_name: com.apple.app_launch_measurement.FirstFramePresentationMetric
+Test Suite 'Selected tests' started at 2026-11-07 00:56:49.259.
+Test Suite 'RoomInTheCartTests.xctest' started at 2026-11-07 00:56:49.260.
+Test Suite 'LedgerCheckoutAdapterTests' started at 2026-11-07 00:56:49.261.
+Test Case '-[RoomInTheCartTests.LedgerCheckoutAdapterTests testBasisOnlyChangeRequiresReviewClearsQuoteAndLeavesOldSnapshotImmutable]' started.
+Test Case '-[RoomInTheCartTests.LedgerCheckoutAdapterTests testBasisOnlyChangeRequiresReviewClearsQuoteAndLeavesOldSnapshotImmutable]' passed (0.453 seconds).
+Test Case '-[RoomInTheCartTests.LedgerCheckoutAdapterTests testCalendarMoveUpdatesCookCorrectionWithoutChangingPlacedPickup]' started.
+Test Case '-[RoomInTheCartTests.LedgerCheckoutAdapterTests testCalendarMoveUpdatesCookCorrectionWithoutChangingPlacedPickup]' passed (0.150 seconds).
+Test Case '-[RoomInTheCartTests.LedgerCheckoutAdapterTests testGuestApplyCarriesFiveBoundPeppersThroughPackAndCheckoutWithoutChangingReportedPurchase]' started.
+Test Case '-[RoomInTheCartTests.LedgerCheckoutAdapterTests testGuestApplyCarriesFiveBoundPeppersThroughPackAndCheckoutWithoutChangingReportedPurchase]' passed (0.095 seconds).
+Test Case '-[RoomInTheCartTests.LedgerCheckoutAdapterTests testGuestCheckoutReviewRequiresSameLedgerBasketAndBranch]' started.
+Test Case '-[RoomInTheCartTests.LedgerCheckoutAdapterTests testGuestCheckoutReviewRequiresSameLedgerBasketAndBranch]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.LedgerCheckoutAdapterTests testNamedServingGroupsPartitionOneMealAndKeepStableNeedIdentities]' started.
+Test Case '-[RoomInTheCartTests.LedgerCheckoutAdapterTests testNamedServingGroupsPartitionOneMealAndKeepStableNeedIdentities]' passed (0.002 seconds).
+Test Case '-[RoomInTheCartTests.LedgerCheckoutAdapterTests testNextShopBridgeAndRepeatedOriginActionCreateOneEditableShop]' started.
+Test Case '-[RoomInTheCartTests.LedgerCheckoutAdapterTests testNextShopBridgeAndRepeatedOriginActionCreateOneEditableShop]' passed (0.052 seconds).
+Test Case '-[RoomInTheCartTests.LedgerCheckoutAdapterTests testSameLinesStillReviewRetailerSourceAndZoneChanges]' started.
+Test Case '-[RoomInTheCartTests.LedgerCheckoutAdapterTests testSameLinesStillReviewRetailerSourceAndZoneChanges]' passed (0.004 seconds).
+Test Case '-[RoomInTheCartTests.LedgerCheckoutAdapterTests testSourceChangesAfterPreviewAreRejectedEvenWhenQuantitiesStayTheSame]' started.
+Test Case '-[RoomInTheCartTests.LedgerCheckoutAdapterTests testSourceChangesAfterPreviewAreRejectedEvenWhenQuantitiesStayTheSame]' passed (0.023 seconds).
+Test Case '-[RoomInTheCartTests.LedgerCheckoutAdapterTests testTwelveExistingWrapsProjectSixFourTwoExactlyOnce]' started.
+Test Case '-[RoomInTheCartTests.LedgerCheckoutAdapterTests testTwelveExistingWrapsProjectSixFourTwoExactlyOnce]' passed (0.092 seconds).
+Test Case '-[RoomInTheCartTests.LedgerCheckoutAdapterTests testUnknownAmountsBlockProjectionAndMissingContextStaysMissing]' started.
+Test Case '-[RoomInTheCartTests.LedgerCheckoutAdapterTests testUnknownAmountsBlockProjectionAndMissingContextStaysMissing]' passed (0.001 seconds).
+Test Suite 'LedgerCheckoutAdapterTests' passed at 2026-11-07 00:56:50.142.
+	 Executed 10 tests, with 0 failures (0 unexpected) in 0.873 (0.881) seconds
+Test Suite 'RoomInTheCartTests.xctest' passed at 2026-11-07 00:56:50.142.
+	 Executed 10 tests, with 0 failures (0 unexpected) in 0.873 (0.882) seconds
+Test Suite 'Selected tests' passed at 2026-11-07 00:56:50.143.
+	 Executed 10 tests, with 0 failures (0 unexpected) in 0.873 (0.884) seconds
+2026-11-07 00:56:50.169 xcodebuild[15580:20418726] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-07 00:56:50.170 xcodebuild[15580:20418726] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232).
+2026-11-07 00:56:50.476 xcodebuild[15580:20418726] [MT] IDETestOperationsObserverDebug: 4.879 elapsed -- Testing started completed.
+2026-11-07 00:56:50.476 xcodebuild[15580:20418726] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-11-07 00:56:50.476 xcodebuild[15580:20418726] [MT] IDETestOperationsObserverDebug: 4.879 sec, +4.879 sec -- end
+
+Test session results, code coverage, and logs:
+	/Users/palatis/Room in the Cart/.build/S04ProtectedNeedsReview20261107/run1/S04.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

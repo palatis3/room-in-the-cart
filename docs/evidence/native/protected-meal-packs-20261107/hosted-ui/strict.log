@@ -1,0 +1,14 @@
+Executed 5 of 5 selected tests.
+
+| Test | Result | Seconds |
+|---|---|---|
+| RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testHidingProtectedLunchKeepsTotalAndTwoWholePacksWithoutStock | Passed | 245.49 |
+| RoomInTheCartUITests/RoomInTheCartUITests/testLargestTextSourceAndSavedDetailsAreFullyReadableAboveTabs | Passed | 201.58 |
+| RoomInTheCartUITests/FreeJourneyUITests/testStagedListCanReturnToOriginalAndMergeADuplicateAfterRestart | Passed | 199.87 |
+| RoomInTheCartUITests/FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval | Passed | 163.06 |
+| RoomInTheCartUITests/RoomInTheCartUITests/testUnknownPackAmountRemainsUnresolvedAfterSaveAndRestart | Passed | 134.31 |
+The XCTest log confirms one start and one passing completion per selected test.
+
+The XCTest test export recorded 0 runtime warning occurrences across 5 examined tests.
+The XCTest summary does not expose a runtime warnings field.
+
