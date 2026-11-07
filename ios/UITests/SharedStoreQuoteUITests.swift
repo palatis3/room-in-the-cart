@@ -174,8 +174,21 @@ import XCTest
         fill(trip,into:prefix+"tripCash")
         fill(minutes,into:prefix+"extraMinutes")
     }
-    private func confirm() { enableSwitch("sharedQuotes.acknowledged"); tap(element("sharedQuotes.confirm")) }
-    private func fixture(_ label: String) { tap(element("fixture.s27.controls")); tap(app.buttons[label]) }
+    private func confirm() {
+        let acknowledgment = app.buttons["sharedQuotes.acknowledged"]
+        let confirm = app.buttons["sharedQuotes.confirm"]
+        // The unknown-trip explanation can push the confirmation row outside the lazy Form.
+        reveal(confirm)
+        XCTAssertFalse(confirm.isEnabled)
+        reveal(acknowledgment)
+        XCTAssertFalse(acknowledgment.isSelected)
+        tap(acknowledgment)
+        XCTAssertTrue(acknowledgment.isSelected)
+        reveal(confirm)
+        XCTAssertTrue(confirm.isEnabled)
+        tap(confirm)
+    }
+    private func fixture(_ label: String) { tap(element("fixture.s27.showControls")); tap(app.buttons[label]) }
     private func counter(_ id: String, _ n: Int) {
         let label = id == "saves" ? "Saves":id == "proposals" ? "Proposals":id == "adoptions" ? "Adoptions":"POSTs"
         let expectation = XCTNSPredicateExpectation(predicate:NSPredicate(format:"exists == true AND label == %@","\(label): \(n)"),object:element("fixture.s27."+id))
