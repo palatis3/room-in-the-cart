@@ -108,8 +108,11 @@ public enum SharedCookCopyEdit: Sendable {
             if let recovery {
                 guard let pantry, let meal = recovery.meals.first(where: { $0.id == occurrence.id }) else { throw ClientError.configuration }
                 try recovery.validate(delivery: page, pantry: pantry)
-                body["recoveryRevision"] = .integer(recovery.base.recoveryRevision)
-                body["revisionId"] = .string(meal.revisionId.uuidString.lowercased())
+                guard let source = recovery.mealSources.first(where: { $0.occurrenceId == meal.id }) else { throw ClientError.configuration }
+                if meal.revisionId != source.sealedRevisionId {
+                    body["recoveryRevision"] = .integer(recovery.base.recoveryRevision)
+                    body["revisionId"] = .string(meal.revisionId.uuidString.lowercased())
+                }
             }
             return body
         case let .markSent(copy, recipient, previous):

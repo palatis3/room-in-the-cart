@@ -317,6 +317,11 @@ final class SharedMealNativeWireTests: XCTestCase {
             try await service.prepare(envelope: .init(replayWindow: window.id, shopId: id, kind: kind,
                 base: .init(shopRevision: desk.base.shopRevision, authorityEpoch: desk.base.authorityEpoch), body: fields), bootstrap: scope)
         }
+        let unchanged = SharedCookCopyEdit.save(text: "Original meal from the recovery desk", language: "en", occurrence: occurrence)
+        let unchangedFields = try unchanged.body(reviewed: facts.delivery, pantry: facts.pantry, recovery: desk)
+        XCTAssertNil(unchangedFields["revisionId"]); XCTAssertNil(unchangedFields["recoveryRevision"])
+        let originalCopy = try await operation(unchanged.kind, unchangedFields)
+        _ = try await service.executeSharedShop(originalCopy)
         let applied = try await operation("mealRecovery.apply", intent.commandBody(reviewed: desk, preview: preview))
         let first = try await service.executeSharedShop(applied)
         let replay = try await service.executeSharedShop(applied)
