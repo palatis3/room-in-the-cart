@@ -90,7 +90,7 @@ struct SharedRecoveryDeskView: View {
                 self.fallbackSession = nil
             }
         }
-        .sheet(item: $fallbackSession) { session in
+        .fullScreenCover(item: $fallbackSession) { session in
             NavigationStack {
                 SharedFallbackRoot(shop: model, household: household, page: session.page) { saved in
                     applied = saved
