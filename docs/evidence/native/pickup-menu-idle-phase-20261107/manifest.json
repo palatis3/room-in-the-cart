@@ -1,0 +1,16 @@
+{
+  "files": [
+    {
+      "path": "scripts/check_ios_test_results.py",
+      "baseSHA256": "17b8af9e6fcee857e14a3b3ea92baf8b5e410468c7e8482c89aa62c8edfdd990",
+      "candidateSHA256": "b3602a28c29732b9e67fe8daabebf582fd9b93a6fc884af3fa32b0c8f4fbf2cc"
+    },
+    {
+      "path": "scripts/test_check_ios_test_results.py",
+      "baseSHA256": "7543d56073f538f70f531e859f0b4e4a1f952bd6ac61870be21de9c4805730c5",
+      "candidateSHA256": "dd45a7a19f13dabb0e187cc066051c7012a718d2f9fd337ac30c8df4723f0ad2"
+    }
+  ],
+  "patchSHA256": "2997f7d359db9e2f1c523cd442ef733f89bef6fdc06e73fda6918eddaabd12c6",
+  "scope": "one exact selector adds exact app idle phase; original total cap2, tap, device, configuration, message, UUID and ancestry validation unchanged"
+}

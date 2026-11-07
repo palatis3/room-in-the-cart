@@ -1,0 +1,140 @@
+{
+  "candidate": "1080fad4999cb6c4ff34c20e99e5b72247e23e23",
+  "runID": 42352333755,
+  "attempt": 1,
+  "jobID": 128347410639,
+  "artifactID": 13568596283,
+  "testIdentifierURL": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges",
+  "nativeCaseResult": "Passed",
+  "caseDurationSeconds": 107.38584005832672,
+  "detailResult": "Passed",
+  "runtime": [
+    {
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+        "deviceName": "iPhone 17",
+        "modelName": "iPhone 17",
+        "osBuildNumber": "23C54",
+        "osVersion": "26.2",
+        "platform": "iOS Simulator"
+      },
+      "expectedFailures": 0,
+      "failedTests": 0,
+      "passedTests": 6,
+      "skippedTests": 0,
+      "testPlanConfiguration": {
+        "configurationId": "1",
+        "configurationName": "Test Scheme Action"
+      }
+    }
+  ],
+  "activityRuntime": {
+    "device": {
+      "architecture": "arm64",
+      "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+      "deviceName": "iPhone 17",
+      "modelName": "iPhone 17",
+      "osBuildNumber": "23C54",
+      "osVersion": "26.2",
+      "platform": "iOS Simulator"
+    },
+    "testPlanConfiguration": {
+      "configurationId": "1",
+      "configurationName": "Test Scheme Action"
+    }
+  },
+  "warningDetailRecords": [
+    {
+      "children": [
+        {
+          "name": "Complete Issue Description.txt",
+          "nodeIdentifier": "E58558F4-7828-4262-80DF-915A4AFDB406",
+          "nodeType": "Attachment"
+        }
+      ],
+      "name": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+      "nodeType": "Runtime Warning"
+    },
+    {
+      "children": [
+        {
+          "name": "Complete Issue Description.txt",
+          "nodeIdentifier": "686C8426-053A-4DC4-A81F-DF29F3456922",
+          "nodeType": "Attachment"
+        }
+      ],
+      "name": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+      "nodeType": "Runtime Warning"
+    }
+  ],
+  "activityWarningRecords": [
+    {
+      "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+      "parentPath": [
+        {
+          "activityType": "com.apple.dt.xctest.activity-type.internal",
+          "title": "Tap \"ledgerShopPicker\" Button"
+        },
+        {
+          "activityType": "com.apple.dt.xctest.activity-type.internal",
+          "title": "Wait for dev.roominthecart.app.debug to idle"
+        }
+      ],
+      "activityIssueAttachmentUUID": "06e48b20-6856-40d4-a29b-c01c610800da"
+    },
+    {
+      "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+      "parentPath": [
+        {
+          "activityType": "com.apple.dt.xctest.activity-type.internal",
+          "title": "Tap \"ledgerShopPicker\" Button"
+        },
+        {
+          "activityType": "com.apple.dt.xctest.activity-type.internal",
+          "title": "Wait for dev.roominthecart.app.debug to idle"
+        }
+      ],
+      "activityIssueAttachmentUUID": "145416f7-9276-4f95-9345-ebacc6bff70b"
+    }
+  ],
+  "uniqueActivityIssueCount": 2,
+  "candidateAllowlist": [
+    2,
+    "Tap \"ledgerShopPicker\" Button",
+    "Synthesize event"
+  ],
+  "candidateAlternatePhases": [],
+  "targetOnlyWarningReplay": {
+    "status": "unexpected-warnings",
+    "summaryWarningCount": null,
+    "runtimeWarningCount": 2,
+    "examinedTestCount": 1,
+    "detailExportCount": 1,
+    "activityExportCount": 1,
+    "warnings": [
+      {
+        "selector": "RoomInTheCartUITests/FreeJourneyUITests/testMealWeekKeepsOriginalPickupWhenShopSelectionChanges",
+        "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+        "count": 2,
+        "maximum": 0
+      }
+    ]
+  },
+  "bundleInfo": {
+    "dateCreated": "2026-11-07 08:39:47",
+    "externalLocations": [],
+    "rootId": {
+      "hash": "0~z7Smkm1ErR-K8gg_IST-1R47MYIduEZvf9C9qNvBCFQdRDPaqOpYFozMfN3I9lSIbi8Ws5yNAqtjr4aBldpV_w=="
+    },
+    "storage": {
+      "backend": "fileBacked2",
+      "compression": "standard"
+    },
+    "version": {
+      "major": 3,
+      "minor": 56
+    }
+  },
+  "scope": "Only this passed test case warning details/activities exported. Exact unmodified candidate warning checker applied to this one-case slice; no allowance changes and no other case or media exports. Hosted job failure remains unchanged."
+}
