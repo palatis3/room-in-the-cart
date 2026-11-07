@@ -1,0 +1,16 @@
+{
+  "files": {
+    "FINAL-AUDIT.json": "8b9cc36eb3beb677f3649f6c5d368c40e795102bc852cd204a3f1307f3ce07ec",
+    "FINAL-REVIEW.md": "25fd7723f362a8b89cebe392b4f424022f46237d47bcceff9bbc3612a72d93fa",
+    "FULL-COLLECTION-MANIFEST.json": "f1092ab46ea283aaec249e53bda19287ec19aa034f6b4995a7d775c86a9d0204",
+    "README.md": "59704c594a7f67fc93470d50a4782c257991248ce82a43d6dc69faedb4ea82fc",
+    "auditor-correction-before.json": "3a598c082da63c859da3b1ea7f936252c35525ad3663d91ac0e0157d339de8c3",
+    "auditor-correction-receipt.json": "12f19380157de13bc49ca0cecd2fca5ac24e31fe5fcd144e43a95879c3660367",
+    "auditor-correction-replay.log": "5cfee90c90a5be47a971a13b0f70eb2e85687db6bf080454571adaa495424fce",
+    "fixture-REVIEW.md": "967bd77233a9851b4525fa78230b5a4fe4a4a6112c1ed904f68ea376d7fa6816",
+    "fixture-terminal-proof.json": "ea2131280a792af46a1eb4eba70fc3f28dfbbb3efd7a7477f13ca23435ee2aa0",
+    "root-verification.json": "ca3a23209acb35631af973e7cf8457dd678803f6197618d948565eb400b23ddd",
+    "swift-archive-guard-refusal.json": "470a0303e4463465268d111db6187525b95bb0521bb152a54df2f78bed43a97b",
+    "swift-post-execution-manifest.json": "faca4f6a362a4645ff507be9e1fe52359bd4cb43fe3e64b3a87fe49737e4159d"
+  }
+}

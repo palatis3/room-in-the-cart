@@ -1,5 +1,7 @@
 # Current implementation and acceptance map
 
+The original8d1a79b CI cohort is now [terminal and independently frozen](evidence/native/ci-8d1a79b-20261107/README.md):604/604models,51/53ordinary UI,29/30StoreKit,47/47fixtures and all3performance gates pass in their recorded scopes. Two share-sheet readiness failures and the English StoreKit timeout remain open, including two runner restarts. Six UI and six fixture warning occurrences remain explicitly scoped. This evidence does not cover the later local commits or establish release acceptance.
+
 S04 now has complementary exact evidence for the six/four/two meal split and hiding protected needs. [Ten native model cases pass locally, and the unchanged protected-lunch UI case passes on hosted CI](evidence/native/protected-meal-packs-20261107/README.md). The strengthened existing test verifies two eight-packs and SQLite reopen without converting the mathematical remainder into confirmed stock.
 
 An [additive evidence refresh](evidence/native/screen-evidence-refresh-20261107/README.md) binds nine previously indirect Check clauses to exact current-source assertions and retained passing outcomes: checkout thresholds, usable-food correction and arrival replay, pending/included credits, and unavailable-source recipe editing. The historical 123-clause ledger is preserved; calculation proof remains distinct from native screen and release acceptance.

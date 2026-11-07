@@ -1,0 +1,3517 @@
+{
+  "candidate": "8d1a79b22981148839c6e3d0827c6710f877a369",
+  "runID": 42337977985,
+  "attempt": 1,
+  "hostedConclusion": "success",
+  "sourceFileCount": 482,
+  "sourceInventoryCount": 47,
+  "expectedShards": [
+    "DinnerDecisionSheetUITests",
+    "RecordsMediaUITests",
+    "SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview",
+    "SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn",
+    "SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult",
+    "SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption",
+    "SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave",
+    "SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable",
+    "SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction",
+    "contributor-balanced-01",
+    "contributor-balanced-02",
+    "contributor-balanced-03",
+    "contributor-balanced-04",
+    "contributor-balanced-05"
+  ],
+  "expectedSelectors": [
+    "RoomInTheCartUITests/ContributorRequestUITests/testSpanishLargeTextReviewStartsAtTheOriginalWording",
+    "RoomInTheCartUITests/ContributorRequestUITests/testTypedAndStructuredReviewCancelThenSendOnlyOwnRequest",
+    "RoomInTheCartUITests/CorrectionPrivacyAcceptanceUITests/testSettingsNamedForgetLastEntryOutcomeConfirmedOptOutAndDisconnectedHelp",
+    "RoomInTheCartUITests/DinnerAwayCarryoverUITests/testPhysicalCarryoverCancelApplyAndRestartKeepOriginalPurchase",
+    "RoomInTheCartUITests/DinnerDecisionSheetUITests/testEnglishGuestPackageBoundaryCheckoutAndCancel",
+    "RoomInTheCartUITests/DinnerDecisionSheetUITests/testEnglishPaidGroupReplacementAndGuestCancellation",
+    "RoomInTheCartUITests/DinnerDecisionSheetUITests/testLargestTypePairingSheetReturnsToItsInitiatingControl",
+    "RoomInTheCartUITests/DinnerDecisionSheetUITests/testSpanishGuestPackageBoundaryCheckoutAndCancel",
+    "RoomInTheCartUITests/DinnerDecisionSheetUITests/testSpanishPaidGroupReplacementAndGuestCancellation",
+    "RoomInTheCartUITests/GuardianEnrollmentUITests/testCancelSetupDialogHasExplicitCancelAndForegroundRestoresStatus",
+    "RoomInTheCartUITests/GuardianEnrollmentUITests/testChildForgetCancelAndForegroundKeepTheSamePairingWithoutActivation",
+    "RoomInTheCartUITests/GuardianEnrollmentUITests/testNoticeDeclarationVerificationPermissionPairingAndDialogCancellation",
+    "RoomInTheCartUITests/GuardianEnrollmentUITests/testRealRootColdChildMarkerAndSyntheticVaultCleanupPreserveAdultData",
+    "RoomInTheCartUITests/GuardianEnrollmentUITests/testRealRootLeaveCancelAndConfirmedExitRestoreLockedAdultAccess",
+    "RoomInTheCartUITests/GuardianEnrollmentUITests/testSpanishLargestTextUnavailableGateRemainsReadableAndClosed",
+    "RoomInTheCartUITests/GuardianEnrollmentUITests/testUnavailableNeverOffersCreationOrAdultVerification",
+    "RoomInTheCartUITests/GuardianEnrollmentUITests/testUncertainAttemptCanRefreshButCannotSendAnotherVerification",
+    "RoomInTheCartUITests/HistoryGrantReadUITests/testFreeGrantDiscoversReadOnlyShopOpensRawRecordsAndRejectsPaidAndForeignAccess",
+    "RoomInTheCartUITests/HistoryGrantReadUITests/testRevokedBudgetGrantClearsPreviouslyOpenedRawPeriodAndRememberedSource",
+    "RoomInTheCartUITests/HouseholdDevicesUITests/testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess",
+    "RoomInTheCartUITests/HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke",
+    "RoomInTheCartUITests/HouseholdRequestPackUITests/testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite",
+    "RoomInTheCartUITests/HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite",
+    "RoomInTheCartUITests/HouseholdRequestPackUITests/testUnavailableMealFactsRemainUnknownInRequestDecision",
+    "RoomInTheCartUITests/ImportRecoveryUITests/testDiscardKeepsPendingImportUncommittedAndReviewPresented",
+    "RoomInTheCartUITests/ImportRecoveryUITests/testRetryPersistsOneImportAndDismissesThroughItsCallback",
+    "RoomInTheCartUITests/MeasurementUITests/testAuthenticatedNoticeConsentExplicitClosedShopSendDeleteAndWithdrawal",
+    "RoomInTheCartUITests/MeasurementUITests/testLocalSettingsConsentIgnoresLegacyBooleanPersistsRestartAndStaysWorkspaceScoped",
+    "RoomInTheCartUITests/RecipeLibraryAcceptanceUITests/testDocumentedLibraryPreviewCancelCorruptPreservationApplyAndWholeBatchUndo",
+    "RoomInTheCartUITests/RecipeLibraryAcceptanceUITests/testImportedRecipeQuantityDismissesKeyboardAndRequiresExplicitPickupChoice",
+    "RoomInTheCartUITests/RecordsMediaUITests/testSelectedPhotoDisclosureEncryptedPreviewCancelSiblingRecoveryAndReadablePhoto",
+    "RoomInTheCartUITests/RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison",
+    "RoomInTheCartUITests/RequestDuplicateComparisonUITests/testSplitPageComparisonPreservesBothUsesAndCancelHasNoWriteThenDecidesOnlySam",
+    "RoomInTheCartUITests/SharedMealChangeUITests/testAssignedShopperMapsLocalSeedWithoutPlannerPostAndCanCancel",
+    "RoomInTheCartUITests/SharedMealChangeUITests/testPlannerCancelThenSendAndSeparateShopperCancelThenApplyExactlyOnce",
+    "RoomInTheCartUITests/SharedMealCivilDateUITests/testEnglishCivilDaysStayExactUnderUSTimeZoneEnvironments",
+    "RoomInTheCartUITests/SharedMealCivilDateUITests/testSpanishCivilDaysStayExactUnderUSTimeZoneEnvironments",
+    "RoomInTheCartUITests/SharedMealIdeaUITests/testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview",
+    "RoomInTheCartUITests/SharedMealIdeaUITests/testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn",
+    "RoomInTheCartUITests/SharedStoreQuoteUITests/testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult",
+    "RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption",
+    "RoomInTheCartUITests/SharedStoreQuoteUITests/testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave",
+    "RoomInTheCartUITests/SharedStoreQuoteUITests/testSpanishLargestTextKeepsRealQuoteEntryDiscoverable",
+    "RoomInTheCartUITests/SharedStoreQuoteUITests/testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction",
+    "RoomInTheCartUITests/StockReviewUITests/testChangedMealRevisionDisablesPreviewWithoutApplyingBatch",
+    "RoomInTheCartUITests/StockReviewUITests/testKeyboardDoneAcceptsCenterAndTargetMargins",
+    "RoomInTheCartUITests/StockReviewUITests/testPreviewCancelThenConfirmShowsEveryMealAndFreshCookInstructionAfterRestart"
+  ],
+  "perShard": {
+    "contributor-balanced-02": {
+      "artifactID": 13561513440,
+      "archiveSHA256": "36db919383ccca001494ae27e7eecdb808f5d5cc0e0d487250c9bfc7a84ed7e8",
+      "archiveBytes": 23613333,
+      "pristineUnchanged": true,
+      "selected": 9,
+      "selectors": [
+        "RoomInTheCartUITests/ContributorRequestUITests/testSpanishLargeTextReviewStartsAtTheOriginalWording",
+        "RoomInTheCartUITests/ContributorRequestUITests/testTypedAndStructuredReviewCancelThenSendOnlyOwnRequest",
+        "RoomInTheCartUITests/ImportRecoveryUITests/testDiscardKeepsPendingImportUncommittedAndReviewPresented",
+        "RoomInTheCartUITests/ImportRecoveryUITests/testRetryPersistsOneImportAndDismissesThroughItsCallback",
+        "RoomInTheCartUITests/MeasurementUITests/testAuthenticatedNoticeConsentExplicitClosedShopSendDeleteAndWithdrawal",
+        "RoomInTheCartUITests/MeasurementUITests/testLocalSettingsConsentIgnoresLegacyBooleanPersistsRestartAndStaysWorkspaceScoped",
+        "RoomInTheCartUITests/StockReviewUITests/testChangedMealRevisionDisablesPreviewWithoutApplyingBatch",
+        "RoomInTheCartUITests/StockReviewUITests/testKeyboardDoneAcceptsCenterAndTargetMargins",
+        "RoomInTheCartUITests/StockReviewUITests/testPreviewCancelThenConfirmShowsEveryMealAndFreshCookInstructionAfterRestart"
+      ],
+      "hostedConclusion": "success",
+      "planByteIdentical": true,
+      "strictReplayExit": 0,
+      "cases": [
+        {
+          "selector": "RoomInTheCartUITests/ContributorRequestUITests/testSpanishLargeTextReviewStartsAtTheOriginalWording",
+          "result": "Passed",
+          "durationSeconds": 153.8751300573349
+        },
+        {
+          "selector": "RoomInTheCartUITests/ContributorRequestUITests/testTypedAndStructuredReviewCancelThenSendOnlyOwnRequest",
+          "result": "Passed",
+          "durationSeconds": 424.6686760187149
+        },
+        {
+          "selector": "RoomInTheCartUITests/ImportRecoveryUITests/testDiscardKeepsPendingImportUncommittedAndReviewPresented",
+          "result": "Passed",
+          "durationSeconds": 44.81799101829529
+        },
+        {
+          "selector": "RoomInTheCartUITests/ImportRecoveryUITests/testRetryPersistsOneImportAndDismissesThroughItsCallback",
+          "result": "Passed",
+          "durationSeconds": 42.82307004928589
+        },
+        {
+          "selector": "RoomInTheCartUITests/MeasurementUITests/testAuthenticatedNoticeConsentExplicitClosedShopSendDeleteAndWithdrawal",
+          "result": "Passed",
+          "durationSeconds": 111.6051390171051
+        },
+        {
+          "selector": "RoomInTheCartUITests/MeasurementUITests/testLocalSettingsConsentIgnoresLegacyBooleanPersistsRestartAndStaysWorkspaceScoped",
+          "result": "Passed",
+          "durationSeconds": 69.30451595783234
+        },
+        {
+          "selector": "RoomInTheCartUITests/StockReviewUITests/testChangedMealRevisionDisablesPreviewWithoutApplyingBatch",
+          "result": "Passed",
+          "durationSeconds": 30.888818979263306
+        },
+        {
+          "selector": "RoomInTheCartUITests/StockReviewUITests/testKeyboardDoneAcceptsCenterAndTargetMargins",
+          "result": "Passed",
+          "durationSeconds": 175.03285098075867
+        },
+        {
+          "selector": "RoomInTheCartUITests/StockReviewUITests/testPreviewCancelThenConfirmShowsEveryMealAndFreshCookInstructionAfterRestart",
+          "result": "Passed",
+          "durationSeconds": 76.53986501693726
+        }
+      ],
+      "runtime": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+            "deviceName": "iPhone 17",
+            "modelName": "iPhone 17",
+            "osBuildNumber": "23C54",
+            "osVersion": "26.2",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 9,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "actualRuntimeMatches": true,
+      "runtimeWarnings": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 9,
+        "detailExportCount": 9,
+        "activityExportCount": 0,
+        "warnings": []
+      },
+      "observedStarts": [
+        "RoomInTheCartUITests/ContributorRequestUITests/testSpanishLargeTextReviewStartsAtTheOriginalWording",
+        "RoomInTheCartUITests/ContributorRequestUITests/testTypedAndStructuredReviewCancelThenSendOnlyOwnRequest",
+        "RoomInTheCartUITests/ImportRecoveryUITests/testDiscardKeepsPendingImportUncommittedAndReviewPresented",
+        "RoomInTheCartUITests/ImportRecoveryUITests/testRetryPersistsOneImportAndDismissesThroughItsCallback",
+        "RoomInTheCartUITests/MeasurementUITests/testAuthenticatedNoticeConsentExplicitClosedShopSendDeleteAndWithdrawal",
+        "RoomInTheCartUITests/MeasurementUITests/testLocalSettingsConsentIgnoresLegacyBooleanPersistsRestartAndStaysWorkspaceScoped",
+        "RoomInTheCartUITests/StockReviewUITests/testChangedMealRevisionDisablesPreviewWithoutApplyingBatch",
+        "RoomInTheCartUITests/StockReviewUITests/testKeyboardDoneAcceptsCenterAndTargetMargins",
+        "RoomInTheCartUITests/StockReviewUITests/testPreviewCancelThenConfirmShowsEveryMealAndFreshCookInstructionAfterRestart"
+      ],
+      "startOrderMatches": true,
+      "serialLogFailures": [],
+      "rawAttempts": {
+        "Tests.log": {
+          "sha256": "27b1763c9e40e1d411a2551b4dd730da9413de7c73ec819900aea024e698d9ba",
+          "starts": 9,
+          "restarts": 0
+        }
+      },
+      "hostedRetryArtifactPresent": false,
+      "totalStartedAcrossRawAttempts": 9,
+      "totalRestartsAcrossRawAttempts": 0,
+      "invocation": {
+        "defaultSeconds": "720",
+        "maximumSeconds": "900",
+        "parallel": "NO",
+        "timeoutsEnabled": "YES",
+        "diagnostics": "never",
+        "selectorArgsMatch": true,
+        "xcodePath": "/Applications/Xcode_26.3.app/Contents/Developer/usr/bin/xcodebuild"
+      },
+      "invocationMatches": true
+    },
+    "contributor-balanced-05": {
+      "artifactID": 13561861689,
+      "archiveSHA256": "36f41ad37ee7f73c4a90fa864800a780ab0dec9eb8644091cb06121c0ebe7e8c",
+      "archiveBytes": 15084721,
+      "pristineUnchanged": true,
+      "selected": 11,
+      "selectors": [
+        "RoomInTheCartUITests/CorrectionPrivacyAcceptanceUITests/testSettingsNamedForgetLastEntryOutcomeConfirmedOptOutAndDisconnectedHelp",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testCancelSetupDialogHasExplicitCancelAndForegroundRestoresStatus",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testChildForgetCancelAndForegroundKeepTheSamePairingWithoutActivation",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testNoticeDeclarationVerificationPermissionPairingAndDialogCancellation",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testRealRootColdChildMarkerAndSyntheticVaultCleanupPreserveAdultData",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testRealRootLeaveCancelAndConfirmedExitRestoreLockedAdultAccess",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testSpanishLargestTextUnavailableGateRemainsReadableAndClosed",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testUnavailableNeverOffersCreationOrAdultVerification",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testUncertainAttemptCanRefreshButCannotSendAnotherVerification",
+        "RoomInTheCartUITests/SharedMealChangeUITests/testAssignedShopperMapsLocalSeedWithoutPlannerPostAndCanCancel",
+        "RoomInTheCartUITests/SharedMealChangeUITests/testPlannerCancelThenSendAndSeparateShopperCancelThenApplyExactlyOnce"
+      ],
+      "hostedConclusion": "success",
+      "planByteIdentical": true,
+      "strictReplayExit": 0,
+      "cases": [
+        {
+          "selector": "RoomInTheCartUITests/CorrectionPrivacyAcceptanceUITests/testSettingsNamedForgetLastEntryOutcomeConfirmedOptOutAndDisconnectedHelp",
+          "result": "Passed",
+          "durationSeconds": 142.04380095005035
+        },
+        {
+          "selector": "RoomInTheCartUITests/GuardianEnrollmentUITests/testCancelSetupDialogHasExplicitCancelAndForegroundRestoresStatus",
+          "result": "Passed",
+          "durationSeconds": 37.16135597229004
+        },
+        {
+          "selector": "RoomInTheCartUITests/GuardianEnrollmentUITests/testChildForgetCancelAndForegroundKeepTheSamePairingWithoutActivation",
+          "result": "Passed",
+          "durationSeconds": 22.37875497341156
+        },
+        {
+          "selector": "RoomInTheCartUITests/GuardianEnrollmentUITests/testNoticeDeclarationVerificationPermissionPairingAndDialogCancellation",
+          "result": "Passed",
+          "durationSeconds": 281.547159075737
+        },
+        {
+          "selector": "RoomInTheCartUITests/GuardianEnrollmentUITests/testRealRootColdChildMarkerAndSyntheticVaultCleanupPreserveAdultData",
+          "result": "Passed",
+          "durationSeconds": 48.17023491859436
+        },
+        {
+          "selector": "RoomInTheCartUITests/GuardianEnrollmentUITests/testRealRootLeaveCancelAndConfirmedExitRestoreLockedAdultAccess",
+          "result": "Passed",
+          "durationSeconds": 49.253239035606384
+        },
+        {
+          "selector": "RoomInTheCartUITests/GuardianEnrollmentUITests/testSpanishLargestTextUnavailableGateRemainsReadableAndClosed",
+          "result": "Passed",
+          "durationSeconds": 25.987954020500183
+        },
+        {
+          "selector": "RoomInTheCartUITests/GuardianEnrollmentUITests/testUnavailableNeverOffersCreationOrAdultVerification",
+          "result": "Passed",
+          "durationSeconds": 16.205996990203857
+        },
+        {
+          "selector": "RoomInTheCartUITests/GuardianEnrollmentUITests/testUncertainAttemptCanRefreshButCannotSendAnotherVerification",
+          "result": "Passed",
+          "durationSeconds": 18.33552098274231
+        },
+        {
+          "selector": "RoomInTheCartUITests/SharedMealChangeUITests/testAssignedShopperMapsLocalSeedWithoutPlannerPostAndCanCancel",
+          "result": "Passed",
+          "durationSeconds": 214.3078489303589
+        },
+        {
+          "selector": "RoomInTheCartUITests/SharedMealChangeUITests/testPlannerCancelThenSendAndSeparateShopperCancelThenApplyExactlyOnce",
+          "result": "Passed",
+          "durationSeconds": 230.21054792404175
+        }
+      ],
+      "runtime": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+            "deviceName": "iPhone 17",
+            "modelName": "iPhone 17",
+            "osBuildNumber": "23C54",
+            "osVersion": "26.2",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 11,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "actualRuntimeMatches": true,
+      "runtimeWarnings": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 11,
+        "detailExportCount": 11,
+        "activityExportCount": 0,
+        "warnings": []
+      },
+      "observedStarts": [
+        "RoomInTheCartUITests/CorrectionPrivacyAcceptanceUITests/testSettingsNamedForgetLastEntryOutcomeConfirmedOptOutAndDisconnectedHelp",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testCancelSetupDialogHasExplicitCancelAndForegroundRestoresStatus",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testChildForgetCancelAndForegroundKeepTheSamePairingWithoutActivation",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testNoticeDeclarationVerificationPermissionPairingAndDialogCancellation",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testRealRootColdChildMarkerAndSyntheticVaultCleanupPreserveAdultData",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testRealRootLeaveCancelAndConfirmedExitRestoreLockedAdultAccess",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testSpanishLargestTextUnavailableGateRemainsReadableAndClosed",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testUnavailableNeverOffersCreationOrAdultVerification",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testUncertainAttemptCanRefreshButCannotSendAnotherVerification",
+        "RoomInTheCartUITests/SharedMealChangeUITests/testAssignedShopperMapsLocalSeedWithoutPlannerPostAndCanCancel",
+        "RoomInTheCartUITests/SharedMealChangeUITests/testPlannerCancelThenSendAndSeparateShopperCancelThenApplyExactlyOnce"
+      ],
+      "startOrderMatches": true,
+      "serialLogFailures": [],
+      "rawAttempts": {
+        "Tests.log": {
+          "sha256": "c99587b6a3b25b84c931700139b59fff24dfea1e8acb541555ea55743024571c",
+          "starts": 11,
+          "restarts": 0
+        }
+      },
+      "hostedRetryArtifactPresent": false,
+      "totalStartedAcrossRawAttempts": 11,
+      "totalRestartsAcrossRawAttempts": 0,
+      "invocation": {
+        "defaultSeconds": "720",
+        "maximumSeconds": "900",
+        "parallel": "NO",
+        "timeoutsEnabled": "YES",
+        "diagnostics": "never",
+        "selectorArgsMatch": true,
+        "xcodePath": "/Applications/Xcode_26.3.app/Contents/Developer/usr/bin/xcodebuild"
+      },
+      "invocationMatches": true
+    },
+    "contributor-balanced-01": {
+      "artifactID": 13561862078,
+      "archiveSHA256": "44deae131daf637897398636319ba4aea6d93b8b28de74f254ed4295b87e9045",
+      "archiveBytes": 25611071,
+      "pristineUnchanged": true,
+      "selected": 3,
+      "selectors": [
+        "RoomInTheCartUITests/DinnerAwayCarryoverUITests/testPhysicalCarryoverCancelApplyAndRestartKeepOriginalPurchase",
+        "RoomInTheCartUITests/RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison",
+        "RoomInTheCartUITests/RequestDuplicateComparisonUITests/testSplitPageComparisonPreservesBothUsesAndCancelHasNoWriteThenDecidesOnlySam"
+      ],
+      "hostedConclusion": "success",
+      "planByteIdentical": true,
+      "strictReplayExit": 0,
+      "cases": [
+        {
+          "selector": "RoomInTheCartUITests/DinnerAwayCarryoverUITests/testPhysicalCarryoverCancelApplyAndRestartKeepOriginalPurchase",
+          "result": "Passed",
+          "durationSeconds": 175.19122898578644
+        },
+        {
+          "selector": "RoomInTheCartUITests/RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison",
+          "result": "Passed",
+          "durationSeconds": 602.7332099676132
+        },
+        {
+          "selector": "RoomInTheCartUITests/RequestDuplicateComparisonUITests/testSplitPageComparisonPreservesBothUsesAndCancelHasNoWriteThenDecidesOnlySam",
+          "result": "Passed",
+          "durationSeconds": 235.083251953125
+        }
+      ],
+      "runtime": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+            "deviceName": "iPhone 17",
+            "modelName": "iPhone 17",
+            "osBuildNumber": "23C54",
+            "osVersion": "26.2",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 3,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "actualRuntimeMatches": true,
+      "runtimeWarnings": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 3,
+        "detailExportCount": 3,
+        "activityExportCount": 0,
+        "warnings": []
+      },
+      "observedStarts": [
+        "RoomInTheCartUITests/DinnerAwayCarryoverUITests/testPhysicalCarryoverCancelApplyAndRestartKeepOriginalPurchase",
+        "RoomInTheCartUITests/RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison",
+        "RoomInTheCartUITests/RequestDuplicateComparisonUITests/testSplitPageComparisonPreservesBothUsesAndCancelHasNoWriteThenDecidesOnlySam"
+      ],
+      "startOrderMatches": true,
+      "serialLogFailures": [],
+      "rawAttempts": {
+        "Tests.log": {
+          "sha256": "cb416861e8d369dc5d49376203b9138b314dfc5d7c384768769d96faa6b109a0",
+          "starts": 3,
+          "restarts": 0
+        }
+      },
+      "hostedRetryArtifactPresent": false,
+      "totalStartedAcrossRawAttempts": 3,
+      "totalRestartsAcrossRawAttempts": 0,
+      "invocation": {
+        "defaultSeconds": "720",
+        "maximumSeconds": "900",
+        "parallel": "NO",
+        "timeoutsEnabled": "YES",
+        "diagnostics": "never",
+        "selectorArgsMatch": true,
+        "xcodePath": "/Applications/Xcode_26.3.app/Contents/Developer/usr/bin/xcodebuild"
+      },
+      "invocationMatches": true
+    },
+    "contributor-balanced-04": {
+      "artifactID": 13561625958,
+      "archiveSHA256": "c006c372a0cec985357c1057cdbd093b278f4695c0f57953db732c20e13be60e",
+      "archiveBytes": 8954644,
+      "pristineUnchanged": true,
+      "selected": 4,
+      "selectors": [
+        "RoomInTheCartUITests/HistoryGrantReadUITests/testFreeGrantDiscoversReadOnlyShopOpensRawRecordsAndRejectsPaidAndForeignAccess",
+        "RoomInTheCartUITests/HistoryGrantReadUITests/testRevokedBudgetGrantClearsPreviouslyOpenedRawPeriodAndRememberedSource",
+        "RoomInTheCartUITests/RecipeLibraryAcceptanceUITests/testDocumentedLibraryPreviewCancelCorruptPreservationApplyAndWholeBatchUndo",
+        "RoomInTheCartUITests/RecipeLibraryAcceptanceUITests/testImportedRecipeQuantityDismissesKeyboardAndRequiresExplicitPickupChoice"
+      ],
+      "hostedConclusion": "success",
+      "planByteIdentical": true,
+      "strictReplayExit": 0,
+      "cases": [
+        {
+          "selector": "RoomInTheCartUITests/HistoryGrantReadUITests/testFreeGrantDiscoversReadOnlyShopOpensRawRecordsAndRejectsPaidAndForeignAccess",
+          "result": "Passed",
+          "durationSeconds": 184.7736679315567
+        },
+        {
+          "selector": "RoomInTheCartUITests/HistoryGrantReadUITests/testRevokedBudgetGrantClearsPreviouslyOpenedRawPeriodAndRememberedSource",
+          "result": "Passed",
+          "durationSeconds": 117.85973799228668
+        },
+        {
+          "selector": "RoomInTheCartUITests/RecipeLibraryAcceptanceUITests/testDocumentedLibraryPreviewCancelCorruptPreservationApplyAndWholeBatchUndo",
+          "result": "Passed",
+          "durationSeconds": 289.77575302124023
+        },
+        {
+          "selector": "RoomInTheCartUITests/RecipeLibraryAcceptanceUITests/testImportedRecipeQuantityDismissesKeyboardAndRequiresExplicitPickupChoice",
+          "result": "Passed",
+          "durationSeconds": 124.31515002250671
+        }
+      ],
+      "runtime": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+            "deviceName": "iPhone 17",
+            "modelName": "iPhone 17",
+            "osBuildNumber": "23C54",
+            "osVersion": "26.2",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 4,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "actualRuntimeMatches": true,
+      "runtimeWarnings": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 4,
+        "detailExportCount": 4,
+        "activityExportCount": 0,
+        "warnings": []
+      },
+      "observedStarts": [
+        "RoomInTheCartUITests/HistoryGrantReadUITests/testFreeGrantDiscoversReadOnlyShopOpensRawRecordsAndRejectsPaidAndForeignAccess",
+        "RoomInTheCartUITests/HistoryGrantReadUITests/testRevokedBudgetGrantClearsPreviouslyOpenedRawPeriodAndRememberedSource",
+        "RoomInTheCartUITests/RecipeLibraryAcceptanceUITests/testDocumentedLibraryPreviewCancelCorruptPreservationApplyAndWholeBatchUndo",
+        "RoomInTheCartUITests/RecipeLibraryAcceptanceUITests/testImportedRecipeQuantityDismissesKeyboardAndRequiresExplicitPickupChoice"
+      ],
+      "startOrderMatches": true,
+      "serialLogFailures": [],
+      "rawAttempts": {
+        "Tests.log": {
+          "sha256": "4bdf57b4779871b0f3a4613ef99c07a994a77a57763c19ab1f06a74f25ceb583",
+          "starts": 4,
+          "restarts": 0
+        }
+      },
+      "hostedRetryArtifactPresent": false,
+      "totalStartedAcrossRawAttempts": 4,
+      "totalRestartsAcrossRawAttempts": 0,
+      "invocation": {
+        "defaultSeconds": "720",
+        "maximumSeconds": "900",
+        "parallel": "NO",
+        "timeoutsEnabled": "YES",
+        "diagnostics": "never",
+        "selectorArgsMatch": true,
+        "xcodePath": "/Applications/Xcode_26.3.app/Contents/Developer/usr/bin/xcodebuild"
+      },
+      "invocationMatches": true
+    },
+    "contributor-balanced-03": {
+      "artifactID": 13561722442,
+      "archiveSHA256": "a6e7c06fce0273f965aeba27e21b5cb0ed3102e1d232212a1d2366480d16936f",
+      "archiveBytes": 26734290,
+      "pristineUnchanged": true,
+      "selected": 7,
+      "selectors": [
+        "RoomInTheCartUITests/HouseholdDevicesUITests/testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess",
+        "RoomInTheCartUITests/HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke",
+        "RoomInTheCartUITests/HouseholdRequestPackUITests/testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite",
+        "RoomInTheCartUITests/HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite",
+        "RoomInTheCartUITests/HouseholdRequestPackUITests/testUnavailableMealFactsRemainUnknownInRequestDecision",
+        "RoomInTheCartUITests/SharedMealCivilDateUITests/testEnglishCivilDaysStayExactUnderUSTimeZoneEnvironments",
+        "RoomInTheCartUITests/SharedMealCivilDateUITests/testSpanishCivilDaysStayExactUnderUSTimeZoneEnvironments"
+      ],
+      "hostedConclusion": "success",
+      "planByteIdentical": true,
+      "strictReplayExit": 0,
+      "cases": [
+        {
+          "selector": "RoomInTheCartUITests/HouseholdDevicesUITests/testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess",
+          "result": "Passed",
+          "durationSeconds": 116.83119189739227
+        },
+        {
+          "selector": "RoomInTheCartUITests/HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke",
+          "result": "Passed",
+          "durationSeconds": 183.21430599689484
+        },
+        {
+          "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite",
+          "result": "Passed",
+          "durationSeconds": 109.00239598751068
+        },
+        {
+          "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite",
+          "result": "Passed",
+          "durationSeconds": 311.04984200000763
+        },
+        {
+          "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testUnavailableMealFactsRemainUnknownInRequestDecision",
+          "result": "Passed",
+          "durationSeconds": 66.86140298843384
+        },
+        {
+          "selector": "RoomInTheCartUITests/SharedMealCivilDateUITests/testEnglishCivilDaysStayExactUnderUSTimeZoneEnvironments",
+          "result": "Passed",
+          "durationSeconds": 41.851715087890625
+        },
+        {
+          "selector": "RoomInTheCartUITests/SharedMealCivilDateUITests/testSpanishCivilDaysStayExactUnderUSTimeZoneEnvironments",
+          "result": "Passed",
+          "durationSeconds": 40.3848739862442
+        }
+      ],
+      "runtime": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+            "deviceName": "iPhone 17",
+            "modelName": "iPhone 17",
+            "osBuildNumber": "23C54",
+            "osVersion": "26.2",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 7,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "actualRuntimeMatches": true,
+      "runtimeWarnings": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 7,
+        "detailExportCount": 7,
+        "activityExportCount": 0,
+        "warnings": []
+      },
+      "observedStarts": [
+        "RoomInTheCartUITests/HouseholdDevicesUITests/testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess",
+        "RoomInTheCartUITests/HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke",
+        "RoomInTheCartUITests/HouseholdRequestPackUITests/testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite",
+        "RoomInTheCartUITests/HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite",
+        "RoomInTheCartUITests/HouseholdRequestPackUITests/testUnavailableMealFactsRemainUnknownInRequestDecision",
+        "RoomInTheCartUITests/SharedMealCivilDateUITests/testEnglishCivilDaysStayExactUnderUSTimeZoneEnvironments",
+        "RoomInTheCartUITests/SharedMealCivilDateUITests/testSpanishCivilDaysStayExactUnderUSTimeZoneEnvironments"
+      ],
+      "startOrderMatches": true,
+      "serialLogFailures": [],
+      "rawAttempts": {
+        "Tests.log": {
+          "sha256": "db21b9cba3b4e0def3b1ed95e0ab7e12def3a5cc8c75b891bc457ad0a14eaaa7",
+          "starts": 7,
+          "restarts": 0
+        }
+      },
+      "hostedRetryArtifactPresent": false,
+      "totalStartedAcrossRawAttempts": 7,
+      "totalRestartsAcrossRawAttempts": 0,
+      "invocation": {
+        "defaultSeconds": "720",
+        "maximumSeconds": "900",
+        "parallel": "NO",
+        "timeoutsEnabled": "YES",
+        "diagnostics": "never",
+        "selectorArgsMatch": true,
+        "xcodePath": "/Applications/Xcode_26.3.app/Contents/Developer/usr/bin/xcodebuild"
+      },
+      "invocationMatches": true
+    },
+    "RecordsMediaUITests": {
+      "artifactID": 13562237519,
+      "archiveSHA256": "a2564f89f07f14dd42e30ad7cca956174cf89eaafe184bdef72c5d38d6b0ab50",
+      "archiveBytes": 27258,
+      "pristineUnchanged": true,
+      "selected": 1,
+      "selectors": [
+        "RoomInTheCartUITests/RecordsMediaUITests/testSelectedPhotoDisclosureEncryptedPreviewCancelSiblingRecoveryAndReadablePhoto"
+      ],
+      "hostedConclusion": "success",
+      "planByteIdentical": true,
+      "artifactName": "iphone-fixture-results-RecordsMediaUITests-1",
+      "sha256": "a2564f89f07f14dd42e30ad7cca956174cf89eaafe184bdef72c5d38d6b0ab50",
+      "size": 27258,
+      "digestVerified": true,
+      "candidate": "8d1a79b22981148839c6e3d0827c6710f877a369",
+      "runID": 42337977985,
+      "jobID": 128308042689,
+      "zipAllowlistVerified": true,
+      "allowedMembers": [
+        "records-test-report.md",
+        "test-plan/RecordsMediaUITests.txt",
+        "test-plan/SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview.txt",
+        "test-plan/SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn.txt",
+        "test-plan/SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult.txt",
+        "test-plan/SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption.txt",
+        "test-plan/SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave.txt",
+        "test-plan/SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable.txt",
+        "test-plan/SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction.txt",
+        "test-plan/contributor-balanced-01.txt",
+        "test-plan/contributor-balanced-02.txt",
+        "test-plan/contributor-balanced-03.txt",
+        "test-plan/contributor-balanced-04.txt",
+        "test-plan/contributor-balanced-05.txt",
+        "test-plan/manifest.json",
+        "test-plan/test-enumeration.json"
+      ],
+      "reportSHA256": "c67d2e46f00ad827219757db8a4be5e0ad5085705b693e968df4dbe8a933d924",
+      "scope": "Only exact allowlisted redacted report and compiled plan; no raw Records download/read or independent native replay.",
+      "reportVerification": "passed",
+      "result": "Passed",
+      "executed": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "expectedFailures": 0,
+      "runtimeWarnings": 0,
+      "failureSourceLine": null,
+      "redactedOnly": true,
+      "countsVerified": true
+    },
+    "SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview": {
+      "artifactID": 13563526001,
+      "archiveSHA256": "756a7cf3409db3686b9f3a02b020ce06de62d13d0b5c4d1bb86e77b52bfa07fe",
+      "archiveBytes": 7472961,
+      "pristineUnchanged": true,
+      "selected": 1,
+      "selectors": [
+        "RoomInTheCartUITests/SharedMealIdeaUITests/testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview"
+      ],
+      "hostedConclusion": "success",
+      "planByteIdentical": true,
+      "strictReplayExit": 0,
+      "cases": [
+        {
+          "selector": "RoomInTheCartUITests/SharedMealIdeaUITests/testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview",
+          "result": "Passed",
+          "durationSeconds": 400.8090270757675
+        }
+      ],
+      "runtime": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+            "deviceName": "iPhone 17",
+            "modelName": "iPhone 17",
+            "osBuildNumber": "23C54",
+            "osVersion": "26.2",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 1,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "actualRuntimeMatches": true,
+      "runtimeWarnings": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 1,
+        "detailExportCount": 1,
+        "activityExportCount": 0,
+        "warnings": []
+      },
+      "observedStarts": [
+        "RoomInTheCartUITests/SharedMealIdeaUITests/testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview"
+      ],
+      "startOrderMatches": true,
+      "serialLogFailures": [],
+      "rawAttempts": {
+        "Tests.log": {
+          "sha256": "bbae238439133717b9fb4dc17b1b4c38b86190c1ec2ee97cf4a5b37d564a0b01",
+          "starts": 1,
+          "restarts": 0
+        }
+      },
+      "hostedRetryArtifactPresent": false,
+      "totalStartedAcrossRawAttempts": 1,
+      "totalRestartsAcrossRawAttempts": 0,
+      "invocation": {
+        "defaultSeconds": "720",
+        "maximumSeconds": "900",
+        "parallel": "NO",
+        "timeoutsEnabled": "YES",
+        "diagnostics": "never",
+        "selectorArgsMatch": true,
+        "xcodePath": "/Applications/Xcode_26.3.app/Contents/Developer/usr/bin/xcodebuild"
+      },
+      "invocationMatches": true
+    },
+    "SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn": {
+      "artifactID": 13563090464,
+      "archiveSHA256": "952969e31fe0cebdc45be75d8278bd10bd98179b614b02e1a2bd318a4f1ceb4b",
+      "archiveBytes": 5242979,
+      "pristineUnchanged": true,
+      "selected": 1,
+      "selectors": [
+        "RoomInTheCartUITests/SharedMealIdeaUITests/testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn"
+      ],
+      "hostedConclusion": "success",
+      "planByteIdentical": true,
+      "strictReplayExit": 0,
+      "cases": [
+        {
+          "selector": "RoomInTheCartUITests/SharedMealIdeaUITests/testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn",
+          "result": "Passed",
+          "durationSeconds": 341.43703496456146
+        }
+      ],
+      "runtime": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+            "deviceName": "iPhone 17",
+            "modelName": "iPhone 17",
+            "osBuildNumber": "23C54",
+            "osVersion": "26.2",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 1,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "actualRuntimeMatches": true,
+      "runtimeWarnings": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 1,
+        "detailExportCount": 1,
+        "activityExportCount": 0,
+        "warnings": []
+      },
+      "observedStarts": [
+        "RoomInTheCartUITests/SharedMealIdeaUITests/testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn"
+      ],
+      "startOrderMatches": true,
+      "serialLogFailures": [],
+      "rawAttempts": {
+        "Tests.log": {
+          "sha256": "53b7b3693ab3fbb0c14f1d410bec25f75565cc73b874f095a40c6d8871f4b0ac",
+          "starts": 1,
+          "restarts": 0
+        }
+      },
+      "hostedRetryArtifactPresent": false,
+      "totalStartedAcrossRawAttempts": 1,
+      "totalRestartsAcrossRawAttempts": 0,
+      "invocation": {
+        "defaultSeconds": "720",
+        "maximumSeconds": "900",
+        "parallel": "NO",
+        "timeoutsEnabled": "YES",
+        "diagnostics": "never",
+        "selectorArgsMatch": true,
+        "xcodePath": "/Applications/Xcode_26.3.app/Contents/Developer/usr/bin/xcodebuild"
+      },
+      "invocationMatches": true
+    },
+    "SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult": {
+      "artifactID": 13561773811,
+      "archiveSHA256": "8e118ee9051b6b779f6e76949e32cf935521a47f8123a7926989c8c85b077e79",
+      "archiveBytes": 2807851,
+      "pristineUnchanged": true,
+      "selected": 1,
+      "selectors": [
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult"
+      ],
+      "hostedConclusion": "success",
+      "planByteIdentical": true,
+      "strictReplayExit": 0,
+      "cases": [
+        {
+          "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult",
+          "result": "Passed",
+          "durationSeconds": 133.71957397460938
+        }
+      ],
+      "runtime": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+            "deviceName": "iPhone 17",
+            "modelName": "iPhone 17",
+            "osBuildNumber": "23C54",
+            "osVersion": "26.2",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 1,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "actualRuntimeMatches": true,
+      "runtimeWarnings": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 1,
+        "detailExportCount": 1,
+        "activityExportCount": 0,
+        "warnings": []
+      },
+      "observedStarts": [
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult"
+      ],
+      "startOrderMatches": true,
+      "serialLogFailures": [],
+      "rawAttempts": {
+        "Tests.log": {
+          "sha256": "0337f11a6da08be106e94b7cda38e19c1ff52ae5202f8335249e423f8b64fbd8",
+          "starts": 1,
+          "restarts": 0
+        }
+      },
+      "hostedRetryArtifactPresent": false,
+      "totalStartedAcrossRawAttempts": 1,
+      "totalRestartsAcrossRawAttempts": 0,
+      "invocation": {
+        "defaultSeconds": "720",
+        "maximumSeconds": "900",
+        "parallel": "NO",
+        "timeoutsEnabled": "YES",
+        "diagnostics": "never",
+        "selectorArgsMatch": true,
+        "xcodePath": "/Applications/Xcode_26.3.app/Contents/Developer/usr/bin/xcodebuild"
+      },
+      "invocationMatches": true
+    },
+    "SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption": {
+      "artifactID": 13563635440,
+      "archiveSHA256": "9cdaf6e5aa4977523b67a3a94534ee3cda5dd33bd135b847ac3c6ec656cb6984",
+      "archiveBytes": 11331922,
+      "pristineUnchanged": true,
+      "selected": 1,
+      "selectors": [
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption"
+      ],
+      "hostedConclusion": "success",
+      "planByteIdentical": true,
+      "strictReplayExit": 0,
+      "cases": [
+        {
+          "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption",
+          "result": "Passed",
+          "durationSeconds": 631.2391450405121
+        }
+      ],
+      "runtime": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+            "deviceName": "iPhone 17",
+            "modelName": "iPhone 17",
+            "osBuildNumber": "23C54",
+            "osVersion": "26.2",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 1,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "actualRuntimeMatches": true,
+      "runtimeWarnings": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 2,
+        "examinedTestCount": 1,
+        "detailExportCount": 1,
+        "activityExportCount": 1,
+        "warnings": [
+          {
+            "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption",
+            "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+            "count": 2,
+            "maximum": 2,
+            "menuActivity": {
+              "tap": "Tap \"fixture.s27.controls\" Button",
+              "phase": "Synthesize event"
+            }
+          }
+        ]
+      },
+      "observedStarts": [
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption"
+      ],
+      "startOrderMatches": true,
+      "serialLogFailures": [],
+      "rawAttempts": {
+        "Tests.log": {
+          "sha256": "edebf494015dd66f1d11ca4b7954414fbe4c61db7259860bf70abb92fe52cf32",
+          "starts": 1,
+          "restarts": 0
+        }
+      },
+      "hostedRetryArtifactPresent": false,
+      "totalStartedAcrossRawAttempts": 1,
+      "totalRestartsAcrossRawAttempts": 0,
+      "invocation": {
+        "defaultSeconds": "720",
+        "maximumSeconds": "900",
+        "parallel": "NO",
+        "timeoutsEnabled": "YES",
+        "diagnostics": "never",
+        "selectorArgsMatch": true,
+        "xcodePath": "/Applications/Xcode_26.3.app/Contents/Developer/usr/bin/xcodebuild"
+      },
+      "invocationMatches": true
+    },
+    "SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave": {
+      "artifactID": 13563716573,
+      "archiveSHA256": "8bddf406c94e5f390ca88aace875880a3d3380d4989b4dfecb983a0684844cb1",
+      "archiveBytes": 6046263,
+      "pristineUnchanged": true,
+      "selected": 1,
+      "selectors": [
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave"
+      ],
+      "hostedConclusion": "success",
+      "planByteIdentical": true,
+      "strictReplayExit": 0,
+      "cases": [
+        {
+          "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave",
+          "result": "Passed",
+          "durationSeconds": 372.5760840177536
+        }
+      ],
+      "runtime": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+            "deviceName": "iPhone 17",
+            "modelName": "iPhone 17",
+            "osBuildNumber": "23C54",
+            "osVersion": "26.2",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 1,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "actualRuntimeMatches": true,
+      "runtimeWarnings": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 2,
+        "examinedTestCount": 1,
+        "detailExportCount": 1,
+        "activityExportCount": 1,
+        "warnings": [
+          {
+            "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave",
+            "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+            "count": 2,
+            "maximum": 2,
+            "menuActivity": {
+              "tap": "Tap \"fixture.s27.controls\" Button",
+              "phase": "Synthesize event"
+            }
+          }
+        ]
+      },
+      "observedStarts": [
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave"
+      ],
+      "startOrderMatches": true,
+      "serialLogFailures": [],
+      "rawAttempts": {
+        "Tests.log": {
+          "sha256": "0f59a48f4e088b11ff1037b19a2a3008d3c43c4a33a0c3e1172020fa01cf40bd",
+          "starts": 1,
+          "restarts": 0
+        }
+      },
+      "hostedRetryArtifactPresent": false,
+      "totalStartedAcrossRawAttempts": 1,
+      "totalRestartsAcrossRawAttempts": 0,
+      "invocation": {
+        "defaultSeconds": "720",
+        "maximumSeconds": "900",
+        "parallel": "NO",
+        "timeoutsEnabled": "YES",
+        "diagnostics": "never",
+        "selectorArgsMatch": true,
+        "xcodePath": "/Applications/Xcode_26.3.app/Contents/Developer/usr/bin/xcodebuild"
+      },
+      "invocationMatches": true
+    },
+    "SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable": {
+      "artifactID": 13563822118,
+      "archiveSHA256": "53e1382411d7e22e519c50539351d4b11bd0818b770098a6c70514703d00c015",
+      "archiveBytes": 2524817,
+      "pristineUnchanged": true,
+      "selected": 1,
+      "selectors": [
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testSpanishLargestTextKeepsRealQuoteEntryDiscoverable"
+      ],
+      "hostedConclusion": "success",
+      "planByteIdentical": true,
+      "strictReplayExit": 0,
+      "cases": [
+        {
+          "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testSpanishLargestTextKeepsRealQuoteEntryDiscoverable",
+          "result": "Passed",
+          "durationSeconds": 91.09107398986816
+        }
+      ],
+      "runtime": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+            "deviceName": "iPhone 17",
+            "modelName": "iPhone 17",
+            "osBuildNumber": "23C54",
+            "osVersion": "26.2",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 1,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "actualRuntimeMatches": true,
+      "runtimeWarnings": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 1,
+        "detailExportCount": 1,
+        "activityExportCount": 0,
+        "warnings": []
+      },
+      "observedStarts": [
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testSpanishLargestTextKeepsRealQuoteEntryDiscoverable"
+      ],
+      "startOrderMatches": true,
+      "serialLogFailures": [],
+      "rawAttempts": {
+        "Tests.log": {
+          "sha256": "efb31b48389b99c38760d681191d81846ea78e61bb7312d146c3a04b294995fc",
+          "starts": 1,
+          "restarts": 0
+        }
+      },
+      "hostedRetryArtifactPresent": false,
+      "totalStartedAcrossRawAttempts": 1,
+      "totalRestartsAcrossRawAttempts": 0,
+      "invocation": {
+        "defaultSeconds": "720",
+        "maximumSeconds": "900",
+        "parallel": "NO",
+        "timeoutsEnabled": "YES",
+        "diagnostics": "never",
+        "selectorArgsMatch": true,
+        "xcodePath": "/Applications/Xcode_26.3.app/Contents/Developer/usr/bin/xcodebuild"
+      },
+      "invocationMatches": true
+    },
+    "SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction": {
+      "artifactID": 13564075890,
+      "archiveSHA256": "ac24ba057feff866803c508ceeb2b52dbc84220be1e0ea04ab90d3248c9e207b",
+      "archiveBytes": 6501425,
+      "pristineUnchanged": true,
+      "selected": 1,
+      "selectors": [
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction"
+      ],
+      "hostedConclusion": "success",
+      "planByteIdentical": true,
+      "strictReplayExit": 0,
+      "cases": [
+        {
+          "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction",
+          "result": "Passed",
+          "durationSeconds": 300.3282859325409
+        }
+      ],
+      "runtime": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+            "deviceName": "iPhone 17",
+            "modelName": "iPhone 17",
+            "osBuildNumber": "23C54",
+            "osVersion": "26.2",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 1,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "actualRuntimeMatches": true,
+      "runtimeWarnings": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 2,
+        "examinedTestCount": 1,
+        "detailExportCount": 1,
+        "activityExportCount": 1,
+        "warnings": [
+          {
+            "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction",
+            "message": "Adding '_UIReparentingView' as a subview of UIHostingController.view is not supported and may result in a broken view hierarchy. Add your view above UIHostingController.view in a common superview or insert it into your SwiftUI content in a UIViewRepresentable instead.",
+            "count": 2,
+            "maximum": 2,
+            "menuActivity": {
+              "tap": "Tap \"fixture.s27.controls\" Button",
+              "phase": "Synthesize event"
+            }
+          }
+        ]
+      },
+      "observedStarts": [
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction"
+      ],
+      "startOrderMatches": true,
+      "serialLogFailures": [],
+      "rawAttempts": {
+        "Tests.log": {
+          "sha256": "4edfd768b7c32add20037e21148e154a2a50f5d0c4cee3b1dd0b6b7ab121b085",
+          "starts": 1,
+          "restarts": 0
+        }
+      },
+      "hostedRetryArtifactPresent": false,
+      "totalStartedAcrossRawAttempts": 1,
+      "totalRestartsAcrossRawAttempts": 0,
+      "invocation": {
+        "defaultSeconds": "720",
+        "maximumSeconds": "900",
+        "parallel": "NO",
+        "timeoutsEnabled": "YES",
+        "diagnostics": "never",
+        "selectorArgsMatch": true,
+        "xcodePath": "/Applications/Xcode_26.3.app/Contents/Developer/usr/bin/xcodebuild"
+      },
+      "invocationMatches": true
+    },
+    "DinnerDecisionSheetUITests": {
+      "artifactID": 13563761150,
+      "archiveSHA256": "6eb559d515d1e3e0b2c06a31ef852b21eb03a88621d0b4e3dde84b5752008fd6",
+      "archiveBytes": 4684483,
+      "pristineUnchanged": true,
+      "selected": 5,
+      "selectors": [
+        "RoomInTheCartUITests/DinnerDecisionSheetUITests/testEnglishGuestPackageBoundaryCheckoutAndCancel",
+        "RoomInTheCartUITests/DinnerDecisionSheetUITests/testEnglishPaidGroupReplacementAndGuestCancellation",
+        "RoomInTheCartUITests/DinnerDecisionSheetUITests/testLargestTypePairingSheetReturnsToItsInitiatingControl",
+        "RoomInTheCartUITests/DinnerDecisionSheetUITests/testSpanishGuestPackageBoundaryCheckoutAndCancel",
+        "RoomInTheCartUITests/DinnerDecisionSheetUITests/testSpanishPaidGroupReplacementAndGuestCancellation"
+      ],
+      "hostedConclusion": "success",
+      "planByteIdentical": true,
+      "strictReplayExit": 0,
+      "cases": [
+        {
+          "selector": "RoomInTheCartUITests/DinnerDecisionSheetUITests/testEnglishGuestPackageBoundaryCheckoutAndCancel",
+          "result": "Passed",
+          "durationSeconds": 86.71762406826019
+        },
+        {
+          "selector": "RoomInTheCartUITests/DinnerDecisionSheetUITests/testEnglishPaidGroupReplacementAndGuestCancellation",
+          "result": "Passed",
+          "durationSeconds": 71.68508493900299
+        },
+        {
+          "selector": "RoomInTheCartUITests/DinnerDecisionSheetUITests/testLargestTypePairingSheetReturnsToItsInitiatingControl",
+          "result": "Passed",
+          "durationSeconds": 29.408751964569092
+        },
+        {
+          "selector": "RoomInTheCartUITests/DinnerDecisionSheetUITests/testSpanishGuestPackageBoundaryCheckoutAndCancel",
+          "result": "Passed",
+          "durationSeconds": 45.65418899059296
+        },
+        {
+          "selector": "RoomInTheCartUITests/DinnerDecisionSheetUITests/testSpanishPaidGroupReplacementAndGuestCancellation",
+          "result": "Passed",
+          "durationSeconds": 77.66809499263763
+        }
+      ],
+      "runtime": [
+        {
+          "device": {
+            "architecture": "arm64",
+            "deviceId": "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+            "deviceName": "iPhone 17",
+            "modelName": "iPhone 17",
+            "osBuildNumber": "23C54",
+            "osVersion": "26.2",
+            "platform": "iOS Simulator"
+          },
+          "expectedFailures": 0,
+          "failedTests": 0,
+          "passedTests": 5,
+          "skippedTests": 0,
+          "testPlanConfiguration": {
+            "configurationId": "1",
+            "configurationName": "Test Scheme Action"
+          }
+        }
+      ],
+      "actualRuntimeMatches": true,
+      "runtimeWarnings": {
+        "status": "passed",
+        "summaryWarningCount": null,
+        "runtimeWarningCount": 0,
+        "examinedTestCount": 5,
+        "detailExportCount": 5,
+        "activityExportCount": 0,
+        "warnings": []
+      },
+      "observedStarts": [
+        "RoomInTheCartUITests/DinnerDecisionSheetUITests/testEnglishGuestPackageBoundaryCheckoutAndCancel",
+        "RoomInTheCartUITests/DinnerDecisionSheetUITests/testEnglishPaidGroupReplacementAndGuestCancellation",
+        "RoomInTheCartUITests/DinnerDecisionSheetUITests/testLargestTypePairingSheetReturnsToItsInitiatingControl",
+        "RoomInTheCartUITests/DinnerDecisionSheetUITests/testSpanishGuestPackageBoundaryCheckoutAndCancel",
+        "RoomInTheCartUITests/DinnerDecisionSheetUITests/testSpanishPaidGroupReplacementAndGuestCancellation"
+      ],
+      "startOrderMatches": true,
+      "serialLogFailures": [],
+      "rawAttempts": {
+        "Tests.log": {
+          "sha256": "c59bb095a72b379648a21871319b646add2b99cd9f3d7213418ad40d8b400523",
+          "starts": 5,
+          "restarts": 0
+        }
+      },
+      "hostedRetryArtifactPresent": false,
+      "totalStartedAcrossRawAttempts": 5,
+      "totalRestartsAcrossRawAttempts": 0,
+      "invocation": {
+        "defaultSeconds": "720",
+        "maximumSeconds": "900",
+        "parallel": "NO",
+        "timeoutsEnabled": "YES",
+        "diagnostics": "never",
+        "selectorArgsMatch": true,
+        "xcodePath": "/Applications/Xcode_26.3.app/Contents/Developer/usr/bin/xcodebuild"
+      },
+      "invocationMatches": true
+    }
+  },
+  "collectionErrors": {},
+  "nonexecution": {},
+  "sourceHashesUnchanged": true,
+  "defaultBoundsUnchanged": true,
+  "rawRecordsMediaDownloadedOrRead": false,
+  "localNativeExecution": false,
+  "hostedMutation": false,
+  "resultCounts": {
+    "selected": 47,
+    "executed": 47,
+    "passed": 47,
+    "failed": 0,
+    "skipped": 0,
+    "expectedFailures": 0
+  },
+  "cases": [
+    {
+      "selector": "RoomInTheCartUITests/ContributorRequestUITests/testSpanishLargeTextReviewStartsAtTheOriginalWording",
+      "result": "Passed",
+      "durationSeconds": 153.8751300573349
+    },
+    {
+      "selector": "RoomInTheCartUITests/ContributorRequestUITests/testTypedAndStructuredReviewCancelThenSendOnlyOwnRequest",
+      "result": "Passed",
+      "durationSeconds": 424.6686760187149
+    },
+    {
+      "selector": "RoomInTheCartUITests/ImportRecoveryUITests/testDiscardKeepsPendingImportUncommittedAndReviewPresented",
+      "result": "Passed",
+      "durationSeconds": 44.81799101829529
+    },
+    {
+      "selector": "RoomInTheCartUITests/ImportRecoveryUITests/testRetryPersistsOneImportAndDismissesThroughItsCallback",
+      "result": "Passed",
+      "durationSeconds": 42.82307004928589
+    },
+    {
+      "selector": "RoomInTheCartUITests/MeasurementUITests/testAuthenticatedNoticeConsentExplicitClosedShopSendDeleteAndWithdrawal",
+      "result": "Passed",
+      "durationSeconds": 111.6051390171051
+    },
+    {
+      "selector": "RoomInTheCartUITests/MeasurementUITests/testLocalSettingsConsentIgnoresLegacyBooleanPersistsRestartAndStaysWorkspaceScoped",
+      "result": "Passed",
+      "durationSeconds": 69.30451595783234
+    },
+    {
+      "selector": "RoomInTheCartUITests/StockReviewUITests/testChangedMealRevisionDisablesPreviewWithoutApplyingBatch",
+      "result": "Passed",
+      "durationSeconds": 30.888818979263306
+    },
+    {
+      "selector": "RoomInTheCartUITests/StockReviewUITests/testKeyboardDoneAcceptsCenterAndTargetMargins",
+      "result": "Passed",
+      "durationSeconds": 175.03285098075867
+    },
+    {
+      "selector": "RoomInTheCartUITests/StockReviewUITests/testPreviewCancelThenConfirmShowsEveryMealAndFreshCookInstructionAfterRestart",
+      "result": "Passed",
+      "durationSeconds": 76.53986501693726
+    },
+    {
+      "selector": "RoomInTheCartUITests/CorrectionPrivacyAcceptanceUITests/testSettingsNamedForgetLastEntryOutcomeConfirmedOptOutAndDisconnectedHelp",
+      "result": "Passed",
+      "durationSeconds": 142.04380095005035
+    },
+    {
+      "selector": "RoomInTheCartUITests/GuardianEnrollmentUITests/testCancelSetupDialogHasExplicitCancelAndForegroundRestoresStatus",
+      "result": "Passed",
+      "durationSeconds": 37.16135597229004
+    },
+    {
+      "selector": "RoomInTheCartUITests/GuardianEnrollmentUITests/testChildForgetCancelAndForegroundKeepTheSamePairingWithoutActivation",
+      "result": "Passed",
+      "durationSeconds": 22.37875497341156
+    },
+    {
+      "selector": "RoomInTheCartUITests/GuardianEnrollmentUITests/testNoticeDeclarationVerificationPermissionPairingAndDialogCancellation",
+      "result": "Passed",
+      "durationSeconds": 281.547159075737
+    },
+    {
+      "selector": "RoomInTheCartUITests/GuardianEnrollmentUITests/testRealRootColdChildMarkerAndSyntheticVaultCleanupPreserveAdultData",
+      "result": "Passed",
+      "durationSeconds": 48.17023491859436
+    },
+    {
+      "selector": "RoomInTheCartUITests/GuardianEnrollmentUITests/testRealRootLeaveCancelAndConfirmedExitRestoreLockedAdultAccess",
+      "result": "Passed",
+      "durationSeconds": 49.253239035606384
+    },
+    {
+      "selector": "RoomInTheCartUITests/GuardianEnrollmentUITests/testSpanishLargestTextUnavailableGateRemainsReadableAndClosed",
+      "result": "Passed",
+      "durationSeconds": 25.987954020500183
+    },
+    {
+      "selector": "RoomInTheCartUITests/GuardianEnrollmentUITests/testUnavailableNeverOffersCreationOrAdultVerification",
+      "result": "Passed",
+      "durationSeconds": 16.205996990203857
+    },
+    {
+      "selector": "RoomInTheCartUITests/GuardianEnrollmentUITests/testUncertainAttemptCanRefreshButCannotSendAnotherVerification",
+      "result": "Passed",
+      "durationSeconds": 18.33552098274231
+    },
+    {
+      "selector": "RoomInTheCartUITests/SharedMealChangeUITests/testAssignedShopperMapsLocalSeedWithoutPlannerPostAndCanCancel",
+      "result": "Passed",
+      "durationSeconds": 214.3078489303589
+    },
+    {
+      "selector": "RoomInTheCartUITests/SharedMealChangeUITests/testPlannerCancelThenSendAndSeparateShopperCancelThenApplyExactlyOnce",
+      "result": "Passed",
+      "durationSeconds": 230.21054792404175
+    },
+    {
+      "selector": "RoomInTheCartUITests/DinnerAwayCarryoverUITests/testPhysicalCarryoverCancelApplyAndRestartKeepOriginalPurchase",
+      "result": "Passed",
+      "durationSeconds": 175.19122898578644
+    },
+    {
+      "selector": "RoomInTheCartUITests/RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison",
+      "result": "Passed",
+      "durationSeconds": 602.7332099676132
+    },
+    {
+      "selector": "RoomInTheCartUITests/RequestDuplicateComparisonUITests/testSplitPageComparisonPreservesBothUsesAndCancelHasNoWriteThenDecidesOnlySam",
+      "result": "Passed",
+      "durationSeconds": 235.083251953125
+    },
+    {
+      "selector": "RoomInTheCartUITests/HistoryGrantReadUITests/testFreeGrantDiscoversReadOnlyShopOpensRawRecordsAndRejectsPaidAndForeignAccess",
+      "result": "Passed",
+      "durationSeconds": 184.7736679315567
+    },
+    {
+      "selector": "RoomInTheCartUITests/HistoryGrantReadUITests/testRevokedBudgetGrantClearsPreviouslyOpenedRawPeriodAndRememberedSource",
+      "result": "Passed",
+      "durationSeconds": 117.85973799228668
+    },
+    {
+      "selector": "RoomInTheCartUITests/RecipeLibraryAcceptanceUITests/testDocumentedLibraryPreviewCancelCorruptPreservationApplyAndWholeBatchUndo",
+      "result": "Passed",
+      "durationSeconds": 289.77575302124023
+    },
+    {
+      "selector": "RoomInTheCartUITests/RecipeLibraryAcceptanceUITests/testImportedRecipeQuantityDismissesKeyboardAndRequiresExplicitPickupChoice",
+      "result": "Passed",
+      "durationSeconds": 124.31515002250671
+    },
+    {
+      "selector": "RoomInTheCartUITests/HouseholdDevicesUITests/testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess",
+      "result": "Passed",
+      "durationSeconds": 116.83119189739227
+    },
+    {
+      "selector": "RoomInTheCartUITests/HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke",
+      "result": "Passed",
+      "durationSeconds": 183.21430599689484
+    },
+    {
+      "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite",
+      "result": "Passed",
+      "durationSeconds": 109.00239598751068
+    },
+    {
+      "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite",
+      "result": "Passed",
+      "durationSeconds": 311.04984200000763
+    },
+    {
+      "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testUnavailableMealFactsRemainUnknownInRequestDecision",
+      "result": "Passed",
+      "durationSeconds": 66.86140298843384
+    },
+    {
+      "selector": "RoomInTheCartUITests/SharedMealCivilDateUITests/testEnglishCivilDaysStayExactUnderUSTimeZoneEnvironments",
+      "result": "Passed",
+      "durationSeconds": 41.851715087890625
+    },
+    {
+      "selector": "RoomInTheCartUITests/SharedMealCivilDateUITests/testSpanishCivilDaysStayExactUnderUSTimeZoneEnvironments",
+      "result": "Passed",
+      "durationSeconds": 40.3848739862442
+    },
+    {
+      "selector": "RoomInTheCartUITests/RecordsMediaUITests/testSelectedPhotoDisclosureEncryptedPreviewCancelSiblingRecoveryAndReadablePhoto",
+      "result": "Passed",
+      "evidenceScope": "Exact redacted report and plan only",
+      "failureSourceLine": null
+    },
+    {
+      "selector": "RoomInTheCartUITests/SharedMealIdeaUITests/testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview",
+      "result": "Passed",
+      "durationSeconds": 400.8090270757675
+    },
+    {
+      "selector": "RoomInTheCartUITests/SharedMealIdeaUITests/testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn",
+      "result": "Passed",
+      "durationSeconds": 341.43703496456146
+    },
+    {
+      "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult",
+      "result": "Passed",
+      "durationSeconds": 133.71957397460938
+    },
+    {
+      "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption",
+      "result": "Passed",
+      "durationSeconds": 631.2391450405121
+    },
+    {
+      "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave",
+      "result": "Passed",
+      "durationSeconds": 372.5760840177536
+    },
+    {
+      "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testSpanishLargestTextKeepsRealQuoteEntryDiscoverable",
+      "result": "Passed",
+      "durationSeconds": 91.09107398986816
+    },
+    {
+      "selector": "RoomInTheCartUITests/SharedStoreQuoteUITests/testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction",
+      "result": "Passed",
+      "durationSeconds": 300.3282859325409
+    },
+    {
+      "selector": "RoomInTheCartUITests/DinnerDecisionSheetUITests/testEnglishGuestPackageBoundaryCheckoutAndCancel",
+      "result": "Passed",
+      "durationSeconds": 86.71762406826019
+    },
+    {
+      "selector": "RoomInTheCartUITests/DinnerDecisionSheetUITests/testEnglishPaidGroupReplacementAndGuestCancellation",
+      "result": "Passed",
+      "durationSeconds": 71.68508493900299
+    },
+    {
+      "selector": "RoomInTheCartUITests/DinnerDecisionSheetUITests/testLargestTypePairingSheetReturnsToItsInitiatingControl",
+      "result": "Passed",
+      "durationSeconds": 29.408751964569092
+    },
+    {
+      "selector": "RoomInTheCartUITests/DinnerDecisionSheetUITests/testSpanishGuestPackageBoundaryCheckoutAndCancel",
+      "result": "Passed",
+      "durationSeconds": 45.65418899059296
+    },
+    {
+      "selector": "RoomInTheCartUITests/DinnerDecisionSheetUITests/testSpanishPaidGroupReplacementAndGuestCancellation",
+      "result": "Passed",
+      "durationSeconds": 77.66809499263763
+    }
+  ],
+  "compiledProfiles": {
+    "contributor": {
+      "manifestSHA256": "bca8125a1d50d2598b51dc444c0499807ab85ef5bf32bb0a8cbd15662f0345c6",
+      "selectors": [
+        "RoomInTheCartUITests/ContributorRequestUITests/testSpanishLargeTextReviewStartsAtTheOriginalWording",
+        "RoomInTheCartUITests/ContributorRequestUITests/testTypedAndStructuredReviewCancelThenSendOnlyOwnRequest",
+        "RoomInTheCartUITests/ImportRecoveryUITests/testDiscardKeepsPendingImportUncommittedAndReviewPresented",
+        "RoomInTheCartUITests/ImportRecoveryUITests/testRetryPersistsOneImportAndDismissesThroughItsCallback",
+        "RoomInTheCartUITests/MeasurementUITests/testAuthenticatedNoticeConsentExplicitClosedShopSendDeleteAndWithdrawal",
+        "RoomInTheCartUITests/MeasurementUITests/testLocalSettingsConsentIgnoresLegacyBooleanPersistsRestartAndStaysWorkspaceScoped",
+        "RoomInTheCartUITests/StockReviewUITests/testChangedMealRevisionDisablesPreviewWithoutApplyingBatch",
+        "RoomInTheCartUITests/StockReviewUITests/testKeyboardDoneAcceptsCenterAndTargetMargins",
+        "RoomInTheCartUITests/StockReviewUITests/testPreviewCancelThenConfirmShowsEveryMealAndFreshCookInstructionAfterRestart",
+        "RoomInTheCartUITests/CorrectionPrivacyAcceptanceUITests/testSettingsNamedForgetLastEntryOutcomeConfirmedOptOutAndDisconnectedHelp",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testCancelSetupDialogHasExplicitCancelAndForegroundRestoresStatus",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testChildForgetCancelAndForegroundKeepTheSamePairingWithoutActivation",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testNoticeDeclarationVerificationPermissionPairingAndDialogCancellation",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testRealRootColdChildMarkerAndSyntheticVaultCleanupPreserveAdultData",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testRealRootLeaveCancelAndConfirmedExitRestoreLockedAdultAccess",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testSpanishLargestTextUnavailableGateRemainsReadableAndClosed",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testUnavailableNeverOffersCreationOrAdultVerification",
+        "RoomInTheCartUITests/GuardianEnrollmentUITests/testUncertainAttemptCanRefreshButCannotSendAnotherVerification",
+        "RoomInTheCartUITests/SharedMealChangeUITests/testAssignedShopperMapsLocalSeedWithoutPlannerPostAndCanCancel",
+        "RoomInTheCartUITests/SharedMealChangeUITests/testPlannerCancelThenSendAndSeparateShopperCancelThenApplyExactlyOnce",
+        "RoomInTheCartUITests/DinnerAwayCarryoverUITests/testPhysicalCarryoverCancelApplyAndRestartKeepOriginalPurchase",
+        "RoomInTheCartUITests/RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison",
+        "RoomInTheCartUITests/RequestDuplicateComparisonUITests/testSplitPageComparisonPreservesBothUsesAndCancelHasNoWriteThenDecidesOnlySam",
+        "RoomInTheCartUITests/HistoryGrantReadUITests/testFreeGrantDiscoversReadOnlyShopOpensRawRecordsAndRejectsPaidAndForeignAccess",
+        "RoomInTheCartUITests/HistoryGrantReadUITests/testRevokedBudgetGrantClearsPreviouslyOpenedRawPeriodAndRememberedSource",
+        "RoomInTheCartUITests/RecipeLibraryAcceptanceUITests/testDocumentedLibraryPreviewCancelCorruptPreservationApplyAndWholeBatchUndo",
+        "RoomInTheCartUITests/RecipeLibraryAcceptanceUITests/testImportedRecipeQuantityDismissesKeyboardAndRequiresExplicitPickupChoice",
+        "RoomInTheCartUITests/HouseholdDevicesUITests/testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess",
+        "RoomInTheCartUITests/HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke",
+        "RoomInTheCartUITests/HouseholdRequestPackUITests/testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite",
+        "RoomInTheCartUITests/HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite",
+        "RoomInTheCartUITests/HouseholdRequestPackUITests/testUnavailableMealFactsRemainUnknownInRequestDecision",
+        "RoomInTheCartUITests/SharedMealCivilDateUITests/testEnglishCivilDaysStayExactUnderUSTimeZoneEnvironments",
+        "RoomInTheCartUITests/SharedMealCivilDateUITests/testSpanishCivilDaysStayExactUnderUSTimeZoneEnvironments",
+        "RoomInTheCartUITests/RecordsMediaUITests/testSelectedPhotoDisclosureEncryptedPreviewCancelSiblingRecoveryAndReadablePhoto",
+        "RoomInTheCartUITests/SharedMealIdeaUITests/testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview",
+        "RoomInTheCartUITests/SharedMealIdeaUITests/testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn",
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult",
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption",
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave",
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testSpanishLargestTextKeepsRealQuoteEntryDiscoverable",
+        "RoomInTheCartUITests/SharedStoreQuoteUITests/testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction"
+      ]
+    },
+    "dinner": {
+      "manifestSHA256": "acd16e775e4f3d0b26cff902288c64824b84ff1ae96a71d825a57b608ac5ff31",
+      "selectors": [
+        "RoomInTheCartUITests/DinnerDecisionSheetUITests/testEnglishGuestPackageBoundaryCheckoutAndCancel",
+        "RoomInTheCartUITests/DinnerDecisionSheetUITests/testEnglishPaidGroupReplacementAndGuestCancellation",
+        "RoomInTheCartUITests/DinnerDecisionSheetUITests/testLargestTypePairingSheetReturnsToItsInitiatingControl",
+        "RoomInTheCartUITests/DinnerDecisionSheetUITests/testSpanishGuestPackageBoundaryCheckoutAndCancel",
+        "RoomInTheCartUITests/DinnerDecisionSheetUITests/testSpanishPaidGroupReplacementAndGuestCancellation"
+      ]
+    }
+  },
+  "compiledSelectorUnionMatchesSource": true,
+  "pristineArchivesAndExtractionsUnchanged": true,
+  "runtimeWarningOccurrences": 6,
+  "consentResults": [
+    {
+      "selector": "RoomInTheCartUITests/MeasurementUITests/testAuthenticatedNoticeConsentExplicitClosedShopSendDeleteAndWithdrawal",
+      "result": "Passed",
+      "durationSeconds": 111.6051390171051
+    },
+    {
+      "selector": "RoomInTheCartUITests/MeasurementUITests/testLocalSettingsConsentIgnoresLegacyBooleanPersistsRestartAndStaysWorkspaceScoped",
+      "result": "Passed",
+      "durationSeconds": 69.30451595783234
+    }
+  ],
+  "jobs": [
+    {
+      "id": 128299118865,
+      "name": "fixture-plan",
+      "status": "completed",
+      "conclusion": "success",
+      "runner_id": 1000004146,
+      "started_at": "2026-11-07T04:20:03Z",
+      "completed_at": "2026-11-07T04:20:09Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-07T04:20:04Z",
+          "completed_at": "2026-11-07T04:20:04Z"
+        },
+        {
+          "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-07T04:20:04Z",
+          "completed_at": "2026-11-07T04:20:07Z"
+        },
+        {
+          "name": "Validate fixture coverage and balanced contributor groups",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-07T04:20:07Z",
+          "completed_at": "2026-11-07T04:20:08Z"
+        },
+        {
+          "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-07T04:20:08Z",
+          "completed_at": "2026-11-07T04:20:08Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-07T04:20:08Z",
+          "completed_at": "2026-11-07T04:20:08Z"
+        }
+      ]
+    },
+    {
+      "id": 128299155327,
+      "name": "Build dinner decision fixture",
+      "status": "completed",
+      "conclusion": "success",
+      "runner_id": 1000004163,
+      "started_at": "2026-11-07T04:29:59Z",
+      "completed_at": "2026-11-07T04:40:08Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-07T04:29:59Z",
+          "completed_at": "2026-11-07T04:30:00Z"
+        },
+        {
+          "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-07T04:30:00Z",
+          "completed_at": "2026-11-07T04:30:04Z"
+        },
+        {
+          "name": "Record Xcode and select an iPhone simulator",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-07T04:30:04Z",
+          "completed_at": "2026-11-07T04:30:31Z"
+        },
+        {
+          "name": "Build fixture app and UI tests for iPhone",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-07T04:30:31Z",
+          "completed_at": "2026-11-07T04:33:49Z"
+        },
+        {
+          "name": "Enumerate compiled tests and package fixture products",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-07T04:33:49Z",
+          "completed_at": "2026-11-07T04:39:33Z"
+        },
+        {
+          "name": "Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-07T04:39:33Z",
+          "completed_at": "2026-11-07T04:39:38Z"
+        },
+        {
+          "name": "Retain fixture discovery diagnostics on failure",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 7,
+          "started_at": "2026-11-07T04:39:38Z",
+          "completed_at": "2026-11-07T04:39:38Z"
+        },
+        {
+          "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-11-07T04:39:38Z",
+          "completed_at": "2026-11-07T04:39:40Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-11-07T04:39:40Z",
+          "completed_at": "2026-11-07T04:40:06Z"
+        }
+      ]
+    },
+    {
+      "id": 128299155568,
+      "name": "Build contributor, stock and carryover fixtures",
+      "status": "completed",
+      "conclusion": "success",
+      "runner_id": 1000004162,
+      "started_at": "2026-11-07T04:26:16Z",
+      "completed_at": "2026-11-07T04:36:33Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-07T04:26:16Z",
+          "completed_at": "2026-11-07T04:26:18Z"
+        },
+        {
+          "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-07T04:26:18Z",
+          "completed_at": "2026-11-07T04:26:23Z"
+        },
+        {
+          "name": "Record Xcode and select an iPhone simulator",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-07T04:26:23Z",
+          "completed_at": "2026-11-07T04:26:37Z"
+        },
+        {
+          "name": "Build fixture app and UI tests for iPhone",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-07T04:26:37Z",
+          "completed_at": "2026-11-07T04:30:47Z"
+        },
+        {
+          "name": "Enumerate compiled tests and package fixture products",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-07T04:30:47Z",
+          "completed_at": "2026-11-07T04:36:08Z"
+        },
+        {
+          "name": "Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-07T04:36:08Z",
+          "completed_at": "2026-11-07T04:36:13Z"
+        },
+        {
+          "name": "Retain fixture discovery diagnostics on failure",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 7,
+          "started_at": "2026-11-07T04:36:13Z",
+          "completed_at": "2026-11-07T04:36:13Z"
+        },
+        {
+          "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-11-07T04:36:13Z",
+          "completed_at": "2026-11-07T04:36:14Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-11-07T04:36:14Z",
+          "completed_at": "2026-11-07T04:36:31Z"
+        }
+      ]
+    },
+    {
+      "id": 128303642774,
+      "name": "Fixture (contributor-balanced-05)",
+      "status": "completed",
+      "conclusion": "success",
+      "runner_id": 1000004166,
+      "started_at": "2026-11-07T04:40:12Z",
+      "completed_at": "2026-11-07T05:06:14Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-07T04:40:13Z",
+          "completed_at": "2026-11-07T04:40:15Z"
+        },
+        {
+          "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-07T04:40:15Z",
+          "completed_at": "2026-11-07T04:40:20Z"
+        },
+        {
+          "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-07T04:40:20Z",
+          "completed_at": "2026-11-07T04:40:25Z"
+        },
+        {
+          "name": "Restore matching fixture products and selector list",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-07T04:40:25Z",
+          "completed_at": "2026-11-07T04:40:26Z"
+        },
+        {
+          "name": "Select an iPhone simulator",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-07T04:40:26Z",
+          "completed_at": "2026-11-07T04:42:48Z"
+        },
+        {
+          "name": "Boot the iPhone simulator",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-07T04:42:48Z",
+          "completed_at": "2026-11-07T04:44:40Z"
+        },
+        {
+          "name": "Run selected fixture tests and require complete execution",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-07T04:44:40Z",
+          "completed_at": "2026-11-07T05:05:50Z"
+        },
+        {
+          "name": "Retain fixture results and timing",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-07T05:05:50Z",
+          "completed_at": "2026-11-07T05:05:54Z"
+        },
+        {
+          "name": "Retain Records media result counts and timing",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 9,
+          "started_at": "2026-11-07T05:05:54Z",
+          "completed_at": "2026-11-07T05:05:54Z"
+        },
+        {
+          "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 18,
+          "started_at": "2026-11-07T05:05:54Z",
+          "completed_at": "2026-11-07T05:05:55Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19,
+          "started_at": "2026-11-07T05:05:55Z",
+          "completed_at": "2026-11-07T05:06:12Z"
+        }
+      ]
+    },
+    {
+      "id": 128303642792,
+      "name": "Fixture (contributor-balanced-02)",
+      "status": "completed",
+      "conclusion": "success",
+      "runner_id": 1000004167,
+      "started_at": "2026-11-07T04:40:12Z",
+      "completed_at": "2026-11-07T05:04:21Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-07T04:40:13Z",
+          "completed_at": "2026-11-07T04:40:15Z"
+        },
+        {
+          "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-07T04:40:15Z",
+          "completed_at": "2026-11-07T04:40:21Z"
+        },
+        {
+          "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-07T04:40:21Z",
+          "completed_at": "2026-11-07T04:40:27Z"
+        },
+        {
+          "name": "Restore matching fixture products and selector list",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-07T04:40:27Z",
+          "completed_at": "2026-11-07T04:40:28Z"
+        },
+        {
+          "name": "Select an iPhone simulator",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-07T04:40:28Z",
+          "completed_at": "2026-11-07T04:41:28Z"
+        },
+        {
+          "name": "Boot the iPhone simulator",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-07T04:41:28Z",
+          "completed_at": "2026-11-07T04:42:58Z"
+        },
+        {
+          "name": "Run selected fixture tests and require complete execution",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-07T04:42:59Z",
+          "completed_at": "2026-11-07T05:03:59Z"
+        },
+        {
+          "name": "Retain fixture results and timing",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-07T05:03:59Z",
+          "completed_at": "2026-11-07T05:04:05Z"
+        },
+        {
+          "name": "Retain Records media result counts and timing",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 9,
+          "started_at": "2026-11-07T05:04:05Z",
+          "completed_at": "2026-11-07T05:04:05Z"
+        },
+        {
+          "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 18,
+          "started_at": "2026-11-07T05:04:05Z",
+          "completed_at": "2026-11-07T05:04:06Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19,
+          "started_at": "2026-11-07T05:04:06Z",
+          "completed_at": "2026-11-07T05:04:19Z"
+        }
+      ]
+    },
+    {
+      "id": 128303643111,
+      "name": "Fixture (contributor-balanced-03)",
+      "status": "completed",
+      "conclusion": "success",
+      "runner_id": 1000004170,
+      "started_at": "2026-11-07T04:58:29Z",
+      "completed_at": "2026-11-07T05:18:06Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-07T04:58:30Z",
+          "completed_at": "2026-11-07T04:58:31Z"
+        },
+        {
+          "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-07T04:58:31Z",
+          "completed_at": "2026-11-07T04:58:35Z"
+        },
+        {
+          "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-07T04:58:35Z",
+          "completed_at": "2026-11-07T04:58:40Z"
+        },
+        {
+          "name": "Restore matching fixture products and selector list",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-07T04:58:40Z",
+          "completed_at": "2026-11-07T04:58:41Z"
+        },
+        {
+          "name": "Select an iPhone simulator",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-07T04:58:41Z",
+          "completed_at": "2026-11-07T04:58:58Z"
+        },
+        {
+          "name": "Boot the iPhone simulator",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-07T04:58:58Z",
+          "completed_at": "2026-11-07T05:00:05Z"
+        },
+        {
+          "name": "Run selected fixture tests and require complete execution",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-07T05:00:07Z",
+          "completed_at": "2026-11-07T05:17:42Z"
+        },
+        {
+          "name": "Retain fixture results and timing",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-07T05:17:42Z",
+          "completed_at": "2026-11-07T05:17:47Z"
+        },
+        {
+          "name": "Retain Records media result counts and timing",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 9,
+          "started_at": "2026-11-07T05:17:47Z",
+          "completed_at": "2026-11-07T05:17:47Z"
+        },
+        {
+          "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 18,
+          "started_at": "2026-11-07T05:17:47Z",
+          "completed_at": "2026-11-07T05:17:48Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19,
+          "started_at": "2026-11-07T05:17:48Z",
+          "completed_at": "2026-11-07T05:18:03Z"
+        }
+      ]
+    },
+    {
+      "id": 128303643332,
+      "name": "Fixture (contributor-balanced-01)",
+      "status": "completed",
+      "conclusion": "success",
+      "runner_id": 1000004169,
+      "started_at": "2026-11-07T04:46:24Z",
+      "completed_at": "2026-11-07T05:09:06Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-07T04:46:24Z",
+          "completed_at": "2026-11-07T04:46:26Z"
+        },
+        {
+          "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-07T04:46:26Z",
+          "completed_at": "2026-11-07T04:46:32Z"
+        },
+        {
+          "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-07T04:46:32Z",
+          "completed_at": "2026-11-07T04:46:35Z"
+        },
+        {
+          "name": "Restore matching fixture products and selector list",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-07T04:46:35Z",
+          "completed_at": "2026-11-07T04:46:36Z"
+        },
+        {
+          "name": "Select an iPhone simulator",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-07T04:46:36Z",
+          "completed_at": "2026-11-07T04:46:59Z"
+        },
+        {
+          "name": "Boot the iPhone simulator",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-07T04:46:59Z",
+          "completed_at": "2026-11-07T04:48:43Z"
+        },
+        {
+          "name": "Run selected fixture tests and require complete execution",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-07T04:48:44Z",
+          "completed_at": "2026-11-07T05:08:47Z"
+        },
+        {
+          "name": "Retain fixture results and timing",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-07T05:08:47Z",
+          "completed_at": "2026-11-07T05:08:51Z"
+        },
+        {
+          "name": "Retain Records media result counts and timing",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 9,
+          "started_at": "2026-11-07T05:08:51Z",
+          "completed_at": "2026-11-07T05:08:51Z"
+        },
+        {
+          "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 18,
+          "started_at": "2026-11-07T05:08:51Z",
+          "completed_at": "2026-11-07T05:08:52Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19,
+          "started_at": "2026-11-07T05:08:52Z",
+          "completed_at": "2026-11-07T05:09:04Z"
+        }
+      ]
+    },
+    {
+      "id": 128303643442,
+      "name": "Fixture (contributor-balanced-04)",
+      "status": "completed",
+      "conclusion": "success",
+      "runner_id": 1000004168,
+      "started_at": "2026-11-07T04:40:21Z",
+      "completed_at": "2026-11-07T05:00:43Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-07T04:40:22Z",
+          "completed_at": "2026-11-07T04:40:24Z"
+        },
+        {
+          "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-07T04:40:24Z",
+          "completed_at": "2026-11-07T04:40:29Z"
+        },
+        {
+          "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-07T04:40:29Z",
+          "completed_at": "2026-11-07T04:40:32Z"
+        },
+        {
+          "name": "Restore matching fixture products and selector list",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-07T04:40:32Z",
+          "completed_at": "2026-11-07T04:40:33Z"
+        },
+        {
+          "name": "Select an iPhone simulator",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-07T04:40:33Z",
+          "completed_at": "2026-11-07T04:41:37Z"
+        },
+        {
+          "name": "Boot the iPhone simulator",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-07T04:41:37Z",
+          "completed_at": "2026-11-07T04:43:10Z"
+        },
+        {
+          "name": "Run selected fixture tests and require complete execution",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-07T04:43:10Z",
+          "completed_at": "2026-11-07T05:00:28Z"
+        },
+        {
+          "name": "Retain fixture results and timing",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-07T05:00:28Z",
+          "completed_at": "2026-11-07T05:00:31Z"
+        },
+        {
+          "name": "Retain Records media result counts and timing",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 9,
+          "started_at": "2026-11-07T05:00:31Z",
+          "completed_at": "2026-11-07T05:00:31Z"
+        },
+        {
+          "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 18,
+          "started_at": "2026-11-07T05:00:31Z",
+          "completed_at": "2026-11-07T05:00:32Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19,
+          "started_at": "2026-11-07T05:00:32Z",
+          "completed_at": "2026-11-07T05:00:41Z"
+        }
+      ]
+    },
+    {
+      "id": 128308042689,
+      "name": "Fixture (RecordsMediaUITests)",
+      "status": "completed",
+      "conclusion": "success",
+      "runner_id": 1000004177,
+      "started_at": "2026-11-07T05:18:36Z",
+      "completed_at": "2026-11-07T05:29:50Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-07T05:18:36Z",
+          "completed_at": "2026-11-07T05:18:38Z"
+        },
+        {
+          "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-07T05:18:38Z",
+          "completed_at": "2026-11-07T05:18:42Z"
+        },
+        {
+          "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-07T05:18:42Z",
+          "completed_at": "2026-11-07T05:18:45Z"
+        },
+        {
+          "name": "Restore matching fixture products and selector list",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-07T05:18:45Z",
+          "completed_at": "2026-11-07T05:18:46Z"
+        },
+        {
+          "name": "Select an iPhone simulator",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-07T05:18:46Z",
+          "completed_at": "2026-11-07T05:19:28Z"
+        },
+        {
+          "name": "Boot the iPhone simulator",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-07T05:19:28Z",
+          "completed_at": "2026-11-07T05:20:52Z"
+        },
+        {
+          "name": "Run selected fixture tests and require complete execution",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-07T05:20:53Z",
+          "completed_at": "2026-11-07T05:29:23Z"
+        },
+        {
+          "name": "Retain fixture results and timing",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 8,
+          "started_at": "2026-11-07T05:29:23Z",
+          "completed_at": "2026-11-07T05:29:23Z"
+        },
+        {
+          "name": "Retain Records media result counts and timing",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-07T05:29:23Z",
+          "completed_at": "2026-11-07T05:29:26Z"
+        },
+        {
+          "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 18,
+          "started_at": "2026-11-07T05:29:26Z",
+          "completed_at": "2026-11-07T05:29:27Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19,
+          "started_at": "2026-11-07T05:29:27Z",
+          "completed_at": "2026-11-07T05:29:48Z"
+        }
+      ]
+    },
+    {
+      "id": 128308865003,
+      "name": "Fixture (SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview)",
+      "status": "completed",
+      "conclusion": "success",
+      "runner_id": 1000004185,
+      "started_at": "2026-11-07T05:45:15Z",
+      "completed_at": "2026-11-07T05:59:13Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-07T05:45:16Z",
+          "completed_at": "2026-11-07T05:45:17Z"
+        },
+        {
+          "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-07T05:45:17Z",
+          "completed_at": "2026-11-07T05:45:22Z"
+        },
+        {
+          "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-07T05:45:22Z",
+          "completed_at": "2026-11-07T05:45:25Z"
+        },
+        {
+          "name": "Restore matching fixture products and selector list",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-07T05:45:25Z",
+          "completed_at": "2026-11-07T05:45:29Z"
+        },
+        {
+          "name": "Select an iPhone simulator",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-07T05:45:29Z",
+          "completed_at": "2026-11-07T05:46:27Z"
+        },
+        {
+          "name": "Boot the iPhone simulator",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-07T05:46:27Z",
+          "completed_at": "2026-11-07T05:48:21Z"
+        },
+        {
+          "name": "Run selected fixture tests and require complete execution",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-07T05:48:23Z",
+          "completed_at": "2026-11-07T05:58:39Z"
+        },
+        {
+          "name": "Retain fixture results and timing",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-07T05:58:39Z",
+          "completed_at": "2026-11-07T05:58:43Z"
+        },
+        {
+          "name": "Retain Records media result counts and timing",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 9,
+          "started_at": "2026-11-07T05:58:43Z",
+          "completed_at": "2026-11-07T05:58:43Z"
+        },
+        {
+          "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 18,
+          "started_at": "2026-11-07T05:58:43Z",
+          "completed_at": "2026-11-07T05:58:44Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19,
+          "started_at": "2026-11-07T05:58:44Z",
+          "completed_at": "2026-11-07T05:59:11Z"
+        }
+      ]
+    },
+    {
+      "id": 128309291550,
+      "name": "Fixture (SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn)",
+      "status": "completed",
+      "conclusion": "success",
+      "runner_id": 1000004183,
+      "started_at": "2026-11-07T05:38:45Z",
+      "completed_at": "2026-11-07T05:50:56Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-07T05:38:46Z",
+          "completed_at": "2026-11-07T05:38:47Z"
+        },
+        {
+          "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-07T05:38:47Z",
+          "completed_at": "2026-11-07T05:38:52Z"
+        },
+        {
+          "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-07T05:38:52Z",
+          "completed_at": "2026-11-07T05:38:55Z"
+        },
+        {
+          "name": "Restore matching fixture products and selector list",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-07T05:38:55Z",
+          "completed_at": "2026-11-07T05:38:56Z"
+        },
+        {
+          "name": "Select an iPhone simulator",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-07T05:38:56Z",
+          "completed_at": "2026-11-07T05:40:01Z"
+        },
+        {
+          "name": "Boot the iPhone simulator",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-07T05:40:01Z",
+          "completed_at": "2026-11-07T05:41:28Z"
+        },
+        {
+          "name": "Run selected fixture tests and require complete execution",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-07T05:41:30Z",
+          "completed_at": "2026-11-07T05:50:30Z"
+        },
+        {
+          "name": "Retain fixture results and timing",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-07T05:50:30Z",
+          "completed_at": "2026-11-07T05:50:34Z"
+        },
+        {
+          "name": "Retain Records media result counts and timing",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 9,
+          "started_at": "2026-11-07T05:50:34Z",
+          "completed_at": "2026-11-07T05:50:34Z"
+        },
+        {
+          "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 18,
+          "started_at": "2026-11-07T05:50:34Z",
+          "completed_at": "2026-11-07T05:50:34Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19,
+          "started_at": "2026-11-07T05:50:34Z",
+          "completed_at": "2026-11-07T05:50:55Z"
+        }
+      ]
+    },
+    {
+      "id": 128309925306,
+      "name": "Fixture (SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult)",
+      "status": "completed",
+      "conclusion": "success",
+      "runner_id": 1000004178,
+      "started_at": "2026-11-07T05:25:57Z",
+      "completed_at": "2026-11-07T05:33:39Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-07T05:25:58Z",
+          "completed_at": "2026-11-07T05:25:59Z"
+        },
+        {
+          "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-07T05:25:59Z",
+          "completed_at": "2026-11-07T05:26:04Z"
+        },
+        {
+          "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-07T05:26:04Z",
+          "completed_at": "2026-11-07T05:26:09Z"
+        },
+        {
+          "name": "Restore matching fixture products and selector list",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-07T05:26:09Z",
+          "completed_at": "2026-11-07T05:26:10Z"
+        },
+        {
+          "name": "Select an iPhone simulator",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-07T05:26:10Z",
+          "completed_at": "2026-11-07T05:26:21Z"
+        },
+        {
+          "name": "Boot the iPhone simulator",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-07T05:26:21Z",
+          "completed_at": "2026-11-07T05:27:49Z"
+        },
+        {
+          "name": "Run selected fixture tests and require complete execution",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-07T05:27:49Z",
+          "completed_at": "2026-11-07T05:33:03Z"
+        },
+        {
+          "name": "Retain fixture results and timing",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-07T05:33:03Z",
+          "completed_at": "2026-11-07T05:33:07Z"
+        },
+        {
+          "name": "Retain Records media result counts and timing",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 9,
+          "started_at": "2026-11-07T05:33:07Z",
+          "completed_at": "2026-11-07T05:33:07Z"
+        },
+        {
+          "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 18,
+          "started_at": "2026-11-07T05:33:07Z",
+          "completed_at": "2026-11-07T05:33:09Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19,
+          "started_at": "2026-11-07T05:33:09Z",
+          "completed_at": "2026-11-07T05:33:37Z"
+        }
+      ]
+    },
+    {
+      "id": 128311925046,
+      "name": "Fixture (SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption)",
+      "status": "completed",
+      "conclusion": "success",
+      "runner_id": 1000004184,
+      "started_at": "2026-11-07T05:40:06Z",
+      "completed_at": "2026-11-07T05:56:08Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-07T05:40:07Z",
+          "completed_at": "2026-11-07T05:40:09Z"
+        },
+        {
+          "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-07T05:40:09Z",
+          "completed_at": "2026-11-07T05:40:15Z"
+        },
+        {
+          "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-07T05:40:15Z",
+          "completed_at": "2026-11-07T05:40:20Z"
+        },
+        {
+          "name": "Restore matching fixture products and selector list",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-07T05:40:20Z",
+          "completed_at": "2026-11-07T05:40:21Z"
+        },
+        {
+          "name": "Select an iPhone simulator",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-07T05:40:21Z",
+          "completed_at": "2026-11-07T05:40:32Z"
+        },
+        {
+          "name": "Boot the iPhone simulator",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-07T05:40:32Z",
+          "completed_at": "2026-11-07T05:42:10Z"
+        },
+        {
+          "name": "Run selected fixture tests and require complete execution",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-07T05:42:10Z",
+          "completed_at": "2026-11-07T05:55:38Z"
+        },
+        {
+          "name": "Retain fixture results and timing",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-07T05:55:38Z",
+          "completed_at": "2026-11-07T05:55:43Z"
+        },
+        {
+          "name": "Retain Records media result counts and timing",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 9,
+          "started_at": "2026-11-07T05:55:43Z",
+          "completed_at": "2026-11-07T05:55:43Z"
+        },
+        {
+          "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 18,
+          "started_at": "2026-11-07T05:55:43Z",
+          "completed_at": "2026-11-07T05:55:44Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19,
+          "started_at": "2026-11-07T05:55:44Z",
+          "completed_at": "2026-11-07T05:56:06Z"
+        }
+      ]
+    },
+    {
+      "id": 128314495951,
+      "name": "Fixture (SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave)",
+      "status": "completed",
+      "conclusion": "success",
+      "runner_id": 1000004187,
+      "started_at": "2026-11-07T05:54:05Z",
+      "completed_at": "2026-11-07T06:06:19Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-07T05:54:06Z",
+          "completed_at": "2026-11-07T05:54:07Z"
+        },
+        {
+          "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-07T05:54:07Z",
+          "completed_at": "2026-11-07T05:54:15Z"
+        },
+        {
+          "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-07T05:54:15Z",
+          "completed_at": "2026-11-07T05:54:16Z"
+        },
+        {
+          "name": "Restore matching fixture products and selector list",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-07T05:54:16Z",
+          "completed_at": "2026-11-07T05:54:17Z"
+        },
+        {
+          "name": "Select an iPhone simulator",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-07T05:54:17Z",
+          "completed_at": "2026-11-07T05:54:44Z"
+        },
+        {
+          "name": "Boot the iPhone simulator",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-07T05:54:44Z",
+          "completed_at": "2026-11-07T05:56:22Z"
+        },
+        {
+          "name": "Run selected fixture tests and require complete execution",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-07T05:56:23Z",
+          "completed_at": "2026-11-07T06:05:57Z"
+        },
+        {
+          "name": "Retain fixture results and timing",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-07T06:05:57Z",
+          "completed_at": "2026-11-07T06:06:01Z"
+        },
+        {
+          "name": "Retain Records media result counts and timing",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 9,
+          "started_at": "2026-11-07T06:06:01Z",
+          "completed_at": "2026-11-07T06:06:01Z"
+        },
+        {
+          "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 18,
+          "started_at": "2026-11-07T06:06:01Z",
+          "completed_at": "2026-11-07T06:06:03Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19,
+          "started_at": "2026-11-07T06:06:03Z",
+          "completed_at": "2026-11-07T06:06:18Z"
+        }
+      ]
+    },
+    {
+      "id": 128315345182,
+      "name": "Fixture (SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable)",
+      "status": "completed",
+      "conclusion": "success",
+      "runner_id": 1000004193,
+      "started_at": "2026-11-07T06:19:12Z",
+      "completed_at": "2026-11-07T06:26:08Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-07T06:19:13Z",
+          "completed_at": "2026-11-07T06:19:14Z"
+        },
+        {
+          "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-07T06:19:14Z",
+          "completed_at": "2026-11-07T06:19:18Z"
+        },
+        {
+          "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-07T06:19:18Z",
+          "completed_at": "2026-11-07T06:19:23Z"
+        },
+        {
+          "name": "Restore matching fixture products and selector list",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-07T06:19:23Z",
+          "completed_at": "2026-11-07T06:19:24Z"
+        },
+        {
+          "name": "Select an iPhone simulator",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-07T06:19:24Z",
+          "completed_at": "2026-11-07T06:19:49Z"
+        },
+        {
+          "name": "Boot the iPhone simulator",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-07T06:19:49Z",
+          "completed_at": "2026-11-07T06:21:16Z"
+        },
+        {
+          "name": "Run selected fixture tests and require complete execution",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-07T06:21:16Z",
+          "completed_at": "2026-11-07T06:25:38Z"
+        },
+        {
+          "name": "Retain fixture results and timing",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-07T06:25:38Z",
+          "completed_at": "2026-11-07T06:25:40Z"
+        },
+        {
+          "name": "Retain Records media result counts and timing",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 9,
+          "started_at": "2026-11-07T06:25:40Z",
+          "completed_at": "2026-11-07T06:25:40Z"
+        },
+        {
+          "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 18,
+          "started_at": "2026-11-07T06:25:40Z",
+          "completed_at": "2026-11-07T06:25:41Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19,
+          "started_at": "2026-11-07T06:25:41Z",
+          "completed_at": "2026-11-07T06:26:06Z"
+        }
+      ]
+    },
+    {
+      "id": 128318995120,
+      "name": "Fixture (SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction)",
+      "status": "completed",
+      "conclusion": "success",
+      "runner_id": 1000004192,
+      "started_at": "2026-11-07T06:09:55Z",
+      "completed_at": "2026-11-07T06:20:24Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-07T06:09:56Z",
+          "completed_at": "2026-11-07T06:09:57Z"
+        },
+        {
+          "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-07T06:09:57Z",
+          "completed_at": "2026-11-07T06:10:01Z"
+        },
+        {
+          "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-07T06:10:01Z",
+          "completed_at": "2026-11-07T06:10:03Z"
+        },
+        {
+          "name": "Restore matching fixture products and selector list",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-07T06:10:03Z",
+          "completed_at": "2026-11-07T06:10:04Z"
+        },
+        {
+          "name": "Select an iPhone simulator",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-07T06:10:04Z",
+          "completed_at": "2026-11-07T06:11:31Z"
+        },
+        {
+          "name": "Boot the iPhone simulator",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-07T06:11:31Z",
+          "completed_at": "2026-11-07T06:12:53Z"
+        },
+        {
+          "name": "Run selected fixture tests and require complete execution",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-07T06:12:53Z",
+          "completed_at": "2026-11-07T06:20:09Z"
+        },
+        {
+          "name": "Retain fixture results and timing",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-07T06:20:09Z",
+          "completed_at": "2026-11-07T06:20:12Z"
+        },
+        {
+          "name": "Retain Records media result counts and timing",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 9,
+          "started_at": "2026-11-07T06:20:12Z",
+          "completed_at": "2026-11-07T06:20:12Z"
+        },
+        {
+          "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 18,
+          "started_at": "2026-11-07T06:20:12Z",
+          "completed_at": "2026-11-07T06:20:13Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19,
+          "started_at": "2026-11-07T06:20:13Z",
+          "completed_at": "2026-11-07T06:20:23Z"
+        }
+      ]
+    },
+    {
+      "id": 128320073037,
+      "name": "Fixture (DinnerDecisionSheetUITests)",
+      "status": "completed",
+      "conclusion": "success",
+      "runner_id": 1000004189,
+      "started_at": "2026-11-07T05:56:12Z",
+      "completed_at": "2026-11-07T06:07:04Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-07T05:56:13Z",
+          "completed_at": "2026-11-07T05:56:15Z"
+        },
+        {
+          "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-07T05:56:15Z",
+          "completed_at": "2026-11-07T05:56:20Z"
+        },
+        {
+          "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-07T05:56:20Z",
+          "completed_at": "2026-11-07T05:56:26Z"
+        },
+        {
+          "name": "Restore matching fixture products and selector list",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-07T05:56:26Z",
+          "completed_at": "2026-11-07T05:56:27Z"
+        },
+        {
+          "name": "Select an iPhone simulator",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-07T05:56:27Z",
+          "completed_at": "2026-11-07T05:56:53Z"
+        },
+        {
+          "name": "Boot the iPhone simulator",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-07T05:56:53Z",
+          "completed_at": "2026-11-07T05:58:35Z"
+        },
+        {
+          "name": "Run selected fixture tests and require complete execution",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-07T05:58:35Z",
+          "completed_at": "2026-11-07T06:06:39Z"
+        },
+        {
+          "name": "Retain fixture results and timing",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-07T06:06:39Z",
+          "completed_at": "2026-11-07T06:06:43Z"
+        },
+        {
+          "name": "Retain Records media result counts and timing",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 9,
+          "started_at": "2026-11-07T06:06:43Z",
+          "completed_at": "2026-11-07T06:06:43Z"
+        },
+        {
+          "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 18,
+          "started_at": "2026-11-07T06:06:43Z",
+          "completed_at": "2026-11-07T06:06:45Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19,
+          "started_at": "2026-11-07T06:06:46Z",
+          "completed_at": "2026-11-07T06:07:01Z"
+        }
+      ]
+    }
+  ],
+  "checkoutProvenance": {
+    "mergeTreePin": {
+      "candidate": "8d1a79b22981148839c6e3d0827c6710f877a369",
+      "candidateTree": "f39e75df75ff2225492f95d7237650bdddc56e69",
+      "expectedCheckout": "e7dc8bf0f3ac256b320f9f82cd1887f1beccfbb6",
+      "hostedMergeTree": "f39e75df75ff2225492f95d7237650bdddc56e69",
+      "treesExactlyEqual": true,
+      "upstreamProofSHA256": "e17df994b014c0d1852e0a12aeaf80d6f1cb257a71abb2c8c396d432d7077f0f",
+      "apiResponseSHA256": "adf70b956f0126402dd34ed471f0927b6a995f7f3e27dcc6e2dba47a98df4242",
+      "scope": "Read-only shared core API merge pin independently compared with immutable local candidate tree; fixture job checkout logs must match expectedCheckout."
+    },
+    "jobs": {
+      "128299118865": {
+        "runnerAcquired": true,
+        "job": "fixture-plan",
+        "logAvailable": true,
+        "logSHA256": "affdb6677bea107d27f08863260861e9d021aa1dc26afbd95cdc54a6a2da4a7f",
+        "observedCheckouts": [
+          "e7dc8bf0f3ac256b320f9f82cd1887f1beccfbb6"
+        ],
+        "exactMergeTreeVerified": true
+      },
+      "128299155327": {
+        "runnerAcquired": true,
+        "job": "Build dinner decision fixture",
+        "logAvailable": true,
+        "logSHA256": "fd864e2cff1e19fa26e4deb9cfa13367ceb6f0bcbedfceec1ff2d321c1d4ea6f",
+        "observedCheckouts": [
+          "e7dc8bf0f3ac256b320f9f82cd1887f1beccfbb6"
+        ],
+        "exactMergeTreeVerified": true
+      },
+      "128299155568": {
+        "runnerAcquired": true,
+        "job": "Build contributor, stock and carryover fixtures",
+        "logAvailable": true,
+        "logSHA256": "963dafb90f51a760b7e9955e305bac9ce587f3255dbb9b0bae1b3cf041c1d29c",
+        "observedCheckouts": [
+          "e7dc8bf0f3ac256b320f9f82cd1887f1beccfbb6"
+        ],
+        "exactMergeTreeVerified": true
+      },
+      "128303642774": {
+        "runnerAcquired": true,
+        "job": "Fixture (contributor-balanced-05)",
+        "logAvailable": true,
+        "logSHA256": "7233aa59eff8082d106f7d607b35463ee392179364da3d8c52bd843fcb85fd5b",
+        "observedCheckouts": [
+          "e7dc8bf0f3ac256b320f9f82cd1887f1beccfbb6"
+        ],
+        "exactMergeTreeVerified": true
+      },
+      "128303642792": {
+        "runnerAcquired": true,
+        "job": "Fixture (contributor-balanced-02)",
+        "logAvailable": true,
+        "logSHA256": "55b59031be538fb206f0ebdef7e701f88dc91e62a4a0e8d0778c49ffa88039cc",
+        "observedCheckouts": [
+          "e7dc8bf0f3ac256b320f9f82cd1887f1beccfbb6"
+        ],
+        "exactMergeTreeVerified": true
+      },
+      "128303643111": {
+        "runnerAcquired": true,
+        "job": "Fixture (contributor-balanced-03)",
+        "logAvailable": true,
+        "logSHA256": "93b757cd836b372382331301156ce720ebace83b6166f9724157e2a45badf56c",
+        "observedCheckouts": [
+          "e7dc8bf0f3ac256b320f9f82cd1887f1beccfbb6"
+        ],
+        "exactMergeTreeVerified": true
+      },
+      "128303643332": {
+        "runnerAcquired": true,
+        "job": "Fixture (contributor-balanced-01)",
+        "logAvailable": true,
+        "logSHA256": "ae60e8c8394bc313d0acc820c9c10cabdc2797e46431ea4808b44d58cf028781",
+        "observedCheckouts": [
+          "e7dc8bf0f3ac256b320f9f82cd1887f1beccfbb6"
+        ],
+        "exactMergeTreeVerified": true
+      },
+      "128303643442": {
+        "runnerAcquired": true,
+        "job": "Fixture (contributor-balanced-04)",
+        "logAvailable": true,
+        "logSHA256": "eeb23cdaae45d7d6bae8ffd74ecb24cf0a7a3c03b2def807a55c0a51f4b6e2a1",
+        "observedCheckouts": [
+          "e7dc8bf0f3ac256b320f9f82cd1887f1beccfbb6"
+        ],
+        "exactMergeTreeVerified": true
+      },
+      "128308042689": {
+        "redactedScopeOnly": true,
+        "rawJobLogNotRetrieved": true
+      },
+      "128308865003": {
+        "runnerAcquired": true,
+        "job": "Fixture (SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview)",
+        "logAvailable": true,
+        "logSHA256": "ecf80f9084d27058593e8fbd661daff4a41c9ec6d84569c043b0edc4d070db93",
+        "observedCheckouts": [
+          "e7dc8bf0f3ac256b320f9f82cd1887f1beccfbb6"
+        ],
+        "exactMergeTreeVerified": true
+      },
+      "128309291550": {
+        "runnerAcquired": true,
+        "job": "Fixture (SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn)",
+        "logAvailable": true,
+        "logSHA256": "5b734a7bfa9a8d3b98ef8d4416e5791a41980d5586ae8a8950fd0fe5e4389b6e",
+        "observedCheckouts": [
+          "e7dc8bf0f3ac256b320f9f82cd1887f1beccfbb6"
+        ],
+        "exactMergeTreeVerified": true
+      },
+      "128309925306": {
+        "runnerAcquired": true,
+        "job": "Fixture (SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult)",
+        "logAvailable": true,
+        "logSHA256": "2031469908722b3213d84d7ed2998bf694d04cff2689ce1f8120c000893a36d9",
+        "observedCheckouts": [
+          "e7dc8bf0f3ac256b320f9f82cd1887f1beccfbb6"
+        ],
+        "exactMergeTreeVerified": true
+      },
+      "128311925046": {
+        "runnerAcquired": true,
+        "job": "Fixture (SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption)",
+        "logAvailable": true,
+        "logSHA256": "830001ace9a56de64b5f009f2dee6a602fae61ab64b599bec346cac7d51ad0d0",
+        "observedCheckouts": [
+          "e7dc8bf0f3ac256b320f9f82cd1887f1beccfbb6"
+        ],
+        "exactMergeTreeVerified": true
+      },
+      "128314495951": {
+        "runnerAcquired": true,
+        "job": "Fixture (SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave)",
+        "logAvailable": true,
+        "logSHA256": "b862736f0456632eb7d87b0eea6be125ac51339b6892b4594ecee31faf9fc29f",
+        "observedCheckouts": [
+          "e7dc8bf0f3ac256b320f9f82cd1887f1beccfbb6"
+        ],
+        "exactMergeTreeVerified": true
+      },
+      "128315345182": {
+        "runnerAcquired": true,
+        "job": "Fixture (SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable)",
+        "logAvailable": true,
+        "logSHA256": "1fff47b7fef5e694f6bccd807c12e2ed1d982a4936385bd6f09fe85b6f2926b1",
+        "observedCheckouts": [
+          "e7dc8bf0f3ac256b320f9f82cd1887f1beccfbb6"
+        ],
+        "exactMergeTreeVerified": true
+      },
+      "128318995120": {
+        "runnerAcquired": true,
+        "job": "Fixture (SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction)",
+        "logAvailable": true,
+        "logSHA256": "6f1f07ccbd05be11dde7e19656b382503187a9fbbb47b31c4297e0c5f66d94b0",
+        "observedCheckouts": [
+          "e7dc8bf0f3ac256b320f9f82cd1887f1beccfbb6"
+        ],
+        "exactMergeTreeVerified": true
+      },
+      "128320073037": {
+        "runnerAcquired": true,
+        "job": "Fixture (DinnerDecisionSheetUITests)",
+        "logAvailable": true,
+        "logSHA256": "a27a472f3aef79bcef15730d55351042694b9f70f7de2d499c106d9b631ce334",
+        "observedCheckouts": [
+          "e7dc8bf0f3ac256b320f9f82cd1887f1beccfbb6"
+        ],
+        "exactMergeTreeVerified": true
+      }
+    },
+    "ordinaryExecutedJobsMatch": true
+  },
+  "buildProvenance": {
+    "dinner": {
+      "jobID": 128299155327,
+      "conclusion": "success",
+      "conditions": [
+        "DEBUG DINNER_DECISION_UI_FIXTURE"
+      ],
+      "expectedConditions": "DEBUG DINNER_DECISION_UI_FIXTURE",
+      "conditionsMatch": true,
+      "xcode263Build17C529Observed": true
+    },
+    "contributor": {
+      "jobID": 128299155568,
+      "conclusion": "success",
+      "conditions": [
+        "DEBUG CONTRIBUTOR_CAPTURE_UI_FIXTURE STOCK_REVIEW_UI_FIXTURE AWAY_CARRYOVER_UI_FIXTURE"
+      ],
+      "expectedConditions": "DEBUG CONTRIBUTOR_CAPTURE_UI_FIXTURE STOCK_REVIEW_UI_FIXTURE AWAY_CARRYOVER_UI_FIXTURE",
+      "conditionsMatch": true,
+      "xcode263Build17C529Observed": true
+    }
+  },
+  "allEvidenceCollected": true,
+  "unknownRuntimeWarningShards": [],
+  "runtimeWarningCoverageComplete": true,
+  "allRequestedChecksPassing": true,
+  "scope": "Only original fixture attempt1. No native-wire/core scope. Passing subsets do not establish fixes or broader candidate acceptance. Product artifacts are metadata/digest pins only; compiled plans are verified from bounded result artifacts.",
+  "atUTC": "2026-11-07T06:26:48.937888+00:00"
+}
