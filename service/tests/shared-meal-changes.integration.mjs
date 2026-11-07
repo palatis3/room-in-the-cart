@@ -1118,11 +1118,21 @@ test('accepted fallback registry tracks the exact source version and erases publ
    replacement:next,reviewedAt:desk.asOf,repeatOfOccurrenceId:null,agreesToRepeat:false,proposesExtraTrip:false,agreesToExtraTrip:false,acceptsUnresolved:true}};
  const preview=ok(await call(f.owner,recovery+'/preview','POST',input)),command=f.command('mealRecovery.apply',{...input,previewId:preview.previewId,previewDigest:preview.previewDigest});
  const receipt=ok(await f.send(command));
- const {linkAcceptedFallback}=await import('../dist/shared-fallback-registry.js');
+ const {loadAcceptedFallbacks,linkAcceptedFallback}=await import('../dist/shared-fallback-registry.js');
+ const list=ids=>repo.transaction(f.h,db=>loadAcceptedFallbacks({db,householdId:f.h,member:{member_id:f.owner.id,kind:'adult'}},ids));
+ assert.deepEqual(await list([]),[]);assert.deepEqual(await list([randomUUID()]),[]);
+ assert.deepEqual((await list([candidateId])).map(x=>x.candidateId),[candidateId]);
  // The paid planner calls this helper in the same household transaction as publication.
  const link=revision=>repo.transaction(f.h,db=>linkAcceptedFallback({db,householdId:f.h,member:{member_id:f.owner.id,kind:'adult'}},receipt.operationId,candidateId,revision));
  await assert.rejects(()=>link(2),e=>e.code==='stale_fallback');await link(1);
  assert.equal((await admin.query('SELECT 1 FROM ritc.meal_recovery_source_member WHERE operation_id=$1 AND member_id=$2',[receipt.operationId,f.planner.id])).rowCount,1);
+ const foreign=await fixture();
+ await repo.transaction(foreign.h,async db=>{
+   for(const table of ['accepted_fallback_revision','meal_recovery_fallback']){
+     assert.equal((await db.query('SELECT 1 FROM ritc.'+table+' WHERE household_id=$1',[f.h])).rowCount,0);
+     assert.equal((await db.query("SELECT has_table_privilege(current_user,$1,'UPDATE,DELETE') AS edits",['ritc.'+table])).rows[0].edits,false);
+   }
+ });
  const after=ok(await call(f.owner,recovery));const copy=ok(await f.write('cookCopy.save',{language:'en',text:recipe.notes,occurrenceId:old.occurrenceId,
    mealRevision:old.sourceMealRevision,revisionId:next.revisionId,recoveryRevision:1,placedRevision:after.placedRevision,supplyRevision:after.base.supplyRevision,pantryRevision:after.base.pantryRevision}));
  await admin.query('SELECT ritc.privacy_erase_extension($1,$2)',[f.h,f.planner.id]);

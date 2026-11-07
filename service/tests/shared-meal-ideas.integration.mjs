@@ -317,3 +317,30 @@ test('accepted fallback registry preserves per-ingredient notes and rejects stal
  const stored=(await admin.query('SELECT recipe,source,fingerprint FROM ritc.accepted_fallback_revision WHERE household_id=$1 AND candidate_id=$2 AND revision=1',[f.h,input.candidateId])).rows[0];
  assert.deepEqual(stored,{recipe:null,source:null,fingerprint:null});
 });
+
+test('accepted fallback registry paginates whole recipes within native read bounds and checks exact named servings',async()=>{
+ const f=await mealFixture(),path=f.path+'/accepted-fallbacks';
+ const recipe={title:'Review one recipe',portions:2,notes:'',sourceURL:null,requiredLeadMinutes:null,elapsedMinutes:null,exclusions:[],
+   ingredients:[{id:randomUUID(),name:'Beans',quantity:null,exclusions:[]}]};
+ const input={v:1,action:'accept',clientKey:randomUUID(),candidateId:randomUUID(),shopRevision:2,authorityEpoch:1,registryRevision:0,baseRevision:null,
+   reviewed:true,source:{kind:'disclosed'},recipe,usual:false};
+ const groups=[{id:randomUUID(),name:'Lunch',protected:true,exclusions:[],servings:{numerator:5,denominator:2}}];
+ assert.equal((await call(f.owner,path,'POST',{...input,recipe:{...recipe,groups}})).status,422);
+ assert.equal((await call(f.owner,path,'POST',{...input,recipe:{...recipe,notes:'Control\u0000'}})).status,422);
+ const ids=[];
+ for(let i=0;i<21;i++){ids.push(randomUUID());ok(await call(f.owner,path,'POST',{...input,registryRevision:i,clientKey:randomUUID(),candidateId:ids[i]}));}
+ let page=ok(await call(f.owner,path));assert.deepEqual(page.candidates.map(c=>c.candidateId),ids.sort().slice(0,20));assert.equal(page.nextCursor,ids[19]);
+ const end=ok(await call(f.owner,path+'?cursor='+page.nextCursor));assert.deepEqual(end.candidates.map(c=>c.candidateId),ids.slice(20));assert.equal(end.nextCursor,null);
+ assert.equal(end.registryRevision,page.registryRevision);
+ assert.equal((await call(f.owner,path+'?cursor='+randomUUID())).data.error.code,'stale_fallback');
+ const large={...recipe,ingredients:Array.from({length:60},()=>({id:randomUUID(),name:'Rice',notes:'x'.repeat(7500),quantity:null,exclusions:[]}))};
+ for(let i=0;i<4;i++)ok(await call(f.owner,path,'POST',{...input,registryRevision:21+i,recipe:large,clientKey:randomUUID(),candidateId:randomUUID()}));
+ const seen=new Set();let cursor=null;
+ do{
+   page=ok(await call(f.owner,path+(cursor?'?cursor='+cursor:'')));
+   assert.equal(page.registryRevision,25);assert(Buffer.byteLength(JSON.stringify(page))<2000000);
+   for(const c of page.candidates){assert(!seen.has(c.candidateId));seen.add(c.candidateId);}
+   cursor=page.nextCursor;if(cursor)assert.equal(cursor,page.candidates.at(-1).candidateId);
+ }while(cursor);
+ assert.equal(seen.size,25);
+});

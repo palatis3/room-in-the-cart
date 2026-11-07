@@ -33,6 +33,8 @@ export const fallbackRecipe=z.object({
   }
   if(!validString(r))fail('Recipe text contains unsupported characters.');
   const groups=r.groups??[],ids=new Set(groups.map(g=>g.id));
+  const assigned=groups.reduce((sum,g)=>add(sum,{n:BigInt(g.servings.numerator),d:BigInt(g.servings.denominator)}),zero);
+  if(cmp(assigned,{n:BigInt(r.portions),d:1n})>0n)fail('Named portions cannot exceed the reviewed total servings.');
   if(ids.size!==groups.length || new Set(r.ingredients.map(i=>i.id)).size!==r.ingredients.length)fail('Use unique group and ingredient identities.');
   for(const i of r.ingredients){
     const targets=i.groupIds??[],parts=i.bindings??[];
@@ -58,20 +60,32 @@ const write=z.discriminatedUnion('action',[
   z.object({...common,action:z.literal('revoke')}).strict(),
 ]);
 const stale=()=>new ServiceError(409,'stale_fallback','Read the current household fallback and review it again.');
-const heads=`SELECT DISTINCT ON(candidate_id) * FROM ritc.accepted_fallback_revision WHERE household_id=$1 ORDER BY candidate_id,revision DESC`;
+function currentHeads(filter='') {
+  return `SELECT DISTINCT ON(candidate_id) * FROM ritc.accepted_fallback_revision WHERE household_id=$1 ${filter} ORDER BY candidate_id,revision DESC`;
+}
 
 // Internal to an authenticated shopper transaction; the route separately verifies the current paid seat.
-export async function loadAcceptedFallbacks(ctx:Context):Promise<AcceptedFallback[]> {
+export async function loadAcceptedFallbacks(ctx:Context,ids?:string[]):Promise<AcceptedFallback[]> {
   if(ctx.viewGrantId || ctx.member.kind!=='adult') throw unavailable();
+  const authority=await ctx.db.query(`SELECT 1 FROM ritc.shop WHERE household_id=$1 AND shopper_id=$2 AND ($3::uuid IS NULL OR shop_id=$3) LIMIT 1`,
+    [ctx.householdId,ctx.member.member_id,ctx.selectedShopId??null]);
+  if(!authority.rowCount)throw unavailable();
+  const selected=ids===undefined?undefined:z.array(id).max(100).parse(ids);
+  const heads=currentHeads(selected===undefined?'':'AND candidate_id=ANY($2::uuid[])');
   const rows=await ctx.db.query<AcceptedFallback>(`SELECT candidate_id AS "candidateId",revision,recipe,usual
-    FROM (${heads}) latest WHERE accepted AND recipe IS NOT NULL ORDER BY candidate_id`,[ctx.householdId]);
+    FROM (${heads}) latest WHERE accepted AND recipe IS NOT NULL ORDER BY candidate_id`,selected===undefined?[ctx.householdId]:[ctx.householdId,selected]);
   return rows.rows;
 }
 export async function linkAcceptedFallback(ctx:Context,operationId:string,candidateId:string,revision:number) {
+  if(ctx.viewGrantId || ctx.member.kind!=='adult')throw unavailable();
   const args=[ctx.householdId,candidateId,revision,operationId];
   const linked=await ctx.db.query(`INSERT INTO ritc.meal_recovery_fallback(household_id,candidate_id,revision,operation_id)
-    SELECT household_id,candidate_id,revision,$4 FROM (${heads}) latest
-    WHERE candidate_id=$2 AND revision=$3 AND accepted AND recipe IS NOT NULL RETURNING operation_id`,args);
+    SELECT household_id,candidate_id,revision,$4 FROM (${currentHeads()}) latest
+    WHERE candidate_id=$2 AND revision=$3 AND accepted AND recipe IS NOT NULL AND EXISTS(
+      SELECT FROM ritc.meal_recovery_revision r JOIN ritc.shop s USING(household_id,shop_id)
+      WHERE r.household_id=$1 AND r.operation_id=$4 AND r.actor_id=$5 AND s.shopper_id=$5 AND r.current_meal IS NOT NULL
+        AND r.authority_epoch=s.authority_epoch AND ($6::uuid IS NULL OR s.shop_id=$6)) RETURNING operation_id`,
+    [...args,ctx.member.member_id,ctx.selectedShopId??null]);
   if(!linked.rowCount) throw stale();
   await ctx.db.query(`INSERT INTO ritc.meal_recovery_source_member(household_id,operation_id,member_id)
     SELECT household_id,$4,unnest(source_members) FROM ritc.accepted_fallback_revision WHERE household_id=$1 AND candidate_id=$2 AND revision=$3
@@ -103,7 +117,8 @@ export class SharedFallbackRegistry {
   async read(ctx:Context,shopId:string,after:string|null){
     const {stamp}=await this.scope(ctx,shopId);
     const cursor=after===null?null:id.parse(after);
-    const rows=(await ctx.db.query<AcceptedFallback>(`SELECT candidate_id AS "candidateId",revision,recipe,usual FROM (${heads}) latest
+    if(cursor && !(await ctx.db.query(`SELECT 1 FROM (${currentHeads()}) latest WHERE candidate_id=$2 AND accepted AND recipe IS NOT NULL`,[ctx.householdId,cursor])).rowCount)throw stale();
+    const rows=(await ctx.db.query<AcceptedFallback>(`SELECT candidate_id AS "candidateId",revision,recipe,usual FROM (${currentHeads()}) latest
       WHERE accepted AND recipe IS NOT NULL AND ($2::uuid IS NULL OR candidate_id>$2) ORDER BY candidate_id LIMIT 21`,[ctx.householdId,cursor])).rows;
     const candidates:AcceptedFallback[]=[];
     let bytes=0;
@@ -197,7 +212,7 @@ export class SharedFallbackRegistry {
     if(accepted){
       material=request.source.kind==='disclosed'?{recipe:request.recipe,members:[],shops:[]}:await this.material(ctx,shop,request.source);
       if(digest(material.recipe)!==digest(request.recipe))throw stale();
-      const other=(await ctx.db.query(`SELECT count(*)::int AS count,bool_or(usual) AS usual FROM (${heads}) latest
+      const other=(await ctx.db.query(`SELECT count(*)::int AS count,bool_or(usual) AS usual FROM (${currentHeads()}) latest
         WHERE candidate_id<>$2 AND accepted AND recipe IS NOT NULL`,scope)).rows[0];
       if(other.count>=100) throw new ServiceError(409,'fallback_limit','Review existing household fallbacks before adding another.');
       if(request.usual && other.usual)throw new ServiceError(409,'usual_fallback_exists','Review the current usual fallback before changing the usual dish.');
