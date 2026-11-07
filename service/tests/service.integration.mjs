@@ -68,6 +68,78 @@ async function fixture() {
   return{h,shopId,lineId,line,quote,actors,http,envelope,command,send,preview};
 }
 
+async function purchaseFixture(author='Sam') {
+  const f=await fixture(),sent=await f.send(author),requestId=sent.request.requestId;
+  const preview=await f.preview(sent.request,{choice:'link',lineId:f.lineId,promote:false});
+  assert.equal(preview.status,200,JSON.stringify(preview.data));
+  const applied=await f.command('Mia','request.apply',{requestId,previewId:preview.data.previewId,acceptOverage:false,acceptUnknown:false},
+    {shopRevision:1,authorityEpoch:1,requestRevision:1});
+  assert.equal(applied.status,200,JSON.stringify(applied.data));
+  assert.equal((await f.http('Mia','GET','/shops/'+f.shopId+'/inbox')).data.requests[0].linkedLineId,undefined);
+  const early=await f.command('Mia','request.confirmPurchase',{requestId,lineId:f.lineId,placedRevision:2,outcome:'bought'},
+    {shopRevision:2,authorityEpoch:1,requestRevision:applied.data.requestRevision});
+  assert.equal(early.data.error.code,'placed_order_required');
+  assert.equal((await f.command('Mia','shop.freeze',{}, {shopRevision:applied.data.shopRevision,authorityEpoch:1})).status,200);
+  const placed=await f.command('Mia','shop.reportPlaced',{occurredAt:new Date().toISOString()},{shopRevision:3,authorityEpoch:1});
+  assert.equal(placed.status,200,JSON.stringify(placed.data));
+  const state=(await f.http('Mia','GET','/shops/'+f.shopId)).data;
+  return {...f,requestId,placedRevision:state.placedRevision,shopRevision:state.shopRevision,requestRevision:applied.data.requestRevision};
+}
+
+test('only first-hand shopper confirmation changes the added request purchase outcome on its sealed line',async()=>{
+  const f=await purchaseFixture(),other=await purchaseFixture(),inbox='/shops/'+f.shopId+'/inbox';
+  const mine=async()=>(await f.http('Sam','GET','/requests/mine')).data.requests[0];
+  const shopper=async(actor='Mia')=>(await f.http(actor,'GET',inbox)).data.requests[0];
+  const before=(await f.http('Mia','GET','/shops/'+f.shopId)).data;
+  const base={shopRevision:f.shopRevision,authorityEpoch:1,requestRevision:f.requestRevision};
+  const body={requestId:f.requestId,lineId:f.lineId,placedRevision:f.placedRevision,outcome:'bought'};
+  const cmd=(extra={},version=base,actor='Mia')=>f.envelope(actor,'request.confirmPurchase',{...body,...extra},version);
+  const send=(c,a='Mia')=>f.http(a,'POST','/commands',c);
+  const ownBefore=await mine();assert.equal(ownBefore.status,'added');assert.equal(ownBefore.purchaseOutcome,undefined);
+  assert.equal((await shopper()).linkedLineId,f.lineId);assert.equal(ownBefore.linkedLineId,undefined);
+  assert((await f.http('Mia','GET','/bootstrap')).data.capabilities.includes('request_purchase_confirmation'));
+  assert(!(await f.http('Sam','GET','/bootstrap')).data.capabilities.includes('request_purchase_confirmation'));
+  assert.equal((await f.http('Alex','GET',inbox)).status,404);
+  for(const actor of ['Sam','Jo','Alex'])assert.equal((await send(cmd({},base,actor),actor)).status,404);
+  assert.equal((await f.http(other.actors.Mia,'POST','/commands',cmd())).status,404);
+  assert.equal((await send(cmd({requestId:other.requestId,lineId:other.lineId}))).status,404);
+  assert.equal((await send(cmd({lineId:randomUUID()}))).status,404);
+  assert.equal((await send(cmd({placedRevision:f.placedRevision+1}))).status,409);
+  assert.equal((await send(cmd({}, {...base,requestRevision:1}))).status,409);
+  assert.equal((await send(cmd({outcome:'refunded'}))).status,422);
+  const first=cmd(),[a,b]=await Promise.all([send(first),send(first)]);
+  assert.equal(a.status,200,JSON.stringify(a.data));assert.deepEqual(a.data,b.data);
+  assert.deepEqual(a.data,{operationId:a.data.operationId,kind:'request.confirmPurchase',shopId:f.shopId,
+    shopRevision:f.shopRevision,authorityEpoch:1,disposition:'recorded',requestId:f.requestId,requestRevision:3,purchaseOutcome:'bought'});
+  assert.deepEqual(await mine(),{...ownBefore,revision:3,purchaseOutcome:'bought'});
+  assert.equal((await send({...first,body:{...body,outcome:'unknown'}})).data.error.code,'key_reused');
+  const correction=cmd({outcome:'notBought'},{...base,requestRevision:3});
+  assert.equal((await send(correction)).data.purchaseOutcome,'notBought');
+  assert.deepEqual(await mine(),{...ownBefore,revision:4,purchaseOutcome:'notBought'});
+  assert.deepEqual((await send(first)).data,a.data); // A late retry cannot restore the earlier answer.
+  assert.equal((await send(cmd({}, {...base,requestRevision:3}))).data.error.code,'stale_base');
+  const clear=await send(cmd({outcome:'unknown'},{...base,requestRevision:4}));
+  assert.equal(clear.data.purchaseOutcome,'unknown');assert.deepEqual(await mine(),{...ownBefore,revision:5});
+  assert.deepEqual((await f.http('Jo','GET','/requests/mine')).data.requests,[]);
+  assert.deepEqual((await f.http('Mia','GET','/shops/'+f.shopId)).data,before);
+  const transfer=(newShopperId,epoch)=>f.command('Mia','shop.transferAuthority',{newShopperId},{shopRevision:f.shopRevision,authorityEpoch:epoch});
+  assert.equal((await transfer(f.actors.Alex.id,1)).status,200);
+  assert.equal((await send(first)).status,404);
+  assert.equal((await send(cmd({}, {...base,requestRevision:5},'Alex'),'Alex')).data.error.code,'authority_changed');
+  assert.equal((await shopper('Alex')).linkedLineId,f.lineId);
+  assert.equal((await transfer(f.actors.Mia.id,2)).status,200);
+  assert.equal((await send(first)).data.error.code,'refresh_required');
+  const closed=await f.http('Mia','POST','/shops/'+f.shopId+'/financial-reviews',{clientKey:randomUUID(),
+    sourceVersion:{shopRevision:f.shopRevision,authorityEpoch:3,financialRevision:0},allEvidenceEntered:false,closeShop:true});
+  assert.equal(closed.status,200,JSON.stringify(closed.data));
+  assert.deepEqual(await mine(),{...ownBefore,revision:5}); // Closing and reviewing money cannot confirm a request.
+  const access=await f.http('Mia','GET','/bootstrap',undefined,{'X-Shop-Id':f.shopId});
+  assert(access.data.capabilities.includes('request_purchase_confirmation'));
+  const late=await send(cmd({}, {shopRevision:closed.data.sourceVersion.shopRevision,authorityEpoch:3,requestRevision:5}));
+  assert.equal(late.status,200,JSON.stringify(late.data));assert.equal((await mine()).purchaseOutcome,'bought');
+  assert.equal((await admin.query('SELECT 1 FROM ritc.request_purchase_review WHERE household_id=$1',[f.h])).rowCount,4);
+});
+
 test('real JWT auth denies missing, forged, expired, wrong issuer and wrong audience tokens',async()=>{
   const f=await fixture();
   assert.equal((await fetch(origin+'/v1/me/workspaces')).status,401);

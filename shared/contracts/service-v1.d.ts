@@ -6,6 +6,12 @@ export interface OwnRequest {
   purchaseOutcome?: 'bought' | 'notBought';
   ownActionAllowed: boolean; clarification: string | null; followupTo: string | null;
 }
+export type RequestPurchaseOutcome=NonNullable<OwnRequest['purchaseOutcome']>|'unknown';
+export interface ShopperInboxRequest extends OwnRequest {authorAlias:string;linkedLineId?:string}
+export interface ConfirmRequestPurchaseBody {requestId:string;lineId:string;placedRevision:number;outcome:RequestPurchaseOutcome}
+export interface ConfirmRequestPurchaseReceipt extends ShopperReceipt {
+  kind:'request.confirmPurchase';disposition:'recorded';requestId:string;requestRevision:number;purchaseOutcome:RequestPurchaseOutcome;
+}
 export interface CommandBase { shopRevision: number; authorityEpoch: number; requestRevision?: number }
 export interface CommandEnvelope {
   v: 1; replayWindow: string; clientKey: string; shopId: string;

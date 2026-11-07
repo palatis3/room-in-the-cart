@@ -6,7 +6,7 @@ import { cookCopyStillExists, recordCookCopy } from './cook-copy.js';
 import { isPantryCommand, pantryOperationExists } from './pantry-lots.js';
 import { consumeSharedMealChange } from './shared-meal-changes.js';
 import { randomBytes, randomUUID } from 'node:crypto';
-import type { OwnRequest, ShopperReceipt, RequestPreview, QuoteBasis, BasketLine } from '../../shared/contracts/service-v1.js';
+import type { OwnRequest, ShopperReceipt, RequestPurchaseOutcome, RequestPreview, QuoteBasis, BasketLine } from '../../shared/contracts/service-v1.js';
 import type { VerifiedIdentity,SessionStatusVerifier } from './auth.js';
 import { type Database,type Transaction,digest,tokenHash } from './database.js';
 import { accessEnded,unavailable,invalid,refresh,ServiceError } from './errors.js';
@@ -16,10 +16,11 @@ export interface AuthContext { identity:VerifiedIdentity; deviceToken?:string; t
 export interface Member { member_id:string; kind:'adult'|'child'; organizer:boolean; can_contribute:boolean; alias:string; state:string }
 export interface Context { db:Transaction; householdId:string; member:Member; deviceId:string; now:Date;viewGrantId?:string;selectedShopId?:string }
 export interface Shop { household_id:string;shop_id:string;shopper_id:string;authority_epoch:number;revision:number;phase:string;quote:QuoteBasis;frozen_revision:number|null;placed_revision:number|null;supply_revision:number;recovery_revision?:number;store_basis_revision?:number|null;store_review_required?:boolean }
-interface RequestRow { request_id:string;author_id:string;shop_id:string;original_item:string;own_quantity:string|null;revision:number;authored_at:Date;received_at:Date;route:'current'|'next';status:OwnRequest['status'];clarification:string|null;followup_to:string|null }
+interface RequestRow { purchase_outcome?:RequestPurchaseOutcome|null;request_id:string;author_id:string;shop_id:string;original_item:string;own_quantity:string|null;revision:number;authored_at:Date;received_at:Date;route:'current'|'next';status:OwnRequest['status'];clarification:string|null;followup_to:string|null }
 const editable=(r:RequestRow)=>r.status==='pending'||r.status==='clarified';
 export function ownRequest(r:RequestRow):OwnRequest {
   return {requestId:r.request_id,shopId:r.shop_id,revision:r.revision,originalItem:r.original_item,ownQuantity:r.own_quantity,
+    ...(r.status==='added' && (r.purchase_outcome==='bought' || r.purchase_outcome==='notBought')?{purchaseOutcome:r.purchase_outcome}:{}),
     authoredAt:r.authored_at.toISOString(),receivedAt:r.received_at.toISOString(),route:r.route,status:r.status,
     ownActionAllowed:editable(r),clarification:r.clarification,followupTo:r.followup_to};
 }
@@ -153,7 +154,7 @@ export class HouseholdRepository {
     return{household:{id:ctx.householdId,label:house.label as string},memberId:ctx.member.member_id,
       canSelectShop:!helperRole&&!ctx.viewGrantId&&ctx.member.kind==='adult'&&(ctx.member.can_contribute||ctx.member.organizer||isShopper||hasBudgetAccess),
       selectionRequired:!helperRole&&!ctx.viewGrantId&&!ctx.selectedShopId&&candidates.length>1,role:isShopper?'shopper':ctx.member.organizer?'organizer':helperRole?(helper.mode==='edit'?'editor':'helper'):'contributor',shopId:helperRole?helper.shop_id:shop?.shop_id??null,...(helperRole?{grantId:helper.grant_id}:{}),enrolled:true,queueConsent:false,
-      capabilities:[...(!helperRole&&!ctx.viewGrantId&&(isShopper||shop?.budget_access)?['store_quotes']:[]),...(isShopper && shop?.placed_revision!=null?['delivery_evidence','cook_copies','cook_corrections','pantry_lots','meal_recovery']:[]),...(planning?['meal_proposals']:[]),...(ctx.member.can_contribute?['own_requests']:[]),...(isShopper?['shopper_inbox','request_preview','shopper_commands','accepted_fallbacks']:[]),...(ctx.member.organizer?['household_admin']:[]),...(helperRole?['helper_view',...(helper.mode==='edit'?['helper_propose']:[])]:[])]};
+      capabilities:[...(!helperRole&&!ctx.viewGrantId&&(isShopper||shop?.budget_access)?['store_quotes']:[]),...(isShopper && shop?.placed_revision!=null?['delivery_evidence','cook_copies','cook_corrections','pantry_lots','meal_recovery','request_purchase_confirmation']:[]),...(planning?['meal_proposals']:[]),...(ctx.member.can_contribute?['own_requests']:[]),...(isShopper?['shopper_inbox','request_preview','shopper_commands','accepted_fallbacks']:[]),...(ctx.member.organizer?['household_admin']:[]),...(helperRole?['helper_view',...(helper.mode==='edit'?['helper_propose']:[])]:[])]};
   }
   async shops(ctx:Context,scope:'active'|'owned',after:string|null){
     if(ctx.viewGrantId||ctx.member.kind!=='adult')throw unavailable();
@@ -171,10 +172,17 @@ export class HouseholdRepository {
     }
     const params:unknown[]=[ctx.householdId,shopId??ctx.member.member_id,ctx.selectedShopId??null];
     if(cursor)params.push(cursor.received_at,cursor.request_id);
-    const result=await ctx.db.query<RequestRow & {author_alias?:string}>(`SELECT r.*${shopId?',(SELECT m.alias FROM ritc.member m WHERE m.household_id=r.household_id AND m.member_id=r.author_id) AS author_alias':''} FROM ritc.request r WHERE household_id=$1 AND ${shopId?'shop_id':'author_id'}=$2
-      AND ($3::uuid IS NULL OR shop_id=$3) ${cursor?'AND (received_at,request_id)>($4,$5)':''} ORDER BY received_at,request_id LIMIT 51`,params);
+    const result=await ctx.db.query<RequestRow & {author_alias?:string;linked_line_id?:string}>(`SELECT r.*,p.outcome AS purchase_outcome
+      ${shopId?',m.alias AS author_alias,l.line_id AS linked_line_id':''}
+      FROM ritc.request r LEFT JOIN ritc.request_purchase_review p
+        ON (p.household_id,p.request_id,p.request_revision)=(r.household_id,r.request_id,r.revision)
+      ${shopId?`JOIN ritc.member m ON (m.household_id,m.member_id)=(r.household_id,r.author_id)
+        LEFT JOIN ritc.placed_request_link l ON (l.household_id,l.request_id)=(r.household_id,r.request_id)`:''}
+      WHERE r.household_id=$1 AND r.${shopId?'shop_id':'author_id'}=$2 AND ($3::uuid IS NULL OR r.shop_id=$3)
+      ${cursor?'AND (r.received_at,r.request_id)>($4,$5)':''} ORDER BY r.received_at,r.request_id LIMIT 51`,params);
     const rows=result.rows.slice(0,50);
-    return{requests:rows.map(r=>({...ownRequest(r),...(shopId?{authorAlias:r.author_alias}: {})})),nextCursor:result.rows.length>50?rows.at(-1)!.request_id:null};
+    return{requests:rows.map(r=>({...ownRequest(r),...(shopId?{authorAlias:r.author_alias}:{}),
+      ...(shopId && r.linked_line_id?{linkedLineId:r.linked_line_id}:{})})),nextCursor:result.rows.length>50?rows.at(-1)!.request_id:null};
   }
   async shop(ctx:Context,shopId:string):Promise<Shop> {
     if(ctx.selectedShopId&&ctx.selectedShopId!==shopId)throw unavailable();
@@ -275,6 +283,8 @@ export class HouseholdRepository {
       // Reauthorize the original scope before returning anything about a prior result.
       if(prior.response_scope==='shopper'){
         const shop=await this.shop(ctx,prior.shop_id);this.requireShopper(ctx,shop);
+        if(prior.kind==='request.confirmPurchase' && (prior.response?.authorityEpoch!==shop.authority_epoch || !(await ctx.db.query(
+          'SELECT 1 FROM ritc.request_purchase_review WHERE household_id=$1 AND operation_id=$2',[ctx.householdId,prior.operation_id])).rowCount)) throw refresh();
         if(prior.kind==='mealRecovery.apply') {
           if(prior.response?.authorityEpoch!==shop.authority_epoch || !(await ctx.db.query(
             'SELECT 1 FROM ritc.meal_recovery_revision WHERE household_id=$1 AND shop_id=$2 AND operation_id=$3 AND current_meal IS NOT NULL',
@@ -392,6 +402,7 @@ export class HouseholdRepository {
       await ctx.db.query("UPDATE ritc.request SET status='clarified',clarification=$3,revision=revision+1 WHERE household_id=$1 AND request_id=$2",[ctx.householdId,r.request_id,b.question]);
       return this.receipt(ctx,c,operationId,'clarified',{requestId:r.request_id,requestRevision:r.revision+1});
     }
+    if(c.kind==='request.confirmPurchase')return this.confirmPurchase(ctx,shop,c,operationId);
     if(c.kind==='request.apply')return this.apply(ctx,shop,c,operationId);
     if(c.kind==='shop.patch') {
       this.requireDraft(shop);const b=bodySchemas['shop.patch'].parse(c.body);this.validateQuote(b.quote,ctx.now);checkout(b.lines,b.quote);
@@ -462,6 +473,24 @@ export class HouseholdRepository {
       return this.receipt(ctx,c,operationId,b.choice==='apply'?'placed':'report_rejected',{reportId:b.reportId});
     }
     throw invalid();
+  }
+  private async confirmPurchase(ctx:Context,shop:Shop,c:Envelope,operationId:string) {
+    const {requestId,lineId,placedRevision,outcome}=bodySchemas['request.confirmPurchase'].parse(c.body);
+    if(!shop.placed_revision || !['placed','closed'].includes(shop.phase))
+      throw new ServiceError(409,'placed_order_required','Open the placed order to review this purchase.');
+    if(placedRevision!==shop.placed_revision) throw refresh();
+    const scope=[ctx.householdId,requestId,shop.shop_id];
+    const linked=await ctx.db.query(`SELECT 1 FROM ritc.placed_request_link
+      WHERE household_id=$1 AND request_id=$2 AND shop_id=$3 AND line_id=$4 AND placed_revision=$5`,[...scope,lineId,placedRevision]);
+    if(!linked.rowCount) throw unavailable();
+    const changed=await ctx.db.query<{revision:number}>(`UPDATE ritc.request SET revision=revision+1
+      WHERE household_id=$1 AND request_id=$2 AND shop_id=$3 AND status='added' AND revision=$4 RETURNING revision`,
+      [...scope,c.base.requestRevision??null]);
+    if(!changed.rowCount) throw new ServiceError(409,'stale_base','Review the current request before confirming the purchase.');
+    const revision=changed.rows[0]!.revision;
+    await ctx.db.query(`INSERT INTO ritc.request_purchase_review(household_id,request_id,shop_id,placed_revision,request_revision,actor_id,operation_id,outcome)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8)`,[...scope,placedRevision,revision,ctx.member.member_id,operationId,outcome]);
+    return {...await this.receipt(ctx,c,operationId,'recorded',{requestId,requestRevision:revision}),purchaseOutcome:outcome};
   }
   private async apply(ctx:Context,shop:Shop,c:Envelope,operationId:string) {
     const b=bodySchemas['request.apply'].parse(c.body),r=await this.request(ctx,b.requestId,shop.shop_id);
