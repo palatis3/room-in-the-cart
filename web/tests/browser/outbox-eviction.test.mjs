@@ -7,13 +7,15 @@ const session = {
   authenticated: true, role: 'contributor',
   household: { id: 'test', label: 'Example household' }, memberId: 'test-member', shopId: 'test-shop',
   replayWindow: { id: 'test-window', expiresAt: '2099-01-01T00:00:00Z' },
-  csrf: 'test-csrf', enrolled: true, queueConsent: true
+  csrf: 'test-csrf', enrolled: true, queueConsent: false, capabilities: ['own_requests', 'request_queue_permission']
 };
 const commandsPath = '/v1/households/test/commands';
 const requestsPath = '/v1/households/test/requests/mine';
 
 test('Refresh reconciles a queued request after IndexedDB eviction without resending it', async t => {
   const posts = [];
+  const grant = '4f14be8f-efc9-48c4-af14-cb09a8489f38';
+  let currentSession = session;
   const server = await preview({
     configFile: false, // Keep this fixture independent of the local service proxy.
     build: { outDir: 'public-build' },
@@ -33,7 +35,17 @@ test('Refresh reconciles a queued request after IndexedDB eviction without resen
             return;
           }
           res.setHeader('Content-Type', 'application/json');
-          if (req.method === 'GET' && req.url === '/v1/session') return res.end(JSON.stringify(session));
+          if (req.method === 'GET' && req.url === '/v1/session') return res.end(JSON.stringify(currentSession));
+          if (req.method === 'PUT' && req.url === '/v1/households/test/devices/current/request-queue') {
+            let body = '';
+            req.on('data', chunk => { body += chunk; });
+            req.on('end', () => {
+              if (JSON.parse(body).enabled !== true) return res.writeHead(400).end();
+              currentSession = { ...session, requestQueueGrant: grant, requestQueueUntil: new Date(Date.now() + 86400000).toISOString() };
+              res.end(JSON.stringify(currentSession));
+            });
+            return;
+          }
           if (req.method === 'GET' && req.url === requestsPath) {
             return res.end(JSON.stringify({ requests: [], nextCursor: null }));
           }
@@ -53,9 +65,8 @@ test('Refresh reconciles a queued request after IndexedDB eviction without resen
   await page.goto(new URL('/requests', server.resolvedUrls.local[0]).href);
 
   const button = name => page.getByRole('button', { name, exact: true });
-  const consent = page.getByRole('checkbox', { name: 'Save pending requests on this browser' });
-  assert.equal(await consent.isChecked(), false);
-  await consent.check();
+  await button('Allow pending requests on this browser for up to 24 hours').click();
+  await button('Turn off and clear pending requests').waitFor();
   await page.getByLabel('Item', { exact: true }).fill('Fixture oats');
   await button('Review request').click();
   await button('Send request').click();
