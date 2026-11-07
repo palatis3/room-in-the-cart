@@ -119,8 +119,7 @@ import XCTest
 
     private func createWrapList() {
         launch(reset: true)
-        tap(element("openPickupList")); tap(element("ledgerStartShop"))
-        fill("Confirmed stock packs", into: "ledgerShopName"); tap(element("ledgerCreateShop"))
+        tap(element("openPickupList"))
         tap(element("ledgerImport"))
         let original = editableElement("ledgerImportText")
         tap(original); app.typeText("12 wraps")

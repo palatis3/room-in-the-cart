@@ -17,10 +17,7 @@ import XCTest
 
     func testInclusiveCheckoutFieldsAndResultSurviveRestartAndUnchangedSave() {
         launch(reset: true)
-        tap(app.buttons["openPickupList"]); tap(app.buttons["ledgerStartShop"])
-        let shopName = app.descendants(matching: .any).matching(identifier: "ledgerShopName").firstMatch
-        fill("Checkout restoration pickup", field: shopName)
-        tap(app.buttons["ledgerCreateShop"]); tap(app.buttons["ledgerImport"])
+        tap(app.buttons["openPickupList"]); tap(app.buttons["ledgerImport"])
         fill("2 wraps", field: app.textViews["ledgerImportText"])
         tap(app.buttons["ledgerReviewImport"])
         let addReviewedList = app.buttons["ledgerCommitImport"]

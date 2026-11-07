@@ -192,13 +192,11 @@ final class ReleasePerformanceUITests: XCTestCase {
         let firstLine = try XCTUnwrap(lines.first)
 
         app.launch()
-        openPickupList()
-        let startShop = element("ledgerStartShop")
-        XCTAssertTrue(startShop.waitForExistence(timeout: 10), "Install the Release app on a fresh simulator for each pickup test")
+        let startShop = element("openPickupList")
+        XCTAssertTrue(startShop.waitForExistence(timeout: 10))
+        XCTAssertTrue(startShop.label.contains("Start pickup"), "Install the Release app on a fresh simulator for each pickup test")
         tap(startShop)
-        tap(element("ledgerShopName"))
-        app.typeText("Fictional weekly pickup")
-        tap(element("ledgerCreateShop"))
+        app.renameSelectedPickup("Fictional weekly pickup")
         tap(element("ledgerImport"))
 
         let paste = app.buttons["Paste list"]

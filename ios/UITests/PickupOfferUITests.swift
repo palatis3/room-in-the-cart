@@ -14,8 +14,7 @@ import XCTest
 
     func testSavedOfferReopensAndUpdatesResponseAfterRestart() throws {
         launch(reset: true)
-        tap(app.buttons["openPickupList"]); tap(app.buttons["ledgerStartShop"])
-        fill("Offer review pickup", into: "ledgerShopName"); tap(app.buttons["ledgerCreateShop"])
+        tap(app.buttons["openPickupList"])
         tap(app.buttons["ledgerImport"]); fill("2 wraps", into: "ledgerImportText", fieldType: .textView)
         tap(app.buttons["ledgerReviewImport"]); tap(app.buttons["ledgerCommitImport"])
         shopRoot()

@@ -14,8 +14,7 @@ import XCTest
 
     func testNextShopDeferralRequestsReminderOnlyAfterExplicitScheduleAndCanCancel() {
         launch(reset: true)
-        tap(element("openPickupList")); tap(element("ledgerStartShop"))
-        fill("Deferred coffee pickup", into: "ledgerShopName"); tap(element("ledgerCreateShop"))
+        tap(element("openPickupList"))
         tap(element("ledgerImport")); fill("1 coffee\n2 wraps", into: "ledgerImportText")
         tap(element("ledgerReviewImport")); tap(element("ledgerCommitImport"))
         shopRoot(); tap(app.buttons["Review checkout"])
@@ -62,8 +61,7 @@ import XCTest
 
     func testSavedOfferRequestsDeadlineReminderFromThatOfferAndCancelKeepsDecisionPending() throws {
         launch(reset: true)
-        tap(element("openPickupList")); tap(element("ledgerStartShop"))
-        fill("Offer reminder pickup", into: "ledgerShopName"); tap(element("ledgerCreateShop"))
+        tap(element("openPickupList"))
         tap(element("ledgerImport")); fill("2 wraps", into: "ledgerImportText")
         tap(element("ledgerReviewImport")); tap(element("ledgerCommitImport"))
         shopRoot(); tap(app.buttons["Review checkout"])

@@ -73,9 +73,8 @@ import UIKit
         UIPasteboard.general.string = fixture
 
         launch(reset: true, largestText: true)
-        tap(element("openPickupList")); tap(element("ledgerStartShop"))
-        fill("Long paste pickup", into: "ledgerShopName")
-        tap(element("ledgerCreateShop")); tap(element("ledgerImport"))
+        tap(element("openPickupList"))
+        tap(element("ledgerImport"))
         let navigation = app.navigationBars["Bring the list"]
         XCTAssertTrue(navigation.waitForExistence(timeout: 8))
 
@@ -180,9 +179,7 @@ import UIKit
 
     func testDinnerOnlyCapAndCancelledSlotChangeSurviveRelaunch() {
         launch(reset: true)
-        shopRoot(); tap(element("openPickupList")); tap(element("ledgerStartShop"))
-        fill("Pickup details regression", into: "ledgerShopName")
-        tap(element("ledgerCreateShop"))
+        shopRoot(); tap(element("openPickupList"))
         let details = element("ledgerFacts")
         func openDetails() {
             revealContent(details); details.tap()
@@ -229,8 +226,7 @@ import UIKit
 
     func testAuthorizationHoldIsOptionalAndSeparateFromCheckoutCap() {
         launch(reset: true)
-        shopRoot(); tap(element("openPickupList")); tap(element("ledgerStartShop"))
-        fill("Private hold comparison", into: "ledgerShopName"); tap(element("ledgerCreateShop"))
+        shopRoot(); tap(element("openPickupList"))
         tap(element("ledgerImport")); fill("2 wraps", into: "ledgerImportText")
         tap(element("ledgerReviewImport")); tap(element("ledgerCommitImport"))
         shopRoot(); tap(app.buttons["Review checkout"]); tap(app.buttons["Continue to checkout review"])
@@ -288,8 +284,7 @@ import UIKit
 
     private func enterWeighedPickup(knownTax: Bool) {
         launch(reset: true)
-        shopRoot(); tap(element("openPickupList")); tap(element("ledgerStartShop"))
-        fill("Weighed produce", into: "ledgerShopName"); tap(element("ledgerCreateShop"))
+        shopRoot(); tap(element("openPickupList"))
         tap(element("ledgerImport")); fill("1 apples\n1 rice", into: "ledgerImportText")
         tap(element("ledgerReviewImport")); tap(element("ledgerCommitImport"))
         shopRoot(); tap(app.buttons["Review checkout"]); tap(app.buttons["Continue to checkout review"])
@@ -335,8 +330,7 @@ import UIKit
         tap(app.tabBars.buttons["Records"])
         XCTAssertFalse(element("records.managedViews").exists)
         shopRoot()
-        tap(element("openPickupList")); tap(element("ledgerStartShop"))
-        fill("Context route pickup", into: "ledgerShopName"); tap(element("ledgerCreateShop"))
+        tap(element("openPickupList"))
         tap(element("ledgerImport")); fill("2 wraps", into: "ledgerImportText")
         tap(element("ledgerReviewImport")); tap(element("ledgerCommitImport"))
         shopRoot(); tap(app.buttons["Review checkout"])
@@ -380,8 +374,7 @@ import UIKit
 
     func testEnteredStoreQuotesKeepTripCostsSeparateAndAdoptOnlyReviewedSavedProof() {
         launch(reset: true)
-        tap(element("openPickupList")); tap(element("ledgerStartShop"))
-        fill("Saturday quote review", into: "ledgerShopName"); tap(element("ledgerCreateShop"))
+        tap(element("openPickupList"))
         tap(element("ledgerImport")); fill("2 wraps", into: "ledgerImportText")
         tap(element("ledgerReviewImport")); tap(element("ledgerCommitImport"))
         shopRoot(); tap(app.buttons["Review checkout"])

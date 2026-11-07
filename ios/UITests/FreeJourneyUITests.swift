@@ -168,9 +168,7 @@ import XCTest
 
         launch(reset: true)
         openShoppingList()
-        tap(element("ledgerStartShop"))
-        fill("Fictional microphone pickup", into: "ledgerShopName")
-        tap(element("ledgerCreateShop"))
+        app.renameSelectedPickup("Fictional microphone pickup")
         tap(element("ledgerImport"))
         fill("2 Wraps", into: "ledgerImportText")
         tap(element("ledger.capture"))
@@ -256,9 +254,6 @@ import XCTest
     private func exerciseRetailerShareCancellation() throws {
         launch(reset: true)
         openShoppingList()
-        tap(element("ledgerStartShop"))
-        fill("Test market pickup", into: "ledgerShopName")
-        tap(element("ledgerCreateShop"))
         tap(element("ledgerImport"))
         fill("2 Wraps", into: "ledgerImportText")
         tap(element("ledgerReviewImport"))
@@ -463,9 +458,6 @@ import XCTest
         enableSwitch("Offer optional feedback after a pickup")
         tap(app.buttons["Done"])
         openShoppingList()
-        tap(element("ledgerStartShop"))
-        fill("Tuesday family pickup", into: "ledgerShopName")
-        tap(app.buttons["ledgerCreateShop"])
         XCTAssertTrue(element("ledgerImport").waitForExistence(timeout: 10))
         tap(app.tabBars.buttons["Dinners"])
         tap(element("dinnerLibrary"))
@@ -983,10 +975,11 @@ import XCTest
 
     func testStagedListCanReturnToOriginalAndMergeADuplicateAfterRestart() throws {
         launch(reset: true)
-        openShoppingList()
-        tap(element("ledgerStartShop"))
-        fill("Saturday market", into: "ledgerShopName")
-        tap(element("ledgerCreateShop"))
+        let pickup = element("openPickupList")
+        XCTAssertTrue(pickup.waitForExistence(timeout: 10))
+        XCTAssertTrue(pickup.label.contains("Start pickup"), pickup.label)
+        tap(pickup)
+        XCTAssertTrue(app.textFields["ledgerSearch"].waitForExistence(timeout: 10))
         tap(element("ledgerImport"))
         fill("2 wraps", into: "ledgerImportText")
         tap(element("ledgerReviewImport"))
@@ -997,6 +990,10 @@ import XCTest
         let line = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "ledgerInspect-")).firstMatch
         reveal(line)
         let id = line.identifier
+        shopRoot()
+        XCTAssertTrue(pickup.label.contains("Shopping list"), pickup.label)
+        tap(pickup)
+        reveal(element(id))
         restart()
         openShoppingList()
         reveal(element(id))
@@ -1039,9 +1036,6 @@ import XCTest
     func testCancelledImportAndIngredientReturnPreserveLongFilteredListContext() {
         launch(reset: true)
         openShoppingList()
-        tap(element("ledgerStartShop"))
-        fill("Filtered family pickup", into: "ledgerShopName")
-        tap(element("ledgerCreateShop"))
         tap(element("ledgerImport"))
         let lines = Array("abcdefghijklmnopqrstuvwx").enumerated().flatMap { index, letter in
             var rows = ["2 Wrap \(letter)"]
@@ -1112,8 +1106,7 @@ import XCTest
             tap(app.buttons[label])
         }
         launch(reset: true)
-        openShoppingList(); tap(element("ledgerStartShop"))
-        fill("Market walk", into: "ledgerShopName"); tap(element("ledgerCreateShop"))
+        openShoppingList()
         tap(element("ledgerImport")); fill("Apples\nMilk", into: "ledgerImportText")
         tap(element("ledgerReviewImport")); tap(element("ledgerCommitImport"))
         chooseListOption("List order and aisles")
@@ -1454,9 +1447,6 @@ import XCTest
     func testListCaptureOpensWithTypedDraftAndReopensAfterCancel() {
         launch(reset: true)
         openShoppingList()
-        tap(element("ledgerStartShop"))
-        fill("List capture pickup", into: "ledgerShopName")
-        tap(element("ledgerCreateShop"))
         tap(element("ledgerImport"))
         fill("2 Wraps", into: "ledgerImportText")
 
@@ -1499,9 +1489,6 @@ import XCTest
     func testTypedBarcodeNeedsACodeAndFreshMatchConfirmation() {
         launch(reset: true)
         openShoppingList()
-        tap(element("ledgerStartShop"))
-        fill("Barcode review pickup", into: "ledgerShopName")
-        tap(element("ledgerCreateShop"))
         tap(element("ledgerImport"))
         fill("2 Wraps", into: "ledgerImportText")
         tap(element("ledgerReviewImport"))
