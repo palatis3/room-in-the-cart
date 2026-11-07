@@ -82,10 +82,30 @@ class PlanIOSFixtureTests(unittest.TestCase):
         self.assertEqual(set(plans["dinner"]["shards"]), {"DinnerDecisionSheetUITests"})
         self.assertEqual(plans["dinner"]["shards"]["DinnerDecisionSheetUITests"]["suite"], "DinnerDecisionSheetUITests")
         self.assertEqual(sum(len(shard["test_identifiers"]) for plan in plans.values()
-                             for shard in plan["shards"].values()), 45)
+                             for shard in plan["shards"].values()), 47)
         for name, shard in plans["contributor"]["shards"].items():
             if name != "RecordsMediaUITests":
                 self.assertFalse(any("/RecordsMediaUITests/" in identifier for identifier in shard["test_identifiers"]))
+
+    def test_import_recovery_actions_are_required_in_the_existing_balanced_group(self):
+        expected = {f"{UI_TARGET}/ImportRecoveryUITests/{method}" for method in (
+            "testDiscardKeepsPendingImportUncommittedAndReviewPresented",
+            "testRetryPersistsOneImportAndDismissesThroughItsCallback",
+        )}
+        self.assertEqual(self.inventory["ImportRecoveryUITests"], expected)
+        enabled = self.enabled_for("contributor")
+        plan = make_plan(enumeration(enabled), "contributor", self.inventory)
+        actual = [identifier.removesuffix("()")
+                  for identifier in plan["shards"]["contributor-balanced-02"]["test_identifiers"]]
+        for identifier in expected:
+            self.assertEqual(actual.count(identifier), 1)
+            remaining = [case for case in enabled if case != identifier]
+            with self.subTest(case=identifier, state="missing"):
+                with self.assertRaisesRegex(ValueError, "Compiled fixture tests differ for ImportRecoveryUITests"):
+                    make_plan(enumeration(remaining), "contributor", self.inventory)
+            with self.subTest(case=identifier, state="disabled"):
+                with self.assertRaisesRegex(ValueError, "Fixture tests must not be disabled"):
+                    make_plan(enumeration(remaining, [STOREKIT_TEST, identifier]), "contributor", self.inventory)
 
     def test_new_method_in_balanced_suite_keeps_its_whole_suite_and_all_other_methods(self):
         inventory = {suite: set(methods) for suite, methods in self.inventory.items()}

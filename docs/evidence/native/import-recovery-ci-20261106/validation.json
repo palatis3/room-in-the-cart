@@ -1,0 +1,38 @@
+{
+  "fixedNativeExit": 0,
+  "fixedStrictExit": 0,
+  "passed": 2,
+  "failed": 0,
+  "runtimeWarnings": 0,
+  "negativeNativeExit": 65,
+  "negativeFailures": 1,
+  "negativeFailure": "Discard must preserve the independent durable record",
+  "fixedDiscard": {
+    "revision": 1,
+    "batches": 0,
+    "matchesBaseline": true
+  },
+  "negativeDiscard": {
+    "revision": 2,
+    "batches": 1,
+    "matchesBaseline": false,
+    "names": [
+      "discarded oat jars"
+    ]
+  },
+  "fixedRetry": {
+    "revision": 2,
+    "batches": 1,
+    "names": [
+      "recovery pears",
+      "recovery wraps"
+    ]
+  },
+  "compiledContributorCases": 42,
+  "allProfilesSourceCases": 47,
+  "matrixJobs": 14,
+  "offlineTests": 45,
+  "hostedValidation": "pending",
+  "testExecutableIdenticalAcrossControl": true,
+  "testExecutableSHA256": "aebc948f741a5154194555bba8996fcb76dbd8aa729908d030a33f2f99d55422"
+}

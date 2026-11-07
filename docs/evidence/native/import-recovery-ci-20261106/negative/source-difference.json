@@ -1,0 +1,6 @@
+{
+  "file": "ios/Features/Ledger/LedgerHomeView.swift",
+  "fixedSHA256": "d9def6771397cf509d9b4c2ed59366b464b58e2f84ba2186999b28fbf013b559",
+  "negativeSHA256": "bef414f5ba04a20662471d60ced254b54bb22817eca18b3c682a8676ccdd6d57",
+  "change": "Remove only both explicit borderless recovery button modifiers; fixture and assertions unchanged."
+}

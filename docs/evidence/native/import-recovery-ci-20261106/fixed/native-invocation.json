@@ -1,0 +1,25 @@
+{
+  "command": [
+    "xcodebuild",
+    "-xctestrun",
+    "/Users/palatis/Room in the Cart/.build/ImportRecoveryNative20261106/ci-native-fixed/DerivedData/Build/Products/RoomInTheCart_iphonesimulator27.1-arm64.xctestrun",
+    "-destination",
+    "platform=iOS Simulator,id=0AC5EAA9-B519-46C8-B810-03E60ACDBBA5",
+    "-parallel-testing-enabled",
+    "NO",
+    "-resultBundlePath",
+    "/Users/palatis/Room in the Cart/.build/ImportRecoveryNative20261106/ci-native-fixed/Tests.xcresult",
+    "-test-timeouts-enabled",
+    "YES",
+    "-default-test-execution-time-allowance",
+    "720",
+    "-maximum-test-execution-time-allowance",
+    "900",
+    "-collect-test-diagnostics",
+    "never",
+    "-only-testing:RoomInTheCartUITests/ImportRecoveryUITests/testDiscardKeepsPendingImportUncommittedAndReviewPresented",
+    "-only-testing:RoomInTheCartUITests/ImportRecoveryUITests/testRetryPersistsOneImportAndDismissesThroughItsCallback",
+    "test-without-building"
+  ],
+  "start": 1794024689.007072
+}

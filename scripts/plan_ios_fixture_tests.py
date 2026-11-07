@@ -21,6 +21,7 @@ PROFILES = {
             "HistoryGrantReadUITests",
             "HouseholdDevicesUITests",
             "HouseholdRequestPackUITests",
+            "ImportRecoveryUITests",
             "MeasurementUITests",
             "RecipeLibraryAcceptanceUITests",
             "RecordsMediaUITests",
@@ -43,7 +44,7 @@ ISOLATED_SUITES = {"SharedMealIdeaUITests", "SharedStoreQuoteUITests"}
 # Estimated repeated setup savings need fresh grouped hosted validation.
 BALANCED_SUITES = {
     "contributor-balanced-01": ("DinnerAwayCarryoverUITests", "RequestDuplicateComparisonUITests"),
-    "contributor-balanced-02": ("ContributorRequestUITests", "MeasurementUITests", "StockReviewUITests"),
+    "contributor-balanced-02": ("ContributorRequestUITests", "ImportRecoveryUITests", "MeasurementUITests", "StockReviewUITests"),
     "contributor-balanced-03": ("HouseholdDevicesUITests", "HouseholdRequestPackUITests", "SharedMealCivilDateUITests"),
     "contributor-balanced-04": ("HistoryGrantReadUITests", "RecipeLibraryAcceptanceUITests"),
     "contributor-balanced-05": ("CorrectionPrivacyAcceptanceUITests", "GuardianEnrollmentUITests", "SharedMealChangeUITests"),

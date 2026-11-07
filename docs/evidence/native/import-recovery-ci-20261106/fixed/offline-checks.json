@@ -1,0 +1,48 @@
+{
+  "planner-tests": {
+    "command": [
+      "python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "scripts",
+      "-p",
+      "test_plan_ios*.py"
+    ],
+    "exit": 0
+  },
+  "slot-tests": {
+    "command": [
+      "python3",
+      "scripts/test_ci_mac_slots.py"
+    ],
+    "exit": 0
+  },
+  "workflow-tests": {
+    "command": [
+      ".build/CIResearch20261106/scheduling-proposal/venv/bin/python",
+      "scripts/test_check_ci_workflows.py"
+    ],
+    "exit": 0
+  },
+  "project-generation": {
+    "command": [
+      "python3",
+      "scripts/generate_xcode_project.py",
+      "--check"
+    ],
+    "exit": 0
+  },
+  "actionlint": {
+    "command": [
+      ".build/CIResearch20261106/scheduling-proposal/venv/bin/python",
+      "scripts/check_ci_workflows.py",
+      "--actionlint",
+      "/tmp/ritc-actionlint-2ttcdxxn/actionlint",
+      "--report",
+      ".build/ImportRecoveryNative20261106/ci-native-fixed/actionlint-report.json"
+    ],
+    "exit": 0
+  }
+}
