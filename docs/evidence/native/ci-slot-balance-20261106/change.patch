@@ -1,0 +1,26 @@
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index e46ef7d..f431743 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -208,7 +208,7 @@ jobs:
+           if-no-files-found: ignore
+   ios-swift-codeql:
+     concurrency:
+-      group: ritc-macos-slot-2
++      group: ritc-macos-slot-4
+       queue: max
+       cancel-in-progress: false
+     runs-on: macos-15
+diff --git a/scripts/check_ci_workflows.py b/scripts/check_ci_workflows.py
+index 3b3c0f0..4aa0e17 100644
+--- a/scripts/check_ci_workflows.py
++++ b/scripts/check_ci_workflows.py
+@@ -19,7 +19,7 @@ QUEUE_ERROR = 'unexpected key "queue" for "concurrency" section. expected one of
+ POLICY = {
+     ('ci.yml', 'swift-packages'): 0,
+     ('ci.yml', 'ios-release'): 1,
+-    ('ci.yml', 'ios-swift-codeql'): 2,
++    ('ci.yml', 'ios-swift-codeql'): 4,
+     ('ci.yml', 'ios-build'): 3,
+     ('ci.yml', 'ios-tests'): ('${{ fromJSON(needs.ios-build.outputs.test_matrix) }}', ('shard',)),
+     ('ios-fixtures.yml', 'build-contributor'): 0,

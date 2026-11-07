@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/Users/palatis/Room in the Cart/scripts/check_ci_workflows.py", line 12, in <module>
+    import yaml
+ModuleNotFoundError: No module named 'yaml'

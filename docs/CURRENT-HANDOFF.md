@@ -4,6 +4,8 @@ Updated November 6, 2026 UTC. The owner resumed and explicitly approved the revi
 
 ## Active CI candidate: 0d5bb1b
 
+A local [five-slot balance change](evidence/native/ci-slot-balance-20261106/README.md) moves only Swift CodeQL from slot2 to slot4.44existing checks and14native queue validations pass. It preserves all tests and the five-slot cap; measured workload arithmetic is not a speedup prediction, and the final fixture pair remains on slot2. This is unpushed and does not alter the active cohort.
+
 Local product follow-up: [large-import confirmation footer](evidence/native/large-import-footer-20261106/README.md) passes three native journeys after the old layout fails the new immediate-action assertion. Duplicate decisions, original editing, restart and cancellation remain covered. The new failed-save status relocation still needs its separate real-contention native validation. Owned simulator CF6099BC-F92B-427C-8985-895AF8D24F8D was removed; all root native processes are terminal. This change is unpushed.
 
 UI10 is terminal 5/6 pass with an initial Settings-launch failure before the Reduce Motion app scenario, followed by an implicit XCTest runner restart. [Root-verified phase classification](evidence/native/ui10-settings-launch-20261106/README.md). UI07 finished5/5. The core collector is terminal:601models and49/52ordinary UI cases pass, with three failed cases and five allowed warnings retained. [Root-verified terminal core checkpoint](evidence/native/ci-0d5bb1b-core-terminal-20261106/README.md). The fixture collector still owns its remaining work. No retry, cancellation or dispatch was performed.

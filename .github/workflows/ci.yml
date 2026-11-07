@@ -208,7 +208,7 @@ jobs:
           if-no-files-found: ignore
   ios-swift-codeql:
     concurrency:
-      group: ritc-macos-slot-2
+      group: ritc-macos-slot-4
       queue: max
       cancel-in-progress: false
     runs-on: macos-15
