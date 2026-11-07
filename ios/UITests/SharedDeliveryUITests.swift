@@ -17,11 +17,25 @@ import XCTest
         app.launch()
         tap(app.buttons["sharedShop.deliveryEvidence"])
     }
+    private func reveal(_ target: XCUIElement, file: StaticString = #filePath, line: UInt = #line) {
+        if target.waitForExistence(timeout: 3), target.isHittable { return }
+        for step in 0..<16 {
+            let exists = target.exists
+            if exists && target.isHittable { return }
+            if exists && !target.frame.isEmpty {
+                if target.frame.midY > app.frame.midY { app.swipeUp() } else { app.swipeDown() }
+            } else if (step / 4).isMultiple(of: 2) { app.swipeUp() } else { app.swipeDown() }
+        }
+        XCTAssertTrue(target.exists && target.isHittable, "Unable to reveal \(target)", file: file, line: line)
+    }
     private func tap(_ target: XCUIElement, file: StaticString = #filePath, line: UInt = #line) {
-        XCTAssertTrue(target.waitForExistence(timeout: 10), "Missing \(target)", file: file, line: line)
-        for _ in 0..<5 where !target.isHittable { app.swipeUp() }
-        XCTAssertTrue(target.isHittable, file: file, line: line)
+        reveal(target, file: file, line: line)
         target.tap()
+    }
+    private func assertFact(_ label: String, _ value: String, file: StaticString = #filePath, line: UInt = #line) {
+        let row = app.descendants(matching: .any).matching(NSPredicate(format:
+            "label CONTAINS %@ AND (label CONTAINS %@ OR value CONTAINS %@)", label, value, value)).firstMatch
+        reveal(row, file: file, line: line)
     }
     private func enter(_ input: String, in field: XCUIElement) {
         tap(field)
@@ -82,14 +96,14 @@ import XCTest
         tap(save)
         XCTAssertTrue(hasUsable("1 unit"))
         tap(app.buttons["Delivered food by meal"])
-        for (label, value) in [("Amount set aside", "2 units"), ("Still backed by this delivery", "1 unit")] {
-            let row = app.descendants(matching: .any).matching(NSPredicate(format:
-                "label CONTAINS %@ AND (label CONTAINS %@ OR value CONTAINS %@)", label, value, value)).firstMatch
-            XCTAssertTrue(row.waitForExistence(timeout: 8), label)
-        }
+        assertFact("Amount set aside", "2 units")
+        assertFact("Still backed by this delivery", "1 unit")
+        let evidence = XCTAttachment(screenshot: app.screenshot())
+        evidence.name = "Set-aside lunch after a delivery correction"; evidence.lifetime = .keepAlways; add(evidence)
         tap(app.buttons["Done"])
         tap(openMatches)
         tap(ingredient)
+        reveal(app.buttons["Remove ingredient match"])
         XCTAssertFalse(app.buttons["Remove ingredient match"].isEnabled)
         tap(reviewReservation)
         tap(app.buttons["Release this reservation"])
@@ -127,10 +141,21 @@ import XCTest
         enter("0,5", in: amount)
         tap(save)
         XCTAssertTrue(hasUsable("1/2 unidades"))
+        let matches = app.buttons["Correspondencias con ingredientes de las comidas"]
+        let ingredient = app.buttons.containing(.staticText, identifier: "Tortillas").firstMatch
+        tap(matches); tap(ingredient); tap(app.buttons["Vincular este ingrediente"])
+        tap(matches); tap(ingredient)
+        tap(app.buttons["Revisar cuánto apartar para School lunch"])
+        enter("0,25", in: app.textFields["delivery.reservation.amount"])
+        tap(app.buttons["Guardar cantidad apartada"])
         tap(record)
         enter(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 3) + "0", in: amount)
         tap(save)
         XCTAssertTrue(hasUsable("0 unidades"))
+        tap(app.buttons["Alimentos entregados por comida"])
+        assertFact("Cantidad apartada", "1/4 unidades")
+        assertFact("Cantidad que aún cubre esta entrega", "0 unidades")
+        tap(app.buttons["Listo"])
         tap(record)
         enter(XCUIKeyboardKey.delete.rawValue, in: amount)
         tap(save)
