@@ -245,6 +245,8 @@
     "HouseholdClient": [
       "HouseholdClientTests.HouseholdClientTests/testAllDeviceSignOutRequestsGlobalScope",
       "HouseholdClientTests.HouseholdClientTests/testContributorCannotFetchShopperPayloadDespiteAdvertisedCapabilities",
+      "HouseholdClientTests.HouseholdClientTests/testCoverageRequiresAllSealedRowsAndCurrentReviewedPhysicalSources",
+      "HouseholdClientTests.HouseholdClientTests/testDeliveryPaginationKeepsSealedLinesAndRejectsStaleOrDuplicatedSources",
       "HouseholdClientTests.HouseholdClientTests/testDeviceIntentStorePreservesExactRetryAndScopedPurgeInvalidatesStaleEpoch",
       "HouseholdClientTests.HouseholdClientTests/testDeviceInventoryUsesEnrolledHeadersAndValidatesCurrentReferenceAndGuardianScope",
       "HouseholdClientTests.HouseholdClientTests/testDeviceRevocationRejectsCurrentDeviceRevokedTargetAndTamperedStoredIntent",
