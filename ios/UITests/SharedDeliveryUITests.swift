@@ -550,7 +550,9 @@ import XCTest
         record("Pending credit", amount: "2.40", evidence: "Promised refund")
         assertFact("Paid so far", "$37.20"); assertFact("Pending credits", "$2.40")
         tap(app.buttons["financial.close"])
-        tap(app.sheets.buttons["Close this pickup"])
+        let closeAction = app.buttons.matching(NSPredicate(format: "label == %@ AND identifier != %@",
+            "Close this pickup", "financial.close")).firstMatch
+        tap(closeAction)
         XCTAssertTrue(app.staticTexts["Closed"].waitForExistence(timeout: 6))
         assertFact("Pending credits", "$2.40")
         record("Credit already included in net charge", amount: "2.40", evidence: "Included on statement", settled: true)

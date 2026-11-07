@@ -95,6 +95,7 @@ struct SharedFinancialEvidenceView: View {
         }
         .disabled(model.busy)
         .navigationTitle(ht("Shared financial evidence"))
+        .navigationBarTitleDisplayMode(.inline)
         .task(id: shopID) { await refresh() }
         .sheet(isPresented: Binding(get: { editing != nil }, set: { if !$0 { editing = nil } })) {
             if let editing, authorized {
