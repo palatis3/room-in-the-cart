@@ -129,7 +129,7 @@ export class HouseholdRepository {
     const key = [ctx.householdId,ctx.member.member_id,ctx.deviceId];
     if (!enabled) {
       await ctx.db.query('DELETE FROM ritc.request_queue_permission WHERE household_id=$1 AND member_id=$2 AND device_id=$3',key);
-    } else if (!current.queueConsent) {
+    } else if (!current.requestQueueGrant) {
       const until = (await this.window(ctx)).expiresAt;
       await ctx.db.query(`INSERT INTO ritc.request_queue_permission(household_id,member_id,device_id,grant_id,enabled_at,expires_at)
         VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(household_id,member_id,device_id)
@@ -167,14 +167,14 @@ export class HouseholdRepository {
     const helperRole=!ctx.selectedShopId&&!isShopper&&!ctx.member.organizer&&!hasBudgetAccess&&helper;
     const queueEligible = !ctx.viewGrantId && !helperRole && ctx.member.kind === 'adult' && ctx.member.can_contribute;
     const grant = queueEligible ? (await ctx.db.query<{request_queue_grant:string,request_queue_until:Date}>(
-      'SELECT grant_id AS request_queue_grant,expires_at AS request_queue_until FROM ritc.request_queue_permission WHERE household_id=$1 AND member_id=$2 AND device_id=$3 AND expires_at>$4',
+      'SELECT grant_id AS request_queue_grant,expires_at AS request_queue_until FROM ritc.request_queue_permission WHERE household_id=$1 AND member_id=$2 AND device_id=$3 AND enabled_at<=$4 AND expires_at>$4',
       [ctx.householdId,ctx.member.member_id,ctx.deviceId,ctx.now])).rows[0] : undefined;
     const planning = !ctx.viewGrantId && !helperRole && !isShopper && shop && ctx.member.kind==='adult' &&
       (await ctx.db.query(`SELECT 1 FROM ritc.meal_planner p JOIN ritc.shop s USING(household_id,shop_id,authority_epoch)
        WHERE p.household_id=$1 AND p.shop_id=$2 AND p.planner_id=$3 AND s.phase<>'closed'`,[ctx.householdId,shop.shop_id,ctx.member.member_id])).rowCount;
     return{household:{id:ctx.householdId,label:house.label as string},memberId:ctx.member.member_id,
       canSelectShop:!helperRole&&!ctx.viewGrantId&&ctx.member.kind==='adult'&&(ctx.member.can_contribute||ctx.member.organizer||isShopper||hasBudgetAccess),
-      selectionRequired:!helperRole&&!ctx.viewGrantId&&!ctx.selectedShopId&&candidates.length>1,role:isShopper?'shopper':ctx.member.organizer?'organizer':helperRole?(helper.mode==='edit'?'editor':'helper'):'contributor',shopId:helperRole?helper.shop_id:shop?.shop_id??null,...(helperRole?{grantId:helper.grant_id}:{}),enrolled:true,canSetRequestQueue:Boolean(queueEligible),queueConsent:Boolean(grant),
+      selectionRequired:!helperRole&&!ctx.viewGrantId&&!ctx.selectedShopId&&candidates.length>1,role:isShopper?'shopper':ctx.member.organizer?'organizer':helperRole?(helper.mode==='edit'?'editor':'helper'):'contributor',shopId:helperRole?helper.shop_id:shop?.shop_id??null,...(helperRole?{grantId:helper.grant_id}:{}),enrolled:true,canSetRequestQueue:Boolean(queueEligible),queueConsent:false,
       ...(grant ? {requestQueueGrant:grant.request_queue_grant,requestQueueUntil:grant.request_queue_until.toISOString()} : {}),
       capabilities:[...(queueEligible?['request_queue_permission']:[]),...(!helperRole&&!ctx.viewGrantId&&(isShopper||shop?.budget_access)?['store_quotes']:[]),...(isShopper && shop?.placed_revision!=null?['delivery_evidence','cook_copies','cook_corrections','pantry_lots','meal_recovery','request_purchase_confirmation']:[]),...(planning?['meal_proposals']:[]),...(ctx.member.can_contribute?['own_requests']:[]),...(isShopper?['shopper_inbox','request_preview','shopper_commands','accepted_fallbacks','deferred_requests']:[]),...(ctx.member.organizer?['household_admin']:[]),...(helperRole?['helper_view',...(helper.mode==='edit'?['helper_propose']:[])]:[])]};
   }
@@ -301,11 +301,11 @@ export class HouseholdRepository {
       VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,[ctx.householdId,previewId,shopId,ctx.member.member_id,r.request_id,shop.revision,r.revision,shop.authority_epoch,input.decision,fingerprint,expiresAt]);
     return{previewId,expiresAt:expiresAt.toISOString(),shopRevision:shop.revision,authorityEpoch:shop.authority_epoch,requestRevision:r.revision,choice:input.decision.choice,...facts};
   }
-  async execute(ctx:Context,command:Envelope,billing?:BillingService):Promise<unknown> {
+  async execute(ctx:Context,command:Envelope,billing?:BillingService,queueGrant?:string):Promise<unknown> {
     if(ctx.selectedShopId && command.shopId!==ctx.selectedShopId) throw unavailable();
     const window=(await ctx.db.query('SELECT 1 FROM ritc.replay_window WHERE household_id=$1 AND window_id=$2 AND member_id=$3 AND device_id=$4 AND revoked_at IS NULL AND expires_at>$5',[ctx.householdId,command.replayWindow,ctx.member.member_id,ctx.deviceId,ctx.now])).rowCount;
     if(!window)throw refresh();
-    const payloadDigest=digest(command);
+    const payloadDigest=queueGrant ? digest({command,queueGrant}) : digest(command);
     const prior=(await ctx.db.query(`SELECT o.*,r.response FROM ritc.operation o LEFT JOIN ritc.operation_response r USING(household_id,operation_id)
       WHERE o.household_id=$1 AND o.actor_id=$2 AND o.client_key=$3`,[ctx.householdId,ctx.member.member_id,command.clientKey])).rows[0];
     if(prior) {
@@ -344,6 +344,9 @@ export class HouseholdRepository {
       if(prior.payload_digest!==payloadDigest)throw new ServiceError(409,'key_reused','Review and submit the changed intent with a new key.');
       if(prior.device_id!==ctx.deviceId)throw refresh();
       return prior.response;
+    }
+    if(queueGrant && (await this.bootstrap(ctx)).requestQueueGrant!==queueGrant) {
+      throw new ServiceError(409,'queue_permission_ended','Review current received requests before sending a new request.');
     }
     const operationId=randomUUID();
     let scope:'own'|'shopper'|'organizer'|'reporter'='shopper';

@@ -470,8 +470,13 @@ test('operator waits for the source, seals exact intents, replays a prior backup
   await source.owner.query(`INSERT INTO ritc.member(household_id,member_id,issuer,subject,alias,kind,state,organizer,can_contribute)
    VALUES($1,$2,$5,$6,'Remove this member','adult','active',true,true),($3,$4,$5,$7,'Retain this member','adult','active',true,true)`,
    [householdId,memberId,otherHousehold,otherMember,issuer,committed.subject,retained.subject]);
+  const deviceId=randomUUID(),grant=randomUUID();
+  await source.owner.query('INSERT INTO ritc.device(household_id,member_id,device_id,token_hash,session_id) VALUES($1,$2,$3,$4,$5)',
+   [otherHousehold,otherMember,deviceId,createHash('sha256').update(randomUUID()).digest('hex'),retained.sessionId]);
+  await source.owner.query("INSERT INTO ritc.request_queue_permission VALUES($1,$2,$3,$4,now(),now()+interval '1 hour')",[otherHousehold,otherMember,deviceId,grant]);
   const socket=source.configuration.connection.host,dump=join(dir,'before-deletion.dump');
   pgTool('pg_dump',['-h',socket,'-p','55434','-U',ownerRole,'-d','postgres','-Fc','-f',dump]);await chmod(dump,0o600);
+  await source.owner.query('DELETE FROM ritc.request_queue_permission WHERE grant_id=$1',[grant]); // After the backup.
   const repo=new HouseholdRepository(runtime,{allowChildNetwork:false,noticeVersion:'fixture',sessionStatus:new SupabaseSessionVerifier(issuer)});
   let providerDeletes=0;
   const provider={assertAvailable:async()=>{},deleteAccount:async()=>{providerDeletes++;}};
@@ -539,7 +544,10 @@ test('operator waits for the source, seals exact intents, replays a prior backup
    trust:{...keys.origin,keyId:pins.keyId,publicKey:keys.writerKeys.publicKeyPEM},authoritySeal:{path:join(exportDirectory,'seal.json'),pins,authorityPublicKey:keys.authorityKeys.publicKeyPEM}};
   await writeFile(restorePath,JSON.stringify(configuration),{mode:0o600});
   assert.equal(cli('privacy-journal.mjs','verify',restorePath).events,1);
+  assert.equal((await destination.query('SELECT grant_id FROM ritc.request_queue_permission WHERE grant_id=$1',[grant])).rowCount,1);
   assert.equal(cli('privacy-journal.mjs','plan',restorePath).quarantined,true);
+  assert.equal((await destination.query('SELECT 1 FROM ritc.request_queue_permission')).rowCount,0);
+
   assert.throws(()=>cli('privacy-journal.mjs','gate',restorePath));
   assert.equal(cli('privacy-journal.mjs','replay',restorePath).targetsApplied,1);
   assert.equal(cli('privacy-journal.mjs','replay',restorePath).targetsApplied,0);

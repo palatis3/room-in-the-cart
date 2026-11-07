@@ -127,15 +127,19 @@ function parseSession(value: unknown): Session | null {
   const grantId = d.grantId == null ? undefined : identity(d.grantId);
   if ((d.role === 'helper' || d.role === 'editor') && !grantId) return invalid();
   const canSetRequestQueue = Array.isArray(d.capabilities) && d.capabilities.includes('request_queue_permission');
-  const queueConsent = boolean(d.queueConsent);
-  if (canSetRequestQueue && (queueConsent !== (d.requestQueueGrant != null) || queueConsent !== (d.requestQueueUntil != null))) return invalid();
+  boolean(d.queueConsent); // Retained on the wire for clients without generation-bound replay.
+  if ((d.requestQueueGrant != null) !== (d.requestQueueUntil != null)) return invalid();
+  const requestQueueGrant = d.requestQueueGrant == null ? undefined : identity(d.requestQueueGrant);
+  const requestQueueUntil = requestQueueGrant ? timestamp(d.requestQueueUntil) : undefined;
+  if (requestQueueGrant && !/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(requestQueueGrant)) return invalid();
+  const queueConsent = !!requestQueueUntil && Date.parse(requestQueueUntil)>Date.now();
   if (!canSetRequestQueue && (d.requestQueueGrant != null || d.requestQueueUntil != null)) return invalid();
   return { authenticated: true, role: String(d.role), household: { id: identity(household.id), label: text(household.label, 512) }, memberId: identity(d.memberId),
     shopId: d.shopId === null ? null : identity(d.shopId), replayWindow: { id: identity(replay.id), expiresAt: timestamp(replay.expiresAt) }, csrf: text(d.csrf, 1024),
     enrolled: boolean(d.enrolled), queueConsent,
     ...(Array.isArray(d.capabilities)?{canContribute:d.capabilities.includes('own_requests')}:{}),
     ...(canSetRequestQueue?{canSetRequestQueue:true}:{}),
-    ...(d.requestQueueGrant!=null?{requestQueueGrant:identity(d.requestQueueGrant),requestQueueUntil:timestamp(d.requestQueueUntil)}:{}), ...(grantId ? { grantId } : {}) };
+    ...(requestQueueGrant && requestQueueUntil ? {requestQueueGrant,requestQueueUntil} : {}), ...(grantId ? { grantId } : {}) };
 }
 
 function parseBrowserAuth(value:unknown):BrowserAuthState {

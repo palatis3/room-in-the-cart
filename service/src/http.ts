@@ -297,13 +297,9 @@ export function createHTTPServer(options:HTTPOptions) {
         }
         if(path==='/commands'&&method==='POST') {
           const command=parseCommand(payload), header=req.headers['x-request-queue-grant'];
-          if(header!==undefined) {
-            const grant=uuid.parse(header);
-            if(!['request.send','request.edit'].includes(command.kind))throw invalid();
-            if((await repository.bootstrap(ctx)).requestQueueGrant!==grant)
-              throw new ServiceError(409,'queue_permission_ended','Review current received requests before sending a new request.');
-          }
-          return repository.execute(ctx,command,options.billing);
+          const queueGrant=header===undefined?undefined:uuid.parse(header).toLowerCase();
+          if(queueGrant && !['request.send','request.edit'].includes(command.kind))throw invalid();
+          return repository.execute(ctx,command,options.billing,queueGrant);
         }
         const shopMatch=/^\/shops\/([^/]+)(.*)$/.exec(path);
         if(shopMatch) {

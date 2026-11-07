@@ -666,7 +666,7 @@ public actor HouseholdService {
     }
     public func setRequestQueuePermission(_ enabled: Bool) async throws -> HouseholdBootstrap {
         let value: HouseholdBootstrap = try await perform("devices/current/request-queue", method: "PUT", body: encoded(["enabled":enabled]))
-        guard value.canSetRequestQueue == true, value.queueConsent == enabled, (value.requestQueueGrant != nil) == enabled else { throw ClientError.invalidResponse }
+        guard value.canSetRequestQueue == true, value.requestQueueEnabled == enabled, (value.requestQueueGrant != nil) == enabled, (value.requestQueueUntil != nil) == enabled else { throw ClientError.invalidResponse }
         return value
     }
     public func prepare(envelope: CommandEnvelope, bootstrap: HouseholdBootstrap, requestQueueGrant: UUID? = nil) throws -> PendingOperation {
@@ -684,9 +684,8 @@ public actor HouseholdService {
         let projection = try await bootstrap()
         guard start == generation else { throw ClientError.cancelled }
         guard projection.memberId == operation.memberID else { throw ClientError.accessEnded }
-        if let grant = operation.requestQueueGrant, projection.requestQueueGrant != grant || !projection.queueConsent {
-            throw ClientError.service(status: 409, code: "queue_permission_ended", correlationID: nil, retryAfter: nil)
-        }
+        // The server may recover an exact committed receipt after a grant ends.
+        // It checks the original generation before executing any new intent.
         return try await perform("commands", method: "POST", body: operation.bytes, requestQueueGrant: operation.requestQueueGrant)
     }
     public func executeMembership(_ intent: MembershipIntent) async throws -> MembershipReceipt {

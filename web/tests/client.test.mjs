@@ -27,6 +27,18 @@ const type=(dom,id,value)=>{const input=dom.window.document.getElementById(id);a
 const submit=(root,dom)=>root.querySelector('form').dispatchEvent(new dom.window.Event('submit',{cancelable:true,bubbles:true}));
 const fakeAPI=(overrides={})=>({authState:async()=>({available:true,authenticated:true,csrf:'csrf-test'}),session:async()=>session(),requests:async()=>[],receivedProposals:async()=>({proposals:[],nextCursor:null}),command:async()=>{},logout:async()=>{},...overrides});
 
+test('only a generation and its live expiry authorize storage in a decoded session',async()=>{
+ const base={...session(),queueConsent:false,capabilities:['own_requests','request_queue_permission']};
+ const grant=crypto.randomUUID(),until=new Date(Date.now()+3600000).toISOString();
+ const parse=data=>new API(async()=>new Response(JSON.stringify(data),{status:200})).session();
+ assert.equal((await parse({...base,queueConsent:true})).queueConsent,false); // Older or malformed flag alone.
+ assert.equal((await parse({...base,requestQueueGrant:grant,requestQueueUntil:until})).queueConsent,true);
+ assert.equal((await parse({...base,requestQueueGrant:grant,requestQueueUntil:'2000-01-01T00:00:00Z'})).queueConsent,false);
+ await assert.rejects(parse({...base,requestQueueGrant:grant}));
+ await assert.rejects(parse({...base,requestQueueGrant:'invalid',requestQueueUntil:until}));
+ await assert.rejects(parse({...base,capabilities:[],requestQueueGrant:grant,requestQueueUntil:until}));
+});
+
 test('invitation secrets leave URL before a request and never enter storage',()=>{
  const dom=new JSDOM('',{url:'https://food.example/invite?token=query-secret#token=fragment-secret'});
  assert.equal(consumeInvitation(dom.window.location,dom.window.history),'fragment-secret');

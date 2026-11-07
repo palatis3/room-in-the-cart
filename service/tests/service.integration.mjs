@@ -85,7 +85,7 @@ test('pending own requests require the current opted-in device, an unexpired gra
   assert.equal(initial.requestQueueGrant,undefined);
   assert.equal((await permission('Sam',true)).status,404);
   const granted=(await permission('Alex',true)).data;
-  assert.equal(granted.queueConsent,true);
+  assert.equal(granted.queueConsent,false); // Older clients must never open their unversioned queue.
   assert.ok(Date.parse(granted.requestQueueUntil)>Date.now());
   assert.ok(Date.parse(granted.requestQueueUntil)<=Date.now()+24*3600_000);
   assert.deepEqual((await permission('Alex',true)).data,granted);
@@ -104,12 +104,17 @@ test('pending own requests require the current opted-in device, an unexpired gra
   assert.deepEqual((await send('Alex',grant,first)).data,received.data);
   assert.equal((await f.http('Alex','GET','/requests/mine')).data.requests.length,1);
   assert.equal((await permission('Alex',false)).data.queueConsent,false);
+  assert.deepEqual((await send('Alex',grant,first)).data,received.data); // Historical readback, no new request.
   const pending=make();
   assert.equal((await send('Alex',grant,pending)).data.error.code,'queue_permission_ended');
   const renewed=(await permission('Alex',true)).data.requestQueueGrant;
   assert.notEqual(renewed,grant);
+  assert.equal((await send('Alex',renewed,first)).data.error.code,'key_reused');
+  assert.deepEqual((await send('Alex',grant,first)).data,received.data);
   assert.equal((await send('Alex',grant,pending)).data.error.code,'queue_permission_ended');
   await admin.query("UPDATE ritc.request_queue_permission SET enabled_at=now()-interval '2 days',expires_at=now()-interval '1 day' WHERE household_id=$1",[f.h]);
+  assert.equal((await send('Alex',renewed,pending)).data.error.code,'queue_permission_ended');
+  await admin.query("UPDATE ritc.request_queue_permission SET enabled_at=now()+interval '1 hour',expires_at=now()+interval '2 hours' WHERE household_id=$1",[f.h]);
   assert.equal((await send('Alex',renewed,pending)).data.error.code,'queue_permission_ended');
   const beforeLoss=(await permission('Alex',true)).data.requestQueueGrant;
   await admin.query('UPDATE ritc.member SET can_contribute=false WHERE household_id=$1 AND member_id=$2',[f.h,f.actors.Alex.id]);

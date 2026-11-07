@@ -13,7 +13,14 @@ public struct HouseholdBootstrap: Codable, Equatable, Sendable {
     public private(set) var canSetRequestQueue: Bool? = nil
     public private(set) var requestQueueGrant: UUID? = nil
     public private(set) var requestQueueUntil: String? = nil
+    // Older clients use this wire flag to enable retries without a generation.
     public let queueConsent: Bool
+    public var requestQueueEnabled: Bool {
+        guard enrolled, canSetRequestQueue == true, capabilities.contains("request_queue_permission"),
+              requestQueueGrant != nil, let requestQueueUntil,
+              let expiry = HistoryValidation.date(requestQueueUntil) else { return false }
+        return expiry > Date()
+    }
     public let capabilities: [String]
 }
 public enum ConfirmedRequestPurchase: String, Codable, Sendable { case bought, notBought }

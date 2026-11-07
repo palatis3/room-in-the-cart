@@ -61,8 +61,8 @@ struct HouseholdSettingsView: View {
                             NavigationLink(ht("Choose shared shop")) { HouseholdShopSelector(household: model) }
                         }
                         if projection.canSetRequestQueue == true {
-                            Button(ht(projection.queueConsent ? "Turn off and clear unsent offline requests" : "Allow offline requests on this iPhone for up to 24 hours")) {
-                                Task { await model.setRequestQueuePermission(!projection.queueConsent) }
+                            Button(ht(projection.requestQueueEnabled ? "Turn off and clear unsent offline requests" : "Allow offline requests on this iPhone for up to 24 hours")) {
+                                Task { await model.setRequestQueuePermission(!projection.requestQueueEnabled) }
                             }.disabled(model.busy).accessibilityIdentifier("household.request.queuePermission")
                         }
                         Button(ht("Refresh household")) { Task { await model.refresh() } }

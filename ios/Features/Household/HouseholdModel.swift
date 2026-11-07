@@ -366,12 +366,9 @@ struct DeviceReminderPersona: Equatable {
                 window = try await service.replayWindow()
                 offline = false
             } catch ClientError.transport {
-                if projection.canSetRequestQueue != nil {
-                    guard projection.canSetRequestQueue == true, projection.queueConsent, projection.requestQueueGrant != nil,
-                          (projection.requestQueueUntil.flatMap(serviceDate) ?? .distantPast) > Date() else {
-                        notice = ht("Enable offline requests while connected before saving a request offline.")
-                        return
-                    }
+                guard projection.requestQueueEnabled else {
+                    notice = ht("Enable offline requests while connected before saving a request offline.")
+                    return
                 }
                 guard let cached = contributorReplayWindow, cached.expiresAt > Date() else { throw ClientError.transport }
                 window = cached.value

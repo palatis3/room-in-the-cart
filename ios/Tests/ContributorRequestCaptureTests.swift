@@ -140,6 +140,8 @@ import DeviceSurfaces
     func testOfflineBeforeSendQueuesExactRequestUntilAnAuthorizedRetryAfterRestart() async throws {
         let queue = location(); defer { try? FileManager.default.removeItem(at: queue.deletingLastPathComponent()) }
         let fixture = ContributorCaptureFixture(), device = ContributorCaptureVault()
+        fixture.offersQueuePermission = true
+        fixture.queueGrant = UUID()
         let first = try await model(fixture, queue: queue, deviceVault: device)
         first.item = "Rice"; first.quantity = "2 bags"
         let review = try ContributorRequestReview.typed(scope: XCTUnwrap(first.contributorRequestScope))
@@ -254,7 +256,9 @@ import DeviceSurfaces
         let pending: PendingOperation
         let committedRequest: OwnRequest
         do {
-            let first = try await model(fixture, queue: queue, deviceVault: device)
+            fixture.offersQueuePermission = true
+        fixture.queueGrant = UUID()
+        let first = try await model(fixture, queue: queue, deviceVault: device)
             let scope = try XCTUnwrap(first.contributorRequestScope)
             let review = try ContributorRequestReview.captured(captured("2 packs of 8 wraps for lunch", scope: scope), scope: scope)
             fixture.loseReply = true
@@ -437,8 +441,8 @@ private final class ContributorCaptureFixture: @unchecked Sendable {
                 revokedBootstrapChecks += 1
                 return try response(["error": ["code": "access_ended"]], 403)
             }
-            var value: [String: Any] = ["household":["id":household,"label":"Home"],"memberId":member,"role":"contributor","shopId":shop,"enrolled":true,"queueConsent":queueGrant != nil,"capabilities":["own_requests"]]
-            if offersQueuePermission { value["canSetRequestQueue"] = true }
+            var value: [String: Any] = ["household":["id":household,"label":"Home"],"memberId":member,"role":"contributor","shopId":shop,"enrolled":true,"queueConsent":false,"capabilities":["own_requests"]]
+            if offersQueuePermission { value["canSetRequestQueue"] = true; value["capabilities"] = ["own_requests", "request_queue_permission"] }
             if let queueGrant {
                 value["requestQueueGrant"] = queueGrant.uuidString
                 value["requestQueueUntil"] = windowExpiry

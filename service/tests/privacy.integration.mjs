@@ -77,6 +77,9 @@ test('a profile-only fixture with an expired lease leaves the next accepted dele
 test('explicit responsibilities precede deletion; outage keeps pending and exact subject erasure preserves another member',async()=>{
  const f=await fresh(),s=await shop(f),other=await invite(f,await actor());const mine=ok(await send(f,f.owner,command(f.owner,s,'request.send',{clientRequestId:randomUUID(),originalItem:'Owner private request',ownQuantity:'secret quantity',authoredAt:new Date().toISOString()}))),theirs=ok(await send(f,other,command(other,s,'request.send',{clientRequestId:randomUUID(),originalItem:'Other retained private request',ownQuantity:'one',authoredAt:new Date().toISOString()})));
  assert.deepEqual(ok(await call(other,'/v1/privacy/deletion-preview')).households[0].otherAdults,[]);
+ const queuePath=`/v1/households/${f.h}/devices/current/request-queue`;
+ assert.ok(ok(await call(f.owner,queuePath,'PUT',{enabled:true})).requestQueueGrant);
+ const otherGrant=ok(await call(other,queuePath,'PUT',{enabled:true})).requestQueueGrant;
  const preview=ok(await call(f.owner,'/v1/privacy/deletion-preview'));assert.equal(preview.households[0].activeShops[0].shopId,s);assert.equal(preview.subscriptionCancelledByDeletion,false);assert.equal(preview.verifiedBackupRetentionDays,1);
  const invalid=request([disposition(f.h)]);assert.equal((await call(f.owner,'/v1/privacy/deletions','POST',invalid)).data.error.code,'organizer_disposition_required');assert.equal((await status(invalid)).status,404);
  const input=request([disposition(f.h,{organizer:'transfer',organizerMemberId:other.id,shops:[{shopId:s,revision:1,authorityEpoch:1,action:'transfer',memberId:other.id}]})]);const accepted=ok(await call(f.owner,'/v1/privacy/deletions','POST',input),202);assert.equal(accepted.status,'pending');assert.equal(accepted.providerAccountDeleted,false);
@@ -84,6 +87,7 @@ test('explicit responsibilities precede deletion; outage keeps pending and exact
  assert.equal((await call(null,'/v1/privacy/jobs/'+input.clientKey,'GET',undefined,{'X-Deletion-Token':randomBytes(32).toString('base64url')})).status,404);
  providerFailure=true;try{const result=await maintenance.run({batchSize:1});assert.equal(result.retryScheduled,1);}finally{providerFailure=false;}
  let receipt=ok(await status(input));assert.equal(receipt.status,'pending');assert.equal(receipt.appDataErased,true);assert.equal(receipt.providerAccountDeleted,false);
+ assert.deepEqual((await admin.query('SELECT grant_id FROM ritc.request_queue_permission WHERE household_id=$1',[f.h])).rows,[{grant_id:otherGrant}]);
  const rows=(await admin.query('SELECT request_id,original_item,own_quantity FROM ritc.request WHERE household_id=$1',[f.h])).rows;assert.equal(rows.find(r=>r.request_id===mine.request.requestId).original_item,'Removed request');assert.equal(rows.find(r=>r.request_id===theirs.request.requestId).original_item,'Other retained private request');
  const erased=(await admin.query('SELECT * FROM ritc.member WHERE household_id=$1 AND member_id=$2',[f.h,f.owner.id])).rows[0];assert.equal(erased.alias,'Removed member');assert.notEqual(erased.subject,f.owner.subject);
  assert.equal((await admin.query("SELECT count(*)::int AS n FROM ritc.shop_snapshot WHERE household_id=$1 AND snapshot::text LIKE '%Owner private grocery%'",[f.h])).rows[0].n,0);
@@ -93,7 +97,9 @@ test('explicit responsibilities precede deletion; outage keeps pending and exact
 });
 test('household exit revokes only that membership, preserves service identity and is recoverable by the same key',async()=>{
  const f=await fresh(),second=ok(await call(f.owner,'/v1/households','POST',{clientKey:randomUUID(),label:'Keep this household',alias:'Still me',adultAttestation:true}),201);
+ assert.ok(ok(await call(f.owner,`/v1/households/${f.h}/devices/current/request-queue`,'PUT',{enabled:true})).requestQueueGrant);
  const input={clientKey:randomUUID(),confirm:true,disposition:disposition(f.h,{organizer:'archive'})};const first=ok(await call(f.owner,`/v1/households/${f.h}/exit`,'POST',input));assert.equal(first.accountDeleted,false);assert.deepEqual(ok(await call(f.owner,`/v1/households/${f.h}/exit`,'POST',input)),first);
+ assert.equal((await admin.query('SELECT 1 FROM ritc.request_queue_permission WHERE household_id=$1',[f.h])).rowCount,0);
  assert.deepEqual(ok(await call(f.owner,'/v1/me/workspaces')).workspaces.map(w=>w.householdId),[second.householdId]);assert.equal((await admin.query('SELECT count(*)::int AS n FROM auth.sessions WHERE id=$1',[f.owner.session])).rows[0].n,1);
 });
 test('sole guardian cannot abandon a child through exit; deletion explicitly erases only the selected household child profile',async()=>{
