@@ -270,7 +270,7 @@ final class SharedMealNativeWireTests: XCTestCase {
         _ = try await save(corrected, preview: impact)
         let stale = try await operation(cook.kind, fields: cookFields)
         do { _ = try await service.executeSharedShop(stale); XCTFail("Saved a stale pantry-based cook copy") }
-        catch { XCTAssertEqual(error as? ClientError, .service(status: 409, code: "stale_supply", correlationID: nil, retryAfter: nil)) }
+        catch ClientError.service(status: 409, code: "stale_supply", correlationID: _, retryAfter: _) { }
         let after = try await service.foodCoverage(reviewed: pantry, delivery: delivery)
         XCTAssertEqual(after.needs.first(where: { $0.groupIds == [group] })?.reservations?.first?.backed.formatted, "2")
         let stored = try await save(.storeDelivery(source: source, location: "pantry", storedAt: Date(), useFirstAt: nil))

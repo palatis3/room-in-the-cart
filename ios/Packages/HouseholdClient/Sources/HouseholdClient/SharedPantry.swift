@@ -87,7 +87,7 @@ public struct SharedPantryPage: Decodable, Equatable, Sendable {
     func validate(delivery: SharedDeliveryPage) throws {
         try validateScope(delivery: delivery)
         try delivery.validateReservations()
-        guard nextCursor == nil, Set(lots.map(\.id)).count == lots.count else { throw ClientError.invalidResponse }
+        guard let readAt = householdTimestamp(asOf), nextCursor == nil, Set(lots.map(\.id)).count == lots.count else { throw ClientError.invalidResponse }
         let targets = Set((delivery.meals ?? []).flatMap { occurrence in
             (occurrence.meal.planning?.ingredients ?? []).map { Match(occurrence: occurrence, ingredient: $0) }
         })
@@ -97,11 +97,12 @@ public struct SharedPantryPage: Decodable, Equatable, Sendable {
         for lot in lots {
             let matches = Set(lot.matches)
             guard ["manual", "delivery"].contains(lot.origin), ["pantry", "freezer"].contains(lot.location),
-                  lot.storedAt.map(validHelperTimestamp) ?? true, lot.useFirstAt.map(validHelperTimestamp) ?? true,
+                  lot.storedAt.map({ householdTimestamp($0).map({ $0 <= readAt }) == true }) ?? true, lot.useFirstAt.map(validHelperTimestamp) ?? true,
                   sharedMealText(lot.foodName, 240), lot.exclusionTags.count <= 20, lot.exclusionTags.allSatisfy({ sharedMealText($0, 240) }),
                   targets.isSuperset(of: matches), matches.count == lot.matches.count, lot.selected || matches.isEmpty else { throw ClientError.invalidResponse }
             if let observation = lot.observation {
-                guard validHelperTimestamp(observation.confirmedAt), observationIDs.insert(observation.observationId).inserted,
+                guard let confirmed = householdTimestamp(observation.confirmedAt), confirmed <= readAt,
+                      observationIDs.insert(observation.observationId).inserted,
                       observation.quantity?.validStockQuantity != false else { throw ClientError.invalidResponse }
             }
             if let source = sources[lot.id] {

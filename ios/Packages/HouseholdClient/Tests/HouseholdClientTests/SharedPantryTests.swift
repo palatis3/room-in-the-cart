@@ -39,10 +39,13 @@ extension HouseholdClientTests {
             value["reservations"] = []; value["issues"] = []
             return value
         }
-        func validate(_ rows: [[String: Any]]) throws {
+        func coverage(_ rows: [[String: Any]]) throws -> SharedFoodCoverage {
             var report = scope
             report["unplannedOccurrenceIds"] = []; report["needs"] = rows
-            try decode(SharedFoodCoverage.self, report).validate(reviewed: pantry(), delivery: delivery)
+            return try decode(SharedFoodCoverage.self, report)
+        }
+        func validate(_ rows: [[String: Any]]) throws {
+            try coverage(rows).validate(reviewed: pantry(), delivery: delivery)
         }
         let first = row(groups[0], 2), second = row(groups[1], 1)
         try validate([first, second])
@@ -53,9 +56,34 @@ extension HouseholdClientTests {
         XCTAssertThrowsError(try validate([first, wrong]))
         wrong = second; wrong["missing"] = fraction(0)
         XCTAssertThrowsError(try validate([first, wrong]))
+        let before = try coverage([first, second]), reviewedLot = try XCTUnwrap(pantry().lots.first)
+        func impact(for row: [String: Any]) -> [String: Any] {
+            var fields = target
+            for key in ["groupIds", "required"] { fields[key] = row[key] }
+            fields["beforeCovered"] = row["covered"]; fields["beforeMissing"] = row["missing"]
+            fields["afterCovered"] = fraction(0); fields["afterMissing"] = fraction(2)
+            fields["beforeReservations"] = []; fields["afterReservations"] = []
+            return fields
+        }
+        var preview = scope
+        preview["lotId"] = batch.uuidString; preview["previewDigest"] = String(repeating: "0", count: 64)
+        preview["otherShopsAffected"] = false; preview["otherShopsCommitted"] = true
+        func validatePreview(_ rows: [[String: Any]]) throws {
+            preview["needs"] = rows
+            try decode(SharedPantryObservationPreview.self, preview).validate(lot: reviewedLot, coverage: before)
+        }
+        let changes = [impact(for: first), impact(for: second)]
+        try validatePreview(changes)
+        XCTAssertThrowsError(try validatePreview([changes[0]]), "Preview omitted a matched group")
+        var altered = changes; altered[0]["beforeCovered"] = fraction(0)
+        XCTAssertThrowsError(try validatePreview(altered))
+        preview["pantryRevision"] = 5
+        XCTAssertThrowsError(try validatePreview(changes))
         lot["selected"] = false
         XCTAssertThrowsError(try validate([first, second]))
         lot["selected"] = true
+        lot["observation"] = ["observationId":observation.uuidString, "confirmedAt":"2030-01-01T00:00:00Z", "quantity":q(3)] as [String:Any]
+        XCTAssertThrowsError(try validate([first, second]), "A later confirmation cannot supply today's reviewed page")
         lot["observation"] = ["observationId":observation.uuidString, "confirmedAt":date, "quantity":NSNull()] as [String:Any]
         XCTAssertThrowsError(try validate([first, second]))
     }
