@@ -481,11 +481,43 @@ import UIKit
     private func enableSwitch(_ label: String) {
         let control = app.switches[label]
         revealContent(control)
+        if label == "quote.first.allChargesIncluded" { captureQuoteSwitchBoundary(control, phase: "before-tap") }
         if control.value as? String == "0" {
             // The accessibility frame includes the Form label. Tap the trailing switch itself.
             control.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
         }
+        if label == "quote.first.allChargesIncluded" { captureQuoteSwitchBoundary(control, phase: "after-tap-before-assertion") }
         XCTAssertEqual(control.value as? String, "1", "The reviewed switch must be on: \(label)")
+    }
+    /// Bounded read-only observation for the original synthetic S27 journey.
+    /// The recorded point is the frame-derived intended point, not proof of delivered touch coordinates.
+    private func captureQuoteSwitchBoundary(_ control: XCUIElement, phase: String) {
+        let started = ProcessInfo.processInfo.systemUptime
+        func rect(_ value: CGRect) -> [Double] {
+            [Double(value.minX), Double(value.minY), Double(value.width), Double(value.height)]
+        }
+        func state(_ element: XCUIElement) -> [String: Any] {
+            guard element.exists else { return ["exists": false] }
+            return ["exists": true, "frame": rect(element.frame), "enabled": element.isEnabled,
+                    "hittable": element.isHittable, "value": element.value as? String ?? "<non-string>"]
+        }
+        let controlFrame = control.exists ? control.frame : .zero
+        var record: [String: Any] = [
+            "schema": 1, "phase": phase, "wallTime": Date().timeIntervalSince1970,
+            "startUptime": started,
+            "control": state(control), "applicationFrame": rect(app.frame),
+            "navigation": state(app.navigationBars.firstMatch), "tabs": state(app.tabBars.firstMatch),
+            "keyboard": state(app.keyboards.firstMatch), "done": state(app.buttons["quoteKeyboardDone"]),
+            "intendedNormalizedPoint": [0.92, 0.5],
+            "intendedFrameDerivedPoint": [Double(controlFrame.minX + controlFrame.width * 0.92), Double(controlFrame.midY)]
+        ]
+        record["endUptime"] = ProcessInfo.processInfo.systemUptime
+        let json = (try? JSONSerialization.data(withJSONObject: record, options: [.sortedKeys]))
+            .flatMap { String(data: $0, encoding: .utf8) } ?? "{\"observationSerializationFailed\":true}"
+        let details = XCTAttachment(string: json)
+        details.name = "S27-quote-switch-" + phase + "-public-state"
+        details.lifetime = .keepAlways; add(details)
+        capture("S27-quote-switch-" + phase)
     }
     private func fill(_ text: String, into id: String, replacing: Bool = false) {
         let field = element(id)

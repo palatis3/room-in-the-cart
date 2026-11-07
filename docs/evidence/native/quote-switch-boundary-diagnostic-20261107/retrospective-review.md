@@ -1,0 +1,9 @@
+# Exact failed-case retrospective review
+
+Independent review of Sol's frozen `ui-04-case-proof` exports on 2026-11-07. Earlier assessment and diagnostic inputs remain unchanged.
+
+Viewed the exact `Contextual-navigation-failure.png` (SHA256 c19b26190cd8241f26460386f4c74fc1548a8e9266b46455ac7cb8d6b4754dfb). The first-store total is 38, subtotal 36 and eligibility text Pickup price. All three review switches are visibly off. The total-charges label and thumb are fully visible well above the bottom tab bar; there is no software keyboard or visible overlay covering that switch. The final rendering therefore supports the assertion's off value. It does not show the frame or touch recipient at the earlier synthesis instant.
+
+Read the exact failed-case activity tree independently. It retains the `[0.92, 0.50]` switch tap, event synthesis, repeated animation-completion waits and final 0-versus-1 assertion. The exported last-toggle public AX snapshot is an empty application element with frame 402×874 and no children/label/value. It cannot establish switch geometry, hit region, focus or touch delivery. No other screenshots, recordings or Records payloads were inspected.
+
+Conclusion: the supplied retrospective evidence does not justify a product fix, geometry correction or extra tap. The visible switch is off; why the requested tap did not produce on remains unresolved. The narrow existing test-only before/after state diagnostic is still justified if root chooses another separately identified attempt. Pairing that attempt with a separately gated, bounded event-only DinnerQuotesView keyboard/focus/toggle observer could distinguish a missed value transition from a subsequent reset; neither should alter interaction, assertion, timing allowance or binding. A passing diagnostic attempt would be nonreproduction, not repair.
