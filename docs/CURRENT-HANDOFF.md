@@ -2,6 +2,16 @@
 
 Updated November 7, 2026 UTC. The owner resumed and explicitly approved the reviewed hosted staging update; the full first-version goal is active and release acceptance remains incomplete. Historical snapshots are preserved in [the handoff archive](CURRENT-HANDOFF-HISTORY-20261106.md).
 
+## Dated instructions from a shared delivery, November 7
+
+From **What came home → Delivered food by meal**, the assigned shopper can open one meal, review or edit the cook’s wording in English or US Spanish, and share the dated text. The preview includes the meal date, serving groups, meal and ingredient exclusions, preparation facts, confirmed delivery quantities, and any difference between food promised and food still backed. Delivery and meal revisions appear with the coverage check time. Readback uses the unedited projection. A separate action opens the scoped live-instruction composer.
+
+On a service with migration 034, the shopper can save the exact reviewed text and reopen each version. Marking a selected copy as sent requires reviewing the named recipient’s previous send. Opening or cancelling system share leaves the send history alone. A later delivery correction preserves earlier copies, including the wording and language the shopper chose.
+
+The final iPhone SE (iOS 17.0) and iPhone 17 Pro (iOS 26.2) suites each passed all three walkthroughs. They verified English and Spanish corrected quantities in the cook’s text, cancellation at the system share sheet with an empty send history, and an explicit recipient mark still present after reopening. iOS 27.0 passed the saved-copy walkthrough after switching the saved copy from an anchored popover to the same system sheet as the preview. Strict checks found zero runtime warnings across the seven executions. The iOS 27.0 test took 377.94 seconds, with its last interaction at 76 seconds. The unsigned arm64 device Release build passed its bundle checks. Static validation passed for 3,917 entries across 21 bilingual catalogs, and all 210 CI script tests passed.
+
+All 190 PostgreSQL integration tests, all 439 service unit tests with the database fixture, and all six native HTTPS scenarios passed. A populated local 033→034 upgrade preserved the 87 existing tables. Restoring the populated 034 backup reproduced all 91 tables, the saved Spanish copy and the named recipient’s send record. Staging remains at 030. Shared pantry and freezer stock, post-arrival meal replacement on the household service, and structured recipient-specific change summaries for shared copies remain open.
+
 ## Instruction revisions for scoped cooks, November 7
 
 A cook opening a scoped grant on iPhone sees the current instruction revision and time. Suggestions retain the revision the cook reviewed, including when a newer instruction arrives. An English and Spanish simulator walkthrough opened revision 12, refreshed to revision 13 and checked the changed instructions and time. The result contained one test, one pass and zero runtime warnings. All 129 companion-web tests passed.
