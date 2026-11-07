@@ -36,7 +36,13 @@ struct SharedPantryView: View {
                         .accessibilityIdentifier("pantry.create")
                 }
                 if delivery.meals?.isEmpty == false {
-                    NavigationLink(ht("Available food by meal")) { SharedFoodCoverageView(model: model, household: household, page: delivery) }
+                    NavigationLink(ht("Available food by meal")) {
+                        if (delivery.recoveryRevision ?? 0) > 0 {
+                            SharedRecoveryCoverageView(model: model, household: household, delivery: delivery)
+                        } else {
+                            SharedFoodCoverageView(model: model, household: household, page: delivery)
+                        }
+                    }
                         .accessibilityIdentifier("pantry.coverage")
                 }
             } else if model.busy { ProgressView() }

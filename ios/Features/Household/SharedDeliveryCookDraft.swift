@@ -5,6 +5,7 @@ import HouseholdClient
 enum SharedCookCoverage {
     case delivery(SharedDeliveryCoverage)
     case food(SharedPantryPage, SharedFoodCoverage)
+    case recovered(SharedRecoveryPage, SharedRecoveryCoverage, SharedRecoveryMeal)
 
     var reviewedPantry: SharedPantryPage? {
         if case .food(let pantry, _) = self { return pantry }
@@ -15,6 +16,7 @@ enum SharedCookCoverage {
         switch self {
         case .delivery(let report): report.asOf
         case .food(_, let report): report.asOf
+        case .recovered(_, let report, _): report.asOf
         }
     }
 
@@ -22,6 +24,12 @@ enum SharedCookCoverage {
         switch self {
         case .delivery(let report): try report.validate(reviewed: page)
         case let .food(pantry, report): try report.validate(reviewed: pantry, delivery: page)
+        case let .recovered(record, report, meal):
+            guard record.shopId == page.shopId, record.placedRevision == page.placedRevision,
+                  record.base.shopRevision == page.shopRevision, record.base.authorityEpoch == page.authorityEpoch,
+                  record.base.supplyRevision == page.supplyRevision, record.base.recoveryRevision == page.recoveryRevision,
+                  record.meals.contains(meal) else { throw ClientError.invalidResponse }
+            try report.validate(reviewed: record)
         }
     }
 }
@@ -42,6 +50,8 @@ struct SharedDeliveryCookDraft {
               (1...page.placedRevision).contains(occurrence.revision), page.meals?.contains(occurrence) == true,
               (try? occurrence.meal.validatePlanning()) != nil, (try? report.validate(reviewed: page)) != nil,
               let asOf = serviceDate(report.asOf) else { return nil }
+        if case let .recovered(_, _, meal) = report,
+           meal.id != occurrence.id || meal.day != occurrence.meal.day || meal.sourceMealRevision != occurrence.revision { return nil }
         let locale = Locale(identifier: language)
         guard let renderer = Self(language: language),
               let day = sharedMealDayText(occurrence.meal.day, locale: locale) else { return nil }
@@ -97,6 +107,8 @@ struct SharedDeliveryCookDraft {
         var footer: [String]
         let unplanned: Bool
         switch report {
+        case let .recovered(record, coverage, currentMeal):
+            return currentCookText(meal: currentMeal, record: record, coverage: coverage, day: day, checked: checked)
         case .delivery(let coverage):
             sections += deliveryIngredients(page: page, occurrence: occurrence, coverage: coverage)
             unplanned = coverage.unplannedOccurrenceIds.contains(occurrence.id)
@@ -241,6 +253,89 @@ extension SharedDeliveryCookDraft {
             case "unconfirmed": label("A matched source is waiting for a usable count.", table: "DeliveryCook")
             case "exclusion": label("A matched source conflicts with a recorded exclusion.", table: "DeliveryCook")
             case "unitMismatch": label("A matched source uses an incompatible unit.", table: "DeliveryCook")
+            case "reservationShortfall": label("A source no longer covers the full amount set aside.", table: "DeliveryCook")
+            default: label(Self.issueKey(issue))
+            }
+        }
+        return lines
+    }
+}
+
+extension SharedDeliveryCookDraft {
+    private func currentCookText(meal: SharedRecoveryMeal, record: SharedRecoveryPage, coverage: SharedRecoveryCoverage,
+                                 day: String, checked: String) -> String {
+        let unknown = label("Unknown")
+        let none = label("None recorded", table: "DeliveryCook")
+        var header = [label("Cook instructions") + " — " + meal.title, day, field("Portions", String(meal.portions))]
+        for group in meal.groups {
+            let servings = group.servings.denominator == 1 ? String(group.servings.numerator) : "\(group.servings.numerator)/\(group.servings.denominator)"
+            header.append(field("Serving group", group.name) + " · " + field("Portions", servings) + (group.protected ? " · " + label("Protected portions") : ""))
+            if !group.exclusions.isEmpty { header.append(field("Group exclusions", group.exclusions.joined(separator: ", "), table: "Recovery")) }
+        }
+        if !meal.notes.isEmpty { header.append(meal.notes) }
+        if let url = meal.sourceURL { header.append(url) }
+        header += [field("Meal exclusions", meal.exclusions.isEmpty ? none : meal.exclusions.joined(separator: ", ")),
+                   field("Required lead time in minutes", meal.requiredLeadMinutes.map(String.init) ?? unknown, table: "Recovery"),
+                   field("Remaining preparation minutes", meal.remainingElapsedMinutes.map(String.init) ?? unknown, table: "Recovery")]
+        if let provenance = record.mealSources.first(where: { $0.occurrenceId == meal.id && $0.sealedRevisionId == meal.revisionId }),
+           !provenance.completedSteps.isEmpty {
+            header.append(field("Completed preparation steps", "\n" + provenance.completedSteps.joined(separator: "\n")))
+        }
+        if meal.advanceStepsCompleted { header.append(label("Advance steps confirmed complete", table: "Recovery")) }
+        else { header.append(label("Advance steps not confirmed complete", table: "Recovery")) }
+        let date = DateFormatter()
+        date.locale = Locale(identifier: language)
+        let zone = meal.zone.flatMap(TimeZone.init(identifier:))
+        date.timeZone = zone ?? TimeZone(secondsFromGMT: 0)
+        date.dateStyle = .long; date.timeStyle = .medium
+        header.append(field("Meal deadline", meal.due.flatMap(serviceDate).map { date.string(from: $0) + " " + (zone?.identifier ?? "UTC") } ?? unknown, table: "Recovery"))
+        var sections = [header.joined(separator: "\n")]
+        for row in coverage.needs where row.occurrenceId == meal.id {
+            sections.append(recoveryNeed(row, meal: meal, record: record).joined(separator: "\n"))
+        }
+        if coverage.unplannedOccurrenceIds.contains(meal.id) { sections.append(label("This meal has no recorded ingredient requirements.")) }
+        sections.append([label(Self.foodScope, table: "DeliveryCook"), field("Checked at", checked),
+                         field("Meal plan revision", String(record.base.recoveryRevision), table: "Recovery"),
+                         field("Current meal revision", meal.revisionId.uuidString, table: "Recovery"),
+                         field("Pantry revision", String(record.base.pantryRevision), table: "DeliveryCook"),
+                         field("Delivery revision", String(record.base.supplyRevision), table: "DeliveryCook")].joined(separator: "\n"))
+        return sections.joined(separator: "\n\n")
+    }
+
+    func recoveryNeed(_ row: SharedRecoveryCoverage.Need, meal: SharedRecoveryMeal, record: SharedRecoveryPage) -> [String] {
+        guard row.occurrenceId == meal.id, let need = meal.needs.first(where: { $0.id == row.needId }) else { return [] }
+        let none = label("None recorded", table: "DeliveryCook")
+        var lines = [field("Ingredient", need.name)]
+        if !need.notes.isEmpty { lines.append(need.notes) }
+        let groups = meal.groups.filter { row.groupIds.contains($0.id) }.map(\.name)
+        if !groups.isEmpty { lines.append(field("Serving group", groups.joined(separator: ", "))) }
+        if need.priority == "protected" { lines.append(label("Protected portions")) }
+        lines += [field("Ingredient exclusions", need.exclusions.isEmpty ? none : need.exclusions.joined(separator: ", ")),
+                  field("Ingredient quantity", measured(row.required)),
+                  field("Covered by deliveries", quantity(row.delivered, required: row.required)),
+                  field("Covered by pantry stock", quantity(row.pantry, required: row.required), table: "DeliveryCook"),
+                  field("Covered by freezer stock", quantity(row.freezer, required: row.required), table: "DeliveryCook"),
+                  field("Still needed", quantity(row.missing, required: row.required), table: "DeliveryCook")]
+        for source in record.sourceOptions where (need.matchedSourceIds ?? []).contains(source.id) {
+            let allocation = row.allocations.first { $0.sourceId == source.id }
+            let kind = allocation?.kind ?? source.kind
+            let key = kind == "delivery" ? "Matched delivery" : kind == "freezer" ? "Matched freezer stock" : "Matched pantry stock"
+            lines += [field(key, source.name + " · " + source.id.uuidString.prefix(8), table: "DeliveryCook"),
+                      field("Latest confirmed usable count", measured(source.quantity), table: "DeliveryCook")]
+            if !source.exclusionTags.isEmpty { lines.append(field("Source exclusions", source.exclusionTags.joined(separator: ", "), table: "DeliveryCook")) }
+            if let claim = row.reservations?.first(where: { $0.sourceId == source.id }) {
+                lines.append(field("Amount set aside", quantity(claim.requested, required: row.required)))
+                lines.append(field("Still backed by this source", quantity(claim.backed, required: row.required), table: "DeliveryCook"))
+            }
+            if let allocation { lines.append(field("Allocated from this source", quantity(allocation.amount, required: row.required), table: "DeliveryCook")) }
+        }
+        if row.reservations?.isEmpty != false { lines.append(field("Amount set aside", none)) }
+        lines += row.issues.map { issue in
+            switch issue {
+            case "noMatch": label("No source has been matched to this ingredient.", table: "DeliveryCook")
+            case "unconfirmed": label("A matched source is waiting for a usable count.", table: "DeliveryCook")
+            case "unitMismatch": label("A matched source uses an incompatible unit.", table: "DeliveryCook")
+            case "exclusion": label("A matched source conflicts with a recorded exclusion.", table: "DeliveryCook")
             case "reservationShortfall": label("A source no longer covers the full amount set aside.", table: "DeliveryCook")
             default: label(Self.issueKey(issue))
             }

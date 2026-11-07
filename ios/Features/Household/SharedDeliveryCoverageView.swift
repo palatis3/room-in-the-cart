@@ -31,10 +31,19 @@ struct SharedDeliveryCoverageView: View {
                             ForEach(Array(result.needs.filter { $0.occurrenceId == occurrence.id }.enumerated()), id: \.offset) { _, need in
                                 requirement(need, occurrence: occurrence)
                             }
-                            NavigationLink(pTr("Preview a dated cook instruction")) {
-                                SharedDeliveryCookView(model: model, household: household, page: page, coverage: .delivery(result), occurrence: occurrence)
+                            if (page.recoveryRevision ?? 0) > 0 {
+                                Text(sharedRecoveryText("Use the current meal plan for new cook instructions."))
+                                if model.canReadCookCopies {
+                                    NavigationLink(pTr("Saved cook notes")) {
+                                        SharedCookHistoryView(model: model, household: household, page: page, occurrence: occurrence)
+                                    }
+                                }
+                            } else {
+                                NavigationLink(pTr("Preview a dated cook instruction")) {
+                                    SharedDeliveryCookView(model: model, household: household, page: page, coverage: .delivery(result), occurrence: occurrence)
+                                }
+                                .accessibilityIdentifier("delivery.cook." + occurrence.id.uuidString)
                             }
-                            .accessibilityIdentifier("delivery.cook." + occurrence.id.uuidString)
                         } header: { Text(occurrence.meal.title + " · " + occurrence.meal.day) }
                     }
                 } else if failed {
@@ -137,6 +146,9 @@ struct SharedDeliveryCookView: View {
     }
 
     private var allowed: Bool {
+        if case let .recovered(record, _, _) = coverage {
+            guard model.canReadMealRecovery, model.recoveryRecord == record else { return false }
+        } else if (page.recoveryRevision ?? 0) > 0 { return false }
         if let pantry = coverage.reviewedPantry, !model.canReadPantry || model.pantryRecord != pantry { return false }
         return !household.locked && household.sharedShop === model && model.canReadDelivery &&
         model.scope.shopId.flatMap(UUID.init(uuidString:)) == page.shopId && model.shop?.shopId == model.scope.shopId &&
@@ -260,6 +272,10 @@ struct SharedDeliveryCookView: View {
         do {
             let unchanged: Bool
             switch coverage {
+            case let .recovered(record, reviewed, meal):
+                let current = try await model.effectiveCoverage(reviewed: record)
+                unchanged = current.needs.filter { $0.occurrenceId == meal.id } == reviewed.needs.filter { $0.occurrenceId == meal.id } &&
+                    current.unplannedOccurrenceIds.contains(meal.id) == reviewed.unplannedOccurrenceIds.contains(meal.id)
             case .delivery(let reviewed):
                 let current = try await model.coverage(reviewed: page)
                 unchanged = current.needs.filter { $0.occurrenceId == occurrence.id } == reviewed.needs.filter { $0.occurrenceId == occurrence.id }
@@ -282,14 +298,19 @@ struct SharedDeliveryCookView: View {
             case .save:
                 guard model.canReadCookCopies, canSaveWording, savedWording[reviewedLanguage] != reviewedText else { return }
                 let locale = reviewedLanguage == "es-US" ? "es" : "en"
-                if await model.saveCookCopy(text: reviewedText, language: locale, occurrence: occurrence, reviewed: page, pantry: coverage.reviewedPantry),
-                   allowed && reviewID == presentation {
+                let saved: Bool
+                if case let .recovered(record, _, meal) = coverage {
+                    saved = await model.saveCookCopy(text: reviewedText, language: locale, meal: meal, reviewed: record)
+                } else {
+                    saved = await model.saveCookCopy(text: reviewedText, language: locale, occurrence: occurrence, reviewed: page, pantry: coverage.reviewedPantry)
+                }
+                if saved && allowed && reviewID == presentation {
                     savedWording[reviewedLanguage] = reviewedText
                 }
             case .read:
                 guard reviewedText == original, let checkedAt = serviceDate(coverage.asOf) else { return }
                 readback = CookReadbackInstruction(authorityBindingID: UUID(), sourceID: occurrence.id,
-                    sourceRevision: Int64(page.supplyRevision), createdAt: checkedAt, startBefore: Date().addingTimeInterval(60),
+                    sourceRevision: Int64(page.recoveryRevision.flatMap { $0 > 0 ? $0 : nil } ?? page.supplyRevision), createdAt: checkedAt, startBefore: Date().addingTimeInterval(60),
                     text: reviewedText, localeIdentifier: reviewedLanguage, excludesPrivateBudget: true)
             }
         } catch {

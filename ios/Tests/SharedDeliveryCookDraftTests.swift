@@ -209,7 +209,7 @@ extension SharedDeliveryCookDraftTests {
                            "observation":["observationId":UUID().uuidString,"confirmedAt":time,"quantity":q(5)] as Object]
         let unused: Object = ["lotId":UUID().uuidString, "location":"pantry", "origin":"manual", "foodName":"Unselected other shop's stock",
                               "selected":false, "storedAt":time, "useFirstAt":NSNull(), "observation":NSNull(), "exclusionTags":[], "matches":[], "reservations":[]]
-        let pantry = seal.merging(["pantryRevision":12,"asOf":time,"lots":[lot,unused]]) { _, new in new }
+        let pantry = seal.merging(["pantryRevision":12,"asOf":time,"lots":[lot,unused],"nextCursor":NSNull()]) { _, new in new }
         func need(_ target: Object, groupID: String, claim: String, cups: Int, frozen: Int, delivered: Int) -> Object {
             var allocations: [Object] = [["sourceId":freezer, "kind":"freezer", "amount":f(String(frozen))]]
             if delivered > 0 { allocations.append(["sourceId":source.uuidString, "kind":"delivery", "amount":f(String(delivered))]) }

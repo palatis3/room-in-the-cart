@@ -45,6 +45,11 @@ struct SharedDeliveryView: View {
                     if model.shop?.phase == "placed", model.pending == nil, !page.lines.isEmpty {
                         Button(ht("Add a delivery")) { choosingLine = true }
                     }
+                    if model.canReadMealRecovery, model.shop?.phase == "placed" {
+                        NavigationLink(sharedRecoveryText("Repair a scheduled meal")) {
+                            SharedRecoveryDeskView(model: model, household: household, shopID: page.shopId)
+                        }.accessibilityIdentifier("recovery.open")
+                    }
                     if page.coverageAvailable == true, page.meals?.isEmpty == false {
                         Button(ht("Delivered food by meal")) { showingCoverage = true }
                     }
