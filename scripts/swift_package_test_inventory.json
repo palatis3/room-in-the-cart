@@ -34,6 +34,10 @@
     "retailerTermsAddition": {
       "added": 1,
       "basis": "The compiled and passing CoreDomain regression verifies exact earlier retailer terms, fresh evidence and stale editor handling."
+    },
+    "boundedListImportAddition": {
+      "added": 3,
+      "basis": "Two compiled CoreDomain boundary cases and one compiled DeviceSurfaces receipt and recovery case passed locally."
     }
   },
   "packages": {
@@ -225,6 +229,8 @@
       "CoreDomainTests.ShoppingLedgerTests/testZeroDemandCanBeConfirmedDuplicateWithoutBecomingUnknown",
       "CoreDomainTests.StagedImportIdentityTests/testExternalIdentitySurvivesRestartAndExactReplay",
       "CoreDomainTests.StagedImportIdentityTests/testSameTextDifferentExplicitOperationRemainsSeparateReviewedIntent",
+      "CoreDomainTests.StagedImportIdentityTests/testSourceLimitsAcceptExactBoundariesAndPreserveOriginalWording",
+      "CoreDomainTests.StagedImportIdentityTests/testStagingRejectsTooManyDuplicateRowsBeforeReview",
       "CoreDomainTests.StapleRecallTests/testBoughtElsewhereClosesOnlyTheChosenCurrentLineAndExactRetryDoesNotCloseItAgain",
       "CoreDomainTests.StapleRecallTests/testChangedOrForgottenApprovalInvalidatesOpenReviewAndStoreIsRequired",
       "CoreDomainTests.StapleRecallTests/testExistingCheckedOrHandledItemIsNeverReopenedAndHandledChoiceCreatesNoPurchase",
@@ -258,6 +264,7 @@
       "DeviceSurfacesTests.DeviceSurfacesTests/testRetirementMigrationProtectsLegacyWriterWithoutKeepingPrivateBody",
       "DeviceSurfacesTests.DeviceSurfacesTests/testRouteCodecRejectsCredentialsExtraKeysAndNoncanonicalHandles",
       "DeviceSurfacesTests.DeviceSurfacesTests/testSelectedTextExactReplayAfterReopenAndChangedReplayFails",
+      "DeviceSurfacesTests.DeviceSurfacesTests/testSelectedTextRejectsNewOversizedReviewButResolvesAnExactLegacyReceipt",
       "DeviceSurfacesTests.DeviceSurfacesTests/testSessionChangedReplayCannotReuseSuccessfulSave",
       "DeviceSurfacesTests.DeviceSurfacesTests/testWidgetFileRejectsCorruptionAndClearContainsOnlyGenericRoute",
       "DeviceSurfacesTests.DeviceSurfacesTests/testWidgetProjectionAllowsNoPrivateFieldAndConfigFailsClosed"

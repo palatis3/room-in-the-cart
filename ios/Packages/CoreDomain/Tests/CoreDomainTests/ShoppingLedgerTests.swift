@@ -101,7 +101,7 @@ final class ShoppingLedgerTests: XCTestCase {
     func testPackLabelsKeepTheirExactContentsAndOriginalWordingAcrossImport() throws {
         var shop = ShoppingLedger()
         let text = "2 × 15 oz pinto beans\n2 cajas de 6 paquetes de 8 tortillas\n2 packs of 6 packs of wraps"
-        let preview = shop.stageImport(text: text, source: .paste)
+        let preview = try shop.stageImport(text: text, source: .paste)
         XCTAssertEqual(preview.lines.map(\.name), ["pinto beans", "tortillas", "wraps"])
         XCTAssertEqual(preview.lines.map { $0.quantity?.amount }, [try Rational(30), try Rational(96), nil])
         XCTAssertEqual(preview.lines.map { $0.quantity?.unit }, [.ounce, .count, nil])
@@ -111,20 +111,29 @@ final class ShoppingLedgerTests: XCTestCase {
         for wording in ["2x15 oz pinto beans", "2x15oz pinto beans", "2 packs × 15oz pinto beans",
                         "2 15-ounce cans of pinto beans", "2 15 oz cans of pinto beans", "2 cans of pinto beans, 15 oz each",
                         "2 latas de pinto beans (15 onzas cada una)"] {
-            let item = shop.stageImport(text: wording).lines[0]
+            let item = try shop.stageImport(text: wording).lines[0]
             XCTAssertEqual(item.name, "pinto beans", wording)
             XCTAssertEqual(item.quantity?.amount, try Rational(30), wording)
             XCTAssertEqual(item.quantity?.unit, .ounce, wording)
             XCTAssertEqual(item.originalPack?.count, 2, wording)
             XCTAssertEqual(item.originalText, wording)
         }
-        XCTAssertEqual(shop.stageImport(text: "250g Product X15").lines[0].name, "Product X15")
-        XCTAssertNil(shop.stageImport(text: "7UP").lines[0].quantity)
-        let mixed = shop.stageImport(text: "1 1/2kg rice").lines[0]
+        XCTAssertEqual(try shop.stageImport(text: "250g Product X15").lines[0].name, "Product X15")
+        XCTAssertNil(try shop.stageImport(text: "7UP").lines[0].quantity)
+        let mixed = try shop.stageImport(text: "1 1/2kg rice").lines[0]
         XCTAssertEqual(mixed.name, "rice")
         XCTAssertEqual(mixed.quantity?.amount, try Rational(3, 2))
         XCTAssertEqual(mixed.quantity?.unit, .kilogram)
-        let ambiguous = shop.stageImport(text: "2 boxes of 3 packs of beans, 15 oz each").lines[0]
+        // The source line is stored verbatim even when a retailer label padded
+        // the gap between the measure and its product name.
+        var paddedShop = ShoppingLedger()
+        let padded = "2x15oz" + String(repeating: " ", count: 8_192 - "2x15ozbeans".utf8.count) + "beans"
+        let paddedPreview = try paddedShop.stageImport(text: padded)
+        try paddedShop.commitImport(paddedPreview)
+        XCTAssertEqual(paddedShop.contributions.first?.originalText, padded)
+        XCTAssertEqual(paddedShop.contributions.first?.quantity?.amount, try Rational(30))
+        XCTAssertEqual(paddedShop.contributions.first?.originalPack?.amountPerPack?.amount, try Rational(15))
+        let ambiguous = try shop.stageImport(text: "2 boxes of 3 packs of beans, 15 oz each").lines[0]
         XCTAssertNil(ambiguous.quantity)
         let batch = try shop.commitImport(preview)
         shop = try roundTrip(shop)
