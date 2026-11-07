@@ -1,5 +1,7 @@
 # Current implementation and acceptance map
 
+An [additive evidence refresh](evidence/native/screen-evidence-refresh-20261107/README.md) binds nine previously indirect Check clauses to exact current-source assertions and retained passing outcomes: checkout thresholds, usable-food correction and arrival replay, pending/included credits, and unavailable-source recipe editing. The historical 123-clause ledger is preserved; calculation proof remains distinct from native screen and release acceptance.
+
 The ordinary S14 recipe journey now verifies editing with an unavailable source, explicit portion bindings, restart persistence and separation from the reusable recipe. It also exposed and verifies a persistent localized name for filled Notes. [The unchanged complete case passes locally](evidence/native/recipe-source-editing-20261107/README.md) and is installed as permanent ordinary CI coverage; human accessibility and hosted acceptance remain separate.
 
 The dinner idea model now has permanent regressions for abandoned preparation, repeated save/approval, a separate explicit shop apply, and revoked planning access. [All 27 selected model tests pass locally](evidence/native/dinner-idea-model-20261107/README.md), with exact compiled selection and zero runtime warnings. This covers the production model with an in-memory store; it does not replace native interaction or SQLite persistence evidence.
