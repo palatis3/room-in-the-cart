@@ -318,3 +318,36 @@ test('erasing the sealed line source removes another shopper purchase confirmati
  assert.equal((await send(f,later,retry)).status,404);
  assert.equal((await admin.query('SELECT 1 FROM ritc.operation_response WHERE household_id=$1 AND operation_id=$2',[f.h,receipt.operationId])).rowCount,0);
 });
+
+test('staged author deletion hides all carried requests and exact retries, then erases source, successors and linked text',async()=>{
+ const f=await fresh(),author=await invite(f,await actor()),source=await shop(f);
+ const text='Private carried grocery';
+ const original=ok(await send(f,author,command(author,source,'request.send',{clientRequestId:randomUUID(),
+   originalItem:text,ownQuantity:'one bag',authoredAt:new Date().toISOString()}))).request;
+ const place=id=>send(f,f.owner,command(f.owner,id,'shop.reportPlaced',{occurredAt:new Date().toISOString()},1,1));
+ ok(await place(source));
+ const second=await shop(f),ops=[],ids=[original.requestId];
+ async function carry(from,to){
+   const op=command(f.owner,to,'request.carry',{sourceShopId:from,sourceAuthorityEpoch:1,requestId:ids.at(-1)},1,1,2);
+   ids.push(ok(await send(f,f.owner,op)).requestId);ops.push(op);
+ }
+ await carry(source,second);ok(await place(second));const third=await shop(f);await carry(second,third);
+ const decision={choice:'add',line:{lineId:randomUUID(),originalItem:text,packs:1,unitPriceMinor:200,feeEligible:true}};
+ const preview=ok(await call(f.owner,`/v1/households/${f.h}/shops/${third}/previews`,'POST',
+   {requestId:ids[2],base:{shopRevision:1,authorityEpoch:1,requestRevision:1},decision}));
+ ok(await send(f,f.owner,command(f.owner,third,'request.apply',{requestId:ids[2],previewId:preview.previewId,acceptOverage:false,acceptUnknown:false},1,1,1)));
+ const input=request([disposition(f.h)]);ok(await call(author,'/v1/privacy/deletions','POST',input),202);
+ for(const shopId of [source,second,third]){
+   const page=ok(await call(f.owner,`/v1/households/${f.h}/shops/${shopId}/inbox`));assert.deepEqual(page.requests,[]);
+ }
+ for(const op of ops)assert.equal((await send(f,f.owner,op)).data.error.code,'refresh_required');
+ assert.equal((await maintenance.run({batchSize:1})).completed,1);
+ const rows=await admin.query('SELECT original_item,own_quantity,author_id FROM ritc.request WHERE household_id=$1',[f.h]);
+ assert.deepEqual(rows.rows,Array(3).fill({original_item:'Removed request',own_quantity:null,author_id:author.id}));
+ const evidence=(await admin.query(`SELECT o.payload_digest,r.response FROM ritc.operation o LEFT JOIN ritc.operation_response r
+   USING(household_id,operation_id) WHERE o.household_id=$1 AND o.kind='request.carry'`,[f.h])).rows;
+ assert.deepEqual(evidence,Array(2).fill({payload_digest:'0'.repeat(64),response:null}));
+ assert.equal((await admin.query("SELECT 1 FROM ritc.shop_snapshot WHERE household_id=$1 AND snapshot::text LIKE $2",[f.h,'%'+text+'%'])).rowCount,0);
+ assert.equal((await admin.query("SELECT original_item FROM ritc.basket_line WHERE household_id=$1 AND line_id=$2",[f.h,decision.line.lineId])).rows[0].original_item,'Removed item');
+ for(const op of ops)assert.equal((await send(f,f.owner,op)).data.error.code,'refresh_required');
+});

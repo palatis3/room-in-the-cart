@@ -9,6 +9,17 @@ export interface OwnRequest {
 }
 export type RequestPurchaseOutcome=NonNullable<OwnRequest['purchaseOutcome']>|'unknown';
 export interface ShopperInboxRequest extends OwnRequest {authorAlias:string;linkedLineId?:string}
+export interface DeferredRequest {
+  sourceShopId:string; sourceAuthorityEpoch:number; requestId:string; requestRevision:number;
+  originalItem:string; ownQuantity:string|null; authorAlias:string; authoredAt:string; receivedAt:string;
+}
+export interface DeferredRequestPage {
+  shopId:string; shopRevision:number; authorityEpoch:number; requests:DeferredRequest[]; nextCursor:string|null;
+}
+export interface CarryRequestBody {sourceShopId:string;sourceAuthorityEpoch:number;requestId:string}
+export interface CarryRequestReceipt extends ShopperReceipt {
+  kind:'request.carry';disposition:'recorded';requestId:string;requestRevision:1;sourceRequestId:string;
+}
 export interface ConfirmRequestPurchaseBody {requestId:string;lineId:string;placedRevision:number;outcome:RequestPurchaseOutcome}
 export interface ConfirmRequestPurchaseReceipt extends ShopperReceipt {
   kind:'request.confirmPurchase';disposition:'recorded';requestId:string;requestRevision:number;purchaseOutcome:RequestPurchaseOutcome;

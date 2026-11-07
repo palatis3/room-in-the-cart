@@ -694,3 +694,150 @@ if(process.env.RITC_TEST_NATIVE_WIRE==='1') test('assigned iPhone shopper confir
   assert.equal(mine[0].status,'added');assert.equal(mine[0].revision,f.requestRevision+3);
   assert.equal(mine[0].purchaseOutcome,'notBought');assert.equal(mine[0].linkedLineId,undefined);
 });
+
+async function nextDraft(f) {
+  const shopId=randomUUID();
+  const created=await f.http('Mia','POST','/commands',{...f.envelope('Mia','shop.create',
+    {quote:f.quote,lines:[]},{shopRevision:0,authorityEpoch:0}),shopId});
+  assert.equal(created.status,200,JSON.stringify(created.data));
+  return shopId;
+}
+
+async function deferredFixture(actor='Sam',requestDetails={}) {
+  const f=await fixture(),original=(await f.send(actor,requestDetails)).request;
+  const placed=await f.command('Mia','shop.reportPlaced',{occurredAt:new Date().toISOString()});
+  assert.equal(placed.status,200);
+  const dest=await nextDraft(f);
+  const page=(id=dest,member='Mia',cursor='')=>f.http(member,'GET','/shops/'+id+'/deferred-requests'+(cursor?'?cursor='+cursor:''),undefined,{'X-Shop-ID':id});
+  const candidate=(await page()).data.requests[0];
+  const carry=(id=dest,source=candidate)=>({...f.envelope('Mia','request.carry',
+    {sourceShopId:source.sourceShopId,sourceAuthorityEpoch:source.sourceAuthorityEpoch,requestId:source.requestId},
+    {shopRevision:1,authorityEpoch:1,requestRevision:source.requestRevision}),shopId:id});
+  const run=(e,actor='Mia')=>f.http(actor,'POST','/commands',e,{'X-Shop-ID':e.shopId});
+  const inbox=async(id,member='Mia')=>(await f.http(member,'GET','/shops/'+id+'/inbox',undefined,{'X-Shop-ID':id})).data.requests;
+  return {...f,original,dest,page,candidate,carry,run,inbox};
+}
+
+test('deferred request enters a later blank shop only once, with original authorship and a fresh price decision',async()=>{
+  const f=await deferredFixture(),candidate=f.candidate,source=f.original;
+  assert.deepEqual(candidate,{sourceShopId:f.shopId,sourceAuthorityEpoch:1,requestId:source.requestId,requestRevision:2,
+    originalItem:source.originalItem,ownQuantity:source.ownQuantity,authorAlias:'Sam',authoredAt:source.authoredAt,receivedAt:source.receivedAt});
+  assert.deepEqual((await f.page()).data,{shopId:f.dest,shopRevision:1,authorityEpoch:1,requests:[candidate],nextCursor:null});
+  const before=(await f.http('Mia','GET','/shops/'+f.shopId)).data;
+  const sourcePreview=await f.preview(source,{choice:'handled'},'Mia',{shopRevision:2,authorityEpoch:1,requestRevision:2});
+  assert.equal(sourcePreview.status,200);
+  assert.deepEqual(await f.inbox(f.dest),[]);
+  const draftBefore=(await f.http('Mia','GET','/shops/'+f.dest)).data;
+  assert.deepEqual(draftBefore.lines,[]);
+  const cmd=f.carry(),[first,retry]=await Promise.all([f.run(cmd),f.run(cmd)]);
+  assert.equal(first.status,200,JSON.stringify(first.data));
+  const id=first.data.operationId;
+  assert.deepEqual(first.data,{operationId:id,kind:'request.carry',shopId:f.dest,shopRevision:1,authorityEpoch:1,
+    disposition:'recorded',requestId:id,requestRevision:1,sourceRequestId:source.requestId});
+  assert.deepEqual(first.data,retry.data);assert.notEqual(id,source.requestId);
+  assert.deepEqual((await f.page()).data.requests,[]);
+  assert.deepEqual((await f.http('Mia','GET','/shops/'+f.dest)).data,draftBefore);
+  assert.deepEqual((await f.http('Mia','GET','/shops/'+f.shopId)).data,before);
+  const [old]=await f.inbox(f.shopId),[copy]=await f.inbox(f.dest);
+  assert.equal(old.carriedForward,true);assert.equal(old.revision,2);assert.equal(old.ownActionAllowed,false);
+  assert.deepEqual(copy,{requestId:id,shopId:f.dest,revision:1,originalItem:source.originalItem,ownQuantity:source.ownQuantity,
+    authoredAt:source.authoredAt,receivedAt:copy.receivedAt,route:'current',status:'pending',fromPreviousShop:true,
+    ownActionAllowed:true,clarification:null,followupTo:null,authorAlias:'Sam'});
+  assert(Date.parse(copy.receivedAt)>=Date.parse(source.receivedAt));
+  assert.deepEqual((await f.http('Jo','GET','/requests/mine')).data.requests,[]);
+  assert.deepEqual((await f.http('Sam','GET','/requests/mine')).data.requests.map(r=>[r.shopId,r.ownActionAllowed]),[[f.shopId,false],[f.dest,true]]);
+  for(const [kind,body] of [['request.edit',{originalItem:'Changed',ownQuantity:null}],['request.withdraw',{}]]){
+    const r=await f.command('Sam',kind,{requestId:source.requestId,...body},{shopRevision:0,authorityEpoch:0,requestRevision:2});
+    assert.equal(r.data.error.code,'followup_required');
+  }
+  assert.equal((await f.send('Sam',{followupTo:source.requestId})).request.followupTo,source.requestId);
+  const body={requestId:source.requestId,previewId:sourcePreview.data.previewId,acceptOverage:false,acceptUnknown:false};
+  assert.equal((await f.command('Mia','request.apply',body,{shopRevision:2,authorityEpoch:1,requestRevision:2})).data.error.code,'already_handled');
+  assert.equal((await f.run({...f.envelope('Mia','request.apply',{...body,requestId:id},{shopRevision:1,authorityEpoch:1,requestRevision:1}),shopId:f.dest})).status,404);
+  const base={shopRevision:1,authorityEpoch:1,requestRevision:1};
+  const preview=await f.http('Mia','POST','/shops/'+f.dest+'/previews',{requestId:id,base,decision:{choice:'add',
+    line:{lineId:randomUUID(),originalItem:copy.originalItem,packs:1,unitPriceMinor:4000,feeEligible:true}}});
+  assert.equal(preview.data.requiresOverageAcceptance,true);assert.equal(preview.data.after.overCapMinor,200);
+  const apply={...f.envelope('Mia','request.apply',{...body,requestId:id,previewId:preview.data.previewId},base),shopId:f.dest};
+  assert.equal((await f.run(apply)).data.error.code,'overage_acceptance_required');
+  apply.body.acceptOverage=true;assert.equal((await f.run(apply)).data.disposition,'added');
+  assert.equal((await f.run({...f.envelope('Mia','shop.reportPlaced',{occurredAt:new Date().toISOString()},{shopRevision:2,authorityEpoch:1}),shopId:f.dest})).status,200);
+  assert.deepEqual((await f.run(cmd)).data,first.data);
+  assert.deepEqual((await f.http('Mia','GET','/shops/'+f.shopId)).data,before);
+});
+
+test('deferred request rejects ungranted sources, stale reviews, concurrent destinations and transferred receipt authority',async()=>{
+  for(const side of ['source','destination']) {
+    const f=await deferredFixture(),g=await fixture(),other=await nextDraft(f),cmd=f.carry();
+    for(const member of ['Sam','Jo','Alex'])assert.equal((await f.page(f.dest,member)).status,404);
+    assert.equal((await f.page(f.dest,g.actors.Mia)).status,404);
+    assert.equal((await f.http('Mia','GET','/shops/'+f.dest+'/deferred-requests',undefined,{'X-Shop-ID':f.shopId})).status,404);
+    for(const update of [{body:{...cmd.body,sourceShopId:g.shopId}},{body:{...cmd.body,requestId:randomUUID()}}])assert.equal((await f.run({...cmd,...update})).status,404);
+    assert.equal((await f.run({...cmd,base:{...cmd.base,requestRevision:1}})).data.error.code,'stale_base');
+    assert.equal((await f.run({...cmd,body:{...cmd.body,sourceAuthorityEpoch:2}})).data.error.code,'authority_changed');
+    assert.equal((await f.run({...cmd,base:{...cmd.base,shopRevision:2}})).data.error.code,'stale_base');
+    const rival=f.carry(other),results=await Promise.all([f.run(cmd),f.run(rival)]);
+    assert.deepEqual(results.map(r=>r.status).sort(),[200,404]);
+    const winner=results[0].status===200?cmd:rival;
+    assert.equal((await f.run(winner)).status,200);
+    const selected=side==='source'?f.shopId:winner.shopId,revision=side==='source'?2:1;
+    const transfer=(member,epoch)=>f.run({...f.envelope('Mia','shop.transferAuthority',{newShopperId:f.actors[member].id},
+      {shopRevision:revision,authorityEpoch:epoch}),shopId:selected});
+    assert.equal((await transfer('Alex',1)).status,200);
+    assert.notEqual((await f.run(winner)).status,200);
+    assert.equal((await transfer('Mia',2)).status,200);
+    assert.equal((await f.run(winner)).data.error.code,'refresh_required');
+    assert.deepEqual((await f.page(other)).data.requests,[]);
+  }
+});
+
+test('deferred request can be explicitly carried again after another deferral, and consent loss blocks the full chain',async()=>{
+  const f=await deferredFixture(),first=f.carry(),firstReceipt=await f.run(first),id=firstReceipt.data.requestId;
+  const base={shopRevision:1,authorityEpoch:1,requestRevision:1};
+  const pv=await f.http('Mia','POST','/shops/'+f.dest+'/previews',{requestId:id,base,decision:{choice:'defer'}});
+  assert.equal((await f.run({...f.envelope('Mia','request.apply',{requestId:id,previewId:pv.data.previewId,acceptOverage:false,acceptUnknown:false},base),shopId:f.dest})).data.disposition,'deferred');
+  assert.equal((await f.run({...f.envelope('Mia','shop.reportPlaced',{occurredAt:new Date().toISOString()}),shopId:f.dest})).status,200);
+  const third=await nextDraft(f),candidates=(await f.page(third)).data.requests;
+  assert.deepEqual(candidates.map(r=>r.requestId),[id]);
+  const second=f.carry(third,candidates[0]);assert.equal((await f.run(second)).status,200);
+  const rows=await f.inbox(f.dest);assert.equal(rows[0].carriedForward,true);assert.equal(rows[0].fromPreviousShop,true);
+  assert.deepEqual((await f.page(third)).data.requests,[]);
+  const consent=(await admin.query('SELECT consent_id FROM ritc.consent WHERE household_id=$1 AND child_id=$2',[f.h,f.actors.Sam.id])).rows[0].consent_id;
+  assert.equal((await f.http('Mia','POST','/guardian/consents/'+consent+'/revoke',{})).status,200);
+  for(const shop of [f.shopId,f.dest,third])assert.deepEqual(await f.inbox(shop),[]);
+  for(const command of [first,second])assert.equal((await f.run(command)).data.error.code,'refresh_required');
+});
+
+test('deferred request pages contain only eligible current grants and exclude older drafts and withdrawn authors',async()=>{
+  const f=await fixture(),older=await nextDraft(f);
+  const sourceId=await nextDraft(f);
+  const request=async(actor,name)=>{
+    const sent=await f.http(actor,'POST','/commands',{...f.envelope(actor,'request.send',
+      {clientRequestId:randomUUID(),originalItem:name,ownQuantity:null,authoredAt:new Date().toISOString()}),shopId:sourceId});
+    assert.equal(sent.status,200);return sent.data.request;
+  };
+  const names=[];
+  for(let i=0;i<52;i++)names.push((await request('Alex','Eligible '+i)).requestId);
+  const missing=await request('Jo','Withheld request');
+  const consent=(await admin.query('SELECT consent_id FROM ritc.consent WHERE household_id=$1 AND child_id=$2',[f.h,f.actors.Jo.id])).rows[0].consent_id;
+  assert.equal((await f.http('Mia','POST','/guardian/consents/'+consent+'/revoke',{})).status,200);
+  const perform=cmd=>f.http('Mia','POST','/commands',{...cmd,shopId:sourceId});
+  assert.equal((await perform(f.envelope('Mia','shop.reportPlaced',{occurredAt:new Date().toISOString()}))).status,200);
+  const dest=await nextDraft(f), page=(id,after='')=>f.http('Mia','GET','/shops/'+id+'/deferred-requests'+after);
+  assert.deepEqual((await page(older)).data.requests,[]);
+  const first=(await page(dest)).data;
+  assert.deepEqual(first.requests.map(r=>r.requestId),names.sort().slice(0,50));
+  assert.equal(first.nextCursor,names[49]);
+  const second=(await page(dest,'?cursor='+first.nextCursor)).data;
+  assert.deepEqual(second.requests.map(r=>r.requestId),names.slice(50));assert.equal(second.nextCursor,null);
+  assert.equal((await page(dest,'?cursor='+missing.requestId)).status,404);
+  const candidate=first.requests[0],carry={...f.envelope('Mia','request.carry',
+    {sourceShopId:sourceId,sourceAuthorityEpoch:1,requestId:candidate.requestId},{shopRevision:1,authorityEpoch:1,requestRevision:2}),shopId:dest};
+  const transfer=(name,epoch)=>perform(f.envelope('Mia','shop.transferAuthority',{newShopperId:f.actors[name].id},{shopRevision:2,authorityEpoch:epoch}));
+  assert.equal((await transfer('Alex',1)).status,200);
+  assert.deepEqual((await page(dest)).data.requests,[]);
+  assert.equal((await f.http('Mia','POST','/commands',carry)).status,404);
+  assert.equal((await transfer('Mia',2)).status,200);
+  assert.equal((await f.http('Mia','POST','/commands',carry)).data.error.code,'authority_changed');
+  assert.equal((await page(dest)).data.requests[0].sourceAuthorityEpoch,3);
+});

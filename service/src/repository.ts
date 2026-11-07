@@ -1,3 +1,4 @@
+import { carryRequest, deferredRequests, reauthorizeCarry } from './deferred-requests.js';
 import type {BillingService} from './billing/service.js';
 import {recordCurrentDelivery,recordCurrentPantry} from './shared-recovery-basis.js';
 import {loadRecoveryPublication,recordSharedRecovery} from './shared-recovery-publication.js';
@@ -16,12 +17,13 @@ export interface AuthContext { identity:VerifiedIdentity; deviceToken?:string; t
 export interface Member { member_id:string; kind:'adult'|'child'; organizer:boolean; can_contribute:boolean; alias:string; state:string }
 export interface Context { db:Transaction; householdId:string; member:Member; deviceId:string; now:Date;viewGrantId?:string;selectedShopId?:string }
 export interface Shop { household_id:string;shop_id:string;shopper_id:string;authority_epoch:number;revision:number;phase:string;quote:QuoteBasis;frozen_revision:number|null;placed_revision:number|null;supply_revision:number;recovery_revision?:number;store_basis_revision?:number|null;store_review_required?:boolean }
-interface RequestRow { purchase_outcome?:RequestPurchaseOutcome|null;request_id:string;author_id:string;shop_id:string;original_item:string;own_quantity:string|null;revision:number;authored_at:Date;received_at:Date;route:'current'|'next';status:OwnRequest['status'];clarification:string|null;followup_to:string|null }
-const editable=(r:RequestRow)=>r.status==='pending'||r.status==='clarified';
+interface RequestRow { carried_forward?:boolean;from_previous_shop?:boolean; purchase_outcome?:RequestPurchaseOutcome|null;request_id:string;author_id:string;shop_id:string;original_item:string;own_quantity:string|null;revision:number;authored_at:Date;received_at:Date;route:'current'|'next';status:OwnRequest['status'];clarification:string|null;followup_to:string|null }
+const editable=(r:RequestRow)=>!r.carried_forward && (r.status==='pending'||r.status==='clarified');
 export function ownRequest(r:RequestRow):OwnRequest {
   return {requestId:r.request_id,shopId:r.shop_id,revision:r.revision,originalItem:r.original_item,ownQuantity:r.own_quantity,
     ...(r.status==='added' && (r.purchase_outcome==='bought' || r.purchase_outcome==='notBought')?{purchaseOutcome:r.purchase_outcome}:{}),
     authoredAt:r.authored_at.toISOString(),receivedAt:r.received_at.toISOString(),route:r.route,status:r.status,
+    ...(r.carried_forward?{carriedForward:true}:{}),...(r.from_previous_shop?{fromPreviousShop:true}:{}),
     ownActionAllowed:editable(r),clarification:r.clarification,followupTo:r.followup_to};
 }
 export class HouseholdRepository {
@@ -154,7 +156,7 @@ export class HouseholdRepository {
     return{household:{id:ctx.householdId,label:house.label as string},memberId:ctx.member.member_id,
       canSelectShop:!helperRole&&!ctx.viewGrantId&&ctx.member.kind==='adult'&&(ctx.member.can_contribute||ctx.member.organizer||isShopper||hasBudgetAccess),
       selectionRequired:!helperRole&&!ctx.viewGrantId&&!ctx.selectedShopId&&candidates.length>1,role:isShopper?'shopper':ctx.member.organizer?'organizer':helperRole?(helper.mode==='edit'?'editor':'helper'):'contributor',shopId:helperRole?helper.shop_id:shop?.shop_id??null,...(helperRole?{grantId:helper.grant_id}:{}),enrolled:true,queueConsent:false,
-      capabilities:[...(!helperRole&&!ctx.viewGrantId&&(isShopper||shop?.budget_access)?['store_quotes']:[]),...(isShopper && shop?.placed_revision!=null?['delivery_evidence','cook_copies','cook_corrections','pantry_lots','meal_recovery','request_purchase_confirmation']:[]),...(planning?['meal_proposals']:[]),...(ctx.member.can_contribute?['own_requests']:[]),...(isShopper?['shopper_inbox','request_preview','shopper_commands','accepted_fallbacks']:[]),...(ctx.member.organizer?['household_admin']:[]),...(helperRole?['helper_view',...(helper.mode==='edit'?['helper_propose']:[])]:[])]};
+      capabilities:[...(!helperRole&&!ctx.viewGrantId&&(isShopper||shop?.budget_access)?['store_quotes']:[]),...(isShopper && shop?.placed_revision!=null?['delivery_evidence','cook_copies','cook_corrections','pantry_lots','meal_recovery','request_purchase_confirmation']:[]),...(planning?['meal_proposals']:[]),...(ctx.member.can_contribute?['own_requests']:[]),...(isShopper?['shopper_inbox','request_preview','shopper_commands','accepted_fallbacks','deferred_requests']:[]),...(ctx.member.organizer?['household_admin']:[]),...(helperRole?['helper_view',...(helper.mode==='edit'?['helper_propose']:[])]:[])]};
   }
   async shops(ctx:Context,scope:'active'|'owned',after:string|null){
     if(ctx.viewGrantId||ctx.member.kind!=='adult')throw unavailable();
@@ -163,23 +165,30 @@ export class HouseholdRepository {
     const rows=(await ctx.db.query("SELECT shop_id,shopper_id,created_at,phase,revision,authority_epoch FROM ritc.shop WHERE household_id=$1 AND ($2='active' AND phase<>'closed' AND (shopper_id=$3 OR $6::boolean OR EXISTS(SELECT 1 FROM ritc.shop_budget_grant g WHERE g.household_id=ritc.shop.household_id AND g.shop_id=ritc.shop.shop_id AND g.member_id=$3 AND g.enabled AND g.authority_epoch=ritc.shop.authority_epoch)) OR $2='owned' AND shopper_id=$3) AND ($4::timestamptz IS NULL OR (created_at,shop_id)<($4,$5::uuid)) ORDER BY created_at DESC,shop_id DESC LIMIT 51",[ctx.householdId,scope,ctx.member.member_id,cursor??null,after,ctx.member.can_contribute||ctx.member.organizer])).rows;
     return{shops:rows.slice(0,50).map(s=>({shopId:s.shop_id,createdAt:s.created_at.toISOString(),phase:s.phase,role:s.shopper_id===ctx.member.member_id?'shopper':'contributor',...(s.shopper_id===ctx.member.member_id?{revision:s.revision,authorityEpoch:s.authority_epoch}:{})})),nextCursor:rows.length>50?rows[49].shop_id:null};
   }
+  private get carryNotice() {return this.options.allowChildNetwork?this.options.noticeVersion:null;}
+  async deferredRequests(ctx:Context,shopId:string,after:string|null) {
+    const shop=await this.shop(ctx,shopId);
+    this.requireShopper(ctx,shop);
+    this.requireDraft(shop);
+    return deferredRequests(ctx,shop,this.carryNotice,after);
+  }
   async requests(ctx:Context,after:string|null,shopId?:string) {
     if(shopId)this.requireShopper(ctx,await this.shop(ctx,shopId));
     let cursor:{received_at:string;request_id:string}|undefined;
     if(after) {
-      cursor=(await ctx.db.query<{received_at:string;request_id:string}>(`SELECT received_at::text AS received_at,request_id FROM ritc.request WHERE household_id=$1 AND request_id=$2 AND ${shopId?'shop_id':'author_id'}=$3 AND ($4::uuid IS NULL OR shop_id=$4)`,[ctx.householdId,after,shopId??ctx.member.member_id,ctx.selectedShopId??null])).rows[0];
+      cursor=(await ctx.db.query<{received_at:string;request_id:string}>(`SELECT received_at::text AS received_at,request_id FROM ritc.request_origin WHERE (NOT (carried_forward OR from_previous_shop) OR (author_active AND (author_kind='adult' OR live_notice=$5))) AND household_id=$1 AND request_id=$2 AND ${shopId?'shop_id':'author_id'}=$3 AND ($4::uuid IS NULL OR shop_id=$4)`,[ctx.householdId,after,shopId??ctx.member.member_id,ctx.selectedShopId??null,this.carryNotice])).rows[0];
       if(!cursor)throw unavailable();
     }
-    const params:unknown[]=[ctx.householdId,shopId??ctx.member.member_id,ctx.selectedShopId??null];
+    const params:unknown[]=[ctx.householdId,shopId??ctx.member.member_id,ctx.selectedShopId??null,this.carryNotice];
     if(cursor)params.push(cursor.received_at,cursor.request_id);
     const result=await ctx.db.query<RequestRow & {author_alias?:string;linked_line_id?:string}>(`SELECT r.*,p.outcome AS purchase_outcome
-      ${shopId?',m.alias AS author_alias,l.line_id AS linked_line_id':''}
-      FROM ritc.request r LEFT JOIN ritc.request_purchase_review p
+      ${shopId?',l.line_id AS linked_line_id':''}
+      FROM ritc.request_origin r LEFT JOIN ritc.request_purchase_review p
         ON (p.household_id,p.request_id,p.request_revision)=(r.household_id,r.request_id,r.revision)
-      ${shopId?`JOIN ritc.member m ON (m.household_id,m.member_id)=(r.household_id,r.author_id)
-        LEFT JOIN ritc.placed_request_link l ON (l.household_id,l.request_id)=(r.household_id,r.request_id)`:''}
+      ${shopId?`LEFT JOIN ritc.placed_request_link l ON (l.household_id,l.request_id)=(r.household_id,r.request_id)`:''}
       WHERE r.household_id=$1 AND r.${shopId?'shop_id':'author_id'}=$2 AND ($3::uuid IS NULL OR r.shop_id=$3)
-      ${cursor?'AND (r.received_at,r.request_id)>($4,$5)':''} ORDER BY r.received_at,r.request_id LIMIT 51`,params);
+      AND (NOT (r.carried_forward OR r.from_previous_shop) OR (r.author_active AND (r.author_kind='adult' OR r.live_notice=$4)))
+      ${cursor?'AND (r.received_at,r.request_id)>($5,$6)':''} ORDER BY r.received_at,r.request_id LIMIT 51`,params);
     const rows=result.rows.slice(0,50);
     return{requests:rows.map(r=>({...ownRequest(r),...(shopId?{authorAlias:r.author_alias}:{}),
       ...(shopId && r.linked_line_id?{linkedLineId:r.linked_line_id}:{})})),nextCursor:result.rows.length>50?rows.at(-1)!.request_id:null};
@@ -197,7 +206,7 @@ export class HouseholdRepository {
   }
   requireDraft(shop:Shop) {if(shop.phase!=='draft')throw new ServiceError(409,'checkout_locked','Review the frozen order or save this for next shop.');}
   async request(ctx:Context,id:string,shopId:string,own=false):Promise<RequestRow> {
-    const r=(await ctx.db.query<RequestRow>('SELECT * FROM ritc.request WHERE household_id=$1 AND request_id=$2 AND shop_id=$3',[ctx.householdId,id,shopId])).rows[0];
+    const r=(await ctx.db.query<RequestRow>("SELECT * FROM ritc.request_origin WHERE household_id=$1 AND request_id=$2 AND shop_id=$3 AND (NOT (carried_forward OR from_previous_shop) OR (author_active AND (author_kind='adult' OR live_notice=$4)))",[ctx.householdId,id,shopId,this.carryNotice])).rows[0];
     if(!r||(own&&r.author_id!==ctx.member.member_id))throw unavailable();return r;
   }
   async lines(ctx:Context,shopId:string):Promise<BasketLine[]> {
@@ -253,7 +262,7 @@ export class HouseholdRepository {
   async preview(ctx:Context,shopId:string,input:PreviewInput):Promise<RequestPreview> {
     const shop=await this.shop(ctx,shopId);this.requireShopper(ctx,shop);this.checkBase(shop,input.base);
     const r=await this.request(ctx,input.requestId,shopId);
-    if(!editable(r)&&!(r.status==='deferred'&&('promote'in input.decision)&&input.decision.promote))throw new ServiceError(409,'already_handled','Review the current request status.');
+    if(r.carried_forward||!editable(r)&&!(r.status==='deferred'&&('promote'in input.decision)&&input.decision.promote))throw new ServiceError(409,'already_handled','Review the current request status.');
     if(r.revision!==input.base.requestRevision)throw new ServiceError(409,'stale_base','Review the changed request.');
     if(input.decision.choice==='add'||input.decision.choice==='link') {
       this.requireDraft(shop);
@@ -283,6 +292,7 @@ export class HouseholdRepository {
       // Reauthorize the original scope before returning anything about a prior result.
       if(prior.response_scope==='shopper'){
         const shop=await this.shop(ctx,prior.shop_id);this.requireShopper(ctx,shop);
+        if(prior.kind==='request.carry')await reauthorizeCarry(ctx,shop,this.carryNotice,prior.operation_id);
         if(prior.kind==='request.confirmPurchase' && (prior.response?.authorityEpoch!==shop.authority_epoch || !(await ctx.db.query(
           'SELECT 1 FROM ritc.request_purchase_review WHERE household_id=$1 AND operation_id=$2',[ctx.householdId,prior.operation_id])).rowCount)) throw refresh();
         if(prior.kind==='mealRecovery.apply') {
@@ -367,8 +377,8 @@ export class HouseholdRepository {
       if(Date.parse(b.authoredAt)>ctx.now.getTime()+24*60*60_000)throw invalid();
       const dup=await ctx.db.query('SELECT 1 FROM ritc.request WHERE household_id=$1 AND author_id=$2 AND client_request_id=$3',[ctx.householdId,ctx.member.member_id,b.clientRequestId]);
       if(dup.rowCount)throw new ServiceError(409,'request_id_reused','Refresh your request list before submitting a new request.');
-      await ctx.db.query(`INSERT INTO ritc.request(household_id,request_id,author_id,client_request_id,shop_id,original_item,own_quantity,route,authored_at,followup_to)
-        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,[ctx.householdId,id,ctx.member.member_id,b.clientRequestId,shop.shop_id,b.originalItem,b.ownQuantity,shop.phase==='draft'?b.route:'next',b.authoredAt,b.followupTo??null]);
+      await ctx.db.query(`INSERT INTO ritc.request(household_id,request_id,author_id,client_request_id,shop_id,original_item,own_quantity,route,authored_at,followup_to,author_consent_id)
+        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,(SELECT guardian_consent_id FROM ritc.device WHERE household_id=$1 AND device_id=$11 AND member_id=$3))`,[ctx.householdId,id,ctx.member.member_id,b.clientRequestId,shop.shop_id,b.originalItem,b.ownQuantity,shop.phase==='draft'?b.route:'next',b.authoredAt,b.followupTo??null,ctx.deviceId]);
     }else {
       const b=c.kind==='request.edit'?bodySchemas['request.edit'].parse(c.body):bodySchemas['request.withdraw'].parse(c.body);id=b.requestId;
       const r=await this.request(ctx,id,shop.shop_id,true);
@@ -395,6 +405,11 @@ export class HouseholdRepository {
     if(c.kind==='delivery.reserve'||c.kind==='delivery.match'||c.kind==='delivery.register'||c.kind==='delivery.arrival'||c.kind==='delivery.usable'){
       const delivery=await recordCurrentDelivery(ctx,shop,c.kind,c.body,operationId,loadRecoveryPublication);
       return {...await this.receipt(ctx,c,operationId,'recorded'),...delivery};
+    }
+    if(c.kind==='request.carry') {
+      this.requireDraft(shop);
+      const carried=await carryRequest(ctx,shop,this.carryNotice,c,operationId);
+      return this.receipt(ctx,c,operationId,'recorded',carried);
     }
     if(c.kind==='request.clarify') {
       const b=bodySchemas['request.clarify'].parse(c.body),r=await this.request(ctx,b.requestId,shop.shop_id);
@@ -497,7 +512,7 @@ export class HouseholdRepository {
     const p=(await ctx.db.query('SELECT * FROM ritc.preview WHERE household_id=$1 AND preview_id=$2 AND actor_id=$3 AND shop_id=$4 AND request_id=$5',[ctx.householdId,b.previewId,ctx.member.member_id,shop.shop_id,r.request_id])).rows[0];
     if(!p)throw unavailable();
     const decision=decisionSchema.parse(p.decision);
-    if(!editable(r)&&!(r.status==='deferred'&&('promote'in decision)&&decision.promote))throw new ServiceError(409,'already_handled','Review the current request.');
+    if(r.carried_forward||!editable(r)&&!(r.status==='deferred'&&('promote'in decision)&&decision.promote))throw new ServiceError(409,'already_handled','Review the current request.');
     if(r.revision!==c.base.requestRevision||p.request_revision!==r.revision||p.shop_revision!==shop.revision||p.authority_epoch!==shop.authority_epoch||p.expires_at<=ctx.now)throw new ServiceError(409,'stale_preview','Review a fresh preview.');
     const lines=await this.lines(ctx,shop.shop_id);
     if(p.fingerprint!==digest({shop,r:ownRequest(r),lines,decision}))throw new ServiceError(409,'stale_preview','Review a fresh preview.');
