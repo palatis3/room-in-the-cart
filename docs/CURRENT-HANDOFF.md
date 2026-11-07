@@ -2,6 +2,16 @@
 
 Updated November 7, 2026 UTC. The owner resumed and explicitly approved the reviewed hosted staging update; the full first-version goal is active and release acceptance remains incomplete. Historical snapshots are preserved in [the handoff archive](CURRENT-HANDOFF-HISTORY-20261106.md).
 
+## Setting aside a delivery for a named meal group, November 7
+
+After matching a delivery to a meal ingredient, the assigned shopper can set aside an exact amount for a named group. If the usable amount drops, the group keeps its original promise and the coverage screen shows how much that delivery still supplies. The shopper can reduce or release the promise even when the usable count is unknown. Removing a match requires releasing its active reservations first.
+
+The combined Swift client completed all six HTTPS scenarios against PostgreSQL. The shopper reopened the sealed meal’s exclusions and preparation facts, then reviewed a four-gram promise after the available amount dropped to two grams. A subsequent unknown count still permitted a reduction and release. The unsigned arm64 iPhone Release build passed its bundle checks, and static localization validation passed for 3,896 English and Spanish entries.
+
+On iPhone 17 Pro (iOS 26.2), the English and Spanish shopper walkthroughs passed with zero runtime warnings. On iPhone SE (iOS 17.0), both walkthroughs passed their assertions, but the strict gate rejected a SwiftUI state-update warning when saving a reservation in each language. The result checker now preserves the warning text when Xcode omits its attachment. The SE warning is under investigation.
+
+All 189 PostgreSQL integration tests passed. The service unit run recorded 428 passes and one database-only skip covered by the integration suite. A backup and restore rehearsal exercised migration 033 locally. Staging was last verified at migration 030. The reservation applies to confirmed deliveries on this order. Shared pantry and freezer stock and publishing a repaired shared dinner to the cook remain open.
+
 ## Keeping recipe restrictions through shared checkout, November 7
 
 An approved household idea now carries its meal-wide exclusions and known preparation time into the separate proposal and shopper review. Mapping a locally reviewed dinner also carries the preparation steps recorded as complete. After placement, the shopper can see the sealed facts when matching a delivery or checking coverage by meal. A confirmed delivery that conflicts with a meal-wide exclusion supplies zero coverage. Existing saved meals can omit the new fields. A pending proposal that lost facts from its approved idea requires fresh review before the shopper can apply it.
