@@ -138,6 +138,13 @@ public struct SharedRecoveryIntent: Codable, Equatable, Sendable {
     public let replacement: SharedRecoveryMeal
     public let reviewedAt: String
     @RecoveryNullable public var repeatOfOccurrenceId: UUID?
+    // A ranked dish can require agreement due to a prior accepted version with a different title.
+    // Keep this witnessed requirement when opening and refreshing a preview. It is not a request field.
+    var witnessedRepeatRequired: Bool?
+    enum CodingKeys: String, CodingKey {
+        case occurrenceId, targetDigest, replacement, reviewedAt, repeatOfOccurrenceId, agreesToRepeat,
+             proposesExtraTrip, agreesToExtraTrip, acceptsUnresolved, fallback
+    }
     public let fallback: SharedFallbackSelection?
     public let agreesToRepeat, proposesExtraTrip, agreesToExtraTrip, acceptsUnresolved: Bool
     public init(occurrenceId: UUID, targetDigest: String, replacement: SharedRecoveryMeal, reviewedAt: String, repeatOfOccurrenceId: UUID?,
@@ -150,9 +157,11 @@ public struct SharedRecoveryIntent: Codable, Equatable, Sendable {
     }
 
     public func withFallbackAgreements(repeatMeal: Bool, extraTrip: Bool, unresolved: Bool) -> Self {
-        .init(occurrenceId: occurrenceId, targetDigest: targetDigest, replacement: replacement, reviewedAt: reviewedAt,
-              repeatOfOccurrenceId: repeatOfOccurrenceId, agreesToRepeat: repeatMeal, proposesExtraTrip: proposesExtraTrip,
-              agreesToExtraTrip: extraTrip, acceptsUnresolved: unresolved, fallback: fallback)
+        var next = Self(occurrenceId: occurrenceId, targetDigest: targetDigest, replacement: replacement, reviewedAt: reviewedAt,
+                        repeatOfOccurrenceId: repeatOfOccurrenceId, agreesToRepeat: repeatMeal, proposesExtraTrip: proposesExtraTrip,
+                        agreesToExtraTrip: extraTrip, acceptsUnresolved: unresolved, fallback: fallback)
+        next.witnessedRepeatRequired = witnessedRepeatRequired
+        return next
     }
 
 }

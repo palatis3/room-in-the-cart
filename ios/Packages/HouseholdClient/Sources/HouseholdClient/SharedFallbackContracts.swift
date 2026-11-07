@@ -236,7 +236,16 @@ public struct SharedFallbackOptions: Decodable, Equatable, Sendable {
         public let buys: [Buy]
         public let after: Projection
         public let repeatRequired: Bool
-        public let intent: SharedRecoveryIntent
+        private let reviewedIntent: SharedRecoveryIntent
+        public var intent: SharedRecoveryIntent {
+            var bound = reviewedIntent
+            bound.witnessedRepeatRequired = repeatRequired
+            return bound
+        }
+        private enum CodingKeys: String, CodingKey {
+            case candidateId, revision, title, kind, minutes, packCount, merchandiseMinor, extraCashMinor, currency, buys, after, repeatRequired
+            case reviewedIntent = "intent"
+        }
     }
     public let shopId: UUID
     public let base: SharedRecoveryBase

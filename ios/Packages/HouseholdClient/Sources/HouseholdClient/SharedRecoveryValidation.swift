@@ -163,7 +163,7 @@ extension SharedRecoveryPreview {
             timely = now.addingTimeInterval(Double(minutes) * 60) <= due &&
                 (meal.requiredLeadMinutes == nil || minutes >= (meal.requiredLeadMinutes ?? 0) || meal.advanceStepsCompleted)
         }
-        let repeated = intent.repeatOfOccurrenceId != nil || page.meals.contains {
+        let repeated = intent.witnessedRepeatRequired == true || intent.repeatOfOccurrenceId != nil || page.meals.contains {
             ($0.id != meal.id || intent.fallback != nil) && fallbackName($0.title) == fallbackName(meal.title)
         }
         guard foodConfirmed == complete, timingConfirmed == timely, (repeatRequired == repeated || (intent.fallback != nil && repeatRequired)),

@@ -135,6 +135,22 @@ private struct RankedFallbackRequest: Encodable {
     let targetDigest: String
     let reviews: [SharedFallbackReview]
     @RecoveryNullable var trip: SharedFallbackTrip?
+
+    /// Each independently reviewed recipe is indivisible. Several can share the bounded HTTP request.
+    func batch(from remaining: ArraySlice<SharedFallbackReview>) throws -> Self {
+        var used = try encoded(self).count
+        var batch = [SharedFallbackReview]()
+        for review in remaining {
+            let size = try encoded(review).count + (batch.isEmpty ? 0 : 1)
+            if used + size > 1_800_000 {
+                guard !batch.isEmpty else { throw ClientError.configuration }
+                break
+            }
+            used += size
+            batch.append(review)
+        }
+        return .init(base: base, occurrenceId: occurrenceId, targetDigest: targetDigest, reviews: batch, trip: trip)
+    }
 }
 
 extension HouseholdService {
@@ -177,17 +193,18 @@ extension HouseholdService {
         let digest = try target.targetDigest()
         let until = try await authorizeAssistance(shopID: id)
         let coverage = try await effectiveCoverage(reviewed: page)
+        let request = RankedFallbackRequest(base: page.base, occurrenceId: occurrenceID, targetDigest: digest, reviews: [], trip: trip)
         var remaining = reviews[...]
         var combined: SharedFallbackOptions?
         repeat {
             guard start == generation, library.actor == (try guardianContext()) else { throw ClientError.cancelled }
-            let body = RankedFallbackRequest(base: page.base, occurrenceId: occurrenceID, targetDigest: digest, reviews: Array(remaining), trip: trip)
+            let body = try request.batch(from: remaining)
             let result: SharedFallbackOptions = try await perform("shops/\(id)/meal-recovery/options", method: "POST", body: encoded(body))
             guard result.registryRevision == library.registryRevision else {
                 throw ClientError.service(status: 409, code: "stale_fallback", correlationID: nil, retryAfter: nil)
             }
-            if let offset = result.nextReviewIndex, offset <= 0 || offset >= remaining.count { throw ClientError.invalidResponse }
-            let count = result.nextReviewIndex ?? remaining.count
+            if let offset = result.nextReviewIndex, offset <= 0 || offset >= body.reviews.count { throw ClientError.invalidResponse }
+            let count = result.nextReviewIndex ?? body.reviews.count
             try result.validate(page: page, library: library, occurrence: occurrenceID, reviews: Array(remaining.prefix(count)), trip: trip)
             for option in result.options {
                 try option.validateRetainedCoverage(coverage)

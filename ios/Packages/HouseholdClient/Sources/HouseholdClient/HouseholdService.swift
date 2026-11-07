@@ -562,9 +562,10 @@ public actor HouseholdService {
             if envelope.kind == "mealRecovery.apply" || (envelope.kind == "cookCopy.save" && envelope.body["recoveryRevision"] != nil) {
                 guard live.capabilities.contains("meal_recovery") else { throw ClientError.accessEnded }
             }
-            if envelope.kind == "mealRecovery.apply", case .object(let intent) = envelope.body["intent"], intent["fallback"] != nil {
-                try await authorizeAssistance(shopID: envelope.shopId)
-            }
+            // The command transaction distinguishes a saved receipt from a new assisted write.
+            // A former seat holder may reconcile the first while the server requires a live seat for the second.
+            if envelope.kind == "mealRecovery.apply", case .object(let intent) = envelope.body["intent"], intent["fallback"] != nil,
+               !live.capabilities.contains("accepted_fallbacks") { throw ClientError.accessEnded }
             if envelope.kind == "cookCopy.save", envelope.body["pantryRevision"] != nil,
                !live.capabilities.contains("pantry_lots") { throw ClientError.accessEnded }
         }

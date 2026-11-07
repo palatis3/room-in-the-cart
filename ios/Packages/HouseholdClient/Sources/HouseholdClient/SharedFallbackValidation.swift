@@ -91,7 +91,7 @@ extension SharedFallbackReview {
 extension SharedFallbackOptions {
     func validate(page: SharedRecoveryPage, library: SharedFallbackLibrary, occurrence: UUID, reviews: [SharedFallbackReview], trip: SharedFallbackTrip?) throws {
         guard shopId == page.shopId, base == page.base, target.id == occurrence, let original = page.meals.first(where: { $0.id == occurrence }),
-              try target.targetDigest() == original.targetDigest(), let now = householdTimestamp(asOf),
+              try target.targetDigest() == original.targetDigest(), let now = householdTimestamp(asOf), let deskTime = householdTimestamp(page.asOf), now >= deskTime,
               unique(options.map(\.id)), options.count <= reviews.count else { throw ClientError.invalidResponse }
         let returned = options.map(\.id) + conditional.map(\.id)
         guard unique(returned), Set(returned) == Set(reviews.map(\.candidateId)) else { throw ClientError.invalidResponse }
@@ -160,9 +160,12 @@ private func conflicts(_ need: SharedRecoveryNeed, with name: String, tags: [Str
 private extension SharedFallbackOptions.Option {
     func validateRecipe(_ recipe: SharedFallbackRecipe, review: SharedFallbackReview, target: SharedRecoveryMeal, page: SharedRecoveryPage) throws {
         let next = intent.replacement
+        let protected = target.needs.filter { $0.priority == "protected" }
+        let added = recipe.exclusions.filter { e in protected.allSatisfy { $0.exclusions.contains(e) } }
+        let mealExclusions = (target.exclusions + added).reduce(into: [String]()) { if !$0.contains($1) { $0.append($1) } }
         guard next.title == recipe.title, next.notes == recipe.notes, next.sourceURL == recipe.sourceURL,
               next.remainingElapsedMinutes == (review.remainingElapsedMinutes ?? recipe.elapsedMinutes), next.requiredLeadMinutes == recipe.requiredLeadMinutes,
-              next.advanceStepsCompleted == review.advanceStepsCompleted, next.exclusions == target.exclusions,
+              next.advanceStepsCompleted == review.advanceStepsCompleted, next.exclusions == mealExclusions,
               review.advanceStepsCompleted || (next.remainingElapsedMinutes ?? 0) >= (recipe.elapsedMinutes ?? 0),
               repeatRequired || !page.meals.contains(where: { fallbackName($0.title) == fallbackName(next.title) })
         else { throw ClientError.invalidResponse }
@@ -184,7 +187,8 @@ private extension SharedFallbackOptions.Option {
             guard let input = ingredient.quantity, let row = review.ingredients.first(where: { $0.ingredientId == ingredient.id }) else {
                 throw ClientError.invalidResponse
             }
-            let parts: [UUID?] = mapping.isEmpty ? Array(scopes) : (ingredient.groupIds?.isEmpty == false ? ingredient.groupIds!.map(Optional.some) : [nil])
+            let groups = ingredient.groupIds ?? []
+            let parts: [UUID?] = mapping.isEmpty ? Array(scopes) : (groups.isEmpty ? [nil] : groups.map(Optional.some))
             guard parts.count <= 1 || mapping.isEmpty || ingredient.bindings?.count == parts.count else { throw ClientError.invalidResponse }
             for part in parts {
                 let group = part.flatMap { id in mapping.isEmpty ? target.groups.first(where: { $0.id == id }) : mapping[id] }
@@ -203,7 +207,7 @@ private extension SharedFallbackOptions.Option {
                     let literal = amount.denominator == 1 ? String(amount.numerator) : "\(amount.numerator)/\(amount.denominator)"
                     let unchanged = expected.compare(fraction(basis.amount)) == .orderedSame
                     guard quantity.originalLiteral == (unchanged ? basis.originalLiteral : literal + " " + basis.unit) else { return false }
-                    return group?.protected == true ? need.priority == "protected" :
+                    return group?.protected == true ? need.priority == "protected" && need.sources == Set(row.sourceIds) :
                         need.priority == "required" && need.ingredientId == ingredient.id && need.matchedSourceIds == row.sourceIds && need.foodId == nil
                 }
                 guard let need = matches.first else { throw ClientError.invalidResponse }
