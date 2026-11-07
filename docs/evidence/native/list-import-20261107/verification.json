@@ -1,0 +1,70 @@
+{
+  "productCommit": "929fe4e9d725602dcd07c9b8b11ef1991d03aa3d",
+  "requirement": "Foundation 2.1 S02 and Master D02",
+  "before": "Both new shopping-ledger parse cases and the new structured-capture app test failed against the original parsers. The iPhone capture test interpreted 1 1/2 cups of arroz as count 1.",
+  "verification": {
+    "model": {
+      "device": "iPhone SE (3rd generation)",
+      "iOS": "17.0",
+      "build": "21A328",
+      "passed": 39,
+      "failed": 0,
+      "skipped": 0,
+      "strictRuntimeWarnings": 0,
+      "summarySHA256": "0a87914570934a2cc510e27490da576fa8ebaeab32b0a2573c5baf0ec31cad72"
+    },
+    "ui": {
+      "device": "iPhone SE (3rd generation)",
+      "iOS": "17.0",
+      "build": "21A328",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "strictRuntimeWarnings": 0,
+      "summarySHA256": "f1a594fb3afd982e1a879848d8f0dbaa55f73b811718496b7324bc5b3b8abc42"
+    }
+  },
+  "packageGate": [
+    "CoreDomain: 190 passed, 0 deliberately skipped",
+    "DeviceSurfaces: 29 passed, 0 deliberately skipped",
+    "HouseholdClient: 101 passed, 3 deliberately skipped",
+    "LocalStore: 74 passed, 0 deliberately skipped",
+    "RecordArchive: 33 passed, 0 deliberately skipped"
+  ],
+  "installedDatabase": {
+    "databaseIntegrity": "ok",
+    "headRevision": 3,
+    "headSHA256": "373281b5becebe0a28b49e93a6f00f9db2dc23e3a7e20f8f40075498e69bbc41",
+    "lines": 1,
+    "activeContributions": 2,
+    "importReceipts": 2,
+    "duplicateAllocations": 1,
+    "effectiveQuantity": "3/2 US cups",
+    "originalWording": [
+      "1 1/2 cups of arroz",
+      "1 1/2 tazas de arroz"
+    ]
+  },
+  "uiHarness": "The first end-to-end run reached the restored list and waited for a root-only shortcut. The corrected test inspects the restored list or enters through Shop if needed, then reads both source texts.",
+  "duplicatePickerVerification": {
+    "source": "cea57142f327d0a7562135d8c299964b3b272443",
+    "runs": {
+      "second": {
+        "pass": 1,
+        "fail": 0,
+        "skip": 0,
+        "runtimeWarnings": 0,
+        "restarts": 0,
+        "animationWaits": 0
+      },
+      "controls": {
+        "pass": 18,
+        "fail": 0,
+        "skip": 0,
+        "runtimeWarnings": 0,
+        "restarts": 0,
+        "animationWaits": 0
+      }
+    }
+  }
+}

@@ -2,6 +2,10 @@
 
 Updated November 7, 2026 UTC. The owner resumed and explicitly approved the reviewed hosted staging update; the full first-version goal is active and release acceptance remains incomplete. Historical snapshots are preserved in [the handoff archive](CURRENT-HANDOFF-HISTORY-20261106.md).
 
+## November 7 bilingual list import
+
+An English or Spanish measure now keeps its exact quantity in list entry and structured capture. On an iPhone SE running iOS 17, the shopper entered “1 1/2 cups of arroz”, merged “1 1/2 tazas de arroz”, and reopened the same item after restarting the app. The list showed 3/2 US cups. SQLite held one line, both original contributions and the duplicate link. The native capture regression also covers a two-pack Spanish fluid-ounce entry and unresolved spoon measures. The five new CoreDomain regressions are in the compiled package gate. [Verification record](evidence/native/list-import-20261107/verification.json)
+
 ## November 7 first pickup and hosted CI
 
 Start pickup opens an editable local draft in one tap. A shopper can paste immediately or rename the pickup in its picker. A fresh iOS 17 Release install exposed an empty-route race. The app now navigates after committing the pickup ID. The Release run saved all 500 pasted lines and the 20 checked rows. An iOS 26.2 shopper also kept the same typed item across process restart. [Release and recovery evidence](evidence/native/first-pickup-change-20261107/first-pickup-release.json)
