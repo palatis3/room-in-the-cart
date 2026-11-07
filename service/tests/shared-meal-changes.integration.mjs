@@ -118,7 +118,20 @@ test('named planning seat lapse blocks proposal reads and retries; Free shopper 
 test('account erasure removes accepted proposal copies and exact retry evidence without restoring old meal labels',async()=>{
  const f=await mealFixture();ok(await call(f.planner,f.changePath,'POST',f.proposal));
  ok(await call(f.owner,f.base+'/commands','POST',f.patch(2,{occurrenceId:f.proposal.occurrenceId,baseMealRevision:2,meal:f.changed,changeProposalId:f.proposal.proposalId})));
+ const send=(kind,body,revision)=>({v:1,kind,shopId:f.shopId,replayWindow:f.owner.window,clientKey:randomUUID(),
+  body,base:{shopRevision:revision,authorityEpoch:1}});
+ const save=cmd=>call(f.owner,f.base+'/commands','POST',cmd);
+ const evidence=async()=>ok(await call(f.owner,f.path+'/delivery-evidence'));
+ ok(await save(send('shop.reportPlaced',{occurredAt:new Date().toISOString()},3)));
+ const sourceId=ok(await save(send('delivery.register',{supplyRevision:0,placedRevision:3,lineId:f.initial.lines[0].lineId,
+  segmentKey:randomUUID(),foodName:'Beans',exclusionTags:[]},4))).sourceId;
+ const matched=send('delivery.match',{sourceId,supplyRevision:1,occurrenceId:f.proposal.occurrenceId,
+  mealRevision:3,ingredientId:f.changed.planning.ingredients[0].id,matched:true},4);
+ ok(await save(matched));assert.equal((await evidence()).sources[0].matches.length,1);
  await admin.query('SELECT ritc.privacy_erase_extension($1,$2)',[f.h,f.planner.id]);
+ const after=await evidence();
+ assert.deepEqual(after.meals,[]);assert.deepEqual(after.sources[0].matches,[]);assert.equal(after.supplyRevision,3);
+ assert.equal(after.sources[0].sourceId,sourceId);assert.equal((await save(matched)).status,409);
  assert.equal((await admin.query('SELECT count(*)::int n FROM ritc.shared_meal_change WHERE household_id=$1',[f.h])).rows[0].n,0);
  assert.equal((await admin.query('SELECT count(*)::int n FROM ritc.shared_meal_revision WHERE household_id=$1',[f.h])).rows[0].n,0);
  assert.deepEqual(ok(await call(f.owner,f.path)).meals,[]);
@@ -238,4 +251,52 @@ test('placed delivery corrections, split arrivals, replay and shopper changes pr
   assert.deepEqual(ok(await call(adult,evidence)).sources.map(s=>s.sourceId),[ownReceipt.sourceId]);
   assert.equal(ok(await call(adult,evidence)).supplyRevision,13);
   assert.equal((await admin.query('SELECT * FROM ritc.delivery_observation WHERE household_id=$1',[f.h])).rowCount,0);
+});
+
+test('delivery ingredient matches use the sealed occurrence, explicit shopper review and supply revision',async()=>{
+ const f=await mealFixture(), endpoint=f.path+'/delivery-evidence';
+ const command=(kind,body,shopRevision=4)=>({kind,v:1,replayWindow:f.owner.window,clientKey:randomUUID(),
+   shopId:f.shopId,base:{shopRevision,authorityEpoch:1},body});
+ const send=input=>call(f.owner,f.base+'/commands','POST',input);
+ const secondOccurrence=randomUUID();
+ ok(await send(f.patch(2,{occurrenceId:secondOccurrence,baseMealRevision:null,meal:{...f.meal,title:'Another lunch'}})));
+ ok(await send(command('shop.reportPlaced',{occurredAt:new Date().toISOString()},3)));
+ const read=async()=>ok(await call(f.owner,endpoint));
+ const initial=await read();
+ assert.equal(initial.meals.length,2);
+ assert.deepEqual(initial.meals.find(m=>m.occurrenceId===f.proposal.occurrenceId),{occurrenceId:f.proposal.occurrenceId,revision:2,meal:f.meal});
+ const sourceId=ok(await send(command('delivery.register',{supplyRevision:0,placedRevision:3,lineId:initial.lines[0].lineId,
+   segmentKey:randomUUID(),foodName:'Beans',exclusionTags:[]}))).sourceId;
+ const target={occurrenceId:f.proposal.occurrenceId,mealRevision:2,ingredientId:f.meal.planning.ingredients[0].id};
+ const body={sourceId,supplyRevision:1,...target,matched:true};
+ assert.deepEqual((await read()).sources[0].matches,[]);
+ for(const bad of [{mealRevision:1},{occurrenceId:randomUUID()},{ingredientId:randomUUID()},{sourceId:randomUUID()}]){
+   assert.equal((await send(command('delivery.match',{...body,...bad}))).status,404);
+ }
+ const save=command('delivery.match',body);
+ const plannerResult=await call(f.planner,f.base+'/commands','POST',{...save,replayWindow:f.planner.window});
+ assert.equal(plannerResult.status,404);
+ const race=await Promise.all([send(save),send(command('delivery.match',body))]);
+ assert.deepEqual(race.map(r=>r.status).sort(),[200,409]);
+ const matched=await read();
+ assert.deepEqual(matched.sources[0].matches,[target]);
+ assert.equal(matched.sources[0].confirmed,null);assert.equal(matched.supplyRevision,2);
+ assert.equal((await send(command('delivery.match',{...body,supplyRevision:2}))).status,409);
+ const remove=command('delivery.match',{...body,matched:false,supplyRevision:2});
+ const receipt=ok(await send(remove));assert.deepEqual(ok(await send(remove)),receipt);
+ assert.deepEqual((await read()).sources[0].matches,[]);
+ const restore=command('delivery.match',{...body,supplyRevision:3});
+ ok(await send(restore));
+ const secondTarget={...target,occurrenceId:secondOccurrence,mealRevision:3};
+ ok(await send(command('delivery.match',{sourceId,...secondTarget,supplyRevision:4,matched:true})));
+ const both=await read();
+ assert.deepEqual(both.meals,initial.meals);
+ assert.deepEqual(both.sources[0].matches.sort((a,b)=>a.occurrenceId.localeCompare(b.occurrenceId)),
+   [target,secondTarget].sort((a,b)=>a.occurrenceId.localeCompare(b.occurrenceId)));
+ ok(await send(command('delivery.match',{...body,supplyRevision:5,matched:false})));
+ assert.deepEqual((await read()).sources[0].matches,[secondTarget]);
+ await admin.query('SELECT ritc.privacy_erase_extension($1,$2)',[f.h,f.owner.id]);
+ assert.deepEqual((await read()).meals,[]);
+ assert.deepEqual((await read()).sources,[]);
+ assert.equal((await send(restore)).status,409);
 });

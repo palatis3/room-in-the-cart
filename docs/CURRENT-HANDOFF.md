@@ -2,13 +2,19 @@
 
 Updated November 7, 2026 UTC. The owner resumed and explicitly approved the reviewed hosted staging update; the full first-version goal is active and release acceptance remains incomplete. Historical snapshots are preserved in [the handoff archive](CURRENT-HANDOFF-HISTORY-20261106.md).
 
+## Matching a shared delivery to meal ingredients, November 7
+
+From **What came home**, an assigned shopper can match or unmatch a delivery segment to an ingredient from the meal revision reviewed at checkout. The review shows the date, confirmed usable amount, ingredient quantity, exclusions and named group requirements. A match can span multiple meals. The food keeps one physical count. Calculating coverage across those matches and publishing a repaired shared dinner to the cook are still open.
+
+The English iPhone 17 Pro walkthrough saved a match, reopened it, removed it and verified the removal. The Spanish delivery regression passed in the same run. Strict XCTest validation found no skips or runtime warnings. The real native Swift client repeated both writes over local HTTPS and PostgreSQL. All 178 PostgreSQL integration tests passed, including concurrent review, removal, separate meal occurrences using the same ingredient ID, privacy erasure and stale-receipt rejection. The complete upgrade and backup restore rehearsal passed through local migration 032. The unsigned Release iPhone build passed its bundle check. Neither delivery migration has been applied to staging. The last verified staging migration is 030.
+
 ## Recording shared deliveries on iPhone, November 7
 
 The assigned shopper can open “What came home” after placing an order, pick a sealed order line and record what actually arrived. Received and usable quantities are separate. The shopper can correct a count and reopen it later. Shared recovery still needs to match this recorded food to dinner requirements, reserve protected portions and publish the reviewed outcome to the household.
 
 Both English and Spanish walkthroughs passed on iPhone 17 Pro with iOS 26.2. The Spanish case covered decimal-comma input, a fractional usable quantity, zero and an unknown quantity. The English case also passed on iPhone SE with iOS 17.0 after moving Save above the keyboard. Both tests are present in the compiled contributor-balanced-03 CI selection. Nine existing shared shop tests passed. The Swift client also replayed synthetic shopper operations over HTTPS against disposable PostgreSQL, including a correction from six usable to seven. All 177 database integration tests passed. Account erasure tests now wait for the relevant request’s receipt when multiple requests are queued.
 
-The unsigned arm64 Release build passed its device-bundle check. The distribution metadata check still requires the production subscription product ID and the privacy, terms and support URLs. The native editor and migration 031 were verified locally. Staging is at migration 029.
+The unsigned arm64 Release build passed its device-bundle check. The distribution metadata check still requires the production subscription product ID and the privacy, terms and support URLs. The native editor and migration 031 were verified locally. The [recorded staging verification](evidence/b11/staging-measurement-hardening-20261106/verification.json) confirms migration 030.
 
 ## Shared delivery evidence, November 7
 

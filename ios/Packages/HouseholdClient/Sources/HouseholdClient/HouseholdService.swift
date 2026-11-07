@@ -390,12 +390,25 @@ public actor HouseholdService {
                       page.authorityEpoch == record?.authorityEpoch, page.placedRevision == record?.placedRevision else {
                     throw ClientError.service(status: 409, code: "stale_supply", correlationID: nil, retryAfter: nil)
                 }
-                guard page.lines.isEmpty else { throw ClientError.invalidResponse }
+                guard page.lines.isEmpty, page.meals?.isEmpty != false else { throw ClientError.invalidResponse }
                 record?.sources.append(contentsOf: page.sources)
                 record?.nextCursor = page.nextCursor
             } else { record = page }
         } while record?.nextCursor != nil
         guard let record else { throw ClientError.invalidResponse }
+        let meals = record.meals ?? []
+        guard Set(meals.map(\.id)).count == meals.count else { throw ClientError.invalidResponse }
+        var targets = Set<SharedDeliveryPage.IngredientMatch>()
+        for occurrence in meals {
+            guard (1...record.placedRevision).contains(occurrence.revision) else { throw ClientError.invalidResponse }
+            for ingredient in occurrence.meal.planning?.ingredients ?? [] {
+                guard targets.insert(.init(occurrence: occurrence, ingredient: ingredient)).inserted else { throw ClientError.invalidResponse }
+            }
+        }
+        for source in record.sources {
+            let matches = source.matches ?? []
+            guard Set(matches).count == matches.count, targets.isSuperset(of: matches) else { throw ClientError.invalidResponse }
+        }
         return record
     }
     public func shopperFinancialEvidence(shopID: String) async throws -> [ShopperFinancialEntry] {
@@ -456,7 +469,7 @@ public actor HouseholdService {
         let envelope = try JSONDecoder().decode(CommandEnvelope.self, from: operation.bytes)
         guard envelope.clientKey == operation.clientKey, UUID(uuidString: envelope.shopId) != nil,
               ["shop.create", "shop.patch", "shop.freeze", "shop.reopen", "shop.transferAuthority",
-               "delivery.register", "delivery.arrival", "delivery.usable"].contains(envelope.kind) else { throw ClientError.configuration }
+               "delivery.register", "delivery.arrival", "delivery.usable", "delivery.match"].contains(envelope.kind) else { throw ClientError.configuration }
         if envelope.kind == "shop.create" {
             guard envelope.base.shopRevision == 0, envelope.base.authorityEpoch == 0 else { throw ClientError.configuration }
             try await authorizeAdmin()

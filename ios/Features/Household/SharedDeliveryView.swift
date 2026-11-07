@@ -34,6 +34,7 @@ struct SharedDeliveryView: View {
     let shopID: String
     @State private var form: DeliveryForm?
     @State private var choosingLine = false
+    @State private var matchingSource: SharedDeliveryPage.Source?
 
     var body: some View {
         Form {
@@ -63,6 +64,9 @@ struct SharedDeliveryView: View {
                                     Button(ht("Record usable quantity")) { form = .usable(source) }
                                 }
                             }
+                            if source.matches != nil, page.meals?.contains(where: { $0.meal.planning?.ingredients.isEmpty == false }) == true {
+                                Button(ht("Meal ingredient matches")) { matchingSource = source }
+                            }
                         } header: { Text(source.foodName) }
                     }
                 }
@@ -79,6 +83,11 @@ struct SharedDeliveryView: View {
                 SharedDeliveryRegistration(model: model, page: page)
             }
         }
+        .sheet(item: $matchingSource) { source in
+            if model.canReadDelivery, model.scope.shopId == shopID, let page = model.deliveryRecord {
+                DeliveryMealMatches(model: model, source: source, page: page)
+            }
+        }
         .sheet(item: $form) { action in
             if model.canReadDelivery, model.scope.shopId == shopID, let page = model.deliveryRecord {
                 SharedDeliveryEditor(model: model, action: action, page: page)
@@ -89,6 +98,85 @@ struct SharedDeliveryView: View {
     private func refresh() async {
         await model.load()
         await model.loadDelivery()
+    }
+}
+
+private struct DeliveryMealMatches: View {
+    @ObservedObject var model: HouseholdShopModel
+    let source: SharedDeliveryPage.Source
+    @State private var reviewed: SharedDeliveryPage
+    @Environment(\.dismiss) private var dismiss
+    @State private var error: String?
+
+    init(model: HouseholdShopModel, source: SharedDeliveryPage.Source, page: SharedDeliveryPage) {
+        self.model = model
+        self.source = source
+        _reviewed = State(initialValue: page)
+    }
+
+    var body: some View {
+        NavigationStack {
+            List {
+                ForEach(reviewed.meals ?? []) { occurrence in
+                    if let plan = occurrence.meal.planning, !plan.ingredients.isEmpty {
+                        Section {
+                            ForEach(plan.ingredients) { ingredient in
+                                let target = SharedDeliveryPage.IngredientMatch(occurrence: occurrence, ingredient: ingredient)
+                                let matched = source.matches?.contains(target) == true
+                                NavigationLink {
+                                    Form {
+                                        LabeledContent(ht("Food that came home"), value: source.foodName)
+                                        LabeledContent(ht("Confirmed usable quantity"), value: deliveryQuantityText(source.confirmed?.quantity))
+                                        if !source.exclusionTags.isEmpty {
+                                            LabeledContent(ht("Delivery exclusions"), value: source.exclusionTags.joined(separator: ", "))
+                                        }
+                                        Section(occurrence.meal.title) {
+                                            Text(verbatim: occurrence.meal.day)
+                                            LabeledContent(ht("Ingredient quantity"), value: deliveryQuantityText(ingredient.quantity))
+                                            if !ingredient.exclusions.isEmpty {
+                                                LabeledContent(ht("Ingredient exclusions"), value: ingredient.exclusions.joined(separator: ", "))
+                                            }
+                                            ForEach(plan.groups.filter { ingredient.groupIds.contains($0.id) }) { group in
+                                                if group.protected || occurrence.meal.protected {
+                                                    Label(group.name, systemImage: "lock").accessibilityLabel(group.name + ", " + ht("Protected portions"))
+                                                } else { Text(group.name) }
+                                                let binding = plan.bindings?.first { $0.ingredientId == ingredient.id && $0.groupId == group.id }
+                                                let quantity = binding?.quantity ?? (ingredient.groupIds.count == 1 ? ingredient.quantity : nil)
+                                                LabeledContent(ht("Reserved for group"), value: deliveryQuantityText(quantity))
+                                            }
+                                        }
+                                        if model.shop?.phase == "placed", model.pending == nil {
+                                            Section {
+                                                Button(matched ? ht("Remove ingredient match") : ht("Match this ingredient")) {
+                                                    Task { await save(target, matched: !matched) }
+                                                }
+                                                .disabled(model.busy)
+                                            } footer: { Text(ht("Matching identifies the food. Portions are reserved separately.")) }
+                                        }
+                                        if let error { Text(error) }
+                                    }
+                                    .navigationTitle(ingredient.name)
+                                } label: {
+                                    if matched { Label(ingredient.name, systemImage: "checkmark.circle").accessibilityValue(ht("Matched")) }
+                                    else { Text(ingredient.name) }
+                                }
+                            }
+                        } header: { Text(occurrence.meal.title + " · " + occurrence.meal.day) }
+                    }
+                }
+            }
+            .navigationTitle(ht("Meal ingredient matches"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ht("Cancel")) { dismiss() } } }
+        }
+        .interactiveDismissDisabled(model.busy)
+    }
+
+    private func save(_ target: SharedDeliveryPage.IngredientMatch, matched: Bool) async {
+        if await model.saveDelivery(.match(source: source.id, ingredient: target, matched: matched), reviewed: reviewed) {
+            dismiss()
+            if model.pending == nil { await model.loadDelivery() }
+        } else { error = model.notice ?? ht("Refresh deliveries and review the current record.") }
     }
 }
 

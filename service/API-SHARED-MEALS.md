@@ -35,12 +35,16 @@ Focused evidence lives in `/tmp/ritc-shared-meal`: host model/store tests, isola
 
 The assigned adult shopper can open `GET /v1/households/{householdId}/shops/{shopId}/delivery-evidence`. A closed order keeps its evidence readable. The bootstrap advertises `delivery_evidence` for an assigned shopper with a placed snapshot. The first page includes selectable lines from that snapshot, excluding erased line descriptions. Each page returns the placed snapshot revision, current shop revision, authority epoch, supply revision, server time, up to 50 delivery sources and an optional UUID cursor. When combining pages, restart the read if the authority epoch or supply revision changes.
 
-Use the regular household command endpoint, device-bound replay window, client key and shop base for these three actions. Save the exact original command for a retry. Each successful action increments the supply revision by one. The shop revision and sealed order stay intact.
+Use the regular household command endpoint, device-bound replay window, client key and shop base for delivery actions. Save the exact original command for a retry. Each successful action increments the supply revision by one. The shop revision and sealed order stay intact.
 
 | Command | Reviewed body fields |
 | --- | --- |
 | `delivery.register` | Supply revision, placed revision, sealed line ID, stable segment key, actual food name and exclusion tags. The receipt returns the server-assigned source ID. A separately confirmed delivery of the same line has its own segment key. |
+| `delivery.match` | Source ID, supply revision, sealed occurrence ID and meal revision, ingredient ID and the explicit matched/removed decision. A fresh command must change the existing match. |
 | `delivery.arrival` | Supply revision, source ID, new observation ID, previous arrival ID (null for first), arrival time and received quantity. Time and quantity can each be unknown. |
 | `delivery.usable` | Supply revision, source ID, new observation ID, previous usable ID (null for first), current arrival observation ID, confirmation time and usable quantity. Null records unknown. Zero records a confirmed zero. |
 
 Quantities use the shared meal amount, unit and original literal. A positive or zero usable observation requires a known physical arrival and a compatible received quantity. The server rejects confirmation before arrival, future confirmation, excess quantity, concurrent stale edits and a receipt from a previous shopper authority epoch. Every source read includes the latest arrival and usable review. Use the `confirmed` field for available food. A corrected arrival needs a fresh usable review. Registration and correction do not allocate portions to a dinner or lunch.
+
+
+The first delivery page includes the meal revisions referenced by the placed snapshot. Each source lists its current reviewed ingredient matches. A physical segment may match ingredients in multiple meals and an ingredient may have multiple sources. Each review binds one pair. The stored decision identifies food only. Quantity coverage requires a separate allocation that accounts for every protected portion and uses each physical quantity only once. Matching and removing a match leave quantities and prices intact. Erasing a source or a meal revision also removes its matches and prevents replay of its old match receipts.

@@ -26,6 +26,17 @@ public struct SharedDeliveryPage: Decodable, Equatable, Sendable {
         public let arrivalId: UUID
         public let usableId: UUID
     }
+    public struct IngredientMatch: Codable, Hashable, Sendable {
+        public let occurrenceId: UUID
+        public let mealRevision: Int
+        public let ingredientId: UUID
+
+        public init(occurrence: SharedMealOccurrence, ingredient: SharedMealPlanning.Ingredient) {
+            occurrenceId = occurrence.id
+            mealRevision = occurrence.revision
+            ingredientId = ingredient.id
+        }
+    }
     public struct Source: Decodable, Equatable, Identifiable, Sendable {
         public let sourceId: UUID
         public let foodId: UUID
@@ -33,6 +44,7 @@ public struct SharedDeliveryPage: Decodable, Equatable, Sendable {
         public let segmentKey: UUID
         public let foodName: String
         public let exclusionTags: [String]
+        public let matches: [IngredientMatch]?
         public let arrival: Arrival?
         public let usable: Usable?
         public let confirmed: Lot?
@@ -52,6 +64,7 @@ public struct SharedDeliveryPage: Decodable, Equatable, Sendable {
     public let shopRevision: Int
     public let authorityEpoch: Int
     public let supplyRevision: Int
+    public let meals: [SharedMealOccurrence]?
     public let lines: [Line]
     public internal(set) var sources: [Source]
     public internal(set) var nextCursor: UUID?
@@ -59,12 +72,13 @@ public struct SharedDeliveryPage: Decodable, Equatable, Sendable {
 
 /// Every edit retains the reviewed observation head. Null is distinct from a confirmed zero.
 public enum SharedDeliveryEdit: Equatable, Sendable {
+    case match(source: UUID, ingredient: SharedDeliveryPage.IngredientMatch, matched: Bool)
     case register(lineID: UUID, segment: UUID, name: String, exclusions: [String])
     case arrival(source: UUID, previous: UUID?, observation: UUID, date: Date?, received: SharedMealQuantity?)
     case usable(source: UUID, previous: UUID?, arrival: UUID, observation: UUID, date: Date, quantity: SharedMealQuantity?)
 
     public var kind: String {
-        switch self { case .register: return "delivery.register"; case .arrival: return "delivery.arrival"; case .usable: return "delivery.usable" }
+        switch self { case .match: return "delivery.match"; case .register: return "delivery.register"; case .arrival: return "delivery.arrival"; case .usable: return "delivery.usable" }
     }
     public func body(reviewed page: SharedDeliveryPage) throws -> [String: JSONValue] {
         func id(_ value: UUID?) -> JSONValue { value.map { .string($0.uuidString.lowercased()) } ?? .null }
@@ -78,6 +92,16 @@ public enum SharedDeliveryEdit: Equatable, Sendable {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         switch self {
+        case let .match(source, target, matched):
+            guard let matches = page.sources.first(where: { $0.id == source })?.matches,
+                  matches.contains(target) != matched, let occurrence = page.meals?.first(where: { $0.id == target.occurrenceId }),
+                  occurrence.revision == target.mealRevision,
+                  occurrence.meal.planning?.ingredients.contains(where: { $0.id == target.ingredientId }) == true else {
+                throw ClientError.configuration
+            }
+            body["sourceId"] = id(source); body["occurrenceId"] = id(target.occurrenceId)
+            body["mealRevision"] = .integer(target.mealRevision); body["ingredientId"] = id(target.ingredientId)
+            body["matched"] = .bool(matched)
         case let .register(line, segment, name, exclusions):
             guard page.lines.contains(where: { $0.id == line }), !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
                   name.count <= 240, exclusions.count <= 20, exclusions.allSatisfy({ !$0.isEmpty && $0.count <= 240 }) else { throw ClientError.configuration }

@@ -86,10 +86,10 @@ final class SharedMealNativeWireTests: XCTestCase {
         let empty = try await service.deliveryEvidence(shopID: shopID)
         XCTAssertTrue(empty.sources.isEmpty)
         let sealed = try XCTUnwrap(empty.lines.first)
-        let receipt = try await save(.register(lineID: sealed.id, segment: UUID(), name: "Wraps", exclusions: ["sesame"]), page: empty)
+        let receipt = try await save(.register(lineID: sealed.id, segment: UUID(), name: "Cannellini beans", exclusions: []), page: empty)
         let source = try XCTUnwrap(receipt.sourceId)
         let registered = try await service.deliveryEvidence(shopID: shopID)
-        let amount: (Int) -> SharedMealQuantity = { .init(amount: .init(numerator: $0), unit: "count", originalLiteral: String($0)) }
+        let amount: (Int) -> SharedMealQuantity = { .init(amount: .init(numerator: $0), unit: "gram", originalLiteral: String($0)) }
         let arrival = UUID()
         _ = try await save(.arrival(source: source, previous: nil, observation: arrival, date: Date().addingTimeInterval(-90), received: amount(8)), page: registered)
         let arrived = try await service.deliveryEvidence(shopID: shopID)
@@ -106,6 +106,20 @@ final class SharedMealNativeWireTests: XCTestCase {
         XCTAssertEqual(corrected.sources.count, 1)
         XCTAssertEqual(corrected.sources.first?.confirmed?.quantity, amount(7))
         XCTAssertEqual(corrected.sources.first?.arrival?.received, amount(8))
+        let occurrence = try XCTUnwrap(corrected.meals?.first)
+        let ingredient = try XCTUnwrap(occurrence.meal.planning?.ingredients.first)
+        let target = SharedDeliveryPage.IngredientMatch(occurrence: occurrence, ingredient: ingredient)
+        XCTAssertEqual(occurrence.meal.title, "Reviewed native guest plan")
+        XCTAssertEqual(ingredient.name, "Beans")
+        XCTAssertEqual(corrected.sources.first?.matches, [])
+        _ = try await save(.match(source: source, ingredient: target, matched: true), page: corrected)
+        let matched = try await service.deliveryEvidence(shopID: shopID)
+        XCTAssertEqual(matched.sources.first?.matches, [target])
+        XCTAssertEqual(matched.sources.first?.confirmed, corrected.sources.first?.confirmed)
+        _ = try await save(.match(source: source, ingredient: target, matched: false), page: matched)
+        let removed = try await service.deliveryEvidence(shopID: shopID)
+        XCTAssertEqual(removed.sources.first?.matches, [])
+        XCTAssertEqual(removed.supplyRevision, 6)
     }
 
 }

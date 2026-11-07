@@ -55,6 +55,20 @@ import XCTest
         tap(app.buttons["sharedShop.deliveryEvidence"])
         XCTAssertTrue(hasUsable("7 units"))
         XCTAssertEqual(app.buttons.matching(identifier: "Record arrival").count, 1)
+        let openMatches = app.buttons["Meal ingredient matches"], ingredient = app.buttons.containing(.staticText, identifier: "Tortillas").firstMatch
+        tap(openMatches)
+        tap(ingredient)
+        let exclusions = app.descendants(matching: .any).matching(NSPredicate(format:
+            "(label CONTAINS %@ OR value CONTAINS %@)", "sesame", "sesame")).firstMatch
+        XCTAssertTrue(exclusions.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", "School lunch")).firstMatch.exists)
+        tap(app.buttons["Match this ingredient"])
+        tap(openMatches)
+        tap(ingredient)
+        tap(app.buttons["Remove ingredient match"])
+        tap(openMatches)
+        tap(ingredient)
+        XCTAssertTrue(app.buttons["Match this ingredient"].waitForExistence(timeout: 8))
     }
     func testSpanishShopperDistinguishesFractionalUsableFoodZeroAndUnknown() {
         launch("es", locale: "es_US")
