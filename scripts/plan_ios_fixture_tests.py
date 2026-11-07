@@ -32,6 +32,7 @@ PROFILES = {
             "SharedMealCivilDateUITests",
             "SharedMealIdeaUITests",
             "SharedStoreQuoteUITests",
+            "StapleRecallUITests",
         ),
         "STOCK_REVIEW_UI_FIXTURE": ("StockReviewUITests",),
         "AWAY_CARRYOVER_UI_FIXTURE": ("DinnerAwayCarryoverUITests",),
@@ -50,7 +51,7 @@ BALANCED_SUITES = {
     # The six delivery, freezer and cook journeys run together on a dedicated runner.
     "contributor-balanced-03": ("HouseholdDevicesUITests", "HouseholdRequestPackUITests", "SharedMealCivilDateUITests"),
     "contributor-balanced-04": ("HistoryGrantReadUITests", "RecipeLibraryAcceptanceUITests", "PaidPickupRecoveryUITests"),
-    "contributor-balanced-05": ("CorrectionPrivacyAcceptanceUITests", "GuardianEnrollmentUITests", "SharedMealChangeUITests"),
+    "contributor-balanced-05": ("CorrectionPrivacyAcceptanceUITests", "GuardianEnrollmentUITests", "SharedMealChangeUITests", "StapleRecallUITests"),
 }
 LIBRARY_PRIVACY_HELPER = f"{UI_TARGET}/LibraryPrivacyUITestCase"
 MICROPHONE_PROBE = f"{UI_TARGET}/FreeJourneyUITests/testNativeMicrophoneRefusalLeavesTypedCaptureReviewable"

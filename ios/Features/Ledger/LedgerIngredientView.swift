@@ -83,7 +83,7 @@ struct LedgerIngredientView: View {
                     }
                     ForEach(contributions.filter { showProtectedNeeds || !$0.source.isProtected }, id: \.id) { contribution in
                         VStack(alignment: .leading, spacing: 8) {
-                            Text(sourceLabel(contribution, shop: shop)).font(.headline)
+                            Text(ledgerSourceLabel(contribution, shop: shop)).font(.headline)
                             Text(ledgerQuantity(contribution.quantity))
                             Text(contribution.originalText).font(.footnote).foregroundStyle(Theme.secondary)
                             if !contribution.notes.isEmpty { Text(ledgerContributionNote(contribution.notes)) }
@@ -95,7 +95,7 @@ struct LedgerIngredientView: View {
                                     .font(.footnote)
                             }
                             Button(ledgerText("Edit this contribution")) { sheet = .contribution(contribution.id) }
-                                .accessibilityLabel(ledgerFormat("Edit contribution: %@", sourceLabel(contribution, shop: shop)))
+                                .accessibilityLabel(ledgerFormat("Edit contribution: %@", ledgerSourceLabel(contribution, shop: shop)))
                             if contribution.source.isMeal || contribution.source.isProtected {
                                 Button(ledgerText("Link within an existing amount")) { sheet = .link(contribution.id) }
                             }
@@ -147,14 +147,7 @@ struct LedgerIngredientView: View {
                 bindings: model.workspace.dinnerPlanning.portionBindings)) == true
         }
     }
-    private func sourceLabel(_ contribution: LedgerContribution, shop: ShoppingLedger) -> String {
-        switch contribution.source {
-        case .manual: return ledgerText("Manually added")
-        case .imported: return ledgerText("Imported list")
-        case .meal(let id): return shop.mealOccurrences.first { $0.id == id }?.title ?? ledgerText("Dinner")
-        case .protectedNeed(let purpose): return ledgerFormat("Protected: %@", purpose)
-        }
-    }
+
 }
 
 private struct LedgerLineEditor: View {

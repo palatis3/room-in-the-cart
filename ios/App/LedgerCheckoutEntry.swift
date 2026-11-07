@@ -46,7 +46,8 @@ enum LedgerCheckoutAdapter {
                        packSelections: [LedgerPackSelection] = [], workspaceID: UUID? = nil, pickupWorkspaceID: UUID? = nil, bindings: [DinnerPortionBinding] = []) throws -> LedgerCheckoutReview {
         try shop.validate()
         let activeLines = shop.lines.filter { !$0.isTrashed && !$0.isHandled }
-        guard !activeLines.isEmpty else { throw LedgerCheckoutError.emptyList }
+        let clearingHandledBasket = previous?.id == shop.id && previous?.basket?.phase == .draft && !shop.handled.isEmpty
+        guard !activeLines.isEmpty || clearingHandledBasket else { throw LedgerCheckoutError.emptyList }
         let sameBasis = previous?.ledgerBasis == shop.basis
         var selectedPacks: [UUID: LedgerPackSelection] = [:]
         for selection in packSelections where selection.shopID == shop.id {
@@ -112,7 +113,7 @@ enum LedgerCheckoutAdapter {
             // Basis-only and purpose-only reviews still make a fresh revision,
             // so an old frozen snapshot cannot stand for newly reviewed terms.
             if changes.isEmpty { changes = lines.map(BasketChange.upsert) }
-            proposal = BasketProposal(id: UUID(), baseRevisionID: basket.current.id, revisionID: UUID(), changes: changes)
+            proposal = changes.isEmpty ? nil : BasketProposal(id: UUID(), baseRevisionID: basket.current.id, revisionID: UUID(), changes: changes)
         } else { proposal = nil }
         return LedgerCheckoutReview(source: shop, workspaceRevision: workspaceRevision,
             previousJourneyRevision: previous?.revision, previousBasketRevision: previous?.basket?.current.id,
@@ -290,7 +291,10 @@ struct LedgerCheckoutEntry: View {
                             }
                             if !review.packSelections.isEmpty { Text(ledgerText("Pack choices supply whole purchased amounts. The named meal needs stay unchanged, and the whole checkout still needs its complete charges.")) }
                             Text(pTr("This review includes source, time zone, fees, reserve, cap scope and named portions, even when the list quantities did not change."))
-                            if review.lines.isEmpty {
+                            if review.lines.isEmpty && review.needs.isEmpty {
+                                Text(ledgerText("All remaining items are marked handled. Applying this review removes them from the checkout copy."))
+                                Button(pTr("Apply reviewed checkout copy")) { Task { await apply(review) } }.buttonStyle(PrimaryAction())
+                            } else if review.lines.isEmpty {
                                 Text(ledgerText("All list needs are covered by confirmed food at home. Save the plan, then review instructions for the cook."))
                                 Button(ledgerText("Save use-at-home plan")) { Task { await apply(review) } }.buttonStyle(PrimaryAction()).accessibilityIdentifier("ledgerSaveAtHomePlan")
                             } else {

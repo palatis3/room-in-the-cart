@@ -28,6 +28,11 @@ import HouseholdClient
     }
     @ViewBuilder private var standardFixtureContent: some View {
         if ProcessInfo.processInfo.arguments.contains("--import-recovery-fixture") { ImportRecoveryUIFixtureRoot() }
+        else if ProcessInfo.processInfo.arguments.contains("--staple-recall-fixture") {
+            #if targetEnvironment(simulator)
+            StapleRecallUIFixture()
+            #endif
+        }
         else if ProcessInfo.processInfo.arguments.contains("--paid-pickup-recovery") {
             #if targetEnvironment(simulator)
             PaidPickupRecoveryFixtureRoot()

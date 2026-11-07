@@ -491,18 +491,29 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         lines.first { normalizedProduct($0.name) == normalizedProduct(name) }
     }
 
-    mutating func recordStaple(_ review: ReviewedStaple, choice: StapleChoice, quantity: Quantity?, exclusions: [String], at date: Date) throws {
+    public func openStapleMatches(named name: String) -> [ShoppingLine] {
+        let key = normalizedProduct(name)
+        return lines.filter { !$0.isTrashed && !$0.isHandled && normalizedProduct($0.name) == key }
+    }
+
+    mutating func recordStaple(_ review: ReviewedStaple, choice: StapleChoice, quantity: Quantity?, exclusions: [String],
+                               handledLine: HandledStapleLine?, at date: Date) throws {
         var next = self
         let newID: UUID?
         if choice == .needed {
             guard matchingStapleLine(named: review.line.name) == nil else { throw LedgerError.invalid("stapleAlreadyListed") }
             newID = try next.addManualLine(name: review.line.name, quantity: quantity, notes: review.approval.purpose, exclusions: exclusions, at: date)
+        } else if let handledLine {
+            guard choice == .alreadyHandled, openStapleMatches(named: review.line.name).contains(where: { $0.id == handledLine.lineID })
+            else { throw LedgerError.stalePreview }
+            try next.handle(lineID: handledLine.lineID, by: handledLine.boughtBy, at: date)
+            newID = nil
         } else {
             try next.mutate("reviewPriorStaple", at: date) { _ in }
             newID = nil
         }
         var receipts = next.stapleReviews ?? []
-        receipts.append(.init(source: review.source, choice: choice, newLineID: newID, quantity: quantity))
+        receipts.append(.init(source: review.source, choice: choice, handledLine: handledLine, newLineID: newID, quantity: quantity))
         next.stapleReviews = receipts
         try next.validate()
         self = next
@@ -826,6 +837,10 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
               receipts.allSatisfy({ $0.source.shopID != id && ($0.newLineID != nil) == ($0.choice == .needed) &&
                   ($0.newLineID.map(lineIDs.contains) ?? true) }) else { throw LedgerError.invalid("stapleReviews") }
         for receipt in receipts {
+            if let handled = receipt.handledLine {
+                guard receipt.choice == .alreadyHandled, lineIDs.contains(handled.lineID) else { throw LedgerError.invalid("stapleHandledLine") }
+                try ledgerText(handled.boughtBy, nonempty: true, maximum: 512)
+            }
             if let quantity = receipt.quantity {
                 guard receipt.choice == .needed, quantity.amount > .zero else { throw LedgerError.invalid("stapleQuantity") }
                 try quantity.validate()

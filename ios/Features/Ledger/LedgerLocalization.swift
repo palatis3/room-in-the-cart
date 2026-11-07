@@ -83,3 +83,12 @@ extension BudgetScope {
         }
     }
 }
+
+func ledgerSourceLabel(_ contribution: LedgerContribution, shop: ShoppingLedger) -> String {
+    switch contribution.source {
+    case .manual: return ledgerText("Manually added")
+    case .imported: return ledgerText("Imported list")
+    case .meal(let id): return shop.mealOccurrences.first { $0.id == id }?.title ?? ledgerText("Dinner")
+    case .protectedNeed(let purpose): return ledgerFormat("Protected: %@", purpose)
+    }
+}

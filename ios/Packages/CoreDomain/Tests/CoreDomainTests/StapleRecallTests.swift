@@ -51,6 +51,34 @@ final class StapleRecallTests: XCTestCase {
         XCTAssertThrowsError(try workspace.applyStaple(review,choice:.skip,quantity:nil,at:lastMonth))
     }
 
+    func testBoughtElsewhereClosesOnlyTheChosenCurrentLineAndExactRetryDoesNotCloseItAgain() throws {
+        var (workspace, oldID, target) = try seed()
+        let now = lastMonth.addingTimeInterval(32 * 86400)
+        let lunch = try workspace.shops[1].addManualLine(name: "Rice", quantity: nil, notes: "School lunches")
+        let dinner = try workspace.shops[1].addManualLine(name: "RICE", quantity: nil, notes: "Dinner")
+        let bread = try workspace.shops[1].addManualLine(name: "Bread", quantity: nil)
+        let review = try XCTUnwrap(workspace.priorStaples(for: target).first)
+        func purchase(_ id: UUID, _ buyer: String = "Ana") -> HandledStapleLine { .init(lineID: id, boughtBy: buyer) }
+        for invalid in [purchase(oldID), purchase(bread), purchase(lunch, " ")] {
+            XCTAssertThrowsError(try workspace.applyStaple(review, choice: .alreadyHandled, quantity: nil, handledLine: invalid, at: now))
+        }
+        let stale = workspace
+        try workspace.shops[1].setChecked(lineID: dinner, checked: true, at: now)
+        XCTAssertThrowsError(try workspace.applyStaple(review, choice: .alreadyHandled, quantity: nil, handledLine: purchase(lunch), at: now))
+        workspace = stale
+        try workspace.applyStaple(review, choice: .alreadyHandled, quantity: nil, handledLine: purchase(lunch), at: now)
+        XCTAssertEqual(workspace.shops[1].handled.map(\.id), [lunch])
+        XCTAssertEqual(workspace.shops[1].handled.first?.handledBy, "Ana")
+        XCTAssertEqual(workspace.shops[1].openStapleMatches(named: "rice").map(\.id), [dinner])
+        XCTAssertEqual(workspace.shops[0].recentlyChecked.first?.checkedAt, lastMonth)
+        XCTAssertThrowsError(try workspace.applyStaple(review, choice: .alreadyHandled, quantity: nil, handledLine: purchase(dinner), at: now))
+        XCTAssertThrowsError(try workspace.applyStaple(review, choice: .alreadyHandled, quantity: nil, handledLine: purchase(lunch, "Sam"), at: now))
+        try workspace.shops[1].reopen(lineID: lunch, at: now)
+        let reopened = workspace
+        try workspace.applyStaple(review, choice: .alreadyHandled, quantity: nil, handledLine: purchase(lunch), at: now)
+        XCTAssertEqual(workspace, reopened)
+    }
+
     func testReopeningEarlierDraftDoesNotSuggestItemsFromAFutureShop() throws {
         var (workspace, _, target) = try seed()
         let original = try XCTUnwrap(workspace.priorStaples(for: target).first)
