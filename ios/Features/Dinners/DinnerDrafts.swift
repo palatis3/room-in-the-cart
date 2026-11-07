@@ -28,9 +28,9 @@ enum DinnerEntry {
     static func positive(_ text: String) throws -> Rational {
         let value = try rational(text); guard value > .zero else { throw DomainError.invalidNumber }; return value
     }
-    static func minutes(_ text: String) throws -> Int? {
+    static func minutes(_ text: String, maximum: Int = 525_600) throws -> Int? {
         guard !text.isEmpty else { return nil }
-        guard let value = Int(text), (0...525_600).contains(value) else { throw DomainError.invalidNumber }; return value
+        guard let value = Int(text), (0...maximum).contains(value) else { throw DomainError.invalidNumber }; return value
     }
     static func list(_ text: String) -> [String] {
         text.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }

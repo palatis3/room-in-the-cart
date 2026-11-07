@@ -29,7 +29,7 @@ struct DisclosedFallbackDraft {
         }
         return try SharedFallbackRecipe(title: title.trimmingCharacters(in: .whitespacesAndNewlines), portions: count,
             notes: notes, sourceURL: address.isEmpty ? nil : address, exclusions: DinnerEntry.list(exclusions),
-            requiredLeadMinutes: DinnerEntry.minutes(lead), elapsedMinutes: DinnerEntry.minutes(elapsed),
+            requiredLeadMinutes: DinnerEntry.minutes(lead, maximum: 1_000_000), elapsedMinutes: DinnerEntry.minutes(elapsed, maximum: 1_000_000),
             ingredients: ingredients.map { row in
                 let ingredient = try row.ingredient()
                 guard !ingredient.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw ClientError.configuration }

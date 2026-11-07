@@ -16,8 +16,8 @@ struct FallbackPackDraft: Equatable {
     func offer() throws -> SharedFallbackOffer {
         guard let qty = try DinnerEntry.quantity(amount, unit: unit), qty.amount > .zero,
               qty.amount.numerator <= 1_000_000_000, qty.amount.denominator <= 1_000_000_000,
-              let money = try DinnerEntry.money(price), money.minorUnits >= 0,
-              let cents = Int(exactly: money.minorUnits), let packs = Int(availability), packs >= 0,
+              let money = try DinnerEntry.money(price), (0...1_000_000_000).contains(money.minorUnits),
+              let cents = Int(exactly: money.minorUnits), let packs = Int(availability), (0...1_000_000).contains(packs),
               !label.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw ClientError.configuration }
         return .init(label: label, exclusionTags: DinnerEntry.list(exclusions),
                      usablePerPack: .init(amount: .init(numerator: Int(qty.amount.numerator), denominator: Int(qty.amount.denominator)),
@@ -64,7 +64,7 @@ struct CandidateReviewDraft: Identifiable, Equatable {
             } else { offer = item.hasOwnPack ? try item.pack.offer() : nil }
             return .init(ingredientId: item.id, sourceIds: item.sources.sorted { $0.uuidString < $1.uuidString }, offer: offer)
         }
-        return .init(candidateId: candidate.id, revision: candidate.revision, remainingElapsedMinutes: try DinnerEntry.minutes(remaining),
+        return .init(candidateId: candidate.id, revision: candidate.revision, remainingElapsedMinutes: try DinnerEntry.minutes(remaining, maximum: 1_000_000),
                      advanceStepsCompleted: stepsComplete, ingredients: rows)
     }
 }
@@ -76,8 +76,8 @@ struct FallbackTripDraft: Equatable {
     var charges = ""
     func trip() throws -> SharedFallbackTrip? {
         guard include else { return nil }
-        guard let time = try DinnerEntry.minutes(minutes), let ceiling = try DinnerEntry.money(budget),
-              let other = try DinnerEntry.money(charges), ceiling.minorUnits >= 0, other.minorUnits >= 0,
+        guard let time = try DinnerEntry.minutes(minutes, maximum: 1_000_000), let ceiling = try DinnerEntry.money(budget),
+              let other = try DinnerEntry.money(charges), (0...1_000_000_000).contains(ceiling.minorUnits), (0...1_000_000_000).contains(other.minorUnits),
               let limit = Int(exactly: ceiling.minorUnits), let fee = Int(exactly: other.minorUnits) else { throw ClientError.configuration }
         return .init(minutes: time, budgetMinor: limit, chargesMinor: fee, currency: "USD")
     }
