@@ -137,6 +137,20 @@
       "HouseholdClient: 101 passed, 3 deliberately skipped",
       "LocalStore: 74 passed, 0 deliberately skipped",
       "RecordArchive: 33 passed, 0 deliberately skipped"
-    ]
+    ],
+    "integratedIOS17": {
+      "productCommit": "f4f8910",
+      "device": "iPhone SE (3rd generation), iOS 17.0 simulator",
+      "selectors": [
+        "RoomInTheCartUITests/ContextualNavigationUITests/testOversizedNativePasteKeepsTheOriginalAndAcceptsASmallerList",
+        "RoomInTheCartUITests/ContextualNavigationUITests/testReviewedQuantityAndOriginalPackLabelSurviveRestartIndependently",
+        "RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testSelectedTextShowsUneditableSourceLimitAndAcceptsAShorterSelection"
+      ],
+      "passed": 3,
+      "failed": 0,
+      "runtimeWarnings": 0,
+      "summarySHA256": "3353e70958b3d2e51be0b892e53976cf211191ce34aa74e494b89dc52c3dcc64",
+      "deviceBuild": "Unsigned Release build for generic arm64 iPhone passed executable, assets, privacy, environment and both embedded extension checks."
+    }
   }
 }
