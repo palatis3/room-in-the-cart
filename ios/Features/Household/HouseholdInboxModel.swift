@@ -53,7 +53,7 @@ enum ShopperDelivery: Equatable {
     private var generation = UUID()
     private var draftGeneration = UUID()
     private var attempts = 0
-    private var retryAfter = Date.distantPast
+    @Published private(set) var retryAfter = Date.distantPast
 
     init(bootstrap: HouseholdBootstrap, service: HouseholdService, outbox: OperationOutbox,
          onAccessEnded: @escaping @MainActor () async -> Void) {

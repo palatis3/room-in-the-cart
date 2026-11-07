@@ -84,7 +84,6 @@ private struct DeferredRequestsView: View {
                             Task {
                                 await model.carryForReview(row)
                                 reviewed = nil
-                                if case .confirmed(let receipt) = model.delivery, receipt.kind == "request.carry" { dismiss() }
                             }
                         }.disabled(model.busy)
                             .accessibilityIdentifier("household.deferred.confirm")
@@ -116,6 +115,9 @@ private struct DeferredRequestsView: View {
         }
         .navigationTitle(ht("Saved from earlier pickups"))
         .task { await model.loadDeferred() }
+        .onChange(of: model.delivery) { _, delivery in
+            if case .confirmed(let receipt) = delivery, receipt.kind == "request.carry" { dismiss() }
+        }
         .onDisappear { model.forgetDeferred() }
     }
 }
@@ -253,7 +255,12 @@ struct ShopperDeliverySection: View {
         case .waiting, .needsReview:
             Section(ht("Pending decision")) {
                 Text(ht("The result is not confirmed. Refresh current requests before creating another decision."))
-                if model.delivery == .waiting { Button(ht("Retry the same decision")) { Task { await model.retry() } }.disabled(model.busy) }
+                if model.delivery == .waiting {
+                    TimelineView(.explicit([Date.now, max(.now, model.retryAfter)])) { tick in
+                        Button(ht("Retry the same decision")) { Task { await model.retry() } }
+                            .disabled(model.busy || tick.date < model.retryAfter)
+                    }
+                }
                 Button(ht("Refresh current requests")) { Task { await model.load() } }.disabled(model.busy)
                 Button(ht("I reviewed the current requests; clear this retry")) { Task { await model.clearPendingAfterReview() } }
                     .disabled(model.busy || !model.reviewedCurrentFacts)
