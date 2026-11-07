@@ -43,13 +43,28 @@ PROFILES = {
 # These long shared-editor journeys each get a fresh hosted runner/simulator.
 # Keep whole journeys intact: no retry or assertion is removed by isolation.
 ISOLATED_SUITES = {"SharedMealIdeaUITests", "SharedStoreQuoteUITests"}
+# Case groups and their measured basis are recorded in docs/CI-VALIDATION.md.
+DELIVERY_SHARDS = {
+    "SharedDeliveryUITests-stock-and-purchase": (
+        "testShopperRecordsAndCorrectsDeliveryThenReopensIt",
+        "testSpanishShopperDistinguishesFractionalUsableFoodZeroAndUnknown",
+        "testShopperReviewsFreezerBatchCoverageBeforeCorrectingFiveToThree",
+        "testShopperConfirmsCorrectsAndClearsTheLinkedFamilyPurchase",
+    ),
+    "SharedDeliveryUITests-recovery-cook-and-closeout": (
+        "testShopperLeavesOriginalDinnerOpenAfterAnUnresolvedReplacementPreview",
+        "testShopperReplacesWednesdayAfterPickupAndKeepsTuesdaysShortage",
+        "testShopperSavesDatedCookCopyAndReopensRecipientSendRecord",
+        "testShopperReviewsExactEditedCookWordingBeforeReadback",
+        "testShopperClosesWithPendingCreditThenLinksItToTheOriginalNetCharge",
+    ),
+}
 # Whole suites share a contributor runner; every method still runs exactly once.
 # Per-case times from23a73a8/run42021894739 sum to14.8–16.9 minutes/group.
 # Estimated repeated setup savings need fresh grouped hosted validation.
 BALANCED_SUITES = {
     "contributor-balanced-01": ("DinnerAwayCarryoverUITests", "RequestDuplicateComparisonUITests"),
     "contributor-balanced-02": ("ContributorRequestUITests", "ImportRecoveryUITests", "MeasurementUITests", "StockReviewUITests"),
-    # The delivery, closeout, freezer and cook journeys run together on a dedicated runner.
     "contributor-balanced-03": ("HouseholdDevicesUITests", "HouseholdRequestPackUITests", "SharedMealCivilDateUITests"),
     "contributor-balanced-04": ("HistoryGrantReadUITests", "RecipeLibraryAcceptanceUITests", "PaidPickupRecoveryUITests"),
     "contributor-balanced-05": ("CorrectionPrivacyAcceptanceUITests", "GuardianEnrollmentUITests", "SharedMealChangeUITests", "StapleRecallUITests"),
@@ -100,12 +115,12 @@ def shard_members(profile, inventory):
     balanced = BALANCED_SUITES if profile == "contributor" else {}
     assigned = {}
     for name, owners in balanced.items():
-        if name in inventory or not owners:
+        if name in inventory or name in DELIVERY_SHARDS or not owners:
             raise ValueError(f"Invalid balanced fixture group: {name}")
         for suite in owners:
             if suite not in suites_for(profile) or suite not in inventory:
                 raise ValueError(f"Balanced fixture suite is outside {profile}: {suite}")
-            if suite == "RecordsMediaUITests" or suite in ISOLATED_SUITES:
+            if suite in {"RecordsMediaUITests", "SharedDeliveryUITests"} or suite in ISOLATED_SUITES:
                 raise ValueError(f"Fixture suite must remain isolated: {suite}")
             if suite in assigned:
                 raise ValueError(f"Fixture suite belongs to multiple balanced groups: {suite}")
@@ -115,6 +130,18 @@ def shard_members(profile, inventory):
             name = assigned[suite]
             owners = balanced[name]
             groups[name] = (owners, set().union(*(inventory[owner] for owner in owners)))
+        elif suite == "SharedDeliveryUITests":
+            assigned_methods = set()
+            for name, methods in DELIVERY_SHARDS.items():
+                members = {f"{UI_TARGET}/{suite}/{method}" for method in methods}
+                if not members or len(members) != len(methods) or assigned_methods & members:
+                    raise ValueError(f"Empty or duplicate shared delivery assignment: {name}")
+                assigned_methods.update(members)
+                groups[name] = ((suite,), members)
+            if assigned_methods != inventory[suite]:
+                raise ValueError(f"Shared delivery groups differ from source: "
+                                 f"missing {sorted(inventory[suite] - assigned_methods)}, "
+                                 f"extra {sorted(assigned_methods - inventory[suite])}")
         elif suite in ISOLATED_SUITES:
             for identifier in sorted(inventory[suite]):
                 groups[f"{suite}-{identifier.rsplit('/', 1)[1]}"] = ((suite,), {identifier})

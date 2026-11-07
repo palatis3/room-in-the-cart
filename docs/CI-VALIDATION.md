@@ -16,6 +16,17 @@ New macOS jobs must be added to the slot policy and tests. Keep slots on leaf jo
 
 These are static checks. Hosted execution, native results, performance measurements, signed-device/provider acceptance and human review have separate evidence requirements. See [current acceptance](CURRENT-ACCEPTANCE.md).
 
+## Shared delivery fixture timing
+
+The six shared-delivery cases at `3e96fe3` passed on a hosted iPhone 17 running iOS 26.2. The runner spent about 2m33s on setup before the test step, then about 16m54s running and checking the shard. The six XCTest case durations account for 860.646s of that step. The suite now includes three more journeys. The table groups each whole journey once, using the six hosted case durations and passing local iOS 17 simulator measurements for the additions. [Hosted job and test log](https://github.com/palatis3/room-in-the-cart/actions/runs/42390883332/job/128469594458).
+
+| Contributor shard | Hosted cases (seconds) | Additional local cases (seconds) | Estimated case time |
+| --- | --- | --- | ---: |
+| `SharedDeliveryUITests-stock-and-purchase` | Record and correct delivery 168.852, Spanish fractional stock 134.521, freezer correction 180.859 | Linked family purchase 54.555 | 538.787 s |
+| `SharedDeliveryUITests-recovery-cook-and-closeout` | Unresolved replacement 164.069, replace Wednesday 135.417, dated cook copy 76.928 | Edited cook wording 47.302, financial closeout 94.418 | 518.134 s |
+
+Each job restores the contributor build, boots its simulator, and checks its own selector file against the completed XCTest result. The fixture matrix has 17 jobs across both profiles, admitted through the five shared macOS slots. On the next hosted run, the `iphone-fixture-results-<shard>-<attempt>` artifacts record the per-case results. The two job timelines also include setup and result collection.
+
 ## Merge protection and release checks
 
 As of November6, `main` requires a pull request, an up-to-date branch, resolved conversations, and the four GitHub Actions checks `CI gate`, `CodeQL (javascript-typescript)`, `CodeQL (actions)` and `Dependency review`. Admins follow the same rules; force push and deletion are disabled. Zero mandatory human approvals preserves the single-owner workflow. [Applied settings and independent verification](evidence/native/main-protection-20261106/README.md).

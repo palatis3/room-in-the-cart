@@ -4,8 +4,10 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from plan_ios_fixture_tests import (BALANCED_SUITES, ISOLATED_SUITES, LIBRARY_PRIVACY_HELPER, MICROPHONE_PROBE, UI_SOURCES, UI_TARGET, make_plan,
-                                    matrix, source_inventory, suites_for, write_plan)
+from plan_ios_fixture_tests import (
+    BALANCED_SUITES, DELIVERY_SHARDS, ISOLATED_SUITES, LIBRARY_PRIVACY_HELPER, MICROPHONE_PROBE,
+    UI_SOURCES, UI_TARGET, make_plan, matrix, source_inventory, suites_for, write_plan,
+)
 
 
 ORDINARY_TEST = f"{UI_TARGET}/FreeJourneyUITests/testCancellingSystemShareKeepsTheFrozenPickupUnplaced"
@@ -34,11 +36,11 @@ class PlanIOSFixtureTests(unittest.TestCase):
     def test_every_source_fixture_method_maps_to_exactly_one_job(self):
         actual = [entry["shard"] for entry in matrix()["include"]]
         grouped_suites = {suite for owners in BALANCED_SUITES.values() for suite in owners}
-        grouped = (set(self.inventory) - ISOLATED_SUITES - grouped_suites) | set(BALANCED_SUITES)
+        grouped = (set(self.inventory) - ISOLATED_SUITES - grouped_suites - {"SharedDeliveryUITests"}) | set(BALANCED_SUITES)
         isolated = {f"{suite}-{method.rsplit('/', 1)[1]}"
                     for suite in ISOLATED_SUITES for method in self.inventory[suite]}
-        self.assertCountEqual(actual, grouped | isolated)
-        self.assertEqual(len(actual), 16)
+        self.assertCountEqual(actual, grouped | isolated | set(DELIVERY_SHARDS))
+        self.assertEqual(len(actual), 17)
         self.assertIn("RecipeLibraryAcceptanceUITests", suites_for("contributor"))
         self.assertIn("CorrectionPrivacyAcceptanceUITests", suites_for("contributor"))
         self.assertNotIn("LibraryPrivacyUITestCase", actual)
@@ -58,7 +60,12 @@ class PlanIOSFixtureTests(unittest.TestCase):
                 for name, shard in plan["shards"].items():
                     owners = shard["suites"] if "suites" in shard else [shard["suite"]]
                     lines = (output / shard["selector_file"]).read_text().splitlines()
-                    if len(owners) == 1 and owners[0] in ISOLATED_SUITES:
+                    if name in DELIVERY_SHARDS:
+                        self.assertEqual(owners, ["SharedDeliveryUITests"])
+                        self.assertEqual(shard["selector_file"], f"{name}.txt")
+                        self.assertEqual(lines, sorted(f"{UI_TARGET}/{owners[0]}/{method}"
+                                                       for method in DELIVERY_SHARDS[name]))
+                    elif len(owners) == 1 and owners[0] in ISOLATED_SUITES:
                         suite = owners[0]
                         self.assertEqual(len(lines), 1)
                         self.assertIn(lines[0], self.inventory[suite])
@@ -93,29 +100,33 @@ class PlanIOSFixtureTests(unittest.TestCase):
         fallbacks = plans["contributor"]["shards"]["SharedFallbackUITests"]
         self.assertEqual(fallbacks["suite"], "SharedFallbackUITests")
         self.assertEqual(len(fallbacks["test_identifiers"]), 2)
-        delivery = plans["contributor"]["shards"]["SharedDeliveryUITests"]
-        self.assertEqual(delivery["suite"], "SharedDeliveryUITests")
-        self.assertEqual({identifier.removesuffix("()") for identifier in delivery["test_identifiers"]},
-                         self.inventory["SharedDeliveryUITests"])
-        expected_delivery_methods = {
-            "testShopperReviewsExactEditedCookWordingBeforeReadback",
-            "testShopperConfirmsCorrectsAndClearsTheLinkedFamilyPurchase",
-            "testShopperClosesWithPendingCreditThenLinksItToTheOriginalNetCharge",
-            "testShopperReviewsFreezerBatchCoverageBeforeCorrectingFiveToThree",
-            "testShopperReplacesWednesdayAfterPickupAndKeepsTuesdaysShortage",
-            "testShopperLeavesOriginalDinnerOpenAfterAnUnresolvedReplacementPreview",
-            "testShopperSavesDatedCookCopyAndReopensRecipientSendRecord",
-            "testShopperRecordsAndCorrectsDeliveryThenReopensIt",
-            "testSpanishShopperDistinguishesFractionalUsableFoodZeroAndUnknown",
-        }
-        self.assertEqual({identifier.rsplit("/", 1)[1].removesuffix("()") for identifier in delivery["test_identifiers"]},
-                         expected_delivery_methods)
         paid_case = f"{UI_TARGET}/PaidPickupRecoveryUITests/testNamedSeatCanApplyAcceptedRecipeAndExpiredSeatCanReadSavedCookCopy"
         group = plans["contributor"]["shards"]["contributor-balanced-04"]
         self.assertIn(paid_case, [identifier.removesuffix("()") for identifier in group["test_identifiers"]])
         for name, shard in plans["contributor"]["shards"].items():
             if name != "RecordsMediaUITests":
                 self.assertFalse(any("/RecordsMediaUITests/" in identifier for identifier in shard["test_identifiers"]))
+
+    def test_delivery_shards_keep_their_own_named_proofs(self):
+        shards = make_plan(enumeration(self.enabled_for("contributor")), "contributor", self.inventory)["shards"]
+        counts = {name: len(shard["test_identifiers"]) for name, shard in shards.items()
+                  if shard.get("suite") == "SharedDeliveryUITests"}
+        self.assertEqual(counts, {"SharedDeliveryUITests-stock-and-purchase": 4,
+                                  "SharedDeliveryUITests-recovery-cook-and-closeout": 5})
+
+    def test_delivery_partition_rejects_unassigned_or_stale_methods(self):
+        suite = "SharedDeliveryUITests"
+        for methods in (self.inventory[suite] | {f"{UI_TARGET}/{suite}/testNewJourney"},
+                        self.inventory[suite] - {min(self.inventory[suite])}):
+            with self.subTest(methods=methods), self.assertRaisesRegex(ValueError, "Shared delivery groups differ"):
+                matrix({**self.inventory, suite: methods})
+
+    def test_delivery_partition_rejects_duplicate_and_empty_assignments(self):
+        first = next(iter(DELIVERY_SHARDS.values()))[0]
+        for methods in ((), (first,), ("testOther", "testOther")):
+            with self.subTest(methods=methods), patch.dict(DELIVERY_SHARDS, {"additional-delivery": methods}):
+                with self.assertRaisesRegex(ValueError, "Empty or duplicate shared delivery assignment"):
+                    matrix(self.inventory)
 
     def test_import_recovery_actions_are_required_in_the_existing_balanced_group(self):
         expected = {f"{UI_TARGET}/ImportRecoveryUITests/{method}" for method in (
@@ -157,6 +168,8 @@ class PlanIOSFixtureTests(unittest.TestCase):
             ({"balanced": ("ContributorRequestUITests", "ContributorRequestUITests")}, "multiple balanced groups"),
             ({"balanced": ("DinnerDecisionSheetUITests",)}, "outside contributor"),
             ({"balanced": ("RecordsMediaUITests",)}, "must remain isolated"),
+            ({"balanced": ("SharedDeliveryUITests",)}, "must remain isolated"),
+            ({"SharedDeliveryUITests-stock-and-purchase": ("ContributorRequestUITests",)}, "Invalid balanced fixture group"),
             ({"balanced": ("SharedMealIdeaUITests",)}, "must remain isolated"),
             ({"balanced": ("SharedStoreQuoteUITests",)}, "must remain isolated"),
             ({"RecordsMediaUITests": ("ContributorRequestUITests",)}, "Invalid balanced fixture group"),
