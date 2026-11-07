@@ -1,6 +1,57 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Meal exclusions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meal exclusions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exclusiones de la comida"
+          }
+        }
+      }
+    },
+    "Preparation time in minutes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparation time in minutes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tiempo de preparación en minutos"
+          }
+        }
+      }
+    },
+    "Completed preparation steps": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed preparation steps"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pasos de preparación completados"
+          }
+        }
+      }
+    },
     "This iPhone could not clear saved product spellings.": {
       "extractionState": "manual",
       "localizations": {

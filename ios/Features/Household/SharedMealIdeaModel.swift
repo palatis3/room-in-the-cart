@@ -35,6 +35,7 @@ extension HouseholdService: SharedMealIdeasServing {}
     }
     func write(ideaID: UUID, draft: SharedMealIdeaDraft, approve: Bool, reviewed: Bool) async {
         guard live, !busy, pending == nil, let page else { return }
+        let draft = draft.normalizedForSave()
         let original = page.ideas.first { $0.id == ideaID }
         guard original == nil || original?.actorId.uuidString.lowercased() == scope.memberID.lowercased() else { return }
         guard !approve || (reviewed && original?.draft == draft && original?.preview.canApprove == true) else { return }

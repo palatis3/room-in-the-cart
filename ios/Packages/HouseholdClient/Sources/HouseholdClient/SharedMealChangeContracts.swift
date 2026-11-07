@@ -41,8 +41,26 @@ public struct SharedMealPlanning: Codable, Equatable, Sendable {
     public var bindings: [Allocation]?
     public var groups: [Group]; public var ingredients: [Ingredient]
     public var sourceOccurrenceId: UUID?
-    public init(groups: [Group], ingredients: [Ingredient], sourceOccurrenceId: UUID? = nil, bindings: [Allocation]? = nil) { self.groups = groups; self.ingredients = ingredients; self.sourceOccurrenceId = sourceOccurrenceId; self.bindings = bindings }
+    public var exclusions: [String]?
+    public var leadTimeMinutes: Int?
+    public var completedSteps: [String]?
+
+    public init(groups: [Group], ingredients: [Ingredient], sourceOccurrenceId: UUID? = nil,
+                bindings: [Allocation]? = nil, exclusions: [String]? = nil,
+                leadTimeMinutes: Int? = nil, completedSteps: [String]? = nil) {
+        self.groups = groups
+        self.ingredients = ingredients
+        self.sourceOccurrenceId = sourceOccurrenceId
+        self.bindings = bindings
+        self.exclusions = exclusions
+        self.leadTimeMinutes = leadTimeMinutes
+        self.completedSteps = completedSteps
+    }
     public func validate() throws {
+        guard (exclusions?.count ?? 0) <= 20, (completedSteps?.count ?? 0) <= 100,
+              (exclusions ?? []).allSatisfy({ sharedMealText($0, 240) }),
+              (completedSteps ?? []).allSatisfy({ sharedMealText($0, 240) }),
+              leadTimeMinutes.map({ (0...1_000_000).contains($0) }) ?? true else { throw ClientError.configuration }
         guard groups.count <= 30, ingredients.count <= 60,
               Set(groups.map(\.id)).count == groups.count, Set(ingredients.map(\.id)).count == ingredients.count else { throw ClientError.configuration }
         guard (bindings?.count ?? 0) <= 200, Set((bindings ?? []).map(\.id)).count == (bindings?.count ?? 0) else { throw ClientError.configuration }

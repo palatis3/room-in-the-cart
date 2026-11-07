@@ -119,11 +119,14 @@ private actor MealChangeFixture: SharedMealChangesServing {
     }
     func testNativeSeedUsesExactContributionIDsAndDoesNotInferGroupBindings() throws {
         var ledger = ShoppingLedger()
-        let template = MealTemplate(title: "Soup", servings: try Rational(4), ingredients: [.init(name: "Beans", quantity: .init(amount: try Rational(400), unit: .gram, originalLiteral: "400 g"))])
+        let template = MealTemplate(title: "Soup", servings: try Rational(4), ingredients: [.init(name: "Beans", quantity: .init(amount: try Rational(400), unit: .gram, originalLiteral: "400 g"))], exclusions: ["peanuts"], leadTimeMinutes: 120, completedSteps: ["Beans soaked"])
         let id = try ledger.chooseMeal(template), occurrence = try XCTUnwrap(ledger.mealOccurrences.first(where: { $0.id == id }))
         let seed = try SharedMealChangeSeed(reviewed: occurrence, contributions: ledger.contributions)
         XCTAssertEqual(seed.localOccurrenceID, id); XCTAssertEqual(seed.planning.sourceOccurrenceId, id)
         XCTAssertEqual(seed.planning.ingredients.map(\.id), occurrence.ingredientContributionIDs)
+        XCTAssertEqual(seed.planning.exclusions, ["peanuts"])
+        XCTAssertEqual(seed.planning.leadTimeMinutes, 120)
+        XCTAssertEqual(seed.planning.completedSteps, ["Beans soaked"])
         XCTAssertTrue(seed.planning.ingredients.allSatisfy { $0.groupIds.isEmpty })
         XCTAssertThrowsError(try SharedMealChangeSeed(reviewed: occurrence, contributions: []))
     }

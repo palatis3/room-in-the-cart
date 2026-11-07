@@ -33,7 +33,8 @@ final class SharedDeliveryFixtureRecords {
 
     func page(shop: String) -> [String:Any] {
         let quantity: [String:Any] = ["amount":["numerator":2,"denominator":1], "unit":"count","originalLiteral":"2"]
-        let plan: [String:Any] = ["groups":[["id":group,"name":"School lunch","servings":["numerator":2,"denominator":1],"protected":true]],
+        let plan: [String:Any] = ["exclusions":["peanuts"], "leadTimeMinutes":120, "completedSteps":["Beans soaked"],
+            "groups":[["id":group,"name":"School lunch","servings":["numerator":2,"denominator":1],"protected":true]],
             "ingredients":[["id":ingredient,"name":"Tortillas","quantity":quantity,"groupIds":[group],"exclusions":["sesame"]]]]
         let meal: [String:Any] = ["title":"Lunch wraps","day":"2026-11-08","kind":"lunch","portions":2,"protected":true,"planning":plan]
         return ["shopId":shop, "coverageAvailable":true,"meals":[["occurrenceId":occurrence,"revision":1,"meal":meal]], "placedRevision":1, "shopRevision":2, "authorityEpoch":1, "supplyRevision":revision,

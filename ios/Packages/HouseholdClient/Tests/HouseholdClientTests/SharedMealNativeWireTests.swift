@@ -64,7 +64,11 @@ final class SharedMealNativeWireTests: XCTestCase {
         } else {
             XCTAssertFalse(page.shopper)
             let occurrence = try XCTUnwrap(page.meals.first)
-            var meal = occurrence.meal; meal.title = "Reviewed native guest plan"
+            var meal = occurrence.meal
+            meal.title = "Reviewed native guest plan"
+            meal.planning?.exclusions = ["no peanuts"]
+            meal.planning?.leadTimeMinutes = 120
+            meal.planning?.completedSteps = ["Beans soaked"]
             let intent = try await service.prepareSharedMealChange(page: page, occurrenceID: occurrence.id, meal: meal, reason: "Exact native proposal across two adults")
             try await service.executeSharedMealChange(intent)
             try await service.executeSharedMealChange(intent)
@@ -85,6 +89,10 @@ final class SharedMealNativeWireTests: XCTestCase {
         }
         let empty = try await service.deliveryEvidence(shopID: shopID)
         XCTAssertTrue(empty.sources.isEmpty)
+        let sealedPlan = try XCTUnwrap(empty.meals?.first(where: { $0.meal.title == "Reviewed native guest plan" })?.meal.planning)
+        XCTAssertEqual(sealedPlan.exclusions, ["no peanuts"])
+        XCTAssertEqual(sealedPlan.leadTimeMinutes, 120)
+        XCTAssertEqual(sealedPlan.completedSteps, ["Beans soaked"])
         let sealed = try XCTUnwrap(empty.lines.first)
         let receipt = try await save(.register(lineID: sealed.id, segment: UUID(), name: "Cannellini beans", exclusions: []), page: empty)
         let source = try XCTUnwrap(receipt.sourceId)

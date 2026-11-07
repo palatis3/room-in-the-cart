@@ -43,6 +43,9 @@ export interface SharedMealQuantity {
 }
 export interface SharedMealPlanning {
   sourceOccurrenceId?: string; // Explicit reviewed local-to-shared mapping; never an authority claim.
+  exclusions?: string[];
+  leadTimeMinutes?: number;
+  completedSteps?: string[];
   groups: Array<{id:string;name:string;servings:SharedMealAmount;protected:boolean}>;
   ingredients: Array<{id:string;name:string;quantity:SharedMealQuantity|null;groupIds:string[];exclusions:string[]}>;
   bindings?: Array<{id:string;groupId:string;ingredientId:string;quantity:SharedMealQuantity}>;

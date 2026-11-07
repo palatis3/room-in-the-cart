@@ -2,6 +2,12 @@
 
 Updated November 7, 2026 UTC. The owner resumed and explicitly approved the reviewed hosted staging update; the full first-version goal is active and release acceptance remains incomplete. Historical snapshots are preserved in [the handoff archive](CURRENT-HANDOFF-HISTORY-20261106.md).
 
+## Keeping recipe restrictions through shared checkout, November 7
+
+An approved household idea now carries its meal-wide exclusions and known preparation time into the separate proposal and shopper review. Mapping a locally reviewed dinner also carries the preparation steps recorded as complete. After placement, the shopper can see the sealed facts when matching a delivery or checking coverage by meal. A confirmed delivery that conflicts with a meal-wide exclusion supplies zero coverage. Existing saved meals can omit the new fields. A pending proposal that lost facts from its approved idea requires fresh review before the shopper can apply it.
+
+The service passed 185 PostgreSQL cases. Tests covered a physically matched but excluded delivery, replay of a previously saved proposal receipt, refusal to apply a stale proposal and preservation of already-applied history. The native Swift planner and shopper used pinned HTTPS to send, apply, place and reopen a meal with a 120-minute lead time, a peanut exclusion and a completed soaking step. The first simulator walkthrough reopened a shopper-approved meal with both exclusions and its 25-minute preparation time. These service changes have not been deployed to staging.
+
 ## Dinner and store-quote walkthroughs, November 7
 
 The English and Spanish paid dinner walkthroughs on `08309eb` opened Dinners before the fixture had loaded its pickup database. The fixture now waits for the database and prepares checkout when the selected scenario requires it. All five original dinner decision walkthroughs passed on the simulator with zero runtime warnings.

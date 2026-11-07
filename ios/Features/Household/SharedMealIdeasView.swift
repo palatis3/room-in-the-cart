@@ -127,7 +127,11 @@ private struct SharedMealIdeaEditor: View {
             }
             if own {
                 Button(ht("Add ingredient")) { draft.ingredients.append(.init()) }.disabled(draft.ingredients.count >= 60 || model.pending != nil)
-                Button(ht("Save household draft for review")) { Task { await model.write(ideaID: ideaID, draft: draft, approve: false, reviewed: false) } }
+                Button(ht("Save household draft for review")) {
+                    let reviewedDraft = draft.normalizedForSave(), selectedID = ideaID
+                    draft = reviewedDraft
+                    Task { await model.write(ideaID: selectedID, draft: reviewedDraft, approve: false, reviewed: false) }
+                }
                     .disabled(model.pending != nil || saved?.draft == draft).accessibilityIdentifier("household-idea-save")
             }
             if let saved, saved.draft == draft {
@@ -160,7 +164,8 @@ private struct SharedMealIdeaEditor: View {
         } message: { Text(ht("This saves adult approval only. Linking a meal and changing shared packs require separate reviews.")) }
     }
     private func lines(_ value: Binding<[String]>) -> Binding<String> {
-        Binding(get: { value.wrappedValue.joined(separator: "\n") }, set: { value.wrappedValue = $0.split(separator: "\n", omittingEmptySubsequences: false).map(String.init).filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty } })
+        Binding(get: { value.wrappedValue.joined(separator: "\n") },
+                set: { value.wrappedValue = $0.components(separatedBy: "\n") })
     }
     private func number(_ title: String, value: Binding<Int?>) -> some View { TextField(title, value: value, format: .number).keyboardType(.numberPad) }
     private func template() {

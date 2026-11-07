@@ -141,6 +141,7 @@ private struct DeliveryMealMatches: View {
                                         }
                                         Section(occurrence.meal.title) {
                                             Text(verbatim: occurrence.meal.day)
+                                            SharedMealPreparationFacts(planning: plan)
                                             LabeledContent(ht("Ingredient quantity"), value: deliveryQuantityText(ingredient.quantity))
                                             if !ingredient.exclusions.isEmpty {
                                                 LabeledContent(ht("Ingredient exclusions"), value: ingredient.exclusions.joined(separator: ", "))

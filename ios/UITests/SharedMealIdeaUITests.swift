@@ -31,6 +31,7 @@ import XCTest
         tap(element("fixture.s26.open"))
         tap(app.buttons["Use editable household idea template"])
         fill("Fractional chickpea supper", into: "Meal name", replacing: true)
+        fill("Peanuts\nMilk", into: "Shared household exclusions, one per line")
         // Start with the real editable template, then retain and correct one ingredient.
         tap(app.buttons.matching(identifier: "Remove ingredient").firstMatch)
         // The retained ingredient is above the removed row's scroll position.
@@ -97,6 +98,8 @@ import XCTest
         assertText("Fixture shared soup")
         assertText("Fractional chickpea supper")
         assertText("1/2 cup")
+        assertMealFact("shared-meal-exclusions", contains: "Peanuts, Milk")
+        assertMealFact("shared-meal-preparation-minutes", contains: "25")
         waitCounter("ideas", "Fixture idea writes: 2")
         waitCounter("proposals", "Fixture meal proposals: 1")
         waitCounter("basket", "Fixture basket writes: 1")
@@ -242,6 +245,11 @@ import XCTest
             // reversing when a visible label does not expose an actionable hit point.
             scrollContent(upward: true)
         }
+    }
+    private func assertMealFact(_ identifier: String, contains expected: String) {
+        let fact = element(identifier)
+        reveal(fact)
+        XCTAssertTrue((fact.label + " " + (fact.value as? String ?? "")).contains(expected), fact.debugDescription)
     }
     private func assertText(_ text: String) {
         let matches = app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", text))

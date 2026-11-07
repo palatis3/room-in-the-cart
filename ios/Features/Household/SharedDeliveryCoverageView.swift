@@ -22,6 +22,7 @@ struct SharedDeliveryCoverageView: View {
                     }
                     ForEach(page.meals ?? []) { occurrence in
                         Section {
+                            if let planning = occurrence.meal.planning { SharedMealPreparationFacts(planning: planning) }
                             if result.unplannedOccurrenceIds.contains(occurrence.id) {
                                 Text(ht("This meal has no recorded ingredient requirements."))
                             }
@@ -63,6 +64,10 @@ struct SharedDeliveryCoverageView: View {
         if let plan = occurrence.meal.planning, let ingredient = plan.ingredients.first(where: { $0.id == need.ingredientId }) {
             VStack(alignment: .leading, spacing: 8) {
                 Text(ingredient.name).font(.headline)
+                let ingredientRules = ingredient.exclusions.filter { !(plan.exclusions ?? []).contains($0) }
+                if !ingredientRules.isEmpty {
+                    LabeledContent(ht("Ingredient exclusions"), value: ingredientRules.joined(separator: ", "))
+                }
                 if need.protected { Label(ht("Protected portions"), systemImage: "lock") }
                 let groups = plan.groups.filter { need.groupIds.contains($0.id) }.map(\.name)
                 if !groups.isEmpty { Text(groups.joined(separator: ", ")) }
