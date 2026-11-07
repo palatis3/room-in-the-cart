@@ -47,13 +47,19 @@ struct RecordsToolsView: View {
                     }
                 }
             }
-            if let error = model.error { Section { Label(errorMessage(error), systemImage: "exclamationmark.triangle").foregroundStyle(.red).accessibilityIdentifier("records.error") } }
-            if let status = model.status {
+            if model.error != nil || model.status != nil {
                 Section {
-                    Text(status).accessibilityAddTraits(.updatesFrequently)
-                        .accessibilityIdentifier("records.status")
-                        .accessibilityFocused($actionResultFocused)
-                        .id("records.actionResult")
+                    Group {
+                        if let error = model.error {
+                            Label(errorMessage(error), systemImage: "exclamationmark.triangle")
+                                .foregroundStyle(.red).accessibilityIdentifier("records.error")
+                        } else if let status = model.status {
+                            Text(status).accessibilityIdentifier("records.status")
+                        }
+                    }
+                    .accessibilityAddTraits(.updatesFrequently)
+                    .accessibilityFocused($actionResultFocused)
+                    .id("records.actionResult")
                 }
             }
             currentSources

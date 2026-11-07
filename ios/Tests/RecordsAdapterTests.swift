@@ -108,6 +108,31 @@ final class RecordsAdapterTests: XCTestCase {
         XCTAssertEqual(model.error, .unavailable)
         XCTAssertTrue(model.currentRecords.isEmpty)
     }
+    @MainActor func testDamagedBackupReportsMalformedAndPreservesLiveAndRecoveredRecords() async throws {
+        let directory = try temporaryDirectory()
+        let manifest = directory.appendingPathComponent("manifest.json")
+        let registry = try RecoveryRegistry(url: manifest)
+        let live = try comparison()
+        let earlier = try ImportedRecipe(title: "Earlier rice").archiveRecord(origin: "prior-kitchen")
+        let old = try ArchiveCodec.make(records: [earlier], kind: .personalRecovery, origin: earlier.origin, revision: earlier.revision)
+        _ = try await registry.apply(registry.review(old))
+        let before = try Data(contentsOf: manifest)
+        let model = RecordsToolsModel(registry: registry, snapshot: { [live] },
+                                     validateNativePayload: { _ in XCTFail("A damaged file must not reach record validation") },
+                                     openRecovered: { _ in XCTFail("A damaged file must not open a workspace") })
+        await model.refresh()
+        let recovered = model.recoveredRecords
+        let file = directory.appendingPathComponent("damaged.roomrecovery")
+        // Balanced braces pass the bounded structural preflight. The algorithm value is missing.
+        try Data(#"{"algorithm":,"formatMajor":1}"#.utf8).write(to: file)
+        await model.importFile(file, recipes: false)
+        XCTAssertEqual(model.error, .malformed)
+        XCTAssertNotNil(model.actionOutcomeID)
+        XCTAssertNil(model.review)
+        XCTAssertEqual(model.currentRecords, [live])
+        XCTAssertEqual(model.recoveredRecords, recovered)
+        XCTAssertEqual(try Data(contentsOf: manifest), before)
+    }
     @MainActor func testUnsupportedNativeImportStagesNothingAndPreservesRegistryBytes() async throws {
         let directory = try temporaryDirectory(), registry = try RecoveryRegistry(url: directory.appendingPathComponent("manifest.json"))
         let record = try comparison()

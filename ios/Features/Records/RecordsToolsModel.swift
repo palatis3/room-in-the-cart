@@ -151,11 +151,13 @@ import RecordArchive
                 try requireAuthorization(authorize)
                 recipeReport = report
             } else {
-                let object = try JSONSerialization.jsonObject(with: data) as? [String: Any]
-                let envelope = object?["algorithm"] != nil ? try EncryptedArchive.open(data, key: recoveryKey) : try ArchiveCodec.decode(data)
+                guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                    throw ArchiveError.malformed
+                }
+                let envelope = object["algorithm"] != nil ? try EncryptedArchive.open(data, key: recoveryKey) : try ArchiveCodec.decode(data)
                 try await stage(envelope, authorize: authorize)
             }
-        } catch { fail(error) }
+        } catch { fail(error, reveal: true) }
     }
     func stageManualRecipe(_ recipe: ImportedRecipe) async {
         guard !busy else { return }
@@ -305,13 +307,13 @@ import RecordArchive
     private func requireAuthorization(_ authorize: Authorization) throws {
         guard authorize() else { invalidateForSourceErasure(); throw ArchiveError.unavailable }
     }
-    func reportFileError(_ error: Error) { fail(error) }
+    func reportFileError(_ error: Error) { fail(error, reveal: true) }
     private func publishOutcome(_ text: String) {
         error = nil; status = text; actionOutcomeID = UUID()
     }
-    private func fail(_ error: Error) {
+    private func fail(_ error: Error, reveal: Bool = false) {
         self.error = error as? ArchiveError ?? .unavailable
-        status = nil; actionOutcomeID = nil
+        status = nil; actionOutcomeID = reveal ? UUID() : nil
     }
 }
 
