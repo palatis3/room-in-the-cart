@@ -88,6 +88,8 @@ import XCTest
             XCTAssertTrue(before.keyboardVisible)
             XCTAssertEqual(before.amount, "3")
             let frame = try XCTUnwrap(before.doneFrame)
+            XCTAssertGreaterThanOrEqual(frame.width, 44, "Done target width")
+            XCTAssertGreaterThanOrEqual(frame.height, 44, "Done target height")
             let bounds = before.bounds
             let point = CGPoint(x: frame.midX + dx, y: frame.midY + dy)
             let started = Date().timeIntervalSince1970
