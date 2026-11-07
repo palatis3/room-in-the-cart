@@ -238,6 +238,11 @@ struct LedgerCheckoutEntry: View {
             }
             else if let shop = ledger.shop {
                 List {
+                    if let proof = shop.initialCheckoutChange {
+                        NavigationLink(SavedCheckoutChangeView.title) {
+                            SavedCheckoutChangeView(proof: proof, shopID: shop.id)
+                        }.accessibilityIdentifier("oneChange.savedReview")
+                    }
                     Section {
                         Text(pTr("Review the list for checkout")).font(.title2.bold())
                         Text(pTr("Review the quantities, protected purposes, store and budget together. Applying clears previous checkout prices."))

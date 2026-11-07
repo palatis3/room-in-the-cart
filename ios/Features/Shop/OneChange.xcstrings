@@ -1,0 +1,533 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "After this change": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "After this change"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Después del cambio"
+          }
+        }
+      }
+    },
+    "All items, fees, discounts, tax and deposits": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All items, fees, discounts, tax and deposits"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todos los artículos, cargos, descuentos, impuestos y depósitos"
+          }
+        }
+      }
+    },
+    "Amount shown by retailer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amount shown by retailer"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importe mostrado por la tienda"
+          }
+        }
+      }
+    },
+    "Before this change": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Before this change"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Antes del cambio"
+          }
+        }
+      }
+    },
+    "Both previews use the same pickup slot and keep the other quantities and protected portions.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Both previews use the same pickup slot and keep the other quantities and protected portions."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las dos vistas previas usan el mismo turno de recogida y conservan las demás cantidades y porciones reservadas."
+          }
+        }
+      }
+    },
+    "Change in checkout total": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change in checkout total"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diferencia en el total de la compra"
+          }
+        }
+      }
+    },
+    "Changed checkout total in USD": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changed checkout total in USD"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total de la compra con el cambio en USD"
+          }
+        }
+      }
+    },
+    "Changed total includes every item and charge": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changed total includes every item and charge"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El total con el cambio incluye todos los artículos y cargos"
+          }
+        }
+      }
+    },
+    "Check fees, promotions, discounts, tax and deposits on each preview. Leave an unknown amount blank.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check fees, promotions, discounts, tax and deposits on each preview. Leave an unknown amount blank."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa los cargos, las promociones, los descuentos, los impuestos y los depósitos en cada vista previa. Deja en blanco los importes que desconozcas."
+          }
+        }
+      }
+    },
+    "Check one change": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check one change"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar un cambio"
+          }
+        }
+      }
+    },
+    "Check one proposed change using the checkout totals shown by the retailer before and after it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check one proposed change using the checkout totals shown by the retailer before and after it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa un cambio con los totales que muestra la tienda antes y después de hacerlo."
+          }
+        }
+      }
+    },
+    "Check the change, store, source and USD amounts, and confirm the previews cover the same pickup.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the change, store, source and USD amounts, and confirm the previews cover the same pickup."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa el cambio, la tienda, la fuente y los importes en USD. Confirma que las dos vistas previas corresponden a la misma recogida."
+          }
+        }
+      }
+    },
+    "Compare two retailer previews": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compare two retailer previews"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparar dos vistas previas de la tienda"
+          }
+        }
+      }
+    },
+    "Current checkout total in USD": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current checkout total in USD"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total actual de la compra en USD"
+          }
+        }
+      }
+    },
+    "Current total includes every item and charge": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current total includes every item and charge"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El total actual incluye todos los artículos y cargos"
+          }
+        }
+      }
+    },
+    "Firm whole-pickup cap in USD, optional": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Firm whole-pickup cap in USD, optional"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Límite fijo para toda la compra en USD, opcional"
+          }
+        }
+      }
+    },
+    "I accept this overage for this draft.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I accept this overage for this draft."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acepto superar el límite por este importe para este borrador."
+          }
+        }
+      }
+    },
+    "Included charges have not been confirmed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Included charges have not been confirmed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Queda por confirmar qué cargos están incluidos."
+          }
+        }
+      }
+    },
+    "Leave without saving": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave without saving"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salir sin guardar"
+          }
+        }
+      }
+    },
+    "Pickup draft saved": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pickup draft saved"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borrador de recogida guardado"
+          }
+        }
+      }
+    },
+    "Proposed change": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proposed change"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambio propuesto"
+          }
+        }
+      }
+    },
+    "Record the pickup date and time": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Record the pickup date and time"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registrar la fecha y hora de recogida"
+          }
+        }
+      }
+    },
+    "Review this change": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review this change"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar este cambio"
+          }
+        }
+      }
+    },
+    "Same pickup slot, time unrecorded": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Same pickup slot, time unrecorded"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mismo turno de recogida, sin hora registrada"
+          }
+        }
+      }
+    },
+    "Save both retailer previews in a private draft named for this change. You can add the shopping list later.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save both retailer previews in a private draft named for this change. You can add the shopping list later."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guarda ambas vistas previas de la tienda en un borrador privado con el nombre de este cambio. Puedes agregar la lista de compras después."
+          }
+        }
+      }
+    },
+    "Save changed preview as a new pickup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save changed preview as a new pickup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar la vista previa con el cambio como nueva recogida"
+          }
+        }
+      }
+    },
+    "Saved checkout change": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved checkout change"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambio de compra guardado"
+          }
+        }
+      }
+    },
+    "Source of these prices": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source of these prices"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fuente de estos precios"
+          }
+        }
+      }
+    },
+    "Store and branch": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Store and branch"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tienda y sucursal"
+          }
+        }
+      }
+    },
+    "The difference is unresolved.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The difference is unresolved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún no se puede determinar la diferencia."
+          }
+        }
+      }
+    },
+    "The saved comparison could not be verified.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The saved comparison could not be verified."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo verificar la comparación guardada."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

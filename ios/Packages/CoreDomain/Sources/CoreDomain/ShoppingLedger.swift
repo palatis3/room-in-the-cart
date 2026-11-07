@@ -386,6 +386,7 @@ public struct LedgerWorkspace: Codable, Equatable, Sendable {
 public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
     public let id: UUID
     public var title: String
+    public let initialCheckoutChange: LedgerCheckoutChange?
     public private(set) var basis: ShopBasis
     public private(set) var basisRevision: Int
     public private(set) var stapleReviews: [StapleRecallReceipt]?
@@ -399,7 +400,8 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
     public private(set) var mealOccurrences: [MealOccurrence]
     public private(set) var importBatches: [LedgerImportBatch]
 
-    public init(id: UUID = UUID(), title: String = "Pickup", basis: ShopBasis = ShopBasis()) {
+    public init(id: UUID = UUID(), title: String = "Pickup", basis: ShopBasis = ShopBasis(), initialCheckoutChange: LedgerCheckoutChange? = nil) {
+        self.initialCheckoutChange = initialCheckoutChange
         self.id = id; self.title = title; self.basis = basis; basisRevision = 0; revision = 0
         revisionID = UUID(); revisions = []; quoteReference = nil
         lines = []; contributions = []; allocations = []; mealOccurrences = []; importBatches = []
@@ -820,6 +822,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
 
     public func validate() throws {
         try basis.validate(); try ledgerText(title, nonempty: true, maximum: 512)
+        _ = try initialCheckoutChange?.comparison(for: id)
         guard revision >= 0, basisRevision >= 0, basisRevision <= revision,
               lines.count <= 10_000, contributions.count <= 20_000, allocations.count <= 20_000,
               mealOccurrences.count <= 2_000, importBatches.count <= 2_000, revisions.count <= 100_000 else {

@@ -13,6 +13,51 @@ import UIKit
         app.terminate()
     }
 
+    func testFirstRunCheckOneChangeCanLeaveOrSaveAndReopenExactRetailerEvidence() {
+        launch(reset: true)
+        let shortcut = element("shop.checkOneChange")
+        tap(shortcut)
+        XCTAssertTrue(app.navigationBars["Check one change"].waitForExistence(timeout: 5))
+        tap(app.buttons["Leave without saving"])
+        XCTAssertTrue(element("openPickupList").label.contains("Start pickup"))
+        tap(shortcut)
+        fill("Defer coffee, keep salsa", into: "oneChange.change")
+        fill("North Market West", into: "oneChange.branch")
+        fill("Retailer app", into: "oneChange.source")
+        fill("40.90", into: "oneChange.before")
+        enableSwitch("oneChange.beforeIncludesCharges")
+        fill("36.30", into: "oneChange.after")
+        enableSwitch("oneChange.afterIncludesCharges")
+        fill("38", into: "oneChange.cap")
+        enableSwitch("oneChange.samePickup")
+        tap(element("oneChange.review"))
+
+        func verifyComparison() {
+            assertText("North Market West")
+            assertText("Retailer app")
+            assertText("$40.90")
+            assertText("$2.90")
+            assertText("$36.30")
+            assertText("$1.70")
+            let delta = element("oneChange.difference")
+            reveal(delta)
+            XCTAssertTrue(delta.label.contains("-$4.60") || (delta.value as? String)?.contains("-$4.60") == true, delta.debugDescription)
+        }
+        verifyComparison()
+        tap(app.buttons["Cancel preview"])
+        tap(element("oneChange.review"))
+        tap(element("oneChange.save"))
+        let done = element("oneChange.finish")
+        XCTAssertTrue(done.waitForExistence(timeout: 8))
+        tap(done)
+        restart()
+        XCTAssertTrue(shortcut.label.contains("Review checkout"))
+        tap(shortcut)
+        tap(element("oneChange.savedReview"))
+        verifyComparison()
+        capture("S01-reopened-private-change-evidence")
+    }
+
     func testUnknownProduceWeightUsesSavedWholePickupCapAndBillingIncrement() {
         enterWeighedPickup(knownTax: true)
     }
