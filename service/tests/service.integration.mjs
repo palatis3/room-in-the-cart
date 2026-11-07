@@ -1,4 +1,5 @@
 import test,{before,after} from 'node:test';
+import {grocery30Routing} from './grocery30-routing.mjs';
 import assert from 'node:assert/strict';
 import pg from 'pg';
 import {randomUUID,randomBytes} from 'node:crypto';
@@ -74,6 +75,9 @@ if(process.env.RITC_TEST_NATIVE_WIRE==='1') test('assigned iPhone shopper carrie
   await exerciseNativeClient({service:server,owner:f.actors.Mia,householdId:f.h,shopId:f.dest,
     deferredRequestId:f.original.requestId});
 });
+
+test('Foundation Grocery 30 routing and replay vectors over four authenticated HTTP clients',
+  t=>grocery30Routing(t,fixture,admin,origin));
 
 async function purchaseFixture(author='Sam') {
   const f=await fixture(),sent=await f.send(author),requestId=sent.request.requestId;
