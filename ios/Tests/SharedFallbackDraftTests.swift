@@ -36,6 +36,19 @@ final class SharedFallbackDraftTests: XCTestCase {
         XCTAssertThrowsError(try draft.recipe())
     }
 
+    func testDisclosureValidatesPastedWordingBeforeLeavingTheEditor() throws {
+        var draft = recipeDraft()
+        draft.ingredients[0].name = "  Black beans  "
+        XCTAssertEqual(try draft.recipe().ingredients[0].name, "Black beans")
+        draft.ingredients[0].notes = "Rinse\u{0}twice"
+        XCTAssertThrowsError(try draft.recipe())
+        draft.ingredients[0].notes = String(repeating: "é", count: 4097)
+        XCTAssertThrowsError(try draft.recipe())
+        draft.ingredients[0].notes = ""
+        draft.title = String(repeating: "A", count: 241)
+        XCTAssertThrowsError(try draft.recipe())
+    }
+
     func testTwoIngredientsShareOneReviewedPackOnlyByItsSelectedIdentity() throws {
         var raw = recipeDraft()
         raw.elapsed = "12"

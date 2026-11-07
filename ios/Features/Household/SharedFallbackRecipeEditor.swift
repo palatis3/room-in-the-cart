@@ -27,20 +27,22 @@ struct DisclosedFallbackDraft {
             guard let url = URLComponents(string: address), ["https", "http"].contains(url.scheme?.lowercased()),
                   url.host?.isEmpty == false, url.user == nil, url.password == nil else { throw ClientError.configuration }
         }
-        return try SharedFallbackRecipe(title: title.trimmingCharacters(in: .whitespacesAndNewlines), portions: count,
+        let recipe = try SharedFallbackRecipe(title: title.trimmingCharacters(in: .whitespacesAndNewlines), portions: count,
             notes: notes, sourceURL: address.isEmpty ? nil : address, exclusions: DinnerEntry.list(exclusions),
             requiredLeadMinutes: DinnerEntry.minutes(lead, maximum: 1_000_000), elapsedMinutes: DinnerEntry.minutes(elapsed, maximum: 1_000_000),
             ingredients: ingredients.map { row in
                 let ingredient = try row.ingredient()
-                guard !ingredient.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw ClientError.configuration }
+                let name = ingredient.name.trimmingCharacters(in: .whitespacesAndNewlines)
                 let quantity = try ingredient.quantity.map { quantity in
                     guard quantity.amount > .zero, quantity.amount.numerator <= 1_000_000_000,
                           quantity.amount.denominator <= 1_000_000_000 else { throw ClientError.configuration }
                     return SharedMealQuantity(amount: .init(numerator: Int(quantity.amount.numerator), denominator: Int(quantity.amount.denominator)),
                                               unit: quantity.unit.rawValue, originalLiteral: quantity.originalLiteral)
                 }
-                return .init(id: row.id, name: ingredient.name, quantity: quantity, exclusions: ingredient.exclusions, notes: ingredient.notes)
+                return .init(id: row.id, name: name, quantity: quantity, exclusions: ingredient.exclusions, notes: ingredient.notes)
             })
+        try recipe.validateForDisclosure()
+        return recipe
     }
 }
 

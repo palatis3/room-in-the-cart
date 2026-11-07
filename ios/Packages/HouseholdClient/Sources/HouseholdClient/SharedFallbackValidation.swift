@@ -2,9 +2,9 @@ import Foundation
 
 private func unique<T: Hashable>(_ values: [T]) -> Bool { Set(values).count == values.count }
 private func validTags(_ values: [String], limit: Int = 60) -> Bool {
-    values.count <= limit && values.allSatisfy { sharedMealText($0, 240) }
+    values.count <= limit && values.allSatisfy { sharedMealText($0, 240) && !$0.utf8.contains(0) }
 }
-private func measured(_ q: SharedMealQuantity) -> Bool { q.validStockQuantity && q.amount.numerator > 0 }
+private func measured(_ q: SharedMealQuantity) -> Bool { q.validStockQuantity && q.amount.numerator > 0 && !q.originalLiteral.utf8.contains(0) }
 
 extension SharedFallbackSource {
     func validate() throws {
@@ -17,15 +17,21 @@ extension SharedFallbackSource {
 }
 
 extension SharedFallbackRecipe {
+    public func validateForDisclosure() throws {
+        try validate()
+        guard try encoded(self).count <= 512 * 1024 else { throw ClientError.configuration }
+    }
+
     func validate() throws {
         let groups = groups ?? []
-        guard sharedMealText(title, 240), (1...1000).contains(portions), notes.utf8.count <= 8192, (sourceURL?.utf8.count ?? 0) <= 2048,
+        guard sharedMealText(title, 240), !title.utf8.contains(0), (1...1000).contains(portions),
+              !notes.utf8.contains(0), notes.utf8.count <= 8192, sourceURL?.utf8.contains(0) != true, (sourceURL?.utf8.count ?? 0) <= 2048,
               validTags(exclusions), (0...1_000_000).contains(requiredLeadMinutes ?? 0), (0...1_000_000).contains(elapsedMinutes ?? 0),
               (1...260).contains(ingredients.count), unique(ingredients.map(\.id)), groups.count <= 30, unique(groups.map(\.id))
         else { throw ClientError.configuration }
         var servings = SharedDeliveryCoverage.Fraction.zero
         for group in groups {
-            guard sharedMealText(group.name, 240), validTags(group.exclusions) else { throw ClientError.configuration }
+            guard sharedMealText(group.name, 240), !group.name.utf8.contains(0), validTags(group.exclusions) else { throw ClientError.configuration }
             try group.servings.validate()
             servings = servings.adding(.init(numerator: String(group.servings.numerator), denominator: String(group.servings.denominator)))
         }
@@ -33,7 +39,8 @@ extension SharedFallbackRecipe {
         let groupIDs = Set(groups.map(\.id))
         for ingredient in ingredients {
             let ids = ingredient.groupIds ?? [], parts = ingredient.bindings ?? []
-            guard sharedMealText(ingredient.name, 240), ingredient.notes.utf8.count <= 8192, validTags(ingredient.exclusions),
+            guard sharedMealText(ingredient.name, 240), !ingredient.name.utf8.contains(0), ingredient.notes.utf8.count <= 8192,
+                  !ingredient.notes.utf8.contains(0), validTags(ingredient.exclusions),
                   ingredient.quantity.map(measured) ?? true, unique(ids), groupIDs.isSuperset(of: ids), unique(parts.map(\.groupId)),
                   Set(ids).isSuperset(of: parts.map(\.groupId)) else { throw ClientError.configuration }
             if parts.isEmpty { continue }

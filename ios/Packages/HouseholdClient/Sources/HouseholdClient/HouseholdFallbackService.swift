@@ -20,8 +20,7 @@ private struct FallbackMutation: Codable {
         case "accept":
             guard let source, let recipe, usual != nil else { throw ClientError.configuration }
             try source.validate()
-            try recipe.validate()
-            guard try encoded(recipe).count <= 512 * 1024 else { throw ClientError.configuration }
+            try recipe.validateForDisclosure()
         case "revoke":
             guard baseRevision != nil, source == nil, recipe == nil, usual == nil else { throw ClientError.configuration }
         default: throw ClientError.configuration
