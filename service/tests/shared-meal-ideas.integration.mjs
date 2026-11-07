@@ -4,6 +4,7 @@ import pg from 'pg';
 import {migrate} from '../scripts/migrate.mjs';
 import {randomUUID} from 'node:crypto';
 import {generateKeyPair,exportJWK,createLocalJWKSet,SignJWT} from 'jose';
+import {digest} from '../dist/database.js';
 import {HouseholdRepository} from '../dist/repository.js';
 import {JWTIdentityVerifier,SupabaseSessionVerifier} from '../dist/auth.js';
 import {BillingService} from '../dist/billing/service.js';
@@ -45,7 +46,7 @@ async function mealFixture() {
 }
 
 const ideaDraft=()=>({title:'Household rice bowls',source:'app_template',servings:2,minutes:25,assumedExtras:['Water'],exclusions:[],ingredients:[{id:randomUUID(),name:'Rice',required:600,unit:'gram',stock:500,reservations:[{name:'Protected Tuesday lunch',amount:250}],pack:400,usableNumerator:3,usableDenominator:4,evidence:'Household stock checked; package label entered'}]});
-function mealFor(draft){return{title:draft.title,day:'2026-11-09',kind:'dinner',portions:draft.servings,protected:false,planning:{groups:[],ingredients:draft.ingredients.map(i=>({id:i.id,name:i.name,quantity:{amount:typeof i.required==='number'?{numerator:i.required,denominator:1}:i.required,unit:i.unit,originalLiteral:`${typeof i.required==='number'?i.required:i.required.denominator===1?i.required.numerator:i.required.numerator+'/'+i.required.denominator} ${i.unit}`},groupIds:[],exclusions:[]}))}};}
+function mealFor(draft){return{title:draft.title,day:'2026-11-09',kind:'dinner',portions:draft.servings,protected:false,planning:{...(draft.exclusions.length ? {exclusions:draft.exclusions} : {}),...(draft.minutes!==null ? {leadTimeMinutes:draft.minutes} : {}),groups:[],ingredients:draft.ingredients.map(i=>({id:i.id,name:i.name,quantity:{amount:typeof i.required==='number'?{numerator:i.required,denominator:1}:i.required,unit:i.unit,originalLiteral:`${typeof i.required==='number'?i.required:i.required.denominator===1?i.required.numerator:i.required.numerator+'/'+i.required.denominator} ${i.unit}`},groupIds:[],exclusions:[]}))}};}
 async function approved(f,author=f.planner,draft=ideaDraft()){
  const path=f.base+'/shops/'+f.shopId+'/meal-plan/ideas',page=ok(await call(author,path));
  const save={clientKey:randomUUID(),ideaId:randomUUID(),baseRevision:null,shopRevision:page.shopRevision,authorityEpoch:page.authorityEpoch,grantRevision:page.grantRevision,action:'save',draft,reviewedHouseholdEvidence:false};
@@ -156,4 +157,93 @@ test('exact fractional cups survive save edit approve proposal and shopper apply
  assert.equal(exact.planning.ingredients[1].quantity.unit,'ounce');assert.equal(exact.planning.ingredients[2].quantity.unit,'fluidOunce');
  ok(await call(f.owner,f.base+'/commands','POST',f.patch(2,{occurrenceId:a.proposal.occurrenceId,baseMealRevision:null,meal:exact,changeProposalId:a.proposal.proposalId})));
  assert.deepEqual(ok(await call(f.owner,f.path)).meals.find(m=>m.occurrenceId===a.proposal.occurrenceId).meal,exact);
+});
+
+test('an approved meal keeps its reviewed restrictions and time through checkout and rejects conflicting delivered food',async()=>{
+ const f=await mealFixture(),draft=ideaDraft();
+ draft.exclusions=['sin sésamo','No nuts'];draft.minutes=1_000_000;
+ const {proposal}=await approved(f,f.planner,draft);
+ const plan=proposal.meal.planning;
+ assert.deepEqual(plan.exclusions,draft.exclusions);assert.equal(plan.leadTimeMinutes,1_000_000);
+ assert.deepEqual(plan.ingredients[0].exclusions,[]);assert.equal(plan.completedSteps,undefined);
+ for(const changed of [{...plan,exclusions:undefined,leadTimeMinutes:undefined},{...plan,exclusions:undefined},{...plan,leadTimeMinutes:undefined},{...plan,exclusions:[...plan.exclusions].reverse()},
+   {...plan,leadTimeMinutes:999_999},{...plan,completedSteps:['Already prepared']}]){
+   const body={...proposal,meal:{...proposal.meal,planning:changed}};
+   assert.equal((await call(f.planner,f.changePath,'POST',body)).data.error?.code,'stale_idea');
+ }
+ ok(await call(f.planner,f.changePath,'POST',proposal));
+ const received=ok(await call(f.owner,f.changePath)).proposals[0].request.meal;
+ assert.deepEqual(received,proposal.meal);
+ const edit={occurrenceId:proposal.occurrenceId,baseMealRevision:null,meal:received,changeProposalId:proposal.proposalId};
+ const applied=f.patch(2,edit),save=body=>call(f.owner,f.base+'/commands','POST',body);
+ const receipt=ok(await save(applied));assert.deepEqual(ok(await save(applied)),receipt);
+ const command=(kind,body,revision=4)=>({v:1,replayWindow:f.owner.window,shopId:f.shopId,clientKey:randomUUID(),
+   kind,body,base:{shopRevision:revision,authorityEpoch:1}});
+ ok(await save(command('shop.reportPlaced',{occurredAt:new Date().toISOString()},3)));
+ const delivery=f.path+'/delivery-evidence';
+ const sealed=ok(await call(f.owner,delivery)).meals.find(m=>m.occurrenceId===proposal.occurrenceId);
+ assert.equal(sealed.revision,3);assert.deepEqual(sealed.meal,received);
+ const {sourceId}=ok(await save(command('delivery.register',{supplyRevision:0,placedRevision:3,
+   lineId:f.initial.lines[0].lineId,segmentKey:randomUUID(),foodName:'Rice mix',exclusionTags:['SÉSAMO']})));
+ ok(await save(command('delivery.match',{sourceId,supplyRevision:1,occurrenceId:sealed.occurrenceId,
+   mealRevision:sealed.revision,ingredientId:plan.ingredients[0].id,matched:true})));
+ const quantity=plan.ingredients[0].quantity,arrival=randomUUID();
+ ok(await save(command('delivery.arrival',{sourceId,supplyRevision:2,observationId:arrival,predecessorId:null,
+   arrivedAt:new Date(Date.now()-1000).toISOString(),received:quantity})));
+ ok(await save(command('delivery.usable',{sourceId,supplyRevision:3,observationId:randomUUID(),predecessorId:null,
+   arrivalObservationId:arrival,confirmedAt:new Date().toISOString(),usable:quantity})));
+ const need=ok(await call(f.owner,delivery+'/coverage')).needs.find(n=>n.occurrenceId===sealed.occurrenceId);
+ assert.deepEqual(need.issues,['exclusion']);assert.deepEqual(need.allocations,[]);
+ assert.equal(need.covered.numerator,'0');assert.equal(need.missing.numerator,'600');
+});
+
+test('an older pending idea proposal missing reviewed planning facts must be reviewed again before use',async()=>{
+ const f=await mealFixture(),draft=ideaDraft();draft.exclusions=['No nuts'];
+ const {proposal}=await approved(f,f.planner,draft);
+ ok(await call(f.planner,f.changePath,'POST',proposal));
+ const old=structuredClone(proposal);
+ delete old.meal.planning.exclusions;delete old.meal.planning.leadTimeMinutes;
+ // Reproduce the proposal body and fingerprint written before these fields existed.
+ await admin.query('UPDATE ritc.shared_meal_change SET body=$3,fingerprint=$4 WHERE household_id=$1 AND proposal_id=$2',
+   [f.h,proposal.proposalId,old,digest(old)]);
+ const apply=(request,meal)=>call(f.owner,f.base+'/commands','POST',f.patch(2,{
+   occurrenceId:request.occurrenceId,baseMealRevision:null,meal,changeProposalId:request.proposalId}));
+ const snapshot=async()=>ok(await call(f.owner,f.changePath));
+ const before=await snapshot();
+ assert.deepEqual(ok(await call(f.planner,f.changePath,'POST',old)),{saved:true,proposalId:old.proposalId});
+ assert.equal((await call(f.planner,f.changePath,'POST',{...old,reason:'Different request'})).status,409);
+ assert.equal((await call(f.planner,f.changePath,'POST',{...old,proposalId:randomUUID()})).data.error.code,'stale_idea');
+ assert.deepEqual(await snapshot(),before,'Historical receipt replay must not change the proposal or shop.');
+ assert.equal((await apply(old,old.meal)).data.error?.code,'stale_idea');
+ assert.equal((await apply(old,proposal.meal)).data.error?.code,'stale_proposal');
+ const [unchanged]=ok(await call(f.owner,f.changePath)).proposals;
+ assert.equal(unchanged.state,'pending');assert.deepEqual(unchanged.request,old);
+ assert.equal(ok(await call(f.owner,f.path)).meals.length,1);
+ const fresh={...proposal,proposalId:randomUUID()};
+ ok(await call(f.planner,f.changePath,'POST',fresh));ok(await apply(fresh,fresh.meal));
+ const page=ok(await call(f.owner,f.changePath));
+ assert.deepEqual(page.proposals.find(p=>p.proposalId===old.proposalId).request,old);
+ assert.equal(page.proposals.find(p=>p.proposalId===fresh.proposalId).state,'applied');
+ ok(await call(f.owner,f.path+'/meal-plan/planner','PUT',{authorityEpoch:1,grantRevision:1,plannerId:null}));
+ assert.equal((await call(f.planner,f.changePath,'POST',old)).status,404);
+});
+
+test('old idea proposal shape stays valid with no reviewed exclusions or time',async()=>{
+ const f=await mealFixture(),draft=ideaDraft();draft.minutes=null;
+ const {proposal,save}=await approved(f,f.planner,draft);
+ assert.deepEqual(Object.keys(proposal.meal.planning).sort(),['groups','ingredients']);
+ ok(await call(f.planner,f.changePath,'POST',proposal));
+ const edit={occurrenceId:proposal.occurrenceId,baseMealRevision:null,meal:proposal.meal,changeProposalId:proposal.proposalId};
+ const command=f.patch(2,edit),apply=()=>call(f.owner,f.base+'/commands','POST',command);
+ const receipt=ok(await apply());
+ assert.deepEqual(ok(await call(f.owner,f.path)).meals.find(m=>m.occurrenceId===proposal.occurrenceId).meal,proposal.meal);
+
+ // Model an already-applied historical revision whose source idea had more facts.
+ await admin.query('UPDATE ritc.shared_meal_idea SET draft=$3 WHERE household_id=$1 AND idea_id=$2',
+   [f.h,save.ideaId,{...draft,minutes:25,exclusions:['No nuts']}]);
+ assert.deepEqual(ok(await apply()),receipt);
+ assert.deepEqual(ok(await call(f.planner,f.changePath,'POST',proposal)),{saved:true,proposalId:proposal.proposalId});
+ const page=ok(await call(f.owner,f.changePath)),applied=page.proposals.find(p=>p.proposalId===proposal.proposalId);
+ assert.equal(applied.state,'applied');assert.deepEqual(applied.request.meal,proposal.meal);
+ assert.deepEqual(page.meals.find(m=>m.occurrenceId===proposal.occurrenceId).meal,proposal.meal);
 });

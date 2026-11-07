@@ -366,3 +366,17 @@ test('shopper reads protected meal coverage from current confirmed deliveries; a
  assert.deepEqual(corrected.needs.map(n=>[n.covered.numerator,n.missing.numerator]),[['0','400'],['150','50']]);
  assert.equal(corrected.needs[1].allocations[0].sourceId,sourceId);
 });
+
+test('a shopper can record completed prep and zero lead time without removing a protected group’s meal-wide restrictions',async()=>{
+ const f=await mealFixture(),occurrenceId=f.proposal.occurrenceId;
+ const meal=structuredClone(f.meal);
+ Object.assign(meal.planning,{exclusions:['No nuts','sin sésamo'],leadTimeMinutes:0,completedSteps:['Beans soaked','Tortillas counted']});
+ ok(await call(f.owner,f.base+'/commands','POST',f.patch(2,{occurrenceId,baseMealRevision:2,meal})));
+ const reduced=structuredClone(meal);reduced.planning.exclusions.pop();
+ const proposal={...f.proposal,meal:reduced,baseMealRevision:3,shopRevision:3};
+ const direct=f.patch(3,{occurrenceId,baseMealRevision:3,meal:reduced});
+ assert.equal((await call(f.planner,f.changePath,'POST',proposal)).data.error.code,'protected_meal');
+ assert.equal((await call(f.owner,f.base+'/commands','POST',direct)).data.error.code,'protected_meal');
+ const protectedMeal=ok(await call(f.owner,f.path)).meals[0].meal;
+ assert.deepEqual(protectedMeal,meal);
+});

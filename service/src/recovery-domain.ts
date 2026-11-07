@@ -75,9 +75,9 @@ function exclusionTerm(value: string): string {
   return value.normalize('NFKD').replace(/\p{M}/gu, '').toLocaleLowerCase('en')
     .split(/[^\p{L}\p{N}]+/u).filter(Boolean).join(' ');
 }
-export function exclusionConflict(need: Pick<RecoveryNeed,'name'|'exclusions'>, food: {name:string;exclusionTags:string[]}): boolean {
-  const labels = [need.name, food.name].map(value => ` ${exclusionTerm(value)} `);
-  const tags = food.exclusionTags.map(exclusionTerm);
+export function exclusionConflict(need: Pick<RecoveryNeed,'name'|'exclusions'>, food?: {name:string;exclusionTags:string[]}): boolean {
+  const labels = (food ? [need.name, food.name] : [need.name]).map(value => ` ${exclusionTerm(value)} `);
+  const tags = (food?.exclusionTags ?? []).map(exclusionTerm);
   return need.exclusions.some(value => {
     const literal = exclusionTerm(value);
     // A shopper can enter either "sesame" or "no sesame" ("sin sésamo").

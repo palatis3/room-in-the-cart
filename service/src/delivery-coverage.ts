@@ -69,6 +69,7 @@ export function deliveryCoverage(meals:SealedMeal[],sources:Source[]) {
     if(!plan?.ingredients.length) { unplannedOccurrenceIds.push(occurrenceId);continue; }
     for(const ingredient of plan.ingredients) {
       const target={occurrenceId,mealRevision:revision,ingredientId:ingredient.id};
+      const restrictions={name:ingredient.name,exclusions:[...(plan.exclusions??[]),...ingredient.exclusions]};
       const bindings=(plan.bindings??[]).filter(b=>b.ingredientId===ingredient.id);
       const exact=bindings.length>0 && bindings.length===ingredient.groupIds.length;
       const parts=exact ? bindings.map(b=>({groupIds:[b.groupId],required:b.quantity})) :
@@ -80,7 +81,7 @@ export function deliveryCoverage(meals:SealedMeal[],sources:Source[]) {
         const candidates=matched.get(targetKey(target))??[];
         if(!candidates.length) issues.add('noMatch');
         const eligible=candidates.filter(source=>{
-          if(exclusionConflict(ingredient,{name:source.foodName,exclusionTags:source.exclusionTags})) {issues.add('exclusion');return false;}
+          if(exclusionConflict(restrictions,{name:source.foodName,exclusionTags:source.exclusionTags})) {issues.add('exclusion');return false;}
           if(!source.confirmed) {issues.add('unconfirmed');return false;}
           if(required && dimension(required)!==dimension(source.confirmed.quantity)) {issues.add('unitMismatch');return false;}
           return true;

@@ -12,6 +12,9 @@ export const mealQuantity = z.object({
 }).strict();
 export const mealPlanning = z.object({
   sourceOccurrenceId: id.optional(),
+  exclusions: z.array(label).max(20).optional(),
+  leadTimeMinutes: z.number().int().min(0).max(1_000_000).optional(),
+  completedSteps: z.array(label).max(100).optional(),
   bindings: z.array(z.object({ id, groupId: id, ingredientId: id, quantity: mealQuantity }).strict()).max(200).optional(),
   groups: z.array(z.object({ id, name: label, servings: mealAmount, protected: z.boolean() }).strict()).max(30),
   ingredients: z.array(z.object({
@@ -57,6 +60,8 @@ export function preserveProtectedMeal(original: SharedMealValue | undefined, nex
   if (original.protected && (!next || !next.protected || next.portions < original.portions || next.kind !== original.kind)) fail();
   // A whole-meal reservation covers each named group even when its own flag is off.
   const protectedGroups = original.planning?.groups.filter(g => original.protected || g.protected) ?? [];
+  if ((original.protected || protectedGroups.length > 0) &&
+      original.planning?.exclusions?.some(restriction => !next?.planning?.exclusions?.includes(restriction))) fail();
   for (const group of protectedGroups) {
     const replacement = next?.planning?.groups.find(g => g.id === group.id);
     if (!replacement || (group.protected && !replacement.protected) || replacement.name !== group.name || !atLeast(replacement.servings, group.servings)) fail();
