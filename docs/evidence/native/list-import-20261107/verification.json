@@ -118,5 +118,25 @@
       "LocalStore: 74 passed, 0 deliberately skipped",
       "RecordArchive: 33 passed, 0 deliberately skipped"
     ]
+  },
+  "boundedImport": {
+    "integratedCommit": "f4f8910",
+    "before": "1,001 identical rows totaling 8,007 bytes reached an uncommittable preview. A separate valid 8,192-byte package label could not commit because the scalar quantity stored its original source text.",
+    "after": "Ordinary paste keeps the complete oversized text editable. Correcting it to 3 pears saves one item across restart. An 8,192-byte supported package label now commits with its full original wording and exact pack evidence.",
+    "nativeEvidenceSHA256": "b79a41d2fdce34ed9d1656dc1eb8d7c515b2158ede0258409ec819ef506b2ba8",
+    "selectedNativeTests": [
+      "RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testSelectedTextShowsUneditableSourceLimitAndAcceptsAShorterSelection",
+      "RoomInTheCartTests/LedgerSelectedTextPortTests/testRealLedgerRestartAcknowledgesExactReceiptWithoutDuplicate",
+      "RoomInTheCartUITests/ContextualNavigationUITests/testOversizedNativePasteKeepsTheOriginalAndAcceptsASmallerList",
+      "RoomInTheCartUITests/ContextualNavigationUITests/testLargeTextKeepsLongNativePasteEditableAndReviewReachable"
+    ],
+    "nativeRuntimeWarnings": 0,
+    "packageGate": [
+      "CoreDomain: 194 passed, 0 deliberately skipped",
+      "DeviceSurfaces: 30 passed, 0 deliberately skipped",
+      "HouseholdClient: 101 passed, 3 deliberately skipped",
+      "LocalStore: 74 passed, 0 deliberately skipped",
+      "RecordArchive: 33 passed, 0 deliberately skipped"
+    ]
   }
 }

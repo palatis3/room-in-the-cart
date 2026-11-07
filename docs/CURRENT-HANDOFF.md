@@ -2,6 +2,12 @@
 
 Updated November 7, 2026 UTC. The owner resumed and explicitly approved the reviewed hosted staging update; the full first-version goal is active and release acceptance remains incomplete. Historical snapshots are preserved in [the handoff archive](CURRENT-HANDOFF-HISTORY-20261106.md).
 
+## November 7 retailer prices and package labels
+
+Changing a pickup’s branch, slot, mode or quote scope requires fresh pricing. A saved West Market preview for $37.20 and its $2.40 fee remain under West after the shopper changes to East Market. East starts without a retailer price. The shopper can compare the earlier West quote with a new East quote of $39.05 before saving. The iOS 26.2 shopper tests reached both histories after restart. On the iPhone SE running iOS 17, the same two walkthroughs reached the correct active values but failed to open the earlier-evidence disclosures. That accessibility and navigation check is open.
+
+Plain and selected-text imports keep the original package wording separately from the editable food demand. On the iOS 17 simulator the shopper edited a two-by-fifteen-ounce label to a 28-ounce need and reopened it with both numbers intact. Nested packs retain their exact per-outer-pack contents. Missing inner quantities remain unresolved. The import boundary update validates the existing source-size and row limits before matching duplicates and retains the editable text for correction. [Package label checks](evidence/native/list-import-20261107/verification.json)
+
 ## November 7 bilingual list import
 
 An English or Spanish measure now keeps its exact quantity in list entry and structured capture. On an iPhone SE running iOS 17, the shopper entered “1 1/2 cups of arroz”, merged “1 1/2 tazas de arroz”, and reopened the same item after restarting the app. The list showed 3/2 US cups. SQLite held one line, both original contributions and the duplicate link. The native capture regression also covers a two-pack Spanish fluid-ounce entry and unresolved spoon measures. The five new CoreDomain regressions are in the compiled package gate. [Verification record](evidence/native/list-import-20261107/verification.json)
