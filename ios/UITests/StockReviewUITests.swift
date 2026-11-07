@@ -84,19 +84,26 @@ import XCTest
             XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
             let done = app.buttons["Done"]
             XCTAssertTrue(done.waitForExistence(timeout: 5) && done.isHittable)
-            let frame = done.frame, bounds = app.frame
+            let before = try keyboardState()
+            XCTAssertTrue(before.keyboardVisible)
+            XCTAssertEqual(before.amount, "3")
+            let frame = try XCTUnwrap(before.doneFrame)
+            let bounds = before.bounds
             let point = CGPoint(x: frame.midX + dx, y: frame.midY + dy)
             let started = Date().timeIntervalSince1970
             print("RITC_DONE_POINT \(name) \(started) x=\(point.x) y=\(point.y)")
             capture("Done-target-\(name)-before")
             app.coordinate(withNormalizedOffset: .zero)
                 .withOffset(CGVector(dx: point.x - bounds.minX, dy: point.y - bounds.minY)).tap()
-            let gone = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: app.keyboards.firstMatch)
-            let dismissed = XCTWaiter.wait(for: [gone], timeout: 4) == .completed
+            // The tap waits for the app to idle. Judge the same editor, keyboard,
+            // and toolbar together from one accessibility tree after that single tap.
+            let after = try keyboardState()
+            let dismissed = after.amount == "3" && !after.keyboardVisible && after.doneFrame == nil
             let record: [String: Any] = ["probe": name, "epoch": started,
                 "point": [Double(point.x), Double(point.y)],
                 "exposedFrame": [Double(frame.minX), Double(frame.minY), Double(frame.width), Double(frame.height)],
-                "keyboardDismissed": dismissed]
+                "keyboardVisibleAfter": after.keyboardVisible, "doneVisibleAfter": after.doneFrame != nil,
+                "amountAfter": after.amount ?? "", "keyboardDismissed": dismissed]
             results.append(record)
             let data = try JSONSerialization.data(withJSONObject: record, options: [.sortedKeys])
             let attachment = XCTAttachment(data: data, uniformTypeIdentifier: "public.json")
@@ -105,6 +112,22 @@ import XCTest
             app.terminate()
         }
         XCTAssertTrue(results.allSatisfy { $0["keyboardDismissed"] as? Bool == true }, "Each independently focused probe must dismiss on its single tap: \(results)")
+    }
+
+    private func keyboardState() throws -> (bounds: CGRect, amount: String?, keyboardVisible: Bool, doneFrame: CGRect?) {
+        let root = try app.snapshot()
+        var nodes = [root]
+        var amount: String?
+        var keyboardVisible = false
+        var doneFrame: CGRect?
+        while let node = nodes.popLast() {
+            nodes.append(contentsOf: node.children)
+            guard !node.frame.isEmpty, node.frame.intersects(root.frame) else { continue }
+            if node.elementType == .keyboard { keyboardVisible = true }
+            if node.elementType == .button, node.identifier == "Done" { doneFrame = node.frame }
+            if node.elementType == .textField, node.identifier == "stockReview.amount" { amount = node.value as? String }
+        }
+        return (root.frame, amount, keyboardVisible, doneFrame)
     }
 
     private func launch(reset: Bool) {
