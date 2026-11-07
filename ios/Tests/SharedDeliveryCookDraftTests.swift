@@ -86,6 +86,56 @@ final class SharedDeliveryCookDraftTests: XCTestCase {
         }
     }
 
+    func testCorrectionsCompareReviewedFactsAndKeepUnresolvedAmountsInEachRecipientLanguage() throws {
+        var changedPage = page
+        var sources = try XCTUnwrap(changedPage["sources"] as? [Object])
+        let correctedSourceName = "Lote de Sofía 🌶\n\nsegunda observación"
+        sources[0]["foodName"] = correctedSourceName
+        changedPage["sources"] = sources
+        var later = coverage
+        later["asOf"] = "2026-11-01T07:30:00Z"
+        for language in ["en", "es"] {
+            func render(_ input: Object, _ quantities: Object) throws -> SharedCookInstruction {
+                let record = try decode(SharedDeliveryPage.self, input)
+                let selected = try XCTUnwrap(record.meals?.first)
+                return try XCTUnwrap(SharedDeliveryCookDraft.instruction(page: record, report: .delivery(decode(SharedDeliveryCoverage.self, quantities)),
+                    occurrence: selected, language: language == "es" ? "es-US" : "en-US"))
+            }
+            func saved(_ instruction: SharedCookInstruction, version: Int, recipientLanguage: String? = nil) throws -> SharedCookCopy {
+                try decode(SharedCookCopy.self, seal.merging(["copyId":UUID().uuidString, "occurrenceId":occurrence.uuidString,
+                    "mealRevision":4, "language":recipientLanguage ?? language, "version":version, "createdAt":"2026-11-01T07:31:00Z", "text":instruction.text]) { _, new in new })
+            }
+            let original = try render(page, coverage), unchanged = try render(page, later), changed = try render(changedPage, later)
+            let first = try saved(original, version: 1), second = try saved(changed, version: 2)
+            let firstIndex = try XCTUnwrap(original.factIndex(for: first.text)), secondIndex = try XCTUnwrap(changed.factIndex(for: second.text))
+            XCTAssertNil(original.factIndex(for: original.text + " Private budget $75"))
+            XCTAssertNil(original.factIndex(for: original.text.decomposedStringWithCanonicalMapping))
+            XCTAssertNotEqual(original.text, unchanged.text)
+            guard case let .changes(noAdd, noRemove, stillMissing) = try unchanged.correction(current: first, previous: first,
+                currentIndex: firstIndex, previousIndex: firstIndex, destinationConfirmed: true) else { return XCTFail("Expected reviewed changes") }
+            XCTAssertTrue(noAdd.isEmpty && noRemove.isEmpty)
+            XCTAssertTrue(stillMissing.contains { $0.contains("Fresh herbs") })
+            let change = try changed.correction(current: second, previous: first, currentIndex: secondIndex,
+                                                previousIndex: firstIndex, destinationConfirmed: true)
+            guard case let .changes(added, removed, unresolved) = change else { return XCTFail("Expected reviewed changes") }
+            XCTAssertEqual(added.count, 1); XCTAssertTrue(added[0].contains(correctedSourceName))
+            XCTAssertEqual(removed.count, 1); XCTAssertTrue(removed[0].contains(sourceName))
+            XCTAssertTrue(unresolved.contains { $0.contains(correctedSourceName) })
+            let correctionText = change.text(current: second.handoff(pieces: []))
+            for label in language == "es" ? ["Añadir", "Quitar", "Por confirmar"] : ["Add", "Remove", "Still to confirm"] {
+                XCTAssertTrue(correctionText.contains(label))
+            }
+            XCTAssertFalse(correctionText.contains("UTC"))
+            XCTAssertThrowsError(try changed.correction(current: first, previous: first, currentIndex: firstIndex,
+                                                        previousIndex: firstIndex, destinationConfirmed: true))
+            XCTAssertEqual(try changed.correction(current: second, previous: first, currentIndex: secondIndex,
+                                                  previousIndex: firstIndex, destinationConfirmed: false), .full(second.text))
+            let translated = try saved(original, version: 1, recipientLanguage: language == "es" ? "en" : "es")
+            XCTAssertEqual(try changed.correction(current: second, previous: translated, currentIndex: secondIndex,
+                                                  previousIndex: firstIndex, destinationConfirmed: true), .full(second.text))
+        }
+    }
+
     func testCoverageFractionsSurviveBeyondIntegerAndDecimalPrecision() throws {
         var result = coverage
         var rows = try XCTUnwrap(result["needs"] as? [Object])

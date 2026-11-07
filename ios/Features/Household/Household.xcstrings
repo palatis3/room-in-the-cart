@@ -14485,6 +14485,40 @@
           }
         }
       }
+    },
+    "Full correction for this recipient": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Full correction for this recipient"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Corrección completa para este destinatario"
+          }
+        }
+      }
+    },
+    "Share reviewed correction": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share reviewed correction"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compartir la corrección revisada"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

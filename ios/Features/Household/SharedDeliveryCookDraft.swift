@@ -34,6 +34,45 @@ enum SharedCookCoverage {
     }
 }
 
+/// Section identity comes from the reviewed meal and ingredient records. Entered
+/// names, notes and translations can contain any punctuation or line breaks.
+struct SharedCookInstruction {
+    struct Section {
+        let key: String
+        let text: String
+        var unresolved = false
+    }
+    let source: SharedCookFactIndex.Source
+    let sections: [Section]
+    var text: String {
+        sections.enumerated().map { index, section in
+            let separator = index == 0 ? "" : (section.key == "stamp" ? "\n" : "\n\n")
+            return separator + section.text
+        }.joined()
+    }
+
+    func correction(current: SharedCookCopy, previous: SharedCookCopy, currentIndex: SharedCookFactIndex,
+                    previousIndex: SharedCookFactIndex, destinationConfirmed: Bool) throws -> HandoffCorrection {
+        guard current.language == previous.language, current.occurrenceId == previous.occurrenceId,
+              let now = currentIndex.pieces(in: current.text), let old = previousIndex.pieces(in: previous.text) else {
+            return .full(current.text)
+        }
+        guard source == currentIndex.source, sections.dropLast().count == now.count,
+              zip(sections.dropLast(), now).allSatisfy({ actual, saved in
+                  actual.key == saved.section.key && actual.unresolved == saved.section.unresolved && actual.text.utf8.elementsEqual(saved.wording.utf8)
+              }) else { throw ClientError.cancelled }
+        return HandoffCorrection.review(current: current.handoff(pieces: now), prior: previous.handoff(pieces: old), paid: true,
+                                        destinationConfirmed: destinationConfirmed, privateWordingConfirmed: false) ?? .full(current.text)
+    }
+
+    func factIndex(for reviewedText: String) -> SharedCookFactIndex? {
+        guard text.utf8.elementsEqual(reviewedText.utf8) else { return nil }
+        return SharedCookFactIndex(source: source, sections: sections.map {
+            .init(key: $0.key, bytes: $0.text.utf8.count, unresolved: $0.unresolved)
+        })
+    }
+}
+
 struct SharedDeliveryCookDraft {
     private let bundle: Bundle
     private let language: String
@@ -45,6 +84,11 @@ struct SharedDeliveryCookDraft {
 
     static func make(page: SharedDeliveryPage, report: SharedCookCoverage,
                      occurrence: SharedMealOccurrence, language: String) -> String? {
+        instruction(page: page, report: report, occurrence: occurrence, language: language)?.text
+    }
+
+    static func instruction(page: SharedDeliveryPage, report: SharedCookCoverage,
+                            occurrence: SharedMealOccurrence, language: String) -> SharedCookInstruction? {
         guard page.coverageAvailable == true, page.nextCursor == nil, page.placedRevision > 0,
               page.shopRevision >= page.placedRevision, page.authorityEpoch > 0, page.supplyRevision >= 0,
               (1...page.placedRevision).contains(occurrence.revision), page.meals?.contains(occurrence) == true,
@@ -81,7 +125,7 @@ struct SharedDeliveryCookDraft {
     }
 
     private func text(page: SharedDeliveryPage, report: SharedCookCoverage, occurrence: SharedMealOccurrence,
-                      day: String, checked: String) -> String {
+                      day: String, checked: String) -> SharedCookInstruction {
         let meal = occurrence.meal, plan = meal.planning
         let noRecord = label("None recorded", table: "DeliveryCook")
         var heading = [label("Cook instructions") + " — " + meal.title, day,
@@ -104,8 +148,10 @@ struct SharedDeliveryCookDraft {
             field("Preparation time in minutes", plan?.leadTimeMinutes.map(String.init) ?? label("Unknown")),
             field("Completed preparation steps", steps.isEmpty ? noRecord : "\n" + steps.joined(separator: "\n"))
         ]
-        var sections = [heading.joined(separator: "\n"), preparation.joined(separator: "\n")]
-        var footer: [String]
+        var sections = [SharedCookInstruction.Section(key: "meal", text: heading.joined(separator: "\n")),
+                        .init(key: "preparation", text: preparation.joined(separator: "\n"), unresolved: plan?.leadTimeMinutes == nil)]
+        let scope: String
+        var footer: [String] = []
         let unplanned: Bool
         switch report {
         case let .recovered(record, coverage, currentMeal):
@@ -113,26 +159,30 @@ struct SharedDeliveryCookDraft {
         case .delivery(let coverage):
             sections += deliveryIngredients(page: page, occurrence: occurrence, coverage: coverage)
             unplanned = coverage.unplannedOccurrenceIds.contains(occurrence.id)
-            footer = [label("These counts use confirmed deliveries for this order. Protected portions are counted first.")]
+            scope = label("These counts use confirmed deliveries for this order. Protected portions are counted first.")
         case let .food(pantry, coverage):
             for need in coverage.needs where need.occurrenceId == occurrence.id {
-                sections.append(foodNeed(need, occurrence: occurrence, page: page, pantry: pantry).joined(separator: "\n"))
+                let key = Self.needKey(need.ingredientId, groups: need.groupIds)
+                sections.append(.init(key: key, text: foodNeed(need, occurrence: occurrence, page: page, pantry: pantry).joined(separator: "\n"),
+                                      unresolved: need.missing?.numerator != "0" || !need.issues.isEmpty || need.reservations == nil))
             }
             unplanned = coverage.unplannedOccurrenceIds.contains(occurrence.id)
-            footer = [label(Self.foodScope, table: "DeliveryCook"), field("Pantry revision", String(coverage.pantryRevision), table: "DeliveryCook")]
+            scope = label(Self.foodScope, table: "DeliveryCook")
+            footer = [field("Pantry revision", String(coverage.pantryRevision), table: "DeliveryCook")]
         }
-        if unplanned { sections.append(label("This meal has no recorded ingredient requirements.")) }
+        if unplanned { sections.append(.init(key: "unplanned", text: label("This meal has no recorded ingredient requirements."), unresolved: true)) }
         footer += [field("Checked at", checked), field("Delivery revision", String(page.supplyRevision), table: "DeliveryCook"),
                    field("Meal revision", String(occurrence.revision), table: "DeliveryCook")]
-        sections.append(footer.joined(separator: "\n"))
-        return sections.joined(separator: "\n\n")
+        sections.append(.init(key: "scope", text: scope))
+        sections.append(.init(key: "stamp", text: footer.joined(separator: "\n")))
+        return SharedCookInstruction(source: report.reviewedPantry == nil ? .delivery : .food, sections: sections)
     }
 
     private func deliveryIngredients(page: SharedDeliveryPage, occurrence: SharedMealOccurrence,
-                                     coverage: SharedDeliveryCoverage) -> [String] {
+                                     coverage: SharedDeliveryCoverage) -> [SharedCookInstruction.Section] {
         let plan = occurrence.meal.planning
         let noRecord = label("None recorded", table: "DeliveryCook")
-        var sections = [String]()
+        var sections = [SharedCookInstruction.Section]()
         let needs = Dictionary(grouping: coverage.needs.filter { $0.occurrenceId == occurrence.id }, by: \.ingredientId)
         for ingredient in plan?.ingredients ?? [] {
             let target = SharedDeliveryPage.IngredientMatch(occurrence: occurrence, ingredient: ingredient)
@@ -161,9 +211,15 @@ struct SharedDeliveryCookDraft {
                 }
                 lines += need.issues.map { label(Self.issueKey($0)) }
             }
-            sections.append(lines.joined(separator: "\n"))
+            let rows = needs[ingredient.id] ?? []
+            sections.append(.init(key: Self.needKey(ingredient.id, groups: []), text: lines.joined(separator: "\n"),
+                                  unresolved: page.reservationsAvailable != true || rows.isEmpty || rows.contains { $0.missing?.numerator != "0" || !$0.issues.isEmpty }))
         }
         return sections
+    }
+
+    private static func needKey(_ id: UUID, groups: [UUID]) -> String {
+        (["need", id.uuidString.lowercased()] + groups.map { $0.uuidString.lowercased() }.sorted()).joined(separator: ".")
     }
 
     private func measured(_ quantity: SharedMealQuantity?) -> String {
@@ -264,7 +320,7 @@ extension SharedDeliveryCookDraft {
 
 extension SharedDeliveryCookDraft {
     private func currentCookText(meal: SharedRecoveryMeal, record: SharedRecoveryPage, coverage: SharedRecoveryCoverage,
-                                 day: String, checked: String) -> String {
+                                 day: String, checked: String) -> SharedCookInstruction {
         let unknown = label("Unknown")
         let none = label("None recorded", table: "DeliveryCook")
         var header = [label("Cook instructions") + " — " + meal.title, day, field("Portions", String(meal.portions))]
@@ -286,17 +342,20 @@ extension SharedDeliveryCookDraft {
         else { header.append(label("Advance steps not confirmed complete", table: "Recovery")) }
         let deadline = meal.due.flatMap { SharedMealDeadline(at: $0, zone: meal.zone ?? "UTC").display(locale: Locale(identifier: language)) }
         header.append(field("Meal deadline", deadline ?? unknown, table: "Recovery"))
-        var sections = [header.joined(separator: "\n")]
+        var sections = [SharedCookInstruction.Section(key: "meal", text: header.joined(separator: "\n"),
+                                                      unresolved: meal.due == nil || meal.requiredLeadMinutes == nil || meal.remainingElapsedMinutes == nil || !meal.advanceStepsCompleted)]
         for row in coverage.needs where row.occurrenceId == meal.id {
-            sections.append(recoveryNeed(row, meal: meal, record: record).joined(separator: "\n"))
+            sections.append(.init(key: Self.needKey(row.needId, groups: row.groupIds), text: recoveryNeed(row, meal: meal, record: record).joined(separator: "\n"),
+                                  unresolved: row.missing?.numerator != "0" || !row.issues.isEmpty))
         }
-        if coverage.unplannedOccurrenceIds.contains(meal.id) { sections.append(label("This meal has no recorded ingredient requirements.")) }
-        sections.append([label(Self.foodScope, table: "DeliveryCook"), field("Checked at", checked),
+        if coverage.unplannedOccurrenceIds.contains(meal.id) { sections.append(.init(key: "unplanned", text: label("This meal has no recorded ingredient requirements."), unresolved: true)) }
+        sections.append(.init(key: "scope", text: label(Self.foodScope, table: "DeliveryCook")))
+        sections.append(.init(key: "stamp", text: [field("Checked at", checked),
                          field("Meal plan revision", String(record.base.recoveryRevision), table: "Recovery"),
                          field("Current meal revision", meal.revisionId.uuidString, table: "Recovery"),
                          field("Pantry revision", String(record.base.pantryRevision), table: "DeliveryCook"),
-                         field("Delivery revision", String(record.base.supplyRevision), table: "DeliveryCook")].joined(separator: "\n"))
-        return sections.joined(separator: "\n\n")
+                         field("Delivery revision", String(record.base.supplyRevision), table: "DeliveryCook")].joined(separator: "\n")))
+        return SharedCookInstruction(source: .recovered, sections: sections)
     }
 
     func recoveryNeed(_ row: SharedRecoveryCoverage.Need, meal: SharedRecoveryMeal, record: SharedRecoveryPage) -> [String] {

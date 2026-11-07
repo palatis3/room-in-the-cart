@@ -116,6 +116,7 @@ struct SharedShopTransfer: Equatable {
     var canReadPantry: Bool { canReadDelivery && scope.capabilities.contains("pantry_lots") }
     var canReadMealRecovery: Bool { canReadPantry && scope.capabilities.contains("meal_recovery") }
     var canReadCookCopies: Bool { canReadDelivery && scope.capabilities.contains("cook_copies") }
+    var canReviewCookCorrection: Bool { canReadCookCopies && scope.capabilities.contains("cook_corrections") }
     var canStartAnother: Bool {
         authorized && !requiresRefresh && scope.canSelectShop == true && scope.grantId == nil &&
         scope.capabilities.contains("household_admin") && !canCreate
@@ -223,7 +224,7 @@ struct SharedShopTransfer: Equatable {
     private var pendingPantry: Bool { pendingEnvelope?.kind.hasPrefix("pantry.") == true }
     private var pendingCookUsesPantry: Bool { pendingEnvelope?.kind == "cookCopy.save" && pendingEnvelope?.body["pantryRevision"] != nil }
     private var canRetryCookCopy: Bool {
-        canReadCookCopies && (!pendingCookUsesPantry || canReadPantry) && (pendingEnvelope?.body["recoveryRevision"] == nil || canReadMealRecovery)
+        canReadCookCopies && (pendingEnvelope?.body["factIndex"] == nil || canReviewCookCorrection) && (!pendingCookUsesPantry || canReadPantry) && (pendingEnvelope?.body["recoveryRevision"] == nil || canReadMealRecovery)
     }
     private var pendingCookCopy: Bool { pendingEnvelope?.kind.hasPrefix("cookCopy.") == true }
 
@@ -290,10 +291,10 @@ struct SharedShopTransfer: Equatable {
                                         expires: serviceDate(preview.expiresAt)) { try intent.commandBody(reviewed: page, preview: preview) }
     }
 
-    func saveCookCopy(text: String, language: String, meal: SharedRecoveryMeal, reviewed page: SharedRecoveryPage) async -> Bool {
+    func saveCookCopy(text: String, language: String, facts: SharedCookFactIndex? = nil, meal: SharedRecoveryMeal, reviewed page: SharedRecoveryPage) async -> Bool {
         guard canReadCookCopies, canReadMealRecovery, recoveryRecord == page, let pantry = pantryRecord, let evidence = deliveryRecord,
               page.meals.contains(meal), let sealed = evidence.meals?.first(where: { $0.id == meal.id && $0.revision == meal.sourceMealRevision }) else { return false }
-        let edit = SharedCookCopyEdit.save(text: text, language: language, occurrence: sealed)
+        let edit = SharedCookCopyEdit.save(text: text, language: language, occurrence: sealed, facts: canReviewCookCorrection ? facts : nil)
         return await saveReviewedChange(kind: edit.kind, reviewed: evidence, reviewedPantry: pantry, reviewedRecovery: page) {
             try edit.body(reviewed: evidence, pantry: pantry, recovery: page)
         }
@@ -405,14 +406,108 @@ struct SharedShopTransfer: Equatable {
             throw error
         }
     }
+    func reviewedCookCorrection(_ copy: SharedCookCopy, recipient: String, baseline: SharedCookCopyBaseline?,
+                                destinationConfirmed: Bool, paid: Bool, occurrence: SharedMealOccurrence,
+                                reviewed page: SharedDeliveryPage) async throws -> HandoffCorrection {
+        let start = generation
+        do {
+            if canReviewCookCorrection, paid, destinationConfirmed, let baseline {
+                do {
+                    let result = try await cookCorrection(copy: copy, baseline: baseline, recipient: recipient,
+                        destinationConfirmed: destinationConfirmed, occurrence: occurrence, reviewed: page)
+                    if case .changes = result { return result }
+                } catch ClientError.service(status: 403, code: "membership_inactive", correlationID: _, retryAfter: _) {
+                    // The shopper can still review the complete current wording on Free.
+                }
+            }
+            try await checkFullCookCorrection(copy, recipient: recipient, previousSendId: baseline?.send.sendId,
+                                              occurrence: occurrence, reviewed: page)
+            return .full(copy.text)
+        } catch {
+            switch error as? ClientError {
+            case .accessEnded, .sessionNeeded, .service(status: 404, code: _, correlationID: _, retryAfter: _):
+                await handle(error, start: start)
+            default: break
+            }
+            throw error
+        }
+    }
+
+    private func checkFullCookCorrection(_ copy: SharedCookCopy, recipient: String, previousSendId: UUID?, occurrence: SharedMealOccurrence, reviewed page: SharedDeliveryPage) async throws {
+        guard canReadCookCopies, deliveryRecord == page,
+              copy.shopRevision == page.shopRevision, copy.authorityEpoch == page.authorityEpoch,
+              copy.supplyRevision == page.supplyRevision, copy.recoveryRevision == nil || copy.recoveryRevision == page.recoveryRevision else { throw ClientError.cancelled }
+        let start = generation
+        let current = try await service.deliveryEvidence(shopID: page.shopId.uuidString.lowercased())
+        guard current == page, start == generation, canReadCookCopies, deliveryRecord == page else { throw ClientError.cancelled }
+        if let revision = copy.pantryRevision {
+            guard canReadPantry else { throw ClientError.cancelled }
+            let pantry = try await service.pantryLots(reviewed: page)
+            guard pantry.pantryRevision == revision, start == generation, canReadPantry else { throw ClientError.cancelled }
+        }
+        let copies = try await cookCopies(occurrence: occurrence, reviewed: page)
+        let baseline = try await service.cookCopyBaseline(recipient: recipient, occurrence: occurrence, reviewed: page)
+        guard baseline?.send.sendId == previousSendId, start == generation, canReadCookCopies, deliveryRecord == page, copies.first == copy else { throw ClientError.cancelled }
+    }
+
+    private func cookCorrection(copy: SharedCookCopy, baseline: SharedCookCopyBaseline, recipient: String, destinationConfirmed: Bool,
+                        occurrence: SharedMealOccurrence, reviewed page: SharedDeliveryPage) async throws -> HandoffCorrection {
+        func authorized() -> Bool {
+            guard canReviewCookCorrection, deliveryRecord == page, let review = reviewedCookRecipient else { return false }
+            return review.page == page && review.occurrence == occurrence.id && review.label.utf8.elementsEqual(recipient.utf8)
+                && review.sendId == baseline.send.sendId
+        }
+        guard authorized() else { throw ClientError.cancelled }
+        let start = generation
+        let facts = try await service.cookCorrection(copy: copy, baseline: baseline, recipient: recipient, destinationConfirmed: destinationConfirmed,
+                                                     occurrence: occurrence, reviewed: page)
+        guard !Task.isCancelled, start == generation, authorized() else { throw ClientError.cancelled }
+        guard let index = facts.currentFacts, let priorIndex = facts.previousFacts,
+              copy.language == baseline.copy.language else { return .full(copy.text) }
+
+        // Time-sensitive usable food can change even between equal revision numbers.
+        let source: SharedCookCoverage
+        switch index.source {
+        case .recovered:
+            guard canReadMealRecovery else { throw ClientError.cancelled }
+            let record = try await service.mealRecoveryFacts(shopID: page.shopId.uuidString.lowercased())
+            guard authorized(), canReadMealRecovery, record.delivery == page, record.pantry.pantryRevision == copy.pantryRevision,
+                  let meal = record.page.meals.first(where: { $0.id == occurrence.id }),
+                  let origin = record.page.mealSources.first(where: { $0.occurrenceId == meal.id }),
+                  meal.revisionId == (copy.revisionId ?? origin.sealedRevisionId) else { throw ClientError.cancelled }
+            source = .recovered(record.page, try await service.effectiveCoverage(reviewed: record.page), meal)
+            guard canReadMealRecovery else { throw ClientError.cancelled }
+        case .food:
+            guard canReadPantry else { throw ClientError.cancelled }
+            let pantry = try await service.pantryLots(reviewed: page)
+            guard authorized(), canReadPantry, pantry.pantryRevision == copy.pantryRevision else { throw ClientError.cancelled }
+            source = .food(pantry, try await service.foodCoverage(reviewed: pantry, delivery: page))
+            guard canReadPantry else { throw ClientError.cancelled }
+        case .delivery:
+            guard copy.pantryRevision == nil else { throw ClientError.cancelled }
+            source = .delivery(try await coverage(reviewed: page))
+        }
+        guard !Task.isCancelled, start == generation, authorized(),
+              let fresh = SharedDeliveryCookDraft.instruction(page: page, report: source, occurrence: occurrence,
+                                                             language: copy.language == "es" ? "es-US" : "en-US") else { throw ClientError.cancelled }
+        let result = try fresh.correction(current: copy, previous: baseline.copy, currentIndex: index,
+                                          previousIndex: priorIndex, destinationConfirmed: destinationConfirmed)
+        // Coverage can require multiple requests. Fence a recipient, seat or source
+        // change while those requests were in flight before releasing the comparison.
+        let confirmed = try await service.cookCorrection(copy: copy, baseline: baseline, recipient: recipient,
+            destinationConfirmed: destinationConfirmed, occurrence: occurrence, reviewed: page)
+        guard confirmed == facts, !Task.isCancelled, start == generation, authorized() else { throw ClientError.cancelled }
+        return result
+    }
+
     private func handleCookCopyRead(_ error: Error, start: UUID) async {
         switch error as? ClientError {
         case .accessEnded, .sessionNeeded: await handle(error, start: start)
         default: break
         }
     }
-    func saveCookCopy(text: String, language: String, occurrence: SharedMealOccurrence, reviewed page: SharedDeliveryPage, pantry: SharedPantryPage? = nil) async -> Bool {
-        let edit = SharedCookCopyEdit.save(text: text, language: language, occurrence: occurrence)
+    func saveCookCopy(text: String, language: String, facts: SharedCookFactIndex? = nil, occurrence: SharedMealOccurrence, reviewed page: SharedDeliveryPage, pantry: SharedPantryPage? = nil) async -> Bool {
+        let edit = SharedCookCopyEdit.save(text: text, language: language, occurrence: occurrence, facts: canReviewCookCorrection ? facts : nil)
         return await saveReviewedChange(kind: edit.kind, reviewed: page, reviewedPantry: pantry) { try edit.body(reviewed: page, pantry: pantry) }
     }
     func markCookCopySent(_ copy: SharedCookCopy, recipient: String, previousSendId: UUID?, reviewed page: SharedDeliveryPage) async -> Bool {

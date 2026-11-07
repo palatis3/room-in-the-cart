@@ -292,7 +292,13 @@ import XCTest
 
         let savedText = app.staticTexts["delivery.cook.savedText"]
         func openSavedCopy() {
-            tap(app.buttons["delivery.cook.history"])
+            let history = app.buttons["delivery.cook.history"]
+            reveal(history)
+            if history.frame.midY > app.frame.maxY - 64 { app.swipeUp() }
+            let center = CGPoint(x: history.frame.midX, y: history.frame.midY)
+            XCTAssertTrue(history.isHittable && app.frame.insetBy(dx: 0, dy: 12).contains(center))
+            history.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+            XCTAssertTrue(app.navigationBars["Saved cook notes"].waitForExistence(timeout: 5))
             tap(app.buttons["delivery.cook.saved.1"])
             reveal(savedText)
             XCTAssertEqual(savedText.label, reviewed)
@@ -326,6 +332,35 @@ import XCTest
         openSavedCopy()
         enter("Fixture cook", in: recipient)
         recipient.typeText("\n")
+        tap(check)
+        assertFirstVersionSent()
+        let reviewCorrection = app.buttons["delivery.cook.reviewCorrection"]
+        tap(reviewCorrection)
+        let manual = app.textFields["delivery.cook.fullCorrection"]
+        reveal(manual)
+        XCTAssertEqual(manual.value as? String, reviewed)
+        let shareCorrection = app.buttons["delivery.cook.shareCorrection"]
+        for _ in 0..<4 where !shareCorrection.exists { app.swipeUp() }
+        XCTAssertTrue(shareCorrection.exists)
+        XCTAssertFalse(shareCorrection.isEnabled)
+        let confirmation = app.switches["delivery.cook.confirmDestination"]
+        reveal(confirmation)
+        let control = confirmation.switches.firstMatch
+        XCTAssertTrue(control.exists && control.isHittable)
+        control.tap()
+        XCTAssertEqual(confirmation.value as? String, "1")
+        tap(reviewCorrection)
+        let correction = app.staticTexts["delivery.cook.correctionText"]
+        reveal(correction)
+        XCTAssertTrue(correction.label.contains("Add\n\nNone"))
+        XCTAssertTrue(correction.label.contains("Remove\n\nNone"))
+        XCTAssertTrue(correction.label.contains("Still to confirm"))
+        XCTAssertTrue(correction.label.contains("Uncovered by deliveries: 2 units"))
+        XCTAssertFalse(mark.exists)
+        tap(shareCorrection)
+        let cancel = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND hittable == true"), object: close)
+        XCTAssertEqual(XCTWaiter.wait(for: [cancel], timeout: 15), .completed)
+        close.tap()
         tap(check)
         assertFirstVersionSent()
     }

@@ -4,15 +4,20 @@ import Foundation
 import SwiftUI
 
 struct SharedDeliveryFixtureRoot: View {
+    @StateObject private var membership = S17FixtureState.recoveryMembership()
     @State private var shopper: HouseholdModel?
     @State private var failed = false
     var body: some View {
         Group {
-            if let shopper { NavigationStack { HouseholdShopView(model: shopper) } }
+            if let shopper { NavigationStack { HouseholdShopView(model: shopper) }.environmentObject(membership) }
             else if failed { Text(verbatim: "Fixture sign-in failed") }
             else { ProgressView() }
         }.task {
-            do { shopper = try await S17FixtureState.recoveryShopper() }
+            do {
+                let model = try await S17FixtureState.recoveryShopper()
+                membership.bind(to: model)
+                shopper = model
+            }
             catch { failed = true }
         }
     }
@@ -24,6 +29,7 @@ final class SharedDeliveryFixtureRecords {
     let recovery = ProcessInfo.processInfo.arguments.contains("--shared-recovery-fixture") ? SharedMealRecoveryFixture() : nil
     let pantry = ProcessInfo.processInfo.arguments.contains("--shared-pantry-fixture") ? SharedPantryFixtureRecords() : nil
     let supportsCookCopies = ProcessInfo.processInfo.arguments.contains("--shared-cook-copies-fixture")
+    private var factIndexes: [String: Any] = [:]
     private var copies: [[String:Any]] = []
     // PostgreSQL keys recipient labels by their exact UTF-8 spelling.
     private struct Recipient: Hashable {
@@ -121,6 +127,17 @@ final class SharedDeliveryFixtureRecords {
         return ["baseline":["copy": copy, "send": send]]
     }
 
+    func correction(_ body: [String:Any]) throws -> [String:Any] {
+        let prior = try cookBaseline(body)["baseline"] as? [String:Any]
+        guard let send = prior?["send"] as? [String:Any], let current = body["copyId"] as? String,
+              let old = body["previousCopyId"] as? String, let sent = body["previousSendId"] as? String,
+              send["sendId"] as? String == sent, send["copyId"] as? String == old, body["destinationConfirmed"] as? Bool == true,
+              let head = copies.first(where: { ($0["occurrenceId"] as? String) == body["occurrenceId"] as? String }),
+              head["copyId"] as? String == current, head["supplyRevision"] as? Int == revision else { throw CookFailure.staleBase }
+        return ["copyId":current, "previousCopyId":old, "previousSendId":sent, "recipient":try recipient(body),
+                "currentFacts":factIndexes[current] ?? NSNull(), "previousFacts":factIndexes[old] ?? NSNull()]
+    }
+
     private func recordCook(shop: String, kind: String, base: [String:Any]?, body: [String:Any]) throws -> [String:Any] {
         guard supportsCookCopies, base?["shopRevision"] as? Int == 2, base?["authorityEpoch"] as? Int == 1 else {
             throw CookFailure.staleBase
@@ -150,6 +167,7 @@ final class SharedDeliveryFixtureRecords {
                 copy["recoveryRevision"] = recoveryRevision
                 copy["revisionId"] = mealVersion
             }
+            factIndexes[copyID] = body["factIndex"]
             copies.insert(copy, at: 0)
         case "cookCopy.markSent":
             guard let id = (body["copyId"] as? String)?.lowercased(), let saved = copies.first(where: { $0["copyId"] as? String == id }),

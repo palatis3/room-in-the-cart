@@ -1,6 +1,14 @@
 import HouseholdClient
 import SwiftUI
 
+extension SharedCookCopy {
+    func handoff(pieces: [(section: SharedCookFactIndex.Section, wording: String)]) -> HandoffCopy {
+        HandoffCopy(shopID: shopId, channel: .cook, versionID: copyId, revision: Int64(version), language: language,
+                    fullText: text, pieces: pieces.map { HandoffPiece(key: $0.section.key, text: $0.wording, unresolved: $0.section.unresolved ? $0.wording : nil) },
+                    needsPrivateReview: false)
+    }
+}
+
 struct SharedCookHistoryView: View {
     @ObservedObject var model: HouseholdShopModel
     @ObservedObject var household: HouseholdModel
@@ -25,7 +33,7 @@ struct SharedCookHistoryView: View {
                         if copies.isEmpty { Text(ht("No dated copies saved for this meal.")) }
                         ForEach(copies) { copy in
                             NavigationLink {
-                                SharedCookSavedView(model: model, household: household, page: page, occurrence: occurrence, copy: copy)
+                                SharedCookSavedView(model: model, household: household, page: page, occurrence: occurrence, copy: copy, latest: copies.first?.id == copy.id)
                             } label: {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(ht("Copy version") + " " + copy.version.formatted())
@@ -68,12 +76,34 @@ private struct SharedCookSavedView: View {
     let page: SharedDeliveryPage
     let occurrence: SharedMealOccurrence
     let copy: SharedCookCopy
+    let latest: Bool
     @Environment(\.scenePhase) private var scenePhase
     @State private var recipient = ""
     @State private var reviewed: RecipientReview?
     @State private var requestID: UUID?
     @State private var failure = false
-    @State private var sharing = false
+    @EnvironmentObject private var membership: MembershipCoordinator
+    @State private var sharing: Message?
+    @State private var destinationConfirmed = false
+    @State private var correction: HandoffCorrection?
+    @State private var fullWording = ""
+    @State private var wordingConfirmed = false
+
+    private struct Message: Identifiable {
+        let id = UUID()
+        let text: String
+        let assisted: Bool
+    }
+    private var paid: Bool {
+        guard let seat = membership.model, seat.context?.householdID == model.householdID,
+              seat.context?.purchaserID == model.memberID else { return false }
+        return seat.hasPaidAccess
+    }
+    private var seatDeadline: Date? {
+        guard paid, let snapshot = membership.model?.state.snapshot,
+              let end = snapshot.status == .grace ? snapshot.graceExpiresAt : snapshot.expiresAt else { return nil }
+        return min(snapshot.validUntil, end)
+    }
     @FocusState private var enteringName: Bool
 
     private struct RecipientReview {
@@ -87,7 +117,10 @@ private struct SharedCookSavedView: View {
         model.deliveryRecord == page && page.shopId == copy.shopId && occurrence.id == copy.occurrenceId
     }
     private var canCheck: Bool { allowed && scenePhase == .active && !model.busy && requestID == nil }
-    private var canMark: Bool { canCheck && model.pending == nil }
+    private var canMark: Bool {
+        if case .full = correction, !fullWording.utf8.elementsEqual(copy.text.utf8) { return false }
+        return canCheck && model.pending == nil
+    }
 
     var body: some View {
         Form {
@@ -98,7 +131,7 @@ private struct SharedCookSavedView: View {
                     Button {
                         guard allowed, scenePhase == .active else { return }
                         enteringName = false
-                        sharing = true
+                        sharing = Message(text: copy.text, assisted: false)
                     } label: {
                         Label(ht("Share dated copy"), systemImage: "square.and.arrow.up")
                     }.accessibilityIdentifier("delivery.cook.savedShare")
@@ -115,7 +148,38 @@ private struct SharedCookSavedView: View {
                             LabeledContent(ht("Last version marked sent"), value: prior.copy.version.formatted())
                                 .accessibilityIdentifier("delivery.cook.lastSent")
                             if let date = serviceDate(prior.send.sentAt) { Text(date.formatted()) }
+                            DisclosureGroup(pTr("Last marked sent")) { Text(verbatim: prior.copy.text).textSelection(.enabled) }
+                            if latest && paid && model.canReviewCookCorrection {
+                                Toggle(pTr("I know the previous copy went to this recipient"), isOn: Binding(
+                                    get: { destinationConfirmed },
+                                    set: { value in
+                                        requestID = nil
+                                        clearCorrection()
+                                        destinationConfirmed = value
+                                    }))
+                                    .accessibilityIdentifier("delivery.cook.confirmDestination")
+                            }
                         } else { Text(ht("No previous send recorded for this recipient.")) }
+                        if latest {
+                            Button(pTr("Review correction")) {
+                                Task { await reviewCorrection(reviewed) }
+                            }.disabled(!canCheck)
+                            .accessibilityIdentifier("delivery.cook.reviewCorrection")
+                            if let correction {
+                                switch correction {
+                                case .full:
+                                    TextField(ht("Full correction for this recipient"), text: $fullWording, axis: .vertical)
+                                        .accessibilityIdentifier("delivery.cook.fullCorrection")
+                                    Toggle(pTr("Include the saved custom or private wording in this correction"), isOn: $wordingConfirmed)
+                                case .changes:
+                                    Text(verbatim: correction.text(current: copy.handoff(pieces: [])))
+                                        .accessibilityIdentifier("delivery.cook.correctionText")
+                                }
+                                Button(ht("Share reviewed correction")) { Task { await reviewCorrection(reviewed, sharingReviewed: true) } }
+                                    .disabled(!canCheck || !canShareCorrection)
+                                    .accessibilityIdentifier("delivery.cook.shareCorrection")
+                            }
+                        }
                         if reviewed.baseline?.copy.copyId != copy.copyId {
                             Button(pTr("I sent this version to this recipient")) { Task { await markSent(reviewed) } }
                                 .disabled(!canMark)
@@ -139,24 +203,76 @@ private struct SharedCookSavedView: View {
             }
         }
         .onChange(of: recipient) { _, _ in invalidate() }
-        .onChange(of: allowed) { _, active in if !active { recipient = ""; sharing = false; invalidate() } }
+        .onChange(of: allowed) { _, active in if !active { recipient = ""; sharing = nil; invalidate() } }
         .onChange(of: scenePhase) { _, phase in if phase != .active { invalidate() } }
+        .onChange(of: fullWording) { _, _ in wordingConfirmed = false }
+        .onChange(of: paid) { _, _ in
+            requestID = nil
+            if sharing?.assisted == true { sharing = nil }
+            clearCorrection()
+        }
+        .task(id: seatDeadline) {
+            guard let end = seatDeadline else { return }
+            do { try await Task.sleep(for: .seconds(max(0, end.timeIntervalSinceNow))) } catch { return }
+            if sharing?.assisted == true { sharing = nil }
+            clearCorrection()
+        }
         .onDisappear { invalidate() }
-        .sheet(isPresented: $sharing) {
-            if allowed {
-                PickupActivitySheet(text: copy.text) { _, _ in sharing = false }
+        .sheet(item: $sharing) { message in
+            if allowed && (!message.assisted || paid) {
+                PickupActivitySheet(text: message.text) { _, _ in sharing = nil }
             }
         }
     }
 
-    private func invalidate() { requestID = nil; reviewed = nil; failure = false }
+    private var canShareCorrection: Bool {
+        switch correction {
+        case .full: return wordingConfirmed && !fullWording.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && fullWording.utf16.count <= 16_000
+        case .changes: return paid && destinationConfirmed
+        case nil: return false
+        }
+    }
+
+    private func clearCorrection() { correction = nil; fullWording = ""; wordingConfirmed = false }
+    private func invalidate() {
+        requestID = nil; reviewed = nil; failure = false; destinationConfirmed = false; clearCorrection()
+    }
+
+    private func reviewCorrection(_ review: RecipientReview, sharingReviewed: Bool = false) async {
+        guard latest, canCheck, review.name.utf8.elementsEqual(name.utf8) else { return }
+        let previous = correction, id = UUID(), confirmed = destinationConfirmed
+        let wording = fullWording
+        requestID = id; failure = false; enteringName = false
+        defer { if requestID == id { requestID = nil } }
+        do {
+            let result = try await model.reviewedCookCorrection(copy, recipient: review.name, baseline: review.baseline,
+                destinationConfirmed: confirmed, paid: paid, occurrence: occurrence, reviewed: page)
+            guard id == requestID, allowed, scenePhase == .active, review.name.utf8.elementsEqual(name.utf8),
+                  reviewed?.baseline?.send.sendId == review.baseline?.send.sendId, destinationConfirmed == confirmed else { return }
+            if case .changes = result, !paid { clearCorrection(); return }
+            if !sharingReviewed || result != previous {
+                correction = result; fullWording = copy.text; wordingConfirmed = false
+            } else if canShareCorrection {
+                switch result {
+                case .full:
+                    guard wording.utf8.elementsEqual(fullWording.utf8) else { return }
+                    sharing = Message(text: wording, assisted: false)
+                case .changes:
+                    sharing = Message(text: result.text(current: copy.handoff(pieces: [])), assisted: true)
+                }
+            }
+        } catch {
+            guard id == requestID else { return }
+            clearCorrection()
+            failure = true
+        }
+    }
 
     private func checkRecipient() async {
         guard canCheck, !name.isEmpty else { return }
         let selected = name, id = UUID()
         enteringName = false
-        reviewed = nil
-        failure = false
+        invalidate()
         requestID = id
         defer { if requestID == id { requestID = nil } }
         do {
@@ -174,9 +290,8 @@ private struct SharedCookSavedView: View {
               reviewed?.baseline?.send.sendId == review.baseline?.send.sendId else { return }
         let id = UUID()
         enteringName = false
+        invalidate()
         requestID = id
-        reviewed = nil
-        failure = false
         let saved = await model.markCookCopySent(copy, recipient: review.name,
                                                  previousSendId: review.baseline?.send.sendId, reviewed: page)
         guard requestID == id, allowed, review.name.utf8.elementsEqual(name.utf8) else { return }

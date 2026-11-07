@@ -298,11 +298,13 @@ struct SharedDeliveryCookView: View {
             case .save:
                 guard model.canReadCookCopies, canSaveWording, savedWording[reviewedLanguage] != reviewedText else { return }
                 let locale = reviewedLanguage == "es-US" ? "es" : "en"
+                let facts = SharedDeliveryCookDraft.instruction(page: page, report: coverage, occurrence: occurrence,
+                                                            language: reviewedLanguage)?.factIndex(for: reviewedText)
                 let saved: Bool
                 if case let .recovered(record, _, meal) = coverage {
-                    saved = await model.saveCookCopy(text: reviewedText, language: locale, meal: meal, reviewed: record)
+                    saved = await model.saveCookCopy(text: reviewedText, language: locale, facts: facts, meal: meal, reviewed: record)
                 } else {
-                    saved = await model.saveCookCopy(text: reviewedText, language: locale, occurrence: occurrence, reviewed: page, pantry: coverage.reviewedPantry)
+                    saved = await model.saveCookCopy(text: reviewedText, language: locale, facts: facts, occurrence: occurrence, reviewed: page, pantry: coverage.reviewedPantry)
                 }
                 if saved && allowed && reviewID == presentation {
                     savedWording[reviewedLanguage] = reviewedText

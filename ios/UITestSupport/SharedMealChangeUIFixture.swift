@@ -59,7 +59,7 @@ private final class S17FixtureServer: @unchecked Sendable {
                 capabilities.append("delivery_evidence")
                 if deliveries.recovery != nil { capabilities.append("meal_recovery") }
                 if deliveries.pantry != nil { capabilities.append("pantry_lots") }
-                if deliveries.supportsCookCopies { capabilities.append("cook_copies") }
+                if deliveries.supportsCookCopies { capabilities += ["cook_copies", "cook_corrections"] }
             }
             return try json(["household":["id":Self.household,"label":"Isolated shared meals"],"memberId":shopper ? Self.shopper:Self.planner,
                              "role":shopper ? "shopper":"contributor","shopId":Self.shop,"enrolled":true,"queueConsent":false,"capabilities":capabilities])
@@ -83,7 +83,7 @@ private final class S17FixtureServer: @unchecked Sendable {
         if let deliveries, [deliveryPath + "/delivery-evidence", deliveryPath + "/delivery-evidence/coverage",
                             pantryPath, pantryPath + "/coverage", pantryPath + "/observation-preview",
                             recoveryPath, recoveryPath + "/coverage", recoveryPath + "/preview",
-                            cookPath, cookPath + "/baseline", scoped + "/commands"].contains(path) {
+                            cookPath, cookPath + "/baseline", cookPath + "/correction", scoped + "/commands"].contains(path) {
             guard request.value(forHTTPHeaderField: "Authorization") == "Bearer fixture-shopper",
                   request.value(forHTTPHeaderField: "X-Device-Token") == "shopper-token" else { return try denied() }
             if path.hasSuffix("/delivery-evidence/coverage") { return try json(deliveries.coverage(shop: Self.shop)) }
@@ -114,6 +114,10 @@ private final class S17FixtureServer: @unchecked Sendable {
                     return try json(deliveries.cookCopies(occurrenceID: query.first { $0.name == "occurrenceId" }?.value, cursor: query.first { $0.name == "cursor" }?.value))
                 }
                 guard request.httpMethod == "POST" else { return try denied() }
+                if path == cookPath + "/correction" {
+                    guard deliveries.supportsCookCopies else { return try denied() }
+                    return try json(deliveries.correction(input))
+                }
                 if path == cookPath + "/baseline" {
                     guard deliveries.supportsCookCopies else { return try denied() }
                     return try json(deliveries.cookBaseline(input))
