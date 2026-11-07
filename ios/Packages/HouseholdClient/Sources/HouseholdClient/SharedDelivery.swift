@@ -251,7 +251,7 @@ public struct SharedDeliveryCoverage: Decodable, Sendable {
     public let unplannedOccurrenceIds: [UUID]
     public let needs: [Need]
 
-    func validate(reviewed page: SharedDeliveryPage) throws {
+    public func validate(reviewed page: SharedDeliveryPage) throws {
         guard shopId == page.shopId, authorityEpoch == page.authorityEpoch, shopRevision == page.shopRevision,
               placedRevision == page.placedRevision, supplyRevision == page.supplyRevision else {
             throw ClientError.service(status: 409, code: "stale_supply", correlationID: nil, retryAfter: nil)
