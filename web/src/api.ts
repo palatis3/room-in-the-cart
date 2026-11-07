@@ -119,13 +119,7 @@ function ownRequest(value: unknown): OwnRequest {
     clarification:optionalText(r.clarification ?? null, 300), followupTo:r.followupTo == null ? null : identity(r.followupTo)};
 }
 
-function parseSession(value: unknown): Session | null {
-  const d = record(value);
-  if (d.authenticated === false) return null;
-  if (d.authenticated !== true || !['contributor', 'shopper', 'organizer', 'helper', 'editor'].includes(String(d.role))) return invalid();
-  const household = record(d.household), replay = record(d.replayWindow);
-  const grantId = d.grantId == null ? undefined : identity(d.grantId);
-  if ((d.role === 'helper' || d.role === 'editor') && !grantId) return invalid();
+function requestQueueState(d: Record<string,unknown>) {
   const canSetRequestQueue = Array.isArray(d.capabilities) && d.capabilities.includes('request_queue_permission');
   boolean(d.queueConsent); // Retained on the wire for clients without generation-bound replay.
   if ((d.requestQueueGrant != null) !== (d.requestQueueUntil != null)) return invalid();
@@ -134,12 +128,23 @@ function parseSession(value: unknown): Session | null {
   if (requestQueueGrant && !/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(requestQueueGrant)) return invalid();
   const queueConsent = !!requestQueueUntil && Date.parse(requestQueueUntil)>Date.now();
   if (!canSetRequestQueue && (d.requestQueueGrant != null || d.requestQueueUntil != null)) return invalid();
+  return { queueConsent,
+    ...(canSetRequestQueue?{canSetRequestQueue:true}:{}),
+    ...(requestQueueGrant && requestQueueUntil ? {requestQueueGrant,requestQueueUntil} : {}) };
+}
+
+function parseSession(value: unknown): Session | null {
+  const d = record(value);
+  if (d.authenticated === false) return null;
+  if (d.authenticated !== true || !['contributor', 'shopper', 'organizer', 'helper', 'editor'].includes(String(d.role))) return invalid();
+  const household = record(d.household), replay = record(d.replayWindow);
+  const grantId = d.grantId == null ? undefined : identity(d.grantId);
+  if ((d.role === 'helper' || d.role === 'editor') && !grantId) return invalid();
   return { authenticated: true, role: String(d.role), household: { id: identity(household.id), label: text(household.label, 512) }, memberId: identity(d.memberId),
     shopId: d.shopId === null ? null : identity(d.shopId), replayWindow: { id: identity(replay.id), expiresAt: timestamp(replay.expiresAt) }, csrf: text(d.csrf, 1024),
-    enrolled: boolean(d.enrolled), queueConsent,
+    enrolled: boolean(d.enrolled), ...requestQueueState(d),
     ...(Array.isArray(d.capabilities)?{canContribute:d.capabilities.includes('own_requests')}:{}),
-    ...(canSetRequestQueue?{canSetRequestQueue:true}:{}),
-    ...(requestQueueGrant && requestQueueUntil ? {requestQueueGrant,requestQueueUntil} : {}), ...(grantId ? { grantId } : {}) };
+    ...(grantId ? { grantId } : {}) };
 }
 
 function parseBrowserAuth(value:unknown):BrowserAuthState {
@@ -198,7 +203,9 @@ export class API {
   }
   async setRequestQueue(session:Session,enabled:boolean):Promise<void>{
     const result=record(await this.call(`/v1/households/${segment(session.household.id)}/devices/current/request-queue`,'PUT',{enabled},session.csrf));
-    if(result.queueConsent!==enabled)invalid();
+    const state=requestQueueState(result);
+    if (!state.canSetRequestQueue || identity(record(result.household).id)!==session.household.id ||
+        identity(result.memberId)!==session.memberId || (enabled ? !state.queueConsent : !!state.requestQueueGrant)) invalid();
   }
   async requests(session: Session): Promise<OwnRequest[]> {
     if (!isContributorSession(session)) throw new ApiError('access_ended', 403);

@@ -39,6 +39,23 @@ test('only a generation and its live expiry authorize storage in a decoded sessi
  await assert.rejects(parse({...base,capabilities:[],requestQueueGrant:grant,requestQueueUntil:until}));
 });
 
+test('queue opt-in and opt-out validate the raw scoped bootstrap acknowledgment', async()=>{
+ const current=session(),grant=crypto.randomUUID(),until=new Date(Date.now()+3600000).toISOString();
+ const base={household:current.household,memberId:current.memberId,capabilities:['request_queue_permission'],queueConsent:false};
+ const active={...base,requestQueueGrant:grant,requestQueueUntil:until};
+ const change=(enabled,data)=>new API(async(path,init)=>{
+   assert.equal(path,'/v1/households/household-a/devices/current/request-queue');
+   assert.equal(init.method,'PUT');assert.deepEqual(JSON.parse(init.body),{enabled});
+   return Response.json(data);
+ }).setRequestQueue(current,enabled);
+ await change(true,active);await change(false,base);
+ for(const bad of [base,{...base,queueConsent:true},{...active,memberId:'member-b'},{...active,household:{id:'other'}},
+   {...active,requestQueueUntil:undefined},{...active,requestQueueUntil:'2000-01-01T00:00:00Z'},{...active,capabilities:[]}]){
+   await assert.rejects(change(true,bad));
+ }
+ await assert.rejects(change(false,active));
+});
+
 test('invitation secrets leave URL before a request and never enter storage',()=>{
  const dom=new JSDOM('',{url:'https://food.example/invite?token=query-secret#token=fragment-secret'});
  assert.equal(consumeInvitation(dom.window.location,dom.window.history),'fragment-secret');
