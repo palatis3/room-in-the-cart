@@ -2,13 +2,17 @@
 
 Updated November 7, 2026 UTC. The owner resumed and explicitly approved the reviewed hosted staging update; the full first-version goal is active and release acceptance remains incomplete. Historical snapshots are preserved in [the handoff archive](CURRENT-HANDOFF-HISTORY-20261106.md).
 
+## Instruction revisions for scoped cooks, November 7
+
+A cook opening a scoped grant on iPhone sees the current instruction revision and time. Suggestions retain the revision the cook reviewed, including when a newer instruction arrives. An English and Spanish simulator walkthrough opened revision 12, refreshed to revision 13 and checked the changed instructions and time. The result contained one test, one pass and zero runtime warnings. All 129 companion-web tests passed.
+
 ## Setting aside a delivery for a named meal group, November 7
 
 After matching a delivery to a meal ingredient, the assigned shopper can set aside an exact amount for a named group. If the usable amount drops, the group keeps its original promise and the coverage screen shows how much that delivery still supplies. The shopper can reduce or release the promise even when the usable count is unknown. Removing a match requires releasing its active reservations first.
 
 The combined Swift client completed all six HTTPS scenarios against PostgreSQL. The shopper reopened the sealed meal’s exclusions and preparation facts, then reviewed a four-gram promise after the available amount dropped to two grams. A subsequent unknown count still permitted a reduction and release. The unsigned arm64 iPhone Release build passed its bundle checks, and static localization validation passed for 3,896 English and Spanish entries.
 
-On iPhone 17 Pro (iOS 26.2), the English and Spanish shopper walkthroughs passed with zero runtime warnings. On iPhone SE (iOS 17.0), both walkthroughs passed their assertions, but the strict gate rejected a SwiftUI state-update warning when saving a reservation in each language. The result checker now preserves the warning text when Xcode omits its attachment. The SE warning is under investigation.
+The iOS 17 warning during reservation save was traced to disabling the focused text field while SwiftUI was updating the form. The editor now ends amount editing before submission and disables the individual actions during the save. The English and Spanish shopper walkthroughs both passed on iPhone SE (iOS 17.0) and iPhone 17 Pro (iOS 26.2), with zero runtime warnings across all four executions. The unsigned device Release build passed its bundle checks.
 
 All 189 PostgreSQL integration tests passed. The service unit run recorded 428 passes and one database-only skip covered by the integration suite. A backup and restore rehearsal exercised migration 033 locally. Staging was last verified at migration 030. The reservation applies to confirmed deliveries on this order. Shared pantry and freezer stock and publishing a repaired shared dinner to the cook remain open.
 
