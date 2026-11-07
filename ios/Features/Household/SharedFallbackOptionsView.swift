@@ -58,7 +58,7 @@ struct SharedFallbackOptionsView: View {
                         if draft.selected {
                             NavigationLink(fallbackText("Review ingredients, food and time")) {
                                 SharedFallbackIngredientView(draft: $draft, page: page, includeOffers: trip.include)
-                            }
+                            }.accessibilityIdentifier("fallback.food." + draft.id.uuidString)
                         }
                     }
                 }

@@ -65,6 +65,7 @@ struct SharedFallbackLibraryView: View {
                 if model.pending != nil {
                     Section {
                         Button(fallbackText("Retry the saved recipe change")) { Task { await model.retry() } }
+                            .accessibilityIdentifier("fallback.retry")
                             .disabled(model.busy)
                         Button(fallbackText("Clear local retry after checking the library")) { clearing = true }
                             .disabled(model.busy)
@@ -85,6 +86,7 @@ struct SharedFallbackLibraryView: View {
                                         }
                                     }
                                     Button(fallbackText("Withdraw household approval"), role: .destructive) { withdrawal = candidate }
+                                        .accessibilityIdentifier("fallback.withdraw")
                                         .disabled(model.busy || model.pending != nil)
                                 }.navigationTitle(candidate.recipe.title)
                             }
@@ -104,12 +106,12 @@ struct SharedFallbackLibraryView: View {
                             Button { Task { await loadSource(.meal(occurrenceId: meal.id, mealRevision: meal.sourceMealRevision,
                                 revisionId: meal.revisionId), library) } } label: {
                                 Text(verbatim: meal.title + " · " + (sharedMealDayText(meal.day, locale: .current) ?? meal.day))
-                            }
+                            }.accessibilityIdentifier("fallback.meal." + meal.id.uuidString)
                         }
                         ForEach(sourceIdeas) { idea in
                             Button { Task { await loadSource(.idea(ideaId: idea.id, revision: idea.revision), library) } } label: {
                                 Text(verbatim: idea.draft.title)
-                            }
+                            }.accessibilityIdentifier("fallback.idea." + idea.id.uuidString)
                         }
                         if sourceFailure { Button(ht("Refresh")) { Task { await loadIdeas() } } }
                     }.onChange(of: displayingSources) { _, expanded in
@@ -146,7 +148,7 @@ struct SharedFallbackLibraryView: View {
             Button(fallbackText("Withdraw household approval"), role: .destructive) {
                 guard let library = model.library, library.candidates.contains(selected) else { return }
                 Task { await model.save(.revoke(candidateId: selected.id, baseRevision: selected.revision), reviewed: library) }
-            }
+            }.accessibilityIdentifier("fallback.withdrawConfirm")
         } message: { candidate in Text(verbatim: candidate.recipe.title) }
         .confirmationDialog(fallbackText("Clear local retry?"), isPresented: $clearing, titleVisibility: .visible) {
             Button(fallbackText("Clear local retry"), role: .destructive) {

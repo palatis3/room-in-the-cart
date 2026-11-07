@@ -44,7 +44,7 @@ struct SharedFallbackIngredientView: View {
                                     Text(verbatim: recoverySourceKind(source.kind) + " · " + deliveryQuantityText(source.quantity))
                                     if !source.exclusionTags.isEmpty { Text(verbatim: source.exclusionTags.joined(separator: ", ")) }
                                 }
-                            }
+                            }.accessibilityIdentifier("fallback.source." + ingredient.id.uuidString + "." + source.id.uuidString)
                         }
                         if includeOffers { packReview($row) }
                     }
