@@ -11,17 +11,17 @@ const notes = z.string().refine(value => Buffer.byteLength(value, 'utf8') <= 819
 const sourceURL = z.string().refine(value => Buffer.byteLength(value, 'utf8') <= 2048, 'Source reference exceeds the shared text limit').nullable();
 const zeroAmount = z.object({ numerator: z.number().int().min(0).max(1_000_000_000), denominator: z.number().int().min(1).max(1_000_000_000) }).strict();
 export const usableQuantitySchema = mealQuantity.extend({amount: zeroAmount});
-export const recoveryBaseSchema = z.object({shopRevision:revision,authorityEpoch:revision,recoveryRevision:revision,supplyRevision:revision,contextRevision:revision}).strict();
-export const recoveryNeedSchema = z.object({id,foodId:id.nullable(),ingredientId:id,groupId:id,name:label,notes,quantity:mealQuantity,priority:z.enum(['protected','required']),due:time.nullable(),exclusions:z.array(label).max(20)}).strict();
+export const recoveryBaseSchema = z.object({shopRevision:revision,authorityEpoch:revision,recoveryRevision:revision,supplyRevision:revision,contextRevision:revision,pantryRevision:revision.optional()}).strict();
+export const recoveryNeedSchema = z.object({id,foodId:id.nullable(),matchedSourceIds:z.array(id).max(1000).optional(),ingredientId:id,groupId:id.nullable(),groupIds:z.array(id).max(30).optional(),name:label,notes,quantity:mealQuantity.nullable(),priority:z.enum(['protected','required']),due:time.nullable(),exclusions:z.array(label).max(60)}).strict();
 export const recoveryMealSchema = z.object({
   occurrenceId:id,revisionId:id,sourceMealRevision:revision,title:label,notes,sourceURL,
   // Match the current shared service contract; reject fractional total servings.
-  portions:z.number().int().min(1).max(1000),day:z.iso.date(),zone:z.string().min(1).max(100).refine(s=>{try{new Intl.DateTimeFormat('en',{timeZone:s});return true;}catch{return false;}}),
+  portions:z.number().int().min(1).max(1000),day:z.iso.date(),zone:z.string().min(1).max(100).refine(s=>{try{new Intl.DateTimeFormat('en',{timeZone:s});return true;}catch{return false;}}).nullable(),
   due:time.nullable(),exclusions:z.array(label).max(20),
   template:z.object({id,version:revision}).strict().nullable(),
-  groups:z.array(z.object({id,name:label,servings:mealAmount,protected:z.boolean(),exclusions:z.array(label).max(20)}).strict()).min(1).max(30),
-  needs:z.array(recoveryNeedSchema).min(1).max(200),
-  remainingElapsedMinutes:z.number().int().min(0).max(525600).nullable(),requiredLeadMinutes:z.number().int().min(0).max(525600).nullable(),advanceStepsCompleted:z.boolean(),
+  groups:z.array(z.object({id,name:label,servings:mealAmount,protected:z.boolean(),exclusions:z.array(label).max(20)}).strict()).max(30),
+  needs:z.array(recoveryNeedSchema).max(260),
+  remainingElapsedMinutes:z.number().int().min(0).max(1_000_000).nullable(),requiredLeadMinutes:z.number().int().min(0).max(1_000_000).nullable(),advanceStepsCompleted:z.boolean(),
 }).strict();
 export const recoveryIntentSchema = z.object({
   occurrenceId:id,targetDigest:hash,replacement:recoveryMealSchema,reviewedAt:time,
@@ -69,7 +69,7 @@ const scoped = {householdId:id,shopId:id};
 export const sourceSchema = z.object({...scoped,id,foodId:id,identityRevision:revision.min(1),
   origin:z.discriminatedUnion('kind',[
     z.object({kind:z.literal('delivery'),sealedOrderRevision:revision,orderLineId:id,segmentKey:id}).strict(),
-    z.object({kind:z.literal('sharedStock'),batchId:id}).strict(),
+    z.object({kind:z.literal('sharedStock'),batchId:id,location:z.enum(['pantry','freezer'])}).strict(),
     z.object({kind:z.literal('reviewedImport'),originBindingId:id,reviewId:id,disclosureDigest:hash}).strict(),
   ]),
 }).strict();
@@ -79,10 +79,26 @@ const observation = {...scoped,id,sourceId:id,identityRevision:revision.min(1),r
 export const arrivalObservationSchema = z.object({...observation,arrivedAt:time.nullable(),received:usableQuantitySchema.nullable()}).strict();
 export const usableObservationSchema = z.object({...observation,arrivalObservationId:id,confirmedAt:time,usable:usableQuantitySchema.nullable()}).strict();
 export const reservationSchema = z.object({id,sourceId:id,needId:id,quantity:mealQuantity}).strict();
+// Manual observations follow the household pantry revision chain. They carry no
+// retailer arrival, order line, receipt, or member identity into the projection.
+const pantryObservationHistoryRow = z.object({
+  householdId:id, id, sourceId:id, identityRevision:revision.min(1), revision:revision.min(1),
+  predecessorId:id.nullable(), confirmedAt:time, recordedAt:time, quantity:usableQuantitySchema.nullable(),
+}).strict();
+// Already committed elsewhere, in an exact physical unit. A null hold means
+// the loader could not quantify that source's foreign commitments.
+const foreignHold = z.object({sourceId:id, quantity:z.object({
+  unit:mealQuantity.shape.unit, amount:z.object({
+    numerator:z.string().regex(/^(0|[1-9][0-9]*)$/).max(4096),
+    denominator:z.string().regex(/^[1-9][0-9]*$/).max(4096),
+  }).strict(),
+}).strict().nullable()}).strict();
 export const recoveryBasisSchema = z.object({...scoped,base:recoveryBaseSchema,
   // These rows must be read from trusted transaction state; this schema is NOT a request body.
   foods:z.array(z.object({id,name:label,exclusionTags:z.array(label).max(20)}).strict()).max(1000),
   sources:z.array(sourceSchema).max(1000),arrivals:z.array(arrivalObservationSchema).max(5000),usable:z.array(usableObservationSchema).max(5000),
+  selectedCarrySourceIds:z.array(id).max(1000).optional(),carrySupplyRevisions:z.array(z.object({shopId:id,supplyRevision:revision}).strict()).max(1000).optional(),
+  pantryObservations:z.array(pantryObservationHistoryRow).max(5000).optional(),foreignHolds:z.array(foreignHold).max(1000).optional(),
   meals:z.array(recoveryMealSchema).max(100),outsideNeeds:z.array(recoveryNeedSchema).max(1000),reservations:z.array(reservationSchema).max(1000),
   usedNeedIds:z.array(id).max(10000),usedRevisionIds:z.array(id).max(10000),knownTemplateIds:z.array(id).max(1000),
   commitmentInventoryComplete:z.boolean(),
