@@ -1,0 +1,7 @@
+{
+  "baseCommit": "81a6e8b0856f37fec700347baba686de486df4a5",
+  "beforeSHA256": "95fdc9cd634864757db3a5289ee31bedb7688af57b734f3a36fcc63170afc707",
+  "installedSHA256": "5968535843a0332136fffafdab2906136213b366c199b67f90f3d6afdc82b27a",
+  "sourcePath": "ios/UITests/FreeJourneyUITests.swift",
+  "nativeExecution": "not performed"
+}

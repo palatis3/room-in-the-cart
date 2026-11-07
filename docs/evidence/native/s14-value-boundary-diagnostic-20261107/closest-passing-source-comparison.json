@@ -1,0 +1,125 @@
+{
+  "published_head": "1080fad4999cb6c4ff34c20e99e5b72247e23e23",
+  "run4_source_manifest_sha256": "0e24e579e3c2ae05cd4fde218359abc1f13c70c2022619e27e73111790c4da7e",
+  "run4_native_log_sha256": "a1f19ad8d5d0e7d1a834674d8059c90427ca62a2470f67d2b50172ec402b6efc",
+  "run4_source_files": [
+    {
+      "path": "ios/App/Theme.swift",
+      "run4_sha256": "f280b780d90d9513b7c3a40c25eafa00e2d0566f1d288b05cc28dcfa608805dc",
+      "run4_manifest_sha256": "f280b780d90d9513b7c3a40c25eafa00e2d0566f1d288b05cc28dcfa608805dc",
+      "hosted_sha256": "f280b780d90d9513b7c3a40c25eafa00e2d0566f1d288b05cc28dcfa608805dc",
+      "source_bound": true,
+      "identical": true
+    },
+    {
+      "path": "ios/Features/Dinners/DinnerEditors.swift",
+      "run4_sha256": "cb78021561d2745779da9dd67312ad9f67ecd10b843c1ff746c33196eb2da7f9",
+      "run4_manifest_sha256": "cb78021561d2745779da9dd67312ad9f67ecd10b843c1ff746c33196eb2da7f9",
+      "hosted_sha256": "cb78021561d2745779da9dd67312ad9f67ecd10b843c1ff746c33196eb2da7f9",
+      "source_bound": true,
+      "identical": true
+    },
+    {
+      "path": "ios/Features/Dinners/DinnerWeekEditors.swift",
+      "run4_sha256": "a84ded1200ace6813223a7983dd26168b6df5085f1decf03257c7d2265467ea8",
+      "run4_manifest_sha256": "a84ded1200ace6813223a7983dd26168b6df5085f1decf03257c7d2265467ea8",
+      "hosted_sha256": "a84ded1200ace6813223a7983dd26168b6df5085f1decf03257c7d2265467ea8",
+      "source_bound": true,
+      "identical": true
+    },
+    {
+      "path": "ios/Features/Dinners/DinnerDrafts.swift",
+      "run4_sha256": "46731fc53e4be99ffdc8dcdaf2d73c7f9f362f929d5745b0fc35e90be025b06c",
+      "run4_manifest_sha256": "46731fc53e4be99ffdc8dcdaf2d73c7f9f362f929d5745b0fc35e90be025b06c",
+      "hosted_sha256": "46731fc53e4be99ffdc8dcdaf2d73c7f9f362f929d5745b0fc35e90be025b06c",
+      "source_bound": true,
+      "identical": true
+    },
+    {
+      "path": "ios/Features/Dinners/DinnerFeatureModel.swift",
+      "run4_sha256": "d1cd61617225d60eebee437f32f228011866cd9fb5204f4e1b49dc62ffc184bd",
+      "run4_manifest_sha256": "d1cd61617225d60eebee437f32f228011866cd9fb5204f4e1b49dc62ffc184bd",
+      "hosted_sha256": "d1cd61617225d60eebee437f32f228011866cd9fb5204f4e1b49dc62ffc184bd",
+      "source_bound": true,
+      "identical": true
+    },
+    {
+      "path": "ios/Features/Dinners/DinnerDecisionSheet.swift",
+      "run4_sha256": "c401b54ea72ad2f91728a9218da087fde9cb40fbedcb7b034b9db68123d1dfa9",
+      "run4_manifest_sha256": "c401b54ea72ad2f91728a9218da087fde9cb40fbedcb7b034b9db68123d1dfa9",
+      "hosted_sha256": "c401b54ea72ad2f91728a9218da087fde9cb40fbedcb7b034b9db68123d1dfa9",
+      "source_bound": true,
+      "identical": true
+    },
+    {
+      "path": "ios/Features/Dinners/DinnerAccessShield.swift",
+      "run4_sha256": "812e8dcabcb3a1abc5fe7065cc3254a89850e70cf07a2f8eac41d19bfb817d4b",
+      "run4_manifest_sha256": "812e8dcabcb3a1abc5fe7065cc3254a89850e70cf07a2f8eac41d19bfb817d4b",
+      "hosted_sha256": "812e8dcabcb3a1abc5fe7065cc3254a89850e70cf07a2f8eac41d19bfb817d4b",
+      "source_bound": true,
+      "identical": true
+    },
+    {
+      "path": "ios/Features/Dinners/DinnerPlanningHome.swift",
+      "run4_sha256": "6bdfc4c161ea2ebb93ef37255da9f146d14a01649af41379a88a8e61ff83a187",
+      "run4_manifest_sha256": "6bdfc4c161ea2ebb93ef37255da9f146d14a01649af41379a88a8e61ff83a187",
+      "hosted_sha256": "6bdfc4c161ea2ebb93ef37255da9f146d14a01649af41379a88a8e61ff83a187",
+      "source_bound": true,
+      "identical": true
+    },
+    {
+      "path": "ios/App/RoomInTheCartApp.swift",
+      "run4_sha256": "ab900dab2551a8929b22180405dac978fe6049bdaa03d109ee3d6f46ec8c8ed8",
+      "run4_manifest_sha256": "ab900dab2551a8929b22180405dac978fe6049bdaa03d109ee3d6f46ec8c8ed8",
+      "hosted_sha256": "ab900dab2551a8929b22180405dac978fe6049bdaa03d109ee3d6f46ec8c8ed8",
+      "source_bound": true,
+      "identical": true
+    }
+  ],
+  "methods": [
+    {
+      "name": "testUnavailableRecipeSourceLeavesServingsAndPortionAllocationEditableAfterRestart",
+      "identical": true,
+      "run4_sha256": "18f079eacf12e687f2c1730164331243d5036a1eeb8cbeb5f1e17fd7ae9bcd3d",
+      "hosted_sha256": "18f079eacf12e687f2c1730164331243d5036a1eeb8cbeb5f1e17fd7ae9bcd3d"
+    },
+    {
+      "name": "fill",
+      "identical": true,
+      "run4_sha256": "f0c7600f7f90ff293baa0d29b02ae0f82056d595e7b302130e136c91d0463deb",
+      "hosted_sha256": "f0c7600f7f90ff293baa0d29b02ae0f82056d595e7b302130e136c91d0463deb"
+    },
+    {
+      "name": "reveal",
+      "identical": true,
+      "run4_sha256": "a8fa670d6205c1518a467cf5111a9b2ee45f595fbd66be42b32c0b94f005bc7f",
+      "hosted_sha256": "a8fa670d6205c1518a467cf5111a9b2ee45f595fbd66be42b32c0b94f005bc7f"
+    },
+    {
+      "name": "tap",
+      "identical": true,
+      "run4_sha256": "9df7ec37409faa5e9cc002a8d1a2d700417ca2830628076c8ff13807cc83c4f2",
+      "hosted_sha256": "9df7ec37409faa5e9cc002a8d1a2d700417ca2830628076c8ff13807cc83c4f2"
+    },
+    {
+      "name": "launch",
+      "identical": true,
+      "run4_sha256": "5557a3875343cd26fad012f084fa9ab9108fa9d714a18d9e42b18a0227aa2993",
+      "hosted_sha256": "5557a3875343cd26fad012f084fa9ab9108fa9d714a18d9e42b18a0227aa2993"
+    },
+    {
+      "name": "restart",
+      "identical": true,
+      "run4_sha256": "898bd4ed8cbdf49be8992b461103b8ef340a3e5c7f1266bd2818818956614aec",
+      "hosted_sha256": "898bd4ed8cbdf49be8992b461103b8ef340a3e5c7f1266bd2818818956614aec"
+    },
+    {
+      "name": "dinnerRoot",
+      "identical": true,
+      "run4_sha256": "a504bb5ed71ed40631a2cb92e52d744c2d6d211e974c6e06d33fc8f17041cd2b",
+      "hosted_sha256": "a504bb5ed71ed40631a2cb92e52d744c2d6d211e974c6e06d33fc8f17041cd2b"
+    }
+  ],
+  "run4_S14_result": "passed (222.074 seconds)",
+  "limitations": "Historical source-bound run, not current execution. Different local environment. Full test source includes scratch visual methods and lacks unrelated later share-readiness diagnostic."
+}

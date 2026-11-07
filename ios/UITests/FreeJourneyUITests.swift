@@ -526,7 +526,23 @@ import XCTest
             let target = field(name)
             reveal(target)
             let exact = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", expected), object: target)
-            XCTAssertEqual(XCTWaiter.wait(for: [exact], timeout: 5), .completed,
+            let outcome = XCTWaiter.wait(for: [exact], timeout: 5)
+            if outcome != .completed {
+                // Preserve the failed five-second decision before slower public
+                // observations. Do not refocus, retype, save or retry the field.
+                let facts = [
+                    "Field: \(name); expected: \(expected); failed wait: \(outcome)",
+                    "Value: \(String(reflecting: target.value)); placeholder: \(String(reflecting: target.placeholderValue))",
+                    "Label: \(target.label); identifier: \(target.identifier)",
+                    "Exists: \(target.exists); enabled: \(target.isEnabled); hittable: \(target.isHittable); frame: \(target.frame)",
+                    "Software keyboard present: \(app.keyboards.firstMatch.exists)"
+                ]
+                let attachment = XCTAttachment(string: facts.joined(separator: "\n"))
+                attachment.name = "S14-failed-field-value-boundary"
+                attachment.lifetime = .keepAlways
+                add(attachment)
+            }
+            XCTAssertEqual(outcome, .completed,
                            "Persisted or entered value for \(name) must be \(expected)")
             XCTAssertEqual(target.value as? String, expected)
         }
