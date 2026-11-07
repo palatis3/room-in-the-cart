@@ -1,0 +1,84 @@
+{
+  "sourceBase": "3d6e671f3c97bf63c564c7a66c3da9b87f647efa",
+  "productCommit": "f2951e0f357569428296a3c38e28cdc907c3fb2e",
+  "toolchain": "Xcode 27.1 (27A9275)",
+  "device": {
+    "architecture": "arm64",
+    "deviceId": "34D8122F-F62B-4DA7-9D6F-A1EF2B3E4127",
+    "deviceName": "RITC-Records-Local-Provider",
+    "modelName": "iPhone 17e",
+    "osBuildNumber": "24A434",
+    "osVersion": "27.0",
+    "platform": "iOS Simulator"
+  },
+  "locale": "en_US",
+  "scope": "Disposable local Files provider (On My iPhone → Downloads) on iPhone Simulator. An offline RecordArchive generator supplies the older encrypted recipe and damaged twin. Normal app entry creates the later live comparison.",
+  "sourceSHA256": {
+    "ios/Features/Records/RecordsToolsView.swift": "eeaa5e8b9b3ecac574cf400dca90e4a606754aaa52dbdf8ba6403b48788fff67",
+    "ios/Features/Records/RecordsToolsModel.swift": "42ce157099f6e09c85d1b8b8d481460bbecef7b15cbeddab8487a0e37f9ded89",
+    "ios/Tests/RecordsAdapterTests.swift": "122ecf7b08cd719f310a97d93d9ee15ce6f8c4c5779988f86f1dea2ffa510ccf",
+    "diagnostics/records-files/RecordsFilesProbe.swift": "127d4cbbd82ac31f69b82ce91d209c30768d4b8602eb03dac1e04899b032cac6",
+    "diagnostics/records-files/main.swift": "7e18a5363ce40849eb5be2548ac3520e0a35933a82fa449e28a7674cac19a130",
+    "diagnostics/records-files/check-storage.py": "c3e20d524a9e401b9ce57f31a2276a32618fdaa3f8903effefa11e060fc86de4",
+    "diagnostics/records-files/replay.zsh": "fdab1195af6e54109bcd8719df643a16239c23ddcac83d0795a00c621959051a"
+  },
+  "archiveSHA256": {
+    "N06-damaged.roomrecovery": "52c0e4412878fa1727ceb44da6a1465a0dd96140be7ddf1fa6fd25de55530ccf",
+    "N06-valid.roomrecovery": "7f30ea300a5dad2613e0ec1ba9e6117657eebd444db5db8a23ffde2b281c1a72"
+  },
+  "initialDiagnostics": {
+    "model": "18 selected. One failed on the unmodified model: returned unavailable instead of malformed. Existing registry bytes stayed unchanged.",
+    "picker": "Two local attempts stopped at their newly written 10-second picker readiness assertion. Both showed a blank system sheet, and the system document service finished connecting during teardown. The standalone probe waits up to 30 seconds for Files to present its actual Cancel control.",
+    "parserFixedControl": "Starting with the comparison already entered on the private simulator, the entire picker flow and restart passed in 417.181 seconds. The damaged-file message was above the visible form and had to be scrolled into view."
+  },
+  "freshInstall": {
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "expectedFailures": 0,
+    "result": "Passed",
+    "startTime": 1794081581.218,
+    "finishTime": 1794081896.844
+  },
+  "strictUIWarnings": {
+    "status": "passed",
+    "summaryWarningCount": 0,
+    "runtimeWarningCount": 0,
+    "examinedTestCount": 1,
+    "detailExportCount": 1,
+    "activityExportCount": 0,
+    "warnings": []
+  },
+  "recordsModels": {
+    "passedTests": 38,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "expectedFailures": 0,
+    "result": "Passed",
+    "startTime": 1794081490.985,
+    "finishTime": 1794081565.386
+  },
+  "strictModelWarnings": {
+    "status": "passed",
+    "summaryWarningCount": 0,
+    "runtimeWarningCount": 0,
+    "examinedTestCount": 38,
+    "detailExportCount": 38,
+    "activityExportCount": 0,
+    "warnings": []
+  },
+  "storageEvidence": "storage.json",
+  "reviewImage": "backup-review.png was captured during the parser-fixed control while reviewing the older recipe through Files.",
+  "localResultBundles": {
+    "fresh": "fresh.xcresult",
+    "recordsModels": "models-final.xcresult",
+    "parserFixedControl": "controls.xcresult",
+    "modelNegativeControl": "model-red.xcresult"
+  },
+  "strictArtifactsSHA256": {
+    "ui-strict.txt": "7120d044bd0137a30e29d95ea34f92ef4cb744be29fa134d215ad1a242de3185",
+    "models-strict.txt": "74bd91105f677baacd460a6d8f1dcb65c81e42b092f52fda1b3c29d40d574137",
+    "storage.json": "bc667429e3b67775d44ea11cceb977b6f448a89fb951df310d303eb3acff7f98",
+    "backup-review.png": "0ba81cc9e668101c4d875d7daeae943cfae997dc9ff0948296fb3789691c5149"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "N06 baseline": {
+    "comparisonRows": 1,
+    "comparisonSHA256": "36f29ff70c5b435730af30c0dbb9b2cc78d034b7e2c80c0832ce350cdfbfe0d5",
+    "recoveredRows": 0,
+    "registrySHA256": null
+  },
+  "N06 picker cancelled": {
+    "comparisonRows": 1,
+    "comparisonSHA256": "36f29ff70c5b435730af30c0dbb9b2cc78d034b7e2c80c0832ce350cdfbfe0d5",
+    "recoveredRows": 0,
+    "registrySHA256": null
+  },
+  "N06 damaged rejected": {
+    "comparisonRows": 1,
+    "comparisonSHA256": "36f29ff70c5b435730af30c0dbb9b2cc78d034b7e2c80c0832ce350cdfbfe0d5",
+    "recoveredRows": 0,
+    "registrySHA256": null
+  },
+  "N06 review cancelled": {
+    "comparisonRows": 1,
+    "comparisonSHA256": "36f29ff70c5b435730af30c0dbb9b2cc78d034b7e2c80c0832ce350cdfbfe0d5",
+    "recoveredRows": 0,
+    "registrySHA256": null
+  },
+  "N06 first applied": {
+    "comparisonRows": 1,
+    "comparisonSHA256": "36f29ff70c5b435730af30c0dbb9b2cc78d034b7e2c80c0832ce350cdfbfe0d5",
+    "recoveredRows": 1,
+    "registrySHA256": "a7a32553f11966daa4590b48de83b27c49ec72f97d6c0858673d8773d4032a19"
+  },
+  "N06 identical reopened": {
+    "comparisonRows": 1,
+    "comparisonSHA256": "36f29ff70c5b435730af30c0dbb9b2cc78d034b7e2c80c0832ce350cdfbfe0d5",
+    "recoveredRows": 1,
+    "registrySHA256": "a7a32553f11966daa4590b48de83b27c49ec72f97d6c0858673d8773d4032a19"
+  }
+}
