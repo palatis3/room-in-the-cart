@@ -194,6 +194,7 @@ struct DeviceReminderPersona: Equatable {
                 try await prefetchContributorReplayWindow(service, start: start)
             }
             // Old device-bound operations require review; never attach them to this new enrollment.
+            try await clearExpiredQueuedRequests(value)
             let old = try await outbox.operations()
             guard start == generation else { return }
             if let operation = old.first(where: { $0.householdID == value.household.id && $0.memberID == value.memberId && $0.targetsShop(value.shopId) }) {
@@ -266,6 +267,8 @@ struct DeviceReminderPersona: Equatable {
             }
             // Revoke the old view as soon as authority is known, even if the request list cannot load.
             projection = fresh
+            try await clearExpiredQueuedRequests(fresh)
+            guard start == generation else { return }
             configureShopperInbox(fresh); configureSharedShop(fresh); lifecycle?.setScope(fresh)
             notice = nil
             if fresh.capabilities.contains("own_requests") {
@@ -316,6 +319,28 @@ struct DeviceReminderPersona: Equatable {
         }
         contributorReplayWindow = (window, expiresAt)
     }
+    private func clearExpiredQueuedRequests(_ current: HouseholdBootstrap) async throws {
+        for operation in try await outbox.operations() where operation.householdID == current.household.id && operation.memberID == current.memberId {
+            guard let grant = operation.requestQueueGrant, grant != current.requestQueueGrant else { continue }
+            try await outbox.remove(operation.id)
+            if pending?.id == operation.id { pending = nil; delivery = .localDraft }
+        }
+    }
+
+    func setRequestQueuePermission(_ enabled: Bool) async {
+        guard !busy, !locked, let service, let prior = projection, prior.canSetRequestQueue == true else { return }
+        busy = true; defer { busy = false }
+        let start = generation
+        do {
+            let updated = try await service.setRequestQueuePermission(enabled)
+            guard start == generation, projection == prior, updated.memberId == prior.memberId, updated.household.id == prior.household.id else { return }
+            projection = updated
+            try await clearExpiredQueuedRequests(updated)
+            if enabled { try await prefetchContributorReplayWindow(service, start: start) }
+            notice = nil
+        } catch { await show(error, start: start) }
+    }
+
     private func prefetchContributorReplayWindow(_ service: HouseholdService, start: UUID) async throws {
         do {
             let window = try await service.replayWindow()
@@ -341,6 +366,13 @@ struct DeviceReminderPersona: Equatable {
                 window = try await service.replayWindow()
                 offline = false
             } catch ClientError.transport {
+                if projection.canSetRequestQueue != nil {
+                    guard projection.canSetRequestQueue == true, projection.queueConsent, projection.requestQueueGrant != nil,
+                          (projection.requestQueueUntil.flatMap(serviceDate) ?? .distantPast) > Date() else {
+                        notice = ht("Enable offline requests while connected before saving a request offline.")
+                        return
+                    }
+                }
                 guard let cached = contributorReplayWindow, cached.expiresAt > Date() else { throw ClientError.transport }
                 window = cached.value
                 offline = true
@@ -362,7 +394,7 @@ struct DeviceReminderPersona: Equatable {
             }
             let envelope = CommandEnvelope(replayWindow: window.id, shopId: scope.targetShopID, kind: kind,
                 base: .init(shopRevision: 0, authorityEpoch: 0, requestRevision: scope.editing?.revision), body: body)
-            let operation = try await service.prepare(envelope: envelope, bootstrap: projection)
+            let operation = try await service.prepare(envelope: envelope, bootstrap: projection, requestQueueGrant: offline ? projection.requestQueueGrant : nil)
             guard start == generation, currentContributorRequestScope() == scope else { return }
             try await outbox.append(operation)
             guard start == generation else { return }
@@ -414,6 +446,21 @@ struct DeviceReminderPersona: Equatable {
             catch { if start == generation { notice = ht("Received by the household. Local retry cleanup needs another attempt.") } }
         } catch {
             guard start == generation else { return }
+            if case .service(_, "queue_permission_ended", _, _) = error as? ClientError {
+                contributorReplayWindow = nil
+                do {
+                    for queued in try await outbox.operations() where queued.householdID == operation.householdID &&
+                        queued.memberID == operation.memberID && queued.requestQueueGrant == operation.requestQueueGrant {
+                        try await outbox.remove(queued.id)
+                    }
+                    guard start == generation else { return }
+                    pending = nil; delivery = .localDraft
+                    notice = ht("Enable offline requests while connected before saving a request offline.")
+                } catch {
+                    if start == generation { notice = ht("Could not clear the local retry. Try again.") }
+                }
+                return
+            }
             if let failure = error as? ClientError {
                 if let delay = RetryPolicy().delay(attempt: attempts, error: failure) { retryAfter = Date().addingTimeInterval(delay) }
                 else if failure != .accessEnded && failure != .sessionNeeded && failure != .cancelled {

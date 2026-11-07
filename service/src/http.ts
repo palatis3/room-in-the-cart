@@ -216,6 +216,10 @@ export function createHTTPServer(options:HTTPOptions) {
       const historicalReportShopId=placementCommand?.shopId??(ownPlacement&&method==='GET'?uuid.parse(ownPlacement[1]):placementRead?uuid.parse(placementRead[1]):undefined);
       const scopedAuth=historicalReportShopId?{...auth,historicalReportShopId}:auth;
       const output=await repository.authorized(householdId,scopedAuth,async ctx=>{
+        if(path==='/devices/current/request-queue' && method==='PUT'){
+          const {enabled}=z.object({enabled:z.boolean()}).strict().parse(payload);
+          return repository.setRequestQueuePermission(ctx,enabled);
+        }
         if(ownPlacement&&method==='GET')return placementReports.own(ctx,uuid.parse(ownPlacement[1]),uuid.parse(ownPlacement[2]),z.string().regex(/^[0-9a-f]{64}$/).parse(url.searchParams.get('commandDigest')));
         if(path==='/devices/current'&&method==='DELETE')return repository.logout(ctx);
         if(path==='/devices'&&method==='GET'){const cursor=url.searchParams.get('cursor');if(cursor)uuid.parse(cursor);return devices.list(ctx,cursor);}
@@ -291,7 +295,16 @@ export function createHTTPServer(options:HTTPOptions) {
           const cursor=url.searchParams.get('cursor');if(cursor)uuid.parse(cursor);
           return repository.requests(ctx,cursor);
         }
-        if(path==='/commands'&&method==='POST')return repository.execute(ctx,parseCommand(payload),options.billing);
+        if(path==='/commands'&&method==='POST') {
+          const command=parseCommand(payload), header=req.headers['x-request-queue-grant'];
+          if(header!==undefined) {
+            const grant=uuid.parse(header);
+            if(!['request.send','request.edit'].includes(command.kind))throw invalid();
+            if((await repository.bootstrap(ctx)).requestQueueGrant!==grant)
+              throw new ServiceError(409,'queue_permission_ended','Review current received requests before sending a new request.');
+          }
+          return repository.execute(ctx,command,options.billing);
+        }
         const shopMatch=/^\/shops\/([^/]+)(.*)$/.exec(path);
         if(shopMatch) {
           const shopId=uuid.parse(shopMatch[1]),tail=shopMatch[2];

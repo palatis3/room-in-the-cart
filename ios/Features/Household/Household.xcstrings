@@ -1,6 +1,57 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Turn off and clear unsent offline requests": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn off and clear unsent offline requests"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desactivar y borrar las solicitudes sin enviar guardadas sin conexión"
+          }
+        }
+      }
+    },
+    "Allow offline requests on this iPhone for up to 24 hours": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow offline requests on this iPhone for up to 24 hours"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permitir solicitudes sin conexión en este iPhone hasta por 24 horas"
+          }
+        }
+      }
+    },
+    "Enable offline requests while connected before saving a request offline.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enable offline requests while connected before saving a request offline."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activa las solicitudes sin conexión mientras tengas conexión antes de guardar una solicitud sin conexión."
+          }
+        }
+      }
+    },
     "Ready for review in this pickup": {
       "extractionState": "manual",
       "localizations": {

@@ -123,6 +123,21 @@ export class HouseholdRepository {
     await ctx.db.query('INSERT INTO ritc.replay_window(household_id,window_id,member_id,device_id,expires_at) VALUES($1,$2,$3,$4,$5)',[ctx.householdId,id,ctx.member.member_id,ctx.deviceId,expiresAt]);
     return{id,expiresAt:expiresAt.toISOString()};
   }
+  async setRequestQueuePermission(ctx:Context, enabled:boolean) {
+    const current = await this.bootstrap(ctx);
+    if (!current.capabilities.includes('request_queue_permission')) throw unavailable();
+    const key = [ctx.householdId,ctx.member.member_id,ctx.deviceId];
+    if (!enabled) {
+      await ctx.db.query('DELETE FROM ritc.request_queue_permission WHERE household_id=$1 AND member_id=$2 AND device_id=$3',key);
+    } else if (!current.queueConsent) {
+      const until = (await this.window(ctx)).expiresAt;
+      await ctx.db.query(`INSERT INTO ritc.request_queue_permission(household_id,member_id,device_id,grant_id,enabled_at,expires_at)
+        VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(household_id,member_id,device_id)
+        DO UPDATE SET grant_id=excluded.grant_id,enabled_at=excluded.enabled_at,expires_at=excluded.expires_at`,
+        [...key,randomUUID(),ctx.now,until]);
+    }
+    return this.bootstrap(ctx);
+  }
   async bootstrap(ctx:Context) {
     const house=(await ctx.db.query('SELECT label FROM ritc.household WHERE household_id=$1',[ctx.householdId])).rows[0];
     const candidates = (await ctx.db.query<{shop_id:string;shopper_id:string;placed_revision:number|null;budget_access:boolean}>(`
@@ -150,13 +165,18 @@ export class HouseholdRepository {
         WHERE g.household_id=$1 AND g.member_id=$2 AND g.enabled AND s.phase<>'closed' LIMIT 1`,
         [ctx.householdId,ctx.member.member_id])).rowCount ?? 0) > 0;
     const helperRole=!ctx.selectedShopId&&!isShopper&&!ctx.member.organizer&&!hasBudgetAccess&&helper;
+    const queueEligible = !ctx.viewGrantId && !helperRole && ctx.member.kind === 'adult' && ctx.member.can_contribute;
+    const grant = queueEligible ? (await ctx.db.query<{request_queue_grant:string,request_queue_until:Date}>(
+      'SELECT grant_id AS request_queue_grant,expires_at AS request_queue_until FROM ritc.request_queue_permission WHERE household_id=$1 AND member_id=$2 AND device_id=$3 AND expires_at>$4',
+      [ctx.householdId,ctx.member.member_id,ctx.deviceId,ctx.now])).rows[0] : undefined;
     const planning = !ctx.viewGrantId && !helperRole && !isShopper && shop && ctx.member.kind==='adult' &&
       (await ctx.db.query(`SELECT 1 FROM ritc.meal_planner p JOIN ritc.shop s USING(household_id,shop_id,authority_epoch)
        WHERE p.household_id=$1 AND p.shop_id=$2 AND p.planner_id=$3 AND s.phase<>'closed'`,[ctx.householdId,shop.shop_id,ctx.member.member_id])).rowCount;
     return{household:{id:ctx.householdId,label:house.label as string},memberId:ctx.member.member_id,
       canSelectShop:!helperRole&&!ctx.viewGrantId&&ctx.member.kind==='adult'&&(ctx.member.can_contribute||ctx.member.organizer||isShopper||hasBudgetAccess),
-      selectionRequired:!helperRole&&!ctx.viewGrantId&&!ctx.selectedShopId&&candidates.length>1,role:isShopper?'shopper':ctx.member.organizer?'organizer':helperRole?(helper.mode==='edit'?'editor':'helper'):'contributor',shopId:helperRole?helper.shop_id:shop?.shop_id??null,...(helperRole?{grantId:helper.grant_id}:{}),enrolled:true,queueConsent:false,
-      capabilities:[...(!helperRole&&!ctx.viewGrantId&&(isShopper||shop?.budget_access)?['store_quotes']:[]),...(isShopper && shop?.placed_revision!=null?['delivery_evidence','cook_copies','cook_corrections','pantry_lots','meal_recovery','request_purchase_confirmation']:[]),...(planning?['meal_proposals']:[]),...(ctx.member.can_contribute?['own_requests']:[]),...(isShopper?['shopper_inbox','request_preview','shopper_commands','accepted_fallbacks','deferred_requests']:[]),...(ctx.member.organizer?['household_admin']:[]),...(helperRole?['helper_view',...(helper.mode==='edit'?['helper_propose']:[])]:[])]};
+      selectionRequired:!helperRole&&!ctx.viewGrantId&&!ctx.selectedShopId&&candidates.length>1,role:isShopper?'shopper':ctx.member.organizer?'organizer':helperRole?(helper.mode==='edit'?'editor':'helper'):'contributor',shopId:helperRole?helper.shop_id:shop?.shop_id??null,...(helperRole?{grantId:helper.grant_id}:{}),enrolled:true,canSetRequestQueue:Boolean(queueEligible),queueConsent:Boolean(grant),
+      ...(grant ? {requestQueueGrant:grant.request_queue_grant,requestQueueUntil:grant.request_queue_until.toISOString()} : {}),
+      capabilities:[...(queueEligible?['request_queue_permission']:[]),...(!helperRole&&!ctx.viewGrantId&&(isShopper||shop?.budget_access)?['store_quotes']:[]),...(isShopper && shop?.placed_revision!=null?['delivery_evidence','cook_copies','cook_corrections','pantry_lots','meal_recovery','request_purchase_confirmation']:[]),...(planning?['meal_proposals']:[]),...(ctx.member.can_contribute?['own_requests']:[]),...(isShopper?['shopper_inbox','request_preview','shopper_commands','accepted_fallbacks','deferred_requests']:[]),...(ctx.member.organizer?['household_admin']:[]),...(helperRole?['helper_view',...(helper.mode==='edit'?['helper_propose']:[])]:[])]};
   }
   async shops(ctx:Context,scope:'active'|'owned',after:string|null){
     if(ctx.viewGrantId||ctx.member.kind!=='adult')throw unavailable();

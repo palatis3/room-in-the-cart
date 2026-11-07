@@ -60,6 +60,11 @@ struct HouseholdSettingsView: View {
                         if projection.canSelectShop == true || projection.selectionRequired == true {
                             NavigationLink(ht("Choose shared shop")) { HouseholdShopSelector(household: model) }
                         }
+                        if projection.canSetRequestQueue == true {
+                            Button(ht(projection.queueConsent ? "Turn off and clear unsent offline requests" : "Allow offline requests on this iPhone for up to 24 hours")) {
+                                Task { await model.setRequestQueuePermission(!projection.queueConsent) }
+                            }.disabled(model.busy).accessibilityIdentifier("household.request.queuePermission")
+                        }
                         Button(ht("Refresh household")) { Task { await model.refresh() } }
                         if model.sharedShop != nil { NavigationLink(ht("Open shared household shop")) { HouseholdShopView(model: model) } }
                         if model.storeQuoteScope != nil {

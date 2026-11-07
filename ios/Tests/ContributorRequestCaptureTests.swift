@@ -167,6 +167,38 @@ import DeviceSurfaces
         let remaining = try await outbox.operations()
         XCTAssertTrue(remaining.isEmpty)
     }
+    func testDeviceOptInRequiredAndRotatedPermissionClearsOfflineIntentWithoutSubmitting() async throws {
+        let queue = location()
+        defer { try? FileManager.default.removeItem(at: queue.deletingLastPathComponent()) }
+        let fixture = ContributorCaptureFixture()
+        fixture.offersQueuePermission = true
+        let model = try await model(fixture, queue: queue)
+        model.item = "Rice"
+        let review = try ContributorRequestReview.typed(scope: XCTUnwrap(model.contributorRequestScope))
+        fixture.windowFailure = .offline
+        await model.sendRequest(reviewed: review, approved: true)
+        let outbox = OperationOutbox(url: queue)
+        let denied = try await outbox.operations()
+        XCTAssertTrue(denied.isEmpty)
+        XCTAssertTrue(fixture.commands.isEmpty)
+
+        fixture.windowFailure = nil
+        fixture.queueGrant = UUID()
+        await model.refresh()
+        fixture.windowFailure = .offline
+        await model.sendRequest(reviewed: review, approved: true)
+        let waiting = try await outbox.operations()
+        XCTAssertEqual(waiting.count, 1)
+        XCTAssertEqual(waiting.first?.requestQueueGrant, fixture.queueGrant)
+        fixture.windowFailure = nil
+        fixture.queueGrant = UUID()
+        await model.retry()
+        let afterRotation = try await outbox.operations()
+        XCTAssertTrue(afterRotation.isEmpty)
+        XCTAssertEqual(model.delivery, .localDraft)
+        XCTAssertTrue(fixture.commands.isEmpty)
+    }
+
     func testOfflineWithoutUsableWindowAndExplicitDenialNeverQueue() async throws {
         for failure in [ContributorCaptureFixture.WindowFailure.offline, .revoked] {
             let queue = location(); defer { try? FileManager.default.removeItem(at: queue.deletingLastPathComponent()) }
@@ -383,6 +415,7 @@ private final class ContributorCaptureFixture: @unchecked Sendable {
     let household = UUID().uuidString.lowercased(), member = UUID().uuidString.lowercased(), shop = UUID().uuidString.lowercased()
     let windowID = UUID().uuidString.lowercased()
     var windowExpiry = "2099-01-01T00:00:00.000Z", windowFailure: WindowFailure?
+    var offersQueuePermission = false, queueGrant: UUID?
     var enrollmentRevoked = false, revokedBootstrapChecks = 0
     var commands: [Data] = [], rows: [[String: Any]] = [], receipts: [String: [String: Any]] = [:]
     var loseReply = false, privateReads = 0
@@ -404,7 +437,13 @@ private final class ContributorCaptureFixture: @unchecked Sendable {
                 revokedBootstrapChecks += 1
                 return try response(["error": ["code": "access_ended"]], 403)
             }
-            return try response(["household":["id":household,"label":"Home"],"memberId":member,"role":"contributor","shopId":shop,"enrolled":true,"queueConsent":false,"capabilities":["own_requests"]])
+            var value: [String: Any] = ["household":["id":household,"label":"Home"],"memberId":member,"role":"contributor","shopId":shop,"enrolled":true,"queueConsent":queueGrant != nil,"capabilities":["own_requests"]]
+            if offersQueuePermission { value["canSetRequestQueue"] = true }
+            if let queueGrant {
+                value["requestQueueGrant"] = queueGrant.uuidString
+                value["requestQueueUntil"] = windowExpiry
+            }
+            return try response(value)
         }
         if path.hasSuffix("/requests/mine") {
             if enrollmentRevoked {

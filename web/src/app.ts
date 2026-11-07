@@ -97,6 +97,15 @@ export class WebApp {
     this.proposalGeneration++;this.proposalIntent=null;this.proposalReceipt=null;this.proposalStatus=null;this.proposalConflict=false;this.withdrawn=null;this.withdrawalCommand=null;this.confirmedOperations.clear();
   }
   checkExpiry():void {
+    if (this.session?.requestQueueUntil && Date.parse(this.session.requestQueueUntil) <= Date.now()) {
+      const expiredScope=scopeFor(this.session);
+      const {requestQueueGrant, requestQueueUntil, ...current} = this.session;
+      this.session = {...current, queueConsent:false};
+      this.pending=[];this.confirmedOperations.clear();this.retryCommand=null;this.uncertainSend=false;
+      this.notice='Offline permission expired. Check Your requests before sending again.';
+      void this.outbox.clearScope(expiredScope).catch(()=>{this.queueState='unavailable';this.render();});
+      this.render();
+    }
     if(this.view && Date.parse(this.view.expiresAt)<=Date.now()) {
       this.clearPrivate();void this.outbox.clear().catch(()=>{});
       this.notice='Access has ended. Ask your household for a new invitation.';this.render();
@@ -110,8 +119,14 @@ export class WebApp {
       this.clearPrivate();this.notice='';this.render();
       await this.outbox.retainScope(scopeFor(fresh)).catch(()=>{});
     }
+    const previous=this.session;
     this.session=fresh;
+    if (previous?.requestQueueGrant && previous.requestQueueGrant !== fresh?.requestQueueGrant) {
+      this.pending=[];this.confirmedOperations.clear();this.retryCommand=null;this.uncertainSend=false;
+      await this.outbox.clearScope(scopeFor(previous)).catch(()=>{this.queueState='unavailable';});
+    }
     if(!fresh){this.requests=[];this.view=null;this.pending=[];this.receivedSuggestions=[];this.suggestionsState='unchecked';this.consent=false;this.render();this.browserAuth=await this.api.authState();return;}
+    if (fresh.role !== 'helper' && fresh.role !== 'editor' && !isContributorSession(fresh)) throw new ApiError('access_ended',403);
     this.reviewedScope=reviewScope(fresh);
     if(fresh.role==='helper'||fresh.role==='editor') {
       this.requests=[];this.view=null;this.pending=[];this.draft=blank();this.retryCommand=null;this.uncertainSend=false;this.consent=false;
@@ -173,7 +188,7 @@ export class WebApp {
   private async fail(error:unknown,purpose:'load'|'mutation'='mutation',rejectedPendingID?:string):Promise<void> {
     this.failurePurpose=purpose;
     const e=error instanceof ApiError ? error:new ApiError('unavailable',500);
-    if(e.status===403||e.code==='access_ended'||(e.status===404&&(this.proposalIntent!==null||['editor','helper'].includes(this.session?.role??'')))) {
+    if(e.status===403||e.code==='queue_permission_ended'||e.code==='access_ended'||(e.status===404&&(this.proposalIntent!==null||['editor','helper'].includes(this.session?.role??'')))) {
       this.clearPrivate();
       this.render();
       try {
@@ -300,7 +315,21 @@ export class WebApp {
       const review=this.button('Review request',()=>{},true);review.type='submit';form.append(review);
       form.addEventListener('submit',e=>{e.preventDefault();if(!this.draft.item.trim())return;this.review=true;this.render();});
     }
-    if(this.session!.enrolled&&this.session!.queueConsent) {
+    if(this.session!.enrolled&&this.session!.canSetRequestQueue) {
+      const enabled=this.session!.queueConsent;
+      form.append(this.button(enabled?'Turn off and clear pending requests':'Allow pending requests on this browser for up to 24 hours',()=>void this.run(async()=>{
+        const fresh=await this.reauthenticate();
+        await this.api.setRequestQueue(fresh,!enabled);
+        if(enabled){
+          this.pending=[];this.retryCommand=null;this.uncertainSend=false;this.consent=false;
+          const {requestQueueGrant,requestQueueUntil,...current}=fresh;
+          this.session={...current,queueConsent:false};
+          try { await this.outbox.clearScope(scopeFor(fresh)); }
+          catch { this.notice='Access has ended. Clear site data before sharing this browser.'; }
+        }
+        await this.load();
+      })),this.el('p',this.t('Only enable this on your own device. Queued requests are not yet received.')));
+    } else if(this.session!.enrolled&&this.session!.queueConsent) {
       const label=this.el('label');label.className='checkbox';const cb=this.el('input');cb.type='checkbox';cb.checked=this.consent;cb.addEventListener('change',()=>{this.consent=cb.checked;});label.append(cb,this.el('span',this.t('Save pending requests on this browser')));form.append(label,this.el('p',this.t('Only enable this on your own device. Queued requests are not yet received.')));
     }
     if(this.draft.item) form.append(this.button('Copy your text',()=>void this.run(async()=>{await navigator.clipboard.writeText(`${this.draft.item}\n${this.draft.amount}`);this.notice='Copied';})));
@@ -343,7 +372,7 @@ export class WebApp {
     } catch(error) {
       const cached=this.session;
       if(!(error instanceof ApiError)||error.status!==0||!cached||!isContributorSession(cached)||
-         reviewScope(cached)!==this.reviewedScope||!cached.enrolled||!cached.queueConsent||!this.consent)throw error;
+         reviewScope(cached)!==this.reviewedScope||!cached.enrolled||!cached.queueConsent||(cached.requestQueueUntil && Date.parse(cached.requestQueueUntil)<=Date.now())||!(cached.canSetRequestQueue||this.consent))throw error;
       if(Date.parse(cached.replayWindow.expiresAt)<=Date.now()||
          (this.retryCommand&&this.retryCommand.replayWindow!==cached.replayWindow.id))throw new ApiError('stale_replay_window',409);
       // The last checked session can scope a local draft. Only a fresh session can send it.
@@ -356,14 +385,14 @@ export class WebApp {
     const command=this.retryCommand;
     const p:Pending={id:command.clientKey,scope:scopeFor(s),command,createdAt:new Date().toISOString()};
     let persisted=false;
-    if(this.consent&&s.queueConsent&&s.enrolled){try{await this.outbox.put(p,s,true);persisted=true;}catch{this.notice='Browser storage is unavailable. Requests will remain editable but will not be saved offline.';}}
+    if((s.canSetRequestQueue||this.consent)&&s.queueConsent&&s.enrolled){try{await this.outbox.put(p,s,true);persisted=true;}catch{this.notice='Browser storage is unavailable. Requests will remain editable but will not be saved offline.';}}
     if(this.signOutPending)throw new ApiError('access_ended',403);
     if(offlineError){
       if(!persisted)throw offlineError;
       this.showQueued(p);
       return;
     }
-    try{await this.api.command(s,command);}catch(error){
+    try{await this.api.command(s,command,persisted?s.requestQueueGrant:undefined);}catch(error){
       this.uncertainSend=error instanceof ApiError && (error.status===0||error.status>=500);
 
       if(persisted && error instanceof ApiError && (error.status===0||error.status>=500||error.status===429)) {
@@ -403,7 +432,7 @@ export class WebApp {
     if(this.signOutPending||!fresh||reviewScope(fresh)!==this.reviewedScope||scopeFor(fresh)!==p.scope||!isContributorSession(fresh)||!fresh.enrolled||!fresh.queueConsent)throw new ApiError('access_ended',403);
     if(!this.confirmedOperations.has(p.id)) {
       if(fresh.replayWindow.id!==p.command.replayWindow||Date.parse(fresh.replayWindow.expiresAt)<=Date.now()) {this.notice='This queued request needs a new review. It was not resent.';return;}
-      await this.api.command(fresh,p.command);
+      await this.api.command(fresh,p.command,fresh.requestQueueGrant);
     }
     this.session=fresh;await this.finishReceived(p,true);
   }

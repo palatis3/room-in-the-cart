@@ -1,5 +1,8 @@
 /** US Spanish draft; human language review remains a release gate. */
 const es: Record<string, string> = {
+  'Allow pending requests on this browser for up to 24 hours':'Permitir solicitudes pendientes en este navegador hasta por 24 horas',
+  'Offline permission expired. Check Your requests before sending again.':'Venció el permiso para guardar solicitudes sin conexión. Revisa tus solicitudes antes de enviar otra vez.',
+  'Turn off and clear pending requests':'Desactivar y borrar las solicitudes pendientes',
   'Received suggestions checked.':'Sugerencias recibidas consultadas.',
   'Suggestions received by the service':'Sugerencias recibidas por el servicio',
   'These suggestions are recovered from your current account and invitation. They do not need to be sent again.':'Estas sugerencias se recuperan de tu cuenta e invitación actuales. No es necesario volver a enviarlas.',

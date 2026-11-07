@@ -28,12 +28,15 @@ Invite tokens have format `householdUUID.randomSecret` and only a SHA-256 hash i
   authenticated: true,
   household: {id: string, label: string}, memberId: string,
   role: 'shopper'|'organizer'|'contributor'|'helper'|'editor',
-  shopId: string|null, grantId?: string, enrolled: true, queueConsent: false,
+  shopId: string|null, grantId?: string, enrolled: true, queueConsent: boolean, canSetRequestQueue: boolean,
+  requestQueueGrant?: string, requestQueueUntil?: string,
   capabilities: string[], replayWindow: {id:string, expiresAt:string}, csrf:string
 }
 ```
 
 `GET /v1/households/{h}/bootstrap` returns the same household/member/role/shop/grant/enrollment/capability fields without session/CSRF/replay metadata. `own_requests` requires contribution rights. `shopper_inbox`, `request_preview` and `shopper_commands` require the adult assigned to the selected shop. `household_admin` requires organizer status. A selected helper session has only `helper_view` and, for editor grants, `helper_propose`; it cannot use shopper authority even if that identity has a broader adult membership.
+
+Enrolled adult contributors may explicitly allow pending requests on their current device through `PUT /v1/households/{h}/devices/current/request-queue` with `{enabled:true|false}`. The capability is `request_queue_permission`. Permission defaults off and expires by the current replay window, at most 24 hours after enablement. Bootstrap returns the grant ID and expiry only while the authenticated member and device remain eligible. Queued send/edit replays include `X-Request-Queue-Grant` and the original command bytes. The server rechecks both grant and operation in the command transaction. Turning permission off, revoking the device or removing contribution rights retires the grant. Re-enabling creates a different grant. Helper and child sessions cannot enable it.
 
 The email-code BFF in API-AUTH.md is implemented but remains disabled until real provider code delivery is configured. These lifecycle APIs do not create a provider login or treat an invitation token as identity.
 

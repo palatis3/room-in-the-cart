@@ -664,10 +664,15 @@ public actor HouseholdService {
         guard access.identity.subject == subject else { throw ClientError.accessEnded }
         return enrollment.deviceToken
     }
-    public func prepare(envelope: CommandEnvelope, bootstrap: HouseholdBootstrap) throws -> PendingOperation {
+    public func setRequestQueuePermission(_ enabled: Bool) async throws -> HouseholdBootstrap {
+        let value: HouseholdBootstrap = try await perform("devices/current/request-queue", method: "PUT", body: encoded(["enabled":enabled]))
+        guard value.canSetRequestQueue == true, value.queueConsent == enabled, (value.requestQueueGrant != nil) == enabled else { throw ClientError.invalidResponse }
+        return value
+    }
+    public func prepare(envelope: CommandEnvelope, bootstrap: HouseholdBootstrap, requestQueueGrant: UUID? = nil) throws -> PendingOperation {
         guard let enrollment, let householdID, bootstrap.household.id == householdID,
               bootstrap.memberId == memberID else { throw ClientError.accessEnded }
-        return try PendingOperation(envelope: envelope, householdID: householdID, memberID: bootstrap.memberId, deviceID: enrollment.deviceId)
+        return try PendingOperation(envelope: envelope, householdID: householdID, memberID: bootstrap.memberId, deviceID: enrollment.deviceId, requestQueueGrant: requestQueueGrant)
     }
     public func execute(_ operation: PendingOperation) async throws -> OwnReceipt {
         let start = generation
@@ -679,7 +684,10 @@ public actor HouseholdService {
         let projection = try await bootstrap()
         guard start == generation else { throw ClientError.cancelled }
         guard projection.memberId == operation.memberID else { throw ClientError.accessEnded }
-        return try await perform("commands", method: "POST", body: operation.bytes)
+        if let grant = operation.requestQueueGrant, projection.requestQueueGrant != grant || !projection.queueConsent {
+            throw ClientError.service(status: 409, code: "queue_permission_ended", correlationID: nil, retryAfter: nil)
+        }
+        return try await perform("commands", method: "POST", body: operation.bytes, requestQueueGrant: operation.requestQueueGrant)
     }
     public func executeMembership(_ intent: MembershipIntent) async throws -> MembershipReceipt {
         let start = generation
@@ -1094,7 +1102,7 @@ public actor HouseholdService {
         try? deviceVault.clear()
     }
     func perform<T: Decodable & Sendable>(_ path: String, method: String, body: Data? = nil,
-                                                 query: [URLQueryItem] = [], absolutePath: Bool = false, creatingShop: Bool = false, reportingShopID: String? = nil) async throws -> T {
+                                                 query: [URLQueryItem] = [], absolutePath: Bool = false, creatingShop: Bool = false, reportingShopID: String? = nil, requestQueueGrant: UUID? = nil) async throws -> T {
         let start = generation
         guard let householdID, let enrollment else { throw ClientError.sessionNeeded }
         if let selectedGrantID, path != "bootstrap",
@@ -1108,6 +1116,7 @@ public actor HouseholdService {
         req.setValue(enrollment.deviceToken, forHTTPHeaderField: "X-Device-Token")
         req.setValue(householdID, forHTTPHeaderField: "X-Household-ID")
         if let selectedGrantID { req.setValue(selectedGrantID, forHTTPHeaderField: "X-View-Grant-ID") }
+        if let requestQueueGrant { req.setValue(requestQueueGrant.uuidString.lowercased(), forHTTPHeaderField: "X-Request-Queue-Grant") }
         if let reportingShopID { req.setValue(reportingShopID, forHTTPHeaderField: "X-Shop-ID") }
         else if let selectedShopID, !creatingShop { req.setValue(selectedShopID.uuidString.lowercased(), forHTTPHeaderField: "X-Shop-ID") }
         if !query.isEmpty {

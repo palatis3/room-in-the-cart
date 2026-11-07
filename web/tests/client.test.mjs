@@ -404,6 +404,26 @@ test('uncertain memory retry cannot cross identities or silently make another op
  assert.equal(sent.length,1);assert.doesNotMatch(root.textContent,/Private original|No-salt frijoles/);
 });
 
+test('the device switch restores only its exact grant and removes earlier pending text after rotation',async()=>{
+ let current={...session(),canSetRequestQueue:true};
+ const outbox=new Outbox(new IDBFactory()), sends=[];
+ const api=fakeAPI({session:async()=>current,setRequestQueue:async(s,enabled)=>{
+   assert.equal(s,current);
+   current={...s,queueConsent:enabled,requestQueueGrant:'first-grant',requestQueueUntil:'2099-01-01T00:00:00Z'};
+ },command:async(_s,command,grant)=>{sends.push({command,grant});throw new ApiError('network',0);}});
+ const {root,dom,app}=await setup(api,'en',outbox);
+ click(root,'Allow pending requests on this browser for up to 24 hours');await waitForIdle(root);
+ type(dom,'item','Private beans');submit(root,dom);submit(root,dom);await waitForIdle(root);
+ assert.equal(sends[0].grant,'first-grant');
+ assert.equal((await outbox.list(scopeFor(current))).length,1);
+ const prior=current;
+ current={...prior,requestQueueGrant:'replacement-grant'};
+ await app.start();
+ assert.equal((await outbox.list(scopeFor(prior))).length,0);
+ assert.doesNotMatch(root.textContent,/Private beans|Waiting to send/);
+ assert.equal(sends.length,1);
+});
+
 test('revoked queue permission prevents replay even for the same household and member',async()=>{
  let current={...session(),queueConsent:true},sent=0;
  const {root,dom}=await setup(fakeAPI({session:async()=>current,command:async()=>{sent++;throw new ApiError('network',0);}}));

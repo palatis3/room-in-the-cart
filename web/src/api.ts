@@ -4,7 +4,7 @@ export type Command = CommandEnvelope;
 export interface Session {
   authenticated: true; role: string; household: { id: string; label: string }; memberId: string;
   shopId: string | null; replayWindow: { id: string; expiresAt: string }; csrf: string;
-  enrolled: boolean; queueConsent: boolean; grantId?: string;
+  enrolled: boolean; queueConsent: boolean; canContribute?:boolean; canSetRequestQueue?: boolean; requestQueueGrant?:string; requestQueueUntil?:string; grantId?: string;
 }
 export interface BrowserAuthState { available:boolean; authenticated:boolean; csrf:string|null }
 export interface InviteRedemption {
@@ -80,7 +80,7 @@ function integer(value: unknown, minimum = 0): number {
 function boolean(value: unknown): boolean { if (typeof value !== 'boolean') return invalid(); return value; }
 function optionalText(value: unknown, max = 2048): string | null { return value === null ? null : text(value, max); }
 const ownKinds = ['request.send', 'request.edit', 'request.withdraw'];
-export function isContributorSession(session: Session): boolean { return ['contributor', 'shopper', 'organizer'].includes(session.role); }
+export function isContributorSession(session: Session): boolean { return session.canContribute !== false && ['contributor', 'shopper', 'organizer'].includes(session.role); }
 
 /** Validate persisted commands too: an outbox can carry only this person's request operations. */
 export function validateOwnCommand(command: Command): void {
@@ -126,9 +126,16 @@ function parseSession(value: unknown): Session | null {
   const household = record(d.household), replay = record(d.replayWindow);
   const grantId = d.grantId == null ? undefined : identity(d.grantId);
   if ((d.role === 'helper' || d.role === 'editor') && !grantId) return invalid();
+  const canSetRequestQueue = Array.isArray(d.capabilities) && d.capabilities.includes('request_queue_permission');
+  const queueConsent = boolean(d.queueConsent);
+  if (canSetRequestQueue && (queueConsent !== (d.requestQueueGrant != null) || queueConsent !== (d.requestQueueUntil != null))) return invalid();
+  if (!canSetRequestQueue && (d.requestQueueGrant != null || d.requestQueueUntil != null)) return invalid();
   return { authenticated: true, role: String(d.role), household: { id: identity(household.id), label: text(household.label, 512) }, memberId: identity(d.memberId),
     shopId: d.shopId === null ? null : identity(d.shopId), replayWindow: { id: identity(replay.id), expiresAt: timestamp(replay.expiresAt) }, csrf: text(d.csrf, 1024),
-    enrolled: boolean(d.enrolled), queueConsent: boolean(d.queueConsent), ...(grantId ? { grantId } : {}) };
+    enrolled: boolean(d.enrolled), queueConsent,
+    ...(Array.isArray(d.capabilities)?{canContribute:d.capabilities.includes('own_requests')}:{}),
+    ...(canSetRequestQueue?{canSetRequestQueue:true}:{}),
+    ...(d.requestQueueGrant!=null?{requestQueueGrant:identity(d.requestQueueGrant),requestQueueUntil:timestamp(d.requestQueueUntil)}:{}), ...(grantId ? { grantId } : {}) };
 }
 
 function parseBrowserAuth(value:unknown):BrowserAuthState {
@@ -139,9 +146,10 @@ function parseBrowserAuth(value:unknown):BrowserAuthState {
 }
 export class API {
   constructor(private readonly fetcher: typeof fetch = (input, init) => globalThis.fetch(input, init)) {}
-  private async call(path: string, method = 'GET', body?: unknown, csrf?: string, encodedBody?:string): Promise<unknown> {
+  private async call(path: string, method = 'GET', body?: unknown, csrf?: string, encodedBody?:string, requestQueueGrant?:string): Promise<unknown> {
     const headers: Record<string, string> = { Accept: 'application/json' };
     if (body !== undefined) headers['Content-Type'] = 'application/json';
+    if(requestQueueGrant)headers['X-Request-Queue-Grant']=requestQueueGrant;
     if (csrf) headers['X-CSRF-Token'] = csrf;
     let response: Response;
     try { response = await this.fetcher(path, { method, credentials: 'same-origin', cache: 'no-store', referrerPolicy: 'no-referrer', headers, ...(body !== undefined ? { body: encodedBody ?? JSON.stringify(body) } : {}) }); }
@@ -184,6 +192,10 @@ export class API {
     const active = parseSession(await this.call('/v1/session', 'POST', {householdId:identity(householdId), ...(grantId ? {grantId:identity(grantId)} : {})}, csrf));
     if (!active || active.household.id !== householdId || (grantId && active.grantId !== grantId)) return invalid();
   }
+  async setRequestQueue(session:Session,enabled:boolean):Promise<void>{
+    const result=record(await this.call(`/v1/households/${segment(session.household.id)}/devices/current/request-queue`,'PUT',{enabled},session.csrf));
+    if(result.queueConsent!==enabled)invalid();
+  }
   async requests(session: Session): Promise<OwnRequest[]> {
     if (!isContributorSession(session)) throw new ApiError('access_ended', 403);
     const rows: OwnRequest[] = [], ids = new Set<string>(), cursors = new Set<string>();
@@ -202,10 +214,10 @@ export class API {
     } while (cursor);
     return rows;
   }
-  async command(session: Session, command: Command): Promise<void> {
+  async command(session: Session, command: Command, requestQueueGrant?:string): Promise<void> {
     if (!isContributorSession(session)) throw new ApiError('access_ended', 403);
     validateOwnCommand(command);
-    const receipt = record(await this.call(`/v1/households/${segment(session.household.id)}/commands`, 'POST', command, session.csrf));
+    const receipt = record(await this.call(`/v1/households/${segment(session.household.id)}/commands`, 'POST', command, session.csrf,undefined,requestQueueGrant));
     identity(receipt.operationId);
     const request = ownRequest(receipt.request);
     if (receipt.kind !== command.kind || request.shopId !== command.shopId

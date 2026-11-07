@@ -76,6 +76,54 @@ if(process.env.RITC_TEST_NATIVE_WIRE==='1') test('assigned iPhone shopper carrie
     deferredRequestId:f.original.requestId});
 });
 
+test('pending own requests require the current opted-in device, an unexpired grant and fresh contribution rights',async()=>{
+  const f=await fixture(),route='/devices/current/request-queue';
+  const permission=(actor,enabled)=>f.http(actor,'PUT',route,{enabled});
+  const initial=(await f.http('Alex','GET','/bootstrap')).data;
+  assert.equal(initial.canSetRequestQueue,true);
+  assert.equal(initial.queueConsent,false);
+  assert.equal(initial.requestQueueGrant,undefined);
+  assert.equal((await permission('Sam',true)).status,404);
+  const granted=(await permission('Alex',true)).data;
+  assert.equal(granted.queueConsent,true);
+  assert.ok(Date.parse(granted.requestQueueUntil)>Date.now());
+  assert.ok(Date.parse(granted.requestQueueUntil)<=Date.now()+24*3600_000);
+  assert.deepEqual((await permission('Alex',true)).data,granted);
+  const second={...f.actors.Alex,deviceToken:undefined};
+  const device=await f.http(second,'POST','/devices',{});
+  assert.equal(device.status,201);
+  second.deviceToken=device.data.deviceToken;
+  assert.equal((await f.http(second,'GET','/bootstrap')).data.queueConsent,false);
+  const make=()=>f.envelope('Alex','request.send',{clientRequestId:randomUUID(),originalItem:'Once',ownQuantity:null,authoredAt:new Date().toISOString()},{shopRevision:0,authorityEpoch:0});
+  const send=(who,grant,command)=>f.http(who,'POST','/commands',command,{'X-Request-Queue-Grant':grant});
+  const first=make(), grant=granted.requestQueueGrant;
+  assert.equal((await send(second,grant,first)).data.error.code,'queue_permission_ended');
+  assert.equal((await send('Mia',grant,first)).data.error.code,'queue_permission_ended');
+  const received=await send('Alex',grant,first);
+  assert.equal(received.status,200,JSON.stringify(received.data));
+  assert.deepEqual((await send('Alex',grant,first)).data,received.data);
+  assert.equal((await f.http('Alex','GET','/requests/mine')).data.requests.length,1);
+  assert.equal((await permission('Alex',false)).data.queueConsent,false);
+  const pending=make();
+  assert.equal((await send('Alex',grant,pending)).data.error.code,'queue_permission_ended');
+  const renewed=(await permission('Alex',true)).data.requestQueueGrant;
+  assert.notEqual(renewed,grant);
+  assert.equal((await send('Alex',grant,pending)).data.error.code,'queue_permission_ended');
+  await admin.query("UPDATE ritc.request_queue_permission SET enabled_at=now()-interval '2 days',expires_at=now()-interval '1 day' WHERE household_id=$1",[f.h]);
+  assert.equal((await send('Alex',renewed,pending)).data.error.code,'queue_permission_ended');
+  const beforeLoss=(await permission('Alex',true)).data.requestQueueGrant;
+  await admin.query('UPDATE ritc.member SET can_contribute=false WHERE household_id=$1 AND member_id=$2',[f.h,f.actors.Alex.id]);
+  const lost=(await f.http('Alex','GET','/bootstrap')).data;
+  assert.equal(lost.canSetRequestQueue,false);
+  assert.equal(lost.queueConsent,false);
+  await admin.query('UPDATE ritc.member SET can_contribute=true WHERE household_id=$1 AND member_id=$2',[f.h,f.actors.Alex.id]);
+  assert.equal((await send('Alex',beforeLoss,pending)).data.error.code,'queue_permission_ended');
+  assert.equal((await f.http('Alex','GET','/requests/mine')).data.requests.length,1);
+  await permission('Alex',true);
+  assert.equal((await f.http('Alex','DELETE','/devices/current')).status,200);
+  assert.equal((await admin.query('SELECT 1 FROM ritc.request_queue_permission WHERE household_id=$1',[f.h])).rowCount,0);
+});
+
 test('Foundation Grocery 30 routing and replay vectors over four authenticated HTTP clients',
   t=>grocery30Routing(t,fixture,admin,origin));
 
@@ -250,6 +298,10 @@ test('BFF cookie is HttpOnly, CSRF required, logout revokes protected reads; no 
   const header=login.headers.get('set-cookie');assert.match(header,/HttpOnly/);assert.match(header,/Secure/);assert.match(header,/SameSite=Strict/);
   assert.equal('deviceToken'in login.data,false);assert.equal(login.data.role,'contributor');
   const cookie=header.split(';')[0];
+  const path=origin+'/v1/households/'+f.h+'/devices/current/request-queue';
+  const allow=headers=>fetch(path,{method:'PUT',headers:{Cookie:cookie,Origin:'https://web.fixture.invalid','Content-Type':'application/json',...headers},body:JSON.stringify({enabled:true})});
+  assert.equal((await allow({})).status,403);
+  assert.equal((await allow({'X-CSRF-Token':login.data.csrf})).status,200);
   const denied=await fetch(origin+'/v1/session',{method:'DELETE',headers:{Cookie:cookie,Origin:'https://web.fixture.invalid'}});assert.equal(denied.status,403);
   const logout=await fetch(origin+'/v1/session',{method:'DELETE',headers:{Cookie:cookie,Origin:'https://web.fixture.invalid','X-CSRF-Token':login.data.csrf}});assert.equal(logout.status,200);assert.match(logout.headers.get('set-cookie'),/Max-Age=0/);
   assert.equal((await fetch(origin+'/v1/session',{headers:{Cookie:cookie}})).status,403);
@@ -328,7 +380,7 @@ test('bootstrap shopper capabilities follow adult role and assigned current shop
   const f=await fixture();
   for(const name of ['Alex','Sam','Jo']) {
     const result=await f.http(name,'GET','/bootstrap');assert.equal(result.status,200);
-    assert.equal(result.data.role,'contributor');assert.deepEqual(result.data.capabilities,['own_requests']);
+    assert.equal(result.data.role,'contributor');assert.deepEqual(result.data.capabilities,name==='Alex'?['request_queue_permission','own_requests']:['own_requests']);
   }
   const shopper=await f.http('Mia','GET','/bootstrap');assert.equal(shopper.data.role,'shopper');
   assert.ok(shopper.data.capabilities.includes('shopper_inbox'));
@@ -347,7 +399,7 @@ test('self-serve adult household creation is atomic, idempotent and rejects chil
   await admin.query("UPDATE ritc.member SET state='revoked' WHERE household_id=$1 AND member_id=$2",[f.h,f.actors.Sam.id]);
   assert.equal((await f.http('Sam','POST','/v1/households',{...input,clientKey:randomUUID()})).status,503);
   const enrolled=await f.http('Mia','POST','/v1/households/'+h+'/devices',{});assert.equal(enrolled.status,201);
-  const boot=await f.http({...f.actors.Mia,deviceToken:enrolled.data.deviceToken},'GET','/v1/households/'+h+'/bootstrap');assert.equal(boot.data.shopId,null);assert.deepEqual(boot.data.capabilities,['own_requests','household_admin']);
+  const boot=await f.http({...f.actors.Mia,deviceToken:enrolled.data.deviceToken},'GET','/v1/households/'+h+'/bootstrap');assert.equal(boot.data.shopId,null);assert.deepEqual(boot.data.capabilities,['request_queue_permission','own_requests','household_admin']);
 });
 
 test('single-use invitations serialize racing identities and permit only the original identity retry',async()=>{
@@ -486,6 +538,7 @@ test('native selected-grant header enforces the exact recipient and removes broa
   const selected={'X-View-Grant-ID':view.data.grantId};
   const boot=await f.http('Mia','GET','/bootstrap',undefined,selected);assert.equal(boot.status,200);assert.equal(boot.data.role,'editor');assert.equal(boot.data.grantId,view.data.grantId);assert.deepEqual(boot.data.capabilities,['helper_view','helper_propose']);
   assert.equal((await f.http('Mia','GET','/shops/'+f.shopId+'/inbox',undefined,selected)).status,404);
+  assert.equal((await f.http('Mia','PUT','/devices/current/request-queue',{enabled:true},selected)).status,404);
   assert.equal((await f.http('Mia','GET','/members',undefined,selected)).status,404);
   assert.equal((await f.http('Mia','GET','/entitlements',undefined,selected)).status,404);
   assert.equal((await f.http('Mia','GET','/requests/mine',undefined,selected)).status,404);
