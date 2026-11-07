@@ -198,11 +198,50 @@ final class SharedMealNativeWireTests: XCTestCase {
         XCTAssertEqual(baseline?.send.sendId, UUID(uuidString: sent.operationId))
         let otherCook = try await service.cookCopyBaseline(recipient: "Luis", occurrence: occurrence, reviewed: short)
         XCTAssertNil(otherCook)
+        // Project the actual protected claim twice across a physical usable-count
+        // change and carry the reviewed UTF-8 sections through the Swift HTTP client.
+        func indexedCopy(_ page: SharedDeliveryPage) async throws -> (SharedCookCopy, SharedCookFactIndex) {
+            let report = try await service.deliveryCoverage(reviewed: page)
+            let need = try XCTUnwrap(report.needs.first(where: { $0.groupIds == [group] }))
+            let claim = try XCTUnwrap(need.reservations?.first)
+            let heading = occurrence.meal.title
+            let portion = "\(ingredient.name) · apartado \(claim.requested.formatted) g · cubierto \(claim.backed.formatted) g"
+            let sourceScope = "Entregas confirmadas", stamp = report.asOf
+            let text = [heading, portion, sourceScope + "\n" + stamp].joined(separator: "\n\n")
+            let index = try XCTUnwrap(SharedCookFactIndex(source: .delivery, sections: [
+                .init(key: "meal", bytes: heading.utf8.count, unresolved: false),
+                .init(key: "need." + ingredient.id.uuidString.lowercased(), bytes: portion.utf8.count, unresolved: !need.issues.isEmpty),
+                .init(key: "scope", bytes: sourceScope.utf8.count, unresolved: false), .init(key: "stamp", bytes: stamp.utf8.count, unresolved: false)]))
+            let receipt = try await writeCookCopy(.save(text: text, language: "es", occurrence: occurrence, facts: index),
+                service: service, scope: scope, page: page)
+            let copies = try await service.cookCopies(occurrence: occurrence, reviewed: page)
+            let saved = try XCTUnwrap(copies.first)
+            XCTAssertEqual(saved.copyId, receipt.copyId)
+            XCTAssertEqual(saved.text, text)
+            return (saved, index)
+        }
+        let (backedCopy, backedIndex) = try await indexedCopy(short)
+        _ = try await writeCookCopy(.markSent(copy: backedCopy, recipient: "Sol", previousSendId: nil), service: service, scope: scope, page: short)
+        let priorSend = try await service.cookCopyBaseline(recipient: "Sol", occurrence: occurrence, reviewed: short)
+        let prior = try XCTUnwrap(priorSend)
+        XCTAssertEqual(prior.copy, backedCopy)
         let unknown = UUID()
         _ = try await save(.usable(source: source, previous: correction, arrival: arrival, observation: unknown,
                                    date: Date(), quantity: nil), page: short)
         let unconfirmed = try await service.deliveryEvidence(shopID: shopID)
         XCTAssertNil(unconfirmed.sources.first?.confirmed)
+        let (unknownCopy, unknownIndex) = try await indexedCopy(unconfirmed)
+        let review = try await service.cookCorrection(copy: unknownCopy, baseline: prior, recipient: "Sol", destinationConfirmed: true,
+                                                      occurrence: occurrence, reviewed: unconfirmed)
+        XCTAssertEqual(review.previousFacts, backedIndex)
+        XCTAssertEqual(review.currentFacts, unknownIndex)
+        let oldNeed = try XCTUnwrap(review.previousFacts?.pieces(in: backedCopy.text)?.first(where: { $0.section.key.hasPrefix("need.") }))
+        let newNeed = try XCTUnwrap(review.currentFacts?.pieces(in: unknownCopy.text)?.first(where: { $0.section.key == oldNeed.section.key }))
+        XCTAssertTrue(oldNeed.wording.hasSuffix("cubierto 2 g"))
+        XCTAssertTrue(newNeed.wording.hasSuffix("cubierto 0 g"))
+        XCTAssertTrue(newNeed.section.unresolved)
+        let unchangedBaseline = try await service.cookCopyBaseline(recipient: "Sol", occurrence: occurrence, reviewed: unconfirmed)
+        XCTAssertEqual(unchangedBaseline, prior)
         let reduction = try await save(.reserve(source: source, ingredient: target, group: group, previous: head.reservationId,
                                                quantity: amount(3)), page: unconfirmed)
         let reduced = try await service.deliveryEvidence(shopID: shopID)

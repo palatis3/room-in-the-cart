@@ -467,6 +467,27 @@ public actor HouseholdService {
         }
         return baseline
     }
+    public func cookCorrection(copy: SharedCookCopy, baseline: SharedCookCopyBaseline, recipient: String,
+                               destinationConfirmed: Bool, occurrence: SharedMealOccurrence,
+                               reviewed page: SharedDeliveryPage) async throws -> SharedCookCorrectionReview {
+        let label = try SharedCookCopyEdit.recipientLabel(recipient)
+        guard destinationConfirmed, page.nextCursor == nil, page.meals?.contains(occurrence) == true,
+              baseline.send.recipient.utf8.elementsEqual(label.utf8), baseline.send.copyId == baseline.copy.id else { throw ClientError.configuration }
+        try copy.validate(occurrence: occurrence, reviewed: page)
+        try baseline.copy.validate(occurrence: occurrence, reviewed: page)
+        let start = generation, shopID = page.shopId.uuidString.lowercased()
+        try await authorizeShopper(shopID: shopID, capability: "cook_corrections")
+        guard start == generation else { throw ClientError.cancelled }
+        let fields: [String: JSONValue] = ["occurrenceId": .string(occurrence.id.uuidString.lowercased()),
+            "copyId": .string(copy.id.uuidString.lowercased()), "previousCopyId": .string(baseline.copy.id.uuidString.lowercased()),
+            "previousSendId": .string(baseline.send.sendId.uuidString.lowercased()), "recipient": .string(label), "destinationConfirmed": .bool(true)]
+        let result: SharedCookCorrectionReview = try await perform("shops/\(shopID)/cook-copies/correction", method: "POST", body: encoded(fields))
+        guard start == generation else { throw ClientError.cancelled }
+        guard result.copyId == copy.id, result.previousCopyId == baseline.copy.id, result.previousSendId == baseline.send.sendId,
+              result.recipient.utf8.elementsEqual(label.utf8) else { throw ClientError.invalidResponse }
+        return result
+    }
+
     public func shopperFinancialEvidence(shopID: String) async throws -> [ShopperFinancialEntry] {
         let start = generation
         try await authorizeShopper(shopID: shopID)
@@ -536,6 +557,8 @@ public actor HouseholdService {
         } else {
             let capability = envelope.kind.hasPrefix("pantry.") ? "pantry_lots" : (envelope.kind.hasPrefix("cookCopy.") ? "cook_copies" : nil)
             let live = try await authorizeShopper(shopID: envelope.shopId, capability: capability)
+            if envelope.kind == "cookCopy.save", envelope.body["factIndex"] != nil,
+               !live.capabilities.contains("cook_corrections") { throw ClientError.accessEnded }
             if envelope.kind == "mealRecovery.apply" || (envelope.kind == "cookCopy.save" && envelope.body["recoveryRevision"] != nil) {
                 guard live.capabilities.contains("meal_recovery") else { throw ClientError.accessEnded }
             }

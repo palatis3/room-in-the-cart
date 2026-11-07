@@ -53,6 +53,29 @@ extension HouseholdClientTests {
         XCTAssertThrowsError(try check(receipt, for: mark))
     }
 
+    func testCookCopyUnknownOrMalformedFactIndexFallsBackWithoutChangingReviewedText() throws {
+        let meal = "Cena 🥣\n\ncon frijoles"
+        let scope = "Sólo entregas"
+        let text = [meal, scope + "\nFecha"].joined(separator: "\n\n")
+        let sections: [SharedCookFactIndex.Section] = [
+            .init(key: "meal", bytes: meal.utf8.count, unresolved: false),
+            .init(key: "scope", bytes: scope.utf8.count, unresolved: false),
+            .init(key: "stamp", bytes: 5, unresolved: false)]
+        let index = try XCTUnwrap(SharedCookFactIndex(source: .delivery, sections: sections))
+        XCTAssertEqual(index.pieces(in: text)?.map(\.wording), [meal, scope])
+        XCTAssertNil(index.pieces(in: text + " private"))
+        XCTAssertNil(SharedCookFactIndex(source: .delivery, sections: [sections[0]] + sections))
+        let invalid = try XCTUnwrap(SharedCookFactIndex(source: .delivery, sections:
+            [.init(key: "meal", bytes: 6, unresolved: false)] + sections.dropFirst()))
+        XCTAssertNil(invalid.pieces(in: text))
+        let ids: [String:Any] = ["copyId":UUID().uuidString, "previousCopyId":UUID().uuidString,
+                                  "previousSendId":UUID().uuidString, "recipient":"Ana"]
+        let wire = ids.merging(["currentFacts":["version":1,"source":"private","sections":[]], "previousFacts":NSNull()]) { _, new in new }
+        let response = try JSONDecoder().decode(SharedCookCorrectionReview.self, from: JSONSerialization.data(withJSONObject: wire))
+        XCTAssertNil(response.currentFacts)
+        XCTAssertNil(response.previousFacts)
+    }
+
     func testCookCopyHistoryAndBaselineRejectDuplicatesWrongMealRecipientAndAbsentHead() async throws {
         let page = try cookPage(), occurrence = try XCTUnwrap(page.meals?.first)
         let shop = page.shopId.uuidString.lowercased(), date = "2026-11-07T10:00:00.000Z"
@@ -66,6 +89,7 @@ extension HouseholdClientTests {
         let first = copies[0]
         var send: [String: Any] = ["sendId": UUID().uuidString, "copyId": try XCTUnwrap(first["copyId"]), "recipient": "Ana", "sentAt": date]
         var missingHead = false, allow = true, reads = 0
+        var returnedRecipient = "Ana"
         let auth = try auth()
         let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!),
                                        auth: auth, deviceVault: MemoryVault(), transport: transport())
@@ -77,9 +101,15 @@ extension HouseholdClientTests {
             if url.path.hasSuffix("/bootstrap") {
                 return try response(["household": ["id": self.household, "label": "Home"], "memberId": self.member, "role": "shopper",
                     "shopId": shop, "enrolled": true, "queueConsent": false, "capabilities":
-                        ["shopper_inbox", "request_preview", "shopper_commands"] + (allow ? ["cook_copies", "delivery_evidence"] : [])])
+                        ["shopper_inbox", "request_preview", "shopper_commands"] + (allow ? ["cook_copies", "cook_corrections", "delivery_evidence"] : [])])
             }
             reads += 1
+            if url.path.hasSuffix("/correction") {
+                XCTAssertEqual(request.httpMethod, "POST")
+                XCTAssertNil(url.query)
+                return try response(["copyId":try XCTUnwrap(first["copyId"]), "previousCopyId":try XCTUnwrap(first["copyId"]),
+                    "previousSendId":try XCTUnwrap(send["sendId"]), "recipient":returnedRecipient, "currentFacts":NSNull(), "previousFacts":NSNull()])
+            }
             if url.path.hasSuffix("/baseline") {
                 XCTAssertEqual(request.httpMethod, "POST")
                 XCTAssertNil(url.query)
@@ -109,6 +139,22 @@ extension HouseholdClientTests {
         }
         let found = try await baseline()
         XCTAssertEqual(found?.copy, history.first)
+        let prior = try XCTUnwrap(found)
+        func correction(_ destination: Bool) async throws -> SharedCookCorrectionReview {
+            try await service.cookCorrection(copy: prior.copy, baseline: prior, recipient: "Ana",
+                                             destinationConfirmed: destination, occurrence: occurrence, reviewed: page)
+        }
+        let noFacts = try await correction(true)
+        XCTAssertNil(noFacts.previousFacts)
+        var readCount = reads
+        do { _ = try await correction(false); XCTFail("Compared an uncertain destination") } catch { XCTAssertEqual(error as? ClientError, .configuration) }
+        XCTAssertEqual(reads, readCount)
+        returnedRecipient = "A different cook"
+        do { _ = try await correction(true); XCTFail("Compared another recipient") } catch { XCTAssertEqual(error as? ClientError, .invalidResponse) }
+        allow = false; readCount = reads
+        do { _ = try await correction(true); XCTFail("Compared after scope loss") } catch { XCTAssertEqual(error as? ClientError, .accessEnded) }
+        XCTAssertEqual(reads, readCount)
+        allow = true
         send["recipient"] = "ana"
         do { _ = try await baseline(); XCTFail("Accepted another recipient") } catch { XCTAssertEqual(error as? ClientError, .invalidResponse) }
         send["recipient"] = "Ana"; send["copyId"] = UUID().uuidString
