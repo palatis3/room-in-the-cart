@@ -75,7 +75,8 @@ function validateBasis(input:unknown):RecoveryBasis {
      requireThat(source.origin.kind === 'delivery' && foreignRevisions.has(source.shopId), 'wrong_scope');
  }
  const pantryRows = b.pantryObservations ?? [];
- unique([...b.arrivals, ...b.usable, ...pantryRows].map(row => row.id));
+ unique([...b.arrivals, ...b.usable].map(row => row.shopId + "/" + row.id));
+ unique(pantryRows.map(row => row.id));
  unique(pantryRows.map(row => String(row.revision)));
  for (const row of pantryRows) {
    requireThat(row.householdId === b.householdId, 'wrong_scope');
@@ -102,7 +103,7 @@ function validateBasis(input:unknown):RecoveryBasis {
  }
  // A supply revision represents one immutable observation, across both tables.
  unique(b.arrivals.concat(b.usable as unknown as typeof b.arrivals).map(r=>r.shopId+'/'+r.revision));
- for(const row of b.usable){const arrival=b.arrivals.find(a=>a.id===row.arrivalObservationId);requireThat(arrival&&arrival.sourceId===row.sourceId&&arrival.revision<row.revision);
+ for(const row of b.usable){const arrival=b.arrivals.find(a=>a.shopId===row.shopId && a.sourceId===row.sourceId && a.id===row.arrivalObservationId);requireThat(arrival&&arrival.sourceId===row.sourceId&&arrival.revision<row.revision);
   requireThat(arrival.identityRevision===row.identityRevision,'identity_mismatch');
   if(row.usable){requireThat(arrival.received&&arrival.arrivedAt,'unverified_arrival');requireThat(fitsReceived(row.usable,arrival.received),'usable_exceeds_received');}
  }

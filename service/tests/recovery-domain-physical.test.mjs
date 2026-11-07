@@ -192,3 +192,14 @@ test('manual stock converts compatible units exactly and never gains implicit fo
   b.meals[1].needs[0].foodId=id(6);delete b.meals[1].needs[0].matchedSourceIds;
   assert.deepEqual(demand(projectRecovery(b,at),32).allocated,fraction(0));
 });
+
+test('two shops may issue the same observation key without borrowing each other’s arrival', () => {
+  const b=fixture();b.base.pantryRevision=1;b.pantryObservations=[];b.foreignHolds=[];
+  const foreign=id(900);b.sources[1].shopId=foreign;
+  b.arrivals[1].shopId=foreign;b.arrivals[1].id=b.arrivals[0].id;
+  b.usable[1].shopId=foreign;b.usable[1].id=b.usable[0].id;b.usable[1].arrivalObservationId=b.arrivals[0].id;
+  b.selectedCarrySourceIds=[b.sources[1].id];b.carrySupplyRevisions=[{shopId:foreign,supplyRevision:4}];
+  assert.equal(canonicalSupply(b,at).length,2);
+  b.arrivals[1].id=id(999);
+  assert.throws(()=>canonicalSupply(b,at));
+});
