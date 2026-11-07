@@ -3,6 +3,8 @@ import HouseholdClient
 
 struct HouseholdSettingsView: View {
     @ObservedObject var model: HouseholdModel
+    var fromPrivateSettings = false
+    @State private var visibleEntry: UUID?
     @Environment(\.scenePhase) private var scenePhase
     @State private var requestReview: RequestReviewPresentation?
     private struct RequestReviewPresentation: Identifiable {
@@ -37,7 +39,14 @@ struct HouseholdSettingsView: View {
                         .disabled(model.email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     if model.codeSent {
                         SecureField(ht("Email sign-in code"), text: $model.code).textContentType(.oneTimeCode)
-                        Button(ht("Verify code")) { Task { await model.verifyCode() } }.disabled(model.code.isEmpty)
+                        Button(ht("Verify code")) {
+                            let entry = visibleEntry
+                            Task {
+                                await model.verifyCode {
+                                    fromPrivateSettings && entry != nil && entry == visibleEntry
+                                }
+                            }
+                        }.disabled(model.code.isEmpty)
                     }
                     } else {
                         Text(ht("Email sign-in is not ready yet. Your private shopping tools work without an account."))
@@ -162,6 +171,8 @@ struct HouseholdSettingsView: View {
             if let notice = model.notice { Section { Text(notice).accessibilityIdentifier("household.notice") } }
             if model.busy { ProgressView(ht("Checking service…")) }
         }
+        .onAppear { visibleEntry = UUID() }
+        .onDisappear { visibleEntry = nil }
         .disabled(model.busy)
         .navigationTitle(ht("Household"))
         .sheet(item: $requestReview) { selected in

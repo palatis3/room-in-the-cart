@@ -200,6 +200,30 @@ import HouseholdClient
             XCTAssertTrue(restored.shopPath.isEmpty); XCTAssertTrue(f.routes.load().shop.isEmpty)
         }
     }
+    func testVerifiedChooserIsScopedToTheExplicitEntryAndInitialAccount() async throws {
+        let f = try await fixture()
+        let server = RestorationServer()
+        let household = try householdModel(server, directory: f.directory)
+        household.email = "shopper@example.invalid"; household.code = "123456"
+        await household.verifyCode { true }
+        XCTAssertTrue(household.showingVerifiedHousehold)
+        XCTAssertEqual(household.workspaces.count, 1)
+        XCTAssertNil(household.projection)
+        XCTAssertFalse(household.keepLocalPrivate)
+
+        // Even a successful verification for a different adult cannot reuse that presentation.
+        server.subject = "second-adult"
+        household.code = "654321"
+        await household.verifyCode { true }
+        XCTAssertEqual(household.identity?.subject, "second-adult")
+        XCTAssertFalse(household.showingVerifiedHousehold)
+
+        let dismissed = try householdModel(server, directory: f.directory)
+        dismissed.email = "shopper@example.invalid"; dismissed.code = "123456"
+        await dismissed.verifyCode { false } // The entry disappeared before verification completed.
+        XCTAssertNotNil(dismissed.identity)
+        XCTAssertFalse(dismissed.showingVerifiedHousehold)
+    }
     private func householdModel(_ server: RestorationServer, directory: URL) throws -> HouseholdModel {
         RestorationProtocol.server = server
         let configuration = URLSessionConfiguration.ephemeral; configuration.protocolClasses = [RestorationProtocol.self]

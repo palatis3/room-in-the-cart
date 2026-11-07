@@ -71,8 +71,7 @@ import DeviceSurfaces
                         .environmentObject(household).environmentObject(access)
                         .environmentObject(membership).environmentObject(surfaces).environmentObject(navigation)
                 }
-                .onChange(of: household.identity?.subject) { _, subject in if subject != nil { access.protect() } }
-                .onChange(of: household.projection?.memberId) { _, id in if id != nil { access.protect() } }
+                .modifier(HouseholdWorkspaceProtection(household: household, access: access))
                 .onChange(of: household.deviceReminderPersona) { _, _ in surfaces.scopeChanged() }
                 .onChange(of: guardianChild.presented) { _, childActive in
                     if childActive {
@@ -400,7 +399,7 @@ struct SettingsView: View {
                 }.frame(minHeight: 44)
             }
             Section(tr("Household")) {
-                NavigationLink(tr("Household requests")) { HouseholdSettingsView(model: household) }
+                NavigationLink(tr("Household requests")) { HouseholdSettingsView(model: household, fromPrivateSettings: true) }
                 NavigationLink(tr("Household membership")) { MembershipEntryView(household: household) }
             }
             if surfaces.privateAuthorized {
