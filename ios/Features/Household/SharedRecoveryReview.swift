@@ -6,7 +6,7 @@ struct SharedRecoveryReview: View {
     @ObservedObject var model: HouseholdShopModel
     @ObservedObject var household: HouseholdModel
     let page: SharedRecoveryPage
-    let didSave: () -> Void
+    let finish: (Bool) -> Void
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scene
     @State private var preview: SharedRecoveryPreview
@@ -20,9 +20,9 @@ struct SharedRecoveryReview: View {
     @State private var presentation = UUID()
 
     init(model: HouseholdShopModel, household: HouseholdModel, page: SharedRecoveryPage,
-         initial: SharedRecoveryPreview, originalIntent: SharedRecoveryIntent, didSave: @escaping () -> Void) {
+         initial: SharedRecoveryPreview, originalIntent: SharedRecoveryIntent, finish: @escaping (Bool) -> Void) {
         self.model = model; self.household = household; self.page = page
-        self.didSave = didSave
+        self.finish = finish
         _intent = State(initialValue: originalIntent); _preview = State(initialValue: initial)
     }
 
@@ -80,6 +80,15 @@ struct SharedRecoveryReview: View {
                         Button(sharedRecoveryText("Review these agreements")) { Task { await recheck() } }
                             .disabled(!agreed || checking || model.pending != nil || model.busy)
                             .accessibilityIdentifier("recovery.reviewAgreements")
+                    }
+                    if !preview.feasible {
+                        Button(sharedRecoveryText("Keep the current meal and leave its needs open")) {
+                            guard allowed, scene == .active, !checking, model.pending == nil else { return }
+                            presentation = UUID()
+                            finish(false)
+                        }
+                        .disabled(checking || model.busy || model.pending != nil)
+                        .accessibilityIdentifier("recovery.keepCurrent")
                     }
                     if checking { ProgressView() }
                 }
@@ -179,7 +188,7 @@ struct SharedRecoveryReview: View {
         checking = true
         defer { checking = false }
         if await model.applyMealRecovery(preview, intent: intent, reviewed: page) {
-            didSave()
+            finish(true)
         } else { message = model.notice ?? sharedRecoveryText("Check the current record before trying again.") }
     }
 }

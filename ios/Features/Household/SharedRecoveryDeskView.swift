@@ -45,7 +45,7 @@ struct SharedRecoveryDeskView: View {
                     }
                 }
                 if applied { Text(sharedRecoveryText("Meal replacement saved")).accessibilityIdentifier("recovery.saved") }
-                if page.base.recoveryRevision > 0, let delivery = model.deliveryRecord, delivery.recoveryRevision == page.base.recoveryRevision {
+                if let delivery = model.deliveryRecord, delivery.recoveryRevision == page.base.recoveryRevision {
                     NavigationLink(sharedRecoveryText("Current meals and cook instructions")) {
                         SharedRecoveryCoverageView(model: model, household: household, delivery: delivery)
                     }.accessibilityIdentifier("recovery.currentCoverage")
@@ -75,8 +75,8 @@ struct SharedRecoveryDeskView: View {
         .sheet(item: $selection) { selected in
             if allowed {
                 NavigationStack {
-                    SharedRecoveryEditor(model: model, household: household, page: selected.page, target: selected.meal) {
-                        applied = true
+                    SharedRecoveryEditor(model: model, household: household, page: selected.page, target: selected.meal) { saved in
+                        applied = saved
                         selection = nil
                     }
                 }
@@ -99,7 +99,7 @@ private struct SharedRecoveryEditor: View {
     @ObservedObject var household: HouseholdModel
     let page: SharedRecoveryPage
     let target: SharedRecoveryMeal
-    let didSave: () -> Void
+    let finish: (Bool) -> Void
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scene
     @State private var draft: SharedRecoveryDraft
@@ -108,8 +108,8 @@ private struct SharedRecoveryEditor: View {
     @State private var message: String?
     @State private var generation = UUID()
 
-    init(model: HouseholdShopModel, household: HouseholdModel, page: SharedRecoveryPage, target: SharedRecoveryMeal, didSave: @escaping () -> Void) {
-        self.model = model; self.household = household; self.page = page; self.target = target; self.didSave = didSave
+    init(model: HouseholdShopModel, household: HouseholdModel, page: SharedRecoveryPage, target: SharedRecoveryMeal, finish: @escaping (Bool) -> Void) {
+        self.model = model; self.household = household; self.page = page; self.target = target; self.finish = finish
         _draft = State(initialValue: .init(target: target))
     }
 
@@ -192,7 +192,7 @@ private struct SharedRecoveryEditor: View {
         .sheet(item: $decision) { reviewed in
             NavigationStack {
                 SharedRecoveryReview(model: model, household: household, page: page,
-                    initial: reviewed.preview, originalIntent: reviewed.intent, didSave: didSave)
+                    initial: reviewed.preview, originalIntent: reviewed.intent, finish: finish)
             }
         }
     }

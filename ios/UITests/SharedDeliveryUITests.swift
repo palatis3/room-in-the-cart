@@ -70,6 +70,27 @@ import XCTest
             "identifier BEGINSWITH %@ AND (label CONTAINS %@ OR value CONTAINS %@)", "delivery.confirmed.", text, text)).firstMatch
         return row.waitForExistence(timeout: 8)
     }
+    func testShopperLeavesOriginalDinnerOpenAfterAnUnresolvedReplacementPreview() {
+        launch("en", locale: "en_US", recovery: true)
+        let wednesday = "EEEEEEEE-EEEE-4EEE-8EEE-000000000002"
+        tap(app.buttons["recovery.open"])
+        tap(app.buttons["recovery.meal." + wednesday])
+        enter("Rice alternative", in: app.textFields["recovery.title"])
+        enter("Rice", in: app.textFields["recovery.ingredient"])
+        enter("4", in: app.textFields["recovery.quantity"])
+        tap(app.buttons["recovery.preview"])
+        assertFact("Food coverage", "Still unresolved")
+        tap(app.buttons["recovery.keepCurrent"])
+        tap(app.buttons["recovery.currentCoverage"])
+        tap(app.buttons["recovery.cook." + wednesday])
+        let original = app.staticTexts["delivery.cook.preview"]
+        reveal(original)
+        for fact in ["Wednesday dinner", "Wednesday beans", "Dinner plates", "Still needed: 4 units", "No sesame"] {
+            XCTAssertTrue(original.label.contains(fact), original.label)
+        }
+        XCTAssertFalse(original.label.contains("Rice alternative"))
+    }
+
     func testShopperReplacesWednesdayAfterPickupAndKeepsTuesdaysShortage() {
         launch("en", locale: "en_US", cookCopies: true, recovery: true)
         let tuesday = "EEEEEEEE-EEEE-4EEE-8EEE-000000000001"

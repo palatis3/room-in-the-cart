@@ -392,6 +392,23 @@
         }
       }
     },
+    "Keep the current meal and leave its needs open": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep the current meal and leave its needs open"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mantener la comida actual y dejar pendientes sus necesidades"
+          }
+        }
+      }
+    },
     "Leave an unknown time blank.": {
       "extractionState": "manual",
       "localizations": {
