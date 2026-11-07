@@ -165,10 +165,10 @@ import XCTest
     private func fill(_ text: String, into id: String, replacing: Bool = false, fieldType: XCUIElement.ElementType = .textField) {
         let field = app.descendants(matching: fieldType).matching(identifier: id).firstMatch
         tap(field)
-        if replacing, let old = field.value as? String, old != field.placeholderValue { app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count)) }
+        if replacing, let old = field.value as? String, !old.isEmpty, old != field.placeholderValue { app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count)) }
         app.typeText(text)
         let done = app.buttons.matching(NSPredicate(format: "label == %@", "Done")).firstMatch
-        if done.isHittable { done.tap() }
+        if done.exists && done.isHittable { done.tap() }
     }
     private func reveal(_ target: XCUIElement) {
         for attempt in 0..<64 {
