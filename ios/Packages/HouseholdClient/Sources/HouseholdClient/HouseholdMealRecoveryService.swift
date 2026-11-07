@@ -23,6 +23,8 @@ extension HouseholdService {
         let id = page.shopId.uuidString.lowercased(), start = generation
         try await authorizeShopper(shopID: id, capability: "meal_recovery")
         guard start == generation else { throw ClientError.cancelled }
+        if intent.fallback != nil { try await authorizeAssistance(shopID: id) }
+        guard start == generation else { throw ClientError.cancelled }
         let body = try intent.commandBody(reviewed: page)
         let preview: SharedRecoveryPreview = try await perform("shops/\(id)/meal-recovery/preview", method: "POST", body: encoded(body))
         try preview.validate(page: page, intent: intent)

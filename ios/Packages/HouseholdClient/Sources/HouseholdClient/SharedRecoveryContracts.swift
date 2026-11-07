@@ -138,14 +138,23 @@ public struct SharedRecoveryIntent: Codable, Equatable, Sendable {
     public let replacement: SharedRecoveryMeal
     public let reviewedAt: String
     @RecoveryNullable public var repeatOfOccurrenceId: UUID?
+    public let fallback: SharedFallbackSelection?
     public let agreesToRepeat, proposesExtraTrip, agreesToExtraTrip, acceptsUnresolved: Bool
     public init(occurrenceId: UUID, targetDigest: String, replacement: SharedRecoveryMeal, reviewedAt: String, repeatOfOccurrenceId: UUID?,
-                agreesToRepeat: Bool, proposesExtraTrip: Bool, agreesToExtraTrip: Bool, acceptsUnresolved: Bool) {
+                agreesToRepeat: Bool, proposesExtraTrip: Bool, agreesToExtraTrip: Bool, acceptsUnresolved: Bool, fallback: SharedFallbackSelection? = nil) {
         self.occurrenceId = occurrenceId; self.targetDigest = targetDigest; self.replacement = replacement
         self.reviewedAt = reviewedAt; self.repeatOfOccurrenceId = repeatOfOccurrenceId
         self.agreesToRepeat = agreesToRepeat; self.proposesExtraTrip = proposesExtraTrip; self.agreesToExtraTrip = agreesToExtraTrip
         self.acceptsUnresolved = acceptsUnresolved
+        self.fallback = fallback
     }
+
+    public func withFallbackAgreements(repeatMeal: Bool, extraTrip: Bool, unresolved: Bool) -> Self {
+        .init(occurrenceId: occurrenceId, targetDigest: targetDigest, replacement: replacement, reviewedAt: reviewedAt,
+              repeatOfOccurrenceId: repeatOfOccurrenceId, agreesToRepeat: repeatMeal, proposesExtraTrip: proposesExtraTrip,
+              agreesToExtraTrip: extraTrip, acceptsUnresolved: unresolved, fallback: fallback)
+    }
+
 }
 
 public struct SharedRecoveryPreview: Decodable, Equatable, Sendable {

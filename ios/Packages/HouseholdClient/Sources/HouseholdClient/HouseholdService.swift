@@ -562,6 +562,9 @@ public actor HouseholdService {
             if envelope.kind == "mealRecovery.apply" || (envelope.kind == "cookCopy.save" && envelope.body["recoveryRevision"] != nil) {
                 guard live.capabilities.contains("meal_recovery") else { throw ClientError.accessEnded }
             }
+            if envelope.kind == "mealRecovery.apply", case .object(let intent) = envelope.body["intent"], intent["fallback"] != nil {
+                try await authorizeAssistance(shopID: envelope.shopId)
+            }
             if envelope.kind == "cookCopy.save", envelope.body["pantryRevision"] != nil,
                !live.capabilities.contains("pantry_lots") { throw ClientError.accessEnded }
         }

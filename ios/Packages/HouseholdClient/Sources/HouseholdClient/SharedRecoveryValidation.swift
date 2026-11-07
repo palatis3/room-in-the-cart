@@ -163,13 +163,10 @@ extension SharedRecoveryPreview {
             timely = now.addingTimeInterval(Double(minutes) * 60) <= due &&
                 (meal.requiredLeadMinutes == nil || minutes >= (meal.requiredLeadMinutes ?? 0) || meal.advanceStepsCompleted)
         }
-        func titleKey(_ title: String) -> String {
-            let spaces = CharacterSet.whitespacesAndNewlines.subtracting(CharacterSet(charactersIn: "\u{0085}\u{200B}"))
-                .union(CharacterSet(charactersIn: "\u{FEFF}"))
-            return title.components(separatedBy: spaces).filter { !$0.isEmpty }.joined(separator: " ").lowercased(with: Locale(identifier: "en_US"))
+        let repeated = intent.repeatOfOccurrenceId != nil || page.meals.contains {
+            ($0.id != meal.id || intent.fallback != nil) && fallbackName($0.title) == fallbackName(meal.title)
         }
-        let repeated = intent.repeatOfOccurrenceId != nil || page.meals.contains { $0.id != meal.id && titleKey($0.title) == titleKey(meal.title) }
-        guard foodConfirmed == complete, timingConfirmed == timely, repeatRequired == repeated,
+        guard foodConfirmed == complete, timingConfirmed == timely, (repeatRequired == repeated || (intent.fallback != nil && repeatRequired)),
               feasible == (complete && timely), consentSatisfied == ((!repeatRequired || intent.agreesToRepeat) &&
                 (!intent.proposesExtraTrip || intent.agreesToExtraTrip) && (feasible || intent.acceptsUnresolved)) else { throw ClientError.invalidResponse }
     }
