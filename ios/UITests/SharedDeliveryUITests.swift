@@ -151,6 +151,13 @@ import XCTest
         XCTAssertTrue(copy.label.contains("Protected lunch"), copy.label)
         XCTAssertTrue(copy.label.contains("Still needed: 2 units") || copy.label.contains("Aún falta: 2 unidades"), copy.label)
         XCTAssertFalse(copy.label.contains("Cooked rice"))
+        let unchangedLunch = copy.label
+        tap(app.buttons["delivery.cook.save"])
+        reveal(app.staticTexts["Dated copy saved"])
+        tap(app.buttons["delivery.cook.history"])
+        tap(app.buttons["delivery.cook.saved.1"])
+        reveal(saved)
+        XCTAssertEqual(saved.label, unchangedLunch)
     }
 
     func testShopperReviewsFreezerBatchCoverageBeforeCorrectingFiveToThree() {

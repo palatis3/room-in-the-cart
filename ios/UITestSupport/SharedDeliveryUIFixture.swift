@@ -143,7 +143,8 @@ final class SharedDeliveryFixtureRecords {
                 copy["pantryRevision"] = pantryRevision
             }
             if body["recoveryRevision"] != nil || body["revisionId"] != nil || recovery?.replacedOccurrence == occurrenceID {
-                guard let recovery, let recoveryRevision = body["recoveryRevision"] as? Int, recoveryRevision == recovery.revision,
+                guard let recovery, recovery.replacedOccurrence == occurrenceID,
+                      let recoveryRevision = body["recoveryRevision"] as? Int, recoveryRevision == recovery.revision,
                       copy["pantryRevision"] != nil, let mealVersion = (body["revisionId"] as? String)?.lowercased(),
                       recovery.version(of: occurrenceID) == mealVersion else { throw CookFailure.staleSupply }
                 copy["recoveryRevision"] = recoveryRevision
