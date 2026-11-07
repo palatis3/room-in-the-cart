@@ -1,0 +1,28 @@
+{
+  "remoteCandidate": "5edf6325499459d59f944844419a250212a13b86",
+  "scope": "Local repair verification for three failures on GitHub. The hosted runner used Xcode 26.3; local simulator checks used Xcode 27.1 on iOS 26.2.",
+  "recipe": {
+    "localCommit": "c9a0e37",
+    "hostedJob": "https://github.com/palatis3/room-in-the-cart/actions/runs/42415084567/job/128533766037",
+    "checks": "Exact original source URL, notes, three servings and six wraps persisted; four servings and eight wraps after the weekly edit. One meal and its grocery proposal were read before applying.",
+    "localResult": "4 passed, zero warnings. A controlled accessibility delay reproduced an expired value check with the exact URL present before and after.",
+    "localVerificationSHA256": "8ed3eee4c2c5ca8b67f3af77f65eec5c5bd3b3081055a520e217dae47c800fc1"
+  },
+  "renderedSearch": {
+    "localCommit": "a374924",
+    "hostedJob": "https://github.com/palatis3/room-in-the-cart/actions/runs/42415084600/job/128534393323",
+    "checks": "The exact post-restart search field value and matching row or empty result share the existing eight-second result deadline. The timed 20 searches and 20 checkoffs remain separate from this interaction.",
+    "localResult": "1 passed, zero warnings. The local Release run retained 500 rows and all 20 checked identities. The original test also passed on a fresh local fixture. Hosted timing thresholds still require the hosted environment.",
+    "localVerificationSHA256": "e83e4887a6aa4fcb0997530b1fb950ea56496698d9dd8d24db30e5175d7c2426"
+  },
+  "keyboard": {
+    "localCommits": [
+      "1f25ec6",
+      "caf9025"
+    ],
+    "hostedJob": "https://github.com/palatis3/room-in-the-cart/actions/runs/42415084575/job/128536408228",
+    "checks": "Five fresh editors each received one tap. Each positive run kept the amount at 3 and dismissed both Done and the keyboard. Each observed target was 44 × 44 points. One deliberate tap inside the field kept the keyboard and Done visible and failed the center check.",
+    "localResult": "3 stock-review tests passed, zero warnings. The extra minimum-size assertions passed the five-point test in a separate run.",
+    "localVerificationSHA256": "9ae338f13e525aa4a57caa37df5814550382f93a1e7b90d526e9942b43c52027"
+  }
+}
