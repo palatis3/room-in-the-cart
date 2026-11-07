@@ -1,0 +1,10 @@
+{
+  "candidate": "0d5bb1b22e9e84cd4b8c2b07317f91cfc703b60c",
+  "hosted": "UI04 original attempt1 fails initial bQuantity input with no keyboard focus; other5casespass",
+  "local": "Same hosted binaries and test, iOS26.2/23C54, separate local coordinatorXcode27.1:1/1pass144.06s,strict0,zero recorded warnings/restarts",
+  "productFilesUnchanged": 254,
+  "freezeFiles": 119,
+  "freezeSHA256": "aebfd1cdf70e1e18d2ef5be7a783259c69eca9f7f0b4200307210699b70c7162",
+  "failureStillUnresolved": true,
+  "scope": "Nonreproduction; no causal fix, no retry/timeout relaxation or acceptance substitution. Only failed comparison case media inspected."
+}
