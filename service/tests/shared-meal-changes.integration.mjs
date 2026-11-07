@@ -229,6 +229,14 @@ if(process.env.RITC_TEST_NATIVE_WIRE==='1') test('actual Swift planner proposal 
  assert(recovered.needs.length>0 && recovered.needs.every(n=>n.due===deadline.at));
  assert.equal(saved.sources.length,1);assert.equal(saved.sources[0].confirmed.quantity.amount.numerator,7);
  assert.equal((await admin.query('SELECT count(*)::int n FROM ritc.shared_meal_change WHERE household_id=$1',[f.h])).rows[0].n,1);
+ const at=new Date(Date.now()+45*60_000).toISOString();
+ const placed=await reservationFixture({day:at.slice(0,10),deadline:{at,zone:'UTC'}});
+ await exerciseSharedMealClient({service:server,owner:placed.owner,householdId:placed.h,shopId:placed.shopId,shopper:true,
+   beforeFallbackReplay:async()=>{
+     const {rows:[{subscription}]}=await admin.query('SELECT subscription FROM ritc.billing_state WHERE household_id=$1',[placed.h]);
+     const original=subscriptions.get(subscription.originalTransactionID);
+     subscriptions.set(subscription.originalTransactionID,{...original,status:'expired',expiresAt:Date.now()-1000,signedAt:Date.now()});
+   }});
 });
 
 

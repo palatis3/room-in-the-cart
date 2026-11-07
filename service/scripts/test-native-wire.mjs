@@ -29,6 +29,7 @@ const swiftRuns = [
   'history-paid HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres',
   'meal-planner HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
   'meal-shopper HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'meal-fallback HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
   'quote-adult HouseholdClientTests.StoreQuoteNativeWireTests/testStoreQuoteClientAgainstPostgres',
   'quote-shopper HouseholdClientTests.StoreQuoteNativeWireTests/testStoreQuoteClientAgainstPostgres',
 ];
@@ -70,7 +71,7 @@ try {
       'Expected exactly four passing Node integration cases');
     assert.deepEqual(passed.sort(), cases.sort(), 'Unexpected, missing or skipped Node cases');
     assert.deepEqual(observedSwiftRuns.sort(), swiftRuns.sort(), 'Unexpected, missing or repeated Swift wire cases');
-    console.log('Verified four Node integration cases and six exact XCTest scenario results.');
+    console.log('Verified four Node integration cases and seven exact XCTest scenario results.');
   } finally {
     await fencePrivacyJournalFixture(admin, journal);
   }

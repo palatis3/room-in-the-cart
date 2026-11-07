@@ -39,6 +39,10 @@ final class SharedMealNativeWireTests: XCTestCase {
         _ = try await service.enroll(householdID: XCTUnwrap(env["RITC_WIRE_HOUSEHOLD"]))
         let shopID = try XCTUnwrap(UUID(uuidString: XCTUnwrap(env["RITC_WIRE_SHOP"])))
         let scope = try await service.selectShop(shopID)
+        if env["RITC_WIRE_FALLBACK"] == "1" {
+            try await exerciseFallback(service, shop: shopID, scope: scope)
+            return
+        }
         let page = try await service.sharedMealChanges(shopID: shopID)
         if env["RITC_WIRE_SHOPPER"] == "1" {
             XCTAssertTrue(page.shopper)
@@ -423,4 +427,93 @@ final class SharedMealNativeWireTests: XCTestCase {
         return first
     }
 
+}
+
+extension SharedMealNativeWireTests {
+    private func exerciseFallback(_ service: HouseholdService, shop: UUID, scope: HouseholdBootstrap) async throws {
+        let id = shop.uuidString.lowercased()
+        let facts = try await service.mealRecoveryFacts(shopID: id), desk = facts.page
+        let target = try XCTUnwrap(desk.meals.first(where: { $0.due != nil }))
+        let source = try XCTUnwrap(desk.sourceOptions.first(where: { $0.quantity?.unit == "count" }))
+        XCTAssertEqual(source.quantity?.amount, .init(numerator: 5))
+        var library = try await service.acceptedFallbacks(shopID: id)
+        XCTAssertTrue(library.candidates.isEmpty)
+        let chosenMeal = SharedFallbackSource.meal(occurrenceId: target.id, mealRevision: target.sourceMealRevision, revisionId: target.revisionId)
+        let projected = try await service.fallbackSource(chosenMeal, reviewed: library)
+        XCTAssertEqual(projected.recipe.title, target.title)
+        XCTAssertEqual(projected.recipe.groups?.count, target.groups.count)
+        func count(_ n: Int) -> SharedMealQuantity { .init(amount: .init(numerator: n), unit: "count", originalLiteral: String(n)) }
+        func recipe(_ n: Int, _ title: String) -> SharedFallbackRecipe {
+            .init(title: title, portions: 4, notes: "Serve warm", sourceURL: nil, exclusions: [], requiredLeadMinutes: nil,
+                  elapsedMinutes: 10, ingredients: [.init(id: UUID(), name: "Wraps", quantity: count(n), exclusions: [], notes: "Warm the wraps")])
+        }
+        let easy = recipe(3, "Three warm wraps"), bigger = recipe(6, target.title)
+        let easyID = UUID(), biggerID = UUID()
+        let pending = try await service.prepareFallback(.accept(candidateId: easyID, baseRevision: nil, source: .disclosed,
+            recipe: easy, usual: true), reviewed: library, clientKey: UUID())
+        let durable = try JSONDecoder().decode(PendingFallbackWrite.self, from: JSONEncoder().encode(pending))
+        try durable.validate()
+        let accepted = try await service.executeFallback(durable)
+        library = try await service.acceptedFallbacks(shopID: id)
+        XCTAssertTrue(library.belongsToSameDevice(as: durable))
+        _ = try await service.saveFallback(.accept(candidateId: biggerID, baseRevision: nil, source: .disclosed, recipe: bigger, usual: false),
+                                          reviewed: library, clientKey: UUID())
+        let replay = try await service.executeFallback(durable)
+        XCTAssertEqual(replay, accepted)
+        library = try await service.acceptedFallbacks(shopID: id)
+        func review(_ cid: UUID, _ candidate: SharedFallbackRecipe, offer: SharedFallbackOffer? = nil) -> SharedFallbackReview {
+            .init(candidateId: cid, revision: 1, remainingElapsedMinutes: nil, advanceStepsCompleted: false,
+                  ingredients: [.init(ingredientId: candidate.ingredients[0].id, sourceIds: [source.id], offer: offer)])
+        }
+        let offer = SharedFallbackOffer(label: "Two wraps", exclusionTags: [], usablePerPack: count(2), priceMinor: 200, availablePacks: 2)
+        let trip = SharedFallbackTrip(minutes: 8, budgetMinor: 500, chargesMinor: 50, currency: "USD")
+        let ranking = try await service.recoveryOptions([review(biggerID, bigger, offer: offer), review(easyID, easy)], trip: trip,
+                                                       for: target.id, reviewed: desk, library: library)
+        XCTAssertEqual(ranking.options.map(\.id), [easyID,biggerID])
+        XCTAssertEqual(ranking.usualMinutes, 10)
+        XCTAssertEqual(ranking.conditional, [])
+        let topUp = try XCTUnwrap(ranking.options.last)
+        XCTAssertEqual(topUp.buys.map(\.packs), [2])
+        XCTAssertEqual(topUp.extraCashMinor, 450)
+        XCTAssertEqual(topUp.minutes, 18)
+        XCTAssertTrue(topUp.repeatRequired)
+        let noTrip = try await service.recoveryOptions([review(biggerID, bigger)], trip: nil, for: target.id, reviewed: desk, library: library)
+        XCTAssertEqual(noTrip.options, [])
+        XCTAssertEqual(noTrip.conditional.first?.reason, "topUpUnreviewed")
+        let blocked = try await service.previewMealRecovery(topUp.intent, reviewed: desk)
+        XCTAssertFalse(blocked.consentSatisfied)
+        _ = try await service.saveFallback(.revoke(candidateId: biggerID, baseRevision: 1), reviewed: library, clientKey: UUID())
+        do {
+            _ = try await service.previewMealRecovery(topUp.intent, reviewed: desk)
+            XCTFail("Withdrawn candidate could still be previewed")
+        } catch ClientError.service(status: 409, code: _, correlationID: _, retryAfter: _) {}
+        let onHand = try XCTUnwrap(ranking.options.first)
+        let preview = try await service.previewMealRecovery(onHand.intent, reviewed: desk)
+        XCTAssertTrue(preview.feasible)
+        let window = try await service.replayWindow()
+        // Keep a second unconsumed preview so a new key after lapse reaches the live seat check.
+        let unused = try await service.previewMealRecovery(onHand.intent, reviewed: desk)
+        XCTAssertNotEqual(unused.previewId, preview.previewId)
+        let operation = try await service.prepare(envelope: .init(replayWindow: window.id, shopId: id, kind: "mealRecovery.apply",
+            base: .init(shopRevision: desk.base.shopRevision, authorityEpoch: desk.base.authorityEpoch),
+            body: onHand.intent.commandBody(reviewed: desk, preview: preview)), bootstrap: scope)
+        let applied = try await service.executeSharedShop(operation)
+        let retry = try await service.executeSharedShop(operation)
+        XCTAssertEqual(applied, retry)
+        let expired = try await service.assistanceValidUntil(shopID: id)
+        XCTAssertNil(expired)
+        let saved = try await service.mealRecoveryFacts(shopID: id)
+        XCTAssertEqual(saved.page.meals.first(where: { $0.id == target.id }), onHand.intent.replacement)
+        let freeLibrary = try await service.acceptedFallbacks(shopID: id)
+        XCTAssertTrue(freeLibrary.candidates.contains { $0.id == easyID })
+        let newOperation = try await service.prepare(envelope: .init(replayWindow: window.id, shopId: id, kind: "mealRecovery.apply",
+            base: .init(shopRevision: desk.base.shopRevision, authorityEpoch: desk.base.authorityEpoch),
+            body: onHand.intent.commandBody(reviewed: desk, preview: unused)), bootstrap: scope)
+        do {
+            _ = try await service.executeSharedShop(newOperation)
+            XCTFail("Expired member created a new assisted write")
+        } catch ClientError.service(status: 403, code: "membership_inactive", correlationID: _, retryAfter: _) {}
+        let stillSaved = try await service.mealRecoveryFacts(shopID: id)
+        XCTAssertEqual(stillSaved.page.base, saved.page.base)
+    }
 }

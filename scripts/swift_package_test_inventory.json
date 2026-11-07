@@ -255,6 +255,8 @@
       "HouseholdClientTests.HouseholdClientTests/testDeviceRevocationRetainsExactTargetBytesAndRejectsReceiptSubstitution",
       "HouseholdClientTests.HouseholdClientTests/testDurableRetryPreservesExactEnvelopeAndRejectsChangedKey",
       "HouseholdClientTests.HouseholdClientTests/testEnrollmentResumesSameDeviceAfterClientRecreation",
+      "HouseholdClientTests.HouseholdClientTests/testFallbackFreeCatalogWithdrawAndPaidNamedSeatGateAcrossRelaunch",
+      "HouseholdClientTests.HouseholdClientTests/testFallbackOptionsBindReviewedTargetSourceQuantityAndWholePackTerms",
       "HouseholdClientTests.HouseholdClientTests/testFoodFractionsRetainArbitraryPrecisionThroughAdditionAndConversion",
       "HouseholdClientTests.HouseholdClientTests/testGuardianChildClaimAndFinishUseSeparateWireSchemaAndExactDeviceSecret",
       "HouseholdClientTests.HouseholdClientTests/testGuardianChildContinuityProjectionRequiresVerifiedUserAndStrictIssuerSubjectSession",

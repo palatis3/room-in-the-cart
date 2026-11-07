@@ -11,10 +11,12 @@ const run = promisify(execFile);
 
 // A fixture identity provider returns one real signed test JWT. Household requests
 // keep their original headers and body and go through the normal API and database.
-export async function exerciseSharedMealClient({service, owner, householdId, shopId, shopper}) {
+export async function exerciseSharedMealClient({service, owner, householdId, shopId, shopper, beforeFallbackReplay}) {
   const dir = await mkdtemp(join(tmpdir(), 'ritc-native-wire-'));
   const key = join(dir, 'tls.key'), cert = join(dir, 'tls.pem'), code = randomUUID();
   let tls;
+  let fallbackCommands = 0;
+  const fallback = !!beforeFallbackReplay;
   const unsuccessful = [];
   try {
     const config = join(dir, 'openssl.cnf');
@@ -28,6 +30,10 @@ export async function exerciseSharedMealClient({service, owner, householdId, sho
         res.once('finish',()=>{
           if(res.statusCode>=400) unsuccessful.push([req.method,req.url.split('?')[0].replace(/[a-f\d-]{36}/gi,'{id}'),res.statusCode].join(' '));
         });
+        if (fallback && req.method === 'POST' && req.url.endsWith('/commands') && ++fallbackCommands === 2) {
+          try { await beforeFallbackReplay(); }
+          catch { res.writeHead(500); res.end(); return; }
+        }
         service.emit('request',req,res); return;
       }
       res.setHeader('Content-Type','application/json');
@@ -45,9 +51,9 @@ export async function exerciseSharedMealClient({service, owner, householdId, sho
     await new Promise((resolve,reject)=>tls.once('error',reject).listen(0,'127.0.0.1',resolve));
     await runNativeWireTest({
       suite: 'SharedMealNativeWireTests', method: 'testSharedMealClientAgainstPostgres',
-      scenario: shopper ? 'meal-shopper' : 'meal-planner', unsuccessful,
+      scenario: fallback ? 'meal-fallback' : shopper ? 'meal-shopper' : 'meal-planner', unsuccessful,
       env:{RITC_WIRE_PORT:String(tls.address().port),RITC_WIRE_CERT:der,RITC_WIRE_CODE:code,
-        RITC_WIRE_SHOPPER:shopper?"1":"0",RITC_WIRE_HOUSEHOLD:householdId,RITC_WIRE_SHOP:shopId},
+        RITC_WIRE_FALLBACK:fallback?"1":"0",RITC_WIRE_SHOPPER:shopper?"1":"0",RITC_WIRE_HOUSEHOLD:householdId,RITC_WIRE_SHOP:shopId},
     });
   } finally {
     if(tls?.listening) await new Promise(resolve=>tls.close(resolve));
