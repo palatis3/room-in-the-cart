@@ -1,5 +1,17 @@
 # Current implementation and acceptance map
 
+## November 7 current state and newly confirmed gap
+
+Current published CI targets1080fad. Deep passes both15-case StoreKit configurations and both sanitizer jobs; Security and Native wire are terminal success. Ordinary UI has a new S14 input-value failure before saving; the earlier local persistence passes do not erase it. A [failure-boundary diagnostic](evidence/native/s14-value-boundary-diagnostic-20261107/README.md) is committed locally, with whole-file typecheck only and no causal product fix claimed. The rest of the hosted cohort is unfinished.
+
+The [future-arrival fix](evidence/native/future-arrival-boundary-20261107/README.md), committed locally as81a6e8b, excludes future evidence from current food, carryover and pending-offer decisions while preserving history. Five identical tests fail on the old product; all129 affected model tests pass on the fix. Native past/future date-control interaction and current saved-date rendering remain pending.
+
+**S09.01 is incomplete:** the required post-arrival replacement of Wednesday's dinner is not implemented by the existing repair-note flow. DinnerPlanning correctly rejects noncalendar ledger changes after placement; the current accepted-fallback action only fills manual instructions, whose Save appends a PickupRepair. A draft-only replacement or a note-only test cannot prove the required post-arrival behavior. The implementation needs a distinct reviewed recovery change that preserves the original order and charges, keeps Tuesday's shortage and protected portions visible, and updates only the chosen meal's current requirements. Local/shared authority, stale review, durable retries, physical matching and cook projection must be covered. Source/design work is under `.build/RecoveryHandoffAcceptance20261107`; no guard weakening or recovery implementation is installed yet.
+
+The Dinner supply-sheet/error styling candidate remains uninstalled while its native validation continues. The first failed attempt and the later approval-completion failure are retained. Earlier scoped color/field observations do not establish a complete passing flow.
+
+The paragraphs below retain historical evidence; old active-candidate and unresolved StoreKit descriptions are superseded by this current section where stated. Full first-version and release acceptance remain incomplete.
+
 The [shared Dinner editor semantic styling](evidence/native/dinner-semantic-theme-20261107/README.md) is installed with passing unchanged normal S14 and Spanish approval regressions, plus separately scoped light/dark diagnostic renders. The earlier normal Dark idle timeout remains open; this does not establish an animation fix, whole-app design acceptance or hosted coverage.
 
 The original8d1a79b CI cohort is now [terminal and independently frozen](evidence/native/ci-8d1a79b-20261107/README.md):604/604models,51/53ordinary UI,29/30StoreKit,47/47fixtures and all3performance gates pass in their recorded scopes. Two share-sheet readiness failures and the English StoreKit timeout remain open, including two runner restarts. Six UI and six fixture warning occurrences remain explicitly scoped. This evidence does not cover the later local commits or establish release acceptance.
