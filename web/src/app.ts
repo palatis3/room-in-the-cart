@@ -111,9 +111,9 @@ export class WebApp {
       this.notice='Access has ended. Ask your household for a new invitation.';this.render();
     }
   }
-  private async load():Promise<void> {
+  private async load(verifiedSession?:Session):Promise<void> {
     if(this.signOutPending)return;
-    const start=this.proposalGeneration,fresh=await this.api.session();
+    const start=this.proposalGeneration,fresh=verifiedSession ?? await this.api.session();
     if(start!==this.proposalGeneration)return;
     if(this.reviewedScope && fresh && this.reviewedScope!==reviewScope(fresh)) {
       this.clearPrivate();this.notice='';this.render();
@@ -187,8 +187,38 @@ export class WebApp {
   }
   private async fail(error:unknown,purpose:'load'|'mutation'='mutation',rejectedPendingID?:string):Promise<void> {
     this.failurePurpose=purpose;
-    const e=error instanceof ApiError ? error:new ApiError('unavailable',500);
-    if(e.status===403||e.code==='queue_permission_ended'||e.code==='access_ended'||(e.status===404&&(this.proposalIntent!==null||['editor','helper'].includes(this.session?.role??'')))) {
+    let e=error instanceof ApiError ? error:new ApiError('unavailable',500);
+    if (e.code==='queue_permission_ended' && this.session) {
+      const prior=this.session;
+      this.clearPrivate();
+      this.render();
+      try {
+        await this.outbox.clearScope(scopeFor(prior));
+      } catch {
+        this.notice='Pending requests could not be cleared. Clear site data before sharing this browser.';
+        return;
+      }
+      try {
+        const fresh=await this.api.session();
+        if (!fresh) throw new ApiError('session_needed',401);
+        if (this.signOutPending || reviewScope(fresh)!==reviewScope(prior) || !fresh.enrolled || !isContributorSession(fresh)) {
+          throw new ApiError('access_ended',403);
+        }
+        await this.load(fresh);
+        this.notice='Offline permission changed. Check Your requests before sending again.';
+        return;
+      } catch (failure) {
+        this.clearPrivate();
+        e=failure instanceof ApiError ? failure:new ApiError('unavailable',500);
+        if (e.status!==401 && e.status!==403) {
+          this.historySuspended=true;
+          this.failurePurpose='load';
+          this.notice='Could not verify household access. Reconnect and refresh.';
+          return;
+        }
+      }
+    }
+    if(e.status===403||e.code==='access_ended'||(e.status===404&&(this.proposalIntent!==null||['editor','helper'].includes(this.session?.role??'')))) {
       this.clearPrivate();
       this.render();
       try {
@@ -429,7 +459,8 @@ export class WebApp {
   }
   private async retry(p:Pending):Promise<void>{
     const fresh=await this.api.session();
-    if(this.signOutPending||!fresh||reviewScope(fresh)!==this.reviewedScope||scopeFor(fresh)!==p.scope||!isContributorSession(fresh)||!fresh.enrolled||!fresh.queueConsent)throw new ApiError('access_ended',403);
+    if(this.signOutPending||!fresh||reviewScope(fresh)!==this.reviewedScope||!isContributorSession(fresh)||!fresh.enrolled)throw new ApiError('access_ended',403);
+    if(scopeFor(fresh)!==p.scope||!fresh.queueConsent)throw new ApiError('queue_permission_ended',409);
     if(!this.confirmedOperations.has(p.id)) {
       if(fresh.replayWindow.id!==p.command.replayWindow||Date.parse(fresh.replayWindow.expiresAt)<=Date.now()) {this.notice='This queued request needs a new review. It was not resent.';return;}
       await this.api.command(fresh,p.command,fresh.requestQueueGrant);

@@ -462,6 +462,65 @@ test('revoked queue permission prevents replay even for the same household and m
  assert.equal(sent,1);assert.doesNotMatch(root.textContent,/Beans|Waiting to send/);
 });
 
+test('a retired queue grant leaves an authorized contributor able to send online', async () => {
+ const active = {...session(), canSetRequestQueue:true, queueConsent:true, requestQueueGrant:'original-grant'};
+ const disabled = {...session(), canSetRequestQueue:true};
+ const outbox = new Outbox(new IDBFactory());
+ let current = active;
+ const attempts = [];
+ const {root,dom} = await setup(fakeAPI({session:async()=>current, requests:async()=>[own()],
+   command:async(_session,command,grant)=>{
+     attempts.push({item:command.body.originalItem, grant});
+     if (grant) throw new ApiError('network',0);
+   }}),'en',outbox);
+ type(dom,'item','Earlier private draft');submit(root,dom);submit(root,dom);await waitForIdle(root);
+ current = disabled;
+ click(root,'Retry');await waitForIdle(root);
+ assert.equal(attempts.length,1);
+ assert.deepEqual(await outbox.list(scopeFor(active)),[]);
+ assert.doesNotMatch(root.textContent,/Earlier private draft|new invitation/);
+ assert.match(root.textContent,/Offline permission changed/);
+ assert.match(root.textContent,/No-salt frijoles/);
+ type(dom,'item','New online request');submit(root,dom);submit(root,dom);await waitForIdle(root);
+ assert.deepEqual(attempts[1],{item:'New online request',grant:undefined});
+});
+
+test('a grant rejected during send clears the draft and checks current household access', async () => {
+ const active = {...session(), canSetRequestQueue:true, queueConsent:true, requestQueueGrant:'original-grant'};
+ const outbox = new Outbox(new IDBFactory());
+ let ended = false;
+ const {root,dom} = await setup(fakeAPI({session:async()=>{
+   if (ended) throw new ApiError('access_ended',403);
+   return active;
+ },requests:async()=>[own()],command:async()=>{
+   ended = true;
+   throw new ApiError('queue_permission_ended',409);
+ }}),'en',outbox);
+ type(dom,'item','Revoked private draft');submit(root,dom);submit(root,dom);await waitForIdle(root);
+ assert.deepEqual(await outbox.list(scopeFor(active)),[]);
+ assert.doesNotMatch(root.textContent,/Revoked private draft|No-salt frijoles|Family A/);
+ assert.match(root.textContent,/Access has ended/);
+ assert.equal(root.querySelector('#item'),null);
+});
+
+test('queue cleanup while disconnected offers a fresh access check without replay', async () => {
+ const active = {...session(), canSetRequestQueue:true, queueConsent:true, requestQueueGrant:'original-grant'};
+ let disconnected=false, retired=false, attempts=0;
+ const {root,dom} = await setup(fakeAPI({session:async()=>{
+   if (disconnected) throw new ApiError('network',0);
+   return retired ? {...session(),canSetRequestQueue:true} : active;
+ },requests:async()=>[own()],command:async()=>{
+   attempts++;retired=true;disconnected=true;throw new ApiError('queue_permission_ended',409);
+ }}));
+ type(dom,'item','Old request');submit(root,dom);submit(root,dom);await waitForIdle(root);
+ assert.doesNotMatch(root.textContent,/Old request|No-salt frijoles|Family A/);
+ assert.match(root.textContent,/Reconnect and refresh/);
+ disconnected=false;click(root,'Refresh');await waitForIdle(root);
+ assert.match(root.textContent,/No-salt frijoles/);
+ assert.doesNotMatch(root.textContent,/Old request|Reconnect and refresh/);
+ assert.equal(attempts,1);
+});
+
 test('failed sign-out clears private content and background reload cannot restore it',async()=>{
  let logoutFails=true,sessionReads=0;
  const {root,app}=await setup(fakeAPI({session:async()=>{sessionReads++;return session();},requests:async()=>[own()],logout:async()=>{if(logoutFails)throw new ApiError('network',0);}}));

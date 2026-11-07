@@ -1,6 +1,9 @@
 /** US Spanish draft; human language review remains a release gate. */
 const es: Record<string, string> = {
   'Allow pending requests on this browser for up to 24 hours':'Permitir solicitudes pendientes en este navegador hasta por 24 horas',
+  'Offline permission changed. Check Your requests before sending again.':'Cambió el permiso para guardar solicitudes sin conexión. Revisa tus solicitudes antes de volver a enviar.',
+  'Pending requests could not be cleared. Clear site data before sharing this browser.':'No se pudieron borrar las solicitudes pendientes. Borra los datos del sitio antes de compartir este navegador.',
+  'Could not verify household access. Reconnect and refresh.':'No se pudo verificar el acceso al hogar. Vuelve a conectarte y actualiza la página.',
   'Offline permission expired. Check Your requests before sending again.':'Venció el permiso para guardar solicitudes sin conexión. Revisa tus solicitudes antes de enviar otra vez.',
   'Turn off and clear pending requests':'Desactivar y borrar las solicitudes pendientes',
   'Received suggestions checked.':'Sugerencias recibidas consultadas.',
