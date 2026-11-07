@@ -13,7 +13,7 @@ public actor HouseholdService {
     private var memberID: String?
     private var selectedShopID: UUID?
     private var selectedGrantID: String?
-    private var generation = UUID()
+    private(set) var generation = UUID()
     private var childAdoptionBinding: ChildInvitationBinding?
     public init(configuration: ServiceConfiguration, auth: AdultAuth, deviceVault: any RefreshTokenVault,
                 transport: HTTPTransport = .init()) {
@@ -138,7 +138,7 @@ public actor HouseholdService {
         if let cursor, UUID(uuidString: cursor) == nil { throw ClientError.configuration }
         return try await perform("requests/mine", method: "GET", query: cursor.map { [.init(name: "cursor", value: $0)] } ?? [])
     }
-    private func authorizeShopper(shopID: String, capability: String? = nil) async throws {
+    @discardableResult func authorizeShopper(shopID: String, capability: String? = nil) async throws -> HouseholdBootstrap {
         guard UUID(uuidString: shopID) != nil else { throw ClientError.configuration }
         let projection = try await bootstrap()
         guard projection.role == "shopper", projection.grantId == nil, projection.shopId == shopID,
@@ -146,6 +146,7 @@ public actor HouseholdService {
               ["shopper_inbox", "request_preview", "shopper_commands"].allSatisfy(projection.capabilities.contains) else {
             throw ClientError.accessEnded
         }
+        return projection
     }
     public func selectableShops(closedAndOwned: Bool, cursor: UUID?) async throws -> HouseholdShopChoices {
         guard selectedGrantID == nil else { throw ClientError.accessEnded }
@@ -525,16 +526,23 @@ public actor HouseholdService {
         guard envelope.clientKey == operation.clientKey, UUID(uuidString: envelope.shopId) != nil,
               ["shop.create", "shop.patch", "shop.freeze", "shop.reopen", "shop.transferAuthority",
                "delivery.register", "delivery.arrival", "delivery.usable", "delivery.match", "delivery.reserve",
-               "cookCopy.save", "cookCopy.markSent"].contains(envelope.kind) else { throw ClientError.configuration }
+               "cookCopy.save", "cookCopy.markSent", "pantry.create", "pantry.storeDelivery", "pantry.observe",
+               "pantry.select", "pantry.match", "pantry.reserve"].contains(envelope.kind) else { throw ClientError.configuration }
         if envelope.kind == "shop.create" {
             guard envelope.base.shopRevision == 0, envelope.base.authorityEpoch == 0 else { throw ClientError.configuration }
             try await authorizeAdmin()
         } else if envelope.kind == "shop.transferAuthority" {
             try await authorizeAdmin()
-        } else { try await authorizeShopper(shopID: envelope.shopId, capability: envelope.kind.hasPrefix("cookCopy.") ? "cook_copies" : nil) }
+        } else {
+            let capability = envelope.kind.hasPrefix("pantry.") ? "pantry_lots" : (envelope.kind.hasPrefix("cookCopy.") ? "cook_copies" : nil)
+            let live = try await authorizeShopper(shopID: envelope.shopId, capability: capability)
+            if envelope.kind == "cookCopy.save", envelope.body["pantryRevision"] != nil,
+               !live.capabilities.contains("pantry_lots") { throw ClientError.accessEnded }
+        }
         guard start == generation else { throw ClientError.cancelled }
         guard operation.memberID == memberID else { throw ClientError.accessEnded }
         let receipt: ShopperReceipt = try await perform("commands", method: "POST", body: operation.bytes, creatingShop: envelope.kind == "shop.create")
+        if envelope.kind.hasPrefix("pantry.") { try receipt.validatePantry(envelope) }
         if envelope.kind.hasPrefix("cookCopy.") { try receipt.validateCookCopy(envelope) }
         if envelope.kind.hasPrefix("delivery.") {
             guard case .integer(let revision) = envelope.body["supplyRevision"], (0..<Int(Int32.max)).contains(revision),
@@ -986,7 +994,7 @@ public actor HouseholdService {
         generation = UUID(); enrollment = nil; householdID = nil; subject = nil; memberID = nil; selectedGrantID = nil; selectedShopID = nil; childAdoptionBinding = nil
         try? deviceVault.clear()
     }
-    private func perform<T: Decodable & Sendable>(_ path: String, method: String, body: Data? = nil,
+    func perform<T: Decodable & Sendable>(_ path: String, method: String, body: Data? = nil,
                                                  query: [URLQueryItem] = [], absolutePath: Bool = false, creatingShop: Bool = false, reportingShopID: String? = nil) async throws -> T {
         let start = generation
         guard let householdID, let enrollment else { throw ClientError.sessionNeeded }

@@ -7,6 +7,7 @@ public struct SharedCookCopy: Decodable, Equatable, Identifiable, Sendable {
     public let shopRevision: Int
     public let placedRevision: Int
     public let authorityEpoch: Int
+    public let pantryRevision: Int?
     public let supplyRevision: Int
     public let occurrenceId: UUID
     public let mealRevision: Int
@@ -18,7 +19,7 @@ public struct SharedCookCopy: Decodable, Equatable, Identifiable, Sendable {
     func validate(occurrence: SharedMealOccurrence, reviewed page: SharedDeliveryPage) throws {
         guard shopId == page.shopId, placedRevision == page.placedRevision,
               occurrenceId == occurrence.id, mealRevision == occurrence.revision,
-              version > 0, shopRevision >= placedRevision, authorityEpoch > 0, supplyRevision >= 0,
+              version > 0, shopRevision >= placedRevision, authorityEpoch > 0, supplyRevision >= 0, (pantryRevision ?? 0) >= 0,
               ["en", "es"].contains(language), SharedCookCopyEdit.validText(text), validHelperTimestamp(createdAt) else {
             throw ClientError.invalidResponse
         }
@@ -87,15 +88,20 @@ public enum SharedCookCopyEdit: Sendable {
         return label
     }
 
-    public func body(reviewed page: SharedDeliveryPage) throws -> [String: JSONValue] {
+    public func body(reviewed page: SharedDeliveryPage, pantry: SharedPantryPage? = nil) throws -> [String: JSONValue] {
         guard page.nextCursor == nil else { throw ClientError.configuration }
         switch self {
         case let .save(text, language, occurrence):
             guard SharedCookCopyEdit.validText(text), ["en", "es"].contains(language),
                   page.meals?.contains(occurrence) == true else { throw ClientError.configuration }
-            return ["placedRevision": .integer(page.placedRevision), "supplyRevision": .integer(page.supplyRevision),
+            var body: [String: JSONValue] = ["placedRevision": .integer(page.placedRevision), "supplyRevision": .integer(page.supplyRevision),
                     "occurrenceId": .string(occurrence.id.uuidString.lowercased()), "mealRevision": .integer(occurrence.revision),
                     "language": .string(language), "text": .string(text)]
+            if let pantry {
+                try pantry.validate(delivery: page)
+                body["pantryRevision"] = .integer(pantry.pantryRevision)
+            }
+            return body
         case let .markSent(copy, recipient, previous):
             guard let occurrence = page.meals?.first(where: { $0.id == copy.occurrenceId }) else { throw ClientError.configuration }
             try copy.validate(occurrence: occurrence, reviewed: page)

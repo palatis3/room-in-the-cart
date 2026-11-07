@@ -145,6 +145,8 @@ public struct ShopperPreview: Codable, Equatable, Sendable {
     public var base: CommandBase { .init(shopRevision: shopRevision, authorityEpoch: authorityEpoch, requestRevision: requestRevision) }
 }
 public struct ShopperReceipt: Codable, Equatable, Sendable {
+    public private(set) var lotId: UUID? = nil
+    public private(set) var pantryRevision: Int? = nil
     public private(set) var copyId: UUID? = nil
     public private(set) var sourceId: UUID? = nil
     public private(set) var supplyRevision: Int? = nil

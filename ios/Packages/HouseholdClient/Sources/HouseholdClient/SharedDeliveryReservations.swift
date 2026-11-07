@@ -81,7 +81,7 @@ enum DeliveryUnit {
         return saved.valid && converted.compare(saved) == .orderedAscending
     }
 
-    fileprivate static func convert(_ quantity: SharedMealQuantity, to unit: String) -> Fraction? {
+    static func convert(_ quantity: SharedMealQuantity, to unit: String) -> SharedDeliveryCoverage.Fraction? {
         guard let from = HistoryUnit(rawValue: quantity.unit), let to = HistoryUnit(rawValue: unit),
               scale(from).dimension == scale(to).dimension else { return nil }
         // Each product has at most 27 digits, within Decimal's 38 significant digits.
@@ -92,43 +92,8 @@ enum DeliveryUnit {
     }
 }
 
-private extension SharedDeliveryCoverage.Fraction {
-    // Summations over many sources can exceed Decimal's precision. Compare the wire
-    // fractions by exact cross multiplication in base 10^9, including zero-backed heads.
-    func compare(_ other: Self) -> ComparisonResult {
-        func limbs(_ value: String) -> [UInt64] {
-            var result = [UInt64](), bytes = value.utf8[...]
-            while !bytes.isEmpty {
-                let chunk = bytes.suffix(9)
-                result.append(chunk.reduce(0) { $0 * 10 + UInt64($1 - 48) })
-                bytes = bytes.dropLast(chunk.count)
-            }
-            return result
-        }
-        func product(_ a: String, _ b: String) -> [UInt64] {
-            let left = limbs(a), right = limbs(b), base: UInt64 = 1_000_000_000
-            var result = Array(repeating: UInt64(0), count: left.count + right.count)
-            for (i, l) in left.enumerated() {
-                var carry: UInt64 = 0
-                for (j, r) in right.enumerated() {
-                    let value = result[i + j] + l * r + carry
-                    result[i + j] = value % base
-                    carry = value / base
-                }
-                result[i + right.count] = carry
-            }
-            while result.last == 0 { result.removeLast() }
-            return result
-        }
-        let left = product(numerator, other.denominator), right = product(other.numerator, denominator)
-        if left.count != right.count { return left.count < right.count ? .orderedAscending : .orderedDescending }
-        if left == right { return .orderedSame }
-        return left.reversed().lexicographicallyPrecedes(right.reversed()) ? .orderedAscending : .orderedDescending
-    }
-}
-
 extension SharedDeliveryCoverage.Need {
-    func validateReservations(expected: [UUID: SharedDeliveryPage.Reservation], sources: [UUID: SharedDeliveryPage.Source]) throws {
+    func validateReservations(expected: [UUID: SharedDeliveryPage.Reservation], sources: [UUID: ReviewedFoodSupply]) throws {
         let rows = reservations ?? []
         guard rows.count == expected.count else { throw ClientError.invalidResponse }
         var seen = Set<UUID>()
@@ -141,7 +106,7 @@ extension SharedDeliveryCoverage.Need {
                   row.backed.compare(row.requested) != .orderedDescending else { throw ClientError.invalidResponse }
             if row.backed.numerator != "0" {
                 guard let allocation = allocations.first(where: { $0.sourceId == row.sourceId }), let covered,
-                      let stock = sources[row.sourceId]?.confirmed?.quantity,
+                      let stock = sources[row.sourceId]?.quantity,
                       let available = DeliveryUnit.convert(stock, to: required.unit), available.valid,
                       row.backed.compare(allocation.amount) != .orderedDescending,
                       row.backed.compare(covered) != .orderedDescending,

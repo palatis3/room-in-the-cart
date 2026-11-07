@@ -213,7 +213,80 @@ final class SharedMealNativeWireTests: XCTestCase {
         XCTAssertTrue(unlinked.needs.allSatisfy { $0.covered?.formatted == "0" && $0.issues.contains("noMatch") })
         do { _ = try await service.deliveryCoverage(reviewed: matched); XCTFail("Displayed stale counts after removing match") }
         catch { XCTAssertEqual(error as? ClientError, .service(status: 409, code: "stale_supply", correlationID: nil, retryAfter: nil)) }
+        try await exercisePantry(service, scope: scope, delivery: removed, source: source, target: target, group: group)
     }
+
+    private func exercisePantry(_ service: HouseholdService, scope: HouseholdBootstrap, delivery: SharedDeliveryPage, source: UUID,
+                                target: SharedDeliveryPage.IngredientMatch, group: UUID) async throws {
+        var pantry = try await service.pantryLots(reviewed: delivery)
+        XCTAssertTrue(pantry.lots.isEmpty)
+        func amount(_ n: Int) -> SharedMealQuantity { .init(amount: .init(numerator: n), unit: "gram", originalLiteral: String(n)) }
+        func operation(_ kind: String, fields: [String: JSONValue]) async throws -> PendingOperation {
+            let window = try await service.replayWindow()
+            return try await service.prepare(envelope: .init(replayWindow: window.id, shopId: delivery.shopId.uuidString.lowercased(),
+                kind: kind, base: .init(shopRevision: delivery.shopRevision, authorityEpoch: delivery.authorityEpoch), body: fields), bootstrap: scope)
+        }
+        func save(_ edit: SharedPantryEdit, preview: SharedPantryObservationPreview? = nil) async throws -> ShopperReceipt {
+            var fields = try edit.body(reviewed: pantry, delivery: delivery)
+            if let preview { fields["previewDigest"] = .string(preview.previewDigest) }
+            let command = try await operation(edit.kind, fields: fields)
+            let first = try await service.executeSharedShop(command)
+            let again = try await service.executeSharedShop(command)
+            XCTAssertEqual(first, again)
+            pantry = try await service.pantryLots(reviewed: delivery)
+            XCTAssertEqual(pantry.pantryRevision, first.pantryRevision)
+            return first
+        }
+        let created = try await save(.create(location: "freezer", storedAt: nil, useFirstAt: nil, name: "Beans", exclusions: []))
+        let lot = try XCTUnwrap(created.lotId)
+        XCTAssertNil(pantry.lots.first?.storedAt)
+        XCTAssertNil(pantry.lots.first?.observation)
+        XCTAssertEqual(pantry.lots.first?.selected, false)
+        let observation = SharedPantryEdit.observe(lot: lot, previous: nil, confirmedAt: Date(), quantity: amount(5))
+        let preview = try await service.previewPantryObservation(observation, reviewed: pantry, delivery: delivery)
+        XCTAssertTrue(preview.needs.isEmpty)
+        let head = try await save(observation, preview: preview)
+        _ = try await save(.select(lot: lot, selected: true))
+        _ = try await save(.match(lot: lot, ingredient: target, matched: true))
+        _ = try await save(.reserve(lot: lot, ingredient: target, group: group, previous: nil, quantity: amount(4)))
+        let full = try await service.foodCoverage(reviewed: pantry, delivery: delivery)
+        let lunch = try XCTUnwrap(full.needs.first(where: { $0.groupIds == [group] }))
+        XCTAssertEqual(lunch.freezer?.formatted, "5")
+        XCTAssertEqual(lunch.delivered?.formatted, "0")
+        XCTAssertEqual(lunch.reservations?.first?.backed.formatted, "4")
+        let corrected = SharedPantryEdit.observe(lot: lot, previous: UUID(uuidString: head.operationId), confirmedAt: Date(), quantity: amount(2))
+        let impact = try await service.previewPantryObservation(corrected, reviewed: pantry, delivery: delivery)
+        let changedLunch = try XCTUnwrap(impact.needs.first(where: { $0.groupIds == [group] }))
+        XCTAssertEqual(changedLunch.beforeCovered?.formatted, "5")
+        XCTAssertEqual(changedLunch.afterCovered?.formatted, "2")
+        let occurrence = try XCTUnwrap(delivery.meals?.first(where: { $0.id == target.occurrenceId }))
+        let cook = SharedCookCopyEdit.save(text: "Keep five grams apart", language: "en", occurrence: occurrence)
+        let cookFields = try cook.body(reviewed: delivery, pantry: pantry)
+        let original = try await operation(cook.kind, fields: cookFields)
+        let first = try await service.executeSharedShop(original)
+        let saved = try await service.cookCopies(occurrence: occurrence, reviewed: delivery)
+        XCTAssertEqual(saved.first?.copyId, first.copyId)
+        XCTAssertEqual(saved.first?.pantryRevision, pantry.pantryRevision)
+        _ = try await save(corrected, preview: impact)
+        let stale = try await operation(cook.kind, fields: cookFields)
+        do { _ = try await service.executeSharedShop(stale); XCTFail("Saved a stale pantry-based cook copy") }
+        catch { XCTAssertEqual(error as? ClientError, .service(status: 409, code: "stale_supply", correlationID: nil, retryAfter: nil)) }
+        let after = try await service.foodCoverage(reviewed: pantry, delivery: delivery)
+        XCTAssertEqual(after.needs.first(where: { $0.groupIds == [group] })?.reservations?.first?.backed.formatted, "2")
+        let stored = try await save(.storeDelivery(source: source, location: "pantry", storedAt: Date(), useFirstAt: nil))
+        XCTAssertEqual(stored.lotId, source)
+        let alias = try XCTUnwrap(pantry.lots.first(where: { $0.id == source }))
+        XCTAssertEqual(alias.observation?.quantity, delivery.sources.first(where: { $0.id == source })?.confirmed?.quantity)
+        _ = try await save(.select(lot: source, selected: true))
+        _ = try await save(.match(lot: source, ingredient: target, matched: true))
+        let joined = try await service.foodCoverage(reviewed: pantry, delivery: delivery)
+        let combined = try XCTUnwrap(joined.needs.first(where: { $0.groupIds == [group] }))
+        XCTAssertEqual(combined.freezer?.formatted, "2")
+        XCTAssertEqual(combined.pantry?.formatted, "7")
+        XCTAssertEqual(combined.delivered?.formatted, "0")
+        XCTAssertEqual(combined.covered?.formatted, "9")
+    }
+
     private func writeCookCopy(_ change: SharedCookCopyEdit, service: HouseholdService, scope: HouseholdBootstrap,
                                page: SharedDeliveryPage) async throws -> ShopperReceipt {
         let window = try await service.replayWindow()

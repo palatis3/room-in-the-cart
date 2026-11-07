@@ -252,6 +252,11 @@ public struct SharedDeliveryCoverage: Decodable, Sendable {
     public let needs: [Need]
 
     public func validate(reviewed page: SharedDeliveryPage) throws {
+        try page.validateReservations()
+        try validate(reviewed: page, supplies: page.sources.map(ReviewedFoodSupply.init))
+    }
+
+    func validate(reviewed page: SharedDeliveryPage, supplies: [ReviewedFoodSupply]) throws {
         guard shopId == page.shopId, authorityEpoch == page.authorityEpoch, shopRevision == page.shopRevision,
               placedRevision == page.placedRevision, supplyRevision == page.supplyRevision else {
             throw ClientError.service(status: 409, code: "stale_supply", correlationID: nil, retryAfter: nil)
@@ -263,15 +268,14 @@ public struct SharedDeliveryCoverage: Decodable, Sendable {
         }
         // Match each row back to the entire sealed requirement, including legacy unsplit group quantities.
         var eligibleSources = [SharedDeliveryPage.IngredientMatch: Set<UUID>]()
-        for source in page.sources where source.confirmed != nil {
-            for target in source.matches ?? [] { eligibleSources[target, default: []].insert(source.id) }
+        for source in supplies where source.quantity != nil {
+            for target in source.matches { eligibleSources[target, default: []].insert(source.id) }
         }
-        let sources = Dictionary(page.sources.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
-        guard sources.count == page.sources.count else { throw ClientError.invalidResponse }
-        try page.validateReservations()
+        let sources = Dictionary(supplies.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        guard sources.count == supplies.count else { throw ClientError.invalidResponse }
         var claims = [DeliveryReservationTarget: [UUID: SharedDeliveryPage.Reservation]]()
-        for source in page.sources {
-            for head in source.reservations ?? [] where head.quantity != nil {
+        for source in supplies {
+            for head in source.reservations where head.quantity != nil {
                 claims[head.target, default: [:]][source.id] = head
             }
         }
