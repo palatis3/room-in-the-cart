@@ -108,7 +108,8 @@ final class ShoppingLedgerTests: XCTestCase {
         XCTAssertNotNil(preview.lines[2].unresolvedReason)
         XCTAssertEqual(preview.lines.map { $0.originalPack?.count }, [2, 2, 2])
         XCTAssertEqual(preview.lines[0].originalPack?.amountPerPack?.amount, try Rational(15))
-        for wording in ["2x15 oz pinto beans", "2 15 oz cans of pinto beans", "2 cans of pinto beans, 15 oz each",
+        for wording in ["2x15 oz pinto beans", "2x15oz pinto beans", "2 packs × 15oz pinto beans",
+                        "2 15-ounce cans of pinto beans", "2 15 oz cans of pinto beans", "2 cans of pinto beans, 15 oz each",
                         "2 latas de pinto beans (15 onzas cada una)"] {
             let item = shop.stageImport(text: wording).lines[0]
             XCTAssertEqual(item.name, "pinto beans", wording)
@@ -117,6 +118,12 @@ final class ShoppingLedgerTests: XCTestCase {
             XCTAssertEqual(item.originalPack?.count, 2, wording)
             XCTAssertEqual(item.originalText, wording)
         }
+        XCTAssertEqual(shop.stageImport(text: "250g Product X15").lines[0].name, "Product X15")
+        XCTAssertNil(shop.stageImport(text: "7UP").lines[0].quantity)
+        let mixed = shop.stageImport(text: "1 1/2kg rice").lines[0]
+        XCTAssertEqual(mixed.name, "rice")
+        XCTAssertEqual(mixed.quantity?.amount, try Rational(3, 2))
+        XCTAssertEqual(mixed.quantity?.unit, .kilogram)
         let ambiguous = shop.stageImport(text: "2 boxes of 3 packs of beans, 15 oz each").lines[0]
         XCTAssertNil(ambiguous.quantity)
         let batch = try shop.commitImport(preview)

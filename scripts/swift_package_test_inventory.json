@@ -30,6 +30,10 @@
     "packLabelAddition": {
       "added": 1,
       "basis": "The compiled CoreDomain test round-tripped reviewed package counts, per-pack measures and original label wording, then undid the batch. Missing inner pack content remained unknown."
+    },
+    "retailerTermsAddition": {
+      "added": 1,
+      "basis": "The compiled and passing CoreDomain regression verifies exact earlier retailer terms, fresh evidence and stale editor handling."
     }
   },
   "packages": {
@@ -209,6 +213,7 @@
       "CoreDomainTests.ShoppingLedgerTests/testRemovingMiddleDuplicatePreservesEquivalence",
       "CoreDomainTests.ShoppingLedgerTests/testRenamedLineRetainsSourceWordsAndCanReceiveNewMatchingSource",
       "CoreDomainTests.ShoppingLedgerTests/testRetailerPreviewStoresScopeAndUnknownFactsWithoutInventingTotals",
+      "CoreDomainTests.ShoppingLedgerTests/testRetailerTermsKeepDisplacedObservationsAndRejectStaleReview",
       "CoreDomainTests.ShoppingLedgerTests/testStagingPreservesOriginalAndUnknownsWithoutMutation",
       "CoreDomainTests.ShoppingLedgerTests/testStalePreviewRejectedEvenWhenCallerErasesDuplicateHints",
       "CoreDomainTests.ShoppingLedgerTests/testTacosLunchAndManualStapleConserveSourcesAcrossRemoval",

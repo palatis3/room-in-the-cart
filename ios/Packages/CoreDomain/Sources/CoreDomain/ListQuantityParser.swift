@@ -9,7 +9,7 @@ public enum ListQuantityParser {
         if let first = tokens.first, let index = first.firstIndex(where: { "xX×".contains($0) }) {
             let left = first[..<index], right = first[first.index(after: index)...]
             if !left.isEmpty, !right.isEmpty, left.utf8.allSatisfy({ (48...57).contains($0) }),
-               (try? number(String(right), allowingWords: false)) != nil {
+               (try? number(separatingUnit(String(right))?.amount ?? String(right), allowingWords: false)) != nil {
                 tokens.replaceSubrange(tokens.startIndex...tokens.startIndex, with: [String(left), "×", String(right)])
             }
         }
@@ -19,12 +19,22 @@ public enum ListQuantityParser {
     public static func takeAmount(from tokens: inout ArraySlice<String>, allowingWords: Bool = false) throws -> Rational {
         guard let first = tokens.first else { throw DomainError.invalidNumber }
         var rest = tokens.dropFirst()
+        if let measured = separatingUnit(first) {
+            let amount = try number(measured.amount, allowingWords: false)
+            tokens[tokens.startIndex] = measured.unit
+            return amount
+        }
         var amount = try number(first.lowercased(), allowingWords: allowingWords)
-        if let next = rest.first, first.utf8.allSatisfy({ (48...57).contains($0) }), isFractionToken(next) {
-            let fraction = try number(next, allowingWords: false)
-            guard fraction < .one else { throw DomainError.invalidNumber }
-            amount = try amount.adding(fraction)
-            rest = rest.dropFirst()
+        if let next = rest.first, first.utf8.allSatisfy({ (48...57).contains($0) }) {
+            let measured = separatingUnit(next)
+            let literal = measured?.amount ?? next
+            if isFractionToken(literal) {
+                let fraction = try number(literal, allowingWords: false)
+                guard fraction < .one else { throw DomainError.invalidNumber }
+                amount = try amount.adding(fraction)
+                if let measured { rest[rest.startIndex] = measured.unit }
+                else { rest = rest.dropFirst() }
+            }
         }
         tokens = rest
         return amount
@@ -141,7 +151,22 @@ public enum ListQuantityParser {
         guard let first = tokens.first, isPackMarker(first) else { return false }
         tokens = tokens.dropFirst()
         if let connector = tokens.first, ["of", "de"].contains(connector.lowercased()) { tokens = tokens.dropFirst() }
+        if containers.contains(first.lowercased()), let separator = tokens.first, ["x", "×"].contains(separator.lowercased()) {
+            tokens = tokens.dropFirst()
+        }
         return true
+    }
+
+    /// Split a printed measure such as "15oz" or "15-ounce" only in an
+    /// amount position. Identifiers and free-text product names remain intact.
+    private static func separatingUnit(_ token: String) -> (amount: String, unit: String)? {
+        guard let start = token.firstIndex(where: \.isLetter), start != token.startIndex else { return nil }
+        let unit = String(token[start...])
+        guard units[unit.lowercased()] != nil else { return nil }
+        var amount = token[..<start]
+        if amount.last == "-" { amount = amount.dropLast() }
+        guard !amount.isEmpty else { return nil }
+        return (String(amount), unit)
     }
 
     private static func isFractionToken(_ token: String) -> Bool {
