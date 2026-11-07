@@ -47,8 +47,10 @@ final class SharedPantryFixtureRecords {
     private var reservations: [String:Object] = [:]
 
     private func scope(shop: String, supply: Int) -> Object {
-        ["shopId":shop,"shopRevision":2,"placedRevision":1,"authorityEpoch":1,"supplyRevision":supply,
-         "pantryRevision":revision,"asOf":ISO8601DateFormatter().string(from: Date())]
+        let timestamp = ISO8601DateFormatter()
+        timestamp.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return ["shopId":shop,"shopRevision":2,"placedRevision":1,"authorityEpoch":1,"supplyRevision":supply,
+                "pantryRevision":revision,"asOf":timestamp.string(from: Date())]
     }
     func page(shop: String, supply: Int) -> Object {
         var result = scope(shop: shop, supply: supply)
