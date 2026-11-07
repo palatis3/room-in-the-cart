@@ -1,6 +1,6 @@
 {
   "remoteCandidate": "5edf6325499459d59f944844419a250212a13b86",
-  "scope": "Local repair verification for three failures on GitHub. The hosted runner used Xcode 26.3; local simulator checks used Xcode 27.1 on iOS 26.2.",
+  "scope": "Local repair verification for three hosted failures and a diagnostic comparison for the shared-cook runtime warning. Hosted Xcode 26.3 and local Xcode 27.1.",
   "recipe": {
     "localCommit": "c9a0e37",
     "hostedJob": "https://github.com/palatis3/room-in-the-cart/actions/runs/42415084567/job/128533766037",
@@ -24,5 +24,12 @@
     "checks": "Five fresh editors each received one tap. Each positive run kept the amount at 3 and dismissed both Done and the keyboard. Each observed target was 44 × 44 points. One deliberate tap inside the field kept the keyboard and Done visible and failed the center check.",
     "localResult": "3 stock-review tests passed, zero warnings. The extra minimum-size assertions passed the five-point test in a separate run.",
     "localVerificationSHA256": "9ae338f13e525aa4a57caa37df5814550382f93a1e7b90d526e9942b43c52027"
+  },
+  "sharedCookReadback": {
+    "hostedJob": "https://github.com/palatis3/room-in-the-cart/actions/runs/42415084575/job/128548155266",
+    "hosted": "Five functional cases passed. The strict checker failed on a runtime issue during the edited cook readback, 0.566 seconds after Play completed. The issue lacked the description attachment and symbolized frames. Session and process logs did not recover the blocking stack.",
+    "local": "A replay on iPhone 17, iOS 26.2 reproduced a warning between Play and Pause. A standalone speech control reached natural completion and reproduced the same 20 framework frames. Audio-session activation alone and voice lookup alone did not reproduce the issue.",
+    "status": "Hosted stack attribution remains open. The runtime warning still fails the gate.",
+    "localVerificationSHA256": "4a02799907dba4d5d8e7a1081fd5e683bcea3f56f8cc0a2614aff09cea50c0c7"
   }
 }
