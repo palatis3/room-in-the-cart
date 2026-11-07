@@ -338,3 +338,31 @@ test('delivery ingredient matches use the sealed occurrence, explicit shopper re
  assert.deepEqual((await read()).sources,[]);
  assert.equal((await send(restore)).status,409);
 });
+
+test('shopper reads protected meal coverage from current confirmed deliveries; a correction changes the result',async()=>{
+ const f=await mealFixture(),endpoint=f.path+'/delivery-evidence/coverage';
+ const send=(kind,body,revision=3)=>call(f.owner,f.base+'/commands','POST',{kind,body,v:1,replayWindow:f.owner.window,
+   clientKey:randomUUID(),shopId:f.shopId,base:{shopRevision:revision,authorityEpoch:1}});
+ const read=async()=>ok(await call(f.owner,endpoint));
+ const quantity=n=>({amount:{numerator:n,denominator:1},unit:'gram',originalLiteral:n+' g'});
+ assert.equal((await call(f.owner,endpoint)).status,409);
+ ok(await send('shop.reportPlaced',{occurredAt:new Date().toISOString()},2));
+ assert.equal((await call(f.planner,endpoint)).status,404);
+ const sourceId=ok(await send('delivery.register',{supplyRevision:0,placedRevision:2,lineId:f.initial.lines[0].lineId,
+   segmentKey:randomUUID(),foodName:'Cannellini beans',exclusionTags:[]})).sourceId;
+ ok(await send('delivery.match',{supplyRevision:1,sourceId,occurrenceId:f.proposal.occurrenceId,mealRevision:2,
+   ingredientId:f.meal.planning.ingredients[0].id,matched:true}));
+ const arrival=randomUUID(),usable=randomUUID();
+ ok(await send('delivery.arrival',{sourceId,supplyRevision:2,observationId:arrival,predecessorId:null,
+   arrivedAt:new Date(Date.now()-10000).toISOString(),received:quantity(600)}));
+ assert.ok((await read()).needs.every(n=>n.covered.numerator==='0' && n.issues.includes('unconfirmed')));
+ const review={sourceId,supplyRevision:3,observationId:usable,predecessorId:null,arrivalObservationId:arrival,
+   confirmedAt:new Date().toISOString(),usable:quantity(500)};
+ ok(await send('delivery.usable',review));
+ const first=await read();
+ assert.deepEqual(first.needs.map(n=>[n.protected,n.covered.numerator,n.missing.numerator]),[[false,'300','100'],[true,'200','0']]);
+ ok(await send('delivery.usable',{...review,supplyRevision:4,observationId:randomUUID(),predecessorId:usable,usable:quantity(150)}));
+ const corrected=await read();assert.equal(corrected.shopRevision,first.shopRevision);assert.equal(corrected.supplyRevision,5);
+ assert.deepEqual(corrected.needs.map(n=>[n.covered.numerator,n.missing.numerator]),[['0','400'],['150','50']]);
+ assert.equal(corrected.needs[1].allocations[0].sourceId,sourceId);
+});

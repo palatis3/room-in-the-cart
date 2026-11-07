@@ -1,4 +1,5 @@
 #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
+import CoreDomain
 import Foundation
 import SwiftUI
 
@@ -35,8 +36,30 @@ final class SharedDeliveryFixtureRecords {
         let plan: [String:Any] = ["groups":[["id":group,"name":"School lunch","servings":["numerator":2,"denominator":1],"protected":true]],
             "ingredients":[["id":ingredient,"name":"Tortillas","quantity":quantity,"groupIds":[group],"exclusions":["sesame"]]]]
         let meal: [String:Any] = ["title":"Lunch wraps","day":"2026-11-08","kind":"lunch","portions":2,"protected":true,"planning":plan]
-        return ["shopId":shop, "meals":[["occurrenceId":occurrence,"revision":1,"meal":meal]], "placedRevision":1, "shopRevision":2, "authorityEpoch":1, "supplyRevision":revision,
+        return ["shopId":shop, "coverageAvailable":true,"meals":[["occurrenceId":occurrence,"revision":1,"meal":meal]], "placedRevision":1, "shopRevision":2, "authorityEpoch":1, "supplyRevision":revision,
          "lines":[["lineId":line,"name":"Ordered wraps"]], "sources":source.map { [$0] } ?? [], "nextCursor":NSNull()]
+    }
+    func coverage(shop: String) throws -> [String:Any] {
+        let required: [String:Any] = ["amount":["numerator":2,"denominator":1],"unit":"count","originalLiteral":"2"]
+        let confirmed = source?["confirmed"] as? [String:Any]
+        let q = confirmed?["quantity"] as? [String:Any]
+        let amount = q?["amount"] as? [String:Int]
+        let target = try Rational(2)
+        var covered = Rational.zero
+        var allocations = [[String:Any]]()
+        func fraction(_ value: Rational) -> [String:String] {
+            ["numerator":String(value.numerator),"denominator":String(value.denominator)]
+        }
+        if !matches.isEmpty, q?["unit"] as? String == "count", let amount,
+           let numerator = amount["numerator"], let denominator = amount["denominator"], let id = source?["sourceId"] {
+            covered = min(target, try Rational(Int64(numerator), Int64(denominator)))
+            if covered > .zero { allocations = [["sourceId":id, "amount":fraction(covered)]] }
+        }
+        let need: [String:Any] = ["occurrenceId":occurrence,"mealRevision":1,"ingredientId":ingredient,"groupIds":[group],
+            "protected":true,"required":required,"covered":fraction(covered),"missing":fraction(try target.subtracting(covered)),"allocations":allocations,
+            "issues":matches.isEmpty ? ["noMatch"] : []]
+        return ["shopId":shop,"shopRevision":2,"placedRevision":1,"authorityEpoch":1,"supplyRevision":revision,
+                "asOf":"2026-11-07T12:00:00Z","unplannedOccurrenceIds":[],"needs":[need]]
     }
     func record(shop: String, command: [String:Any]) throws -> [String:Any] {
         guard let key = command["clientKey"] as? String, let kind = command["kind"] as? String,

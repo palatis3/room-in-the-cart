@@ -171,6 +171,13 @@ struct SharedShopTransfer: Equatable {
             await handle(error, start: start)
         }
     }
+    func coverage(reviewed page: SharedDeliveryPage) async throws -> SharedDeliveryCoverage {
+        guard canReadDelivery, deliveryRecord == page else { throw ClientError.accessEnded }
+        let start = generation
+        let result = try await service.deliveryCoverage(reviewed: page)
+        guard canReadDelivery, start == generation, deliveryRecord == page else { throw ClientError.cancelled }
+        return result
+    }
     var pendingDelivery: Bool {
         guard let pending, let envelope = try? JSONDecoder().decode(CommandEnvelope.self, from: pending.bytes) else { return false }
         return envelope.kind.hasPrefix("delivery.")

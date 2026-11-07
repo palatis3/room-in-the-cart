@@ -1,3 +1,4 @@
+import {deliveryCoverage,type SealedMeal} from './delivery-coverage.js';
 import { z } from 'zod';
 import type { Context, Shop } from './repository.js';
 import { deliveryMatchBody, deliverySourceBody, deliveryArrivalBody, deliveryUsableBody } from './recovery-contracts.js';
@@ -43,6 +44,27 @@ const heads = `SELECT s.*,matches.current AS matches,a.body AS arrival,a.recorde
     AND shop_id=s.shop_id AND source_id=s.source_id AND kind='usable' ORDER BY supply_revision DESC LIMIT 1) u ON true
   WHERE s.household_id=$1 AND s.shop_id=$2`;
 
+function sourceEvidence(row:SourceRow, asOf:string) {
+  // Each newly reviewed physical identity is distinct until deliberately mapped.
+  const source = {id:row.source_id, foodId:row.source_id, identityRevision:1};
+  const a=row.arrival, u=row.usable;
+  const lot=confirmedLot(source,
+    a && row.arrival_recorded ? {...a,id:a.observationId,identityRevision:1,recordedAt:row.arrival_recorded.toISOString()} : undefined,
+    u && row.usable_recorded ? {...u,id:u.observationId,identityRevision:1,recordedAt:row.usable_recorded.toISOString()} : undefined, asOf);
+  return {sourceId:source.id, foodId:source.foodId, lineId:row.line_id, segmentKey:row.segment_key, foodName:row.food_name,
+    exclusionTags:row.exclusion_tags, matches:row.matches, arrival:a, usable:u, confirmed:lot??null};
+}
+
+export async function readDeliveryCoverage(ctx:Context,shop:Shop) {
+  requirePlaced(shop,true);
+  const scope=[ctx.householdId,shop.shop_id];
+  const meals=await ctx.db.query<SealedMeal>(sealedMeals+" ORDER BY m.meal->>'day',m.occurrence_id",[...scope,shop.placed_revision]);
+  const sources=await ctx.db.query<SourceRow>(heads+" AND jsonb_array_length(matches.current)>0 ORDER BY s.source_id",scope);
+  const asOf=ctx.now.toISOString();
+  return {shopId:shop.shop_id,shopRevision:shop.revision,placedRevision:shop.placed_revision,authorityEpoch:shop.authority_epoch,
+    supplyRevision:shop.supply_revision,asOf,...deliveryCoverage(meals.rows,sources.rows.map(row=>sourceEvidence(row,asOf)))};
+}
+
 export async function readDelivery(ctx: Context, shop: Shop, cursor: string|null) {
   requirePlaced(shop, true);
   const lines = cursor === null ? (await ctx.db.query(`SELECT lower(line->>'lineId') AS "lineId", line->>'originalItem' AS name
@@ -55,18 +77,9 @@ export async function readDelivery(ctx: Context, shop: Shop, cursor: string|null
   const result = await ctx.db.query<SourceRow>(heads+' AND ($3::uuid IS NULL OR s.source_id>$3) ORDER BY s.source_id LIMIT 51',
     [ctx.householdId,shop.shop_id,cursor]);
   const asOf = ctx.now.toISOString();
-  const sources = result.rows.slice(0,50).map(row => {
-    // Each newly reviewed physical identity is distinct until deliberately mapped.
-    const source = {id:row.source_id, foodId:row.source_id, identityRevision:1};
-    const a=row.arrival, u=row.usable;
-    const lot=confirmedLot(source,
-      a && row.arrival_recorded ? {...a,id:a.observationId,identityRevision:1,recordedAt:row.arrival_recorded.toISOString()} : undefined,
-      u && row.usable_recorded ? {...u,id:u.observationId,identityRevision:1,recordedAt:row.usable_recorded.toISOString()} : undefined, asOf);
-    return {sourceId:source.id, foodId:source.foodId, lineId:row.line_id, segmentKey:row.segment_key, foodName:row.food_name,
-      exclusionTags:row.exclusion_tags, matches:row.matches, arrival:a, usable:u, confirmed:lot??null};
-  });
+  const sources = result.rows.slice(0,50).map(row=>sourceEvidence(row,asOf));
   return {shopId:shop.shop_id, placedRevision:shop.placed_revision, shopRevision:shop.revision, authorityEpoch:shop.authority_epoch,
-    supplyRevision:shop.supply_revision, asOf, lines, meals, sources, nextCursor:result.rows.length>50?sources.at(-1)!.sourceId:null};
+    supplyRevision:shop.supply_revision, asOf, coverageAvailable:true, lines, meals, sources, nextCursor:result.rows.length>50?sources.at(-1)!.sourceId:null};
 }
 
 // Called in HouseholdRepository's household-locked command transaction, after device,

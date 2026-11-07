@@ -48,3 +48,44 @@ extension HouseholdClientTests {
         catch { XCTAssertEqual(error as? ClientError, .invalidResponse) }
     }
 }
+
+extension HouseholdClientTests {
+    func testCoverageRequiresAllSealedRowsAndCurrentReviewedPhysicalSources() throws {
+        let shop = UUID().uuidString, occurrence = UUID().uuidString, ingredient = UUID().uuidString
+        let source = UUID().uuidString, line = UUID().uuidString, arrival = UUID().uuidString, usable = UUID().uuidString
+        let quantity: [String:Any] = ["amount":["numerator":2,"denominator":1],"unit":"count","originalLiteral":"2"]
+        let target: [String:Any] = ["occurrenceId":occurrence,"mealRevision":1,"ingredientId":ingredient]
+        let plan: [String:Any] = ["groups":[],"ingredients":[["id":ingredient,"name":"Wraps","quantity":quantity,"exclusions":[],"groupIds":[]]]]
+        let meal: [String:Any] = ["title":"Wraps","day":"2026-11-07","kind":"dinner","portions":2,"protected":false,"planning":plan]
+        let physical: [String:Any] = ["sourceId":source,"foodId":source,"lineId":line,"segmentKey":source,"foodName":"Wraps",
+            "exclusionTags":[],"matches":[target],"arrival":["observationId":arrival,"sourceId":source,"received":quantity],
+            "usable":["observationId":usable,"sourceId":source,"arrivalObservationId":arrival,"confirmedAt":"2026-11-07T12:00:00Z","usable":quantity],
+            "confirmed":["sourceId":source,"foodId":source,"quantity":quantity,"arrivalId":arrival,"usableId":usable]]
+        let revisions: [String:Any] = ["shopId":shop,"shopRevision":2,"placedRevision":1,"authorityEpoch":1,"supplyRevision":7]
+        var pageJSON = revisions
+        pageJSON["meals"] = [["occurrenceId":occurrence,"revision":1,"meal":meal]]
+        pageJSON["sources"] = [physical]; pageJSON["lines"] = [["lineId":line,"name":"Wraps"]]
+        let page = try JSONDecoder().decode(SharedDeliveryPage.self, from: JSONSerialization.data(withJSONObject: pageJSON))
+        let two = ["numerator":"2","denominator":"1"]
+        var row = target
+        row["groupIds"] = []; row["protected"] = false; row["required"] = quantity
+        row["covered"] = two; row["missing"] = ["numerator":"0","denominator":"1"]; row["issues"] = []
+        row["allocations"] = [["sourceId":source,"amount":two]]
+        func validate(_ rows: [[String:Any]], revision: Int = 7) throws {
+            var payload = revisions
+            payload["asOf"] = "2026-11-07T12:00:00Z"; payload["unplannedOccurrenceIds"] = []
+            payload["needs"] = rows; payload["supplyRevision"] = revision
+            try JSONDecoder().decode(SharedDeliveryCoverage.self, from: JSONSerialization.data(withJSONObject: payload)).validate(reviewed: page)
+        }
+        try validate([row])
+        XCTAssertThrowsError(try validate([]))
+        XCTAssertThrowsError(try validate([row,row]))
+        XCTAssertThrowsError(try validate([row], revision: 6))
+        var malformed = row
+        malformed["covered"] = ["numerator":"2","denominator":"0"]
+        XCTAssertThrowsError(try validate([malformed]))
+        malformed = row
+        malformed["allocations"] = [["sourceId":UUID().uuidString,"amount":two]]
+        XCTAssertThrowsError(try validate([malformed]))
+    }
+}

@@ -411,6 +411,16 @@ public actor HouseholdService {
         }
         return record
     }
+    public func deliveryCoverage(reviewed page: SharedDeliveryPage) async throws -> SharedDeliveryCoverage {
+        guard page.coverageAvailable == true else { throw ClientError.configuration }
+        let id = page.shopId.uuidString.lowercased(), start = generation
+        try await authorizeShopper(shopID: id)
+        guard start == generation else { throw ClientError.cancelled }
+        let result: SharedDeliveryCoverage = try await perform("shops/\(id)/delivery-evidence/coverage", method: "GET")
+        guard start == generation else { throw ClientError.cancelled }
+        try result.validate(reviewed: page)
+        return result
+    }
     public func shopperFinancialEvidence(shopID: String) async throws -> [ShopperFinancialEntry] {
         let start = generation
         try await authorizeShopper(shopID: shopID)

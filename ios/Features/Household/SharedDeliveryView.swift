@@ -23,7 +23,7 @@ private enum DeliveryForm: Identifiable {
     }
 }
 
-private func deliveryQuantityText(_ value: SharedMealQuantity?) -> String {
+func deliveryQuantityText(_ value: SharedMealQuantity?) -> String {
     guard let value, let unit = UnitOfMeasure(rawValue: value.unit),
           let amount = try? Rational(Int64(value.amount.numerator), Int64(value.amount.denominator)) else { return dinnerText("Quantity unresolved") }
     return dinnerQuantity(.init(amount: amount, unit: unit, originalLiteral: value.originalLiteral))
@@ -34,6 +34,7 @@ struct SharedDeliveryView: View {
     let shopID: String
     @State private var form: DeliveryForm?
     @State private var choosingLine = false
+    @State private var showingCoverage = false
     @State private var matchingSource: SharedDeliveryPage.Source?
 
     var body: some View {
@@ -42,6 +43,9 @@ struct SharedDeliveryView: View {
                 if let page = model.deliveryRecord, page.shopId == UUID(uuidString: shopID) {
                     if model.shop?.phase == "placed", model.pending == nil, !page.lines.isEmpty {
                         Button(ht("Add a delivery")) { choosingLine = true }
+                    }
+                    if page.coverageAvailable == true, page.meals?.isEmpty == false {
+                        Button(ht("Delivered food by meal")) { showingCoverage = true }
                     }
                     if page.sources.isEmpty { Text(ht("No deliveries recorded yet.")) }
                     ForEach(page.sources) { source in
@@ -81,6 +85,11 @@ struct SharedDeliveryView: View {
         .sheet(isPresented: $choosingLine) {
             if model.canReadDelivery, model.scope.shopId == shopID, let page = model.deliveryRecord {
                 SharedDeliveryRegistration(model: model, page: page)
+            }
+        }
+        .sheet(isPresented: $showingCoverage) {
+            if model.canReadDelivery, model.scope.shopId == shopID, let page = model.deliveryRecord {
+                SharedDeliveryCoverageView(model: model, page: page)
             }
         }
         .sheet(item: $matchingSource) { source in

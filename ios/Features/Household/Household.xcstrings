@@ -12921,6 +12921,227 @@
           }
         }
       }
+    },
+    "Delivered food by meal": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delivered food by meal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimentos entregados por comida"
+          }
+        }
+      }
+    },
+    "Checked at": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checked at"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hora de revisión"
+          }
+        }
+      }
+    },
+    "This meal has no recorded ingredient requirements.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This meal has no recorded ingredient requirements."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se registraron los ingredientes necesarios para esta comida."
+          }
+        }
+      }
+    },
+    "Covered by deliveries": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Covered by deliveries"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cubierto por las entregas"
+          }
+        }
+      }
+    },
+    "The required amount is unknown.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The required amount is unknown."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se desconoce la cantidad necesaria."
+          }
+        }
+      }
+    },
+    "The total is shared. Amounts for each group are unresolved.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The total is shared. Amounts for each group are unresolved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El total se comparte. Aún no se sabe cuánto le corresponde a cada grupo."
+          }
+        }
+      }
+    },
+    "No delivery has been matched to this ingredient.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No delivery has been matched to this ingredient."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ninguna entrega está vinculada a este ingrediente."
+          }
+        }
+      }
+    },
+    "A matched delivery is waiting for a usable count.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A matched delivery is waiting for a usable count."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falta confirmar la cantidad utilizable de una entrega vinculada."
+          }
+        }
+      }
+    },
+    "A matched delivery conflicts with a recorded exclusion.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A matched delivery conflicts with a recorded exclusion."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una entrega vinculada contiene un alimento excluido."
+          }
+        }
+      }
+    },
+    "A matched delivery uses an incompatible unit.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A matched delivery uses an incompatible unit."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una entrega vinculada usa una unidad incompatible."
+          }
+        }
+      }
+    },
+    "Matched food is held for a protected group whose quantity is unknown.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Matched food is held for a protected group whose quantity is unknown."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El alimento vinculado se reserva para un grupo protegido cuya cantidad se desconoce."
+          }
+        }
+      }
+    },
+    "These counts use confirmed deliveries for this order. Protected portions are counted first.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These counts use confirmed deliveries for this order. Protected portions are counted first."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estas cantidades se basan en las entregas confirmadas de esta compra. Primero se cuentan las porciones protegidas."
+          }
+        }
+      }
+    },
+    "Uncovered by deliveries": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uncovered by deliveries"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin cubrir por las entregas"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

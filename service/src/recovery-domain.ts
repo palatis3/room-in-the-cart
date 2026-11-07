@@ -1,3 +1,4 @@
+import {type Rat,zero,add,sub,cmp,min,wire,amount,inUnit,dimension} from './physical-quantity.js';
 import {createHash} from 'node:crypto';
 import {recoveryBasisSchema,recoveryPreviewSchema,type RecoveryBasis,type RecoveryMeal,type RecoveryNeed,type Quantity} from './recovery-contracts.js';
 
@@ -7,25 +8,9 @@ function requireThat(value:unknown,code='invalid_basis'):asserts value {if(!valu
 export function recoveryDigest(value:unknown):string {return createHash('sha256').update(canonical(value)).digest('hex');}
 function canonical(v:unknown):string {if(v===null||typeof v!=='object')return JSON.stringify(v);if(Array.isArray(v))return '['+v.map(canonical).join(',')+']';return '{'+Object.entries(v).sort(([a],[b])=>a<b?-1:a>b?1:0).map(([k,x])=>JSON.stringify(k)+':'+canonical(x)).join(',')+'}';}
 const equal=(a:unknown,b:unknown)=>recoveryDigest(a)===recoveryDigest(b);
-type Rat={n:bigint;d:bigint};
-const zero:Rat={n:0n,d:1n};
-function rat(n:bigint,d:bigint):Rat {let a=n<0n?-n:n,b=d;while(b){const c=a%b;a=b;b=c;}return{n:n/(a||1n),d:d/(a||1n)};}
-const add=(a:Rat,b:Rat)=>rat(a.n*b.d+b.n*a.d,a.d*b.d);
-const sub=(a:Rat,b:Rat)=>rat(a.n*b.d-b.n*a.d,a.d*b.d);
-const cmp=(a:Rat,b:Rat)=>a.n*b.d-b.n*a.d;
-const min=(a:Rat,b:Rat)=>cmp(a,b)<0n?a:b;
-const wire=(a:Rat)=>({numerator:a.n.toString(),denominator:a.d.toString()});
-const units:Record<Quantity['unit'],{dimension:string;n:bigint;d:bigint}>={
- count:{dimension:'count',n:1n,d:1n},gram:{dimension:'mass',n:1n,d:1n},kilogram:{dimension:'mass',n:1000n,d:1n},
- ounce:{dimension:'mass',n:45359237n,d:1600000n},pound:{dimension:'mass',n:45359237n,d:100000n},
- milliliter:{dimension:'volume',n:1n,d:1n},liter:{dimension:'volume',n:1000n,d:1n},fluidOunce:{dimension:'volume',n:473176473n,d:16000000n},cup:{dimension:'volume',n:473176473n,d:2000000n},
-};
-function amount(q:Quantity):Rat {const u=units[q.unit];return rat(BigInt(q.amount.numerator)*u.n,BigInt(q.amount.denominator)*u.d);}
 export function fitsReceived(usable: Quantity, received: Quantity): boolean {
   return dimension(usable) === dimension(received) && cmp(amount(usable), amount(received)) <= 0n;
 }
-function inUnit(a:Rat,unit:Quantity['unit']){const u=units[unit];return wire(rat(a.n*u.d,a.d*u.n));}
-const dimension=(q:Quantity)=>units[q.unit].dimension;
 const instant=(s:string)=>Date.parse(s);
 function unique(values:string[]){requireThat(new Set(values).size===values.length);}
 function scoped(b:RecoveryBasis,row:{householdId:string;shopId:string}){requireThat(row.householdId===b.householdId&&row.shopId===b.shopId,'wrong_scope');}
@@ -84,18 +69,21 @@ function supply(b:RecoveryBasis,asOf:string):CanonicalLot[]{
 }
 export function canonicalSupply(input:unknown,asOf:string){requireThat(Number.isFinite(instant(asOf)),'invalid_time');return supply(validateBasis(input),asOf);}
 // Compare saved text without rewriting it or inferring food identity, synonyms,
-// allergen families, translations, or negation. Token-bounded phrase matching
+// allergen families or translations. Token-bounded phrase matching
 // mirrors native permittedProduct; tags remain explicit evidence, not legacy IDs.
 function exclusionTerm(value: string): string {
   return value.normalize('NFKD').replace(/\p{M}/gu, '').toLocaleLowerCase('en')
     .split(/[^\p{L}\p{N}]+/u).filter(Boolean).join(' ');
 }
-function exclusionConflict(need: RecoveryNeed, food: RecoveryBasis['foods'][number]): boolean {
+export function exclusionConflict(need: Pick<RecoveryNeed,'name'|'exclusions'>, food: {name:string;exclusionTags:string[]}): boolean {
   const labels = [need.name, food.name].map(value => ` ${exclusionTerm(value)} `);
   const tags = food.exclusionTags.map(exclusionTerm);
   return need.exclusions.some(value => {
-    const term = exclusionTerm(value);
-    return term.length > 0 && (tags.includes(term) || labels.some(label => label.includes(` ${term} `)));
+    const literal = exclusionTerm(value);
+    // A shopper can enter either "sesame" or "no sesame" ("sin sésamo").
+    // Read the prohibition only on the saved restriction, never as a safety claim on a product.
+    const term = literal.replace(/^(?:no|without|sin) /u, '');
+    return term.length > 0 && (tags.includes(term) || tags.includes(literal) || labels.some(label => label.includes(` ${term} `)));
   });
 }
 interface Allocation {needId:string;sourceId:string;amount:Rat}

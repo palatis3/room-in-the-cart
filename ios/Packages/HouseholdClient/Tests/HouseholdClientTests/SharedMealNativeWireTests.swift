@@ -116,10 +116,20 @@ final class SharedMealNativeWireTests: XCTestCase {
         let matched = try await service.deliveryEvidence(shopID: shopID)
         XCTAssertEqual(matched.sources.first?.matches, [target])
         XCTAssertEqual(matched.sources.first?.confirmed, corrected.sources.first?.confirmed)
+        let coverage = try await service.deliveryCoverage(reviewed: matched)
+        let lunch = try XCTUnwrap(coverage.needs.first(where: { $0.protected }))
+        let dinner = try XCTUnwrap(coverage.needs.first(where: { !$0.protected }))
+        XCTAssertEqual(lunch.covered?.formatted, "7"); XCTAssertEqual(lunch.missing?.formatted, "193")
+        XCTAssertEqual(lunch.allocations.map(\.sourceId), [source])
+        XCTAssertEqual(dinner.covered?.formatted, "0")
         _ = try await save(.match(source: source, ingredient: target, matched: false), page: matched)
         let removed = try await service.deliveryEvidence(shopID: shopID)
         XCTAssertEqual(removed.sources.first?.matches, [])
         XCTAssertEqual(removed.supplyRevision, 6)
+        let unlinked = try await service.deliveryCoverage(reviewed: removed)
+        XCTAssertTrue(unlinked.needs.allSatisfy { $0.covered?.formatted == "0" && $0.issues.contains("noMatch") })
+        do { _ = try await service.deliveryCoverage(reviewed: matched); XCTFail("Displayed stale counts after removing match") }
+        catch { XCTAssertEqual(error as? ClientError, .service(status: 409, code: "stale_supply", correlationID: nil, retryAfter: nil)) }
     }
 
 }

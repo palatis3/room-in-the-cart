@@ -2,6 +2,12 @@
 
 Updated November 7, 2026 UTC. The owner resumed and explicitly approved the reviewed hosted staging update; the full first-version goal is active and release acceptance remains incomplete. Historical snapshots are preserved in [the handoff archive](CURRENT-HANDOFF-HISTORY-20261106.md).
 
+## Delivered food by meal, November 7
+
+An assigned shopper can open **What came home → Delivered food by meal** to see recorded ingredient requirements, confirmed coverage, the missing amount and the physical sources used for each group. Corrections and removed matches update the next read. Protected groups are counted first. One delivery matched to multiple meals retains one usable count. Incomplete group splits stay together, and unknown protected quantities hold matched food. This covers deliveries for the placed order. Shared fallback selection, preparation deadlines, non-delivery stock, durable reservations and publishing the repaired cook handoff remain open.
+
+The real iPhone client’s HTTPS test against PostgreSQL checked scoped reads, a protected lunch receiving seven grams, removal of the match, and rejection of an earlier revision. All 181 PostgreSQL cases passed. The service unit run had 422 passes and one separately exercised database-only skip. Its allocation regression compared the result with every possible assignment in each of 512 three-lot/three-meal matching patterns. The English and Spanish iPhone 17 Pro walkthroughs passed with zero skips or runtime warnings. The unsigned Release device build passed its bundle check. The service and iPhone changes are local pending CI and staging deployment.
+
 ## Protected meal quantities and GitHub share-sheet investigation, November 7
 
 A shared meal marked protected now preserves each named group, its servings, and its exact ingredient quantities when a planner proposes changes or the shopper edits directly. A quantity entered for an ordinary group previously allowed a reduction when the amount reserved for a protected group was unknown. The service now preserves the ingredient total in that case. A title-only edit remains possible. The whole-meal regression reproduced on the previous service. After the fix all 180 PostgreSQL integration tests passed.

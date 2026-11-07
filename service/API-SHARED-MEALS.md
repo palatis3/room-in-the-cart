@@ -48,3 +48,11 @@ Quantities use the shared meal amount, unit and original literal. A positive or 
 
 
 The first delivery page includes the meal revisions referenced by the placed snapshot. Each source lists its current reviewed ingredient matches. A physical segment may match ingredients in multiple meals and an ingredient may have multiple sources. Each review binds one pair. The stored decision identifies food only. Quantity coverage requires a separate allocation that accounts for every protected portion and uses each physical quantity only once. Matching and removing a match leave quantities and prices intact. Erasing a source or a meal revision also removes its matches and prevents replay of its old match receipts.
+
+## Delivered food by meal
+
+The assigned shopper may read `GET /v1/households/{householdId}/shops/{shopId}/delivery-evidence/coverage` for a placed or closed order. The delivery page advertises `coverageAvailable`. Read the projection against the same shop, placed snapshot, authority and supply revisions. Refresh the delivery page if any revision changes. This read computes a projection from the sealed meal references, current reviewed ingredient matches and current confirmed usable quantities. It records no reservation or change to checkout.
+
+For each ingredient the result shows the required, covered and missing quantities and how much each physical source supplied, in the ingredient's unit. Computed rational numerators and denominators are decimal strings. Named groups with exact bindings are separate rows. An incomplete split keeps the original total together and reports the unresolved group split. A protected group with an unknown quantity holds its matched food until the shopper can resolve the amount. Meals without recorded ingredients are returned in `unplannedOccurrenceIds`.
+
+Coverage assigns protected needs first, then follows saved meal dates. It can move an earlier group's coverage between its approved sources to fill a later need while preserving the earlier total. A correction to received or usable food, or the removal of an ingredient match, takes effect on the next read. This calculation covers recorded delivery requirements for this order. Private pantry stock, preparation deadlines, replacement decisions and cook instructions require their own reviewed facts.

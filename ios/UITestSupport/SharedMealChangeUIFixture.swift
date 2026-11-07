@@ -57,8 +57,9 @@ private final class S17FixtureServer: @unchecked Sendable {
                 "verifiedAt": format.string(from: now), "validUntil": end,
                 "seats": [["userID": Self.shopper, "displayName": "Fixture shopper", "isAdult": true]]])
         }
-        if let deliveries, path.hasSuffix("/delivery-evidence") || path.hasSuffix("/commands") {
+        if let deliveries, path.hasSuffix("/delivery-evidence") || path.hasSuffix("/delivery-evidence/coverage") || path.hasSuffix("/commands") {
             guard shopper, request.value(forHTTPHeaderField: "X-Device-Token") == "shopper-token" else { return try denied() }
+            if path.hasSuffix("/delivery-evidence/coverage") { return try json(deliveries.coverage(shop: Self.shop)) }
             if path.hasSuffix("/delivery-evidence") { return try json(deliveries.page(shop: Self.shop)) }
             return try json(deliveries.record(shop: Self.shop, command: input))
         }

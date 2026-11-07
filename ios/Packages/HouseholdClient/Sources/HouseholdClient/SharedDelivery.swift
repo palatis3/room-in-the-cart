@@ -64,6 +64,7 @@ public struct SharedDeliveryPage: Decodable, Equatable, Sendable {
     public let shopRevision: Int
     public let authorityEpoch: Int
     public let supplyRevision: Int
+    public let coverageAvailable: Bool?
     public let meals: [SharedMealOccurrence]?
     public let lines: [Line]
     public internal(set) var sources: [Source]
@@ -118,5 +119,99 @@ public enum SharedDeliveryEdit: Equatable, Sendable {
             body["arrivalObservationId"] = id(arrival); body["confirmedAt"] = .string(formatter.string(from: date)); body["usable"] = try quantity(usable)
         }
         return body
+    }
+}
+
+public struct SharedDeliveryCoverage: Decodable, Sendable {
+    /// The service keeps exact conversion and summation results as unbounded integers.
+    public struct Fraction: Decodable, Sendable {
+        public let numerator: String
+        public let denominator: String
+        public var formatted: String { denominator == "1" ? numerator : numerator + "/" + denominator }
+
+        var valid: Bool {
+            func digits(_ s: String) -> Bool {
+                !s.isEmpty && (s.count == 1 || s.first != "0") && s.utf8.allSatisfy { (48...57).contains($0) }
+            }
+            return digits(numerator) && digits(denominator) && denominator != "0"
+        }
+    }
+    public struct Allocation: Decodable, Sendable {
+        public let sourceId: UUID
+        public let amount: Fraction
+    }
+    public struct Need: Decodable, Sendable {
+        public let occurrenceId: UUID
+        public let mealRevision: Int
+        public let ingredientId: UUID
+        public let groupIds: [UUID]
+        public let protected: Bool
+        public let required: SharedMealQuantity?
+        public let covered: Fraction?
+        public let missing: Fraction?
+        public let allocations: [Allocation]
+        public let issues: [String]
+
+        fileprivate func validateAmounts(eligible: Set<UUID>) throws {
+            if required == nil {
+                guard covered == nil, missing == nil, allocations.isEmpty else { throw ClientError.invalidResponse }
+            } else {
+                guard covered?.valid == true, missing?.valid == true else { throw ClientError.invalidResponse }
+            }
+            var used = Set<UUID>()
+            for allocation in allocations {
+                guard allocation.amount.valid, allocation.amount.numerator != "0",
+                      eligible.contains(allocation.sourceId), used.insert(allocation.sourceId).inserted else { throw ClientError.invalidResponse }
+            }
+        }
+    }
+    public let shopId: UUID
+    public let shopRevision: Int
+    public let placedRevision: Int
+    public let authorityEpoch: Int
+    public let supplyRevision: Int
+    public let asOf: String
+    public let unplannedOccurrenceIds: [UUID]
+    public let needs: [Need]
+
+    func validate(reviewed page: SharedDeliveryPage) throws {
+        guard shopId == page.shopId, authorityEpoch == page.authorityEpoch, shopRevision == page.shopRevision,
+              placedRevision == page.placedRevision, supplyRevision == page.supplyRevision else {
+            throw ClientError.service(status: 409, code: "stale_supply", correlationID: nil, retryAfter: nil)
+        }
+        guard let meals = page.meals else { throw ClientError.invalidResponse }
+        let unplanned = meals.filter { $0.meal.planning?.ingredients.isEmpty != false }.map(\.id)
+        guard Set(unplanned) == Set(unplannedOccurrenceIds), unplanned.count == unplannedOccurrenceIds.count else {
+            throw ClientError.invalidResponse
+        }
+        // Match each row back to the entire sealed requirement, including legacy unsplit group quantities.
+        var eligibleSources = [SharedDeliveryPage.IngredientMatch: Set<UUID>]()
+        for source in page.sources where source.confirmed != nil {
+            for target in source.matches ?? [] { eligibleSources[target, default: []].insert(source.id) }
+        }
+        var remaining = Dictionary(grouping: needs, by: { $0.occurrenceId })
+        for occurrence in meals {
+            let rows = remaining.removeValue(forKey: occurrence.id) ?? []
+            var byIngredient = Dictionary(grouping: rows, by: { $0.ingredientId })
+            for ingredient in occurrence.meal.planning?.ingredients ?? [] {
+                let bindings = (occurrence.meal.planning?.bindings ?? []).filter { $0.ingredientId == ingredient.id }
+                var parts: [([UUID], SharedMealQuantity?)] = [ (ingredient.groupIds, ingredient.quantity) ]
+                if !bindings.isEmpty && bindings.count == ingredient.groupIds.count {
+                    parts = bindings.map { ([$0.groupId], $0.quantity) }
+                }
+                let target = SharedDeliveryPage.IngredientMatch(occurrence: occurrence, ingredient: ingredient)
+                for row in byIngredient.removeValue(forKey: ingredient.id) ?? [] {
+                    let protectedGroups = occurrence.meal.planning?.groups.filter { row.groupIds.contains($0.id) && $0.protected } ?? []
+                    guard let index = parts.firstIndex(where: { $0.0 == row.groupIds && $0.1 == row.required }),
+                          row.mealRevision == occurrence.revision,
+                          row.protected == (occurrence.meal.protected || !protectedGroups.isEmpty) else { throw ClientError.invalidResponse }
+                    try row.validateAmounts(eligible: eligibleSources[target] ?? [])
+                    parts.remove(at: index)
+                }
+                guard parts.isEmpty else { throw ClientError.invalidResponse }
+            }
+            guard byIngredient.isEmpty else { throw ClientError.invalidResponse }
+        }
+        guard remaining.isEmpty else { throw ClientError.invalidResponse }
     }
 }

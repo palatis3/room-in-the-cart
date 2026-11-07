@@ -63,6 +63,14 @@ import XCTest
         XCTAssertTrue(exclusions.waitForExistence(timeout: 5))
         XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", "School lunch")).firstMatch.exists)
         tap(app.buttons["Match this ingredient"])
+        tap(app.buttons["Delivered food by meal"])
+        let covered = app.descendants(matching: .any).matching(NSPredicate(format:
+            "label CONTAINS %@ AND (label CONTAINS %@ OR value CONTAINS %@)", "Covered by deliveries", "2 units", "2 units")).firstMatch
+        XCTAssertTrue(covered.waitForExistence(timeout: 8))
+        let missing = app.descendants(matching: .any).matching(NSPredicate(format:
+            "label CONTAINS %@ AND (label CONTAINS %@ OR value CONTAINS %@)", "Uncovered by deliveries", "0 units", "0 units")).firstMatch
+        XCTAssertTrue(missing.exists)
+        tap(app.buttons["Done"])
         tap(openMatches)
         tap(ingredient)
         tap(app.buttons["Remove ingredient match"])
@@ -72,6 +80,9 @@ import XCTest
     }
     func testSpanishShopperDistinguishesFractionalUsableFoodZeroAndUnknown() {
         launch("es", locale: "es_US")
+        tap(app.buttons["Alimentos entregados por comida"])
+        XCTAssertTrue(app.staticTexts["Ninguna entrega está vinculada a este ingrediente."].waitForExistence(timeout: 8))
+        tap(app.buttons["Listo"])
         let save = app.buttons["Guardar en la compra compartida"], record = app.buttons["Registrar cantidad utilizable"]
         let amount = app.textFields["delivery.amount"]
         tap(app.buttons["Agregar una entrega"])
