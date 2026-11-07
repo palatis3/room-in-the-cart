@@ -6,7 +6,7 @@ import {linkedComponent} from './pantry-lots.js';
 import {recoveryMealSchema, recoveryPreviewSchema, type RecoveryMeal,type RecoveryNeed} from './recovery-contracts.js';
 import {previewRecovery, recoveryDigest, RecoveryError} from './recovery-domain.js';
 import type {Context,Shop} from './repository.js';
-import {loadSharedRecoveryBasis,readSharedRecoveryContext,type SharedRecoveryPublication} from './shared-recovery-basis.js';
+import {loadSharedRecoveryDecisionBasis,readSharedRecoveryContext,type SharedRecoveryPublication} from './shared-recovery-basis.js';
 
 import {recoveryApplyBody} from './contracts.js';
 
@@ -83,9 +83,9 @@ function validateRepeat(donor:RecoveryMeal|undefined,target:RecoveryMeal) {
 
 async function decision(ctx:Context,shop:Shop,request:z.infer<typeof recoveryPreviewSchema>) {
   requirePlaced(shop);
-  const basis=await loadSharedRecoveryBasis(ctx,shop,loadRecoveryPublication);
+  const {basis,verifyReplacementCoverage}=await loadSharedRecoveryDecisionBasis(ctx,shop,loadRecoveryPublication);
   try {
-    const reviewed=previewRecovery(basis,request,ctx.now.toISOString());
+    const reviewed=verifyReplacementCoverage(previewRecovery(basis,request,ctx.now.toISOString()));
     const intent=reviewed.intent;
     if(intent.repeatOfOccurrenceId) {
       validateRepeat(basis.meals.find(m=>m.occurrenceId===intent.repeatOfOccurrenceId),intent.replacement);
