@@ -551,6 +551,10 @@ test('operator waits for the source, seals exact intents, replays a prior backup
   assert.throws(()=>cli('privacy-journal.mjs','gate',restorePath));
   assert.equal(cli('privacy-journal.mjs','replay',restorePath).targetsApplied,1);
   assert.equal(cli('privacy-journal.mjs','replay',restorePath).targetsApplied,0);
+  // A positive permission introduced in an already registered clone must not pass its release gate.
+  await destination.query("INSERT INTO ritc.request_queue_permission VALUES($1,$2,$3,$4,now(),now()+interval '1 hour')",[otherHousehold,otherMember,deviceId,randomUUID()]);
+  assert.throws(()=>cli('privacy-journal.mjs','gate',restorePath),/Restored device queue permissions/);
+  assert.equal(cli('privacy-journal.mjs','plan',restorePath).quarantined,true);
   assert.deepEqual(cli('privacy-journal.mjs','gate',restorePath),{runId:configuration.runId,localAppErasureApplied:true,syntheticProbePermitted:true,providerReconciliationRequired:true,productionReady:false});
   const members=(await destination.query('SELECT member_id,alias,erased_at FROM ritc.member WHERE member_id IN ($1,$2)',[memberId,otherMember])).rows;
   assert.equal(members.find(member=>member.member_id===memberId).alias,'Removed member');
