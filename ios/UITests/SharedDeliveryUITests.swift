@@ -113,18 +113,16 @@ import XCTest
         tap(app.buttons["Remove ingredient match"])
         tap(openMatches)
         tap(ingredient)
-        XCTAssertTrue(app.buttons["Match this ingredient"].waitForExistence(timeout: 8))
+        reveal(app.buttons["Match this ingredient"])
     }
     func testSpanishShopperDistinguishesFractionalUsableFoodZeroAndUnknown() {
         launch("es", locale: "es_US")
         tap(app.buttons["Alimentos entregados por comida"])
         for (label, value) in [("Exclusiones de la comida", "peanuts"), ("Tiempo de preparación en minutos", "120"),
                                ("Pasos de preparación completados", "Beans soaked")] {
-            let fact = app.descendants(matching: .any).matching(NSPredicate(format:
-                "label CONTAINS %@ AND (label CONTAINS %@ OR value CONTAINS %@)", label, value, value)).firstMatch
-            XCTAssertTrue(fact.waitForExistence(timeout: 8), label)
+            assertFact(label, value)
         }
-        XCTAssertTrue(app.staticTexts["Ninguna entrega está vinculada a este ingrediente."].waitForExistence(timeout: 8))
+        reveal(app.staticTexts["Ninguna entrega está vinculada a este ingrediente."])
         tap(app.buttons["Listo"])
         let save = app.buttons["Guardar en la compra compartida"], record = app.buttons["Registrar cantidad utilizable"]
         let amount = app.textFields["delivery.amount"]
