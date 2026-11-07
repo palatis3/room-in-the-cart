@@ -167,8 +167,17 @@ import XCTest
         tap(app.buttons["Share dated list"])
         let close = app.buttons.matching(NSPredicate(format: "identifier == %@ OR label == %@", "header.closeButton", "Close")).firstMatch
         let closeReady = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND hittable == true"), object: close)
+        let readinessStarted = Date()
+        let readinessResult = XCTWaiter.wait(for: [closeReady], timeout: 15)
+        if readinessResult != .completed {
+            // Keep the failed decision fixed. Capture before slow debug hierarchy
+            // retrieval or Reduce Motion restoration can change the visible UI.
+            let facts = XCTAttachment(string: "Readiness result: \(readinessResult); requested allowance: 15 seconds; observed wait: \(Date().timeIntervalSince(readinessStarted)) seconds; runner Reduce Motion: \(UIAccessibility.isReduceMotionEnabled)")
+            facts.name = "Share-readiness-failed-boundary"; facts.lifetime = .keepAlways; add(facts)
+            captureSystemScreen("Share-readiness-failed-before-debug-hierarchy")
+        }
         _ = try XCTUnwrap(
-            XCTWaiter.wait(for: [closeReady], timeout: 15) == .completed ? close : nil,
+            readinessResult == .completed ? close : nil,
             "The system share sheet Close control did not become ready. \(app.debugDescription)")
         func waitForShareDismissal(timeout: TimeInterval) -> Bool {
             let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in

@@ -1,0 +1,30 @@
+{
+  "diagnosticOnly": true,
+  "sourcePath": "ios/UITests/FreeJourneyUITests.swift",
+  "baseSHA256": "a29581b69a1e33112bfe8f4d5fb94c6afef2478ccf75076b5ed704a948be01b0",
+  "candidateSHA256": "95fdc9cd634864757db3a5289ee31bedb7688af57b734f3a36fcc63170afc707",
+  "patchSHA256": "45da25f553acad6d72564b75e84bfce07682018c703483076a5f775322f80362",
+  "allOriginalSourceOutsideReadinessReplacementByteIdentical": true,
+  "noTimeoutQueryOrCancellationAssertionChanges": true,
+  "nativeValidation": "Not compiled or executed",
+  "exactSelectors": [
+    "RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareKeepsTheFrozenPickupUnplaced",
+    "RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced"
+  ],
+  "exportedEvidenceSHA256": {
+    ".build/ShareCancellationReview20261107/root-export/ui-06/activities.json": "b819baad8cc04730187280d0f48c5e34eb18f42d4985591d9d375047fdef9eec",
+    ".build/ShareCancellationReview20261107/root-export/ui-06/attachment-index.json": "b060de4760ed10d40c9e80ac5fbd7ab5f6573cd544e1c423b06ea22b04d4151c",
+    ".build/ShareCancellationReview20261107/root-export/ui-06/readiness-query-debug.txt": "d74ac45135b353a8b51cab0d24b5afd4802705ba81e4b22dc8ffad8b9753402a",
+    ".build/ShareCancellationReview20261107/root-export/ui-06/query-export.json": "45979f073c2a897a55dda3b5d5a2cf219af56517dfbabef228df8991ee045799",
+    ".build/ShareCancellationReview20261107/root-export/ui-06/export-receipt.json": "263dfab97dc6a35b2125baa6d3ba1787f2d4d6771163435138b294dfb94d2885",
+    ".build/ShareCancellationReview20261107/root-export/ui-06/Free-flow-failure_0_D226DF5F-1E52-4FC3-B3C7-E2FBD6E8047D.png": "c0ee9a4357ecd4f3707cbdabb7298fd7084b7563e188139eb0ef9000e843a860",
+    ".build/ShareCancellationReview20261107/root-export/ui-09/activities.json": "9054f9e1e1a7163934879d71190b1827ab24db480d07689ef8ef49b1b501003e",
+    ".build/ShareCancellationReview20261107/root-export/ui-09/attachment-index.json": "c1681c006d93b853e2a24c29226fb9b709b7e18e54eea7d6b46edd3e418cac6e",
+    ".build/ShareCancellationReview20261107/root-export/ui-09/readiness-query-debug.txt": "d74ac45135b353a8b51cab0d24b5afd4802705ba81e4b22dc8ffad8b9753402a",
+    ".build/ShareCancellationReview20261107/root-export/ui-09/query-export.json": "4581c9db34e18bbb2c1395032733e453502fb70cd5080f48d3420b71660d180f",
+    ".build/ShareCancellationReview20261107/root-export/ui-09/export-receipt.json": "c2abf2ec631c47e134e661d8f28ad979edf4cbd0a186852d4043ff342b615250",
+    ".build/ShareCancellationReview20261107/root-export/ui-09/pre-restoration-exports.json": "5c329f4a6d8948326c4b2583ea4093f61e8b636444280bb3f26086a3244de5c3",
+    ".build/ShareCancellationReview20261107/root-export/ui-09/Free-flow-failure_0_911ABC16-2F48-4868-820E-6093AF6F6D19.png": "33cdda4292f9a71169498aad537184d786af6559b560a4df1b4d3e75f17212a4",
+    ".build/ShareCancellationReview20261107/root-export/ui-09/Reduce-Motion-failure-before-settings-restoration_0_3FC6CC52-196F-4F88-A6A4-7086F2F04A40.png": "c349ee736e9f66285322b8d1ca560b6fc4d4ca29be86fecddfd670ad50a0bc23"
+  }
+}
