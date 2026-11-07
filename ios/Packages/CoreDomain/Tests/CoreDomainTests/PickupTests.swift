@@ -9,7 +9,8 @@ final class PickupTests: XCTestCase {
         var ledger = try PickupLedger(orderID: UUID(), orderLines: [line])
         let receipt = try fragment(line, amount: 8)
         try ledger.receive(receipt)
-        try ledger.confirmUsable(observation(receipt, amount: 6))
+        let originalUsable = try observation(receipt, amount: 6)
+        try ledger.confirmUsable(originalUsable)
         let tacos = try need(line, name: "Tacos", amount: 6, priority: .required)
         let quesadillas = try need(line, name: "Quesadillas", amount: 4, priority: .required)
         let lunches = try need(line, name: "Protected lunches", amount: 2, priority: .protected)
@@ -22,6 +23,25 @@ final class PickupTests: XCTestCase {
         XCTAssertFalse(result.confirmedCoverageComplete)
         XCTAssertEqual(ledger.receipts.first?.received.amount, try Rational(8))
         XCTAssertEqual(ledger.usableObservations.first?.usable.amount, try Rational(6))
+
+        // S08: correcting six usable wraps to seven increases tacos' share,
+        // while retaining the received fact and protecting the same two lunches.
+        let correction = try observation(receipt, amount: 7, supersedes: originalUsable.id)
+        XCTAssertTrue(try ledger.confirmUsable(correction))
+        XCTAssertFalse(try ledger.confirmUsable(correction), "A replay cannot create extra usable food")
+        let corrected = try ledger.allocate([tacos, quesadillas, lunches])
+        XCTAssertEqual(corrected.demands.map(\.id), [tacos.id, quesadillas.id, lunches.id])
+        XCTAssertEqual(corrected.demands.map(\.allocated), [try Rational(5), .zero, try Rational(2)])
+        XCTAssertEqual(corrected.demands.map(\.shortfall), [try Rational(1), try Rational(4), .zero])
+        XCTAssertEqual(corrected.lines.first?.confirmedUsable, try Rational(7))
+        XCTAssertEqual(corrected.lines.first?.remainingUnallocated, .zero)
+        XCTAssertFalse(corrected.confirmedCoverageComplete)
+        XCTAssertEqual(ledger.receipts, [receipt])
+        XCTAssertEqual(ledger.receipts.first?.received.amount, try Rational(8))
+        XCTAssertEqual(ledger.usableObservations, [originalUsable, correction])
+        let restored = try JSONDecoder().decode(PickupLedger.self, from: JSONEncoder().encode(ledger))
+        XCTAssertEqual(restored, ledger)
+        XCTAssertEqual(try restored.allocate([tacos, quesadillas, lunches]), corrected)
     }
 
     func testReceiptRetryAddsNothingButSecondGenuineSegmentCounts() throws {

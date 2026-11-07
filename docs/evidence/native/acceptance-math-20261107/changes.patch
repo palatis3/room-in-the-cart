@@ -1,0 +1,66 @@
+diff --git a/ios/Packages/CoreDomain/Tests/CoreDomainTests/PickupTests.swift b/ios/Packages/CoreDomain/Tests/CoreDomainTests/PickupTests.swift
+index 8e5d73c..db281a3 100644
+--- a/ios/Packages/CoreDomain/Tests/CoreDomainTests/PickupTests.swift
++++ b/ios/Packages/CoreDomain/Tests/CoreDomainTests/PickupTests.swift
+@@ -9,7 +9,8 @@ final class PickupTests: XCTestCase {
+         var ledger = try PickupLedger(orderID: UUID(), orderLines: [line])
+         let receipt = try fragment(line, amount: 8)
+         try ledger.receive(receipt)
+-        try ledger.confirmUsable(observation(receipt, amount: 6))
++        let originalUsable = try observation(receipt, amount: 6)
++        try ledger.confirmUsable(originalUsable)
+         let tacos = try need(line, name: "Tacos", amount: 6, priority: .required)
+         let quesadillas = try need(line, name: "Quesadillas", amount: 4, priority: .required)
+         let lunches = try need(line, name: "Protected lunches", amount: 2, priority: .protected)
+@@ -22,6 +23,25 @@ final class PickupTests: XCTestCase {
+         XCTAssertFalse(result.confirmedCoverageComplete)
+         XCTAssertEqual(ledger.receipts.first?.received.amount, try Rational(8))
+         XCTAssertEqual(ledger.usableObservations.first?.usable.amount, try Rational(6))
++
++        // S08: correcting six usable wraps to seven increases tacos' share,
++        // while retaining the received fact and protecting the same two lunches.
++        let correction = try observation(receipt, amount: 7, supersedes: originalUsable.id)
++        XCTAssertTrue(try ledger.confirmUsable(correction))
++        XCTAssertFalse(try ledger.confirmUsable(correction), "A replay cannot create extra usable food")
++        let corrected = try ledger.allocate([tacos, quesadillas, lunches])
++        XCTAssertEqual(corrected.demands.map(\.id), [tacos.id, quesadillas.id, lunches.id])
++        XCTAssertEqual(corrected.demands.map(\.allocated), [try Rational(5), .zero, try Rational(2)])
++        XCTAssertEqual(corrected.demands.map(\.shortfall), [try Rational(1), try Rational(4), .zero])
++        XCTAssertEqual(corrected.lines.first?.confirmedUsable, try Rational(7))
++        XCTAssertEqual(corrected.lines.first?.remainingUnallocated, .zero)
++        XCTAssertFalse(corrected.confirmedCoverageComplete)
++        XCTAssertEqual(ledger.receipts, [receipt])
++        XCTAssertEqual(ledger.receipts.first?.received.amount, try Rational(8))
++        XCTAssertEqual(ledger.usableObservations, [originalUsable, correction])
++        let restored = try JSONDecoder().decode(PickupLedger.self, from: JSONEncoder().encode(ledger))
++        XCTAssertEqual(restored, ledger)
++        XCTAssertEqual(try restored.allocate([tacos, quesadillas, lunches]), corrected)
+     }
+ 
+     func testReceiptRetryAddsNothingButSecondGenuineSegmentCounts() throws {
+diff --git a/shared/fixtures/checkout.json b/shared/fixtures/checkout.json
+index c059b18..537921c 100644
+--- a/shared/fixtures/checkout.json
++++ b/shared/fixtures/checkout.json
+@@ -1,8 +1,20 @@
+ {
+   "version": 1,
+   "currency": "USD",
+-  "source": "Foundation 2.1 06-domain.md and grocery30/inbox-scenarios.json; fictional acceptance examples",
++  "source": "Foundation 2.1 03-screens.md S05, 06-domain.md and grocery30/inbox-scenarios.json; fictional acceptance examples",
+   "cases": [
++    {
++      "id": "s05-defer-coffee-retains-salsa-and-fee-waiver", "scope": "wholeCheckout", "capScope": "wholeCheckout", "capCents": 3800,
++      "before": {"lines": [{"id": "protected", "cents": 3480, "eligible": true}, {"id": "coffee", "cents": 460, "eligible": true}, {"id": "salsa", "cents": 150, "eligible": true}], "complete": true, "fee": {"kind": "threshold", "thresholdCents": 3500, "belowThresholdCents": 495}, "discountCents": 0, "taxCents": 0, "depositCents": 0},
++      "after": {"lines": [{"id": "protected", "cents": 3480, "eligible": true}, {"id": "salsa", "cents": 150, "eligible": true}], "complete": true, "fee": {"kind": "threshold", "thresholdCents": 3500, "belowThresholdCents": 495}, "discountCents": 0, "taxCents": 0, "depositCents": 0},
++      "expected": {"beforeCents": 4090, "afterCents": 3630, "changeCents": -460, "afterLowerCents": 3630, "afterUpperCents": 3630, "capStatus": "within", "overCents": 0, "wholeCheckoutWithinCap": true}
++    },
++    {
++      "id": "s05-defer-coffee-and-salsa-restores-pickup-fee", "scope": "wholeCheckout", "capScope": "wholeCheckout", "capCents": 3800,
++      "before": {"lines": [{"id": "protected", "cents": 3480, "eligible": true}, {"id": "coffee", "cents": 460, "eligible": true}, {"id": "salsa", "cents": 150, "eligible": true}], "complete": true, "fee": {"kind": "threshold", "thresholdCents": 3500, "belowThresholdCents": 495}, "discountCents": 0, "taxCents": 0, "depositCents": 0},
++      "after": {"lines": [{"id": "protected", "cents": 3480, "eligible": true}], "complete": true, "fee": {"kind": "threshold", "thresholdCents": 3500, "belowThresholdCents": 495}, "discountCents": 0, "taxCents": 0, "depositCents": 0},
++      "expected": {"beforeCents": 4090, "afterCents": 3975, "changeCents": -115, "afterLowerCents": 3975, "afterUpperCents": 3975, "capStatus": "over", "overCents": 175, "wholeCheckoutWithinCap": false}
++    },
+     {
+       "id": "cereal-over-cap", "scope": "wholeCheckout", "capScope": "wholeCheckout", "capCents": 3800,
+       "before": {"lines": [{"id": "basket", "cents": 3720, "eligible": true}], "complete": true, "fee": {"kind": "fixed", "cents": 0}, "discountCents": 0, "taxCents": 0, "depositCents": 0},

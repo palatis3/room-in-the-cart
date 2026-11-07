@@ -1,0 +1,21 @@
+{
+  "baseCommit": "7c36519",
+  "sourceInputsRehashed": true,
+  "coreDomain": {
+    "passed": 171,
+    "skipped": 0,
+    "strictInventoryResult": "pass",
+    "nativeIOSUI": false
+  },
+  "serviceCheckout": {
+    "passed": 13,
+    "failed": 0,
+    "skipped": 0
+  },
+  "newSharedVectors": [
+    "s05-defer-coffee-retains-salsa-and-fee-waiver",
+    "s05-defer-coffee-and-salsa-restores-pickup-fee"
+  ],
+  "extendedPickupCase": "testSixUsableWrapsProtectTwoLunchesBeforeDinners",
+  "scope": "Local package and TypeScript calculation/replay/serialization checks; not screen, physical device or hosted acceptance"
+}

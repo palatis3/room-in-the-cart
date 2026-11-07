@@ -1,5 +1,7 @@
 # Current implementation and acceptance map
 
+The exact S05 coffee/salsa fee-threshold examples now run in Swift and TypeScript, and S08 verifies six-to-seven usable-wrap correction, protected lunches, replay and serialization. [Calculation evidence](evidence/native/acceptance-math-20261107/README.md):171CoreDomain cases and13service checkout checks pass locally; screen/device acceptance remains separate.
+
 StoreKit cancellation remains an unresolved hosted failure. [Test-only diagnostic evidence](evidence/native/storekit-cancellation-diagnostic-20261107/README.md) includes a15/15local nonreproduction and a deliberate120-second timeout that preserves25stage attachments while the strict checker rejects the failure. Instrumentation is installed without the artificial sleep or relaxed gates; it is not a product correction or hosted pass.
 
 The companion-web history boundary now conceals private content before browser caching and requires fresh access on return. Six real persisted Chrome restores and six cold-history controls cover unchanged, changed, revoked, offline and expired-identity recovery;129web unit checks and14combined browser checks pass locally. The regression runs in the existing CI web step with its unchanged two-minute limit. [Root-reviewed evidence and limits](evidence/b11/web-history-privacy-20261107/README.md). Hosted/mobile/live-provider acceptance remains separate. The current hosted cohort is8d1a79b; older candidate paragraphs below retain historical scope.

@@ -1,8 +1,20 @@
 {
   "version": 1,
   "currency": "USD",
-  "source": "Foundation 2.1 06-domain.md and grocery30/inbox-scenarios.json; fictional acceptance examples",
+  "source": "Foundation 2.1 03-screens.md S05, 06-domain.md and grocery30/inbox-scenarios.json; fictional acceptance examples",
   "cases": [
+    {
+      "id": "s05-defer-coffee-retains-salsa-and-fee-waiver", "scope": "wholeCheckout", "capScope": "wholeCheckout", "capCents": 3800,
+      "before": {"lines": [{"id": "protected", "cents": 3480, "eligible": true}, {"id": "coffee", "cents": 460, "eligible": true}, {"id": "salsa", "cents": 150, "eligible": true}], "complete": true, "fee": {"kind": "threshold", "thresholdCents": 3500, "belowThresholdCents": 495}, "discountCents": 0, "taxCents": 0, "depositCents": 0},
+      "after": {"lines": [{"id": "protected", "cents": 3480, "eligible": true}, {"id": "salsa", "cents": 150, "eligible": true}], "complete": true, "fee": {"kind": "threshold", "thresholdCents": 3500, "belowThresholdCents": 495}, "discountCents": 0, "taxCents": 0, "depositCents": 0},
+      "expected": {"beforeCents": 4090, "afterCents": 3630, "changeCents": -460, "afterLowerCents": 3630, "afterUpperCents": 3630, "capStatus": "within", "overCents": 0, "wholeCheckoutWithinCap": true}
+    },
+    {
+      "id": "s05-defer-coffee-and-salsa-restores-pickup-fee", "scope": "wholeCheckout", "capScope": "wholeCheckout", "capCents": 3800,
+      "before": {"lines": [{"id": "protected", "cents": 3480, "eligible": true}, {"id": "coffee", "cents": 460, "eligible": true}, {"id": "salsa", "cents": 150, "eligible": true}], "complete": true, "fee": {"kind": "threshold", "thresholdCents": 3500, "belowThresholdCents": 495}, "discountCents": 0, "taxCents": 0, "depositCents": 0},
+      "after": {"lines": [{"id": "protected", "cents": 3480, "eligible": true}], "complete": true, "fee": {"kind": "threshold", "thresholdCents": 3500, "belowThresholdCents": 495}, "discountCents": 0, "taxCents": 0, "depositCents": 0},
+      "expected": {"beforeCents": 4090, "afterCents": 3975, "changeCents": -115, "afterLowerCents": 3975, "afterUpperCents": 3975, "capStatus": "over", "overCents": 175, "wholeCheckoutWithinCap": false}
+    },
     {
       "id": "cereal-over-cap", "scope": "wholeCheckout", "capScope": "wholeCheckout", "capCents": 3800,
       "before": {"lines": [{"id": "basket", "cents": 3720, "eligible": true}], "complete": true, "fee": {"kind": "fixed", "cents": 0}, "discountCents": 0, "taxCents": 0, "depositCents": 0},
