@@ -2,6 +2,14 @@
 
 Updated November 7, 2026 UTC. The owner resumed and explicitly approved the reviewed hosted staging update; the full first-version goal is active and release acceptance remains incomplete. Historical snapshots are preserved in [the handoff archive](CURRENT-HANDOFF-HISTORY-20261106.md).
 
+## November 7 release verification through schema 040
+
+The pinned staging candidate at `eae1e72` builds from clean dependency installs. Vercel’s local deployment inspection enumerated 162 regular input files. Each matched the pinned Git revision byte for byte. The current staging alias points to ready deployment `dpl_2tfRmEfTGLW63sSTksJ6xJ9MZ97P` and passed six public boundary checks. The live registry still ends at 030. No 031–040 migration or candidate deployment was applied during preparation. [Candidate inputs, ten migration checksums and build evidence](evidence/b11/staging-040-preparation-20261107/candidate.json)
+
+On the local 040 service, 236 PostgreSQL integration cases, 454 service and billing tests, 133 web tests and 14 Chrome browser checks passed. The database run includes all twenty grocery inbox scenarios. Six Node integration cases and ten selected Swift scenarios passed together over pinned HTTPS. A separate populated restore recovered 747 synthetic rows in 103 tables and the 40-entry registry. The original shopper could recover the carry receipt after restoring the database. Source and restored schemas differed in PostgreSQL’s formatting of equivalent AND expressions in one view.
+
+The compact iPhone SE simulator on iOS 17 completed the financial closeout, confirmed the system dialog and linked a pending credit to the original net charge. The strict test recorded one execution and zero runtime warnings. The cook read-aloud tests exercised Play, Pause, Resume and Stop on iOS 17.0, 26.2 and 27.0. All 37 selected cases passed on each OS. Moving the audio-session setup off the main thread cleared the app’s responsiveness warning. The strict check still flags an Apple TextToSpeech priority-inversion warning on 26.2. The other two runtimes passed strict verification.
+
 ## Shared purchase confirmation, closeout and next pickup, November 7
 
 From **What came home**, the assigned shopper can confirm, correct or clear the purchase of an added family request. The review compares the requested quantity with the known pack count on the sealed order line. An older line with no pack count shows an unknown quantity. The contributor can read their own outcome in English or US Spanish. A posted charge, refund or reported placement alone leaves the purchase unconfirmed.
