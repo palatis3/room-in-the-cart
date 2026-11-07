@@ -12,8 +12,9 @@ import XCTest
         app.terminate()
     }
 
-    private func launch(_ language: String, locale: String) {
+    private func launch(_ language: String, locale: String, cookCopies: Bool = false) {
         app.launchArguments = ["--ui-testing", "--shared-delivery-fixture", "-AppleLanguages", "(\(language))", "-AppleLocale", locale]
+        if cookCopies { app.launchArguments.append("--shared-cook-copies-fixture") }
         app.launch()
         tap(app.buttons["sharedShop.deliveryEvidence"])
     }
@@ -66,6 +67,59 @@ import XCTest
         let row = app.descendants(matching: .any).matching(NSPredicate(format:
             "identifier BEGINSWITH %@ AND (label CONTAINS %@ OR value CONTAINS %@)", "delivery.confirmed.", text, text)).firstMatch
         return row.waitForExistence(timeout: 8)
+    }
+    func testShopperSavesDatedCookCopyAndReopensRecipientSendRecord() {
+        launch("en", locale: "en_US", cookCopies: true)
+        tap(app.buttons["Delivered food by meal"])
+        let occurrence = "AAAAAAA1-AAAA-4AAA-8AAA-AAAAAAAAAAAA"
+        tap(app.buttons["delivery.cook." + occurrence])
+        let preview = app.staticTexts["delivery.cook.preview"]
+        reveal(preview)
+        let reviewed = preview.label
+        for fact in ["Lunch wraps", "School lunch", "Uncovered by deliveries: 2 units", "Beans soaked"] {
+            XCTAssertTrue(reviewed.contains(fact), "Missing no-delivery meal fact: \(fact)")
+        }
+        tap(app.buttons["delivery.cook.save"])
+        reveal(app.staticTexts["Dated copy saved"])
+
+        let savedText = app.staticTexts["delivery.cook.savedText"]
+        func openSavedCopy() {
+            tap(app.buttons["delivery.cook.history"])
+            tap(app.buttons["delivery.cook.saved.1"])
+            reveal(savedText)
+            XCTAssertEqual(savedText.label, reviewed)
+        }
+        openSavedCopy()
+        tap(app.buttons["delivery.cook.savedShare"])
+        let close = app.buttons.matching(NSPredicate(format: "identifier == %@ OR label == %@", "header.closeButton", "Close")).firstMatch
+        let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND hittable == true"), object: close)
+        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 15), .completed)
+        close.tap()
+
+        let recipient = app.textFields["delivery.cook.recipient"]
+        let check = app.buttons["delivery.cook.checkRecipient"], mark = app.buttons["delivery.cook.markSent"]
+        let last = app.descendants(matching: .any).matching(identifier: "delivery.cook.lastSent").firstMatch
+        func assertFirstVersionSent() {
+            reveal(last)
+            let text = [last.label, last.value as? String ?? ""].joined(separator: " ")
+            XCTAssertNotNil(text.range(of: #"\b1\b"#, options: .regularExpression), text)
+            XCTAssertFalse(mark.exists)
+        }
+        enter("Fixture cook", in: recipient)
+        recipient.typeText("\n")
+        tap(check)
+        reveal(app.staticTexts["No previous send recorded for this recipient."])
+        XCTAssertFalse(last.exists)
+        tap(mark)
+        assertFirstVersionSent()
+
+        tap(app.navigationBars.buttons.firstMatch)
+        tap(app.navigationBars.buttons.firstMatch)
+        openSavedCopy()
+        enter("Fixture cook", in: recipient)
+        recipient.typeText("\n")
+        tap(check)
+        assertFirstVersionSent()
     }
     func testShopperRecordsAndCorrectsDeliveryThenReopensIt() {
         launch("en", locale: "en_US")

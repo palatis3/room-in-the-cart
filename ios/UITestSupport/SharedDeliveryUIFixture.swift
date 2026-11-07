@@ -21,6 +21,11 @@ struct SharedDeliveryFixtureRoot: View {
 /// Deterministic HTTP responses for the iPhone controls. The pinned HTTPS suite
 /// exercises these same Swift commands against the real service and PostgreSQL.
 final class SharedDeliveryFixtureRecords {
+    let supportsCookCopies = ProcessInfo.processInfo.arguments.contains("--shared-cook-copies-fixture")
+    private var copies: [[String:Any]] = [] // Newest first for the fixture's single placed meal.
+    // PostgreSQL keys recipient labels by their exact UTF-8 spelling.
+    private var recipientHeads: [Data:[String:Any]] = [:]
+    private var recordedCommands: [String:Data] = [:]
     private var revision = 0
     private var source: [String:Any]?
     private var receipts: [String:[String:Any]] = [:]
@@ -73,10 +78,80 @@ final class SharedDeliveryFixtureRecords {
         return ["shopId":shop,"shopRevision":2,"placedRevision":1,"authorityEpoch":1,"supplyRevision":revision,
                 "asOf":"2026-11-07T12:00:00Z","unplannedOccurrenceIds":[],"needs":[need]]
     }
+    enum CookFailure: Error { case invalid, staleBase, staleSupply, replayConflict }
+
+    func cookCopies(occurrenceID: String?, cursor: String?) throws -> [String:Any] {
+        guard supportsCookCopies, occurrenceID?.lowercased() == occurrence else { throw CookFailure.invalid }
+        let start: Int
+        if let cursor {
+            guard let index = copies.firstIndex(where: { $0["copyId"] as? String == cursor.lowercased() }) else { throw CookFailure.invalid }
+            start = index + 1
+        } else { start = 0 }
+        let page = Array(copies.dropFirst(start).prefix(20))
+        let next = start + page.count < copies.count ? page.last?["copyId"] : nil
+        return ["copies":page,"nextCursor":next ?? NSNull()]
+    }
+
+    private func recipient(_ body: [String:Any]) throws -> String {
+        guard let raw = body["recipient"] as? String else { throw CookFailure.invalid }
+        let name = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else { throw CookFailure.invalid }
+        return name
+    }
+
+    func cookBaseline(_ body: [String:Any]) throws -> [String:Any] {
+        guard supportsCookCopies, (body["occurrenceId"] as? String)?.lowercased() == occurrence else { throw CookFailure.invalid }
+        let name = try recipient(body)
+        guard let send = recipientHeads[Data(name.utf8)], let id = send["copyId"] as? String,
+              let copy = copies.first(where: { $0["copyId"] as? String == id }) else { return ["baseline":NSNull()] }
+        return ["baseline":["copy": copy, "send": send]]
+    }
+
+    private func recordCook(shop: String, kind: String, base: [String:Any]?, body: [String:Any]) throws -> [String:Any] {
+        guard supportsCookCopies, base?["shopRevision"] as? Int == 2, base?["authorityEpoch"] as? Int == 1 else {
+            throw CookFailure.staleBase
+        }
+        let copyID: String, operation = UUID().uuidString.lowercased(), at = ISO8601DateFormatter().string(from: Date())
+        switch kind {
+        case "cookCopy.save":
+            guard body["placedRevision"] as? Int == 1, body["supplyRevision"] as? Int == revision else { throw CookFailure.staleSupply }
+            guard (body["occurrenceId"] as? String)?.lowercased() == occurrence, body["mealRevision"] as? Int == 1,
+                  let language = body["language"] as? String, ["en","es"].contains(language),
+                  let text = body["text"] as? String, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw CookFailure.invalid }
+            copyID = operation
+            let copy: [String:Any] = ["copyId":copyID,"occurrenceId":occurrence,"mealRevision":1,"shopId":shop,"shopRevision":2,
+                                      "placedRevision":1,"authorityEpoch":1,"supplyRevision":revision,"language":language,
+                                      "text":text,"version":copies.count + 1,"createdAt":at]
+            copies.insert(copy, at: 0)
+        case "cookCopy.markSent":
+            guard let id = (body["copyId"] as? String)?.lowercased(), copies.contains(where: { $0["copyId"] as? String == id }),
+                  let previous = body["previousSendId"], previous is NSNull || previous is String else { throw CookFailure.invalid }
+            let name = try recipient(body)
+            guard (previous as? String)?.lowercased() == recipientHeads[Data(name.utf8)]?["sendId"] as? String else { throw CookFailure.staleBase }
+            copyID = id
+            recipientHeads[Data(name.utf8)] = ["sendId":operation,"copyId":copyID,"recipient":name,"sentAt":at]
+        default: throw CookFailure.invalid
+        }
+        return ["kind":kind,"operationId":operation,"shopId":shop,"shopRevision":2,"authorityEpoch":1,
+                "disposition":"recorded","copyId":copyID]
+    }
+
     func record(shop: String, command: [String:Any]) throws -> [String:Any] {
         guard let key = command["clientKey"] as? String, let kind = command["kind"] as? String,
               let body = command["body"] as? [String:Any] else { throw URLError(.badServerResponse) }
-        if let receipt = receipts[key] { return receipt }
+        let bytes = try JSONSerialization.data(withJSONObject: command, options: [.sortedKeys])
+        if let receipt = receipts[key] {
+            guard recordedCommands[key] == bytes else { throw CookFailure.replayConflict }
+            return receipt
+        }
+        if kind.hasPrefix("cookCopy.") {
+            guard command["v"] as? Int == 1, command["shopId"] as? String == shop,
+                  command["replayWindow"] as? String == "77777777-7777-4777-8777-777777777777" else { throw CookFailure.invalid }
+            let receipt = try recordCook(shop: shop, kind: kind, base: command["base"] as? [String:Any], body: body)
+            recordedCommands[key] = bytes
+            receipts[key] = receipt
+            return receipt
+        }
         guard body["supplyRevision"] as? Int == revision else { throw URLError(.badServerResponse) }
         let op = UUID().uuidString.lowercased()
         switch kind {
@@ -116,6 +191,7 @@ final class SharedDeliveryFixtureRecords {
         revision += 1
         let receipt: [String:Any] = ["kind":kind,"operationId":op,"shopId":shop,"shopRevision":2,"authorityEpoch":1,
             "disposition":"recorded","sourceId":id,"supplyRevision":revision]
+        recordedCommands[key] = bytes
         receipts[key] = receipt
         return receipt
     }
