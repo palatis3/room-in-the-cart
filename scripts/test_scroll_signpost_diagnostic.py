@@ -153,5 +153,75 @@ class ScrollSignpostDiagnosticTests(unittest.TestCase):
         self.assertEqual(summarize("", "not JSON", "ok", "ok")["status"], "parse_error")
 
 
+    def test_endpoint_receipt_retains_lone_kind_without_promoting_missing_pair(self):
+        for missing, expected in [(0, "end"), (1, "begin")]:
+            report = self.report(self.lines[:missing] + self.lines[missing+1:])
+            self.assertEqual(report["status"], "incomplete_windows")
+            self.assertEqual(report["windows"][0]["pairCount"], 0)
+            scoped = [e for e in report["endpointEvidence"]["events"] if e["windowIndices"] == [0]]
+            self.assertEqual([e["kind"] for e in scoped], [expected])
+
+    def test_endpoint_receipt_preserves_outside_window_endpoint_and_bounded_scope(self):
+        prior = self.lines[0].replace("00:01:51.000", "00:01:49.000")
+        outside = self.lines[0].replace("00:01:51.000", "00:01:34.000")
+        report = self.report([outside, prior] + self.lines[1:])
+        self.assertEqual(report["status"], "incomplete_windows")
+        receipt = report["endpointEvidence"]
+        self.assertEqual(receipt["scopedEventCount"], 12)
+        self.assertEqual(receipt["events"][0]["offsetSeconds"], -1)
+        self.assertEqual(receipt["events"][0]["windowIndices"], [])
+        self.assertEqual(receipt["scopeStartOffsetSeconds"], -15)
+        self.assertEqual(receipt["scopeEndOffsetSeconds"], 60)
+
+    def test_endpoint_receipt_tokens_preserve_equality_without_raw_identifiers(self):
+        lines = self.lines.copy()
+        lines[1] = lines[1].replace("0xab", "0xcd")
+        lines[2] = lines[2].replace("[123:", "[456:")
+        report = self.report(lines)
+        events = report["endpointEvidence"]["events"]
+        self.assertEqual(events[0]["processToken"], events[1]["processToken"])
+        self.assertNotEqual(events[0]["signpostToken"], events[1]["signpostToken"])
+        self.assertNotEqual(events[0]["processToken"], events[2]["processToken"])
+        self.assertEqual(events[0]["signpostToken"], events[3]["signpostToken"])
+        for secret in ["0xab", "0xcd", "123", "456", "private sample text", "RoomInTheCart["]:
+            self.assertNotIn(secret, json.dumps(report))
+        self.assertEqual(report["status"], "incomplete_windows")
+
+    def test_endpoint_overflow_is_explicit_and_does_not_choose_pairs(self):
+        report = self.report(self.lines + [self.lines[0]] * 140)
+        receipt = report["endpointEvidence"]
+        self.assertEqual(receipt["status"], "truncated")
+        self.assertEqual(receipt["scopedEventCount"], 152)
+        self.assertEqual(receipt["retainedEventCount"], 128)
+        self.assertEqual(receipt["omittedEventCount"], 24)
+        self.assertEqual(len(receipt["events"]), 128)
+        self.assertEqual(report["status"], "incomplete_windows")
+        self.assertEqual(report["windows"][0]["pairs"], [])
+
+    def test_endpoint_origin_is_first_swipe_utc_and_aligns_relative_events(self):
+        receipt = self.report()["endpointEvidence"]
+        self.assertIsInstance(receipt["originUnixUTC"], (int, float))
+        self.assertEqual(receipt["originUnixUTC"], 110)
+        self.assertEqual(receipt["originUnixUTC"] + receipt["events"][0]["offsetSeconds"], 111)
+        self.assertEqual(receipt["originUnixUTC"] + receipt["scopeStartOffsetSeconds"], 95)
+        self.assertEqual(receipt["originUnixUTC"] + receipt["windows"][1]["swipeStartOffsetSeconds"], 120)
+
+    def test_endpoint_receipt_scope_failure_does_not_change_existing_summary(self):
+        for value in [None, True, float("nan"), 111]:
+            activity = copy.deepcopy(self.activity)
+            activity["testRuns"][0]["activities"][0]["startTime"] = value
+            report = self.report(activity=activity)
+            self.assertEqual(report["status"], "captured")
+            self.assertEqual(report["endpointEvidence"]["status"], "scope_unavailable")
+            self.assertNotIn("events", report["endpointEvidence"])
+
+    def test_endpoint_receipt_unavailable_with_failed_capture_or_activity(self):
+        for capture, activity in [("error", "ok"), ("ok", "error")]:
+            report = summarize("", "", capture, activity)
+            self.assertEqual(report["endpointEvidence"]["status"], "unavailable")
+        self.assertEqual(self.report()["schemaVersion"], 2)
+        self.assertEqual(len(self.report()["endpointEvidence"]["windows"]), 6)
+
+
 if __name__ == "__main__":
     unittest.main()

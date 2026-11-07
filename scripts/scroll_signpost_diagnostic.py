@@ -8,9 +8,49 @@ PATTERN = re.compile(r'^(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d\.\d+) Sp RoomInTheCart\[
 SELECTOR = 'ReleasePerformanceUITests/testScrollingPerformanceOnFiveHundredItemPickup()'
 URL_SUFFIX = '/RoomInTheCartUITests/' + SELECTOR.removesuffix('()')
 
+
+# Receipt limits affect diagnostic retention only, never metric acceptance.
+ENDPOINT_LIMIT = 128
+ENDPOINT_MARGIN_SECONDS = 5.0
+
+def endpoint_receipt(events, windows, reset_start):
+    """Retain scoped endpoint fields, never raw lines, PID or signpost IDs."""
+    receipt = {'diagnosticOnly': True, 'maximumRetainedEvents': ENDPOINT_LIMIT,
+               'marginSeconds': ENDPOINT_MARGIN_SECONDS,
+               'timestampBasis': 'seconds from first enclosing swipe activity start; not measurement boundaries'}
+    if (not windows or type(reset_start) not in (int, float)
+            or not math.isfinite(reset_start) or reset_start > windows[0][0]):
+        return {**receipt, 'status': 'scope_unavailable'}
+    origin = windows[0][0]
+    lower = reset_start - ENDPOINT_MARGIN_SECONDS
+    upper = windows[-1][2] + ENDPOINT_MARGIN_SECONDS
+    scoped = [e for e in events if lower <= e[0] <= upper]
+    pids, ids, retained = {}, {}, []
+    for ts, pid, sid, kind in scoped[:ENDPOINT_LIMIT]:
+        # Ordinal tokens preserve equality within this receipt, not cross-run identity.
+        process = pids.setdefault(pid, f'process-{len(pids) + 1}')
+        signpost = ids.setdefault((pid, sid), f'signpost-{len(ids) + 1}')
+        indices = [i for i, (start, _, end) in enumerate(windows) if start <= ts <= end]
+        retained.append({'offsetSeconds': round(ts - origin, 6), 'kind': kind,
+                         'processToken': process, 'signpostToken': signpost,
+                         'windowIndices': indices})
+    return {**receipt, 'status': 'truncated' if len(scoped) > ENDPOINT_LIMIT else 'retained',
+            'originUnixUTC': origin,
+            'scopeStartOffsetSeconds': round(lower - origin, 6),
+            'scopeEndOffsetSeconds': round(upper - origin, 6),
+            'scopedEventCount': len(scoped), 'retainedEventCount': len(retained),
+            'omittedEventCount': max(0, len(scoped) - ENDPOINT_LIMIT),
+            'ordering': 'captured log order; tokens preserve equality, not unique gesture identity',
+            'windows': [{'invocationIndex': i, 'swipeStartOffsetSeconds': round(start-origin, 6),
+                         'synthesisStartOffsetSeconds': round(synthesis-origin, 6),
+                         'followingActivityStartOffsetSeconds': round(end-origin, 6)}
+                        for i, (start, synthesis, end) in enumerate(windows)],
+            'events': retained}
+
 def summarize(log, activity, capture_status, activity_status):
-    out = {'schemaVersion': 1, 'diagnosticOnly': True, 'captureStatus': capture_status,
-           'activityStatus': activity_status, 'metric': 'com.apple.UIKit:ScrollView Scroll_DraggingAndDeceleration', 'windows': []}
+    out = {'schemaVersion': 2, 'diagnosticOnly': True, 'captureStatus': capture_status,
+           'activityStatus': activity_status, 'metric': 'com.apple.UIKit:ScrollView Scroll_DraggingAndDeceleration', 'windows': [],
+           'endpointEvidence': {'diagnosticOnly': True, 'status': 'unavailable'}}
     if capture_status != 'ok' or activity_status != 'ok':
         out['status'] = 'capture_unavailable' if capture_status != 'ok' else 'activities_unavailable'
         return out
@@ -35,6 +75,7 @@ def summarize(log, activity, capture_status, activity_status):
         out['windowBasis'] = 'enclosing swipe activity start to following activity start; not XCTest measurement boundaries'
         previous_end = None
         process_ids = set()
+        receipt_windows = []
         for swipe, following in zip(activities[reset:], activities[reset+1:]):
             if not swipe['title'].startswith('Swipe up CollectionView'): continue
             starts = [a['startTime'] for a in swipe.get('childActivities', []) if a['title'] == 'Synthesize event']
@@ -49,6 +90,7 @@ def summarize(log, activity, capture_status, activity_status):
                     or (previous_end is not None and start <= previous_end)):
                 raise ValueError('invalid or overlapping window')
             previous_end = end
+            receipt_windows.append((start, synthesis, end))
             selected = [event for event in events if start <= event[0] <= end]
             process_ids.update(event[1] for event in selected)
             pairs = []
@@ -59,6 +101,7 @@ def summarize(log, activity, capture_status, activity_status):
                 if a[3] == 'begin' and b[3] == 'end' and a[1:3] == b[1:3] and b[0] > a[0]:
                     pairs.append({'durationSeconds': round(b[0]-a[0], 3)})
             out['windows'].append({'case': 'warm-up' if not out['windows'] else f'measured swipe {len(out["windows"])}', 'eventCount': len(selected), 'pairCount': len(pairs), 'pairs': pairs})
+        out['endpointEvidence'] = endpoint_receipt(events, receipt_windows, activities[reset].get('startTime'))
         out['matchedProcessCount'] = len(process_ids)
         out['status'] = ('unparsed_events' if out['unparsedCandidateCount'] else 'zero_events' if not events
                          else 'incomplete_windows' if len(out['windows']) != 6 or len(process_ids) != 1
