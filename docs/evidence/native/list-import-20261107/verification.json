@@ -93,5 +93,30 @@
       ]
     },
     "localization": "Localization checks passed: 25 catalogs, 4199 en/es entries, 3900 literal source keys, matching format arguments."
+  },
+  "packLabels": {
+    "product": "9d1622b",
+    "iPhone": "iPhone SE (3rd generation), iOS 17.0",
+    "passed": 41,
+    "recordedRuntimeWarnings": 0,
+    "before": "The original structured-capture regression failed on both the printed multiplier and missing contents inside nested packs. The original CoreDomain staging test also failed.",
+    "database": {
+      "integrity": "ok",
+      "headRevision": 2,
+      "payloadSHA256": "da25aaf16528eb8ac7ce2b26b41c8317c7237b99f26b737ebaee7ee74e381749",
+      "originalWording": "2x15 oz pinto beans",
+      "packCount": 2,
+      "perPackMassOunces": 15,
+      "reviewedNeedMassOunces": 28,
+      "activeLines": 1,
+      "importBatches": 1
+    },
+    "compiledPackageCheck": [
+      "CoreDomain: 192 passed, 0 deliberately skipped",
+      "DeviceSurfaces: 29 passed, 0 deliberately skipped",
+      "HouseholdClient: 101 passed, 3 deliberately skipped",
+      "LocalStore: 74 passed, 0 deliberately skipped",
+      "RecordArchive: 33 passed, 0 deliberately skipped"
+    ]
   }
 }
