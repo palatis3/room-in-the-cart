@@ -40,7 +40,8 @@ class MacSlotMetadataTests(unittest.TestCase):
         self.assertCountEqual([c for s in plan['shards'].values() for c in s['test_identifiers']], [MODEL, *methods])
         fixtures = fixture_matrix()['include']
         validate_macos_slots(fixtures, ('profile', 'shard'))
-        self.assertEqual(len(fixtures), 15)
+        self.assertEqual(len(fixtures), 16)
+        self.assertEqual([row['profile'] for row in fixtures if row['shard'] == 'SharedFallbackUITests'], ['contributor'])
         self.assertEqual(set(fixtures[0]), {'profile', 'shard', 'macos_slot'})
         performance = performance_matrix('\n'.join(COMPILED))['include']
         validate_macos_slots(performance, ('case',))
