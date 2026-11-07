@@ -37,6 +37,27 @@ import XCTest
             "label CONTAINS %@ AND (label CONTAINS %@ OR value CONTAINS %@)", label, value, value)).firstMatch
         reveal(row, file: file, line: line)
     }
+    private func checkCookCopy(_ fragments: [String], openShare: Bool = false,
+                               file: StaticString = #filePath, line: UInt = #line) {
+        let link = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "delivery.cook.")).firstMatch
+        tap(link, file: file, line: line)
+        let preview = app.staticTexts["delivery.cook.preview"]
+        reveal(preview, file: file, line: line)
+        let copy = preview.label
+        for fragment in fragments {
+            XCTAssertTrue(copy.contains(fragment), "Missing cook instruction: \(fragment)", file: file, line: line)
+        }
+        if openShare {
+            tap(app.buttons["delivery.cook.share"], file: file, line: line)
+            let close = app.buttons.matching(NSPredicate(format: "identifier == %@ OR label == %@", "header.closeButton", "Close")).firstMatch
+            let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND hittable == true"), object: close)
+            XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 15), .completed, file: file, line: line)
+            close.tap()
+            reveal(preview, file: file, line: line)
+            XCTAssertEqual(preview.label, copy, file: file, line: line)
+        }
+        tap(app.navigationBars.buttons.firstMatch, file: file, line: line)
+    }
     private func enter(_ input: String, in field: XCUIElement) {
         tap(field)
         field.typeText(input)
@@ -100,6 +121,8 @@ import XCTest
         assertFact("Still backed by this delivery", "1 unit")
         let evidence = XCTAttachment(screenshot: app.screenshot())
         evidence.name = "Set-aside lunch after a delivery correction"; evidence.lifetime = .keepAlways; add(evidence)
+        checkCookCopy(["Lunch wraps", "School lunch", "peanuts", "sesame", "Beans soaked", "Kitchen wraps",
+                       "Amount set aside: 2 units", "Still backed by this delivery: 1 unit"], openShare: true)
         tap(app.buttons["Done"])
         tap(openMatches)
         tap(ingredient)
@@ -153,6 +176,8 @@ import XCTest
         tap(app.buttons["Alimentos entregados por comida"])
         assertFact("Cantidad apartada", "1/4 unidades")
         assertFact("Cantidad que aún cubre esta entrega", "0 unidades")
+        checkCookCopy(["Lunch wraps", "School lunch", "Tortillas de maíz", "Cantidad apartada: 1/4 unidades",
+                       "Cantidad que aún cubre esta entrega: 0 unidades", "peanuts", "sesame"])
         tap(app.buttons["Listo"])
         tap(record)
         enter(XCUIKeyboardKey.delete.rawValue, in: amount)

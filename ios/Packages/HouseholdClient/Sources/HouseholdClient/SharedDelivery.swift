@@ -194,7 +194,7 @@ public enum SharedDeliveryEdit: Equatable, Sendable {
 
 public struct SharedDeliveryCoverage: Decodable, Sendable {
     /// The service keeps exact conversion and summation results as unbounded integers.
-    public struct Fraction: Decodable, Sendable {
+    public struct Fraction: Decodable, Equatable, Sendable {
         public let numerator: String
         public let denominator: String
         public var formatted: String { denominator == "1" ? numerator : numerator + "/" + denominator }
@@ -206,17 +206,17 @@ public struct SharedDeliveryCoverage: Decodable, Sendable {
             return digits(numerator) && digits(denominator) && denominator != "0"
         }
     }
-    public struct Reservation: Decodable, Sendable {
+    public struct Reservation: Decodable, Equatable, Sendable {
         public let sourceId: UUID
         public let reservationId: UUID
         public let requested: Fraction
         public let backed: Fraction
     }
-    public struct Allocation: Decodable, Sendable {
+    public struct Allocation: Decodable, Equatable, Sendable {
         public let sourceId: UUID
         public let amount: Fraction
     }
-    public struct Need: Decodable, Sendable {
+    public struct Need: Decodable, Equatable, Sendable {
         public let occurrenceId: UUID
         public let mealRevision: Int
         public let ingredientId: UUID

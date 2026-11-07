@@ -1,6 +1,74 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Couldn’t check the delivery. Reconnect and try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t check the delivery. Reconnect and try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo comprobar la entrega. Vuelve a conectarte e inténtalo de nuevo."
+          }
+        }
+      }
+    },
+    "Share dated copy": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share dated copy"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compartir copia con fecha"
+          }
+        }
+      }
+    },
+    "Prepare readback": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prepare readback"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparar lectura en voz alta"
+          }
+        }
+      }
+    },
+    "Edit cook wording": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit cook wording"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar el texto para quien cocina"
+          }
+        }
+      }
+    },
     "Review the usable amount, ingredient match and existing reservations before setting food aside.": {
       "extractionState": "manual",
       "localizations": {
