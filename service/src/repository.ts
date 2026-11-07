@@ -305,6 +305,8 @@ export class HouseholdRepository {
     if(ctx.selectedShopId && command.shopId!==ctx.selectedShopId) throw unavailable();
     const window=(await ctx.db.query('SELECT 1 FROM ritc.replay_window WHERE household_id=$1 AND window_id=$2 AND member_id=$3 AND device_id=$4 AND revoked_at IS NULL AND expires_at>$5',[ctx.householdId,command.replayWindow,ctx.member.member_id,ctx.deviceId,ctx.now])).rowCount;
     const queueEnded=()=>new ServiceError(409,'queue_permission_ended','Review current received requests before sending a new request.');
+    const queueAuthority=queueGrant ? await this.bootstrap(ctx) : undefined;
+    if(queueGrant && !queueAuthority?.canSetRequestQueue)throw queueEnded();
     if(!window)throw queueGrant ? queueEnded() : refresh();
     const payloadDigest=queueGrant ? digest({command,queueGrant}) : digest(command);
     const prior=(await ctx.db.query(`SELECT o.*,r.response FROM ritc.operation o LEFT JOIN ritc.operation_response r USING(household_id,operation_id)
@@ -346,7 +348,7 @@ export class HouseholdRepository {
       if(prior.device_id!==ctx.deviceId)throw refresh();
       return prior.response;
     }
-    if(queueGrant && (await this.bootstrap(ctx)).requestQueueGrant!==queueGrant) {
+    if(queueGrant && queueAuthority?.requestQueueGrant!==queueGrant) {
       throw queueEnded();
     }
     const operationId=randomUUID();

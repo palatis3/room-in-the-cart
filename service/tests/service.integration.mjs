@@ -129,6 +129,17 @@ test('pending own requests require the current opted-in device, an unexpired gra
   assert.equal((await admin.query('SELECT 1 FROM ritc.request_queue_permission WHERE household_id=$1',[f.h])).rowCount,0);
 });
 
+test('an implicit or selected helper view cannot recover a contributor queue receipt',async()=>{
+  const f=await fixture(),grant=(await f.http('Alex','PUT','/devices/current/request-queue',{enabled:true})).data.requestQueueGrant;
+  const input=f.envelope('Alex','request.send',{clientRequestId:randomUUID(),originalItem:'Private request',ownQuantity:null,authoredAt:new Date().toISOString()},{shopRevision:0,authorityEpoch:0});
+  const send=(access={})=>f.http('Alex','POST','/commands',input,{'X-Request-Queue-Grant':grant,...access});
+  assert.equal((await send()).status,200);
+  const view=await f.http('Mia','POST','/views',{shopId:f.shopId,mode:'read',shopLabel:'Shared meal',language:'en',items:[]});
+  assert.equal((await f.http('Alex','POST','/v1/invites/redeem',{token:view.data.token,intent:'join',adultAttestation:true})).status,200);
+  assert.equal((await f.http('Alex','GET','/bootstrap')).data.role,'helper');
+  for(const scope of [{},{'X-View-Grant-ID':view.data.grantId}])assert.equal((await send(scope)).data.error.code,'queue_permission_ended');
+});
+
 test('Foundation Grocery 30 routing and replay vectors over four authenticated HTTP clients',
   t=>grocery30Routing(t,fixture,admin,origin));
 
