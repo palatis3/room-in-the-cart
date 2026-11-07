@@ -30,8 +30,12 @@ struct SharedFallbackRoot: View {
             model?.invalidate()
             model = nil
             guard let selected = access, let service = household.service else { return }
-            let next = SharedFallbackModel(shopID: page.shopId, service: service, store: household.fallbackPendingStore,
-                                           authorized: { self.access == selected })
+            let record = page
+            let next = SharedFallbackModel(shopID: record.shopId, service: service, store: household.fallbackPendingStore) { [weak shop, weak household] in
+                guard let shop, let household, household.decisionAccess == selected,
+                      shop.scope.capabilities.contains("accepted_fallbacks"), shop.scope.role == "shopper", shop.scope.grantId == nil else { return false }
+                return showsReviewedRecovery(record, model: shop, household: household)
+            }
             model = next
             await next.load()
         }

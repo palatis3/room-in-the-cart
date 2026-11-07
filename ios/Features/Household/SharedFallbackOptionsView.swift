@@ -45,7 +45,7 @@ struct SharedFallbackOptionsView: View {
                     LabeledContent(sharedRecoveryText("Meal deadline"), value: deadline)
                 }
                 Section {
-                    Toggle(fallbackText("Compare a top-up trip"), isOn: $trip.include)
+                    Toggle(fallbackText("Compare a top-up trip"), isOn: $trip.include).accessibilityIdentifier("fallback.trip.include")
                     if trip.include {
                         TextField(fallbackText("Round-trip minutes"), text: $trip.minutes).keyboardType(.numberPad).focused($editing)
                         TextField(fallbackText("Whole-trip spending limit (USD)"), text: $trip.budget).keyboardType(.decimalPad).focused($editing)
@@ -54,7 +54,7 @@ struct SharedFallbackOptionsView: View {
                 }
                 ForEach($candidates) { $draft in
                     Section {
-                        Toggle(draft.candidate.recipe.title, isOn: $draft.selected)
+                        Toggle(draft.candidate.recipe.title, isOn: $draft.selected).accessibilityIdentifier("fallback.select." + draft.id.uuidString)
                         if draft.selected {
                             NavigationLink(fallbackText("Review ingredients, food and time")) {
                                 FallbackIngredientReview(draft: $draft, page: page, includeOffers: trip.include)
@@ -134,7 +134,7 @@ struct SharedFallbackOptionsView: View {
                 }
                 if option.repeatRequired { Text(fallbackText("Repeating this meal requires agreement.")) }
                 Button(fallbackText("Review this replacement")) { Task { await choose(option, reviewed: result) } }
-                    .disabled(model.busy || preparing)
+                    .disabled(model.busy || preparing).accessibilityIdentifier("fallback.choose." + option.id.uuidString)
             }
         }
         ForEach(result.conditional, id: \.candidateId) { row in

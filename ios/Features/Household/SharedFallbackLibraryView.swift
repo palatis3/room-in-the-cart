@@ -98,6 +98,7 @@ struct SharedFallbackLibraryView: View {
                 } header: { Text(fallbackText("Household fallback recipes")) }
                 if model.canSuggest, model.pending == nil {
                     Button(fallbackText("Share one fallback recipe")) { enteringRecipe = true }
+                        .accessibilityIdentifier("fallback.disclose")
                     DisclosureGroup(fallbackText("Review a scheduled meal or approved idea"), isExpanded: $displayingSources) {
                         ForEach(recovery.meals) { meal in
                             Button { Task { await loadSource(.meal(occurrenceId: meal.id, mealRevision: meal.sourceMealRevision,
@@ -198,12 +199,12 @@ private struct FallbackApprovalSheet: View {
             Form {
                 if model.canSuggest, model.library == review.library {
                     SharedFallbackRecipeFacts(recipe: review.recipe)
-                    Toggle(fallbackText("Usual fallback"), isOn: $usual)
+                    Toggle(fallbackText("Usual fallback"), isOn: $usual).accessibilityIdentifier("fallback.usual")
                     Button(fallbackText("Accept this recipe for household suggestions")) {
                         let edit = SharedFallbackEdit.accept(candidateId: review.candidateID, baseRevision: review.priorRevision,
                                                              source: review.source, recipe: review.recipe, usual: usual)
                         Task { if await model.save(edit, reviewed: review.library) { dismiss() } }
-                    }.disabled(model.busy || model.pending != nil)
+                    }.disabled(model.busy || model.pending != nil).accessibilityIdentifier("fallback.accept")
                 }
                 if let notice = model.notice { Text(verbatim: notice) }
             }
