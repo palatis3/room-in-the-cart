@@ -13,7 +13,12 @@
         "artifactSHA256": "90d1b7705994697e4a959256d17a0b13888ddadcb3b9c262ee926d1f494841b3"
       }
     },
-    "basis": "Both hosted sanitizer logs reported the same 392 unique test identifiers, with 389 passes and three approved skips per job."
+    "basis": "Both hosted sanitizer logs reported the same 392 unique test identifiers, with 389 passes and three approved skips per job.",
+    "mealRecoveryAddition": {
+      "sourceCommit": "852367b74bb344c2864700a3360436a585fa89e2",
+      "job": "https://github.com/palatis3/room-in-the-cart/actions/runs/42363987322/job/128378065295",
+      "added": 12
+    }
   },
   "packages": {
     "CoreDomain": [
@@ -129,6 +134,18 @@
       "CoreDomainTests.LedgerPackStockEvidenceTests/testProtectedFoodAndFixedReservationsElsewhereCannotBeCreditedTwice",
       "CoreDomainTests.LedgerPackStockEvidenceTests/testTwelveNeedEightAllocatedEightPerPackBuysOneAndKeepsGrossDemand",
       "CoreDomainTests.LedgerPackStockEvidenceTests/testVersionOneArchiveAndNoStockBehaviorRemainUnchanged",
+      "CoreDomainTests.MealRecoveryTests/testCalendarMovePreservesMealQuantitiesAndSavedDeadlineThroughRecoveryHistory",
+      "CoreDomainTests.MealRecoveryTests/testDecodedHistoryRejectsDuplicateOperationBrokenLineageAndForgedWholeTarget",
+      "CoreDomainTests.MealRecoveryTests/testFutureArrivalEvidenceStaysUnusableUntilInstantAndStalesAnExistingReview",
+      "CoreDomainTests.MealRecoveryTests/testNewOutsideDemandIsAnExplicitRevisionAndInvalidatesAnOlderReplacementReview",
+      "CoreDomainTests.MealRecoveryTests/testOutsideAllocationComparisonUsesExactUnitsAndStillRejectsTakingItsFood",
+      "CoreDomainTests.MealRecoveryTests/testPreparationLeadAndClockBoundaryRemainConditionalWithoutChangingSavedDeadline",
+      "CoreDomainTests.MealRecoveryTests/testRepeatedReplacementUsesCurrentWholeTargetAndRejectsSameOperationDifferentContent",
+      "CoreDomainTests.MealRecoveryTests/testReplacementCannotConsumeAnotherNeedAndFivePortionsDoNotCoverFourPlusTwoProtected",
+      "CoreDomainTests.MealRecoveryTests/testSixFourTwoWrapRecoveryReplacesOnlyWednesdayAndPreservesHistoryCancelReplayAndRestart",
+      "CoreDomainTests.MealRecoveryTests/testTopUpAndRepeatConsentNeverInventFoodOrAcknowledgedCoverage",
+      "CoreDomainTests.MealRecoveryTests/testUnknownDeadlineCanBeExplicitlyConfirmedAndHistoricalNeedIDsCannotReturn",
+      "CoreDomainTests.MealRecoveryTests/testWholeTargetProtectedGroupsDueAndExclusionsCannotBeDroppedOrBorrowIdentities",
       "CoreDomainTests.PickupTests/testAllocationConservationAcrossManyPartialReceipts",
       "CoreDomainTests.PickupTests/testCorruptPickupArchiveCannotBypassPhysicalSupplyCeiling",
       "CoreDomainTests.PickupTests/testCorruptSettlementArchiveCannotDoubleCountIncludedCredit",
