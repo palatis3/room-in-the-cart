@@ -1,0 +1,45 @@
+{
+  "interpretation": "Zero exported XCTest runtime warnings does not mean the native log contains no SDK/simulator notices.",
+  "separateNativeLogNotices": {
+    "simulatorDuplicateAccessibilityClass": {
+      "count": 1,
+      "lineNumbers": [
+        20
+      ]
+    },
+    "xcodeDebuggerVersionLookup": {
+      "count": 3,
+      "lineNumbers": [
+        18,
+        618,
+        737
+      ]
+    },
+    "xcodeOperatingSystemBuildParse": {
+      "count": 12,
+      "lineNumbers": [
+        7,
+        21,
+        614,
+        615,
+        620,
+        733,
+        734,
+        739,
+        795,
+        796,
+        804,
+        805
+      ]
+    }
+  },
+  "xctestRuntimeWarnings": {
+    "activityExportCount": 0,
+    "detailExportCount": 1,
+    "examinedTestCount": 1,
+    "runtimeWarningCount": 0,
+    "status": "passed",
+    "summaryWarningCount": 0,
+    "warnings": []
+  }
+}

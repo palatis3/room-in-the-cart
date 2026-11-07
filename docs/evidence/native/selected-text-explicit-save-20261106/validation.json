@@ -1,0 +1,45 @@
+{
+  "checkpointsVerified": 10,
+  "claims": {
+    "coldRestartRestoresSavedMerge": true,
+    "consumedReceiptPayloadCleared": true,
+    "explicitSavePersistsMerge": true,
+    "finalColdRestartDoesNotCommitAgain": true,
+    "nativeCancelResetsUnsavedMerge": true,
+    "oneAddCommitsOneSelectedTextBatch": true,
+    "oneNativeHeaderDragDismisses": true,
+    "unsavedSkipDoesNotOverwriteSavedJournal": true
+  },
+  "driverExitCode": 0,
+  "failedTests": 0,
+  "gaps": [],
+  "hostProtocol": "protocol-and-native-exit-success",
+  "nativeAttempts": 1,
+  "nativeExitCode": 0,
+  "offlineCoordinatorChecks": 40,
+  "passedTests": 1,
+  "platform": {
+    "device": "iPhone 17 Pro",
+    "language": "en",
+    "locale": "en_US",
+    "osBuild": "23C54",
+    "osVersion": "26.2",
+    "xcode": "27.1",
+    "xcodeBuild": "27A9275"
+  },
+  "scopeExclusions": [
+    "Permanent CI regression",
+    "Late-completion race reproduction",
+    "Spanish UI",
+    "Physical-device validation",
+    "Third-party sender coverage",
+    "Any runtime other than actual26.2/23C54"
+  ],
+  "selector": "RoomInTheCartUITests/FreeJourneyUITests/testSystemSelectedTextReviewCancelSaveAndDismissPreserveExplicitDraft",
+  "skippedTests": 0,
+  "sourceBaseline": "8d1a79b22981148839c6e3d0827c6710f877a369",
+  "status": "passed",
+  "supervisorSeconds": 192.617433625,
+  "testOverlay": "v2",
+  "testSeconds": 185.61882996559143
+}
