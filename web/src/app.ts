@@ -316,6 +316,11 @@ export class WebApp {
     if(!this.requests.length)own.append(this.el('p',this.t('No requests yet.')));
     for(const r of this.requests){const card=this.el('article');card.className='card';card.dataset.requestId=r.requestId;
       card.append(this.el('h3',r.originalItem),this.el('p',r.ownQuantity??this.t('Unknown amount')),this.el('p',this.t(statuses[r.status]??'Status unavailable')),this.el('p',this.t(r.route==='next'?'Next shop':'This pickup')),this.el('p',this.date(r.receivedAt)));
+      if(r.status==='added'){
+        const purchaseLabel=r.purchaseOutcome==='bought'?'Shopper confirmed purchase':
+          r.purchaseOutcome==='notBought'?'Shopper confirmed the item was not bought':'Purchase not confirmed';
+        card.append(this.el('p',this.t(purchaseLabel)));
+      }
       if(r.clarification)card.append(this.el('p',r.clarification));
       if(r.ownActionAllowed){card.append(this.button('Edit',()=>{if(this.uncertainSend)return;this.draft={item:r.originalItem,amount:r.ownQuantity??'',route:r.route,editing:r,followup:null};this.review=false;this.retryCommand=null;this.render();this.root.querySelector<HTMLElement>('#item')?.focus();}),this.button('Withdraw',()=>{this.withdrawn=r;this.withdrawalCommand=null;this.render();}));}
       else if(r.status!=='withdrawn')card.append(this.button('Follow up',()=>{if(this.uncertainSend)return;this.draft={...blank(),item:r.originalItem,amount:r.ownQuantity??'',route:r.route,followup:r.requestId};this.review=false;this.retryCommand=null;this.render();this.root.querySelector<HTMLElement>('#item')?.focus();}));

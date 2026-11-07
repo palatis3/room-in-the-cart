@@ -799,3 +799,40 @@ test('pagination appends only distinct own rows and receipt recovery avoids dupl
  type(dom,'correction','Previously received private suggestion');submit(root,dom);await waitForIdle(root);
  assert.equal(root.querySelector('[data-proposal-id="proposal-a"]'),null);assert.match(root.textContent,/Your reviewed suggestion/);assert.ok(root.querySelector('[data-proposal-id="proposal-b"]'));
 });
+
+test('only an added own request may carry an explicit purchase outcome',async()=>{
+ const row={...own(),status:'added',ownActionAllowed:false};
+ const read=async fields=>{
+  const api=new API(async()=>Response.json({requests:[{...row,...fields}],nextCursor:null}));
+  return (await api.requests(session()))[0];
+ };
+ for(const outcome of ['bought','notBought']){
+  const parsed=await read({purchaseOutcome:outcome,linkedLineId:'shopper-only',priceMinor:399});
+  assert.equal(parsed.purchaseOutcome,outcome);
+  assert.equal('linkedLineId' in parsed,false);
+  assert.equal('priceMinor' in parsed,false);
+ }
+ assert.equal('purchaseOutcome' in await read({}),false);
+ for(const fields of [{purchaseOutcome:'unknown'},{purchaseOutcome:null},{purchaseOutcome:'bought',status:'deferred'}]){
+  await assert.rejects(()=>read(fields),ApiError);
+ }
+});
+
+for(const [language,refresh,unconfirmed,bought,notBought] of [
+ ['en','Refresh','Purchase not confirmed','Shopper confirmed purchase','Shopper confirmed the item was not bought'],
+ ['es','Actualizar','Compra sin confirmar','La persona que hizo la compra confirmó que compró el artículo','La persona que hizo la compra confirmó que no compró el artículo']
+]){
+ test('own receipt refresh follows the shopper purchase correction in '+language,async t=>{
+  let row=own();
+  const {root,dom}=await setup(fakeAPI({requests:async()=>[row]}),language);
+  t.after(()=>dom.window.close());
+  assert.ok(!root.textContent.includes(unconfirmed));
+  row={...row,status:'added',ownActionAllowed:false};
+  for(const [outcome,expected] of [[undefined,unconfirmed],['bought',bought],['notBought',notBought],[undefined,unconfirmed]]){
+   row={...row,revision:row.revision+1,purchaseOutcome:outcome};
+   click(root,refresh);await waitForIdle(root);
+   const labels=[...root.querySelectorAll('p')].map(p=>p.textContent);
+   assert.deepEqual(labels.filter(label=>[unconfirmed,bought,notBought].includes(label)),[expected]);
+  }
+ });
+}
