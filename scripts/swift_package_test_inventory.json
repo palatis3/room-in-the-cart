@@ -38,6 +38,10 @@
     "boundedListImportAddition": {
       "added": 3,
       "basis": "Two compiled CoreDomain boundary cases and one compiled DeviceSurfaces receipt and recovery case passed locally."
+    },
+    "rangedImportQuantityAddition": {
+      "added": 1,
+      "basis": "CoreDomainTests.ShoppingLedgerTests/testRangedImportsKeepUncertainAmountsOutOfSavedSupply verifies that numeric and bilingual spoken ranges retain their source and remain unresolved through import."
     }
   },
   "packages": {
@@ -212,6 +216,7 @@
       "CoreDomainTests.ShoppingLedgerTests/testPersistedAllocationCycleDanglingAndOverallocationAreRejected",
       "CoreDomainTests.ShoppingLedgerTests/testPersistedCorruptionIsRejectedBeforeMutationCanTrap",
       "CoreDomainTests.ShoppingLedgerTests/testRandomizedLinkedDemandConservationAndRemoval",
+      "CoreDomainTests.ShoppingLedgerTests/testRangedImportsKeepUncertainAmountsOutOfSavedSupply",
       "CoreDomainTests.ShoppingLedgerTests/testRefreshImportMatchesUsesEditedNamesWithoutChangingEvidenceOrIDs",
       "CoreDomainTests.ShoppingLedgerTests/testRemoveIndividualMealAndImportContributionPreservesOtherSources",
       "CoreDomainTests.ShoppingLedgerTests/testRemovingMiddleDuplicatePreservesEquivalence",
