@@ -1,0 +1,50 @@
+{
+  "review": "Read-only audit of retained execution, frozen test and current matching source/artifacts; no rerun",
+  "result": {
+    "tests": 7,
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "cancelled": 0,
+    "exit": 0,
+    "tapDurationMs": 2872.672916
+  },
+  "database": {
+    "version": "PostgreSQL 17.11",
+    "migrations": 30,
+    "admin": "ritc_fixture_admin",
+    "runtime": "ritc_runtime",
+    "runtimeSuperuser": false,
+    "runtimeBypassRLS": false,
+    "runtimeGrant": "ritc_app",
+    "environment": "Fresh task-owned loopback cluster; synthetic identities and billing gateway",
+    "stopExit": 0,
+    "socketDirectoryAbsentAtReview": true,
+    "postmasterPIDFileAbsentAtReview": true
+  },
+  "binding": {
+    "manifestEntriesVerified": 126,
+    "mismatches": [],
+    "testMatchesPreparedCandidate": true,
+    "testSHA256": "ad4b8c9b5ba1f0db6509894d13108ea940b6a26da328157227f6b4a9a08d1596"
+  },
+  "clauses": {
+    "S26.03": "No new cancellation test. Preparation is synchronous with no in-flight generator. Prior native unsaved-template abandonment evidence remains separate.",
+    "S26.04": "Exact service draft-save and approval retries preserve all idea/receipt rows and full shop state; not a generation-in-flight/UI retry claim.",
+    "S26.06": "Ordinary enrolled unassigned contributor denied fresh valid template-derived save and approval of exact adult-owned draft, with unchanged domain/receipt baseline; identical allowed-adult requests succeed. Local newIdea access still requires native model binding."
+  },
+  "initialFailure": {
+    "stage": "PostgreSQL startup before tests",
+    "exit": 1,
+    "reason": "Unix-domain socket path exceeds macOS 103-byte maximum",
+    "terminalLog": "database system is shut down",
+    "correction": "Fresh cluster and short private /tmp socket path; failed logs retained"
+  },
+  "limits": [
+    "Focused service acceptance, not native UI/physical-device proof or whole-app acceptance",
+    "No asynchronous generator exists; no in-flight cancellation race is certified",
+    "No production behavior changed by this regression-test patch",
+    "No fresh service build receipt is in this bundle; executed dist hashes are pinned and were compared to current files",
+    "Full test file is retained as assertion binding; database rows themselves were not separately exported"
+  ]
+}

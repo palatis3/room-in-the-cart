@@ -1,0 +1,11 @@
+{
+  "command": [
+    "/Users/palatis/Room in the Cart/.tools/postgres/bin/psql",
+    "postgresql://ritc_fixture_admin@127.0.0.1:61954/ritc_acceptance",
+    "-At",
+    "-c",
+    "SELECT current_database(),current_user,inet_server_addr(),inet_server_port(); SELECT rolname,rolsuper,rolbypassrls FROM pg_roles WHERE rolname='ritc_runtime'; SELECT count(*) FROM public.ritc_schema_migration;"
+  ],
+  "start": 1794028931.22272,
+  "scope": "Dedicated synthetic loopback PostgreSQL cluster only"
+}

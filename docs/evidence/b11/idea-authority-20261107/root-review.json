@@ -1,0 +1,11 @@
+{
+  "publicationFilesRehashed": 21,
+  "sourceAndExecutedJSRehashed": 126,
+  "installedTestMatchesPreparedCandidate": true,
+  "postgresObservedStopped": true,
+  "privateSocketObservedRemoved": true,
+  "integrationPassed": 7,
+  "integrationFailed": 0,
+  "integrationSkipped": 0,
+  "scope": "Focused real loopback HTTP/PostgreSQL with synthetic identity and billing; native model/UI and generation-in-flight proofs separate"
+}

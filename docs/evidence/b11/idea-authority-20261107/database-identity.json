@@ -1,0 +1,11 @@
+{
+  "host": "127.0.0.1",
+  "port": 61954,
+  "database": "ritc_acceptance",
+  "dataDirectory": "/Users/palatis/Room in the Cart/.build/S26AcceptanceInvestigation20261107/postgres-run-corrected/data",
+  "admin": "ritc_fixture_admin",
+  "runtime": "ritc_runtime",
+  "syntheticOnly": true,
+  "socketDirectory": "/tmp/ritc-s26-29c7eg8j",
+  "setupCorrection": "Initial cluster startup failed before tests: macOS Unix socket path exceeded103bytes; short private directory used here"
+}

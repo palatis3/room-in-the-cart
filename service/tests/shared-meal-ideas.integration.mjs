@@ -102,7 +102,40 @@ test('exact idea author, approved revision and quantities cannot be substituted'
 test('unassigned contributor and one-shop grant cannot read or approve; planner revocation stops retry',async()=>{
  const f=await mealFixture(),a=await approved(f),other=await actor();const invite=ok(await call(f.owner,f.base+'/invites','POST',{kind:'adult_contributor'}));
  other.id=ok(await call(other,'/v1/invites/redeem','POST',{token:invite.token,intent:'join',adultAttestation:true,alias:'Other adult'})).memberId;await enroll(other,f.h);
- assert.equal((await call(other,a.path)).status,404);assert.equal((await call(other,a.path,'POST',a.save)).status,404);
+ // Preparation is synchronous app-owned template construction, not a server generation job.
+ // Use a fresh, valid template-derived draft and then the exact adult-owned saved draft:
+ // neither a malformed payload nor a stale revision may stand in for authority denial.
+ const snapshot=async()=>({
+  shop:ok(await call(f.owner,f.path)),
+  ideas:(await admin.query('SELECT to_jsonb(i) AS row FROM ritc.shared_meal_idea i WHERE household_id=$1 AND shop_id=$2 ORDER BY idea_id',[f.h,f.shopId])).rows,
+  receipts:(await admin.query('SELECT to_jsonb(r) AS row FROM ritc.shared_idea_receipt r WHERE household_id=$1 AND shop_id=$2 ORDER BY actor_id,client_key',[f.h,f.shopId])).rows
+ });
+ const before=await snapshot();
+ assert.equal((await call(other,a.path)).status,404);
+ assert.deepEqual(await snapshot(),before,'Denied read must leave idea, receipt and full shop state unchanged');
+ const save={...a.save,clientKey:randomUUID(),ideaId:randomUUID(),draft:{...a.save.draft,title:'Fresh editable adult idea'}};
+ assert.equal((await call(other,a.path,'POST',save)).status,404);
+ assert.deepEqual(await snapshot(),before,'Ordinary contributor cannot save a prepared idea or create a receipt');
+ const saved=ok(await call(f.planner,a.path,'POST',save));
+ assert.equal(saved.ideaId,save.ideaId);assert.equal(saved.revision,1);assert.equal(saved.state,'draft');
+ const afterSave=await snapshot();
+ assert.deepEqual(afterSave.shop,before.shop,'Allowed adult draft save must not choose a meal or add lines');
+ assert.equal(afterSave.ideas.length,before.ideas.length+1);assert.equal(afterSave.receipts.length,before.receipts.length+1);
+ assert.equal(afterSave.ideas.find(value=>value.row.idea_id===save.ideaId).row.actor_id,f.planner.id);
+ assert.deepEqual(ok(await call(f.planner,a.path,'POST',save)),saved);
+ assert.deepEqual(await snapshot(),afterSave,'Exact allowed draft retry must add no idea or receipt');
+ const approval={...save,clientKey:randomUUID(),baseRevision:saved.revision,action:'approve',reviewedHouseholdEvidence:true};
+ assert.equal((await call(other,a.path,'POST',approval)).status,404);
+ assert.deepEqual(await snapshot(),afterSave,'Ordinary contributor cannot approve the adult-owned idea or create a receipt');
+ const accepted=ok(await call(f.planner,a.path,'POST',approval));
+ assert.equal(accepted.ideaId,save.ideaId);assert.equal(accepted.revision,2);assert.equal(accepted.state,'approved');
+ const afterApproval=await snapshot();
+ assert.deepEqual(afterApproval.shop,before.shop,'Allowed adult approval must not choose a meal or add lines');
+ assert.equal(afterApproval.ideas.length,afterSave.ideas.length);assert.equal(afterApproval.receipts.length,afterSave.receipts.length+1);
+ assert.equal(afterApproval.ideas.find(value=>value.row.idea_id===save.ideaId).row.state,'approved');
+ assert.equal(afterApproval.receipts.filter(value=>value.row.actor_id===other.id).length,0);
+ assert.deepEqual(ok(await call(f.planner,a.path,'POST',approval)),accepted);
+ assert.deepEqual(await snapshot(),afterApproval,'Exact allowed approval retry must add no idea, receipt, meal or line');
  assert.equal((await call(f.planner,a.path,'GET',undefined,{'X-View-Grant-ID':randomUUID()})).status,404);
  ok(await call(f.owner,f.path+'/meal-plan/planner','PUT',{authorityEpoch:1,grantRevision:1,plannerId:null}));
  assert.equal((await call(f.planner,a.path,'POST',a.approval)).status,404);assert.equal((await call(f.planner,f.changePath,'POST',a.proposal)).status,404);

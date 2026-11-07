@@ -1,0 +1,159 @@
+import test,{before,after} from 'node:test';
+import assert from 'node:assert/strict';
+import pg from 'pg';
+import {migrate} from '../scripts/migrate.mjs';
+import {randomUUID} from 'node:crypto';
+import {generateKeyPair,exportJWK,createLocalJWKSet,SignJWT} from 'jose';
+import {HouseholdRepository} from '../dist/repository.js';
+import {JWTIdentityVerifier,SupabaseSessionVerifier} from '../dist/auth.js';
+import {BillingService} from '../dist/billing/service.js';
+import {createHTTPServer} from '../dist/http.js';
+const admin=new pg.Pool({connectionString:process.env.TEST_ADMIN_DATABASE_URL}),runtime=new pg.Pool({connectionString:process.env.TEST_DATABASE_URL}),subscriptions=new Map();let verifiedCalls=0;
+const gateway={verifyTransaction:async value=>{const current=subscriptions.get(value);if(!current)throw Error('fixture signature');return current;},current:async id=>{verifiedCalls++;const value=subscriptions.get(id);if(!value)throw Error('fixture unavailable');return value;},verifyNotification:async()=>{throw Error('unused');}};
+const issuer='https://history.fixture.invalid',audience='authenticated';const {publicKey,privateKey}=await generateKeyPair('ES256'),jwk=await exportJWK(publicKey);jwk.kid='history';
+const verifier=new JWTIdentityVerifier({issuer,audience,jwksUrl:issuer+'/keys'},createLocalJWKSet({keys:[jwk]})),repo=new HouseholdRepository(runtime,{allowChildNetwork:false,noticeVersion:'fixture',sessionStatus:new SupabaseSessionVerifier(issuer)}),billing=new BillingService(gateway),server=createHTTPServer({repository:repo,verifier,billing,maxRequestsPerMinute:20000});let origin;
+before(async()=>{if(!process.env.TEST_DATABASE_URL||!process.env.TEST_ADMIN_DATABASE_URL)throw Error('Explicit isolated local database URLs required');await admin.query('CREATE SCHEMA IF NOT EXISTS auth; CREATE TABLE IF NOT EXISTS auth.sessions(id uuid PRIMARY KEY,user_id uuid NOT NULL,not_after timestamptz)');await migrate(process.env.TEST_ADMIN_DATABASE_URL);await new Promise(r=>server.listen(0,'127.0.0.1',r));origin='http://127.0.0.1:'+server.address().port;});after(async()=>{await new Promise(r=>server.close(r));await Promise.all([admin.end(),runtime.end()]);});
+async function actor(){const subject=randomUUID(),session=randomUUID();await admin.query('INSERT INTO auth.sessions(id,user_id) VALUES($1,$2)',[session,subject]);const token=await new SignJWT({session_id:session}).setProtectedHeader({alg:'ES256',kid:jwk.kid}).setIssuer(issuer).setSubject(subject).setAudience(audience).setIssuedAt().setExpirationTime('1h').sign(privateKey);return{subject,session,token};}
+async function call(a,path,method='GET',body,headers={}){const r=await fetch(origin+path,{method,headers:{Authorization:'Bearer '+a.token,...(a.device?{'X-Device-Token':a.device}:{}),...(body===undefined?{}:{'Content-Type':'application/json'}),...headers},...(body===undefined?{}:{body:JSON.stringify(body)})});return{status:r.status,data:await r.json()};}
+function ok(r,status=200){assert.equal(r.status,status,JSON.stringify(r.data));return r.data;}
+async function enroll(a,h){a.device=ok(await call(a,`/v1/households/${h}/devices`,'POST',{}),201).deviceToken;a.window=ok(await call(a,`/v1/households/${h}/replay-windows`,'POST',{})).id;}
+async function fixture(){const owner=await actor(),created=ok(await call(owner,'/v1/households','POST',{clientKey:randomUUID(),label:'History fixture',alias:'Adult',adultAttestation:true}),201),h=created.householdId,base=`/v1/households/${h}`;owner.id=created.memberId;await enroll(owner,h);
+ const shop=async(price=10000)=>{const id=randomUUID(),quote={currency:'USD',scope:'wholeCheckout',complete:true,capMinor:100000,capScope:'wholeCheckout',fee:{kind:'fixed',amountMinor:0},taxesMinor:0,depositsMinor:0,discountsMinor:0,observedAt:new Date(Date.now()-60000).toISOString(),expiresAt:new Date(Date.now()+3600000).toISOString()};ok(await call(owner,base+'/commands','POST',{v:1,replayWindow:owner.window,clientKey:randomUUID(),shopId:id,kind:'shop.create',base:{shopRevision:0,authorityEpoch:0},body:{quote,lines:[{lineId:randomUUID(),originalItem:'Private basket source',packs:1,unitPriceMinor:price,feeEligible:true}]}}));return id;};
+ const shopId=await shop();async function paid(){const token=ok(await call(owner,base+'/billing/purchase-context','POST',{})).appAccountToken,original=String(Date.now())+String(Math.floor(Math.random()*1e6)).padStart(6,'0'),now=Date.now();subscriptions.set(original,{environment:'Sandbox',originalTransactionID:original,transactionID:original,appAccountToken:token,productID:'fixture.household.yearly',purchasedAt:now,signedAt:now,expiresAt:now+3600000,graceExpiresAt:null,status:'active'});ok(await call(owner,'/v1/billing/verify','POST',{householdId:h,signedTransactionInfo:original}));return original;}
+ const version=async(id=shopId)=>ok(await call(owner,base+`/shops/${id}/financial-evidence`)).sourceVersion;
+ const financial=async(entry,id=shopId)=>{const input={clientKey:randomUUID(),sourceVersion:await version(id),entry};return{input,result:ok(await call(owner,base+`/shops/${id}/financial-evidence`,'POST',input))};};
+ return{owner,h,base,shopId,shop,paid,version,financial};}
+
+async function mealFixture() {
+ const f=await fixture(),path=f.base+'/shops/'+f.shopId,changePath=path+'/meal-plan/changes';
+ const planner=await actor(),invite=ok(await call(f.owner,f.base+'/invites','POST',{kind:'adult_contributor'}));
+ planner.id=ok(await call(planner,'/v1/invites/redeem','POST',{token:invite.token,intent:'join',adultAttestation:true,alias:'Planner'})).memberId;
+ await enroll(planner,f.h);await f.paid();const seats=ok(await call(f.owner,f.base+'/entitlements'));
+ ok(await call(f.owner,f.base+'/billing/seats','PUT',{revision:seats.revision,userIDs:[f.owner.id,planner.id]}));
+ const initial=ok(await call(f.owner,path)),occurrenceId=randomUUID(),dinner=randomUUID(),lunch=randomUUID(),ingredient=randomUUID();
+ const quantity=n=>({amount:{numerator:n,denominator:1},unit:'gram',originalLiteral:n+' g'});
+ const meal={title:'Reviewed supper',day:'2026-11-05',kind:'dinner',portions:6,protected:false,planning:{sourceOccurrenceId:randomUUID(),
+  groups:[{id:dinner,name:'Dinner group',servings:{numerator:4,denominator:1},protected:false},{id:lunch,name:'Protected lunch',servings:{numerator:2,denominator:1},protected:true}],
+  ingredients:[{id:ingredient,name:'Beans',quantity:quantity(600),groupIds:[dinner,lunch],exclusions:['No sesame']}],
+  bindings:[{id:randomUUID(),ingredientId:ingredient,groupId:dinner,quantity:quantity(400)},{id:randomUUID(),ingredientId:ingredient,groupId:lunch,quantity:quantity(200)}]}};
+ const patch=(revision,mealEdit,extra={})=>({v:1,replayWindow:f.owner.window,clientKey:randomUUID(),shopId:f.shopId,kind:'shop.patch',base:{shopRevision:revision,authorityEpoch:1},body:{quote:initial.quote,lines:initial.lines,mealEdit,...extra}});
+ ok(await call(f.owner,f.base+'/commands','POST',patch(1,{occurrenceId,baseMealRevision:null,meal})));
+ ok(await call(f.owner,path+'/meal-plan/planner','PUT',{authorityEpoch:1,grantRevision:0,plannerId:planner.id}));
+ const changed=structuredClone(meal);changed.portions=4;changed.planning.groups[0].servings.numerator=2;changed.planning.ingredients[0].quantity=quantity(400);changed.planning.bindings[0].quantity=quantity(200);
+ const proposal={proposalId:randomUUID(),occurrenceId,baseMealRevision:2,shopRevision:2,authorityEpoch:1,grantRevision:1,meal:changed,reason:'Guests changed; keep the two protected lunches.'};
+ return {...f,path,changePath,planner,initial,meal,changed,proposal,patch};
+}
+
+const ideaDraft=()=>({title:'Household rice bowls',source:'app_template',servings:2,minutes:25,assumedExtras:['Water'],exclusions:[],ingredients:[{id:randomUUID(),name:'Rice',required:600,unit:'gram',stock:500,reservations:[{name:'Protected Tuesday lunch',amount:250}],pack:400,usableNumerator:3,usableDenominator:4,evidence:'Household stock checked; package label entered'}]});
+function mealFor(draft){return{title:draft.title,day:'2026-11-09',kind:'dinner',portions:draft.servings,protected:false,planning:{groups:[],ingredients:draft.ingredients.map(i=>({id:i.id,name:i.name,quantity:{amount:typeof i.required==='number'?{numerator:i.required,denominator:1}:i.required,unit:i.unit,originalLiteral:`${typeof i.required==='number'?i.required:i.required.denominator===1?i.required.numerator:i.required.numerator+'/'+i.required.denominator} ${i.unit}`},groupIds:[],exclusions:[]}))}};}
+async function approved(f,author=f.planner,draft=ideaDraft()){
+ const path=f.base+'/shops/'+f.shopId+'/meal-plan/ideas',page=ok(await call(author,path));
+ const save={clientKey:randomUUID(),ideaId:randomUUID(),baseRevision:null,shopRevision:page.shopRevision,authorityEpoch:page.authorityEpoch,grantRevision:page.grantRevision,action:'save',draft,reviewedHouseholdEvidence:false};
+ const saved=ok(await call(author,path,'POST',save));
+ const approval={...save,clientKey:randomUUID(),baseRevision:saved.revision,action:'approve',reviewedHouseholdEvidence:true};
+ const result=ok(await call(author,path,'POST',approval));
+ const proposal={proposalId:randomUUID(),occurrenceId:randomUUID(),baseMealRevision:null,shopRevision:page.shopRevision,authorityEpoch:page.authorityEpoch,grantRevision:page.grantRevision,meal:mealFor(draft),reason:'Explicit household idea approval',approvedIdeaId:save.ideaId,approvedIdeaRevision:result.revision};
+ return{path,page,save,approval,result,proposal};
+}
+test('adult planner corrects excluded ambiguous idea, approves only, then separately proposes and shopper applies once',async()=>{
+ const f=await mealFixture(),path=f.path+'/meal-plan/ideas',before=ok(await call(f.owner,f.path));
+ const draft=ideaDraft();draft.exclusions=['RICE'];draft.ingredients[0].pack=null;
+ const save={clientKey:randomUUID(),ideaId:randomUUID(),baseRevision:null,shopRevision:2,authorityEpoch:1,grantRevision:1,action:'save',draft,reviewedHouseholdEvidence:false};
+ const first=ok(await call(f.planner,path,'POST',save));assert.deepEqual(ok(await call(f.planner,path,'POST',save)),first);
+ assert.equal((await call(f.planner,path,'POST',{...save,draft:{...draft,title:'Changed'}})).data.error.code,'key_reused');
+ assert.equal((await call(f.planner,path,'POST',{...save,clientKey:randomUUID(),baseRevision:1,action:'approve',reviewedHouseholdEvidence:true})).data.error.code,'idea_review_required');
+ draft.ingredients[0].name='Beans';draft.ingredients[0].pack=400;
+ ok(await call(f.planner,path,'POST',{...save,clientKey:randomUUID(),baseRevision:1,draft}));
+ const approval={...save,clientKey:randomUUID(),baseRevision:2,action:'approve',draft,reviewedHouseholdEvidence:true};
+ const responses=await Promise.all([call(f.planner,path,'POST',approval),call(f.planner,path,'POST',approval)]);assert.deepEqual(ok(responses[0]),ok(responses[1]));
+ assert.deepEqual(ok(await call(f.owner,f.path)),before);
+ const page=ok(await call(f.planner,path));assert.equal(page.ideas[0].state,'approved');assert.equal(page.ideas[0].preview.ingredients[0].wholePacks,2);assert.equal(page.quote,undefined);assert.equal(page.lines,undefined);
+ const proposal={proposalId:randomUUID(),occurrenceId:randomUUID(),baseMealRevision:null,shopRevision:2,authorityEpoch:1,grantRevision:1,meal:mealFor(draft),reason:'Reviewed idea',approvedIdeaId:save.ideaId,approvedIdeaRevision:3};
+ const response=ok(await call(f.planner,f.changePath,'POST',proposal));assert.deepEqual(ok(await call(f.planner,f.changePath,'POST',proposal)),response);
+ assert.deepEqual(ok(await call(f.owner,f.path)),before);
+ const receipt=ok(await call(f.owner,f.changePath));assert.equal(receipt.proposals[0].original,null);
+ const command=f.patch(2,{occurrenceId:proposal.occurrenceId,baseMealRevision:null,meal:proposal.meal,changeProposalId:proposal.proposalId});
+ const applied=ok(await call(f.owner,f.base+'/commands','POST',command));assert.deepEqual(ok(await call(f.owner,f.base+'/commands','POST',command)),applied);
+ const current=ok(await call(f.owner,f.path));assert.equal(current.meals.length,2);assert.deepEqual(current.lines,before.lines);
+});
+test('Free current household shopper may approve and separately self-propose without assigning a planner',async()=>{
+ const f=await fixture(),path=f.base+'/shops/'+f.shopId,created=await approved(f,f.owner);
+ assert.equal(created.page.grantRevision,0);ok(await call(f.owner,path+'/meal-plan/changes','POST',created.proposal));
+ const page=ok(await call(f.owner,path+'/meal-plan/changes'));assert.equal(page.proposals.length,1);assert.equal(page.proposals[0].original,null);
+ const current=ok(await call(f.owner,path));assert.equal(current.meals.length,0);
+ const edit={occurrenceId:created.proposal.occurrenceId,baseMealRevision:null,meal:created.proposal.meal,changeProposalId:created.proposal.proposalId};
+ ok(await call(f.owner,f.base+'/commands','POST',{v:1,replayWindow:f.owner.window,clientKey:randomUUID(),shopId:f.shopId,kind:'shop.patch',base:{shopRevision:1,authorityEpoch:1},body:{quote:current.quote,lines:current.lines,mealEdit:edit}}));
+ assert.equal(ok(await call(f.owner,path)).meals.length,1);
+});
+test('editing an approved idea invalidates submission and any pending shopper application',async()=>{
+ const f=await mealFixture(),a=await approved(f);ok(await call(f.planner,f.changePath,'POST',a.proposal));
+ ok(await call(f.planner,a.path,'POST',{...a.save,clientKey:randomUUID(),baseRevision:2,draft:{...a.save.draft,title:'New revision'}}));
+ assert.equal((await call(f.planner,f.changePath,'POST',a.proposal)).data.error.code,'stale_idea');
+ const edit={occurrenceId:a.proposal.occurrenceId,baseMealRevision:null,meal:a.proposal.meal,changeProposalId:a.proposal.proposalId};
+ assert.equal((await call(f.owner,f.base+'/commands','POST',f.patch(2,edit))).data.error.code,'stale_idea');
+ assert.equal(ok(await call(f.owner,f.path)).meals.length,1);
+});
+test('exact idea author, approved revision and quantities cannot be substituted',async()=>{
+ const f=await mealFixture(),a=await approved(f);
+ for(const proposal of [{...a.proposal,approvedIdeaRevision:1},{...a.proposal,approvedIdeaId:randomUUID()},{...a.proposal,meal:{...a.proposal.meal,portions:3}}])assert.equal((await call(f.planner,f.changePath,'POST',proposal)).status,409);
+ assert.equal((await call(f.owner,f.changePath,'POST',a.proposal)).status,409);
+ assert.equal((await call(f.planner,f.changePath,'POST',{...a.proposal,approvedIdeaId:undefined,approvedIdeaRevision:undefined})).status,422);
+});
+test('unassigned contributor and one-shop grant cannot read or approve; planner revocation stops retry',async()=>{
+ const f=await mealFixture(),a=await approved(f),other=await actor();const invite=ok(await call(f.owner,f.base+'/invites','POST',{kind:'adult_contributor'}));
+ other.id=ok(await call(other,'/v1/invites/redeem','POST',{token:invite.token,intent:'join',adultAttestation:true,alias:'Other adult'})).memberId;await enroll(other,f.h);
+ // Preparation is synchronous app-owned template construction, not a server generation job.
+ // Use a fresh, valid template-derived draft and then the exact adult-owned saved draft:
+ // neither a malformed payload nor a stale revision may stand in for authority denial.
+ const snapshot=async()=>({
+  shop:ok(await call(f.owner,f.path)),
+  ideas:(await admin.query('SELECT to_jsonb(i) AS row FROM ritc.shared_meal_idea i WHERE household_id=$1 AND shop_id=$2 ORDER BY idea_id',[f.h,f.shopId])).rows,
+  receipts:(await admin.query('SELECT to_jsonb(r) AS row FROM ritc.shared_idea_receipt r WHERE household_id=$1 AND shop_id=$2 ORDER BY actor_id,client_key',[f.h,f.shopId])).rows
+ });
+ const before=await snapshot();
+ assert.equal((await call(other,a.path)).status,404);
+ assert.deepEqual(await snapshot(),before,'Denied read must leave idea, receipt and full shop state unchanged');
+ const save={...a.save,clientKey:randomUUID(),ideaId:randomUUID(),draft:{...a.save.draft,title:'Fresh editable adult idea'}};
+ assert.equal((await call(other,a.path,'POST',save)).status,404);
+ assert.deepEqual(await snapshot(),before,'Ordinary contributor cannot save a prepared idea or create a receipt');
+ const saved=ok(await call(f.planner,a.path,'POST',save));
+ assert.equal(saved.ideaId,save.ideaId);assert.equal(saved.revision,1);assert.equal(saved.state,'draft');
+ const afterSave=await snapshot();
+ assert.deepEqual(afterSave.shop,before.shop,'Allowed adult draft save must not choose a meal or add lines');
+ assert.equal(afterSave.ideas.length,before.ideas.length+1);assert.equal(afterSave.receipts.length,before.receipts.length+1);
+ assert.equal(afterSave.ideas.find(value=>value.row.idea_id===save.ideaId).row.actor_id,f.planner.id);
+ assert.deepEqual(ok(await call(f.planner,a.path,'POST',save)),saved);
+ assert.deepEqual(await snapshot(),afterSave,'Exact allowed draft retry must add no idea or receipt');
+ const approval={...save,clientKey:randomUUID(),baseRevision:saved.revision,action:'approve',reviewedHouseholdEvidence:true};
+ assert.equal((await call(other,a.path,'POST',approval)).status,404);
+ assert.deepEqual(await snapshot(),afterSave,'Ordinary contributor cannot approve the adult-owned idea or create a receipt');
+ const accepted=ok(await call(f.planner,a.path,'POST',approval));
+ assert.equal(accepted.ideaId,save.ideaId);assert.equal(accepted.revision,2);assert.equal(accepted.state,'approved');
+ const afterApproval=await snapshot();
+ assert.deepEqual(afterApproval.shop,before.shop,'Allowed adult approval must not choose a meal or add lines');
+ assert.equal(afterApproval.ideas.length,afterSave.ideas.length);assert.equal(afterApproval.receipts.length,afterSave.receipts.length+1);
+ assert.equal(afterApproval.ideas.find(value=>value.row.idea_id===save.ideaId).row.state,'approved');
+ assert.equal(afterApproval.receipts.filter(value=>value.row.actor_id===other.id).length,0);
+ assert.deepEqual(ok(await call(f.planner,a.path,'POST',approval)),accepted);
+ assert.deepEqual(await snapshot(),afterApproval,'Exact allowed approval retry must add no idea, receipt, meal or line');
+ assert.equal((await call(f.planner,a.path,'GET',undefined,{'X-View-Grant-ID':randomUUID()})).status,404);
+ ok(await call(f.owner,f.path+'/meal-plan/planner','PUT',{authorityEpoch:1,grantRevision:1,plannerId:null}));
+ assert.equal((await call(f.planner,a.path,'POST',a.approval)).status,404);assert.equal((await call(f.planner,f.changePath,'POST',a.proposal)).status,404);
+});
+test('deleting idea author erases drafts, approvals and retry receipts',async()=>{
+ const f=await mealFixture(),a=await approved(f);await admin.query('SELECT ritc.privacy_erase_extension($1,$2)',[f.h,f.planner.id]);
+ assert.equal((await admin.query('SELECT count(*)::int n FROM ritc.shared_meal_idea WHERE household_id=$1',[f.h])).rows[0].n,0);
+ assert.equal((await admin.query('SELECT count(*)::int n FROM ritc.shared_idea_receipt WHERE household_id=$1',[f.h])).rows[0].n,0);
+ assert.equal((await call(f.planner,f.changePath,'POST',a.proposal)).status,404);
+});
+
+test('exact fractional cups survive save edit approve proposal and shopper apply; ounce and fluid ounce remain distinct',async()=>{
+ const f=await mealFixture(),draft=ideaDraft();Object.assign(draft.ingredients[0],{unit:'cup',required:{numerator:1,denominator:2},stock:{numerator:1,denominator:4},reservations:[{name:'Named lunch',amount:{numerator:1,denominator:8}}],pack:1,usableNumerator:1,usableDenominator:2});
+ for(const unit of ['ounce','fluidOunce'])draft.ingredients.push({...draft.ingredients[0],id:randomUUID(),unit,name:unit,required:{numerator:1,denominator:3}});
+ const a=await approved(f,f.planner,draft),page=ok(await call(f.planner,a.path)),idea=page.ideas[0];assert.deepEqual(idea.draft,draft);
+ assert.deepEqual(idea.preview.ingredients[0].remaining,{numerator:1,denominator:8});assert.deepEqual(idea.preview.ingredients[0].shortage,{numerator:3,denominator:8});assert.equal(idea.preview.ingredients[0].wholePacks,1);
+ ok(await call(f.planner,f.changePath,'POST',a.proposal));const exact=ok(await call(f.owner,f.changePath)).proposals[0].request.meal;assert.deepEqual(exact.planning.ingredients[0].quantity,{amount:{numerator:1,denominator:2},unit:'cup',originalLiteral:'1/2 cup'});
+ assert.equal(exact.planning.ingredients[1].quantity.unit,'ounce');assert.equal(exact.planning.ingredients[2].quantity.unit,'fluidOunce');
+ ok(await call(f.owner,f.base+'/commands','POST',f.patch(2,{occurrenceId:a.proposal.occurrenceId,baseMealRevision:null,meal:exact,changeProposalId:a.proposal.proposalId})));
+ assert.deepEqual(ok(await call(f.owner,f.path)).meals.find(m=>m.occurrenceId===a.proposal.occurrenceId).meal,exact);
+});

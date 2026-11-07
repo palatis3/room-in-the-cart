@@ -1,5 +1,7 @@
 # Current implementation and acceptance map
 
+S26 now has an exact ordinary-contributor save/approval denial check with unchanged idea, receipt and full-shop snapshots, valid adult controls and idempotent retries. [Seven real HTTP/PostgreSQL tests pass](evidence/b11/idea-authority-20261107/README.md) on a fresh local cluster under the restricted runtime role. Current catalog preparation is synchronous; this does not claim in-flight generation cancellation or replace native access/UI evidence.
+
 The exact S05 coffee/salsa fee-threshold examples now run in Swift and TypeScript, and S08 verifies six-to-seven usable-wrap correction, protected lunches, replay and serialization. [Calculation evidence](evidence/native/acceptance-math-20261107/README.md):171CoreDomain cases and13service checkout checks pass locally; screen/device acceptance remains separate.
 
 StoreKit cancellation remains an unresolved hosted failure. [Test-only diagnostic evidence](evidence/native/storekit-cancellation-diagnostic-20261107/README.md) includes a15/15local nonreproduction and a deliberate120-second timeout that preserves25stage attachments while the strict checker rejects the failure. Instrumentation is installed without the artificial sleep or relaxed gates; it is not a product correction or hosted pass.
