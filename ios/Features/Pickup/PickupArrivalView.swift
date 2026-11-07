@@ -52,6 +52,9 @@ struct PickupArrivalView: View {
                         Text(receipt.itemName).font(.headline)
                         Text("\(pTr("Received")): \(pQuantity(receipt.received)) · \(pTr(receipt.disposition.rawValue))")
                         Text("\(receipt.key.sourceEventID) / \(receipt.key.segmentID)").font(.caption)
+                        LabeledContent(pTr("Actual arrival")) {
+                            Text(receipt.receivedAt, format: .dateTime.month().day().year().hour().minute())
+                        }
                         if let observation = model.journey?.pickup?.usableObservations.last(where: { $0.receipt == receipt.key }) {
                             Text("\(pTr("Usable")): \(pQuantity(observation.usable))")
                             if receipt.receivedAt > model.stockReviewDate || observation.confirmedAt > model.stockReviewDate {

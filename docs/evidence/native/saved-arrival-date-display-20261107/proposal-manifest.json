@@ -1,0 +1,10 @@
+{
+  "sourcePath": "ios/Features/Pickup/PickupArrivalView.swift",
+  "baseSHA256": "d5a8a7d66ccc68ff48b939f182170f7aee318fb6d59c4072290ed60fc8336151",
+  "candidateSHA256": "b268310a4f202ab48757aaecdf472319c7b4a9b3bbcadbaacddbf530179ea595",
+  "patchSHA256": "8c0e686d3771ef4e637011ec007d33c279ec9daf368567b55f2567c0c35913e5",
+  "change": "Display receipt.receivedAt in saved receipt row using existing localized Actual arrival label and native SwiftUI Date formatting. No mutation or model/time changes.",
+  "originalSourceExactAfterRemovingSingleInsertion": true,
+  "observerHarnessDoesNotRequireThisPatch": true,
+  "validation": "Uninstalled source-only proposal; no native build/typecheck."
+}

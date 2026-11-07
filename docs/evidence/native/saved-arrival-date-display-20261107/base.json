@@ -1,0 +1,4 @@
+{
+  "head": "1e1f71390cef723bad9854fe1a5405aaf2a8d108",
+  "scope": "One-job build only of current1e1f713 + additive EN/ES actual-arrival observer + saved actual-arrival date display. No second native test/boot/install. No other root native job is running; generic simulator destination performs no boot/install."
+}
