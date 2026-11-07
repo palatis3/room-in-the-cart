@@ -90,7 +90,7 @@ import XCTest
         tap(app.buttons["recovery.cook." + wednesday])
         let original = app.staticTexts["delivery.cook.preview"]
         reveal(original)
-        for fact in ["Wednesday dinner", "Wednesday beans", "Dinner plates", "Still needed: 4 units", "No sesame"] {
+        for fact in ["Wednesday dinner", "Wednesday beans", "Dinner plates", "Still needed: 4 units", "No sesame", "America/New_York (UTC−05:00)"] {
             XCTAssertTrue(original.label.contains(fact), original.label)
         }
         XCTAssertFalse(original.label.contains("Rice alternative"))
@@ -130,7 +130,7 @@ import XCTest
         tap(app.buttons["recovery.cook." + wednesday])
         let copy = app.staticTexts["delivery.cook.preview"]
         reveal(copy)
-        for fact in ["Wednesday rice", "Cooked rice", "Dinner plates", "Still needed: 4 units", "No sesame"] {
+        for fact in ["Wednesday rice", "Cooked rice", "Dinner plates", "Still needed: 4 units", "No sesame", "America/New_York (UTC−05:00)"] {
             XCTAssertTrue(copy.label.contains(fact), copy.label)
         }
         XCTAssertFalse(copy.label.contains("Wednesday beans"))
@@ -139,6 +139,7 @@ import XCTest
         tap(app.buttons["Español (EE. UU.)"])
         reveal(copy)
         XCTAssertTrue(copy.label.contains("Aún falta: 4 unidades"), copy.label)
+        XCTAssertTrue(copy.label.contains("America/New_York (UTC−05:00)"), copy.label)
         let revisedSpanish = copy.label
         tap(app.buttons["delivery.cook.save"])
         reveal(app.staticTexts["Dated copy saved"])
@@ -156,6 +157,7 @@ import XCTest
         XCTAssertTrue(copy.label.contains("Protected lunch"), copy.label)
         XCTAssertTrue(copy.label.contains("Still needed: 2 units") || copy.label.contains("Aún falta: 2 unidades"), copy.label)
         XCTAssertFalse(copy.label.contains("Cooked rice"))
+        XCTAssertTrue(copy.label.contains("America/Los_Angeles (UTC−08:00)"), copy.label)
         let unchangedLunch = copy.label
         tap(app.buttons["delivery.cook.save"])
         reveal(app.staticTexts["Dated copy saved"])

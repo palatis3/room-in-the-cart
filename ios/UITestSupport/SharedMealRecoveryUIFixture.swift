@@ -22,14 +22,16 @@ final class SharedMealRecoveryFixture {
     }
     private func original(_ index: Int) -> Row {
         let tuesday = index == 1, count = tuesday ? 2 : 4
+        let due = tuesday ? "2026-11-10T20:15:00Z" : "2026-11-11T23:30:00Z"
+        let zone = tuesday ? "America/Los_Angeles" : "America/New_York"
         let group: Row = ["id": uuid(10 + index), "name": tuesday ? "Protected lunch" : "Dinner plates",
                           "servings": ["numerator": count, "denominator": 1], "protected": tuesday, "exclusions": []]
         let need: Row = ["id": uuid(20 + index), "foodId": null, "matchedSourceIds": [], "ingredientId": uuid(30 + index),
                          "groupId": uuid(10 + index), "name": tuesday ? "Tuesday tortillas" : "Wednesday beans", "notes": "",
-                         "quantity": quantity(count), "priority": tuesday ? "protected" : "required", "due": null, "exclusions": ["No sesame"]]
+                         "quantity": quantity(count), "priority": tuesday ? "protected" : "required", "due": due, "exclusions": ["No sesame"]]
         return ["occurrenceId": uuid(index), "revisionId": uuid(40 + index), "sourceMealRevision": 1,
                 "title": tuesday ? "Tuesday lunch" : "Wednesday dinner", "notes": "", "sourceURL": null,
-                "portions": count, "day": tuesday ? "2026-11-10" : "2026-11-11", "zone": null, "due": null,
+                "portions": count, "day": tuesday ? "2026-11-10" : "2026-11-11", "zone": zone, "due": due,
                 "exclusions": ["No sesame"], "template": null, "groups": [group], "needs": [need],
                 "remainingElapsedMinutes": null, "requiredLeadMinutes": null, "advanceStepsCompleted": false]
     }
@@ -40,7 +42,8 @@ final class SharedMealRecoveryFixture {
             group.removeValue(forKey: "exclusions")
             let ingredient: Row = ["id": uuid(30 + index), "name": tuesday ? "Tuesday tortillas" : "Wednesday beans",
                                    "quantity": quantity(tuesday ? 2 : 4), "groupIds": [uuid(10 + index)], "exclusions": ["No sesame"]]
-            let plan: Row = ["groups": [group], "ingredients": [ingredient], "exclusions": ["No sesame"]]
+            let plan: Row = ["groups": [group], "ingredients": [ingredient], "exclusions": ["No sesame"],
+                             "deadline": ["at": source["due"]!, "zone": source["zone"]!]]
             return ["occurrenceId": uuid(index), "revision": 1, "meal": ["title": source["title"]!, "day": source["day"]!,
                     "kind": tuesday ? "lunch" : "dinner", "portions": source["portions"]!, "protected": tuesday, "planning": plan]]
         }
@@ -73,8 +76,9 @@ final class SharedMealRecoveryFixture {
     private func demands(_ meals: [Row]) throws -> [Row] {
         try meals.flatMap { try ($0["needs"] as? [Row] ?? []).map { need -> Row in
             guard let q = need["quantity"] as? Row, let amount = q["amount"] as? [String: Int], let unit = q["unit"],
-                  let n = amount["numerator"], let d = amount["denominator"], let id = need["id"] else { throw Failure.invalid }
-            return ["needId": id, "due": null, "deadlineStatus": "unknown", "allocated": zero, "shortfall": ["numerator": String(n), "denominator": String(d)],
+                  let n = amount["numerator"], let d = amount["denominator"], let id = need["id"],
+                  let due = need["due"] as? String, let deadline = ISO8601DateFormatter().date(from: due) else { throw Failure.invalid }
+            return ["needId": id, "due": due, "deadlineStatus": deadline < Date() ? "pastDue" : "notPastDue", "allocated": zero, "shortfall": ["numerator": String(n), "denominator": String(d)],
                     "unit": unit, "issues": ["unknown_food"], "sourceIssues": [], "reservations": []]
         }}
     }
