@@ -47,6 +47,10 @@ struct SharedDeliveryView: View {
                     if page.coverageAvailable == true, page.meals?.isEmpty == false {
                         Button(ht("Delivered food by meal")) { showingCoverage = true }
                     }
+                    if model.canReadPantry {
+                        NavigationLink(ht("Pantry and freezer")) { SharedPantryView(model: model, shopID: page.shopId) }
+                            .accessibilityIdentifier("delivery.openPantry")
+                    }
                     if page.sources.isEmpty { Text(ht("No deliveries recorded yet.")) }
                     ForEach(page.sources) { source in
                         Section {
