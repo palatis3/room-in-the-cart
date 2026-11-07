@@ -1,6 +1,23 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Placed orders": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Placed orders"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pedidos realizados"
+          }
+        }
+      }
+    },
     "Record an arrival or usable confirmation only after it has happened.": {
       "extractionState": "manual",
       "localizations": {

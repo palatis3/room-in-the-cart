@@ -75,6 +75,30 @@ import XCTest
         XCTAssertFalse(app.buttons["I placed this order"].exists)
         XCTAssertFalse(app.buttons["Reopen draft and recheck prices"].exists)
         capture("S06-reopened-reported-order")
+
+        back(to: "Start the next shop")
+        tap(app.buttons["Start the next shop"])
+        tap(app.buttons["Create fresh next-shop draft"])
+        let currentDraft = element("pickupOpenCreatedNextList")
+        XCTAssertTrue(currentDraft.waitForExistence(timeout: 8))
+
+        tap(app.tabBars.buttons["Records"])
+        let orders = app.buttons["records.placedOrders"]
+        XCTAssertTrue(orders.waitForExistence(timeout: 8), "Records should open an older placed order independently of the active pickup")
+        tap(orders)
+        let rows = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "records.placedOrder."))
+        XCTAssertEqual(rows.count, 1, "The unplaced next-shop draft must stay out of placed order history")
+        XCTAssertTrue(rows.firstMatch.label.contains("Family market"))
+        tap(rows.firstMatch)
+        reveal(receipt)
+        XCTAssertTrue(receipt.label.contains("2 units") && receipt.label.contains("wraps"))
+        let total = element("pickup.placementReviewedTotal")
+        reveal(total)
+        XCTAssertTrue(total.label.contains("$3.00") || total.value as? String == "$3.00")
+        XCTAssertFalse(app.buttons["I placed this order"].exists)
+        capture("S20-prior-order-frozen-quote")
+        tap(app.tabBars.buttons["Shop"])
+        XCTAssertTrue(currentDraft.waitForExistence(timeout: 8), "Reading a prior order must preserve the active next-shop draft")
     }
 
     func testSavedOfferReopensAndUpdatesResponseAfterRestart() throws {

@@ -36,5 +36,15 @@
   },
   "fixtureStore": "Read-only inspection of the simulator SQLite comparison envelope and the private installation preferences.",
   "expectedSelectorsSHA256": "71ab1bd6db7cbf5a2ef3dec07d86b0e8c7ca370d935f47aca5d6acb118304fe5",
-  "strictResultSHA256": "1bade61d0dda80cb5744e2c1625fa063adfa854f017644ab532b47c388d43deb"
+  "strictResultSHA256": "1bade61d0dda80cb5744e2c1625fa063adfa854f017644ab532b47c388d43deb",
+  "recordsWalkthrough": {
+    "requirement": "S20 private order history",
+    "originalProduct": "With the next-shop draft active, the old Records screen had no direct placed-orders entry. The new test reproduced this before the Records change.",
+    "result": "Created an unplaced next-shop draft and left it open, browsed the earlier order through Records, read its frozen two wraps and $3.00, then returned to the same open draft in Shop. The iOS 17 simulator test passed with zero recorded runtime warnings.",
+    "persistedPickups": 2,
+    "placedOrders": 1,
+    "draftHadFrozenQuote": false,
+    "originalPlacedBasketUnchangedAfterNextShop": true,
+    "strictResultSHA256": "5a1408b947099ac86a03c70d36514cc27c8f86d9568188f5e44d823c72ed064a"
+  }
 }

@@ -354,6 +354,7 @@ struct RecordsView: View {
     var body: some View {
         List {
             ManagedViewsContextLink()
+            PickupPlacedOrdersLink(model: pickup)
             NavigationLink(HistoryCopy.text("Family decision history")) { FamilyDecisionsEntry() }
             RecordsRecoveryLink()
             NavigationLink(HistoryCopy.text("Prices and period budgets")) {

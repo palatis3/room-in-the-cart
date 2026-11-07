@@ -501,6 +501,109 @@ struct PickupActivitySheet: UIViewControllerRepresentable {
     }
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
+struct PickupPlacedOrdersLink: View {
+    @ObservedObject var model: PickupModel
+    @EnvironmentObject private var access: WorkspaceAccess
+
+    var body: some View {
+        if access.unlocked, model.journeys.contains(where: { $0.basket?.phase == .reportedPlaced }) {
+            NavigationLink(pTr("Placed orders")) { PickupPlacedOrdersView(model: model) }
+                .accessibilityIdentifier("records.placedOrders")
+        }
+    }
+}
+
+private struct PickupPlacedOrdersView: View {
+    @ObservedObject var model: PickupModel
+    @EnvironmentObject private var access: WorkspaceAccess
+
+    var body: some View {
+        List {
+            if access.unlocked {
+                let orders = model.journeys.compactMap { journey in
+                    journey.basket?.placements.first.map { (journey: journey, placement: $0) }
+                }.sorted { $0.placement.reportedAt > $1.placement.reportedAt }
+                ForEach(orders, id: \.placement.id) { record in
+                    let journey = record.journey
+                    let store = journey.frozenQuotes[record.placement.snapshotID]?.context.storeID
+                    NavigationLink {
+                        PickupPlacedOrderRecordView(model: model, shopID: journey.id)
+                    } label: {
+                        VStack(alignment: .leading) {
+                            Text(verbatim: store ?? pTr("Pickup"))
+                            Text(record.placement.reportedAt, format: .dateTime.month().day().year().hour().minute())
+                                .font(.subheadline)
+                            if let line = journey.basket?.reportedOrderLines?.first {
+                                Text(verbatim: line.name).font(.subheadline).foregroundStyle(.secondary)
+                            }
+                        }
+                    }.accessibilityIdentifier("records.placedOrder.\(record.placement.id)")
+                }
+            }
+        }.navigationTitle(pTr("Placed orders"))
+    }
+}
+
+private struct PickupPlacedOrderRecordView: View {
+    @ObservedObject var model: PickupModel
+    let shopID: UUID
+    @EnvironmentObject private var access: WorkspaceAccess
+
+    var body: some View {
+        Form {
+            if access.unlocked, let journey = model.journeys.first(where: { $0.id == shopID }) {
+                PickupPlacedOrderSections(journey: journey)
+            }
+        }.navigationTitle(pTr("Placement report"))
+    }
+}
+
+private struct PickupPlacedOrderSections: View {
+    let journey: PickupJourney
+    @EnvironmentObject private var access: WorkspaceAccess
+
+    var body: some View {
+        if let basket = journey.basket, let placement = basket.placements.first,
+           let snapshot = basket.snapshots.first(where: { $0.id == placement.snapshotID }) {
+            let quote = journey.frozenQuotes[snapshot.id]
+            Section(pTr("Placement report")) {
+                LabeledContent(pTr("Reported by"), value: reporterLabel(placement.reportedByLocalActorID)).accessibilityIdentifier("pickup.placementReporter")
+                LabeledContent(pTr("Reported at"), value: placement.reportedAt.formatted(date: .long, time: .shortened))
+                if let quote {
+                    LabeledContent(pTr("Store"), value: quote.context.storeID)
+                    LabeledContent(pTr("Branch"), value: quote.context.branchID)
+                    LabeledContent(pTr("Pickup or delivery slot"), value: quote.context.slot)
+                    if let result = try? CheckoutEngine.evaluate(quote, cap: nil) {
+                        LabeledContent(pickupScopeLabel(quote.scope), value: pickupResultText(result))
+                            .accessibilityIdentifier("pickup.placementReviewedTotal")
+                    }
+                }
+            }
+            Section(pTr("Dated snapshot")) {
+                Text(verbatim: PickupModel.datedRetailerText(snapshot))
+                    .accessibilityIdentifier("pickup.placedSnapshot").textSelection(.enabled)
+            }
+            PickupHandoffHistory(actions: basket.handoffActions.filter { $0.snapshotID == snapshot.id })
+        }
+    }
+
+    private func reporterLabel(_ actorID: UUID?) -> String {
+        guard let actorID else { return pTr("Shopper not recorded") }
+        return actorID == access.localActorID ? pTr("Local shopper on this iPhone") : pTr("Original local shopper")
+    }
+}
+
+private struct PickupHandoffHistory: View {
+    let actions: [HandoffAction]
+    var body: some View {
+        if !actions.isEmpty {
+            Section(pTr("Handoff history")) {
+                ForEach(actions) { event in Text("\(pTr(event.kind.rawValue)) · \(event.occurredAt.formatted())") }
+            }
+        }
+    }
+}
+
 struct PickupHandoffView: View {
     @ObservedObject var model: PickupModel
     let shopID: UUID
@@ -512,9 +615,8 @@ struct PickupHandoffView: View {
         Form {
             PickupSaveStatus(model: model)
             if access.unlocked, let journey = model.journey, journey.id == shopID {
-                if let placement = journey.basket?.placements.first,
-                   let snapshot = journey.basket?.snapshots.first(where: { $0.id == placement.snapshotID }) {
-                    placedReceipt(placement, snapshot: snapshot, quote: journey.frozenQuotes[snapshot.id])
+                if journey.basket?.phase == .reportedPlaced {
+                    PickupPlacedOrderSections(journey: journey)
                 } else {
                     pendingHandoff(reviewing: journey)
                 }
@@ -524,39 +626,6 @@ struct PickupHandoffView: View {
         .sheet(item: $sharing) { snapshot in
             PickupActivitySheet(text: PickupModel.datedRetailerText(snapshot)) { completed, destination in
                 Task { await model.recordHandoff(completed ? .shareCompleted : .shareCancelled, snapshot: snapshot, destination: destination) }
-            }
-        }
-    }
-
-    @ViewBuilder private func placedReceipt(_ placement: ReportedPlacement, snapshot: HandoffSnapshot, quote: CheckoutQuote?) -> some View {
-        Section(pTr("Placement report")) {
-            LabeledContent(pTr("Reported by"), value: reporterLabel(placement.reportedByLocalActorID)).accessibilityIdentifier("pickup.placementReporter")
-            LabeledContent(pTr("Reported at"), value: placement.reportedAt.formatted(date: .long, time: .shortened))
-            if let quote {
-                LabeledContent(pTr("Store"), value: quote.context.storeID)
-                LabeledContent(pTr("Branch"), value: quote.context.branchID)
-                LabeledContent(pTr("Pickup or delivery slot"), value: quote.context.slot)
-                if let result = try? CheckoutEngine.evaluate(quote, cap: nil) {
-                    LabeledContent(pickupScopeLabel(quote.scope), value: pickupResultText(result))
-                }
-            }
-        }
-        Section(pTr("Dated snapshot")) {
-            Text(verbatim: PickupModel.datedRetailerText(snapshot))
-                .accessibilityIdentifier("pickup.placedSnapshot").textSelection(.enabled)
-        }
-        handoffHistory(model.journey?.basket?.handoffActions.filter { $0.snapshotID == snapshot.id } ?? [])
-    }
-
-    private func reporterLabel(_ actorID: UUID?) -> String {
-        guard let actorID else { return pTr("Shopper not recorded") }
-        return actorID == access.localActorID ? pTr("Local shopper on this iPhone") : pTr("Original local shopper")
-    }
-
-    @ViewBuilder private func handoffHistory(_ actions: [HandoffAction]) -> some View {
-        if !actions.isEmpty {
-            Section(pTr("Handoff history")) {
-                ForEach(actions) { event in Text("\(pTr(event.kind.rawValue)) · \(event.occurredAt.formatted())") }
             }
         }
     }
@@ -615,7 +684,7 @@ struct PickupHandoffView: View {
                     await model.reopenDraft(reviewing: snapshot)
                 }
             }
-            handoffHistory(model.journey?.basket?.handoffActions ?? [])
+            PickupHandoffHistory(actions: journey.basket?.handoffActions ?? [])
         }
     }
 }
