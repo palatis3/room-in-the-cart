@@ -4,7 +4,7 @@ import type { SharedMealValue } from './shared-meal-planning.js';
 import { exclusionConflict } from './recovery-domain.js';
 import { type Rat, zero, add, sub, min, amount, dimension, inUnit } from './physical-quantity.js';
 
-export interface SealedMeal { occurrenceId:string; revision:number; meal:SharedMealValue }
+export interface SealedMeal { occurrenceId:string; revision:number; meal:SharedMealValue; protectedIngredientIds?:string[] }
 export interface Match { occurrenceId:string; mealRevision:number; ingredientId:string }
 export interface ReservationHead extends Match {
   groupId:string; reservationId:string; quantity:Quantity|null;
@@ -36,7 +36,7 @@ export function deliveryCoverage(meals:SealedMeal[],sources:DeliverySource[]) {
   }
   const needs:Need[]=[];
   const unplannedOccurrenceIds:string[]=[];
-  for(const {occurrenceId,revision,meal} of meals) {
+  for(const {occurrenceId,revision,meal,protectedIngredientIds} of meals) {
     const plan=meal.planning;
     if(!plan?.ingredients.length) { unplannedOccurrenceIds.push(occurrenceId);continue; }
     for(const ingredient of plan.ingredients) {
@@ -58,7 +58,7 @@ export function deliveryCoverage(meals:SealedMeal[],sources:DeliverySource[]) {
           if(required && dimension(required)!==dimension(source.confirmed.quantity)) {issues.add('unitMismatch');return false;}
           return true;
         });
-        const protectedGroup=meal.protected || plan.groups.some(g=>g.protected && groupIds.includes(g.id));
+        const protectedGroup=protectedIngredientIds?.includes(ingredient.id) || meal.protected || plan.groups.some(g=>g.protected && groupIds.includes(g.id));
         needs.push({...target,groupIds,required,protected:protectedGroup,issues,eligible});
       }
     }

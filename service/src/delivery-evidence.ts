@@ -155,7 +155,7 @@ export function validateReservation(meals:SealedMeal[],sources:DeliverySource[],
   }
 }
 
-async function reserveDelivery(ctx:Context,shop:Shop,row:ReservationWrite,operationId:string) {
+async function reserveDelivery(ctx:Context,shop:Shop,row:ReservationWrite,operationId:string,effectiveReviewed:boolean) {
   if(row.supplyRevision!==shop.supply_revision) throw stale();
   const scope=[ctx.householdId,shop.shop_id,row.sourceId,row.occurrenceId,row.mealRevision,row.ingredientId];
   const match=(await ctx.db.query(`SELECT operation_id,matched FROM ritc.delivery_ingredient_review
@@ -174,7 +174,7 @@ async function reserveDelivery(ctx:Context,shop:Shop,row:ReservationWrite,operat
     // Reducing an existing promise releases part of its claim even when the
     // remaining amount still exceeds newly corrected or unknown usable food.
     const reduction=head?.quantity && dimension(head.quantity)===dimension(quantity) && cmp(amount(quantity),amount(head.quantity))<0n;
-    if(!reduction) validateReservation(meals,sources,source,row,updated);
+    if(!reduction && !effectiveReviewed) validateReservation(meals,sources,source,row,updated);
   } else if(!head?.quantity) throw stale();
   await ctx.db.query(`INSERT INTO ritc.delivery_reservation(household_id,shop_id,source_id,occurrence_id,meal_revision,
     ingredient_id,group_id,quantity,operation_id,predecessor_id,match_operation_id,actor_id,supply_revision,recorded_at)
@@ -184,13 +184,13 @@ async function reserveDelivery(ctx:Context,shop:Shop,row:ReservationWrite,operat
 
 // Called in HouseholdRepository's household-locked command transaction, after device,
 // replay, shopper and checkout-revision validation. The receipt and evidence commit together.
-export async function recordDelivery(ctx: Context, shop: Shop, kind: Kind, input: unknown, operationId: string) {
+export async function recordDelivery(ctx: Context, shop: Shop, kind: Kind, input: unknown, operationId: string, verifyEffective?:()=>Promise<void>) {
   requirePlaced(shop);
   const scope=[ctx.householdId,shop.shop_id], revision=shop.supply_revision+1;
   let sourceId:string;
   if(kind==='delivery.reserve') {
     const row=deliveryReservationBody.parse(input);
-    await reserveDelivery(ctx,shop,row,operationId);
+    await reserveDelivery(ctx,shop,row,operationId,Boolean(verifyEffective));
     sourceId=row.sourceId;
   } else if(kind==='delivery.register') {
     const row=deliverySourceBody.parse(input);
@@ -241,5 +241,6 @@ export async function recordDelivery(ctx: Context, shop: Shop, kind: Kind, input
       [...scope,sourceId,row.observationId,kind==='delivery.arrival'?'arrival':'usable',revision,row,ctx.member.member_id,operationId,ctx.now]);
   }
   await ctx.db.query('UPDATE ritc.shop SET supply_revision=$3 WHERE household_id=$1 AND shop_id=$2',[...scope,revision]);
+  await verifyEffective?.();
   return {sourceId,supplyRevision:revision};
 }

@@ -161,29 +161,37 @@ function checkOthers(shop:Shop,before:Needs,after:Needs){
     }
   }
 }
-async function observationImpact(ctx:Context,shop:Shop,row:z.infer<typeof pantryObservation>){
+export interface EffectivePantryProjection {
+  needs():Needs;
+  matches(row:Needs[number],sourceId:string):boolean;
+}
+export type PantryProjectionLoader=(ctx:Context,shop:Shop,input:Inputs)=>Promise<EffectivePantryProjection|undefined>;
+async function observationImpact(ctx:Context,shop:Shop,row:z.infer<typeof pantryObservation>,loadProjection?:PantryProjectionLoader){
   await requireReview(ctx,shop,row);
   if(Date.parse(row.confirmedAt)>ctx.now.getTime()) throw invalid();
-  const input=await jointInputs(ctx,shop,row.lotId);
+  const input=await jointInputs(ctx,shop,row.lotId,Boolean(loadProjection));
   const lot=input.rows.find(l=>l.lot_id===row.lotId);
   if(!lot) throw unavailable();
   if(lot.delivery_source_id) throw reviewReservation();
   const head=input.heads.find(h=>h.lot_id===row.lotId && h.kind==='observe');
   if((head?.operation_id??null)!==row.predecessorId) throw stale();
   const source=input.sources.find(s=>s.sourceId===row.lotId)!;
-  const before=project(input).needs;
+  const effective=await loadProjection?.(ctx,shop,input);
+  const needsForStock=()=>effective?effective.needs():project(input).needs;
+  const matches=(row:Needs[number])=>effective?effective.matches(row,source.sourceId):source.matches.some(m=>sameTarget(row,m));
+  const before=needsForStock();
   source.confirmed=row.quantity?{quantity:row.quantity}:null;
-  const after=project(input).needs;
+  const after=needsForStock();
   let otherShopsAffected=false,otherShopsCommitted=false;
   const needs=before.flatMap((n,i)=>{
     const next=after[i]!,changed=digest(n)!==digest(next);
     if(!visible(shop,n.occurrenceId)){
       if(changed) otherShopsAffected=true;
       if([n,next].some(row=>row.allocations.some(a=>a.sourceId===source.sourceId) || row.reservations.some(p=>p.sourceId===source.sourceId) ||
-        row.protected && !row.required && source.matches.some(m=>sameTarget(row,m)))) otherShopsCommitted=true;
+        row.protected && !row.required && matches(row))) otherShopsCommitted=true;
       return [];
     }
-    if(!changed && !source.matches.some(m=>sameTarget(n,m))) return [];
+    if(!changed && !matches(n)) return [];
     return [{occurrenceId:unscoped(n.occurrenceId),mealRevision:n.mealRevision,ingredientId:n.ingredientId,groupIds:n.groupIds,required:n.required,
       beforeCovered:n.covered,afterCovered:next.covered,beforeMissing:n.missing,afterMissing:next.missing,
       beforeReservations:n.reservations,afterReservations:next.reservations}];
@@ -192,14 +200,14 @@ async function observationImpact(ctx:Context,shop:Shop,row:z.infer<typeof pantry
     member:ctx.member.member_id,row,before,after});
   return {...pantryScope(ctx,shop,row.pantryRevision),lotId:row.lotId,previewDigest,needs,otherShopsAffected,otherShopsCommitted};
 }
-export function previewPantryObservation(ctx:Context,shop:Shop,input:unknown){return observationImpact(ctx,shop,pantryObservation.parse(input));}
+export function previewPantryObservation(ctx:Context,shop:Shop,input:unknown,projection?:PantryProjectionLoader){return observationImpact(ctx,shop,pantryObservation.parse(input),projection);}
 
 export async function pantryOperationExists(ctx:Context,id:string){
   return (await ctx.db.query(`SELECT 1 FROM ritc.pantry_lot WHERE household_id=$1 AND operation_id=$2
     UNION ALL SELECT 1 FROM ritc.pantry_event WHERE household_id=$1 AND operation_id=$2`,[ctx.householdId,id])).rowCount===1;
 }
 
-export async function recordPantry(ctx:Context,shop:Shop,kind:Kind,input:unknown,operationId:string){
+export async function recordPantry(ctx:Context,shop:Shop,kind:Kind,input:unknown,operationId:string,verifyEffective?:()=>Promise<void>,projection?:PantryProjectionLoader){
   const body=pantryBodies[kind].parse(input);
   await requireReview(ctx,shop,body);
   const revision=body.pantryRevision+1;
@@ -219,7 +227,7 @@ export async function recordPantry(ctx:Context,shop:Shop,kind:Kind,input:unknown
   }else{
     if('previewDigest' in body){
       const {previewDigest,...observation}=body;
-      if((await observationImpact(ctx,shop,observation)).previewDigest!==previewDigest) throw stale();
+      if((await observationImpact(ctx,shop,observation,projection)).previewDigest!==previewDigest) throw stale();
     }else{
       const joint=await jointInputs(ctx,shop,lotId),source=joint.sources.find(s=>s.sourceId===lotId);
       if(!source || !joint.rows.some(l=>l.lot_id===lotId)) throw unavailable();
@@ -237,16 +245,18 @@ export async function recordPantry(ctx:Context,shop:Shop,kind:Kind,input:unknown
           if(matched===body.matched) throw stale();
           if(body.matched && source.matches.some(r=>sameTarget(r,m)) ||
              !body.matched && current.reservations.some(p=>p.quantity && sameTarget(p,body))) throw reviewReservation();
-          const before=project(joint).needs;
-          source.matches=source.matches.filter(r=>!sameTarget(r,m));
-          if(body.matched)source.matches.push(m);
-          checkOthers(shop,before,project(joint).needs);
+          if(!verifyEffective){
+            const before=project(joint).needs;
+            source.matches=source.matches.filter(r=>!sameTarget(r,m));
+            if(body.matched) source.matches.push(m);
+            checkOthers(shop,before,project(joint).needs);
+          }
         }else{
           if(!matched) throw reviewReservation();
           const head=current.reservations.find(r=>sameTarget(r,body) && r.groupId===body.groupId);
           if((head?.reservationId??null)!==body.predecessorId || (!body.quantity && !head?.quantity)) throw stale();
           const reduction=head?.quantity && body.quantity && dimension(head.quantity)===dimension(body.quantity) && cmp(amount(body.quantity),amount(head.quantity))<0n;
-          if(body.quantity && !reduction){
+          if(body.quantity && !reduction && !verifyEffective){
             const updated:ReservationHead[]=(source.reservations??[]).filter(p=>p.reservationId!==body.predecessorId);
             updated.push({...m,groupId:body.groupId,quantity:body.quantity,reservationId:operationId});
             validateReservation(joint.meals,joint.sources,source,{...body,...m,sourceId:lotId},updated);
@@ -264,6 +274,7 @@ export async function recordPantry(ctx:Context,shop:Shop,kind:Kind,input:unknown
         'selected' in body?body.selected:'matched' in body?body.matched:null,'confirmedAt' in body?body.confirmedAt:null,'quantity' in body?body.quantity:null]);
   }
   await ctx.db.query('UPDATE ritc.household SET pantry_revision=$2 WHERE household_id=$1',[ctx.householdId,revision]);
+  await verifyEffective?.();
   return {lotId,pantryRevision:revision,supplyRevision:shop.supply_revision};
 }
 export function isPantryCommand(kind:string):kind is Kind{return Object.hasOwn(pantryBodies,kind);}

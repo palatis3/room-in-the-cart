@@ -1,10 +1,10 @@
 import {createHash} from 'node:crypto';
 import {deliveryCoverage,type SealedMeal,type DeliverySource} from './delivery-coverage.js';
-import {requirePlaced} from './delivery-evidence.js';
-import {unavailable} from './errors.js';
-import {jointInputs,pantryRevision} from './pantry-lots.js';
-import {add,amount,dimension,inUnit,sub,wire,zero,type Rat} from './physical-quantity.js';
-import {recoveryBasisSchema,recoveryMealSchema,type Quantity,type RecoveryBasis,type RecoveryMeal,type RecoveryNeed} from './recovery-contracts.js';
+import {requirePlaced,recordDelivery,reviewReservation,validateReservation,lower} from './delivery-evidence.js';
+import {unavailable,ServiceError} from './errors.js';
+import {jointInputs,pantryRevision,guardDeliveryEdit,recordPantry,previewPantryObservation,type PantryProjectionLoader} from './pantry-lots.js';
+import {add,amount,cmp,dimension,inUnit,sub,wire,zero,type Rat} from './physical-quantity.js';
+import {deliveryReservationBody,pantryBodies,recoveryBasisSchema,recoveryMealSchema,type Quantity,type RecoveryBasis,type RecoveryMeal,type RecoveryNeed} from './recovery-contracts.js';
 import {exclusionConflict} from './recovery-domain.js';
 import type {Context,Shop} from './repository.js';
 
@@ -57,7 +57,11 @@ function eligibleOrigin(stock:Stock,shopId:string,sourceId:string):Origin|undefi
 }
 function originForNeed(stock:Stock,m:ScopedMeal,n:RecoveryNeed,sourceId:string):Origin|undefined{
   const prefix=m.shopId+'/'+m.current!.occurrenceId;
-  return stock.kinds.get([sourceId,prefix,m.sealed.revision,n.ingredientId].join('/'))??eligibleOrigin(stock,m.shopId,sourceId);
+  if(m.original.needs.some(old=>old.id===n.id)){
+    const reviewed=stock.kinds.get([sourceId,prefix,m.sealed.revision,n.ingredientId].join('/'));
+    if(reviewed) return reviewed;
+  }
+  return eligibleOrigin(stock,m.shopId,sourceId);
 }
 async function effectiveMeals(ctx:Context,stock:Stock,load:RecoveryPublicationLoader){
   const publications=new Map<string,SharedRecoveryPublication>();
@@ -72,7 +76,9 @@ async function effectiveMeals(ctx:Context,stock:Stock,load:RecoveryPublicationLo
     const current=p.removedOccurrences?.includes(original.occurrenceId)?null:accepted?recoveryMealSchema.parse({...accepted,
       needs:accepted.needs.map(n=>{
         const retained=original.needs.find(old=>old.id===n.id);
-        return {...n,matchedSourceIds:retained?.matchedSourceIds??(n.matchedSourceIds??[]).filter(id=>eligibleOrigin(stock,shopId,id))};
+        const nativeFood=stock.deliverySources.find(s=>s.shopId===shopId && s.physical.foodId===n.foodId);
+        const accepted=n.matchedSourceIds??(nativeFood?[nativeFood.physical.sourceId]:[]);
+        return {...n,matchedSourceIds:retained?.matchedSourceIds??accepted.filter(id=>eligibleOrigin(stock,shopId,id))};
       })}):original;
     return {shopId,sealed,original,current};
   });
@@ -100,18 +106,20 @@ function effectiveGraph(stock:Stock,meals:ScopedMeal[]){
         const target={occurrenceId:m.sealed.occurrenceId,mealRevision:m.sealed.revision,ingredientId:key};
         source.matches.push(target);kinds.set(id+'/'+key,kind);
         const physical=stock.sources.find(s=>s.sourceId===id)!;
-        for(const pin of physical.reservations??[]) if(pin.quantity && pin.occurrenceId===target.occurrenceId &&
+        for(const pin of physical.reservations??[]) if(pin.occurrenceId===target.occurrenceId &&
           pin.mealRevision===m.sealed.revision && pin.ingredientId===n.ingredientId && pin.groupId===n.groupId &&
           m.original.needs.some(old=>old.id===n.id)){
-          source.reservations!.push({...pin,...target});pins.push({shopId:m.shopId,id:pin.reservationId,sourceId:id,needId:n.id,quantity:pin.quantity});
+          source.reservations!.push({...pin,...target});
+          if(pin.quantity) pins.push({shopId:m.shopId,id:pin.reservationId,sourceId:id,needId:n.id,quantity:pin.quantity});
         }
       }
       return {id:key,name:n.name,quantity:n.quantity,groupIds:ids,exclusions:n.exclusions};
     });
-    return [{...m.sealed,meal:{...m.sealed.meal,title:meal.title,day:meal.day,portions:meal.portions,
+    return [{...m.sealed,protectedIngredientIds:meal.needs.filter(n=>n.priority==='protected').map(n=>m.shopId+'/'+n.id),
+      meal:{...m.sealed.meal,title:meal.title,day:meal.day,portions:meal.portions,
       planning:{groups:meal.groups,ingredients}}}];
   });
-  return {report:deliveryCoverage(projected,sources),needByKey,kinds,pins,sources};
+  return {report:deliveryCoverage(projected,sources),projected,needByKey,kinds,pins,sources};
 }
 const fraction=(f:{numerator:string;denominator:string}):Rat=>({n:BigInt(f.numerator),d:BigInt(f.denominator)});
 type Graph=ReturnType<typeof effectiveGraph>;
@@ -133,27 +141,23 @@ function outsideHolds(shop:Shop,graph:Graph,visible:Set<string>){
       const pin=row.reservations.find(p=>p.sourceId===source.sourceId);
       const used=add(allocation?fraction(allocation.amount):zero,pin?sub(fraction(pin.requested),fraction(pin.backed)):zero);
       if(used.n===0n) continue;
-      const prior=held.get(source.sourceId);
-      if(prior && prior.unit!==row.required.unit || source.confirmed && dimension(source.confirmed.quantity)!==dimension(row.required)){
-        if(source.confirmed && dimension(source.confirmed.quantity)===dimension(row.required) && prior &&
-           dimension({...row.required,unit:prior.unit})===dimension(row.required)){
-          const scale=amount({...row.required,amount:{numerator:1,denominator:1}});
-          held.set(source.sourceId,{unit:prior.unit,value:add(prior.value,{n:used.n*scale.n,d:used.d*scale.d})});
-        }else held.set(source.sourceId,null);
-        continue;
+      const prior=held.get(source.sourceId),unit=prior?.unit??row.required.unit;
+      if(dimension({...row.required,unit})!==dimension(row.required) ||
+         source.confirmed && dimension(source.confirmed.quantity)!==dimension(row.required)){
+        held.set(source.sourceId,null);continue;
       }
       const scale=amount({...row.required,amount:{numerator:1,denominator:1}});
-      held.set(source.sourceId,{unit:row.required.unit,value:add(prior?.value??zero,{n:used.n*scale.n,d:used.d*scale.d})});
+      held.set(source.sourceId,{unit,value:add(prior?.value??zero,{n:used.n*scale.n,d:used.d*scale.d})});
     }
   }
   return [...held].map(([sourceId,h])=>({sourceId,quantity:h?{unit:h.unit,amount:inUnit(h.value,h.unit)}:null}));
 }
 
-async function loadGraph(ctx:Context,shop:Shop,load:RecoveryPublicationLoader){
+async function loadGraph(ctx:Context,shop:Shop,load:RecoveryPublicationLoader,focus:string|null=null){
   if(shop.household_id!==ctx.householdId || shop.shopper_id!==ctx.member.member_id || ctx.member.kind!=='adult' ||
      ctx.viewGrantId || ctx.selectedShopId && shop.shop_id!==ctx.selectedShopId) throw unavailable();
   requirePlaced(shop,true);
-  const stock=await jointInputs(ctx,shop,null,true);
+  const stock=await jointInputs(ctx,shop,focus,true);
   const {meals,publications}=await effectiveMeals(ctx,stock,load);
   const local=meals.filter(m=>m.shopId===shop.shop_id);
   const current=local.flatMap(m=>m.current?[m.current]:[]);
@@ -164,7 +168,7 @@ async function loadGraph(ctx:Context,shop:Shop,load:RecoveryPublicationLoader){
   const p=publications.get(shop.shop_id)!;
   const base={shopRevision:shop.revision,authorityEpoch:shop.authority_epoch,recoveryRevision:p.recoveryRevision,
     contextRevision:p.contextRevision,supplyRevision:shop.supply_revision,pantryRevision:await pantryRevision(ctx)};
-  return {stock,graph:effectiveGraph(stock,meals),local,current,options,base,p};
+  return {stock,graph:effectiveGraph(stock,meals),local,current,options,base,p,hasRecovery:[...publications.values()].some(p=>p.recoveryRevision>0)};
 }
 type Loaded=Awaited<ReturnType<typeof loadGraph>>;
 
@@ -246,4 +250,81 @@ export async function readSharedRecoveryCoverage(ctx:Context,shop:Shop,load:Reco
   });
   return {shopId:shop.shop_id,placedRevision:shop.placed_revision!,...base,asOf:ctx.now.toISOString(),needs,
     unplannedOccurrenceIds:graph.report.unplannedOccurrenceIds.filter(id=>id.startsWith(prefix)).map(id=>id.slice(prefix.length))};
+}
+
+// Once any connected shop has an accepted replacement, previews and legacy
+// command guards must use the very same effective requirements as recovery.
+function effectivePantryProjection(load:RecoveryPublicationLoader):PantryProjectionLoader{
+  return async(ctx,_shop,input)=>{
+    const {meals,publications}=await effectiveMeals(ctx,input,load);
+    if(![...publications.values()].some(p=>p.recoveryRevision>0)) return;
+    const matches=new Map<string,Set<string>>();
+    const needs=()=>{
+      const graph=effectiveGraph(input,meals);
+      return graph.report.needs.map(row=>{
+        const n=graph.needByKey.get(row.ingredientId)!;
+        const key=[row.occurrenceId,n.ingredientId,...row.groupIds].join('/');
+        matches.set(key,new Set(n.matchedSourceIds));
+        return {...row,ingredientId:n.ingredientId};
+      });
+    };
+    return {needs,matches:(row,id)=>matches.get([row.occurrenceId,row.ingredientId,...row.groupIds].join('/'))?.has(id)??false};
+  };
+}
+export function previewCurrentPantryObservation(ctx:Context,shop:Shop,input:unknown,load:RecoveryPublicationLoader){
+  return previewPantryObservation(ctx,shop,input,effectivePantryProjection(load));
+}
+
+type DeliveryKind=Parameters<typeof recordDelivery>[2];
+type PantryKind=Parameters<typeof recordPantry>[2];
+async function effectiveEdit(ctx:Context,shop:Shop,kind:DeliveryKind|PantryKind,body:Record<string,unknown>,operationId:string,load:RecoveryPublicationLoader){
+  if(!['pantry.select','pantry.match','pantry.reserve','delivery.match','delivery.reserve'].includes(kind)) return;
+  const id=String(body.lotId??body.sourceId),before=await loadGraph(ctx,shop,load,id);
+  if(!before.hasRecovery) return;
+  const old=before.graph,scope=shop.shop_id+'/';
+  const meal=before.local.find(m=>m.original.occurrenceId===body.occurrenceId);
+  const retained=meal?.current?.needs.filter(n=>n.ingredientId===body.ingredientId && (!body.groupId || n.groupId===body.groupId) &&
+    meal.original.needs.some(o=>o.id===n.id));
+  if(body.occurrenceId && !retained?.length && body.matched!==false && body.quantity!==null)
+    throw new ServiceError(409,'stale_supply','Review the current meal and its physical sources.');
+  const reserve=kind==='pantry.reserve'||kind==='delivery.reserve';
+  if(reserve && body.quantity){
+    const request=kind==='delivery.reserve'?deliveryReservationBody.parse(body):{...pantryBodies['pantry.reserve'].parse(body),sourceId:id};
+    const current=retained?.[0],source=old.sources.find(s=>s.sourceId===id);
+    if(!current || !source) throw reviewReservation();
+    const target={...request,occurrenceId:scope+request.occurrenceId,ingredientId:scope+current.id},quantity=request.quantity!;
+    const head=source.reservations?.find(p=>p.occurrenceId===target.occurrenceId&&p.ingredientId===target.ingredientId&&p.groupId===request.groupId);
+    if((head?.reservationId??null)!==request.predecessorId) throw reviewReservation();
+    const reducing=head?.quantity && dimension(head.quantity)===dimension(quantity) && cmp(amount(quantity),amount(head.quantity))<0n;
+    if(!reducing){
+      const updated=(source.reservations??[]).filter(r=>r!==head);
+      updated.push({...target,quantity,reservationId:operationId});
+      validateReservation(old.projected,old.sources,source,target,updated);
+    }
+  }
+  return async()=>{
+    const after=(await loadGraph(ctx,shop,load,id)).graph.report.needs;
+    const byNeed=new Map(after.map(n=>[n.ingredientId,n]));
+    for(const n of old.report.needs){
+      if(n.occurrenceId.startsWith(scope)) continue;
+      const next=byNeed.get(n.ingredientId);
+      if(!next || n.covered && next.covered && lower(next.covered,n.covered)) throw reviewReservation();
+      for(const pin of n.reservations){
+        const kept=next.reservations.find(p=>p.reservationId===pin.reservationId);
+        if(!kept||lower(kept.backed,pin.backed))throw reviewReservation();
+      }
+    }
+  };
+}
+export async function recordCurrentDelivery(ctx:Context,shop:Shop,kind:DeliveryKind,body:Record<string,unknown>,operationId:string,load:RecoveryPublicationLoader){
+  const current=await effectiveEdit(ctx,shop,kind,body,operationId,load);
+  if(current) return recordDelivery(ctx,shop,kind,body,operationId,current);
+  const legacy=await guardDeliveryEdit(ctx,shop,kind,body);
+  const receipt=await recordDelivery(ctx,shop,kind,body,operationId);
+  await legacy?.();
+  return receipt;
+}
+export async function recordCurrentPantry(ctx:Context,shop:Shop,kind:PantryKind,body:Record<string,unknown>,operationId:string,load:RecoveryPublicationLoader){
+  const current=await effectiveEdit(ctx,shop,kind,body,operationId,load);
+  return recordPantry(ctx,shop,kind,body,operationId,current,effectivePantryProjection(load));
 }

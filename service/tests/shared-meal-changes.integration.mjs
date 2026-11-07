@@ -863,3 +863,43 @@ test('trusted recovery basis carries a genuine foreign delivery once and publish
  assert.equal(after.projection.demands[0].allocated.numerator,'3');
  assert.equal(after.coverage.needs[0].freezer.numerator,'3');
 });
+
+test('trusted recovery basis guards retired legacy targets and previews the current recipe before recording a correction',async()=>{
+ const {recordCurrentDelivery,recordCurrentPantry,previewCurrentPantryObservation,readSharedRecoveryCoverage}=await import('../dist/shared-recovery-basis.js');
+ const f=await reservationFixture(),p=pantryHarness(f),q=f.quantity;
+ const {lotId}=await p.create('Separate freezer batch');await p.edit('pantry.select',{lotId,selected:true});
+ const physical=await p.preview(lotId,q(3));ok(await p.send(physical.cmd));
+ const pin=ok(await f.write('delivery.reserve',{...f.reservation,supplyRevision:4}));
+ const released=ok(await f.write('delivery.reserve',{...f.reservation,supplyRevision:5,quantity:null,predecessorId:pin.operationId}));
+ const original=(await realRecoveryRead(f)).context.meals.find(m=>m.occurrenceId===f.match.occurrenceId),
+   changedIngredient=randomUUID(),replacement={...original,revisionId:randomUUID(),needs:original.needs.map(n=>n.priority==='protected'?n:
+     {...n,id:randomUUID(),ingredientId:changedIngredient,matchedSourceIds:[lotId],quantity:q(3)})};
+ const load=async()=>({...emptyRecoveryPublication(),recoveryRevision:1,meals:[replacement]});
+ const next=await p.preview(lotId,q(1)),{previewDigest,...observation}=next.cmd.body;
+ const run=fn=>repo.transaction(f.h,async(db,now)=>{
+   const member=await repo.member(db,f.h,{issuer,subject:f.owner.subject}),ctx={db,now,householdId:f.h,member,selectedShopId:f.shopId};
+   const shop=await repo.shop(ctx,f.shopId);
+   // Exercise the command handler and both projections on actual transaction rows.
+   // The enclosing repository normally writes a receipt after this hook returns.
+   await db.query('SAVEPOINT review_change');
+   try{return await fn(ctx,shop);}finally{await db.query('ROLLBACK TO SAVEPOINT review_change');}
+ });
+ const result=await run((ctx,shop)=>previewCurrentPantryObservation(ctx,shop,observation,load));
+ assert.equal(result.needs.length,1);assert.equal(result.needs[0].ingredientId,changedIngredient);
+ assert.deepEqual([result.needs[0].beforeMissing.numerator,result.needs[0].afterMissing.numerator],['0','2']);
+ assert.notEqual(result.previewDigest,previewDigest);
+ await assert.rejects(run((ctx,shop)=>recordCurrentPantry(ctx,shop,'pantry.observe',next.cmd.body,randomUUID(),load)),e=>e.code==='stale_supply');
+ await run(async(ctx,shop)=>{
+   await recordCurrentPantry(ctx,shop,'pantry.observe',{...observation,previewDigest:result.previewDigest},randomUUID(),load);
+   const report=await readSharedRecoveryCoverage(ctx,shop,load),current=report.needs.find(n=>n.ingredientId===changedIngredient);
+   assert.deepEqual(current.missing,result.needs[0].afterMissing);
+ });
+ await assert.rejects(run((ctx,shop)=>recordCurrentDelivery(ctx,shop,'delivery.reserve',{...f.reservation,
+   quantity:q(1),supplyRevision:6,groupId:f.plates.id},randomUUID(),load)),e=>e.code==='stale_supply');
+ await run(async(ctx,shop)=>{
+   const id=randomUUID();
+   await recordCurrentDelivery(ctx,shop,'delivery.reserve',{...f.reservation,supplyRevision:6,predecessorId:released.operationId},id,load);
+   const report=await readSharedRecoveryCoverage(ctx,shop,load);
+   assert.equal(report.needs.find(n=>n.needId===original.needs.find(n=>n.priority==='protected').id).reservations[0].reservationId,id);
+ });
+});
