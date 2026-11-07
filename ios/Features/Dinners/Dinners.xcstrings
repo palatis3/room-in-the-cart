@@ -6425,19 +6425,36 @@
         }
       }
     },
-    "I agree to consider a repeated dinner": {
+    "I agree to repeat %@ for this repair": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "I agree to consider a repeated dinner"
+            "value": "I agree to repeat %@ for this repair"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Acepto considerar una cena repetida"
+            "value": "Acepto repetir %@ para esta comida"
+          }
+        }
+      }
+    },
+    "Include repeated dinners in the review": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Include repeated dinners in the review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incluir cenas repetidas en la revisión"
           }
         }
       }

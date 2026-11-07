@@ -7,7 +7,7 @@ struct PickupFallbackReviewEntry: View {
     @EnvironmentObject private var membership: MembershipCoordinator
     @EnvironmentObject private var access: WorkspaceAccess
     @EnvironmentObject private var household: HouseholdModel
-    let select: (PickupFallbackOption,UUID,Date) -> Void
+    let select: (PickupRepairDraft) -> Void
 
     private var permitted: Bool {
         access.unlocked && !household.locked && (household.projection.map { ["shopper","organizer"].contains($0.role) } ?? true) &&
@@ -36,7 +36,7 @@ private struct PickupFallbackReviewView: View {
     let chosen: Set<UUID>
     let now: Date
     let authorized: () -> Bool
-    let select: (PickupFallbackOption,UUID,Date) -> Void
+    let select: (PickupRepairDraft) -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var review = PickupFallbackReview()
     private var choices: [StockNeed] { PickupFallbackOptions.needs(journey) }
@@ -73,7 +73,7 @@ private struct PickupFallbackReviewView: View {
                 TextField(dinnerText("Maximum available for a top-up, USD"), text: $review.draft.topUpBudget)
                 TextField(dinnerText("Top-up fees and tax, including zero, USD"), text: $review.draft.topUpCharges)
                 TextField(dinnerText("Round-trip minutes for a top-up"), text: $review.draft.tripMinutes)
-                Toggle(dinnerText("I agree to consider a repeated dinner"), isOn: $review.draft.permitsRepeat)
+                Toggle(dinnerText("Include repeated dinners in the review"), isOn: $review.draft.permitsRepeat)
             }
             Section(dinnerText("Accepted fallbacks")) {
                 if library.isEmpty { Text(dinnerText("No household dinner is marked as an accepted fallback.")) }
@@ -103,20 +103,28 @@ private struct PickupFallbackReviewView: View {
                                 }
                             ))
                         }
+                        if best.repeatRequired {
+                            Toggle(dinnerFormat("I agree to repeat %@ for this repair", best.title), isOn: Binding(
+                                get: { review.agreedRepeat == best },
+                                set: { agrees in
+                                    if review.isReviewed, draft == review.draft { review.agreedRepeat = agrees ? best : nil }
+                                }
+                            ))
+                        }
                         Button(dinnerText("Use in manual repair instructions")) {
-                            guard draft == review.draft, let target = draft.target, let due = draft.deadline,
-                                  let fresh = rankedBest(at: Date()),
-                                  review.canUse(best, fresh: fresh) else {
-                                review.agreedTrip = nil
+                            guard draft == review.draft,
+                                  let repair = review.manualRepair(for: best, fresh: rankedBest(at: Date()), in: journey) else {
+                                review.cancelReview()
                                 return
                             }
-                            let savedDue = journey.savedMealDeadline(for: target)
-                            select(fresh,target,min(due,savedDue ?? due)); dismiss()
-                        }.disabled(best.requiresTrip && review.agreedTrip != best)
+                            select(repair)
+                            dismiss()
+                        }.disabled(!review.canUse(best, fresh: best))
                     } else { Text(dinnerText("No feasible accepted repair is confirmed. Keep the need open or edit it manually.")) }
                 }
             }
         }
+        .onDisappear { review.cancelReview() }
         .onChange(of: best) { _, updated in review.rankedOfferChanged(to: updated) }
         .onChange(of: draft.target) { _, new in
             review.draft.deadline = journey.savedMealDeadline(for: new)

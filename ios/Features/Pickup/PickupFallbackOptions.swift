@@ -33,25 +33,44 @@ struct PickupFallbackReview {
     var draft = PickupFallbackDraft() {
         didSet {
             if draft != oldValue {
-                isReviewed = false
-                agreedTrip = nil
+                cancelReview()
             }
         }
     }
     private(set) var isReviewed = false
     var agreedTrip: PickupFallbackOption?
+    var agreedRepeat: PickupFallbackOption?
+
+    mutating func cancelReview() {
+        isReviewed = false
+        agreedTrip = nil
+        agreedRepeat = nil
+    }
 
     mutating func reviewDraft() {
+        cancelReview()
         isReviewed = true
-        agreedTrip = nil
     }
 
     mutating func rankedOfferChanged(to best: PickupFallbackOption?) {
         if agreedTrip != best { agreedTrip = nil }
+        if agreedRepeat != best { agreedRepeat = nil }
     }
 
     func canUse(_ displayed: PickupFallbackOption, fresh: PickupFallbackOption?) -> Bool {
-        isReviewed && fresh == displayed && (!displayed.requiresTrip || agreedTrip == displayed)
+        isReviewed && fresh == displayed &&
+            (!displayed.requiresTrip || agreedTrip == displayed) &&
+            (!displayed.repeatRequired || agreedRepeat == displayed)
+    }
+
+    func manualRepair(for displayed: PickupFallbackOption, fresh: PickupFallbackOption?, in journey: PickupJourney) -> PickupRepairDraft? {
+        guard canUse(displayed, fresh: fresh), let target = draft.target, let due = draft.deadline else { return nil }
+        var repair = PickupRepairDraft(shopID: journey.id)
+        repair.fields = .init(needID: target, instruction: displayed.instruction, minutes: String(displayed.minutes),
+                              knownDue: true, due: min(due, journey.savedMealDeadline(for: target) ?? due))
+        repair.extraTrip = displayed.requiresTrip && agreedTrip == displayed
+        repair.repeatMeal = displayed.repeatRequired && agreedRepeat == displayed
+        return repair
     }
 }
 

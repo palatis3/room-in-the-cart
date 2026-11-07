@@ -819,6 +819,24 @@ import XCTest
         app.navigationBars.buttons.element(boundBy: 0).tap()
         assertText("Free manual meal repair")
         assertText("Open meal need")
+        choose("Affected meal need", value: "Wednesday rice")
+        fill("Use the remaining peppers in rice.", into: "Exact food, portions, exclusions and instructions")
+        let trip = "I agree to an extra top-up trip for this repair"
+        let repeated = "I agree to repeat a meal for this repair"
+        enableSwitch(trip)
+        enableSwitch(repeated)
+        fill("20", into: "Remaining elapsed preparation minutes (optional)")
+        for label in [trip, repeated] {
+            let control = app.switches[label]
+            reveal(control)
+            XCTAssertEqual(control.value as? String, "0")
+        }
+        enableSwitch(repeated)
+        tap(app.buttons["Save reviewed repair instructions"])
+        assertText("Use the remaining peppers in rice.")
+        let nextRepeat = app.switches[repeated]
+        reveal(nextRepeat, initiallyUpward: false)
+        XCTAssertEqual(nextRepeat.value as? String, "0")
     }
 
     func testFreeCookCorrectionAndExplicitRecipientAcknowledgment() {
