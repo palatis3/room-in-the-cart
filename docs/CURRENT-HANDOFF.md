@@ -2,6 +2,14 @@
 
 Updated November 7, 2026 UTC. The owner resumed and explicitly approved the reviewed hosted staging update; the full first-version goal is active and release acceptance remains incomplete. Historical snapshots are preserved in [the handoff archive](CURRENT-HANDOFF-HISTORY-20261106.md).
 
+## Household fallback recipes and dated cook corrections, November 7
+
+The local service accepts individually reviewed household recipes, including a recipe disclosed by the shopper, a scheduled meal, or an approved idea. P04 compares confirmed stock, protected portions, preparation time and reviewed top-up offers. A shopper can clear a previously known preparation time. That leaves the dish conditional and preserves the original deadline. The iPhone shows the extra pack cost, trip charges and time difference from the usual fallback again when it asks for trip agreement.
+
+Seven Swift scenarios ran through pinned HTTPS against PostgreSQL. The fallback scenario used five confirmed wraps with two reserved for lunch, applied a reviewed on-hand replacement, and recovered its receipt after the shopper’s named seat expired. The same shopper and device could also recover a previously committed recipe approval. New meal changes and previously unsent approvals were denied after expiry. The registry and the meal revision stayed unchanged. A separate populated database restore exercised migrations 037 and 038 locally. Staging was last verified at 030.
+
+For S10, the shopper can review changes against the exact copy explicitly marked sent to a named recipient. The simulator walkthrough opened and cancelled two real share sheets, then reopened the original sent record. Edited copies, ambiguous destinations and older copies without a structured index use the full wording. The combined current-deadline and recipient-correction shopper walkthrough and the two new P04 UI fixtures are undergoing verification.
+
 ## Shared dinner replacement after pickup, November 7
 
 From **What came home → Repair a scheduled meal**, the assigned shopper can change one dinner, review quantities for every affected meal and decide whether to accept unresolved food or another trip. Keeping the original meal returns to current coverage without publishing the proposed change. Applying records a new meal version, while the placed order and its monetary facts remain sealed.
