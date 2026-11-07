@@ -45,6 +45,17 @@ private final class S17FixtureServer: @unchecked Sendable {
         if path == "/v1/me/workspaces" { return try json(["workspaces":[["householdId":Self.household,"label":"Isolated shared meals","role":"contributor"]]]) }
         if path.hasSuffix("/devices") { return try json(["deviceId":shopper ? "shopper-device":"planner-device","deviceToken":shopper ? "shopper-token":"planner-token"],status:201) }
         if path.hasSuffix("/bootstrap") { return try json(["household":["id":Self.household,"label":"Isolated shared meals"],"memberId":shopper ? Self.shopper:Self.planner,"role":shopper ? "shopper":"contributor","shopId":Self.shop,"enrolled":true,"queueConsent":false,"capabilities":shopper ? ["shopper_commands","shopper_inbox","request_preview"]:["meal_proposals"]]) }
+        if path == "/v1/households/\(Self.household)/entitlements", request.httpMethod == "GET" {
+            guard request.value(forHTTPHeaderField: "Authorization") == "Bearer fixture-shopper",
+                  request.value(forHTTPHeaderField: "X-Device-Token") == "shopper-token" else { return try denied() }
+            let now = Date(), format = ISO8601DateFormatter()
+            let end = format.string(from: now.addingTimeInterval(3600))
+            let expired = ProcessInfo.processInfo.arguments.contains("--expired-recovery-seat")
+            return try json(["householdID": Self.household, "purchaserID": Self.planner, "revision": expired ? 2 : 1,
+                "status": expired ? "expired" : "active", "expiresAt": expired ? format.string(from: now) : end,
+                "verifiedAt": format.string(from: now), "validUntil": end,
+                "seats": [["userID": Self.shopper, "displayName": "Fixture shopper", "isAdult": true]]])
+        }
         if path.hasSuffix("/inbox") { return try json(["requests":[],"nextCursor":NSNull()]) }
         if path.hasSuffix("/requests/mine") { return try json(["requests":[],"nextCursor":NSNull()]) }
         let occurrence: [String:Any] = ["occurrenceId":Self.occurrence,"revision":revision,"meal":meal]
@@ -91,7 +102,7 @@ private final class S17FixtureProtocol: URLProtocol, @unchecked Sendable {
     }
     override func stopLoading() {}
 }
-@MainActor private final class S17FixtureState: ObservableObject {
+@MainActor final class S17FixtureState: ObservableObject {
     @Published var planner: HouseholdModel?
     @Published var shopper: HouseholdModel?
     @Published var proposals = 0
@@ -106,6 +117,24 @@ private final class S17FixtureProtocol: URLProtocol, @unchecked Sendable {
             planner = try await make(role:"planner"); shopper = try await make(role:"shopper")
         } catch { failure = "Fixture setup failed" }
     }
+    static func recoveryShopper() async throws -> HouseholdModel {
+        let state = S17FixtureState()
+        S17FixtureProtocol.server = state.server
+        return try await state.make(role: "shopper")
+    }
+
+    static func recoveryMembership() -> MembershipCoordinator {
+        MembershipCoordinator { session, credentials in
+            let config = URLSessionConfiguration.ephemeral
+            config.protocolClasses = [S17FixtureProtocol.self]
+            let service = try HTTPMembershipEntitlementService(baseURL: session.serviceURL, session: URLSession(configuration: config),
+                deviceToken: credentials.deviceToken, token: credentials.accessToken)
+            let context = MembershipContext(purchaserID: session.memberID, purchaserName: session.accountName,
+                householdID: session.householdID, householdName: session.householdName, appAccountToken: nil)
+            return MembershipModel(configuration: .init(productID: nil, privacyURL: nil, termsURL: nil), context: context, service: service)
+        }
+    }
+
     private func make(role: String) async throws -> HouseholdModel {
         let config = URLSessionConfiguration.ephemeral; config.protocolClasses = [S17FixtureProtocol.self]
         let transport = HTTPTransport(session:URLSession(configuration:config))

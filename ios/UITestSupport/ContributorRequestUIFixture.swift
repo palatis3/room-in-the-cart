@@ -28,6 +28,11 @@ import HouseholdClient
     }
     @ViewBuilder private var standardFixtureContent: some View {
         if ProcessInfo.processInfo.arguments.contains("--import-recovery-fixture") { ImportRecoveryUIFixtureRoot() }
+        else if ProcessInfo.processInfo.arguments.contains("--paid-pickup-recovery") {
+            #if targetEnvironment(simulator)
+            PaidPickupRecoveryFixtureRoot()
+            #endif
+        }
         else if ProcessInfo.processInfo.arguments.contains("--shared-meal-fixture") { S17SharedMealFixtureRoot() }
         else if ProcessInfo.processInfo.arguments.contains("--shared-store-quotes-fixture") { S27StoreQuotesFixtureRoot() }
         else if ProcessInfo.processInfo.arguments.contains("--records-media-fixture") { RecordsMediaUIFixtureRoot() }

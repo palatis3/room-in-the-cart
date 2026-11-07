@@ -45,7 +45,7 @@ struct DeviceReminderPersona: Equatable {
     let configured: Bool
     let guardianChildOnly: Bool
     let emailOTPEnabled: Bool
-    private(set) var serviceURL: URL?
+    var serviceURL: URL? { service?.baseURL }
     var onScopeChange: (() -> Void)?
     private(set) var accountDeletion: AccountDeletionModel?
     private(set) var householdExit: HouseholdExitModel?
@@ -114,7 +114,6 @@ struct DeviceReminderPersona: Equatable {
         }
         let namespace = (bundle.bundleIdentifier ?? "RoomInTheCart") + "." + (projectURL.host ?? "auth")
         let managedAuth = AdultAuth(configuration: authConfig, vault: KeychainRefreshTokenVault(service: namespace))
-        self.serviceURL = serviceURL
         self.auth = managedAuth
         let householdService = HouseholdService(configuration: serviceConfig, auth: managedAuth,
             deviceVault: KeychainRefreshTokenVault(service: namespace, account: "household-device"))

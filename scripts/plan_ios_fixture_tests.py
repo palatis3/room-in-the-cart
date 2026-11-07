@@ -23,6 +23,7 @@ PROFILES = {
             "HouseholdRequestPackUITests",
             "ImportRecoveryUITests",
             "MeasurementUITests",
+            "PaidPickupRecoveryUITests",
             "RecipeLibraryAcceptanceUITests",
             "RecordsMediaUITests",
             "RequestDuplicateComparisonUITests",
@@ -46,7 +47,7 @@ BALANCED_SUITES = {
     "contributor-balanced-01": ("DinnerAwayCarryoverUITests", "RequestDuplicateComparisonUITests"),
     "contributor-balanced-02": ("ContributorRequestUITests", "ImportRecoveryUITests", "MeasurementUITests", "StockReviewUITests"),
     "contributor-balanced-03": ("HouseholdDevicesUITests", "HouseholdRequestPackUITests", "SharedMealCivilDateUITests"),
-    "contributor-balanced-04": ("HistoryGrantReadUITests", "RecipeLibraryAcceptanceUITests"),
+    "contributor-balanced-04": ("HistoryGrantReadUITests", "RecipeLibraryAcceptanceUITests", "PaidPickupRecoveryUITests"),
     "contributor-balanced-05": ("CorrectionPrivacyAcceptanceUITests", "GuardianEnrollmentUITests", "SharedMealChangeUITests"),
 }
 LIBRARY_PRIVACY_HELPER = f"{UI_TARGET}/LibraryPrivacyUITestCase"

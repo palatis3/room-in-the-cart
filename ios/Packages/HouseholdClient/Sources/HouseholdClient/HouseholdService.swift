@@ -2,6 +2,7 @@ import Foundation
 
 /// A service grant never follows from account login alone. Enrollment is an explicit UI action.
 public actor HouseholdService {
+    public nonisolated var baseURL: URL { configuration.baseURL }
     private let configuration: ServiceConfiguration
     private let transport: HTTPTransport
     private let auth: AdultAuth

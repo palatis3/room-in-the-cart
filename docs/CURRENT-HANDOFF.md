@@ -2,6 +2,12 @@
 
 Updated November 7, 2026 UTC. The owner resumed and explicitly approved the reviewed hosted staging update; the full first-version goal is active and release acceptance remains incomplete. Historical snapshots are preserved in [the handoff archive](CURRENT-HANDOFF-HISTORY-20261106.md).
 
+## Recovering a paid dinner and reopening its saved instructions, November 7
+
+The iPhone 17 Pro on iOS 26.2 passed a three-launch walkthrough using a simulated server-verified second adult seat. The shopper chose an accepted recipe for Wednesday and reviewed its food match, exclusions, portions and preparation lead time. The cook instructions kept the protected lunch and Tuesday’s remaining shortage. After the seat expired, manual recovery remained available and the saved cook copy reopened with identical text. The fixture uses the app’s authenticated household and membership clients with a local test response.
+
+The walkthrough took 94.05 seconds. All 90 selected membership, dinner recovery and app startup tests also passed. Strict XCTest validation found zero skips or runtime warnings across these 91 cases. The compiled CI inventory places the walkthrough in the existing contributor-balanced-04 job. HouseholdClient passed 82 package tests with three expected wire-test skips. All 209 CI script tests passed. Shared server persistence and live billing verification remain open.
+
 ## Replacing a dinner and moving its food to another night, November 7
 
 An adult can now open a replaced dinner in Dinners, recount the actual food, and reserve some or all of it for a later local date. The dated dinner keeps the replacement name and exclusions. The saved cook handoff identifies the food, quantity and date. The original basket, charges, protected lunch and recipe quantities stay in their history. Existing pickups with a carryover saved before their first replacement are supported when their recorded transfer reconciles with checkout.
@@ -12,7 +18,7 @@ The iPhone 17 Pro on iOS 26.2 passed the 62 selected native cases, including bot
 
 On PR #1, `99ab9a3` ties the shopper’s consent to the displayed allocation and acknowledges a successful retry after a locked SQLite write. `ccdab14` adds private dinner replacement from a household-accepted recipe, including serving-group quantities, protected lunches, exclusions, prep lead time and live membership checks.
 
-On iPhone 17 Pro with iOS 26.2, 134 affected model tests passed. An English walkthrough on the combined build replaced Wednesday’s dinner, left Tuesday’s remaining shortage and the protected lunch visible, and reopened the saved cook instructions after two launches. A separate simulator run held the actual SQLite writer, released it at Retry, and verified the date change survived relaunch. The accepted-recipe path has model coverage. Its paid UI walkthrough and shared server persistence remain open. Physical away-night carryover was subsequently added above.
+On iPhone 17 Pro with iOS 26.2, 134 affected model tests passed. An English walkthrough on the combined build replaced Wednesday’s dinner, left Tuesday’s remaining shortage and the protected lunch visible, and reopened the saved cook instructions after two launches. A separate simulator run held the actual SQLite writer, released it at Retry, and verified the date change survived relaunch. The accepted-recipe path has model coverage. The later checkpoints above cover its paid UI walkthrough and physical away-night carryover.
 
 The ordinary Debug simulator CI suite now includes `FreeJourneyUITests.testCreateReplacementFromPrivatePickupAndReopenForCook`. It creates its own placed pickup through the ledger and checkout models. Local execution passed in 171.086 seconds with zero skips or recorded runtime warnings.
 

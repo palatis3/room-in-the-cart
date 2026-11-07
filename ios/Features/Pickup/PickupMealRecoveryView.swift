@@ -54,7 +54,8 @@ struct PickupMealRecoveryEntry: View {
                                 if membership.model?.hasPaidAccess == true {
                                     NavigationLink(dinnerText("Recover with an accepted dinner")) {
                                         acceptedDinners(for: value)
-                                    }.accessibilityIdentifier("mealRecovery.accepted." + value.meal.id.uuidString)
+                                    }.accessibilityLabel(String.localizedStringWithFormat(recoveryText("Choose an accepted dinner for %@"), value.meal.title))
+                                        .accessibilityIdentifier("mealRecovery.accepted." + value.meal.id.uuidString)
                                 }
                             }
                         }
@@ -257,7 +258,7 @@ private struct PickupMealRecoveryEditor: View {
                 if !template.notes.isEmpty { Text(template.notes) }
                 if let url = template.sourceURL { Text(url).textSelection(.enabled) }
                 if !template.exclusions.isEmpty { Text(recoveryText("Keep these exclusions") + ": " + pExclusions(template.exclusions)) }
-                if let minutes = template.leadTimeMinutes { Text(pTr("Saved elapsed preparation minutes") + ": " + String(minutes)) }
+                if let minutes = template.leadTimeMinutes { Text(pTr("Required advance preparation (minutes)") + ": " + String(minutes)) }
             } else {
                 field("Dinner title", text: $draft.title, id: "title")
                 field("Notes and preparation instructions", text: $draft.notes, id: "notes", multiline: true)

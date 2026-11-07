@@ -715,6 +715,23 @@
         }
       }
     },
+    "Choose an accepted dinner for %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose an accepted dinner for %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir una cena aceptada para %@"
+          }
+        }
+      }
+    },
     "Replace %@": {
       "extractionState": "manual",
       "localizations": {
