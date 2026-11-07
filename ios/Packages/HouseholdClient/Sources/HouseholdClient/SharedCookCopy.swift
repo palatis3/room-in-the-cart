@@ -7,6 +7,8 @@ public struct SharedCookCopy: Decodable, Equatable, Identifiable, Sendable {
     public let shopRevision: Int
     public let placedRevision: Int
     public let authorityEpoch: Int
+    public internal(set) var recoveryRevision: Int? = nil
+    public internal(set) var revisionId: UUID? = nil
     public let pantryRevision: Int?
     public let supplyRevision: Int
     public let occurrenceId: UUID
@@ -20,6 +22,8 @@ public struct SharedCookCopy: Decodable, Equatable, Identifiable, Sendable {
         guard shopId == page.shopId, placedRevision == page.placedRevision,
               occurrenceId == occurrence.id, mealRevision == occurrence.revision,
               version > 0, shopRevision >= placedRevision, authorityEpoch > 0, supplyRevision >= 0, (pantryRevision ?? 0) >= 0,
+              (revisionId == nil) == (recoveryRevision == nil), recoveryRevision == nil || pantryRevision != nil,
+              (recoveryRevision ?? 0) >= 0, (recoveryRevision ?? 0) <= (page.recoveryRevision ?? 0),
               ["en", "es"].contains(language), SharedCookCopyEdit.validText(text), validHelperTimestamp(createdAt) else {
             throw ClientError.invalidResponse
         }
@@ -88,7 +92,7 @@ public enum SharedCookCopyEdit: Sendable {
         return label
     }
 
-    public func body(reviewed page: SharedDeliveryPage, pantry: SharedPantryPage? = nil) throws -> [String: JSONValue] {
+    public func body(reviewed page: SharedDeliveryPage, pantry: SharedPantryPage? = nil, recovery: SharedRecoveryPage? = nil) throws -> [String: JSONValue] {
         guard page.nextCursor == nil else { throw ClientError.configuration }
         switch self {
         case let .save(text, language, occurrence):
@@ -100,6 +104,12 @@ public enum SharedCookCopyEdit: Sendable {
             if let pantry {
                 try pantry.validate(delivery: page)
                 body["pantryRevision"] = .integer(pantry.pantryRevision)
+            }
+            if let recovery {
+                guard let pantry, let meal = recovery.meals.first(where: { $0.id == occurrence.id }) else { throw ClientError.configuration }
+                try recovery.validate(delivery: page, pantry: pantry)
+                body["recoveryRevision"] = .integer(recovery.base.recoveryRevision)
+                body["revisionId"] = .string(meal.revisionId.uuidString.lowercased())
             }
             return body
         case let .markSent(copy, recipient, previous):

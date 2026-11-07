@@ -61,7 +61,17 @@ struct SharedShopTransfer: Equatable {
 /// The shared shop is explicitly entered and reviewed here. It never reads the private local ledger.
 @MainActor final class HouseholdShopModel: ObservableObject {
     @Published private(set) var scope: HouseholdBootstrap
-    @Published private(set) var pantryRecord: SharedPantryPage?
+    @Published private(set) var recoveryRecord: SharedRecoveryPage? {
+        didSet { if recoveryRecord != oldValue { reviewedRecovery = nil } }
+    }
+    private var reviewedRecovery: (page: SharedRecoveryPage, intent: SharedRecoveryIntent, preview: SharedRecoveryPreview)?
+    private var recoveryRead = UUID()
+    private var reviewedRecoveryOperation: String?
+    @Published private(set) var pantryRecord: SharedPantryPage? {
+        didSet {
+            if recoveryRecord?.base.pantryRevision != pantryRecord?.pantryRevision { recoveryRecord = nil }
+        }
+    }
     @Published private(set) var deliveryRecord: SharedDeliveryPage? {
         didSet { if oldValue != deliveryRecord { pantryRecord = nil; reviewedObservation = nil; reviewedPantryOperation = nil } }
     }
@@ -104,6 +114,7 @@ struct SharedShopTransfer: Equatable {
     var canManage: Bool { authorized && !requiresRefresh && scope.grantId == nil && scope.role == "shopper" && scope.capabilities.contains("shopper_commands") && scope.shopId != nil }
     var canReadDelivery: Bool { canManage && scope.capabilities.contains("delivery_evidence") }
     var canReadPantry: Bool { canReadDelivery && scope.capabilities.contains("pantry_lots") }
+    var canReadMealRecovery: Bool { canReadPantry && scope.capabilities.contains("meal_recovery") }
     var canReadCookCopies: Bool { canReadDelivery && scope.capabilities.contains("cook_copies") }
     var canStartAnother: Bool {
         authorized && !requiresRefresh && scope.canSelectShop == true && scope.grantId == nil &&
@@ -118,7 +129,7 @@ struct SharedShopTransfer: Equatable {
         if scope.shopId != value.shopId || scope.role != value.role || Set(scope.capabilities) != Set(value.capabilities) {
             financialEntries = nil; deliveryRecord = nil; review = nil; acknowledged = false
             reviewedCookRecipient = nil; pendingMarkOccurrence = nil; reviewedCookOperation = nil
-            if scope.shopId != value.shopId, pendingCookCopy || pendingPantry { pending = nil; delivery = .none; reviewedCurrentFacts = false }
+            if scope.shopId != value.shopId, pendingCookCopy || pendingPantry || pendingMealRecovery { pending = nil; delivery = .none; reviewedCurrentFacts = false }
             draft = .init()
             editing = false; creatingAnother = false
             shop = nil
@@ -140,7 +151,10 @@ struct SharedShopTransfer: Equatable {
                     delivery = matches ? .waiting : .needsReview
                 }
             }
-            if pendingPantry {
+            if pendingMealRecovery {
+                if !canReadMealRecovery { delivery = .needsReview }
+                reviewedCurrentFacts = !canReadMealRecovery || reviewedRecoveryOperation == pending?.id
+            } else if pendingPantry {
                 if !canReadPantry { delivery = .needsReview }
                 reviewedCurrentFacts = !canReadPantry || pending?.id == reviewedPantryOperation
             } else if pendingCookCopy {
@@ -204,10 +218,83 @@ struct SharedShopTransfer: Equatable {
     private var pendingEnvelope: CommandEnvelope? {
         pending.flatMap { try? JSONDecoder().decode(CommandEnvelope.self, from: $0.bytes) }
     }
+    var pendingMealRecovery: Bool { pendingEnvelope?.kind == "mealRecovery.apply" }
     var pendingDelivery: Bool { pendingEnvelope?.kind.hasPrefix("delivery.") == true }
     private var pendingPantry: Bool { pendingEnvelope?.kind.hasPrefix("pantry.") == true }
     private var pendingCookUsesPantry: Bool { pendingEnvelope?.kind == "cookCopy.save" && pendingEnvelope?.body["pantryRevision"] != nil }
     private var pendingCookCopy: Bool { pendingEnvelope?.kind.hasPrefix("cookCopy.") == true }
+
+    private func refreshMealRecovery(shop: ShopperShop, start: UUID) async throws {
+        let facts = try await service.mealRecoveryFacts(shopID: shop.shopId)
+        guard generation == start, self.shop == shop, scope.shopId == shop.shopId, canReadMealRecovery else { throw ClientError.cancelled }
+        guard facts.page.placedRevision == shop.placedRevision, facts.page.base.authorityEpoch == shop.authorityEpoch,
+              facts.page.base.shopRevision == shop.shopRevision else {
+            throw ClientError.service(status: 409, code: "stale_supply", correlationID: nil, retryAfter: nil)
+        }
+        deliveryRecord = facts.delivery
+        pantryRecord = facts.pantry
+        recoveryRecord = facts.page
+        if pendingMealRecovery { reviewedRecoveryOperation = pending?.id; reviewedCurrentFacts = true }
+    }
+
+    func loadMealRecovery() async {
+        guard canReadMealRecovery, !busy, let shop, shop.placedRevision != nil else { return }
+        let start = generation
+        busy = true; defer { busy = false }
+        do {
+            try await refreshMealRecovery(shop: shop, start: start)
+            notice = nil
+        } catch {
+            guard start == generation, self.shop == shop else { return }
+            recoveryRecord = nil
+            await handlePantryRead(error, start: start)
+        }
+    }
+
+    func effectiveCoverage(reviewed page: SharedRecoveryPage) async throws -> SharedRecoveryCoverage {
+        guard canReadMealRecovery, recoveryRecord == page else { throw ClientError.cancelled }
+        let start = generation
+        do {
+            let result = try await service.effectiveCoverage(reviewed: page)
+            guard !Task.isCancelled, start == generation, canReadMealRecovery, recoveryRecord == page else { throw ClientError.cancelled }
+            return result
+        } catch {
+            if recoveryRecord == page { await handlePantryRead(error, start: start) }
+            throw error
+        }
+    }
+
+    func previewMealRecovery(_ intent: SharedRecoveryIntent, reviewed page: SharedRecoveryPage) async throws -> SharedRecoveryPreview {
+        guard canReadMealRecovery, shop?.phase == "placed", !busy, pending == nil, recoveryRecord == page else { throw ClientError.cancelled }
+        let start = generation, read = UUID()
+        recoveryRead = read; reviewedRecovery = nil
+        do {
+            let result = try await service.previewMealRecovery(intent, reviewed: page)
+            guard !Task.isCancelled, start == generation, recoveryRead == read, canReadMealRecovery, !busy,
+                  pending == nil, recoveryRecord == page else { throw ClientError.cancelled }
+            reviewedRecovery = (page, intent, result)
+            return result
+        } catch {
+            if recoveryRecord == page { await handlePantryRead(error, start: start) }
+            throw error
+        }
+    }
+
+    func applyMealRecovery(_ preview: SharedRecoveryPreview, intent: SharedRecoveryIntent, reviewed page: SharedRecoveryPage) async -> Bool {
+        guard let checked = reviewedRecovery, checked.page == page, checked.intent == intent, checked.preview == preview,
+              canReadMealRecovery, recoveryRecord == page, let evidence = deliveryRecord, let pantry = pantryRecord else { return false }
+        return await saveReviewedChange(kind: "mealRecovery.apply", reviewed: evidence, reviewedPantry: pantry, reviewedRecovery: page,
+                                        expires: serviceDate(preview.expiresAt)) { try intent.commandBody(reviewed: page, preview: preview) }
+    }
+
+    func saveCookCopy(text: String, language: String, meal: SharedRecoveryMeal, reviewed page: SharedRecoveryPage) async -> Bool {
+        guard canReadCookCopies, canReadMealRecovery, recoveryRecord == page, let pantry = pantryRecord, let evidence = deliveryRecord,
+              page.meals.contains(meal), let sealed = evidence.meals?.first(where: { $0.id == meal.id && $0.revision == meal.sourceMealRevision }) else { return false }
+        let edit = SharedCookCopyEdit.save(text: text, language: language, occurrence: sealed)
+        return await saveReviewedChange(kind: edit.kind, reviewed: evidence, reviewedPantry: pantry, reviewedRecovery: page) {
+            try edit.body(reviewed: evidence, pantry: pantry, recovery: page)
+        }
+    }
 
     func loadPantry(reviewed delivery: SharedDeliveryPage) async {
         guard !busy, canReadPantry, deliveryRecord == delivery else { return }
@@ -334,8 +421,11 @@ struct SharedShopTransfer: Equatable {
     func saveDelivery(_ edit: SharedDeliveryEdit, reviewed page: SharedDeliveryPage) async -> Bool {
         await saveReviewedChange(kind: edit.kind, reviewed: page) { try edit.body(reviewed: page) }
     }
-    private func saveReviewedChange(kind: String, reviewed page: SharedDeliveryPage, reviewedPantry: SharedPantryPage? = nil, body: () throws -> [String: JSONValue]) async -> Bool {
+    private func saveReviewedChange(kind: String, reviewed page: SharedDeliveryPage, reviewedPantry: SharedPantryPage? = nil, reviewedRecovery: SharedRecoveryPage? = nil, expires: Date? = nil, body: () throws -> [String: JSONValue]) async -> Bool {
         let cookCopy = kind.hasPrefix("cookCopy."), pantryEdit = kind.hasPrefix("pantry.")
+        let recovering = kind == "mealRecovery.apply"
+        if let reviewedRecovery, !canReadMealRecovery || recoveryRecord != reviewedRecovery { return false }
+        if recovering, (expires ?? .distantPast) <= Date() { return false }
         if let reviewedPantry, !canReadPantry || pantryRecord != reviewedPantry { return false }
         guard canReadDelivery, !busy, pending == nil, let shop, scope.shopId == shop.shopId,
               cookCopy ? (canReadCookCopies && ["placed", "closed"].contains(shop.phase)) : shop.phase == "placed",
@@ -347,17 +437,22 @@ struct SharedShopTransfer: Equatable {
             let fields = try body()
             let window = try await service.replayWindow()
             guard start == generation, scope == actorScope, self.shop == shop, deliveryRecord == page, canReadDelivery,
-                  reviewedPantry == nil || pantryRecord == reviewedPantry else { return false }
+                  reviewedPantry == nil || pantryRecord == reviewedPantry,
+                  reviewedRecovery == nil || canReadMealRecovery && recoveryRecord == reviewedRecovery,
+                  !recovering || (expires ?? .distantPast) > Date() else { return false }
             let envelope = CommandEnvelope(replayWindow: window.id, shopId: shop.shopId, kind: kind,
                 base: .init(shopRevision: page.shopRevision, authorityEpoch: page.authorityEpoch), body: fields)
             try await queueAndDeliver(envelope, start: start)
             guard start == generation, scope.shopId == shop.shopId else { return false }
             if case .confirmed(let receipt) = delivery {
+                if recovering {
+                    return !requiresRefresh && recoveryRecord?.meals.first(where: { $0.id == receipt.occurrenceId })?.revisionId == receipt.revisionId
+                }
                 if pantryEdit { return !requiresRefresh && (pantryRecord?.pantryRevision ?? -1) >= (receipt.pantryRevision ?? 0) }
                 if !cookCopy { deliveryRecord = nil }
                 return true
             }
-            return !cookCopy && !pantryEdit && pending != nil
+            return !recovering && !cookCopy && !pantryEdit && pending != nil
         } catch { await handle(error, start: start); return false }
     }
     func loadFinancialEntries() async {
@@ -455,6 +550,7 @@ struct SharedShopTransfer: Equatable {
     }
     func retry() async {
         guard authorized, !busy, let pending, delivery == .waiting else { return }
+        if pendingMealRecovery && (!canReadMealRecovery || pendingEnvelope?.shopId != scope.shopId) { return }
         if pendingCookCopy && (!canReadCookCopies || pendingCookUsesPantry && !canReadPantry || pendingEnvelope?.shopId != scope.shopId) { return }
         if pendingPantry && (!canReadPantry || pendingEnvelope?.shopId != scope.shopId) { return }
         guard Date() >= retryAfter, attempts < 5 else { notice = ht("Wait before retrying, or review this action after several failed attempts."); return }
@@ -466,13 +562,16 @@ struct SharedShopTransfer: Equatable {
             let envelope = try JSONDecoder().decode(CommandEnvelope.self, from: operation.bytes)
             let receipt = try await service.executeSharedShop(operation); guard start == generation else { return }
             let cookCopy = envelope.kind.hasPrefix("cookCopy."), pantryEdit = envelope.kind.hasPrefix("pantry.")
+            let recovering = envelope.kind == "mealRecovery.apply"
+            if recovering, pending != operation || !canReadMealRecovery || scope.shopId != envelope.shopId { return }
             if pantryEdit, pending != operation || !canReadPantry || scope.shopId != envelope.shopId { return }
             if cookCopy, pending != operation || !canReadCookCopies || scope.shopId != envelope.shopId { return }
             guard receipt.shopId == envelope.shopId, receipt.kind == envelope.kind else { throw ClientError.invalidResponse }
             delivery = .confirmed(receipt); pending = nil; editing = false; creatingAnother = false; review = nil; acknowledged = false
             // A copy receipt leaves every reviewed shop and delivery revision intact.
-            requiresRefresh = !cookCopy && !pantryEdit
-            if cookCopy || pantryEdit { notice = nil }
+            requiresRefresh = !cookCopy && !pantryEdit && !recovering
+            if cookCopy || pantryEdit || recovering { notice = nil }
+            if recovering { recoveryRecord = nil; reviewedRecovery = nil }
             do { try await outbox.remove(operation.id) } catch { notice = ht("The shared shop change was confirmed. Local retry cleanup needs another attempt.") }
             guard start == generation else { return }
             do {
@@ -480,7 +579,13 @@ struct SharedShopTransfer: Equatable {
                     _ = try await service.selectShop(id)
                 }
                 try await refreshFacts(start: start)
-                if pantryEdit {
+                if recovering {
+                    guard let current = shop, current.shopId == envelope.shopId, canReadMealRecovery else { throw ClientError.cancelled }
+                    try await refreshMealRecovery(shop: current, start: start)
+                    guard let revision = receipt.recoveryRevision, let page = recoveryRecord, page.base.recoveryRevision >= revision else {
+                        throw ClientError.invalidResponse
+                    }
+                } else if pantryEdit {
                     guard canReadPantry, scope.shopId == envelope.shopId, let current = shop else { throw ClientError.cancelled }
                     let evidence = try await service.deliveryEvidence(shopID: envelope.shopId)
                     let record = try await service.pantryLots(reviewed: evidence)
@@ -520,6 +625,7 @@ struct SharedShopTransfer: Equatable {
     }
     func clear() {
         reviewedCookRecipient = nil; pendingMarkOccurrence = nil; reviewedCookOperation = nil
+        recoveryRecord = nil; reviewedRecovery = nil; reviewedRecoveryOperation = nil
         generation = UUID(); lastShopSync = nil; financialEntries = nil; deliveryRecord = nil
         authorized = false; shop = nil; review = nil; pending = nil; draft = .init()
         notice = nil; editing = false; acknowledged = false; delivery = .none

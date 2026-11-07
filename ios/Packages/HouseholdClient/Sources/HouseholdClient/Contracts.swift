@@ -69,7 +69,7 @@ public struct PendingOperation: Codable, Equatable, Identifiable, Sendable {
     public func targetsShop(_ shopID: String?, includeCreation: Bool = false) -> Bool {
         guard let envelope = try? JSONDecoder().decode(CommandEnvelope.self, from: bytes) else { return false }
         if includeCreation, envelope.kind == "shop.create" { return true }
-        guard let shopID else { return !envelope.kind.hasPrefix("cookCopy.") && !envelope.kind.hasPrefix("pantry.") }
+        guard let shopID else { return !envelope.kind.hasPrefix("cookCopy.") && !envelope.kind.hasPrefix("pantry.") && envelope.kind != "mealRecovery.apply" }
         return envelope.shopId.caseInsensitiveCompare(shopID) == .orderedSame
     }
     public init(envelope: CommandEnvelope, householdID: String, memberID: String, deviceID: String) throws {

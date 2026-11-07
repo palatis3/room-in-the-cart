@@ -96,6 +96,7 @@ public struct SharedDeliveryPage: Decodable, Equatable, Sendable {
     public let shopRevision: Int
     public let authorityEpoch: Int
     public let supplyRevision: Int
+    public internal(set) var recoveryRevision: Int? = nil
     public let coverageAvailable: Bool?
     public let reservationsAvailable: Bool?
     public let meals: [SharedMealOccurrence]?

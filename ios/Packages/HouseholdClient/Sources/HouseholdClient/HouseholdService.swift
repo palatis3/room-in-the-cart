@@ -382,13 +382,13 @@ public actor HouseholdService {
             let page: SharedDeliveryPage = try await perform("shops/\(shopID)/delivery-evidence", method: "GET",
                 query: record?.nextCursor.map { [.init(name: "cursor", value: $0.uuidString.lowercased())] } ?? [])
             guard page.shopId == UUID(uuidString: shopID), page.sources.count <= 50, page.placedRevision > 0,
-                  page.authorityEpoch > 0, page.shopRevision >= page.placedRevision, page.supplyRevision >= 0,
+                  page.authorityEpoch > 0, page.shopRevision >= page.placedRevision, page.supplyRevision >= 0, (page.recoveryRevision ?? 0) >= 0,
                   Set(page.lines.map(\.id)).count == page.lines.count, page.lines.count <= 200,
                   page.sources.allSatisfy({ seen.insert($0.id).inserted }),
                   page.nextCursor == nil || (page.sources.count == 50 && page.nextCursor == page.sources.last?.id) else { throw ClientError.invalidResponse }
             try page.sources.forEach { try $0.validate() }
             if record != nil {
-                guard page.supplyRevision == record?.supplyRevision, page.shopRevision == record?.shopRevision,
+                guard page.supplyRevision == record?.supplyRevision, page.recoveryRevision == record?.recoveryRevision, page.shopRevision == record?.shopRevision,
                       page.authorityEpoch == record?.authorityEpoch, page.placedRevision == record?.placedRevision else {
                     throw ClientError.service(status: 409, code: "stale_supply", correlationID: nil, retryAfter: nil)
                 }
@@ -527,7 +527,7 @@ public actor HouseholdService {
               ["shop.create", "shop.patch", "shop.freeze", "shop.reopen", "shop.transferAuthority",
                "delivery.register", "delivery.arrival", "delivery.usable", "delivery.match", "delivery.reserve",
                "cookCopy.save", "cookCopy.markSent", "pantry.create", "pantry.storeDelivery", "pantry.observe",
-               "pantry.select", "pantry.match", "pantry.reserve"].contains(envelope.kind) else { throw ClientError.configuration }
+               "pantry.select", "pantry.match", "pantry.reserve", "mealRecovery.apply"].contains(envelope.kind) else { throw ClientError.configuration }
         if envelope.kind == "shop.create" {
             guard envelope.base.shopRevision == 0, envelope.base.authorityEpoch == 0 else { throw ClientError.configuration }
             try await authorizeAdmin()
@@ -536,12 +536,16 @@ public actor HouseholdService {
         } else {
             let capability = envelope.kind.hasPrefix("pantry.") ? "pantry_lots" : (envelope.kind.hasPrefix("cookCopy.") ? "cook_copies" : nil)
             let live = try await authorizeShopper(shopID: envelope.shopId, capability: capability)
+            if envelope.kind == "mealRecovery.apply" || (envelope.kind == "cookCopy.save" && envelope.body["recoveryRevision"] != nil) {
+                guard live.capabilities.contains("meal_recovery") else { throw ClientError.accessEnded }
+            }
             if envelope.kind == "cookCopy.save", envelope.body["pantryRevision"] != nil,
                !live.capabilities.contains("pantry_lots") { throw ClientError.accessEnded }
         }
         guard start == generation else { throw ClientError.cancelled }
         guard operation.memberID == memberID else { throw ClientError.accessEnded }
         let receipt: ShopperReceipt = try await perform("commands", method: "POST", body: operation.bytes, creatingShop: envelope.kind == "shop.create")
+        if envelope.kind == "mealRecovery.apply" { try receipt.validateRecovery(envelope) }
         if envelope.kind.hasPrefix("pantry.") { try receipt.validatePantry(envelope) }
         if envelope.kind.hasPrefix("cookCopy.") { try receipt.validateCookCopy(envelope) }
         if envelope.kind.hasPrefix("delivery.") {
