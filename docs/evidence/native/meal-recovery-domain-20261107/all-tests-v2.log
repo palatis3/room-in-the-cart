@@ -1,0 +1,486 @@
+Building for debugging...
+[Pre-planning 1 / 95]
+[Planning deferred tasks]
+[12 / 52]
+[29 / 53]
+[31 / 98]
+[33 / 98]
+[34 / 98]
+[35 / 98]
+[36 / 98]
+[39 / 98]
+[40 / 98]
+[41 / 98]
+[43 / 98]
+[46 / 98]
+[48 / 98]
+[51 / 98]
+[52 / 98]
+[54 / 98]
+[57 / 98]
+[59 / 98]
+[60 / 98]
+[61 / 98]
+[62 / 98]
+[63 / 98]
+[65 / 98] CoreDomain
+[68 / 98] CoreDomain
+[74 / 98] CoreDomain
+[75 / 98] CoreDomainTests-product
+[76 / 98] CoreDomainTests-product
+[78 / 98] CoreDomain
+[79 / 98] CoreDomain
+[80 / 98]
+[88 / 99]
+[90 / 145]
+[92 / 145]
+[93 / 145]
+[95 / 145]
+[97 / 145]
+[99 / 145]
+[101 / 145]
+[103 / 145]
+[104 / 145]
+[106 / 145]
+[107 / 145]
+[108 / 145]
+[109 / 145]
+[110 / 145]
+[112 / 145]
+[113 / 145]
+[115 / 145]
+[116 / 145]
+[117 / 145]
+[119 / 145]
+[120 / 145]
+[122 / 145]
+[123 / 145]
+[125 / 145] CoreDomainTests-product
+[127 / 145] CoreDomainTests-product
+[132 / 145] CoreDomainTests-product
+[134 / 145] CoreDomainTests-product
+[136 / 145] CoreDomainTests-product
+[137 / 145] CoreDomainTests-product
+[139 / 145] CoreDomainTests-product
+[139 / 145] AllIncludingTests
+[141 / 145] CoreDomain-product
+[144 / 145] CoreDomainTests-product
+Build complete! (46.52 sec)
+Test Suite 'All tests' started at 2026-11-07 03:52:08.993.
+Test Suite 'CoreDomainTests.xctest' started at 2026-11-07 03:52:08.995.
+Test Suite 'CaptureImportTests' started at 2026-11-07 03:52:08.995.
+Test Case '-[CoreDomainTests.CaptureImportTests testCancellationIsOnlyDiscardingPreviewAndChangesNothing]' started.
+Test Case '-[CoreDomainTests.CaptureImportTests testCancellationIsOnlyDiscardingPreviewAndChangesNothing]' passed (0.002 seconds).
+Test Case '-[CoreDomainTests.CaptureImportTests testDuplicateImportUsesExclusionsAndKeepsCaptureEvidenceAtomically]' started.
+Test Case '-[CoreDomainTests.CaptureImportTests testDuplicateImportUsesExclusionsAndKeepsCaptureEvidenceAtomically]' passed (0.002 seconds).
+Test Case '-[CoreDomainTests.CaptureImportTests testDurableExactReplayAndChangedMetadataConflict]' started.
+Test Case '-[CoreDomainTests.CaptureImportTests testDurableExactReplayAndChangedMetadataConflict]' passed (0.003 seconds).
+Test Case '-[CoreDomainTests.CaptureImportTests testExplicitZeroRemainsZeroAndIsNotConfusedWithUnknown]' started.
+Test Case '-[CoreDomainTests.CaptureImportTests testExplicitZeroRemainsZeroAndIsNotConfusedWithUnknown]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.CaptureImportTests testHardExclusionFailureRollsBackEarlierRowsAndMetadata]' started.
+Test Case '-[CoreDomainTests.CaptureImportTests testHardExclusionFailureRollsBackEarlierRowsAndMetadata]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.CaptureImportTests testInvalidAndFutureCaptureMetadataRejectedOnDecode]' started.
+Test Case '-[CoreDomainTests.CaptureImportTests testInvalidAndFutureCaptureMetadataRejectedOnDecode]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.CaptureImportTests testLegacyPreviewAndContributionDecodeWithEmptyCaptureDefaults]' started.
+Test Case '-[CoreDomainTests.CaptureImportTests testLegacyPreviewAndContributionDecodeWithEmptyCaptureDefaults]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.CaptureImportTests testMissingAndAmbiguousAmountsRemainUnknownWithEvidenceRetained]' started.
+Test Case '-[CoreDomainTests.CaptureImportTests testMissingAndAmbiguousAmountsRemainUnknownWithEvidenceRetained]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.CaptureImportTests testNegationAndUnresolvedExclusionsBlockWholeBatchUnlessSkipped]' started.
+Test Case '-[CoreDomainTests.CaptureImportTests testNegationAndUnresolvedExclusionsBlockWholeBatchUnlessSkipped]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.CaptureImportTests testOverflowNegativePackCountAndContradictoryTotalsDoNotMutate]' started.
+Test Case '-[CoreDomainTests.CaptureImportTests testOverflowNegativePackCountAndContradictoryTotalsDoNotMutate]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.CaptureImportTests testPackEvidenceAndLabelsPersistTogetherWithoutCreatingAuthorityOrReservations]' started.
+Test Case '-[CoreDomainTests.CaptureImportTests testPackEvidenceAndLabelsPersistTogetherWithoutCreatingAuthorityOrReservations]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.CaptureImportTests testPackMathIsExactAcrossFractionalAmountsAndEquivalentUnits]' started.
+Test Case '-[CoreDomainTests.CaptureImportTests testPackMathIsExactAcrossFractionalAmountsAndEquivalentUnits]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.CaptureImportTests testStaleReviewAndTamperedDerivedQuantityLeaveLedgerUnchanged]' started.
+Test Case '-[CoreDomainTests.CaptureImportTests testStaleReviewAndTamperedDerivedQuantityLeaveLedgerUnchanged]' passed (0.000 seconds).
+Test Suite 'CaptureImportTests' passed at 2026-11-07 03:52:09.008.
+	 Executed 13 tests, with 0 failures (0 unexpected) in 0.012 (0.013) seconds
+Test Suite 'CheckoutTests' started at 2026-11-07 03:52:09.008.
+Test Case '-[CoreDomainTests.CheckoutTests testApplyRetryStaleProposalAndChangedReplayDoNotDuplicateOrMutate]' started.
+Test Case '-[CoreDomainTests.CheckoutTests testApplyRetryStaleProposalAndChangedReplayDoNotDuplicateOrMutate]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.CheckoutTests testBoundedFeesRequireUpperBoundWithinCap]' started.
+Test Case '-[CoreDomainTests.CheckoutTests testBoundedFeesRequireUpperBoundWithinCap]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.CheckoutTests testCopyCancelOpenAndIntentionalSendDoNotReportPlacement]' started.
+Test Case '-[CoreDomainTests.CheckoutTests testCopyCancelOpenAndIntentionalSendDoNotReportPlacement]' passed (0.002 seconds).
+Test Case '-[CoreDomainTests.CheckoutTests testDuplicateLinesNegativeEvidenceAndOverflowFail]' started.
+Test Case '-[CoreDomainTests.CheckoutTests testDuplicateLinesNegativeEvidenceAndOverflowFail]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.CheckoutTests testFractionalCentRoundingAndUnknownIncrementRemainExplicit]' started.
+Test Case '-[CoreDomainTests.CheckoutTests testFractionalCentRoundingAndUnknownIncrementRemainExplicit]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.CheckoutTests testInclusiveTotalUsesItsCompleteBasisOnce]' started.
+Test Case '-[CoreDomainTests.CheckoutTests testInclusiveTotalUsesItsCompleteBasisOnce]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.CheckoutTests testInclusiveUnrelatedAndMissingWeighedLineLeaveMaximumUnresolved]' started.
+Test Case '-[CoreDomainTests.CheckoutTests testInclusiveUnrelatedAndMissingWeighedLineLeaveMaximumUnresolved]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.CheckoutTests testMalformedBasketArchiveRejectsEmptyHistoryAndFabricatedRevision]' started.
+Test Case '-[CoreDomainTests.CheckoutTests testMalformedBasketArchiveRejectsEmptyHistoryAndFabricatedRevision]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.CheckoutTests testOldSnapshotCannotPlaceEditedBasket]' started.
+Test Case '-[CoreDomainTests.CheckoutTests testOldSnapshotCannotPlaceEditedBasket]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.CheckoutTests testPlacementSealsOriginalAndConfirmedAmendmentIsSeparate]' started.
+Test Case '-[CoreDomainTests.CheckoutTests testPlacementSealsOriginalAndConfirmedAmendmentIsSeparate]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.CheckoutTests testQuoteComparisonsRequireMatchedStoreSlotAndCommitments]' started.
+Test Case '-[CoreDomainTests.CheckoutTests testQuoteComparisonsRequireMatchedStoreSlotAndCommitments]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.CheckoutTests testRetainedOriginalConsumesLineCeilingAndJointOffersCanExceedCap]' started.
+Test Case '-[CoreDomainTests.CheckoutTests testRetainedOriginalConsumesLineCeilingAndJointOffersCanExceedCap]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.CheckoutTests testSharedCheckoutVectors]' started.
+Test Case '-[CoreDomainTests.CheckoutTests testSharedCheckoutVectors]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.CheckoutTests testThresholdCanUseNetEligibleSubtotalAfterDiscount]' started.
+Test Case '-[CoreDomainTests.CheckoutTests testThresholdCanUseNetEligibleSubtotalAfterDiscount]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.CheckoutTests testThresholdUncertaintyPropagatesAndWaiverCanResolveUnknownFee]' started.
+Test Case '-[CoreDomainTests.CheckoutTests testThresholdUncertaintyPropagatesAndWaiverCanResolveUnknownFee]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.CheckoutTests testUndoRejectsInterveningChangeToAffectedLine]' started.
+Test Case '-[CoreDomainTests.CheckoutTests testUndoRejectsInterveningChangeToAffectedLine]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.CheckoutTests testUndoRestoresOnlyAffectedLinesAndIsCompensatingRevision]' started.
+Test Case '-[CoreDomainTests.CheckoutTests testUndoRestoresOnlyAffectedLinesAndIsCompensatingRevision]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.CheckoutTests testUnknownDiscountCannotRaiseTheKnownMaximum]' started.
+Test Case '-[CoreDomainTests.CheckoutTests testUnknownDiscountCannotRaiseTheKnownMaximum]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.CheckoutTests testUnknownTaxAndDepositAreNotZero]' started.
+Test Case '-[CoreDomainTests.CheckoutTests testUnknownTaxAndDepositAreNotZero]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.CheckoutTests testUnknownWeightHasMaximumAtRetailerBillingIncrementUnderWholeCap]' started.
+Test Case '-[CoreDomainTests.CheckoutTests testUnknownWeightHasMaximumAtRetailerBillingIncrementUnderWholeCap]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.CheckoutTests testWeightCeilingRechecksFeeAtActualBilledIncrementAndRetainsDiscount]' started.
+Test Case '-[CoreDomainTests.CheckoutTests testWeightCeilingRechecksFeeAtActualBilledIncrementAndRetainsDiscount]' passed (0.000 seconds).
+Test Suite 'CheckoutTests' passed at 2026-11-07 03:52:09.018.
+	 Executed 21 tests, with 0 failures (0 unexpected) in 0.009 (0.010) seconds
+Test Suite 'CheckoutWeightPropertyTests' started at 2026-11-07 03:52:09.018.
+Test Case '-[CoreDomainTests.CheckoutWeightPropertyTests testMaximumWeightMatchesLargestAffordableBilledIncrement]' started.
+Test Case '-[CoreDomainTests.CheckoutWeightPropertyTests testMaximumWeightMatchesLargestAffordableBilledIncrement]' passed (0.228 seconds).
+Test Suite 'CheckoutWeightPropertyTests' passed at 2026-11-07 03:52:09.246.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.228 (0.228) seconds
+Test Suite 'CoreDomainTests' started at 2026-11-07 03:52:09.246.
+Test Case '-[CoreDomainTests.CoreDomainTests testCheaperKnownOfferPreferenceDoesNotAssertItemCap]' started.
+Test Case '-[CoreDomainTests.CoreDomainTests testCheaperKnownOfferPreferenceDoesNotAssertItemCap]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.CoreDomainTests testConfirmedStockDeductedOnlyOnce]' started.
+Test Case '-[CoreDomainTests.CoreDomainTests testConfirmedStockDeductedOnlyOnce]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.CoreDomainTests testEmptyUnknownAndZeroNeedRemainDistinct]' started.
+Test Case '-[CoreDomainTests.CoreDomainTests testEmptyUnknownAndZeroNeedRemainDistinct]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.CoreDomainTests testExactDecimalsAndCanonicalRationals]' started.
+Test Case '-[CoreDomainTests.CoreDomainTests testExactDecimalsAndCanonicalRationals]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.CoreDomainTests testMassConversionsPreservePackages]' started.
+Test Case '-[CoreDomainTests.CoreDomainTests testMassConversionsPreservePackages]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.CoreDomainTests testMassVolumeNeverAssumedAndConfirmedBasisIsScoped]' started.
+Test Case '-[CoreDomainTests.CoreDomainTests testMassVolumeNeverAssumedAndConfirmedBasisIsScoped]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.CoreDomainTests testOverflowAndInvalidDataFailWithoutTrapping]' started.
+Test Case '-[CoreDomainTests.CoreDomainTests testOverflowAndInvalidDataFailWithoutTrapping]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.CoreDomainTests testRandomizedConservationAndMinimalWholePackages]' started.
+Test Case '-[CoreDomainTests.CoreDomainTests testRandomizedConservationAndMinimalWholePackages]' passed (0.023 seconds).
+Test Case '-[CoreDomainTests.CoreDomainTests testRequestRoundTripRetainsOriginalLabelsAndBasis]' started.
+Test Case '-[CoreDomainTests.CoreDomainTests testRequestRoundTripRetainsOriginalLabelsAndBasis]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.CoreDomainTests testSharedContractVectors]' started.
+Test Case '-[CoreDomainTests.CoreDomainTests testSharedContractVectors]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.CoreDomainTests testUnconvertibleConfirmedStockAndProtectedQuantityBlockCoverage]' started.
+Test Case '-[CoreDomainTests.CoreDomainTests testUnconvertibleConfirmedStockAndProtectedQuantityBlockCoverage]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.CoreDomainTests testUnknownYieldAndMissingPriceAreUnresolved]' started.
+Test Case '-[CoreDomainTests.CoreDomainTests testUnknownYieldAndMissingPriceAreUnresolved]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.CoreDomainTests testWholePacksAndProtectedPartition]' started.
+Test Case '-[CoreDomainTests.CoreDomainTests testWholePacksAndProtectedPartition]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.CoreDomainTests testZeroYieldKeepsNeedOpen]' started.
+Test Case '-[CoreDomainTests.CoreDomainTests testZeroYieldKeepsNeedOpen]' passed (0.000 seconds).
+Test Suite 'CoreDomainTests' passed at 2026-11-07 03:52:09.274.
+	 Executed 14 tests, with 0 failures (0 unexpected) in 0.027 (0.028) seconds
+Test Suite 'DinnerCompletenessTests' started at 2026-11-07 03:52:09.274.
+Test Case '-[CoreDomainTests.DinnerCompletenessTests testCompleteIngredientBindingsCanProveCoverage]' started.
+Test Case '-[CoreDomainTests.DinnerCompletenessTests testCompleteIngredientBindingsCanProveCoverage]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.DinnerCompletenessTests testConfirmedFoodBasisSurvivesDemandAggregation]' started.
+Test Case '-[CoreDomainTests.DinnerCompletenessTests testConfirmedFoodBasisSurvivesDemandAggregation]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.DinnerCompletenessTests testExcludedPackLabelCannotHideBehindBenignDemand]' started.
+Test Case '-[CoreDomainTests.DinnerCompletenessTests testExcludedPackLabelCannotHideBehindBenignDemand]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.DinnerCompletenessTests testExcludedStockLabelCannotHideBehindBenignDemand]' started.
+Test Case '-[CoreDomainTests.DinnerCompletenessTests testExcludedStockLabelCannotHideBehindBenignDemand]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.DinnerCompletenessTests testForeignIngredientBindingFailsClosed]' started.
+Test Case '-[CoreDomainTests.DinnerCompletenessTests testForeignIngredientBindingFailsClosed]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.DinnerCompletenessTests testLegacyUnboundDemandDecodesButCannotCertifyCompleteMeal]' started.
+Test Case '-[CoreDomainTests.DinnerCompletenessTests testLegacyUnboundDemandDecodesButCannotCertifyCompleteMeal]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.DinnerCompletenessTests testOmittedRequiredIngredientCannotClaimCoverage]' started.
+Test Case '-[CoreDomainTests.DinnerCompletenessTests testOmittedRequiredIngredientCannotClaimCoverage]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.DinnerCompletenessTests testRecipeYieldMustCoverRequestedPortions]' started.
+Test Case '-[CoreDomainTests.DinnerCompletenessTests testRecipeYieldMustCoverRequestedPortions]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.DinnerCompletenessTests testUnrelatedStockDoesNotAcquireAnotherFoodsExclusion]' started.
+Test Case '-[CoreDomainTests.DinnerCompletenessTests testUnrelatedStockDoesNotAcquireAnotherFoodsExclusion]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.DinnerCompletenessTests testZeroOrUndersizedRequiredIngredientCannotClaimCoverage]' started.
+Test Case '-[CoreDomainTests.DinnerCompletenessTests testZeroOrUndersizedRequiredIngredientCannotClaimCoverage]' passed (0.000 seconds).
+Test Suite 'DinnerCompletenessTests' passed at 2026-11-07 03:52:09.280.
+	 Executed 10 tests, with 0 failures (0 unexpected) in 0.005 (0.006) seconds
+Test Suite 'DinnerPlanningTests' started at 2026-11-07 03:52:09.280.
+Test Case '-[CoreDomainTests.DinnerPlanningTests testCivilWeekKeepsOriginalDatesAfterChangingPickupTimeZone]' started.
+Test Case '-[CoreDomainTests.DinnerPlanningTests testCivilWeekKeepsOriginalDatesAfterChangingPickupTimeZone]' passed (0.002 seconds).
+Test Case '-[CoreDomainTests.DinnerPlanningTests testCivilWeekMoveKeepsFridayLunchAndSameNeedsAcrossDST]' started.
+Test Case '-[CoreDomainTests.DinnerPlanningTests testCivilWeekMoveKeepsFridayLunchAndSameNeedsAcrossDST]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.DinnerPlanningTests testConfirmedStockProtectsLunchAndFallbackRequiresTimeAndTripConsent]' started.
+Test Case '-[CoreDomainTests.DinnerPlanningTests testConfirmedStockProtectsLunchAndFallbackRequiresTimeAndTripConsent]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.DinnerPlanningTests testContributorExpiredAndBudgetlessAccessAreDeniedAtBoundary]' started.
+Test Case '-[CoreDomainTests.DinnerPlanningTests testContributorExpiredAndBudgetlessAccessAreDeniedAtBoundary]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.DinnerPlanningTests testExactReplayAfterNewerEditReturnsReceiptWithoutRevertingAndChangedIntentFails]' started.
+Test Case '-[CoreDomainTests.DinnerPlanningTests testExactReplayAfterNewerEditReturnsReceiptWithoutRevertingAndChangedIntentFails]' passed (0.002 seconds).
+Test Case '-[CoreDomainTests.DinnerPlanningTests testFallbackOverCapRemainsUnresolved]' started.
+Test Case '-[CoreDomainTests.DinnerPlanningTests testFallbackOverCapRemainsUnresolved]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.DinnerPlanningTests testFreeManualReductionFromTwelveToFourKeepsOnePackAndPrivateBudgetHidden]' started.
+Test Case '-[CoreDomainTests.DinnerPlanningTests testFreeManualReductionFromTwelveToFourKeepsOnePackAndPrivateBudgetHidden]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.DinnerPlanningTests testFreeReuseAndLapseKeepManualWorkAndAllSavedMeals]' started.
+Test Case '-[CoreDomainTests.DinnerPlanningTests testFreeReuseAndLapseKeepManualWorkAndAllSavedMeals]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.DinnerPlanningTests testG12PairingAndGuestWholeCheckoutUseActualThresholdEngine]' started.
+Test Case '-[CoreDomainTests.DinnerPlanningTests testG12PairingAndGuestWholeCheckoutUseActualThresholdEngine]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.DinnerPlanningTests testGuestApplyRefreshesBindingsForTheNextPreview]' started.
+Test Case '-[CoreDomainTests.DinnerPlanningTests testGuestApplyRefreshesBindingsForTheNextPreview]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.DinnerPlanningTests testGuestBindingPreservesProtectedPortionsAndCrossesWholePackBoundary]' started.
+Test Case '-[CoreDomainTests.DinnerPlanningTests testGuestBindingPreservesProtectedPortionsAndCrossesWholePackBoundary]' passed (0.002 seconds).
+Test Case '-[CoreDomainTests.DinnerPlanningTests testIdeaEditingCannotRemoveHouseholdHardExclusion]' started.
+Test Case '-[CoreDomainTests.DinnerPlanningTests testIdeaEditingCannotRemoveHouseholdHardExclusion]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.DinnerPlanningTests testIdeaGenerationReviewCorrectionAcceptanceAndRetryStayOutsideBasket]' started.
+Test Case '-[CoreDomainTests.DinnerPlanningTests testIdeaGenerationReviewCorrectionAcceptanceAndRetryStayOutsideBasket]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.DinnerPlanningTests testImportedPaidFieldsCannotAuthorizeSharedApply]' started.
+Test Case '-[CoreDomainTests.DinnerPlanningTests testImportedPaidFieldsCannotAuthorizeSharedApply]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.DinnerPlanningTests testInvalidDateAndOverflowLeaveLedgerUnchanged]' started.
+Test Case '-[CoreDomainTests.DinnerPlanningTests testInvalidDateAndOverflowLeaveLedgerUnchanged]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.DinnerPlanningTests testLimitedSearchReportsUntestedAndDoesNotClaimNoPairing]' started.
+Test Case '-[CoreDomainTests.DinnerPlanningTests testLimitedSearchReportsUntestedAndDoesNotClaimNoPairing]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.DinnerPlanningTests testManualQuantityEditCannotEraseProtectedFoodOrRemoveItsMeal]' started.
+Test Case '-[CoreDomainTests.DinnerPlanningTests testManualQuantityEditCannotEraseProtectedFoodOrRemoveItsMeal]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.DinnerPlanningTests testPairingRetainsProtectedBindingIdentityAndQuantityAfterReplacingNamedGroup]' started.
+Test Case '-[CoreDomainTests.DinnerPlanningTests testPairingRetainsProtectedBindingIdentityAndQuantityAfterReplacingNamedGroup]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.DinnerPlanningTests testPairingUnknownPriceAvailabilityAndDifferentCommitmentsNeverWin]' started.
+Test Case '-[CoreDomainTests.DinnerPlanningTests testPairingUnknownPriceAvailabilityAndDifferentCommitmentsNeverWin]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.DinnerPlanningTests testPlacedBasketAllowsCalendarButRequiresAmendmentForDemandChange]' started.
+Test Case '-[CoreDomainTests.DinnerPlanningTests testPlacedBasketAllowsCalendarButRequiresAmendmentForDemandChange]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.DinnerPlanningTests testPreviewCancelHasZeroMutationAndAtomicApplyUsesReviewedIDs]' started.
+Test Case '-[CoreDomainTests.DinnerPlanningTests testPreviewCancelHasZeroMutationAndAtomicApplyUsesReviewedIDs]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.DinnerPlanningTests testPrivateBudgetIsAbsentFromPlannerPreviewProjection]' started.
+Test Case '-[CoreDomainTests.DinnerPlanningTests testPrivateBudgetIsAbsentFromPlannerPreviewProjection]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.DinnerPlanningTests testQuoteAdoptionRequiresCurrentDraftAndClearsOldStoreEvidence]' started.
+Test Case '-[CoreDomainTests.DinnerPlanningTests testQuoteAdoptionRequiresCurrentDraftAndClearsOldStoreEvidence]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.DinnerPlanningTests testQuoteCannotAdoptUnreviewedBasisOrUnsavedProof]' started.
+Test Case '-[CoreDomainTests.DinnerPlanningTests testQuoteCannotAdoptUnreviewedBasisOrUnsavedProof]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.DinnerPlanningTests testReservationWithinTypedTotalDoesNotAddQuantityAndPreviewIDsMatch]' started.
+Test Case '-[CoreDomainTests.DinnerPlanningTests testReservationWithinTypedTotalDoesNotAddQuantityAndPreviewIDsMatch]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.DinnerPlanningTests testRotationSelectedNightCopiesVersionAndWeeklyEditsPreserveTemplate]' started.
+Test Case '-[CoreDomainTests.DinnerPlanningTests testRotationSelectedNightCopiesVersionAndWeeklyEditsPreserveTemplate]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.DinnerPlanningTests testSecondAdultProposesButOnlyCurrentShopperAppliesAndOfflineSharedCannotCommit]' started.
+Test Case '-[CoreDomainTests.DinnerPlanningTests testSecondAdultProposesButOnlyCurrentShopperAppliesAndOfflineSharedCannotCommit]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.DinnerPlanningTests testStalePreviewAndChangedPlanningVersionRejectWithoutMutation]' started.
+Test Case '-[CoreDomainTests.DinnerPlanningTests testStalePreviewAndChangedPlanningVersionRejectWithoutMutation]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.DinnerPlanningTests testTwelveToFourStillBuysOneWholePack]' started.
+Test Case '-[CoreDomainTests.DinnerPlanningTests testTwelveToFourStillBuysOneWholePack]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.DinnerPlanningTests testTwoStoreCheckoutVersusTravelCashAndTimeVector]' started.
+Test Case '-[CoreDomainTests.DinnerPlanningTests testTwoStoreCheckoutVersusTravelCashAndTimeVector]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.DinnerPlanningTests testUnboundNamedPortionsRequireReviewAndIsolatedPreviewCannotApply]' started.
+Test Case '-[CoreDomainTests.DinnerPlanningTests testUnboundNamedPortionsRequireReviewAndIsolatedPreviewCannotApply]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.DinnerPlanningTests testUnknownFeeTripOrAvailabilityDoesNotCrownWinnerAndBreakEvenIsCashOnly]' started.
+Test Case '-[CoreDomainTests.DinnerPlanningTests testUnknownFeeTripOrAvailabilityDoesNotCrownWinnerAndBreakEvenIsCashOnly]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.DinnerPlanningTests testWorkspaceRoundtripOldDocumentDefaultsEmptyAndBadReferenceRejected]' started.
+Test Case '-[CoreDomainTests.DinnerPlanningTests testWorkspaceRoundtripOldDocumentDefaultsEmptyAndBadReferenceRejected]' passed (0.001 seconds).
+Test Suite 'DinnerPlanningTests' passed at 2026-11-07 03:52:09.306.
+	 Executed 33 tests, with 0 failures (0 unexpected) in 0.024 (0.026) seconds
+Test Suite 'DinnerWeekRolloverTests' started at 2026-11-07 03:52:09.306.
+Test Case '-[CoreDomainTests.DinnerWeekRolloverTests testReopeningAfterMidnightKeepsTheOriginalDinnerAndLunch]' started.
+Test Case '-[CoreDomainTests.DinnerWeekRolloverTests testReopeningAfterMidnightKeepsTheOriginalDinnerAndLunch]' passed (0.002 seconds).
+Test Case '-[CoreDomainTests.DinnerWeekRolloverTests testReopeningAfterNewYorkFallBackKeepsTheOriginalDinnerAndLunch]' started.
+Test Case '-[CoreDomainTests.DinnerWeekRolloverTests testReopeningAfterNewYorkFallBackKeepsTheOriginalDinnerAndLunch]' passed (0.002 seconds).
+Test Case '-[CoreDomainTests.DinnerWeekRolloverTests testReopeningInJanuaryKeepsTheDecemberDinnerAndLunch]' started.
+Test Case '-[CoreDomainTests.DinnerWeekRolloverTests testReopeningInJanuaryKeepsTheDecemberDinnerAndLunch]' passed (0.002 seconds).
+Test Suite 'DinnerWeekRolloverTests' passed at 2026-11-07 03:52:09.311.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.005 (0.005) seconds
+Test Suite 'LedgerIndexSafetyTests' started at 2026-11-07 03:52:09.311.
+Test Case '-[CoreDomainTests.LedgerIndexSafetyTests testGroupedQuantityValidationStillRejectsLateOverflowAtomically]' started.
+Test Case '-[CoreDomainTests.LedgerIndexSafetyTests testGroupedQuantityValidationStillRejectsLateOverflowAtomically]' passed (0.056 seconds).
+Test Case '-[CoreDomainTests.LedgerIndexSafetyTests testLargeImportKeepsExactReceiptAfterChecksAndRoundTrip]' started.
+Test Case '-[CoreDomainTests.LedgerIndexSafetyTests testLargeImportKeepsExactReceiptAfterChecksAndRoundTrip]' passed (0.417 seconds).
+Test Case '-[CoreDomainTests.LedgerIndexSafetyTests testReceiptMembershipAndOriginalOrderRemainValidatedAfterDecode]' started.
+Test Case '-[CoreDomainTests.LedgerIndexSafetyTests testReceiptMembershipAndOriginalOrderRemainValidatedAfterDecode]' passed (0.024 seconds).
+Test Case '-[CoreDomainTests.LedgerIndexSafetyTests testSkippedDuplicateDoesNotBecomeAnExistingLineAndSearchKeepsSourceHistory]' started.
+Test Case '-[CoreDomainTests.LedgerIndexSafetyTests testSkippedDuplicateDoesNotBecomeAnExistingLineAndSearchKeepsSourceHistory]' passed (0.001 seconds).
+Test Suite 'LedgerIndexSafetyTests' passed at 2026-11-07 03:52:09.809.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.497 (0.498) seconds
+Test Suite 'LedgerPackSelectionTests' started at 2026-11-07 03:52:09.809.
+Test Case '-[CoreDomainTests.LedgerPackSelectionTests testChangedSourceKeepsHistoricalEvidenceButCannotDriveCheckout]' started.
+Test Case '-[CoreDomainTests.LedgerPackSelectionTests testChangedSourceKeepsHistoricalEvidenceButCannotDriveCheckout]' passed (0.002 seconds).
+Test Case '-[CoreDomainTests.LedgerPackSelectionTests testDecodedTamperedTotalUnknownEngineAndInvalidSourceReferencesFailClosed]' started.
+Test Case '-[CoreDomainTests.LedgerPackSelectionTests testDecodedTamperedTotalUnknownEngineAndInvalidSourceReferencesFailClosed]' passed (0.003 seconds).
+Test Case '-[CoreDomainTests.LedgerPackSelectionTests testEarlierWorkspaceDefaultsEmptyAndUnknownYieldCannotBeSelected]' started.
+Test Case '-[CoreDomainTests.LedgerPackSelectionTests testEarlierWorkspaceDefaultsEmptyAndUnknownYieldCannotBeSelected]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.LedgerPackSelectionTests testRecoveredWorkspaceCannotTreatOriginalWorkspaceEvidenceAsCurrent]' started.
+Test Case '-[CoreDomainTests.LedgerPackSelectionTests testRecoveredWorkspaceCannotTreatOriginalWorkspaceEvidenceAsCurrent]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.LedgerPackSelectionTests testReviewRetryIsIdempotentButDifferentBodyReusingOperationConflicts]' started.
+Test Case '-[CoreDomainTests.LedgerPackSelectionTests testReviewRetryIsIdempotentButDifferentBodyReusingOperationConflicts]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.LedgerPackSelectionTests testServingGroupProtectionUsesItsPartitionInsideMealAmount]' started.
+Test Case '-[CoreDomainTests.LedgerPackSelectionTests testServingGroupProtectionUsesItsPartitionInsideMealAmount]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.LedgerPackSelectionTests testWholePacksRetainProtectedPartitionAndItemOnlyCost]' started.
+Test Case '-[CoreDomainTests.LedgerPackSelectionTests testWholePacksRetainProtectedPartitionAndItemOnlyCost]' passed (0.001 seconds).
+Test Suite 'LedgerPackSelectionTests' passed at 2026-11-07 03:52:09.818.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.008 (0.009) seconds
+Test Suite 'LedgerPackStockEvidenceTests' started at 2026-11-07 03:52:09.818.
+Test Case '-[CoreDomainTests.LedgerPackStockEvidenceTests testEvidenceMustMatchLiveSourceAndRecoveredWorkspaceCannotAdoptIt]' started.
+Test Case '-[CoreDomainTests.LedgerPackStockEvidenceTests testEvidenceMustMatchLiveSourceAndRecoveredWorkspaceCannotAdoptIt]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.LedgerPackStockEvidenceTests testFreeStandingStockTotalAndTamperedPartitionCannotAuthorizeSelection]' started.
+Test Case '-[CoreDomainTests.LedgerPackStockEvidenceTests testFreeStandingStockTotalAndTamperedPartitionCannotAuthorizeSelection]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.LedgerPackStockEvidenceTests testFullyCoveredHasExplicitNoPurchaseWithNoPackPriceEvidence]' started.
+Test Case '-[CoreDomainTests.LedgerPackStockEvidenceTests testFullyCoveredHasExplicitNoPurchaseWithNoPackPriceEvidence]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.LedgerPackStockEvidenceTests testProtectedFoodAndFixedReservationsElsewhereCannotBeCreditedTwice]' started.
+Test Case '-[CoreDomainTests.LedgerPackStockEvidenceTests testProtectedFoodAndFixedReservationsElsewhereCannotBeCreditedTwice]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.LedgerPackStockEvidenceTests testTwelveNeedEightAllocatedEightPerPackBuysOneAndKeepsGrossDemand]' started.
+Test Case '-[CoreDomainTests.LedgerPackStockEvidenceTests testTwelveNeedEightAllocatedEightPerPackBuysOneAndKeepsGrossDemand]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.LedgerPackStockEvidenceTests testVersionOneArchiveAndNoStockBehaviorRemainUnchanged]' started.
+Test Case '-[CoreDomainTests.LedgerPackStockEvidenceTests testVersionOneArchiveAndNoStockBehaviorRemainUnchanged]' passed (0.001 seconds).
+Test Suite 'LedgerPackStockEvidenceTests' passed at 2026-11-07 03:52:09.823.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.004 (0.005) seconds
+Test Suite 'MealRecoveryTests' started at 2026-11-07 03:52:09.823.
+Test Case '-[CoreDomainTests.MealRecoveryTests testDecodedHistoryRejectsDuplicateOperationBrokenLineageAndForgedWholeTarget]' started.
+Test Case '-[CoreDomainTests.MealRecoveryTests testDecodedHistoryRejectsDuplicateOperationBrokenLineageAndForgedWholeTarget]' passed (0.007 seconds).
+Test Case '-[CoreDomainTests.MealRecoveryTests testFutureArrivalEvidenceStaysUnusableUntilInstantAndStalesAnExistingReview]' started.
+Test Case '-[CoreDomainTests.MealRecoveryTests testFutureArrivalEvidenceStaysUnusableUntilInstantAndStalesAnExistingReview]' passed (0.004 seconds).
+Test Case '-[CoreDomainTests.MealRecoveryTests testOutsideAllocationComparisonUsesExactUnitsAndStillRejectsTakingItsFood]' started.
+Test Case '-[CoreDomainTests.MealRecoveryTests testOutsideAllocationComparisonUsesExactUnitsAndStillRejectsTakingItsFood]' passed (0.002 seconds).
+Test Case '-[CoreDomainTests.MealRecoveryTests testPreparationLeadAndClockBoundaryRemainConditionalWithoutChangingSavedDeadline]' started.
+Test Case '-[CoreDomainTests.MealRecoveryTests testPreparationLeadAndClockBoundaryRemainConditionalWithoutChangingSavedDeadline]' passed (0.004 seconds).
+Test Case '-[CoreDomainTests.MealRecoveryTests testRepeatedReplacementUsesCurrentWholeTargetAndRejectsSameOperationDifferentContent]' started.
+Test Case '-[CoreDomainTests.MealRecoveryTests testRepeatedReplacementUsesCurrentWholeTargetAndRejectsSameOperationDifferentContent]' passed (0.010 seconds).
+Test Case '-[CoreDomainTests.MealRecoveryTests testReplacementCannotConsumeAnotherNeedAndFivePortionsDoNotCoverFourPlusTwoProtected]' started.
+Test Case '-[CoreDomainTests.MealRecoveryTests testReplacementCannotConsumeAnotherNeedAndFivePortionsDoNotCoverFourPlusTwoProtected]' passed (0.003 seconds).
+Test Case '-[CoreDomainTests.MealRecoveryTests testSixFourTwoWrapRecoveryReplacesOnlyWednesdayAndPreservesHistoryCancelReplayAndRestart]' started.
+Test Case '-[CoreDomainTests.MealRecoveryTests testSixFourTwoWrapRecoveryReplacesOnlyWednesdayAndPreservesHistoryCancelReplayAndRestart]' passed (0.004 seconds).
+Test Case '-[CoreDomainTests.MealRecoveryTests testTopUpAndRepeatConsentNeverInventFoodOrAcknowledgedCoverage]' started.
+Test Case '-[CoreDomainTests.MealRecoveryTests testTopUpAndRepeatConsentNeverInventFoodOrAcknowledgedCoverage]' passed (0.007 seconds).
+Test Case '-[CoreDomainTests.MealRecoveryTests testWholeTargetProtectedGroupsDueAndExclusionsCannotBeDroppedOrBorrowIdentities]' started.
+Test Case '-[CoreDomainTests.MealRecoveryTests testWholeTargetProtectedGroupsDueAndExclusionsCannotBeDroppedOrBorrowIdentities]' passed (0.003 seconds).
+Test Suite 'MealRecoveryTests' passed at 2026-11-07 03:52:09.867.
+	 Executed 9 tests, with 0 failures (0 unexpected) in 0.044 (0.045) seconds
+Test Suite 'PickupTests' started at 2026-11-07 03:52:09.867.
+Test Case '-[CoreDomainTests.PickupTests testAllocationConservationAcrossManyPartialReceipts]' started.
+Test Case '-[CoreDomainTests.PickupTests testAllocationConservationAcrossManyPartialReceipts]' passed (0.005 seconds).
+Test Case '-[CoreDomainTests.PickupTests testCorruptPickupArchiveCannotBypassPhysicalSupplyCeiling]' started.
+Test Case '-[CoreDomainTests.PickupTests testCorruptPickupArchiveCannotBypassPhysicalSupplyCeiling]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.PickupTests testCorruptSettlementArchiveCannotDoubleCountIncludedCredit]' started.
+Test Case '-[CoreDomainTests.PickupTests testCorruptSettlementArchiveCannotDoubleCountIncludedCredit]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.PickupTests testDeadlineChangesToAwaitPickupAtExactInstantWithoutInventingFill]' started.
+Test Case '-[CoreDomainTests.PickupTests testDeadlineChangesToAwaitPickupAtExactInstantWithoutInventingFill]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.PickupTests testImpossibleYieldAndWrongBranchFailWithoutMutation]' started.
+Test Case '-[CoreDomainTests.PickupTests testImpossibleYieldAndWrongBranchFailWithoutMutation]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.PickupTests testIncludedCreditExplainsNetChargeWithoutSecondDeduction]' started.
+Test Case '-[CoreDomainTests.PickupTests testIncludedCreditExplainsNetChargeWithoutSecondDeduction]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.PickupTests testIndependentEqualPurchasesSurviveWhileSameEvidenceDeduplicates]' started.
+Test Case '-[CoreDomainTests.PickupTests testIndependentEqualPurchasesSurviveWhileSameEvidenceDeduplicates]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.PickupTests testIndependentStockRequiresReviewedIdentityAndDeduplicatedLot]' started.
+Test Case '-[CoreDomainTests.PickupTests testIndependentStockRequiresReviewedIdentityAndDeduplicatedLot]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.PickupTests testIndependentStockUnknownConversionAndProtectedNeedRemainUnresolved]' started.
+Test Case '-[CoreDomainTests.PickupTests testIndependentStockUnknownConversionAndProtectedNeedRemainUnresolved]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.PickupTests testNoFillIsAnExplicitZeroAndUnknownConversionBlocksCoverage]' started.
+Test Case '-[CoreDomainTests.PickupTests testNoFillIsAnExplicitZeroAndUnknownConversionBlocksCoverage]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.PickupTests testPaymentHoldAndItsReleaseNeverEnterPaidCash]' started.
+Test Case '-[CoreDomainTests.PickupTests testPaymentHoldAndItsReleaseNeverEnterPaidCash]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.PickupTests testPendingCreditDoesNotReducePostedCashUntilPosted]' started.
+Test Case '-[CoreDomainTests.PickupTests testPendingCreditDoesNotReducePostedCashUntilPosted]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.PickupTests testReceiptRetryAddsNothingButSecondGenuineSegmentCounts]' started.
+Test Case '-[CoreDomainTests.PickupTests testReceiptRetryAddsNothingButSecondGenuineSegmentCounts]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.PickupTests testSettlementOverflowIsAtomic]' started.
+Test Case '-[CoreDomainTests.PickupTests testSettlementOverflowIsAtomic]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.PickupTests testSixUsableWrapsProtectTwoLunchesBeforeDinners]' started.
+Test Case '-[CoreDomainTests.PickupTests testSixUsableWrapsProtectTwoLunchesBeforeDinners]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.PickupTests testUnknownUsableAmountDoesNotBecomeReceivedAmountOrZeroFact]' started.
+Test Case '-[CoreDomainTests.PickupTests testUnknownUsableAmountDoesNotBecomeReceivedAmountOrZeroFact]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.PickupTests testUrgentRepairUsesConfirmedStockWithoutOrderOrInventedDate]' started.
+Test Case '-[CoreDomainTests.PickupTests testUrgentRepairUsesConfirmedStockWithoutOrderOrInventedDate]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.PickupTests testUsableCorrectionPreservesReceivedFactAndRevisitsProtectedAllocations]' started.
+Test Case '-[CoreDomainTests.PickupTests testUsableCorrectionPreservesReceivedFactAndRevisitsProtectedAllocations]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.PickupTests testWrongItemNeedsReviewedMatchBeforeAllocation]' started.
+Test Case '-[CoreDomainTests.PickupTests testWrongItemNeedsReviewedMatchBeforeAllocation]' passed (0.000 seconds).
+Test Suite 'PickupTests' passed at 2026-11-07 03:52:09.881.
+	 Executed 19 tests, with 0 failures (0 unexpected) in 0.012 (0.014) seconds
+Test Suite 'RecipeSourceEvidenceTests' started at 2026-11-07 03:52:09.881.
+Test Case '-[CoreDomainTests.RecipeSourceEvidenceTests testLegacyOptionalEvidenceRemainsOmittedAndCanonical]' started.
+Test Case '-[CoreDomainTests.RecipeSourceEvidenceTests testLegacyOptionalEvidenceRemainsOmittedAndCanonical]' passed (0.002 seconds).
+Test Case '-[CoreDomainTests.RecipeSourceEvidenceTests testMalformedAndOversizedIdentifiersCannotBecomeMediaReferences]' started.
+Test Case '-[CoreDomainTests.RecipeSourceEvidenceTests testMalformedAndOversizedIdentifiersCannotBecomeMediaReferences]' passed (0.002 seconds).
+Test Case '-[CoreDomainTests.RecipeSourceEvidenceTests testMalformedNestedEvidenceRejectsWorkspaceBeforeAnyRecipeMutation]' started.
+Test Case '-[CoreDomainTests.RecipeSourceEvidenceTests testMalformedNestedEvidenceRejectsWorkspaceBeforeAnyRecipeMutation]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.RecipeSourceEvidenceTests testMediaEligibilityRequiresNativeScopeAndMatchingNamespace]' started.
+Test Case '-[CoreDomainTests.RecipeSourceEvidenceTests testMediaEligibilityRequiresNativeScopeAndMatchingNamespace]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.RecipeSourceEvidenceTests testOriginalEvidenceSurvivesIndependentRecipeAndOccurrenceEdits]' started.
+Test Case '-[CoreDomainTests.RecipeSourceEvidenceTests testOriginalEvidenceSurvivesIndependentRecipeAndOccurrenceEdits]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.RecipeSourceEvidenceTests testOriginalTextHasUTF8BoundAndRejectsEmptyAndNUL]' started.
+Test Case '-[CoreDomainTests.RecipeSourceEvidenceTests testOriginalTextHasUTF8BoundAndRejectsEmptyAndNUL]' passed (0.002 seconds).
+Test Case '-[CoreDomainTests.RecipeSourceEvidenceTests testReviewedPlannerCopiesEvidenceWithoutInferringQuantitiesOrAuthority]' started.
+Test Case '-[CoreDomainTests.RecipeSourceEvidenceTests testReviewedPlannerCopiesEvidenceWithoutInferringQuantitiesOrAuthority]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.RecipeSourceEvidenceTests testUnknownFieldsAndFutureKindsAreRejectedAtEveryEvidenceLevel]' started.
+Test Case '-[CoreDomainTests.RecipeSourceEvidenceTests testUnknownFieldsAndFutureKindsAreRejectedAtEveryEvidenceLevel]' passed (0.001 seconds).
+Test Suite 'RecipeSourceEvidenceTests' passed at 2026-11-07 03:52:09.892.
+	 Executed 8 tests, with 0 failures (0 unexpected) in 0.009 (0.010) seconds
+Test Suite 'ShoppingLedgerTests' started at 2026-11-07 03:52:09.892.
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testAllBasisChangesInvalidateQuoteAndNoOpDoesNot]' started.
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testAllBasisChangesInvalidateQuoteAndNoOpDoesNot]' passed (0.002 seconds).
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testCheckedHandledTrashRestoreAreIndependentAndDurableByID]' started.
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testCheckedHandledTrashRestoreAreIndependentAndDurableByID]' passed (0.004 seconds).
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testDateOnlyValidationAndDSTCalendarDays]' started.
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testDateOnlyValidationAndDSTCalendarDays]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testDuplicateAliasCannotDoubleReservationCapacityAndUndoRehomesSurvivors]' started.
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testDuplicateAliasCannotDoubleReservationCapacityAndUndoRehomesSurvivors]' passed (0.003 seconds).
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testDuplicatePasteNeedsExplicitDecisionAndRetryIsIdempotent]' started.
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testDuplicatePasteNeedsExplicitDecisionAndRetryIsIdempotent]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testExactUnitMergeAndFractionalAllocation]' started.
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testExactUnitMergeAndFractionalAllocation]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testExplicitAdditionalPasteAddsQuantityAndUndoIsIsolated]' started.
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testExplicitAdditionalPasteAddsQuantityAndUndoIsIsolated]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testMatchingRejectsExclusionsIncompatibleProductsAndUnknownUnits]' started.
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testMatchingRejectsExclusionsIncompatibleProductsAndUnknownUnits]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testMealTemplateAndOccurrenceAreIndependentAndSchedulingKeepsIDs]' started.
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testMealTemplateAndOccurrenceAreIndependentAndSchedulingKeepsIDs]' passed (0.004 seconds).
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testPartialLinkRetainsResidualAndSiblingReservationsCannotOverallocate]' started.
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testPartialLinkRetainsResidualAndSiblingReservationsCannotOverallocate]' passed (0.002 seconds).
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testPersistedAllocationCycleDanglingAndOverallocationAreRejected]' started.
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testPersistedAllocationCycleDanglingAndOverallocationAreRejected]' passed (0.003 seconds).
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testPersistedCorruptionIsRejectedBeforeMutationCanTrap]' started.
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testPersistedCorruptionIsRejectedBeforeMutationCanTrap]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testRandomizedLinkedDemandConservationAndRemoval]' started.
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testRandomizedLinkedDemandConservationAndRemoval]' passed (0.103 seconds).
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testRefreshImportMatchesUsesEditedNamesWithoutChangingEvidenceOrIDs]' started.
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testRefreshImportMatchesUsesEditedNamesWithoutChangingEvidenceOrIDs]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testRemoveIndividualMealAndImportContributionPreservesOtherSources]' started.
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testRemoveIndividualMealAndImportContributionPreservesOtherSources]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testRemovingMiddleDuplicatePreservesEquivalence]' started.
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testRemovingMiddleDuplicatePreservesEquivalence]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testRenamedLineRetainsSourceWordsAndCanReceiveNewMatchingSource]' started.
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testRenamedLineRetainsSourceWordsAndCanReceiveNewMatchingSource]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testRetailerPreviewStoresScopeAndUnknownFactsWithoutInventingTotals]' started.
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testRetailerPreviewStoresScopeAndUnknownFactsWithoutInventingTotals]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testStagingPreservesOriginalAndUnknownsWithoutMutation]' started.
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testStagingPreservesOriginalAndUnknownsWithoutMutation]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testStalePreviewRejectedEvenWhenCallerErasesDuplicateHints]' started.
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testStalePreviewRejectedEvenWhenCallerErasesDuplicateHints]' passed (0.000 seconds).
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testTacosLunchAndManualStapleConserveSourcesAcrossRemoval]' started.
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testTacosLunchAndManualStapleConserveSourcesAcrossRemoval]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testTrashPreservesActiveNeedAndSearchFindsNotesButNotTrash]' started.
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testTrashPreservesActiveNeedAndSearchFindsNotesButNotTrash]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testTwoDuplicatesInSamePreviewRequireChoiceAndCanMergeOrAdd]' started.
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testTwoDuplicatesInSamePreviewRequireChoiceAndCanMergeOrAdd]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testUndoOriginalImportRetainsLinkedMealAndLunchAsDemands]' started.
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testUndoOriginalImportRetainsLinkedMealAndLunchAsDemands]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testUnknownsStayUnresolvedAndInvalidLinkIsAtomic]' started.
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testUnknownsStayUnresolvedAndInvalidLinkIsAtomic]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testZeroDemandCanBeConfirmedDuplicateWithoutBecomingUnknown]' started.
+Test Case '-[CoreDomainTests.ShoppingLedgerTests testZeroDemandCanBeConfirmedDuplicateWithoutBecomingUnknown]' passed (0.000 seconds).
+Test Suite 'ShoppingLedgerTests' passed at 2026-11-07 03:52:10.027.
+	 Executed 26 tests, with 0 failures (0 unexpected) in 0.133 (0.136) seconds
+Test Suite 'StagedImportIdentityTests' started at 2026-11-07 03:52:10.027.
+Test Case '-[CoreDomainTests.StagedImportIdentityTests testExternalIdentitySurvivesRestartAndExactReplay]' started.
+Test Case '-[CoreDomainTests.StagedImportIdentityTests testExternalIdentitySurvivesRestartAndExactReplay]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.StagedImportIdentityTests testSameTextDifferentExplicitOperationRemainsSeparateReviewedIntent]' started.
+Test Case '-[CoreDomainTests.StagedImportIdentityTests testSameTextDifferentExplicitOperationRemainsSeparateReviewedIntent]' passed (0.000 seconds).
+Test Suite 'StagedImportIdentityTests' passed at 2026-11-07 03:52:10.028.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'StapleRecallTests' started at 2026-11-07 03:52:10.028.
+Test Case '-[CoreDomainTests.StapleRecallTests testChangedOrForgottenApprovalInvalidatesOpenReviewAndStoreIsRequired]' started.
+Test Case '-[CoreDomainTests.StapleRecallTests testChangedOrForgottenApprovalInvalidatesOpenReviewAndStoreIsRequired]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.StapleRecallTests testExistingCheckedOrHandledItemIsNeverReopenedAndHandledChoiceCreatesNoPurchase]' started.
+Test Case '-[CoreDomainTests.StapleRecallTests testExistingCheckedOrHandledItemIsNeverReopenedAndHandledChoiceCreatesNoPurchase]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.StapleRecallTests testRecallCopiesOnlyReviewedNeedAndRetainsOldCheckAcrossSaveAndReplay]' started.
+Test Case '-[CoreDomainTests.StapleRecallTests testRecallCopiesOnlyReviewedNeedAndRetainsOldCheckAcrossSaveAndReplay]' passed (0.001 seconds).
+Test Case '-[CoreDomainTests.StapleRecallTests testReopeningEarlierDraftDoesNotSuggestItemsFromAFutureShop]' started.
+Test Case '-[CoreDomainTests.StapleRecallTests testReopeningEarlierDraftDoesNotSuggestItemsFromAFutureShop]' passed (0.000 seconds).
+Test Suite 'StapleRecallTests' passed at 2026-11-07 03:52:10.032.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.003 (0.003) seconds
+Test Suite 'CoreDomainTests.xctest' passed at 2026-11-07 03:52:10.032.
+	 Executed 180 tests, with 0 failures (0 unexpected) in 1.021 (1.037) seconds
+Test Suite 'All tests' passed at 2026-11-07 03:52:10.032.
+	 Executed 180 tests, with 0 failures (0 unexpected) in 1.021 (1.038) seconds
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.
