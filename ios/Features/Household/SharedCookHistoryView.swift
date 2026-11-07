@@ -73,6 +73,7 @@ private struct SharedCookSavedView: View {
     @State private var reviewed: RecipientReview?
     @State private var requestID: UUID?
     @State private var failure = false
+    @State private var sharing = false
     @FocusState private var enteringName: Bool
 
     private struct RecipientReview {
@@ -94,8 +95,13 @@ private struct SharedCookSavedView: View {
                 Section(occurrence.meal.title) {
                     LabeledContent(ht("Copy version"), value: copy.version.formatted())
                     Text(verbatim: copy.text).textSelection(.enabled).accessibilityIdentifier("delivery.cook.savedText")
-                    ShareLink(item: copy.text) { Label(ht("Share dated copy"), systemImage: "square.and.arrow.up") }
-                        .accessibilityIdentifier("delivery.cook.savedShare")
+                    Button {
+                        guard allowed, scenePhase == .active else { return }
+                        enteringName = false
+                        sharing = true
+                    } label: {
+                        Label(ht("Share dated copy"), systemImage: "square.and.arrow.up")
+                    }.accessibilityIdentifier("delivery.cook.savedShare")
                 }
                 Section {
                     TextField(pTr("Recipient (for explicit sent history)"), text: $recipient)
@@ -133,9 +139,14 @@ private struct SharedCookSavedView: View {
             }
         }
         .onChange(of: recipient) { _, _ in invalidate() }
-        .onChange(of: allowed) { _, active in if !active { recipient = ""; invalidate() } }
+        .onChange(of: allowed) { _, active in if !active { recipient = ""; sharing = false; invalidate() } }
         .onChange(of: scenePhase) { _, phase in if phase != .active { invalidate() } }
         .onDisappear { invalidate() }
+        .sheet(isPresented: $sharing) {
+            if allowed {
+                PickupActivitySheet(text: copy.text) { _, _ in sharing = false }
+            }
+        }
     }
 
     private func invalidate() { requestID = nil; reviewed = nil; failure = false }
