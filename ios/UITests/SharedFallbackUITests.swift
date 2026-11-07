@@ -160,7 +160,7 @@ final class SharedFallbackUITests: XCTestCase {
         tap(app.buttons.matching(NSPredicate(format:"label CONTAINS %@",title)).firstMatch)
         reveal(has("Warm before serving"))
         tap(app.buttons["fallback.withdraw"])
-        let action = app.buttons["fallback.withdrawConfirm"]
+        let action = app.sheets.buttons.matching(identifier: "fallback.withdrawConfirm").firstMatch
         if action.waitForExistence(timeout: 2) { tap(action) }
         else {
             // UIKit may expose a system confirmation action under its visible label only.
