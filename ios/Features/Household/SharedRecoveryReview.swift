@@ -6,6 +6,8 @@ struct SharedRecoveryReview: View {
     @ObservedObject var model: HouseholdShopModel
     @ObservedObject var household: HouseholdModel
     let page: SharedRecoveryPage
+    let fallback: SharedFallbackOptions.Option?
+    let usualMinutes: Int?
     let finish: (Bool) -> Void
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scene
@@ -20,8 +22,10 @@ struct SharedRecoveryReview: View {
     @State private var presentation = UUID()
 
     init(model: HouseholdShopModel, household: HouseholdModel, page: SharedRecoveryPage,
-         initial: SharedRecoveryPreview, originalIntent: SharedRecoveryIntent, finish: @escaping (Bool) -> Void) {
+         initial: SharedRecoveryPreview, originalIntent: SharedRecoveryIntent, fallback: SharedFallbackOptions.Option? = nil,
+         usualMinutes: Int? = nil, finish: @escaping (Bool) -> Void) {
         self.model = model; self.household = household; self.page = page
+        self.fallback = fallback; self.usualMinutes = usualMinutes
         self.finish = finish
         _intent = State(initialValue: originalIntent); _preview = State(initialValue: initial)
     }
@@ -59,6 +63,7 @@ struct SharedRecoveryReview: View {
                     .accessibilityIdentifier("recovery.after." + meal.id.uuidString)
                 }
                 Section {
+                    if let fallback { SharedFallbackOptionFacts(option: fallback, usualMinutes: usualMinutes) }
                     if preview.repeatRequired {
                         Toggle(isOn: $repeatAgreement) {
                             Text(verbatim: sharedRecoveryText("I agree to repeat this meal") + " · " + intent.replacement.title)

@@ -15,12 +15,13 @@ struct SharedFallbackOptionsView: View {
     @State private var message: String?
     @State private var decision: Decision?
     @State private var preparing = false
+    @State private var hasCompared = false
     @Environment(\.scenePhase) private var scene
     @FocusState private var editing: Bool
 
     private struct Decision: Identifiable {
         var id: UUID { preview.previewId }
-        let intent: SharedRecoveryIntent
+        let option: SharedFallbackOptions.Option
         let preview: SharedRecoveryPreview
     }
 
@@ -68,7 +69,7 @@ struct SharedFallbackOptionsView: View {
                 }
                 .disabled(model.busy || preparing || !candidates.contains(where: \.selected))
                 .accessibilityIdentifier("fallback.compare")
-                if let options = model.ranking, options.target.id == target.id, options.base == page.base {
+                if hasCompared, let options = model.ranking, options.target.id == target.id, options.base == page.base {
                     ranked(options)
                 }
             } else { Text(sharedRecoveryText("Refresh the current meal record.")) }
@@ -80,11 +81,15 @@ struct SharedFallbackOptionsView: View {
         .navigationTitle(fallbackText("Compare fallback recipes"))
         .onChange(of: candidates) { _, _ in invalidate() }.onChange(of: trip) { _, _ in invalidate() }
         .onChange(of: live) { _, allowed in if !allowed { invalidate() } }
+        .onChange(of: model.ranking) { _, ranking in
+            if let decision, ranking?.options.contains(decision.option) != true { self.decision = nil }
+        }
         .sheet(item: $decision) { chosen in
-            if live {
+            if live, let ranking = model.ranking, ranking.options.contains(chosen.option) {
                 NavigationStack {
                     SharedRecoveryReview(model: shop, household: household, page: page, initial: chosen.preview,
-                                         originalIntent: chosen.intent) { _ in decision = nil; completed() }
+                                         originalIntent: chosen.option.intent, fallback: chosen.option,
+                                         usualMinutes: ranking.usualMinutes) { _ in decision = nil; completed() }
                 }
             }
         }
@@ -95,7 +100,12 @@ struct SharedFallbackOptionsView: View {
         return SharedMealDeadline(at: instant, zone: zone).display(locale: .current) ?? ht("Unknown")
     }
 
-    private func invalidate() { decision = nil; model.discardRanking(); message = nil }
+    private func invalidate() {
+        decision = nil
+        hasCompared = false
+        model.discardRanking()
+        message = nil
+    }
 
     private func compare() async {
         guard live, !preparing else { return }
@@ -103,18 +113,20 @@ struct SharedFallbackOptionsView: View {
             let enteredTrip = try trip.trip()
             let reviews = try candidates.filter(\.selected).map { try $0.review(includeOffers: enteredTrip != nil) }
             message = nil
+            hasCompared = false
             await model.rank(reviews, trip: enteredTrip, occurrence: target.id, page: page, reviewed: library)
+            hasCompared = model.ranking?.target.id == target.id
         } catch { message = fallbackText("Review the minutes, pack quantities, prices and available budget.") }
     }
 
     private func choose(_ option: SharedFallbackOptions.Option, reviewed ranking: SharedFallbackOptions) async {
-        guard live, !preparing, !model.busy, model.ranking == ranking else { return }
+        guard live, hasCompared, !preparing, !model.busy, model.ranking == ranking else { return }
         preparing = true
         defer { preparing = false }
         do {
             let preview = try await shop.previewMealRecovery(option.intent, reviewed: page)
             guard live, model.ranking == ranking else { return }
-            decision = .init(intent: option.intent, preview: preview)
+            decision = .init(option: option, preview: preview)
         } catch { message = shop.notice ?? sharedRecoveryText("Reconnect and preview the current meal again.") }
     }
 
@@ -125,13 +137,7 @@ struct SharedFallbackOptionsView: View {
         }
         ForEach(result.options) { option in
             Section(option.title) {
-                LabeledContent(fallbackText("Total minutes including travel"), value: option.minutes.formatted())
-                if option.kind == "topUp", let currency = option.currency {
-                    LabeledContent(fallbackText("Whole-trip extra cash"), value: cash(option.extraCashMinor, currency))
-                    ForEach(option.buys, id: \.ingredientId) { buy in
-                        LabeledContent(buy.label, value: fallbackText("Packs required") + " " + buy.packs.formatted() + " · " + cash(buy.subtotalMinor, currency))
-                    }
-                }
+                SharedFallbackOptionFacts(option: option, usualMinutes: result.usualMinutes)
                 if option.repeatRequired { Text(fallbackText("Repeating this meal requires agreement.")) }
                 Button(fallbackText("Review this replacement")) { Task { await choose(option, reviewed: result) } }
                     .disabled(model.busy || preparing).accessibilityIdentifier("fallback.choose." + option.id.uuidString)
@@ -146,16 +152,47 @@ struct SharedFallbackOptionsView: View {
                     if let packs = row.requiredPacks { LabeledContent(fallbackText("Packs required"), value: packs.formatted()) }
                     if let packs = row.availablePacks { LabeledContent(fallbackText("Packs available"), value: packs.formatted()) }
                     if let currency = row.currency {
-                        if let amount = row.extraCashMinor { LabeledContent(fallbackText("Whole-trip extra cash"), value: cash(amount, currency)) }
-                        if let limit = row.budgetMinor { LabeledContent(fallbackText("Whole-trip spending limit (USD)"), value: cash(limit, currency)) }
+                        if let amount = row.extraCashMinor { LabeledContent(fallbackText("Whole-trip extra cash"), value: fallbackCash(amount, currency)) }
+                        if let limit = row.budgetMinor { LabeledContent(fallbackText("Whole-trip spending limit (USD)"), value: fallbackCash(limit, currency)) }
                     }
                 }
             }
         }
     }
-    private func cash(_ cents: Int, _ currency: String) -> String {
-        (Decimal(cents) / 100).formatted(.currency(code: currency))
+}
+
+struct SharedFallbackOptionFacts: View {
+    let option: SharedFallbackOptions.Option
+    let usualMinutes: Int?
+
+    var body: some View {
+        LabeledContent(fallbackText("Total minutes including travel"), value: option.minutes.formatted())
+        if let usualMinutes {
+            let difference = option.minutes - usualMinutes
+            if difference == 0 {
+                Text(fallbackText("Same time as the usual fallback"))
+            } else if difference > 0 {
+                LabeledContent(fallbackText("Minutes longer than usual"), value: difference.formatted())
+            } else {
+                LabeledContent(fallbackText("Minutes quicker than usual"), value: (-difference).formatted())
+            }
+        } else {
+            Text(fallbackText("Usual fallback time unavailable")).font(.subheadline)
+        }
+        if option.kind == "topUp", let currency = option.currency {
+            ForEach(option.buys, id: \.ingredientId) { buy in
+                LabeledContent(buy.label, value: fallbackText("Packs required") + " " + buy.packs.formatted() + " · " + fallbackCash(buy.subtotalMinor, currency))
+            }
+            LabeledContent(fallbackText("Extra charges and travel cost (USD)"),
+                           value: fallbackCash(option.extraCashMinor - option.merchandiseMinor, currency))
+            LabeledContent(fallbackText("Whole-trip extra cash"), value: fallbackCash(option.extraCashMinor, currency))
+        }
     }
+
+}
+
+private func fallbackCash(_ cents: Int, _ currency: String) -> String {
+    (Decimal(cents) / 100).formatted(.currency(code: currency))
 }
 
 private func fallbackReason(_ reason: String) -> String {

@@ -324,6 +324,23 @@
         }
       }
     },
+    "Minutes longer than usual": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minutes longer than usual"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minutos más que la alternativa habitual"
+          }
+        }
+      }
+    },
     "Minutes needed": {
       "extractionState": "manual",
       "localizations": {
@@ -337,6 +354,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Minutos necesarios"
+          }
+        }
+      }
+    },
+    "Minutes quicker than usual": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minutes quicker than usual"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minutos menos que la alternativa habitual"
           }
         }
       }
@@ -681,6 +715,23 @@
         }
       }
     },
+    "Same time as the usual fallback": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Same time as the usual fallback"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El mismo tiempo que la alternativa habitual"
+          }
+        }
+      }
+    },
     "Selected pack is no longer available": {
       "extractionState": "manual",
       "localizations": {
@@ -932,6 +983,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Alternativa habitual"
+          }
+        }
+      }
+    },
+    "Usual fallback time unavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usual fallback time unavailable"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay un tiempo disponible para la alternativa habitual"
           }
         }
       }
