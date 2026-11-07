@@ -90,11 +90,83 @@ import XCTest
         XCTAssertEqual(model.instruction.text, value.text); XCTAssertEqual(model.state, .stopped)
         model.close()
     }
+    func testActivationCompletionRechecksAuthorityAndCannotRestartCancelledPlayback() {
+        let speech = FakeCookSpeech()
+        speech.delayed = true
+        var allowed = true
+        let model = CookReadbackModel(instruction: instruction(), speech: speech, clock: { self.now }) { _, _ in allowed }
+        model.playFromBeginning()
+        XCTAssertEqual(model.state, .preparing)
+        allowed = false
+        speech.activations.removeFirst()(true)
+        XCTAssertTrue(speech.spoken.isEmpty)
+        XCTAssertEqual(model.state, .stopped)
+
+        allowed = true
+        model.playFromBeginning()
+        model.stop() // The view stops synchronously when it backgrounds or disappears.
+        model.update(instruction(revision: 4, text: "Updated cook note"))
+        model.playFromBeginning()
+        speech.activations.removeFirst()(true)
+        XCTAssertTrue(speech.spoken.isEmpty)
+        XCTAssertEqual(model.state, .preparing)
+        speech.activations.removeFirst()(true)
+        XCTAssertEqual(speech.spoken, ["Updated cook note"])
+        model.pause()
+        model.resume()
+        model.setVoiceOver(true)
+        speech.activations.removeFirst()(true)
+        XCTAssertEqual(speech.resumes, 0)
+        XCTAssertEqual(model.state, .stopped)
+        model.close()
+    }
+
+    func testSessionOperationsRunOffMainAndStaleReleasePreservesTheNewOwner() async {
+        let activations = expectation(description: "Three successful session activations")
+        activations.expectedFulfillmentCount = 3
+        let releases = expectation(description: "Three matching session releases")
+        releases.expectedFulfillmentCount = 3
+        let session = CookAudioSession(activate: {
+            XCTAssertFalse(Thread.isMainThread)
+            activations.fulfill()
+        }, deactivate: {
+            XCTAssertFalse(Thread.isMainThread)
+            releases.fulfill()
+        })
+        let first = UUID(), second = UUID(), competing = UUID()
+        func acquire(_ id: UUID) async -> Bool {
+            await withCheckedContinuation { continuation in
+                session.acquire(id) { continuation.resume(returning: $0) }
+            }
+        }
+        let firstReady = expectation(description: "First activation returned")
+        session.acquire(first) { ready in
+            XCTAssertTrue(ready)
+            firstReady.fulfill()
+        }
+        // Stop the first playback before its main-actor callback can run.
+        session.release(first)
+        let next = await acquire(second)
+        XCTAssertTrue(next)
+        session.release(first)
+        let unauthorized = await acquire(competing)
+        XCTAssertFalse(unauthorized)
+        session.release(second)
+        let afterRelease = await acquire(competing)
+        XCTAssertTrue(afterRelease)
+        session.release(competing)
+        await fulfillment(of: [firstReady, activations, releases], timeout: 5)
+    }
 }
 @MainActor final class FakeCookSpeech: CookSpeechPlayback {
     var onEnd: ((UUID) -> Void)?
     var spoken: [String] = []; var locales: [String] = []; var ids: [UUID] = []
     var resumes = 0; var stops = 0; var failure: CaptureFailure?
+    var delayed = false
+    var activations: [@MainActor @Sendable (Bool) -> Void] = []
+    func prepareAudio(for id: UUID, completion: @escaping @MainActor @Sendable (Bool) -> Void) {
+        if delayed { activations.append(completion) } else { completion(true) }
+    }
     func speak(_ text: String, localeIdentifier: String, playbackID: UUID) throws {
         if let failure { throw failure }
         spoken.append(text); locales.append(localeIdentifier); ids.append(playbackID)
