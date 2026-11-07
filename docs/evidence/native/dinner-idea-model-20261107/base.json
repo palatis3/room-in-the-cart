@@ -1,0 +1,5 @@
+{
+  "head": "10c69b04a7e4a6381eb4b35ca5c4d08aee9df56d",
+  "overlay": "one localized persistent Notes label, unchanged S14 UI method, two S26 model tests",
+  "priorFailure": "run1: Notes query disappears after value entry and Done; no downstream S14 action reached"
+}

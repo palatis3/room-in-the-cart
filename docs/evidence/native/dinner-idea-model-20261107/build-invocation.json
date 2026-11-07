@@ -1,0 +1,24 @@
+{
+  "command": [
+    "xcodebuild",
+    "-project",
+    "ios/RoomInTheCart.xcodeproj",
+    "-scheme",
+    "RoomInTheCart",
+    "-configuration",
+    "Debug",
+    "-destination",
+    "platform=iOS Simulator,id=87F93DE8-670E-463D-8FAA-E3A256326B94",
+    "-jobs",
+    "2",
+    "-parallel-testing-enabled",
+    "NO",
+    "-derivedDataPath",
+    "/Users/palatis/Room in the Cart/.build/S14BrokenRecipeLinkReview20261107/run2/DerivedData",
+    "CODE_SIGNING_ALLOWED=YES",
+    "CODE_SIGN_IDENTITY=-",
+    "build-for-testing"
+  ],
+  "cwd": "/Users/palatis/Room in the Cart/.build/S14BrokenRecipeLinkReview20261107/run2/source",
+  "start": 1794029641.391238
+}
