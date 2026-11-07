@@ -1156,7 +1156,7 @@ test('paid fallback ranking uses the accepted household library, current physica
  assert.equal((await rank([],null,f.planner)).status,404);
  const otherShop=await f.shop(),outside=f.base+'/shops/'+otherShop+'/accepted-fallbacks';
  async function approve(title,quantity,elapsedMinutes,usual=false,requiredLeadMinutes=null,extra=[]) {
-   const recipe={title,portions:4,notes:'Keep the entered method',sourceURL:null,exclusions:[],elapsedMinutes,requiredLeadMinutes,
+   const recipe={title,portions:4,notes:'Keep the entered method',sourceURL:null,exclusions:['No sesame','No peanuts'],elapsedMinutes,requiredLeadMinutes,
      ingredients:[{id:randomUUID(),name:'Wraps',quantity:f.quantity(quantity),exclusions:[],notes:'Warm before serving'},...extra]};
    const {shopRevision,authorityEpoch,registryRevision}=ok(await call(f.owner,outside));
    const candidateId=randomUUID(),receipt=ok(await call(f.owner,outside,'POST',{v:1,clientKey:randomUUID(),shopRevision,authorityEpoch,
@@ -1185,6 +1185,8 @@ test('paid fallback ranking uses the accepted household library, current physica
  assert.equal(enough.usualMinutes,10);assert.deepEqual(enough.options.map(o=>o.candidateId),[easy.candidateId,large.candidateId]);
  const [onHand,topUp]=enough.options;
  assert.equal(onHand.kind,'onHand');assert.equal(onHand.packCount,0);
+ assert.deepEqual(onHand.intent.replacement.exclusions,['No sesame']);
+ assert(onHand.intent.replacement.needs.find(n=>n.priority==='required').exclusions.includes('No peanuts'));
  assert.equal(onHand.intent.replacement.needs.find(n=>n.priority==='required').notes,'Warm before serving');
  assert.deepEqual(onHand.intent.replacement.needs.filter(n=>n.priority==='protected'),target.needs.filter(n=>n.priority==='protected'));
  assert.equal(topUp.kind,'topUp');assert.equal(topUp.minutes,16);assert.equal(topUp.repeatRequired,true);
@@ -1241,4 +1243,7 @@ test('paid fallback ranking uses the accepted household library, current physica
  assert.equal((await admin.query('select 1 from ritc.meal_recovery_fallback where household_id=$1 and candidate_id=$2 and operation_id=$3',
    [f.h,large.candidateId,receipt.operationId])).rowCount,1);
  assert.equal(ok(await call(f.owner,path+'/coverage')).needs.find(n=>n.needId===i.replacement.needs.find(n=>n.priority==='required').id).missing.numerator,'3');
+ subscriptions.set(state.originalTransactionID,{...subscription,status:'expired',expiresAt:Date.now()-1000,signedAt:Date.now()+2000});
+ assert.deepEqual(ok(await f.send(command)),receipt); // Read back the committed receipt after the seat lapses.
+ assert.deepEqual(ok(await call(f.owner,path)).meals,saved.meals);
 });
