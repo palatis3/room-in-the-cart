@@ -111,6 +111,39 @@ import HouseholdClient
         model.reconcile()
         XCTAssertEqual(f.routes.load().shop, [.shoppingList(actorID: f.access.localActorID, workspaceID: workspace, shopID: f.ledger.shop?.id)])
     }
+    func testFirstPickupRecoversTheCommittedDraftIfAnotherWriterStartsItFirst() async throws {
+        let f = try await fixture()
+        let navigation = router(f)
+        let workspace = try XCTUnwrap(f.ledger.sourceWorkspaceID)
+        let actor = f.access.localActorID
+        let openList = RestorableDestination.shoppingList(actorID: actor, workspaceID: workspace, shopID: nil)
+        navigation.setPath([openList], for: .shop)
+
+        let writer = LedgerModel(databaseURL: f.directory.appendingPathComponent("ledger.sqlite"))
+        f.cleanup.track(writer)
+        await writer.open()
+        let created = await writer.startShop(title: "Tuesday pickup")
+        XCTAssertTrue(created)
+        let durableID = try XCTUnwrap(writer.shop?.id)
+
+        let conflictingSave = await f.ledger.startShop(title: "Pickup")
+        XCTAssertFalse(conflictingSave)
+        XCTAssertTrue(f.ledger.hasPendingSave)
+        navigation.reconcile()
+        XCTAssertEqual(navigation.shopPath, [openList])
+        XCTAssertNil(f.ledger.shop)
+        let staleRetry = await f.ledger.retrySave()
+        XCTAssertFalse(staleRetry)
+
+        await f.ledger.discardPendingSave()
+        navigation.reconcile()
+        XCTAssertFalse(f.ledger.hasPendingSave)
+        XCTAssertEqual(f.ledger.workspace.shops.map(\.id), [durableID])
+        let savedList = RestorableDestination.shoppingList(actorID: actor, workspaceID: workspace, shopID: durableID)
+        XCTAssertEqual(navigation.shopPath, [savedList])
+        XCTAssertEqual(f.routes.load().shop, [savedList])
+    }
+
     func testIncomingLinkBeforeOpenAlwaysTakesPrecedenceOverSavedTabAndPath() async throws {
         let f = try await fixture()
         let record = try await saveComparison(f), first = router(f)
