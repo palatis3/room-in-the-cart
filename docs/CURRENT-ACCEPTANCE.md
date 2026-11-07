@@ -2,7 +2,7 @@
 
 ## November 7 delivery coverage and dinner recovery
 
-The [current handoff](CURRENT-HANDOFF.md) records the post-placement private dinner replacement and the iPhone/HTTPS/PostgreSQL evidence for shared delivery counts, reviewed matches and per-meal coverage. In the shared order, five usable portions can cover two protected lunches and three dinner plates. The fourth dinner plate stays open. Shared replacement publication, other stock commitments, preparation deadlines, and the production distribution gates still need acceptance evidence.
+The [current handoff](CURRENT-HANDOFF.md) records the verified private and shared post-placement meal changes. S09.01 now has two shared shopper walkthroughs on iOS 17.0 and 26.2. Replacing Wednesday preserves Tuesday’s exact protected shortage, and declining an unresolved replacement preserves the original dinner. A separate shopper walkthrough verifies that five freezer portions cover two protected lunches and three of four dinner plates (S09.02). Service tests cover immutable orders, cross-shop commitments, stale decisions, retry and scoped cook instructions. The all-approved-options and deadline case (S09.03), paid suggestions and remaining release requirements are still open.
 
 ## Earlier November 7 snapshot at 1080fad
 

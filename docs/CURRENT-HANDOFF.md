@@ -2,6 +2,16 @@
 
 Updated November 7, 2026 UTC. The owner resumed and explicitly approved the reviewed hosted staging update; the full first-version goal is active and release acceptance remains incomplete. Historical snapshots are preserved in [the handoff archive](CURRENT-HANDOFF-HISTORY-20261106.md).
 
+## Shared dinner replacement after pickup, November 7
+
+From **What came home → Repair a scheduled meal**, the assigned shopper can change one dinner, review quantities for every affected meal and decide whether to accept unresolved food or another trip. Keeping the original meal returns to current coverage without publishing the proposed change. Applying records a new meal version, while the placed order and its monetary facts remain sealed.
+
+Two end-to-end journeys passed on both iPhone SE (iOS 17.0) and iPhone 17 Pro (iOS 26.2), with zero XCTest runtime warnings. The first kept the original Wednesday dinner and its four-unit shortage. The second replaced Wednesday beans with rice for four plates, preserved Tuesday’s two missing protected lunch portions, then saved and reopened the exact Spanish rice instructions and the untouched lunch instructions under their respective meal revisions. The small-screen run previously caught a keyboard that obscured the next ingredient. The verified editor exposes Done for each focused text field.
+
+Local migration 036 passed all 200 PostgreSQL integration tests and 451 service and billing tests. A real Swift client exercised review, exact retry, stale rejection and cook-copy readback over HTTPS. Populated database restores matched 95 tables before upgrade and 99 afterward, including permissions, row security, old and new cook copies, and exact named recipient baselines. Staging was last verified at 030.
+
+The unsigned arm64 iPhone Release bundle passed validation. The fixture planner assigns the six shared delivery tests to their own job, including the two replacement journeys. Paid household fallback ranking, explicit shared meal deadlines and recipient-specific structured corrections are in development. Full release acceptance is open.
+
 ## Household pantry and freezer, November 7
 
 From **What came home → Pantry and freezer**, the assigned shopper can register a household batch, select it for a shop, link ingredients and reserve food for a named group. Storing a confirmed delivery retains its physical identity. A correction previews the effect on each linked meal and its named reservations before the shopper confirms it. Other shops' commitments count toward availability while their meal details stay private.
