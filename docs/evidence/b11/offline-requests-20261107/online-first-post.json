@@ -1,0 +1,23 @@
+{
+  "schema": 41,
+  "native": "40854df + 4693c07",
+  "service": "b082623",
+  "transport": "Simulator app, verified HTTPS relay and restricted PostgreSQL service role. Synthetic local OTP issuer.",
+  "stale_requests": 0,
+  "stale_operations": 0,
+  "confirmed_requests": 1,
+  "confirmed_operations": 1,
+  "confirmed_receipts": 1,
+  "staleProbe": "409 queue_permission_ended",
+  "scope": "Real simulator UI, local HTTPS service and isolated PostgreSQL with synthetic accounts. Initial preflight succeeded in both cases. The first POST was dropped before reaching the service in one case, and a committed HTTP 200 was discarded in the other.",
+  "checks": {
+    "signedSimulatorModelTests": 668,
+    "nativeUITests": 1,
+    "runtimeWarnings": 0,
+    "nativeUISeconds": 254.31
+  },
+  "privateEvidenceSHA256": {
+    "checked.txt": "74dbbc715519551bb7e0b56e0efb4df93334851ae4b22805d4f7c4584bf28c90",
+    "database-proof.json": "721ba776e95a15d60c9bb7e05cd5360eb9ad6267cc641812bbb0b0fda53e9477"
+  }
+}
