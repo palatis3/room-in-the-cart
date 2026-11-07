@@ -1,0 +1,40 @@
+{
+  "sourceRevision": "ea949f6",
+  "runtime": "iPhone SE (3rd generation), iOS 17.0 simulator",
+  "placements": 1,
+  "originalLiteral": "2 wraps",
+  "basketRevision": 1,
+  "quantity": {
+    "denominator": 1,
+    "numerator": 2
+  },
+  "unit": "count",
+  "checkout": {
+    "currency": "USD",
+    "minorUnits": 300
+  },
+  "scope": "wholeCheckout",
+  "store": "Family market",
+  "branch": "Main branch",
+  "slot": "Tuesday 5 PM",
+  "matchedInstallationReporter": true,
+  "reportedAfterFreeze": true,
+  "matchedPlacementSnapshotAndFrozenQuote": true,
+  "requirement": "Foundation 2.1 S06 private retailer handoff",
+  "baseline": "The original app reached the frozen retailer handoff on iOS 26.2. Its explicit Still checking out button was absent.",
+  "walkthrough": "The shopper left checkout unconfirmed, returned to the frozen snapshot, reported placement and reopened the dated order after relaunch.",
+  "integratedRun": {
+    "modelTests": 683,
+    "uiJourneys": 2,
+    "failures": 0,
+    "skips": 0,
+    "runtimeWarnings": 0,
+    "selectedUI": [
+      "two-pack uncertain yield corrected to 14 and retained after restart",
+      "reported order reopened after leaving checkout unconfirmed"
+    ]
+  },
+  "fixtureStore": "Read-only inspection of the simulator SQLite comparison envelope and the private installation preferences.",
+  "expectedSelectorsSHA256": "71ab1bd6db7cbf5a2ef3dec07d86b0e8c7ca370d935f47aca5d6acb118304fe5",
+  "strictResultSHA256": "1bade61d0dda80cb5744e2c1625fa063adfa854f017644ab532b47c388d43deb"
+}
