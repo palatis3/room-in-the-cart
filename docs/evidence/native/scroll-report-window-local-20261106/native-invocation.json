@@ -1,0 +1,25 @@
+{
+  "command": [
+    "xcodebuild",
+    "-xctestrun",
+    "/Users/palatis/Room in the Cart/.build/ScrollReportWindowWitness20261106/DerivedData/Build/Products/RoomInTheCart-Performance_iphonesimulator27.1-arm64-x86_64.xctestrun",
+    "-destination",
+    "platform=iOS Simulator,id=B7C06557-2E53-4BAF-A963-A5F9866351C4",
+    "-parallel-testing-enabled",
+    "NO",
+    "-test-timeouts-enabled",
+    "YES",
+    "-default-test-execution-time-allowance",
+    "900",
+    "-maximum-test-execution-time-allowance",
+    "1200",
+    "-resultBundlePath",
+    "/Users/palatis/Room in the Cart/.build/ScrollReportWindowWitness20261106/Performance.xcresult",
+    "-collect-test-diagnostics",
+    "never",
+    "-only-testing:RoomInTheCartUITests/ReleasePerformanceUITests/testScrollingPerformanceOnFiveHundredItemPickup",
+    "test-without-building"
+  ],
+  "startUnixUTC": 1794017887.697121,
+  "scope": "Local Xcode27.1 compatibility only; not hosted26.3 qualification"
+}

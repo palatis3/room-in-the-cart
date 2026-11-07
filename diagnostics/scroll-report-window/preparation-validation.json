@@ -1,0 +1,68 @@
+{
+  "scope": "Preparation checks only. Runtime build is active, not yet qualified. No hosted diagnostic dispatched.",
+  "checks": {
+    "recorder": 8,
+    "correlation": 19,
+    "existingEndpointParser": 16
+  },
+  "typecheck": {
+    "toolchain": "Xcode27.1",
+    "target": "arm64-apple-ios17.0-simulator",
+    "exitCode": 0,
+    "basis": "Observed root tool invocation; not inferred from empty log"
+  },
+  "files": [
+    {
+      "path": "WitnessRecorder.swift",
+      "sha256": "bf73f5dc3109d864aba3bd6ea11538b9b1f4373c58929f2bbf6d8190828a27ee"
+    },
+    {
+      "path": "WitnessMetric.swift",
+      "sha256": "e6fdca2cc8d45267cfa88245993df3aa998df81cbb4b6ce8c72a2d95e078243c"
+    },
+    {
+      "path": "ReleasePerformanceUITests.swift",
+      "sha256": "d1f2c40dfbf1603366ecf6309d264c3372ddce260ca97d4cfd7806b00622c06b"
+    },
+    {
+      "path": "main.swift",
+      "sha256": "82882878a6eef06b43975c7b3cb284a2061704fbd03d991fa55edb220c3d21fa"
+    },
+    {
+      "path": "recorder-checks.json",
+      "sha256": "cb2ffce3284aef40b2e705938fa9239313e697433e69fce560e8ca2578b7bd99"
+    },
+    {
+      "path": "correlate.py",
+      "sha256": "fd2c559b5d42eaa46c251ce8a4fe3c2a63f902fe2547188f2483a71b65fb235f"
+    },
+    {
+      "path": "test_correlate.py",
+      "sha256": "5b3dbc5a2928ae51cb1e1bb86fdcf9f0b385a591db2dd18dace5fd7e2240bdd4"
+    },
+    {
+      "path": "correlation-checks-v3.log",
+      "sha256": "d604d5b4a307d14f9b407f9dc4ec3c155113ee4ba72b98ed71fc618e7f6974db"
+    },
+    {
+      "path": "endpoint-parser/scroll_signpost_diagnostic.py",
+      "sha256": "be4a3f473c7e5dc6bc952df4c82e350a8ad58c4c2fb8721e71efabfa441f7de9"
+    },
+    {
+      "path": "endpoint-parser/test_scroll_signpost_diagnostic.py",
+      "sha256": "a3b94cec9424acfed37a1e102c5f79ef240d984154ecc80ee31e6dbd78942c4c"
+    },
+    {
+      "path": "endpoint-parser/checks.log",
+      "sha256": "cb911b310ccb3daadcab815b43af6edf4c098f9348c2c9dd39e6de244666d0ae"
+    },
+    {
+      "path": "independent-review.md",
+      "sha256": "e129918918facce22593dc3c9fd63521f6333f69db84cc87f0c6bd2dae054263"
+    },
+    {
+      "path": "correlation-review.md",
+      "sha256": "3263ef251c8c85fe1eccd3473a3e28c41216a22da0dd1ed1356c1a408c866d32"
+    }
+  ]
+}

@@ -1,0 +1,322 @@
+{
+  "schemaVersion": 2,
+  "diagnosticOnly": true,
+  "captureStatus": "ok",
+  "activityStatus": "ok",
+  "metric": "com.apple.UIKit:ScrollView Scroll_DraggingAndDeceleration",
+  "windows": [
+    {
+      "case": "warm-up",
+      "eventCount": 2,
+      "pairCount": 1,
+      "pairs": [
+        {
+          "durationSeconds": 2.582
+        }
+      ]
+    },
+    {
+      "case": "measured swipe 1",
+      "eventCount": 2,
+      "pairCount": 1,
+      "pairs": [
+        {
+          "durationSeconds": 2.583
+        }
+      ]
+    },
+    {
+      "case": "measured swipe 2",
+      "eventCount": 2,
+      "pairCount": 1,
+      "pairs": [
+        {
+          "durationSeconds": 2.567
+        }
+      ]
+    },
+    {
+      "case": "measured swipe 3",
+      "eventCount": 2,
+      "pairCount": 1,
+      "pairs": [
+        {
+          "durationSeconds": 2.583
+        }
+      ]
+    },
+    {
+      "case": "measured swipe 4",
+      "eventCount": 2,
+      "pairCount": 1,
+      "pairs": [
+        {
+          "durationSeconds": 2.582
+        }
+      ]
+    },
+    {
+      "case": "measured swipe 5",
+      "eventCount": 2,
+      "pairCount": 1,
+      "pairs": [
+        {
+          "durationSeconds": 2.583
+        }
+      ]
+    }
+  ],
+  "endpointEvidence": {
+    "diagnosticOnly": true,
+    "maximumRetainedEvents": 128,
+    "marginSeconds": 5.0,
+    "timestampBasis": "seconds from first enclosing swipe activity start; not measurement boundaries",
+    "status": "retained",
+    "originUnixUTC": 1794018093.157,
+    "scopeStartOffsetSeconds": -6.91,
+    "scopeEndOffsetSeconds": 40.016,
+    "scopedEventCount": 24,
+    "retainedEventCount": 24,
+    "omittedEventCount": 0,
+    "ordering": "captured log order; tokens preserve equality, not unique gesture identity",
+    "windows": [
+      {
+        "invocationIndex": 0,
+        "swipeStartOffsetSeconds": 0.0,
+        "synthesisStartOffsetSeconds": 0.103,
+        "followingActivityStartOffsetSeconds": 4.411
+      },
+      {
+        "invocationIndex": 1,
+        "swipeStartOffsetSeconds": 6.484,
+        "synthesisStartOffsetSeconds": 6.588,
+        "followingActivityStartOffsetSeconds": 10.408
+      },
+      {
+        "invocationIndex": 2,
+        "swipeStartOffsetSeconds": 12.546,
+        "synthesisStartOffsetSeconds": 12.669,
+        "followingActivityStartOffsetSeconds": 16.52
+      },
+      {
+        "invocationIndex": 3,
+        "swipeStartOffsetSeconds": 18.706,
+        "synthesisStartOffsetSeconds": 18.807,
+        "followingActivityStartOffsetSeconds": 22.635
+      },
+      {
+        "invocationIndex": 4,
+        "swipeStartOffsetSeconds": 24.768,
+        "synthesisStartOffsetSeconds": 24.883,
+        "followingActivityStartOffsetSeconds": 28.701
+      },
+      {
+        "invocationIndex": 5,
+        "swipeStartOffsetSeconds": 30.954,
+        "synthesisStartOffsetSeconds": 31.137,
+        "followingActivityStartOffsetSeconds": 35.016
+      }
+    ],
+    "events": [
+      {
+        "offsetSeconds": -1.713,
+        "kind": "begin",
+        "processToken": "process-1",
+        "signpostToken": "signpost-1",
+        "windowIndices": []
+      },
+      {
+        "offsetSeconds": -0.846,
+        "kind": "end",
+        "processToken": "process-1",
+        "signpostToken": "signpost-1",
+        "windowIndices": []
+      },
+      {
+        "offsetSeconds": 0.205,
+        "kind": "begin",
+        "processToken": "process-1",
+        "signpostToken": "signpost-1",
+        "windowIndices": [
+          0
+        ]
+      },
+      {
+        "offsetSeconds": 2.787,
+        "kind": "end",
+        "processToken": "process-1",
+        "signpostToken": "signpost-1",
+        "windowIndices": [
+          0
+        ]
+      },
+      {
+        "offsetSeconds": 4.771,
+        "kind": "begin",
+        "processToken": "process-1",
+        "signpostToken": "signpost-1",
+        "windowIndices": []
+      },
+      {
+        "offsetSeconds": 5.755,
+        "kind": "end",
+        "processToken": "process-1",
+        "signpostToken": "signpost-1",
+        "windowIndices": []
+      },
+      {
+        "offsetSeconds": 6.688,
+        "kind": "begin",
+        "processToken": "process-1",
+        "signpostToken": "signpost-1",
+        "windowIndices": [
+          1
+        ]
+      },
+      {
+        "offsetSeconds": 9.271,
+        "kind": "end",
+        "processToken": "process-1",
+        "signpostToken": "signpost-1",
+        "windowIndices": [
+          1
+        ]
+      },
+      {
+        "offsetSeconds": 10.771,
+        "kind": "begin",
+        "processToken": "process-1",
+        "signpostToken": "signpost-1",
+        "windowIndices": []
+      },
+      {
+        "offsetSeconds": 11.756,
+        "kind": "end",
+        "processToken": "process-1",
+        "signpostToken": "signpost-1",
+        "windowIndices": []
+      },
+      {
+        "offsetSeconds": 12.804,
+        "kind": "begin",
+        "processToken": "process-1",
+        "signpostToken": "signpost-1",
+        "windowIndices": [
+          2
+        ]
+      },
+      {
+        "offsetSeconds": 15.371,
+        "kind": "end",
+        "processToken": "process-1",
+        "signpostToken": "signpost-1",
+        "windowIndices": [
+          2
+        ]
+      },
+      {
+        "offsetSeconds": 17.055,
+        "kind": "begin",
+        "processToken": "process-1",
+        "signpostToken": "signpost-1",
+        "windowIndices": []
+      },
+      {
+        "offsetSeconds": 18.038,
+        "kind": "end",
+        "processToken": "process-1",
+        "signpostToken": "signpost-1",
+        "windowIndices": []
+      },
+      {
+        "offsetSeconds": 18.904,
+        "kind": "begin",
+        "processToken": "process-1",
+        "signpostToken": "signpost-1",
+        "windowIndices": [
+          3
+        ]
+      },
+      {
+        "offsetSeconds": 21.487,
+        "kind": "end",
+        "processToken": "process-1",
+        "signpostToken": "signpost-1",
+        "windowIndices": [
+          3
+        ]
+      },
+      {
+        "offsetSeconds": 23.021,
+        "kind": "begin",
+        "processToken": "process-1",
+        "signpostToken": "signpost-1",
+        "windowIndices": []
+      },
+      {
+        "offsetSeconds": 24.005,
+        "kind": "end",
+        "processToken": "process-1",
+        "signpostToken": "signpost-1",
+        "windowIndices": []
+      },
+      {
+        "offsetSeconds": 24.989,
+        "kind": "begin",
+        "processToken": "process-1",
+        "signpostToken": "signpost-1",
+        "windowIndices": [
+          4
+        ]
+      },
+      {
+        "offsetSeconds": 27.571,
+        "kind": "end",
+        "processToken": "process-1",
+        "signpostToken": "signpost-1",
+        "windowIndices": [
+          4
+        ]
+      },
+      {
+        "offsetSeconds": 29.021,
+        "kind": "begin",
+        "processToken": "process-1",
+        "signpostToken": "signpost-1",
+        "windowIndices": []
+      },
+      {
+        "offsetSeconds": 30.004,
+        "kind": "end",
+        "processToken": "process-1",
+        "signpostToken": "signpost-1",
+        "windowIndices": []
+      },
+      {
+        "offsetSeconds": 31.288,
+        "kind": "begin",
+        "processToken": "process-1",
+        "signpostToken": "signpost-1",
+        "windowIndices": [
+          5
+        ]
+      },
+      {
+        "offsetSeconds": 33.871,
+        "kind": "end",
+        "processToken": "process-1",
+        "signpostToken": "signpost-1",
+        "windowIndices": [
+          5
+        ]
+      }
+    ]
+  },
+  "parsedEventCount": 106,
+  "candidateLineCount": 106,
+  "unparsedCandidateCount": 0,
+  "timeZoneOfLog": "UTC",
+  "windowBasis": "enclosing swipe activity start to following activity start; not XCTest measurement boundaries",
+  "matchedProcessCount": 1,
+  "status": "captured"
+}
