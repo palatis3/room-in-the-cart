@@ -1097,3 +1097,37 @@ test('free household can repair a placed dinner and erasure removes revised text
  const stored=(await admin.query('SELECT current_meal,intent,decision_digest FROM ritc.meal_recovery_revision WHERE operation_id=$1',[receipt.operationId])).rows[0];
  assert.deepEqual(stored,{current_meal:null,intent:null,decision_digest:null});
 });
+
+test('accepted fallback registry tracks the exact source version and erases published copies derived from another shopper',async()=>{
+ const f=await reservationFixture(),sourceShop=await f.shop(),origin=f.base+'/shops/'+sourceShop,registry=origin+'/accepted-fallbacks',recovery=f.path+'/meal-recovery';
+ ok(await call(f.owner,f.base+'/commands','POST',{v:1,clientKey:randomUUID(),shopId:sourceShop,replayWindow:f.owner.window,kind:'shop.transferAuthority',
+   base:{shopRevision:1,authorityEpoch:1},body:{newShopperId:f.planner.id}}));
+ const scope=ok(await call(f.planner,registry));
+ const recipe={title:'Separate recipe disclosure',portions:6,notes:'Keep the exact recipe.',sourceURL:null,exclusions:[],elapsedMinutes:null,requiredLeadMinutes:null,
+   ingredients:[{id:randomUUID(),name:'Rice',notes:'Wash twice',quantity:null,exclusions:[]}]};
+ const candidateId=randomUUID(),accept={v:1,clientKey:randomUUID(),shopRevision:scope.shopRevision,authorityEpoch:scope.authorityEpoch,registryRevision:0,
+   action:'accept',reviewed:true,candidateId,baseRevision:null,source:{kind:'disclosed'},recipe,usual:false};
+ ok(await call(f.planner,registry,'POST',accept));
+ const desk=ok(await call(f.owner,recovery)),old=desk.meals.find(m=>m.occurrenceId===f.match.occurrenceId);
+ const source={kind:'meal',occurrenceId:old.occurrenceId,mealRevision:old.sourceMealRevision,revisionId:old.revisionId};
+ const current=ok(await call(f.owner,f.path+'/accepted-fallbacks/source','POST',{source})).recipe;
+ assert.equal(current.groups.find(g=>g.protected).servings.numerator,2);assert.equal(current.ingredients.find(i=>i.groupIds[0]===f.lunch.id).quantity.amount.numerator,2);
+ const next={...old,revisionId:randomUUID(),title:recipe.title,notes:recipe.notes,needs:old.needs.map(n=>n.priority==='protected'?n:{...n,id:randomUUID(),
+   ingredientId:recipe.ingredients[0].id,name:'Rice',notes:'Wash twice',quantity:null,matchedSourceIds:[]})};
+ const input={v:1,base:desk.base,intent:{occurrenceId:old.occurrenceId,targetDigest:desk.targetDigests.find(t=>t.occurrenceId===old.occurrenceId).digest,
+   replacement:next,reviewedAt:desk.asOf,repeatOfOccurrenceId:null,agreesToRepeat:false,proposesExtraTrip:false,agreesToExtraTrip:false,acceptsUnresolved:true}};
+ const preview=ok(await call(f.owner,recovery+'/preview','POST',input)),command=f.command('mealRecovery.apply',{...input,previewId:preview.previewId,previewDigest:preview.previewDigest});
+ const receipt=ok(await f.send(command));
+ const {linkAcceptedFallback}=await import('../dist/shared-fallback-registry.js');
+ // The paid planner calls this helper in the same household transaction as publication.
+ const link=revision=>repo.transaction(f.h,db=>linkAcceptedFallback({db,householdId:f.h,member:{member_id:f.owner.id,kind:'adult'}},receipt.operationId,candidateId,revision));
+ await assert.rejects(()=>link(2),e=>e.code==='stale_fallback');await link(1);
+ assert.equal((await admin.query('SELECT 1 FROM ritc.meal_recovery_source_member WHERE operation_id=$1 AND member_id=$2',[receipt.operationId,f.planner.id])).rowCount,1);
+ const after=ok(await call(f.owner,recovery));const copy=ok(await f.write('cookCopy.save',{language:'en',text:recipe.notes,occurrenceId:old.occurrenceId,
+   mealRevision:old.sourceMealRevision,revisionId:next.revisionId,recoveryRevision:1,placedRevision:after.placedRevision,supplyRevision:after.base.supplyRevision,pantryRevision:after.base.pantryRevision}));
+ await admin.query('SELECT ritc.privacy_erase_extension($1,$2)',[f.h,f.planner.id]);
+ assert.deepEqual(ok(await call(f.owner,f.path+'/accepted-fallbacks')).candidates,[]);
+ assert(!ok(await call(f.owner,recovery)).meals.some(m=>m.occurrenceId===old.occurrenceId));
+ assert.equal((await admin.query('SELECT 1 FROM ritc.dated_cook_copy WHERE copy_id=$1',[copy.copyId])).rowCount,0);
+ assert.notEqual((await f.send(command)).status,200);
+});

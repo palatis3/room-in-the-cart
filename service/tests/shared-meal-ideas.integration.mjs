@@ -247,3 +247,73 @@ test('old idea proposal shape stays valid with no reviewed exclusions or time',a
  assert.equal(applied.state,'applied');assert.deepEqual(applied.request.meal,proposal.meal);
  assert.deepEqual(page.meals.find(m=>m.occurrenceId===proposal.occurrenceId).meal,proposal.meal);
 });
+
+test('accepted fallback registry separates idea approval and meal choice from an explicit cross-shop recipe disclosure',async()=>{
+ const f=await mealFixture(),other=await f.shop(),path=f.path+'/accepted-fallbacks',remote=f.base+'/shops/'+other+'/accepted-fallbacks';
+ const selected=ok(await call(f.owner,f.path)),approvedIdea=await approved(f);
+ assert.equal(ok(await call(f.owner,path)).candidates.length,0);
+ const source={kind:'idea',ideaId:approvedIdea.result.ideaId,revision:approvedIdea.result.revision};
+ const review=ok(await call(f.owner,path+'/source','POST',{source})),r=review.recipe;
+ assert.equal(r.ingredients[0].quantity.amount.numerator,600);assert.equal(r.ingredients[1].name,'Water');assert.equal(r.ingredients[1].quantity,null);
+ for(const key of ['stock','reservations','evidence','pack'])assert(!Object.hasOwn(r.ingredients[0],key));
+ const input={v:1,clientKey:randomUUID(),shopRevision:review.shopRevision,authorityEpoch:review.authorityEpoch,registryRevision:review.registryRevision,
+   candidateId:randomUUID(),baseRevision:null,action:'accept',reviewed:true,source,recipe:r,usual:false};
+ assert.equal((await call(f.owner,path,'POST',{...input,reviewed:false})).status,422);
+ assert.equal((await call(f.owner,path,'POST',{...input,recipe:{...r,title:'Not the reviewed idea'}})).data.error.code,'stale_fallback');
+ const [a,b]=await Promise.all([call(f.owner,path,'POST',input),call(f.owner,path,'POST',input)]);assert.deepEqual(ok(a),ok(b));
+ assert.equal(a.data.revision,1);assert.equal(a.data.registryRevision,1);
+ assert.equal((await call(f.owner,path,'POST',{...input,usual:true})).data.error.code,'key_reused');
+ const visible=ok(await call(f.owner,remote));assert.deepEqual(visible.candidates,[{candidateId:input.candidateId,revision:1,recipe:r,usual:false}]);
+ assert(!JSON.stringify(visible).includes(f.shopId));assert(!JSON.stringify(visible).includes(f.planner.id));assert(!JSON.stringify(visible).includes(source.ideaId));
+ assert.equal((await call(f.owner,remote+'/source','POST',{source})).status,409);
+ assert.equal((await call(f.owner,remote,'GET',undefined,{'X-Shop-ID':f.shopId})).status,404);
+ assert.equal((await call(f.planner,path)).status,404);
+ const sourceMeal={kind:'meal',occurrenceId:f.proposal.occurrenceId,mealRevision:2,revisionId:null};
+ const meal=ok(await call(f.owner,path+'/source','POST',{source:sourceMeal}));
+ assert.deepEqual(meal.recipe.groups.map(g=>g.protected),[false,true]);assert.deepEqual(meal.recipe.ingredients[0].bindings.map(b=>b.quantity.amount.numerator),[400,200]);
+ const replace={...input,clientKey:randomUUID(),baseRevision:1,registryRevision:1,source:sourceMeal,recipe:meal.recipe,usual:true};
+ const next=ok(await call(f.owner,path,'POST',replace));assert.equal(next.revision,2);
+ const revoke={v:1,clientKey:randomUUID(),candidateId:input.candidateId,action:'revoke',reviewed:true,shopRevision:2,authorityEpoch:1,baseRevision:2,registryRevision:2};
+ assert.equal((await call(f.owner,path,'POST',{...revoke,baseRevision:1})).data.error.code,'stale_fallback');
+ assert.equal(ok(await call(f.owner,path,'POST',revoke)).accepted,false);
+ assert.deepEqual(ok(await call(f.owner,remote)).candidates,[]);
+ assert.deepEqual(ok(await call(f.owner,path,'POST',input)),a.data);
+ assert.deepEqual((await admin.query('SELECT revision,accepted,recipe IS NOT NULL AS present FROM ritc.accepted_fallback_revision WHERE household_id=$1 ORDER BY revision',[f.h])).rows,
+   [{revision:1,accepted:true,present:true},{revision:2,accepted:true,present:true},{revision:3,accepted:false,present:false}]);
+ assert.deepEqual(ok(await call(f.owner,f.path)),selected);
+ const free=await fixture();assert.deepEqual(ok(await call(free.owner,free.base+'/shops/'+free.shopId+'/accepted-fallbacks')).candidates,[]);
+ const outsider=await fixture();assert.equal((await call(outsider.owner,path)).status,404);
+});
+
+test('accepted fallback registry preserves per-ingredient notes and rejects stale approvals, guessed groups and unauthorized replay',async()=>{
+ const f=await mealFixture(),path=f.path+'/accepted-fallbacks',receipt=ok(await call(f.owner,path));
+ const qty=n=>({amount:{numerator:n,denominator:1},unit:'gram',originalLiteral:String(n)}),group=randomUUID();
+ const recipe={title:'One deliberately shared home recipe',notes:'Finish slowly.',portions:2,exclusions:['sesame'],elapsedMinutes:20,requiredLeadMinutes:null,sourceURL:null,
+   groups:[{id:group,name:'Almuerzo',servings:{numerator:2,denominator:1},protected:true,exclusions:[]}],
+   ingredients:[{id:randomUUID(),name:'Beans',notes:'  Remojar.\nEscurrir.  ',quantity:qty(4),exclusions:[],groupIds:[group],bindings:[{groupId:group,quantity:qty(4)}]}]};
+ const input={v:1,clientKey:randomUUID(),action:'accept',reviewed:true,registryRevision:receipt.registryRevision,shopRevision:receipt.shopRevision,
+   authorityEpoch:1,candidateId:randomUUID(),baseRevision:null,usual:true,recipe,source:{kind:'disclosed'}};
+ const wrong=structuredClone(input);wrong.recipe.ingredients[0].bindings[0].quantity=qty(5);
+ assert.equal((await call(f.owner,path,'POST',wrong)).status,422);
+ const prior=ok(await call(f.owner,path,'POST',input));assert.equal(prior.revision,1);assert.deepEqual(ok(await call(f.owner,path)).candidates[0].recipe,recipe);
+ const sibling={...input,candidateId:randomUUID(),clientKey:randomUUID()};
+ assert.equal((await call(f.owner,path,'POST',sibling)).data.error.code,'stale_fallback');
+ assert.equal((await call(f.owner,path,'POST',{...sibling,registryRevision:1})).data.error.code,'usual_fallback_exists');
+ const newDevice={...f.owner};await enroll(newDevice,f.h);assert.equal((await call(newDevice,path,'POST',input)).status,409);
+ ok(await call(f.owner,f.base+'/commands','POST',{v:1,clientKey:randomUUID(),replayWindow:f.owner.window,shopId:f.shopId,kind:'shop.transferAuthority',
+   base:{shopRevision:2,authorityEpoch:1},body:{newShopperId:f.planner.id}}));
+ assert.equal((await call(f.owner,path,'POST',input)).status,404);assert.equal((await call(f.owner,path)).status,404);
+ const current=ok(await call(f.planner,path));assert.equal(current.candidates[0].candidateId,input.candidateId);
+ await admin.query('DELETE FROM ritc.billing_seat WHERE household_id=$1',[f.h]);
+ assert.equal(ok(await call(f.planner,path)).candidates[0].recipe.title,recipe.title);
+ assert.equal((await call(f.planner,path+'/source','POST',{source:{kind:'meal',occurrenceId:f.proposal.occurrenceId,mealRevision:2,revisionId:null}})).data.error.code,'membership_inactive');
+ assert.equal((await call(f.planner,path,'POST',{...input,clientKey:randomUUID(),authorityEpoch:current.authorityEpoch,shopRevision:current.shopRevision})).data.error.code,'membership_inactive');
+ const withdraw={v:1,clientKey:randomUUID(),action:'revoke',candidateId:input.candidateId,baseRevision:1,reviewed:true,
+   authorityEpoch:current.authorityEpoch,shopRevision:current.shopRevision,registryRevision:current.registryRevision};
+ assert.equal(ok(await call(f.planner,path,'POST',withdraw)).accepted,false);
+ assert.deepEqual(ok(await call(f.planner,path)).candidates,[]);
+ await admin.query('SELECT ritc.privacy_erase_extension($1,$2)',[f.h,f.owner.id]);
+ assert.deepEqual(ok(await call(f.planner,path)).candidates,[]);
+ const stored=(await admin.query('SELECT recipe,source,fingerprint FROM ritc.accepted_fallback_revision WHERE household_id=$1 AND candidate_id=$2 AND revision=1',[f.h,input.candidateId])).rows[0];
+ assert.deepEqual(stored,{recipe:null,source:null,fingerprint:null});
+});

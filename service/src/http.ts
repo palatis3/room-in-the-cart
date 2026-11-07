@@ -27,6 +27,7 @@ import {PrivacyService,deletionSchema,exitSchema} from './privacy.js';
 import {privacyHTTPCall,type PrivacyCall} from './privacy-call.js';
 import {GuardianEnrollmentService,guardianCreateSchema,guardianActionSchema,guardianConsentSchema,guardianInvitationSchema,guardianConfirmSchema,childClaimSchema,childFinishSchema,childAuthStartSchema,childNativeStartSchema,childNativeAdmitSchema} from './guardian.js';
 import {viewReplacementSchema,proposalResolutionSchema,householdCreateSchema,inviteCreateSchema,inviteRedeemSchema,viewCreateSchema,viewUpdateSchema,proposalSchema,revocationSchema, parseCommand,previewSchema,uuid } from './contracts.js';
+import { SharedFallbackRegistry } from './shared-fallback-registry.js';
 export interface HTTPOptions { repository:HouseholdRepository; verifier?:IdentityVerifier; webOrigin?:string; maxRequestsPerMinute?:number; billing?:BillingService; browserAuth?:BrowserAuthService; privacy?:PrivacyService; guardian?:GuardianEnrollmentService; clientAddress?:(request:IncomingMessage)=>string|undefined }
 async function rawBody(req:IncomingMessage,maxBytes=65_536):Promise<Buffer> {
   if(!/^application\/json(?:\s*;|$)/i.test(req.headers['content-type']??''))throw new ServiceError(415,'json_required','Send a JSON command.');
@@ -44,6 +45,7 @@ export function createHTTPServer(options:HTTPOptions) {
   const repository=options.repository,verifier=options.verifier??new DenyIdentityVerifier();
   const lifecycle=new HouseholdLifecycle(repository),helperReview=new HelperReview(lifecycle),history=new PriceBudgetHistory(repository,options.billing);
   const decisions = new DecisionHistory(options.billing);
+  const fallbacks = new SharedFallbackRegistry(repository,options.billing);
   const mealMoves = new MealMoves(repository,options.billing);
   const mealIdeas = new SharedMealIdeas(repository,mealMoves);
   const mealChanges = new SharedMealChanges(repository,mealMoves);
@@ -192,7 +194,7 @@ export function createHTTPServer(options:HTTPOptions) {
       }
       const verificationRoute=/^\/guardian\/enrollments\/([^/]+)\/verification$/.exec(path);
       if(verificationRoute&&method==='POST'){send(200,await guardian.verification(householdId,auth,uuid.parse(verificationRoute[1]),guardianActionSchema.parse(await body(req,4096))));return;}
-      const payload=method==='POST'||method==='PUT'||(method==='DELETE'&&/\/measurement-feedback$/.test(path))?await body(req):undefined;
+      const payload=method==='POST'||method==='PUT'||(method==='DELETE'&&/\/measurement-feedback$/.test(path))?await body(req,/\/accepted-fallbacks$/.test(path)?540000:65536):undefined;
       const ownPlacement=/^\/shops\/([^/]+)\/placement-reports\/mine\/([^/]+)$/.exec(path);
       const placementCommand=path==='/commands'&&method==='POST'&&typeof payload==='object'&&payload!==null&&'kind' in payload&&(payload.kind==='shop.reportPlaced'||payload.kind==='shop.reconcileReport')?parseCommand(payload):undefined;
       const placementRead=method==='GET'?/^\/shops\/([^/]+)\/placement-reports(?:\/[^/]+)?$/.exec(path):null;
@@ -304,6 +306,9 @@ export function createHTTPServer(options:HTTPOptions) {
           if(tail==='/placement-reports/current-shop'&&method==='GET')return placementReports.currentShop(ctx,shopId);
           const placementDetail=/^\/placement-reports\/([^/]+)$/.exec(tail??'');
           if(placementDetail&&method==='GET')return placementReports.detail(ctx,shopId,uuid.parse(placementDetail[1]));
+          if(tail==='/accepted-fallbacks' && method==='GET')return fallbacks.read(ctx,shopId.toLowerCase(),url.searchParams.get('cursor'));
+          if(tail==='/accepted-fallbacks' && method==='POST')return fallbacks.change(ctx,shopId.toLowerCase(),payload);
+          if(tail==='/accepted-fallbacks/source' && method==='POST')return fallbacks.source(ctx,shopId.toLowerCase(),payload);
           if((tail==='/meal-recovery' || tail==='/meal-recovery/coverage') && method==='GET' || tail==='/meal-recovery/preview' && method==='POST') {
             const shop=await repository.shop(ctx,shopId.toLowerCase());
             repository.requireShopper(ctx,shop);

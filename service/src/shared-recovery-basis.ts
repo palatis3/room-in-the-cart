@@ -21,7 +21,7 @@ interface ScopedMeal {shopId:string;sealed:SealedMeal;original:RecoveryMeal;curr
 
 // UUIDv5 within the occurrence namespace. Scoped recipe copies can legitimately
 // reuse every ingredient, binding and named-group UUID of another dinner.
-function reviewedID(occurrence:string,...parts:(string|number)[]){
+export function reviewedID(occurrence:string,...parts:(string|number)[]){
   const hash=createHash('sha1').update(Buffer.from(occurrence.replaceAll('-',''),'hex')).update(JSON.stringify(parts)).digest();
   hash[6]=((hash[6]??0)&0x0f)|0x50;hash[8]=((hash[8]??0)&0x3f)|0x80;
   const hex=hash.toString('hex',0,16);

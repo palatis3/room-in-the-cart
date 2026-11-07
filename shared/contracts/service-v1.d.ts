@@ -223,3 +223,21 @@ export interface PantryObservationPreview extends PantryScope {
     afterCovered:ExactSupplyFraction|null;beforeMissing:ExactSupplyFraction|null;afterMissing:ExactSupplyFraction|null;
     beforeReservations:DeliveryReservationCoverage[];afterReservations:DeliveryReservationCoverage[]})[];
 }
+
+export interface AcceptedFallbackRecipe {
+  title:string; portions:number; notes:string; sourceURL:string|null; exclusions:string[];
+  elapsedMinutes:number|null; requiredLeadMinutes:number|null;
+  groups?:Array<{id:string;name:string;servings:SharedMealAmount;protected:boolean;exclusions:string[]}>;
+  ingredients:Array<{id:string;name:string;notes?:string;quantity:SharedMealQuantity|null;exclusions:string[];groupIds?:string[];
+    bindings?:Array<{groupId:string;quantity:SharedMealQuantity}>}>;
+}
+export interface AcceptedFallback { candidateId:string;revision:number;usual:boolean;recipe:AcceptedFallbackRecipe }
+export interface FallbackRegistryScope { shopId:string;shopRevision:number;authorityEpoch:number;registryRevision:number }
+export interface FallbackRegistryPage extends FallbackRegistryScope {candidates:AcceptedFallback[];nextCursor:string|null}
+export type FallbackSource = {kind:'idea';ideaId:string;revision:number} |
+  {kind:'meal';occurrenceId:string;mealRevision:number;revisionId:string|null};
+export interface FallbackSourceReview extends FallbackRegistryScope {source:FallbackSource;recipe:AcceptedFallbackRecipe}
+export type FallbackRegistryChange = Omit<FallbackRegistryScope,'shopId'> &
+  {v:1;clientKey:string;candidateId:string;baseRevision:number|null;reviewed:true} &
+  ({action:'accept';source:FallbackSource|{kind:'disclosed'};usual:boolean;recipe:AcceptedFallbackRecipe}|{action:'revoke'});
+export interface FallbackRegistryReceipt extends FallbackRegistryScope {candidateId:string;revision:number;accepted:boolean}
