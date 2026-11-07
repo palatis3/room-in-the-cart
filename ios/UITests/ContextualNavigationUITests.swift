@@ -344,7 +344,7 @@ import UIKit
     }
 
     func testChangedPickupTermsKeepEarlierFeesAndPreviewUnderTheirOriginalBranch() {
-        launch(reset: true)
+        launchRetailerHistoryWalk()
         tap(element("openPickupList"))
         func openFacts() {
             tap(element("ledgerFacts"))
@@ -378,7 +378,7 @@ import UIKit
         let activePreview = app.switches["Record a retailer preview"]
         revealContent(activePreview)
         XCTAssertEqual(activePreview.value as? String, "0")
-        tap(app.buttons["Earlier retailer evidence"])
+        openHistoryDisclosure("ledger.earlierRetailerEvidence", label: "Earlier retailer evidence")
         assertText("West Market"); assertText("Fees: $2.40")
         assertText("West retailer page"); assertText("Retailer preview: $37.20")
         capture("S03-earlier-retailer-evidence-after-branch-change")
@@ -443,7 +443,7 @@ import UIKit
     }
 
     func testCheckoutRequiresFreshBranchPricingAndPreservesEarlierInclusiveQuote() {
-        launch(reset: true)
+        launchRetailerHistoryWalk()
         shopRoot(); tap(element("openPickupList"))
         tap(element("ledgerImport")); fill("2 wraps", into: "ledgerImportText")
         tap(element("ledgerReviewImport")); tap(element("ledgerCommitImport"))
@@ -485,7 +485,7 @@ import UIKit
         tap(app.buttons["Save reviewed checkout"])
         XCTAssertTrue(app.navigationBars["Review checkout changes"].waitForNonExistence(timeout: 8))
         assertText("Saved checkout result"); assertText("$39.05")
-        tap(app.buttons["Earlier checkout quotes"])
+        openHistoryDisclosure("checkout.earlierQuotes", label: "Earlier checkout quotes")
         assertText("Market · West branch"); assertText("West checkout"); assertText("$37.20")
         capture("S05-original-and-reviewed-replacement-checkout")
     }
@@ -796,17 +796,44 @@ import UIKit
         details.lifetime = .keepAlways; add(details)
         capture("S27-quote-switch-" + phase)
     }
+    private func launchRetailerHistoryWalk() {
+        if #unavailable(iOS 18) {
+            // iOS 17 XCTest crashed fetching a field placeholder in its OSLog
+            // high-volume callback. Scope the workaround to this walk's app process.
+            app.launchEnvironment["OS_ACTIVITY_MODE"] = "disable"
+        }
+        launch(reset: true)
+    }
+
+    private func openHistoryDisclosure(_ id: String, label: String) {
+        let header = app.buttons[id]
+        revealContent(header)
+        XCTAssertEqual(header.label, label)
+        XCTAssertEqual(header.value as? String, "Collapsed")
+        XCTAssertGreaterThanOrEqual(header.frame.height, 44)
+        XCTAssertGreaterThan(header.frame.width, app.frame.width / 2)
+        // Tap the label side. The whole header must activate, including on a small iPhone.
+        header.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: 0.5)).tap()
+        XCTAssertEqual(header.value as? String, "Expanded")
+    }
+
     private func replaceRetailerField(_ id: String, with text: String) {
         let field = element(id)
         revealContent(field)
         field.tap()
-        field.press(forDuration: 1.2)
-        let item = app.menuItems["Select All"]
-        let selectAll = item.exists ? item : app.buttons["Select All"]
-        XCTAssertTrue(selectAll.waitForExistence(timeout: 5))
-        selectAll.tap()
-        field.typeText(text)
-        XCTAssertEqual(field.value as? String, text)
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+        // These short, single-line test values leave trailing whitespace. Position
+        // the insertion point there after focus and keyboard layout have settled.
+        let previous = field.value as? String ?? ""
+        XCTAssertFalse(previous.isEmpty)
+        field.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: previous.count))
+        // A focused empty field can expose its shortened placeholder as its AX value.
+        let emptyPresentation = field.value as? String ?? ""
+        XCTContext.runActivity(named: "Replace \(id) after deletion displayed \(String(reflecting: emptyPresentation))") { _ in
+            app.typeText(text)
+            XCTAssertEqual(field.value as? String, text)
+        }
         let done = app.buttons["Done"]
         if done.isHittable { done.tap() }
     }

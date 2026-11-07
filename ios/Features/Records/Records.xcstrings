@@ -2813,40 +2813,6 @@
         }
       }
     },
-    "Expanded": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Expanded"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Expandido"
-          }
-        }
-      }
-    },
-    "Collapsed": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Collapsed"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Contraído"
-          }
-        }
-      }
-    },
     "Captured in a separate recovered workspace.": {
       "extractionState": "manual",
       "localizations": {

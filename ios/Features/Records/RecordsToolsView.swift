@@ -176,7 +176,7 @@ struct RecordsToolsView: View {
                     .disabled(!savedKey || model.recoveryKey.isEmpty || model.selectedCount == 0 || (model.selectedMediaCount > 0 && !acknowledgedMedia))
                     .accessibilityIdentifier("records.prepareRecovery")
             }
-            .disclosureGroupStyle(RecordsDisclosureGroupStyle(label: recordsText("Encrypted personal recovery"), identifier: "records.encryptedRecovery"))
+            .disclosureGroupStyle(LabeledFormDisclosureStyle(label: recordsText("Encrypted personal recovery"), identifier: "records.encryptedRecovery"))
             if let document = model.preparedDocument {
                 Label(model.preparedIsPrivate ? recordsText("Private owner file ready") : recordsText("Redacted copy ready"), systemImage: model.preparedIsPrivate ? "lock.doc" : "doc.text")
                 Text(ByteCountFormatter.string(fromByteCount: Int64(document.data.count), countStyle: .file)).font(.caption)
@@ -186,7 +186,7 @@ struct RecordsToolsView: View {
                 } else if let text = String(data: document.data, encoding: .utf8) {
                     ShareLink(item: text) { Label(recordsText("Share prepared text…"), systemImage: "square.and.arrow.up") }
                     DisclosureGroup(recordsText("Preview readable copy")) { Text(text).textSelection(.enabled) }
-                        .disclosureGroupStyle(RecordsDisclosureGroupStyle(label: recordsText("Preview readable copy"), identifier: "records.readablePreview"))
+                        .disclosureGroupStyle(LabeledFormDisclosureStyle(label: recordsText("Preview readable copy"), identifier: "records.readablePreview"))
                 }
                 Button(recordsText("Discard prepared file")) { model.dismissPreparedFile() }
             }
@@ -291,7 +291,7 @@ struct RecordsToolsView: View {
                     Button(recordsText("Delete this recovered copy"), role: .destructive) { deletion = Deletion(title: saved.record.title, source: nil, recovered: .copy(saved.id)) }
                     Button(recordsText("Delete recovered copies from this source"), role: .destructive) { deletion = Deletion(title: saved.record.origin, source: nil, recovered: .origin(saved.record.origin)) }
                 }
-                .disclosureGroupStyle(RecordsDisclosureGroupStyle(
+                .disclosureGroupStyle(LabeledFormDisclosureStyle(
                     label: recordsText("Recovered copy") + ": " + (saved.record.title.isEmpty ? recordsText("Untitled record") : saved.record.title),
                     identifier: "records.recovered." + saved.record.title))
             }
@@ -388,7 +388,7 @@ struct RecordsToolsView: View {
                     }
                 }
             }
-            .disclosureGroupStyle(RecordsDisclosureGroupStyle(label: recordsText("Preview source reference") + ": " + source.reviewedLabel,
+            .disclosureGroupStyle(LabeledFormDisclosureStyle(label: recordsText("Preview source reference") + ": " + source.reviewedLabel,
                 identifier: "records.mediaPreview." + attachment.id))
         }
     }
@@ -398,31 +398,6 @@ struct RecordsToolsView: View {
         case .recipeSource: return recordsText("Recipe source")
         case .receiptEvidence: return recordsText("Receipt evidence")
         }
-    }
-}
-
-/// Keep expanded controls as separate Form rows. The native Chevron-only action
-/// lacked a useful label/hit area on iOS 17, so the disclosure header is one
-/// explicit, full-row semantic button using the normal expansion binding.
-@MainActor private struct RecordsDisclosureGroupStyle: DisclosureGroupStyle {
-    let label: String
-    let identifier: String
-    @ViewBuilder func makeBody(configuration: Configuration) -> some View {
-        Button { configuration.isExpanded.toggle() } label: {
-            HStack {
-                configuration.label
-                Spacer(minLength: 12)
-                Image(systemName: configuration.isExpanded ? "chevron.down" : "chevron.forward")
-                    .font(.body.weight(.semibold)).foregroundStyle(.tint).accessibilityHidden(true)
-            }
-            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityIdentifier(identifier)
-        .accessibilityLabel(label)
-        .accessibilityValue(recordsText(configuration.isExpanded ? "Expanded" : "Collapsed"))
-        if configuration.isExpanded { configuration.content }
     }
 }
 

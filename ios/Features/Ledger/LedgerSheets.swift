@@ -590,6 +590,8 @@ struct LedgerFactsView: View {
                             if let earlier = revision.previousRetailerBasis { summary(earlier); Divider() }
                         }
                     }
+                    .disclosureGroupStyle(LabeledFormDisclosureStyle(label: ledgerText("Earlier retailer evidence"),
+                                                                     identifier: "ledger.earlierRetailerEvidence"))
                 }
             }
             if let validation { Text(validation).foregroundStyle(Theme.warning) }

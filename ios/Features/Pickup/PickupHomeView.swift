@@ -267,6 +267,8 @@ struct PickupCheckoutView: View {
                             Divider()
                         }
                     }
+                    .disclosureGroupStyle(LabeledFormDisclosureStyle(label: pTr("Earlier checkout quotes"),
+                                                                     identifier: "checkout.earlierQuotes"))
                 }
                 Section(pTr("Payment hold · separate from spending")) {
                     Toggle(pTr("Compare an authorization hold"), isOn: $comparingHold)

@@ -29,6 +29,31 @@ struct WorkingForm<Content: View>: View {
     }
 }
 
+/// Keep expanded controls as separate Form rows. The native Chevron-only action
+/// lacked a useful label/hit area on iOS 17, so the disclosure header is one
+/// explicit, full-row semantic button using the normal expansion binding.
+@MainActor struct LabeledFormDisclosureStyle: DisclosureGroupStyle {
+    let label: String
+    let identifier: String
+    @ViewBuilder func makeBody(configuration: Configuration) -> some View {
+        Button { configuration.isExpanded.toggle() } label: {
+            HStack {
+                configuration.label
+                Spacer(minLength: 12)
+                Image(systemName: configuration.isExpanded ? "chevron.down" : "chevron.forward")
+                    .font(.body.weight(.semibold)).foregroundStyle(.tint).accessibilityHidden(true)
+            }
+            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier(identifier)
+        .accessibilityLabel(label)
+        .accessibilityValue(configuration.isExpanded ? Text("Expanded") : Text("Collapsed"))
+        if configuration.isExpanded { configuration.content }
+    }
+}
+
 /// Explicit prompt color keeps native empty-field purposes readable. Return the
 /// native TextField so callers retain their existing focus and input modifiers.
 func workingTextField(_ title: String, text: Binding<String>) -> TextField<Text> {
