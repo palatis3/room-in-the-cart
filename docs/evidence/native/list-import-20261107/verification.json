@@ -66,5 +66,32 @@
         "animationWaits": 0
       }
     }
+  },
+  "integrated": {
+    "productCommit": "ab083d07f1e3cb2b5e987cf41518951195b6f6e6",
+    "iPhone": "iPhone SE (3rd generation), iOS 17.0 (21A328)",
+    "configuration": "Release scheme build for iOS Simulator, Debug scheme for the two executed tests",
+    "releaseBuild": "succeeded",
+    "passedSelectors": [
+      "RoomInTheCartUITests/ContextualNavigationUITests/testMixedEnglishAndSpanishListMeasuresMergeAndSurviveRestart",
+      "RoomInTheCartTests/DeviceSurfacesCompositionStartupTests/testSelectedTextRevalidatesDependentChoicesAcrossSavedEdits"
+    ],
+    "strictRuntimeWarnings": 0,
+    "resultSummarySHA256": "8f067e5ca8baf70e5362707e013ed43ca09151f2b8c276c67e58d656baa218a6",
+    "installedDatabase": {
+      "databaseIntegrity": "ok",
+      "headRevision": 3,
+      "headSHA256": "d02131eca7ca496afb6bcb8d9e1d8d7e5a5ea62c517cde84b18952e201c8a85c",
+      "lines": 1,
+      "activeContributions": 2,
+      "importReceipts": 2,
+      "duplicateAllocations": 1,
+      "effectiveQuantity": "3/2 US cups",
+      "originalWording": [
+        "1 1/2 cups of arroz",
+        "1 1/2 tazas de arroz"
+      ]
+    },
+    "localization": "Localization checks passed: 25 catalogs, 4199 en/es entries, 3900 literal source keys, matching format arguments."
   }
 }
