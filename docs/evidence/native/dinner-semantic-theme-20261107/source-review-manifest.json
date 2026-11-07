@@ -1,0 +1,37 @@
+{
+  "files": [
+    {
+      "sourcePath": "ios/App/Theme.swift",
+      "baseSHA256": "feeaf4ac4534b9aa81e89d3ba9a97d0bde4a6cdbabb306c4d4e79071173eb288",
+      "candidatePath": ".build/DinnerThemeReview20261107/action-followup/Theme.swift",
+      "candidateSHA256": "f280b780d90d9513b7c3a40c25eafa00e2d0566f1d288b05cc28dcfa608805dc"
+    },
+    {
+      "sourcePath": "ios/Features/Dinners/DinnerEditors.swift",
+      "baseSHA256": "0c32312815fb9de54ba411840d1a6300a15ce4163b8c25544c7e916dc1e73a67",
+      "candidatePath": ".build/DinnerThemeReview20261107/action-followup/DinnerEditors.swift",
+      "candidateSHA256": "cb78021561d2745779da9dd67312ad9f67ecd10b843c1ff746c33196eb2da7f9"
+    },
+    {
+      "sourcePath": "ios/Features/Dinners/DinnerIdeaSupplyViews.swift",
+      "baseSHA256": "62ef5560cb67d0d3139e4cf94d70d08bea72b8bd01c884c172c0228c2f87e7a4",
+      "candidatePath": ".build/DinnerThemeReview20261107/action-followup/DinnerIdeaSupplyViews.swift",
+      "candidateSHA256": "c734eedc6975b608329c65c505fae3c92cffa0d970fc8c380e7c4f93f505c6b4"
+    }
+  ],
+  "patchPath": ".build/DinnerThemeReview20261107/action-followup/dinner-theme-v2-consolidated.patch",
+  "patchSHA256": "67c8d6d61ec3630ca37fb5e53716aea34cbb1181f685a62216d7184b73d02d37",
+  "checks": {
+    "focusModifiersExact": true,
+    "disabledExpressionsExact": true,
+    "accessibilityIdentifiersExact": true,
+    "draftBindingAndStateInitializationExact": true,
+    "reviewFunctionExact": true,
+    "allProductSourceAfterTemplateFieldsExact": true,
+    "existingPrimaryActionAndThemeModifiersExact": true,
+    "privateIdeaSupplyEditorExact": true,
+    "workingTextFieldCount": 14,
+    "primaryActionBranches": 4
+  },
+  "scope": "Read-only source review; no native execution, product edits or acceptance claim."
+}

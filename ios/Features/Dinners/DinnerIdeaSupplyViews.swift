@@ -42,7 +42,7 @@ struct DinnerIdeaSupplyViews: View {
                             if row.conflictingPacks { Text(dinnerText("These pack observations differ. Review one pack for this food.")) }
                             ForEach(row.ingredients) { ingredient in
                                 Button(dinnerFormat("Review stock and pack for %@", ingredient.name)) { editing = ingredient }
-                                    .buttonStyle(.borderless).frame(minHeight: 44)
+                                    .buttonStyle(.borderless).foregroundStyle(Theme.action).frame(minHeight: 44)
                                     .accessibilityIdentifier("ideaSupplyEdit-" + ingredient.id.uuidString)
                             }
                         }

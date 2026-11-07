@@ -1,0 +1,221 @@
+--- a/ios/Features/Dinners/DinnerEditors.swift
++++ b/ios/Features/Dinners/DinnerEditors.swift
+@@ -1,5 +1,10 @@
+ import SwiftUI
+ import CoreDomain
++#if DEBUG && DINNER_KEYBOARD_DIAGNOSTIC
++import UIKit
++import QuartzCore
++import OSLog
++#endif
+ 
+ /// SwiftUI may retain a row binding while a collection is removed/reordered or
+ /// its editor is torn down. Resolve identity on every access, never a saved index.
+@@ -38,6 +43,9 @@
+     @State private var showPreview = false
+     @State private var completed = false
+     @FocusState private var inputFocus: String?
++    #if DEBUG && DINNER_KEYBOARD_DIAGNOSTIC
++    @Environment(\.scenePhase) private var diagnosticScenePhase
++    #endif
+     @Environment(\.dismiss) private var dismiss
+     init(model: DinnerFeatureModel, purpose: DinnerEditorPurpose, initial: MealTemplate? = nil, idea: DinnerIdeaDraft? = nil) {
+         self.model = model; self.purpose = purpose; originalIdea = idea
+@@ -135,7 +143,43 @@
+             }
+             DinnerFeedback(model: model)
+         }.navigationTitle(purpose == .manual ? dinnerText("Manual dinner") : purpose == .idea ? dinnerText("Dinner idea") : dinnerText("Reusable dinner")).dinnerAccess(model)
+-            .keyboardDoneAction(visible: inputFocus != nil, title: dinnerText("Done")) { inputFocus = nil }
++            .keyboardDoneAction(visible: inputFocus != nil, title: dinnerText("Done")) {
++                #if DEBUG && DINNER_KEYBOARD_DIAGNOSTIC
++                DinnerKeyboardDiagnostic.record(.doneEnter, focus: DinnerKeyboardDiagnostic.focus(inputFocus))
++                #endif
++                inputFocus = nil
++                #if DEBUG && DINNER_KEYBOARD_DIAGNOSTIC
++                DinnerKeyboardDiagnostic.record(.doneExit, focus: DinnerKeyboardDiagnostic.focus(inputFocus))
++                #endif
++            }
++            #if DEBUG && DINNER_KEYBOARD_DIAGNOSTIC
++            .onAppear { DinnerKeyboardDiagnostic.record(.appear, focus: DinnerKeyboardDiagnostic.focus(inputFocus)) }
++            .onDisappear { DinnerKeyboardDiagnostic.record(.disappear, focus: DinnerKeyboardDiagnostic.focus(inputFocus)) }
++            .onChange(of: inputFocus) { old, new in
++                DinnerKeyboardDiagnostic.record(.focusChange, previousFocus: DinnerKeyboardDiagnostic.focus(old), focus: DinnerKeyboardDiagnostic.focus(new))
++            }
++            .onChange(of: diagnosticScenePhase, initial: true) { old, new in
++                DinnerKeyboardDiagnostic.record(.sceneChange, previousScene: DinnerKeyboardDiagnostic.scene(old), scene: DinnerKeyboardDiagnostic.scene(new))
++            }
++            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { notification in
++                MainActor.assumeIsolated { DinnerKeyboardDiagnostic.record(.willShow, keyboard: notification) }
++            }
++            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardDidShowNotification)) { notification in
++                MainActor.assumeIsolated { DinnerKeyboardDiagnostic.record(.didShow, keyboard: notification) }
++            }
++            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { notification in
++                MainActor.assumeIsolated { DinnerKeyboardDiagnostic.record(.willHide, keyboard: notification) }
++            }
++            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardDidHideNotification)) { notification in
++                MainActor.assumeIsolated { DinnerKeyboardDiagnostic.record(.didHide, keyboard: notification) }
++            }
++            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification)) { notification in
++                MainActor.assumeIsolated { DinnerKeyboardDiagnostic.record(.willChangeFrame, keyboard: notification) }
++            }
++            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardDidChangeFrameNotification)) { notification in
++                MainActor.assumeIsolated { DinnerKeyboardDiagnostic.record(.didChangeFrame, keyboard: notification) }
++            }
++            #endif
+             .dinnerApplyPresentation(model, presented: $showPreview)
+     }
+     private func review() {
+@@ -316,3 +360,152 @@
+             .dinnerAccess(model).disabled(!model.editable)
+     }
+ }
++
++#if DEBUG && DINNER_KEYBOARD_DIAGNOSTIC
++/// Read-only, event-triggered diagnostic. No entered text, identifiers, layer names or animation keys are emitted.
++@MainActor private enum DinnerKeyboardDiagnostic {
++    enum Event: String {
++        case appear, disappear, doneEnter = "done.enter", doneExit = "done.exit", focusChange = "focus.change", sceneChange = "scene.change"
++        case willShow = "keyboard.willShow", didShow = "keyboard.didShow", willHide = "keyboard.willHide", didHide = "keyboard.didHide"
++        case willChangeFrame = "keyboard.willChangeFrame", didChangeFrame = "keyboard.didChangeFrame"
++    }
++    private static let enabled = ProcessInfo.processInfo.arguments.contains("--ui-testing")
++    private static let logger = Logger(subsystem: "dev.roominthecart.dinnerkeyboarddiagnostic", category: "events")
++    private static var sequence = 0
++    private static var eventLimitReported = false
++    private static var layerSnapshots = 0
++    private static var layerLimitReported = false
++    static func focus(_ value: String?) -> Int {
++        guard let value else { return 0 }
++        switch value {
++        case "title": return 1
++        case "servings": return 2
++        case "notes": return 3
++        case "source": return 4
++        case "exclusions": return 5
++        case "leadTime": return 6
++        case "completed": return 7
++        case "assumptions": return 8
++        default: return value.hasPrefix("ingredient.") ? 9 : value.hasPrefix("group.") ? 10 : 11
++        }
++    }
++    static func scene(_ value: ScenePhase) -> Int {
++        switch value { case .active: return 0; case .inactive: return 1; case .background: return 2; @unknown default: return 3 }
++    }
++    private static func number(_ value: Double) -> String {
++        if value.isNaN { return "nan" }
++        if value == .infinity { return "positiveInfinity" }
++        if value == -.infinity { return "negativeInfinity" }
++        return String(value)
++    }
++    private static func write(_ fields: [String: Any]) {
++        guard let data = try? JSONSerialization.data(withJSONObject: fields, options: [.sortedKeys]),
++              let payload = String(data: data, encoding: .utf8) else {
++            logger.error("schema=1 serializationFailure")
++            return
++        }
++        logger.info("\(payload, privacy: .public)")
++    }
++    static func record(_ event: Event, previousFocus: Int = -1, focus: Int = -1,
++                       previousScene: Int = -1, scene: Int = -1, keyboard: Notification? = nil) {
++        guard enabled else { return }
++        guard sequence < 128 else {
++            if !eventLimitReported { eventLimitReported = true; write(["schema": 1, "kind": "eventLimit", "limit": 128]) }
++            return
++        }
++        sequence += 1
++        let eventSequence = sequence
++        var fields: [String: Any] = ["schema": 1, "kind": "event", "sequence": eventSequence,
++            "uptime": number(ProcessInfo.processInfo.systemUptime), "event": event.rawValue,
++            "previousFocus": previousFocus, "focus": focus, "previousScene": previousScene, "scene": scene]
++        if let info = keyboard?.userInfo {
++            if let duration = info[UIResponder.keyboardAnimationDurationUserInfoKey] as? NSNumber { fields["keyboardDuration"] = number(duration.doubleValue) }
++            if let curve = info[UIResponder.keyboardAnimationCurveUserInfoKey] as? NSNumber { fields["keyboardCurve"] = curve.intValue }
++            if let local = info[UIResponder.keyboardIsLocalUserInfoKey] as? NSNumber { fields["keyboardIsLocal"] = local.boolValue }
++            if let value = info[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue {
++                let r = value.cgRectValue
++                fields["keyboardEndFrame"] = [r.origin.x, r.origin.y, r.width, r.height].map { number(Double($0)) }
++            }
++        }
++        write(fields)
++        #if DINNER_KEYBOARD_LAYER_DIAGNOSTIC
++        // No traversal before the original Done focus write. End/focus/notification snapshots are optional in a separately flagged build.
++        switch event {
++        case .appear, .doneExit, .focusChange, .didShow, .didHide, .didChangeFrame: inspectLayers(parentSequence: eventSequence)
++        default: break
++        }
++        #endif
++    }
++    #if DINNER_KEYBOARD_LAYER_DIAGNOSTIC
++    private static func inspectLayers(parentSequence: Int) {
++        guard layerSnapshots < 12 else {
++            if !layerLimitReported { layerLimitReported = true; write(["schema": 1, "kind": "layerLimit", "limit": 12, "parentSequence": parentSequence]) }
++            return
++        }
++        layerSnapshots += 1
++        let start = ProcessInfo.processInfo.systemUptime, mediaTime = CACurrentMediaTime()
++        let windows = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.flatMap { $0.windows }
++        let chosen = Array(windows.prefix(8))
++        var queue: [(CALayer, Int, Int)] = chosen.enumerated().map { ($0.element.layer, $0.offset, 0) }
++        var cursor = 0, layerCount = 0, attachedKeys = 0, configurations = 0, missingAnimations = 0
++        var nonfiniteConfigurations = 0, positiveInfinityConfigurations = 0, pausedConfigurations = 0, hugeRepeatConfigurations = 0
++        var layersWithPausedClock = 0, truncated = windows.count > chosen.count
++        var samples: [[String: Any]] = []
++        func inspectAnimation(_ animation: CAAnimation, layer: CALayer, layerIndex: Int, windowIndex: Int, depth: Int) {
++            guard configurations < 64, depth <= 4 else { truncated = true; return }
++            configurations += 1
++            let values = [animation.duration, Double(animation.repeatCount), animation.repeatDuration,
++                          animation.beginTime, animation.timeOffset, Double(animation.speed)]
++            if values.contains(where: { !$0.isFinite }) { nonfiniteConfigurations += 1 }
++            if values.contains(.infinity) { positiveInfinityConfigurations += 1 }
++            if animation.speed == 0 { pausedConfigurations += 1 }
++            if animation.repeatCount.isFinite && animation.repeatCount >= 1_000_000 { hugeRepeatConfigurations += 1 }
++            if samples.count < 8 {
++                let kind = animation is CASpringAnimation ? "spring" : animation is CABasicAnimation ? "basic" : animation is CAKeyframeAnimation ? "keyframe" : animation is CAAnimationGroup ? "group" : animation is CATransition ? "transition" : "other"
++                samples.append(["ordinal": configurations, "windowOrdinal": windowIndex, "layerOrdinal": layerIndex, "groupDepth": depth,
++                    "kind": kind, "duration": number(animation.duration), "repeatCount": number(Double(animation.repeatCount)),
++                    "repeatDuration": number(animation.repeatDuration), "speed": number(Double(animation.speed)),
++                    "beginTime": number(animation.beginTime), "timeOffset": number(animation.timeOffset),
++                    "autoreverses": animation.autoreverses, "removedOnCompletion": animation.isRemovedOnCompletion,
++                    "layerSpeed": number(Double(layer.speed)), "layerBeginTime": number(layer.beginTime),
++                    "layerTimeOffset": number(layer.timeOffset), "layerLocalTime": number(layer.convertTime(mediaTime, from: nil))])
++            }
++            if let group = animation as? CAAnimationGroup, let children = group.animations {
++                let allowed = max(0, 64 - configurations)
++                if children.count > allowed { truncated = true }
++                for child in children.prefix(allowed) { inspectAnimation(child, layer: layer, layerIndex: layerIndex, windowIndex: windowIndex, depth: depth + 1) }
++            }
++        }
++        while cursor < queue.count && layerCount < 512 {
++            let (layer, windowIndex, depth) = queue[cursor]; cursor += 1; layerCount += 1
++            if layer.speed == 0 { layersWithPausedClock += 1 }
++            let keys = layer.animationKeys() ?? []
++            attachedKeys += keys.count
++            let allowed = max(0, 64 - configurations)
++            if keys.count > allowed { truncated = true }
++            for key in keys.prefix(allowed) {
++                if let animation = layer.animation(forKey: key) {
++                    inspectAnimation(animation, layer: layer, layerIndex: layerCount, windowIndex: windowIndex, depth: 0)
++                } else { missingAnimations += 1 }
++            }
++            let children = layer.sublayers ?? []
++            let room = max(0, 512 - queue.count)
++            if depth >= 64 { if !children.isEmpty { truncated = true } }
++            else {
++                if children.count > room { truncated = true }
++                queue.append(contentsOf: children.prefix(room).map { ($0, windowIndex, depth + 1) })
++            }
++        }
++        if cursor < queue.count { truncated = true }
++        write(["schema": 1, "kind": "layers", "parentSequence": parentSequence, "snapshot": layerSnapshots,
++            "uptimeStart": number(start), "uptimeEnd": number(ProcessInfo.processInfo.systemUptime), "mediaTime": number(mediaTime),
++            "windowsAvailable": windows.count, "windowsVisited": chosen.count, "layersVisited": layerCount,
++            "attachedKeyCountInVisitedLayers": attachedKeys, "configurationsInspected": configurations,
++            "missingAnimations": missingAnimations, "finiteNumericConfigurations": configurations - nonfiniteConfigurations, "nonfiniteConfigurations": nonfiniteConfigurations,
++            "positiveInfinityConfigurations": positiveInfinityConfigurations, "pausedConfigurations": pausedConfigurations,
++            "hugeFiniteRepeatConfigurations": hugeRepeatConfigurations, "layersWithPausedClock": layersWithPausedClock,
++            "inventoryTruncated": truncated, "samplesTruncated": configurations > samples.count, "samples": samples])
++    }
++    #endif
++}
++#endif

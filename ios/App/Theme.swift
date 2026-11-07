@@ -7,8 +7,36 @@ enum Theme {
     static let secondary = Color("secondary")
     static let action = Color("accent")
     static let onAction = Color("on_accent")
+    static let error = Color("error")
     static let warning = Color("warning")
     static let warningSurface = Color("warning_surface")
+}
+
+/// Native form chrome uses the app's semantic colors in either appearance.
+/// Keep row styling on the content, where Form consumes list-row preferences.
+struct WorkingForm<Content: View>: View {
+    private let content: Content
+
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+
+    var body: some View {
+        Form {
+            Group { content }
+                .listRowBackground(Theme.surface)
+        }.workingSurface()
+    }
+}
+
+/// Explicit prompt color keeps native empty-field purposes readable. Return the
+/// native TextField so callers retain their existing focus and input modifiers.
+func workingTextField(_ title: String, text: Binding<String>) -> TextField<Text> {
+    TextField(title, text: text, prompt: Text(title).foregroundStyle(Theme.secondary))
+}
+
+func workingTextField(_ title: String, text: Binding<String>, axis: Axis) -> TextField<Text> {
+    TextField(title, text: text, prompt: Text(title).foregroundStyle(Theme.secondary), axis: axis)
 }
 
 struct PrimaryAction: ButtonStyle {

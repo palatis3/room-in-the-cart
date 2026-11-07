@@ -1,0 +1,25 @@
+{
+  "sourcePath": "ios/UITests/FreeJourneyUITests.swift",
+  "baseSHA256": "a29581b69a1e33112bfe8f4d5fb94c6afef2478ccf75076b5ed704a948be01b0",
+  "candidateSHA256": "8370fd4695405ef7f40c9823006a89772aac9c8289a714a625677755e261b13c",
+  "patchSHA256": "0841a02afb88b8d464b77432c5d223c1b4f55decdec25deb596658e0c83c3469",
+  "v3BaseSHA256": "f2385a45d06fd2fbe3cf38ccf8205f90e3361a8d5405dc878021fe0f47e60453",
+  "deltaPatchSHA256": "911a527cabdd858e765d7e896db3424aa4a0ac6e7ac9cc6d0f817a91943900d3",
+  "exactSelectors": [
+    "RoomInTheCartUITests/FreeJourneyUITests/testDinnerEditorSemanticThemeLightVisualAcceptance",
+    "RoomInTheCartUITests/FreeJourneyUITests/testDinnerEditorSemanticThemeDarkVisualAcceptance"
+  ],
+  "thirdUnchangedSelector": "RoomInTheCartUITests/FreeJourneyUITests/testUnavailableRecipeSourceLeavesServingsAndPortionAllocationEditableAfterRestart",
+  "checks": {
+    "everyV3SourceLinePreservedInSequence": true,
+    "changesOnlyWithinAddedIdeaReviewActionProbe": true,
+    "allPermanentSourcePreservedByteForByte": true,
+    "exactExistingExistenceAndValueAssertionsRetained": true,
+    "allHelpersUnchanged": true,
+    "noTimeoutAllowanceOrRetryChanges": true,
+    "atMostOneExtraConditionalViewportScroll": true,
+    "allThreeActionsMustBeHittableAndFullyWithinMeasuredContentArea": true
+  },
+  "productManifestSHA256": "158888557fe9b2edc0042a4cb551e738d5ea6a909ff80a683771ccc2d8dcc999",
+  "validation": "Static scratch overlay only; no compile/native execution. Run3 still active at preparation; no failure screenshot inference."
+}

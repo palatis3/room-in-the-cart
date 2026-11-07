@@ -1,0 +1,177 @@
+--- a/ios/UITests/FreeJourneyUITests.swift
++++ b/ios/UITests/FreeJourneyUITests.swift
+@@ -502,6 +502,174 @@
+         capture("Free-saved-repair-decision-without-inferred-outcome")
+     }
+ 
++    // Scratch visual acceptance only; not a permanent CI inventory addition.
++    func testDinnerEditorSemanticThemeLightVisualAcceptance() throws {
++        try verifyDinnerEditorSemanticTheme(appearance: "light")
++    }
++
++    func testDinnerEditorSemanticThemeDarkVisualAcceptance() throws {
++        try verifyDinnerEditorSemanticTheme(appearance: "dark")
++    }
++
++    private func verifyDinnerEditorSemanticTheme(appearance: String) throws {
++        // Same ordinary English/reset launch as launch(reset:), with only the
++        // existing appearance preference made explicit. No large-type override.
++        app.launchArguments = ["--ui-testing", "--reset-test-workspace", "-AppleLanguages", "(en)",
++                               "-AppleLocale", "en_US", "-appearance", appearance]
++        app.launch()
++        XCTAssertTrue(app.tabBars.buttons["Shop"].waitForExistence(timeout: 15))
++        tap(app.tabBars.buttons["Dinners"])
++        tap(element("dinnerStartPickup"))
++        fill("Dinner theme pickup", into: "ledgerShopName")
++        XCTAssertEqual(element("ledgerShopName").value as? String, "Dinner theme pickup")
++        tap(element("ledgerCreateShop"))
++        tap(element("dinnerLibrary")); tap(element("ledgerNewTemplate"))
++        XCTAssertTrue(app.navigationBars["Reusable dinner"].waitForExistence(timeout: 8))
++
++        let title = "Bean and garden wraps"
++        let notes = "Warm the wraps and serve the beans separately."
++        let editableTypes = [XCUIElement.ElementType.textField.rawValue, XCUIElement.ElementType.textView.rawValue]
++        let sections: [(name: String, fields: [(String, String)])] = [
++            ("reusable-top", [("ledgerDinnerTitle", title), ("ledgerDinnerServings", "3"), ("Notes", notes)]),
++            ("reusable-ingredients", [("Ingredient name", "Wraps"), ("Amount, optional", "6")]),
++            ("reusable-groups", [("Group name", "Dinner"), ("Group servings", "3")])
++        ]
++        for section in sections {
++            if section.name == "reusable-groups" { tap(app.buttons["Add serving group"]) }
++            for (name, value) in section.fields {
++                fill(value, into: name, requireDone: true)
++                let field = app.descendants(matching: .any).matching(identifier: name)
++                    .matching(NSPredicate(format: "elementType IN %@", editableTypes)).firstMatch
++                reveal(field)
++                let exact = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", value), object: field)
++                XCTAssertEqual(XCTWaiter.wait(for: [exact], timeout: 5), .completed)
++                XCTAssertEqual(field.value as? String, value)
++            }
++            XCTAssertFalse(app.keyboards.firstMatch.exists, "Capture the opaque form after Done")
++            try captureDinnerThemeState(section.name, appearance: appearance)
++        }
++        let protectedGroup = app.switches["Protected group"]
++        reveal(protectedGroup); XCTAssertEqual(protectedGroup.value as? String, "0")
++        let review = element("ledgerReviewDinner")
++        reveal(review); XCTAssertTrue(review.isEnabled); tap(review)
++        for label in [title, "Servings: 3", "Dinner · 3 servings"] {
++            let text = app.staticTexts[label]
++            reveal(text); XCTAssertEqual(text.label, label)
++        }
++        // SwiftUI can combine the ingredient's two Text children into one label.
++        // Accept only the exact quantity, either separately or next to its name.
++        let quantity = app.staticTexts.matching(NSPredicate(format: "label MATCHES %@",
++            "(?:Wraps[\\s,]+)?6 units")).firstMatch
++        reveal(quantity)
++        let save = element("ledgerSaveDinner")
++        reveal(save); XCTAssertTrue(save.isEnabled)
++        try captureDinnerThemeState("reusable-review", appearance: appearance)
++        tap(save)
++        let completed = app.staticTexts["Dinner saved. Choose it separately to add grocery needs."]
++        reveal(completed)
++        XCTAssertEqual(completed.label, "Dinner saved. Choose it separately to add grocery needs.")
++        let done = app.buttons["Done"]
++        reveal(done); XCTAssertTrue(done.isEnabled)
++        XCTAssertFalse(element("dinnerError").exists)
++        try captureDinnerThemeState("reusable-completion", appearance: appearance)
++        tap(done)
++        XCTAssertTrue(app.navigationBars["Dinner library"].waitForExistence(timeout: 8))
++        assertText(title)
++        reveal(element("ledgerChooseTemplate")); XCTAssertTrue(element("ledgerChooseTemplate").isEnabled)
++
++        // The same WorkingForm renders these mode-specific sections. Open and
++        // inspect them without creating or choosing additional dinner records.
++        dinnerRoot(); tap(element("dinnerManual"))
++        XCTAssertTrue(app.navigationBars["Manual dinner"].waitForExistence(timeout: 8))
++        reveal(element("ledgerDinnerTitle")); XCTAssertTrue(element("ledgerDinnerTitle").isEnabled)
++        try captureDinnerThemeState("manual-top", appearance: appearance)
++        let date = app.switches["Assign a date"]
++        reveal(date); XCTAssertEqual(date.value as? String, "0")
++        try captureDinnerThemeState("manual-night", appearance: appearance)
++        dinnerRoot(); tap(app.buttons["Review a dinner idea"])
++        tap(app.buttons["Write a dinner idea"])
++        XCTAssertTrue(app.navigationBars["Dinner idea"].waitForExistence(timeout: 8))
++        reveal(element("ledgerDinnerTitle")); XCTAssertTrue(element("ledgerDinnerTitle").isEnabled)
++        try captureDinnerThemeState("idea-top", appearance: appearance)
++        for label in ["Usable yield reviewed", "Availability reviewed"] {
++            let control = app.switches[label]
++            reveal(control); XCTAssertEqual(control.value as? String, "0")
++        }
++        reveal(element("ledgerReviewDinner")); XCTAssertTrue(element("ledgerReviewDinner").isEnabled)
++        try captureDinnerThemeState("idea-assumptions", appearance: appearance)
++
++        // Additive v2 coverage: render the idea-specific review actions without
++        // approving another reusable record or changing grocery requirements.
++        for (name, value) in [("ledgerDinnerTitle", "Reviewed garden wraps"),
++                              ("ledgerDinnerServings", "2"),
++                              ("Ingredient name", "Wraps"), ("Amount, optional", "4")] {
++            fill(value, into: name, requireDone: true)
++            let field = app.descendants(matching: .any).matching(identifier: name)
++                .matching(NSPredicate(format: "elementType IN %@", editableTypes)).firstMatch
++            reveal(field); XCTAssertEqual(field.value as? String, value)
++        }
++        for label in ["Usable yield reviewed", "Availability reviewed"] {
++            let control = app.switches[label]
++            enableSwitch(label); XCTAssertEqual(control.value as? String, "1")
++        }
++        tap(element("ledgerReviewDinner"))
++        assertText("Reviewed garden wraps")
++        assertText("Servings: 2")
++        assertText("Recipe needs: 4 units")
++        let stock = app.buttons["Review stock and pack for Wraps"]
++        reveal(stock); XCTAssertTrue(stock.isEnabled)
++        try captureDinnerThemeState("idea-review-supply", appearance: appearance)
++        let accept = element("dinnerAcceptIdea")
++        reveal(accept); XCTAssertTrue(accept.isEnabled)
++        let saveDraft = app.buttons["Save editable draft"]
++        reveal(saveDraft)
++        XCTAssertTrue(app.buttons["Save editable draft"].exists)
++        let continueEditing = app.buttons["Continue editing"]
++        reveal(continueEditing)
++        XCTAssertTrue(app.buttons["Continue editing"].exists)
++        let actionArea = scrollableArea()
++        if continueEditing.frame.maxY > actionArea.maxY {
++            scrollContent(upward: true, area: actionArea)
++        }
++        let visibleActionArea = scrollableArea()
++        for action in [accept, saveDraft, continueEditing] {
++            XCTAssertTrue(action.isHittable, "The final idea-review action must remain actionable")
++            XCTAssertGreaterThanOrEqual(action.frame.minY, visibleActionArea.minY)
++            XCTAssertLessThanOrEqual(action.frame.maxY, visibleActionArea.maxY)
++        }
++        XCTAssertFalse(element("dinnerError").exists)
++        try captureDinnerThemeState("idea-review-actions", appearance: appearance)
++        dinnerRoot()
++    }
++
++    private func captureDinnerThemeState(_ state: String, appearance: String) throws {
++        let name = "Dinner-theme-\(appearance)-\(state)"
++        let snapshot = try app.snapshot()
++        var pending = [snapshot]
++        var nodes: [[String: Any]] = []
++        while let node = pending.popLast() {
++            let frame = node.frame
++            if !frame.isEmpty && frame.intersects(snapshot.frame),
++               [frame.minX, frame.minY, frame.width, frame.height].allSatisfy({ $0.isFinite }) {
++                nodes.append(["type": node.elementType.rawValue, "identifier": node.identifier,
++                              "label": node.label, "value": node.value.map { String(describing: $0) } ?? "",
++                              "framePoints": [frame.minX, frame.minY, frame.width, frame.height]])
++            }
++            pending.append(contentsOf: node.children)
++        }
++        XCTAssertGreaterThan(nodes.count, 1, "Retain actual AX descendants for screenshot interpretation")
++        let facts: [String: Any] = [
++            "appearanceArgument": appearance, "state": state, "locale": "en_US",
++            "appFramePoints": [snapshot.frame.minX, snapshot.frame.minY, snapshot.frame.width, snapshot.frame.height],
++            "keyboardPresent": app.keyboards.firstMatch.exists, "nodes": nodes,
++            "coordinateNote": "AX frames are screen points. Convert using actual PNG dimensions; sample opaque interiors away from antialiasing, rounded edges and system bars. Appearance argument is requested mode, not independent proof of rendered colors."
++        ]
++        let data = try JSONSerialization.data(withJSONObject: facts, options: [.prettyPrinted, .sortedKeys])
++        let bounds = XCTAttachment(string: String(decoding: data, as: UTF8.self))
++        bounds.name = name + "-AX-bounds.json"; bounds.lifetime = .keepAlways; add(bounds)
++        capture(name)
++    }
++
+     /// S14.01: the source URL is evidence, not a prerequisite for local planning.
+     /// Uses ordinary UI and an empty isolated workspace; no seeded dinner fixture.
+     func testUnavailableRecipeSourceLeavesServingsAndPortionAllocationEditableAfterRestart() {

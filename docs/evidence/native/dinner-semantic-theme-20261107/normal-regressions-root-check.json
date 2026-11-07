@@ -1,0 +1,10 @@
+{
+  "nativeExit": 0,
+  "strictExit": 0,
+  "originalUnchanged": true,
+  "sourceProductsUnchanged": true,
+  "selectors": [
+    "RoomInTheCartUITests/FreeJourneyUITests/testUnavailableRecipeSourceLeavesServingsAndPortionAllocationEditableAfterRestart",
+    "RoomInTheCartUITests/FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval"
+  ]
+}

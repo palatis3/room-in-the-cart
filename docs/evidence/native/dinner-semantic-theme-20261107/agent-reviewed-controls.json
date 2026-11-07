@@ -1,0 +1,506 @@
+[
+  {
+    "state": "idea-review-actions",
+    "keyboardPresent": false,
+    "appFramePoints": [
+      0,
+      0,
+      402,
+      874
+    ],
+    "controls": [
+      {
+        "framePoints": [
+          16,
+          719,
+          370,
+          52
+        ],
+        "identifier": "",
+        "label": "Continue editing",
+        "type": 9,
+        "value": ""
+      },
+      {
+        "framePoints": [
+          16,
+          667,
+          370,
+          52
+        ],
+        "identifier": "",
+        "label": "Save editable draft",
+        "type": 9,
+        "value": ""
+      },
+      {
+        "framePoints": [
+          16,
+          585,
+          370,
+          82
+        ],
+        "identifier": "dinnerAcceptIdea",
+        "label": "Accept idea",
+        "type": 9,
+        "value": ""
+      },
+      {
+        "framePoints": [
+          32,
+          525.6666666666667,
+          252.66666666666663,
+          20.333333333333258
+        ],
+        "identifier": "ideaSupplyEdit-3B67DE76-BFBB-4CBC-A66D-0D5D2A599D8E",
+        "label": "Review stock and pack for Wraps",
+        "type": 9,
+        "value": ""
+      },
+      {
+        "framePoints": [
+          16,
+          62.000000000000014,
+          44,
+          44
+        ],
+        "identifier": "BackButton",
+        "label": "Dinner ideas",
+        "type": 9,
+        "value": ""
+      }
+    ]
+  },
+  {
+    "state": "idea-review-supply",
+    "keyboardPresent": false,
+    "appFramePoints": [
+      0,
+      0,
+      402,
+      874
+    ],
+    "controls": [
+      {
+        "framePoints": [
+          16,
+          859.6666666666666,
+          370,
+          52
+        ],
+        "identifier": "",
+        "label": "Save editable draft",
+        "type": 9,
+        "value": ""
+      },
+      {
+        "framePoints": [
+          16,
+          777.6666666666666,
+          370,
+          82
+        ],
+        "identifier": "dinnerAcceptIdea",
+        "label": "Accept idea",
+        "type": 9,
+        "value": ""
+      },
+      {
+        "framePoints": [
+          32,
+          718.3333333333334,
+          252.66666666666663,
+          20.33333333333337
+        ],
+        "identifier": "ideaSupplyEdit-3B67DE76-BFBB-4CBC-A66D-0D5D2A599D8E",
+        "label": "Review stock and pack for Wraps",
+        "type": 9,
+        "value": ""
+      },
+      {
+        "framePoints": [
+          16,
+          62.000000000000014,
+          44,
+          44
+        ],
+        "identifier": "BackButton",
+        "label": "Dinner ideas",
+        "type": 9,
+        "value": ""
+      }
+    ]
+  },
+  {
+    "state": "reusable-review",
+    "keyboardPresent": false,
+    "appFramePoints": [
+      0,
+      0,
+      402,
+      874
+    ],
+    "controls": [
+      {
+        "framePoints": [
+          16,
+          467,
+          370,
+          52
+        ],
+        "identifier": "",
+        "label": "Continue editing",
+        "type": 9,
+        "value": ""
+      },
+      {
+        "framePoints": [
+          16,
+          385,
+          370,
+          82
+        ],
+        "identifier": "ledgerSaveDinner",
+        "label": "Save accepted dinner",
+        "type": 9,
+        "value": ""
+      },
+      {
+        "framePoints": [
+          16,
+          62,
+          44,
+          44
+        ],
+        "identifier": "BackButton",
+        "label": "Dinner library",
+        "type": 9,
+        "value": ""
+      }
+    ]
+  },
+  {
+    "state": "reusable-completion",
+    "keyboardPresent": false,
+    "appFramePoints": [
+      0,
+      0,
+      402,
+      874
+    ],
+    "controls": [
+      {
+        "framePoints": [
+          16,
+          188.33333333333331,
+          370,
+          82
+        ],
+        "identifier": "",
+        "label": "Done",
+        "type": 9,
+        "value": ""
+      },
+      {
+        "framePoints": [
+          16,
+          62,
+          44,
+          44
+        ],
+        "identifier": "BackButton",
+        "label": "Dinner library",
+        "type": 9,
+        "value": ""
+      }
+    ]
+  },
+  {
+    "state": "reusable-top",
+    "keyboardPresent": false,
+    "appFramePoints": [
+      0,
+      0,
+      402,
+      874
+    ],
+    "controls": [
+      {
+        "framePoints": [
+          32,
+          856,
+          338,
+          22
+        ],
+        "identifier": "",
+        "label": "Ingredient notes",
+        "type": 49,
+        "value": ""
+      },
+      {
+        "framePoints": [
+          32,
+          820.6666870117188,
+          338,
+          34.33331298828125
+        ],
+        "identifier": "",
+        "label": "Unit, count",
+        "type": 9,
+        "value": ""
+      },
+      {
+        "framePoints": [
+          32,
+          797.6666666666666,
+          338,
+          22
+        ],
+        "identifier": "",
+        "label": "Amount, optional",
+        "type": 49,
+        "value": ""
+      },
+      {
+        "framePoints": [
+          32,
+          767.6666666666666,
+          338,
+          22
+        ],
+        "identifier": "",
+        "label": "Ingredient name",
+        "type": 49,
+        "value": ""
+      },
+      {
+        "framePoints": [
+          32,
+          557.3333333333333,
+          338,
+          22
+        ],
+        "identifier": "",
+        "label": "Completed steps, one per line",
+        "type": 49,
+        "value": ""
+      },
+      {
+        "framePoints": [
+          32,
+          505.3333333333333,
+          338,
+          21.999999999999943
+        ],
+        "identifier": "",
+        "label": "Remaining lead time in minutes, optional",
+        "type": 49,
+        "value": ""
+      },
+      {
+        "framePoints": [
+          32,
+          453.3333333333333,
+          338,
+          22
+        ],
+        "identifier": "",
+        "label": "Hard exclusions, one per line",
+        "type": 49,
+        "value": ""
+      },
+      {
+        "framePoints": [
+          32,
+          401.33333333333337,
+          338,
+          22
+        ],
+        "identifier": "",
+        "label": "Source URL, optional",
+        "type": 49,
+        "value": ""
+      },
+      {
+        "framePoints": [
+          32,
+          327.33333333333337,
+          338,
+          44
+        ],
+        "identifier": "",
+        "label": "Notes",
+        "type": 49,
+        "value": "Warm the wraps and serve the beans separately."
+      },
+      {
+        "framePoints": [
+          32,
+          275.3333333333333,
+          338,
+          22
+        ],
+        "identifier": "ledgerDinnerServings",
+        "label": "Total servings",
+        "type": 49,
+        "value": "3"
+      },
+      {
+        "framePoints": [
+          32,
+          223.33333333333334,
+          338,
+          22
+        ],
+        "identifier": "ledgerDinnerTitle",
+        "label": "Dinner name",
+        "type": 49,
+        "value": "Bean and garden wraps"
+      },
+      {
+        "framePoints": [
+          16,
+          62,
+          44,
+          44
+        ],
+        "identifier": "BackButton",
+        "label": "Dinner library",
+        "type": 9,
+        "value": ""
+      }
+    ]
+  },
+  {
+    "state": "idea-assumptions",
+    "keyboardPresent": false,
+    "appFramePoints": [
+      0,
+      0,
+      402,
+      874
+    ],
+    "controls": [
+      {
+        "framePoints": [
+          16,
+          689.0000000000001,
+          370,
+          82
+        ],
+        "identifier": "ledgerReviewDinner",
+        "label": "Review",
+        "type": 9,
+        "value": ""
+      },
+      {
+        "framePoints": [
+          16,
+          507.33333333333337,
+          370,
+          52
+        ],
+        "identifier": "",
+        "label": "Availability reviewed",
+        "type": 40,
+        "value": "0"
+      },
+      {
+        "framePoints": [
+          16,
+          455.33333333333337,
+          370,
+          52
+        ],
+        "identifier": "",
+        "label": "Usable yield reviewed",
+        "type": 40,
+        "value": "0"
+      },
+      {
+        "framePoints": [
+          32,
+          418.33333333333337,
+          338,
+          22
+        ],
+        "identifier": "",
+        "label": "Assumptions, one per line",
+        "type": 49,
+        "value": ""
+      },
+      {
+        "framePoints": [
+          16,
+          293.66666666666674,
+          370,
+          52
+        ],
+        "identifier": "",
+        "label": "Add serving group",
+        "type": 9,
+        "value": ""
+      },
+      {
+        "framePoints": [
+          16,
+          89.66666666666674,
+          370,
+          52
+        ],
+        "identifier": "",
+        "label": "Add ingredient",
+        "type": 9,
+        "value": ""
+      },
+      {
+        "framePoints": [
+          32,
+          48.333333333333314,
+          142,
+          20.333333333333343
+        ],
+        "identifier": "",
+        "label": "Remove ingredient",
+        "type": 9,
+        "value": ""
+      },
+      {
+        "framePoints": [
+          32,
+          18.33333333333337,
+          338,
+          22
+        ],
+        "identifier": "",
+        "label": "Ingredient exclusions, one per line",
+        "type": 49,
+        "value": ""
+      },
+      {
+        "framePoints": [
+          32,
+          0,
+          338,
+          10.333333333333371
+        ],
+        "identifier": "",
+        "label": "Ingredient notes",
+        "type": 49,
+        "value": ""
+      },
+      {
+        "framePoints": [
+          16,
+          62.000000000000014,
+          44,
+          44
+        ],
+        "identifier": "BackButton",
+        "label": "Dinner ideas",
+        "type": 9,
+        "value": ""
+      }
+    ]
+  }
+]
