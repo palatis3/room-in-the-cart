@@ -42,6 +42,16 @@ export const arrivalCommandSchema = z.object({v:z.literal(1),clientKey:id,replay
 export const usableCommandSchema = z.object({v:z.literal(1),clientKey:id,replayWindow:id,base:recoveryBaseSchema,
   sourceId:id,observationId:id,predecessorId:id.nullable(),arrivalObservationId:id,confirmedAt:time,usable:usableQuantitySchema.nullable(),
 }).strict();
+// The standard household command envelope carries shopper authority, replay window and client key.
+export const deliverySourceBody = z.object({
+  supplyRevision: revision, placedRevision: revision.min(1), lineId: id, segmentKey: id,
+  foodName: label, exclusionTags: z.array(label).max(20),
+}).strict();
+const observationFields = {sourceId: true, observationId: true, predecessorId: true} as const;
+export const deliveryArrivalBody = arrivalCommandSchema.pick({...observationFields, arrivedAt: true, received: true})
+  .extend({supplyRevision: revision});
+export const deliveryUsableBody = usableCommandSchema.pick({...observationFields, arrivalObservationId: true, confirmedAt: true, usable: true})
+  .extend({supplyRevision: revision});
 // Review IDs refer to server-held exact disclosure records; this is deliberately not
 // a bulk private-library upload contract. Origin ownership verification is still required.
 export const importApprovalSchema = z.object({v:z.literal(1),clientKey:id,replayWindow:id,base:recoveryBaseSchema,

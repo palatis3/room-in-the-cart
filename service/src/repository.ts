@@ -1,4 +1,5 @@
 import { sharedMealSchema, preserveProtectedMeal } from './shared-meal-planning.js';
+import { recordDelivery } from './delivery-evidence.js';
 import { consumeSharedMealChange } from './shared-meal-changes.js';
 import { randomBytes, randomUUID } from 'node:crypto';
 import type { OwnRequest, ShopperReceipt, RequestPreview, QuoteBasis, BasketLine } from '../../shared/contracts/service-v1.js';
@@ -10,7 +11,7 @@ import { checkout } from './checkout.js';
 export interface AuthContext { identity:VerifiedIdentity; deviceToken?:string; trustedDeviceId?:string;viewGrantId?:string;selectedShopId?:string;historicalReportShopId?:string }
 export interface Member { member_id:string; kind:'adult'|'child'; organizer:boolean; can_contribute:boolean; alias:string; state:string }
 export interface Context { db:Transaction; householdId:string; member:Member; deviceId:string; now:Date;viewGrantId?:string;selectedShopId?:string }
-export interface Shop { household_id:string;shop_id:string;shopper_id:string;authority_epoch:number;revision:number;phase:string;quote:QuoteBasis;frozen_revision:number|null;placed_revision:number|null;store_basis_revision?:number|null;store_review_required?:boolean }
+export interface Shop { household_id:string;shop_id:string;shopper_id:string;authority_epoch:number;revision:number;phase:string;quote:QuoteBasis;frozen_revision:number|null;placed_revision:number|null;supply_revision:number;store_basis_revision?:number|null;store_review_required?:boolean }
 interface RequestRow { request_id:string;author_id:string;shop_id:string;original_item:string;own_quantity:string|null;revision:number;authored_at:Date;received_at:Date;route:'current'|'next';status:OwnRequest['status'];clarification:string|null;followup_to:string|null }
 const editable=(r:RequestRow)=>r.status==='pending'||r.status==='clarified';
 export function ownRequest(r:RequestRow):OwnRequest {
@@ -268,7 +269,15 @@ export class HouseholdRepository {
       WHERE o.household_id=$1 AND o.actor_id=$2 AND o.client_key=$3`,[ctx.householdId,ctx.member.member_id,command.clientKey])).rows[0];
     if(prior) {
       // Reauthorize the original scope before returning anything about a prior result.
-      if(prior.response_scope==='shopper')this.requireShopper(ctx,await this.shop(ctx,prior.shop_id));
+      if(prior.response_scope==='shopper'){
+        const shop=await this.shop(ctx,prior.shop_id);this.requireShopper(ctx,shop);
+        if(prior.kind.startsWith('delivery.')) {
+          if(prior.response?.authorityEpoch!==shop.authority_epoch) throw refresh();
+          const source=await ctx.db.query('SELECT 1 FROM ritc.delivery_source WHERE household_id=$1 AND shop_id=$2 AND source_id=$3',
+            [ctx.householdId,shop.shop_id,prior.response.sourceId]);
+          if(!source.rowCount)throw refresh();
+        }
+      }
       if(prior.response_scope==='organizer')this.requireOrganizer(ctx);
       if(prior.response_scope==='own'&&!ctx.member.can_contribute)throw accessEnded();
       if(!prior.response)throw refresh();
@@ -341,6 +350,10 @@ export class HouseholdRepository {
     return{operationId,kind:c.kind,request:ownRequest(await this.request(ctx,id,shop.shop_id,true))};
   }
   private async shopperCommand(ctx:Context,shop:Shop,c:Envelope,operationId:string) {
+    if(c.kind==='delivery.register'||c.kind==='delivery.arrival'||c.kind==='delivery.usable'){
+      const delivery=await recordDelivery(ctx,shop,c.kind,c.body,operationId);
+      return {...await this.receipt(ctx,c,operationId,'recorded'),...delivery};
+    }
     if(c.kind==='request.clarify') {
       const b=bodySchemas['request.clarify'].parse(c.body),r=await this.request(ctx,b.requestId,shop.shop_id);
       if(!editable(r)||r.revision!==c.base.requestRevision)throw new ServiceError(409,'stale_base','Review the current request.');

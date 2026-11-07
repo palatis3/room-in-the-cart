@@ -290,3 +290,26 @@ if(process.env.RITC_TEST_NATIVE_WIRE==='1')test('real Swift adult proposal and s
  assert.equal((await admin.query('SELECT count(*)::int n FROM ritc.store_quote_pair WHERE household_id=$1',[f.h])).rows[0].n,2);
  assert.equal((await admin.query('SELECT count(*)::int n FROM ritc.store_quote_adoption WHERE household_id=$1',[f.h])).rows[0].n,1);
 });
+
+test('account erasure removes a later shopper’s delivery copy linked to a redacted sealed line', async () => {
+  const f=await fixture(), contributor=await f.join(), commands=f.base+'/commands', evidence=f.path+'/delivery-evidence';
+  const save=(actor,command)=>call(actor,commands,'POST',{...command,replayWindow:actor.window});
+  ok(await save(f.owner,f.command('shop.transferAuthority',{newShopperId:contributor.id})));
+  const line={...f.lines[0],originalItem:'Source description supplied by the former shopper'};
+  ok(await save(contributor,f.command('shop.patch',{quote:f.quote,lines:[line]},1,2)));
+  ok(await save(contributor,f.command('shop.reportPlaced',{occurredAt:new Date().toISOString()},2,2)));
+  ok(await save(f.owner,f.command('shop.transferAuthority',{newShopperId:f.owner.id},3,2)));
+  const body={placedRevision:2,supplyRevision:0,lineId:line.lineId,segmentKey:randomUUID(),foodName:line.originalItem,exclusionTags:[]};
+  const retained=f.command('delivery.register',body,3,3);
+  ok(await save(f.owner,retained));
+  assert.equal(ok(await call(f.owner,evidence)).sources[0].foodName,line.originalItem);
+  const deletion={clientKey:randomUUID(),statusToken:randomBytes(32).toString('base64url'),confirm:true,
+    households:[{householdId:f.h,organizer:'none',shops:[],eraseChildProfiles:[]}]};
+  ok(await call(contributor,'/v1/privacy/deletions','POST',deletion),202);
+  assert.equal((await maintenance.run({batchSize:1})).completed,1);
+  const erased=ok(await call(f.owner,evidence));
+  assert.deepEqual(erased.sources,[]);
+  assert.equal(erased.supplyRevision,2);
+  assert.equal((await save(f.owner,retained)).data.error.code,'refresh_required');
+  assert.equal((await save(f.owner,f.command('delivery.register',{...body,supplyRevision:2},3,3))).status,404);
+});

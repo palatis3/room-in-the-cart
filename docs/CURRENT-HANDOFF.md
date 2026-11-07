@@ -2,6 +2,12 @@
 
 Updated November 7, 2026 UTC. The owner resumed and explicitly approved the reviewed hosted staging update; the full first-version goal is active and release acceptance remains incomplete. Historical snapshots are preserved in [the handoff archive](CURRENT-HANDOFF-HISTORY-20261106.md).
 
+## Shared delivery evidence, November 7
+
+The assigned shopper can record arrival and usable quantities separately for each delivery segment of a placed shared order through the household service. The sealed line, current shopper, replay window, supply revision and prior observation are checked inside the same transaction. A corrected arrival requires a new usable confirmation. Two deliveries remain distinct, and a forecast arrival cannot become usable because time passed. Closing the order preserves its readable evidence.
+
+On a disposable PostgreSQL 17.11 instance, all 177 integration tests passed with the web client enabled. They exercised concurrent corrections, restricted runtime access, replay after shopper changes, and account erasure of another shopper’s copy when the underlying sealed line was redacted. The service unit run had 413 passes and one database-only skip, covered separately by the integration suite. The upgrade and backup restore rehearsal also passed with migration 031. This is local service work. The iPhone’s shared delivery editor, shared dinner allocation and publication, and staging rollout of this migration are still open.
+
 ## Recovering a paid dinner and reopening its saved instructions, November 7
 
 The iPhone 17 Pro on iOS 26.2 passed a three-launch walkthrough using a simulated server-verified second adult seat. The shopper chose an accepted recipe for Wednesday and reviewed its food match, exclusions, portions and preparation lead time. The cook instructions kept the protected lunch and Tuesday’s remaining shortage. After the seat expired, manual recovery remained available and the saved cook copy reopened with identical text. The fixture uses the app’s authenticated household and membership clients with a local test response.

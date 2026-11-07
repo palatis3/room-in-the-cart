@@ -21,6 +21,9 @@ const units:Record<Quantity['unit'],{dimension:string;n:bigint;d:bigint}>={
  milliliter:{dimension:'volume',n:1n,d:1n},liter:{dimension:'volume',n:1000n,d:1n},fluidOunce:{dimension:'volume',n:473176473n,d:16000000n},cup:{dimension:'volume',n:473176473n,d:2000000n},
 };
 function amount(q:Quantity):Rat {const u=units[q.unit];return rat(BigInt(q.amount.numerator)*u.n,BigInt(q.amount.denominator)*u.d);}
+export function fitsReceived(usable: Quantity, received: Quantity): boolean {
+  return dimension(usable) === dimension(received) && cmp(amount(usable), amount(received)) <= 0n;
+}
 function inUnit(a:Rat,unit:Quantity['unit']){const u=units[unit];return wire(rat(a.n*u.d,a.d*u.n));}
 const dimension=(q:Quantity)=>units[q.unit].dimension;
 const instant=(s:string)=>Date.parse(s);
@@ -53,20 +56,29 @@ function validateBasis(input:unknown):RecoveryBasis {
  unique(b.arrivals.concat(b.usable as unknown as typeof b.arrivals).map(r=>String(r.revision)));
  for(const row of b.usable){const arrival=b.arrivals.find(a=>a.id===row.arrivalObservationId);requireThat(arrival&&arrival.sourceId===row.sourceId&&arrival.revision<row.revision);
   requireThat(arrival.identityRevision===row.identityRevision,'identity_mismatch');
-  if(row.usable){requireThat(arrival.received&&arrival.arrivedAt,'unverified_arrival');requireThat(dimension(row.usable)===dimension(arrival.received)&&cmp(amount(row.usable),amount(arrival.received))<=0n,'usable_exceeds_received');}
+  if(row.usable){requireThat(arrival.received&&arrival.arrivedAt,'unverified_arrival');requireThat(fitsReceived(row.usable,arrival.received),'usable_exceeds_received');}
  }
  return b;
 }
 export interface CanonicalLot {sourceId:string;foodId:string;identityRevision:number;quantity:Quantity;availableAt:string;arrivalId:string;usableId:string}
+type ArrivalHead = Pick<RecoveryBasis['arrivals'][number], 'id'|'received'|'arrivedAt'|'recordedAt'|'identityRevision'>;
+type UsableHead = Pick<RecoveryBasis['usable'][number], 'id'|'usable'|'arrivalObservationId'|'confirmedAt'|'recordedAt'|'identityRevision'>;
+export function confirmedLot(source: Pick<RecoveryBasis['sources'][number], 'id'|'foodId'|'identityRevision'>,
+  arrival: ArrivalHead | undefined, usable: UsableHead | undefined, asOf: string): CanonicalLot | undefined {
+  if (!arrival?.arrivedAt || !arrival.received || !usable?.usable || usable.arrivalObservationId !== arrival.id ||
+      arrival.identityRevision !== source.identityRevision || usable.identityRevision !== source.identityRevision) return;
+  const available = Math.max(instant(arrival.arrivedAt), instant(arrival.recordedAt), instant(usable.confirmedAt), instant(usable.recordedAt));
+  if (available > instant(asOf)) return;
+  return {sourceId:source.id, foodId:source.foodId, identityRevision:source.identityRevision, quantity:usable.usable,
+    availableAt:new Date(available).toISOString(), arrivalId:arrival.id, usableId:usable.id};
+}
 function supply(b:RecoveryBasis,asOf:string):CanonicalLot[]{
  const lots:CanonicalLot[]=[];
- for(const source of b.sources){const arrivals=b.arrivals.filter(a=>a.sourceId===source.id).sort((a,c)=>c.revision-a.revision);const usable=b.usable.filter(u=>u.sourceId===source.id).sort((a,c)=>c.revision-a.revision);
-  const a=arrivals[0],u=usable[0];
-  if(!a?.arrivedAt||!a.received||!u?.usable||u.arrivalObservationId!==a.id||
-     a.identityRevision!==source.identityRevision||u.identityRevision!==source.identityRevision)continue;
-  const available=Math.max(instant(a.arrivedAt),instant(a.recordedAt),instant(u.confirmedAt),instant(u.recordedAt));
-  if(available>instant(asOf))continue;
-  lots.push({sourceId:source.id,foodId:source.foodId,identityRevision:source.identityRevision,quantity:u.usable,availableAt:new Date(available).toISOString(),arrivalId:a.id,usableId:u.id});
+ for (const source of b.sources) {
+   const latest = <T extends {sourceId:string; revision:number}>(rows:T[]) =>
+     rows.filter(row => row.sourceId === source.id).sort((a,c) => c.revision-a.revision)[0];
+   const lot = confirmedLot(source, latest(b.arrivals), latest(b.usable), asOf);
+   if (lot) lots.push(lot);
  }
  return lots.sort((a,c)=>a.sourceId<c.sourceId?-1:1);
 }
