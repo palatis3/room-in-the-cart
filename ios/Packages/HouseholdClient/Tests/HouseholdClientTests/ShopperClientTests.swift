@@ -80,6 +80,61 @@ extension HouseholdClientTests {
 }
 
 extension HouseholdClientTests {
+    func testCarryUsesBothReviewedShopsAndRejectsSubstitutedPagesOrReceipts() async throws {
+        let auth = try auth()
+        let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!),
+                                      auth: auth, deviceVault: MemoryVault(), transport: transport())
+        let sourceShop = UUID().uuidString.lowercased()
+        var rowShop = sourceShop, echoedRequest = requestID, role = "shopper"
+        var posts: [Data] = []
+        MockURLProtocol.handler = { request in
+            if let result = self.authResponse(request) { return result }
+            let path = request.url!.path
+            if path.hasSuffix("/devices") { return (200, Data(#"{"deviceId":"device","deviceToken":"device-token"}"#.utf8)) }
+            if path.hasSuffix("/bootstrap") {
+                var scope = try XCTUnwrap(JSONSerialization.jsonObject(with: self.bootstrapBytes(role: role)) as? [String: Any])
+                scope["capabilities"] = ["shopper_inbox", "request_preview", "shopper_commands", "deferred_requests"]
+                return (200, try JSONSerialization.data(withJSONObject: scope))
+            }
+            if path.hasSuffix("/deferred-requests") {
+                let row: [String:Any] = ["requestId":self.requestID, "sourceShopId":rowShop, "sourceAuthorityEpoch":2,
+                    "requestRevision":4, "originalItem":"School coffee", "ownQuantity":"one bag", "authorAlias":"Ana",
+                    "authoredAt":"2026-11-01T12:00:00Z", "receivedAt":"2026-11-01T12:00:01Z"]
+                return (200, try JSONSerialization.data(withJSONObject:["shopId":self.shopID, "shopRevision":3,
+                    "authorityEpoch":5, "requests":[row], "nextCursor":NSNull()]))
+            }
+            XCTAssertTrue(path.hasSuffix("/commands"))
+            posts.append(self.requestBytes(request))
+            let receipt: [String:Any] = ["operationId":self.previewID, "kind":"request.carry", "shopId":self.shopID,
+                "shopRevision":3, "authorityEpoch":5, "disposition":"recorded", "sourceRequestId":echoedRequest,
+                "requestId":self.previewID, "requestRevision":1]
+            return (200, try JSONSerialization.data(withJSONObject:receipt))
+        }
+        _ = try await auth.verifyEmailCode(email:"adult@example.test",code:"123456")
+        let scope = try await service.enroll(householdID:household)
+        let page = try await service.deferredRequests(shopID:shopID)
+        let row = try XCTUnwrap(page.requests.first)
+        XCTAssertEqual(row.sourceShopId.uuidString.lowercased(), sourceShop)
+        let envelope = CommandEnvelope(replayWindow:UUID().uuidString, shopId:shopID, kind:"request.carry",
+            base:.init(shopRevision:page.shopRevision, authorityEpoch:page.authorityEpoch,requestRevision:row.requestRevision),
+            body:["sourceShopId":.string(sourceShop),"sourceAuthorityEpoch":.integer(row.sourceAuthorityEpoch),"requestId":.string(requestID)])
+        let operation = try await service.prepare(envelope:envelope, bootstrap:scope)
+        XCTAssertFalse(operation.targetsShop(nil))
+        rowShop = shopID
+        do { _ = try await service.deferredRequests(shopID:shopID); XCTFail("A draft supplied its own row as a previous request") }
+        catch ClientError.invalidResponse {}
+        echoedRequest = UUID().uuidString.lowercased()
+        do { _ = try await service.executeShopper(operation); XCTFail("A receipt named a different source request") }
+        catch ClientError.invalidResponse {}
+        echoedRequest = requestID
+        let receipt = try await service.executeShopper(operation)
+        XCTAssertEqual(receipt.requestId,previewID)
+        XCTAssertEqual(posts,[operation.bytes,operation.bytes])
+        role = "contributor"
+        do { _ = try await service.executeShopper(operation); XCTFail("Former shopper replayed") }
+        catch ClientError.accessEnded {}
+        XCTAssertEqual(posts.count,2)
+    }
     func testPurchaseRetryValidatesDeviceScopeCapabilityAndExactReceipt() async throws {
         let auth = try auth()
         let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://service.test")!),

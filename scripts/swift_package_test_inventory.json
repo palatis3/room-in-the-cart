@@ -245,6 +245,7 @@
     ],
     "HouseholdClient": [
       "HouseholdClientTests.HouseholdClientTests/testAllDeviceSignOutRequestsGlobalScope",
+      "HouseholdClientTests.HouseholdClientTests/testCarryUsesBothReviewedShopsAndRejectsSubstitutedPagesOrReceipts",
       "HouseholdClientTests.HouseholdClientTests/testContributorCannotFetchShopperPayloadDespiteAdvertisedCapabilities",
       "HouseholdClientTests.HouseholdClientTests/testCookCopyCommandsBindSealedFactsAndRejectMismatchedReceipts",
       "HouseholdClientTests.HouseholdClientTests/testCookCopyHistoryAndBaselineRejectDuplicatesWrongMealRecipientAndAbsentHead",
