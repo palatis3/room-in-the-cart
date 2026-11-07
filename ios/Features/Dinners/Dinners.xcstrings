@@ -1,6 +1,159 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "%@ · comparison %d": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · comparison %d"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · comparación %d"
+          }
+        }
+      }
+    },
+    "Recorded scope: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recorded scope: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alcance registrado: %@"
+          }
+        }
+      }
+    },
+    "Start a new comparison": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start a new comparison"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciar otra comparación"
+          }
+        }
+      }
+    },
+    "First store commitments": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "First store commitments"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compromisos de la primera tienda"
+          }
+        }
+      }
+    },
+    "Second store commitments": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Second store commitments"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compromisos de la segunda tienda"
+          }
+        }
+      }
+    },
+    "This comparison keeps the recorded line prices, fees, discounts, taxes and deposits.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This comparison keeps the recorded line prices, fees, discounts, taxes and deposits."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta comparación conserva los precios de los artículos, los cargos, los descuentos, los impuestos y los depósitos registrados."
+          }
+        }
+      }
+    },
+    "Recorded cost range: %@ to %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recorded cost range: %@ to %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Intervalo de costo registrado: de %@ a %@"
+          }
+        }
+      }
+    },
+    "Recorded cost: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recorded cost: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Costo registrado: %@"
+          }
+        }
+      }
+    },
+    "Edit other observations here. Start a new comparison to enter a different checkout total.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit other observations here. Start a new comparison to enter a different checkout total."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edita las demás observaciones aquí. Inicia otra comparación para ingresar un total diferente."
+          }
+        }
+      }
+    },
     "Total servings: enter a number greater than zero.": {
       "extractionState": "manual",
       "localizations": {

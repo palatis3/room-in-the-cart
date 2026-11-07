@@ -456,10 +456,13 @@ public struct StoreQuoteOption: Codable, Equatable, Sendable, Identifiable {
     public let cap: CheckoutCap?
     public let observedItemSubtotal: Money?
     public let eligibilityTerms: String?
+    /// Entered total whose included charges have not been reviewed. It is never used to price the quote.
+    public let unreviewedInclusiveTotal: Money?
     public let adoptionBasis: ShopBasis?
     public init(id: UUID = UUID(), label: String, commitments: DinnerCommitmentSet, quote: CheckoutQuote,
         available: Bool?, quantitiesMatched: Bool, singleStore: Bool = true, trip: StoreTripEvidence, cap: CheckoutCap? = nil, adoptionBasis: ShopBasis? = nil,
-        observedItemSubtotal: Money? = nil, eligibilityTerms: String? = nil) {
+        observedItemSubtotal: Money? = nil, eligibilityTerms: String? = nil, unreviewedInclusiveTotal: Money? = nil) {
+        self.unreviewedInclusiveTotal = unreviewedInclusiveTotal
         self.observedItemSubtotal = observedItemSubtotal
         self.eligibilityTerms = eligibilityTerms
         self.id = id; self.label = label; self.commitments = commitments; self.quote = quote; self.available = available
@@ -484,6 +487,9 @@ public struct TwoStoreQuotePair: Codable, Equatable, Sendable, Identifiable {
             guard option.quote.context.commitmentsID == option.commitments.id,
                   option.trip.extraMinutes.map({ (0...525_600).contains($0) }) ?? true else { throw DinnerPlanningError.invalid("quoteOption") }
             if let terms = option.eligibilityTerms { try dinnerText(terms) }
+            if let entered = option.unreviewedInclusiveTotal {
+                guard case .inclusiveTotal(.unknown) = option.quote.pricing, entered >= .zero else { throw DinnerPlanningError.invalid("unreviewedInclusiveTotal") }
+            }
             if let subtotal = option.observedItemSubtotal {
                 guard case .inclusiveTotal = option.quote.pricing, subtotal >= .zero else { throw DinnerPlanningError.invalid("quoteItemSubtotal") }
             }

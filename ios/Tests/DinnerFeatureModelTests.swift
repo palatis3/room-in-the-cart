@@ -424,6 +424,67 @@ import CoreDomain
         let saved = await model.saveRotation(rotation); XCTAssertFalse(saved); XCTAssertTrue(model.state.rotations.isEmpty)
         XCTAssertTrue(model.prepare([.choose(PlannedDinner(template: try recipe()))]))
     }
+    func testSavedQuoteEditPreservesImportedEvidenceAndSeparateCommitmentsOnTheCurrentBasis() throws {
+        let shop = ShoppingLedger(title: "Pickup", basis: ShopBasis(cap: Money(minorUnits: 3800)))
+        let day = try MealDay(year: 2026, month: 11, day: 8, timeZoneIdentifier: "America/Los_Angeles")
+        let firstSet = DinnerCommitmentSet(commitments: [
+            DinnerCommitment(name: "Lunch", kind: .lunch, portions: try Rational(7, 3), protected: true, day: day,
+                             reviewedPortion: .init(occurrenceID: UUID(), groupID: UUID()))])
+        let secondSet = DinnerCommitmentSet(commitments: [DinnerCommitment(name: "Staples", kind: .staple, portions: .one)])
+        let range = CostEvidence.bounded(lower: .init(minorUnits: 301), upper: .init(minorUnits: 309), reason: "Package weight")
+        let itemized = CheckoutPricing.components(lines: [.init(id: UUID(), name: "Beans", cost: range)], lineSetComplete: false,
+            fees: [.init(id: "pickup", rule: .fixed(.unknown(reason: "Weekend fee")))], discounts: [], tax: .exact(.zero), deposits: .exact(.zero))
+        func option(_ set: DinnerCommitmentSet, pricing: CheckoutPricing, slot: String) -> StoreQuoteOption {
+            StoreQuoteOption(label: "Quoted", commitments: set, quote: .init(scope: .dinner,
+                context: .init(storeID: "North", branchID: "Market", mode: .delivery, slot: slot, commitmentsID: set.id,
+                               observedAt: now, source: "Printed quote"), pricing: pricing), available: nil, quantitiesMatched: false, singleStore: false,
+                trip: .init(incrementalCash: range, extraMinutes: nil, tripAlreadyPlanned: false), eligibilityTerms: "Card required")
+        }
+        let saved = TwoStoreQuotePair(shopID: shop.id, baseRevisionID: UUID(), basisRevision: 44,
+            first: option(firstSet, pricing: itemized, slot: "After lunch"),
+            second: option(secondSet, pricing: .inclusiveTotal(range), slot: "2026-11-08T09:30:10.123-08:00"))
+        let persisted = try JSONDecoder().decode(TwoStoreQuotePair.self, from: JSONEncoder().encode(saved))
+        var draft = DinnerQuoteEditDraft(persisted)
+        XCTAssertTrue(draft.hasSeparateCommitments)
+        draft.first.label = "Correct retailer"; draft.second.eligibilityTerms = "Member weekends"
+        let revised = try draft.pair(for: shop)
+        try revised.validate()
+        XCTAssertNotEqual(revised.id, saved.id); XCTAssertEqual(revised.baseRevisionID, shop.revisionID)
+        XCTAssertEqual(revised.basisRevision, shop.basisRevision)
+        XCTAssertEqual(revised.first.commitments, firstSet); XCTAssertEqual(revised.second.commitments, secondSet)
+        XCTAssertEqual(revised.first.quote, saved.first.quote); XCTAssertEqual(revised.second.quote, saved.second.quote)
+        XCTAssertEqual(revised.first.trip, saved.first.trip); XCTAssertEqual(revised.second.trip, saved.second.trip)
+        XCTAssertNil(revised.first.available); XCTAssertNil(revised.first.adoptionBasis)
+        XCTAssertEqual(revised.first.cap?.amount, shop.basis.cap)
+        XCTAssertEqual(revised.first.label, "Correct retailer"); XCTAssertEqual(revised.second.eligibilityTerms, "Member weekends")
+        XCTAssertEqual(saved.second.eligibilityTerms, "Card required")
+        XCTAssertThrowsError(try draft.pair(for: ShoppingLedger(title: "Other pickup")))
+    }
+
+    func testEnteredUnreviewedQuoteTotalSurvivesSavingWithoutMakingCheckoutExact() throws {
+        let shop = ShoppingLedger(title: "Saturday")
+        let set = DinnerCommitmentSet(commitments: [DinnerCommitment(name: "Supper", kind: .dinner, portions: .one)])
+        var entry = DinnerStoreDraft(); entry.storeID = "A"; entry.label = "Market"; entry.branch = "South"; entry.source = "App"
+        entry.total = "37.19"; entry.tripCash = "0"; entry.itemSubtotal = "30.43"
+        let original = try entry.option(commitments: set, basis: shop.basis)
+        let decoded = try JSONDecoder().decode(StoreQuoteOption.self, from: JSONEncoder().encode(original))
+        var legacy = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(original)) as? [String: Any])
+        legacy.removeValue(forKey: "unreviewedInclusiveTotal")
+        let old = try JSONDecoder().decode(StoreQuoteOption.self, from: JSONSerialization.data(withJSONObject: legacy))
+        XCTAssertEqual(DinnerStoreDraft(old).total, "")
+        XCTAssertNil(try CheckoutEngine.evaluate(old.quote).total.exact)
+        var edit = DinnerStoreDraft(decoded)
+        XCTAssertEqual(edit.total, "37.19"); XCTAssertFalse(edit.allChargesIncluded)
+        XCTAssertEqual(edit.tripCash, "0"); XCTAssertEqual(edit.itemSubtotal, "30.43")
+        XCTAssertEqual(edit.observedAt, original.quote.context.observedAt); XCTAssertEqual(edit.extraMinutes, "")
+        XCTAssertEqual(try edit.option(commitments: set, basis: shop.basis), original)
+        edit.allChargesIncluded = true
+        let confirmed = try edit.option(commitments: set, basis: shop.basis)
+        XCTAssertNil(confirmed.unreviewedInclusiveTotal)
+        XCTAssertEqual(try CheckoutEngine.evaluate(confirmed.quote).total.exact, Money(minorUnits: 3719))
+        XCTAssertNil(try CheckoutEngine.evaluate(original.quote).total.exact)
+    }
+
     func testQuoteProofSavedThenBasisAdoptionIsExplicitAndStalesOnEdit() async throws {
         let (store, model) = fixture()
         let commitments = DinnerCommitmentSet(commitments: [DinnerCommitment(name: "Dinner", kind: .dinner, portions: .one)])

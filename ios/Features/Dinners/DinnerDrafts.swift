@@ -101,8 +101,14 @@ struct DinnerBindingDraft: Identifiable {
 }
 struct DinnerCommitmentDraft: Identifiable {
     var id = UUID(); var name = ""; var portions = ""; var kind = DinnerCommitment.Kind.dinner; var isProtected = false
+    private var saved: DinnerCommitment?
+    init() {}
+    init(_ saved: DinnerCommitment) {
+        self.saved = saved; id = saved.id; name = saved.name; portions = saved.portions.description
+        kind = saved.kind; isProtected = saved.protected
+    }
     func commitment() throws -> DinnerCommitment {
-        DinnerCommitment(id: id, name: name, kind: kind, portions: try DinnerEntry.positive(portions), protected: isProtected)
+        DinnerCommitment(id: id, name: name, kind: kind, portions: try DinnerEntry.positive(portions), protected: isProtected, day: saved?.day, reviewedPortion: saved?.reviewedPortion)
     }
 }
 /// An inclusive retailer total is accepted only after the user confirms its scope.
@@ -113,19 +119,123 @@ struct DinnerStoreDraft {
     var quantitiesMatched = false; var availability = 0; var singleStore = false
     var itemSubtotal = ""; var eligibilityTerms = ""
     var tripCash = ""; var extraMinutes = ""; var alreadyPlanned = false
+    private var saved: StoreQuoteOption?
+    var writtenSlot: String?
+    private static let unreviewedCharges = "Included charges are unreviewed"
+    private static let unknownTotal = "Checkout total is unknown"
+
+    init() {}
+    init(_ saved: StoreQuoteOption) {
+        self.saved = saved
+        let context = saved.quote.context
+        id = saved.id; label = saved.label; storeID = context.storeID; branch = context.branchID; mode = context.mode
+        if let date = Self.slotDate(context.slot) { slot = date }
+        else { writtenSlot = context.slot }
+        observedAt = context.observedAt; source = context.source
+        eligibilityTerms = saved.eligibilityTerms ?? ""; itemSubtotal = Self.amount(saved.observedItemSubtotal)
+        quantitiesMatched = saved.quantitiesMatched; singleStore = saved.singleStore
+        availability = saved.available.map { $0 ? 1 : 2 } ?? 0
+        extraMinutes = saved.trip.extraMinutes.map(String.init) ?? ""; alreadyPlanned = saved.trip.tripAlreadyPlanned
+        if case .exact(let cash) = saved.trip.incrementalCash { tripCash = Self.amount(cash) }
+        if case .inclusiveTotal(let checkout) = saved.quote.pricing {
+            switch checkout {
+            case .exact(let money): total = Self.amount(money); allChargesIncluded = true
+            case .bounded: allChargesIncluded = true
+            case .unknown(let reason):
+                allChargesIncluded = reason == Self.unknownTotal
+                total = Self.amount(saved.unreviewedInclusiveTotal)
+            }
+        }
+    }
+    private static func amount(_ money: Money?) -> String {
+        money.map { NSDecimalNumber(decimal: Decimal($0.minorUnits) / 100).stringValue } ?? ""
+    }
+    private static func slotDate(_ text: String) -> Date? {
+        let formatter = ISO8601DateFormatter()
+        if let date = formatter.date(from: text) { return date }
+        formatter.formatOptions.insert(.withFractionalSeconds)
+        return formatter.date(from: text)
+    }
+    var retainedCheckout: CheckoutQuote? {
+        guard let quote = saved?.quote else { return nil }
+        switch quote.pricing {
+        case .components, .inclusiveTotal(.bounded): return quote
+        default: return quote.scope == .wholeCheckout ? nil : quote
+        }
+    }
+    var tripRange: (Money, Money, String)? {
+        guard case let .bounded(lower, upper, reason) = saved?.trip.incrementalCash else { return nil }
+        return (lower, upper, reason)
+    }
+
     func option(commitments: DinnerCommitmentSet, basis: ShopBasis) throws -> StoreQuoteOption {
         let amount = try DinnerEntry.money(total)
-        let evidence: CostEvidence = allChargesIncluded ? amount.map(CostEvidence.exact) ?? .unknown(reason: "Checkout total is unknown") : .unknown(reason: "Included charges are unreviewed")
+        let evidence: CostEvidence
+        if case .inclusiveTotal(.unknown(let reason)) = saved?.quote.pricing,
+           allChargesIncluded == (reason == Self.unknownTotal), amount == saved?.unreviewedInclusiveTotal {
+            evidence = .unknown(reason: reason)
+        } else if allChargesIncluded {
+            evidence = amount.map(CostEvidence.exact) ?? .unknown(reason: Self.unknownTotal)
+        } else {
+            evidence = .unknown(reason: Self.unreviewedCharges)
+        }
+        let slotText: String
+        if let writtenSlot { slotText = writtenSlot }
+        else if let original = saved?.quote.context.slot, Self.slotDate(original) == slot { slotText = original }
+        else { slotText = ISO8601DateFormatter().string(from: slot) }
         let context = CheckoutContext(storeID: storeID, branchID: branch, mode: mode,
-            slot: ISO8601DateFormatter().string(from: slot), commitmentsID: commitments.id, observedAt: observedAt, source: source)
+            slot: slotText, commitmentsID: commitments.id, observedAt: observedAt, source: source)
         var adopted = basis; adopted.branch = branch; adopted.mode = FulfillmentMode(rawValue: mode.rawValue) ?? .pickup
-        adopted.slot = slot; adopted.retailerPreview = nil
+        if saved?.quote.context.slot == slotText { adopted.slot = saved?.adoptionBasis?.slot }
+        else { adopted.slot = writtenSlot == nil ? slot : nil }
+        adopted.retailerPreview = nil
+        if let original = saved?.adoptionBasis {
+            adopted.timeZoneIdentifier = original.timeZoneIdentifier
+            adopted.knownFees = original.knownFees
+        }
+        let enteredCash = try DinnerEntry.money(tripCash)
+        let cash: CostEvidence
+        switch saved?.trip.incrementalCash {
+        case let .bounded(lower, upper, reason): cash = .bounded(lower: lower, upper: upper, reason: reason)
+        case let .unknown(reason) where enteredCash == nil: cash = .unknown(reason: reason)
+        default: cash = enteredCash.map(CostEvidence.exact) ?? .unknown(reason: "Trip cash is unknown")
+        }
         let cap = basis.cap.map { CheckoutCap(scope: basis.capScope == .wholeShop ? .wholeCheckout : basis.capScope == .dinnersOnly ? .dinner : .item, commitmentsID: commitments.id, amount: $0) }
         return StoreQuoteOption(id: id, label: label, commitments: commitments,
-            quote: CheckoutQuote(scope: .wholeCheckout, context: context, pricing: .inclusiveTotal(evidence)),
+            quote: CheckoutQuote(scope: saved?.quote.scope ?? .wholeCheckout, context: context, pricing: retainedCheckout?.pricing ?? .inclusiveTotal(evidence)),
             available: availability == 0 ? nil : availability == 1, quantitiesMatched: quantitiesMatched, singleStore: singleStore,
-            trip: StoreTripEvidence(incrementalCash: try DinnerEntry.money(tripCash).map(CostEvidence.exact) ?? .unknown(reason: "Trip cash is unknown"),
-                extraMinutes: try DinnerEntry.minutes(extraMinutes), tripAlreadyPlanned: alreadyPlanned), cap: cap, adoptionBasis: adopted, observedItemSubtotal: try DinnerEntry.money(itemSubtotal),
-            eligibilityTerms: eligibilityTerms.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : eligibilityTerms)
+            trip: StoreTripEvidence(incrementalCash: cash,
+                extraMinutes: try DinnerEntry.minutes(extraMinutes), tripAlreadyPlanned: alreadyPlanned), cap: cap, adoptionBasis: saved != nil && saved?.adoptionBasis == nil ? nil : adopted, observedItemSubtotal: try DinnerEntry.money(itemSubtotal),
+            eligibilityTerms: eligibilityTerms.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : eligibilityTerms,
+            unreviewedInclusiveTotal: allChargesIncluded ? nil : amount)
+    }
+}
+
+/// Revisions share an unchanged commitment set. Separate imported sets retain their distinct coverage.
+struct DinnerQuoteEditDraft {
+    var commitments = [DinnerCommitmentDraft()]
+    var secondCommitments: [DinnerCommitmentDraft] = []
+    var first = DinnerStoreDraft(), second = DinnerStoreDraft()
+    private var saved: TwoStoreQuotePair?
+    var hasSeparateCommitments: Bool { saved.map { $0.first.commitments != $0.second.commitments } ?? false }
+
+    init() {}
+    init(_ saved: TwoStoreQuotePair) {
+        self.saved = saved
+        commitments = saved.first.commitments.commitments.map(DinnerCommitmentDraft.init)
+        if hasSeparateCommitments { secondCommitments = saved.second.commitments.commitments.map(DinnerCommitmentDraft.init) }
+        first = DinnerStoreDraft(saved.first); second = DinnerStoreDraft(saved.second)
+    }
+    func pair(for shop: ShoppingLedger) throws -> TwoStoreQuotePair {
+        guard saved == nil || saved?.shopID == shop.id else { throw DinnerPlanningError.stalePreview }
+        func set(_ rows: [DinnerCommitmentDraft], original: DinnerCommitmentSet?) throws -> DinnerCommitmentSet {
+            let values = try rows.map { try $0.commitment() }
+            if let original, original.commitments == values { return original }
+            return DinnerCommitmentSet(commitments: values)
+        }
+        let a = try set(commitments, original: saved?.first.commitments)
+        let b = try hasSeparateCommitments ? set(secondCommitments, original: saved?.second.commitments) : a
+        return try TwoStoreQuotePair(shopID: shop.id, baseRevisionID: shop.revisionID, basisRevision: shop.basisRevision,
+            first: first.option(commitments: a, basis: shop.basis), second: second.option(commitments: b, basis: shop.basis))
     }
 }

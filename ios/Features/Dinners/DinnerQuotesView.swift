@@ -3,9 +3,7 @@ import CoreDomain
 
 struct DinnerQuotesView: View {
     @ObservedObject var model: DinnerFeatureModel
-    @State private var commitments = [DinnerCommitmentDraft()]
-    @State private var first = DinnerStoreDraft()
-    @State private var second = DinnerStoreDraft()
+    @State private var draft = DinnerQuoteEditDraft()
     @State private var pair: TwoStoreQuotePair?
     @State private var result: TwoStoreQuoteResult?
     @State private var showPreview = false
@@ -41,38 +39,23 @@ struct DinnerQuotesView: View {
                             .disabled(!current || !result.comparable || !result.second.coverageConfirmed || !model.editable)
                     }
                     Button(dinnerText("Continue editing"), action: editQuotes)
+                    Button(dinnerText("Start a new comparison")) { draft = DinnerQuoteEditDraft(); editQuotes() }
                 }
             } else if model.budgetVisible {
                 savedComparisons
-                Section(dinnerText("Same commitments at both stores")) {
-                    Text(dinnerText("List the dinners, lunches, sides and staples that both complete store plans must cover. Include all grocery needs in each reviewed total."))
-                    ForEach($commitments) { $commitment in
-                        VStack(alignment: .leading, spacing: 6) {
-                            TextField(dinnerText("Commitment name"), text: $commitment.name)
-                                .focused($inputFocus, equals: "commitment.\(commitment.id).name")
-                            TextField(dinnerText("Required portions"), text: $commitment.portions)
-                                .focused($inputFocus, equals: "commitment.\(commitment.id).portions")
-                            Picker(dinnerText("Commitment type"), selection: $commitment.kind) {
-                                Text(dinnerText("Dinner")).tag(DinnerCommitment.Kind.dinner)
-                                Text(dinnerText("Lunch")).tag(DinnerCommitment.Kind.lunch)
-                                Text(dinnerText("Side")).tag(DinnerCommitment.Kind.side)
-                                Text(dinnerText("Staple")).tag(DinnerCommitment.Kind.staple)
-                            }
-                            Toggle(dinnerText("Protected commitment"), isOn: $commitment.isProtected)
-                            Button(dinnerText("Remove commitment"), role: .destructive) { commitments.removeAll { $0.id == commitment.id } }
-                        }.padding(.vertical, 5)
-                    }
-                    Button(dinnerText("Add commitment")) { commitments.append(DinnerCommitmentDraft()) }.disabled(commitments.count >= 100)
+                if draft.hasSeparateCommitments {
+                    commitmentFields(dinnerText("First store commitments"), rows: $draft.commitments)
+                    commitmentFields(dinnerText("Second store commitments"), rows: $draft.secondCommitments)
+                } else {
+                    commitmentFields(dinnerText("Same commitments at both stores"), rows: $draft.commitments)
                 }
-                DinnerStoreFields(title: dinnerText("First store"), prefix: "quote.first.", draft: $first, focus: $inputFocus)
-                DinnerStoreFields(title: dinnerText("Second store"), prefix: "quote.second.", draft: $second, focus: $inputFocus)
+                DinnerStoreFields(title: dinnerText("First store"), prefix: "quote.first.", draft: $draft.first, focus: $inputFocus)
+                DinnerStoreFields(title: dinnerText("Second store"), prefix: "quote.second.", draft: $draft.second, focus: $inputFocus)
                 Section {
                     Button(dinnerText("Review two complete trips")) {
                         do {
                             guard let shop = model.shop else { return }
-                            let same = DinnerCommitmentSet(commitments: try commitments.map { try $0.commitment() })
-                            let candidate = TwoStoreQuotePair(shopID: shop.id, baseRevisionID: shop.revisionID, basisRevision: shop.basisRevision,
-                                first: try first.option(commitments: same, basis: shop.basis), second: try second.option(commitments: same, basis: shop.basis))
+                            let candidate = try draft.pair(for: shop)
                             let compared = try model.compare(candidate); pair = candidate; result = compared
                         } catch { model.report(error) }
                     }.disabled(!model.editable)
@@ -80,6 +63,9 @@ struct DinnerQuotesView: View {
             } else { Text(dinnerText("Budget access is required to review store quotes.")) }
             DinnerFeedback(model: model)
         }.navigationTitle(dinnerText("Two store trips")).dinnerAccess(model, budget: true)
+            .onChange(of: model.shop?.id) { _, _ in
+                draft = DinnerQuoteEditDraft(); editQuotes(); showPreview = false
+            }
             .scrollDismissesKeyboard(.immediately)
             .toolbar {
                 if pair != nil {
@@ -91,6 +77,31 @@ struct DinnerQuotesView: View {
             .keyboardDoneAction(visible: inputFocus != nil, title: ledgerText("Done"), identifier: "quoteKeyboardDone") { inputFocus = nil }
             .dinnerApplyPresentation(model, presented: $showPreview)
     }
+    private func commitmentFields(_ title: String, rows: Binding<[DinnerCommitmentDraft]>) -> some View {
+        Section(title) {
+            if !draft.hasSeparateCommitments {
+                Text(dinnerText("List the dinners, lunches, sides and staples that both complete store plans must cover. Include all grocery needs in each reviewed total."))
+            }
+            ForEach(rows.wrappedValue) { value in
+                let commitment = dinnerDraftBinding(value, in: rows)
+                VStack(alignment: .leading, spacing: 6) {
+                    TextField(dinnerText("Commitment name"), text: commitment.name)
+                        .focused($inputFocus, equals: "\(title).\(value.id).name")
+                    TextField(dinnerText("Required portions"), text: commitment.portions)
+                        .focused($inputFocus, equals: "\(title).\(value.id).portions")
+                    Picker(dinnerText("Commitment type"), selection: commitment.kind) {
+                        Text(dinnerText("Dinner")).tag(DinnerCommitment.Kind.dinner)
+                        Text(dinnerText("Lunch")).tag(DinnerCommitment.Kind.lunch)
+                        Text(dinnerText("Side")).tag(DinnerCommitment.Kind.side)
+                        Text(dinnerText("Staple")).tag(DinnerCommitment.Kind.staple)
+                    }
+                    Toggle(dinnerText("Protected commitment"), isOn: commitment.isProtected)
+                    Button(dinnerText("Remove commitment"), role: .destructive) { rows.wrappedValue.removeAll { $0.id == value.id } }
+                }.padding(.vertical, 5)
+            }
+            Button(dinnerText("Add commitment")) { rows.wrappedValue.append(DinnerCommitmentDraft()) }.disabled(rows.wrappedValue.count >= 100)
+        }
+    }
     private func editQuotes() {
         pair = nil
         result = nil
@@ -99,10 +110,18 @@ struct DinnerQuotesView: View {
         if let shop = model.shop {
             let saved = model.state.quotePairs.filter { $0.shopID == shop.id }
             if !saved.isEmpty {
+                let titles = saved.map { dinnerFormat("%@ and %@", $0.first.label, $0.second.label) }
+                let counts = Dictionary(titles.map { ($0, 1) }, uniquingKeysWith: +)
                 Section(dinnerText("Saved comparisons")) {
-                    ForEach(saved) { comparison in
-                        Button(dinnerFormat("%@ and %@",comparison.first.label,comparison.second.label)) {
-                            do { result = try model.compare(comparison); pair = comparison } catch { model.report(error) }
+                    ForEach(Array(saved.enumerated().reversed()), id: \.element.id) { index, comparison in
+                        let title = titles[index]
+                        let repeats = counts[title, default: 0] > 1
+                        Button(repeats ? dinnerFormat("%@ · comparison %d", title, index + 1) : title) {
+                            do {
+                                result = try model.compare(comparison)
+                                draft = DinnerQuoteEditDraft(comparison)
+                                pair = comparison
+                            } catch { model.report(error) }
                         }
                     }
                 }
@@ -119,7 +138,15 @@ struct DinnerQuotesView: View {
             Text(dinnerFormat("Items before fees and discounts: %@", dinnerMoney(try? TwoStoreQuoteEngine.itemSubtotal(option))))
             Text(option.quote.context.source)
             Text(option.quote.context.observedAt.formatted(date: .abbreviated, time: .shortened))
-            Text(dinnerFormat("Checkout: %@", dinnerMoney(value.checkout.total.exact)))
+            if option.quote.scope != .wholeCheckout {
+                Text(dinnerFormat("Recorded scope: %@", dinnerBudgetScope(option.quote.scope == .dinner ? .dinnersOnly : .selectedItems)))
+            }
+            if case let .inclusiveTotal(.bounded(lower, upper, reason)) = option.quote.pricing {
+                Text(dinnerFormat("Recorded cost range: %@ to %@", dinnerMoney(lower), dinnerMoney(upper)))
+                Text(reason)
+            } else {
+                Text(dinnerFormat("Checkout: %@", dinnerMoney(value.checkout.total.exact)))
+            }
             Text(dinnerCap(value.checkout.cap))
             switch option.trip.incrementalCash {
             case .exact(let amount): Text(dinnerFormat("Incremental trip cash: %@", dinnerMoney(amount)))
@@ -148,13 +175,32 @@ struct DinnerStoreFields: View {
                 Text(dinnerText("Delivery")).tag(ShoppingMode.delivery)
                 Text(dinnerText("In store")).tag(ShoppingMode.inStore)
             }
-            DatePicker(dinnerText("Store slot"), selection: $draft.slot)
+            if let slot = Binding($draft.writtenSlot) {
+                textField(dinnerText("Store slot"), value: slot, key: "slot")
+            } else {
+                DatePicker(dinnerText("Store slot"), selection: $draft.slot)
+            }
             textField(dinnerText("Evidence source"), value: $draft.source, key: "source")
             DatePicker(dinnerText("Observed at"), selection: $draft.observedAt)
-            EnteredQuoteValueField(title: dinnerText("Items before fees and discounts in USD, optional"), value: $draft.itemSubtotal, identifier: prefix + "itemSubtotal", focus: focus)
+            if case .components = draft.retainedCheckout?.pricing {
+                Text(dinnerText("This comparison keeps the recorded line prices, fees, discounts, taxes and deposits."))
+            } else {
+                EnteredQuoteValueField(title: dinnerText("Items before fees and discounts in USD, optional"), value: $draft.itemSubtotal, identifier: prefix + "itemSubtotal", focus: focus)
+            }
             textField(dinnerText("Price conditions, such as a loyalty card"), value: $draft.eligibilityTerms, key: "eligibilityTerms")
-            EnteredQuoteValueField(title: dinnerText("Whole checkout total in USD, optional"), value: $draft.total, identifier: prefix + "total", focus: focus)
-            Toggle(dinnerText("Total includes every item, fee, discount, tax and deposit"), isOn: $draft.allChargesIncluded).accessibilityIdentifier(prefix + "allChargesIncluded")
+            if let quote = draft.retainedCheckout {
+                Text(dinnerFormat("Recorded scope: %@", dinnerBudgetScope(quote.scope == .wholeCheckout ? .wholeShop : quote.scope == .dinner ? .dinnersOnly : .selectedItems)))
+                if case let .inclusiveTotal(.bounded(lower, upper, reason)) = quote.pricing {
+                    Text(dinnerFormat("Recorded cost range: %@ to %@", dinnerMoney(lower), dinnerMoney(upper)))
+                    Text(reason)
+                } else if let amount = try? CheckoutEngine.evaluate(quote).total {
+                    Text(dinnerFormat("Recorded cost: %@", dinnerMoney(amount.exact)))
+                }
+                Text(dinnerText("Edit other observations here. Start a new comparison to enter a different checkout total."))
+            } else {
+                EnteredQuoteValueField(title: dinnerText("Whole checkout total in USD, optional"), value: $draft.total, identifier: prefix + "total", focus: focus)
+                Toggle(dinnerText("Total includes every item, fee, discount, tax and deposit"), isOn: $draft.allChargesIncluded).accessibilityIdentifier(prefix + "allChargesIncluded")
+            }
             Toggle(dinnerText("All required quantities match the commitments"), isOn: $draft.quantitiesMatched).accessibilityIdentifier(prefix + "quantitiesMatched")
             Toggle(dinnerText("This is one complete store plan"), isOn: $draft.singleStore).accessibilityIdentifier(prefix + "singleStore")
             Picker(dinnerText("Required product availability"), selection: $draft.availability) {
@@ -162,7 +208,12 @@ struct DinnerStoreFields: View {
                 Text(dinnerText("Reviewed available")).tag(1)
                 Text(dinnerText("Unavailable")).tag(2)
             }.accessibilityIdentifier(prefix + "availability")
-            EnteredQuoteValueField(title: dinnerText("Incremental trip cash in USD, optional"), value: $draft.tripCash, identifier: prefix + "tripCash", focus: focus)
+            if let (lower, upper, reason) = draft.tripRange {
+                Text(dinnerFormat("Incremental trip cash range: %@ to %@", dinnerMoney(lower), dinnerMoney(upper)))
+                Text(reason)
+            } else {
+                EnteredQuoteValueField(title: dinnerText("Incremental trip cash in USD, optional"), value: $draft.tripCash, identifier: prefix + "tripCash", focus: focus)
+            }
             EnteredQuoteValueField(title: dinnerText("Extra minutes, optional"), value: $draft.extraMinutes, identifier: prefix + "extraMinutes", focus: focus)
             Toggle(dinnerText("Trip already planned"), isOn: $draft.alreadyPlanned).accessibilityIdentifier(prefix + "alreadyPlanned")
             Text(dinnerText("Blank costs stay unresolved. Enter zero only when you have confirmed there is no charge."))

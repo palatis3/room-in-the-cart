@@ -410,6 +410,29 @@ import UIKit
         tap(app.buttons["Market A and Market B"])
         assertText("This saved comparison uses an earlier pickup revision.")
         capture("S27-reopened-adopted-branch-and-dated-comparison")
+        tap(app.buttons["quoteEditReviewed"])
+        let restoredName = app.textFields["Commitment name"]
+        revealContent(restoredName)
+        XCTAssertEqual(restoredName.value as? String, "Dinner and protected lunch")
+        XCTAssertEqual(app.textFields["Required portions"].value as? String, "3")
+        let corrected = app.textFields["quote.second.eligibilityTerms"]
+        tap(corrected)
+        XCTAssertEqual(corrected.value as? String, "Card price")
+        corrected.typeText(" with membership")
+        tap(app.buttons["quoteKeyboardDone"])
+        tapQuoteRow("Review two complete trips")
+        reveal(second)
+        XCTAssertEqual(second.label, reviewedSecondStore.replacingOccurrences(of: "Card price", with: "Card price with membership"))
+        assertText("Checkout plus trip cash, second minus first: $1.00")
+        XCTAssertFalse(app.buttons["Preview using Market B"].exists)
+        tapQuoteRow("Save reviewed comparison")
+        let revisedAdoption = app.buttons["Preview using Market B"]
+        reveal(revisedAdoption); XCTAssertTrue(revisedAdoption.isEnabled)
+        restart(); tap(app.tabBars.buttons["Dinners"]); tap(app.buttons["Compare two store trips"])
+        tap(app.buttons["Market A and Market B · comparison 1"])
+        reveal(second); XCTAssertEqual(second.label, reviewedSecondStore)
+        assertText("This saved comparison uses an earlier pickup revision.")
+        capture("S27-original-observations-survive-corrected-comparison")
     }
 
     func testMissingStorePricesAndAvailabilityRemainConditionalAfterSaving() {
