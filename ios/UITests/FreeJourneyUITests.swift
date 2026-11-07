@@ -16,6 +16,71 @@ import XCTest
         if app.state != .notRunning { app.terminate() }
     }
 
+#if DEBUG && targetEnvironment(simulator)
+    func testCreateReplacementFromPrivatePickupAndReopenForCook() throws {
+        launch(reset: true, privateRecovery: true)
+        shopRoot()
+        tap(app.buttons["Pickup, repairs and handoffs"])
+        tap(app.buttons["Repair a meal"])
+        tap(element("pickup.mealRecovery"))
+        let replace = app.buttons["Replace Wednesday quesadillas"]
+        reveal(replace)
+        let mealID = String(replace.identifier.dropFirst("mealRecovery.target.".count))
+        tap(replace)
+        fill("Wednesday bean bowls", into: "mealRecovery.title")
+        fill("Heat the beans for dinner", into: "mealRecovery.notes")
+        let name = app.textFields.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND identifier ENDSWITH %@", "mealRecovery.", ".name")).firstMatch
+        reveal(name)
+        let ingredientID = String(name.identifier.dropLast(".name".count))
+        fill("Beans", into: ingredientID + ".name")
+        choose("Reviewed matching food", value: "Beans")
+        fill("4", into: ingredientID + ".amount")
+        enableSwitch("I reviewed every food identity, usable unit and inherited exclusion")
+        tap(element("mealRecovery.preview"))
+        let changed = element("mealRecovery.previewMeal." + mealID)
+        reveal(changed, initiallyUpward: false)
+        XCTAssertTrue(changed.label.contains("Wednesday bean bowls") && changed.label.contains("Still short: 0"), changed.label)
+        let tuesday = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "mealRecovery.previewMeal.", "Tuesday tacos")).firstMatch
+        reveal(tuesday, initiallyUpward: false)
+        XCTAssertTrue(tuesday.label.contains("Still short: 2"), tuesday.label)
+        let protected = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "Protected · unchanged")).firstMatch
+        reveal(protected)
+        capture("Manual-recovery-preview")
+        enableSwitch("I reviewed the replacement and every other meal’s remaining shortage")
+        XCTAssertFalse(element("mealRecovery.apply").isEnabled)
+        enableSwitch("I accept that unresolved food or timing remains open")
+        tap(element("mealRecovery.apply"))
+        XCTAssertTrue(element("mealRecovery.saved").waitForExistence(timeout: 8))
+        capture("Manual-recovery-saved")
+        restart()
+        shopRoot()
+        tap(app.buttons["Pickup, repairs and handoffs"])
+        tap(app.buttons["Tell the cook"])
+        tap(app.buttons["Prepare complete dated instruction"])
+        let instruction = app.textViews["Editable cook instruction"]
+        reveal(instruction)
+        let copy = try XCTUnwrap(instruction.value as? String)
+        for expected in ["Wednesday bean bowls", "Heat the beans for dinner", "Tuesday tacos", "Lunch", "garlic"] {
+            XCTAssertTrue(copy.localizedCaseInsensitiveContains(expected), expected)
+        }
+        XCTAssertFalse(copy.contains("Wednesday quesadillas"))
+        tap(app.buttons["Save dated copy"])
+        let share = app.buttons["Share saved dated copy"]
+        reveal(share)
+        XCTAssertTrue(share.isEnabled)
+        restart()
+        shopRoot()
+        tap(app.buttons["Pickup, repairs and handoffs"])
+        tap(app.buttons["Tell the cook"])
+        tap(app.buttons["Review this saved copy"])
+        let reopenedInstruction = app.textViews["Editable cook instruction"]
+        reveal(reopenedInstruction, initiallyUpward: false)
+        let saved = try XCTUnwrap(reopenedInstruction.value as? String)
+        XCTAssertEqual(saved, copy)
+    }
+
+#endif
+
 #if DEBUG && NATIVE_MICROPHONE_PERMISSION_PROBE
     // Requires a fresh simulator with both app permissions undetermined.
     func testNativeMicrophoneRefusalLeavesTypedCaptureReviewable() throws {
@@ -1395,9 +1460,10 @@ import XCTest
         assertText(copy("Add the groceries you need for this pickup.", "Añade los alimentos que necesitas para esta compra."))
     }
 
-    private func launch(reset: Bool, spanish: Bool = false) {
+    private func launch(reset: Bool, spanish: Bool = false, privateRecovery: Bool = false) {
         app.launchArguments = ["--ui-testing", "-AppleLanguages", spanish ? "(es)" : "(en)", "-AppleLocale", spanish ? "es_US" : "en_US"]
         if reset { app.launchArguments.append("--reset-test-workspace") }
+        if privateRecovery { app.launchArguments.append("--seed-private-recovery") }
         app.launch()
         XCTAssertTrue(app.tabBars.buttons[spanish ? "Compras" : "Shop"].waitForExistence(timeout: 15))
     }

@@ -715,6 +715,23 @@
         }
       }
     },
+    "Replace %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reemplazar %@"
+          }
+        }
+      }
+    },
     "Replace a whole dinner": {
       "extractionState": "manual",
       "localizations": {

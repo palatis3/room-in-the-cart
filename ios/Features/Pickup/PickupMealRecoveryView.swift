@@ -45,7 +45,8 @@ struct PickupMealRecoveryEntry: View {
                                     PickupMealRecoveryEditor(model: model, original: value,
                                         currentAuthority: currentAuthority)
                                         .id(leaseID)
-                                }.accessibilityIdentifier("mealRecovery.target." + value.meal.id.uuidString)
+                                }.accessibilityLabel(String.localizedStringWithFormat(recoveryText("Replace %@"), value.meal.title))
+                                    .accessibilityIdentifier("mealRecovery.target." + value.meal.id.uuidString)
                                 if membership.model?.hasPaidAccess == true {
                                     NavigationLink(dinnerText("Recover with an accepted dinner")) {
                                         acceptedDinners(for: value)

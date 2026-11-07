@@ -2,9 +2,17 @@
 
 Updated November 7, 2026 UTC. The owner resumed and explicitly approved the reviewed hosted staging update; the full first-version goal is active and release acceptance remains incomplete. Historical snapshots are preserved in [the handoff archive](CURRENT-HANDOFF-HISTORY-20261106.md).
 
-## Current work: published 1080fad and local future-arrival fix
+## Private dinner recovery, November 7
 
-Published head is `1080fad4999cb6c4ff34c20e99e5b72247e23e23` on `codex/parallel-ios-ci`, PR1. The prior thirteen local commits through shared Dinner styling and the share-readiness failure capture are now pushed. Hosted candidate pins live in `.build/CIResearch20261107/candidate-1080fad/monitor/`; its merge tree matches the published candidate. Sol6.1 owns read-only CI monitoring; Astra High owns fix preparation; root owns integration, Git and native execution. Dot/Lumpy is not used.
+On PR #1, `99ab9a3` ties the shopper’s consent to the displayed allocation and acknowledges a successful retry after a locked SQLite write. `ccdab14` adds private dinner replacement from a household-accepted recipe, including serving-group quantities, protected lunches, exclusions, prep lead time and live membership checks.
+
+On iPhone 17 Pro with iOS 26.2, 134 affected model tests passed. An English walkthrough on the combined build replaced Wednesday’s dinner, left Tuesday’s remaining shortage and the protected lunch visible, and reopened the saved cook instructions after two launches. A separate simulator run held the actual SQLite writer, released it at Retry, and verified the date change survived relaunch. The accepted-recipe path has model coverage. Its paid UI walkthrough, shared server persistence and physical away-night carryover remain open.
+
+The ordinary Debug simulator CI suite now includes `FreeJourneyUITests.testCreateReplacementFromPrivatePickupAndReopenForCook`. It creates its own placed pickup through the ledger and checkout models. Local execution passed in 171.086 seconds with zero skips or recorded runtime warnings.
+
+## November 7 checkpoint at 1080fad
+
+Published head at this checkpoint was `1080fad4999cb6c4ff34c20e99e5b72247e23e23` on `codex/parallel-ios-ci`, PR1. The prior thirteen local commits through shared Dinner styling and the share-readiness failure capture are now pushed. Hosted candidate pins live in `.build/CIResearch20261107/candidate-1080fad/monitor/`; its merge tree matches the published candidate. Sol6.1 owns read-only CI monitoring; Astra High owns fix preparation; root owns integration, Git and native execution. Dot/Lumpy is not used.
 
 Deep and Security are terminal success. Root independently rehashed all920 retained Deep proof files: English and Spanish StoreKit each15/15, both sanitizer suites389passes plus3expected wire skips, exact checkout/runtime identity retained. The instrumented cancellation passes once per locale with unchanged120-second allowances; this does not establish the earlier timeout's cause. Core ui-01 has a newly identified S14 immediate-entry value assertion failure (`Current amount for this group` expected8), before Save/restart. Astra is investigating with Sol's pinned evidence. Other cohort work remains in progress; no full-cohort acceptance is claimed. The [S14 failed-value diagnostic](evidence/native/s14-value-boundary-diagnostic-20261107/README.md) is installed locally and whole-file typechecks; it captures the native value only after the unchanged five-second failure decision. No retry, product fix or native execution of that diagnostic branch is claimed.
 

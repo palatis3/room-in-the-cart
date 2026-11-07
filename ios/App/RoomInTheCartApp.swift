@@ -16,6 +16,9 @@ import DeviceSurfaces
     @StateObject private var navigation = NavigationRestorationModel()
     @StateObject private var guardianChild = GuardianChildCoordinator()
     @Environment(\.scenePhase) private var scenePhase
+    #if DEBUG && targetEnvironment(simulator)
+    @StateObject private var recoveryFixture = PrivatePickupRecoveryFixture()
+    #endif
     @AppStorage("appearance") private var appearance = "system"
     init() {
         // Keep inactive navigation labels legible against both system bar appearances.
@@ -26,7 +29,7 @@ import DeviceSurfaces
             Group {
                 if scenePhase != .active && access.isProtected {
                     Theme.canvas.ignoresSafeArea()
-                } else { RootView() }
+                } else { root }
             }.environment(\.pickupLedger, ledger)
                 .environmentObject(model)
                 .environmentObject(ledger).environmentObject(pickup)
@@ -97,6 +100,17 @@ import DeviceSurfaces
                 }
         }
     }
+    @ViewBuilder private var root: some View {
+        #if DEBUG && targetEnvironment(simulator)
+        if recoveryFixture.requested && recoveryFixture.phase != .ready {
+            if recoveryFixture.phase == .failed { Text(verbatim: "Recovery fixture setup failed") }
+            else { ProgressView() }
+        } else { RootView() }
+        #else
+        RootView()
+        #endif
+    }
+
     @MainActor private func openAdultWorkspace() async {
         guard scenePhase == .active, !guardianChild.presented, access.unlocked else { return }
         if !model.ready { await model.open() }
@@ -105,6 +119,9 @@ import DeviceSurfaces
         guard !guardianChild.presented, access.unlocked else { return }
         if !pickup.ready { await pickup.load() }
         guard scenePhase == .active, !guardianChild.presented, access.unlocked else { return }
+        #if DEBUG && targetEnvironment(simulator)
+        await recoveryFixture.prepare(ledger: ledger, pickup: pickup)
+        #endif
         navigation.resume()
         await surfaces.foreground()
     }
