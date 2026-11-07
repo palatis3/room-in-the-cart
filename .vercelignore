@@ -1,5 +1,8 @@
 ios/
 docs/
+diagnostics/
+/README.md
+/.gitattributes
 config/
 scripts/
 .tools/
