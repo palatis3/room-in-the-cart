@@ -20,6 +20,16 @@ The candidate gives an enrolled adult contributor an explicit, per-device option
 
 The browser suite exercised enabling retention, losing a send response and then losing the IndexedDB entry. On refresh the contributor saw the missing-request message and the browser issued no second command. All 14 Chrome cases and 136 web cases passed locally. Hosted staging remains at 040.
 
+### Checking the released client and device permission changes
+
+A local iPhone simulator and Android Chrome emulator used the 041 candidate after losing a response. Each accepted request appeared once in PostgreSQL. The released 040 web bundle opened on an already opted-in 041 device and cleared an earlier pending entry without sending it. Both new clients also sent online against schema 040. Three native journeys passed with zero runtime warnings. These runs cover an iPhone Send that began offline. The transition from a successful online preflight to a lost first POST has a separate native regression in progress. [Device results and exact client versions](evidence/b11/offline-requests-20261107/released-client-device-checks.json)
+
+A grant-bound withdrawal now recovers the original committed receipt after opt-out. A withdrawal that first reaches the server after opt-out leaves the request pending. The restricted PostgreSQL suite passed 239 tests and the service suite passed 454. If only queue permission changes, the web client verifies current household access and can offer an immediate online send. If verification fails offline, it conceals private data and offers Refresh. All 139 web cases and 14 Chrome cases passed locally.
+
+## Request decision at large text sizes
+
+The protected lunch names and dates used to truncate on the request decision sheet at the largest Dynamic Type setting. Both labels now wrap, guidance contrast measures 7.08:1, and amounts read together with their labels. Eight iPhone 17 simulator checks passed on iOS 26.2. The standard layout still shows the $37.20 current checkout, $40.69 proposed checkout, $2.69 overage and both protected lunches together. Cancel leaves the basket untouched. The unfiltered accessibility audit reported 36 findings, including 14 with matching categories and labels in stock SwiftUI controls. Physical VoiceOver and the remaining audit findings are open. [Audit method and results](../diagnostics/request-review-accessibility/README.md)
+
 ## November 7 release verification through schema 040
 
 The pinned staging candidate at `eae1e72` builds from clean dependency installs. Vercel’s local deployment inspection enumerated 162 regular input files. Each matched the pinned Git revision byte for byte. At the time of this rehearsal the staging alias pointed to ready deployment `dpl_2tfRmEfTGLW63sSTksJ6xJ9MZ97P` and passed six public boundary checks. The live registry then ended at 030. No 031–040 migration or candidate deployment was applied during preparation. [Candidate inputs, ten migration checksums and build evidence](evidence/b11/staging-040-preparation-20261107/candidate.json)
