@@ -1,9 +1,10 @@
 import SwiftUI
 import CoreDomain
 
-private enum LedgerHomeSheet: String, Identifiable {
+private enum LedgerHomeSheet: Hashable, Identifiable {
     case newShop, entry, facts, history, layout, printList
-    var id: String { rawValue }
+    case renameShop(id: UUID, title: String)
+    var id: Self { self }
 }
 
 struct LedgerHomeView: View {
@@ -98,6 +99,8 @@ struct LedgerHomeView: View {
             NavigationStack {
                 switch destination {
                 case .newShop: LedgerNewShopView(model: model)
+                case let .renameShop(id, title):
+                    LedgerNewShopView(model: model, shopID: id, title: title)
                 case .entry:
                     if let shop = model.shop { LedgerImportView(model: model, shopID: shop.id) }
                 case .facts:
@@ -144,6 +147,8 @@ struct LedgerHomeView: View {
             ForEach(model.workspace.shops, id: \.id) { item in
                 Button(item.title) { Task { await model.selectShop(item.id) } }
             }
+            Button(ledgerText("Rename pickup")) { sheet = .renameShop(id: shop.id, title: shop.title) }
+                .accessibilityIdentifier("ledgerRenameShop")
             Button(ledgerText("Start another pickup")) { sheet = .newShop }
             Button(ledgerText("Cancel"), role: .cancel) {}
         }
@@ -263,18 +268,41 @@ struct LedgerSaveStatus: View {
 struct LedgerNewShopView: View {
     @ObservedObject var model: LedgerModel
     @Environment(\.dismiss) private var dismiss
-    @State private var title = ""
+    private let originalID: UUID?
+    private let originalTitle: String
+    @State private var title: String
+
+    init(model: LedgerModel, shopID: UUID? = nil, title: String = "") {
+        self.model = model
+        originalID = shopID
+        originalTitle = title
+        _title = State(initialValue: title)
+    }
+
     var body: some View {
         Form {
             TextField(ledgerText("Pickup name"), text: $title, axis: .vertical).accessibilityIdentifier("ledgerShopName")
                 .disabled(model.saving || model.hasPendingSave)
             LedgerSaveStatus(model: model, onRetried: { dismiss() })
-            Button(ledgerText("Start pickup")) {
-                Task { if await model.startShop(title: title.trimmingCharacters(in: .whitespacesAndNewlines)) { dismiss() } }
-            }.buttonStyle(PrimaryAction()).disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || model.saving).accessibilityIdentifier("ledgerCreateShop")
-        }.scrollDismissesKeyboard(.interactively).workingSurface().navigationTitle(ledgerText("Start pickup"))
+            Button(originalID == nil ? ledgerText("Start pickup") : ledgerText("Save name")) {
+                Task { await save() }
+            }.buttonStyle(PrimaryAction())
+                .disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || model.saving || model.hasPendingSave)
+                .accessibilityIdentifier(originalID == nil ? "ledgerCreateShop" : "ledgerSaveShopName")
+        }.scrollDismissesKeyboard(.interactively).workingSurface()
+            .navigationTitle(originalID == nil ? ledgerText("Start pickup") : ledgerText("Rename pickup"))
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ledgerText("Cancel")) { dismiss() }.disabled(model.saving) } }
             .interactiveDismissDisabled(model.saving)
+    }
+
+    private func save() async {
+        let name = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let id = originalID {
+            if await model.editShop(key: "rename-\(id)", shopID: id, { shop in
+                guard model.workspace.selectedShopID == id, shop.title == originalTitle else { throw LedgerError.stalePreview }
+                shop.title = name
+            }) { dismiss() }
+        } else if await model.startShop(title: name) { dismiss() }
     }
 }
 

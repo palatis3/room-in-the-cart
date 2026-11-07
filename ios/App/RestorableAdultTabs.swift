@@ -61,12 +61,27 @@ struct RestoredDestinationView: View {
 struct RestorableShoppingListLink<Label: View>: View {
     @EnvironmentObject private var ledger: LedgerModel
     @EnvironmentObject private var access: WorkspaceAccess
+    @EnvironmentObject private var navigation: NavigationRestorationModel
     private let label: Label
     init(@ViewBuilder label: () -> Label) { self.label = label() }
     var body: some View {
         if let workspace = ledger.sourceWorkspaceID {
-            NavigationLink(value: RestorableDestination.shoppingList(actorID: access.localActorID,
-                workspaceID: workspace, shopID: ledger.shop?.id)) { label }
+            let actor = access.localActorID
+            let route = RestorableDestination.shoppingList(actorID: actor,
+                workspaceID: workspace, shopID: ledger.shop?.id)
+            if ledger.shop == nil && ledger.ready && !ledger.hasPendingSave {
+                Button {
+                    navigation.setPath([route], for: .shop)
+                    Task {
+                        guard navigation.shopPath.last == route, access.unlocked, access.localActorID == actor,
+                              ledger.sourceWorkspaceID == workspace, ledger.shop == nil else { return }
+                        _ = await ledger.startShop(title: ledgerText("Pickup"))
+                    }
+                } label: { label }
+                .disabled(ledger.saving || ledger.hasPendingLedgerDeletion)
+            } else {
+                NavigationLink(value: route) { label }
+            }
         } else { label }
     }
 }

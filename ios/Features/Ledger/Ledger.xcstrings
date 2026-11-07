@@ -2449,6 +2449,23 @@
         }
       }
     },
+    "Rename pickup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename pickup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambiar el nombre de la compra"
+          }
+        }
+      }
+    },
     "Reopen": {
       "localizations": {
         "en": {
@@ -2765,6 +2782,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Guardar artículo"
+          }
+        }
+      }
+    },
+    "Save name": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save name"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar nombre"
           }
         }
       }
