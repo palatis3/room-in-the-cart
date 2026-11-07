@@ -4,6 +4,7 @@ import SwiftUI
 
 struct SharedDeliveryCoverageView: View {
     @ObservedObject var model: HouseholdShopModel
+    @ObservedObject var household: HouseholdModel
     let page: SharedDeliveryPage
     @Environment(\.dismiss) private var dismiss
     @State private var result: SharedDeliveryCoverage?
@@ -31,7 +32,7 @@ struct SharedDeliveryCoverageView: View {
                                 requirement(need, occurrence: occurrence)
                             }
                             NavigationLink(pTr("Preview a dated cook instruction")) {
-                                SharedDeliveryCookView(model: model, page: page, coverage: .delivery(result), occurrence: occurrence)
+                                SharedDeliveryCookView(model: model, household: household, page: page, coverage: .delivery(result), occurrence: occurrence)
                             }
                             .accessibilityIdentifier("delivery.cook." + occurrence.id.uuidString)
                         } header: { Text(occurrence.meal.title + " · " + occurrence.meal.day) }
@@ -111,10 +112,10 @@ struct SharedDeliveryCoverageView: View {
 
 struct SharedDeliveryCookView: View {
     @ObservedObject var model: HouseholdShopModel
+    @ObservedObject var household: HouseholdModel
     let page: SharedDeliveryPage
     let coverage: SharedCookCoverage
     let occurrence: SharedMealOccurrence
-    @EnvironmentObject private var household: HouseholdModel
     @Environment(\.scenePhase) private var scenePhase
     @State private var language = Bundle.main.preferredLocalizations.first?.hasPrefix("es") == true ? "es-US" : "en-US"
     @State private var original: String?
@@ -210,7 +211,7 @@ struct SharedDeliveryCookView: View {
             }
             if model.canReadCookCopies && !household.locked && household.sharedShop === model {
                 NavigationLink(pTr("Saved cook notes")) {
-                    SharedCookHistoryView(model: model, page: page, occurrence: occurrence)
+                    SharedCookHistoryView(model: model, household: household, page: page, occurrence: occurrence)
                 }
                 .accessibilityIdentifier("delivery.cook.history")
             }

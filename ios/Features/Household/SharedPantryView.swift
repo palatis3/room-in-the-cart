@@ -4,6 +4,7 @@ import SwiftUI
 
 struct SharedPantryView: View {
     @ObservedObject var model: HouseholdShopModel
+    @ObservedObject var household: HouseholdModel
     let shopID: UUID
     @State private var registering = false
 
@@ -35,7 +36,7 @@ struct SharedPantryView: View {
                         .accessibilityIdentifier("pantry.create")
                 }
                 if delivery.meals?.isEmpty == false {
-                    NavigationLink(ht("Available food by meal")) { SharedFoodCoverageView(model: model, page: delivery) }
+                    NavigationLink(ht("Available food by meal")) { SharedFoodCoverageView(model: model, household: household, page: delivery) }
                         .accessibilityIdentifier("pantry.coverage")
                 }
             } else if model.busy { ProgressView() }

@@ -30,7 +30,7 @@ private struct SharedShopContent: View {
                 }
                 delivery
                 if model.canReadDelivery, let shop = model.shop, shop.placedRevision != nil, ["placed", "closed"].contains(shop.phase) {
-                    NavigationLink(ht("What came home")) { SharedDeliveryView(model: model, shopID: shop.shopId).environmentObject(household) }
+                    NavigationLink(ht("What came home")) { SharedDeliveryView(model: model, household: household, shopID: shop.shopId) }
                         .accessibilityIdentifier("sharedShop.deliveryEvidence")
                 }
                 if model.pending == nil {

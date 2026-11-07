@@ -4,8 +4,8 @@ import SwiftUI
 /// Reads both seals together. The delivery-only report remains available independently.
 struct SharedFoodCoverageView: View {
     @ObservedObject var model: HouseholdShopModel
+    @ObservedObject var household: HouseholdModel
     let page: SharedDeliveryPage
-    @EnvironmentObject private var household: HouseholdModel
     @Environment(\.locale) private var locale
     @State private var result: Snapshot?
     @State private var failed = false
@@ -72,7 +72,7 @@ struct SharedFoodCoverageView: View {
                         .accessibilityIdentifier("pantry.coverage.need." + occurrence.id.uuidString + "." + String(index))
                     }
                     NavigationLink(pTr("Preview a dated cook instruction")) {
-                        SharedDeliveryCookView(model: model, page: page, coverage: .food(snapshot.pantry, coverage), occurrence: occurrence)
+                        SharedDeliveryCookView(model: model, household: household, page: page, coverage: .food(snapshot.pantry, coverage), occurrence: occurrence)
                     }
                     .accessibilityIdentifier("pantry.coverage.cook." + occurrence.id.uuidString)
                 } header: {

@@ -31,6 +31,7 @@ func deliveryQuantityText(_ value: SharedMealQuantity?) -> String {
 
 struct SharedDeliveryView: View {
     @ObservedObject var model: HouseholdShopModel
+    @ObservedObject var household: HouseholdModel
     let shopID: String
     @State private var form: DeliveryForm?
     @State private var choosingLine = false
@@ -48,7 +49,7 @@ struct SharedDeliveryView: View {
                         Button(ht("Delivered food by meal")) { showingCoverage = true }
                     }
                     if model.canReadPantry {
-                        NavigationLink(ht("Pantry and freezer")) { SharedPantryView(model: model, shopID: page.shopId) }
+                        NavigationLink(ht("Pantry and freezer")) { SharedPantryView(model: model, household: household, shopID: page.shopId) }
                             .accessibilityIdentifier("delivery.openPantry")
                     }
                     if page.sources.isEmpty { Text(ht("No deliveries recorded yet.")) }
@@ -93,7 +94,7 @@ struct SharedDeliveryView: View {
         }
         .sheet(isPresented: $showingCoverage) {
             if model.canReadDelivery, model.scope.shopId == shopID, let page = model.deliveryRecord {
-                SharedDeliveryCoverageView(model: model, page: page)
+                SharedDeliveryCoverageView(model: model, household: household, page: page)
             }
         }
         .sheet(item: $matchingSource) { source in

@@ -3,9 +3,9 @@ import SwiftUI
 
 struct SharedCookHistoryView: View {
     @ObservedObject var model: HouseholdShopModel
+    @ObservedObject var household: HouseholdModel
     let page: SharedDeliveryPage
     let occurrence: SharedMealOccurrence
-    @EnvironmentObject private var household: HouseholdModel
     @State private var copies: [SharedCookCopy]?
     @State private var failed = false
 
@@ -25,7 +25,7 @@ struct SharedCookHistoryView: View {
                         if copies.isEmpty { Text(ht("No dated copies saved for this meal.")) }
                         ForEach(copies) { copy in
                             NavigationLink {
-                                SharedCookSavedView(model: model, page: page, occurrence: occurrence, copy: copy)
+                                SharedCookSavedView(model: model, household: household, page: page, occurrence: occurrence, copy: copy)
                             } label: {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(ht("Copy version") + " " + copy.version.formatted())
@@ -64,10 +64,10 @@ struct SharedCookHistoryView: View {
 
 private struct SharedCookSavedView: View {
     @ObservedObject var model: HouseholdShopModel
+    @ObservedObject var household: HouseholdModel
     let page: SharedDeliveryPage
     let occurrence: SharedMealOccurrence
     let copy: SharedCookCopy
-    @EnvironmentObject private var household: HouseholdModel
     @Environment(\.scenePhase) private var scenePhase
     @State private var recipient = ""
     @State private var reviewed: RecipientReview?
