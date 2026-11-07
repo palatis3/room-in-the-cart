@@ -4,7 +4,7 @@
 
 Only the standalone test metric and previously reviewed schema-2 endpoint parser/tests differ. App, built-in metrics, measured closure, fixture, checker, baselines and all workflows are unchanged. The original workflow runs a build and all three performance cases. The original complete cohort finished before this dispatch.
 
-This is a dispatch checkpoint, not a pass or a fix. Local Xcode 27.1 qualification does not prove hosted Xcode 26.3 behavior. Full collection is retained separately under `.build/ScrollReportWindowHosted20261106/collection`; no terminal conclusion is recorded here yet. The PR candidate remains unchanged at 0d5.
+The original dispatch receipt remains as a historical checkpoint. The full, now-terminal collection is retained under `.build/ScrollReportWindowHosted20261106/collection`. Hosted verification below is separate from the earlier local Xcode 27.1 qualification. The PR candidate remains unchanged at 0d5.
 
 ## Terminal outcome
 
