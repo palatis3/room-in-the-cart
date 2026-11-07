@@ -7,9 +7,11 @@ public struct SharedRecoveryCoverage: Decodable, Equatable, Sendable {
         private let physical: SharedFoodCoverage.Need
         public subscript<T>(dynamicMember key: KeyPath<SharedFoodCoverage.Need, T>) -> T { physical[keyPath: key] }
 
-        private enum CodingKeys: CodingKey { case needId }
+        private enum CodingKeys: CodingKey { case needId, required, covered, missing }
         public init(from decoder: Decoder) throws {
-            needId = try decoder.container(keyedBy: CodingKeys.self).decode(UUID.self, forKey: .needId)
+            let values = try decoder.container(keyedBy: CodingKeys.self)
+            guard values.contains(.required), values.contains(.covered), values.contains(.missing) else { throw ClientError.invalidResponse }
+            needId = try values.decode(UUID.self, forKey: .needId)
             physical = try .init(from: decoder)
         }
     }
@@ -45,6 +47,8 @@ public struct SharedRecoveryCoverage: Decodable, Equatable, Sendable {
                   row.protected == (need.priority == "protected"), row.required == need.quantity, let pins = row.reservations else {
                 throw ClientError.invalidResponse
             }
+            let knownIssues = ["unknownQuantity", "unknownSplit", "noMatch", "unconfirmed", "unitMismatch", "exclusion", "protectedQuantityUnknown", "reservationShortfall"]
+            guard Set(knownIssues).isSuperset(of: row.issues) else { throw ClientError.invalidResponse }
             var totals = [String: SharedDeliveryCoverage.Fraction]()
             for allocation in row.allocations {
                 guard let unit = row.required?.unit, allocation.amount.valid, let source = page.sourceOptions.first(where: { $0.id == allocation.sourceId }),
@@ -66,6 +70,6 @@ public struct SharedRecoveryCoverage: Decodable, Equatable, Sendable {
                                  unit: row.required?.unit, issues: row.issues, sourceIssues: [], reservations: pins))
         }
         let projection = SharedRecoveryPreview.Projection(meals: page.meals, demands: demands, allocations: allocations)
-        try projection.validate(options: page.sourceOptions, asOf: now)
+        try projection.validate(page: page, asOf: now)
     }
 }

@@ -6,6 +6,21 @@ private func digestSyntax(_ digest: String) -> Bool {
 }
 
 extension SharedRecoveryPage {
+    mutating func bindPhysicalHeads(delivery: SharedDeliveryPage, pantry: SharedPantryPage) throws {
+        deliverySourceIDs = Set(delivery.sources.map(\.id))
+        let heads = delivery.sources.map { ($0.id, $0.reservations ?? []) } + pantry.lots.filter(\.selected).map { ($0.id, $0.reservations) }
+        var result = [UUID: [UUID: SharedDeliveryPage.Reservation]]()
+        for (source, reservations) in heads {
+            for head in reservations where head.quantity != nil {
+                guard let meal = meals.first(where: { $0.id == head.occurrenceId && $0.sourceMealRevision == head.mealRevision }) else { continue }
+                for need in meal.needs where need.groupId == head.groupId && need.ingredientId == head.ingredientId && need.sources.contains(source) {
+                    guard result[need.id, default: [:]].updateValue(head, forKey: source) == nil else { throw ClientError.invalidResponse }
+                }
+            }
+        }
+        pinsByNeed = result
+    }
+
     func validate(delivery: SharedDeliveryPage, pantry: SharedPantryPage) throws {
         try pantry.validate(delivery: delivery)
         guard shopId == delivery.shopId, placedRevision == delivery.placedRevision, base.shopRevision == delivery.shopRevision,
@@ -87,6 +102,15 @@ extension SharedRecoveryIntent {
         guard !removed.isEmpty, !newRows.isEmpty, Set(newRows.map(\.id)).isDisjoint(with: page.meals.flatMap { $0.needs.map(\.id) }) else {
             throw ClientError.configuration
         }
+        let allGroupIDs = Set(newRows.flatMap(\.groups))
+        guard removed.allSatisfy({ old in
+            old.groups.isEmpty ? newRows.contains(where: { $0.groups.isEmpty }) : allGroupIDs.isSuperset(of: old.groups)
+        }), removed.allSatisfy({ page.pinsByNeed[$0.id]?.isEmpty != false }) else { throw ClientError.configuration }
+        for need in next.needs {
+            let groups = Set(need.groups)
+            let related = removed.filter { groups.isEmpty ? $0.groups.isEmpty : !groups.isDisjoint(with: $0.groups) }
+            guard Set(need.exclusions).isSuperset(of: related.flatMap(\.exclusions)) else { throw ClientError.configuration }
+        }
         try next.validate(options: Set(page.sourceOptions.map(\.id)))
     }
 
@@ -112,8 +136,22 @@ extension SharedRecoveryPreview {
         // Compare digests to preserve the exact Unicode wording the shopper reviewed.
         guard try before.meals.map({ try $0.targetDigest() }) == page.meals.map({ try $0.targetDigest() }),
               try after.meals.map({ try $0.targetDigest() }) == expected.map({ try $0.targetDigest() }) else { throw ClientError.invalidResponse }
-        try before.validate(options: page.sourceOptions, asOf: now)
-        try after.validate(options: page.sourceOptions, asOf: now)
+        for projection in [before, after] {
+            try projection.validate(page: page, asOf: now)
+            let issues = ["unknown_quantity", "unknown_split", "unknown_food", "exclusion_conflict", "unconfirmed_stock", "unit_mismatch",
+                          "reservation_shortfall", "protected_quantity_unknown", "foreign_hold_unknown"]
+            guard projection.demands.allSatisfy({ Set(issues).isSuperset(of: $0.issues) &&
+                $0.sourceIssues.allSatisfy { ["exclusion_conflict", "unconfirmed_stock", "unit_mismatch"].contains($0.issue) } }) else {
+                throw ClientError.invalidResponse
+            }
+        }
+        for old in before.demands {
+            guard let new = after.demands.first(where: { $0.id == old.id }) else { continue }
+            guard old.issues == new.issues, old.reservations == new.reservations,
+                  old.allocated.map({ prior in new.allocated?.compare(prior) != .orderedAscending }) ?? (new.allocated == nil) else {
+                throw ClientError.invalidResponse
+            }
+        }
         let targetNeeds = Set(intent.replacement.needs.map(\.id))
         let complete = page.commitmentInventoryComplete && after.demands.filter { targetNeeds.contains($0.id) }.allSatisfy {
             $0.shortfall?.numerator == "0" && $0.issues.isEmpty
@@ -125,7 +163,9 @@ extension SharedRecoveryPreview {
                 (meal.requiredLeadMinutes == nil || minutes >= (meal.requiredLeadMinutes ?? 0) || meal.advanceStepsCompleted)
         }
         func titleKey(_ title: String) -> String {
-            title.split(whereSeparator: { $0.isWhitespace }).joined(separator: " ").lowercased()
+            let spaces = CharacterSet.whitespacesAndNewlines.subtracting(CharacterSet(charactersIn: "\u{0085}\u{200B}"))
+                .union(CharacterSet(charactersIn: "\u{FEFF}"))
+            return title.components(separatedBy: spaces).filter { !$0.isEmpty }.joined(separator: " ").lowercased(with: Locale(identifier: "en_US"))
         }
         let repeated = intent.repeatOfOccurrenceId != nil || page.meals.contains { $0.id != meal.id && titleKey($0.title) == titleKey(meal.title) }
         guard foodConfirmed == complete, timingConfirmed == timely, repeatRequired == repeated,
@@ -135,7 +175,8 @@ extension SharedRecoveryPreview {
 }
 
 extension SharedRecoveryPreview.Projection {
-    func validate(options: [SharedRecoveryPage.SourceOption], asOf: Date) throws {
+    func validate(page: SharedRecoveryPage, asOf: Date) throws {
+        let options = page.sourceOptions
         let needs = meals.flatMap(\.needs), grouped = Dictionary(grouping: allocations, by: \.needId)
         let sources = Dictionary(options.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         let ids = Set(needs.map(\.id))
@@ -165,8 +206,12 @@ extension SharedRecoveryPreview.Projection {
                 used[row.sourceId] = (used[row.sourceId] ?? .zero).adding(row.amount.multiplied(by: factor))
             }
             guard total.compare(allocated) == .orderedSame else { throw ClientError.invalidResponse }
+            let heads = page.pinsByNeed[need.id] ?? [:]
+            guard heads.count == demand.reservations.count else { throw ClientError.invalidResponse }
             for pin in demand.reservations {
-                guard need.sources.contains(pin.sourceId), pin.requested.valid, pin.backed.valid,
+                guard let head = heads[pin.sourceId], head.reservationId == pin.reservationId, let quantity = head.quantity,
+                      let exact = DeliveryUnit.convert(quantity, to: required.unit), pin.requested.valid, pin.backed.valid,
+                      pin.requested.compare(exact) == .orderedSame, need.sources.contains(pin.sourceId),
                       pin.backed.compare(pin.requested) != .orderedDescending,
                       pin.backed.compare(rows.first(where: { $0.sourceId == pin.sourceId })?.amount ?? .zero) != .orderedDescending else { throw ClientError.invalidResponse }
             }

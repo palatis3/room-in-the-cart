@@ -195,7 +195,7 @@ public enum SharedDeliveryEdit: Equatable, Sendable {
 
 public struct SharedDeliveryCoverage: Decodable, Sendable {
     /// The service keeps exact conversion and summation results as unbounded integers.
-    public struct Fraction: Decodable, Equatable, Sendable {
+    public struct Fraction: Codable, Equatable, Sendable {
         public let numerator: String
         public let denominator: String
         public var formatted: String { denominator == "1" ? numerator : numerator + "/" + denominator }

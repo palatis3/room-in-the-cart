@@ -126,6 +126,7 @@ public struct SharedRecoveryPage: Decodable, Equatable, Sendable {
     public let unplannedOccurrenceIds: [UUID]
     public let commitmentInventoryComplete: Bool
     var deliverySourceIDs: Set<UUID> = []
+    var pinsByNeed: [UUID: [UUID: SharedDeliveryPage.Reservation]] = [:]
     private enum CodingKeys: CodingKey {
         case shopId, placedRevision, asOf, base, meals, targetDigests, sourceOptions, mealSources, unplannedOccurrenceIds, commitmentInventoryComplete
     }
@@ -152,10 +153,11 @@ public struct SharedRecoveryPreview: Decodable, Equatable, Sendable {
         public struct SourceIssue: Decodable, Equatable, Sendable { public let sourceId: UUID; public let issue: String }
         public var id: UUID { needId }
         public let needId: UUID
-        public let due: String?
+        @RecoveryNullable public var due: String?
         public let deadlineStatus: String
-        public let allocated, shortfall: SharedDeliveryCoverage.Fraction?
-        public let unit: String?
+        @RecoveryNullable public var allocated: SharedDeliveryCoverage.Fraction?
+        @RecoveryNullable public var shortfall: SharedDeliveryCoverage.Fraction?
+        @RecoveryNullable public var unit: String?
         public let issues: [String]
         public let sourceIssues: [SourceIssue]
         public let reservations: [SharedDeliveryCoverage.Reservation]

@@ -158,7 +158,7 @@ struct SharedShopTransfer: Equatable {
                 if !canReadPantry { delivery = .needsReview }
                 reviewedCurrentFacts = !canReadPantry || pending?.id == reviewedPantryOperation
             } else if pendingCookCopy {
-                let canReconcile = canReadCookCopies && (!pendingCookUsesPantry || canReadPantry)
+                let canReconcile = canRetryCookCopy
                 if !canReconcile { delivery = .needsReview }
                 reviewedCurrentFacts = !canReconcile || reviewedCookOperation == pending?.id
             } else {
@@ -222,6 +222,9 @@ struct SharedShopTransfer: Equatable {
     var pendingDelivery: Bool { pendingEnvelope?.kind.hasPrefix("delivery.") == true }
     private var pendingPantry: Bool { pendingEnvelope?.kind.hasPrefix("pantry.") == true }
     private var pendingCookUsesPantry: Bool { pendingEnvelope?.kind == "cookCopy.save" && pendingEnvelope?.body["pantryRevision"] != nil }
+    private var canRetryCookCopy: Bool {
+        canReadCookCopies && (!pendingCookUsesPantry || canReadPantry) && (pendingEnvelope?.body["recoveryRevision"] == nil || canReadMealRecovery)
+    }
     private var pendingCookCopy: Bool { pendingEnvelope?.kind.hasPrefix("cookCopy.") == true }
 
     private func refreshMealRecovery(shop: ShopperShop, start: UUID) async throws {
@@ -551,7 +554,7 @@ struct SharedShopTransfer: Equatable {
     func retry() async {
         guard authorized, !busy, let pending, delivery == .waiting else { return }
         if pendingMealRecovery && (!canReadMealRecovery || pendingEnvelope?.shopId != scope.shopId) { return }
-        if pendingCookCopy && (!canReadCookCopies || pendingCookUsesPantry && !canReadPantry || pendingEnvelope?.shopId != scope.shopId) { return }
+        if pendingCookCopy && (!canRetryCookCopy || pendingEnvelope?.shopId != scope.shopId) { return }
         if pendingPantry && (!canReadPantry || pendingEnvelope?.shopId != scope.shopId) { return }
         guard Date() >= retryAfter, attempts < 5 else { notice = ht("Wait before retrying, or review this action after several failed attempts."); return }
         busy = true; defer { busy = false }; await deliver(pending, start: generation)

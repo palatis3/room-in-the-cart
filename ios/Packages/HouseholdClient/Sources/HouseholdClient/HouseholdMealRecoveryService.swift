@@ -15,7 +15,7 @@ extension HouseholdService {
         guard start == generation else { throw ClientError.cancelled }
         var page: SharedRecoveryPage = try await perform("shops/\(shopID)/meal-recovery", method: "GET")
         try page.validate(delivery: delivery, pantry: pantry)
-        page.deliverySourceIDs = Set(delivery.sources.map(\.id))
+        try page.bindPhysicalHeads(delivery: delivery, pantry: pantry)
         return .init(page: page, delivery: delivery, pantry: pantry)
     }
 
