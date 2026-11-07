@@ -66,9 +66,16 @@ final class SharedFallbackModel: ObservableObject {
             try await refresh(token)
             guard current(token) else { return }
             // Retained household recipes and withdrawal remain available after membership ends.
-            let expiry = try? await service.assistanceValidUntil(shopID: shopID.uuidString.lowercased())
-            guard current(token) else { return }
-            paidUntil = expiry
+            paidUntil = nil
+            do {
+                let expiry = try await service.assistanceValidUntil(shopID: shopID.uuidString.lowercased())
+                guard current(token) else { return }
+                paidUntil = expiry
+            } catch ClientError.transport {
+                if current(token) { notice = fallbackText("Couldn’t check membership. Refresh to try again.") }
+            } catch let ClientError.service(status, _, _, _) where status == 429 || status >= 500 {
+                if current(token) { notice = fallbackText("Couldn’t check membership. Refresh to try again.") }
+            }
         } catch { fail(error, token: token) }
     }
 

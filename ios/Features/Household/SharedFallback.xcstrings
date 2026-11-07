@@ -188,6 +188,23 @@
         }
       }
     },
+    "Couldn’t check membership. Refresh to try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t check membership. Refresh to try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo comprobar la membresía. Actualiza para volver a intentarlo."
+          }
+        }
+      }
+    },
     "Enter a reviewed pack offer": {
       "extractionState": "manual",
       "localizations": {

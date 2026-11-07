@@ -63,6 +63,26 @@ import HouseholdClient
         XCTAssertEqual(fixture.kinds.filter { $0 == "shop.reopen" }.count, 1)
         XCTAssertEqual(fixture.privateReads, 0)
     }
+    func testFallbackLibrarySurvivesBillingOutageAndClosesOnShopperTransferDuringSeatCheck() async throws {
+        let fixture = SharedFlowService()
+        let adult = try await createdHousehold(fixture)
+        let shared = try XCTUnwrap(adult.sharedShop)
+        enterShop(shared)
+        await shared.applyReviewed()
+        let id = try XCTUnwrap(fixture.shopID.flatMap(UUID.init(uuidString:)))
+        let service = try XCTUnwrap(adult.service)
+        let library = SharedFallbackModel(shopID: id, service: service, store: adult.fallbackPendingStore, authorized: { true })
+        fixture.fallbackBillingUnavailable = true
+        await library.load()
+        XCTAssertEqual(library.library?.shopId, id)
+        XCTAssertFalse(library.canSuggest)
+        XCTAssertEqual(library.notice, fallbackText("Couldn’t check membership. Refresh to try again."))
+        fixture.transferAfterLibraryRead = true
+        await library.load()
+        XCTAssertNil(library.library)
+        XCTAssertNil(library.pending)
+        XCTAssertFalse(library.canSuggest)
+    }
     func testShopDraftRequiresExplicitReviewAndEditsInvalidateIt() async throws {
         let fixture = SharedFlowService(); let mia = try await createdHousehold(fixture)
         let shared = try XCTUnwrap(mia.sharedShop)
@@ -224,6 +244,8 @@ private final class SharedFlowService {
     var receipts: [String: [String: Any]] = [:], previews: [String: [String: Any]] = [:]
     var loseCreateResponse = false
     var shopperTransferred = false
+    var fallbackBillingUnavailable = false
+    var transferAfterLibraryRead = false
     var ownRequestsUnavailable = false
     var readFailureAfterCreate: Int?
     func data(_ value: Any) throws -> Data { try JSONSerialization.data(withJSONObject: value, options: [.sortedKeys]) }
@@ -253,8 +275,13 @@ private final class SharedFlowService {
             let shopper = actor == "mia" && shopID != nil && !shopperTransferred
             return try ok(["household":["id":household,"label":"Our home"],"memberId":actor == "mia" ? miaID : samID,
                 "role":shopper ? "shopper" : actor == "mia" ? "organizer" : "contributor", "shopId":shopID as Any? ?? NSNull(),"enrolled":true,"queueConsent":false,
-                "capabilities":["own_requests"] + (actor == "mia" ? ["household_admin"] : []) + (shopper ? ["shopper_inbox","request_preview","shopper_commands"] : [])])
+                "capabilities":["own_requests"] + (actor == "mia" ? ["household_admin"] : []) + (shopper ? ["shopper_inbox","request_preview","shopper_commands","accepted_fallbacks"] : [])])
         }
+        if path.hasSuffix("/accepted-fallbacks"), let shopID {
+            if transferAfterLibraryRead { shopperTransferred = true }
+            return try ok(["shopId":shopID, "shopRevision":revision, "authorityEpoch":1, "registryRevision":0, "candidates":[], "nextCursor":NSNull()])
+        }
+        if path.hasSuffix("/entitlements"), fallbackBillingUnavailable { return try ok(["error":["code":"service_unavailable"]],503) }
         if path.hasSuffix("/replay-windows") { return try ok(["id":UUID().uuidString.lowercased(),"expiresAt":"2099-01-01T00:00:00Z"]) }
         if path.hasSuffix("/invites") { return try ok(["inviteId":UUID().uuidString.lowercased(),"token":household+"."+String(repeating:"a",count:43),"expiresAt":"2099-01-01T00:00:00Z"]) }
         if path.hasSuffix("/requests/mine"), ownRequestsUnavailable { return try ok(["error":["code":"unavailable"]],503) }
