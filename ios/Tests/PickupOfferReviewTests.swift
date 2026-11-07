@@ -157,13 +157,19 @@ final class PickupOfferReviewTests: XCTestCase {
         XCTAssertThrowsError(try PickupOfferReview.validate(oversized, ordered: ordered))
         // Same-dimension explicit unit conversion is permitted, never count-to-mass guessing.
         XCTAssertNoThrow(try PickupOfferReview.validate(offer(lineID: lineID, remaining: 1, unit: .kilogram), ordered: quantity(2_000, .gram)))
-        let invalidLiteral = Quantity(amount: .one, unit: .count, originalLiteral: String(repeating: "x", count: 2_049))
-        XCTAssertThrowsError(try PickupOfferReview.validate(offer(lineID: lineID), ordered: invalidLiteral))
         let valid = try offer(lineID: lineID)
-        let invalidRemaining = PickupOffer(id: valid.id, lineID: lineID, replacement: valid.replacement,
-            required: valid.required, remainingOriginal: invalidLiteral, price: valid.price, ceiling: valid.ceiling,
-            deadline: valid.deadline, fallback: valid.fallback, householdPreference: "", retailerResponse: "")
-        XCTAssertThrowsError(try PickupOfferReview.validate(invalidRemaining, ordered: ordered))
+        func withQuantities(required: Quantity, remaining: Quantity) -> PickupOffer {
+            PickupOffer(id: valid.id, lineID: lineID, replacement: valid.replacement, required: required,
+                remainingOriginal: remaining, price: valid.price, ceiling: valid.ceiling,
+                deadline: valid.deadline, fallback: valid.fallback, householdPreference: "", retailerResponse: "")
+        }
+        let maximum = String(repeating: "é", count: 1_024)
+        let atLimit = Quantity(amount: try Rational(8), unit: .count, originalLiteral: maximum)
+        let overLimit = Quantity(amount: try Rational(8), unit: .count, originalLiteral: maximum + "x")
+        XCTAssertNoThrow(try PickupOfferReview.validate(withQuantities(required: atLimit, remaining: atLimit), ordered: atLimit))
+        XCTAssertThrowsError(try PickupOfferReview.validate(valid, ordered: overLimit))
+        XCTAssertThrowsError(try PickupOfferReview.validate(withQuantities(required: overLimit, remaining: valid.remainingOriginal), ordered: ordered))
+        XCTAssertThrowsError(try PickupOfferReview.validate(withQuantities(required: valid.required, remaining: overLimit), ordered: ordered))
         var json = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(valid)) as? [String: Any])
         var remaining = try XCTUnwrap(json["remainingOriginal"] as? [String: Any])
         remaining["amount"] = ["numerator": -1, "denominator": 1]
