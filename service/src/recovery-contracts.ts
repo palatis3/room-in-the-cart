@@ -51,6 +51,9 @@ export const deliveryMatchBody = z.object({
   supplyRevision: revision, sourceId: id, occurrenceId: id, mealRevision: revision.min(1),
   ingredientId: id, matched: z.boolean(),
 }).strict();
+export const deliveryReservationBody = deliveryMatchBody.omit({matched:true}).extend({
+  groupId:id, predecessorId:id.nullable(), quantity:mealQuantity.nullable(),
+});
 const observationFields = {sourceId: true, observationId: true, predecessorId: true} as const;
 export const deliveryArrivalBody = arrivalCommandSchema.pick({...observationFields, arrivedAt: true, received: true})
   .extend({supplyRevision: revision});

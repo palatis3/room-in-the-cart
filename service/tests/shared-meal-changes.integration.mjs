@@ -166,9 +166,20 @@ test('account erasure removes accepted proposal copies and exact retry evidence 
  const matched=send('delivery.match',{sourceId,supplyRevision:1,occurrenceId:f.proposal.occurrenceId,
   mealRevision:3,ingredientId:f.changed.planning.ingredients[0].id,matched:true},4);
  ok(await save(matched));assert.equal((await evidence()).sources[0].matches.length,1);
+ const quantity={amount:{numerator:1,denominator:1},unit:'gram',originalLiteral:'1 g'};
+ const arrival=randomUUID();
+ ok(await save(send('delivery.arrival',{sourceId,supplyRevision:2,observationId:arrival,predecessorId:null,
+   arrivedAt:new Date(Date.now()-1000).toISOString(),received:quantity},4)));
+ ok(await save(send('delivery.usable',{sourceId,supplyRevision:3,observationId:randomUUID(),predecessorId:null,
+   arrivalObservationId:arrival,confirmedAt:new Date().toISOString(),usable:quantity},4)));
+ const reserved=send('delivery.reserve',{sourceId,supplyRevision:4,occurrenceId:f.proposal.occurrenceId,
+   mealRevision:3,ingredientId:f.changed.planning.ingredients[0].id,groupId:f.changed.planning.groups[1].id,
+   predecessorId:null,quantity},4);
+ ok(await save(reserved));
  await admin.query('SELECT ritc.privacy_erase_extension($1,$2)',[f.h,f.planner.id]);
  const after=await evidence();
- assert.deepEqual(after.meals,[]);assert.deepEqual(after.sources[0].matches,[]);assert.equal(after.supplyRevision,3);
+ assert.deepEqual(after.meals,[]);assert.deepEqual(after.sources[0].matches,[]);assert.equal(after.supplyRevision,6);
+ assert.deepEqual(after.sources[0].reservations,[]);assert.equal((await save(reserved)).status,409);
  assert.equal(after.sources[0].sourceId,sourceId);assert.equal((await save(matched)).status,409);
  assert.equal((await admin.query('SELECT count(*)::int n FROM ritc.shared_meal_change WHERE household_id=$1',[f.h])).rows[0].n,0);
  assert.equal((await admin.query('SELECT count(*)::int n FROM ritc.shared_meal_revision WHERE household_id=$1',[f.h])).rows[0].n,0);
@@ -379,4 +390,175 @@ test('a shopper can record completed prep and zero lead time without removing a 
  assert.equal((await call(f.owner,f.base+'/commands','POST',direct)).data.error.code,'protected_meal');
  const protectedMeal=ok(await call(f.owner,f.path)).meals[0].meal;
  assert.deepEqual(protectedMeal,meal);
+});
+
+async function reservationFixture({excluded=false,split=true,rival=false}={}) {
+ const f=await mealFixture(),commands=f.base+'/commands',path=f.path+'/delivery-evidence';
+ const quantity=n=>({amount:{numerator:n,denominator:1},unit:'count',originalLiteral:String(n)});
+ const meal=structuredClone(f.meal),[plates,lunch]=meal.planning.groups,ingredient=meal.planning.ingredients[0];
+ ingredient.quantity=quantity(6);
+ if(split) meal.planning.bindings.forEach((b,i)=>b.quantity=quantity(i===0?4:2));
+ else delete meal.planning.bindings;
+ const occurrenceId=randomUUID();
+ ok(await call(f.owner,commands,'POST',f.patch(2,{occurrenceId,baseMealRevision:null,meal})));
+ const snapshot={shopRevision:3,authorityEpoch:1};
+ const rivalOccurrence=randomUUID();
+ if(rival){
+   const other=structuredClone(meal);
+   other.title='Another supper';other.planning.groups=[plates];other.planning.ingredients[0].groupIds=[plates.id];
+   other.planning.ingredients[0].quantity=quantity(4);delete other.planning.bindings;
+   ok(await call(f.owner,commands,'POST',f.patch(3,{occurrenceId:rivalOccurrence,baseMealRevision:null,meal:other})));
+   snapshot.shopRevision++;
+ }
+ function command(kind,body,actor=f.owner) {
+   return {v:1,replayWindow:actor.window,clientKey:randomUUID(),shopId:f.shopId,kind,body,base:{...snapshot}};
+ }
+ const send=(cmd,actor=f.owner)=>call(actor,commands,'POST',cmd);
+ const write=(kind,body,actor=f.owner)=>send(command(kind,body,actor),actor);
+ const target={occurrenceId,mealRevision:3,ingredientId:ingredient.id};
+ const invalidSet={supplyRevision:0,sourceId:randomUUID(),...target,groupId:lunch.id,quantity:quantity(1),predecessorId:null};
+ ok(await write('shop.freeze',{}));snapshot.shopRevision++;
+ assert.equal((await write('delivery.reserve',invalidSet)).data.error.code,'placed_order_required');
+ ok(await write('shop.reportPlaced',{occurredAt:new Date().toISOString()}));snapshot.shopRevision++;
+ const delivery=async()=>ok(await call(f.owner,path));
+ const coverage=async()=>{
+   const page=ok(await call(f.owner,path+'/coverage'));
+   return {...page,needs:page.needs.filter(n=>n.occurrenceId===occurrenceId)};
+ };
+ const sourceId=ok(await write('delivery.register',{supplyRevision:0,placedRevision:snapshot.shopRevision-1,lineId:f.initial.lines[0].lineId,
+   segmentKey:randomUUID(),foodName:'Wraps',exclusionTags:excluded?['sesame']:[]})).sourceId;
+ const match={sourceId,...target,matched:true};
+ ok(await write('delivery.match',{...match,supplyRevision:1}));
+ const reservation={sourceId,...target,groupId:lunch.id,quantity:quantity(2),predecessorId:null};
+ assert.equal((await write('delivery.reserve',{...reservation,supplyRevision:2})).data.error.code,'reservation_review_required');
+ const arrival=randomUUID();
+ ok(await write('delivery.arrival',{sourceId,supplyRevision:2,observationId:arrival,predecessorId:null,
+   arrivedAt:new Date(Date.now()-1000).toISOString(),received:quantity(6)}));
+ const usable={sourceId,supplyRevision:3,observationId:randomUUID(),predecessorId:null,arrivalObservationId:arrival,
+   confirmedAt:new Date().toISOString(),usable:quantity(5)};
+ ok(await write('delivery.usable',usable));
+ return {...f,command,write,send,delivery,coverage,sourceId,reservation,quantity,match,usable,plates,lunch,snapshot,rivalOccurrence};
+}
+
+test('durable named reservations bind exact group, predecessor and authority through corrections and release',async()=>{
+ const f=await reservationFixture(),r={...f.reservation,supplyRevision:4};
+ assert.equal((await f.delivery()).reservationsAvailable,true);
+ const set=f.command('delivery.reserve',r);
+ assert.equal((await f.write('delivery.reserve',r,f.planner)).status,404);
+ for(const bad of [{groupId:randomUUID()},{occurrenceId:randomUUID()},{ingredientId:randomUUID()},
+   {quantity:{...r.quantity,unit:'gram'}},{quantity:f.quantity(3)}]){
+   assert.equal((await f.write('delivery.reserve',{...r,...bad})).status,409);
+ }
+ assert.equal((await f.write('delivery.reserve',{...r,quantity:f.quantity(0)})).status,422);
+ // An ordinary set-aside cannot consume the two portions that the protected lunch can use.
+ assert.equal((await f.write('delivery.reserve',{...r,groupId:f.plates.id,quantity:f.quantity(4)})).status,409);
+ const race=await Promise.all([f.send(set),f.send(set)]);
+ const saved=ok(race[0]);assert.deepEqual(ok(race[1]),saved);
+ assert.equal((await f.delivery()).supplyRevision,5);
+ const pinId=saved.operationId,source=(await f.delivery()).sources[0];
+ assert.deepEqual(source.reservations,[{groupId:r.groupId,ingredientId:r.ingredientId,mealRevision:r.mealRevision,
+   occurrenceId:r.occurrenceId,reservationId:pinId,quantity:r.quantity}]);
+ const readRows=async()=> (await f.coverage()).needs;
+ const [plates,lunch]=await readRows();
+ assert.equal(plates.covered.numerator,'3');assert.equal(plates.missing.numerator,'1');
+ assert.deepEqual(lunch.reservations,[{sourceId:r.sourceId,reservationId:pinId,
+   requested:{numerator:'2',denominator:'1'},backed:{numerator:'2',denominator:'1'}}]);
+ assert.equal((await f.write('delivery.match',{...f.match,matched:false,supplyRevision:5})).data.error.code,'reservation_review_required');
+ assert.equal((await f.send({...set,body:{...r,quantity:f.quantity(1)}})).data.error.code,'key_reused');
+ assert.equal((await f.write('delivery.reserve',{...r,supplyRevision:5,quantity:f.quantity(1)})).data.error.code,'stale_supply');
+ const ordinary={...r,supplyRevision:5,groupId:f.plates.id,quantity:f.quantity(3)};
+ const contender=await Promise.all([f.write('delivery.reserve',ordinary),f.write('delivery.reserve',ordinary)]);
+ assert.deepEqual(contender.map(v=>v.status).sort(),[200,409]);
+ const ordinaryId=ok(contender.find(v=>v.status===200)).operationId;
+ ok(await f.write('delivery.usable',{...f.usable,supplyRevision:6,predecessorId:f.usable.observationId,
+   observationId:randomUUID(),usable:f.quantity(1)}));
+ const [shortPlates,shortLunch]=await readRows();
+ assert.equal(shortPlates.reservations[0].backed.numerator,'0');
+ assert.equal(shortLunch.reservations[0].backed.numerator,'1');
+ assert.ok(shortPlates.issues.includes('reservationShortfall') && shortLunch.issues.includes('reservationShortfall'));
+ const release=(pin,groupId,supplyRevision)=>f.write('delivery.reserve',{...r,groupId,predecessorId:pin,supplyRevision,quantity:null});
+ const fewer=ok(await f.write('delivery.reserve',{...ordinary,supplyRevision:7,predecessorId:ordinaryId,quantity:f.quantity(2)}));
+ const [stillShort]=await readRows();
+ assert.equal(stillShort.reservations[0].requested.numerator,'2');assert.equal(stillShort.reservations[0].backed.numerator,'0');
+ assert.equal((await f.write('delivery.reserve',{...ordinary,supplyRevision:8,predecessorId:fewer.operationId})).status,409);
+ const earlier=(await f.delivery()).sources[0].usable;
+ const unknown=ok(await f.write('delivery.usable',{...earlier,supplyRevision:8,predecessorId:earlier.observationId,observationId:randomUUID(),usable:null}));
+ assert.equal(unknown.supplyRevision,9);
+ const update=ok(await f.write('delivery.reserve',{...r,supplyRevision:9,predecessorId:pinId,quantity:f.quantity(1)}));
+ ok(await release(fewer.operationId,f.plates.id,10));
+ const released=ok(await release(update.operationId,f.lunch.id,11));
+ ok(await f.write('delivery.match',{...f.match,matched:false,supplyRevision:12}));
+ assert.deepEqual((await readRows()).map(n=>n.reservations),[[],[]]);
+ assert.equal((await f.delivery()).sources[0].reservations.find(p=>p.groupId===f.lunch.id).reservationId,released.operationId);
+ assert.equal((await f.write('delivery.reserve',{...r,supplyRevision:13,predecessorId:released.operationId})).status,409);
+ ok(await f.write('delivery.match',{...f.match,supplyRevision:13}));
+ const unconfirmed=(await f.delivery()).sources[0].usable;
+ ok(await f.write('delivery.usable',{...unconfirmed,supplyRevision:14,predecessorId:unconfirmed.observationId,observationId:randomUUID(),usable:f.quantity(1)}));
+ ok(await f.write('delivery.reserve',{...r,supplyRevision:15,predecessorId:released.operationId,quantity:f.quantity(1)}));
+ await admin.query("UPDATE ritc.shop SET phase='closed' WHERE household_id=$1 AND shop_id=$2",[f.h,f.shopId]);
+ assert.equal((await f.coverage()).needs[1].reservations[0].backed.numerator,'1');
+ assert.equal((await f.write('delivery.reserve',{...r,supplyRevision:13})).data.error.code,'placed_order_required');
+});
+
+test('durable named reservations reject excluded food and ambiguous group splits',async()=>{
+ for(const settings of [{excluded:true},{split:false}]) {
+   const f=await reservationFixture(settings);
+   const result=await f.write('delivery.reserve',{...f.reservation,supplyRevision:4});
+   assert.equal(result.data.error.code,'reservation_review_required');
+   assert.deepEqual((await f.delivery()).sources[0].reservations,[]);assert.equal((await f.delivery()).supplyRevision,4);
+ }
+});
+
+test('durable named reservations on two lots respect competing sealed meals and protected priority after a correction',async()=>{
+ const f=await reservationFixture({rival:true}),key={occurrenceId:f.rivalOccurrence,mealRevision:4,ingredientId:f.match.ingredientId};
+ const src=ok(await f.write('delivery.register',{supplyRevision:4,placedRevision:5,lineId:f.initial.lines[0].lineId,
+   segmentKey:randomUUID(),foodName:'Additional wraps',exclusionTags:[]})).sourceId;
+ ok(await f.write('delivery.match',{...f.match,sourceId:src,supplyRevision:5}));
+ ok(await f.write('delivery.match',{...f.match,...key,supplyRevision:6}));
+ const arrival=randomUUID(),usable=randomUUID();
+ ok(await f.write('delivery.arrival',{sourceId:src,supplyRevision:7,observationId:arrival,predecessorId:null,
+   arrivedAt:new Date(Date.now()-1000).toISOString(),received:f.quantity(2)}));
+ ok(await f.write('delivery.usable',{sourceId:src,supplyRevision:8,observationId:usable,predecessorId:null,
+   arrivalObservationId:arrival,confirmedAt:new Date().toISOString(),usable:f.quantity(2)}));
+ const rival={...f.reservation,...key,groupId:f.plates.id,supplyRevision:9,quantity:f.quantity(4)};
+ ok(await f.write('delivery.reserve',rival));
+ assert.equal((await f.write('delivery.reserve',{...f.reservation,supplyRevision:10})).status,409);
+ ok(await f.write('delivery.reserve',{...f.reservation,sourceId:src,supplyRevision:10}));
+ const read=async()=>ok(await call(f.owner,f.path+'/delivery-evidence/coverage')).needs;
+ const current=await read();
+ assert.equal(current.find(n=>n.occurrenceId===key.occurrenceId).reservations[0].backed.numerator,'4');
+ assert.equal(current.find(n=>n.occurrenceId===f.match.occurrenceId && n.protected).reservations[0].backed.numerator,'2');
+ ok(await f.write('delivery.usable',{sourceId:src,supplyRevision:11,observationId:randomUUID(),predecessorId:usable,
+   arrivalObservationId:arrival,confirmedAt:new Date().toISOString(),usable:f.quantity(0)}));
+ const corrected=await read(),lunch=corrected.find(n=>n.occurrenceId===f.match.occurrenceId && n.protected);
+ assert.equal(lunch.covered.numerator,'2');assert.equal(lunch.reservations[0].backed.numerator,'0');
+ const other=corrected.find(n=>n.occurrenceId===key.occurrenceId);
+ assert.equal(other.covered.numerator,'3');assert.equal(other.reservations[0].backed.numerator,'3');
+ assert.ok(other.issues.includes('reservationShortfall') && lunch.issues.includes('reservationShortfall'));
+ assert.equal(corrected.flatMap(n=>n.allocations).reduce((total,a)=>total+BigInt(a.amount.numerator),0n),5n);
+});
+
+test('reservation erasure removes all revisions involving a former shopper without reviving an older claim',async()=>{
+ const f=await reservationFixture(),body={...f.reservation,supplyRevision:4};
+ const saved=f.command('delivery.reserve',body),first=ok(await f.send(saved));
+ ok(await f.write('shop.transferAuthority',{newShopperId:f.planner.id}));f.snapshot.authorityEpoch++;
+ assert.equal((await f.send(saved)).status,404);
+ const client=await runtime.connect();
+ try {
+   await client.query('BEGIN');
+   await client.query("SELECT set_config('app.household_id',$1,true)",[randomUUID()]);
+   assert.equal((await client.query('SELECT * FROM ritc.delivery_reservation WHERE household_id=$1',[f.h])).rowCount,0);
+   await assert.rejects(()=>client.query('DELETE FROM ritc.delivery_reservation'),e=>e.code==='42501');
+ } finally {await client.query('ROLLBACK');client.release();}
+ const correction={...body,supplyRevision:5,quantity:f.quantity(1),predecessorId:first.operationId};
+ ok(await f.write('delivery.reserve',correction,f.planner));
+ ok(await f.write('shop.transferAuthority',{newShopperId:f.owner.id}));f.snapshot.authorityEpoch++;
+ assert.equal((await f.delivery()).sources[0].reservations[0].quantity.amount.numerator,1);
+ await admin.query('SELECT ritc.privacy_erase_extension($1,$2)',[f.h,f.planner.id]);
+ const page=await f.delivery();
+ assert.equal(page.supplyRevision,7);assert.deepEqual(page.sources[0].reservations,[]);
+ assert.equal(page.sources[0].sourceId,f.sourceId);assert.equal(page.sources[0].matches.length,1);
+ assert.deepEqual((await f.coverage()).needs.map(n=>n.reservations),[[],[]]);
+ assert.equal((await admin.query('SELECT count(*)::int n FROM ritc.delivery_reservation WHERE household_id=$1',[f.h])).rows[0].n,0);
+ assert.equal((await f.send(saved)).status,409);
 });

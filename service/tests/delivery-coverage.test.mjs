@@ -106,3 +106,60 @@ test('confirmed zero is distinct from waiting for a usable count',()=>{
  const waiting=deliveryCoverage([m],[{...food,confirmed:null}]).needs[0];
  assert.deepEqual(waiting.missing,zero.missing);assert.deepEqual(waiting.issues,['unconfirmed']);
 });
+
+function named(occurrenceId,quantity,protectedMeal=false) {
+ const entry=meal(occurrenceId,quantity,{protectedMeal});
+ entry.meal.planning.groups=[{id:'group',name:occurrenceId,protected:protectedMeal}];
+ entry.meal.planning.ingredients[0].groupIds=['group'];
+ return entry;
+}
+function pin(occurrenceId,quantity,reservationId='decision-'+occurrenceId) {
+ return {occurrenceId,mealRevision:2,ingredientId:'wrap',groupId:'group',reservationId,quantity};
+}
+
+test('a corrected five-portion delivery keeps two named lunches and shows three of four plates covered',()=>{
+ const lunch=named('lunch',q(2),true),plates=named('plates',q(4));
+ const lot=source('lot',q(6),['lunch','plates']);
+ lot.reservations=[pin('lunch',q(2)),pin('plates',q(4))];
+ const read=()=>deliveryCoverage([plates,lunch],[lot]).needs;
+ assert.deepEqual(read().map(n=>n.covered),[value(4),value(2)]);
+ lot.confirmed.quantity=q(5);
+ const [dinner,protectedLunch]=read();
+ assert.deepEqual(dinner.covered,value(3));assert.deepEqual(dinner.missing,value(1));
+ assert.deepEqual(dinner.reservations,[{sourceId:'lot',reservationId:'decision-plates',requested:value(4),backed:value(3)}]);
+ assert.deepEqual(dinner.issues,['reservationShortfall']);
+ assert.deepEqual(protectedLunch.reservations[0].backed,value(2));
+ assert.deepEqual(protectedLunch.allocations,[{sourceId:'lot',amount:value(2)}]);
+ lot.confirmed=null;
+ assert.ok(read().every(n=>n.reservations[0].backed.numerator==='0' && n.issues.includes('reservationShortfall')));
+});
+
+test('ordinary named food can reroute flexible protected coverage without shifting a protected reservation',()=>{
+ const lunch=named('lunch',q(2),true),supper=named('supper',q(2));
+ const both=source('a',q(2),['lunch','supper']),other=source('b',q(2),['lunch']);
+ both.reservations=[pin('supper',q(2))];
+ let [protectedLunch,ordinary]=deliveryCoverage([lunch,supper],[both,other]).needs;
+ assert.deepEqual(protectedLunch.allocations,[{sourceId:'b',amount:value(2)}]);
+ assert.deepEqual(ordinary.reservations[0].backed,value(2));
+ both.reservations.push(pin('lunch',q(1)));
+ [protectedLunch,ordinary]=deliveryCoverage([lunch,supper],[both,other]).needs;
+ assert.deepEqual(protectedLunch.allocations,[{sourceId:'a',amount:value(1)},{sourceId:'b',amount:value(1)}]);
+ assert.deepEqual(ordinary.covered,value(1));assert.deepEqual(ordinary.reservations[0].backed,value(1));
+ // A second lot covers the meal's full need while its original source remains short.
+ const substitute=source('c',q(1),['supper']);
+ ordinary=deliveryCoverage([lunch,supper],[both,other,substitute]).needs[1];
+ assert.deepEqual(ordinary.covered,value(2));assert.deepEqual(ordinary.reservations[0].backed,value(1));
+ assert.deepEqual(ordinary.issues,['reservationShortfall']);
+});
+
+test('named amounts report exact converted fractions and remain held back for unknown protected needs',()=>{
+ const mass=named('meal',q(2,'gram')),lot=source('lot',q(1,'gram'),['meal','unknown']);
+ lot.reservations=[pin('meal',q(1,'kilogram',999_983))];
+ let row=deliveryCoverage([mass],[lot]).needs[0];
+ assert.deepEqual(row.reservations[0].requested,{numerator:'1000',denominator:'999983'});
+ assert.deepEqual(row.reservations[0].backed,row.reservations[0].requested);
+ assert.deepEqual(row.allocations,[{sourceId:'lot',amount:value(1)}]);
+ row=deliveryCoverage([mass,named('unknown',null,true)],[lot]).needs[0];
+ assert.deepEqual(row.reservations[0].backed,value(0));assert.deepEqual(row.allocations,[]);
+ assert.ok(row.issues.includes('protectedQuantityUnknown') && row.issues.includes('reservationShortfall'));
+});

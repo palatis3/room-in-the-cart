@@ -276,6 +276,9 @@ export class HouseholdRepository {
           const source=await ctx.db.query('SELECT 1 FROM ritc.delivery_source WHERE household_id=$1 AND shop_id=$2 AND source_id=$3',
             [ctx.householdId,shop.shop_id,prior.response.sourceId]);
           if(!source.rowCount)throw refresh();
+          if(prior.kind==='delivery.reserve' && !(await ctx.db.query(
+            'SELECT 1 FROM ritc.delivery_reservation WHERE household_id=$1 AND operation_id=$2',
+            [ctx.householdId,prior.operation_id])).rowCount)throw refresh();
           if(prior.kind==='delivery.match' && !(await ctx.db.query(
             'SELECT 1 FROM ritc.delivery_ingredient_review WHERE household_id=$1 AND operation_id=$2',
             [ctx.householdId,prior.operation_id])).rowCount)throw refresh();
@@ -353,7 +356,7 @@ export class HouseholdRepository {
     return{operationId,kind:c.kind,request:ownRequest(await this.request(ctx,id,shop.shop_id,true))};
   }
   private async shopperCommand(ctx:Context,shop:Shop,c:Envelope,operationId:string) {
-    if(c.kind==='delivery.match'||c.kind==='delivery.register'||c.kind==='delivery.arrival'||c.kind==='delivery.usable'){
+    if(c.kind==='delivery.reserve'||c.kind==='delivery.match'||c.kind==='delivery.register'||c.kind==='delivery.arrival'||c.kind==='delivery.usable'){
       const delivery=await recordDelivery(ctx,shop,c.kind,c.body,operationId);
       return {...await this.receipt(ctx,c,operationId,'recorded'),...delivery};
     }

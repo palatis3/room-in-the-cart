@@ -1,19 +1,22 @@
-import {deliveryCoverage,type SealedMeal} from './delivery-coverage.js';
+import {deliveryCoverage,type SealedMeal,type ReservationHead,type DeliverySource} from './delivery-coverage.js';
 import { z } from 'zod';
 import type { Context, Shop } from './repository.js';
-import { deliveryMatchBody, deliverySourceBody, deliveryArrivalBody, deliveryUsableBody } from './recovery-contracts.js';
+import { deliveryReservationBody, deliveryMatchBody, deliverySourceBody, deliveryArrivalBody, deliveryUsableBody } from './recovery-contracts.js';
 import { fitsReceived, confirmedLot } from './recovery-domain.js';
+import { amount, add, cmp, dimension, zero } from './physical-quantity.js';
 import { ServiceError, invalid, unavailable } from './errors.js';
 
-type Kind = 'delivery.match'|'delivery.register'|'delivery.arrival'|'delivery.usable';
+type Kind = 'delivery.reserve'|'delivery.match'|'delivery.register'|'delivery.arrival'|'delivery.usable';
 type Arrival = z.infer<typeof deliveryArrivalBody>;
 type Usable = z.infer<typeof deliveryUsableBody>;
 interface SourceRow {
   source_id:string; line_id:string; segment_key:string; food_name:string; exclusion_tags:string[];
+  reservations: ReservationHead[];
   matches: {occurrenceId:string;mealRevision:number;ingredientId:string}[];
   arrival: Arrival|null; usable: Usable|null; arrival_recorded: Date|null; usable_recorded: Date|null;
 }
 
+const reviewReservation = () => new ServiceError(409,'reservation_review_required','Review the named reservation, confirmed food and protected portions.');
 const stale = () => new ServiceError(409, 'stale_supply', 'Reopen the delivery and review the latest observation.');
 function requirePlaced(shop: Shop, allowClosed = false) {
   if (shop.placed_revision === null || (shop.phase !== 'placed' && !(allowClosed && shop.phase === 'closed'))) {
@@ -30,7 +33,7 @@ const sealedMeals = `SELECT m.occurrence_id AS "occurrenceId",m.revision,m.meal
   WHERE ss.household_id=$1 AND ss.shop_id=$2 AND ss.revision=$3 AND m.meal IS NOT NULL`;
 
 // Physical observations and reviewed ingredient identity have independent heads.
-const heads = `SELECT s.*,matches.current AS matches,a.body AS arrival,a.recorded_at AS arrival_recorded,u.body AS usable,u.recorded_at AS usable_recorded
+const heads = `SELECT s.*,matches.current AS matches,pins.current AS reservations,a.body AS arrival,a.recorded_at AS arrival_recorded,u.body AS usable,u.recorded_at AS usable_recorded
   FROM ritc.delivery_source s
   LEFT JOIN LATERAL (SELECT COALESCE(jsonb_agg(jsonb_build_object('occurrenceId',r.occurrence_id,
     'mealRevision',r.meal_revision,'ingredientId',r.ingredient_id) ORDER BY r.occurrence_id,r.ingredient_id)
@@ -38,6 +41,12 @@ const heads = `SELECT s.*,matches.current AS matches,a.body AS arrival,a.recorde
     (SELECT DISTINCT ON (occurrence_id,meal_revision,ingredient_id) * FROM ritc.delivery_ingredient_review
       WHERE household_id=s.household_id AND shop_id=s.shop_id AND source_id=s.source_id
       ORDER BY occurrence_id,meal_revision,ingredient_id,supply_revision DESC) r) matches ON true
+  LEFT JOIN LATERAL (SELECT COALESCE(jsonb_agg(jsonb_build_object('occurrenceId',r.occurrence_id,'mealRevision',r.meal_revision,
+    'ingredientId',r.ingredient_id,'groupId',r.group_id,'reservationId',r.operation_id,'quantity',r.quantity)
+    ORDER BY r.occurrence_id,r.meal_revision,r.ingredient_id,r.group_id),'[]'::jsonb) AS current FROM
+    (SELECT DISTINCT ON (occurrence_id,meal_revision,ingredient_id,group_id) * FROM ritc.delivery_reservation
+      WHERE household_id=s.household_id AND shop_id=s.shop_id AND source_id=s.source_id
+      ORDER BY occurrence_id,meal_revision,ingredient_id,group_id,supply_revision DESC) r) pins ON true
   LEFT JOIN LATERAL (SELECT body,recorded_at FROM ritc.delivery_observation WHERE household_id=s.household_id
     AND shop_id=s.shop_id AND source_id=s.source_id AND kind='arrival' ORDER BY supply_revision DESC LIMIT 1) a ON true
   LEFT JOIN LATERAL (SELECT body,recorded_at FROM ritc.delivery_observation WHERE household_id=s.household_id
@@ -52,17 +61,22 @@ function sourceEvidence(row:SourceRow, asOf:string) {
     a && row.arrival_recorded ? {...a,id:a.observationId,identityRevision:1,recordedAt:row.arrival_recorded.toISOString()} : undefined,
     u && row.usable_recorded ? {...u,id:u.observationId,identityRevision:1,recordedAt:row.usable_recorded.toISOString()} : undefined, asOf);
   return {sourceId:source.id, foodId:source.foodId, lineId:row.line_id, segmentKey:row.segment_key, foodName:row.food_name,
-    exclusionTags:row.exclusion_tags, matches:row.matches, arrival:a, usable:u, confirmed:lot??null};
+    exclusionTags:row.exclusion_tags, matches:row.matches, reservations:row.reservations, arrival:a, usable:u, confirmed:lot??null};
 }
 
-export async function readDeliveryCoverage(ctx:Context,shop:Shop) {
-  requirePlaced(shop,true);
+async function coverageInputs(ctx:Context,shop:Shop) {
   const scope=[ctx.householdId,shop.shop_id];
   const meals=await ctx.db.query<SealedMeal>(sealedMeals+" ORDER BY m.meal->>'day',m.occurrence_id",[...scope,shop.placed_revision]);
   const sources=await ctx.db.query<SourceRow>(heads+" AND jsonb_array_length(matches.current)>0 ORDER BY s.source_id",scope);
   const asOf=ctx.now.toISOString();
+  return {meals:meals.rows,sources:sources.rows.map(row=>sourceEvidence(row,asOf)),asOf};
+}
+
+export async function readDeliveryCoverage(ctx:Context,shop:Shop) {
+  requirePlaced(shop,true);
+  const {meals,sources,asOf}=await coverageInputs(ctx,shop);
   return {shopId:shop.shop_id,shopRevision:shop.revision,placedRevision:shop.placed_revision,authorityEpoch:shop.authority_epoch,
-    supplyRevision:shop.supply_revision,asOf,...deliveryCoverage(meals.rows,sources.rows.map(row=>sourceEvidence(row,asOf)))};
+    supplyRevision:shop.supply_revision,asOf,...deliveryCoverage(meals,sources)};
 }
 
 export async function readDelivery(ctx: Context, shop: Shop, cursor: string|null) {
@@ -79,7 +93,77 @@ export async function readDelivery(ctx: Context, shop: Shop, cursor: string|null
   const asOf = ctx.now.toISOString();
   const sources = result.rows.slice(0,50).map(row=>sourceEvidence(row,asOf));
   return {shopId:shop.shop_id, placedRevision:shop.placed_revision, shopRevision:shop.revision, authorityEpoch:shop.authority_epoch,
-    supplyRevision:shop.supply_revision, asOf, coverageAvailable:true, lines, meals, sources, nextCursor:result.rows.length>50?sources.at(-1)!.sourceId:null};
+    supplyRevision:shop.supply_revision, asOf, coverageAvailable:true, reservationsAvailable:true, lines, meals, sources, nextCursor:result.rows.length>50?sources.at(-1)!.sourceId:null};
+}
+
+type ReservationWrite=z.infer<typeof deliveryReservationBody>;
+type Target=Pick<ReservationWrite,'occurrenceId'|'mealRevision'|'ingredientId'>;
+function sameTarget(a:Target,b:Target) {
+  return a.occurrenceId===b.occurrenceId && a.mealRevision===b.mealRevision && a.ingredientId===b.ingredientId;
+}
+function lower(a:{numerator:string;denominator:string},b:{numerator:string;denominator:string}) {
+  return BigInt(a.numerator)*BigInt(b.denominator)<BigInt(b.numerator)*BigInt(a.denominator);
+}
+
+// An ordinary set-aside cannot deplete a protected need or another surviving
+// promise. Check the same exact, source-constrained projection the shopper sees.
+function validateReservation(meals:SealedMeal[],sources:DeliverySource[],source:DeliverySource,row:ReservationWrite,
+  updated:ReservationHead[]) {
+  const quantity=row.quantity;
+  if(!quantity || !source.confirmed || dimension(quantity)!==dimension(source.confirmed.quantity)) throw reviewReservation();
+  const before=deliveryCoverage(meals,sources).needs;
+  const after=deliveryCoverage(meals,sources.map(s=>s===source?{...s,reservations:updated}:s)).needs;
+  const target=after.find(n=>sameTarget(n,row) && n.groupIds.length===1 && n.groupIds[0]===row.groupId);
+  if(!target?.required || dimension(quantity)!==dimension(target.required)) throw reviewReservation();
+  const candidate=target.reservations.find(p=>p.sourceId===source.sourceId);
+  if(!candidate || lower(candidate.backed,candidate.requested)) throw reviewReservation();
+  let sourceTotal=zero;
+  for(const pin of updated) if(pin.quantity) {
+    if(dimension(pin.quantity)!==dimension(quantity)) throw reviewReservation();
+    sourceTotal=add(sourceTotal,amount(pin.quantity));
+  }
+  if(cmp(sourceTotal,amount(source.confirmed.quantity))>0n) throw reviewReservation();
+  let targetTotal=zero;
+  for(const s of sources) for(const pin of (s===source?updated:s.reservations)??[]) {
+    if(pin.quantity && sameTarget(pin,row) && pin.groupId===row.groupId) targetTotal=add(targetTotal,amount(pin.quantity));
+  }
+  if(cmp(targetTotal,amount(target.required))>0n) throw reviewReservation();
+  for(const [index,n] of before.entries()) {
+    const next=after[index]!;
+    if(n.protected && n.covered && next.covered && lower(next.covered,n.covered)) throw reviewReservation();
+    for(const pin of n.reservations) {
+      if(pin.reservationId===row.predecessorId) continue;
+      const other=next.reservations.find(p=>p.reservationId===pin.reservationId);
+      if(!other || lower(other.backed,pin.backed)) throw reviewReservation();
+    }
+  }
+}
+
+async function reserveDelivery(ctx:Context,shop:Shop,row:ReservationWrite,operationId:string) {
+  if(row.supplyRevision!==shop.supply_revision) throw stale();
+  const scope=[ctx.householdId,shop.shop_id,row.sourceId,row.occurrenceId,row.mealRevision,row.ingredientId];
+  const match=(await ctx.db.query(`SELECT operation_id,matched FROM ritc.delivery_ingredient_review
+    WHERE household_id=$1 AND shop_id=$2 AND source_id=$3 AND occurrence_id=$4 AND meal_revision=$5 AND ingredient_id=$6
+    ORDER BY supply_revision DESC LIMIT 1`,scope)).rows[0];
+  if(!match?.matched) throw reviewReservation();
+  const {meals,sources}=await coverageInputs(ctx,shop);
+  const source=sources.find(s=>s.sourceId===row.sourceId);
+  if(!source) throw unavailable();
+  const head=source.reservations.find(p=>sameTarget(p,row) && p.groupId===row.groupId);
+  if(row.predecessorId!==(head?.reservationId??null)) throw stale();
+  if(row.quantity) {
+    const {occurrenceId,mealRevision,ingredientId,groupId,quantity}=row;
+    const updated=source.reservations.filter(p=>p!==head);
+    updated.push({occurrenceId,mealRevision,ingredientId,groupId,quantity,reservationId:operationId});
+    // Reducing an existing promise releases part of its claim even when the
+    // remaining amount still exceeds newly corrected or unknown usable food.
+    const reduction=head?.quantity && dimension(head.quantity)===dimension(quantity) && cmp(amount(quantity),amount(head.quantity))<0n;
+    if(!reduction) validateReservation(meals,sources,source,row,updated);
+  } else if(!head?.quantity) throw stale();
+  await ctx.db.query(`INSERT INTO ritc.delivery_reservation(household_id,shop_id,source_id,occurrence_id,meal_revision,
+    ingredient_id,group_id,quantity,operation_id,predecessor_id,match_operation_id,actor_id,supply_revision,recorded_at)
+    VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+    [...scope,row.groupId,row.quantity,operationId,row.predecessorId,match.operation_id,ctx.member.member_id,shop.supply_revision+1,ctx.now]);
 }
 
 // Called in HouseholdRepository's household-locked command transaction, after device,
@@ -88,7 +172,11 @@ export async function recordDelivery(ctx: Context, shop: Shop, kind: Kind, input
   requirePlaced(shop);
   const scope=[ctx.householdId,shop.shop_id], revision=shop.supply_revision+1;
   let sourceId:string;
-  if(kind==='delivery.register') {
+  if(kind==='delivery.reserve') {
+    const row=deliveryReservationBody.parse(input);
+    await reserveDelivery(ctx,shop,row,operationId);
+    sourceId=row.sourceId;
+  } else if(kind==='delivery.register') {
     const row=deliverySourceBody.parse(input);
     if(row.supplyRevision!==shop.supply_revision || row.placedRevision!==shop.placed_revision) throw stale();
     const line=await ctx.db.query(`SELECT 1 FROM ritc.shop_snapshot ss, jsonb_array_elements(ss.snapshot->'lines') line
@@ -106,6 +194,7 @@ export async function recordDelivery(ctx: Context, shop: Shop, kind: Kind, input
     sourceId=row.sourceId;
     const source=(await ctx.db.query<SourceRow>(heads+' AND s.source_id=$3',[...scope,sourceId])).rows[0];
     if(!source) throw unavailable();
+    if(!row.matched && source.reservations.some(p=>p.quantity && sameTarget(p,row))) throw reviewReservation();
     const meal=await ctx.db.query(sealedMeals+` AND m.occurrence_id=$4 AND m.revision=$5
       AND EXISTS(SELECT 1 FROM jsonb_array_elements(m.meal->'planning'->'ingredients') i WHERE (i->>'id')::uuid=$6)`,
       [...scope,shop.placed_revision,row.occurrenceId,row.mealRevision,row.ingredientId]);
