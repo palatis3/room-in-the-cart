@@ -236,6 +236,7 @@ private struct DeliveryReservationEditor: View {
     let reviewed: SharedDeliveryPage
     let save: (SharedDeliveryEdit) async -> String?
     @State private var amount = ""
+    @FocusState private var amountFocused: Bool
     @State private var releasing = false
     @State private var error: String?
 
@@ -266,6 +267,7 @@ private struct DeliveryReservationEditor: View {
             if source.confirmed != nil || head?.quantity != nil {
                 Section {
                     TextField(ht("Amount to set aside"), text: $amount)
+                        .focused($amountFocused)
                         .accessibilityIdentifier("delivery.reservation.amount")
                     LabeledContent(ht("Unit"), value: dinnerUnit(unit))
                     if let proposed {
@@ -276,7 +278,11 @@ private struct DeliveryReservationEditor: View {
                 }
             }
             if head?.quantity != nil {
-                Button(ht("Release this reservation"), role: .destructive) { releasing = true }
+                Button(ht("Release this reservation"), role: .destructive) {
+                    amountFocused = false
+                    releasing = true
+                }
+                    .disabled(model.busy)
                     .confirmationDialog(ht("Release this reservation?"), isPresented: $releasing, titleVisibility: .visible) {
                         Button(ht("Release amount set aside"), role: .destructive) { Task { await submit(nil) } }
                         Button(ht("Cancel"), role: .cancel) {}
@@ -288,14 +294,15 @@ private struct DeliveryReservationEditor: View {
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
                 Button(ht("Save")) {
-                    if let proposed { Task { await submit(proposed) } }
+                    guard let proposed else { return }
+                    amountFocused = false
+                    Task { await submit(proposed) }
                 }
                 .accessibilityLabel(ht("Save amount set aside"))
                 .disabled(proposed == nil || model.busy)
             }
         }
         .scrollDismissesKeyboard(.interactively)
-        .disabled(model.busy)
     }
 
     private func submit(_ quantity: SharedMealQuantity?) async {
