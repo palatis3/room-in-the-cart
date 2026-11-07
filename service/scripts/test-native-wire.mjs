@@ -19,6 +19,7 @@ process.env.RITC_TEST_NATIVE_WIRE = '1';
 
 const history = paid => `Swift household client records meals and price history over HTTPS and PostgreSQL (paid=${paid})`;
 const cases = [
+  'assigned iPhone shopper carries a prior request and reprices it over pinned HTTPS',
   'assigned iPhone shopper confirms and corrects a placed request over pinned HTTPS',
   history(false),
   history(true),
@@ -26,6 +27,7 @@ const cases = [
   'real Swift adult proposal and separate shopper adoption use pinned loopback HTTPS and PostgreSQL',
 ];
 const swiftRuns = [
+  'deferred-request HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres',
   'purchase-author HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres',
   'request-purchase HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres',
   'history-free HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres',

@@ -68,6 +68,13 @@ async function fixture() {
   return{h,shopId,lineId,line,quote,actors,http,envelope,command,send,preview};
 }
 
+if(process.env.RITC_TEST_NATIVE_WIRE==='1') test('assigned iPhone shopper carries a prior request and reprices it over pinned HTTPS',async()=>{
+  const f=await deferredFixture('Alex',{originalItem:'Original basket'});
+  const {exerciseNativeClient}=await import('./native-wire.mjs');
+  await exerciseNativeClient({service:server,owner:f.actors.Mia,householdId:f.h,shopId:f.dest,
+    deferredRequestId:f.original.requestId});
+});
+
 async function purchaseFixture(author='Sam') {
   const f=await fixture(),sent=await f.send(author),requestId=sent.request.requestId;
   const preview=await f.preview(sent.request,{choice:'link',lineId:f.lineId,promote:false});

@@ -11,7 +11,7 @@ const run = promisify(execFile);
 
 // A fixture identity provider returns one real signed test JWT. Household requests
 // keep their original headers and body and go through the normal API and database.
-export async function exerciseNativeClient({service, owner, householdId, shopId, secondShopId, observationId, paid, purchaseRequestId, purchaseReader = false}) {
+export async function exerciseNativeClient({service, owner, householdId, shopId, secondShopId, observationId, paid, deferredRequestId, purchaseRequestId, purchaseReader = false}) {
   const dir = await mkdtemp(join(tmpdir(), 'ritc-native-wire-'));
   const key = join(dir, 'tls.key'), cert = join(dir, 'tls.pem'), code = randomUUID();
   let tls;
@@ -45,8 +45,9 @@ export async function exerciseNativeClient({service, owner, householdId, shopId,
     await new Promise((resolve,reject)=>tls.once('error',reject).listen(0,'127.0.0.1',resolve));
     await runNativeWireTest({
       suite: 'NativeServiceWireTests', method: 'testNativeClientAgainstPostgres',
-      scenario: purchaseReader ? 'purchase-author' : purchaseRequestId ? 'request-purchase' : paid ? 'history-paid' : 'history-free', unsuccessful,
+      scenario: deferredRequestId ? 'deferred-request' : purchaseReader ? 'purchase-author' : purchaseRequestId ? 'request-purchase' : paid ? 'history-paid' : 'history-free', unsuccessful,
       env:{RITC_WIRE_PORT:String(tls.address().port),RITC_WIRE_CERT:der,RITC_WIRE_CODE:code,
+        ...(deferredRequestId ? {RITC_WIRE_DEFERRED_REQUEST:deferredRequestId} : {}),
         ...(purchaseRequestId ? {RITC_WIRE_PURCHASE_REQUEST:purchaseRequestId,RITC_WIRE_PURCHASE_READER:purchaseReader?"1":"0"} : {}),
         RITC_WIRE_PAID:paid?"1":"0",RITC_WIRE_HOUSEHOLD:householdId,RITC_WIRE_SHOP:shopId,RITC_WIRE_OTHER:secondShopId,RITC_WIRE_OBSERVATION:observationId},
     });
