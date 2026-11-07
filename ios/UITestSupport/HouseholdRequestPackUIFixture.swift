@@ -23,10 +23,16 @@ final class S24FixtureServer: @unchecked Sendable {
     func advanceSource() { lock.lock(); defer { lock.unlock() }; revision += 1 }
     private var accessRevoked = false
     func revokeAccess() { lock.lock(); defer { lock.unlock() }; accessRevoked = true }
+    private static let earlierShop = "77777777-5555-4555-8555-555555555555"
+    private static let earlierRequest = "88888888-5555-4555-8555-555555555555"
+    private let deferredScenario: Bool
+    private var carryKey: String?
+    private var carryBody: Data?
     let includeExistingLine: Bool
     let cerealScenario: Bool
     let includeMealFacts: Bool
-    init(includeExistingLine: Bool = false, cerealScenario: Bool = false, includeMealFacts: Bool = true) {
+    init(includeExistingLine: Bool = false, cerealScenario: Bool = false, includeMealFacts: Bool = true, deferredScenario: Bool = false) {
+        self.deferredScenario = deferredScenario
         self.includeExistingLine = includeExistingLine; self.cerealScenario = cerealScenario; self.includeMealFacts = includeMealFacts
     }
     static let protectedLunches: [[String: Any]] = [
@@ -55,9 +61,21 @@ final class S24FixtureServer: @unchecked Sendable {
         if path == "/auth/v1/verify" { return try json(["access_token":"fixture-access","refresh_token":"fixture-refresh","expires_in":3600,"user":["id":"fixture-adult","email_confirmed_at":"date"]]) }
         if path == "/auth/v1/user" { return try json(["id":"fixture-adult","email_confirmed_at":"date"]) }
         if path.hasSuffix("/devices") { return try json(["deviceId":"fixture-device","deviceToken":"fixture-device-token"]) }
-        if path.hasSuffix("/bootstrap") { return try json(["household":["id":Self.household,"label":"Fixture"],"memberId":Self.member,"role":"shopper","shopId":Self.shop,"enrolled":true,"queueConsent":false,"capabilities":["shopper_inbox","request_preview","shopper_commands"]]) }
-        let requestRow: [String: Any] = ["requestId":Self.requestID,"shopId":Self.shop,"revision":recordedLines.isEmpty ? 1 : 2,"originalItem":cerealScenario ? "Brown rice cereal" : "Wraps for lunch","ownQuantity":cerealScenario ? "1 box" : "8 wraps","authoredAt":"2026-11-03T00:00:00Z","receivedAt":"2026-11-03T00:00:01Z","route":"current","status":recordedLines.isEmpty ? "pending" : "added","ownActionAllowed":recordedLines.isEmpty,"authorAlias":"Sam"]
-        if path.hasSuffix("/inbox") { return try json(["requests":[requestRow],"nextCursor":NSNull()]) }
+        let capabilities = ["shopper_inbox", "request_preview", "shopper_commands"] + (deferredScenario ? ["deferred_requests"] : [])
+        if deferredScenario && path.hasSuffix("/shops/" + Self.shop + "/deferred-requests") {
+            let row: [String: Any] = ["sourceShopId": Self.earlierShop, "sourceAuthorityEpoch": 3,
+                "requestId": Self.earlierRequest, "requestRevision": 2, "originalItem": "Wraps for lunch",
+                "ownQuantity": "8 wraps", "authorAlias": "Sam", "authoredAt": "2026-11-03T00:00:00Z",
+                "receivedAt": "2026-11-03T00:00:01Z"]
+            return try json(["shopId": Self.shop, "shopRevision": revision + (recordedLines.isEmpty ? 0 : 1),
+                             "authorityEpoch": 1, "requests": carryKey == nil ? [row] : [], "nextCursor": NSNull()])
+        }
+        if path.hasSuffix("/bootstrap") { return try json(["household":["id":Self.household,"label":"Fixture"],"memberId":Self.member,"role":"shopper","shopId":Self.shop,"enrolled":true,"queueConsent":false,"capabilities":capabilities]) }
+        var requestRow: [String: Any] = ["requestId":Self.requestID,"shopId":Self.shop,"revision":recordedLines.isEmpty ? 1 : 2,"originalItem":cerealScenario ? "Brown rice cereal" : "Wraps for lunch","ownQuantity":cerealScenario ? "1 box" : "8 wraps","authoredAt":"2026-11-03T00:00:00Z","receivedAt":"2026-11-03T00:00:01Z","route":"current","status":recordedLines.isEmpty ? "pending" : "added","ownActionAllowed":recordedLines.isEmpty,"authorAlias":"Sam"]
+        if path.hasSuffix("/inbox") {
+            if deferredScenario { requestRow["fromPreviousShop"] = true }
+            return try json(["requests": deferredScenario && carryKey == nil ? [] : [requestRow], "nextCursor": NSNull()])
+        }
         if path.hasSuffix("/shops/" + Self.shop) {
             if accessRevoked { return (403, Data()) }
             let quote = try ShopperQuote(scope: "wholeCheckout", complete: true, capMinor: cerealScenario ? 3800 : 500, capScope: "wholeCheckout", fee: .fixed(0), taxesMinor: 0, depositsMinor: 0, discountsMinor: 0, observedAt: Date().addingTimeInterval(-60), expiresAt: Date().addingTimeInterval(3600))
@@ -82,6 +100,29 @@ final class S24FixtureServer: @unchecked Sendable {
         if path.hasSuffix("/replay-windows") { return try json(["id":"66666666-6666-4666-8666-666666666666","expiresAt":"2099-01-01T00:00:00Z"]) }
         if path.hasSuffix("/commands"), let key = input["clientKey"] as? String {
             count += 1
+            if deferredScenario && input["kind"] as? String == "request.carry" {
+                guard input["shopId"] as? String == Self.shop,
+                      let body = input["body"] as? [String: Any], body.count == 3,
+                      body["requestId"] as? String == Self.earlierRequest,
+                      body["sourceShopId"] as? String == Self.earlierShop, body["sourceAuthorityEpoch"] as? Int == 3,
+                      input["base"] as? [String: Int] == ["shopRevision": 1, "authorityEpoch": 1, "requestRevision": 2]
+                else { throw URLError(.badServerResponse) }
+                if let carryKey {
+                    guard key == carryKey, bytes == carryBody, let receipt = receipts[key] else {
+                        throw URLError(.badServerResponse)
+                    }
+                    changed?(count, recordedLines.count)
+                    return try json(receipt)
+                }
+                carryKey = key
+                carryBody = bytes
+                receipts[key] = ["kind": "request.carry", "operationId": Self.requestID, "requestId": Self.requestID,
+                    "sourceRequestId": Self.earlierRequest, "requestRevision": 1, "shopId": Self.shop,
+                    "shopRevision": 1, "authorityEpoch": 1, "disposition": "recorded"]
+                changed?(count, recordedLines.count)
+                // The write committed, but the gateway cannot deliver its receipt.
+                return (503, Data())
+            }
             if let receipt = receipts[key] { changed?(count,recordedLines.count); return try json(receipt) }
             guard input["kind"] as? String == "request.apply", let decision = recordedPreview?["decision"] as? [String: Any] else { throw URLError(.badServerResponse) }
             if let line = decision["line"] as? [String: Any] { recordedLines.append(line) }
@@ -99,7 +140,10 @@ final class S24FixtureProtocol: URLProtocol, @unchecked Sendable {
         do {
             guard let server = Self.server else { throw URLError(.unsupportedURL) }
             let (status,data) = try server.respond(request)
-            client?.urlProtocol(self, didReceive: HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: ["Content-Type":"application/json"])!, cacheStoragePolicy: .notAllowed)
+            var headers = ["Content-Type": "application/json"]
+            if status == 503 { headers["Retry-After"] = "8" }
+            client?.urlProtocol(self, didReceive: HTTPURLResponse(url: request.url!, statusCode: status,
+                httpVersion: nil, headerFields: headers)!, cacheStoragePolicy: .notAllowed)
             client?.urlProtocol(self, didLoad: data); client?.urlProtocolDidFinishLoading(self)
         } catch { client?.urlProtocol(self, didFailWithError: error) }
     }
@@ -126,7 +170,7 @@ import SwiftUI
     @Published var lines = 0
     @Published var failed = false
     @Published var previews = 0
-    private let server = S24FixtureServer(cerealScenario: ProcessInfo.processInfo.arguments.contains("--request-meal-fixture"), includeMealFacts: !ProcessInfo.processInfo.arguments.contains("--request-meals-unknown"))
+    private let server = S24FixtureServer(cerealScenario: ProcessInfo.processInfo.arguments.contains("--request-meal-fixture"), includeMealFacts: !ProcessInfo.processInfo.arguments.contains("--request-meals-unknown"), deferredScenario: ProcessInfo.processInfo.arguments.contains("--deferred-request-fixture"))
     func endShopperAccess() async { server.revokeAccess(); await model?.load() }
     func start() async {
         guard model == nil, ProcessInfo.processInfo.arguments.contains("--ui-testing"),ProcessInfo.processInfo.arguments.contains("--request-pack-fixture") else { return }
