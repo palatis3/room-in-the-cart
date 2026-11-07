@@ -546,3 +546,68 @@ test('S24 reviewed pack source persists in private exact preview and atomic appl
   const shop=await f.http('Mia','GET','/shops/'+f.shopId);assert.equal(shop.data.lines.length,2);assert.deepEqual(shop.data.lines.find(l=>l.lineId===line.lineId),line);
   const own=await f.http('Sam','GET','/requests/mine');assert.equal(own.data.requests[0].status,'added');assert.equal(JSON.stringify(own.data).includes('quoteSource'),false);assert.equal(JSON.stringify(own.data).includes('Private reviewed shelf source'),false);
 });
+
+test('two contributor web sessions see only their own purchase receipt through shopper corrections',
+  {skip:process.env.RITC_TEST_WEB_WIRE!=='1'}, async t=>{
+  const [{JSDOM},{IDBFactory},{WebApp},{API},{Outbox}]=await Promise.all([
+    import('../../web/node_modules/jsdom/lib/api.js'),import('../../web/node_modules/fake-indexeddb/build/esm/index.js'),
+    import('../../web/dist/app.js'),import('../../web/dist/api.js'),import('../../web/dist/outbox.js')
+  ]);
+  const f=await purchaseFixture('Alex'),other=await fixture();
+  const outsider=other.actors.Alex;
+  const invitation=await f.http('Mia','POST','/invites',{kind:'adult_contributor',expiresInHours:1});
+  assert.equal(invitation.status,200);
+  const joined=await f.http(outsider,'POST','/v1/invites/redeem',{token:invitation.data.token,intent:'join',adultAttestation:true,alias:'Second contributor'});
+  assert.equal(joined.status,200);
+
+  async function openBrowser(actor,language){
+    const active=await f.http(actor,'POST','/v1/session',{householdId:f.h,shopId:f.shopId});
+    assert.equal(active.status,200,JSON.stringify(active.data));
+    assert.equal(active.data.role,'contributor');
+    const cookie=active.headers.get('set-cookie').split(';')[0];
+    let rows;
+    const api=new API(async(path,options)=>{
+      const res=await fetch(origin+path,{...options,headers:{...options.headers,Cookie:cookie,Origin:'https://web.fixture.invalid'}});
+      if(path.includes('/requests/mine') && res.ok)rows=(await res.clone().json()).requests;
+      return res;
+    });
+    const dom=new JSDOM('<div id="app"></div>',{url:'https://web.fixture.invalid/requests'});
+    t.after(()=>dom.window.close());
+    Object.defineProperty(dom.window.navigator,'language',{value:language});
+    const root=dom.window.document.querySelector('#app');
+    const app=new WebApp(root,api,new Outbox(new IDBFactory()));
+    await app.start();
+    return {root,rows:()=>rows,refresh:async()=>{
+      const id=language==='es'?'Actualizar':'Refresh';
+      const refresh=[...root.querySelectorAll('button')].find(b=>b.textContent===id);
+      assert.ok(refresh);refresh.click();
+      const deadline=Date.now()+5000;
+      while(root.querySelector('main')?.getAttribute('aria-busy')==='true'){
+        assert.ok(Date.now()<deadline);await new Promise(resolve=>setTimeout(resolve,5));
+      }
+    }};
+  }
+  const alex=await openBrowser('Alex','es'),observer=await openBrowser(outsider,'en');
+  let revision=f.requestRevision;
+  for(const [outcome,label] of [
+    [null,'Compra sin confirmar'],['bought','La persona que hizo la compra confirmó que compró el artículo'],
+    ['notBought','La persona que hizo la compra confirmó que no compró el artículo'],['unknown','Compra sin confirmar']
+  ]){
+    if(outcome){
+      const saved=await f.command('Mia','request.confirmPurchase',
+        {requestId:f.requestId,lineId:f.lineId,placedRevision:f.placedRevision,outcome},
+        {shopRevision:f.shopRevision,authorityEpoch:1,requestRevision:revision});
+      assert.equal(saved.status,200,JSON.stringify(saved.data));revision=saved.data.requestRevision;
+    }
+    await Promise.all([alex.refresh(),observer.refresh()]);
+    assert.deepEqual(alex.rows().map(r=>r.requestId),[f.requestId]);
+    const [own]=alex.rows();
+    assert.equal(own.revision,revision);assert.equal(own.status,'added');
+    assert.equal(own.purchaseOutcome,outcome==='bought'||outcome==='notBought'?outcome:undefined);
+    assert.equal(Object.hasOwn(own,'linkedLineId'),false);
+    assert.equal(Object.hasOwn(own,'unitPriceMinor'),false);
+    assert.ok([...alex.root.querySelectorAll('p')].some(p=>p.textContent===label));
+    assert.deepEqual(observer.rows(),[]);
+    assert.doesNotMatch(observer.root.textContent,/Fictional cereal|Shopper confirmed|Purchase not confirmed/);
+  }
+});
