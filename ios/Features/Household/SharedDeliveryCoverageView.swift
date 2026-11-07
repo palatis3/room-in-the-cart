@@ -127,18 +127,21 @@ private struct SharedDeliveryCookView: View {
     @State private var readback: CookReadbackInstruction?
     @State private var sharing: DatedCopy?
 
+    private enum ReviewAction { case read, share, save }
+    @State private var savedWording: [String: String] = [:]
+
     private struct DatedCopy: Identifiable {
         let id = UUID()
         let text: String
     }
 
     private var allowed: Bool {
-        !household.locked && household.sharedShop === model && model.canReadDelivery && model.pending == nil &&
+        !household.locked && household.sharedShop === model && model.canReadDelivery &&
         model.deliveryRecord == page && model.shop?.shopRevision == page.shopRevision &&
         model.shop?.authorityEpoch == page.authorityEpoch
     }
     private var text: String { wording[language] ?? original ?? "" }
-    private var canReview: Bool { allowed && !stale && !checking && scenePhase == .active && original != nil }
+    private var canReview: Bool { allowed && model.pending == nil && !model.busy && !stale && !checking && scenePhase == .active && original != nil }
 
     var body: some View {
         Form {
@@ -164,16 +167,27 @@ private struct SharedDeliveryCookView: View {
                         if !editing {
                             Button(ht("Edit cook wording")) { readback = nil; editing = true }
                             if readback == nil && text == original && (try? CaptureLimits.validate(text)) != nil {
-                                Button(ht("Prepare readback")) { Task { await review(share: false) } }
+                                Button(ht("Prepare readback")) { Task { await review(.read) } }
                                     .disabled(!canReview)
                             }
                         }
                     }
                     if !editing {
-                        Button(ht("Share dated copy")) { Task { await review(share: true) } }
+                        Button(ht("Share dated copy")) { Task { await review(.share) } }
                             .disabled(!canReview || text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                             .accessibilityIdentifier("delivery.cook.share")
+                        if model.canReadCookCopies {
+                            Button(pTr("Save dated copy")) { Task { await review(.save) } }
+                                .disabled(!canReview || !canSaveWording || savedWording[language] == text)
+                                .accessibilityIdentifier("delivery.cook.save")
+                            if !canSaveWording && text.utf16.count > 16_000 {
+                                Text(ht("Shorten the wording to save a version. The full dated copy can still be shared."))
+                            } else if savedWording[language] == text {
+                                Text(ht("Dated copy saved"))
+                            }
+                        }
                         if checking { ProgressView() }
+                        if let notice = model.notice { Text(notice) }
                         if retry { Text(ht("Couldn’t check the delivery. Reconnect and try again.")) }
                         if let lifecycle = household.lifecycle, lifecycle.canShare {
                             NavigationLink(pTr("Prepare a current shared view")) { HouseholdHelperComposer(model: lifecycle) }
@@ -184,6 +198,12 @@ private struct SharedDeliveryCookView: View {
                 }
             } else {
                 Text(ht("Refresh deliveries and review the current record."))
+            }
+            if model.canReadCookCopies && !household.locked && household.sharedShop === model {
+                NavigationLink(pTr("Saved cook notes")) {
+                    SharedCookHistoryView(model: model, page: page, occurrence: occurrence)
+                }
+                .accessibilityIdentifier("delivery.cook.history")
             }
         }
         .navigationTitle(pTr("Tell the cook"))
@@ -217,7 +237,11 @@ private struct SharedDeliveryCookView: View {
         wording = [:]
     }
 
-    private func review(share: Bool) async {
+    private var canSaveWording: Bool {
+        !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && text.utf16.count <= 16_000
+    }
+
+    private func review(_ action: ReviewAction) async {
         guard canReview, !editing else { return }
         let reviewedLanguage = language, reviewedText = text, reviewID = presentation
         retry = false
@@ -230,11 +254,20 @@ private struct SharedDeliveryCookView: View {
                   current.unplannedOccurrenceIds.contains(occurrence.id) == coverage.unplannedOccurrenceIds.contains(occurrence.id) else {
                 stale = true; clear(); return
             }
-            guard allowed, scenePhase == .active, !editing, language == reviewedLanguage, text == reviewedText else { return }
+            guard allowed, model.pending == nil, !model.busy, scenePhase == .active, !editing, language == reviewedLanguage, text == reviewedText else { return }
             readback = nil
-            if share {
+            switch action {
+            case .share:
                 sharing = DatedCopy(text: reviewedText)
-            } else if reviewedText == original, let checkedAt = serviceDate(coverage.asOf) {
+            case .save:
+                guard model.canReadCookCopies, canSaveWording, savedWording[reviewedLanguage] != reviewedText else { return }
+                let locale = reviewedLanguage == "es-US" ? "es" : "en"
+                if await model.saveCookCopy(text: reviewedText, language: locale, occurrence: occurrence, reviewed: page),
+                   allowed && reviewID == presentation {
+                    savedWording[reviewedLanguage] = reviewedText
+                }
+            case .read:
+                guard reviewedText == original, let checkedAt = serviceDate(coverage.asOf) else { return }
                 readback = CookReadbackInstruction(authorityBindingID: UUID(), sourceID: occurrence.id,
                     sourceRevision: Int64(page.supplyRevision), createdAt: checkedAt, startBefore: Date().addingTimeInterval(60),
                     text: reviewedText, localeIdentifier: reviewedLanguage, excludesPrivateBudget: true)
