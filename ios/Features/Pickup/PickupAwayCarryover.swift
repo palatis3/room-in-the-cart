@@ -184,12 +184,16 @@ extension PickupJourney {
         return lots
     }
     var physicalStockNeeds: [StockNeed] {
-        (pickup == nil ? plannedNeeds : needs).map { StockNeed(id: $0.id, foodID: $0.orderLineID, name: $0.name, amount: $0.amount, priority: $0.priority) } + stockNeeds
+        guard let history = mealRecovery else { return rawPhysicalStockNeeds }
+        // Validated persisted histories always project. Invalid transient data must
+        // not fall back to superseded original demands and claim their coverage.
+        return (try? MealRecoveryEngine.project(history.domain).demands) ?? []
     }
     /// Omit the instant only for structural/history validation. Live projections
     /// and business decisions supply their injected clock.
     func carryoverAllocation(at instant: Date? = nil) throws -> StockAllocationResult {
-        try ConfirmedCarryoverAllocator.allocate(lots: physicalLots(at: instant), needs: physicalStockNeeds, reservations: carryoverStockReservations)
+        if let history = mealRecovery { try history.validate(); try validateRecoveryRawBasis(history) }
+        return try ConfirmedCarryoverAllocator.allocate(lots: physicalLots(at: instant), needs: physicalStockNeeds, reservations: carryoverStockReservations)
     }
     func validateAwayCarryovers() throws {
         guard awayCarryovers.count <= 1_000, Set(awayCarryovers.map(\.id)).count == awayCarryovers.count,

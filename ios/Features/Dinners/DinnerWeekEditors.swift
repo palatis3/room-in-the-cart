@@ -3,6 +3,8 @@ import CoreDomain
 
 struct DinnerOccurrenceView: View {
     @ObservedObject var model: DinnerFeatureModel
+    @EnvironmentObject private var pickup: PickupModel
+    @EnvironmentObject private var ledger: LedgerModel
     let occurrenceID: UUID
     @State private var date = Date()
     @State private var scheduled = false
@@ -13,12 +15,22 @@ struct DinnerOccurrenceView: View {
     private var meal: MealOccurrence? { model.shop?.mealOccurrences.first { $0.id == occurrenceID && $0.removedAt == nil } }
     var body: some View {
         Group {
-            if meal?.carryover != nil {
-                DinnerCarryoverDetailsView(model: model, occurrenceID: occurrenceID)
-            } else {
-                occurrenceForm
+            switch currentRoute {
+            case .success(.recovered(let shopID, let currentID)):
+                PickupMealRecoveryEntry(model: pickup, ledger: ledger, pickupID: shopID, occurrenceID: currentID)
+            case .success(.original(let current)):
+                if current.carryover != nil {
+                    DinnerCarryoverDetailsView(model: model, occurrenceID: occurrenceID)
+                } else { occurrenceForm }
+            case .failure:
+                ContentUnavailableView(currentDinnerText("Current dinner unavailable"), systemImage: "arrow.triangle.2.circlepath",
+                    description: Text(currentDinnerText("Current dinners could not be verified. Reopen the same pickup and review its saved changes.")))
+                    .accessibilityIdentifier("dinner.currentMealsUnavailable")
             }
         }
+    }
+    private var currentRoute: Result<DinnerMealDestination, Error> {
+        Result { try model.currentMealDestination(occurrenceID, pickup: pickup) }
     }
     private var occurrenceForm: some View {
         Form {

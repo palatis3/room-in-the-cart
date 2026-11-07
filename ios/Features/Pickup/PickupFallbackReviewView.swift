@@ -58,7 +58,7 @@ private struct PickupFallbackReviewView: View {
                 Text(dinnerText("Only checked usable food from this pickup and its confirmed stock can feed a fallback. All other named needs stay reserved."))
                 Picker(dinnerText("Need to repair"), selection: $review.draft.target) {
                     Text(dinnerText("Choose a meal")).tag(UUID?.none)
-                    ForEach(choices.filter { $0.priority != .protected && !journey.urgent.filter(\.resolved).map(\.id).contains($0.id) }) { need in
+                    ForEach(choices.filter { $0.priority != .protected && !journey.recoveryCurrentUrgent.filter(\.resolved).map(\.id).contains($0.id) }) { need in
                         Text(need.name).tag(Optional(need.id))
                     }
                 }
@@ -68,7 +68,7 @@ private struct PickupFallbackReviewView: View {
                 ForEach(choices.filter { $0.id != draft.target }) { need in
                     Text(dinnerFormat("Reserved: %@ · %@",need.name,dinnerQuantity(need.amount)))
                 }
-                if let rule = journey.needDetails.first(where: { $0.id == draft.target }), !rule.exclusions.isEmpty { Text(rule.exclusions.joined(separator: ", ")) }
+                if let rule = journey.recoveryCurrentDetails.first(where: { $0.id == draft.target }), !rule.exclusions.isEmpty { Text(rule.exclusions.joined(separator: ", ")) }
                 TextField(dinnerText("Usual fallback minutes, optional"), text: $review.draft.usualMinutes)
                 TextField(dinnerText("Maximum available for a top-up, USD"), text: $review.draft.topUpBudget)
                 TextField(dinnerText("Top-up fees and tax, including zero, USD"), text: $review.draft.topUpCharges)
@@ -110,7 +110,7 @@ private struct PickupFallbackReviewView: View {
                                 review.agreedTrip = nil
                                 return
                             }
-                            let savedDue = journey.urgent.first { $0.id == target }?.due
+                            let savedDue = journey.savedMealDeadline(for: target)
                             select(fresh,target,min(due,savedDue ?? due)); dismiss()
                         }.disabled(best.requiresTrip && review.agreedTrip != best)
                     } else { Text(dinnerText("No feasible accepted repair is confirmed. Keep the need open or edit it manually.")) }
@@ -119,7 +119,7 @@ private struct PickupFallbackReviewView: View {
         }
         .onChange(of: best) { _, updated in review.rankedOfferChanged(to: updated) }
         .onChange(of: draft.target) { _, new in
-            review.draft.deadline = journey.urgent.first { $0.id == new }?.due
+            review.draft.deadline = journey.savedMealDeadline(for: new)
             review.draft.reviews = [:]
         }
     }

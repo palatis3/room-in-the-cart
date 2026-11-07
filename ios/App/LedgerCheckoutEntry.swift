@@ -143,12 +143,12 @@ enum LedgerCheckoutAdapter {
                     guard portion > .zero else { continue }
                     let id = compositeID(contribution.id, group.id)
                     needs.append(AllocationNeed(id: id, orderLineID: lineID, name: "\(meal.title) · \(group.name)", amount: Quantity(amount: portion, unit: unit, originalLiteral: quantity.originalLiteral), priority: group.isProtected ? .protected : .required))
-                    details.append(PickupNeedDetail(id: id, mealName: meal.title, exclusions: contribution.exclusions, scheduledDay: meal.scheduledDay, leadTimeMinutes: meal.leadTimeMinutes, completedSteps: meal.completedSteps, sourceContributionID: contribution.id))
+                    details.append(PickupNeedDetail(id: id, mealName: meal.title, exclusions: contribution.exclusions, scheduledDay: meal.scheduledDay, leadTimeMinutes: meal.leadTimeMinutes, completedSteps: meal.completedSteps, sourceContributionID: contribution.id, sourceOccurrenceID: meal.id, sourceGroupID: group.id, sourceLedgerRevisionID: shop.revisionID))
                 }
                 let portion = portions.unassigned
                 if portion > .zero {
                     needs.append(AllocationNeed(id: contribution.id, orderLineID: lineID, name: meal.title, amount: Quantity(amount: portion, unit: unit, originalLiteral: quantity.originalLiteral), priority: .required))
-                    details.append(PickupNeedDetail(id: contribution.id, mealName: meal.title, exclusions: contribution.exclusions, scheduledDay: meal.scheduledDay, leadTimeMinutes: meal.leadTimeMinutes, completedSteps: meal.completedSteps, sourceContributionID: contribution.id))
+                    details.append(PickupNeedDetail(id: contribution.id, mealName: meal.title, exclusions: contribution.exclusions, scheduledDay: meal.scheduledDay, leadTimeMinutes: meal.leadTimeMinutes, completedSteps: meal.completedSteps, sourceContributionID: contribution.id, sourceOccurrenceID: meal.id, sourceGroupID: nil, sourceLedgerRevisionID: shop.revisionID))
                 }
             default: break
             }
@@ -165,15 +165,27 @@ enum LedgerCheckoutAdapter {
                   try LedgerPackStockReview.isCurrent(selection, shop: review.source, workspaceID: workspaceID,
                     journey: previous, pickupWorkspaceID: pickup.sourceWorkspaceID, bindings: ledger.workspace.dinnerPlanning.portionBindings) else { throw LedgerCheckoutError.staleSource }
         }
+        guard let ledgerWorkspaceID = ledger.sourceWorkspaceID else { throw LedgerCheckoutError.staleSource }
+        let occurrenceIDs = Set(review.source.mealOccurrences.map(\.id))
+        let mealSource = PickupCheckoutMealSource(ledgerWorkspaceID: ledgerWorkspaceID, shop: review.source,
+            needs: review.needs, details: review.details,
+            bindings: ledger.workspace.dinnerPlanning.portionBindings.filter { occurrenceIDs.contains($0.occurrenceID) })
+        try mealSource.validate()
         if let previous {
             guard previous.basket?.phase != .reportedPlaced else { throw LedgerCheckoutError.placedOrder }
             pickup.selectedID = review.source.id
-            if !review.needsApplication { return true }
+            if !review.needsApplication {
+                if previous.mealSource == mealSource { return true }
+                return await pickup.change { value in
+                    guard value.revision == review.previousJourneyRevision else { throw LedgerCheckoutError.staleCheckout }
+                    value.mealSource = mealSource
+                }
+            }
             return await pickup.change { value in
                 guard value.revision == review.previousJourneyRevision, var basket = value.basket else { throw LedgerCheckoutError.staleCheckout }
                 if let proposal = review.proposal { try basket.apply(proposal, at: Date()) }
                 value.basket = basket; value.context = review.context; value.cap = review.cap
-                value.plannedNeeds = review.needs; value.needDetails = review.details
+                value.plannedNeeds = review.needs; value.needDetails = review.details; value.mealSource = mealSource
                 value.ledgerPackSelections = review.packSelections
                 value.ledgerBasis = review.source.basis; value.ledgerSourceRevisionID = review.source.revisionID
                 value.quote = nil; value.quotedRevisionID = nil
@@ -182,7 +194,7 @@ enum LedgerCheckoutAdapter {
         }
         return await pickup.start(from: review.lines, shopID: review.source.id, context: review.context, cap: review.cap,
                                   plannedNeeds: review.needs, ledgerBasis: review.source.basis,
-                                  ledgerSourceRevisionID: review.source.revisionID, needDetails: review.details, ledgerPackSelections: review.packSelections)
+                                  ledgerSourceRevisionID: review.source.revisionID, needDetails: review.details, ledgerPackSelections: review.packSelections, mealSource: mealSource)
     }
 
     /// A stable shop ID makes resuming after either store commits retry-safe.

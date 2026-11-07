@@ -1,0 +1,83 @@
+import Foundation
+import CoreDomain
+
+/// Form state only. All resulting definitions are revalidated by the adapter.
+struct PickupRecoveryDraft: Equatable {
+    struct Ingredient: Identifiable, Equatable {
+        let id = UUID()
+        let ingredientID = UUID()
+        let unknownFoodID = UUID()
+        let groupID: UUID?
+        let priority: AllocationPriority
+        let requiredExclusions: [String]
+        var name = ""
+        var foodID: UUID?
+        var amount = ""
+        var unit: UnitOfMeasure = .count
+        var notes = ""
+        var extraExclusions = ""
+    }
+    let original: PickupRecoveryMealDefinition
+    let operationID = UUID()
+    let revisionID = UUID()
+    var title = ""
+    var notes = ""
+    var sourceURL = ""
+    var rows: [Ingredient] = []
+    var minutes = ""
+    var advanceComplete = false
+    var confirmsDeadline = false
+    var deadline = Date()
+    var identityReviewed = false
+    var proposesTrip = false
+    var agreesTrip = false
+    var agreesRepeat = false
+    var acceptsUnresolved = false
+
+    init(_ original: PickupRecoveryMealDefinition) {
+        self.original = original
+        // Start new manual instructions blank, not with an old recipe under a new title.
+        for group in editableGroups { add(groupID: group) }
+    }
+    var editableGroups: [UUID?] {
+        var seen = Set<UUID?>()
+        return original.meal.ingredients.filter { $0.need.priority != .protected }
+            .compactMap { item -> [UUID?]? in
+                seen.insert(item.groupID).inserted ? [item.groupID] : nil
+            }.flatMap { $0 }
+    }
+    func groupName(_ id: UUID?) -> String {
+        original.groups.first { $0.id == id }?.name ?? recoveryText("Dinner portions")
+    }
+    mutating func add(groupID: UUID?) {
+        let old = original.meal.ingredients.filter { $0.groupID == groupID && $0.need.priority != .protected }
+        let ids = Set(old.map(\.need.id))
+        let required = Array(Set(original.ingredientRules.filter { ids.contains($0.needID) }.flatMap(\.exclusions))).sorted()
+        rows.append(.init(groupID: groupID, priority: .required, requiredExclusions: required))
+        identityReviewed = false
+    }
+    func definition() throws -> PickupRecoveryMealDefinition {
+        var ingredients = original.meal.ingredients.filter { $0.need.priority == .protected }
+        let protectedIDs = Set(ingredients.map(\.need.id))
+        var rules = original.ingredientRules.filter { protectedIDs.contains($0.needID) }
+        for row in rows {
+            guard let amount = try DinnerEntry.quantity(row.amount, unit: row.unit) else { throw PickupMealRecoveryError.invalid }
+            let name = row.name.trimmingCharacters(in: .whitespacesAndNewlines)
+            ingredients.append(.init(ingredientID: row.ingredientID, groupID: row.groupID, foodName: name,
+                need: .init(id: row.id, foodID: row.foodID ?? row.unknownFoodID,
+                    name: title + " · " + groupName(row.groupID) + " · " + name,
+                    amount: amount, priority: row.priority)))
+            rules.append(.init(needID: row.id, notes: row.notes,
+                exclusions: Array(Set(row.requiredExclusions + DinnerEntry.list(row.extraExclusions))).sorted()))
+        }
+        let meal = RecoveryMeal(id: original.meal.id, revisionID: revisionID, templateID: nil, templateVersion: nil,
+            title: title.trimmingCharacters(in: .whitespacesAndNewlines), servings: original.meal.servings,
+            ingredients: ingredients, scheduledDay: original.meal.scheduledDay,
+            due: original.meal.due ?? (confirmsDeadline ? deadline : nil), timeZoneID: original.meal.timeZoneID,
+            exclusions: original.meal.exclusions, remainingElapsedMinutes: try DinnerEntry.minutes(minutes),
+            requiredLeadMinutes: original.meal.requiredLeadMinutes, advanceStepsCompleted: advanceComplete)
+        return .init(meal: meal, groups: original.groups, notes: notes,
+            sourceURL: sourceURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : sourceURL,
+            ingredientRules: rules, acceptedTemplate: nil)
+    }
+}

@@ -87,6 +87,7 @@ struct DinnerWorkspaceView<SaveStatus: View>: View {
 /// destination or switching tabs keeps the same local calendar context.
 struct DinnerWeekView<SaveStatus: View>: View {
     @ObservedObject var model: DinnerFeatureModel
+    @EnvironmentObject private var pickup: PickupModel
     @State private var shopID: UUID
     @Binding var weekStart: Date
     @Binding var showWeekGrid: Bool
@@ -147,19 +148,21 @@ struct DinnerWeekView<SaveStatus: View>: View {
                     Text(dinnerText("Grid")).tag(true)
                 }.pickerStyle(.segmented).accessibilityIdentifier("dinnerWeekDisplay")
                 if let shop = model.shop, let start = try? MealDay(date: weekStart, timeZoneIdentifier: shop.basis.timeZoneIdentifier),
-                   let week = try? model.week(start: start) {
+                   let week = try? model.week(start: start),
+                   case .success(let current) = currentMeals {
                     if showWeekGrid {
-                        weekGrid(week.days, in: shop)
+                        weekGrid(week.days, in: shop, current: current)
                     } else {
                         ForEach(week.days, id: \.day) { day in
-                            dayContent(day, in: shop).padding(.vertical, 6).buttonStyle(.borderless)
+                            dayContent(day, in: shop, current: current).padding(.vertical, 6).buttonStyle(.borderless)
                         }
                     }
-                    if !week.unscheduled.isEmpty {
+                    if !current.unscheduled.isEmpty {
                         Text(dinnerText("Unscheduled")).font(.headline).accessibilityAddTraits(.isHeader)
-                        ForEach(week.unscheduled) { meal in mealLink(meal) }
+                        ForEach(current.unscheduled) { meal in mealLink(meal) }
                     }
-                } else { Text(dinnerText("The week could not be read. Check access and the pickup time zone.")) }
+                } else { Text(currentDinnerText("Current dinners could not be verified. Reopen the same pickup and review its saved changes."))
+                    .accessibilityIdentifier("dinner.currentMealsUnavailable") }
             } header: {
                 Text(dinnerText("Week")).font(.headline).foregroundStyle(Theme.ink)
                     .accessibilityAddTraits(.isHeader)
@@ -172,7 +175,8 @@ struct DinnerWeekView<SaveStatus: View>: View {
         }.listStyle(.insetGrouped).scrollContentBackground(.hidden).background(Theme.canvas)
     }
 
-    private func weekGrid(_ days: [DinnerMealWeek.Day], in shop: ShoppingLedger) -> some View {
+    private var currentMeals: Result<DinnerCurrentMeals, Error> { Result { try model.currentMeals(pickup: pickup) } }
+    private func weekGrid(_ days: [DinnerMealWeek.Day], in shop: ShoppingLedger, current: DinnerCurrentMeals) -> some View {
         let rowLayout = dynamicTypeSize.isAccessibilitySize
             ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12))
             : AnyLayout(HStackLayout(alignment: .top, spacing: 12))
@@ -180,7 +184,7 @@ struct DinnerWeekView<SaveStatus: View>: View {
         return ForEach(days.indices.filter { $0.isMultiple(of: 2) }, id: \.self) { start in
             rowLayout {
                 ForEach(days[start..<min(start + 2, days.count)], id: \.day) { day in
-                    dayContent(day, in: shop)
+                    dayContent(day, in: shop, current: current)
                         .padding(10)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(Theme.canvas, in: RoundedRectangle(cornerRadius: 12))
@@ -192,10 +196,10 @@ struct DinnerWeekView<SaveStatus: View>: View {
         ContentUnavailableView(dinnerText("Pickup selection changed"), systemImage: "arrow.triangle.2.circlepath",
             description: Text(dinnerText("Return to the original pickup to review this week.")))
     }
-    private func dayContent(_ day: DinnerMealWeek.Day, in shop: ShoppingLedger) -> some View {
+    private func dayContent(_ day: DinnerMealWeek.Day, in shop: ShoppingLedger, current: DinnerCurrentMeals) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(dinnerDay(day.day)).font(.headline).accessibilityAddTraits(.isHeader)
-            ForEach(day.meals) { meal in mealLink(meal, calendarZone: day.day.timeZoneIdentifier) }
+            ForEach(current.on(day.day)) { meal in mealLink(meal, calendarZone: day.day.timeZoneIdentifier) }
             ForEach(day.notes) { note in
                 VStack(alignment: .leading) {
                     Text(dinnerNoteKind(note.kind)).font(.subheadline.bold())
@@ -224,7 +228,7 @@ struct DinnerWeekView<SaveStatus: View>: View {
                 .accessibilityIdentifier("dinnerDayNote-\(day.day.year)-\(day.day.month)-\(day.day.day)")
         }.multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
     }
-    private func mealLink(_ meal: MealOccurrence, calendarZone: String? = nil) -> some View {
+    private func mealLink(_ meal: DinnerCurrentMeal, calendarZone: String? = nil) -> some View {
         // Several calendar actions share one List row in Grid. Explicit selection
         // avoids the row-wide NavigationLink activation choosing a different day.
         Button { destination = .meal(meal.id) } label: {
@@ -346,13 +350,17 @@ func dinnerNoteKind(_ kind: DinnerWeekNote.Kind) -> String {
 
 struct DinnerAllMealsView: View {
     @ObservedObject var model: DinnerFeatureModel
+    @EnvironmentObject private var pickup: PickupModel
+    private var currentMeals: Result<DinnerCurrentMeals, Error> { Result { try model.currentMeals(pickup: pickup) } }
     var body: some View {
         List {
             Section {
-                Text(dinnerText("Chosen dinners keep their original identities and grocery needs. Earlier reusable templates are available in the dinner library for review."))
+                Text(currentDinnerText("Chosen dinners show their current meal and date. Original purchases and earlier reusable templates remain preserved."))
                 NavigationLink(dinnerText("Dinner library")) { DinnerLibraryView(model: model) }
             }
-            ForEach((model.shop?.mealOccurrences ?? []).filter { $0.removedAt == nil }) { meal in
+            switch currentMeals {
+            case .success(let current):
+            ForEach(current.all) { meal in
                 NavigationLink { DinnerOccurrenceView(model: model, occurrenceID: meal.id) } label: {
                     VStack(alignment: .leading, spacing: 5) {
                         Text(meal.title).font(.headline)
@@ -360,6 +368,10 @@ struct DinnerAllMealsView: View {
                         if meal.isHidden { Text(dinnerText("Hidden dinner")) }
                     }
                 }.accessibilityIdentifier("dinnerOccurrence-\(meal.id)")
+            }
+            case .failure:
+                Text(currentDinnerText("Current dinners could not be verified. Reopen the same pickup and review its saved changes."))
+                    .accessibilityIdentifier("dinner.currentMealsUnavailable")
             }
         }.navigationTitle(dinnerText("All chosen dinners")).dinnerAccess(model)
     }

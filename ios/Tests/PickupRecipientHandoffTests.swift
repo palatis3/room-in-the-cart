@@ -194,4 +194,104 @@ final class PickupRecipientHandoffTests: XCTestCase {
         XCTAssertFalse(delta.text(current: current).contains("PRIVATE"))
         XCTAssertEqual(model.reviewedCorrection(current, recipient: "Other store", destinationConfirmed: true, privateWordingConfirmed: false, paid: true, reviewedRevision: rev), .full(current.fullText))
     }
+    @MainActor func testCancelledCookPreviewAndSharePreserveExistingRecipientBaselines() async throws {
+        let at = Date(timeIntervalSince1970: 1_800_000_000)
+        let zone = try XCTUnwrap(TimeZone(secondsFromGMT: 0))
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let model = PickupModel(databaseURL: url, clock: { at })
+        let q = Quantity(amount: try Rational(2), unit: .count, originalLiteral: "2")
+        let need = UrgentMealNeed(id: UUID(), food: "Beans", meal: "Soup", required: q,
+                                 available: q, due: at.addingTimeInterval(3600), confirmedAt: at)
+        let started = await model.addUrgent(need); XCTAssertTrue(started)
+        func saveCurrentCopy() async throws -> HandoffCopy {
+            let source = try XCTUnwrap(model.cookJourney)
+            var note = PickupCookNote(id: UUID(),
+                text: PickupCookProjection.text(journey: source, allocation: model.allocation, result: nil,
+                    language: "en-US", at: at, timeZone: zone),
+                language: "en-US", createdAt: at, revision: source.revision)
+            note.reviewedHandoff = .init(pieces: PickupCookProjection.pieces(journey: source,
+                allocation: model.allocation, language: "en-US", timeZone: zone),
+                timeZoneID: zone.identifier, includesBudget: false, customWording: false, budget: nil)
+            let saved = await model.change { $0.notes.append(note) }; XCTAssertTrue(saved)
+            return try XCTUnwrap(model.handoffCopy(channel: .cook, versionID: note.id, language: "en-US"))
+        }
+        let original = try await saveCurrentCopy()
+        for recipient in ["Ana", "Ben"] {
+            let sent = await model.markRecipient(original, recipient: recipient, acknowledge: false,
+                reviewedRevision: try XCTUnwrap(model.journey?.revision))
+            XCTAssertTrue(sent)
+        }
+        let acknowledged = await model.markRecipient(original, recipient: "Ana", acknowledge: true,
+            reviewedRevision: try XCTUnwrap(model.journey?.revision))
+        XCTAssertTrue(acknowledged)
+        let anaBaseline = try XCTUnwrap(model.journey?.lastSend(.cook, recipient: "Ana"))
+        let benBaseline = try XCTUnwrap(model.journey?.lastSend(.cook, recipient: "Ben"))
+        XCTAssertNotNil(anaBaseline.acknowledgedAt)
+        XCTAssertNil(benBaseline.acknowledgedAt)
+        XCTAssertEqual(anaBaseline.versionID, original.versionID)
+
+        let repair = PickupRepair(id: UUID(), needID: need.id, instruction: "Warm the beans; save the broth.",
+            createdAt: at, extraTripAgreed: false, repeatMealAgreed: false, elapsedMinutes: 10, due: need.due)
+        let changed = await model.change { $0.repairs.append(repair) }; XCTAssertTrue(changed)
+        let beforePreview = try XCTUnwrap(model.journey)
+        var abandoned: String? = PickupCookProjection.text(journey: beforePreview, allocation: model.allocation,
+            result: nil, language: "en-US", at: at, timeZone: zone)
+        XCTAssertTrue(try XCTUnwrap(abandoned).contains(repair.instruction))
+        abandoned = nil
+        XCTAssertNil(abandoned)
+        XCTAssertEqual(model.journey, beforePreview, "Abandoning an unsaved projection has zero mutation")
+
+        let current = try await saveCurrentCopy()
+        XCTAssertNotEqual(current.versionID, original.versionID)
+        XCTAssertTrue(model.isCurrent(current))
+        let beforeShare = try XCTUnwrap(model.journey)
+        let correction = try XCTUnwrap(model.reviewedCorrection(current, recipient: "Ana",
+            destinationConfirmed: true, privateWordingConfirmed: false, paid: true,
+            reviewedRevision: beforeShare.revision))
+        guard case let .changes(added, removed, _) = correction else { return XCTFail("Expected comparison with Ana's existing copy") }
+        XCTAssertTrue(added.contains { $0.contains(repair.instruction) })
+        XCTAssertTrue(removed.isEmpty)
+        XCTAssertEqual(model.journey, beforeShare)
+        let opened = await model.recordCookShare(.shareOpened, copy: current)
+        let cancelled = await model.recordCookShare(.shareCancelled, copy: current)
+        XCTAssertTrue(opened && cancelled)
+        let afterShare = try XCTUnwrap(model.journey)
+        let events = Array(afterShare.cookShareEvents.dropFirst(beforeShare.cookShareEvents.count))
+        XCTAssertEqual(events.count, 2)
+        XCTAssertEqual(Set(events.map(\.id)).count, 2)
+        XCTAssertEqual(events.map(\.noteID), [current.versionID, current.versionID])
+        XCTAssertEqual(events.map(\.action), [.shareOpened, .shareCancelled])
+        XCTAssertEqual(events.map(\.occurredAt), [at, at])
+        XCTAssertTrue(events.allSatisfy { $0.destination == nil })
+        var expected = beforeShare
+        expected.revision += 2; expected.savedAt = at; expected.cookShareEvents += events
+        XCTAssertEqual(afterShare, expected, "Only the two share audit events and their revisions may change")
+        XCTAssertEqual(afterShare.lastSend(.cook, recipient: "Ana"), anaBaseline)
+        XCTAssertEqual(afterShare.lastSend(.cook, recipient: "Ben"), benBaseline)
+        XCTAssertEqual(afterShare.notes, beforeShare.notes)
+        XCTAssertEqual(model.selectedID, beforeShare.id)
+        let reopened = PickupModel(databaseURL: url, clock: { at })
+        await reopened.load()
+        XCTAssertEqual(reopened.journey, afterShare)
+        XCTAssertEqual(reopened.journey?.lastSend(.cook, recipient: "Ana"), anaBaseline)
+
+        // Positive control: explicit recipient confirmation of the same new copy
+        // advances only Ana's baseline and still does not claim acknowledgment.
+        let sent = await reopened.markRecipient(current, recipient: "Ana", acknowledge: false,
+            reviewedRevision: afterShare.revision)
+        XCTAssertTrue(sent)
+        let newBaseline = try XCTUnwrap(reopened.journey?.lastSend(.cook, recipient: "Ana"))
+        XCTAssertEqual(newBaseline.versionID, current.versionID)
+        XCTAssertNil(newBaseline.acknowledgedAt)
+        XCTAssertEqual(reopened.journey?.lastSend(.cook, recipient: "Ben"), benBaseline)
+        XCTAssertEqual(reopened.journey?.recipientSends?.filter { $0.versionID == original.versionID },
+                       beforeShare.recipientSends?.filter { $0.versionID == original.versionID })
+        XCTAssertEqual(reopened.journey?.recipientSends?.count, (beforeShare.recipientSends?.count ?? 0) + 1)
+        var expectedSent = afterShare
+        expectedSent.revision += 1; expectedSent.savedAt = at
+        expectedSent.recipientSends = (afterShare.recipientSends ?? []) + [newBaseline]
+        XCTAssertEqual(reopened.journey, expectedSent)
+    }
+
 }

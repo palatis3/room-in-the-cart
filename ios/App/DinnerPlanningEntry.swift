@@ -34,6 +34,14 @@ struct DinnerPlanningEntry: View {
         }
         .environment(\.dinnerHousehold, household)
         .toolbar {
+            if let shopID = ledger.shop?.id, pickup.selectedID == shopID,
+               pickup.journey?.basket?.phase == .reportedPlaced {
+                ToolbarItem(placement: .secondaryAction) {
+                    NavigationLink(recoveryText("Current dinners after arrival")) {
+                        PickupMealRecoveryEntry(model: pickup, ledger: ledger, pickupID: shopID)
+                    }.accessibilityIdentifier("dinner.mealRecovery")
+                }
+            }
             if household.canOpenSharedDinnerPlanning {
                 ToolbarItem(placement: .primaryAction) {
                     NavigationLink(ht("Shared meal plan")) { DinnerSharedPlanningEntry(household: household) }

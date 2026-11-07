@@ -45,7 +45,7 @@ enum PickupCookProjection {
         // stock-only protected reservations. Urgent metadata enriches the same need ID.
         let demands = value.physicalStockNeeds
         var renderedIDs = Set<UUID>()
-        for need in value.urgent where renderedIDs.insert(need.id).inserted {
+        for need in value.recoveryCurrentUrgent where renderedIDs.insert(need.id).inserted {
             let name = "\(need.meal): \(need.food)"
             let demand = demands.first { $0.id == need.id }
             let coverage = allocation?.demands.first { $0.id == need.id }
@@ -73,12 +73,15 @@ enum PickupCookProjection {
             pieces.append(.init(key: "need/\(need.id)", text: lines.joined(separator: "\n\n"), unresolved: unresolved ? "\(need.name) · \(warning)" : nil))
         }
         var renderedDetails: [UUID: Set<String>] = [:]
-        for detail in value.needDetails where renderedIDs.contains(detail.id) {
+        for detail in value.recoveryCurrentDetails where renderedIDs.contains(detail.id) {
             // Lunch and dinner allocations can share the same original ingredient instructions.
             let sourceID = detail.sourceContributionID ?? detail.id
             var lines: [String] = []
             if !detail.exclusions.isEmpty { lines.append("\(detail.mealName) · \(pCook("Keep these exclusions", language: language)): \(detail.exclusions.joined(separator: ", "))") }
             if let day = detail.scheduledDay { lines.append("\(detail.mealName): \(day.iso8601) · \(day.timeZoneIdentifier)") }
+            if let due = detail.due { lines.append("\(pCook("Needed by", language: language)): \(formatter.string(from: due))") }
+            lines += detail.preparationNotes ?? []
+            if let source = detail.sourceURL { lines.append(source) }
             if let minutes = detail.leadTimeMinutes { lines.append("\(pCook("Saved elapsed preparation minutes", language: language)): \(minutes)") }
             if !detail.completedSteps.isEmpty { lines.append("\(pCook("Steps already marked complete", language: language)): \(detail.completedSteps.joined(separator: "; "))") }
             let text = lines.joined(separator: "\n\n")
@@ -86,7 +89,7 @@ enum PickupCookProjection {
                 pieces.append(.init(key: "detail/\(detail.id)", text: text, unresolved: nil))
             }
         }
-        for repair in value.repairs {
+        for repair in value.currentRepairInstructions {
             let timing = pCook(repair.timingConfirmed ? "Entered preparation time fits the deadline" : "Timing conditional or deadline missed · review before cooking", language: language)
             pieces.append(.init(key: "repair/\(repair.id)", text: "\(repair.instruction)\n\(timing)", unresolved: repair.timingConfirmed ? nil : "\(repair.instruction) · \(timing)"))
         }

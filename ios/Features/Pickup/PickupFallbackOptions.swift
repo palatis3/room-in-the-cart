@@ -94,7 +94,7 @@ struct PickupFallbackOption: Identifiable, Equatable {
 
 enum PickupFallbackOptions {
     static func needs(_ journey: PickupJourney) -> [StockNeed] {
-        journey.needs.map { .init(id: $0.id, foodID: $0.orderLineID, name: $0.name, amount: $0.amount, priority: $0.priority) } + journey.stockNeeds
+        journey.physicalStockNeeds
     }
 
     static func lots(_ journey: PickupJourney, at now: Date) -> [ConfirmedStockLot] {
@@ -113,9 +113,9 @@ enum PickupFallbackOptions {
         guard paid else { throw DinnerPlanningError.paidAccessRequired }
         let commitments = needs(journey)
         guard let target = commitments.first(where: { $0.id == draft.target && $0.priority != .protected }),
-              !journey.urgent.contains(where: { $0.id == target.id && $0.resolved }),
+              !journey.recoveryCurrentUrgent.contains(where: { $0.id == target.id && $0.resolved }),
               let enteredDeadline = draft.deadline else { return [] }
-        let savedDeadline = journey.urgent.first { $0.id == target.id }?.due
+        let savedDeadline = journey.savedMealDeadline(for: target.id)
         let deadline = min(enteredDeadline, savedDeadline ?? enteredDeadline)
         guard deadline >= now else { return [] }
         let portions = try DinnerEntry.positive(draft.portions)
@@ -124,7 +124,7 @@ enum PickupFallbackOptions {
         }
         let stock = lots(journey, at: now)
         let available = Int(min(525_600, deadline.timeIntervalSince(now)/60))
-        let rules = journey.needDetails.first { $0.id == target.id }?.exclusions ?? []
+        let rules = journey.recoveryCurrentDetails.first { $0.id == target.id }?.exclusions ?? []
         var results: [PickupFallbackOption] = []
         for dinner in library where dinner.acceptedFallback {
             guard let review = draft.reviews[dinner.id], review.reviewedIdentityYieldAndExclusions,

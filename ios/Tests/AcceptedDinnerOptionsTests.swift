@@ -286,4 +286,81 @@ final class AcceptedDinnerOptionsTests: XCTestCase {
         XCTAssertThrowsError(try library.replacement(for:scenario,shop:shop,state:state))
     }
 
+    @MainActor func testAllAcceptedRecoveryOptionsFailWithoutChangingOriginalOpenNeedOrDeadline() async throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let model = PickupModel(databaseURL: url, clock: { self.now })
+        let tuesday = UrgentMealNeed(id: UUID(), food: "Wraps", meal: "Tuesday tacos", required: q(6),
+                                    available: q(2), due: now.addingTimeInterval(30 * 60), confirmedAt: now)
+        let wednesday = UrgentMealNeed(id: UUID(), food: "Peppers", meal: "Wednesday dinner", required: q(5),
+                                      available: q(4), due: now.addingTimeInterval(45 * 60), confirmedAt: now)
+        let firstSaved = await model.addUrgent(tuesday)
+        let secondSaved = await model.addUrgent(wednesday)
+        XCTAssertTrue(firstSaved && secondSaved)
+        let before = try XCTUnwrap(model.journey)
+        let coverageBefore = try XCTUnwrap(model.allocation)
+        XCTAssertEqual(before.urgent, [tuesday, wednesday])
+        XCTAssertFalse(wednesday.resolved)
+        XCTAssertEqual(coverageBefore.demands.first { $0.id == wednesday.id }?.shortfall, try Rational(1))
+        XCTAssertEqual(coverageBefore.demands.first { $0.id == tuesday.id }?.shortfall, try Rational(4))
+
+        var slowTemplate = dinner("Marinated peppers", count: 1).template
+        slowTemplate.leadTimeMinutes = 120
+        let slow = AcceptedDinner(id: UUID(), template: slowTemplate, acceptedAt: now, acceptedFallback: true)
+        let quick = dinner("Quick peppers", count: 1)
+        let library = [slow, quick]
+        var draft = PickupFallbackDraft()
+        draft.target = wednesday.id; draft.portions = "5"
+        // Extending the review date must not replace the saved 45-minute deadline.
+        draft.deadline = now.addingTimeInterval(180 * 60)
+        draft.tripMinutes = "10"; draft.topUpBudget = "3"; draft.topUpCharges = "0.25"
+        for option in library {
+            var review = FallbackRecipeReview()
+            review.elapsedMinutes = "20"; review.completedLeadReviewed = true
+            review.reviewedIdentityYieldAndExclusions = true
+            review.ingredients[option.template.ingredients[0].id] = .init(foodID: wednesday.id,
+                packLabel: "One pepper", packYield: "1", packUnit: .count, packPrice: "2.50", availablePacks: "1")
+            draft.reviews[option.id] = review
+        }
+        func ranked(_ value: PickupFallbackDraft) throws -> [PickupFallbackOption] {
+            try PickupFallbackOptions.ranked(journey: XCTUnwrap(model.journey), library: library,
+                chosenTemplates: [], draft: value, at: now, paid: true)
+        }
+        // Positive control: these exact accepted identities are usable with reviewed
+        // completed preparation and one genuinely available top-up package.
+        let feasible = try ranked(draft)
+        XCTAssertEqual(Set(feasible.map(\.id)), Set(library.map(\.id)))
+        XCTAssertTrue(feasible.allSatisfy { $0.packCount == 1 && $0.minutes == 30 })
+        XCTAssertEqual(model.journey, before)
+
+        draft.reviews[slow.id]?.elapsedMinutes = "120"
+        draft.reviews[slow.id]?.completedLeadReviewed = false
+        draft.reviews[quick.id]?.ingredients[quick.template.ingredients[0].id]?.availablePacks = "0"
+        // Each option fails a distinct real requirement, not missing setup/access.
+        var timingOnly = draft
+        timingOnly.reviews[quick.id] = nil
+        XCTAssertTrue(try ranked(timingOnly).isEmpty)
+        var quantityOnly = draft
+        quantityOnly.reviews[slow.id] = nil
+        XCTAssertTrue(try ranked(quantityOnly).isEmpty)
+        let rejected = try ranked(draft)
+        XCTAssertTrue(rejected.isEmpty)
+        var review = PickupFallbackReview()
+        review.draft = draft; review.reviewDraft()
+        let priorOption = try XCTUnwrap(feasible.first)
+        review.agreedTrip = priorOption
+        XCTAssertFalse(review.canUse(priorOption, fresh: rejected.first))
+        review.rankedOfferChanged(to: rejected.first)
+        XCTAssertNil(review.agreedTrip)
+        XCTAssertEqual(model.journey, before, "No rejected option may save a repair or settle either need")
+        XCTAssertEqual(model.allocation, coverageBefore)
+        XCTAssertEqual(model.selectedID, before.id)
+        XCTAssertEqual(model.journey?.urgent.first { $0.id == wednesday.id }, wednesday)
+        XCTAssertEqual(model.journey?.urgent.first { $0.id == tuesday.id }, tuesday)
+        let reopened = PickupModel(databaseURL: url, clock: { self.now })
+        await reopened.load()
+        XCTAssertEqual(reopened.journey, before)
+        XCTAssertEqual(reopened.allocation, coverageBefore)
+    }
+
 }

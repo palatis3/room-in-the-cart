@@ -371,6 +371,68 @@ final class LedgerCheckoutAdapterTests: XCTestCase {
         try shop.addProtectedNeed(name: "Wraps", quantity: quantity(2), purpose: "Lunch", within: supply)
         return shop
     }
+
+    @MainActor func testCheckoutMealProvenanceDistinguishesSameNamedOccurrencesAndSurvivesLegacyAndSQLiteRoundTrips() async throws {
+        var shop = ShoppingLedger(basis: basis())
+        let lunch = ServingGroup(name: "Lunch", servings: try Rational(2), isProtected: true)
+        let recipe = MealTemplate(title: "Soup", servings: try Rational(6),
+            ingredients: [MealIngredient(name: "Soup portions", quantity: quantity(6))], servingGroups: [lunch])
+        let first = try shop.chooseMeal(recipe)
+        let second = try shop.chooseMeal(recipe)
+        XCTAssertNotEqual(first, second)
+        let review = try LedgerCheckoutAdapter.review(shop: shop, workspaceRevision: 1, previous: nil)
+        XCTAssertEqual(review.details.count, 4)
+        for occurrenceID in [first, second] {
+            let occurrence = try XCTUnwrap(shop.mealOccurrences.first { $0.id == occurrenceID })
+            let details = review.details.filter { $0.sourceOccurrenceID == occurrenceID }
+            XCTAssertEqual(details.count, 2)
+            XCTAssertEqual(Set(details.compactMap(\.sourceContributionID)), Set(occurrence.ingredientContributionIDs))
+            XCTAssertTrue(details.allSatisfy { $0.sourceLedgerRevisionID == shop.revisionID })
+            for detail in details {
+                let need = try XCTUnwrap(review.needs.first { $0.id == detail.id })
+                if need.priority == .protected {
+                    XCTAssertEqual(detail.sourceGroupID, lunch.id)
+                    XCTAssertEqual(need.amount.amount, try Rational(2))
+                } else {
+                    XCTAssertNil(detail.sourceGroupID)
+                    XCTAssertEqual(need.amount.amount, try Rational(4))
+                }
+            }
+        }
+        let encoded = try JSONEncoder().encode(review.details)
+        XCTAssertEqual(try JSONDecoder().decode([PickupNeedDetail].self, from: encoded), review.details)
+        let objects = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded) as? [[String: Any]])
+        let legacyObjects = objects.map { object -> [String: Any] in
+            var old = object
+            for key in ["sourceOccurrenceID", "sourceGroupID", "sourceLedgerRevisionID"] { old.removeValue(forKey: key) }
+            return old
+        }
+        let legacy = try JSONDecoder().decode([PickupNeedDetail].self, from: JSONSerialization.data(withJSONObject: legacyObjects))
+        var expectedLegacy = review.details
+        for index in expectedLegacy.indices {
+            expectedLegacy[index].sourceOccurrenceID = nil
+            expectedLegacy[index].sourceGroupID = nil
+            expectedLegacy[index].sourceLedgerRevisionID = nil
+        }
+        XCTAssertEqual(legacy, expectedLegacy, "Old details remain intact without inventing occurrence/group provenance")
+        let directory = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appendingPathComponent("pickup.sqlite")
+        let pickup = PickupModel(databaseURL: url)
+        let started = await pickup.start(from: review.lines, shopID: shop.id, context: review.context,
+            plannedNeeds: review.needs, ledgerBasis: shop.basis, ledgerSourceRevisionID: shop.revisionID,
+            needDetails: review.details)
+        XCTAssertTrue(started)
+        let stored = try XCTUnwrap(pickup.journey)
+        let reopened = PickupModel(databaseURL: url)
+        await reopened.load()
+        XCTAssertEqual(reopened.journey, stored)
+        XCTAssertEqual(reopened.journey?.needDetails, review.details)
+        let partial = await reopened.change { $0.needDetails[0].sourceOccurrenceID = nil }
+        XCTAssertFalse(partial, "A partially populated new provenance tuple is not a valid saved snapshot")
+        XCTAssertEqual(reopened.journey, stored)
+    }
+
     private func basis() -> ShopBasis {
         ShopBasis(branch: "Main branch", mode: .pickup, slot: Date(timeIntervalSince1970: 1_800_000_000), timeZoneIdentifier: "America/New_York", cap: Money(minorUnits: 3800))
     }
