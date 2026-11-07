@@ -128,9 +128,14 @@ final class SharedFallbackUITests: XCTestCase {
         reveal(has("Two wraps","Packs required 2","4.00"))
         captureScreen("Usual fallback and smallest two-pack trip")
         tap(app.buttons["fallback.choose." + larger])
-        reveal(has("Whole-trip extra cash","4.50"))
-        reveal(has("Minutes longer than usual","6"))
         reveal(has("Food coverage","Still unresolved"))
+        reveal(app.switches["recovery.agreeRepeat"])
+        // The ranking remains behind the sheet. Check the facts in the foreground confirmation.
+        for label in ["Whole-trip extra cash, $4.50", "Minutes longer than usual, 6"] {
+            let rows = app.staticTexts.matching(NSPredicate(format: "label == %@", label))
+            XCTAssertTrue(rows.allElementsBoundByIndex.contains(where: { $0.isHittable }), label)
+        }
+        captureScreen("Confirmed trip price and comparison alongside separate agreements")
         toggle(app.switches["recovery.agreeRepeat"])
         toggle(app.switches["recovery.agreeTrip"])
         toggle(app.switches["recovery.agreeUnresolved"])
