@@ -77,9 +77,10 @@ enum ShopperDelivery: Equatable {
         guard purchaseMatch(match.request.id, placed: placed) == match, match.request.purchaseOutcome != outcome else { return }
         await enqueue(kind: "request.confirmPurchase", base: match.base, body: match.body(outcome: outcome))
     }
-    var canReviewDeferred: Bool {
-        authorized && shop?.phase == "draft" && bootstrap.capabilities.contains("deferred_requests")
+    var supportsDeferredRequests: Bool {
+        authorized && bootstrap.grantId == nil && bootstrap.capabilities.contains("deferred_requests")
     }
+    var canReviewDeferred: Bool { supportsDeferredRequests && shop?.phase == "draft" }
     func forgetDeferred() {
         deferredLoad = UUID()
         deferredPage = nil
@@ -157,7 +158,7 @@ enum ShopperDelivery: Equatable {
                         let matches = await service.matches(operation, memberID: memberID)
                         guard start == generation else { return }
                         let permitted = (envelope.kind != "request.confirmPurchase" || supportsPurchaseConfirmation) &&
-                            (envelope.kind != "request.carry" || bootstrap.capabilities.contains("deferred_requests"))
+                            (envelope.kind != "request.carry" || supportsDeferredRequests)
                         delivery = matches && permitted && envelope.shopId == shopID ? .waiting : .needsReview
                         notice = ht("An earlier decision is waiting for confirmation. Review the current requests before retrying or clearing it.")
                     }
