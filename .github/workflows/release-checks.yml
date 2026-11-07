@@ -40,6 +40,56 @@ jobs:
     uses: ./.github/workflows/ios-performance.yml
     with:
       enforce_baselines: true
+  staging-iphone:
+    name: Installed iPhone app against staging
+    concurrency:
+      group: ritc-macos-slot-2
+      queue: max
+      cancel-in-progress: false
+    runs-on: macos-15
+    timeout-minutes: 30
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Select an iPhone for the staging scheme
+        run: xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
+      - name: Test the staging service, Help and Support from the installed app
+        shell: bash
+        run: |
+          mkdir -p .build/staging-results
+          python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"
+          xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart-Staging \
+            -destination "platform=iOS Simulator,id=$SIMULATOR_ID,arch=arm64" \
+            -parallel-testing-enabled NO -jobs 2 -derivedDataPath .build/StagingDerivedData \
+            CODE_SIGN_IDENTITY=- -resultBundlePath .build/staging-results/staging.xcresult \
+            test 2>&1 | tee .build/staging-results/test.log
+      - name: Require all three staging checks and inspect runtime warnings
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          result=.build/staging-results
+          xcrun xcresulttool get test-results summary --path "$result/staging.xcresult" --compact > "$result/summary.json"
+          xcrun xcresulttool get test-results tests --path "$result/staging.xcresult" --compact > "$result/tests.json"
+          cat > "$result/selectors.txt" <<'TESTS'
+          RoomInTheCartTests/StagingServiceTests/testInstalledAppReachesItsStagingServiceAnonymously
+          RoomInTheCartUITests/StagingHelpUITests/testOnlineHelpOpensItsPageInSafari
+          RoomInTheCartUITests/StagingHelpUITests/testOnlineSupportOpensItsPageInSafari
+          TESTS
+          python3 scripts/check_ios_test_results.py --selectors "$result/selectors.txt" --expected-count 3 \
+            --summary "$result/summary.json" --tests "$result/tests.json" \
+            --result-bundle "$result/staging.xcresult" --test-log "$result/test.log"
+      - name: Preserve staging test evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: staging-iphone-results-${{ github.run_attempt }}
+          path: .build/staging-results/
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 7
   dependencies:
     name: Existing dependencies (${{ matrix.package }})
     runs-on: ubuntu-24.04
@@ -58,7 +108,7 @@ jobs:
         run: npm audit --package-lock-only --audit-level=high
   release-checks:
     name: Automated release gate
-    needs: [core, security, diagnostics, fixtures, native-wire, performance, dependencies]
+    needs: [core, security, diagnostics, fixtures, native-wire, performance, staging-iphone, dependencies]
     if: always()
     runs-on: ubuntu-24.04
     timeout-minutes: 10

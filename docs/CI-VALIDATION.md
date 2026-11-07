@@ -1,5 +1,7 @@
 # Local CI validation
 
+The pre-release workflow launches the Staging scheme on an iPhone simulator. It verifies the installed build’s anonymous service and authentication responses and opens Help and Support from native Settings into Safari. The release gate requires all three cases to run and pass its runtime-warning checks. This job uses one of the existing five macOS slots.
+
 The Linux source check runs the Foundation 2.1 verifier with Python 3.13. It checks the 52 launch requirements, 27 screen contracts, source checksums, SQLite constraints and reference grocery scenarios. The PostgreSQL job separately executes all twenty grocery inbox scenarios against the service.
 
 The workflow validator uses actionlint 1.7.12 plus the hash-pinned PyYAML requirements. Use an isolated environment; CI creates one before running the full Python suite. The lock currently covers CPython 3.12 on Linux x86_64 (Ubuntu 24.04) and CPython 3.9 on macOS arm64 (this Mac). Other interpreter/platform combinations require a reviewed wheel hash; source builds and unpinned fallback installs are disabled.

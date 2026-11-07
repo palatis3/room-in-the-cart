@@ -19,6 +19,7 @@ QUEUE_ERROR = 'unexpected key "queue" for "concurrency" section. expected one of
 POLICY = {
     ('ci.yml', 'swift-packages'): 0,
     ('ci.yml', 'ios-release'): 1,
+    ('release-checks.yml', 'staging-iphone'): 2,
     ('ci.yml', 'ios-swift-codeql'): 4,
     ('ci.yml', 'ios-build'): 3,
     ('ci.yml', 'ios-tests'): ('${{ fromJSON(needs.ios-build.outputs.test_matrix) }}', ('shard',)),
