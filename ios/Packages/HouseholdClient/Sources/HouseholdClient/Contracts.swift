@@ -13,6 +13,7 @@ public struct HouseholdBootstrap: Codable, Equatable, Sendable {
     public let queueConsent: Bool
     public let capabilities: [String]
 }
+public enum ConfirmedRequestPurchase: String, Codable, Sendable { case bought, notBought }
 public struct OwnRequest: Codable, Equatable, Identifiable, Sendable {
     public var id: String { requestId }
     public let requestId: String; public let shopId: String; public let revision: Int; public let originalItem: String
@@ -20,6 +21,8 @@ public struct OwnRequest: Codable, Equatable, Identifiable, Sendable {
     public let route: String; public let status: String; public let ownActionAllowed: Bool
     public let clarification: String?; public let followupTo: String?
     public let authorAlias: String?
+    public private(set) var purchaseOutcome: ConfirmedRequestPurchase? = nil
+    public private(set) var linkedLineId: UUID? = nil
 }
 public struct OwnRequestsPage: Codable, Equatable, Sendable { public let requests: [OwnRequest]; public let nextCursor: String? }
 public struct ReplayWindow: Codable, Equatable, Sendable { public let id: String; public let expiresAt: String
@@ -69,7 +72,7 @@ public struct PendingOperation: Codable, Equatable, Identifiable, Sendable {
     public func targetsShop(_ shopID: String?, includeCreation: Bool = false) -> Bool {
         guard let envelope = try? JSONDecoder().decode(CommandEnvelope.self, from: bytes) else { return false }
         if includeCreation, envelope.kind == "shop.create" { return true }
-        guard let shopID else { return !envelope.kind.hasPrefix("cookCopy.") && !envelope.kind.hasPrefix("pantry.") && envelope.kind != "mealRecovery.apply" }
+        guard let shopID else { return envelope.kind != "request.confirmPurchase" && !envelope.kind.hasPrefix("cookCopy.") && !envelope.kind.hasPrefix("pantry.") && envelope.kind != "mealRecovery.apply" }
         return envelope.shopId.caseInsensitiveCompare(shopID) == .orderedSame
     }
     public init(envelope: CommandEnvelope, householdID: String, memberID: String, deviceID: String) throws {

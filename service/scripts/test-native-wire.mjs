@@ -19,12 +19,15 @@ process.env.RITC_TEST_NATIVE_WIRE = '1';
 
 const history = paid => `Swift household client records meals and price history over HTTPS and PostgreSQL (paid=${paid})`;
 const cases = [
+  'assigned iPhone shopper confirms and corrects a placed request over pinned HTTPS',
   history(false),
   history(true),
   'actual Swift planner proposal and separate shopper review travel over pinned loopback HTTPS and PostgreSQL',
   'real Swift adult proposal and separate shopper adoption use pinned loopback HTTPS and PostgreSQL',
 ];
 const swiftRuns = [
+  'purchase-author HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres',
+  'request-purchase HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres',
   'history-free HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres',
   'history-paid HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres',
   'meal-planner HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
@@ -33,7 +36,7 @@ const swiftRuns = [
   'quote-adult HouseholdClientTests.StoreQuoteNativeWireTests/testStoreQuoteClientAgainstPostgres',
   'quote-shopper HouseholdClientTests.StoreQuoteNativeWireTests/testStoreQuoteClientAgainstPostgres',
 ];
-const files = ['history', 'shared-meal-changes', 'shared-store-quotes']
+const files = ['history', 'shared-meal-changes', 'shared-store-quotes', 'service']
   .map(name => fileURLToPath(new URL(`../tests/${name}.integration.mjs`, import.meta.url)));
 const admin = new pg.Client({ connectionString: adminURL });
 await admin.connect();
@@ -68,10 +71,10 @@ try {
       .filter(line => line.startsWith(nativeWirePassPrefix))
       .map(line => line.slice(nativeWirePassPrefix.length));
     assert.ok(summary?.success && summary.counts.tests === cases.length && summary.counts.passed === cases.length,
-      'Expected exactly four passing Node integration cases');
+      'Expected every selected Node integration case to pass');
     assert.deepEqual(passed.sort(), cases.sort(), 'Unexpected, missing or skipped Node cases');
     assert.deepEqual(observedSwiftRuns.sort(), swiftRuns.sort(), 'Unexpected, missing or repeated Swift wire cases');
-    console.log('Verified four Node integration cases and seven exact XCTest scenario results.');
+    console.log(`Verified ${cases.length} Node integration cases and ${swiftRuns.length} exact XCTest scenario results.`);
   } finally {
     await fencePrivacyJournalFixture(admin, journal);
   }

@@ -37,12 +37,29 @@ final class NativeServiceWireTests: XCTestCase {
         _ = try await auth.verifyEmailCode(email: "wire@example.invalid", code: XCTUnwrap(env["RITC_WIRE_CODE"]))
         let householdID = try XCTUnwrap(env["RITC_WIRE_HOUSEHOLD"])
         let shop = try XCTUnwrap(env["RITC_WIRE_SHOP"])
-        let other = try XCTUnwrap(env["RITC_WIRE_OTHER"])
         let vault = MemoryVault(), config = try ServiceConfiguration(baseURL: base)
         let service = HouseholdService(configuration: config, auth: auth, deviceVault: vault, transport: transport)
         _ = try await service.enroll(householdID: householdID)
         let scope = try await service.selectShop(XCTUnwrap(UUID(uuidString: shop)))
         XCTAssertEqual(scope.shopId, shop)
+        if let request = env["RITC_WIRE_PURCHASE_REQUEST"] {
+            if env["RITC_WIRE_PURCHASE_READER"] == "1" {
+                XCTAssertEqual(scope.role, "contributor")
+                XCTAssertFalse(scope.capabilities.contains("request_purchase_confirmation"))
+                let mine = try await service.ownRequests()
+                XCTAssertEqual(mine.requests.map(\.id), [request])
+                let own = try XCTUnwrap(mine.requests.first)
+                XCTAssertEqual(own.originalItem, "Fictional cereal")
+                XCTAssertEqual(own.purchaseOutcome, .notBought)
+                XCTAssertEqual(own.status, "added")
+                XCTAssertNil(own.linkedLineId)
+                XCTAssertNil(own.authorAlias)
+            } else {
+                try await exercisePurchaseConfirmation(service, scope: scope, shopID: shop, requestID: request)
+            }
+            return
+        }
+        let other = try XCTUnwrap(env["RITC_WIRE_OTHER"])
         let mealPlan = try await service.mealPlan(shopID: XCTUnwrap(UUID(uuidString: shop)))
         XCTAssertTrue(mealPlan.shopper)
         let observation = try await service.priceObservation(observationID: XCTUnwrap(env["RITC_WIRE_OBSERVATION"]))
@@ -155,5 +172,39 @@ final class NativeServiceWireTests: XCTestCase {
         XCTAssertEqual(placedDetail.report.occurredAt, occurredAt)
         let minimal = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(placementStatus)) as? [String: Any])
         XCTAssertEqual(Set(minimal.keys), ["clientKey", "operationId", "reportId", "shopId", "reportedRevision", "reportedAuthorityEpoch", "occurredAt", "receivedAt", "source", "state"])
+    }
+
+    private func exercisePurchaseConfirmation(_ service: HouseholdService, scope: HouseholdBootstrap,
+                                              shopID: String, requestID: String) async throws {
+        XCTAssertTrue(scope.capabilities.contains("request_purchase_confirmation"))
+        let shop = try await service.shopperShop(shopID: shopID)
+        let placed = try await service.deliveryEvidence(shopID: shopID)
+        let window = try await service.replayWindow()
+        var expected: ConfirmedRequestPurchase?
+        for outcome: ConfirmedRequestPurchase? in [.bought, nil, .notBought] {
+            let page = try await service.shopperInbox(shopID: shopID)
+            let request = try XCTUnwrap(page.requests.first { $0.id == requestID })
+            let match = try XCTUnwrap(RequestPurchaseMatch(request: request, shop: shop, placed: placed))
+            XCTAssertEqual(match.request.originalItem, "Fictional cereal")
+            XCTAssertEqual(match.request.authorAlias, "Alex")
+            XCTAssertEqual(match.request.ownQuantity, "one box")
+            XCTAssertEqual(match.request.purchaseOutcome, expected)
+            XCTAssertEqual(match.line.name, "Original basket")
+            let op = try await service.prepare(envelope: .init(replayWindow: window.id, shopId: shopID,
+                kind: "request.confirmPurchase", base: match.base, body: match.body(outcome: outcome)), bootstrap: scope)
+            XCTAssertFalse(op.targetsShop(nil))
+            XCTAssertFalse(op.targetsShop(UUID().uuidString))
+            let first = try await service.executeShopper(op)
+            let retry = try await service.executeShopper(op)
+            XCTAssertEqual(first, retry)
+            XCTAssertEqual(first.purchaseOutcome, outcome?.rawValue ?? "unknown")
+            XCTAssertEqual(first.requestRevision, request.revision + 1)
+            expected = outcome
+        }
+        let final = try await service.shopperInbox(shopID: shopID)
+        let saved = try XCTUnwrap(final.requests.first { $0.id == requestID })
+        XCTAssertEqual(saved.purchaseOutcome, .notBought)
+        XCTAssertEqual(saved.status, "added")
+        XCTAssertEqual(saved.linkedLineId, placed.lines.first?.id)
     }
 }

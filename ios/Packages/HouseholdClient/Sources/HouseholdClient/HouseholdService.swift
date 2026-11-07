@@ -136,7 +136,9 @@ public actor HouseholdService {
     public func replayWindow() async throws -> ReplayWindow { try await perform("replay-windows", method: "POST", body: Data("{}".utf8)) }
     public func ownRequests(cursor: String? = nil) async throws -> OwnRequestsPage {
         if let cursor, UUID(uuidString: cursor) == nil { throw ClientError.configuration }
-        return try await perform("requests/mine", method: "GET", query: cursor.map { [.init(name: "cursor", value: $0)] } ?? [])
+        let page: OwnRequestsPage = try await perform("requests/mine", method: "GET", query: cursor.map { [.init(name: "cursor", value: $0)] } ?? [])
+        guard page.requests.allSatisfy({ $0.linkedLineId == nil }) else { throw ClientError.invalidResponse }
+        return page
     }
     @discardableResult func authorizeShopper(shopID: String, capability: String? = nil) async throws -> HouseholdBootstrap {
         guard UUID(uuidString: shopID) != nil else { throw ClientError.configuration }
@@ -531,11 +533,23 @@ public actor HouseholdService {
         let start = generation
         guard let enrollment, operation.householdID == householdID, operation.deviceID == enrollment.deviceId else { throw ClientError.accessEnded }
         let envelope = try JSONDecoder().decode(CommandEnvelope.self, from: operation.bytes)
-        guard envelope.clientKey == operation.clientKey, ["request.apply", "request.clarify"].contains(envelope.kind) else { throw ClientError.configuration }
-        try await authorizeShopper(shopID: envelope.shopId)
+        let confirming = envelope.kind == "request.confirmPurchase"
+        guard envelope.clientKey == operation.clientKey, confirming || ["request.apply", "request.clarify"].contains(envelope.kind) else { throw ClientError.configuration }
+        try await authorizeShopper(shopID: envelope.shopId, capability: confirming ? "request_purchase_confirmation" : nil)
         guard start == generation else { throw ClientError.cancelled }
         guard operation.memberID == memberID else { throw ClientError.accessEnded }
-        return try await perform("commands", method: "POST", body: operation.bytes)
+        let receipt: ShopperReceipt = try await perform("commands", method: "POST", body: operation.bytes)
+        if confirming {
+            guard let revision = envelope.base.requestRevision, revision > 0, revision < Int.max,
+                  UUID(uuidString: receipt.operationId) != nil, receipt.kind == envelope.kind,
+                  receipt.shopId == envelope.shopId, receipt.shopRevision == envelope.base.shopRevision,
+                  receipt.authorityEpoch == envelope.base.authorityEpoch, receipt.disposition == "recorded",
+                  receipt.requestRevision == revision + 1, let request = receipt.requestId,
+                  envelope.body["requestId"] == .string(request), let outcome = receipt.purchaseOutcome,
+                  ["bought", "notBought", "unknown"].contains(outcome), envelope.body["outcome"] == .string(outcome)
+            else { throw ClientError.invalidResponse }
+        }
+        return receipt
     }
     /// Shop creation is organizer-only; updates remain restricted to the currently assigned shopper.
     /// A retry retains its original shop ID, replay window, base and exact command bytes.

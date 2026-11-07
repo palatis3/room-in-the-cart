@@ -683,3 +683,14 @@ test('two contributor web sessions see only their own purchase receipt through s
     assert.doesNotMatch(observer.root.textContent,/Fictional cereal|Shopper confirmed|Purchase not confirmed/);
   }
 });
+
+if(process.env.RITC_TEST_NATIVE_WIRE==='1') test('assigned iPhone shopper confirms and corrects a placed request over pinned HTTPS',async()=>{
+  const f=await purchaseFixture('Alex');
+  const {exerciseNativeClient}=await import('./native-wire.mjs');
+  await exerciseNativeClient({service:server,owner:f.actors.Mia,householdId:f.h,shopId:f.shopId,purchaseRequestId:f.requestId});
+  await exerciseNativeClient({service:server,owner:f.actors.Alex,householdId:f.h,shopId:f.shopId,purchaseRequestId:f.requestId,purchaseReader:true});
+  const mine=(await f.http('Alex','GET','/requests/mine')).data.requests;
+  assert.equal(mine.length,1);assert.equal(mine[0].requestId,f.requestId);
+  assert.equal(mine[0].status,'added');assert.equal(mine[0].revision,f.requestRevision+3);
+  assert.equal(mine[0].purchaseOutcome,'notBought');assert.equal(mine[0].linkedLineId,undefined);
+});
