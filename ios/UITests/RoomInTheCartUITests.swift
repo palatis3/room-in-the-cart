@@ -254,6 +254,12 @@ final class RoomInTheCartUITests: XCTestCase {
         launch()
         let shortcuts = app.buttons["deviceShortcuts"]
         XCTAssertTrue(shortcuts.waitForExistence(timeout: 5))
+        let compare = app.buttons["newComparison"]
+        let startPickup = app.buttons["openPickupList"]
+        XCTAssertTrue(shopViewport.contains(compare.frame))
+        XCTAssertTrue(shopViewport.contains(startPickup.frame))
+        XCTAssertLessThan(compare.frame.midY, shortcuts.frame.minY)
+        XCTAssertLessThan(startPickup.frame.midY, shortcuts.frame.minY)
         XCTAssertGreaterThanOrEqual(shortcuts.frame.height, 44)
         XCTAssertTrue(shopViewport.contains(shortcuts.frame))
         shortcuts.tap()

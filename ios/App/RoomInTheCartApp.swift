@@ -187,6 +187,20 @@ struct ShopView: View {
         .onAppear { pickup.selectedID = id }
     }
 
+    private var canReviewCheckout: Bool {
+        guard ledger.ready, !ledger.hasPendingLedgerDeletion else { return false }
+        guard let shop = ledger.shop,
+              let journey = pickup.journeys.first(where: { $0.id == shop.id }) else { return true }
+        return journey.closedAt == nil && (journey.basket == nil || journey.basket?.phase == .draft)
+    }
+
+    private var comparePacks: some View {
+        NavigationLink { ComparisonView() } label: {
+            Label(tr("Compare packs"), systemImage: "arrow.left.arrow.right")
+                .frame(minHeight: 44)
+        }.accessibilityIdentifier("newComparison")
+    }
+
     private var shopContent: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
@@ -211,41 +225,22 @@ struct ShopView: View {
                         }
                     }
                 }
-                NavigationLink {
-                    DeviceSurfacesEntry(composition: surfaces)
-                } label: {
-                    HStack(spacing: 12) {
-                        Image(systemName: "iphone").foregroundStyle(Theme.secondary)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(tr("On this iPhone")).font(.caption).foregroundStyle(Theme.secondary)
-                            Text(SurfaceCopy.text("Device shortcuts")).font(.subheadline.weight(.semibold))
-                        }.fixedSize(horizontal: false, vertical: true)
-                        Spacer(minLength: 0)
-                        Image(systemName: "chevron.forward").font(.footnote)
-                    }
-                    .frame(minHeight: 44).contentShape(Rectangle())
-                }.buttonStyle(.plain).foregroundStyle(Theme.action)
-                    .accessibilityIdentifier("deviceShortcuts")
-                VStack(alignment: .leading, spacing: 16) {
-                    Text(tr("Make room for what matters.")).font(.largeTitle.bold())
-                    Text(tr("Compare packs for one item, or start a pickup to build your shopping list."))
-                        .foregroundStyle(Theme.secondary)
-                    NavigationLink { ComparisonView() } label: {
-                        Label(tr("Compare packs"), systemImage: "arrow.left.arrow.right")
-                    }.buttonStyle(PrimaryAction()).accessibilityIdentifier("newComparison")
-                    Text(tr("Works offline. No account needed.")).font(.footnote).foregroundStyle(Theme.secondary)
-                }.padding(20).background(Theme.surface, in: RoundedRectangle(cornerRadius: 24))
                 VStack(alignment: .leading, spacing: 12) {
+                    if let shop = ledger.shop {
+                        Text(shop.title).font(.title2.bold()).accessibilityAddTraits(.isHeader)
+                        if let slot = shop.basis.slot, let zone = TimeZone(identifier: shop.basis.timeZoneIdentifier) {
+                            Text(slot.formatted(Date.FormatStyle(date: .abbreviated, time: .shortened, timeZone: zone)) + " · " + zone.identifier)
+                        }
+                    } else {
+                        comparePacks.buttonStyle(PrimaryAction())
+                        Text(tr("Works offline. No account needed.")).font(.footnote).foregroundStyle(Theme.secondary)
+                    }
                     RestorableShoppingListLink {
                         Label(ledger.shop == nil ? ledgerText("Start pickup") : ledgerText("Shopping list"), systemImage: "list.bullet")
                             .font(.headline).fixedSize(horizontal: false, vertical: true)
                             .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
                     }.foregroundStyle(Theme.action).accessibilityIdentifier("openPickupList")
                     if let shop = ledger.shop {
-                        Text(shop.title).font(.title2.bold())
-                        if let slot = shop.basis.slot, let zone = TimeZone(identifier: shop.basis.timeZoneIdentifier) {
-                            Text(slot.formatted(Date.FormatStyle(date: .abbreviated, time: .shortened, timeZone: zone)) + " · " + zone.identifier)
-                        }
                         if let closed = pickup.journeys.first(where: { $0.id == shop.id })?.closedAt {
                             Text(pTr("Closed") + " · " + closed.formatted(date: .abbreviated, time: .shortened))
                         } else if let journey = pickup.resumableJourney(for: shop.id), let basket = journey.basket, basket.phase != .draft {
@@ -261,11 +256,20 @@ struct ShopView: View {
                                     pickupDestination(journey.id) { PickupArrivalView(model: pickup) }
                                 }.frame(minHeight: 44)
                             }
-                        } else {
-                            NavigationLink(tr("Review checkout")) {
-                                LedgerCheckoutEntry(ledger: ledger, pickup: pickup)
-                            }.frame(minHeight: 44)
                         }
+                    }
+                    if canReviewCheckout {
+                        NavigationLink {
+                            CheckOneChangeView()
+                        } label: {
+                            Label(ledger.shop == nil ? CheckOneChangeView.title : tr("Review checkout"),
+                                  systemImage: "cart")
+                                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                                .contentShape(Rectangle())
+                        }.foregroundStyle(Theme.action).accessibilityIdentifier("shop.checkOneChange")
+                    }
+                    if ledger.shop != nil {
+                        comparePacks.foregroundStyle(Theme.action)
                     }
                     NavigationLink {
                         UrgentRepairView(model: pickup).environment(\.pickupLedger, ledger)
@@ -284,6 +288,19 @@ struct ShopView: View {
                             .frame(minHeight: 44)
                     }
                 }.padding(20).background(Theme.surface, in: RoundedRectangle(cornerRadius: 20))
+                NavigationLink {
+                    DeviceSurfacesEntry(composition: surfaces)
+                } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: "iphone").foregroundStyle(Theme.secondary)
+                        Text(SurfaceCopy.text("Device shortcuts")).font(.subheadline.weight(.semibold))
+                            .fixedSize(horizontal: false, vertical: true)
+                        Spacer(minLength: 0)
+                        Image(systemName: "chevron.forward").font(.footnote)
+                    }
+                    .frame(minHeight: 44).contentShape(Rectangle())
+                }.buttonStyle(.plain).foregroundStyle(Theme.action)
+                    .accessibilityIdentifier("deviceShortcuts")
                 if let error = model.error {
                     Label(error, systemImage: "exclamationmark.triangle").foregroundStyle(Color("error"))
                     Button(tr("Try again")) { Task { await model.open(); await model.refresh() } }.frame(minHeight: 44)
