@@ -1,0 +1,35 @@
+[
+  {
+    "path": ".build/S02SystemShareContext20261106/DerivedData/Build/Intermediates.noindex/RoomInTheCart.build/Debug-iphonesimulator/RoomInTheCart.build/RoomInTheCart.app.xcent",
+    "sha256": "97704a8960b4facceef54397a08fb5d0a456247c3627359215aa2a27df22656c",
+    "entitlements": {}
+  },
+  {
+    "path": ".build/S02SystemShareContext20261106/DerivedData/Build/Intermediates.noindex/RoomInTheCart.build/Debug-iphonesimulator/RoomInTheCart.build/RoomInTheCart.app-Simulated.xcent",
+    "sha256": "62848c353669a3d73a72c6c2c6aaac74e6e90c3946a31308857e8805e59d9e7d",
+    "entitlements": {
+      "application-identifier": "FAKETEAMID.dev.roominthecart.app.debug",
+      "com.apple.developer.default-data-protection": "NSFileProtectionComplete",
+      "com.apple.security.application-groups": [
+        "group.dev.roominthecart.app.debug.widget",
+        "group.dev.roominthecart.app.debug.share-inbox"
+      ]
+    }
+  },
+  {
+    "path": ".build/S02SystemShareContext20261106/DerivedData/Build/Intermediates.noindex/RoomInTheCart.build/Debug-iphonesimulator/RoomInTheCartShare.build/RoomInTheCartShare.appex.xcent",
+    "sha256": "97704a8960b4facceef54397a08fb5d0a456247c3627359215aa2a27df22656c",
+    "entitlements": {}
+  },
+  {
+    "path": ".build/S02SystemShareContext20261106/DerivedData/Build/Intermediates.noindex/RoomInTheCart.build/Debug-iphonesimulator/RoomInTheCartShare.build/RoomInTheCartShare.appex-Simulated.xcent",
+    "sha256": "7c8324ff60879f733cc3bd368fd370a1dc8cc8c4d9c8d715f485da73905e41a4",
+    "entitlements": {
+      "application-identifier": "FAKETEAMID.dev.roominthecart.app.debug.share",
+      "com.apple.developer.default-data-protection": "NSFileProtectionComplete",
+      "com.apple.security.application-groups": [
+        "group.dev.roominthecart.app.debug.share-inbox"
+      ]
+    }
+  }
+]

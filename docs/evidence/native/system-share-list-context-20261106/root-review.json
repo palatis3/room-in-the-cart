@@ -1,0 +1,12 @@
+{
+  "sourceFilesVerified": 457,
+  "sourceMismatches": [],
+  "nativeCasePassed": 1,
+  "strictExit": 0,
+  "recordedXCTestWarnings": 0,
+  "restarts": 0,
+  "freezeFiles": 511,
+  "freezeSHA256": "2bc420156f7f31c620b540a7917dc32866cd3f07e34af232d63138c2b89ed994",
+  "nativeLogSHA256": "71a522f71caaa3d8456b980e2d838c5db59961b7dbdbb0b5ea473b11a147b9f3",
+  "scope": "Real system extension Cancel before staging, normal unprotected local workspace, English standard text, iPhone17 iOS27.0; no containing-app saved-review Cancel, physical-device or cold-launch viewport claim"
+}

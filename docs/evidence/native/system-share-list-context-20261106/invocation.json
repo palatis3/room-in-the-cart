@@ -1,0 +1,29 @@
+{
+  "command": [
+    "xcodebuild",
+    "-project",
+    "ios/RoomInTheCart.xcodeproj",
+    "-scheme",
+    "RoomInTheCart",
+    "-configuration",
+    "Debug",
+    "-destination",
+    "platform=iOS Simulator,id=789A7C41-16B3-4C42-AC3E-B65EC5423104",
+    "-jobs",
+    "2",
+    "-parallel-testing-enabled",
+    "NO",
+    "-derivedDataPath",
+    "/Users/palatis/Room in the Cart/.build/S02SystemShareContext20261106/DerivedData",
+    "-resultBundlePath",
+    "/Users/palatis/Room in the Cart/.build/S02SystemShareContext20261106/SystemShareContext.xcresult",
+    "-collect-test-diagnostics",
+    "never",
+    "CODE_SIGNING_ALLOWED=YES",
+    "CODE_SIGN_IDENTITY=-",
+    "-only-testing:RoomInTheCartUITests/FreeJourneyUITests/testSystemShareCancelAndIngredientReturnPreserveLongFilteredListContext",
+    "test"
+  ],
+  "cwd": "/Users/palatis/Room in the Cart/.build/S02SystemShareContext20261106/source",
+  "start": 1794011712.8456619
+}

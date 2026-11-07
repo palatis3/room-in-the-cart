@@ -2,13 +2,21 @@
 
 Updated November 6, 2026 UTC. The owner resumed and explicitly approved the reviewed hosted staging update; the full first-version goal is active and release acceptance remains incomplete. Historical snapshots are preserved in [the handoff archive](CURRENT-HANDOFF-HISTORY-20261106.md).
 
-## Active CI candidate: 804030e
+## Active CI candidate: 0d5bb1b
+
+Published `0d5bb1b22e9e84cd4b8c2b07317f91cfc703b60c` once to draft PR1. Full original-attempt cohort: core42316648565, fixtures42316648586, deep42316648633, performance42316648635, native-wire42316648577 and security42316648580. Existing collectors own the core/performance and fixture sessions; do not start duplicate collections or cancel/retry running jobs based on observation timeouts. Compact progress snapshots and pinned inputs are under `.build/CIResearch20261106/candidate-0d5bb1b/`. Original models601/601 and both builds have passed. Deep is terminal success: both15-case StoreKit configurations and both sanitizer lanes pass; [root-verified deep evidence](evidence/native/ci-0d5bb1b-deep-20261106/README.md). The remaining ordinary/fixture/performance/security collection is still in progress; inspect live state before making a full-cohort claim.
+
+Local follow-ups remain unpushed to avoid superseding that cohort: `d059421` adds the passing ordinary long-filtered-list cancellation/detail-return regression. A separate normal-app system-extension Cancel run now passes1/1 in98.66s, with all30 original items preserved and an empty shared inbox; [scope](evidence/native/system-share-list-context-20261106/README.md). A newly reviewed next-shop fix applies fresh handled/dismissed choices to linked meal carryovers. Its negative control fails exactly at the unwanted retained needs; all9 Free journey model cases pass after correction, preserving prior history and replay; [proof](evidence/native/next-shop-fresh-closing-20261106/README.md). The owned simulator789A7C41-16B3-4C42-AC3E-B65EC5423104 has been shut down and deleted; the preview remains untouched. No root local native process is left running.
+
+Next: finish the exact published cohort collection, inspect actual failures if any, and batch the local follow-ups for the next reviewed candidate. Do not claim owner-deferred signing/provider activation or physical/human acceptance from these subsets. The full first-version goal remains active.
+
+## Previous CI candidate: 804030e
 
 A single ordinary push published `804030e68473d022e72b464940061c01c611a0bd` to draft PR1. The reviewed five-job scheduling and independent performance/pickup evidence changes are now under hosted validation. All 199 local script tests, workflow lint and generated-file checks passed before publication. App/test bodies, inventory, time limits, warning rules and original Xcode26.3/iOS26.2 release pins remain unchanged. No new performance baseline is approved.
 
 All six original attempt-1 runs are terminal: core42272379454, fixtures42272379477, deep42272379472 and performance42272379490 failed; native-wire42272379461 and security42272379767 succeeded. Both builds and models601/601 passed. All ordinary51 and fixture45 cases executed: ordinary48pass/3fail, fixtures44pass/1fail, with six narrowly allowed warnings in each collection. Failures and source/security limits remain explicit. [Original core/deep/performance audit](evidence/native/ci-804030e-20261106/original-core-deep-performance-audit.json).
 
-All original collectors are stopped. Root verified3138 core frozen files and113 compact fixture files. The single English-only StoreKit recovery is terminal success:15/15 passed, zero warnings/skips/restarts, exact source/order/runtime. The original English job had no runner and no execution; its acquisition failure remains retained. All three other deep jobs kept their original execution unchanged. Root verified the separate268-file recovery freeze. [Recovery audit](evidence/native/ci-804030e-20261106/english-recovery-final-audit.json). No new acceptance candidate or source push has followed804.
+All original804 collectors are stopped. Root verified3138 core frozen files and113 compact fixture files. The single English-only StoreKit recovery is terminal success:15/15 passed, zero warnings/skips/restarts, exact source/order/runtime. The original English job had no runner and no execution; its acquisition failure remains retained. All three other deep jobs kept their original execution unchanged. Root verified the separate268-file recovery freeze. [Recovery audit](evidence/native/ci-804030e-20261106/english-recovery-final-audit.json). The later0d5 candidate above supersedes this historical scheduling checkpoint without relabeling its failures.
 
 ## Targeted performance setup follow-up dispatched
 

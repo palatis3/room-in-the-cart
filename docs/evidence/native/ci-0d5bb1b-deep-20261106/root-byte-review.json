@@ -1,0 +1,9 @@
+{
+  "candidate": "0d5bb1b22e9e84cd4b8c2b07317f91cfc703b60c",
+  "runID": 42316648633,
+  "attempt": 1,
+  "freezeSHA256": "130e52b1e7a1a4cb26bfbacb6a18bef14d80b1d29bcfb6fcefc2ade618aa87fc",
+  "checkedFiles": 732,
+  "mismatches": [],
+  "scope": "Root independent full frozen-input/artifact byte verification; detailed native case conclusions retained in collector audit"
+}

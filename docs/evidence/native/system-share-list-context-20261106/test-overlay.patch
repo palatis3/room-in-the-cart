@@ -1,0 +1,91 @@
+--- a/ios/UITests/FreeJourneyUITests.swift
++++ b/ios/UITests/FreeJourneyUITests.swift
+@@ -681,6 +681,88 @@
+         reveal(element(id))
+     }
+ 
++    func testSystemShareCancelAndIngredientReturnPreserveLongFilteredListContext() {
++        app.launchArguments = ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
++        app.launch()
++        XCTAssertTrue(app.tabBars.buttons["Shop"].waitForExistence(timeout: 15))
++        openShoppingList()
++        tap(element("ledgerStartShop"))
++        fill("Filtered family pickup", into: "ledgerShopName")
++        tap(element("ledgerCreateShop"))
++        tap(element("ledgerImport"))
++        let lines = Array("abcdefghijklmnopqrstuvwx").enumerated().flatMap { index, letter in
++            var rows = ["2 Wrap \(letter)"]
++            if index.isMultiple(of: 4) { rows.append("1 Soap \(letter)") }
++            return rows
++        }.joined(separator: "\n")
++        fill(lines, into: "ledgerImportText", requireDone: true)
++        tap(element("ledgerReviewImport"))
++        let commit = element("ledgerCommitImport")
++        for _ in 0..<40 {
++            if commit.exists && commit.isHittable { break }
++            app.collectionViews.firstMatch.swipeUp(velocity: 6_000)
++        }
++        tap(commit)
++        XCTAssertTrue(commit.waitForNonExistence(timeout: 10))
++
++        let search = app.textFields["ledgerSearch"]
++        tap(search); search.typeText("Wrap\n")
++        XCTAssertEqual(search.value as? String, "Wrap")
++        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
++        let row = app.buttons["Inspect Wrap n"]
++        XCTAssertFalse(row.exists && row.isHittable, "The anchor must start beyond the filtered viewport")
++        reveal(row)
++        let rowID = row.identifier
++        let originalY = row.frame.minY
++        XCTAssertTrue(rowID.hasPrefix("ledgerInspect-"))
++        capture("long-filtered-list-before-leaving")
++
++        let host = XCUIApplication(bundleIdentifier: "dev.roominthecart.share-probe")
++        defer { if host.state != .notRunning { host.terminate() } }
++        host.launch()
++        openTextShare(host, sample: "Share cancellation sample")
++        let save = host.buttons["Save for review"]
++        XCTAssertTrue(save.waitForExistence(timeout: 12), host.debugDescription)
++        XCTAssertTrue(host.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", "2 Carrots")).firstMatch.exists)
++        host.buttons["Cancel"].tap()
++        XCTAssertTrue(save.waitForNonExistence(timeout: 8))
++        app.activate()
++        XCTAssertTrue(search.waitForExistence(timeout: 8))
++        XCTAssertEqual(search.value as? String, "Wrap")
++        XCTAssertTrue(element(rowID).isHittable)
++        XCTAssertEqual(element(rowID).frame.minY, originalY, accuracy: 4)
++
++        tap(element(rowID))
++        XCTAssertTrue(app.navigationBars["Inspect ingredient"].waitForExistence(timeout: 8))
++        XCTAssertEqual(element("ledgerIngredientTotal").label, "2 items")
++        tap(app.navigationBars["Inspect ingredient"].buttons.element(boundBy: 0))
++        XCTAssertTrue(search.waitForExistence(timeout: 8))
++        XCTAssertEqual(search.value as? String, "Wrap")
++        XCTAssertTrue(element(rowID).isHittable)
++        XCTAssertEqual(element(rowID).frame.minY, originalY, accuracy: 4)
++        capture("long-filtered-list-after-system-share-cancel-and-detail-return")
++
++        // Search the complete list for the cancelled row; absence from a lazy
++        // offscreen accessibility tree alone would not prove cancellation.
++        tap(search); search.press(forDuration: 1.2)
++        let menuItem = app.menuItems["Select All"]
++        let selectAll = menuItem.exists ? menuItem : app.buttons["Select All"]
++        XCTAssertTrue(selectAll.waitForExistence(timeout: 5))
++        selectAll.tap(); search.typeText("Carrots\n")
++        XCTAssertEqual(search.value as? String, "Carrots")
++        XCTAssertTrue(app.staticTexts["No active items match your search."].waitForExistence(timeout: 8))
++    }
++
++    private func openTextShare(_ host: XCUIApplication, sample: String) {
++        let trigger = host.buttons[sample]
++        let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND hittable == true"), object: trigger)
++        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 12), .completed, host.debugDescription)
++        trigger.tap()
++        let extensionCell = host.cells.matching(NSPredicate(format: "identifier == %@ AND label == %@", "shareCell", "Room in the Cart")).firstMatch
++        XCTAssertTrue(extensionCell.waitForExistence(timeout: 8), host.debugDescription)
++        extensionCell.tap()
++    }
++
+     func testCancelledImportAndIngredientReturnPreserveLongFilteredListContext() {
+         launch(reset: true)
+         openShoppingList()
