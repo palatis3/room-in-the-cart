@@ -1291,35 +1291,20 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
     private static func parseLine(_ original: String) -> (name: String, quantity: Quantity?, reason: String?) {
         var text = original.trimmingCharacters(in: .whitespaces)
         if text.hasPrefix("- ") || text.hasPrefix("• ") || text.hasPrefix("* ") { text.removeFirst(2) }
-        let tokens = text.split(whereSeparator: \.isWhitespace).map(String.init)
-        guard tokens.count >= 2, let number = parseAmount(tokens[0]) else {
+        var tokens = text.split(whereSeparator: \.isWhitespace).map(String.init)[...]
+        guard tokens.count >= 2, let number = try? ListQuantityParser.takeAmount(from: &tokens) else {
             return (text, nil, "Review the quantity and unit.")
         }
-        var unit: UnitOfMeasure = .count
-        var nameStart = 1
-        let units: [String: UnitOfMeasure] = ["g": .gram, "gram": .gram, "grams": .gram, "kg": .kilogram,
-            "kilogram": .kilogram, "kilograms": .kilogram, "oz": .ounce, "ounce": .ounce, "ounces": .ounce,
-            "lb": .pound, "lbs": .pound, "pound": .pound, "pounds": .pound, "ml": .milliliter,
-            "milliliter": .milliliter, "milliliters": .milliliter, "l": .liter, "liter": .liter, "liters": .liter,
-            "cup": .cup, "cups": .cup, "count": .count, "ct": .count, "each": .count,
-            "gramo": .gram, "gramos": .gram, "kilo": .kilogram, "kilos": .kilogram,
-            "libra": .pound, "libras": .pound, "litro": .liter, "litros": .liter,
-            "taza": .cup, "tazas": .cup, "unidades": .count]
-        if let parsed = units[tokens[1].lowercased()] { unit = parsed; nameStart = 2 }
-        else if tokens.count > 2 && tokens[1].lowercased() == "fl" && ["oz", "ounce", "ounces"].contains(tokens[2].lowercased()) {
-            unit = .fluidOunce; nameStart = 3
-        } else if ["tbsp", "tsp", "tablespoon", "tablespoons", "teaspoon", "teaspoons", "dozen", "dozens", "scoop", "scoops", "handful", "handfuls", "pinch", "pinches", "about", "approximately"].contains(tokens[1].lowercased()) {
-            return (tokens.dropFirst().joined(separator: " "), nil, "Review the unsupported or approximate unit.")
+        let parsedUnit = ListQuantityParser.takeUnit(from: &tokens)
+        let name = tokens.joined(separator: " ")
+        if parsedUnit == nil && ListQuantityParser.needsUnitReview(tokens.first) {
+            return (name, nil, "Review the unsupported or approximate unit.")
         }
-        let name = tokens.dropFirst(nameStart).joined(separator: " ")
+        let unit = parsedUnit ?? .count
         guard !name.isEmpty else { return (text, nil, "Add the item name.") }
         return (name, Quantity(amount: number, unit: unit, originalLiteral: original), nil)
     }
-    private static func parseAmount(_ text: String) -> Rational? {
-        let parts = text.split(separator: "/", omittingEmptySubsequences: false)
-        if parts.count == 2, let top = Int64(parts[0]), let bottom = Int64(parts[1]) { return try? Rational(top, bottom) }
-        return try? Rational(decimal: text)
-    }
+
 }
 
 private func normalizedProduct(_ value: String) -> String {

@@ -69,6 +69,35 @@ final class ShoppingLedgerTests: XCTestCase {
         XCTAssertEqual(ledger.revision, 0)
     }
 
+    func testBilingualMeasuresMatchFoodWithoutChangingOriginalEvidence() throws {
+        var ledger = ShoppingLedger()
+        let first = ledger.stageImport(text: "1 1/2 cups of arroz\n2 onzas de queso\n2 onzas líquidas de caldo sin sal\n1 kg De Cecco")
+        XCTAssertEqual(first.lines.map(\.name), ["arroz", "queso", "caldo sin sal", "De Cecco"])
+        XCTAssertEqual(first.lines.map { $0.quantity?.unit }, [.cup, .ounce, .fluidOunce, .kilogram])
+        XCTAssertEqual(first.lines[0].quantity?.amount, try Rational(3, 2))
+        try ledger.commitImport(first)
+        let repeatPaste = ledger.stageImport(text: "1½ tazas de arroz", source: .paste)
+        let item = repeatPaste.lines[0]
+        XCTAssertEqual(item.duplicateLineIDs, [first.lines[0].proposedLineID])
+        let batch = try ledger.commitImport(repeatPaste, decisions: [item.id: .mergeDuplicate(first.lines[0].proposedLineID)])
+        ledger = try roundTrip(ledger)
+        XCTAssertEqual(try ledger.quantity(forLineID: first.lines[0].proposedLineID)?.amount, try Rational(3, 2))
+        XCTAssertEqual(ledger.contributions.last?.originalText, "1½ tazas de arroz")
+        try ledger.undoImport(batchID: batch)
+        XCTAssertEqual(ledger.contributions(forLineID: first.lines[0].proposedLineID).map(\.originalText), ["1 1/2 cups of arroz"])
+    }
+
+    func testUnsupportedMeasuresAndMalformedMixedAmountsStayUnresolved() {
+        let shop = ShoppingLedger()
+        for text in ["2 cucharadas de arroz", "2 cucharaditas de sal", "3 manojos de cilantro",
+                     "1 1/0 cups rice", "9223372036854775807 1/2 cups rice"] {
+            let row = shop.stageImport(text: text).lines[0]
+            XCTAssertNil(row.quantity, text)
+            XCTAssertNotNil(row.unresolvedReason, text)
+            XCTAssertEqual(row.originalText, text)
+        }
+    }
+
     func testDuplicatePasteNeedsExplicitDecisionAndRetryIsIdempotent() throws {
         var ledger = ShoppingLedger()
         let first = ledger.stageImport(text: "12 wraps", source: .paste)

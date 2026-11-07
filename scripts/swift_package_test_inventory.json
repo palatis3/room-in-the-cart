@@ -22,6 +22,10 @@
     "carryoverRecoveryAddition": {
       "added": 1,
       "basis": "The reviewed CoreDomain XCTest for physical transfer and later replacement passed locally. The full package gate matched compiled inventories with 402 passes and three expected HouseholdClient wire skips."
+    },
+    "shoppingImportAddition": {
+      "added": 5,
+      "basis": "The five shopping-list regressions cover completed lines, ordered merge decisions, receipt replay and bilingual quantity parsing. All five were discovered in the compiled CoreDomain suite and passed locally."
     }
   },
   "packages": {
@@ -178,13 +182,17 @@
       "CoreDomainTests.RecipeSourceEvidenceTests/testOriginalTextHasUTF8BoundAndRejectsEmptyAndNUL",
       "CoreDomainTests.RecipeSourceEvidenceTests/testReviewedPlannerCopiesEvidenceWithoutInferringQuantitiesOrAuthority",
       "CoreDomainTests.RecipeSourceEvidenceTests/testUnknownFieldsAndFutureKindsAreRejectedAtEveryEvidenceLevel",
+      "CoreDomainTests.ShoppingLedgerTests/testAdditionalImportNeedsAnOpenLineAndPreservesCompletedEvidence",
       "CoreDomainTests.ShoppingLedgerTests/testAllBasisChangesInvalidateQuoteAndNoOpDoesNot",
+      "CoreDomainTests.ShoppingLedgerTests/testBilingualMeasuresMatchFoodWithoutChangingOriginalEvidence",
       "CoreDomainTests.ShoppingLedgerTests/testCheckedHandledTrashRestoreAreIndependentAndDurableByID",
+      "CoreDomainTests.ShoppingLedgerTests/testCommittedAdditionalImportCanReplayAfterLineHandled",
       "CoreDomainTests.ShoppingLedgerTests/testDateOnlyValidationAndDSTCalendarDays",
       "CoreDomainTests.ShoppingLedgerTests/testDuplicateAliasCannotDoubleReservationCapacityAndUndoRehomesSurvivors",
       "CoreDomainTests.ShoppingLedgerTests/testDuplicatePasteNeedsExplicitDecisionAndRetryIsIdempotent",
       "CoreDomainTests.ShoppingLedgerTests/testExactUnitMergeAndFractionalAllocation",
       "CoreDomainTests.ShoppingLedgerTests/testExplicitAdditionalPasteAddsQuantityAndUndoIsIsolated",
+      "CoreDomainTests.ShoppingLedgerTests/testImportOptionsTrackOriginalSuppliesAndEarlierDecisions",
       "CoreDomainTests.ShoppingLedgerTests/testMatchingRejectsExclusionsIncompatibleProductsAndUnknownUnits",
       "CoreDomainTests.ShoppingLedgerTests/testMealTemplateAndOccurrenceAreIndependentAndSchedulingKeepsIDs",
       "CoreDomainTests.ShoppingLedgerTests/testPartialLinkRetainsResidualAndSiblingReservationsCannotOverallocate",
@@ -203,6 +211,7 @@
       "CoreDomainTests.ShoppingLedgerTests/testTwoDuplicatesInSamePreviewRequireChoiceAndCanMergeOrAdd",
       "CoreDomainTests.ShoppingLedgerTests/testUndoOriginalImportRetainsLinkedMealAndLunchAsDemands",
       "CoreDomainTests.ShoppingLedgerTests/testUnknownsStayUnresolvedAndInvalidLinkIsAtomic",
+      "CoreDomainTests.ShoppingLedgerTests/testUnsupportedMeasuresAndMalformedMixedAmountsStayUnresolved",
       "CoreDomainTests.ShoppingLedgerTests/testZeroDemandCanBeConfirmedDuplicateWithoutBecomingUnknown",
       "CoreDomainTests.StagedImportIdentityTests/testExternalIdentitySurvivesRestartAndExactReplay",
       "CoreDomainTests.StagedImportIdentityTests/testSameTextDifferentExplicitOperationRemainsSeparateReviewedIntent",

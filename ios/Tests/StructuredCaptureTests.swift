@@ -12,6 +12,33 @@ final class StructuredCaptureTests: XCTestCase {
         XCTAssertEqual(english.name, "rice"); XCTAssertEqual(spanish.name, "arroz")
         XCTAssertEqual(spanish.purpose, "la cena"); XCTAssertEqual(spanish.destination, destination)
     }
+    func testMixedMeasuresAndSpanishPackEvidenceReachTheSameReviewedList() throws {
+        for text in ["1 1/2 cups of arroz", "1½ tazas de arroz"] {
+            let draft = try row(text)
+            XCTAssertEqual(draft.amount, "3/2")
+            XCTAssertEqual(draft.unit, .cup)
+            XCTAssertEqual(draft.name, "arroz")
+            XCTAssertEqual(draft.originalText, text)
+        }
+        var packs = try row("dos paquetes de 1 1/2 onzas líquidas de caldo sin sal")
+        XCTAssertEqual(packs.packCount, "2")
+        XCTAssertEqual(packs.amountPerPack, "3/2")
+        XCTAssertEqual(packs.packUnit, .fluidOunce)
+        XCTAssertEqual(packs.name, "caldo")
+        XCTAssertEqual(packs.exclusions, "sal")
+        packs.confirmed = true
+        let captured = try XCTUnwrap(packs.reviewed(expectedDestination: destination))
+        let shop = ShoppingLedger()
+        let staged = try shop.stageCaptureImport(id: UUID(), originalText: packs.originalText, source: .voice, lines: [captured])
+        XCTAssertEqual(staged.lines[0].quantity?.amount, try Rational(3))
+        XCTAssertEqual(staged.lines[0].quantity?.unit, .fluidOunce)
+        XCTAssertEqual(staged.lines[0].originalText, packs.originalText)
+        let unknown = try row("dos paquetes de 2 cucharaditas de sal")
+        XCTAssertTrue(unknown.amountPerPack.isEmpty)
+        XCTAssertTrue(unknown.warnings.contains(.packUnknown))
+        XCTAssertTrue(try row("1 1/0 cups rice").amount.isEmpty)
+    }
+
     func testPackEvidenceCommitsTogetherWithExclusionsAndOriginal() throws {
         let original = "two packs of six wraps for tacos without peanuts to this pickup"
         var draft = try row(original); draft.confirmed = true

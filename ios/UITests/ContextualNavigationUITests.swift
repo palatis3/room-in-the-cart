@@ -13,6 +13,38 @@ import UIKit
         app.terminate()
     }
 
+    func testMixedEnglishAndSpanishListMeasuresMergeAndSurviveRestart() {
+        launch(reset: true)
+        tap(element("openPickupList"))
+        tap(element("ledgerImport"))
+        let english = "1 1/2 cups of arroz"
+        let spanish = "1 1/2 tazas de arroz"
+        fill(english, into: "ledgerImportText")
+        tap(element("ledgerReviewImport"))
+        tap(element("ledgerCommitImport"))
+        let food = app.buttons["Inspect arroz"]
+        reveal(food)
+        let lineID = food.identifier
+        XCTAssertTrue(lineID.hasPrefix("ledgerInspect-"))
+        tap(element("ledgerImport"))
+        fill(spanish, into: "ledgerImportText")
+        tap(element("ledgerReviewImport"))
+        let apply = element("ledgerCommitImport")
+        XCTAssertFalse(apply.isEnabled)
+        let decision = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "How to add this line")).firstMatch
+        tap(decision)
+        tap(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Merge same need")).firstMatch)
+        tap(apply)
+        reveal(element(lineID))
+        restart()
+        let saved = element(lineID)
+        if !element("ledgerSearch").waitForExistence(timeout: 4) { tap(element("openPickupList")) }
+        tap(saved)
+        assertText("3/2 US cups")
+        assertText(english)
+        assertText(spanish)
+    }
+
     func testFirstRunCheckOneChangeCanLeaveOrSaveAndReopenExactRetailerEvidence() {
         launch(reset: true)
         let shortcut = element("shop.checkOneChange")

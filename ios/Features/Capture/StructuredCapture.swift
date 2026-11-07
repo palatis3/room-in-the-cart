@@ -59,15 +59,12 @@ struct CaptureLineDraft: Identifiable, Equatable, Sendable {
 
 enum CaptureNumber {
     static func parse(_ text: String) throws -> Rational {
-        let value = text.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
-        if let number = words[value] { return try Rational(number) }
-        if ["half", "medio", "media", "½"].contains(value) { return try Rational(1, 2) }
-        let parts = value.split(separator: "/", omittingEmptySubsequences: false)
-        if parts.count == 2, let top = Int64(parts[0]), let bottom = Int64(parts[1]), bottom > 0 { return try Rational(top, bottom) }
-        guard !value.contains(",") else { throw StructuredCaptureFailure.invalidAmount }
-        do { return try Rational(decimal: value) } catch { throw StructuredCaptureFailure.invalidAmount }
+        var tokens = text.split(whereSeparator: \.isWhitespace).map(String.init)[...]
+        guard let number = try? ListQuantityParser.takeAmount(from: &tokens, allowingWords: true), tokens.isEmpty else {
+            throw StructuredCaptureFailure.invalidAmount
+        }
+        return number
     }
-    static let words: [String: Int64] = ["one":1,"two":2,"three":3,"four":4,"five":5,"six":6,"seven":7,"eight":8,"nine":9,"ten":10,"eleven":11,"twelve":12,"thirteen":13,"fourteen":14,"fifteen":15,"sixteen":16,"seventeen":17,"eighteen":18,"nineteen":19,"twenty":20,"a":1,"an":1,"un":1,"una":1,"uno":1,"dos":2,"tres":3,"cuatro":4,"cinco":5,"seis":6,"siete":7,"ocho":8,"nueve":9,"diez":10,"once":11,"doce":12,"trece":13,"catorce":14,"quince":15,"dieciséis":16,"dieciseis":16,"diecisiete":17,"dieciocho":18,"diecinueve":19,"veinte":20]
 }
 
 enum StructuredCaptureParser {
@@ -97,26 +94,29 @@ enum StructuredCaptureParser {
             else if ["without", "except", "sin", "excepto"].contains(key) { exclusions += (exclusions.isEmpty ? "" : "\n") + value }
             else { requestedDestination += (requestedDestination.isEmpty ? "" : "; ") + value }
         }
-        var tokens = body.split(whereSeparator: \.isWhitespace).map(String.init)
+        var tokens = body.split(whereSeparator: \.isWhitespace).map(String.init)[...]
         var amount = "", packCount = "", perPack = ""
         var unit = UnitOfMeasure.count, packUnit = UnitOfMeasure.count
         var warnings: [CaptureInterpretationWarning] = []
-        if let first = tokens.first, let number = try? CaptureNumber.parse(first), number > .zero {
-            tokens.removeFirst()
+        let originalTokens = tokens
+        if let number = try? ListQuantityParser.takeAmount(from: &tokens, allowingWords: true), number > .zero {
             if let token = tokens.first, packs.contains(token.lowercased()) {
                 tokens.removeFirst()
                 if number.denominator == 1 { packCount = number.description } else { warnings.append(.packUnknown) }
                 if tokens.first.map({ ["of", "de"].contains($0.lowercased()) }) == true { tokens.removeFirst() }
-                if let next = tokens.first, let amount = try? CaptureNumber.parse(next), amount > .zero {
-                    perPack = amount.description; tokens.removeFirst()
-                    if let known = takeUnit(&tokens) { packUnit = known }
+                if let amount = try? ListQuantityParser.takeAmount(from: &tokens, allowingWords: true), amount > .zero {
+                    if let known = ListQuantityParser.takeUnit(from: &tokens) {
+                        perPack = amount.description; packUnit = known
+                    } else if ListQuantityParser.needsUnitReview(tokens.first) {
+                        warnings.append(.packUnknown)
+                    } else { perPack = amount.description }
                 } else { warnings.append(.packUnknown) }
             } else {
                 amount = number.description
-                if let known = takeUnit(&tokens) { unit = known }
-                else if let token = tokens.first, unknownMeasures.contains(token.lowercased()) { amount = ""; warnings.append(.ambiguous) }
+                if let known = ListQuantityParser.takeUnit(from: &tokens) { unit = known }
+                else if ListQuantityParser.needsUnitReview(tokens.first) { amount = ""; warnings.append(.ambiguous) }
             }
-        } else { warnings.append(.quantityUnknown) }
+        } else { tokens = originalTokens; warnings.append(.quantityUnknown) }
         if tokens.contains(where: { packs.contains($0.lowercased()) }) { warnings.append(.packUnknown); amount = "" }
         let name = tokens.joined(separator: " ")
         if CaptureLimits.containsExclusion(original) || !exclusions.isEmpty { warnings.append(.negation) }
@@ -132,21 +132,11 @@ enum StructuredCaptureParser {
         draft.purpose = purpose; draft.destination = chosenDestination; draft.exclusions = exclusions; draft.warnings = warnings
         return draft
     }
-    private static func takeUnit(_ tokens: inout [String]) -> UnitOfMeasure? {
-        let pair = tokens.prefix(2).joined(separator: " ").lowercased()
-        if ["fl oz", "fluid ounce", "fluid ounces", "onza líquida", "onzas líquidas"].contains(pair) {
-            tokens.removeFirst(2); return .fluidOunce
-        }
-        guard let first = tokens.first, let unit = units[first.lowercased()] else { return nil }
-        tokens.removeFirst(); return unit
-    }
     private static func suffix(_ text: String, pattern: String) -> (String, String)? {
         guard let expression = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
               let match = expression.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
               let range = Range(match.range, in: text) else { return nil }
         return (String(text[..<range.lowerBound]), String(text[range.upperBound...]))
     }
-    static let units: [String: UnitOfMeasure] = ["g":.gram,"gram":.gram,"grams":.gram,"gramo":.gram,"gramos":.gram,"kg":.kilogram,"kilogram":.kilogram,"kilograms":.kilogram,"kilo":.kilogram,"kilos":.kilogram,"kilogramos":.kilogram,"oz":.ounce,"ounce":.ounce,"ounces":.ounce,"onza":.ounce,"onzas":.ounce,"lb":.pound,"lbs":.pound,"pound":.pound,"pounds":.pound,"libra":.pound,"libras":.pound,"ml":.milliliter,"milliliters":.milliliter,"mililitros":.milliliter,"l":.liter,"liter":.liter,"liters":.liter,"litro":.liter,"litros":.liter,"cup":.cup,"cups":.cup,"taza":.cup,"tazas":.cup,"count":.count,"units":.count,"unidades":.count]
     private static let packs: Set<String> = ["pack", "packs", "package", "packages", "paquete", "paquetes", "caja", "cajas"]
-    private static let unknownMeasures: Set<String> = ["handful", "handfuls", "bunch", "bunches", "pinch", "pinches", "scoop", "scoops", "puñado", "puñados", "manojo", "manojos", "pizca", "pizcas", "cucharada", "cucharadas", "fl", "fluid"]
 }
