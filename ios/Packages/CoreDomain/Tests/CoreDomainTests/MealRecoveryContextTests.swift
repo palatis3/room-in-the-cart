@@ -2,6 +2,42 @@ import XCTest
 @testable import CoreDomain
 
 extension MealRecoveryTests {
+    func testPhysicalTransferMovesOnlyCurrentUnprotectedDemandAndPreservesItsPinThroughAnotherReplacement() throws {
+        var f = try fixture()
+        let replaced = try preview(request(f.state, target: f.wednesday, replacement: replacement(f.wednesday)), f)
+        try MealRecoveryEngine.apply(replaced, to: &f.state, stockEvidence: f.stock, reservations: [], at: now)
+        let before = try MealRecoveryEngine.project(f.state)
+        let beans = try XCTUnwrap(before.meals[1].needs.first)
+        func transfer(_ source: StockNeed, _ target: StockNeed, occurrence: UUID) -> MealRecoveryContextRequest {
+            .init(id: id(84), shopID: f.state.shopID, baseRevisionID: before.revisionID, revisionID: id(85),
+                change: .transferCarryover(occurrenceID: occurrence, source: source, reservation: target), reviewedAt: now)
+        }
+        let reserved = StockNeed(id: id(86), foodID: beans.foodID, name: "Friday beans", amount: q(2), priority: .required)
+        let valid = transfer(beans, reserved, occurrence: f.wednesday.id)
+        let original = f.state
+        let oversized = StockNeed(id: id(87), foodID: beans.foodID, name: "Friday beans", amount: q(5), priority: .required)
+        let wrongFood = StockNeed(id: id(87), foodID: f.lunch.foodID, name: "Beans", amount: q(1), priority: .required)
+        for invalid in [transfer(beans, reserved, occurrence: f.tuesday.id), transfer(beans, oversized, occurrence: f.wednesday.id),
+                        transfer(beans, wrongFood, occurrence: f.wednesday.id), transfer(f.lunch, reserved, occurrence: f.wednesday.id),
+                        transfer(f.wednesday.needs[0], reserved, occurrence: f.wednesday.id)] {
+            XCTAssertThrowsError(try MealRecoveryEngine.previewContext(invalid, in: f.state, at: now))
+        }
+        XCTAssertEqual(f.state, original)
+        let checked = try MealRecoveryEngine.previewContext(valid, in: f.state, at: now)
+        XCTAssertEqual(checked.after.demands.first { $0.id == beans.id }?.amount.amount, try Rational(2))
+        XCTAssertEqual(checked.after.meals, before.meals)
+        let moved = try MealRecoveryEngine.applyContext(checked, to: &f.state, at: now)
+        XCTAssertEqual(try MealRecoveryEngine.applyContext(checked, to: &f.state, at: now), moved)
+        let lot = try XCTUnwrap(f.stock.first { $0.lot.foodID == beans.foodID }?.lot)
+        let pin = ConfirmedStockReservation(needID: reserved.id, lotID: lot.id)
+        let next = try preview(request(f.state, target: before.meals[1],
+            replacement: replacement(before.meals[1], revision: 90, need: 91, amount: 2), operation: 92, repeatOK: true), f, reservations: [pin])
+        XCTAssertEqual(next.afterAllocation.allocations.first { $0.needID == reserved.id }?.lotID, lot.id)
+        XCTAssertEqual(next.afterAllocation.demands.first { $0.id == reserved.id }?.allocated, try Rational(2))
+        try MealRecoveryEngine.apply(next, to: &f.state, stockEvidence: f.stock, reservations: [pin], at: now)
+        XCTAssertEqual(try JSONDecoder().decode(MealRecoveryState.self, from: JSONEncoder().encode(f.state)), f.state)
+    }
+
     func testNewOutsideDemandIsAnExplicitRevisionAndInvalidatesAnOlderReplacementReview() throws {
         var f = try fixture(beanAmount: 5)
         let first = try preview(request(f.state, target: f.wednesday, replacement: replacement(f.wednesday)), f)

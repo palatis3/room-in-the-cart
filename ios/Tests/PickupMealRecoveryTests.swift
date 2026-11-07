@@ -62,7 +62,7 @@ import SQLite3
             usable: .init(id: UUID(), receipt: key, usable: q(6), confirmedAt: now, confirmedMatchToOrderLine: true))
         XCTAssertTrue(received)
         let beans = UUID()
-        let stocked = await model.change { $0.stockLots.append(.init(id: UUID(), foodID: beans, name: "Beans", usable: q(4), confirmedAt: now)) }
+        let stocked = await model.change { $0.stockLots.append(.init(id: UUID(), foodID: beans, name: "Beans", usable: q(4), confirmedAt: now, source: .freezer)) }
         XCTAssertTrue(stocked)
         let journey = try XCTUnwrap(model.journey)
         let authority = PickupRecoveryAuthority(presentation: .init(workspaceID: model.sourceWorkspaceID,
@@ -73,7 +73,8 @@ import SQLite3
         return Fixture(directory: directory, cleanup: cleanup, ledger: ledger, model: model, beans: beans,
             tuesday: occurrences[0], wednesday: occurrences[1], lunch: try XCTUnwrap(journey.needs.first { $0.priority == .protected }?.id), authority: authority)
     }
-    private func review(_ fixture: Fixture, amount: Int64 = 4) throws -> PickupMealRecoveryReview {
+    private func review(_ fixture: Fixture, amount: Int64 = 4, authority: PickupRecoveryAuthority? = nil,
+                        ingredientExclusions: [String] = ["garlic"]) throws -> PickupMealRecoveryReview {
         let old = try XCTUnwrap(fixture.model.recoveryDefinitions().first { $0.meal.id == fixture.wednesday })
         let need = StockNeed(id: UUID(), foodID: fixture.beans, name: "Wednesday beans", amount: q(amount), priority: .required)
         let due = now.addingTimeInterval(2700)
@@ -85,9 +86,9 @@ import SQLite3
             advanceStepsCompleted: false)
         return try fixture.model.prepareMealRecovery(definition: .init(meal: replacement, groups: old.groups,
             notes: "Warm the beans", sourceURL: "https://example.invalid/beans",
-            ingredientRules: [.init(needID: need.id, notes: "Use the checked freezer portion", exclusions: ["garlic"])], acceptedTemplate: nil),
+            ingredientRules: [.init(needID: need.id, notes: "Use the checked freezer portion", exclusions: ingredientExclusions)], acceptedTemplate: nil),
             operationID: UUID(), confirmedUnknownDeadline: old.meal.due == nil ? due : nil,
-            agreesToRepeat: false, proposesExtraTrip: false, agreesToExtraTrip: false, acceptsUnresolved: true, authority: fixture.authority)
+            agreesToRepeat: false, proposesExtraTrip: false, agreesToExtraTrip: false, acceptsUnresolved: true, authority: authority ?? fixture.authority)
     }
     func testReplacementCancelApplyReplayAndRestartPreserveWholeOrderAndTuesdayShortage() async throws {
         let f = try await fixture(), before = try XCTUnwrap(f.model.journey), ledgerBefore = f.ledger.workspace
@@ -287,6 +288,105 @@ import SQLite3
                 assignedShopperID: "local", canPlan: true, canReadBudget: true, hasPaidTools: false,
                 roleRevision: 0, verifiedAt: instant.addingTimeInterval(-1), validUntil: instant.addingTimeInterval(3600))
         }, phase: { _ in .reportedPlaced }, clock: { instant })
+    }
+
+    func testFirstRecoveryAfterAnExistingCarryoverReconcilesRecordedTransferAndRejectsUnexplainedChanges() async throws {
+        let f = try await fixture()
+        let coordinator = DinnerAwayCarryoverModel(dinner: dinnerModel(f), pickup: f.model, clock: { self.now })
+        let tuesday = try XCTUnwrap(f.ledger.shop?.mealOccurrences.first { $0.id == f.tuesday })
+        let initial = try XCTUnwrap(f.model.journey)
+        let need = try XCTUnwrap(AwayCarryoverEngine.sourceNeeds(tuesday, in: initial).first)
+        let wraps = try XCTUnwrap(AwayCarryoverEngine.supplies(for: need, in: initial).first)
+        let day = try MealDay(year: 2026, month: 11, day: 13, timeZoneIdentifier: "America/New_York")
+        XCTAssertTrue(coordinator.prepare(id: UUID(), occurrenceID: tuesday.id, needID: need.id, supply: wraps,
+            counted: q(6), reserved: q(2), servings: try Rational(2), day: day, observedAt: now))
+        let carryover = try XCTUnwrap(coordinator.review)
+        let saved = await coordinator.apply()
+        XCTAssertTrue(saved)
+        let prior = try XCTUnwrap(f.model.journey)
+        XCTAssertNil(prior.mealRecovery)
+        XCTAssertEqual(prior.needs.first { $0.id == need.id }?.amount.amount, try Rational(4))
+        var missingReceipt = prior
+        missingReceipt.awayCarryovers = []
+        XCTAssertThrowsError(try missingReceipt.initialMealRecoveryHistory(at: now))
+        let authority = PickupRecoveryAuthority(presentation: f.authority.presentation,
+            ledgerWorkspaceID: f.authority.ledgerWorkspaceID, ledgerRevisionID: try XCTUnwrap(f.ledger.shop?.revisionID),
+            selectedPickupID: initial.id, leaseID: UUID())
+        let replacement = try review(f, authority: authority)
+        let applied = await f.model.applyMealRecovery(replacement, currentAuthority: { authority })
+        XCTAssertTrue(applied, f.model.error ?? "")
+        let after = try XCTUnwrap(f.model.journey)
+        XCTAssertEqual(after.needs, prior.needs)
+        XCTAssertEqual(after.pickup, prior.pickup)
+        XCTAssertEqual(after.mealRecovery?.domain.originalMeals.first { $0.id == tuesday.id }?.needs.first?.amount.amount, try Rational(6))
+        XCTAssertEqual(after.physicalStockNeeds.first { $0.id == need.id }?.amount.amount, try Rational(4))
+        XCTAssertEqual(after.mealRecovery?.domain.contextChanges.filter { $0.id == carryover.id }.count, 1)
+        XCTAssertEqual(f.model.allocation?.demands.first { $0.id == f.lunch }?.allocated, try Rational(2))
+        XCTAssertEqual(f.model.allocation?.demands.first { $0.id == carryover.plan.link.reservationID }?.allocated, try Rational(2))
+        XCTAssertEqual(f.model.allocation?.demands.first { $0.id == need.id }?.shortfall, try Rational(2))
+        let reopened = PickupModel(databaseURL: f.directory.appendingPathComponent("pickup.sqlite"), clock: { self.now })
+        f.cleanup.track(reopened)
+        await reopened.load()
+        XCTAssertEqual(reopened.journey, after)
+    }
+
+    func testRecoveredDinnerTransfersPartialThenRemainingPhysicalFoodToDatedTargetsAndReopens() async throws {
+        let f = try await fixture()
+        let reviewed = try review(f, ingredientExclusions: ["garlic", "sesame"])
+        let recovered = await f.model.applyMealRecovery(reviewed, currentAuthority: { f.authority })
+        XCTAssertTrue(recovered)
+        let before = try XCTUnwrap(f.model.journey)
+        let original = try XCTUnwrap(f.ledger.shop?.mealOccurrences.first { $0.id == f.wednesday })
+        let needID = try XCTUnwrap(reviewed.definition.meal.needs.first?.id)
+        let recoveredDinner = try AwayCarryoverEngine.currentMeal(original, in: before)
+        XCTAssertEqual(recoveredDinner.title, "Wednesday beans")
+        let day = try MealDay(year: 2026, month: 11, day: 13, timeZoneIdentifier: "America/New_York")
+        let coordinator = DinnerAwayCarryoverModel(dinner: dinnerModel(f), pickup: f.model, clock: { self.now })
+        for remaining in [Int64(4), 2] {
+            let current = try XCTUnwrap(f.model.journey)
+            let need = try XCTUnwrap(AwayCarryoverEngine.sourceNeeds(original, in: current).first)
+            XCTAssertEqual(need.id, needID)
+            XCTAssertEqual(need.amount.amount, try Rational(remaining))
+            let lot = try XCTUnwrap(AwayCarryoverEngine.supplies(for: need, in: current).first)
+            XCTAssertTrue(coordinator.prepare(id: UUID(), occurrenceID: original.id, needID: need.id, supply: lot,
+                counted: q(4), reserved: q(2), servings: try Rational(2), day: day, observedAt: now))
+            let intent = try XCTUnwrap(coordinator.review)
+            let saved = await coordinator.apply()
+            XCTAssertTrue(saved, coordinator.message ?? "")
+            let record = try XCTUnwrap(coordinator.records.first { $0.id == intent.id })
+            XCTAssertEqual(record.phase, .completed)
+            let target = try XCTUnwrap(f.ledger.shop?.mealOccurrences.first { $0.id == intent.plan.occurrenceID })
+            XCTAssertEqual(target.title, recoveredDinner.title)
+            XCTAssertEqual(target.notes, reviewed.definition.notes)
+            XCTAssertEqual(target.sourceURL, reviewed.definition.sourceURL)
+            XCTAssertEqual(target.exclusions, ["garlic", "sesame"])
+            XCTAssertEqual(target.scheduledDay, day)
+            let pin = try XCTUnwrap(f.model.allocation?.allocations.first { $0.needID == intent.plan.link.reservationID })
+            XCTAssertEqual(pin.lotID, lot.id)
+            XCTAssertEqual(pin.amount, try Rational(2))
+            let revision = f.model.journey?.revision
+            let replayed = await coordinator.retry(record)
+            XCTAssertTrue(replayed)
+            XCTAssertEqual(f.model.journey?.revision, revision)
+        }
+        let final = try XCTUnwrap(f.model.journey)
+        XCTAssertTrue(AwayCarryoverEngine.sourceNeeds(original, in: final).isEmpty)
+        let cook = PickupCookProjection.text(journey: final, allocation: f.model.allocation, result: nil, language: "en-US", at: now)
+        XCTAssertTrue(cook.contains("Physical source: Beans"))
+        XCTAssertTrue(cook.contains("Carryover dinner date: 2026-11-13 · America/New_York"))
+        XCTAssertTrue(cook.contains("Keep these exclusions: garlic, sesame"))
+        XCTAssertEqual(final.needs, before.needs)
+        XCTAssertEqual(final.basket, before.basket)
+        XCTAssertEqual(final.pickup, before.pickup)
+        XCTAssertEqual(final.settlement, before.settlement)
+        XCTAssertEqual(final.mealRecovery?.domain.events, before.mealRecovery?.domain.events)
+        XCTAssertEqual(f.ledger.shop?.mealOccurrences.first { $0.id == original.id }, original)
+        XCTAssertEqual(f.model.allocation?.demands.first { $0.id == f.lunch }?.allocated, try Rational(2))
+        let restarted = PickupModel(databaseURL: f.directory.appendingPathComponent("pickup.sqlite"), clock: { self.now })
+        f.cleanup.track(restarted)
+        await restarted.load()
+        XCTAssertEqual(restarted.journey, final)
+        XCTAssertEqual(restarted.allocation, f.model.allocation)
     }
 
     func testDinnersAllChosenAndWeekShareCurrentIdentityMetadataAndDate() async throws {

@@ -17,7 +17,7 @@ struct DinnerOccurrenceView: View {
         Group {
             switch currentRoute {
             case .success(.recovered(let shopID, let currentID)):
-                PickupMealRecoveryEntry(model: pickup, ledger: ledger, pickupID: shopID, occurrenceID: currentID)
+                PickupMealRecoveryEntry(model: pickup, ledger: ledger, pickupID: shopID, occurrenceID: currentID, carryoverPlanner: model)
             case .success(.original(let current)):
                 if current.carryover != nil {
                     DinnerCarryoverDetailsView(model: model, occurrenceID: occurrenceID)

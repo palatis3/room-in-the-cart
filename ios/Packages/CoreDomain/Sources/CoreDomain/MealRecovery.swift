@@ -82,6 +82,8 @@ public struct MealRecoveryProjection: Equatable, Sendable {
     public let meals: [RecoveryMeal]
     public let demands: [StockNeed]
     public let outsideDemands: [StockNeed]
+    // Remaining demand for ingredients already transferred to dated carryovers.
+    let carryoverRemainders: [UUID: StockNeed]
 }
 
 public struct MealRecoveryEvent: Codable, Equatable, Sendable, Identifiable {
@@ -264,7 +266,7 @@ public enum MealRecoveryEngine {
         let replacedIDs = Set(old.needs.filter { $0.priority != .protected }.map(\.id))
         guard !reservations.contains(where: { replacedIDs.contains($0.needID) }) else { throw MealRecoveryError.protectedAllocation }
         var meals = current.meals; meals[index] = new
-        let after = projection(revision: new.revisionID, meals: meals, outside: outside)
+        let after = projection(revision: new.revisionID, meals: meals, outside: outside, remainders: current.carryoverRemainders)
         try validateDemands(after.demands)
         guard evidence.count <= 10_000, Set(evidence.map { $0.lot.id }).count == evidence.count else { throw MealRecoveryError.invalid }
         for item in evidence {
@@ -326,8 +328,16 @@ public enum MealRecoveryEngine {
         }
         guard feasible || request.acceptsUnresolved else { throw MealRecoveryError.unresolved }
     }
-    static func projection(revision: UUID, meals: [RecoveryMeal], outside: [StockNeed]) -> MealRecoveryProjection {
-        MealRecoveryProjection(revisionID: revision, meals: meals, demands: meals.flatMap(\.needs) + outside, outsideDemands: outside)
+    static func projection(revision: UUID, meals: [RecoveryMeal], outside: [StockNeed],
+                           remainders: [UUID: StockNeed] = [:]) -> MealRecoveryProjection {
+        let ingredients = meals.flatMap(\.needs)
+        let currentIDs = Set(ingredients.map(\.id))
+        let remaining = ingredients.compactMap { need -> StockNeed? in
+            guard let adjusted = remainders[need.id] else { return need }
+            return adjusted.amount.amount == .zero ? nil : adjusted
+        }
+        return MealRecoveryProjection(revisionID: revision, meals: meals, demands: remaining + outside,
+            outsideDemands: outside, carryoverRemainders: remainders.filter { currentIDs.contains($0.key) })
     }
     static func validateDemands(_ demands: [StockNeed]) throws {
         guard demands.count <= 10_000, demands.allSatisfy({ $0.amount.amount > .zero }) else { throw MealRecoveryError.invalid }

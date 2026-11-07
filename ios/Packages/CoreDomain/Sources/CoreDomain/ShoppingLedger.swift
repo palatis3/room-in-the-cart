@@ -701,14 +701,14 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         let target = MealOccurrence(carryover: plan.link, id: plan.occurrenceID,
             templateID: source.templateID, templateRevision: source.templateRevision,
             title: source.title, servings: plan.servings, notes: source.notes, sourceURL: source.sourceURL,
-            sourceEvidence: source.sourceEvidence, exclusions: source.exclusions, servingGroups: [],
+            sourceEvidence: source.sourceEvidence, exclusions: plan.targetExclusions, servingGroups: [],
             leadTimeMinutes: nil, completedSteps: [], ingredientContributionIDs: [],
             scheduledDay: plan.day, isHidden: false, removedAt: nil)
         if let prior = mealOccurrences.first(where: { $0.id == plan.occurrenceID }) {
             guard prior == target else { throw DinnerPlanningError.operationConflict }; return
         }
         guard revisionID == plan.baseRevisionID,
-              mealOccurrences.first(where: { $0.id == source.id }) == source else { throw DinnerPlanningError.stalePreview }
+              mealOccurrences.first(where: { $0.id == source.id }) == (plan.purchasedSource ?? source) else { throw DinnerPlanningError.stalePreview }
         try mutate("physical-carryover:v1:\(plan.link.operationID)", at: at, revisionID: plan.revisionID) { next in
             next.mealOccurrences.append(target)
         }

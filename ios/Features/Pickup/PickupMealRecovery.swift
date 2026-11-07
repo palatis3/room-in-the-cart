@@ -45,24 +45,57 @@ extension PickupJourney {
         }
         return evidence
     }
-    func initialMealRecoveryHistory() throws -> PickupMealRecoveryHistory {
+    func initialMealRecoveryHistory(at instant: Date = Date()) throws -> PickupMealRecoveryHistory {
         if let mealRecovery { try mealRecovery.validate(); return mealRecovery }
         guard pickup != nil, basket?.phase == .reportedPlaced, let source = mealSource else { throw PickupMealRecoveryError.unavailable }
         try source.validate()
         let definitions = try source.definitions()
         guard !definitions.isEmpty else { throw PickupMealRecoveryError.unavailable }
         let ids = Set(definitions.flatMap { $0.meal.needs.map(\.id) })
-        let state = try MealRecoveryState(shopID: id, originalRevisionID: source.shop.revisionID,
-            originalMeals: definitions.map(\.meal), outsideDemands: rawPhysicalStockNeeds.filter { !ids.contains($0.id) })
+        // Older carryovers already reduced the raw pickup need. Reconcile their
+        // saved, ordered transfers against the original checkout before reviewing
+        // the first recovery. Never infer a transfer from an amount difference.
+        let prior = legacyRecoveryTransfers(originalIDs: ids)
+        let reservationIDs = Set(prior.map { $0.plan.link.reservationID })
+        var state = try MealRecoveryState(shopID: id, originalRevisionID: source.shop.revisionID,
+            originalMeals: definitions.map(\.meal), outsideDemands: rawPhysicalStockNeeds.filter {
+                !ids.contains($0.id) && !reservationIDs.contains($0.id)
+            })
+        var revision = source.shop.revisionID
+        for intent in prior {
+            let request = AwayCarryoverEngine.transferRequest(intent, base: revision)
+            let reviewed = try MealRecoveryEngine.previewContext(request, in: state, at: instant)
+            try MealRecoveryEngine.applyContext(reviewed, to: &state, at: instant)
+            revision = request.revisionID
+        }
         let result = PickupMealRecoveryHistory(source: source, domain: state, definitions: [],
             ledgerCalendarBasis: definitions.map { .init(occurrenceID: $0.meal.id, day: $0.meal.scheduledDay) })
         try validateRecoveryRawBasis(result)
         return result
     }
+    func legacyRecoveryTransfers(originalIDs: Set<UUID>) -> [AwayCarryoverIntent] {
+        awayCarryovers.filter { ($0.phase == .reserved || $0.phase == .completed) &&
+            $0.intent.recoveryRevision == nil && originalIDs.contains($0.intent.sourceNeed.id)
+        }.map(\.intent)
+    }
+    private func expectedRawMealNeeds(_ history: PickupMealRecoveryHistory) throws -> [StockNeed] {
+        let originals = history.domain.originalMeals.flatMap(\.needs)
+        var byID = Dictionary(uniqueKeysWithValues: originals.map { ($0.id, $0) })
+        for intent in legacyRecoveryTransfers(originalIDs: Set(byID.keys)) {
+            guard let event = history.domain.contextChanges.first(where: { $0.id == intent.id }),
+                  event.request == AwayCarryoverEngine.transferRequest(intent, base: event.request.baseRevisionID) else {
+                throw PickupMealRecoveryError.sourceChanged
+            }
+            let reduced = try AwayCarryoverEngine.reducedNeed(intent)
+            byID[reduced.id] = .init(id: reduced.id, foodID: reduced.orderLineID, name: reduced.name,
+                amount: reduced.amount, priority: reduced.priority)
+        }
+        return Array(byID.values)
+    }
     func validateRecoveryRawBasis(_ history: PickupMealRecoveryHistory) throws {
         guard history.source == mealSource, history.domain.shopID == id,
               history.source.details.filter({ $0.sourceOccurrenceID != nil }).allSatisfy({ needDetails.contains($0) }) else { throw PickupMealRecoveryError.sourceChanged }
-        let original = history.domain.originalMeals.flatMap(\.needs)
+        let original = try expectedRawMealNeeds(history)
         for need in original {
             guard rawPhysicalStockNeeds.first(where: { $0.id == need.id }) == need else { throw PickupMealRecoveryError.sourceChanged }
         }
@@ -78,7 +111,7 @@ extension PickupJourney {
     mutating func synchronizeRecoveryOutside(at instant: Date) throws {
         guard var history = mealRecovery else { return }
         try history.validate()
-        let original = history.domain.originalMeals.flatMap(\.needs), ids = Set(original.map(\.id))
+        let original = try expectedRawMealNeeds(history), ids = Set(original.map(\.id))
         guard original.allSatisfy({ rawPhysicalStockNeeds.contains($0) }) else { throw PickupMealRecoveryError.sourceChanged }
         let current = try MealRecoveryEngine.project(history.domain)
         let outside = rawPhysicalStockNeeds.filter { !ids.contains($0.id) }
@@ -172,7 +205,7 @@ extension PickupModel {
               let workspaceID = ledger.sourceWorkspaceID,
               let shop = ledger.workspace.shops.first(where: { $0.id == current.id }) else { throw PickupMealRecoveryError.unavailable }
         let instant = contextInstant ?? stockReviewDate
-        var history = try current.initialMealRecoveryHistory()
+        var history = try current.initialMealRecoveryHistory(at: instant)
         guard history.source.ledgerWorkspaceID == workspaceID else { throw PickupMealRecoveryError.sourceChanged }
         let recovered = Set(history.domain.events.map { $0.request.target.id })
         for sourceMeal in history.source.shop.mealOccurrences where history.domain.originalMeals.contains(where: { $0.id == sourceMeal.id }) {
@@ -217,6 +250,7 @@ extension PickupModel {
         guard ready, !saving, allowPending || !hasPendingSave, let scope = authority.scope, scope.permitsReview,
               scope.workspaceID == sourceWorkspaceID, authority.selectedPickupID == selectedID,
               let current = journey, current.id == authority.selectedPickupID, current.closedAt == nil,
+              !current.awayCarryovers.contains(where: { $0.phase == .prepared || $0.phase == .reserved }),
               let ledger = recoveryLedger, ledger.ready, !ledger.saving, !ledger.hasPendingSave,
               ledger.sourceWorkspaceID == authority.ledgerWorkspaceID,
               ledger.workspace.shops.first(where: { $0.id == current.id })?.revisionID == authority.ledgerRevisionID else { return false }

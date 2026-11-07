@@ -7,7 +7,8 @@
     "checkout_restoration": "Final checkout-restoration local UI case passed249.203s on iPhone17/iOS26.2 build23C52 with Xcode27.1. Rounded up and kept under the existing conservative local multiplier; not a hosted measurement. Evidence: docs/evidence/native/checkout-restoration-20261105/final-validation.json.",
     "hosted_23a73a8_strict_update": "33 complete passing cases in seven digest-verified, strict-accepted ordinary UI artifacts from candidate23a73a890afbaa23d3c58ae6b0cf63a8b2e2fb71, run42021894668, Xcode26.3/macOS15.8.2 arm64, iPhone17/iOS26.2 build23C54. Rounded up from retained test-details.json and cross-checked against raw execution logs. Proof: docs/evidence/native/ci-23a73a8-20261105/ordinary-progress.json. Two scoped warnings each in ui02/ui06 remain recorded. Raw per-case passes inside failed artifacts and all failed/timed-out cases are excluded from this update. Existing selectors without a new strict passing measurement keep prior weights; these are scheduling estimates, not acceptance or timeout allowances.",
     "unavailable_recipe_source": "The complete S14 recipe/servings/allocation/restart journey passed 215.62280595302582s locally on iPhone17Pro/iOS26.2 build23C54 with Xcode27.1; strict acceptance reports zero runtime warnings. Rounded up to 216s under the unchanged local multiplier4. This is scheduling evidence, not a hosted measurement or a changed execution limit. Proof: docs/evidence/native/recipe-source-editing-20261107/README.md.",
-    "private_pickup_recovery": "The independently seeded English recovery and cook-instruction journey passed in 171.086 seconds on iPhone 17 Pro with iOS 26.2 and Xcode 27.1. Strict verification found zero runtime warnings. Rounded up for the existing local scheduling multiplier."
+    "private_pickup_recovery": "The independently seeded English recovery and cook-instruction journey passed in 171.086 seconds on iPhone 17 Pro with iOS 26.2 and Xcode 27.1. Strict verification found zero runtime warnings. Rounded up for the existing local scheduling multiplier.",
+    "recovered_dinner_carryover": "The independently seeded shopper journey replaced a private dinner, reserved two units of beans for another night and reopened the dated target. It passed in 171.535 seconds on iPhone 17 Pro with iOS 26.2 and 133.147 seconds on iPhone SE (3rd generation) with iOS 17.0. Both local Xcode 27.1 results passed strict verification with zero recorded runtime warnings. The iOS 26.2 measurement is rounded up for scheduling."
   },
   "default_seconds": 300,
   "local_multiplier": 4,
@@ -100,6 +101,7 @@
     "RoomInTheCartUITests/RoomInTheCartUITests/testUnknownPackAmountRemainsUnresolvedAfterSaveAndRestart": 99,
     "RoomInTheCartUITests/PickupCheckoutRestoreUITests/testInclusiveCheckoutFieldsAndResultSurviveRestartAndUnchangedSave": 250,
     "RoomInTheCartUITests/FreeJourneyUITests/testUnavailableRecipeSourceLeavesServingsAndPortionAllocationEditableAfterRestart": 216,
-    "RoomInTheCartUITests/FreeJourneyUITests/testCreateReplacementFromPrivatePickupAndReopenForCook": 172
+    "RoomInTheCartUITests/FreeJourneyUITests/testCreateReplacementFromPrivatePickupAndReopenForCook": 172,
+    "RoomInTheCartUITests/FreeJourneyUITests/testCarryRecoveredDinnerFoodToAnotherNightAndReopenTheDatedTarget": 172
   }
 }

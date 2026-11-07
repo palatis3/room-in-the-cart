@@ -2,11 +2,17 @@
 
 Updated November 7, 2026 UTC. The owner resumed and explicitly approved the reviewed hosted staging update; the full first-version goal is active and release acceptance remains incomplete. Historical snapshots are preserved in [the handoff archive](CURRENT-HANDOFF-HISTORY-20261106.md).
 
-## Private dinner recovery, November 7
+## Replacing a dinner and moving its food to another night, November 7
+
+An adult can now open a replaced dinner in Dinners, recount the actual food, and reserve some or all of it for a later local date. The dated dinner keeps the replacement name and exclusions. The saved cook handoff identifies the food, quantity and date. The original basket, charges, protected lunch and recipe quantities stay in their history. Existing pickups with a carryover saved before their first replacement are supported when their recorded transfer reconciles with checkout.
+
+The iPhone 17 Pro on iOS 26.2 passed the 62 selected native cases, including both full shopper journeys. Frame inspection of a prior failure showed the floating tab bar covering Preview. The confirmed action now sits in the safe area. The final carryover walkthrough reopened its dated target on both iOS 26.2 (171.535 seconds) and iPhone SE with iOS 17.0 (133.147 seconds). Strict XCTest checks reported zero skips and runtime warnings in those simulator runs. The Swift package gate passed 402 cases with three expected wire-test skips.
+
+## Earlier private dinner recovery checkpoint, November 7
 
 On PR #1, `99ab9a3` ties the shopper’s consent to the displayed allocation and acknowledges a successful retry after a locked SQLite write. `ccdab14` adds private dinner replacement from a household-accepted recipe, including serving-group quantities, protected lunches, exclusions, prep lead time and live membership checks.
 
-On iPhone 17 Pro with iOS 26.2, 134 affected model tests passed. An English walkthrough on the combined build replaced Wednesday’s dinner, left Tuesday’s remaining shortage and the protected lunch visible, and reopened the saved cook instructions after two launches. A separate simulator run held the actual SQLite writer, released it at Retry, and verified the date change survived relaunch. The accepted-recipe path has model coverage. Its paid UI walkthrough, shared server persistence and physical away-night carryover remain open.
+On iPhone 17 Pro with iOS 26.2, 134 affected model tests passed. An English walkthrough on the combined build replaced Wednesday’s dinner, left Tuesday’s remaining shortage and the protected lunch visible, and reopened the saved cook instructions after two launches. A separate simulator run held the actual SQLite writer, released it at Retry, and verified the date change survived relaunch. The accepted-recipe path has model coverage. Its paid UI walkthrough and shared server persistence remain open. Physical away-night carryover was subsequently added above.
 
 The ordinary Debug simulator CI suite now includes `FreeJourneyUITests.testCreateReplacementFromPrivatePickupAndReopenForCook`. It creates its own placed pickup through the ledger and checkout models. Local execution passed in 171.086 seconds with zero skips or recorded runtime warnings.
 

@@ -65,6 +65,19 @@ enum PickupCookProjection {
         }
         for need in demands where renderedIDs.insert(need.id).inserted {
             var lines = ["\(need.name): \(pQuantity(need.amount, language: language))\(need.priority == .protected ? (" — " + pCook("set aside first", language: language)) : "")"]
+            if let record = value.awayCarryovers.first(where: {
+                $0.intent.plan.link.reservationID == need.id && ($0.phase == .reserved || $0.phase == .completed)
+            }) {
+                let plan = record.intent.plan
+                lines.append(pCook("Physical source", language: language) + ": " + record.intent.supply.name)
+                lines.append(pCook("Carryover dinner date", language: language) + ": " + plan.day.iso8601 + " · " + plan.day.timeZoneIdentifier)
+                if !plan.targetExclusions.isEmpty {
+                    lines.append(pCook("Keep these exclusions", language: language) + ": " + pExclusions(plan.targetExclusions))
+                }
+                if record.phase == .reserved {
+                    lines.append(pCook("The physical reservation is saved; the calendar target still needs confirmation.", language: language))
+                }
+            }
             let coverage = allocation?.demands.first { $0.id == need.id }
             lines += coverageLines(coverage, language: language)
             let warning = pCook("Short or unverified amount. Review.", language: language)
@@ -77,9 +90,8 @@ enum PickupCookProjection {
             // Lunch and dinner allocations can share the same original ingredient instructions.
             let sourceID = detail.sourceContributionID ?? detail.id
             var lines: [String] = []
-            var seenExclusions = Set<String>()
-            let exclusions = detail.exclusions.filter { seenExclusions.insert($0).inserted }
-            if !exclusions.isEmpty { lines.append("\(detail.mealName) · \(pCook("Keep these exclusions", language: language)): \(exclusions.joined(separator: ", "))") }
+            let exclusions = pExclusions(detail.exclusions)
+            if !exclusions.isEmpty { lines.append("\(detail.mealName) · \(pCook("Keep these exclusions", language: language)): \(exclusions)") }
             if let day = detail.scheduledDay { lines.append("\(detail.mealName): \(day.iso8601) · \(day.timeZoneIdentifier)") }
             if let due = detail.due { lines.append("\(pCook("Needed by", language: language)): \(formatter.string(from: due))") }
             lines += detail.preparationNotes ?? []

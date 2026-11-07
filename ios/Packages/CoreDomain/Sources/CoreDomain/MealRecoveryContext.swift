@@ -5,6 +5,7 @@ import Foundation
 /// they cannot be smuggled through an additive context update.
 public enum MealRecoveryContextChange: Codable, Equatable, Sendable {
     case appendOutside([StockNeed])
+    case transferCarryover(occurrenceID: UUID, source: StockNeed, reservation: StockNeed)
     case moveMeal(occurrenceID: UUID, from: MealDay?, to: MealDay?)
     case confirmDeadline(occurrenceID: UUID, due: Date)
 }
@@ -63,10 +64,24 @@ extension MealRecoveryEngine {
               request.reviewedAt.timeIntervalSinceReferenceDate.isFinite, event.appliedAt.timeIntervalSinceReferenceDate.isFinite,
               request.reviewedAt <= event.appliedAt, !usedRevisions.contains(request.revisionID) else { throw MealRecoveryError.stale }
         var meals = current.meals, outside = current.outsideDemands
+        var remainders = current.carryoverRemainders
         switch request.change {
         case .appendOutside(let additions):
             guard !additions.isEmpty, additions.allSatisfy({ !usedNeeds.contains($0.id) }) else { throw MealRecoveryError.invalid }
             outside += additions
+        case let .transferCarryover(occurrenceID, source, reservation):
+            guard let meal = meals.first(where: { $0.id == occurrenceID }),
+                  meal.needs.contains(where: { $0.id == source.id }), current.demands.contains(source),
+                  source.priority != .protected, reservation.priority == .required,
+                  !usedNeeds.contains(reservation.id), source.foodID == reservation.foodID,
+                  let moved = try reservation.amount.converted(to: source.amount.unit),
+                  moved > .zero, moved <= source.amount.amount else { throw MealRecoveryError.invalid }
+            let amount = try source.amount.amount.subtracting(moved)
+            let remainder = Quantity(amount: amount, unit: source.amount.unit, originalLiteral: amount.description,
+                confirmedConversion: source.amount.confirmedConversion)
+            remainders[source.id] = StockNeed(id: source.id, foodID: source.foodID, name: source.name,
+                amount: remainder, priority: source.priority)
+            outside.append(reservation)
         case let .moveMeal(occurrenceID, from, to):
             guard let index = meals.firstIndex(where: { $0.id == occurrenceID }), meals[index].scheduledDay == from,
                   to != from, to.map({ $0.timeZoneIdentifier == meals[index].timeZoneID }) ?? true else { throw MealRecoveryError.stale }
@@ -78,7 +93,7 @@ extension MealRecoveryEngine {
             meals[index] = contextCopy(meals[index], revision: request.revisionID, day: meals[index].scheduledDay, due: due)
         }
         for meal in meals { try validate(meal) }
-        let result = projection(revision: request.revisionID, meals: meals, outside: outside)
+        let result = projection(revision: request.revisionID, meals: meals, outside: outside, remainders: remainders)
         try validateDemands(result.demands)
         return result
     }

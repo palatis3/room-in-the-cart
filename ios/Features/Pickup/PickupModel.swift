@@ -12,6 +12,10 @@ func pCook(_ key: String, language: String) -> String {
 }
 func pMoney(_ money: Money) -> String { Decimal(money.minorUnits).dividing(by: 100).formatted(.currency(code: "USD")) }
 private extension Decimal { func dividing(by value: Decimal) -> Decimal { self / value } }
+func pExclusions(_ values: [String]) -> String {
+    var seen = Set<String>()
+    return values.filter { seen.insert($0).inserted }.joined(separator: ", ")
+}
 func pQuantity(_ quantity: Quantity, language: String? = nil) -> String {
     pQuantity(quantity.amount, unit: quantity.unit, language: language)
 }

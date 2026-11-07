@@ -36,6 +36,7 @@ struct AwayCarryoverIntent: Codable, Equatable, Identifiable {
     let supply: AwayCarryoverSupply
     let counted: Quantity
     let plan: DinnerCarryoverPlan
+    var recoveryRevision: UUID? = nil
 }
 struct AwayCarryoverRecord: Codable, Equatable, Identifiable {
     enum Phase: String, Codable { case prepared, reserved, completed, cancelled }
@@ -52,12 +53,42 @@ enum AwayCarryoverEngine {
         return UUID(uuid: (bytes[0],bytes[1],bytes[2],bytes[3],bytes[4],bytes[5],bytes[6],bytes[7],bytes[8],bytes[9],bytes[10],bytes[11],bytes[12],bytes[13],bytes[14],bytes[15]))
     }
     static func sourceNeeds(_ meal: MealOccurrence, in journey: PickupJourney) -> [AllocationNeed] {
-        journey.needs.filter { need in
+        if let history = journey.mealRecovery {
+            guard let projection = try? MealRecoveryEngine.project(history.domain),
+                  let current = projection.meals.first(where: { $0.id == meal.id }) else { return [] }
+            let ingredientIDs = Set(current.needs.map(\.id))
+            return projection.demands.filter { ingredientIDs.contains($0.id) && $0.priority != .protected }.map {
+                AllocationNeed(id: $0.id, orderLineID: $0.foodID, name: $0.name, amount: $0.amount, priority: $0.priority)
+            }
+        }
+        return journey.needs.filter { need in
             need.priority != .protected && need.amount.amount > .zero && (
                 meal.ingredientContributionIDs.contains(need.id) ||
                 journey.needDetails.first(where: { $0.id == need.id })?.sourceContributionID.map(meal.ingredientContributionIDs.contains) == true)
         }
     }
+    static func currentMeal(_ purchased: MealOccurrence, in journey: PickupJourney) throws -> MealOccurrence {
+        guard let history = journey.mealRecovery,
+              history.domain.events.contains(where: { $0.request.target.id == purchased.id }) else { return purchased }
+        guard let current = try history.definition(for: purchased.id),
+              let basis = history.ledgerCalendarBasis.first(where: { $0.occurrenceID == purchased.id }),
+              purchased.scheduledDay == basis.day,
+              var checked = history.source.shop.mealOccurrences.first(where: { $0.id == purchased.id }) else { throw AwayCarryoverError.stale }
+        checked.scheduledDay = basis.day
+        guard checked == purchased else { throw AwayCarryoverError.stale }
+        return purchased.carryoverSource(meal: current.meal, notes: current.notes, sourceURL: current.sourceURL,
+            evidence: current.acceptedTemplate?.sourceEvidence, groups: current.groups)
+    }
+
+    static func transferRequest(_ intent: AwayCarryoverIntent, base: UUID) -> MealRecoveryContextRequest {
+        let need = intent.sourceNeed
+        let source = StockNeed(id: need.id, foodID: need.orderLineID, name: need.name, amount: need.amount, priority: need.priority)
+        return .init(id: intent.id, shopID: intent.plan.link.sourceShopID, baseRevisionID: base,
+            revisionID: targetID(intent.id, "recovery-context"),
+            change: .transferCarryover(occurrenceID: intent.plan.source.id, source: source, reservation: targetNeed(intent)),
+            reviewedAt: intent.plan.link.observedAt)
+    }
+
     static func supplies(for need: AllocationNeed, in journey: PickupJourney) -> [AwayCarryoverSupply] {
         var result = journey.stockLots.filter { $0.foodID == need.orderLineID && $0.source != .manual && $0.usable.amount > .zero }.map(AwayCarryoverSupply.batch)
         for receipt in journey.pickup?.receipts ?? [] where receipt.key.orderLineID == need.orderLineID {
@@ -73,7 +104,8 @@ enum AwayCarryoverEngine {
         guard let moved = try intent.plan.link.quantity.converted(to: original.amount.unit) else { throw AwayCarryoverError.invalid }
         let remainder = try original.amount.amount.subtracting(moved)
         return AllocationNeed(id: original.id, orderLineID: original.orderLineID, name: original.name,
-            amount: Quantity(amount: remainder, unit: original.amount.unit, originalLiteral: remainder.description), priority: original.priority)
+            amount: Quantity(amount: remainder, unit: original.amount.unit, originalLiteral: remainder.description,
+                confirmedConversion: original.amount.confirmedConversion), priority: original.priority)
     }
     static func targetNeed(_ intent: AwayCarryoverIntent) -> StockNeed {
         StockNeed(id: intent.plan.link.reservationID, foodID: intent.sourceNeed.orderLineID,
@@ -109,8 +141,14 @@ enum AwayCarryoverEngine {
         guard intent.plan.link.observedAt <= instant else { throw AwayCarryoverError.invalid }
         guard value.id == intent.plan.link.sourceShopID,
               value.awayCarryovers.first(where: { $0.id == intent.id }) == AwayCarryoverRecord(intent: intent, phase: .reserved),
-              value.needs.first(where: { $0.id == intent.sourceNeed.id }) == (try reducedNeed(intent)),
               value.stockNeeds.first(where: { $0.id == intent.plan.link.reservationID }) == targetNeed(intent) else { throw AwayCarryoverError.stale }
+        if let base = intent.recoveryRevision {
+            guard value.mealRecovery?.domain.contextChanges.first(where: { $0.id == intent.id })?.request == transferRequest(intent, base: base) else {
+                throw AwayCarryoverError.stale
+            }
+        } else {
+            guard value.needs.first(where: { $0.id == intent.sourceNeed.id }) == (try reducedNeed(intent)) else { throw AwayCarryoverError.stale }
+        }
         switch intent.supply {
         case .batch(let lot):
             let expected = ConfirmedStockLot(id: lot.id, foodID: lot.foodID, name: lot.name, usable: intent.counted,
@@ -130,7 +168,8 @@ enum AwayCarryoverEngine {
         try validate(intent)
         guard intent.plan.link.observedAt <= instant else { throw AwayCarryoverError.invalid }
         guard original.id == intent.plan.link.sourceShopID, original.pickup != nil,
-              original.needs.first(where: { $0.id == intent.sourceNeed.id }) == intent.sourceNeed,
+              sourceNeeds(intent.plan.purchasedSource ?? intent.plan.source, in: original).contains(intent.sourceNeed),
+              try currentMeal(intent.plan.purchasedSource ?? intent.plan.source, in: original) == intent.plan.source,
               intent.supply.matches(original),
               !original.stockNeeds.contains(where: { $0.id == intent.plan.link.reservationID }) else { throw AwayCarryoverError.stale }
         var value = original
@@ -146,8 +185,18 @@ enum AwayCarryoverEngine {
             try pickup.confirmUsable(corrected)
             value.pickup = pickup
         }
-        guard let index = value.needs.firstIndex(where: { $0.id == intent.sourceNeed.id }) else { throw AwayCarryoverError.stale }
-        value.needs[index] = try reducedNeed(intent)
+        if var history = value.mealRecovery {
+            guard let base = intent.recoveryRevision else { throw AwayCarryoverError.stale }
+            let request = transferRequest(intent, base: base)
+            let review = try MealRecoveryEngine.previewContext(request, in: history.domain, at: instant)
+            try MealRecoveryEngine.applyContext(review, to: &history.domain, at: instant)
+            value.mealRecovery = history
+        } else {
+            guard intent.recoveryRevision == nil, let index = value.needs.firstIndex(where: { $0.id == intent.sourceNeed.id }) else {
+                throw AwayCarryoverError.stale
+            }
+            value.needs[index] = try reducedNeed(intent)
+        }
         value.stockNeeds.append(targetNeed(intent))
         if let record = value.awayCarryovers.firstIndex(where: { $0.id == intent.id }) { value.awayCarryovers[record].phase = .reserved }
         else { value.awayCarryovers.append(AwayCarryoverRecord(intent: intent, phase: .reserved)) }
@@ -198,13 +247,27 @@ extension PickupJourney {
     func validateAwayCarryovers() throws {
         guard awayCarryovers.count <= 1_000, Set(awayCarryovers.map(\.id)).count == awayCarryovers.count,
               awayCarryovers.filter({ $0.phase == .prepared || $0.phase == .reserved }).count <= 1 else { throw AwayCarryoverError.invalid }
+        let originalIDs = Set(mealRecovery?.domain.originalMeals.flatMap { $0.needs.map(\.id) } ?? [])
+        var expectedTransfers = Set(legacyRecoveryTransfers(originalIDs: originalIDs).map(\.id))
         for record in awayCarryovers {
             try AwayCarryoverEngine.validate(record.intent)
             guard record.intent.plan.link.sourceShopID == id else { throw AwayCarryoverError.invalid }
             if record.phase == .reserved || record.phase == .completed {
                 guard stockNeeds.contains(where: { $0 == AwayCarryoverEngine.targetNeed(record.intent) }) else { throw AwayCarryoverError.invalid }
+                if let base = record.intent.recoveryRevision {
+                    let request = AwayCarryoverEngine.transferRequest(record.intent, base: base)
+                    guard mealRecovery?.domain.contextChanges.first(where: { $0.id == record.id })?.request == request else {
+                        throw AwayCarryoverError.invalid
+                    }
+                    expectedTransfers.insert(record.id)
+                }
             }
         }
+        let transfers = mealRecovery?.domain.contextChanges.filter { event in
+            if case .transferCarryover = event.request.change { return true }
+            return false
+        } ?? []
+        guard Set(transfers.map(\.id)) == expectedTransfers else { throw AwayCarryoverError.invalid }
         _ = try carryoverAllocation()
     }
 }
@@ -239,7 +302,7 @@ extension PickupJourney {
                                    counted: Quantity, reserved: Quantity, servings: Rational, day: MealDay, observedAt: Date) -> Bool {
         do {
             guard !busy, pending == nil, let shop = dinner.shop, let journey = pickup.journey,
-                  journey.id == shop.id, journey.pickup != nil,
+                  journey.id == shop.id, journey.pickup != nil, journey.closedAt == nil,
                   let meal = shop.mealOccurrences.first(where: { $0.id == occurrenceID && $0.removedAt == nil && $0.carryover == nil }),
                   let need = AwayCarryoverEngine.sourceNeeds(meal, in: journey).first(where: { $0.id == needID }),
                   observedAt <= clock() else { throw AwayCarryoverError.invalid }
@@ -250,11 +313,14 @@ extension PickupJourney {
             let link = DinnerCarryoverLink(operationID: id, sourceShopID: shop.id, sourceOccurrenceID: meal.id,
                 sourceNeedID: need.id, sourceSupplyID: supply.id, confirmedSupplyID: confirmedID,
                 reservationID: AwayCarryoverEngine.targetID(id, "reservation"), quantity: reserved, observedAt: observedAt)
+            let current = try AwayCarryoverEngine.currentMeal(meal, in: journey)
             let plan = DinnerCarryoverPlan(occurrenceID: AwayCarryoverEngine.targetID(id, "dinner"),
                 revisionID: AwayCarryoverEngine.targetID(id, "ledger-revision"), baseRevisionID: shop.revisionID,
-                source: meal, day: day, servings: servings, link: link)
+                source: current, day: day, servings: servings, link: link, purchasedSource: current == meal ? nil : meal,
+                ingredientExclusions: journey.recoveryCurrentDetails.first(where: { $0.id == need.id })?.exclusions)
             let intent = AwayCarryoverIntent(workspaceID: workspaceID, actorID: authority.actorID, pickupRevision: journey.revision,
-                planningRevisionID: dinner.state.revisionID, sourceNeed: need, supply: supply, counted: counted, plan: plan)
+                planningRevisionID: dinner.state.revisionID, sourceNeed: need, supply: supply, counted: counted, plan: plan,
+                recoveryRevision: try journey.mealRecovery.map { try MealRecoveryEngine.project($0.domain).revisionID })
             _ = try AwayCarryoverEngine.reserving(intent, in: journey, at: clock())
             var ledgerPreview = shop; try ledgerPreview.appendConfirmedCarryover(plan, at: clock())
             review = intent; message = nil; return true
@@ -276,7 +342,7 @@ extension PickupJourney {
                 review = nil; return true
             }
             if records.first(where: { $0.id == intent.id }) == nil {
-                guard seal, pickup.journey?.revision == intent.pickupRevision,
+                guard seal, pickup.journey?.closedAt == nil, pickup.journey?.revision == intent.pickupRevision,
                       dinner.shop?.revisionID == intent.plan.baseRevisionID, dinner.state.revisionID == intent.planningRevisionID,
                       pending == nil else { throw AwayCarryoverError.stale }
                 guard await pickup.change({ value in value.awayCarryovers.append(AwayCarryoverRecord(intent: intent, phase: .prepared)) }) else { throw AwayCarryoverError.pending }

@@ -1,8 +1,7 @@
 import UIKit
 import XCTest
 
-/// Real visible entry, no seeded model data. Run only on the isolated DEBUG
-/// workspace after the parent releases its simulator/accessibility audit lane.
+/// Shopper journeys use the isolated Debug workspace. Pickup recovery cases seed a placed order.
 @MainActor final class FreeJourneyUITests: XCTestCase {
     private var app: XCUIApplication!
     override func setUpWithError() throws {
@@ -17,7 +16,7 @@ import XCTest
     }
 
 #if DEBUG && targetEnvironment(simulator)
-    func testCreateReplacementFromPrivatePickupAndReopenForCook() throws {
+    private func createReplacementFromPrivatePickup() {
         launch(reset: true, privateRecovery: true)
         shopRoot()
         tap(app.buttons["Pickup, repairs and handoffs"])
@@ -27,16 +26,20 @@ import XCTest
         reveal(replace)
         let mealID = String(replace.identifier.dropFirst("mealRecovery.target.".count))
         tap(replace)
-        fill("Wednesday bean bowls", into: "mealRecovery.title")
-        fill("Heat the beans for dinner", into: "mealRecovery.notes")
+        fill("Wednesday bean bowls", into: "mealRecovery.title", useVisibleCenter: true)
+        fill("Heat the beans for dinner", into: "mealRecovery.notes", useVisibleCenter: true)
         let name = app.textFields.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND identifier ENDSWITH %@", "mealRecovery.", ".name")).firstMatch
         reveal(name)
         let ingredientID = String(name.identifier.dropLast(".name".count))
-        fill("Beans", into: ingredientID + ".name")
+        fill("Beans", into: ingredientID + ".name", useVisibleCenter: true)
         choose("Reviewed matching food", value: "Beans")
-        fill("4", into: ingredientID + ".amount")
+        fill("4", into: ingredientID + ".amount", useVisibleCenter: true)
         enableSwitch("I reviewed every food identity, usable unit and inherited exclusion")
-        tap(element("mealRecovery.preview"))
+        let preview = element("mealRecovery.preview")
+        XCTAssertTrue(preview.waitForExistence(timeout: 5) && preview.isHittable && preview.isEnabled)
+        XCTAssertLessThanOrEqual(preview.frame.maxY, app.tabBars.buttons["Shop"].frame.minY,
+            "The recovery action must stay above the floating tab bar.")
+        preview.tap()
         let changed = element("mealRecovery.previewMeal." + mealID)
         reveal(changed, initiallyUpward: false)
         XCTAssertTrue(changed.label.contains("Wednesday bean bowls") && changed.label.contains("Still short: 0"), changed.label)
@@ -52,6 +55,59 @@ import XCTest
         tap(element("mealRecovery.apply"))
         XCTAssertTrue(element("mealRecovery.saved").waitForExistence(timeout: 8))
         capture("Manual-recovery-saved")
+    }
+
+    func testCarryRecoveredDinnerFoodToAnotherNightAndReopenTheDatedTarget() {
+        createReplacementFromPrivatePickup()
+        tap(app.tabBars.buttons["Dinners"])
+        dinnerRoot()
+        tap(app.buttons["All chosen dinners, including earlier dates"])
+        let dinner = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'dinnerOccurrence-' AND label CONTAINS %@", "Wednesday bean bowls")).firstMatch
+        reveal(dinner)
+        let originalID = dinner.identifier
+        tap(dinner)
+        tap(element("awayCarryover.open"))
+        tap(element("awayCarryover.need"))
+        tap(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Wednesday bean bowls ·")).firstMatch)
+        tap(element("awayCarryover.supply"))
+        tap(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Beans")).firstMatch)
+        fill("4", into: "awayCarryover.counted", useVisibleCenter: true)
+        fill("2", into: "awayCarryover.reserved", useVisibleCenter: true)
+        fill("2", into: "awayCarryover.servings", useVisibleCenter: true)
+        if app.keyboards.firstMatch.exists { app.typeText(XCUIKeyboardKey.return.rawValue) }
+        enableSwitch("awayCarryover.checked")
+        tap(element("awayCarryover.review"))
+        let source = app.staticTexts["Physical source: Beans"]
+        XCTAssertTrue(source.waitForExistence(timeout: 8))
+        // Wait for the new review to settle, then scroll to its approval control.
+        // A disabled button can briefly leave the lazy Form’s accessibility tree.
+        let approval = app.switches["awayCarryover.approve"]
+        reveal(approval)
+        let apply = app.buttons["awayCarryover.apply"]
+        XCTAssertTrue(apply.waitForExistence(timeout: 5))
+        XCTAssertFalse(apply.isEnabled)
+        enableSwitch("awayCarryover.approve")
+        tap(apply)
+        let saved = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "awayCarryover.saved.")).firstMatch
+        reveal(saved)
+        tap(saved)
+        let target = app.navigationBars["Dated physical carryover"]
+        XCTAssertTrue(target.waitForExistence(timeout: 8))
+        restart()
+        tap(app.tabBars.buttons["Dinners"])
+        dinnerRoot()
+        tap(app.buttons["All chosen dinners, including earlier dates"])
+        let matches = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'dinnerOccurrence-' AND label CONTAINS %@", "Wednesday bean bowls"))
+        XCTAssertEqual(matches.count, 2)
+        tap(matches.matching(NSPredicate(format: "identifier != %@", originalID)).firstMatch)
+        XCTAssertTrue(target.waitForExistence(timeout: 8))
+        let reserved = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Reserved quantity: 2")).firstMatch
+        reveal(reserved)
+        XCTAssertTrue(reserved.exists)
+    }
+
+    func testCreateReplacementFromPrivatePickupAndReopenForCook() throws {
+        createReplacementFromPrivatePickup()
         restart()
         shopRoot()
         tap(app.buttons["Pickup, repairs and handoffs"])
@@ -1046,7 +1102,7 @@ import XCTest
         launch(reset: true)
         tap(app.tabBars.buttons["Dinners"]); tap(element("dinnerStartPickup"))
         fill("Original reservation pickup", into: "ledgerShopName"); tap(element("ledgerCreateShop"))
-        openMealWeek(); tapWeekRow(app.buttons["Protect a lunch or side"])
+        openMealWeek(); tapVisibleFormRow(app.buttons["Protect a lunch or side"])
         fill("Fictional original lunch", into: "Food name", requireDone: true)
         fill("2", into: "Protected amount", requireDone: true)
         fill("Original pickup only", into: "Purpose, such as lunch", requireDone: true)
@@ -1057,7 +1113,7 @@ import XCTest
         XCTAssertTrue(app.staticTexts["Pickup selection changed"].waitForExistence(timeout: 8), app.debugDescription)
         XCTAssertFalse(app.buttons["Review protected need"].exists)
         XCTAssertFalse(element("Food name").exists)
-        dinnerRoot(); openMealWeek(); tapWeekRow(app.buttons["Protect a lunch or side"])
+        dinnerRoot(); openMealWeek(); tapVisibleFormRow(app.buttons["Protect a lunch or side"])
         let name = element("Food name")
         XCTAssertTrue(name.waitForExistence(timeout: 8))
         XCTAssertNotEqual(name.value as? String, "Fictional original lunch")
@@ -1151,7 +1207,7 @@ import XCTest
         if moveAcrossWeek {
             assertText("Unscheduled")
             let meal = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", "dinnerOccurrence-")).firstMatch
-            tapWeekRow(meal)
+            tapVisibleFormRow(meal)
             enableSwitch(assignDate)
             chooseMealWeekDate(originalDay, from: Date(), in: element("dinnerMoveDate"), formatter: dateFormatter)
             tap(element("dinnerMoveReview"))
@@ -1166,7 +1222,7 @@ import XCTest
             }
         }
 
-        tapWeekRow(app.buttons[copy("Protect a lunch or side", "Proteger un almuerzo o acompañamiento")])
+        tapVisibleFormRow(app.buttons[copy("Protect a lunch or side", "Proteger un almuerzo o acompañamiento")])
         XCTAssertTrue(app.navigationBars[copy("Protect food", "Proteger alimentos")].waitForExistence(timeout: 8))
         fill(food, into: copy("Food name", "Nombre del alimento"), requireDone: true)
         fill("2", into: copy("Protected amount", "Cantidad protegida"), requireDone: true)
@@ -1213,12 +1269,12 @@ import XCTest
         capture((spanish ? "es-US" : "en-US") + "-Dinners-stable-return")
         openMealWeek(title: weekTitle)
         XCTAssertTrue(display.buttons[copy("Grid", "Cuadrícula")].isSelected)
-        tapWeekRow(element(dinnerID))
+        tapVisibleFormRow(element(dinnerID))
         XCTAssertTrue(app.navigationBars[copy("Chosen dinner", "Cena elegida")].waitForExistence(timeout: 8), app.debugDescription)
         assertText(dateFormatter.string(from: originalDay))
         app.navigationBars[copy("Chosen dinner", "Cena elegida")].buttons.firstMatch.tap()
         XCTAssertTrue(app.navigationBars[weekTitle].waitForExistence(timeout: 8))
-        tapWeekRow(element(dayNoteID))
+        tapVisibleFormRow(element(dayNoteID))
         let noteTitle = copy("Day note", "Nota del día")
         XCTAssertTrue(app.navigationBars[noteTitle].waitForExistence(timeout: 8))
         assertText(dateFormatter.string(from: originalDay))
@@ -1252,7 +1308,7 @@ import XCTest
         let month = calendar.dateInterval(of: .month, for: originalDay)!.start
         let futureMonth = calendar.date(byAdding: .month, value: 2, to: month)!
         let moved = calendar.date(byAdding: .day, value: 14, to: futureMonth)!
-        tapWeekRow(element(dinnerID))
+        tapVisibleFormRow(element(dinnerID))
         chooseMealWeekDate(moved, from: originalDay, in: element("dinnerMoveDate"), formatter: dateFormatter)
         tap(movedReview)
         assertText("Before: " + dateFormatter.string(from: originalDay))
@@ -1287,12 +1343,12 @@ import XCTest
     }
 
     private func openMealWeek(title: String = "This week") {
-        tapWeekRow(element("dinnerWeekEntry"))
+        tapVisibleFormRow(element("dinnerWeekEntry"))
         XCTAssertTrue(app.navigationBars[title].waitForExistence(timeout: 8))
         XCTAssertTrue(app.navigationBars[title].buttons.firstMatch.isHittable, "The pushed week must have a native Back control")
     }
 
-    private func tapWeekRow(_ row: XCUIElement) {
+    private func tapVisibleFormRow(_ row: XCUIElement, marker: String = "S25_ROW_TAP") {
         // XCUI's default activation point can lie above the scrolled content.
         // Use the visible row center, clear of navigation and tab bars.
         for attempt in 0..<24 {
@@ -1300,14 +1356,14 @@ import XCTest
             let exists = row.exists
             let frame = exists ? row.frame : .zero
             if exists && row.isHittable && area.contains(CGPoint(x: frame.midX, y: frame.midY)) {
-                print("S25_ROW_TAP id=\(row.identifier) frame=\(frame) area=\(area)")
+                print("\(marker) id=\(row.identifier) frame=\(frame) area=\(area)")
                 row.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
                 return
             }
             // A lazy row outside the viewport can be above or below the current position.
             scrollContent(upward: exists ? frame.midY > area.midY : attempt < 12)
         }
-        XCTFail("No visible center for week row: \(row.debugDescription)")
+        XCTFail("No visible center for form row: \(row.debugDescription)")
     }
 
     private func chooseMealWeekDate(_ date: Date, from displayedDate: Date, in picker: XCUIElement,
@@ -1510,13 +1566,15 @@ import XCTest
         hierarchy.name = name + "-accessibility"; hierarchy.lifetime = .keepAlways; add(hierarchy)
         captureSystemScreen(name)
     }
-    private func fill(_ text: String, into id: String, replacing: Bool = false, requireDone: Bool = false) {
+    private func fill(_ text: String, into id: String, replacing: Bool = false, requireDone: Bool = false, useVisibleCenter: Bool = false) {
         // Persistent labels can share the field's accessible name. Match only
         // editable controls, including lazily materialized Form rows.
         let editableTypes: [XCUIElement.ElementType] = [.textField, .textView, .secureTextField, .searchField]
         let field = app.descendants(matching: .any).matching(identifier: id)
             .matching(NSPredicate(format: "elementType IN %@", editableTypes.map { $0.rawValue })).firstMatch
-        tap(field)
+        if useVisibleCenter {
+            tapVisibleFormRow(field, marker: "RECOVERY_FIELD_TAP")
+        } else { tap(field) }
         if replacing, let old = field.value as? String, old != field.placeholderValue { field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count)) }
         field.typeText(text)
         let done = app.buttons.matching(NSPredicate(format: "label IN %@", ["Done", "Listo"])).firstMatch

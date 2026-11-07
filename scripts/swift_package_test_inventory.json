@@ -18,6 +18,10 @@
       "sourceCommit": "852367b74bb344c2864700a3360436a585fa89e2",
       "job": "https://github.com/palatis3/room-in-the-cart/actions/runs/42363987322/job/128378065295",
       "added": 12
+    },
+    "carryoverRecoveryAddition": {
+      "added": 1,
+      "basis": "The reviewed CoreDomain XCTest for physical transfer and later replacement passed locally. The full package gate matched compiled inventories with 402 passes and three expected HouseholdClient wire skips."
     }
   },
   "packages": {
@@ -139,6 +143,7 @@
       "CoreDomainTests.MealRecoveryTests/testFutureArrivalEvidenceStaysUnusableUntilInstantAndStalesAnExistingReview",
       "CoreDomainTests.MealRecoveryTests/testNewOutsideDemandIsAnExplicitRevisionAndInvalidatesAnOlderReplacementReview",
       "CoreDomainTests.MealRecoveryTests/testOutsideAllocationComparisonUsesExactUnitsAndStillRejectsTakingItsFood",
+      "CoreDomainTests.MealRecoveryTests/testPhysicalTransferMovesOnlyCurrentUnprotectedDemandAndPreservesItsPinThroughAnotherReplacement",
       "CoreDomainTests.MealRecoveryTests/testPreparationLeadAndClockBoundaryRemainConditionalWithoutChangingSavedDeadline",
       "CoreDomainTests.MealRecoveryTests/testRepeatedReplacementUsesCurrentWholeTargetAndRejectsSameOperationDifferentContent",
       "CoreDomainTests.MealRecoveryTests/testReplacementCannotConsumeAnotherNeedAndFivePortionsDoNotCoverFourPlusTwoProtected",
