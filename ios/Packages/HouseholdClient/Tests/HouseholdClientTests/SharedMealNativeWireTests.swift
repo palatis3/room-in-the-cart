@@ -23,6 +23,8 @@ private final class SharedMealLoopbackTrust: NSObject, URLSessionDelegate, @unch
 }
 
 final class SharedMealNativeWireTests: XCTestCase {
+    private let deadline = SharedMealDeadline(at: "2099-11-01T06:30:00Z", zone: "America/New_York")
+
     func testSharedMealClientAgainstPostgres() async throws {
         let env = ProcessInfo.processInfo.environment
         guard let rawPort = env["RITC_WIRE_PORT"] else { throw XCTSkip("Run isolated shared meal PostgreSQL tests with RITC_TEST_NATIVE_WIRE=1.") }
@@ -56,7 +58,22 @@ final class SharedMealNativeWireTests: XCTestCase {
             XCTAssertEqual(updated.meals.first?.meal, proposal.request.meal)
             let reviewedShop = try await service.shopperShop(shopID: current.shopId)
             XCTAssertEqual(reviewedShop.shopRevision, current.shopRevision + 1)
-            let prepared = try await service.preparePlacementSnapshot(reviewed: reviewedShop)
+            let occurrence = try XCTUnwrap(reviewedShop.meals?.first)
+            XCTAssertEqual(occurrence.meal.day, "2099-11-01")
+            XCTAssertNil(occurrence.meal.planning?.deadline)
+            var meal = occurrence.meal
+            try meal.setDeadline(deadline)
+            var timedEdit = SharedMealEdit(occurrenceID: occurrence.id, meal: meal)
+            timedEdit.baseMealRevision = occurrence.revision
+            var timedBody = try ShopperShopCandidate(quote: reviewedShop.quote, lines: reviewedShop.lines).commandBody()
+            timedBody["mealEdit"] = try timedEdit.commandValue()
+            let timedOperation = try await service.prepare(envelope: .init(replayWindow: window.id, shopId: current.shopId,
+                kind: "shop.patch", base: .init(shopRevision: reviewedShop.shopRevision, authorityEpoch: reviewedShop.authorityEpoch),
+                body: timedBody), bootstrap: scope)
+            _ = try await service.executeSharedShop(timedOperation)
+            let timedShop = try await service.shopperShop(shopID: current.shopId)
+            XCTAssertEqual(timedShop.meals?.first?.meal.planning?.deadline, deadline)
+            let prepared = try await service.preparePlacementSnapshot(reviewed: timedShop)
             let placed = try await service.executePlacementReport(try .init(prepared: prepared, occurredAt: ISO8601DateFormatter().string(from: Date())))
             XCTAssertEqual(placed.disposition, "placed")
             try await exerciseDelivery(service, scope: scope, shopID: current.shopId)
@@ -93,6 +110,7 @@ final class SharedMealNativeWireTests: XCTestCase {
         XCTAssertEqual(sealedPlan.exclusions, ["no peanuts"])
         XCTAssertEqual(sealedPlan.leadTimeMinutes, 120)
         XCTAssertEqual(sealedPlan.completedSteps, ["Beans soaked"])
+        XCTAssertEqual(sealedPlan.deadline, deadline)
         let sealed = try XCTUnwrap(empty.lines.first)
         let receipt = try await save(.register(lineID: sealed.id, segment: UUID(), name: "Cannellini beans", exclusions: []), page: empty)
         let source = try XCTUnwrap(receipt.sourceId)
@@ -296,6 +314,11 @@ final class SharedMealNativeWireTests: XCTestCase {
         let original = try XCTUnwrap(desk.meals.first(where: { $0.id == occurrence.id }))
         XCTAssertEqual(desk.mealSources.first?.sealedRevisionId, original.revisionId)
         XCTAssertEqual(desk.targetDigests.first?.digest, try original.targetDigest())
+        XCTAssertEqual(original.day, "2099-11-01")
+        XCTAssertEqual(original.zone, deadline.zone)
+        XCTAssertEqual(original.due, deadline.at)
+        XCTAssertFalse(original.needs.isEmpty)
+        XCTAssertTrue(original.needs.allSatisfy { $0.due == deadline.at })
         var replacement = original
         replacement.title = "Bean supper / frijoles"
         replacement.notes = "Use the freezer beans.\nCocer a fuego lento."

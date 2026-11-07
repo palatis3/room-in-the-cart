@@ -24,7 +24,7 @@ async function fixture(){const owner=await actor(),created=ok(await call(owner,'
  const financial=async(entry,id=shopId)=>{const input={clientKey:randomUUID(),sourceVersion:await version(id),entry};return{input,result:ok(await call(owner,base+`/shops/${id}/financial-evidence`,'POST',input))};};
  return{owner,h,base,shopId,shop,paid,version,financial};}
 
-async function mealFixture() {
+async function mealFixture({day = '2026-11-05', deadline} = {}) {
  const f=await fixture(),path=f.base+'/shops/'+f.shopId,changePath=path+'/meal-plan/changes';
  const planner=await actor(),invite=ok(await call(f.owner,f.base+'/invites','POST',{kind:'adult_contributor'}));
  planner.id=ok(await call(planner,'/v1/invites/redeem','POST',{token:invite.token,intent:'join',adultAttestation:true,alias:'Planner'})).memberId;
@@ -32,7 +32,7 @@ async function mealFixture() {
  ok(await call(f.owner,f.base+'/billing/seats','PUT',{revision:seats.revision,userIDs:[f.owner.id,planner.id]}));
  const initial=ok(await call(f.owner,path)),occurrenceId=randomUUID(),dinner=randomUUID(),lunch=randomUUID(),ingredient=randomUUID();
  const quantity=n=>({amount:{numerator:n,denominator:1},unit:'gram',originalLiteral:n+' g'});
- const meal={title:'Reviewed supper',day:'2026-11-05',kind:'dinner',portions:6,protected:false,planning:{sourceOccurrenceId:randomUUID(),
+ const meal={title:'Reviewed supper',day,kind:'dinner',portions:6,protected:false,planning:{sourceOccurrenceId:randomUUID(),...(deadline ? {deadline} : {}),
   groups:[{id:dinner,name:'Dinner group',servings:{numerator:4,denominator:1},protected:false},{id:lunch,name:'Protected lunch',servings:{numerator:2,denominator:1},protected:true}],
   ingredients:[{id:ingredient,name:'Beans',quantity:quantity(600),groupIds:[dinner,lunch],exclusions:['No sesame']}],
   bindings:[{id:randomUUID(),ingredientId:ingredient,groupId:dinner,quantity:quantity(400)},{id:randomUUID(),ingredientId:ingredient,groupId:lunch,quantity:quantity(200)}]}};
@@ -195,13 +195,38 @@ test('account erasure removes accepted proposal copies and exact retry evidence 
 });
 
 if(process.env.RITC_TEST_NATIVE_WIRE==='1') test('actual Swift planner proposal and separate shopper review travel over pinned loopback HTTPS and PostgreSQL',async()=>{
- const {exerciseSharedMealClient}=await import('./shared-meal-native-wire.mjs');const f=await mealFixture();
+ const {exerciseSharedMealClient}=await import('./shared-meal-native-wire.mjs');
+ const zone='America/New_York', originalDeadline={at:'2099-10-31T22:30:00Z',zone};
+ const f=await mealFixture({day:'2099-10-31',deadline:originalDeadline});
+ const occurrenceId=f.proposal.occurrenceId, movedDay='2099-11-01';
+ const move={proposalId:randomUUID(),occurrenceId,day:movedDay,shopRevision:2,authorityEpoch:1,grantRevision:1};
+ ok(await call(f.planner,f.path+'/meal-plan/proposals','POST',move));
+ const edit={occurrenceId,baseMealRevision:2,proposalId:move.proposalId,meal:{...f.meal,day:movedDay,planning:{...f.meal.planning}}};
+ const submit=edit=>call(f.owner,f.base+'/commands','POST',f.patch(2,edit));
+ // Carrying yesterday's instant is invalid. Extending it to the new day is valid
+ // as a local date/time, but the planner's date-only proposal never agreed to it.
+ assert.equal((await submit(edit)).status,422);
+ edit.meal.planning.deadline={at:'2099-11-01T23:30:00Z',zone};
+ assert.equal((await submit(edit)).data.error.code,'stale_proposal');
+ assert.deepEqual(ok(await call(f.owner,f.path)).meals[0].meal.planning.deadline,originalDeadline);
+ delete edit.meal.planning.deadline;
+ ok(await submit(edit));
+ const moved=ok(await call(f.owner,f.path)).meals[0].meal;
+ assert.equal(moved.day,movedDay);assert.equal(moved.planning.deadline,undefined);
  await exerciseSharedMealClient({service:server,owner:f.planner,householdId:f.h,shopId:f.shopId,shopper:false});
- assert.equal(ok(await call(f.owner,f.path)).shopRevision,2);
+ assert.equal(ok(await call(f.owner,f.path)).shopRevision,3);
  await exerciseSharedMealClient({service:server,owner:f.owner,householdId:f.h,shopId:f.shopId,shopper:true});
- const current=ok(await call(f.owner,f.path));assert.equal(current.shopRevision,4);assert.equal(current.placedRevision,3);
+ const current=ok(await call(f.owner,f.path));assert.equal(current.shopRevision,6);assert.equal(current.placedRevision,5);
  assert.equal(current.meals[0].meal.title,'Reviewed native guest plan');
  const saved=ok(await call(f.owner,f.path+'/delivery-evidence'));
+ const deadline={at:'2099-11-01T06:30:00Z',zone};
+ assert.deepEqual(saved.meals[0].meal.planning.deadline,deadline);
+ const history=(await admin.query('SELECT revision,meal FROM ritc.shared_meal_revision WHERE household_id=$1 AND shop_id=$2 AND occurrence_id=$3 ORDER BY revision',[f.h,f.shopId,occurrenceId])).rows;
+ assert.deepEqual(history.map(({revision,meal})=>[revision,meal.day,meal.planning.deadline??null]),[
+   [2,'2099-10-31',originalDeadline],[3,movedDay,null],[4,movedDay,null],[5,movedDay,deadline]]);
+ const recovered=ok(await call(f.owner,f.path+'/meal-recovery')).meals[0];
+ assert.equal(recovered.due,deadline.at);assert.equal(recovered.zone,zone);
+ assert(recovered.needs.length>0 && recovered.needs.every(n=>n.due===deadline.at));
  assert.equal(saved.sources.length,1);assert.equal(saved.sources[0].confirmed.quantity.amount.numerator,7);
  assert.equal((await admin.query('SELECT count(*)::int n FROM ritc.shared_meal_change WHERE household_id=$1',[f.h])).rows[0].n,1);
 });

@@ -33,6 +33,7 @@ private func mealKind(_ kind: String) -> String {
 
 struct SharedMealFacts: View {
     let meal: SharedMeal
+    var deadlineIdentifier = "sharedMeal.deadlineFact"
     @Environment(\.locale) private var locale
     var body: some View {
         VStack(alignment: .leading) {
@@ -44,7 +45,8 @@ struct SharedMealFacts: View {
                 Text(verbatim: day).accessibilityIdentifier("shared-meal-civil-date")
             }
             LabeledContent(sharedRecoveryText("Meal deadline"), value: meal.planning?.deadline?.display(locale: locale) ?? ht("Unknown"))
-                .accessibilityIdentifier("sharedMeal.deadlineFact")
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier(deadlineIdentifier)
             LabeledContent(ht("Portions"), value: meal.portions.formatted())
             if meal.protected { Label(ht("Protected portions"), systemImage: "lock") }
             if let planning = meal.planning { SharedMealPlanningFacts(planning: planning) }
@@ -99,6 +101,7 @@ struct SharedMealEditor: View {
                 current.move(to: sharedMealDay(date)); start(id, current)
             }), displayedComponents: .date)
             .environment(\.timeZone, mealCalendar().timeZone)
+            .accessibilityIdentifier("sharedMeal.day")
         if let original = meals.first(where: { $0.id == id })?.meal, original.day != meal.day,
            original.planning?.deadline != nil && meal.planning?.deadline == nil {
             Text(sharedRecoveryText("The new day has no deadline until you set one."))

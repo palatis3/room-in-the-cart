@@ -79,7 +79,12 @@ final class SharedRecoveryEditorTests: XCTestCase {
     }
 
     func testEffectiveCookTextUsesRecoveredIngredientAndBothRealRevisionsInEachLanguage() throws {
-        let raw = meal("Sopa revisada",group,ingredient:"Black beans")
+        let deadline = SharedMealDeadline(at: "2026-11-01T06:30:00Z", zone: "America/New_York")
+        var raw = meal("Sopa revisada",group,ingredient:"Black beans")
+        raw["day"] = "2026-11-01"; raw["due"] = deadline.at; raw["zone"] = deadline.zone
+        var needs = try XCTUnwrap(raw["needs"] as? [Object])
+        needs[0]["due"] = deadline.at
+        raw["needs"] = needs
         let page=try record(rows:[raw]);let meal=page.meals[0],need=meal.needs[0]
         func f(_ n:String,_ d:String="1")->Object { ["numerator":n,"denominator":d] }
         let row:Object=["occurrenceId":meal.id.uuidString,"mealRevision":2,"needId":need.id.uuidString,"ingredientId":need.ingredientId.uuidString,
@@ -87,7 +92,8 @@ final class SharedRecoveryEditorTests: XCTestCase {
                         "delivered":f("0"),"pantry":f("0"),"freezer":f("2"),"reservations":[],"issues":[],
                         "allocations":[["sourceId":source.uuidString,"amount":f("2"),"kind":"freezer"] as Object]]
         let snapshot=try decode(SharedRecoveryCoverage.self,base.merging(["shopId":shop.uuidString,"placedRevision":3,"asOf":time,"needs":[row],"unplannedOccurrenceIds":[]]) { _,new in new })
-        let sealedMeal:Object=["title":"Original wraps","kind":"dinner","day":meal.day,"portions":4,"protected":false]
+        let sealedMeal:Object=["title":"Original wraps","kind":"dinner","day":meal.day,"portions":4,"protected":false,
+                               "planning":["groups":[],"ingredients":[],"deadline":["at":deadline.at,"zone":deadline.zone]] as Object]
         let delivery=try decode(SharedDeliveryPage.self,base.merging(["shopId":shop.uuidString,"coverageAvailable":true,"reservationsAvailable":true,
             "lines":[],"sources":[],"meals":[["occurrenceId":meal.id.uuidString,"revision":2,"meal":sealedMeal] as Object]]) { _,new in new })
         let sealed=try XCTUnwrap(delivery.meals?.first)
@@ -96,6 +102,12 @@ final class SharedRecoveryEditorTests: XCTestCase {
             let text=try XCTUnwrap(SharedDeliveryCookDraft.make(page:delivery, report:current, occurrence:sealed, language:lang))
             for value in ["Sopa revisada","Dinner plates","Black beans","no sesame","Beans from freezer","1/3",meal.revisionId.uuidString,"UTC"] { XCTAssertTrue(text.contains(value),value) }
             XCTAssertTrue(text.contains(lang == "en-US" ? "Covered by freezer stock: 2 cups" : "Cubierto por el congelador: 2 tazas"))
+            let line = try XCTUnwrap(text.split(separator: "\n").first(where: { $0.contains("America/New_York") }))
+            XCTAssertTrue(line.contains("1:30") && line.contains("UTC−05:00"), String(line))
+            let date = try XCTUnwrap(line.range(of: "1:30").map { String(line[..<$0.lowerBound]) })
+            XCTAssertTrue(date.contains(lang == "en-US" ? "November" : "noviembre"), date)
+            XCTAssertNotNil(date.range(of: #"\b1\b"#, options: .regularExpression), date)
+            XCTAssertTrue(date.contains("2026"), date)
             XCTAssertFalse(text.contains("Original wraps"))
             XCTAssertFalse(text.contains("Original prep completed"))
 

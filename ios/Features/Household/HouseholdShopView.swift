@@ -93,9 +93,9 @@ private struct SharedShopContent: View {
                             }
                             if let edit = review.mealEdit {
                                 if let previous = model.shop?.meals?.first(where: { $0.id == edit.occurrenceID }) {
-                                    Text(ht("Previously planned")); SharedMealFacts(meal: previous.meal)
+                                    Text(ht("Previously planned")); SharedMealFacts(meal: previous.meal, deadlineIdentifier: "sharedMeal.review.previousDeadline")
                                 }
-                                if let meal = edit.meal { Text(ht("Proposed meal")); SharedMealFacts(meal: meal) }
+                                if let meal = edit.meal { Text(ht("Proposed meal")); SharedMealFacts(meal: meal, deadlineIdentifier: "sharedMeal.review.proposedDeadline") }
                                 else { Text(ht("Remove this occurrence from the shared plan.")) }
                             }
                             if let candidate = review.candidate { SharedShopFields(quote: candidate.quote, lines: candidate.lines) }

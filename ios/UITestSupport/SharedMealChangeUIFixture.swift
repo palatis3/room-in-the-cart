@@ -25,6 +25,14 @@ private final class S17FixtureServer: @unchecked Sendable {
     private var receipts: [String:[String:Any]] = [:]
     private var posts = 0
     var changed: (@Sendable (Int,Int) -> Void)?
+    init() {
+        if ProcessInfo.processInfo.arguments.contains("--shared-meal-deadline-fixture") {
+            meal["day"] = "2026-11-01"
+            meal["planning"] = ["groups": [], "ingredients": [],
+                                "deadline": ["at": "2026-11-01T05:30:00Z", "zone": "America/New_York"]] as [String:Any]
+        }
+    }
+
     func respond(_ request: URLRequest) throws -> (Int,Data) {
         lock.lock(); defer { lock.unlock() }
         guard request.url?.host?.hasSuffix(".invalid") == true else { throw URLError(.unsupportedURL) }
@@ -221,9 +229,9 @@ private final class S17FixtureProtocol: URLProtocol, @unchecked Sendable {
 }
 struct S17SharedMealFixtureRoot: View {
     @StateObject private var state = S17FixtureState()
-    @State private var shopperMode = ProcessInfo.processInfo.arguments.contains("--shopper-meal-seed")
+    @State private var shopperMode = ProcessInfo.processInfo.arguments.contains("--shopper-meal-seed") || ProcessInfo.processInfo.arguments.contains("--shared-meal-deadline-fixture")
     @State private var directSeed = ProcessInfo.processInfo.arguments.contains("--shopper-meal-seed")
-    @State private var directShopReview = false
+    @State private var directShopReview = ProcessInfo.processInfo.arguments.contains("--shared-meal-deadline-fixture")
     private var seed: SharedMealChangeSeed { .init(localOccurrenceID: UUID(uuidString:"88888888-8888-4888-8888-888888888888")!, title:"Fixture guest soup",portions:6,planning:.init(groups:[],ingredients:[])) }
     @ViewBuilder var body: some View {
         if ProcessInfo.processInfo.arguments.contains("--shared-meal-civil-date-fixture") {
