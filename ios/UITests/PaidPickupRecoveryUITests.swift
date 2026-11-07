@@ -84,7 +84,10 @@ import XCTest
         let toggle = app.switches[label]
         show(toggle)
         if toggle.value as? String == "0" {
-            toggle.coordinate(withNormalizedOffset: .init(dx: 0.92, dy: 0.5)).tap()
+            let nativeSwitch = toggle.switches.firstMatch
+            let control = nativeSwitch.exists ? nativeSwitch : toggle
+            show(control)
+            control.tap()
         }
         XCTAssertEqual(toggle.value as? String, "1")
     }
