@@ -111,8 +111,9 @@ extension HouseholdService {
         let actor = GuardianActorBinding(subject: pending.subject, householdID: pending.householdID, memberID: pending.memberID, deviceID: pending.deviceID)
         let start = generation
         let body = try JSONDecoder().decode(FallbackMutation.self, from: pending.bytes)
-        if body.action == "accept" { try await authorizeAssistance(shopID: id) }
-        else { try await authorizeShopper(shopID: id, capability: "accepted_fallbacks") }
+        // A retry may only need the receipt. The server checks paid access if
+        // these exact bytes would create a new approval.
+        try await authorizeShopper(shopID: id, capability: "accepted_fallbacks")
         guard start == generation else { throw ClientError.cancelled }
         guard actor == (try guardianContext()) else { throw ClientError.accessEnded }
         let receipt: SharedFallbackReceipt = try await perform("shops/\(id)/accepted-fallbacks", method: "POST", body: pending.bytes)

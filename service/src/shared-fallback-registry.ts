@@ -193,7 +193,6 @@ export class SharedFallbackRegistry {
 
   async change(ctx:Context,shopId:string,input:unknown){
     const {shop,stamp}=await this.scope(ctx,shopId),request=write.parse(input),scope=[ctx.householdId,request.candidateId];
-    if(request.action==='accept')await this.requireAssistance(ctx);
     const fingerprint=digest({shopId,request});
     const prior=(await ctx.db.query(`SELECT * FROM ritc.accepted_fallback_revision WHERE household_id=$1 AND actor_id=$2 AND client_key=$3`,
       [ctx.householdId,ctx.member.member_id,request.clientKey])).rows[0];
@@ -203,6 +202,9 @@ export class SharedFallbackRegistry {
       return {shopId,shopRevision:prior.shop_revision,authorityEpoch:prior.authority_epoch,candidateId:prior.candidate_id,revision:prior.revision,
         registryRevision:prior.registry_revision,accepted:prior.accepted};
     }
+    // A paid seat is required to publish a new approval. The same shopper and
+    // device can retrieve the receipt for an approval that already committed.
+    if(request.action==='accept')await this.requireAssistance(ctx);
     this.repo.checkBase(shop,request);
     if(request.registryRevision!==stamp.registryRevision)throw stale();
     const current=(await ctx.db.query(`SELECT * FROM ritc.accepted_fallback_revision WHERE household_id=$1 AND candidate_id=$2 ORDER BY revision DESC LIMIT 1`,scope)).rows[0];

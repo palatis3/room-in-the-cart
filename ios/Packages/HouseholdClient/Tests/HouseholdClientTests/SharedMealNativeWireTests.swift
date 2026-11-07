@@ -494,6 +494,9 @@ extension SharedMealNativeWireTests {
             _ = try await service.previewMealRecovery(topUp.intent, reviewed: desk)
             XCTFail("Withdrawn candidate could still be previewed")
         } catch ClientError.service(status: 409, code: _, correlationID: _, retryAfter: _) {}
+        let preLapseLibrary = try await service.acceptedFallbacks(shopID: id)
+        let unsentApproval = try await service.prepareFallback(.accept(candidateId: UUID(), baseRevision: nil,
+            source: .disclosed, recipe: bigger, usual: false), reviewed: preLapseLibrary, clientKey: UUID())
         let onHand = try XCTUnwrap(ranking.options.first)
         let preview = try await service.previewMealRecovery(onHand.intent, reviewed: desk)
         XCTAssertTrue(preview.feasible)
@@ -513,6 +516,14 @@ extension SharedMealNativeWireTests {
         XCTAssertEqual(saved.page.meals.first(where: { $0.id == target.id }), onHand.intent.replacement)
         let freeLibrary = try await service.acceptedFallbacks(shopID: id)
         XCTAssertTrue(freeLibrary.candidates.contains { $0.id == easyID })
+        let recoveredApproval = try await service.executeFallback(durable)
+        XCTAssertEqual(recoveredApproval, accepted)
+        do {
+            _ = try await service.executeFallback(unsentApproval)
+            XCTFail("Expired member published a previously unsent household recipe")
+        } catch ClientError.service(status: 403, code: "membership_inactive", correlationID: _, retryAfter: _) {}
+        let afterRetry = try await service.acceptedFallbacks(shopID: id)
+        XCTAssertEqual(afterRetry, freeLibrary)
         let newOperation = try await service.prepare(envelope: .init(replayWindow: window.id, shopId: id, kind: "mealRecovery.apply",
             base: .init(shopRevision: desk.base.shopRevision, authorityEpoch: desk.base.authorityEpoch),
             body: onHand.intent.commandBody(reviewed: desk, preview: unused)), bootstrap: scope)
