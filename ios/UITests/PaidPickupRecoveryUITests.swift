@@ -86,20 +86,26 @@ import XCTest
         if toggle.value as? String == "0" {
             let nativeSwitch = toggle.switches.firstMatch
             let control = nativeSwitch.exists ? nativeSwitch : toggle
-            show(control)
+            show(control, within: app.frame)
             control.tap()
         }
         XCTAssertEqual(toggle.value as? String, "1")
     }
-    private func show(_ target: XCUIElement, down: Bool = true, file: StaticString = #filePath, line: UInt = #line) {
+    private func show(_ target: XCUIElement, down: Bool = true, within viewport: CGRect? = nil,
+                      file: StaticString = #filePath, line: UInt = #line) {
         let surface = app.collectionViews.firstMatch
+        func ready() -> Bool {
+            target.exists && target.isHittable && (viewport?.contains(target.frame) ?? true)
+        }
         for index in 0..<24 {
-            if target.exists && target.isHittable { return }
+            if ready() { return }
             guard surface.exists else { break }
-            let below = (index < 14) == down
+            let below: Bool
+            if let viewport, target.exists { below = target.frame.midY > viewport.midY }
+            else { below = (index < 14) == down }
             if below { surface.swipeUp() } else { surface.swipeDown() }
         }
-        XCTAssertTrue(target.exists && target.isHittable, "Missing control: \(target)", file: file, line: line)
+        XCTAssertTrue(ready(), "Missing control: \(target)", file: file, line: line)
     }
 }
 #endif
