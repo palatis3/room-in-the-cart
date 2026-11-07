@@ -206,6 +206,7 @@
       "CoreDomainTests.ShoppingLedgerTests/testZeroDemandCanBeConfirmedDuplicateWithoutBecomingUnknown",
       "CoreDomainTests.StagedImportIdentityTests/testExternalIdentitySurvivesRestartAndExactReplay",
       "CoreDomainTests.StagedImportIdentityTests/testSameTextDifferentExplicitOperationRemainsSeparateReviewedIntent",
+      "CoreDomainTests.StapleRecallTests/testBoughtElsewhereClosesOnlyTheChosenCurrentLineAndExactRetryDoesNotCloseItAgain",
       "CoreDomainTests.StapleRecallTests/testChangedOrForgottenApprovalInvalidatesOpenReviewAndStoreIsRequired",
       "CoreDomainTests.StapleRecallTests/testExistingCheckedOrHandledItemIsNeverReopenedAndHandledChoiceCreatesNoPurchase",
       "CoreDomainTests.StapleRecallTests/testRecallCopiesOnlyReviewedNeedAndRetainsOldCheckAcrossSaveAndReplay",
