@@ -1,0 +1,7 @@
+# First visit and saved pickup on the iPhone SE
+
+The normal app opened to Shop in [English](shop-en.png) and [US Spanish](shop-es.png) on an iPhone SE (3rd generation) simulator running iOS 17.0. Compare packs, Start pickup, Check one change and Something is missing all fit above Device shortcuts. Existing dated pickups lead with their name and slot.
+
+The shopper reviewed two retailer totals against the same pickup, left without saving, and later saved a choice. Reopening it after a process restart showed both original amounts, their difference, the cap and the retailer evidence. The model checks cover partial and unknown prices, agreement to a particular overage, earlier documents and erasure. [Five selected tests](iphone-se-verification.txt)
+
+Four integrated UI tests passed for default and largest text, Device shortcuts, urgent repair, and the automated accessibility audit on Shop and comparison results. A fifth test initially looked for the multiline pickup name as a single-line field. After selecting it by its stable identifier, that test reached list import, where its scrolling helper excluded the visible sheet action. It now taps the fixed Add reviewed list button directly. Reading the restored fields in their displayed order reduced the local run from 181.01 to 92.32 seconds. Both runs checked the saved mode, six input values, total and remaining cap after two process restarts. The final run recorded zero XCTest runtime warnings. [Checkout restoration](checkout-restoration.txt)

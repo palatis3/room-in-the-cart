@@ -2,6 +2,12 @@
 
 Updated November 7, 2026 UTC. The owner resumed and explicitly approved the reviewed hosted staging update; the full first-version goal is active and release acceptance remains incomplete. Historical snapshots are preserved in [the handoff archive](CURRENT-HANDOFF-HISTORY-20261106.md).
 
+## November 7 Shop entry and list interaction
+
+Shop now opens directly to pickup tasks. The first-visit checkout comparison saves the shopper’s two retailer observations, their included-charge confirmations and the original cap. The reopened comparison was checked after process restart on iOS 17. The selected-pickup checkout also retained its exact amount and pricing mode across two restarts. [Shop walkthrough and checks](evidence/native/first-pickup-change-20261107/README.md)
+
+The hosted contributor test for closing and reopening a prior market check passed its assertions but emitted a UIKit hierarchy warning. The original product reproduced the warning locally on iPhone 17, iOS 26.2. The pickup selector and list options now use native action dialogs. The same staple-recall selector, manual order and print, and changing pickups with a reservation draft passed locally with zero runtime warnings. The hosted failure was on the earlier PR revision. [Hosted job](https://github.com/palatis3/room-in-the-cart/actions/runs/42402979723/job/128499934642)
+
 ## November 7 staging update through 041
 
 Room in the Cart Staging now serves the per-device offline request permission and retry update. All 41 hosted migration checksums matched the reviewed source. The 128 existing non-registry tables retained their contents and no device permission rows were created by migration.
