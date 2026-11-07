@@ -1,5 +1,9 @@
 # Current implementation and acceptance map
 
+## November 7 offline request retries
+
+An adult contributor can opt in to keeping a pending request on a specific enrolled device for up to 24 hours. On a local service with migration 041, Android Chrome and the iPhone app recovered after disconnection and restart. PostgreSQL recorded one request and one operation per submitted intent, including after a committed reply was lost. Revoking contribution rights removed the Android pending text and IndexedDB row. The merged native run passed all 22 selected app tests and 12 client tests, including account changes and first sign-in. Older web clients and recovery from an earlier database snapshot are under separate review. Hosted staging remains at 040. [Verified checks](evidence/b11/offline-requests-20261107/verified.json)
+
 ## November 7 purchase, closeout and next-shop acceptance
 
 The [current handoff](CURRENT-HANDOFF.md) records the native S11 purchase and financial-closeout tests, real-service Android contributor checks in both languages and the local 039 restore. S12 now has a Free path for an assigned shopper to bring an eligible earlier family request to a fresh shared inbox and price it there. The local 040 regression suite covers source and destination authority, child consent, erasure, pagination and competing destinations. A previous store review is excluded from the new-shop command. The approved [hosted rollout through 040](evidence/b11/staging-040-preparation-20261107/deployed.json) has passed its database and deployed-web checks. The mixed-phone grocery test used a local service and synthetic accounts. End-to-end access with production providers and physical phones remains open.
