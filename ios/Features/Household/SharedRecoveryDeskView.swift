@@ -27,6 +27,11 @@ struct SharedRecoveryDeskView: View {
         let meal: SharedRecoveryMeal
         let page: SharedRecoveryPage
     }
+    private struct FallbackSession: Identifiable {
+        let id = UUID()
+        let page: SharedRecoveryPage
+    }
+    @State private var fallbackSession: FallbackSession?
     @State private var selection: Selection?
     @State private var applied = false
 
@@ -51,8 +56,9 @@ struct SharedRecoveryDeskView: View {
                     }.accessibilityIdentifier("recovery.currentCoverage")
                 }
                 if model.scope.capabilities.contains("accepted_fallbacks") {
-                    NavigationLink(fallbackText("Household fallback recipes")) {
-                        SharedFallbackRoot(shop: model, household: household, page: page)
+                    Button(fallbackText("Household fallback recipes")) {
+                        applied = false
+                        fallbackSession = FallbackSession(page: page)
                     }.accessibilityIdentifier("recovery.fallbackLibrary")
                 }
                 ForEach(page.meals) { meal in
@@ -76,7 +82,27 @@ struct SharedRecoveryDeskView: View {
         }
         .navigationTitle(sharedRecoveryText("Repair a scheduled meal"))
         .task(id: shopID) { if allowed { await model.loadMealRecovery() } }
-        .onChange(of: allowed) { _, current in if !current { selection = nil } }
+        .onChange(of: allowed) { _, current in
+            if !current { selection = nil; fallbackSession = nil }
+        }
+        .onChange(of: model.recoveryRecord?.base) { _, current in
+            if let current, let fallbackSession, current != fallbackSession.page.base {
+                self.fallbackSession = nil
+            }
+        }
+        .sheet(item: $fallbackSession) { session in
+            NavigationStack {
+                SharedFallbackRoot(shop: model, household: household, page: session.page) { saved in
+                    applied = saved
+                    fallbackSession = nil
+                }
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button(ht("Close")) { fallbackSession = nil }
+                    }
+                }
+            }
+        }
         .sheet(item: $selection) { selected in
             if allowed {
                 NavigationStack {

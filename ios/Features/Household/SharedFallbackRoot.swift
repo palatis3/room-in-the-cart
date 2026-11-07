@@ -7,7 +7,7 @@ struct SharedFallbackRoot: View {
     let page: SharedRecoveryPage
     @Environment(\.scenePhase) private var scene
     @State private var model: SharedFallbackModel?
-    @Environment(\.dismiss) private var dismiss
+    let completed: (Bool) -> Void
 
     private var access: FamilyDecisionAccess? {
         guard scene == .active, showsReviewedRecovery(page, model: shop, household: household),
@@ -20,7 +20,7 @@ struct SharedFallbackRoot: View {
         Group {
             if let model, let access, model.live {
                 SharedFallbackMenu(model: model, shop: shop, household: household, page: page,
-                                   completed: { dismiss() })
+                                   completed: completed)
                     .id(access)
             } else if access != nil { ProgressView() }
             else { Text(sharedRecoveryText("Refresh the current meal record.")) }
@@ -48,7 +48,7 @@ private struct SharedFallbackMenu: View {
     @ObservedObject var shop: HouseholdShopModel
     @ObservedObject var household: HouseholdModel
     let page: SharedRecoveryPage
-    let completed: () -> Void
+    let completed: (Bool) -> Void
 
     var body: some View {
         List {

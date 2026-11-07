@@ -9,7 +9,7 @@ struct SharedFallbackOptionsView: View {
     let page: SharedRecoveryPage
     let library: SharedFallbackLibrary
     let target: SharedRecoveryMeal
-    let completed: () -> Void
+    let completed: (Bool) -> Void
     @State private var candidates: [CandidateReviewDraft]
     @State private var trip = FallbackTripDraft()
     @State private var message: String?
@@ -26,7 +26,7 @@ struct SharedFallbackOptionsView: View {
     }
 
     init(model: SharedFallbackModel, shop: HouseholdShopModel, household: HouseholdModel, page: SharedRecoveryPage,
-         library: SharedFallbackLibrary, target: SharedRecoveryMeal, completed: @escaping () -> Void) {
+         library: SharedFallbackLibrary, target: SharedRecoveryMeal, completed: @escaping (Bool) -> Void) {
         self.model = model; self.shop = shop; self.household = household; self.page = page
         self.library = library; self.target = target; self.completed = completed
         _candidates = State(initialValue: library.candidates.map(CandidateReviewDraft.init))
@@ -89,7 +89,7 @@ struct SharedFallbackOptionsView: View {
                 NavigationStack {
                     SharedRecoveryReview(model: shop, household: household, page: page, initial: chosen.preview,
                                          originalIntent: chosen.option.intent, fallback: chosen.option,
-                                         usualMinutes: ranking.usualMinutes) { _ in decision = nil; completed() }
+                                         usualMinutes: ranking.usualMinutes) { saved in completed(saved) }
                 }
             }
         }
