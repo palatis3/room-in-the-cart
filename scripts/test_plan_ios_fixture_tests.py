@@ -82,7 +82,11 @@ class PlanIOSFixtureTests(unittest.TestCase):
         self.assertEqual(set(plans["dinner"]["shards"]), {"DinnerDecisionSheetUITests"})
         self.assertEqual(plans["dinner"]["shards"]["DinnerDecisionSheetUITests"]["suite"], "DinnerDecisionSheetUITests")
         self.assertEqual(sum(len(shard["test_identifiers"]) for plan in plans.values()
-                             for shard in plan["shards"].values()), 63)
+                             for shard in plan["shards"].values()), 64)
+        carry = f"{UI_TARGET}/HouseholdRequestPackUITests/testShopperCarriesEarlierRequestOnceAndReviewsCurrentPackPrice"
+        carry_shards = [shard for shard in plans["contributor"]["shards"].values()
+                       if carry in [value.removesuffix("()") for value in shard["test_identifiers"]]]
+        self.assertEqual(len(carry_shards), 1)
         deadline = f"{UI_TARGET}/SharedMealChangeUITests/testShopperReviewsRepeatedClockTimeThenMovesDayWithoutExtendingDeadline"
         shared_edits = plans["contributor"]["shards"]["contributor-balanced-05"]["test_identifiers"]
         self.assertIn(deadline, [value.removesuffix("()") for value in shared_edits])
