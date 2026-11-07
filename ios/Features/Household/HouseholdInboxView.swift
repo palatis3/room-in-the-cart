@@ -214,9 +214,13 @@ struct HouseholdRequestDecisionView: View {
                                         HouseholdDecisionFact(ht("Deposits"), value: householdMoney(shop.quote.depositsMinor, currency: shop.quote.currency))
                                         HouseholdDecisionFact(ht("Discounts"), value: householdMoney(shop.quote.discountsMinor, currency: shop.quote.currency))
                                     }
+                                    .disclosureGroupStyle(LabeledFormDisclosureStyle(label: ht("Included charges and discounts"),
+                                                                                     identifier: "household.decision.includedCharges"))
                                     ShopperBudgetView(title: ht("Before this decision"), value: preview.before)
                                     ShopperBudgetView(title: ht("After this decision"), value: preview.after)
                                 }
+                                .disclosureGroupStyle(LabeledFormDisclosureStyle(label: ht("Checkout calculation details"),
+                                                                                 identifier: "household.decision.checkoutDetails"))
                                 HouseholdDecisionFact(ht("Preview expires"), value: householdTime(preview.expiresAt))
                                 if preview.requiresOverageAcceptance { Toggle(ht("I accept the displayed overage"), isOn: $model.acceptOverage).accessibilityIdentifier("household.decision.overage") }
                                 if preview.requiresUnknownAcceptance { Toggle(ht("I understand the total or its scope is unresolved"), isOn: $model.acceptUnknown) }

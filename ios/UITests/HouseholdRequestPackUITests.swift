@@ -121,6 +121,48 @@ import XCTest
         XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 0")
         capture("S24-shopper-access-ended-clears-private-context")
     }
+    func testShopperOpensCheckoutCalculationsAndIncludedChargesWithNoDecisionWrite() {
+        if #unavailable(iOS 18) { app.launchEnvironment["OS_ACTIVITY_MODE"] = "disable" }
+        openCerealReview()
+        XCTAssertTrue(element("household.decision.after-total").label.contains("$40.69"))
+        let outer = app.buttons["household.decision.checkoutDetails"]
+        let inner = app.buttons["household.decision.includedCharges"]
+        func open(_ button: XCUIElement, label: String) {
+            reveal(button, fullyVisible: true)
+            XCTAssertEqual(button.label, label)
+            XCTAssertEqual(button.value as? String, "Collapsed")
+            XCTAssertGreaterThanOrEqual(button.frame.height, 44)
+            XCTAssertGreaterThan(button.frame.width, app.frame.width / 2)
+            button.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: 0.5)).tap()
+            XCTAssertEqual(button.value as? String, "Expanded")
+        }
+        XCTAssertFalse(inner.exists)
+        open(outer, label: "Checkout calculation details")
+        let revision = app.staticTexts["Shop revision, 1"]
+        reveal(revision)
+        XCTAssertTrue(revision.isHittable)
+        open(inner, label: "Included charges and discounts")
+        let charges = ["Retailer fee, $1.99", "Tax, $0.75", "Deposits, $0.10", "Discounts, $0.49"]
+        for charge in charges {
+            let row = app.staticTexts[charge]
+            centerForReading(row)
+            XCTAssertTrue(row.isHittable)
+            XCTAssertEqual(row.label, charge)
+        }
+        capture("S23-shopper-itemized-checkout-details")
+        let apply = element("household.decision.apply")
+        reveal(apply)
+        XCTAssertFalse(apply.isEnabled, "Opening the calculation cannot accept the overage")
+        tap(element("household.decision.cancel"))
+        XCTAssertTrue(element("household.request.44444444-4444-4444-8444-444444444444").waitForExistence(timeout: 5))
+        tap(element("fixture.s24.end-access"))
+        XCTAssertTrue(app.staticTexts["Shopper access has ended. Return to household settings."].waitForExistence(timeout: 10))
+        XCTAssertFalse(outer.exists); XCTAssertFalse(inner.exists)
+        for charge in charges { XCTAssertFalse(app.staticTexts[charge].exists) }
+        XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 0")
+        XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 0")
+    }
+
     func testLargestTextShowsCompleteProtectedLunchNamesAndDates() throws {
         openCerealReview(extraArguments: ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"])
         let dates = ["Lunch · November 4, 2026", "Lunch · November 5, 2026"]

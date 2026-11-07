@@ -53,6 +53,9 @@ import XCTest
         XCTAssertTrue(unconfirmed.label.contains("Fruta"), unconfirmed.label)
         XCTAssertFalse(unconfirmed.label.contains("se compr\u{00f3}"), unconfirmed.label)
         XCTAssertFalse(element("delivery.requestPurchases").exists)
+        XCTAssertFalse(element("household.decision.after-total").exists)
+        XCTAssertFalse(app.buttons["household.decision.checkoutDetails"].exists)
+        XCTAssertFalse(app.buttons["household.decision.includedCharges"].exists)
     }
 
     func testSpanishLargeTextReviewStartsAtTheOriginalWording() {

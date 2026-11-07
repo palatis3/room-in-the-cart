@@ -29,6 +29,11 @@ final class S24FixtureServer: @unchecked Sendable {
     private var carryKey: String?
     private var carryBody: Data?
     let includeExistingLine: Bool
+    // The cereal fixture's $37.20 checkout includes each reviewed charge exactly once.
+    private enum CerealCheckout {
+        static let items = 3485, fee = 199, tax = 75, deposits = 10, discounts = 49
+        static let total = items + fee + tax + deposits - discounts
+    }
     let cerealScenario: Bool
     let includeMealFacts: Bool
     init(includeExistingLine: Bool = false, cerealScenario: Bool = false, includeMealFacts: Bool = true, deferredScenario: Bool = false) {
@@ -78,9 +83,11 @@ final class S24FixtureServer: @unchecked Sendable {
         }
         if path.hasSuffix("/shops/" + Self.shop) {
             if accessRevoked { return (403, Data()) }
-            let quote = try ShopperQuote(scope: "wholeCheckout", complete: true, capMinor: cerealScenario ? 3800 : 500, capScope: "wholeCheckout", fee: .fixed(0), taxesMinor: 0, depositsMinor: 0, discountsMinor: 0, observedAt: Date().addingTimeInterval(-60), expiresAt: Date().addingTimeInterval(3600))
+            let quote = try ShopperQuote(scope: "wholeCheckout", complete: true, capMinor: cerealScenario ? 3800 : 500, capScope: "wholeCheckout", fee: .fixed(cerealScenario ? CerealCheckout.fee : 0),
+                taxesMinor: cerealScenario ? CerealCheckout.tax : 0, depositsMinor: cerealScenario ? CerealCheckout.deposits : 0,
+                discountsMinor: cerealScenario ? CerealCheckout.discounts : 0, observedAt: Date().addingTimeInterval(-60), expiresAt: Date().addingTimeInterval(3600))
             let data = try JSONSerialization.jsonObject(with: JSONEncoder().encode(quote))
-            var shop: [String: Any] = ["shopId":Self.shop,"shopRevision":revision + (recordedLines.isEmpty ? 0 : 1),"authorityEpoch":1,"phase":"draft","quote":data,"lines":recordedLines + (cerealScenario ? [["lineId":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","originalItem":"Original pickup items","packs":1,"unitPriceMinor":3720,"feeEligible":true]] : []) + (includeExistingLine ? [["lineId":"77777777-7777-4777-8777-777777777777","originalItem":"Existing wraps","packs":1,"unitPriceMinor":0,"feeEligible":true]] : [])]
+            var shop: [String: Any] = ["shopId":Self.shop,"shopRevision":revision + (recordedLines.isEmpty ? 0 : 1),"authorityEpoch":1,"phase":"draft","quote":data,"lines":recordedLines + (cerealScenario ? [["lineId":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","originalItem":"Original pickup items","packs":1,"unitPriceMinor":CerealCheckout.items,"feeEligible":true]] : []) + (includeExistingLine ? [["lineId":"77777777-7777-4777-8777-777777777777","originalItem":"Existing wraps","packs":1,"unitPriceMinor":0,"feeEligible":true]] : [])]
             if includeMealFacts { shop["meals"] = Self.protectedLunches }
             return try json(shop)
         }
@@ -90,7 +97,7 @@ final class S24FixtureServer: @unchecked Sendable {
             let decision = input["decision"] as? [String: Any] ?? [:]
             let line = decision["line"] as? [String: Any]
             let unit = line?["unitPriceMinor"] as? Int
-            let before = cerealScenario ? 3720 : 0
+            let before = cerealScenario ? CerealCheckout.total : 0
             let cap = cerealScenario ? 3800 : 500
             let change: Int? = decision["choice"] as? String == "add" ? unit.map { $0 * (line?["packs"] as? Int ?? 1) } : 0
             let total = change.map { before + $0 }
