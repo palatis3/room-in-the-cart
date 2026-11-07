@@ -936,6 +936,40 @@
         }
       }
     },
+    "Review this wording for anyone who can hear it. Remove private budget details before confirming.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review this wording for anyone who can hear it. Remove private budget details before confirming."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa este texto pensando en quienes puedan oírlo. Quita los detalles privados del presupuesto antes de confirmar."
+          }
+        }
+      }
+    },
+    "Confirm this copy has no private budget details": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm this copy has no private budget details"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmar que esta copia no contiene detalles privados del presupuesto"
+          }
+        }
+      }
+    },
     "Prepare readback": {
       "extractionState": "manual",
       "localizations": {

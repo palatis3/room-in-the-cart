@@ -75,6 +75,60 @@ import XCTest
         tap(app.buttons["recovery.finishEditing"])
     }
 
+    func testShopperReviewsExactEditedCookWordingBeforeReadback() {
+        launch("en", locale: "en_US")
+        tap(app.buttons["Delivered food by meal"])
+        tap(app.buttons["delivery.cook.AAAAAAA1-AAAA-4AAA-8AAA-AAAAAAAAAAAA"])
+        let preview = app.staticTexts["delivery.cook.preview"]
+        let prepare = app.buttons["delivery.cook.prepareReadback"]
+        let confirm = app.buttons["delivery.cook.confirmReadback"]
+        let play = app.buttons["capture.readback.play"]
+        let edit = app.buttons["Edit cook wording"]
+        let field = app.textViews["Editable cook instruction"]
+        let marker = "Warm the wraps."
+
+        tap(edit)
+        tap(field)
+        field.typeText(marker)
+        tap(app.buttons["delivery.cook.finishEditing"])
+        reveal(preview)
+        let edited = preview.label
+        XCTAssertTrue(edited.contains(marker))
+        tap(prepare)
+        reveal(confirm)
+        XCTAssertFalse(play.exists)
+        tap(app.buttons["delivery.cook.cancelReadback"])
+        XCTAssertFalse(confirm.exists)
+        XCTAssertFalse(play.exists)
+        XCTAssertEqual(preview.label, edited)
+
+        tap(prepare)
+        tap(confirm)
+        reveal(play)
+        XCTAssertTrue(play.isEnabled)
+        let stop = app.buttons["Stop readback"]
+        XCTAssertFalse(stop.isEnabled, "Privacy confirmation alone must not start speech")
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label == %@", edited)).firstMatch.exists)
+
+        tap(play)
+        let pause = app.buttons["Pause readback"]
+        if pause.exists {
+            tap(pause)
+            tap(app.buttons["Resume readback"])
+            tap(stop)
+        } else {
+            XCTAssertTrue(app.staticTexts["A local voice is unavailable. The complete instruction remains readable."].exists)
+        }
+        tap(edit)
+        tap(field)
+        field.typeText(" Pack separately.")
+        tap(app.buttons["delivery.cook.finishEditing"])
+        tap(prepare)
+        reveal(confirm)
+        XCTAssertFalse(play.exists)
+        tap(app.buttons["delivery.cook.cancelReadback"])
+    }
+
     func testShopperLeavesOriginalDinnerOpenAfterAnUnresolvedReplacementPreview() {
         launch("en", locale: "en_US", recovery: true)
         let wednesday = "EEEEEEEE-EEEE-4EEE-8EEE-000000000002"

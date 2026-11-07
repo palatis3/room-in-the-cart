@@ -137,7 +137,16 @@ struct SharedDeliveryCookView: View {
     @State private var readback: CookReadbackInstruction?
     @State private var sharing: DatedCopy?
 
-    private enum ReviewAction { case read, share, save }
+    private struct WordingReview {
+        let presentation: UUID
+        let language, text: String
+
+        func matches(_ id: UUID, _ currentLanguage: String, _ currentText: String) -> Bool {
+            presentation == id && language == currentLanguage && text.utf8.elementsEqual(currentText.utf8)
+        }
+    }
+    private enum ReviewAction { case read(WordingReview?), share, save }
+    @State private var privacyReview: WordingReview?
     @State private var savedWording: [String: String] = [:]
 
     private struct DatedCopy: Identifiable {
@@ -169,25 +178,42 @@ struct SharedDeliveryCookView: View {
                     Text(pTr("English (US)")).tag("en-US")
                     Text(pTr("Español (EE. UU.)")).tag("es-US")
                 }
-                if let original {
+                if original != nil {
                     Section(ht("Recipient preview")) {
                         if editing {
                             TextEditor(text: Binding(get: { text }, set: { wording[language] = $0 }))
                                 .frame(minHeight: 190)
                                 .accessibilityLabel(pTr("Editable cook instruction"))
-                            Button(ht("Done")) { editing = false }
                         } else if let readback {
                             CookReadbackView(instruction: readback) { candidate, _ in
-                                canReview && self.readback == candidate && text == candidate.text && text == original
+                                canReview && self.readback == candidate && text.utf8.elementsEqual(candidate.text.utf8)
                             }.id(readback.authorityBindingID)
                         } else {
                             Text(verbatim: text).textSelection(.enabled).accessibilityIdentifier("delivery.cook.preview")
                         }
                         if !editing {
-                            Button(ht("Edit cook wording")) { readback = nil; editing = true }
-                            if readback == nil && text == original && (try? CaptureLimits.validate(text)) != nil {
-                                Button(ht("Prepare readback")) { Task { await review(.read) } }
+                            Button(ht("Edit cook wording")) { cancelReview(); editing = true }
+                            if readback == nil && !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && (try? CaptureLimits.validate(text)) != nil {
+                                if let review = privacyReview {
+                                    Text(ht("Review this wording for anyone who can hear it. Remove private budget details before confirming."))
+                                    Button(ht("Confirm this copy has no private budget details")) {
+                                        Task { await self.review(.read(review)) }
+                                    }
                                     .disabled(!canReview)
+                                    .accessibilityIdentifier("delivery.cook.confirmReadback")
+                                    Button(ht("Cancel"), role: .cancel) { cancelReview() }
+                                        .accessibilityIdentifier("delivery.cook.cancelReadback")
+                                } else {
+                                    Button(ht("Prepare readback")) {
+                                        if let original, text.utf8.elementsEqual(original.utf8) {
+                                            Task { await review(.read(nil)) }
+                                        } else {
+                                            privacyReview = WordingReview(presentation: presentation, language: language, text: text)
+                                        }
+                                    }
+                                    .disabled(!canReview)
+                                    .accessibilityIdentifier("delivery.cook.prepareReadback")
+                                }
                             }
                         }
                     }
@@ -230,6 +256,14 @@ struct SharedDeliveryCookView: View {
         }
         .navigationTitle(pTr("Tell the cook"))
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            if editing {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(ht("Done")) { editing = false }
+                        .accessibilityIdentifier("delivery.cook.finishEditing")
+                }
+            }
+        }
         .onAppear { prepare() }
         .onChange(of: language) { _, _ in prepare() }
         .onChange(of: allowed) { _, current in if !current { clear() } }
@@ -242,6 +276,7 @@ struct SharedDeliveryCookView: View {
 
     private func cancelReview() {
         presentation = UUID()
+        privacyReview = nil
         readback = nil
     }
 
@@ -266,6 +301,15 @@ struct SharedDeliveryCookView: View {
     private func review(_ action: ReviewAction) async {
         guard canReview, !editing else { return }
         let reviewedLanguage = language, reviewedText = text, reviewID = presentation
+        if case .read(let confirmation) = action {
+            if let confirmation {
+                guard privacyReview?.matches(reviewID, reviewedLanguage, reviewedText) == true,
+                      confirmation.matches(reviewID, reviewedLanguage, reviewedText) else { return }
+            } else {
+                guard let original, reviewedText.utf8.elementsEqual(original.utf8) else { return }
+            }
+        }
+        privacyReview = nil
         retry = false
         checking = true
         defer { checking = false }
@@ -290,7 +334,7 @@ struct SharedDeliveryCookView: View {
             guard unchanged else {
                 stale = true; clear(); return
             }
-            guard allowed, model.pending == nil, !model.busy, scenePhase == .active, !editing, language == reviewedLanguage, text == reviewedText else { return }
+            guard allowed, model.pending == nil, !model.busy, scenePhase == .active, !editing, language == reviewedLanguage, text.utf8.elementsEqual(reviewedText.utf8) else { return }
             readback = nil
             switch action {
             case .share:
@@ -310,7 +354,7 @@ struct SharedDeliveryCookView: View {
                     savedWording[reviewedLanguage] = reviewedText
                 }
             case .read:
-                guard reviewedText == original, let checkedAt = serviceDate(coverage.asOf) else { return }
+                guard let checkedAt = serviceDate(coverage.asOf) else { return }
                 readback = CookReadbackInstruction(authorityBindingID: UUID(), sourceID: occurrence.id,
                     sourceRevision: Int64(page.recoveryRevision.flatMap { $0 > 0 ? $0 : nil } ?? page.supplyRevision), createdAt: checkedAt, startBefore: Date().addingTimeInterval(60),
                     text: reviewedText, localeIdentifier: reviewedLanguage, excludesPrivateBudget: true)
