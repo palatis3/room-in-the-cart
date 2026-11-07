@@ -18,10 +18,15 @@ import XCTest
     func testInclusiveCheckoutFieldsAndResultSurviveRestartAndUnchangedSave() {
         launch(reset: true)
         tap(app.buttons["openPickupList"]); tap(app.buttons["ledgerStartShop"])
-        fill("Checkout restoration pickup", field: app.textFields["ledgerShopName"])
+        let shopName = app.descendants(matching: .any).matching(identifier: "ledgerShopName").firstMatch
+        fill("Checkout restoration pickup", field: shopName)
         tap(app.buttons["ledgerCreateShop"]); tap(app.buttons["ledgerImport"])
         fill("2 wraps", field: app.textViews["ledgerImportText"])
-        tap(app.buttons["ledgerReviewImport"]); tap(app.buttons["ledgerCommitImport"])
+        tap(app.buttons["ledgerReviewImport"])
+        let addReviewedList = app.buttons["ledgerCommitImport"]
+        XCTAssertTrue(addReviewedList.waitForExistence(timeout: 8))
+        XCTAssertTrue(addReviewedList.isHittable)
+        addReviewedList.tap()
         shopRoot()
         tap(app.buttons["Review checkout"]); tap(app.buttons["Continue to checkout review"])
         tap(app.buttons["Apply reviewed checkout copy"]); tap(app.buttons["Review whole checkout"])
@@ -46,17 +51,20 @@ import XCTest
     }
 
     private func assertRestoredCheckout() {
-        let inclusive = app.switches["Retailer total already includes all charges"]
-        reveal(inclusive)
-        // This is the original defect: the old app still shows the saved result
-        // below, while this switch has reset and its saved total field is gone.
-        XCTAssertEqual(inclusive.value as? String, "1", "The saved inclusive pricing mode must reopen unchanged")
-        for (label, expected) in [("Inclusive total", "3"), ("Store", "Hydration market"),
+        for (label, expected) in [("Store", "Hydration market"),
                                   ("Branch", "Main branch"), ("Pickup or delivery slot", "Tuesday 5 PM"),
                                   ("Source of these prices", "Reviewed checkout snapshot"), ("Spending cap", "10")] {
             let field = app.textFields[label]; reveal(field)
             XCTAssertEqual(field.value as? String, expected, "Restored checkout field: " + label)
         }
+        let inclusive = app.switches["Retailer total already includes all charges"]
+        reveal(inclusive)
+        // This is the original defect: the old app still shows the saved result
+        // below, while this switch has reset and its saved total field is gone.
+        XCTAssertEqual(inclusive.value as? String, "1", "The saved inclusive pricing mode must reopen unchanged")
+        let total = app.textFields["Inclusive total"]
+        reveal(total)
+        XCTAssertEqual(total.value as? String, "3")
         reveal(app.staticTexts.matching(NSPredicate(format: "label == %@", "$3.00")).firstMatch)
         reveal(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "room remaining")).firstMatch)
         XCTAssertFalse(app.staticTexts["Whether this fits the cap is unresolved"].exists)
