@@ -259,6 +259,18 @@ class BuiltAppVerificationTests(unittest.TestCase):
         (debug / "PlugIns/RoomInTheCartTests.xctest").mkdir()
         verify_built_app(debug, "Debug")
 
+    def test_rejects_loose_shopper_and_local_purchase_fixtures_in_distributed_bundles(self):
+        staging = self.make_app("Staging", "dev.roominthecart.app.staging", "roominthecart-staging", "iPhoneOS")
+        for app, configuration in ((self.app, "Release"), (staging, "Staging")):
+            for resource in ("SharedFallbackShop.json", "ReleaseLedger500.txt", "Local.storekit"):
+                with self.subTest(configuration=configuration, resource=resource):
+                    path = app / "PlugIns/RoomInTheCartShare.appex" / resource
+                    path.write_text("test-only input")
+                    with self.assertRaisesRegex(ValueError, "Test resource embedded"):
+                        verify_built_app(app, configuration)
+                    path.unlink()
+            verify_built_app(app, configuration)
+
     def test_rejects_incorrect_device_family_floor_and_platform(self):
         for bundle in (self.app, self.widget, self.share):
             with self.subTest(bundle=bundle.name):
