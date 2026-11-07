@@ -583,7 +583,8 @@ public actor HouseholdService {
     public func currentHelperView(grantID: String) async throws -> HelperView {
         guard UUID(uuidString: grantID) != nil, selectedGrantID == grantID else { throw ClientError.accessEnded }
         let value: HelperView = try await perform("v1/views/\(grantID)/current", method: "GET", absolutePath: true)
-        guard value.grantId == grantID else { throw ClientError.invalidResponse }
+        guard value.grantId == grantID, value.revision > 0, validHelperTimestamp(value.asOf),
+              validHelperTimestamp(value.expiresAt) else { throw ClientError.invalidResponse }
         return value
     }
     public func prepareHelperProposal(grantID: String, baseRevision: Int, correction: String) async throws -> HelperProposalIntent {
@@ -599,12 +600,14 @@ public actor HouseholdService {
         let start = generation
         guard intent.householdID == householdID, intent.memberID == memberID, intent.deviceID == enrollment?.deviceId,
               intent.grantID == selectedGrantID else { throw ClientError.accessEnded }
-        struct Key: Decodable { let clientKey: String }
-        guard try JSONDecoder().decode(Key.self, from: intent.bytes).clientKey == intent.id else { throw ClientError.configuration }
+        guard let baseRevision = intent.reviewedRevision else { throw ClientError.configuration }
         let view = try await currentHelperView(grantID: intent.grantID)
         guard start == generation else { throw ClientError.cancelled }
         guard view.canPropose else { throw ClientError.accessEnded }
-        return try await perform("v1/views/\(intent.grantID)/proposals", method: "POST", body: intent.bytes, absolutePath: true)
+        let receipt: HelperProposalReceipt = try await perform("v1/views/\(intent.grantID)/proposals", method: "POST", body: intent.bytes, absolutePath: true)
+        guard receipt.grantId == intent.grantID, receipt.baseRevision == baseRevision, receipt.status == "pending",
+              UUID(uuidString: receipt.proposalId) != nil else { throw ClientError.invalidResponse }
+        return receipt
     }
     public func managedHelperProjection(grantID: String, shopID: String) async throws -> ManagedHelperProjection {
         guard UUID(uuidString: grantID) != nil, selectedGrantID == nil else { throw ClientError.configuration }

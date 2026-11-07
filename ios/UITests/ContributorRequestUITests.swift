@@ -12,6 +12,34 @@ import XCTest
         if testRun?.failureCount ?? 0 > 0 { capture("Contributor-request-failure") }
         app.terminate()
     }
+    func testHelperSeesCurrentInstructionRevisionAndDateAfterRefreshInBothLanguages() {
+        for (language, entry, label, refresh) in [
+            ("en", "Cook instructions", "Current instruction revision", "Refresh instructions"),
+            ("es", "Instrucciones para cocinar", "Versión actual de las instrucciones", "Actualizar instrucciones")
+        ] {
+            app.launchArguments = ["--ui-testing", "--helper-revision-fixture", "-AppleLanguages", "(\(language))", "-AppleLocale", language + "_US"]
+            app.launch()
+            let open = app.buttons[entry]
+            XCTAssertTrue(open.waitForExistence(timeout: 30))
+            tap(open)
+            func read(_ number: Int, _ action: String) {
+                let instruction = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", action)).firstMatch
+                XCTAssertTrue(instruction.waitForExistence(timeout: 10))
+                let revision = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@ AND (value == %@ OR label CONTAINS %@)", label, String(number), String(number))).firstMatch
+                XCTAssertTrue(revision.exists, app.debugDescription)
+            }
+            read(12, "Save two")
+            let updated = element("helper.instructions.asOf")
+            func timestamp() -> String { updated.label + (updated.value as? String ?? "") }
+            let before = timestamp()
+            XCTAssertTrue(before.contains("2026"), before)
+            tap(app.buttons[refresh])
+            read(13, "Save three")
+            XCTAssertNotEqual(timestamp(), before)
+            app.terminate()
+        }
+    }
+
     func testSpanishLargeTextReviewStartsAtTheOriginalWording() {
         if ProcessInfo.processInfo.operatingSystemVersion.majorVersion == 17 {
             app.launchEnvironment["OS_ACTIVITY_MODE"] = "disable"

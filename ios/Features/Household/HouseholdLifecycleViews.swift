@@ -183,14 +183,26 @@ struct HouseholdHelperView: View {
                 if let view = model.helperView {
                     Section {
                         Text(view.shopLabel).font(.headline)
+                        LabeledContent(ht("Current instruction revision"), value: view.revision.formatted())
                         LabeledContent(ht("Last updated"), value: householdTime(view.asOf))
+                            .accessibilityIdentifier("helper.instructions.asOf")
                         LabeledContent(ht("Access expires"), value: householdTime(view.expiresAt))
                         ForEach(Array(view.items.enumerated()), id: \.offset) { _, item in helperInstruction(item) }
                     }
-                    if let receipt = model.proposalReceipt { Section { Text(receipt.status == "pending" ? ht("Suggestion received for shopper review") : ht("Check current status")) } }
-                    if model.pendingProposal != nil {
+                    if let receipt = model.proposalReceipt {
+                        Section {
+                            Text(ht("Suggestion received for shopper review"))
+                            LabeledContent(ht("Instruction revision reviewed"), value: receipt.baseRevision.formatted())
+                        }
+                    }
+                    if let pending = model.pendingProposal {
                         Section(ht("Pending suggestion")) {
-                            Text(ht("The result is not confirmed. Retry the same suggestion before writing another one."))
+                            if model.proposalReceipt == nil {
+                                if let revision = pending.reviewedRevision {
+                                    LabeledContent(ht("Instruction revision reviewed"), value: revision.formatted())
+                                }
+                                Text(ht("The result is not confirmed. Retry the same suggestion before writing another one."))
+                            }
                             Button(ht("Retry the same suggestion")) { Task { await model.retryProposal() } }
                             Button(ht("Review and clear this suggestion retry")) { clearProposal = true }
                         }

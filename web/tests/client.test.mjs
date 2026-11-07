@@ -243,7 +243,11 @@ test('revocation purges household display and exposes no cached request',async()
 });
 
 test('helper content is inert text, read-only grants cannot propose or show adult routes',async()=>{
- const {root}=await setup(fakeAPI({session:async()=>({...session(),role:'helper',grantId:'grant-a'}),view:async()=>({grantId:'grant-a',shopId:'shop-a',shopLabel:'Tuesday',revision:2,asOf:'2026-01-01T12:00:00Z',expiresAt:'2099-01-01T00:00:00Z',canPropose:false,instructions:[{item:'<img src=x onerror=alert(1)>',amount:'4 wraps',action:'Reserve two for lunch'}]})}));
+ const api=fakeAPI({session:async()=>({...session(),role:'helper',grantId:'grant-a'}),view:async()=>({grantId:'grant-a',shopId:'shop-a',shopLabel:'Tuesday',revision:2,asOf:'2026-01-01T12:00:00Z',expiresAt:'2099-01-01T00:00:00Z',canPropose:false,instructions:[{item:'<img src=x onerror=alert(1)>',amount:'4 wraps',action:'Reserve two for lunch'}]})});
+ const {root}=await setup(api);
+ assert.match(root.textContent,/Revision: 2/);assert.match(root.textContent,/As of: [^:]*2026/);
+ const spanish=await setup(api,'es-US');
+ assert.match(spanish.root.textContent,/Versión: 2/);assert.match(spanish.root.textContent,/Actualizado: [^:]*2026/);
  assert.equal(root.querySelector('img'),null);assert.match(root.textContent,/Reserve two for lunch/);assert.match(root.textContent,/read-only/);assert.doesNotMatch(root.textContent,/Ask the shopper|Send proposal/);
 });
 
@@ -600,11 +604,12 @@ test('a helper correction draft is cleared when refresh opens a different grant'
  let grantId='grant-a';
  const {root,dom}=await setup(fakeAPI({
   session:async()=>({...session(),role:'editor',grantId}),
-  view:async()=>({grantId,shopId:'shop-a',shopLabel:grantId,revision:1,asOf:'2026-01-01T00:00:00Z',expiresAt:'2099-01-01T00:00:00Z',canPropose:true,instructions:[]})
+  view:async()=>({grantId,shopId:'shop-a',shopLabel:grantId,revision:grantId==='grant-a'?1:4,asOf:'2026-01-01T00:00:00Z',expiresAt:'2099-01-01T00:00:00Z',canPropose:true,instructions:[]})
  }));
+ assert.match(root.textContent,/Revision: 1/);
  type(dom,'correction','A note for the first cook');
  grantId='grant-b';click(root,'Refresh');await waitForIdle(root);
- assert.match(root.textContent,/grant-b/);
+ assert.match(root.textContent,/grant-b/);assert.match(root.textContent,/Revision: 4/);assert.doesNotMatch(root.textContent,/Revision: 1/);
  assert.equal(dom.window.document.getElementById('correction').value,'');
 });
 
@@ -632,7 +637,7 @@ test('lost editor reply retries identical reviewed bytes after refresh advances 
  assert.match(root.textContent,/receipt is unconfirmed/);assert.doesNotMatch(root.textContent,/Not saved/);
  assert.equal(root.querySelector('#correction'),null);assert.match(root.textContent,/only kept on this page/);
  revision=8;click(root,'Refresh');await waitForIdle(root);
- assert.match(root.textContent,/Reviewed revision: 7/);click(root,'Retry original suggestion');await waitForIdle(root);
+ assert.match(root.textContent,/Revision: 8/);assert.match(root.textContent,/Reviewed revision: 7/);click(root,'Retry original suggestion');await waitForIdle(root);
  assert.equal(commits,1);assert.equal(requests.length,2);assert.equal(requests[0],requests[1]);
  assert.match(root.textContent,/Suggestion received for shopper review/);
  click(root,'Check suggestion status');await waitForIdle(root);

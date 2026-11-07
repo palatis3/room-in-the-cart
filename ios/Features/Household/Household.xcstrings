@@ -1650,6 +1650,23 @@
         }
       }
     },
+    "Current instruction revision": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current instruction revision"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versión actual de las instrucciones"
+          }
+        }
+      }
+    },
     "Current household permission is required to manage shared views.": {
       "localizations": {
         "en": {
