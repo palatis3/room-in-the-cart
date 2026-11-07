@@ -54,6 +54,7 @@ private struct SurfaceImportReview: View {
                         Section {
                             SurfaceImportedLineEditor(row: row, locked: draft.phase == .committing) { name, amount, unit in composition.editDraftLine(row.id, name: name, amount: amount, unit: unit) }
                             Text(row.originalText).font(.footnote)
+                            if let pack = row.originalPack { LedgerPackLabelFacts(pack: pack) }
                             if row.quantity == nil { Text(SurfaceCopy.text("Quantity unresolved")) }
                             if draft.phase == .committing {
                                 if let choice = draft.decisions[row.id] { Text(confirmedChoice(choice, row: row)) }

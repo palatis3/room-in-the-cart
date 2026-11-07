@@ -98,6 +98,32 @@ import UIKit
         enterWeighedPickup(knownTax: false)
     }
 
+    func testReviewedQuantityAndOriginalPackLabelSurviveRestartIndependently() {
+        launch(reset: true)
+        tap(element("openPickupList"))
+        tap(element("ledgerImport"))
+        let original = "2x15 oz pinto beans"
+        fill(original, into: "ledgerImportText")
+        tap(element("ledgerReviewImport"))
+        assertText("Packs on the original label: 2")
+        assertText("Amount per pack on the original label: 15 ounces (weight)")
+        let amount = element("ledgerImportAmount-1")
+        reveal(amount)
+        XCTAssertEqual(amount.value as? String, "30")
+        fill("28", into: "ledgerImportAmount-1", replacing: true)
+        tap(element("ledgerCommitImport"))
+        let food = app.buttons["Inspect pinto beans"]
+        reveal(food)
+        let id = food.identifier
+        restart()
+        if !element("ledgerSearch").waitForExistence(timeout: 4) { tap(element("openPickupList")) }
+        tap(element(id))
+        assertText("28 ounces (weight)")
+        assertText(original)
+        assertText("Packs on the original label: 2")
+        assertText("Amount per pack on the original label: 15 ounces (weight)")
+    }
+
     func testLargeTextKeepsLongNativePasteEditableAndReviewReachable() throws {
         let url = try XCTUnwrap(Bundle(for: Self.self).url(forResource: "ReleaseLedger500", withExtension: "txt"))
         let fixture = try String(contentsOf: url, encoding: .utf8)

@@ -38,6 +38,7 @@ func ledgerAmountInput(_ value: Rational) -> String {
 func ledgerContributionNote(_ note: String) -> String {
     switch note {
     case "Review the quantity and unit.": return ledgerText("Review the quantity and unit.")
+    case "Review the pack count and usable amount in each pack.": return ledgerText("Review the pack count and usable amount in each pack.")
     case "Review the unsupported or approximate unit.": return ledgerText("Review the unsupported or approximate unit.")
     case "Add the item name.": return ledgerText("Add the item name.")
     case "quantityUnknown": return ledgerText("Quantity unresolved")

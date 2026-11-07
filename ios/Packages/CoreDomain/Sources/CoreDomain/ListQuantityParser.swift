@@ -3,6 +3,19 @@ import Foundation
 /// The two list entry paths share these exact quantities and US customary units.
 /// A count remains available for ordinary item names with no measure.
 public enum ListQuantityParser {
+    public static func itemTokens(_ text: String) -> ArraySlice<String> {
+        var tokens = text.split(whereSeparator: \.isWhitespace).map(String.init)[...]
+        // Only expand a leading printed multiplier. Keep identifiers such as X15 in the product name.
+        if let first = tokens.first, let index = first.firstIndex(where: { "xX×".contains($0) }) {
+            let left = first[..<index], right = first[first.index(after: index)...]
+            if !left.isEmpty, !right.isEmpty, left.utf8.allSatisfy({ (48...57).contains($0) }),
+               (try? number(String(right), allowingWords: false)) != nil {
+                tokens.replaceSubrange(tokens.startIndex...tokens.startIndex, with: [String(left), "×", String(right)])
+            }
+        }
+        return tokens
+    }
+
     public static func takeAmount(from tokens: inout ArraySlice<String>, allowingWords: Bool = false) throws -> Rational {
         guard let first = tokens.first else { throw DomainError.invalidNumber }
         var rest = tokens.dropFirst()
@@ -37,6 +50,98 @@ public enum ListQuantityParser {
     public static func needsUnitReview(_ token: String?) -> Bool {
         guard let token else { return false }
         return unresolvedMeasures.contains(token.lowercased())
+    }
+
+    public struct PackLabel: Codable, Equatable, Sendable {
+        public let count: Int?
+        public let amountPerPack: Quantity?
+
+        func validate() throws {
+            guard count.map({ $0 >= 0 }) ?? true else { throw DomainError.negativeQuantity }
+            try amountPerPack?.validate()
+        }
+
+        public var total: Quantity? {
+            guard let count, let amountPerPack,
+                  let amount = try? amountPerPack.amount.multiplied(by: Rational(Int64(count))) else { return nil }
+            return Quantity(amount: amount, unit: amountPerPack.unit, originalLiteral: amountPerPack.originalLiteral)
+        }
+    }
+
+    /// Parse an explicit pack chain, leaving the source product name in tokens.
+    /// Inner package counts qualify the contents of one outer pack.
+    public static func takePackLabel(count: Rational, from tokens: inout ArraySlice<String>, original: String) -> PackLabel? {
+        let count = count.denominator == 1 ? Int(exactly: count.numerator) : nil
+        if !consumePackMarker(from: &tokens) {
+            // "2 15 oz cans of beans" places the size before the container.
+            var rest = tokens
+            guard let amount = try? takeAmount(from: &rest), let unit = takeUnit(from: &rest),
+                  rest.first.map({ containers.contains($0.lowercased()) }) == true,
+                  consumePackMarker(from: &rest) else { return nil }
+            tokens = rest
+            return PackLabel(count: count, amountPerPack: Quantity(amount: amount, unit: unit, originalLiteral: original))
+        }
+        let unresolved = PackLabel(count: count, amountPerPack: nil)
+        if let labelled = trailingSize(in: &tokens, original: original) {
+            return PackLabel(count: count, amountPerPack: labelled)
+        }
+        var multiplier = Rational.one
+        while let amount = try? takeAmount(from: &tokens, allowingWords: true) {
+            if consumePackMarker(from: &tokens) {
+                guard amount.denominator == 1, let nested = try? multiplier.multiplied(by: amount) else { return unresolved }
+                multiplier = nested
+                continue
+            }
+            let measure = takeUnit(from: &tokens)
+            guard !(measure == nil && needsUnitReview(tokens.first)), !tokens.isEmpty,
+                  !tokens.contains(where: isPackMarker), let contents = try? multiplier.multiplied(by: amount)
+            else { return unresolved }
+            return PackLabel(count: count, amountPerPack: Quantity(amount: contents, unit: measure ?? .count,
+                                                                    originalLiteral: original))
+        }
+        return unresolved
+    }
+
+    /// Both "beans, 15 oz each" and "frijoles, 15 onzas cada una" explicitly
+    /// identify a per-pack amount. A bare number in the product name does not.
+    private static func trailingSize(in tokens: inout ArraySlice<String>, original: String) -> Quantity? {
+        guard let last = tokens.last?.lowercased().trimmingCharacters(in: CharacterSet(charactersIn: ")")) else { return nil }
+        var body = tokens.dropLast()
+        if last == "una" || last == "uno" {
+            guard body.last?.lowercased() == "cada" else { return nil }
+            body = body.dropLast()
+        } else if last != "each" { return nil }
+
+        // A mixed fraction and a two-word unit occupy at most four tokens.
+        for position in body.suffix(4).indices where position > body.startIndex {
+            var suffix = Array(body[position...])[...]
+            if let first = suffix.first, first.hasPrefix("(") { suffix[suffix.startIndex] = String(first.dropFirst()) }
+            guard let amount = try? takeAmount(from: &suffix), let unit = takeUnit(from: &suffix), suffix.isEmpty else { continue }
+            var name = body[..<position]
+            if name.last == "de" { name = name.dropLast() }
+            if let tail = name.last, tail.hasSuffix(",") { name[name.index(before: name.endIndex)] = String(tail.dropLast()) }
+            guard !name.isEmpty, !name.contains(where: isPackMarker) else { return nil }
+            tokens = name
+            return Quantity(amount: amount, unit: unit, originalLiteral: original)
+        }
+        return nil
+    }
+
+    public static func isPackMarker(_ token: String) -> Bool {
+        let word = token.lowercased()
+        return containers.contains(word) || word == "×" || word == "x"
+    }
+
+    private static let containers: Set<String> = [
+        "pack", "packs", "package", "packages", "box", "boxes", "can", "cans",
+        "paquete", "paquetes", "caja", "cajas", "lata", "latas"
+    ]
+
+    private static func consumePackMarker(from tokens: inout ArraySlice<String>) -> Bool {
+        guard let first = tokens.first, isPackMarker(first) else { return false }
+        tokens = tokens.dropFirst()
+        if let connector = tokens.first, ["of", "de"].contains(connector.lowercased()) { tokens = tokens.dropFirst() }
+        return true
     }
 
     private static func isFractionToken(_ token: String) -> Bool {

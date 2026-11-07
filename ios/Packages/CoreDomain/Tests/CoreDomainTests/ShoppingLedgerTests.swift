@@ -98,6 +98,36 @@ final class ShoppingLedgerTests: XCTestCase {
         }
     }
 
+    func testPackLabelsKeepTheirExactContentsAndOriginalWordingAcrossImport() throws {
+        var shop = ShoppingLedger()
+        let text = "2 × 15 oz pinto beans\n2 cajas de 6 paquetes de 8 tortillas\n2 packs of 6 packs of wraps"
+        let preview = shop.stageImport(text: text, source: .paste)
+        XCTAssertEqual(preview.lines.map(\.name), ["pinto beans", "tortillas", "wraps"])
+        XCTAssertEqual(preview.lines.map { $0.quantity?.amount }, [try Rational(30), try Rational(96), nil])
+        XCTAssertEqual(preview.lines.map { $0.quantity?.unit }, [.ounce, .count, nil])
+        XCTAssertNotNil(preview.lines[2].unresolvedReason)
+        XCTAssertEqual(preview.lines.map { $0.originalPack?.count }, [2, 2, 2])
+        XCTAssertEqual(preview.lines[0].originalPack?.amountPerPack?.amount, try Rational(15))
+        for wording in ["2x15 oz pinto beans", "2 15 oz cans of pinto beans", "2 cans of pinto beans, 15 oz each",
+                        "2 latas de pinto beans (15 onzas cada una)"] {
+            let item = shop.stageImport(text: wording).lines[0]
+            XCTAssertEqual(item.name, "pinto beans", wording)
+            XCTAssertEqual(item.quantity?.amount, try Rational(30), wording)
+            XCTAssertEqual(item.quantity?.unit, .ounce, wording)
+            XCTAssertEqual(item.originalPack?.count, 2, wording)
+            XCTAssertEqual(item.originalText, wording)
+        }
+        let ambiguous = shop.stageImport(text: "2 boxes of 3 packs of beans, 15 oz each").lines[0]
+        XCTAssertNil(ambiguous.quantity)
+        let batch = try shop.commitImport(preview)
+        shop = try roundTrip(shop)
+        XCTAssertEqual(shop.importBatches.first?.originalText, text)
+        XCTAssertEqual(shop.contributions.map(\.originalPack), preview.lines.map(\.originalPack))
+        XCTAssertEqual(shop.contributions.map(\.originalText), text.components(separatedBy: .newlines))
+        try shop.undoImport(batchID: batch)
+        XCTAssertTrue(shop.search("").isEmpty)
+    }
+
     func testDuplicatePasteNeedsExplicitDecisionAndRetryIsIdempotent() throws {
         var ledger = ShoppingLedger()
         let first = ledger.stageImport(text: "12 wraps", source: .paste)

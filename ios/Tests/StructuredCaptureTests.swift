@@ -39,6 +39,35 @@ final class StructuredCaptureTests: XCTestCase {
         XCTAssertTrue(try row("1 1/0 cups rice").amount.isEmpty)
     }
 
+    func testMultipliedAndNestedPackLabelsKeepExactPackEvidenceWithoutInventingMissingContents() throws {
+        let label = "2 × 15 oz pinto beans"
+        var draft = try row(label)
+        XCTAssertEqual(draft.name, "pinto beans")
+        XCTAssertEqual(draft.packCount, "2")
+        XCTAssertEqual(draft.amountPerPack, "15")
+        XCTAssertEqual(draft.packUnit, .ounce)
+        draft.confirmed = true
+        let capture = try XCTUnwrap(draft.reviewed(expectedDestination: destination))
+        var shop = ShoppingLedger()
+        let preview = try shop.stageCaptureImport(id: UUID(), originalText: label, source: .paste, lines: [capture])
+        try shop.commitImport(preview)
+        XCTAssertEqual(shop.contributions.first?.quantity?.amount, try Rational(30))
+        XCTAssertEqual(shop.contributions.first?.quantity?.unit, .ounce)
+        XCTAssertEqual(shop.contributions.first?.capture?.packCount, 2)
+        XCTAssertEqual(shop.contributions.first?.originalText, label)
+        let nested = try row("dos cajas de 6 paquetes de 8 tortillas")
+        XCTAssertEqual(nested.name, "tortillas")
+        XCTAssertEqual(nested.packCount, "2")
+        XCTAssertEqual(nested.amountPerPack, "48")
+        var missing = try row("2 packs of 6 packs of wraps")
+        XCTAssertTrue(missing.amountPerPack.isEmpty)
+        XCTAssertTrue(missing.warnings.contains(.packUnknown))
+        missing.confirmed = true
+        let unknown = try XCTUnwrap(missing.reviewed(expectedDestination: destination))
+        let unknownPreview = try shop.stageCaptureImport(id: UUID(), originalText: missing.originalText, source: .paste, lines: [unknown])
+        XCTAssertNil(unknownPreview.lines.first?.quantity)
+    }
+
     func testPackEvidenceCommitsTogetherWithExclusionsAndOriginal() throws {
         let original = "two packs of six wraps for tacos without peanuts to this pickup"
         var draft = try row(original); draft.confirmed = true

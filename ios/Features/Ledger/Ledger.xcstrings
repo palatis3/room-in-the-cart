@@ -257,6 +257,22 @@
         }
       }
     },
+    "Amount per pack on the original label: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amount per pack on the original label: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad por paquete en la etiqueta original: %@"
+          }
+        }
+      }
+    },
     "Amount, unknown if blank": {
       "localizations": {
         "en": {
@@ -2033,6 +2049,22 @@
         }
       }
     },
+    "Packs on the original label: %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Packs on the original label: %lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paquetes en la etiqueta original: %lld"
+          }
+        }
+      }
+    },
     "Paste list": {
       "localizations": {
         "en": {
@@ -2702,6 +2734,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Revisa la cantidad y la unidad."
+          }
+        }
+      }
+    },
+    "Review the pack count and usable amount in each pack.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the pack count and usable amount in each pack."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa el número de paquetes y la cantidad utilizable de cada uno."
           }
         }
       }

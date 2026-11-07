@@ -360,6 +360,16 @@ struct LedgerImportResolutionPicker: View {
     }
 }
 
+struct LedgerPackLabelFacts: View {
+    let pack: ListQuantityParser.PackLabel
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            if let count = pack.count { Text(ledgerFormat("Packs on the original label: %lld", Int64(count))) }
+            Text(ledgerFormat("Amount per pack on the original label: %@", ledgerQuantity(pack.amountPerPack)))
+        }.font(.footnote)
+    }
+}
+
 private struct LedgerImportRowView: View {
     let number: Int
     @Binding var line: StagedImportLine
@@ -380,6 +390,7 @@ private struct LedgerImportRowView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(line.originalText).font(.caption).foregroundStyle(Theme.secondary)
+            if let pack = line.originalPack { LedgerPackLabelFacts(pack: pack) }
             if let capture = line.capture {
                 Text(line.name).font(.headline)
                 if let quantity = line.quantity { Text(ledgerAmountInput(quantity.amount) + " " + quantity.unit.displayName) }

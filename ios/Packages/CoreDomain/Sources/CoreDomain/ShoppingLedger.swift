@@ -220,6 +220,7 @@ public struct LedgerContribution: Codable, Equatable, Sendable, Identifiable {
     public var exclusions: [String]
     public var removedAt: Date?
     public var capture: CaptureImportMetadata? = nil
+    public var originalPack: ListQuantityParser.PackLabel? = nil
 }
 
 public enum AllocationKind: String, Codable, Sendable { case duplicate, withinExisting }
@@ -274,16 +275,17 @@ public struct StagedImportLine: Codable, Equatable, Sendable, Identifiable {
     public var duplicateLineIDs: [UUID]
     public var exclusions: [String]
     public var capture: CaptureImportMetadata?
+    public let originalPack: ListQuantityParser.PackLabel?
 
     public init(id: UUID, proposedLineID: UUID, originalText: String, name: String, quantity: Quantity?,
                 unresolvedReason: String?, duplicateLineIDs: [UUID], exclusions: [String] = [],
-                capture: CaptureImportMetadata? = nil) {
+                capture: CaptureImportMetadata? = nil, originalPack: ListQuantityParser.PackLabel? = nil) {
         self.id = id; self.proposedLineID = proposedLineID; self.originalText = originalText; self.name = name
         self.quantity = quantity; self.unresolvedReason = unresolvedReason; self.duplicateLineIDs = duplicateLineIDs
-        self.exclusions = exclusions; self.capture = capture
+        self.exclusions = exclusions; self.capture = capture; self.originalPack = originalPack
     }
     private enum CodingKeys: String, CodingKey {
-        case id, proposedLineID, originalText, name, quantity, unresolvedReason, duplicateLineIDs, exclusions, capture
+        case id, proposedLineID, originalText, name, quantity, unresolvedReason, duplicateLineIDs, exclusions, capture, originalPack
     }
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -294,6 +296,7 @@ public struct StagedImportLine: Codable, Equatable, Sendable, Identifiable {
         duplicateLineIDs = try c.decode([UUID].self, forKey: .duplicateLineIDs)
         exclusions = try c.decodeIfPresent([String].self, forKey: .exclusions) ?? []
         capture = try c.decodeIfPresent(CaptureImportMetadata.self, forKey: .capture)
+        originalPack = try c.decodeIfPresent(ListQuantityParser.PackLabel.self, forKey: .originalPack)
     }
 }
 
@@ -303,7 +306,7 @@ private extension StagedImportLine {
             productName: name, quantity: quantity, originalText: originalText,
             notes: [capture?.purpose, capture?.destination, unresolvedReason]
                 .compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: "\n"),
-            exclusions: exclusions, removedAt: nil, capture: capture)
+            exclusions: exclusions, removedAt: nil, capture: capture, originalPack: originalPack)
     }
 }
 
@@ -547,7 +550,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
             let name = normalizedProduct(parsed.name), proposedLineID = UUID()
             staged.append(StagedImportLine(id: UUID(), proposedLineID: proposedLineID, originalText: original,
                 name: parsed.name, quantity: parsed.quantity, unresolvedReason: parsed.reason,
-                duplicateLineIDs: candidatesByName[name] ?? []))
+                duplicateLineIDs: candidatesByName[name] ?? [], originalPack: parsed.pack))
             candidatesByName[name, default: []].append(proposedLineID)
         }
         return StagedListImport(id: importID, shopID: id, baseRevision: revision, source: source, originalText: text, lines: staged)
@@ -925,6 +928,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
             guard lineIDs.contains(source.lineID) else { throw LedgerError.notFound(source.lineID) }
             try ledgerText(source.productName, nonempty: true, maximum: 512); try ledgerText(source.originalText)
             try ledgerText(source.notes); try source.quantity?.validate(); try validateExclusions(source.exclusions)
+            try source.originalPack?.validate()
             _ = try source.capture?.resolvedQuantity()
             try permittedProduct(source.productName, exclusions: source.exclusions); try ledgerDate(source.removedAt)
             switch source.source {
@@ -1279,6 +1283,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         for line in preview.lines {
             try ledgerText(line.originalText); try ledgerText(line.name, nonempty: true, maximum: 512)
             try line.quantity?.validate()
+            try line.originalPack?.validate()
             try validateExclusions(line.exclusions)
             if let capture = line.capture {
                 guard line.quantity == (try capture.resolvedQuantity()) else { throw CaptureImportError.conflictingQuantity }
@@ -1288,21 +1293,31 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
         }
     }
 
-    private static func parseLine(_ original: String) -> (name: String, quantity: Quantity?, reason: String?) {
+    private static func parseLine(_ original: String) -> (name: String, quantity: Quantity?, reason: String?, pack: ListQuantityParser.PackLabel?) {
         var text = original.trimmingCharacters(in: .whitespaces)
         if text.hasPrefix("- ") || text.hasPrefix("• ") || text.hasPrefix("* ") { text.removeFirst(2) }
-        var tokens = text.split(whereSeparator: \.isWhitespace).map(String.init)[...]
-        guard tokens.count >= 2, let number = try? ListQuantityParser.takeAmount(from: &tokens) else {
-            return (text, nil, "Review the quantity and unit.")
+        var tokens = ListQuantityParser.itemTokens(text)
+        guard tokens.count >= 2 else { return (text, nil, "Review the quantity and unit.", nil) }
+        // Spoken number words are explicit on a pack label ("dos cajas"). A
+        // single product name such as "Half and Half" must retain its wording.
+        let packFollows = ListQuantityParser.isPackMarker(tokens.dropFirst().first ?? "")
+        guard let number = try? ListQuantityParser.takeAmount(from: &tokens, allowingWords: packFollows) else {
+            return (text, nil, "Review the quantity and unit.", nil)
+        }
+        if let label = ListQuantityParser.takePackLabel(count: number, from: &tokens, original: original) {
+            let name = tokens.joined(separator: " ")
+            guard !name.isEmpty else { return (text, nil, "Add the item name.", label) }
+            let quantity = label.total
+            return (name, quantity, quantity == nil ? "Review the pack count and usable amount in each pack." : nil, label)
         }
         let parsedUnit = ListQuantityParser.takeUnit(from: &tokens)
         let name = tokens.joined(separator: " ")
         if parsedUnit == nil && ListQuantityParser.needsUnitReview(tokens.first) {
-            return (name, nil, "Review the unsupported or approximate unit.")
+            return (name, nil, "Review the unsupported or approximate unit.", nil)
         }
         let unit = parsedUnit ?? .count
-        guard !name.isEmpty else { return (text, nil, "Add the item name.") }
-        return (name, Quantity(amount: number, unit: unit, originalLiteral: original), nil)
+        guard !name.isEmpty else { return (text, nil, "Add the item name.", nil) }
+        return (name, Quantity(amount: number, unit: unit, originalLiteral: original), nil, nil)
     }
 
 }

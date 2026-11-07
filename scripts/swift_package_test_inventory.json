@@ -26,6 +26,10 @@
     "shoppingImportAddition": {
       "added": 5,
       "basis": "The five shopping-list regressions cover completed lines, ordered merge decisions, receipt replay and bilingual quantity parsing. All five were discovered in the compiled CoreDomain suite and passed locally."
+    },
+    "packLabelAddition": {
+      "added": 1,
+      "basis": "The compiled CoreDomain test round-tripped reviewed package counts, per-pack measures and original label wording, then undid the batch. Missing inner pack content remained unknown."
     }
   },
   "packages": {
@@ -195,6 +199,7 @@
       "CoreDomainTests.ShoppingLedgerTests/testImportOptionsTrackOriginalSuppliesAndEarlierDecisions",
       "CoreDomainTests.ShoppingLedgerTests/testMatchingRejectsExclusionsIncompatibleProductsAndUnknownUnits",
       "CoreDomainTests.ShoppingLedgerTests/testMealTemplateAndOccurrenceAreIndependentAndSchedulingKeepsIDs",
+      "CoreDomainTests.ShoppingLedgerTests/testPackLabelsKeepTheirExactContentsAndOriginalWordingAcrossImport",
       "CoreDomainTests.ShoppingLedgerTests/testPartialLinkRetainsResidualAndSiblingReservationsCannotOverallocate",
       "CoreDomainTests.ShoppingLedgerTests/testPersistedAllocationCycleDanglingAndOverallocationAreRejected",
       "CoreDomainTests.ShoppingLedgerTests/testPersistedCorruptionIsRejectedBeforeMutationCanTrap",

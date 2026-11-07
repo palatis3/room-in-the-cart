@@ -86,6 +86,7 @@ struct LedgerIngredientView: View {
                             Text(ledgerSourceLabel(contribution, shop: shop)).font(.headline)
                             Text(ledgerQuantity(contribution.quantity))
                             Text(contribution.originalText).font(.footnote).foregroundStyle(Theme.secondary)
+                            if let pack = contribution.originalPack { LedgerPackLabelFacts(pack: pack) }
                             if !contribution.notes.isEmpty { Text(ledgerContributionNote(contribution.notes)) }
                             if !contribution.exclusions.isEmpty {
                                 Text(ledgerFormat("Exclusions: %@", contribution.exclusions.joined(separator: ", ")))

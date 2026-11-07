@@ -94,30 +94,29 @@ enum StructuredCaptureParser {
             else if ["without", "except", "sin", "excepto"].contains(key) { exclusions += (exclusions.isEmpty ? "" : "\n") + value }
             else { requestedDestination += (requestedDestination.isEmpty ? "" : "; ") + value }
         }
-        var tokens = body.split(whereSeparator: \.isWhitespace).map(String.init)[...]
+        var tokens = ListQuantityParser.itemTokens(body)
         var amount = "", packCount = "", perPack = ""
         var unit = UnitOfMeasure.count, packUnit = UnitOfMeasure.count
         var warnings: [CaptureInterpretationWarning] = []
         let originalTokens = tokens
         if let number = try? ListQuantityParser.takeAmount(from: &tokens, allowingWords: true), number > .zero {
-            if let token = tokens.first, packs.contains(token.lowercased()) {
-                tokens.removeFirst()
-                if number.denominator == 1 { packCount = number.description } else { warnings.append(.packUnknown) }
-                if tokens.first.map({ ["of", "de"].contains($0.lowercased()) }) == true { tokens.removeFirst() }
-                if let amount = try? ListQuantityParser.takeAmount(from: &tokens, allowingWords: true), amount > .zero {
-                    if let known = ListQuantityParser.takeUnit(from: &tokens) {
-                        perPack = amount.description; packUnit = known
-                    } else if ListQuantityParser.needsUnitReview(tokens.first) {
-                        warnings.append(.packUnknown)
-                    } else { perPack = amount.description }
-                } else { warnings.append(.packUnknown) }
+            if let label = ListQuantityParser.takePackLabel(count: number, from: &tokens, original: original) {
+                if let count = label.count { packCount = String(count) }
+                if let contents = label.amountPerPack, contents.amount > .zero {
+                    perPack = contents.amount.description
+                    packUnit = contents.unit
+                }
+                if label.count == nil || perPack.isEmpty { warnings.append(.packUnknown) }
             } else {
                 amount = number.description
                 if let known = ListQuantityParser.takeUnit(from: &tokens) { unit = known }
                 else if ListQuantityParser.needsUnitReview(tokens.first) { amount = ""; warnings.append(.ambiguous) }
             }
         } else { tokens = originalTokens; warnings.append(.quantityUnknown) }
-        if tokens.contains(where: { packs.contains($0.lowercased()) }) { warnings.append(.packUnknown); amount = "" }
+        if tokens.contains(where: ListQuantityParser.isPackMarker) {
+            if !warnings.contains(.packUnknown) { warnings.append(.packUnknown) }
+            amount = ""; perPack = ""
+        }
         let name = tokens.joined(separator: " ")
         if CaptureLimits.containsExclusion(original) || !exclusions.isEmpty { warnings.append(.negation) }
         let knownDestinations = ["this list", "this pickup", "current list", "esta lista", "esta compra", "lista actual"]
@@ -138,5 +137,4 @@ enum StructuredCaptureParser {
               let range = Range(match.range, in: text) else { return nil }
         return (String(text[..<range.lowerBound]), String(text[range.upperBound...]))
     }
-    private static let packs: Set<String> = ["pack", "packs", "package", "packages", "paquete", "paquetes", "caja", "cajas"]
 }
