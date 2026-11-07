@@ -32,6 +32,79 @@ import CoreDomain
         }, phase: { _ in .draft }, ideaCatalog: catalog, clock: { self.now })
         return (store, model)
     }
+    func testTotalServingsValidationNamesTheFieldAndRetainsDraftAndStore() throws {
+        let (store, model) = fixture()
+        var original = try recipe()
+        original.notes = "Keep the beans separate."
+        original.sourceURL = "https://example.invalid/unavailable-recipe"
+        original.servingGroups = [ServingGroup(name: "Dinner", servings: .one)]
+        let before = store.workspace
+        for input in ["", "0", "-1", "beans", "1/0"] {
+            var draft = DinnerTemplateDraft(original)
+            draft.servings = input
+            XCTAssertThrowsError(try draft.template()) { failure in
+                XCTAssertEqual(failure as? DinnerDraftValidationError, .totalServings)
+                model.report(failure)
+            }
+            XCTAssertEqual(model.error, dinnerText("Total servings: enter a number greater than zero."))
+            XCTAssertEqual(draft.servings, input)
+            XCTAssertEqual(draft.title, original.title)
+            XCTAssertEqual(draft.notes, original.notes)
+            XCTAssertEqual(draft.source, original.sourceURL)
+            XCTAssertEqual(draft.ingredients.map(\.id), original.ingredients.map(\.id))
+            XCTAssertEqual(draft.groups.map(\.id), original.servingGroups.map(\.id))
+            XCTAssertEqual(draft.original, original)
+            XCTAssertEqual(store.workspace, before)
+            XCTAssertEqual(store.commits, 0)
+            XCTAssertNil(model.preview)
+        }
+    }
+
+    func testCorrectedServingsReviewClearsStaleFeedbackAndSavesRetainedDraft() async throws {
+        let (store, model) = fixture()
+        var original = try recipe()
+        original.notes = "Keep the beans separate."
+        original.sourceURL = "https://example.invalid/unavailable-recipe"
+        var draft = DinnerTemplateDraft(original)
+        draft.servings = "0"
+        do { _ = try draft.template(); XCTFail("Zero servings must reject") }
+        catch { model.report(error) }
+        XCTAssertNotNil(model.error)
+        let before = store.workspace
+        draft.servings = "1,5"
+        let reviewed = try draft.template()
+        model.clearErrorAfterSuccessfulReview()
+        XCTAssertNil(model.error)
+        XCTAssertEqual(store.workspace, before)
+        XCTAssertEqual(store.commits, 0)
+        XCTAssertEqual(reviewed.servings, try Rational(3, 2))
+        XCTAssertEqual(reviewed.notes, original.notes)
+        XCTAssertEqual(reviewed.sourceURL, original.sourceURL)
+        XCTAssertEqual(reviewed.ingredients, original.ingredients)
+        let saved = await model.accept(reviewed, id: UUID(), fallback: false)
+        XCTAssertTrue(saved)
+        XCTAssertNil(model.error)
+        XCTAssertEqual(store.workspace.dinnerPlanning.acceptedDinners.map(\.template), [reviewed])
+        XCTAssertEqual(store.workspace.shops, before.shops)
+        XCTAssertEqual(store.commits, 1)
+    }
+
+    func testOtherInvalidNumericFieldsAreNotReportedAsTotalServings() throws {
+        let (_, model) = fixture()
+        var draft = DinnerTemplateDraft(try recipe())
+        draft.ingredients[0].amount = "not an amount"
+        XCTAssertThrowsError(try draft.template()) { failure in
+            XCTAssertNil(failure as? DinnerDraftValidationError)
+            model.report(failure)
+        }
+        XCTAssertEqual(model.error, dinnerText("Check the entered amounts, dates and required fields. Nothing has been applied."))
+        for input in ["2", "1/2", "1,5"] {
+            var valid = DinnerTemplateDraft(try recipe())
+            valid.servings = input
+            XCTAssertGreaterThan(try valid.template().servings, .zero)
+        }
+    }
+
     func testBundledFreeIdeasAreEditableAndApprovalKeepsShoppingListUntouched() async throws {
         let patterns = DinnerPatternCatalog.patterns
         let (store, model) = fixture(catalog: patterns)

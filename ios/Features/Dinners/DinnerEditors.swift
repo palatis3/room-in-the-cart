@@ -155,7 +155,11 @@ struct DinnerTemplateEditor: View {
                 }
                 idea.supplyEvidence = supplyEvidence.isEmpty ? nil : supplyEvidence
                 idea.assumptions = DinnerEntry.list(assumptions); reviewedIdea = idea; reviewed = template
-            } else { reviewed = template }
+                model.clearErrorAfterSuccessfulReview()
+            } else {
+                reviewed = template
+                model.clearErrorAfterSuccessfulReview()
+            }
         } catch { model.report(error) }
     }
 }

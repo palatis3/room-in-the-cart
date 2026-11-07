@@ -1,6 +1,23 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Total servings: enter a number greater than zero.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total servings: enter a number greater than zero."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porciones totales: introduce un número mayor que cero."
+          }
+        }
+      }
+    },
     "%@ and %@": {
       "localizations": {
         "en": {

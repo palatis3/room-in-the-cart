@@ -56,6 +56,10 @@ struct DinnerGroupDraft: Identifiable {
     }
     func group() throws -> ServingGroup { ServingGroup(id: id, name: name, servings: try DinnerEntry.positive(servings), isProtected: isProtected) }
 }
+/// Keep field context at the parser boundary; unrelated numeric errors must not
+/// be described as a servings problem.
+enum DinnerDraftValidationError: Error, Equatable { case totalServings }
+
 struct DinnerTemplateDraft {
     let id: UUID
     let original: MealTemplate?
@@ -69,7 +73,10 @@ struct DinnerTemplateDraft {
         lead = template?.leadTimeMinutes.map(String.init) ?? ""; completed = template?.completedSteps.joined(separator: "\n") ?? ""
     }
     func template(validate: Bool = true) throws -> MealTemplate {
-        var value = MealTemplate(id: id, title: title, servings: try DinnerEntry.positive(servings), ingredients: try ingredients.map { try $0.ingredient() },
+        let enteredServings: Rational
+        do { enteredServings = try DinnerEntry.positive(servings) }
+        catch { throw DinnerDraftValidationError.totalServings }
+        var value = MealTemplate(id: id, title: title, servings: enteredServings, ingredients: try ingredients.map { try $0.ingredient() },
             notes: notes, sourceURL: source.isEmpty ? nil : source, exclusions: DinnerEntry.list(exclusions),
             revision: original?.revision ?? 0, servingGroups: try groups.map { try $0.group() }, leadTimeMinutes: try DinnerEntry.minutes(lead), completedSteps: DinnerEntry.list(completed), sourceEvidence: original?.sourceEvidence)
         if let original, original != value {
