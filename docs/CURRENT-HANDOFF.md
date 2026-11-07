@@ -10,7 +10,7 @@ The staging address serves Vercel deployment `dpl_7Q9S57LPCh1JACsdP6X7sweHT4wr` 
 
 ## Staging iPhone build and live service checks
 
-An installed Staging build on an iPhone 17 Pro simulator running iOS 26.2 reached the hosted schema 040 service. The signed-out session check agreed with the app configuration and the protected workspace endpoint returned HTTP 401. From the app’s Settings, Online Help and Open Support each opened the corresponding live page in Mobile Safari. All three tests passed once, with zero XCTest runtime warnings. The tested source was `6c0b78a`.
+An installed Staging build on an iPhone 17 Pro simulator running iOS 26.2 reached the hosted schema 040 service. The signed-out session check agreed with the app configuration and the protected workspace endpoint returned HTTP 401. From the app’s Settings, Online Help and Open Support each opened the corresponding live page in Mobile Safari. All three tests passed once, with zero XCTest runtime warnings. The tested source was `6c0b78a`. The same staging products passed the three checks again on an iPhone SE simulator at the iOS 17.0 deployment floor. Binary hashes were unchanged and the strict runtime-warning count was zero.
 
 The Staging scheme now uses Staging for testing, launching, profiling, analysis and archiving. A generic iPhone archive built from `b0565fb` contained the arm64 staging app, widget and share extension. The archive check verified its assets, privacy declarations and embedded environment. This was an unsigned archive. The explicit pre-release workflow now includes the installed staging journey. [Staging tests and archive evidence](evidence/b11/staging-040-preparation-20261107/native-iphone.json)
 
