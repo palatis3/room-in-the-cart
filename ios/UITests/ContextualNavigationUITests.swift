@@ -381,23 +381,22 @@ import UIKit
         tap(app.buttons["Continue to checkout review"]); tap(app.buttons["Apply reviewed checkout copy"])
         tap(app.buttons["Review whole checkout"]); tap(element("checkout.twoStoreQuotes"))
 
-        fillQuote("Dinner and protected lunch", into: "Commitment name")
-        fillQuote("3", into: "Required portions")
+        enterQuoteFields([("Commitment name", "Dinner and protected lunch"), ("Required portions", "3")])
         func enterStore(_ slot: String, name: String, branch: String, items: String, total: String, terms: String, cash: String?, minutes: String) {
             let prefix = "quote." + slot + "."
-            fillQuote(name, into: prefix + "label")
-            fillQuote(name, into: prefix + "storeID")
-            fillQuote(branch, into: prefix + "branch")
-            fillQuote("Customer entered quote", into: prefix + "source")
-            fillQuote(items, into: prefix + "itemSubtotal")
-            fillQuote(terms, into: prefix + "eligibilityTerms")
-            fillQuote(total, into: prefix + "total")
+            enterQuoteFields([
+                (prefix + "label", name), (prefix + "storeID", name), (prefix + "branch", branch),
+                (prefix + "source", "Customer entered quote"), (prefix + "itemSubtotal", items),
+                (prefix + "eligibilityTerms", terms), (prefix + "total", total)
+            ])
             enableSwitch(prefix + "allChargesIncluded")
             enableSwitch(prefix + "quantitiesMatched")
             enableSwitch(prefix + "singleStore")
             tap(element(prefix + "availability")); tap(app.buttons["Reviewed available"])
-            if let cash { fillQuote(cash, into: prefix + "tripCash") }
-            fillQuote(minutes, into: prefix + "extraMinutes")
+            var tripFields: [(String, String)] = []
+            if let cash { tripFields.append((prefix + "tripCash", cash)) }
+            tripFields.append((prefix + "extraMinutes", minutes))
+            enterQuoteFields(tripFields)
             if slot == "first" { enableSwitch(prefix + "alreadyPlanned") }
         }
         enterStore("first",name: "Market A",branch: "North branch",items: "36",total: "38",terms: "Pickup price",cash: "0",minutes: "0")
@@ -518,13 +517,22 @@ import UIKit
         XCTFail("Quote action did not scroll above the tab bar: " + id)
     }
     private func fillQuote(_ text: String, into id: String) {
-        let field = app.textFields[id]
-        tap(field)
-        field.typeText(text)
-        XCTAssertEqual(field.value as? String,text,id)
+        enterQuoteFields([(id, text)])
+    }
+
+    /// Move directly between observations, then end editing to review the group.
+    private func enterQuoteFields(_ fields: [(String, String)]) {
         let done = app.buttons["quoteKeyboardDone"]
+        for (id, value) in fields {
+            let field = app.textFields[id]
+            revealContent(field, above: done)
+            field.tap()
+            field.typeText(value)
+            XCTAssertEqual(field.value as? String, value, id)
+        }
         XCTAssertTrue(done.waitForExistence(timeout: 3) && done.isHittable)
         done.tap()
+        XCTAssertTrue(done.waitForNonExistence(timeout: 5))
     }
 
     private func launch(reset: Bool, largestText: Bool = false) {
@@ -590,7 +598,7 @@ import UIKit
         let done = app.buttons.matching(NSPredicate(format: "label == %@", "Done")).firstMatch
         if done.exists && done.isHittable { done.tap() }
     }
-    private func revealContent(_ target: XCUIElement) {
+    private func revealContent(_ target: XCUIElement, above inputBar: XCUIElement? = nil) {
         for attempt in 0..<24 {
             let area = scrollableArea()
             if target.exists && !target.frame.isEmpty {
@@ -600,15 +608,18 @@ import UIKit
                 let tabs = app.tabBars.firstMatch
                 let keyboard = app.keyboards.firstMatch
                 let top = navigation.exists ? navigation.frame.maxY : bounds.minY
+                // The app's Done bar sits above the system keyboard and can cover
+                // a text field that XCTest still considers hittable.
+                let inputBarTop = inputBar.flatMap { $0.exists ? $0.frame.minY : nil } ?? bounds.maxY
                 let bottom = min(tabs.exists ? tabs.frame.minY : bounds.maxY,
-                                 keyboard.exists ? keyboard.frame.minY : bounds.maxY)
+                                 keyboard.exists ? keyboard.frame.minY : bounds.maxY, inputBarTop)
                 let viewport = CGRect(x: bounds.minX, y: top, width: bounds.width, height: max(0, bottom - top))
                 // A partly visible Form row can be hittable while its center is
                 // behind the tab bar. Scroll its tap point into clear content.
                 if viewport.insetBy(dx: 0, dy: 4).contains(center) && target.isHittable { return }
-                scrollContent(upward: center.y > area.midY)
+                scrollContent(upward: center.y > area.midY, besideFields: inputBar != nil)
             } else {
-                scrollContent(upward: attempt < 16)
+                scrollContent(upward: attempt < 16, besideFields: inputBar != nil)
             }
         }
         XCTFail("Content tap point is obscured: \(target.debugDescription)")
@@ -633,14 +644,17 @@ import UIKit
         let bottom = min(bounds.maxY - 100, keyboardTop - 16)
         return CGRect(x: bounds.minX + 24, y: top, width: bounds.width - 48, height: max(80, bottom - top))
     }
-    private func scrollContent(upward: Bool) {
+    private func scrollContent(upward: Bool, besideFields: Bool = false) {
         // Whole-app swipes can start on the software keyboard. Drag only in
         // the observed unobscured content, and still require real hittability.
         let area = scrollableArea(), bounds = app.frame
         let high = area.minY + area.height * 0.2, low = area.minY + area.height * 0.8
         let origin = app.coordinate(withNormalizedOffset: .zero)
-        let start = origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: (upward ? low : high) - bounds.minY))
-        let end = origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: (upward ? high : low) - bounds.minY))
+        // During grouped text entry, drag in the Form margin. A central drag on
+        // the active field can select its text and leave the scroll position intact.
+        let x = besideFields ? area.minX : area.midX
+        let start = origin.withOffset(CGVector(dx: x - bounds.minX, dy: (upward ? low : high) - bounds.minY))
+        let end = origin.withOffset(CGVector(dx: x - bounds.minX, dy: (upward ? high : low) - bounds.minY))
         start.press(forDuration: 0.05, thenDragTo: end)
     }
     private func assertText(_ text: String) {
