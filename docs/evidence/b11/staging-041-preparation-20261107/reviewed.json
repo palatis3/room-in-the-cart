@@ -67,5 +67,10 @@
     "upgradeResultSHA256": "8707d1b4e085a2af9e4819439e4d79bc6ce0f6d360bf476337e536b947f094ae",
     "captureManifestSHA256": "5a06d9b73dd2255cf85dd27e9e04e5e98c382062fcd5ffbb91a28a4382b4c3ed",
     "bothKeychainImagesVerifiedAndDetached": true
+  },
+  "preflight": {
+    "status": "A third private restore ran the reviewed application migration runner. The read-only live preflight verified the original schema, table hashes, role memberships, migration timestamps, and effective security properties.",
+    "transcriptSHA256": "a44aca53480e45f3d5fdbe9b6249042ea7a1394bf47a129c58e9b1131aec9391",
+    "encryptedVolumesDetached": true
   }
 }
