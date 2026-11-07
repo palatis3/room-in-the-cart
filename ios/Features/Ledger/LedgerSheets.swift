@@ -306,7 +306,8 @@ struct LedgerImportReview {
         }
         let options = shop.importMatchOptions(for: preview, decisions: projected)
         if !options.isEmpty {
-            let targets = Set(options.values.flatMap { $0.map(\.lineID) })
+            var targets = Set<UUID>()
+            for candidates in options.values { targets.formUnion(candidates.lazy.map(\.lineID)) }
             var labels: [UUID: String] = [:]
             for line in shop.lines where targets.contains(line.id) {
                 labels[line.id] = ledgerFormat("Item %lld: %@", Int64(line.originalOrder + 1), line.name)
