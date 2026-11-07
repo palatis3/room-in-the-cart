@@ -10,7 +10,7 @@ import {JWTIdentityVerifier,SupabaseSessionVerifier} from '../dist/auth.js';
 import {createHTTPServer} from '../dist/http.js';
 import {assertRuntimeRole,tokenHash} from '../dist/database.js';
 import {PrivacyService} from '../dist/privacy.js';
-import {openPrivacyJournalFixture} from './privacy-journal-fixture.mjs';
+import {deferProfileOnlyDeletion,openPrivacyJournalFixture} from './privacy-journal-fixture.mjs';
 
 const runtimeURL=process.env.TEST_DATABASE_URL,adminURL=process.env.TEST_ADMIN_DATABASE_URL;
 if(!runtimeURL||!adminURL)throw new Error('Device authority tests require disposable real PostgreSQL runtime and admin URLs.');
@@ -219,8 +219,9 @@ test('owner erasure drops only the erased member fence and restore reapplication
   await admin.query("UPDATE ritc.device SET session_id='erased' WHERE household_id=$1 AND member_id=$2",[f.h,a.memberId]);
   assert.deepEqual((await admin.query('SELECT member_id FROM ritc.device_enrollment_fence WHERE household_id=$1',[f.h])).rows.map(r=>r.member_id),[b.memberId]);
 });
-test('a legitimate separately leased privacy worker erases session fences while preserving another member fence',async()=>{
+test('a legitimate separately leased privacy worker erases session fences while preserving another member fence',async t=>{
   const f=await fixture(),a=f.actors.Contributor,b=f.actors.Helper,job=randomUUID(),lease=randomUUID();
+  t.after(()=>deferProfileOnlyDeletion(admin,job));
   for(const target of [a,b])assert.equal((await f.http('Organizer','POST',revokedPath(target),targetBody(target))).status,200);
   const choices=[{householdId:f.h,organizer:'none',shops:[],eraseChildProfiles:[]}];
   const token=await new SignJWT({session_id:a.sessionId,amr:[{method:'otp',timestamp:Math.floor(Date.now()/1000)}]}).setProtectedHeader({alg:'ES256',kid:jwk.kid}).setIssuer(issuer).setAudience(audience).setSubject(a.subject).setIssuedAt().setExpirationTime('1h').sign(privateKey);

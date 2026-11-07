@@ -6,7 +6,7 @@ import {generateKeyPair,exportJWK,createLocalJWKSet,SignJWT} from 'jose';
 import {HouseholdRepository} from '../dist/repository.js';
 import {JWTIdentityVerifier,SupabaseSessionVerifier} from '../dist/auth.js';
 import {PrivacyService,PrivacyMaintenance} from '../dist/privacy.js';
-import {openPrivacyJournalFixture} from './privacy-journal-fixture.mjs';
+import {deferProfileOnlyDeletion,openPrivacyJournalFixture} from './privacy-journal-fixture.mjs';
 import {createHTTPServer} from '../dist/http.js';
 const admin=new pg.Pool({connectionString:process.env.TEST_ADMIN_DATABASE_URL}),runtime=new pg.Pool({connectionString:process.env.TEST_DATABASE_URL});
 const workerURL=new URL(process.env.TEST_DATABASE_URL);workerURL.username='ritc_test_worker';const worker=new pg.Pool({connectionString:process.env.TEST_WORKER_DATABASE_URL??workerURL.toString()});
@@ -54,6 +54,25 @@ test('deletion requires recent signed authentication and configured provider bef
  const old=await actor(3600),input=request([]);const r=await call(old,'/v1/privacy/deletions','POST',input);assert.equal(r.status,401);assert.equal(r.data.error.code,'reauthentication_required');
  const a=await actor(),identity=await verifier.verify(a.token);await assert.rejects(()=>new PrivacyService(repo).request(identity,input),e=>e.code==='deletion_unavailable');assert.equal((await status(input)).status,404);
  await assert.rejects(()=>runtime.query('SELECT * FROM ritc.privacy_job'),e=>e.code==='42501');await assert.rejects(()=>runtime.query('SELECT ritc.privacy_claim($1)',[randomUUID()]),e=>e.code==='42501');
+});
+test('a profile-only fixture with an expired lease leaves the next accepted deletion claimable',async t=>{
+ const first=await actor(),second=await actor(),firstJob=request([]),secondJob=request([]);
+ t.after(async()=>{
+   await deferProfileOnlyDeletion(admin,firstJob.clientKey);
+   await deferProfileOnlyDeletion(admin,secondJob.clientKey);
+ });
+ ok(await call(first,'/v1/privacy/deletions','POST',firstJob),202);
+ const lease=randomUUID(),claim=(await worker.query('SELECT * FROM ritc.privacy_claim($1)',[lease])).rows[0];
+ assert.equal(claim.job_id,firstJob.clientKey);
+ ok(await call(second,'/v1/privacy/deletions','POST',secondJob),202);
+ await deferProfileOnlyDeletion(admin,firstJob.clientKey);
+ // Exercise a slow-suite boundary without waiting for the real 30-second lease.
+ assert.equal((await admin.query("UPDATE ritc.privacy_job SET lease_until=clock_timestamp()-interval '1 second' WHERE job_id=$1 AND lease_id=$2",
+   [firstJob.clientKey,lease])).rowCount,1);
+ assert.equal((await maintenance.run({batchSize:1})).completed,1);
+ assert.equal(ok(await status(secondJob)).status,'complete');
+ assert.equal(ok(await status(firstJob)).providerAccountDeleted,false);
+ assert.equal((await admin.query('SELECT 1 FROM auth.sessions WHERE id=$1',[first.session])).rowCount,1);
 });
 test('explicit responsibilities precede deletion; outage keeps pending and exact subject erasure preserves another member',async()=>{
  const f=await fresh(),s=await shop(f),other=await invite(f,await actor());const mine=ok(await send(f,f.owner,command(f.owner,s,'request.send',{clientRequestId:randomUUID(),originalItem:'Owner private request',ownQuantity:'secret quantity',authoredAt:new Date().toISOString()}))),theirs=ok(await send(f,other,command(other,s,'request.send',{clientRequestId:randomUUID(),originalItem:'Other retained private request',ownQuantity:'one',authoredAt:new Date().toISOString()})));
