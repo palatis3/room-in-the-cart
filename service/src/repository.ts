@@ -1,3 +1,4 @@
+import type {BillingService} from './billing/service.js';
 import {recordCurrentDelivery,recordCurrentPantry} from './shared-recovery-basis.js';
 import {loadRecoveryPublication,recordSharedRecovery} from './shared-recovery-publication.js';
 import { sharedMealSchema, moveSharedMeal, preserveProtectedMeal } from './shared-meal-planning.js';
@@ -263,7 +264,7 @@ export class HouseholdRepository {
       VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,[ctx.householdId,previewId,shopId,ctx.member.member_id,r.request_id,shop.revision,r.revision,shop.authority_epoch,input.decision,fingerprint,expiresAt]);
     return{previewId,expiresAt:expiresAt.toISOString(),shopRevision:shop.revision,authorityEpoch:shop.authority_epoch,requestRevision:r.revision,choice:input.decision.choice,...facts};
   }
-  async execute(ctx:Context,command:Envelope):Promise<unknown> {
+  async execute(ctx:Context,command:Envelope,billing?:BillingService):Promise<unknown> {
     if(ctx.selectedShopId && command.shopId!==ctx.selectedShopId) throw unavailable();
     const window=(await ctx.db.query('SELECT 1 FROM ritc.replay_window WHERE household_id=$1 AND window_id=$2 AND member_id=$3 AND device_id=$4 AND revoked_at IS NULL AND expires_at>$5',[ctx.householdId,command.replayWindow,ctx.member.member_id,ctx.deviceId,ctx.now])).rowCount;
     if(!window)throw refresh();
@@ -336,7 +337,7 @@ export class HouseholdRepository {
         response=await this.receipt(ctx,command,operationId,'transferred');
       }else {
         this.requireShopper(ctx,shop);this.checkBase(shop,command.base);
-        response=await this.shopperCommand(ctx,shop,command,operationId);
+        response=await this.shopperCommand(ctx,shop,command,operationId,billing);
       }
     }
     await ctx.db.query(`INSERT INTO ritc.operation(household_id,operation_id,actor_id,device_id,client_key,window_id,kind,shop_id,payload_digest,response_scope)
@@ -368,9 +369,9 @@ export class HouseholdRepository {
     }
     return{operationId,kind:c.kind,request:ownRequest(await this.request(ctx,id,shop.shop_id,true))};
   }
-  private async shopperCommand(ctx:Context,shop:Shop,c:Envelope,operationId:string) {
+  private async shopperCommand(ctx:Context,shop:Shop,c:Envelope,operationId:string,billing?:BillingService) {
     if(c.kind==='mealRecovery.apply') {
-      const applied=await recordSharedRecovery(ctx,shop,c.body,operationId);
+      const applied=await recordSharedRecovery(ctx,shop,c.body,operationId,billing);
       return {...await this.receipt(ctx,c,operationId,'recorded'),...applied};
     }
     if(isPantryCommand(c.kind)) {

@@ -1,3 +1,4 @@
+import {rankSharedFallbacks,requireAssistance} from './shared-fallback-options.js';
 import {previewCurrentPantryObservation,readSharedRecoveryCoverage} from './shared-recovery-basis.js';
 import {loadRecoveryPublication,previewSharedRecovery,readRecoveryDesk} from './shared-recovery-publication.js';
 import { cookCorrectionFacts, cookCopyBaseline, cookCopyHistory } from './cook-copy.js';
@@ -36,6 +37,20 @@ async function rawBody(req:IncomingMessage,maxBytes=65_536):Promise<Buffer> {
   return Buffer.concat(chunks);
 }
 async function body(req:IncomingMessage,maxBytes=65_536):Promise<unknown>{try{return JSON.parse((await rawBody(req,maxBytes)).toString('utf8'));}catch(error){if(error instanceof ServiceError)throw error;throw invalid();}}
+
+// A disclosed recipe may be larger than an ordinary command. Keep the
+// command's byte limit for every other kind, including JSON whitespace.
+async function householdBody(req:IncomingMessage,path:string) {
+  if(path.endsWith('/accepted-fallbacks')) return body(req,540_000);
+  if(path.endsWith('/meal-recovery/options') || path.endsWith('/meal-recovery/preview')) return body(req,1_800_000);
+  if(path!=='/commands') return body(req);
+  const raw=await rawBody(req,1_800_000);
+  let payload:unknown;
+  try {payload=JSON.parse(raw.toString('utf8'));} catch {throw invalid();}
+  if(raw.length>65_536 && !(typeof payload==='object' && payload && 'kind' in payload && payload.kind==='mealRecovery.apply'))
+    throw new ServiceError(413,'body_too_large','Send one bounded command.');
+  return payload;
+}
 
 function equal(a:string,b:string){const aa=Buffer.from(a),bb=Buffer.from(b);return aa.length===bb.length&&timingSafeEqual(aa,bb);}
 function cookie(req:IncomingMessage,name='ritc_session'):string|null {
@@ -194,7 +209,7 @@ export function createHTTPServer(options:HTTPOptions) {
       }
       const verificationRoute=/^\/guardian\/enrollments\/([^/]+)\/verification$/.exec(path);
       if(verificationRoute&&method==='POST'){send(200,await guardian.verification(householdId,auth,uuid.parse(verificationRoute[1]),guardianActionSchema.parse(await body(req,4096))));return;}
-      const payload=method==='POST'||method==='PUT'||(method==='DELETE'&&/\/measurement-feedback$/.test(path))?await body(req,/\/accepted-fallbacks$/.test(path)?540000:65536):undefined;
+      const payload=method==='POST'||method==='PUT'||(method==='DELETE'&&/\/measurement-feedback$/.test(path))?await householdBody(req,path):undefined;
       const ownPlacement=/^\/shops\/([^/]+)\/placement-reports\/mine\/([^/]+)$/.exec(path);
       const placementCommand=path==='/commands'&&method==='POST'&&typeof payload==='object'&&payload!==null&&'kind' in payload&&(payload.kind==='shop.reportPlaced'||payload.kind==='shop.reconcileReport')?parseCommand(payload):undefined;
       const placementRead=method==='GET'?/^\/shops\/([^/]+)\/placement-reports(?:\/[^/]+)?$/.exec(path):null;
@@ -276,7 +291,7 @@ export function createHTTPServer(options:HTTPOptions) {
           const cursor=url.searchParams.get('cursor');if(cursor)uuid.parse(cursor);
           return repository.requests(ctx,cursor);
         }
-        if(path==='/commands'&&method==='POST')return repository.execute(ctx,parseCommand(payload));
+        if(path==='/commands'&&method==='POST')return repository.execute(ctx,parseCommand(payload),options.billing);
         const shopMatch=/^\/shops\/([^/]+)(.*)$/.exec(path);
         if(shopMatch) {
           const shopId=uuid.parse(shopMatch[1]),tail=shopMatch[2];
@@ -309,11 +324,17 @@ export function createHTTPServer(options:HTTPOptions) {
           if(tail==='/accepted-fallbacks' && method==='GET')return fallbacks.read(ctx,shopId.toLowerCase(),url.searchParams.get('cursor'));
           if(tail==='/accepted-fallbacks' && method==='POST')return fallbacks.change(ctx,shopId.toLowerCase(),payload);
           if(tail==='/accepted-fallbacks/source' && method==='POST')return fallbacks.source(ctx,shopId.toLowerCase(),payload);
+          if(tail==='/meal-recovery/options' && method==='POST') {
+            const shop=await repository.shop(ctx,shopId.toLowerCase());
+            repository.requireShopper(ctx,shop);
+            await requireAssistance(ctx,options.billing);
+            return rankSharedFallbacks(ctx,shop,payload,loadRecoveryPublication);
+          }
           if((tail==='/meal-recovery' || tail==='/meal-recovery/coverage') && method==='GET' || tail==='/meal-recovery/preview' && method==='POST') {
             const shop=await repository.shop(ctx,shopId.toLowerCase());
             repository.requireShopper(ctx,shop);
             if(tail==='/meal-recovery/coverage') return readSharedRecoveryCoverage(ctx,shop,loadRecoveryPublication);
-            return method==='GET' ? readRecoveryDesk(ctx,shop) : previewSharedRecovery(ctx,shop,payload);
+            return method==='GET' ? readRecoveryDesk(ctx,shop) : previewSharedRecovery(ctx,shop,payload,options.billing);
           }
           if((tail==='/pantry-lots' || tail==='/pantry-lots/coverage') && method==='GET' ||
              tail==='/pantry-lots/observation-preview' && method==='POST'){

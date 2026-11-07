@@ -400,11 +400,12 @@ test('a shopper can record completed prep and zero lead time without removing a 
  assert.deepEqual(protectedMeal,meal);
 });
 
-async function reservationFixture({excluded=false,split=true,rival=false,day,rivalDay}={}) {
+async function reservationFixture({excluded=false,split=true,rival=false,day,rivalDay,deadline}={}) {
  const f=await mealFixture(),commands=f.base+'/commands',path=f.path+'/delivery-evidence';
  const quantity=n=>({amount:{numerator:n,denominator:1},unit:'count',originalLiteral:String(n)});
  const meal=structuredClone(f.meal),[plates,lunch]=meal.planning.groups,ingredient=meal.planning.ingredients[0];
  if(day) meal.day=day;
+ if(deadline) meal.planning.deadline=deadline;
  ingredient.quantity=quantity(6);
  if(split) meal.planning.bindings.forEach((b,i)=>b.quantity=quantity(i===0?4:2));
  else delete meal.planning.bindings;
@@ -1140,4 +1141,104 @@ test('accepted fallback registry tracks the exact source version and erases publ
  assert(!ok(await call(f.owner,recovery)).meals.some(m=>m.occurrenceId===old.occurrenceId));
  assert.equal((await admin.query('SELECT 1 FROM ritc.dated_cook_copy WHERE copy_id=$1',[copy.copyId])).rowCount,0);
  assert.notEqual((await f.send(command)).status,200);
+});
+
+test('paid fallback ranking uses the accepted household library, current physical food, deadline and explicit independent agreements',async()=>{
+ const at=new Date(Date.now()+45*60_000).toISOString(),f=await reservationFixture({day:at.slice(0,10),deadline:{at,zone:'UTC'}});
+ const path=f.path+'/meal-recovery',library=f.path+'/accepted-fallbacks',desk=ok(await call(f.owner,path));
+ const target=desk.meals.find(m=>m.occurrenceId===f.match.occurrenceId);
+ assert.equal(target.due,at);
+ const targetDigest=desk.targetDigests.find(d=>d.occurrenceId===target.occurrenceId).digest;
+ const base={v:1,base:desk.base,occurrenceId:target.occurrenceId,targetDigest,trip:null};
+ const rank=(reviews,trip=null,actor=f.owner)=>call(actor,path+'/options','POST',{...base,reviews,trip});
+ const empty=ok(await rank([]));assert.deepEqual(empty.options,[]);assert.deepEqual(empty.target,target);
+ assert.deepEqual(ok(await call(f.owner,library)).candidates,[]); // Choosing the two shop dishes did not approve either.
+ assert.equal((await rank([],null,f.planner)).status,404);
+ const otherShop=await f.shop(),outside=f.base+'/shops/'+otherShop+'/accepted-fallbacks';
+ async function approve(title,quantity,elapsedMinutes,usual=false,requiredLeadMinutes=null,extra=[]) {
+   const recipe={title,portions:4,notes:'Keep the entered method',sourceURL:null,exclusions:[],elapsedMinutes,requiredLeadMinutes,
+     ingredients:[{id:randomUUID(),name:'Wraps',quantity:f.quantity(quantity),exclusions:[],notes:'Warm before serving'},...extra]};
+   const {shopRevision,authorityEpoch,registryRevision}=ok(await call(f.owner,outside));
+   const candidateId=randomUUID(),receipt=ok(await call(f.owner,outside,'POST',{v:1,clientKey:randomUUID(),shopRevision,authorityEpoch,
+     registryRevision,candidateId,baseRevision:null,reviewed:true,action:'accept',source:{kind:'disclosed'},recipe,usual}));
+   return {candidateId,revision:receipt.revision,remainingElapsedMinutes:null,advanceStepsCompleted:false,
+     ingredients:recipe.ingredients.map(i=>({ingredientId:i.id,sourceIds:[f.sourceId],offer:null}))};
+ }
+ const easy=await approve('Three warm wraps',3,10,true);
+ const large=await approve(target.title,6,8);
+ const slow=await approve('Marinated wraps',3,10,false,120);
+ const unknown=await approve('Unknown cook time',3,null);
+ const trip={minutes:8,budgetMinor:500,chargesMinor:50,currency:'USD'};
+ const offer={label:'Reviewed two-wrap pouch',exclusionTags:[],usablePerPack:f.quantity(2),priceMinor:200,availablePacks:2};
+ large.ingredients[0].offer=offer;
+ const sharedPack=await approve('Two servings from the same pack',1,5,false,null,[
+   {id:randomUUID(),name:'More wraps',quantity:f.quantity(1),exclusions:[],notes:''}]);
+ const packId=randomUUID();
+ sharedPack.ingredients.forEach(r=>{r.sourceIds=[];r.offer={...offer,packId,availablePacks:1};});
+ const pooled=ok(await rank([sharedPack],trip)).options[0];
+ assert.equal(pooled.packCount,1);assert.equal(pooled.extraCashMinor,250);assert.equal(pooled.buys.length,1);
+ const inconsistent=structuredClone(sharedPack);inconsistent.ingredients[1].offer.priceMinor++;
+ assert.deepEqual(ok(await rank([inconsistent],trip)).options,[]);
+ const single=ok(await rank([large,unknown,slow,easy]));assert.deepEqual(single.options.map(o=>o.candidateId),[easy.candidateId]);
+ assert.deepEqual(single.conditional.map(c=>c.reason),['topUpUnreviewed','timingUnknown','leadStepUnconfirmed']);
+ const enough=ok(await rank([slow,large,easy],trip));
+ assert.equal(enough.usualMinutes,10);assert.deepEqual(enough.options.map(o=>o.candidateId),[easy.candidateId,large.candidateId]);
+ const [onHand,topUp]=enough.options;
+ assert.equal(onHand.kind,'onHand');assert.equal(onHand.packCount,0);
+ assert.equal(onHand.intent.replacement.needs.find(n=>n.priority==='required').notes,'Warm before serving');
+ assert.deepEqual(onHand.intent.replacement.needs.filter(n=>n.priority==='protected'),target.needs.filter(n=>n.priority==='protected'));
+ assert.equal(topUp.kind,'topUp');assert.equal(topUp.minutes,16);assert.equal(topUp.repeatRequired,true);
+ assert.deepEqual(topUp.buys,[{ingredientId:large.ingredients[0].ingredientId,label:offer.label,packs:2,subtotalMinor:400}]);
+ assert.equal(topUp.extraCashMinor,450);
+ const over=ok(await rank([large],{...trip,budgetMinor:449}));assert.deepEqual(over.options,[]);
+ assert.deepEqual(over.conditional,[{candidateId:large.candidateId,revision:large.revision,reason:'overBudget',extraCashMinor:450,budgetMinor:449,currency:'USD'}]);
+ const sold=structuredClone(large);sold.ingredients[0].offer.availablePacks=1;
+ assert.equal(ok(await rank([sold],trip)).conditional[0].requiredPacks,2);
+ assert.deepEqual(ok(await rank([large],{...trip,minutes:50})).options,[]);
+ const unsafe=structuredClone(large);unsafe.ingredients[0].offer.exclusionTags=['sesame'];
+ const noFit=ok(await rank([unsafe,unknown,slow],trip));assert.deepEqual(noFit.options,[]);assert.deepEqual(noFit.target,target);assert.equal(noFit.conditional[0].reason,'exclusionConflict');
+ assert.equal(ok(await rank([{...slow,advanceStepsCompleted:true}])).options.length,1);
+ const preview=intent=>call(f.owner,path+'/preview','POST',{v:1,base:desk.base,intent});
+ const apply=(intent,seen)=>f.command('mealRecovery.apply',{v:1,base:desk.base,intent,previewId:seen.previewId,previewDigest:seen.previewDigest});
+ const source={kind:'meal',occurrenceId:target.occurrenceId,mealRevision:target.sourceMealRevision,revisionId:target.revisionId};
+ const scoped=ok(await call(f.owner,library+'/source','POST',{source})),candidateId=randomUUID();
+ ok(await call(f.owner,library,'POST',{v:1,clientKey:randomUUID(),candidateId,baseRevision:null,action:'accept',usual:false,reviewed:true,
+   registryRevision:scoped.registryRevision,shopRevision:scoped.shopRevision,authorityEpoch:scoped.authorityEpoch,recipe:scoped.recipe,source}));
+ const fromPlan={candidateId,revision:1,remainingElapsedMinutes:8,advanceStepsCompleted:false,
+   ingredients:scoped.recipe.ingredients.map(i=>({ingredientId:i.id,sourceIds:[f.sourceId],offer}))};
+ const named=ok(await rank([fromPlan],trip)).options[0];
+ assert.equal(named.packCount,1);assert.equal(named.repeatRequired,true);
+ assert.deepEqual(named.intent.replacement.needs.filter(n=>n.priority==='protected'),target.needs.filter(n=>n.priority==='protected'));
+ const hiddenGroup=structuredClone(fromPlan);
+ hiddenGroup.ingredients.find(i=>i.ingredientId===target.needs.find(n=>n.priority==='protected').id).sourceIds=[];
+ assert.deepEqual(ok(await rank([hiddenGroup],trip)).options,[]);
+ const original=topUp.intent;assert.equal(original.agreesToRepeat,false);assert.equal(original.agreesToExtraTrip,false);
+ for(const flags of [{agreesToRepeat:true},{agreesToExtraTrip:true},{agreesToRepeat:true,agreesToExtraTrip:true}]) {
+   const i={...original,...flags},p=ok(await preview(i));assert.equal(p.consentSatisfied,false);assert.equal(p.feasible,false);
+   assert.equal((await f.send(apply(i,p))).data.error.code,'meal_agreement_required');
+ }
+ const forged=structuredClone(original);forged.replacement.title='Invented approved dish';
+ assert.equal((await preview(forged)).status,409);
+ const none=ok(await call(f.owner,path));assert.deepEqual(none.meals,desk.meals);
+ const current=ok(await call(f.owner,outside));
+ const approved=ok(await preview(onHand.intent));
+ ok(await call(f.owner,outside,'POST',{v:1,action:'revoke',reviewed:true,clientKey:randomUUID(),shopRevision:current.shopRevision,
+   authorityEpoch:current.authorityEpoch,registryRevision:current.registryRevision,candidateId:easy.candidateId,baseRevision:easy.revision}));
+ assert.equal((await f.send(apply(onHand.intent,approved))).status,409);
+ assert.equal((await rank([easy])).status,409);
+ const i={...original,agreesToRepeat:true,agreesToExtraTrip:true,acceptsUnresolved:true},seen=ok(await preview(i));
+ assert.equal(seen.consentSatisfied,true);assert.equal(seen.foodConfirmed,false);
+ const state=(await admin.query('select subscription from ritc.billing_state where household_id=$1',[f.h])).rows[0].subscription;
+ const subscription=subscriptions.get(state.originalTransactionID);
+ subscriptions.set(state.originalTransactionID,{...subscription,status:'expired',expiresAt:Date.now()-1000,signedAt:Date.now()});
+ assert.equal((await rank([large],trip)).data.error.code,'membership_inactive');
+ assert.equal((await f.send(apply(i,seen))).data.error.code,'membership_inactive');
+ assert.deepEqual(ok(await call(f.owner,path)).meals,desk.meals);
+ subscriptions.set(state.originalTransactionID,{...subscription,signedAt:Date.now()+1000});
+ const command=apply(i,seen),receipt=ok(await f.send(command));assert.deepEqual(ok(await f.send(command)),receipt);
+ const saved=ok(await call(f.owner,path));assert.equal(saved.meals.find(m=>m.occurrenceId===target.occurrenceId).revisionId,i.replacement.revisionId);
+ assert.equal((await rank([large],trip)).status,409); // Stock/recovery seals changed on the published replacement.
+ assert.equal((await admin.query('select 1 from ritc.meal_recovery_fallback where household_id=$1 and candidate_id=$2 and operation_id=$3',
+   [f.h,large.candidateId,receipt.operationId])).rowCount,1);
+ assert.equal(ok(await call(f.owner,path+'/coverage')).needs.find(n=>n.needId===i.replacement.needs.find(n=>n.priority==='required').id).missing.numerator,'3');
 });

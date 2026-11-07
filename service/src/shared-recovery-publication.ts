@@ -1,3 +1,6 @@
+import {chosenFallbacks,fallbackDecision,FallbackConstraint,requireAssistance} from './shared-fallback-options.js';
+import {loadAcceptedFallbacks,linkAcceptedFallback} from './shared-fallback-registry.js';
+import type {BillingService} from './billing/service.js';
 import {randomUUID} from 'node:crypto';
 import {z} from 'zod';
 import {requirePlaced} from './delivery-evidence.js';
@@ -81,10 +84,22 @@ function validateRepeat(donor:RecoveryMeal|undefined,target:RecoveryMeal) {
   if(remaining.length) throw invalidRepeat();
 }
 
-async function decision(ctx:Context,shop:Shop,request:z.infer<typeof recoveryPreviewSchema>) {
+async function decision(ctx:Context,shop:Shop,request:z.infer<typeof recoveryPreviewSchema>,billing?:BillingService) {
   requirePlaced(shop);
-  const {basis,verifyReplacementCoverage}=await loadSharedRecoveryDecisionBasis(ctx,shop,loadRecoveryPublication);
+  if(request.intent.fallback) await requireAssistance(ctx,billing);
+  const state=await loadSharedRecoveryDecisionBasis(ctx,shop,loadRecoveryPublication);
+  const {basis,verifyReplacementCoverage}=state;
   try {
+    if(request.intent.fallback) {
+      const selection=request.intent.fallback;
+      const target=basis.meals.find(m=>m.occurrenceId===request.intent.occurrenceId);
+      const candidate=(await loadAcceptedFallbacks(ctx,[selection.review.candidateId])).find(c=>c.candidateId===selection.review.candidateId && c.revision===selection.review.revision);
+      if(!target || !candidate || recoveryDigest(basis.base)!==recoveryDigest(request.base)) throw refresh();
+      const chosen=await chosenFallbacks(ctx,shop,state);
+      const result=fallbackDecision(state,chosen,target,candidate,selection,ctx.now.toISOString(),request.intent.reviewedAt,request.intent);
+      if(!result) throw refresh();
+      return result.decision;
+    }
     const reviewed=verifyReplacementCoverage(previewRecovery(basis,request,ctx.now.toISOString()));
     const intent=reviewed.intent;
     if(intent.repeatOfOccurrenceId) {
@@ -96,6 +111,7 @@ async function decision(ctx:Context,shop:Shop,request:z.infer<typeof recoveryPre
     }
     return reviewed;
   } catch(error) {
+    if(error instanceof FallbackConstraint) throw refresh();
     if(!(error instanceof RecoveryError)) throw error;
     if(error.code==='stale_basis' || error.code==='stale_target') throw refresh();
     throw new ServiceError(409,'meal_recovery_review_required','Review the remaining food, meal timing and protected portions.');
@@ -109,8 +125,8 @@ function scopedProjection(projection:Decision['before']) {
     allocations:projection.allocations.filter(a=>localNeeds.has(a.needId))};
 }
 
-export async function previewSharedRecovery(ctx:Context,shop:Shop,input:unknown) {
-  const reviewed=await decision(ctx,shop,recoveryPreviewSchema.parse(input));
+export async function previewSharedRecovery(ctx:Context,shop:Shop,input:unknown,billing?:BillingService) {
+  const reviewed=await decision(ctx,shop,recoveryPreviewSchema.parse(input),billing);
   const previewId=randomUUID(),expiresAt=new Date(ctx.now.getTime()+10*60_000);
   await ctx.db.query('DELETE FROM ritc.meal_recovery_preview WHERE household_id=$1 AND expires_at<=$2',[ctx.householdId,ctx.now]);
   await ctx.db.query(`INSERT INTO ritc.meal_recovery_preview(household_id,shop_id,preview_id,actor_id,device_id,digest,expires_at)
@@ -143,14 +159,14 @@ async function rememberSources(ctx:Context,shop:Shop,operationId:string) {
     ) origins`,[...scope,[...lots]]);
 }
 
-export async function recordSharedRecovery(ctx:Context,shop:Shop,input:unknown,operationId:string) {
+export async function recordSharedRecovery(ctx:Context,shop:Shop,input:unknown,operationId:string,billing?:BillingService) {
   const {previewId,previewDigest,...request}=recoveryApplyBody.parse(input);
   const scope=[ctx.householdId,shop.shop_id];
   const stored=await ctx.db.query(`SELECT 1 FROM ritc.meal_recovery_preview
     WHERE household_id=$1 AND shop_id=$2 AND preview_id=$3 AND actor_id=$4 AND device_id=$5 AND digest=$6 AND expires_at>$7`,
     [...scope,previewId,ctx.member.member_id,ctx.deviceId,previewDigest,ctx.now]);
   if(!stored.rowCount) throw refresh();
-  const reviewed=await decision(ctx,shop,request);
+  const reviewed=await decision(ctx,shop,request,billing);
   if(reviewed.previewDigest!==previewDigest) throw refresh();
   if(!reviewed.consentSatisfied) throw new ServiceError(409,'meal_agreement_required','Review the repeat, extra trip or unresolved meal before applying.');
   const meal=reviewed.intent.replacement;
@@ -167,6 +183,8 @@ export async function recordSharedRecovery(ctx:Context,shop:Shop,input:unknown,o
       shop.placed_revision,shop.authority_epoch,shop.supply_revision,reviewed.base.pantryRevision,ctx.member.member_id,ctx.now,
       meal,reviewed.intent,previewDigest,[...new Set([...previous.needs,...meal.needs].map(n=>n.id))]]);
   await rememberSources(ctx,shop,operationId);
+  const fallback=reviewed.intent.fallback?.review;
+  if(fallback) await linkAcceptedFallback(ctx,operationId,fallback.candidateId,fallback.revision);
   await ctx.db.query('DELETE FROM ritc.meal_recovery_preview WHERE household_id=$1 AND preview_id=$2',[ctx.householdId,previewId]);
   return {recoveryRevision,occurrenceId:meal.occurrenceId,revisionId:meal.revisionId};
 }

@@ -23,8 +23,20 @@ export const recoveryMealSchema = z.object({
   needs:z.array(recoveryNeedSchema).max(260),
   remainingElapsedMinutes:z.number().int().min(0).max(1_000_000).nullable(),requiredLeadMinutes:z.number().int().min(0).max(1_000_000).nullable(),advanceStepsCompleted:z.boolean(),
 }).strict();
+const minutes=z.number().int().min(0).max(1_000_000);
+const minor=z.number().int().min(0).max(1_000_000_000);
+const fallbackOffer=z.object({packId:id.optional(),label,exclusionTags:z.array(label).max(20),
+  usablePerPack:mealQuantity,priceMinor:minor,availablePacks:z.number().int().nonnegative().max(1_000_000)}).strict();
+export const fallbackReviewSchema=z.object({candidateId:id,revision:revision.min(1),
+  remainingElapsedMinutes:minutes.nullable(),advanceStepsCompleted:z.boolean(),
+  ingredients:z.array(z.object({ingredientId:id,sourceIds:z.array(id).max(100),offer:fallbackOffer.nullable()}).strict()).max(260)}).strict();
+const fallbackTrip=z.object({minutes,budgetMinor:minor,chargesMinor:minor,currency:z.string().regex(/^[A-Z]{3}$/)}).strict();
+export const fallbackSelectionSchema=z.object({review:fallbackReviewSchema,trip:fallbackTrip.nullable()}).strict();
+export const fallbackOptionsSchema=z.object({v:z.literal(1),base:recoveryBaseSchema,occurrenceId:id,targetDigest:hash,
+  reviews:z.array(fallbackReviewSchema).max(100),trip:fallbackTrip.nullable()}).strict();
+export type FallbackSelection=z.infer<typeof fallbackSelectionSchema>;
 export const recoveryIntentSchema = z.object({
-  occurrenceId:id,targetDigest:hash,replacement:recoveryMealSchema,reviewedAt:time,
+  occurrenceId:id,targetDigest:hash,replacement:recoveryMealSchema,reviewedAt:time,fallback:fallbackSelectionSchema.optional(),
   // Explicit manual repeat choice; not proof of an accepted recipe/template.
   repeatOfOccurrenceId:id.nullable(),
   agreesToRepeat:z.boolean(),proposesExtraTrip:z.boolean(),agreesToExtraTrip:z.boolean(),acceptsUnresolved:z.boolean(),

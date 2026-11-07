@@ -280,7 +280,12 @@ export async function loadSharedRecoveryDecisionBasis(ctx:Context,shop:Shop,load
     return {...reviewed,before,after,previewDigest:recoveryDigest({decision:reviewed.previewDigest,
       before:before.allocations,after:after.allocations})};
   }
-  return {basis,verifyReplacementCoverage};
+  // A ranked top-up cannot use an outside shop's unfilled protected claim as
+  // spare food. Its meal identity and requested amount stay in this transaction.
+  const outsideShortages=new Set(state.graph.report.needs.filter(n=>!n.occurrenceId.startsWith(shop.shop_id+'/') &&
+    (n.protected || n.reservations.length) && (!n.missing || n.missing.numerator!=='0')).map(n=>n.ingredientId));
+  const outsideProtectedSources=new Set(state.graph.sources.filter(s=>s.matches.some(m=>outsideShortages.has(m.ingredientId))).map(s=>s.sourceId));
+  return {basis,verifyReplacementCoverage,outsideProtectedSources};
 }
 export async function readSharedRecoveryContext(ctx:Context,shop:Shop,load:RecoveryPublicationLoader){
   const state=await loadGraph(ctx,shop,load);
