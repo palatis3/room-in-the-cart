@@ -1,0 +1,21 @@
+{
+  "sourceFiles": {
+    "ios/Features/Ledger/LedgerIngredientView.swift": "288ef8f8bcb5a8fd3e1da1dce5219d442615b418e781e0485037dab418411fd4",
+    "ios/Features/Ledger/Ledger.xcstrings": "6fe648e2937ecb6495169305cab35764507c92f1c71e9e6aa3f446d2ff749fe9",
+    "ios/UITests/LedgerConfirmedStockPackUITests.swift": "1c675c450f8ac6a6ba4729dba38234fcc84f8c3dd781a81af6015c734b003d05"
+  },
+  "nativeFinalExit": 0,
+  "strictExit": 0,
+  "expectedCases": 1,
+  "passedCases": 1,
+  "recordedRuntimeWarnings": 0,
+  "implicitRestarts": 0,
+  "preparatoryFailedExecutions": 3,
+  "timeoutsUnchanged": true,
+  "ownedSimulatorRemoved": true,
+  "protectedPreviewUntouched": true,
+  "frozenLocalFiles": 610,
+  "freezeSHA256": "42d351a982a8752c3ae61663d011ad76cfc0703c9e8b80902e3721732147c9ed",
+  "originalHosted804Or775Acceptance": false,
+  "fullReleaseAcceptance": false
+}

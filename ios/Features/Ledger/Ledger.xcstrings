@@ -5537,6 +5537,38 @@
           }
         }
       }
+    },
+    "Show protected needs": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show protected needs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar necesidades protegidas"
+          }
+        }
+      }
+    },
+    "Hidden protected needs still count toward the total and whole packs.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hidden protected needs still count toward the total and whole packs."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las necesidades protegidas ocultas siguen contando para el total y los paquetes completos."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

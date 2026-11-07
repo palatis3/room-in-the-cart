@@ -1,0 +1,10 @@
+{
+  "nativeExit": 65,
+  "visibilityAndTotalAssertionsPassed": true,
+  "observedProtectedLabel": "Protected inside that amount, 2 items",
+  "failure": "Test queried an isolated value but SwiftUI exposes the LabeledContent as a combined label",
+  "correction": "Assert the exact combined protected-quantity label observed in retained hierarchy",
+  "appChangedAfterFirstRun": false,
+  "timeoutsChanged": false,
+  "evidence": "switch-target-attachments/DA5A98E3-D238-4DBF-AA1D-AA64B6B7BD7A.txt"
+}

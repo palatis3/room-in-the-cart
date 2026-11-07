@@ -1,0 +1,16 @@
+[
+  {
+    "action": "shutdown",
+    "uuid": "F237FDBF-5A29-4CA8-A8C4-9779D92D1A26",
+    "exitCode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "action": "delete",
+    "uuid": "F237FDBF-5A29-4CA8-A8C4-9779D92D1A26",
+    "exitCode": 0,
+    "stdout": "",
+    "stderr": ""
+  }
+]

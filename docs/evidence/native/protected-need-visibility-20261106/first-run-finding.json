@@ -1,0 +1,21 @@
+{
+  "nativeExit": 65,
+  "failure": "Row-wide switch remains 1 after center tap; expected 0",
+  "outerSwitchFrame": [
+    16,
+    560.3,
+    370,
+    52
+  ],
+  "innerSwitchFrame": [
+    309,
+    572.3,
+    63,
+    28
+  ],
+  "evidence": "case-attachments/A7DC4294-AB40-48BF-82D5-19193CEF1A6B.txt",
+  "correction": "Use trailing control coordinate x=0.92,y=0.5 already used elsewhere in this test suite",
+  "timeoutsChanged": false,
+  "appChangedAfterFirstRun": false,
+  "freshCaseExecutionJustification": "Corrected test interaction target, same full assertions; first failed result retained"
+}
