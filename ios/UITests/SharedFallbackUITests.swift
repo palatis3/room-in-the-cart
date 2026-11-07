@@ -41,9 +41,12 @@ final class SharedFallbackUITests: XCTestCase {
     private func toggle(_ element: XCUIElement, to value: String = "1", file: StaticString = #filePath, line: UInt = #line) {
         reveal(element,file:file,line:line)
         // A partially visible SwiftUI switch can report hittable while its trailing knob is under the home indicator.
-        if element.frame.midY > app.frame.maxY - 72 { app.swipeUp() }
-        if element.frame.midY < app.frame.minY + 72 { app.swipeDown() }
-        element.coordinate(withNormalizedOffset: CGVector(dx:0.92,dy:0.5)).tap()
+        let knob = element.switches.firstMatch
+        let control = knob.exists ? knob : element
+        reveal(control, file: file, line: line)
+        if control.frame.midY > app.frame.maxY - 72 { app.swipeUp() }
+        if control.frame.midY < app.frame.minY + 72 { app.swipeDown() }
+        control.tap()
         let applied = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", value), object: element)
         XCTAssertEqual(XCTWaiter.wait(for: [applied], timeout: 3), .completed, file: file, line: line)
     }
