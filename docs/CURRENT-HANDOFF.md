@@ -2,6 +2,12 @@
 
 Updated November 7, 2026 UTC. The owner resumed and explicitly approved the reviewed hosted staging update; the full first-version goal is active and release acceptance remains incomplete. Historical snapshots are preserved in [the handoff archive](CURRENT-HANDOFF-HISTORY-20261106.md).
 
+## November 7 first pickup and hosted CI
+
+Start pickup opens an editable local draft in one tap. A shopper can paste immediately or rename the pickup in its picker. A fresh iOS 17 Release install exposed an empty-route race. The app now navigates after committing the pickup ID. The Release run saved all 500 pasted lines and the 20 checked rows. An iOS 26.2 shopper also kept the same typed item across process restart. [Release and recovery evidence](evidence/native/first-pickup-change-20261107/first-pickup-release.json)
+
+The six GitHub runs for `df8e36d` finished with 47 successful jobs and five failures. One failure was the aggregate CI gate. Local fixes cover the urgent-repair timeout, the staple picker hierarchy warning, the asynchronous cook-readback assertion and the offscreen meal-proposal action. The cook readback suite still produced a QoS warning with an incomplete XCTest diagnostic on the local simulator. The strict warning check remains active. [Core run](https://github.com/palatis3/room-in-the-cart/actions/runs/42402979653) · [Fixture run](https://github.com/palatis3/room-in-the-cart/actions/runs/42402979723)
+
 ## November 7 Shop entry and list interaction
 
 Shop now opens directly to pickup tasks. The first-visit checkout comparison saves the shopper’s two retailer observations, their included-charge confirmations and the original cap. The reopened comparison was checked after process restart on iOS 17. The selected-pickup checkout also retained its exact amount and pricing mode across two restarts. [Shop walkthrough and checks](evidence/native/first-pickup-change-20261107/README.md)

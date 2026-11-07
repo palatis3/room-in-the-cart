@@ -1,0 +1,34 @@
+{
+  "productCommit": "962f75ccff89980f2c4a80f62cdf62805f01ba4a",
+  "releaseSimulator": {
+    "osVersion": "17.0",
+    "osBuildNumber": "21A328",
+    "modelName": "iPhone SE (3rd generation)",
+    "architecture": "arm64",
+    "xcode": "Xcode 27.1\nBuild version 27A9275",
+    "buildConfiguration": "Release",
+    "testConfiguration": "Test Scheme Action"
+  },
+  "releaseTest": "testRenderedFiveHundredItemPickup",
+  "runtimeWarnings": 0,
+  "persistedPickup": {
+    "sqliteQuickCheck": "ok",
+    "revision": 23,
+    "payloadSHA256": "30afe3696abe69785c55a7afc7a685bda05c10f5d19217cd493bfe0bc0add801",
+    "lineCount": 500,
+    "contributionCount": 500,
+    "importCount": 1,
+    "source": "paste",
+    "checkedCount": 20
+  },
+  "timingScope": "calibration-only",
+  "typedEntryAndRelaunch": {
+    "iOS": "26.2",
+    "receiptSHA256": "9608f641536ecbe435fa445fa5e3060638a1c647606464e0931740a53e9deeb0"
+  },
+  "competingFirstWriteAndRouteRestoration": {
+    "passed": 12,
+    "runtimeWarnings": 0
+  },
+  "earlierReleaseFailure": "The initial iOS 17 run committed a pickup, but SwiftUI displayed the access-changed screen after receiving the empty route. Navigation now opens the committed shop ID."
+}
