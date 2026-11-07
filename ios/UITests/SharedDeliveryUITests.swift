@@ -12,8 +12,9 @@ import XCTest
         app.terminate()
     }
 
-    private func launch(_ language: String, locale: String, cookCopies: Bool = false) {
+    private func launch(_ language: String, locale: String, cookCopies: Bool = false, pantry: Bool = false) {
         app.launchArguments = ["--ui-testing", "--shared-delivery-fixture", "-AppleLanguages", "(\(language))", "-AppleLocale", locale]
+        if pantry { app.launchArguments.append("--shared-pantry-fixture") }
         if cookCopies { app.launchArguments.append("--shared-cook-copies-fixture") }
         app.launch()
         tap(app.buttons["sharedShop.deliveryEvidence"])
@@ -68,6 +69,115 @@ import XCTest
             "identifier BEGINSWITH %@ AND (label CONTAINS %@ OR value CONTAINS %@)", "delivery.confirmed.", text, text)).firstMatch
         return row.waitForExistence(timeout: 8)
     }
+    func testShopperReviewsFreezerBatchCoverageBeforeCorrectingFiveToThree() {
+        launch("en", locale: "en_US", pantry: true)
+        let lunch = "AAAAAAA1-AAAA-4AAA-8AAA-AAAAAAAAAAAA", dinner = "BBBBBBB1-BBBB-4BBB-8BBB-BBBBBBBBBBBB"
+        let lunchIngredient = "AAAAAAA2-AAAA-4AAA-8AAA-AAAAAAAAAAAA", dinnerIngredient = "BBBBBBB2-BBBB-4BBB-8BBB-BBBBBBBBBBBB"
+        let lunchGroup = "AAAAAAA3-AAAA-4AAA-8AAA-AAAAAAAAAAAA", dinnerGroup = "BBBBBBB3-BBBB-4BBB-8BBB-BBBBBBBBBBBB"
+        let name = "Freezer tortillas"
+        let observe = app.buttons["pantry.observe"], preview = app.buttons["pantry.preview"]
+        let confirm = app.buttons["pantry.confirmObservation"]
+        let batch = app.buttons.matching(NSPredicate(format:"label CONTAINS %@",name)).firstMatch
+        func back(from title: String) { tap(app.navigationBars[title].buttons.firstMatch) }
+        func enterObservation(_ number: String) {
+            tap(observe)
+            let field = app.textFields["pantry.amount"]
+            tap(field)
+            if let value = field.value as? String, value == "5" {
+                field.typeText(XCUIKeyboardKey.delete.rawValue)
+            }
+            field.typeText(number)
+            tap(preview)
+        }
+        func assertFields(_ identifier: String, _ fields: [(String,String)], line: UInt = #line) {
+            let row = app.descendants(matching: .any).matching(identifier: identifier).firstMatch
+            reveal(row, line: line)
+            for (label, value) in fields {
+                let text = "(?s).*" + NSRegularExpression.escapedPattern(for: label) + "[\\s,:]+"
+                    + NSRegularExpression.escapedPattern(for: value) + "(?:$|[^\\p{L}\\p{N}].*)"
+                let predicate = NSPredicate(format: "(label CONTAINS %@ AND value == %@) OR label MATCHES %@", label, value, text)
+                let fact = row.descendants(matching: .any).matching(predicate).firstMatch
+                XCTAssertTrue(fact.exists, "Missing \(label) \(value) in \(identifier)", line: line)
+            }
+        }
+        func checkCoverage(dinnerCovered: String, dinnerMissing: String, checkCook: Bool = false) {
+            tap(app.buttons["pantry.coverage"])
+            assertFields("pantry.coverage.need." + lunch + ".0", [
+                ("Covered by freezer stock","2 units"), ("Still needed","0 units"),
+                ("Amount set aside","2 units"), ("Still backed by this source","2 units")
+            ])
+            assertFields("pantry.coverage.need." + dinner + ".0", [
+                ("Covered by deliveries","0 units"), ("Covered by pantry stock","0 units"),
+                ("Covered by freezer stock",dinnerCovered), ("Still needed",dinnerMissing)
+            ])
+            if checkCook {
+                tap(app.buttons["pantry.coverage.cook." + dinner])
+                let copy = app.staticTexts["delivery.cook.preview"]
+                reveal(copy)
+                for fragment in [name, "Dinner wraps", "Covered by freezer stock: 1 unit", "Still needed: 3 units"] {
+                    XCTAssertTrue(copy.label.contains(fragment), copy.label)
+                }
+                tap(app.buttons.matching(NSPredicate(format:"label CONTAINS %@", "Recipient language")).firstMatch)
+                tap(app.buttons["Español (EE. UU.)"])
+                reveal(copy)
+                for fragment in [name, "Dinner wraps", "Cubierto por el congelador: 1 unidad", "Aún falta: 3 unidades"] {
+                    XCTAssertTrue(copy.label.contains(fragment), copy.label)
+                }
+                back(from: "Tell the cook")
+            }
+            back(from: "Food coverage by meal")
+        }
+
+        tap(app.buttons["delivery.openPantry"])
+        tap(app.buttons["pantry.create"])
+        enter(name, in: app.textFields["pantry.name"])
+        tap(app.buttons["pantry.location"])
+        tap(app.buttons["Freezer"])
+        tap(app.buttons["pantry.saveBatch"])
+        tap(batch)
+        tap(app.buttons["pantry.select"])
+        reveal(app.buttons["pantry.matches"])
+        XCTAssertEqual(app.buttons["pantry.select"].label, "Remove from this shop")
+        enterObservation("5")
+        tap(confirm)
+
+        tap(app.buttons["pantry.matches"])
+        tap(app.buttons["pantry.ingredient." + lunch + "." + lunchIngredient])
+        tap(app.buttons["pantry.match"])
+        reveal(app.buttons["pantry.group." + lunchGroup])
+        back(from: "Tortillas")
+        tap(app.buttons["pantry.ingredient." + dinner + "." + dinnerIngredient])
+        tap(app.buttons["pantry.match"])
+        reveal(app.buttons["pantry.group." + dinnerGroup])
+        back(from: "Tortillas")
+        tap(app.buttons["pantry.ingredient." + lunch + "." + lunchIngredient])
+        tap(app.buttons["pantry.group." + lunchGroup])
+        enter("2", in: app.textFields["pantry.reserveAmount"])
+        tap(app.buttons["pantry.saveReservation"])
+        back(from: "Tortillas")
+        back(from: "Meal ingredient matches")
+        back(from: name)
+        checkCoverage(dinnerCovered: "3 units", dinnerMissing: "1 unit")
+
+        tap(batch)
+        enterObservation("3")
+        let lunchImpact = ["pantry.impact", lunch, lunchIngredient, lunchGroup].joined(separator: ".")
+        let dinnerImpact = ["pantry.impact", dinner, dinnerIngredient, dinnerGroup].joined(separator: ".")
+        assertFields(lunchImpact, [("Covered before","2 units"),("Covered after","2 units"),("Missing after","0 units")])
+        assertFields(dinnerImpact, [("Covered before","3 units"),("Covered after","1 unit"),
+                                    ("Missing before","1 unit"),("Missing after","3 units")])
+        tap(app.buttons["Cancel"])
+        back(from: name)
+        checkCoverage(dinnerCovered: "3 units", dinnerMissing: "1 unit")
+
+        tap(batch)
+        enterObservation("3")
+        assertFields(dinnerImpact, [("Covered after","1 unit"),("Missing after","3 units")])
+        tap(confirm)
+        back(from: name)
+        checkCoverage(dinnerCovered: "1 unit", dinnerMissing: "3 units", checkCook: true)
+    }
+
     func testShopperSavesDatedCookCopyAndReopensRecipientSendRecord() {
         launch("en", locale: "en_US", cookCopies: true)
         tap(app.buttons["Delivered food by meal"])

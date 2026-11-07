@@ -21,12 +21,13 @@ struct SharedDeliveryFixtureRoot: View {
 /// Deterministic HTTP responses for the iPhone controls. The pinned HTTPS suite
 /// exercises these same Swift commands against the real service and PostgreSQL.
 final class SharedDeliveryFixtureRecords {
+    let pantry = ProcessInfo.processInfo.arguments.contains("--shared-pantry-fixture") ? SharedPantryFixtureRecords() : nil
     let supportsCookCopies = ProcessInfo.processInfo.arguments.contains("--shared-cook-copies-fixture")
     private var copies: [[String:Any]] = [] // Newest first for the fixture's single placed meal.
     // PostgreSQL keys recipient labels by their exact UTF-8 spelling.
     private var recipientHeads: [Data:[String:Any]] = [:]
     private var recordedCommands: [String:Data] = [:]
-    private var revision = 0
+    private(set) var revision = 0
     private var source: [String:Any]?
     private var receipts: [String:[String:Any]] = [:]
     private let line = "66666666-6666-4666-8666-666666666666"
@@ -43,10 +44,11 @@ final class SharedDeliveryFixtureRecords {
             "groups":[["id":group,"name":"School lunch","servings":["numerator":2,"denominator":1],"protected":true]],
             "ingredients":[["id":ingredient,"name":"Tortillas","quantity":quantity,"groupIds":[group],"exclusions":["sesame"]]]]
         let meal: [String:Any] = ["title":"Lunch wraps","day":"2026-11-08","kind":"lunch","portions":2,"protected":true,"planning":plan]
-        return ["shopId":shop, "coverageAvailable":true,"reservationsAvailable":true,"meals":[["occurrenceId":occurrence,"revision":1,"meal":meal]], "placedRevision":1, "shopRevision":2, "authorityEpoch":1, "supplyRevision":revision,
+        return ["shopId":shop, "coverageAvailable":true,"reservationsAvailable":true,"meals":pantry?.meals ?? [["occurrenceId":occurrence,"revision":1,"meal":meal]], "placedRevision":1, "shopRevision":2, "authorityEpoch":1, "supplyRevision":revision,
          "lines":[["lineId":line,"name":"Ordered wraps"]], "sources":source.map { [$0] } ?? [], "nextCursor":NSNull()]
     }
     func coverage(shop: String) throws -> [String:Any] {
+        if let pantry { return try pantry.coverage(shop: shop, supply: revision, deliveryOnly: true) }
         let required: [String:Any] = ["amount":["numerator":2,"denominator":1],"unit":"count","originalLiteral":"2"]
         let confirmed = source?["confirmed"] as? [String:Any]
         let q = confirmed?["quantity"] as? [String:Any]
@@ -144,10 +146,17 @@ final class SharedDeliveryFixtureRecords {
             guard recordedCommands[key] == bytes else { throw CookFailure.replayConflict }
             return receipt
         }
-        if kind.hasPrefix("cookCopy.") {
+        if kind.hasPrefix("cookCopy.") || kind.hasPrefix("pantry.") {
             guard command["v"] as? Int == 1, command["shopId"] as? String == shop,
                   command["replayWindow"] as? String == "77777777-7777-4777-8777-777777777777" else { throw CookFailure.invalid }
-            let receipt = try recordCook(shop: shop, kind: kind, base: command["base"] as? [String:Any], body: body)
+            let receipt: [String:Any]
+            if kind.hasPrefix("pantry.") {
+                guard let pantry, let base = command["base"] as? [String:Any], base["shopRevision"] as? Int == 2,
+                      base["authorityEpoch"] as? Int == 1 else { throw CookFailure.staleBase }
+                receipt = try pantry.record(shop: shop, supply: revision, kind: kind, body: body)
+            } else {
+                receipt = try recordCook(shop: shop, kind: kind, base: command["base"] as? [String:Any], body: body)
+            }
             recordedCommands[key] = bytes
             receipts[key] = receipt
             return receipt
@@ -189,6 +198,7 @@ final class SharedDeliveryFixtureRecords {
         }
         guard let id = source?["sourceId"] as? String else { throw URLError(.badServerResponse) }
         revision += 1
+        pantry?.revision += 1
         let receipt: [String:Any] = ["kind":kind,"operationId":op,"shopId":shop,"shopRevision":2,"authorityEpoch":1,
             "disposition":"recorded","sourceId":id,"supplyRevision":revision]
         recordedCommands[key] = bytes

@@ -49,6 +49,7 @@ private final class S17FixtureServer: @unchecked Sendable {
             var capabilities = shopper ? ["shopper_commands","shopper_inbox","request_preview"] : ["meal_proposals"]
             if shopper, let deliveries {
                 capabilities.append("delivery_evidence")
+                if deliveries.pantry != nil { capabilities.append("pantry_lots") }
                 if deliveries.supportsCookCopies { capabilities.append("cook_copies") }
             }
             return try json(["household":["id":Self.household,"label":"Isolated shared meals"],"memberId":shopper ? Self.shopper:Self.planner,
@@ -67,14 +68,26 @@ private final class S17FixtureServer: @unchecked Sendable {
         }
         let scoped = "/v1/households/" + Self.household
         let deliveryPath = scoped + "/shops/" + Self.shop
+        let pantryPath = deliveryPath + "/pantry-lots"
         let cookPath = deliveryPath + "/cook-copies"
         if let deliveries, [deliveryPath + "/delivery-evidence", deliveryPath + "/delivery-evidence/coverage",
+                            pantryPath, pantryPath + "/coverage", pantryPath + "/observation-preview",
                             cookPath, cookPath + "/baseline", scoped + "/commands"].contains(path) {
             guard request.value(forHTTPHeaderField: "Authorization") == "Bearer fixture-shopper",
                   request.value(forHTTPHeaderField: "X-Device-Token") == "shopper-token" else { return try denied() }
             if path.hasSuffix("/delivery-evidence/coverage") { return try json(deliveries.coverage(shop: Self.shop)) }
             if path.hasSuffix("/delivery-evidence") { return try json(deliveries.page(shop: Self.shop)) }
             do {
+                if path == pantryPath || path.hasPrefix(pantryPath + "/") {
+                    guard let pantry = deliveries.pantry else { return try denied() }
+                    switch (request.httpMethod, path) {
+                    case ("GET", pantryPath): return try json(pantry.page(shop: Self.shop, supply: deliveries.revision))
+                    case ("GET", pantryPath + "/coverage"): return try json(pantry.coverage(shop: Self.shop, supply: deliveries.revision))
+                    case ("POST", pantryPath + "/observation-preview"):
+                        return try json(pantry.preview(shop: Self.shop, supply: deliveries.revision, body: input))
+                    default: return try denied()
+                    }
+                }
                 if path == cookPath {
                     guard deliveries.supportsCookCopies, request.httpMethod == "GET",
                           let query = URLComponents(url: request.url!, resolvingAgainstBaseURL: false)?.queryItems else { return try denied() }
@@ -85,6 +98,7 @@ private final class S17FixtureServer: @unchecked Sendable {
                     guard deliveries.supportsCookCopies else { return try denied() }
                     return try json(deliveries.cookBaseline(input))
                 }
+                if (input["kind"] as? String)?.hasPrefix("pantry.") == true, deliveries.pantry == nil { return try denied() }
                 if (input["kind"] as? String)?.hasPrefix("cookCopy.") == true, !deliveries.supportsCookCopies { return try denied() }
                 return try json(deliveries.record(shop: Self.shop, command: input))
             } catch let failure as SharedDeliveryFixtureRecords.CookFailure {
