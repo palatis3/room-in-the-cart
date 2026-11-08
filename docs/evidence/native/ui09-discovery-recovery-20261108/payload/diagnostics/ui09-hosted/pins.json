@@ -1,0 +1,24 @@
+{
+  "baseSHA": "a30506596ad3a0103396fccb29800c629c92bc30",
+  "patchedSources": {
+    "ios/App/Theme.swift": "79cbcedfd5c7d793f10120cc2637b089776178ff3fd4c4388eccaac918bea3e0",
+    "ios/Features/Pickup/PickupHomeView.swift": "6ba2279f96d3a5af1ff5c8b2aecb64e4ae4f3c6eb77520ab2d29ef9c0c4c1690"
+  },
+  "payloadHashes": {
+    ".github/workflows/ios-toggle-diagnostic.yml": "d2de5db93eb242d3b281537eaff4bfab7c36f8acd002724e3cc1b824d00ed365",
+    "diagnostics/ui09-hosted/hosted.py": "6ccf10e6c32e58c959f5925ca67deb6d5f7906fb232510ee11f55084faa717b1",
+    "diagnostics/ui09-hosted/collect.py": "417f7efd5e83f1cbe5b4863467e255d190be7217a09296183cf399fa7b841f28",
+    "diagnostics/ui09-hosted/diagnostic.patch": "5df17229f21adaddfa473ff63445cdf6efcdcfd2d3df24647393d6d68676489d",
+    "diagnostics/ui09-hosted/ui-09.txt": "cb9657808f4c27eff4ccbb89f712120cd1e990f2e58a0094dd70b6af5aafb022"
+  },
+  "candidateDelta": [
+    ".github/workflows/ios-toggle-diagnostic.yml",
+    "diagnostics/ui09-hosted/collect.py",
+    "diagnostics/ui09-hosted/diagnostic.patch",
+    "diagnostics/ui09-hosted/hosted.py",
+    "diagnostics/ui09-hosted/pins.json",
+    "diagnostics/ui09-hosted/ui-09.txt",
+    "ios/App/Theme.swift",
+    "ios/Features/Pickup/PickupHomeView.swift"
+  ]
+}

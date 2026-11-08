@@ -1,0 +1,40 @@
+{
+  "command": [
+    "/usr/bin/xcrun",
+    "simctl",
+    "spawn",
+    "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+    "log",
+    "show",
+    "--process",
+    "69990",
+    "--start",
+    "2026-11-08 16:30:35+0000",
+    "--end",
+    "2026-11-08 16:31:33+0000",
+    "--timezone",
+    "UTC",
+    "--style",
+    "json",
+    "--predicate",
+    "subsystem == \"com.apple.runtime-issues\" AND category == \"Hang Risk\" AND process == \"RoomInTheCart\""
+  ],
+  "startedAtUTC": "2026-11-08T16:40:06.324431+00:00",
+  "finishedAtUTC": "2026-11-08T16:40:08.019823+00:00",
+  "queryExit": 143,
+  "truncatedOrTimedOut": "stdout byte cap",
+  "bytes": {
+    "stdout": 1048576,
+    "stderr": 44
+  },
+  "limits": {
+    "stdout": 1048576,
+    "stderr": 65536
+  },
+  "deadlineSeconds": 45,
+  "sha256": {
+    "stdout": "b0615a7c20b7525c9f5aedefad08383a2628eec96ad362f76d818e6e6f65c8d8",
+    "stderr": "8b9e4a529f3e367142876bd0ce03ed7c7f10a50657c9a73fda0d6e30867e7523"
+  },
+  "scope": "Read-only existing log records for prior PID69990; no new app execution or trace; absence does not clear observed warnings."
+}

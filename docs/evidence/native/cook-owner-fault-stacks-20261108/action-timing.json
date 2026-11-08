@@ -1,0 +1,82 @@
+{
+  "activityReceiptSHA256": "c85e75dca35eca9f5aa649341eba84f70bcfe1895977631539f67702c1337140",
+  "rawActivitySHA256": "8e17223a9cb4a90a04c300363d53a66bd2e93586374152ecb093e1008fd690d3",
+  "actions": [
+    {
+      "title": "Tap \"capture.readback.play\" Button",
+      "startEpoch": 1794155470.632,
+      "startUTC": "2026-11-08T16:31:10.632000+00:00",
+      "descendantEvents": [
+        {
+          "title": "Wait for dev.roominthecart.app.debug to idle",
+          "startEpoch": 1794155470.633
+        },
+        {
+          "title": "Synthesize event",
+          "startEpoch": 1794155470.766
+        },
+        {
+          "title": "Wait for dev.roominthecart.app.debug to idle",
+          "startEpoch": 1794155471.072
+        }
+      ]
+    },
+    {
+      "title": "Tap \"Pause readback\" Button",
+      "startEpoch": 1794155473.488,
+      "startUTC": "2026-11-08T16:31:13.488000+00:00",
+      "descendantEvents": [
+        {
+          "title": "Wait for dev.roominthecart.app.debug to idle",
+          "startEpoch": 1794155473.489
+        },
+        {
+          "title": "Synthesize event",
+          "startEpoch": 1794155473.635
+        },
+        {
+          "title": "Wait for dev.roominthecart.app.debug to idle",
+          "startEpoch": 1794155473.946
+        }
+      ]
+    },
+    {
+      "title": "Tap \"Resume readback\" Button",
+      "startEpoch": 1794155475.121,
+      "startUTC": "2026-11-08T16:31:15.121000+00:00",
+      "descendantEvents": [
+        {
+          "title": "Wait for dev.roominthecart.app.debug to idle",
+          "startEpoch": 1794155475.121
+        },
+        {
+          "title": "Synthesize event",
+          "startEpoch": 1794155475.23
+        },
+        {
+          "title": "Wait for dev.roominthecart.app.debug to idle",
+          "startEpoch": 1794155475.53
+        }
+      ]
+    },
+    {
+      "title": "Tap \"Stop readback\" Button",
+      "startEpoch": 1794155476.718,
+      "startUTC": "2026-11-08T16:31:16.718000+00:00",
+      "descendantEvents": [
+        {
+          "title": "Wait for dev.roominthecart.app.debug to idle",
+          "startEpoch": 1794155476.718
+        },
+        {
+          "title": "Synthesize event",
+          "startEpoch": 1794155476.827
+        },
+        {
+          "title": "Wait for dev.roominthecart.app.debug to idle",
+          "startEpoch": 1794155477.126
+        }
+      ]
+    }
+  ]
+}

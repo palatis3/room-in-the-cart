@@ -1,0 +1,17 @@
+{
+  "baseSHA": "2397704ca4392281d396c152b40e350b60c0183e",
+  "candidateSHA": "7f3d3cefcd433ad4c233ee91ec57cd84dc265ae7",
+  "preparedPackageSHA256": "37b43ed3a4b6331da9c3177f0ffe150e2c1f8e34dbcaa04c2fa662d9a6369a2b",
+  "patchSHA256": "efed76de6b936f6f193b62951e6dedf830589445d06f540d93a1eafeebc262a0",
+  "sourceScope": "collect.py,hosted.py receipt annotations,pins.json only; original8selectors/app diagnostic patch/workflow deadlines unchanged",
+  "review": "Root reviewed process loss, buffered markers, sticky ambiguity and separate lsof failure handling; verified all frozen preparation file hashes before applying exact3files",
+  "offlinePassed": {
+    "boundary": 22,
+    "setup": 14,
+    "discovery": 14
+  },
+  "runId": 42502133362,
+  "runUrl": "https://github.com/palatis3/room-in-the-cart/actions/runs/42502133362",
+  "hostedStatus": "in_progress asof17:02:33UTC;build/bootpassed, testwrapperactive; native/captureoutcomesunknown",
+  "dispatchCount": 1
+}

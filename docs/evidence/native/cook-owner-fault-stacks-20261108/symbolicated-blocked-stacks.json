@@ -1,0 +1,2246 @@
+[
+  {
+    "index": 0,
+    "timestamp": "2026-11-08 16:31:11.142389+0000",
+    "pid": 69990,
+    "threadID": 26132822,
+    "detail": {
+      "message": "[Internal] Thread running at User-initiated quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions",
+      "antipattern trigger": "-[NSCondition wait]",
+      "message type": "elevatable",
+      "category type": 3,
+      "subcategory type": -1,
+      "show in console": "0"
+    },
+    "blockedStack": [
+      {
+        "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+        "offset": 9249416,
+        "symbol": "-[_NSThreadPerformInfo wait] (in Foundation) + 40"
+      },
+      {
+        "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+        "offset": 9257912,
+        "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:modes:] (in Foundation) + 596"
+      },
+      {
+        "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+        "offset": 9258528,
+        "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:] (in Foundation) + 104"
+      },
+      {
+        "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+        "offset": 210120,
+        "symbol": "0x000334c8 (in TextToSpeech) + 116"
+      },
+      {
+        "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+        "offset": 229812,
+        "symbol": "0x000381b4 (in TextToSpeech) + 100"
+      },
+      {
+        "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+        "offset": 182720,
+        "symbol": "0x0002c9c0 (in TextToSpeech) + 60"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 3330580,
+        "symbol": "CookAVSpeechEngine.isSpeaking.getter (in RoomInTheCart.debug.dylib) (LocalCookSpeech.swift:498)"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 3333100,
+        "symbol": "protocol witness for CookNativeEngine.isSpeaking.getter in conformance CookAVSpeechEngine (in RoomInTheCart.debug.dylib) (/<compiler-generated>:0)"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 3336464,
+        "symbol": "closure #1 in CookNativeCore.observedIdle.getter (in RoomInTheCart.debug.dylib) (LocalCookSpeech.swift:539)"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 140884,
+        "symbol": "Optional.map<A, B>(_:) (in RoomInTheCart.debug.dylib) (/<compiler-generated>:0)"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 3336248,
+        "symbol": "CookNativeCore.observedIdle.getter (in RoomInTheCart.debug.dylib) (LocalCookSpeech.swift:539)"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 3341840,
+        "symbol": "CookNativeCore.perform(_:) (in RoomInTheCart.debug.dylib) (LocalCookSpeech.swift:568)"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 3337256,
+        "symbol": "CookNativeCore.drain() (in RoomInTheCart.debug.dylib) (LocalCookSpeech.swift:553)"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 3359504,
+        "symbol": "closure #1 in closure #1 in closure #2 in ThreadCookSpeechOwner.init(engineFactory:observeAudioNotifications:notificationCenter:deliverEvent:) (in RoomInTheCart.debug.dylib) (LocalCookSpeech.swift:670)"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 3359544,
+        "symbol": "@objc closure #1 in closure #1 in closure #2 in ThreadCookSpeechOwner.init(engineFactory:observeAudioNotifications:notificationCenter:deliverEvent:) (in RoomInTheCart.debug.dylib) (/<compiler-generated>:0)"
+      },
+      {
+        "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+        "offset": 603044,
+        "symbol": "__CFRUNLOOP_IS_CALLING_OUT_TO_A_SOURCE0_PERFORM_FUNCTION__ (in CoreFoundation) + 24"
+      },
+      {
+        "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+        "offset": 602860,
+        "symbol": "__CFRunLoopDoSource0 (in CoreFoundation) + 168"
+      },
+      {
+        "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+        "offset": 600696,
+        "symbol": "__CFRunLoopDoSources0 (in CoreFoundation) + 220"
+      },
+      {
+        "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+        "offset": 597068,
+        "symbol": "__CFRunLoopRun (in CoreFoundation) + 760"
+      },
+      {
+        "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+        "offset": 576748,
+        "symbol": "_CFRunLoopRunSpecificWithOptions (in CoreFoundation) + 496"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 3359620,
+        "symbol": "closure #2 in closure #1 in closure #2 in ThreadCookSpeechOwner.init(engineFactory:observeAudioNotifications:notificationCenter:deliverEvent:) (in RoomInTheCart.debug.dylib) (LocalCookSpeech.swift:676)"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 3359776,
+        "symbol": "autoreleasepool<A, B>(invoking:) (in RoomInTheCart.debug.dylib) (/<compiler-generated>:0)"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 3358996,
+        "symbol": "closure #1 in closure #2 in ThreadCookSpeechOwner.init(engineFactory:observeAudioNotifications:notificationCenter:deliverEvent:) (in RoomInTheCart.debug.dylib) (LocalCookSpeech.swift:676)"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 3391648,
+        "symbol": "partial apply for closure #1 in closure #2 in ThreadCookSpeechOwner.init(engineFactory:observeAudioNotifications:notificationCenter:deliverEvent:) (in RoomInTheCart.debug.dylib) (/<compiler-generated>:0)"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 3359776,
+        "symbol": "autoreleasepool<A, B>(invoking:) (in RoomInTheCart.debug.dylib) (/<compiler-generated>:0)"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 3358012,
+        "symbol": "closure #2 in ThreadCookSpeechOwner.init(engineFactory:observeAudioNotifications:notificationCenter:deliverEvent:) (in RoomInTheCart.debug.dylib) (LocalCookSpeech.swift:663)"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 3276560,
+        "symbol": "0x0031ff10 (in RoomInTheCart.debug.dylib)"
+      },
+      {
+        "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+        "offset": 9256212,
+        "symbol": "__NSThread__start__ (in Foundation) + 716"
+      },
+      {
+        "uuid": "8728D77B-94C9-38E9-A54B-1D4A92967CD8",
+        "offset": 26212
+      },
+      {
+        "uuid": "8728D77B-94C9-38E9-A54B-1D4A92967CD8",
+        "offset": 6764
+      },
+      {
+        "uuid": "00000000-0000-0000-0000-000000000000",
+        "offset": 0
+      }
+    ],
+    "emissionBacktrace": [
+      {
+        "imageOffset": 584064,
+        "imageUUID": "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset": 589392,
+        "imageUUID": "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset": 28196,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 115888,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 73808,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 34496,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 582700,
+        "imageUUID": "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset": 580856,
+        "imageUUID": "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset": 575440,
+        "imageUUID": "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset": 9249416,
+        "imageUUID": "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset": 9257912,
+        "imageUUID": "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset": 9258528,
+        "imageUUID": "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset": 210120,
+        "imageUUID": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset": 229812,
+        "imageUUID": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset": 182720,
+        "imageUUID": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset": 3330580,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 3333100,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 3336464,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 140884,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 3336248,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 3341840,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 3337256,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 3359504,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 3359544,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 603044,
+        "imageUUID": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset": 602860,
+        "imageUUID": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset": 600696,
+        "imageUUID": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset": 597068,
+        "imageUUID": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset": 576748,
+        "imageUUID": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset": 3359620,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 3359776,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 3358996,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 3391648,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 3359776,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 3358012,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 3276560,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 9256212,
+        "imageUUID": "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset": 26212,
+        "imageUUID": "8728D77B-94C9-38E9-A54B-1D4A92967CD8"
+      },
+      {
+        "imageOffset": 6764,
+        "imageUUID": "8728D77B-94C9-38E9-A54B-1D4A92967CD8"
+      }
+    ]
+  },
+  {
+    "index": 1,
+    "timestamp": "2026-11-08 16:31:11.226244+0000",
+    "pid": 69990,
+    "threadID": 26131913,
+    "detail": {
+      "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions",
+      "antipattern trigger": "-[NSCondition wait]",
+      "message type": "elevatable",
+      "category type": 3,
+      "subcategory type": -1,
+      "show in console": "0"
+    },
+    "blockedStack": [
+      {
+        "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+        "offset": 9249416,
+        "symbol": "-[_NSThreadPerformInfo wait] (in Foundation) + 40"
+      },
+      {
+        "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+        "offset": 9257912,
+        "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:modes:] (in Foundation) + 596"
+      },
+      {
+        "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+        "offset": 9258528,
+        "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:] (in Foundation) + 104"
+      },
+      {
+        "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+        "offset": 210120,
+        "symbol": "0x000334c8 (in TextToSpeech) + 116"
+      },
+      {
+        "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+        "offset": 231396,
+        "symbol": "0x000387e4 (in TextToSpeech) + 116"
+      },
+      {
+        "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+        "offset": 159636,
+        "symbol": "0x00026f94 (in TextToSpeech) + 44"
+      },
+      {
+        "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+        "offset": 6056,
+        "symbol": "_dispatch_call_block_and_release (in libdispatch.dylib) + 24"
+      },
+      {
+        "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+        "offset": 115888,
+        "symbol": "_dispatch_client_callout (in libdispatch.dylib) + 12"
+      },
+      {
+        "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+        "offset": 230560,
+        "symbol": "<deduplicated_symbol> (in libdispatch.dylib) + 24"
+      },
+      {
+        "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+        "offset": 70428,
+        "symbol": "_dispatch_main_queue_drain (in libdispatch.dylib) + 1184"
+      },
+      {
+        "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+        "offset": 69228,
+        "symbol": "_dispatch_main_queue_callback_4CF (in libdispatch.dylib) + 40"
+      },
+      {
+        "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+        "offset": 601816,
+        "symbol": "__CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__ (in CoreFoundation) + 12"
+      },
+      {
+        "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+        "offset": 598192,
+        "symbol": "__CFRunLoopRun (in CoreFoundation) + 1884"
+      },
+      {
+        "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+        "offset": 576748,
+        "symbol": "_CFRunLoopRunSpecificWithOptions (in CoreFoundation) + 496"
+      },
+      {
+        "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+        "offset": 10684,
+        "symbol": "GSEventRunModal (in GraphicsServices) + 116"
+      },
+      {
+        "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+        "offset": 18523508,
+        "symbol": "-[UIApplication _run] (in UIKitCore) + 772"
+      },
+      {
+        "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+        "offset": 18540444,
+        "symbol": "UIApplicationMain (in UIKitCore) + 124"
+      },
+      {
+        "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+        "offset": 8099360,
+        "symbol": "closure #1 in KitRendererCommon(_:) (in SwiftUI) + 164"
+      },
+      {
+        "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+        "offset": 8098664,
+        "symbol": "runApp<A>(_:) (in SwiftUI) + 180"
+      },
+      {
+        "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+        "offset": 5534764,
+        "symbol": "static App.main() (in SwiftUI) + 148"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 31562480,
+        "symbol": "static RoomInTheCartContributorFixtureApp.$main() (in RoomInTheCart.debug.dylib) (/<compiler-generated>:0)"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 31615284,
+        "symbol": "__debug_main_executable_dylib_entry_point (in RoomInTheCart.debug.dylib) (ContributorRequestUIFixture.swift:0)"
+      },
+      {
+        "uuid": "00000000-0000-0000-0000-000000000000",
+        "offset": 0
+      }
+    ],
+    "emissionBacktrace": [
+      {
+        "imageOffset": 584064,
+        "imageUUID": "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset": 589392,
+        "imageUUID": "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset": 28196,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 115888,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 73808,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 34496,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 582700,
+        "imageUUID": "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset": 580856,
+        "imageUUID": "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset": 575440,
+        "imageUUID": "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset": 9249416,
+        "imageUUID": "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset": 9257912,
+        "imageUUID": "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset": 9258528,
+        "imageUUID": "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset": 210120,
+        "imageUUID": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset": 231396,
+        "imageUUID": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset": 159636,
+        "imageUUID": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset": 6056,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 115888,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 230560,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 70428,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 69228,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 601816,
+        "imageUUID": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset": 598192,
+        "imageUUID": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset": 576748,
+        "imageUUID": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset": 10684,
+        "imageUUID": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6"
+      },
+      {
+        "imageOffset": 18523508,
+        "imageUUID": "196154FF-BA04-33CD-9277-98F9AA0B7499"
+      },
+      {
+        "imageOffset": 18540444,
+        "imageUUID": "196154FF-BA04-33CD-9277-98F9AA0B7499"
+      },
+      {
+        "imageOffset": 8099360,
+        "imageUUID": "719CF349-8C4A-3054-9536-23EB53648EE0"
+      },
+      {
+        "imageOffset": 8098664,
+        "imageUUID": "719CF349-8C4A-3054-9536-23EB53648EE0"
+      },
+      {
+        "imageOffset": 5534764,
+        "imageUUID": "719CF349-8C4A-3054-9536-23EB53648EE0"
+      },
+      {
+        "imageOffset": 31562480,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 31615284,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 0,
+        "imageUUID": "00000000-0000-0000-0000-000000000000"
+      },
+      {
+        "imageOffset": 0,
+        "imageUUID": "00000000-0000-0000-0000-000000000000"
+      }
+    ]
+  },
+  {
+    "index": 2,
+    "timestamp": "2026-11-08 16:31:12.576539+0000",
+    "pid": 69990,
+    "threadID": 26131913,
+    "detail": {
+      "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions",
+      "antipattern trigger": "-[NSCondition wait]",
+      "message type": "elevatable",
+      "category type": 3,
+      "subcategory type": -1,
+      "show in console": "0"
+    },
+    "blockedStack": [
+      {
+        "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+        "offset": 9249416,
+        "symbol": "-[_NSThreadPerformInfo wait] (in Foundation) + 40"
+      },
+      {
+        "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+        "offset": 9257912,
+        "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:modes:] (in Foundation) + 596"
+      },
+      {
+        "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+        "offset": 9258528,
+        "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:] (in Foundation) + 104"
+      },
+      {
+        "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+        "offset": 210120,
+        "symbol": "0x000334c8 (in TextToSpeech) + 116"
+      },
+      {
+        "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+        "offset": 234308,
+        "symbol": "0x00039344 (in TextToSpeech) + 344"
+      },
+      {
+        "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+        "offset": 161532,
+        "symbol": "0x000276fc (in TextToSpeech) + 48"
+      },
+      {
+        "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+        "offset": 6056,
+        "symbol": "_dispatch_call_block_and_release (in libdispatch.dylib) + 24"
+      },
+      {
+        "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+        "offset": 115888,
+        "symbol": "_dispatch_client_callout (in libdispatch.dylib) + 12"
+      },
+      {
+        "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+        "offset": 230560,
+        "symbol": "<deduplicated_symbol> (in libdispatch.dylib) + 24"
+      },
+      {
+        "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+        "offset": 70428,
+        "symbol": "_dispatch_main_queue_drain (in libdispatch.dylib) + 1184"
+      },
+      {
+        "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+        "offset": 69228,
+        "symbol": "_dispatch_main_queue_callback_4CF (in libdispatch.dylib) + 40"
+      },
+      {
+        "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+        "offset": 601816,
+        "symbol": "__CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__ (in CoreFoundation) + 12"
+      },
+      {
+        "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+        "offset": 598192,
+        "symbol": "__CFRunLoopRun (in CoreFoundation) + 1884"
+      },
+      {
+        "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+        "offset": 576748,
+        "symbol": "_CFRunLoopRunSpecificWithOptions (in CoreFoundation) + 496"
+      },
+      {
+        "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+        "offset": 10684,
+        "symbol": "GSEventRunModal (in GraphicsServices) + 116"
+      },
+      {
+        "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+        "offset": 18523508,
+        "symbol": "-[UIApplication _run] (in UIKitCore) + 772"
+      },
+      {
+        "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+        "offset": 18540444,
+        "symbol": "UIApplicationMain (in UIKitCore) + 124"
+      },
+      {
+        "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+        "offset": 8099360,
+        "symbol": "closure #1 in KitRendererCommon(_:) (in SwiftUI) + 164"
+      },
+      {
+        "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+        "offset": 8098664,
+        "symbol": "runApp<A>(_:) (in SwiftUI) + 180"
+      },
+      {
+        "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+        "offset": 5534764,
+        "symbol": "static App.main() (in SwiftUI) + 148"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 31562480,
+        "symbol": "static RoomInTheCartContributorFixtureApp.$main() (in RoomInTheCart.debug.dylib) (/<compiler-generated>:0)"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 31615284,
+        "symbol": "__debug_main_executable_dylib_entry_point (in RoomInTheCart.debug.dylib) (ContributorRequestUIFixture.swift:0)"
+      },
+      {
+        "uuid": "00000000-0000-0000-0000-000000000000",
+        "offset": 0
+      }
+    ],
+    "emissionBacktrace": [
+      {
+        "imageOffset": 584064,
+        "imageUUID": "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset": 589392,
+        "imageUUID": "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset": 28196,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 115888,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 73808,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 34496,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 582700,
+        "imageUUID": "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset": 580856,
+        "imageUUID": "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset": 575440,
+        "imageUUID": "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset": 9249416,
+        "imageUUID": "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset": 9257912,
+        "imageUUID": "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset": 9258528,
+        "imageUUID": "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset": 210120,
+        "imageUUID": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset": 234308,
+        "imageUUID": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset": 161532,
+        "imageUUID": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset": 6056,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 115888,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 230560,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 70428,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 69228,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 601816,
+        "imageUUID": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset": 598192,
+        "imageUUID": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset": 576748,
+        "imageUUID": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset": 10684,
+        "imageUUID": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6"
+      },
+      {
+        "imageOffset": 18523508,
+        "imageUUID": "196154FF-BA04-33CD-9277-98F9AA0B7499"
+      },
+      {
+        "imageOffset": 18540444,
+        "imageUUID": "196154FF-BA04-33CD-9277-98F9AA0B7499"
+      },
+      {
+        "imageOffset": 8099360,
+        "imageUUID": "719CF349-8C4A-3054-9536-23EB53648EE0"
+      },
+      {
+        "imageOffset": 8098664,
+        "imageUUID": "719CF349-8C4A-3054-9536-23EB53648EE0"
+      },
+      {
+        "imageOffset": 5534764,
+        "imageUUID": "719CF349-8C4A-3054-9536-23EB53648EE0"
+      },
+      {
+        "imageOffset": 31562480,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 31615284,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 0,
+        "imageUUID": "00000000-0000-0000-0000-000000000000"
+      },
+      {
+        "imageOffset": 0,
+        "imageUUID": "00000000-0000-0000-0000-000000000000"
+      }
+    ]
+  },
+  {
+    "index": 3,
+    "timestamp": "2026-11-08 16:31:13.758964+0000",
+    "pid": 69990,
+    "threadID": 26132822,
+    "detail": {
+      "message": "[Internal] Thread running at User-initiated quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions",
+      "antipattern trigger": "-[NSCondition wait]",
+      "message type": "elevatable",
+      "category type": 3,
+      "subcategory type": -1,
+      "show in console": "0"
+    },
+    "blockedStack": [
+      {
+        "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+        "offset": 9249416,
+        "symbol": "-[_NSThreadPerformInfo wait] (in Foundation) + 40"
+      },
+      {
+        "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+        "offset": 9257912,
+        "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:modes:] (in Foundation) + 596"
+      },
+      {
+        "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+        "offset": 9258528,
+        "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:] (in Foundation) + 104"
+      },
+      {
+        "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+        "offset": 210120,
+        "symbol": "0x000334c8 (in TextToSpeech) + 116"
+      },
+      {
+        "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+        "offset": 229284,
+        "symbol": "0x00037fa4 (in TextToSpeech) + 100"
+      },
+      {
+        "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+        "offset": 182340,
+        "symbol": "0x0002c844 (in TextToSpeech) + 300"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 3332640,
+        "symbol": "CookAVSpeechEngine.pause() (in RoomInTheCart.debug.dylib) (LocalCookSpeech.swift:511)"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 3333172,
+        "symbol": "protocol witness for CookNativeEngine.pause() in conformance CookAVSpeechEngine (in RoomInTheCart.debug.dylib) (/<compiler-generated>:0)"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 3343308,
+        "symbol": "CookNativeCore.perform(_:) (in RoomInTheCart.debug.dylib) (LocalCookSpeech.swift:580)"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 3337256,
+        "symbol": "CookNativeCore.drain() (in RoomInTheCart.debug.dylib) (LocalCookSpeech.swift:553)"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 3359504,
+        "symbol": "closure #1 in closure #1 in closure #2 in ThreadCookSpeechOwner.init(engineFactory:observeAudioNotifications:notificationCenter:deliverEvent:) (in RoomInTheCart.debug.dylib) (LocalCookSpeech.swift:670)"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 3359544,
+        "symbol": "@objc closure #1 in closure #1 in closure #2 in ThreadCookSpeechOwner.init(engineFactory:observeAudioNotifications:notificationCenter:deliverEvent:) (in RoomInTheCart.debug.dylib) (/<compiler-generated>:0)"
+      },
+      {
+        "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+        "offset": 603044,
+        "symbol": "__CFRUNLOOP_IS_CALLING_OUT_TO_A_SOURCE0_PERFORM_FUNCTION__ (in CoreFoundation) + 24"
+      },
+      {
+        "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+        "offset": 602860,
+        "symbol": "__CFRunLoopDoSource0 (in CoreFoundation) + 168"
+      },
+      {
+        "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+        "offset": 600696,
+        "symbol": "__CFRunLoopDoSources0 (in CoreFoundation) + 220"
+      },
+      {
+        "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+        "offset": 597068,
+        "symbol": "__CFRunLoopRun (in CoreFoundation) + 760"
+      },
+      {
+        "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+        "offset": 576748,
+        "symbol": "_CFRunLoopRunSpecificWithOptions (in CoreFoundation) + 496"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 3359620,
+        "symbol": "closure #2 in closure #1 in closure #2 in ThreadCookSpeechOwner.init(engineFactory:observeAudioNotifications:notificationCenter:deliverEvent:) (in RoomInTheCart.debug.dylib) (LocalCookSpeech.swift:676)"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 3359776,
+        "symbol": "autoreleasepool<A, B>(invoking:) (in RoomInTheCart.debug.dylib) (/<compiler-generated>:0)"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 3358996,
+        "symbol": "closure #1 in closure #2 in ThreadCookSpeechOwner.init(engineFactory:observeAudioNotifications:notificationCenter:deliverEvent:) (in RoomInTheCart.debug.dylib) (LocalCookSpeech.swift:676)"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 3391648,
+        "symbol": "partial apply for closure #1 in closure #2 in ThreadCookSpeechOwner.init(engineFactory:observeAudioNotifications:notificationCenter:deliverEvent:) (in RoomInTheCart.debug.dylib) (/<compiler-generated>:0)"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 3359776,
+        "symbol": "autoreleasepool<A, B>(invoking:) (in RoomInTheCart.debug.dylib) (/<compiler-generated>:0)"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 3358012,
+        "symbol": "closure #2 in ThreadCookSpeechOwner.init(engineFactory:observeAudioNotifications:notificationCenter:deliverEvent:) (in RoomInTheCart.debug.dylib) (LocalCookSpeech.swift:663)"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 3276560,
+        "symbol": "0x0031ff10 (in RoomInTheCart.debug.dylib)"
+      },
+      {
+        "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+        "offset": 9256212,
+        "symbol": "__NSThread__start__ (in Foundation) + 716"
+      },
+      {
+        "uuid": "8728D77B-94C9-38E9-A54B-1D4A92967CD8",
+        "offset": 26212
+      },
+      {
+        "uuid": "8728D77B-94C9-38E9-A54B-1D4A92967CD8",
+        "offset": 6764
+      },
+      {
+        "uuid": "00000000-0000-0000-0000-000000000000",
+        "offset": 0
+      }
+    ],
+    "emissionBacktrace": [
+      {
+        "imageOffset": 584064,
+        "imageUUID": "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset": 589392,
+        "imageUUID": "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset": 28196,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 115888,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 73808,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 34496,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 582700,
+        "imageUUID": "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset": 580856,
+        "imageUUID": "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset": 575440,
+        "imageUUID": "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset": 9249416,
+        "imageUUID": "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset": 9257912,
+        "imageUUID": "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset": 9258528,
+        "imageUUID": "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset": 210120,
+        "imageUUID": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset": 229284,
+        "imageUUID": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset": 182340,
+        "imageUUID": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset": 3332640,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 3333172,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 3343308,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 3337256,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 3359504,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 3359544,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 603044,
+        "imageUUID": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset": 602860,
+        "imageUUID": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset": 600696,
+        "imageUUID": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset": 597068,
+        "imageUUID": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset": 576748,
+        "imageUUID": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset": 3359620,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 3359776,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 3358996,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 3391648,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 3359776,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 3358012,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 3276560,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 9256212,
+        "imageUUID": "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset": 26212,
+        "imageUUID": "8728D77B-94C9-38E9-A54B-1D4A92967CD8"
+      },
+      {
+        "imageOffset": 6764,
+        "imageUUID": "8728D77B-94C9-38E9-A54B-1D4A92967CD8"
+      }
+    ]
+  },
+  {
+    "index": 4,
+    "timestamp": "2026-11-08 16:31:13.767501+0000",
+    "pid": 69990,
+    "threadID": 26131913,
+    "detail": {
+      "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions",
+      "antipattern trigger": "-[NSCondition wait]",
+      "message type": "elevatable",
+      "category type": 3,
+      "subcategory type": -1,
+      "show in console": "0"
+    },
+    "blockedStack": [
+      {
+        "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+        "offset": 9249416,
+        "symbol": "-[_NSThreadPerformInfo wait] (in Foundation) + 40"
+      },
+      {
+        "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+        "offset": 9257912,
+        "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:modes:] (in Foundation) + 596"
+      },
+      {
+        "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+        "offset": 9258528,
+        "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:] (in Foundation) + 104"
+      },
+      {
+        "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+        "offset": 210120,
+        "symbol": "0x000334c8 (in TextToSpeech) + 116"
+      },
+      {
+        "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+        "offset": 233208,
+        "symbol": "0x00038ef8 (in TextToSpeech) + 116"
+      },
+      {
+        "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+        "offset": 159860,
+        "symbol": "0x00027074 (in TextToSpeech) + 44"
+      },
+      {
+        "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+        "offset": 6056,
+        "symbol": "_dispatch_call_block_and_release (in libdispatch.dylib) + 24"
+      },
+      {
+        "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+        "offset": 115888,
+        "symbol": "_dispatch_client_callout (in libdispatch.dylib) + 12"
+      },
+      {
+        "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+        "offset": 230560,
+        "symbol": "<deduplicated_symbol> (in libdispatch.dylib) + 24"
+      },
+      {
+        "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+        "offset": 70428,
+        "symbol": "_dispatch_main_queue_drain (in libdispatch.dylib) + 1184"
+      },
+      {
+        "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+        "offset": 69228,
+        "symbol": "_dispatch_main_queue_callback_4CF (in libdispatch.dylib) + 40"
+      },
+      {
+        "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+        "offset": 601816,
+        "symbol": "__CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__ (in CoreFoundation) + 12"
+      },
+      {
+        "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+        "offset": 598192,
+        "symbol": "__CFRunLoopRun (in CoreFoundation) + 1884"
+      },
+      {
+        "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+        "offset": 576748,
+        "symbol": "_CFRunLoopRunSpecificWithOptions (in CoreFoundation) + 496"
+      },
+      {
+        "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+        "offset": 10684,
+        "symbol": "GSEventRunModal (in GraphicsServices) + 116"
+      },
+      {
+        "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+        "offset": 18523508,
+        "symbol": "-[UIApplication _run] (in UIKitCore) + 772"
+      },
+      {
+        "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+        "offset": 18540444,
+        "symbol": "UIApplicationMain (in UIKitCore) + 124"
+      },
+      {
+        "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+        "offset": 8099360,
+        "symbol": "closure #1 in KitRendererCommon(_:) (in SwiftUI) + 164"
+      },
+      {
+        "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+        "offset": 8098664,
+        "symbol": "runApp<A>(_:) (in SwiftUI) + 180"
+      },
+      {
+        "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+        "offset": 5534764,
+        "symbol": "static App.main() (in SwiftUI) + 148"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 31562480,
+        "symbol": "static RoomInTheCartContributorFixtureApp.$main() (in RoomInTheCart.debug.dylib) (/<compiler-generated>:0)"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 31615284,
+        "symbol": "__debug_main_executable_dylib_entry_point (in RoomInTheCart.debug.dylib) (ContributorRequestUIFixture.swift:0)"
+      },
+      {
+        "uuid": "00000000-0000-0000-0000-000000000000",
+        "offset": 0
+      }
+    ],
+    "emissionBacktrace": [
+      {
+        "imageOffset": 584064,
+        "imageUUID": "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset": 589392,
+        "imageUUID": "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset": 28196,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 115888,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 73808,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 34496,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 582700,
+        "imageUUID": "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset": 580856,
+        "imageUUID": "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset": 575440,
+        "imageUUID": "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset": 9249416,
+        "imageUUID": "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset": 9257912,
+        "imageUUID": "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset": 9258528,
+        "imageUUID": "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset": 210120,
+        "imageUUID": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset": 233208,
+        "imageUUID": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset": 159860,
+        "imageUUID": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset": 6056,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 115888,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 230560,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 70428,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 69228,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 601816,
+        "imageUUID": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset": 598192,
+        "imageUUID": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset": 576748,
+        "imageUUID": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset": 10684,
+        "imageUUID": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6"
+      },
+      {
+        "imageOffset": 18523508,
+        "imageUUID": "196154FF-BA04-33CD-9277-98F9AA0B7499"
+      },
+      {
+        "imageOffset": 18540444,
+        "imageUUID": "196154FF-BA04-33CD-9277-98F9AA0B7499"
+      },
+      {
+        "imageOffset": 8099360,
+        "imageUUID": "719CF349-8C4A-3054-9536-23EB53648EE0"
+      },
+      {
+        "imageOffset": 8098664,
+        "imageUUID": "719CF349-8C4A-3054-9536-23EB53648EE0"
+      },
+      {
+        "imageOffset": 5534764,
+        "imageUUID": "719CF349-8C4A-3054-9536-23EB53648EE0"
+      },
+      {
+        "imageOffset": 31562480,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 31615284,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 0,
+        "imageUUID": "00000000-0000-0000-0000-000000000000"
+      },
+      {
+        "imageOffset": 0,
+        "imageUUID": "00000000-0000-0000-0000-000000000000"
+      }
+    ]
+  },
+  {
+    "index": 5,
+    "timestamp": "2026-11-08 16:31:15.329978+0000",
+    "pid": 69990,
+    "threadID": 26131913,
+    "detail": {
+      "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions",
+      "antipattern trigger": "-[NSCondition wait]",
+      "message type": "elevatable",
+      "category type": 3,
+      "subcategory type": -1,
+      "show in console": "0"
+    },
+    "blockedStack": [
+      {
+        "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+        "offset": 9249416,
+        "symbol": "-[_NSThreadPerformInfo wait] (in Foundation) + 40"
+      },
+      {
+        "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+        "offset": 9257912,
+        "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:modes:] (in Foundation) + 596"
+      },
+      {
+        "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+        "offset": 9258528,
+        "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:] (in Foundation) + 104"
+      },
+      {
+        "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+        "offset": 210120,
+        "symbol": "0x000334c8 (in TextToSpeech) + 116"
+      },
+      {
+        "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+        "offset": 233644,
+        "symbol": "0x000390ac (in TextToSpeech) + 116"
+      },
+      {
+        "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+        "offset": 160084,
+        "symbol": "0x00027154 (in TextToSpeech) + 44"
+      },
+      {
+        "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+        "offset": 6056,
+        "symbol": "_dispatch_call_block_and_release (in libdispatch.dylib) + 24"
+      },
+      {
+        "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+        "offset": 115888,
+        "symbol": "_dispatch_client_callout (in libdispatch.dylib) + 12"
+      },
+      {
+        "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+        "offset": 230560,
+        "symbol": "<deduplicated_symbol> (in libdispatch.dylib) + 24"
+      },
+      {
+        "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+        "offset": 70428,
+        "symbol": "_dispatch_main_queue_drain (in libdispatch.dylib) + 1184"
+      },
+      {
+        "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+        "offset": 69228,
+        "symbol": "_dispatch_main_queue_callback_4CF (in libdispatch.dylib) + 40"
+      },
+      {
+        "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+        "offset": 601816,
+        "symbol": "__CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__ (in CoreFoundation) + 12"
+      },
+      {
+        "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+        "offset": 598192,
+        "symbol": "__CFRunLoopRun (in CoreFoundation) + 1884"
+      },
+      {
+        "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+        "offset": 576748,
+        "symbol": "_CFRunLoopRunSpecificWithOptions (in CoreFoundation) + 496"
+      },
+      {
+        "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+        "offset": 10684,
+        "symbol": "GSEventRunModal (in GraphicsServices) + 116"
+      },
+      {
+        "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+        "offset": 18523508,
+        "symbol": "-[UIApplication _run] (in UIKitCore) + 772"
+      },
+      {
+        "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+        "offset": 18540444,
+        "symbol": "UIApplicationMain (in UIKitCore) + 124"
+      },
+      {
+        "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+        "offset": 8099360,
+        "symbol": "closure #1 in KitRendererCommon(_:) (in SwiftUI) + 164"
+      },
+      {
+        "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+        "offset": 8098664,
+        "symbol": "runApp<A>(_:) (in SwiftUI) + 180"
+      },
+      {
+        "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+        "offset": 5534764,
+        "symbol": "static App.main() (in SwiftUI) + 148"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 31562480,
+        "symbol": "static RoomInTheCartContributorFixtureApp.$main() (in RoomInTheCart.debug.dylib) (/<compiler-generated>:0)"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 31615284,
+        "symbol": "__debug_main_executable_dylib_entry_point (in RoomInTheCart.debug.dylib) (ContributorRequestUIFixture.swift:0)"
+      },
+      {
+        "uuid": "00000000-0000-0000-0000-000000000000",
+        "offset": 0
+      }
+    ],
+    "emissionBacktrace": [
+      {
+        "imageOffset": 584064,
+        "imageUUID": "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset": 589392,
+        "imageUUID": "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset": 28196,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 115888,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 73808,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 34496,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 582700,
+        "imageUUID": "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset": 580856,
+        "imageUUID": "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset": 575440,
+        "imageUUID": "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset": 9249416,
+        "imageUUID": "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset": 9257912,
+        "imageUUID": "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset": 9258528,
+        "imageUUID": "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset": 210120,
+        "imageUUID": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset": 233644,
+        "imageUUID": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset": 160084,
+        "imageUUID": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset": 6056,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 115888,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 230560,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 70428,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 69228,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 601816,
+        "imageUUID": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset": 598192,
+        "imageUUID": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset": 576748,
+        "imageUUID": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset": 10684,
+        "imageUUID": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6"
+      },
+      {
+        "imageOffset": 18523508,
+        "imageUUID": "196154FF-BA04-33CD-9277-98F9AA0B7499"
+      },
+      {
+        "imageOffset": 18540444,
+        "imageUUID": "196154FF-BA04-33CD-9277-98F9AA0B7499"
+      },
+      {
+        "imageOffset": 8099360,
+        "imageUUID": "719CF349-8C4A-3054-9536-23EB53648EE0"
+      },
+      {
+        "imageOffset": 8098664,
+        "imageUUID": "719CF349-8C4A-3054-9536-23EB53648EE0"
+      },
+      {
+        "imageOffset": 5534764,
+        "imageUUID": "719CF349-8C4A-3054-9536-23EB53648EE0"
+      },
+      {
+        "imageOffset": 31562480,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 31615284,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 0,
+        "imageUUID": "00000000-0000-0000-0000-000000000000"
+      },
+      {
+        "imageOffset": 0,
+        "imageUUID": "00000000-0000-0000-0000-000000000000"
+      }
+    ]
+  },
+  {
+    "index": 6,
+    "timestamp": "2026-11-08 16:31:16.257455+0000",
+    "pid": 69990,
+    "threadID": 26131913,
+    "detail": {
+      "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions",
+      "antipattern trigger": "-[NSCondition wait]",
+      "message type": "elevatable",
+      "category type": 3,
+      "subcategory type": -1,
+      "show in console": "0"
+    },
+    "blockedStack": [
+      {
+        "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+        "offset": 9249416,
+        "symbol": "-[_NSThreadPerformInfo wait] (in Foundation) + 40"
+      },
+      {
+        "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+        "offset": 9257912,
+        "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:modes:] (in Foundation) + 596"
+      },
+      {
+        "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+        "offset": 9258528,
+        "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:] (in Foundation) + 104"
+      },
+      {
+        "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+        "offset": 210120,
+        "symbol": "0x000334c8 (in TextToSpeech) + 116"
+      },
+      {
+        "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+        "offset": 234308,
+        "symbol": "0x00039344 (in TextToSpeech) + 344"
+      },
+      {
+        "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+        "offset": 161532,
+        "symbol": "0x000276fc (in TextToSpeech) + 48"
+      },
+      {
+        "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+        "offset": 6056,
+        "symbol": "_dispatch_call_block_and_release (in libdispatch.dylib) + 24"
+      },
+      {
+        "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+        "offset": 115888,
+        "symbol": "_dispatch_client_callout (in libdispatch.dylib) + 12"
+      },
+      {
+        "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+        "offset": 230560,
+        "symbol": "<deduplicated_symbol> (in libdispatch.dylib) + 24"
+      },
+      {
+        "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+        "offset": 70428,
+        "symbol": "_dispatch_main_queue_drain (in libdispatch.dylib) + 1184"
+      },
+      {
+        "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+        "offset": 69228,
+        "symbol": "_dispatch_main_queue_callback_4CF (in libdispatch.dylib) + 40"
+      },
+      {
+        "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+        "offset": 601816,
+        "symbol": "__CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__ (in CoreFoundation) + 12"
+      },
+      {
+        "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+        "offset": 598192,
+        "symbol": "__CFRunLoopRun (in CoreFoundation) + 1884"
+      },
+      {
+        "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+        "offset": 576748,
+        "symbol": "_CFRunLoopRunSpecificWithOptions (in CoreFoundation) + 496"
+      },
+      {
+        "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+        "offset": 10684,
+        "symbol": "GSEventRunModal (in GraphicsServices) + 116"
+      },
+      {
+        "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+        "offset": 18523508,
+        "symbol": "-[UIApplication _run] (in UIKitCore) + 772"
+      },
+      {
+        "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+        "offset": 18540444,
+        "symbol": "UIApplicationMain (in UIKitCore) + 124"
+      },
+      {
+        "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+        "offset": 8099360,
+        "symbol": "closure #1 in KitRendererCommon(_:) (in SwiftUI) + 164"
+      },
+      {
+        "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+        "offset": 8098664,
+        "symbol": "runApp<A>(_:) (in SwiftUI) + 180"
+      },
+      {
+        "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+        "offset": 5534764,
+        "symbol": "static App.main() (in SwiftUI) + 148"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 31562480,
+        "symbol": "static RoomInTheCartContributorFixtureApp.$main() (in RoomInTheCart.debug.dylib) (/<compiler-generated>:0)"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 31615284,
+        "symbol": "__debug_main_executable_dylib_entry_point (in RoomInTheCart.debug.dylib) (ContributorRequestUIFixture.swift:0)"
+      },
+      {
+        "uuid": "00000000-0000-0000-0000-000000000000",
+        "offset": 0
+      }
+    ],
+    "emissionBacktrace": [
+      {
+        "imageOffset": 584064,
+        "imageUUID": "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset": 589392,
+        "imageUUID": "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset": 28196,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 115888,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 73808,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 34496,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 582700,
+        "imageUUID": "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset": 580856,
+        "imageUUID": "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset": 575440,
+        "imageUUID": "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset": 9249416,
+        "imageUUID": "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset": 9257912,
+        "imageUUID": "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset": 9258528,
+        "imageUUID": "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset": 210120,
+        "imageUUID": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset": 234308,
+        "imageUUID": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset": 161532,
+        "imageUUID": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset": 6056,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 115888,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 230560,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 70428,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 69228,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 601816,
+        "imageUUID": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset": 598192,
+        "imageUUID": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset": 576748,
+        "imageUUID": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset": 10684,
+        "imageUUID": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6"
+      },
+      {
+        "imageOffset": 18523508,
+        "imageUUID": "196154FF-BA04-33CD-9277-98F9AA0B7499"
+      },
+      {
+        "imageOffset": 18540444,
+        "imageUUID": "196154FF-BA04-33CD-9277-98F9AA0B7499"
+      },
+      {
+        "imageOffset": 8099360,
+        "imageUUID": "719CF349-8C4A-3054-9536-23EB53648EE0"
+      },
+      {
+        "imageOffset": 8098664,
+        "imageUUID": "719CF349-8C4A-3054-9536-23EB53648EE0"
+      },
+      {
+        "imageOffset": 5534764,
+        "imageUUID": "719CF349-8C4A-3054-9536-23EB53648EE0"
+      },
+      {
+        "imageOffset": 31562480,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 31615284,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 0,
+        "imageUUID": "00000000-0000-0000-0000-000000000000"
+      },
+      {
+        "imageOffset": 0,
+        "imageUUID": "00000000-0000-0000-0000-000000000000"
+      }
+    ]
+  },
+  {
+    "index": 7,
+    "timestamp": "2026-11-08 16:31:16.930742+0000",
+    "pid": 69990,
+    "threadID": 26132822,
+    "detail": {
+      "message": "[Internal] Thread running at User-initiated quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions",
+      "antipattern trigger": "-[NSCondition wait]",
+      "message type": "elevatable",
+      "category type": 3,
+      "subcategory type": -1,
+      "show in console": "0"
+    },
+    "blockedStack": [
+      {
+        "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+        "offset": 9249416,
+        "symbol": "-[_NSThreadPerformInfo wait] (in Foundation) + 40"
+      },
+      {
+        "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+        "offset": 9257912,
+        "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:modes:] (in Foundation) + 596"
+      },
+      {
+        "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+        "offset": 9258528,
+        "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:] (in Foundation) + 104"
+      },
+      {
+        "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+        "offset": 210120,
+        "symbol": "0x000334c8 (in TextToSpeech) + 116"
+      },
+      {
+        "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+        "offset": 229812,
+        "symbol": "0x000381b4 (in TextToSpeech) + 100"
+      },
+      {
+        "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+        "offset": 182720,
+        "symbol": "0x0002c9c0 (in TextToSpeech) + 60"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 3330580,
+        "symbol": "CookAVSpeechEngine.isSpeaking.getter (in RoomInTheCart.debug.dylib) (LocalCookSpeech.swift:498)"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 3333100,
+        "symbol": "protocol witness for CookNativeEngine.isSpeaking.getter in conformance CookAVSpeechEngine (in RoomInTheCart.debug.dylib) (/<compiler-generated>:0)"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 3345136,
+        "symbol": "CookNativeCore.perform(_:) (in RoomInTheCart.debug.dylib) (LocalCookSpeech.swift:590)"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 3337256,
+        "symbol": "CookNativeCore.drain() (in RoomInTheCart.debug.dylib) (LocalCookSpeech.swift:553)"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 3359504,
+        "symbol": "closure #1 in closure #1 in closure #2 in ThreadCookSpeechOwner.init(engineFactory:observeAudioNotifications:notificationCenter:deliverEvent:) (in RoomInTheCart.debug.dylib) (LocalCookSpeech.swift:670)"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 3359544,
+        "symbol": "@objc closure #1 in closure #1 in closure #2 in ThreadCookSpeechOwner.init(engineFactory:observeAudioNotifications:notificationCenter:deliverEvent:) (in RoomInTheCart.debug.dylib) (/<compiler-generated>:0)"
+      },
+      {
+        "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+        "offset": 603044,
+        "symbol": "__CFRUNLOOP_IS_CALLING_OUT_TO_A_SOURCE0_PERFORM_FUNCTION__ (in CoreFoundation) + 24"
+      },
+      {
+        "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+        "offset": 602860,
+        "symbol": "__CFRunLoopDoSource0 (in CoreFoundation) + 168"
+      },
+      {
+        "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+        "offset": 600696,
+        "symbol": "__CFRunLoopDoSources0 (in CoreFoundation) + 220"
+      },
+      {
+        "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+        "offset": 597068,
+        "symbol": "__CFRunLoopRun (in CoreFoundation) + 760"
+      },
+      {
+        "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+        "offset": 576748,
+        "symbol": "_CFRunLoopRunSpecificWithOptions (in CoreFoundation) + 496"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 3359620,
+        "symbol": "closure #2 in closure #1 in closure #2 in ThreadCookSpeechOwner.init(engineFactory:observeAudioNotifications:notificationCenter:deliverEvent:) (in RoomInTheCart.debug.dylib) (LocalCookSpeech.swift:676)"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 3359776,
+        "symbol": "autoreleasepool<A, B>(invoking:) (in RoomInTheCart.debug.dylib) (/<compiler-generated>:0)"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 3358996,
+        "symbol": "closure #1 in closure #2 in ThreadCookSpeechOwner.init(engineFactory:observeAudioNotifications:notificationCenter:deliverEvent:) (in RoomInTheCart.debug.dylib) (LocalCookSpeech.swift:676)"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 3391648,
+        "symbol": "partial apply for closure #1 in closure #2 in ThreadCookSpeechOwner.init(engineFactory:observeAudioNotifications:notificationCenter:deliverEvent:) (in RoomInTheCart.debug.dylib) (/<compiler-generated>:0)"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 3359776,
+        "symbol": "autoreleasepool<A, B>(invoking:) (in RoomInTheCart.debug.dylib) (/<compiler-generated>:0)"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 3358012,
+        "symbol": "closure #2 in ThreadCookSpeechOwner.init(engineFactory:observeAudioNotifications:notificationCenter:deliverEvent:) (in RoomInTheCart.debug.dylib) (LocalCookSpeech.swift:663)"
+      },
+      {
+        "uuid": "A5F012DA-1A1F-3765-924D-BA245EC94D9D",
+        "offset": 3276560,
+        "symbol": "0x0031ff10 (in RoomInTheCart.debug.dylib)"
+      },
+      {
+        "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+        "offset": 9256212,
+        "symbol": "__NSThread__start__ (in Foundation) + 716"
+      },
+      {
+        "uuid": "8728D77B-94C9-38E9-A54B-1D4A92967CD8",
+        "offset": 26212
+      },
+      {
+        "uuid": "8728D77B-94C9-38E9-A54B-1D4A92967CD8",
+        "offset": 6764
+      },
+      {
+        "uuid": "00000000-0000-0000-0000-000000000000",
+        "offset": 0
+      }
+    ],
+    "emissionBacktrace": [
+      {
+        "imageOffset": 584064,
+        "imageUUID": "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset": 589392,
+        "imageUUID": "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset": 28196,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 115888,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 73808,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 34496,
+        "imageUUID": "EC9ECF10-959D-3DA1-A055-6DE970159B9D"
+      },
+      {
+        "imageOffset": 582700,
+        "imageUUID": "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset": 580856,
+        "imageUUID": "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset": 575440,
+        "imageUUID": "139A52E3-2B0D-39ED-AD36-0FABDDB28519"
+      },
+      {
+        "imageOffset": 9249416,
+        "imageUUID": "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset": 9257912,
+        "imageUUID": "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset": 9258528,
+        "imageUUID": "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset": 210120,
+        "imageUUID": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset": 229812,
+        "imageUUID": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset": 182720,
+        "imageUUID": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B"
+      },
+      {
+        "imageOffset": 3330580,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 3333100,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 3345136,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 3337256,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 3359504,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 3359544,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 603044,
+        "imageUUID": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset": 602860,
+        "imageUUID": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset": 600696,
+        "imageUUID": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset": 597068,
+        "imageUUID": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset": 576748,
+        "imageUUID": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF"
+      },
+      {
+        "imageOffset": 3359620,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 3359776,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 3358996,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 3391648,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 3359776,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 3358012,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 3276560,
+        "imageUUID": "A5F012DA-1A1F-3765-924D-BA245EC94D9D"
+      },
+      {
+        "imageOffset": 9256212,
+        "imageUUID": "C153116F-DD31-3FA9-89BB-04B47C1FA83D"
+      },
+      {
+        "imageOffset": 26212,
+        "imageUUID": "8728D77B-94C9-38E9-A54B-1D4A92967CD8"
+      },
+      {
+        "imageOffset": 6764,
+        "imageUUID": "8728D77B-94C9-38E9-A54B-1D4A92967CD8"
+      }
+    ]
+  }
+]
