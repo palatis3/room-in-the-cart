@@ -2,7 +2,19 @@
 
 Updated November 8, 2026 UTC. The full first-version goal is active and release acceptance remains incomplete. The owner's migration 041 approval has already been executed and verified. The separate 042 approval is pending; a repeated 041 approval does not authorize 042. Historical snapshots are preserved in [the handoff archive](CURRENT-HANDOFF-HISTORY-20261106.md).
 
-## Latest execution state — November 8, 06:22 UTC
+## Latest execution state — November 8, 06:43 UTC
+
+Canonical source is still unchanged for the keyboard helper. Commit e1493af adds the tested CI idle-delay report; 42f265b preserves the fallback diagnostic. Migration 041 is already live; no repeat deployment, push, or 042 update occurred.
+
+The isolated public-responder experiment passed the original two fallback cases: strict 2/2, 96.901 and 180.728 seconds, zero recorded warnings, idle messages or runner restarts. Its subsequent mixed cross-screen run failed strict acceptance. Root mistakenly selected normal-app checkout and Spanish tests against the contributor fixture app; both failed at startup before their keyboard assertions. The valid Stock Review five-point test passed in128.949 seconds but its top-right tap still caused a60.03-second idle wait. Explicit resignation is therefore not a reliable shared fix and was not installed.
+
+A second, isolated stable-content candidate kept the Done button in the view tree while hiding its container when inactive. Its unchanged five-point test failed all five dismissal assertions in68.333 seconds: the reported Done frame expanded to the full402-point bar while the visible button stayed at the right edge. Root reviewed before/after screenshots; the test taps missed the button and left the keyboard open. Zero idle messages in that failed test are not success. Strict verification recorded zero runtime warnings and no restart. The candidate was not installed.
+
+Root now exclusively owns simulator4C7FAE04-D40B-4ADC-8F75-1366C09B1695 for the minimal R2 derivative: move hit-testing, accessibility-hidden and disabled modifiers from the HStack to the Button. The original five-point test and assertions are unchanged. Session41440 / xcodebuild46911 is active under `.build/CI15F216Nov08/keyboard-responder-experiment-r1/stable-content-r2-run/`. No concurrent native/UI actions. Inspect its natural result, strict warning report, tap geometry and actual keyboard dismissal before further qualification.
+
+The experimental `source/` and `run/dd/` paths are intentionally reused for incremental builds. Exact earlier inputs were preserved and hash-verified before each change: `preserved-responder/source` and `preserved-responder/Products` hold the responder version; `preserved-stable-content-r1/source` and `preserved-stable-content-r1/Products` hold the failed first stable-content version. Each directory has a preservation receipt mapping historical paths and manifest hashes. Original result bundles and run receipts remain unchanged. The two ordinary tests still need a normal DEBUG app build if a candidate passes the fixture checks; contributor flags replace the app's @main. The quote visibility correction remains prepared and unrun. All agents are idle.
+
+## Previous execution state — November 8, 06:22 UTC
 
 Migration 041 remains live and verified; its repeated approval caused no duplicate update. Separate 042 approval remains pending. No push or live deployment occurred. The published 15f216b cohort remains terminal, with the original failures preserved.
 
