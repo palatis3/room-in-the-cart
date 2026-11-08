@@ -1,0 +1,598 @@
+[
+  {
+    "path": "ios/Features/Pickup/PickupCheckoutDraft.swift",
+    "currentSHA256": "5f1867e0f6d564f2b9d8813ac6c10aa9bbfdebed5a917db74fe28b28c7cac033",
+    "f90SHA256": "5f1867e0f6d564f2b9d8813ac6c10aa9bbfdebed5a917db74fe28b28c7cac033",
+    "selectedLines": [
+      {
+        "line": 81,
+        "text": "    private var detailsInput: DetailsInput {"
+      },
+      {
+        "line": 82,
+        "text": "        .init(store: store, branch: branch, slot: slot, source: source, observed: observed,"
+      },
+      {
+        "line": 83,
+        "text": "              mode: mode, scope: scope, capScope: capScope, cap: cap)"
+      },
+      {
+        "line": 84,
+        "text": "    }"
+      },
+      {
+        "line": 85,
+        "text": "    private var terms: PickupPricingTerms { .init(store: store, branch: branch, slot: slot, mode: mode, scope: scope) }"
+      },
+      {
+        "line": 86,
+        "text": "    private var originalTerms: PickupPricingTerms?"
+      },
+      {
+        "line": 87,
+        "text": "    private var pricingTerms: PickupPricingTerms?"
+      },
+      {
+        "line": 88,
+        "text": "    private mutating func pinEditedPricing() {"
+      },
+      {
+        "line": 89,
+        "text": "        if pricingTerms == nil, let initialInput, pricingInput != initialInput { pricingTerms = terms }"
+      },
+      {
+        "line": 90,
+        "text": "    }"
+      },
+      {
+        "line": 91,
+        "text": "    var termsNeedFreshPricing: Bool { pricingTerms.map { $0 != terms } ?? false }"
+      },
+      {
+        "line": 92,
+        "text": "    var changedRetailerTerms: Bool { originalTerms.map { $0 != terms } ?? false }"
+      },
+      {
+        "line": 93,
+        "text": "    var pricingNeedsReplacement: Bool { termsNeedFreshPricing || (!supportsEditing && !replacingPricing) }"
+      },
+      {
+        "line": 145,
+        "text": "            tax = Self.literal(savedTax); deposits = Self.literal(savedDeposits)"
+      },
+      {
+        "line": 146,
+        "text": "        }"
+      },
+      {
+        "line": 147,
+        "text": "        supportsEditing = Self.canEdit(pricing, basketLines: basketLines)"
+      },
+      {
+        "line": 148,
+        "text": "        originalTerms = terms"
+      },
+      {
+        "line": 149,
+        "text": "        if currentQuote != nil || basketLines.contains(where: {"
+      },
+      {
+        "line": 150,
+        "text": "            if case .unknown = lineCost($0) { return false }"
+      },
+      {
+        "line": 151,
+        "text": "            return true"
+      },
+      {
+        "line": 152,
+        "text": "        }) { pricingTerms = terms }"
+      },
+      {
+        "line": 169,
+        "text": "        if termsNeedFreshPricing { source = \"\"; observed = now }"
+      },
+      {
+        "line": 170,
+        "text": "        pricingTerms = terms"
+      },
+      {
+        "line": 171,
+        "text": "        replacingPricing = true"
+      },
+      {
+        "line": 172,
+        "text": "        inclusive = false; total = \"\"; prices = [:]"
+      },
+      {
+        "line": 173,
+        "text": "        fee = \"\"; threshold = \"\"; discount = \"\"; tax = \"\"; deposits = \"\"; complete = false"
+      },
+      {
+        "line": 174,
+        "text": "    }"
+      },
+      {
+        "line": 175,
+        "text": ""
+      },
+      {
+        "line": 176,
+        "text": "    func matchesSource(_ journey: PickupJourney, workspaceID: UUID? = nil) -> Bool {"
+      },
+      {
+        "line": 177,
+        "text": "        (sourceWorkspaceID == nil || sourceWorkspaceID == workspaceID) && journey.id == journeyID && basketRevisionID != nil && journey.basket?.current.id == basketRevisionID"
+      },
+      {
+        "line": 178,
+        "text": "            && journey.quote == originalQuote && journey.quotedRevisionID == originalQuotedRevisionID"
+      },
+      {
+        "line": 179,
+        "text": "            && journey.earlierQuotes.last?.id == earlierQuoteRevision && journey.ledgerSourceRevisionID == ledgerSourceRevisionID"
+      },
+      {
+        "line": 180,
+        "text": "            && journey.context == originalContext && journey.cap == originalCap"
+      },
+      {
+        "line": 181,
+        "text": "    }"
+      }
+    ]
+  },
+  {
+    "path": "ios/Features/Pickup/PickupHomeView.swift",
+    "currentSHA256": "7a8975abb0eb0344868a617e11ab2a53b553641282940081665bd717bdbc26f5",
+    "f90SHA256": "d3cb9cc1932ab50df93f4cc082e2e4623a0fbb4dc79024d2de669f19fcb85c45",
+    "selectedLines": [
+      {
+        "line": 193,
+        "text": "            Section(pTr(\"Retailer preview \u00b7 source and time\")) {"
+      },
+      {
+        "line": 194,
+        "text": "                TextField(pTr(\"Store\"), text: $draft.store).focused($field, equals: .store)"
+      },
+      {
+        "line": 195,
+        "text": "                TextField(pTr(\"Branch\"), text: $draft.branch).focused($field, equals: .branch)"
+      },
+      {
+        "line": 196,
+        "text": "                TextField(pTr(\"Pickup or delivery slot\"), text: $draft.slot).focused($field, equals: .slot)"
+      },
+      {
+        "line": 197,
+        "text": "                if !draft.termsNeedFreshPricing {"
+      },
+      {
+        "line": 198,
+        "text": "                    TextField(pTr(\"Source of these prices\"), text: $draft.source).focused($field, equals: .source)"
+      },
+      {
+        "line": 199,
+        "text": "                    DatePicker(pTr(\"Observed\"), selection: $draft.observed)"
+      },
+      {
+        "line": 200,
+        "text": "                }"
+      },
+      {
+        "line": 201,
+        "text": "                Picker(pTr(\"Shopping mode\"), selection: $draft.mode) {"
+      },
+      {
+        "line": 218,
+        "text": "            Section(pTr(\"Expected charges \u00b7 USD\")) {"
+      },
+      {
+        "line": 219,
+        "text": "                if draft.pricingNeedsReplacement || draft.replacingPricing, let pricing = draft.originalPricing {"
+      },
+      {
+        "line": 220,
+        "text": "                    Text(pTr(\"Pricing details to preserve\")).font(.headline)"
+      },
+      {
+        "line": 221,
+        "text": "                    if let original = draft.reviewedQuote {"
+      },
+      {
+        "line": 222,
+        "text": "                        PickupQuoteTermsView(quote: original, cap: draft.originalCap)"
+      },
+      {
+        "line": 223,
+        "text": "                    }"
+      },
+      {
+        "line": 224,
+        "text": "                    PickupSavedCheckoutPricingView(pricing: pricing)"
+      },
+      {
+        "line": 225,
+        "text": "                }"
+      },
+      {
+        "line": 226,
+        "text": "                if draft.pricingNeedsReplacement {"
+      },
+      {
+        "line": 227,
+        "text": "                    if draft.termsNeedFreshPricing {"
+      },
+      {
+        "line": 228,
+        "text": "                        Text(pTr(\"These prices belong to different checkout terms. Review them and enter fresh evidence.\"))"
+      },
+      {
+        "line": 229,
+        "text": "                    } else {"
+      },
+      {
+        "line": 230,
+        "text": "                        Text(pTr(\"These pricing details stay intact when you save. Review them before starting replacement pricing.\"))"
+      },
+      {
+        "line": 231,
+        "text": "                    }"
+      },
+      {
+        "line": 232,
+        "text": "                    Button(pTr(\"Replace pricing after review\")) { reviewingReplacement = true }"
+      },
+      {
+        "line": 233,
+        "text": "                } else {"
+      },
+      {
+        "line": 234,
+        "text": "                    Toggle(pTr(\"Retailer total already includes all charges\"), isOn: $draft.inclusive)"
+      },
+      {
+        "line": 235,
+        "text": "                    Text(pTr(\"Blank means unknown. Enter 0 only for a confirmed zero charge.\"))"
+      },
+      {
+        "line": 236,
+        "text": "                    if draft.inclusive { PickupEvidenceField(title: \"Inclusive total\", amount: $draft.total).focused($field, equals: .total) }"
+      },
+      {
+        "line": 237,
+        "text": "                    else {"
+      },
+      {
+        "line": 368,
+        "text": "            Text(pTr(\"This only discards the edits shown here. The saved checkout stays unchanged.\"))"
+      },
+      {
+        "line": 369,
+        "text": "        }"
+      },
+      {
+        "line": 370,
+        "text": "        .confirmationDialog(pTr(\"Replace saved pricing?\"), isPresented: $reviewingReplacement, titleVisibility: .visible) {"
+      },
+      {
+        "line": 371,
+        "text": "            Button(pTr(\"Start replacement pricing\")) {"
+      },
+      {
+        "line": 372,
+        "text": "                draft.beginPricingReplacement(); preview = nil; formError = nil"
+      },
+      {
+        "line": 373,
+        "text": "            }.disabled(draftIsStale)"
+      },
+      {
+        "line": 374,
+        "text": "            Button(pTr(\"Cancel\"), role: .cancel) {}"
+      },
+      {
+        "line": 375,
+        "text": "        } message: {"
+      },
+      {
+        "line": 376,
+        "text": "            Text(pTr(\"Review the saved details above first. New pricing starts blank and replaces them only when you save. Cancel or go back to keep the saved checkout.\"))"
+      },
+      {
+        "line": 377,
+        "text": "        }"
+      },
+      {
+        "line": 378,
+        "text": "        .onChange(of: comparingHold) { _, enabled in"
+      },
+      {
+        "line": 379,
+        "text": "            guard !enabled else { return }"
+      }
+    ]
+  },
+  {
+    "path": "ios/UITests/FreeJourneyUITests.swift",
+    "currentSHA256": "b86079eb30921e2cd1d86353dea1f88e1789aa8fff3e15edb4370d75e60d167d",
+    "f90SHA256": "b86079eb30921e2cd1d86353dea1f88e1789aa8fff3e15edb4370d75e60d167d",
+    "selectedLines": [
+      {
+        "line": 516,
+        "text": "        tap(app.buttons[\"Continue to checkout review\"])"
+      },
+      {
+        "line": 517,
+        "text": "        assertText(\"Lunch\")"
+      },
+      {
+        "line": 518,
+        "text": "        tap(app.buttons[\"Apply reviewed checkout copy\"])"
+      },
+      {
+        "line": 519,
+        "text": "        tap(app.buttons[\"Review whole checkout\"])"
+      },
+      {
+        "line": 520,
+        "text": "        // These adjacent checkout fields share one keyboard. Type into each"
+      },
+      {
+        "line": 521,
+        "text": "        // field directly, then dismiss before moving to the charge controls."
+      },
+      {
+        "line": 522,
+        "text": "        for (name, value) in [(\"Store\", \"Family market\"), (\"Branch\", \"Main branch\"),"
+      },
+      {
+        "line": 523,
+        "text": "                              (\"Pickup or delivery slot\", \"Tuesday 5 PM\"),"
+      },
+      {
+        "line": 524,
+        "text": "                              (\"Source of these prices\", \"Retailer preview reviewed by shopper\")] {"
+      },
+      {
+        "line": 525,
+        "text": "            let field = app.textFields[name]"
+      },
+      {
+        "line": 526,
+        "text": "            tap(field)"
+      },
+      {
+        "line": 527,
+        "text": "            XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5), \"Show the keyboard for \\(name)\")"
+      },
+      {
+        "line": 528,
+        "text": "            if let old = field.value as? String, !old.isEmpty, old != field.placeholderValue {"
+      },
+      {
+        "line": 529,
+        "text": "                field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count))"
+      },
+      {
+        "line": 530,
+        "text": "            }"
+      },
+      {
+        "line": 531,
+        "text": "            field.typeText(value)"
+      },
+      {
+        "line": 532,
+        "text": "            XCTAssertEqual(field.value as? String, value, name)"
+      },
+      {
+        "line": 533,
+        "text": "        }"
+      },
+      {
+        "line": 534,
+        "text": "        tap(app.buttons[\"Done\"])"
+      },
+      {
+        "line": 535,
+        "text": "        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))"
+      },
+      {
+        "line": 536,
+        "text": "        enableSwitch(\"Retailer total already includes all charges\")"
+      },
+      {
+        "line": 537,
+        "text": "        fill(\"3.00\", into: \"Inclusive total\")"
+      },
+      {
+        "line": 538,
+        "text": "        tap(app.buttons[\"Save and evaluate checkout\"])"
+      },
+      {
+        "line": 539,
+        "text": "        assertText(\"3.00\")"
+      },
+      {
+        "line": 540,
+        "text": "        back(to: \"Prepare retailer handoff\")"
+      },
+      {
+        "line": 541,
+        "text": "        tap(app.buttons[\"Prepare retailer handoff\"])"
+      },
+      {
+        "line": 542,
+        "text": "        tap(app.buttons[\"Freeze reviewed basket\"])"
+      },
+      {
+        "line": 543,
+        "text": "        tap(app.buttons[\"Copy dated list\"])"
+      }
+    ]
+  },
+  {
+    "path": "ios/Tests/PickupCheckoutDraftTests.swift",
+    "currentSHA256": "7b7aa6fca39f95c41bcf36b77dbfa8b0694ec9493c95166a1bc0b9e784ef6fca",
+    "f90SHA256": "7b7aa6fca39f95c41bcf36b77dbfa8b0694ec9493c95166a1bc0b9e784ef6fca",
+    "selectedLines": [
+      {
+        "line": 158,
+        "text": ""
+      },
+      {
+        "line": 159,
+        "text": "    func testPricesAreBoundToReviewedTermsIncludingReplacementAndUnquotedBasketPrices() throws {"
+      },
+      {
+        "line": 160,
+        "text": "        let old = try journey(.inclusiveTotal(.bounded(lower: money(300), upper: money(450), reason: \"Weight varies\")))"
+      },
+      {
+        "line": 161,
+        "text": "        let edits: [(inout PickupCheckoutDraft) -> Void] = ["
+      },
+      {
+        "line": 162,
+        "text": "            { $0.store = \"Other market\" }, { $0.branch = \"East\" }, { $0.slot = \"Wednesday\" },"
+      },
+      {
+        "line": 163,
+        "text": "            { $0.mode = .delivery }, { $0.scope = .dinner }"
+      },
+      {
+        "line": 164,
+        "text": "        ]"
+      },
+      {
+        "line": 165,
+        "text": "        for edit in edits {"
+      },
+      {
+        "line": 166,
+        "text": "            var draft = PickupCheckoutDraft(journey: old)"
+      },
+      {
+        "line": 167,
+        "text": "            edit(&draft)"
+      },
+      {
+        "line": 168,
+        "text": "            XCTAssertTrue(draft.termsNeedFreshPricing)"
+      },
+      {
+        "line": 169,
+        "text": "            XCTAssertThrowsError(try draft.submission(for: old)) {"
+      },
+      {
+        "line": 170,
+        "text": "                XCTAssertEqual($0 as? PickupCheckoutDraftError, .reviewReplacement)"
+      },
+      {
+        "line": 171,
+        "text": "            }"
+      },
+      {
+        "line": 172,
+        "text": "            draft.beginPricingReplacement(now: now.addingTimeInterval(60))"
+      },
+      {
+        "line": 173,
+        "text": "            XCTAssertEqual(draft.source, \"\"); XCTAssertEqual(draft.observed, now.addingTimeInterval(60))"
+      },
+      {
+        "line": 174,
+        "text": "            XCTAssertFalse(draft.complete); XCTAssertEqual(draft.prices, [:]); XCTAssertEqual(draft.fee, \"\")"
+      },
+      {
+        "line": 175,
+        "text": "            XCTAssertThrowsError(try draft.submission(for: old))"
+      },
+      {
+        "line": 176,
+        "text": "            draft.source = \"New retailer page\"; draft.inclusive = true; draft.total = \"4.05\""
+      },
+      {
+        "line": 177,
+        "text": "            let new = try draft.submission(for: old).quote"
+      },
+      {
+        "line": 178,
+        "text": "            XCTAssertEqual(new.pricing, .inclusiveTotal(.exact(money(405))))"
+      },
+      {
+        "line": 179,
+        "text": "            XCTAssertEqual(new.context.source, \"New retailer page\")"
+      },
+      {
+        "line": 180,
+        "text": "            XCTAssertEqual(draft.reviewedQuote, old.quote)"
+      },
+      {
+        "line": 181,
+        "text": "            draft.slot += \" afternoon\""
+      },
+      {
+        "line": 182,
+        "text": "            XCTAssertThrowsError(try draft.submission(for: old))"
+      },
+      {
+        "line": 183,
+        "text": "        }"
+      },
+      {
+        "line": 184,
+        "text": "        var unquoted = old"
+      },
+      {
+        "line": 185,
+        "text": "        unquoted.quote = nil; unquoted.quotedRevisionID = nil"
+      },
+      {
+        "line": 186,
+        "text": "        var fromBasket = PickupCheckoutDraft(journey: unquoted)"
+      },
+      {
+        "line": 187,
+        "text": "        fromBasket.branch = \"Other branch\""
+      },
+      {
+        "line": 188,
+        "text": "        XCTAssertThrowsError(try fromBasket.submission(for: unquoted))"
+      },
+      {
+        "line": 189,
+        "text": "        XCTAssertNil(fromBasket.reviewedQuote)"
+      },
+      {
+        "line": 190,
+        "text": "        unquoted.ledgerBasis = ShopBasis(capScope: .dinnersOnly)"
+      },
+      {
+        "line": 191,
+        "text": "        let workspaceID = UUID()"
+      },
+      {
+        "line": 192,
+        "text": "        let scoped = PickupCheckoutDraft(journey: unquoted, workspaceID: workspaceID)"
+      },
+      {
+        "line": 193,
+        "text": "        XCTAssertEqual(scoped.scope, .dinner)"
+      },
+      {
+        "line": 194,
+        "text": "        XCTAssertThrowsError(try scoped.submission(for: unquoted, workspaceID: UUID())) {"
+      },
+      {
+        "line": 195,
+        "text": "            XCTAssertEqual($0 as? PickupCheckoutDraftError, .staleSource)"
+      },
+      {
+        "line": 196,
+        "text": "        }"
+      }
+    ]
+  }
+]

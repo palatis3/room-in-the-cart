@@ -1,0 +1,13 @@
+{
+  "sourcePath": "ios/UITests/FreeJourneyUITests.swift",
+  "sourceCommitAtPreparation": "53950b78fbae665c6000b7b271d730d962811c6f",
+  "sourceSHA256": "b86079eb30921e2cd1d86353dea1f88e1789aa8fff3e15edb4370d75e60d167d",
+  "proposedSourceSHA256": "37cc1bdc26266457bd17933278ad880c90eea7beb216e8391d9323272f9f5c1f",
+  "patchFile": ".build/CIF90Nov07/ui-04-inspection/pricing-review-sequence.patch",
+  "patchSHA256": "f10b551fb76475821009bdeb534d6d42553ef1ff77991d6bee4ee0c94123521d",
+  "installed": false,
+  "nativeExecution": false,
+  "remainderFromInclusiveControlByteIdentical": true,
+  "remainingJourneySHA256": "1f53967cf9e021a33b0a88b076ab1a874c02baf6ec17d3c3a22ffc3d94bde071",
+  "scope": "Only the protected-dinner journey checkout-entry sequence. Original store/branch/slot values and exact assertions preserved; source value/assertion moved after explicit review. Existing inclusive3.00 and every subsequent journey action/assertion remain byte-identical."
+}

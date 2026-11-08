@@ -1,0 +1,231 @@
+{
+  "source": ".build/CIF90Nov07/ui-04/pristine-members/Tests.log",
+  "sourceSHA256": "040d877c0916a809c2fc7ecb6f55e8e70ad77ebe6798fc5c4b42c664625ccf24",
+  "lineConvention": "Physical LF-delimited source lines",
+  "lines": [
+    {
+      "line": 2034,
+      "text": "    t =   239.47s Tap \"Apply reviewed checkout copy\" Button"
+    },
+    {
+      "line": 2035,
+      "text": "    t =   239.47s     Wait for dev.roominthecart.app.debug to idle"
+    },
+    {
+      "line": 2036,
+      "text": "    t =   239.88s     Find the \"Apply reviewed checkout copy\" Button"
+    },
+    {
+      "line": 2037,
+      "text": "    t =   240.00s     Check for interrupting elements affecting \"Apply reviewed checkout copy\" Button"
+    },
+    {
+      "line": 2038,
+      "text": "    t =   240.14s     Synthesize event"
+    },
+    {
+      "line": 2058,
+      "text": "    t =   246.49s         Checking existence of `Keyboard (First Match)`"
+    },
+    {
+      "line": 2059,
+      "text": "    t =   246.51s Find the \"Store\" TextField"
+    },
+    {
+      "line": 2060,
+      "text": "    t =   246.60s Find the \"Store\" TextField"
+    },
+    {
+      "line": 2061,
+      "text": "    t =   246.69s Type 'Family market' into \"Store\" TextField"
+    },
+    {
+      "line": 2062,
+      "text": "    t =   246.69s     Wait for dev.roominthecart.app.debug to idle"
+    },
+    {
+      "line": 2063,
+      "text": "    t =   246.70s     Find the \"Store\" TextField"
+    },
+    {
+      "line": 2064,
+      "text": "    t =   246.79s     Check for interrupting elements affecting \"Store\" TextField"
+    },
+    {
+      "line": 2065,
+      "text": "    t =   246.88s     Synthesize event"
+    },
+    {
+      "line": 2066,
+      "text": "    t =   247.31s     Wait for dev.roominthecart.app.debug to idle"
+    },
+    {
+      "line": 2078,
+      "text": "    t =   249.80s         Checking existence of `Keyboard (First Match)`"
+    },
+    {
+      "line": 2079,
+      "text": "    t =   249.83s Find the \"Branch\" TextField"
+    },
+    {
+      "line": 2080,
+      "text": "    t =   249.96s Find the \"Branch\" TextField"
+    },
+    {
+      "line": 2081,
+      "text": "    t =   250.08s Type 'Main branch' into \"Branch\" TextField"
+    },
+    {
+      "line": 2082,
+      "text": "    t =   250.08s     Wait for dev.roominthecart.app.debug to idle"
+    },
+    {
+      "line": 2083,
+      "text": "    t =   250.08s     Find the \"Branch\" TextField"
+    },
+    {
+      "line": 2084,
+      "text": "    t =   250.21s     Check for interrupting elements affecting \"Branch\" TextField"
+    },
+    {
+      "line": 2085,
+      "text": "    t =   250.29s     Synthesize event"
+    },
+    {
+      "line": 2086,
+      "text": "    t =   250.68s     Wait for dev.roominthecart.app.debug to idle"
+    },
+    {
+      "line": 2098,
+      "text": "    t =   252.54s         Checking existence of `Keyboard (First Match)`"
+    },
+    {
+      "line": 2099,
+      "text": "    t =   252.58s Find the \"Pickup or delivery slot\" TextField"
+    },
+    {
+      "line": 2100,
+      "text": "    t =   252.70s Find the \"Pickup or delivery slot\" TextField"
+    },
+    {
+      "line": 2101,
+      "text": "    t =   252.82s Type 'Tuesday 5 PM' into \"Pickup or delivery slot\" TextField"
+    },
+    {
+      "line": 2102,
+      "text": "    t =   252.82s     Wait for dev.roominthecart.app.debug to idle"
+    },
+    {
+      "line": 2103,
+      "text": "    t =   252.82s     Find the \"Pickup or delivery slot\" TextField"
+    },
+    {
+      "line": 2104,
+      "text": "    t =   252.96s     Check for interrupting elements affecting \"Pickup or delivery slot\" TextField"
+    },
+    {
+      "line": 2105,
+      "text": "    t =   253.09s     Synthesize event"
+    },
+    {
+      "line": 2106,
+      "text": "    t =   253.51s     Wait for dev.roominthecart.app.debug to idle"
+    },
+    {
+      "line": 2107,
+      "text": "    t =   253.51s Find the \"Pickup or delivery slot\" TextField"
+    },
+    {
+      "line": 2108,
+      "text": "    t =   253.66s Checking existence of `\"Source of these prices\" TextField`"
+    },
+    {
+      "line": 2109,
+      "text": "    t =   253.78s Find the Target Application 'dev.roominthecart.app.debug'"
+    },
+    {
+      "line": 2110,
+      "text": "    t =   253.98s Find the Target Application 'dev.roominthecart.app.debug'"
+    },
+    {
+      "line": 2444,
+      "text": "    t =   331.82s Find the \"Source of these prices\" TextField"
+    },
+    {
+      "line": 2445,
+      "text": "    t =   333.00s     Find the \"Source of these prices\" TextField (retry 1)"
+    },
+    {
+      "line": 2446,
+      "text": "    t =   334.09s     Find the \"Source of these prices\" TextField (retry 2)"
+    },
+    {
+      "line": 2447,
+      "text": "    t =   334.18s Requesting snapshot of accessibility hierarchy for app with pid 25699"
+    },
+    {
+      "line": 2448,
+      "text": "    t =   334.33s Find: Descendants matching type TextField"
+    },
+    {
+      "line": 2449,
+      "text": "    t =   334.34s Find: Elements matching predicate '\"Source of these prices\" IN identifiers'"
+    },
+    {
+      "line": 2450,
+      "text": "/Users/runner/work/room-in-the-cart/room-in-the-cart/ios/UITests/FreeJourneyUITests.swift:1739: error: -[RoomInTheCartUITests.FreeJourneyUITests testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop] : XCTAssertTrue failed - Missing actionable UI element: Query chain:"
+    },
+    {
+      "line": 2451,
+      "text": " \u2192Find: Target Application 'dev.roominthecart.app.debug'"
+    },
+    {
+      "line": 2452,
+      "text": "  \u21aa\ufe0eFind: Descendants matching type TextField"
+    },
+    {
+      "line": 2453,
+      "text": "    \u21aa\ufe0eFind: Elements matching predicate '\"Source of these prices\" IN identifiers'"
+    },
+    {
+      "line": 2454,
+      "text": "No matches found for Elements matching predicate '\"Source of these prices\" IN identifiers' from input {("
+    },
+    {
+      "line": 2455,
+      "text": "    TextField, {{32.0, 276.0}, {338.0, 22.0}}, placeholderValue: 'Store', value: Family market,"
+    },
+    {
+      "line": 2456,
+      "text": "    TextField, {{32.0, 328.0}, {338.0, 22.0}}, placeholderValue: 'Branch', value: Main branch,"
+    },
+    {
+      "line": 2457,
+      "text": "    TextField, {{32.0, 380.0}, {338.0, 22.0}}, placeholderValue: 'Pickup or delivery slot', value: Tuesday 5 PM, Keyboard Focused,"
+    },
+    {
+      "line": 2458,
+      "text": "    TextField, {{32.0, 536.0}, {338.0, 22.0}}, placeholderValue: 'Spending cap'"
+    },
+    {
+      "line": 2459,
+      "text": ")}"
+    },
+    {
+      "line": 2460,
+      "text": ""
+    },
+    {
+      "line": 2461,
+      "text": "    t =   334.95s Tear Down"
+    },
+    {
+      "line": 2462,
+      "text": "    t =   335.17s     Added attachment named 'Free-flow-failure'"
+    },
+    {
+      "line": 2463,
+      "text": "    t =   335.18s     Terminate dev.roominthecart.app.debug:25699"
+    }
+  ]
+}

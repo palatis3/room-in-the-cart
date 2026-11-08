@@ -1,0 +1,62 @@
+[
+  {
+    "file": "Free-flow-failure.png",
+    "bytes": 389669,
+    "sha256": "e89ae0ae9f9e222971abb7bf0510ad094039e401a1141c3072366edb0c848b47"
+  },
+  {
+    "file": "Pack-choice-saved.png",
+    "bytes": 196782,
+    "sha256": "40598b5f23a2d6ee2f521a902a5f23fb7d9f08560fb928d9cad457633526211a"
+  },
+  {
+    "file": "README.md",
+    "bytes": 3409,
+    "sha256": "f1c3e1b9efa97deb6c74578c9059b264a5c9c81035f1e48dc2afff4c4d065c60"
+  },
+  {
+    "file": "activity-excerpt.json",
+    "bytes": 1674,
+    "sha256": "d6915e7fa8621a35993831ac88c87b5f2e8d086f6483173bc208ca6f0bb8f290"
+  },
+  {
+    "file": "artifact-metadata.json",
+    "bytes": 803,
+    "sha256": "2958a2817e40ee44836f11edd66f435c8ed8042b4e77e9b4c538c20d1f67f900"
+  },
+  {
+    "file": "attachment-export-receipts.json",
+    "bytes": 2427,
+    "sha256": "b97293df2e0a94f8fb64052c1088245a53680afda1a8c01465c64a2d25402aa4"
+  },
+  {
+    "file": "attachment-member-hashes.json",
+    "bytes": 1743,
+    "sha256": "d9a94f06ad6f57ea4e5a44d809687fd38fff55b1c9debd6876fb2e077c31c6c2"
+  },
+  {
+    "file": "console-excerpt.json",
+    "bytes": 6950,
+    "sha256": "0e6f26f4dee3a7741876c752c2bfcc9f7c4c78a9ebe39b1f04d75078f6584317"
+  },
+  {
+    "file": "metadata-member-hashes.json",
+    "bytes": 992,
+    "sha256": "322d1c479fd6319c0d31196a71babf8dee9e24e76db36480592320e3ae4556af"
+  },
+  {
+    "file": "proof.json",
+    "bytes": 3061,
+    "sha256": "4897812689f3c954ff1f2c3c946ab8ca0d90f7aba6a99aa7462981d854309ae7"
+  },
+  {
+    "file": "scratch-patch-proof.json",
+    "bytes": 965,
+    "sha256": "a8ab50a3d1cd5b5d3fbd0cfe320bbe41d3bf2c745148129851963dbab236fab0"
+  },
+  {
+    "file": "source-excerpts.json",
+    "bytes": 18016,
+    "sha256": "5352dae0e7d7229f53dd3f5d67e3e18bdfbeb4bc8d3b75076798059c643f78cd"
+  }
+]
