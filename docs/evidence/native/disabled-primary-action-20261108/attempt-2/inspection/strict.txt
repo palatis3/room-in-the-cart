@@ -1,0 +1,25 @@
+Executed 2 of 2 selected tests.
+
+| Test | Result | Seconds |
+|---|---|---|
+| RoomInTheCartUITests/FreeJourneyUITests/testFirstPickupCanStartFromDinnersAndReviewAnEditablePattern | Failed | 720.00 |
+| RoomInTheCartUITests/FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval | Failed | 238.39 |
+
+Animation-idle diagnostics: 9 observed messages in 3405 log lines (2 case starts, 1 runner restart boundaries). Diagnostic only; native results and runtime-warning checks are unchanged.
+First elapsed is the message's XCTest timestamp, not the wait duration; unknown means the message had no timestamp.
+
+| Runner segment | Test (start line) | Messages | First elapsed (s) | First log line |
+|---|---|---|---|---|
+| 1 | RoomInTheCartUITests/FreeJourneyUITests/testFirstPickupCanStartFromDinnersAndReviewAnEditablePattern (line 1013) | 8 | 270.22 | 2095 |
+| 1 | Unattributed | 1 | 754.62 | 2134 |
+
+The XCTest test export recorded 0 runtime warning occurrences across 2 examined tests.
+Executed and passing counts do not match the selected tests
+The shard contains failures, expected failures or skipped tests
+Every selected test must individually report Passed
+XCTest restarted its runner at log line 2149.
+XCTest logged a failure for RoomInTheCartUITests/FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval at log line 3377.
+XCTest log requires one start then one pass for RoomInTheCartUITests/FreeJourneyUITests/testFirstPickupCanStartFromDinnersAndReviewAnEditablePattern; found ['start', 'timeout'].
+XCTest log requires one start then one pass for RoomInTheCartUITests/FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval; found ['start', 'non-passing or unrecognized completion'].
+XCTest log requires one successful result banner; found ['FAILED'].
+

@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "boundaryTests": 22,
+  "exactOriginalSelectors": true,
+  "exactPreviouslyCompiledPatch": true,
+  "patchedSourceHashesMatchLocalCompiledCandidate": true,
+  "nativeExecution": false,
+  "remoteMutation": false,
+  "workflowLint": true
+}

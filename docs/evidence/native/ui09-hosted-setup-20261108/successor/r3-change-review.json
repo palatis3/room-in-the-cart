@@ -1,0 +1,23 @@
+{
+  "failedRunID": 42495529960,
+  "failedCandidateSHA": "ca967b540dce824adbf6e82a470e9167c9cc4e8d",
+  "originalExcerptPath": "/Users/palatis/Room in the Cart/.build/CIA305065Nov08/ui09-hosted-dispatch/monitor/terminal-job-log-excerpts.txt",
+  "originalExcerptSHA256": "8478bd64e6ce98c15742fd49cf74dae4493afe7fa7812f03b65de5b775f79eba",
+  "originalExcerptUnchanged": true,
+  "baseReadinessWorkflow": "a30506596ad3a0103396fccb29800c629c92bc30:.github/workflows/ci.yml",
+  "baseBootHelper": "a30506596ad3a0103396fccb29800c629c92bc30:scripts/boot_ios_simulator.py",
+  "finding": "boot helper finished; diagnostic-only appearance query timed out before native tests; missing-result assertion was secondary",
+  "successorChangedFiles": [
+    ".github/workflows/ios-toggle-diagnostic.yml",
+    "diagnostics/ui09-hosted/hosted.py",
+    "diagnostics/ui09-hosted/pins.json"
+  ],
+  "successorPatchSHA256": "14d91a6685f5280f189c1de8c6f9bad1094b0b65713bfada6a9c88630c72d27d",
+  "patchCheckExit": 0,
+  "isolatedWorktreeUnchanged": true,
+  "nativeExecution": false,
+  "remoteMutation": false,
+  "collectorUnchanged": true,
+  "observerPatchUnchanged": true,
+  "selectorsUnchanged": true
+}

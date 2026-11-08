@@ -1,0 +1,10 @@
+{
+  "priorManifestSHA256": "be308a336e69d2b316df79efd8d71ff3e3e9824b516c0091934bd05f2ea9462d",
+  "newManifestSHA256": "38e6b9ece2f6fc8c8b953cf6fe156708da59a3ea841cdca2eebba520601d6dbf",
+  "changedFromPrior": [
+    "ios/Features/Dinners/DinnerEditors.swift",
+    "ios/UITests/FreeJourneyUITests.swift"
+  ],
+  "unchangedIOSInputs": 554,
+  "scope": "Only dinner row rendering and ordinary dinner regression change from alreadyexecuted firstcandidate; Theme and HouseholdRequestPack tests are byteidentical."
+}

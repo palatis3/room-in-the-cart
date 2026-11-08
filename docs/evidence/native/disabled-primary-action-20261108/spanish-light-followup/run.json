@@ -1,0 +1,1299 @@
+{
+  "status": "completed",
+  "phase": "ordinary-light",
+  "startedAtUTC": "2026-11-08T15:54:08.033889+00:00",
+  "sourceManifestSHA256": "601d87b5bebd6e7b28b5c171a4ce13810d6e7b8b524e0fe3bf5c6e9524f23582",
+  "sourceManifest": "/Users/palatis/Room in the Cart/.build/S24DisabledActionNov08/row-qualification-r2/fixed-source-manifest.json",
+  "selectionSHA256": "3f81344a414dcb5d82a9d5d710b35f34f6c092c89329b38db142042b6f01a2b8",
+  "expectedCount": 1,
+  "command": [
+    "/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild",
+    "-project",
+    "ios/RoomInTheCart.xcodeproj",
+    "-scheme",
+    "RoomInTheCart",
+    "-configuration",
+    "Debug",
+    "-destination",
+    "platform=iOS Simulator,id=4C7FAE04-D40B-4ADC-8F75-1366C09B1695,arch=arm64",
+    "-derivedDataPath",
+    "/Users/palatis/Room in the Cart/.build/S24DisabledActionNov08/qualification/ordinary-dd",
+    "-jobs",
+    "2",
+    "-parallel-testing-enabled",
+    "NO",
+    "CODE_SIGN_IDENTITY=-",
+    "SWIFT_ACTIVE_COMPILATION_CONDITIONS=DEBUG",
+    "-resultBundlePath",
+    "/Users/palatis/Room in the Cart/.build/S24DisabledActionNov08/row-qualification-r2/ordinary-light-run/native.xcresult",
+    "-test-timeouts-enabled",
+    "YES",
+    "-default-test-execution-time-allowance",
+    "720",
+    "-maximum-test-execution-time-allowance",
+    "900",
+    "-collect-test-diagnostics",
+    "never",
+    "-only-testing:RoomInTheCartUITests/FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval",
+    "test"
+  ],
+  "newDD": false,
+  "scope": "Spanish-only follow-up after moving enabled assertion after existing row reveal. English timeout remains unresolved. Corrected full-row dinner native Button: disabled/enabled contrast, full native Cell bounds and padding-edge activation with original persistence; minimum17 shared style coverage. Original case timeouts/logging retained.",
+  "toolchain": {
+    "developerDirectory": "/Applications/Xcode.app/Contents/Developer",
+    "xcodebuild": "/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild",
+    "xcodebuildSHA256": "d37fbcb4198c2474d847e5d7d4bf8394a1a9443890ad0153a76bc3e1d5576ec1",
+    "xcodeVersion": "Xcode 27.1\nBuild version 27A9275",
+    "swiftExecutable": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift",
+    "swiftVersion": "Apple Swift version 6.4 (swiftlang-6.4.0.34.1 clang-2100.3.34.1)\nTarget: arm64-apple-macosx27.2.0"
+  },
+  "device": {
+    "runtimeIdentifier": "com.apple.CoreSimulator.SimRuntime.iOS-26-2",
+    "dataPath": "/Users/palatis/Library/Developer/CoreSimulator/Devices/4C7FAE04-D40B-4ADC-8F75-1366C09B1695/data",
+    "dataPathSize": 7140184064,
+    "logPath": "/Users/palatis/Library/Logs/CoreSimulator/4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+    "udid": "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+    "lastUsedAt": "2026-11-07T22:59:27Z",
+    "isAvailable": true,
+    "logPathSize": 368640,
+    "deviceTypeIdentifier": "com.apple.CoreSimulator.SimDeviceType.iPhone-17",
+    "state": "Booted",
+    "name": "RITC-Placed-Receipt-Nov07"
+  },
+  "bootedRuntimeRoot": "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot",
+  "systemVersion": {
+    "BuildID": "28797834-D251-11F0-A935-FBAB4C799B22",
+    "ProductBuildVersion": "23C54",
+    "ProductCopyright": "1983-2025 Apple Inc.",
+    "ProductName": "iPhone OS",
+    "ProductVersion": "26.2",
+    "SystemImageID": "5A79EE63-AF0F-43EF-884D-7F08B93ED590"
+  },
+  "settings": {
+    "appearance": "light",
+    "content_size": "large",
+    "increase_contrast": "disabled"
+  },
+  "pid": 61388,
+  "nativeExit": 0,
+  "finishedAtUTC": "2026-11-08T15:58:59.833301+00:00",
+  "sourceUnchanged": true,
+  "preservedProductsUnchanged": true,
+  "productManifest": {
+    "Debug-iphonesimulator": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/CoreDomain.o": {
+      "kind": "file",
+      "sha256": "aabefeb4b4361d2d3d85f6697f698a92f317b7c6e9c8adba57ce9622798743ae",
+      "bytes": 9433936
+    },
+    "Debug-iphonesimulator/CoreDomain.swiftmodule": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/CoreDomain.swiftmodule/Project": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/CoreDomain.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo": {
+      "kind": "file",
+      "sha256": "0e00d90a64b39c0d474f03016994ed858a23a275fc3145e57850a6f89af3f866",
+      "bytes": 296656
+    },
+    "Debug-iphonesimulator/CoreDomain.swiftmodule/arm64-apple-ios-simulator.abi.json": {
+      "kind": "file",
+      "sha256": "4277ac6b49f8511196028a5ac20f5b1b1dfa754c24615d34068089f0b1739728",
+      "bytes": 149
+    },
+    "Debug-iphonesimulator/CoreDomain.swiftmodule/arm64-apple-ios-simulator.swiftdoc": {
+      "kind": "file",
+      "sha256": "842026347b08db444196f42d840d4217fbaaa2e8346b46c8167a7df0214e379f",
+      "bytes": 40584
+    },
+    "Debug-iphonesimulator/CoreDomain.swiftmodule/arm64-apple-ios-simulator.swiftmodule": {
+      "kind": "file",
+      "sha256": "2f9a5ace3585611c72df4ac782ec79693f1513b391130f12ef523b165ed01fdb",
+      "bytes": 1686168
+    },
+    "Debug-iphonesimulator/DeviceSurfaces.o": {
+      "kind": "file",
+      "sha256": "50e38b1bfe2a90a2fdeee84b6487f1adfa123cfc25928f5fe2485316704093f3",
+      "bytes": 970872
+    },
+    "Debug-iphonesimulator/DeviceSurfaces.swiftmodule": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/DeviceSurfaces.swiftmodule/Project": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/DeviceSurfaces.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo": {
+      "kind": "file",
+      "sha256": "3d9caef8e8c6bce4033374191deb46a30e7c60198dd098246d88d2992f44dd7d",
+      "bytes": 45076
+    },
+    "Debug-iphonesimulator/DeviceSurfaces.swiftmodule/arm64-apple-ios-simulator.abi.json": {
+      "kind": "file",
+      "sha256": "4277ac6b49f8511196028a5ac20f5b1b1dfa754c24615d34068089f0b1739728",
+      "bytes": 149
+    },
+    "Debug-iphonesimulator/DeviceSurfaces.swiftmodule/arm64-apple-ios-simulator.swiftdoc": {
+      "kind": "file",
+      "sha256": "86f111454a39525a8a32e435512a5ed6c7a2d52c416d9f6c3a93b49db698a669",
+      "bytes": 4864
+    },
+    "Debug-iphonesimulator/DeviceSurfaces.swiftmodule/arm64-apple-ios-simulator.swiftmodule": {
+      "kind": "file",
+      "sha256": "22bf02f01bf7055da1cdb544111f5caf064078ab85b7279279d3a0b9cf74198f",
+      "bytes": 235976
+    },
+    "Debug-iphonesimulator/HouseholdClient.o": {
+      "kind": "file",
+      "sha256": "99f3467d37ce817719ecbba090f5614938b3d11afd2527187f930b010251258c",
+      "bytes": 15468744
+    },
+    "Debug-iphonesimulator/HouseholdClient.swiftmodule": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/HouseholdClient.swiftmodule/Project": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/HouseholdClient.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo": {
+      "kind": "file",
+      "sha256": "0aec2058771efcadef6e3b5ab2e828dfba976b703fcbd86c4236ba83987b98d9",
+      "bytes": 509464
+    },
+    "Debug-iphonesimulator/HouseholdClient.swiftmodule/arm64-apple-ios-simulator.abi.json": {
+      "kind": "file",
+      "sha256": "4277ac6b49f8511196028a5ac20f5b1b1dfa754c24615d34068089f0b1739728",
+      "bytes": 149
+    },
+    "Debug-iphonesimulator/HouseholdClient.swiftmodule/arm64-apple-ios-simulator.swiftdoc": {
+      "kind": "file",
+      "sha256": "7f47a4d86229dd665e0b3fbecd56eb0c1545b0071fd32b1c619c96422497928c",
+      "bytes": 22412
+    },
+    "Debug-iphonesimulator/HouseholdClient.swiftmodule/arm64-apple-ios-simulator.swiftmodule": {
+      "kind": "file",
+      "sha256": "fa73c97b234df170fbf4bce8df6108a554cffbdc78999870cda95c16a64e1672",
+      "bytes": 2730340
+    },
+    "Debug-iphonesimulator/LocalStore.o": {
+      "kind": "file",
+      "sha256": "75eb2026bc612503108670558fbff310dbcd23bfe880618323814af8b2dd089a",
+      "bytes": 408576
+    },
+    "Debug-iphonesimulator/LocalStore.swiftmodule": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/LocalStore.swiftmodule/Project": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/LocalStore.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo": {
+      "kind": "file",
+      "sha256": "1232114dd5f01ec5a320a7b0f345fad513a8864c6b85f1afb19ef44e2d90bf4d",
+      "bytes": 16152
+    },
+    "Debug-iphonesimulator/LocalStore.swiftmodule/arm64-apple-ios-simulator.abi.json": {
+      "kind": "file",
+      "sha256": "4277ac6b49f8511196028a5ac20f5b1b1dfa754c24615d34068089f0b1739728",
+      "bytes": 149
+    },
+    "Debug-iphonesimulator/LocalStore.swiftmodule/arm64-apple-ios-simulator.swiftdoc": {
+      "kind": "file",
+      "sha256": "83a41c391e9c0c39eaff087bbebed19142cc566397f1dc17eaf97a1297fd64ff",
+      "bytes": 10008
+    },
+    "Debug-iphonesimulator/LocalStore.swiftmodule/arm64-apple-ios-simulator.swiftmodule": {
+      "kind": "file",
+      "sha256": "6e23547667d3801f15f1300b00aa25d680ff4a4f679acfc10bb5bc7268e137de",
+      "bytes": 116696
+    },
+    "Debug-iphonesimulator/PackageFrameworks": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/PackageFrameworks/CoreDomain_-28BC35CF4A8A1B15_PackageProduct.framework": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/PackageFrameworks/CoreDomain_-28BC35CF4A8A1B15_PackageProduct.framework/CoreDomain_-28BC35CF4A8A1B15_PackageProduct": {
+      "kind": "file",
+      "sha256": "083562d6a12a532d0ff15d84c4cfc5341a17eef8005eacb4b3d11898dee4bc7c",
+      "bytes": 7546248
+    },
+    "Debug-iphonesimulator/PackageFrameworks/CoreDomain_-28BC35CF4A8A1B15_PackageProduct.framework/Info.plist": {
+      "kind": "file",
+      "sha256": "3caced50fa55d29674bac4aec5cb2a4ab09402f61347de019ffea3faa7afc03d",
+      "bytes": 773
+    },
+    "Debug-iphonesimulator/PackageFrameworks/DeviceSurfaces_3D3532C6B9956B9A_PackageProduct.framework": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/PackageFrameworks/DeviceSurfaces_3D3532C6B9956B9A_PackageProduct.framework/DeviceSurfaces_3D3532C6B9956B9A_PackageProduct": {
+      "kind": "file",
+      "sha256": "5e7324ae449a4eee6ff3a621e30a045c288ff7b7d5ab936678c0906556a23b11",
+      "bytes": 824368
+    },
+    "Debug-iphonesimulator/PackageFrameworks/DeviceSurfaces_3D3532C6B9956B9A_PackageProduct.framework/Info.plist": {
+      "kind": "file",
+      "sha256": "6b01bb9809de0326e354977e79e5138f34f4e65b4e34e42805b139915ade80c9",
+      "bytes": 784
+    },
+    "Debug-iphonesimulator/PackageFrameworks/HouseholdClient_618599AD572A3719_PackageProduct.framework": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/PackageFrameworks/HouseholdClient_618599AD572A3719_PackageProduct.framework/HouseholdClient_618599AD572A3719_PackageProduct": {
+      "kind": "file",
+      "sha256": "a55ea7c474a27fb5e9a756592680baf9f28a0fa61ffd834f01369255a87f0dbd",
+      "bytes": 12417440
+    },
+    "Debug-iphonesimulator/PackageFrameworks/HouseholdClient_618599AD572A3719_PackageProduct.framework/Info.plist": {
+      "kind": "file",
+      "sha256": "c3c8c8485cbf8be36f98b0c9129aa685929acd577f993ab1b93593ebfc71f351",
+      "bytes": 787
+    },
+    "Debug-iphonesimulator/PackageFrameworks/LocalStore_48DC8B08D5D6A302_PackageProduct.framework": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/PackageFrameworks/LocalStore_48DC8B08D5D6A302_PackageProduct.framework/Info.plist": {
+      "kind": "file",
+      "sha256": "c02b16bbece9670a64151a49b88c873e9ccf2d51ce760eddf3bb41cb4912818e",
+      "bytes": 772
+    },
+    "Debug-iphonesimulator/PackageFrameworks/LocalStore_48DC8B08D5D6A302_PackageProduct.framework/LocalStore_48DC8B08D5D6A302_PackageProduct": {
+      "kind": "file",
+      "sha256": "65bd17c0863b69c2aa8bb9cfd23456c2a42287f9a4683cdc29f073ff86e326e4",
+      "bytes": 384168
+    },
+    "Debug-iphonesimulator/PackageFrameworks/RecordArchive_-6C39D90174E985D2_PackageProduct.framework": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/PackageFrameworks/RecordArchive_-6C39D90174E985D2_PackageProduct.framework/Info.plist": {
+      "kind": "file",
+      "sha256": "80926054a0560cd0ae558a38c2bf53bec9c9649335af50b7a6416f4e8b5fb6b7",
+      "bytes": 782
+    },
+    "Debug-iphonesimulator/PackageFrameworks/RecordArchive_-6C39D90174E985D2_PackageProduct.framework/RecordArchive_-6C39D90174E985D2_PackageProduct": {
+      "kind": "file",
+      "sha256": "668fca2f33dce3b641cc0ca4edd5ab66d839bf5f39b56b107cace3813df63ff6",
+      "bytes": 949824
+    },
+    "Debug-iphonesimulator/RecordArchive.o": {
+      "kind": "file",
+      "sha256": "c038439f1017ed885fd4a05981b833730f3fe50b55ac6c874efa8321ecd16a77",
+      "bytes": 1143416
+    },
+    "Debug-iphonesimulator/RecordArchive.swiftmodule": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RecordArchive.swiftmodule/Project": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RecordArchive.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo": {
+      "kind": "file",
+      "sha256": "d674cb4ae7cb00a2acef708ee24e968c051f7ebe9bb17645ae2b142657767288",
+      "bytes": 40600
+    },
+    "Debug-iphonesimulator/RecordArchive.swiftmodule/arm64-apple-ios-simulator.abi.json": {
+      "kind": "file",
+      "sha256": "4277ac6b49f8511196028a5ac20f5b1b1dfa754c24615d34068089f0b1739728",
+      "bytes": 149
+    },
+    "Debug-iphonesimulator/RecordArchive.swiftmodule/arm64-apple-ios-simulator.swiftdoc": {
+      "kind": "file",
+      "sha256": "6197d0fae7e4c20b7ca12e33a1aa87ea81fca9710920bec79ad170000d425c70",
+      "bytes": 7708
+    },
+    "Debug-iphonesimulator/RecordArchive.swiftmodule/arm64-apple-ios-simulator.swiftmodule": {
+      "kind": "file",
+      "sha256": "fe6db1ddf15e2796330bcb6e9ace35018877418a6c5de9b03db2955f718b3288",
+      "bytes": 275016
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/AppIcon60x60@2x.png": {
+      "kind": "file",
+      "sha256": "27e21fc124a79cad37a794049aa509d85bde6b2090d40a47879fa16eb3283ed6",
+      "bytes": 15760
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/AppIcon76x76@2x~ipad.png": {
+      "kind": "file",
+      "sha256": "eb3a280138cf5e99f822725ec645ee261fa5030dea8206b2ba7843df736db1eb",
+      "bytes": 24964
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/Assets.car": {
+      "kind": "file",
+      "sha256": "2f7d3c89e317aee12078b40d010d2a7d22394264118d465f00827862fa3407ce",
+      "bytes": 943112
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/Frameworks": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/Frameworks/CoreDomain_-28BC35CF4A8A1B15_PackageProduct.framework": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/Frameworks/CoreDomain_-28BC35CF4A8A1B15_PackageProduct.framework/CoreDomain_-28BC35CF4A8A1B15_PackageProduct": {
+      "kind": "file",
+      "sha256": "c55281ff1b506b3622c5738bc5260a050b140182171e30db711cb39cf5b53d57",
+      "bytes": 6469584
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/Frameworks/CoreDomain_-28BC35CF4A8A1B15_PackageProduct.framework/Info.plist": {
+      "kind": "file",
+      "sha256": "3caced50fa55d29674bac4aec5cb2a4ab09402f61347de019ffea3faa7afc03d",
+      "bytes": 773
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/Frameworks/CoreDomain_-28BC35CF4A8A1B15_PackageProduct.framework/_CodeSignature": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/Frameworks/CoreDomain_-28BC35CF4A8A1B15_PackageProduct.framework/_CodeSignature/CodeResources": {
+      "kind": "file",
+      "sha256": "a2740127f8555418dbf4b37726c67911e036736949b385bfbaeb7355f118a7d1",
+      "bytes": 1798
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/Frameworks/DeviceSurfaces_3D3532C6B9956B9A_PackageProduct.framework": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/Frameworks/DeviceSurfaces_3D3532C6B9956B9A_PackageProduct.framework/DeviceSurfaces_3D3532C6B9956B9A_PackageProduct": {
+      "kind": "file",
+      "sha256": "f43ede87173bfaf7a9a5ab6bbce60f37be9895107b1e8641462bd10e8a8e0236",
+      "bytes": 702368
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/Frameworks/DeviceSurfaces_3D3532C6B9956B9A_PackageProduct.framework/Info.plist": {
+      "kind": "file",
+      "sha256": "6b01bb9809de0326e354977e79e5138f34f4e65b4e34e42805b139915ade80c9",
+      "bytes": 784
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/Frameworks/DeviceSurfaces_3D3532C6B9956B9A_PackageProduct.framework/_CodeSignature": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/Frameworks/DeviceSurfaces_3D3532C6B9956B9A_PackageProduct.framework/_CodeSignature/CodeResources": {
+      "kind": "file",
+      "sha256": "9184ae74308db960378c5fc0b165679db378b573aae6fec6f3e9b81a19ae226a",
+      "bytes": 1798
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/Frameworks/HouseholdClient_618599AD572A3719_PackageProduct.framework": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/Frameworks/HouseholdClient_618599AD572A3719_PackageProduct.framework/HouseholdClient_618599AD572A3719_PackageProduct": {
+      "kind": "file",
+      "sha256": "4fed115cb17a3393ab59ff2f4a8aa7f3a27623c8eb1f56c79380042e7a86cd6b",
+      "bytes": 10628736
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/Frameworks/HouseholdClient_618599AD572A3719_PackageProduct.framework/Info.plist": {
+      "kind": "file",
+      "sha256": "c3c8c8485cbf8be36f98b0c9129aa685929acd577f993ab1b93593ebfc71f351",
+      "bytes": 787
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/Frameworks/HouseholdClient_618599AD572A3719_PackageProduct.framework/_CodeSignature": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/Frameworks/HouseholdClient_618599AD572A3719_PackageProduct.framework/_CodeSignature/CodeResources": {
+      "kind": "file",
+      "sha256": "078e0dd6d411680e7a585388b102cb9f3aa63326c8d729a0b1a158825e2d423a",
+      "bytes": 1798
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/Frameworks/LocalStore_48DC8B08D5D6A302_PackageProduct.framework": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/Frameworks/LocalStore_48DC8B08D5D6A302_PackageProduct.framework/Info.plist": {
+      "kind": "file",
+      "sha256": "c02b16bbece9670a64151a49b88c873e9ccf2d51ce760eddf3bb41cb4912818e",
+      "bytes": 772
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/Frameworks/LocalStore_48DC8B08D5D6A302_PackageProduct.framework/LocalStore_48DC8B08D5D6A302_PackageProduct": {
+      "kind": "file",
+      "sha256": "2b17efb9f7b32b5295228eb23a9c7dbc26d9f565c294020214bd84e23f65a7ad",
+      "bytes": 341296
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/Frameworks/LocalStore_48DC8B08D5D6A302_PackageProduct.framework/_CodeSignature": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/Frameworks/LocalStore_48DC8B08D5D6A302_PackageProduct.framework/_CodeSignature/CodeResources": {
+      "kind": "file",
+      "sha256": "4bd061496152389b09c1b878f609200a8ee400ce4881bfa9ae0e0b2d44724a56",
+      "bytes": 1798
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/Frameworks/RecordArchive_-6C39D90174E985D2_PackageProduct.framework": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/Frameworks/RecordArchive_-6C39D90174E985D2_PackageProduct.framework/Info.plist": {
+      "kind": "file",
+      "sha256": "80926054a0560cd0ae558a38c2bf53bec9c9649335af50b7a6416f4e8b5fb6b7",
+      "bytes": 782
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/Frameworks/RecordArchive_-6C39D90174E985D2_PackageProduct.framework/RecordArchive_-6C39D90174E985D2_PackageProduct": {
+      "kind": "file",
+      "sha256": "4d27078bd6974242820a74ac289a80467fbd400e792078428572a09ec2144ba2",
+      "bytes": 806288
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/Frameworks/RecordArchive_-6C39D90174E985D2_PackageProduct.framework/_CodeSignature": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/Frameworks/RecordArchive_-6C39D90174E985D2_PackageProduct.framework/_CodeSignature/CodeResources": {
+      "kind": "file",
+      "sha256": "c26454215e4a2eccb01c4d40a48ff29aca63dc2e3e72f82e3c295bc73384cfca",
+      "bytes": 1798
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/Info.plist": {
+      "kind": "file",
+      "sha256": "f55b5cf2a523a8bd9e7851e742761eec7d7a3a4335e14209013677b055e57979",
+      "bytes": 3028
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/Metadata.appintents": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/Metadata.appintents/extract.actionsdata": {
+      "kind": "file",
+      "sha256": "939ddc86c54055eb8dd75f928f8463b0ff2d179d75f1e5bb8dc81d91cbb51ff2",
+      "bytes": 1837
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/Metadata.appintents/root.ssu.yaml": {
+      "kind": "file",
+      "sha256": "7d3f54b92f0fece668fc695d0bc93d31f58d7f1eb867c97565ab328e0c6eaf05",
+      "bytes": 1373
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/Metadata.appintents/version.json": {
+      "kind": "file",
+      "sha256": "9734d5bb42c949505a719cbca76baa9736fb9678e638b43ff527c200d3d9dea1",
+      "bytes": 53
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PkgInfo": {
+      "kind": "file",
+      "sha256": "82502191c9484b04d685374f9879a0066069c49b8acae7a04b01d38d07e8eca0",
+      "bytes": 8
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartShare.appex": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartShare.appex/Info.plist": {
+      "kind": "file",
+      "sha256": "a38f6a36ba7d325e788bb0d69ff34c70136860b7a67274322b467df09a9be2a5",
+      "bytes": 1148
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartShare.appex/RoomInTheCartShare": {
+      "kind": "file",
+      "sha256": "e751c3d1fb89a558f6ed8c26a295439d3933599b2c0d7433c9ed307abf122b59",
+      "bytes": 37872
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartShare.appex/RoomInTheCartShare.debug.dylib": {
+      "kind": "file",
+      "sha256": "9092f64b4e6e49be1a37007c31f27c084c9fb03dd1a6124c13c1ea0612974493",
+      "bytes": 243040
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartShare.appex/_CodeSignature": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartShare.appex/_CodeSignature/CodeResources": {
+      "kind": "file",
+      "sha256": "64dd7f02ed71e97f6fedb62e535255e643a11ef98e143f4f489383ad75905072",
+      "bytes": 2982
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartShare.appex/__preview.dylib": {
+      "kind": "file",
+      "sha256": "7d986de7328e41cf9e50c3ab132f981ff065d78602c58bfe60b333826b1a52bd",
+      "bytes": 16800
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartShare.appex/en.lproj": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartShare.appex/en.lproj/DeviceSurfaces.strings": {
+      "kind": "file",
+      "sha256": "01a23d7633e50cccdedc0bb244a1ccec33918375222256e394dbabe1c55e5b5b",
+      "bytes": 3814
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartShare.appex/es.lproj": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartShare.appex/es.lproj/DeviceSurfaces.strings": {
+      "kind": "file",
+      "sha256": "ec6cfc7959e777cc74925808c463d7226f770206fe1d1f663ed0724d4229c421",
+      "bytes": 11212
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/Frameworks": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/Frameworks/CoreDomain_-28BC35CF4A8A1B15_PackageProduct.framework": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/Frameworks/CoreDomain_-28BC35CF4A8A1B15_PackageProduct.framework/CoreDomain_-28BC35CF4A8A1B15_PackageProduct": {
+      "kind": "file",
+      "sha256": "c55281ff1b506b3622c5738bc5260a050b140182171e30db711cb39cf5b53d57",
+      "bytes": 6469584
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/Frameworks/CoreDomain_-28BC35CF4A8A1B15_PackageProduct.framework/Info.plist": {
+      "kind": "file",
+      "sha256": "3caced50fa55d29674bac4aec5cb2a4ab09402f61347de019ffea3faa7afc03d",
+      "bytes": 773
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/Frameworks/CoreDomain_-28BC35CF4A8A1B15_PackageProduct.framework/_CodeSignature": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/Frameworks/CoreDomain_-28BC35CF4A8A1B15_PackageProduct.framework/_CodeSignature/CodeResources": {
+      "kind": "file",
+      "sha256": "a2740127f8555418dbf4b37726c67911e036736949b385bfbaeb7355f118a7d1",
+      "bytes": 1798
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/Frameworks/DeviceSurfaces_3D3532C6B9956B9A_PackageProduct.framework": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/Frameworks/DeviceSurfaces_3D3532C6B9956B9A_PackageProduct.framework/DeviceSurfaces_3D3532C6B9956B9A_PackageProduct": {
+      "kind": "file",
+      "sha256": "f43ede87173bfaf7a9a5ab6bbce60f37be9895107b1e8641462bd10e8a8e0236",
+      "bytes": 702368
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/Frameworks/DeviceSurfaces_3D3532C6B9956B9A_PackageProduct.framework/Info.plist": {
+      "kind": "file",
+      "sha256": "6b01bb9809de0326e354977e79e5138f34f4e65b4e34e42805b139915ade80c9",
+      "bytes": 784
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/Frameworks/DeviceSurfaces_3D3532C6B9956B9A_PackageProduct.framework/_CodeSignature": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/Frameworks/DeviceSurfaces_3D3532C6B9956B9A_PackageProduct.framework/_CodeSignature/CodeResources": {
+      "kind": "file",
+      "sha256": "9184ae74308db960378c5fc0b165679db378b573aae6fec6f3e9b81a19ae226a",
+      "bytes": 1798
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/Frameworks/HouseholdClient_618599AD572A3719_PackageProduct.framework": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/Frameworks/HouseholdClient_618599AD572A3719_PackageProduct.framework/HouseholdClient_618599AD572A3719_PackageProduct": {
+      "kind": "file",
+      "sha256": "4fed115cb17a3393ab59ff2f4a8aa7f3a27623c8eb1f56c79380042e7a86cd6b",
+      "bytes": 10628736
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/Frameworks/HouseholdClient_618599AD572A3719_PackageProduct.framework/Info.plist": {
+      "kind": "file",
+      "sha256": "c3c8c8485cbf8be36f98b0c9129aa685929acd577f993ab1b93593ebfc71f351",
+      "bytes": 787
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/Frameworks/HouseholdClient_618599AD572A3719_PackageProduct.framework/_CodeSignature": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/Frameworks/HouseholdClient_618599AD572A3719_PackageProduct.framework/_CodeSignature/CodeResources": {
+      "kind": "file",
+      "sha256": "078e0dd6d411680e7a585388b102cb9f3aa63326c8d729a0b1a158825e2d423a",
+      "bytes": 1798
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/Frameworks/LocalStore_48DC8B08D5D6A302_PackageProduct.framework": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/Frameworks/LocalStore_48DC8B08D5D6A302_PackageProduct.framework/Info.plist": {
+      "kind": "file",
+      "sha256": "c02b16bbece9670a64151a49b88c873e9ccf2d51ce760eddf3bb41cb4912818e",
+      "bytes": 772
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/Frameworks/LocalStore_48DC8B08D5D6A302_PackageProduct.framework/LocalStore_48DC8B08D5D6A302_PackageProduct": {
+      "kind": "file",
+      "sha256": "2b17efb9f7b32b5295228eb23a9c7dbc26d9f565c294020214bd84e23f65a7ad",
+      "bytes": 341296
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/Frameworks/LocalStore_48DC8B08D5D6A302_PackageProduct.framework/_CodeSignature": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/Frameworks/LocalStore_48DC8B08D5D6A302_PackageProduct.framework/_CodeSignature/CodeResources": {
+      "kind": "file",
+      "sha256": "4bd061496152389b09c1b878f609200a8ee400ce4881bfa9ae0e0b2d44724a56",
+      "bytes": 1798
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/Frameworks/RecordArchive_-6C39D90174E985D2_PackageProduct.framework": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/Frameworks/RecordArchive_-6C39D90174E985D2_PackageProduct.framework/Info.plist": {
+      "kind": "file",
+      "sha256": "80926054a0560cd0ae558a38c2bf53bec9c9649335af50b7a6416f4e8b5fb6b7",
+      "bytes": 782
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/Frameworks/RecordArchive_-6C39D90174E985D2_PackageProduct.framework/RecordArchive_-6C39D90174E985D2_PackageProduct": {
+      "kind": "file",
+      "sha256": "4d27078bd6974242820a74ac289a80467fbd400e792078428572a09ec2144ba2",
+      "bytes": 806288
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/Frameworks/RecordArchive_-6C39D90174E985D2_PackageProduct.framework/_CodeSignature": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/Frameworks/RecordArchive_-6C39D90174E985D2_PackageProduct.framework/_CodeSignature/CodeResources": {
+      "kind": "file",
+      "sha256": "c26454215e4a2eccb01c4d40a48ff29aca63dc2e3e72f82e3c295bc73384cfca",
+      "bytes": 1798
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/HouseholdLocalTesting.storekit": {
+      "kind": "file",
+      "sha256": "4803f75689da6bcdfa4fb21b64c1b3fe39931a456c61dc8703be34108b44278b",
+      "bytes": 2091
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/Info.plist": {
+      "kind": "file",
+      "sha256": "115d5eff0be9bf16b1ccd101e7344313d72d6f3577d6d5b1598f038789bd4116",
+      "bytes": 760
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/RoomInTheCartTests": {
+      "kind": "file",
+      "sha256": "7d7a9306275a393587ab644ae6c5ba5e8f67c6223ea3ce73663dcd2630c0e34e",
+      "bytes": 17890592
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/_CodeSignature": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/_CodeSignature/CodeResources": {
+      "kind": "file",
+      "sha256": "a7e3e70b10f80906da5d535eb06ce393972457b2443111c0aac210810bea5f30",
+      "bytes": 7674
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartWidget.appex": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartWidget.appex/Info.plist": {
+      "kind": "file",
+      "sha256": "5cc18eaafc6a942f1fab1f25d926c54becfe9ec778dee89abecf0473830a4cda",
+      "bytes": 1013
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartWidget.appex/RoomInTheCartWidget": {
+      "kind": "file",
+      "sha256": "442c581559448089642f4017a0b4b7f03be3d13940a05ad01db8ab1f09c185b1",
+      "bytes": 40512
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartWidget.appex/RoomInTheCartWidget.debug.dylib": {
+      "kind": "file",
+      "sha256": "ef24445ca1753436350b24e4dcab04954378b769ece714b13701032c9da764a0",
+      "bytes": 108288
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartWidget.appex/_CodeSignature": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartWidget.appex/_CodeSignature/CodeResources": {
+      "kind": "file",
+      "sha256": "2533eabbd8c35dfcc76211ad26df772023084f3861539936bf6e5e5fbb3a2ba6",
+      "bytes": 2984
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartWidget.appex/__preview.dylib": {
+      "kind": "file",
+      "sha256": "82125f9c5aab358e86107e2c48c5877467ac2fd8e45663ac38e324ab46056cb1",
+      "bytes": 16800
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartWidget.appex/en.lproj": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartWidget.appex/en.lproj/DeviceSurfaces.strings": {
+      "kind": "file",
+      "sha256": "01a23d7633e50cccdedc0bb244a1ccec33918375222256e394dbabe1c55e5b5b",
+      "bytes": 3814
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartWidget.appex/es.lproj": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartWidget.appex/es.lproj/DeviceSurfaces.strings": {
+      "kind": "file",
+      "sha256": "ec6cfc7959e777cc74925808c463d7226f770206fe1d1f663ed0724d4229c421",
+      "bytes": 11212
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/PrivacyInfo.xcprivacy": {
+      "kind": "file",
+      "sha256": "00a04709e2034eb948b051abc761b2bf7f05693ada0e5c986569dbdaec968d27",
+      "bytes": 3631
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart": {
+      "kind": "file",
+      "sha256": "2dad5644f004d6d6186080b1ed71df046aca50de3b82229d2c402b161ea59e47",
+      "bytes": 40496
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart.debug.dylib": {
+      "kind": "file",
+      "sha256": "dc59837ee7ead024a75fd38a005c390a2ab6bd5a600696e790d5e84e1a25caa3",
+      "bytes": 70773264
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/_CodeSignature": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/_CodeSignature/CodeResources": {
+      "kind": "file",
+      "sha256": "6ed53ece9fc5e8d26744895b53a88854233bb96505a720d67efa453d07f31484",
+      "bytes": 41853
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/__preview.dylib": {
+      "kind": "file",
+      "sha256": "6c77653262cc765338fe98393bf60746b399c463cb8162f105335d5fc731bf72",
+      "bytes": 16800
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/en.lproj": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/en.lproj/AppShortcuts.strings": {
+      "kind": "file",
+      "sha256": "83a47c776b4a88146c360d7f9a6dbc2a08321b03138c1f11773baa32df4ab271",
+      "bytes": 88
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/en.lproj/Capture.strings": {
+      "kind": "file",
+      "sha256": "01b970e94a7a3950d05f3c97cc96914956eca6378504d4e2fc364da7313fc101",
+      "bytes": 14775
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/en.lproj/DeliveryCook.strings": {
+      "kind": "file",
+      "sha256": "b4c2e72f97002a0564f4cd8117c2ff899b10c88a7eb7130c1ba1d4d1fdf7dfc8",
+      "bytes": 1085
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/en.lproj/DeviceManagement.strings": {
+      "kind": "file",
+      "sha256": "7e6bcca1362eba83ab6f82907f098ae30e2c7fb114c484467709d3b83fcd119b",
+      "bytes": 1517
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/en.lproj/DeviceSurfaces.strings": {
+      "kind": "file",
+      "sha256": "01a23d7633e50cccdedc0bb244a1ccec33918375222256e394dbabe1c55e5b5b",
+      "bytes": 3814
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/en.lproj/DinnerRecoveryRoutes.strings": {
+      "kind": "file",
+      "sha256": "d2286412056ee1aa9255869753122396b5992e7d8cb81988049f1d827cbfc268",
+      "bytes": 574
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/en.lproj/Dinners.strings": {
+      "kind": "file",
+      "sha256": "554af98a0cd804a074750f32ce98d36285fb67ef5ee403900435543ab61b1c8a",
+      "bytes": 22942
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/en.lproj/Guardian.strings": {
+      "kind": "file",
+      "sha256": "b283184a8ced2fd8f9e190769724e0b4dd34ec6ce80d5b91b107380c777f0c87",
+      "bytes": 8325
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/en.lproj/Help.strings": {
+      "kind": "file",
+      "sha256": "c5da28d6a269a00e87013b76bd3e0bb2b5d95e0db0c05a9242cde4eae63e7c19",
+      "bytes": 10431
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/en.lproj/History.strings": {
+      "kind": "file",
+      "sha256": "0a7289a49f301cd39975434b56380cba5801f188c3904cde7199a53f8b9f702a",
+      "bytes": 10770
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/en.lproj/Household.strings": {
+      "kind": "file",
+      "sha256": "c3b94a21eb4067e15d47803607b0375dd9b387e34b722d2341a774a5b1fd4320",
+      "bytes": 44610
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/en.lproj/InfoPlist.strings": {
+      "kind": "file",
+      "sha256": "d9d99d9314b5576e647cff9cc794af296409278e1e44af1ca16439ad54871c32",
+      "bytes": 520
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/en.lproj/Ledger.strings": {
+      "kind": "file",
+      "sha256": "0ddc6bb9779ccf69f0ae6cb086b63a65d90ec3cc33fc7669dacd278b55b68d07",
+      "bytes": 16546
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/en.lproj/Localizable.strings": {
+      "kind": "file",
+      "sha256": "9f74333a6474db33ed9189d2b95e6e36aafce9c3773519a9c75ac7f118ee1fb3",
+      "bytes": 5825
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/en.lproj/Membership.strings": {
+      "kind": "file",
+      "sha256": "1a934f871741f16ca4c80c3508c935602f7fd79411b1711e054a4512d70f4537",
+      "bytes": 4767
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/en.lproj/OneChange.strings": {
+      "kind": "file",
+      "sha256": "81805f64efc6d17311507563ee51f7250cc9a0292c19df20aa2a83881d8eb89d",
+      "bytes": 1485
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/en.lproj/OrderAmendment.strings": {
+      "kind": "file",
+      "sha256": "9beacf5d46d637ae689d15884734ef66be44a80fa01c4b273e24dfdcc1107a7f",
+      "bytes": 2052
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/en.lproj/Pickup.strings": {
+      "kind": "file",
+      "sha256": "d23d62e0beeb6a80b0d1b62cd1a686ed037cd28778660e5a103563c9babfe433",
+      "bytes": 36116
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/en.lproj/PickupRecovery.strings": {
+      "kind": "file",
+      "sha256": "ed18e0e8e22bf8edd51d9564b0db9512e49f9aab6f7e57702da4081f575e9071",
+      "bytes": 3773
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/en.lproj/Placement.strings": {
+      "kind": "file",
+      "sha256": "3f7894c03794149bc6e8b5fde61b1a9a39e760f0945dffcc874a4e8b843e7ced",
+      "bytes": 9784
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/en.lproj/Records.strings": {
+      "kind": "file",
+      "sha256": "96e88aa79496bb02a990d854e0387ea979377462636ff3e4d26cf55431aa3c75",
+      "bytes": 10384
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/en.lproj/Recovery.strings": {
+      "kind": "file",
+      "sha256": "78638d95b925569bd5c5ccdf742dd070b34e2f444a805c2d23963a761bde5353",
+      "bytes": 2243
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/en.lproj/RequestDuplicates.strings": {
+      "kind": "file",
+      "sha256": "4e9e47b4a2ecd7f2d9b9414139d939ae117bacba628e2e7f6648e27c886be319",
+      "bytes": 979
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/en.lproj/SharedFallback.strings": {
+      "kind": "file",
+      "sha256": "213b1ababa3ba30f52486039f396102c15f10fb8023b8922d1d2f95e71dfe3d4",
+      "bytes": 2671
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/en.lproj/SharedFinancial.strings": {
+      "kind": "file",
+      "sha256": "4637cefbb109ea35b7215ea6371bc433acbec1aba3c11ae7f0a9115db45b8aab",
+      "bytes": 184
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/en.lproj/StoreQuotes.strings": {
+      "kind": "file",
+      "sha256": "55df93c72f0914cd3ee66048f59601b36afa62990a63e03be96a686792d540de",
+      "bytes": 4278
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/en.lproj/nlu.appintents": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/en.lproj/nlu.appintents/62e46cd6a9aa59c45cd8df862128f1f8.version": {
+      "kind": "file",
+      "sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+      "bytes": 1
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/en.lproj/nlu.appintents/nlu.lzfse": {
+      "kind": "file",
+      "sha256": "be39db9dfbddacfe81c3f7ff454de1f1b83af1c269b5613323edecb5afc2e75c",
+      "bytes": 2170
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/es.lproj": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/es.lproj/AppShortcuts.strings": {
+      "kind": "file",
+      "sha256": "7422e86e93310bd3da622c71cf73785d6f5da888090890643933192969a4ac7b",
+      "bytes": 138
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/es.lproj/Capture.strings": {
+      "kind": "file",
+      "sha256": "68d901ef538f9850953df0a07d2118066bfb336f38282afcd48405ba0e94a965",
+      "bytes": 41716
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/es.lproj/DeliveryCook.strings": {
+      "kind": "file",
+      "sha256": "9cf2bdc795eab7b99a2a5f7c2e281dba9643df181b20b3888ac76be635a99bd6",
+      "bytes": 2532
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/es.lproj/DeviceManagement.strings": {
+      "kind": "file",
+      "sha256": "f308a33beeb2944dcf8268f6699ad16299caff1e9d23a01110eda25738969a28",
+      "bytes": 4010
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/es.lproj/DeviceSurfaces.strings": {
+      "kind": "file",
+      "sha256": "ec6cfc7959e777cc74925808c463d7226f770206fe1d1f663ed0724d4229c421",
+      "bytes": 11212
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/es.lproj/DinnerRecoveryRoutes.strings": {
+      "kind": "file",
+      "sha256": "8b1c46dc0fff9a635b7eee1b822b31439249f2d725b6b240eb5ca1f778971aee",
+      "bytes": 1270
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/es.lproj/Dinners.strings": {
+      "kind": "file",
+      "sha256": "3a8b23ed24a1353cc49d9b4f3d0deda3a18a0282cbc2d91462bb0e7ba6d2774b",
+      "bytes": 59318
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/es.lproj/Guardian.strings": {
+      "kind": "file",
+      "sha256": "0a30e4bc33e6f2da5f714a770c218a0d6602917b253ac941db8f5755b028f76e",
+      "bytes": 27065
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/es.lproj/Help.strings": {
+      "kind": "file",
+      "sha256": "685fcf8b2be68577b424de4fbd8ff8a9bf5598db333c2f28af159216fcb2a893",
+      "bytes": 31608
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/es.lproj/History.strings": {
+      "kind": "file",
+      "sha256": "a004ff28f7bda873b3f1f1c91e8646604c7b5f4327940d7fbe5c7e547668ffe7",
+      "bytes": 30480
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/es.lproj/Household.strings": {
+      "kind": "file",
+      "sha256": "1a5c765288e2fe73cdc375ab9440fc626f737fa63abe07be5246698e33c941cd",
+      "bytes": 126285
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/es.lproj/InfoPlist.strings": {
+      "kind": "file",
+      "sha256": "3c961185c462cc9390876ebdf5ca4894e20b2bf1ee9dc0b988cf5085731840c5",
+      "bytes": 729
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/es.lproj/Ledger.strings": {
+      "kind": "file",
+      "sha256": "20f2841db5f80ab3d9bdced48ba8c2e109ce968865c673282b83179e8e52f50c",
+      "bytes": 43817
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/es.lproj/Localizable.strings": {
+      "kind": "file",
+      "sha256": "c8741426a895785a391c8b160096f88b22c371fbf1242820c0a59b4561885c48",
+      "bytes": 17675
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/es.lproj/Membership.strings": {
+      "kind": "file",
+      "sha256": "6a9ed132c1cb70d9bce8cdd3ef0c1f4540833c8123378a98a5a9994073269aaf",
+      "bytes": 13265
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/es.lproj/OneChange.strings": {
+      "kind": "file",
+      "sha256": "a1dda0e5688659dddd9f8010a4569d5529970e6e0fd9a1d65f58869a557705fc",
+      "bytes": 4086
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/es.lproj/OrderAmendment.strings": {
+      "kind": "file",
+      "sha256": "4ae4fbf926b1024ae992f5aef5dc91839dd5b5115a5a2d1c3297500dfe1d7b63",
+      "bytes": 5293
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/es.lproj/Pickup.strings": {
+      "kind": "file",
+      "sha256": "1006f3e8eed266f0e8cc4e1ea58a56210737013a51d9f8bcb435576e9f5a808f",
+      "bytes": 98525
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/es.lproj/PickupRecovery.strings": {
+      "kind": "file",
+      "sha256": "fd27f6c574c581764779cee63f2652e10fd4d4f7265b695a559b7dd9ae0ed624",
+      "bytes": 9660
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/es.lproj/Placement.strings": {
+      "kind": "file",
+      "sha256": "d0bc9a8ecc16f8ec97b4636ee384cc60ce2314277226e86e9235671854ae5937",
+      "bytes": 27899
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/es.lproj/Records.strings": {
+      "kind": "file",
+      "sha256": "d027d93149d100e0baf31b9c2e71427997966b2a168abdee87d33433a0a5bf47",
+      "bytes": 28944
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/es.lproj/Recovery.strings": {
+      "kind": "file",
+      "sha256": "4a00bc1c82b7add5270a123360c80d165ea1a876237b4c37b4ab429cbfdd55d9",
+      "bytes": 5514
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/es.lproj/RequestDuplicates.strings": {
+      "kind": "file",
+      "sha256": "08feda4264bd9513da681555b137c5c96b66b686b669086e31a4d9ea6ce883e7",
+      "bytes": 2411
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/es.lproj/SharedFallback.strings": {
+      "kind": "file",
+      "sha256": "cee7ddd2b9ab374c13de53578dc388f8da875cb01906b232abb888250e11e276",
+      "bytes": 7135
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/es.lproj/SharedFinancial.strings": {
+      "kind": "file",
+      "sha256": "ad638cf357d3342f25323297ec171281c0ec58bbdf4d8dc8f235522f6e47a929",
+      "bytes": 434
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/es.lproj/StoreQuotes.strings": {
+      "kind": "file",
+      "sha256": "542a54644e78c144816144b0f17577e766f26be204c324f78e12cba0eaf0d7d1",
+      "bytes": 12181
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/es.lproj/nlu.appintents": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/es.lproj/nlu.appintents/e5a394f823f7f2eb1de99f70a637b59e.version": {
+      "kind": "file",
+      "sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+      "bytes": 1
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/es.lproj/nlu.appintents/nlu.lzfse": {
+      "kind": "file",
+      "sha256": "54ef5c237a069017feba15c06bdd429f3bcbe8e7a4e01d086f0b13bc041e00fd",
+      "bytes": 2292
+    },
+    "Debug-iphonesimulator/RoomInTheCart.swiftmodule": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.swiftmodule/Project": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo": {
+      "kind": "file",
+      "sha256": "0aeabe3cd55ae749b0add68e303295aa94e5298b24db57a442bdce49058d4b9d",
+      "bytes": 1010464
+    },
+    "Debug-iphonesimulator/RoomInTheCart.swiftmodule/arm64-apple-ios-simulator.abi.json": {
+      "kind": "file",
+      "sha256": "4277ac6b49f8511196028a5ac20f5b1b1dfa754c24615d34068089f0b1739728",
+      "bytes": 149
+    },
+    "Debug-iphonesimulator/RoomInTheCart.swiftmodule/arm64-apple-ios-simulator.swiftdoc": {
+      "kind": "file",
+      "sha256": "58368dda566ebe6abd54e9690b0eb7fe49c5831509c5f3345f7505566ec9fd8b",
+      "bytes": 84824
+    },
+    "Debug-iphonesimulator/RoomInTheCart.swiftmodule/arm64-apple-ios-simulator.swiftmodule": {
+      "kind": "file",
+      "sha256": "e6f927c355cd32ba1a1dddc009e201e673ab8fd19c6d101655ef4dd8e37bd42e",
+      "bytes": 5826516
+    },
+    "Debug-iphonesimulator/RoomInTheCartShare.appex": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCartShare.appex/Info.plist": {
+      "kind": "file",
+      "sha256": "a38f6a36ba7d325e788bb0d69ff34c70136860b7a67274322b467df09a9be2a5",
+      "bytes": 1148
+    },
+    "Debug-iphonesimulator/RoomInTheCartShare.appex/RoomInTheCartShare": {
+      "kind": "file",
+      "sha256": "e751c3d1fb89a558f6ed8c26a295439d3933599b2c0d7433c9ed307abf122b59",
+      "bytes": 37872
+    },
+    "Debug-iphonesimulator/RoomInTheCartShare.appex/RoomInTheCartShare.debug.dylib": {
+      "kind": "file",
+      "sha256": "9092f64b4e6e49be1a37007c31f27c084c9fb03dd1a6124c13c1ea0612974493",
+      "bytes": 243040
+    },
+    "Debug-iphonesimulator/RoomInTheCartShare.appex/_CodeSignature": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCartShare.appex/_CodeSignature/CodeResources": {
+      "kind": "file",
+      "sha256": "64dd7f02ed71e97f6fedb62e535255e643a11ef98e143f4f489383ad75905072",
+      "bytes": 2982
+    },
+    "Debug-iphonesimulator/RoomInTheCartShare.appex/__preview.dylib": {
+      "kind": "file",
+      "sha256": "7d986de7328e41cf9e50c3ab132f981ff065d78602c58bfe60b333826b1a52bd",
+      "bytes": 16800
+    },
+    "Debug-iphonesimulator/RoomInTheCartShare.appex/en.lproj": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCartShare.appex/en.lproj/DeviceSurfaces.strings": {
+      "kind": "file",
+      "sha256": "01a23d7633e50cccdedc0bb244a1ccec33918375222256e394dbabe1c55e5b5b",
+      "bytes": 3814
+    },
+    "Debug-iphonesimulator/RoomInTheCartShare.appex/es.lproj": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCartShare.appex/es.lproj/DeviceSurfaces.strings": {
+      "kind": "file",
+      "sha256": "ec6cfc7959e777cc74925808c463d7226f770206fe1d1f663ed0724d4229c421",
+      "bytes": 11212
+    },
+    "Debug-iphonesimulator/RoomInTheCartShare.swiftmodule": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCartShare.swiftmodule/Project": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCartShare.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo": {
+      "kind": "file",
+      "sha256": "c8c1830cb233336acc1453e04cb1a3cd37a1eca29254879f29f1a04935e5356d",
+      "bytes": 1020
+    },
+    "Debug-iphonesimulator/RoomInTheCartShare.swiftmodule/arm64-apple-ios-simulator.abi.json": {
+      "kind": "file",
+      "sha256": "4277ac6b49f8511196028a5ac20f5b1b1dfa754c24615d34068089f0b1739728",
+      "bytes": 149
+    },
+    "Debug-iphonesimulator/RoomInTheCartShare.swiftmodule/arm64-apple-ios-simulator.swiftdoc": {
+      "kind": "file",
+      "sha256": "86bb593c3b9bae100c66b16b628ed6571d8a22a1b27e59ddf74760199920f64f",
+      "bytes": 428
+    },
+    "Debug-iphonesimulator/RoomInTheCartShare.swiftmodule/arm64-apple-ios-simulator.swiftmodule": {
+      "kind": "file",
+      "sha256": "4f58363350eca8021d5a79115e02af6ba5bf669268a6901d8f98fc4f5b3d2dda",
+      "bytes": 79900
+    },
+    "Debug-iphonesimulator/RoomInTheCartTests.swiftmodule": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCartTests.swiftmodule/Project": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCartTests.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo": {
+      "kind": "file",
+      "sha256": "7eb859e48b2c67f69f967f01b99ee7d5f16f552621f09a6f367b36229113a73c",
+      "bytes": 235428
+    },
+    "Debug-iphonesimulator/RoomInTheCartTests.swiftmodule/arm64-apple-ios-simulator.abi.json": {
+      "kind": "file",
+      "sha256": "4277ac6b49f8511196028a5ac20f5b1b1dfa754c24615d34068089f0b1739728",
+      "bytes": 149
+    },
+    "Debug-iphonesimulator/RoomInTheCartTests.swiftmodule/arm64-apple-ios-simulator.swiftdoc": {
+      "kind": "file",
+      "sha256": "b37168b0a34385d2507df809708fead53f6ba4f70cb9168062dc81ca4e21748d",
+      "bytes": 1972
+    },
+    "Debug-iphonesimulator/RoomInTheCartTests.swiftmodule/arm64-apple-ios-simulator.swiftmodule": {
+      "kind": "file",
+      "sha256": "0b53afa8abf9ddb44d19f43c4b6d3d5e2b6578a480b6909f8cbdcbfe288338cd",
+      "bytes": 1062200
+    },
+    "Debug-iphonesimulator/RoomInTheCartUITests-Runner.app": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCartUITests-Runner.app/Info.plist": {
+      "kind": "file",
+      "sha256": "ee30655885543f5e2a1b3551ee1b325c112228b2c04c4f4f7d5142a53f3cd5ea",
+      "bytes": 10915
+    },
+    "Debug-iphonesimulator/RoomInTheCartUITests-Runner.app/PkgInfo": {
+      "kind": "file",
+      "sha256": "82502191c9484b04d685374f9879a0066069c49b8acae7a04b01d38d07e8eca0",
+      "bytes": 8
+    },
+    "Debug-iphonesimulator/RoomInTheCartUITests-Runner.app/PlugIns": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCartUITests-Runner.app/PlugIns/RoomInTheCartUITests.xctest": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCartUITests-Runner.app/PlugIns/RoomInTheCartUITests.xctest/Info.plist": {
+      "kind": "file",
+      "sha256": "097a333e6957d48710f2b90bb6ea630b01198074f7b0e27b930f354e0cd811ef",
+      "bytes": 792
+    },
+    "Debug-iphonesimulator/RoomInTheCartUITests-Runner.app/PlugIns/RoomInTheCartUITests.xctest/ReleaseLedger500.txt": {
+      "kind": "file",
+      "sha256": "7411eb3a8a10911d6599237e1f2f618c0c3508667909a4766a4b5b14bef6e3b8",
+      "bytes": 16099
+    },
+    "Debug-iphonesimulator/RoomInTheCartUITests-Runner.app/PlugIns/RoomInTheCartUITests.xctest/RoomInTheCartUITests": {
+      "kind": "file",
+      "sha256": "d4375958263c0ba80b81046ab8cded89bea3f541d5b9a7c19e07d9fa80a3d1ec",
+      "bytes": 1502624
+    },
+    "Debug-iphonesimulator/RoomInTheCartUITests-Runner.app/PlugIns/RoomInTheCartUITests.xctest/SharedFallbackShop.json": {
+      "kind": "file",
+      "sha256": "ba9f151cad7ec011fea0a43ae6b2f6a67031490e686e87cc7374e454629cb502",
+      "bytes": 55645
+    },
+    "Debug-iphonesimulator/RoomInTheCartUITests-Runner.app/PlugIns/RoomInTheCartUITests.xctest/_CodeSignature": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCartUITests-Runner.app/PlugIns/RoomInTheCartUITests.xctest/_CodeSignature/CodeResources": {
+      "kind": "file",
+      "sha256": "fa11e7d8438953a572c1475b2f6b8352ce202e27f2fec4b5468ca5705c367fc3",
+      "bytes": 2264
+    },
+    "Debug-iphonesimulator/RoomInTheCartUITests-Runner.app/RoomInTheCartUITests-Runner": {
+      "kind": "file",
+      "sha256": "9f97d4b8030dfe2fffa84dc1affd7f684c605f3eaa43e4dd737643d199654a19",
+      "bytes": 95248
+    },
+    "Debug-iphonesimulator/RoomInTheCartUITests-Runner.app/_CodeSignature": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCartUITests-Runner.app/_CodeSignature/CodeResources": {
+      "kind": "file",
+      "sha256": "76b5e17153809082e09a230be1a2f13fcceae7602a15eb437b898cdac701bf51",
+      "bytes": 3369
+    },
+    "Debug-iphonesimulator/RoomInTheCartUITests.swiftmodule": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCartUITests.swiftmodule/Project": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCartUITests.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo": {
+      "kind": "file",
+      "sha256": "9bcd1dad9eff5dbd14deb11a458dd2d7a076c5fdb662922ef8db8693f67f08ad",
+      "bytes": 28028
+    },
+    "Debug-iphonesimulator/RoomInTheCartUITests.swiftmodule/arm64-apple-ios-simulator.abi.json": {
+      "kind": "file",
+      "sha256": "4277ac6b49f8511196028a5ac20f5b1b1dfa754c24615d34068089f0b1739728",
+      "bytes": 149
+    },
+    "Debug-iphonesimulator/RoomInTheCartUITests.swiftmodule/arm64-apple-ios-simulator.swiftdoc": {
+      "kind": "file",
+      "sha256": "31d80ccf952add447bdc329984a6ed6c8086045d3800e87e0462bd9bc5ed6914",
+      "bytes": 3532
+    },
+    "Debug-iphonesimulator/RoomInTheCartUITests.swiftmodule/arm64-apple-ios-simulator.swiftmodule": {
+      "kind": "file",
+      "sha256": "d0d45d454fdf11fd275199f0e6ca5cc588bda5713298051954b729a5c80211ce",
+      "bytes": 148456
+    },
+    "Debug-iphonesimulator/RoomInTheCartWidget.appex": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCartWidget.appex/Info.plist": {
+      "kind": "file",
+      "sha256": "5cc18eaafc6a942f1fab1f25d926c54becfe9ec778dee89abecf0473830a4cda",
+      "bytes": 1013
+    },
+    "Debug-iphonesimulator/RoomInTheCartWidget.appex/RoomInTheCartWidget": {
+      "kind": "file",
+      "sha256": "442c581559448089642f4017a0b4b7f03be3d13940a05ad01db8ab1f09c185b1",
+      "bytes": 40512
+    },
+    "Debug-iphonesimulator/RoomInTheCartWidget.appex/RoomInTheCartWidget.debug.dylib": {
+      "kind": "file",
+      "sha256": "ef24445ca1753436350b24e4dcab04954378b769ece714b13701032c9da764a0",
+      "bytes": 108288
+    },
+    "Debug-iphonesimulator/RoomInTheCartWidget.appex/_CodeSignature": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCartWidget.appex/_CodeSignature/CodeResources": {
+      "kind": "file",
+      "sha256": "2533eabbd8c35dfcc76211ad26df772023084f3861539936bf6e5e5fbb3a2ba6",
+      "bytes": 2984
+    },
+    "Debug-iphonesimulator/RoomInTheCartWidget.appex/__preview.dylib": {
+      "kind": "file",
+      "sha256": "82125f9c5aab358e86107e2c48c5877467ac2fd8e45663ac38e324ab46056cb1",
+      "bytes": 16800
+    },
+    "Debug-iphonesimulator/RoomInTheCartWidget.appex/en.lproj": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCartWidget.appex/en.lproj/DeviceSurfaces.strings": {
+      "kind": "file",
+      "sha256": "01a23d7633e50cccdedc0bb244a1ccec33918375222256e394dbabe1c55e5b5b",
+      "bytes": 3814
+    },
+    "Debug-iphonesimulator/RoomInTheCartWidget.appex/es.lproj": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCartWidget.appex/es.lproj/DeviceSurfaces.strings": {
+      "kind": "file",
+      "sha256": "ec6cfc7959e777cc74925808c463d7226f770206fe1d1f663ed0724d4229c421",
+      "bytes": 11212
+    },
+    "Debug-iphonesimulator/RoomInTheCartWidget.swiftmodule": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCartWidget.swiftmodule/Project": {
+      "kind": "directory"
+    },
+    "Debug-iphonesimulator/RoomInTheCartWidget.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo": {
+      "kind": "file",
+      "sha256": "73a7e763066c0595ff6f0596cbb844e6a697a034bd3e2d82c3bf2ada61fa0be8",
+      "bytes": 1280
+    },
+    "Debug-iphonesimulator/RoomInTheCartWidget.swiftmodule/arm64-apple-ios-simulator.abi.json": {
+      "kind": "file",
+      "sha256": "4277ac6b49f8511196028a5ac20f5b1b1dfa754c24615d34068089f0b1739728",
+      "bytes": 149
+    },
+    "Debug-iphonesimulator/RoomInTheCartWidget.swiftmodule/arm64-apple-ios-simulator.swiftdoc": {
+      "kind": "file",
+      "sha256": "a789f7b2957093792d984b8172922cb81b340546144c1b2dc9dfff198ad5077d",
+      "bytes": 428
+    },
+    "Debug-iphonesimulator/RoomInTheCartWidget.swiftmodule/arm64-apple-ios-simulator.swiftmodule": {
+      "kind": "file",
+      "sha256": "b30368639d42367d73ab45e3be3014c2f87d83975c0d87a8d2a51d0048ca15c1",
+      "bytes": 74928
+    }
+  }
+}

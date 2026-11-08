@@ -1,0 +1,43 @@
+{
+  "passed": true,
+  "actionlintVersion": "1.7.12\ninstalled by downloading from release page\nbuilt with go1.26.1 compiler for darwin/arm64",
+  "validationErrors": [],
+  "exemptedQueueDiagnostics": [
+    {
+      "message": "unexpected key \"queue\" for \"concurrency\" section. expected one of \"cancel-in-progress\", \"group\"",
+      "filepath": ".build/CIA305065Nov08/ui09-hosted-diagnostic-preparation-r3/payload/.github/workflows/ios-toggle-diagnostic.yml",
+      "line": 15,
+      "column": 7,
+      "kind": "syntax-check",
+      "snippet": "      queue: max\n      ^~~~~~",
+      "end_column": 12
+    }
+  ],
+  "unexpectedDiagnostics": [],
+  "sourceSHA256": {
+    ".build/CIA305065Nov08/ui09-hosted-diagnostic-preparation-r3/payload/.github/workflows/ios-toggle-diagnostic.yml": "d2de5db93eb242d3b281537eaff4bfab7c36f8acd002724e3cc1b824d00ed365"
+  },
+  "actionlintArguments": [
+    "/tmp/ritc-actionlint-2ttcdxxn/actionlint",
+    "-no-color",
+    "-shellcheck=",
+    "-pyflakes=",
+    "-format",
+    "{{json .}}",
+    ".build/CIA305065Nov08/ui09-hosted-diagnostic-preparation-r3/payload/.github/workflows/ios-toggle-diagnostic.yml"
+  ],
+  "actionlintExit": 1,
+  "actionlintStderr": "",
+  "actionlintStdout": "[{\"message\":\"unexpected key \\\"queue\\\" for \\\"concurrency\\\" section. expected one of \\\"cancel-in-progress\\\", \\\"group\\\"\",\"filepath\":\".build/CIA305065Nov08/ui09-hosted-diagnostic-preparation-r3/payload/.github/workflows/ios-toggle-diagnostic.yml\",\"line\":15,\"column\":7,\"kind\":\"syntax-check\",\"snippet\":\"      queue: max\\n      ^~~~~~\",\"end_column\":12}]\n",
+  "actionlintDiagnostics": [
+    {
+      "message": "unexpected key \"queue\" for \"concurrency\" section. expected one of \"cancel-in-progress\", \"group\"",
+      "filepath": ".build/CIA305065Nov08/ui09-hosted-diagnostic-preparation-r3/payload/.github/workflows/ios-toggle-diagnostic.yml",
+      "line": 15,
+      "column": 7,
+      "kind": "syntax-check",
+      "snippet": "      queue: max\n      ^~~~~~",
+      "end_column": 12
+    }
+  ]
+}

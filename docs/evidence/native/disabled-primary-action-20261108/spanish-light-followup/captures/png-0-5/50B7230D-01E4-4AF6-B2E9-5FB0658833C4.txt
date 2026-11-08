@@ -1,0 +1,187 @@
+Attributes: Button, 0x1171e2290, {{16.0, 677.3}, {370.0, 82.0}}, identifier: 'dinnerAcceptIdea', label: 'Aceptar idea', Disabled
+Element subtree:
+ →Button, 0x1171e2290, {{16.0, 677.3}, {370.0, 82.0}}, identifier: 'dinnerAcceptIdea', label: 'Aceptar idea', Disabled
+    StaticText, 0x1171e23b0, {{16.0, 677.3}, {370.0, 82.0}}, label: 'Aceptar idea'
+    Other, 0x1171e24d0, {{32.0, 692.3}, {338.0, 52.0}}, Disabled
+Path to element:
+ →Application, 0x1171d5780, pid: 61556, label: 'Room in the Cart'
+  ↳Window (Main), 0x1171d28a0, {{0.0, 0.0}, {402.0, 874.0}}
+   ↳Other, 0x1171dc7b0, {{0.0, 0.0}, {402.0, 874.0}}
+    ↳Other, 0x1171dc8d0, {{0.0, 0.0}, {402.0, 874.0}}
+     ↳Other, 0x1171dc510, {{0.0, 0.0}, {402.0, 874.0}}
+      ↳Other, 0x1171dc630, {{0.0, 0.0}, {402.0, 874.0}}
+       ↳Other, 0x1171dc9f0, {{0.0, 0.0}, {402.0, 874.0}}
+        ↳Other, 0x1171dcb10, {{0.0, 0.0}, {402.0, 874.0}}
+         ↳Other, 0x1171dcc30, {{0.0, 0.0}, {402.0, 874.0}}
+          ↳Other, 0x1171dcd50, {{0.0, 0.0}, {402.0, 874.0}}
+           ↳Other, 0x1171dce70, {{0.0, 0.0}, {402.0, 874.0}}
+            ↳Other, 0x1171dcf90, {{0.0, 0.0}, {402.0, 874.0}}
+             ↳Other, 0x1171dd0b0, {{0.0, 0.0}, {402.0, 874.0}}
+              ↳Other, 0x1171dd530, {{0.0, 0.0}, {402.0, 874.0}}
+               ↳Other, 0x1171dd650, {{0.0, 0.0}, {402.0, 874.0}}
+                ↳Other, 0x1171dd770, {{0.0, 0.0}, {402.0, 874.0}}
+                 ↳Other, 0x1171dd890, {{0.0, 0.0}, {402.0, 874.0}}
+                  ↳CollectionView, 0x1171dd9b0, {{0.0, 0.0}, {402.0, 874.0}}
+                   ↳Cell, 0x1171e1ab0, {{16.0, 677.3}, {370.0, 82.0}}
+                    ↳Other, 0x1171e1f30, {{16.0, 677.3}, {370.0, 82.0}}
+                     ↳Other, 0x1171e2050, {{16.0, 677.3}, {370.0, 82.0}}
+                      ↳Other, 0x1171e2170, {{16.0, 677.3}, {370.0, 82.0}}
+                       ↳Button, 0x1171e2290, {{16.0, 677.3}, {370.0, 82.0}}, identifier: 'dinnerAcceptIdea', label: 'Aceptar idea', Disabled
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x102e30b00, pid: 61556, label: 'Room in the Cart'
+  }
+  ↪︎Find: Descendants matching type Any
+    Output: {
+      Window (Main), 0x116baacb0, {{0.0, 0.0}, {402.0, 874.0}}
+      Window, 0x11744d360, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x102a940d0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11744d480, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x102a941f0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11744d5a0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x102a93f80, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x1174448d0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x102a94310, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x102a94430, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11744b2c0, {{0.0, 791.0}, {402.0, 83.0}}
+      Other, 0x102a94550, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11744b3e0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11744ca60, {{0.0, 791.0}, {402.0, 83.0}}
+      Other, 0x102a94670, {{0.0, 0.0}, {402.0, 874.0}}
+      TabBar, 0x11744b500, {{0.0, 791.0}, {402.0, 83.0}}, label: 'Barra de pestañas'
+      Other, 0x11744cb80, {{0.0, 791.0}, {402.0, 83.0}}
+      Other, 0x102a94790, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11744b620, {{64.0, 791.0}, {274.0, 62.0}}
+      Other, 0x11744cca0, {{0.0, 791.0}, {402.0, 83.0}}
+      Other, 0x102a948b0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11744b740, {{64.0, 791.0}, {94.0, 54.0}}
+      Other, 0x11744b860, {{64.0, 791.0}, {274.0, 62.0}}
+      Other, 0x11744c040, {{154.0, 795.0}, {94.0, 54.0}}
+      Other, 0x11744cdc0, {{0.0, 791.0}, {402.0, 83.0}}
+      Other, 0x11744d120, {{0.0, 791.0}, {402.0, 83.0}}
+      Other, 0x102a949d0, {{0.0, 0.0}, {402.0, 874.0}}
+      Button, 0x11744b980, {{68.0, 795.0}, {94.0, 54.0}}, identifier: 'cart', label: 'Compras'
+      Button, 0x11744bbc0, {{154.0, 795.0}, {94.0, 54.0}}, identifier: 'fork.knife', label: 'Cenas', Selected
+      Button, 0x11744be00, {{240.0, 795.0}, {94.0, 54.0}}, identifier: 'clock.arrow.circlepath', label: 'Historial'
+      Other, 0x11744c160, {{154.0, 795.0}, {94.0, 54.0}}
+      Other, 0x11744cee0, {{0.0, 791.0}, {402.0, 83.0}}
+      Other, 0x11744d240, {{0.0, 791.0}, {402.0, 83.0}}
+      NavigationBar, 0x102a94af0, {{0.0, 62.0}, {402.0, 54.0}}, identifier: 'Idea para cenar'
+      Other, 0x102a94e50, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11744b080, {{0.0, 0.0}, {402.0, 874.0}}
+      Image, 0x11744baa0, {{99.0, 802.3}, {31.7, 26.7}}, identifier: 'cart.fill', label: 'carrito de la compra'
+      Image, 0x11744bce0, {{190.0, 798.7}, {21.7, 30.7}}, identifier: 'fork.knife', label: 'Comida'
+      Image, 0x11744bf20, {{272.7, 801.3}, {27.7, 27.3}}, identifier: 'clock.arrow.trianglehead.counterclockwise.rotate.90', label: 'clock.arrow.trianglehead.counterclockwise.rotate.90'
+      Other, 0x11744c280, {{154.0, 795.0}, {94.0, 54.0}}
+      Other, 0x11744c3a0, {{154.0, 795.0}, {94.0, 54.0}}
+      Other, 0x11744d000, {{0.0, 791.0}, {402.0, 83.0}}
+      Button, 0x102a94c10, {{16.0, 62.0}, {44.0, 44.0}}, identifier: 'BackButton', label: 'Ideas para cenar'
+      StaticText, 0x102a94d30, {{139.3, 73.7}, {123.0, 20.7}}, label: 'Idea para cenar'
+      Other, 0x102a94f70, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11744b1a0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11744c4c0, {{154.0, 795.0}, {94.0, 54.0}}
+      Other, 0x11744c940, {{154.0, 795.0}, {94.0, 54.0}}
+      Other, 0x102a95090, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11744c5e0, {{154.0, 795.0}, {94.0, 54.0}}
+      Other, 0x11744c820, {{154.0, 795.0}, {94.0, 54.0}}
+      Other, 0x102a951b0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11744c700, {{154.0, 795.0}, {94.0, 54.0}}
+      CollectionView, 0x102a952d0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x102a953f0, {{-16.0, -2764.0}, {434.0, 5395.3}}
+      Cell, 0x102a95510, {{16.0, -384.7}, {370.0, 1062.0}}
+      Other, 0x1174473c0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x117447720, {{0.0, 0.0}, {402.0, 874.0}}
+      Cell, 0x117448b60, {{16.0, 677.3}, {370.0, 82.0}}
+      Other, 0x1174496a0, {{32.0, 676.3}, {338.0, 1.0}}
+      Cell, 0x1174497c0, {{16.0, 759.3}, {370.0, 52.0}}
+      Other, 0x11744a0c0, {{150.7, 758.3}, {219.3, 1.0}}
+      Cell, 0x11744a1e0, {{16.0, 811.3}, {370.0, 52.0}}
+      Other, 0x11744aae0, {{32.0, 810.3}, {338.0, 1.0}}
+      Other, 0x11744ac00, {{369.0, 116.0}, {30.0, 675.0}}, label: 'Barra de desplazamiento vertical, 3 páginas', value: 92%
+      Other, 0x102a95630, {{16.0, -384.7}, {370.0, 1062.0}}
+      Other, 0x102a95990, {{16.0, -384.7}, {370.0, 1062.0}}
+      Other, 0x1174474e0, {{0.0, 0.0}, {402.0, 170.8}}
+      Other, 0x117447600, {{0.0, 726.2}, {402.0, 147.8}}
+      Other, 0x117447840, {{0.0, 0.0}, {402.0, 170.8}}
+      Other, 0x117448380, {{0.0, 726.2}, {402.0, 147.8}}
+      Other, 0x117448c80, {{16.0, 677.3}, {370.0, 82.0}}
+      Other, 0x117448fe0, {{16.0, 677.3}, {370.0, 82.0}}
+      Other, 0x1174498e0, {{16.0, 759.3}, {370.0, 52.0}}
+      Other, 0x117449c40, {{16.0, 759.3}, {370.0, 52.0}}
+      Other, 0x11744a300, {{16.0, 811.3}, {370.0, 52.0}}
+      Other, 0x11744a660, {{16.0, 811.3}, {370.0, 52.0}}
+      Other, 0x11744ad20, {{396.0, 480.0}, {3.0, 278.7}}
+      Other, 0x102a95750, {{16.0, -384.7}, {370.0, 1062.0}}
+      Other, 0x102a95ab0, {{16.0, -384.7}, {370.0, 1062.0}}
+      Image, 0x117447960, {{-120.0, -166.0}, {642.0, 332.0}}, identifier: 'AdditionalDimmingOverlay'
+      Other, 0x117447a80, {{0.0, 0.0}, {402.0, 106.0}}
+      Other, 0x117447ba0, {{0.0, 0.0}, {402.0, 170.8}}
+      Other, 0x117447de0, {{0.0, 0.0}, {402.0, 170.8}}
+      Other, 0x117448020, {{0.0, 0.0}, {402.0, 170.8}}
+      Image, 0x1174484a0, {{-120.0, 731.0}, {642.0, 286.0}}, identifier: 'AdditionalDimmingOverlay'
+      Other, 0x1174485c0, {{0.0, 726.2}, {402.0, 147.8}}
+      Other, 0x117448800, {{0.0, 726.2}, {402.0, 147.8}}
+      Other, 0x117448da0, {{16.0, 677.3}, {370.0, 82.0}}
+      Other, 0x117449100, {{16.0, 677.3}, {370.0, 82.0}}
+      Other, 0x117449a00, {{16.0, 759.3}, {370.0, 52.0}}
+      Other, 0x117449d60, {{16.0, 759.3}, {370.0, 52.0}}
+      Other, 0x11744a420, {{16.0, 811.3}, {370.0, 52.0}}
+      Other, 0x11744a780, {{16.0, 811.3}, {370.0, 52.0}}
+      Other, 0x102a95870, {{16.0, -384.7}, {370.0, 1062.0}}
+      Other, 0x117445360, {{16.0, -384.7}, {370.0, 1062.0}}
+      Other, 0x117447cc0, {{0.0, 0.0}, {402.0, 170.8}}
+      Other, 0x117447f00, {{0.0, 0.0}, {402.0, 170.8}}
+      Other, 0x117448140, {{0.0, 0.0}, {402.0, 170.8}}
+      Other, 0x117448260, {{0.0, 0.0}, {402.0, 170.8}}
+      Other, 0x1174486e0, {{0.0, 726.2}, {402.0, 147.8}}
+      Other, 0x117448920, {{0.0, 726.2}, {402.0, 147.8}}
+      Other, 0x117448a40, {{0.0, 726.2}, {402.0, 147.8}}
+      Other, 0x117448ec0, {{16.0, 677.3}, {370.0, 82.0}}
+      Other, 0x117449220, {{16.0, 677.3}, {370.0, 82.0}}
+      Other, 0x117449b20, {{16.0, 759.3}, {370.0, 52.0}}
+      Other, 0x117449e80, {{16.0, 759.3}, {370.0, 52.0}}
+      Other, 0x11744a540, {{16.0, 811.3}, {370.0, 52.0}}
+      Other, 0x11744a8a0, {{16.0, 811.3}, {370.0, 52.0}}
+      StaticText, 0x117445480, {{32.0, -369.5}, {246.3, 20.3}}, label: 'Existencias y paquetes enteros'
+      StaticText, 0x1174455a0, {{32.0, -337.2}, {312.7, 64.3}}, label: 'Solo se cuenta la comida que vinculaste. Revisar una idea conserva la lista y las porciones reservadas.'
+      StaticText, 0x1174456c0, {{32.0, -260.8}, {63.3, 20.3}}, label: 'Tortillas'
+      StaticText, 0x1174457e0, {{32.0, -235.5}, {308.0, 20.3}}, label: 'La receta necesita: Cantidad sin resolver'
+      StaticText, 0x117445900, {{32.0, -210.2}, {317.7, 42.3}}, label: 'Existencias confirmadas disponibles para esta idea: Cantidad sin resolver'
+      StaticText, 0x117445a20, {{32.0, -162.8}, {284.0, 20.3}}, label: 'Falta por cubrir: Cantidad sin resolver'
+      StaticText, 0x117445b40, {{32.0, -137.5}, {298.0, 42.3}}, label: 'Cantidad aprovechable en un paquete: Cantidad sin resolver'
+      StaticText, 0x117445c60, {{32.0, -90.2}, {268.7, 42.3}}, label: 'Paquetes enteros para lo que falta: Sin resolver'
+      StaticText, 0x117445d80, {{32.0, -42.8}, {306.0, 20.3}}, label: 'Costo estimado del artículo: Sin resolver'
+      Button, 0x117445ea0, {{32.0, -5.7}, {311.3, 20.3}}, identifier: 'ideaSupplyEdit-60FAD324-EDB2-472A-B387-829051D60301', label: 'Revisar existencias y paquete de Tortillas'
+      StaticText, 0x117445fc0, {{32.0, 50.8}, {123.7, 20.3}}, label: 'Frijoles cocidos'
+      StaticText, 0x1174460e0, {{32.0, 76.2}, {192.3, 20.3}}, label: 'La receta necesita: 1 taza'
+      StaticText, 0x117446200, {{32.0, 101.5}, {317.7, 42.3}}, label: 'Existencias confirmadas disponibles para esta idea: 0 tazas'
+      StaticText, 0x117446320, {{32.0, 148.8}, {168.3, 20.3}}, label: 'Falta por cubrir: 1 taza'
+      StaticText, 0x117446440, {{32.0, 174.2}, {298.0, 42.3}}, label: 'Cantidad aprovechable en un paquete: Cantidad sin resolver'
+      StaticText, 0x117446560, {{32.0, 221.5}, {268.7, 42.3}}, label: 'Paquetes enteros para lo que falta: Sin resolver'
+      StaticText, 0x117446680, {{32.0, 268.8}, {306.0, 20.3}}, label: 'Costo estimado del artículo: Sin resolver'
+      Button, 0x1174467a0, {{32.0, 295.0}, {252.3, 42.3}}, identifier: 'ideaSupplyEdit-60FAD324-EDB2-472A-B387-829051D60302', label: 'Revisar existencias y paquete de Frijoles cocidos'
+      StaticText, 0x1174468c0, {{32.0, 362.5}, {117.7, 20.3}}, label: 'Repollo rallado'
+      StaticText, 0x1174469e0, {{32.0, 387.8}, {192.3, 20.3}}, label: 'La receta necesita: 1 taza'
+      StaticText, 0x117446b00, {{32.0, 413.2}, {317.7, 42.3}}, label: 'Existencias confirmadas disponibles para esta idea: 0 tazas'
+      StaticText, 0x117446c20, {{32.0, 460.5}, {168.3, 20.3}}, label: 'Falta por cubrir: 1 taza'
+      StaticText, 0x117446d40, {{32.0, 485.8}, {298.0, 42.3}}, label: 'Cantidad aprovechable en un paquete: Cantidad sin resolver'
+      StaticText, 0x117446e60, {{32.0, 533.2}, {268.7, 42.3}}, label: 'Paquetes enteros para lo que falta: Sin resolver'
+      StaticText, 0x117446f80, {{32.0, 580.5}, {306.0, 20.3}}, label: 'Costo estimado del artículo: Sin resolver'
+      Button, 0x1174470a0, {{32.0, 606.7}, {252.3, 42.3}}, identifier: 'ideaSupplyEdit-60FAD324-EDB2-472A-B387-829051D60303', label: 'Revisar existencias y paquete de Repollo rallado'
+      Button, 0x117449340, {{16.0, 677.3}, {370.0, 82.0}}, identifier: 'dinnerAcceptIdea', label: 'Aceptar idea', Disabled
+      Button, 0x117449fa0, {{16.0, 759.3}, {370.0, 52.0}}, label: 'Guardar borrador editable'
+      Button, 0x11744a9c0, {{16.0, 811.3}, {370.0, 52.0}}, label: 'Seguir editando'
+      StaticText, 0x117449460, {{16.0, 677.3}, {370.0, 82.0}}, label: 'Aceptar idea'
+      Other, 0x117449580, {{32.0, 692.3}, {338.0, 52.0}}, Disabled
+    }
+    ↪︎Find: Elements matching predicate '"dinnerAcceptIdea" IN identifiers'
+      Output: {
+        Button, 0x1174414b0, {{16.0, 677.3}, {370.0, 82.0}}, identifier: 'dinnerAcceptIdea', label: 'Aceptar idea', Disabled
+      }
+      ↪︎Find: First Match
+        Output: {
+          Button, 0x1173609c0, {{16.0, 677.3}, {370.0, 82.0}}, identifier: 'dinnerAcceptIdea', label: 'Aceptar idea', Disabled
+        }
+
+rowPaddingTap=(201.0, 681.3333333333333); topEdge=true
