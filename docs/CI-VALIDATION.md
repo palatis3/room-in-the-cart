@@ -99,6 +99,35 @@ These are static checks. Hosted execution, native results, performance measureme
 
 ## XCTest failure diagnostics
 
+### Working rules for faster fixes
+
+Use one coordinator to own dispatches and the integration branch. Give each
+independent failure one investigation owner; helpers should return a patch and
+its evidence before overlapping files are installed. Monitoring should reuse
+the existing run ID rather than launch another copy.
+
+| Situation | Next work |
+| --- | --- |
+| Source, generation or workflow validation fails | Repair and rerun the cheap validation before allocating a native build. |
+| One fixture journey fails | Preserve its first failure and run its complete fixture group on a development branch. |
+| One performance case fails | Select that case manually, retaining its original measurements and approved limits. |
+| A native case passes but strict validation fails | Investigate the warning or missing evidence; do not count the native pass as acceptance. |
+| Several fixes have focused proof | Publish them together for one full PR regression at the combined revision. |
+| A release candidate is ready | Run the full release checks for that exact revision; focused passes cannot replace them. |
+
+Before another diagnostic, record the question it will answer and what differs
+from the retained run. Preserve source, products and original failure results
+before reusing a local build directory. Keep one local simulator test active at
+a time so competing tests do not distort animation or performance measurements.
+Collect each terminal artifact once and reuse the retained copy for analysis.
+
+Track time spent waiting for a runner, building, starting the simulator, executing
+tests and collecting evidence separately. Compare full runs with full runs and
+focused runs with the same focused scope. The measured 28m27s focused run is not
+a new estimate for the full release suite. Rebalance shards only when their
+measured critical path justifies it; the existing five-slot utilization is already
+high.
+
 The shared iOS shard runner, StoreKit and Release-performance workflows, and optional local UI check use `-collect-test-diagnostics on-failure`. This lets Xcode collect system diagnostics when XCTest encounters a failure or error. Test selections, warning gates, retries and execution deadlines remain unchanged.
 
 Existing CI result-bundle uploads retain those diagnostics for seven days, including after failures. The Records media shard continues to exclude raw bundles and logs from uploads; its sanitized artifacts remain the only published results. Collection can increase failure-run time and disk use, and an outer deadline may prevent complete finalization or upload. Inspect the actual failed-run artifacts before claiming complete evidence.

@@ -1,5 +1,38 @@
 # Room in the Cart current handoff
 
+## November 8, workflow operating rules and live-font terminal result
+
+Workflow efficiency remains implemented in `648e86ff` and `13a2437e`, published
+on development branches and verified by the retained 250 Python checks and paired
+workflow lint. The focused fixture path has hosted proof; focused performance
+selection still needs hosted qualification. No merge, full-PR push or new hosted
+dispatch was made in this continuation. `CI-VALIDATION.md` now records failure
+routing, one dispatch owner, preserved evidence/cache reuse, one local native
+lane and combined-revision full regression rules.
+
+Live-font session82990/PID55468 is terminal, with native0. Inspector94316 is also
+terminal0; its one-time result inspection verifies strict0, all18 required
+attachments, both system-size readbacks, restoration to large and unchanged
+original source/log/result receipts. Evidence remains at
+`.build/RequestDecisionAccessibilityNov08/live-type-transition-r1/run/inspection`.
+Root viewed the three full title captures (before, AX5, restored): expiry title
+and date remain visible and complete; recorded height changes20.333→125.333→20.333
+points. The other captures/crops have not yet received visual review. This is
+targeted live-resizing evidence, not closure of the broader accessibility audit.
+Do not repeat inspection or launch an unchanged measurement.
+
+The English supply-navigation wrappers are prepared at
+`.build/EnglishKeyboardReviewNov08/supply-navigation-qualification-r1` with
+execution package SHA `ad2076acf5f9c0650d9c6735dbe0ee3b86691bc244d0adba1b2881e76dc0b0a4`.
+They remain unexecuted: root must finish reviewing `run_qualification.py` and
+`inspect_qualification.py` before the internal review receipt, preservation and
+isolated build. No source/DerivedData mutation occurred. The scroll metric helper
+has completed its read-only proposal in `.build/ScrollMetricReviewNov08`; its
+conditional method-observation proposal is not approved or implemented. All
+helpers are terminal. No local native lane remains active. Product acceptance
+and the known English, speech/strict-evidence, scroll and wider accessibility
+failures remain open.
+
 ## November 8, hosted cook terminal and live-font execution
 
 Previous goal turn was progress: the original English diagnostic reproduced a720-second timeout, its result and bounded probe were collected/verified once, and focused hosted cook evidence is now fully retained. Hosted42527730777 is terminal failure at348dcdd2: **all five native journeys passed**, but strict warning provenance fails because the readback warning activity has no Complete Issue Description attachment. Its89cook trace records show the expected false→true confirmation in that passing case; this is not a repair. Archive/product digests, exact speech UUID symbols and original results are preserved. [Hosted outcome](evidence/native/ci-focused-cook-20261108/README.md), commit `6b6177a7`. No hosted run remains from this dispatch; no successor was launched. Do not download/re-export the same artifacts. A complete xcresult replay was not performed; the exact hosted parser rejection was independently reproduced against the verified retained activity export.
