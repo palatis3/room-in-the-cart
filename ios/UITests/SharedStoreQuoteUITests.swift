@@ -161,18 +161,20 @@ import XCTest
         enableSwitch("sharedQuotes.second.eligibility")
     }
     private func enter(prefix: String, label: String, checkout: String, trip: String, minutes: String) {
-        fill(label,into:prefix+"label")
-        fill(label+" store",into:prefix+"storeID")
-        fill(label+" branch",into:prefix+"branch")
-        fill("Entered retailer checkout",into:prefix+"source")
-        fill(checkout,into:prefix+"itemSubtotal")
-        fill(checkout,into:prefix+"total")
+        // Move focus directly between quote fields, then dismiss the keyboard
+        // before reviewing the assumptions for this store.
+        enterValue(label,into:prefix+"label")
+        enterValue(label+" store",into:prefix+"storeID")
+        enterValue(label+" branch",into:prefix+"branch")
+        enterValue("Entered retailer checkout",into:prefix+"source")
+        enterValue(checkout,into:prefix+"itemSubtotal")
+        fill(checkout,into:prefix+"total",requireDone:true)
         enableSwitch(prefix+"allChargesIncluded")
         enableSwitch(prefix+"quantitiesMatched")
         enableSwitch(prefix+"singleStore")
         tap(element(prefix+"availability")); tap(app.buttons["Reviewed available"])
-        fill(trip,into:prefix+"tripCash")
-        fill(minutes,into:prefix+"extraMinutes")
+        enterValue(trip,into:prefix+"tripCash")
+        fill(minutes,into:prefix+"extraMinutes",requireDone:true)
     }
     private func confirm() {
         let acknowledgment = app.buttons["sharedQuotes.acknowledged"]
@@ -242,7 +244,7 @@ import XCTest
         }
         XCTFail("No visible switch tap point after 30 reveal attempts: "+id)
     }
-    private func fill(_ text: String, into id: String, replacing: Bool = false, requireDone: Bool = false) {
+    private func enterValue(_ text: String, into id: String, replacing: Bool = false) {
         let field = app.textFields.matching(identifier:id).firstMatch
         tap(field)
         dismissBilingualKeyboardCardIfPresent()
@@ -255,9 +257,15 @@ import XCTest
         if !text.isEmpty { field.typeText(text) }
         dismissBilingualKeyboardCardIfPresent()
         assertFieldValue(app.textFields.matching(identifier:id).firstMatch,text:text)
+    }
+    private func fill(_ text: String, into id: String, replacing: Bool = false, requireDone: Bool = false) {
+        enterValue(text,into:id,replacing:replacing)
         let done = app.buttons.matching(NSPredicate(format:"identifier IN %@",["Done","Listo"])).firstMatch
         if requireDone { XCTAssertTrue(done.waitForExistence(timeout: 5) && done.isHittable, "Done must be reachable from \(id)") }
-        if done.exists && done.isHittable { done.tap() }
+        if done.exists && done.isHittable {
+            done.tap()
+            XCTAssertTrue(done.waitForNonExistence(timeout:5),"End editing before reviewing \(id)")
+        }
         assertFieldValue(app.textFields.matching(identifier:id).firstMatch,text:text)
     }
     private func assertFieldValue(_ field: XCUIElement, text: String) {

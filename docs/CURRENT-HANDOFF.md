@@ -38,6 +38,8 @@ All six workflows for `5edf632` are terminal. The batch had 45 successful jobs a
 
 The recipe-source, 500-item search and keyboard Done checks that failed on hosted revision `5edf632` each passed on the corrected local iPhone simulator runs. The keyboard test also rejected a deliberate missed tap. The search test retained its measured sample count and time budget. Hosted reruns of these changes are pending. [Tests, failed GitHub jobs and local verification](evidence/native/ci-5edf632-20261107/verification.json)
 
+The corrected store-quote test passed in 374.97 seconds against the exact published app and matching libraries. It retained all entered-value assertions, all six review stages and the explicit shopper adoption checks. There were zero recorded runtime warnings or missing animation-completion notifications. The first local replay had mixed app/library versions and failed at launch; its result is excluded. The next hosted run must confirm the new driver.
+
 ## November 7 first pickup and hosted CI
 
 Start pickup opens an editable local draft in one tap. A shopper can paste immediately or rename the pickup in its picker. A fresh iOS 17 Release install exposed an empty-route race. The app now navigates after committing the pickup ID. The Release run saved all 500 pasted lines and the 20 checked rows. An iOS 26.2 shopper also kept the same typed item across process restart. [Release and recovery evidence](evidence/native/first-pickup-change-20261107/first-pickup-release.json)

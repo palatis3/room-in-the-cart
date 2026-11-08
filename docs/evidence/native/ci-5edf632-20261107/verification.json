@@ -40,5 +40,29 @@
     "limit": "The exact hosted delay did not reproduce locally. A new hosted run is required to verify the updated wait there.",
     "sharedStrictSHA256": "4bcadf4b8866835fd7d32871e30ff9a3af4693528c40a8db6a66374b90c97a0c",
     "privateStrictSHA256": "78f4730a3f1f89cdc038edd179009b8026cbe2d0873c182e30b1fe8e6815ea00"
+  },
+  "storeQuoteEntry": {
+    "hostedJob": "https://github.com/palatis3/room-in-the-cart/actions/runs/42415084575/job/128555653479",
+    "hosted": "The original test timed out at 720 seconds during second-store entry. Repeated 60-second animation waits followed dismissing the keyboard between consecutive fields.",
+    "change": "Enter contiguous quote fields in one keyboard session, assert every entered value, and require Done before reviewing each store total and trip assumptions.",
+    "local": "Passed in 374.97 seconds against the exact published app with its original libraries, zero runtime warnings and zero missing animation-completion notifications. All six review stages completed, including private proposal separation and explicit shopper adoption.",
+    "excludedAttempt": "The first local setup mixed the original app with newer libraries and failed at launch with a missing symbol. The corrected replay loaded the original libraries.",
+    "limit": "The underlying cause of the original hosted animation wait is unresolved. Updated driver requires hosted confirmation.",
+    "binarySHA256": {
+      "RoomInTheCart": {
+        "archive": "4dee2bce2c21e03b6e254956d265c7b83b3decef1b578c6c4e345323a11c2025",
+        "installed": "4dee2bce2c21e03b6e254956d265c7b83b3decef1b578c6c4e345323a11c2025"
+      },
+      "RoomInTheCart.debug.dylib": {
+        "archive": "b22fc10f3cdc4423773a10d5d233bbce1505c6f3cac1b00163efda7195d78eb7",
+        "installed": "b22fc10f3cdc4423773a10d5d233bbce1505c6f3cac1b00163efda7195d78eb7"
+      },
+      "Info.plist": {
+        "archive": "704b7d126853d08c8712fd5b3855759af185d20deb29162ff77dad33d4427c4d",
+        "installed": "704b7d126853d08c8712fd5b3855759af185d20deb29162ff77dad33d4427c4d"
+      }
+    },
+    "sourceSHA256": "d2cc50ba2e19bfed8cbba324250220ca1d576c775d6e8640ce85b53eea127628",
+    "verificationSHA256": "a42ced63db3083ae7c3746dde8b4438eaabd35bfe3e6968de7377e228f04a9f8"
   }
 }
