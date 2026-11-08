@@ -1,0 +1,62 @@
+{
+  "copy": "/Users/palatis/Room in the Cart/.build/CookVoicePreparationNov08/current-os-dark-followup/inspection/native.xcresult",
+  "original": "/Users/palatis/Room in the Cart/.build/CookVoicePreparationNov08/current-os-dark-followup/native.xcresult",
+  "perFileCapBytes": 4194304,
+  "commands": [
+    {
+      "reference": {
+        "lifetime": "deleteOnSuccess",
+        "name": "UI Snapshot 2026-11-08 at 05.58.16 AM",
+        "payloadId": "0~SyEUHBHW4iPCVvVT-5GgaL_Ofk7JQ2nSdIn0HLqZTOo0YAlw5A0UYELfVLZvR46B6wPLgR-IRJZzfxYDuf4Aaw==",
+        "timestamp": 1794135496.21,
+        "uuid": "7CB7FE18-3698-4F30-A5EC-6D482593AF05"
+      },
+      "command": [
+        "/usr/bin/xcrun",
+        "xcresulttool",
+        "export",
+        "object",
+        "--legacy",
+        "--path",
+        "/Users/palatis/Room in the Cart/.build/CookVoicePreparationNov08/current-os-dark-followup/inspection/native.xcresult",
+        "--id",
+        "0~SyEUHBHW4iPCVvVT-5GgaL_Ofk7JQ2nSdIn0HLqZTOo0YAlw5A0UYELfVLZvR46B6wPLgR-IRJZzfxYDuf4Aaw==",
+        "--type",
+        "file",
+        "--output-path",
+        "/Users/palatis/Room in the Cart/.build/CookVoicePreparationNov08/current-os-dark-followup/failure-review/tap-boundary/close-snapshot.archive"
+      ],
+      "exitCode": 0,
+      "bytes": 1367,
+      "sha256": "0529e0f3abfc7e5439db422359f362bb1ec703a2999bbc75c36d02aa176b9cb7"
+    },
+    {
+      "reference": {
+        "lifetime": "deleteOnSuccess",
+        "name": "Synthesized Event 2026-11-08 at 05.58.16 AM",
+        "payloadId": "0~4JFfoepliyqZQc6BUvtG8eNzE1jTBjaOm9QKpJyDAAbMA13yNolKve7ajkwi9Eq6ZjqWWCstco0Y4up4RnLi6A==",
+        "timestamp": 1794135496.518,
+        "uuid": "66BE50B2-371C-4ECE-85C0-15F74C2A893D"
+      },
+      "command": [
+        "/usr/bin/xcrun",
+        "xcresulttool",
+        "export",
+        "object",
+        "--legacy",
+        "--path",
+        "/Users/palatis/Room in the Cart/.build/CookVoicePreparationNov08/current-os-dark-followup/inspection/native.xcresult",
+        "--id",
+        "0~4JFfoepliyqZQc6BUvtG8eNzE1jTBjaOm9QKpJyDAAbMA13yNolKve7ajkwi9Eq6ZjqWWCstco0Y4up4RnLi6A==",
+        "--type",
+        "file",
+        "--output-path",
+        "/Users/palatis/Room in the Cart/.build/CookVoicePreparationNov08/current-os-dark-followup/failure-review/tap-boundary/close-event.archive"
+      ],
+      "exitCode": 0,
+      "bytes": 1881,
+      "sha256": "3b987842cc03684a641e04ce16b4af04b113d3cfbe8ef9a7272b259006bddfc5"
+    }
+  ],
+  "originalUnchanged": true
+}

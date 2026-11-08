@@ -1,0 +1,167 @@
+{
+  "testURL": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord",
+  "copy": "/Users/palatis/Room in the Cart/.build/CookVoicePreparationNov08/current-os-dark-followup/inspection/native.xcresult",
+  "commands": [
+    {
+      "args": [
+        "get",
+        "test-results",
+        "activities",
+        "--path",
+        "/Users/palatis/Room in the Cart/.build/CookVoicePreparationNov08/current-os-dark-followup/inspection/native.xcresult",
+        "--test-id",
+        "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord",
+        "--compact"
+      ],
+      "exitCode": 0,
+      "problem": null
+    },
+    {
+      "args": [
+        "export",
+        "attachments",
+        "--path",
+        "/Users/palatis/Room in the Cart/.build/CookVoicePreparationNov08/current-os-dark-followup/inspection/native.xcresult",
+        "--test-id",
+        "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord",
+        "--filter",
+        "*.txt",
+        "--output-path",
+        "/Users/palatis/Room in the Cart/.build/CookVoicePreparationNov08/current-os-dark-followup/failure-review/text"
+      ],
+      "exitCode": 0,
+      "problem": null
+    },
+    {
+      "args": [
+        "export",
+        "attachments",
+        "--path",
+        "/Users/palatis/Room in the Cart/.build/CookVoicePreparationNov08/current-os-dark-followup/inspection/native.xcresult",
+        "--test-id",
+        "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord",
+        "--filter",
+        "*.debug",
+        "--output-path",
+        "/Users/palatis/Room in the Cart/.build/CookVoicePreparationNov08/current-os-dark-followup/failure-review/hierarchies"
+      ],
+      "exitCode": 0,
+      "problem": null
+    },
+    {
+      "args": [
+        "export",
+        "attachments",
+        "--path",
+        "/Users/palatis/Room in the Cart/.build/CookVoicePreparationNov08/current-os-dark-followup/inspection/native.xcresult",
+        "--test-id",
+        "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord",
+        "--filter",
+        "*.png",
+        "--output-path",
+        "/Users/palatis/Room in the Cart/.build/CookVoicePreparationNov08/current-os-dark-followup/failure-review/screens"
+      ],
+      "exitCode": 0,
+      "problem": null
+    }
+  ],
+  "originalUnchanged": true,
+  "files": {
+    "activities.json": {
+      "bytes": 106848,
+      "sha256": "e1c8255ffb177f580e422e5a7edd087560dd23761aaf7632c47671ff6badd72c"
+    },
+    "activities.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "export-receipt.json": {
+      "bytes": 2691,
+      "sha256": "bca89aaecf015a443dbd5f64c625fefd9d7912da02a7c213aba84274462bb21c"
+    },
+    "export_bounded.py": {
+      "bytes": 2352,
+      "sha256": "045b559b99a66c09441abdbcefa8968f51f84e5ec6f608838fd39dd901f6057e"
+    },
+    "hierarchies/8C182AC9-0EF6-4B16-9231-D91AA3175A02.txt": {
+      "bytes": 17788,
+      "sha256": "5156dfb4cb6d2d57ad481c3b4a89f8a8093d3d1b34b224629916cefb49fce4a1"
+    },
+    "hierarchies/E895A487-61E9-4751-B344-F8B41F47012F.txt": {
+      "bytes": 17568,
+      "sha256": "72eb18bd8b9c51b00df54a59c5892d8e4ebee5150c0bb5cb4bf822dd8d432ff1"
+    },
+    "hierarchies/manifest.json": {
+      "bytes": 1251,
+      "sha256": "92184f48548ca3192e2b94afe54a6e877e6a94dae33750516ac73866557220e6"
+    },
+    "hierarchies-export.json": {
+      "bytes": 601,
+      "sha256": "82413a61fcc59c77b21fdb5b6568f820b5f2d63e95e94f9c2f261599491eca86"
+    },
+    "hierarchies-export.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "screens/00617AED-DAD3-46D5-8DA3-03A579F312CC.png": {
+      "bytes": 314412,
+      "sha256": "b8e78ab410b081fdc67b5fb44e9d02a01672c858aa091f5112cafbb365b3900a"
+    },
+    "screens/064C39AF-4602-4468-88F0-9F51A22ADFAA.png": {
+      "bytes": 108188,
+      "sha256": "3720bb5285c87a24f66c027b9000376d18f2c8ac1250ecdfde364a25d72749b0"
+    },
+    "screens/C4D0D7B6-74B4-4997-B733-6111BA5F8DDD.png": {
+      "bytes": 322848,
+      "sha256": "21d11ce56cd58cf0755d0057eddf86c6a3ec3ae9d713673e345eb12fb60bc91d"
+    },
+    "screens/manifest.json": {
+      "bytes": 1655,
+      "sha256": "14644b0f153bd802bf74c6c45cf8b83ac2c35918ed5a200a0faf7d5df30b86a4"
+    },
+    "screens-export.json": {
+      "bytes": 689,
+      "sha256": "02f0eda1c88f8ed203c5c6052e0b2092bb39032afd365193bdc4786bcce76668"
+    },
+    "screens-export.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "text/0CB73C0A-50F2-4782-B014-E918E717E4EA.txt": {
+      "bytes": 207,
+      "sha256": "bc420c39c1c1da9fca7c28eae60d8be0668ff58fa8b84c68e74a780b59d71b89"
+    },
+    "text/4DB63F75-0225-4AFD-8835-74A80ABF6697.txt": {
+      "bytes": 201,
+      "sha256": "5bb54e3cc7ad20c06d66e95ce5a8a4d4cb5929f18716ac7691c02b9b14cb4a47"
+    },
+    "text/584A40F2-A1F8-4529-BD01-8E8BE87F262A.txt": {
+      "bytes": 207,
+      "sha256": "bc420c39c1c1da9fca7c28eae60d8be0668ff58fa8b84c68e74a780b59d71b89"
+    },
+    "text/9E179A42-B49E-475D-9079-13805B514ADF.txt": {
+      "bytes": 201,
+      "sha256": "5bb54e3cc7ad20c06d66e95ce5a8a4d4cb5929f18716ac7691c02b9b14cb4a47"
+    },
+    "text/A1926344-4220-4A7B-A2CC-AD8389E28AFA.txt": {
+      "bytes": 201,
+      "sha256": "5bb54e3cc7ad20c06d66e95ce5a8a4d4cb5929f18716ac7691c02b9b14cb4a47"
+    },
+    "text/F4CA3826-3A60-476E-AD25-EABD97F3BD8B.txt": {
+      "bytes": 207,
+      "sha256": "bc420c39c1c1da9fca7c28eae60d8be0668ff58fa8b84c68e74a780b59d71b89"
+    },
+    "text/manifest.json": {
+      "bytes": 3194,
+      "sha256": "e67892b1002be4116468b38098e82751525291f7d58d83133baf1be334861a4f"
+    },
+    "text-export.json": {
+      "bytes": 1270,
+      "sha256": "40ecf3ea7f8a43b710b43290c171dc492970d4733d46094ae4f6d0a452c7b950"
+    },
+    "text-export.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  }
+}

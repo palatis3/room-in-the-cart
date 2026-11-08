@@ -1,0 +1,35 @@
+{
+  "status": "focused-models-pass-original-ui-failure-preserved-affected-journey-qualified",
+  "models": {
+    "selected": 16,
+    "passed": 16,
+    "strictExit": 0
+  },
+  "fixture": {
+    "selected": 5,
+    "passed": 4,
+    "nativeExit": 65,
+    "strictExit": 1,
+    "runtimeWarnings": 0,
+    "realPlaybackControlsPassed": true,
+    "failure": "Confirmed test-only role mismatch: actual TextView queried only as TextField"
+  },
+  "sourceUnchanged": true,
+  "originalResultsUnchanged": true,
+  "followup": {
+    "ios17Final": {
+      "nativeExit": 0,
+      "strictExit": 0,
+      "selected": 1,
+      "runtimeWarnings": 0
+    },
+    "ios26DarkFinal": {
+      "nativeExit": 0,
+      "strictExit": 0,
+      "selected": 1,
+      "runtimeWarnings": 0
+    },
+    "evidence": "../shared-cook-history-surfaces-20261108/README.md",
+    "limits": "Separate affected-journey qualification; original five-case failure remains recorded, not relabeled as a passing batch."
+  }
+}

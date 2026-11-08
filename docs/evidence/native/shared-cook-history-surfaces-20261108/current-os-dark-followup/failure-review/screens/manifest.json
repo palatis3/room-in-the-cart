@@ -1,0 +1,35 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "C4D0D7B6-74B4-4997-B733-6111BA5F8DDD.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Shared delivery failure_0_168EFBB9-DA5F-464B-8AE3-A746AF02393C.png",
+        "timestamp" : 1794135515.921
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "00617AED-DAD3-46D5-8DA3-03A579F312CC.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Shared dated cook copy_0_5A02F58B-5279-4CE7-A7EE-6C90400EA8F0.png",
+        "timestamp" : 1794135488.93
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "064C39AF-4602-4468-88F0-9F51A22ADFAA.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Shared saved cook history_0_553C9680-0D2C-42E9-BDA8-0DA6896C19CC.png",
+        "timestamp" : 1794135485.54
+      }
+    ],
+    "testIdentifier" : "SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord()",
+    "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord"
+  }
+]

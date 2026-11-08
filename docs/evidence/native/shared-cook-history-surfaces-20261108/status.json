@@ -1,0 +1,35 @@
+{
+  "scope": "Shared cook saved history, dated copy, recipient correction and complete send-record journey",
+  "finalNativeAndStrict": [
+    {
+      "path": "ios17/dismissal-guard-final",
+      "nativePassed": 1,
+      "selected": 1,
+      "strictExit": 0,
+      "recordedRuntimeWarnings": 0
+    },
+    {
+      "path": "current-os-dark-boundary-r2/run",
+      "nativePassed": 1,
+      "selected": 1,
+      "strictExit": 0,
+      "recordedRuntimeWarnings": 0
+    }
+  ],
+  "screenshots": {
+    "count": 10,
+    "ios17Light": "Earlier selector-theme-followup; same product surface hash, prior test hash before dismissal guard",
+    "ios26Dark": "Final current-os-dark-boundary-r2/run"
+  },
+  "priorFailuresPreserved": true,
+  "originalDarkTapCauseResolved": false,
+  "releaseStyleR2": {
+    "buildExit": 0,
+    "bundleCheckExit": 0,
+    "sourceUnchanged": true,
+    "scope": "Unsigned generic arm64 iPhone compilation and compiled-bundle checks"
+  },
+  "physicalOrFullAccessibilityAcceptance": false,
+  "nativeActionsByPublisher": false,
+  "sourceEditsByPublisher": false
+}

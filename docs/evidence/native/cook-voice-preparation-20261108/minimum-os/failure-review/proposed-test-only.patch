@@ -1,0 +1,13 @@
+--- a/ios/UITests/SharedDeliveryUITests.swift
++++ b/ios/UITests/SharedDeliveryUITests.swift
+@@ -502,8 +502,9 @@
+         assertFirstVersionSent()
+         let reviewCorrection = app.buttons["delivery.cook.reviewCorrection"]
+         tap(reviewCorrection)
+-        let manual = app.textFields["delivery.cook.fullCorrection"]
++        let manual = app.descendants(matching: .any).matching(identifier: "delivery.cook.fullCorrection").firstMatch
+         reveal(manual)
++        XCTAssertTrue(manual.elementType == .textField || manual.elementType == .textView)
+         XCTAssertEqual(manual.value as? String, reviewed)
+         let shareCorrection = app.buttons["delivery.cook.shareCorrection"]
+         for _ in 0..<4 where !shareCorrection.exists { app.swipeUp() }

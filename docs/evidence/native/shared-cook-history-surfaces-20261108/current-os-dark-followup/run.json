@@ -1,0 +1,61 @@
+{
+  "status": "completed",
+  "startedAtUTC": "2026-11-08T10:57:27.855123+00:00",
+  "command": [
+    "/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild",
+    "-project",
+    "ios/RoomInTheCart.xcodeproj",
+    "-scheme",
+    "RoomInTheCart",
+    "-configuration",
+    "Debug",
+    "-destination",
+    "platform=iOS Simulator,id=858A2244-001F-4BAD-AFE0-A6E7AF02F41A,arch=arm64",
+    "-derivedDataPath",
+    "/Users/palatis/Room in the Cart/.build/CookVoicePreparationNov08/fixture-r1/dd",
+    "-jobs",
+    "2",
+    "-parallel-testing-enabled",
+    "NO",
+    "CODE_SIGN_IDENTITY=-",
+    "SWIFT_ACTIVE_COMPILATION_CONDITIONS=DEBUG CONTRIBUTOR_CAPTURE_UI_FIXTURE STOCK_REVIEW_UI_FIXTURE AWAY_CARRYOVER_UI_FIXTURE",
+    "-resultBundlePath",
+    "/Users/palatis/Room in the Cart/.build/CookVoicePreparationNov08/current-os-dark-followup/native.xcresult",
+    "-test-timeouts-enabled",
+    "YES",
+    "-default-test-execution-time-allowance",
+    "720",
+    "-maximum-test-execution-time-allowance",
+    "900",
+    "-collect-test-diagnostics",
+    "never",
+    "-only-testing:RoomInTheCartUITests/SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord",
+    "test"
+  ],
+  "sourcePins": {
+    "ios/Features/Capture/LocalCookSpeech.swift": "052f6f680229a944b4397e93eb812b492b823a0339a5cea49febce5e37a61407",
+    "ios/Tests/CookReadbackTests.swift": "509c078a3ceee83ea6b7522b835914a0bf48984ba340371c51c2d0d34af7d543",
+    "ios/Features/Household/SharedCookHistoryView.swift": "5591e7987cb884ab6c873fde4d4644c49bb49a68d6bbd942f6a0b140ad3fed81",
+    "ios/UITests/SharedDeliveryUITests.swift": "fb8b1bd2015bf314dc700257cc8bee615345ca95dd1c0cda557dc0d18cf169a1"
+  },
+  "expectedCount": 1,
+  "settings": {
+    "appearance": "dark",
+    "content_size": "large",
+    "increase_contrast": "disabled"
+  },
+  "bootedRuntimeRoot": "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot",
+  "systemVersion": {
+    "BuildID": "28797834-D251-11F0-A935-FBAB4C799B22",
+    "ProductBuildVersion": "23C54",
+    "ProductCopyright": "1983-2025 Apple Inc.",
+    "ProductName": "iPhone OS",
+    "ProductVersion": "26.2",
+    "SystemImageID": "5A79EE63-AF0F-43EF-884D-7F08B93ED590"
+  },
+  "scope": "Same complete send-record journey with reviewed selector and cook-history semantic surfaces on iPhone17Pro iOS26.2 dark; all business assertions preserved",
+  "pid": 97096,
+  "nativeExit": 65,
+  "finishedAtUTC": "2026-11-08T10:58:37.597819+00:00",
+  "sourceUnchanged": true
+}

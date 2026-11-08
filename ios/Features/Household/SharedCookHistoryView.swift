@@ -24,31 +24,33 @@ struct SharedCookHistoryView: View {
 
     var body: some View {
         List {
-            if allowed {
-                Section(occurrence.meal.title) {
-                    if failed {
-                        Text(ht("Couldn’t load the saved cook instructions."))
-                        Button(ht("Refresh")) { Task { await load() } }
-                    } else if let copies {
-                        if copies.isEmpty { Text(ht("No dated copies saved for this meal.")) }
-                        ForEach(copies) { copy in
-                            NavigationLink {
-                                SharedCookSavedView(model: model, household: household, page: page, occurrence: occurrence, copy: copy, latest: copies.first?.id == copy.id)
-                            } label: {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(ht("Copy version") + " " + copy.version.formatted())
-                                    if let date = serviceDate(copy.createdAt) { Text(date.formatted()).font(.subheadline) }
-                                    Text(copy.language == "es" ? pTr("Español (EE. UU.)") : pTr("English (US)"))
-                                        .font(.subheadline)
-                                }
-                            }.accessibilityIdentifier("delivery.cook.saved." + String(copy.version))
-                        }
-                    } else { ProgressView() }
+            Group {
+                if allowed {
+                    Section(occurrence.meal.title) {
+                        if failed {
+                            Text(ht("Couldn’t load the saved cook instructions."))
+                            Button(ht("Refresh")) { Task { await load() } }
+                        } else if let copies {
+                            if copies.isEmpty { Text(ht("No dated copies saved for this meal.")) }
+                            ForEach(copies) { copy in
+                                NavigationLink {
+                                    SharedCookSavedView(model: model, household: household, page: page, occurrence: occurrence, copy: copy, latest: copies.first?.id == copy.id)
+                                } label: {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(ht("Copy version") + " " + copy.version.formatted())
+                                        if let date = serviceDate(copy.createdAt) { Text(date.formatted()).font(.subheadline) }
+                                        Text(copy.language == "es" ? pTr("Español (EE. UU.)") : pTr("English (US)"))
+                                            .font(.subheadline)
+                                    }
+                                }.accessibilityIdentifier("delivery.cook.saved." + String(copy.version))
+                            }
+                        } else { ProgressView() }
+                    }
+                } else {
+                    Text(ht("Refresh deliveries and review the current record."))
                 }
-            } else {
-                Text(ht("Refresh deliveries and review the current record."))
-            }
-        }
+            }.listRowBackground(Theme.surface)
+        }.workingSurface()
         .navigationTitle(pTr("Saved cook notes"))
         .task(id: page) { await load() }
         .refreshable { await load() }
@@ -127,7 +129,7 @@ private struct SharedCookSavedView: View {
     }
 
     var body: some View {
-        Form {
+        WorkingForm {
             if allowed {
                 Section(occurrence.meal.title) {
                     LabeledContent(ht("Copy version"), value: copy.version.formatted())

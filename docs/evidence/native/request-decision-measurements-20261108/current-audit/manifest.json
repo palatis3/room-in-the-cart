@@ -1,0 +1,15 @@
+{
+  "README.md": "3cd381d0bcf3954904b3d84e6400d0ca2dad85efed7d0cbb3bc43ec9180c30ad",
+  "action-targets.json": "e00aa996991a489838faabed0fee080029a03a91593fcfcdebcfb86cab0b4248",
+  "collection-receipt.json": "b24bad545563216e6eaa5cf00f987697d8cf5370376b7b5e9b24404e4dd30d6d",
+  "findings.csv": "feff1ab1eac0241691c5e0c611ef541e1e34d6fb79ed94e6126abf692a188986",
+  "findings.json": "b75ba930edc3efbd183c4a05e1446adeaa358ea39b224bd4736f22a897718c28",
+  "input-pins.json": "576ef8d55ee413c90087c97ac36ef40c0a89ec03819ef0ebfcb37794b72624e1",
+  "original36-crosswalk.csv": "6fdb7f527d4cf4d34a7b36f920e90da2243965e6af7e5ceaaa1620e8a3daa5d3",
+  "parser-note.txt": "1c60321e0cb217a73935713619c8af050d2f26ca2f5b74fb28e7ab25eabc61b3",
+  "receipt.json": "3a5761cf962ea56785ba8e46a7d7de51399e3c77b4f2b21fbee865a8c312e332",
+  "run.json": "340abc239f332f5aecec2c5b86d028ab3e416aed7374ffc258f783e95a9c0697",
+  "strict.txt": "c9dfdef44d36aba8916c797dde68a268369949579a43f09c46ae4f77fba247cf",
+  "test-runtime-warnings.json": "ce5f63a49527481ca5704f8996eb8eea682d8688c3381353dd8f23ad6759bffb",
+  "verification.json": "61c278fe3e925308c2e693f78965fcb041e2eabae031973eb67f9ec53b2dbc7d"
+}

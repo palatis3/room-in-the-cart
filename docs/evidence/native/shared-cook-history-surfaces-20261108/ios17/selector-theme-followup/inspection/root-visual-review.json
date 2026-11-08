@@ -1,0 +1,21 @@
+{
+  "status": "reviewed",
+  "imagesViewed": [
+    "4D6905FC-D822-4D58-B77D-186C7AB031AC.png",
+    "D04438FB-3305-4A29-892B-678B38584D59.png",
+    "E6D4FE64-9DC9-4DCF-9545-6EB214AA4D52.png",
+    "874EB857-38BE-4D61-9F0D-16DCE1DEE6F1.png",
+    "ECC65F69-C087-42B9-B1BD-B44EA8A3DEE3.png"
+  ],
+  "scope": "Five actual iOS17light captures: history twice, datedcopy twice, fullcorrection boundary",
+  "observations": [
+    "History uses linen canvas,white row surfaces and darksemantic text; version,date,language and navigation title remain readable.",
+    "Datedcopy uses same semantic surfaces; visible original food facts preserve wording and wrap in the small viewport.",
+    "Recipient row,priorversion and destination confirmation remain readable; the correction editor begins below the preceding controls and scrolls."
+  ],
+  "limits": [
+    "Long text continues beyond the screenshot viewport; full equality is separately asserted by the passing journey.",
+    "Fixture blue navigation does not represent production-root tint; source review confirms inherited production spruce tint.",
+    "No full-app,dark,largest-type or physical acceptance claim from these images."
+  ]
+}

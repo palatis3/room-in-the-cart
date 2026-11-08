@@ -1,0 +1,139 @@
+{
+  "targets": [
+    {
+      "newFinding": 4,
+      "category": "Contrast failed",
+      "attributes": "Attributes: Button, 0x11b0395e0, {{16.0, 692.7}, {370.0, 52.0}}, identifier: 'household.decision.apply', label: 'Apply reviewed decision', Disabled",
+      "ancestors": [
+        "\u21b3Window (Main), 0x10ca16830, {{0.0, 0.0}, {402.0, 874.0}}",
+        "\u21b3CollectionView, 0x11ae641a0, {{0.0, 62.0}, {402.0, 812.0}}",
+        "\u21b3Cell, 0x11b038f20, {{16.0, 692.7}, {370.0, 52.0}}",
+        "\u21b3Button, 0x11b0395e0, {{16.0, 692.7}, {370.0, 52.0}}, identifier: 'household.decision.apply', label: 'Apply reviewed decision', Disabled"
+      ],
+      "source": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/current-unfiltered-r2/source/ios/Features/Household/HouseholdInboxView.swift",
+        "sha256": "8501bd25bbdf8bdfb5b2fa7171e45b3764e449397ebe9eceebe7723ed5633a2c",
+        "line": 227
+      },
+      "enabledObservation": "Explicit Disabled marker on issue-time Button; intentional until overage acceptance per .disabled(!model.canApply).",
+      "geometryInterpretation": "Apply row16,692.7,370,52 fits recorded collection0,62,402,812 and window0,0,402,874.",
+      "limit": "These normal/Large issue-time frames do not demonstrate the predicted clipping at a larger category; no issue-time image or hit test was inspected."
+    },
+    {
+      "newFinding": 6,
+      "category": "Dynamic Type font sizes are unsupported",
+      "attributes": "Attributes: Button, 0x11b06d930, {{16.0, 692.7}, {370.0, 52.0}}, identifier: 'household.decision.apply', label: 'Apply reviewed decision', Disabled",
+      "ancestors": [
+        "\u21b3Window (Main), 0x106c11f00, {{0.0, 0.0}, {402.0, 874.0}}",
+        "\u21b3CollectionView, 0x11b1724d0, {{0.0, 62.0}, {402.0, 812.0}}",
+        "\u21b3Cell, 0x11b06d270, {{16.0, 692.7}, {370.0, 52.0}}",
+        "\u21b3Button, 0x11b06d930, {{16.0, 692.7}, {370.0, 52.0}}, identifier: 'household.decision.apply', label: 'Apply reviewed decision', Disabled"
+      ],
+      "source": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/current-unfiltered-r2/source/ios/Features/Household/HouseholdInboxView.swift",
+        "sha256": "8501bd25bbdf8bdfb5b2fa7171e45b3764e449397ebe9eceebe7723ed5633a2c",
+        "line": 227
+      },
+      "enabledObservation": "Explicit Disabled marker on issue-time Button; intentional until overage acceptance per .disabled(!model.canApply).",
+      "geometryInterpretation": "Apply row16,692.7,370,52 fits recorded collection0,62,402,812 and window0,0,402,874.",
+      "limit": "These normal/Large issue-time frames do not demonstrate the predicted clipping at a larger category; no issue-time image or hit test was inspected."
+    },
+    {
+      "newFinding": 20,
+      "category": "Dynamic Type font sizes are unsupported",
+      "attributes": "Attributes: Button, 0x11b6ba440, {{16.0, 744.7}, {370.0, 52.0}}, label: 'Cancel preview'",
+      "ancestors": [
+        "\u21b3Window (Main), 0x11b65b130, {{0.0, 0.0}, {402.0, 874.0}}",
+        "\u21b3CollectionView, 0x11b6b29a0, {{0.0, 62.0}, {402.0, 812.0}}",
+        "\u21b3Cell, 0x11b6b9d80, {{16.0, 744.7}, {370.0, 52.0}}",
+        "\u21b3Button, 0x11b6ba440, {{16.0, 744.7}, {370.0, 52.0}}, label: 'Cancel preview'"
+      ],
+      "source": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/current-unfiltered-r2/source/ios/Features/Household/HouseholdInboxView.swift",
+        "sha256": "8501bd25bbdf8bdfb5b2fa7171e45b3764e449397ebe9eceebe7723ed5633a2c",
+        "line": 229
+      },
+      "enabledObservation": "No Disabled marker in this debug description; no direct isEnabled value captured, so do not elevate absence to a separately measured enabled state.",
+      "geometryInterpretation": "Cancel-preview row16,744.7,370,52 fits recorded collection0,62,402,812 and window0,0,402,874.",
+      "limit": "These normal/Large issue-time frames do not demonstrate the predicted clipping at a larger category; no issue-time image or hit test was inspected."
+    },
+    {
+      "newFinding": 39,
+      "category": "Text clipped",
+      "attributes": "Attributes: Button, 0x11cc46820, {{16.0, 744.7}, {370.0, 52.0}}, label: 'Cancel preview'",
+      "ancestors": [
+        "\u21b3Window (Main), 0x11cc39bb0, {{0.0, 0.0}, {402.0, 874.0}}",
+        "\u21b3CollectionView, 0x11cc3f3d0, {{0.0, 62.0}, {402.0, 812.0}}",
+        "\u21b3Cell, 0x11cc46160, {{16.0, 744.7}, {370.0, 52.0}}",
+        "\u21b3Button, 0x11cc46820, {{16.0, 744.7}, {370.0, 52.0}}, label: 'Cancel preview'"
+      ],
+      "source": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/current-unfiltered-r2/source/ios/Features/Household/HouseholdInboxView.swift",
+        "sha256": "8501bd25bbdf8bdfb5b2fa7171e45b3764e449397ebe9eceebe7723ed5633a2c",
+        "line": 229
+      },
+      "enabledObservation": "No Disabled marker in this debug description; no direct isEnabled value captured, so do not elevate absence to a separately measured enabled state.",
+      "geometryInterpretation": "Cancel-preview row16,744.7,370,52 fits recorded collection0,62,402,812 and window0,0,402,874.",
+      "limit": "These normal/Large issue-time frames do not demonstrate the predicted clipping at a larger category; no issue-time image or hit test was inspected."
+    },
+    {
+      "newFinding": 40,
+      "category": "Text clipped",
+      "attributes": "Attributes: Button, 0x11cc73060, {{16.0, 692.7}, {370.0, 52.0}}, identifier: 'household.decision.apply', label: 'Apply reviewed decision', Disabled",
+      "ancestors": [
+        "\u21b3Window (Main), 0x11cc672e0, {{0.0, 0.0}, {402.0, 874.0}}",
+        "\u21b3CollectionView, 0x11cc21550, {{0.0, 62.0}, {402.0, 812.0}}",
+        "\u21b3Cell, 0x11cc3fd90, {{16.0, 692.7}, {370.0, 52.0}}",
+        "\u21b3Button, 0x11cc73060, {{16.0, 692.7}, {370.0, 52.0}}, identifier: 'household.decision.apply', label: 'Apply reviewed decision', Disabled"
+      ],
+      "source": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/current-unfiltered-r2/source/ios/Features/Household/HouseholdInboxView.swift",
+        "sha256": "8501bd25bbdf8bdfb5b2fa7171e45b3764e449397ebe9eceebe7723ed5633a2c",
+        "line": 227
+      },
+      "enabledObservation": "Explicit Disabled marker on issue-time Button; intentional until overage acceptance per .disabled(!model.canApply).",
+      "geometryInterpretation": "Apply row16,692.7,370,52 fits recorded collection0,62,402,812 and window0,0,402,874.",
+      "limit": "These normal/Large issue-time frames do not demonstrate the predicted clipping at a larger category; no issue-time image or hit test was inspected."
+    }
+  ],
+  "chromeReference": {
+    "newFinding": 30,
+    "attachment": {
+      "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/current-unfiltered-r2/run-r3/reconciliation/text-attachments/3148339E-8CE8-47B3-B794-5B47065327C6.txt",
+      "sha256": "0e642958bcf92a016a9bd7e1ab58fe8b66d1d4024fdd05369b293388077ac7fe"
+    },
+    "navigationBar": "\u21b3NavigationBar, 0x11c3ee8a0, {{0.0, 78.0}, {402.0, 54.0}}, identifier: 'Review request'",
+    "scope": "Same audit sequence, not a simultaneously captured ancestor for each earlier issue. Topbar78..132 is a geometric reference, not issue-time pixel proof."
+  },
+  "contrastOtherTargets": [
+    {
+      "newFinding": 2,
+      "frame": "16,30,370,52",
+      "interpretation": "Preview heading largely above/partly overlapping the same-sequence navbar extent; no text-color defect inferred."
+    },
+    {
+      "newFinding": 3,
+      "frame": "32,97,144.3,20.3",
+      "interpretation": "After heading lies within same-sequence navbar vertical extent; no issue-time visual occlusion established without image."
+    }
+  ],
+  "auditBoundaryEvidence": "Raw log48.12s records the original simultaneous-viewport capture before first audit callback52.35s. That image was not exported under this text-only collection. No exact issue-time audit-boundary screenshot geometry is claimed.",
+  "sourceReview": "Separate ordinary Form Button rows227\u2013229, no local fixed font, fixed height or HStack. Parent form disabled(model.busy) remains unchanged. Apply disabled(!canApply) intentional.",
+  "nextTarget": "Cancel preview DynamicType/clipping #20/#39 first; pair with Apply #6/#40 using its intended disabled state. Do not fix disabled-control contrast #4 without a separate standards/state review.",
+  "nextAction": "Review existing retained AX5 action capture/ordinary test evidence against these exact rows before authorizing any new target-only native probe. If insufficient, root may separately review a bounded same-journey size/visibility qualification without consent or Apply action. No screenshot extraction, new capture or rerun is performed/proposed for automatic execution here.",
+  "provenCurrentProductDefect": false,
+  "inactiveContrastReference": {
+    "url": "https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html#inactive-user-interface-components",
+    "sourceVerification": "Primary reference checked by root and supplied during this review.",
+    "rule": "SC1.4.3 exempts inactive user-interface components from minimum contrast.",
+    "observedState": "Issue4 Attributes explicitly marks Apply reviewed decision Disabled; issues6/40 independently retain that marker.",
+    "disposition": "Relevant to this disabled-state contrast finding only. No minimum-contrast styling repair is established from it. Preserve XCTest contrast failure and full native41/strict1 result.",
+    "notExempted": [
+      "Dynamic Type",
+      "text clipping",
+      "an enabled Apply state",
+      "other controls"
+    ],
+    "waiverOrPolicyChanged": false
+  }
+}

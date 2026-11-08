@@ -1,0 +1,53 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "C4831C3E-956C-427E-B1E2-B3D91FD813E4.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Shared full correction editor_0_50FD72CF-C09F-434E-BB1E-2CCBDD82B75A.png",
+        "timestamp" : 1794136442.189
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "D8E3DBD2-92CD-4088-ABE3-2DB9AFDF8304.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Shared dated cook copy_0_0A87AEA7-86A0-49B6-9B97-BA106A982DDA.png",
+        "timestamp" : 1794136423.392
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "2EE9159D-E68B-43FD-B4DF-C11A72382B6A.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Shared saved cook history_0_35A8C7F6-F8ED-45E8-94C4-DA4A1F66F977.png",
+        "timestamp" : 1794136420.044
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "2E3BD8D1-8797-49D6-BAF5-EFCE3BC8A570.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Shared dated cook copy_0_BF619D89-A81D-4E77-AD0D-AC8D7CE965DB.png",
+        "timestamp" : 1794136387.366
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "D4431E77-6279-48EC-BDD5-422469DE544A.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Shared saved cook history_0_5A987921-F729-476F-9203-C38F7A637AC3.png",
+        "timestamp" : 1794136383.942
+      }
+    ],
+    "testIdentifier" : "SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord()",
+    "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord"
+  }
+]

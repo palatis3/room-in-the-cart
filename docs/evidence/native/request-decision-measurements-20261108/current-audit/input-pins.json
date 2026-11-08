@@ -1,0 +1,18 @@
+[
+  {
+    "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/finding-reconciliation-r1/findings.json",
+    "sha256": "0398175b58e87fccac2bafed5271e3bfb44e45bbe702c469e703389954bb59b0"
+  },
+  {
+    "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/audit-comparison.json",
+    "sha256": "f7bde24b477ca7221402a516f02bf8ec54c9995dfd03cc1fbeb5e2ead28fd733"
+  },
+  {
+    "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/current-unfiltered-r2/run-r3/native.log",
+    "sha256": "48d295c572bd7d2337260a0f6002abd144cc97ba7dc3f23872b919eb04a2e0a6"
+  },
+  {
+    "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/current-unfiltered-r2/source/ios/Features/Household/HouseholdInboxView.swift",
+    "sha256": "8501bd25bbdf8bdfb5b2fa7171e45b3764e449397ebe9eceebe7723ed5633a2c"
+  }
+]

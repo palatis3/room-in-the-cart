@@ -1,0 +1,37 @@
+{
+  "conclusion": "Exact-identifier correction control exists as TextView; TextField-only XCTest selector caused this failure.",
+  "productFixJustified": false,
+  "proposedPatchApplied": false,
+  "canonicalTestSHA256": "fc602c61180e82c49823ddfc36378034164250b6d635594f980df6d1c8fd7884",
+  "originalBundleUnchanged": true,
+  "attachmentExport": {
+    "status": "incomplete",
+    "exitCode": -25,
+    "signal": "SIGXFSZ",
+    "perFileLimit": 12582912,
+    "sampledFileLimit": 101,
+    "actualFileCount": 125,
+    "actualTotalBytes": 13698200,
+    "sampledFileLimitOvershoot": true,
+    "repeatedOrExpanded": false
+  },
+  "evidence": {
+    "hierarchy": "attachments/06860871-409B-48DD-AB35-C88D905ABD7F.txt",
+    "hierarchyLine": 191,
+    "hierarchyTimestamp": 1794134267.01,
+    "hierarchyElementType": "TextView",
+    "hierarchyIdentifier": "delivery.cook.fullCorrection",
+    "framePoints": [
+      32,
+      612,
+      311,
+      682
+    ],
+    "valuePrefix": "Cook instructions ...",
+    "reviewTapRelativeSeconds": 70.71,
+    "firstFailedLookupRelativeSeconds": 71.13,
+    "failureScreenshot": "attachments/90B62CDD-1F87-4034-A70E-53CBA73A1D5B.png",
+    "screenshotLimitation": "Tear-down after repeated unsuccessful reveal swipes shows top of Dated copy; does not itself show correction control or full equality."
+  },
+  "validationNeeded": "Rerun exact original five cases with reviewed test-only selector change; unchanged exact manual.value == reviewed and all later confirmation/correction/share/sent-record assertions must pass."
+}

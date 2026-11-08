@@ -1,0 +1,53 @@
+{
+  "decodeMethod": "plistlib.loads plus UID table dereference only; no object instantiation or unpickling",
+  "snapshot": {
+    "label": "Room in the Cart",
+    "identifier": "",
+    "encodedElementType": 2,
+    "frame": "{{0, 0}, {402, 874}}",
+    "enabled": true,
+    "childCount": 0,
+    "limitation": "This is the application root only; enabled belongs to the app, not Close. No Close frame/state/hittability retained."
+  },
+  "event": {
+    "name": "tap",
+    "targetProcessID": 97211,
+    "pointerEvents": [
+      {
+        "eventTypeEncoded": 1,
+        "x": 364.0,
+        "y": 110.0,
+        "offsetSeconds": 0.0
+      },
+      {
+        "eventTypeEncoded": 3,
+        "x": 364.0,
+        "y": 110.0,
+        "offsetSeconds": 0.05
+      }
+    ],
+    "encodedTargetFrame": {
+      "targetFrame.x": 0.0,
+      "targetFrame.y": 0.0,
+      "targetFrame.width": 0.0,
+      "targetFrame.height": 0.0
+    },
+    "limitation": "Zero targetFrame fields do not establish zero button bounds. Synthesized event record does not prove OS delivery or action acceptance."
+  },
+  "comparison": {
+    "finalScreenshotSecondsAfterEvent": 19.403,
+    "finalScreenshotPixels": [
+      1206,
+      2622
+    ],
+    "recordedWindowPoints": [
+      402,
+      874
+    ],
+    "visualOnly": "The final Close X appears near the recorded tap position. No contemporaneous Close-frame comparison is possible.",
+    "offCenterTapEstablished": false,
+    "transitionOrRePresentationExcluded": false,
+    "productRepairEstablished": false
+  },
+  "originalUnchanged": true
+}

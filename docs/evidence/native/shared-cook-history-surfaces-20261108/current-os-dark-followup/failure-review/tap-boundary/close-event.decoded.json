@@ -1,0 +1,333 @@
+{
+  "$version": 100000,
+  "$archiver": "NSKeyedArchiver",
+  "$top": {
+    "root": {
+      "UID": 1
+    }
+  },
+  "$objects": [
+    "$null",
+    {
+      "originalOffset.dx": {
+        "UID": 11
+      },
+      "parentWindowSize": {
+        "UID": 21
+      },
+      "orientation": {
+        "UID": 3
+      },
+      "targetProcessID": 97211,
+      "endsPersistentState": false,
+      "$class": {
+        "UID": 26
+      },
+      "displayID": {
+        "UID": 3
+      },
+      "systemAutomationProperties": {
+        "UID": 19
+      },
+      "originalOffset.dy": {
+        "UID": 11
+      },
+      "beginsPersistentState": false,
+      "name": {
+        "UID": 2
+      },
+      "eventPaths": {
+        "UID": 4
+      }
+    },
+    "tap",
+    1,
+    {
+      "NS.objects": [
+        {
+          "UID": 5
+        }
+      ],
+      "$class": {
+        "UID": 17
+      }
+    },
+    {
+      "targetFrame.width": {
+        "UID": 11
+      },
+      "targetFrame.x": {
+        "UID": 11
+      },
+      "$class": {
+        "UID": 18
+      },
+      "pathType": {
+        "UID": 3
+      },
+      "targetFrame.y": {
+        "UID": 11
+      },
+      "deviceID": {
+        "UID": 8
+      },
+      "pointerEvents": {
+        "UID": 6
+      },
+      "speedFactor": {
+        "UID": 11
+      },
+      "eventStream": {
+        "UID": 0
+      },
+      "targetFrame.height": {
+        "UID": 11
+      },
+      "index": {
+        "UID": 3
+      }
+    },
+    {
+      "NS.objects": [
+        {
+          "UID": 7
+        },
+        {
+          "UID": 14
+        }
+      ],
+      "$class": {
+        "UID": 17
+      }
+    },
+    {
+      "pressure": {
+        "UID": 11
+      },
+      "eventType": {
+        "UID": 3
+      },
+      "clickCount": {
+        "UID": 8
+      },
+      "duration": {
+        "UID": 11
+      },
+      "verticalLineScroll": {
+        "UID": 8
+      },
+      "keyCode": {
+        "UID": 8
+      },
+      "gesturePhase": {
+        "UID": 8
+      },
+      "deltaVector.dy": {
+        "UID": 11
+      },
+      "$class": {
+        "UID": 13
+      },
+      "destination.y": {
+        "UID": 11
+      },
+      "buttonType": {
+        "UID": 8
+      },
+      "keyModifierFlags": {
+        "UID": 8
+      },
+      "gestureStage": {
+        "UID": 8
+      },
+      "typingSpeed": {
+        "UID": 8
+      },
+      "destination.x": {
+        "UID": 11
+      },
+      "deviceID": {
+        "UID": 8
+      },
+      "offset": {
+        "UID": 11
+      },
+      "deltaVector.dx": {
+        "UID": 11
+      },
+      "coordinate.y": {
+        "UID": 10
+      },
+      "mergeModifierFlagsWithCurrentFlags": {
+        "UID": 12
+      },
+      "coordinate.x": {
+        "UID": 9
+      },
+      "keyPhase": {
+        "UID": 8
+      },
+      "shouldRedact": {
+        "UID": 12
+      },
+      "string": {
+        "UID": 0
+      },
+      "key": {
+        "UID": 0
+      }
+    },
+    0,
+    364.0,
+    110.0,
+    0.0,
+    false,
+    {
+      "$classname": "XCPointerEvent",
+      "$classes": [
+        "XCPointerEvent",
+        "NSObject"
+      ]
+    },
+    {
+      "pressure": {
+        "UID": 11
+      },
+      "eventType": {
+        "UID": 15
+      },
+      "clickCount": {
+        "UID": 8
+      },
+      "duration": {
+        "UID": 11
+      },
+      "verticalLineScroll": {
+        "UID": 8
+      },
+      "keyCode": {
+        "UID": 8
+      },
+      "gesturePhase": {
+        "UID": 8
+      },
+      "deltaVector.dy": {
+        "UID": 11
+      },
+      "$class": {
+        "UID": 13
+      },
+      "destination.y": {
+        "UID": 11
+      },
+      "buttonType": {
+        "UID": 8
+      },
+      "keyModifierFlags": {
+        "UID": 8
+      },
+      "gestureStage": {
+        "UID": 8
+      },
+      "typingSpeed": {
+        "UID": 8
+      },
+      "destination.x": {
+        "UID": 11
+      },
+      "deviceID": {
+        "UID": 8
+      },
+      "offset": {
+        "UID": 16
+      },
+      "deltaVector.dx": {
+        "UID": 11
+      },
+      "coordinate.y": {
+        "UID": 10
+      },
+      "mergeModifierFlagsWithCurrentFlags": {
+        "UID": 12
+      },
+      "coordinate.x": {
+        "UID": 9
+      },
+      "keyPhase": {
+        "UID": 8
+      },
+      "shouldRedact": {
+        "UID": 12
+      },
+      "string": {
+        "UID": 0
+      },
+      "key": {
+        "UID": 0
+      }
+    },
+    3,
+    0.05,
+    {
+      "$classname": "NSMutableArray",
+      "$classes": [
+        "NSMutableArray",
+        "NSArray",
+        "NSObject"
+      ]
+    },
+    {
+      "$classname": "XCPointerEventPath",
+      "$classes": [
+        "XCPointerEventPath",
+        "NSObject"
+      ]
+    },
+    {
+      "NS.keys": [],
+      "NS.objects": [],
+      "$class": {
+        "UID": 20
+      }
+    },
+    {
+      "$classname": "NSDictionary",
+      "$classes": [
+        "NSDictionary",
+        "NSObject"
+      ]
+    },
+    {
+      "NS.keys": [
+        {
+          "UID": 22
+        },
+        {
+          "UID": 23
+        }
+      ],
+      "NS.objects": [
+        {
+          "UID": 24
+        },
+        {
+          "UID": 25
+        }
+      ],
+      "$class": {
+        "UID": 20
+      }
+    },
+    "Width",
+    "Height",
+    402.0,
+    874.0,
+    {
+      "$classname": "XCSynthesizedEventRecord",
+      "$classes": [
+        "XCSynthesizedEventRecord",
+        "NSObject"
+      ]
+    }
+  ]
+}

@@ -22,3 +22,9 @@ The native runs use Xcode 27.1, iPhone 17 Simulator and iOS 26.2 (23C54). Model 
 The earlier diagnostic observed an approximately 84 ms main-thread voice lookup and a 62 ms Pause call under Debug/XCTest/Thread Performance Checker. Those are diagnostic call intervals, not physical-device or Release frame-time measurements. Moving lookup off MainActor does not establish that Pause or framework QoS warnings are fixed. The existing strict warning gate remains unchanged. Hosted CI, physical-device acceptance and full release readiness remain separate.
 
 Private original results and logs remain under `.build/CookVoicePreparationNov08/`. Public receipts preserve the bounded outcomes and exact source patch; they do not include the raw result bundles.
+
+## Minimum OS follow-up
+
+iOS 17.0 on iPhone SE passed all 16 focused readback tests with zero recorded runtime warnings. The original five UI journeys passed four cases and failed the saved-copy test because it queried a TextField while the actual editor was a TextView. Playback controls were exercised; the original failure is preserved in `minimum-os/`.
+
+A portable editor-role lookup retains exact full-value equality. The complete affected journey subsequently passed on iOS 17 light and iOS 26.2 dark with zero recorded runtime warnings. These are separate runs, not a relabeling of the original five-case result. [Saved-copy follow-up](../shared-cook-history-surfaces-20261108/README.md) records styling, stronger dismissal assertions and the separate unresolved first dark share-dismissal failure.

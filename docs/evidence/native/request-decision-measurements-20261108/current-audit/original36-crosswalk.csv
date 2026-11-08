@@ -1,0 +1,37 @@
+Original,Category,Target,Context,New same category,New other category,Status,Closed
+1,Dynamic Type font sizes are partially unsupported,Sam’s wrap lunch,,[19],[],observed-again,No
+2,Dynamic Type font sizes are partially unsupported,After this decision,,[],"[{'finding': 3, 'category': 'Contrast failed'}]",different-category-observed,No
+3,Dynamic Type font sizes are partially unsupported,$38.00,,[18],[],observed-again,No
+4,Dynamic Type font sizes are partially unsupported,$3.49,,[9],[],observed-again,No
+5,Dynamic Type font sizes are partially unsupported,"Lunch · November 5, 2026",,[31],[],observed-again,No
+6,Dynamic Type font sizes are partially unsupported,UNATTRIBUTED,,[],[],unattributed-unmatchable,No
+7,Dynamic Type font sizes are partially unsupported,Before this decision,,[7],[],observed-again,No
+8,Dynamic Type font sizes are partially unsupported,$40.69,,[21],[],observed-again,No
+9,Dynamic Type font sizes are partially unsupported,$37.20,,[37],[],observed-again,No
+10,Dynamic Type font sizes are partially unsupported,Checkout calculation details,,[25],[],observed-again,No
+11,Dynamic Type font sizes are partially unsupported,Cancel,,[30],[],observed-again,No
+12,Dynamic Type font sizes are partially unsupported,$2.69,,[23],[],observed-again,No
+13,Dynamic Type font sizes are partially unsupported,Mia’s wrap lunch,,[35],[],observed-again,No
+14,Dynamic Type font sizes are partially unsupported,Cap scope,,[24],[],observed-again,No
+15,Dynamic Type font sizes are partially unsupported,Protected portions,Mia protected meal9999,[32],[],observed-again,No
+16,Dynamic Type font sizes are partially unsupported,Cap,,[16],[],observed-again,No
+17,Dynamic Type font sizes are partially unsupported,Scope,,[34],[],observed-again,No
+18,Dynamic Type font sizes are partially unsupported,Whole checkout,Cap scope,[29],[],observed-again,No
+19,Dynamic Type font sizes are partially unsupported,1,Sam protected meal8888,[26],[],observed-again,No
+20,Dynamic Type font sizes are partially unsupported,1,Mia protected meal9999,[27],[],observed-again,No
+21,Dynamic Type font sizes are unsupported,UNATTRIBUTED,,[],[],unattributed-unmatchable,No
+22,Dynamic Type font sizes are partially unsupported,Add packs to this shop,,[],"[{'finding': 2, 'category': 'Contrast failed'}]",different-category-observed,No
+23,Dynamic Type font sizes are partially unsupported,"Lunch · November 4, 2026",,[36],[],observed-again,No
+24,Dynamic Type font sizes are partially unsupported,Over cap,,[17],[],observed-again,No
+25,Dynamic Type font sizes are partially unsupported,Whole checkout,Scope,[5],[],observed-again,No
+26,Dynamic Type font sizes are partially unsupported,Cost change,,[10],[],observed-again,No
+27,Dynamic Type font sizes are partially unsupported,Review before applying,,[],[],not-observed-in-this-run,No
+28,Dynamic Type font sizes are partially unsupported,Protected portions,Sam protected meal8888,[12],[],observed-again,No
+29,Dynamic Type font sizes are partially unsupported,Protected meal commitments,,[14],"[{'finding': 38, 'category': 'Text clipped'}]",observed-again,No
+30,Dynamic Type font sizes are partially unsupported,Check usable food separately; this review does not confirm meal coverage.,,[33],[],observed-again,No
+31,Dynamic Type font sizes are partially unsupported,UNATTRIBUTED,,[],[],unattributed-unmatchable,No
+32,Dynamic Type font sizes are partially unsupported,Expected total,,[28],[],observed-again,No
+33,Text clipped,Protected meal commitments,,[38],"[{'finding': 14, 'category': 'Dynamic Type font sizes are partially unsupported'}]",observed-again,No
+34,Contrast failed,Review decision,,[],[],not-observed-in-this-run,No
+35,Contrast failed,Review before applying,,[],[],not-observed-in-this-run,No
+36,Potentially inaccessible text,UNATTRIBUTED,,[],[],unattributed-unmatchable,No

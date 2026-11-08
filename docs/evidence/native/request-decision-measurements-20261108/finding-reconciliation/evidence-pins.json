@@ -1,0 +1,77 @@
+[
+  {
+    "path": "/Users/palatis/Room in the Cart/diagnostics/request-review-accessibility/remaining-findings.csv",
+    "sha256": "7e82b9afe3526117641c450e662f83eb97b0e08da1a98feaf498c9c652e776a2",
+    "bytes": 7117
+  },
+  {
+    "path": "/Users/palatis/Room in the Cart/diagnostics/request-review-accessibility/unfiltered-review.patch",
+    "sha256": "3abfff75d85ddede0874c41cefeb1317548473cc6f5e310fe83909ba90266dd9",
+    "bytes": 1063
+  },
+  {
+    "path": "/Users/palatis/Room in the Cart/docs/evidence/native/request-decision-measurements-20261108/README.md",
+    "sha256": "51de8a0dbbaebd7a60b9df3962810a115d7bbe3da3ce7656add216606f3a4555",
+    "bytes": 3789
+  },
+  {
+    "path": "/Users/palatis/Room in the Cart/docs/evidence/native/request-decision-measurements-20261108/measurement-final/root-visual-observations.json",
+    "sha256": "4b928692532172e6285fd9d5e7cf1471c2fff8136fcbbfffb150ac3570da72cb",
+    "bytes": 4039
+  },
+  {
+    "path": "/Users/palatis/Room in the Cart/docs/evidence/native/request-decision-measurements-20261108/baseline/strict-verification.txt",
+    "sha256": "42227a4e255bf2ba1076bd53d7c7f6063879d5285a1b363588c4e8ddbac3a598",
+    "bytes": 521
+  },
+  {
+    "path": "/Users/palatis/Room in the Cart/docs/evidence/native/request-decision-measurements-20261108/remaining-controls/README.md",
+    "sha256": "969318dfc808ef1a71f2915725080e5f946d1fa0e0fd62f646767f3d8f5b79df",
+    "bytes": 3780
+  },
+  {
+    "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-controls-independent-visual-review-r2/visual-review.json",
+    "sha256": "81f61209972607f60f7f822437e13453652aa1bef02eec71714ffa21db5ee58e",
+    "bytes": 15892
+  },
+  {
+    "path": "/Users/palatis/Room in the Cart/docs/evidence/native/request-decision-measurements-20261108/measurement-final/measurement-summary-original.json",
+    "sha256": "42b2d16cbf52751570cbe9dc0b175e3e460df4f18922c6a5e6073d360ce2176b",
+    "bytes": 149393
+  },
+  {
+    "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-summary.json",
+    "sha256": "d7478e601b7167d2c839b9338ebe5afa1e3dfd0eb79fc27e021020e8f8029447",
+    "bytes": 68562
+  },
+  {
+    "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/grouped-overlay.json",
+    "sha256": "aecc7535d1c3a41cb246eed6a66ed37b528c04efc13120155530710395bf7b6c",
+    "bytes": 323
+  },
+  {
+    "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/normal.zsh",
+    "sha256": "5178c6b575e6578c02daba3b050848cbe63ab8577c207d7b8a614d4c5787f7d8",
+    "bytes": 518
+  },
+  {
+    "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/grouped-normal-summary.json",
+    "sha256": "e8a4aef89b6e457bbd13f9f5ea6cd797d73f85520d94289a2a1a22df4d5c8381",
+    "bytes": 1018
+  },
+  {
+    "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/verification.json",
+    "sha256": "69c6eddc743e4c58b43c1591b2b036bd19bd7d38bbb53f0dcdfafd882a553a6c",
+    "bytes": 6589
+  },
+  {
+    "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov07/wrap-sizes-device-log.txt",
+    "sha256": "7fb2d3db22f8dd61bfa42cdeb56d26e93fbadd09a37578f272351be43c27972e",
+    "bytes": 119
+  },
+  {
+    "path": "/Users/palatis/Room in the Cart/ios/UITests/HouseholdRequestPackUITests.swift",
+    "sha256": "5801ef81869849ae0404961e89507393a56444ede4d546d18f114e770f5a161f",
+    "bytes": 24949
+  }
+]

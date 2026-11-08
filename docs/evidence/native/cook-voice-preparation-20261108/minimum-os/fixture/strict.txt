@@ -1,0 +1,21 @@
+Executed 5 of 5 selected tests.
+
+| Test | Result | Seconds |
+|---|---|---|
+| RoomInTheCartUITests/SharedDeliveryUITests/testShopperClosesWithPendingCreditThenLinksItToTheOriginalNetCharge | Passed | 188.56 |
+| RoomInTheCartUITests/SharedDeliveryUITests/testShopperReplacesWednesdayAfterPickupAndKeepsTuesdaysShortage | Passed | 106.23 |
+| RoomInTheCartUITests/SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord | Failed | 102.73 |
+| RoomInTheCartUITests/SharedDeliveryUITests/testShopperReviewsExactEditedCookWordingBeforeReadback | Passed | 50.01 |
+| RoomInTheCartUITests/SharedDeliveryUITests/testShopperLeavesOriginalDinnerOpenAfterAnUnresolvedReplacementPreview | Passed | 46.86 |
+
+Animation-idle diagnostics: 0 observed messages in 3036 log lines (5 case starts, 0 runner restart boundaries). Diagnostic only; native results and runtime-warning checks are unchanged.
+No matching messages observed in the supplied log; this does not establish complete log coverage or absence of idle delays.
+
+The XCTest test export recorded 0 runtime warning occurrences across 5 examined tests.
+Executed and passing counts do not match the selected tests
+The shard contains failures, expected failures or skipped tests
+Every selected test must individually report Passed
+XCTest logged a failure for RoomInTheCartUITests/SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord at log line 3009.
+XCTest log requires one start then one pass for RoomInTheCartUITests/SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord; found ['start', 'non-passing or unrecognized completion'].
+XCTest log requires one successful result banner; found ['FAILED'].
+

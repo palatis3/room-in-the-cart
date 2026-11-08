@@ -1,0 +1,69 @@
+{
+  "scope": "One existing completed AX5 screenshot; no app/test/simulator action",
+  "command": [
+    "/usr/bin/xcrun",
+    "xcresulttool",
+    "export",
+    "attachments",
+    "--path",
+    "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/baseline-r2/inspection/native.xcresult",
+    "--test-id",
+    "HouseholdRequestPackUITests/testLargestTextShowsCompleteProtectedLunchNamesAndDates()",
+    "--output-path",
+    "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/existing-ax5-actions-export-r1/attachments",
+    "--filter",
+    "Largest text review actions*.png"
+  ],
+  "inputCopy": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/baseline-r2/inspection/native.xcresult",
+  "testDetailsSHA256": "f4a6416701febd08247b5082a4ba22f9f7c4618bb5693c76d168c8a1bff85ac4",
+  "selector": "HouseholdRequestPackUITests/testLargestTextShowsCompleteProtectedLunchNamesAndDates()",
+  "recordedResult": "Passed",
+  "nativeExportExit": 0,
+  "maxFileBytes": 12582912,
+  "maxTotalBytes": 20971520,
+  "limitExceeded": false,
+  "originalBundleFileCount": 43,
+  "originalManifestDigestBefore": "8e4cd4f4dd4da454b74ad2d625342fbeca77399d0e6951a6de1d9bd284bad1d8",
+  "originalUnchangedAfter": true,
+  "sourcePins": [
+    {
+      "path": "ios/Features/Household/HouseholdInboxView.swift",
+      "currentSHA256": "8501bd25bbdf8bdfb5b2fa7171e45b3764e449397ebe9eceebe7723ed5633a2c",
+      "baselineSHA256": "8501bd25bbdf8bdfb5b2fa7171e45b3764e449397ebe9eceebe7723ed5633a2c"
+    },
+    {
+      "path": "ios/Features/Household/HouseholdRequestMealContext.swift",
+      "currentSHA256": "02c37bf92608709a1c3229e07223607fda6762616713b5d1b41ef4057c94316f",
+      "baselineSHA256": "02c37bf92608709a1c3229e07223607fda6762616713b5d1b41ef4057c94316f"
+    },
+    {
+      "path": "ios/App/Theme.swift",
+      "currentSHA256": "8c8ace01c987920f0b694c077694354e4a20bd5abd22d5c70c1b60d8304a9cf3",
+      "baselineSHA256": "8c8ace01c987920f0b694c077694354e4a20bd5abd22d5c70c1b60d8304a9cf3"
+    }
+  ],
+  "sourceUnchangedAfter": true,
+  "image": {
+    "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/existing-ax5-actions-export-r1/attachments/067A7538-4D7B-4431-919F-052EDB9B9426.png",
+    "sha256": "a8527031f13ac3427f81a4c921b4b24cbdf3fa49946fbce8e1c31c57a1fefd02",
+    "bytes": 250563,
+    "dimensionsPixels": [
+      1206,
+      2622
+    ],
+    "attachmentMetadata": {
+      "configurationName": "Test Scheme Action",
+      "deviceId": "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+      "deviceName": "RITC-Placed-Receipt-Nov07",
+      "exportedFileName": "067A7538-4D7B-4431-919F-052EDB9B9426.png",
+      "isAssociatedWithFailure": false,
+      "suggestedHumanReadableName": "Largest text review actions_0_CDCA29C5-5424-4E86-9EA6-E3B739C3BEB3.png",
+      "timestamp": 1794110756.743
+    }
+  },
+  "priorStrictVerification": {
+    "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/baseline-r2/inspection/verification.json",
+    "sha256": "d75cb25c7ca2ee04879e9335ac598ea6f4d3a3b14abbb6f7becf773786a00834"
+  },
+  "auditOutcomeChanged": false
+}

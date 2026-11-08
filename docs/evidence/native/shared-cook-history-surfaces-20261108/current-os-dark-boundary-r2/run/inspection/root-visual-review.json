@@ -1,0 +1,22 @@
+{
+  "status": "reviewed",
+  "imagesViewed": [
+    "C4831C3E-956C-427E-B1E2-B3D91FD813E4.png",
+    "D8E3DBD2-92CD-4088-ABE3-2DB9AFDF8304.png",
+    "2EE9159D-E68B-43FD-B4DF-C11A72382B6A.png",
+    "2E3BD8D1-8797-49D6-BAF5-EFCE3BC8A570.png",
+    "D4431E77-6279-48EC-BDD5-422469DE544A.png"
+  ],
+  "scope": "Five actual iOS26.2dark images: savedhistory twice, datedcopy twice, fullcorrection boundary",
+  "observations": [
+    "Dark canvas and green surface layers are distinct; pale semantic text remains readable.",
+    "Version,date,language and saved-note headings remain visible without overlap.",
+    "The long dated note and correction continue vertically through the scrollable form; visible original facts retain wording and wrap.",
+    "Recipient history,priorversion and destination confirmation are readable in the same surface treatment."
+  ],
+  "limits": [
+    "Image display was resized from1206x2622 to942x2048; review is visual, not a pixel contrast measurement.",
+    "Full text equality and send-history behavior are established by the complete passing journey, not by a single viewport.",
+    "No full-app,AX5 or physical-device acceptance claim."
+  ]
+}

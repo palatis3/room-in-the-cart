@@ -35,10 +35,11 @@
     "sourceUnchanged": true,
     "scope": "Unsigned generic arm64 iPhone Release compilation and bundle checks; no distribution signing"
   },
-  "hosted": "Not yet published",
+  "hosted": "Published a305065; cohort ongoing. Hosted model suite passed 702/702; no combined-green claim.",
   "limitations": [
     "No Pause/QoS fix established",
     "No physical-device or Release performance qualification",
     "No full release acceptance"
-  ]
+  ],
+  "minimumOS": "iOS17 focused16/16 strict pass. Original five journeys4/5; role-selector failure preserved. Corrected affected journey separately passes native/strict on17light and26.2dark."
 }

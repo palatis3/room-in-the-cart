@@ -1,0 +1,53 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "D420C2CA-0E73-4213-9B96-1EB62EB061F6",
+        "deviceName" : "RITC Cook Voice Minimum OS Nov08",
+        "exportedFileName" : "4D6905FC-D822-4D58-B77D-186C7AB031AC.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Shared full correction editor_0_B7C0CBF8-D122-4909-B9F4-92E4A54403FB.png",
+        "timestamp" : 1794135284.868
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "D420C2CA-0E73-4213-9B96-1EB62EB061F6",
+        "deviceName" : "RITC Cook Voice Minimum OS Nov08",
+        "exportedFileName" : "D04438FB-3305-4A29-892B-678B38584D59.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Shared dated cook copy_0_C33CA8A5-F0B7-4EB4-A2E1-B2C4A81F383C.png",
+        "timestamp" : 1794135265.571
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "D420C2CA-0E73-4213-9B96-1EB62EB061F6",
+        "deviceName" : "RITC Cook Voice Minimum OS Nov08",
+        "exportedFileName" : "E6D4FE64-9DC9-4DCF-9545-6EB214AA4D52.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Shared saved cook history_0_6F8436F7-A919-4B4A-A2C4-8162C22DAC95.png",
+        "timestamp" : 1794135262.507
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "D420C2CA-0E73-4213-9B96-1EB62EB061F6",
+        "deviceName" : "RITC Cook Voice Minimum OS Nov08",
+        "exportedFileName" : "874EB857-38BE-4D61-9F0D-16DCE1DEE6F1.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Shared dated cook copy_0_BA2FE79A-98EC-4D51-9F34-5D928DE35FF4.png",
+        "timestamp" : 1794135232.619
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "D420C2CA-0E73-4213-9B96-1EB62EB061F6",
+        "deviceName" : "RITC Cook Voice Minimum OS Nov08",
+        "exportedFileName" : "ECC65F69-C087-42B9-B1BD-B44EA8A3DEE3.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Shared saved cook history_0_C84F8896-8E25-41E0-9C39-EE2922A51DD6.png",
+        "timestamp" : 1794135229.437
+      }
+    ],
+    "testIdentifier" : "SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord()",
+    "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord"
+  }
+]
