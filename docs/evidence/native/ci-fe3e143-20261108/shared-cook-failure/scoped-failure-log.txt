@@ -1,0 +1,19 @@
+424:     t =   117.19s Waiting 3.0s for Any (First Match) to exist
+1604:     t =   117.39s     Checking `Expect predicate `existsNoRetry == 1` for object "delivery.cook.history" Button`
+1605:     t =   117.39s         Checking existence of `"delivery.cook.history" Button`
+1606:     t =   117.43s Find the "delivery.cook.history" Button
+1607:     t =   117.48s Tap "delivery.cook.history" Button
+1608:     t =   117.48s     Wait for dev.roominthecart.app.debug to idle
+1609:     t =   117.49s     Find the "delivery.cook.history" Button
+1610:     t =   117.53s     Check for interrupting elements affecting "delivery.cook.history" Button
+1611:     t =   117.58s     Synthesize event
+1612:     t =   117.88s     Wait for dev.roominthecart.app.debug to idle
+2369:     t =   116.85s Tap "0" Switch
+2370:     t =   116.85s     Wait for dev.roominthecart.app.debug to idle
+2371:     t =   117.03s     Find the "0" Switch
+2372:     t =   117.44s     Check for interrupting elements affecting "0" Switch
+2373:     t =   117.51s     Synthesize event
+2374:     t =   117.81s     Wait for dev.roominthecart.app.debug to idle
+2375:     t =   117.82s Find the "delivery.cook.confirmDestination" Switch
+2376: /Users/runner/work/room-in-the-cart/room-in-the-cart/ios/UITests/SharedDeliveryUITests.swift:544: error: -[RoomInTheCartUITests.SharedDeliveryUITests testShopperSavesDatedCookCopyAndReopensRecipientSendRecord] : XCTAssertEqual failed: ("Optional("0")") is not equal to ("Optional("1")")
+2380: Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperSavesDatedCookCopyAndReopensRecipientSendRecord]' failed (119.868 seconds).

@@ -1,0 +1,6 @@
+{
+  "consoleStatus": "unavailable: No console log available; first attempt retained, no repeat",
+  "screenshotExit": 0,
+  "originalUnchanged": true,
+  "scope": "Read-only archived CI clone; missing console is not evidence the setter was not invoked."
+}
