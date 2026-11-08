@@ -1,0 +1,58 @@
+{
+  "sourceCommit": "f9c9bcfddbcb84ebcd503aa89446e969357bf084",
+  "sourceManifestSHA256": "5bcb428454a3a326068278d675a8403995501deb8ac96fb482f9ac0f819cedbf",
+  "compilationConditions": "DEBUG COMPARISON_KEYBOARD_DIAGNOSTIC",
+  "toolchain": "Xcode 27.1\nBuild version 27A9275",
+  "runtime": {
+    "identifier": "com.apple.CoreSimulator.SimRuntime.iOS-26-2",
+    "name": "iOS 26.2",
+    "version": "26.2",
+    "buildversion": "23C54",
+    "runtimeRoot": "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot"
+  },
+  "nativeExit": 0,
+  "strictExit": 0,
+  "expectedCount": 8,
+  "originalEightCaseOrder": true,
+  "sourcePinsAfterRun": true,
+  "originalBundleUnchanged": true,
+  "recordedTestExportRuntimeWarnings": 0,
+  "idleDiagnostics": {
+    "lineCount": 9513,
+    "testStarts": 8,
+    "restartLines": [],
+    "groups": []
+  },
+  "traceCapture": {
+    "status": "unavailable",
+    "notEvidenceOfAbsentEvents": true,
+    "nativeExitCode": 0,
+    "strictExitCode": 0,
+    "originalEightCaseOrder": true,
+    "parserExecuted": false,
+    "errorType": "RuntimeError",
+    "reason": "Object export failed/capped/timed out: unavailable, never absent events",
+    "originalBundleUnchanged": true
+  },
+  "scope": "Original eight-case diagnostic passed without reproducing the timeout. Partial stdout is unavailable evidence for complete callback coverage; no causal repair or production code change.",
+  "hashes": {
+    "run.json": "86cfd091c5f4d98faa440330ebaa0308ef1cdb27c7ede5c072dceea1f62bfb44",
+    "selectors.txt": "661bf13a564fb7a194b34cceef833c32c664ba2055a2bacc0863efacfd8ca125",
+    "native.log": "76b3976e2311174e0d84d41f155d08d741eb95563bab1547b5e26976cf1e3007",
+    "inspection/verification.json": "c1c0e0aada0e68f98f1ea8fb4535917a1c8ad5a04d76fe2b9696eccef41cdbc0",
+    "inspection/strict.stdout": "6e66682e6e3ece769eae88f983fe34b5d6e2fb9aae6175b55fa0d1521adcc539",
+    "inspection/original-manifest-before.json": "30533c723dca9619c785c8d5e2ed4290c12b5ae257080f9bc8279fe11612c470",
+    "stdout-export-r1/export-status.json": "14101d28c2d5d1f5c5a2319f831b8e34c2c25b0eb7eb7b236039cbfc60d8e9f3",
+    "stdout-export-r1/stdout-preflight.json": "e3d750b9a05886b59f74336f26b67d72ff05c876b6fbf0d5ed26a3794ee2d3f0"
+  },
+  "caseDurationsSeconds": [
+    33.964,
+    232.076,
+    31.1,
+    87.793,
+    115.009,
+    91.143,
+    12.052,
+    83.219
+  ]
+}

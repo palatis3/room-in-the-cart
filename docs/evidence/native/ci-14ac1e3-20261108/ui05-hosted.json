@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "source": {
+    "headSha": "14ac1e39021eaa2047e21bd3ac24328e6b36a068",
+    "runId": 42457092386,
+    "jobId": 128663596395,
+    "jobUrl": "https://github.com/palatis3/room-in-the-cart/actions/runs/42457092386/job/128663596395",
+    "statusReceipt": ".build/CI14AC1E3Nov08/status-20261108T083246Z.json",
+    "sourceKind": "GitHub Actions decoded job log and artifact metadata via GitHub connector"
+  },
+  "native": {
+    "selected": 6,
+    "executed": 6,
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "caseDurationSeconds": 1393.55,
+    "elapsedSelectedSuiteSeconds": 1393.589,
+    "testExportRuntimeWarnings": 0,
+    "testExportCasesExaminedForWarnings": 6,
+    "summaryRuntimeWarningsFieldAvailable": false,
+    "runnerRestartBoundariesObserved": 0,
+    "animationIdleMessagesObserved": 0,
+    "analyzedNativeLogLines": 3852,
+    "coverage": "Hosted checker reported no matching messages in supplied console, which does not establish complete log coverage or absence of delays."
+  },
+  "tests": [
+    {
+      "selector": "RoomInTheCartUITests/ContextualNavigationUITests/testRangedPackNeedsAnExactAmountAndKeepsItsOriginalAfterRelaunch",
+      "durationSeconds": 84.396,
+      "jobLogLine": 752
+    },
+    {
+      "selector": "RoomInTheCartUITests/FreeJourneyUITests/testEnglishMealWeekListAndGridShowDatedProtectedLunch",
+      "durationSeconds": 285.957,
+      "jobLogLine": 1519
+    },
+    {
+      "selector": "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testFullyCoveredSavesUseAtHomePlanWithoutPurchasedItemOrRetailerOrder",
+      "durationSeconds": 198.229,
+      "jobLogLine": 1981
+    },
+    {
+      "selector": "RoomInTheCartUITests/PickupOfferUITests/testSavedOfferReopensAndUpdatesResponseAfterRestart",
+      "durationSeconds": 492.583,
+      "jobLogLine": 3671
+    },
+    {
+      "selector": "RoomInTheCartUITests/RoomInTheCartUITests/testComparisonSaveStaysInsideViewportAboveTabBar",
+      "durationSeconds": 136.511,
+      "jobLogLine": 3950
+    },
+    {
+      "selector": "RoomInTheCartUITests/RoomInTheCartUITests/testOwnerExportReviewAndCancelledDeletionPreserveComparisonAfterRestart",
+      "durationSeconds": 195.874,
+      "jobLogLine": 4409
+    }
+  ],
+  "correction": {
+    "sourcePath": "ios/UITests/PickupOfferUITests.swift",
+    "selector": "RoomInTheCartUITests/PickupOfferUITests/testSavedOfferReopensAndUpdatesResponseAfterRestart",
+    "typeEventSeconds": 53.65,
+    "exactValuePredicateSeconds": 55.4,
+    "nextFieldCheckSeconds": 55.68,
+    "jobLogLines": [
+      2166,
+      2172,
+      2175
+    ],
+    "scope": "The hosted passing shard runs the same six selectors in the same order as the original failure. The first Branch entry shows one type event, exact-value completion check, then the next field.",
+    "sourceSHA256": "1a8729509e7d403bacba77aad61276c4fb0d28cdddd1078d6db3bb740ef8f077",
+    "sourceTypeEventLine": 43
+  },
+  "artifact": {
+    "id": 13610024509,
+    "name": "iphone-results-ui-05-1",
+    "bytes": 27215225,
+    "digest": "sha256:6a65397faf02bad97b4725be4f1f95eb6288c895825837eaf58bea30fdac6cbe",
+    "expiresAt": "2026-11-15T08:28:06Z",
+    "downloaded": false
+  },
+  "privateReceiptSHA256": "0e1668eae01c72e65790236b334cac662f3e36f5c6e038736f4ab5353027df13",
+  "jobLogExcerptSHA256": "a4627f8fdd84808eec1b7c98527243848c013998245fe065b1d67ee5f87086f2",
+  "originalSelectorOrderMatched": true,
+  "releaseAcceptance": false
+}
