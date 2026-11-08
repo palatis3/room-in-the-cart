@@ -1,0 +1,225 @@
+{
+  "observedAtUtc": "2026-11-08T01:43:13Z",
+  "previousSnapshot": "monitor-latest.json",
+  "previousObservedAtUtc": "2026-11-08T01:31:40Z",
+  "headSha": "f90ad75a2e561891b2014ecb234d19639bcaed4c",
+  "ref": "codex/parallel-ios-ci",
+  "runs": [
+    {
+      "runId": 42428216003,
+      "name": "iOS deep checks",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428216003",
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "runId": 42428215928,
+      "name": "Security checks",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215928",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "runId": 42428215935,
+      "name": "Build and test",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215935",
+      "status": "pending",
+      "conclusion": null,
+      "visibleJobCounts": {
+        "success": 12,
+        "failure": 3,
+        "in_progress": 3,
+        "pending": 1
+      },
+      "remainingJobs": [
+        {
+          "jobId": 128579225683,
+          "name": "ios-tests (ui-06, 8)",
+          "status": "in_progress"
+        },
+        {
+          "jobId": 128583797613,
+          "name": "ios-tests (ui-07, 8)",
+          "status": "in_progress"
+        },
+        {
+          "jobId": 128588297174,
+          "name": "ios-tests (ui-09, 8)",
+          "status": "pending"
+        },
+        {
+          "jobId": 128588387968,
+          "name": "ios-tests (ui-10, 7)",
+          "status": "in_progress"
+        }
+      ]
+    },
+    {
+      "runId": 42428215958,
+      "name": "Native Swift HTTPS and PostgreSQL",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215958",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "runId": 42428215952,
+      "name": "iOS Release performance",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215952",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "runId": 42428215965,
+      "name": "iOS fixture checks",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215965",
+      "status": "pending",
+      "conclusion": null,
+      "visibleJobCounts": {
+        "success": 8,
+        "in_progress": 2,
+        "pending": 3
+      },
+      "remainingJobs": [
+        {
+          "jobId": 128575557708,
+          "name": "Fixture (contributor-balanced-03)",
+          "status": "in_progress"
+        },
+        {
+          "jobId": 128588917127,
+          "name": "Fixture (SharedDeliveryUITests-stock-and-purchase)",
+          "status": "pending"
+        },
+        {
+          "jobId": 128589072389,
+          "name": "Fixture (SharedDeliveryUITests-recovery-cook-and-closeout)",
+          "status": "pending"
+        },
+        {
+          "jobId": 128590839245,
+          "name": "Fixture (SharedFallbackUITests)",
+          "status": "in_progress"
+        },
+        {
+          "jobId": 128591114527,
+          "name": "Fixture (SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview)",
+          "status": "pending"
+        }
+      ]
+    }
+  ],
+  "changes": [
+    {
+      "runId": 42428215965,
+      "jobId": 128575557741,
+      "name": "Fixture (contributor-balanced-01)",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215965/job/128575557741",
+      "from": "in_progress",
+      "to": "success",
+      "time": "2026-11-08T01:32:11Z"
+    },
+    {
+      "runId": 42428215935,
+      "jobId": 128583797613,
+      "name": "ios-tests (ui-07, 8)",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215935/job/128583797613",
+      "from": "pending",
+      "to": "in_progress",
+      "time": "2026-11-08T01:32:14Z"
+    },
+    {
+      "runId": 42428215965,
+      "jobId": 128582738305,
+      "name": "Fixture (RecordsMediaUITests)",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215965/job/128582738305",
+      "from": "in_progress",
+      "to": "success",
+      "time": "2026-11-08T01:33:28Z"
+    },
+    {
+      "runId": 42428215965,
+      "jobId": 128591114527,
+      "name": "Fixture (SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview)",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215965/job/128591114527",
+      "from": "not_listed",
+      "to": "pending",
+      "time": "2026-11-08T01:33:28Z"
+    },
+    {
+      "runId": 42428215935,
+      "jobId": 128588387968,
+      "name": "ios-tests (ui-10, 7)",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215935/job/128588387968",
+      "from": "pending",
+      "to": "in_progress",
+      "time": "2026-11-08T01:33:31Z"
+    },
+    {
+      "runId": 42428215935,
+      "jobId": 128585259808,
+      "name": "ios-tests (ui-08, 7)",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215935/job/128585259808",
+      "from": "in_progress",
+      "to": "success",
+      "time": "2026-11-08T01:43:00Z"
+    },
+    {
+      "runId": 42428215965,
+      "jobId": 128590839245,
+      "name": "Fixture (SharedFallbackUITests)",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215965/job/128590839245",
+      "from": "not_listed",
+      "to": "in_progress",
+      "time": "2026-11-08T01:43:04Z"
+    }
+  ],
+  "newFailures": [],
+  "verifiedSuccess": [
+    {
+      "jobId": 128585259808,
+      "selected": 7,
+      "passed": 7,
+      "runtimeWarnings": 0,
+      "runnerRestarts": 0,
+      "artifact": {
+        "id": 13599397430,
+        "name": "iphone-results-ui-08-1",
+        "apiSHA256": "51f0ea391e511a6c6f3029e28dc0719876598ec92bb59318c6307f9d8fbe7cd8"
+      },
+      "hostedLogLines": [
+        "2026-11-08T01:42:42.3595330Z Executed 7 of 7 selected tests.",
+        "2026-11-08T01:42:42.3671020Z The XCTest log confirms one start and one passing completion per selected test.",
+        "2026-11-08T01:42:42.3671880Z The XCTest test export recorded 0 runtime warning occurrences across 7 examined tests."
+      ]
+    },
+    {
+      "jobId": 128575557741,
+      "selected": 3,
+      "passed": 3,
+      "runtimeWarnings": 0,
+      "runnerRestarts": 0,
+      "artifact": {
+        "id": 13599096773,
+        "name": "iphone-fixture-results-contributor-balanced-01-1",
+        "apiSHA256": "e091a9cdd813543306db9a6edebe538e8b165f74be3d9ee4dcd75d5a9059d2c2"
+      },
+      "hostedLogLines": [
+        "2026-11-08T01:31:41.3748940Z Executed 3 of 3 selected tests.",
+        "2026-11-08T01:31:41.4171650Z The XCTest log confirms one start and one passing completion per selected test.",
+        "2026-11-08T01:31:41.4432490Z The XCTest test export recorded 0 runtime warning occurrences across 3 examined tests."
+      ]
+    }
+  ],
+  "speechDiagnostic": {
+    "runId": 42428215965,
+    "jobId": 128589072389,
+    "jobUrl": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215965/job/128589072389",
+    "shard": "SharedDeliveryUITests-recovery-cook-and-closeout",
+    "jobState": "pending",
+    "runnerId": null,
+    "listedStepCount": 0,
+    "expectedArtifact": "iphone-fixture-results-SharedDeliveryUITests-recovery-cook-and-closeout-1",
+    "artifactState": "not_listed",
+    "attribution": null
+  }
+}

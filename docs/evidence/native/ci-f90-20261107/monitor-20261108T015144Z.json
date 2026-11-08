@@ -1,0 +1,209 @@
+{
+  "observedAtUtc": "2026-11-08T01:51:44Z",
+  "previousSnapshot": "monitor-20261108T014313Z.json",
+  "previousObservedAtUtc": "2026-11-08T01:43:13Z",
+  "headSha": "f90ad75a2e561891b2014ecb234d19639bcaed4c",
+  "ref": "codex/parallel-ios-ci",
+  "runs": [
+    {
+      "runId": 42428215935,
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215935",
+      "status": "in_progress",
+      "conclusion": null,
+      "visibleJobCounts": {
+        "success": 12,
+        "failure": 3,
+        "in_progress": 4
+      },
+      "remainingJobs": [
+        {
+          "jobId": 128579225683,
+          "name": "ios-tests (ui-06, 8)",
+          "status": "in_progress"
+        },
+        {
+          "jobId": 128583797613,
+          "name": "ios-tests (ui-07, 8)",
+          "status": "in_progress"
+        },
+        {
+          "jobId": 128588297174,
+          "name": "ios-tests (ui-09, 8)",
+          "status": "in_progress"
+        },
+        {
+          "jobId": 128588387968,
+          "name": "ios-tests (ui-10, 7)",
+          "status": "in_progress"
+        }
+      ]
+    },
+    {
+      "runId": 42428215965,
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215965",
+      "status": "pending",
+      "conclusion": null,
+      "visibleJobCounts": {
+        "success": 8,
+        "failure": 1,
+        "pending": 4,
+        "in_progress": 1
+      },
+      "remainingJobs": [
+        {
+          "jobId": 128588917127,
+          "name": "Fixture (SharedDeliveryUITests-stock-and-purchase)",
+          "status": "pending"
+        },
+        {
+          "jobId": 128589072389,
+          "name": "Fixture (SharedDeliveryUITests-recovery-cook-and-closeout)",
+          "status": "pending"
+        },
+        {
+          "jobId": 128590839245,
+          "name": "Fixture (SharedFallbackUITests)",
+          "status": "in_progress"
+        },
+        {
+          "jobId": 128591114527,
+          "name": "Fixture (SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview)",
+          "status": "pending"
+        },
+        {
+          "jobId": 128594978722,
+          "name": "Fixture (SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn)",
+          "status": "pending"
+        }
+      ]
+    }
+  ],
+  "changes": [
+    {
+      "runId": 42428215965,
+      "jobId": 128575557708,
+      "name": "Fixture (contributor-balanced-03)",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215965/job/128575557708",
+      "from": "in_progress",
+      "to": "failure",
+      "time": "2026-11-08T01:51:28Z"
+    },
+    {
+      "runId": 42428215965,
+      "jobId": 128594978722,
+      "name": "Fixture (SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn)",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215965/job/128594978722",
+      "from": "not_listed",
+      "to": "pending",
+      "time": "2026-11-08T01:51:28Z"
+    },
+    {
+      "runId": 42428215935,
+      "jobId": 128588297174,
+      "name": "ios-tests (ui-09, 8)",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215935/job/128588297174",
+      "from": "pending",
+      "to": "in_progress",
+      "time": "2026-11-08T01:51:31Z"
+    }
+  ],
+  "newFailures": [
+    {
+      "runId": 42428215965,
+      "jobId": 128575557708,
+      "failedStep": "Run selected fixture tests and require complete execution",
+      "classification": "Native XCTest assertion on pack match switch",
+      "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite",
+      "nativeResult": {
+        "selected": 10,
+        "passed": 9,
+        "failed": 1,
+        "skipped": 0,
+        "runtimeWarnings": 0,
+        "runnerRestarts": 0,
+        "failedTestDurationSeconds": 189.9726949930191
+      },
+      "detail": "The helper dismissed the keyboard, revealed household.pack.a.matched and tapped the trailing switch once using normalized coordinates (0.92, 0.5). The immediate XCTest readback was 0 and the assertion required 1. The captured log establishes the failed readback; input delivery and the cause of the remaining off value require further inspection.",
+      "source": [
+        {
+          "path": "ios/UITests/HouseholdRequestPackUITests.swift",
+          "line": 299
+        },
+        {
+          "path": "ios/UITests/HouseholdRequestPackUITests.swift",
+          "line": 307
+        }
+      ],
+      "hostedFailureAttachments": [
+        "S24-request-pack-failure",
+        "S24-failure-accessibility-hierarchy",
+        "S24-failure-preview-diagnostics"
+      ],
+      "artifact": {
+        "id": 13599104299,
+        "name": "iphone-fixture-results-contributor-balanced-03-1",
+        "apiSize": 54480673,
+        "apiDigest": "sha256:6dd0afced63ef9b8781e4f87f8f184e3b42619fb4bae88949ff27340ca9403d4",
+        "localReceipt": ".build/CIF90Nov07/balanced-03/range-receipt.json",
+        "receiptSHA256": "8000c2a93f384899b4620eb05399830d9e93757bce51ac867fe79a426cb732ef",
+        "transferredBytes": 102442,
+        "fullArchiveDownloaded": false,
+        "fullArchiveDigestVerified": false,
+        "verifiedMembers": [
+          {
+            "file": "Tests.log",
+            "bytes": 645037,
+            "sha256": "fdd6ce3e58606062f3335d0de9425a06ba30a3a35034a25fa8cbca34b78209ed",
+            "zipCRC": 2124272440,
+            "CRCVerified": true
+          },
+          {
+            "file": "test-details.json",
+            "bytes": 5986,
+            "sha256": "c24df839b39b9384a17de082ce766b849afd258866e54c8f8c355a063fd82d93",
+            "zipCRC": 894660607,
+            "CRCVerified": true
+          },
+          {
+            "file": "test-plan/contributor-balanced-03.txt",
+            "bytes": 1122,
+            "sha256": "7109fc0cd8617c8451b5a457fede7476fdf7e8ee17bd203e637c6c1eec257d16",
+            "zipCRC": 3909865589,
+            "CRCVerified": true
+          },
+          {
+            "file": "test-runtime-warnings.json",
+            "bytes": 184,
+            "sha256": "8ae08d078872d604777a3b47b9516196c1b0dd897187b57ff939bb71aa337ef6",
+            "zipCRC": 2856964476,
+            "CRCVerified": true
+          },
+          {
+            "file": "test-summary.json",
+            "bytes": 1313,
+            "sha256": "9145e77e4e79035a9368bccd86cdf8a803e6280777b5277f051f48ae0f1e4fcc",
+            "zipCRC": 2447667540,
+            "CRCVerified": true
+          }
+        ],
+        "consoleEvidenceLines": [
+          6615
+        ]
+      },
+      "offlineConsoleReplayFailures": [
+        "XCTest logged a failure for RoomInTheCartUITests/HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite at log line 6615.",
+        "XCTest log requires one start then one pass for RoomInTheCartUITests/HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite; found ['start', 'non-passing or unrecognized completion'].",
+        "XCTest log requires one successful result banner; found ['FAILED']."
+      ]
+    }
+  ],
+  "speechDiagnostic": {
+    "runId": 42428215965,
+    "jobId": 128589072389,
+    "jobState": "pending",
+    "runnerId": null,
+    "expectedArtifact": "iphone-fixture-results-SharedDeliveryUITests-recovery-cook-and-closeout-1",
+    "artifactState": "not_listed",
+    "attribution": null
+  }
+}

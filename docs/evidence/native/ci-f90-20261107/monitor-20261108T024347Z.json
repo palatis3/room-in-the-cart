@@ -1,0 +1,79 @@
+{
+  "observedAtUtc": "2026-11-08T02:43:47Z",
+  "previousSnapshot": "monitor-20261108T023848Z.json",
+  "previousObservedAtUtc": "2026-11-08T02:38:48Z",
+  "headSha": "f90ad75a2e561891b2014ecb234d19639bcaed4c",
+  "ref": "codex/parallel-ios-ci",
+  "runs": [
+    {
+      "runId": 42428215935,
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215935",
+      "status": "completed",
+      "conclusion": "failure",
+      "visibleJobCounts": {
+        "success": 13,
+        "failure": 7
+      },
+      "remainingJobs": []
+    },
+    {
+      "runId": 42428215965,
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215965",
+      "status": "in_progress",
+      "conclusion": null,
+      "visibleJobCounts": {
+        "success": 17,
+        "failure": 2,
+        "in_progress": 1
+      },
+      "remainingJobs": [
+        {
+          "jobId": 128600647338,
+          "name": "Fixture (SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable)",
+          "status": "in_progress"
+        }
+      ]
+    }
+  ],
+  "changes": [
+    {
+      "runId": 42428215965,
+      "jobId": 128603089001,
+      "name": "Fixture (DinnerDecisionSheetUITests)",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215965/job/128603089001",
+      "from": "in_progress",
+      "to": "success",
+      "time": "2026-11-08T02:40:54Z"
+    }
+  ],
+  "newFailures": [],
+  "speechDiagnostic": {
+    "runId": 42428215965,
+    "jobId": 128589072389,
+    "jobState": "completed",
+    "conclusion": "failure",
+    "artifactState": "collected",
+    "originalEvidence": "speech-runtime-original/proof.json",
+    "causalEvidence": "speech-causal-review/proof.json"
+  },
+  "verifiedSuccess": [
+    {
+      "jobId": 128603089001,
+      "selected": 5,
+      "passed": 5,
+      "runtimeWarnings": 0,
+      "runnerRestarts": 0,
+      "hostedLogLines": [
+        "2026-11-08T02:40:31.4585580Z Executed 5 of 5 selected tests.",
+        "2026-11-08T02:40:31.4600870Z The XCTest log confirms one start and one passing completion per selected test.",
+        "2026-11-08T02:40:31.4601490Z The XCTest test export recorded 0 runtime warning occurrences across 5 examined tests."
+      ]
+    }
+  ],
+  "fixtureMatrix": {
+    "plannedRows": 17,
+    "listedRows": 17,
+    "notListedRows": [],
+    "sourceInventory": "monitor-20261108T023154Z.json"
+  }
+}
