@@ -1,0 +1,9 @@
+# Staging042 local preparation
+
+The fresh encrypted041 backup reopened and verified through the login Keychain. Two new actual restores passed, and applying042 to only the second clone preserved the129 original non-registry table data sets, verified all42 migration checksums and exact schema/security changes, and left the original baseline byte-identical. The new amendment table is empty. Both encrypted images are detached and all owned restore servers stopped. [Verified receipt](restore-rehearsal.json).
+
+The first rehearsal failed on an existing foreign-key rendering difference caused by session search_path. Its failure, clones and reviewed helper set are preserved privately. A synthetic control reproduced that mismatch; the narrow catalog-rendering correction still rejects actual changes to referenced schema and deletion behavior. The expected042 catalog delta was unchanged. A second rehearsal then passed using two new clones from the same fresh verified capture.
+
+This is local recovery proof, not approval or completion of a hosted042 rollout. Live staging remains041. Before requesting rollout approval, prepare the guarded migration, exact service/web candidate, a verified maintenance deployment, and protection checks for older immutable URLs. Ordinary041 application rollback is unsafe after confirmed-order amendment use. [Compatibility audit](../staging-042-compatibility-20261107/verification.json) and [maintenance boundary](../staging-042-compatibility-20261107/maintenance-proposal/README.md).
+
+Private capture/helper/restore logs remain under `.build/StagingBackup041-Nov08/`, `.build/StagingDB042-Nov08/` and the authorized encrypted archives. Credentials and private row data are not included here. Managed-provider internals, Storage bytes, Vault keys and password reprovisioning remain outside this restore scope.
