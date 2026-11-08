@@ -1,0 +1,20 @@
+{
+  "preparedAtUTC": "2026-11-08T13:59:56.770859+00:00",
+  "originalHead": "a30506596ad3a0103396fccb29800c629c92bc30",
+  "trackedFiles": 4673,
+  "trackedBlobBytes": 148572621,
+  "allOriginalGitBlobsVerified": true,
+  "changedFiles": [
+    "ios/App/Theme.swift",
+    "ios/Features/Pickup/PickupHomeView.swift"
+  ],
+  "excludedTrackedFiles": [],
+  "originalSelectorsSHA256": "cb9657808f4c27eff4ccbb89f712120cd1e990f2e58a0094dd70b6af5aafb022",
+  "originalManifestSHA256": "63a83b70293711f50f16ae7a0f5b85f219ea035c0b5fcf1210f1b90339da6772",
+  "candidateManifestSHA256": "006479011e6822d4591e9c83b746c7f3741bf59c5ff581e889373a4dc57cf9d6",
+  "freeBytesAfterMaterialization": 11038420992,
+  "dedicatedNewDD": "/Users/palatis/Room in the Cart/.build/CIA305065Nov08/ui09-animation-owner-execution-r1/dd",
+  "nativeExecution": false,
+  "sourceCompilation": false,
+  "rootOwnedDevice": "4C7FAE04-D40B-4ADC-8F75-1366C09B1695"
+}

@@ -1,0 +1,41 @@
+{
+  "originalHead": "a30506596ad3a0103396fccb29800c629c92bc30",
+  "trackedFiles": 4673,
+  "originalManifestSHA256": "63a83b70293711f50f16ae7a0f5b85f219ea035c0b5fcf1210f1b90339da6772",
+  "candidateManifestSHA256": "006479011e6822d4591e9c83b746c7f3741bf59c5ff581e889373a4dc57cf9d6",
+  "diagnosticPatchSHA256": "5df17229f21adaddfa473ff63445cdf6efcdcfd2d3df24647393d6d68676489d",
+  "changedFiles": {
+    "ios/App/Theme.swift": {
+      "original": {
+        "mode": "100644",
+        "gitBlob": "133bbe4e77c1750e860a2d5b54f7c41ec5f5dd3c",
+        "sha256": "8c8ace01c987920f0b694c077694354e4a20bd5abd22d5c70c1b60d8304a9cf3",
+        "bytes": 4500
+      },
+      "candidate": {
+        "mode": "100644",
+        "gitBlob": "133bbe4e77c1750e860a2d5b54f7c41ec5f5dd3c",
+        "sha256": "79cbcedfd5c7d793f10120cc2637b089776178ff3fd4c4388eccaac918bea3e0",
+        "bytes": 16869
+      }
+    },
+    "ios/Features/Pickup/PickupHomeView.swift": {
+      "original": {
+        "mode": "100644",
+        "gitBlob": "32fbb5824a715f59e9b3e2f9c3da60b6b4c1746d",
+        "sha256": "7a8975abb0eb0344868a617e11ab2a53b553641282940081665bd717bdbc26f5",
+        "bytes": 44899
+      },
+      "candidate": {
+        "mode": "100644",
+        "gitBlob": "32fbb5824a715f59e9b3e2f9c3da60b6b4c1746d",
+        "sha256": "6ba2279f96d3a5af1ff5c8b2aecb64e4ae4f3c6eb77520ab2d29ef9c0c4c1690",
+        "bytes": 45092
+      }
+    }
+  },
+  "other4671TrackedEntriesUnchanged": true,
+  "allUITestEntriesUnchanged": true,
+  "selectorsSHA256": "cb9657808f4c27eff4ccbb89f712120cd1e990f2e58a0094dd70b6af5aafb022",
+  "scope": "Scratch diagnostic overlay only; no product repair. Large complete source manifests retained privately and bound by hashes."
+}

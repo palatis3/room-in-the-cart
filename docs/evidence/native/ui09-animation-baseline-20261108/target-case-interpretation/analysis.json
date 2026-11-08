@@ -1,0 +1,866 @@
+{
+  "scope": "closed target PID39312 trace only; full eight-case test run still active at analysis; no xcresult inspection",
+  "analyzedAtUTC": "2026-11-08T14:14:49.140987+00:00",
+  "traceSHA256": "e36d3b6059450641b4789a456f84b1c746774d919a632971655821516012e7ff",
+  "collectionReceiptSHA256": "c95a553fdaecdbbb560fb5e22d3f88c7b08f9ea67e5e07ee28625c571c779896",
+  "candidateSourceManifestSHA256": "006479011e6822d4591e9c83b746c7f3741bf59c5ff581e889373a4dc57cf9d6",
+  "targetCase": "ContextualNavigationUITests/testFreeContextualRoutesKeepPrivateAndSharedWorkSeparate",
+  "caseDurationSeconds": 130.127,
+  "pidBinding": {
+    "PID": 39312,
+    "caseStart": {
+      "event": "caseMarker",
+      "observedUTC": "2026-11-08T14:08:25.318426+00:00",
+      "elapsedSeconds": 136.451951708,
+      "test": "ContextualNavigationUITests/testFreeContextualRoutesKeepPrivateAndSharedWorkSeparate",
+      "state": "started",
+      "logByteOffset": 42166,
+      "logLineBytes": 130
+    },
+    "caseEnd": {
+      "event": "caseMarker",
+      "observedUTC": "2026-11-08T14:10:33.767397+00:00",
+      "elapsedSeconds": 264.90004575,
+      "test": "ContextualNavigationUITests/testFreeContextualRoutesKeepPrivateAndSharedWorkSeparate",
+      "state": "passed",
+      "logByteOffset": 93662,
+      "logLineBytes": 147
+    },
+    "processPresent": {
+      "event": "processPresent",
+      "observedUTC": "2026-11-08T14:08:25.615231+00:00",
+      "elapsedSeconds": 136.74877895799997,
+      "pid": 39312,
+      "executableRelativeToOwnedDevice": "data/Containers/Bundle/Application/EAC8BE6A-3F9F-46DC-986D-77F5BD5C198C/RoomInTheCart.app/RoomInTheCart",
+      "logByteOffsetObserved": 42953,
+      "psMS": 224.4965830000183
+    },
+    "processAbsent": {
+      "event": "processAbsent",
+      "observedUTC": "2026-11-08T14:10:34.008785+00:00",
+      "elapsedSeconds": 265.141429667,
+      "pid": 39312,
+      "executableRelativeToOwnedDevice": "data/Containers/Bundle/Application/EAC8BE6A-3F9F-46DC-986D-77F5BD5C198C/RoomInTheCart.app/RoomInTheCart",
+      "logByteOffsetObserved": 94543,
+      "psMS": 181.966999999986
+    },
+    "birthTimeUTC": "2026-11-08T14:09:15.913071+00:00",
+    "modifiedTimeUTC": "2026-11-08T14:10:20.312441+00:00"
+  },
+  "inventoriesMS": {
+    "n": 14,
+    "median": 1.5657291514798999,
+    "p95LinearR7": 2.613068727077916,
+    "max": 3.121666726656258,
+    "sum": 23.97770807147026
+  },
+  "derivedSampleEncodingMS": {
+    "n": 14,
+    "median": 0.6442083395086229,
+    "p95LinearR7": 0.987368740607053,
+    "max": 0.9947082726284862,
+    "sum": 9.494124911725521
+  },
+  "inventoryPlusDerivedEncodingMS": {
+    "n": 14,
+    "median": 2.1736041526310146,
+    "p95LinearR7": 3.5762332845479246,
+    "max": 4.026250098831952,
+    "sum": 33.47183298319578
+  },
+  "encodingDerivation": "next cumulative total minus current cumulative total minus next inventory; final sample uses finished cumulative total. Does not include encoding for separate callback/dismiss/final records.",
+  "preDismissProbeMS": 3.1530833803117275,
+  "dismissClosureMS": 0.02845830749720335,
+  "footer": {
+    "bytesBeforeFooter": 114473,
+    "droppedRecords": 0,
+    "event": "sinkFinished",
+    "mainThreadEncodeMaxMS": 0.9947082726284862,
+    "writeMaxMS": 1.5696249902248383
+  },
+  "traversal": {
+    "visitedLayersMin": 346,
+    "visitedLayersMax": 560,
+    "truncatedTraversalCount": 0,
+    "skippedChildren": 0,
+    "skippedInterestingRecords": 0,
+    "truncatedAnimationKeys": 0
+  },
+  "keyboardEvents": {
+    "recorded": 16,
+    "cap": 16,
+    "capReached": true,
+    "lastRecordedTime": 12.995205000042915,
+    "firstDidHideTime": 0.4399973750114441,
+    "nextObservedKeyboardWillFrameTime": 2.4508003332884982,
+    "laterSilenceIsNotAbsence": true
+  },
+  "persistentPreexistingLayerRecords": [
+    {
+      "layer": 30,
+      "parent": 29,
+      "viewType": "_TtC5UIKitP33_ACD4A08F4BE9D00246F2A9C24A80CA8816UISDFElementView",
+      "keyCount": 7,
+      "oneAnimationTiming": {
+        "autoreverses": false,
+        "beginTime": 959698.2325758752,
+        "duration": -999999,
+        "kind": "other",
+        "property": "other",
+        "removedOnCompletion": false,
+        "repeatCount": 0,
+        "repeatDuration": 0,
+        "speed": 1,
+        "timeOffset": 0
+      },
+      "allKeysShareReportedTiming": true,
+      "preDoneAndThreePostHideRecordsIdentical": true,
+      "modelPresentationDifferences": {
+        "bounds": {
+          "model": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "presentation": [
+            0,
+            0,
+            274,
+            62
+          ]
+        },
+        "position": {
+          "model": [
+            0,
+            0
+          ],
+          "presentation": [
+            201,
+            31
+          ]
+        }
+      }
+    },
+    {
+      "layer": 35,
+      "parent": 34,
+      "viewType": "_TtCE5UIKitCSo17_UILiquidLensViewP33_4C400BD973F5E4E0B779D1A21A7AEB2711DestOutView",
+      "keyCount": 1,
+      "oneAnimationTiming": {
+        "autoreverses": false,
+        "beginTime": 959698.2325758752,
+        "duration": -999999,
+        "kind": "other",
+        "property": "other",
+        "removedOnCompletion": false,
+        "repeatCount": 0,
+        "repeatDuration": 0,
+        "speed": 1,
+        "timeOffset": 0
+      },
+      "allKeysShareReportedTiming": true,
+      "preDoneAndThreePostHideRecordsIdentical": true,
+      "modelPresentationDifferences": {
+        "position": {
+          "model": [
+            47,
+            27
+          ],
+          "presentation": [
+            51,
+            31
+          ]
+        }
+      }
+    },
+    {
+      "layer": 99,
+      "parent": 98,
+      "viewType": "_TtC5UIKitP33_ACD4A08F4BE9D00246F2A9C24A80CA8816UISDFElementView",
+      "keyCount": 7,
+      "oneAnimationTiming": {
+        "autoreverses": false,
+        "beginTime": 959740.0777468752,
+        "duration": -999999,
+        "kind": "other",
+        "property": "other",
+        "removedOnCompletion": false,
+        "repeatCount": 0,
+        "repeatDuration": 0,
+        "speed": 1,
+        "timeOffset": 0
+      },
+      "allKeysShareReportedTiming": true,
+      "preDoneAndThreePostHideRecordsIdentical": true,
+      "modelPresentationDifferences": {
+        "bounds": {
+          "model": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "presentation": [
+            0,
+            0,
+            44,
+            44
+          ]
+        },
+        "position": {
+          "model": [
+            0,
+            0
+          ],
+          "presentation": [
+            38,
+            22
+          ]
+        }
+      }
+    }
+  ],
+  "sampleSummary": [
+    {
+      "t": 0.00034904165659099817,
+      "due": 0,
+      "inventoryMS": 1.8906666664406657,
+      "sampleEncodingMSDerived": 0.6318333325907588,
+      "latenessMS": 0.3490416565909982,
+      "animationsCountInVisited": 16,
+      "interestingLayers": [
+        {
+          "id": 1,
+          "keys": 0,
+          "differentPresentation": false
+        },
+        {
+          "id": 14,
+          "keys": 0,
+          "differentPresentation": false
+        },
+        {
+          "id": 30,
+          "keys": 7,
+          "differentPresentation": true
+        },
+        {
+          "id": 35,
+          "keys": 1,
+          "differentPresentation": true
+        },
+        {
+          "id": 99,
+          "keys": 7,
+          "differentPresentation": true
+        },
+        {
+          "id": 330,
+          "keys": 1,
+          "differentPresentation": true
+        }
+      ],
+      "respondersCount": 2
+    },
+    {
+      "t": 0.04163474997039884,
+      "due": 0,
+      "inventoryMS": 1.1782917426899076,
+      "sampleEncodingMSDerived": 0.7314999820664525,
+      "latenessMS": 41.63474997039884,
+      "animationsCountInVisited": 27,
+      "interestingLayers": [
+        {
+          "id": 1,
+          "keys": 0,
+          "differentPresentation": false
+        },
+        {
+          "id": 4,
+          "keys": 4,
+          "differentPresentation": true
+        },
+        {
+          "id": 6,
+          "keys": 4,
+          "differentPresentation": false
+        },
+        {
+          "id": 7,
+          "keys": 2,
+          "differentPresentation": false
+        },
+        {
+          "id": 14,
+          "keys": 0,
+          "differentPresentation": false
+        },
+        {
+          "id": 30,
+          "keys": 7,
+          "differentPresentation": true
+        },
+        {
+          "id": 35,
+          "keys": 1,
+          "differentPresentation": true
+        },
+        {
+          "id": 99,
+          "keys": 7,
+          "differentPresentation": true
+        },
+        {
+          "id": 133,
+          "keys": 2,
+          "differentPresentation": true
+        }
+      ],
+      "respondersCount": 0
+    },
+    {
+      "t": 0.04396637505851686,
+      "due": 0.016,
+      "inventoryMS": 0.8362915832549334,
+      "sampleEncodingMSDerived": 0.656583346426487,
+      "latenessMS": 27.96637505851686,
+      "animationsCountInVisited": 27,
+      "interestingLayers": [
+        {
+          "id": 1,
+          "keys": 0,
+          "differentPresentation": false
+        },
+        {
+          "id": 4,
+          "keys": 4,
+          "differentPresentation": true
+        },
+        {
+          "id": 6,
+          "keys": 4,
+          "differentPresentation": false
+        },
+        {
+          "id": 7,
+          "keys": 2,
+          "differentPresentation": false
+        },
+        {
+          "id": 14,
+          "keys": 0,
+          "differentPresentation": false
+        },
+        {
+          "id": 30,
+          "keys": 7,
+          "differentPresentation": true
+        },
+        {
+          "id": 35,
+          "keys": 1,
+          "differentPresentation": true
+        },
+        {
+          "id": 99,
+          "keys": 7,
+          "differentPresentation": true
+        },
+        {
+          "id": 133,
+          "keys": 2,
+          "differentPresentation": true
+        }
+      ],
+      "respondersCount": 0
+    },
+    {
+      "t": 0.055679416633211076,
+      "due": 0.05,
+      "inventoryMS": 1.4119166880846024,
+      "sampleEncodingMSDerived": 0.7620833348482847,
+      "latenessMS": 5.679416633211074,
+      "animationsCountInVisited": 27,
+      "interestingLayers": [
+        {
+          "id": 1,
+          "keys": 0,
+          "differentPresentation": false
+        },
+        {
+          "id": 4,
+          "keys": 4,
+          "differentPresentation": true
+        },
+        {
+          "id": 6,
+          "keys": 4,
+          "differentPresentation": false
+        },
+        {
+          "id": 7,
+          "keys": 2,
+          "differentPresentation": false
+        },
+        {
+          "id": 14,
+          "keys": 0,
+          "differentPresentation": false
+        },
+        {
+          "id": 30,
+          "keys": 7,
+          "differentPresentation": true
+        },
+        {
+          "id": 35,
+          "keys": 1,
+          "differentPresentation": true
+        },
+        {
+          "id": 99,
+          "keys": 7,
+          "differentPresentation": true
+        },
+        {
+          "id": 133,
+          "keys": 2,
+          "differentPresentation": true
+        }
+      ],
+      "respondersCount": 0
+    },
+    {
+      "t": 0.10615741671063006,
+      "due": 0.1,
+      "inventoryMS": 2.1423333091661334,
+      "sampleEncodingMSDerived": 0.9834166849032044,
+      "latenessMS": 6.157416710630054,
+      "animationsCountInVisited": 27,
+      "interestingLayers": [
+        {
+          "id": 1,
+          "keys": 0,
+          "differentPresentation": false
+        },
+        {
+          "id": 4,
+          "keys": 4,
+          "differentPresentation": true
+        },
+        {
+          "id": 6,
+          "keys": 4,
+          "differentPresentation": false
+        },
+        {
+          "id": 7,
+          "keys": 2,
+          "differentPresentation": false
+        },
+        {
+          "id": 14,
+          "keys": 0,
+          "differentPresentation": false
+        },
+        {
+          "id": 30,
+          "keys": 7,
+          "differentPresentation": true
+        },
+        {
+          "id": 35,
+          "keys": 1,
+          "differentPresentation": true
+        },
+        {
+          "id": 99,
+          "keys": 7,
+          "differentPresentation": true
+        },
+        {
+          "id": 133,
+          "keys": 2,
+          "differentPresentation": true
+        }
+      ],
+      "respondersCount": 0
+    },
+    {
+      "t": 0.26546725002117455,
+      "due": 0.25,
+      "inventoryMS": 1.53758330270648,
+      "sampleEncodingMSDerived": 0.8293333230540156,
+      "latenessMS": 15.46725002117455,
+      "animationsCountInVisited": 27,
+      "interestingLayers": [
+        {
+          "id": 1,
+          "keys": 0,
+          "differentPresentation": false
+        },
+        {
+          "id": 4,
+          "keys": 4,
+          "differentPresentation": true
+        },
+        {
+          "id": 6,
+          "keys": 4,
+          "differentPresentation": false
+        },
+        {
+          "id": 7,
+          "keys": 2,
+          "differentPresentation": false
+        },
+        {
+          "id": 14,
+          "keys": 0,
+          "differentPresentation": false
+        },
+        {
+          "id": 30,
+          "keys": 7,
+          "differentPresentation": true
+        },
+        {
+          "id": 35,
+          "keys": 1,
+          "differentPresentation": true
+        },
+        {
+          "id": 99,
+          "keys": 7,
+          "differentPresentation": true
+        },
+        {
+          "id": 133,
+          "keys": 2,
+          "differentPresentation": true
+        }
+      ],
+      "respondersCount": 0
+    },
+    {
+      "t": 0.5342103750444949,
+      "due": 0.5,
+      "inventoryMS": 1.444874913431704,
+      "sampleEncodingMSDerived": 0.44733332470059395,
+      "latenessMS": 34.21037504449487,
+      "animationsCountInVisited": 15,
+      "interestingLayers": [
+        {
+          "id": 1,
+          "keys": 0,
+          "differentPresentation": false
+        },
+        {
+          "id": 14,
+          "keys": 0,
+          "differentPresentation": false
+        },
+        {
+          "id": 30,
+          "keys": 7,
+          "differentPresentation": true
+        },
+        {
+          "id": 35,
+          "keys": 1,
+          "differentPresentation": true
+        },
+        {
+          "id": 99,
+          "keys": 7,
+          "differentPresentation": true
+        }
+      ],
+      "respondersCount": 0
+    },
+    {
+      "t": 1.1561828333651647,
+      "due": 1,
+      "inventoryMS": 1.1642082827165723,
+      "sampleEncodingMSDerived": 0.4637084202840924,
+      "latenessMS": 156.1828333651647,
+      "animationsCountInVisited": 15,
+      "interestingLayers": [
+        {
+          "id": 1,
+          "keys": 0,
+          "differentPresentation": false
+        },
+        {
+          "id": 14,
+          "keys": 0,
+          "differentPresentation": false
+        },
+        {
+          "id": 30,
+          "keys": 7,
+          "differentPresentation": true
+        },
+        {
+          "id": 35,
+          "keys": 1,
+          "differentPresentation": true
+        },
+        {
+          "id": 99,
+          "keys": 7,
+          "differentPresentation": true
+        }
+      ],
+      "respondersCount": 0
+    },
+    {
+      "t": 2.1233790416736156,
+      "due": 2,
+      "inventoryMS": 1.6730832867324352,
+      "sampleEncodingMSDerived": 0.5001249955967069,
+      "latenessMS": 123.37904167361557,
+      "animationsCountInVisited": 15,
+      "interestingLayers": [
+        {
+          "id": 1,
+          "keys": 0,
+          "differentPresentation": false
+        },
+        {
+          "id": 14,
+          "keys": 0,
+          "differentPresentation": false
+        },
+        {
+          "id": 30,
+          "keys": 7,
+          "differentPresentation": true
+        },
+        {
+          "id": 35,
+          "keys": 1,
+          "differentPresentation": true
+        },
+        {
+          "id": 99,
+          "keys": 7,
+          "differentPresentation": true
+        }
+      ],
+      "respondersCount": 0
+    },
+    {
+      "t": 4.3648505416931584,
+      "due": 4,
+      "inventoryMS": 2.313583274371922,
+      "sampleEncodingMSDerived": 0.5805832333862782,
+      "latenessMS": 364.85054169315845,
+      "animationsCountInVisited": 16,
+      "interestingLayers": [
+        {
+          "id": 1,
+          "keys": 0,
+          "differentPresentation": false
+        },
+        {
+          "id": 14,
+          "keys": 0,
+          "differentPresentation": false
+        },
+        {
+          "id": 30,
+          "keys": 7,
+          "differentPresentation": true
+        },
+        {
+          "id": 35,
+          "keys": 1,
+          "differentPresentation": true
+        },
+        {
+          "id": 99,
+          "keys": 7,
+          "differentPresentation": true
+        },
+        {
+          "id": 370,
+          "keys": 1,
+          "differentPresentation": true
+        }
+      ],
+      "respondersCount": 2
+    },
+    {
+      "t": 8.40025850001257,
+      "due": 8,
+      "inventoryMS": 1.3301250291988254,
+      "sampleEncodingMSDerived": 0.46458328142762184,
+      "latenessMS": 400.25850001256913,
+      "animationsCountInVisited": 15,
+      "interestingLayers": [
+        {
+          "id": 1,
+          "keys": 0,
+          "differentPresentation": false
+        },
+        {
+          "id": 14,
+          "keys": 0,
+          "differentPresentation": false
+        },
+        {
+          "id": 30,
+          "keys": 7,
+          "differentPresentation": true
+        },
+        {
+          "id": 35,
+          "keys": 1,
+          "differentPresentation": true
+        },
+        {
+          "id": 99,
+          "keys": 7,
+          "differentPresentation": true
+        }
+      ],
+      "respondersCount": 0
+    },
+    {
+      "t": 16.95594816666562,
+      "due": 16,
+      "inventoryMS": 1.5938750002533197,
+      "sampleEncodingMSDerived": 0.5437500076368451,
+      "latenessMS": 955.9481666656211,
+      "animationsCountInVisited": 16,
+      "interestingLayers": [
+        {
+          "id": 1,
+          "keys": 0,
+          "differentPresentation": false
+        },
+        {
+          "id": 14,
+          "keys": 0,
+          "differentPresentation": false
+        },
+        {
+          "id": 30,
+          "keys": 7,
+          "differentPresentation": true
+        },
+        {
+          "id": 35,
+          "keys": 1,
+          "differentPresentation": true
+        },
+        {
+          "id": 99,
+          "keys": 7,
+          "differentPresentation": true
+        },
+        {
+          "id": 396,
+          "keys": 1,
+          "differentPresentation": false
+        }
+      ],
+      "respondersCount": 2
+    },
+    {
+      "t": 32.87801824999042,
+      "due": 32,
+      "inventoryMS": 3.121666726656258,
+      "sampleEncodingMSDerived": 0.9045833721756935,
+      "latenessMS": 878.0182499904186,
+      "animationsCountInVisited": 16,
+      "interestingLayers": [
+        {
+          "id": 1,
+          "keys": 0,
+          "differentPresentation": false
+        },
+        {
+          "id": 14,
+          "keys": 0,
+          "differentPresentation": false
+        },
+        {
+          "id": 30,
+          "keys": 7,
+          "differentPresentation": true
+        },
+        {
+          "id": 35,
+          "keys": 1,
+          "differentPresentation": true
+        },
+        {
+          "id": 99,
+          "keys": 7,
+          "differentPresentation": true
+        },
+        {
+          "id": 455,
+          "keys": 1,
+          "differentPresentation": true
+        }
+      ],
+      "respondersCount": 2
+    },
+    {
+      "t": 64.39606470835861,
+      "due": 64,
+      "inventoryMS": 2.3392082657665014,
+      "sampleEncodingMSDerived": 0.9947082726284862,
+      "latenessMS": 396.0647083586082,
+      "animationsCountInVisited": 22,
+      "interestingLayers": [
+        {
+          "id": 1,
+          "keys": 0,
+          "differentPresentation": false
+        },
+        {
+          "id": 14,
+          "keys": 0,
+          "differentPresentation": false
+        },
+        {
+          "id": 554,
+          "keys": 7,
+          "differentPresentation": true
+        },
+        {
+          "id": 616,
+          "keys": 0,
+          "differentPresentation": true
+        },
+        {
+          "id": 617,
+          "keys": 0,
+          "differentPresentation": true
+        },
+        {
+          "id": 30,
+          "keys": 7,
+          "differentPresentation": true
+        },
+        {
+          "id": 35,
+          "keys": 1,
+          "differentPresentation": true
+        },
+        {
+          "id": 712,
+          "keys": 7,
+          "differentPresentation": true
+        }
+      ],
+      "respondersCount": 0
+    }
+  ],
+  "interpretation": "normal passing instrumented baseline; retained animation keys and stable model/presentation differences do not establish an XCTest idle blocker; original failure cause remains unknown"
+}

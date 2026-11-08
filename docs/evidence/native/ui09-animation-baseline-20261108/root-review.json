@@ -1,0 +1,19 @@
+{
+  "reviewedAtUTC": "2026-11-08T14:03:57.374516+00:00",
+  "reviewer": "root",
+  "sourceVerification": "4673 isolated tracked files verified; original ContextualNavigationUITests exacta305; diagnostic patch identical reviewed proposal",
+  "scope": "Two product files only in scratch originala305 tree; public read-only layer probe at Store Done; canonical c4d9f72 unchanged",
+  "device": "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+  "actualRuntime": "iOS26.2/23C54 iPhone17",
+  "buildSession": 52744,
+  "testAuthorization": "Run original8 only after successful build, source/products preserved and result-preservation patch reviewed; no timeoutchanges/retries",
+  "limits": [
+    "LocalXcode27.1 differs hosted26.3",
+    "Instrumentation can perturb scheduling",
+    "Build stage currently pending; no runtime probe result yet"
+  ],
+  "remainingBeforeTest": [],
+  "build": "passed-build/native0/compiledAppCheck0; sources unchanged",
+  "resultPreservation": "Root installed reviewed pre/post original bundle/log hashing after terminalbuild; oldrunner preserved",
+  "processMonitor": "Reviewed standalone two-second bounded ps pid/comm exact owneddevice+bundle, selectedtestmarkers only; no input/actions"
+}

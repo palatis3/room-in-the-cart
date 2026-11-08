@@ -1,0 +1,212 @@
+{
+  "copiedFiles": [
+    {
+      "path": "build-run/run.json",
+      "originalPath": ".build/CIA305065Nov08/ui09-animation-owner-execution-r1/build-run/run.json",
+      "bytes": 3332,
+      "sha256": "5c8cc0df00f8abb82ed85964bc29e6e6cee7a03cffacbecc045b20d2e78a64e3"
+    },
+    {
+      "path": "build-run/compiled-app-check.log",
+      "originalPath": ".build/CIA305065Nov08/ui09-animation-owner-execution-r1/build-run/compiled-app-check.log",
+      "bytes": 103,
+      "sha256": "6a7c3f827bfc65530a2327c7d90c5337c90f594b91b1fce4e543c801d13fe564"
+    },
+    {
+      "path": "test-run/run.json",
+      "originalPath": ".build/CIA305065Nov08/ui09-animation-owner-execution-r1/test-run/run.json",
+      "bytes": 4582,
+      "sha256": "98bceb7a4541c67b6d79d05780281ee794f2b4030defb58f6f9f17d854e56108"
+    },
+    {
+      "path": "test-run/strict.log",
+      "originalPath": ".build/CIA305065Nov08/ui09-animation-owner-execution-r1/test-run/strict.log",
+      "bytes": 1589,
+      "sha256": "640c26ab38999a79691023c6427eb0035f02a1be94a80dd147dd5c11d93ff922"
+    },
+    {
+      "path": "test-run/summary.json",
+      "originalPath": ".build/CIA305065Nov08/ui09-animation-owner-execution-r1/test-run/summary.json",
+      "bytes": 742,
+      "sha256": "880f58baadef144378a52bd68676d6dd69b04e35fca81b4deba001bf9f9c42d9"
+    },
+    {
+      "path": "test-run/tests.json",
+      "originalPath": ".build/CIA305065Nov08/ui09-animation-owner-execution-r1/test-run/tests.json",
+      "bytes": 4948,
+      "sha256": "4157e9e308ffdd8e00590b923433d7643ec2694917d08746dacbf1591dd00d58"
+    },
+    {
+      "path": "test-run/test-runtime-warnings.json",
+      "originalPath": ".build/CIA305065Nov08/ui09-animation-owner-execution-r1/test-run/test-runtime-warnings.json",
+      "bytes": 179,
+      "sha256": "be523ad7605de2b95a9604b75d4ff956e7976c78f164f711665a72802ef3678a"
+    },
+    {
+      "path": "test-run/original-before-inspection.json",
+      "originalPath": ".build/CIA305065Nov08/ui09-animation-owner-execution-r1/test-run/original-before-inspection.json",
+      "bytes": 17422,
+      "sha256": "7b1866c2d2b99946237a375948bb0fce8373ffc7f550dcdc3cd01afc8c984f0d"
+    },
+    {
+      "path": "test-run/original-after-inspection.json",
+      "originalPath": ".build/CIA305065Nov08/ui09-animation-owner-execution-r1/test-run/original-after-inspection.json",
+      "bytes": 17561,
+      "sha256": "387c1f54f01a13806d91acbc71799de8e132b7a21f9ab37265f95a0df6c5d138"
+    },
+    {
+      "path": "preinspection-result-preservation/reconciliation.json",
+      "originalPath": ".build/CIA305065Nov08/ui09-animation-owner-execution-r1/preinspection-result-preservation/reconciliation.json",
+      "bytes": 920,
+      "sha256": "fa8661e471baf304b34a167846bcf0e96b82487250131a18b142803daaec700d"
+    },
+    {
+      "path": "target-case-probe/receipt.json",
+      "originalPath": ".build/CIA305065Nov08/ui09-animation-owner-execution-r1/target-case-probe/receipt.json",
+      "bytes": 2414,
+      "sha256": "c95a553fdaecdbbb560fb5e22d3f88c7b08f9ea67e5e07ee28625c571c779896"
+    },
+    {
+      "path": "target-case-probe/ui09-animation-39312.ndjson",
+      "originalPath": ".build/CIA305065Nov08/ui09-animation-owner-execution-r1/target-case-probe/ui09-animation-39312.ndjson",
+      "bytes": 114620,
+      "sha256": "e36d3b6059450641b4789a456f84b1c746774d919a632971655821516012e7ff"
+    },
+    {
+      "path": "target-case-interpretation/README.md",
+      "originalPath": ".build/CIA305065Nov08/ui09-animation-owner-execution-r1/target-case-interpretation/README.md",
+      "bytes": 5544,
+      "sha256": "41b9dcef1c432b0d2c344e89950007551a5e4363436dd2df049bcf16a7549bda"
+    },
+    {
+      "path": "target-case-interpretation/analysis.json",
+      "originalPath": ".build/CIA305065Nov08/ui09-animation-owner-execution-r1/target-case-interpretation/analysis.json",
+      "bytes": 20956,
+      "sha256": "ecddbbfbf98129e4ffe8ecf51fe73db277d618d37e2e812eaa3433b3813cbed5"
+    },
+    {
+      "path": "target-case-interpretation/file-hashes.json",
+      "originalPath": ".build/CIA305065Nov08/ui09-animation-owner-execution-r1/target-case-interpretation/file-hashes.json",
+      "bytes": 421,
+      "sha256": "ccf722f589a0ea8d38068637c571a2e1c66ab218993cbfb1ae39b806cdc0c0bf"
+    },
+    {
+      "path": "target-case-interpretation/native-boundary.json",
+      "originalPath": ".build/CIA305065Nov08/ui09-animation-owner-execution-r1/target-case-interpretation/native-boundary.json",
+      "bytes": 2242,
+      "sha256": "599c5be9a0c8fd4263ed9eefdedc4db423a079227bf1fd3395b8d315f8febb4f"
+    },
+    {
+      "path": "pid-monitor/receipt.json",
+      "originalPath": ".build/CIA305065Nov08/ui09-animation-owner-execution-r1/pid-monitor/receipt.json",
+      "bytes": 671,
+      "sha256": "8716f1a7d3575bcf479ff2cf8073c506fe2cb84d097d71d0d22e3865d5ae3a44"
+    },
+    {
+      "path": "pid-monitor/events.ndjson",
+      "originalPath": ".build/CIA305065Nov08/ui09-animation-owner-execution-r1/pid-monitor/events.ndjson",
+      "bytes": 11426,
+      "sha256": "4524289530cce7493e6408dfa6b07eee73d4ba0289ca6dd67ee84d51647b3735"
+    },
+    {
+      "path": "diagnostic.patch",
+      "originalPath": ".build/CIA305065Nov08/ui09-animation-owner-execution-r1/diagnostic.patch",
+      "bytes": 13497,
+      "sha256": "5df17229f21adaddfa473ff63445cdf6efcdcfd2d3df24647393d6d68676489d"
+    },
+    {
+      "path": "ui-09.txt",
+      "originalPath": ".build/CIA305065Nov08/ui09-animation-owner-execution-r1/ui-09.txt",
+      "bytes": 862,
+      "sha256": "cb9657808f4c27eff4ccbb89f712120cd1e990f2e58a0094dd70b6af5aafb022"
+    },
+    {
+      "path": "preparation.json",
+      "originalPath": ".build/CIA305065Nov08/ui09-animation-owner-execution-r1/preparation.json",
+      "bytes": 916,
+      "sha256": "cfb7d6cd35795a43f5cb8d1dc9395b0bed2dcf6ba53af3eb8e73b253c7865e2b"
+    },
+    {
+      "path": "static-preparation-receipt.json",
+      "originalPath": ".build/CIA305065Nov08/ui09-animation-owner-execution-r1/static-preparation-receipt.json",
+      "bytes": 1172,
+      "sha256": "5e9a6e0a9d8acf9e8befdbd27d1d73c79d797f650b2bfce4d97d539bbff51611"
+    },
+    {
+      "path": "preparation-file-hashes.json",
+      "originalPath": ".build/CIA305065Nov08/ui09-animation-owner-execution-r1/preparation-file-hashes.json",
+      "bytes": 1830,
+      "sha256": "649c9e2fa83814e17d27f4989f16d324d6f1ad9db2800092ba2cddef7d444d60"
+    },
+    {
+      "path": "root-review.json",
+      "originalPath": ".build/CIA305065Nov08/ui09-animation-owner-execution-r1/root-review.json",
+      "bytes": 1204,
+      "sha256": "55452765ce1a385080be3aeac9ff16fd54d56a98fe0e49ad7a8d7e24abe88df0"
+    }
+  ],
+  "privateArtifacts": [
+    {
+      "originalPath": ".build/CIA305065Nov08/ui09-animation-owner-execution-r1/original-source-manifest.json",
+      "bytes": 1302492,
+      "sha256": "63a83b70293711f50f16ae7a0f5b85f219ea035c0b5fcf1210f1b90339da6772",
+      "copied": false
+    },
+    {
+      "originalPath": ".build/CIA305065Nov08/ui09-animation-owner-execution-r1/candidate-source-manifest.json",
+      "bytes": 1302592,
+      "sha256": "006479011e6822d4591e9c83b746c7f3741bf59c5ff581e889373a4dc57cf9d6",
+      "copied": false
+    },
+    {
+      "originalPath": ".build/CIA305065Nov08/ui09-animation-owner-execution-r1/build-run/native.log",
+      "bytes": 1068839,
+      "sha256": "11399761f1bb9cc6993ab26f69ba6332b52eb508d648baa36cb6365ca634a4ef",
+      "copied": false
+    },
+    {
+      "originalPath": ".build/CIA305065Nov08/ui09-animation-owner-execution-r1/build-run/products.json",
+      "bytes": 40039,
+      "sha256": "e85126ba7718ce4660cf8605cbc0c87c135c80b15d4a5bd17f413bedeb37a6c3",
+      "copied": false
+    },
+    {
+      "originalPath": ".build/CIA305065Nov08/ui09-animation-owner-execution-r1/test-run/native.log",
+      "bytes": 299248,
+      "sha256": "eb1bab3f67ba325aa2ac016ef24c6e0a11a54dfd6902188ae6510aeaa9c43acf",
+      "copied": false
+    },
+    {
+      "originalPath": ".build/CIA305065Nov08/ui09-animation-owner-execution-r1/run.py",
+      "bytes": 12372,
+      "sha256": "b0399a7f255393ea02ceeb49ac1796afbee1731f398f8f15330b7ea27034a22c",
+      "copied": false
+    },
+    {
+      "originalPath": ".build/CIA305065Nov08/ui09-animation-owner-execution-r1/build-run/runner-original.py",
+      "bytes": 11393,
+      "sha256": "11b525cbfcf9de2f156688e719bfad4d1b223b43d7abe8551f00a16e5fff5b9f",
+      "copied": false
+    },
+    {
+      "originalPath": ".build/CIA305065Nov08/ui09-animation-owner-execution-r1/monitor.py",
+      "bytes": 7464,
+      "sha256": "8492d048ac2d3430bed3e00d2cc0d6e688b133c8ad87ffc6a4737726c9e8dd67",
+      "copied": false
+    },
+    {
+      "originalPath": ".build/CIA305065Nov08/ui09-animation-owner-execution-r1/inspection-preservation-proposal/preserve-original.patch",
+      "bytes": 2265,
+      "sha256": "15976e68e803022152f5f64cf6439e7d796df167df39969ceb74344000664bb9",
+      "copied": false
+    },
+    {
+      "originalPath": ".build/CIA305065Nov08/ui09-animation-owner-execution-r1/inspection-preservation-proposal/run.py.candidate",
+      "bytes": 12372,
+      "sha256": "b0399a7f255393ea02ceeb49ac1796afbee1731f398f8f15330b7ea27034a22c",
+      "copied": false
+    }
+  ],
+  "sourceRoot": ".build/CIA305065Nov08/ui09-animation-owner-execution-r1",
+  "limits": "No complete source manifests, products, native logs, result bundles, screenshots or videos copied. Historical active/pending wording in original receipts is preserved and superseded only by the terminal records."
+}

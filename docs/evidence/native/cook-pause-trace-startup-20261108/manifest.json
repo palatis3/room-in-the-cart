@@ -1,0 +1,16 @@
+{
+  "files": {
+    "cache-cleanup.json": {
+      "bytes": 860,
+      "sha256": "8f88a206516f536a00c4d41092a8b9f27ba60c930c9b36b97a0e8bcc992054cd"
+    },
+    "assessment.json": {
+      "bytes": 1224,
+      "sha256": "efa7d8b9596433a5fdf4128522555a3b9570e7e5fbbefd532e0e7a611642755f"
+    },
+    "run.json": {
+      "bytes": 5084,
+      "sha256": "efdc966f4cf07c8c0b1157ff6ad318b656a809535bace3d7f624d61c48a4c77f"
+    }
+  }
+}

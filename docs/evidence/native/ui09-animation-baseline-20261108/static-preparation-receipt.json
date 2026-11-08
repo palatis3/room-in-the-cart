@@ -1,0 +1,34 @@
+{
+  "recordedAtUTC": "2026-11-08T14:01:49.020531+00:00",
+  "pythonASTPassed": true,
+  "buildPlanPassed": true,
+  "allOriginalGitBlobHashesVerified": true,
+  "originalTrackedFiles": 4673,
+  "iosTrackedFiles": 556,
+  "allUITestsUnchanged": true,
+  "changedFiles": [
+    "ios/App/Theme.swift",
+    "ios/Features/Pickup/PickupHomeView.swift"
+  ],
+  "runnerSHA256": "11b525cbfcf9de2f156688e719bfad4d1b223b43d7abe8551f00a16e5fff5b9f",
+  "candidateManifestSHA256": "006479011e6822d4591e9c83b746c7f3741bf59c5ff581e889373a4dc57cf9d6",
+  "originalManifestSHA256": "63a83b70293711f50f16ae7a0f5b85f219ea035c0b5fcf1210f1b90339da6772",
+  "diskAllocatedBytes": {
+    ".build/CIA305065Nov08/ui09-animation-owner-execution-r1/source": 159989760,
+    ".build/CookVoicePreparationNov08/fixture-r1/dd": 850145280,
+    ".build/DerivedData": 628146176
+  },
+  "freeBytes": 11041325056,
+  "reserveBytes": 8589934592,
+  "estimatedNewDDBytesRange": [
+    838860800,
+    1572864000
+  ],
+  "estimatedTestResultAndLogsRangeBytes": [
+    104857600,
+    734003200
+  ],
+  "estimatesAreNotMeasuredFutureAllocation": true,
+  "nativeExecutedByPreparingAgent": false,
+  "oldProductsReusedOrRemoved": false
+}

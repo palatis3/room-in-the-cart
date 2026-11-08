@@ -1,0 +1,17 @@
+{
+  "classification": "Capture unavailable; no Pause observation or test pass",
+  "caseStartRecorded": false,
+  "nativeResultInspection": "Not performed; no case-start marker in original full native log, recorder and test interrupted",
+  "sourceAndOriginalPrivateProductsUnchanged": true,
+  "guard": "8GiB reserved disk floor reached2.542seconds after native launch",
+  "traceFinalBytes": 2011364648,
+  "configuredTraceByteCap": 1073741824,
+  "traceCapOvershootBytes": 937622824,
+  "traceLimitNote": "Disk guard fired first; recorder grew while owned cleanup attempted finalization. The nominal cap is sampled, not a hard allocation limit.",
+  "sourceRun": ".build/CIA305065Nov08/cook-pause-trace-execution-r1/run",
+  "nativeLogSHA256": "02ba4ccbae96d13d3c3241594d58494caa58f027d7cb008cd3a7b271bd1904d7",
+  "traceStdoutSHA256": "56a4c88d3278533b1e0a4dfe2c135f62663ad5cd1c69263361786a0c5b237940",
+  "traceStderrSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "next": "Restore task-owned cache headroom and inspect actual recorder allocation/limits before any new separately reviewed attempt. No automatic retry or capture-cap increase.",
+  "recordedAtUTC": "2026-11-08T14:30:17.164867+00:00"
+}

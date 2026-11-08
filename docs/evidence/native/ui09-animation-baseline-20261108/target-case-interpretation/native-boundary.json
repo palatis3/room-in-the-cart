@@ -1,0 +1,67 @@
+{
+  "source": "test-run/native.log",
+  "closedCaseByteRange": [
+    42166,
+    93809
+  ],
+  "closedCaseByteRangeSHA256": "2db4d51a7c0bae938aa7ab95b6933fa372d3e169451a62f684a937b8abfbfcb4",
+  "selectedMetadataLines": [
+    {
+      "byteOffset": 42166,
+      "line": "Test Case '-[RoomInTheCartUITests.ContextualNavigationUITests testFreeContextualRoutesKeepPrivateAndSharedWorkSeparate]' started."
+    },
+    {
+      "byteOffset": 58572,
+      "line": "    t =    47.96s Tap \"Store\" TextField"
+    },
+    {
+      "byteOffset": 60481,
+      "line": "    t =    52.21s Tap \"Done\" Button"
+    },
+    {
+      "byteOffset": 60517,
+      "line": "    t =    52.21s     Wait for dev.roominthecart.app.debug to idle"
+    },
+    {
+      "byteOffset": 60584,
+      "line": "    t =    52.22s     Find the \"Done\" Button"
+    },
+    {
+      "byteOffset": 60629,
+      "line": "    t =    52.31s     Check for interrupting elements affecting \"Done\" Button"
+    },
+    {
+      "byteOffset": 60707,
+      "line": "    t =    52.39s     Synthesize event"
+    },
+    {
+      "byteOffset": 60746,
+      "line": "    t =    52.69s     Wait for dev.roominthecart.app.debug to idle"
+    },
+    {
+      "byteOffset": 60813,
+      "line": "    t =    52.93s Find the Target Application 'dev.roominthecart.app.debug'"
+    },
+    {
+      "byteOffset": 60889,
+      "line": "    t =    52.98s Get all elements bound by index for: Descendants matching type Keyboard"
+    },
+    {
+      "byteOffset": 60979,
+      "line": "    t =    53.03s Checking existence of `\"Branch\" Any`"
+    },
+    {
+      "byteOffset": 61589,
+      "line": "    t =    54.39s Tap \"Branch\" TextField"
+    },
+    {
+      "byteOffset": 61869,
+      "line": "    t =    55.03s     Wait for dev.roominthecart.app.debug to idle"
+    },
+    {
+      "byteOffset": 93662,
+      "line": "Test Case '-[RoomInTheCartUITests.ContextualNavigationUITests testFreeContextualRoutesKeepPrivateAndSharedWorkSeparate]' passed (130.127 seconds)."
+    }
+  ],
+  "clockLimit": "XCTest test-relative timestamps and probe Done-relative monotonic timestamps are separate clocks; no exact shared UTC origin was emitted. Monitor times are sampled/possibly buffered observations, file birth is not precise t0."
+}

@@ -1,0 +1,20 @@
+{
+  "event": "monitorFinished",
+  "observedUTC": "2026-11-08T14:18:39.685742+00:00",
+  "elapsedSeconds": 750.81414925,
+  "reason": "confirmedTerminalTestReceipt",
+  "polls": 375,
+  "maxPSMS": 496.19245900004216,
+  "totalPSMS": 83339.5561290002,
+  "processTransitions": 20,
+  "pollErrors": 0,
+  "caseMarkers": 16,
+  "seenTestReceipt": true,
+  "lastLogByteOffset": 299248,
+  "metadataEvents": 38,
+  "bytesBeforeFooter": 11012,
+  "pidReuseAndLogBufferingCanBeAmbiguous": true,
+  "eventsSHA256": "4524289530cce7493e6408dfa6b07eee73d4ba0289ca6dd67ee84d51647b3735",
+  "eventsBytes": 11426,
+  "helperSHA256": "8492d048ac2d3430bed3e00d2cc0d6e688b133c8ad87ffc6a4737726c9e8dd67"
+}
