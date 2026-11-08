@@ -1,0 +1,22 @@
+TAP version 13
+# Subtest: real erasure removes dependent amendment copies without reverting to the original order or reviving erased retries
+ok 1 - real erasure removes dependent amendment copies without reverting to the original order or reviving erased retries
+  ---
+  duration_ms: 526.790542
+  type: 'test'
+  ...
+# Subtest: erasing an original snapshot author also removes a different shopper’s copied amendment chain
+ok 2 - erasing an original snapshot author also removes a different shopper’s copied amendment chain
+  ---
+  duration_ms: 190.548125
+  type: 'test'
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 2
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 987.391958

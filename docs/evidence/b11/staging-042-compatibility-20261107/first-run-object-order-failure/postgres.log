@@ -1,0 +1,4 @@
+2026-11-07 20:48:05.085 EST [83615] LOG:  starting PostgreSQL 17.11 on aarch64-apple-darwin27.2.0, compiled by Apple clang version 21.0.0 (clang-2100.3.34.2), 64-bit
+2026-11-07 20:48:05.085 EST [83615] LOG:  listening on Unix socket "/var/folders/mv/8p5lhty96rd6kjk1_0z0yv400000gn/T/ritc-rollback042-ejy49_sg/socket/.s.PGSQL.64103"
+2026-11-07 20:48:05.090 EST [83618] LOG:  database system was shut down at 2026-11-07 20:48:05 EST
+2026-11-07 20:48:05.093 EST [83615] LOG:  database system is ready to accept connections

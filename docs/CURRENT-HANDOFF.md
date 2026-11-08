@@ -6,6 +6,8 @@ Updated November 8, 2026 UTC. The owner resumed and explicitly approved the revi
 
 Private and shared retailer-confirmed amendment flows are implemented and locally verified in the canonical checkout. Do not restart the superseded scratch implementation on `codex/private-order-amendments`. The hosted batch for `f90ad75` is still running; security and native HTTPS/PostgreSQL passed. Keep this later amendment batch local until that cohort finishes, to avoid cancelling its remaining tests. Staging remains through the approved migration 041; migration 042 has not been deployed. Hosted confirmation and the remaining first-version release gates are still open.
 
+The local 041→042 compatibility audit found that an ordinary application rollback to 041 is unsafe after confirmed-order changes: the old service omits amendment-derived delivery identities. Six real old-Swift HTTPS probes and 21 behavior checks preserve that result; both actual old-worker erasure cases pass against 042. The old Swift client rejects a complete 202-line historical union, while the old server silently truncates it to one line. [Exact evidence](evidence/b11/staging-042-compatibility-20261107/verification.json). No general service suspension gate existed at audit time. A maintenance gate is being prepared in scratch for review; do not promote 041 after 042 feature use or treat this synthetic audit as a fresh live backup/restore rehearsal.
+
 The hosted speech warning still needs an attributable blocking stack. The next fixture run captures the app’s Hang Risk runtime log for that suite alongside its existing XCTest result. Required warning checks still fail on the unresolved issue.
 
 ## November 7 closed-pickup correction and large-text recovery

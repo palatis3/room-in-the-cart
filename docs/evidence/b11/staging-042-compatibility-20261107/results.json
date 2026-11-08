@@ -1,0 +1,74 @@
+{
+  "oldSource": "02f9b872a9bfe919039cbd7f8117f1faf5983396",
+  "checks": [
+    "old-client-old-service-schema041",
+    "old migration runner leaves all42 registry entries intact",
+    "existing shop has false erasure fence",
+    "old-client-old-service-schema042-before-amendment",
+    "old service lacks confirmed-order capability",
+    "old service has no confirmed-order route",
+    "old service rejects amendment exact retry before receipt lookup",
+    "old service exact-replays already registered added identity",
+    "old service cannot register another segment for added identity",
+    "old service can correct already registered amendment source while placed",
+    "old-client-new-service-two-historical-identities",
+    "old-client-old-service-silently-omits-added-line",
+    "new service returns complete202 historical identities",
+    "old-client-new-service-rejects-202-identities",
+    "old-client-old-service-accepts-truncated-202-union",
+    "old service can close shop without deleting amendment chain",
+    "closed revision advances once and placed identity unchanged",
+    "old service blocks fresh closed usable correction",
+    "old service still exact-replays prior delivery receipt after close",
+    "new service permits same reviewed closed correction",
+    "rollback reads and allowed writes preserve snapshots amended order and posted financial evidence"
+  ],
+  "swift": [
+    {
+      "name": "old-client-old-service-schema041",
+      "LINES": 1,
+      "SOURCES": 1,
+      "ORPHANS": 0
+    },
+    {
+      "name": "old-client-old-service-schema042-before-amendment",
+      "LINES": 1,
+      "SOURCES": 1,
+      "ORPHANS": 0
+    },
+    {
+      "name": "old-client-new-service-two-historical-identities",
+      "LINES": 2,
+      "SOURCES": 2,
+      "ORPHANS": 0,
+      "ADDED": "db0b6409-115f-4fe5-b168-129dc0e2eca7"
+    },
+    {
+      "name": "old-client-old-service-silently-omits-added-line",
+      "LINES": 1,
+      "SOURCES": 2,
+      "ORPHANS": 1,
+      "ADDED": "db0b6409-115f-4fe5-b168-129dc0e2eca7"
+    },
+    {
+      "name": "old-client-new-service-rejects-202-identities",
+      "INVALID": 1
+    },
+    {
+      "name": "old-client-old-service-accepts-truncated-202-union",
+      "LINES": 1,
+      "SOURCES": 2,
+      "ORPHANS": 1,
+      "ADDED": "db0b6409-115f-4fe5-b168-129dc0e2eca7"
+    }
+  ],
+  "final": {
+    "shopRevision": 6,
+    "placedRevision": 2,
+    "amendments": 2,
+    "historicalLines": 202,
+    "oldProjectedLines": 1,
+    "sources": 2,
+    "supplyRevision": 7
+  }
+}
