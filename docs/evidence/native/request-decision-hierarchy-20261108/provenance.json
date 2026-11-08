@@ -1,0 +1,596 @@
+{
+  "copiedFiles": [
+    {
+      "path": "source/change.patch",
+      "originalPath": ".build/S24DecisionHierarchyNov08/change.patch",
+      "bytes": 11387,
+      "sha256": "269c0d1421fa433d7c9b871bdf10e1819685ce7ceec2478f552d409a7ecc5fa1"
+    },
+    {
+      "path": "source/fixed-source-manifest.json",
+      "originalPath": ".build/S24DecisionHierarchyNov08/fixed-source-manifest.json",
+      "bytes": 69846,
+      "sha256": "e103f77342879bcc93477c4f9cbb2d5a03d2cbd19c481bc909d8b3585a43f5ee"
+    },
+    {
+      "path": "source/localization-check.txt",
+      "originalPath": ".build/S24DecisionHierarchyNov08/localization-check.txt",
+      "bytes": 327,
+      "sha256": "f67de4397176653c5ba3c703ad4bcb4399b0ae5411b9d82b28fc11cc26cb26bb"
+    },
+    {
+      "path": "light/selectors.txt",
+      "originalPath": ".build/S24DecisionHierarchyNov08/light-run/selectors.txt",
+      "bytes": 469,
+      "sha256": "a19d2ace21c7a7e5a3d115caf6485162b9f92fafc0c557427dc4049c5c8710e4"
+    },
+    {
+      "path": "light/inspection/verification.json",
+      "originalPath": ".build/S24DecisionHierarchyNov08/light-run/inspection/verification.json",
+      "bytes": 269,
+      "sha256": "863fd9cb4244b3b08a8f50ddfe1faa1044daa77bca71bd3601030aac5e7aeb63"
+    },
+    {
+      "path": "light/inspection/strict.txt",
+      "originalPath": ".build/S24DecisionHierarchyNov08/light-run/inspection/strict.txt",
+      "bytes": 1109,
+      "sha256": "b4fd5701a47596156552bf3dbc915df1e6c48483b545d4a546b616de0545451f"
+    },
+    {
+      "path": "light/inspection/summary.json",
+      "originalPath": ".build/S24DecisionHierarchyNov08/light-run/inspection/summary.json",
+      "bytes": 1021,
+      "sha256": "81e72cea6fb919817c138073fbf86c4c9e77d2b092e4663e5276a985214d40dd"
+    },
+    {
+      "path": "light/inspection/tests.json",
+      "originalPath": ".build/S24DecisionHierarchyNov08/light-run/inspection/tests.json",
+      "bytes": 3805,
+      "sha256": "d23987ecaf7fafe0052afc17c39d35b1a48d2e702abdf886d37cf0b6790e66e2"
+    },
+    {
+      "path": "light/inspection/test-runtime-warnings.json",
+      "originalPath": ".build/S24DecisionHierarchyNov08/light-run/inspection/test-runtime-warnings.json",
+      "bytes": 179,
+      "sha256": "46c491959346fd2623729293bd2f1520d6e0cce6856177b586e8fca8fee2dfc2"
+    },
+    {
+      "path": "light/captures/receipt.json",
+      "originalPath": ".build/S24DecisionHierarchyNov08/light-run/captures/receipt.json",
+      "bytes": 5761,
+      "sha256": "d97e51953d8c91565ff4a777fdb7a0c468bce5f0dc8c42a45794e6bcade34b85"
+    },
+    {
+      "path": "light/captures/root-review.json",
+      "originalPath": ".build/S24DecisionHierarchyNov08/light-run/captures/root-review.json",
+      "bytes": 987,
+      "sha256": "13da24b813df99fe9d31103d1994cd42eabbdcf27f41dcc0358539d108462c83"
+    },
+    {
+      "path": "light/captures/png-0-0/F90FB69F-204E-4BBB-B431-38D8E8DD4984.png",
+      "originalPath": ".build/S24DecisionHierarchyNov08/light-run/captures/png-0-0/F90FB69F-204E-4BBB-B431-38D8E8DD4984.png",
+      "bytes": 326089,
+      "sha256": "efaa20d25fffcb06626e0c314fb5f11d410f5a9a5ea83eda339bb7ae71977020"
+    },
+    {
+      "path": "light/captures/png-0-0/manifest.json",
+      "originalPath": ".build/S24DecisionHierarchyNov08/light-run/captures/png-0-0/manifest.json",
+      "bytes": 845,
+      "sha256": "b72bcaa8396954d90b87d88a0447042444a0c4b89355e80dfed393509ac986f7"
+    },
+    {
+      "path": "light/captures/png-0-1/1BD55162-C27B-4993-974D-C62BDB5908F6.png",
+      "originalPath": ".build/S24DecisionHierarchyNov08/light-run/captures/png-0-1/1BD55162-C27B-4993-974D-C62BDB5908F6.png",
+      "bytes": 132159,
+      "sha256": "c42c85b64316f57ff120be740f90ef9c7572761bfad1da944d165c05ec9b09af"
+    },
+    {
+      "path": "light/captures/png-0-1/manifest.json",
+      "originalPath": ".build/S24DecisionHierarchyNov08/light-run/captures/png-0-1/manifest.json",
+      "bytes": 840,
+      "sha256": "f2a2d0ec8e0cd7a0db39a3811e63fba0d27515630240c20db9c25f91a3c5ee62"
+    },
+    {
+      "path": "light/captures/png-1-0/DD3358CC-F55C-48FA-B01D-AC37D6A2457D.png",
+      "originalPath": ".build/S24DecisionHierarchyNov08/light-run/captures/png-1-0/DD3358CC-F55C-48FA-B01D-AC37D6A2457D.png",
+      "bytes": 281986,
+      "sha256": "06926c4076e217500af60f4b4e467137422d063a6f1e7e53c4d2c5b1567a7ad8"
+    },
+    {
+      "path": "light/captures/png-1-0/manifest.json",
+      "originalPath": ".build/S24DecisionHierarchyNov08/light-run/captures/png-1-0/manifest.json",
+      "bytes": 818,
+      "sha256": "d91c2725bb76c7e1194832d037b1ae043692948f824d44add1d5e860e9cad771"
+    },
+    {
+      "path": "light/captures/png-2-0/6CB83E42-AF5B-4F5A-94A4-8ED166F1C176.png",
+      "originalPath": ".build/S24DecisionHierarchyNov08/light-run/captures/png-2-0/6CB83E42-AF5B-4F5A-94A4-8ED166F1C176.png",
+      "bytes": 289203,
+      "sha256": "c299b3af8795f2df511171cdb7b18ef806bf4cd666e1766672e7ad7d7745d374"
+    },
+    {
+      "path": "light/captures/png-2-0/manifest.json",
+      "originalPath": ".build/S24DecisionHierarchyNov08/light-run/captures/png-2-0/manifest.json",
+      "bytes": 774,
+      "sha256": "52ed16b6a61091c25b9c5b08398cfc37c4f5e867df4b57eee112c9ae797e77bb"
+    },
+    {
+      "path": "light/captures/png-2-1/DD6B98A3-B748-4B11-A032-D732D089746F.png",
+      "originalPath": ".build/S24DecisionHierarchyNov08/light-run/captures/png-2-1/DD6B98A3-B748-4B11-A032-D732D089746F.png",
+      "bytes": 297009,
+      "sha256": "ec6ff635a7fd878948c128d3bef8e794e8b97ad5850720950e5dd36d1d171b3a"
+    },
+    {
+      "path": "light/captures/png-2-1/manifest.json",
+      "originalPath": ".build/S24DecisionHierarchyNov08/light-run/captures/png-2-1/manifest.json",
+      "bytes": 776,
+      "sha256": "863b69c3a91c4452f40291ce0854d9dc26e6d48d474dadda0cc5b4036b210695"
+    },
+    {
+      "path": "light/captures/png-2-2/747338B6-55E7-4BBF-8FFA-BEF5FC26B21B.png",
+      "originalPath": ".build/S24DecisionHierarchyNov08/light-run/captures/png-2-2/747338B6-55E7-4BBF-8FFA-BEF5FC26B21B.png",
+      "bytes": 248922,
+      "sha256": "45eb600aa679a96a30900fbe2657ea58b78d6ed95f7f746338245331154033b6"
+    },
+    {
+      "path": "light/captures/png-2-2/manifest.json",
+      "originalPath": ".build/S24DecisionHierarchyNov08/light-run/captures/png-2-2/manifest.json",
+      "bytes": 771,
+      "sha256": "0929cabe8453d700a339e4bac5546e109c0cbce61b109b080a9c2a7f11a8f1af"
+    },
+    {
+      "path": "light/captures/png-3-0/434F6C14-31BF-4639-838D-25A4691710B2.png",
+      "originalPath": ".build/S24DecisionHierarchyNov08/light-run/captures/png-3-0/434F6C14-31BF-4639-838D-25A4691710B2.png",
+      "bytes": 305796,
+      "sha256": "a70bb7b0630f9c79be8ece0951eb4aeede559519c5d7411120eaa8263ff2f10a"
+    },
+    {
+      "path": "light/captures/png-3-0/manifest.json",
+      "originalPath": ".build/S24DecisionHierarchyNov08/light-run/captures/png-3-0/manifest.json",
+      "bytes": 810,
+      "sha256": "bfac9d0cc1150ed5376c30488d5076555c943132e83fd72fab6ae239d718337b"
+    },
+    {
+      "path": "original-price-prompt/measurement.json",
+      "originalPath": ".build/S24DecisionHierarchyNov08/price-prompt-review/measurement.json",
+      "bytes": 5109,
+      "sha256": "8a4adf8ca938877a0d13d06b659aeca1c3bd173ec1495c0dba41157af47ce1fb"
+    },
+    {
+      "path": "original-price-prompt/ledger-check.json",
+      "originalPath": ".build/S24DecisionHierarchyNov08/price-prompt-review/ledger-check.json",
+      "bytes": 496,
+      "sha256": "e4f64784b22cae2b1c00884240ea62b15e7891fa89b0b5fc53599cc2d3bd4c48"
+    },
+    {
+      "path": "original-price-prompt/manifest.json",
+      "originalPath": ".build/S24DecisionHierarchyNov08/price-prompt-review/manifest.json",
+      "bytes": 1514,
+      "sha256": "9de06bd43fd8068d15133c6678a228ae8587ab35257312d170e4753dbec9c815"
+    },
+    {
+      "path": "original-price-prompt/REVIEW.md",
+      "originalPath": ".build/S24DecisionHierarchyNov08/price-prompt-review/REVIEW.md",
+      "bytes": 3488,
+      "sha256": "7369c9eb25406badbb97e8d323a46f41b9b218c2faac5363e1b71dd5ed96df05"
+    },
+    {
+      "path": "original-price-prompt/measure_prompt.py",
+      "originalPath": ".build/S24DecisionHierarchyNov08/price-prompt-review/measure_prompt.py",
+      "bytes": 4039,
+      "sha256": "96d35ae2486034fd5d01feb7853f927c6e803f0040d4360f398d409e145079be"
+    },
+    {
+      "path": "dark/selectors.txt",
+      "originalPath": ".build/S24DecisionHierarchyNov08/dark-run/selectors.txt",
+      "bytes": 357,
+      "sha256": "e1fede27cc0de309858dab8ba58e494f15b82bf64d1deffa9da207ca24b97bb4"
+    },
+    {
+      "path": "dark/inspection/verification.json",
+      "originalPath": ".build/S24DecisionHierarchyNov08/dark-run/inspection/verification.json",
+      "bytes": 269,
+      "sha256": "8139a64e9755e30fd63fa7baa572c5613a2b3d35c29af85443364813c1e4d41a"
+    },
+    {
+      "path": "dark/inspection/strict.txt",
+      "originalPath": ".build/S24DecisionHierarchyNov08/dark-run/inspection/strict.txt",
+      "bytes": 976,
+      "sha256": "24ae481c22cf0943c9b7e17fc54e4e48ba9c9de0b1eb0f4e0eee3c44da1762e0"
+    },
+    {
+      "path": "dark/inspection/summary.json",
+      "originalPath": ".build/S24DecisionHierarchyNov08/dark-run/inspection/summary.json",
+      "bytes": 1021,
+      "sha256": "cb064268d334872420941727dd46cafec38b7946aa3daf62594304499d30ed33"
+    },
+    {
+      "path": "dark/inspection/tests.json",
+      "originalPath": ".build/S24DecisionHierarchyNov08/dark-run/inspection/tests.json",
+      "bytes": 3166,
+      "sha256": "9a6c579c03fbd6fa48967080845f93f18470e0351a2011d810d49386485842cb"
+    },
+    {
+      "path": "dark/inspection/test-runtime-warnings.json",
+      "originalPath": ".build/S24DecisionHierarchyNov08/dark-run/inspection/test-runtime-warnings.json",
+      "bytes": 179,
+      "sha256": "cc76e9112bb0eb81c9cc802130460cbc5a18d3b186525a823326dcb0e45678ac"
+    },
+    {
+      "path": "dark/captures/receipt.json",
+      "originalPath": ".build/S24DecisionHierarchyNov08/dark-run/captures/receipt.json",
+      "bytes": 4478,
+      "sha256": "d98f9ec9bcc9c95b279c0bd319004d05e51307b60d3e06c837d341aa6d0d9d1b"
+    },
+    {
+      "path": "dark/captures/root-review.json",
+      "originalPath": ".build/S24DecisionHierarchyNov08/dark-run/captures/root-review.json",
+      "bytes": 616,
+      "sha256": "465d18598d6295dec450c8eacc8cc0373e9b3eb3dbebc7f3a41d63616581e7e5"
+    },
+    {
+      "path": "dark/captures/png-0-0/C83055D3-7985-4DE1-8AD5-E647F06D05D4.png",
+      "originalPath": ".build/S24DecisionHierarchyNov08/dark-run/captures/png-0-0/C83055D3-7985-4DE1-8AD5-E647F06D05D4.png",
+      "bytes": 298633,
+      "sha256": "eed1a83d13afcfe5c7e1fed5b17d7ac1579798a8397c46f1717d9ce4ba02dc4b"
+    },
+    {
+      "path": "dark/captures/png-0-0/manifest.json",
+      "originalPath": ".build/S24DecisionHierarchyNov08/dark-run/captures/png-0-0/manifest.json",
+      "bytes": 845,
+      "sha256": "cc72d939a8621510bfad3bf26d6dd4370ca30514857e334e693948ba7030b643"
+    },
+    {
+      "path": "dark/captures/png-0-1/0F4CE567-56C3-4781-B8D2-27B5AB52AAFF.png",
+      "originalPath": ".build/S24DecisionHierarchyNov08/dark-run/captures/png-0-1/0F4CE567-56C3-4781-B8D2-27B5AB52AAFF.png",
+      "bytes": 122262,
+      "sha256": "eb6b75a5782b1ed6d309adc3bc75062d06df8f42a60294383106a1083d0227f7"
+    },
+    {
+      "path": "dark/captures/png-0-1/manifest.json",
+      "originalPath": ".build/S24DecisionHierarchyNov08/dark-run/captures/png-0-1/manifest.json",
+      "bytes": 840,
+      "sha256": "0c93641ed460386e122f06f93ca3ca84b224eec032d1fda6f67a8f2844948d16"
+    },
+    {
+      "path": "dark/captures/png-1-0/E75C5C27-4428-42D1-AF6A-D12F7581B10A.png",
+      "originalPath": ".build/S24DecisionHierarchyNov08/dark-run/captures/png-1-0/E75C5C27-4428-42D1-AF6A-D12F7581B10A.png",
+      "bytes": 254830,
+      "sha256": "53caad8c7e4c3466fa2e1688c602316b20ad9dcd9cf108fd80f7a5e9003f62cf"
+    },
+    {
+      "path": "dark/captures/png-1-0/manifest.json",
+      "originalPath": ".build/S24DecisionHierarchyNov08/dark-run/captures/png-1-0/manifest.json",
+      "bytes": 818,
+      "sha256": "14adc481052c2c41535221e1acc7261f2a2b460fe50ccfdc44a53ca9ec880771"
+    },
+    {
+      "path": "dark/captures/png-2-0/2A164578-03A4-42BE-9EBA-5901ACFA9F52.png",
+      "originalPath": ".build/S24DecisionHierarchyNov08/dark-run/captures/png-2-0/2A164578-03A4-42BE-9EBA-5901ACFA9F52.png",
+      "bytes": 259869,
+      "sha256": "5d054e2405128bd850d4094e766212930ffe6f3e1570bbbc65b00b2b49c8ec22"
+    },
+    {
+      "path": "dark/captures/png-2-0/manifest.json",
+      "originalPath": ".build/S24DecisionHierarchyNov08/dark-run/captures/png-2-0/manifest.json",
+      "bytes": 776,
+      "sha256": "8fe0fb0af06dcf80bba50c4ba6cc7c2e67ebbcf4f1b82e1b1e0f15eb256db358"
+    },
+    {
+      "path": "dark/captures/png-2-1/B9491B8F-CA7A-4555-B680-9CE4442CEF0F.png",
+      "originalPath": ".build/S24DecisionHierarchyNov08/dark-run/captures/png-2-1/B9491B8F-CA7A-4555-B680-9CE4442CEF0F.png",
+      "bytes": 258877,
+      "sha256": "00a0b0a8407a3d1519135f9cf7739c28ad94740c4911aab17872a65fd57f5d44"
+    },
+    {
+      "path": "dark/captures/png-2-1/manifest.json",
+      "originalPath": ".build/S24DecisionHierarchyNov08/dark-run/captures/png-2-1/manifest.json",
+      "bytes": 776,
+      "sha256": "4e44eceb7537673c1666923c23c20de2d85a12db0af800dcd377f01a874fc68a"
+    },
+    {
+      "path": "dark/captures/png-2-2/7045B6E2-AAE7-4A2E-954B-40BB0105C73F.png",
+      "originalPath": ".build/S24DecisionHierarchyNov08/dark-run/captures/png-2-2/7045B6E2-AAE7-4A2E-954B-40BB0105C73F.png",
+      "bytes": 221282,
+      "sha256": "44a11d8ee51ae5cf0c46284e1e2e3b97689ac66b04262e1bb14ef920c6d090ec"
+    },
+    {
+      "path": "dark/captures/png-2-2/manifest.json",
+      "originalPath": ".build/S24DecisionHierarchyNov08/dark-run/captures/png-2-2/manifest.json",
+      "bytes": 772,
+      "sha256": "b04ab61b4e5df1abe831cb6166287e90034550a6fd5353b28d86c8bff1007058"
+    },
+    {
+      "path": "original-price-prompt/root-verification/measurement.json",
+      "originalPath": ".build/S24DecisionHierarchyNov08/price-prompt-root-review/measurement.json",
+      "bytes": 5109,
+      "sha256": "8a4adf8ca938877a0d13d06b659aeca1c3bd173ec1495c0dba41157af47ce1fb"
+    },
+    {
+      "path": "original-price-prompt/root-verification/measure_prompt.py",
+      "originalPath": ".build/S24DecisionHierarchyNov08/price-prompt-root-review/measure_prompt.py",
+      "bytes": 4044,
+      "sha256": "1a7ccac65a2007cccc7cc6188b33efdc85a4ee4ab0166d26ba728fddeed50552"
+    },
+    {
+      "path": "final-followup/source/change.patch",
+      "originalPath": ".build/S24DecisionPromptNov08/change.patch",
+      "bytes": 13194,
+      "sha256": "1092a3805db50aaf5b647d425267eb0bbfd6dea58c8d1920748e23eda0a205d9"
+    },
+    {
+      "path": "final-followup/source/fixed-source-manifest.json",
+      "originalPath": ".build/S24DecisionPromptNov08/fixed-source-manifest.json",
+      "bytes": 69846,
+      "sha256": "c4cbc2f604d43e021b927e849acd8b486fd3179179a1f964a7c410c6288c36e5"
+    },
+    {
+      "path": "final-followup/source/followup-scope.json",
+      "originalPath": ".build/S24DecisionPromptNov08/followup-scope.json",
+      "bytes": 570,
+      "sha256": "e1f28d06c5606e5b42ecbf6b676a6823940b04fcf93f85b136227d3bf41a525e"
+    },
+    {
+      "path": "final-followup/light/selectors.txt",
+      "originalPath": ".build/S24DecisionPromptNov08/light-run/selectors.txt",
+      "sha256": "2fdd9263a549114629651f00229a23dee50813fb3f90e26de94193a21b434707",
+      "bytes": 112
+    },
+    {
+      "path": "final-followup/light/inspection/verification.json",
+      "originalPath": ".build/S24DecisionPromptNov08/light-run/inspection/verification.json",
+      "sha256": "f487ccc2d89467b80cc67826047053daf4db8e4f2b36aabf7953865fa8cd2002",
+      "bytes": 269
+    },
+    {
+      "path": "final-followup/light/inspection/strict.txt",
+      "originalPath": ".build/S24DecisionPromptNov08/light-run/inspection/strict.txt",
+      "sha256": "a053d2c937f30de146361b074726f3d087930f0f06d62faa46ba2edcfc066433",
+      "bytes": 689
+    },
+    {
+      "path": "final-followup/light/inspection/summary.json",
+      "originalPath": ".build/S24DecisionPromptNov08/light-run/inspection/summary.json",
+      "sha256": "5940ea450fe2aef9a0bd0c6798b72753e347ede5d1140c0a9d2f65bea4eba16f",
+      "bytes": 1021
+    },
+    {
+      "path": "final-followup/light/inspection/tests.json",
+      "originalPath": ".build/S24DecisionPromptNov08/light-run/inspection/tests.json",
+      "sha256": "cc73918b0030e9dd954497cc7c04b6f151fde9e5f1d2a17cb38f1966d4b71033",
+      "bytes": 1827
+    },
+    {
+      "path": "final-followup/light/inspection/test-runtime-warnings.json",
+      "originalPath": ".build/S24DecisionPromptNov08/light-run/inspection/test-runtime-warnings.json",
+      "sha256": "ce5f63a49527481ca5704f8996eb8eea682d8688c3381353dd8f23ad6759bffb",
+      "bytes": 179
+    },
+    {
+      "path": "final-followup/light/captures/receipt.json",
+      "originalPath": ".build/S24DecisionPromptNov08/light-run/captures/receipt.json",
+      "sha256": "5f04722e715ab22bb2ef4ad2678a22c07f7566aa9cbb3c32d4adbffffdf7afa3",
+      "bytes": 2300
+    },
+    {
+      "path": "final-followup/light/captures/root-review.json",
+      "originalPath": ".build/S24DecisionPromptNov08/light-run/captures/root-review.json",
+      "sha256": "015a259d643053ad44deee77adc80906eddcb6eb59842b210a8182fdeff0a12a",
+      "bytes": 492
+    },
+    {
+      "path": "final-followup/light/captures/png-0-0/001CAF58-369F-4258-9544-40BB14623894.png",
+      "originalPath": ".build/S24DecisionPromptNov08/light-run/captures/png-0-0/001CAF58-369F-4258-9544-40BB14623894.png",
+      "sha256": "1f4067e1fb8acbe16bb8428566f5d35d2cd818d2c02d5eae32c07c2dd2b84cea",
+      "bytes": 13550
+    },
+    {
+      "path": "final-followup/light/captures/png-0-0/manifest.json",
+      "originalPath": ".build/S24DecisionPromptNov08/light-run/captures/png-0-0/manifest.json",
+      "sha256": "0d0bdaa811e56ae4dc6afa78599c755b29225b8ae4aa3361658643d513cf0dd1",
+      "bytes": 781
+    },
+    {
+      "path": "final-followup/light/captures/png-0-1/60903456-68E7-4B35-9E1D-E9F9279E3DE3.txt",
+      "originalPath": ".build/S24DecisionPromptNov08/light-run/captures/png-0-1/60903456-68E7-4B35-9E1D-E9F9279E3DE3.txt",
+      "sha256": "67efac339e71043e197a0c5b129109089262e823c8c634c196c05f8b6334a633",
+      "bytes": 17821
+    },
+    {
+      "path": "final-followup/light/captures/png-0-1/manifest.json",
+      "originalPath": ".build/S24DecisionPromptNov08/light-run/captures/png-0-1/manifest.json",
+      "sha256": "0aa8c10d8f1a3e9b565b29978312a8da239e81fd4fa67e4fb9c3ffe2c9ff0ba5",
+      "bytes": 787
+    },
+    {
+      "path": "final-followup/light/captures/png-0-2/98EB0097-2F50-4908-BCFC-4F03CCCC3B36.png",
+      "originalPath": ".build/S24DecisionPromptNov08/light-run/captures/png-0-2/98EB0097-2F50-4908-BCFC-4F03CCCC3B36.png",
+      "sha256": "f8ca863f7b00fab9092769a50d418eeb414d66342ebe8bd0cd1cb63349f7323a",
+      "bytes": 306943
+    },
+    {
+      "path": "final-followup/light/captures/png-0-2/manifest.json",
+      "originalPath": ".build/S24DecisionPromptNov08/light-run/captures/png-0-2/manifest.json",
+      "sha256": "e1cea2677e2376077dbf3477845344fcb08af33b321e7a84c4d5766ea0fd1a16",
+      "bytes": 810
+    },
+    {
+      "path": "final-followup/dark/selectors.txt",
+      "originalPath": ".build/S24DecisionPromptNov08/dark-run/selectors.txt",
+      "sha256": "2fdd9263a549114629651f00229a23dee50813fb3f90e26de94193a21b434707",
+      "bytes": 112
+    },
+    {
+      "path": "final-followup/dark/inspection/verification.json",
+      "originalPath": ".build/S24DecisionPromptNov08/dark-run/inspection/verification.json",
+      "sha256": "c587a9528d6c719b1c6a69fd1bd267f27c236e35cb821ff3573955ad416cfa0b",
+      "bytes": 269
+    },
+    {
+      "path": "final-followup/dark/inspection/strict.txt",
+      "originalPath": ".build/S24DecisionPromptNov08/dark-run/inspection/strict.txt",
+      "sha256": "cc674c2ae83434d72773384bf4a9e712b1d12b868ef193c3cc3db3a4f8547250",
+      "bytes": 688
+    },
+    {
+      "path": "final-followup/dark/inspection/summary.json",
+      "originalPath": ".build/S24DecisionPromptNov08/dark-run/inspection/summary.json",
+      "sha256": "5decccd2005472aa158a68ad48e04ba80413bade71cab9bffd9cea5f2beb97b2",
+      "bytes": 1020
+    },
+    {
+      "path": "final-followup/dark/inspection/tests.json",
+      "originalPath": ".build/S24DecisionPromptNov08/dark-run/inspection/tests.json",
+      "sha256": "5a0c41ff4afdcc8b915686700dde06fa624d1341d5ad232ff31dfdcfccfea7f0",
+      "bytes": 1828
+    },
+    {
+      "path": "final-followup/dark/inspection/test-runtime-warnings.json",
+      "originalPath": ".build/S24DecisionPromptNov08/dark-run/inspection/test-runtime-warnings.json",
+      "sha256": "ce5f63a49527481ca5704f8996eb8eea682d8688c3381353dd8f23ad6759bffb",
+      "bytes": 179
+    },
+    {
+      "path": "final-followup/dark/captures/receipt.json",
+      "originalPath": ".build/S24DecisionPromptNov08/dark-run/captures/receipt.json",
+      "sha256": "efc8de3ab513fba3ab2d74d6262df6e78d6efdac2025140187d9cf6de9f1e58c",
+      "bytes": 2299
+    },
+    {
+      "path": "final-followup/dark/captures/root-review.json",
+      "originalPath": ".build/S24DecisionPromptNov08/dark-run/captures/root-review.json",
+      "sha256": "98546c1db3bae8b4b460e02075a606c1be5bd0b52dd372a14498b4a5812b79df",
+      "bytes": 617
+    },
+    {
+      "path": "final-followup/dark/captures/png-0-0/5F79AE57-B585-46FC-83B7-2B7CD81616DB.png",
+      "originalPath": ".build/S24DecisionPromptNov08/dark-run/captures/png-0-0/5F79AE57-B585-46FC-83B7-2B7CD81616DB.png",
+      "sha256": "f06708c05df0c07ca55fda0527de44c4e7f473de5cffb80902b98a9ef948cde3",
+      "bytes": 13588
+    },
+    {
+      "path": "final-followup/dark/captures/png-0-0/manifest.json",
+      "originalPath": ".build/S24DecisionPromptNov08/dark-run/captures/png-0-0/manifest.json",
+      "sha256": "0a182de9b6f3d3dcfdb27535a6441dca3befbfabf260190e08505d44a318bc46",
+      "bytes": 781
+    },
+    {
+      "path": "final-followup/dark/captures/png-0-1/D1A95D5A-6CA4-4529-BDE0-484F46E2C981.txt",
+      "originalPath": ".build/S24DecisionPromptNov08/dark-run/captures/png-0-1/D1A95D5A-6CA4-4529-BDE0-484F46E2C981.txt",
+      "sha256": "dbf84341667c64252a91c065881b230dc43d4b0b51f132fb1766731efbd67a45",
+      "bytes": 17821
+    },
+    {
+      "path": "final-followup/dark/captures/png-0-1/manifest.json",
+      "originalPath": ".build/S24DecisionPromptNov08/dark-run/captures/png-0-1/manifest.json",
+      "sha256": "e9519593c5f2e6a85c451183338fedb6202409c78ccf5179750b6dfe56379da9",
+      "bytes": 787
+    },
+    {
+      "path": "final-followup/dark/captures/png-0-2/B6D2915B-68A8-455A-9A88-5D444A83FE92.png",
+      "originalPath": ".build/S24DecisionPromptNov08/dark-run/captures/png-0-2/B6D2915B-68A8-455A-9A88-5D444A83FE92.png",
+      "sha256": "61018d85ab54711a5340142e515071708c9a50163e49953b46d5d23e8fb8061f",
+      "bytes": 277669
+    },
+    {
+      "path": "final-followup/dark/captures/png-0-2/manifest.json",
+      "originalPath": ".build/S24DecisionPromptNov08/dark-run/captures/png-0-2/manifest.json",
+      "sha256": "214ea24f5f3497b57c7a33c110cc467d828ffbced2c13cbc3d54891f941e1686",
+      "bytes": 809
+    },
+    {
+      "path": "final-followup/measurements/light-measurement.json",
+      "originalPath": ".build/S24DecisionPromptNov08/price-prompt-measurement/light-measurement.json",
+      "sha256": "d0375f401e110c72ebd686fcf9aad6f64de0b1bb90d5e0cde43392d474e7540d",
+      "bytes": 9629
+    },
+    {
+      "path": "final-followup/measurements/light-review.json",
+      "originalPath": ".build/S24DecisionPromptNov08/price-prompt-measurement/light-review.json",
+      "sha256": "51f2c374356d7facf7d58d882ad911e4bcad18fbdb5611f259c00a02065178b6",
+      "bytes": 3559
+    },
+    {
+      "path": "final-followup/measurements/LIGHT-REVIEW.md",
+      "originalPath": ".build/S24DecisionPromptNov08/price-prompt-measurement/LIGHT-REVIEW.md",
+      "sha256": "ede3f8b0ce02b79e795fa64241eb20ef3482a74ff2dcb5ea0fb317b3668e5c60",
+      "bytes": 1439
+    },
+    {
+      "path": "final-followup/measurements/light-manifest.json",
+      "originalPath": ".build/S24DecisionPromptNov08/price-prompt-measurement/light-manifest.json",
+      "sha256": "8d91bd5a87cdceca63ad040f13e73ceaa6030702b671da97cecd2502f883eeef",
+      "bytes": 2353
+    },
+    {
+      "path": "final-followup/measurements/measure_field.py",
+      "originalPath": ".build/S24DecisionPromptNov08/price-prompt-measurement/measure_field.py",
+      "sha256": "487b50142ac771836efe92b15364a7bf5252dd70bfe5698573118898db87d8b0",
+      "bytes": 9050
+    },
+    {
+      "path": "final-followup/measurements/check_method.py",
+      "originalPath": ".build/S24DecisionPromptNov08/price-prompt-measurement/check_method.py",
+      "sha256": "9cade49d4e2b9661d1f51964d29e45133f7f2b18f709ab22a7bf8ecbe577e1f6",
+      "bytes": 2613
+    },
+    {
+      "path": "final-followup/measurements/README.md",
+      "originalPath": ".build/S24DecisionPromptNov08/price-prompt-measurement/README.md",
+      "sha256": "7a3f58d81c819c0ba07135c59503f94675019e25e9e6a393a1d80e462a3a34bc",
+      "bytes": 3470
+    },
+    {
+      "path": "final-followup/measurements/root-verification/light-measurement.json",
+      "originalPath": ".build/S24DecisionPromptNov08/price-prompt-root-review/light-measurement.json",
+      "sha256": "d0375f401e110c72ebd686fcf9aad6f64de0b1bb90d5e0cde43392d474e7540d",
+      "bytes": 9629
+    },
+    {
+      "path": "final-followup/measurements/dark-measurement.json",
+      "originalPath": ".build/S24DecisionPromptNov08/price-prompt-measurement/dark-measurement.json",
+      "sha256": "4e1d7fca45e46a506b9d3f0469aa761417faff8ba61a4772caf5b5598af633dc",
+      "bytes": 9632
+    },
+    {
+      "path": "final-followup/measurements/dark-review.json",
+      "originalPath": ".build/S24DecisionPromptNov08/price-prompt-measurement/dark-review.json",
+      "sha256": "290666702a499f8eee58d79aa0d7dd941a4d6834e3db923a212142517b66259a",
+      "bytes": 3604
+    },
+    {
+      "path": "final-followup/measurements/DARK-REVIEW.md",
+      "originalPath": ".build/S24DecisionPromptNov08/price-prompt-measurement/DARK-REVIEW.md",
+      "sha256": "ef8f541f24a9de2a5a7cdecb09707313c7639f92324d6f9c0eee508fcc1fd352",
+      "bytes": 1751
+    },
+    {
+      "path": "final-followup/measurements/final-manifest.json",
+      "originalPath": ".build/S24DecisionPromptNov08/price-prompt-measurement/final-manifest.json",
+      "sha256": "ecc78808acaf7e3325baca9e0f39d0b1feebc370a8056a934cee21223bff276f",
+      "bytes": 4251
+    },
+    {
+      "path": "final-followup/measurements/root-verification/dark-measurement.json",
+      "originalPath": ".build/S24DecisionPromptNov08/price-prompt-root-review/dark-measurement.json",
+      "sha256": "4e1d7fca45e46a506b9d3f0469aa761417faff8ba61a4772caf5b5598af633dc",
+      "bytes": 9632
+    },
+    {
+      "path": "final-followup/release/bundle-check.txt",
+      "originalPath": ".build/S24DecisionPromptNov08/release-run/bundle-check.txt",
+      "sha256": "f235bbb8dff89745abba14e5dbe8f0247778c5a7063582549dc3dd95af685c76",
+      "bytes": 105
+    }
+  ],
+  "allCopiedOriginalsUnchanged": true,
+  "runProjection": "Exact private run SHA retained; huge productManifest omitted.",
+  "activities": "Not copied; attachment names/IDs/times/hashes remain in light and dark captures/receipt.json; initial light collector correction preserved.",
+  "darkRun": "Completed original hierarchy run: bounded receipts and six original reviewed PNGs copied; no result tools used.",
+  "finalFollowup": "Separate final source c4cbc2: completed light/dark1/1 receipts, four root-reviewed PNGs/two bounded TXT, independently byte-identical light/dark measurements, compact unsigned Release/bundle receipt. No result tools used.",
+  "releaseProjection": {
+    "originalPath": ".build/S24DecisionPromptNov08/release-run/run.json",
+    "sha256": "5ed4ebceb0e3f4c2ecc197f351172ef6fc6bf4d477435ff4293136007eb28914",
+    "omittedProductManifestEntries": 173
+  }
+}

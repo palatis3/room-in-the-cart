@@ -1,0 +1,17 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "B6D2915B-68A8-455A-9A88-5D444A83FE92.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-unknown-price-visible-without-expanding-details_0_0028401A-6870-48BE-BA79-FD780A700ED5.png",
+        "timestamp" : 1794145894.73
+      }
+    ],
+    "testIdentifier" : "HouseholdRequestPackUITests/testShopperCarriesEarlierRequestOnceAndReviewsCurrentPackPrice()",
+    "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/HouseholdRequestPackUITests/testShopperCarriesEarlierRequestOnceAndReviewsCurrentPackPrice"
+  }
+]

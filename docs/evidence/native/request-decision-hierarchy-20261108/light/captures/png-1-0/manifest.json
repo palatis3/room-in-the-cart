@@ -1,0 +1,17 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "DD3358CC-F55C-48FA-B01D-AC37D6A2457D.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S23-shopper-itemized-checkout-details_0_AFCFCAA3-F8C7-4477-A28B-8E563703E9C6.png",
+        "timestamp" : 1794145081.646
+      }
+    ],
+    "testIdentifier" : "HouseholdRequestPackUITests/testShopperOpensCheckoutCalculationsAndIncludedChargesWithNoDecisionWrite()",
+    "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/HouseholdRequestPackUITests/testShopperOpensCheckoutCalculationsAndIncludedChargesWithNoDecisionWrite"
+  }
+]

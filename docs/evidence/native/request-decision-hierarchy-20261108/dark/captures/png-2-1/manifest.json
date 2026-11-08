@@ -1,0 +1,17 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "B9491B8F-CA7A-4555-B680-9CE4442CEF0F.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Largest text Mia’s wrap lunch_0_59050492-E19A-4160-967E-EF53EA3A9A9B.png",
+        "timestamp" : 1794145400.189
+      }
+    ],
+    "testIdentifier" : "HouseholdRequestPackUITests/testLargestTextShowsCompleteProtectedLunchNamesAndDates()",
+    "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/HouseholdRequestPackUITests/testLargestTextShowsCompleteProtectedLunchNamesAndDates"
+  }
+]

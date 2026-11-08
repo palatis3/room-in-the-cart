@@ -172,7 +172,7 @@ struct HouseholdRequestDecisionView: View {
                                     Stepper(value: $model.packs, in: 1...10_000) {
                                         LabeledContent(ht("Whole packs"), value: model.packs.formatted())
                                     }
-                                    TextField(ht("Price per pack in USD, blank if unknown"), text: $model.price).keyboardType(.decimalPad)
+                                    workingTextField(ht("Price per pack in USD, blank if unknown"), text: $model.price).keyboardType(.decimalPad)
                                         .accessibilityIdentifier("household.decision.price")
                                     Toggle(ht("Counts toward the retailer fee threshold"), isOn: $model.feeEligible)
                                 }
@@ -189,16 +189,20 @@ struct HouseholdRequestDecisionView: View {
                                 if (model.choice == .add || model.choice == .link), selected.route == "next" {
                                     Toggle(ht("Bring this next-shop request into this shop"), isOn: $model.promote)
                                 }
-                                Button(ht("Review decision")) { Task { await model.review() } }.accessibilityIdentifier("household.decision.review")
+                                if model.preview == nil {
+                                    reviewButton.buttonStyle(PrimaryAction())
+                                } else {
+                                    reviewButton
+                                }
                             }
                         } else { Section { Text(ht("This request has a recorded outcome. Refresh to check for changes.")) } }
                         if let preview = model.preview {
                             Section(header: Text(ht("Review before applying")).foregroundStyle(Theme.secondary)) {
-                                Text(model.choice.title).font(.headline)
+                                Text(model.choice.title).font(.title2)
                                 if let selection = model.packSelection { HouseholdChosenPackSummary(selection: selection) }
                                 VStack(alignment: .leading, spacing: 8) {
-                                    Text(ht("After this decision")).font(.headline)
-                                    HouseholdDecisionFact(ht("Expected total"), value: householdMoney(preview.after.totalMinor, currency: preview.after.currency))
+                                    Text(ht("After this decision")).font(.title2)
+                                    HouseholdDecisionTotal(value: householdMoney(preview.after.totalMinor, currency: preview.after.currency))
                                         .accessibilityElement(children: .combine)
                                         .accessibilityIdentifier("household.decision.after-total")
                                     if preview.after.status == "overCap" {
@@ -206,9 +210,20 @@ struct HouseholdRequestDecisionView: View {
                                             .accessibilityElement(children: .combine)
                                             .accessibilityIdentifier("household.decision.over-cap")
                                     }
-                                    if preview.after.status == "unresolved" { Text(ht("Missing facts prevent a confirmed budget result.")) }
-                                    if preview.after.status == "scopeMismatch" { Text(ht("The cap and total cover different scopes.")) }
+                                    if preview.after.status == "unresolved", preview.after.missing.isEmpty {
+                                        Text(ht("Missing facts prevent a confirmed budget result."))
+                                    }
+                                    if preview.after.status == "scopeMismatch", !preview.after.missing.contains("scope_mismatch") {
+                                        Text(ht("The cap and total cover different scopes."))
+                                    }
+                                    ForEach(preview.after.missing, id: \.self) { code in
+                                        Text(missingBudgetFact(code))
+                                            .fixedSize(horizontal: false, vertical: true)
+                                    }
                                     HouseholdDecisionFact(ht("Scope"), value: householdScope(preview.after.scope))
+                                    Text(householdDecisionFeeBasis(shop.quote))
+                                        .fixedSize(horizontal: false, vertical: true)
+                                        .accessibilityIdentifier("household.decision.feeBasis")
                                     HouseholdDecisionFact(ht("Before this decision"), value: householdMoney(preview.before.totalMinor, currency: preview.before.currency))
                                         .accessibilityElement(children: .combine)
                                         .accessibilityIdentifier("household.decision.before-total")
@@ -245,6 +260,7 @@ struct HouseholdRequestDecisionView: View {
                                 if preview.requiresOverageAcceptance { Toggle(ht("I accept the displayed overage"), isOn: $model.acceptOverage).accessibilityIdentifier("household.decision.overage") }
                                 if preview.requiresUnknownAcceptance { Toggle(ht("I understand the total or its scope is unresolved"), isOn: $model.acceptUnknown) }
                                 Button(ht("Apply reviewed decision")) { Task { await model.apply() } }
+                                    .buttonStyle(PrimaryAction())
                                     .disabled(!model.canApply).accessibilityIdentifier("household.decision.apply")
                                 Button(ht("Cancel preview")) { model.invalidatePreview() }
                             }
@@ -277,7 +293,29 @@ struct HouseholdRequestDecisionView: View {
         .toolbar { ToolbarItem(placement: .cancellationAction) { Button(ht("Cancel")) { model.cancelReview(); dismiss() }.accessibilityIdentifier("household.decision.cancel") } }
         .task { model.select(request) }
     }
+
+    private var reviewButton: some View {
+        Button(ht("Review decision")) { Task { await model.review() } }
+            .accessibilityIdentifier("household.decision.review")
+    }
 }
+
+/// Show the quoted rule, never infer a threshold fee from incomplete basket facts.
+private func householdDecisionFeeBasis(_ quote: ShopperQuote) -> String {
+    switch quote.fee.kind {
+    case "fixed":
+        guard let amount = quote.fee.amountMinor else { return ht("The retailer fee is unknown.") }
+        return String(format: ht("Fixed retailer fee: %@."), householdMoney(amount, currency: quote.currency))
+    case "threshold":
+        return String(format: ht("Retailer fee: %@ below %@ in eligible items; %@ at or above."),
+                      householdMoney(quote.fee.belowMinor, currency: quote.currency),
+                      householdMoney(quote.fee.thresholdMinor, currency: quote.currency),
+                      householdMoney(quote.fee.aboveMinor, currency: quote.currency))
+    default:
+        return ht("The retailer fee is unknown.")
+    }
+}
+
 struct ShopperDeliverySection: View {
     @ObservedObject var model: HouseholdInboxModel
     @State private var reachedRetryDeadline: Date?

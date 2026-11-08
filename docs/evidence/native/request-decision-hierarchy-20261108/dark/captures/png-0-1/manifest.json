@@ -1,0 +1,17 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "0F4CE567-56C3-4781-B8D2-27B5AB52AAFF.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-shopper-access-ended-clears-private-context_0_C4F58954-B052-4EF7-917D-6EE99EC0C943.png",
+        "timestamp" : 1794145307.948
+      }
+    ],
+    "testIdentifier" : "HouseholdRequestPackUITests/testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite()",
+    "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/HouseholdRequestPackUITests/testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite"
+  }
+]

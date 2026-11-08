@@ -1,0 +1,258 @@
+Attributes: TextField, 0x11654fa90, {{32.0, 787.3}, {338.0, 22.0}}, identifier: 'household.decision.price', placeholderValue: 'Price per pack in USD, blank if unknown', value: Price per pack in ...
+Element subtree:
+ →TextField, 0x11654fa90, {{32.0, 787.3}, {338.0, 22.0}}, identifier: 'household.decision.price', placeholderValue: 'Price per pack in USD, blank if unknown', value: Price per pack in ...
+Path to element:
+ →Application, 0x102119010, pid: 34148, label: 'Room in the Cart'
+  ↳Window (Main), 0x102119130, {{0.0, 0.0}, {402.0, 874.0}}
+   ↳Other, 0x1167147d0, {{0.0, 0.0}, {402.0, 874.0}}
+    ↳Other, 0x116714a10, {{0.0, 62.0}, {402.0, 812.0}}
+     ↳Other, 0x116714b30, {{0.0, 62.0}, {402.0, 812.0}}
+      ↳Other, 0x116714c50, {{0.0, 62.0}, {402.0, 812.0}}
+       ↳Other, 0x116714d70, {{0.0, 62.0}, {402.0, 812.0}}
+        ↳Other, 0x116714e90, {{0.0, 62.0}, {402.0, 812.0}}
+         ↳Other, 0x116714fb0, {{0.0, 62.0}, {402.0, 812.0}}
+          ↳Other, 0x116547560, {{0.0, 62.0}, {402.0, 812.0}}
+           ↳Other, 0x116547680, {{0.0, 62.0}, {402.0, 812.0}}
+            ↳Other, 0x1165477a0, {{0.0, 62.0}, {402.0, 812.0}}
+             ↳Other, 0x1165478c0, {{0.0, 62.0}, {402.0, 812.0}}
+              ↳CollectionView, 0x1165479e0, {{0.0, 62.0}, {402.0, 812.0}}
+               ↳Cell, 0x11654f2b0, {{16.0, 772.3}, {370.0, 52.0}}
+                ↳Other, 0x11654f730, {{16.0, 772.3}, {370.0, 52.0}}
+                 ↳Other, 0x11654f850, {{16.0, 772.3}, {370.0, 52.0}}
+                  ↳Other, 0x11654f970, {{16.0, 772.3}, {370.0, 52.0}}
+                   ↳TextField, 0x11654fa90, {{32.0, 787.3}, {338.0, 22.0}}, identifier: 'household.decision.price', placeholderValue: 'Price per pack in USD, blank if unknown', value: Price per pack in ...
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x1167431f0, pid: 34148, label: 'Room in the Cart'
+  }
+  ↪︎Find: Descendants matching type Any
+    Output: {
+      Window (Main), 0x11663b180, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11664ab70, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11664fae0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11664ac90, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11664fc00, {{-402.0, -874.0}, {1206.0, 2622.0}}
+      Other, 0x11664fd20, {{0.0, 62.0}, {402.0, 812.0}}
+      Other, 0x11664a8d0, {{-402.0, -874.0}, {1206.0, 2622.0}}
+      Other, 0x11664a9f0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11664fe40, {{0.0, 62.0}, {402.0, 812.0}}
+      Other, 0x11664adb0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11664ff60, {{0.0, 62.0}, {402.0, 812.0}}
+      StaticText, 0x11664aed0, {{97.3, 62.0}, {207.3, 20.3}}, identifier: 'fixture.s24.posts', label: 'Fixture applied decisions: 2'
+      StaticText, 0x11664aff0, {{121.2, 84.3}, {159.7, 20.3}}, identifier: 'fixture.s24.lines', label: 'Fixture saved lines: 0'
+      Button, 0x11664b110, {{96.0, 106.7}, {210.0, 20.3}}, identifier: 'fixture.s24.end-access', label: 'Fixture end shopper access'
+      StaticText, 0x11664b2e0, {{1.0, 127.0}, {400.0, 13.3}}, identifier: 'fixture.s24.preview-diagnostics', label: 'Fixture previews: 0; busy: false; selected: 44444444-4444-4444-8444-444444444444; choice: add; price: ; preview: none; notice: none'
+      Other, 0x11664b400, {{0.0, 147.0}, {402.0, 727.0}}
+      Other, 0x116650080, {{0.0, 62.0}, {402.0, 812.0}}
+      NavigationBar, 0x11664b520, {{0.0, 157.0}, {402.0, 106.0}}, identifier: 'S24 request decision'
+      Other, 0x11664b760, {{0.0, 147.0}, {402.0, 727.0}}
+      Other, 0x11664f8a0, {{0.0, 147.0}, {402.0, 727.0}}
+      Other, 0x1166501a0, {{0.0, 62.0}, {402.0, 812.0}}
+      StaticText, 0x11664b640, {{16.0, 214.7}, {334.3, 40.7}}, label: 'S24 request decision'
+      Other, 0x11664b880, {{0.0, 147.0}, {402.0, 727.0}}
+      Other, 0x11664f9c0, {{0.0, 147.0}, {402.0, 727.0}}
+      Other, 0x1166502c0, {{0.0, 62.0}, {402.0, 812.0}}
+      Other, 0x11664b9a0, {{0.0, 147.0}, {402.0, 727.0}}
+      NavigationBar, 0x1166503e0, {{0.0, 78.0}, {402.0, 106.0}}, identifier: 'Review request'
+      Other, 0x116650980, {{0.0, 62.0}, {402.0, 812.0}}
+      Other, 0x11665a4b0, {{0.0, 62.0}, {402.0, 812.0}}
+      Other, 0x11664bac0, {{0.0, 147.0}, {402.0, 727.0}}
+      Other, 0x116650500, {{20.0, 82.0}, {76.7, 36.0}}, identifier: 'household.decision.cancel', label: 'Cancel'
+      StaticText, 0x116650860, {{16.0, 135.7}, {242.7, 40.7}}, label: 'Review request'
+      Other, 0x116650aa0, {{0.0, 62.0}, {402.0, 812.0}}
+      Other, 0x11665a5d0, {{0.0, 62.0}, {402.0, 812.0}}
+      CollectionView, 0x11664bbe0, {{0.0, 147.0}, {402.0, 727.0}}
+      Other, 0x116650620, {{20.0, 82.0}, {76.7, 36.0}}
+      Other, 0x116650bc0, {{0.0, 62.0}, {402.0, 812.0}}
+      Other, 0x11664bd00, {{-16.0, -1191.0}, {434.0, 1523.7}}
+      Other, 0x11664be20, {{0.0, 147.0}, {402.0, 727.0}}
+      Other, 0x11664bf40, {{0.0, 147.0}, {402.0, 727.0}}
+      Cell, 0x11664c060, {{16.0, 263.0}, {370.0, 52.0}}
+      Other, 0x11664ca80, {{-16.0, 332.7}, {434.0, 159.3}}
+      Cell, 0x11664cba0, {{16.0, 350.0}, {370.0, 52.0}}
+      Cell, 0x11664d380, {{16.0, 402.0}, {370.0, 72.3}}
+      Other, 0x11664db60, {{32.0, 401.0}, {338.0, 1.0}}
+      Other, 0x11664dc80, {{-16.0, 492.0}, {434.0, 1688.0}}
+      Cell, 0x11664dda0, {{16.0, 492.0}, {370.0, 40.3}}
+      Cell, 0x11664e460, {{16.0, 532.0}, {370.0, 173.7}}
+      Other, 0x11664f420, {{369.0, 201.0}, {30.0, 611.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+      Button, 0x116650740, {{20.0, 82.0}, {76.7, 36.0}}, identifier: 'household.decision.cancel', label: 'Cancel'
+      Other, 0x116650ce0, {{0.0, 62.0}, {402.0, 812.0}}
+      Other, 0x11664c180, {{16.0, 263.0}, {370.0, 52.0}}
+      Other, 0x11664c3c0, {{16.0, 263.0}, {370.0, 52.0}}
+      Other, 0x11664ccc0, {{16.0, 350.0}, {370.0, 52.0}}
+      Other, 0x11664cf00, {{16.0, 350.0}, {370.0, 52.0}}
+      Other, 0x11664d4a0, {{16.0, 402.0}, {370.0, 72.3}}
+      Other, 0x11664d6e0, {{16.0, 402.0}, {370.0, 72.3}}
+      Other, 0x11664dec0, {{16.0, 492.0}, {370.0, 40.3}}
+      Other, 0x11664dfe0, {{16.0, 492.0}, {370.0, 40.3}}
+      Other, 0x11664e580, {{16.0, 532.0}, {370.0, 173.7}}
+      Other, 0x11664e7c0, {{16.0, 532.0}, {370.0, 173.7}}
+      Other, 0x11664f540, {{396.0, 204.0}, {3.0, 461.3}}
+      CollectionView, 0x116650e00, {{0.0, 62.0}, {402.0, 812.0}}
+      Other, 0x11664c2a0, {{16.0, 263.0}, {370.0, 52.0}}
+      Other, 0x11664c4e0, {{16.0, 263.0}, {370.0, 52.0}}
+      Other, 0x11664cde0, {{16.0, 350.0}, {370.0, 52.0}}
+      Other, 0x11664d020, {{16.0, 350.0}, {370.0, 52.0}}
+      Other, 0x11664d5c0, {{16.0, 402.0}, {370.0, 72.3}}
+      Other, 0x11664d800, {{16.0, 402.0}, {370.0, 72.3}}
+      Other, 0x11664e100, {{16.0, 492.0}, {370.0, 40.3}}
+      Other, 0x11664e6a0, {{16.0, 532.0}, {370.0, 173.7}}
+      Other, 0x11664e8e0, {{16.0, 532.0}, {370.0, 173.7}}
+      Other, 0x116650f20, {{-16.0, -1440.0}, {434.0, 1942.0}}
+      Other, 0x116651040, {{0.0, 62.0}, {402.0, 812.0}}
+      Other, 0x116651280, {{0.0, 62.0}, {402.0, 812.0}}
+      Cell, 0x1166513a0, {{16.0, 184.0}, {370.0, 40.3}}
+      Cell, 0x116651a60, {{16.0, 224.3}, {370.0, 52.0}}
+      Cell, 0x116652360, {{16.0, 276.3}, {370.0, 52.0}}
+      Other, 0x116652d80, {{32.0, 275.3}, {338.0, 1.0}}
+      Cell, 0x116652ea0, {{16.0, 328.3}, {370.0, 52.0}}
+      Other, 0x1166537a0, {{32.0, 327.3}, {338.0, 1.0}}
+      Cell, 0x1166538c0, {{16.0, 380.3}, {370.0, 52.0}}
+      Other, 0x1166541c0, {{32.0, 379.3}, {338.0, 1.0}}
+      Cell, 0x1166542e0, {{16.0, 432.3}, {370.0, 52.0}}
+      Other, 0x116654d00, {{32.0, 431.3}, {338.0, 1.0}}
+      Other, 0x116654e20, {{-16.0, 502.0}, {434.0, 494.3}}
+      Cell, 0x116654f40, {{16.0, 502.0}, {370.0, 40.3}}
+      Cell, 0x116655600, {{16.0, 542.3}, {370.0, 52.0}}
+      Cell, 0x116656140, {{16.0, 594.3}, {370.0, 74.0}}
+      Other, 0x116656c80, {{32.0, 593.3}, {338.0, 1.0}}
+      Cell, 0x116656da0, {{16.0, 668.3}, {370.0, 52.0}}
+      Other, 0x1166576a0, {{32.0, 667.3}, {338.0, 1.0}}
+      Cell, 0x1166577c0, {{16.0, 720.3}, {370.0, 52.0}}
+      Other, 0x116658540, {{32.0, 719.3}, {338.0, 1.0}}
+      Cell, 0x116658660, {{16.0, 772.3}, {370.0, 52.0}}
+      Other, 0x116658f60, {{32.0, 771.3}, {338.0, 1.0}}
+      Cell, 0x116659080, {{16.0, 824.3}, {370.0, 72.3}}
+      Other, 0x116659bc0, {{32.0, 823.3}, {338.0, 1.0}}
+      Other, 0x116659ce0, {{369.0, 184.0}, {30.0, 628.0}}, label: 'Vertical scroll bar, 2 pages', value: 0%
+      Other, 0x11664c600, {{16.0, 263.0}, {370.0, 52.0}}
+      Other, 0x11664d140, {{16.0, 350.0}, {370.0, 52.0}}
+      Other, 0x11664d920, {{16.0, 402.0}, {370.0, 72.3}}
+      Other, 0x11664e220, {{16.0, 492.0}, {370.0, 40.3}}
+      Other, 0x11664ea00, {{16.0, 532.0}, {370.0, 173.7}}
+      Other, 0x116651160, {{0.0, 62.0}, {402.0, 124.8}}
+      Other, 0x1166514c0, {{16.0, 184.0}, {370.0, 40.3}}
+      Other, 0x1166515e0, {{16.0, 184.0}, {370.0, 40.3}}
+      Other, 0x116651b80, {{16.0, 224.3}, {370.0, 52.0}}
+      Other, 0x116651ee0, {{16.0, 224.3}, {370.0, 52.0}}
+      Other, 0x116652480, {{16.0, 276.3}, {370.0, 52.0}}
+      Other, 0x1166527e0, {{16.0, 276.3}, {370.0, 52.0}}
+      Other, 0x116652fc0, {{16.0, 328.3}, {370.0, 52.0}}
+      Other, 0x116653320, {{16.0, 328.3}, {370.0, 52.0}}
+      Other, 0x1166539e0, {{16.0, 380.3}, {370.0, 52.0}}
+      Other, 0x116653d40, {{16.0, 380.3}, {370.0, 52.0}}
+      Other, 0x116654400, {{16.0, 432.3}, {370.0, 52.0}}
+      Other, 0x116654760, {{16.0, 432.3}, {370.0, 52.0}}
+      Other, 0x116655060, {{16.0, 502.0}, {370.0, 40.3}}
+      Other, 0x116655180, {{16.0, 502.0}, {370.0, 40.3}}
+      Other, 0x116655720, {{16.0, 542.3}, {370.0, 52.0}}
+      Other, 0x116655a80, {{16.0, 542.3}, {370.0, 52.0}}
+      Other, 0x116656260, {{16.0, 594.3}, {370.0, 74.0}}
+      Other, 0x1166565c0, {{16.0, 594.3}, {370.0, 74.0}}
+      Other, 0x116656ec0, {{16.0, 668.3}, {370.0, 52.0}}
+      Other, 0x116657220, {{16.0, 668.3}, {370.0, 52.0}}
+      Other, 0x1166578e0, {{16.0, 720.3}, {370.0, 52.0}}
+      Other, 0x116657c40, {{16.0, 720.3}, {370.0, 52.0}}
+      Other, 0x116658780, {{16.0, 772.3}, {370.0, 52.0}}
+      Other, 0x116658ae0, {{16.0, 772.3}, {370.0, 52.0}}
+      Other, 0x1166591a0, {{16.0, 824.3}, {370.0, 72.3}}
+      Other, 0x116659500, {{16.0, 824.3}, {370.0, 72.3}}
+      Other, 0x116659e00, {{396.0, 187.0}, {3.0, 534.7}}
+      Button, 0x11664c720, {{16.0, 263.0}, {370.0, 52.0}}, identifier: 'household.deferred.open', label: 'Saved from earlier pickups'
+      Button, 0x11664d260, {{16.0, 350.0}, {370.0, 52.0}}, label: 'Refresh requests'
+      StaticText, 0x11664da40, {{16.0, 402.0}, {370.0, 72.3}}, label: 'Each request keeps its own outcome. Linking a line does not add another pack.'
+      StaticText, 0x11664e340, {{16.0, 492.0}, {370.0, 40.3}}, label: 'Requests for this shop'
+      Other, 0x11664eb20, {{32.0, 547.0}, {338.0, 143.7}}
+      Other, 0x116651700, {{16.0, 184.0}, {370.0, 40.3}}
+      Other, 0x116651ca0, {{16.0, 224.3}, {370.0, 52.0}}
+      Other, 0x116652000, {{16.0, 224.3}, {370.0, 52.0}}
+      Other, 0x1166525a0, {{16.0, 276.3}, {370.0, 52.0}}
+      Other, 0x116652900, {{16.0, 276.3}, {370.0, 52.0}}
+      Other, 0x1166530e0, {{16.0, 328.3}, {370.0, 52.0}}
+      Other, 0x116653440, {{16.0, 328.3}, {370.0, 52.0}}
+      Other, 0x116653b00, {{16.0, 380.3}, {370.0, 52.0}}
+      Other, 0x116653e60, {{16.0, 380.3}, {370.0, 52.0}}
+      Other, 0x116654520, {{16.0, 432.3}, {370.0, 52.0}}
+      Other, 0x116654880, {{16.0, 432.3}, {370.0, 52.0}}
+      Other, 0x1166552a0, {{16.0, 502.0}, {370.0, 40.3}}
+      Other, 0x116655840, {{16.0, 542.3}, {370.0, 52.0}}
+      Other, 0x116655ba0, {{16.0, 542.3}, {370.0, 52.0}}
+      Other, 0x116656380, {{16.0, 594.3}, {370.0, 74.0}}
+      Other, 0x1166566e0, {{16.0, 594.3}, {370.0, 74.0}}
+      Other, 0x116656fe0, {{16.0, 668.3}, {370.0, 52.0}}
+      Other, 0x116657340, {{16.0, 668.3}, {370.0, 52.0}}
+      Other, 0x116657a00, {{16.0, 720.3}, {370.0, 52.0}}
+      Other, 0x116657d60, {{16.0, 720.3}, {370.0, 52.0}}
+      Other, 0x1166588a0, {{16.0, 772.3}, {370.0, 52.0}}
+      Other, 0x116658c00, {{16.0, 772.3}, {370.0, 52.0}}
+      Other, 0x1166592c0, {{16.0, 824.3}, {370.0, 72.3}}
+      Other, 0x116659620, {{16.0, 824.3}, {370.0, 72.3}}
+      StaticText, 0x11664c840, {{32.0, 278.8}, {202.3, 20.3}}, label: 'Saved from earlier pickups'
+      Image, 0x11664c960, {{360.7, 283.0}, {7.0, 12.0}}, identifier: 'chevron.forward'
+      Button, 0x11664ec40, {{32.0, 547.0}, {338.0, 117.3}}, identifier: 'household.request.44444444-4444-4444-8444-444444444444', label: 'Wraps for lunch, Sam, 8 wraps, From an earlier pickup, Nov 2, 2026 at 7:00 PM'
+      StaticText, 0x11664f300, {{32.0, 670.3}, {212.0, 20.3}}, identifier: 'household.request.outcome.44444444-4444-4444-8444-444444444444', label: 'Received, waiting for review'
+      Other, 0x116651820, {{16.0, 184.0}, {370.0, 40.3}}
+      Other, 0x116651dc0, {{16.0, 224.3}, {370.0, 52.0}}
+      Other, 0x116652120, {{16.0, 224.3}, {370.0, 52.0}}
+      Other, 0x1166526c0, {{16.0, 276.3}, {370.0, 52.0}}
+      Other, 0x116652a20, {{16.0, 276.3}, {370.0, 52.0}}
+      Other, 0x116653200, {{16.0, 328.3}, {370.0, 52.0}}
+      Other, 0x116653560, {{16.0, 328.3}, {370.0, 52.0}}
+      Other, 0x116653c20, {{16.0, 380.3}, {370.0, 52.0}}
+      Other, 0x116653f80, {{16.0, 380.3}, {370.0, 52.0}}
+      Other, 0x116654640, {{16.0, 432.3}, {370.0, 52.0}}
+      Other, 0x1166549a0, {{16.0, 432.3}, {370.0, 52.0}}
+      Other, 0x1166553c0, {{16.0, 502.0}, {370.0, 40.3}}
+      Other, 0x116655960, {{16.0, 542.3}, {370.0, 52.0}}
+      Other, 0x116655cc0, {{16.0, 542.3}, {370.0, 52.0}}
+      Other, 0x1166564a0, {{16.0, 594.3}, {370.0, 74.0}}
+      Other, 0x116656800, {{16.0, 594.3}, {370.0, 74.0}}
+      Other, 0x116657100, {{16.0, 668.3}, {370.0, 52.0}}
+      Other, 0x116657460, {{16.0, 668.3}, {370.0, 52.0}}
+      Other, 0x116657b20, {{16.0, 720.3}, {370.0, 52.0}}
+      Other, 0x116657e80, {{16.0, 720.3}, {370.0, 52.0}}
+      Other, 0x1166589c0, {{16.0, 772.3}, {370.0, 52.0}}
+      Other, 0x116658d20, {{16.0, 772.3}, {370.0, 52.0}}
+      Other, 0x1166593e0, {{16.0, 824.3}, {370.0, 72.3}}
+      Other, 0x116659740, {{16.0, 824.3}, {370.0, 72.3}}
+      StaticText, 0x11664ed60, {{32.0, 547.0}, {125.7, 20.3}}, label: 'Wraps for lunch'
+      StaticText, 0x11664ee80, {{32.0, 573.3}, {30.3, 18.0}}, label: 'Sam'
+      StaticText, 0x11664efa0, {{32.0, 597.3}, {61.0, 20.3}}, label: '8 wraps'
+      StaticText, 0x11664f0c0, {{32.0, 623.7}, {169.0, 20.3}}, label: 'From an earlier pickup'
+      StaticText, 0x11664f1e0, {{32.0, 650.0}, {132.3, 14.3}}, label: 'Nov 2, 2026 at 7:00 PM'
+      StaticText, 0x116651940, {{16.0, 184.0}, {370.0, 40.3}}, label: 'Request'
+      StaticText, 0x116652240, {{16.0, 224.3}, {370.0, 52.0}}, label: 'Wraps for lunch'
+      StaticText, 0x116652b40, {{32.0, 292.2}, {104.7, 20.3}}, label: 'Requested by'
+      StaticText, 0x116652c60, {{16.0, 276.3}, {370.0, 52.0}}, label: 'Requested by, Sam'
+      StaticText, 0x116653680, {{16.0, 328.3}, {370.0, 52.0}}, label: '8 wraps'
+      StaticText, 0x1166540a0, {{16.0, 380.3}, {370.0, 52.0}}, label: 'Received, waiting for review'
+      StaticText, 0x116654ac0, {{32.0, 448.2}, {69.7, 20.3}}, label: 'Received'
+      StaticText, 0x116654be0, {{16.0, 432.3}, {370.0, 52.0}}, label: 'Received, Nov 2, 2026 at 7:00 PM'
+      StaticText, 0x1166554e0, {{16.0, 502.0}, {370.0, 40.3}}, label: 'Choose an outcome'
+      StaticText, 0x116655de0, {{32.0, 558.2}, {70.3, 20.3}}, label: 'Outcome'
+      Button, 0x116655f00, {{32.0, 551.3}, {338.0, 34.3}}, identifier: 'household.decision.choice', label: 'Outcome, Add packs to this shop'
+      Button, 0x116656920, {{16.0, 594.3}, {370.0, 74.0}}, identifier: 'household.pack.open', label: 'Compare available packs for this request', value: Collapsed
+      TextField, 0x116657580, {{32.0, 683.3}, {338.0, 22.0}}, identifier: 'household.decision.item', placeholderValue: 'Pack or item name', value: Wraps for lunch
+      StaticText, 0x116657fa0, {{32.0, 736.2}, {97.7, 20.3}}, label: 'Whole packs'
+      StaticText, 0x1166580c0, {{32.0, 736.2}, {236.0, 20.3}}, label: 'Whole packs, 1'
+      Stepper, 0x1166581e0, {{32.0, 730.3}, {338.0, 32.0}}, label: 'Whole packs, 1', value: 1
+      TextField, 0x116658e40, {{32.0, 787.3}, {338.0, 22.0}}, identifier: 'household.decision.price', placeholderValue: 'Price per pack in USD, blank if unknown', value: Price per pack in ...
+      Switch, 0x116659860, {{16.0, 824.3}, {370.0, 72.3}}, label: 'Counts toward the retailer fee threshold', value: 1
+      StaticText, 0x116656020, {{180.3, 558.3}, {173.3, 20.3}}, label: 'Add packs to this shop'
+      StaticText, 0x116656a40, {{32.0, 609.3}, {338.0, 44.0}}, label: 'Compare available packs for this request'
+      Image, 0x116656b60, {{360.0, 624.0}, {9.0, 15.0}}, identifier: 'chevron.forward', label: 'Forward'
+      Button, 0x116658300, {{276.0, 730.3}, {47.0, 32.0}}, identifier: 'Decrement', label: 'Whole packs, 1, Decrement', value: 1
+      Button, 0x116658420, {{323.0, 730.3}, {47.0, 32.0}}, identifier: 'Increment', label: 'Whole packs, 1, Increment', value: 1
+      StaticText, 0x116659980, {{32.0, 839.3}, {201.3, 42.3}}, label: 'Counts toward the retailer fee threshold'
+      Switch, 0x116659aa0, {{309.0, 846.7}, {63.0, 28.0}}, value: 1
+    }
+    ↪︎Find: Elements matching predicate '"household.decision.price" IN identifiers'
+      Output: {
+        TextField, 0x11659ded0, {{32.0, 787.3}, {338.0, 22.0}}, identifier: 'household.decision.price', placeholderValue: 'Price per pack in USD, blank if unknown', value: Price per pack in ...
+      }
+      ↪︎Find: First Match
+        Output: {
+          TextField, 0x11681b4d0, {{32.0, 787.3}, {338.0, 22.0}}, identifier: 'household.decision.price', placeholderValue: 'Price per pack in USD, blank if unknown', value: Price per pack in ...
+        }

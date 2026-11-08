@@ -1,0 +1,116 @@
+{
+  "light": {
+    "nativeExit": 0,
+    "strictExit": 0,
+    "selected": 4,
+    "passed": 4,
+    "recordedRuntimeWarnings": 0,
+    "observedIdleMessages": 0,
+    "observedRunnerRestarts": 0,
+    "reviewedPNGs": 7
+  },
+  "collectorCorrection": {
+    "initialExpected": 8,
+    "actualExpected": 7,
+    "allSevenExportsSucceeded": true,
+    "receiptCompletedFromRetainedFiles": true,
+    "reexportOrNativeRerun": false
+  },
+  "dark": {
+    "nativeExit": 0,
+    "strictExit": 0,
+    "selected": 3,
+    "passed": 3,
+    "recordedRuntimeWarnings": 0,
+    "observedIdleMessages": 0,
+    "observedRunnerRestarts": 0,
+    "reviewedPNGs": 6
+  },
+  "Release": {
+    "buildExit": 0,
+    "bundleCheckExit": 0,
+    "sourceManifestSHA256": "c4cbc2f604d43e021b927e849acd8b486fd3179179a1f964a7c410c6288c36e5",
+    "sourceUnchanged": true,
+    "preservedProductsUnchanged": true,
+    "scope": "Final c4cbc2 source unsigned arm64 generic iPhone Release only; no signed/device/distribution qualification"
+  },
+  "qualifiedScope": "Initial hierarchy source: current English fixed-fee standard/AX5 selected views in iOS26.2 light and dark; unknown line price and valid Apply in light",
+  "unqualified": [
+    "Spanish runtime and human language review",
+    "threshold fee runtime",
+    "new minimumiOS17 styling",
+    "physical VoiceOver",
+    "41audit closure",
+    "full S24 or whole-app acceptance",
+    "enabled PrimaryAction pixel measurement",
+    "all-field, AX5 and physical-device contrast qualification"
+  ],
+  "nativeOrResultToolsByPublisher": false,
+  "sourceEditsByPublisher": false,
+  "originalPromptMeasurement": {
+    "reportedRatio": 1.7233924684533595,
+    "sourcePNGIdentityVerified": true,
+    "rootIndependentVerification": "Completed; measurement JSON byte-identical, bound in original-price-prompt/root-verification",
+    "fixtureState": "Original light standard-text empty-price prompt",
+    "audit41ClosureOrCountChangeClaimed": false
+  },
+  "finalSourceFollowup": {
+    "sourceManifestSHA256": "c4cbc2f604d43e021b927e849acd8b486fd3179179a1f964a7c410c6288c36e5",
+    "sourceEvidence": "final-followup/source",
+    "status": "Light and dark completed native/strict1/1 each; both prompt measurements independently reproduced; final-source Release and bundle check passed",
+    "light": {
+      "nativeExit": 0,
+      "strictExit": 0,
+      "selected": 1,
+      "passed": 1,
+      "seconds": 102.63,
+      "recordedRuntimeWarnings": 0,
+      "observedIdleMessages": 0,
+      "observedRunnerRestarts": 0,
+      "reviewedPNGs": 2,
+      "boundedFrameTXT": 1
+    },
+    "dark": {
+      "nativeExit": 0,
+      "strictExit": 0,
+      "selected": 1,
+      "passed": 1,
+      "seconds": 100.8,
+      "recordedRuntimeWarnings": 0,
+      "observedIdleMessages": 0,
+      "observedRunnerRestarts": 0,
+      "reviewedPNGs": 2,
+      "boundedFrameTXT": 1
+    },
+    "renderedLightPromptContrast": {
+      "coreRGB": [
+        71,
+        93,
+        85
+      ],
+      "backgroundRGB": [
+        255,
+        255,
+        255
+      ],
+      "ratio": 7.083026440313754,
+      "rootMeasurementByteIdentical": true,
+      "scope": "Single English Large-text light empty-price capture"
+    },
+    "renderedDarkPromptContrast": {
+      "coreRGB": [
+        180,
+        196,
+        185
+      ],
+      "backgroundRGB": [
+        28,
+        41,
+        35
+      ],
+      "ratio": 8.295238954004883,
+      "rootMeasurementByteIdentical": true,
+      "scope": "Single English Large-text dark empty-price capture"
+    }
+  }
+}

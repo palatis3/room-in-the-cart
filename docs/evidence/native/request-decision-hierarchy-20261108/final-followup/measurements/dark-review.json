@@ -1,0 +1,84 @@
+{
+  "appearance": "dark",
+  "captureProvenance": [
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/S24DecisionPromptNov08/dark-run/captures/png-0-0/5F79AE57-B585-46FC-83B7-2B7CD81616DB.png",
+      "bytes": 13588,
+      "sha256": "f06708c05df0c07ca55fda0527de44c4e7f473de5cffb80902b98a9ef948cde3",
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S24-empty-price-prompt_0_64C5BC6B-45F0-4037-A4A8-7824C4A8A3D8.png",
+        "payloadId": "0~kdoZRqrhZiU8xsGC721lexsdSsQyvuvIio11qkxFvuMZab9Cq0Dit71-qzwqXDitlZvkcPIyhE2JeqqLbdj_-g==",
+        "timestamp": 1794145882.042,
+        "uuid": "5F79AE57-B585-46FC-83B7-2B7CD81616DB"
+      },
+      "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testShopperCarriesEarlierRequestOnceAndReviewsCurrentPackPrice"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/S24DecisionPromptNov08/dark-run/captures/png-0-1/D1A95D5A-6CA4-4529-BDE0-484F46E2C981.txt",
+      "bytes": 17821,
+      "sha256": "dbf84341667c64252a91c065881b230dc43d4b0b51f132fb1766731efbd67a45",
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S24-empty-price-prompt-frame_0_49A56525-42F3-4300-908B-FF1E3BE94638.txt",
+        "payloadId": "0~Q89Lfs6Bcgm6Disryqe_CmYmPnKiDzGOQyNNoMakhYPgR8XiHaGrNWLp949nk3ghUW7Pj0tsrXmzWDmHFdAkhA==",
+        "timestamp": 1794145884.246,
+        "uuid": "D1A95D5A-6CA4-4529-BDE0-484F46E2C981"
+      },
+      "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testShopperCarriesEarlierRequestOnceAndReviewsCurrentPackPrice"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/S24DecisionPromptNov08/dark-run/captures/png-0-2/B6D2915B-68A8-455A-9A88-5D444A83FE92.png",
+      "bytes": 277669,
+      "sha256": "61018d85ab54711a5340142e515071708c9a50163e49953b46d5d23e8fb8061f",
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S24-unknown-price-visible-without-expanding-details_0_0028401A-6870-48BE-BA79-FD780A700ED5.png",
+        "payloadId": "0~eiQkDj9N0I4fupnsg3QSUqd-RGSp_vFY8WwNCQuwsOH6GXuW261ZfYMQ73EIZkKD14paJeFvLBHWMo7BiJaGxA==",
+        "timestamp": 1794145894.73,
+        "uuid": "B6D2915B-68A8-455A-9A88-5D444A83FE92"
+      },
+      "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testShopperCarriesEarlierRequestOnceAndReviewsCurrentPackPrice"
+    }
+  ],
+  "framePoints": {
+    "x": 32.0,
+    "y": 787.3,
+    "width": 338.0,
+    "height": 22.0
+  },
+  "pngDimensions": [
+    1014,
+    66
+  ],
+  "scaleInferredFromDimensions": 3,
+  "visualReview": "Complete empty price prompt; no caret, border, icon or adjacent label visible. Four excluded narrow components are letters, not a caret. Remaining component boxes track text glyphs.",
+  "coreRGB": [
+    180,
+    196,
+    185
+  ],
+  "backgroundRGB": [
+    28,
+    41,
+    35
+  ],
+  "fullCropCorePixelCount": 6339,
+  "fullCropStrongestContrastRGB": [
+    180,
+    196,
+    185
+  ],
+  "fullCropStrongestContrast": 8.295238954004883,
+  "coreContrast": 8.295238954004883,
+  "retainedComponentCorePixelCount": 5994,
+  "retainedComponentsWithCoreMode": 31,
+  "requiredContrast": 4.5,
+  "conclusion": "Actual captured dark prompt core exceeds 4.5:1. All strongest-color pixels share the repeated glyph core; no isolated caret or border supplies the result.",
+  "lightEvidenceUnchanged": true,
+  "limits": [
+    "Single dark capture; companion light capture separately measured.",
+    "No native app/test execution or canonical source changes by this reviewer.",
+    "Not a claim that the 41-finding audit is resolved or physical/AX5 accessibility is qualified."
+  ]
+}

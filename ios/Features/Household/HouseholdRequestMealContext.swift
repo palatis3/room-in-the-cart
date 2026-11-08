@@ -128,3 +128,20 @@ struct HouseholdDecisionFact: View {
         .fixedSize(horizontal: false, vertical: true)
     }
 }
+
+/// A native Dynamic Type checkout amount; LabeledContent stacks at accessibility sizes.
+struct HouseholdDecisionTotal: View {
+    let value: String
+
+    var body: some View {
+        LabeledContent {
+            Text(value).font(.largeTitle.weight(.semibold))
+                .monospacedDigit().foregroundStyle(Theme.ink)
+        } label: {
+            Text(ht("Expected total"))
+        }
+        .accessibilityElement(children: .combine)
+        .lineLimit(nil)
+        .fixedSize(horizontal: false, vertical: true)
+    }
+}

@@ -1,0 +1,11 @@
+{
+  "initialHierarchyManifestSHA256": "e103f77342879bcc93477c4f9cbb2d5a03d2cbd19c481bc909d8b3585a43f5ee",
+  "finalManifestSHA256": "c4cbc2f604d43e021b927e849acd8b486fd3179179a1f964a7c410c6288c36e5",
+  "changedFromHierarchy": [
+    "ios/Features/Household/HouseholdInboxView.swift",
+    "ios/UITests/HouseholdRequestPackUITests.swift"
+  ],
+  "other554InputsUnchanged": true,
+  "patchScope": "change.patch is cumulative; followup-scope.json and this manifest comparison identify the two-file increment.",
+  "qualification": "Final-source light and dark native/strict1/1 each completed; both rendered prompt measurements independently reproduced; unsigned arm64 Release build and bundle check passed. No active result bundle or run files inspected by publisher."
+}

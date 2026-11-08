@@ -1,0 +1,15 @@
+Executed 4 of 4 selected tests.
+
+| Test | Result | Seconds |
+|---|---|---|
+| RoomInTheCartUITests/HouseholdRequestPackUITests/testLargestTextShowsCompleteProtectedLunchNamesAndDates | Passed | 107.35 |
+| RoomInTheCartUITests/HouseholdRequestPackUITests/testShopperCarriesEarlierRequestOnceAndReviewsCurrentPackPrice | Passed | 94.62 |
+| RoomInTheCartUITests/HouseholdRequestPackUITests/testShopperOpensCheckoutCalculationsAndIncludedChargesWithNoDecisionWrite | Passed | 70.07 |
+| RoomInTheCartUITests/HouseholdRequestPackUITests/testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite | Passed | 59.14 |
+The XCTest log confirms one start and one passing completion per selected test.
+
+Animation-idle diagnostics: 0 observed messages in 3478 log lines (4 case starts, 0 runner restart boundaries). Diagnostic only; native results and runtime-warning checks are unchanged.
+No matching messages observed in the supplied log; this does not establish complete log coverage or absence of idle delays.
+
+The XCTest test export recorded 0 runtime warning occurrences across 4 examined tests.
+

@@ -1,0 +1,92 @@
+[
+  {
+    "path": "/Users/palatis/Room in the Cart/.build/S24DecisionPromptNov08/price-prompt-measurement/DARK-REVIEW.md",
+    "bytes": 1751,
+    "sha256": "ef8f541f24a9de2a5a7cdecb09707313c7639f92324d6f9c0eee508fcc1fd352"
+  },
+  {
+    "path": "/Users/palatis/Room in the Cart/.build/S24DecisionPromptNov08/price-prompt-measurement/LIGHT-REVIEW.md",
+    "bytes": 1439,
+    "sha256": "ede3f8b0ce02b79e795fa64241eb20ef3482a74ff2dcb5ea0fb317b3668e5c60"
+  },
+  {
+    "path": "/Users/palatis/Room in the Cart/.build/S24DecisionPromptNov08/price-prompt-measurement/README.md",
+    "bytes": 3470,
+    "sha256": "7a3f58d81c819c0ba07135c59503f94675019e25e9e6a393a1d80e462a3a34bc"
+  },
+  {
+    "path": "/Users/palatis/Room in the Cart/.build/S24DecisionPromptNov08/price-prompt-measurement/check_method.py",
+    "bytes": 2613,
+    "sha256": "9cade49d4e2b9661d1f51964d29e45133f7f2b18f709ab22a7bf8ecbe577e1f6"
+  },
+  {
+    "path": "/Users/palatis/Room in the Cart/.build/S24DecisionPromptNov08/price-prompt-measurement/dark-measurement.json",
+    "bytes": 9632,
+    "sha256": "4e1d7fca45e46a506b9d3f0469aa761417faff8ba61a4772caf5b5598af633dc"
+  },
+  {
+    "path": "/Users/palatis/Room in the Cart/.build/S24DecisionPromptNov08/price-prompt-measurement/dark-review.json",
+    "bytes": 3604,
+    "sha256": "290666702a499f8eee58d79aa0d7dd941a4d6834e3db923a212142517b66259a"
+  },
+  {
+    "path": "/Users/palatis/Room in the Cart/.build/S24DecisionPromptNov08/price-prompt-measurement/light-manifest.json",
+    "bytes": 2353,
+    "sha256": "8d91bd5a87cdceca63ad040f13e73ceaa6030702b671da97cecd2502f883eeef"
+  },
+  {
+    "path": "/Users/palatis/Room in the Cart/.build/S24DecisionPromptNov08/price-prompt-measurement/light-measurement.json",
+    "bytes": 9629,
+    "sha256": "d0375f401e110c72ebd686fcf9aad6f64de0b1bb90d5e0cde43392d474e7540d"
+  },
+  {
+    "path": "/Users/palatis/Room in the Cart/.build/S24DecisionPromptNov08/price-prompt-measurement/light-review.json",
+    "bytes": 3559,
+    "sha256": "51f2c374356d7facf7d58d882ad911e4bcad18fbdb5611f259c00a02065178b6"
+  },
+  {
+    "path": "/Users/palatis/Room in the Cart/.build/S24DecisionPromptNov08/price-prompt-measurement/measure_field.py",
+    "bytes": 9050,
+    "sha256": "487b50142ac771836efe92b15364a7bf5252dd70bfe5698573118898db87d8b0"
+  },
+  {
+    "path": "/Users/palatis/Room in the Cart/.build/S24DecisionPromptNov08/light-run/captures/receipt.json",
+    "bytes": 2300,
+    "sha256": "5f04722e715ab22bb2ef4ad2678a22c07f7566aa9cbb3c32d4adbffffdf7afa3"
+  },
+  {
+    "path": "/Users/palatis/Room in the Cart/.build/S24DecisionPromptNov08/light-run/captures/png-0-0/001CAF58-369F-4258-9544-40BB14623894.png",
+    "bytes": 13550,
+    "sha256": "1f4067e1fb8acbe16bb8428566f5d35d2cd818d2c02d5eae32c07c2dd2b84cea"
+  },
+  {
+    "path": "/Users/palatis/Room in the Cart/.build/S24DecisionPromptNov08/light-run/captures/png-0-1/60903456-68E7-4B35-9E1D-E9F9279E3DE3.txt",
+    "bytes": 17821,
+    "sha256": "67efac339e71043e197a0c5b129109089262e823c8c634c196c05f8b6334a633"
+  },
+  {
+    "path": "/Users/palatis/Room in the Cart/.build/S24DecisionPromptNov08/light-run/captures/png-0-2/98EB0097-2F50-4908-BCFC-4F03CCCC3B36.png",
+    "bytes": 306943,
+    "sha256": "f8ca863f7b00fab9092769a50d418eeb414d66342ebe8bd0cd1cb63349f7323a"
+  },
+  {
+    "path": "/Users/palatis/Room in the Cart/.build/S24DecisionPromptNov08/dark-run/captures/receipt.json",
+    "bytes": 2299,
+    "sha256": "efc8de3ab513fba3ab2d74d6262df6e78d6efdac2025140187d9cf6de9f1e58c"
+  },
+  {
+    "path": "/Users/palatis/Room in the Cart/.build/S24DecisionPromptNov08/dark-run/captures/png-0-0/5F79AE57-B585-46FC-83B7-2B7CD81616DB.png",
+    "bytes": 13588,
+    "sha256": "f06708c05df0c07ca55fda0527de44c4e7f473de5cffb80902b98a9ef948cde3"
+  },
+  {
+    "path": "/Users/palatis/Room in the Cart/.build/S24DecisionPromptNov08/dark-run/captures/png-0-1/D1A95D5A-6CA4-4529-BDE0-484F46E2C981.txt",
+    "bytes": 17821,
+    "sha256": "dbf84341667c64252a91c065881b230dc43d4b0b51f132fb1766731efbd67a45"
+  },
+  {
+    "path": "/Users/palatis/Room in the Cart/.build/S24DecisionPromptNov08/dark-run/captures/png-0-2/B6D2915B-68A8-455A-9A88-5D444A83FE92.png",
+    "bytes": 277669,
+    "sha256": "61018d85ab54711a5340142e515071708c9a50163e49953b46d5d23e8fb8061f"
+  }
+]

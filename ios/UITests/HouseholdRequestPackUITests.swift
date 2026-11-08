@@ -20,7 +20,7 @@ import XCTest
         }
         app.terminate()
     }
-    func testShopperCarriesEarlierRequestOnceAndReviewsCurrentPackPrice() {
+    func testShopperCarriesEarlierRequestOnceAndReviewsCurrentPackPrice() throws {
         app.launchArguments = ["--ui-testing", "--request-pack-fixture", "--deferred-request-fixture",
                                "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
@@ -66,8 +66,21 @@ import XCTest
         let price = element("household.decision.price")
         reveal(price)
         XCTAssertTrue((price.value as? String ?? "").isEmpty || price.value as? String == price.placeholderValue)
+        reveal(price, fullyVisible: true)
+        let promptImage = XCTAttachment(screenshot: price.screenshot())
+        promptImage.name = "S24-empty-price-prompt"; promptImage.lifetime = .keepAlways; add(promptImage)
+        let promptFrame = XCTAttachment(string: price.debugDescription)
+        promptFrame.name = "S24-empty-price-prompt-frame"; promptFrame.lifetime = .keepAlways; add(promptFrame)
+        try assertReadableContrast(price)
         tap(element("household.decision.review"))
         let apply = element("household.decision.apply")
+        let missingPrice = app.staticTexts["At least one line price is unknown."]
+        reveal(missingPrice, fullyVisible: true)
+        XCTAssertTrue(missingPrice.isHittable)
+        capture("S24-unknown-price-visible-without-expanding-details")
+        let details = app.buttons["household.decision.checkoutDetails"]
+        reveal(details)
+        XCTAssertEqual(details.value as? String, "Collapsed")
         reveal(apply)
         XCTAssertFalse(apply.isEnabled)
         tap(element("household.decision.cancel"))
@@ -92,11 +105,13 @@ import XCTest
         let mia = element("household.decision.meal.99999999-9999-4999-8999-999999999999")
         // Require one actual viewport with both current/proposed checkout and
         // the two named commitments, rather than finding each after scrolling.
-        let context = [element("household.decision.after-total"), element("household.decision.over-cap"), element("household.decision.before-total"), sam, mia]
+        let feeBasis = element("household.decision.feeBasis")
+        let context = [element("household.decision.after-total"), element("household.decision.over-cap"), element("household.decision.before-total"), feeBasis, sam, mia]
         revealTogether(context)
         for target in context {
             XCTAssertTrue(target.exists && target.isHittable, target.debugDescription)
         }
+        XCTAssertEqual(feeBasis.label, "Fixed retailer fee: $1.99.")
         XCTAssertTrue(element("household.decision.before-total").label.contains("$37.20"))
         XCTAssertTrue(element("household.decision.after-total").label.contains("$40.69"))
         XCTAssertTrue(element("household.decision.over-cap").label.contains("$2.69"))

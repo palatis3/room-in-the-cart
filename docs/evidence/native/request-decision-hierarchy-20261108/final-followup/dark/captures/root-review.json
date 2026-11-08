@@ -1,0 +1,14 @@
+{
+  "reviewedAtUTC": "2026-11-08T13:55:34.207345+00:00",
+  "reviewer": "root",
+  "capturesReviewed": [
+    "png-0-0/5F79AE57-B585-46FC-83B7-2B7CD81616DB.png",
+    "png-0-2/B6D2915B-68A8-455A-9A88-5D444A83FE92.png"
+  ],
+  "findings": [
+    "Exact empty price prompt complete and legible; no caret, border or icon in field crop.",
+    "Full dark preview shows Unknown total, named missing line price, scope and quoted fixed fee.",
+    "Scrolled screenshot does not claim full-sheet or Apply visibility."
+  ],
+  "scope": "Selected English dark Large text carried-request state; no whole-app accessibility acceptance."
+}

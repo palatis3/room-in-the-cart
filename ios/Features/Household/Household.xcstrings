@@ -15063,6 +15063,40 @@
           }
         }
       }
+    },
+    "Fixed retailer fee: %@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fixed retailer fee: %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tarifa fija de la tienda: %@."
+          }
+        }
+      }
+    },
+    "Retailer fee: %@ below %@ in eligible items; %@ at or above.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retailer fee: %@ below %@ in eligible items; %@ at or above."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tarifa de la tienda: %@ si los artículos que cuentan para el mínimo suman menos de %@; %@ al alcanzar o superar ese mínimo."
+          }
+        }
+      }
     }
   },
   "version": "1.0"
