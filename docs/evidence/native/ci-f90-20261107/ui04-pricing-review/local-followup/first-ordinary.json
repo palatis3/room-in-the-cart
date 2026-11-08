@@ -1,0 +1,23 @@
+{
+  "result": "failed",
+  "nativeExit": 65,
+  "strictExit": 1,
+  "durationSeconds": 255.331,
+  "runtimeWarnings": 0,
+  "sourceSHA256": "37cc1bdc26266457bd17933278ad880c90eea7beb216e8391d9323272f9f5c1f",
+  "logSHA256": "4222009be02fccc523cc0bdd12fe95c5700550aa0f6827a05036224a2592efb1",
+  "resultBundle": ".build/FreeJourneyPricingReviewNov07/full-ordinary.xcresult",
+  "diagnosis": "Save and evaluate checkout opened the changed-retailer confirmation sheet. The test saw the proposed3.00 and its back helper selected Cancel; no Save reviewed checkout occurred. Freeze remained disabled because no saved quote result existed.",
+  "previousWrongProfileAttempt": {
+    "bundle": ".build/FreeJourneyPricingReviewNov07/full.xcresult",
+    "result": "failed before Shop tab; fixture-profile Household root"
+  },
+  "provenance": {
+    "head": "336d5b51e725f0f7b9c29d9b1a39c3e98b5dc496",
+    "testSourceSHA256": "37cc1bdc26266457bd17933278ad880c90eea7beb216e8391d9323272f9f5c1f",
+    "xcode": "Xcode 27.1\nBuild version 27A9275",
+    "simulator": "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+    "compilationConditions": "DEBUG",
+    "scope": "Complete ordinary native journey; hosted f90 ran a different Xcode version."
+  }
+}

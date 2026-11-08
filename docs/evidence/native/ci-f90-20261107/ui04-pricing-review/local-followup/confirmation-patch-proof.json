@@ -1,0 +1,293 @@
+{
+  "sourcePath": "ios/UITests/FreeJourneyUITests.swift",
+  "sourceSHA256": "37cc1bdc26266457bd17933278ad880c90eea7beb216e8391d9323272f9f5c1f",
+  "headAtPreparation": "336d5b51e725f0f7b9c29d9b1a39c3e98b5dc496",
+  "patchPath": ".build/FreeJourneyPricingReviewNov07/commit-reviewed-checkout.patch",
+  "patchSHA256": "32a800d0c8bdab438bf6dab574fcb704248af3e0596f7e191788db45013457f8",
+  "proposedSourceSHA256": "74f2beb39a24b81e6b3f60f46ff8a5ceb0c1fd37796724247f8d02145d99513e",
+  "patchInstalled": false,
+  "gitApplyCheckExit": 0,
+  "nativeExecution": false,
+  "remainingJourneyFromBackByteIdentical": true,
+  "cause": "The first pricing-review correction omitted final quote confirmation. Save-and-evaluate opens the reviewed replacement sheet; assertText3.00 accepts its unsaved proposed amount. Generic back(to:) then taps Cancel, so no quote is committed and result remains nil. Existing Freeze guard stays disabled, Copy is absent.",
+  "evidenceFiles": {
+    ".build/FreeJourneyPricingReviewNov07/full-ordinary.log": "4222009be02fccc523cc0bdd12fe95c5700550aa0f6827a05036224a2592efb1",
+    ".build/FreeJourneyPricingReviewNov07/checks/summary.json": "7300c0812dd85ab6073c9b41d084a17a00b7e74d66e16c3afac27bbb02711e35",
+    ".build/FreeJourneyPricingReviewNov07/checks/tests.json": "d5078fae658a05a727c3c64aad4afceb1f1a25a2c377c5e91d5c06ed9f20229e",
+    ".build/FreeJourneyPricingReviewNov07/checks/provenance.json": "43294e74728a77b168911cccc4a2cad27dcb6d9dcb94485d6a01252ae91ff38e",
+    ".build/FreeJourneyPricingReviewNov07/checks/strict.txt": "534bb58ce1884b8a2e020d6f8c3bc2fd085f67db15f42e1d07f86acbfb55ae20",
+    ".build/FreeJourneyPricingReviewNov07/checks/test-runtime-warnings.json": "ce5f63a49527481ca5704f8996eb8eea682d8688c3381353dd8f23ad6759bffb",
+    ".build/FreeJourneyPricingReviewNov07/run.json": "7fe3784f35efb80807e5e5ff856b2695e31b5f7f510581f058fb25c72df5761d"
+  },
+  "consoleExcerpt": [
+    {
+      "line": 3830,
+      "text": "    t =   197.76s Checking existence of `\"Save and evaluate checkout\" Button`"
+    },
+    {
+      "line": 3831,
+      "text": "    t =   197.81s Find the \"Save and evaluate checkout\" Button"
+    },
+    {
+      "line": 3832,
+      "text": "    t =   197.87s Tap \"Save and evaluate checkout\" Button"
+    },
+    {
+      "line": 3833,
+      "text": "    t =   197.87s     Wait for dev.roominthecart.app.debug to idle"
+    },
+    {
+      "line": 3834,
+      "text": "    t =   197.87s     Find the \"Save and evaluate checkout\" Button"
+    },
+    {
+      "line": 3835,
+      "text": "    t =   197.92s     Check for interrupting elements affecting \"Save and evaluate checkout\" Button"
+    },
+    {
+      "line": 3836,
+      "text": "    t =   197.97s     Synthesize event"
+    },
+    {
+      "line": 3837,
+      "text": "    t =   198.26s     Wait for dev.roominthecart.app.debug to idle"
+    },
+    {
+      "line": 3838,
+      "text": "    t =   198.88s Checking existence of `StaticText (First Match)`"
+    },
+    {
+      "line": 3839,
+      "text": "    t =   198.97s Find the StaticText (First Match)"
+    },
+    {
+      "line": 3840,
+      "text": "    t =   199.07s Checking existence of `\"Prepare retailer handoff\" Button`"
+    },
+    {
+      "line": 3841,
+      "text": "    t =   199.22s Get all elements bound by index for: Descendants matching type Button"
+    },
+    {
+      "line": 3842,
+      "text": "    t =   199.29s Checking existence of `Button (Element at index 0)`"
+    },
+    {
+      "line": 3843,
+      "text": "    t =   199.37s Find the Button (Element at index 0)"
+    },
+    {
+      "line": 3844,
+      "text": "    t =   199.47s Find the \"Cancel\" Button"
+    },
+    {
+      "line": 3845,
+      "text": "    t =   199.55s Find the \"Cancel\" Button"
+    },
+    {
+      "line": 3846,
+      "text": "    t =   199.63s Find the Target Application 'dev.roominthecart.app.debug'"
+    },
+    {
+      "line": 3847,
+      "text": "    t =   199.69s Checking existence of `Button (Element at index 1)`"
+    },
+    {
+      "line": 3848,
+      "text": "    t =   199.77s Find the Button (Element at index 1)"
+    },
+    {
+      "line": 3849,
+      "text": "    t =   199.88s Tap \"Cancel\" Button"
+    },
+    {
+      "line": 3850,
+      "text": "    t =   199.88s     Wait for dev.roominthecart.app.debug to idle"
+    },
+    {
+      "line": 3851,
+      "text": "    t =   199.89s     Find the \"Cancel\" Button"
+    },
+    {
+      "line": 3852,
+      "text": "    t =   199.96s     Check for interrupting elements affecting \"Cancel\" Button"
+    },
+    {
+      "line": 3853,
+      "text": "    t =   200.03s     Synthesize event"
+    },
+    {
+      "line": 3854,
+      "text": "    t =   200.32s     Wait for dev.roominthecart.app.debug to idle"
+    },
+    {
+      "line": 3855,
+      "text": "    t =   201.08s Checking existence of `\"Prepare retailer handoff\" Button`"
+    },
+    {
+      "line": 3856,
+      "text": "    t =   201.17s Get all elements bound by index for: Descendants matching type Button"
+    },
+    {
+      "line": 3857,
+      "text": "    t =   201.21s Checking existence of `Button (Element at index 0)`"
+    },
+    {
+      "line": 3858,
+      "text": "    t =   201.25s Find the Button (Element at index 0)"
+    },
+    {
+      "line": 3859,
+      "text": "    t =   201.30s Find the \"BackButton\" Button"
+    },
+    {
+      "line": 3860,
+      "text": "    t =   201.34s Find the \"BackButton\" Button"
+    },
+    {
+      "line": 3878,
+      "text": "    t =   203.26s Checking existence of `\"Freeze reviewed basket\" Button`"
+    },
+    {
+      "line": 3879,
+      "text": "    t =   203.30s Find the \"Freeze reviewed basket\" Button"
+    },
+    {
+      "line": 3880,
+      "text": "    t =   203.34s Tap \"Freeze reviewed basket\" Button"
+    },
+    {
+      "line": 3881,
+      "text": "    t =   203.34s     Wait for dev.roominthecart.app.debug to idle"
+    },
+    {
+      "line": 3882,
+      "text": "    t =   203.35s     Find the \"Freeze reviewed basket\" Button"
+    },
+    {
+      "line": 3883,
+      "text": "    t =   203.38s     Check for interrupting elements affecting \"Freeze reviewed basket\" Button"
+    },
+    {
+      "line": 3884,
+      "text": "    t =   203.41s     Synthesize event"
+    },
+    {
+      "line": 3885,
+      "text": "    t =   203.70s     Wait for dev.roominthecart.app.debug to idle"
+    },
+    {
+      "line": 3886,
+      "text": "    t =   203.71s Checking existence of `\"Copy dated list\" Button`"
+    },
+    {
+      "line": 3887,
+      "text": "    t =   203.74s Find the Target Application 'dev.roominthecart.app.debug'"
+    },
+    {
+      "line": 4228,
+      "text": "/Users/palatis/Room in the Cart/ios/UITests/FreeJourneyUITests.swift:1756: error: -[RoomInTheCartUITests.FreeJourneyUITests testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop] : XCTAssertTrue failed - Missing actionable UI element: Query chain:"
+    },
+    {
+      "line": 4229,
+      "text": " \u2192Find: Target Application 'dev.roominthecart.app.debug'"
+    },
+    {
+      "line": 4230,
+      "text": "  \u21aa\ufe0eFind: Descendants matching type Button"
+    },
+    {
+      "line": 4231,
+      "text": "    \u21aa\ufe0eFind: Elements matching predicate '\"Copy dated list\" IN identifiers'"
+    },
+    {
+      "line": 4232,
+      "text": "No matches found for Elements matching predicate '\"Copy dated list\" IN identifiers' from input {("
+    },
+    {
+      "line": 4233,
+      "text": "    Button, {{68.0, 795.0}, {94.0, 54.0}}, identifier: 'cart', label: 'Shop', Selected,"
+    },
+    {
+      "line": 4234,
+      "text": "    Button, {{154.0, 795.0}, {94.0, 54.0}}, identifier: 'fork.knife', label: 'Dinners',"
+    },
+    {
+      "line": 4235,
+      "text": "    Button, {{240.0, 795.0}, {94.0, 54.0}}, identifier: 'clock.arrow.circlepath', label: 'Records',"
+    },
+    {
+      "line": 4236,
+      "text": "    Button, {{16.0, 62.0}, {44.0, 44.0}}, identifier: 'BackButton', label: 'Pickup',"
+    },
+    {
+      "line": 4237,
+      "text": "    Button, {{16.0, 245.3}, {370.0, 52.0}}, label: 'Freeze reviewed basket', Disabled"
+    },
+    {
+      "line": 4238,
+      "text": ")}"
+    },
+    {
+      "line": 4239,
+      "text": ""
+    },
+    {
+      "line": 4240,
+      "text": "    t =   253.44s Tear Down"
+    },
+    {
+      "line": 4241,
+      "text": "    t =   253.58s     Added attachment named 'Free-flow-failure'"
+    },
+    {
+      "line": 4242,
+      "text": "    t =   253.59s     Terminate dev.roominthecart.app.debug:82962"
+    },
+    {
+      "line": 4243,
+      "text": "2026-11-07 20:48:04.283 xcodebuild[82183:24482379] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232)."
+    },
+    {
+      "line": 4244,
+      "text": "2026-11-07 20:48:04.284 xcodebuild[82183:24482379] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232)."
+    },
+    {
+      "line": 4245,
+      "text": "Test Case '-[RoomInTheCartUITests.FreeJourneyUITests testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop]' failed (255.331 seconds)."
+    }
+  ],
+  "sourceEvidence": [
+    {
+      "path": "ios/Features/Pickup/PickupHomeView.swift",
+      "line": 395,
+      "fact": "changedRetailerTerms && replacingPricing presents QuoteReview; only Save reviewed checkout invokes commit."
+    },
+    {
+      "path": "ios/Features/Pickup/PickupHomeView.swift",
+      "line": 646,
+      "fact": "Freeze disabled when model.result is nil or a frozen snapshot already exists."
+    },
+    {
+      "path": "ios/Features/Pickup/PickupModel.swift",
+      "line": 347,
+      "fact": "result requires a quote for the current basket revision."
+    }
+  ],
+  "scope": "Only adds missing native quote confirmation: checks proposed terms/source/price and Save reviewed checkout enabled, awaits existing5s/8s sheet budgets, verifies Saved checkout result. No app/helper changes, timeout increases, retries, skips, fixture substitution, or later-journey edits. Original wrong-profile failure and ordinary failure remain retained.",
+  "firstAttempt": {
+    "execSession": 41417,
+    "exit": 65,
+    "reason": "Wrong contributor-fixture build profile: ordinary Shop root absent; failed before journey.",
+    "log": "full.log",
+    "bundle": "full.xcresult",
+    "originalLogSHA256": "54b9b9083f161847cd088c8967bfde31cfbee9e27fefea2614eff676e0e5ef53",
+    "resultBundleRetained": true
+  },
+  "ordinaryStrictVerification": {
+    "exit": 1,
+    "failedTests": 1,
+    "selectedTests": 1,
+    "runtimeWarnings": 0
+  }
+}

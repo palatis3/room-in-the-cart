@@ -1,5 +1,9 @@
 # Current implementation and acceptance map
 
+## November 7 complete checkout-review journey
+
+The full ordinary Free journey passes locally after following both existing pricing-review confirmations. It verifies preserved old prices, fresh source and inclusive$3.00, the committed result, placement, short fill, protected-lunch repair, settlement, next-shop reuse and restarted history. Strict1/1 passes with zero warnings/skips/restarts; no application guard or later assertion changed. Both earlier failed attempts remain retained, and hosted26.3 follow-up is pending. [Evidence](evidence/native/ci-f90-20261107/ui04-pricing-review/local-followup/README.md).
+
 ## November 7 closed-pickup corrections
 
 S08/S11 now preserve later physical correction after closure: an assigned shopper can register late food, revise received/usable quantities and correct protected portions without reopening the pickup or changing its order or spending. A reproduced pending-action bug is also fixed: another shop’s review cannot clear the original durable delivery. The complete iOS 17 batch passed 696 model tests and three UI journeys; both selected iOS 26.2 journeys passed, all with zero skips or recorded runtime warnings. Real Swift/HTTPS/PostgreSQL, backend regressions and the unsigned Release build passed in their [documented scopes](evidence/native/closed-delivery-20261107/README.md). Spanish largest-text confirmation recovery is covered; human language and physical assistive-access acceptance remain separate.

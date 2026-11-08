@@ -517,11 +517,10 @@ import XCTest
         assertText("Lunch")
         tap(app.buttons["Apply reviewed checkout copy"])
         tap(app.buttons["Review whole checkout"])
-        // These adjacent checkout fields share one keyboard. Type into each
-        // field directly, then dismiss before moving to the charge controls.
+        // The saved pack price belongs to the earlier retailer terms. Enter
+        // the new terms before reviewing and replacing their pricing evidence.
         for (name, value) in [("Store", "Family market"), ("Branch", "Main branch"),
-                              ("Pickup or delivery slot", "Tuesday 5 PM"),
-                              ("Source of these prices", "Retailer preview reviewed by shopper")] {
+                              ("Pickup or delivery slot", "Tuesday 5 PM")] {
             let field = app.textFields[name]
             tap(field)
             XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5), "Show the keyboard for \(name)")
@@ -533,9 +532,40 @@ import XCTest
         }
         tap(app.buttons["Done"])
         XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+        assertText("Pricing details to preserve")
+        assertText("Wraps")
+        assertText("$3.00")
+        assertText("These prices belong to different checkout terms. Review them and enter fresh evidence.")
+        let saveCheckout = app.buttons["Save and evaluate checkout"]
+        reveal(saveCheckout)
+        XCTAssertFalse(saveCheckout.isEnabled, "Changed retailer terms require reviewed replacement pricing")
+        tap(app.buttons["Replace pricing after review"])
+        tap(app.buttons["Start replacement pricing"])
+        let source = app.textFields["Source of these prices"]
+        reveal(source, initiallyUpward: false)
+        XCTAssertEqual(source.value as? String, source.placeholderValue, "Replacement pricing starts with a blank source")
+        source.tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5), "Show the keyboard for Source of these prices")
+        source.typeText("Retailer preview reviewed by shopper")
+        XCTAssertEqual(source.value as? String, "Retailer preview reviewed by shopper", "Source of these prices")
+        tap(app.buttons["Done"])
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
         enableSwitch("Retailer total already includes all charges")
         fill("3.00", into: "Inclusive total")
         tap(app.buttons["Save and evaluate checkout"])
+        let checkoutReview = app.navigationBars["Review checkout changes"]
+        XCTAssertTrue(checkoutReview.waitForExistence(timeout: 5))
+        assertText("Proposed checkout quote")
+        assertText("Family market · Main branch")
+        assertText("Pickup · Tuesday 5 PM")
+        assertText("Retailer preview reviewed by shopper")
+        assertText("$3.00")
+        let saveReviewed = app.buttons["Save reviewed checkout"]
+        reveal(saveReviewed)
+        XCTAssertTrue(saveReviewed.isEnabled, "The reviewed replacement must be eligible to save")
+        saveReviewed.tap()
+        XCTAssertTrue(checkoutReview.waitForNonExistence(timeout: 8))
+        assertText("Saved checkout result")
         assertText("3.00")
         back(to: "Prepare retailer handoff")
         tap(app.buttons["Prepare retailer handoff"])
