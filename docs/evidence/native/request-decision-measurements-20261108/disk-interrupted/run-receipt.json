@@ -1,0 +1,17 @@
+{
+  "sourceCommit": "44e82484e7c94a0d6cb14a8e55a2909562a329f3",
+  "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/baseline-source-r2",
+  "startedAtUTC": "2026-11-08T03:51:40.674627+00:00",
+  "endedAtUTC": "2026-11-08T03:59:47.973593+00:00",
+  "nativeExitCode": 0,
+  "selectors": [
+    "RoomInTheCartUITests/HouseholdRequestPackUITests/testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite",
+    "RoomInTheCartUITests/HouseholdRequestPackUITests/testLargestTextShowsCompleteProtectedLunchNamesAndDates"
+  ],
+  "simulator": "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+  "nativeLogSHA256": "4f13e286cb490de6ee9e2b78bd29ed02f2b113c357f0733377e1bd9efed7118a",
+  "originalBundleManifestSHA256": "a206d56d53214fb8194b250112fca63ac59ce3d64beaabad53300dd947d9c4a8",
+  "productsUnchanged": null,
+  "deviceSettings": null,
+  "reason": null
+}

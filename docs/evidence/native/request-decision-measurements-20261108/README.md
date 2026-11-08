@@ -1,0 +1,15 @@
+# Request review: baseline and rendered measurements
+
+The unchanged standard-size checkout and largest-accessibility-text protected-lunch tests pass **2/2**, with no skipped tests, recorded runtime warnings or runner restarts. The serial console and result bundle agree. Both cases cancel the actual preview and verify no applied decision or saved line. [Strict baseline](baseline/strict-verification.txt) · [Run identity](baseline/run-receipt.json)
+
+The exact source is `44e82484e7c94a0d6cb14a8e55a2909562a329f3`, using the contributor fixture on iPhone 17 / iOS 26.2 and local Xcode 27.1. The repeat used the same compiled products, whose file hashes remained unchanged. These are local results, separate from the Xcode 26.3 hosted candidate.
+
+The preceding attempt returned native exit zero during an observed host disk-exhaustion incident, but its result bundle contained zero cases and its console lacked the second completion. The strict checker rejected it. [Preserved incomplete attempt](disk-interrupted/verification.json) is not a pass. Removing inactive compiler, index and module caches recovered about 12 GiB; source, products, result bundles and encrypted backups were preserved. A justified same-product repeat then produced the complete baseline above.
+
+The first test-only measurement run passed Small and standard text, but failed the largest accessibility case while searching for the earlier Review button. All three cases executed with zero runtime warnings. The five AX5 money captures were retained; two review targets were missing, and the inventory checker correctly rejected that partial export. [Initial strict result](measurement-initial/strict-verification.txt) · [Missing-capture rejection](measurement-initial/partial-inventory-rejection.txt)
+
+The original log shows sixteen drags toward later content followed by eight toward earlier content. The [failure screenshot](measurement-initial/ax5-navigation-failure.png) and hierarchy still show the Cap and protected-meal rows, below the desired button. The revised diagnostic searches toward that known earlier control while it is absent from the lazy accessibility tree, using the same 24-drag cap and existing geometry. Original selectors, centering, exact labels, visibility, one Review tap, and cancellation/no-write assertions are unchanged. [Narrow diagnostic patch](measurement-initial/measurement-navigation.patch)
+
+The revised three-size run is underway in a separate source and build-cache clone; the original source, results and products remain preserved. No complete rendered-measurement or accessibility-audit result is claimed yet. The original 36 audit findings remain separately tracked; these diagnostic captures do not establish physical VoiceOver usability.
+
+Original result bundles were hashed and copied before inspection, and the originals remained unchanged. The manifest binds the small published receipts; complete console and original bundles remain in local scratch storage under `.build/RequestDecisionAccessibilityNov08/`.

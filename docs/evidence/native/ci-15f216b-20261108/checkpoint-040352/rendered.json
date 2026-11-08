@@ -1,0 +1,234 @@
+{
+  "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+  "runId": 42440464669,
+  "jobId": 128610747545,
+  "artifactId": 13601989244,
+  "transportBytes": 24053,
+  "retainedMembers": [
+    {
+      "file": "Performance.log",
+      "bytes": 83352,
+      "sha256": "75ebf848daae3be54c948987a2e8bffc716bad5347e6a477b1bdd128bf53d20d",
+      "zipCRC": 631697588,
+      "CRCVerified": true
+    },
+    {
+      "file": "attachments/0E755265-F5D1-4AC5-94EE-E73D55ED62F5.json",
+      "bytes": 2233,
+      "sha256": "5126fce536b3dfd6dd1fd87a752cda79daccd1108d3ffc413f88a6e066325386",
+      "zipCRC": 3072380788,
+      "CRCVerified": true
+    },
+    {
+      "file": "attachments/8D8A4E18-48B9-43B4-9B79-129E5A9BF176.json",
+      "bytes": 404,
+      "sha256": "85610ea8bf3b8950e5885e3b77899aa2f99701d40c8ce74527a7eee3d5fa1505",
+      "zipCRC": 3206448592,
+      "CRCVerified": true
+    },
+    {
+      "file": "attachments/manifest.json",
+      "bytes": 2039,
+      "sha256": "40948aa66d240627e0d25544197c19bdbfb0b9d8ee63127b4f302bd61c805642",
+      "zipCRC": 3775839619,
+      "CRCVerified": true
+    },
+    {
+      "file": "calibration.json",
+      "bytes": 5059,
+      "sha256": "2091baa75ffbf2ecc4f97810a4eb61879cedbd520cda7cbfa0c665853c98e30b",
+      "zipCRC": 1615629189,
+      "CRCVerified": true
+    },
+    {
+      "file": "evidence-validation.json",
+      "bytes": 1739,
+      "sha256": "b16c63b59d5fc0f563d6a2e0f24c5f0be3c1961615bfe723daf5628b4e26d277",
+      "zipCRC": 2973533465,
+      "CRCVerified": true
+    },
+    {
+      "file": "selector.txt",
+      "bytes": 81,
+      "sha256": "3720bbe2136e292479ced097109e8334d89a6f6c290bfa11d94b31ca4a2a95d8",
+      "zipCRC": 1647360349,
+      "CRCVerified": true
+    },
+    {
+      "file": "setup.json",
+      "bytes": 582,
+      "sha256": "a305a281e4d2ef9361076daf679dc1ddd6eb89fa709c2fa6708e55f9a2445548",
+      "zipCRC": 1395605018,
+      "CRCVerified": true
+    },
+    {
+      "file": "test-details.json",
+      "bytes": 1142,
+      "sha256": "711887083f1ba249e11f7db77362e7ce4e236c32089f1fad74586d53228ace33",
+      "zipCRC": 3002787792,
+      "CRCVerified": true
+    },
+    {
+      "file": "test-summary.json",
+      "bytes": 730,
+      "sha256": "b810194f839ae88c1deee720cac55c49e213839e928453b363a78dba9e9ea201",
+      "zipCRC": 1559732434,
+      "CRCVerified": true
+    },
+    {
+      "file": "toolchain.txt",
+      "bytes": 32,
+      "sha256": "bb7fc9a8f5e063e81975b33054b3a526c91bcccff263ad11d5bd8bcdbe8f0973",
+      "zipCRC": 1329079503,
+      "CRCVerified": true
+    },
+    {
+      "file": "test-runtime-warnings.json",
+      "bytes": 182,
+      "sha256": "e18d0e7ad63a7e1be003b7165bdcb1e60ef8ba08bfa76b8f528bc431b6a02003",
+      "zipCRC": 635318996,
+      "CRCVerified": true
+    }
+  ],
+  "selector": "RoomInTheCartUITests/ReleasePerformanceUITests/testRenderedFiveHundredItemPickup",
+  "nativeResult": {
+    "selected": 1,
+    "passed": 1,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "runnerRestarts": 0
+  },
+  "baseline": {
+    "searchP95Milliseconds": {
+      "measured": 3744.0061250000554,
+      "maximum": 4750,
+      "passed": true
+    },
+    "checkP95Milliseconds": {
+      "measured": 2662.2562083333605,
+      "maximum": 3750,
+      "passed": true
+    }
+  },
+  "timingAttachment": {
+    "checkedRowIDs": [
+      "B120DC3D-5D07-4DB9-B790-BDA01B52DD63",
+      "C02F2002-3DB9-4534-B062-F95722F71E19",
+      "43A22FC0-97A0-4A56-B9E2-37129B9447A2",
+      "5B1BA78F-E3FE-49A5-AA30-A694EE69106F",
+      "F9489E53-B1B4-43E4-8E8F-D1595B805FD2",
+      "90202DFE-9005-4FA6-B4FA-A029B76DA78C",
+      "EE1DE00C-383A-47A7-BAC3-DEAD1011BD2D",
+      "A5021A77-A43C-4A27-BAB9-1676E1F131B1",
+      "6A5BF6D0-4FDB-464F-BB9D-13D3B337F182",
+      "8604E71E-40D9-4FAA-9BBF-3D627DEE9C08",
+      "E424DAB6-118F-4A38-8FAC-2DB879E8A94E",
+      "CA30B508-0869-45CD-86C3-CAC21B5431D6",
+      "FF77E5C1-6135-4809-BA9D-6D6AC3D123D9",
+      "99B7F76D-BDEC-49D4-B3AF-E56610192554",
+      "6292B2EC-E133-476F-B274-8EB37716850A",
+      "2F215C15-AEA6-4B07-A017-8318BBF5BB9E",
+      "41393E3A-3E51-4D8C-AF18-381CAFA1D62A",
+      "9BBF3F31-CEA7-4037-A7EC-71EC5CBAA6FE",
+      "721DF905-D769-484B-940F-53788BA1853C",
+      "A4C11C05-3838-4F1F-86FE-106CE6D80B87"
+    ],
+    "checkP95Milliseconds": 2662.2562083333605,
+    "checkToResultRemovalMilliseconds": [
+      2237.0027916666686,
+      2381.6103750000366,
+      2061.054666666678,
+      1918.744833333335,
+      1924.579458333369,
+      1887.1416666665937,
+      1929.5503333332817,
+      2757.6089166666407,
+      2420.398291666629,
+      1832.7741250000145,
+      2433.244416666639,
+      2175.861791666648,
+      1955.1952499999743,
+      2126.6563750000387,
+      2465.0310000000673,
+      2662.2562083333605,
+      1842.2108750000916,
+      2394.1853333333256,
+      2298.9402916666677,
+      1961.736291666739
+    ],
+    "fixtureLineCount": 500,
+    "limits": "Simulator XCTest round trips include input synthesis, keyboard dismissal, idle waits and accessibility polling.",
+    "sampleCount": 20,
+    "searchP95Milliseconds": 3744.0061250000554,
+    "searchToAccessibleResultMilliseconds": [
+      5520.447125000032,
+      3362.8032499999563,
+      3437.099708333335,
+      3081.7973750000647,
+      3066.6470833333506,
+      2281.3249583333572,
+      3375.5015416666083,
+      2570.0083333333623,
+      2680.076708333331,
+      2655.2282083333694,
+      2772.8703333332305,
+      2328.679083333327,
+      3744.0061250000554,
+      2938.970791666634,
+      3167.423124999914,
+      2989.2458333333707,
+      2960.3517499999725,
+      2333.387458333391,
+      2499.7600416666046,
+      2383.7235416666545
+    ]
+  },
+  "functionalSearch": {
+    "afterRelaunch": {
+      "checkedRowAbsent": true,
+      "sameUncheckedRowFound": true,
+      "unmatchedEmpty": true
+    },
+    "beforeRelaunch": {
+      "clearedListRestored": true,
+      "replacementFoundUncheckedRow": true,
+      "unmatchedEmpty": true
+    },
+    "fixtureLineCount": 500,
+    "uncheckedRowID": "9219C1FC-B2C2-47C9-8546-0BA6E1113CFC",
+    "unmatchedQuery": "zz-no-such-fixture-item-987654321"
+  },
+  "hostedPersistedPickup": {
+    "sqliteQuickCheck": "ok",
+    "revision": 23,
+    "payloadSHA256": "ae4bd17fc868fc3ea60f1298ceb27fa67d44a614306dd8804a1f60bd544a9cd8",
+    "lineCount": 500,
+    "contributionCount": 500,
+    "importCount": 1,
+    "source": "paste",
+    "checkedCount": 20,
+    "checkedRowIDs": [
+      "2f215c15-aea6-4b07-a017-8318bbf5bb9e",
+      "41393e3a-3e51-4d8c-af18-381cafa1d62a",
+      "43a22fc0-97a0-4a56-b9e2-37129b9447a2",
+      "5b1ba78f-e3fe-49a5-aa30-a694ee69106f",
+      "6292b2ec-e133-476f-b274-8eb37716850a",
+      "6a5bf6d0-4fdb-464f-bb9d-13d3b337f182",
+      "721df905-d769-484b-940f-53788ba1853c",
+      "8604e71e-40d9-4faa-9bbf-3d627dee9c08",
+      "90202dfe-9005-4fa6-b4fa-a029b76da78c",
+      "99b7f76d-bdec-49d4-b3af-e56610192554",
+      "9bbf3f31-cea7-4037-a7ec-71ec5cbaa6fe",
+      "a4c11c05-3838-4f1f-86fe-106ce6d80b87",
+      "a5021a77-a43c-4a27-bab9-1676e1f131b1",
+      "b120dc3d-5d07-4db9-b790-bda01b52dd63",
+      "c02f2002-3db9-4534-b062-f95722f71e19",
+      "ca30b508-0869-45cd-86c3-cac21b5431d6",
+      "e424dab6-118f-4a38-8fac-2db879e8a94e",
+      "ee1de00c-383a-47a7-bac3-dead1011bd2d",
+      "f9489e53-b1b4-43e4-8e8f-d1595b805fd2",
+      "ff77e5c1-6135-4809-ba9d-6d6ac3d123d9"
+    ]
+  },
+  "scope": "Offline exact inventory, console, timing and baseline verification. Hosted runtime warning and SQLite readback receipts retained. Image presence verified from the manifest."
+}

@@ -1,0 +1,27 @@
+{
+  "status": "terminal",
+  "startedAtUTC": "2026-11-08T04:06:41.365977+00:00",
+  "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-source-r1",
+  "output": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/measurement-r1",
+  "command": [
+    "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/overlay-44e8248/run-reviewed-proposal.sh"
+  ],
+  "deviceSettingsBeforeRun": {
+    "appearance": "light",
+    "increase_contrast": "disabled",
+    "content_size": "large"
+  },
+  "simulator": "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+  "toolchain": "Xcode 27.1\nBuild version 27A9275",
+  "sourceCommit": "44e82484e7c94a0d6cb14a8e55a2909562a329f3",
+  "overlay": "overlay-44e8248/measurement-overlay.patch",
+  "scope": "Three diagnostic capture/cancel selectors; no production changes or unfiltered-audit pass claim.",
+  "pid": 14139,
+  "exitCode": 65,
+  "endedAtUTC": "2026-11-08T04:20:03.218049+00:00",
+  "nativeLogSHA256": "85aa6c86824c06f9ead54df253a13bacf8b8e960c19f50b5463be5f083a2129c",
+  "originalBundleManifestSHA256": "8d1315f966e865c85347ad0c98f91b3de599ded2253c809fc2e7f5fc0a45b557",
+  "originalMeasurementTestSHA256": "6d85c240f7609e5274462af98fbf89024f00a5487d7034068091004910701fec",
+  "followupMeasurementTestSHA256": "7cee914c8599fb30616c9907dd8b051a758a1bb850a4c1ff8e79ee004eb0e4ab",
+  "followupStatus": "running; not a pass"
+}

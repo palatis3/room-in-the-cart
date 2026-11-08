@@ -1,0 +1,21 @@
+{
+  "sourceCommit": "44e82484e7c94a0d6cb14a8e55a2909562a329f3",
+  "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/baseline-source-r2",
+  "startedAtUTC": "2026-11-08T04:02:46.344805+00:00",
+  "endedAtUTC": "2026-11-08T04:06:00.848727+00:00",
+  "nativeExitCode": 0,
+  "selectors": [
+    "RoomInTheCartUITests/HouseholdRequestPackUITests/testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite",
+    "RoomInTheCartUITests/HouseholdRequestPackUITests/testLargestTextShowsCompleteProtectedLunchNamesAndDates"
+  ],
+  "simulator": "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+  "nativeLogSHA256": "d9cf4ce05dae72deb12ed18becf2462ddeec3b3b28d76dc141e8bd32ed48e29d",
+  "originalBundleManifestSHA256": "56aa9d8699d00a8f1977853834081fd3ff981319d7c45d08bfee91eba19c5183",
+  "productsUnchanged": true,
+  "deviceSettings": {
+    "appearance": "light",
+    "increase_contrast": "disabled",
+    "content_size": "large"
+  },
+  "reason": "Prior native exit0 produced incomplete bundle and truncated log during observed host ENOSPC; strict check rejected. Original preserved. Same source, unchanged compiled products and two selectors."
+}

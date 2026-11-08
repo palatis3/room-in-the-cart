@@ -1,0 +1,117 @@
+{
+  "observedAtUtc": "2026-11-08T04:02:54+00:00",
+  "source": {
+    "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+    "mergeCheckout": "64d9f0d7b27c6c70566f318035c0156dee92b7c7",
+    "tree": "29a2792c0e7355b2b9f3c170e22891175536ba22",
+    "checkerSHA256": {
+      "scripts/check_ios_test_results.py": "857f58676bd623c8c1d90828d30ef91cbe1ed5af3821d48592ab63837eccf6aa",
+      "scripts/check_ios_performance.py": "f203f21510455a8a83300ee6968e8c5ac2bb14dd8c6afd5a6adb5caa7ce8a4c7",
+      "scripts/ios_performance_baselines.json": "38742a9b5f5eea668c608f117db602ac6a2b73aa56691c3ec3f90c291d15c38e"
+    }
+  },
+  "run": {
+    "attempt": 1,
+    "conclusion": "",
+    "event": "pull_request",
+    "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+    "name": "iOS fixture checks",
+    "runId": 42440464791,
+    "status": "pending",
+    "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42440464791"
+  },
+  "job": {
+    "completedAt": "2026-11-08T03:55:11Z",
+    "conclusion": "success",
+    "failedSteps": [],
+    "id": 128612236397,
+    "name": "Fixture (contributor-balanced-02)",
+    "startedAt": "2026-11-08T03:30:22Z",
+    "status": "completed"
+  },
+  "artifact": {
+    "id": 13603107200,
+    "name": "iphone-fixture-results-contributor-balanced-02-1",
+    "digest": "sha256:e77fa58ff0108260a04aaea81e1da64815643190e469253d772e86e093062ab4",
+    "size_in_bytes": 23255371,
+    "workflow_run": {
+      "id": 42440464791,
+      "repository_id": 1445928007,
+      "head_repository_id": 1445928007,
+      "head_branch": "codex/parallel-ios-ci",
+      "head_sha": "15f216b01e41c111ec99bbd812419cec32e6a5e4"
+    }
+  },
+  "collection": {
+    "rangeReceiptSHA256": "4a8433da45869aca37151a10edfaabf57c4af99a1334aaa5704627f35940a154",
+    "rangeBytes": 58714,
+    "verifiedMembers": [
+      {
+        "file": "Tests.log",
+        "bytes": 376966,
+        "sha256": "a101f1c7dee14d1afc4b31136f2716da2ca12fda0f63db93553041568b187336",
+        "zipCRC": 165817397,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-details.json",
+        "bytes": 6272,
+        "sha256": "2120625a88c9d866a0bb7d68d80ae9c9538a282d8998c2207c66de873ea4c9ce",
+        "zipCRC": 1466910864,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-plan/contributor-balanced-02.txt",
+        "bytes": 1185,
+        "sha256": "7ac65d36f80875b8c1749b1144b37e5dc267295c50e082e01aee41025f8ea077",
+        "zipCRC": 2131748106,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-runtime-warnings.json",
+        "bytes": 184,
+        "sha256": "53b313c36ab3d2a2c9dac94bde4fe4cc5141f7aceb5b697f341a695798a6254f",
+        "zipCRC": 4019689367,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-summary.json",
+        "bytes": 710,
+        "sha256": "d94312dacc6670d2ea6c1c5701ea22ace34e389ef3ddddcb24c574e9de6498d3",
+        "zipCRC": 839732962,
+        "CRCVerified": true
+      }
+    ]
+  },
+  "strictResult": {
+    "passed": 11,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "restarts": 0,
+    "selectors": {
+      "RoomInTheCartUITests/ContributorRequestUITests/testHelperSeesCurrentInstructionRevisionAndDateAfterRefreshInBothLanguages": 69.93235802650452,
+      "RoomInTheCartUITests/ContributorRequestUITests/testSpanishContributorReadsOnlyExplicitPurchaseStatusOnTheirOwnRequests": 22.968559980392456,
+      "RoomInTheCartUITests/ContributorRequestUITests/testSpanishLargeTextReviewStartsAtTheOriginalWording": 151.19262897968292,
+      "RoomInTheCartUITests/ContributorRequestUITests/testTypedAndStructuredReviewCancelThenSendOnlyOwnRequest": 396.70369005203247,
+      "RoomInTheCartUITests/ImportRecoveryUITests/testDiscardKeepsPendingImportUncommittedAndReviewPresented": 48.96985399723053,
+      "RoomInTheCartUITests/ImportRecoveryUITests/testRetryPersistsOneImportAndDismissesThroughItsCallback": 41.90364599227905,
+      "RoomInTheCartUITests/MeasurementUITests/testAuthenticatedNoticeConsentExplicitClosedShopSendDeleteAndWithdrawal": 98.37180399894714,
+      "RoomInTheCartUITests/MeasurementUITests/testLocalSettingsConsentIgnoresLegacyBooleanPersistsRestartAndStaysWorkspaceScoped": 64.57548499107361,
+      "RoomInTheCartUITests/StockReviewUITests/testChangedMealRevisionDisablesPreviewWithoutApplyingBatch": 31.299949049949646,
+      "RoomInTheCartUITests/StockReviewUITests/testKeyboardDoneAcceptsCenterAndTargetMargins": 106.6074628829956,
+      "RoomInTheCartUITests/StockReviewUITests/testPreviewCancelThenConfirmShowsEveryMealAndFreshCookInstructionAfterRestart": 79.21234500408173
+    },
+    "hostedWarningReceipt": {
+      "status": "passed",
+      "summaryWarningCount": null,
+      "runtimeWarningCount": 0,
+      "examinedTestCount": 11,
+      "detailExportCount": 11,
+      "activityExportCount": 0,
+      "warnings": []
+    },
+    "localSerialConsoleAndInventoryReplay": "passed"
+  },
+  "scope": "Original hosted metadata, exact serial XCTest console and bounded CRC-verified ZIP members. Full ZIP digest is GitHub metadata. No native execution."
+}
