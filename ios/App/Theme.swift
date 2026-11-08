@@ -112,3 +112,195 @@ extension View {
         self.scrollContentBackground(.hidden).background(Theme.canvas).foregroundStyle(Theme.ink)
     }
 }
+
+// SCRATCH, UNCOMPILED. Append to ORIGINAL a305 Theme.swift under this gate.
+// Public UIKit/CoreAnimation reads only; never read text, AX, layer contents or descriptions.
+#if DEBUG && UI09_ANIMATION_DIAGNOSTIC
+import UIKit
+import QuartzCore
+
+@MainActor final class UI09AnimationProbe {
+    static let shared = UI09AnimationProbe()
+    private var used = false
+    private var stopped = false
+    private var dismissalReturned = false
+    private var pendingFinish: String?
+    private var start: CFTimeInterval = 0
+    private var sumMS = 0.0
+    private var ids: [ObjectIdentifier: Int] = [:]
+    private var observers: [NSObjectProtocol] = []
+    private var keyboardEvents = 0
+    private let sink = UI09MetadataSink()
+    private let offsets: [Double] = [0, 0.016, 0.05, 0.1, 0.25, 0.5, 1, 2, 4, 8, 16, 32, 64]
+
+    // The production closure executes exactly once, synchronously, unconditionally.
+    func done(isStore: Bool, dismiss: () -> Void) {
+        guard isStore && !used else { dismiss(); return }
+        used = true
+        start = CACurrentMediaTime()
+        for name in [UIResponder.keyboardWillHideNotification, UIResponder.keyboardDidHideNotification,
+                     UIResponder.keyboardWillChangeFrameNotification, UIResponder.keyboardDidChangeFrameNotification] {
+            observers.append(NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] note in
+                // Copy only standard scalar/geometry values before the actor hop.
+                let kind = name == UIResponder.keyboardWillHideNotification ? "willHide" :
+                    name == UIResponder.keyboardDidHideNotification ? "didHide" :
+                    name == UIResponder.keyboardWillChangeFrameNotification ? "willFrame" : "didFrame"
+                let rect = (note.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue ?? .zero
+                let duration = (note.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? NSNumber)?.doubleValue ?? -1
+                let observed = CACurrentMediaTime()
+                Task { @MainActor in self?.keyboard(kind, rect: rect, duration: duration, observed: observed) }
+            })
+        }
+        sample(phase: "beforeDismiss", due: 0)
+        let before = CACurrentMediaTime()
+        let preDismissProbeMS = (before - start) * 1000
+        dismiss()
+        sink.put(["event": "dismissReturned", "t": CACurrentMediaTime() - start,
+                  "closureMS": (CACurrentMediaTime() - before) * 1000, "preDismissProbeMS": preDismissProbeMS])
+        dismissalReturned = true
+        if let pendingFinish { finish(reason: pendingFinish) }
+        for delay in offsets {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+                guard let self, !self.stopped else { return }
+                self.sample(phase: "afterDismiss", due: delay)
+                if delay == 64 { self.finish(reason: "windowComplete") }
+            }
+        }
+    }
+
+    private func keyboard(_ kind: String, rect: CGRect, duration: Double, observed: Double) {
+        guard !stopped, keyboardEvents < 16 else { return }
+        keyboardEvents += 1
+        sink.put(["event": kind, "t": observed - start, "deliveryLagMS": (CACurrentMediaTime() - observed) * 1000,
+                  "endFrame": box(rect), "duration": finite(duration)])
+    }
+    private func id(_ object: AnyObject) -> Int {
+        let key = ObjectIdentifier(object)
+        if let value = ids[key] { return value }
+        guard ids.count < 4096 else { return -1 }
+        let value = ids.count + 1; ids[key] = value; return value
+    }
+    private func finite(_ value: Double) -> Double { value.isFinite ? value : -999999 }
+    private func box(_ r: CGRect) -> [Double] { [r.origin.x, r.origin.y, r.width, r.height].map { finite(Double($0)) } }
+    private func state(_ l: CALayer) -> [String: Any] {
+        let t = l.transform
+        return ["position": [Double(l.position.x), Double(l.position.y)].map(finite), "bounds": box(l.bounds),
+                "opacity": finite(Double(l.opacity)), "hidden": l.isHidden,
+                "transform": [t.m11,t.m12,t.m13,t.m14,t.m21,t.m22,t.m23,t.m24,t.m31,t.m32,t.m33,t.m34,t.m41,t.m42,t.m43,t.m44].map { finite(Double($0)) }]
+    }
+    private func sample(phase: String, due: Double) {
+        guard !stopped else { return }
+        let began = CACurrentMediaTime()
+        let windows = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.flatMap { $0.windows }
+        var stack: [(CALayer, Int)] = windows.prefix(8).map { ($0.layer, 0) }
+        var visited = 0, active = 0, skippedRecords = 0, animKeysTruncated = 0, skippedChildren = 0
+        var records: [[String: Any]] = [], scrolls: [[String: Any]] = [], responders: [[String: Any]] = []
+        let keyPaths: Set<String> = ["position", "position.x", "position.y", "bounds", "bounds.origin", "bounds.size", "opacity", "transform", "transform.translation", "transform.scale", "backgroundColor", "cornerRadius"]
+        while let (layer, parent) = stack.popLast() {
+            if visited >= 2048 || (CACurrentMediaTime() - began) * 1000 >= 4 { stack.append((layer, parent)); break }
+            visited += 1
+            let layerID = id(layer)
+            let keys = layer.animationKeys() ?? []
+            if keys.count > 8 { animKeysTruncated += keys.count - 8 }
+            var animations: [[String: Any]] = []
+            for key in keys.prefix(8) {
+                guard let a = layer.animation(forKey: key) else { continue }
+                let property = (a as? CAPropertyAnimation)?.keyPath ?? "none"
+                // No raw animation keys, from/to values, paths or delegate descriptions.
+                animations.append(["kind": a is CASpringAnimation ? "spring" : a is CABasicAnimation ? "basic" : a is CAKeyframeAnimation ? "keyframe" : a is CAAnimationGroup ? "group" : "other",
+                    "property": keyPaths.contains(property) ? property : "other", "duration": finite(a.duration),
+                    "beginTime": finite(a.beginTime), "timeOffset": finite(a.timeOffset), "speed": finite(Double(a.speed)),
+                    "repeatCount": finite(Double(a.repeatCount)), "repeatDuration": finite(a.repeatDuration),
+                    "autoreverses": a.autoreverses, "removedOnCompletion": a.isRemovedOnCompletion])
+            }
+            active += keys.count
+            let p = layer.presentation()
+            let changed = p.map { $0.position != layer.position || $0.bounds != layer.bounds || $0.opacity != layer.opacity || !CATransform3DEqualToTransform($0.transform, layer.transform) } ?? false
+            let view = layer.delegate as? UIView
+            if let view, view.isFirstResponder, responders.count < 8 {
+                responders.append(["layer": layerID, "type": String(NSStringFromClass(type(of: view)).prefix(96)), "frame": box(view.convert(view.bounds, to: nil))])
+            }
+            if let scroll = view as? UIScrollView, scrolls.count < 8 {
+                scrolls.append(["layer": layerID, "bounds": box(scroll.bounds), "adjustedInset": [scroll.adjustedContentInset.top,scroll.adjustedContentInset.left,scroll.adjustedContentInset.bottom,scroll.adjustedContentInset.right].map { finite(Double($0)) }, "dragging": scroll.isDragging, "decelerating": scroll.isDecelerating])
+            }
+            if !keys.isEmpty || changed || parent == 0 {
+                if records.count < 48 {
+                    var row: [String: Any] = ["layer": layerID, "parent": parent, "viewType": view.map { String(NSStringFromClass(type(of: $0)).prefix(96)) } ?? "none",
+                        "model": state(layer), "hasPresentation": p != nil, "differentPresentation": changed,
+                        "animations": animations, "animationKeyCount": keys.count,
+                        "layerSpeed": finite(Double(layer.speed)), "layerTimeOffset": finite(layer.timeOffset), "layerBeginTime": finite(layer.beginTime)]
+                    if let p { row["presentation"] = state(p) }
+                    records.append(row)
+                } else { skippedRecords += 1 }
+            }
+            // Layer trees can contain unattached sublayers; public app-owned roots only.
+            let children = layer.sublayers ?? []
+            let allowed = min(256, max(0, 4096 - stack.count))
+            skippedChildren += max(0, children.count - allowed)
+            for child in children.prefix(allowed) { stack.append((child, layerID)) }
+        }
+        let ms = (CACurrentMediaTime() - began) * 1000
+        sumMS += ms
+        let encodingMS = sink.put(["event": phase, "t": began - start, "due": due, "latenessMS": max(0, (began-start-due)*1000),
+                  "inventoryMS": ms, "measuredProbeTotalMS": sumMS, "visitedLayers": visited,
+                  "truncatedTraversal": !stack.isEmpty, "windowCount": windows.count, "animationsCountInVisited": active,
+                  "skippedInterestingRecords": skippedRecords, "truncatedAnimationKeys": animKeysTruncated, "skippedChildren": skippedChildren,
+                  "layers": records, "scrolls": scrolls, "responders": responders,
+                  "windows": windows.prefix(8).map { ["layer": id($0.layer), "bounds": box($0.bounds), "safeArea": [Double($0.safeAreaInsets.top),Double($0.safeAreaInsets.bottom)]] }])
+        sumMS += encodingMS
+        if ms + encodingMS > 12 || sumMS > 60 { finish(reason: "inventoryOverheadLimit") }
+    }
+    private func finish(reason: String) {
+        guard !stopped else { return }
+        guard dismissalReturned else { pendingFinish = reason; return }
+        stopped = true
+        for observer in observers { NotificationCenter.default.removeObserver(observer) }
+        observers.removeAll()
+        sink.put(["event": "finished", "reason": reason, "t": CACurrentMediaTime() - start, "measuredProbeTotalMS": sumMS])
+        sink.finish()
+    }
+}
+
+// Serial background file output, never os_log/print. Filename holds only process identity.
+private final class UI09MetadataSink: @unchecked Sendable {
+    private let queue = DispatchQueue(label: "ui09.metadata", qos: .utility)
+    private var bytes = 0, dropped = 0
+    private var encodeMaxMS = 0.0, writeMaxMS = 0.0
+    private var handle: FileHandle?
+    init() {
+        queue.async { [self] in
+            let url = FileManager.default.temporaryDirectory.appendingPathComponent("ui09-animation-\(ProcessInfo.processInfo.processIdentifier).ndjson")
+            guard !FileManager.default.fileExists(atPath: url.path), FileManager.default.createFile(atPath: url.path, contents: nil) else { return }
+            handle = try? FileHandle(forWritingTo: url)
+        }
+    }
+    // Freeze on the calling thread into immutable Sendable Data. No [String: Any],
+    // Foundation object graph or mutable data crosses the dispatch boundary.
+    // Encoding time is measured explicitly; it is additional main-thread overhead.
+    @discardableResult func put(_ record: [String: Any]) -> Double {
+        let began = CACurrentMediaTime()
+        guard var encoded = try? JSONSerialization.data(withJSONObject: record, options: [.sortedKeys]) else {
+            queue.async { [self] in dropped += 1 }
+            return (CACurrentMediaTime() - began) * 1000
+        }
+        encoded.append(10)
+        let sealed: Data = encoded
+        let encodeMS = (CACurrentMediaTime() - began) * 1000
+        queue.async { [self, sealed, encodeMS] in
+            encodeMaxMS = max(encodeMaxMS, encodeMS)
+            guard bytes + sealed.count <= 127*1024, let handle else { dropped += 1; return }
+            let writeStart = CACurrentMediaTime()
+            do { try handle.write(contentsOf: sealed); bytes += sealed.count } catch { dropped += 1 }
+            writeMaxMS = max(writeMaxMS, (CACurrentMediaTime() - writeStart)*1000)
+        }
+        return encodeMS
+    }
+    func finish() {
+        queue.async { [self] in
+            let footer: [String: Any] = ["event": "sinkFinished", "bytesBeforeFooter": bytes, "droppedRecords": dropped, "mainThreadEncodeMaxMS": encodeMaxMS, "writeMaxMS": writeMaxMS]
+            if var data = try? JSONSerialization.data(withJSONObject: footer, options: [.sortedKeys]) { data.append(10); try? handle?.write(contentsOf: data) }
+            try? handle?.close(); handle = nil
+        }
+    }
+}
+#endif

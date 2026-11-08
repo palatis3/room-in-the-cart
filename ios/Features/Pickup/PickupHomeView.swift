@@ -315,7 +315,13 @@ struct PickupCheckoutView: View {
             }
         }.navigationTitle(pTr("Whole checkout"))
         .scrollDismissesKeyboard(.interactively)
-        .keyboardDoneAction(visible: field != nil, title: pTr("Done")) { field = nil }
+        .keyboardDoneAction(visible: field != nil, title: pTr("Done")) {
+            #if DEBUG && UI09_ANIMATION_DIAGNOSTIC
+            UI09AnimationProbe.shared.done(isStore: field == .store) { field = nil }
+            #else
+            field = nil
+            #endif
+        }
         .disabled(model.saving)
         .onAppear { populate() }
         .onChange(of: model.journey?.basket?.current.id) { _, _ in populate() }
