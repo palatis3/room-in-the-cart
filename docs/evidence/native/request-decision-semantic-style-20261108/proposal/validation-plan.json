@@ -1,0 +1,40 @@
+{
+  "status": "proposal-only-no-run",
+  "initialMatrix": [
+    {
+      "runtime": "current owned iOS26.2",
+      "appearance": "light",
+      "selectors": [
+        "RoomInTheCartUITests/HouseholdRequestPackUITests/testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite",
+        "RoomInTheCartUITests/HouseholdRequestPackUITests/testShopperOpensCheckoutCalculationsAndIncludedChargesWithNoDecisionWrite",
+        "RoomInTheCartUITests/HouseholdRequestPackUITests/testLargestTextShowsCompleteProtectedLunchNamesAndDates"
+      ],
+      "expectedCount": 3,
+      "sizes": "First2 standardLarge; third sets AccessibilityXXXL/AX5 internally",
+      "increaseContrast": "disabled baseline"
+    },
+    {
+      "runtime": "current owned iOS26.2",
+      "appearance": "dark",
+      "selectors": [
+        "RoomInTheCartUITests/HouseholdRequestPackUITests/testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite",
+        "RoomInTheCartUITests/HouseholdRequestPackUITests/testShopperOpensCheckoutCalculationsAndIncludedChargesWithNoDecisionWrite",
+        "RoomInTheCartUITests/HouseholdRequestPackUITests/testLargestTextShowsCompleteProtectedLunchNamesAndDates"
+      ],
+      "expectedCount": 3,
+      "sizes": "First2 standardLarge; third sets AccessibilityXXXL/AX5 internally",
+      "increaseContrast": "disabled baseline"
+    }
+  ],
+  "minimumOS": "After current-OS checks, same source: iOS17 cereal readability/no-write and AX5 cases,2perappearance. Calculation-details test suppresses app OS_ACTIVITY_MODE on iOS17; exclude from warning-clean evidence or report functional-only if separately selected. No suppression addition proposed.",
+  "existingContrastAssertions": "Cereal test captures $40.69 and meal-coverage guidance screenshot samples, trims outer1percent luminances and requires4.5:1. Does not measure the four original named audit findings or every fact/metadata color.",
+  "visualChecks": [
+    "Canvas/row surface and essential amounts/portions in light/dark",
+    "Quote recorded/expires, preview expiry and shoprevision remain secondary",
+    "Same-viewport37.20/40.69/2.69 and two named protected lunches",
+    "AX5 names/dates/portion labels and review controls retain complete readable layout",
+    "Apply stays disabled absentoverageconsent; all existing Cancel/no-write and revoked-access assertions pass"
+  ],
+  "additionalEvidenceNeeded": "Retained screenshots do not automatically cover all metadata or the two original heading contrast targets. Root must review sufficient existing captures or separately authorize bounded target captures; no new audit or test variant is prepared.",
+  "limits": "No closure of41audit findings; no causal contrast-fix claim; no runtimewarning absence inferred from a suppressed process; no business-model changes or new model suite required by this styling-only proposal."
+}

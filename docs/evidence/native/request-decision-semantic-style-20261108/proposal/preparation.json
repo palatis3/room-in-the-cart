@@ -1,0 +1,29 @@
+{
+  "status": "scratch-proposal-not-installed",
+  "createdAtUTC": "2026-11-08T13:02:05.850405+00:00",
+  "baseSHA256": {
+    "ios/Features/Household/HouseholdInboxView.swift": "49900fb2a166b3fb18d9d1aee99659d8cdaf78339faae7ca2d76bc0c677d804c",
+    "ios/Features/Household/HouseholdRequestMealContext.swift": "02c37bf92608709a1c3229e07223607fda6762616713b5d1b41ef4057c94316f"
+  },
+  "candidateSHA256": {
+    "ios/Features/Household/HouseholdInboxView.swift": "dde713f818fbafdd18b786df929528280e5447d58abec46332cd69ccb3c3d48a",
+    "ios/Features/Household/HouseholdRequestMealContext.swift": "83a358f55ad8992b9d0dbf28d079d9a802711e45da013bbe08d1620e4e775cd2"
+  },
+  "patchSHA256": "37370bbe8615d29e5d4b809559f1cbc275cb13695b78d09dc2e523478bef5e60",
+  "changedProductFiles": 2,
+  "nativeRuns": 0,
+  "builds": 0,
+  "canonicalEdits": 0,
+  "allCallersInspected": 23,
+  "metadataExplicit": 4,
+  "essentialByDefault": 19,
+  "modelsChanged": false,
+  "patchCheckExit": 0,
+  "swiftCompilationPerformed": false,
+  "validationInputSHA256": {
+    "ios/UITests/HouseholdRequestPackUITests.swift": "ee6c2911882972258af70e97382d63621b999b9dd056986a207c60ecade61df0",
+    "ios/App/Theme.swift": "8c8ace01c987920f0b694c077694354e4a20bd5abd22d5c70c1b60d8304a9cf3",
+    "docs/product/APP-BASELINE.md": "9422442e284dbbf0179db1df23793a6872708481e3ffd913c1933f49ec38aaf3",
+    "docs/product/foundation-gen2.1/04-design.md": "20c4d600b3f403c1c2a0d90523d4829fde152cff50ef1107655f0d292a40a0cf"
+  }
+}

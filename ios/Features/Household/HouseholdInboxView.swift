@@ -146,7 +146,7 @@ struct HouseholdRequestDecisionView: View {
     let request: OwnRequest
     @Environment(\.dismiss) private var dismiss
     var body: some View {
-        Form {
+        WorkingForm {
             if model.authorized {
                 ShopperDeliverySection(model: model)
                 if let selected = model.selected, selected.id == request.id {
@@ -219,9 +219,9 @@ struct HouseholdRequestDecisionView: View {
                                 }
                                 .monospacedDigit()
                                 DisclosureGroup(ht("Checkout calculation details")) {
-                                    HouseholdDecisionFact(ht("Shop revision"), value: shop.shopRevision.formatted())
-                                    HouseholdDecisionFact(ht("Quote recorded"), value: householdTime(shop.quote.observedAt))
-                                    HouseholdDecisionFact(ht("Quote expires"), value: householdTime(shop.quote.expiresAt))
+                                    HouseholdDecisionFact(ht("Shop revision"), value: shop.shopRevision.formatted(), valueRole: .metadata)
+                                    HouseholdDecisionFact(ht("Quote recorded"), value: householdTime(shop.quote.observedAt), valueRole: .metadata)
+                                    HouseholdDecisionFact(ht("Quote expires"), value: householdTime(shop.quote.expiresAt), valueRole: .metadata)
                                     DisclosureGroup(ht("Included charges and discounts")) {
                                         if shop.quote.fee.kind == "fixed" {
                                             HouseholdDecisionFact(ht("Retailer fee"), value: householdMoney(shop.quote.fee.amountMinor, currency: shop.quote.currency))
@@ -241,7 +241,7 @@ struct HouseholdRequestDecisionView: View {
                                 }
                                 .disclosureGroupStyle(LabeledFormDisclosureStyle(label: ht("Checkout calculation details"),
                                                                                  identifier: "household.decision.checkoutDetails"))
-                                HouseholdDecisionFact(ht("Preview expires"), value: householdTime(preview.expiresAt))
+                                HouseholdDecisionFact(ht("Preview expires"), value: householdTime(preview.expiresAt), valueRole: .metadata)
                                 if preview.requiresOverageAcceptance { Toggle(ht("I accept the displayed overage"), isOn: $model.acceptOverage).accessibilityIdentifier("household.decision.overage") }
                                 if preview.requiresUnknownAcceptance { Toggle(ht("I understand the total or its scope is unresolved"), isOn: $model.acceptUnknown) }
                                 Button(ht("Apply reviewed decision")) { Task { await model.apply() } }

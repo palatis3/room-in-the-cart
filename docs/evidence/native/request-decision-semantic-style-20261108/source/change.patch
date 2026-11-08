@@ -1,0 +1,73 @@
+diff --git a/ios/Features/Household/HouseholdInboxView.swift b/ios/Features/Household/HouseholdInboxView.swift
+index e53c512..73a0a4f 100644
+--- a/ios/Features/Household/HouseholdInboxView.swift
++++ b/ios/Features/Household/HouseholdInboxView.swift
+@@ -146,7 +146,7 @@ struct HouseholdRequestDecisionView: View {
+     let request: OwnRequest
+     @Environment(\.dismiss) private var dismiss
+     var body: some View {
+-        Form {
++        WorkingForm {
+             if model.authorized {
+                 ShopperDeliverySection(model: model)
+                 if let selected = model.selected, selected.id == request.id {
+@@ -219,9 +219,9 @@ struct HouseholdRequestDecisionView: View {
+                                 }
+                                 .monospacedDigit()
+                                 DisclosureGroup(ht("Checkout calculation details")) {
+-                                    HouseholdDecisionFact(ht("Shop revision"), value: shop.shopRevision.formatted())
+-                                    HouseholdDecisionFact(ht("Quote recorded"), value: householdTime(shop.quote.observedAt))
+-                                    HouseholdDecisionFact(ht("Quote expires"), value: householdTime(shop.quote.expiresAt))
++                                    HouseholdDecisionFact(ht("Shop revision"), value: shop.shopRevision.formatted(), valueRole: .metadata)
++                                    HouseholdDecisionFact(ht("Quote recorded"), value: householdTime(shop.quote.observedAt), valueRole: .metadata)
++                                    HouseholdDecisionFact(ht("Quote expires"), value: householdTime(shop.quote.expiresAt), valueRole: .metadata)
+                                     DisclosureGroup(ht("Included charges and discounts")) {
+                                         if shop.quote.fee.kind == "fixed" {
+                                             HouseholdDecisionFact(ht("Retailer fee"), value: householdMoney(shop.quote.fee.amountMinor, currency: shop.quote.currency))
+@@ -241,7 +241,7 @@ struct HouseholdRequestDecisionView: View {
+                                 }
+                                 .disclosureGroupStyle(LabeledFormDisclosureStyle(label: ht("Checkout calculation details"),
+                                                                                  identifier: "household.decision.checkoutDetails"))
+-                                HouseholdDecisionFact(ht("Preview expires"), value: householdTime(preview.expiresAt))
++                                HouseholdDecisionFact(ht("Preview expires"), value: householdTime(preview.expiresAt), valueRole: .metadata)
+                                 if preview.requiresOverageAcceptance { Toggle(ht("I accept the displayed overage"), isOn: $model.acceptOverage).accessibilityIdentifier("household.decision.overage") }
+                                 if preview.requiresUnknownAcceptance { Toggle(ht("I understand the total or its scope is unresolved"), isOn: $model.acceptUnknown) }
+                                 Button(ht("Apply reviewed decision")) { Task { await model.apply() } }
+diff --git a/ios/Features/Household/HouseholdRequestMealContext.swift b/ios/Features/Household/HouseholdRequestMealContext.swift
+index 0b79163..7e13f62 100644
+--- a/ios/Features/Household/HouseholdRequestMealContext.swift
++++ b/ios/Features/Household/HouseholdRequestMealContext.swift
+@@ -95,17 +95,31 @@ private struct HouseholdRequestMealFacts: View {
+ 
+ /// Preserve LabeledContent's native stacked layout at accessibility sizes.
+ struct HouseholdDecisionFact: View {
++    enum ValueRole {
++        case essential
++        case metadata
++
++        var foregroundColor: Color {
++            switch self {
++            case .essential: Theme.ink
++            case .metadata: Theme.secondary
++            }
++        }
++    }
++
+     let title: String
+     let value: String
++    let valueRole: ValueRole
+ 
+-    init(_ title: String, value: String) {
++    init(_ title: String, value: String, valueRole: ValueRole = .essential) {
+         self.title = title
+         self.value = value
++        self.valueRole = valueRole
+     }
+ 
+     var body: some View {
+         LabeledContent {
+-            Text(value).foregroundStyle(Theme.secondary)
++            Text(value).foregroundStyle(valueRole.foregroundColor)
+         } label: {
+             Text(title)
+         }

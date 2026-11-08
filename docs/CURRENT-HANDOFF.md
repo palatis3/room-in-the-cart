@@ -2,6 +2,16 @@
 
 Updated November 8, 2026 UTC. The full first-version goal is active and release acceptance remains incomplete. The owner's migration 041 approval has already been executed and verified. The separate 042 approval is pending; a repeated 041 approval does not authorize 042. Historical snapshots are preserved in [the handoff archive](CURRENT-HANDOFF-HISTORY-20261106.md).
 
+## Latest verified state — November 8, 13:25 UTC
+
+The request-decision sheet now uses the established WorkingForm canvas/surface styling. Nineteen essential money, quantity and scope values use ink; four revision/freshness values retain secondary. Both production files match the reviewed proposal; calculations, authority, consent, actions, layout modifiers and existing test assertions are unchanged. The complete checkout/lunch, itemized-charge and AX5 lunch journeys pass native/strict 3/3 in each of light and dark on iOS 26.2. Both runs record zero runtime warnings, animation-idle messages and runner restarts. Root reviewed all twelve retained PNGs. The final frozen-source unsigned arm64 Release build and compiled-bundle checks pass. [Exact qualification](evidence/native/request-decision-semantic-style-20261108/README.md).
+
+These results qualify the selected semantic styling only. All 41 reported accessibility findings remain tracked. A source-and-render review also identifies concrete remaining design requirements: a native large-title checkout amount and appropriate heading hierarchy, one filled primary action for the current review/apply stage, and concise fee basis/named unknown facts beside the result rather than only inside collapsed details. Preserve the existing standard-size one-viewport budget/lunch acceptance, AX5 natural scrolling, identifiers, explicit consent and server-authoritative calculations when implementing those changes. No new minimum-iOS17 styling, physical VoiceOver, increased-contrast or complete-S24 acceptance is claimed.
+
+The bounded UI09 animation-owner diagnostic is prepared privately at `.build/CIA305065Nov08/ui09-animation-owner-proposal/`; its original eight tests are unchanged. Root caught and the scratch author corrected non-Sendable output capture and early sink closure. It remains uncompiled, unexecuted and uninstalled; no checkout-timeout repair is established. Speech warning investigation and the four underlying hosted CI failures remain open. The published `a305065` cohort is fully terminal and collected; no push, retry, dispatch, cancellation or live deployment occurred.
+
+Migration 041 is already live; 042 remains separately pending. No native build/test or inspection remains active. Both styling result inspections and screenshot exports are complete; do not repeat them. The full first-version goal remains active. Earlier sections below preserve historical state.
+
 ## Latest verified state — November 8, 13:10 UTC
 
 Migration 041 is already deployed and verified; the repeated approval requires no duplicate update. Migration 042 remains separately pending. Published PR1 remains `a305065`; no new push, dispatch, cancellation or deployment occurred.

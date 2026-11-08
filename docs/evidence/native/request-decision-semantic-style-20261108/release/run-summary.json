@@ -1,0 +1,56 @@
+{
+  "status": "completed",
+  "startedAtUTC": "2026-11-08T13:24:06.904092+00:00",
+  "source": "/Users/palatis/Room in the Cart",
+  "sourceManifest": "/Users/palatis/Room in the Cart/.build/S24SemanticStyleNov08/fixed-source-manifest.json",
+  "sourceManifestSHA256": "ad32a9a313a2f2763c9513adaa62513800d48ceaad1145d8cf66205ed9af6ff1",
+  "command": [
+    "/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild",
+    "-project",
+    "ios/RoomInTheCart.xcodeproj",
+    "-scheme",
+    "RoomInTheCart-Release",
+    "-configuration",
+    "Release",
+    "-sdk",
+    "iphoneos",
+    "-destination",
+    "generic/platform=iOS",
+    "-jobs",
+    "2",
+    "-derivedDataPath",
+    "/Users/palatis/Room in the Cart/.build/CookVoicePreparationNov08/release-style-r2/dd",
+    "ARCHS=arm64",
+    "CODE_SIGNING_REQUIRED=NO",
+    "CODE_SIGNING_ALLOWED=NO",
+    "build"
+  ],
+  "bundleCheckCommand": [
+    "python3",
+    "scripts/check_built_app.py",
+    "/Users/palatis/Room in the Cart/.build/CookVoicePreparationNov08/release-style-r2/dd/Build/Products/Release-iphoneos/RoomInTheCart.app",
+    "--configuration",
+    "Release"
+  ],
+  "scope": "Final frozen S24 semantic-style source unsigned arm64 generic iPhone Release; existing DD reuse; serial jobs2",
+  "toolchain": {
+    "developerDirectory": "/Applications/Xcode.app/Contents/Developer",
+    "xcodebuild": "/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild",
+    "xcodebuildSHA256": "d37fbcb4198c2474d847e5d7d4bf8394a1a9443890ad0153a76bc3e1d5576ec1",
+    "xcodeVersion": "Xcode 27.1\nBuild version 27A9275",
+    "swiftExecutable": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift",
+    "swiftVersion": "Apple Swift version 6.4 (swiftlang-6.4.0.34.1 clang-2100.3.34.1)\nTarget: arm64-apple-macosx27.2.0"
+  },
+  "pid": 28687,
+  "buildExit": 0,
+  "bundleCheckExit": 0,
+  "finishedAtUTC": "2026-11-08T13:24:41.261559+00:00",
+  "sourceUnchanged": true,
+  "preservedProductsUnchanged": true,
+  "originalPrivateRunPath": ".build/S24SemanticStyleNov08/release-run/run.json",
+  "originalPrivateRunSHA256": "b80f1369c287db3becd5f7c64a6cb822bd5cfe882ad6c0611b35ab61cf245ab6",
+  "omittedProductManifest": {
+    "entries": 173,
+    "reason": "Bounded receipt projection; exact full original private run bound by SHA256."
+  }
+}

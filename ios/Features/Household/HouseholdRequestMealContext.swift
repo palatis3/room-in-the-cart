@@ -95,17 +95,31 @@ private struct HouseholdRequestMealFacts: View {
 
 /// Preserve LabeledContent's native stacked layout at accessibility sizes.
 struct HouseholdDecisionFact: View {
+    enum ValueRole {
+        case essential
+        case metadata
+
+        var foregroundColor: Color {
+            switch self {
+            case .essential: Theme.ink
+            case .metadata: Theme.secondary
+            }
+        }
+    }
+
     let title: String
     let value: String
+    let valueRole: ValueRole
 
-    init(_ title: String, value: String) {
+    init(_ title: String, value: String, valueRole: ValueRole = .essential) {
         self.title = title
         self.value = value
+        self.valueRole = valueRole
     }
 
     var body: some View {
         LabeledContent {
-            Text(value).foregroundStyle(Theme.secondary)
+            Text(value).foregroundStyle(valueRole.foregroundColor)
         } label: {
             Text(title)
         }
