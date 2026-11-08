@@ -1,0 +1,16 @@
+{
+  "README.md": "e54a7755a15cf4cb195829198ddfaafb6f6c351c4380eda34be705e3e7db2343",
+  "copy-origins.json": "ace6eba2e57092652fcff1f1415e881b58886175113054d98c45adf5ede374ba",
+  "helper-provenance-manifest.json": "d36e5e55b1b7c0f951331f2efdf8015aefeb30a743420395d459e306bf6f8e20",
+  "observation-final.json": "0d9ca68ab0ab1ae6864c116d4ede5d89d460388e24d698694678be57480be71c",
+  "observation-queued.json": "0508f2a6b3c8c12b2430a8ff384e2e95bc8ff8837596a3d41eca0ebea1322dfa",
+  "observation.mjs": "9895ac940211242d8ee357fe072a9fdca6b343729c0de3d033b0117b422c19a3",
+  "prior-proof-preservation.json": "cdff202fe07c1f0aa21e6a8fbdb593852721e5e4a356945b80037cf3dcd7bdbe",
+  "probe.js": "aba06331ecf63d3191a0abce9722e9dc5496406125df4d172019776dd2359918",
+  "receipt.json": "9db96800dd33067ca7c2172410b5cac1583f36ecfaf002f22f4754255d17d904",
+  "verification.json": "8dfeb432090d2f5495cb9b58b939c63dae7a6fa6fc34ca641f33df34ddcfbe67",
+  "verification.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "verification.stdout.txt": "fff576fe82c9c1d4b0152aa47c188bdf84a47416fbdd286fe95fb05f9894933b",
+  "verify-case.mjs": "180b6258f761fcdefefe316e7b19889b6c655e6c918d6cbbf0a303b1ea7ac26c",
+  "verify-pin.mjs": "ce831e1967e495cb85953eecf3dbf54596c6ea2dc81b0b2e1de62109ab9e73de"
+}

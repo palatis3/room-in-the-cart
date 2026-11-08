@@ -1,0 +1,58 @@
+{
+  "status": "passed-scoped",
+  "recordedAtUTC": "2026-11-08T03:50:08.036418+00:00",
+  "case": "queue-revoked",
+  "manifestIdentity": "bffa8e626fc1f2e5645864c38d0017ab215e19170aef59383c3d417cb6ddcb62",
+  "frozenManifestAndHelpersVerified": true,
+  "verifierExit": 0,
+  "verifierCommand": [
+    ".tools/node-v22.23.4-darwin-arm64/bin/node",
+    ".build/SafariQualificationNov08/proposal/verify-case.mjs",
+    "queue-revoked",
+    ".build/SafariQualificationNov08/proposal/runs/queue-revoked/receipt.json"
+  ],
+  "receiptSHA256": "9db96800dd33067ca7c2172410b5cac1583f36ecfaf002f22f4754255d17d904",
+  "observationPhases": [
+    "queued",
+    "final"
+  ],
+  "pendingCommandSHA256": "36f5382061d72fce07a459d61fd266785d6fc9e7384b683ed1c91bf0f0cd495a",
+  "supplementalAssertions": {
+    "queuedOneRealStoredCommandWithPermissionControl": true,
+    "sameActorAuthorityRetainedQueuePermissionFalse": true,
+    "finalAuthorizedOnlineFormReadyNotBusy": true,
+    "finalTopLevelStatusEmpty": true,
+    "finalNoPendingMarkerRetryOrQueuePermissionControls": true,
+    "finalZeroStoredRows": true,
+    "noCommandRequestAtAnyBoundary": true
+  },
+  "counts": {
+    "commandAttempts": 0,
+    "commandEffects": 0,
+    "rowsA": 0,
+    "rowsB": 0
+  },
+  "rootVisualObservation": "One actual product Refresh returned the authorized blank form, empty top-level status and empty Your requests. No pending, Retry or queue-permission controls remained. Root completed the final fixture capture.",
+  "cleanup": {
+    "rootReportedExecSession": 79057,
+    "rootReportedServerPID": 9493,
+    "rootReportedStopExit": 0,
+    "port": 52401,
+    "independentConnectResult": 61,
+    "independentPortState": "ECONNREFUSED"
+  },
+  "identity": "same root-owned iPhone17 Simulator/iOS26.2 MobileSafari as ../owned-simulator-safari.json",
+  "visualEvidence": "Root Device Hub CUA transcript only; no standalone PNG/video export",
+  "scope": "Synthetic device queue-permission revocation; actual Safari, IndexedDB cleanup and product Refresh; no provider/server/PostgreSQL authority claim",
+  "allEightMinimalCasesQualifiedInSeparateProofs": [
+    "history-same",
+    "history-changed",
+    "history-revoked",
+    "history-offline",
+    "queue-offline",
+    "queue-lost",
+    "queue-evicted",
+    "queue-revoked"
+  ],
+  "broaderSafariPhysicalProviderAcceptance": "open"
+}

@@ -2,7 +2,17 @@
 
 Updated November 8, 2026 UTC. The full first-version goal is active and release acceptance remains incomplete. The owner's migration 041 approval has already been executed and verified. The separate 042 approval is pending; a repeated 041 approval does not authorize 042. Historical snapshots are preserved in [the handoff archive](CURRENT-HANDOFF-HISTORY-20261106.md).
 
-## Latest execution state — November 8, 03:43 UTC
+## Latest execution state — November 8, 03:52 UTC
+
+All eight frozen minimal Safari cases now pass on the owned iPhone17/iOS26.2 Simulator: four persisted-history cases and four queue cases. The new [explicit storage-loss proof](evidence/b11/safari-history-20261108/queue-evicted/verification.json) records one attempted command/zero effects, an explicit fixture-only outbox deletion, and the exact missing-request notice with no Retry or resend after product Refresh. The new [device-permission revocation proof](evidence/b11/safari-history-20261108/queue-revoked/verification.json) records zero command attempts/effects throughout, removal of pending text and stored command, and an authorized online form without queue controls. Broader mobile-browser/physical/provider acceptance is still open; intentional fixture deletion is not OS-generated eviction. Both receipts and their publication hashes were independently checked by root. Earlier proof is immutable.
+
+Fixture sessions83178/79057 stopped with exit0, ports52252/52401 independently refused connections, and both CUA completion summaries were reported. Safari's task tab remains at stopped synthetic origin52401. Root has now assigned owned simulator4C7FAE04-D40B-4ADC-8F75-1366C09B1695 to the S24 native baseline: session61013/PID10412, `.build/RequestDecisionAccessibilityNov08/baseline/{run.json,native.log,native.xcresult}`. This is the unchanged two-selector standard/AX5 baseline from exact44e8248 archive `.build/RequestDecisionAccessibilityNov08/baseline-source-r2`; no result is claimed while it runs. Do not operate that simulator concurrently. A first archive setup failed before extraction because host Python lacks the tar filter argument; the setup failure is retained, and r2 validates every archive path/type before extraction. The test-only measurement overlay is separately being prepared by `ci_log_record_fix`; it has not been installed or executed.
+
+The hosted snapshot through03:50UTC adds UI02 strict7/7, including private retailer-confirmed amendment/restart, and rendered Release performance strict1/1. Both have zero warnings/skips/restarts. Rendered search p95 is3744.006ms below4750 and checkoff p95 is2662.256ms below3750 across20samples each; the six functional checks and SQLite500rows/20matching checkoffs pass. These are simulator XCTest round trips including input synthesis/idle waits/accessibility polling, not pure physical render latency. Exact proof is `.build/CI15F216Nov08/performance/rendered/verification.json`. Core UI04, fixtures and Release scroll remain active; other UI jobs await admission. Chrome startup remains the only observed failed job. Keep the existing six-run cohort unchanged while collecting results. The bounded monitor has ended, not the hosted runs.
+
+Staging remains approved041; separate042 approval and provider/distribution/human gates remain pending. Full first-version completion is not established.
+
+## Previous execution state — November 8, 03:43 UTC
 
 The repeated owner approval for041 is acknowledged against the completed deployment record; no duplicate migration or rollout was performed. Staging remains041 and the separate042 approval is still pending.
 
