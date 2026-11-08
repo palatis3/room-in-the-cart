@@ -1,0 +1,194 @@
+{
+  "retainedAtUTC": "2026-11-08T02:11:15.567274+00:00",
+  "files": [
+    {
+      "file": "original-small/artifact-metadata.json",
+      "bytes": 828,
+      "sha256": "a6669f5c886db7057fa2e0bd8ea2ccf1cc87347455b4466a47a78245bbec9f90",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/balanced-03/artifact-metadata.json"
+    },
+    {
+      "file": "original-small/range-receipt.json",
+      "bytes": 3574,
+      "sha256": "8000c2a93f384899b4620eb05399830d9e93757bce51ac867fe79a426cb732ef",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/balanced-03/range-receipt.json"
+    },
+    {
+      "file": "original-small/pristine-manifest.json",
+      "bytes": 989,
+      "sha256": "3a88482d78b1a8c4942522a3a73d270e7d60627d5c4cb3bf8ab769a11b520042",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/balanced-03/pristine-manifest.json"
+    },
+    {
+      "file": "original-small/test-summary.json",
+      "bytes": 1313,
+      "sha256": "9145e77e4e79035a9368bccd86cdf8a803e6280777b5277f051f48ae0f1e4fcc",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/balanced-03/pristine-members/test-summary.json"
+    },
+    {
+      "file": "original-small/test-runtime-warnings.json",
+      "bytes": 184,
+      "sha256": "8ae08d078872d604777a3b47b9516196c1b0dd897187b57ff939bb71aa337ef6",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/balanced-03/pristine-members/test-runtime-warnings.json"
+    },
+    {
+      "file": "original-small/contributor-balanced-03.txt",
+      "bytes": 1122,
+      "sha256": "7109fc0cd8617c8451b5a457fede7476fdf7e8ee17bd203e637c6c1eec257d16",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/balanced-03/pristine-members/test-plan/contributor-balanced-03.txt"
+    },
+    {
+      "file": "metadata/range-receipt.json",
+      "bytes": 3088,
+      "sha256": "0b2d4b5e8d06f2d8a8f38b3072832a565722d606e1d774ef2a907a1dd0f0c16b",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/balanced-03-inspection/range-receipt.json"
+    },
+    {
+      "file": "metadata/pristine-manifest.json",
+      "bytes": 993,
+      "sha256": "01cc04d9dc1dc7e3c814078a53d86986bded90495d4074e54f764504fabd6e59",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/balanced-03-inspection/pristine-manifest.json"
+    },
+    {
+      "file": "attachments/range-receipt.json",
+      "bytes": 6518,
+      "sha256": "b7d6497f6723c7c1d8a9eede92b52056f234b89aed4b8b49c068c6cd872e7943",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/balanced-03-inspection/attachment-download/range-receipt.json"
+    },
+    {
+      "file": "attachments/pristine-manifest.json",
+      "bytes": 2897,
+      "sha256": "3a85694b64fdf1bd4d9a4e5151f2526ecb3077c8430156f9c2b5356495fee8ba",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/balanced-03-inspection/attachment-download/pristine-manifest.json"
+    },
+    {
+      "file": "attachments/export-receipts.json",
+      "bytes": 4078,
+      "sha256": "d2c20149bb033ba092c5f2847001ecd4d08b82c2189bb007bfee266f12e14553",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/balanced-03-inspection/attachment-download/export-receipts.json"
+    },
+    {
+      "file": "session/range-receipt.json",
+      "bytes": 6519,
+      "sha256": "dd23aad658d1195186ce6edc491bab0e566a717d1d1bd19eac407824513ea49a",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/balanced-03-inspection/diagnostics-scope/range-receipt.json"
+    },
+    {
+      "file": "session/pristine-download-manifest.json",
+      "bytes": 2322,
+      "sha256": "4f052f8b252dbf363ae8d0634c1cf0b4853bc9dfbc77d207da0d074fa41a6ec5",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/balanced-03-inspection/diagnostics-scope/pristine-download-manifest.json"
+    },
+    {
+      "file": "session/session-receipt.json",
+      "bytes": 363,
+      "sha256": "fcd5e58fe67602b22882cfad5eece50f6d06221e99590c1496fabd2752155ac7",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/balanced-03-inspection/diagnostics-scope/session-receipt.json"
+    },
+    {
+      "file": "session/directory-traversal.json",
+      "bytes": 2161,
+      "sha256": "16565fc8741d8f5ee9287bc2d95693e975dfe46f408a3475b7da88d2dd5884cd",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/balanced-03-inspection/diagnostics-scope/directory-traversal.json"
+    },
+    {
+      "file": "attachments/exports/S24-request-pack-failure.png",
+      "bytes": 251188,
+      "sha256": "11585410148b4b465ee7c677ca032df4b41a790c566afc5412554b9aa7a4d57d",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/balanced-03-inspection/attachment-download/exports/S24-request-pack-failure.png"
+    },
+    {
+      "file": "attachments/exports/S24-failure-preview-diagnostics.txt",
+      "bytes": 131,
+      "sha256": "b6646881c9c1e82e3478dcffd537b640a5eb156898c5ce9ad3323f588bcc84d9",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/balanced-03-inspection/attachment-download/exports/S24-failure-preview-diagnostics.txt"
+    },
+    {
+      "file": "attachments/exports/kXCTAttachmentLegacySnapshot.snapshot",
+      "bytes": 1211,
+      "sha256": "29e252bfe5f0de78e4d3db10471070848f34dea18012295c01f2abc9bbfd6dd2",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/balanced-03-inspection/attachment-download/exports/kXCTAttachmentLegacySnapshot.snapshot"
+    },
+    {
+      "file": "attachments/exports/kXCTAttachmentLegacySynthesizedEvent.snapshot",
+      "bytes": 1903,
+      "sha256": "d498268a2d53410d7b1f85a8d08cb77e8c40c95c12f711af052f4e6627218c72",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/balanced-03-inspection/attachment-download/exports/kXCTAttachmentLegacySynthesizedEvent.snapshot"
+    },
+    {
+      "file": "attachments/exports/S24-failure-accessibility-hierarchy.txt",
+      "bytes": 22643,
+      "sha256": "514c8c955abefa87b06ffdb299a18b661e40d359b379b8eada4fc249a1ec2f15",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/balanced-03-inspection/attachment-download/exports/S24-failure-accessibility-hierarchy.txt"
+    },
+    {
+      "file": "original-review-receipt.json",
+      "bytes": 3004,
+      "sha256": "3affd56c8ea2e3e78b8b74b8b848a9a9e5b73d4467182256de51381184a6f757",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/balanced-03-inspection/review-receipt.json"
+    },
+    {
+      "file": "original-investigation.md",
+      "bytes": 5694,
+      "sha256": "7ed64861a9a59800d6c4f92c14140c51b9323868a8cdcdf97c68ec038f90d679",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/balanced-03-inspection/review.md"
+    },
+    {
+      "file": "runner-tap-and-failure-excerpts.txt",
+      "bytes": 39384,
+      "sha256": "dbb4fdc4a99d6cad275131792626650c6bff723f076687bbc897b64af6a662e9",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/balanced-03-inspection/runner-tap-and-failure-excerpts.txt"
+    },
+    {
+      "file": "proposal/matched-binding-diagnostic.patch",
+      "bytes": 5263,
+      "sha256": "86caf70335e63d05c6e8f08d21b329bada9b2f81bfa6d1b956c6960983dce7fc",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/balanced-03-inspection/diagnostic-candidate/matched-binding-diagnostic.patch"
+    },
+    {
+      "file": "proposal/proposal-receipt.json",
+      "bytes": 1193,
+      "sha256": "9814af4e435fbd50b14347c0704967f26ceed403a3357e36cf9c1f2dfd1778a8",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/balanced-03-inspection/diagnostic-candidate/proposal-receipt.json"
+    },
+    {
+      "file": "proposal/proposal.md",
+      "bytes": 3915,
+      "sha256": "3ac5b45cf024ade57cd4c1d2401309a8cf4702b701bcca349704bf3142c966f1",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/balanced-03-inspection/diagnostic-candidate/proposal.md"
+    },
+    {
+      "file": "proposal/original-prefix-through-failure.txt",
+      "bytes": 573,
+      "sha256": "58755046aecc52c4370b507d3bf193d812f2c88d9811b31c89bff1c5d04d9df8",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/balanced-03-inspection/diagnostic-candidate/original-prefix-through-failure.txt"
+    },
+    {
+      "file": "proposal/original-shard-selectors.txt",
+      "bytes": 1122,
+      "sha256": "7109fc0cd8617c8451b5a457fede7476fdf7e8ee17bd203e637c6c1eec257d16",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/balanced-03-inspection/diagnostic-candidate/original-shard-selectors.txt"
+    },
+    {
+      "file": "collectors/collect-balanced03-metadata.py",
+      "bytes": 6221,
+      "sha256": "ed6f2816421a001bbd41742a9f59cbe9a253ac7ffaa391b1940873d28f30d5b3",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/collect-balanced03-metadata.py"
+    },
+    {
+      "file": "collectors/collect-balanced03-attachments.py",
+      "bytes": 6114,
+      "sha256": "43ce9d9c09cfd185443adba1a6fffdcacaf98f54f4e16fb24bfea6f6e1e1344b",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/collect-balanced03-attachments.py"
+    },
+    {
+      "file": "collectors/collect-balanced03-session.py",
+      "bytes": 7192,
+      "sha256": "2d7cf9cdce14247bec08d11d39b958531fb912214488cc39f4009c555333c5ee",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/collect-balanced03-session.py"
+    }
+  ],
+  "rawInspectionDirectory": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/balanced-03-inspection",
+  "rawSmallArtifactDirectory": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/balanced-03",
+  "excluded": "Full Session, video, ZIP transport ranges, pristine object binaries, SQLite, inspection copy and whole candidate source files. Range receipts point into raw locations; they are not full ZIP hash verification."
+}

@@ -7,6 +7,7 @@ import XCTest
     override func setUpWithError() throws {
         continueAfterFailure = false
         app = XCUIApplication(bundleIdentifier: "dev.roominthecart.app.debug")
+        app.launchEnvironment["S24_PACK_TRACE_SCOPE"] = name
     }
     override func tearDownWithError() throws {
         if testRun?.failureCount ?? 0 > 0 {

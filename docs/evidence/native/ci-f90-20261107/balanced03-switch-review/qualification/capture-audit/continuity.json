@@ -1,0 +1,102 @@
+{
+  "scope": "Observed first onAppear to final onDisappear; constructor initialization is not separately emitted.",
+  "monotonic_uptime": true,
+  "per_pack": {
+    "a": {
+      "events": 41,
+      "first_event": {
+        "line": 53205,
+        "uptime": 917179.63527075,
+        "pid": 90958,
+        "scope": "-[HouseholdRequestPackUITests testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite]",
+        "event": "appear",
+        "pack": "a",
+        "oldDraft": "C7721B92-89E7-438C-BC53-9A46F38D9F87",
+        "newDraft": "C7721B92-89E7-438C-BC53-9A46F38D9F87",
+        "old": false,
+        "new": false
+      },
+      "unique_draft_ids": [
+        "C7721B92-89E7-438C-BC53-9A46F38D9F87"
+      ],
+      "setter_entries": 1,
+      "setter_returns": 1,
+      "false_to_true_state_changes": [
+        {
+          "line": 465677,
+          "uptime": 917234.0461495417,
+          "pid": 90958,
+          "scope": "-[HouseholdRequestPackUITests testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite]",
+          "event": "change",
+          "pack": "a",
+          "oldDraft": "C7721B92-89E7-438C-BC53-9A46F38D9F87",
+          "newDraft": "C7721B92-89E7-438C-BC53-9A46F38D9F87",
+          "old": false,
+          "new": true
+        }
+      ],
+      "true_to_false_transitions": 0,
+      "identity_replacements": 0,
+      "last_event": {
+        "line": 955737,
+        "uptime": 917294.1344790834,
+        "pid": 90958,
+        "scope": "-[HouseholdRequestPackUITests testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite]",
+        "event": "disappear",
+        "pack": "a",
+        "oldDraft": "C7721B92-89E7-438C-BC53-9A46F38D9F87",
+        "newDraft": "C7721B92-89E7-438C-BC53-9A46F38D9F87",
+        "old": true,
+        "new": true
+      }
+    },
+    "b": {
+      "events": 41,
+      "first_event": {
+        "line": 53206,
+        "uptime": 917179.6353018751,
+        "pid": 90958,
+        "scope": "-[HouseholdRequestPackUITests testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite]",
+        "event": "appear",
+        "pack": "b",
+        "oldDraft": "67B1B981-3FAB-4FBF-9207-19762B8A2195",
+        "newDraft": "67B1B981-3FAB-4FBF-9207-19762B8A2195",
+        "old": false,
+        "new": false
+      },
+      "unique_draft_ids": [
+        "67B1B981-3FAB-4FBF-9207-19762B8A2195"
+      ],
+      "setter_entries": 1,
+      "setter_returns": 1,
+      "false_to_true_state_changes": [
+        {
+          "line": 812835,
+          "uptime": 917278.3270104168,
+          "pid": 90958,
+          "scope": "-[HouseholdRequestPackUITests testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite]",
+          "event": "change",
+          "pack": "b",
+          "oldDraft": "67B1B981-3FAB-4FBF-9207-19762B8A2195",
+          "newDraft": "67B1B981-3FAB-4FBF-9207-19762B8A2195",
+          "old": false,
+          "new": true
+        }
+      ],
+      "true_to_false_transitions": 0,
+      "identity_replacements": 0,
+      "last_event": {
+        "line": 955738,
+        "uptime": 917294.1345105417,
+        "pid": 90958,
+        "scope": "-[HouseholdRequestPackUITests testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite]",
+        "event": "disappear",
+        "pack": "b",
+        "oldDraft": "67B1B981-3FAB-4FBF-9207-19762B8A2195",
+        "newDraft": "67B1B981-3FAB-4FBF-9207-19762B8A2195",
+        "old": true,
+        "new": true
+      }
+    }
+  }
+}

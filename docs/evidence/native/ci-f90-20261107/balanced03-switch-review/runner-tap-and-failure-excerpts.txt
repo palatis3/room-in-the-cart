@@ -1,0 +1,273 @@
+Original Session lines 565292-565403:
+565292: 01:42:10.689 RoomInTheCartUITests-Runner[12122:41208] Computing hit point for Switch, identifier: 'household.pack.a.matched', label: 'I confirmed this pack matches the request and intended use', value: 0
+565293: 01:42:10.690 RoomInTheCartUITests-Runner[12122:41208] Creating future for 'fetching attributes 'XC_kAXXCAttributeVisiblePoint' for AX element pid: 34760, elementOrHash.elementID: 4813336560.847' with timeout 30.00
+565294: 01:42:10.690 RoomInTheCartUITests-Runner[12122:41208] <XCTWaiter: 0x600004cfc5a0> entering wait loop for 30.00s with expectations: `fetching attributes 'XC_kAXXCAttributeVisiblePoint' for AX element pid: 34760, elementOrHash.elementID: 4813336560.847`
+565295: 01:42:10.704 RoomInTheCartUITests-Runner[12122:41208] Returning result XCTWaiterResultCompleted for synchronous waiter <XCTWaiter: 0x600004cfc5a0>
+565296: 01:42:10.704 RoomInTheCartUITests-Runner[12122:41208] Wait <XCTWaiterWait: 0x600001ba0540> completed after 0.014s
+565297: 01:42:10.704 RoomInTheCartUITests-Runner[12122:41208] cleaning up fetching attributes 'XC_kAXXCAttributeVisiblePoint' for AX element pid: 34760, elementOrHash.elementID: 4813336560.847
+565298: 01:42:10.704 RoomInTheCartUITests-Runner[12122:41208] Switch, identifier: 'household.pack.a.matched', label: 'I confirmed this pack matches the request and intended use', value: 0 (AX element pid: 34760, elementOrHash.elementID: 4813336560.847) faulted in {
+565299:     "XC_kAXXCAttributeVisiblePoint" =     {
+565300:         X = 201;
+565301:         Y = "222.5000000000001";
+565302:     };
+565303: }: (no error) for activationPoint using XC_kAXXCAttributeVisiblePoint
+565304: 01:42:10.704 RoomInTheCartUITests-Runner[12122:41208] Creating future for 'fetching attributes 'XC_kAXXCAttributeWindowContextId' for AX element pid: 34760, elementOrHash.elementID: 4813336560.847' with timeout 30.00
+565305: 01:42:10.704 RoomInTheCartUITests-Runner[12122:41208] <XCTWaiter: 0x600004d00390> entering wait loop for 30.00s with expectations: `fetching attributes 'XC_kAXXCAttributeWindowContextId' for AX element pid: 34760, elementOrHash.elementID: 4813336560.847`
+565306: 01:42:10.719 RoomInTheCartUITests-Runner[12122:41208] Returning result XCTWaiterResultCompleted for synchronous waiter <XCTWaiter: 0x600004d00390>
+565307: 01:42:10.719 RoomInTheCartUITests-Runner[12122:41208] Wait <XCTWaiterWait: 0x6000019bec80> completed after 0.015s
+565308: 01:42:10.719 RoomInTheCartUITests-Runner[12122:41208] cleaning up fetching attributes 'XC_kAXXCAttributeWindowContextId' for AX element pid: 34760, elementOrHash.elementID: 4813336560.847
+565309: 01:42:10.719 RoomInTheCartUITests-Runner[12122:41208] Switch, identifier: 'household.pack.a.matched', label: 'I confirmed this pack matches the request and intended use', value: 0 (AX element pid: 34760, elementOrHash.elementID: 4813336560.847) faulted in {
+565310:     "XC_kAXXCAttributeWindowContextId" = 1941634293;
+565311: }: (no error) for windowContextID using XC_kAXXCAttributeWindowContextId
+565312: 01:42:10.720 RoomInTheCartUITests-Runner[12122:41208] Creating future for 'fetching attributes 'XC_kAXXCAttributeWindowDisplayId' for AX element pid: 34760, elementOrHash.elementID: 4813336560.847' with timeout 30.00
+565313: 01:42:10.720 RoomInTheCartUITests-Runner[12122:41208] <XCTWaiter: 0x600004d00a50> entering wait loop for 30.00s with expectations: `fetching attributes 'XC_kAXXCAttributeWindowDisplayId' for AX element pid: 34760, elementOrHash.elementID: 4813336560.847`
+565314: 01:42:10.726 RoomInTheCartUITests-Runner[12122:41208] Returning result XCTWaiterResultCompleted for synchronous waiter <XCTWaiter: 0x600004d00a50>
+565315: 01:42:10.726 RoomInTheCartUITests-Runner[12122:41208] Wait <XCTWaiterWait: 0x600001ba2740> completed after 0.007s
+565316: 01:42:10.727 RoomInTheCartUITests-Runner[12122:41208] cleaning up fetching attributes 'XC_kAXXCAttributeWindowDisplayId' for AX element pid: 34760, elementOrHash.elementID: 4813336560.847
+565317: 01:42:10.727 RoomInTheCartUITests-Runner[12122:41208] Switch, identifier: 'household.pack.a.matched', label: 'I confirmed this pack matches the request and intended use', value: 0 (AX element pid: 34760, elementOrHash.elementID: 4813336560.847) faulted in {
+565318:     "XC_kAXXCAttributeWindowDisplayId" = 1;
+565319: }: (no error) for displayID using XC_kAXXCAttributeWindowDisplayId
+565320: 01:42:10.727 RoomInTheCartUITests-Runner[12122:41208] getting parameterized attribute XC_kAXXCParameterizedAttributeConvertHostedViewPositionFromContext with parameter (
+565321:         {
+565322:         X = 201;
+565323:         Y = "222.5000000000001";
+565324:     },
+565325:     1941634293,
+565326:     1
+565327: )
+565328: 01:42:10.727 RoomInTheCartUITests-Runner[12122:41208] Creating future for 'getting parameterized attribute XC_kAXXCParameterizedAttributeConvertHostedViewPositionFromContext' with timeout 65.00
+565329: 01:42:10.727 RoomInTheCartUITests-Runner[12122:41208] <XCTWaiter: 0x600004cfc8a0> entering wait loop for 65.00s with expectations: `getting parameterized attribute XC_kAXXCParameterizedAttributeConvertHostedViewPositionFromContext`
+565330: 01:42:10.727 RoomInTheCartUITests-Runner[12122:45084] Got parameterized attribute fetch for XC_kAXXCParameterizedAttributeConvertHostedViewPositionFromContext response with values {
+565331:     X = 201;
+565332:     Y = "222.5000000000001";
+565333: }, error: (null)
+565334: 01:42:10.727 RoomInTheCartUITests-Runner[12122:41208] Returning result XCTWaiterResultCompleted for synchronous waiter <XCTWaiter: 0x600004cfc8a0>
+565335: 01:42:10.728 RoomInTheCartUITests-Runner[12122:41208] Wait <XCTWaiterWait: 0x600001ba20c0> completed after 0.001s
+565336: 01:42:10.728 RoomInTheCartUITests-Runner[12122:41208] cleaning up getting parameterized attribute XC_kAXXCParameterizedAttributeConvertHostedViewPositionFromContext
+565337: 01:42:10.728 RoomInTheCartUITests-Runner[12122:41208] Creating future for 'fetching attributes 'XC_kAXXCAttributeFrame', 'XC_kAXXCAttributeWindowDisplayId', 'XC_kAXXCAttributeWindowContextId' for AX element pid: 34760, elementOrHash.elementID: 4813336560.847' with timeout 30.00
+565338: 01:42:10.728 RoomInTheCartUITests-Runner[12122:41208] <XCTWaiter: 0x600004d009f0> entering wait loop for 30.00s with expectations: `fetching attributes 'XC_kAXXCAttributeFrame', 'XC_kAXXCAttributeWindowDisplayId', 'XC_kAXXCAttributeWindowContextId' for AX element pid: 34760, elementOrHash.elementID: 4813336560.847`
+565339: 01:42:10.731 RoomInTheCartUITests-Runner[12122:41208] Returning result XCTWaiterResultCompleted for synchronous waiter <XCTWaiter: 0x600004d009f0>
+565340: 01:42:10.731 RoomInTheCartUITests-Runner[12122:41208] Wait <XCTWaiterWait: 0x6000019bf840> completed after 0.003s
+565341: 01:42:10.731 RoomInTheCartUITests-Runner[12122:41208] cleaning up fetching attributes 'XC_kAXXCAttributeFrame', 'XC_kAXXCAttributeWindowDisplayId', 'XC_kAXXCAttributeWindowContextId' for AX element pid: 34760, elementOrHash.elementID: 4813336560.847
+565342: 01:42:10.731 RoomInTheCartUITests-Runner[12122:41208] Switch, identifier: 'household.pack.a.matched', label: 'I confirmed this pack matches the request and intended use', value: 0 (AX element pid: 34760, elementOrHash.elementID: 4813336560.847) faulted in {
+565343:     "XC_kAXXCAttributeFrame" =     {
+565344:         Height = "72.33333333333331";
+565345:         Width = 370;
+565346:         X = 16;
+565347:         Y = "186.3333333333335";
+565348:     };
+565349:     "XC_kAXXCAttributeWindowContextId" = 1941634293;
+565350:     "XC_kAXXCAttributeWindowDisplayId" = 1;
+565351: }: (no error) for frame using XC_kAXXCAttributeFrame, XC_kAXXCAttributeWindowDisplayId, XC_kAXXCAttributeWindowContextId
+565352: 01:42:10.732 RoomInTheCartUITests-Runner[12122:41208] getting parameterized attribute XC_kAXXCParameterizedAttributeConvertHostedViewFrame with parameter (
+565353:         {
+565354:         Height = "72.33333333333331";
+565355:         Width = 370;
+565356:         X = 16;
+565357:         Y = "186.3333333333335";
+565358:     },
+565359:     1941634293,
+565360:     1
+565361: )
+565362: 01:42:10.732 RoomInTheCartUITests-Runner[12122:41208] Creating future for 'getting parameterized attribute XC_kAXXCParameterizedAttributeConvertHostedViewFrame' with timeout 65.00
+565363: 01:42:10.732 RoomInTheCartUITests-Runner[12122:41208] <XCTWaiter: 0x600004d06730> entering wait loop for 65.00s with expectations: `getting parameterized attribute XC_kAXXCParameterizedAttributeConvertHostedViewFrame`
+565364: 01:42:10.733 RoomInTheCartUITests-Runner[12122:74012] Got parameterized attribute fetch for XC_kAXXCParameterizedAttributeConvertHostedViewFrame response with values {
+565365:     Height = "72.33333333333331";
+565366:     Width = 370;
+565367:     X = 16;
+565368:     Y = "186.3333333333335";
+565369: }, error: (null)
+565370: 01:42:10.733 RoomInTheCartUITests-Runner[12122:41208] Returning result XCTWaiterResultCompleted for synchronous waiter <XCTWaiter: 0x600004d06730>
+565371: 01:42:10.733 RoomInTheCartUITests-Runner[12122:41208] Wait <XCTWaiterWait: 0x600001bd6e80> completed after 0.001s
+565372: 01:42:10.733 RoomInTheCartUITests-Runner[12122:41208] cleaning up getting parameterized attribute XC_kAXXCParameterizedAttributeConvertHostedViewFrame
+565373: 01:42:10.733 RoomInTheCartUITests-Runner[12122:41208] No change when transforming rect {{16, 186.33333333333348}, {370, 72.333333333333314}}, either portrait orientation or non-standard app configuration such as springboard
+565374: 01:42:10.733 RoomInTheCartUITests-Runner[12122:41208] Fetching application interface orientation
+565375: 01:42:10.733 RoomInTheCartUITests-Runner[12122:41208] Creating future for 'getting interface orientation' with timeout 65.00
+565376: 01:42:10.733 RoomInTheCartUITests-Runner[12122:41208] <XCTWaiter: 0x600004d00f90> entering wait loop for 65.00s with expectations: `getting interface orientation`
+565377: 01:42:10.734 RoomInTheCartUITests-Runner[12122:41208] Returning result XCTWaiterResultCompleted for synchronous waiter <XCTWaiter: 0x600004d00f90>
+565378: 01:42:10.734 RoomInTheCartUITests-Runner[12122:41208] Wait <XCTWaiterWait: 0x6000019bcc80> completed after 0.001s
+565379: 01:42:10.734 RoomInTheCartUITests-Runner[12122:41208] cleaning up getting interface orientation
+565380: 01:42:10.734 RoomInTheCartUITests-Runner[12122:41208] Creating future for 'getting screen identifiers' with timeout 30.00
+565381: 01:42:10.734 RoomInTheCartUITests-Runner[12122:41208] <XCTWaiter: 0x600004d00f90> entering wait loop for 30.00s with expectations: `getting screen identifiers`
+565382: 01:42:10.734 RoomInTheCartUITests-Runner[12122:41208] Returning result XCTWaiterResultCompleted for synchronous waiter <XCTWaiter: 0x600004d00f90>
+565383: 01:42:10.734 RoomInTheCartUITests-Runner[12122:41208] Wait <XCTWaiterWait: 0x6000019beac0> completed after 0.000s
+565384: 01:42:10.734 RoomInTheCartUITests-Runner[12122:41208] cleaning up getting screen identifiers
+565385: 01:42:10.734 RoomInTheCartUITests-Runner[12122:41208] Creating future for 'getting screen bounds' with timeout 30.00
+565386: 01:42:10.734 RoomInTheCartUITests-Runner[12122:41208] <XCTWaiter: 0x600004d00f90> entering wait loop for 30.00s with expectations: `getting screen bounds`
+565387: 01:42:10.734 RoomInTheCartUITests-Runner[12122:41208] Returning result XCTWaiterResultCompleted for synchronous waiter <XCTWaiter: 0x600004d00f90>
+565388: 01:42:10.735 RoomInTheCartUITests-Runner[12122:41208] Wait <XCTWaiterWait: 0x6000019bf600> completed after 0.000s
+565389: 01:42:10.735 RoomInTheCartUITests-Runner[12122:41208] cleaning up getting screen bounds
+565390: 01:42:10.735 RoomInTheCartUITests-Runner[12122:41208] Creating future for 'getting screen scale' with timeout 30.00
+565391: 01:42:10.735 RoomInTheCartUITests-Runner[12122:41208] <XCTWaiter: 0x600004d01e00> entering wait loop for 30.00s with expectations: `getting screen scale`
+565392: 01:42:10.735 RoomInTheCartUITests-Runner[12122:41208] Returning result XCTWaiterResultCompleted for synchronous waiter <XCTWaiter: 0x600004d01e00>
+565393: 01:42:10.735 RoomInTheCartUITests-Runner[12122:41208] Wait <XCTWaiterWait: 0x6000019be540> completed after 0.000s
+565394: 01:42:10.735 RoomInTheCartUITests-Runner[12122:41208] cleaning up getting screen scale
+565395: 01:42:10.735 RoomInTheCartUITests-Runner[12122:41208] Checking that activation point {201, 222.50000000000014} is inside event synthesis frame {{16, 186.33333333333348}, {370, 72.333333333333314}} (or is the {-1, -1} sentinel for unhittable)
+565396: 01:42:10.735 RoomInTheCartUITests-Runner[12122:41208] hit point computation for Switch, {{16.0, 186.3}, {370.0, 72.3}}, identifier: 'household.pack.a.matched', label: 'I confirmed this pack matches the request and intended use', value: 0 took 0.0s and 1 attempts
+565397: 01:42:10.735 RoomInTheCartUITests-Runner[12122:41208] Computed hit point {201.0, 222.5} (hittable)
+565398: 01:42:10.735 RoomInTheCartUITests-Runner[12122:41208] Creating future for 'fetching attributes 'XC_kAXXCAttributePlaceholderValue' for AX element pid: 34760, elementOrHash.elementID: 4813336560.847' with timeout 30.00
+565399: 01:42:10.735 RoomInTheCartUITests-Runner[12122:41208] <XCTWaiter: 0x600004d025e0> entering wait loop for 30.00s with expectations: `fetching attributes 'XC_kAXXCAttributePlaceholderValue' for AX element pid: 34760, elementOrHash.elementID: 4813336560.847`
+565400: 01:42:10.738 RoomInTheCartUITests-Runner[12122:41208] Returning result XCTWaiterResultCompleted for synchronous waiter <XCTWaiter: 0x600004d025e0>
+565401: 01:42:10.738 RoomInTheCartUITests-Runner[12122:41208] Wait <XCTWaiterWait: 0x600001ba20c0> completed after 0.003s
+565402: 01:42:10.738 RoomInTheCartUITests-Runner[12122:41208] cleaning up fetching attributes 'XC_kAXXCAttributePlaceholderValue' for AX element pid: 34760, elementOrHash.elementID: 4813336560.847
+565403: 01:42:10.738 RoomInTheCartUITests-Runner[12122:41208] Switch, {{16.0, 186.3}, {370.0, 72.3}}, identifier: 'household.pack.a.matched', label: 'I confirmed this pack matches the request and intended use', value: 0 (AX element pid: 34760, elementOrHash.elementID: 4813336560.847) faulted in {
+Original Session lines 566210-566325:
+566210: }, error: (null)
+566211: 01:42:11.720 RoomInTheCartUITests-Runner[12122:41208] Returning result XCTWaiterResultCompleted for synchronous waiter <XCTWaiter: 0x600004cf07e0>
+566212: 01:42:11.720 RoomInTheCartUITests-Runner[12122:41208] Wait <XCTWaiterWait: 0x600001b9cd40> completed after 0.001s
+566213: 01:42:11.721 RoomInTheCartUITests-Runner[12122:41208] cleaning up getting parameterized attribute XC_kAXXCParameterizedAttributeConvertHostedViewFrame
+566214: 01:42:11.721 RoomInTheCartUITests-Runner[12122:41208] No change when transforming rect {{16, 186.33333333333348}, {370, 72.333333333333314}}, either portrait orientation or non-standard app configuration such as springboard
+566215: 01:42:11.721 RoomInTheCartUITests-Runner[12122:41208] Fetching application interface orientation
+566216: 01:42:11.721 RoomInTheCartUITests-Runner[12122:41208] Creating future for 'getting interface orientation' with timeout 65.00
+566217: 01:42:11.721 RoomInTheCartUITests-Runner[12122:41208] <XCTWaiter: 0x600004cf4e40> entering wait loop for 65.00s with expectations: `getting interface orientation`
+566218: 01:42:11.721 RoomInTheCartUITests-Runner[12122:41208] Returning result XCTWaiterResultCompleted for synchronous waiter <XCTWaiter: 0x600004cf4e40>
+566219: 01:42:11.721 RoomInTheCartUITests-Runner[12122:41208] Wait <XCTWaiterWait: 0x600001b80300> completed after 0.001s
+566220: 01:42:11.721 RoomInTheCartUITests-Runner[12122:41208] cleaning up getting interface orientation
+566221: 01:42:11.722 RoomInTheCartUITests-Runner[12122:41208] Creating future for 'getting screen identifiers' with timeout 30.00
+566222: 01:42:11.722 RoomInTheCartUITests-Runner[12122:41208] <XCTWaiter: 0x600004cfa190> entering wait loop for 30.00s with expectations: `getting screen identifiers`
+566223: 01:42:11.722 RoomInTheCartUITests-Runner[12122:41208] Returning result XCTWaiterResultCompleted for synchronous waiter <XCTWaiter: 0x600004cfa190>
+566224: 01:42:11.722 RoomInTheCartUITests-Runner[12122:41208] Wait <XCTWaiterWait: 0x6000019b9ac0> completed after 0.000s
+566225: 01:42:11.722 RoomInTheCartUITests-Runner[12122:41208] cleaning up getting screen identifiers
+566226: 01:42:11.722 RoomInTheCartUITests-Runner[12122:41208] Creating future for 'getting screen bounds' with timeout 30.00
+566227: 01:42:11.722 RoomInTheCartUITests-Runner[12122:41208] <XCTWaiter: 0x600004cfa190> entering wait loop for 30.00s with expectations: `getting screen bounds`
+566228: 01:42:11.722 RoomInTheCartUITests-Runner[12122:41208] Returning result XCTWaiterResultCompleted for synchronous waiter <XCTWaiter: 0x600004cfa190>
+566229: 01:42:11.723 RoomInTheCartUITests-Runner[12122:41208] Wait <XCTWaiterWait: 0x6000019ba040> completed after 0.000s
+566230: 01:42:11.723 RoomInTheCartUITests-Runner[12122:41208] cleaning up getting screen bounds
+566231: 01:42:11.723 RoomInTheCartUITests-Runner[12122:41208] Creating future for 'getting screen scale' with timeout 30.00
+566232: 01:42:11.723 RoomInTheCartUITests-Runner[12122:41208] <XCTWaiter: 0x600004cfa5b0> entering wait loop for 30.00s with expectations: `getting screen scale`
+566233: 01:42:11.723 RoomInTheCartUITests-Runner[12122:41208] Returning result XCTWaiterResultCompleted for synchronous waiter <XCTWaiter: 0x600004cfa5b0>
+566234: 01:42:11.723 RoomInTheCartUITests-Runner[12122:41208] Wait <XCTWaiterWait: 0x6000019bac00> completed after 0.000s
+566235: 01:42:11.723 RoomInTheCartUITests-Runner[12122:41208] cleaning up getting screen scale
+566236: 01:42:11.724 RoomInTheCartUITests-Runner[12122:41208] Creating future for 'fetching attributes 'XC_kAXXCAttributeSystemAutomationProperties' for AX element pid: 34760, elementOrHash.elementID: 4813336560.847' with timeout 30.00
+566237: 01:42:11.724 RoomInTheCartUITests-Runner[12122:41208] <XCTWaiter: 0x600004cfa970> entering wait loop for 30.00s with expectations: `fetching attributes 'XC_kAXXCAttributeSystemAutomationProperties' for AX element pid: 34760, elementOrHash.elementID: 4813336560.847`
+566238: 01:42:11.731 RoomInTheCartUITests-Runner[12122:41208] Returning result XCTWaiterResultCompleted for synchronous waiter <XCTWaiter: 0x600004cfa970>
+566239: 01:42:11.732 RoomInTheCartUITests-Runner[12122:41208] Wait <XCTWaiterWait: 0x6000019b9a80> completed after 0.008s
+566240: 01:42:11.732 RoomInTheCartUITests-Runner[12122:41208] cleaning up fetching attributes 'XC_kAXXCAttributeSystemAutomationProperties' for AX element pid: 34760, elementOrHash.elementID: 4813336560.847
+566241: 01:42:11.732 RoomInTheCartUITests-Runner[12122:41208] Switch, {{16.0, 186.3}, {370.0, 72.3}}, identifier: 'household.pack.a.matched', label: 'I confirmed this pack matches the request and intended use', value: 0 (AX element pid: 34760, elementOrHash.elementID: 4813336560.847) faulted in {
+566242: }: (no error) for systemAutomationProperties using XC_kAXXCAttributeSystemAutomationProperties
+566243: 01:42:11.732 RoomInTheCartUITests-Runner[12122:41208] Requesting local synthesis of event: 
+566244: <XCSynthesizedEventRecord 'tap display 1'>
+566245: Path 1:
+566246: 	Touch down at 356.4, 222.5, offset=0.00s
+566247: 	Touch up at 356.4, 222.5, offset=0.05s
+566248: 01:42:11.732 RoomInTheCartUITests-Runner[12122:41208] Event upper bound on duration 30.05
+566249: 01:42:11.732 RoomInTheCartUITests-Runner[12122:41208] Computed timeout 30.05 for future for 'synthesizing event'
+566250: 01:42:11.732 RoomInTheCartUITests-Runner[12122:41208] <XCTWaiter: 0x600004cf95c0> entering wait loop for 30.05s with expectations: `synthesizing event`
+566251: 01:42:11.827 RoomInTheCartUITests-Runner[12122:74012] Handling kAXUserTestingNotification
+566252: 01:42:11.827 RoomInTheCartUITests-Runner[12122:74012] Received kAXUserTestingNotification from AX element pid: 8874, elementOrHash.elementID: 0.1: {
+566253:     event = TouchEventsCompleted;
+566254: }
+566255: 01:42:11.845 RoomInTheCartUITests-Runner[12122:74012] Handling kAXUserTestingNotification
+566256: 01:42:11.845 RoomInTheCartUITests-Runner[12122:74012] Received kAXUserTestingNotification from AX element pid: 34760, elementOrHash.elementID: 0.1: {
+566257:     event = TouchEventsCompleted;
+566258: }
+566259: 01:42:12.019 RoomInTheCartUITests-Runner[12122:41576] Got event completion callback
+566260: 01:42:12.019 RoomInTheCartUITests-Runner[12122:41208] Returning result XCTWaiterResultCompleted for synchronous waiter <XCTWaiter: 0x600004cf95c0>
+566261: 01:42:12.019 RoomInTheCartUITests-Runner[12122:41208] Wait <XCTWaiterWait: 0x6000019baac0> completed after 0.287s
+566262: 01:42:12.020 RoomInTheCartUITests-Runner[12122:41208] cleaning up synthesizing event
+566263: 01:42:12.020 RoomInTheCartUITests-Runner[12122:41208] Cancelation not currently supported for daemon event requests - this is a no-op.
+566264: 01:42:12.020 RoomInTheCartUITests-Runner[12122:41208] Creating future for 'getting screen scale' with timeout 30.00
+566265: 01:42:12.020 RoomInTheCartUITests-Runner[12122:41208] <XCTWaiter: 0x600004cf14d0> entering wait loop for 30.00s with expectations: `getting screen scale`
+566266: 01:42:12.020 RoomInTheCartUITests-Runner[12122:41208] Returning result XCTWaiterResultCompleted for synchronous waiter <XCTWaiter: 0x600004cf14d0>
+566267: 01:42:12.020 RoomInTheCartUITests-Runner[12122:41208] Wait <XCTWaiterWait: 0x600001b9e9c0> completed after 0.000s
+566268: 01:42:12.020 RoomInTheCartUITests-Runner[12122:41208] cleaning up getting screen scale
+566269: 01:42:12.020 RoomInTheCartUITests-Runner[12122:41208] Activity A6F9DFBB-8757-4E06-AFB0-655F7BA404F9 added attachment with name 'kXCTAttachmentLegacySynthesizedEvent', Uniform Type Identifier 'com.apple.dt.xctest.synthesized-event-record', lifetime 'deleteOnSuccess', hasPayload: YES, size (in bytes): 0.
+566270: 01:42:12.020 RoomInTheCartUITests-Runner[12122:41208] Event synthesis future completed in 0.29s
+566271: 01:42:12.020 RoomInTheCartUITests-Runner[12122:41208] <XCTContext: 0x6000021183c0> finished activity <XCActivityRecord: 0x600002178fa0> 2026-11-08 01:42:11 +0000: Synthesize event (0.684268s)
+566272: 01:42:12.023 xcodebuild[9759:34042] _XCT_testCaseWithIdentifier:<XCTTestIdentifier leaf, method ["none", "none"]> didFinishActivity:<XCActivityRecord: 0x6000006b0820> 2026-11-08 01:42:11 +0000: Synthesize event (0.684268s)
+566273: 01:42:12.024 xcodebuild[9759:34042] Nothing to delete
+566274:     t =   184.60s     Wait for dev.roominthecart.app.debug to idle
+566275: 01:42:12.021 RoomInTheCartUITests-Runner[12122:41208] <XCTContext: 0x6000021183c0> started activity <XCActivityRecord: 0x600002165270> 2026-11-08 01:42:12 +0000: Wait for dev.roominthecart.app.debug to idle
+566276: 01:42:12.026 xcodebuild[9759:34042] _XCT_testCaseWithIdentifier:<XCTTestIdentifier leaf, method ["none", "none"]> willStartActivity:<XCActivityRecord: 0x60000012a530> 2026-11-08 01:42:12 +0000: Wait for dev.roominthecart.app.debug to idle
+566277: 01:42:12.026 xcodebuild[9759:34042] Nothing to delete
+566278: 01:42:12.021 RoomInTheCartUITests-Runner[12122:41208] Creating future for 'getting screen identifiers' with timeout 30.00
+566279: 01:42:12.021 RoomInTheCartUITests-Runner[12122:41208] <XCTWaiter: 0x600004cf0270> entering wait loop for 30.00s with expectations: `getting screen identifiers`
+566280: 01:42:12.021 RoomInTheCartUITests-Runner[12122:41208] Returning result XCTWaiterResultCompleted for synchronous waiter <XCTWaiter: 0x600004cf0270>
+566281: 01:42:12.021 RoomInTheCartUITests-Runner[12122:41208] Wait <XCTWaiterWait: 0x600001b9d600> completed after 0.000s
+566282: 01:42:12.021 RoomInTheCartUITests-Runner[12122:41208] cleaning up getting screen identifiers
+566283: 01:42:12.022 RoomInTheCartUITests-Runner[12122:41208] Waiting for dev.roominthecart.app.debug (PID 34760) quiescence...
+566284: 01:42:12.022 RoomInTheCartUITests-Runner[12122:74012] dev.roominthecart.app.debug (pid:34760) eventLoopHasIdled YES -> NO
+566285: 01:42:12.022 RoomInTheCartUITests-Runner[12122:74012] Posting KVO notifications for eventLoopHasIdled
+566286: 01:42:12.022 RoomInTheCartUITests-Runner[12122:41208] Requesting main run loop idle notification using automation session for dev.roominthecart.app.debug (pid:34760)
+566287: 01:42:12.022 RoomInTheCartUITests-Runner[12122:41576] dev.roominthecart.app.debug (pid:34760) animationsHaveFinished YES -> NO
+566288: 01:42:12.022 RoomInTheCartUITests-Runner[12122:74012] Posting KVO notifications for animationsHaveFinished
+566289: 01:42:12.022 RoomInTheCartUITests-Runner[12122:41208] Requesting animations idle notification using automation session for dev.roominthecart.app.debug (pid:34760)
+566290: 01:42:12.023 RoomInTheCartUITests-Runner[12122:41576] Got event loop idle reply for dev.roominthecart.app.debug (PID 34760)
+566291: 01:42:12.025 RoomInTheCartUITests-Runner[12122:41208] Waiting on quiescence state variables
+566292: 01:42:12.025 RoomInTheCartUITests-Runner[12122:41576] Event loop is idle.
+566293: 01:42:12.025 RoomInTheCartUITests-Runner[12122:41208] KVO change: checked status of Expect value of 'foreground' of dev.roominthecart.app.debug (pid:34760) to be '0': fulfill=NO
+566294: 01:42:12.025 RoomInTheCartUITests-Runner[12122:41576] dev.roominthecart.app.debug (pid:34760) eventLoopHasIdled NO -> YES
+566295: 01:42:12.025 RoomInTheCartUITests-Runner[12122:74012] Posting KVO notifications for eventLoopHasIdled
+566296: 01:42:12.025 RoomInTheCartUITests-Runner[12122:41208] KVO change: checked status of Expect value of 'foreground' of dev.roominthecart.app.debug (pid:34760) to be '0': fulfill=NO
+566297: 01:42:12.025 RoomInTheCartUITests-Runner[12122:95536] Got animations reply for dev.roominthecart.app.debug (PID 34760)
+566298: 01:42:12.026 RoomInTheCartUITests-Runner[12122:95536] Animations are not active.
+566299: 01:42:12.025 RoomInTheCartUITests-Runner[12122:41208] isQuiescent: self.eventLoopHasIdled: YES && self.animationsHaveFinished: NO
+566300: 01:42:12.026 RoomInTheCartUITests-Runner[12122:41576] dev.roominthecart.app.debug (pid:34760) animationsHaveFinished NO -> YES
+566301: 01:42:12.026 RoomInTheCartUITests-Runner[12122:41576] Posting KVO notifications for animationsHaveFinished
+566302: 01:42:12.026 RoomInTheCartUITests-Runner[12122:41208] KVO change: checked status of Expect value of 'isQuiescent' of dev.roominthecart.app.debug (pid:34760) to be '1': fulfill=YES
+566303: 01:42:12.026 RoomInTheCartUITests-Runner[12122:41208] Fulfilling (Expect value of 'foreground' of dev.roominthecart.app.debug (pid:34760) to be '0' OR Expect value of 'isQuiescent' of dev.roominthecart.app.debug (pid:34760) to be '1') because Expect value of 'isQuiescent' of dev.roominthecart.app.debug (pid:34760) to be '1' is fulfilled
+566304: 01:42:12.026 RoomInTheCartUITests-Runner[12122:41208] <XCTWaiter: 0x600004cf5350> entering wait loop for 60.00s with expectations: `(Expect value of 'foreground' of dev.roominthecart.app.debug (pid:34760) to be '0' OR Expect value of 'isQuiescent' of dev.roominthecart.app.debug (pid:34760) to be '1')`
+566305: 01:42:12.026 RoomInTheCartUITests-Runner[12122:41208] Returning result XCTWaiterResultCompleted for synchronous waiter <XCTWaiter: 0x600004cf5350>
+566306: 01:42:12.027 RoomInTheCartUITests-Runner[12122:41208] Wait <XCTWaiterWait: 0x600001b82f80> completed after 0.000s
+566307: 01:42:12.027 RoomInTheCartUITests-Runner[12122:41208] cleaning up (Expect value of 'foreground' of dev.roominthecart.app.debug (pid:34760) to be '0' OR Expect value of 'isQuiescent' of dev.roominthecart.app.debug (pid:34760) to be '1')
+566308: 01:42:12.027 RoomInTheCartUITests-Runner[12122:41208] cleaning up Expect value of 'foreground' of dev.roominthecart.app.debug (pid:34760) to be '0'
+566309: 01:42:12.027 RoomInTheCartUITests-Runner[12122:41208] cleaning up Expect value of 'foreground' of dev.roominthecart.app.debug (pid:34760) to be '0'
+566310: 01:42:12.027 RoomInTheCartUITests-Runner[12122:41208] cleaning up Expect value of 'isQuiescent' of dev.roominthecart.app.debug (pid:34760) to be '1'
+566311: 01:42:12.027 RoomInTheCartUITests-Runner[12122:41208] cleaning up Expect value of 'isQuiescent' of dev.roominthecart.app.debug (pid:34760) to be '1'
+566312: 01:42:12.027 RoomInTheCartUITests-Runner[12122:41208] dev.roominthecart.app.debug has quiesced or quiescence timeout has elapsed.
+566313: 01:42:12.027 RoomInTheCartUITests-Runner[12122:41208] <XCTContext: 0x6000021183c0> finished activity <XCActivityRecord: 0x600002165270> 2026-11-08 01:42:12 +0000: Wait for dev.roominthecart.app.debug to idle (0.00640595s)
+566314: 01:42:12.028 xcodebuild[9759:34042] _XCT_testCaseWithIdentifier:<XCTTestIdentifier leaf, method ["none", "none"]> didFinishActivity:<XCActivityRecord: 0x6000001283c0> 2026-11-08 01:42:12 +0000: Wait for dev.roominthecart.app.debug to idle (0.00640595s)
+566315: 01:42:12.028 xcodebuild[9759:34042] Nothing to delete
+566316: 01:42:12.028 RoomInTheCartUITests-Runner[12122:41208] <XCTContext: 0x6000021183c0> finished activity <XCActivityRecord: 0x600002164eb0> 2026-11-08 01:42:11 +0000: Tap "household.pack.a.matched" Switch[0.92, 0.50] (0.94576s)
+566317: 01:42:12.029 xcodebuild[9759:34042] _XCT_testCaseWithIdentifier:<XCTTestIdentifier leaf, method ["none", "none"]> didFinishActivity:<XCActivityRecord: 0x600000129770> 2026-11-08 01:42:11 +0000: Tap "household.pack.a.matched" Switch[0.92, 0.50] (0.94576s)
+566318: 01:42:12.029 xcodebuild[9759:34042] Nothing to delete
+566319: 01:42:12.029 RoomInTheCartUITests-Runner[12122:41208] Creating future for 'fetching attributes 'XC_kAXXCAttributePlaceholderValue' for AX element pid: 34760, elementOrHash.elementID: 4813336560.847' with timeout 30.00
+566320: 01:42:12.029 RoomInTheCartUITests-Runner[12122:41208] <XCTWaiter: 0x600004cf4150> entering wait loop for 30.00s with expectations: `fetching attributes 'XC_kAXXCAttributePlaceholderValue' for AX element pid: 34760, elementOrHash.elementID: 4813336560.847`
+566321: 01:42:12.032 RoomInTheCartUITests-Runner[12122:41208] Returning result XCTWaiterResultCompleted for synchronous waiter <XCTWaiter: 0x600004cf4150>
+566322: 01:42:12.033 RoomInTheCartUITests-Runner[12122:41208] Wait <XCTWaiterWait: 0x600001b82f80> completed after 0.003s
+566323: 01:42:12.033 RoomInTheCartUITests-Runner[12122:41208] cleaning up fetching attributes 'XC_kAXXCAttributePlaceholderValue' for AX element pid: 34760, elementOrHash.elementID: 4813336560.847
+566324: 01:42:12.033 RoomInTheCartUITests-Runner[12122:41208] Switch, {{16.0, 186.3}, {370.0, 72.3}}, identifier: 'household.pack.a.matched', label: 'I confirmed this pack matches the request and intended use', value: 0 (AX element pid: 34760, elementOrHash.elementID: 4813336560.847) faulted in {
+566325: }: (no error) for placeholderValue using XC_kAXXCAttributePlaceholderValue
+Original Session lines 566364-566382:
+566364: 01:42:12.187 xcodebuild[9759:34042] _XCT_testCaseWithIdentifier:<XCTTestIdentifier leaf, method ["none", "none"]> didFinishActivity:<XCActivityRecord: 0x6000006b15e0> 2026-11-08 01:42:12 +0000: Find the "household.pack.a.matched" Switch (0.127529s)
+566365: 01:42:12.188 xcodebuild[9759:34042] Nothing to delete
+566366: 01:42:14.150 RoomInTheCartUITests-Runner[12122:41208] Error getting symbolication information for <XCTSourceCodeFrame: 0x6000004be500> Error Domain=XCTSymbolicationServiceErrorDomain Code=6 "Unable to get source info for address 4443188275 in image 'RoomInTheCartUITests'" UserInfo={NSLocalizedDescription=Unable to get source info for address 4443188275 in image 'RoomInTheCartUITests'}
+566367: 01:42:14.156 RoomInTheCartUITests-Runner[12122:41208] Error getting symbolication information for <XCTSourceCodeFrame: 0x6000004bd8a0> Error Domain=XCTSymbolicationServiceErrorDomain Code=6 "Unable to get source info for address 4443184335 in image 'RoomInTheCartUITests'" UserInfo={NSLocalizedDescription=Unable to get source info for address 4443184335 in image 'RoomInTheCartUITests'}
+566368: 01:42:14.157 RoomInTheCartUITests-Runner[12122:41208] Error getting symbolication information for <XCTSourceCodeFrame: 0x6000004bf340> Error Domain=XCTSymbolicationServiceErrorDomain Code=6 "Unable to get source info for address 4443188627 in image 'RoomInTheCartUITests'" UserInfo={NSLocalizedDescription=Unable to get source info for address 4443188627 in image 'RoomInTheCartUITests'}
+566369: 01:42:14.161 RoomInTheCartUITests-Runner[12122:41208] Error getting symbolication information for <XCTSourceCodeFrame: 0x6000004beba0> Error Domain=XCTSymbolicationServiceErrorDomain Code=6 "Unable to get source info for address 4344848355 in image 'RoomInTheCartUITests-Runner'" UserInfo={NSLocalizedDescription=Unable to get source info for address 4344848355 in image 'RoomInTheCartUITests-Runner'}
+566370: 01:42:14.161 RoomInTheCartUITests-Runner[12122:41208] Error getting symbolication information for <XCTSourceCodeFrame: 0x6000004bc4c0> Error Domain=XCTSymbolicationServiceErrorDomain Code=6 "Unable to get source info for address 4344847859 in image 'RoomInTheCartUITests-Runner'" UserInfo={NSLocalizedDescription=Unable to get source info for address 4344847859 in image 'RoomInTheCartUITests-Runner'}
+566371: 01:42:14.161 RoomInTheCartUITests-Runner[12122:41208] Error getting symbolication information for <XCTSourceCodeFrame: 0x6000004bda20> Error Domain=XCTSymbolicationServiceErrorDomain Code=6 "Unable to get source info for address 4344849215 in image 'RoomInTheCartUITests-Runner'" UserInfo={NSLocalizedDescription=Unable to get source info for address 4344849215 in image 'RoomInTheCartUITests-Runner'}
+566372: 01:42:14.161 RoomInTheCartUITests-Runner[12122:41208] Creating future for 'getting screen identifiers' with timeout 30.00
+566373: 01:42:14.161 RoomInTheCartUITests-Runner[12122:41208] <XCTWaiter: 0x600004d57d20> entering wait loop for 30.00s with expectations: `getting screen identifiers`
+566374: 01:42:14.162 RoomInTheCartUITests-Runner[12122:41208] Returning result XCTWaiterResultCompleted for synchronous waiter <XCTWaiter: 0x600004d57d20>
+566375: 01:42:14.162 RoomInTheCartUITests-Runner[12122:41208] Wait <XCTWaiterWait: 0x6000019404c0> completed after 0.000s
+566376: 01:42:14.162 RoomInTheCartUITests-Runner[12122:41208] cleaning up getting screen identifiers
+566377: 01:42:14.162 RoomInTheCartUITests-Runner[12122:41208] -[XCTRunnerIDESession(_XCTestObservationInternal) testCase:didRecordIssue:]
+566378: /Users/runner/work/room-in-the-cart/room-in-the-cart/ios/UITests/HouseholdRequestPackUITests.swift:307: error: -[RoomInTheCartUITests.HouseholdRequestPackUITests testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite] : XCTAssertEqual failed: ("Optional("0")") is not equal to ("Optional("1")") - The reviewed switch must be on: household.pack.a.matched
+566379:     t =   186.75s Tear Down
+566380:     t =   186.75s     Find the Target Application 'dev.roominthecart.app.debug'
+566381: 01:42:14.210 xcodebuild[9759:34042] Nothing to delete
+566382: 01:42:14.630 xcodebuild[9759:34042] _XCT_testWithIdentifier:<XCTTestIdentifier leaf, method, swift ["HouseholdRequestPackUITests", "testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite"]> didRecordIssue:Assertion Failure at HouseholdRequestPackUITests.swift:307: XCTAssertEqual failed: ("Optional("0")") is not equal to ("Optional("1")") - The reviewed switch must be on: household.pack.a.matched
+Original Session lines 566608-566609:
+566608: 01:42:14.982 RoomInTheCartUITests-Runner[12122:41208] Error (com.apple.dt.xctest.ui-testing.error) 10204, userInfo keys: (null): Invalid input rect {{-402.0, -874.0}, {1206.0, 2622.0}}
+566609: 01:42:14.982 RoomInTheCartUITests-Runner[12122:41208] Error (com.apple.dt.xctest.ui-testing.error) 10204, userInfo keys: (null): Invalid input rect {{-402.0, -874.0}, {1206.0, 2622.0}}
+Original Session lines 567128-567129:
+567128: 01:42:15.039 RoomInTheCartUITests-Runner[12122:41208] Error (com.apple.dt.xctest.ui-testing.error) 10204, userInfo keys: (null): Invalid input rect {{-16.0, -1191.0}, {434.0, 1595.7}}
+567129: 01:42:15.039 RoomInTheCartUITests-Runner[12122:41208] Error (com.apple.dt.xctest.ui-testing.error) 10204, userInfo keys: (null): Invalid input rect {{-16.0, -1191.0}, {434.0, 1595.7}}
+Original Session lines 569280-569295:
+569280: 01:42:15.211 RoomInTheCartUITests-Runner[12122:41208] Error (com.apple.dt.xctest.ui-testing.error) 10204, userInfo keys: (null): Invalid input rect {{-16.0, -974.3}, {434.0, 2566.7}}
+569281: 01:42:15.211 RoomInTheCartUITests-Runner[12122:41208] Error (com.apple.dt.xctest.ui-testing.error) 10204, userInfo keys: (null): Invalid input rect {{-16.0, -974.3}, {434.0, 2566.7}}
+569282: 01:42:15.211 RoomInTheCartUITests-Runner[12122:41208] Error (com.apple.dt.xctest.ui-testing.error) 10204, userInfo keys: (null): Invalid input rect {{16.0, -372.0}, {370.0, 52.0}}
+569283: 01:42:15.211 RoomInTheCartUITests-Runner[12122:41208] Error (com.apple.dt.xctest.ui-testing.error) 10204, userInfo keys: (null): Invalid input rect {{16.0, -372.0}, {370.0, 52.0}}
+569284: 01:42:15.212 RoomInTheCartUITests-Runner[12122:41208] Error (com.apple.dt.xctest.ui-testing.error) 10204, userInfo keys: (null): Invalid input rect {{16.0, -372.0}, {370.0, 52.0}}
+569285: 01:42:15.212 RoomInTheCartUITests-Runner[12122:41208] Error (com.apple.dt.xctest.ui-testing.error) 10204, userInfo keys: (null): Invalid input rect {{16.0, -372.0}, {370.0, 52.0}}
+569286: 01:42:15.212 RoomInTheCartUITests-Runner[12122:41208] Error (com.apple.dt.xctest.ui-testing.error) 10204, userInfo keys: (null): Invalid input rect {{16.0, -372.0}, {370.0, 52.0}}
+569287: 01:42:15.212 RoomInTheCartUITests-Runner[12122:41208] Error (com.apple.dt.xctest.ui-testing.error) 10204, userInfo keys: (null): Invalid input rect {{16.0, -372.0}, {370.0, 52.0}}
+569288: 01:42:15.212 RoomInTheCartUITests-Runner[12122:41208] Error (com.apple.dt.xctest.ui-testing.error) 10204, userInfo keys: (null): Invalid input rect {{16.0, -372.0}, {370.0, 52.0}}
+569289: 01:42:15.212 RoomInTheCartUITests-Runner[12122:41208] Error (com.apple.dt.xctest.ui-testing.error) 10204, userInfo keys: (null): Invalid input rect {{16.0, -372.0}, {370.0, 52.0}}
+569290: 01:42:15.212 RoomInTheCartUITests-Runner[12122:41208] Error (com.apple.dt.xctest.ui-testing.error) 10204, userInfo keys: (null): Invalid input rect {{16.0, -372.0}, {370.0, 52.0}}
+569291: 01:42:15.212 RoomInTheCartUITests-Runner[12122:41208] Error (com.apple.dt.xctest.ui-testing.error) 10204, userInfo keys: (null): Invalid input rect {{16.0, -372.0}, {370.0, 52.0}}
+569292: 01:42:15.212 RoomInTheCartUITests-Runner[12122:41208] Error (com.apple.dt.xctest.ui-testing.error) 10204, userInfo keys: (null): Invalid input rect {{16.0, -372.0}, {370.0, 52.0}}
+569293: 01:42:15.212 RoomInTheCartUITests-Runner[12122:41208] Error (com.apple.dt.xctest.ui-testing.error) 10204, userInfo keys: (null): Invalid input rect {{16.0, -372.0}, {370.0, 52.0}}
+569294: 01:42:15.213 RoomInTheCartUITests-Runner[12122:41208] Error (com.apple.dt.xctest.ui-testing.error) 10204, userInfo keys: (null): Invalid input rect {{52.0, -357.0}, {318.0, 22.0}}
+569295: 01:42:15.213 RoomInTheCartUITests-Runner[12122:41208] Error (com.apple.dt.xctest.ui-testing.error) 10204, userInfo keys: (null): Invalid input rect {{52.0, -357.0}, {318.0, 22.0}}

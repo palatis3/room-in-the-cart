@@ -1,0 +1,107 @@
+[
+  {
+    "attachment": {
+      "rowid": 143,
+      "xcResultKitPayloadRefId": "0~l9FzT39OKk27pHhfgCS4NUCoPdrWMg5T3WOwphsGeZ0P-svvJDVpHByYFB2B22LRxJgvNFaWEM4kEKcMc70WoQ==",
+      "uniformTypeIdentifier": "public.plain-text",
+      "inActivityIdentifier": 0,
+      "userInfo_fk": null,
+      "activity_fk": 6586,
+      "filenameOverride": "S24-failure-preview-diagnostics_0_EE2DE275-98EC-4703-A83B-EFD40399E611.txt",
+      "uuid": "6E326831-9F2A-4B7B-B3EA-423D3B3869B0",
+      "lifetime": "keepAlways",
+      "timestamp": 815794935.938,
+      "name": "S24-failure-preview-diagnostics",
+      "testIssue_fk": null
+    },
+    "file": "exports/S24-failure-preview-diagnostics.txt",
+    "exit": 0,
+    "stderr": "",
+    "bytes": 131,
+    "sha256": "b6646881c9c1e82e3478dcffd537b640a5eb156898c5ce9ad3323f588bcc84d9"
+  },
+  {
+    "attachment": {
+      "rowid": 144,
+      "xcResultKitPayloadRefId": "0~5QkH2j5vPNAZksYI496Nz8JNQYMNKrhqls3-sUE7XiUSs6roL7bLN-CRRM41L0ZgdXcBB21-teUyk6Z68jJCjA==",
+      "uniformTypeIdentifier": "public.plain-text",
+      "inActivityIdentifier": 0,
+      "userInfo_fk": null,
+      "activity_fk": 6589,
+      "filenameOverride": "S24-failure-accessibility-hierarchy_0_AB644186-021D-4E82-8413-BC8D1E52ED07.txt",
+      "uuid": "ECEEDFF0-5097-42DB-A252-24DCCB05323C",
+      "lifetime": "keepAlways",
+      "timestamp": 815794935.856,
+      "name": "S24-failure-accessibility-hierarchy",
+      "testIssue_fk": null
+    },
+    "file": "exports/S24-failure-accessibility-hierarchy.txt",
+    "exit": 0,
+    "stderr": "",
+    "bytes": 22643,
+    "sha256": "514c8c955abefa87b06ffdb299a18b661e40d359b379b8eada4fc249a1ec2f15"
+  },
+  {
+    "attachment": {
+      "rowid": 145,
+      "xcResultKitPayloadRefId": "0~0r-hcQJyKiepWYtGOgPC_xOCrPEH4sY-C5p0RhcTYBf3Kk0QIJ_eBybTb-axIKrgZAvUPHF00aZ6taRynD0R1g==",
+      "uniformTypeIdentifier": "public.png",
+      "inActivityIdentifier": 0,
+      "userInfo_fk": 62,
+      "activity_fk": 6592,
+      "filenameOverride": "S24-request-pack-failure_0_9CBD0770-B46C-49CB-9EB2-827476A6BB08.png",
+      "uuid": "42A0634D-E325-4F4B-A8FE-E7044F560929",
+      "lifetime": "keepAlways",
+      "timestamp": 815794934.665,
+      "name": "S24-request-pack-failure",
+      "testIssue_fk": null
+    },
+    "file": "exports/S24-request-pack-failure.png",
+    "exit": 0,
+    "stderr": "",
+    "bytes": 251188,
+    "sha256": "11585410148b4b465ee7c677ca032df4b41a790c566afc5412554b9aa7a4d57d"
+  },
+  {
+    "attachment": {
+      "rowid": 141,
+      "xcResultKitPayloadRefId": "0~0UWotWoQZVVi2QXOrN1TLTekEbIMG8wXvbVzYoh1X-qIKKiWt70c79P3Qs3CPsMXP92gpSRKktxTvQvB8DPP8g==",
+      "uniformTypeIdentifier": "com.apple.dt.xctest.element-snapshot",
+      "inActivityIdentifier": 0,
+      "userInfo_fk": null,
+      "activity_fk": 6576,
+      "filenameOverride": "Snapshot_0_A6F9DFBB-8757-4E06-AFB0-655F7BA404F9",
+      "uuid": "0A1652DC-E141-41BE-A8C5-72E8571EEDD6",
+      "lifetime": "deleteOnSuccess",
+      "timestamp": 815794931.339,
+      "name": "kXCTAttachmentLegacySnapshot",
+      "testIssue_fk": null
+    },
+    "file": "exports/kXCTAttachmentLegacySnapshot.snapshot",
+    "exit": 0,
+    "stderr": "",
+    "bytes": 1211,
+    "sha256": "29e252bfe5f0de78e4d3db10471070848f34dea18012295c01f2abc9bbfd6dd2"
+  },
+  {
+    "attachment": {
+      "rowid": 142,
+      "xcResultKitPayloadRefId": "0~cSUwNsC1HLRqBf-B5V1MMAcoh9_zzEVAcKMk2gWjxIoG2JBbFkmw7XHPukTxNtEZoJYBcvChuxgVfd4t-HMCMQ==",
+      "uniformTypeIdentifier": "com.apple.dt.xctest.synthesized-event-record",
+      "inActivityIdentifier": 1,
+      "userInfo_fk": 61,
+      "activity_fk": 6576,
+      "filenameOverride": "SynthesizedEvent_1_A6F9DFBB-8757-4E06-AFB0-655F7BA404F9",
+      "uuid": "5936FA43-7E73-41D9-ADBD-73D6A144D9A0",
+      "lifetime": "deleteOnSuccess",
+      "timestamp": 815794932.02,
+      "name": "kXCTAttachmentLegacySynthesizedEvent",
+      "testIssue_fk": null
+    },
+    "file": "exports/kXCTAttachmentLegacySynthesizedEvent.snapshot",
+    "exit": 0,
+    "stderr": "",
+    "bytes": 1903,
+    "sha256": "d498268a2d53410d7b1f85a8d08cb77e8c40c95c12f711af052f4e6627218c72"
+  }
+]

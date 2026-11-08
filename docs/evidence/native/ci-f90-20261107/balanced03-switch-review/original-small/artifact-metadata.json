@@ -1,0 +1,20 @@
+{
+  "id": 13599104299,
+  "node_id": "MDg6QXJ0aWZhY3QxMzU5OTEwNDI5OQ==",
+  "name": "iphone-fixture-results-contributor-balanced-03-1",
+  "size_in_bytes": 54480673,
+  "url": "https://api.github.com/repos/palatis3/room-in-the-cart/actions/artifacts/13599104299",
+  "archive_download_url": "https://api.github.com/repos/palatis3/room-in-the-cart/actions/artifacts/13599104299/zip",
+  "expired": false,
+  "digest": "sha256:6dd0afced63ef9b8781e4f87f8f184e3b42619fb4bae88949ff27340ca9403d4",
+  "created_at": "2026-11-08T01:51:13Z",
+  "updated_at": "2026-11-08T01:51:13Z",
+  "expires_at": "2026-11-15T01:51:08Z",
+  "workflow_run": {
+    "id": 42428215965,
+    "repository_id": 1445928007,
+    "head_repository_id": 1445928007,
+    "head_branch": "codex/parallel-ios-ci",
+    "head_sha": "f90ad75a2e561891b2014ecb234d19639bcaed4c"
+  }
+}

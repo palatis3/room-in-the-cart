@@ -1,0 +1,37 @@
+{
+  "status": "native pass; diagnostic markers recovered",
+  "baseCommit": "a0195caa8eea9a5247cf1232902cbb2e215844d7",
+  "sourceFiles": [
+    {
+      "file": "ios/Features/Household/HouseholdRequestPackReviewView.swift",
+      "baseSHA256": "036aff257576516e5a6a70f7da2f99cb953933339e8a11eb1bab356ab13c1710",
+      "candidateSHA256": "913ff3d73ff394de81178d71ddcec2560d073105b72e39ba244cec9a8428e3d7"
+    },
+    {
+      "file": "ios/UITestSupport/HouseholdRequestPackUIFixture.swift",
+      "baseSHA256": "4a51c6d3463fa44732c9bd248a4186d481e5aa53d71f8dd000f78b6931c756d6",
+      "candidateSHA256": "7b7e6744ce659b7565ce281212b2e65a42d3de999dbe0816d314fba3487721c3"
+    },
+    {
+      "file": "ios/UITests/HouseholdRequestPackUITests.swift",
+      "baseSHA256": "be9803f5d7eb091fa4852367aceb3e7c6909840c23c880acef462ddd1a30b17f",
+      "candidateSHA256": "5801ef81869849ae0404961e89507393a56444ede4d546d18f114e770f5a161f"
+    }
+  ],
+  "patchSHA256": "86caf70335e63d05c6e8f08d21b329bada9b2f81bfa6d1b956c6960983dce7fc",
+  "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite",
+  "scope": "Local complete singleton qualification; no original five-case history/hosted acceptance or causal fix claimed.",
+  "log": "native.log",
+  "bundle": "native.xcresult",
+  "derivedData": ".build/S24TraceNov07/dd",
+  "simulator": "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+  "execSession": 89493,
+  "nativeExit": 0,
+  "strictExit": 0,
+  "durationSeconds": 225.71,
+  "runtimeWarnings": 0,
+  "skipped": 0,
+  "runnerRestarts": 0,
+  "markersRecovered": 82,
+  "traceEvidence": "capture-audit/recovery-receipt.json"
+}

@@ -2,6 +2,23 @@
 import Foundation
 import HouseholdClient
 
+// Temporary opt-in diagnostics; no product payload or extra observable state.
+enum S24PackTrace {
+    private static let scope: String? = {
+        let process = ProcessInfo.processInfo
+        guard process.arguments.contains("--ui-testing"), process.arguments.contains("--request-pack-fixture"),
+              let value = process.environment["S24_PACK_TRACE_SCOPE"], value.count <= 240,
+              value.range(of: #"^[A-Za-z0-9_./ \[\]\-]+$"#, options: .regularExpression) != nil else { return nil }
+        return value
+    }()
+    static var enabled: Bool { scope != nil }
+    static func emit(_ event: String, pack: String, oldID: String, newID: String, old: Bool, new: Bool) {
+        guard let scope else { return }
+        let process = ProcessInfo.processInfo
+        print("S24_PACK_TRACE uptime=\(process.systemUptime) pid=\(process.processIdentifier) scope=\(scope) event=\(event) pack=\(pack) oldDraft=\(oldID) newDraft=\(newID) old=\(old) new=\(new)")
+    }
+}
+
 final class S24FixtureVault: RefreshTokenVault, @unchecked Sendable {
     private var value: String?
     func read() throws -> String? { value }

@@ -1,0 +1,18 @@
+{
+  "originalPath": "/Users/palatis/Room in the Cart/.build/S24TraceNov07/native.log",
+  "originalSHA256": "be2824560d6e8acaa989ffe5f229186e9ff07ca8df52f8d038e283531158c58a",
+  "lines": [
+    {
+      "line": 4971,
+      "text": "Test Case '-[RoomInTheCartUITests.HouseholdRequestPackUITests testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite]' started."
+    },
+    {
+      "line": 6740,
+      "text": "Test Case '-[RoomInTheCartUITests.HouseholdRequestPackUITests testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite]' passed (225.707 seconds)."
+    },
+    {
+      "line": 6756,
+      "text": "** TEST SUCCEEDED **"
+    }
+  ]
+}

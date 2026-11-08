@@ -1,0 +1,1 @@
+Fixture previews: 0; busy: false; selected: 44444444-4444-4444-8444-444444444444; choice: add; price: ; preview: none; notice: none
