@@ -1,0 +1,1 @@
+{"status":"passed-scoped","case":"history-revoked","persisted":true,"cache":"private, max-age=0"}

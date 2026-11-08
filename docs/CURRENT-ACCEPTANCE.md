@@ -1,6 +1,14 @@
 # Current implementation and acceptance map
 
-## November 8 current CI and recovery boundary
+## November 8 latest verified state
+
+Published candidate `15f216b` has completed strict model coverage (696/696), English and Spanish StoreKit (15/15 each), both sanitizers (437 passes plus three declared opt-in wire skips each), security and native HTTPS/PostgreSQL. Core UI, fixture and performance jobs remain live or queued as of03:29UTC. Chrome startup is the only observed failed job so far; it failed before browser-history assertions. No combined green result is claimed. The [current handoff](CURRENT-HANDOFF.md) identifies exact runs and unpublished local work.
+
+Actual iPhone Simulator Safari 26.2 now qualifies four persisted-history cases: same actor, changed actor, revoked authority and unavailable authority. Prior request/draft remain hidden until fresh authorization, and each case reaches its required final state. Zero product mutations. [Exact additional-history proof](evidence/b11/safari-history-20261108/additional-history/verification.json). Four queue cases and the wider human/physical Safari matrix remain open. This synthetic loopback engine evidence does not substitute for real-provider acceptance.
+
+Staging remains041; the separately reviewed042 rollout awaits approval. The [concrete review](evidence/b11/staging-042-preparation-20261108/ROLLOUT-REVIEW.md) records the completed restored-database owner-runner rehearsal and verified upload. Apple membership, SMTP/KWS activation, distribution and human/physical acceptance remain separate.
+
+## Earlier November 8 CI and recovery checkpoint
 
 The original f90 cohort is terminal and fully collected. All684model tests passed; ordinary UI passed62/67 and fixture native assertions passed65/67 across17jobs. Security, native HTTPS/PostgreSQL and all3Release performance gates passed. Original UI failures, disconnected Swift CodeQL runner, strict StoreKit log-parser failure and incomplete speech-warning evidence remain recorded; no combined acceptance is claimed. [Terminal snapshot](evidence/native/ci-f90-20261107/monitor-20261108T024722Z.json).
 

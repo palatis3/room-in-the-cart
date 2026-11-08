@@ -1,0 +1,17 @@
+{
+  "history-changed-receipt.json": {
+    "source": ".build/SafariQualificationNov08/proposal/runs/history-changed/receipt.json",
+    "sha256": "6f26edf41830643110f004ef1b7d48cb36c2adfe400ac87adc574bd011d6a1f9",
+    "mode": "exact-byte-copy"
+  },
+  "history-revoked-receipt.json": {
+    "source": ".build/SafariQualificationNov08/proposal/runs/history-revoked/receipt.json",
+    "sha256": "84116928548e808ec46f6df47afe855b42cea2d7009c218f3cfe8b7780fb28a9",
+    "mode": "exact-byte-copy"
+  },
+  "history-offline-receipt.json": {
+    "source": ".build/SafariQualificationNov08/proposal/runs/history-offline/receipt.json",
+    "sha256": "aa0248a179dd4f1808dc6a6fee0fbbbeabbca4250665bb405061700c709cf951",
+    "mode": "exact-byte-copy"
+  }
+}
