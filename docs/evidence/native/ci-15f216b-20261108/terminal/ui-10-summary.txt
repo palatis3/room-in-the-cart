@@ -1,0 +1,24 @@
+2026-11-08T04:25:13.1810120Z [command]/opt/homebrew/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +64d9f0d7b27c6c70566f318035c0156dee92b7c7:refs/remotes/pull/1/merge
+2026-11-08T04:25:17.3592090Z  * [new ref]         64d9f0d7b27c6c70566f318035c0156dee92b7c7 -> pull/1/merge
+2026-11-08T04:25:18.0998500Z HEAD is now at 64d9f0d Merge 15f216b01e41c111ec99bbd812419cec32e6a5e4 into 1a2530a7ad006b5939f87a08a1964b5fc863383e
+2026-11-08T04:25:18.1217220Z 64d9f0d7b27c6c70566f318035c0156dee92b7c7
+2026-11-08T04:29:35.7658660Z Test Case '-[RoomInTheCartUITests.ContextualNavigationUITests testChangedPickupTermsKeepEarlierFeesAndPreviewUnderTheirOriginalBranch]' started.
+2026-11-08T04:32:24.5651520Z Test Case '-[RoomInTheCartUITests.ContextualNavigationUITests testChangedPickupTermsKeepEarlierFeesAndPreviewUnderTheirOriginalBranch]' passed (168.997 seconds).
+2026-11-08T04:32:24.5703990Z Test Case '-[RoomInTheCartUITests.ContextualNavigationUITests testCheckoutRequiresFreshBranchPricingAndPreservesEarlierInclusiveQuote]' started.
+2026-11-08T04:44:24.6463680Z Test Case '-[RoomInTheCartUITests.ContextualNavigationUITests testCheckoutRequiresFreshBranchPricingAndPreservesEarlierInclusiveQuote]' exceeded execution time allowance of 12 minutes. The test may have hung; check Xcode's test report for additional diagnostics. If the test requires additional time, use -[XCTestCase executionTimeAllowance] or one of xcodebuild's command-line overrides.
+2026-11-08T04:45:28.3259350Z Restarting after unexpected exit, crash, or test timeout; summary will include totals from previous launches.
+2026-11-08T04:45:28.5695660Z Test Case '-[RoomInTheCartUITests.ContextualNavigationUITests testDinnerOnlyCapAndCancelledSlotChangeSurviveRelaunch]' started.
+2026-11-08T04:47:05.4765870Z Test Case '-[RoomInTheCartUITests.ContextualNavigationUITests testDinnerOnlyCapAndCancelledSlotChangeSurviveRelaunch]' passed (96.944 seconds).
+2026-11-08T04:47:05.4866210Z Test Case '-[RoomInTheCartUITests.ContextualNavigationUITests testReviewedQuantityAndOriginalPackLabelSurviveRestartIndependently]' started.
+2026-11-08T04:47:57.7398260Z Test Case '-[RoomInTheCartUITests.ContextualNavigationUITests testReviewedQuantityAndOriginalPackLabelSurviveRestartIndependently]' passed (52.257 seconds).
+2026-11-08T04:47:57.7437760Z Test Case '-[RoomInTheCartUITests.ContextualNavigationUITests testUnknownTaxKeepsWeighedPickupUnresolved]' started.
+2026-11-08T04:50:40.0457370Z Test Case '-[RoomInTheCartUITests.ContextualNavigationUITests testUnknownTaxKeepsWeighedPickupUnresolved]' passed (162.298 seconds).
+2026-11-08T04:50:40.0896430Z Test Case '-[RoomInTheCartUITests.FreeJourneyUITests testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced]' started.
+2026-11-08T04:53:17.3082100Z Test Case '-[RoomInTheCartUITests.FreeJourneyUITests testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced]' passed (157.265 seconds).
+2026-11-08T04:53:17.3173900Z Test Case '-[RoomInTheCartUITests.FreeJourneyUITests testMealWeekKeepsOriginalPickupWhenShopSelectionChanges]' started.
+2026-11-08T04:54:19.3185740Z Test Case '-[RoomInTheCartUITests.FreeJourneyUITests testMealWeekKeepsOriginalPickupWhenShopSelectionChanges]' passed (61.897 seconds).
+2026-11-08T04:54:22.3332600Z ** TEST EXECUTE FAILED **
+2026-11-08T04:54:33.2142670Z The XCTest test export recorded 0 runtime warning occurrences across 7 examined tests.
+2026-11-08T04:54:33.2143400Z The XCTest summary does not expose a runtime warnings field.
+2026-11-08T04:54:33.2148210Z XCTest log requires one successful result banner; found ['FAILED'].
+2026-11-08T04:54:33.2535780Z ##[error]Process completed with exit code 1.

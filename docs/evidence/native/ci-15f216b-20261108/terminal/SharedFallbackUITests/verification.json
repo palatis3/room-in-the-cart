@@ -1,0 +1,159 @@
+{
+  "observedAtUtc": "2026-11-08T04:27:52+00:00",
+  "source": {
+    "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+    "checkout": {
+      "parents": [
+        "1a2530a7ad006b5939f87a08a1964b5fc863383e",
+        "15f216b01e41c111ec99bbd812419cec32e6a5e4"
+      ],
+      "sha": "64d9f0d7b27c6c70566f318035c0156dee92b7c7",
+      "tree": "29a2792c0e7355b2b9f3c170e22891175536ba22"
+    },
+    "strictCheckerSHA256": "857f58676bd623c8c1d90828d30ef91cbe1ed5af3821d48592ab63837eccf6aa"
+  },
+  "runId": 42440464791,
+  "job": {
+    "completedAt": "2026-11-08T04:23:54Z",
+    "conclusion": "failure",
+    "failedSteps": [
+      "Run selected fixture tests and require complete execution"
+    ],
+    "id": 128624899598,
+    "name": "Fixture (SharedFallbackUITests)",
+    "startedAt": "2026-11-08T04:14:27Z",
+    "status": "completed"
+  },
+  "artifact": {
+    "id": 13604170744,
+    "name": "iphone-fixture-results-SharedFallbackUITests-1",
+    "digest": "sha256:571a024b044eaa930410754165576454f849ed3f261d0eea3657f6e713afbf62",
+    "size_in_bytes": 6315698,
+    "workflow_run": {
+      "id": 42440464791,
+      "repository_id": 1445928007,
+      "head_repository_id": 1445928007,
+      "head_branch": "codex/parallel-ios-ci",
+      "head_sha": "15f216b01e41c111ec99bbd812419cec32e6a5e4"
+    }
+  },
+  "collection": {
+    "rangeBytes": 18329,
+    "rangeReceiptSHA256": "1463f6c1d97bcda363c5203bb94eba031045b0d5350e67818cb61147315cc4b2",
+    "members": [
+      {
+        "file": "Tests.log",
+        "bytes": 38177,
+        "sha256": "e4071d33e1f77b0858f34c52c29dfb3d603261489b5c3a5cc1e1df0c28c2c03f",
+        "zipCRC": 246359559,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-details.json",
+        "bytes": 1857,
+        "sha256": "d71ee292d87befc3a439ddeeb948e60bc9ccbe1a3b9a028d159e308f77448258",
+        "zipCRC": 2511857225,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-plan/SharedFallbackUITests.txt",
+        "bytes": 218,
+        "sha256": "e140671e4e641c2f2bdb66da7b4ed4030bbc289e9651ffe952367f171106100a",
+        "zipCRC": 963215910,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-runtime-warnings.json",
+        "bytes": 182,
+        "sha256": "655e0e03528691a025687aa854e1236c5c3f3a8a659c0fbc78f8a8d329840adf",
+        "zipCRC": 994757509,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-summary.json",
+        "bytes": 1257,
+        "sha256": "cf93890145168bfce3d8a4a751b3557c5352ae3de36fd20cb18e44218c47fe8d",
+        "zipCRC": 2995490102,
+        "CRCVerified": true
+      }
+    ],
+    "fullArchiveDownloaded": false
+  },
+  "nativeResult": {
+    "result": "Failed",
+    "totalTestCount": 2,
+    "passedTests": 1,
+    "failedTests": 1,
+    "skippedTests": 0,
+    "expectedFailures": 0,
+    "testFailures": [
+      {
+        "failureText": "XCTAssertEqual failed: (\"XCTWaiterResult(rawValue: 2)\") is not equal to (\"XCTWaiterResult(rawValue: 1)\")",
+        "targetName": "RoomInTheCartUITests",
+        "testIdentifier": 2,
+        "testIdentifierString": "SharedFallbackUITests/testFiveUsableWrapsProtectLunchAndCompareUsualDinnerWithTwoPackTrip()",
+        "testIdentifierURL": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/SharedFallbackUITests/testFiveUsableWrapsProtectLunchAndCompareUsualDinnerWithTwoPackTrip",
+        "testName": "testFiveUsableWrapsProtectLunchAndCompareUsualDinnerWithTwoPackTrip()"
+      }
+    ]
+  },
+  "observedResultCounts": {
+    "Passed": 1,
+    "Failed": 1
+  },
+  "plannedSelectors": [
+    "RoomInTheCartUITests/SharedFallbackUITests/testExplicitRecipeReviewCanBeRefusedThenSavedOnceAfterLostReply",
+    "RoomInTheCartUITests/SharedFallbackUITests/testFiveUsableWrapsProtectLunchAndCompareUsualDinnerWithTwoPackTrip"
+  ],
+  "missingSelectors": [],
+  "extraSelectors": [],
+  "executedSelectors": [
+    {
+      "selector": "RoomInTheCartUITests/SharedFallbackUITests/testExplicitRecipeReviewCanBeRefusedThenSavedOnceAfterLostReply",
+      "result": "Passed",
+      "durationSeconds": 140.67750298976898
+    },
+    {
+      "selector": "RoomInTheCartUITests/SharedFallbackUITests/testFiveUsableWrapsProtectLunchAndCompareUsualDinnerWithTwoPackTrip",
+      "result": "Failed",
+      "durationSeconds": 27.99330496788025
+    }
+  ],
+  "hostedWarningReceipt": {
+    "status": "passed",
+    "summaryWarningCount": null,
+    "runtimeWarningCount": 0,
+    "examinedTestCount": 2,
+    "detailExportCount": 2,
+    "activityExportCount": 0,
+    "warnings": []
+  },
+  "resultTreeWarningNames": [],
+  "console": {
+    "restartLines": [],
+    "failureRows": [
+      {
+        "rawLogLine": 489,
+        "text": "/Users/runner/work/room-in-the-cart/room-in-the-cart/ios/UITests/SharedFallbackUITests.swift:107: error: -[RoomInTheCartUITests.SharedFallbackUITests testFiveUsableWrapsProtectLunchAndCompareUsualDinnerWithTwoPackTrip] : XCTAssertEqual failed: (\"XCTWaiterResult(rawValue: 2)\") is not equal to (\"XCTWaiterResult(rawValue: 1)\")"
+      }
+    ],
+    "strictReplayFailures": [
+      "XCTest logged a failure for RoomInTheCartUITests/SharedFallbackUITests/testFiveUsableWrapsProtectLunchAndCompareUsualDinnerWithTwoPackTrip at log line 489.",
+      "XCTest log requires one start then one pass for RoomInTheCartUITests/SharedFallbackUITests/testFiveUsableWrapsProtectLunchAndCompareUsualDinnerWithTwoPackTrip; found ['start', 'non-passing or unrecognized completion'].",
+      "XCTest log requires one successful result banner; found ['FAILED']."
+    ]
+  },
+  "boundary": {
+    "selector": "RoomInTheCartUITests/SharedFallbackUITests/testFiveUsableWrapsProtectLunchAndCompareUsualDinnerWithTwoPackTrip",
+    "sourceLocation": "ios/UITests/SharedFallbackUITests.swift:107",
+    "rawLogLine": 489,
+    "assertion": "First larger-recipe selection did not reach value 1 before its wait expired.",
+    "scope": "The later reviewed stock and trip comparison assertions were not reached. Toggle cause remains under separate review.",
+    "precedingCase": {
+      "selector": "RoomInTheCartUITests/SharedFallbackUITests/testExplicitRecipeReviewCanBeRefusedThenSavedOnceAfterLostReply",
+      "result": "Passed",
+      "durationSeconds": 140.678
+    },
+    "boundaryLogSHA256": "1cc491eabef530e8e45ab9d2bfffa19fbf561fd6f99a18237ca2d770b6199812"
+  }
+}

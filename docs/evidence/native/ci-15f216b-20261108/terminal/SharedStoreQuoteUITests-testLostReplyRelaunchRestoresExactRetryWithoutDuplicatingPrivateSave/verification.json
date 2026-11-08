@@ -1,0 +1,107 @@
+{
+  "observedAtUtc": "2026-11-08T05:07:48+00:00",
+  "source": {
+    "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+    "mergeCheckout": "64d9f0d7b27c6c70566f318035c0156dee92b7c7",
+    "tree": "29a2792c0e7355b2b9f3c170e22891175536ba22",
+    "checkerSHA256": {
+      "scripts/check_ios_test_results.py": "857f58676bd623c8c1d90828d30ef91cbe1ed5af3821d48592ab63837eccf6aa",
+      "scripts/check_ios_performance.py": "f203f21510455a8a83300ee6968e8c5ac2bb14dd8c6afd5a6adb5caa7ce8a4c7",
+      "scripts/ios_performance_baselines.json": "38742a9b5f5eea668c608f117db602ac6a2b73aa56691c3ec3f90c291d15c38e"
+    }
+  },
+  "run": {
+    "attempt": 1,
+    "conclusion": "",
+    "event": "pull_request",
+    "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+    "name": "iOS fixture checks",
+    "runId": 42440464791,
+    "status": "in_progress",
+    "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42440464791"
+  },
+  "job": {
+    "completedAt": "2026-11-08T05:06:52Z",
+    "conclusion": "success",
+    "failedSteps": [],
+    "id": 128632608362,
+    "name": "Fixture (SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave)",
+    "startedAt": "2026-11-08T04:52:48Z",
+    "status": "completed"
+  },
+  "artifact": {
+    "id": 13604957936,
+    "name": "iphone-fixture-results-SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave-1",
+    "digest": "sha256:632ef1dc0ec430cc9e326645ea251c62c064f46bdc32f68333ddd1cbcb341b19",
+    "size_in_bytes": 5863532,
+    "workflow_run": {
+      "id": 42440464791,
+      "repository_id": 1445928007,
+      "head_repository_id": 1445928007,
+      "head_branch": "codex/parallel-ios-ci",
+      "head_sha": "15f216b01e41c111ec99bbd812419cec32e6a5e4"
+    }
+  },
+  "collection": {
+    "rangeReceiptSHA256": "51f7d479547261e023562f4c94927a112959527919de15fc67fb0c64572148e4",
+    "rangeBytes": 18561,
+    "verifiedMembers": [
+      {
+        "file": "Tests.log",
+        "bytes": 93300,
+        "sha256": "48a721475fe10b753449fbe7bf14c3de95ad881b41d82f7dae2f47b849d8c3df",
+        "zipCRC": 4140824074,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-details.json",
+        "bytes": 1226,
+        "sha256": "edfdbf5d6a4a86e10678940d7953db6311ef79819ce7ad28d9c534692a56ff2a",
+        "zipCRC": 3403774869,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-plan/SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave.txt",
+        "bytes": 114,
+        "sha256": "084109585400456bdcaf3eb1e4e6538890162b118755bafb6883a5ff40350889",
+        "zipCRC": 2723462642,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-runtime-warnings.json",
+        "bytes": 182,
+        "sha256": "e18d0e7ad63a7e1be003b7165bdcb1e60ef8ba08bfa76b8f528bc431b6a02003",
+        "zipCRC": 635318996,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-summary.json",
+        "bytes": 707,
+        "sha256": "d6c858400f0c41974a51c17de598d14ec9ea6689cc160eb7999617ea31d007ab",
+        "zipCRC": 2607611890,
+        "CRCVerified": true
+      }
+    ]
+  },
+  "strictResult": {
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "restarts": 0,
+    "selectors": {
+      "RoomInTheCartUITests/SharedStoreQuoteUITests/testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave": 398.0845100879669
+    },
+    "hostedWarningReceipt": {
+      "status": "passed",
+      "summaryWarningCount": null,
+      "runtimeWarningCount": 0,
+      "examinedTestCount": 1,
+      "detailExportCount": 1,
+      "activityExportCount": 0,
+      "warnings": []
+    },
+    "localSerialConsoleAndInventoryReplay": "passed"
+  },
+  "scope": "Original hosted metadata, exact serial XCTest console and bounded CRC-verified ZIP members. Full ZIP digest is GitHub metadata. No native execution."
+}

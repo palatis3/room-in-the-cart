@@ -1,0 +1,27 @@
+{
+  "recordedAtUTC": "2026-11-08T05:10:50.389872+00:00",
+  "status": "original-source-negative-control",
+  "exitCode": 1,
+  "passed": 3,
+  "failed": 9,
+  "testSHA256": {
+    "foreground-lifecycle.test.mjs": "50a205fd1d7c48acbc50b25adc3285bd6ca22d8bd8aa1eb0721f3545f5c3f1c7",
+    "support/source-dom-loader.mjs": "9ecb2e23c748b3c59ad5a57b9911dd87fd377656f4dcec78d30da09fd375895a"
+  },
+  "sourceSHA256": {
+    "api.ts": "c32e5596b858dafd66b04317691372c1582384e3f6a4c4f4905d30bce71b9ecc",
+    "app.ts": "92756619c5c9e5f384376e19b254240964cc25c59ba8dabc4aee09eeed3f2535",
+    "browser-sign-out.ts": "465269f619e1ad67b51366bf178bbc935f79a682381f6d86e33c975e676753c3",
+    "child-invitation-page.ts": "b3cf24c37911445043ac6b8080a332c37daa0e1b107119497d49fc99026adbf5",
+    "child-invitation.ts": "1d2f26a723c818344138b3776c6bc63f5ebf79d59bccd4d919059b294fe431db",
+    "config.ts": "c3c421cc03af511faaa5d3a1e2588bc8f3dae3e4f50d09d53dcec3133abeb090",
+    "i18n.ts": "b66fd8ae7d664201cde68aacd403a75ec7a09138c35e8d488640044d42757fdc",
+    "main.ts": "2d8c565430d4267acf49983209240dbb6914d20c66083c4bbfc7f1e6f1740e1c",
+    "outbox.ts": "add5fb28a9d22068a565ec19697db9189a02f06b62b440ece42742afec378cbd",
+    "public-pages-content.ts": "57661a3e73f3e36a1455bd6e8aceb6de12ed3fd696be5c7d0e9a072dc88a273a",
+    "public-pages.ts": "0a4d954a671663a81eecd27e9b21780465099982835b2920697467a156598661",
+    "public-site-configuration.ts": "1b529d8692fd71a1ca64b4b4c4e0e6700327144fad3595b6e00f590b457d1518"
+  },
+  "logSHA256": "b76bcf50df93b0999c9ed6a14964e60a9c485c79a0b2dcb617100e90cb984afe",
+  "scope": "Exact committed portable test bytes, including root3s mock-boundary deadlines, against isolated original product source; no browser/build/native/server."
+}

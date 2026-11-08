@@ -1,0 +1,45 @@
+Original: /Users/palatis/Room in the Cart/.build/CI15F216Nov08/ui-05/pristine-members/Tests.log
+Original SHA256: a42f195ff059ba8d08f79f62b5fe826cc604266ae0efbb5dc1cba5e69f6c1d9e
+Only selected original line-numbered excerpts; omitted intervals are not continuous evidence.
+
+18: Test Case '-[RoomInTheCartUITests.ContextualNavigationUITests testRangedPackNeedsAnExactAmountAndKeepsItsOriginalAfterRelaunch]' started.
+179: Test Case '-[RoomInTheCartUITests.ContextualNavigationUITests testRangedPackNeedsAnExactAmountAndKeepsItsOriginalAfterRelaunch]' passed (107.541 seconds).
+183: Test Case '-[RoomInTheCartUITests.FreeJourneyUITests testEnglishMealWeekListAndGridShowDatedProtectedLunch]' started.
+946: Test Case '-[RoomInTheCartUITests.FreeJourneyUITests testEnglishMealWeekListAndGridShowDatedProtectedLunch]' passed (232.859 seconds).
+950: Test Case '-[RoomInTheCartUITests.LedgerConfirmedStockPackUITests testFullyCoveredSavesUseAtHomePlanWithoutPurchasedItemOrRetailerOrder]' started.
+1408: Test Case '-[RoomInTheCartUITests.LedgerConfirmedStockPackUITests testFullyCoveredSavesUseAtHomePlanWithoutPurchasedItemOrRetailerOrder]' passed (143.477 seconds).
+1412: Test Case '-[RoomInTheCartUITests.PickupOfferUITests testSavedOfferReopensAndUpdatesResponseAfterRestart]' started.
+1576:     t =    51.26s     Wait for dev.roominthecart.app.debug to idle
+1577:     t =    51.32s Find the "Store" TextField
+1578:     t =    51.54s Checking existence of `"Branch" TextField`
+1579:     t =    51.75s Find the "Branch" TextField
+1580:     t =    51.96s Tap "Branch" TextField
+1581:     t =    51.96s     Wait for dev.roominthecart.app.debug to idle
+1582:     t =    51.98s     Find the "Branch" TextField
+1583:     t =    52.22s     Check for interrupting elements affecting "Branch" TextField
+1584:     t =    52.41s     Synthesize event
+1585:     t =    52.82s     Wait for dev.roominthecart.app.debug to idle
+1586:     t =    52.97s Waiting 5.0s for Keyboard (First Match) to exist
+1587:     t =    54.04s     Checking `Expect predicate `existsNoRetry == 1` for object Keyboard (First Match)`
+1588:     t =    54.04s         Checking existence of `Keyboard (First Match)`
+1589:     t =    54.12s Find the "Branch" TextField
+1590:     t =    54.33s Find the "Branch" TextField
+1591:     t =    54.55s Type 'Main branch' into "Branch" TextField
+1592:     t =    54.56s     Wait for dev.roominthecart.app.debug to idle
+1593:     t =    54.56s     Find the "Branch" TextField
+1594:     t =    54.72s     Check for interrupting elements affecting "Branch" TextField
+1595:     t =    54.89s     Synthesize event
+1596:     t =    55.31s     Wait for dev.roominthecart.app.debug to idle
+1597:     t =    55.35s Find the "Branch" TextField
+1598: /Users/runner/work/room-in-the-cart/room-in-the-cart/ios/UITests/PickupOfferUITests.swift:44: error: -[RoomInTheCartUITests.PickupOfferUITests testSavedOfferReopensAndUpdatesResponseAfterRestart] : XCTAssertEqual failed: ("Optional("Ma")") is not equal to ("Optional("Main branch")") - Branch
+1599:     t =    57.37s Tear Down
+1600:     t =    57.37s     Find the Target Application 'dev.roominthecart.app.debug'
+1601:     t =    57.89s     Added attachment named 'Offer-review-failure'
+1602:     t =    57.89s     Terminate dev.roominthecart.app.debug:31936
+1603: Test Case '-[RoomInTheCartUITests.PickupOfferUITests testSavedOfferReopensAndUpdatesResponseAfterRestart]' failed (59.745 seconds).
+1604: Test Suite 'PickupOfferUITests' failed at 2026-11-08 04:09:00.609.
+1607: Test Case '-[RoomInTheCartUITests.RoomInTheCartUITests testComparisonSaveStaysInsideViewportAboveTabBar]' started.
+1882: Test Case '-[RoomInTheCartUITests.RoomInTheCartUITests testComparisonSaveStaysInsideViewportAboveTabBar]' passed (99.894 seconds).
+1883: Test Case '-[RoomInTheCartUITests.RoomInTheCartUITests testOwnerExportReviewAndCancelledDeletionPreserveComparisonAfterRestart]' started.
+2340: Test Case '-[RoomInTheCartUITests.RoomInTheCartUITests testOwnerExportReviewAndCancelledDeletionPreserveComparisonAfterRestart]' passed (155.285 seconds).
+2354: ** TEST EXECUTE FAILED **

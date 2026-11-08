@@ -1,0 +1,12 @@
+2026-11-08T05:02:54.2661600Z [command]/opt/homebrew/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +64d9f0d7b27c6c70566f318035c0156dee92b7c7:refs/remotes/pull/1/merge
+2026-11-08T05:03:00.8512970Z  * [new ref]         64d9f0d7b27c6c70566f318035c0156dee92b7c7 -> pull/1/merge
+2026-11-08T05:03:02.6069680Z HEAD is now at 64d9f0d Merge 15f216b01e41c111ec99bbd812419cec32e6a5e4 into 1a2530a7ad006b5939f87a08a1964b5fc863383e
+2026-11-08T05:03:02.6397910Z 64d9f0d7b27c6c70566f318035c0156dee92b7c7
+2026-11-08T05:10:06.3077560Z Test Case '-[RoomInTheCartUITests.SharedStoreQuoteUITests testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption]' started.
+2026-11-08T05:12:56.6625150Z /Users/runner/work/room-in-the-cart/room-in-the-cart/ios/UITests/SharedStoreQuoteUITests.swift:251: error: -[RoomInTheCartUITests.SharedStoreQuoteUITests testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption] : XCTAssertTrue failed - Show the keyboard for sharedQuotes.first.extraMinutes
+2026-11-08T05:13:03.3357550Z Test Case '-[RoomInTheCartUITests.SharedStoreQuoteUITests testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption]' failed (174.112 seconds).
+2026-11-08T05:13:05.8289540Z ** TEST EXECUTE FAILED **
+2026-11-08T05:13:18.5498910Z The XCTest test export recorded 0 runtime warning occurrences across 1 examined tests.
+2026-11-08T05:13:18.5501170Z The XCTest summary does not expose a runtime warnings field.
+2026-11-08T05:13:18.5517890Z XCTest log requires one successful result banner; found ['FAILED'].
+2026-11-08T05:13:18.5845940Z ##[error]Process completed with exit code 1.

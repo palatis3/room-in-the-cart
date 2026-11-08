@@ -1,0 +1,37 @@
+{
+  "recordedAtUTC": "2026-11-08T05:09:19.342246+00:00",
+  "commit": "58419f9822b26a93820c2f4cfa4a45e7cd257a11",
+  "command": "npm test (includes tsc and vite build)",
+  "exitCode": 0,
+  "unitTests": {
+    "selected": 152,
+    "passed": 152,
+    "failed": 0,
+    "skipped": 0
+  },
+  "sourceSHA256": {
+    "api.ts": "c32e5596b858dafd66b04317691372c1582384e3f6a4c4f4905d30bce71b9ecc",
+    "app.ts": "d74c7761859fced292053af0ee5aecd924ab0b4c665427e80eda3b557c35d5e3",
+    "browser-sign-out.ts": "465269f619e1ad67b51366bf178bbc935f79a682381f6d86e33c975e676753c3",
+    "child-invitation-page.ts": "b3cf24c37911445043ac6b8080a332c37daa0e1b107119497d49fc99026adbf5",
+    "child-invitation.ts": "1d2f26a723c818344138b3776c6bc63f5ebf79d59bccd4d919059b294fe431db",
+    "config.ts": "c3c421cc03af511faaa5d3a1e2588bc8f3dae3e4f50d09d53dcec3133abeb090",
+    "i18n.ts": "b66fd8ae7d664201cde68aacd403a75ec7a09138c35e8d488640044d42757fdc",
+    "main.ts": "4ba02ec6b83d18aeab12062f0665b053a5ad4065f04bac28e97570ffdf8f07ac",
+    "outbox.ts": "add5fb28a9d22068a565ec19697db9189a02f06b62b440ece42742afec378cbd",
+    "public-pages-content.ts": "57661a3e73f3e36a1455bd6e8aceb6de12ed3fd696be5c7d0e9a072dc88a273a",
+    "public-pages.ts": "0a4d954a671663a81eecd27e9b21780465099982835b2920697467a156598661",
+    "public-site-configuration.ts": "1b529d8692fd71a1ca64b4b4c4e0e6700327144fad3595b6e00f590b457d1518"
+  },
+  "webAssetSHA256": {
+    "apple-touch-icon.png": "e69ddd65f0718ffef895c0b82a63873d580722b920af40e86b1478a5cd9427e3",
+    "assets/index-B9I61_lh.css": "7cf18dacddae715ef01363daf5f2770fb9562762a10d2d2e4d41daf406224cee",
+    "assets/index-GykSVZ9a.js": "2cba5fdc7fa659a1d91c6a68e83598783aeb6acdd2c1ce465bf261b508aff5e2",
+    "icon.png": "dd8314efcedbe096fbce5c43f09af13a335d713a1dcfae43f82b4904d9e58914",
+    "index.html": "8cb81feedc84fcbddb59b09044cb9f10dd2dafc2d54be50ed7e558b32620dc6b"
+  },
+  "logSHA256": "76770b7783a7dccf16ef18c6cd1e210328f35ad35e7301921057fbcee31233a8",
+  "sourcePatch": "/Users/palatis/Room in the Cart/.build/SafariQualificationNov08/foreground-source-proposal/foreground-authority.patch",
+  "actualFixedSafari": "not yet run",
+  "chromiumRegression": "first attempt unavailable because no Chrome executable; isolated official Playwright browser installation running"
+}

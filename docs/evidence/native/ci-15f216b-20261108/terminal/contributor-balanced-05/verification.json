@@ -1,0 +1,120 @@
+{
+  "observedAtUtc": "2026-11-08T04:15:50+00:00",
+  "source": {
+    "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+    "mergeCheckout": "64d9f0d7b27c6c70566f318035c0156dee92b7c7",
+    "tree": "29a2792c0e7355b2b9f3c170e22891175536ba22",
+    "checkerSHA256": {
+      "scripts/check_ios_test_results.py": "857f58676bd623c8c1d90828d30ef91cbe1ed5af3821d48592ab63837eccf6aa",
+      "scripts/check_ios_performance.py": "f203f21510455a8a83300ee6968e8c5ac2bb14dd8c6afd5a6adb5caa7ce8a4c7",
+      "scripts/ios_performance_baselines.json": "38742a9b5f5eea668c608f117db602ac6a2b73aa56691c3ec3f90c291d15c38e"
+    }
+  },
+  "run": {
+    "attempt": 1,
+    "conclusion": "",
+    "event": "pull_request",
+    "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+    "name": "iOS fixture checks",
+    "runId": 42440464791,
+    "status": "pending",
+    "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42440464791"
+  },
+  "job": {
+    "completedAt": "2026-11-08T04:14:18Z",
+    "conclusion": "success",
+    "failedSteps": [],
+    "id": 128612236684,
+    "name": "Fixture (contributor-balanced-05)",
+    "startedAt": "2026-11-08T03:49:36Z",
+    "status": "completed"
+  },
+  "artifact": {
+    "id": 13603253261,
+    "name": "iphone-fixture-results-contributor-balanced-05-1",
+    "digest": "sha256:052f375a5e7dbd050e73aca0b3d6ea0257641b657fa324cb6a37ed030d46a56a",
+    "size_in_bytes": 20319830,
+    "workflow_run": {
+      "id": 42440464791,
+      "repository_id": 1445928007,
+      "head_repository_id": 1445928007,
+      "head_branch": "codex/parallel-ios-ci",
+      "head_sha": "15f216b01e41c111ec99bbd812419cec32e6a5e4"
+    }
+  },
+  "collection": {
+    "rangeReceiptSHA256": "c8910dc0611432563cdc1a102d5c462cf86a0fff824ed1be22a958ecff13f500",
+    "rangeBytes": 87170,
+    "verifiedMembers": [
+      {
+        "file": "Tests.log",
+        "bytes": 708738,
+        "sha256": "371fef7e845614c330813f96e70e3c39247d0d9a755fd63d0ae7c1e939c1a345",
+        "zipCRC": 2820162643,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-details.json",
+        "bytes": 7898,
+        "sha256": "8174b2c8d26aa895300fb740651000f043ac47dcaad1d5024b556cd2748d7c6d",
+        "zipCRC": 1398653059,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-plan/contributor-balanced-05.txt",
+        "bytes": 1607,
+        "sha256": "34dc67f998f83493163ae8af7e3eaf03aa48102bf0523a41b469bccae40a53b7",
+        "zipCRC": 4249834773,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-runtime-warnings.json",
+        "bytes": 184,
+        "sha256": "8e4f5131a624a9c06d28e5cba89def1319e10feba119160c4f5e9a5081bcf548",
+        "zipCRC": 1715588241,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-summary.json",
+        "bytes": 710,
+        "sha256": "10a0fbb8611066dbba13e0ca993345eda2bddfe600ca4315a181cd7be844e20e",
+        "zipCRC": 1925040563,
+        "CRCVerified": true
+      }
+    ]
+  },
+  "strictResult": {
+    "passed": 14,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "restarts": 0,
+    "selectors": {
+      "RoomInTheCartUITests/CorrectionPrivacyAcceptanceUITests/testSettingsNamedForgetLastEntryOutcomeConfirmedOptOutAndDisconnectedHelp": 155.56672596931458,
+      "RoomInTheCartUITests/GuardianEnrollmentUITests/testCancelSetupDialogHasExplicitCancelAndForegroundRestoresStatus": 30.304306030273438,
+      "RoomInTheCartUITests/GuardianEnrollmentUITests/testChildForgetCancelAndForegroundKeepTheSamePairingWithoutActivation": 18.859151005744934,
+      "RoomInTheCartUITests/GuardianEnrollmentUITests/testNoticeDeclarationVerificationPermissionPairingAndDialogCancellation": 225.46878099441528,
+      "RoomInTheCartUITests/GuardianEnrollmentUITests/testPrivateSettingsFirstSignInContinuesToHouseholdAndBackgroundReturnsToLock": 53.30393397808075,
+      "RoomInTheCartUITests/GuardianEnrollmentUITests/testRealRootColdChildMarkerAndSyntheticVaultCleanupPreserveAdultData": 37.85209393501282,
+      "RoomInTheCartUITests/GuardianEnrollmentUITests/testRealRootLeaveCancelAndConfirmedExitRestoreLockedAdultAccess": 44.375251054763794,
+      "RoomInTheCartUITests/GuardianEnrollmentUITests/testSpanishLargestTextUnavailableGateRemainsReadableAndClosed": 23.594120979309082,
+      "RoomInTheCartUITests/GuardianEnrollmentUITests/testUnavailableNeverOffersCreationOrAdultVerification": 8.198086977005005,
+      "RoomInTheCartUITests/GuardianEnrollmentUITests/testUncertainAttemptCanRefreshButCannotSendAnotherVerification": 16.887139081954956,
+      "RoomInTheCartUITests/SharedMealChangeUITests/testAssignedShopperMapsLocalSeedWithoutPlannerPostAndCanCancel": 151.18118596076965,
+      "RoomInTheCartUITests/SharedMealChangeUITests/testPlannerCancelThenSendAndSeparateShopperCancelThenApplyExactlyOnce": 207.03059101104736,
+      "RoomInTheCartUITests/SharedMealChangeUITests/testShopperReviewsRepeatedClockTimeThenMovesDayWithoutExtendingDeadline": 135.3297120332718,
+      "RoomInTheCartUITests/StapleRecallUITests/testShopperClosesExactCoffeeAfterFilteringAndReopensOnlyThePriorMarketCheck": 60.51545703411102
+    },
+    "hostedWarningReceipt": {
+      "status": "passed",
+      "summaryWarningCount": null,
+      "runtimeWarningCount": 0,
+      "examinedTestCount": 14,
+      "detailExportCount": 14,
+      "activityExportCount": 0,
+      "warnings": []
+    },
+    "localSerialConsoleAndInventoryReplay": "passed"
+  },
+  "scope": "Original hosted metadata, exact serial XCTest console and bounded CRC-verified ZIP members. Full ZIP digest is GitHub metadata. No native execution."
+}

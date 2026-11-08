@@ -1,0 +1,10 @@
+{
+  "scope": "Bounded retained text review and pattern scan; synthetic marker/fixture data, local loopback origins and local provenance paths retained intentionally. No screenshots or signed download URLs.",
+  "patternsChecked": [
+    "signed artifact/auth query",
+    "bearer credential",
+    "private key"
+  ],
+  "findings": [],
+  "limitations": "Not a general-purpose secret detector; public fixture source includes explicitly synthetic CSRF markers, not live credentials."
+}

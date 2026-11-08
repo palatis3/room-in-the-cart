@@ -1,0 +1,64 @@
+Original: /Users/palatis/Room in the Cart/.build/CI15F216Nov08/ui-07/pristine-members/Tests.log
+Original SHA256: 160855048682bfee23d3e15b6ff6efa12d02a31b862c861a8b08f71c33f8275f
+Only selected original line-numbered excerpts; omitted intervals are not continuous evidence.
+
+18: Test Case '-[RoomInTheCartUITests.ContextualNavigationUITests testOversizedNativePasteKeepsTheOriginalAndAcceptsASmallerList]' started.
+1170: Test Case '-[RoomInTheCartUITests.ContextualNavigationUITests testOversizedNativePasteKeepsTheOriginalAndAcceptsASmallerList]' passed (62.124 seconds).
+1174: Test Case '-[RoomInTheCartUITests.FreeJourneyUITests testDinnerMoveAcrossDisplayedWeeksKeepsLunchAndOccurrence]' started.
+2308: Test Case '-[RoomInTheCartUITests.FreeJourneyUITests testDinnerMoveAcrossDisplayedWeeksKeepsLunchAndOccurrence]' passed (289.386 seconds).
+2309: Test Case '-[RoomInTheCartUITests.FreeJourneyUITests testRecipeCaptureOpensOnFirstAttemptAndReopensAfterCancel]' started.
+2452: Test Case '-[RoomInTheCartUITests.FreeJourneyUITests testRecipeCaptureOpensOnFirstAttemptAndReopensAfterCancel]' passed (41.570 seconds).
+2456: Test Case '-[RoomInTheCartUITests.LedgerConfirmedStockPackUITests testHidingProtectedLunchKeepsTotalAndTwoWholePacksWithoutStock]' started.
+2912: Test Case '-[RoomInTheCartUITests.LedgerConfirmedStockPackUITests testHidingProtectedLunchKeepsTotalAndTwoWholePacksWithoutStock]' passed (120.968 seconds).
+2913: Test Case '-[RoomInTheCartUITests.LedgerConfirmedStockPackUITests testTwelveNeededEightConfirmedEightPerPackReviewsOneWholePack]' started.
+3546: Test Case '-[RoomInTheCartUITests.LedgerConfirmedStockPackUITests testTwelveNeededEightConfirmedEightPerPackReviewsOneWholePack]' passed (192.835 seconds).
+3550: Test Case '-[RoomInTheCartUITests.RoomInTheCartUITests testConfirmedComparisonDeletionSurvivesRestart]' started.
+3975: Test Case '-[RoomInTheCartUITests.RoomInTheCartUITests testConfirmedComparisonDeletionSurvivesRestart]' passed (153.090 seconds).
+3976: Test Case '-[RoomInTheCartUITests.RoomInTheCartUITests testShopPhoneShortcutsHaveACompleteTouchTargetAndReturnToShop]' started.
+4035: Test Case '-[RoomInTheCartUITests.RoomInTheCartUITests testShopPhoneShortcutsHaveACompleteTouchTargetAndReturnToShop]' passed (18.137 seconds).
+4036: Test Case '-[RoomInTheCartUITests.RoomInTheCartUITests testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer]' started.
+4133:     t =    29.84s     Synthesize event
+4134:     t =    29.84s         Get number of matches for: Elements containing elements matching predicate 'hasKeyboardFocus == 1'
+4135:     t =    30.11s     Wait for dev.roominthecart.app.debug to idle
+4136:     t =    30.11s Waiting 3.0s for Button (First Match) to exist
+4137:     t =    31.13s     Checking `Expect predicate `existsNoRetry == 1` for object Button (First Match)`
+4138:     t =    31.13s         Checking existence of `Button (First Match)`
+4139:     t =    31.21s Tap Button (First Match)
+4140:     t =    31.21s     Wait for dev.roominthecart.app.debug to idle
+4141:     t =    31.22s     Find the Button (First Match)
+4142:     t =    31.29s     Check for interrupting elements affecting "Listo" Button
+4143:     t =    31.36s     Synthesize event
+4144:     t =    31.66s     Wait for dev.roominthecart.app.debug to idle
+4145:     t =    91.69s App animations complete notification not received, will attempt to continue.
+4146:     t =    91.70s Checking existence of `"aQuantity" TextField`
+4184:     t =   461.18s Tap "bQuantity" TextField
+4185:     t =   461.18s     Wait for dev.roominthecart.app.debug to idle
+4186:     t =   521.20s App animations complete notification not received, will attempt to continue.
+4187:     t =   521.21s     Find the "bQuantity" TextField
+4188:     t =   521.68s     Check for interrupting elements affecting "bQuantity" TextField
+4189:     t =   521.80s     Synthesize event
+4190:     t =   522.27s     Wait for dev.roominthecart.app.debug to idle
+4191:     t =   582.29s App animations complete notification not received, will attempt to continue.
+4192:     t =   582.29s Type '6' into Target Application 'dev.roominthecart.app.debug'
+4193:     t =   582.29s     Wait for dev.roominthecart.app.debug to idle
+4194:     t =   642.32s App animations complete notification not received, will attempt to continue.
+4195:     t =   642.32s     Find the Target Application 'dev.roominthecart.app.debug'
+4196:     t =   642.44s     Check for interrupting elements affecting "Room in the Cart" Application
+4197:     t =   642.53s     Synthesize event
+4198:     t =   642.53s         Get number of matches for: Elements containing elements matching predicate 'hasKeyboardFocus == 1'
+4199:     t =   642.81s     Wait for dev.roominthecart.app.debug to idle
+4200:     t =   702.85s App animations complete notification not received, will attempt to continue.
+4201:     t =   702.85s Waiting 3.0s for Button (First Match) to exist
+4202:     t =   703.86s     Checking `Expect predicate `existsNoRetry == 1` for object Button (First Match)`
+4203:     t =   703.86s         Checking existence of `Button (First Match)`
+4204:     t =   703.99s Tap Button (First Match)
+4205:     t =   703.99s     Wait for dev.roominthecart.app.debug to idle
+4206: Test Case '-[RoomInTheCartUITests.RoomInTheCartUITests testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer]' exceeded execution time allowance of 12 minutes. The test may have hung; check Xcode's test report for additional diagnostics. If the test requires additional time, use -[XCTestCase executionTimeAllowance] or one of xcodebuild's command-line overrides.
+4207: 
+4208: 
+4209: *** If you believe this error represents a bug, please attach the result bundle at /Users/runner/work/room-in-the-cart/room-in-the-cart/.build/Tests.xcresult
+4210: 
+4211: 2026-11-08 04:45:20.019226+0000 RoomInTheCartUITests-Runner[12023:270850] [Default] Running tests...
+4212:     t =      nans Interface orientation changed to Portrait
+4214: Restarting after unexpected exit, crash, or test timeout; summary will include totals from previous launches.
+4229: ** TEST EXECUTE FAILED **

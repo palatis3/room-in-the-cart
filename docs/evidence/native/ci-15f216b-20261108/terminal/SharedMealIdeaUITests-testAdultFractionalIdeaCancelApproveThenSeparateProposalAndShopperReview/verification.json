@@ -1,0 +1,107 @@
+{
+  "observedAtUtc": "2026-11-08T04:59:50+00:00",
+  "source": {
+    "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+    "mergeCheckout": "64d9f0d7b27c6c70566f318035c0156dee92b7c7",
+    "tree": "29a2792c0e7355b2b9f3c170e22891175536ba22",
+    "checkerSHA256": {
+      "scripts/check_ios_test_results.py": "857f58676bd623c8c1d90828d30ef91cbe1ed5af3821d48592ab63837eccf6aa",
+      "scripts/check_ios_performance.py": "f203f21510455a8a83300ee6968e8c5ac2bb14dd8c6afd5a6adb5caa7ce8a4c7",
+      "scripts/ios_performance_baselines.json": "38742a9b5f5eea668c608f117db602ac6a2b73aa56691c3ec3f90c291d15c38e"
+    }
+  },
+  "run": {
+    "attempt": 1,
+    "conclusion": "",
+    "event": "pull_request",
+    "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+    "name": "iOS fixture checks",
+    "runId": 42440464791,
+    "status": "pending",
+    "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42440464791"
+  },
+  "job": {
+    "completedAt": "2026-11-08T04:58:26Z",
+    "conclusion": "success",
+    "failedSteps": [],
+    "id": 128626094384,
+    "name": "Fixture (SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview)",
+    "startedAt": "2026-11-08T04:46:29Z",
+    "status": "completed"
+  },
+  "artifact": {
+    "id": 13604912093,
+    "name": "iphone-fixture-results-SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview-1",
+    "digest": "sha256:69cb2440006e56b88fe21c1d60ac27e86ebab3318e2710b2f666d4f88d0a62f6",
+    "size_in_bytes": 8118534,
+    "workflow_run": {
+      "id": 42440464791,
+      "repository_id": 1445928007,
+      "head_repository_id": 1445928007,
+      "head_branch": "codex/parallel-ios-ci",
+      "head_sha": "15f216b01e41c111ec99bbd812419cec32e6a5e4"
+    }
+  },
+  "collection": {
+    "rangeReceiptSHA256": "095b9a12796d7cccb7baca9bad5df5f709865f27b9bedee1cb328cb1a6dae718",
+    "rangeBytes": 24363,
+    "verifiedMembers": [
+      {
+        "file": "Tests.log",
+        "bytes": 148494,
+        "sha256": "d6403ab5edda9d7035f2cefe6f53aac1c688cb5cad15a7ab85ef860408891eec",
+        "zipCRC": 2971526875,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-details.json",
+        "bytes": 1229,
+        "sha256": "998f8382e34c6c5d67e18b4bc3daf1d417643bb3c6831288973b736e791493a9",
+        "zipCRC": 408354084,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-plan/SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview.txt",
+        "bytes": 116,
+        "sha256": "0481679dfa40ef7aae745cdf4af797f613e7c9d2ff779ae98fe106b4b05359fe",
+        "zipCRC": 2388042911,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-runtime-warnings.json",
+        "bytes": 182,
+        "sha256": "e18d0e7ad63a7e1be003b7165bdcb1e60ef8ba08bfa76b8f528bc431b6a02003",
+        "zipCRC": 635318996,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-summary.json",
+        "bytes": 707,
+        "sha256": "7bc5cfe564815fdf6022e0b5fee05d69fa3b46de7e37c70549d3811a1512cadf",
+        "zipCRC": 3069569374,
+        "CRCVerified": true
+      }
+    ]
+  },
+  "strictResult": {
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "restarts": 0,
+    "selectors": {
+      "RoomInTheCartUITests/SharedMealIdeaUITests/testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview": 367.5349669456482
+    },
+    "hostedWarningReceipt": {
+      "status": "passed",
+      "summaryWarningCount": null,
+      "runtimeWarningCount": 0,
+      "examinedTestCount": 1,
+      "detailExportCount": 1,
+      "activityExportCount": 0,
+      "warnings": []
+    },
+    "localSerialConsoleAndInventoryReplay": "passed"
+  },
+  "scope": "Original hosted metadata, exact serial XCTest console and bounded CRC-verified ZIP members. Full ZIP digest is GitHub metadata. No native execution."
+}

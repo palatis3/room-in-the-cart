@@ -1,0 +1,196 @@
+{
+  "source": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+  "observedAtUtc": "2026-11-08T05:16:51Z",
+  "allCheckpointReceiptReferencesHashVerified": 40,
+  "allSixWorkflowsTerminal": true,
+  "ordinaryUI": {
+    "selected": 68,
+    "executedWithResultReceipt": 68,
+    "nativePassed": 65,
+    "nativeFailed": 3,
+    "nativeSkipped": 0,
+    "casesInStrictlyPassingJobs": 47,
+    "runtimeWarningsInAvailableReceipts": 0,
+    "casesWithRuntimeWarningCountReceipt": 68,
+    "warningCountUnavailableRows": [],
+    "runnerRestartsInAvailableConsoleReceipts": 2,
+    "terminalRowsPendingExactResultReceipt": [],
+    "unlistedRows": []
+  },
+  "fixtureUI": {
+    "selected": 69,
+    "executedWithResultReceipt": 69,
+    "nativePassed": 67,
+    "nativeFailed": 2,
+    "nativeSkipped": 0,
+    "casesInStrictlyPassingJobs": 61,
+    "runtimeWarningsInAvailableReceipts": 0,
+    "casesWithRuntimeWarningCountReceipt": 64,
+    "warningCountUnavailableRows": [
+      "SharedDeliveryUITests-recovery-cook-and-closeout"
+    ],
+    "runnerRestartsInAvailableConsoleReceipts": 0,
+    "terminalRowsPendingExactResultReceipt": [],
+    "unlistedRows": []
+  },
+  "fixtureUniqueSelectors": 69,
+  "fixtureRows": [
+    {
+      "shard": "contributor-balanced-02",
+      "selected": 11,
+      "jobId": 128612236397,
+      "selectorSHA256": "7ac65d36f80875b8c1749b1144b37e5dc267295c50e082e01aee41025f8ea077",
+      "nativePassed": 11,
+      "nativeFailed": 0,
+      "jobConclusion": "success"
+    },
+    {
+      "shard": "contributor-balanced-03",
+      "selected": 10,
+      "jobId": 128612236597,
+      "selectorSHA256": "7109fc0cd8617c8451b5a457fede7476fdf7e8ee17bd203e637c6c1eec257d16",
+      "nativePassed": 10,
+      "nativeFailed": 0,
+      "jobConclusion": "success"
+    },
+    {
+      "shard": "contributor-balanced-01",
+      "selected": 3,
+      "jobId": 128612236658,
+      "selectorSHA256": "90b926b7d37a73949c13ca3d6375428359bc3f5da0b9b7ceabdd6db70c85ab7a",
+      "nativePassed": 3,
+      "nativeFailed": 0,
+      "jobConclusion": "success"
+    },
+    {
+      "shard": "contributor-balanced-04",
+      "selected": 5,
+      "jobId": 128612236669,
+      "selectorSHA256": "681ebe9b7ead2c23f7debd69ab6a6dfd0b5fa2a8fcf5eb0eb4d1358204f830c4",
+      "nativePassed": 5,
+      "nativeFailed": 0,
+      "jobConclusion": "success"
+    },
+    {
+      "shard": "contributor-balanced-05",
+      "selected": 14,
+      "jobId": 128612236684,
+      "selectorSHA256": "34dc67f998f83493163ae8af7e3eaf03aa48102bf0523a41b469bccae40a53b7",
+      "nativePassed": 14,
+      "nativeFailed": 0,
+      "jobConclusion": "success"
+    },
+    {
+      "shard": "RecordsMediaUITests",
+      "selected": 1,
+      "jobId": 128620991581,
+      "selectorSHA256": "1cd1b7dadf0cef4f124e88261cd491a0e960a2e874b6938c80e288c5fb07927b",
+      "nativePassed": 1,
+      "nativeFailed": 0,
+      "jobConclusion": "success"
+    },
+    {
+      "shard": "SharedDeliveryUITests-stock-and-purchase",
+      "selected": 6,
+      "jobId": 128621149453,
+      "selectorSHA256": "9f113c6e2e8ac1ac0e90b36b29386fea93bb24dba2c5e044e17bf504052b6cbf",
+      "nativePassed": 6,
+      "nativeFailed": 0,
+      "jobConclusion": "success"
+    },
+    {
+      "shard": "SharedDeliveryUITests-recovery-cook-and-closeout",
+      "selected": 5,
+      "jobId": 128624824824,
+      "selectorSHA256": "14afce1ee41211348af391106eccf800d6071bfead42a0a1e3202d28751abd99",
+      "nativePassed": 5,
+      "nativeFailed": 0,
+      "jobConclusion": "failure"
+    },
+    {
+      "shard": "SharedFallbackUITests",
+      "selected": 2,
+      "jobId": 128624899598,
+      "selectorSHA256": "e140671e4e641c2f2bdb66da7b4ed4030bbc289e9651ffe952367f171106100a",
+      "nativePassed": 1,
+      "nativeFailed": 1,
+      "jobConclusion": "failure"
+    },
+    {
+      "shard": "SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview",
+      "selected": 1,
+      "jobId": 128626094384,
+      "selectorSHA256": "0481679dfa40ef7aae745cdf4af797f613e7c9d2ff779ae98fe106b4b05359fe",
+      "nativePassed": 1,
+      "nativeFailed": 0,
+      "jobConclusion": "success"
+    },
+    {
+      "shard": "SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn",
+      "selected": 1,
+      "jobId": 128626872278,
+      "selectorSHA256": "d5edad5d51c5465106f511e1d854157a60c633f6a6a358b3a9677f96e1efe50c",
+      "nativePassed": 1,
+      "nativeFailed": 0,
+      "jobConclusion": "success"
+    },
+    {
+      "shard": "SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult",
+      "selected": 1,
+      "jobId": 128627124142,
+      "selectorSHA256": "76c844050eca114fcf16267969780963d9ce646f1c5f64df275be91f46180287",
+      "nativePassed": 1,
+      "nativeFailed": 0,
+      "jobConclusion": "success"
+    },
+    {
+      "shard": "SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption",
+      "selected": 1,
+      "jobId": 128631169252,
+      "selectorSHA256": "380682e67299ec7ba70f71d0145ecf85ee441acdc4d75dbde70808a4a17cc8de",
+      "nativePassed": 0,
+      "nativeFailed": 1,
+      "jobConclusion": "failure"
+    },
+    {
+      "shard": "SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave",
+      "selected": 1,
+      "jobId": 128632608362,
+      "selectorSHA256": "084109585400456bdcaf3eb1e4e6538890162b118755bafb6883a5ff40350889",
+      "nativePassed": 1,
+      "nativeFailed": 0,
+      "jobConclusion": "success"
+    },
+    {
+      "shard": "SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable",
+      "selected": 1,
+      "jobId": 128633685007,
+      "selectorSHA256": "bd19dd89da11f05ee96a89a88301f749dc95d554477430d3230f030e826eb249",
+      "nativePassed": 1,
+      "nativeFailed": 0,
+      "jobConclusion": "success"
+    },
+    {
+      "shard": "SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction",
+      "selected": 1,
+      "jobId": 128634556278,
+      "selectorSHA256": "18490653592a3d155fb4595c559cf5429ef83a3bffa302e4b8e2053a5b99b946",
+      "nativePassed": 1,
+      "nativeFailed": 0,
+      "jobConclusion": "success"
+    },
+    {
+      "shard": "DinnerDecisionSheetUITests",
+      "selected": 5,
+      "jobId": 128634727680,
+      "selectorSHA256": "c31056e9f3c5dcd850f3267ad8ae078a281ad1c5f09d9d805053fcd8edb8db74",
+      "nativePassed": 5,
+      "nativeFailed": 0,
+      "jobConclusion": "success"
+    }
+  ],
+  "exactPlannerAndHostedSelectorsMatch": true,
+  "RecordsEvidenceRestricted": true,
+  "warningCountsUnavailableNotZero": true,
+  "localFollowupsDoNotReplaceOriginalResults": true
+}

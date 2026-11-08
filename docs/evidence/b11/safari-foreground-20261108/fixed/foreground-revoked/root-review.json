@@ -1,0 +1,17 @@
+{
+  "caseName": "foreground-revoked",
+  "verificationExitCode": 0,
+  "observationCount": 3,
+  "phases": [
+    "initial",
+    "held",
+    "final"
+  ],
+  "zeroProductCommands": true,
+  "serverStopped": true,
+  "nativeObservations": "Root observed concealed Loading with no private request/draft/control while authority held; then exact access-ended notice, enabled Refresh, no private form/draft/row/Retry. Screenshots in CUA transcript only.",
+  "limitations": [
+    "Simulator Safari, not physical device",
+    "No App Switcher or continuous-frame capture claim"
+  ]
+}

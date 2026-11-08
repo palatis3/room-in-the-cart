@@ -1,0 +1,35 @@
+Original: /Users/palatis/Room in the Cart/.build/CI15F216Nov08/SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption/pristine-members/Tests.log
+Original SHA256: e6e0a1688fad5c700f7dbd99ed81a86a41f0bf0e3931a08963be98559aac311d
+Only selected original line-numbered excerpts; omitted intervals are not continuous evidence.
+
+18: Test Case '-[RoomInTheCartUITests.SharedStoreQuoteUITests testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption]' started.
+467:     t =   162.82s Collecting debug information to assist test failure triage
+468:     t =   162.82s     Requesting snapshot of accessibility hierarchy for app with pid 14192
+469:     t =   163.05s Bilingual keyboard onboarding absent
+470:     t =   163.05s Waiting 5.0s for Keyboard (First Match) to exist
+471:     t =   164.07s     Checking `Expect predicate `existsNoRetry == 1` for object Keyboard (First Match)`
+472:     t =   164.07s         Checking existence of `Keyboard (First Match)`
+473:     t =   164.36s         Capturing element debug description
+474:     t =   165.08s     Checking `Expect predicate `existsNoRetry == 1` for object Keyboard (First Match)`
+475:     t =   165.09s         Checking existence of `Keyboard (First Match)`
+476:     t =   165.45s         Capturing element debug description
+477:     t =   166.05s     Checking `Expect predicate `existsNoRetry == 1` for object Keyboard (First Match)`
+478:     t =   166.05s         Checking existence of `Keyboard (First Match)`
+479:     t =   166.35s         Capturing element debug description
+480:     t =   167.05s     Checking `Expect predicate `existsNoRetry == 1` for object Keyboard (First Match)`
+481:     t =   167.05s         Checking existence of `Keyboard (First Match)`
+482:     t =   167.47s         Capturing element debug description
+483:     t =   168.05s     Checking `Expect predicate `existsNoRetry == 1` for object Keyboard (First Match)`
+484:     t =   168.05s         Checking existence of `Keyboard (First Match)`
+485:     t =   168.35s         Capturing element debug description
+486:     t =   168.35s     Checking existence of `Keyboard (First Match)`
+487:     t =   168.74s Collecting debug information to assist test failure triage
+488:     t =   168.74s     Requesting snapshot of accessibility hierarchy for app with pid 14192
+489: /Users/runner/work/room-in-the-cart/room-in-the-cart/ios/UITests/SharedStoreQuoteUITests.swift:251: error: -[RoomInTheCartUITests.SharedStoreQuoteUITests testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption] : XCTAssertTrue failed - Show the keyboard for sharedQuotes.first.extraMinutes
+490:     t =   170.68s Tear Down
+491:     t =   170.68s     Find the Target Application 'dev.roominthecart.app.debug'
+492:     t =   171.26s     Added attachment named 'S27-screen-failure'
+493:     t =   171.27s     Terminate dev.roominthecart.app.debug:14192
+494: Test Case '-[RoomInTheCartUITests.SharedStoreQuoteUITests testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption]' failed (174.112 seconds).
+495: Test Suite 'SharedStoreQuoteUITests' failed at 2026-11-08 05:13:00.100.
+508: ** TEST EXECUTE FAILED **

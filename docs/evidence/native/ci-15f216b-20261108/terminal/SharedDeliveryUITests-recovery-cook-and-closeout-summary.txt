@@ -1,0 +1,18 @@
+2026-11-08T04:45:54.8216000Z [command]/opt/homebrew/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +64d9f0d7b27c6c70566f318035c0156dee92b7c7:refs/remotes/pull/1/merge
+2026-11-08T04:45:59.5932730Z  * [new ref]         64d9f0d7b27c6c70566f318035c0156dee92b7c7 -> pull/1/merge
+2026-11-08T04:46:01.5570550Z HEAD is now at 64d9f0d Merge 15f216b01e41c111ec99bbd812419cec32e6a5e4 into 1a2530a7ad006b5939f87a08a1964b5fc863383e
+2026-11-08T04:46:01.5806410Z 64d9f0d7b27c6c70566f318035c0156dee92b7c7
+2026-11-08T04:51:18.7414520Z Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperClosesWithPendingCreditThenLinksItToTheOriginalNetCharge]' started.
+2026-11-08T04:55:12.6763490Z Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperClosesWithPendingCreditThenLinksItToTheOriginalNetCharge]' passed (233.838 seconds).
+2026-11-08T04:55:12.6773510Z Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperLeavesOriginalDinnerOpenAfterAnUnresolvedReplacementPreview]' started.
+2026-11-08T04:56:23.0419820Z Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperLeavesOriginalDinnerOpenAfterAnUnresolvedReplacementPreview]' passed (70.466 seconds).
+2026-11-08T04:56:23.0536490Z Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperReplacesWednesdayAfterPickupAndKeepsTuesdaysShortage]' started.
+2026-11-08T04:58:31.2640420Z Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperReplacesWednesdayAfterPickupAndKeepsTuesdaysShortage]' passed (128.289 seconds).
+2026-11-08T04:58:31.2650470Z Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperReviewsExactEditedCookWordingBeforeReadback]' started.
+2026-11-08T04:59:34.2552230Z Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperReviewsExactEditedCookWordingBeforeReadback]' passed (62.984 seconds).
+2026-11-08T04:59:34.2561430Z Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperSavesDatedCookCopyAndReopensRecipientSendRecord]' started.
+2026-11-08T05:02:06.9909560Z Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperSavesDatedCookCopyAndReopensRecipientSendRecord]' passed (152.735 seconds).
+2026-11-08T05:02:10.0362110Z ** TEST EXECUTE SUCCEEDED **
+2026-11-08T05:02:22.8243600Z XCTest runtime warning evidence is unavailable. Malformed XCTest runtime warning activity '[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions'. Expected one Complete Issue Description.txt attachment, found 0.
+2026-11-08T05:02:22.8870210Z ##[error]Process completed with exit code 1.
+2026-11-08T05:02:22.9965510Z [36;1m    --predicate 'process == "RoomInTheCart" AND subsystem == "com.apple.runtime-issues" AND category == "Hang Risk"' \[0m

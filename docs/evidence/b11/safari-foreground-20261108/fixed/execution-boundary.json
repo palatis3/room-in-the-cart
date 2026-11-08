@@ -1,0 +1,23 @@
+{
+  "authority": "Root-reported completed native execution and shutdown, checked against receipt origins; publication performs offline verification only",
+  "cases": {
+    "foreground-same": {
+      "session": 34310,
+      "pid": 29623,
+      "port": 55396,
+      "exitCode": 0,
+      "portClosed": true
+    },
+    "foreground-revoked": {
+      "session": 34188,
+      "pid": 30620,
+      "port": 55615,
+      "exitCode": 0,
+      "portClosed": true
+    }
+  },
+  "sourceCommit": "58419f9822b26a93820c2f4cfa4a45e7cd257a11",
+  "deployment": "local only; not deployed",
+  "identity": "same owned Simulator Safari as baseline; no new identity query during publication",
+  "screenshots": "CUA transcript only; no standalone files"
+}

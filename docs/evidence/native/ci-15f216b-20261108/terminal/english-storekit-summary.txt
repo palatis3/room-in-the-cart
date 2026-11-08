@@ -1,0 +1,6 @@
+2026-11-08T03:15:05.7432230Z Test Case '-[RoomInTheCartTests.StoreKitScenarioTests testUnavailableProductKeepsFreeRoute]' started.
+2026-11-08T03:15:05.7639060Z Test Case '-[RoomInTheCartTests.StoreKitScenarioTests testUnavailableProductKeepsFreeRoute]' passed (0.124 seconds).
+2026-11-08T03:15:08.0556980Z ** TEST SUCCEEDED **
+2026-11-08T03:15:20.0236070Z Executed 15 of 15 selected tests.
+2026-11-08T03:15:20.0313160Z The XCTest log confirms one start and one passing completion per selected test.
+2026-11-08T03:15:20.0314060Z The XCTest test export recorded 0 runtime warning occurrences across 15 examined tests.

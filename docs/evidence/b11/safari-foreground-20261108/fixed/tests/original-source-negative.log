@@ -1,0 +1,235 @@
+TAP version 13
+# Subtest: actual main visibility listener conceals during held same-actor authorization
+not ok 1 - actual main visibility listener conceals during held same-actor authorization
+  ---
+  duration_ms: 609.70375
+  type: 'test'
+  location: '/Users/palatis/Room in the Cart/.build/SafariQualificationNov08/foreground-canonical-negative/web/tests/foreground-lifecycle.test.mjs:18:35'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input was expected to not match the regular expression /PRIVATE OWN REQUEST|Household a|PRIVATE COOK/. Input:
+    
+    'Room in the CartEnglishSpanishLoading…Household aRefreshSign outAsk the shopperItemKeep the food name and any restrictions as written.Amount or pack count (optional)Intended tripThis pickupNext shopReview requestCopy your textYour requestsPRIVATE OWN REQUESTUnknown amountReceivedThis pickupFriday, November 6, 2026 at 7:00 AMEditWithdraw'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: 'Room in the CartEnglishSpanishLoading…Household aRefreshSign outAsk the shopperItemKeep the food name and any restrictions as written.Amount or pack count (optional)Intended tripThis pickupNext shopReview requestCopy your textYour requestsPRIVATE OWN REQUESTUnknown amountReceivedThis pickupFriday, November 6, 2026 at 7:00 AMEditWithdraw'
+  operator: 'doesNotMatch'
+  stack: |-
+    concealed (file:///Users/palatis/Room%20in%20the%20Cart/.build/SafariQualificationNov08/foreground-canonical-negative/web/tests/foreground-lifecycle.test.mjs:17:33)
+    TestContext.<anonymous> (file:///Users/palatis/Room%20in%20the%20Cart/.build/SafariQualificationNov08/foreground-canonical-negative/web/tests/foreground-lifecycle.test.mjs:21:127)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: actual main visibility listener conceals during held revoked authorization
+not ok 2 - actual main visibility listener conceals during held revoked authorization
+  ---
+  duration_ms: 242.906583
+  type: 'test'
+  location: '/Users/palatis/Room in the Cart/.build/SafariQualificationNov08/foreground-canonical-negative/web/tests/foreground-lifecycle.test.mjs:18:35'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input was expected to not match the regular expression /PRIVATE OWN REQUEST|Household a|PRIVATE COOK/. Input:
+    
+    'Room in the CartEnglishSpanishLoading…Household aRefreshSign outAsk the shopperItemKeep the food name and any restrictions as written.Amount or pack count (optional)Intended tripThis pickupNext shopReview requestCopy your textYour requestsPRIVATE OWN REQUESTUnknown amountReceivedThis pickupFriday, November 6, 2026 at 7:00 AMEditWithdraw'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: 'Room in the CartEnglishSpanishLoading…Household aRefreshSign outAsk the shopperItemKeep the food name and any restrictions as written.Amount or pack count (optional)Intended tripThis pickupNext shopReview requestCopy your textYour requestsPRIVATE OWN REQUESTUnknown amountReceivedThis pickupFriday, November 6, 2026 at 7:00 AMEditWithdraw'
+  operator: 'doesNotMatch'
+  stack: |-
+    concealed (file:///Users/palatis/Room%20in%20the%20Cart/.build/SafariQualificationNov08/foreground-canonical-negative/web/tests/foreground-lifecycle.test.mjs:17:33)
+    TestContext.<anonymous> (file:///Users/palatis/Room%20in%20the%20Cart/.build/SafariQualificationNov08/foreground-canonical-negative/web/tests/foreground-lifecycle.test.mjs:21:127)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: changed foreground actor clears previous unsent draft and own requests
+not ok 3 - changed foreground actor clears previous unsent draft and own requests
+  ---
+  duration_ms: 178.519666
+  type: 'test'
+  location: '/Users/palatis/Room in the Cart/.build/SafariQualificationNov08/foreground-canonical-negative/web/tests/foreground-lifecycle.test.mjs:25:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input was expected to not match the regular expression /PRIVATE OWN REQUEST|Household a|PRIVATE COOK/. Input:
+    
+    'Room in the CartEnglishSpanishLoading…Household aRefreshSign outAsk the shopperItemKeep the food name and any restrictions as written.Amount or pack count (optional)Intended tripThis pickupNext shopReview requestCopy your textYour requestsPRIVATE OWN REQUESTUnknown amountReceivedThis pickupFriday, November 6, 2026 at 7:00 AMEditWithdraw'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: 'Room in the CartEnglishSpanishLoading…Household aRefreshSign outAsk the shopperItemKeep the food name and any restrictions as written.Amount or pack count (optional)Intended tripThis pickupNext shopReview requestCopy your textYour requestsPRIVATE OWN REQUESTUnknown amountReceivedThis pickupFriday, November 6, 2026 at 7:00 AMEditWithdraw'
+  operator: 'doesNotMatch'
+  stack: |-
+    concealed (file:///Users/palatis/Room%20in%20the%20Cart/.build/SafariQualificationNov08/foreground-canonical-negative/web/tests/foreground-lifecycle.test.mjs:17:33)
+    TestContext.<anonymous> (file:///Users/palatis/Room%20in%20the%20Cart/.build/SafariQualificationNov08/foreground-canonical-negative/web/tests/foreground-lifecycle.test.mjs:28:28)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: offline foreground stays concealed and explicit same-actor recovery restores draft
+not ok 4 - offline foreground stays concealed and explicit same-actor recovery restores draft
+  ---
+  duration_ms: 168.092167
+  type: 'test'
+  location: '/Users/palatis/Room in the Cart/.build/SafariQualificationNov08/foreground-canonical-negative/web/tests/foreground-lifecycle.test.mjs:30:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input was expected to not match the regular expression /PRIVATE OWN REQUEST|Household a|PRIVATE COOK/. Input:
+    
+    'Room in the CartEnglishSpanishCould not load your account. Refresh to try again.Household aRefreshSign outAsk the shopperItemKeep the food name and any restrictions as written.Amount or pack count (optional)Intended tripThis pickupNext shopReview requestCopy your textYour requestsPRIVATE OWN REQUESTUnknown amountReceivedThis pickupFriday, November 6, 2026 at 7:00 AMEditWithdraw'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: 'Room in the CartEnglishSpanishCould not load your account. Refresh to try again.Household aRefreshSign outAsk the shopperItemKeep the food name and any restrictions as written.Amount or pack count (optional)Intended tripThis pickupNext shopReview requestCopy your textYour requestsPRIVATE OWN REQUESTUnknown amountReceivedThis pickupFriday, November 6, 2026 at 7:00 AMEditWithdraw'
+  operator: 'doesNotMatch'
+  stack: |-
+    concealed (file:///Users/palatis/Room%20in%20the%20Cart/.build/SafariQualificationNov08/foreground-canonical-negative/web/tests/foreground-lifecycle.test.mjs:17:33)
+    TestContext.<anonymous> (file:///Users/palatis/Room%20in%20the%20Cart/.build/SafariQualificationNov08/foreground-canonical-negative/web/tests/foreground-lifecycle.test.mjs:31:161)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: visibility-first BFCache/visibility notifications share one held authority read
+ok 5 - visibility-first BFCache/visibility notifications share one held authority read
+  ---
+  duration_ms: 170.969
+  type: 'test'
+  ...
+# Subtest: pageshow-first BFCache/visibility notifications share one held authority read
+ok 6 - pageshow-first BFCache/visibility notifications share one held authority read
+  ---
+  duration_ms: 158.322042
+  type: 'test'
+  ...
+# Subtest: foreground during old load rejects its reveal and performs one deferred authority check
+not ok 7 - foreground during old load rejects its reveal and performs one deferred authority check
+  ---
+  duration_ms: 154.341875
+  type: 'test'
+  location: '/Users/palatis/Room in the Cart/.build/SafariQualificationNov08/foreground-canonical-negative/web/tests/foreground-lifecycle.test.mjs:40:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input was expected to not match the regular expression /PRIVATE OWN REQUEST|Household a|PRIVATE COOK/. Input:
+    
+    'Room in the CartEnglishSpanishLoading…Household aRefreshSign outAsk the shopperItemKeep the food name and any restrictions as written.Amount or pack count (optional)Intended tripThis pickupNext shopReview requestCopy your textYour requestsPRIVATE OWN REQUESTUnknown amountReceivedThis pickupFriday, November 6, 2026 at 7:00 AMEditWithdraw'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: 'Room in the CartEnglishSpanishLoading…Household aRefreshSign outAsk the shopperItemKeep the food name and any restrictions as written.Amount or pack count (optional)Intended tripThis pickupNext shopReview requestCopy your textYour requestsPRIVATE OWN REQUESTUnknown amountReceivedThis pickupFriday, November 6, 2026 at 7:00 AMEditWithdraw'
+  operator: 'doesNotMatch'
+  stack: |-
+    concealed (file:///Users/palatis/Room%20in%20the%20Cart/.build/SafariQualificationNov08/foreground-canonical-negative/web/tests/foreground-lifecycle.test.mjs:17:33)
+    TestContext.<anonymous> (file:///Users/palatis/Room%20in%20the%20Cart/.build/SafariQualificationNov08/foreground-canonical-negative/web/tests/foreground-lifecycle.test.mjs:43:134)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: foreground during actual pending send conceals, never reposts, and defers fresh load
+not ok 8 - foreground during actual pending send conceals, never reposts, and defers fresh load
+  ---
+  duration_ms: 182.135583
+  type: 'test'
+  location: '/Users/palatis/Room in the Cart/.build/SafariQualificationNov08/foreground-canonical-negative/web/tests/foreground-lifecycle.test.mjs:47:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input was expected to not match the regular expression /PRIVATE OWN REQUEST|Household a|PRIVATE COOK/. Input:
+    
+    'Room in the CartEnglishSpanishLoading…Household aRefreshSign outAsk the shopperReview before sendingUNSENT PRIVATE DRAFTUnknown amountThis pickupBack to editSend requestCopy your textYour requestsPRIVATE OWN REQUESTUnknown amountReceivedThis pickupFriday, November 6, 2026 at 7:00 AMEditWithdraw'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: 'Room in the CartEnglishSpanishLoading…Household aRefreshSign outAsk the shopperReview before sendingUNSENT PRIVATE DRAFTUnknown amountThis pickupBack to editSend requestCopy your textYour requestsPRIVATE OWN REQUESTUnknown amountReceivedThis pickupFriday, November 6, 2026 at 7:00 AMEditWithdraw'
+  operator: 'doesNotMatch'
+  stack: |-
+    concealed (file:///Users/palatis/Room%20in%20the%20Cart/.build/SafariQualificationNov08/foreground-canonical-negative/web/tests/foreground-lifecycle.test.mjs:17:33)
+    TestContext.<anonymous> (file:///Users/palatis/Room%20in%20the%20Cart/.build/SafariQualificationNov08/foreground-canonical-negative/web/tests/foreground-lifecycle.test.mjs:51:166)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: signout barrier prevents foreground authority reads and stale rendering
+ok 9 - signout barrier prevents foreground authority reads and stale rendering
+  ---
+  duration_ms: 256.472167
+  type: 'test'
+  ...
+# Subtest: helper foreground conceals private view until revoked result
+not ok 10 - helper foreground conceals private view until revoked result
+  ---
+  duration_ms: 157.601292
+  type: 'test'
+  location: '/Users/palatis/Room in the Cart/.build/SafariQualificationNov08/foreground-canonical-negative/web/tests/foreground-lifecycle.test.mjs:58:39'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input was expected to not match the regular expression /PRIVATE OWN REQUEST|Household a|PRIVATE COOK/. Input:
+    
+    'Room in the CartEnglishSpanishLoading…Household aRefreshSign outCurrent instructionsShop aAs of: Friday, November 6, 2026 at 7:00 AMRevision: 1Expires: Wednesday, December 31, 2098 at 7:00 PMPRIVATE COOK INSTRUCTIONUnknown amountPrepareSuggestions received by the serviceThese suggestions are recovered from your current account and invitation. They do not need to be sent again.No received suggestions for this invitation. An unsent draft cannot be recovered after reloading.Check received suggestionsThis view is read-only.'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: 'Room in the CartEnglishSpanishLoading…Household aRefreshSign outCurrent instructionsShop aAs of: Friday, November 6, 2026 at 7:00 AMRevision: 1Expires: Wednesday, December 31, 2098 at 7:00 PMPRIVATE COOK INSTRUCTIONUnknown amountPrepareSuggestions received by the serviceThese suggestions are recovered from your current account and invitation. They do not need to be sent again.No received suggestions for this invitation. An unsent draft cannot be recovered after reloading.Check received suggestionsThis view is read-only.'
+  operator: 'doesNotMatch'
+  stack: |-
+    concealed (file:///Users/palatis/Room%20in%20the%20Cart/.build/SafariQualificationNov08/foreground-canonical-negative/web/tests/foreground-lifecycle.test.mjs:17:33)
+    TestContext.<anonymous> (file:///Users/palatis/Room%20in%20the%20Cart/.build/SafariQualificationNov08/foreground-canonical-negative/web/tests/foreground-lifecycle.test.mjs:60:173)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: editor foreground conceals private view until revoked result
+not ok 11 - editor foreground conceals private view until revoked result
+  ---
+  duration_ms: 168.150458
+  type: 'test'
+  location: '/Users/palatis/Room in the Cart/.build/SafariQualificationNov08/foreground-canonical-negative/web/tests/foreground-lifecycle.test.mjs:58:39'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input was expected to not match the regular expression /PRIVATE OWN REQUEST|Household a|PRIVATE COOK/. Input:
+    
+    'Room in the CartEnglishSpanishLoading…Household aRefreshSign outCurrent instructionsShop aAs of: Friday, November 6, 2026 at 7:00 AMRevision: 1Expires: Wednesday, December 31, 2098 at 7:00 PMPRIVATE COOK INSTRUCTIONUnknown amountPrepareSuggestions received by the serviceThese suggestions are recovered from your current account and invitation. They do not need to be sent again.No received suggestions for this invitation. An unsent draft cannot be recovered after reloading.Check received suggestionsPropose a correctionCorrection for the shopper to reviewThis draft is only kept on this page. After reloading, only suggestions already received by the service can be recovered.Send proposal'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: 'Room in the CartEnglishSpanishLoading…Household aRefreshSign outCurrent instructionsShop aAs of: Friday, November 6, 2026 at 7:00 AMRevision: 1Expires: Wednesday, December 31, 2098 at 7:00 PMPRIVATE COOK INSTRUCTIONUnknown amountPrepareSuggestions received by the serviceThese suggestions are recovered from your current account and invitation. They do not need to be sent again.No received suggestions for this invitation. An unsent draft cannot be recovered after reloading.Check received suggestionsPropose a correctionCorrection for the shopper to reviewThis draft is only kept on this page. After reloading, only suggestions already received by the service can be recovered.Send proposal'
+  operator: 'doesNotMatch'
+  stack: |-
+    concealed (file:///Users/palatis/Room%20in%20the%20Cart/.build/SafariQualificationNov08/foreground-canonical-negative/web/tests/foreground-lifecycle.test.mjs:17:33)
+    TestContext.<anonymous> (file:///Users/palatis/Room%20in%20the%20Cart/.build/SafariQualificationNov08/foreground-canonical-negative/web/tests/foreground-lifecycle.test.mjs:60:173)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: two distinct foreground returns reject first-cycle authorization and require a newer read
+not ok 12 - two distinct foreground returns reject first-cycle authorization and require a newer read
+  ---
+  duration_ms: 146.217542
+  type: 'test'
+  location: '/Users/palatis/Room in the Cart/.build/SafariQualificationNov08/foreground-canonical-negative/web/tests/foreground-lifecycle.test.mjs:63:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input was expected to not match the regular expression /PRIVATE OWN REQUEST|Household a|PRIVATE COOK/. Input:
+    
+    'Room in the CartEnglishSpanishLoading…Household aRefreshSign outAsk the shopperItemKeep the food name and any restrictions as written.Amount or pack count (optional)Intended tripThis pickupNext shopReview requestCopy your textYour requestsPRIVATE OWN REQUESTUnknown amountReceivedThis pickupFriday, November 6, 2026 at 7:00 AMEditWithdraw'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: 'Room in the CartEnglishSpanishLoading…Household aRefreshSign outAsk the shopperItemKeep the food name and any restrictions as written.Amount or pack count (optional)Intended tripThis pickupNext shopReview requestCopy your textYour requestsPRIVATE OWN REQUESTUnknown amountReceivedThis pickupFriday, November 6, 2026 at 7:00 AMEditWithdraw'
+  operator: 'doesNotMatch'
+  stack: |-
+    concealed (file:///Users/palatis/Room%20in%20the%20Cart/.build/SafariQualificationNov08/foreground-canonical-negative/web/tests/foreground-lifecycle.test.mjs:17:33)
+    TestContext.<anonymous> (file:///Users/palatis/Room%20in%20the%20Cart/.build/SafariQualificationNov08/foreground-canonical-negative/web/tests/foreground-lifecycle.test.mjs:66:75)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..12
+# tests 12
+# suites 0
+# pass 3
+# fail 9
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3666.876042

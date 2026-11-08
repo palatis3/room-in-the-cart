@@ -1,0 +1,163 @@
+{
+  "observedAtUtc": "2026-11-08T05:04:02+00:00",
+  "source": {
+    "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+    "checkout": {
+      "parents": [
+        "1a2530a7ad006b5939f87a08a1964b5fc863383e",
+        "15f216b01e41c111ec99bbd812419cec32e6a5e4"
+      ],
+      "sha": "64d9f0d7b27c6c70566f318035c0156dee92b7c7",
+      "tree": "29a2792c0e7355b2b9f3c170e22891175536ba22"
+    },
+    "strictCheckerSHA256": "857f58676bd623c8c1d90828d30ef91cbe1ed5af3821d48592ab63837eccf6aa"
+  },
+  "runId": 42440464791,
+  "job": {
+    "completedAt": "2026-11-08T05:02:47Z",
+    "conclusion": "failure",
+    "failedSteps": [
+      "Run selected fixture tests and require complete execution"
+    ],
+    "id": 128624824824,
+    "name": "Fixture (SharedDeliveryUITests-recovery-cook-and-closeout)",
+    "startedAt": "2026-11-08T04:45:51Z",
+    "status": "completed"
+  },
+  "artifact": {
+    "id": 13604074151,
+    "name": "iphone-fixture-results-SharedDeliveryUITests-recovery-cook-and-closeout-1",
+    "digest": "sha256:e409f77c6dfac4e91fd4b34673b7ed968fb054e68c4b382ecda83b07a8f83460",
+    "size_in_bytes": 4838617,
+    "workflow_run": {
+      "id": 42440464791,
+      "repository_id": 1445928007,
+      "head_repository_id": 1445928007,
+      "head_branch": "codex/parallel-ios-ci",
+      "head_sha": "15f216b01e41c111ec99bbd812419cec32e6a5e4"
+    }
+  },
+  "collection": {
+    "rangeBytes": 32251,
+    "rangeReceiptSHA256": "ea1b4b0783c6c3b951397684d156e402f964a6b005cb6481df2a2a77b24af8b1",
+    "members": [
+      {
+        "file": "Tests.log",
+        "bytes": 186208,
+        "sha256": "73fc922cc73291c11dfd065d76eeb0684fb1c11ea181bb53866963e2a83564c1",
+        "zipCRC": 3990222924,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-details.json",
+        "bytes": 3235,
+        "sha256": "3b3f0bc4737a22d5bd5ad423cdc6500185039371f41b45bab2b26cb758d68149",
+        "zipCRC": 3350173496,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-plan/SharedDeliveryUITests-recovery-cook-and-closeout.txt",
+        "bytes": 532,
+        "sha256": "14afce1ee41211348af391106eccf800d6071bfead42a0a1e3202d28751abd99",
+        "zipCRC": 3384510446,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-runtime-warnings.json",
+        "bytes": 346,
+        "sha256": "c7800357c492169550fc48812417a5a2c91e5030d99f23f4581c92692bc521fa",
+        "zipCRC": 343625567,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-speech-runtime-error.txt",
+        "bytes": 44,
+        "sha256": "8b9e4a529f3e367142876bd0ce03ed7c7f10a50657c9a73fda0d6e30867e7523",
+        "zipCRC": 957490032,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-speech-runtime.json",
+        "bytes": 38429,
+        "sha256": "619c9c0ea4f102373cf647e3a95d14175be453e21e9f7b1109c0a8adf17fefdd",
+        "zipCRC": 829772834,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-speech-start.txt",
+        "bytes": 20,
+        "sha256": "8f5456b504a56bea793ae285e220e0339baae7a7fdf6180b62f5c85211648598",
+        "zipCRC": 768977706,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-summary.json",
+        "bytes": 707,
+        "sha256": "992546954028356c9e3e671f5e56b23985f28f84b8b8fb51bae45ee639930ce9",
+        "zipCRC": 2384113714,
+        "CRCVerified": true
+      }
+    ],
+    "fullArchiveDownloaded": false
+  },
+  "nativeResult": {
+    "result": "Passed",
+    "totalTestCount": 5,
+    "passedTests": 5,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "expectedFailures": 0,
+    "testFailures": []
+  },
+  "observedResultCounts": {
+    "Passed": 5
+  },
+  "plannedSelectors": [
+    "RoomInTheCartUITests/SharedDeliveryUITests/testShopperClosesWithPendingCreditThenLinksItToTheOriginalNetCharge",
+    "RoomInTheCartUITests/SharedDeliveryUITests/testShopperLeavesOriginalDinnerOpenAfterAnUnresolvedReplacementPreview",
+    "RoomInTheCartUITests/SharedDeliveryUITests/testShopperReplacesWednesdayAfterPickupAndKeepsTuesdaysShortage",
+    "RoomInTheCartUITests/SharedDeliveryUITests/testShopperReviewsExactEditedCookWordingBeforeReadback",
+    "RoomInTheCartUITests/SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord"
+  ],
+  "missingSelectors": [],
+  "extraSelectors": [],
+  "executedSelectors": [
+    {
+      "selector": "RoomInTheCartUITests/SharedDeliveryUITests/testShopperClosesWithPendingCreditThenLinksItToTheOriginalNetCharge",
+      "result": "Passed",
+      "durationSeconds": 233.83779001235962
+    },
+    {
+      "selector": "RoomInTheCartUITests/SharedDeliveryUITests/testShopperLeavesOriginalDinnerOpenAfterAnUnresolvedReplacementPreview",
+      "result": "Passed",
+      "durationSeconds": 70.46643102169037
+    },
+    {
+      "selector": "RoomInTheCartUITests/SharedDeliveryUITests/testShopperReplacesWednesdayAfterPickupAndKeepsTuesdaysShortage",
+      "result": "Passed",
+      "durationSeconds": 128.28864705562592
+    },
+    {
+      "selector": "RoomInTheCartUITests/SharedDeliveryUITests/testShopperReviewsExactEditedCookWordingBeforeReadback",
+      "result": "Passed",
+      "durationSeconds": 62.98368299007416
+    },
+    {
+      "selector": "RoomInTheCartUITests/SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord",
+      "result": "Passed",
+      "durationSeconds": 152.7354838848114
+    }
+  ],
+  "hostedWarningReceipt": {
+    "status": "unavailable",
+    "error": "Malformed XCTest runtime warning activity '[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions'. Expected one Complete Issue Description.txt attachment, found 0."
+  },
+  "resultTreeWarningNames": [
+    "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions"
+  ],
+  "console": {
+    "restartLines": [],
+    "failureRows": [],
+    "strictReplayFailures": []
+  }
+}

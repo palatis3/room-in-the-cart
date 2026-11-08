@@ -1,0 +1,107 @@
+{
+  "observedAtUtc": "2026-11-08T05:15:00+00:00",
+  "source": {
+    "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+    "mergeCheckout": "64d9f0d7b27c6c70566f318035c0156dee92b7c7",
+    "tree": "29a2792c0e7355b2b9f3c170e22891175536ba22",
+    "checkerSHA256": {
+      "scripts/check_ios_test_results.py": "857f58676bd623c8c1d90828d30ef91cbe1ed5af3821d48592ab63837eccf6aa",
+      "scripts/check_ios_performance.py": "f203f21510455a8a83300ee6968e8c5ac2bb14dd8c6afd5a6adb5caa7ce8a4c7",
+      "scripts/ios_performance_baselines.json": "38742a9b5f5eea668c608f117db602ac6a2b73aa56691c3ec3f90c291d15c38e"
+    }
+  },
+  "run": {
+    "attempt": 1,
+    "conclusion": "",
+    "event": "pull_request",
+    "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+    "name": "iOS fixture checks",
+    "runId": 42440464791,
+    "status": "in_progress",
+    "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42440464791"
+  },
+  "job": {
+    "completedAt": "2026-11-08T05:13:55Z",
+    "conclusion": "success",
+    "failedSteps": [],
+    "id": 128634556278,
+    "name": "Fixture (SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction)",
+    "startedAt": "2026-11-08T05:03:38Z",
+    "status": "completed"
+  },
+  "artifact": {
+    "id": 13604903936,
+    "name": "iphone-fixture-results-SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction-1",
+    "digest": "sha256:ddd762424ed8ba968933929e45e38802861027cdc6d322f3e1bde2e4f6431ca6",
+    "size_in_bytes": 6286461,
+    "workflow_run": {
+      "id": 42440464791,
+      "repository_id": 1445928007,
+      "head_repository_id": 1445928007,
+      "head_branch": "codex/parallel-ios-ci",
+      "head_sha": "15f216b01e41c111ec99bbd812419cec32e6a5e4"
+    }
+  },
+  "collection": {
+    "rangeReceiptSHA256": "3e809d77791ffcfa62a0aae4495ad4a6167a122ebdc3725535b6f499bec26984",
+    "rangeBytes": 19300,
+    "verifiedMembers": [
+      {
+        "file": "Tests.log",
+        "bytes": 97576,
+        "sha256": "c4260db65be194bdd544270c0658e662398ec6ff124633d67d1791f98f74b790",
+        "zipCRC": 151939157,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-details.json",
+        "bytes": 1241,
+        "sha256": "e321474c8bc914b3bd746d8eb01817fdf3735cc3a371ad99d423f6d2727f0558",
+        "zipCRC": 1850413621,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-plan/SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction.txt",
+        "bytes": 119,
+        "sha256": "18490653592a3d155fb4595c559cf5429ef83a3bffa302e4b8e2053a5b99b946",
+        "zipCRC": 3067623647,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-runtime-warnings.json",
+        "bytes": 182,
+        "sha256": "e18d0e7ad63a7e1be003b7165bdcb1e60ef8ba08bfa76b8f528bc431b6a02003",
+        "zipCRC": 635318996,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-summary.json",
+        "bytes": 707,
+        "sha256": "1d9517802788a09c504dad8e1b1eb6ad92d28a1b4450520a225d4d2337b91cc7",
+        "zipCRC": 3257681627,
+        "CRCVerified": true
+      }
+    ]
+  },
+  "strictResult": {
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "restarts": 0,
+    "selectors": {
+      "RoomInTheCartUITests/SharedStoreQuoteUITests/testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction": 312.3801580667496
+    },
+    "hostedWarningReceipt": {
+      "status": "passed",
+      "summaryWarningCount": null,
+      "runtimeWarningCount": 0,
+      "examinedTestCount": 1,
+      "detailExportCount": 1,
+      "activityExportCount": 0,
+      "warnings": []
+    },
+    "localSerialConsoleAndInventoryReplay": "passed"
+  },
+  "scope": "Original hosted metadata, exact serial XCTest console and bounded CRC-verified ZIP members. Full ZIP digest is GitHub metadata. No native execution."
+}

@@ -1,0 +1,118 @@
+{
+  "scope": "Exact bounded source copies; no screenshot exports exist for these baseline cases.",
+  "originalFrozenPinVerification": "Independently ran original verifyPin against all original bundle/helper files and referenced build/ancestor receipts before copying; identity161583ff8c0771c0bd85f3765a0a9981333840cfef91ed225ce793f11aee4414.",
+  "files": [
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/SafariQualificationNov08/foreground-proposal-r2/runs/foreground-same/receipt.json",
+      "retained": "foreground-same/receipt.json",
+      "bytes": 15353,
+      "sha256": "80c4e0afee294dd3d206c4a1a19a788c6412c929658dd23bead61416d49b54f1",
+      "byteExact": true
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/SafariQualificationNov08/foreground-proposal-r2/runs/foreground-same/root-review.json",
+      "retained": "foreground-same/root-review.json",
+      "bytes": 1324,
+      "sha256": "ae17fcb82542dd3ec65db1573750a1cd21df0c4dca09a90ae13001cec35dd16d",
+      "byteExact": true
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/SafariQualificationNov08/foreground-proposal-r2/runs/foreground-same/verification.log",
+      "retained": "foreground-same/verification.log",
+      "bytes": 739,
+      "sha256": "e8b1062071cbf8ef807378e8ba45faf40a13f3a365e2edd857bed8ce8281632c",
+      "byteExact": true
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/SafariQualificationNov08/foreground-proposal-r2/runs/foreground-revoked/receipt.json",
+      "retained": "foreground-revoked/receipt.json",
+      "bytes": 15886,
+      "sha256": "5ea30b9960f28d052d66881c66706e85b08300ad217d905b153eb558b505c0ff",
+      "byteExact": true
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/SafariQualificationNov08/foreground-proposal-r2/runs/foreground-revoked/root-review.json",
+      "retained": "foreground-revoked/root-review.json",
+      "bytes": 1324,
+      "sha256": "756740fe49c3b5ef5888ba12df602ff5a154f3f0ed30a70f82729e16229ed771",
+      "byteExact": true
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/SafariQualificationNov08/foreground-proposal-r2/runs/foreground-revoked/verification.log",
+      "retained": "foreground-revoked/verification.log",
+      "bytes": 739,
+      "sha256": "e8b1062071cbf8ef807378e8ba45faf40a13f3a365e2edd857bed8ce8281632c",
+      "byteExact": true
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/SafariQualificationNov08/foreground-proposal-r2/manifest.json",
+      "retained": "frozen/manifest.json",
+      "bytes": 4473,
+      "sha256": "6b608d2cc7019a3a871faddb6db73da67b59ca38afc5d7c8269ebb3f8a7933b3",
+      "byteExact": true
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/SafariQualificationNov08/foreground-proposal-r2/verify-foreground.mjs",
+      "retained": "frozen/verify-foreground.mjs",
+      "bytes": 5604,
+      "sha256": "583710e9ed83782ea0d4300a78decbf2d1aa4744775bcbcaf656f4f350f179b2",
+      "byteExact": true
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/SafariQualificationNov08/foreground-proposal-r2/observation.mjs",
+      "retained": "frozen/observation.mjs",
+      "bytes": 1904,
+      "sha256": "7b717f12fa68004bd1c319717343720e2b4247024a0986c91428fbd16c4f9626",
+      "byteExact": true
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/SafariQualificationNov08/foreground-proposal-r2/probe.js",
+      "retained": "frozen/probe.js",
+      "bytes": 5718,
+      "sha256": "350f326ccc09be60fbf78f3b25d444a795d534754fbec3cf932f0b300d7e3782",
+      "byteExact": true
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/SafariQualificationNov08/foreground-proposal-r2/fixture.mjs",
+      "retained": "frozen/fixture.mjs",
+      "bytes": 6219,
+      "sha256": "c526e26180cd74198f45d90113742b39e49d695e5e325b9b1864d883008515f5",
+      "byteExact": true
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/SafariQualificationNov08/foreground-proposal-r2/server.mjs",
+      "retained": "frozen/server.mjs",
+      "bytes": 4659,
+      "sha256": "a17e7d8b0365ba3013f3b92d6bd74524606d642a619f6a89111f743989304979",
+      "byteExact": true
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/SafariQualificationNov08/foreground-proposal-r2/verify-case.mjs",
+      "retained": "frozen/verify-case.mjs",
+      "bytes": 407,
+      "sha256": "b3941f7212b62108b220d85528a2da7d8c1e642fde523081fa4ffa0f496eeb36",
+      "byteExact": true
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/SafariQualificationNov08/foreground-proposal-r2/verify-pin.mjs",
+      "retained": "frozen/verify-pin.mjs",
+      "bytes": 1411,
+      "sha256": "fe80e355a75da6ea538087c268da983a4b31b358a86bdcb80b70eb399de0d93f",
+      "byteExact": true
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/SafariQualificationNov08/foreground-source-proposal/source-pins.json",
+      "retained": "prior-source-proof/source-pins.json",
+      "bytes": 3251,
+      "sha256": "70922a23e9604f68c71459934d207e4e58b8372abf712af53d57b30a63f3f69f",
+      "byteExact": true
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/SafariQualificationNov08/foreground-baseline-native-identity.json",
+      "retained": "native-identity.json",
+      "bytes": 764,
+      "sha256": "4ef53c1192fe608292df564697e878af2d4a27a6f19904fca745e6b5bb14cb03",
+      "byteExact": true
+    }
+  ]
+}

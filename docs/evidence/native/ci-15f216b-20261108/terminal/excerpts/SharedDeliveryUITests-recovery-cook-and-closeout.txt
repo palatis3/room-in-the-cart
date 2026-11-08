@@ -1,0 +1,43 @@
+Original: /Users/palatis/Room in the Cart/.build/CI15F216Nov08/SharedDeliveryUITests-recovery-cook-and-closeout/pristine-members/Tests.log
+Original SHA256: 73fc922cc73291c11dfd065d76eeb0684fb1c11ea181bb53866963e2a83564c1
+Only selected original line-numbered excerpts; omitted intervals are not continuous evidence.
+
+18: Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperClosesWithPendingCreditThenLinksItToTheOriginalNetCharge]' started.
+883: Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperClosesWithPendingCreditThenLinksItToTheOriginalNetCharge]' passed (233.838 seconds).
+884: Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperLeavesOriginalDinnerOpenAfterAnUnresolvedReplacementPreview]' started.
+1117: Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperLeavesOriginalDinnerOpenAfterAnUnresolvedReplacementPreview]' passed (70.466 seconds).
+1118: Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperReplacesWednesdayAfterPickupAndKeepsTuesdaysShortage]' started.
+1631: Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperReplacesWednesdayAfterPickupAndKeepsTuesdaysShortage]' passed (128.289 seconds).
+1632: Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperReviewsExactEditedCookWordingBeforeReadback]' started.
+1787:     t =    39.34s Tap "capture.readback.play" Button
+1788:     t =    39.34s     Wait for dev.roominthecart.app.debug to idle
+1789:     t =    39.35s     Find the "capture.readback.play" Button
+1790:     t =    39.42s     Check for interrupting elements affecting "capture.readback.play" Button
+1791:     t =    39.47s     Synthesize event
+1792:     t =    39.78s     Wait for dev.roominthecart.app.debug to idle
+1793:     t =    40.86s Checking existence of `"Pause readback" Button`
+1799:     t =    42.61s Tap "Pause readback" Button
+1800:     t =    42.61s     Wait for dev.roominthecart.app.debug to idle
+1801:     t =    42.61s     Find the "Pause readback" Button
+1802:     t =    42.68s     Check for interrupting elements affecting "Pause readback" Button
+1803:     t =    42.73s     Synthesize event
+1804:     t =    43.04s     Wait for dev.roominthecart.app.debug to idle
+1805:     t =    43.04s Waiting 3.0s for "Resume readback" Button to exist
+1809:     t =    44.29s Tap "Resume readback" Button
+1810:     t =    44.29s     Wait for dev.roominthecart.app.debug to idle
+1811:     t =    44.29s     Find the "Resume readback" Button
+1812:     t =    44.35s     Check for interrupting elements affecting "Resume readback" Button
+1813:     t =    44.45s     Synthesize event
+1814:     t =    44.75s     Wait for dev.roominthecart.app.debug to idle
+1815:     t =    44.77s Waiting 3.0s for "Stop readback" Button to exist
+1819:     t =    45.93s Tap "Stop readback" Button
+1820:     t =    45.93s     Wait for dev.roominthecart.app.debug to idle
+1821:     t =    45.93s     Find the "Stop readback" Button
+1822:     t =    46.01s     Check for interrupting elements affecting "Stop readback" Button
+1823:     t =    46.07s     Synthesize event
+1824:     t =    46.36s     Wait for dev.roominthecart.app.debug to idle
+1825:     t =    46.37s Checking existence of `StaticText (First Match)`
+1896: Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperReviewsExactEditedCookWordingBeforeReadback]' passed (62.984 seconds).
+1897: Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperSavesDatedCookCopyAndReopensRecipientSendRecord]' started.
+2523: Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperSavesDatedCookCopyAndReopensRecipientSendRecord]' passed (152.735 seconds).
+2537: ** TEST EXECUTE SUCCEEDED **

@@ -1,0 +1,65 @@
+{
+  "status": "foreground-prepared-not-executed",
+  "scope": [
+    "foreground-same",
+    "foreground-revoked"
+  ],
+  "previousRevision": {
+    "manifestIdentity": "09906d646a980d7d56cda098348cca204933db15d1894fa6d93a634bc4f8e674",
+    "manifestPath": "/Users/palatis/Room in the Cart/.build/SafariQualificationNov08/foreground-proposal/manifest.json",
+    "manifestSHA256": "045138dbadf454da3c414b99aca5e99177443b6ebd3c5e3fb01561d2f6b0628a"
+  },
+  "derivativeOf": {
+    "manifestIdentity": "bffa8e626fc1f2e5645864c38d0017ab215e19170aef59383c3d417cb6ddcb62",
+    "manifestPath": "/Users/palatis/Room in the Cart/.build/SafariQualificationNov08/proposal/manifest.json",
+    "manifestSHA256": "d36e5e55b1b7c0f951331f2efdf8015aefeb30a743420395d459e306bf6f8e20"
+  },
+  "verifiedBuild": {
+    "commit": "975cfb15ccc402b55d31960f6d03d46c66104d69",
+    "receipt": "/Users/palatis/Room in the Cart/.build/StagingCandidate042Nov08/verified-inputs.json",
+    "sha256": "6e451cf0e6ea29e497635680ff241f1d2c5032ae28e2e7de166d0392ed61d7d4"
+  },
+  "bundle": {
+    "apple-touch-icon.png": "e69ddd65f0718ffef895c0b82a63873d580722b920af40e86b1478a5cd9427e3",
+    "assets/index-B9I61_lh.css": "7cf18dacddae715ef01363daf5f2770fb9562762a10d2d2e4d41daf406224cee",
+    "assets/index-BcYhp7mE.js": "5bec4196cdf13ce38656be49ea5db6d18877a1e57d2c60aee62a77812fce5a61",
+    "icon.png": "dd8314efcedbe096fbce5c43f09af13a335d713a1dcfae43f82b4904d9e58914",
+    "index.html": "00e32d49f4136b5dc6e2115812ae27f69cda69f43a313b3fd283af13047ae84b"
+  },
+  "source": {
+    "api.ts": "c32e5596b858dafd66b04317691372c1582384e3f6a4c4f4905d30bce71b9ecc",
+    "app.ts": "92756619c5c9e5f384376e19b254240964cc25c59ba8dabc4aee09eeed3f2535",
+    "browser-sign-out.ts": "465269f619e1ad67b51366bf178bbc935f79a682381f6d86e33c975e676753c3",
+    "child-invitation-page.ts": "b3cf24c37911445043ac6b8080a332c37daa0e1b107119497d49fc99026adbf5",
+    "child-invitation.ts": "1d2f26a723c818344138b3776c6bc63f5ebf79d59bccd4d919059b294fe431db",
+    "config.ts": "c3c421cc03af511faaa5d3a1e2588bc8f3dae3e4f50d09d53dcec3133abeb090",
+    "i18n.ts": "b66fd8ae7d664201cde68aacd403a75ec7a09138c35e8d488640044d42757fdc",
+    "main.ts": "2d8c565430d4267acf49983209240dbb6914d20c66083c4bbfc7f1e6f1740e1c",
+    "outbox.ts": "add5fb28a9d22068a565ec19697db9189a02f06b62b440ece42742afec378cbd",
+    "public-pages-content.ts": "57661a3e73f3e36a1455bd6e8aceb6de12ed3fd696be5c7d0e9a072dc88a273a",
+    "public-pages.css": "5720c8c6d112e728eb9341f220e313a5ca6e3cd646819de02ce5459a526d85e3",
+    "public-pages.ts": "0a4d954a671663a81eecd27e9b21780465099982835b2920697467a156598661",
+    "public-site-configuration.ts": "1b529d8692fd71a1ca64b4b4c4e0e6700327144fad3595b6e00f590b457d1518",
+    "style.css": "0f4388a8942c624ba6b5b36d0e8cada9564943ff55271719f3458d4c71c20fba",
+    "theme.css": "39b339ff38c3ebf4bee9a7a3a59254f87f01331d0a1df69b0c163d1d5c475ba5"
+  },
+  "helpers": {
+    "README.md": "1b6617b6274dd2fb6307c4b700d9e967decef8eeec01ed9a30a7869438f3c843",
+    "fixture.mjs": "c526e26180cd74198f45d90113742b39e49d695e5e325b9b1864d883008515f5",
+    "fixture.test.mjs": "6ca3efae0c6ce8cb3435272617aa1576dd53c97c39ca538753974e3e957b18ee",
+    "foreground.test.mjs": "7dde7858ae096616ba4a3f3e61e0b7af93e4473324a14b62dcdcdad536882212",
+    "observation.mjs": "7b717f12fa68004bd1c319717343720e2b4247024a0986c91428fbd16c4f9626",
+    "original-negative-control.mjs": "70909f9108e3b38ed3901d0622240b911e8c1d136850871ff42cfee8abf90233",
+    "pin.mjs": "22b95c99d0523e73c455ba83e04f23250246b140c2c0dc3880c66b612e2c93f2",
+    "probe.js": "350f326ccc09be60fbf78f3b25d444a795d534754fbec3cf932f0b300d7e3782",
+    "probe.test.mjs": "6d2c2ca4378f4ddb0b3133ff23bc21836a23bb0ff0105f245070c0c400649cc6",
+    "review-regressions-original-shapes.mjs": "399eed74d5dc4ad6fd70751320719bb69225aca76cce12c25ec70754b3ff19ec",
+    "review-regressions.mjs": "54eec87fdaaa1851274500b0afa0ff1620380aac8ef0ff5fb91f8e21a219a77b",
+    "review-regressions.test.mjs": "0722d0f11be835526c242dc1defb322d9dc0e06c3115d0b216de8058581380aa",
+    "server.mjs": "a17e7d8b0365ba3013f3b92d6bd74524606d642a619f6a89111f743989304979",
+    "verify-case.mjs": "b3941f7212b62108b220d85528a2da7d8c1e642fde523081fa4ffa0f496eeb36",
+    "verify-foreground.mjs": "583710e9ed83782ea0d4300a78decbf2d1aa4744775bcbcaf656f4f350f179b2",
+    "verify-pin.mjs": "fe80e355a75da6ea538087c268da983a4b31b358a86bdcb80b70eb399de0d93f"
+  },
+  "identity": "161583ff8c0771c0bd85f3765a0a9981333840cfef91ed225ce793f11aee4414"
+}

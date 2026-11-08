@@ -1,0 +1,37 @@
+{
+  "preparedAtUTC": "2026-11-08T05:11:52.877883+00:00",
+  "status": "fixed-harness-ready-not-executed",
+  "identity": "9d8302a00fde50e5e137166a52bd4496745f69e348e23acd974a3a43f794f5ba",
+  "manifestSHA256": "149d2c3ef241300b0c1f6b161431622be508890a9a220c7235ba295278d1deed",
+  "originalIdentity": "161583ff8c0771c0bd85f3765a0a9981333840cfef91ed225ce793f11aee4414",
+  "fullOriginalTreeFilesUnchanged": 36,
+  "copiedHelpersByteIdentical": [
+    "fixture.mjs",
+    "fixture.test.mjs",
+    "foreground.test.mjs",
+    "observation.mjs",
+    "original-negative-control.mjs",
+    "probe.js",
+    "probe.test.mjs",
+    "review-regressions-original-shapes.mjs",
+    "review-regressions.mjs",
+    "review-regressions.test.mjs",
+    "server.mjs",
+    "verify-case.mjs",
+    "verify-foreground.mjs",
+    "verify-pin.mjs"
+  ],
+  "changedHelperFiles": [
+    "README.md",
+    "pin.mjs"
+  ],
+  "exactBundleFilesMatched": 5,
+  "installedTypeScriptSourcesMatched": 12,
+  "buildReceiptSHA256": "076e56f429de76022c4e8e3f994a7ace2478e62044839f62d8d63ebf970b0015",
+  "originalPreservationSHA256": "6c6e54dbd3d66d83c7b366d6fd1b48e9cb5af53c5d33f471a72441eacb582ac1",
+  "fixedOriginSHA256": "5625c733b3bad430d5a079c03e9340758dc13f13003dea07855e5bb2f986bbc5",
+  "bothVerifyPinCalls": "passed",
+  "serversListenersBrowsersNativeBuildsStarted": 0,
+  "newTestsOrBranches": 0,
+  "runsDirectoryEmpty": true
+}

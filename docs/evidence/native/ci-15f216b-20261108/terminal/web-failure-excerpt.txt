@@ -1,0 +1,120 @@
+634-2026-11-08T02:54:57.5781529Z   ...
+635-2026-11-08T02:54:57.5970862Z # Subtest: queue cleanup while disconnected offers a fresh access check without replay
+636-2026-11-08T02:54:57.5972158Z ok 76 - queue cleanup while disconnected offers a fresh access check without replay
+637-2026-11-08T02:54:57.5972935Z   ---
+638-2026-11-08T02:54:57.5973298Z   duration_ms: 19.362415
+639-2026-11-08T02:54:57.5973723Z   type: 'test'
+640-2026-11-08T02:54:57.5974087Z   ...
+641:2026-11-08T02:54:57.6168903Z # Subtest: failed sign-out clears private content and background reload cannot restore it
+642:2026-11-08T02:54:57.6170222Z ok 77 - failed sign-out clears private content and background reload cannot restore it
+643-2026-11-08T02:54:57.6171187Z   ---
+644-2026-11-08T02:54:57.6171684Z   duration_ms: 19.412559
+645-2026-11-08T02:54:57.6172244Z   type: 'test'
+646-2026-11-08T02:54:57.6172735Z   ...
+647-2026-11-08T02:54:57.6384111Z # Subtest: an interrupted sign-out stays private across a cold reload and retries with the current session
+648-2026-11-08T02:54:57.6385721Z ok 78 - an interrupted sign-out stays private across a cold reload and retries with the current session
+649-2026-11-08T02:54:57.6386940Z   ---
+--
+652-2026-11-08T02:54:57.6388368Z   ...
+653-2026-11-08T02:54:57.6580490Z # Subtest: a lost successful sign-out response can be confirmed after reload without posting a second logout
+654-2026-11-08T02:54:57.6582458Z ok 79 - a lost successful sign-out response can be confirmed after reload without posting a second logout
+655-2026-11-08T02:54:57.6583746Z   ---
+656-2026-11-08T02:54:57.6584478Z   duration_ms: 21.050619
+657-2026-11-08T02:54:57.6585031Z   type: 'test'
+658-2026-11-08T02:54:57.6585480Z   ...
+659:2026-11-08T02:54:57.6633050Z # Subtest: failed helper loading never falls back to the contributor form
+660:2026-11-08T02:54:57.6634466Z ok 80 - failed helper loading never falls back to the contributor form
+661-2026-11-08T02:54:57.6635318Z   ---
+662-2026-11-08T02:54:57.6635771Z   duration_ms: 5.5084
+663-2026-11-08T02:54:57.6636290Z   type: 'test'
+664-2026-11-08T02:54:57.6636732Z   ...
+665-2026-11-08T02:54:57.6637540Z # Subtest: narrow session validation rejects malformed identity and expiry
+666-2026-11-08T02:54:57.6638859Z ok 81 - narrow session validation rejects malformed identity and expiry
+667-2026-11-08T02:54:57.6648431Z   ---
+--
+754-2026-11-08T02:54:57.7508642Z   ...
+755-2026-11-08T02:54:57.7509631Z # Subtest: helper session activation sends and verifies the selected grant
+756-2026-11-08T02:54:57.7511381Z ok 96 - helper session activation sends and verifies the selected grant
+757-2026-11-08T02:54:57.7512007Z   ---
+758-2026-11-08T02:54:57.7512342Z   duration_ms: 0.573424
+759-2026-11-08T02:54:57.7512612Z   type: 'test'
+760-2026-11-08T02:54:57.7512818Z   ...
+761:2026-11-08T02:54:57.7703794Z # Subtest: successful Refresh preserves an actual failed-save notice and unsent draft
+762:2026-11-08T02:54:57.7705709Z ok 97 - successful Refresh preserves an actual failed-save notice and unsent draft
+763-2026-11-08T02:54:57.7706972Z   ---
+764-2026-11-08T02:54:57.7707971Z   duration_ms: 19.353308
+765-2026-11-08T02:54:57.7708768Z   type: 'test'
+766-2026-11-08T02:54:57.7709311Z   ...
+767-2026-11-08T02:54:57.7858487Z # Subtest: a reviewed request cannot silently move to a newly selected shop
+768-2026-11-08T02:54:57.7860750Z ok 98 - a reviewed request cannot silently move to a newly selected shop
+769-2026-11-08T02:54:57.7861531Z   ---
+--
+838-2026-11-08T02:54:58.0521545Z   ...
+839-2026-11-08T02:54:58.0689106Z # Subtest: full app recreation recovers received suggestions from the service without a local intent or submission
+840-2026-11-08T02:54:58.0690705Z ok 110 - full app recreation recovers received suggestions from the service without a local intent or submission
+841-2026-11-08T02:54:58.0691572Z   ---
+842-2026-11-08T02:54:58.0692159Z   duration_ms: 18.751187
+843-2026-11-08T02:54:58.0692783Z   type: 'test'
+844-2026-11-08T02:54:58.0693353Z   ...
+845:2026-11-08T02:54:58.0875774Z # Subtest: failed discovery blocks a new suggestion until explicit recovery succeeds and permits read-only own status
+846:2026-11-08T02:54:58.0878233Z ok 111 - failed discovery blocks a new suggestion until explicit recovery succeeds and permits read-only own status
+847-2026-11-08T02:54:58.0879609Z   ---
+848-2026-11-08T02:54:58.0880214Z   duration_ms: 18.599887
+849-2026-11-08T02:54:58.0880565Z   type: 'test'
+850-2026-11-08T02:54:58.0880780Z   ...
+851-2026-11-08T02:54:58.1230968Z # Subtest: late received-page response cannot expose old actor data after account switch or local expiry
+852-2026-11-08T02:54:58.1231929Z ok 112 - late received-page response cannot expose old actor data after account switch or local expiry
+853-2026-11-08T02:54:58.1232442Z   ---
+--
+1022-2026-11-08T02:54:58.2818997Z   duration_ms: 158.429757
+1023-2026-11-08T02:54:58.2819294Z   type: 'test'
+1024-2026-11-08T02:54:58.2819513Z   ...
+1025-2026-11-08T02:54:58.2819725Z 1..140
+1026-2026-11-08T02:54:58.2819912Z # tests 140
+1027-2026-11-08T02:54:58.2820094Z # suites 0
+1028-2026-11-08T02:54:58.2820276Z # pass 140
+1029:2026-11-08T02:54:58.2820452Z # fail 0
+1030-2026-11-08T02:54:58.2820642Z # cancelled 0
+1031-2026-11-08T02:54:58.2820845Z # skipped 0
+1032-2026-11-08T02:54:58.2821025Z # todo 0
+1033-2026-11-08T02:54:58.2821235Z # duration_ms 3646.239129
+1034-2026-11-08T02:54:58.2961251Z ##[group]Run npm run test:browser
+1035-2026-11-08T02:54:58.2961566Z [36;1mnpm run test:browser[0m
+1036-2026-11-08T02:54:58.2981487Z shell: /usr/bin/bash -e {0}
+--
+1049-2026-11-08T02:55:13.8877369Z   failureType: 'testCodeFailure'
+1050-2026-11-08T02:55:13.8878030Z   error: |-
+1051-2026-11-08T02:55:13.8878503Z     browserType.launch: Timeout 15000ms exceeded.
+1052-2026-11-08T02:55:13.8878884Z     Call log:
+1053-2026-11-08T02:55:13.8887430Z       - <launching> /usr/bin/google-chrome --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-breakpad --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-edgeupdater --disable-extensions --disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,HttpsUpgrades,HttpsFirstBalancedModeAutoEnable,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,AvoidCorsURLLoaderRestartOnRedirect,TcpPortRandomizationWin,OptimizationHints,NetworkTimeServiceQuerying,AimEnabled,PreconnectToSearch,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion --enable-features=CDPScreenshotNewSurface,SkipListAccountsWithoutGaiaCookies --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --disable-updater-scheduler --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --enable-unsafe-swiftshader --edge-skip-compat-layer-relaunch --disable-stack-profiler --disable-infobars --disable-sync --do-not-de-elevate --headless --hide-scrollbars --mute-audio --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --no-sandbox --user-data-dir=/tmp/playwright_chromiumdev_profile-StLz2b --remote-debugging-pipe --no-startup-window
+1054-2026-11-08T02:55:13.8896020Z       - <launched> pid=2566
+1055-2026-11-08T02:55:13.8896271Z     
+1056:2026-11-08T02:55:13.8896473Z   code: 'ERR_TEST_FAILURE'
+1057:2026-11-08T02:55:13.8896718Z   name: 'TimeoutError'
+1058-2026-11-08T02:55:13.8896935Z   stack: |-
+1059-2026-11-08T02:55:13.8897720Z     TestContext.<anonymous> (/home/runner/work/room-in-the-cart/room-in-the-cart/web/tests/browser/history-privacy.test.mjs:76:34)
+1060-2026-11-08T02:55:13.8898316Z   ...
+1061-2026-11-08T02:55:35.2301683Z # Subtest: Refresh reconciles a queued request after IndexedDB eviction without resending it
+1062-2026-11-08T02:55:35.2303348Z ok 2 - Refresh reconciles a queued request after IndexedDB eviction without resending it
+1063-2026-11-08T02:55:35.2304336Z   ---
+1064-2026-11-08T02:55:35.2304883Z   duration_ms: 9943.618633
+1065-2026-11-08T02:55:35.2305494Z   type: 'test'
+1066-2026-11-08T02:55:35.2306006Z   ...
+1067-2026-11-08T02:55:35.2306559Z # Chrome 156.0.8078.79
+1068-2026-11-08T02:55:35.2471022Z 1..2
+1069-2026-11-08T02:55:35.2472991Z # tests 2
+1070-2026-11-08T02:55:35.2473628Z # suites 0
+1071-2026-11-08T02:55:35.2474293Z # pass 1
+1072:2026-11-08T02:55:35.2475327Z # fail 1
+1073-2026-11-08T02:55:35.2475719Z # cancelled 0
+1074-2026-11-08T02:55:35.2476279Z # skipped 0
+1075-2026-11-08T02:55:35.2476867Z # todo 0
+1076-2026-11-08T02:55:35.2477753Z # duration_ms 36819.350286
+1077:2026-11-08T02:55:35.2614920Z ##[error]Process completed with exit code 1.
+1078-2026-11-08T02:55:35.2790728Z Post job cleanup.
+1079-2026-11-08T02:55:35.3653024Z [command]/usr/bin/git version
+1080-2026-11-08T02:55:35.3700909Z git version 2.56.0
+1081-2026-11-08T02:55:35.3745453Z Temporarily overriding HOME='/home/runner/work/_temp/be055a74-1a05-4d95-a90b-97a6f0b7b318' before making global git config changes
+1082-2026-11-08T02:55:35.3746434Z Adding repository directory to the temporary git global config as a safe directory
+1083-2026-11-08T02:55:35.3751844Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/room-in-the-cart/room-in-the-cart
+1084-2026-11-08T02:55:35.3792461Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand

@@ -1,0 +1,581 @@
+{
+  "observedAtUtc": "2026-11-08T05:16:51Z",
+  "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+  "runs": [
+    {
+      "attempt": 1,
+      "conclusion": "failure",
+      "event": "pull_request",
+      "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+      "jobs": [
+        {
+          "completedAt": "2026-11-08T02:54:43Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608399660,
+          "name": "source-checks",
+          "startedAt": "2026-11-08T02:54:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T02:54:50Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608399731,
+          "name": "typescript (service)",
+          "startedAt": "2026-11-08T02:54:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T02:55:37Z",
+          "conclusion": "failure",
+          "failedSteps": [
+            "Check contributor outbox and history privacy in Chrome"
+          ],
+          "id": 128608399841,
+          "name": "typescript (web)",
+          "startedAt": "2026-11-08T02:54:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T02:56:16Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608399854,
+          "name": "service-postgres",
+          "startedAt": "2026-11-08T02:54:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T03:04:33Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608399893,
+          "name": "ios-build",
+          "startedAt": "2026-11-08T02:54:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T03:01:41Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608400044,
+          "name": "ios-release",
+          "startedAt": "2026-11-08T02:54:25Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T03:02:39Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608400083,
+          "name": "swift-packages",
+          "startedAt": "2026-11-08T02:59:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T03:31:52Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608400221,
+          "name": "ios-swift-codeql",
+          "startedAt": "2026-11-08T02:57:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T03:33:21Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128610476718,
+          "name": "ios-tests (ui-03, 6)",
+          "startedAt": "2026-11-08T03:11:34Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T03:35:44Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128610476890,
+          "name": "ios-tests (ui-01, 5)",
+          "startedAt": "2026-11-08T03:12:42Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T03:19:00Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128610476904,
+          "name": "ios-tests (models, 696)",
+          "startedAt": "2026-11-08T03:10:55Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T03:59:39Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128610477030,
+          "name": "ios-tests (ui-04, 6)",
+          "startedAt": "2026-11-08T03:31:55Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T03:43:15Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128610477032,
+          "name": "ios-tests (ui-02, 7)",
+          "startedAt": "2026-11-08T03:15:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T04:13:59Z",
+          "conclusion": "failure",
+          "failedSteps": [
+            "Run selected tests and verify complete execution"
+          ],
+          "id": 128613594078,
+          "name": "ios-tests (ui-05, 6)",
+          "startedAt": "2026-11-08T03:55:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T04:31:47Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128616614616,
+          "name": "ios-tests (ui-06, 8)",
+          "startedAt": "2026-11-08T04:14:21Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T04:45:49Z",
+          "conclusion": "failure",
+          "failedSteps": [
+            "Run selected tests and verify complete execution"
+          ],
+          "id": 128617122245,
+          "name": "ios-tests (ui-07, 8)",
+          "startedAt": "2026-11-08T04:14:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T04:14:24Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128618649542,
+          "name": "ios-tests (ui-08, 7)",
+          "startedAt": "2026-11-08T03:56:02Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T04:46:26Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128621833502,
+          "name": "ios-tests (ui-09, 8)",
+          "startedAt": "2026-11-08T04:20:11Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T04:54:57Z",
+          "conclusion": "failure",
+          "failedSteps": [
+            "Run selected tests and verify complete execution"
+          ],
+          "id": 128624830058,
+          "name": "ios-tests (ui-10, 7)",
+          "startedAt": "2026-11-08T04:25:11Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T04:55:03Z",
+          "conclusion": "failure",
+          "failedSteps": [
+            "Require every build and test job to succeed"
+          ],
+          "id": 128633032161,
+          "name": "CI gate",
+          "startedAt": "2026-11-08T04:55:00Z",
+          "status": "completed"
+        }
+      ],
+      "name": "Build and test",
+      "runId": 42440464721,
+      "status": "completed",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42440464721"
+    },
+    {
+      "attempt": 1,
+      "conclusion": "success",
+      "event": "pull_request",
+      "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+      "jobs": [
+        {
+          "completedAt": "2026-11-08T02:59:10Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608400012,
+          "name": "sanitizers (thread)",
+          "startedAt": "2026-11-08T02:54:25Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T03:04:26Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608400043,
+          "name": "sanitizers (address)",
+          "startedAt": "2026-11-08T03:01:44Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T03:11:30Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608400173,
+          "name": "storekit (es, US Spanish app · Spanish (Mexico) offer · USA storefront)",
+          "startedAt": "2026-11-08T03:04:36Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T03:15:37Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608400424,
+          "name": "storekit (en, US English — local StoreKit)",
+          "startedAt": "2026-11-08T03:05:49Z",
+          "status": "completed"
+        }
+      ],
+      "name": "iOS deep checks",
+      "runId": 42440464691,
+      "status": "completed",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42440464691"
+    },
+    {
+      "attempt": 1,
+      "conclusion": "failure",
+      "event": "pull_request",
+      "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+      "jobs": [
+        {
+          "completedAt": "2026-11-08T02:54:31Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608400025,
+          "name": "fixture-plan",
+          "startedAt": "2026-11-08T02:54:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T03:10:52Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608432407,
+          "name": "Build contributor, stock and carryover fixtures",
+          "startedAt": "2026-11-08T03:02:42Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T03:12:39Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608432581,
+          "name": "Build dinner decision fixture",
+          "startedAt": "2026-11-08T03:04:28Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T03:55:11Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128612236397,
+          "name": "Fixture (contributor-balanced-02)",
+          "startedAt": "2026-11-08T03:30:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T04:20:07Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128612236597,
+          "name": "Fixture (contributor-balanced-03)",
+          "startedAt": "2026-11-08T03:59:42Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T04:13:57Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128612236658,
+          "name": "Fixture (contributor-balanced-01)",
+          "startedAt": "2026-11-08T03:52:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T03:55:59Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128612236669,
+          "name": "Fixture (contributor-balanced-04)",
+          "startedAt": "2026-11-08T03:33:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T04:14:18Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128612236684,
+          "name": "Fixture (contributor-balanced-05)",
+          "startedAt": "2026-11-08T03:49:36Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T04:25:07Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128620991581,
+          "name": "Fixture (RecordsMediaUITests)",
+          "startedAt": "2026-11-08T04:14:02Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T04:45:26Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128621149453,
+          "name": "Fixture (SharedDeliveryUITests-stock-and-purchase)",
+          "startedAt": "2026-11-08T04:31:49Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T05:02:47Z",
+          "conclusion": "failure",
+          "failedSteps": [
+            "Run selected fixture tests and require complete execution"
+          ],
+          "id": 128624824824,
+          "name": "Fixture (SharedDeliveryUITests-recovery-cook-and-closeout)",
+          "startedAt": "2026-11-08T04:45:51Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T04:23:54Z",
+          "conclusion": "failure",
+          "failedSteps": [
+            "Run selected fixture tests and require complete execution"
+          ],
+          "id": 128624899598,
+          "name": "Fixture (SharedFallbackUITests)",
+          "startedAt": "2026-11-08T04:14:27Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T04:58:26Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128626094384,
+          "name": "Fixture (SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview)",
+          "startedAt": "2026-11-08T04:46:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T05:03:35Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128626872278,
+          "name": "Fixture (SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn)",
+          "startedAt": "2026-11-08T04:55:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T04:52:44Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128627124142,
+          "name": "Fixture (SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult)",
+          "startedAt": "2026-11-08T04:45:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T05:13:40Z",
+          "conclusion": "failure",
+          "failedSteps": [
+            "Run selected fixture tests and require complete execution"
+          ],
+          "id": 128631169252,
+          "name": "Fixture (SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption)",
+          "startedAt": "2026-11-08T05:02:50Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T05:06:52Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128632608362,
+          "name": "Fixture (SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave)",
+          "startedAt": "2026-11-08T04:52:48Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T05:06:18Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128633685007,
+          "name": "Fixture (SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable)",
+          "startedAt": "2026-11-08T04:58:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T05:13:55Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128634556278,
+          "name": "Fixture (SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction)",
+          "startedAt": "2026-11-08T05:03:38Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T05:16:18Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128634727680,
+          "name": "Fixture (DinnerDecisionSheetUITests)",
+          "startedAt": "2026-11-08T05:03:38Z",
+          "status": "completed"
+        }
+      ],
+      "name": "iOS fixture checks",
+      "runId": 42440464791,
+      "status": "completed",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42440464791"
+    },
+    {
+      "attempt": 1,
+      "conclusion": "success",
+      "event": "pull_request",
+      "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+      "jobs": [
+        {
+          "completedAt": "2026-11-08T03:05:46Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608399586,
+          "name": "Build optimized iPhone test products",
+          "startedAt": "2026-11-08T02:54:25Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T03:30:18Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128610747362,
+          "name": "Release performance (launch)",
+          "startedAt": "2026-11-08T03:19:03Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T03:49:33Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128610747545,
+          "name": "Release performance (rendered)",
+          "startedAt": "2026-11-08T03:35:47Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T03:52:08Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128610747620,
+          "name": "Release performance (scroll)",
+          "startedAt": "2026-11-08T03:43:19Z",
+          "status": "completed"
+        }
+      ],
+      "name": "iOS Release performance",
+      "runId": 42440464669,
+      "status": "completed",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42440464669"
+    },
+    {
+      "attempt": 1,
+      "conclusion": "success",
+      "event": "pull_request",
+      "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+      "jobs": [
+        {
+          "completedAt": "2026-11-08T02:56:56Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608399778,
+          "name": "native-wire",
+          "startedAt": "2026-11-08T02:54:25Z",
+          "status": "completed"
+        }
+      ],
+      "name": "Native Swift HTTPS and PostgreSQL",
+      "runId": 42440464677,
+      "status": "completed",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42440464677"
+    },
+    {
+      "attempt": 1,
+      "conclusion": "success",
+      "event": "pull_request",
+      "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+      "jobs": [
+        {
+          "completedAt": "2026-11-08T02:54:32Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608399288,
+          "name": "Dependency review",
+          "startedAt": "2026-11-08T02:54:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T02:55:58Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608399508,
+          "name": "CodeQL (javascript-typescript)",
+          "startedAt": "2026-11-08T02:54:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T02:55:07Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608399567,
+          "name": "CodeQL (actions)",
+          "startedAt": "2026-11-08T02:54:24Z",
+          "status": "completed"
+        }
+      ],
+      "name": "Security checks",
+      "runId": 42440464675,
+      "status": "completed",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42440464675"
+    }
+  ],
+  "previousObservedAtUtc": "2026-11-08T05:14:31Z",
+  "changes": [
+    {
+      "type": "workflow",
+      "runId": 42440464791,
+      "name": "iOS fixture checks",
+      "from": "in_progress",
+      "to": "failure"
+    },
+    {
+      "type": "job",
+      "runId": 42440464791,
+      "id": 128634727680,
+      "name": "Fixture (DinnerDecisionSheetUITests)",
+      "from": "in_progress",
+      "to": "success",
+      "failedSteps": []
+    }
+  ]
+}

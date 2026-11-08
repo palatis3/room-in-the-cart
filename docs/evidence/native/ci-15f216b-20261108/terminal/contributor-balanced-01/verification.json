@@ -1,0 +1,109 @@
+{
+  "observedAtUtc": "2026-11-08T04:15:50+00:00",
+  "source": {
+    "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+    "mergeCheckout": "64d9f0d7b27c6c70566f318035c0156dee92b7c7",
+    "tree": "29a2792c0e7355b2b9f3c170e22891175536ba22",
+    "checkerSHA256": {
+      "scripts/check_ios_test_results.py": "857f58676bd623c8c1d90828d30ef91cbe1ed5af3821d48592ab63837eccf6aa",
+      "scripts/check_ios_performance.py": "f203f21510455a8a83300ee6968e8c5ac2bb14dd8c6afd5a6adb5caa7ce8a4c7",
+      "scripts/ios_performance_baselines.json": "38742a9b5f5eea668c608f117db602ac6a2b73aa56691c3ec3f90c291d15c38e"
+    }
+  },
+  "run": {
+    "attempt": 1,
+    "conclusion": "",
+    "event": "pull_request",
+    "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+    "name": "iOS fixture checks",
+    "runId": 42440464791,
+    "status": "pending",
+    "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42440464791"
+  },
+  "job": {
+    "completedAt": "2026-11-08T04:13:57Z",
+    "conclusion": "success",
+    "failedSteps": [],
+    "id": 128612236658,
+    "name": "Fixture (contributor-balanced-01)",
+    "startedAt": "2026-11-08T03:52:10Z",
+    "status": "completed"
+  },
+  "artifact": {
+    "id": 13603920480,
+    "name": "iphone-fixture-results-contributor-balanced-01-1",
+    "digest": "sha256:2a0a9905b315968abbfa1aba21c3f63d5de18717719be53eb54d0c8ba301798d",
+    "size_in_bytes": 24384137,
+    "workflow_run": {
+      "id": 42440464791,
+      "repository_id": 1445928007,
+      "head_repository_id": 1445928007,
+      "head_branch": "codex/parallel-ios-ci",
+      "head_sha": "15f216b01e41c111ec99bbd812419cec32e6a5e4"
+    }
+  },
+  "collection": {
+    "rangeReceiptSHA256": "91acf3d7f5943c0d19401f3be8d39ac6c4a57d67514c198a61bdf44d661a6ae0",
+    "rangeBytes": 79800,
+    "verifiedMembers": [
+      {
+        "file": "Tests.log",
+        "bytes": 549521,
+        "sha256": "969190bd4ee2f3aca0d1e87109bd905e2b0a7bda0ff422f78ec21502a2a288cf",
+        "zipCRC": 575696919,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-details.json",
+        "bytes": 2428,
+        "sha256": "7dfe7df8b62c6997dcb46a86f2b8880b70c17e3fbbfeff07d8672eacc75fcc5c",
+        "zipCRC": 1186405907,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-plan/contributor-balanced-01.txt",
+        "bytes": 366,
+        "sha256": "90b926b7d37a73949c13ca3d6375428359bc3f5da0b9b7ceabdd6db70c85ab7a",
+        "zipCRC": 503147678,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-runtime-warnings.json",
+        "bytes": 182,
+        "sha256": "19ded0e93376e15b1b5aa293e8a036973cf92d88c8d39ba866abb9ea6e1d28c9",
+        "zipCRC": 825844554,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-summary.json",
+        "bytes": 706,
+        "sha256": "eece4e6cbcc6edca93e38d5be252375c6a9b19115503045d11c737c16fb58a47",
+        "zipCRC": 1388363054,
+        "CRCVerified": true
+      }
+    ]
+  },
+  "strictResult": {
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "restarts": 0,
+    "selectors": {
+      "RoomInTheCartUITests/DinnerAwayCarryoverUITests/testPhysicalCarryoverCancelApplyAndRestartKeepOriginalPurchase": 176.3757280111313,
+      "RoomInTheCartUITests/RequestDuplicateComparisonUITests/testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison": 560.41845703125,
+      "RoomInTheCartUITests/RequestDuplicateComparisonUITests/testSplitPageComparisonPreservesBothUsesAndCancelHasNoWriteThenDecidesOnlySam": 241.0059199333191
+    },
+    "hostedWarningReceipt": {
+      "status": "passed",
+      "summaryWarningCount": null,
+      "runtimeWarningCount": 0,
+      "examinedTestCount": 3,
+      "detailExportCount": 3,
+      "activityExportCount": 0,
+      "warnings": []
+    },
+    "localSerialConsoleAndInventoryReplay": "passed"
+  },
+  "scope": "Original hosted metadata, exact serial XCTest console and bounded CRC-verified ZIP members. Full ZIP digest is GitHub metadata. No native execution."
+}

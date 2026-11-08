@@ -1,0 +1,48 @@
+{
+  "status": "fixed-scoped-pass-and-baseline-failures-confirmed-offline",
+  "fixedIdentity": "9d8302a00fde50e5e137166a52bd4496745f69e348e23acd974a3a43f794f5ba",
+  "baselineIdentity": "161583ff8c0771c0bd85f3765a0a9981333840cfef91ed225ce793f11aee4414",
+  "baselineFilesUnchanged": 22,
+  "installedUnitTests": 152,
+  "originalPortableControls": {
+    "passed": 3,
+    "failed": 9
+  },
+  "chromiumTests": 14,
+  "missingBrowserAttempt": "separately preserved",
+  "results": [
+    {
+      "case": "foreground-same",
+      "receiptSHA256": "1e1e4ab2e4333a3b745bf144fd7eb71d0fb6f55cc34b00914dd65e4eb20b4a09",
+      "verdict": {
+        "status": "passed-scoped",
+        "case": "foreground-same",
+        "observedHiddenVisibleCycle": true,
+        "sameDocument": true,
+        "concealedAfterVisibleTaskAndWhileAuthorityHeld": true,
+        "pageLifecycleDuringBackground": [],
+        "commandAttempts": 0,
+        "commandEffects": 0
+      },
+      "heldPendingAuthority": 1,
+      "stoppedAndPortClosed": "root-reported; offline origin/receipt consistency verified"
+    },
+    {
+      "case": "foreground-revoked",
+      "receiptSHA256": "bce56ffbb4714a3b7b4bc4bbb02dde22d84b9ef327419a617b2b77f456b86a05",
+      "verdict": {
+        "status": "passed-scoped",
+        "case": "foreground-revoked",
+        "observedHiddenVisibleCycle": true,
+        "sameDocument": true,
+        "concealedAfterVisibleTaskAndWhileAuthorityHeld": true,
+        "pageLifecycleDuringBackground": [],
+        "commandAttempts": 0,
+        "commandEffects": 0
+      },
+      "heldPendingAuthority": 1,
+      "stoppedAndPortClosed": "root-reported; offline origin/receipt consistency verified"
+    }
+  ],
+  "limits": "Simulator Safari with synthetic API and recorded DOM/native observations; not physical device, App Switcher, continuous-frame, provider or deployment proof."
+}

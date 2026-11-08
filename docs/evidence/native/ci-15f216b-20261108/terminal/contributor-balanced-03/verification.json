@@ -1,0 +1,116 @@
+{
+  "observedAtUtc": "2026-11-08T04:26:54+00:00",
+  "source": {
+    "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+    "mergeCheckout": "64d9f0d7b27c6c70566f318035c0156dee92b7c7",
+    "tree": "29a2792c0e7355b2b9f3c170e22891175536ba22",
+    "checkerSHA256": {
+      "scripts/check_ios_test_results.py": "857f58676bd623c8c1d90828d30ef91cbe1ed5af3821d48592ab63837eccf6aa",
+      "scripts/check_ios_performance.py": "f203f21510455a8a83300ee6968e8c5ac2bb14dd8c6afd5a6adb5caa7ce8a4c7",
+      "scripts/ios_performance_baselines.json": "38742a9b5f5eea668c608f117db602ac6a2b73aa56691c3ec3f90c291d15c38e"
+    }
+  },
+  "run": {
+    "attempt": 1,
+    "conclusion": "",
+    "event": "pull_request",
+    "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+    "name": "iOS fixture checks",
+    "runId": 42440464791,
+    "status": "pending",
+    "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42440464791"
+  },
+  "job": {
+    "completedAt": "2026-11-08T04:20:07Z",
+    "conclusion": "success",
+    "failedSteps": [],
+    "id": 128612236597,
+    "name": "Fixture (contributor-balanced-03)",
+    "startedAt": "2026-11-08T03:59:42Z",
+    "status": "completed"
+  },
+  "artifact": {
+    "id": 13603423376,
+    "name": "iphone-fixture-results-contributor-balanced-03-1",
+    "digest": "sha256:cb65ad08d2c85212f97643804a02fb5e71b2bd1703119310004e181a14a14600",
+    "size_in_bytes": 36690601,
+    "workflow_run": {
+      "id": 42440464791,
+      "repository_id": 1445928007,
+      "head_repository_id": 1445928007,
+      "head_branch": "codex/parallel-ios-ci",
+      "head_sha": "15f216b01e41c111ec99bbd812419cec32e6a5e4"
+    }
+  },
+  "collection": {
+    "rangeReceiptSHA256": "6fa3733ae7e23e24fb38ab9fe7a6a001242f15921c67d02fa90f44e234e86463",
+    "rangeBytes": 96619,
+    "verifiedMembers": [
+      {
+        "file": "Tests.log",
+        "bytes": 700103,
+        "sha256": "b0e5a24b47cf730a41cc8db9ad486f264a97c88b64683fb55f2477dadf3a251e",
+        "zipCRC": 86958604,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-details.json",
+        "bytes": 5749,
+        "sha256": "e578a1b8c0143340cfd294c2f7bc62dd1fb89a5193ffa8003852281625edf48c",
+        "zipCRC": 829867119,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-plan/contributor-balanced-03.txt",
+        "bytes": 1122,
+        "sha256": "7109fc0cd8617c8451b5a457fede7476fdf7e8ee17bd203e637c6c1eec257d16",
+        "zipCRC": 3909865589,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-runtime-warnings.json",
+        "bytes": 184,
+        "sha256": "8ae08d078872d604777a3b47b9516196c1b0dd897187b57ff939bb71aa337ef6",
+        "zipCRC": 2856964476,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-summary.json",
+        "bytes": 710,
+        "sha256": "bf4127d3906156778a9656a975c69b8ca84c3c6d869f6361953120550f07449c",
+        "zipCRC": 1505367501,
+        "CRCVerified": true
+      }
+    ]
+  },
+  "strictResult": {
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "restarts": 0,
+    "selectors": {
+      "RoomInTheCartUITests/HouseholdDevicesUITests/testDeviceManagementCancelThenPreciseRevokePreservesOtherAccess": 149.41422998905182,
+      "RoomInTheCartUITests/HouseholdDevicesUITests/testSpanishDeviceManagementLargestTextPaginationAndPreciseRevoke": 145.45776200294495,
+      "RoomInTheCartUITests/HouseholdRequestPackUITests/testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite": 58.71307599544525,
+      "RoomInTheCartUITests/HouseholdRequestPackUITests/testLargestTextShowsCompleteProtectedLunchNamesAndDates": 101.21928000450134,
+      "RoomInTheCartUITests/HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite": 191.41793298721313,
+      "RoomInTheCartUITests/HouseholdRequestPackUITests/testShopperCarriesEarlierRequestOnceAndReviewsCurrentPackPrice": 103.28586399555206,
+      "RoomInTheCartUITests/HouseholdRequestPackUITests/testShopperOpensCheckoutCalculationsAndIncludedChargesWithNoDecisionWrite": 59.641900062561035,
+      "RoomInTheCartUITests/HouseholdRequestPackUITests/testUnavailableMealFactsRemainUnknownInRequestDecision": 41.00652897357941,
+      "RoomInTheCartUITests/SharedMealCivilDateUITests/testEnglishCivilDaysStayExactUnderUSTimeZoneEnvironments": 31.234705090522766,
+      "RoomInTheCartUITests/SharedMealCivilDateUITests/testSpanishCivilDaysStayExactUnderUSTimeZoneEnvironments": 30.025487065315247
+    },
+    "hostedWarningReceipt": {
+      "status": "passed",
+      "summaryWarningCount": null,
+      "runtimeWarningCount": 0,
+      "examinedTestCount": 10,
+      "detailExportCount": 10,
+      "activityExportCount": 0,
+      "warnings": []
+    },
+    "localSerialConsoleAndInventoryReplay": "passed"
+  },
+  "scope": "Original hosted metadata, exact serial XCTest console and bounded CRC-verified ZIP members. Full ZIP digest is GitHub metadata. No native execution."
+}

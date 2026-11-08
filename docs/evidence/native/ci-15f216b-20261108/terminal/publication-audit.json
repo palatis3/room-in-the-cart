@@ -1,0 +1,15 @@
+{
+  "scope": "Offline publication integrity/reconciliation only; original failures unchanged.",
+  "exactOriginalCopiesVerified": 91,
+  "lineNumberedDerivedExcerptsVerified": 7,
+  "checkpointReferenceHashesVerified": 40,
+  "uniqueFixtureSelectors": 69,
+  "allWorkflowStatusesTerminal": true,
+  "ordinaryNativePassed": 65,
+  "ordinaryNativeFailed": 3,
+  "fixtureNativePassed": 67,
+  "fixtureNativeFailed": 2,
+  "cookNativePassed": 5,
+  "cookStrictWarningCount": null,
+  "nativeOrRemoteExecution": false
+}

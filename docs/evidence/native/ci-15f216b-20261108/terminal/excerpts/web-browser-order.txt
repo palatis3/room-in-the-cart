@@ -1,0 +1,56 @@
+Original: /Users/palatis/Room in the Cart/.build/CI15F216Nov08/web-job-original.log
+Original SHA256: f4ea19908a88c88cd14e1cbb5a22776665f2a5204514927f4c333646ad1c5ea1
+
+1025: 2026-11-08T02:54:58.2819725Z 1..140
+1026: 2026-11-08T02:54:58.2819912Z # tests 140
+1027: 2026-11-08T02:54:58.2820094Z # suites 0
+1028: 2026-11-08T02:54:58.2820276Z # pass 140
+1029: 2026-11-08T02:54:58.2820452Z # fail 0
+1030: 2026-11-08T02:54:58.2820642Z # cancelled 0
+1031: 2026-11-08T02:54:58.2820845Z # skipped 0
+1032: 2026-11-08T02:54:58.2821025Z # todo 0
+1033: 2026-11-08T02:54:58.2821235Z # duration_ms 3646.239129
+1034: 2026-11-08T02:54:58.2961251Z ##[group]Run npm run test:browser
+1035: 2026-11-08T02:54:58.2961566Z [36;1mnpm run test:browser[0m
+1036: 2026-11-08T02:54:58.2981487Z shell: /usr/bin/bash -e {0}
+1037: 2026-11-08T02:54:58.2981739Z ##[endgroup]
+1038: 2026-11-08T02:54:58.3948639Z 
+1039: 2026-11-08T02:54:58.3949187Z > @room-in-the-cart/web@0.1.0 test:browser
+1040: 2026-11-08T02:54:58.3950730Z > node --test --test-concurrency=1 --test-timeout=45000 tests/browser/outbox-eviction.test.mjs tests/browser/history-privacy.test.mjs
+1041: 2026-11-08T02:54:58.3951763Z 
+1042: 2026-11-08T02:54:58.4411759Z TAP version 13
+1043: 2026-11-08T02:55:13.8865376Z # Subtest: history restoration conceals private content until fresh authority succeeds
+1044: 2026-11-08T02:55:13.8873471Z not ok 1 - history restoration conceals private content until fresh authority succeeds
+1045: 2026-11-08T02:55:13.8874604Z   ---
+1046: 2026-11-08T02:55:13.8874961Z   duration_ms: 15022.511525
+1047: 2026-11-08T02:55:13.8875399Z   type: 'test'
+1048: 2026-11-08T02:55:13.8876380Z   location: '/home/runner/work/room-in-the-cart/room-in-the-cart/web/tests/browser/history-privacy.test.mjs:24:1'
+1049: 2026-11-08T02:55:13.8877369Z   failureType: 'testCodeFailure'
+1050: 2026-11-08T02:55:13.8878030Z   error: |-
+1051: 2026-11-08T02:55:13.8878503Z     browserType.launch: Timeout 15000ms exceeded.
+1052: 2026-11-08T02:55:13.8878884Z     Call log:
+1053: 2026-11-08T02:55:13.8887430Z       - <launching> /usr/bin/google-chrome --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-breakpad --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-edgeupdater --disable-extensions --disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,HttpsUpgrades,HttpsFirstBalancedModeAutoEnable,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,AvoidCorsURLLoaderRestartOnRedirect,TcpPortRandomizationWin,OptimizationHints,NetworkTimeServiceQuerying,AimEnabled,PreconnectToSearch,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion --enable-features=CDPScreenshotNewSurface,SkipListAccountsWithoutGaiaCookies --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --disable-updater-scheduler --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --enable-unsafe-swiftshader --edge-skip-compat-layer-relaunch --disable-stack-profiler --disable-infobars --disable-sync --do-not-de-elevate --headless --hide-scrollbars --mute-audio --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --no-sandbox --user-data-dir=/tmp/playwright_chromiumdev_profile-StLz2b --remote-debugging-pipe --no-startup-window
+1054: 2026-11-08T02:55:13.8896020Z       - <launched> pid=2566
+1055: 2026-11-08T02:55:13.8896271Z     
+1056: 2026-11-08T02:55:13.8896473Z   code: 'ERR_TEST_FAILURE'
+1057: 2026-11-08T02:55:13.8896718Z   name: 'TimeoutError'
+1058: 2026-11-08T02:55:13.8896935Z   stack: |-
+1059: 2026-11-08T02:55:13.8897720Z     TestContext.<anonymous> (/home/runner/work/room-in-the-cart/room-in-the-cart/web/tests/browser/history-privacy.test.mjs:76:34)
+1060: 2026-11-08T02:55:13.8898316Z   ...
+1061: 2026-11-08T02:55:35.2301683Z # Subtest: Refresh reconciles a queued request after IndexedDB eviction without resending it
+1062: 2026-11-08T02:55:35.2303348Z ok 2 - Refresh reconciles a queued request after IndexedDB eviction without resending it
+1063: 2026-11-08T02:55:35.2304336Z   ---
+1064: 2026-11-08T02:55:35.2304883Z   duration_ms: 9943.618633
+1065: 2026-11-08T02:55:35.2305494Z   type: 'test'
+1066: 2026-11-08T02:55:35.2306006Z   ...
+1067: 2026-11-08T02:55:35.2306559Z # Chrome 156.0.8078.79
+1068: 2026-11-08T02:55:35.2471022Z 1..2
+1069: 2026-11-08T02:55:35.2472991Z # tests 2
+1070: 2026-11-08T02:55:35.2473628Z # suites 0
+1071: 2026-11-08T02:55:35.2474293Z # pass 1
+1072: 2026-11-08T02:55:35.2475327Z # fail 1
+1073: 2026-11-08T02:55:35.2475719Z # cancelled 0
+1074: 2026-11-08T02:55:35.2476279Z # skipped 0
+1075: 2026-11-08T02:55:35.2476867Z # todo 0
+1076: 2026-11-08T02:55:35.2477753Z # duration_ms 36819.350286
+1077: 2026-11-08T02:55:35.2614920Z ##[error]Process completed with exit code 1.

@@ -1,0 +1,144 @@
+{
+  "observedAtUtc": "2026-11-08T04:16:41+00:00",
+  "source": {
+    "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+    "checkout": {
+      "parents": [
+        "1a2530a7ad006b5939f87a08a1964b5fc863383e",
+        "15f216b01e41c111ec99bbd812419cec32e6a5e4"
+      ],
+      "sha": "64d9f0d7b27c6c70566f318035c0156dee92b7c7",
+      "tree": "29a2792c0e7355b2b9f3c170e22891175536ba22"
+    }
+  },
+  "runId": 42440464721,
+  "job": {
+    "completedAt": "2026-11-08T04:13:59Z",
+    "conclusion": "failure",
+    "failedSteps": [
+      "Run selected tests and verify complete execution"
+    ],
+    "id": 128613594078,
+    "name": "ios-tests (ui-05, 6)",
+    "startedAt": "2026-11-08T03:55:13Z",
+    "status": "completed"
+  },
+  "artifact": {
+    "id": 13602898981,
+    "name": "iphone-results-ui-05-1",
+    "digest": "sha256:e0e7e9f82487a489e4cb93940983638546b8839fd2422c9a4cb797bc229fef57",
+    "size_in_bytes": 34469071,
+    "workflow_run": {
+      "id": 42440464721,
+      "repository_id": 1445928007,
+      "head_repository_id": 1445928007,
+      "head_branch": "codex/parallel-ios-ci",
+      "head_sha": "15f216b01e41c111ec99bbd812419cec32e6a5e4"
+    }
+  },
+  "collection": {
+    "rangeBytes": 39134,
+    "rangeReceiptSHA256": "b4bb02145f12d0c17085b7d677acb14aa6eeb21091f7dcf9ced7f3a084524cfd",
+    "members": [
+      {
+        "file": "Tests.log",
+        "bytes": 159746,
+        "sha256": "a42f195ff059ba8d08f79f62b5fe826cc604266ae0efbb5dc1cba5e69f6c1d9e",
+        "zipCRC": 2225384315,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-details.json",
+        "bytes": 4361,
+        "sha256": "f80de00b770a834f1700ac36cc2a2986572673d2713a739b09273c2e44c242f3",
+        "zipCRC": 343953288,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-plan/ui-05.txt",
+        "bytes": 628,
+        "sha256": "0415f7e0a15429949b1eb5732013cb3a90d5717fbe2280e6be9337d2af41e090",
+        "zipCRC": 462903567,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-runtime-warnings.json",
+        "bytes": 182,
+        "sha256": "6635f765ac4d45baa1a2fde7dad242a65b85e9290a599240464ad69a085738f1",
+        "zipCRC": 310667449,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-summary.json",
+        "bytes": 1198,
+        "sha256": "5ad5f3756a128d25128c383049676d290f938939b4fe175b601032b79f8db95c",
+        "zipCRC": 1851335005,
+        "CRCVerified": true
+      }
+    ],
+    "fullArchiveDownloaded": false,
+    "failureBoundarySHA256": "c45fdfd6b20b7cbab68975029c528b7f13f9d431c29fcfdc21d78ee9dc6d19e9"
+  },
+  "strictResult": {
+    "passed": 5,
+    "failed": 1,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "restarts": 0,
+    "selectors": {
+      "RoomInTheCartUITests/ContextualNavigationUITests/testRangedPackNeedsAnExactAmountAndKeepsItsOriginalAfterRelaunch": {
+        "result": "Passed",
+        "durationSeconds": 107.54085195064545
+      },
+      "RoomInTheCartUITests/FreeJourneyUITests/testEnglishMealWeekListAndGridShowDatedProtectedLunch": {
+        "result": "Passed",
+        "durationSeconds": 232.85871803760529
+      },
+      "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testFullyCoveredSavesUseAtHomePlanWithoutPurchasedItemOrRetailerOrder": {
+        "result": "Passed",
+        "durationSeconds": 143.4773589372635
+      },
+      "RoomInTheCartUITests/PickupOfferUITests/testSavedOfferReopensAndUpdatesResponseAfterRestart": {
+        "result": "Failed",
+        "durationSeconds": 59.74506092071533
+      },
+      "RoomInTheCartUITests/RoomInTheCartUITests/testComparisonSaveStaysInsideViewportAboveTabBar": {
+        "result": "Passed",
+        "durationSeconds": 99.89421796798706
+      },
+      "RoomInTheCartUITests/RoomInTheCartUITests/testOwnerExportReviewAndCancelledDeletionPreserveComparisonAfterRestart": {
+        "result": "Passed",
+        "durationSeconds": 155.28465402126312
+      }
+    },
+    "hostedWarningReceipt": {
+      "status": "passed",
+      "summaryWarningCount": null,
+      "runtimeWarningCount": 0,
+      "examinedTestCount": 6,
+      "detailExportCount": 6,
+      "activityExportCount": 0,
+      "warnings": []
+    },
+    "offlineStrictConsoleFailures": [
+      "XCTest logged a failure for RoomInTheCartUITests/PickupOfferUITests/testSavedOfferReopensAndUpdatesResponseAfterRestart at log line 1598.",
+      "XCTest log requires one start then one pass for RoomInTheCartUITests/PickupOfferUITests/testSavedOfferReopensAndUpdatesResponseAfterRestart; found ['start', 'non-passing or unrecognized completion'].",
+      "XCTest log requires one successful result banner; found ['FAILED']."
+    ]
+  },
+  "boundary": {
+    "selector": "RoomInTheCartUITests/PickupOfferUITests/testSavedOfferReopensAndUpdatesResponseAfterRestart",
+    "sourceLocation": "ios/UITests/PickupOfferUITests.swift:44",
+    "rawLogLine": 1598,
+    "expected": "Main branch",
+    "observed": "Ma",
+    "attachmentLabel": "Offer-review-failure",
+    "precedingCase": {
+      "selector": "RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testFullyCoveredSavesUseAtHomePlanWithoutPurchasedItemOrRetailerOrder",
+      "result": "Passed",
+      "durationSeconds": 143.477,
+      "rawLogLine": 1408
+    },
+    "scope": "Failure occurred during the pre-save field-value assertion. Later checkout and restart assertions were not reached. Cause of partial field entry is unproven."
+  }
+}

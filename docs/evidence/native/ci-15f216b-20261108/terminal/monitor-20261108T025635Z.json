@@ -1,0 +1,299 @@
+{
+  "observedAtUtc": "2026-11-08T02:56:35Z",
+  "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+  "runs": [
+    {
+      "attempt": 1,
+      "conclusion": "",
+      "event": "pull_request",
+      "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+      "jobs": [
+        {
+          "completedAt": "2026-11-08T02:54:43Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608399660,
+          "name": "source-checks",
+          "startedAt": "2026-11-08T02:54:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T02:54:50Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608399731,
+          "name": "typescript (service)",
+          "startedAt": "2026-11-08T02:54:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T02:55:37Z",
+          "conclusion": "failure",
+          "failedSteps": [
+            "Check contributor outbox and history privacy in Chrome"
+          ],
+          "id": 128608399841,
+          "name": "typescript (web)",
+          "startedAt": "2026-11-08T02:54:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T02:56:16Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608399854,
+          "name": "service-postgres",
+          "startedAt": "2026-11-08T02:54:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "failedSteps": [],
+          "id": 128608399893,
+          "name": "ios-build",
+          "startedAt": "2026-11-08T02:54:24Z",
+          "status": "in_progress"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "failedSteps": [],
+          "id": 128608400044,
+          "name": "ios-release",
+          "startedAt": "2026-11-08T02:54:25Z",
+          "status": "in_progress"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "failedSteps": [],
+          "id": 128608400083,
+          "name": "swift-packages",
+          "startedAt": "2026-11-08T02:54:21Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "failedSteps": [],
+          "id": 128608400221,
+          "name": "ios-swift-codeql",
+          "startedAt": "2026-11-08T02:54:21Z",
+          "status": "pending"
+        }
+      ],
+      "name": "Build and test",
+      "runId": 42440464721,
+      "status": "pending",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42440464721"
+    },
+    {
+      "attempt": 1,
+      "conclusion": "",
+      "event": "pull_request",
+      "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+      "jobs": [
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "failedSteps": [],
+          "id": 128608400012,
+          "name": "sanitizers (thread)",
+          "startedAt": "2026-11-08T02:54:25Z",
+          "status": "in_progress"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "failedSteps": [],
+          "id": 128608400043,
+          "name": "sanitizers (address)",
+          "startedAt": "2026-11-08T02:54:21Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "failedSteps": [],
+          "id": 128608400173,
+          "name": "storekit (es, US Spanish app · Spanish (Mexico) offer · USA storefront)",
+          "startedAt": "2026-11-08T02:54:21Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "failedSteps": [],
+          "id": 128608400424,
+          "name": "storekit (en, US English — local StoreKit)",
+          "startedAt": "2026-11-08T02:54:22Z",
+          "status": "pending"
+        }
+      ],
+      "name": "iOS deep checks",
+      "runId": 42440464691,
+      "status": "pending",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42440464691"
+    },
+    {
+      "attempt": 1,
+      "conclusion": "",
+      "event": "pull_request",
+      "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+      "jobs": [
+        {
+          "completedAt": "2026-11-08T02:54:31Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608400025,
+          "name": "fixture-plan",
+          "startedAt": "2026-11-08T02:54:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "failedSteps": [],
+          "id": 128608432407,
+          "name": "Build contributor, stock and carryover fixtures",
+          "startedAt": "2026-11-08T02:54:31Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "failedSteps": [],
+          "id": 128608432581,
+          "name": "Build dinner decision fixture",
+          "startedAt": "2026-11-08T02:54:32Z",
+          "status": "pending"
+        }
+      ],
+      "name": "iOS fixture checks",
+      "runId": 42440464791,
+      "status": "pending",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42440464791"
+    },
+    {
+      "attempt": 1,
+      "conclusion": "",
+      "event": "pull_request",
+      "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+      "jobs": [
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "failedSteps": [],
+          "id": 128608399586,
+          "name": "Build optimized iPhone test products",
+          "startedAt": "2026-11-08T02:54:25Z",
+          "status": "in_progress"
+        }
+      ],
+      "name": "iOS Release performance",
+      "runId": 42440464669,
+      "status": "in_progress",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42440464669"
+    },
+    {
+      "attempt": 1,
+      "conclusion": "",
+      "event": "pull_request",
+      "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+      "jobs": [
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "failedSteps": [],
+          "id": 128608399778,
+          "name": "native-wire",
+          "startedAt": "2026-11-08T02:54:25Z",
+          "status": "in_progress"
+        }
+      ],
+      "name": "Native Swift HTTPS and PostgreSQL",
+      "runId": 42440464677,
+      "status": "in_progress",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42440464677"
+    },
+    {
+      "attempt": 1,
+      "conclusion": "success",
+      "event": "pull_request",
+      "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+      "jobs": [
+        {
+          "completedAt": "2026-11-08T02:54:32Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608399288,
+          "name": "Dependency review",
+          "startedAt": "2026-11-08T02:54:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T02:55:58Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608399508,
+          "name": "CodeQL (javascript-typescript)",
+          "startedAt": "2026-11-08T02:54:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T02:55:07Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608399567,
+          "name": "CodeQL (actions)",
+          "startedAt": "2026-11-08T02:54:24Z",
+          "status": "completed"
+        }
+      ],
+      "name": "Security checks",
+      "runId": 42440464675,
+      "status": "completed",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42440464675"
+    }
+  ],
+  "previousObservedAtUtc": "2026-11-08T02:55:15Z",
+  "changes": [
+    {
+      "type": "job",
+      "runId": 42440464721,
+      "id": 128608399841,
+      "name": "typescript (web)",
+      "from": "in_progress",
+      "to": "failure",
+      "failedSteps": [
+        "Check contributor outbox and history privacy in Chrome"
+      ]
+    },
+    {
+      "type": "job",
+      "runId": 42440464721,
+      "id": 128608399854,
+      "name": "service-postgres",
+      "from": "in_progress",
+      "to": "success",
+      "failedSteps": []
+    },
+    {
+      "type": "workflow",
+      "runId": 42440464675,
+      "name": "Security checks",
+      "from": "in_progress",
+      "to": "success"
+    },
+    {
+      "type": "job",
+      "runId": 42440464675,
+      "id": 128608399508,
+      "name": "CodeQL (javascript-typescript)",
+      "from": "in_progress",
+      "to": "success",
+      "failedSteps": []
+    }
+  ]
+}

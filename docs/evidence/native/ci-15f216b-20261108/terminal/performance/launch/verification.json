@@ -1,0 +1,118 @@
+{
+  "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+  "runId": 42440464669,
+  "jobId": 128610747362,
+  "artifactId": 13602805373,
+  "transportBytes": 10708,
+  "retainedMembers": [
+    {
+      "file": "Performance.log",
+      "bytes": 6809,
+      "sha256": "759287d35ffd9d6f8da37389b9a97dfcc63850ac059918b4831e8fa8f495cfc4",
+      "zipCRC": 3397153719,
+      "CRCVerified": true
+    },
+    {
+      "file": "calibration.json",
+      "bytes": 1106,
+      "sha256": "b4447e6432ac6859a188e36868e14cee1c7c906931d24c3c8d2eb501958eb1e9",
+      "zipCRC": 2120160420,
+      "CRCVerified": true
+    },
+    {
+      "file": "evidence-validation.json",
+      "bytes": 395,
+      "sha256": "fa91d0246bb1d5678a26ce41b628086236f805e911a232dbe91326b909afd720",
+      "zipCRC": 1019678614,
+      "CRCVerified": true
+    },
+    {
+      "file": "metrics.json",
+      "bytes": 878,
+      "sha256": "f9c07f979aaea0b4fabaaa7db11ddc17dc5a99a4c5a14898c2af89bd6f8fdb8c",
+      "zipCRC": 873535532,
+      "CRCVerified": true
+    },
+    {
+      "file": "selector.txt",
+      "bytes": 73,
+      "sha256": "5cd83df85fe7e0a27249d5485f04fc2e3f892625026cea2afdeb277361c63505",
+      "zipCRC": 1239105704,
+      "CRCVerified": true
+    },
+    {
+      "file": "setup.json",
+      "bytes": 456,
+      "sha256": "e4e02a20f2cd65e787d4dfb8dc7b07a8829c2c93ae8a6939946da6d18b870f77",
+      "zipCRC": 3578361911,
+      "CRCVerified": true
+    },
+    {
+      "file": "test-runtime-warnings.json",
+      "bytes": 182,
+      "sha256": "e18d0e7ad63a7e1be003b7165bdcb1e60ef8ba08bfa76b8f528bc431b6a02003",
+      "zipCRC": 635318996,
+      "CRCVerified": true
+    },
+    {
+      "file": "test-details.json",
+      "bytes": 1117,
+      "sha256": "a9c13f173e6555848674d1b0e85a04bc74c7c393901ddd6112ca416aa18c4b58",
+      "zipCRC": 1617146416,
+      "CRCVerified": true
+    },
+    {
+      "file": "test-summary.json",
+      "bytes": 803,
+      "sha256": "95ceece272167b27c824ae5e16edfeef61ec34aa367fc4c0400bdb619fe8015b",
+      "zipCRC": 3976516169,
+      "CRCVerified": true
+    },
+    {
+      "file": "toolchain.txt",
+      "bytes": 32,
+      "sha256": "bb7fc9a8f5e063e81975b33054b3a526c91bcccff263ad11d5bd8bcdbe8f0973",
+      "zipCRC": 1329079503,
+      "CRCVerified": true
+    }
+  ],
+  "selector": "RoomInTheCartUITests/ReleasePerformanceUITests/testColdLaunchPerformance",
+  "nativeResult": {
+    "selected": 1,
+    "passed": 1,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "runnerRestarts": 0
+  },
+  "baseline": {
+    "responsiveLaunchMedianSeconds": {
+      "measured": 4.66734825,
+      "maximum": 5.5,
+      "passed": true
+    }
+  },
+  "metrics": {
+    "com.apple.dt.XCTMetric_ApplicationLaunch-ApplicationFirstFramePresentationResponsive.duration": {
+      "unit": "s",
+      "samples": [
+        7.280410916,
+        6.590990458,
+        3.9783536670000004,
+        4.66734825,
+        4.202993708
+      ],
+      "median": 4.66734825
+    }
+  },
+  "environment": {
+    "osVersion": "26.2",
+    "osBuildNumber": "23C54",
+    "modelName": "iPhone 17",
+    "architecture": "arm64",
+    "xcode": "Xcode 26.3\nBuild version 17C529",
+    "buildConfiguration": "Release",
+    "testConfiguration": "Test Scheme Action"
+  },
+  "replayStdout": "Complete measurements passed the approved baseline for this simulator environment.",
+  "scope": "Offline exact inventory, console and performance baseline replay. Hosted warning receipt retained."
+}

@@ -1,0 +1,5 @@
+2026-11-08T03:04:20.6306780Z CoreDomain: 195 passed, 0 deliberately skipped
+2026-11-08T03:04:20.6307100Z DeviceSurfaces: 30 passed, 0 deliberately skipped
+2026-11-08T03:04:20.6307380Z HouseholdClient: 105 passed, 3 deliberately skipped
+2026-11-08T03:04:20.6307640Z LocalStore: 74 passed, 0 deliberately skipped
+2026-11-08T03:04:20.6307910Z RecordArchive: 33 passed, 0 deliberately skipped

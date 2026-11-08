@@ -1,0 +1,66 @@
+Original: /Users/palatis/Room in the Cart/.build/CI15F216Nov08/ui-10/pristine-members/Tests.log
+Original SHA256: f2c6656a5c086e2162ccb2bfb6a218a7cd42cc77f00c0aba9937690725dd863d
+Only selected original line-numbered excerpts; omitted intervals are not continuous evidence.
+
+18: Test Case '-[RoomInTheCartUITests.ContextualNavigationUITests testChangedPickupTermsKeepEarlierFeesAndPreviewUnderTheirOriginalBranch]' started.
+571: Test Case '-[RoomInTheCartUITests.ContextualNavigationUITests testChangedPickupTermsKeepEarlierFeesAndPreviewUnderTheirOriginalBranch]' passed (168.997 seconds).
+572: Test Case '-[RoomInTheCartUITests.ContextualNavigationUITests testCheckoutRequiresFreshBranchPricingAndPreservesEarlierInclusiveQuote]' started.
+1000:     t =    91.92s     Check for interrupting elements affecting "Room in the Cart" Application
+1001:     t =    92.00s     Synthesize event
+1002:     t =    92.00s         Get number of matches for: Elements containing elements matching predicate 'hasKeyboardFocus == 1'
+1003:     t =    92.34s     Wait for dev.roominthecart.app.debug to idle
+1004:     t =    92.34s Checking existence of `Button (First Match)`
+1005:     t =    92.44s Find the Button (First Match)
+1006:     t =    92.55s Tap "Done" Button
+1007:     t =    92.55s     Wait for dev.roominthecart.app.debug to idle
+1008:     t =    92.55s     Find the "Done" Button
+1009:     t =    92.64s     Check for interrupting elements affecting "Done" Button
+1010:     t =    92.72s     Synthesize event
+1011:     t =    93.06s     Wait for dev.roominthecart.app.debug to idle
+1012:     t =   153.13s App animations complete notification not received, will attempt to continue.
+1013:     t =   153.14s Checking existence of `"Save and evaluate checkout" Button`
+1025:     t =   275.13s Find the StaticText (First Match)
+1026:     t =   275.66s Checking existence of `"Saved checkout result" StaticText`
+1027:     t =   275.92s Find the "Saved checkout result" StaticText
+1028:     t =   276.27s Find the "Branch" TextField
+1072:     t =   525.79s     Checking `Expect predicate `existsNoRetry == 1` for object Keyboard (First Match)`
+1073:     t =   525.79s         Checking existence of `Keyboard (First Match)`
+1074:     t =   525.91s Find the "Branch" TextField
+1075:     t =   526.58s Tap "Branch" TextField[0.90, 0.50]
+1076:     t =   526.58s     Wait for dev.roominthecart.app.debug to idle
+1077:     t =   586.62s App animations complete notification not received, will attempt to continue.
+1078:     t =   586.63s     Find the "Branch" TextField
+1079:     t =   587.57s     Check for interrupting elements affecting "Branch" TextField
+1080:     t =   587.85s     Synthesize event
+1081:     t =   587.86s         Find the "Branch" TextField
+1082:     t =   588.64s         Find the "Branch" TextField
+1083:     t =   589.76s         Find the "Branch" TextField
+1084:     t =   591.69s     Wait for dev.roominthecart.app.debug to idle
+1085:     t =   651.73s App animations complete notification not received, will attempt to continue.
+1086:     t =   651.75s Type '' into Target Application 'dev.roominthecart.app.debug'
+1087:     t =   651.75s     Wait for dev.roominthecart.app.debug to idle
+1088:     t =   711.79s App animations complete notification not received, will attempt to continue.
+1089:     t =   711.80s     Find the Target Application 'dev.roominthecart.app.debug'
+1090:     t =   712.16s     Check for interrupting elements affecting "Room in the Cart" Application
+1091:     t =   712.35s     Synthesize event
+1092:     t =   712.35s         Get number of matches for: Elements containing elements matching predicate 'hasKeyboardFocus == 1'
+1093:     t =   712.86s     Wait for dev.roominthecart.app.debug to idle
+1094: Test Case '-[RoomInTheCartUITests.ContextualNavigationUITests testCheckoutRequiresFreshBranchPricingAndPreservesEarlierInclusiveQuote]' exceeded execution time allowance of 12 minutes. The test may have hung; check Xcode's test report for additional diagnostics. If the test requires additional time, use -[XCTestCase executionTimeAllowance] or one of xcodebuild's command-line overrides.
+1095:     t =   772.96s App animations complete notification not received, will attempt to continue.
+1096:     t =   772.97s Find the "Branch" TextField
+1097: 
+1098: 
+1099: *** If you believe this error represents a bug, please attach the result bundle at /Users/runner/work/room-in-the-cart/room-in-the-cart/.build/Tests.xcresult
+1100: 
+1105: Restarting after unexpected exit, crash, or test timeout; summary will include totals from previous launches.
+1111: Test Case '-[RoomInTheCartUITests.ContextualNavigationUITests testDinnerOnlyCapAndCancelledSlotChangeSurviveRelaunch]' started.
+1509: Test Case '-[RoomInTheCartUITests.ContextualNavigationUITests testDinnerOnlyCapAndCancelledSlotChangeSurviveRelaunch]' passed (96.944 seconds).
+1510: Test Case '-[RoomInTheCartUITests.ContextualNavigationUITests testReviewedQuantityAndOriginalPackLabelSurviveRestartIndependently]' started.
+1684: Test Case '-[RoomInTheCartUITests.ContextualNavigationUITests testReviewedQuantityAndOriginalPackLabelSurviveRestartIndependently]' passed (52.257 seconds).
+1685: Test Case '-[RoomInTheCartUITests.ContextualNavigationUITests testUnknownTaxKeepsWeighedPickupUnresolved]' started.
+2365: Test Case '-[RoomInTheCartUITests.ContextualNavigationUITests testUnknownTaxKeepsWeighedPickupUnresolved]' passed (162.298 seconds).
+2369: Test Case '-[RoomInTheCartUITests.FreeJourneyUITests testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced]' started.
+3004: Test Case '-[RoomInTheCartUITests.FreeJourneyUITests testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced]' passed (157.265 seconds).
+3005: Test Case '-[RoomInTheCartUITests.FreeJourneyUITests testMealWeekKeepsOriginalPickupWhenShopSelectionChanges]' started.
+3188: Test Case '-[RoomInTheCartUITests.FreeJourneyUITests testMealWeekKeepsOriginalPickupWhenShopSelectionChanges]' passed (61.897 seconds).
+3202: ** TEST EXECUTE FAILED **

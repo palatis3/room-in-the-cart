@@ -1,0 +1,419 @@
+{
+  "observedAtUtc": "2026-11-08T03:14:03Z",
+  "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+  "runs": [
+    {
+      "attempt": 1,
+      "conclusion": "",
+      "event": "pull_request",
+      "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+      "jobs": [
+        {
+          "completedAt": "2026-11-08T02:54:43Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608399660,
+          "name": "source-checks",
+          "startedAt": "2026-11-08T02:54:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T02:54:50Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608399731,
+          "name": "typescript (service)",
+          "startedAt": "2026-11-08T02:54:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T02:55:37Z",
+          "conclusion": "failure",
+          "failedSteps": [
+            "Check contributor outbox and history privacy in Chrome"
+          ],
+          "id": 128608399841,
+          "name": "typescript (web)",
+          "startedAt": "2026-11-08T02:54:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T02:56:16Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608399854,
+          "name": "service-postgres",
+          "startedAt": "2026-11-08T02:54:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T03:04:33Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608399893,
+          "name": "ios-build",
+          "startedAt": "2026-11-08T02:54:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T03:01:41Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608400044,
+          "name": "ios-release",
+          "startedAt": "2026-11-08T02:54:25Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T03:02:39Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608400083,
+          "name": "swift-packages",
+          "startedAt": "2026-11-08T02:59:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "failedSteps": [],
+          "id": 128608400221,
+          "name": "ios-swift-codeql",
+          "startedAt": "2026-11-08T02:57:00Z",
+          "status": "in_progress"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "failedSteps": [],
+          "id": 128610476718,
+          "name": "ios-tests (ui-03, 6)",
+          "startedAt": "2026-11-08T03:11:34Z",
+          "status": "in_progress"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "failedSteps": [],
+          "id": 128610476890,
+          "name": "ios-tests (ui-01, 5)",
+          "startedAt": "2026-11-08T03:12:42Z",
+          "status": "in_progress"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "failedSteps": [],
+          "id": 128610476904,
+          "name": "ios-tests (models, 696)",
+          "startedAt": "2026-11-08T03:10:55Z",
+          "status": "in_progress"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "failedSteps": [],
+          "id": 128610477030,
+          "name": "ios-tests (ui-04, 6)",
+          "startedAt": "2026-11-08T03:04:34Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "failedSteps": [],
+          "id": 128610477032,
+          "name": "ios-tests (ui-02, 7)",
+          "startedAt": "2026-11-08T03:04:34Z",
+          "status": "pending"
+        }
+      ],
+      "name": "Build and test",
+      "runId": 42440464721,
+      "status": "pending",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42440464721"
+    },
+    {
+      "attempt": 1,
+      "conclusion": "",
+      "event": "pull_request",
+      "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+      "jobs": [
+        {
+          "completedAt": "2026-11-08T02:59:10Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608400012,
+          "name": "sanitizers (thread)",
+          "startedAt": "2026-11-08T02:54:25Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T03:04:26Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608400043,
+          "name": "sanitizers (address)",
+          "startedAt": "2026-11-08T03:01:44Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T03:11:30Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608400173,
+          "name": "storekit (es, US Spanish app · Spanish (Mexico) offer · USA storefront)",
+          "startedAt": "2026-11-08T03:04:36Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "failedSteps": [],
+          "id": 128608400424,
+          "name": "storekit (en, US English — local StoreKit)",
+          "startedAt": "2026-11-08T03:05:49Z",
+          "status": "in_progress"
+        }
+      ],
+      "name": "iOS deep checks",
+      "runId": 42440464691,
+      "status": "in_progress",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42440464691"
+    },
+    {
+      "attempt": 1,
+      "conclusion": "",
+      "event": "pull_request",
+      "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+      "jobs": [
+        {
+          "completedAt": "2026-11-08T02:54:31Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608400025,
+          "name": "fixture-plan",
+          "startedAt": "2026-11-08T02:54:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T03:10:52Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608432407,
+          "name": "Build contributor, stock and carryover fixtures",
+          "startedAt": "2026-11-08T03:02:42Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T03:12:39Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608432581,
+          "name": "Build dinner decision fixture",
+          "startedAt": "2026-11-08T03:04:28Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "failedSteps": [],
+          "id": 128612236397,
+          "name": "Fixture (contributor-balanced-02)",
+          "startedAt": "2026-11-08T03:12:39Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "failedSteps": [],
+          "id": 128612236597,
+          "name": "Fixture (contributor-balanced-03)",
+          "startedAt": "2026-11-08T03:12:39Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "failedSteps": [],
+          "id": 128612236658,
+          "name": "Fixture (contributor-balanced-01)",
+          "startedAt": "2026-11-08T03:12:39Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "failedSteps": [],
+          "id": 128612236669,
+          "name": "Fixture (contributor-balanced-04)",
+          "startedAt": "2026-11-08T03:12:39Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "failedSteps": [],
+          "id": 128612236684,
+          "name": "Fixture (contributor-balanced-05)",
+          "startedAt": "2026-11-08T03:12:39Z",
+          "status": "pending"
+        }
+      ],
+      "name": "iOS fixture checks",
+      "runId": 42440464791,
+      "status": "pending",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42440464791"
+    },
+    {
+      "attempt": 1,
+      "conclusion": "",
+      "event": "pull_request",
+      "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+      "jobs": [
+        {
+          "completedAt": "2026-11-08T03:05:46Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608399586,
+          "name": "Build optimized iPhone test products",
+          "startedAt": "2026-11-08T02:54:25Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "failedSteps": [],
+          "id": 128610747362,
+          "name": "Release performance (launch)",
+          "startedAt": "2026-11-08T03:05:47Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "failedSteps": [],
+          "id": 128610747545,
+          "name": "Release performance (rendered)",
+          "startedAt": "2026-11-08T03:05:47Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "failedSteps": [],
+          "id": 128610747620,
+          "name": "Release performance (scroll)",
+          "startedAt": "2026-11-08T03:05:47Z",
+          "status": "pending"
+        }
+      ],
+      "name": "iOS Release performance",
+      "runId": 42440464669,
+      "status": "pending",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42440464669"
+    },
+    {
+      "attempt": 1,
+      "conclusion": "success",
+      "event": "pull_request",
+      "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+      "jobs": [
+        {
+          "completedAt": "2026-11-08T02:56:56Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608399778,
+          "name": "native-wire",
+          "startedAt": "2026-11-08T02:54:25Z",
+          "status": "completed"
+        }
+      ],
+      "name": "Native Swift HTTPS and PostgreSQL",
+      "runId": 42440464677,
+      "status": "completed",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42440464677"
+    },
+    {
+      "attempt": 1,
+      "conclusion": "success",
+      "event": "pull_request",
+      "headSha": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+      "jobs": [
+        {
+          "completedAt": "2026-11-08T02:54:32Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608399288,
+          "name": "Dependency review",
+          "startedAt": "2026-11-08T02:54:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T02:55:58Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608399508,
+          "name": "CodeQL (javascript-typescript)",
+          "startedAt": "2026-11-08T02:54:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-08T02:55:07Z",
+          "conclusion": "success",
+          "failedSteps": [],
+          "id": 128608399567,
+          "name": "CodeQL (actions)",
+          "startedAt": "2026-11-08T02:54:24Z",
+          "status": "completed"
+        }
+      ],
+      "name": "Security checks",
+      "runId": 42440464675,
+      "status": "completed",
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42440464675"
+    }
+  ],
+  "previousObservedAtUtc": "2026-11-08T03:11:09Z",
+  "authoritativeSummaries": {
+    "spanishStoreKit": {
+      "jobId": 128608400173,
+      "selected": 15,
+      "passed": 15,
+      "runtimeWarnings": 0,
+      "runnerRestarts": 0,
+      "hostedLogLines": [
+        "2026-11-08T03:10:59.8616330Z ** TEST SUCCEEDED **",
+        "2026-11-08T03:11:04.7406210Z Executed 15 of 15 selected tests.",
+        "2026-11-08T03:11:04.9388660Z The XCTest log confirms one start and one passing completion per selected test.",
+        "2026-11-08T03:11:04.9589610Z The XCTest test export recorded 0 runtime warning occurrences across 15 examined tests."
+      ],
+      "artifact": {
+        "digest": "sha256:cd00aeec1261132d841f89120e8e23ebe64691b37b42529f32e11ae00a73a35c",
+        "id": 13601771868,
+        "name": "storekit-es-1",
+        "size_in_bytes": 577684
+      }
+    },
+    "dinnerBuild": {
+      "conclusion": "success",
+      "id": 128608432581,
+      "steps": [
+        {
+          "conclusion": "success",
+          "name": "Build fixture app and UI tests for iPhone"
+        },
+        {
+          "conclusion": "success",
+          "name": "Enumerate compiled tests and package fixture products"
+        }
+      ],
+      "artifact": {
+        "digest": "sha256:5b62560a449c9439c80e90d4df512a75918b4f7a499513d655fb120f58317605",
+        "id": 13601887104,
+        "name": "iphone-fixture-products-dinner-1",
+        "size_in_bytes": 63782168
+      }
+    }
+  }
+}

@@ -1,0 +1,20 @@
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: private field/control exposed: ownA
+
+true !== false
+
+    at concealed (file:///Users/palatis/Room%20in%20the%20Cart/.build/SafariQualificationNov08/foreground-proposal-r2/verify-foreground.mjs:5:58)
+    at verifyForeground (file:///Users/palatis/Room%20in%20the%20Cart/.build/SafariQualificationNov08/foreground-proposal-r2/verify-foreground.mjs:26:55)
+    at file:///Users/palatis/Room%20in%20the%20Cart/.build/SafariQualificationNov08/foreground-proposal-r2/verify-case.mjs:3:148 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: true,
+  expected: false,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v22.23.4
