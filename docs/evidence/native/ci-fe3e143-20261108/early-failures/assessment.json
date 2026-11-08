@@ -1,0 +1,24 @@
+{
+  "observedAtUTC": "2026-11-08T19:35:33.880982+00:00",
+  "head": "fe3e14306eee08f0464215b560dccaf21054c6a8",
+  "coreRun": 42509307282,
+  "ui01Job": 128821441785,
+  "ui01Artifact": 13630059692,
+  "performanceRun": 42509307171,
+  "scrollJob": 128821661268,
+  "scrollArtifact": 13630284197,
+  "spindumpSHA256": "dc0bdb635b783b8f36aca705661e8ca63fd30b9123cdf9f96e1c78e870ec35da",
+  "spindumpBytes": 6556466,
+  "archivedQueryExit": 0,
+  "originalPreserved": true,
+  "ui01": "4 passed,1 timed out; same English dinner-pattern selector as former UI09",
+  "scroll": "Native measurement count mismatch3vs4; no exported metrics. External UIKit pairs in all6windows not actual measurement-boundary proof.",
+  "interpretation": "Runner waiting for animation quiescence; app main thread sampled waiting in run loop306/306. Preference callback queue waiting for cfprefsd; animation manager waiting semaphore. No demonstrated app main-thread work loop or identified animation owner. Sample is late timeout interval, not first stall.",
+  "spindumpWindow": {
+    "startUTC": "2026-11-08 19:00:43.071",
+    "endUTC": "2026-11-08 19:00:48.064",
+    "sampledSeconds": 3.09,
+    "samples": 306
+  },
+  "screenRecording": "One exact export returned only60-byte error text: Unexpected Error: Finished test run with pending attachment. No usable video or visual state during stall. No repeat."
+}

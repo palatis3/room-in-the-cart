@@ -1,0 +1,129 @@
+162: 130  @objc FreeJourneyUITests.testFirstPickupCanStartFromDinnersAndReviewAnEditablePattern() + 56 (RoomInTheCartUITests + 494612) [0x10890cc14]
+163: 130  FreeJourneyUITests.testFirstPickupCanStartFromDinnersAndReviewAnEditablePattern() + 36 (RoomInTheCartUITests + 483912) [0x10890a248]
+164: 130  FreeJourneyUITests.reviewAndApprovePattern(spanish:) + 7684 (RoomInTheCartUITests + 491648) [0x10890c080]
+165: 130  FreeJourneyUITests.fill(_:into:replacing:requireDone:useVisibleCenter:) + 3052 (RoomInTheCartUITests + 270004) [0x1088d5eb4]
+166: 130  -[XCUIElement(XCUIElementTouchEvents) tap] + 48 (XCUIAutomation + 327672) [0x103a43ff8]
+167: 130  -[XCUIElementEmbeddedEventTarget tapWithError:] + 292 (XCUIAutomation + 378448) [0x103a50650]
+168: 130  -[XCUIElementBaseEventTarget dispatchEventWithDescription:eventBuilder:error:] + 376 (XCUIAutomation + 363564) [0x103a4cc2c]
+169: 130  -[XCTContext runInternalActivityNamed:block:] + 124 (XCTestCore + 393028) [0x103da7f44]
+170: 130  -[XCTContext _runActivityNamed:type:block:] + 196 (XCTestCore + 398276) [0x103da93c4]
+171: 130  __78-[XCUIElementBaseEventTarget dispatchEventWithDescription:eventBuilder:error:]_block_invoke + 72 (XCUIAutomation + 364184) [0x103a4ce98]
+172: 130  -[XCUIElementBaseEventTarget _dispatchEventWithEventBuilder:error:] + 112 (XCUIAutomation + 361276) [0x103a4c33c]
+173: 130  -[XCUIApplication _waitForQuiescenceAsPreEvent:] + 96 (XCUIAutomation + 57188) [0x103a01f64]
+174: 130  -[XCUIApplicationProcess waitForQuiescenceIncludingAnimationsIdle:usingActivity:isPreEvent:] + 360 (XCUIAutomation + 96992) [0x103a0bae0]
+175: 130  -[XCTContext runInternalActivityNamed:block:] + 124 (XCTestCore + 393028) [0x103da7f44]
+176: 130  -[XCTContext _runActivityNamed:type:block:] + 196 (XCTestCore + 398276) [0x103da93c4]
+177: 130  __92-[XCUIApplicationProcess waitForQuiescenceIncludingAnimationsIdle:usingActivity:isPreEvent:]_block_invoke + 144 (XCUIAutomation + 97228) [0x103a0bbcc]
+178: 130  XCUIWaitAndLog + 128 (XCUIAutomation + 120256) [0x103a115c0]
+179: 130  +[XCTWaiter waitForExpectations:timeout:enforceOrder:] + 72 (XCTestCore + 515820) [0x103dc5eec]
+180: 130  -[XCTWaiter waitForExpectations:timeout:enforceOrder:] + 108 (XCTestCore + 514828) [0x103dc5b0c]
+181: 130  -[XCTWaiter _waitForExpectations:timeout:enforceOrder:synchronously:completionHandler:] + 520 (XCTestCore + 515428) [0x103dc5d64]
+182: 129  -[XCTWaiter _performWait:manager:completionHandler:] + 792 (XCTestCore + 523436) [0x103dc7cac]
+183: 129  +[XCTWaiter _synchronouslyWaitForTimeInterval:] + 108 (XCTestCore + 521724) [0x103dc75fc]
+184: 129  ??? [0x18044fcec]
+185: 129  ??? [0x180454dbc]
+186: 129  ??? [0x180455c04]
+187: 129  mach_msg + 20 (libsystem_kernel.dylib + 3800) [0x10319ced8]
+188: 129  mach_msg_overwrite + 480 (libsystem_kernel.dylib + 35880) [0x1031a4c28]
+189: 129  mach_msg2_trap + 8 (libsystem_kernel.dylib + 2928) [0x10319cb70]
+190: *128  ??? (kernel.release.vmapple + 205024) [0xfffffe0007db20e0]
+191: *1    ??? (kernel.release.vmapple + 205024) [0xfffffe0007db20e0] (runnable)
+192: 1    -[XCTWaiter _performWait:manager:completionHandler:] + 772 (XCTestCore + 523416) [0x103dc7c98]
+49847: Process:          RoomInTheCart [15963]
+49848: UUID:             32C3B5C8-3956-39DA-9F28-036E4D517700
+49849: Path:             /Users/runner/Library/Developer/CoreSimulator/Devices/7CD62B98-6E72-4F0F-9068-3F6B0C8F8682/data/Containers/Bundle/Application/EC022559-63EB-4ECD-80FA-DBCDD14FCFF9/RoomInTheCart.app/RoomInTheCart
+49850: Identifier:       dev.roominthecart.app.debug
+49851: Version:          0.1.0 (1)
+49852: Is First Party:   No
+49853: Beta Identifier:  AFAD563E-D10E-59C5-AAA9-A4F168C4BF50
+49854: Shared Cache:     97ECA66B-AD55-3F61-8379-F8AB536FC272 slid base address 0x180000000, slide 0x180000001
+49855: Architecture:     arm64
+49856: Parent:           launchd_sim [3219]
+49857: Responsible:      launchd_sim [3219]
+49858: UID:              501
+49859: Footprint:        103.96 MB
+49860: Time Since Fork:  720s
+49861: Num samples:      306 (1-306)
+49862: Num threads:      5
+49863: Note:             1 idle work queue thread omitted
+49864: 
+49865: Thread 0xc593    DispatchQueue "com.apple.main-thread"(1)    306 samples (1-306)    priority 47 (base 47)
+49866: 306  start + 6076 (dyld + 27544) [0x104d5ab98]
+49867: 306  start_sim + 20 (dyld + 5072) [0x104e853d0]
+49868: 306  __debug_main_executable_dylib_entry_point + 12 (RoomInTheCart.debug.dylib + 2208760) [0x109dff3f8]
+49869: 306  static RoomInTheCartApp.$main() + 40 (RoomInTheCart.debug.dylib + 2068424) [0x109ddcfc8]
+49870: 306  static App.main() + 148 (SwiftUI + 5534764) [0x1da31b42c]
+49871: 306  runApp<A>(_:) + 180 (SwiftUI + 8098664) [0x1da58d368]
+49872: 306  closure #1 in KitRendererCommon(_:) + 164 (SwiftUI + 8099360) [0x1da58d620]
+49873: 306  UIApplicationMain + 124 (UIKitCore + 18540444) [0x18634c79c]
+49874: 306  -[UIApplication _run] + 772 (UIKitCore + 18523508) [0x186348574]
+49875: 306  GSEventRunModal + 116 (GraphicsServices + 10684) [0x192a669bc]
+49876: 306  _CFRunLoopRunSpecificWithOptions + 496 (CoreFoundation + 576748) [0x18044fcec]
+49877: 306  __CFRunLoopRun + 1128 (CoreFoundation + 597436) [0x180454dbc]
+49878: 306  __CFRunLoopServiceMachPort + 156 (CoreFoundation + 601092) [0x180455c04]
+49879: 306  mach_msg + 20 (libsystem_kernel.dylib + 3800) [0x104cb0ed8]
+49880: 306  mach_msg_overwrite + 480 (libsystem_kernel.dylib + 35880) [0x104cb8c28]
+49881: 306  mach_msg2_trap + 8 (libsystem_kernel.dylib + 2928) [0x104cb0b70]
+49882: *306  ??? (kernel.release.vmapple + 205024) [0xfffffe0007db20e0]
+49883: 
+49884: Thread 0x1b4df    DispatchQueue "CFPreferences Remote KVO Callback Queue"(3691)    306 samples (1-306)    priority 4 (base 4)
+49885: 306  start_wqthread + 8 (libsystem_pthread.dylib + 6540) [0x104bd198c]
+49886: 306  _pthread_wqthread + 288 (libsystem_pthread.dylib + 11144) [0x104bd2b88]
+49887: 306  _dispatch_workloop_worker_thread + 692 (libdispatch.dylib + 89204) [0x1801d4c74]
+49888: 306  _dispatch_root_queue_drain_deferred_wlh + 288 (libdispatch.dylib + 91444) [0x1801d5534]
+49889: 306  _dispatch_lane_invoke + 396 (libdispatch.dylib + 46824) [0x1801ca6e8]
+49890: 306  _dispatch_lane_serial_drain + 984 (libdispatch.dylib + 44072) [0x1801c9c28]
+49891: 306  _dispatch_client_callout + 12 (libdispatch.dylib + 115888) [0x1801db4b0]
+49892: 306  _dispatch_call_block_and_release + 24 (libdispatch.dylib + 6056) [0x1801c07a8]
+49893: 306  __65-[_CFXPreferences _setupNewDaemonConnection:invalidationHandler:]_block_invoke_2 + 264 (CoreFoundation + 1681776) [0x18055d970]
+49894: 306  -[_CFXPreferences updateSearchListsForIdentifier:] + 172 (CoreFoundation + 1438684) [0x1805223dc]
+49895: 306  -[__NSFrozenDictionaryM __apply:context:] + 124 (CoreFoundation + 1716404) [0x1805660b4]
+49896: 306  -[CFPrefsSuiteSearchListSource handleChangeNotificationForDomainIdentifier:isRemote:] + 84 (CoreFoundation + 1442052) [0x180523104]
+49897: 306  -[CFPrefsSource forEachObserver:] + 268 (CoreFoundation + 956588) [0x1804ac8ac]
+49898: 306  -[CFPrefsSearchListSource handleChangeNotificationForDomainIdentifier:isRemote:] + 300 (CoreFoundation + 1433672) [0x180521048]
+49899: 306  -[CFPrefsSearchListSource generationCount] + 92 (CoreFoundation + 1433856) [0x180521100]
+49900: 306  -[CFPrefsSearchListSource generationCount].cold.1 + 52 (CoreFoundation + 1835340) [0x18058314c]
+49901: 306  -[CFPrefsSearchListSource alreadylocked_getDictionary:] + 412 (CoreFoundation + 1832308) [0x180582574]
+49902: 306  -[CFPrefsSearchListSource alreadylocked_generationCountFromListOfSources:count:] + 256 (CoreFoundation + 1833796) [0x180582b44]
+49903: 306  -[CFPrefsSearchListSource synchronouslySendSystemMessage:andUserMessage:andDirectMessage:replyHandler:] + 276 (CoreFoundation + 1830772) [0x180581f74]
+49904: 306  CFPREFERENCES_IS_WAITING_FOR_USER_CFPREFSD + 92 (CoreFoundation + 1432144) [0x180520a50]
+49905: 306  __103-[CFPrefsSearchListSource synchronouslySendSystemMessage:andUserMessage:andDirectMessage:replyHandler:]_block_invoke + 112 (CoreFoundation + 1432420) [0x180520b64]
+49906: 306  -[_CFXPreferences withConnectionForRole:andUserIdentifier:performBlock:] + 44 (CoreFoundation + 1853716) [0x180587914]
+49907: 306  __103-[CFPrefsSearchListSource synchronouslySendSystemMessage:andUserMessage:andDirectMessage:replyHandler:]_block_invoke_2 + 40 (CoreFoundation + 1432500) [0x180520bb4]
+49908: 306  xpc_connection_send_message_with_reply_sync + 252 (libxpc.dylib + 63736) [0x1801078f8]
+49909: 306  dispatch_mach_send_with_result_and_wait_for_reply + 56 (libdispatch.dylib + 122812) [0x1801dcfbc]
+49910: 306  _dispatch_mach_send_and_wait_for_reply + 564 (libdispatch.dylib + 121888) [0x1801dcc20]
+49911: 306  mach_msg + 20 (libsystem_kernel.dylib + 3800) [0x104cb0ed8]
+49912: 306  mach_msg_overwrite + 480 (libsystem_kernel.dylib + 35880) [0x104cb8c28]
+49913: 306  mach_msg2_trap + 8 (libsystem_kernel.dylib + 2928) [0x104cb0b70]
+49914: *251  ??? (kernel.release.vmapple + 205024) [0xfffffe0007db20e0] (blocked by turnstile waiting for cfprefsd [3290] thread 0x1c060 after 4 hops)
+49915: *49   ??? (kernel.release.vmapple + 205024) [0xfffffe0007db20e0] (blocked by turnstile waiting for cfprefsd [3290] thread 0x1ccf2 after 4 hops)
+49916: *6    ??? (kernel.release.vmapple + 205024) [0xfffffe0007db20e0] (blocked by turnstile waiting for cfprefsd [3290] thread 0x1f135 after 4 hops)
+49917: 
+49918: Thread 0xdf9a    Thread name "com.apple.uikit.eventfetch-thread"    306 samples (1-306)    priority 47 (base 47)
+49919: 306  thread_start + 8 (libsystem_pthread.dylib + 6552) [0x104bd1998]
+49920: 306  _pthread_start + 104 (libsystem_pthread.dylib + 26028) [0x104bd65ac]
+49921: 306  __NSThread__start__ + 716 (Foundation + 9256212) [0x181132d14]
+49922: 306  -[UIEventFetcher threadMain] + 392 (UIKitCore + 15735888) [0x18609fc50]
+49923: 306  -[NSRunLoop(NSRunLoop) runUntilDate:] + 60 (Foundation + 9097320) [0x18110c068]
+49924: 306  -[NSRunLoop(NSRunLoop) runMode:beforeDate:] + 208 (Foundation + 9096776) [0x18110be48]
+49925: 306  _CFRunLoopRunSpecificWithOptions + 496 (CoreFoundation + 576748) [0x18044fcec]
+49926: 306  __CFRunLoopRun + 1128 (CoreFoundation + 597436) [0x180454dbc]
+49927: 306  __CFRunLoopServiceMachPort + 156 (CoreFoundation + 601092) [0x180455c04]
+49928: 306  mach_msg + 20 (libsystem_kernel.dylib + 3800) [0x104cb0ed8]
+49929: 306  mach_msg_overwrite + 480 (libsystem_kernel.dylib + 35880) [0x104cb8c28]
+49930: 306  mach_msg2_trap + 8 (libsystem_kernel.dylib + 2928) [0x104cb0b70]
+49931: *306  ??? (kernel.release.vmapple + 205024) [0xfffffe0007db20e0]
+49932: 
+49933: Thread 0xe0d4    Thread name "com.apple.UIKit.inProcessAnimationManager"    306 samples (1-306)    priority 53 (base 53)
+49934: 306  thread_start + 8 (libsystem_pthread.dylib + 6552) [0x104bd1998]
+49935: 306  _pthread_start + 104 (libsystem_pthread.dylib + 26028) [0x104bd65ac]
+49936: 306  __NSThread__start__ + 716 (Foundation + 9256212) [0x181132d14]
+49937: 306  ??? (UIKitCore + 1418704) [0x1852f85d0]
+49938: 306  ??? (UIKitCore + 5013128) [0x185665e88]
+49939: 306  ??? (UIKitCore + 4995520) [0x1856619c0]
+49940: 306  _dispatch_semaphore_wait_slow + 128 (libdispatch.dylib + 14304) [0x1801c27e0]
+49941: 306  semaphore_wait_trap + 8 (libsystem_kernel.dylib + 2796) [0x104cb0aec]
+49942: *306  ??? (kernel.release.vmapple + 636416) [0xfffffe0007e1b600]
+49943: 
+49944: Binary Images:

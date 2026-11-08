@@ -1,6 +1,12 @@
 # Room in the Cart current handoff
 
-Updated November 8, 2026 UTC. The full first-version goal is active and release acceptance remains incomplete. The owner's migration 041 approval has already been executed and verified. The separate 042 approval is pending; a repeated 041 approval does not authorize 042. Historical snapshots are preserved in [the handoff archive](CURRENT-HANDOFF-HISTORY-20261106.md).
+## November 8, 19:55 UTC checkpoint
+
+The Other meals disclosure fix is locally qualified. The complete label-tap journey passes native and strict validation on iOS 17.0 light, iOS 26.2 light, and iOS 26.2 dark at the largest accessibility text size. All 15 screenshots and 24 control records were reviewed. Both protected lunches, checkout amounts, disabled Apply and zero writes survive expansion and collapse. The exact 556-input source `a5624f8feb151fdbbe28e980849861d766ec239480967389d7bc1ac36909ab26` also passes unsigned arm64 Release compilation and bundle validation. [Evidence and retained failures](evidence/native/request-other-meals-disclosure-20261108/README.md). The largest-text header changes wrapping with the chevron width; a stable indicator-width refinement remains useful. No global accessibility or physical-device acceptance is claimed.
+
+Published `fe3e143` still has two observed failed jobs: the known English dinner-pattern keyboard-animation timeout (now UI01), and inconsistent scroll-performance metric counts. Launch/rendered performance, Security, Deep, native Swift/backend integration, 713 model tests, Debug/Release compilation, Swift CodeQL and ordinary UI shards 02–05 pass. Four contributor groups and Records/media pass; the remaining Core and fixture jobs are unfinished. [New failure evidence](evidence/native/ci-fe3e143-20261108/early-failures/README.md) includes the previously missing app stack: its main thread waits in the event loop during the late timeout sample while XCTest waits for animation quiescence. The recording attachment contains an error, not usable video. No cause or repair is inferred from that sample.
+
+All local native, inspection and collection processes for the disclosure fix are terminal. The next prepared work is the Cancel preview UI/model regression in `.build/S24CancelPreviewNov08/proposal-r2`, followed by the unfiltered accessibility audit. The full 52-requirement/27-screen goal remains active. Provider/distribution and human/physical gates remain open. Helper agents reported usage-limit errors; root owns monitoring and fixes. No staging update or new CI push occurred during this work.
 
 ## Latest verified state — November 8, 18:16 UTC
 
