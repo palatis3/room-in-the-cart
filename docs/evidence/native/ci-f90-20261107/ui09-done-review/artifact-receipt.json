@@ -1,0 +1,9 @@
+{
+  "artifact_id": 13600243874,
+  "bytes": 24337702,
+  "sha256": "8147db2595fee5d0dcf7f0aaa012f4138ae5e8c8ad22e8ba2100a8daa4191c45",
+  "expected_sha256_matched": true,
+  "original_archive_retained": true,
+  "only_result_bundle_extracted": true,
+  "member_count": 135
+}

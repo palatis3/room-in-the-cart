@@ -1,0 +1,83 @@
+9: 2026-11-08 01:57:50.008502+0000 RoomInTheCart[8951:33273] [Default] Received request to notify when animations are idle
+10: 2026-11-08 01:57:50.008575+0000 RoomInTheCart[8951:33273] [Default] Sending animations idle reply with error: (null)
+12: 2026-11-08 01:57:52.101531+0000 RoomInTheCart[8951:33004] [Default] Sending main run loop idle reply
+5863: 2026-11-08 01:57:58.664624+0000 RoomInTheCart[8951:33004] [Default] Sending main run loop idle reply
+5864: 2026-11-08 01:57:58.664629+0000 RoomInTheCart[8951:33392] [Default] Received request to notify when animations are idle
+5865: 2026-11-08 01:57:58.669092+0000 RoomInTheCart[8951:33392] [Default] Sending animations idle reply with error: (null)
+8263: 2026-11-08 01:58:01.161595+0000 RoomInTheCart[8951:33391] [Default] Received request to notify when animations are idle
+8264: 2026-11-08 01:58:01.161663+0000 RoomInTheCart[8951:33391] [Default] Sending animations idle reply with error: (null)
+8266: 2026-11-08 01:58:01.893673+0000 RoomInTheCart[8951:33004] [Default] Sending main run loop idle reply
+9811: 2026-11-08 01:58:04.555487+0000 RoomInTheCart[8951:33004] [Default] Sending main run loop idle reply
+9812: 2026-11-08 01:58:04.556504+0000 RoomInTheCart[8951:33272] [Default] Received request to notify when animations are idle
+9813: 2026-11-08 01:58:04.556564+0000 RoomInTheCart[8951:33272] [Default] Sending animations idle reply with error: (null)
+10587: 2026-11-08 01:58:06.436037+0000 RoomInTheCart[8951:33287] [Default] Received request to notify when animations are idle
+10588: 2026-11-08 01:58:07.066127+0000 RoomInTheCart[8951:33004] [Default] Sending animations idle reply with error: (null)
+10590: 2026-11-08 01:58:07.945159+0000 RoomInTheCart[8951:33004] [Default] Sending main run loop idle reply
+11664: 2026-11-08 01:58:08.867764+0000 RoomInTheCart[8951:33004] [Default] Sending main run loop idle reply
+11665: 2026-11-08 01:58:08.867781+0000 RoomInTheCart[8951:33272] [Default] Received request to notify when animations are idle
+11666: 2026-11-08 01:58:08.867823+0000 RoomInTheCart[8951:33272] [Default] Sending animations idle reply with error: (null)
+12324: 2026-11-08 01:58:09.703759+0000 RoomInTheCart[8951:33287] [Default] Received request to notify when animations are idle
+12326: 2026-11-08 01:58:09.754367+0000 RoomInTheCart[8951:33004] [Default] Sending main run loop idle reply
+12327: 2026-11-08 01:58:10.632165+0000 RoomInTheCart[8951:33004] [Default] Sending animations idle reply with error: (null)
+19833: 2026-11-08 01:58:13.734540+0000 RoomInTheCart[8951:33004] [Default] Sending main run loop idle reply
+19834: 2026-11-08 01:58:13.734561+0000 RoomInTheCart[8951:33287] [Default] Received request to notify when animations are idle
+19835: 2026-11-08 01:58:13.734624+0000 RoomInTheCart[8951:33287] [Default] Sending animations idle reply with error: (null)
+22246: 2026-11-08 01:58:14.996695+0000 RoomInTheCart[8951:33287] [Default] Received request to notify when animations are idle
+22247: 2026-11-08 01:58:14.996752+0000 RoomInTheCart[8951:33287] [Default] Sending animations idle reply with error: (null)
+22249: 2026-11-08 01:58:15.053194+0000 RoomInTheCart[8951:33004] [Default] Sending main run loop idle reply
+47201: 2026-11-08 01:58:22.231016+0000 RoomInTheCart[8951:33004] [Default] Sending main run loop idle reply
+47202: 2026-11-08 01:58:22.231061+0000 RoomInTheCart[8951:33287] [Default] Received request to notify when animations are idle
+47203: 2026-11-08 01:58:22.231101+0000 RoomInTheCart[8951:33287] [Default] Sending animations idle reply with error: (null)
+51904: 2026-11-08 01:58:23.750083+0000 RoomInTheCart[8951:33391] [Default] Received request to notify when animations are idle
+51905: 2026-11-08 01:58:23.750177+0000 RoomInTheCart[8951:33391] [Default] Sending animations idle reply with error: (null)
+51930: 2026-11-08 01:58:53.196232+0000 RoomInTheCart[8951:40399]        CHHapticPattern.mm:487   +[CHHapticPattern patternForKey:error:]: Failed to read pattern library data: Error Domain=NSCocoaErrorDomain Code=260 "The file “hapticpatternlibrary.plist” couldn’t be opened because there is no such file." UserInfo={NSFilePath=/Library/Audio/Tunings/Generic/Haptics/Library/hapticpatternlibrary.plist, NSURL=file://2026-11-08 01:58:53.196296+0000 RoomInTheCart[8951:33004] [Default] Sending main run loop idle reply
+52308: 2026-11-08 01:58:54.447735+0000 RoomInTheCart[8951:33004] [Default] Sending main run loop idle reply
+52309: 2026-11-08 01:58:54.448131+0000 RoomInTheCart[8951:33272] [Default] Received request to notify when animations are idle
+52310: 2026-11-08 01:58:54.448181+0000 RoomInTheCart[8951:33272] [Default] Sending animations idle reply with error: (null)
+53120: 2026-11-08 01:58:55.573891+0000 RoomInTheCart[8951:33004] [Default] Sending main run loop idle reply
+53121: 2026-11-08 01:58:55.586159+0000 RoomInTheCart[8951:40400] [Default] Received request to notify when animations are idle
+53122: 2026-11-08 01:58:55.586373+0000 RoomInTheCart[8951:40400] [Default] Sending animations idle reply with error: (null)
+57620: 2026-11-08 01:58:56.557110+0000 RoomInTheCart[8951:40400] [Default] Received request to notify when animations are idle
+57621: 2026-11-08 01:58:56.557160+0000 RoomInTheCart[8951:33004] [Default] Sending main run loop idle reply
+57622: 2026-11-08 01:58:56.557227+0000 RoomInTheCart[8951:40400] [Default] Sending animations idle reply with error: (null)
+60261: 2026-11-08 01:58:57.976839+0000 RoomInTheCart[8951:40400] [Default] Received request to notify when animations are idle
+60262: 2026-11-08 01:58:57.976881+0000 RoomInTheCart[8951:33004] [Default] Sending main run loop idle reply
+60263: 2026-11-08 01:58:58.209270+0000 RoomInTheCart[8951:33004] [Default] Sending animations idle reply with error: (null)
+86175: 2026-11-08 01:59:07.516649+0000 RoomInTheCart[8951:40400] [Default] Received request to notify when animations are idle
+86176: 2026-11-08 01:59:07.516653+0000 RoomInTheCart[8951:33004] [Default] Sending main run loop idle reply
+86177: 2026-11-08 01:59:07.516722+0000 RoomInTheCart[8951:40400] [Default] Sending animations idle reply with error: (null)
+91037: 2026-11-08 01:59:09.296286+0000 RoomInTheCart[8951:33004] [Default] Sending main run loop idle reply
+91038: 2026-11-08 01:59:09.296260+0000 RoomInTheCart[8951:40376] [Default] Received request to notify when animations are idle
+91421: 2026-11-08 01:59:10.395776+0000 RoomInTheCart[8951:33004] [Default] Sending main run loop idle reply
+91422: 2026-11-08 01:59:10.395921+0000 RoomInTheCart[8951:40400] [Default] Received request to notify when animations are idle
+91423: 2026-11-08 01:59:10.396033+0000 RoomInTheCart[8951:40400] [Default] Sending animations idle reply with error: (null)
+92221: 2026-11-08 01:59:11.439896+0000 RoomInTheCart[8951:33004] [Default] Sending main run loop idle reply
+92222: 2026-11-08 01:59:11.439990+0000 RoomInTheCart[8951:40376] [Default] Received request to notify when animations are idle
+92224: -08 01:59:11.440049+0000 RoomInTheCart[8951:40376] [Default] Sending animations idle reply with error: (null)
+96732: 2026-11-08 01:59:12.477410+0000 RoomInTheCart[8951:40376] [Default] Received request to notify when animations are idle
+96733: 2026-11-08 01:59:12.477473+0000 RoomInTheCart[8951:33004] [Default] Sending main run loop idle reply
+96734: 2026-11-08 01:59:12.477478+0000 RoomInTheCart[8951:40376] [Default] Sending animations idle reply with error: (null)
+99373: 2026-11-08 01:59:13.285321+0000 RoomInTheCart[8951:33004] [Default] Sending main run loop idle reply
+99374: 2026-11-08 01:59:13.288172+0000 RoomInTheCart[8951:40376] [Default] Received request to notify when animations are idle
+125636: 2026-11-08 02:00:17.022327+0000 RoomInTheCart[8951:33004] [Default] Sending main run loop idle reply
+125637: 2026-11-08 02:00:17.022849+0000 RoomInTheCart[8951:40523] [Default] Received request to notify when animations are idle
+130562: 2026-11-08 02:01:19.158862+0000 RoomInTheCart[8951:40399] [Default] Received request to notify when animations are idle
+130572: 2026-11-08 02:01:20.841467+0000 RoomInTheCart[8951:33004] [Default] Sending main run loop idle reply
+130948: 2026-11-08 02:02:20.503284+0000 RoomInTheCart[8951:33004] [Default] Sending main run loop idle reply
+130949: 2026-11-08 02:02:20.505570+0000 RoomInTheCart[8951:62990] [Default] Received request to notify when animations are idle
+131744: 2026-11-08 02:03:21.896957+0000 RoomInTheCart[8951:62990] [Default] Received request to notify when animations are idle
+131760: 2026-11-08 02:03:22.370372+0000 RoomInTheCart[8951:33004] [Default] Sending main run loop idle reply
+136256: 2026-11-08 02:04:22.664797+0000 RoomInTheCart[8951:71743] [Default] Received request to notify when animations are idle
+136258: 2026-11-08 02:04:22.664970+0000 RoomInTheCart[8951:33004] [Default] Sending main run loop idle reply
+138896: 2026-11-08 02:05:24.094576+0000 RoomInTheCart[8951:82613] [Default] Received request to notify when animations are idle
+138898: 2026-11-08 02:05:24.834409+0000 RoomInTheCart[8951:33004] [Default] Sending main run loop idle reply
+166155: 2026-11-08 02:06:27.900546+0000 RoomInTheCart[8951:33004] [Default] Sending main run loop idle reply
+166156: 2026-11-08 02:06:27.901455+0000 RoomInTheCart[8951:95035] [Default] Received request to notify when animations are idle
+171280: 2026-11-08 02:07:29.472667+0000 RoomInTheCart[8951:103412] [Default] Received request to notify when animations are idle
+171292: 2026-11-08 02:07:30.386959+0000 RoomInTheCart[8951:33004] [Default] Sending main run loop idle reply
+171638: 2026-11-08 02:08:30.765591+0000 RoomInTheCart[8951:33004] [Default] Sending main run loop idle reply
+171639: 2026-11-08 02:08:30.765608+0000 RoomInTheCart[8951:112431] [Default] Received request to notify when animations are idle
+172399: 2026-11-08 02:09:32.930399+0000 RoomInTheCart[8951:116319] [Default] Received request to notify when animations are idle
+172401: 2026-11-08 02:09:33.062838+0000 RoomInTheCart[8951:33004] [Default] Sending main run loop idle reply
+175432: 2026-11-08 02:10:33.548607+0000 RoomInTheCart[8951:33004] [Default] Sending main run loop idle reply
+175433: 2026-11-08 02:10:33.548628+0000 RoomInTheCart[8951:125840] [Default] Received request to notify when animations are idle

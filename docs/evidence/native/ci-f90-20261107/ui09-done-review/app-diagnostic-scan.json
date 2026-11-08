@@ -1,0 +1,15 @@
+{
+  "scope": "Whole original combined app stdout, all case processes; bounded literal signature scan only. Runner restart is separately retained in Tests.log.",
+  "file": "diagnostics/0_Test_iPhone 17_Diagnostics/RoomInTheCartUITests-1EB916BC-9545-4494-A9A9-0C97781F5BF2-Configuration-Test Scheme Action-Iteration-1/RoomInTheCartUITests-A00DB79D-7AFA-4F7C-862B-32080D090687/StandardOutputAndStandardError-dev.roominthecart.app.debug.txt",
+  "bytes": 352580309,
+  "sha256": "0f1da5f043cc7481ab3fdc28c9f46ce743e2b2e930d162e22a437968317f7190",
+  "counts": {
+    "sqlite_api_misuse": 0,
+    "uncaught_exception": 0,
+    "fatal_error": 0,
+    "exc_bad_access": 0,
+    "exc_crash": 0,
+    "xctest_restart": 0
+  },
+  "lineNumbers": {}
+}

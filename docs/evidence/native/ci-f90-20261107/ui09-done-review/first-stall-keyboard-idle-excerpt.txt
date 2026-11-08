@@ -1,0 +1,17 @@
+96729: 2026-11-08 01:59:12.477145+0000 RoomInTheCart[8951:40400] [Default] Received request to notify when the main run loop is idle
+96730: 2026-11-08 01:59:12.477264+0000 RoomInTheCart[8951:40400] [Default] Idle notifier finished setting up run loop observer
+96731: 2026-11-08 01:59:12.477333+0000 RoomInTheCart[8951:33004] [Default] Idle notifier run loop observer fired
+96732: 2026-11-08 01:59:12.477410+0000 RoomInTheCart[8951:40376] [Default] Received request to notify when animations are idle
+96733: 2026-11-08 01:59:12.477473+0000 RoomInTheCart[8951:33004] [Default] Sending main run loop idle reply
+96734: 2026-11-08 01:59:12.477478+0000 RoomInTheCart[8951:40376] [Default] Sending animations idle reply with error: (null)
+99370: 2026-11-08 01:59:13.284896+0000 RoomInTheCart[8951:33287] [Default] Received request to notify when the main run loop is idle
+99371: 2026-11-08 01:59:13.285074+0000 RoomInTheCart[8951:33004] [Default] Idle notifier run loop observer fired
+99372: 2026-11-08 01:59:13.285216+0000 RoomInTheCart[8951:33287] [Default] Idle notifier finished setting up run loop observer
+99373: 2026-11-08 01:59:13.285321+0000 RoomInTheCart[8951:33004] [Default] Sending main run loop idle reply
+99374: 2026-11-08 01:59:13.288172+0000 RoomInTheCart[8951:40376] [Default] Received request to notify when animations are idle
+99686:     Other, 0x1011e4e60 <AX element pid: 8951, elementOrHash.elementID: 4313735184.397>
+99687:       Other, 0x1011576b0 <AX element pid: 8951, elementOrHash.elementID: 4313215264.399>
+99688: 2026-11-08 02:00:13.630802+0000 RoomInTheCart[8951:40399] [Default] Query ↪︎ Descendants matching type Keyboard found matching snapshots: {(
+99689: )} (error: (null))
+99690: 2026-11-08 02:00:13.631008+0000 RoomInTheCart[8951:40399] [Default] Replying to query ↪︎ Descendants matching type Keyboard with results: <XCTElementQueryResults: 0x600000dac480> (error: (null))
+99691: 2026-11-08 02:00:13.633883+0000 RoomInTheCart[8951:40523] [Default] Received request to fetch matches for query: ↪︎ Descendants matching type Any

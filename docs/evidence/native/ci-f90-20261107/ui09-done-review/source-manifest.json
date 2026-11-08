@@ -1,0 +1,24 @@
+{
+  "originalCommit": "f90ad75a2e561891b2014ecb234d19639bcaed4c",
+  "currentCommit": "a0195caa8eea9a5247cf1232902cbb2e215844d7",
+  "files": [
+    {
+      "file": "ios/UITests/ContextualNavigationUITests.swift",
+      "originalSHA256": "3f2c8f9f21945a5004d87f2589d0a2b9be73d937e364499c60db6154989c614c",
+      "currentSHA256": "c59477daa1b60ba20efc8aa93caa52cdf296d65e7698293b96eda11dafbc6045",
+      "wholeFileIdentical": false
+    },
+    {
+      "file": "ios/Features/Shop/CheckOneChangeView.swift",
+      "originalSHA256": "3613cb4d8d15ce7b076cd137ae3dfd88734eed3d201f95b8e270e8eb5035713b",
+      "currentSHA256": "3613cb4d8d15ce7b076cd137ae3dfd88734eed3d201f95b8e270e8eb5035713b",
+      "wholeFileIdentical": true
+    },
+    {
+      "file": "ios/App/Theme.swift",
+      "originalSHA256": "8c8ace01c987920f0b694c077694354e4a20bd5abd22d5c70c1b60d8304a9cf3",
+      "currentSHA256": "8c8ace01c987920f0b694c077694354e4a20bd5abd22d5c70c1b60d8304a9cf3",
+      "wholeFileIdentical": true
+    }
+  ]
+}
