@@ -1,0 +1,20 @@
+import SwiftUI
+import AVFoundation
+
+@main struct SpeechControl: App {
+    let synth = AVSpeechSynthesizer()
+    var body: some Scene {
+        WindowGroup {
+            VStack {
+                Button("Speak") {
+                    let utterance = AVSpeechUtterance(string: String(repeating: "Warm two tortillas for lunch. ", count: 15))
+                    utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
+                    synth.speak(utterance)
+                }
+                Button("Pause") { _ = synth.pauseSpeaking(at: .immediate) }
+                Button("Resume") { _ = synth.continueSpeaking() }
+                Button("Stop") { _ = synth.stopSpeaking(at: .immediate) }
+            }
+        }
+    }
+}

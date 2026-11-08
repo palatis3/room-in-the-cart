@@ -1,0 +1,9 @@
+{
+  "offlineAuditReproducesExactly": true,
+  "originalFrozenFilesReverifiedUnchanged": 28,
+  "exactCopiesVerified": 5,
+  "boundedSourceAndDiagnosticTextReviewed": true,
+  "urlCredentialPatternScan": "no matches",
+  "nativeOrRemoteActions": false,
+  "limitations": "Pattern scan supplements review; raw JSON preserves local diagnostic paths/UUIDs, not business text."
+}

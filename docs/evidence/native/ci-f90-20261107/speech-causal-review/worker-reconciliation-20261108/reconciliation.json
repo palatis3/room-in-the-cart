@@ -1,0 +1,1496 @@
+{
+  "schema": 1,
+  "status": "offline evidence reconciliation; not native qualification",
+  "foregroundPrefixExactlyDuplicated": true,
+  "foregroundEventCount": 5,
+  "workerEventCount": 5,
+  "workerDistinctFirstSixSignatures": 4,
+  "workerNativeCaseStart": "2026-11-07T12:24:25.167000-05:00",
+  "workerNativeCaseEnd": "2026-11-07T12:24:34.427000-05:00",
+  "workerFaultWindowSeconds": 2.696236,
+  "waitDurationSeconds": null,
+  "durationLimit": "The event window and XCTest synthesis intervals are not wait or API-call durations. Raw events contain no wait duration or complete lower-priority-owner stack.",
+  "foreground": [
+    {
+      "timestamp": "2026-11-07 12:23:39.547976-0500",
+      "pid": 70394,
+      "emissionThreadID": 22679512,
+      "processImageUUID": "9C6B73EE-E92C-30EF-8DC6-39FD8AD05577",
+      "detail": {
+        "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions",
+        "antipattern trigger": "-[NSCondition wait]",
+        "message type": "elevatable",
+        "category type": 3,
+        "subcategory type": -1,
+        "show in console": "0"
+      },
+      "blockedStack": [
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d2288"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d43b8"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d4620"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x334c8"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x387e4"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x26f94"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x17a8"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1c4b0"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x384a0"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1131c"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x10e6c"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x92ed8"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x920b0"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x8ccec"
+        },
+        {
+          "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+          "offset": "0x29bc"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11aa574"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11ae79c"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9620"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9368"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x54742c"
+        },
+        {
+          "uuid": "1C3600EB-D474-334B-B394-8EDC765436EA",
+          "offset": "0x2148"
+        },
+        {
+          "uuid": "1C3600EB-D474-334B-B394-8EDC765436EA",
+          "offset": "0x2298"
+        },
+        {
+          "uuid": "00000000-0000-0000-0000-000000000000",
+          "offset": "0x0"
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-11-07 12:23:40.779455-0500",
+      "pid": 70394,
+      "emissionThreadID": 22679512,
+      "processImageUUID": "9C6B73EE-E92C-30EF-8DC6-39FD8AD05577",
+      "detail": {
+        "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions",
+        "antipattern trigger": "-[NSCondition wait]",
+        "message type": "elevatable",
+        "category type": 3,
+        "subcategory type": -1,
+        "show in console": "0"
+      },
+      "blockedStack": [
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d2288"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d43b8"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d4620"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x334c8"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x37fa4"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x2c844"
+        },
+        {
+          "uuid": "1C3600EB-D474-334B-B394-8EDC765436EA",
+          "offset": "0x1e24"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x6fb920"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0xdfcdb0"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0xdc77ac"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0xb68f0"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x69370c"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x699258"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0xd73818"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0xdfcdb0"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0xd6e9f4"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0xd749a8"
+        },
+        {
+          "uuid": "F7E2BB37-D266-38FC-B8CC-80664C89F0B4",
+          "offset": "0xcbdb4"
+        },
+        {
+          "uuid": "F7E2BB37-D266-38FC-B8CC-80664C89F0B4",
+          "offset": "0x242080"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x28e2c4"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x54ade0"
+        },
+        {
+          "uuid": "F7E2BB37-D266-38FC-B8CC-80664C89F0B4",
+          "offset": "0x50f708"
+        },
+        {
+          "uuid": "F7E2BB37-D266-38FC-B8CC-80664C89F0B4",
+          "offset": "0x50e760"
+        },
+        {
+          "uuid": "F7E2BB37-D266-38FC-B8CC-80664C89F0B4",
+          "offset": "0x50e498"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x9548e0"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x95493c"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0xc66bb0"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0xc6fd84"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0xc6ca68"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0xc6c62c"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0xc712c8"
+        },
+        {
+          "uuid": "F19999F3-DB13-3984-BEF8-CC5C36F65EF9",
+          "offset": "0xc6a0"
+        },
+        {
+          "uuid": "F19999F3-DB13-3984-BEF8-CC5C36F65EF9",
+          "offset": "0x2869c"
+        },
+        {
+          "uuid": "F19999F3-DB13-3984-BEF8-CC5C36F65EF9",
+          "offset": "0x543dc"
+        },
+        {
+          "uuid": "F19999F3-DB13-3984-BEF8-CC5C36F65EF9",
+          "offset": "0x7b464"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0xc5e090"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11e6450"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11c42e4"
+        },
+        {
+          "uuid": "AF87E7D6-1068-3D45-93D5-100C754A495F",
+          "offset": "0x5c624"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x1073270"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x1075f24"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x106e4d0"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x691378"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x10c60a4"
+        },
+        {
+          "uuid": "E2E29A67-7D1D-333D-9227-E405451EDB7D",
+          "offset": "0x12b4"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x574ac"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x93aa8"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x930c0"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x92188"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x8ccec"
+        },
+        {
+          "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+          "offset": "0x29bc"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11aa574"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11ae79c"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9620"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9368"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x54742c"
+        },
+        {
+          "uuid": "1C3600EB-D474-334B-B394-8EDC765436EA",
+          "offset": "0x2148"
+        },
+        {
+          "uuid": "1C3600EB-D474-334B-B394-8EDC765436EA",
+          "offset": "0x2298"
+        },
+        {
+          "uuid": "00000000-0000-0000-0000-000000000000",
+          "offset": "0x0"
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-11-07 12:23:40.788811-0500",
+      "pid": 70394,
+      "emissionThreadID": 22679512,
+      "processImageUUID": "9C6B73EE-E92C-30EF-8DC6-39FD8AD05577",
+      "detail": {
+        "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions",
+        "antipattern trigger": "-[NSCondition wait]",
+        "message type": "elevatable",
+        "category type": 3,
+        "subcategory type": -1,
+        "show in console": "0"
+      },
+      "blockedStack": [
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d2288"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d43b8"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d4620"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x334c8"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x38ef8"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x27074"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x17a8"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1c4b0"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x384a0"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1131c"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x10e6c"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x92ed8"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x920b0"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x8ccec"
+        },
+        {
+          "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+          "offset": "0x29bc"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11aa574"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11ae79c"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9620"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9368"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x54742c"
+        },
+        {
+          "uuid": "1C3600EB-D474-334B-B394-8EDC765436EA",
+          "offset": "0x2148"
+        },
+        {
+          "uuid": "1C3600EB-D474-334B-B394-8EDC765436EA",
+          "offset": "0x2298"
+        },
+        {
+          "uuid": "00000000-0000-0000-0000-000000000000",
+          "offset": "0x0"
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-11-07 12:23:42.195238-0500",
+      "pid": 70394,
+      "emissionThreadID": 22679512,
+      "processImageUUID": "9C6B73EE-E92C-30EF-8DC6-39FD8AD05577",
+      "detail": {
+        "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions",
+        "antipattern trigger": "-[NSCondition wait]",
+        "message type": "elevatable",
+        "category type": 3,
+        "subcategory type": -1,
+        "show in console": "0"
+      },
+      "blockedStack": [
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d2288"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d43b8"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d4620"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x334c8"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x390ac"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x27154"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x17a8"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1c4b0"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x384a0"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1131c"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x10e6c"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x92ed8"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x920b0"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x8ccec"
+        },
+        {
+          "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+          "offset": "0x29bc"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11aa574"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11ae79c"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9620"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9368"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x54742c"
+        },
+        {
+          "uuid": "1C3600EB-D474-334B-B394-8EDC765436EA",
+          "offset": "0x2148"
+        },
+        {
+          "uuid": "1C3600EB-D474-334B-B394-8EDC765436EA",
+          "offset": "0x2298"
+        },
+        {
+          "uuid": "00000000-0000-0000-0000-000000000000",
+          "offset": "0x0"
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-11-07 12:23:42.277012-0500",
+      "pid": 70394,
+      "emissionThreadID": 22679512,
+      "processImageUUID": "9C6B73EE-E92C-30EF-8DC6-39FD8AD05577",
+      "detail": {
+        "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions",
+        "antipattern trigger": "-[NSCondition wait]",
+        "message type": "elevatable",
+        "category type": 3,
+        "subcategory type": -1,
+        "show in console": "0"
+      },
+      "blockedStack": [
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d2288"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d43b8"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d4620"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x334c8"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x39344"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x276fc"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x17a8"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1c4b0"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x384a0"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1131c"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x10e6c"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x92ed8"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x920b0"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x8ccec"
+        },
+        {
+          "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+          "offset": "0x29bc"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11aa574"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11ae79c"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9620"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9368"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x54742c"
+        },
+        {
+          "uuid": "1C3600EB-D474-334B-B394-8EDC765436EA",
+          "offset": "0x2148"
+        },
+        {
+          "uuid": "1C3600EB-D474-334B-B394-8EDC765436EA",
+          "offset": "0x2298"
+        },
+        {
+          "uuid": "00000000-0000-0000-0000-000000000000",
+          "offset": "0x0"
+        }
+      ]
+    }
+  ],
+  "worker": [
+    {
+      "timestamp": "2026-11-07 12:24:29.915204-0500",
+      "pid": 70758,
+      "emissionThreadID": 22684028,
+      "processImageUUID": "9C6B73EE-E92C-30EF-8DC6-39FD8AD05577",
+      "detail": {
+        "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions",
+        "antipattern trigger": "-[NSCondition wait]",
+        "message type": "elevatable",
+        "category type": 3,
+        "subcategory type": -1,
+        "show in console": "0"
+      },
+      "blockedStack": [
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d2288"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d43b8"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d4620"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x334c8"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x387e4"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x26f94"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x17a8"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1c4b0"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x384a0"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1131c"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x10e6c"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x92ed8"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x920b0"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x8ccec"
+        },
+        {
+          "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+          "offset": "0x29bc"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11aa574"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11ae79c"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9620"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9368"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x54742c"
+        },
+        {
+          "uuid": "54DF15CD-C78C-3DF6-A059-1152D9899530",
+          "offset": "0x2d48"
+        },
+        {
+          "uuid": "54DF15CD-C78C-3DF6-A059-1152D9899530",
+          "offset": "0x2e88"
+        },
+        {
+          "uuid": "00000000-0000-0000-0000-000000000000",
+          "offset": "0x0"
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-11-07 12:24:30.863496-0500",
+      "pid": 70758,
+      "emissionThreadID": 22684028,
+      "processImageUUID": "9C6B73EE-E92C-30EF-8DC6-39FD8AD05577",
+      "detail": {
+        "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions",
+        "antipattern trigger": "-[NSCondition wait]",
+        "message type": "elevatable",
+        "category type": 3,
+        "subcategory type": -1,
+        "show in console": "0"
+      },
+      "blockedStack": [
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d2288"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d43b8"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d4620"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x334c8"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x39344"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x276fc"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x17a8"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1c4b0"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x384a0"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1131c"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x10e6c"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x92ed8"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x920b0"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x8ccec"
+        },
+        {
+          "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+          "offset": "0x29bc"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11aa574"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11ae79c"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9620"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9368"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x54742c"
+        },
+        {
+          "uuid": "54DF15CD-C78C-3DF6-A059-1152D9899530",
+          "offset": "0x2d48"
+        },
+        {
+          "uuid": "54DF15CD-C78C-3DF6-A059-1152D9899530",
+          "offset": "0x2e88"
+        },
+        {
+          "uuid": "00000000-0000-0000-0000-000000000000",
+          "offset": "0x0"
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-11-07 12:24:31.157462-0500",
+      "pid": 70758,
+      "emissionThreadID": 22684028,
+      "processImageUUID": "9C6B73EE-E92C-30EF-8DC6-39FD8AD05577",
+      "detail": {
+        "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions",
+        "antipattern trigger": "-[NSCondition wait]",
+        "message type": "elevatable",
+        "category type": 3,
+        "subcategory type": -1,
+        "show in console": "0"
+      },
+      "blockedStack": [
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d2288"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d43b8"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d4620"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x334c8"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x38ef8"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x27074"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x17a8"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1c4b0"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x384a0"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1131c"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x10e6c"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x92ed8"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x920b0"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x8ccec"
+        },
+        {
+          "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+          "offset": "0x29bc"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11aa574"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11ae79c"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9620"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9368"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x54742c"
+        },
+        {
+          "uuid": "54DF15CD-C78C-3DF6-A059-1152D9899530",
+          "offset": "0x2d48"
+        },
+        {
+          "uuid": "54DF15CD-C78C-3DF6-A059-1152D9899530",
+          "offset": "0x2e88"
+        },
+        {
+          "uuid": "00000000-0000-0000-0000-000000000000",
+          "offset": "0x0"
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-11-07 12:24:32.541116-0500",
+      "pid": 70758,
+      "emissionThreadID": 22684028,
+      "processImageUUID": "9C6B73EE-E92C-30EF-8DC6-39FD8AD05577",
+      "detail": {
+        "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions",
+        "antipattern trigger": "-[NSCondition wait]",
+        "message type": "elevatable",
+        "category type": 3,
+        "subcategory type": -1,
+        "show in console": "0"
+      },
+      "blockedStack": [
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d2288"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d43b8"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d4620"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x334c8"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x390ac"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x27154"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x17a8"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1c4b0"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x384a0"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1131c"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x10e6c"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x92ed8"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x920b0"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x8ccec"
+        },
+        {
+          "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+          "offset": "0x29bc"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11aa574"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11ae79c"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9620"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9368"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x54742c"
+        },
+        {
+          "uuid": "54DF15CD-C78C-3DF6-A059-1152D9899530",
+          "offset": "0x2d48"
+        },
+        {
+          "uuid": "54DF15CD-C78C-3DF6-A059-1152D9899530",
+          "offset": "0x2e88"
+        },
+        {
+          "uuid": "00000000-0000-0000-0000-000000000000",
+          "offset": "0x0"
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-11-07 12:24:32.611440-0500",
+      "pid": 70758,
+      "emissionThreadID": 22684028,
+      "processImageUUID": "9C6B73EE-E92C-30EF-8DC6-39FD8AD05577",
+      "detail": {
+        "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions",
+        "antipattern trigger": "-[NSCondition wait]",
+        "message type": "elevatable",
+        "category type": 3,
+        "subcategory type": -1,
+        "show in console": "0"
+      },
+      "blockedStack": [
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d2288"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d43b8"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d4620"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x334c8"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x39344"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x276fc"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x17a8"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1c4b0"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x384a0"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1131c"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x10e6c"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x92ed8"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x920b0"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x8ccec"
+        },
+        {
+          "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+          "offset": "0x29bc"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11aa574"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11ae79c"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9620"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9368"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x54742c"
+        },
+        {
+          "uuid": "54DF15CD-C78C-3DF6-A059-1152D9899530",
+          "offset": "0x2d48"
+        },
+        {
+          "uuid": "54DF15CD-C78C-3DF6-A059-1152D9899530",
+          "offset": "0x2e88"
+        },
+        {
+          "uuid": "00000000-0000-0000-0000-000000000000",
+          "offset": "0x0"
+        }
+      ]
+    }
+  ],
+  "f90FirstSixComparisons": [
+    {
+      "f90Event": 0,
+      "f90Timestamp": "2026-11-08 02:12:45.994006+0000",
+      "firstSix": [
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d2288",
+          "image": "Foundation"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d43b8",
+          "image": "Foundation"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d4620",
+          "image": "Foundation"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x334c8",
+          "image": "TextToSpeech"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x387e4",
+          "image": "TextToSpeech"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x26f94",
+          "image": "TextToSpeech"
+        }
+      ],
+      "foregroundMatches": [
+        0
+      ],
+      "workerMatches": [
+        0
+      ]
+    },
+    {
+      "f90Event": 1,
+      "f90Timestamp": "2026-11-08 02:12:48.475920+0000",
+      "firstSix": [
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d2288",
+          "image": "Foundation"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d43b8",
+          "image": "Foundation"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d4620",
+          "image": "Foundation"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x334c8",
+          "image": "TextToSpeech"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x39344",
+          "image": "TextToSpeech"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x276fc",
+          "image": "TextToSpeech"
+        }
+      ],
+      "foregroundMatches": [
+        4
+      ],
+      "workerMatches": [
+        1,
+        4
+      ]
+    },
+    {
+      "f90Event": 2,
+      "f90Timestamp": "2026-11-08 02:12:48.898352+0000",
+      "firstSix": [
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d2288",
+          "image": "Foundation"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d43b8",
+          "image": "Foundation"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d4620",
+          "image": "Foundation"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x334c8",
+          "image": "TextToSpeech"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x37fa4",
+          "image": "TextToSpeech"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x2c844",
+          "image": "TextToSpeech"
+        }
+      ],
+      "foregroundMatches": [
+        1
+      ],
+      "workerMatches": []
+    },
+    {
+      "f90Event": 3,
+      "f90Timestamp": "2026-11-08 02:12:48.924878+0000",
+      "firstSix": [
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d2288",
+          "image": "Foundation"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d43b8",
+          "image": "Foundation"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d4620",
+          "image": "Foundation"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x334c8",
+          "image": "TextToSpeech"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x38ef8",
+          "image": "TextToSpeech"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x27074",
+          "image": "TextToSpeech"
+        }
+      ],
+      "foregroundMatches": [
+        2
+      ],
+      "workerMatches": [
+        2
+      ]
+    },
+    {
+      "f90Event": 4,
+      "f90Timestamp": "2026-11-08 02:12:50.542941+0000",
+      "firstSix": [
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d2288",
+          "image": "Foundation"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d43b8",
+          "image": "Foundation"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d4620",
+          "image": "Foundation"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x334c8",
+          "image": "TextToSpeech"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x390ac",
+          "image": "TextToSpeech"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x27154",
+          "image": "TextToSpeech"
+        }
+      ],
+      "foregroundMatches": [
+        3
+      ],
+      "workerMatches": [
+        3
+      ]
+    },
+    {
+      "f90Event": 5,
+      "f90Timestamp": "2026-11-08 02:12:51.958449+0000",
+      "firstSix": [
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d2288",
+          "image": "Foundation"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d43b8",
+          "image": "Foundation"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d4620",
+          "image": "Foundation"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x334c8",
+          "image": "TextToSpeech"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x39344",
+          "image": "TextToSpeech"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x276fc",
+          "image": "TextToSpeech"
+        }
+      ],
+      "foregroundMatches": [
+        4
+      ],
+      "workerMatches": [
+        1,
+        4
+      ]
+    }
+  ],
+  "claimCorrection": "Aggregate ten contains five earlier foreground records. Direct Pause signature matches only foreground, not the five scoped worker events. Absence in this capture is not proof of elimination."
+}
