@@ -1,0 +1,906 @@
+{
+  "schema": 1,
+  "headSha": "a30506596ad3a0103396fccb29800c629c92bc30",
+  "headTree": "c963a43b2461ed45946d006c58e7f1516f2d6bd6",
+  "pullRequest": 1,
+  "runAttempt": 1,
+  "coreSyntheticMergeSha": "3d61917d3a282e66a4198797528d44558f385369",
+  "observedAtUtc": "2026-11-08T13:00:41Z",
+  "cohortTerminal": true,
+  "jobCounts": {
+    "failure": 5,
+    "success": 47
+  },
+  "workflows": [
+    {
+      "runId": 42471092731,
+      "name": "Build and test",
+      "status": "completed",
+      "conclusion": "failure",
+      "visibleCounts": {
+        "failure": 3,
+        "success": 17
+      },
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42471092731"
+    },
+    {
+      "runId": 42471092696,
+      "name": "iOS fixture checks",
+      "status": "completed",
+      "conclusion": "failure",
+      "visibleCounts": {
+        "success": 19,
+        "failure": 1
+      },
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42471092696"
+    },
+    {
+      "runId": 42471092699,
+      "name": "iOS deep checks",
+      "status": "completed",
+      "conclusion": "success",
+      "visibleCounts": {
+        "success": 4
+      },
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42471092699"
+    },
+    {
+      "runId": 42471092792,
+      "name": "iOS Release performance",
+      "status": "completed",
+      "conclusion": "success",
+      "visibleCounts": {
+        "success": 4
+      },
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42471092792"
+    },
+    {
+      "runId": 42471092697,
+      "name": "Native Swift HTTPS and PostgreSQL",
+      "status": "completed",
+      "conclusion": "success",
+      "visibleCounts": {
+        "success": 1
+      },
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42471092697"
+    },
+    {
+      "runId": 42471092689,
+      "name": "Security checks",
+      "status": "completed",
+      "conclusion": "failure",
+      "visibleCounts": {
+        "failure": 1,
+        "success": 2
+      },
+      "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42471092689"
+    }
+  ],
+  "core": {
+    "ordinaryUI": {
+      "selected": 68,
+      "executed": 68,
+      "passed": 67,
+      "failed": 1,
+      "skipped": 0
+    },
+    "models": {
+      "selected": 702,
+      "passed": 702
+    },
+    "shards": [
+      {
+        "shard": "ui-01",
+        "selected": 5,
+        "conclusion": "success",
+        "jobId": 128705965983
+      },
+      {
+        "shard": "ui-02",
+        "selected": 7,
+        "conclusion": "success",
+        "jobId": 128705966168
+      },
+      {
+        "shard": "ui-03",
+        "selected": 6,
+        "conclusion": "success",
+        "jobId": 128705965713
+      },
+      {
+        "shard": "ui-04",
+        "selected": 6,
+        "conclusion": "success",
+        "jobId": 128705966151
+      },
+      {
+        "shard": "ui-05",
+        "selected": 6,
+        "conclusion": "success",
+        "jobId": 128707884628
+      },
+      {
+        "shard": "ui-06",
+        "selected": 8,
+        "conclusion": "success",
+        "jobId": 128710897693
+      },
+      {
+        "shard": "ui-07",
+        "selected": 8,
+        "conclusion": "success",
+        "jobId": 128713184186
+      },
+      {
+        "shard": "ui-08",
+        "selected": 7,
+        "conclusion": "success",
+        "jobId": 128713634913
+      },
+      {
+        "shard": "ui-09",
+        "selected": 8,
+        "conclusion": "failure",
+        "jobId": 128717768488
+      },
+      {
+        "shard": "ui-10",
+        "selected": 7,
+        "conclusion": "success",
+        "jobId": 128721129843
+      }
+    ],
+    "originalReceipt": {
+      "name": "core-gate-receipt.json",
+      "sha256": "096d215f70f8eeeefc6c20b87da5668e6e0ec4c9aa77f0b9223de3a88ab35ea9"
+    }
+  },
+  "fixtures": {
+    "aggregate": {
+      "selected": 69,
+      "executed": 69,
+      "passed": 69,
+      "failed": 0,
+      "skipped": 0,
+      "unexecuted": 0,
+      "strictlyAcceptedCases": 64,
+      "warningCountUnavailableShards": [
+        "SharedDeliveryUITests-recovery-cook-and-closeout"
+      ],
+      "warningVerificationNotRunShards": [],
+      "scopedWarningCount": "Zero across strictly accepted rows, per scoped hosted test exports and the sanitized Records report."
+    },
+    "inventory": "fixture-inventory.json"
+  },
+  "underlyingFailures": [
+    {
+      "category": "actionlint dependency download",
+      "runId": 42471092731,
+      "jobId": 128701759248,
+      "httpStatus": 504,
+      "curlExitCode": 22,
+      "checksumReached": false,
+      "workflowLintReached": false,
+      "dependency": {
+        "name": "actionlint",
+        "version": "1.7.12",
+        "url": "https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz",
+        "expectedSha256": "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8"
+      },
+      "originalReceipt": {
+        "name": "source-checks-receipt.json",
+        "sha256": "5874aef5bc3acd15e2ca26da4b4e30fd4918c355ff1d936b4134009d63cabd93"
+      }
+    },
+    {
+      "category": "Actions CodeQL bundle download",
+      "runId": 42471092689,
+      "jobId": 128701758818,
+      "httpStatus": 504,
+      "toolVersion": "2.27.4",
+      "url": "https://github.com/github/codeql-action/releases/download/codeql-bundle-v2.27.4/codeql-bundle-actions-linux64.tar.zst",
+      "failedStreamingAttempts": 1,
+      "failedFallbackAttempts": 3,
+      "analysisReached": false,
+      "otherSecurityJobs": {
+        "dependencyReview": "success",
+        "javascriptTypeScriptCodeQL": "success"
+      },
+      "originalReceipt": {
+        "name": "security-actions-receipt.json",
+        "sha256": "ed166e47fb02498d42d8621ba408a3882661c568d49a006b16fc283143bd77a4"
+      }
+    },
+    {
+      "category": "native UI09 execution timeout",
+      "runId": 42471092731,
+      "jobId": 128717768488,
+      "native": {
+        "selected": 8,
+        "executed": 8,
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0,
+        "recordedTestExportRuntimeWarnings": 0,
+        "summaryRuntimeWarningFieldAvailable": false,
+        "analyzedConsoleLines": 3963,
+        "runnerRestartBoundariesObserved": 1,
+        "animationIdleMessagesObserved": 11
+      },
+      "failure": {
+        "selector": "RoomInTheCartUITests/ContextualNavigationUITests/testFreeContextualRoutesKeepPrivateAndSharedWorkSeparate",
+        "caseOrder": 2,
+        "executionAllowanceSeconds": 720,
+        "source": {
+          "path": "ios/UITests/ContextualNavigationUITests.swift",
+          "sha256": "c59477daa1b60ba20efc8aa93caa52cdf296d65e7698293b96eda11dafbc6045",
+          "selectorLine": 562,
+          "storeFillLine": 579,
+          "branchFillLine": 580,
+          "pickupSlotFillLine": 581,
+          "fillHelperLine": 887,
+          "helperTypeLine": 893,
+          "helperDoneTapLine": 895
+        },
+        "firstBoundary": {
+          "field": "Store",
+          "typeValue": "Family market",
+          "typeTestSeconds": 96.97,
+          "doneTapSeconds": 98.84,
+          "synthesisSeconds": 99.47,
+          "postEventIdleWaitSeconds": 99.92,
+          "firstMissSeconds": 159.96,
+          "firstMissJobLogLine": 1365,
+          "firstMissNativeLogLineFromHostedChecker": 813
+        },
+        "finalBoundary": {
+          "field": "Pickup or delivery slot",
+          "tapSeconds": 655.67,
+          "synthesisSeconds": 717.03,
+          "postEventIdleWaitSeconds": 717.41,
+          "timeoutJobLogLine": 1440,
+          "postTimeoutUnattributedMissSeconds": 777.51,
+          "runnerRestartJobLogLine": 1456
+        },
+        "attributedIdleMarkers": 10,
+        "unattributedPostTimeoutMarkers": 1,
+        "markers": [
+          {
+            "jobLogLine": 1365,
+            "testSeconds": 159.96,
+            "afterTimeout": false
+          },
+          {
+            "jobLogLine": 1381,
+            "testSeconds": 222.34,
+            "afterTimeout": false
+          },
+          {
+            "jobLogLine": 1386,
+            "testSeconds": 283.45,
+            "afterTimeout": false
+          },
+          {
+            "jobLogLine": 1394,
+            "testSeconds": 346.49,
+            "afterTimeout": false
+          },
+          {
+            "jobLogLine": 1400,
+            "testSeconds": 407.32,
+            "afterTimeout": false
+          },
+          {
+            "jobLogLine": 1403,
+            "testSeconds": 467.35,
+            "afterTimeout": false
+          },
+          {
+            "jobLogLine": 1409,
+            "testSeconds": 528.64,
+            "afterTimeout": false
+          },
+          {
+            "jobLogLine": 1414,
+            "testSeconds": 589.49,
+            "afterTimeout": false
+          },
+          {
+            "jobLogLine": 1419,
+            "testSeconds": 650.7,
+            "afterTimeout": false
+          },
+          {
+            "jobLogLine": 1435,
+            "testSeconds": 715.74,
+            "afterTimeout": false
+          },
+          {
+            "jobLogLine": 1441,
+            "testSeconds": 777.51,
+            "afterTimeout": true
+          }
+        ],
+        "scope": "Console sequence and exact source. Focus internals and cause of quiescence delays are undetermined."
+      },
+      "artifact": {
+        "id": 13617322473,
+        "name": "iphone-results-ui-09-1",
+        "bytes": 25733341,
+        "digest": "sha256:5e90d13a7fc37e6161aaec3b116f0fcbc1a54df15e1434c803c315b48bd97ef6",
+        "downloaded": false
+      },
+      "originalReceipt": {
+        "name": "ui-09-receipt.json",
+        "sha256": "fa76b602716612c9a871e82a8bf82d9e13702823b640f4aec6f56269d89e9746"
+      }
+    },
+    {
+      "category": "cook runtime-warning evidence unavailable",
+      "runId": 42471092696,
+      "jobId": 128721455532,
+      "native": {
+        "selected": 5,
+        "executed": 5,
+        "passed": 5,
+        "failed": 0,
+        "skipped": 0,
+        "totalCaseSeconds": 663.49,
+        "animationIdleMessagesObserved": 0,
+        "runnerRestartBoundariesObserved": 0,
+        "analyzedConsoleLines": 2528
+      },
+      "warningGate": {
+        "status": "failed-evidence-unavailable",
+        "warningCount": null,
+        "jobLogLine": 3056,
+        "expectedIssueDescriptionAttachments": 1,
+        "foundIssueDescriptionAttachments": 0
+      },
+      "artifact": {
+        "id": 13616933126,
+        "name": "iphone-fixture-results-SharedDeliveryUITests-recovery-cook-and-closeout-1",
+        "bytes": 4821072,
+        "digest": "sha256:a493720b5ba36851caf26faaf830c71cf5083c09eccd3ce24761b82cd0e7dd18"
+      },
+      "selectedCase": {
+        "selector": "RoomInTheCartUITests/SharedDeliveryUITests/testShopperReviewsExactEditedCookWordingBeforeReadback",
+        "order": 4,
+        "nativeResult": "passed",
+        "durationSeconds": 63.825
+      },
+      "structuredWarningActivity": {
+        "path": [
+          "testRuns",
+          0,
+          "activities",
+          55
+        ],
+        "title": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions",
+        "timestampUtc": "2026-11-08T12:18:39.606000+00:00",
+        "retainedCaseExportSHA256": "82fb513e63e040a6cbe0493c6c0de6896aeec6b7c8457f763a494418abb86238",
+        "issueDescriptionAttachmentCount": 0,
+        "scope": "One completed per-case activity export retained before strict validation stopped."
+      },
+      "observedAppUnifiedLogHangRiskRecords": 5,
+      "diagnosticScope": "Five captured app unified-log Hang Risk records are separate from the incomplete XCTest warning inventory. Exact structured warning is attributed to the passing fourth case. Timestamp proximity does not establish the blocked wait owner or causal fix.",
+      "originalReceipt": {
+        "name": "cook-receipt.json",
+        "sha256": "5fe3df40516397b3c3bc3804d791443df72b22d44711a821af002936994bc858"
+      },
+      "originalDiagnosticReceipt": {
+        "name": "cook-diagnostics-receipt.json",
+        "sha256": "f467c37abc4dee01fb2c15ff7baa5c948d48a276a753d0ca06a6177b83ccdb4c"
+      }
+    }
+  ],
+  "derivativeGate": {
+    "runId": 42471092731,
+    "jobId": 128732720503,
+    "failedPrerequisites": {
+      "source-checks": "failure",
+      "ios-tests": "failure"
+    },
+    "originalReceipt": {
+      "name": "core-gate-receipt.json",
+      "sha256": "096d215f70f8eeeefc6c20b87da5668e6e0ec4c9aa77f0b9223de3a88ab35ea9"
+    }
+  },
+  "nativeWire": {
+    "nodeIntegrationCases": 6,
+    "exactXCTestScenarios": 10,
+    "artifact": {
+      "id": 13613578003,
+      "name": "native-wire-results-1",
+      "bytes": 2837,
+      "sha256": "ecc4497d9edc8c7229563b74b7aff619c4f6f3267451593646ad68baa207943e",
+      "source": "GitHub upload log",
+      "downloaded": false
+    },
+    "originalReceipt": {
+      "name": "wire-receipt.json",
+      "sha256": "1c4217b8c49020db17009d86521c25372b986269061da5b5c41d342ba2b22cef"
+    }
+  },
+  "deep": [
+    {
+      "lane": "storekit-en",
+      "jobId": 128701759273,
+      "results": {
+        "selected": 15,
+        "executed": 15,
+        "passed": 15,
+        "failed": 0,
+        "skipped": 0,
+        "caseSeconds": 5.261,
+        "recordedTestExportWarnings": 0,
+        "summaryWarningFieldAvailable": false,
+        "idleMarkers": 0,
+        "restartMarkers": 0,
+        "analyzedNativeLogLines": 4497
+      },
+      "artifact": {
+        "id": 13613219421,
+        "sha256": "22806c09d08f40dcb22baf4e3719904d40e6374088aaf04da9ff2bf641d00824"
+      },
+      "originalReceipt": {
+        "name": "storekit-en-receipt.json",
+        "sha256": "e26347038e58b21538853e65c33e31bb585a6cf02ab1363521ca368cd17170a2"
+      }
+    },
+    {
+      "lane": "storekit-es",
+      "jobId": 128701759376,
+      "results": {
+        "selected": 15,
+        "executed": 15,
+        "passed": 15,
+        "failed": 0,
+        "skipped": 0,
+        "caseSeconds": 11.366,
+        "recordedTestExportWarnings": 0,
+        "summaryWarningFieldAvailable": false,
+        "idleMarkers": 0,
+        "restartMarkers": 0,
+        "analyzedNativeLogLines": 4493
+      },
+      "artifact": {
+        "id": 13613508671,
+        "sha256": "5f66df166de90803b82f452e97ece86f5fc905b70c65eaabe876079f87cc7dfd"
+      },
+      "originalReceipt": {
+        "name": "storekit-es-receipt.json",
+        "sha256": "bb42687c713d33cf160cda7322a71d2d5b7297bf2edc2b3c9940ae1285fdd10b"
+      }
+    },
+    {
+      "lane": "sanitizer-address",
+      "jobId": 128701759589,
+      "results": {
+        "xctestReportedCases": 440,
+        "passed": 437,
+        "skipped": 3,
+        "failed": 0,
+        "skips": "Native wire cases require RITC_TEST_NATIVE_WIRE=1 and have separate hosted verification."
+      },
+      "artifact": {
+        "id": 13613104502,
+        "sha256": "349e6e5a15ab9ba194cca0f1f598a37c2cf1b6b854cdb209f614547eeba9dad9"
+      },
+      "originalReceipt": {
+        "name": "sanitizer-address-receipt.json",
+        "sha256": "44acd0a88e2ec1bcb1589bf2594f85c92270906355ad05ccd8cfdbabbbc6549c"
+      }
+    },
+    {
+      "lane": "sanitizer-thread",
+      "jobId": 128701759375,
+      "results": {
+        "xctestReportedCases": 440,
+        "passed": 437,
+        "skipped": 3,
+        "failed": 0,
+        "skips": "Native wire cases require RITC_TEST_NATIVE_WIRE=1 and have separate hosted verification."
+      },
+      "artifact": {
+        "id": 13613209019,
+        "sha256": "acedfc9b8d300c803cff0e3971b81b52c0378e6515ba7679aa9857a61ee2f778"
+      },
+      "originalReceipt": {
+        "name": "sanitizer-thread-receipt.json",
+        "sha256": "97bb585f709cebf8cff32d8cfd4f101ba8d96d0b44ebc56f74c151baed74b1e2"
+      }
+    }
+  ],
+  "performance": {
+    "environment": {
+      "osVersion": "26.2",
+      "osBuildNumber": "23C54",
+      "modelName": "iPhone 17",
+      "architecture": "arm64",
+      "xcode": "Xcode 26.3\nBuild version 17C529",
+      "buildConfiguration": "Release",
+      "testConfiguration": "Test Scheme Action"
+    },
+    "lanes": [
+      {
+        "case": "launch",
+        "jobId": 128706963707,
+        "selector": "RoomInTheCartUITests/ReleasePerformanceUITests/testColdLaunchPerformance",
+        "native": {
+          "selected": 1,
+          "executed": 1,
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0,
+          "caseDurationSeconds": 69.343,
+          "recordedTestExportRuntimeWarnings": 0,
+          "summaryRuntimeWarningFieldAvailable": false,
+          "animationIdleMessagesObserved": 0,
+          "runnerRestartBoundariesObserved": 0,
+          "analyzedConsoleLines": 87
+        },
+        "baselineComparisons": {
+          "responsiveLaunchMedianSeconds": {
+            "measured": 3.318243958,
+            "maximum": 5.5,
+            "passed": true
+          }
+        },
+        "artifact": {
+          "id": 13614557030,
+          "name": "iphone-performance-launch-1",
+          "bytes": 85008,
+          "digest": "sha256:41512bc9daa2bdb91e6ce12c572c613e9ad6744ca0defa35c6e78f5077654f5e",
+          "rangeBytesFetched": 8910,
+          "fullArchiveDownloaded": false
+        },
+        "hostedReleaseAcceptance": false
+      },
+      {
+        "case": "scroll",
+        "jobId": 128706963429,
+        "selector": "RoomInTheCartUITests/ReleasePerformanceUITests/testScrollingPerformanceOnFiveHundredItemPickup",
+        "native": {
+          "selected": 1,
+          "executed": 1,
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0,
+          "caseDurationSeconds": 166.453,
+          "recordedTestExportRuntimeWarnings": 0,
+          "summaryRuntimeWarningFieldAvailable": false,
+          "animationIdleMessagesObserved": 0,
+          "runnerRestartBoundariesObserved": 0,
+          "analyzedConsoleLines": 284
+        },
+        "baselineComparisons": {
+          "scrollMedianSeconds": {
+            "measured": 2.582662334,
+            "maximum": 3.25,
+            "passed": true
+          },
+          "absoluteMemoryMedianKilobytes": {
+            "measured": 95035.264,
+            "maximum": 150000,
+            "passed": true
+          },
+          "peakMemoryMedianKilobytes": {
+            "measured": 95264.64,
+            "maximum": 155000,
+            "passed": true
+          },
+          "maximumPeakMemoryKilobytes": {
+            "measured": 95346.56,
+            "maximum": 160000,
+            "passed": true
+          }
+        },
+        "artifact": {
+          "id": 13615098003,
+          "name": "iphone-performance-scroll-1",
+          "bytes": 2166365,
+          "digest": "sha256:343745508bfdd17a7ac95c3566c6ee29d2d5160560314ed2268253d09cc71779",
+          "rangeBytesFetched": 10704,
+          "fullArchiveDownloaded": false
+        },
+        "hostedReleaseAcceptance": false,
+        "hitches": {
+          "status": "unavailable",
+          "detail": "XCTest emitted scroll duration and memory, but no animation hitch samples on this simulator. This run cannot evaluate frame hitches."
+        },
+        "hostedReadback": {
+          "sqliteQuickCheck": "ok",
+          "lineCount": 500,
+          "checkedCount": 0,
+          "databaseReopenedOffline": false
+        },
+        "scrollSignpostDiagnostic": {
+          "status": "captured",
+          "diagnosticOnly": true,
+          "windowCount": 6,
+          "windowPairCounts": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      {
+        "case": "rendered",
+        "jobId": 128706963651,
+        "selector": "RoomInTheCartUITests/ReleasePerformanceUITests/testRenderedFiveHundredItemPickup",
+        "native": {
+          "selected": 1,
+          "executed": 1,
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0,
+          "caseDurationSeconds": 311.435,
+          "recordedTestExportRuntimeWarnings": 0,
+          "summaryRuntimeWarningFieldAvailable": false,
+          "animationIdleMessagesObserved": 0,
+          "runnerRestartBoundariesObserved": 0,
+          "analyzedConsoleLines": 1172
+        },
+        "baselineComparisons": {
+          "searchP95Milliseconds": {
+            "measured": 3047.7415833333907,
+            "maximum": 4750,
+            "passed": true
+          },
+          "checkP95Milliseconds": {
+            "measured": 2426.130291666709,
+            "maximum": 3750,
+            "passed": true
+          }
+        },
+        "artifact": {
+          "id": 13614914061,
+          "name": "iphone-performance-rendered-1",
+          "bytes": 4800627,
+          "digest": "sha256:6d082bcb38abc27b1a5a47efbec39efed77661f255e006e1fa685a60d6653eb7",
+          "rangeBytesFetched": 14768,
+          "fullArchiveDownloaded": false
+        },
+        "hostedReleaseAcceptance": false,
+        "hitches": {
+          "status": "unavailable",
+          "reason": "XCTest metric JSON and CSV manifest are empty. This selector collects search and checkoff timing samples."
+        },
+        "hostedReadback": {
+          "sqliteQuickCheck": "ok",
+          "lineCount": 500,
+          "checkedCount": 20,
+          "databaseReopenedOffline": false
+        }
+      }
+    ],
+    "scope": "Simulator baseline validation. Recomputed metric and timing comparisons from small exact artifact members. Runtime warnings and SQLite readback are scoped hosted receipts. No full archives or media downloaded.",
+    "originalReceipt": {
+      "name": "performance/terminal-receipt.json",
+      "sha256": "31f8f27adddcf76faa93e148201be90531b00650e4c66261a39320ed6bc420e4"
+    }
+  },
+  "ownedFixturePilot": {
+    "jobId": 128707105249,
+    "native": {
+      "selected": 3,
+      "executed": 3,
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0,
+      "totalCaseSeconds": 901.281,
+      "recordedTestExportRuntimeWarnings": 0,
+      "summaryRuntimeWarningFieldAvailable": false,
+      "animationIdleMessagesObserved": 0,
+      "runnerRestartBoundariesObserved": 0,
+      "analyzedConsoleLines": 7550
+    },
+    "bootSeconds": 81,
+    "cleanup": "deleted",
+    "artifact": {
+      "id": 13615708770,
+      "sha256": "414854d71b9961b4fc16e0295f8d384e5a0fd2b9631e56e6f39c86ee3964be8e",
+      "source": "Hosted upload log",
+      "downloaded": false
+    },
+    "scope": "One hosted contributor-balanced-01 observation.",
+    "originalReceipt": {
+      "name": "balanced-01-receipt.json",
+      "sha256": "ed01d76ee4276ca53cce5bd909d158f5e72adc17886fc9870dd50f895fd6a02f"
+    }
+  },
+  "provenance": {
+    "originalSnapshot": {
+      "name": "status-20261108T130041Z.json",
+      "sha256": "4d0bfbc2fe418ecf79bf36a422b56b1cf35f543571f9ed410179ace41b3d5442"
+    },
+    "originalFixtureInventory": {
+      "name": "fixture-terminal-inventory.json",
+      "sha256": "8c9972b92010dbd0b5d637c5662f0399f61a5e9e37e90a258786086bdef35832"
+    },
+    "selectedJobLogExcerpts": {
+      "path": "job-log-excerpts.txt",
+      "sha256": "2d8c8184cf71a2cd9fd072040428abb9be1538269d16374856c0d2e1f8e33f75",
+      "sections": [
+        {
+          "title": "Source checks download failure",
+          "originalReceiptExcerpt": {
+            "name": "source-checks-job-log-excerpts.txt",
+            "sha256": "35457318b5cdfed73f6842bcc11854871afa868e0db38e2c7695c8a39f068127"
+          },
+          "originalJobLogLines": [
+            119,
+            122,
+            131,
+            132,
+            133,
+            134,
+            135,
+            137,
+            145,
+            146,
+            147
+          ]
+        },
+        {
+          "title": "Actions CodeQL bundle failure",
+          "originalReceiptExcerpt": {
+            "name": "security-actions-job-log-excerpts.txt",
+            "sha256": "51350a4f4f3372df0190638ed94700ca639bc09b0f20fc31db50aec67d8c9528"
+          },
+          "originalJobLogLines": [
+            186,
+            187,
+            188,
+            189,
+            190,
+            191,
+            192,
+            193,
+            194,
+            195,
+            196,
+            197,
+            198,
+            207,
+            208
+          ]
+        },
+        {
+          "title": "UI09 first idle and timeout",
+          "originalReceiptExcerpt": {
+            "name": "ui-09-job-log-excerpts.txt",
+            "sha256": "7a48808d3175b3bc14f9e609f98e60a471e5e0a2bc8444bb42dad494bd38afc0"
+          },
+          "originalJobLogLines": [
+            1113,
+            1114,
+            1350,
+            1359,
+            1360,
+            1361,
+            1362,
+            1363,
+            1364,
+            1365,
+            1366,
+            1367,
+            1368,
+            1433,
+            1437,
+            1438,
+            1439,
+            1440,
+            1441,
+            1456,
+            4516,
+            4529,
+            4534,
+            4535,
+            4536,
+            4537,
+            4538,
+            4539,
+            4540,
+            4541,
+            4542,
+            4543,
+            4544,
+            4588,
+            4590
+          ]
+        },
+        {
+          "title": "Cook native success and incomplete warning evidence",
+          "originalReceiptExcerpt": {
+            "name": "cook-job-log-excerpts.txt",
+            "sha256": "9c397695cddf1c0636fe7a8929e04714ffc91e32f6f370c68036fbec348a007d"
+          },
+          "originalJobLogLines": [
+            1395,
+            1629,
+            2140,
+            2405,
+            3024,
+            3038,
+            3041,
+            3052,
+            3056,
+            3058,
+            3117,
+            3119
+          ]
+        },
+        {
+          "title": "Cook readback action boundaries",
+          "originalReceiptExcerpt": {
+            "name": "cook-readback-action-log-excerpts.txt",
+            "sha256": "d68c1b78a38db4ac8b6bd714978212e62adbd9f5f5ae5cdb5d606926afda1ed7"
+          },
+          "originalJobLogLines": [
+            2296,
+            2308,
+            2318,
+            2328,
+            2405
+          ]
+        },
+        {
+          "title": "Derivative Core gate",
+          "originalReceiptExcerpt": {
+            "name": "core-gate-job-log-excerpts.txt",
+            "sha256": "32c1c9e04e72a415a18bbea75e18682bead180ef19ca917279fd09f725f6f361"
+          },
+          "originalJobLogLines": [
+            42,
+            50,
+            51,
+            52,
+            53,
+            74,
+            75,
+            76,
+            80,
+            81
+          ]
+        },
+        {
+          "title": "Hosted model inventory",
+          "originalReceiptExcerpt": {
+            "name": "models-job-log-excerpts.txt",
+            "sha256": "6f908d1c04c4ff6cf75051c0485fd5883ac42d61e69adf38f5d4bf91d3324d27"
+          },
+          "originalJobLogLines": [
+            2223,
+            2233,
+            2236,
+            2944,
+            2947,
+            2948,
+            2988,
+            2990
+          ]
+        },
+        {
+          "title": "Native wire verification",
+          "originalReceiptExcerpt": {
+            "name": "wire-job-log-excerpts.txt",
+            "sha256": "6debd4244ebf48b73f2bce28bfad034e35aefa65be84884c1c7f19669c1a5f96"
+          },
+          "originalJobLogLines": [
+            425,
+            449,
+            451,
+            452
+          ]
+        }
+      ]
+    }
+  },
+  "scope": "Compact hosted evidence. Artifact digests pin archive identities as reported by GitHub. The small retained members used for offline checks were verified separately. Full archives, media, and raw Records output were excluded."
+}

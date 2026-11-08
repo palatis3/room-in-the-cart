@@ -1,0 +1,117 @@
+One-based LF-delimited lines from the original GitHub Actions job logs. Intervening lines are omitted. ANSI formatting codes and trailing whitespace were removed.
+
+Source checks download failure
+119	2026-11-08T10:21:45.1694178Z HEAD is now at 3d61917 Merge a30506596ad3a0103396fccb29800c629c92bc30 into 1a2530a7ad006b5939f87a08a1964b5fc863383e
+122	2026-11-08T10:21:45.1812700Z 3d61917d3a282e66a4198797528d44558f385369
+131	2026-11-08T10:21:45.2066372Z curl --fail --silent --show-error --location \
+132	2026-11-08T10:21:45.2067134Z   https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz \
+133	2026-11-08T10:21:45.2067765Z   --output "$lint_dir/actionlint.tar.gz"
+134	2026-11-08T10:21:45.2068397Z echo '8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  actionlint.tar.gz' \
+135	2026-11-08T10:21:45.2069003Z   | (cd "$lint_dir" && sha256sum --check)
+137	2026-11-08T10:21:45.2070121Z "$yaml_env/bin/python" scripts/check_ci_workflows.py --actionlint "$lint_dir/actionlint" \
+145	2026-11-08T10:21:48.6088719Z Successfully installed PyYAML-6.0.3
+146	2026-11-08T10:21:48.7469499Z curl: (22) The requested URL returned error: 504
+147	2026-11-08T10:21:48.7502931Z ##[error]Process completed with exit code 22.
+
+Actions CodeQL bundle failure
+186	2026-11-08T10:21:47.1105658Z Did not find CodeQL tools version 2.27.4 in the toolcache.
+187	2026-11-08T10:21:47.1109289Z Selected the per-language CodeQL bundle for 'actions'.
+188	2026-11-08T10:21:47.1109856Z Using CodeQL CLI version 2.27.4 sourced from https://github.com/github/codeql-action/releases/download/codeql-bundle-v2.27.4/codeql-bundle-actions-linux64.tar.zst .
+189	2026-11-08T10:21:49.5380183Z Deleted the CodeQL tools at '/opt/hostedtoolcache/CodeQL/2.27.3' from the toolcache to free up disk space.
+190	2026-11-08T10:21:49.5389060Z Downloading CodeQL tools from https://github.com/github/codeql-action/releases/download/codeql-bundle-v2.27.4/codeql-bundle-actions-linux64.tar.zst . This may take a while.
+191	2026-11-08T10:21:49.5389575Z Streaming the extraction of the CodeQL bundle.
+192	2026-11-08T10:22:00.7368980Z ##[warning]Failed to download and extract CodeQL bundle using streaming with error: Failed to download CodeQL bundle from https://github.com/github/codeql-action/releases/download/codeql-bundle-v2.27.4/codeql-bundle-actions-linux64.tar.zst. HTTP status code: 504.
+193	2026-11-08T10:22:00.7376133Z ##[warning]Falling back to downloading the bundle before extracting.
+194	2026-11-08T10:22:11.9272186Z Unexpected HTTP response: 504
+195	2026-11-08T10:22:11.9272464Z Waiting 11 seconds before trying again
+196	2026-11-08T10:22:34.1300644Z Unexpected HTTP response: 504
+197	2026-11-08T10:22:34.1300841Z Waiting 18 seconds before trying again
+198	2026-11-08T10:23:03.2989678Z ##[error]Unable to download and extract CodeQL CLI: Unexpected HTTP response: 504
+207	2026-11-08T10:23:04.0947355Z ##[warning]Debugging artifacts are unavailable since the 'init' Action failed before it could produce any.
+208	2026-11-08T10:23:04.0948789Z CodeQL job status was failure.
+
+UI09 first idle and timeout
+1113	2026-11-08T12:08:36.7205880Z Test Case '-[RoomInTheCartUITests.ContextualNavigationUITests testFirstRunCheckOneChangeCanLeaveOrSaveAndReopenExactRetailerEvidence]' passed (207.878 seconds).
+1114	2026-11-08T12:08:36.7230960Z Test Case '-[RoomInTheCartUITests.ContextualNavigationUITests testFreeContextualRoutesKeepPrivateAndSharedWorkSeparate]' started.
+1350	2026-11-08T12:10:13.7162740Z     t =    96.97s Type 'Family market' into Target Application 'dev.roominthecart.app.debug'
+1359	2026-11-08T12:10:15.5577400Z     t =    98.84s Tap "Done" Button
+1360	2026-11-08T12:10:15.5686790Z     t =    98.84s     Wait for dev.roominthecart.app.debug to idle
+1361	2026-11-08T12:10:15.5804530Z     t =    98.85s     Find the "Done" Button
+1362	2026-11-08T12:10:16.0624970Z     t =    99.34s     Check for interrupting elements affecting "Done" Button
+1363	2026-11-08T12:10:16.1883060Z     t =    99.47s     Synthesize event
+1364	2026-11-08T12:10:16.6994990Z     t =    99.92s     Wait for dev.roominthecart.app.debug to idle
+1365	2026-11-08T12:11:16.7146820Z     t =   159.96s App animations complete notification not received, will attempt to continue.
+1366	2026-11-08T12:11:16.7148250Z     t =   159.96s Find the Target Application 'dev.roominthecart.app.debug'
+1367	2026-11-08T12:11:16.7631650Z     t =   160.05s Get all elements bound by index for: Descendants matching type Keyboard
+1368	2026-11-08T12:11:16.8120470Z     t =   160.10s Checking existence of `"Branch" Any`
+1433	2026-11-08T12:19:32.3954540Z     t =   655.67s Tap "Pickup or delivery slot" TextField
+1437	2026-11-08T12:20:33.4511920Z     t =   716.72s     Check for interrupting elements affecting "Pickup or delivery slot" TextField
+1438	2026-11-08T12:20:33.7389410Z     t =   717.03s     Synthesize event
+1439	2026-11-08T12:20:34.2827770Z     t =   717.41s     Wait for dev.roominthecart.app.debug to idle
+1440	2026-11-08T12:20:37.0971850Z Test Case '-[RoomInTheCartUITests.ContextualNavigationUITests testFreeContextualRoutesKeepPrivateAndSharedWorkSeparate]' exceeded execution time allowance of 12 minutes. The test may have hung; check Xcode's test report for additional diagnostics. If the test requires additional time, use -[XCTestCase executionTimeAllowance] or one of xcodebuild's command-line overrides.
+1441	2026-11-08T12:21:34.3994340Z     t =   777.51s App animations complete notification not received, will attempt to continue.
+1456	2026-11-08T12:21:54.7483180Z Restarting after unexpected exit, crash, or test timeout; summary will include totals from previous launches.
+4516	2026-11-08T12:34:23.0723440Z Executed 8 of 8 selected tests.
+4529	2026-11-08T12:34:23.0755440Z Animation-idle diagnostics: 11 observed messages in 3963 log lines (8 case starts, 1 runner restart boundaries). Diagnostic only; native results and runtime-warning checks are unchanged.
+4534	2026-11-08T12:34:23.0758280Z | 1 | RoomInTheCartUITests/ContextualNavigationUITests/testFreeContextualRoutesKeepPrivateAndSharedWorkSeparate (line 562) | 10 | 159.96 | 813 |
+4535	2026-11-08T12:34:23.0759090Z | 1 | Unattributed | 1 | 777.51 | 889 |
+4536	2026-11-08T12:34:23.0759310Z
+4537	2026-11-08T12:34:23.0759560Z The XCTest test export recorded 0 runtime warning occurrences across 8 examined tests.
+4538	2026-11-08T12:34:23.0760050Z The XCTest summary does not expose a runtime warnings field.
+4539	2026-11-08T12:34:23.0760670Z Executed and passing counts do not match the selected tests
+4540	2026-11-08T12:34:23.0761530Z The shard contains failures, expected failures or skipped tests
+4541	2026-11-08T12:34:23.0761910Z Every selected test must individually report Passed
+4542	2026-11-08T12:34:23.0762410Z XCTest restarted its runner at log line 904.
+4543	2026-11-08T12:34:23.0763130Z XCTest log requires one start then one pass for RoomInTheCartUITests/ContextualNavigationUITests/testFreeContextualRoutesKeepPrivateAndSharedWorkSeparate; found ['start', 'timeout'].
+4544	2026-11-08T12:34:23.0764030Z XCTest log requires one successful result banner; found ['FAILED'].
+4588	2026-11-08T12:34:27.7573710Z SHA256 digest of uploaded artifact zip is 5e90d13a7fc37e6161aaec3b116f0fcbc1a54df15e1434c803c315b48bd97ef6
+4590	2026-11-08T12:34:28.2377470Z Artifact iphone-results-ui-09-1.zip successfully finalized. Artifact ID 13617322473
+
+Cook native success and incomplete warning evidence
+1395	2026-11-08T12:14:51.7676450Z Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperClosesWithPendingCreditThenLinksItToTheOriginalNetCharge]' passed (255.340 seconds).
+1629	2026-11-08T12:15:59.7678780Z Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperLeavesOriginalDinnerOpenAfterAnUnresolvedReplacementPreview]' passed (68.422 seconds).
+2140	2026-11-08T12:18:00.6003320Z Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperReplacesWednesdayAfterPickupAndKeepsTuesdaysShortage]' passed (120.850 seconds).
+2405	2026-11-08T12:19:04.4489650Z Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperReviewsExactEditedCookWordingBeforeReadback]' passed (63.825 seconds).
+3024	2026-11-08T12:21:39.4961370Z Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperSavesDatedCookCopyAndReopensRecipientSendRecord]' passed (155.053 seconds).
+3038	2026-11-08T12:21:41.6336680Z ** TEST EXECUTE SUCCEEDED **
+3041	2026-11-08T12:21:50.5964220Z Executed 5 of 5 selected tests.
+3052	2026-11-08T12:21:50.5995980Z Animation-idle diagnostics: 0 observed messages in 2528 log lines (5 case starts, 0 runner restart boundaries). Diagnostic only; native results and runtime-warning checks are unchanged.
+3056	2026-11-08T12:21:50.5999420Z XCTest runtime warning evidence is unavailable. Malformed XCTest runtime warning activity '[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions'. Expected one Complete Issue Description.txt attachment, found 0.
+3058	2026-11-08T12:21:50.6471330Z ##[error]Process completed with exit code 1.
+3117	2026-11-08T12:22:01.9670100Z SHA256 digest of uploaded artifact zip is a493720b5ba36851caf26faaf830c71cf5083c09eccd3ce24761b82cd0e7dd18
+3119	2026-11-08T12:22:02.3249100Z Artifact iphone-fixture-results-SharedDeliveryUITests-recovery-cook-and-closeout-1.zip successfully finalized. Artifact ID 13616933126
+
+Cook readback action boundaries
+2296	2026-11-08T12:18:38.4269760Z     t =    37.83s Tap "capture.readback.play" Button
+2308	2026-11-08T12:18:42.5814610Z     t =    41.97s Tap "Pause readback" Button
+2318	2026-11-08T12:18:44.3828890Z     t =    43.78s Tap "Resume readback" Button
+2328	2026-11-08T12:18:46.0140160Z     t =    45.42s Tap "Stop readback" Button
+2405	2026-11-08T12:19:04.4489650Z Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperReviewsExactEditedCookWordingBeforeReadback]' passed (63.825 seconds).
+
+Derivative Core gate
+42	2026-11-08T12:36:01.4788593Z   JOB_RESULTS: {
+50	  },
+51	  "source-checks": {
+52	    "result": "failure",
+53	    "outputs": {}
+74	  "ios-tests": {
+75	    "result": "failure",
+76	    "outputs": {}
+80	2026-11-08T12:36:01.5225833Z Required jobs did not pass: {'source-checks': 'failure', 'ios-tests': 'failure'}
+81	2026-11-08T12:36:01.5276226Z ##[error]Process completed with exit code 1.
+
+Hosted model inventory
+2223	2026-11-08T10:47:08.9601360Z 	 Executed 702 tests, with 0 failures (0 unexpected) in 59.463 (61.071) seconds
+2233	2026-11-08T10:47:09.0809140Z ** TEST EXECUTE SUCCEEDED **
+2236	2026-11-08T10:48:09.7835770Z Executed 702 of 702 selected tests.
+2944	2026-11-08T10:48:09.9482180Z Animation-idle diagnostics: 0 observed messages in 1734 log lines (702 case starts, 0 runner restart boundaries). Diagnostic only; native results and runtime-warning checks are unchanged.
+2947	2026-11-08T10:48:09.9487310Z The XCTest test export recorded 0 runtime warning occurrences across 702 examined tests.
+2948	2026-11-08T10:48:09.9488390Z The XCTest summary does not expose a runtime warnings field.
+2988	2026-11-08T10:48:14.9082910Z SHA256 digest of uploaded artifact zip is 0aec89efdd102aaf58fc7abeb7c431edf6f200a12c8fc8cecd3f1632eeb8fe19
+2990	2026-11-08T10:48:15.2969750Z Artifact iphone-results-models-1.zip successfully finalized. Artifact ID 13613918481
+
+Native wire verification
+425	2026-11-08T10:24:10.3266590Z Verified 6 Node integration cases and 10 exact XCTest scenario results.
+449	2026-11-08T10:24:12.7999600Z SHA256 digest of uploaded artifact zip is ecc4497d9edc8c7229563b74b7aff619c4f6f3267451593646ad68baa207943e
+451	2026-11-08T10:24:13.2168180Z Artifact native-wire-results-1.zip successfully finalized. Artifact ID 13613578003
+452	2026-11-08T10:24:13.2169230Z Artifact native-wire-results-1 has been successfully uploaded! Final size is 2837 bytes. Artifact ID is 13613578003

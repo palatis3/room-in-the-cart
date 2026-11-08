@@ -1,0 +1,12 @@
+{
+  "reviewer": "root",
+  "verifiedAtUTC": "2026-11-08T13:05:21.456808+00:00",
+  "headSHA": "a30506596ad3a0103396fccb29800c629c92bc30",
+  "verified": "Original terminal snapshot and inventory hashes; publicexcerpt hash;69uniqueselectors/17rows/69nativepasses/64strict;702models/67ordinaryUI;4underlyingfailures+gate",
+  "files": {
+    "terminal-summary.json": "375518a9b1b4219945c7f751bebf1777f3a2ec3496d55d86c3bfa65a015d84cc",
+    "README.md": "a24a79855543bbff3d38acf102a74dd51492b8e0a15f28db4ce6def2d3a7438b",
+    "job-log-excerpts.txt": "2d8c8184cf71a2cd9fd072040428abb9be1538269d16374856c0d2e1f8e33f75",
+    "fixture-inventory.json": "c0fd6bd1b0fa2af8ad6080d347ba0f53d43e410fd55bbf45529d96504383648b"
+  }
+}
