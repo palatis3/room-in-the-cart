@@ -36,3 +36,10 @@ verification. No test expectations, release coverage or time budgets were relaxe
 
 References: [GitHub workflow syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax)
 and [reusable workflow context](https://docs.github.com/en/actions/reference/workflows-and-actions/contexts).
+
+## Hosted fixture outcome
+
+The focused fixture run above subsequently completed successfully. Its original
+quote journey passed native and strict checks; total run time was 28m27s. The
+unused dinner build was skipped. [Preserved outcome and limitations](../../ci-focused-known-trip-20261108/README.md). The focused performance path still
+needs hosted qualification; this fixture result does not qualify that path.

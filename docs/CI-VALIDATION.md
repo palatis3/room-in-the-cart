@@ -22,9 +22,9 @@ selectors, runtime-warning checks, privacy handling, timeouts and five-slot limi
 The run title names the selected group. A targeted pass is diagnostic evidence,
 not full PR or release acceptance.
 
-List valid groups with `python3 scripts/plan_ios_fixture_tests.py matrix`. Once
-the workflow change is published, a focused run can be dispatched on a development
-branch without an open PR, for example:
+List valid groups with `python3 scripts/plan_ios_fixture_tests.py matrix`. The
+workflow is published on development branches; dispatch a focused run on a branch
+containing the change without an open PR, for example:
 
 ```sh
 gh workflow run ios-fixtures.yml --ref codex/my-reviewed-fix \
@@ -44,6 +44,11 @@ DerivedData directory when the toolchain/profile is unchanged, preserving the
 tested source revision/diff and results. Avoid a fresh source path and cold build
 for every small experiment. Keep CI failure diagnostics enabled; collect heavier
 local diagnostics when they answer the failure being investigated.
+
+The first hosted focused fixture run passed in 28m27s, including its build,
+simulator setup and one original quote journey. The unused dinner build was
+skipped. This confirms the focused path works; it does not establish a faster
+full-suite duration. [Verified hosted result](evidence/native/ci-focused-known-trip-20261108/README.md).
 
 The performance workflow likewise accepts a manual `case`: `all` (default),
 `launch`, `rendered` or `scroll`. For example:
