@@ -246,6 +246,7 @@ import XCTest
     }
     private func enterValue(_ text: String, into id: String, replacing: Bool = false) {
         let field = app.textFields.matching(identifier:id).firstMatch
+        reveal(field, fullyVisible: true)
         tap(field)
         dismissBilingualKeyboardCardIfPresent()
         XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout:5), "Show the keyboard for \(id)")
@@ -327,29 +328,34 @@ import XCTest
         }
     }
     private func scrollableArea(snapshot suppliedSnapshot: XCUIElementSnapshot? = nil) -> CGRect {
-        // Measure bars and keyboard from one tree so transitions cannot replace
+        // Measure bars, keyboard and the app Done control from one tree so transitions cannot replace
         // an element between separate live existence, hittability and frame queries.
         let snapshot = suppliedSnapshot ?? (try? app.snapshot())
         let bounds = snapshot?.frame ?? app.frame
         var keyboardTop = bounds.maxY
+        var doneTop = bounds.maxY
         var barBottom = bounds.minY+90
         var elements = snapshot.map { [$0] } ?? []
         while let element = elements.popLast() {
             let frame = element.frame
             if frame.height > 0 && frame.intersects(bounds) {
                 if element.elementType == .keyboard { keyboardTop = min(keyboardTop,frame.minY) }
+                if element.elementType == .button && ["Done","Listo"].contains(element.identifier) {
+                    doneTop = min(doneTop,frame.minY)
+                }
                 if element.elementType == .navigationBar { barBottom = max(barBottom,frame.maxY) }
             }
             elements.append(contentsOf:element.children)
         }
-        let top = max(bounds.minY+95,min(barBottom+12,keyboardTop-140)), bottom = min(bounds.maxY-70,keyboardTop-16)
+        let inputTop = min(keyboardTop,doneTop)
+        let top = max(bounds.minY+95,min(barBottom+12,inputTop-140)), bottom = min(bounds.maxY-70,inputTop-16)
         return CGRect(x:bounds.minX+24,y:top,width:bounds.width-48,height:max(80,bottom-top))
     }
     private func scrollContent(upward: Bool, area: CGRect) {
         let bounds = app.frame, high = area.minY+area.height*0.18, low = area.minY+area.height*0.82
         let origin = app.coordinate(withNormalizedOffset:.zero)
-        let start = origin.withOffset(CGVector(dx:area.midX-bounds.minX,dy:(upward ? low:high)-bounds.minY))
-        let end = origin.withOffset(CGVector(dx:area.midX-bounds.minX,dy:(upward ? high:low)-bounds.minY))
+        let start = origin.withOffset(CGVector(dx:area.minX-bounds.minX,dy:(upward ? low:high)-bounds.minY))
+        let end = origin.withOffset(CGVector(dx:area.minX-bounds.minX,dy:(upward ? high:low)-bounds.minY))
         start.press(forDuration:0.05,thenDragTo:end)
     }
     private func capture(_ name: String) { let attachment = XCTAttachment(screenshot:app.screenshot()); attachment.name = name; attachment.lifetime = .keepAlways; add(attachment) }
