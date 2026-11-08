@@ -2,7 +2,23 @@
 
 Updated November 8, 2026 UTC. The full first-version goal is active and release acceptance remains incomplete. The owner's migration 041 approval has already been executed and verified. The separate 042 approval is pending; a repeated 041 approval does not authorize 042. Historical snapshots are preserved in [the handoff archive](CURRENT-HANDOFF-HISTORY-20261106.md).
 
-## Latest execution state — November 8, 06:43 UTC
+## Latest execution state — November 8, 07:01 UTC
+
+The full-version goal remains active. No native build or UI test is running, and all three agents are idle. Canonical `ios/App/Theme.swift` remains unchanged: none of the keyboard experiments passed the complete existing acceptance checks. Migration 041 is already live and verified; 042 remains separately pending. No new deployment occurred.
+
+The next CI candidate contains the independently verified Safari foreground privacy fix (152 web tests, 14 Chromium checks and both actual simulator-Safari return cases), the UI05 exact-input completion correction (original six-case local replay passed), browser startup logging, and the diagnostic-only idle-delay report (42 focused checker tests passed). The connector rechecked PR1 at15f216b and all six prior workflows terminal: four succeeded; Core and fixtures failed. The next normal push should validate these completed changes while the keyboard investigation continues. Keep the PR draft and preserve the known failures; do not claim a combined green result or overlap another candidate before collecting the new cohort.
+
+The responder experiment passed the original two fallback cases but still produced a60.03-second idle miss in the valid Stock Review five-point case. The mixed follow-up's ordinary checkout and Spanish cases were invalid for the contributor fixture entry point and failed before their keyboard assertions. Those outcomes remain preserved and the responder change was rejected.
+
+Stable-content experiments R1–R4 all compiled but failed the unchanged five-point test. R1 and R3 exposed a full-bar Done target and missed the actual button. R2 and R4 restored the44-point target and dismissed the keyboard at every point with zero idle messages, but the hidden Done control remained in the accessibility snapshot. Each failed strict acceptance with zero recorded runtime warnings/restarts. Root reviewed R1 before/after and R2 after screenshots; R2's hidden-control issue was not visually exposed. No test assertion was weakened.
+
+R5 is prepared but UNRUN at `.build/CI15F216Nov08/keyboard-stable-content-variant-r5/`: only the accessibility child behavior changes to `visible ? .contain : .ignore`, preserving the separate child target when visible and hiding children when collapsed. Candidate Theme SHA256:95c72a4bed54329eb13584ee660906cc6b15446c6b3369bdc210d494d7a259d0. This is still a hypothesis. Before installing it into the scratch workspace, preserve current R4 source/products; then run the unchanged Stock Review singleton with the original fixture flags and720/900 limits. If that passes, qualify the original two fallback journeys, then use a normal DEBUG app build for ordinary checkout/Spanish checks. Contributor flags replace the normal @main; never reuse that fixture app for ordinary startup routes.
+
+Experimental root is `.build/CI15F216Nov08/keyboard-responder-experiment-r1/`. Its `source/` and `run/dd/` are mutable incremental-build working paths, currently containing R4. Immutable snapshots `preserved-responder/` and `preserved-stable-content-r1/`, `-r2/`, `-r3/` retain earlier exact source and products; preservation receipts map old paths to hashes. All original native results and run receipts are unchanged. R4 strict evidence is under `stable-content-r4-run/inspection/`; the next source change must snapshot R4 first. Live CI handles and continuation pointers belong in `.build/ContinuationNov08-safari-history.json` after the push.
+
+The one-line known-trip full-visibility correction remains prepared and unrun. UI07/UI10 trace proposals remain unrun. Owner-deferred provider/email/distribution setup remains separate.
+
+## Previous execution state — November 8, 06:43 UTC
 
 Canonical source is still unchanged for the keyboard helper. Commit e1493af adds the tested CI idle-delay report; 42f265b preserves the fallback diagnostic. Migration 041 is already live; no repeat deployment, push, or 042 update occurred.
 
