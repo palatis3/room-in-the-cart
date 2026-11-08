@@ -85,7 +85,7 @@ private struct HouseholdRequestMealFacts: View {
                 .font(.caption)
                 .fixedSize(horizontal: false, vertical: true)
             HouseholdDecisionFact(occurrence.meal.protected ? ht("Protected portions") : ht("Portions"), value: occurrence.meal.portions.formatted())
-                .font(.caption)
+                .font(.body)
         }
         .lineLimit(nil)
         .accessibilityElement(children: .combine)

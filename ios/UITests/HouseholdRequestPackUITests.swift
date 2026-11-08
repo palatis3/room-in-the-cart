@@ -122,6 +122,9 @@ import XCTest
         XCTAssertTrue(sam.label.contains("Sam’s wrap lunch") && sam.label.contains("Protected portions") && sam.label.contains("1"))
         XCTAssertTrue(mia.label.contains("Mia’s wrap lunch") && mia.label.contains("Protected portions") && mia.label.contains("1"))
         capture("S24-cereal-checkout-with-two-named-protected-lunches")
+        // Do not scroll between the existing shared viewport proof and these quantity checks.
+        try assertReadablePortions(sam, category: .large, name: "S24-standard-Sam-portions")
+        try assertReadablePortions(mia, category: .large, name: "S24-standard-Mia-portions")
         let total = element("household.decision.after-total").staticTexts["$40.69"]
         centerForReading(total)
         try assertReadableContrast(total)
@@ -201,6 +204,8 @@ import XCTest
                 XCTAssertGreaterThanOrEqual(text.frame.height + 2, needed.height, label)
             }
             capture("Largest text " + name)
+            try assertReadablePortions(row, category: .accessibilityExtraExtraExtraLarge,
+                                       name: "S24-AX5-" + id + "-portions")
         }
         try assertDisabledApplyRejectsActivation(element("household.decision.apply"), name: "S24-largest-disabled-apply")
         centerForReading(app.buttons["Cancel preview"])
@@ -208,6 +213,35 @@ import XCTest
         tap(element("household.decision.cancel"))
         XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 0")
         XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 0")
+    }
+
+    // These are essential quantities. Check actual rendered bounds and pixels, not a source font declaration.
+    // The caller positions the meal; this helper must not scroll away from the shared checkout viewport.
+    private func assertReadablePortions(_ row: XCUIElement, category: UIContentSizeCategory, name: String) throws {
+        let area = scrollableArea(bottomInset: 16)
+        let viewport = CGRect(x: app.frame.minX, y: area.minY, width: app.frame.width, height: area.height)
+        let traits = UITraitCollection(preferredContentSizeCategory: category)
+        let minimumFont = UIFont.preferredFont(forTextStyle: .body, compatibleWith: traits)
+        for (suffix, label) in [("label", "Protected portions"), ("value", "1")] {
+            let matches = row.staticTexts.matching(NSPredicate(format: "label == %@", label))
+            XCTAssertEqual(matches.count, 1, name + " " + suffix)
+            let text = matches.firstMatch
+            XCTAssertEqual(text.label, label)
+            XCTAssertTrue(text.isHittable, text.debugDescription)
+            let frame = text.frame
+            let required = (label as NSString).boundingRect(
+                with: CGSize(width: frame.width, height: .greatestFiniteMagnitude),
+                options: [.usesLineFragmentOrigin, .usesFontLeading], attributes: [.font: minimumFont], context: nil)
+            let screenshot = text.screenshot()
+            let attachment = XCTAttachment(screenshot: screenshot)
+            attachment.name = name + "-" + suffix; attachment.lifetime = .keepAlways; add(attachment)
+            let geometry = XCTAttachment(string: "category=\(category.rawValue); frame=\(frame); viewport=\(viewport); bodyLineHeight=\(minimumFont.lineHeight); requiredTextBounds=\(required)\n\(text.debugDescription)")
+            geometry.name = name + "-" + suffix + "-frame"; geometry.lifetime = .keepAlways; add(geometry)
+            XCTAssertTrue(viewport.contains(frame), "Portion text must be wholly visible: \(frame) in \(viewport)")
+            XCTAssertGreaterThan(frame.width, 0)
+            XCTAssertGreaterThanOrEqual(frame.height + 2, max(minimumFont.lineHeight, required.height), label)
+            try assertReadableContrast(try XCTUnwrap(screenshot.image.cgImage), label: name + " " + suffix)
+        }
     }
 
     // Measure the ink and background of this visible, single-color text element.
