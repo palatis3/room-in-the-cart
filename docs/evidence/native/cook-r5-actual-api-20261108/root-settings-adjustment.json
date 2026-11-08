@@ -1,0 +1,15 @@
+{
+  "changedAtUTC": "2026-11-08T17:33:53.854109+00:00",
+  "device": "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+  "change": "dark to light",
+  "reason": "Match reviewed original actual-API capture conditions; prior dark state recorded separately",
+  "command": [
+    "/usr/bin/xcrun",
+    "simctl",
+    "ui",
+    "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+    "appearance",
+    "light"
+  ],
+  "verifiedAppearance": "light"
+}

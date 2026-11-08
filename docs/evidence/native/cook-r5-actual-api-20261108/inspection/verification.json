@@ -1,0 +1,11 @@
+{
+  "nativeExit": 0,
+  "expectedCount": 1,
+  "traceSuccessNotRequiredForNativeInspection": true,
+  "startedAtUTC": "2026-11-08T17:36:53.435365+00:00",
+  "strictExit": 1,
+  "originalUnchanged": true,
+  "fixtureProductsUnchanged": true,
+  "finishedAtUTC": "2026-11-08T17:36:54.557139+00:00",
+  "sourceAndModelProofUnchanged": true
+}

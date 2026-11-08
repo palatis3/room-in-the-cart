@@ -1,0 +1,89 @@
+{
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 2839,
+      "sha256": "10391786e26a5a8af9e3ced9a8dc8b69f501bf7e2061204a9ab2d6832df20a0d"
+    },
+    {
+      "path": "build/log-review.json",
+      "bytes": 7173,
+      "sha256": "424bb2adc3bc8d213bcc73afb5cf86ffb4f976fd2f5b356ced94bd79468474d3"
+    },
+    {
+      "path": "build/run.json",
+      "bytes": 2671,
+      "sha256": "62b3e7cc9d567d595b106833ace311f55f12dc368e325d536f57acce14d243ba"
+    },
+    {
+      "path": "capture/native.log",
+      "bytes": 25618,
+      "sha256": "d35f4270ab9b7e9769bae442be63fefb097df8ed59fada0ff2ddbde24cc67a7c"
+    },
+    {
+      "path": "capture/observations.ndjson",
+      "bytes": 138854,
+      "sha256": "a2e5b520818314442dff52124f1cd4f8490aa045e1b4d0acb89ba693ab689081"
+    },
+    {
+      "path": "capture/run.json",
+      "bytes": 10490,
+      "sha256": "a2472774923d3dc599b5f6282325b17dee9dc738b51c3ef56dbc621d421201d5"
+    },
+    {
+      "path": "capture/trace.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "capture/trace.stdout",
+      "bytes": 146,
+      "sha256": "56a4c88d3278533b1e0a4dfe2c135f62663ad5cd1c69263361786a0c5b237940"
+    },
+    {
+      "path": "inspection/strict.txt",
+      "bytes": 1077,
+      "sha256": "3fcec365c0ecd4c2b6fd807eeb0565ee18d0d2e85ae942dd8ffdc5d829e9623c"
+    },
+    {
+      "path": "inspection/summary.json",
+      "bytes": 1538,
+      "sha256": "45e9bdfcf35f1e3c825801d50990a9ca3499941e7099d45275ab352f10430d5a"
+    },
+    {
+      "path": "inspection/test-runtime-warning-activities.json",
+      "bytes": 56182,
+      "sha256": "bcb29e309cc50f6aeed34df8d2237318f0428275464788c43f7fd64cd4b40209"
+    },
+    {
+      "path": "inspection/tests.json",
+      "bytes": 1982,
+      "sha256": "2745ca8ebd2b376afc94099c03a2e12719a59d57c79284dc1649e1ccc28e631d"
+    },
+    {
+      "path": "inspection/verification.json",
+      "bytes": 331,
+      "sha256": "f1ab1d155c4a5d4156d4904a941598c7977735c9ac3c72fd44342426c1bf2f06"
+    },
+    {
+      "path": "manifest.json",
+      "bytes": 2773,
+      "sha256": "92d80f96e93eb090f9bca07c38cfb5c3fba162982a4dad27e38f2fb4df3eb399"
+    },
+    {
+      "path": "root-settings-adjustment.json",
+      "bytes": 418,
+      "sha256": "a53c26c05769333a4b0357a40a2c92738834dde894e2149d4bf41a3566d426fa"
+    },
+    {
+      "path": "root-settings-before-capture.json",
+      "bytes": 242,
+      "sha256": "8fdb3b36f15f5e36ce93981e63a1befece0cb20d46939b0204b1863600acddc6"
+    },
+    {
+      "path": "root-warning-activity-review.json",
+      "bytes": 770,
+      "sha256": "22c3ee650cca65f807d93a2bbbc8439b0a6894a58e1e85c286f1da7ae8b0855c"
+    }
+  ]
+}

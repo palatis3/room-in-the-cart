@@ -1,0 +1,13 @@
+Executed 1 of 1 selected tests.
+
+| Test | Result | Seconds |
+|---|---|---|
+| RoomInTheCartUITests/SharedDeliveryUITests/testShopperReviewsExactEditedCookWordingBeforeReadback | Passed | 62.28 |
+The XCTest log confirms one start and one passing completion per selected test.
+
+Animation-idle diagnostics: 0 observed messages in 317 log lines (1 case starts, 0 runner restart boundaries). Diagnostic only; native results and runtime-warning checks are unchanged.
+No matching messages observed in the supplied log; this does not establish complete log coverage or absence of idle delays.
+
+Runtime-warning activity export diagnostics: test-runtime-warning-activities.json (artifact only; unavailable payloads are explicitly marked).
+XCTest runtime warning evidence is unavailable. Malformed XCTest runtime warning activity '[Internal] Thread running at User-initiated quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions'. Expected one Complete Issue Description.txt attachment, found 0.
+

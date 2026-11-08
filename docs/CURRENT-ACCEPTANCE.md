@@ -1,5 +1,13 @@
 # Current implementation and acceptance map
 
+## Latest verified state — November 8, 17:40 UTC
+
+The isolated r5 actual speech journey passed native 1/1 in 62.276 seconds with observed Play/Pause/Resume/Stop, but strict inspection failed on two priority-inversion records without required issue descriptions. The inspector is complete and must not be repeated. The separately passing 43 model/owner tests remain preserved. Canonical speech remains unchanged. [Actual API result and limits](evidence/native/cook-r5-actual-api-20261108/README.md).
+
+The accompanying trace requested Stop on the sampled volume-growth guard before Play and required forced termination after 120 seconds of finalization. Native completion remained independent. The 4.87 GB raw trace is private and unqualified; its actual time coverage is unknown. A separately bounded import of the documented raw `.atrc` format is being prepared to inspect retained data, without a new recording. No local native process or inspector is active. Root sessions34926,32979,8182 are all terminal.
+
+CI failure-diagnostic collection is now enabled locally in the four existing callers (`on-failure`), committed as2910ca0. Shell syntax,17 existing workflow tests, all8 workflow lint and15 queue-node checks pass. Native deadlines, warning gates, retention and the Records raw-artifact exclusion are unchanged; actual hosted failure collection remains unverified. [Policy](CI-VALIDATION.md#xctest-failure-diagnostics). The hosted UI09 diagnostic is terminal native8/8/strict0 but observer-unavailable; no GitHub run remains active or queued at the latest check, and no successor/main PR push occurred. The English timeout still has no source-supported repair. Full first-version, provider, physical/human and release acceptance remain open.
+
 ## Latest verified state — November 8, 17:26 UTC
 
 The isolated r5 speech candidate now compiles and passes all 43 model/owner-transport cases, native 0 and strict 0. The three new cases verify removal of redundant active-Stop getters while preserving failed-Stop and matched-terminal idle barriers. No runtime warnings were recorded in this controlled test scope. Source, products, original result and preserved r4 evidence are unchanged at inspection. [Exact proof and limitations](evidence/native/cook-active-stop-20261108/README.md). Inspection is complete; do not repeat it. A reviewed fresh fixture build for one causal speech trace is active under root session34926, PID82630, in `.build/CIA305065Nov08/cook-causal-review/thread-state-r5-proposal-r1/build`. Capture has not launched; poll that same handle before its next phase. Canonical speech remains unchanged; real AVFoundation/framework waits and the prior strict failure are unresolved.

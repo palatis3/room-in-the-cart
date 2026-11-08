@@ -1,0 +1,29 @@
+{
+  "files": {
+    "README.md": "262c822605814051b57f1c05398215fd8e1a65e32cee965d4b33ee16c9fdd72f",
+    "build.py": "bc42cd689fa566805f665dea2b4fbca96b2b980cb5f122e2906debd030b14c63",
+    "capture.py": "e40135eb4221feffe183511064ef5f3fe0746399cc9cb5e910452541276eab69",
+    "controls.py": "6e542629570204be3018b8d5f4b9459b2e13a14873be848d0cf320f4fb3b9a0f",
+    "diagnostics-option-review.json": "5b3e25ed8c3f51f9717d180d9b79d35a0ab1dfa34380a4f7c8c3a9042b7b7b07",
+    "inspect.py": "6b1686269546bf8eae120179e7fc6f8e593e17aa4b52cfbf7415dad6049918ae",
+    "notify-api-excerpts.txt": "3a6361e37e41107cd39b74c7fba6a0854b979e5c78094eb5145cc69591904e48",
+    "offline-controls.txt": "698d16d7b93c4bd9707d3cfacda6fb1e0fea99ed0cda6e69bedc42772940540a",
+    "preparation.json": "0b56e3ef6fff72c644fb40e7653d4e6bfaba9b71c48c8edf48079a8c2fe529bf",
+    "prior-failed-run.json": "efdc966f4cf07c8c0b1157ff6ad318b656a809535bace3d7f624d61c48a4c77f",
+    "recording-options.json": "fde2a906f2a209160c2204ed88cc8dc3f873ea90079a5d540ce1dad8f41c1260",
+    "retained-failure-review.json": "76c19d3fdf93bd37010d233960e190c95cbdbd105148ea0cfab2bfbd576e9bd3",
+    "retained-toc-outcome.json": "e423c4488f182e6b395f0ca663e1ea41b227ee1434ece8beb679dec22ec71827",
+    "source-manifest.json": "d2f233f64af0540e77cd66b995c39bada71522bc9f8f6b4fab1ee2927e36c590",
+    "support.py": "963c3fdd5673f543f7583acf18122088a89177a782429332c62191433ce26d42",
+    "test_controls.py": "ca1295e772bf9f243ebb73fdc8cc4fa82cbe8f2c2a6f8b1148310eeba0aaf797"
+  },
+  "installedFiles": {
+    "/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild": "d37fbcb4198c2474d847e5d7d4bf8394a1a9443890ad0153a76bc3e1d5576ec1",
+    "/Applications/Xcode.app/Contents/Developer/usr/bin/xctrace": "1820e9bafac5a8710535a63c43716094d28fbbc7eb39839277bf2ddd53b12e29",
+    "/Applications/Xcode.app/Contents/Developer/usr/share/man/man1/xcodebuild.1": "0c3bbc6c997ffd6130ebeb4278e90eeae8987bc6811a3295aa3229693db0bd2d",
+    "/Applications/Xcode.app/Contents/Developer/usr/share/man/man1/xctrace.1": "17b702ba4500320d2abbe83cc5d9e409c411b48088afb1255c61c77353865833",
+    "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/notify.h": "c7bf63e398effebe5e8895f4b89eace820437cfdd9735ffeb99ed69707dd5bb3",
+    "/Applications/Xcode.app/Contents/Applications/Instruments.app/Contents/Packages/SystemTrace.instrdst/Contents/Extensions/com.apple.dt.instruments.system-trace.dtac/schemas.xml": "d47ee1cf7f25c75a8be1a14f6ade12a7d1da09fc2f74c96308ea82efff48c2b1",
+    "/Applications/Xcode.app/Contents/Applications/Instruments.app/Contents/Packages/SystemTrace.instrdst/Contents/Templates/System Trace.tracetemplate": "25a342bbdb82e93c85e8cb4ecbab9656714de77bd4d823b57c20646d3d491a44"
+  }
+}
