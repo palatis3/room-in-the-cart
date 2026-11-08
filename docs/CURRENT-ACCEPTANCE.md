@@ -1,5 +1,13 @@
 # Current implementation and acceptance map
 
+## November 8, 20:36 UTC continuation checkpoint
+
+The unfiltered S24 audit is terminal (native65/strict1), with37 retained findings:2 contrast,1 potentially inaccessible text,2 Dynamic Type unsupported,29 partially unsupported and3 clipping. Inspection and complete target/category/context reconciliation are finished; do not repeat the export. None is closed merely because the prior count was41. Five historical reports are outside the current captured viewport. [Audit evidence](evidence/native/request-audit-after-disclosure-20261108/README.md).
+
+A separate unchanged-product measurement is active under root session92893 at `.build/S24NamedAuditTargetsNov08/measurement-r1`. It has two private UI cases for standard/AX5 fully visible review-button contrast and protected heading/expiry bounds and contrast. Source manifest `badbb8895707a18b1c705448eaea99275b5824a6f244723dc727f4b3aa5bf356` differs from canonical only in the diagnostic UI file. Poll this handle; no second local native run. Protected preview is untouched. No canonical app/test changes or new CI push occurred.
+
+GitHub fe3e143 fixture workflow remains unfinished: the latest poll found13 passed jobs,1 failed,4 running and1 pending. Core/Performance failures and the cook confirmation/speech-warning evidence remain unresolved as described below. Root owns monitoring. Full52-requirement/27-screen acceptance remains open.
+
 ## November 8, 20:25 UTC checkpoint
 
 The shared disclosure heading correction is committed locally as `137c661`. Reserving both native chevron dimensions prevents largest-text rewrap on expansion. Exact 556-input source `ffd68bf9a00de16e7be6c7d2121b2502da3b134626b5b3810cd65820434fd763` passes five native/strict UI executions: Other meals on minimum17/light, current26.2/light and current26.2/dark/AX5, plus nested checkout/charge disclosures on both standard-text platforms. Root reviewed all15 PNGs and24 text records. The header stays311×44points on SE3,338×44 at current standard text and338×187.333 at AX5 in all states. Unsigned arm64 Release and bundle checks pass. [Qualified evidence](evidence/native/disclosure-stable-heading-20261108/README.md).
