@@ -1,5 +1,33 @@
 # Current implementation and acceptance map
 
+## November 8, direct Done touch result terminal
+
+The direct-touch candidate builds (native0/bundle0) and the first center Done tap
+passes: keyboard/Done disappear, exact whitespace remains, editor retained. The
+original unknown-quantity/disabled-acceptance section then completes. After amount4
+is restored, the top midpoint(348,62) of the planned centered44pt region leaves the
+keyboard visible after5s. Native65/strict1,0idle; supply/final approval/relaunch not
+reached. Root reviewed all3screens and3geometry records. [Evidence and scope](evidence/native/native-done-touch-behavior-20261108/README.md).
+This proves failed behavior at that point, not a complete map of possible hit areas.
+
+All handles terminal: preparation5682, build27809/PID73222,
+test61472/PID73556, inspection55172. Do not repeat inspection. Current reused
+source/DD is the direct-touch candidate,561-source
+`2bebda3ee325cd752d31e7951796ae9a16e3c42137819066098d3da9ef79af40`.
+Execution package `.build/EnglishKeyboardReviewNov08/native-done-touch-execution-r1`,
+manifest `bde92bb703abc520452297e648c839651a9373b27f8ad164ba6ef115f5cc1b41`.
+Its preservation directory holds the previous observer source/products; R3 is in
+`native-done-hit-execution-r1/preservation`. Canonical native source remains8d0eb48f.
+
+Agent `english_keyboard_review` is reviewing official toolbar styling/control APIs
+and preparing a scratch-only app correction against this exact behavioral test.
+No new source/DD mutation or native execution is assigned to the helper. Avoid
+another arbitrary label-size guess, introspection iteration, or moving the failed
+point togreen. Original Theme.keyboardDoneAction is the bottom safeAreaInset that
+previously stalled; do not reintroduce it as an unexplained fallback. No new hosted
+run/deploy occurred. Full52/27 first-version acceptance stays open.
+
+
 ## November 8, native Done observation terminal; actual touch behavior next
 
 The isolated native Done observer compiled (native0/bundle0). Its original English

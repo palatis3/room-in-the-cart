@@ -1,0 +1,27 @@
+{
+  "sourceManifestSHA256": "2bebda3ee325cd752d31e7951796ae9a16e3c42137819066098d3da9ef79af40",
+  "executionManifestSHA256": "bde92bb703abc520452297e648c839651a9373b27f8ad164ba6ef115f5cc1b41",
+  "build": {
+    "nativeExit": 0,
+    "compiledAppCheckExit": 0,
+    "nativeElapsedSeconds": 45.298989333
+  },
+  "test": {
+    "nativeExit": 65,
+    "nativeElapsedSeconds": 177.129352625,
+    "nativeStartedAtUTC": "2026-11-08T23:52:05.145902+00:00",
+    "nativeFinishedAtUTC": "2026-11-08T23:55:02.273895+00:00"
+  },
+  "caseSeconds": 147.306,
+  "strictExit": 1,
+  "animationIdleMessages": 0,
+  "originalUnchanged": true,
+  "sourceUnchanged": true,
+  "preservedInputsUnchanged": true,
+  "qualificationPassed": false,
+  "centerInteractionPassed": true,
+  "restoredAmountTopSampleDismissedKeyboard": false,
+  "supplyInteractionsReached": false,
+  "screensAndGeometryReviewed": 3,
+  "continuousHitRegionProven": false
+}
