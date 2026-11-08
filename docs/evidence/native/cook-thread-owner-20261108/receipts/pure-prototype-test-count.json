@@ -1,0 +1,19 @@
+{
+  "log": ".build/CIA305065Nov08/cook-causal-review/blocked-pause-prototype-r2-execution/native.log",
+  "logSHA256": "829cddc9b939caba6e4e3485432f2a5a02a70f063b92f365c5022292294ce474",
+  "matchedSummaryLines": [
+    {
+      "line": 83,
+      "text": "\t Executed 12 tests, with 0 failures (0 unexpected) in 0.014 (0.019) seconds"
+    },
+    {
+      "line": 85,
+      "text": "\t Executed 12 tests, with 0 failures (0 unexpected) in 0.014 (0.019) seconds"
+    },
+    {
+      "line": 87,
+      "text": "\t Executed 12 tests, with 0 failures (0 unexpected) in 0.014 (0.025) seconds"
+    }
+  ],
+  "scope": "Pure Swift value model; no native speech qualification"
+}

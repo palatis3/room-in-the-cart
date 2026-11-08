@@ -1,0 +1,6 @@
+{
+  "check": "git apply --check --reverse against frozen isolated r3 source",
+  "exitCode": 0,
+  "mutation": false,
+  "nativeExecution": false
+}

@@ -1,0 +1,12 @@
+{
+  "nativeExit": 0,
+  "strictExit": 0,
+  "expectedCount": 40,
+  "originalUnchanged": true,
+  "sourceUnchanged": true,
+  "compiledProductsUnchanged": true,
+  "sourceManifestSHA256": "6fb75b908ad294becfb3abdf06778bb8d2b98c4a411fbef8f15c068729726ae3",
+  "inspectedAtUTC": "2026-11-08T16:13:35.903694+00:00",
+  "checkerSHA256": "d5aeb8c6217d1f49153986cbaa6a6505681ef781aa19a76278272355828f8652",
+  "scope": "40 model/real-owner tests with confined fake engine; not actual AV or acoustic acceptance"
+}

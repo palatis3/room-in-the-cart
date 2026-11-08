@@ -1,0 +1,18 @@
+Executed 1 of 5 selected tests.
+
+| Test | Result | Seconds |
+|---|---|---|
+| RoomInTheCartUITests/SharedDeliveryUITests/testShopperClosesWithPendingCreditThenLinksItToTheOriginalNetCharge | Failed | 0.00 |
+
+Animation-idle diagnostics: 0 observed messages in 4710 log lines (1 case starts, 0 runner restart boundaries). Diagnostic only; native results and runtime-warning checks are unchanged.
+No matching messages observed in the supplied log; this does not establish complete log coverage or absence of idle delays.
+
+The XCTest test export recorded 0 runtime warning occurrences across 1 examined tests.
+Unexpected execution inventory. Missing ['RoomInTheCartUITests/SharedDeliveryUITests/testShopperLeavesOriginalDinnerOpenAfterAnUnresolvedReplacementPreview', 'RoomInTheCartUITests/SharedDeliveryUITests/testShopperReplacesWednesdayAfterPickupAndKeepsTuesdaysShortage', 'RoomInTheCartUITests/SharedDeliveryUITests/testShopperReviewsExactEditedCookWordingBeforeReadback', 'RoomInTheCartUITests/SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord']; extra []
+Executed and passing counts do not match the selected tests
+The shard contains failures, expected failures or skipped tests
+Every selected test must individually report Passed
+XCTest log inventory mismatch. Missing ['RoomInTheCartUITests/SharedDeliveryUITests/testShopperLeavesOriginalDinnerOpenAfterAnUnresolvedReplacementPreview', 'RoomInTheCartUITests/SharedDeliveryUITests/testShopperReplacesWednesdayAfterPickupAndKeepsTuesdaysShortage', 'RoomInTheCartUITests/SharedDeliveryUITests/testShopperReviewsExactEditedCookWordingBeforeReadback', 'RoomInTheCartUITests/SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord']; extra [].
+XCTest log requires one start then one pass for RoomInTheCartUITests/SharedDeliveryUITests/testShopperClosesWithPendingCreditThenLinksItToTheOriginalNetCharge; found ['start'].
+XCTest log requires one successful result banner; found [].
+

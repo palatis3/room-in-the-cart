@@ -1,0 +1,378 @@
+{
+  "recordedAtUTC": "2026-11-08T16:06:02.420347+00:00",
+  "original": "/Users/palatis/Room in the Cart/.build/CIA305065Nov08/cook-causal-review/thread-owner-adapter-r2-execution/dd/Build/Products",
+  "copy": "/Users/palatis/Room in the Cart/.build/CIA305065Nov08/cook-causal-review/thread-owner-adapter-r3-execution/prior-products",
+  "manifest": {
+    "Debug-iphonesimulator/CoreDomain.o": {
+      "bytes": 18676096,
+      "sha256": "e284602a1bb250255b8975e1422897672877103574673bb6b36f7bed2f2d376b"
+    },
+    "Debug-iphonesimulator/CoreDomain.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo": {
+      "bytes": 297432,
+      "sha256": "8c9cd231f31806649060fc033ba195bde55e9277735fc078842d7a12a4d481df"
+    },
+    "Debug-iphonesimulator/CoreDomain.swiftmodule/Project/x86_64-apple-ios-simulator.swiftsourceinfo": {
+      "bytes": 297432,
+      "sha256": "fd3d3bc74ba1342719fe96c9208e3a16477f2af2e66ccc4218731aec7435f0f8"
+    },
+    "Debug-iphonesimulator/CoreDomain.swiftmodule/arm64-apple-ios-simulator.abi.json": {
+      "bytes": 149,
+      "sha256": "4277ac6b49f8511196028a5ac20f5b1b1dfa754c24615d34068089f0b1739728"
+    },
+    "Debug-iphonesimulator/CoreDomain.swiftmodule/arm64-apple-ios-simulator.swiftdoc": {
+      "bytes": 40584,
+      "sha256": "842026347b08db444196f42d840d4217fbaaa2e8346b46c8167a7df0214e379f"
+    },
+    "Debug-iphonesimulator/CoreDomain.swiftmodule/arm64-apple-ios-simulator.swiftmodule": {
+      "bytes": 1687044,
+      "sha256": "05033e242358af029403fa328ce0ab6ce6d78004ef5ee1a8bf7ec21fde5a09dc"
+    },
+    "Debug-iphonesimulator/CoreDomain.swiftmodule/x86_64-apple-ios-simulator.abi.json": {
+      "bytes": 149,
+      "sha256": "4277ac6b49f8511196028a5ac20f5b1b1dfa754c24615d34068089f0b1739728"
+    },
+    "Debug-iphonesimulator/CoreDomain.swiftmodule/x86_64-apple-ios-simulator.swiftdoc": {
+      "bytes": 40584,
+      "sha256": "75bea1802da0288584cb6387dd26966ce5c44fd068c0dfd27b067d4fadd198f2"
+    },
+    "Debug-iphonesimulator/CoreDomain.swiftmodule/x86_64-apple-ios-simulator.swiftmodule": {
+      "bytes": 1687060,
+      "sha256": "a153b27896444828249308113d755a05b64398742b04157ec5607a247beb4690"
+    },
+    "Debug-iphonesimulator/DeviceSurfaces.o": {
+      "bytes": 1908912,
+      "sha256": "0005eb3222ee267493cbbacd3c05a3c921a21272cdc23d0e9527be2f3f886bae"
+    },
+    "Debug-iphonesimulator/DeviceSurfaces.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo": {
+      "bytes": 45232,
+      "sha256": "105ddd95f09bdd3635c6cb7ca690fe6ec5b10e2f37896a1e433ca5183def53e3"
+    },
+    "Debug-iphonesimulator/DeviceSurfaces.swiftmodule/Project/x86_64-apple-ios-simulator.swiftsourceinfo": {
+      "bytes": 45232,
+      "sha256": "f2c621ccf3e0cdcafb053eb5611b67b340d3086c429105e180eacafaf45db8fd"
+    },
+    "Debug-iphonesimulator/DeviceSurfaces.swiftmodule/arm64-apple-ios-simulator.abi.json": {
+      "bytes": 149,
+      "sha256": "4277ac6b49f8511196028a5ac20f5b1b1dfa754c24615d34068089f0b1739728"
+    },
+    "Debug-iphonesimulator/DeviceSurfaces.swiftmodule/arm64-apple-ios-simulator.swiftdoc": {
+      "bytes": 4864,
+      "sha256": "86f111454a39525a8a32e435512a5ed6c7a2d52c416d9f6c3a93b49db698a669"
+    },
+    "Debug-iphonesimulator/DeviceSurfaces.swiftmodule/arm64-apple-ios-simulator.swiftmodule": {
+      "bytes": 237020,
+      "sha256": "4b8916ba70bad5c58c9e7ce7c79ef15d9e215c208c75b5c1342c143931aa4b79"
+    },
+    "Debug-iphonesimulator/DeviceSurfaces.swiftmodule/x86_64-apple-ios-simulator.abi.json": {
+      "bytes": 149,
+      "sha256": "4277ac6b49f8511196028a5ac20f5b1b1dfa754c24615d34068089f0b1739728"
+    },
+    "Debug-iphonesimulator/DeviceSurfaces.swiftmodule/x86_64-apple-ios-simulator.swiftdoc": {
+      "bytes": 4864,
+      "sha256": "840c7eb03d499636f13d3460b15ea2013f28c32bb514ebb66fb8e6dd1ba677ab"
+    },
+    "Debug-iphonesimulator/DeviceSurfaces.swiftmodule/x86_64-apple-ios-simulator.swiftmodule": {
+      "bytes": 237036,
+      "sha256": "ed590ce179ccfb4373bb52676cc2c47a84a166edbe830c16939450346b97a0e6"
+    },
+    "Debug-iphonesimulator/HouseholdClient.o": {
+      "bytes": 30841336,
+      "sha256": "8416de6c778d8a4b8e2a4f19238ffd810b29e3a1111e78ff67cf4b712411fad9"
+    },
+    "Debug-iphonesimulator/HouseholdClient.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo": {
+      "bytes": 510860,
+      "sha256": "d8888969d0643a888565b3a590ed6002dc5608223820d6207e0531edfd807289"
+    },
+    "Debug-iphonesimulator/HouseholdClient.swiftmodule/Project/x86_64-apple-ios-simulator.swiftsourceinfo": {
+      "bytes": 510860,
+      "sha256": "f2411d0e415dd4e2214467bc710c8ab4bd408a8eac4096eadd4dd21a962a39bc"
+    },
+    "Debug-iphonesimulator/HouseholdClient.swiftmodule/arm64-apple-ios-simulator.abi.json": {
+      "bytes": 149,
+      "sha256": "4277ac6b49f8511196028a5ac20f5b1b1dfa754c24615d34068089f0b1739728"
+    },
+    "Debug-iphonesimulator/HouseholdClient.swiftmodule/arm64-apple-ios-simulator.swiftdoc": {
+      "bytes": 22412,
+      "sha256": "7f47a4d86229dd665e0b3fbecd56eb0c1545b0071fd32b1c619c96422497928c"
+    },
+    "Debug-iphonesimulator/HouseholdClient.swiftmodule/arm64-apple-ios-simulator.swiftmodule": {
+      "bytes": 2731232,
+      "sha256": "2ff8d58e51f37d72946144195760505992d7d0ae6fc67a3b5467f9d33218e516"
+    },
+    "Debug-iphonesimulator/HouseholdClient.swiftmodule/x86_64-apple-ios-simulator.abi.json": {
+      "bytes": 149,
+      "sha256": "4277ac6b49f8511196028a5ac20f5b1b1dfa754c24615d34068089f0b1739728"
+    },
+    "Debug-iphonesimulator/HouseholdClient.swiftmodule/x86_64-apple-ios-simulator.swiftdoc": {
+      "bytes": 22412,
+      "sha256": "e89ade8b6079bb01cdcc35b205dd6808037d3e9994479aa00638ed2fdd09e11e"
+    },
+    "Debug-iphonesimulator/HouseholdClient.swiftmodule/x86_64-apple-ios-simulator.swiftmodule": {
+      "bytes": 2731252,
+      "sha256": "6b79e43c8db38ee868a19ebe504e03a282961717ca00ecc7dec36d48c896ccdd"
+    },
+    "Debug-iphonesimulator/LocalStore.o": {
+      "bytes": 798224,
+      "sha256": "230a12b3e7638c6d71f60600e712f822110a53b36d48db5d1efe8214cd26ea8d"
+    },
+    "Debug-iphonesimulator/LocalStore.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo": {
+      "bytes": 16216,
+      "sha256": "915acadfbbd3548dc2d4179b8e7ad1abf68503b43f52ba62b02d1233e73ac522"
+    },
+    "Debug-iphonesimulator/LocalStore.swiftmodule/Project/x86_64-apple-ios-simulator.swiftsourceinfo": {
+      "bytes": 16216,
+      "sha256": "d67270e79c29b02a9f0c5c3963173f8c87b257f13f9ea4f00c43b07f91c66653"
+    },
+    "Debug-iphonesimulator/LocalStore.swiftmodule/arm64-apple-ios-simulator.abi.json": {
+      "bytes": 149,
+      "sha256": "4277ac6b49f8511196028a5ac20f5b1b1dfa754c24615d34068089f0b1739728"
+    },
+    "Debug-iphonesimulator/LocalStore.swiftmodule/arm64-apple-ios-simulator.swiftdoc": {
+      "bytes": 10008,
+      "sha256": "83a41c391e9c0c39eaff087bbebed19142cc566397f1dc17eaf97a1297fd64ff"
+    },
+    "Debug-iphonesimulator/LocalStore.swiftmodule/arm64-apple-ios-simulator.swiftmodule": {
+      "bytes": 117724,
+      "sha256": "fba691e9abbfd8bcd67a767de5c52bc5cb201a518718b00b124781eade45943b"
+    },
+    "Debug-iphonesimulator/LocalStore.swiftmodule/x86_64-apple-ios-simulator.abi.json": {
+      "bytes": 149,
+      "sha256": "4277ac6b49f8511196028a5ac20f5b1b1dfa754c24615d34068089f0b1739728"
+    },
+    "Debug-iphonesimulator/LocalStore.swiftmodule/x86_64-apple-ios-simulator.swiftdoc": {
+      "bytes": 10008,
+      "sha256": "cc4ec0c2735c92af5eaecd98947852af40c05628b333a2e932895a0f2cf34b35"
+    },
+    "Debug-iphonesimulator/LocalStore.swiftmodule/x86_64-apple-ios-simulator.swiftmodule": {
+      "bytes": 117740,
+      "sha256": "148fa23e7c4a130bf86dc6e6e14a62b87fa51f270886fa3dbe06094b3d7375db"
+    },
+    "Debug-iphonesimulator/PackageFrameworks/LocalStore_48DC8B08D5D6A302_PackageProduct.framework/Info.plist": {
+      "bytes": 772,
+      "sha256": "c02b16bbece9670a64151a49b88c873e9ccf2d51ce760eddf3bb41cb4912818e"
+    },
+    "Debug-iphonesimulator/PackageFrameworks/LocalStore_48DC8B08D5D6A302_PackageProduct.framework/LocalStore_48DC8B08D5D6A302_PackageProduct": {
+      "bytes": 728344,
+      "sha256": "e7fd26409790676ed0e4f5a8ca636dfc76d40a193351cf22e2ffe8b68179c666"
+    },
+    "Debug-iphonesimulator/PackageFrameworks/RecordArchive_-6C39D90174E985D2_PackageProduct.framework/Info.plist": {
+      "bytes": 782,
+      "sha256": "80926054a0560cd0ae558a38c2bf53bec9c9649335af50b7a6416f4e8b5fb6b7"
+    },
+    "Debug-iphonesimulator/PackageFrameworks/RecordArchive_-6C39D90174E985D2_PackageProduct.framework/RecordArchive_-6C39D90174E985D2_PackageProduct": {
+      "bytes": 1883920,
+      "sha256": "3753222d15ffa9ac3e352bee51bd50da18d754f837e2048a13535de049d8264d"
+    },
+    "Debug-iphonesimulator/RecordArchive.o": {
+      "bytes": 2256848,
+      "sha256": "d994ea1edb1f5a4aa5d98dd35bca549974ef22c20c5a4aaa1dc9aa58d49d2fe2"
+    },
+    "Debug-iphonesimulator/RecordArchive.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo": {
+      "bytes": 40724,
+      "sha256": "15187452aacdbbe03d441543da3a4eb4a1ead09f755d6b2a9dad6e92197d3a48"
+    },
+    "Debug-iphonesimulator/RecordArchive.swiftmodule/Project/x86_64-apple-ios-simulator.swiftsourceinfo": {
+      "bytes": 40724,
+      "sha256": "01e5f0be5873cc4ecb029c97e688c3f0d64180dc24b547a3115ebd70908b1e8d"
+    },
+    "Debug-iphonesimulator/RecordArchive.swiftmodule/arm64-apple-ios-simulator.abi.json": {
+      "bytes": 149,
+      "sha256": "4277ac6b49f8511196028a5ac20f5b1b1dfa754c24615d34068089f0b1739728"
+    },
+    "Debug-iphonesimulator/RecordArchive.swiftmodule/arm64-apple-ios-simulator.swiftdoc": {
+      "bytes": 7708,
+      "sha256": "6197d0fae7e4c20b7ca12e33a1aa87ea81fca9710920bec79ad170000d425c70"
+    },
+    "Debug-iphonesimulator/RecordArchive.swiftmodule/arm64-apple-ios-simulator.swiftmodule": {
+      "bytes": 275908,
+      "sha256": "92cfb3d8c40664b9872ff460722970de9bcf26ba263a44953e7bc0412dc5f6b8"
+    },
+    "Debug-iphonesimulator/RecordArchive.swiftmodule/x86_64-apple-ios-simulator.abi.json": {
+      "bytes": 149,
+      "sha256": "4277ac6b49f8511196028a5ac20f5b1b1dfa754c24615d34068089f0b1739728"
+    },
+    "Debug-iphonesimulator/RecordArchive.swiftmodule/x86_64-apple-ios-simulator.swiftdoc": {
+      "bytes": 7708,
+      "sha256": "59557d3c70da49b88f34418779b98b38ac934bc548539c695cb5d593500a5388"
+    },
+    "Debug-iphonesimulator/RecordArchive.swiftmodule/x86_64-apple-ios-simulator.swiftmodule": {
+      "bytes": 275928,
+      "sha256": "071d26f572a04da7f1bd334151727e8b3dcb40ccb25efc53daf9dc107860d2f9"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/AppIcon60x60@2x.png": {
+      "bytes": 15760,
+      "sha256": "27e21fc124a79cad37a794049aa509d85bde6b2090d40a47879fa16eb3283ed6"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/AppIcon76x76@2x~ipad.png": {
+      "bytes": 24964,
+      "sha256": "eb3a280138cf5e99f822725ec645ee261fa5030dea8206b2ba7843df736db1eb"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.app/Assets.car": {
+      "bytes": 943112,
+      "sha256": "12c7ad92a58084b65d06a2d24fddf49c92725228fb2d4d4b44a9acebf04ddd26"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo": {
+      "bytes": 1028836,
+      "sha256": "f22166cb8274d30afc11f2dd122aa6241cf3647d2aaa968d477a4b9909a47d16"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.swiftmodule/Project/x86_64-apple-ios-simulator.swiftsourceinfo": {
+      "bytes": 1028836,
+      "sha256": "1835cc24f6d741724d99208db7bde110b16452f80793ac7cd236edd2e9fa3cbc"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.swiftmodule/arm64-apple-ios-simulator.abi.json": {
+      "bytes": 149,
+      "sha256": "4277ac6b49f8511196028a5ac20f5b1b1dfa754c24615d34068089f0b1739728"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.swiftmodule/arm64-apple-ios-simulator.swiftdoc": {
+      "bytes": 87096,
+      "sha256": "a1d463fe716597256204a3dfe656088405bb05ea5ef2f3096838d509dc3710ae"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.swiftmodule/arm64-apple-ios-simulator.swiftmodule": {
+      "bytes": 5885412,
+      "sha256": "ff6c4bba3228d6f4b68f4abb7c4a871561f5123f5ebe0faaffed9882ce30a6a0"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.swiftmodule/x86_64-apple-ios-simulator.abi.json": {
+      "bytes": 149,
+      "sha256": "4277ac6b49f8511196028a5ac20f5b1b1dfa754c24615d34068089f0b1739728"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.swiftmodule/x86_64-apple-ios-simulator.swiftdoc": {
+      "bytes": 87096,
+      "sha256": "dab69f97c65ea0c3b30680680659a291dc43cbcbd942305b2701c601c5c04025"
+    },
+    "Debug-iphonesimulator/RoomInTheCart.swiftmodule/x86_64-apple-ios-simulator.swiftmodule": {
+      "bytes": 5885500,
+      "sha256": "66628a182a0a48c258e30128ae27b58f40ffbfaeb0e3e99c1bdcae8193b59abd"
+    },
+    "Debug-iphonesimulator/RoomInTheCartShare.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo": {
+      "bytes": 1052,
+      "sha256": "769ccfbb4fcc3fe100013fb574a1a797cc3d1e8b7e0700b2684d330618e6c02a"
+    },
+    "Debug-iphonesimulator/RoomInTheCartShare.swiftmodule/Project/x86_64-apple-ios-simulator.swiftsourceinfo": {
+      "bytes": 1052,
+      "sha256": "635a860d60dcb6dea90bab3251cc81262ed1b9a488911cd76ed9029f5816ea2c"
+    },
+    "Debug-iphonesimulator/RoomInTheCartShare.swiftmodule/arm64-apple-ios-simulator.abi.json": {
+      "bytes": 149,
+      "sha256": "4277ac6b49f8511196028a5ac20f5b1b1dfa754c24615d34068089f0b1739728"
+    },
+    "Debug-iphonesimulator/RoomInTheCartShare.swiftmodule/arm64-apple-ios-simulator.swiftdoc": {
+      "bytes": 428,
+      "sha256": "86bb593c3b9bae100c66b16b628ed6571d8a22a1b27e59ddf74760199920f64f"
+    },
+    "Debug-iphonesimulator/RoomInTheCartShare.swiftmodule/arm64-apple-ios-simulator.swiftmodule": {
+      "bytes": 81864,
+      "sha256": "74ef969c3ba6a0ddc8ff271f5c5472129954c0e076dd6db19308e99b9e9a7c73"
+    },
+    "Debug-iphonesimulator/RoomInTheCartShare.swiftmodule/x86_64-apple-ios-simulator.abi.json": {
+      "bytes": 149,
+      "sha256": "4277ac6b49f8511196028a5ac20f5b1b1dfa754c24615d34068089f0b1739728"
+    },
+    "Debug-iphonesimulator/RoomInTheCartShare.swiftmodule/x86_64-apple-ios-simulator.swiftdoc": {
+      "bytes": 428,
+      "sha256": "cd433540b2f45d81fcc77b6c340e5d9bb7305535530ee5acf24c29c5d8f94e5d"
+    },
+    "Debug-iphonesimulator/RoomInTheCartShare.swiftmodule/x86_64-apple-ios-simulator.swiftmodule": {
+      "bytes": 81876,
+      "sha256": "2c0f0da0172891803580530cc05b6f7eeda568300a88ae7e47cca380594e108a"
+    },
+    "Debug-iphonesimulator/RoomInTheCartUITests.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo": {
+      "bytes": 28992,
+      "sha256": "af832b65bc1be6acfb7f34279afea7975bb9a63b80c5786c40947e8b5b30921f"
+    },
+    "Debug-iphonesimulator/RoomInTheCartUITests.swiftmodule/Project/x86_64-apple-ios-simulator.swiftsourceinfo": {
+      "bytes": 28992,
+      "sha256": "75800d8db99b860fd4aefeb8537f268d7cb7fbf37cb93a709fbe9541e8ca5443"
+    },
+    "Debug-iphonesimulator/RoomInTheCartUITests.swiftmodule/arm64-apple-ios-simulator.abi.json": {
+      "bytes": 149,
+      "sha256": "4277ac6b49f8511196028a5ac20f5b1b1dfa754c24615d34068089f0b1739728"
+    },
+    "Debug-iphonesimulator/RoomInTheCartUITests.swiftmodule/arm64-apple-ios-simulator.swiftdoc": {
+      "bytes": 3532,
+      "sha256": "31d80ccf952add447bdc329984a6ed6c8086045d3800e87e0462bd9bc5ed6914"
+    },
+    "Debug-iphonesimulator/RoomInTheCartUITests.swiftmodule/arm64-apple-ios-simulator.swiftmodule": {
+      "bytes": 148968,
+      "sha256": "9ecb94cfcdf96a7fab18ab998bf3a690ac98e80ec62a1aa3caf483235307dea9"
+    },
+    "Debug-iphonesimulator/RoomInTheCartUITests.swiftmodule/x86_64-apple-ios-simulator.abi.json": {
+      "bytes": 149,
+      "sha256": "4277ac6b49f8511196028a5ac20f5b1b1dfa754c24615d34068089f0b1739728"
+    },
+    "Debug-iphonesimulator/RoomInTheCartUITests.swiftmodule/x86_64-apple-ios-simulator.swiftdoc": {
+      "bytes": 3532,
+      "sha256": "865e1ef326f018628b5743196d350e63c89fc94903c2e64b943341079ee52c08"
+    },
+    "Debug-iphonesimulator/RoomInTheCartUITests.swiftmodule/x86_64-apple-ios-simulator.swiftmodule": {
+      "bytes": 149016,
+      "sha256": "d411d37236da272e92bc6aa48cbd09a536056f38c9a696ddd35868e0929f7102"
+    },
+    "Debug-iphonesimulator/RoomInTheCartWidget.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo": {
+      "bytes": 1308,
+      "sha256": "a4719ba92d41a2ee5621920f6e97271c61ef7f426ee273438df09e33ad00a039"
+    },
+    "Debug-iphonesimulator/RoomInTheCartWidget.swiftmodule/Project/x86_64-apple-ios-simulator.swiftsourceinfo": {
+      "bytes": 1308,
+      "sha256": "ca9475ecfb4b729e842b627a4fbf87c3c66b3b9a759bea04a01ab15e47a9a6a2"
+    },
+    "Debug-iphonesimulator/RoomInTheCartWidget.swiftmodule/arm64-apple-ios-simulator.abi.json": {
+      "bytes": 149,
+      "sha256": "4277ac6b49f8511196028a5ac20f5b1b1dfa754c24615d34068089f0b1739728"
+    },
+    "Debug-iphonesimulator/RoomInTheCartWidget.swiftmodule/arm64-apple-ios-simulator.swiftdoc": {
+      "bytes": 428,
+      "sha256": "a789f7b2957093792d984b8172922cb81b340546144c1b2dc9dfff198ad5077d"
+    },
+    "Debug-iphonesimulator/RoomInTheCartWidget.swiftmodule/arm64-apple-ios-simulator.swiftmodule": {
+      "bytes": 77112,
+      "sha256": "8f70cdd55000358fc7766b7cfdef4379caa60766a6f07abe41a135a230ab3cbe"
+    },
+    "Debug-iphonesimulator/RoomInTheCartWidget.swiftmodule/x86_64-apple-ios-simulator.abi.json": {
+      "bytes": 149,
+      "sha256": "4277ac6b49f8511196028a5ac20f5b1b1dfa754c24615d34068089f0b1739728"
+    },
+    "Debug-iphonesimulator/RoomInTheCartWidget.swiftmodule/x86_64-apple-ios-simulator.swiftdoc": {
+      "bytes": 428,
+      "sha256": "55a91ebceaadb90308c524b587f3d175b105d31c07536d34a1b1496c2e8fe0be"
+    },
+    "Debug-iphonesimulator/RoomInTheCartWidget.swiftmodule/x86_64-apple-ios-simulator.swiftmodule": {
+      "bytes": 77132,
+      "sha256": "b5d8d6b9cf675cea46596d11393852303c47bb551238840d7605452c8cfa0198"
+    }
+  },
+  "originalUnchanged": true,
+  "copyVerified": true,
+  "failedRunSHA256": "7694f4a19263b9bb5e00460df94d436c31201d251397b6901d2f3fe9043602de",
+  "failedLogSHA256": "17c7a0a32009e1309d190d397a528e4490f449b9431d285deed1593434f8c14a",
+  "failedResultManifest": {
+    "Data/data.0~EX7f_bHAIjfD1zVkq-QMDnKnz9OfLPOkhAPKuyXiVvngtwAoDC3ljklkmSmMU1DPZWhsXClfFYYcHaX31NdNfA==": {
+      "bytes": 138121,
+      "sha256": "6cad189207be793a6ae81592a982fc9c4f762cbe05406b80f1f979dc9397a02d"
+    },
+    "Data/data.0~NYpS1QQWI-Neyz1kchQ39PBeOEVcjwsAoykT-pnPoOCxy35JA6lyl6tzKylNpbzKsp0BmITOHwjwjLliMf3KFg==": {
+      "bytes": 2695,
+      "sha256": "340e820a2b91e54fbabcb63927a36ea0a310daaf779f6ad956a92cdf641d7a6b"
+    },
+    "Data/data.0~ucOlwO1QRBNjc8zjXaAJK60K8SbvjGtER9VHbk8MqgCie-3UxiAh8DS8uqnnuBNd4GoWGTYvval1-C0jFks62w==": {
+      "bytes": 315,
+      "sha256": "abc02f5627803a8707cdb166e587dda058de280d7eca698adf8264f1f166341f"
+    },
+    "Data/refs.0~EX7f_bHAIjfD1zVkq-QMDnKnz9OfLPOkhAPKuyXiVvngtwAoDC3ljklkmSmMU1DPZWhsXClfFYYcHaX31NdNfA==": {
+      "bytes": 1,
+      "sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+    },
+    "Data/refs.0~NYpS1QQWI-Neyz1kchQ39PBeOEVcjwsAoykT-pnPoOCxy35JA6lyl6tzKylNpbzKsp0BmITOHwjwjLliMf3KFg==": {
+      "bytes": 133,
+      "sha256": "a1ba592e592a5c470289191ae5a09ec5c7a89479f4b132ba440ee34dde2576e1"
+    },
+    "Data/refs.0~ucOlwO1QRBNjc8zjXaAJK60K8SbvjGtER9VHbk8MqgCie-3UxiAh8DS8uqnnuBNd4GoWGTYvval1-C0jFks62w==": {
+      "bytes": 1,
+      "sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+    },
+    "Info.plist": {
+      "bytes": 776,
+      "sha256": "6396262f2904e7f930970a87d59b4dff41d9e02c24ae14e0890552080d52b168"
+    }
+  },
+  "sourceManifestSHA256": "eb1a7f69b81f2ab1105fbb8ca55c08e501c1f693871cb41fe0f9034a59c71991"
+}

@@ -1,0 +1,1592 @@
+--- a/ios/Features/Capture/Capture.xcstrings
++++ b/ios/Features/Capture/Capture.xcstrings
+@@ -4204,6 +4204,57 @@
+           }
+         }
+       }
++    },
++    "Pausing readback…": {
++      "extractionState": "manual",
++      "localizations": {
++        "en": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Pausing readback…"
++          }
++        },
++        "es": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Pausando la lectura…"
++          }
++        }
++      }
++    },
++    "Stopping readback…": {
++      "extractionState": "manual",
++      "localizations": {
++        "en": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Stopping readback…"
++          }
++        },
++        "es": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Deteniendo la lectura…"
++          }
++        }
++      }
++    },
++    "Still waiting for readback to stop.": {
++      "extractionState": "manual",
++      "localizations": {
++        "en": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Still waiting for readback to stop."
++          }
++        },
++        "es": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "Aún se espera que se detenga la lectura."
++          }
++        }
++      }
+     }
+   },
+   "version": "1.0"
+--- a/ios/Features/Capture/CookReadbackModel.swift
++++ b/ios/Features/Capture/CookReadbackModel.swift
+@@ -15,15 +15,17 @@
+ 
+ @MainActor protocol CookSpeechPlayback: AnyObject {
+     var onEnd: ((UUID) -> Void)? { get set }
++    var onStopRequired: (() -> Void)? { get set }
+     func prepareAudio(for id: UUID, completion: @escaping @MainActor @Sendable (Bool) -> Void)
+-    func speak(_ text: String, localeIdentifier: String, playbackID: UUID) throws
+-    func pause() -> Bool
+-    func resume() throws -> Bool
+-    func stop()
++    func speak(_ text: String, localeIdentifier: String, playbackID: UUID, startBefore: Date,
++               completion: @escaping @MainActor @Sendable (Result<Void, CaptureFailure>) -> Void)
++    func pause(completion: @escaping @MainActor @Sendable (Bool) -> Void)
++    func resume(completion: @escaping @MainActor @Sendable (Result<Bool, CaptureFailure>) -> Void)
++    func stop(completion: @escaping @MainActor @Sendable (Bool) -> Void)
+ }
+ 
+ @MainActor final class CookReadbackModel: ObservableObject {
+-    enum State: Equatable { case stopped, preparing, speaking, paused }
++    enum State: Equatable { case stopped, preparing, speaking, pausing, paused, stopping }
+     @Published private(set) var state = State.stopped
+     @Published private(set) var voiceOverActive = false
+     @Published private(set) var unavailable = false
+@@ -32,6 +34,9 @@
+     private let authorize: (CookReadbackInstruction, Date) -> Bool
+     private let clock: () -> Date
+     private var playbackID: UUID?
++    private var operation: UUID?
++    private var awaitingPreparation: UUID?
++    private var repeatIntent: CookReadbackInstruction?
+     private var watchdog: Task<Void, Never>?
+     private var closed = false
+ 
+@@ -40,76 +45,120 @@
+         self.instruction = instruction; self.speech = speech; self.clock = clock; self.authorize = authorize
+         speech.onEnd = { [weak self] id in
+             guard let self, self.playbackID == id else { return }
+-            self.stop()
++            // The adapter's terminal event means matching utterance + owner idle,
++            // not just receipt of an arbitrary delegate callback.
++            self.finishStop(id)
+         }
++        speech.onStopRequired = { [weak self] in self?.stop() }
+     }
+     var canRead: Bool { canRead(at: clock()) }
+     var canStart: Bool {
+         let now = clock()
+-        return now < instruction.startBefore && !voiceOverActive && canRead(at: now)
++        return state != .stopping && now < instruction.startBefore && !voiceOverActive && canRead(at: now)
+     }
+     var canResume: Bool { state == .paused && canContinue }
+     private var canContinue: Bool { !voiceOverActive && canRead }
+-
+     private func canRead(at now: Date) -> Bool {
+         !closed && instruction.excludesPrivateBudget && instruction.sourceRevision >= 0 &&
+         instruction.createdAt <= now && !instruction.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+         (try? CaptureLimits.validate(instruction.text)) != nil && authorize(instruction, now)
+     }
+-
+     func update(_ instruction: CookReadbackInstruction) {
+         guard !closed else { return }
+         if self.instruction != instruction { stop(); self.instruction = instruction; unavailable = false }
+     }
+     func setVoiceOver(_ active: Bool) {
+         voiceOverActive = active
+-        if active { stop() } // VoiceOver is exclusive. Turning it off never resumes playback automatically.
++        if active { stop() }
+     }
+     func playFromBeginning() {
+         guard canStart else { checkCurrent(); return }
+-        stop(); unavailable = false
++        if state != .stopped {
++            repeatIntent = instruction // This user's request only; invalidation cancels it.
++            requestStop(preserveExplicitRepeat: true)
++            return
++        }
++        beginPlayback()
++    }
++    private func beginPlayback() {
++        guard canStart, state == .stopped else { return }
++        repeatIntent = nil; unavailable = false
+         let id = UUID(); playbackID = id
+-        watch(id)
+-        prepareAudio(for: id, resuming: false)
++        watch(id); prepareAudio(for: id, resuming: false)
+     }
+     private func prepareAudio(for id: UUID, resuming: Bool) {
+-        state = .preparing
++        let token = UUID(); operation = token; awaitingPreparation = token; state = .preparing
+         speech.prepareAudio(for: id) { [weak self] ready in
+-            guard let self, self.playbackID == id, self.state == .preparing else { return }
+-            // While the session was activating, this note, its authority, or the route may have changed.
++            guard let self, self.playbackID == id, self.operation == token,
++                  self.awaitingPreparation == token, self.state == .preparing else { return }
++            self.awaitingPreparation = nil // Claim exactly once before native command submission.
+             guard resuming ? self.canContinue : self.canStart else { self.stop(); return }
+-            do {
+-                guard ready else { throw CaptureFailure.audioUnavailable }
+-                if resuming {
+-                    guard try self.speech.resume() else { throw CaptureFailure.audioUnavailable }
+-                } else {
+-                    try self.speech.speak(self.instruction.text, localeIdentifier: self.instruction.localeIdentifier, playbackID: id)
++            guard ready else { self.failAndStop(); return }
++            if resuming {
++                self.speech.resume { [weak self] result in
++                    self?.completedPlaybackCommand(id: id, token: token, succeeded: (try? result.get()) == true)
+                 }
+-                self.state = .speaking
+-            } catch {
+-                self.stop()
+-                self.unavailable = true
++            } else {
++                self.speech.speak(self.instruction.text, localeIdentifier: self.instruction.localeIdentifier, playbackID: id, startBefore: self.instruction.startBefore) { [weak self] result in
++                    let succeeded: Bool
++                    switch result { case .success: succeeded = true; case .failure: succeeded = false }
++                    self?.completedPlaybackCommand(id: id, token: token, succeeded: succeeded)
++                }
+             }
+         }
+     }
++    private func completedPlaybackCommand(id: UUID, token: UUID, succeeded: Bool) {
++        guard playbackID == id, operation == token, state == .preparing else { return }
++        guard canContinue else { stop(); return }
++        guard succeeded else { failAndStop(); return }
++        operation = nil; state = .speaking
++    }
+     func pause() {
+-        guard state == .speaking else { return }
++        guard state == .speaking, let id = playbackID else { return }
+         guard canContinue else { stop(); return }
+-        if speech.pause() { state = .paused }
+-        else { stop() }
++        let token = UUID(); operation = token; state = .pausing
++        speech.pause { [weak self] paused in
++            guard let self, self.playbackID == id, self.operation == token, self.state == .pausing else { return }
++            guard paused, self.canContinue else { self.stop(); return }
++            self.operation = nil; self.state = .paused
++        }
+     }
+     func resume() {
+         guard state == .paused else { return }
+         guard canResume, let playbackID else { stop(); return }
+         prepareAudio(for: playbackID, resuming: true)
+     }
+-    /// Parent may call synchronously on an authority/source change; the watchdog also checks during playback.
+     func checkCurrent() { if !canContinue { stop() } }
+-    func stop() {
+-        playbackID = nil; watchdog?.cancel(); watchdog = nil
+-        speech.stop(); state = .stopped
++    func stop() { requestStop(preserveExplicitRepeat: false) }
++    private func requestStop(preserveExplicitRepeat: Bool) {
++        if !preserveExplicitRepeat { repeatIntent = nil }
++        watchdog?.cancel(); watchdog = nil; awaitingPreparation = nil
++        guard let id = playbackID else { state = .stopped; return }
++        guard state != .stopping || operation == nil else { return }
++        let token = UUID(); operation = token; state = .stopping
++        speech.stop { [weak self] stopped in
++            guard let self, self.playbackID == id, self.operation == token, self.state == .stopping else { return }
++            guard stopped else {
++                self.unavailable = true; self.repeatIntent = nil
++                self.operation = nil // Completed rejection: allow another explicit Stop, never a Play.
++                return
++            }
++            self.finishStop(id)
++        }
+     }
+-    func close() { stop(); closed = true; speech.onEnd = nil }
++    private func finishStop(_ id: UUID) {
++        guard playbackID == id else { return }
++        watchdog?.cancel(); watchdog = nil; awaitingPreparation = nil; operation = nil; playbackID = nil
++        let requested = repeatIntent; repeatIntent = nil; state = .stopped
++        if let requested, requested == instruction, canStart { beginPlayback() }
++    }
++    private func failAndStop() { repeatIntent = nil; unavailable = true; stop() }
++    func close() {
++        closed = true; stop(); speech.onStopRequired = nil
++        // Keep the weak terminal callback while a Stop is outstanding. Native
++        // generation ownership is also held by the adapter's teardown handle.
++        if state == .stopped { speech.onEnd = nil }
++    }
+     private func watch(_ id: UUID) {
+         watchdog = Task { [weak self] in
+             while !Task.isCancelled {
+--- a/ios/Features/Capture/CookReadbackView.swift
++++ b/ios/Features/Capture/CookReadbackView.swift
+@@ -18,23 +18,33 @@
+                     Text(captureText("Current dated cook instruction")).font(.headline)
+                     Text(model.instruction.createdAt.formatted(date: .abbreviated, time: .shortened))
+                     Text(model.instruction.text).textSelection(.enabled)
+-                    if model.voiceOverActive {
++                    if model.voiceOverActive && model.state == .stopped {
+                         Text(captureText("VoiceOver can read this instruction. Separate playback is stopped."))
+                     }
+-                    if model.state == .speaking {
+-                        Button(captureText("Pause readback")) { model.pause() }
++                    if model.state == .speaking || model.state == .pausing {
++                        Button(captureText("Pause readback")) { model.pause() }.disabled(model.state == .pausing)
+                     } else if model.state == .paused {
+                         Button(captureText("Resume readback")) { model.resume() }.disabled(!model.canResume)
+                     }
+                     Button(captureText("Read from beginning")) { model.playFromBeginning() }
+                         .disabled(!model.canStart).accessibilityIdentifier("capture.readback.play")
+-                    Button(captureText("Stop readback")) { model.stop() }.disabled(model.state == .stopped)
+                     if model.state == .stopped && !model.voiceOverActive && !model.canStart {
+                         Text(captureText("Prepare the instruction again to start a new readback."))
+                     }
+-                    if model.unavailable { Text(captureText("A local voice is unavailable. The complete instruction remains readable.")) }
++                    if model.unavailable && model.state != .stopping { Text(captureText("A local voice is unavailable. The complete instruction remains readable.")) }
+                 } else {
+                     Text(captureText("Prepare the current instruction without private budget details before playback."))
++                }
++                // Pending control status contains no instruction text and remains
++                // truthful when authority removes the private projection above.
++                if model.state == .pausing { Text(captureText("Pausing readback…")) }
++                if model.state == .stopping {
++                    Text(captureText(model.unavailable ? "Still waiting for readback to stop." : "Stopping readback…"))
++                }
++                // Stop never reveals instruction content. Keep explicit retry
++                // reachable after authority revocation and a completed failed Stop.
++                if model.state != .stopped {
++                    Button(captureText("Stop readback")) { model.stop() }
+                 }
+             }
+             // In a Form, automatic buttons otherwise share a single row action.
+@@ -46,7 +56,8 @@
+         .onReceive(NotificationCenter.default.publisher(for: UIAccessibility.voiceOverStatusDidChangeNotification)) { _ in
+             model.setVoiceOver(UIAccessibility.isVoiceOverRunning)
+         }
+-        .onReceive(NotificationCenter.default.publisher(for: AVAudioSession.interruptionNotification)) { _ in model.stop() }
++        // Audio interruption and device-route notifications are owned by the shared
++        // speech service, so they also invalidate a pending cross-view Stop/repeat.
+         .onDisappear { model.stop() }
+     }
+ }
+--- a/ios/Features/Capture/LocalCookSpeech.swift
++++ b/ios/Features/Capture/LocalCookSpeech.swift
+@@ -1,66 +1,101 @@
+ import AVFoundation
+ import UIKit
+ 
+-/// Local installed voices only. Playback never requests microphone or speech-recognition permission.
+-@MainActor final class LocalCookSpeech: NSObject, CookSpeechPlayback, AVSpeechSynthesizerDelegate {
++/// Scratch async façade. Installed catalog/audio preparation retain their current
++/// MainActor generation gates; synth/utterance objects belong only to the owner.
++@MainActor final class LocalCookSpeech: NSObject, CookSpeechPlayback {
+     var onEnd: ((UUID) -> Void)?
+-    private let synthesizer = AVSpeechSynthesizer()
+-    private var ids: [ObjectIdentifier: UUID] = [:]
+-    private let preparation = CookSpeechPreparation<AVSpeechSynthesisVoice>(
+-        loadVoices: CookInstalledVoices.load,
+-        acquire: { CookAudioSession.shared.acquire($0, completion: $1) },
+-        release: { CookAudioSession.shared.release($0) }
+-    )
+-
+-    override init() { super.init(); synthesizer.delegate = self }
++    var onStopRequired: (() -> Void)?
++    private var playbackID: UUID?
++    private var nativeGeneration: UUID?
++    private var lifetime: CookSpeechLifetime?
++    private var pending: [UInt64: @MainActor (Bool) -> Void] = [:]
++    private let injectedOwner: ThreadCookSpeechOwner?
++    private var owner: ThreadCookSpeechOwner { injectedOwner ?? .shared }
++    private let preparation: CookSpeechPreparation<AVSpeechSynthesisVoice>
++    override convenience init() {
++        self.init(owner: nil, preparation: CookSpeechPreparation<AVSpeechSynthesisVoice>(
++            loadVoices: CookInstalledVoices.load,
++            acquire: { CookAudioSession.shared.acquire($0, completion: $1) },
++            release: { CookAudioSession.shared.release($0) }
++        ))
++    }
++    // Internal seam injects a factory-owned service and value preparation only;
++    // no synthesizer or utterance can be supplied or escape through this API.
++    init(owner: ThreadCookSpeechOwner?, preparation: CookSpeechPreparation<AVSpeechSynthesisVoice>) {
++        self.injectedOwner = owner; self.preparation = preparation; super.init()
++    }
+     func prepareAudio(for id: UUID, completion: @escaping @MainActor @Sendable (Bool) -> Void) {
++        if playbackID == nil {
++            let generation = UUID() // Fresh native epoch even if a caller reuses a playback UUID.
++            guard owner.reserve(generation, events: { [weak self] in self?.received($0) }) else {
++                completion(false); return
++            }
++            playbackID = id; nativeGeneration = generation
++            lifetime = owner.lifetime(for: generation)
++        }
++        guard playbackID == id else { completion(false); return }
+         preparation.prepare(for: id, completion: completion)
+     }
+-    func speak(_ text: String, localeIdentifier: String, playbackID: UUID) throws {
+-        guard preparation.sessionID == playbackID else { throw CaptureFailure.audioUnavailable }
+-        guard !UIAccessibility.isVoiceOverRunning else { throw CaptureFailure.audioUnavailable }
++    func speak(_ text: String, localeIdentifier: String, playbackID id: UUID, startBefore: Date,
++               completion: @escaping @MainActor @Sendable (Result<Void, CaptureFailure>) -> Void) {
++        guard playbackID == id, preparation.sessionID == id, let generation = nativeGeneration,
++              !UIAccessibility.isVoiceOverRunning else { completion(.failure(.audioUnavailable)); return }
+         guard let voice = preparation.installedVoice(localeIdentifier: localeIdentifier, language: { $0.language })
+-        else { throw CaptureFailure.onDeviceUnavailable }
+-        let utterance = AVSpeechUtterance(string: text)
+-        utterance.voice = voice
+-        utterance.rate = AVSpeechUtteranceDefaultSpeechRate
+-        ids[ObjectIdentifier(utterance)] = playbackID
+-        synthesizer.speak(utterance)
+-    }
+-    func pause() -> Bool {
+-        let paused = synthesizer.pauseSpeaking(at: .immediate)
+-        if paused { preparation.releaseAudio() }
+-        return paused
+-    }
+-    func resume() throws -> Bool {
+-        guard !UIAccessibility.isVoiceOverRunning else { throw CaptureFailure.audioUnavailable }
+-        return synthesizer.continueSpeaking()
+-    }
+-    func stop() {
+-        if !ids.isEmpty { synthesizer.stopSpeaking(at: .immediate) }
+-        ids.removeAll()
+-        deactivate()
+-    }
+-    private func deactivate() {
++        else { completion(.failure(.onDeviceUnavailable)); return }
++        guard let ticket = owner.start(generation, text: text, voice: voice, startBefore: startBefore)
++        else { completion(.failure(.audioUnavailable)); return }
++        pending[ticket.sequence] = { ok in completion(ok ? .success(()) : .failure(.audioUnavailable)) }
++    }
++    func pause(completion: @escaping @MainActor @Sendable (Bool) -> Void) {
++        guard let generation = nativeGeneration, let ticket = owner.pause(generation)
++        else { completion(false); return }
++        pending[ticket.sequence] = { [weak self] ok in
++            if ok, self?.nativeGeneration == generation { self?.preparation.releaseAudio() }
++            completion(ok)
++        }
++    }
++    func resume(completion: @escaping @MainActor @Sendable (Result<Bool, CaptureFailure>) -> Void) {
++        guard !UIAccessibility.isVoiceOverRunning, let generation = nativeGeneration,
++              let ticket = owner.resume(generation)
++        else { completion(.failure(.audioUnavailable)); return }
++        pending[ticket.sequence] = { completion(.success($0)) }
++    }
++    func stop(completion: @escaping @MainActor @Sendable (Bool) -> Void) {
+         preparation.invalidate()
+-    }
+-    nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
+-        let key = ObjectIdentifier(utterance)
+-        Task { @MainActor [weak self] in
+-            guard let self, let id = self.ids.removeValue(forKey: key) else { return }
+-            self.deactivate(); self.onEnd?(id)
+-        }
+-    }
+-    nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
+-        let key = ObjectIdentifier(utterance)
+-        Task { @MainActor [weak self] in
+-            guard let self, let id = self.ids.removeValue(forKey: key) else { return }
+-            self.deactivate(); self.onEnd?(id)
+-        }
+-    }
+-}
+-
+-/// Only installed-voice discovery crosses this queue; synthesizers and utterances stay on MainActor.
++        let cancelled = Array(pending.values); pending.removeAll()
++        for completion in cancelled { completion(false) }
++        guard let generation = nativeGeneration else { completion(true); return }
++        guard let ticket = owner.stop(generation) else { completion(false); return }
++        pending[ticket.sequence] = { [weak self] ok in
++            if ok, self?.nativeGeneration == generation { self?.retire() }
++            completion(ok)
++        }
++    }
++    private func retire() {
++        preparation.invalidate(); lifetime?.disarm(); lifetime = nil
++        playbackID = nil; nativeGeneration = nil
++        pending.removeAll()
++    }
++    private func received(_ event: CookNativeEvent) {
++        switch event {
++        case .result(let ticket, let ok):
++            guard nativeGeneration == ticket.generation else { return }
++            pending.removeValue(forKey: ticket.sequence)?(ok)
++        case .ended(let generation):
++            guard nativeGeneration == generation, let id = playbackID else { return }
++            retire(); onEnd?(id) // Owner retired only after matched callback plus observed idle.
++        case .externalStop(let generation), .inconsistentTerminal(let generation):
++            guard nativeGeneration == generation else { return }
++            onStopRequired?() // Route change or inconsistent native terminal state stops; never resumes.
++        case .closed:
++            let id = playbackID; retire()
++            if let id { onEnd?(id) }
++        }
++    }
++}
++
++/// Installed-voice discovery uses this queue; synthesizers and utterances belong to the dedicated owner.
+ private enum CookInstalledVoices {
+     static let queue = DispatchQueue(label: "dev.roominthecart.cook-installed-voices", qos: .userInitiated)
+ 
+@@ -178,3 +213,541 @@
+         }
+     }
+ }
++
++import Foundation
++
++/// No admitted utterance + both idle flags is a provable no-work Stop. Once
++/// speech was admitted, sampled idle flags alone cannot turn native false into true.
++struct CookSpeechStopPolicy {
++    static func stop(hasAdmittedUtterance: Bool, matchedTerminal: Bool = false, isSpeaking: Bool, isPaused: Bool,
++                     callNativeStop: () -> Bool) -> Bool {
++        if (!hasAdmittedUtterance || matchedTerminal) && !isSpeaking && !isPaused { return true }
++        return callNativeStop()
++    }
++}
++
++// Scratch iOS notification bridge. No automatic resume and no output identifiers logged.
++import Foundation
++import AVFoundation
++
++struct CookSpeechRoutePolicy {
++    static func shouldStop(reason: UInt?, previous: Set<String>?, current: Set<String>?) -> Bool {
++        guard let reason, let value = AVAudioSession.RouteChangeReason(rawValue: reason) else { return true }
++        switch value {
++        case .oldDeviceUnavailable, .noSuitableRouteForCategory, .override, .wakeFromSleep, .routeConfigurationChange, .unknown:
++            return true
++        case .newDeviceAvailable, .categoryChange:
++            // Our own setCategory may notify without changing output. Never skip
++            // an unknown/empty snapshot or an actual changed output route.
++            guard let previous, let current, !previous.isEmpty, !current.isEmpty else { return true }
++            return previous != current
++        @unknown default: return true
++        }
++    }
++}
++
++/// The token is immutable and privately owned. NotificationCenter removal is the
++/// only deinit action; no native speech object is created, accessed or released.
++final class CookSpeechRouteObservation: @unchecked Sendable {
++    private static let queue = DispatchQueue(label: "dev.roominthecart.cook-route-snapshot", qos: .userInitiated)
++    private let center: NotificationCenter
++    private let token: NSObjectProtocol
++    init(center: NotificationCenter = .default,
++         previousOutputs: @escaping @Sendable (Notification) -> Set<String>? = { @Sendable note in CookSpeechRouteObservation.decodePrevious(note) },
++         currentOutputs: @escaping @Sendable () -> Set<String>? = { @Sendable in CookSpeechRouteObservation.readCurrent() },
++         onStop: @escaping @MainActor @Sendable () -> Void) {
++        self.center = center
++        token = center.addObserver(forName: AVAudioSession.routeChangeNotification, object: nil, queue: nil) { note in
++            let reason = (note.userInfo?[AVAudioSessionRouteChangeReasonKey] as? NSNumber)?.uintValue
++            // Only value data crosses from NotificationCenter to our queue.
++            let previous = previousOutputs(note)
++            if reason != AVAudioSession.RouteChangeReason.categoryChange.rawValue &&
++               reason != AVAudioSession.RouteChangeReason.newDeviceAvailable.rawValue {
++                DispatchQueue.main.async { onStop() }; return
++            }
++            Self.queue.async {
++                let current = currentOutputs()
++                if CookSpeechRoutePolicy.shouldStop(reason: reason, previous: previous, current: current) {
++                    DispatchQueue.main.async { onStop() }
++                }
++            }
++        }
++    }
++    deinit { center.removeObserver(token) }
++    static func decodePrevious(_ note: Notification) -> Set<String>? {
++        guard let route = note.userInfo?[AVAudioSessionRouteChangePreviousRouteKey] as? AVAudioSessionRouteDescription else { return nil }
++        return Set(route.outputs.map { $0.portType.rawValue + ":" + $0.uid })
++    }
++    static func readCurrent() -> Set<String>? {
++        Set(AVAudioSession.sharedInstance().currentRoute.outputs.map { $0.portType.rawValue + ":" + $0.uid })
++    }
++}
++
++/// Preserve the existing policy: interruption began/ended both invalidate intent;
++/// a system shouldResume flag never starts speech without another user action.
++final class CookSpeechInterruptionObservation: @unchecked Sendable {
++    private let center: NotificationCenter
++    private let token: NSObjectProtocol
++    init(center: NotificationCenter = .default, onStop: @escaping @MainActor @Sendable () -> Void) {
++        self.center = center
++        token = center.addObserver(forName: AVAudioSession.interruptionNotification, object: nil, queue: nil) { _ in
++            DispatchQueue.main.async { onStop() }
++        }
++    }
++    deinit { center.removeObserver(token) }
++}
++
++// SCRATCH REAL-API OWNER IMPLEMENTATION. Uncompiled/unexecuted; not product source.
++// The MainActor facade owns no synthesizer/utterance. This service must be shared
++// across cook views so an unresolved Stop cannot be bypassed with a second engine.
++import Foundation
++import AVFoundation
++import CoreFoundation
++
++struct CookNativeTicket: Hashable, Sendable {
++    enum Kind: Hashable, Sendable { case start, pause, resume, stop, shutdown }
++    let generation: UUID
++    let sequence: UInt64
++    let kind: Kind
++}
++enum CookNativeEvent: Sendable {
++    case result(CookNativeTicket, Bool)
++    case ended(UUID) // Matched terminal callback AND owner-observed idle; full generation retired.
++    case externalStop(UUID)
++    case inconsistentTerminal(UUID) // Retain barrier; never claim stopped from this event.
++    case closed
++}
++private struct CookNativeCommand: Sendable {
++    let ticket: CookNativeTicket
++    let text: String?
++    let startBefore: Date?
++    let voice: AVSpeechSynthesisVoice? // Explicit SDK Sendable; no synth/utterance crosses.
++}
++struct CookNativeTerminal: Hashable, Sendable {
++    let generation: UUID
++    let utterance: UUID
++}
++
++@MainActor private final class CookNativeRelay {
++    var receive: (@MainActor @Sendable (CookNativeEvent) -> Void)?
++    func send(_ event: CookNativeEvent) { receive?(event) }
++}
++
++/// @unchecked covers only locked value mailbox / CF wakeup handles. It must never
++/// store a synthesizer, utterance, delegate or native-core reference.
++private final class CookNativeBridge: @unchecked Sendable {
++    private let lock = NSLock()
++    private let relay: CookNativeRelay
++    private var generation: UUID?
++    private var sequence: UInt64 = 0
++    private var revoked = false
++    private var shuttingDown = false
++    private var pending: [CookNativeCommand] = []
++    private var inFlight: CookNativeTicket?
++    private var terminals: [CookNativeTerminal] = []
++    private var expectedTerminal: CookNativeTerminal?
++    private var runLoop: CFRunLoop?
++    private var source: CFRunLoopSource?
++    init(relay: CookNativeRelay) { self.relay = relay }
++    func emit(_ event: CookNativeEvent) {
++        let relay = relay
++        DispatchQueue.main.async { relay.send(event) }
++    }
++    func currentGeneration() -> UUID? { lock.lock(); defer { lock.unlock() }; return generation }
++    func open(_ id: UUID) -> Bool {
++        lock.lock(); defer { lock.unlock() }
++        guard !shuttingDown, generation == nil, inFlight == nil, pending.isEmpty else { return false }
++        generation = id; revoked = false; return true
++    }
++    func submit(_ id: UUID, kind: CookNativeTicket.Kind, text: String? = nil,
++                voice: AVSpeechSynthesisVoice? = nil, startBefore: Date? = nil) -> CookNativeTicket? {
++        lock.lock()
++        guard !shuttingDown, generation == id, (!revoked || kind == .stop),
++              pending.count < 4 || kind == .stop else { lock.unlock(); return nil }
++        sequence += 1
++        let ticket = CookNativeTicket(generation: id, sequence: sequence, kind: kind)
++        if kind == .stop { revoked = true; pending.removeAll() }
++        pending.append(.init(ticket: ticket, text: text, startBefore: startBefore, voice: voice))
++        let wake = (runLoop, source); lock.unlock()
++        signal(wake); return ticket
++    }
++    func shutdown() {
++        lock.lock()
++        guard !shuttingDown else { lock.unlock(); return }
++        shuttingDown = true; revoked = true; sequence += 1
++        let ticket = CookNativeTicket(generation: generation ?? UUID(), sequence: sequence, kind: .shutdown)
++        pending = [.init(ticket: ticket, text: nil, startBefore: nil, voice: nil)]
++        let wake = (runLoop, source); lock.unlock(); signal(wake)
++    }
++    func publish(_ loop: CFRunLoop, _ source: CFRunLoopSource) {
++        lock.lock(); runLoop = loop; self.source = source; lock.unlock()
++        signal((loop, source)) // Work may have arrived before thread readiness.
++    }
++    func detachWakeHandles() {
++        lock.lock(); runLoop = nil; source = nil; lock.unlock()
++    }
++    private func signal(_ wake: (CFRunLoop?, CFRunLoopSource?)) {
++        if let source = wake.1 { CFRunLoopSourceSignal(source) }
++        if let loop = wake.0 { CFRunLoopWakeUp(loop) }
++    }
++    func signalPending() {
++        lock.lock(); let wake = (runLoop, source); lock.unlock(); signal(wake)
++    }
++    func registerTerminal(_ value: CookNativeTerminal) {
++        lock.lock(); defer { lock.unlock() }
++        precondition(generation == value.generation && expectedTerminal == nil)
++        expectedTerminal = value
++    }
++    func clearTerminalRegistration(_ value: CookNativeTerminal) {
++        lock.lock(); defer { lock.unlock() }
++        if expectedTerminal == value { expectedTerminal = nil; terminals.removeAll() }
++    }
++    func terminal(_ value: CookNativeTerminal) {
++        lock.lock()
++        // Delegate captures a generation, so an old callback/address reuse cannot
++        // bind to a new utterance. Only one utterance is admitted per generation.
++        guard generation == value.generation, expectedTerminal == value else { lock.unlock(); return }
++        // One registered utterance; duplicate matching callbacks coalesce. Wrong
++        // identities cannot consume queue capacity or evict a legitimate end.
++        if terminals.isEmpty { terminals.append(value) }
++        let wake = (runLoop, source); lock.unlock(); signal(wake)
++    }
++    func takeTerminals() -> [CookNativeTerminal] {
++        lock.lock(); defer { lock.unlock() }
++        let values = terminals; terminals.removeAll(); return values
++    }
++    func takeNext() -> CookNativeCommand? {
++        lock.lock(); defer { lock.unlock() }
++        guard inFlight == nil else { return nil }
++        while !pending.isEmpty {
++            let command = pending.removeFirst()
++            let isShutdown = command.ticket.kind == .shutdown
++            guard isShutdown || (command.ticket.generation == generation && (!revoked || command.ticket.kind == .stop)) else { continue }
++            inFlight = command.ticket; return command // Admission linearization point.
++        }
++        return nil
++    }
++    func returned(_ ticket: CookNativeTicket, succeeded: Bool) {
++        lock.lock(); defer { lock.unlock() }
++        precondition(inFlight == ticket)
++        inFlight = nil
++        if succeeded && (ticket.kind == .stop || ticket.kind == .shutdown) {
++            generation = nil; terminals.removeAll(); expectedTerminal = nil
++            // Shutdown may have arrived while an ordinary Stop was in flight.
++            // Its owner-thread teardown command must survive that Stop's retirement.
++            if ticket.kind == .shutdown { pending.removeAll() }
++            else { pending.removeAll { $0.ticket.kind != .shutdown } }
++        }
++    }
++    func completeShutdownAfterMatchedIdle() -> Bool {
++        lock.lock(); defer { lock.unlock() }
++        guard shuttingDown, inFlight == nil else { return false }
++        generation = nil; pending.removeAll(); terminals.removeAll(); expectedTerminal = nil
++        return true
++    }
++    func retireEnded(_ id: UUID) -> Bool {
++        lock.lock(); defer { lock.unlock() }
++        guard generation == id, inFlight == nil, !shuttingDown else { return false }
++        generation = nil; pending.removeAll(); terminals.removeAll(); expectedTerminal = nil; return true
++    }
++}
++
++/// The factory is Sendable; its returned engine is deliberately NOT Sendable.
++/// Creation, every method/property access, and release happen inside the owner.
++protocol CookNativeEngine: AnyObject {
++    var isSpeaking: Bool { get }
++    var isPaused: Bool { get }
++    func start(text: String, voice: AVSpeechSynthesisVoice?, startBefore: Date, generation: UUID, utterance: UUID,
++               terminal: @escaping @Sendable (CookNativeTerminal) -> Void) -> Bool
++    func pause() -> Bool
++    func resume() -> Bool
++    func stop() -> Bool
++    func clearUtterance()
++}
++
++/// Callback executor is unspecified. Verify native identity without reading native
++/// properties; forward immutable generation/token only. The delegate owns no native object.
++private final class CookNativeDelegate: NSObject, AVSpeechSynthesizerDelegate, @unchecked Sendable {
++    let nativeIdentity: ObjectIdentifier
++    let identity: CookNativeTerminal
++    let terminal: @Sendable (CookNativeTerminal) -> Void
++    init(nativeIdentity: ObjectIdentifier, identity: CookNativeTerminal,
++         terminal: @escaping @Sendable (CookNativeTerminal) -> Void) {
++        self.nativeIdentity = nativeIdentity; self.identity = identity; self.terminal = terminal
++    }
++    func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
++        if ObjectIdentifier(utterance) == nativeIdentity { terminal(identity) }
++    }
++    func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
++        if ObjectIdentifier(utterance) == nativeIdentity { terminal(identity) }
++    }
++}
++
++/// Only the owner-thread factory constructs this engine. Native objects never
++/// leave it; the delegate captures identifiers, never the utterance or synthesizer.
++private final class CookAVSpeechEngine: CookNativeEngine {
++    private let owner = Thread.current
++    private let synthesizer: AVSpeechSynthesizer
++    private var utterance: AVSpeechUtterance?
++    private var delegate: CookNativeDelegate?
++    init() {
++        precondition(!Thread.isMainThread)
++        synthesizer = AVSpeechSynthesizer(); synthesizer.usesApplicationAudioSession = true
++    }
++    private func assertOwner() { precondition(Thread.current == owner && !Thread.isMainThread) }
++    var isSpeaking: Bool { assertOwner(); return synthesizer.isSpeaking }
++    var isPaused: Bool { assertOwner(); return synthesizer.isPaused }
++    func start(text: String, voice: AVSpeechSynthesisVoice?, startBefore: Date, generation: UUID, utterance token: UUID,
++               terminal: @escaping @Sendable (CookNativeTerminal) -> Void) -> Bool {
++        assertOwner(); guard let voice else { return false }
++        let utterance = AVSpeechUtterance(string: text)
++        utterance.voice = voice; utterance.rate = AVSpeechUtteranceDefaultSpeechRate
++        let delegate = CookNativeDelegate(nativeIdentity: ObjectIdentifier(utterance),
++            identity: .init(generation: generation, utterance: token), terminal: terminal)
++        self.utterance = utterance; self.delegate = delegate; synthesizer.delegate = delegate
++        guard Date() < startBefore else { clearUtterance(); return false }
++        synthesizer.speak(utterance); return true
++    }
++    func pause() -> Bool { assertOwner(); return synthesizer.pauseSpeaking(at: .immediate) }
++    func resume() -> Bool { assertOwner(); return synthesizer.continueSpeaking() }
++    func stop() -> Bool { assertOwner(); return synthesizer.stopSpeaking(at: .immediate) }
++    func clearUtterance() { assertOwner(); synthesizer.delegate = nil; utterance = nil; delegate = nil }
++    deinit { assertOwner() }
++}
++
++/// This object is created, used and released only inside the dedicated thread.
++/// Framework-held final releases remain outside application ownership guarantees.
++private final class CookNativeCore {
++    private let owner = Thread.current
++    private let bridge: CookNativeBridge
++    private var engine: (any CookNativeEngine)?
++    private var active: CookNativeTerminal?
++    private var terminalSeen: CookNativeTerminal?
++    private var executing = false
++    private var needsDrain = false
++    private(set) var shouldExit = false
++    init(bridge: CookNativeBridge, factory: @Sendable () -> any CookNativeEngine) {
++        precondition(!Thread.isMainThread)
++        self.bridge = bridge; engine = factory()
++    }
++    private func assertOwner() { precondition(Thread.current == owner && !Thread.isMainThread) }
++    private func clearUtterance() {
++        assertOwner(); engine?.clearUtterance()
++        if let active { bridge.clearTerminalRegistration(active) }
++        active = nil; terminalSeen = nil
++    }
++    private var observedIdle: Bool { assertOwner(); return engine.map { !$0.isSpeaking && !$0.isPaused } ?? true }
++    func drain() {
++        assertOwner()
++        // Guard the WHOLE turn: native state getters, clear/release, and calls can
++        // each service nested run loops. A consumed nested source wake is deferred.
++        guard !executing else { needsDrain = true; return }
++        executing = true
++        defer {
++            executing = false
++            let wake = needsDrain && !shouldExit; needsDrain = false
++            if wake { bridge.signalPending() }
++        }
++        processTerminals()
++        guard !shouldExit, let command = bridge.takeNext() else { return }
++        let succeeded = perform(command)
++        bridge.returned(command.ticket, succeeded: succeeded)
++        // Retire matched completion before late Pause/Resume result delivery.
++        processTerminals()
++        bridge.emit(.result(command.ticket, succeeded))
++        if command.ticket.kind == .shutdown && succeeded { shouldExit = true }
++        // At most one follow-up turn after a command, plus consumed nested wakes.
++        // An empty non-reentrant turn does NOT signal itself or spin.
++        needsDrain = true
++    }
++    private func perform(_ command: CookNativeCommand) -> Bool {
++        assertOwner(); guard let engine else { return false }
++        let ticket = command.ticket
++        switch ticket.kind {
++        case .start:
++            guard active == nil, observedIdle, let text = command.text,
++                  let deadline = command.startBefore, Date() < deadline else { return false }
++            let identity = CookNativeTerminal(generation: ticket.generation, utterance: UUID())
++            active = identity // Admit before native start; callbacks may be synchronous.
++            bridge.registerTerminal(identity)
++            let bridge = bridge
++            let accepted = engine.start(text: text, voice: command.voice, startBefore: deadline, generation: identity.generation,
++                utterance: identity.utterance) { bridge.terminal($0) }
++            if !accepted { clearUtterance() }
++            return accepted // API submission returned; not an acoustic-start assertion.
++        case .pause:
++            guard active?.generation == ticket.generation else { return false }
++            return engine.pause()
++        case .resume:
++            guard active?.generation == ticket.generation else { return false }
++            return engine.resume()
++        case .stop, .shutdown:
++            if ticket.kind == .stop, let active, active.generation != ticket.generation { return false }
++            let matchedTerminal = active.map { value in
++                terminalSeen == value
++            } ?? false
++            let stopped = CookSpeechStopPolicy.stop(hasAdmittedUtterance: active != nil, matchedTerminal: matchedTerminal,
++                isSpeaking: engine.isSpeaking, isPaused: engine.isPaused) {
++                    engine.stop()
++                }
++            if stopped { clearUtterance() }
++            // False active Stop remains unacknowledged. A matched terminal event
++            // may separately retire the generation after owner-observed idle.
++            return stopped
++        }
++    }
++    private func processTerminals() {
++        assertOwner(); precondition(executing)
++        for value in bridge.takeTerminals() {
++            guard let active, active.generation == value.generation,
++                  active.utterance == value.utterance else { continue }
++            terminalSeen = value
++            guard observedIdle else {
++                bridge.emit(.inconsistentTerminal(value.generation)); continue
++            }
++            clearUtterance()
++            if bridge.completeShutdownAfterMatchedIdle() {
++                shouldExit = true // No second AV Stop; matched terminal+idle proves safe teardown.
++            } else if bridge.retireEnded(value.generation) { bridge.emit(.ended(value.generation)) }
++        }
++    }
++    func finish() {
++        assertOwner(); precondition(shouldExit && active == nil)
++        clearUtterance(); engine = nil
++    }
++}
++
++/// A façade can disappear before its async Stop returns. This handle owns no
++/// native object; deinit only revokes/enqueues Stop through the thread-safe bridge.
++final class CookSpeechLifetime: @unchecked Sendable {
++    private let lock = NSLock()
++    private let bridge: CookNativeBridge
++    private let generation: UUID
++    private var armed = true
++    fileprivate init(bridge: CookNativeBridge, generation: UUID) {
++        self.bridge = bridge; self.generation = generation
++    }
++    func disarm() { lock.lock(); armed = false; lock.unlock() }
++    deinit {
++        lock.lock(); let shouldCancel = armed; armed = false; lock.unlock()
++        if shouldCancel { _ = bridge.submit(generation, kind: .stop) }
++    }
++}
++
++@MainActor final class ThreadCookSpeechOwner {
++    static let shared = ThreadCookSpeechOwner()
++    private let relay: CookNativeRelay
++    private let bridge: CookNativeBridge
++    private var thread: Thread?
++    private var sinks: [UUID: @MainActor @Sendable (CookNativeEvent) -> Void] = [:]
++    private var shutdownCompletions: [@MainActor @Sendable (Bool) -> Void] = []
++    private var shutdownResult: Bool?
++    private var closed = false
++    private var routeObservation: CookSpeechRouteObservation?
++    private var interruptionObservation: CookSpeechInterruptionObservation?
++    private convenience init() {
++        self.init(engineFactory: { CookAVSpeechEngine() }, observeAudioNotifications: true)
++    }
++    // Internal injection admits only a Sendable factory, never a prebuilt engine.
++    // Tests use the SAME thread, source, mailbox, core, lifetime and event routing.
++    init(engineFactory: @escaping @Sendable () -> any CookNativeEngine,
++         observeAudioNotifications: Bool = false,
++         notificationCenter: NotificationCenter = .default,
++         deliverEvent: @escaping @MainActor @Sendable (CookNativeEvent, @escaping @MainActor @Sendable () -> Void) -> Void = { _, deliver in deliver() }) {
++        let relay = CookNativeRelay(), bridge = CookNativeBridge(relay: relay)
++        self.relay = relay; self.bridge = bridge
++        relay.receive = { [weak self] event in
++            deliverEvent(event) { [weak self] in self?.received(event) }
++        }
++        let thread = Thread {
++            autoreleasepool {
++                let core = CookNativeCore(bridge: bridge, factory: engineFactory)
++                let loop = CFRunLoopGetCurrent()!
++                var context = CFRunLoopSourceContext(version: 0, info: Unmanaged.passUnretained(core).toOpaque(),
++                    retain: nil, release: nil, copyDescription: nil, equal: nil, hash: nil, schedule: nil, cancel: nil,
++                    perform: { raw in
++                        guard let raw else { return }
++                        Unmanaged<CookNativeCore>.fromOpaque(raw).takeUnretainedValue().drain()
++                    })
++                let source = CFRunLoopSourceCreate(nil, 0, &context)!
++                CFRunLoopAddSource(loop, source, .defaultMode)
++                bridge.publish(loop, source)
++                while !core.shouldExit {
++                    autoreleasepool { _ = CFRunLoopRunInMode(.defaultMode, 60, true) }
++                }
++                // Context is non-owning. Remove/invalidate before releasing core;
++                // CF handles copied by another thread cannot own/release native core.
++                bridge.detachWakeHandles()
++                CFRunLoopRemoveSource(loop, source, .defaultMode)
++                CFRunLoopSourceInvalidate(source)
++                core.finish()
++                withExtendedLifetime(core) {}
++            }
++            bridge.emit(.closed)
++        }
++        thread.name = "dev.roominthecart.cook-speech-owner"
++        thread.qualityOfService = .userInitiated
++        self.thread = thread
++        if observeAudioNotifications {
++            routeObservation = CookSpeechRouteObservation(center: notificationCenter) { [weak self] in
++                self?.invalidateLogicalPlayback()
++            }
++            interruptionObservation = CookSpeechInterruptionObservation(center: notificationCenter) { [weak self] in
++                self?.invalidateLogicalPlayback()
++            }
++        }
++        thread.start()
++    }
++    // Shared production service lives for the process. An injected owner can be
++    // released early; deinit only queues teardown, never joins or touches native objects.
++    deinit { bridge.shutdown() }
++    func reserve(_ generation: UUID, events: @escaping @MainActor @Sendable (CookNativeEvent) -> Void) -> Bool {
++        guard !closed, bridge.open(generation) else { return false }
++        sinks[generation] = events; return true
++    }
++    func lifetime(for generation: UUID) -> CookSpeechLifetime { CookSpeechLifetime(bridge: bridge, generation: generation) }
++    func start(_ generation: UUID, text: String, voice: AVSpeechSynthesisVoice?, startBefore: Date) -> CookNativeTicket? {
++        bridge.submit(generation, kind: .start, text: text, voice: voice, startBefore: startBefore)
++    }
++    func pause(_ generation: UUID) -> CookNativeTicket? { bridge.submit(generation, kind: .pause) }
++    func resume(_ generation: UUID) -> CookNativeTicket? { bridge.submit(generation, kind: .resume) }
++    func stop(_ generation: UUID) -> CookNativeTicket? { bridge.submit(generation, kind: .stop) }
++    /// Route close uses stop(generation), not service shutdown. The bounded shared
++    /// thread survives views; explicit service shutdown is asynchronous and final.
++    func shutdown(_ completion: @escaping @MainActor @Sendable (Bool) -> Void) {
++        if closed {
++            if let shutdownResult { completion(shutdownResult) }
++            else { shutdownCompletions.append(completion) }
++            return
++        }
++        closed = true; shutdownCompletions.append(completion)
++        // Cancel any explicit repeat before shutdown can acknowledge idle.
++        for (id, sink) in Array(sinks) { sink(.externalStop(id)) }
++        bridge.shutdown()
++    }
++    private func invalidateLogicalPlayback() {
++        // Native retirement precedes MainActor acknowledgment. Logical sinks still
++        // own pending repeat in that gap, so do not consult bridge.currentGeneration.
++        for (id, sink) in Array(sinks) { sink(.externalStop(id)) }
++    }
++    private func received(_ event: CookNativeEvent) {
++        switch event {
++        case .result(let ticket, let succeeded):
++            // A rejected native shutdown Stop leaves teardown pending. A later
++            // matching terminal+idle may finish it; all shutdown callers wait for
++            // .closed instead of receiving a false claim of completed teardown.
++            sinks[ticket.generation]?(event)
++            if ticket.kind == .stop && succeeded { sinks[ticket.generation] = nil }
++        case .ended(let id):
++            sinks[id]?(event); sinks[id] = nil
++        case .externalStop(let id): sinks[id]?(event)
++        case .inconsistentTerminal(let id): sinks[id]?(event)
++        case .closed:
++            for sink in Array(sinks.values) { sink(.closed) }
++            sinks.removeAll(); thread = nil; routeObservation = nil; interruptionObservation = nil
++            shutdownResult = true
++            let completions = shutdownCompletions; shutdownCompletions.removeAll()
++            completions.forEach { $0(true) }
++        }
++    }
++}
+--- a/ios/Tests/CookReadbackTests.swift
++++ b/ios/Tests/CookReadbackTests.swift
+@@ -1,4 +1,5 @@
+ import XCTest
++import AVFoundation
+ @testable import RoomInTheCart
+ 
+ @MainActor final class CookReadbackTests: XCTestCase {
+@@ -273,6 +274,7 @@
+ }
+ @MainActor final class FakeCookSpeech: CookSpeechPlayback {
+     var onEnd: ((UUID) -> Void)?
++    var onStopRequired: (() -> Void)?
+     var spoken: [String] = []; var locales: [String] = []; var ids: [UUID] = []
+     var resumes = 0; var stops = 0; var failure: CaptureFailure?
+     var delayed = false
+@@ -282,16 +284,17 @@
+         if let preparation { preparation.prepare(for: id, completion: completion) }
+         else if delayed { activations.append(completion) } else { completion(true) }
+     }
+-    func speak(_ text: String, localeIdentifier: String, playbackID: UUID) throws {
+-        if let failure { throw failure }
++    func speak(_ text: String, localeIdentifier: String, playbackID: UUID, startBefore: Date,
++               completion: @escaping @MainActor @Sendable (Result<Void, CaptureFailure>) -> Void) {
++        if let failure { completion(.failure(failure)); return }
+         if let preparation, preparation.installedVoice(localeIdentifier: localeIdentifier, language: { $0 }) == nil {
+-            throw CaptureFailure.onDeviceUnavailable
+-        }
+-        spoken.append(text); locales.append(localeIdentifier); ids.append(playbackID)
+-    }
+-    func pause() -> Bool { true }
+-    func resume() throws -> Bool { resumes += 1; return true }
+-    func stop() { stops += 1; preparation?.invalidate() }
++            completion(.failure(.onDeviceUnavailable)); return
++        }
++        spoken.append(text); locales.append(localeIdentifier); ids.append(playbackID); completion(.success(()))
++    }
++    func pause(completion: @escaping @MainActor @Sendable (Bool) -> Void) { completion(true) }
++    func resume(completion: @escaping @MainActor @Sendable (Result<Bool, CaptureFailure>) -> Void) { resumes += 1; completion(.success(true)) }
++    func stop(completion: @escaping @MainActor @Sendable (Bool) -> Void) { stops += 1; preparation?.invalidate(); completion(true) }
+ }
+ 
+ @MainActor private final class ControlledCookPreparation {
+@@ -315,3 +318,552 @@
+     var events: [String] { lock.lock(); defer { lock.unlock() }; return storage }
+     func append(_ event: String) { lock.lock(); defer { lock.unlock() }; storage.append(event) }
+ }
++
++// Append to existing CookReadbackTests.swift in the scratch overlay.
++@MainActor final class CookReadbackAsyncIntegrationTests: XCTestCase {
++    private let now = Date(timeIntervalSince1970: 1_800_000_000)
++    private func instruction() -> CookReadbackInstruction {
++        .init(authorityBindingID: UUID(), sourceID: UUID(), sourceRevision: 1,
++              createdAt: now.addingTimeInterval(-1), startBefore: now.addingTimeInterval(30),
++              text: "Exact confirmed cooking instruction.", localeIdentifier: "en-US", excludesPrivateBudget: true)
++    }
++    func testExplicitRepeatWaitsForStopAcknowledgment() {
++        let speech = ControlledAsyncCookSpeech()
++        let model = CookReadbackModel(instruction: instruction(), speech: speech, clock: { self.now }) { _, _ in true }
++        model.playFromBeginning(); let oldID = speech.ids[0]
++        model.playFromBeginning()
++        XCTAssertEqual(model.state, .stopping); XCTAssertEqual(speech.ids.count, 1)
++        XCTAssertFalse(model.canStart)
++        speech.completeStop(true)
++        XCTAssertEqual(model.state, .speaking); XCTAssertEqual(speech.ids.count, 2)
++        XCTAssertNotEqual(oldID, speech.ids[1])
++        model.close(); speech.completeStop(true)
++    }
++    func testInvalidationCancelsExplicitRepeatWhileStopIsHeld() {
++        for reason in ["stop", "source", "voiceOver", "close"] {
++            let speech = ControlledAsyncCookSpeech()
++            let model = CookReadbackModel(instruction: instruction(), speech: speech, clock: { self.now }) { _, _ in true }
++            model.playFromBeginning(); model.playFromBeginning()
++            switch reason {
++            case "source": model.update(instruction())
++            case "voiceOver": model.setVoiceOver(true)
++            case "close": model.close()
++            default: model.stop()
++            }
++            speech.completeStop(true)
++            XCTAssertEqual(model.state, .stopped, reason); XCTAssertEqual(speech.ids.count, 1, reason)
++            model.close()
++        }
++    }
++    func testRepeatRechecksStartDeadlineAfterStopAcknowledgment() {
++        let speech = ControlledAsyncCookSpeech(); var instant = now
++        let model = CookReadbackModel(instruction: instruction(), speech: speech, clock: { instant }) { _, _ in true }
++        model.playFromBeginning(); model.playFromBeginning()
++        instant = now.addingTimeInterval(31); speech.completeStop(true)
++        XCTAssertEqual(model.state, .stopped); XCTAssertEqual(speech.ids.count, 1)
++        XCTAssertFalse(model.canStart); model.close()
++    }
++    func testHeldPauseThenStopCannotRestorePausedAndRequiresStopAcknowledgment() {
++        let speech = ControlledAsyncCookSpeech()
++        let model = CookReadbackModel(instruction: instruction(), speech: speech, clock: { self.now }) { _, _ in true }
++        model.playFromBeginning(); model.pause(); XCTAssertEqual(model.state, .pausing)
++        model.stop(); speech.completePause(true)
++        XCTAssertEqual(model.state, .stopping); XCTAssertFalse(model.canStart)
++        speech.completeStop(true); XCTAssertEqual(model.state, .stopped); model.close()
++    }
++    func testRevocationAndFailedStopRemainExplicitlyRetryable() {
++        let speech = ControlledAsyncCookSpeech(); var authorized = true
++        let model = CookReadbackModel(instruction: instruction(), speech: speech, clock: { self.now }) { _, _ in authorized }
++        model.playFromBeginning(); authorized = false; model.checkCurrent(); model.stop()
++        XCTAssertEqual(speech.pendingStopCount, 1); XCTAssertFalse(model.canRead)
++        speech.completeStop(false)
++        XCTAssertEqual(model.state, .stopping); XCTAssertFalse(model.canStart); XCTAssertFalse(model.canRead)
++        model.stop(); XCTAssertEqual(speech.pendingStopCount, 1)
++        XCTAssertFalse(model.canStart); speech.completeStop(true)
++        XCTAssertEqual(model.state, .stopped); XCTAssertEqual(speech.ids.count, 1); model.close()
++    }
++    func testIdlePreparationCancellationDoesNotRequireNativeStopSuccess() {
++        var nativeStopCalls = 0
++        let accepted = CookSpeechStopPolicy.stop(hasAdmittedUtterance: false, isSpeaking: false, isPaused: false) {
++            nativeStopCalls += 1; return false
++        }
++        XCTAssertTrue(accepted); XCTAssertEqual(nativeStopCalls, 0)
++    }
++    func testFalseStopOfAdmittedSpeechIsNotSuccessEvenIfSampledIdle() {
++        for paused in [false, true] {
++            var nativeStopCalls = 0
++            let accepted = CookSpeechStopPolicy.stop(hasAdmittedUtterance: true, isSpeaking: false, isPaused: paused) {
++                nativeStopCalls += 1; return false
++            }
++            XCTAssertFalse(accepted); XCTAssertEqual(nativeStopCalls, 1)
++        }
++    }
++    func testMatchedTerminalAndNowIdleCanAcknowledgeWithoutRepeatingNativeStop() {
++        var nativeStopCalls = 0
++        let accepted = CookSpeechStopPolicy.stop(hasAdmittedUtterance: true, matchedTerminal: true, isSpeaking: false, isPaused: false) {
++            nativeStopCalls += 1; return false
++        }
++        XCTAssertTrue(accepted); XCTAssertEqual(nativeStopCalls, 0)
++    }
++    func testHeadphoneRemovalNotificationCancelsRepeatWithoutAutomaticRestart() async {
++        let center = NotificationCenter(), speech = ControlledAsyncCookSpeech()
++        let model = CookReadbackModel(instruction: instruction(), speech: speech, clock: { self.now }) { _, _ in true }
++        let invalidated = expectation(description: "Route notification reached model")
++        let observation = CookSpeechRouteObservation(center: center, previousOutputs: { _ in ["headphones"] }, currentOutputs: { ["speaker"] }) {
++            model.stop(); invalidated.fulfill()
++        }
++        model.playFromBeginning(); model.playFromBeginning()
++        center.post(name: AVAudioSession.routeChangeNotification, object: nil,
++                    userInfo: [AVAudioSessionRouteChangeReasonKey: NSNumber(value: AVAudioSession.RouteChangeReason.oldDeviceUnavailable.rawValue)])
++        await fulfillment(of: [invalidated], timeout: 2)
++        speech.completeStop(true)
++        XCTAssertEqual(model.state, .stopped); XCTAssertEqual(speech.ids.count, 1)
++        withExtendedLifetime(observation) {}; model.close()
++    }
++    func testInterruptionEndedShouldResumeNotificationNeverRestarts() async {
++        let center = NotificationCenter(), speech = ControlledAsyncCookSpeech()
++        let model = CookReadbackModel(instruction: instruction(), speech: speech, clock: { self.now }) { _, _ in true }
++        let invalidated = expectation(description: "Interruption notification reached model")
++        let observation = CookSpeechInterruptionObservation(center: center) { model.stop(); invalidated.fulfill() }
++        model.playFromBeginning(); model.playFromBeginning()
++        center.post(name: AVAudioSession.interruptionNotification, object: nil, userInfo: [
++            AVAudioSessionInterruptionTypeKey: NSNumber(value: AVAudioSession.InterruptionType.ended.rawValue),
++            AVAudioSessionInterruptionOptionKey: NSNumber(value: AVAudioSession.InterruptionOptions.shouldResume.rawValue)
++        ])
++        await fulfillment(of: [invalidated], timeout: 2)
++        speech.completeStop(true)
++        XCTAssertEqual(model.state, .stopped); XCTAssertEqual(speech.ids.count, 1); XCTAssertEqual(speech.resumes, 0)
++        withExtendedLifetime(observation) {}; model.close()
++    }
++    func testOwnCategoryNotificationWithSameOutputDoesNotCancelPlayback() async {
++        let center = NotificationCenter()
++        let stopped = expectation(description: "No stop for verified unchanged output"); stopped.isInverted = true
++        let observation = CookSpeechRouteObservation(center: center, previousOutputs: { _ in ["headphones"] }, currentOutputs: { ["headphones"] }) { stopped.fulfill() }
++        center.post(name: AVAudioSession.routeChangeNotification, object: nil,
++                    userInfo: [AVAudioSessionRouteChangeReasonKey: NSNumber(value: AVAudioSession.RouteChangeReason.categoryChange.rawValue)])
++        await fulfillment(of: [stopped], timeout: 0.2)
++        withExtendedLifetime(observation) {}
++        XCTAssertTrue(CookSpeechRoutePolicy.shouldStop(reason: AVAudioSession.RouteChangeReason.categoryChange.rawValue,
++                                                       previous: ["headphones"], current: ["speaker"]))
++    }
++}
++
++@MainActor private final class ControlledAsyncCookSpeech: CookSpeechPlayback {
++    var onEnd: ((UUID) -> Void)?
++    var onStopRequired: (() -> Void)?
++    var ids: [UUID] = []
++    var resumes = 0
++    private var pauses: [@MainActor @Sendable (Bool) -> Void] = []
++    private var stops: [@MainActor @Sendable (Bool) -> Void] = []
++    func prepareAudio(for id: UUID, completion: @escaping @MainActor @Sendable (Bool) -> Void) { completion(true) }
++    func speak(_ text: String, localeIdentifier: String, playbackID: UUID, startBefore: Date,
++               completion: @escaping @MainActor @Sendable (Result<Void, CaptureFailure>) -> Void) { ids.append(playbackID); completion(.success(())) }
++    func pause(completion: @escaping @MainActor @Sendable (Bool) -> Void) { pauses.append(completion) }
++    func resume(completion: @escaping @MainActor @Sendable (Result<Bool, CaptureFailure>) -> Void) { resumes += 1; completion(.success(true)) }
++    func stop(completion: @escaping @MainActor @Sendable (Bool) -> Void) { stops.append(completion) }
++    func completePause(_ ok: Bool) { pauses.removeFirst()(ok) }
++    var pendingStopCount: Int { stops.count }
++    func completeStop(_ ok: Bool) { stops.removeFirst()(ok) }
++}
++
++// Real Thread + CFRunLoopSource + production mailbox/core. Only the confined
++// engine factory is replaced. No AVSpeechSynthesizer or AVAudioSession is used.
++import Darwin
++import CoreFoundation
++
++private struct OwnerThreadRecord: Sendable {
++    let name: String
++    let thread: UInt64
++    let isMain: Bool
++}
++
++/// All cross-thread test controls are locked values/closures, never an engine.
++private final class OwnerEngineControl: @unchecked Sendable {
++    private let condition = NSCondition()
++    private var records: [OwnerThreadRecord] = []
++    private var callbacks: [String: @Sendable () -> Void] = [:]
++    private var heldPause = false
++    private var heldStop = false
++    private var armedGetter = false
++    private var heldGetter = false
++    private var speaking = false
++    private var paused = false
++    private var stopResults: [Bool] = []
++    private var terminals: [CookNativeTerminal: @Sendable (CookNativeTerminal) -> Void] = [:]
++    private var current: CookNativeTerminal?
++    func record(_ name: String) {
++        var thread: UInt64 = 0; pthread_threadid_np(nil, &thread)
++        condition.lock()
++        records.append(.init(name: name, thread: thread, isMain: Thread.isMainThread))
++        let callback = callbacks.removeValue(forKey: name)
++        condition.unlock(); callback?()
++    }
++    func observe(_ name: String, _ callback: @escaping @Sendable () -> Void) {
++        condition.lock(); callbacks[name] = callback; condition.unlock()
++    }
++    func snapshot() -> [OwnerThreadRecord] { condition.lock(); defer { condition.unlock() }; return records }
++    func setHoldPause() { condition.lock(); heldPause = true; condition.unlock() }
++    func releasePause() { condition.lock(); heldPause = false; condition.broadcast(); condition.unlock() }
++    func setHoldStop() { condition.lock(); heldStop = true; condition.unlock() }
++    func releaseStop() { condition.lock(); heldStop = false; condition.broadcast(); condition.unlock() }
++    func armNestedGetter() { condition.lock(); armedGetter = true; heldGetter = true; condition.unlock() }
++    func releaseGetter() { condition.lock(); heldGetter = false; condition.broadcast(); condition.unlock() }
++    func spinNestedGetterIfArmed() {
++        condition.lock(); let armed = armedGetter; armedGetter = false; condition.unlock()
++        guard armed else { return }
++        record("getter.enter")
++        condition.lock(); while heldGetter { condition.wait() }; condition.unlock()
++        // MainActor has queued and signaled the real source before releasing this
++        // condition. Assert handledSource so the test cannot pass on timing alone.
++        let result = CFRunLoopRunInMode(.defaultMode, 0.05, true)
++        record(result == .handledSource ? "getter.nestedSourceHandled" : "getter.noSourceHandled")
++        record("getter.return")
++    }
++    func setStopResults(_ values: [Bool]) { condition.lock(); stopResults = values; condition.unlock() }
++    func flags() -> (Bool, Bool) { condition.lock(); defer { condition.unlock() }; return (speaking, paused) }
++    func setIdle() { condition.lock(); speaking = false; paused = false; condition.unlock() }
++    func admitted(_ value: CookNativeTerminal, sink: @escaping @Sendable (CookNativeTerminal) -> Void) {
++        condition.lock(); current = value; terminals[value] = sink; speaking = true; paused = false; condition.unlock()
++    }
++    func currentIdentity() -> CookNativeTerminal? { condition.lock(); defer { condition.unlock() }; return current }
++    func emit(_ value: CookNativeTerminal, through captured: CookNativeTerminal? = nil) {
++        condition.lock(); let sink = terminals[captured ?? value]; condition.unlock(); sink?(value)
++    }
++    func pause() -> Bool {
++        record("pause.enter")
++        condition.lock()
++        while heldPause { condition.wait() } // The owner alone waits; main never waits on this condition.
++        paused = true; condition.unlock(); record("pause.return"); return true
++    }
++    func resume() -> Bool { condition.lock(); paused = false; condition.unlock(); record("resume"); return true }
++    func stop() -> Bool {
++        record("stop.enter")
++        condition.lock()
++        while heldStop { condition.wait() }
++        let result = stopResults.isEmpty ? true : stopResults.removeFirst()
++        if result { speaking = false; paused = false }
++        condition.unlock(); record(result ? "stop.true" : "stop.false"); return result
++    }
++}
++
++private final class ThreadRecordedEngine: CookNativeEngine {
++    private let control: OwnerEngineControl
++    init(_ control: OwnerEngineControl) { self.control = control; control.record("create") }
++    var isSpeaking: Bool { control.record("isSpeaking"); control.spinNestedGetterIfArmed(); return control.flags().0 }
++    var isPaused: Bool { control.record("isPaused"); return control.flags().1 }
++    func start(text: String, voice: AVSpeechSynthesisVoice?, startBefore: Date, generation: UUID, utterance: UUID,
++               terminal: @escaping @Sendable (CookNativeTerminal) -> Void) -> Bool {
++        control.record("start")
++        guard Date() < startBefore else { return false }
++        control.admitted(.init(generation: generation, utterance: utterance), sink: terminal); return true
++    }
++    func pause() -> Bool { control.pause() }
++    func resume() -> Bool { control.resume() }
++    func stop() -> Bool { control.stop() }
++    func clearUtterance() { control.record("clear") }
++    deinit { control.record("destroy") }
++}
++
++@MainActor private final class OwnerEventLog {
++    private(set) var values: [CookNativeEvent] = []
++    private var waiting: [(XCTestExpectation, (CookNativeEvent) -> Bool)] = []
++    func receive(_ event: CookNativeEvent) {
++        values.append(event)
++        var remaining: [(XCTestExpectation, (CookNativeEvent) -> Bool)] = []
++        for (expectation, match) in waiting {
++            if match(event) { expectation.fulfill() } else { remaining.append((expectation, match)) }
++        }
++        waiting = remaining
++    }
++    func result(_ ticket: CookNativeTicket, _ succeeded: Bool) -> XCTestExpectation {
++        expectation("Result \(ticket.kind) \(ticket.sequence)") {
++            if case .result(let received, let value) = $0 { return received == ticket && value == succeeded }; return false
++        }
++    }
++    func expectation(_ description: String, match: @escaping (CookNativeEvent) -> Bool) -> XCTestExpectation {
++        let expectation = XCTestExpectation(description: description)
++        if values.contains(where: match) { expectation.fulfill() } else { waiting.append((expectation, match)) }
++        return expectation
++    }
++}
++
++@MainActor private final class OwnerResultGate {
++    var holdStop = false
++    var held: [@MainActor @Sendable () -> Void] = []
++    var didHold: (() -> Void)?
++    func deliver(_ event: CookNativeEvent, _ delivery: @escaping @MainActor @Sendable () -> Void) {
++        if holdStop, case .result(let ticket, _) = event, ticket.kind == .stop {
++            held.append(delivery); didHold?()
++        } else { delivery() }
++    }
++    func release() { holdStop = false; let values = held; held.removeAll(); values.forEach { $0() } }
++}
++
++@MainActor final class CookSpeechOwnerLifecycleTests: XCTestCase {
++    private func makeOwner(_ control: OwnerEngineControl) -> ThreadCookSpeechOwner {
++        let owner = ThreadCookSpeechOwner(engineFactory: { ThreadRecordedEngine(control) })
++        addTeardownBlock {
++            control.releasePause(); control.releaseStop(); control.releaseGetter()
++            await MainActor.run { owner.shutdown { _ in } }
++        }
++        return owner
++    }
++    private func start(_ owner: ThreadCookSpeechOwner, _ id: UUID, _ events: OwnerEventLog) async throws {
++        XCTAssertTrue(owner.reserve(id, events: { events.receive($0) }))
++        let ticket = try XCTUnwrap(owner.start(id, text: "Synthetic owner test", voice: nil, startBefore: Date().addingTimeInterval(30)))
++        await fulfillment(of: [events.result(ticket, true)], timeout: 3)
++    }
++    private func finish(_ owner: ThreadCookSpeechOwner, _ control: OwnerEngineControl) async {
++        control.releasePause(); control.releaseStop(); control.releaseGetter()
++        let finished = expectation(description: "Owner shutdown completed")
++        owner.shutdown { result in XCTAssertTrue(result); finished.fulfill() }
++        await fulfillment(of: [finished], timeout: 3)
++        let records = control.snapshot()
++        XCTAssertEqual(records.filter { $0.name == "create" }.count, 1)
++        XCTAssertEqual(records.filter { $0.name == "destroy" }.count, 1)
++        XCTAssertEqual(Set(records.map(\.thread)).count, 1)
++        XCTAssertFalse(records.contains { $0.isMain })
++        XCTAssertNotEqual(records.first?.thread, 0)
++    }
++    func testOwnerDeinitRequestsAsynchronousDestructionOnItsOriginalThread() async {
++        let control = OwnerEngineControl()
++        let created = expectation(description: "Engine created"), destroyed = expectation(description: "Engine destroyed after owner deinit")
++        control.observe("create") { created.fulfill() }; control.observe("destroy") { destroyed.fulfill() }
++        var owner: ThreadCookSpeechOwner? = ThreadCookSpeechOwner(engineFactory: { ThreadRecordedEngine(control) })
++        await fulfillment(of: [created], timeout: 3); XCTAssertNotNil(owner)
++        owner = nil // Only value shutdown admission occurs here; no main-thread join.
++        XCTAssertTrue(Thread.isMainThread)
++        await fulfillment(of: [destroyed], timeout: 3)
++        let records = control.snapshot()
++        XCTAssertEqual(Set(records.map(\.thread)).count, 1)
++        XCTAssertFalse(records.contains { $0.isMain })
++        XCTAssertEqual(records.filter { $0.name == "destroy" }.count, 1)
++    }
++    func testEngineCreationCallsAndDestructionUseOneNonMainThread() async throws {
++        let control = OwnerEngineControl(), events = OwnerEventLog(), id = UUID()
++        let owner = makeOwner(control); defer { control.releasePause() }
++        try await start(owner, id, events)
++        let pause = try XCTUnwrap(owner.pause(id)); await fulfillment(of: [events.result(pause, true)], timeout: 3)
++        let resume = try XCTUnwrap(owner.resume(id)); await fulfillment(of: [events.result(resume, true)], timeout: 3)
++        let stop = try XCTUnwrap(owner.stop(id)); await fulfillment(of: [events.result(stop, true)], timeout: 3)
++        await finish(owner, control)
++        let names = control.snapshot().map(\.name)
++        XCTAssertTrue(names.contains("start")); XCTAssertTrue(names.contains("pause.return")); XCTAssertTrue(names.contains("resume"))
++        XCTAssertTrue(names.contains("stop.true")); XCTAssertEqual(names.last, "destroy")
++    }
++    func testBlockedPauseAllowsMainRevocationAndStopPrecedesQueuedResume() async throws {
++        let control = OwnerEngineControl(), events = OwnerEventLog(), id = UUID()
++        let owner = makeOwner(control); defer { control.releasePause() }
++        try await start(owner, id, events)
++        let entered = expectation(description: "Owner entered held Pause")
++        control.observe("pause.enter") { entered.fulfill() }; control.setHoldPause()
++        let pause = try XCTUnwrap(owner.pause(id)); await fulfillment(of: [entered], timeout: 3)
++        // Running this code on MainActor while Pause remains held is the responsiveness proof.
++        XCTAssertTrue(Thread.isMainThread)
++        _ = try XCTUnwrap(owner.resume(id))
++        let stop = try XCTUnwrap(owner.stop(id))
++        XCTAssertNil(owner.resume(id)); XCTAssertFalse(owner.reserve(UUID(), events: { _ in }))
++        XCTAssertFalse(control.snapshot().contains { $0.name == "pause.return" })
++        control.releasePause()
++        await fulfillment(of: [events.result(pause, true), events.result(stop, true)], timeout: 3)
++        let names = control.snapshot().map(\.name)
++        XCTAssertFalse(names.contains("resume"))
++        XCTAssertLessThan(try XCTUnwrap(names.firstIndex(of: "pause.return")), try XCTUnwrap(names.firstIndex(of: "stop.true")))
++        await finish(owner, control)
++    }
++    func testNestedGetterCannotAdmitCommandsAndConsumedWakeIsResignaled() async throws {
++        // Getter inside initial Start: the nested wake is consumed, then queued
++        // Pause must execute after getter return (proves deferred wake liveness).
++        do {
++            let control = OwnerEngineControl(), events = OwnerEventLog(), id = UUID()
++            let owner = makeOwner(control); defer { control.releaseGetter() }
++            XCTAssertTrue(owner.reserve(id, events: { events.receive($0) }))
++            let entered = expectation(description: "Start idle getter held")
++            control.observe("getter.enter") { entered.fulfill() }; control.armNestedGetter()
++            let start = try XCTUnwrap(owner.start(id, text: "Synthetic nested start", voice: nil, startBefore: Date().addingTimeInterval(30)))
++            await fulfillment(of: [entered], timeout: 3)
++            let pause = try XCTUnwrap(owner.pause(id)); control.releaseGetter()
++            await fulfillment(of: [events.result(start, true), events.result(pause, true)], timeout: 3)
++            let names = control.snapshot().map(\.name)
++            XCTAssertTrue(names.contains("getter.nestedSourceHandled"))
++            XCTAssertLessThan(try XCTUnwrap(names.firstIndex(of: "getter.return")), try XCTUnwrap(names.firstIndex(of: "pause.enter")))
++            await finish(owner, control)
++        }
++        // Getter inside terminal observation: stale Pause must not be admitted in
++        // the nested loop, and matched idle retires it without resurrection.
++        do {
++            let control = OwnerEngineControl(), events = OwnerEventLog(), id = UUID()
++            let owner = makeOwner(control); defer { control.releaseGetter() }; try await start(owner, id, events)
++            let identity = try XCTUnwrap(control.currentIdentity())
++            let entered = expectation(description: "Terminal idle getter held")
++            control.observe("getter.enter") { entered.fulfill() }; control.armNestedGetter(); control.setIdle()
++            let ended = events.expectation("Matched idle completes after nested getter") {
++                if case .ended(let received) = $0 { return received == id }; return false
++            }
++            control.emit(identity); await fulfillment(of: [entered], timeout: 3)
++            _ = try XCTUnwrap(owner.pause(id)); control.releaseGetter()
++            await fulfillment(of: [ended], timeout: 3)
++            let names = control.snapshot().map(\.name)
++            XCTAssertTrue(names.contains("getter.nestedSourceHandled")); XCTAssertFalse(names.contains("pause.enter"))
++            XCTAssertTrue(owner.reserve(UUID(), events: { _ in })); await finish(owner, control)
++        }
++    }
++    func testFalseActiveStopKeepsReservationUntilExplicitSuccessfulRetry() async throws {
++        let control = OwnerEngineControl(), events = OwnerEventLog(), id = UUID()
++        let owner = makeOwner(control); try await start(owner, id, events)
++        control.setStopResults([false, true])
++        let rejected = try XCTUnwrap(owner.stop(id)); await fulfillment(of: [events.result(rejected, false)], timeout: 3)
++        XCTAssertFalse(owner.reserve(UUID(), events: { _ in })); XCTAssertNil(owner.resume(id))
++        let accepted = try XCTUnwrap(owner.stop(id)); await fulfillment(of: [events.result(accepted, true)], timeout: 3)
++        let next = UUID(); XCTAssertTrue(owner.reserve(next, events: { _ in }))
++        await finish(owner, control)
++    }
++    func testPrestartCancellationAcknowledgesIdleWithoutCallingNativeStop() async throws {
++        let control = OwnerEngineControl(), events = OwnerEventLog(), id = UUID()
++        let testedOwner = makeOwner(control)
++        XCTAssertTrue(testedOwner.reserve(id, events: { events.receive($0) }))
++        let stop = try XCTUnwrap(testedOwner.stop(id)); await fulfillment(of: [events.result(stop, true)], timeout: 3)
++        XCTAssertFalse(control.snapshot().contains { $0.name.hasPrefix("stop.") })
++        await finish(testedOwner, control)
++    }
++    func testLateGenerationAndWrongUtteranceTerminalsCannotRetireCurrentSpeech() async throws {
++        let control = OwnerEngineControl(), events = OwnerEventLog(), first = UUID()
++        let owner = makeOwner(control); try await start(owner, first, events)
++        let old = try XCTUnwrap(control.currentIdentity())
++        let stop = try XCTUnwrap(owner.stop(first)); await fulfillment(of: [events.result(stop, true)], timeout: 3)
++        let currentID = UUID(); try await start(owner, currentID, events)
++        let current = try XCTUnwrap(control.currentIdentity())
++        control.emit(old)
++        control.emit(.init(generation: currentID, utterance: UUID()), through: current)
++        // A following owner command fences processing of the previously queued terminal values.
++        let pause = try XCTUnwrap(owner.pause(currentID)); await fulfillment(of: [events.result(pause, true)], timeout: 3)
++        XCTAssertFalse(events.values.contains { if case .ended(let id) = $0 { return id == currentID }; return false })
++        XCTAssertFalse(owner.reserve(UUID(), events: { _ in }))
++        control.setIdle(); let ended = events.expectation("Matching natural end") {
++            if case .ended(let id) = $0 { return id == currentID }; return false
++        }
++        control.emit(.init(generation: currentID, utterance: UUID()), through: current)
++        control.emit(.init(generation: currentID, utterance: UUID()), through: current)
++        control.emit(.init(generation: currentID, utterance: UUID()), through: current)
++        control.emit(current); await fulfillment(of: [ended], timeout: 3)
++        await finish(owner, control)
++    }
++    func testRepeatedShutdownDuringBlockedPauseSharesFinalAcknowledgment() async throws {
++        let control = OwnerEngineControl(), events = OwnerEventLog(), id = UUID()
++        let owner = makeOwner(control); defer { control.releasePause() }; try await start(owner, id, events)
++        let entered = expectation(description: "Pause held before shutdown")
++        control.observe("pause.enter") { entered.fulfill() }; control.setHoldPause()
++        _ = try XCTUnwrap(owner.pause(id)); await fulfillment(of: [entered], timeout: 3)
++        let first = expectation(description: "First shutdown"), second = expectation(description: "Second shutdown")
++        var completed = 0
++        owner.shutdown { result in XCTAssertTrue(result); completed += 1; first.fulfill() }
++        owner.shutdown { result in XCTAssertTrue(result); completed += 1; second.fulfill() }
++        XCTAssertEqual(completed, 0); XCTAssertFalse(owner.reserve(UUID(), events: { _ in }))
++        control.releasePause(); await fulfillment(of: [first, second], timeout: 3)
++        XCTAssertEqual(completed, 2); await finish(owner, control)
++        XCTAssertEqual(control.snapshot().filter { $0.name == "stop.true" }.count, 1)
++    }
++    func testShutdownQueuedDuringInFlightOrdinaryStopIsNotDiscarded() async throws {
++        let control = OwnerEngineControl(), events = OwnerEventLog(), id = UUID()
++        let owner = makeOwner(control); defer { control.releaseStop() }; try await start(owner, id, events)
++        let entered = expectation(description: "Ordinary native Stop held")
++        control.observe("stop.enter") { entered.fulfill() }; control.setHoldStop()
++        let stop = try XCTUnwrap(owner.stop(id)); await fulfillment(of: [entered], timeout: 3)
++        let closed = expectation(description: "Queued shutdown survives Stop return")
++        owner.shutdown { result in XCTAssertTrue(result); closed.fulfill() }
++        control.releaseStop()
++        await fulfillment(of: [events.result(stop, true), closed], timeout: 3)
++        XCTAssertEqual(control.snapshot().filter { $0.name == "stop.true" }.count, 1)
++        await finish(owner, control)
++    }
++    func testFailedShutdownCompletesAfterLateMatchedIdleWithoutRetryingNativeStop() async throws {
++        let control = OwnerEngineControl(), events = OwnerEventLog(), id = UUID()
++        let owner = makeOwner(control); try await start(owner, id, events)
++        let identity = try XCTUnwrap(control.currentIdentity()); control.setStopResults([false])
++        let rejected = events.expectation("Native shutdown Stop rejected") {
++            if case .result(let ticket, let result) = $0 { return ticket.kind == .shutdown && !result }; return false
++        }
++        let first = expectation(description: "Deferred first close"), second = expectation(description: "Deferred repeated close")
++        var completed = 0
++        owner.shutdown { result in XCTAssertTrue(result); completed += 1; first.fulfill() }
++        await fulfillment(of: [rejected], timeout: 3)
++        owner.shutdown { result in XCTAssertTrue(result); completed += 1; second.fulfill() }
++        XCTAssertEqual(completed, 0); XCTAssertFalse(owner.reserve(UUID(), events: { _ in }))
++        control.setIdle(); control.emit(identity)
++        await fulfillment(of: [first, second], timeout: 3); XCTAssertEqual(completed, 2)
++        XCTAssertEqual(control.snapshot().filter { $0.name == "stop.true" || $0.name == "stop.false" }.count, 1)
++        await finish(owner, control)
++    }
++    func testLifetimeDeinitDuringBlockedPauseStopsBeforeAnotherViewCanReserve() async throws {
++        let control = OwnerEngineControl(), events = OwnerEventLog(), id = UUID()
++        let owner = makeOwner(control); defer { control.releasePause() }; try await start(owner, id, events)
++        var lifetime: CookSpeechLifetime? = owner.lifetime(for: id)
++        XCTAssertNotNil(lifetime)
++        let entered = expectation(description: "Pause held for lifetime close")
++        control.observe("pause.enter") { entered.fulfill() }; control.setHoldPause()
++        _ = try XCTUnwrap(owner.pause(id)); await fulfillment(of: [entered], timeout: 3)
++        let stopped = events.expectation("Lifetime Stop acknowledgment") {
++            if case .result(let ticket, let result) = $0 { return ticket.kind == .stop && ticket.generation == id && result }; return false
++        }
++        lifetime = nil; XCTAssertFalse(owner.reserve(UUID(), events: { _ in }))
++        control.releasePause(); await fulfillment(of: [stopped], timeout: 3)
++        XCTAssertTrue(owner.reserve(UUID(), events: { _ in })); await finish(owner, control)
++    }
++    func testRealNotificationsInvalidateRepeatBetweenNativeRetirementAndStopDelivery() async throws {
++        for notification in [AVAudioSession.routeChangeNotification, AVAudioSession.interruptionNotification] {
++            let control = OwnerEngineControl(), events = OwnerEventLog(), gate = OwnerResultGate(), center = NotificationCenter()
++            let owner = ThreadCookSpeechOwner(engineFactory: { ThreadRecordedEngine(control) }, observeAudioNotifications: true,
++                notificationCenter: center, deliverEvent: { gate.deliver($0, $1) })
++            let id = UUID(), invalidated = expectation(description: "Logical repeat invalidated after native retirement")
++            var repeatPending = true
++            XCTAssertTrue(owner.reserve(id, events: { event in
++                events.receive(event)
++                if case .externalStop(let received) = event, received == id {
++                    repeatPending = false; invalidated.fulfill()
++                }
++            }))
++            let start = try XCTUnwrap(owner.start(id, text: "Synthetic route case", voice: nil, startBefore: Date().addingTimeInterval(30)))
++            await fulfillment(of: [events.result(start, true)], timeout: 3)
++            let held = expectation(description: "Stop result held after native retirement")
++            gate.holdStop = true; gate.didHold = { held.fulfill() }
++            let stop = try XCTUnwrap(owner.stop(id)); await fulfillment(of: [held], timeout: 3)
++            XCTAssertEqual(gate.held.count, 1)
++            // The same real NotificationCenter observer used by the service handles
++            // each notification; no direct model guard or observer method is called.
++            if notification == AVAudioSession.routeChangeNotification {
++                center.post(name: notification, object: nil, userInfo: [
++                    AVAudioSessionRouteChangeReasonKey: NSNumber(value: AVAudioSession.RouteChangeReason.oldDeviceUnavailable.rawValue)
++                ])
++            } else {
++                center.post(name: notification, object: nil, userInfo: [
++                    AVAudioSessionInterruptionTypeKey: NSNumber(value: AVAudioSession.InterruptionType.ended.rawValue),
++                    AVAudioSessionInterruptionOptionKey: NSNumber(value: AVAudioSession.InterruptionOptions.shouldResume.rawValue)
++                ])
++            }
++            await fulfillment(of: [invalidated], timeout: 3)
++            XCTAssertFalse(repeatPending); gate.release()
++            await fulfillment(of: [events.result(stop, true)], timeout: 3)
++            XCTAssertFalse(repeatPending)
++            XCTAssertEqual(control.snapshot().filter { $0.name == "start" }.count, 1)
++            await finish(owner, control)
++        }
++    }
++    func testFacadeDeinitBeforeSpeakReleasesNativeReservationWithoutNativeStop() async {
++        let control = OwnerEngineControl()
++        let testedOwner = makeOwner(control)
++        let prepared = expectation(description: "Synthetic preparation complete")
++        let released = expectation(description: "Facade preparation released its audio lease")
++        var facade: LocalCookSpeech? = LocalCookSpeech(owner: testedOwner,
++            preparation: CookSpeechPreparation<AVSpeechSynthesisVoice>(loadVoices: { $0([]) },
++                acquire: { _, completion in completion(true) }, release: { _ in released.fulfill() }))
++        facade?.prepareAudio(for: UUID()) { value in XCTAssertTrue(value); prepared.fulfill() }
++        await fulfillment(of: [prepared], timeout: 3)
++        XCTAssertFalse(testedOwner.reserve(UUID(), events: { _ in }))
++        let cleared = expectation(description: "Facade deinit queued owner clear")
++        control.observe("clear") { cleared.fulfill() }; facade = nil
++        await fulfillment(of: [cleared, released], timeout: 3)
++        // Shutdown is the transport fence for the deinit Stop's mailbox retirement.
++        await finish(testedOwner, control)
++        XCTAssertFalse(control.snapshot().contains { $0.name.hasPrefix("stop.") })
++    }
++}

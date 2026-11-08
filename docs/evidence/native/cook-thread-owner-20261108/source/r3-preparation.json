@@ -1,0 +1,45 @@
+{
+  "status": "frozen-r3-scratch-uncompiled-unexecuted",
+  "r2ManifestSHA256": "f82128f1a348f917b3e97ae359d228eb7eb38f6e79da1682075df8b5e00eb9e5",
+  "deltaPatchSHA256": "4f28502063b7b668326ca8261f207cf3901afb3b1fb6673fb920860cf53367ca",
+  "canonicalMutation": false,
+  "isolatedMutation": false,
+  "nativeExecution": false,
+  "baselinePackageWarning": {
+    "priorRun": "/Users/palatis/Room in the Cart/.build/CookVoicePreparationNov08/fixture-r1/run.json",
+    "priorHead": null,
+    "priorWarning": [
+      {
+        "line": 1764,
+        "text": "/Users/palatis/Room in the Cart/ios/Packages/RecordArchive/Package.swift: RecordArchivedynamic-product: clang: warning: using sysroot for 'macOS 27.0' but targeting 'arm64-apple-ios17.0.0-simulator' [-Wincompatible-sysroot]"
+      }
+    ],
+    "packagePath": "ios/Packages/RecordArchive/Package.swift",
+    "currentPackageSHA256": "e21946525911a486e193b499acd280d15735b9e3dc3aa89e2f54ec1e14256599",
+    "priorPackageSHA256": null,
+    "packageSameAsPrior": null,
+    "claim": "Warning already existed before adapter; underlying toolchain sysroot cause is not established or waived.",
+    "r2BaseAndCandidatePackageSHA256": "e21946525911a486e193b499acd280d15735b9e3dc3aa89e2f54ec1e14256599",
+    "r2PatchLeavesPackageUnchanged": true,
+    "priorPackagePinLimitation": "The prior fixture receipt pins speech/test files, not Package.swift or a Git HEAD; exact prior package-byte equality is not claimed."
+  },
+  "preparedUTC": "2026-11-08T16:03:05.922018+00:00",
+  "deltaApplyCheckExit": 0,
+  "changedFiles": [
+    {
+      "path": "ios/Features/Capture/LocalCookSpeech.swift",
+      "r2SHA256": "49831d71c4021e08cc430ae2dc0de54a2ff9262a225d9b7c46863ccbde38a314",
+      "r3SHA256": "3014055bdd290bfc50f9709d4b82491ef11b6f58781f0cf490bba1549da213b0"
+    },
+    {
+      "path": "ios/Tests/CookReadbackTests.swift",
+      "r2SHA256": "4af1645489ddc4e13044c7c9ed38de4cb32a81cfd2ac60daa6cc92036cd82e77",
+      "r3SHA256": "529a9af6062203b29e855e3c13ee2d163ddc5615fce702db2c3da01721509f11"
+    }
+  ],
+  "all40TestBodiesUnchanged": true,
+  "testFileOnlyChange": "Add explicit import AVFoundation",
+  "r2CompileExitCode": 65,
+  "r2CompileLogSHA256": "17c7a0a32009e1309d190d397a528e4490f449b9431d285deed1593434f8c14a",
+  "frozenUTC": "2026-11-08T16:06:59.445158+00:00"
+}
