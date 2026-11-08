@@ -18,7 +18,7 @@ run_tests() {
         -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
         -resultBundlePath "$bundle" -parallel-testing-enabled NO \
         -test-timeouts-enabled YES -default-test-execution-time-allowance 720 \
-        -maximum-test-execution-time-allowance 900 -collect-test-diagnostics never \
+        -maximum-test-execution-time-allowance 900 -collect-test-diagnostics on-failure \
         "${selectors[@]}" test-without-building 2>&1 | tee "$log"
 }
 result=.build/Tests.xcresult

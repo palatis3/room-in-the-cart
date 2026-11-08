@@ -153,7 +153,7 @@ jobs:
           xcodebuild -xctestrun "${test_runs[0]}" -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
             -parallel-testing-enabled NO -test-timeouts-enabled YES \
             -default-test-execution-time-allowance 900 -maximum-test-execution-time-allowance 1200 \
-            -resultBundlePath .build/performance/Performance.xcresult -collect-test-diagnostics never \
+            -resultBundlePath .build/performance/Performance.xcresult -collect-test-diagnostics on-failure \
             "-only-testing:$(cat .build/performance/selector.txt)" test-without-building \
             2>&1 | tee .build/performance/Performance.log
       - name: Export available XCTest metrics, attachments and test results

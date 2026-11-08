@@ -101,7 +101,7 @@ jobs:
             -configuration Debug -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
             -only-test-configuration "$STOREKIT_CONFIGURATION" -parallel-testing-enabled NO \
             -test-timeouts-enabled YES -default-test-execution-time-allowance 120 \
-            -maximum-test-execution-time-allowance 120 -collect-test-diagnostics never \
+            -maximum-test-execution-time-allowance 120 -collect-test-diagnostics on-failure \
             -derivedDataPath .build/StoreKitDerivedData -resultBundlePath .build/StoreKit.xcresult \
             CODE_SIGN_IDENTITY=- test 2>&1 | tee .build/StoreKit.log
       - name: Export StoreKit results even after a failed scenario

@@ -20,6 +20,14 @@ New macOS jobs must be added to the slot policy and tests. Keep slots on leaf jo
 
 These are static checks. Hosted execution, native results, performance measurements, signed-device/provider acceptance and human review have separate evidence requirements. See [current acceptance](CURRENT-ACCEPTANCE.md).
 
+## XCTest failure diagnostics
+
+The shared iOS shard runner, StoreKit and Release-performance workflows, and optional local UI check use `-collect-test-diagnostics on-failure`. This lets Xcode collect system diagnostics when XCTest encounters a failure or error. Test selections, warning gates, retries and execution deadlines remain unchanged.
+
+Existing CI result-bundle uploads retain those diagnostics for seven days, including after failures. The Records media shard continues to exclude raw bundles and logs from uploads; its sanitized artifacts remain the only published results. Collection can increase failure-run time and disk use, and an outer deadline may prevent complete finalization or upload. Inspect the actual failed-run artifacts before claiming complete evidence.
+
+A later strict-checker rejection of an otherwise passing XCTest run is not itself an XCTest failure. This option therefore does not guarantee collection for a runtime-warning attachment that is missing from a passing test. Required issue descriptions remain mandatory; changing diagnostic collection does not repair or waive a warning.
+
 ## Shared delivery fixture timing
 
 The six shared-delivery cases at `3e96fe3` passed on a hosted iPhone 17 running iOS 26.2. The runner spent about 2m33s on setup before the test step, then about 16m54s running and checking the shard. The six XCTest case durations account for 860.646s of that step. The suite now includes three more journeys. The table groups each whole journey once, using the six hosted case durations and passing local iOS 17 simulator measurements for the additions. [Hosted job and test log](https://github.com/palatis3/room-in-the-cart/actions/runs/42390883332/job/128469594458).

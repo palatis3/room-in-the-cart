@@ -32,6 +32,6 @@ if [ "${RUN_UI_TESTS:-0}" = "1" ]; then
   result_bundle="${TEST_RESULT_BUNDLE:-.build/UITests-$(date +%Y%m%d-%H%M%S).xcresult}"
   xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart \
     -configuration Debug -destination "$IOS_SIMULATOR_DESTINATION" \
-    -derivedDataPath .build/DerivedData -resultBundlePath "$result_bundle" -collect-test-diagnostics never \
+    -derivedDataPath .build/DerivedData -resultBundlePath "$result_bundle" -collect-test-diagnostics on-failure \
     CODE_SIGN_IDENTITY=- test
 fi
