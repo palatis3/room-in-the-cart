@@ -1,0 +1,8 @@
+{
+  "status": "read-only-packaging-assumption-corrected",
+  "originalFailure": "An extra packaging assertion required current.waiting=true at reloaded; AssertionError.",
+  "actualEvidence": "reloaded has queued=true, retryPresent=true, contributorReady=true, statusEmpty=true, one unchanged IndexedDB command and zero command attempts/effects.",
+  "reason": "The frozen probe waiting flag measures exact top-level status. A fresh connected load restores the pending card but does not invent a top-level waiting notice.",
+  "preserved": "Frozen verifier passed unchanged; no helper, product, receipt or original assertion was altered. The corrected supplemental check verifies the actual pending-row/retry state.",
+  "originalOutput": "Traceback: AssertionError in supplemental packaging check; original tool transcript retained."
+}

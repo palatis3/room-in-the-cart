@@ -1,0 +1,54 @@
+{
+  "status": "passed-scoped",
+  "recordedAtUTC": "2026-11-08T03:39:57.233044+00:00",
+  "case": "queue-offline",
+  "manifestIdentity": "bffa8e626fc1f2e5645864c38d0017ab215e19170aef59383c3d417cb6ddcb62",
+  "frozenManifestAndHelpersVerified": true,
+  "verifierExit": 0,
+  "verifierCommand": [
+    ".tools/node-v22.23.4-darwin-arm64/bin/node",
+    ".build/SafariQualificationNov08/proposal/verify-case.mjs",
+    "queue-offline",
+    ".build/SafariQualificationNov08/proposal/runs/queue-offline/receipt.json"
+  ],
+  "receiptSHA256": "c749cd9ee5165c4b4ab256c482a37b680da07382fc419a52695b03b7ac7dfb95",
+  "observationPhases": [
+    "queued",
+    "offline-reloaded",
+    "reloaded",
+    "final"
+  ],
+  "pendingCommandSHA256": "12a0f02ae5298a54789d03934f618d500eff10447d0ba0f0d7a07ea2f899a834",
+  "readOnlyAdditionalAssertions": {
+    "offlineReloadHidesPrivateFixtureText": true,
+    "offlineReloadShowsExactUnavailableStatusAndEnabledRefresh": true,
+    "offlineReloadReadyNotBusy": true,
+    "onePendingRowSameDigestAcrossBothNativeReloads": true,
+    "reconnectedReloadShowsPendingMarkerRetryAndOnlineFormWithEmptyTopLevelStatus": true,
+    "zeroAutomaticCommandsBeforeExplicitRetry": true,
+    "oneExplicitRetryOneEffect": true,
+    "finalExactReceivedMarkerAndStatus": true,
+    "finalNoPendingRowOrRetry": true
+  },
+  "counts": {
+    "commandAttempts": 1,
+    "commandEffects": 1,
+    "rowsA": 1,
+    "rowsB": 0
+  },
+  "cleanup": {
+    "rootReportedExecSession": 49068,
+    "rootReportedStopExit": 0,
+    "port": 51726,
+    "independentConnectResult": 61,
+    "independentPortState": "ECONNREFUSED"
+  },
+  "identity": "same root-owned iPhone17 Simulator/iOS26.2 MobileSafari as ../owned-simulator-safari.json",
+  "visualEvidence": "Root Device Hub CUA transcript only; no standalone PNG/video export",
+  "scope": "API-only synthetic disconnect with shell available; real Safari/IndexedDB/reload/explicit retry; no real radio-offline, provider or PostgreSQL proof",
+  "unexecutedQueueCases": [
+    "queue-lost",
+    "queue-evicted",
+    "queue-revoked"
+  ]
+}

@@ -1,0 +1,1 @@
+{"status":"passed-scoped","case":"queue-offline","commandAttempts":1,"commandEffects":1}

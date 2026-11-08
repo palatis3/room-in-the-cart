@@ -2,7 +2,19 @@
 
 Updated November 8, 2026 UTC. The full first-version goal is active and release acceptance remains incomplete. The owner's migration 041 approval has already been executed and verified. The separate 042 approval is pending; a repeated 041 approval does not authorize 042. Historical snapshots are preserved in [the handoff archive](CURRENT-HANDOFF-HISTORY-20261106.md).
 
-## Latest execution state — November 8, 03:30 UTC
+## Latest execution state — November 8, 03:43 UTC
+
+The repeated owner approval for041 is acknowledged against the completed deployment record; no duplicate migration or rollout was performed. Staging remains041 and the separate042 approval is still pending.
+
+Actual owned iPhone Simulator Safari now also passes `queue-offline` and `queue-lost` using the unchanged frozen R2 harness. Offline storage survives disconnected and connected native Reload with the same command digest and zero automatic submissions; one explicit Retry produces one POST/effect and clears the pending row. The lost committed reply case preserves its pending command across native Reload without another POST; explicit Retry produces a second byte-identical POST but only one total effect and recovers the original receipt. Native UI confirms received status and removal of the pending card. [Offline proof](evidence/b11/safari-history-20261108/queue-offline/verification.json) and [lost-reply proof](evidence/b11/safari-history-20261108/queue-lost/verification.json) preserve the synthetic scope. Two queue cases remain: explicit fixture storage eviction and permission revocation. Broader Safari, physical/human and provider acceptance remain open.
+
+Owned fixture sessions49068/24557 stopped with exit0; their ports51726/52060 are closed. CUA completion summaries were reported for both cases. DeviceHub remains on owned simulator4C7FAE04-D40B-4ADC-8F75-1366C09B1695; Capture Keyboard remains off. Safari's task tab is at the stopped synthetic origin52060. Start further interactive fixtures with `tty:true`; no live household data was used.
+
+The bounded CI snapshot through03:38UTC adds UI01 strict5/5 and UI03 strict6/6 with zero warnings/skips/restarts. Release cold launch passes at4.66734825s against5.5s. Swift CodeQL is terminal success with27rules/zero findings, retaining11extractor diagnostics. The current compiled plan reassigned the original Settings/Reduce Motion case toUI10, which has not yet been admitted; UI01 success does not close that failure. Core web startup remains the only observed failed job. Core UI, fixtures and the other performance jobs remain active or pending; the existing six-run cohort must finish collection before any push/cancel/rerun/dispatch. Exact private receipts remain in `.build/CI15F216Nov08/` including `ordinary-discovery/followup-shard-map.json`.
+
+The bounded remaining-product audit found no verified missing implementation in the inspected current flows, but does not establish app completion. Outstanding S24 money-font/contrast measurements have an exact scratch plan at `.build/RequestDecisionAccessibilityNov08/PLAN.md` and proposed commands beside it; no native measurement was launched. The36historical findings are not36proven app bugs. Physical speech/assistive audio and bilingual human cook/financial comprehension remain separate acceptance work. All three reused agents completed their bounded tasks; no background UI/build ownership remains.
+
+## Previous execution state — November 8, 03:30 UTC
 
 Canonical checkout is `/Users/palatis/Room in the Cart`, branch `codex/parallel-ios-ci`. Published candidate `15f216b01e41c111ec99bbd812419cec32e6a5e4` has six existing PR attempt-1 workflow runs: Core42440464721, Deep42440464691, Fixtures42440464791, Performance42440464669, NativeWire42440464677 and Security42440464675. Do not push another candidate, cancel, dispatch or rerun while collecting this cohort. PR1 remains draft. The older candidate sections below are historical evidence, not current run pointers.
 
