@@ -1,0 +1,7 @@
+{
+  "tables": 103,
+  "rows": 9534,
+  "migrations": 42,
+  "allRowsAndEffectivePermissionsAndPoliciesEqual": true,
+  "rawACLNormalization": "pg_dump restores explicit owner-only ACL as equivalent PostgreSQL default; compare aclexplode(COALESCE(relacl,acldefault(...)))"
+}

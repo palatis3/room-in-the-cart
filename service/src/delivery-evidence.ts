@@ -1,3 +1,4 @@
+import { confirmedDeliveryLines } from './order-amendments.js';
 import {deliveryCoverage,type SealedMeal,type ReservationHead,type DeliverySource} from './delivery-coverage.js';
 import { z } from 'zod';
 import type { Context, Shop } from './repository.js';
@@ -97,16 +98,7 @@ export async function readDeliveryCoverage(ctx:Context,shop:Shop) {
 
 export async function readDelivery(ctx: Context, shop: Shop, cursor: string|null) {
   requirePlaced(shop, true);
-  const sealed = cursor === null ? (await ctx.db.query<{lineId:string;name:string;packs:unknown}>(`SELECT
-    lower(line->>'lineId') AS "lineId", line->>'originalItem' AS name, line->'packs' AS packs
-    FROM ritc.shop_snapshot ss CROSS JOIN LATERAL jsonb_array_elements(ss.snapshot->'lines') WITH ORDINALITY AS item(line,position)
-    WHERE ss.household_id=$1 AND ss.shop_id=$2 AND ss.revision=$3
-      AND NOT (ss.digest=repeat('0',64) AND line->>'originalItem'='Removed item') ORDER BY position`,
-    [ctx.householdId,shop.shop_id,shop.placed_revision])).rows : [];
-  const lines = sealed.map(({lineId,name,packs}) => {
-    const known = typeof packs === 'number' && Number.isInteger(packs) && packs >= 1 && packs <= 10_000;
-    return {lineId,name,...(known ? {packs} : {})};
-  });
+  const lines = cursor === null ? await confirmedDeliveryLines(ctx,shop) : [];
   const meals = cursor === null ? (await ctx.db.query(sealedMeals+" ORDER BY m.meal->>'day',m.occurrence_id",
     [ctx.householdId,shop.shop_id,shop.placed_revision])).rows : [];
   const result = await ctx.db.query<SourceRow>(heads+' AND ($3::uuid IS NULL OR s.source_id>$3) ORDER BY s.source_id LIMIT 51',
@@ -201,11 +193,7 @@ export async function recordDelivery(ctx: Context, shop: Shop, kind: Kind, input
   } else if(kind==='delivery.register') {
     const row=deliverySourceBody.parse(input);
     if(row.supplyRevision!==shop.supply_revision || row.placedRevision!==shop.placed_revision) throw stale();
-    const line=await ctx.db.query(`SELECT 1 FROM ritc.shop_snapshot ss, jsonb_array_elements(ss.snapshot->'lines') line
-      WHERE ss.household_id=$1 AND ss.shop_id=$2 AND ss.revision=$3 AND lower(line->>'lineId')=$4
-      AND NOT (ss.digest=repeat('0',64) AND line->>'originalItem'='Removed item')`,
-      [...scope,row.placedRevision,row.lineId]);
-    if(!line.rowCount) throw unavailable();
+    if(!(await confirmedDeliveryLines(ctx,shop)).some(line=>line.lineId===row.lineId))throw unavailable();
     sourceId=operationId;
     await ctx.db.query(`INSERT INTO ritc.delivery_source(household_id,shop_id,source_id,placed_revision,line_id,segment_key,
       food_name,exclusion_tags,actor_id,operation_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$3)`,

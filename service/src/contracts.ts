@@ -27,7 +27,7 @@ export const decisionSchema = z.discriminatedUnion('choice', [
 export const previewSchema = z.object({ requestId: uuid, base: z.object({ shopRevision: z.number().int().positive(), authorityEpoch: z.number().int().positive(), requestRevision: z.number().int().positive() }).strict(), decision: decisionSchema }).strict();
 export const envelopeSchema = z.object({
   v: z.literal(1), replayWindow: uuid, clientKey: uuid, shopId: uuid,
-  kind: z.enum(['mealRecovery.apply','pantry.create','pantry.storeDelivery','pantry.observe','pantry.select','pantry.match','pantry.reserve','cookCopy.save','cookCopy.markSent','delivery.reserve','delivery.match','delivery.register','delivery.arrival','delivery.usable','shop.create','shop.patch','shop.freeze','shop.reopen','shop.reportPlaced','shop.reconcileReport','shop.transferAuthority','request.send','request.edit','request.withdraw','request.clarify','request.apply','request.confirmPurchase','request.carry']),
+  kind: z.enum(['amendment.recordResponse','mealRecovery.apply','pantry.create','pantry.storeDelivery','pantry.observe','pantry.select','pantry.match','pantry.reserve','cookCopy.save','cookCopy.markSent','delivery.reserve','delivery.match','delivery.register','delivery.arrival','delivery.usable','shop.create','shop.patch','shop.freeze','shop.reopen','shop.reportPlaced','shop.reconcileReport','shop.transferAuthority','request.send','request.edit','request.withdraw','request.clarify','request.apply','request.confirmPurchase','request.carry']),
   base: z.object({ shopRevision: z.number().int().min(0), authorityEpoch: z.number().int().min(0), requestRevision: z.number().int().positive().optional() }).strict(),
   body: z.record(z.string(),z.unknown()),
 }).strict();
@@ -77,7 +77,13 @@ export const cookCopySendBody = z.object({copyId,recipient,previousSendId:copyId
 export const recoveryApplyBody = recoveryPreviewSchema.extend({
   previewId:copyId, previewDigest:z.string().regex(/^[0-9a-f]{64}$/),
 });
+export const amendmentResponseBody = z.object({
+  placedRevision:copyRevision, predecessorId:copyId.nullable(), retailerReference:z.string().trim().min(1).max(240).refine(v=>!/[\u0000-\u001F\u007F]/u.test(v)),
+  confirmedAt:timestamp, lines:z.array(lineSchema).max(200),
+}).strict().refine(v=>new Set(v.lines.map(l=>l.lineId.toLowerCase())).size===v.lines.length,'Unique order line identities required');
+
 export const bodySchemas = {
+  'amendment.recordResponse':amendmentResponseBody,
   'mealRecovery.apply':recoveryApplyBody,
   ...pantryBodies,
   'cookCopy.save':cookCopySaveBody, 'cookCopy.markSent':cookCopySendBody,

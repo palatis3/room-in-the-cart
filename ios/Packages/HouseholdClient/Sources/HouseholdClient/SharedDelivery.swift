@@ -5,6 +5,7 @@ public struct SharedDeliveryPage: Decodable, Equatable, Sendable {
         public let lineId: UUID
         public let name: String
         public let packs: Int?
+        public internal(set) var currentOrderedPacks: Int? = nil
         public var id: UUID { lineId }
     }
     public struct Arrival: Decodable, Equatable, Sendable {

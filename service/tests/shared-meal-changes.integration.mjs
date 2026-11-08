@@ -216,7 +216,7 @@ if(process.env.RITC_TEST_NATIVE_WIRE==='1') test('actual Swift planner proposal 
  await exerciseSharedMealClient({service:server,owner:f.planner,householdId:f.h,shopId:f.shopId,shopper:false});
  assert.equal(ok(await call(f.owner,f.path)).shopRevision,3);
  await exerciseSharedMealClient({service:server,owner:f.owner,householdId:f.h,shopId:f.shopId,shopper:true});
- const current=ok(await call(f.owner,f.path));assert.equal(current.shopRevision,6);assert.equal(current.placedRevision,5);
+ const current=ok(await call(f.owner,f.path));assert.equal(current.shopRevision,8);assert.equal(current.placedRevision,5);
  assert.equal(current.meals[0].meal.title,'Reviewed native guest plan');
  const saved=ok(await call(f.owner,f.path+'/delivery-evidence'));
  const deadline={at:'2099-11-01T06:30:00Z',zone};
@@ -227,7 +227,15 @@ if(process.env.RITC_TEST_NATIVE_WIRE==='1') test('actual Swift planner proposal 
  const recovered=ok(await call(f.owner,f.path+'/meal-recovery')).meals[0];
  assert.equal(recovered.due,deadline.at);assert.equal(recovered.zone,zone);
  assert(recovered.needs.length>0 && recovered.needs.every(n=>n.due===deadline.at));
- assert.equal(saved.sources.length,1);assert.equal(saved.sources[0].confirmed.quantity.amount.numerator,7);
+ assert.equal(saved.sources.length,2);
+ const physicalSource=saved.sources.find(s=>s.confirmed!==null);
+ assert.equal(physicalSource.confirmed.quantity.amount.numerator,7);
+ const addedSource=saved.sources.find(s=>s.foodName==='Independently confirmed replacement');
+ assert.equal(addedSource.arrival,null);assert.equal(addedSource.confirmed,null);
+ const confirmedOrder=ok(await call(f.owner,f.path+'/confirmed-order'));
+ assert.equal(confirmedOrder.amendments.length,2);assert.deepEqual(confirmedOrder.current.lines,[]);
+ assert.deepEqual(confirmedOrder.original.lines,current.lines);
+ assert(saved.lines.every(line=>line.currentOrderedPacks===0));
  assert.equal((await admin.query('SELECT count(*)::int n FROM ritc.shared_meal_change WHERE household_id=$1',[f.h])).rows[0].n,1);
  const at=new Date(Date.now()+45*60_000).toISOString();
  const placed=await reservationFixture({day:at.slice(0,10),deadline:{at,zone:'UTC'}});

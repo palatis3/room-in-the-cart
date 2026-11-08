@@ -1,3 +1,4 @@
+import { readConfirmedOrder } from './order-amendments.js';
 import {rankSharedFallbacks,requireAssistance} from './shared-fallback-options.js';
 import {previewCurrentPantryObservation,readSharedRecoveryCoverage} from './shared-recovery-basis.js';
 import {loadRecoveryPublication,previewSharedRecovery,readRecoveryDesk} from './shared-recovery-publication.js';
@@ -367,6 +368,10 @@ export function createHTTPServer(options:HTTPOptions) {
           if(tail==='/cook-copies/baseline' && method==='POST') {
             const shop=await repository.shop(ctx,shopId.toLowerCase());repository.requireShopper(ctx,shop);
             return cookCopyBaseline(ctx,shop,payload);
+          }
+          if(tail==='/confirmed-order' && method==='GET') {
+            const shop=await repository.shop(ctx,shopId.toLowerCase());repository.requireShopper(ctx,shop);
+            return readConfirmedOrder(ctx,shop);
           }
           if((tail==='/delivery-evidence' || tail==='/delivery-evidence/coverage') && method==='GET'){
             const shop=await repository.shop(ctx,shopId.toLowerCase());repository.requireShopper(ctx,shop);

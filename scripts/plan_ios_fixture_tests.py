@@ -46,6 +46,7 @@ ISOLATED_SUITES = {"SharedMealIdeaUITests", "SharedStoreQuoteUITests"}
 # Case groups and their measured basis are recorded in docs/CI-VALIDATION.md.
 DELIVERY_SHARDS = {
     "SharedDeliveryUITests-stock-and-purchase": (
+        "testConfirmedOrderCancelAndLostReplyRecoverOnceAfterRestart",
         "testShopperRecordsAndCorrectsDeliveryThenReopensIt",
         "testSpanishShopperDistinguishesFractionalUsableFoodZeroAndUnknown",
         "testShopperReviewsFreezerBatchCoverageBeforeCorrectingFiveToThree",

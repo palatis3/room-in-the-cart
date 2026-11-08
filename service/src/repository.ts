@@ -1,3 +1,4 @@
+import { recordOrderAmendment } from './order-amendments.js';
 import { carryRequest, deferredRequests, reauthorizeCarry } from './deferred-requests.js';
 import type {BillingService} from './billing/service.js';
 import {recordCurrentDelivery,recordCurrentPantry} from './shared-recovery-basis.js';
@@ -16,7 +17,7 @@ import { checkout } from './checkout.js';
 export interface AuthContext { identity:VerifiedIdentity; deviceToken?:string; trustedDeviceId?:string;viewGrantId?:string;selectedShopId?:string;historicalReportShopId?:string }
 export interface Member { member_id:string; kind:'adult'|'child'; organizer:boolean; can_contribute:boolean; alias:string; state:string }
 export interface Context { db:Transaction; householdId:string; member:Member; deviceId:string; now:Date;viewGrantId?:string;selectedShopId?:string }
-export interface Shop { household_id:string;shop_id:string;shopper_id:string;authority_epoch:number;revision:number;phase:string;quote:QuoteBasis;frozen_revision:number|null;placed_revision:number|null;supply_revision:number;recovery_revision?:number;store_basis_revision?:number|null;store_review_required?:boolean }
+export interface Shop { household_id:string;shop_id:string;shopper_id:string;authority_epoch:number;revision:number;phase:string;quote:QuoteBasis;frozen_revision:number|null;placed_revision:number|null;supply_revision:number;recovery_revision?:number;store_basis_revision?:number|null;store_review_required?:boolean;confirmed_order_erased?:boolean }
 interface RequestRow { carried_forward?:boolean;from_previous_shop?:boolean; purchase_outcome?:RequestPurchaseOutcome|null;request_id:string;author_id:string;shop_id:string;original_item:string;own_quantity:string|null;revision:number;authored_at:Date;received_at:Date;route:'current'|'next';status:OwnRequest['status'];clarification:string|null;followup_to:string|null }
 const editable=(r:RequestRow)=>!r.carried_forward && (r.status==='pending'||r.status==='clarified');
 export function ownRequest(r:RequestRow):OwnRequest {
@@ -176,7 +177,7 @@ export class HouseholdRepository {
       canSelectShop:!helperRole&&!ctx.viewGrantId&&ctx.member.kind==='adult'&&(ctx.member.can_contribute||ctx.member.organizer||isShopper||hasBudgetAccess),
       selectionRequired:!helperRole&&!ctx.viewGrantId&&!ctx.selectedShopId&&candidates.length>1,role:isShopper?'shopper':ctx.member.organizer?'organizer':helperRole?(helper.mode==='edit'?'editor':'helper'):'contributor',shopId:helperRole?helper.shop_id:shop?.shop_id??null,...(helperRole?{grantId:helper.grant_id}:{}),enrolled:true,canSetRequestQueue:Boolean(queueEligible),queueConsent:false,
       ...(grant ? {requestQueueGrant:grant.request_queue_grant,requestQueueUntil:grant.request_queue_until.toISOString()} : {}),
-      capabilities:[...(queueEligible?['request_queue_permission']:[]),...(!helperRole&&!ctx.viewGrantId&&(isShopper||shop?.budget_access)?['store_quotes']:[]),...(isShopper && shop?.placed_revision!=null?['delivery_evidence','cook_copies','cook_corrections','pantry_lots','meal_recovery','request_purchase_confirmation']:[]),...(planning?['meal_proposals']:[]),...(ctx.member.can_contribute?['own_requests']:[]),...(isShopper?['shopper_inbox','request_preview','shopper_commands','accepted_fallbacks','deferred_requests']:[]),...(ctx.member.organizer?['household_admin']:[]),...(helperRole?['helper_view',...(helper.mode==='edit'?['helper_propose']:[])]:[])]};
+      capabilities:[...(queueEligible?['request_queue_permission']:[]),...(!helperRole&&!ctx.viewGrantId&&(isShopper||shop?.budget_access)?['store_quotes']:[]),...(isShopper && shop?.placed_revision!=null?['confirmed_order','delivery_evidence','cook_copies','cook_corrections','pantry_lots','meal_recovery','request_purchase_confirmation']:[]),...(planning?['meal_proposals']:[]),...(ctx.member.can_contribute?['own_requests']:[]),...(isShopper?['shopper_inbox','request_preview','shopper_commands','accepted_fallbacks','deferred_requests']:[]),...(ctx.member.organizer?['household_admin']:[]),...(helperRole?['helper_view',...(helper.mode==='edit'?['helper_propose']:[])]:[])]};
   }
   async shops(ctx:Context,scope:'active'|'owned',after:string|null){
     if(ctx.viewGrantId||ctx.member.kind!=='adult')throw unavailable();
@@ -315,6 +316,8 @@ export class HouseholdRepository {
       // Reauthorize the original scope before returning anything about a prior result.
       if(prior.response_scope==='shopper'){
         const shop=await this.shop(ctx,prior.shop_id);this.requireShopper(ctx,shop);
+        if(prior.kind==='amendment.recordResponse' && (prior.response?.authorityEpoch!==shop.authority_epoch || shop.confirmed_order_erased || !(await ctx.db.query(
+          'SELECT 1 FROM ritc.order_amendment WHERE household_id=$1 AND shop_id=$2 AND operation_id=$3',[ctx.householdId,shop.shop_id,prior.operation_id])).rowCount)) throw refresh();
         if(prior.kind==='request.carry')await reauthorizeCarry(ctx,shop,this.carryNotice,prior.operation_id);
         if(prior.kind==='request.confirmPurchase' && (prior.response?.authorityEpoch!==shop.authority_epoch || !(await ctx.db.query(
           'SELECT 1 FROM ritc.request_purchase_review WHERE household_id=$1 AND operation_id=$2',[ctx.householdId,prior.operation_id])).rowCount)) throw refresh();
@@ -427,6 +430,10 @@ export class HouseholdRepository {
     if(c.kind==='cookCopy.save' || c.kind==='cookCopy.markSent') {
       const copyId=await recordCookCopy(ctx,shop,c.kind,c.body,operationId);
       return {...await this.receipt(ctx,c,operationId,'recorded'),copyId};
+    }
+    if(c.kind==='amendment.recordResponse') {
+      const amendment=await recordOrderAmendment(ctx,shop,c.body,operationId);
+      return {...await this.receipt(ctx,c,operationId,'recorded'),...amendment};
     }
     if(c.kind==='delivery.reserve'||c.kind==='delivery.match'||c.kind==='delivery.register'||c.kind==='delivery.arrival'||c.kind==='delivery.usable'){
       const delivery=await recordCurrentDelivery(ctx,shop,c.kind,c.body,operationId,loadRecoveryPublication);

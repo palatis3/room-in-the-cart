@@ -81,6 +81,7 @@ final class SharedMealNativeWireTests: XCTestCase {
             let placed = try await service.executePlacementReport(try .init(prepared: prepared, occurredAt: ISO8601DateFormatter().string(from: Date())))
             XCTAssertEqual(placed.disposition, "placed")
             try await exerciseDelivery(service, scope: scope, shopID: current.shopId)
+            try await exerciseConfirmedAmendment(service, shopID: shopID)
 
         } else {
             XCTAssertFalse(page.shopper)
@@ -97,6 +98,48 @@ final class SharedMealNativeWireTests: XCTestCase {
             XCTAssertEqual(updated.proposals.count, 1); XCTAssertEqual(updated.proposals[0].request, intent.request)
             XCTAssertEqual(updated.meals, page.meals)
         }
+    }
+    private func exerciseConfirmedAmendment(_ service: HouseholdService, shopID: UUID) async throws {
+        let id = shopID.uuidString.lowercased(), page = try await service.confirmedOrder(shopID: shopID)
+        let original = try await service.shopperShop(shopID: id)
+        let physical = try await service.deliveryEvidence(shopID: id)
+        let financial = try await service.shopperFinancialRecord(shopID: id)
+        let added = ShopperBasketLine(originalItem: "Independently confirmed replacement", packs: 3, unitPriceMinor: nil, feeEligible: false)
+        func record(_ lines: [ShopperBasketLine], page: SharedConfirmedOrder) async throws -> ShopperReceipt {
+            let confirmation = SharedOrderConfirmation(reference: "Native retailer ABC-51", confirmedAt: Date(), lines: lines)
+            let window = try await service.replayWindow(), scope = try await service.bootstrap()
+            let operation = try await service.prepare(envelope: .init(replayWindow: window.id, shopId: id, kind: "amendment.recordResponse",
+                base: .init(shopRevision: page.shopRevision, authorityEpoch: page.authorityEpoch), body: confirmation.body(reviewed: page)), bootstrap: scope)
+            let receipt = try await service.executeSharedShop(operation), retry = try await service.executeSharedShop(operation)
+            XCTAssertEqual(receipt, retry)
+            return receipt
+        }
+        let first = try await record([added], page: page)
+        let changed = try await service.confirmedOrder(shopID: shopID)
+        XCTAssertEqual(changed.original, page.original); XCTAssertEqual(changed.current.lines, [added])
+        XCTAssertEqual(changed.amendments.count, 1); XCTAssertEqual(changed.current.amendmentId, first.amendmentId)
+        let unchanged = try await service.shopperShop(shopID: id)
+        XCTAssertEqual(unchanged.lines, original.lines); XCTAssertEqual(unchanged.quote, original.quote)
+        XCTAssertEqual(unchanged.meals, original.meals); XCTAssertEqual(unchanged.placedRevision, original.placedRevision)
+        let beforeArrival = try await service.deliveryEvidence(shopID: id)
+        XCTAssertEqual(beforeArrival.sources, physical.sources); XCTAssertEqual(beforeArrival.supplyRevision, physical.supplyRevision)
+        XCTAssertEqual(beforeArrival.lines.first(where: { $0.id == UUID(uuidString: added.lineId) })?.currentOrderedPacks, 3)
+        XCTAssertTrue(beforeArrival.lines.filter { line in page.original.lines.contains { UUID(uuidString: $0.lineId) == line.id } }.allSatisfy { $0.currentOrderedPacks == 0 })
+        let registration = SharedDeliveryEdit.register(lineID: try XCTUnwrap(UUID(uuidString: added.lineId)), segment: UUID(), name: added.originalItem, exclusions: [])
+        let window = try await service.replayWindow(), scope = try await service.bootstrap()
+        let operation = try await service.prepare(envelope: .init(replayWindow: window.id, shopId: id, kind: registration.kind,
+            base: .init(shopRevision: beforeArrival.shopRevision, authorityEpoch: beforeArrival.authorityEpoch), body: registration.body(reviewed: beforeArrival)), bootstrap: scope)
+        _ = try await service.executeSharedShop(operation)
+        let registered = try await service.deliveryEvidence(shopID: id)
+        XCTAssertNil(registered.sources.first(where: { $0.lineId == UUID(uuidString: added.lineId) })?.arrival)
+        XCTAssertNil(registered.sources.first(where: { $0.lineId == UUID(uuidString: added.lineId) })?.confirmed)
+        let beforeCancellation = try await service.confirmedOrder(shopID: shopID)
+        _ = try await record([], page: beforeCancellation)
+        let cancelled = try await service.confirmedOrder(shopID: shopID), retained = try await service.deliveryEvidence(shopID: id)
+        XCTAssertTrue(cancelled.current.lines.isEmpty); XCTAssertEqual(cancelled.amendments.count, 2)
+        XCTAssertEqual(retained.sources, registered.sources); XCTAssertEqual(retained.supplyRevision, registered.supplyRevision)
+        let finalFinancial = try await service.shopperFinancialRecord(shopID: id)
+        XCTAssertEqual(finalFinancial.entries, financial.entries)
     }
     private func exerciseDelivery(_ service: HouseholdService, scope: HouseholdBootstrap, shopID: String) async throws {
         func save(_ change: SharedDeliveryEdit, page: SharedDeliveryPage) async throws -> ShopperReceipt {

@@ -12,6 +12,47 @@ import XCTest
         app.terminate()
     }
 
+    func testConfirmedOrderCancelAndLostReplyRecoverOnceAfterRestart() {
+        func open(reset: Bool) {
+            app.launchArguments = ["--ui-testing", "--shared-delivery-fixture", "--confirmed-order-fixture", "--confirmed-order-drop-reply", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+            if reset { app.launchArguments.append("--reset-confirmed-order-fixture") }
+            app.launch()
+            tap(app.buttons["sharedShop.confirmedOrder"])
+        }
+        func row(_ prefix: String) -> XCUIElement {
+            app.descendants(matching: .any).matching(identifier: prefix + ".66666666-6666-4666-8666-666666666666").firstMatch
+        }
+        func prepare() {
+            tap(app.buttons["sharedOrder.amend"])
+            tap(app.buttons["Edit Entered soup packs"])
+            let packs=app.textFields["sharedOrder.packs"]
+            tap(packs); packs.typeText(XCUIKeyboardKey.delete.rawValue + "3")
+            tap(app.buttons["Done"])
+            tap(app.buttons["sharedOrder.keepLine"])
+            let reference=app.textFields["sharedOrder.reference"]
+            tap(reference); reference.typeText("Native market ABC-51")
+            tap(app.buttons["Done"])
+            tap(app.buttons["sharedOrder.review"])
+        }
+        open(reset:true)
+        reveal(row("sharedOrder.original"));XCTAssertTrue(row("sharedOrder.original").label.contains("Packs: 1"))
+        prepare();tap(app.buttons["Cancel"])
+        XCTAssertFalse(app.staticTexts["Native market ABC-51"].exists)
+        XCTAssertFalse(row("sharedOrder.current").exists)
+        prepare();tap(app.buttons["sharedOrder.confirm"])
+        let retry=app.buttons["Retry the same shared shop action"]
+        XCTAssertTrue(retry.waitForExistence(timeout:10), "A lost reply must retain the original durable operation")
+        app.terminate();open(reset:false)
+        XCTAssertTrue(retry.waitForExistence(timeout:10))
+        tap(retry)
+        XCTAssertTrue(retry.waitForNonExistence(timeout:10))
+        reveal(row("sharedOrder.original"));XCTAssertTrue(row("sharedOrder.original").label.contains("Packs: 1"))
+        reveal(row("sharedOrder.current"));XCTAssertTrue(row("sharedOrder.current").label.contains("Packs: 3"))
+        let reference=app.staticTexts["Native market ABC-51"]
+        reveal(reference);XCTAssertEqual(app.staticTexts.matching(identifier: "Native market ABC-51").count,1)
+        let capture=XCTAttachment(screenshot:app.screenshot());capture.name="Shared-confirmed-amendment-after-lost-reply";capture.lifetime = .keepAlways;add(capture)
+    }
+
     private func launch(_ language: String, locale: String, cookCopies: Bool = false, pantry: Bool = false, recovery: Bool = false, financial: Bool = false) {
         app.launchArguments = ["--ui-testing", "--shared-delivery-fixture", "-AppleLanguages", "(\(language))", "-AppleLocale", locale]
         if financial { app.launchArguments += ["--financial-closeout-fixture", "--expired-recovery-seat"] }

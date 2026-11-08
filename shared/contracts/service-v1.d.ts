@@ -262,3 +262,19 @@ export type FallbackRegistryChange = Omit<FallbackRegistryScope,'shopId'> &
   {v:1;clientKey:string;candidateId:string;baseRevision:number|null;reviewed:true} &
   ({action:'accept';source:FallbackSource|{kind:'disclosed'};usual:boolean;recipe:AcceptedFallbackRecipe}|{action:'revoke'});
 export interface FallbackRegistryReceipt extends FallbackRegistryScope {candidateId:string;revision:number;accepted:boolean}
+
+/** Original placement, retailer-confirmed changes and actual delivery remain separate evidence. */
+export interface ConfirmedOrderAmendment {
+  amendmentId:string;predecessorId:string|null;retailerReference:string;confirmedAt:string;recordedAt:string;actorId:string;actorLabel?:string;lines:BasketLine[];
+}
+export interface ConfirmedOrderPage {
+  shopId:string;shopRevision:number;authorityEpoch:number;placedRevision:number;asOf:string;
+  original:{lines:BasketLine[];quote:QuoteBasis;snapshotCreatedAt:string};
+  current:{lines:BasketLine[];amendmentId:string|null};amendments:ConfirmedOrderAmendment[];
+}
+export interface ConfirmedOrderCommand extends Omit<CommandEnvelope,'kind'|'body'> {
+  kind:'amendment.recordResponse';body:{placedRevision:number;predecessorId:string|null;retailerReference:string;confirmedAt:string;lines:BasketLine[]};
+}
+export interface ConfirmedOrderReceipt extends ShopperReceipt {
+  kind:'amendment.recordResponse';disposition:'recorded';amendmentId:string;placedRevision:number;
+}

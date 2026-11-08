@@ -29,13 +29,18 @@ private struct SharedShopContent: View {
                         .accessibilityIdentifier("sharedShop.placementReports")
                 }
                 delivery
+                if model.canReadConfirmedOrder, let shop = model.shop, shop.placedRevision != nil {
+                    NavigationLink(OrderAmendmentCopy.text("Confirmed order and amendments")) {
+                        SharedOrderAmendmentView(model: model, shopID: shop.shopId)
+                    }.accessibilityIdentifier("sharedShop.confirmedOrder")
+                }
                 if model.canReadDelivery, let shop = model.shop, shop.placedRevision != nil, ["placed", "closed"].contains(shop.phase) {
                     NavigationLink(ht("What came home")) { SharedDeliveryView(model: model, household: household, shopID: shop.shopId) }
                         .accessibilityIdentifier("sharedShop.deliveryEvidence")
                 }
                 if model.pending == nil {
                     if let shop = model.shop {
-                        Section(ht("Current shared shop")) {
+                        Section(["placed", "closed"].contains(shop.phase) ? OrderAmendmentCopy.text("Original checkout") : ht("Current shared shop")) {
                             LabeledContent(ht("Revision"), value: shop.shopRevision.formatted())
                             Text(phaseName(shop.phase))
                             if shop.storeReviewRequired == true {

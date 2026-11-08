@@ -20,6 +20,7 @@ private final class S17FixtureServer: @unchecked Sendable {
     private let purchases = ProcessInfo.processInfo.arguments.contains("--request-purchase-fixture") ? RequestPurchaseFixture() : nil
     private let fallbacks = SharedFallbackUIFixture()
     private let financial = ProcessInfo.processInfo.arguments.contains("--financial-closeout-fixture") ? SharedFinancialFixture() : nil
+    private let confirmedOrder = ProcessInfo.processInfo.arguments.contains("--confirmed-order-fixture") ? SharedConfirmedOrderUIFixture() : nil
     private var revision = 2
     private let quoteObservedAt = Date().addingTimeInterval(-60)
     private let quoteExpiresAt = Date().addingTimeInterval(3600)
@@ -39,6 +40,7 @@ private final class S17FixtureServer: @unchecked Sendable {
     func respond(_ request: URLRequest) throws -> (Int,Data) {
         lock.lock(); defer { lock.unlock() }
         guard request.url?.host?.hasSuffix(".invalid") == true else { throw URLError(.unsupportedURL) }
+        if let confirmedOrder { revision = confirmedOrder.revision }
         let path = request.url!.path
         var bytes = request.httpBody ?? Data()
         if bytes.isEmpty, let stream = request.httpBodyStream {
@@ -58,6 +60,7 @@ private final class S17FixtureServer: @unchecked Sendable {
         if path.hasSuffix("/devices") { return try json(["deviceId":shopper ? (fallbacks != nil ? "dddddddd-dddd-4ddd-8ddd-dddddddddddd" : "shopper-device") : "planner-device","deviceToken":shopper ? "shopper-token":"planner-token"],status:201) }
         if path.hasSuffix("/bootstrap") {
             var capabilities = shopper ? ["shopper_commands","shopper_inbox","request_preview"] : ["meal_proposals"]
+            if shopper, confirmedOrder != nil { capabilities.append("confirmed_order") }
             if shopper, let deliveries {
                 capabilities.append("delivery_evidence")
                 if purchases != nil { capabilities.append("request_purchase_confirmation") }
@@ -95,6 +98,11 @@ private final class S17FixtureServer: @unchecked Sendable {
                   request.value(forHTTPHeaderField: "X-Device-Token") == "shopper-token" else { return try denied() }
             let route = path == scoped + "/commands" ? "/commands" : String(path.dropFirst(deliveryPath.count))
             if let result = try fallbacks.respond(route, method: request.httpMethod ?? "GET", input: input, bytes: bytes) { return result }
+        }
+        if let confirmedOrder, path == deliveryPath + "/confirmed-order" || (path == scoped + "/commands" && input["kind"] as? String == "amendment.recordResponse") {
+            guard shopper, request.value(forHTTPHeaderField: "X-Device-Token") == "shopper-token" else { return try denied() }
+            if path.hasSuffix("/confirmed-order") { return try json(confirmedOrder.page(shop: Self.shop)) }
+            return try json(confirmedOrder.record(shop: Self.shop, actor: Self.shopper, input: input, bytes: bytes))
         }
         if let deliveries, [deliveryPath + "/delivery-evidence", deliveryPath + "/delivery-evidence/coverage",
                             pantryPath, pantryPath + "/coverage", pantryPath + "/observation-preview",
@@ -252,7 +260,7 @@ private final class S17FixtureProtocol: URLProtocol, @unchecked Sendable {
         let transport = HTTPTransport(session:URLSession(configuration:config))
         let auth = AdultAuth(configuration:try .init(projectURL:URL(string:"https://s17-identity.invalid")!,publishableKey:"sb_publishable_fixture_only"),vault:S17FixtureVault(),transport:transport)
         let service = HouseholdService(configuration:try .init(baseURL:URL(string:"https://s17-household.invalid")!),auth:auth,deviceVault:S17FixtureVault(),transport:transport)
-        let url = FileManager.default.temporaryDirectory.appendingPathComponent("UITestWorkspace/S17-"+UUID().uuidString).appendingPathComponent("outbox.json")
+        let url = ProcessInfo.processInfo.arguments.contains("--confirmed-order-fixture") ? SharedConfirmedOrderUIFixture.folder.appendingPathComponent("outbox.json") : FileManager.default.temporaryDirectory.appendingPathComponent("UITestWorkspace/S17-"+UUID().uuidString).appendingPathComponent("outbox.json")
         let model = HouseholdModel(auth:auth,service:service,outboxURL:url,deletionVault:S17FixtureVault(),exitVault:S17FixtureVault())
         model.email = role+"@example.invalid"; model.code = "123456"; await model.verifyCode()
         guard let workspace = model.workspaces.first else { throw ClientError.invalidResponse }

@@ -1,0 +1,62 @@
+{
+  "date": "2026-11-07",
+  "scope": "Local synthetic PostgreSQL17 isolated task-owned cluster only. No hosted mutation or deployment.",
+  "build": "Pinned Node22.23.4 TypeScript build passed",
+  "unit": {
+    "passed": 443,
+    "skipped": 1,
+    "failed": 0
+  },
+  "postgres": {
+    "passed": 242,
+    "skipped": 3,
+    "failed": 0,
+    "newAmendmentCases": 6
+  },
+  "controls": [
+    {
+      "file": "amendment-initial.log",
+      "reason": "Assertion incorrectly compared financial source shopRevision; corrected to compare financial entries and independent financialRevision."
+    },
+    {
+      "file": "full-integration.log",
+      "reason": "Initial isolated harness omitted TEST_WORKER_DATABASE_URL and intentionally combined guardian verifier negative-test role; corrected owned-cluster fixture only."
+    }
+  ],
+  "restore": {
+    "tables": 103,
+    "rows": 9534,
+    "migrations": 42,
+    "allRowsAndEffectivePermissionsAndPoliciesEqual": true,
+    "rawACLNormalization": "pg_dump restores explicit owner-only ACL as equivalent PostgreSQL default; compare aclexplode(COALESCE(relacl,acldefault(...)))"
+  },
+  "coverage": [
+    "Append-only original/current/history",
+    "Concurrent same-key exact retry",
+    "Competing confirmations serialize",
+    "Wrong reference/time/identity/predecessor/revision rejected",
+    "No implied physical supply or finance",
+    "All-line cancellation preserves existing delivery sources",
+    "New amendment lines independently register delivery",
+    "More than200 historical identities remain complete",
+    "Current authority and closed-order manual path",
+    "Actual worker/journal erasure of amendment author and copied successors",
+    "Original snapshot author erasure invalidates later shopper amendments",
+    "Immutable runtime grants and tenant policy",
+    "Populated restore all rows, migration checksums, effective ACL and RLS policies"
+  ],
+  "limitations": [
+    "Swift native-wire opt-in cases run independently by root",
+    "No staging deployment or physical-device acceptance"
+  ],
+  "sourceSHA256": {
+    "service/migrations/042_confirmed_order_amendments.sql": "1bc54c2d91fe9a38f494078463b95aaec0b20314fc486ff23ae141edc93751f8",
+    "service/src/order-amendments.ts": "12ef48d995cfa1db939e18829111a1b1f92d99351a39d9759905476ec1ce3d47",
+    "service/src/contracts.ts": "eb3fa7515224a6646d7473706369c8ce644ada46225adf318155486c62075591",
+    "service/src/repository.ts": "0d086c9d2c042e965359c488425e9e3c544cb9572418a5cdeae8d1691f4e98ec",
+    "service/src/delivery-evidence.ts": "d793dabf991bd3f80be70eaea6a4a1ce7daf0623bf8754a4cc24ee862dfde925",
+    "service/src/http.ts": "38e8e06a2193a9df4b56c48122e2324a927c2c952647ba7905a6e6432d10d202",
+    "shared/contracts/service-v1.d.ts": "c467f5446566e49b6285830fb3030eafb5bed26bbacedecc2d66b918443999b0",
+    "service/tests/order-amendments.integration.mjs": "f5dff67447a8f30cc6276fa0135d3141d258d59e526481b7e17694e2bf611c3d"
+  }
+}

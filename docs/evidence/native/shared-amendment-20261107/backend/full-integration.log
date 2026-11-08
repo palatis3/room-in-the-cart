@@ -1,0 +1,1514 @@
+Synthetic journal fixture retained at /tmp/ritc-integration-journal-evidence-3lo8hZ; private key is separately held outside evidence.
+TAP version 13
+# Subtest: PostgreSQL durable billing / RLS / named seats contract
+    # Subtest: purchase token is server-issued, stable, household-specific and adult-only
+    ok 1 - purchase token is server-issued, stable, household-specific and adult-only
+      ---
+      duration_ms: 8.028583
+      type: 'test'
+      ...
+    # Subtest: simultaneous delivery / replay yields one immutable receipt and one initial seat
+    ok 2 - simultaneous delivery / replay yields one immutable receipt and one initial seat
+      ---
+      duration_ms: 22.722416
+      type: 'test'
+      ...
+    # Subtest: wrong purchaser / household cannot restore or enumerate receipts
+    ok 3 - wrong purchaser / household cannot restore or enumerate receipts
+      ---
+      duration_ms: 3.678583
+      type: 'test'
+      ...
+    # Subtest: an unseated adult gets only their own Free projection, never the purchaser or paid roster
+    ok 4 - an unseated adult gets only their own Free projection, never the purchaser or paid roster
+      ---
+      duration_ms: 1.618542
+      type: 'test'
+      ...
+    # Subtest: two named adults, purchaser-only candidates, no third / child / foreign seat and no shop authority created
+    ok 5 - two named adults, purchaser-only candidates, no third / child / foreign seat and no shop authority created
+      ---
+      duration_ms: 21.215084
+      type: 'test'
+      ...
+    # Subtest: failure after deleting original assignments rolls back all seat changes
+    ok 6 - failure after deleting original assignments rolls back all seat changes
+      ---
+      duration_ms: 7.735208
+      type: 'test'
+      ...
+    # Subtest: same version revalidation advances only lease; time expiry advances revision and denies assistance
+    ok 7 - same version revalidation advances only lease; time expiry advances revision and denies assistance
+      ---
+      duration_ms: 8.207375
+      type: 'test'
+      ...
+    # Subtest: renewal preserves exactly the two assignments; grace allows then retry denies
+    ok 8 - renewal preserves exactly the two assignments; grace allows then retry denies
+      ---
+      duration_ms: 12.993791
+      type: 'test'
+      ...
+    # Subtest: refund notification is durable and idempotent; stale active status cannot resurrect access
+    ok 9 - refund notification is durable and idempotent; stale active status cannot resurrect access
+      ---
+      duration_ms: 8.554417
+      type: 'test'
+      ...
+    # Subtest: revoked household member is removed with a new snapshot revision, preserving records
+    ok 10 - revoked household member is removed with a new snapshot revision, preserving records
+      ---
+      duration_ms: 9.945667
+      type: 'test'
+      ...
+    1..10
+ok 1 - PostgreSQL durable billing / RLS / named seats contract
+  ---
+  duration_ms: 116.706291
+  type: 'test'
+  ...
+# Subtest: email code login stores encrypted provider state and grants no household authority
+ok 2 - email code login stores encrypted provider state and grants no household authority
+  ---
+  duration_ms: 148.027708
+  type: 'test'
+  ...
+# Subtest: pre-auth CSRF, exact origin, strict bodies and persistent attempt bounds guard email verification
+ok 3 - pre-auth CSRF, exact origin, strict bodies and persistent attempt bounds guard email verification
+  ---
+  duration_ms: 34.43
+  type: 'test'
+  ...
+# Subtest: two service instances enforce the same durable account-scoped OTP request limit
+ok 4 - two service instances enforce the same durable account-scoped OTP request limit
+  ---
+  duration_ms: 31.88425
+  type: 'test'
+  ...
+# Subtest: concurrent BFF requests refresh once and preserve household context without exposing tokens
+ok 5 - concurrent BFF requests refresh once and preserve household context without exposing tokens
+  ---
+  duration_ms: 74.382417
+  type: 'test'
+  ...
+# Subtest: live session deletion and a refreshed subject mismatch both fail closed
+ok 6 - live session deletion and a refreshed subject mismatch both fail closed
+  ---
+  duration_ms: 91.125
+  type: 'test'
+  ...
+# Subtest: logout revokes local authentication and scoped device even when provider logout fails
+ok 7 - logout revokes local authentication and scoped device even when provider logout fails
+  ---
+  duration_ms: 231.887709
+  type: 'test'
+  ...
+# Subtest: context switch requires actual membership and a fresh login clears the previous scoped cookie
+ok 8 - context switch requires actual membership and a fresh login clears the previous scoped cookie
+  ---
+  duration_ms: 237.700667
+  type: 'test'
+  ...
+# Subtest: trusted client-address port separates proxy clients and forwarded-header spoofing cannot evade the socket limit
+ok 9 - trusted client-address port separates proxy clients and forwarded-header spoofing cannot evade the socket limit
+  ---
+  duration_ms: 6.17125
+  type: 'test'
+  ...
+# Subtest: unconfigured email auth is explicitly unavailable and never reports a sent code
+ok 10 - unconfigured email auth is explicitly unavailable and never reports a sent code
+  ---
+  duration_ms: 3.93725
+  type: 'test'
+  ...
+# Subtest: trusted IP OTP limits persist across service instances and distinct email addresses
+ok 11 - trusted IP OTP limits persist across service instances and distinct email addresses
+  ---
+  duration_ms: 317.414916
+  type: 'test'
+  ...
+# Subtest: encrypted browser credentials are bound to their own cookie and private tables remain RLS-isolated
+ok 12 - encrypted browser credentials are bound to their own cookie and private tables remain RLS-isolated
+  ---
+  duration_ms: 84.835958
+  type: 'test'
+  ...
+# Subtest: explicit refresh never contacts the provider after its exact session is revoked
+ok 13 - explicit refresh never contacts the provider after its exact session is revoked
+  ---
+  duration_ms: 38.78825
+  type: 'test'
+  ...
+# Subtest: Free records human decisions, updates a checked outcome later, and preserves exact receipts
+ok 14 - Free records human decisions, updates a checked outcome later, and preserves exact receipts
+  ---
+  duration_ms: 296.682916
+  type: 'test'
+  ...
+# Subtest: only explicit promotion of a temporary preference is paid; it never modifies the shop
+ok 15 - only explicit promotion of a temporary preference is paid; it never modifies the shop
+  ---
+  duration_ms: 142.469
+  type: 'test'
+  ...
+# Subtest: literal combined filters, fifty-row pages, tied timestamps and scoped cursors
+ok 16 - literal combined filters, fifty-row pages, tied timestamps and scoped cursors
+  ---
+  duration_ms: 340.53475
+  type: 'test'
+  ...
+# Subtest: selected shop and current assignment narrow records, retries, search and cursors across tenants
+ok 17 - selected shop and current assignment narrow records, retries, search and cursors across tenants
+  ---
+  duration_ms: 181.188334
+  type: 'test'
+  ...
+# Subtest: rejects child, revoked, logged-out and malformed input
+ok 18 - rejects child, revoked, logged-out and malformed input
+  ---
+  duration_ms: 91.134125
+  type: 'test'
+  ...
+# Subtest: erasure drops authored records and all receipts carrying erased current or superseded observations
+ok 19 - erasure drops authored records and all receipts carrying erased current or superseded observations
+  ---
+  duration_ms: 141.01675
+  type: 'test'
+  ...
+# Subtest: a redeemed helper cannot access decisions; closure preserves history while explicit retirement removes access
+ok 20 - a redeemed helper cannot access decisions; closure preserves history while explicit retirement removes access
+  ---
+  duration_ms: 95.120792
+  type: 'test'
+  ...
+# Subtest: organizer inventory projects opaque enrollment metadata, current device and exact member aliases only
+ok 21 - organizer inventory projects opaque enrollment metadata, current device and exact member aliases only
+  ---
+  duration_ms: 111.862542
+  type: 'test'
+  ...
+# Subtest: ordinary contributor/helper, scoped organizer editor, child and foreign actor cannot inspect or revoke devices
+ok 22 - ordinary contributor/helper, scoped organizer editor, child and foreign actor cannot inspect or revoke devices
+  ---
+  duration_ms: 101.886458
+  type: 'test'
+  ...
+# Subtest: actual guardian sees and revokes only verified children; revoked relationship removes management authority
+ok 23 - actual guardian sees and revokes only verified children; revoked relationship removes management authority
+  ---
+  duration_ms: 53.628417
+  type: 'test'
+  ...
+# Subtest: current device uses separate sign out; repeated precise revocation preserves siblings, provider session, membership and shopper authority
+ok 24 - current device uses separate sign out; repeated precise revocation preserves siblings, provider session, membership and shopper authority
+  ---
+  duration_ms: 93.3865
+  type: 'test'
+  ...
+# Subtest: revocation commits before queued reads/writes recheck enrollment; a stored old success is never replayed
+ok 25 - revocation commits before queued reads/writes recheck enrollment; a stored old success is never replayed
+  ---
+  duration_ms: 51.827625
+  type: 'test'
+  ...
+# Subtest: stable pagination covers all actual enrollments without leaking an inaccessible or foreign cursor
+ok 26 - stable pagination covers all actual enrollments without leaking an inaccessible or foreign cursor
+  ---
+  duration_ms: 62.292958
+  type: 'test'
+  ...
+# Subtest: lost-device bearer cannot replace enrollment through devices or browser session; fresh provider login can
+ok 27 - lost-device bearer cannot replace enrollment through devices or browser session; fresh provider login can
+  ---
+  duration_ms: 39.575917
+  type: 'test'
+  ...
+# Subtest: new fence is owner-only, cannot accept supplied hashes, and guarded SQL rejects wrong actors/sessions/targets
+ok 28 - new fence is owner-only, cannot accept supplied hashes, and guarded SQL rejects wrong actors/sessions/targets
+  ---
+  duration_ms: 62.489583
+  type: 'test'
+  ...
+# Subtest: both enrollment/revocation lock orderings preserve a prior sibling and reject replacement after revocation
+ok 29 - both enrollment/revocation lock orderings preserve a prior sibling and reject replacement after revocation
+  ---
+  duration_ms: 47.253208
+  type: 'test'
+  ...
+# Subtest: owner erasure drops only the erased member fence and restore reapplication removes reintroduced pseudonyms
+ok 30 - owner erasure drops only the erased member fence and restore reapplication removes reintroduced pseudonyms
+  ---
+  duration_ms: 27.238209
+  type: 'test'
+  ...
+# Subtest: a legitimate separately leased privacy worker erases session fences while preserving another member fence
+ok 31 - a legitimate separately leased privacy worker erases session fences while preserving another member fence
+  ---
+  duration_ms: 125.518292
+  type: 'test'
+  ...
+# Subtest: notice/create/verification exact retry binds notice and exact current guardian session/device
+ok 32 - notice/create/verification exact retry binds notice and exact current guardian session/device
+  ---
+  duration_ms: 112.018375
+  type: 'test'
+  ...
+# Subtest: unconfirmed email, client email/boolean, wrong provider body and spoofed redirect cannot create proof
+ok 33 - unconfirmed email, client email/boolean, wrong provider body and spoofed redirect cannot create proof
+  ---
+  duration_ms: 49.289
+  type: 'test'
+  ...
+# Subtest: signed event exact retry is idempotent; changed transaction evidence and wrong nonce are rejected
+ok 34 - signed event exact retry is idempotent; changed transaction evidence and wrong nonce are rejected
+  ---
+  duration_ms: 27.238291
+  type: 'test'
+  ...
+# Subtest: separate permission, authenticated child claim and guardian pairing are all required before activation
+ok 35 - separate permission, authenticated child claim and guardian pairing are all required before activation
+  ---
+  duration_ms: 107.641959
+  type: 'test'
+  ...
+# Subtest: forwarded invitation cannot change an already claimed child subject, session, code or retry payload
+ok 36 - forwarded invitation cannot change an already claimed child subject, session, code or retry payload
+  ---
+  duration_ms: 58.413708
+  type: 'test'
+  ...
+# Subtest: current email change, exact guardian session loss and notice drift invalidate later authority
+ok 37 - current email change, exact guardian session loss and notice drift invalidate later authority
+  ---
+  duration_ms: 94.680917
+  type: 'test'
+  ...
+# Subtest: uncertain delivery persists once, permits only signed callback completion, and never resends on exact retry
+ok 38 - uncertain delivery persists once, permits only signed callback completion, and never resends on exact retry
+  ---
+  duration_ms: 29.983875
+  type: 'test'
+  ...
+# Subtest: withdrawal retires device/window/invite/claim generation and cannot be undone through HTTP or SQL
+ok 39 - withdrawal retires device/window/invite/claim generation and cannot be undone through HTTP or SQL
+  ---
+  duration_ms: 98.84775
+  type: 'test'
+  ...
+# Subtest: ordinary runtime role cannot record provider proof or mint another child device from active consent
+ok 40 - ordinary runtime role cannot record provider proof or mint another child device from active consent
+  ---
+  duration_ms: 72.876459
+  type: 'test'
+  ...
+# Subtest: cancelled and expired setup callbacks cannot revive authority
+ok 41 - cancelled and expired setup callbacks cannot revive authority
+  ---
+  duration_ms: 51.304416
+  type: 'test'
+  ...
+# Subtest: pending child erasure purges claim identity and same live provider principal stays classified after marker expiry
+ok 42 - pending child erasure purges claim identity and same live provider principal stays classified after marker expiry
+  ---
+  duration_ms: 54.110417
+  type: 'test'
+  ...
+# Subtest: native child signup is authorized before OTP, retries once, and requires fresh signed OTP AMR
+ok 43 - native child signup is authorized before OTP, retries once, and requires fresh signed OTP AMR
+  ---
+  duration_ms: 64.23125
+  type: 'test'
+  ...
+# Subtest: browser covered child OTP installs scoped HttpOnly session and omits credentials from finish JSON
+ok 44 - browser covered child OTP installs scoped HttpOnly session and omits credentials from finish JSON
+  ---
+  duration_ms: 116.928125
+  type: 'test'
+  ...
+# Subtest: non-organizer cannot create child membership and organizer role loss blocks pending finalization
+ok 45 - non-organizer cannot create child membership and organizer role loss blocks pending finalization
+  ---
+  duration_ms: 68.381333
+  type: 'test'
+  ...
+# Subtest: guardian revoke and adult rejoin cannot revive a child consent/device generation
+ok 46 - guardian revoke and adult rejoin cannot revive a child consent/device generation
+  ---
+  duration_ms: 69.457125
+  type: 'test'
+  ...
+# {"event":"operations_failed","error":"operations_unavailable"}
+# Subtest: production operations HTTP performs bounded technical expiry and policy-gated pending purge without provider calls
+not ok 47 - production operations HTTP performs bounded technical expiry and policy-gated pending purge without provider calls
+  ---
+  duration_ms: 16.126792
+  type: 'test'
+  location: '/Users/palatis/Room in the Cart/service/tests/guardian.integration.mjs:164:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    503 !== 200
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 200
+  actual: 503
+  operator: 'strictEqual'
+  stack: |-
+    run (file:///Users/palatis/Room%20in%20the%20Cart/service/tests/guardian.integration.mjs:168:178)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async TestContext.<anonymous> (file:///Users/palatis/Room%20in%20the%20Cart/service/tests/guardian.integration.mjs:169:67)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: bound OTP verification racing guardian cancellation has no browser/household deadlock or post-cancel admission
+ok 48 - bound OTP verification racing guardian cancellation has no browser/household deadlock or post-cancel admission
+  ---
+  duration_ms: 68.0995
+  type: 'test'
+  ...
+# Subtest: application SQL writer cannot use copied email digests to admit or finalize child authority
+ok 49 - application SQL writer cannot use copied email digests to admit or finalize child authority
+  ---
+  duration_ms: 53.191125
+  type: 'test'
+  ...
+# Subtest: reconsent is a fresh guardian generation; organizer-revoked membership cannot be restored by a non-organizer guardian
+ok 50 - reconsent is a fresh guardian generation; organizer-revoked membership cannot be restored by a non-organizer guardian
+  ---
+  duration_ms: 132.721125
+  type: 'test'
+  ...
+# Subtest: enrolled child submits only own request and never receives basket, budget, roster or another author request
+ok 51 - enrolled child submits only own request and never receives basket, budget, roster or another author request
+  ---
+  duration_ms: 94.281542
+  type: 'test'
+  ...
+# Subtest: trusted finish and pending-child identity deletion serialize in both deterministic lock orders
+ok 52 - trusted finish and pending-child identity deletion serialize in both deterministic lock orders
+  ---
+  duration_ms: 222.783
+  type: 'test'
+  ...
+# Subtest: real privacy worker erases guardian plus child profile, retains independent provider account and lifetime negative authority
+not ok 53 - real privacy worker erases guardian plus child profile, retains independent provider account and lifetime negative authority
+  ---
+  duration_ms: 159.282667
+  type: 'test'
+  location: '/Users/palatis/Room in the Cart/service/tests/guardian.integration.mjs:229:1'
+  failureType: 'testCodeFailure'
+  error: ''
+  code: 'ECONNREFUSED'
+  name: 'AggregateError'
+  stack: |-
+    /Users/palatis/Room in the Cart/service/node_modules/pg-pool/index.js:45:11
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async TestContext.<anonymous> (file:///Users/palatis/Room%20in%20the%20Cart/service/tests/guardian.integration.mjs:233:120)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: production readiness cannot be enabled by flags, partial notices, missing onboarding or a combined verifier role
+not ok 54 - production readiness cannot be enabled by flags, partial notices, missing onboarding or a combined verifier role
+  ---
+  duration_ms: 37.919458
+  type: 'test'
+  location: '/Users/palatis/Room in the Cart/service/tests/guardian.integration.mjs:239:1'
+  failureType: 'testCodeFailure'
+  error: 'The existing intentionally combined fixture role is required for this negative test; this test does not create roles or change memberships.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///Users/palatis/Room%20in%20the%20Cart/service/tests/guardian.integration.mjs:246:9)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: shopper management projection is exact and recipients cannot read or mutate management routes
+ok 55 - shopper management projection is exact and recipients cannot read or mutate management routes
+  ---
+  duration_ms: 466.022334
+  type: 'test'
+  ...
+# Subtest: full projection replacement replays its durable receipt and binds exact reviewed text
+ok 56 - full projection replacement replays its durable receipt and binds exact reviewed text
+  ---
+  duration_ms: 81.684417
+  type: 'test'
+  ...
+# Subtest: proposal replacement is explicit, durably reviewed and never automatically copies a suggestion or changes the basket
+ok 57 - proposal replacement is explicit, durably reviewed and never automatically copies a suggestion or changes the basket
+  ---
+  duration_ms: 89.868708
+  type: 'test'
+  ...
+# Subtest: dismissal leaves instructions unchanged; stale or competing proposal resolution cannot commit twice
+ok 58 - dismissal leaves instructions unchanged; stale or competing proposal resolution cannot commit twice
+  ---
+  duration_ms: 70.744958
+  type: 'test'
+  ...
+# Subtest: multiple shops require explicit selection and native selection cannot drift to a newer or foreign shop
+ok 59 - multiple shops require explicit selection and native selection cannot drift to a newer or foreign shop
+  ---
+  duration_ms: 66.053333
+  type: 'test'
+  ...
+# Subtest: browser selected shop is persisted and revalidated rather than inferred on refresh
+ok 60 - browser selected shop is persisted and revalidated rather than inferred on refresh
+  ---
+  duration_ms: 80.987916
+  type: 'test'
+  ...
+# Subtest: proposal pagination is bounded and binds cursors to the currently authorized grant
+ok 61 - proposal pagination is bounded and binds cursors to the currently authorized grant
+  ---
+  duration_ms: 90.854875
+  type: 'test'
+  ...
+# Subtest: shop and request cursors preserve PostgreSQL submillisecond peers without omission or repetition
+ok 62 - shop and request cursors preserve PostgreSQL submillisecond peers without omission or repetition
+  ---
+  duration_ms: 54.829333
+  type: 'test'
+  ...
+# Subtest: a selected shop excludes another shop’s own request, cursor, command and prior receipt
+ok 63 - a selected shop excludes another shop’s own request, cursor, command and prior receipt
+  ---
+  duration_ms: 54.013041
+  type: 'test'
+  ...
+# Subtest: real browser WebApp and API recover a dropped helper reply with exact original bytes after a newer projection
+ok 64 - real browser WebApp and API recover a dropped helper reply with exact original bytes after a newer projection # SKIP
+  ---
+  duration_ms: 0.286792
+  type: 'test'
+  ...
+# Subtest: own suggestion discovery is bounded, author/grant-scoped and preserves submillisecond cursor order
+ok 65 - own suggestion discovery is bounded, author/grant-scoped and preserves submillisecond cursor order
+  ---
+  duration_ms: 85.550542
+  type: 'test'
+  ...
+# Subtest: real full browser recreation recovers a lost received suggestion with read-only retries and fences identity, expiry and revocation
+ok 66 - real full browser recreation recovers a lost received suggestion with read-only retries and fences identity, expiry and revocation # SKIP
+  ---
+  duration_ms: 0.076333
+  type: 'test'
+  ...
+# Subtest: explicit current budget grants allow history reads without allowing financial or price mutations
+ok 67 - explicit current budget grants allow history reads without allowing financial or price mutations
+  ---
+  duration_ms: 308.356708
+  type: 'test'
+  ...
+# Subtest: Free readable-shop discovery pages only current permitted sources and preserves selected-shop scope
+ok 68 - Free readable-shop discovery pages only current permitted sources and preserves selected-shop scope
+  ---
+  duration_ms: 412.887625
+  type: 'test'
+  ...
+# Subtest: a saved period regains full read scope through an explicit grant and loses all envelope signals on revocation
+ok 69 - a saved period regains full read scope through an explicit grant and loses all envelope signals on revocation
+  ---
+  duration_ms: 106.564125
+  type: 'test'
+  ...
+# Subtest: Free manual evidence and saved observations remain accessible while paid history is gated
+ok 70 - Free manual evidence and saved observations remain accessible while paid history is gated
+  ---
+  duration_ms: 54.348333
+  type: 'test'
+  ...
+# Subtest: fresh paid history keeps inclusive estimates, posted cash, pending/included credits and holds distinct
+ok 71 - fresh paid history keeps inclusive estimates, posted cash, pending/included credits and holds distinct
+  ---
+  duration_ms: 114.062375
+  type: 'test'
+  ...
+# Subtest: period totals include linked later credits and count an applied reservation exactly once
+ok 72 - period totals include linked later credits and count an applied reservation exactly once
+  ---
+  duration_ms: 76.455334
+  type: 'test'
+  ...
+# Subtest: lost shop authority yields only independently permitted subtotal with no hidden funding or counts
+ok 73 - lost shop authority yields only independently permitted subtotal with no hidden funding or counts
+  ---
+  duration_ms: 85.957959
+  type: 'test'
+  ...
+# Subtest: price observations preserve pack/channel context and paid lapse never erases saved raw records
+ok 74 - price observations preserve pack/channel context and paid lapse never erases saved raw records
+  ---
+  duration_ms: 47.559375
+  type: 'test'
+  ...
+# Subtest: named paid status never grants another adult budget authority and currency/credit links stay exact
+ok 75 - named paid status never grants another adult budget authority and currency/credit links stay exact
+  ---
+  duration_ms: 74.275917
+  type: 'test'
+  ...
+# Subtest: history pagination retains submillisecond boundaries and rejects foreign source cursors
+ok 76 - history pagination retains submillisecond boundaries and rejects foreign source cursors
+  ---
+  duration_ms: 53.421791
+  type: 'test'
+  ...
+# Subtest: explicit planner access and an active adult seat allow proposing an exact move without basket or budget access
+ok 77 - explicit planner access and an active adult seat allow proposing an exact move without basket or budget access
+  ---
+  duration_ms: 163.195167
+  type: 'test'
+  ...
+# Subtest: optional measurement PostgreSQL identities, RLS, consent and verified billing
+    # Subtest: default off, helper/child denial, fresh notice only
+    ok 1 - default off, helper/child denial, fresh notice only
+      ---
+      duration_ms: 13.518084
+      type: 'test'
+      ...
+    # Subtest: requires a placed closed shop and pins week to server closure
+    ok 2 - requires a placed closed shop and pins week to server closure
+      ---
+      duration_ms: 14.972792
+      type: 'test'
+      ...
+    # Subtest: measurement triggers keep invoker privileges and ignore caller search path overrides
+    ok 3 - measurement triggers keep invoker privileges and ignore caller search path overrides
+      ---
+      duration_ms: 9.678792
+      type: 'test'
+      ...
+    # Subtest: second device and retry have one household/shop/week response
+    ok 4 - second device and retry have one household/shop/week response
+      ---
+      duration_ms: 10.637708
+      type: 'test'
+      ...
+    # Subtest: withdrawal removes response, stale consent cannot be replayed or resurrected
+    ok 5 - withdrawal removes response, stale consent cannot be replayed or resurrected
+      ---
+      duration_ms: 8.778459
+      type: 'test'
+      ...
+    # Subtest: only server-verified production billing counts one canonical willing household; refund removes it
+    ok 6 - only server-verified production billing counts one canonical willing household; refund removes it
+      ---
+      duration_ms: 34.24325
+      type: 'test'
+      ...
+    # Subtest: authenticated HTTP consent, code-only send, read, DELETE and withdrawal stay connected
+    ok 7 - authenticated HTTP consent, code-only send, read, DELETE and withdrawal stay connected
+      ---
+      duration_ms: 93.7545
+      type: 'test'
+      ...
+    # Subtest: member erasure removes measurement without restoring consent
+    ok 8 - member erasure removes measurement without restoring consent
+      ---
+      duration_ms: 7.571209
+      type: 'test'
+      ...
+    1..8
+ok 78 - optional measurement PostgreSQL identities, RLS, consent and verified billing
+  ---
+  duration_ms: 211.26425
+  type: 'test'
+  ...
+# Subtest: retailer amendments preserve original placement, physical evidence and finances; exact lost-reply retry appends once
+ok 79 - retailer amendments preserve original placement, physical evidence and finances; exact lost-reply retry appends once
+  ---
+  duration_ms: 290.752708
+  type: 'test'
+  ...
+# Subtest: invalid evidence, stale chains, recycled identities and proposal-shaped writes cannot become confirmed orders
+ok 80 - invalid evidence, stale chains, recycled identities and proposal-shaped writes cannot become confirmed orders
+  ---
+  duration_ms: 120.907625
+  type: 'test'
+  ...
+# Subtest: current authority alone reads and records; reassignment fences successful retry and closed orders retain manual recording
+ok 81 - current authority alone reads and records; reassignment fences successful retry and closed orders retain manual recording
+  ---
+  duration_ms: 269.989042
+  type: 'test'
+  ...
+# Subtest: real erasure removes dependent amendment copies without reverting to the original order or reviving erased retries
+ok 82 - real erasure removes dependent amendment copies without reverting to the original order or reviving erased retries
+  ---
+  duration_ms: 301.732292
+  type: 'test'
+  ...
+# Subtest: fresh self-serve household completes create, invite, review, freeze, late routing and promote with exact retries
+ok 83 - fresh self-serve household completes create, invite, review, freeze, late routing and promote with exact retries
+  ---
+  duration_ms: 233.72575
+  type: 'test'
+  ...
+# Subtest: deletion requires recent signed authentication and configured provider before accepting a job
+ok 84 - deletion requires recent signed authentication and configured provider before accepting a job
+  ---
+  duration_ms: 18.929833
+  type: 'test'
+  ...
+# Subtest: a profile-only fixture with an expired lease leaves the next accepted deletion claimable
+ok 85 - a profile-only fixture with an expired lease leaves the next accepted deletion claimable
+  ---
+  duration_ms: 164.07525
+  type: 'test'
+  ...
+# Subtest: explicit responsibilities precede deletion; outage keeps pending and exact subject erasure preserves another member
+ok 86 - explicit responsibilities precede deletion; outage keeps pending and exact subject erasure preserves another member
+  ---
+  duration_ms: 316.901667
+  type: 'test'
+  ...
+# Subtest: household exit revokes only that membership, preserves service identity and is recoverable by the same key
+ok 87 - household exit revokes only that membership, preserves service identity and is recoverable by the same key
+  ---
+  duration_ms: 42.922875
+  type: 'test'
+  ...
+# Subtest: sole guardian cannot abandon a child through exit; deletion explicitly erases only the selected household child profile
+ok 88 - sole guardian cannot abandon a child through exit; deletion explicitly erases only the selected household child profile
+  ---
+  duration_ms: 170.617209
+  type: 'test'
+  ...
+# Subtest: deleting a purchaser purges billing payloads and seats while retaining only a non-expiring rebinding marker
+ok 89 - deleting a purchaser purges billing payloads and seats while retaining only a non-expiring rebinding marker
+  ---
+  duration_ms: 135.198417
+  type: 'test'
+  ...
+# Subtest: foreign household and child identifiers cannot broaden deletion scope
+ok 90 - foreign household and child identifiers cannot broaden deletion scope
+  ---
+  duration_ms: 71.816292
+  type: 'test'
+  ...
+# Subtest: worker abort during the provider call leaves the original lease and receipt recoverable
+ok 91 - worker abort during the provider call leaves the original lease and receipt recoverable
+  ---
+  duration_ms: 83.683208
+  type: 'test'
+  ...
+# Subtest: worker recovers an accepted request whose committed event was never acknowledged
+ok 92 - worker recovers an accepted request whose committed event was never acknowledged
+  ---
+  duration_ms: 82.277584
+  type: 'test'
+  ...
+# Subtest: worker recovers a lost completion acknowledgement without deleting the account again
+ok 93 - worker recovers a lost completion acknowledgement without deleting the account again
+  ---
+  duration_ms: 90.690875
+  type: 'test'
+  ...
+# Subtest: deletion waits for an authorized identity transaction then closes enrollment and requires an actual worker lease
+ok 94 - deletion waits for an authorized identity transaction then closes enrollment and requires an actual worker lease
+  ---
+  duration_ms: 158.4725
+  type: 'test'
+  ...
+# Subtest: new helper/history data joins the bounded erasure path without deleting another current shopper accounting facts
+ok 95 - new helper/history data joins the bounded erasure path without deleting another current shopper accounting facts
+  ---
+  duration_ms: 172.010042
+  type: 'test'
+  ...
+# Subtest: account erasure removes household stock and observed corrections without reviving earlier counts or joint cook text
+ok 96 - account erasure removes household stock and observed corrections without reviving earlier counts or joint cook text
+  ---
+  duration_ms: 299.923916
+  type: 'test'
+  ...
+# Subtest: actual account erasure clears a purchase correction without reviving an old answer and removes request-linked receipts
+ok 97 - actual account erasure clears a purchase correction without reviving an old answer and removes request-linked receipts
+  ---
+  duration_ms: 301.956375
+  type: 'test'
+  ...
+# Subtest: erasing the sealed line source removes another shopper purchase confirmation while its independent request author remains
+ok 98 - erasing the sealed line source removes another shopper purchase confirmation while its independent request author remains
+  ---
+  duration_ms: 207.891583
+  type: 'test'
+  ...
+# Subtest: staged author deletion hides all carried requests and exact retries, then erases source, successors and linked text
+ok 99 - staged author deletion hides all carried requests and exact retries, then erases source, successors and linked text
+  ---
+  duration_ms: 218.133917
+  type: 'test'
+  ...
+# Subtest: production runtime exposes authenticated responsibility preview while new provider deletion remains disabled
+ok 100 - production runtime exposes authenticated responsibility preview while new provider deletion remains disabled
+  ---
+  duration_ms: 89.710542
+  type: 'test'
+  ...
+# Subtest: production runtime can read an existing pending deletion receipt without accepting or claiming provider erasure
+ok 101 - production runtime can read an existing pending deletion receipt without accepting or claiming provider erasure
+  ---
+  duration_ms: 14.169125
+  type: 'test'
+  ...
+# Subtest: production runtime leaves only the reviewed household, retries once and still requires recent authentication
+ok 102 - production runtime leaves only the reviewed household, retries once and still requires recent authentication
+  ---
+  duration_ms: 53.624667
+  type: 'test'
+  ...
+# Subtest: a device-bound withdrawal recovers its committed receipt and rejects uncommitted withdrawals after opt-out
+ok 103 - a device-bound withdrawal recovers its committed receipt and rejects uncommitted withdrawals after opt-out
+  ---
+  duration_ms: 285.392583
+  type: 'test'
+  ...
+# Subtest: pending own requests require the current opted-in device, an unexpired grant and fresh contribution rights
+ok 104 - pending own requests require the current opted-in device, an unexpired grant and fresh contribution rights
+  ---
+  duration_ms: 206.884541
+  type: 'test'
+  ...
+# Subtest: an implicit or selected helper view cannot recover a contributor queue receipt
+ok 105 - an implicit or selected helper view cannot recover a contributor queue receipt
+  ---
+  duration_ms: 81.61075
+  type: 'test'
+  ...
+# Subtest: Foundation Grocery 30 routing and replay vectors over four authenticated HTTP clients
+    # Subtest: Lost reply retries the same request and decision
+    ok 1 - Lost reply retries the same request and decision
+      ---
+      duration_ms: 146.967416
+      type: 'test'
+      ...
+    # Subtest: Old shopper and second adult cannot both approve
+    ok 2 - Old shopper and second adult cannot both approve
+      ---
+      duration_ms: 158.3275
+      type: 'test'
+      ...
+    # Subtest: Offline request reaches server after placement
+    ok 3 - Offline request reaches server after placement
+      ---
+      duration_ms: 112.002875
+      type: 'test'
+      ...
+    # Subtest: Pending request crosses cutoff while preview is open
+    ok 4 - Pending request crosses cutoff while preview is open
+      ---
+      duration_ms: 118.860292
+      type: 'test'
+      ...
+    # Subtest: Revoked device tries to deliver its outbox
+    ok 5 - Revoked device tries to deliver its outbox
+      ---
+      duration_ms: 69.910292
+      type: 'test'
+      ...
+    # Subtest: Revised quantity invalidates approval preview
+    ok 6 - Revised quantity invalidates approval preview
+      ---
+      duration_ms: 134.199667
+      type: 'test'
+      ...
+    # Subtest: A child cannot edit another request or approve a purchase
+    ok 7 - A child cannot edit another request or approve a purchase
+      ---
+      duration_ms: 97.221167
+      type: 'test'
+      ...
+    # Subtest: A checkout in progress protects the prepared basket
+    ok 8 - A checkout in progress protects the prepared basket
+      ---
+      duration_ms: 91.578167
+      type: 'test'
+      ...
+    # Subtest: Same operation key with a changed payload is rejected
+    ok 9 - Same operation key with a changed payload is rejected
+      ---
+      duration_ms: 126.749625
+      type: 'test'
+      ...
+    # Subtest: Two contributors may use the same local request ID and operation key
+    ok 10 - Two contributors may use the same local request ID and operation key
+      ---
+      duration_ms: 125.820167
+      type: 'test'
+      ...
+    # Subtest: Cap or fee changed under an otherwise unchanged request
+    ok 11 - Cap or fee changed under an otherwise unchanged request
+      ---
+      duration_ms: 122.332292
+      type: 'test'
+      ...
+    # Subtest: Another approved request invalidates the basket preview
+    ok 12 - Another approved request invalidates the basket preview
+      ---
+      duration_ms: 136.795958
+      type: 'test'
+      ...
+    # Subtest: Child and unassigned adult cannot freeze or place; transfer only to eligible adult
+    ok 13 - Child and unassigned adult cannot freeze or place; transfer only to eligible adult
+      ---
+      duration_ms: 79.2935
+      type: 'test'
+      ...
+    # Subtest: Frozen checkout survives handover and a stale offline purchase report
+    ok 14 - Frozen checkout survives handover and a stale offline purchase report
+      ---
+      duration_ms: 102.948292
+      type: 'test'
+      ...
+    # Subtest: Stale external report cannot close a revised open basket
+    ok 15 - Stale external report cannot close a revised open basket
+      ---
+      duration_ms: 86.595708
+      type: 'test'
+      ...
+    # Subtest: Current verified external report closes intake once
+    ok 16 - Current verified external report closes intake once
+      ---
+      duration_ms: 90.220875
+      type: 'test'
+      ...
+    # Subtest: Returning to the same shopper cannot revive an old approval
+    ok 17 - Returning to the same shopper cannot revive an old approval
+      ---
+      duration_ms: 127.611625
+      type: 'test'
+      ...
+    # Subtest: A contributor withdraws a pending line and the shopper saves another for next shop
+    ok 18 - A contributor withdraws a pending line and the shopper saves another for next shop
+      ---
+      duration_ms: 219.854541
+      type: 'test'
+      ...
+    # Subtest: Replay or late contributor changes leave an approved line intact
+    ok 19 - Replay or late contributor changes leave an approved line intact
+      ---
+      duration_ms: 224.291667
+      type: 'test'
+      ...
+    # Subtest: Revocation prevents replaying an already accepted submission
+    ok 20 - Revocation prevents replaying an already accepted submission
+      ---
+      duration_ms: 87.751792
+      type: 'test'
+      ...
+    1..20
+ok 106 - Foundation Grocery 30 routing and replay vectors over four authenticated HTTP clients
+  ---
+  duration_ms: 2463.153666
+  type: 'test'
+  ...
+# Subtest: only first-hand shopper confirmation changes the added request purchase outcome on its sealed line
+ok 107 - only first-hand shopper confirmation changes the added request purchase outcome on its sealed line
+  ---
+  duration_ms: 336.665667
+  type: 'test'
+  ...
+# Subtest: real JWT auth denies missing, forged, expired, wrong issuer and wrong audience tokens
+ok 108 - real JWT auth denies missing, forged, expired, wrong issuer and wrong audience tokens
+  ---
+  duration_ms: 37.652958
+  type: 'test'
+  ...
+# Subtest: whole checkout recompute requires explicit $2.69 overage approval; exact retry applies once
+ok 109 - whole checkout recompute requires explicit $2.69 overage approval; exact retry applies once
+  ---
+  duration_ms: 74.49675
+  type: 'test'
+  ...
+# Subtest: known foreign IDs cannot cross tenant or author boundaries, including a child preview
+ok 110 - known foreign IDs cannot cross tenant or author boundaries, including a child preview
+  ---
+  duration_ms: 93.529792
+  type: 'test'
+  ...
+# Subtest: revocation blocks prior success replay and child consent cannot be resurrected
+ok 111 - revocation blocks prior success replay and child consent cannot be resurrected
+  ---
+  duration_ms: 48.213833
+  type: 'test'
+  ...
+# Subtest: replay window expiry and compacted receipt never recreate a command
+ok 112 - replay window expiry and compacted receipt never recreate a command
+  ---
+  duration_ms: 59.452042
+  type: 'test'
+  ...
+# Subtest: simultaneous exact retries and competing approvals conserve lines and revisions
+ok 113 - simultaneous exact retries and competing approvals conserve lines and revisions
+  ---
+  duration_ms: 62.95325
+  type: 'test'
+  ...
+# Subtest: request edit invalidates preview; deferral preserves basket and routes obligation next
+ok 114 - request edit invalidates preview; deferral preserves basket and routes obligation next
+  ---
+  duration_ms: 76.108208
+  type: 'test'
+  ...
+# Subtest: freeze survives authority transfer and stale placement is preserved without closing the new shop
+ok 115 - freeze survives authority transfer and stale placement is preserved without closing the new shop
+  ---
+  duration_ms: 86.616583
+  type: 'test'
+  ...
+# Subtest: SQL exception at event insert rolls back basket, operation and request mutation together
+ok 116 - SQL exception at event insert rolls back basket, operation and request mutation together
+  ---
+  duration_ms: 74.193459
+  type: 'test'
+  ...
+# Subtest: BFF cookie is HttpOnly, CSRF required, logout revokes protected reads; no tokens in JSON
+ok 117 - BFF cookie is HttpOnly, CSRF required, logout revokes protected reads; no tokens in JSON
+  ---
+  duration_ms: 59.821375
+  type: 'test'
+  ...
+# Subtest: runtime RLS hides cross-tenant rows and runtime cannot rewrite evidence or enroll members
+ok 118 - runtime RLS hides cross-tenant rows and runtime cannot rewrite evidence or enroll members
+  ---
+  duration_ms: 74.95775
+  type: 'test'
+  ...
+# Subtest: missing prices stay unresolved, expired previews fail and foreign browser origins are denied
+ok 119 - missing prices stay unresolved, expired previews fail and foreign browser origins are denied
+  ---
+  duration_ms: 75.592166
+  type: 'test'
+  ...
+# Subtest: child default-off gate and device/session binding reject authenticated but unauthorized clients
+ok 120 - child default-off gate and device/session binding reject authenticated but unauthorized clients
+  ---
+  duration_ms: 42.912583
+  type: 'test'
+  ...
+# Subtest: billing HTTP wiring remains Free and blocks delivery without configured Apple authority
+ok 121 - billing HTTP wiring remains Free and blocks delivery without configured Apple authority
+  ---
+  duration_ms: 45.284583
+  type: 'test'
+  ...
+# Subtest: two contributors can reuse the same local key and local request ID without collision
+ok 122 - two contributors can reuse the same local key and local request ID without collision
+  ---
+  duration_ms: 60.984541
+  type: 'test'
+  ...
+# Subtest: signed provider sessions require a live row bound to subject; cookie and reenrollment recheck revocation
+ok 123 - signed provider sessions require a live row bound to subject; cookie and reenrollment recheck revocation
+  ---
+  duration_ms: 55.709625
+  type: 'test'
+  ...
+# Subtest: bootstrap shopper capabilities follow adult role and assigned current shop
+ok 124 - bootstrap shopper capabilities follow adult role and assigned current shop
+  ---
+  duration_ms: 61.639417
+  type: 'test'
+  ...
+# Subtest: self-serve adult household creation is atomic, idempotent and rejects child elevation
+ok 125 - self-serve adult household creation is atomic, idempotent and rejects child elevation
+  ---
+  duration_ms: 66.44775
+  type: 'test'
+  ...
+# Subtest: single-use invitations serialize racing identities and permit only the original identity retry
+ok 126 - single-use invitations serialize racing identities and permit only the original identity retry
+  ---
+  duration_ms: 142.861541
+  type: 'test'
+  ...
+# Subtest: helper projection excludes private data and durable proposals never mutate the shared basket
+ok 127 - helper projection excludes private data and durable proposals never mutate the shared basket
+  ---
+  duration_ms: 139.349958
+  type: 'test'
+  ...
+# Subtest: read-only helper and expired grants cannot propose; browser can switch to its newly redeemed household
+ok 128 - read-only helper and expired grants cannot propose; browser can switch to its newly redeemed household
+  ---
+  duration_ms: 98.495458
+  type: 'test'
+  ...
+# Subtest: guardian access is scoped to actual relationships and withdrawal revokes child devices and replay
+ok 129 - guardian access is scoped to actual relationships and withdrawal revokes child devices and replay
+  ---
+  duration_ms: 64.201792
+  type: 'test'
+  ...
+# Subtest: new private tables enforce tenant isolation and provider checker cannot leak sessions
+ok 130 - new private tables enforce tenant isolation and provider checker cannot leak sessions
+  ---
+  duration_ms: 98.6855
+  type: 'test'
+  ...
+# Subtest: browser helper session stays bound to its selected grant and cannot fall back after revocation
+ok 131 - browser helper session stays bound to its selected grant and cannot fall back after revocation
+  ---
+  duration_ms: 121.876292
+  type: 'test'
+  ...
+# Subtest: only shopper inbox includes author aliases; own requests and receipts remain minimal
+ok 132 - only shopper inbox includes author aliases; own requests and receipts remain minimal
+  ---
+  duration_ms: 54.494208
+  type: 'test'
+  ...
+# Subtest: JWT without signed session_id is rejected before device enrollment
+ok 133 - JWT without signed session_id is rejected before device enrollment
+  ---
+  duration_ms: 40.194125
+  type: 'test'
+  ...
+# Subtest: live provider session lock serializes logout with the authorized transaction
+ok 134 - live provider session lock serializes logout with the authorized transaction
+  ---
+  duration_ms: 141.672125
+  type: 'test'
+  ...
+# Subtest: native selected-grant header enforces the exact recipient and removes broader shopper authority
+ok 135 - native selected-grant header enforces the exact recipient and removes broader shopper authority
+  ---
+  duration_ms: 63.291166
+  type: 'test'
+  ...
+# Subtest: managed invitation and view lists reconcile creation without disclosing tokens or unrelated shops
+ok 136 - managed invitation and view lists reconcile creation without disclosing tokens or unrelated shops
+  ---
+  duration_ms: 92.835875
+  type: 'test'
+  ...
+# Subtest: shopper reviews a dated dinner and packs in one revision, preserves protected lunch, and cannot replay after transfer
+ok 137 - shopper reviews a dated dinner and packs in one revision, preserves protected lunch, and cannot replay after transfer
+  ---
+  duration_ms: 139.131042
+  type: 'test'
+  ...
+# Subtest: placement reviewer reads original snapshot; reporter replay/status survives transfer, closure and expired window without budget disclosure
+ok 138 - placement reviewer reads original snapshot; reporter replay/status survives transfer, closure and expired window without budget disclosure
+  ---
+  duration_ms: 186.881667
+  type: 'test'
+  ...
+# Subtest: changed basket cannot apply an old placement; concurrent current-shopper resolution and transfer preserve one resolution
+ok 139 - changed basket cannot apply an old placement; concurrent current-shopper resolution and transfer preserve one resolution
+  ---
+  duration_ms: 115.948459
+  type: 'test'
+  ...
+# Subtest: placement report pages are bounded, stable and bind cursors to the authorized shop
+ok 140 - placement report pages are bounded, stable and bind cursors to the authorized shop
+  ---
+  duration_ms: 94.028083
+  type: 'test'
+  ...
+# Subtest: placement command digest matches the native fixed sorted-byte fixture
+ok 141 - placement command digest matches the native fixed sorted-byte fixture
+  ---
+  duration_ms: 0.203125
+  type: 'test'
+  ...
+# Subtest: S24 reviewed pack source persists in private exact preview and atomic apply without author leakage
+ok 142 - S24 reviewed pack source persists in private exact preview and atomic apply without author leakage
+  ---
+  duration_ms: 117.252167
+  type: 'test'
+  ...
+# Subtest: two contributor web sessions see only their own purchase receipt through shopper corrections
+ok 143 - two contributor web sessions see only their own purchase receipt through shopper corrections # SKIP
+  ---
+  duration_ms: 0.270333
+  type: 'test'
+  ...
+# Subtest: deferred request enters a later blank shop only once, with original authorship and a fresh price decision
+ok 144 - deferred request enters a later blank shop only once, with original authorship and a fresh price decision
+  ---
+  duration_ms: 279.513167
+  type: 'test'
+  ...
+# Subtest: deferred request rejects ungranted sources, stale reviews, concurrent destinations and transferred receipt authority
+ok 145 - deferred request rejects ungranted sources, stale reviews, concurrent destinations and transferred receipt authority
+  ---
+  duration_ms: 410.9835
+  type: 'test'
+  ...
+# Subtest: deferred request can be explicitly carried again after another deferral, and consent loss blocks the full chain
+ok 146 - deferred request can be explicitly carried again after another deferral, and consent loss blocks the full chain
+  ---
+  duration_ms: 181.6565
+  type: 'test'
+  ...
+# Subtest: deferred request pages contain only eligible current grants and exclude older drafts and withdrawn authors
+ok 147 - deferred request pages contain only eligible current grants and exclude older drafts and withdrawn authors
+  ---
+  duration_ms: 495.526125
+  type: 'test'
+  ...
+# Subtest: cross-device proposal keeps basket private and applies exact reviewed meal, packs and quote once
+ok 148 - cross-device proposal keeps basket private and applies exact reviewed meal, packs and quote once
+  ---
+  duration_ms: 377.657833
+  type: 'test'
+  ...
+# Subtest: protecting a whole meal also preserves its named groups and their exact ingredient quantities
+ok 149 - protecting a whole meal also preserves its named groups and their exact ingredient quantities
+  ---
+  duration_ms: 189.911333
+  type: 'test'
+  ...
+# Subtest: an ordinary group binding cannot establish the amount available to an unquantified protected group
+ok 150 - an ordinary group binding cannot establish the amount available to an unquantified protected group
+  ---
+  duration_ms: 114.680125
+  type: 'test'
+  ...
+# Subtest: protected group identities, servings, ingredients, exclusions and fixed allocations cannot be reduced through proposal or direct patch
+ok 151 - protected group identities, servings, ingredients, exclusions and fixed allocations cannot be reduced through proposal or direct patch
+  ---
+  duration_ms: 181.262042
+  type: 'test'
+  ...
+# Subtest: stale source, changed calendar day, changed unit and invented group identity fail closed
+ok 152 - stale source, changed calendar day, changed unit and invented group identity fail closed
+  ---
+  duration_ms: 122.214166
+  type: 'test'
+  ...
+# Subtest: frozen/placed order retains an amendment proposal without any automatic retailer or basket edit
+ok 153 - frozen/placed order retains an amendment proposal without any automatic retailer or basket edit
+  ---
+  duration_ms: 128.260916
+  type: 'test'
+  ...
+# Subtest: planner revocation and authority transfer block old submissions and shopper applications, including successful retries
+ok 154 - planner revocation and authority transfer block old submissions and shopper applications, including successful retries
+  ---
+  duration_ms: 110.4035
+  type: 'test'
+  ...
+# Subtest: named planning seat lapse blocks proposal reads and retries; Free shopper review remains available
+ok 155 - named planning seat lapse blocks proposal reads and retries; Free shopper review remains available
+  ---
+  duration_ms: 164.914125
+  type: 'test'
+  ...
+# Subtest: account erasure removes accepted proposal copies and exact retry evidence without restoring old meal labels
+ok 156 - account erasure removes accepted proposal copies and exact retry evidence without restoring old meal labels
+  ---
+  duration_ms: 242.63975
+  type: 'test'
+  ...
+# Subtest: concurrent planning grant revocation and shopper apply serialize without a partially consumed proposal
+ok 157 - concurrent planning grant revocation and shopper apply serialize without a partially consumed proposal
+  ---
+  duration_ms: 88.753333
+  type: 'test'
+  ...
+# Subtest: placed delivery corrections, split arrivals, replay and shopper changes preserve the sealed shop
+ok 158 - placed delivery corrections, split arrivals, replay and shopper changes preserve the sealed shop
+  ---
+  duration_ms: 272.788458
+  type: 'test'
+  ...
+# Subtest: delivery ingredient matches use the sealed occurrence, explicit shopper review and supply revision
+ok 159 - delivery ingredient matches use the sealed occurrence, explicit shopper review and supply revision
+  ---
+  duration_ms: 240.679208
+  type: 'test'
+  ...
+# Subtest: shopper reads protected meal coverage from current confirmed deliveries; a correction changes the result
+ok 160 - shopper reads protected meal coverage from current confirmed deliveries; a correction changes the result
+  ---
+  duration_ms: 137.109833
+  type: 'test'
+  ...
+# Subtest: a shopper can record completed prep and zero lead time without removing a protected group’s meal-wide restrictions
+ok 161 - a shopper can record completed prep and zero lead time without removing a protected group’s meal-wide restrictions
+  ---
+  duration_ms: 87.687375
+  type: 'test'
+  ...
+# Subtest: durable named reservations bind exact group, predecessor and authority through corrections and release
+ok 162 - durable named reservations bind exact group, predecessor and authority through corrections and release
+  ---
+  duration_ms: 390.736792
+  type: 'test'
+  ...
+# Subtest: durable named reservations reject excluded food and ambiguous group splits
+ok 163 - durable named reservations reject excluded food and ambiguous group splits
+  ---
+  duration_ms: 293.764708
+  type: 'test'
+  ...
+# Subtest: durable named reservations on two lots respect competing sealed meals and protected priority after a correction
+ok 164 - durable named reservations on two lots respect competing sealed meals and protected priority after a correction
+  ---
+  duration_ms: 227.201917
+  type: 'test'
+  ...
+# Subtest: reservation erasure removes all revisions involving a former shopper without reviving an older claim
+ok 165 - reservation erasure removes all revisions involving a former shopper without reviving an older claim
+  ---
+  duration_ms: 176.641375
+  type: 'test'
+  ...
+# Subtest: reviewed cook sections require the current source, explicit recipient baseline and live named seat
+ok 166 - reviewed cook sections require the current source, explicit recipient baseline and live named seat
+  ---
+  duration_ms: 189.627959
+  type: 'test'
+  ...
+# Subtest: dated cook copies keep exact sealed text; only an explicit recipient send advances its baseline
+ok 167 - dated cook copies keep exact sealed text; only an explicit recipient send advances its baseline
+  ---
+  duration_ms: 398.685833
+  type: 'test'
+  ...
+# Subtest: shared pantry allocates one freezer count and delivery together, previews correction and preserves explicit cook seal
+ok 168 - shared pantry allocates one freezer count and delivery together, previews correction and preserves explicit cook seal
+  ---
+  duration_ms: 435.451333
+  type: 'test'
+  ...
+# Subtest: stored delivery retains one physical count across two shops and protects other commitments during carryover
+ok 169 - stored delivery retains one physical count across two shops and protects other commitments during carryover
+  ---
+  duration_ms: 549.946875
+  type: 'test'
+  ...
+# Subtest: shared pantry corrections serialize competing reviews, reject stale predecessors and isolate household reads
+ok 170 - shared pantry corrections serialize competing reviews, reject stale predecessors and isolate household reads
+  ---
+  duration_ms: 210.882334
+  type: 'test'
+  ...
+# Subtest: trusted recovery basis reads real freezer history, preserves Tuesday and protects two lunch portions on Wednesday
+ok 171 - trusted recovery basis reads real freezer history, preserves Tuesday and protects two lunch portions on Wednesday
+  ---
+  duration_ms: 394.924458
+  type: 'test'
+  ...
+# Subtest: trusted recovery basis carries a genuine foreign delivery once and publishes only scoped current needs and stock
+ok 172 - trusted recovery basis carries a genuine foreign delivery once and publishes only scoped current needs and stock
+  ---
+  duration_ms: 335.854708
+  type: 'test'
+  ...
+# Subtest: trusted recovery basis guards retired legacy targets and previews the current recipe before recording a correction
+ok 173 - trusted recovery basis guards retired legacy targets and previews the current recipe before recording a correction
+  ---
+  duration_ms: 242.862167
+  type: 'test'
+  ...
+# Subtest: shopper previews and publishes one actual meal replacement after pickup while checkout and other needs stay intact
+ok 174 - shopper previews and publishes one actual meal replacement after pickup while checkout and other needs stay intact
+  ---
+  duration_ms: 318.740167
+  type: 'test'
+  ...
+# Subtest: free household can repair a placed dinner and erasure removes revised text without reviving an old meal
+ok 175 - free household can repair a placed dinner and erasure removes revised text without reviving an old meal
+  ---
+  duration_ms: 111.375792
+  type: 'test'
+  ...
+# Subtest: accepted fallback registry tracks the exact source version and erases published copies derived from another shopper
+ok 176 - accepted fallback registry tracks the exact source version and erases published copies derived from another shopper
+  ---
+  duration_ms: 247.620166
+  type: 'test'
+  ...
+# Subtest: paid fallback ranking uses the accepted household library, current physical food, deadline and explicit independent agreements
+ok 177 - paid fallback ranking uses the accepted household library, current physical food, deadline and explicit independent agreements
+  ---
+  duration_ms: 660.592042
+  type: 'test'
+  ...
+# Subtest: adult planner corrects excluded ambiguous idea, approves only, then separately proposes and shopper applies once
+ok 178 - adult planner corrects excluded ambiguous idea, approves only, then separately proposes and shopper applies once
+  ---
+  duration_ms: 394.389333
+  type: 'test'
+  ...
+# Subtest: Free current household shopper may approve and separately self-propose without assigning a planner
+ok 179 - Free current household shopper may approve and separately self-propose without assigning a planner
+  ---
+  duration_ms: 80.671167
+  type: 'test'
+  ...
+# Subtest: editing an approved idea invalidates submission and any pending shopper application
+ok 180 - editing an approved idea invalidates submission and any pending shopper application
+  ---
+  duration_ms: 160.745584
+  type: 'test'
+  ...
+# Subtest: exact idea author, approved revision and quantities cannot be substituted
+ok 181 - exact idea author, approved revision and quantities cannot be substituted
+  ---
+  duration_ms: 141.364666
+  type: 'test'
+  ...
+# Subtest: unassigned contributor and one-shop grant cannot read or approve; planner revocation stops retry
+ok 182 - unassigned contributor and one-shop grant cannot read or approve; planner revocation stops retry
+  ---
+  duration_ms: 249.33775
+  type: 'test'
+  ...
+# Subtest: deleting idea author erases drafts, approvals and retry receipts
+ok 183 - deleting idea author erases drafts, approvals and retry receipts
+  ---
+  duration_ms: 128.308917
+  type: 'test'
+  ...
+# Subtest: exact fractional cups survive save edit approve proposal and shopper apply; ounce and fluid ounce remain distinct
+ok 184 - exact fractional cups survive save edit approve proposal and shopper apply; ounce and fluid ounce remain distinct
+  ---
+  duration_ms: 120.046875
+  type: 'test'
+  ...
+# Subtest: an approved meal keeps its reviewed restrictions and time through checkout and rejects conflicting delivered food
+ok 185 - an approved meal keeps its reviewed restrictions and time through checkout and rejects conflicting delivered food
+  ---
+  duration_ms: 204.139875
+  type: 'test'
+  ...
+# Subtest: an older pending idea proposal missing reviewed planning facts must be reviewed again before use
+ok 186 - an older pending idea proposal missing reviewed planning facts must be reviewed again before use
+  ---
+  duration_ms: 156.175125
+  type: 'test'
+  ...
+# Subtest: old idea proposal shape stays valid with no reviewed exclusions or time
+ok 187 - old idea proposal shape stays valid with no reviewed exclusions or time
+  ---
+  duration_ms: 113.175667
+  type: 'test'
+  ...
+# Subtest: accepted fallback registry separates idea approval and meal choice from an explicit cross-shop recipe disclosure
+ok 188 - accepted fallback registry separates idea approval and meal choice from an explicit cross-shop recipe disclosure
+  ---
+  duration_ms: 214.87425
+  type: 'test'
+  ...
+# Subtest: accepted fallback registry preserves per-ingredient notes and rejects stale approvals, guessed groups and unauthorized replay
+ok 189 - accepted fallback registry preserves per-ingredient notes and rejects stale approvals, guessed groups and unauthorized replay
+  ---
+  duration_ms: 169.563084
+  type: 'test'
+  ...
+# Subtest: accepted fallback registry paginates whole recipes within native read bounds and checks exact named servings
+ok 190 - accepted fallback registry paginates whole recipes within native read bounds and checks exact named servings
+  ---
+  duration_ms: 417.164417
+  type: 'test'
+  ...
+# Subtest: Free grants are per-adult and independent of contribution, paid seats, meal roles or administration
+ok 191 - Free grants are per-adult and independent of contribution, paid seats, meal roles or administration
+  ---
+  duration_ms: 245.354833
+  type: 'test'
+  ...
+# Subtest: unselected budget discovery finds an oldest third shop despite a separate cook link
+ok 192 - unselected budget discovery finds an oldest third shop despite a separate cook link
+  ---
+  duration_ms: 127.299792
+  type: 'test'
+  ...
+# Subtest: private saves require explicit proposal; only current shopper adopts an exact submitted choice once
+ok 193 - private saves require explicit proposal; only current shopper adopts an exact submitted choice once
+  ---
+  duration_ms: 189.736208
+  type: 'test'
+  ...
+# Subtest: store adoption invalidates request previews and freeze until an explicit review at the chosen basis
+ok 194 - store adoption invalidates request previews and freeze until an explicit review at the chosen basis
+  ---
+  duration_ms: 149.104
+  type: 'test'
+  ...
+# Subtest: matching store review saves unknown or expired draft costs while only a complete current reprice unlocks freeze
+ok 195 - matching store review saves unknown or expired draft costs while only a complete current reprice unlocks freeze
+  ---
+  duration_ms: 96.707958
+  type: 'test'
+  ...
+# Subtest: unknown fees, unavailable packages, unmatched quantities and missing eligibility never produce a winner
+ok 196 - unknown fees, unavailable packages, unmatched quantities and missing eligibility never produce a winner
+  ---
+  duration_ms: 109.185584
+  type: 'test'
+  ...
+# Subtest: revocation, regrant and shopper transfer reject old proposals and successful retries without resurrecting authority
+ok 197 - revocation, regrant and shopper transfer reject old proposals and successful retries without resurrecting authority
+  ---
+  duration_ms: 92.749416
+  type: 'test'
+  ...
+# Subtest: frozen and placed shops preserve dated proof but refuse new save/proposal/adoption; revocation remains available
+ok 198 - frozen and placed shops preserve dated proof but refuse new save/proposal/adoption; revocation remains available
+  ---
+  duration_ms: 85.56525
+  type: 'test'
+  ...
+# Subtest: tenant scope, helper grants, children and cross-shop cursors cannot reveal private quote content
+ok 199 - tenant scope, helper grants, children and cross-shop cursors cannot reveal private quote content
+  ---
+  duration_ms: 100.939
+  type: 'test'
+  ...
+# Subtest: proposal/adoption transaction rolls back if its durable receipt cannot be stored
+ok 200 - proposal/adoption transaction rolls back if its durable receipt cannot be stored
+  ---
+  duration_ms: 52.914625
+  type: 'test'
+  ...
+# Subtest: real account deletion worker removes proposed/adopted private pair, copies, grant and retries without restoring old prices
+ok 201 - real account deletion worker removes proposed/adopted private pair, copies, grant and retries without restoring old prices
+  ---
+  duration_ms: 239.433541
+  type: 'test'
+  ...
+# Subtest: validation bounds money and exactly two alternatives; runtime cannot rewrite or delete saved proof
+ok 202 - validation bounds money and exactly two alternatives; runtime cannot rewrite or delete saved proof
+  ---
+  duration_ms: 42.901125
+  type: 'test'
+  ...
+# Subtest: dated proof paginates without overlap and revoked members disappear from the shopper proposal read
+ok 203 - dated proof paginates without overlap and revoked members disappear from the shopper proposal read
+  ---
+  duration_ms: 227.587541
+  type: 'test'
+  ...
+# Subtest: simultaneous grant revocation and adoption serialize with no partial basket or resurrected proposal
+ok 204 - simultaneous grant revocation and adoption serialize with no partial basket or resurrected proposal
+  ---
+  duration_ms: 59.439666
+  type: 'test'
+  ...
+# Subtest: account erasure removes a later shopper’s delivery copy linked to a redacted sealed line
+ok 205 - account erasure removes a later shopper’s delivery copy linked to a redacted sealed line
+  ---
+  duration_ms: 462.3625
+  type: 'test'
+  ...
+1..205
+# tests 243
+# suites 0
+# pass 237
+# fail 3
+# cancelled 0
+# skipped 3
+# todo 0
+# duration_ms 35576.361458

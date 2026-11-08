@@ -28,6 +28,81 @@ import HouseholdClient
         model.draft.fee = "0"; model.draft.tax = "0"; model.draft.deposits = "0"; model.draft.discounts = "0"
         model.reviewDraft(); model.acknowledged = true
     }
+    private func waitingAmendment() async throws -> (SharedFlowService, HouseholdModel, HouseholdShopModel, OperationOutbox, PendingOperation) {
+        let fixture = SharedFlowService()
+        let queue = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathComponent("amendment-retry.json")
+        let adult = try await createdHousehold(fixture, queue: queue)
+        let shared = try XCTUnwrap(adult.sharedShop)
+        enterShop(shared); await shared.applyReviewed()
+        fixture.phase = "placed"; fixture.placedRevision = fixture.revision; fixture.revision += 1
+        await shared.load()
+        let page = try await shared.confirmedOrder()
+        let confirmation = SharedOrderConfirmation(reference: "Retailer cancelled this order", confirmedAt: Date(), lines: [])
+        let envelope = CommandEnvelope(replayWindow: UUID().uuidString.lowercased(), shopId: try XCTUnwrap(fixture.shopID),
+            kind: "amendment.recordResponse", base: .init(shopRevision: page.shopRevision, authorityEpoch: page.authorityEpoch),
+            body: try confirmation.body(reviewed: page))
+        let operation = try PendingOperation(envelope: envelope, householdID: fixture.household, memberID: fixture.miaID, deviceID: "mia-device")
+        // HouseholdModel deliberately separates contributor and shared-shop queues.
+        // Seed the same durable store the shared model actually opens on restart.
+        let outbox = OperationOutbox(url: queue.deletingPathExtension().appendingPathExtension("shared-shop.json"))
+        try await outbox.append(operation)
+        let persisted = try await outbox.operations(); XCTAssertEqual(persisted, [operation])
+        await shared.load()
+        XCTAssertEqual(shared.pending, operation)
+        XCTAssertEqual(shared.delivery, .waiting)
+        XCTAssertFalse(shared.reviewedCurrentFacts)
+        return (fixture, adult, shared, outbox, operation)
+    }
+    func testErasedAmendmentEvidenceAllowsExplicitLocalRetryClearWithoutResubmitting() async throws {
+        let (fixture, _, shared, outbox, operation) = try await waitingAmendment()
+        fixture.confirmedOrderFailure = (409, "order_evidence_removed")
+        do { _ = try await shared.confirmedOrder(); XCTFail("Erased evidence must remain unavailable") }
+        catch ClientError.service(status: 409, code: "order_evidence_removed", correlationID: _, retryAfter: _) {}
+        XCTAssertEqual(shared.pending, operation)
+        XCTAssertEqual(shared.delivery, .needsReview)
+        XCTAssertTrue(shared.reviewedCurrentFacts)
+        XCTAssertNotNil(shared.notice)
+        // Refresh does not forget the exact terminal outcome already reviewed.
+        await shared.load()
+        XCTAssertTrue(shared.reviewedCurrentFacts)
+        await shared.clearPendingAfterReview()
+        XCTAssertNil(shared.pending); XCTAssertFalse(shared.reviewedCurrentFacts)
+        let remaining = try await outbox.operations(); XCTAssertTrue(remaining.isEmpty)
+        XCTAssertFalse(fixture.kinds.contains("amendment.recordResponse"))
+    }
+    func testUncertainConfirmedOrderReadNeverAuthorizesClearingPendingAmendment() async throws {
+        let (fixture, _, shared, outbox, operation) = try await waitingAmendment()
+        fixture.confirmedOrderFailure = (503, "service_unavailable")
+        do { _ = try await shared.confirmedOrder(); XCTFail("Unavailable read must fail") }
+        catch ClientError.service(status: 503, code: _, correlationID: _, retryAfter: _) {}
+        XCTAssertFalse(shared.reviewedCurrentFacts)
+        await shared.clearPendingAfterReview()
+        XCTAssertEqual(shared.pending, operation)
+        let remaining = try await outbox.operations(); XCTAssertEqual(remaining, [operation])
+    }
+    func testAmendmentRetryStaysWithItsOriginalShopAcrossSelectionAndReviewReset() async throws {
+        let (fixture, adult, shared, outbox, operation) = try await waitingAmendment()
+        let originalShop = try XCTUnwrap(fixture.shopID)
+        _ = try await shared.confirmedOrder()
+        XCTAssertTrue(shared.reviewedCurrentFacts)
+        fixture.shopID = UUID().uuidString.lowercased()
+        await shared.load()
+        XCTAssertNil(shared.pending); XCTAssertFalse(shared.reviewedCurrentFacts)
+        _ = try await shared.confirmedOrder()
+        XCTAssertFalse(shared.reviewedCurrentFacts)
+        await shared.clearPendingAfterReview()
+        let retained = try await outbox.operations(); XCTAssertEqual(retained, [operation])
+        fixture.shopID = originalShop
+        await shared.load()
+        XCTAssertEqual(shared.pending, operation)
+        XCTAssertFalse(shared.reviewedCurrentFacts, "A review of another shop must never clear this action")
+        fixture.confirmedOrderFailure = (409, "order_evidence_removed")
+        do { _ = try await shared.confirmedOrder() } catch {}
+        XCTAssertTrue(shared.reviewedCurrentFacts)
+        adult.lock()
+        XCTAssertNil(shared.pending); XCTAssertFalse(shared.reviewedCurrentFacts)
+        let stillSaved = try await outbox.operations(); XCTAssertEqual(stillSaved, [operation])
+    }
     func testFreshHouseholdNativeFlowCreatesInvitesReceivesApprovesFreezesAndReopens() async throws {
         let fixture = SharedFlowService(); let mia = try await createdHousehold(fixture)
         let shared = try XCTUnwrap(mia.sharedShop); XCTAssertTrue(shared.canCreate)
@@ -291,6 +366,8 @@ private final class SharedFlowService {
     var transferAfterLibraryRead = false
     var ownRequestsUnavailable = false
     var readFailureAfterCreate: Int?
+    var placedRevision: Int?
+    var confirmedOrderFailure: (Int, String)?
     func data(_ value: Any) throws -> Data { try JSONSerialization.data(withJSONObject: value, options: [.sortedKeys]) }
     func body(_ request: URLRequest) throws -> Data {
         if let body = request.httpBody { return body }
@@ -318,7 +395,7 @@ private final class SharedFlowService {
             let shopper = actor == "mia" && shopID != nil && !shopperTransferred
             return try ok(["household":["id":household,"label":"Our home"],"memberId":actor == "mia" ? miaID : samID,
                 "role":shopper ? "shopper" : actor == "mia" ? "organizer" : "contributor", "canSelectShop":canSelectShop, "shopId":shopID as Any? ?? NSNull(),"enrolled":true,"queueConsent":false,
-                "capabilities":["own_requests"] + (actor == "mia" ? ["household_admin"] : []) + (shopper ? ["shopper_inbox","request_preview","shopper_commands","accepted_fallbacks"] : [])])
+                "capabilities":["own_requests"] + (actor == "mia" ? ["household_admin"] : []) + (shopper ? ["shopper_inbox","request_preview","shopper_commands","accepted_fallbacks"] + (placedRevision == nil ? [] : ["confirmed_order"]) : [])])
         }
         if path.hasSuffix("/accepted-fallbacks"), let shopID {
             if transferAfterLibraryRead { shopperTransferred = true }
@@ -339,7 +416,13 @@ private final class SharedFlowService {
                 "currency": "USD", "occurredAt": "2026-01-01T12:00:00.000Z", "sourceText": "Hold on the entered receipt"]], "nextCursor": NSNull()])
         }
         if path.hasSuffix("/inbox") { return try ok(["requests":requests.map { $0.merging(["authorAlias":"Sam"]) { _, new in new } },"nextCursor":NSNull()]) }
-        if path.contains("/shops/"), request.httpMethod == "GET" { return try ok(["shopId":shopID!,"shopRevision":revision,"authorityEpoch":1,"phase":phase,"quote":quote,"lines":lines,"meals":meals,"storeBasisRevision":storeBasisRevision as Any? ?? NSNull(),"frozenRevision":phase == "frozen" ? revision : NSNull(),"placedRevision":NSNull()]) }
+        if path.hasSuffix("/confirmed-order"), let shopID, let placedRevision {
+            if let (status, code) = confirmedOrderFailure { return try ok(["error":["code":code,"correlationId":"test"]],status) }
+            return try ok(["shopId":shopID,"shopRevision":revision,"authorityEpoch":1,"placedRevision":placedRevision,
+                "asOf":Date().ISO8601Format(),"original":["lines":lines,"quote":quote,"snapshotCreatedAt":"2026-01-01T00:00:00Z"],
+                "current":["lines":lines,"amendmentId":NSNull()],"amendments":[]])
+        }
+        if path.contains("/shops/"), request.httpMethod == "GET" { return try ok(["shopId":shopID!,"shopRevision":revision,"authorityEpoch":1,"phase":phase,"quote":quote,"lines":lines,"meals":meals,"storeBasisRevision":storeBasisRevision as Any? ?? NSNull(),"frozenRevision":phase == "frozen" ? revision : NSNull(),"placedRevision":placedRevision as Any? ?? NSNull()]) }
         if path.hasSuffix("/previews") {
             let id = UUID().uuidString.lowercased(); previews[id] = json
             let total = lines.reduce(0) { $0 + ($1["packs"] as! Int) * ($1["unitPriceMinor"] as? Int ?? 0) }

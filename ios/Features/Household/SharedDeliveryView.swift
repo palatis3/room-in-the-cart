@@ -70,6 +70,9 @@ struct SharedDeliveryView: View {
                         Section {
                             if let line = page.lines.first(where: { $0.id == source.lineId }) {
                                 LabeledContent(ht("Ordered item"), value: line.name)
+                                if let packs = line.currentOrderedPacks {
+                                    LabeledContent(OrderAmendmentCopy.text("Currently ordered packs"), value: packs.formatted())
+                                }
                             }
                             LabeledContent(ht("Delivery reference"), value: String(source.segmentKey.uuidString.prefix(8)))
                             if !source.exclusionTags.isEmpty { Text(source.exclusionTags.joined(separator: ", ")) }

@@ -4,9 +4,19 @@ Updated November 7, 2026 UTC. The owner resumed and explicitly approved the revi
 
 ## Current unfinished work
 
-The private retailer-confirmed amendment flow is implemented and locally verified in the canonical checkout. Do not restart the superseded scratch implementation on `codex/private-order-amendments`. The hosted batch for `f90ad75` is still running; security and native HTTPS/PostgreSQL passed. Keep this later amendment batch local until that cohort finishes, to avoid cancelling its remaining tests. Hosted confirmation and the remaining first-version release gates are still open.
+Private and shared retailer-confirmed amendment flows are implemented and locally verified in the canonical checkout. Do not restart the superseded scratch implementation on `codex/private-order-amendments`. The hosted batch for `f90ad75` is still running; security and native HTTPS/PostgreSQL passed. Keep this later amendment batch local until that cohort finishes, to avoid cancelling its remaining tests. Staging remains through the approved migration 041; migration 042 has not been deployed. Hosted confirmation and the remaining first-version release gates are still open.
 
 The hosted speech warning still needs an attributable blocking stack. The next fixture run captures the app’s Hang Risk runtime log for that suite alongside its existing XCTest result. Required warning checks still fail on the unresolved issue.
+
+## November 7 shared retailer-confirmed amendments
+
+The assigned adult shopper can now independently record reviewed retailer changes to a placed or closed shared order. Original checkout and its quote remain immutable; current lines and complete confirmation history are separate. New delivery identities do not imply arrival or usable food. Exact retries recheck authority and preserve one confirmation after a lost reply. Privacy erasure invalidates affected confirmation chains; uncertain reads cannot authorize clearing a pending operation, and switching shops cannot reuse another shop’s pending work.
+
+The final local run passed **693 model tests plus the complete shared confirmation UI journey** on iOS 17; the same UI journey passed on iOS 26.2, both with zero recorded runtime warnings or skips. Cancel preserved the original one-pack order; recovery after restart retained one confirmation for three packs with the changed price unknown. The real Swift HTTPS/PostgreSQL run passed six Node cases and ten Swift scenarios. Backend checks passed 443 unit cases and 242 PostgreSQL cases with existing skips documented, and a populated 042 restore preserved data and effective access policies. The client package passed 105 cases with three opt-in wire skips; its final four-case boundary follow-up passed. All 219 Python checks and the unsigned generic arm64 Release build/bundle checks passed. [Integrated evidence](evidence/native/shared-amendment-20261107/README.md).
+
+The first UI attempt exposed a pending retry below lazy history; the product now shows recovery above history. Three new model regressions also cover erased history, uncertain reads and shop changes. Migration 042 and its service build remain local and require a fresh reviewed staging rollout.
+
+The f90 hosted cohort has separate unresolved failures: English StoreKit passed 15/15 but its strict console parser missed a pass line split by a simulator log header; the narrow parser correction is committed as `b541fde` and passes 37 checker tests plus the original artifact replay. [Parser proof](evidence/native/xctest-console-interleave-20261107/parser-recheck.json). Core UI01 failed while opening system Settings for Reduce Motion, before the app assertions. Swift CodeQL lost its hosted runner during compilation and skipped analysis/artifact upload; this is not a code finding or a pass. Core models passed 684/684. Other f90 jobs remain active; do not push merely to restart them.
 
 ## November 7 retailer-confirmed amendments
 

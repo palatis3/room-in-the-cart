@@ -374,6 +374,16 @@ public actor HouseholdService {
         guard start == generation else { throw ClientError.cancelled }
         return try await perform("shops/\(shopID)", method: "GET")
     }
+    public func confirmedOrder(shopID: UUID) async throws -> SharedConfirmedOrder {
+        let start = generation
+        let id = shopID.uuidString.lowercased()
+        try await authorizeShopper(shopID: id, capability: "confirmed_order")
+        guard start == generation else { throw ClientError.cancelled }
+        let page: SharedConfirmedOrder = try await perform("shops/\(id)/confirmed-order", method: "GET")
+        guard start == generation else { throw ClientError.cancelled }
+        try page.validate(shopID: shopID)
+        return page
+    }
     public func deliveryEvidence(shopID: String) async throws -> SharedDeliveryPage {
         let start = generation
         try await authorizeShopper(shopID: shopID)
@@ -385,8 +395,8 @@ public actor HouseholdService {
                 query: record?.nextCursor.map { [.init(name: "cursor", value: $0.uuidString.lowercased())] } ?? [])
             guard page.shopId == UUID(uuidString: shopID), page.sources.count <= 50, page.placedRevision > 0,
                   page.authorityEpoch > 0, page.shopRevision >= page.placedRevision, page.supplyRevision >= 0, (page.recoveryRevision ?? 0) >= 0,
-                  Set(page.lines.map(\.id)).count == page.lines.count, page.lines.count <= 200,
-                  page.lines.allSatisfy({ $0.packs.map((1...10_000).contains) ?? true }),
+                  Set(page.lines.map(\.id)).count == page.lines.count,
+                  page.lines.allSatisfy({ ($0.packs.map((1...10_000).contains) ?? true) && ($0.currentOrderedPacks.map((0...10_000).contains) ?? true) }),
                   page.sources.allSatisfy({ seen.insert($0.id).inserted }),
                   page.nextCursor == nil || (page.sources.count == 50 && page.nextCursor == page.sources.last?.id) else { throw ClientError.invalidResponse }
             try page.sources.forEach { try $0.validate() }
@@ -616,14 +626,14 @@ public actor HouseholdService {
               ["shop.create", "shop.patch", "shop.freeze", "shop.reopen", "shop.transferAuthority",
                "delivery.register", "delivery.arrival", "delivery.usable", "delivery.match", "delivery.reserve",
                "cookCopy.save", "cookCopy.markSent", "pantry.create", "pantry.storeDelivery", "pantry.observe",
-               "pantry.select", "pantry.match", "pantry.reserve", "mealRecovery.apply"].contains(envelope.kind) else { throw ClientError.configuration }
+               "pantry.select", "pantry.match", "pantry.reserve", "mealRecovery.apply", "amendment.recordResponse"].contains(envelope.kind) else { throw ClientError.configuration }
         if envelope.kind == "shop.create" {
             guard envelope.base.shopRevision == 0, envelope.base.authorityEpoch == 0 else { throw ClientError.configuration }
             try await authorizeAdmin()
         } else if envelope.kind == "shop.transferAuthority" {
             try await authorizeAdmin()
         } else {
-            let capability = envelope.kind.hasPrefix("pantry.") ? "pantry_lots" : (envelope.kind.hasPrefix("cookCopy.") ? "cook_copies" : nil)
+            let capability = envelope.kind == "amendment.recordResponse" ? "confirmed_order" : envelope.kind.hasPrefix("pantry.") ? "pantry_lots" : (envelope.kind.hasPrefix("cookCopy.") ? "cook_copies" : nil)
             let live = try await authorizeShopper(shopID: envelope.shopId, capability: capability)
             if envelope.kind == "cookCopy.save", envelope.body["factIndex"] != nil,
                !live.capabilities.contains("cook_corrections") { throw ClientError.accessEnded }
@@ -640,6 +650,7 @@ public actor HouseholdService {
         guard start == generation else { throw ClientError.cancelled }
         guard operation.memberID == memberID else { throw ClientError.accessEnded }
         let receipt: ShopperReceipt = try await perform("commands", method: "POST", body: operation.bytes, creatingShop: envelope.kind == "shop.create")
+        if envelope.kind == "amendment.recordResponse" { try receipt.validateAmendment(envelope) }
         if envelope.kind == "mealRecovery.apply" { try receipt.validateRecovery(envelope) }
         if envelope.kind.hasPrefix("pantry.") { try receipt.validatePantry(envelope) }
         if envelope.kind.hasPrefix("cookCopy.") { try receipt.validateCookCopy(envelope) }
