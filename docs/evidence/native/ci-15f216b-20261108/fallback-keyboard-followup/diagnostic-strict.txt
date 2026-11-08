@@ -1,0 +1,15 @@
+Executed 2 of 2 selected tests.
+
+| Test | Result | Seconds |
+|---|---|---|
+| RoomInTheCartUITests/SharedFallbackUITests/testExplicitRecipeReviewCanBeRefusedThenSavedOnceAfterLostReply | Failed | 720.00 |
+| RoomInTheCartUITests/SharedFallbackUITests/testFiveUsableWrapsProtectLunchAndCompareUsualDinnerWithTwoPackTrip | Passed | 661.96 |
+
+The XCTest test export recorded 0 runtime warning occurrences across 2 examined tests.
+Executed and passing counts do not match the selected tests
+The shard contains failures, expected failures or skipped tests
+Every selected test must individually report Passed
+XCTest restarted its runner at log line 8709.
+XCTest log requires one start then one pass for RoomInTheCartUITests/SharedFallbackUITests/testExplicitRecipeReviewCanBeRefusedThenSavedOnceAfterLostReply; found ['start', 'timeout'].
+XCTest log requires one successful result banner; found ['FAILED'].
+

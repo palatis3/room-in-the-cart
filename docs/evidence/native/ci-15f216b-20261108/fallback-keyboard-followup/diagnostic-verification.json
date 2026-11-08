@@ -1,0 +1,28 @@
+{
+  "inspectedAtUTC": "2026-11-08T06:14:17.309350+00:00",
+  "nativeExitCode": 65,
+  "strictExitCode": 1,
+  "expectedCount": 2,
+  "originalBundleUnchanged": true,
+  "originalTwoCaseOrder": true,
+  "observedStartOrder": [
+    "testExplicitRecipeReviewCanBeRefusedThenSavedOnceAfterLostReply",
+    "testFiveUsableWrapsProtectLunchAndCompareUsualDinnerWithTwoPackTrip"
+  ],
+  "command": [
+    "python3",
+    "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/SharedFallbackUITests/execution-r2/diagnostic-source/scripts/check_ios_test_results.py",
+    "--selectors",
+    "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/SharedFallbackUITests/execution-r2/runs/diagnostic/selectors.txt",
+    "--expected-count",
+    "2",
+    "--summary",
+    "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/SharedFallbackUITests/execution-r2/runs/diagnostic/inspection/test-summary.json",
+    "--tests",
+    "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/SharedFallbackUITests/execution-r2/runs/diagnostic/inspection/test-details.json",
+    "--result-bundle",
+    "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/SharedFallbackUITests/execution-r2/runs/diagnostic/inspection/native.xcresult",
+    "--test-log",
+    "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/SharedFallbackUITests/execution-r2/runs/diagnostic/native.log"
+  ]
+}

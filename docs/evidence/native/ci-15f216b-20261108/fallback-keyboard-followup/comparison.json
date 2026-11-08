@@ -1,0 +1,114 @@
+{
+  "checkerCommit": "e1493af",
+  "copiedEvidence": {
+    "baseline-verification.json": {
+      "source": ".build/CI15F216Nov08/SharedFallbackUITests/execution-r1/runs/baseline/inspection/verification.json",
+      "sha256": "baa7816418b2415bcf57f7e5259171c80ba978e8e0897d8ca07a2c8e53ff8b47"
+    },
+    "baseline-strict.txt": {
+      "source": ".build/CI15F216Nov08/SharedFallbackUITests/execution-r1/runs/baseline/inspection/strict-verification.txt",
+      "sha256": "ac1287f677d2808ecf48ee53679947b6dad63ae75f92a8e86708d2ec13af1cb5"
+    },
+    "diagnostic-verification.json": {
+      "source": ".build/CI15F216Nov08/SharedFallbackUITests/execution-r2/runs/diagnostic/inspection/verification.json",
+      "sha256": "9c46529ee68834ba8816a32a73220cced6de7909bc4ac259d4d087ded80a4680"
+    },
+    "diagnostic-strict.txt": {
+      "source": ".build/CI15F216Nov08/SharedFallbackUITests/execution-r2/runs/diagnostic/inspection/strict-verification.txt",
+      "sha256": "353c7a1fc17fc73cd1861923307b96d1d865182d621729899600daa8c471a235"
+    },
+    "callback-timings.json": {
+      "source": ".build/CI15F216Nov08/SharedFallbackUITests/post-terminal-collector-r1/semantic-review-r1/timings-provenance.json",
+      "sha256": "22f9624f73db0f5c2ad2b31b574d252bef37cba31f1adffb148af9ce5d87af70"
+    },
+    "line-number-correction.json": {
+      "source": ".build/CI15F216Nov08/SharedFallbackUITests/post-terminal-collector-r1/semantic-review-r1/line-number-correction.json",
+      "sha256": "1b925f312abeb4bc50b7afed78b47d294cadc93bbdc1483f5ec62a58a9a30839"
+    }
+  },
+  "runs": {
+    "baseline": {
+      "runReceiptSHA256": "502ef8254b367d5a864c23ab92c30927547c9e68515e6a505787c92a82da8bb9",
+      "consoleSHA256": "c28103637ca196674af47fc2f612be22b19a8da6b3e88d0d0319df265dd177e2",
+      "sourceCommit": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+      "sourceManifestSHA256": "3d1bad9cfa90c006aa326ef1694031698e0f5ca032e3c7e9ae38afaf25b804f7",
+      "nativeExit": 65,
+      "idleMessages": {
+        "lineCount": 5762,
+        "testStarts": 2,
+        "restartLines": [
+          5740
+        ],
+        "groups": [
+          {
+            "runnerSegment": 1,
+            "selector": "RoomInTheCartUITests/SharedFallbackUITests/testFiveUsableWrapsProtectLunchAndCompareUsualDinnerWithTwoPackTrip",
+            "caseStartLine": 5371,
+            "count": 10,
+            "firstLine": 5663,
+            "firstElapsedSeconds": "127.99"
+          },
+          {
+            "runnerSegment": 1,
+            "selector": null,
+            "caseStartLine": null,
+            "count": 2,
+            "firstLine": 5716,
+            "firstElapsedSeconds": "734.42"
+          }
+        ]
+      },
+      "consoleAcceptanceFailures": [
+        "XCTest restarted its runner at log line 5740.",
+        "XCTest log requires one start then one pass for RoomInTheCartUITests/SharedFallbackUITests/testFiveUsableWrapsProtectLunchAndCompareUsualDinnerWithTwoPackTrip; found ['start', 'timeout'].",
+        "XCTest log requires one successful result banner; found ['FAILED']."
+      ]
+    },
+    "diagnostic": {
+      "runReceiptSHA256": "8695638d65f8c2cd36ba5b0500196ad0257ea0c3aece9f3def233499fd67dcd8",
+      "consoleSHA256": "65052ee150f319a256f78737b5f6d0104e8e9e3dd29b28cb1babd87e9be9cfbc",
+      "sourceCommit": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+      "sourceManifestSHA256": "de72b9b6e30145b586890a1777cf268a722944b6ab5f459cd55e20083958eb93",
+      "nativeExit": 65,
+      "idleMessages": {
+        "lineCount": 9505,
+        "testStarts": 2,
+        "restartLines": [
+          8709
+        ],
+        "groups": [
+          {
+            "runnerSegment": 1,
+            "selector": "RoomInTheCartUITests/SharedFallbackUITests/testExplicitRecipeReviewCanBeRefusedThenSavedOnceAfterLostReply",
+            "caseStartLine": 8397,
+            "count": 10,
+            "firstLine": 8604,
+            "firstElapsedSeconds": "111.22"
+          },
+          {
+            "runnerSegment": 1,
+            "selector": null,
+            "caseStartLine": null,
+            "count": 1,
+            "firstLine": 8684,
+            "firstElapsedSeconds": "725.47"
+          },
+          {
+            "runnerSegment": 2,
+            "selector": "RoomInTheCartUITests/SharedFallbackUITests/testFiveUsableWrapsProtectLunchAndCompareUsualDinnerWithTwoPackTrip",
+            "caseStartLine": 8714,
+            "count": 8,
+            "firstLine": 8952,
+            "firstElapsedSeconds": "112.23"
+          }
+        ]
+      },
+      "consoleAcceptanceFailures": [
+        "XCTest restarted its runner at log line 8709.",
+        "XCTest log requires one start then one pass for RoomInTheCartUITests/SharedFallbackUITests/testExplicitRecipeReviewCanBeRefusedThenSavedOnceAfterLostReply; found ['start', 'timeout'].",
+        "XCTest log requires one successful result banner; found ['FAILED']."
+      ]
+    }
+  },
+  "scope": "Original two-case local source baseline and separately instrumented diagnostic. Neither is accepted as a repair. Raw app stdout remains private."
+}

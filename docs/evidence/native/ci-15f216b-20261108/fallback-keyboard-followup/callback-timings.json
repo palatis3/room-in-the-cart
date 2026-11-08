@@ -1,0 +1,311 @@
+{
+  "createdAtUtc": "2026-11-08T06:17:13.485713+00:00",
+  "scope": "Completed diagnostic only. Parse completeness does not change native acceptance.",
+  "native": {
+    "sourceCommit": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+    "toolchain": "Xcode 27.1\nBuild version 27A9275",
+    "runtime": {
+      "identifier": "com.apple.CoreSimulator.SimRuntime.iOS-26-2",
+      "name": "iOS 26.2",
+      "version": "26.2",
+      "buildversion": "23C54"
+    },
+    "nativeExit": 65,
+    "strictExit": 1,
+    "exactOrder": true,
+    "caseResults": [
+      {
+        "rowid": 1,
+        "result": "Failure",
+        "duration": 720.0,
+        "orderInTestSuiteRun": 0,
+        "identifier": "SharedFallbackUITests/testExplicitRecipeReviewCanBeRefusedThenSavedOnceAfterLostReply()",
+        "startEpoch": 1794116994.416,
+        "endEpoch": 1794117659.852
+      },
+      {
+        "rowid": 2,
+        "result": "Success",
+        "duration": 661.964714050293,
+        "orderInTestSuiteRun": 1,
+        "identifier": "SharedFallbackUITests/testFiveUsableWrapsProtectLunchAndCompareUsualDinnerWithTwoPackTrip()",
+        "startEpoch": 1794117762.613,
+        "endEpoch": 1794118424.352
+      }
+    ],
+    "runtimeWarnings": 0,
+    "runnerRestarts": 1,
+    "originalBundleUnchanged": true
+  },
+  "inputProvenance": {
+    "captureReceiptSHA256": "7ca39a7c048108d765201b89493210f0618e753736319a0bd7da0a3314ced24e",
+    "inputPinsSHA256": "1e3146b36a2ca47ad98bf037fc6c78a22c8855a4ef1a39c15e1658b152b448b5",
+    "allExportedInputsRehashedUnchanged": true,
+    "appStdoutSHA256": "efec36ab7857fedbddbee8a294762822c8c6e707ea3a1b6cfda9d3847e5c703e",
+    "appStdoutBytes": 49621916,
+    "appLaunch": {
+      "pid": 40065,
+      "launchUTC": "2026-11-08 06:02:42 +0000",
+      "selectedCaseEpoch": [
+        1794117762.613,
+        1794118424.352
+      ],
+      "windowSource": "Explicit completed-result case interval supplied by owning reviewer; header has one-second precision."
+    },
+    "parserInvocationsSHA256": "047cf1721829e02e98a4906a51998be7c8e3ef5d516c2da128cd1645c022f24f"
+  },
+  "selection": {
+    "parserStatus": "captured-scoped-not-product-pass",
+    "parserExit": 0,
+    "parsedMarkerCount": 18,
+    "firstToggleBeforeUptime": 930570.7561959584,
+    "firstToggleAfterUptime": 930575.0239655834,
+    "firstSetterIndex": 1,
+    "firstSetterEntries": 1,
+    "setterBefore": "0",
+    "setterReadback": "1",
+    "firstToggleScopedLines": [
+      32292,
+      32293,
+      32294
+    ],
+    "firstSetterAfterBeforeSnapshotMs": 1671.668,
+    "setterReturnAfterEntryMs": 0.691,
+    "accessibilityParentAndControl": [
+      "0",
+      "1"
+    ],
+    "ingredientLinkAppeared": true,
+    "waiterResult": 1,
+    "lifecycleGapObservations": [
+      {
+        "line": 74497,
+        "kind": "event_outside_observed_active_token"
+      },
+      {
+        "line": 152954,
+        "kind": "event_outside_observed_active_token"
+      },
+      {
+        "line": 202605,
+        "kind": "event_outside_observed_active_token"
+      }
+    ],
+    "parserLimits": "Recorded callbacks only; zero setters is observed absence, not proof of complete stdout or no event delivery. Token replacement/revert is evidence, not a capture failure.",
+    "receiptSHA256": "b22582ebd74277c44d4bc68494e59b7636abfa009cdfd6ea5ccb0ccf1afe628c"
+  },
+  "keyboard": {
+    "parserStatus": "observed-with-limits",
+    "parserExit": 0,
+    "appPid": 40065,
+    "testRunnerPid": 40047,
+    "appMarkerCount": 37,
+    "testMarkerCount": 28,
+    "parserLimitations": [],
+    "donePairs": [
+      {
+        "field": "Pack name",
+        "fieldCode": 2,
+        "handlerEntryFocus": 2,
+        "handlerReturnFocus": 2,
+        "handlerDurationMs": 0.072,
+        "willHideAfterReturnMs": 35.374,
+        "focusNoneAfterReturnMs": 48.849,
+        "didHideAfterReturnMs": 461.088,
+        "runnerDoneIntervalMs": 2289.658,
+        "appSeqs": {
+          "done.enter": 8,
+          "done.exit": 9,
+          "keyboard.willHide": 10,
+          "focus.change": 11,
+          "keyboard.didHide": 12
+        },
+        "runnerBoundarySeqs": [
+          8,
+          9
+        ]
+      },
+      {
+        "field": "Usable food per pack",
+        "fieldCode": 3,
+        "handlerEntryFocus": 3,
+        "handlerReturnFocus": 3,
+        "handlerDurationMs": 0.056,
+        "willHideAfterReturnMs": 28.888,
+        "focusNoneAfterReturnMs": 43.806,
+        "didHideAfterReturnMs": 461.498,
+        "runnerDoneIntervalMs": 2828.609,
+        "appSeqs": {
+          "done.enter": 15,
+          "done.exit": 16,
+          "keyboard.willHide": 17,
+          "focus.change": 18,
+          "keyboard.didHide": 19
+        },
+        "runnerBoundarySeqs": [
+          14,
+          15
+        ]
+      },
+      {
+        "field": "Price per pack (USD)",
+        "fieldCode": 4,
+        "handlerEntryFocus": 4,
+        "handlerReturnFocus": 4,
+        "handlerDurationMs": 0.041,
+        "willHideAfterReturnMs": 24.276,
+        "focusNoneAfterReturnMs": 38.758,
+        "didHideAfterReturnMs": 445.561,
+        "runnerDoneIntervalMs": 2127.186,
+        "appSeqs": {
+          "done.enter": 22,
+          "done.exit": 23,
+          "keyboard.willHide": 24,
+          "focus.change": 25,
+          "keyboard.didHide": 26
+        },
+        "runnerBoundarySeqs": [
+          20,
+          21
+        ]
+      },
+      {
+        "field": "Packs available",
+        "fieldCode": 5,
+        "handlerEntryFocus": 5,
+        "handlerReturnFocus": 5,
+        "handlerDurationMs": 0.15,
+        "willHideAfterReturnMs": 28.533,
+        "focusNoneAfterReturnMs": 50.198,
+        "didHideAfterReturnMs": 479.744,
+        "runnerDoneIntervalMs": 2861.742,
+        "appSeqs": {
+          "done.enter": 29,
+          "done.exit": 30,
+          "keyboard.willHide": 31,
+          "focus.change": 32,
+          "keyboard.didHide": 33
+        },
+        "runnerBoundarySeqs": [
+          26,
+          27
+        ]
+      }
+    ],
+    "auditSHA256": "47c2a953e13a07cba7f1d3e8febdbe7acefd769c530b38dafa2f365af25c477f",
+    "scope": "All four instrumented Done callbacks returned with the entering field still reported. Later willHide, focus-to-none and didHide were observed within each same test-action interval. The notifications are process-wide and do not prove animation completion."
+  },
+  "secondCaseIdleBoundary": {
+    "control": "Whole-trip spending limit Done (fallback.trip.done)",
+    "tapSeconds": 51.65,
+    "synthesisSeconds": 51.88,
+    "postTapIdleWaitStartSeconds": 52.2,
+    "firstMissSeconds": 112.23,
+    "lastMissSeconds": 537.58,
+    "totalMisses": 8,
+    "firstInstrumentedPackFieldActivitySeconds": 544.9,
+    "scope": "The trip Done and idle stalls occurred before the instrumented ingredient view field actions. The selected stdout does not cover the first case. This run does not establish the stalled transition callback or the cause of missing XCTest animation-completion notifications.",
+    "nativeLogSHA256": "65052ee150f319a256f78737b5f6d0104e8e9e3dd29b28cb1babd87e9be9cfbc",
+    "lineNumbering": {
+      "checkerIterator": "One-based Python open() universal-newline iteration, matching the checker and keyboard parser native-console rows.",
+      "lfDelimited": "One-based original LF delimiters, matching nl and rg. Five bare carriage returns before the target add five checker rows."
+    },
+    "checkerIteratorLogLines": [
+      8952,
+      8959,
+      8964,
+      8967,
+      8972,
+      8979,
+      8984,
+      8991
+    ],
+    "lfDelimitedLogLines": [
+      8947,
+      8954,
+      8959,
+      8962,
+      8967,
+      8974,
+      8979,
+      8986
+    ],
+    "idleMarkers": [
+      {
+        "seconds": 112.23,
+        "checkerIteratorLine": 8952,
+        "lfDelimitedLine": 8947
+      },
+      {
+        "seconds": 173.47,
+        "checkerIteratorLine": 8959,
+        "lfDelimitedLine": 8954
+      },
+      {
+        "seconds": 233.95,
+        "checkerIteratorLine": 8964,
+        "lfDelimitedLine": 8959
+      },
+      {
+        "seconds": 293.98,
+        "checkerIteratorLine": 8967,
+        "lfDelimitedLine": 8962
+      },
+      {
+        "seconds": 354.45,
+        "checkerIteratorLine": 8972,
+        "lfDelimitedLine": 8967
+      },
+      {
+        "seconds": 415.75,
+        "checkerIteratorLine": 8979,
+        "lfDelimitedLine": 8974
+      },
+      {
+        "seconds": 476.32,
+        "checkerIteratorLine": 8984,
+        "lfDelimitedLine": 8979
+      },
+      {
+        "seconds": 537.58,
+        "checkerIteratorLine": 8991,
+        "lfDelimitedLine": 8986
+      }
+    ],
+    "boundaryAnchors": {
+      "targetCaseStart": {
+        "checkerIteratorLine": 8714,
+        "lfDelimitedLine": 8709
+      },
+      "tripBudgetDoneTap": {
+        "checkerIteratorLine": 8946,
+        "lfDelimitedLine": 8941
+      },
+      "tripBudgetDoneSynthesis": {
+        "checkerIteratorLine": 8950,
+        "lfDelimitedLine": 8945
+      },
+      "postTapIdleWaitStart": {
+        "checkerIteratorLine": 8951,
+        "lfDelimitedLine": 8946
+      },
+      "firstMiss": {
+        "checkerIteratorLine": 8952,
+        "lfDelimitedLine": 8947
+      },
+      "lastMiss": {
+        "checkerIteratorLine": 8991,
+        "lfDelimitedLine": 8986
+      },
+      "firstInstrumentedPackFieldActivity": {
+        "checkerIteratorLine": 9018,
+        "lfDelimitedLine": 9013
+      },
+      "targetCasePass": {
+        "checkerIteratorLine": 9482,
+        "lfDelimitedLine": 9477
+      }
+    }
+  },
+  "lineNumberingCorrectedAtUtc": "2026-11-08T06:19:29.427453+00:00"
+}

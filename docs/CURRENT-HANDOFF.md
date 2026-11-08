@@ -2,7 +2,19 @@
 
 Updated November 8, 2026 UTC. The full first-version goal is active and release acceptance remains incomplete. The owner's migration 041 approval has already been executed and verified. The separate 042 approval is pending; a repeated 041 approval does not authorize 042. Historical snapshots are preserved in [the handoff archive](CURRENT-HANDOFF-HISTORY-20261106.md).
 
-## Latest execution state — November 8, 05:43 UTC
+## Latest execution state — November 8, 06:22 UTC
+
+Migration 041 remains live and verified; its repeated approval caused no duplicate update. Separate 042 approval remains pending. No push or live deployment occurred. The published 15f216b cohort remains terminal, with the original failures preserved.
+
+The combined fallback diagnostic is terminal: native65 / strict1, first case timed out720s, second passed661.965s, zero recorded runtime warnings and one runner restart. Its original first-toggle failure did not reproduce. Nineteen animation-idle messages begin after recipe quantity Done in the first case and trip-budget Done in the second; the latter precedes the instrumented ingredient editor. All four instrumented Done callbacks ran, then focus cleared and keyboard-hide notifications arrived. This does not explain the earlier stalled transitions. Original source, baseline products and result bundles remain unchanged. [Compact comparison and callback evidence](evidence/native/ci-15f216b-20261108/fallback-keyboard-followup/README.md).
+
+Commit e1493af adds diagnostic-only CI reporting of idle messages by test, runner segment, first timestamp and log line; missing coverage stays unknown. All42 focused checker tests pass and the original UI07/UI10 acceptance failures remain unchanged. It introduces no retries, timeout changes or warning suppression.
+
+Root exclusively owns simulator4C7FAE04-D40B-4ADC-8F75-1366C09B1695 for a fresh Theme-only experiment, session59176 / xcodebuild42084, under `.build/CI15F216Nov08/keyboard-responder-experiment-r1/run/`. The original two tests and4076 other source files are unchanged. The helper keeps its existing focus clear and then requests responder resignation through public UIKit. Root reviewed the patch and exact command, verified source/toolchain/runtime/settings, and started one build/test with original720/900 limits and no retries. It is still building; no repair or production installation is claimed. No concurrent native/UI actions. After natural completion, inspect original two-case results and idle messages before deciding whether the hypothesis warrants further qualification. All three agents are idle.
+
+The known-trip one-line full-visibility test correction remains prepared, source-checked and unrun. UI07/UI10 trace proposals also remain unrun. Browser startup investigation supports retaining existing diagnostic logging for the next normal CI run; no additional launcher change is justified yet.
+
+## Previous execution state — November 8, 05:43 UTC
 
 Migration 041 remains deployed and verified. The repeated owner approval did not trigger a duplicate update; separate 042 rollout approval is still pending. No live deployment, provider activation or distribution action occurred in this continuation. The local web privacy fix below is newer than the prepared 042 bundle and has not been deployed.
 
