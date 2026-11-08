@@ -121,6 +121,119 @@ import XCTest
         model.close()
     }
 
+    func testCancelledVoiceLookupCannotAcquireAudioOrRestoreCatalog() {
+        let control = ControlledCookPreparation()
+        control.preparation.prepare(for: UUID()) { _ in XCTFail("Cancelled preparation completed") }
+        control.preparation.invalidate()
+        control.lookups.removeFirst()(["es-US"])
+        XCTAssertTrue(control.activations.isEmpty)
+        XCTAssertNil(control.preparation.sessionID)
+        XCTAssertNil(control.preparation.installedVoice(localeIdentifier: "es-US", language: { $0 }))
+    }
+
+    func testSupersededVoiceLookupCannotReplaceNewPlaybackCatalog() {
+        let control = ControlledCookPreparation()
+        let oldID = UUID(), newID = UUID()
+        control.preparation.prepare(for: oldID) { _ in XCTFail("Superseded preparation completed") }
+        var ready = false
+        control.preparation.prepare(for: newID) { ready = $0 }
+        control.lookups.removeFirst()(["en-US"])
+        XCTAssertTrue(control.activations.isEmpty)
+        control.lookups.removeFirst()(["es-US"])
+        XCTAssertEqual(control.activations.count, 1)
+        control.activations.removeFirst()(true)
+        XCTAssertTrue(ready)
+        XCTAssertEqual(control.preparation.sessionID, newID)
+        XCTAssertNil(control.preparation.installedVoice(localeIdentifier: "en-US", language: { $0 }))
+        XCTAssertEqual(control.preparation.installedVoice(localeIdentifier: "es-US", language: { $0 }), "es-US")
+        control.preparation.invalidate()
+    }
+
+    func testLateAudioCompletionCannotReleaseNewPreparationWithSamePlaybackID() {
+        let control = ControlledCookPreparation()
+        let id = UUID()
+        control.preparation.prepare(for: id) { _ in XCTFail("Superseded activation completed") }
+        control.lookups.removeFirst()(["es-US"])
+        var ready = false
+        control.preparation.prepare(for: id) { ready = $0 }
+        XCTAssertTrue(control.lookups.isEmpty) // Same playback retains its installed catalog.
+        XCTAssertEqual(control.audioLog.events, ["acquire:\(id)", "release:\(id)", "acquire:\(id)"])
+        control.activations.removeFirst()(true)
+        XCTAssertFalse(ready)
+        XCTAssertEqual(control.audioLog.events.count, 3) // Stale callback must not release the newer owner.
+        control.activations.removeFirst()(true)
+        XCTAssertTrue(ready)
+        XCTAssertEqual(control.preparation.sessionID, id)
+        control.preparation.invalidate()
+    }
+
+    func testPendingVoicePreparationHonorsStopVoiceOverAndAuthorityRevocation() {
+        for revocation in ["stop", "voiceOver", "authority"] {
+            let control = ControlledCookPreparation()
+            let speech = FakeCookSpeech(); speech.preparation = control.preparation
+            var allowed = true
+            let model = CookReadbackModel(instruction: instruction(), speech: speech, clock: { self.now }) { _, _ in allowed }
+            model.playFromBeginning()
+            XCTAssertEqual(model.state, .preparing)
+            switch revocation {
+            case "stop": model.stop()
+            case "voiceOver": model.setVoiceOver(true)
+            default: allowed = false
+            }
+            control.lookups.removeFirst()(["es-US"])
+            if revocation == "authority" {
+                // Exercise the model's final authority check even before its watchdog has run.
+                XCTAssertEqual(control.activations.count, 1)
+                control.activations.removeFirst()(true)
+            } else {
+                XCTAssertTrue(control.activations.isEmpty)
+            }
+            XCTAssertTrue(speech.spoken.isEmpty)
+            XCTAssertEqual(model.state, .stopped)
+            XCTAssertNil(control.preparation.sessionID)
+            model.close()
+        }
+    }
+
+    func testPreparedVoiceSelectionHasNoFallbackAndRefreshesAfterStop() {
+        let control = ControlledCookPreparation()
+        let id = UUID()
+        control.preparation.prepare(for: id) { XCTAssertTrue($0) }
+        control.lookups.removeFirst()(["en-GB", "en-US:first", "en-US:second", "es-ES"])
+        control.activations.removeFirst()(true)
+        let language: (String) -> String = { String($0.split(separator: ":")[0]) }
+        XCTAssertEqual(control.preparation.installedVoice(localeIdentifier: "en-GB", language: language), "en-US:first")
+        XCTAssertNil(control.preparation.installedVoice(localeIdentifier: "es-US", language: language))
+        XCTAssertNil(control.preparation.installedVoice(localeIdentifier: "fr-FR", language: language))
+        control.preparation.releaseAudio()
+        control.preparation.prepare(for: id) { XCTAssertTrue($0) }
+        XCTAssertTrue(control.lookups.isEmpty) // Resume does not enumerate again.
+        control.activations.removeFirst()(true)
+        control.preparation.invalidate()
+        control.preparation.prepare(for: UUID()) { XCTAssertTrue($0) }
+        XCTAssertEqual(control.lookups.count, 1)
+        control.lookups.removeFirst()(["es-US"])
+        control.activations.removeFirst()(true)
+        XCTAssertNil(control.preparation.installedVoice(localeIdentifier: "en-US", language: language))
+        XCTAssertEqual(control.preparation.installedVoice(localeIdentifier: "es-US", language: language), "es-US")
+        control.preparation.invalidate()
+    }
+
+    func testMissingPreparedVoicePreservesVisibleTextWithoutFallback() {
+        let control = ControlledCookPreparation()
+        let speech = FakeCookSpeech(); speech.preparation = control.preparation
+        let value = instruction()
+        let model = CookReadbackModel(instruction: value, speech: speech, clock: { self.now }) { _, _ in true }
+        model.playFromBeginning()
+        control.lookups.removeFirst()(["en-US", "es-ES"])
+        control.activations.removeFirst()(true)
+        XCTAssertTrue(model.unavailable)
+        XCTAssertEqual(model.instruction.text, value.text)
+        XCTAssertTrue(speech.spoken.isEmpty)
+        XCTAssertEqual(model.state, .stopped)
+        model.close()
+    }
+
     func testSessionOperationsRunOffMainAndStaleReleasePreservesTheNewOwner() async {
         let activations = expectation(description: "Three successful session activations")
         activations.expectedFulfillmentCount = 3
@@ -163,15 +276,42 @@ import XCTest
     var spoken: [String] = []; var locales: [String] = []; var ids: [UUID] = []
     var resumes = 0; var stops = 0; var failure: CaptureFailure?
     var delayed = false
+    var preparation: CookSpeechPreparation<String>?
     var activations: [@MainActor @Sendable (Bool) -> Void] = []
     func prepareAudio(for id: UUID, completion: @escaping @MainActor @Sendable (Bool) -> Void) {
-        if delayed { activations.append(completion) } else { completion(true) }
+        if let preparation { preparation.prepare(for: id, completion: completion) }
+        else if delayed { activations.append(completion) } else { completion(true) }
     }
     func speak(_ text: String, localeIdentifier: String, playbackID: UUID) throws {
         if let failure { throw failure }
+        if let preparation, preparation.installedVoice(localeIdentifier: localeIdentifier, language: { $0 }) == nil {
+            throw CaptureFailure.onDeviceUnavailable
+        }
         spoken.append(text); locales.append(localeIdentifier); ids.append(playbackID)
     }
     func pause() -> Bool { true }
     func resume() throws -> Bool { resumes += 1; return true }
-    func stop() { stops += 1 }
+    func stop() { stops += 1; preparation?.invalidate() }
+}
+
+@MainActor private final class ControlledCookPreparation {
+    var lookups: [CookSpeechPreparation<String>.VoiceCompletion] = []
+    var activations: [CookSpeechPreparation<String>.AudioCompletion] = []
+    let audioLog = CookPreparationAudioLog()
+    lazy var preparation = CookSpeechPreparation<String>(loadVoices: { [weak self] in
+        self?.lookups.append($0)
+    }, acquire: { [weak self] id, completion in
+        self?.audioLog.append("acquire:\(id)")
+        self?.activations.append(completion)
+    }, release: { [audioLog] id in
+        audioLog.append("release:\(id)")
+    })
+}
+
+/// Release is Sendable because production deinitialization also releases a pending audio owner.
+private final class CookPreparationAudioLog: @unchecked Sendable {
+    private let lock = NSLock()
+    private var storage: [String] = []
+    var events: [String] { lock.lock(); defer { lock.unlock() }; return storage }
+    func append(_ event: String) { lock.lock(); defer { lock.unlock() }; storage.append(event) }
 }

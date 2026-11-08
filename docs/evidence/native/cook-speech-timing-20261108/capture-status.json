@@ -1,0 +1,11 @@
+{
+  "status": "exported",
+  "nativeExitCode": 0,
+  "strictExitCode": 1,
+  "originalFiveCaseOrder": true,
+  "notEvidenceOfAbsentEvents": true,
+  "parserAutomaticallyInvoked": false,
+  "nativeTestsBuildLaunchActions": false,
+  "captureQualified": false,
+  "originalBundleUnchanged": true
+}

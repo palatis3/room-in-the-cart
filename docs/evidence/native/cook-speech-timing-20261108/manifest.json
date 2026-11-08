@@ -1,0 +1,12 @@
+{
+  "README.md": "b56da1deb3a9781cb2bb50db770376edcfe14b220d021a0607962832fb19f985",
+  "capture-status.json": "041158353887db66564d2c74823a9c91c731f9276cfaf9b519b41dfca5e613c6",
+  "diagnostic.patch": "6cd1f2e26d255b5a3ce303e26cc86f970e06fb60b59c3d489fcd21a6ba3e3218",
+  "independent-review.md": "1025d2c0a0d1de911b14ec3512436654523b29522ab32a8deb0da05f034c5d87",
+  "run-identity.json": "2df2cf547aba0f2627cc48399611d341f587b20c5381e3587a431ae46bd4f472",
+  "selectors.txt": "14afce1ee41211348af391106eccf800d6071bfead42a0a1e3202d28751abd99",
+  "source-pins.json": "93b078134f289c3f6c33dbed989653ee7eaed1833a0db3dce11c97fd3b5cbb6c",
+  "strict-verification.txt": "ed76eb0e31d6fbad55d2e67f855d41d2a2e1ec5bb9a5673c7bbaf6f571f0df7c",
+  "timing-summary.json": "5c9ca7d3115e6f6c0847fd9c183c1ebda46f908b88ed121b6b8a782cfa6fc88c",
+  "verification.json": "ec0383d8c5195790f55bb92ba8b630e8a5be0c288d5cbaa4e5420a1a7a8d652b"
+}

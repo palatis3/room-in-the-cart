@@ -1,0 +1,59 @@
+{
+  "schema": 1,
+  "source": {
+    "headSha": "14ac1e39021eaa2047e21bd3ac24328e6b36a068",
+    "runId": 42457094298,
+    "jobId": 128662104339,
+    "jobUrl": "https://github.com/palatis3/room-in-the-cart/actions/runs/42457094298/job/128662104339",
+    "observedAt": "2026-11-08T07:53:15Z",
+    "statusReceipt": "../status-20261108T075315Z.json",
+    "sourceKind": "GitHub Actions decoded job log via GitHub connector"
+  },
+  "job": "Fixture (contributor-balanced-01)",
+  "failedStep": "Boot the iPhone simulator",
+  "failure": {
+    "status": 3,
+    "terminal": true,
+    "elapsedSeconds": 140,
+    "message": "Data Migration Failed",
+    "wrapperMessage": "Simulator boot failed: simctl reported Data Migration Failed despite exit 0.",
+    "bootCommandExit": 0,
+    "workflowStepExit": 1,
+    "classification": "Simulator setup failed before XCTest; final migrant process observed was CloudTabsMigrator, exact failing component unconfirmed.",
+    "terminalStatusLogLine": 671,
+    "wrapperMessageLogLine": 674
+  },
+  "native": {
+    "expected": 3,
+    "executed": 0,
+    "testStepStatus": "skipped",
+    "runtimeWarnings": "unavailable"
+  },
+  "artifact": {
+    "id": 13609457451,
+    "name": "iphone-fixture-results-contributor-balanced-01-1",
+    "bytes": 32677,
+    "sha256": "d64011736acce1ea63b45e12fc00350e2b61b9fbf2611d1f99c2cc827076b468",
+    "provenance": "GitHub upload step",
+    "downloaded": false
+  },
+  "jobLogExcerpt": {
+    "path": "job-log-excerpts.txt",
+    "lineNumbering": "One-based LF-delimited line indices in decoded GitHub job log.",
+    "ranges": [
+      [
+        181,
+        205
+      ],
+      [
+        650,
+        675
+      ],
+      [
+        691,
+        710
+      ]
+    ]
+  },
+  "jobLogExcerptSha256": "7e9af965409a8e5065b33c6956441b171362fdbc0079b4adccdd106c03b61630"
+}

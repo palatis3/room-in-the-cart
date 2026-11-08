@@ -1,0 +1,27 @@
+Executed 16 of 16 selected tests.
+
+| Test | Result | Seconds |
+|---|---|---|
+| RoomInTheCartTests/CookReadbackTests/testSessionOperationsRunOffMainAndStaleReleasePreservesTheNewOwner | Passed | 0.08 |
+| RoomInTheCartTests/CookReadbackTests/testMissingPreparedVoicePreservesVisibleTextWithoutFallback | Passed | 0.01 |
+| RoomInTheCartTests/CookReadbackTests/testActivationCompletionRechecksAuthorityAndCannotRestartCancelledPlayback | Passed | 0.00 |
+| RoomInTheCartTests/CookReadbackTests/testSourceRevisionChangeStopsAndOldFinishCannotStopNewPlayback | Passed | 0.00 |
+| RoomInTheCartTests/CookReadbackTests/testExpiredAuthorityStopsCurrentPlayback | Passed | 0.00 |
+| RoomInTheCartTests/CookReadbackTests/testCancelledVoiceLookupCannotAcquireAudioOrRestoreCatalog | Passed | 0.00 |
+| RoomInTheCartTests/CookReadbackTests/testPendingVoicePreparationHonorsStopVoiceOverAndAuthorityRevocation | Passed | 0.00 |
+| RoomInTheCartTests/CookReadbackTests/testPreparedVoiceSelectionHasNoFallbackAndRefreshesAfterStop | Passed | 0.00 |
+| RoomInTheCartTests/CookReadbackTests/testVoiceOverIsExclusiveAndDoesNotAutoResume | Passed | 0.00 |
+| RoomInTheCartTests/CookReadbackTests/testUnavailableLocalVoiceKeepsVisibleTextWithoutFallback | Passed | 0.00 |
+| RoomInTheCartTests/CookReadbackTests/testSupersededVoiceLookupCannotReplaceNewPlaybackCatalog | Passed | 0.00 |
+| RoomInTheCartTests/CookReadbackTests/testDeniedSourceAndPrivateBudgetCannotPlay | Passed | 0.00 |
+| RoomInTheCartTests/CookReadbackTests/testResumeRechecksAuthorityAndRequiresExplicitAction | Passed | 0.00 |
+| RoomInTheCartTests/CookReadbackTests/testPlaybackUsesExactAuthorizedDatedProjection | Passed | 0.00 |
+| RoomInTheCartTests/CookReadbackTests/testRouteCloseCannotBeReactivated | Passed | 0.00 |
+| RoomInTheCartTests/CookReadbackTests/testLateAudioCompletionCannotReleaseNewPreparationWithSamePlaybackID | Passed | 0.00 |
+The XCTest log confirms one start and one passing completion per selected test.
+
+Animation-idle diagnostics: 0 observed messages in 4929 log lines (16 case starts, 0 runner restart boundaries). Diagnostic only; native results and runtime-warning checks are unchanged.
+No matching messages observed in the supplied log; this does not establish complete log coverage or absence of idle delays.
+
+The XCTest test export recorded 0 runtime warning occurrences across 16 examined tests.
+

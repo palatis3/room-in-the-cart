@@ -1,0 +1,47 @@
+{
+  "baselineCommit": "e186dcf4e8fdb7b63646d1494cc7f1555e58777f",
+  "baselineTree": "9d28a07543a16275305b516cf63acfa3c09797e0",
+  "status": "scratch-only-uncompiled-unexecuted",
+  "files": [
+    {
+      "path": "ios/Features/Capture/LocalCookSpeech.swift",
+      "baselineSHA256": "020a623f674f55fb595d4d7131d23dae7dd606bc4f32f4c92786a42737c880b3",
+      "candidateSHA256": "260e30a46599501bc0034c42223c52b5dde48ded0c756b559dc8975f8afc5dcd",
+      "baselineMatchesCommit": true
+    },
+    {
+      "path": "ios/UITests/SharedDeliveryUITests.swift",
+      "baselineSHA256": "fc602c61180e82c49823ddfc36378034164250b6d635594f980df6d1c8fd7884",
+      "candidateSHA256": "97ceef0df87502de89c6a3df6661333b61022859c30dc8667c9d35f10d004c2f",
+      "baselineMatchesCommit": true
+    }
+  ],
+  "patchSHA256": "6cd1f2e26d255b5a3ce303e26cc86f970e06fb60b59c3d489fcd21a6ba3e3218",
+  "selectorsSHA256": "14afce1ee41211348af391106eccf800d6071bfead42a0a1e3202d28751abd99",
+  "originalStatementsPreservedAfterRemovingDedicatedDiagnosticBlocks": true,
+  "onlyNonDiagnosticTextDifference": "Whitespace-only expansion of the existing stop conditional",
+  "compileCondition": "DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE && SPEECH_CALL_TIMING_DIAGNOSTIC",
+  "flags": "DEBUG CONTRIBUTOR_CAPTURE_UI_FIXTURE STOCK_REVIEW_UI_FIXTURE AWAY_CARRYOVER_UI_FIXTURE SPEECH_CALL_TIMING_DIAGNOSTIC",
+  "noNativeOrSimulatorExecution": true,
+  "staticValidation": {
+    "patchDryRunExit": 0,
+    "SwiftCompilationPerformed": false,
+    "nativeExecutionPerformed": false,
+    "strippedDiagnosticBlocksPreserveOriginalStatements": true,
+    "numericInterpolations": [
+      "domain",
+      "call",
+      "op",
+      "phase",
+      "pid",
+      "main",
+      "issued",
+      "begin",
+      "end",
+      "queued"
+    ],
+    "mainLoopObserverAdded": false,
+    "timersHeartbeatsLocksQueuesAdded": false,
+    "maximumMarkersPerProcess": 258
+  }
+}

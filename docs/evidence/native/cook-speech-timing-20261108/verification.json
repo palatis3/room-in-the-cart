@@ -1,0 +1,12 @@
+{
+  "inspectedAtUTC": "2026-11-08T09:41:38.427045+00:00",
+  "nativeExitCode": 0,
+  "strictExitCode": 1,
+  "expectedCount": 5,
+  "originalFiveCaseOrder": true,
+  "originalBundleUnchanged": true,
+  "sourcePinsAfterRun": true,
+  "traceCapture": "Separate bounded notice/Hang Risk log capture required; no absence inference",
+  "runtimeWarningEvidence": "Preserve strict stderr/issue detail outputs; unavailable is not zero",
+  "passingDiagnosticWouldNotProveRepair": true
+}

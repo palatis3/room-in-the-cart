@@ -6,24 +6,21 @@ import UIKit
     var onEnd: ((UUID) -> Void)?
     private let synthesizer = AVSpeechSynthesizer()
     private var ids: [ObjectIdentifier: UUID] = [:]
-    private var sessionID: UUID?
+    private let preparation = CookSpeechPreparation<AVSpeechSynthesisVoice>(
+        loadVoices: CookInstalledVoices.load,
+        acquire: { CookAudioSession.shared.acquire($0, completion: $1) },
+        release: { CookAudioSession.shared.release($0) }
+    )
 
     override init() { super.init(); synthesizer.delegate = self }
-    deinit {
-        if let sessionID { CookAudioSession.shared.release(sessionID) }
-    }
     func prepareAudio(for id: UUID, completion: @escaping @MainActor @Sendable (Bool) -> Void) {
-        sessionID = id
-        CookAudioSession.shared.acquire(id, completion: completion)
+        preparation.prepare(for: id, completion: completion)
     }
     func speak(_ text: String, localeIdentifier: String, playbackID: UUID) throws {
-        guard sessionID == playbackID else { throw CaptureFailure.audioUnavailable }
+        guard preparation.sessionID == playbackID else { throw CaptureFailure.audioUnavailable }
         guard !UIAccessibility.isVoiceOverRunning else { throw CaptureFailure.audioUnavailable }
-        let language = Locale(identifier: localeIdentifier).language.languageCode?.identifier
-        guard language == "en" || language == "es" else { throw CaptureFailure.onDeviceUnavailable }
-        let locale = language == "es" ? "es-US" : "en-US"
-        let voices = AVSpeechSynthesisVoice.speechVoices()
-        guard let voice = voices.first(where: { $0.language == locale }) else { throw CaptureFailure.onDeviceUnavailable }
+        guard let voice = preparation.installedVoice(localeIdentifier: localeIdentifier, language: { $0.language })
+        else { throw CaptureFailure.onDeviceUnavailable }
         let utterance = AVSpeechUtterance(string: text)
         utterance.voice = voice
         utterance.rate = AVSpeechUtteranceDefaultSpeechRate
@@ -32,7 +29,7 @@ import UIKit
     }
     func pause() -> Bool {
         let paused = synthesizer.pauseSpeaking(at: .immediate)
-        if paused { deactivate() }
+        if paused { preparation.releaseAudio() }
         return paused
     }
     func resume() throws -> Bool {
@@ -45,8 +42,7 @@ import UIKit
         deactivate()
     }
     private func deactivate() {
-        if let sessionID { CookAudioSession.shared.release(sessionID) }
-        sessionID = nil
+        preparation.invalidate()
     }
     nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
         let key = ObjectIdentifier(utterance)
@@ -61,6 +57,79 @@ import UIKit
             guard let self, let id = self.ids.removeValue(forKey: key) else { return }
             self.deactivate(); self.onEnd?(id)
         }
+    }
+}
+
+/// Only installed-voice discovery crosses this queue; synthesizers and utterances stay on MainActor.
+private enum CookInstalledVoices {
+    static let queue = DispatchQueue(label: "dev.roominthecart.cook-installed-voices", qos: .userInitiated)
+
+    static func load(_ completion: @escaping @MainActor @Sendable ([AVSpeechSynthesisVoice]) -> Void) {
+        queue.async {
+            let voices = AVSpeechSynthesisVoice.speechVoices()
+            DispatchQueue.main.async { completion(voices) }
+        }
+    }
+}
+
+/// A catalog belongs to one playback, including its pauses, and is never a process-wide voice cache.
+@MainActor final class CookSpeechPreparation<Voice: Sendable> {
+    typealias VoiceCompletion = @MainActor @Sendable ([Voice]) -> Void
+    typealias AudioCompletion = @MainActor @Sendable (Bool) -> Void
+    private let loadVoices: (@escaping VoiceCompletion) -> Void
+    private let acquire: (UUID, @escaping AudioCompletion) -> Void
+    private let release: @Sendable (UUID) -> Void
+    private var generation: UUID?
+    private var preparedFor: UUID?
+    private var voices: [Voice] = []
+    private(set) var sessionID: UUID?
+
+    init(loadVoices: @escaping (@escaping VoiceCompletion) -> Void,
+         acquire: @escaping (UUID, @escaping AudioCompletion) -> Void,
+         release: @escaping @Sendable (UUID) -> Void) {
+        self.loadVoices = loadVoices; self.acquire = acquire; self.release = release
+    }
+    deinit { if let sessionID { release(sessionID) } }
+
+    func prepare(for id: UUID, completion: @escaping AudioCompletion) {
+        // Invalidation queues the old owner's release before any newer acquire, even for a reused id.
+        releaseAudio()
+        let token = UUID()
+        generation = token
+        sessionID = id
+        if preparedFor == id {
+            acquireAudio(for: id, token: token, completion: completion)
+        } else {
+            preparedFor = nil; voices = []
+            loadVoices { [weak self] voices in
+                guard let self, self.generation == token else { return }
+                self.voices = voices; self.preparedFor = id
+                self.acquireAudio(for: id, token: token, completion: completion)
+            }
+        }
+    }
+    private func acquireAudio(for id: UUID, token: UUID, completion: @escaping AudioCompletion) {
+        acquire(id) { [weak self] ready in
+            // The matching release was already queued on invalidation. Releasing here could release
+            // a newer preparation using the same playback id.
+            guard let self, self.generation == token else { return }
+            completion(ready)
+        }
+    }
+    func installedVoice(localeIdentifier: String, language: (Voice) -> String) -> Voice? {
+        let code = Locale(identifier: localeIdentifier).language.languageCode?.identifier
+        guard code == "en" || code == "es" else { return nil }
+        let locale = code == "es" ? "es-US" : "en-US"
+        return voices.first { language($0) == locale }
+    }
+    func releaseAudio() {
+        generation = nil
+        if let sessionID { release(sessionID) }
+        sessionID = nil
+    }
+    func invalidate() {
+        releaseAudio()
+        preparedFor = nil; voices = []
     }
 }
 

@@ -1,0 +1,44 @@
+{
+  "status": "local-validation-complete-with-existing-fixture-warning-failure",
+  "sourcePins": {
+    "ios/Features/Capture/LocalCookSpeech.swift": "052f6f680229a944b4397e93eb812b492b823a0339a5cea49febce5e37a61407",
+    "ios/Tests/CookReadbackTests.swift": "509c078a3ceee83ea6b7522b835914a0bf48984ba340371c51c2d0d34af7d543"
+  },
+  "focused": {
+    "nativePassed": 16,
+    "strictExit": 0,
+    "includedInModelSuite": true
+  },
+  "models": {
+    "nativePassed": 702,
+    "strictExit": 0
+  },
+  "fixture": {
+    "expectedCount": 5,
+    "nativeExit": 0,
+    "strictExit": 1,
+    "originalUnchanged": true,
+    "sourceUnchanged": true,
+    "originalOrder": true,
+    "playbackTaps": {
+      "capture.readback.play": true,
+      "Pause readback": true,
+      "Resume readback": true,
+      "Stop readback": true
+    },
+    "inspectedAtUTC": "2026-11-08T10:15:34.991584+00:00"
+  },
+  "warningStatus": "Existing speech QoS activity lacks Complete Issue Description attachment; strict failure preserved. Warning count unavailable.",
+  "release": {
+    "buildExit": 0,
+    "bundleCheckExit": 0,
+    "sourceUnchanged": true,
+    "scope": "Unsigned generic arm64 iPhone Release compilation and bundle checks; no distribution signing"
+  },
+  "hosted": "Not yet published",
+  "limitations": [
+    "No Pause/QoS fix established",
+    "No physical-device or Release performance qualification",
+    "No full release acceptance"
+  ]
+}

@@ -1,0 +1,230 @@
+--- a/ios/Features/Capture/LocalCookSpeech.swift
++++ b/ios/Features/Capture/LocalCookSpeech.swift
+@@ -1,5 +1,8 @@
+ import AVFoundation
+ import UIKit
++#if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE && SPEECH_CALL_TIMING_DIAGNOSTIC
++import OSLog
++#endif
+ 
+ /// Local installed voices only. Playback never requests microphone or speech-recognition permission.
+ @MainActor final class LocalCookSpeech: NSObject, CookSpeechPlayback, AVSpeechSynthesizerDelegate {
+@@ -7,40 +10,85 @@
+     private let synthesizer = AVSpeechSynthesizer()
+     private var ids: [ObjectIdentifier: UUID] = [:]
+     private var sessionID: UUID?
++#if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE && SPEECH_CALL_TIMING_DIAGNOSTIC
++    private static var callTiming = CookSpeechCallTiming(domain: 1)
++#endif
+ 
+     override init() { super.init(); synthesizer.delegate = self }
+     deinit {
+         if let sessionID { CookAudioSession.shared.release(sessionID) }
+     }
+     func prepareAudio(for id: UUID, completion: @escaping @MainActor @Sendable (Bool) -> Void) {
++#if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE && SPEECH_CALL_TIMING_DIAGNOSTIC
++        let timing = Self.callTiming.begin(.prepareAudio)
++        defer { Self.callTiming.end(timing) }
++#endif
+         sessionID = id
+         CookAudioSession.shared.acquire(id, completion: completion)
+     }
+     func speak(_ text: String, localeIdentifier: String, playbackID: UUID) throws {
++#if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE && SPEECH_CALL_TIMING_DIAGNOSTIC
++        let timing = Self.callTiming.begin(.speakMethod)
++        defer { Self.callTiming.end(timing) }
++#endif
+         guard sessionID == playbackID else { throw CaptureFailure.audioUnavailable }
+         guard !UIAccessibility.isVoiceOverRunning else { throw CaptureFailure.audioUnavailable }
+         let language = Locale(identifier: localeIdentifier).language.languageCode?.identifier
+         guard language == "en" || language == "es" else { throw CaptureFailure.onDeviceUnavailable }
+         let locale = language == "es" ? "es-US" : "en-US"
++#if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE && SPEECH_CALL_TIMING_DIAGNOSTIC
++        let voiceTiming = Self.callTiming.begin(.installedVoices)
++#endif
+         let voices = AVSpeechSynthesisVoice.speechVoices()
++#if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE && SPEECH_CALL_TIMING_DIAGNOSTIC
++        Self.callTiming.end(voiceTiming)
++#endif
+         guard let voice = voices.first(where: { $0.language == locale }) else { throw CaptureFailure.onDeviceUnavailable }
+         let utterance = AVSpeechUtterance(string: text)
+         utterance.voice = voice
+         utterance.rate = AVSpeechUtteranceDefaultSpeechRate
+         ids[ObjectIdentifier(utterance)] = playbackID
++#if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE && SPEECH_CALL_TIMING_DIAGNOSTIC
++        let speakTiming = Self.callTiming.begin(.speakAPI)
++#endif
+         synthesizer.speak(utterance)
++#if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE && SPEECH_CALL_TIMING_DIAGNOSTIC
++        Self.callTiming.end(speakTiming)
++#endif
+     }
+     func pause() -> Bool {
++#if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE && SPEECH_CALL_TIMING_DIAGNOSTIC
++        let timing = Self.callTiming.begin(.pauseAPI)
++#endif
+         let paused = synthesizer.pauseSpeaking(at: .immediate)
++#if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE && SPEECH_CALL_TIMING_DIAGNOSTIC
++        Self.callTiming.end(timing)
++#endif
+         if paused { deactivate() }
+         return paused
+     }
+     func resume() throws -> Bool {
++#if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE && SPEECH_CALL_TIMING_DIAGNOSTIC
++        let timing = Self.callTiming.begin(.resumeMethod)
++        defer { Self.callTiming.end(timing) }
++#endif
+         guard !UIAccessibility.isVoiceOverRunning else { throw CaptureFailure.audioUnavailable }
+         return synthesizer.continueSpeaking()
+     }
+     func stop() {
+-        if !ids.isEmpty { synthesizer.stopSpeaking(at: .immediate) }
++#if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE && SPEECH_CALL_TIMING_DIAGNOSTIC
++        let methodTiming = Self.callTiming.begin(.stopMethod)
++        defer { Self.callTiming.end(methodTiming) }
++#endif
++        if !ids.isEmpty {
++#if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE && SPEECH_CALL_TIMING_DIAGNOSTIC
++            let timing = Self.callTiming.begin(.stopAPI)
++#endif
++            synthesizer.stopSpeaking(at: .immediate)
++#if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE && SPEECH_CALL_TIMING_DIAGNOSTIC
++            Self.callTiming.end(timing)
++#endif
++        }
+         ids.removeAll()
+         deactivate()
+     }
+@@ -79,6 +127,9 @@
+     private let activate: @Sendable () throws -> Void
+     private let deactivate: @Sendable () -> Void
+     private var owner: UUID? // Accessed only on queue.
++#if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE && SPEECH_CALL_TIMING_DIAGNOSTIC
++    private var callTiming = CookSpeechCallTiming(domain: 2) // Accessed only on the existing queue.
++#endif
+ 
+     init(activate: @escaping @Sendable () throws -> Void, deactivate: @escaping @Sendable () -> Void) {
+         self.activate = activate
+@@ -86,9 +137,20 @@
+     }
+ 
+     func acquire(_ id: UUID, completion: @escaping @MainActor @Sendable (Bool) -> Void) {
++#if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE && SPEECH_CALL_TIMING_DIAGNOSTIC
++        let queuedAt = CookSpeechCallTiming.clockIfEnabled()
++#endif
+         queue.async {
++#if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE && SPEECH_CALL_TIMING_DIAGNOSTIC
++            let queueTiming = self.callTiming.begin(.acquireQueue, queuedAt: queuedAt)
++            defer { self.callTiming.end(queueTiming) }
++#endif
+             if self.owner == nil {
+                 do {
++#if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE && SPEECH_CALL_TIMING_DIAGNOSTIC
++                    let timing = self.callTiming.begin(.activateScope)
++                    defer { self.callTiming.end(timing) }
++#endif
+                     try self.activate()
+                     self.owner = id
+                 } catch {
+@@ -102,10 +164,88 @@
+     }
+ 
+     func release(_ id: UUID) {
++#if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE && SPEECH_CALL_TIMING_DIAGNOSTIC
++        let queuedAt = CookSpeechCallTiming.clockIfEnabled()
++#endif
+         queue.async {
++#if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE && SPEECH_CALL_TIMING_DIAGNOSTIC
++            let queueTiming = self.callTiming.begin(.releaseQueue, queuedAt: queuedAt)
++            defer { self.callTiming.end(queueTiming) }
++#endif
+             guard self.owner == id else { return }
++#if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE && SPEECH_CALL_TIMING_DIAGNOSTIC
++            let timing = self.callTiming.begin(.deactivateAPI)
++#endif
+             self.deactivate()
++#if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE && SPEECH_CALL_TIMING_DIAGNOSTIC
++            self.callTiming.end(timing)
++#endif
+             self.owner = nil
+         }
+     }
+ }
++
++#if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE && SPEECH_CALL_TIMING_DIAGNOSTIC
++// Diagnostic values are numeric only. No cook text, playback/business UUIDs, audio or errors.
++// Domain1 is confined to MainActor; domain2 to the pre-existing audio-session serial queue.
++// No new synchronization, queue, timer, observer, or speech ownership is introduced.
++private struct CookSpeechCallTiming {
++    enum Operation: Int {
++        case prepareAudio = 1, speakMethod, installedVoices, speakAPI, pauseAPI
++        case resumeMethod, stopMethod, stopAPI, acquireQueue, activateScope
++        case releaseQueue, deactivateAPI
++    }
++    struct Token {
++        let call: Int
++        let operation: Operation
++        let issued: UInt64
++        let begin: UInt64
++        let queued: UInt64
++    }
++    private static let enabled: Bool = {
++        let process = ProcessInfo.processInfo
++        return process.arguments.contains("--ui-testing") &&
++            process.arguments.contains("--shared-delivery-fixture") &&
++            process.environment["SPEECH_CALL_TIMING_SCOPE"] ==
++                "SharedDeliveryUITests/testShopperReviewsExactEditedCookWordingBeforeReadback"
++    }()
++    private static let logger = Logger(subsystem: "dev.roominthecart.diagnostics", category: "speech-call-timing")
++    let domain: Int
++    private var issuedCalls = 0
++    private var capReported = false
++
++    init(domain: Int) { self.domain = domain }
++    static func clockIfEnabled() -> UInt64 { enabled ? DispatchTime.now().uptimeNanoseconds : 0 }
++
++    mutating func begin(_ operation: Operation, queuedAt: UInt64 = 0) -> Token? {
++        guard Self.enabled else { return nil }
++        guard issuedCalls < 64 else {
++            if !capReported {
++                capReported = true
++                emit(call: 0, op: 0, phase: 2, issued: DispatchTime.now().uptimeNanoseconds,
++                     begin: 0, end: 0, queued: 0)
++            }
++            return nil
++        }
++        issuedCalls += 1
++        let issued = DispatchTime.now().uptimeNanoseconds
++        emit(call: issuedCalls, op: operation.rawValue, phase: 0, issued: issued,
++             begin: 0, end: 0, queued: queuedAt)
++        // Start AFTER entry logging; finish BEFORE exit logging to exclude both log writes.
++        return Token(call: issuedCalls, operation: operation, issued: issued,
++                     begin: DispatchTime.now().uptimeNanoseconds, queued: queuedAt)
++    }
++    func end(_ token: Token?) {
++        guard let token else { return }
++        let end = DispatchTime.now().uptimeNanoseconds
++        emit(call: token.call, op: token.operation.rawValue, phase: 1, issued: token.issued,
++             begin: token.begin, end: end, queued: token.queued)
++    }
++    private func emit(call: Int, op: Int, phase: Int, issued: UInt64,
++                      begin: UInt64, end: UInt64, queued: UInt64) {
++        let pid = ProcessInfo.processInfo.processIdentifier
++        let main = Thread.isMainThread ? 1 : 0
++        Self.logger.notice("SPEECH_CALL_TIMING v=1 domain=\(domain, privacy: .public) call=\(call, privacy: .public) op=\(op, privacy: .public) phase=\(phase, privacy: .public) pid=\(pid, privacy: .public) main=\(main, privacy: .public) issued=\(issued, privacy: .public) begin=\(begin, privacy: .public) end=\(end, privacy: .public) queued=\(queued, privacy: .public)")
++    }
++}
++#endif
+--- a/ios/UITests/SharedDeliveryUITests.swift
++++ b/ios/UITests/SharedDeliveryUITests.swift
+@@ -140,6 +140,9 @@
+     }
+ 
+     func testShopperReviewsExactEditedCookWordingBeforeReadback() {
++#if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE && SPEECH_CALL_TIMING_DIAGNOSTIC
++        app.launchEnvironment["SPEECH_CALL_TIMING_SCOPE"] = "SharedDeliveryUITests/testShopperReviewsExactEditedCookWordingBeforeReadback"
++#endif
+         launch("en", locale: "en_US")
+         tap(app.buttons["Delivered food by meal"])
+         tap(app.buttons["delivery.cook.AAAAAAA1-AAAA-4AAA-8AAA-AAAAAAAAAAAA"])
