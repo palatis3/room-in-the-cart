@@ -193,7 +193,23 @@ jobs:
             fi
             exit "$status"
           fi
+          if [[ "$TEST_SHARD" == SharedDeliveryUITests-recovery-cook-and-closeout ]]; then
+            date '+%Y-%m-%d %H:%M:%S' > .build/test-speech-start.txt
+          fi
           bash scripts/run_ios_test_shard.sh
+      - name: Retain speech runtime diagnostics
+        if: always() && matrix.shard == 'SharedDeliveryUITests-recovery-cook-and-closeout'
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          if [[ -s .build/test-speech-start.txt ]]; then
+            if ! xcrun simctl spawn "$SIMULATOR_ID" log show \
+              --start "$(cat .build/test-speech-start.txt)" --style json \
+              --predicate 'process == "RoomInTheCart" AND subsystem == "com.apple.runtime-issues" AND category == "Hang Risk"' \
+              > .build/test-speech-runtime.json 2> .build/test-speech-runtime-error.txt; then
+              echo 'Speech runtime diagnostics could not be collected.' >> "$GITHUB_STEP_SUMMARY"
+            fi
+          fi
       - name: Retain fixture results and timing
         if: always() && matrix.shard != 'RecordsMediaUITests'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -204,6 +220,7 @@ jobs:
             .build/Tests*.xcresult
             .build/Tests*.log
             .build/test-*.json
+            .build/test-speech-*.txt
             .build/test-plan/
           retention-days: 7
           if-no-files-found: ignore
