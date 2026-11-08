@@ -1,0 +1,14 @@
+[
+  {
+    "path": "Package.swift",
+    "sha256": "119df855591c184cf0bc2f392cacb37364bbde6065b28ef90899a3ef265a31d7"
+  },
+  {
+    "path": "Sources/SpeechControlPrototype/SpeechControlPrototype.swift",
+    "sha256": "4c48f4078191b4d33b6456da7684d074e860e384c32a477fc3959ec2cde4b7a7"
+  },
+  {
+    "path": "Tests/SpeechControlPrototypeTests/SpeechControlPrototypeTests.swift",
+    "sha256": "45840217639b1aa98547e0c28b5495b1fae81700ff32ec8398a5e44bcb546ea7"
+  }
+]

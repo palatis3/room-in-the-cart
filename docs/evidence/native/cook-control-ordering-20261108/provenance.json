@@ -1,0 +1,62 @@
+{
+  "copiedFiles": [
+    {
+      "path": "prototype/Package.swift",
+      "originalPath": ".build/CIA305065Nov08/cook-causal-review/blocked-pause-prototype-r2/Package.swift",
+      "bytes": 410,
+      "sha256": "119df855591c184cf0bc2f392cacb37364bbde6065b28ef90899a3ef265a31d7"
+    },
+    {
+      "path": "prototype/REVIEW.md",
+      "originalPath": ".build/CIA305065Nov08/cook-causal-review/blocked-pause-prototype-r2/REVIEW.md",
+      "bytes": 1813,
+      "sha256": "10708aef31f80f93b68de450e42800957498a76de1e4f8aedb56bce9d8e73b81"
+    },
+    {
+      "path": "prototype/Sources/SpeechControlPrototype/SpeechControlPrototype.swift",
+      "originalPath": ".build/CIA305065Nov08/cook-causal-review/blocked-pause-prototype-r2/Sources/SpeechControlPrototype/SpeechControlPrototype.swift",
+      "bytes": 8070,
+      "sha256": "c9afadd5bbd2541e41e4745e6f7fce854375804c7e81ebfaf2e7499f67139131"
+    },
+    {
+      "path": "prototype/Tests/SpeechControlPrototypeTests/SpeechControlPrototypeTests.swift",
+      "originalPath": ".build/CIA305065Nov08/cook-causal-review/blocked-pause-prototype-r2/Tests/SpeechControlPrototypeTests/SpeechControlPrototypeTests.swift",
+      "bytes": 11727,
+      "sha256": "30c8bdc4617e7484ac0306dba2d6530b96cf95151a36a463c151665757f55a26"
+    },
+    {
+      "path": "prototype/file-hashes.json",
+      "originalPath": ".build/CIA305065Nov08/cook-causal-review/blocked-pause-prototype-r2/file-hashes.json",
+      "bytes": 926,
+      "sha256": "9e24726c0664b3abd7153e92a230080132c90b261d694efd43df076e7489ac30"
+    },
+    {
+      "path": "prototype/r1-pins.json",
+      "originalPath": ".build/CIA305065Nov08/cook-causal-review/blocked-pause-prototype-r2/r1-pins.json",
+      "bytes": 460,
+      "sha256": "5f586e3318d9d077c27ee6236a69518d0331f944a7c0a91305eda97e57a438ef"
+    },
+    {
+      "path": "prototype/r1-to-r2.patch",
+      "originalPath": ".build/CIA305065Nov08/cook-causal-review/blocked-pause-prototype-r2/r1-to-r2.patch",
+      "bytes": 7896,
+      "sha256": "b15503fe045af9ab2ba1c2e3de1ec402a06b1aa397620b02dd11ba6553fa3531"
+    },
+    {
+      "path": "execution/run.json",
+      "originalPath": ".build/CIA305065Nov08/cook-causal-review/blocked-pause-prototype-r2-execution/run.json",
+      "bytes": 732,
+      "sha256": "f9e142525df9d70c470b461e615a6712c20d97fb01aa6e02642796d9cc721e97"
+    },
+    {
+      "path": "execution/native.log",
+      "originalPath": ".build/CIA305065Nov08/cook-causal-review/blocked-pause-prototype-r2-execution/native.log",
+      "bytes": 5654,
+      "sha256": "829cddc9b939caba6e4e3485432f2a5a02a70f063b92f365c5022292294ce474"
+    }
+  ],
+  "originalSourceRoot": ".build/CIA305065Nov08/cook-causal-review/blocked-pause-prototype-r2",
+  "originalExecutionRoot": ".build/CIA305065Nov08/cook-causal-review/blocked-pause-prototype-r2-execution",
+  "omitted": "SwiftPM build/cache products; no app or simulator artifact is part of this proof.",
+  "historicalReview": "Original REVIEW.md is copied unchanged. Its pre-execution compiler/discovery-unverified statement is superseded only by the local12/12 receipt, not by app Swift5 or iOS compatibility proof."
+}

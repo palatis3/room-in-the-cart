@@ -1,0 +1,149 @@
+{
+  "captures": [
+    {
+      "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite",
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S24-overage-disabled-apply-whole-button_0_9C3D2F08-4A8E-4529-8776-133010B4E929.png",
+        "payloadId": "0~ALWmfQ-FYN6qD4SaHhDic6Bg4GMZG5NHyMUFht3sZLmbO1Adcp5mFSh-hqRIAiPhFYgOfhHcYwICFLSDd8kcCw==",
+        "timestamp": 1794149436.805,
+        "uuid": "D86E1CB3-54F1-4432-8044-7937166402A9"
+      },
+      "path": "png-0-0/D86E1CB3-54F1-4432-8044-7937166402A9.png",
+      "sha256": "d3618c84fb142d4f45cc381eca3e16aaedc41d7fcddb30e4b04ff10be0514762",
+      "bytes": 20176,
+      "exitCode": 0
+    },
+    {
+      "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite",
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S24-overage-disabled-apply-label-interior_0_9ED58E57-AC50-49A8-B52A-F90CAF8327B5.png",
+        "payloadId": "0~2oxqW3m6hFdFVwJy1Atv-r5rDO-KthzwlESt_AeuQ9bvdQ9EDyYjWIR-YJOnpmsH62VtaVanGkvtnnogaBMp1A==",
+        "timestamp": 1794149436.816,
+        "uuid": "AA9D9C9D-ABFF-4970-8FC5-B59ACA2B87B0"
+      },
+      "path": "png-0-1/AA9D9C9D-ABFF-4970-8FC5-B59ACA2B87B0.png",
+      "sha256": "4fef49ed26da63a8c460505fed9c46a6af4d802503315f2e8ba61744059d6a77",
+      "bytes": 13374,
+      "exitCode": 0
+    },
+    {
+      "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite",
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S24-overage-disabled-apply-disabled-state-and-crop_0_F794039C-E61D-4A0D-9318-D69A5C831319.txt",
+        "payloadId": "0~XrhH3p28XvDCluWbJrXRu2ycRTPsZ9-PCqdh0h5_4ugIDHiF3iJMm3Tn44A6nog008iGTOOyhKlZ-u-9dgYY8A==",
+        "timestamp": 1794149439.076,
+        "uuid": "33D4C629-FCB7-49CF-90F6-8D7128A9CF18"
+      },
+      "path": "png-0-2/33D4C629-FCB7-49CF-90F6-8D7128A9CF18.txt",
+      "sha256": "f2ac4441f3b7604fff7c67f835b6d77b13d6f3b3d6d44c966ad0cd4a016441a9",
+      "bytes": 19756,
+      "exitCode": 0
+    },
+    {
+      "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testShopperCarriesEarlierRequestOnceAndReviewsCurrentPackPrice",
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S24-unknown-price-disabled-apply-whole-button_0_35DCFF2A-2104-490B-8A46-83CF032A59B9.png",
+        "payloadId": "0~ALWmfQ-FYN6qD4SaHhDic6Bg4GMZG5NHyMUFht3sZLmbO1Adcp5mFSh-hqRIAiPhFYgOfhHcYwICFLSDd8kcCw==",
+        "timestamp": 1794149601.669,
+        "uuid": "FE231F4A-0716-44B1-9FF1-4F79B14C1A41"
+      },
+      "path": "png-1-0/FE231F4A-0716-44B1-9FF1-4F79B14C1A41.png",
+      "sha256": "d3618c84fb142d4f45cc381eca3e16aaedc41d7fcddb30e4b04ff10be0514762",
+      "bytes": 20176,
+      "exitCode": 0
+    },
+    {
+      "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testShopperCarriesEarlierRequestOnceAndReviewsCurrentPackPrice",
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S24-unknown-price-disabled-apply-label-interior_0_BBCD5A7D-A97B-4743-8156-3BDEAB608DEC.png",
+        "payloadId": "0~2oxqW3m6hFdFVwJy1Atv-r5rDO-KthzwlESt_AeuQ9bvdQ9EDyYjWIR-YJOnpmsH62VtaVanGkvtnnogaBMp1A==",
+        "timestamp": 1794149601.677,
+        "uuid": "1F6D3241-16A4-44EA-9524-9C4C9B5073DE"
+      },
+      "path": "png-1-1/1F6D3241-16A4-44EA-9524-9C4C9B5073DE.png",
+      "sha256": "4fef49ed26da63a8c460505fed9c46a6af4d802503315f2e8ba61744059d6a77",
+      "bytes": 13374,
+      "exitCode": 0
+    },
+    {
+      "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testShopperCarriesEarlierRequestOnceAndReviewsCurrentPackPrice",
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S24-unknown-price-disabled-apply-disabled-state-and-crop_0_8C8C98BC-02B1-4430-984F-8A000E09A87C.txt",
+        "payloadId": "0~sKTiDxZ9vsewdFKNJlB19IkthYx8FJv-Hzd-khK1gLfo4XS7lmzMxBGfQrM9LjEbhEfH99kB0Acn7ofeOEmDqw==",
+        "timestamp": 1794149603.591,
+        "uuid": "BDCE0A6A-93C2-4F5D-8E50-431FBF4E0C83"
+      },
+      "path": "png-1-2/BDCE0A6A-93C2-4F5D-8E50-431FBF4E0C83.txt",
+      "sha256": "fdb3b26e9342de292f453f77b1b8a2afe799efeffbd1fcdd9043cf6cb1824f4d",
+      "bytes": 19687,
+      "exitCode": 0
+    },
+    {
+      "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testLargestTextShowsCompleteProtectedLunchNamesAndDates",
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S24-largest-disabled-apply-whole-button_0_E2938F4D-2558-4E6B-A8DC-6FA197DFF561.png",
+        "payloadId": "0~XQW5btqQ5sLSzG1cssaU6PpBp5aM_eMBCtjrgh5FSfsz36sS-QEJtcmioH_jMsIrIpY4M13Rx5NX7IZhdXp7pg==",
+        "timestamp": 1794149242.264,
+        "uuid": "5C068387-A42A-4D43-A2C7-1B7A415BFA27"
+      },
+      "path": "png-2-0/5C068387-A42A-4D43-A2C7-1B7A415BFA27.png",
+      "sha256": "8027192901fa41c89c133824a775add89ea51004f67c41fbb5652a8de7ff017b",
+      "bytes": 54589,
+      "exitCode": 0
+    },
+    {
+      "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testLargestTextShowsCompleteProtectedLunchNamesAndDates",
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S24-largest-disabled-apply-label-interior_0_2FAC6906-E9A9-4FAE-9057-FEB1E132ABDA.png",
+        "payloadId": "0~wqo9hkV9c_aovdbh7iXnxAo9TwQY2jO73YK-AFO_BC9NALZdpS2fLFhn7piNOGxumfcFt8k_jo95q0NSJMCiQA==",
+        "timestamp": 1794149242.304,
+        "uuid": "D10BD9C2-9544-41F4-917C-DD8C48FD43FF"
+      },
+      "path": "png-2-1/D10BD9C2-9544-41F4-917C-DD8C48FD43FF.png",
+      "sha256": "a5e6dda718ce3e3ee1ccb37fefe0e3c4b15cc716f29dd7ae6e1cdca760e30816",
+      "bytes": 45877,
+      "exitCode": 0
+    },
+    {
+      "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testLargestTextShowsCompleteProtectedLunchNamesAndDates",
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S24-largest-disabled-apply-disabled-state-and-crop_0_8E04CCCF-0ED6-47F3-BB30-3C0A5F1BB16C.txt",
+        "payloadId": "0~rAh49bSfkScstlQythgHY9niXY00wZ5quHH-aZNs-JfMdweXwpX-hZIAufuXt54pMY069E_dopDOBdwR6G-RxA==",
+        "timestamp": 1794149243.942,
+        "uuid": "D704F2FE-E382-4C70-820C-369AE4B484C8"
+      },
+      "path": "png-2-2/D704F2FE-E382-4C70-820C-369AE4B484C8.txt",
+      "sha256": "3be1cfe487660b5be03dc3b8854f2fc0b29a141d979d6dd0244f790b7f780fb6",
+      "bytes": 13286,
+      "exitCode": 0
+    },
+    {
+      "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testLargestTextShowsCompleteProtectedLunchNamesAndDates",
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "Largest text review actions_0_8E1C4EA3-6F6E-4CBD-8406-BA87A42E6145.png",
+        "payloadId": "0~dcgCF66bFWzR96GIRpm1H20Vu2mctrVmN1QueKzknwlFQWetpFOqEgQT3WLQ6Bod7rKo6Tv2M1GbE3hqVrcvWg==",
+        "timestamp": 1794149249.992,
+        "uuid": "548FDEE2-46FF-4CE8-8FD9-808E234F718A"
+      },
+      "path": "png-2-3/548FDEE2-46FF-4CE8-8FD9-808E234F718A.png",
+      "sha256": "ecf7bea87c201bf0a662ac29471a64d4a864ed19e52c417df1a3f63fbcff53a6",
+      "bytes": 256281,
+      "exitCode": 0
+    }
+  ],
+  "originalUnchanged": true,
+  "sourceUnchanged": true,
+  "perFileLimitBytes": 4000000,
+  "timeoutPerCommandSeconds": 45,
+  "visualReview": "pending root"
+}

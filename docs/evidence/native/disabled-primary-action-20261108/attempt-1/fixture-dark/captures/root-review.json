@@ -1,0 +1,20 @@
+{
+  "reviewer": "root",
+  "imagesReviewed": 5,
+  "visualResult": "Both whole button labels and intended glyph crops render clearly; AX5 wraps in three complete lines without clipping. Fullscreen contains the entire Apply and Cancel review controls. Parent AX Buttons retain Disabled, native activation attempts and no-write/correction journeys passed.",
+  "measurements": [
+    {
+      "source": "png-0-1/A95ACE6C-C344-47FB-85EA-335D6162E484.png",
+      "report": "png-0-1-pixels.json",
+      "contrast": 13.746425261250582,
+      "components": 23
+    },
+    {
+      "source": "png-1-1/215E58A9-C0B0-4CDB-A85C-7176E6B391BE.png",
+      "report": "png-1-1-pixels.json",
+      "contrast": 13.746425261250582,
+      "components": 23
+    }
+  ],
+  "limits": "Component-based actual core-ink measurement excludes edge fragments; no broad audit or human assistive acceptance claimed."
+}

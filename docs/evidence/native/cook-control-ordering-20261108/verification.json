@@ -1,0 +1,27 @@
+{
+  "frozenPrototypeFileHashesSHA256": "9e24726c0664b3abd7153e92a230080132c90b261d694efd43df076e7489ac30",
+  "allSixPinnedFilesMatch": true,
+  "executionManifestMatches": true,
+  "recordedExitCode": 0,
+  "recordedSourceUnchanged": true,
+  "xctestDeclaredMethods": [
+    "testHeldPauseRevocationReturnsThenStopBarrierBeforeReplacementStart",
+    "testRevokeDiscardsAlreadyQueuedResumeWhilePauseIsInFlight",
+    "testBackgroundVoiceOverRouteCloseEachPreserveStopBarrierDuringHeldPause",
+    "testFailedStopNeverClaimsStoppedOrAllowsReplacementAndDoesNotRetry",
+    "testLatePauseAndOldStopResultsCannotAffectNewGenerationOrLease",
+    "testPendingAudioCompletionAfterRevocationCannotStartOrReleaseNewLease",
+    "testSuccessfulPauseAndResumeUseSameGenerationNewLeaseAndRealResumeCommand",
+    "testFailedPauseStopsInsteadOfPretendingPaused",
+    "testDuplicatePreparationCompletionCannotRepeatStartOrReleaseCurrentLease",
+    "testDuplicatePreparationCompletionCannotRepeatResumeOrReleaseItsLease",
+    "testMailboxRejectsDuplicateOlderAndStaleRevocationCommands",
+    "testLateStartAcknowledgmentAfterRevocationCannotRestoreSpeaking"
+  ],
+  "onePassingCompletionPerDeclaredMethod": true,
+  "passedXCTestCount": 12,
+  "failedXCTestCount": 0,
+  "swiftTestingFooter": "Separate Swift Testing discovery reports0 tests; the executed12 are XCTest.",
+  "runtimeScope": "Local pure macOS SwiftPM/XCTest execution; no AVFoundation, simulator or app execution in this package.",
+  "publisherExecutedTestsOrBuild": false
+}

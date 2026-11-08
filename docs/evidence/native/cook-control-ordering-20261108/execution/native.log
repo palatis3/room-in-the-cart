@@ -1,0 +1,91 @@
+Building for debugging...
+[Constructing description]
+[Planning deferred tasks]
+[25 / 52] SpeechControlPrototype
+[28 / 52]
+[29 / 53] SpeechControlPrototype
+[31 / 89]
+[35 / 89]
+[39 / 89]
+[41 / 89]
+[43 / 89]
+[46 / 89]
+[48 / 89]
+[51 / 89]
+[52 / 89]
+[53 / 89]
+[54 / 89]
+[55 / 89]
+[57 / 89]
+[60 / 89]
+[61 / 89]
+[62 / 89]
+[63 / 89]
+[65 / 89] SpeechControlPrototype
+[73 / 89] SpeechControlPrototype
+[79 / 90] SpeechControlPrototype-product
+[79 / 90] SpeechControlPrototypeTests-product
+[81 / 128]
+[84 / 128]
+[86 / 128]
+[88 / 128]
+[90 / 128]
+[91 / 128]
+[93 / 128]
+[94 / 128]
+[96 / 128]
+[99 / 128]
+[101 / 128]
+[102 / 128]
+[104 / 128]
+[105 / 128]
+[106 / 128]
+[108 / 128]
+[109 / 128]
+[110 / 128]
+[111 / 128]
+[112 / 128]
+[113 / 128]
+[114 / 128]
+[117 / 128] SpeechControlPrototypeTests-product
+[122 / 128] SpeechControlPrototypeTests-product
+[124 / 128] SpeechControlPrototypeTests-product
+[126 / 128] SpeechControlPrototypeTests-product
+Build complete! (27.29 sec)
+Test Suite 'All tests' started at 2026-11-08 10:01:51.778.
+Test Suite 'SpeechControlPrototypeTests.xctest' started at 2026-11-08 10:01:51.784.
+Test Suite 'SpeechControlPrototypeTests' started at 2026-11-08 10:01:51.784.
+Test Case '-[SpeechControlPrototypeTests.SpeechControlPrototypeTests testBackgroundVoiceOverRouteCloseEachPreserveStopBarrierDuringHeldPause]' started.
+Test Case '-[SpeechControlPrototypeTests.SpeechControlPrototypeTests testBackgroundVoiceOverRouteCloseEachPreserveStopBarrierDuringHeldPause]' passed (0.005 seconds).
+Test Case '-[SpeechControlPrototypeTests.SpeechControlPrototypeTests testDuplicatePreparationCompletionCannotRepeatResumeOrReleaseItsLease]' started.
+Test Case '-[SpeechControlPrototypeTests.SpeechControlPrototypeTests testDuplicatePreparationCompletionCannotRepeatResumeOrReleaseItsLease]' passed (0.002 seconds).
+Test Case '-[SpeechControlPrototypeTests.SpeechControlPrototypeTests testDuplicatePreparationCompletionCannotRepeatStartOrReleaseCurrentLease]' started.
+Test Case '-[SpeechControlPrototypeTests.SpeechControlPrototypeTests testDuplicatePreparationCompletionCannotRepeatStartOrReleaseCurrentLease]' passed (0.000 seconds).
+Test Case '-[SpeechControlPrototypeTests.SpeechControlPrototypeTests testFailedPauseStopsInsteadOfPretendingPaused]' started.
+Test Case '-[SpeechControlPrototypeTests.SpeechControlPrototypeTests testFailedPauseStopsInsteadOfPretendingPaused]' passed (0.000 seconds).
+Test Case '-[SpeechControlPrototypeTests.SpeechControlPrototypeTests testFailedStopNeverClaimsStoppedOrAllowsReplacementAndDoesNotRetry]' started.
+Test Case '-[SpeechControlPrototypeTests.SpeechControlPrototypeTests testFailedStopNeverClaimsStoppedOrAllowsReplacementAndDoesNotRetry]' passed (0.000 seconds).
+Test Case '-[SpeechControlPrototypeTests.SpeechControlPrototypeTests testHeldPauseRevocationReturnsThenStopBarrierBeforeReplacementStart]' started.
+Test Case '-[SpeechControlPrototypeTests.SpeechControlPrototypeTests testHeldPauseRevocationReturnsThenStopBarrierBeforeReplacementStart]' passed (0.000 seconds).
+Test Case '-[SpeechControlPrototypeTests.SpeechControlPrototypeTests testLatePauseAndOldStopResultsCannotAffectNewGenerationOrLease]' started.
+Test Case '-[SpeechControlPrototypeTests.SpeechControlPrototypeTests testLatePauseAndOldStopResultsCannotAffectNewGenerationOrLease]' passed (0.001 seconds).
+Test Case '-[SpeechControlPrototypeTests.SpeechControlPrototypeTests testLateStartAcknowledgmentAfterRevocationCannotRestoreSpeaking]' started.
+Test Case '-[SpeechControlPrototypeTests.SpeechControlPrototypeTests testLateStartAcknowledgmentAfterRevocationCannotRestoreSpeaking]' passed (0.000 seconds).
+Test Case '-[SpeechControlPrototypeTests.SpeechControlPrototypeTests testMailboxRejectsDuplicateOlderAndStaleRevocationCommands]' started.
+Test Case '-[SpeechControlPrototypeTests.SpeechControlPrototypeTests testMailboxRejectsDuplicateOlderAndStaleRevocationCommands]' passed (0.000 seconds).
+Test Case '-[SpeechControlPrototypeTests.SpeechControlPrototypeTests testPendingAudioCompletionAfterRevocationCannotStartOrReleaseNewLease]' started.
+Test Case '-[SpeechControlPrototypeTests.SpeechControlPrototypeTests testPendingAudioCompletionAfterRevocationCannotStartOrReleaseNewLease]' passed (0.003 seconds).
+Test Case '-[SpeechControlPrototypeTests.SpeechControlPrototypeTests testRevokeDiscardsAlreadyQueuedResumeWhilePauseIsInFlight]' started.
+Test Case '-[SpeechControlPrototypeTests.SpeechControlPrototypeTests testRevokeDiscardsAlreadyQueuedResumeWhilePauseIsInFlight]' passed (0.001 seconds).
+Test Case '-[SpeechControlPrototypeTests.SpeechControlPrototypeTests testSuccessfulPauseAndResumeUseSameGenerationNewLeaseAndRealResumeCommand]' started.
+Test Case '-[SpeechControlPrototypeTests.SpeechControlPrototypeTests testSuccessfulPauseAndResumeUseSameGenerationNewLeaseAndRealResumeCommand]' passed (0.001 seconds).
+Test Suite 'SpeechControlPrototypeTests' passed at 2026-11-08 10:01:51.803.
+	 Executed 12 tests, with 0 failures (0 unexpected) in 0.014 (0.019) seconds
+Test Suite 'SpeechControlPrototypeTests.xctest' passed at 2026-11-08 10:01:51.803.
+	 Executed 12 tests, with 0 failures (0 unexpected) in 0.014 (0.019) seconds
+Test Suite 'All tests' passed at 2026-11-08 10:01:51.803.
+	 Executed 12 tests, with 0 failures (0 unexpected) in 0.014 (0.025) seconds
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.002 seconds.

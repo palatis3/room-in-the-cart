@@ -1,0 +1,30 @@
+{
+  "reviewer": "root",
+  "imagesReviewed": 7,
+  "visualResult": "All three whole button labels are complete. All three interior crops visibly isolate the intended label and omit other controls. AX5 wraps across three complete lines. Fullscreen shows Apply, overage switch, and Cancel review without overlap. All three retained AX records show parent Button Disabled. Native disabled-tap/no-write and subsequent enabled journey assertions passed.",
+  "measurements": [
+    {
+      "source": "png-0-1/AA9D9C9D-ABFF-4970-8FC5-B59ACA2B87B0.png",
+      "report": "png-0-1-pixels.json",
+      "contrast": 15.213849827934512,
+      "components": 23,
+      "sRGB": true
+    },
+    {
+      "source": "png-1-1/1F6D3241-16A4-44EA-9524-9C4C9B5073DE.png",
+      "report": "png-1-1-pixels.json",
+      "contrast": 15.213849827934512,
+      "components": 23,
+      "sRGB": true
+    },
+    {
+      "source": "png-2-1/D10BD9C2-9544-41F4-917C-DD8C48FD43FF.png",
+      "report": "png-2-1-pixels.json",
+      "contrast": 15.213849827934512,
+      "components": 23,
+      "sRGB": true
+    }
+  ],
+  "limits": "Selected light English states only; no global accessibility closure.",
+  "cropLimit": "Independent pixel review found56 faint corner-antialias outline pixels at first/last crop rows, max contrast1.40155:1; the crop is not literally glyph-only. These edge fragments are excluded by the connected-component measurement and cannot account for the repeated23 core glyph components at15.21385:1."
+}

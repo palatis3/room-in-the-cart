@@ -1,0 +1,46 @@
+{
+  "source": "png-0-0/D86E1CB3-54F1-4432-8044-7937166402A9.png",
+  "sha256": "d3618c84fb142d4f45cc381eca3e16aaedc41d7fcddb30e4b04ff10be0514762",
+  "backgroundRGB": [
+    255,
+    255,
+    255
+  ],
+  "sampling": "Horizontal straight top edge, x200..<900,y40..<56 in original whole-button1110x246PNG, away from corners and label. All nonbackground row modes reported; no glyph pixels sampled.",
+  "rows": [
+    {
+      "row": 45,
+      "RGB": [
+        102,
+        121,
+        110
+      ],
+      "consistentPixels": 700,
+      "samplePixels": 700,
+      "contrast": 4.640819584077428
+    },
+    {
+      "row": 46,
+      "RGB": [
+        102,
+        121,
+        110
+      ],
+      "consistentPixels": 700,
+      "samplePixels": 700,
+      "contrast": 4.640819584077428
+    },
+    {
+      "row": 47,
+      "RGB": [
+        102,
+        121,
+        110
+      ],
+      "consistentPixels": 700,
+      "samplePixels": 700,
+      "contrast": 4.640819584077428
+    }
+  ],
+  "limit": "Edge qualification for captured normal-size button only."
+}
