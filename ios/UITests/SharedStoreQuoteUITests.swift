@@ -34,7 +34,7 @@ import XCTest
         fill("West unknown",into:"sharedQuotes.second.label",replacing:true)
         fill("",into:"sharedQuotes.second.tripCash",replacing:true)
         tap(element("sharedQuotes.reviewSave"))
-        assertLabel("sharedQuotes.breakEven",contains:"$3.00")
+        assertVisibleLabel("sharedQuotes.breakEven", contains: "$3.00")
         capture("S27-unknown-trip-three-dollar-break-even")
         confirm(); counter("saves",2); counter("proposals",0)
 
@@ -298,6 +298,36 @@ import XCTest
             XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed)
             capture("Bilingual-keyboard-card-dismissed")
         }
+    }
+    // Lazy form rows can disappear between exists/isHittable/frame queries. Locate this
+    // short result in one tree, scroll it fully into view, then assert its real text.
+    private func assertVisibleLabel(_ id: String, contains text: String) {
+        for attempt in 0..<30 {
+            let snapshot: XCUIElementSnapshot
+            do { snapshot = try app.snapshot() }
+            catch { XCTFail("Unable to inspect the current quote review: \(error)"); return }
+            let area = scrollableArea(snapshot: snapshot)
+            var pending = snapshot.children
+            var matches: [XCUIElementSnapshot] = []
+            while let node = pending.popLast() {
+                if node.identifier == id { matches.append(node) }
+                pending.append(contentsOf: node.children)
+            }
+            guard matches.count <= 1 else { XCTFail("Ambiguous quote result: " + id); return }
+            let target = matches.first
+            if let target, !target.frame.isEmpty,
+               target.frame.minY >= area.minY, target.frame.maxY <= area.maxY,
+               target.frame.minX >= snapshot.frame.minX, target.frame.maxX <= snapshot.frame.maxX {
+                XCTAssertTrue(target.label.contains(text), target.label)
+                XCTAssertTrue(element(id).isHittable, "Quote result must be visible and hittable: " + id)
+                return
+            }
+            let up: Bool
+            if let target, !target.frame.isEmpty { up = target.frame.midY > area.midY }
+            else { up = (attempt / 6) % 2 == 0 }
+            scrollContent(upward: up, area: area)
+        }
+        XCTFail("Could not display the complete quote result: " + id)
     }
     private func assertLabel(_ id: String, contains text: String) { let target = element(id); reveal(target); XCTAssertTrue(target.label.contains(text),target.label) }
     private func assertText(_ text: String) {

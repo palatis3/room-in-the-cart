@@ -1,0 +1,62 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "D3D9F0A0-8767-4B23-95C9-3C6C648F465F.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S27-frozen-proof-cannot-adopt_0_F8C650E9-91E3-4966-9402-F1FA9F8CE93D.png",
+        "timestamp" : 1794172539.824
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "DB1317A4-83E2-4A5A-855D-4D6CE4C9719F.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S27-adopted-draft-requires-fresh-checkout-prices_0_6AF6B324-C481-438F-AAC6-87B611EE5748.png",
+        "timestamp" : 1794172532.687
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "4137EB08-A435-4AB3-B1A6-8C608220C3AC.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S27-assigned-shopper-explicit-adoption-review_0_23E4355D-9B87-407D-B09E-4ED4043639D8.png",
+        "timestamp" : 1794172497.174
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "2FC494F8-D4C1-429F-B692-52AA89F4CF2C.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S27-private-save-separated-from-explicit-proposal_0_2B66D84F-1AD3-48E3-9157-C6DA58FCD572.png",
+        "timestamp" : 1794172474.713
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "6FADFF62-2110-4EC1-8561-2E2A2B52A388.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S27-unknown-trip-three-dollar-break-even_0_1FA75650-5309-4A82-8B25-0ECAF41D7492.png",
+        "timestamp" : 1794172446.19
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "C33055A3-C545-4827-9E57-500F25B322CF.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S27-known-checkout-trip-and-time-review_0_F62A15B0-8E5F-4135-915C-E92B5407E632.png",
+        "timestamp" : 1794172359.667
+      }
+    ],
+    "testIdentifier" : "SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption()",
+    "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption"
+  }
+]
