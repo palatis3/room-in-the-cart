@@ -1,0 +1,28 @@
+{
+  "scope": "Original English dinner journey with proposed navigation-bar Done; rejected before first Done tap",
+  "sourceManifestSHA256": "6e43bb2091b43a07b9102afdd1744fb35a9145e724fe6c9db7547ec4174f7e55",
+  "nativeExit": 65,
+  "strictExit": 1,
+  "qualificationPassed": false,
+  "animationIdleMessages": 0,
+  "runtimeWarningCount": 0,
+  "failure": "XCTAssertGreaterThanOrEqual failed: (\"36.0\") is less than (\"44.0\")",
+  "assertion": "Done accessibility frame height must be at least44 points",
+  "testDurationSeconds": 202.343,
+  "buildPassed": true,
+  "compiledAppCheckPassed": true,
+  "originalUnchanged": true,
+  "preservedInputsFinally": true,
+  "oldEvidenceFinally": {
+    "nativeExit": 65,
+    "strictExit": 1,
+    "exactPinnedFilesVerified": true,
+    "resultTreeVerified": true
+  },
+  "remainingDoneInteractionsUnexecuted": true,
+  "toolchain": "Xcode27.1/27A9275",
+  "runtime": "iOS26.2/23C54",
+  "device": "iPhone17Pro",
+  "appearance": "light",
+  "textSize": "large"
+}
