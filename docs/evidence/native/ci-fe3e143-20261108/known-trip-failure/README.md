@@ -1,0 +1,9 @@
+# Store quote break-even target lookup failure
+
+Published `fe3e143`, fixture run42509307308/job128847355844, artifact13633198902. The original single test fails after506.516seconds. It is an accessibility snapshot lookup failure for `sharedQuotes.breakEven`, not a 720-second timeout or a failed $3.00 arithmetic assertion. The preceding known-quote save and cancellation assertions completed; the later unknown-quote save, proposal and shopper adoption were not reached. Runtime-warning inventory reports zero warnings for the one examined case.
+
+The log shows the review-save tap, followed by a successful existence query and then failed repeated matching snapshots when the helper asks about the offscreen break-even element. Root reviewed the one retained failure screenshot: the app is showing the exact-action review with East unknown and West unknown quote details, near the top of the long form, with one save, zero proposals and zero adoptions. The break-even row is not visible there. The image does not establish the value of the second quote's hidden trip cash or prove that the break-even result exists below.
+
+This narrows investigation to review navigation/accessibility snapshot stability before asserting the underlying computation is wrong. `reveal` currently reads existence, hittability and frame in separate live queries. Inspect and test a coherent snapshot-based reveal for offscreen lazy rows; preserve actual visible-label and command-count assertions. No change, retry, waiver or causal fix is claimed here.
+
+The original artifact remains private at `.build/CIFe3e143Nov08/known-trip-artifact`. A single archived screenshot export was performed from an APFS clone, with original preservation verified. No simulator operations were used. The overall CI cohort remains unfinished at this checkpoint.

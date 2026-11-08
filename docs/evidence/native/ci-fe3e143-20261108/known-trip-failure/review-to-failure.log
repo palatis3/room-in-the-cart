@@ -1,0 +1,37 @@
+1793:     t =   480.18s Tap "sharedQuotes.reviewSave" Button
+1794:     t =   480.18s     Wait for dev.roominthecart.app.debug to idle
+1795:     t =   480.18s     Find the "sharedQuotes.reviewSave" Button
+1796:     t =   480.64s     Check for interrupting elements affecting "sharedQuotes.reviewSave" Button
+1797:     t =   480.74s     Synthesize event
+1798:     t =   481.05s     Wait for dev.roominthecart.app.debug to idle
+1799:     t =   485.16s Checking existence of `"sharedQuotes.breakEven" Any`
+1800:     t =   485.57s Find the "sharedQuotes.breakEven" Any
+1801:     t =   486.05s Find the "sharedQuotes.breakEven" StaticText
+1802:     t =   487.33s     Find the "sharedQuotes.breakEven" StaticText (retry 1)
+1803:     t =   488.59s     Find the "sharedQuotes.breakEven" StaticText (retry 2)
+1804:     t =   488.80s     Collecting debug information to assist test failure triage
+1805:     t =   488.80s         Requesting snapshot of accessibility hierarchy for app with pid 7594
+1806:     t =   488.88s     Requesting snapshot of accessibility hierarchy for app with pid 7594
+1807:     t =   488.98s     Requesting snapshot of accessibility hierarchy for app with pid 7594
+1808: <unknown>:0: error: -[RoomInTheCartUITests.SharedStoreQuoteUITests testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption] : Failed to get matching snapshot: No matches found for first query match sequence: `Descendants matching type Any` -> `Elements matching predicate '"sharedQuotes.breakEven" IN identifiers'`, given input App element pid: 7594
+1809:     t =   503.48s Tear Down
+1810:     t =   503.48s         Find the Target Application 'dev.roominthecart.app.debug'
+1811:     t =   504.06s     Added attachment named 'S27-screen-failure'
+1812:     t =   504.06s         Terminate dev.roominthecart.app.debug:7594
+1813: Test Case '-[RoomInTheCartUITests.SharedStoreQuoteUITests testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption]' failed (506.516 seconds).
+1814: Test Suite 'SharedStoreQuoteUITests' failed at 2026-11-08 20:36:50.324.
+1815: 	 Executed 1 test, with 1 failure (0 unexpected) in 506.516 (506.519) seconds
+1816: Test Suite 'RoomInTheCartUITests.xctest' failed at 2026-11-08 20:36:50.326.
+1817: 	 Executed 1 test, with 1 failure (0 unexpected) in 506.516 (506.521) seconds
+1818: Test Suite 'Selected tests' failed at 2026-11-08 20:36:50.327.
+1819: 	 Executed 1 test, with 1 failure (0 unexpected) in 506.516 (506.523) seconds
+1820: 2026-11-08 20:37:50.985 xcodebuild[4462:17884] [MT] IDETestOperationsObserverDebug: 603.951 elapsed -- Testing started completed.
+1821: 2026-11-08 20:37:51.004 xcodebuild[4462:17884] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+1822: 2026-11-08 20:37:51.004 xcodebuild[4462:17884] [MT] IDETestOperationsObserverDebug: 603.951 sec, +603.951 sec -- end
+1823: 
+1824: Test session results, code coverage, and logs:
+1825: 	/Users/runner/work/room-in-the-cart/room-in-the-cart/.build/Tests.xcresult
+1826: 
+1827: ** TEST EXECUTE FAILED **
+1828: 
+1829: Testing started

@@ -1,0 +1,17 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+        "deviceName" : "iPhone 17",
+        "exportedFileName" : "FDBC2CEA-4667-4804-AD7A-95FC94218B21.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S27-screen-failure_0_1F681473-C667-47AE-9682-B176872BB0EE.png",
+        "timestamp" : 1794170207.864
+      }
+    ],
+    "testIdentifier" : "SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption()",
+    "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/SharedStoreQuoteUITests/testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption"
+  }
+]
