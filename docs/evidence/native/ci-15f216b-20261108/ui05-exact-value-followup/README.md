@@ -1,0 +1,11 @@
+# UI05 exact-value completion correction
+
+The original six-case group now passes locally, strict **6/6**, with native exit0, zero skips, recorded runtime warnings or runner restarts. Console and bundle agree on one start and passing completion per selector, in the original order. The full saved-offer journey takes346.73seconds and verifies its later save, restart, response update, copy, reopened state and cancellation assertions. [Strict result](strict-verification.txt) · [Verification](verification.json) · [Observed sequence](sequence-verification.json).
+
+The original hosted failure read `Ma` immediately after typing `Main branch`. Its preserved teardown screenshot shows the full value2.243seconds later without intervening input. [Original failure and image](../checkpoint-041707/README.md). Relevant product and test sources were unchanged between that hosted candidate and the prepared local base. This evidence supports observing completion of the original input event; it does not demonstrate persisted truncation.
+
+The six-line correction waits up to5seconds for the exact intended field value, then retains the original exact-equality assertion. It types once and never retries/retypes to repair input. The helper covers the four reviewed checkout context fields; all subsequent journey checks remain unchanged. [Exact patch](reviewed.patch). No product field binding, persistence, timeout allowance or test selector was changed.
+
+The isolated complete source archive isaf0a408 plus only this patch; all4,188other files match its original source inventory. [Source preparation](source-preparation.json). Ordinary Debug, no contributor/fixture compilation flags, two build jobs, serial testing and720/900case limits remain unchanged. The original result bundle was hash-copied before inspection and remained unchanged.
+
+Local toolchain isXcode27.1/27A9275 on the owned iPhone17/iOS26.2 simulator; hosted failure usedXcode26.3. This is local qualification, not hosted confirmation. The original hosted failure remains recorded, and the correction has not been pushed while the existing six-workflow cohort is still collecting. Other Core failures and broader app release gates remain open.

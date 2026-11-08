@@ -1,0 +1,61 @@
+{
+  "preparedAtUTC": "2026-11-08T04:23:13.575917+00:00",
+  "baseCommit": "af0a40815e32354d609c77ba6230b27d0a8f668d",
+  "source": "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/ui-05-followup/source",
+  "archive": {
+    "file": "source-original.git.tar",
+    "bytes": 140124160,
+    "sha256": "ea36a4898241884171da6fe9c19972b9c887e54d110fd252154738bcfde2b5d7",
+    "fileCount": 4189,
+    "allPathsTypesValidated": true
+  },
+  "onlyChangedFiles": [
+    {
+      "path": "ios/UITests/PickupOfferUITests.swift",
+      "baseSHA256": "519a8886a9669911588ea20e4ddc68e7e245953947a5d1be4da9afb16d99b78a",
+      "candidateSHA256": "1a8729509e7d403bacba77aad61276c4fb0d28cdddd1078d6db3bb740ef8f077"
+    }
+  ],
+  "patchSHA256": "4c1065423a59e577027d5842e866e69bbd61bea0b4df3601842dcfd66d20d9dd",
+  "selectorsSHA256": "0415f7e0a15429949b1eb5732013cb3a90d5717fbe2280e6be9337d2af41e090",
+  "expectedCount": 6,
+  "productPins": [
+    {
+      "path": "ios/UITests/PickupOfferUITests.swift",
+      "sha256": "1a8729509e7d403bacba77aad61276c4fb0d28cdddd1078d6db3bb740ef8f077"
+    },
+    {
+      "path": "ios/Features/Pickup/PickupHomeView.swift",
+      "sha256": "7a8975abb0eb0344868a617e11ab2a53b553641282940081665bd717bdbc26f5"
+    },
+    {
+      "path": "ios/Features/Pickup/PickupCheckoutDraft.swift",
+      "sha256": "5f1867e0f6d564f2b9d8813ac6c10aa9bbfdebed5a917db74fe28b28c7cac033"
+    },
+    {
+      "path": "ios/Features/Pickup/PickupModel.swift",
+      "sha256": "a83549ca6f66570bbfe6d40f6cf293fc6bf8d341b976c7fc4a4f7883efefeb5f"
+    },
+    {
+      "path": "ios/Tests/PickupCheckoutDraftTests.swift",
+      "sha256": "7b7aa6fca39f95c41bcf36b77dbfa8b0694ec9493c95166a1bc0b9e784ef6fca"
+    }
+  ],
+  "originalManifestSHA256": "2980f7e80fce0ca958203e50c82d7cd6d6752094231688afea8c4ea142c14b88",
+  "candidateManifestSHA256": "689c66b78e9353421de4090c34113bee14628b3cd6ab2dba9250ec9e3e5f3f08",
+  "ordinaryDebug": true,
+  "fixtureFlags": false,
+  "defaultTestAllowanceSeconds": 720,
+  "maximumTestAllowanceSeconds": 900,
+  "parallelTesting": false,
+  "buildJobs": 2,
+  "retries": 0,
+  "nativeBuildRunUI": "not performed",
+  "scope": "Full pinned source plus only reviewed UI05 expectation; canonical previously patched by root, no canonical edits during preparation.",
+  "executionScript": {
+    "file": "run-reviewed.sh",
+    "sha256": "889b9519b776c37df66ae000963a974f4171244c32c0cb74ce1a9d1904038ee1",
+    "shellSyntax": "bash -n passed",
+    "executed": false
+  }
+}

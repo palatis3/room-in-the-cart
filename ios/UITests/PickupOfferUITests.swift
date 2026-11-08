@@ -41,6 +41,12 @@ import XCTest
                 field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: current.count))
             }
             field.typeText(value)
+            // The original failed read returned "Ma", while its later failure
+            // screenshot showed the complete "Main branch" without more input.
+            // Observe completion of this one input event; never retype to repair it.
+            let entered = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", value), object: field)
+            XCTAssertEqual(XCTWaiter.wait(for: [entered], timeout: 5), .completed,
+                           "The single typed value should finish appearing in \(name)")
             XCTAssertEqual(field.value as? String, value, name)
         }
         tap(app.buttons["Done"])

@@ -1,0 +1,14 @@
+{
+  "README.md": "8a20a2ded7cd8d276b06c9874b2c3d50a950f5ec273fc9d4c6095f6452cbb12f",
+  "owner-run-receipt.json": "a1a95ddcb7b73e08a16c736d05f9de988d33fb431105adf393694766ae9c01c7",
+  "reviewed.patch": "4c1065423a59e577027d5842e866e69bbd61bea0b4df3601842dcfd66d20d9dd",
+  "run-receipt.json": "633e594c0c222c76a292562981e2fcefd39cf8d57d5d23f74359a5b2fcbd60c4",
+  "selectors.txt": "0415f7e0a15429949b1eb5732013cb3a90d5717fbe2280e6be9337d2af41e090",
+  "sequence-verification.json": "823f68b84c652d8564103d81222d3e000867f3f1f9182a2738d4b9a552d35ed8",
+  "source-preparation.json": "b7e436f8957c97bb563cc0f27a98c944e18fac27d9f901052f203e00b1ad95a7",
+  "strict-verification.txt": "45173e92b4f00e00f62cec6cb4123a0b01dbb6d5a5d05aaceb38897efd2512b3",
+  "test-details.json": "af4154f8d9f422eba3b32abd8c644e2ae9b7043a231259e3c102e8174b3dea51",
+  "test-runtime-warnings.json": "1a3564a75e0ee3a3cba8f9d584d04e509fe4bb9e85b4f975dbc173f2a30995be",
+  "test-summary.json": "8653c1d1012f9ac5b0de78bd02aa39098894b65eb2279fb86caca736ee30d117",
+  "verification.json": "da38eb281bde9a13c0b4419a2666024ccdf59ec9daccfa73dbfedb80bb736930"
+}

@@ -1,0 +1,14 @@
+Executed 6 of 6 selected tests.
+
+| Test | Result | Seconds |
+|---|---|---|
+| RoomInTheCartUITests/PickupOfferUITests/testSavedOfferReopensAndUpdatesResponseAfterRestart | Passed | 346.73 |
+| RoomInTheCartUITests/FreeJourneyUITests/testEnglishMealWeekListAndGridShowDatedProtectedLunch | Passed | 186.35 |
+| RoomInTheCartUITests/RoomInTheCartUITests/testOwnerExportReviewAndCancelledDeletionPreserveComparisonAfterRestart | Passed | 120.33 |
+| RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testFullyCoveredSavesUseAtHomePlanWithoutPurchasedItemOrRetailerOrder | Passed | 105.84 |
+| RoomInTheCartUITests/RoomInTheCartUITests/testComparisonSaveStaysInsideViewportAboveTabBar | Passed | 64.45 |
+| RoomInTheCartUITests/ContextualNavigationUITests/testRangedPackNeedsAnExactAmountAndKeepsItsOriginalAfterRelaunch | Passed | 47.04 |
+The XCTest log confirms one start and one passing completion per selected test.
+
+The XCTest test export recorded 0 runtime warning occurrences across 6 examined tests.
+
