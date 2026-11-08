@@ -1,0 +1,12 @@
+{
+  "scope": "This retained incremental build.log only; not a clean rebuild, all prior compiler output or runtime warning audit.",
+  "logSHA256": "f58c676957487f7e902f862860e1a80c5aea280cb8fb4d0eb80355390cea11e9",
+  "lineCount": 220,
+  "warningCount": 0,
+  "errorCount": 0,
+  "diagnostics": {
+    "warning": [],
+    "error": []
+  },
+  "matcher": "case-insensitive warning: or error:, not immediately preceded by a word character or hyphen"
+}

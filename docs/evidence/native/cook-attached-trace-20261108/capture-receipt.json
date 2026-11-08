@@ -1,0 +1,171 @@
+{
+  "selector": "RoomInTheCartUITests/SharedDeliveryUITests/testShopperReviewsExactEditedCookWordingBeforeReadback",
+  "expectedCount": 1,
+  "recordingScope": "attach-single-current-owned-app",
+  "sourceManifestSHA256": "d2f233f64af0540e77cd66b995c39bada71522bc9f8f6b4fab1ee2927e36c590",
+  "startedAtUTC": "2026-11-08T18:02:24.627082+00:00",
+  "finishedAtUTC": "2026-11-08T18:05:27.341149+00:00",
+  "nativePID": 91601,
+  "nativeExit": 0,
+  "nativeLaunchUTC": "2026-11-08T18:02:26.816835+00:00",
+  "nativeTerminalObservedUTC": "2026-11-08T18:04:07.930701+00:00",
+  "caseEnd": {
+    "hostObservedUTC": "2026-11-08T18:03:37.583056+00:00",
+    "hostObservedMonotonic": 80.166191791,
+    "reportedDurationSeconds": 60.621,
+    "caseEventUTC": "2026-11-08T18:03:37.501000+00:00"
+  },
+  "caseEndToNativeTerminalSeconds": 30.429701,
+  "tracePID": 91815,
+  "traceExit": -9,
+  "traceLaunchUTC": "2026-11-08T18:03:00.228558+00:00",
+  "traceReadyUTC": "2026-11-08T18:03:08.116050+00:00",
+  "traceStop": {
+    "reason": "sampledCaptureVolumeGrowthThreshold",
+    "requestedUTC": "2026-11-08T18:03:21.798155+00:00",
+    "requestedMonotonic": 64.379343666,
+    "pid": 91815
+  },
+  "traceFinalStats": {
+    "files": 137,
+    "bytes": 12387518,
+    "allocatedBytes": 12689408,
+    "scanTruncated": false,
+    "scanSeconds": 0.003744499999982054
+  },
+  "traceForcedTermination": true,
+  "traceOvershootBytes": 0,
+  "finalFreeBytes": 44037591040,
+  "initialFreeBytes": 56189960192,
+  "readyBeforePlay": true,
+  "clockStable": true,
+  "controlWindowPIDCandidates": [
+    91693
+  ],
+  "captureEligibleForReview": false,
+  "errors": [
+    "sampledCaptureVolumeGrowthThreshold",
+    "sampledTraceByteThreshold",
+    "90SecondLaunchBound"
+  ],
+  "parserLoss": [],
+  "sourceUnchanged": true,
+  "priorModelEvidenceUnchanged": true,
+  "fixtureProductsUnchanged": true,
+  "preservedFixtureProductCloneUnchanged": true,
+  "collectorStagingQuiescenceProven": false,
+  "sampledByteThreshold": 4294967296,
+  "hardByteCap": false,
+  "reserveBytes": 8589934592,
+  "maxTraceLaunchSeconds": 90,
+  "finalizationGraceSeconds": 120,
+  "readinessSeconds": 30,
+  "sampleSeconds": 0.5,
+  "nativeOuterSeconds": 1080,
+  "attachment": {
+    "pid": 91693,
+    "processStart": "Sun Nov 8 13:02:38 2026",
+    "binarySHA256": {
+      "executable": "85b438f205eb9bc3ecb4ceca8f082edb8e94c7341a6fc359e41e25ceea679443",
+      "debug": "b14e98b901a06b64a5773aa34703e8b706048af8d9917cd418733909b232bbe7"
+    },
+    "observedTwice": true,
+    "selectionStartedUTC": "2026-11-08T18:02:59.318255+00:00",
+    "selectionFinishedUTC": "2026-11-08T18:03:00.220179+00:00",
+    "selectionSeconds": 0.9019953339999986,
+    "expectedBinarySHA256": {
+      "executable": "85b438f205eb9bc3ecb4ceca8f082edb8e94c7341a6fc359e41e25ceea679443",
+      "debug": "b14e98b901a06b64a5773aa34703e8b706048af8d9917cd418733909b232bbe7"
+    },
+    "atomicAttachmentGuaranteed": false
+  },
+  "actions": [
+    {
+      "kind": "edit",
+      "caseRelativeSeconds": 16.43,
+      "caseEventUTC": "2026-11-08T18:02:53.310000+00:00",
+      "hostObservedUTC": "2026-11-08T18:02:53.747594+00:00",
+      "hostObservedMonotonic": 36.331082416,
+      "logByteOffsetUpperBound": 8458
+    },
+    {
+      "kind": "finishEditing",
+      "caseRelativeSeconds": 22.42,
+      "caseEventUTC": "2026-11-08T18:02:59.300000+00:00",
+      "hostObservedUTC": "2026-11-08T18:02:59.312871+00:00",
+      "hostObservedMonotonic": 41.896307875,
+      "logByteOffsetUpperBound": 10247
+    },
+    {
+      "kind": "play",
+      "caseRelativeSeconds": 37.18,
+      "caseEventUTC": "2026-11-08T18:03:14.060000+00:00",
+      "hostObservedUTC": "2026-11-08T18:03:14.219772+00:00",
+      "hostObservedMonotonic": 56.803086,
+      "logByteOffsetUpperBound": 15709
+    },
+    {
+      "kind": "pause",
+      "caseRelativeSeconds": 40.03,
+      "caseEventUTC": "2026-11-08T18:03:16.910000+00:00",
+      "hostObservedUTC": "2026-11-08T18:03:17.240398+00:00",
+      "hostObservedMonotonic": 59.823699958,
+      "logByteOffsetUpperBound": 17134
+    },
+    {
+      "kind": "resume",
+      "caseRelativeSeconds": 41.67,
+      "caseEventUTC": "2026-11-08T18:03:18.550000+00:00",
+      "hostObservedUTC": "2026-11-08T18:03:18.759242+00:00",
+      "hostObservedMonotonic": 61.342531708,
+      "logByteOffsetUpperBound": 17802
+    },
+    {
+      "kind": "stop",
+      "caseRelativeSeconds": 43.37,
+      "caseEventUTC": "2026-11-08T18:03:20.250000+00:00",
+      "hostObservedUTC": "2026-11-08T18:03:20.279830+00:00",
+      "hostObservedMonotonic": 62.863097625,
+      "logByteOffsetUpperBound": 18330
+    },
+    {
+      "kind": "edit",
+      "caseRelativeSeconds": 45.23,
+      "caseEventUTC": "2026-11-08T18:03:22.110000+00:00",
+      "hostObservedUTC": "2026-11-08T18:03:22.305579+00:00",
+      "hostObservedMonotonic": 64.88883775,
+      "logByteOffsetUpperBound": 19205
+    },
+    {
+      "kind": "finishEditing",
+      "caseRelativeSeconds": 51.41,
+      "caseEventUTC": "2026-11-08T18:03:28.290000+00:00",
+      "hostObservedUTC": "2026-11-08T18:03:28.451193+00:00",
+      "hostObservedMonotonic": 71.034399791,
+      "logByteOffsetUpperBound": 21097
+    }
+  ],
+  "builtBinaryUUIDs": {
+    "RoomInTheCart": [
+      {
+        "uuid": "D1C6007F-5F1C-35C3-BE29-9FE9BB361B6C",
+        "architecture": "x86_64"
+      },
+      {
+        "uuid": "CF2E7BCB-CD7C-3BA9-AE85-93EAEF9C7A95",
+        "architecture": "arm64"
+      }
+    ],
+    "RoomInTheCart.debug.dylib": [
+      {
+        "uuid": "9C4352A6-F9DF-39CC-B024-D6536E93E256",
+        "architecture": "x86_64"
+      },
+      {
+        "uuid": "7C913FBF-8440-3584-8AB8-EA76A7644E59",
+        "architecture": "arm64"
+      }
+    ]
+  },
+  "sanitization": "Absolute executable/build paths and command arrays omitted; fixed action metadata, hashes, runtime identity and outcome preserved. No speech text, screenshots or trace contents copied."
+}

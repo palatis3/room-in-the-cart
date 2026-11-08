@@ -1,0 +1,134 @@
+{
+  "method": "Existing-file read/hash/copy and original-pixel analysis only; no xcresult tools or native actions",
+  "copiedFiles": [
+    {
+      "source": ".build/S24PortionTypographyNov08/execution-r2/light-run/inspection/strict.txt",
+      "destination": "run/strict.txt",
+      "bytes": 832,
+      "sha256": "00f6adbc39650aad8d061d30b8d34bbb6be57b6f79b301aa5c11ba15b243aed4"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/execution-r2/light-run/inspection/verification.json",
+      "destination": "run/verification.json",
+      "bytes": 269,
+      "sha256": "56a90af9d605eb1602143ceb3875b124c1f50353bdeef93cd4b1db9fb744cfb6"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/execution-r2/light-run/inspection/summary.json",
+      "destination": "run/summary.json",
+      "bytes": 1021,
+      "sha256": "9bf620a9715687abedb09ad66e63aa1197de6a12961d269225c8eeb16343c506"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/execution-r2/light-run/inspection/tests.json",
+      "destination": "run/tests.json",
+      "bytes": 2496,
+      "sha256": "eb31c11de5fd9a90774462c6f9f98b9680e28b305042657df1096dca0c1b8b70"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/execution-r2/light-run/inspection/test-runtime-warnings.json",
+      "destination": "run/test-runtime-warnings.json",
+      "bytes": 179,
+      "sha256": "f8ad96fa2dba1663cb8ecf3e532759170a56556bd8646ffa1bd97a8aa0aa78f8"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/execution-r2/light-run/selectors.txt",
+      "destination": "run/selectors.txt",
+      "bytes": 234,
+      "sha256": "11cd319ef14209b85e1e468e8c4ebe575a66527bb3e6a074be33eb41e700c7c9"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/execution-r2/product.patch",
+      "destination": "provenance/product.patch",
+      "bytes": 541,
+      "sha256": "2cf5719f069ce01f4c89cb0c92093acdc5c36ed6b0a5b2b8b61032c93f6204ce"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/execution-r2/test-only.patch",
+      "destination": "provenance/test-only.patch",
+      "bytes": 4116,
+      "sha256": "1b6d9f4a5629680d696a1ba5e3c4d78928e3e63c991b11882b7d61279b9d41ba"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/execution-r2/source-pins.json",
+      "destination": "provenance/source-pins.json",
+      "bytes": 583,
+      "sha256": "4b5e7262455824583719e3d1122f11480bc40ec5e0c3cf616972a0eb14e703ae"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/execution-r2/root-installation.json",
+      "destination": "provenance/root-installation.json",
+      "bytes": 526,
+      "sha256": "619a257672fdebacb9ec1348fc3efced691cb8c25159f833fdced1ef98ea7afc"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/execution-r2/light-run/captures/target-0-0/C69A015C-D8CF-4538-B642-AB5EFB282E6B.png",
+      "destination": "images/S24-standard-Sam-portions-label.png",
+      "bytes": 9114,
+      "sha256": "39ef5daeca79a846f3c34420e0194c460f3b441477870e0ac5b52ca9236dbcae"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/execution-r2/light-run/captures/target-0-2/D68D53BC-9C47-4AF6-B0D0-FAD7DB488E70.png",
+      "destination": "images/S24-standard-Sam-portions-value.png",
+      "bytes": 1336,
+      "sha256": "6a314569b4ab219e504a2fbd2289c29198827d84787d8dfdb536b2739923cfc8"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/execution-r2/light-run/captures/target-0-4/D4261542-2B63-4736-B2D5-5040AF18AEB6.png",
+      "destination": "images/S24-standard-Mia-portions-label.png",
+      "bytes": 9100,
+      "sha256": "f1f1be5f6f23b600d0ff93a86ccf9b6657118cbc9ed8e1ca86e2888232922967"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/execution-r2/light-run/captures/target-0-6/87858CAA-BC8E-40C8-83DF-147048D47BD4.png",
+      "destination": "images/S24-standard-Mia-portions-value.png",
+      "bytes": 1336,
+      "sha256": "43c1802bcc362b19c6a2899c91a27a5e7f88002c0f238cd0580fa2c2781b6228"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/execution-r2/light-run/captures/target-1-0/A648C76B-FA61-46E2-B325-6C43E27EDB6C.png",
+      "destination": "images/S24-AX5-88888888-8888-4888-8888-888888888888-portions-label.png",
+      "bytes": 29204,
+      "sha256": "2a38de0d7626e4a5510b95dc2f17319d17c25a0f544b278ccd337213adaf282b"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/execution-r2/light-run/captures/target-1-2/EC74E2B7-AAA4-4E39-9D88-316FAC28390B.png",
+      "destination": "images/S24-AX5-88888888-8888-4888-8888-888888888888-portions-value.png",
+      "bytes": 2246,
+      "sha256": "96d349c91afbc02c6b482aa66823df120314f739cf22a455ff485424e8106ca4"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/execution-r2/light-run/captures/target-1-4/D5BF5441-293B-4C39-AE63-CAABCBAFB5FB.png",
+      "destination": "images/S24-AX5-99999999-9999-4999-8999-999999999999-portions-label.png",
+      "bytes": 29229,
+      "sha256": "29a1d6a00cd0cd8530e24c6e25382581443f7f85de145b5dd02effc8bb922d7f"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/execution-r2/light-run/captures/target-1-6/E3B4C026-7D28-478D-89FB-A2E1B4BC3256.png",
+      "destination": "images/S24-AX5-99999999-9999-4999-8999-999999999999-portions-value.png",
+      "bytes": 2246,
+      "sha256": "96d349c91afbc02c6b482aa66823df120314f739cf22a455ff485424e8106ca4"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/standard-context-r1/capture/png/0E5EBF15-F41D-49D5-99BE-837EB8BEF421.png",
+      "destination": "images/standard-checkout-and-two-lunches.png",
+      "bytes": 331191,
+      "sha256": "39953b4fdd1a7420d7768b86a54079544ff8824e302e42a9acc647491ff01ffe"
+    },
+    {
+      "source": ".build/S24DecisionPromptNov08/price-prompt-measurement/measure_field.py",
+      "destination": "measurement/measure_field.py",
+      "bytes": 9050,
+      "sha256": "487b50142ac771836efe92b15364a7bf5252dd70bfe5698573118898db87d8b0"
+    },
+    {
+      "source": ".build/S24PortionTypographyNov08/execution-r2/light-run/captures/root-review.json",
+      "destination": "root-review.json",
+      "bytes": 999,
+      "sha256": "9b76086fbc49ee7a06a1252da93068a93523d4e4f4f6394630bd83c20cc70d7f"
+    }
+  ],
+  "verifiedOriginalTargets": 16,
+  "verifiedContextPNG": true,
+  "rawAXAndActivitiesCopied": false
+}

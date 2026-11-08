@@ -1,0 +1,92 @@
+{
+  "sources": [
+    {
+      "path": ".build/CIA305065Nov08/cook-causal-review/thread-state-r5-attach-proposal-r1/manifest.json",
+      "bytes": 3500,
+      "sha256": "9f36a36e932bb006400511c797fcb7dd069dbb6a1473abc4900eb9d7a48fdd74"
+    },
+    {
+      "path": ".build/CIA305065Nov08/cook-causal-review/thread-state-r5-attach-proposal-r1/source-manifest.json",
+      "bytes": 104617,
+      "sha256": "d2f233f64af0540e77cd66b995c39bada71522bc9f8f6b4fab1ee2927e36c590"
+    },
+    {
+      "path": ".build/CIA305065Nov08/cook-causal-review/thread-state-r5-attach-proposal-r1/capture/run.json",
+      "bytes": 11811,
+      "sha256": "3bb651cbdc280b39cc4883e7bbd9b0e5aae9cb4b0bca411ee4eead094664eb7e"
+    },
+    {
+      "path": ".build/CIA305065Nov08/cook-causal-review/thread-state-r5-attach-proposal-r1/capture/native.log",
+      "bytes": 25639,
+      "sha256": "f41eaf4ee4d73289021856d157646e81e7e35e4d5b720469001af386f9a02d91"
+    },
+    {
+      "path": ".build/CIA305065Nov08/cook-causal-review/thread-state-r5-attach-proposal-r1/capture/trace.stdout",
+      "bytes": 201,
+      "sha256": "92abc71a2f6d24a9218039ed5d60538a5224ff59aee602b8f11b009033c1b357"
+    },
+    {
+      "path": ".build/CIA305065Nov08/cook-causal-review/thread-state-r5-attach-proposal-r1/capture/trace.stderr",
+      "bytes": 404,
+      "sha256": "4f99aa8c330a418f414d061c1629ecc153fa5813681a601b48fef307bed2b6f4"
+    },
+    {
+      "path": ".build/CIA305065Nov08/cook-causal-review/thread-state-r5-attach-proposal-r1/capture/observations.ndjson",
+      "bytes": 150476,
+      "sha256": "de2a7c4aabc5207541f91e960847a1555689b73d11286c83b1d6d8ceebfdf8b1"
+    },
+    {
+      "path": ".build/CIA305065Nov08/cook-causal-review/thread-state-r5-attach-proposal-r1/inspection/summary.json",
+      "bytes": 1538,
+      "sha256": "065aef9872e05c5addf45dd96b41ef2dc9816e00473c48c570c7e4f3831d8fea"
+    },
+    {
+      "path": ".build/CIA305065Nov08/cook-causal-review/thread-state-r5-attach-proposal-r1/inspection/verification.json",
+      "bytes": 331,
+      "sha256": "8d22798847720f742240fdcf9e71cf3d473ae12ec2f893dec6c217b5c0b470e7"
+    },
+    {
+      "path": ".build/CIA305065Nov08/cook-causal-review/thread-state-r5-attach-proposal-r1/inspection/strict.txt",
+      "bytes": 1077,
+      "sha256": "00e14b3b2fae03ed13af7a71993bb52defbc3755d5278a722b61ef9c735210e6"
+    },
+    {
+      "path": ".build/CIA305065Nov08/cook-causal-review/thread-state-r5-attach-proposal-r1/inspection/test-runtime-warning-activities.json",
+      "bytes": 56186,
+      "sha256": "dd2061551f0a17609bf0a20db732f5f39b8fde9a95b225c7c46a31b09aa88d12"
+    },
+    {
+      "path": ".build/CIA305065Nov08/cook-causal-review/thread-state-r5-proposal-r1/build/run.json",
+      "bytes": 2671,
+      "sha256": "62b3e7cc9d567d595b106833ace311f55f12dc368e325d536f57acce14d243ba"
+    },
+    {
+      "path": ".build/CIA305065Nov08/cook-causal-review/r5-attached-bundle-toc-r1/input.json",
+      "bytes": 482549,
+      "sha256": "898f6e6e8a47774242f0e447701666a65415d25493b19f3fe678b14ccf99f267"
+    },
+    {
+      "path": ".build/CIA305065Nov08/cook-causal-review/r5-attached-bundle-toc-r1/inspection/run.json",
+      "bytes": 26392,
+      "sha256": "6e5ea7650d16e8c09fee0db168d1203d7b10b3e3230893d246f4637cbff84691"
+    },
+    {
+      "path": ".build/CIA305065Nov08/cook-causal-review/r5-attached-bundle-toc-r1/inspection/toc.xml",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".build/CIA305065Nov08/cook-causal-review/r5-attached-bundle-toc-r1/inspection/stderr.txt",
+      "bytes": 66,
+      "sha256": "d107c0d0bee87bbb268e2d42500a2f8a76628e6fb9295c5b821501b5887a083b"
+    }
+  ],
+  "publishedScope": "Compact native outcome, strict failure, fixed timing/identity metadata and final trace file hashes. Full native log, result, observations and trace remain private and unchanged.",
+  "newTraceQueryPreparedSeparately": ".build/CIA305065Nov08/cook-causal-review/r5-attached-bundle-toc-r1",
+  "queryExecutedByPreparingAgent": false,
+  "canonicalProductEdits": false,
+  "nativeActionsByPreparingAgent": false,
+  "topLevelDocsOrCommit": false,
+  "retainedTraceQueryStatus": "Root executed once; native10/runner2, malformed instrument run data missing; no retry or recording.",
+  "retainedTraceQueryRootSession": "29520"
+}

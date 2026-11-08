@@ -1,0 +1,17 @@
+{
+  "sourceManifestSHA256": "d55bb442efa527fad09edb2e83297a4b6458be92358996774fe7cd8779c60f18",
+  "sourceManifestEntries": 556,
+  "files": {
+    "ios/Features/Household/HouseholdRequestMealContext.swift": {
+      "runSHA256": "19e64564491b6dc13d8024002a22f931b30fdf5ee5a214a94abb04a0b47af1c1",
+      "currentSHA256": "19e64564491b6dc13d8024002a22f931b30fdf5ee5a214a94abb04a0b47af1c1",
+      "matchesCurrent": true
+    },
+    "ios/UITests/HouseholdRequestPackUITests.swift": {
+      "runSHA256": "bf59f4682651dccc529e3dafdbf04d9d6ea948c26f5bf78712d4e74570ebac9b",
+      "currentSHA256": "bf59f4682651dccc529e3dafdbf04d9d6ea948c26f5bf78712d4e74570ebac9b",
+      "matchesCurrent": true
+    }
+  },
+  "sourcePinNote": "source-pins.json was a preparation receipt; root-installation.json records subsequent installation."
+}

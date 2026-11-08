@@ -1,0 +1,17 @@
+{
+  "status": "passed",
+  "reviewedAtUTC": "2026-11-08T18:03:28.954553+00:00",
+  "reviewer": "root",
+  "scope": "All eight isolated portion text PNGs and one full standard viewport PNG viewed directly. Frame first lines reviewed for all eight semantic targets.",
+  "findings": [
+    "All labels and single-digit values are complete with no truncation in selected images.",
+    "Standard frames are20.333pt high vs native body20.287pt; AX5 value63.333pt vs body63.248pt; labels use two full lines125.333pt.",
+    "Full standard viewport includes40.69total,2.69overage,37.20prior total,1.99fee and both named dated protected lunches with one portion each.",
+    "XCTest actual-pixel4.5minimum checks pass for all8 targets."
+  ],
+  "limits": [
+    "Single digits are one glyph; no multi-glyph or12-component proof claimed.",
+    "Light26.2 only; dark/minimum and physicalVoiceOver remain unqualified."
+  ],
+  "sourceManifestSHA256": "d55bb442efa527fad09edb2e83297a4b6458be92358996774fe7cd8779c60f18"
+}

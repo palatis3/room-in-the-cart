@@ -1,0 +1,30 @@
+{
+  "files": {
+    "README.md": {
+      "sha256": "f0ddcf20b125e7d51ea2e31880b9f5fe0d690c30bb4a38fbec0293a17628b5c4",
+      "bytes": 1591
+    },
+    "build.log": {
+      "sha256": "f58c676957487f7e902f862860e1a80c5aea280cb8fb4d0eb80355390cea11e9",
+      "bytes": 51610
+    },
+    "bundle-check.txt": {
+      "sha256": "f235bbb8dff89745abba14e5dbe8f0247778c5a7063582549dc3dd95af685c76",
+      "bytes": 105
+    },
+    "input-pins.json": {
+      "sha256": "ff9acbf30b162b996edb63267e5c0767b5377c7c3d4130925f1d6c3a65f26cef",
+      "bytes": 526
+    },
+    "log-diagnostics.json": {
+      "sha256": "5af6d3650bbfde08d9d4514061f798fb13e98f408c017beecdea8051f23a2094",
+      "bytes": 442
+    },
+    "receipt-summary.json": {
+      "sha256": "b323d7d4b7233dd0e033b0008a556fc1021ae5e2f2f858cf7608c291c0e8bf22",
+      "bytes": 3486
+    }
+  },
+  "fileCount": 6,
+  "totalBytes": 57760
+}
