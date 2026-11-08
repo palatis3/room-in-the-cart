@@ -1,0 +1,37 @@
+{
+  "run.json": {
+    "source": "/Users/palatis/Room in the Cart/.build/S24OutcomeReturnNov08/disclosure-input-followup/ios17-run/run.json",
+    "sha256": "7d08176751ac785426763b297964af67c2171b049445fb06d743c67f8ad5f510",
+    "bytes": 59260
+  },
+  "selectors.txt": {
+    "source": "/Users/palatis/Room in the Cart/.build/S24OutcomeReturnNov08/disclosure-input-followup/ios17-run/selectors.txt",
+    "sha256": "37edd79c1654c6805d486f0537f8d9cc280fbef8536bc514e672786a88b67b45",
+    "bytes": 120
+  },
+  "inspection/verification.json": {
+    "source": "/Users/palatis/Room in the Cart/.build/S24OutcomeReturnNov08/disclosure-input-followup/ios17-run/inspection/verification.json",
+    "sha256": "e7751f1dfb5521143ede24fd33e32305a1ca46d0b7e4e52bb180b662b1b87f35",
+    "bytes": 270
+  },
+  "inspection/strict.txt": {
+    "source": "/Users/palatis/Room in the Cart/.build/S24OutcomeReturnNov08/disclosure-input-followup/ios17-run/inspection/strict.txt",
+    "sha256": "58d72b07e013a14c1f217c4987708c4f117a19a262c70a7882a14659a53e81af",
+    "bytes": 1253
+  },
+  "inspection/summary.json": {
+    "source": "/Users/palatis/Room in the Cart/.build/S24OutcomeReturnNov08/disclosure-input-followup/ios17-run/inspection/summary.json",
+    "sha256": "fe559a87a67965d6c696222165ef8495761f5a60aa6b51b7097b2dbc2acfba5b",
+    "bytes": 1653
+  },
+  "inspection/tests.json": {
+    "source": "/Users/palatis/Room in the Cart/.build/S24OutcomeReturnNov08/disclosure-input-followup/ios17-run/inspection/tests.json",
+    "sha256": "2e61b1360702f7d6b735e9a384a3295f2a10bde5bb3f4cf79320b04ebcce7998",
+    "bytes": 2371
+  },
+  "inspection/test-runtime-warnings.json": {
+    "source": "/Users/palatis/Room in the Cart/.build/S24OutcomeReturnNov08/disclosure-input-followup/ios17-run/inspection/test-runtime-warnings.json",
+    "sha256": "ce5f63a49527481ca5704f8996eb8eea682d8688c3381353dd8f23ad6759bffb",
+    "bytes": 179
+  }
+}

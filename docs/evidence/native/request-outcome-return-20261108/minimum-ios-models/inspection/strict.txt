@@ -1,0 +1,17 @@
+Executed 6 of 6 selected tests.
+
+| Test | Result | Seconds |
+|---|---|---|
+| RoomInTheCartTests/HouseholdRequestMealContextTests/testCancelAndServiceScopeLossClearMealContextWithoutWrites | Passed | 0.07 |
+| RoomInTheCartTests/HouseholdRequestMealContextTests/testCerealPreviewIncludesTwoNamedProtectedLunchesFromItsCurrentShopRevision | Passed | 0.02 |
+| RoomInTheCartTests/HouseholdRequestMealContextTests/testUnchangedPriceCommitDuringReviewKeepsResponseButChangedPriceDiscardsIt | Passed | 0.02 |
+| RoomInTheCartTests/HouseholdRequestMealContextTests/testContextRejectsAnotherShopOrRevisionAndRefreshRequiresFreshReview | Passed | 0.01 |
+| RoomInTheCartTests/HouseholdRequestMealContextTests/testUnchangedDecisionBindingCommitsKeepPreviewAndExplicitAcknowledgments | Passed | 0.01 |
+| RoomInTheCartTests/HouseholdRequestMealContextTests/testMissingMealsStayUnknownWhileKnownEmptyMealsStayEmpty | Passed | 0.01 |
+The XCTest log confirms one start and one passing completion per selected test.
+
+Animation-idle diagnostics: 0 observed messages in 263 log lines (6 case starts, 0 runner restart boundaries). Diagnostic only; native results and runtime-warning checks are unchanged.
+No matching messages observed in the supplied log; this does not establish complete log coverage or absence of idle delays.
+
+The XCTest test export recorded 0 runtime warning occurrences across 6 examined tests.
+

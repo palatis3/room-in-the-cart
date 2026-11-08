@@ -1,0 +1,20 @@
+{
+  "reviewedAtUTC": "2026-11-08T12:36:00.490098+00:00",
+  "classification": "App process EXC_BAD_ACCESS/SIGSEGV null address; SIGNAL11. Not classified as OS memory pressure kill.",
+  "capturedAtUTC": "2026-11-08T12:31:29.453Z",
+  "rawReportSHA256": "dda53766cce0052754d8659b9b54ca62c9539a1878f578c294b430f2844be923",
+  "rawReportPublic": false,
+  "exactProductUUIDsMatched": true,
+  "faultPath": [
+    "strcmp",
+    "XCTAutomationSupport runtime_issue_os_log_fault_callback",
+    "libtrace high-volume logging quarantine",
+    "XCT accessibility snapshot placeholderValue/identifiers query"
+  ],
+  "source": "Private byte-preserved report and UUID binding under .build/S24OutcomeReturnNov08/disclosure-input-followup/ios17-termination-review/",
+  "limits": "No business-logic fault established; no complete minimum17 UI or warning-clear claim. No logging suppression, retry or native recovery applied. Narrow typed selector is an untested hypothesis.",
+  "historicalEvidence": [
+    "docs/evidence/b11/s21-device-management-20261103/se17-logging-crash/crash-diagnosis.json",
+    "docs/evidence/native/free-journey-week-entry-20261104.json"
+  ]
+}

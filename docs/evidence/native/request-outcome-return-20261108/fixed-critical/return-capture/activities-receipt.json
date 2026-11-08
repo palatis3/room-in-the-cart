@@ -1,0 +1,45 @@
+{
+  "exports": [
+    {
+      "argv": [
+        "/usr/bin/xcrun",
+        "xcresulttool",
+        "get",
+        "test-results",
+        "activities",
+        "--path",
+        "/Users/palatis/Room in the Cart/.build/S24OutcomeReturnNov08/fixed-critical-run/inspection/native.xcresult",
+        "--test-id",
+        "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite"
+      ],
+      "exitCode": 0,
+      "capBytes": 4000000,
+      "timeoutSeconds": 45,
+      "stdoutBytes": 330588,
+      "stdoutSHA256": "55f200206cd1985ce534c351964d3c9539c28e3cb5b984f8f598782f8ec3c3e4",
+      "stderrBytes": 0,
+      "stderrSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "/usr/bin/xcrun",
+        "xcresulttool",
+        "get",
+        "test-results",
+        "activities",
+        "--path",
+        "/Users/palatis/Room in the Cart/.build/S24OutcomeReturnNov08/fixed-critical-run/inspection/native.xcresult",
+        "--test-id",
+        "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/RequestDuplicateComparisonUITests/testConfirmedLaterPageDecisionReturnsToSameLeeOutcomeWithoutScrolling"
+      ],
+      "exitCode": 0,
+      "capBytes": 4000000,
+      "timeoutSeconds": 45,
+      "stdoutBytes": 410326,
+      "stdoutSHA256": "86af6820e2483dc1b0730eb36b020c5309d897fc2fe72edfec5e1037ac70b591",
+      "stderrBytes": 0,
+      "stderrSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "originalUnchanged": true
+}

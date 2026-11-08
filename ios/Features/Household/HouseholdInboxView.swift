@@ -15,54 +15,74 @@ struct ShopperInboxContent: View {
     @ObservedObject var model: HouseholdInboxModel
     @State private var decisionRequest: OwnRequest?
     @State private var lastRequestID: String?
+    @State private var confirmedReturnID: String?
     @AccessibilityFocusState private var focusedRequest: String?
+    @AccessibilityFocusState private var focusedOutcome: String?
     var body: some View {
-        List {
-            if model.authorized {
-                ShopperDeliverySection(model: model)
-                if model.canReviewDeferred, model.pending == nil {
-                    NavigationLink(ht("Saved from earlier pickups")) { DeferredRequestsView(model: model) }
-                        .accessibilityIdentifier("household.deferred.open")
-                }
-                Section {
-                    Button(ht("Refresh requests")) { Task { await model.load() } }.disabled(model.busy)
-                    Text(ht("Each request keeps its own outcome. Linking a line does not add another pack."))
-                        .foregroundStyle(.secondary)
-                }
-                Section(ht("Requests for this shop")) {
-                    ForEach(model.duplicateRequestGroups) { group in
-                        if group.hasPossibleDuplicates { RequestDuplicateGroupHeading(group: group) }
-                        ForEach(group.requests) { request in
-                            Button {
-                                lastRequestID = request.id; decisionRequest = request
-                            } label: {
-                                VStack(alignment: .leading, spacing: 6) {
-                                    Text(request.originalItem).font(.headline)
-                                    if let alias = request.authorAlias { Text(alias).font(.subheadline) }
-                                    if let quantity = request.ownQuantity { Text(quantity) }
-                                    if request.fromPreviousShop == true { Text(ht("From an earlier pickup")) }
-                                    Text(shopperRequestStatus(request)).foregroundStyle(.secondary)
-                                    Text(householdTime(request.receivedAt)).font(.caption)
-                                }
-                            }.disabled(model.busy || model.pending != nil)
-                                .accessibilityIdentifier("household.request.\(request.id)")
-                                .accessibilityFocused($focusedRequest, equals: request.id)
-                        }
+        ScrollViewReader { scroll in
+            List {
+                if model.authorized {
+                    ShopperDeliverySection(model: model)
+                    if model.canReviewDeferred, model.pending == nil {
+                        NavigationLink(ht("Saved from earlier pickups")) { DeferredRequestsView(model: model) }
+                            .accessibilityIdentifier("household.deferred.open")
                     }
-                    if model.requests.isEmpty, !model.busy { Text(ht("No requests are available in this shop.")) }
-                    if model.nextCursor != nil { Button(ht("Load more requests")) { Task { await model.load(more: true) } }.disabled(model.busy) }
-                }
-                if let notice = model.notice { Section { Text(notice).accessibilityIdentifier("household.inbox.notice") } }
-                if model.busy { ProgressView(ht("Checking service…")) }
-            } else { Text(ht("Shopper access has ended. Return to household settings.")) }
-        }.task { await model.load() }
-        .sheet(item: $decisionRequest, onDismiss: {
-            model.cancelReview(); focusedRequest = lastRequestID
-        }) { request in
-            NavigationStack { HouseholdRequestDecisionView(model: model, request: request) }
-                .presentationDetents([.large])
+                    Section {
+                        Button(ht("Refresh requests")) { Task { await model.load() } }.disabled(model.busy)
+                        Text(ht("Each request keeps its own outcome. Linking a line does not add another pack."))
+                            .foregroundStyle(.secondary)
+                    }
+                    Section(ht("Requests for this shop")) {
+                        ForEach(model.duplicateRequestGroups) { group in
+                            if group.hasPossibleDuplicates { RequestDuplicateGroupHeading(group: group) }
+                            ForEach(group.requests) { request in
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Button {
+                                        confirmedReturnID = nil; focusedOutcome = nil
+                                        lastRequestID = request.id; decisionRequest = request
+                                    } label: {
+                                        VStack(alignment: .leading, spacing: 6) {
+                                            Text(request.originalItem).font(.headline)
+                                            if let alias = request.authorAlias { Text(alias).font(.subheadline) }
+                                            if let quantity = request.ownQuantity { Text(quantity) }
+                                            if request.fromPreviousShop == true { Text(ht("From an earlier pickup")) }
+                                            Text(householdTime(request.receivedAt)).font(.caption)
+                                        }.frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                                            .contentShape(Rectangle())
+                                    }.disabled(model.busy || model.pending != nil)
+                                        .accessibilityIdentifier("household.request.\(request.id)")
+                                        .accessibilityFocused($focusedRequest, equals: request.id)
+                                    Text(shopperRequestStatus(request)).foregroundStyle(.secondary)
+                                        .accessibilityIdentifier("household.request.outcome.\(request.id)")
+                                        .accessibilityFocused($focusedOutcome, equals: request.id)
+                                }.accessibilityElement(children: .contain)
+                                    .id(request.id)
+                            }
+                        }
+                        if model.requests.isEmpty, !model.busy { Text(ht("No requests are available in this shop.")) }
+                        if model.nextCursor != nil { Button(ht("Load more requests")) { Task { await model.load(more: true) } }.disabled(model.busy) }
+                    }
+                    if let notice = model.notice { Section { Text(notice).accessibilityIdentifier("household.inbox.notice") } }
+                    if model.busy { ProgressView(ht("Checking service…")) }
+                } else { Text(ht("Shopper access has ended. Return to household settings.")) }
+            }.task { await model.load() }
+            .sheet(item: $decisionRequest, onDismiss: {
+                model.cancelReview()
+                if let id = confirmedReturnID, model.confirmedDecisionRequestID == id {
+                    scroll.scrollTo(id, anchor: .center)
+                    focusedRequest = nil; focusedOutcome = id
+                } else { focusedRequest = lastRequestID }
+            }) { request in
+                NavigationStack { HouseholdRequestDecisionView(model: model, request: request) }
+                    .presentationDetents([.large])
+            }
+            .onChange(of: model.confirmedDecisionRequestID) { _, id in
+                guard let id, decisionRequest?.id == id else { return }
+                confirmedReturnID = id
+                decisionRequest = nil
+            }
+            .onChange(of: model.authorized) { _, allowed in if !allowed { decisionRequest = nil } }
         }
-        .onChange(of: model.authorized) { _, allowed in if !allowed { decisionRequest = nil } }
     }
 }
 private struct DeferredRequestsView: View {
@@ -239,6 +259,11 @@ struct HouseholdRequestDecisionView: View {
                             }
                         }
                     }
+                }
+                if case .confirmed(let receipt) = model.delivery, receipt.kind == "request.apply",
+                   receipt.requestId == request.id, model.confirmedDecisionRequestID == nil {
+                    Button(ht("Refresh requests")) { Task { await model.load() } }
+                        .accessibilityIdentifier("household.decision.refreshOutcome")
                 }
                 if let notice = model.notice { Section { Text(notice).accessibilityIdentifier("household.decision.notice") } }
                 if model.busy { ProgressView(ht("Checking service…")) }

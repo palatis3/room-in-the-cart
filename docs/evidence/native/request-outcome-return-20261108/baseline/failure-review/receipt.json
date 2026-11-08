@@ -1,0 +1,69 @@
+{
+  "testIdentifier": "HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite()",
+  "testResult": "Failed",
+  "testsSHA256": "763e0654a9ce6207ba2560e0bf74d33ed27cfb5079b481d35f455e1d2f6c7b18",
+  "limits": {
+    "perFileBytes": 12582912,
+    "totalBytes": 20971520
+  },
+  "exports": [
+    {
+      "argv": [
+        "/usr/bin/xcrun",
+        "xcresulttool",
+        "export",
+        "attachments",
+        "--path",
+        "/Users/palatis/Room in the Cart/.build/S24OutcomeReturnNov08/baseline-run/inspection/native.xcresult",
+        "--test-id",
+        "HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite()",
+        "--output-path",
+        "/Users/palatis/Room in the Cart/.build/S24OutcomeReturnNov08/baseline-run/failure-review/png",
+        "--filter",
+        "S24-request-pack-failure*.png"
+      ],
+      "exitCode": 0
+    },
+    {
+      "argv": [
+        "/usr/bin/xcrun",
+        "xcresulttool",
+        "export",
+        "attachments",
+        "--path",
+        "/Users/palatis/Room in the Cart/.build/S24OutcomeReturnNov08/baseline-run/inspection/native.xcresult",
+        "--test-id",
+        "HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite()",
+        "--output-path",
+        "/Users/palatis/Room in the Cart/.build/S24OutcomeReturnNov08/baseline-run/failure-review/txt",
+        "--filter",
+        "S24-failure-accessibility-hierarchy*.txt"
+      ],
+      "exitCode": 0
+    }
+  ],
+  "originalUnchanged": true,
+  "originalFileCount": 129,
+  "files": [
+    {
+      "path": "png/manifest.json",
+      "bytes": 799,
+      "sha256": "b6fcc5a4008ae075c96d11be29dd3d80482a39eb615bd5ab363cfd7043f7af19"
+    },
+    {
+      "path": "png/F054BF36-F432-487E-9C1E-A69D62D17708.png",
+      "bytes": 151684,
+      "sha256": "e8353655b3ee7275f016fc92a915e86e28214fb7e315f4c91c6781ee48c2398d"
+    },
+    {
+      "path": "txt/C96354F9-E031-452A-9E86-15EDDB029A91.txt",
+      "bytes": 13884,
+      "sha256": "baa646c99b10c5d6c54507ecca763920a47602a9d241c112f834929937345ffe"
+    },
+    {
+      "path": "txt/manifest.json",
+      "bytes": 809,
+      "sha256": "93d1bcaaaef9d07dded15c45d20d365fd0ef25bda0205d04f962c64797605e3e"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite": {
+    "identical": true,
+    "sha256": "ef3761b9926ea0d749295051bc4d3d9fdcb723c39cba4ce2c231023f2f0e7479"
+  },
+  "assertReturnedToConfirmedRequest": {
+    "identical": true,
+    "sha256": "40b303511ebd63911a8c12c14c6c5e2b6974f2bf5ee161238025d63383fb9391"
+  }
+}

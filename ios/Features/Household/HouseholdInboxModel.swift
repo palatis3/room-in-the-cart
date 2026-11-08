@@ -132,6 +132,21 @@ enum ShopperDelivery: Equatable {
         guard authorized, !busy, pending == nil, let preview, let expiry = serviceDate(preview.expiresAt), expiry > Date() else { return false }
         return (!preview.requiresOverageAcceptance || acceptOverage) && (!preview.requiresUnknownAcceptance || acceptUnknown)
     }
+    /// A receipt alone is insufficient: the original inbox row must have refreshed
+    /// under the same shopper authority before its decision sheet can return.
+    var confirmedDecisionRequestID: String? {
+        guard authorized, !busy, pending == nil, case .confirmed(let receipt) = delivery,
+              receipt.kind == "request.apply", receipt.shopId == shopID, receipt.shopRevision > 0,
+              ["added", "deferred", "dismissed", "handled"].contains(receipt.disposition),
+              let shop, shop.shopId == shopID, shop.authorityEpoch == receipt.authorityEpoch,
+              shop.shopRevision >= receipt.shopRevision,
+              let requestID = receipt.requestId, let revision = receipt.requestRevision, revision > 0,
+              let request = requests.first(where: { $0.id == requestID && $0.shopId == shopID }),
+              request.revision >= revision,
+              ["added", "deferred", "dismissed", "handled", "withdrawn"].contains(request.status),
+              request.revision > revision || request.status == receipt.disposition else { return nil }
+        return requestID
+    }
     func hasPossibleDuplicate(_ request: OwnRequest) -> Bool {
         requests.filter { $0.originalItem.localizedCaseInsensitiveCompare(request.originalItem) == .orderedSame }.count > 1
     }
@@ -165,15 +180,46 @@ enum ShopperDelivery: Equatable {
                 }
                 reviewedCurrentFacts = pending != nil
             }
-        } catch { await handle(error, start: start) }
+        } catch {
+            if case .confirmed(let receipt) = delivery, receipt.kind == "request.apply" {
+                await handleConfirmedRefresh(error, start: start)
+            } else { await handle(error, start: start) }
+        }
     }
     private func refreshFacts(start: UUID) async throws {
         let value = try await service.shopperShop(shopID: shopID)
-        let page = try await service.shopperInbox(shopID: shopID)
+        var page = try await service.shopperInbox(shopID: shopID)
         guard start == generation else { throw ClientError.cancelled }
         guard value.shopId == shopID, page.requests.allSatisfy({ $0.shopId == shopID }) else { throw ClientError.invalidResponse }
+        let target: String?
+        if case .confirmed(let receipt) = delivery, receipt.kind == "request.apply", receipt.shopId == shopID {
+            target = receipt.requestId
+        } else { target = nil }
+        var refreshed = page.requests
+        var seenIDs = Set(refreshed.map(\.id))
+        var seenCursors = Set<String>()
+        guard seenIDs.count == refreshed.count else { throw ClientError.invalidResponse }
+        // Keep the original request reachable even when it was on a later page.
+        // Publish no partial result while locating its durable outcome.
+        while let target, !refreshed.contains(where: { $0.id == target }), let cursor = page.nextCursor {
+            guard seenCursors.insert(cursor).inserted else { throw ClientError.invalidResponse }
+            page = try await service.shopperInbox(shopID: shopID, cursor: cursor)
+            guard start == generation else { throw ClientError.cancelled }
+            guard page.requests.allSatisfy({ $0.shopId == shopID && seenIDs.insert($0.id).inserted }) else {
+                throw ClientError.invalidResponse
+            }
+            refreshed += page.requests
+        }
+        if target != nil {
+            let latest = try await service.shopperShop(shopID: shopID)
+            guard start == generation else { throw ClientError.cancelled }
+            guard latest.shopId == value.shopId, latest.shopRevision == value.shopRevision,
+                  latest.authorityEpoch == value.authorityEpoch else {
+                throw ClientError.service(status: 409, code: "stale_base", correlationID: nil, retryAfter: nil)
+            }
+        }
         forgetDeferred()
-        shop = value; requests = page.requests; nextCursor = page.nextCursor; invalidatePreview()
+        shop = value; requests = refreshed; nextCursor = page.nextCursor; invalidatePreview()
         if let selected { self.selected = requests.first { $0.id == selected.id } }
     }
     func select(_ request: OwnRequest) {
@@ -295,15 +341,7 @@ enum ShopperDelivery: Equatable {
             guard start == generation else { return }
             shop = nil; requests = []; nextCursor = nil
             do { try await refreshFacts(start: start) }
-            catch {
-                guard start == generation else { return }
-                switch error as? ClientError {
-                case .accessEnded, .sessionNeeded, .service(status: 404, code: _, correlationID: _, retryAfter: _):
-                    await handle(error, start: start)
-                case .cancelled: break
-                default: notice = ht("The decision was confirmed. Refresh requests to see the latest state.")
-                }
-            }
+            catch { await handleConfirmedRefresh(error, start: start) }
         } catch {
             guard start == generation else { return }
             if pending != nil {
@@ -327,6 +365,15 @@ enum ShopperDelivery: Equatable {
         forgetDeferred()
         generation = UUID(); authorized = false; shop = nil; requests = []; selected = nil; nextCursor = nil
         pending = nil; delivery = .none; notice = nil; clarification = ""; lineItem = ""; price = ""; linkedLineID = ""; invalidatePreview()
+    }
+    private func handleConfirmedRefresh(_ error: Error, start: UUID) async {
+        guard start == generation else { return }
+        switch error as? ClientError {
+        case .accessEnded, .sessionNeeded, .service(status: 404, code: _, correlationID: _, retryAfter: _):
+            await handle(error, start: start)
+        case .cancelled: break
+        default: notice = ht("The decision was confirmed. Refresh requests to see the latest state.")
+        }
     }
     private func handle(_ error: Error, start: UUID) async {
         guard start == generation else { return }

@@ -1,0 +1,46 @@
+{
+  "recordedAtUTC": "2026-11-08T12:46:08.669081+00:00",
+  "baseline": {
+    "nativeExit": 65,
+    "strictExit": 1,
+    "selected": 1,
+    "passed": 0,
+    "durationSeconds": 205.034,
+    "recordedRuntimeWarnings": 0,
+    "returnPostcondition": "failed; confirmed sheet remains open"
+  },
+  "requestReturnFix": "Scoped pass with preserved original failure",
+  "models": {
+    "requestPack": 16,
+    "mealContextMinimum17": 6,
+    "strict": "pass"
+  },
+  "earlierCurrentOSUI": {
+    "critical": 2,
+    "relatedRegression": 4,
+    "strict": "pass",
+    "sourceScope": "Before later comparison-header product style and test input visibility corrections"
+  },
+  "finalCurrentOSUI": {
+    "selected": 2,
+    "passed": 2,
+    "nativeExit": 0,
+    "strictExit": 0,
+    "recordedRuntimeWarnings": 0,
+    "sourceManifestSHA256": "7cafa30c68921bb57afd7e05e620ff3929a955fb064716042c1b9c4059a54c72"
+  },
+  "finalRelease": {
+    "buildExit": 0,
+    "bundleCheckExit": 0,
+    "signing": "disabled",
+    "arch": "arm64"
+  },
+  "rootVisualReview": "two initial final-return screenshots and both subsequent minimum17 failure screenshots reviewed",
+  "minimum17UI": "Open; three retained failed runs. Last matched crash inside XCTest logging/accessibility instrumentation. No suppression applied.",
+  "remaining": [
+    "minimum17 full UI and warning acceptance",
+    "physical VoiceOver focus",
+    "broader release and hosted CI acceptance"
+  ],
+  "originalPublicationSnapshot": "status-first-critical-publication.json"
+}

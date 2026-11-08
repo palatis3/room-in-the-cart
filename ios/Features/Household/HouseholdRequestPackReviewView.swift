@@ -79,6 +79,8 @@ struct HouseholdRequestPackReviewView: View {
             }
             if failure { Text(ht("Review the need, units, pack labels, source, availability, and prices. The decision has not changed.")) }
         }
+        .disclosureGroupStyle(LabeledFormDisclosureStyle(label: ht("Compare available packs for this request"),
+                                                         identifier: "household.pack.open"))
         .onChange(of: needed) { _, _ in reset() }.onChange(of: unit) { _, _ in reset() }
         .onChange(of: first) { old, new in
             #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE

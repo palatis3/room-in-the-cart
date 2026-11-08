@@ -1,0 +1,13 @@
+{
+  "reviewer": "root",
+  "reviewedAtUTC": "2026-11-08T12:25:56.077261+00:00",
+  "scope": "Original iOS17.0 screenshot and exact accessibility hierarchy; no interaction",
+  "observed": "Compare available packs row fully visible below Outcome/Add packs. Hierarchy exposes named StaticText343x64.5 and sibling unnamed collapsed Button10.5x13.5. Failure occurs before pack input or Apply.",
+  "interpretation": "Native disclosure button semantics differ on17; reused existing LabeledFormDisclosureStyle is a targeted product accessibility correction, not a timeout/scroll workaround.",
+  "files": {
+    "failure-review/png/81264F62-ED3C-408E-9577-3510128C1423.png": "b78df5342bd0139e524ad5a1780662f6995922bf8f73a1afd0af8d7d73fb5ee0",
+    "failure-review/txt/1E13CDDC-FD69-48F3-8036-B809CD25BD77.txt": "8e8324ed0b7182b637e0c6a5dda74140adab99fbcaa4fcd8526b7dc8de06478c",
+    "failure-review/receipt.json": "a5a6dfb89ceb9b12e70472018c3187cd934ca2c4c6e615d149204e103407540e"
+  },
+  "limits": "Does not establish physical VoiceOver behavior or outcome-return failure on17."
+}

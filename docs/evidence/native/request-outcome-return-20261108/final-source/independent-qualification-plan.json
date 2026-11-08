@@ -1,0 +1,11 @@
+{
+  "preparedAtUTC": "2026-11-08T12:34:04.678700+00:00",
+  "reason": "Minimum17 failed with app-process SIGSEGV inside XCTest logging callback after log-volume quarantine. Preserve failure and investigate. CurrentOSUI and unsignedRelease can establish independent scoped evidence without claiming minimum17 passage.",
+  "originalScriptsUnchanged": true,
+  "changes": "New separate runners remove dependency on failed17 before independent26/Release; no test selectors, assertions, limits, warning checks or source changed.",
+  "files": {
+    "run-ios26-independent.py": "5c8fbb0a627076f7b4f4d6cdaabac59fff1b31bd3e58c23e3624a69cc63387aa",
+    "inspect-ios26-independent.py": "555bfe9ecd8dc0b20dc870bb50b1cc703a05cfa16d70e8232ed8688094427e02",
+    "run-release-independent.py": "1a1a565ee6995a50a900b9d6cf060851d69f2f597a0c909040dc350a32d231f5"
+  }
+}

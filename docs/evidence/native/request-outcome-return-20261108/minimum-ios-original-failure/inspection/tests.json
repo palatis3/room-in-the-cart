@@ -1,0 +1,63 @@
+{
+  "devices" : [
+    {
+      "architecture" : "arm64",
+      "deviceId" : "D420C2CA-0E73-4213-9B96-1EB62EB061F6",
+      "deviceName" : "RITC Cook Voice Minimum OS Nov08",
+      "modelName" : "iPhone SE (3rd generation)",
+      "osBuildNumber" : "21A328",
+      "osVersion" : "17.0",
+      "platform" : "iOS Simulator"
+    }
+  ],
+  "testNodes" : [
+    {
+      "children" : [
+        {
+          "children" : [
+            {
+              "children" : [
+                {
+                  "children" : [
+                    {
+                      "name" : "XCTAssertTrue failed - Missing fully actionable UI element: Query chain:\n →Find: Target Application 'dev.roominthecart.app.debug'\n  ↪︎Find: Descendants matching type Button\n    ↪︎Find: Elements matching predicate '\"Compare available packs for this request\" IN identifiers'\nNo matches found for Elements matching predicate '\"Compare available packs for this request\" IN identifiers' from input {(\n    Button, {{91.5, 89.5}, {192.1, 18.8}}, identifier: 'fixture.s24.end-access', label: 'Fixture end shopper access',\n    Button, {{16.0, 54.0}, {60.5, 28.5}}, identifier: 'household.decision.cancel', label: 'Cancel',\n    Button, {{30.6, 214.8}, {313.7, 40.2}}, label: 'Refresh requests',\n    Button, {{45.3, 395.9}, {284.5, 83.7}}, identifier: 'household.request.44444444-4444-4444-8444-444444444444', label: 'Wraps for lunch, Sam, 8 wraps, Nov 2, 2026 at 7:00 PM',\n    Button, {{16.0, 463.5}, {343.0, 44.0}}, identifier: 'household.decision.choice', label: 'Outcome, Add packs to this shop',\n    Button, {{332.5, 533.0}, {10.5, 13.5}}, identifier: 'collapsed',\n    Button, {{249.0, 622.0}, {46.5, 32.0}}, identifier: 'Decrement', label: 'Whole packs, 1, Decrement', value: 1, Disabled,\n    Button, {{296.5, 622.0}, {46.5, 32.0}}, identifier: 'Increment', label: 'Whole packs, 1, Increment', value: 1\n)}\n",
+                      "nodeType" : "Failure Message",
+                      "sourceLocation" : {
+                        "filePath" : "/Users/palatis/Room in the Cart/ios/UITests/HouseholdRequestPackUITests.swift",
+                        "lineNumber" : 345
+                      }
+                    }
+                  ],
+                  "duration" : "1m 32s",
+                  "durationInSeconds" : 92.8813829421997,
+                  "name" : "testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite()",
+                  "nodeIdentifier" : "HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite",
+                  "nodeType" : "Test Case",
+                  "result" : "Failed"
+                }
+              ],
+              "name" : "HouseholdRequestPackUITests",
+              "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/HouseholdRequestPackUITests",
+              "nodeType" : "Test Suite",
+              "result" : "Failed"
+            }
+          ],
+          "name" : "RoomInTheCartUITests",
+          "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests",
+          "nodeType" : "UI test bundle",
+          "result" : "Failed"
+        }
+      ],
+      "name" : "RoomInTheCart",
+      "nodeType" : "Test Plan",
+      "result" : "Failed"
+    }
+  ],
+  "testPlanConfigurations" : [
+    {
+      "configurationId" : "1",
+      "configurationName" : "Test Scheme Action"
+    }
+  ]
+}

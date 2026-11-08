@@ -1,0 +1,23 @@
+{
+  "reviewer": "root",
+  "reviewedAtUTC": "2026-11-08T12:05:19.452187+00:00",
+  "method": "view_image; both originals1206x2622 displayed942x2048",
+  "images": [
+    {
+      "path": "fixed-critical/return-capture/png-0/ED422AC4-799A-4AFC-AE75-90B9BDACD1F8.png",
+      "sha256": "b1e2b8b8967e64a2ba6da5915e3eb4e380130546474b7b2bf5a1ba0a18781f54"
+    },
+    {
+      "path": "fixed-critical/return-capture/png-1/1DBFF268-F32F-42C2-B8BE-081520294909.png",
+      "sha256": "af16f39ccdde9fe24ba39f9253fa93a54b96c420edcb6b902c42410aaf6e712c"
+    }
+  ],
+  "observations": [
+    "Original request return: no Review request sheet or Cancel; Wraps for lunch, Sam,8wraps and Added to the plan fully visible; fixture1decision/1line.",
+    "Later-page return: no decision sheet; Lee,2boxes for the school snack drive and Saved for next shop fully visible; Sam remains pending and Pat handled; fixture1decision/1line/4loaded."
+  ],
+  "limits": [
+    "Static synthetic iOS26.2 light/Large fixture screenshots.",
+    "Does not establish VoiceOver focus, continuous motion, other appearances or physical device acceptance."
+  ]
+}

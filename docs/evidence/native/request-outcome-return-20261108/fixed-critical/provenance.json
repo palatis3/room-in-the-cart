@@ -1,0 +1,106 @@
+{
+  "files": [
+    {
+      "path": "fixed-critical/run.json",
+      "sourcePath": ".build/S24OutcomeReturnNov08/fixed-critical-run/run.json",
+      "bytes": 2307,
+      "sha256": "76d48b281db7cec8576c321f9a0223107a5211ee0159f8388c6a89d25b0e57e1"
+    },
+    {
+      "path": "fixed-critical/selectors.txt",
+      "sourcePath": ".build/S24OutcomeReturnNov08/fixed-critical-run/selectors.txt",
+      "bytes": 245,
+      "sha256": "8cf8cfa27ac62a4180fabdcfbb19cb997862115e822d0516646c69d641345bf4"
+    },
+    {
+      "path": "fixed-critical/inspection/verification.json",
+      "sourcePath": ".build/S24OutcomeReturnNov08/fixed-critical-run/inspection/verification.json",
+      "bytes": 175,
+      "sha256": "1993230d696c804a11eccf8e96e3215d5b2e69750f06309dcb9bfdd05906b312"
+    },
+    {
+      "path": "fixed-critical/inspection/strict.txt",
+      "sourcePath": ".build/S24OutcomeReturnNov08/fixed-critical-run/inspection/strict.txt",
+      "bytes": 844,
+      "sha256": "1374843aac0f9c65f99e58a0e635f558f10c9460fe9ffbde20bbcb41a086288c"
+    },
+    {
+      "path": "fixed-critical/inspection/summary.json",
+      "sourcePath": ".build/S24OutcomeReturnNov08/fixed-critical-run/inspection/summary.json",
+      "bytes": 1021,
+      "sha256": "fcfc4c2ec542f55e7eeb7deed79cf8d3bf533545fd353149fa335bfbac531cf5"
+    },
+    {
+      "path": "fixed-critical/inspection/tests.json",
+      "sourcePath": ".build/S24OutcomeReturnNov08/fixed-critical-run/inspection/tests.json",
+      "bytes": 2865,
+      "sha256": "8a0202e07635c88e7beb5ffe98cde9c28a9ee81dfe238f90863265bdcce2438e"
+    },
+    {
+      "path": "fixed-critical/inspection/test-runtime-warnings.json",
+      "sourcePath": ".build/S24OutcomeReturnNov08/fixed-critical-run/inspection/test-runtime-warnings.json",
+      "bytes": 179,
+      "sha256": "f8ad96fa2dba1663cb8ecf3e532759170a56556bd8646ffa1bd97a8aa0aa78f8"
+    },
+    {
+      "path": "fixed-critical/source/causal-test-identity.json",
+      "sourcePath": ".build/S24OutcomeReturnNov08/causal-test-identity.json",
+      "bytes": 339,
+      "sha256": "bd68ac1fbdf39ed842e8ae2319b0b384c8b6631075e848a2381d0392f4a0ab60"
+    },
+    {
+      "path": "fixed-critical/source/fixed-source-manifest.json",
+      "sourcePath": ".build/S24OutcomeReturnNov08/fixed-source-manifest.json",
+      "bytes": 69846,
+      "sha256": "07d95cd307eb89f35398335051c49b5a208ce43a74683fe3f822a106230598a2"
+    },
+    {
+      "path": "fixed-critical/source/fixed-source.patch",
+      "sourcePath": ".build/S24OutcomeReturnNov08/fixed-source.patch",
+      "bytes": 40564,
+      "sha256": "b0eb5a1a91faa795270a5c3f3688b7271a474d35dd77ccbcfd959d89bab1488f"
+    },
+    {
+      "path": "fixed-critical/return-capture/activities-receipt.json",
+      "sourcePath": ".build/S24OutcomeReturnNov08/fixed-critical-run/return-capture/activities-receipt.json",
+      "bytes": 1618,
+      "sha256": "95afb5cf2256445b56683c5094bcc1d76a84d973abfe597f04f163bc20f8c7eb"
+    },
+    {
+      "path": "fixed-critical/return-capture/screenshots-receipt.json",
+      "sourcePath": ".build/S24OutcomeReturnNov08/fixed-critical-run/return-capture/screenshots-receipt.json",
+      "bytes": 3643,
+      "sha256": "99e9a7886fbfe95587ad289216c966de386209c113f4f91e65ad4a9bc019f534"
+    },
+    {
+      "path": "fixed-critical/return-capture/png-1/1DBFF268-F32F-42C2-B8BE-081520294909.png",
+      "sourcePath": ".build/S24OutcomeReturnNov08/fixed-critical-run/return-capture/png-1/1DBFF268-F32F-42C2-B8BE-081520294909.png",
+      "bytes": 296856,
+      "sha256": "af16f39ccdde9fe24ba39f9253fa93a54b96c420edcb6b902c42410aaf6e712c"
+    },
+    {
+      "path": "fixed-critical/return-capture/png-1/manifest.json",
+      "sourcePath": ".build/S24OutcomeReturnNov08/fixed-critical-run/return-capture/png-1/manifest.json",
+      "bytes": 846,
+      "sha256": "fca623c04956bf3d3ad9d8c7d04c47177186d96daecf96436861de12bfd92aaa"
+    },
+    {
+      "path": "fixed-critical/return-capture/png-0/manifest.json",
+      "sourcePath": ".build/S24OutcomeReturnNov08/fixed-critical-run/return-capture/png-0/manifest.json",
+      "bytes": 825,
+      "sha256": "89709617df2842f6bf3b37de7165119e5936d180ef62dab7c369f8a2a89264eb"
+    },
+    {
+      "path": "fixed-critical/return-capture/png-0/ED422AC4-799A-4AFC-AE75-90B9BDACD1F8.png",
+      "sourcePath": ".build/S24OutcomeReturnNov08/fixed-critical-run/return-capture/png-0/ED422AC4-799A-4AFC-AE75-90B9BDACD1F8.png",
+      "bytes": 219316,
+      "sha256": "b1e2b8b8967e64a2ba6da5915e3eb4e380130546474b7b2bf5a1ba0a18781f54"
+    }
+  ],
+  "originalCopiesUnchanged": true,
+  "activitiesRetainedPrivately": ".build/S24OutcomeReturnNov08/fixed-critical-run/return-capture/activities-{0,1}.json",
+  "activitiesPublicScope": "Exact final-return attachment metadata and complete-export hashes in receipts; full activity trees omitted",
+  "screenshotReview": "Pending root visual review",
+  "noNativeBuildTestOrSimulatorAction": true,
+  "readOnlyCompletedResultExports": true
+}

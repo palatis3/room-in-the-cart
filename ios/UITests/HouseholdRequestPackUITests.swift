@@ -49,7 +49,7 @@ import XCTest
         tap(retry)
         XCTAssertTrue(successor.waitForExistence(timeout: 8))
         XCTAssertTrue(successor.label.contains("From an earlier pickup"))
-        XCTAssertTrue(successor.label.contains("Received, waiting for review"))
+        XCTAssertEqual(element("household.request.outcome.44444444-4444-4444-8444-444444444444").label, "Received, waiting for review")
         XCTAssertEqual(app.buttons.matching(identifier: successor.identifier).count, 1)
         XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 2")
         XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 0")
@@ -81,9 +81,7 @@ import XCTest
         tap(element("household.decision.review"))
         assertElementContains("household.decision.after-total", "$4.25")
         tap(apply)
-        tap(element("household.decision.cancel"))
-        XCTAssertTrue(successor.waitForExistence(timeout: 5))
-        XCTAssertTrue(successor.label.contains("Added"))
+        assertReturnedToConfirmedRequest()
         XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 1")
         XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 3")
     }
@@ -113,7 +111,8 @@ import XCTest
         try assertReadableContrast(guidance)
         tap(element("household.decision.cancel"))
         let request = element("household.request.44444444-4444-4444-8444-444444444444")
-        XCTAssertTrue(request.waitForExistence(timeout: 5)); XCTAssertTrue(request.label.contains("Received, waiting for review"))
+        XCTAssertTrue(request.waitForExistence(timeout: 5))
+        XCTAssertEqual(element("household.request.outcome.44444444-4444-4444-8444-444444444444").label, "Received, waiting for review")
         XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 0")
         XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 0")
         tap(element("fixture.s24.end-access"))
@@ -261,7 +260,14 @@ import XCTest
         XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 0")
         tap(request)
         tap(element("household.decision.choice")); tap(app.buttons["Add packs to this shop"])
-        tap(app.buttons["Compare available packs for this request"])
+        let comparePacks = app.buttons["household.pack.open"]
+        reveal(comparePacks, fullyVisible: true)
+        XCTAssertEqual(comparePacks.label, "Compare available packs for this request")
+        XCTAssertEqual(comparePacks.value as? String, "Collapsed")
+        XCTAssertGreaterThanOrEqual(comparePacks.frame.height, 44)
+        XCTAssertGreaterThan(comparePacks.frame.width, app.frame.width / 2)
+        comparePacks.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: 0.5)).tap()
+        XCTAssertEqual(comparePacks.value as? String, "Expanded")
         fill("8", into: "household.pack.need", replacing: true)
         for (id, yield, price) in [("a", "4", "3.00"), ("b", "6", "4.00")] {
             fill("Reviewed pack " + id, into: "household.pack.\(id).label", replacing: true)
@@ -282,18 +288,24 @@ import XCTest
         capture("S24-actual-household-preview-before-overage-approval")
         enableSwitch("household.decision.overage")
         reveal(apply); XCTAssertTrue(apply.isEnabled); tap(apply)
-        let confirmations = app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", "Decision confirmed by the household"))
-        // The inbox behind the sheet displays the same receipt. Require the
-        // visible sheet receipt, rather than the covered parent's first match.
-        let visibleReceipt = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-            confirmations.allElementsBoundByIndex.contains { $0.exists && $0.isHittable }
-        }, object: nil)
-        XCTAssertEqual(XCTWaiter.wait(for: [visibleReceipt], timeout: 10), .completed)
-        capture("S24-actual-decision-receipt")
-        tap(element("household.decision.cancel"))
+        assertReturnedToConfirmedRequest()
+        capture("S23-updated-original-request-after-confirmed-apply")
         XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 1")
         XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 1")
-        capture("S24-request-returned-once-after-sheet-dismissal")
+        capture("S23-request-returned-once-without-manual-dismissal")
+    }
+    private func assertReturnedToConfirmedRequest(file: StaticString = #filePath, line: UInt = #line) {
+        let cancel = element("household.decision.cancel")
+        let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: cancel)
+        XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 10), .completed,
+                       "Confirmed Apply must return without another Cancel tap", file: file, line: line)
+        let request = element("household.request.44444444-4444-4444-8444-444444444444")
+        let outcome = element("household.request.outcome.44444444-4444-4444-8444-444444444444")
+        // Do not scroll here: returning from the sheet must expose the original row.
+        XCTAssertTrue(request.exists && request.isHittable, file: file, line: line)
+        XCTAssertTrue(outcome.exists && outcome.isHittable, file: file, line: line)
+        XCTAssertEqual(outcome.label, "Added to the plan", file: file, line: line)
+        XCTAssertEqual(app.buttons.matching(identifier: request.identifier).count, 1, file: file, line: line)
     }
     private func element(_ id: String) -> XCUIElement { app.descendants(matching: .any).matching(identifier: id).firstMatch }
     private func tap(_ target: XCUIElement) { reveal(target); XCTAssertTrue(target.isHittable, target.debugDescription); target.tap() }
@@ -308,7 +320,9 @@ import XCTest
         XCTAssertEqual(control.value as? String, "1", "The reviewed switch must be on: \(label)")
     }
     private func fill(_ text: String, into id: String, replacing: Bool = false) {
-        let field = element(id); tap(field)
+        let field = element(id)
+        // A partially clipped field can report hittable on the smaller iOS 17 screen.
+        reveal(field, fullyVisible: true); tap(field)
         if replacing, let old = field.value as? String, old != field.placeholderValue { app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count)) }
         app.typeText(text)
         let done = app.buttons.matching(NSPredicate(format: "label == %@", "Done")).firstMatch

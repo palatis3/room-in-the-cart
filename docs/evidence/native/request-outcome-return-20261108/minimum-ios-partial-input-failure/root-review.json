@@ -1,0 +1,7 @@
+{
+  "reviewer": "root",
+  "reviewedAtUTC": "2026-11-08T12:30:41.741100+00:00",
+  "observations": "Named pack button343x66 Expanded. Need field652\u2013696 in667point viewport; screenshot shows field cut off atbottom and no keyboard. First empty clearing input failed without keyboard focus.",
+  "scope": "Clipping corroborates the need for full-visibility precondition, but no touch delivery trace proves sole causality. Native65/strict1 remains a failure before Apply.",
+  "correction": "Only test fill helper now requires existing fullyVisible reveal before its single tap; product source unchanged from labeled disclosure followup."
+}

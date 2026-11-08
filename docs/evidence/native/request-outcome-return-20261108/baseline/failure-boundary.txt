@@ -1,0 +1,6 @@
+Source: .build/S24OutcomeReturnNov08/baseline-run/native.log
+Line numbering: physical LF lines (checker splitlines numbering may differ).
+SHA256: 33d0b2d4aacf8dc9f8ca687629a89a8e00a350f751a2ef768ea6fd353435ef1b
+
+9620: /Users/palatis/Room in the Cart/.build/S24OutcomeReturnNov08/baseline-source/ios/UITests/HouseholdRequestPackUITests.swift:283: error: -[RoomInTheCartUITests.HouseholdRequestPackUITests testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite] : XCTAssertEqual failed: ("XCTWaiterResult(rawValue: 2)") is not equal to ("XCTWaiterResult(rawValue: 1)") - Confirmed Apply must return without another Cancel tap
+9633: Test Case '-[RoomInTheCartUITests.HouseholdRequestPackUITests testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite]' failed (205.034 seconds).

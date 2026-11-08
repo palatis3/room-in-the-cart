@@ -1,0 +1,9 @@
+{
+  "nativeExit": 65,
+  "strictExit": 1,
+  "expectedCount": 1,
+  "sourceManifestSHA256": "17055a858536fa784f0b066595ff9fe3720daf5a632ff160d5d74dea79d5bcce",
+  "originalUnchanged": true,
+  "sourceUnchanged": true,
+  "inspectedAtUTC": "2026-11-08T12:28:50.461714+00:00"
+}

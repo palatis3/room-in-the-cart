@@ -37,8 +37,14 @@ import XCTest
         tap(element("household.decision.review"))
         let apply = element("household.decision.apply")
         tap(apply)
-        assertVisible("Decision confirmed by the household")
-        closeDecision()
+        let returned = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"),
+                                                object: element("household.decision.cancel"))
+        XCTAssertEqual(XCTWaiter.wait(for: [returned], timeout: 10), .completed)
+        expectsDecisionSheet = false
+        let outcome = element("household.request.outcome.a4444444-4444-4444-8444-444444444441")
+        XCTAssertTrue(sam.exists && sam.isHittable)
+        XCTAssertTrue(outcome.exists && outcome.isHittable)
+        XCTAssertEqual(outcome.label, "Saved for next shop")
         XCTAssertEqual(element("fixture.s23.commands").label,"Fixture applied decisions: 1")
         XCTAssertEqual(element("fixture.s23.lines").label,"Fixture saved lines: 1")
         tap(app.buttons["Load more requests"])
@@ -50,6 +56,46 @@ import XCTest
         assertComparisonValue("amount",request:"lee",value:"2 boxes for the school snack drive")
         assertComparisonValue("outcome",request:"lee",value:"Received, waiting for review",contains:true)
         capture("S23-one-decision-keeps-other-request-pending")
+    }
+    func testConfirmedLaterPageDecisionReturnsToSameLeeOutcomeWithoutScrolling() {
+        launch(language: "en", locale: "en_US")
+        let loadedFirstPage = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "label == %@", "Fixture loaded requests: 2"),
+            object: element("fixture.s23.loaded"))
+        XCTAssertEqual(XCTWaiter.wait(for: [loadedFirstPage], timeout: 5), .completed)
+        tap(app.buttons["Load more requests"])
+        XCTAssertEqual(element("fixture.s23.loaded").label, "Fixture loaded requests: 4")
+        let lee = element("household.request.a4444444-4444-4444-8444-444444444443")
+        XCTAssertEqual(element("fixture.s23.commands").label, "Fixture applied decisions: 0")
+        openRequest(lee, step: "Lee-originally-on-page-two")
+        assertComparisonValue("selection", request: "lee", value: "Deciding this request")
+        assertComparisonValue("amount", request: "lee", value: "2 boxes for the school snack drive")
+        tap(element("household.decision.review"))
+        tap(element("household.decision.apply"))
+        let returned = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"),
+                                                object: element("household.decision.cancel"))
+        XCTAssertEqual(XCTWaiter.wait(for: [returned], timeout: 10), .completed)
+        expectsDecisionSheet = false
+        let outcome = element("household.request.outcome.a4444444-4444-4444-8444-444444444443")
+        // No reveal, tap or scrolling after Apply may make these assertions pass.
+        XCTAssertTrue(lee.exists && lee.isHittable)
+        XCTAssertTrue(lee.label.contains("Lee") && lee.label.contains("2 boxes for the school snack drive"))
+        XCTAssertTrue(outcome.exists && outcome.isHittable)
+        XCTAssertEqual(outcome.label, "Saved for next shop")
+        XCTAssertEqual(app.buttons.matching(identifier: lee.identifier).count, 1)
+        XCTAssertEqual(element("fixture.s23.loaded").label, "Fixture loaded requests: 4")
+        XCTAssertEqual(element("fixture.s23.commands").label, "Fixture applied decisions: 1")
+        XCTAssertEqual(element("fixture.s23.lines").label, "Fixture saved lines: 1")
+        capture("S23-later-page-Lee-returned-to-durable-outcome-without-scroll")
+
+        // After proving the return location, inspect the refreshed sibling outcomes.
+        openRequest(lee, step: "Lee-after-own-confirmed-outcome")
+        assertComparisonValue("outcome", request: "sam", value: "Received, waiting for review", contains: true)
+        assertComparisonValue("outcome", request: "pat", value: "Handled", contains: true)
+        assertComparisonValue("outcome", request: "lee", value: "Saved for next shop", contains: true)
+        closeDecision()
+        XCTAssertEqual(element("fixture.s23.commands").label, "Fixture applied decisions: 1")
+        XCTAssertEqual(element("fixture.s23.lines").label, "Fixture saved lines: 1")
     }
     func testSpanishLargeTypeKeepsOriginalRequestWordsAndReadOnlyComparison() {
         launch(language:"es",locale:"es_US",largeType:true)

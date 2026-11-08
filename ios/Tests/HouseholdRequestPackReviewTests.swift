@@ -77,6 +77,203 @@ final class HouseholdRequestPackReviewTests: XCTestCase {
         await model.apply(); XCTAssertEqual(server.commandCount,1); XCTAssertEqual(server.lineCount,1)
         await model.apply(); XCTAssertEqual(server.commandCount,1)
     }
+    @MainActor func testConfirmedApplyWaitsForRefreshedOriginalOutcomeBeforeReturning() async throws {
+        let (model, server, url) = try await setup()
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        model.price = "3.00"; await model.review()
+        let held = HeldS24OutcomeResponse()
+        defer { S24FixtureProtocol.intercept = nil; held.release() }
+        let arrived = expectation(description: "Confirmed Apply is refreshing its original request")
+        S24FixtureProtocol.intercept = { task in
+            guard task.request.url?.path.hasSuffix("/inbox") == true, server.commandCount > 0 else { return false }
+            held.hold(task); arrived.fulfill(); return true
+        }
+        let apply = Task { await model.apply() }
+        await fulfillment(of: [arrived], timeout: 3)
+        guard case .confirmed = model.delivery else { return XCTFail("Expected durable receipt before inbox refresh") }
+        XCTAssertTrue(model.busy); XCTAssertNil(model.confirmedDecisionRequestID)
+        XCTAssertTrue(model.requests.isEmpty, "The old row cannot supply the outcome focus")
+        S24FixtureProtocol.intercept = nil; held.release()
+        await apply.value
+        XCTAssertFalse(model.busy)
+        XCTAssertEqual(model.confirmedDecisionRequestID, S24FixtureServer.requestID)
+        XCTAssertEqual(model.requests.first?.status, "added")
+        XCTAssertEqual(model.requests.first?.revision, 2)
+        await model.apply()
+        XCTAssertEqual(server.commandCount, 1); XCTAssertEqual(server.lineCount, 1)
+        model.clear(); XCTAssertNil(model.confirmedDecisionRequestID)
+    }
+
+    @MainActor func testConfirmedApplyRefreshFailureWaitsForSuccessfulRefresh() async throws {
+        let (model, server, url) = try await setup()
+        defer { S24FixtureProtocol.intercept = nil; try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        model.price = "3.00"; await model.review()
+        S24FixtureProtocol.intercept = { task in
+            guard task.request.url?.path.hasSuffix("/inbox") == true, server.commandCount > 0 else { return false }
+            task.client?.urlProtocol(task, didFailWithError: URLError(.timedOut)); return true
+        }
+        await model.apply()
+        guard case .confirmed = model.delivery else { return XCTFail("The accepted decision must stay confirmed") }
+        XCTAssertFalse(model.busy); XCTAssertNil(model.confirmedDecisionRequestID)
+        XCTAssertTrue(model.requests.isEmpty)
+        S24FixtureProtocol.intercept = nil
+        await model.load()
+        XCTAssertEqual(model.confirmedDecisionRequestID, S24FixtureServer.requestID)
+        XCTAssertEqual(model.requests.first?.status, "added")
+        XCTAssertEqual(server.commandCount, 1); XCTAssertEqual(server.lineCount, 1)
+    }
+
+    @MainActor func testConfirmedApplyFindsOriginalOutcomeOnLaterInboxPage() async throws {
+        let (model, server, url) = try await setup()
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        model.price = "3.00"; await model.review()
+        let held = HeldS24OutcomeResponse()
+        defer { S24FixtureProtocol.intercept = nil; held.release() }
+        let arrived = expectation(description: "Original confirmed request is on the second inbox page")
+        S24FixtureProtocol.intercept = { task in
+            guard task.request.url?.path.hasSuffix("/inbox") == true, server.commandCount > 0 else { return false }
+            if task.request.url?.query == nil { finishS24FirstOutcomePage(task, server: server) }
+            else { held.hold(task); arrived.fulfill() }
+            return true
+        }
+        let apply = Task { await model.apply() }
+        await fulfillment(of: [arrived], timeout: 3)
+        XCTAssertTrue(model.busy); XCTAssertNil(model.confirmedDecisionRequestID)
+        XCTAssertTrue(model.requests.isEmpty, "A partial page cannot replace the original outcome")
+        held.release()
+        await apply.value
+        XCTAssertEqual(model.confirmedDecisionRequestID, S24FixtureServer.requestID)
+        XCTAssertEqual(model.requests.map(\.id), [s24OtherRequestID, S24FixtureServer.requestID])
+        XCTAssertEqual(model.requests.last?.status, "added")
+        XCTAssertNil(model.nextCursor)
+        XCTAssertEqual(server.commandCount, 1); XCTAssertEqual(server.lineCount, 1)
+    }
+
+    @MainActor func testOutcomePageCycleOrShopChangePreservesReceiptWithoutPublishingPartialRows() async throws {
+        for cycle in [true, false] {
+            let (model, server, url) = try await setup()
+            defer { S24FixtureProtocol.intercept = nil; try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+            model.price = "3.00"; await model.review()
+            S24FixtureProtocol.intercept = { task in
+                guard task.request.url?.path.hasSuffix("/inbox") == true, server.commandCount > 0 else { return false }
+                if task.request.url?.query == nil { finishS24FirstOutcomePage(task, server: server) }
+                else if cycle {
+                    let page: [String: Any] = ["requests": [], "nextCursor": s24OtherRequestID]
+                    let bytes = try! JSONSerialization.data(withJSONObject: page)
+                    finishS24OutcomeResponse(task, status: 200, data: bytes)
+                } else {
+                    server.advanceSource()
+                    task.finishResponse()
+                }
+                return true
+            }
+            await model.apply()
+            guard case .confirmed = model.delivery else { return XCTFail("Refresh failure must preserve the durable receipt") }
+            XCTAssertNil(model.confirmedDecisionRequestID); XCTAssertTrue(model.requests.isEmpty)
+            XCTAssertEqual(model.notice, "The decision was confirmed. Refresh requests to see the latest state.")
+            // Repeated failed Refresh must not claim that the decision is unconfirmed.
+            await model.load()
+            XCTAssertNil(model.confirmedDecisionRequestID); XCTAssertTrue(model.requests.isEmpty)
+            XCTAssertEqual(model.notice, "The decision was confirmed. Refresh requests to see the latest state.")
+            S24FixtureProtocol.intercept = nil
+            await model.load()
+            XCTAssertEqual(model.confirmedDecisionRequestID, S24FixtureServer.requestID)
+            XCTAssertEqual(server.commandCount, 1); XCTAssertEqual(server.lineCount, 1)
+        }
+    }
+
+    @MainActor func testOutcomeReturnRequiresKnownStateAndAllowsNewerDurableOutcome() async throws {
+        for (status, revision, canReturn) in [("unexpected", 2, false), ("pending", 2, false),
+                                             ("deferred", 2, false), ("deferred", 3, true), ("withdrawn", 3, true)] {
+            let (model, server, url) = try await setup()
+            defer { S24FixtureProtocol.intercept = nil; try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+            model.price = "3.00"; await model.review()
+            S24FixtureProtocol.intercept = { task in
+                guard task.request.url?.path.hasSuffix("/inbox") == true, server.commandCount > 0 else { return false }
+                do {
+                    let (_, bytes) = try server.respond(task.request)
+                    var page = try XCTUnwrap(JSONSerialization.jsonObject(with: bytes) as? [String: Any])
+                    var rows = try XCTUnwrap(page["requests"] as? [[String: Any]])
+                    rows[0]["status"] = status; rows[0]["revision"] = revision; page["requests"] = rows
+                    finishS24OutcomeResponse(task, status: 200, data: try JSONSerialization.data(withJSONObject: page))
+                } catch { task.client?.urlProtocol(task, didFailWithError: error) }
+                return true
+            }
+            await model.apply()
+            XCTAssertEqual(model.confirmedDecisionRequestID, canReturn ? S24FixtureServer.requestID : nil,
+                           "Outcome \(status) at revision \(revision)")
+        }
+    }
+
+    @MainActor func testAccessEndsDuringConfirmedRefreshWithoutAnOutcomeReturn() async throws {
+        let (model, server, url) = try await setup()
+        defer { S24FixtureProtocol.intercept = nil; try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        model.price = "3.00"; await model.review()
+        XCTAssertNil(model.confirmedDecisionRequestID)
+        S24FixtureProtocol.intercept = { task in
+            guard task.request.url?.path.hasSuffix("/inbox") == true, server.commandCount > 0 else { return false }
+            finishS24OutcomeResponse(task, status: 403, data: Data())
+            return true
+        }
+        await model.apply()
+        XCTAssertFalse(model.authorized); XCTAssertNil(model.confirmedDecisionRequestID)
+        XCTAssertNil(model.shop); XCTAssertTrue(model.requests.isEmpty)
+        XCTAssertEqual(server.commandCount, 1); XCTAssertEqual(server.lineCount, 1)
+    }
+
+    @MainActor func testUnrelatedReceiptAndChangedAuthorityCannotReturnToDecisionOutcome() async throws {
+        let replacements: [[String: Any]] = [
+            ["kind": "request.clarify"], ["kind": "request.carry"],
+            ["requestId": UUID().uuidString], ["authorityEpoch": 2],
+            ["requestRevision": 3], ["shopRevision": 3], ["requestRevision": 0], ["shopRevision": 0],
+            ["disposition": "unexpected"], ["disposition": "clarified"]
+        ]
+        for replacement in replacements {
+            let (model, server, url) = try await setup()
+            defer { S24FixtureProtocol.intercept = nil; try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+            model.price = "3.00"; await model.review()
+            S24FixtureProtocol.intercept = { task in
+                guard task.request.url?.path.hasSuffix("/commands") == true else { return false }
+                do {
+                    let (_, bytes) = try server.respond(task.request)
+                    var receipt = try XCTUnwrap(JSONSerialization.jsonObject(with: bytes) as? [String: Any])
+                    receipt.merge(replacement) { _, changed in changed }
+                    finishS24OutcomeResponse(task, status: 200, data: try JSONSerialization.data(withJSONObject: receipt))
+                } catch { task.client?.urlProtocol(task, didFailWithError: error) }
+                return true
+            }
+            await model.apply()
+            XCTAssertNil(model.confirmedDecisionRequestID, "Mismatched receipt: \(replacement)")
+            XCTAssertEqual(model.requests.first?.status, "added")
+        }
+    }
+
+    @MainActor func testLostReplyAndConflictDoNotReturnEvenWhenRefreshedRowHasOutcome() async throws {
+        for conflict in [false, true] {
+            let (model, server, url) = try await setup()
+            defer { S24FixtureProtocol.intercept = nil; try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+            model.price = "3.00"; await model.review()
+            S24FixtureProtocol.intercept = { task in
+                guard task.request.url?.path.hasSuffix("/commands") == true else { return false }
+                if conflict {
+                    finishS24OutcomeResponse(task, status: 409, data: Data("{\"error\":{\"code\":\"stale_base\"}}".utf8))
+                } else {
+                    // The service commits once, but the app never receives its receipt.
+                    _ = try? server.respond(task.request)
+                    task.client?.urlProtocol(task, didFailWithError: URLError(.timedOut))
+                }
+                return true
+            }
+            await model.apply()
+            XCTAssertEqual(model.delivery, conflict ? .needsReview : .waiting)
+            XCTAssertNotNil(model.pending); XCTAssertNil(model.confirmedDecisionRequestID)
+            S24FixtureProtocol.intercept = nil
+            await model.load()
+            XCTAssertEqual(model.requests.first?.status, conflict ? "pending" : "added")
+            XCTAssertNil(model.confirmedDecisionRequestID)
+        }
+    }
+
     @MainActor func testUnknownSelectedPriceAndManualPathKeepExplicitUnknownAcknowledgment() async throws {
         let(model,server,url)=try await setup(); defer { try? FileManager.default.removeItem(at:url.deletingLastPathComponent()) }
         let scope=try XCTUnwrap(model.packReviewScope)
@@ -106,4 +303,34 @@ final class HouseholdRequestPackReviewTests: XCTestCase {
         model.cancelReview(); XCTAssertNil(model.selected); XCTAssertNil(model.preview)
         model.clear(); XCTAssertFalse(model.usePackSelection(selection)); XCTAssertNil(model.packReviewScope)
     }
+}
+
+private final class HeldS24OutcomeResponse: @unchecked Sendable {
+    private let lock = NSLock()
+    private var task: S24FixtureProtocol?
+    func hold(_ value: S24FixtureProtocol) { lock.lock(); task = value; lock.unlock() }
+    func release() {
+        lock.lock(); let value = task; task = nil; lock.unlock()
+        value?.finishResponse()
+    }
+}
+private func finishS24OutcomeResponse(_ task: S24FixtureProtocol, status: Int, data: Data) {
+    let response = HTTPURLResponse(url: task.request.url!, statusCode: status, httpVersion: nil,
+                                   headerFields: ["Content-Type": "application/json"])!
+    task.client?.urlProtocol(task, didReceive: response, cacheStoragePolicy: .notAllowed)
+    task.client?.urlProtocol(task, didLoad: data)
+    task.client?.urlProtocolDidFinishLoading(task)
+}
+
+private let s24OtherRequestID = "77777777-7777-4777-8777-777777777777"
+private func finishS24FirstOutcomePage(_ task: S24FixtureProtocol, server: S24FixtureServer) {
+    do {
+        let (_, bytes) = try server.respond(task.request)
+        let original = try XCTUnwrap(JSONSerialization.jsonObject(with: bytes) as? [String: Any])
+        var other = try XCTUnwrap((original["requests"] as? [[String: Any]])?.first)
+        other["requestId"] = s24OtherRequestID; other["originalItem"] = "Other request"
+        other["revision"] = 1; other["status"] = "pending"; other["ownActionAllowed"] = true
+        let page: [String: Any] = ["requests": [other], "nextCursor": s24OtherRequestID]
+        finishS24OutcomeResponse(task, status: 200, data: try JSONSerialization.data(withJSONObject: page))
+    } catch { task.client?.urlProtocol(task, didFailWithError: error) }
 }
