@@ -375,6 +375,85 @@ final class HouseholdRequestPackReviewTests: XCTestCase {
         }
     }
 
+    @MainActor func testCancelUnknownPreviewKeepsDraftAndRequiresFreshAcknowledgmentBeforeAnyWrite() async throws {
+        let (model, server, url) = try await setup()
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        model.lineItem = "Unknown-price wraps"
+        model.packs = 2
+        model.price = ""
+        model.feeEligible = false
+        model.clarification = "Keep this draft question"
+        let selectedID = try XCTUnwrap(model.selected).id
+        func assertDraftPreserved() {
+            XCTAssertEqual(model.selected?.id, selectedID)
+            XCTAssertEqual(model.choice, .add)
+            XCTAssertEqual(model.lineItem, "Unknown-price wraps")
+            XCTAssertEqual(model.packs, 2)
+            XCTAssertEqual(model.price, "")
+            XCTAssertFalse(model.feeEligible)
+            XCTAssertEqual(model.clarification, "Keep this draft question")
+        }
+        func assertNoWrites() {
+            XCTAssertEqual(server.commandCount, 0)
+            XCTAssertEqual(server.lineCount, 0)
+            XCTAssertNil(model.pending)
+            XCTAssertEqual(model.requests.first?.status, "pending")
+        }
+        func assertUnknownPreviewRequest() throws {
+            let body = try XCTUnwrap(server.previewBody)
+            let decision = try XCTUnwrap(body["decision"] as? [String: Any])
+            let line = try XCTUnwrap(decision["line"] as? [String: Any])
+            XCTAssertEqual(body["requestId"] as? String, selectedID)
+            XCTAssertEqual(decision["choice"] as? String, "add")
+            XCTAssertEqual(line["originalItem"] as? String, "Unknown-price wraps")
+            XCTAssertEqual(line["packs"] as? Int, 2)
+            XCTAssertTrue(line["unitPriceMinor"] is NSNull)
+            XCTAssertEqual(line["feeEligible"] as? Bool, false)
+        }
+
+        await model.review()
+        XCTAssertEqual(server.previewCount, 1)
+        XCTAssertTrue(try XCTUnwrap(model.preview).requiresUnknownAcceptance)
+        XCTAssertNil(model.preview?.after.totalMinor)
+        try assertUnknownPreviewRequest()
+        XCTAssertFalse(model.canApply)
+        model.acceptUnknown = true
+        XCTAssertTrue(model.canApply)
+        assertNoWrites()
+
+        model.invalidatePreview() // The exact model transition invoked by Cancel preview.
+        XCTAssertNil(model.preview)
+        XCTAssertFalse(model.acceptUnknown)
+        XCTAssertFalse(model.canApply)
+        assertDraftPreserved()
+        await model.apply() // The discarded acknowledgment cannot authorize a write.
+        assertNoWrites()
+        XCTAssertEqual(server.previewCount, 1)
+
+        // Do not edit any draft field: those setters would independently clear
+        // consent and could hide a defective Cancel preview transition.
+        await model.review()
+        XCTAssertEqual(server.previewCount, 2, "Fresh review must use the real fixture transport")
+        XCTAssertTrue(try XCTUnwrap(model.preview).requiresUnknownAcceptance)
+        XCTAssertNil(model.preview?.after.totalMinor)
+        try assertUnknownPreviewRequest()
+        assertDraftPreserved()
+        XCTAssertFalse(model.acceptUnknown)
+        XCTAssertFalse(model.canApply)
+        await model.apply()
+        assertNoWrites()
+        XCTAssertEqual(server.previewCount, 2)
+
+        model.acceptUnknown = true
+        XCTAssertTrue(model.canApply)
+        await model.apply()
+        XCTAssertEqual(server.commandCount, 1)
+        XCTAssertEqual(server.lineCount, 1)
+        await model.apply()
+        XCTAssertEqual(server.commandCount, 1, "A confirmed decision must not be written twice")
+        XCTAssertEqual(server.lineCount, 1)
+    }
+
     @MainActor func testUnknownSelectedPriceAndManualPathKeepExplicitUnknownAcknowledgment() async throws {
         let(model,server,url)=try await setup(); defer { try? FileManager.default.removeItem(at:url.deletingLastPathComponent()) }
         let scope=try XCTUnwrap(model.packReviewScope)

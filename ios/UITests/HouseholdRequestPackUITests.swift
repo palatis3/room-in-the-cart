@@ -185,6 +185,88 @@ import XCTest
         XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 0")
     }
 
+    func testCancelPreviewClearsOverageConsentRetainsEditableDraftAndRequiresFreshReview() {
+        openCerealReview()
+        let apply = element("household.decision.apply")
+        let overage = app.switches["household.decision.overage"]
+        let cancelPreview = app.buttons.matching(NSPredicate(format: "label == %@", "Cancel preview"))
+        let item = app.textFields["household.decision.item"]
+        let price = app.textFields["household.decision.price"]
+        let review = element("household.decision.review")
+        func assertNoWrites() {
+            XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 0")
+            XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 0")
+        }
+        func assertPreviewState(count: Int, present: Bool) {
+            let facts = element("fixture.s24.preview-diagnostics").label
+            XCTAssertTrue(facts.contains("Fixture previews: \(count);"), facts)
+            XCTAssertTrue(facts.contains("selected: 44444444-4444-4444-8444-444444444444;"), facts)
+            XCTAssertTrue(facts.contains("choice: add; price: 3.49;"), facts)
+            let preview = present ? "55555555-5555-4555-8555-555555555555" : "none"
+            XCTAssertTrue(facts.contains("preview: \(preview);"), facts)
+        }
+        assertPreviewState(count: 1, present: true)
+        reveal(apply); XCTAssertFalse(apply.isEnabled)
+        enableSwitch("household.decision.overage")
+        XCTAssertEqual(overage.value as? String, "1")
+        reveal(apply); XCTAssertTrue(apply.isEnabled)
+        assertNoWrites()
+
+        let cancel = cancelPreview.firstMatch
+        reveal(cancel, fullyVisible: true)
+        capture("S24-cancel-preview-before-activation")
+        XCTAssertEqual(cancelPreview.count, 1)
+        XCTAssertEqual(cancel.elementType, .button)
+        XCTAssertEqual(cancel.label, "Cancel preview")
+        XCTAssertTrue(cancel.isEnabled && cancel.isHittable)
+        cancel.tap() // Exercise Cancel preview, not the toolbar's sheet dismissal.
+        capture("S24-cancel-preview-returned-to-draft")
+        XCTAssertFalse(cancel.exists)
+        XCTAssertFalse(element("household.decision.after-total").exists)
+        XCTAssertFalse(apply.exists)
+        XCTAssertFalse(overage.exists)
+        XCTAssertTrue(app.navigationBars["Review request"].exists)
+        XCTAssertTrue(element("household.decision.cancel").exists)
+        assertPreviewState(count: 1, present: false)
+        assertNoWrites()
+
+        reveal(item, fullyVisible: true)
+        XCTAssertEqual(item.value as? String, "Brown rice cereal")
+        reveal(price, fullyVisible: true)
+        XCTAssertEqual(price.value as? String, "3.49")
+        // Re-review the unchanged draft before any typing: a field edit would
+        // independently reset consent and could mask a broken Cancel preview.
+        reveal(review, fullyVisible: true)
+        XCTAssertEqual(review.elementType, .button)
+        XCTAssertEqual(review.label, "Review decision")
+        XCTAssertTrue(review.isEnabled && review.isHittable)
+        capture("S24-cancel-preview-draft-ready-for-fresh-review")
+        review.tap()
+        XCTAssertTrue(element("household.decision.after-total").waitForExistence(timeout: 10))
+        assertElementContains("household.decision.after-total", "$40.69")
+        assertElementContains("household.decision.over-cap", "$2.69")
+        assertPreviewState(count: 2, present: true)
+        reveal(overage, fullyVisible: true)
+        XCTAssertEqual(overage.value as? String, "0", "A fresh preview must require fresh overage consent")
+        reveal(apply); XCTAssertFalse(apply.isEnabled)
+        capture("S24-cancel-preview-fresh-review-requires-consent")
+        assertNoWrites()
+
+        // Supported focus evidence: an explicit field tap routes keyboard input
+        // to that field. This does not assert automatic or VoiceOver focus.
+        reveal(item, fullyVisible: true)
+        item.tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+        app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: "Brown rice cereal".count))
+        app.typeText("Reviewed cereal draft")
+        XCTAssertEqual(item.value as? String, "Reviewed cereal draft")
+        dismissKeyboardIfPresent()
+        reveal(price, fullyVisible: true)
+        XCTAssertEqual(price.value as? String, "3.49")
+        assertPreviewState(count: 2, present: false)
+        assertNoWrites()
+    }
+
     func testOtherMealsDisclosureHasNamed44PointControlAndLabelTapsPreserveReviewedFacts() {
         openCerealReview(extraArguments: ["--request-other-meal-fixture"])
         let title = "Other meals in this shop"

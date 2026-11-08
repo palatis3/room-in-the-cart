@@ -1,0 +1,12 @@
+{
+  "nativeExit": 0,
+  "strictExit": 0,
+  "expectedCount": 21,
+  "sourceManifestSHA256": "8f809b9a72bb6e73dbcbf99336548a7602605cceb99fa7af8af61ae499af43ce",
+  "originalUnchanged": true,
+  "sourceUnchanged": true,
+  "inspectedAtUTC": "2026-11-08T20:04:34.738750+00:00",
+  "correction": "Expanded original model-suite selection into its 20 unchanged source methods, plus original UI method; no native rerun.",
+  "originalStrictVerification": "inspection/verification.json",
+  "selectorSHA256": "475d569b896dfa9e5bacc09d8fcbad5eb51c4d2b5883300fcfdfb00128b88a03"
+}

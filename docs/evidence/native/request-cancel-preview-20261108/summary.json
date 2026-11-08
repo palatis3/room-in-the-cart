@@ -1,0 +1,36 @@
+{
+  "sourceManifestSHA256": "8f809b9a72bb6e73dbcbf99336548a7602605cceb99fa7af8af61ae499af43ce",
+  "productionChanges": false,
+  "casesPerPlatform": 21,
+  "plannerTests": 16,
+  "fixtureSelectors": 72,
+  "fixtureShards": 17,
+  "platforms": {
+    "minimum17": {
+      "startedAtUTC": "2026-11-08T20:00:46.735455+00:00",
+      "finishedAtUTC": "2026-11-08T20:03:34.133409+00:00",
+      "nativeExit": 0,
+      "sourceUnchanged": true,
+      "preservedProductsUnchanged": true,
+      "priorResultsUnchanged": true,
+      "settings": {
+        "appearance": "light",
+        "content_size": "large",
+        "increase_contrast": "disabled"
+      }
+    },
+    "current-light": {
+      "startedAtUTC": "2026-11-08T20:04:50.651623+00:00",
+      "finishedAtUTC": "2026-11-08T20:07:44.199985+00:00",
+      "nativeExit": 0,
+      "sourceUnchanged": true,
+      "preservedProductsUnchanged": true,
+      "priorResultsUnchanged": true,
+      "settings": {
+        "appearance": "light",
+        "content_size": "large",
+        "increase_contrast": "disabled"
+      }
+    }
+  }
+}

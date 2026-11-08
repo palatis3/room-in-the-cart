@@ -1,0 +1,16 @@
+{
+  "status": "scoped screenshots reviewed",
+  "sourceManifestSHA256": "8f809b9a72bb6e73dbcbf99336548a7602605cceb99fa7af8af61ae499af43ce",
+  "images": 4,
+  "observations": [
+    "Before Cancel preview: overage on, Apply filled/enabled and Cancel preview visible.",
+    "After cancellation: same item, packs and price with Review decision visible; same viewport repeated before re-review.",
+    "Fresh review: overage off, Apply outlined/disabled, Cancel preview visible."
+  ],
+  "limits": [
+    "Screenshots cover scrolled sections, not all facts simultaneously.",
+    "Keyboard edit verified by XCTest assertions after final screenshot.",
+    "No physical VoiceOver or automatic focus proof.",
+    "Clarification guidance/prompt appears faint; broader contrast audit remains open."
+  ]
+}

@@ -1,0 +1,44 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "D420C2CA-0E73-4213-9B96-1EB62EB061F6",
+        "deviceName" : "RITC Cook Voice Minimum OS Nov08",
+        "exportedFileName" : "84EFD1FF-15DC-4AAF-9482-5DDA34BD90A8.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-cancel-preview-fresh-review-requires-consent_0_41D66C6B-91AE-4001-9616-01205AF341E8.png",
+        "timestamp" : 1794168146.254
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "D420C2CA-0E73-4213-9B96-1EB62EB061F6",
+        "deviceName" : "RITC Cook Voice Minimum OS Nov08",
+        "exportedFileName" : "3E860039-54E6-47B2-A983-CF698739D976.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-cancel-preview-draft-ready-for-fresh-review_0_E472E5F0-745B-4828-8690-82A47506D988.png",
+        "timestamp" : 1794168129.924
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "D420C2CA-0E73-4213-9B96-1EB62EB061F6",
+        "deviceName" : "RITC Cook Voice Minimum OS Nov08",
+        "exportedFileName" : "47F0307D-80A8-4CA8-952D-992157A1A9BE.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-cancel-preview-returned-to-draft_0_E5361E0A-4277-4A28-A885-0F41A3BBB653.png",
+        "timestamp" : 1794168122.136
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "D420C2CA-0E73-4213-9B96-1EB62EB061F6",
+        "deviceName" : "RITC Cook Voice Minimum OS Nov08",
+        "exportedFileName" : "31FEDDCF-41EB-4340-8F16-3018293A22E5.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-cancel-preview-before-activation_0_CE3A4DB5-7C77-45E8-82BB-4408C24EC50A.png",
+        "timestamp" : 1794168120.792
+      }
+    ],
+    "testIdentifier" : "HouseholdRequestPackUITests/testCancelPreviewClearsOverageConsentRetainsEditableDraftAndRequiresFreshReview()",
+    "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/HouseholdRequestPackUITests/testCancelPreviewClearsOverageConsentRetainsEditableDraftAndRequiresFreshReview"
+  }
+]
