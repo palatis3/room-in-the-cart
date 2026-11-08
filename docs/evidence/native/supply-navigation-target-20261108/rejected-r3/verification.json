@@ -1,0 +1,40 @@
+{
+  "scope": "Original English journey plus early Amount and supply Done checks; stopped before first Done action on AX-frame assertion",
+  "sourceManifestSHA256": "0ee6fb0af4b0de5eb757883b4dce0f6d2ac85a0b966922e1dbe16407b38a2b1d",
+  "nativeExit": 65,
+  "strictExit": 1,
+  "qualificationPassed": false,
+  "animationIdleMessages": 0,
+  "originalUnchanged": true,
+  "sourceUnchanged": true,
+  "preservedInputsFinally": true,
+  "requiredEvidenceComplete": false,
+  "doneAXFrame": [
+    314,
+    66,
+    68,
+    36
+  ],
+  "navigationBarFrame": [
+    0,
+    62,
+    402,
+    54
+  ],
+  "backAXFrame": [
+    16,
+    62,
+    44,
+    44
+  ],
+  "centered44Region": [
+    326,
+    62,
+    44,
+    44
+  ],
+  "centeredRegionFitsBar": true,
+  "actual44TouchRegionVerified": false,
+  "doneActionExecuted": false,
+  "newSizeFrameDoesNotProveTouchRegion": "XCTest screen bounds and UIKit touch hit testing are separate public API concepts."
+}

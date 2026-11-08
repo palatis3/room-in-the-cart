@@ -1,5 +1,17 @@
 # Current implementation and acceptance map
 
+## November 8, R3 terminal and touch-region evidence gap
+
+R3 compiled, but its original English test and strict inspection failed before
+the first Done tap because the automation frame remained36points high. The one
+before screenshot and geometry are reviewed; actual44-point touch support is
+still unmeasured. The automation frame is not itself proof of the complete touch
+region. [Retained failure and limits](evidence/native/supply-navigation-target-20261108/rejected-r3/README.md).
+No keyboard repair, full journey or release acceptance is claimed. All local
+native handles are terminal. The next prepared direction is bounded public
+hit-testing observation; no observer code or execution exists yet. Canonical
+app source is unchanged by these isolated candidates. Full52/27 scope remains open.
+
 ## November 8, earlier editor stall and R3 qualification
 
 The second supply target candidate encountered four animation waits in the

@@ -1,5 +1,39 @@
 # Room in the Cart current handoff
 
+## November 8, R3 terminal; inspect hit-region semantics next
+
+R3 test82246/PID64813 and inspector81958 are terminal65; native65/strict1,
+zero observed idle messages. It stops before first Done on height36<44 despite
+the minimum44 label. Root/helper reviewed the one retained before PNG and target
+geometry. Done AX(314,66,68,36), bar(0,62,402,54), Back(16,62,44,44). The centered
+44×44 region fits inside the bar, but actual hit support is unknown. Earlier
+frame-only conclusions about actual touch size were too strong. Preserve the
+failure; do not weaken it or repeat arbitrary sizing changes. [Result and API distinction](evidence/native/supply-navigation-target-20261108/rejected-r3/README.md).
+R3 source/products and prior evidence verify unchanged. No native process remains
+active; no inspection/export needs repeating. Current reused source/DD describe
+R3, whose exact561source manifest remains0ee6fb0a…; canonical556source remains8d0eb48f.
+
+Agent `english_keyboard_review` completed feasibility review at
+`.build/EnglishKeyboardReviewNov08/native-toolbar-hit-region-review.md`.
+Next useful action is a narrowly reviewed DEBUG observation outside the unchanged
+button body: unique semantic native-control identity, center-hit ancestry,
+bounded public UIWindow.hitTest/UIView.point-inside samples. Missing/virtual-only
+identity, shared-container matches or ambiguous ownership mean unknown. Sampling
+is not continuous-region or action-execution proof. No probe code, build or
+execution exists yet; do not imply the36-point AX frame alone proves a small
+touch target. An opaque hitRegion audit alone would not establish44-point bounds.
+
+Agent `speech_hosted_fault_review` completed the scratch hosted core-UI proposal
+at `.build/CoreUIDiagnosticNov08/README.md`:59static/mocked tests, paired
+actionlint across9workflows/16native jobs and9shell syntax checks pass. Root has
+not reviewed/installed it. The new manual-only path may need default-branch
+registration before dispatch. `BRANCH-ONLY-OPTION.md` separately assesses reuse
+of an already-registered diagnostic path on an isolated branch, requiring its
+own15-job policy/test validation; it is not covered by the original59tests.
+Do not add a PR trigger or merge unqualified source merely to register a workflow.
+Both helpers are terminal. No new push, hosted dispatch, staging change or
+provider activation occurred. Full52/27 first-version goal stays active.
+
 ## November 8, R3 dinner editor qualification active
 
 R2 is terminal and inspected: native75/strict1 after root deliberately sent
