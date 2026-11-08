@@ -1,5 +1,15 @@
 # Room in the Cart current handoff
 
+## November 8, workflow efficiency follow-up
+
+Workflow update `13a2437e` is published on `codex/ci-feedback-efficiency-20261108` (no PR and no new automatic batch). Core macOS entry jobs wait for the fast source checks; performance now has Linux preflight and optional manual launch/rendered/scroll selection. Full PR/release coverage and exact compiled inventory validation remain. All250Python checks and paired actionlint/workflow validation pass. [Changes and evidence](evidence/native/ci-workflow-efficiency-20261108/followup/README.md).
+
+Focused fixture run42524447359 at48c9f713 remains active: planner and contributor build passed, dinner build skipped, exactly one store-quote group running. Do not dispatch a duplicate or push the PR merely for another diagnostic. The original quote journey passed locally399.775s with all assertions; hosted outcome is pending. PR1 remains atfe3e143; the new development branches are not merged.
+
+The native Text heading candidate remains in two uncommitted iOS files. Current26.2/light and minimum17/light each passed the original standard and AX5 journeys, native0/strict0 (four test executions total). Source manifest7a98427be259ea40764fdae396013ebe78cf8a43cf02d4b9508ee849c9284d99. Both one-time inspections/exports are complete under `.build/S24TextHeadingNov08/execution-r1`; no local native job remains active. Current dark and Release qualification are still pending. The current heading/expiry full screenshots and heading crop were reviewed; minimum17 exported screenshots still need review. Do not repeat completed runs or exports. The full unfiltered accessibility audit remains open; these targeted passes are not full audit acceptance.
+
+Next: monitor42524447359 to terminal, preserve its result once; finish current-dark and Release heading qualification using prepared runners and preserved build provenance; then batch qualified changes for full PR regression. Keyboard-card wait optimization is only measured, not implemented. Other original English timeout, scroll metric-count and cook-confirmation failures remain open. Full52-requirement/27-screen acceptance remains incomplete. Staging041 is live;042/provider/distribution approvals are separate.
+
 ## November 8, 21:06 UTC checkpoint
 
 The measured CI-efficiency change is committed locally as `648e86ff`: optional manual exact-shard selection runs one complete fixture group and only its required build profile. Default PR/release runs retain all17groups and existing checks. Workflow validation and all245Python tests pass. [Timing and validation evidence](evidence/native/ci-workflow-efficiency-20261108/README.md). The published fe3e143 cohort is terminal; five macOS slots were91.22% utilized over150.70minutes. No new remote push/dispatch occurred; the focused hosted path remains unverified. Prefer focused feedback on a branch without an open PR, then one full regression batch for a coherent fix set.
