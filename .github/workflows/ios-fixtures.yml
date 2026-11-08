@@ -164,8 +164,15 @@ jobs:
               raise SystemExit("The fixture selector list is empty.")
           print(f"EXPECTED_TEST_COUNT={expected}")
           PY
-      - name: Select an iPhone simulator
-        run: xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
+      - name: Select iPhone simulator with owned-device pilot for contributor-balanced-01
+        timeout-minutes: 8
+        run: |
+          if [[ "$TEST_SHARD" == contributor-balanced-01 ]]; then
+            xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py \
+              --create-owned .build/test-simulator-ownership.json
+          else
+            xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
+          fi
       - name: Boot the iPhone simulator
         timeout-minutes: 8
         run: python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"
@@ -210,6 +217,10 @@ jobs:
               echo 'Speech runtime diagnostics could not be collected.' >> "$GITHUB_STEP_SUMMARY"
             fi
           fi
+      - name: Clean up only the owned simulator after result and speech export
+        if: always()
+        timeout-minutes: 2
+        run: python3 scripts/select_ci_iphone.py --cleanup-owned .build/test-simulator-ownership.json
       - name: Retain fixture results and timing
         if: always() && matrix.shard != 'RecordsMediaUITests'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -232,6 +243,7 @@ jobs:
           include-hidden-files: true
           path: |
             .build/records-test-report.md
+            .build/test-simulator-ownership.json
             .build/test-plan/
           retention-days: 7
           if-no-files-found: ignore

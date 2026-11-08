@@ -462,16 +462,25 @@ jobs:
           mkdir -p .build/DerivedData/Build
           tar -xzf .build/download/iphone-test-products.tar.gz -C .build/DerivedData/Build
           mv .build/DerivedData/Build/test-plan .build/test-plan
-      - name: Select and boot iPhone simulator
+      - name: Select iPhone simulator with owned-device pilot for ui-01
         timeout-minutes: 8
         run: |
-          xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
+          if [[ "$TEST_SHARD" == ui-01 ]]; then
+            xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py \
+              --create-owned .build/test-simulator-ownership.json
+          else
+            xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
+          fi
       - name: Wait for simulator boot
         timeout-minutes: 8
         run: python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"
       - name: Run selected tests and verify complete execution
         timeout-minutes: 40
         run: bash scripts/run_ios_test_shard.sh
+      - name: Clean up only the owned simulator after result export
+        if: always()
+        timeout-minutes: 2
+        run: python3 scripts/select_ci_iphone.py --cleanup-owned .build/test-simulator-ownership.json
       - name: Retain result bundles, screenshots, logs and timing
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
