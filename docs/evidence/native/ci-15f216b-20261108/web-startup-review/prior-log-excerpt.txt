@@ -1,0 +1,127 @@
+12: 2026-11-08T00:06:12.7915887Z Ubuntu
+13: 2026-11-08T00:06:12.7916196Z 24.04.5
+14: 2026-11-08T00:06:12.7916548Z LTS
+15: 2026-11-08T00:06:12.7916868Z ##[endgroup]
+16: 2026-11-08T00:06:12.7917210Z ##[group]Runner Image
+17: 2026-11-08T00:06:12.7917603Z Image: ubuntu-24.04
+18: 2026-11-08T00:06:12.7917937Z Version: 20261101.360.1
+19: 2026-11-08T00:06:12.7918842Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261101.360/images/ubuntu/Ubuntu2404-Readme.md
+20: 2026-11-08T00:06:12.7919682Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261101.360
+21: 2026-11-08T00:06:12.7920495Z ##[endgroup]
+1025: 2026-11-08T00:06:24.1896162Z 1..140
+1026: 2026-11-08T00:06:24.1896264Z # tests 140
+1027: 2026-11-08T00:06:24.1896369Z # suites 0
+1028: 2026-11-08T00:06:24.1896475Z # pass 140
+1029: 2026-11-08T00:06:24.1896578Z # fail 0
+1030: 2026-11-08T00:06:24.1896682Z # cancelled 0
+1031: 2026-11-08T00:06:24.1896795Z # skipped 0
+1032: 2026-11-08T00:06:24.1896894Z # todo 0
+1033: 2026-11-08T00:06:24.1897007Z # duration_ms 2353.451994
+1043: 2026-11-08T00:06:33.0081369Z # Subtest: history restoration conceals private content until fresh authority succeeds
+1044: 2026-11-08T00:06:33.0081972Z     # Subtest: private, max-age=0: unchanged
+1045: 2026-11-08T00:06:33.0082267Z     ok 1 - private, max-age=0: unchanged
+1046: 2026-11-08T00:06:33.0090561Z       ---
+1047: 2026-11-08T00:06:33.0090910Z       duration_ms: 2913.792829
+1048: 2026-11-08T00:06:33.0091177Z       type: 'test'
+1049: 2026-11-08T00:06:33.0091350Z       ...
+1050: 2026-11-08T00:06:33.0091778Z     # persisted BFCache restore; HTML Cache-Control:private, max-age=0
+1051: 2026-11-08T00:06:33.3607205Z     # Subtest: private, max-age=0: changed-delayed
+1052: 2026-11-08T00:06:33.3608339Z     ok 2 - private, max-age=0: changed-delayed
+1053: 2026-11-08T00:06:33.3608930Z       ---
+1054: 2026-11-08T00:06:33.3609276Z       duration_ms: 357.767133
+1055: 2026-11-08T00:06:33.3609603Z       type: 'test'
+1056: 2026-11-08T00:06:33.3610019Z       ...
+1057: 2026-11-08T00:06:33.3610428Z     # persisted BFCache restore; HTML Cache-Control:private, max-age=0
+1058: 2026-11-08T00:06:33.6738488Z     # Subtest: private, max-age=0: revoked-delayed
+1059: 2026-11-08T00:06:33.6738892Z     ok 3 - private, max-age=0: revoked-delayed
+1060: 2026-11-08T00:06:33.6739274Z       ---
+1061: 2026-11-08T00:06:33.6739460Z       duration_ms: 312.553349
+1062: 2026-11-08T00:06:33.6739662Z       type: 'test'
+1063: 2026-11-08T00:06:33.6739835Z       ...
+1064: 2026-11-08T00:06:33.6740311Z     # persisted BFCache restore; HTML Cache-Control:private, max-age=0
+1065: 2026-11-08T00:06:33.9940397Z     # Subtest: private, max-age=0: revoked-offline
+1066: 2026-11-08T00:06:33.9947246Z     ok 4 - private, max-age=0: revoked-offline
+1067: 2026-11-08T00:06:33.9947712Z       ---
+1068: 2026-11-08T00:06:33.9948111Z       duration_ms: 320.372601
+1069: 2026-11-08T00:06:33.9948347Z       type: 'test'
+1070: 2026-11-08T00:06:33.9948526Z       ...
+1071: 2026-11-08T00:06:33.9948804Z     # persisted BFCache restore; HTML Cache-Control:private, max-age=0
+1072: 2026-11-08T00:06:34.4780946Z     # Subtest: private, max-age=0: expired-identity-same
+1073: 2026-11-08T00:06:34.4782693Z     ok 5 - private, max-age=0: expired-identity-same
+1074: 2026-11-08T00:06:34.4783321Z       ---
+1075: 2026-11-08T00:06:34.4784442Z       duration_ms: 482.919167
+1076: 2026-11-08T00:06:34.4785089Z       type: 'test'
+1077: 2026-11-08T00:06:34.4785332Z       ...
+1078: 2026-11-08T00:06:34.4786136Z     # persisted BFCache restore; HTML Cache-Control:private, max-age=0
+1079: 2026-11-08T00:06:34.9170703Z     # Subtest: private, max-age=0: expired-identity-changed
+1080: 2026-11-08T00:06:34.9171434Z     ok 6 - private, max-age=0: expired-identity-changed
+1081: 2026-11-08T00:06:34.9171624Z       ---
+1082: 2026-11-08T00:06:34.9171744Z       duration_ms: 438.882531
+1083: 2026-11-08T00:06:34.9171881Z       type: 'test'
+1084: 2026-11-08T00:06:34.9171993Z       ...
+1085: 2026-11-08T00:06:34.9172179Z     # persisted BFCache restore; HTML Cache-Control:private, max-age=0
+1086: 2026-11-08T00:06:35.2825270Z     # Subtest: no-store: unchanged
+1087: 2026-11-08T00:06:35.2825967Z     ok 7 - no-store: unchanged
+1088: 2026-11-08T00:06:35.2826524Z       ---
+1089: 2026-11-08T00:06:35.2826878Z       duration_ms: 365.21116
+1090: 2026-11-08T00:06:35.2827219Z       type: 'test'
+1091: 2026-11-08T00:06:35.2827521Z       ...
+1092: 2026-11-08T00:06:35.2828417Z     # cold history navigation; BFCache unavailable; HTML Cache-Control:no-store
+1093: 2026-11-08T00:06:35.6434002Z     # Subtest: no-store: changed-delayed
+1094: 2026-11-08T00:06:35.6434663Z     ok 8 - no-store: changed-delayed
+1095: 2026-11-08T00:06:35.6435105Z       ---
+1096: 2026-11-08T00:06:35.6435535Z       duration_ms: 361.317229
+1097: 2026-11-08T00:06:35.6435857Z       type: 'test'
+1098: 2026-11-08T00:06:35.6436122Z       ...
+1099: 2026-11-08T00:06:35.6437148Z     # cold history navigation; BFCache unavailable; HTML Cache-Control:no-store
+1100: 2026-11-08T00:06:35.9811466Z     # Subtest: no-store: revoked-delayed
+1101: 2026-11-08T00:06:35.9861924Z     ok 9 - no-store: revoked-delayed
+1102: 2026-11-08T00:06:35.9941802Z       ---
+1103: 2026-11-08T00:06:35.9980924Z       duration_ms: 332.379889
+1104: 2026-11-08T00:06:35.9987521Z       type: 'test'
+1105: 2026-11-08T00:06:35.9987931Z       ...
+1106: 2026-11-08T00:06:35.9988495Z     # cold history navigation; BFCache unavailable; HTML Cache-Control:no-store
+1107: 2026-11-08T00:06:36.3381371Z     # Subtest: no-store: revoked-offline
+1108: 2026-11-08T00:06:36.3382126Z     ok 10 - no-store: revoked-offline
+1109: 2026-11-08T00:06:36.3430982Z       ---
+1110: 2026-11-08T00:06:36.3450427Z       duration_ms: 358.21861
+1111: 2026-11-08T00:06:36.3450924Z       type: 'test'
+1112: 2026-11-08T00:06:36.3451127Z       ...
+1113: 2026-11-08T00:06:36.3451457Z     # cold history navigation; BFCache unavailable; HTML Cache-Control:no-store
+1114: 2026-11-08T00:06:36.8091253Z     # Subtest: no-store: expired-identity-same
+1115: 2026-11-08T00:06:36.8105242Z     ok 11 - no-store: expired-identity-same
+1116: 2026-11-08T00:06:36.8109577Z       ---
+1117: 2026-11-08T00:06:36.8110141Z       duration_ms: 474.498439
+1118: 2026-11-08T00:06:36.8127290Z       type: 'test'
+1119: 2026-11-08T00:06:36.8127683Z       ...
+1120: 2026-11-08T00:06:36.8128308Z     # cold history navigation; BFCache unavailable; HTML Cache-Control:no-store
+1121: 2026-11-08T00:06:37.2827566Z     # Subtest: no-store: expired-identity-changed
+1122: 2026-11-08T00:06:37.2833283Z     ok 12 - no-store: expired-identity-changed
+1123: 2026-11-08T00:06:37.2834021Z       ---
+1124: 2026-11-08T00:06:37.2834418Z       duration_ms: 472.605745
+1125: 2026-11-08T00:06:37.2835142Z       type: 'test'
+1126: 2026-11-08T00:06:37.2835754Z       ...
+1127: 2026-11-08T00:06:37.2836752Z     # cold history navigation; BFCache unavailable; HTML Cache-Control:no-store
+1128: 2026-11-08T00:06:37.3954964Z     1..12
+1129: 2026-11-08T00:06:37.3955562Z ok 1 - history restoration conceals private content until fresh authority succeeds
+1130: 2026-11-08T00:06:37.3955971Z   ---
+1131: 2026-11-08T00:06:37.3956166Z   duration_ms: 12866.271841
+1132: 2026-11-08T00:06:37.3956368Z   type: 'test'
+1133: 2026-11-08T00:06:37.3956530Z   ...
+1134: 2026-11-08T00:06:37.3956898Z # Chrome 156.0.8078.79; synthetic loopback authority; API Cache-Control:no-store
+1135: 2026-11-08T00:06:38.4262721Z # Subtest: Refresh reconciles a queued request after IndexedDB eviction without resending it
+1136: 2026-11-08T00:06:38.4263387Z ok 2 - Refresh reconciles a queued request after IndexedDB eviction without resending it
+1137: 2026-11-08T00:06:38.4263685Z   ---
+1138: 2026-11-08T00:06:38.4263810Z   duration_ms: 729.391549
+1139: 2026-11-08T00:06:38.4263945Z   type: 'test'
+1140: 2026-11-08T00:06:38.4264071Z   ...
+1141: 2026-11-08T00:06:38.4264262Z # Chrome 156.0.8078.79
+1142: 2026-11-08T00:06:38.4438324Z 1..2
+1143: 2026-11-08T00:06:38.4438516Z # tests 14
+1144: 2026-11-08T00:06:38.4438687Z # suites 0
+1145: 2026-11-08T00:06:38.4438836Z # pass 14
+1146: 2026-11-08T00:06:38.4438976Z # fail 0
+1147: 2026-11-08T00:06:38.4439636Z # cancelled 0
+1148: 2026-11-08T00:06:38.4439804Z # skipped 0
+1149: 2026-11-08T00:06:38.4440049Z # todo 0
+1150: 2026-11-08T00:06:38.4450861Z # duration_ms 14153.382229

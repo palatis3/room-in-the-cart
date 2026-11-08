@@ -1,0 +1,107 @@
+{
+  "reviewedAtUTC": "2026-11-08T03:01:08.591216+00:00",
+  "original": {
+    "source": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+    "run": 42440464721,
+    "job": 128608399841,
+    "status": "failed",
+    "boundary": "history first; Chromium child spawned PID2566, launch readiness timed out15000ms before context/page/navigation/privacy assertions",
+    "historyNativeMilliseconds": 15022.511525,
+    "outboxAfterHistoryPassedMilliseconds": 9943.618633,
+    "unitPassed": 140,
+    "browserParentsPassed": 1,
+    "browserParentsFailed": 1,
+    "historySubcasesExecuted": 0
+  },
+  "priorControl": {
+    "source": "f90ad75a2e561891b2014ecb234d19639bcaed4c",
+    "run": 42428215935,
+    "job": 128571029976,
+    "browserPassIncludingHistoryParent": 14,
+    "historyScenarios": 12,
+    "persistedBFCache": 6,
+    "coldNoStore": 6,
+    "historyDurationMilliseconds": 12866.271841,
+    "browserDurationMilliseconds": 14153.382229
+  },
+  "sharedEnvironment": {
+    "Chrome": "156.0.8078.79",
+    "runnerImage": "ubuntu-24.04 20261101.360.1",
+    "playwrightCore": "1.65.0"
+  },
+  "sourcePins": [
+    {
+      "path": "web/tests/browser/history-privacy.test.mjs",
+      "sha256": "7e5199a590d92792f3cb86db1f5e1155310f6e4f6ec79eb14c14aec6ed8eedf2",
+      "sameF90And15F216AndCurrent": true
+    },
+    {
+      "path": "web/tests/browser/outbox-eviction.test.mjs",
+      "sha256": "ac0cd308f1bf18aa919062a438fd38455bbe1c6d22942a7e3b164dc92e00c3dd",
+      "sameF90And15F216AndCurrent": true
+    },
+    {
+      "path": "web/package.json",
+      "sha256": "39d57746a050cf9e0a1476aa63a078347d9499e222a01c70749b231ab0ab111c",
+      "sameF90And15F216AndCurrent": true
+    },
+    {
+      "path": "web/package-lock.json",
+      "sha256": "2034a9f535c9bc91b6c7c0136c78794aa927051537818e5899775248dce8d6fe",
+      "sameF90And15F216AndCurrent": true
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "34140b533e6419444ce9af39ee3ec6234e59fd90a99037cf1909fbbdaaf14fed",
+      "sameF90And15F216AndCurrent": true
+    }
+  ],
+  "packageAudit": {
+    "source": "existing local npm cache only; tar integrity equals package-lock",
+    "tarPath": "/Users/palatis/Room in the Cart/.build/CI15F216Nov08/playwright-core-1.65.0.tgz",
+    "tarBytes": 3232467,
+    "tarSHA256": "315247c55a793ca760b2f05bdcee0e6a53fd65b1f22d1d3de8323c8c9395add3",
+    "lockIntegrity": "sha512-vNSKgH6YqtN7cdT/L334zo0a+YwkrpicyrHJlWWPIm/Q+Nn2SWInil01oT0mbu96U4GgoRtCYQD9CzJQgju+lA==",
+    "entry": "package/lib/coreBundle.js",
+    "sourceSHA256": "4ef8330594818d8f464de939e32bca62b758099e0d0e94a56095406da963f7f1",
+    "reviewedLines": {
+      "launchAndCleanup": [
+        41480,
+        41701
+      ],
+      "processOwnershipAndKill": [
+        10324,
+        10441
+      ],
+      "pipeHandshake": [
+        40150,
+        40176
+      ],
+      "pipeReadyState": [
+        44773,
+        44788
+      ]
+    },
+    "scope": "Source provides launch-error close/kill and process-exit cleanup; hosted process cleanup completion not independently observed."
+  },
+  "artifacts": "Web job has no artifact-upload step; full terminal per-job logs are retained in scratch. No browser readiness traces/process resource snapshots were recorded. Other live Core run artifacts are not evidence for this web failure.",
+  "proposal": {
+    "status": "scratch only, uninstalled",
+    "patchSHA256": "f2f43d9011402919bc5a1cfd2d1024eeb78c4e023794b5d22a0b107a5cf89bca",
+    "change": "DEBUG=pw:browser on existing browser CI step only",
+    "preserved": [
+      "15000ms launch timeout",
+      "45000ms node test timeout",
+      "2-minute CI step timeout",
+      "serial test file execution",
+      "all12 privacy/BFCache scenarios",
+      "actual persisted-restore requirement",
+      "no retries",
+      "fresh profile per launch",
+      "default flags except existing BFCache exception"
+    ]
+  },
+  "causalConclusion": "Pre-app browser-start failure; original cause unresolved. No supported app/privacy/cleanup behavior correction. Prior matched-source/environment pass is nonreproduction, not replacement for failed current cohort.",
+  "officialReference": "https://playwright.dev/docs/ci#debugging-browser-launches",
+  "noCIMutationOrNativeActions": true
+}

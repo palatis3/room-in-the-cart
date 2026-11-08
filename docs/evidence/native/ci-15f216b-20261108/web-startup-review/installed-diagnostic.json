@@ -1,0 +1,16 @@
+{
+  "status": "installed locally; not pushed to active15f216b cohort",
+  "change": "DEBUG=pw:browser on existing Chrome browser-test CI step only",
+  "workflowSHA256": "8c8ffb97614be08f45ce205d721f466a612f3496ebfb4ba696979198e1140c9c",
+  "patchSHA256": "f2f43d9011402919bc5a1cfd2d1024eeb78c4e023794b5d22a0b107a5cf89bca",
+  "workflowTestsPassed": 17,
+  "actionlintAndQueueValidation": "passed;15queue nodes",
+  "originalBudgetsAndAssertionsUnchanged": true,
+  "noRetryOrFailureSuppression": true,
+  "originalFailureResolved": false,
+  "verificationSetupFailures": [
+    "Default python lacked pinned PyYAML; retained logs. Reused existing pinned6.0.3 environment.",
+    "Workflow checker first invocation omitted required actionlint/report args; corrected invocation passed."
+  ],
+  "basis": "Original launch lacks browser readiness/stderr details. Logging adds diagnostic evidence only."
+}

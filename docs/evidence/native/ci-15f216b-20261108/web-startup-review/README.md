@@ -1,0 +1,29 @@
+# Original 15f216b browser-start failure
+
+The current web job remains **failed**. Core run 42440464721, job 128608399841, source `15f216b01e41c111ec99bbd812419cec32e6a5e4`: web unit checks passed 140/140, then the **history test ran first** and `chromium.launch()` timed out after 15,000 ms. Chrome PID 2566 was spawned, but the call did not return. No browser context, page, application navigation or one of the twelve history/privacy scenarios was reached. The outbox case ran **afterward** and passed in 9.944 seconds, reporting Chrome 156.0.8078.79. Despite the CLI listing outbox first, both retained Node runs execute history first.
+
+This establishes a pre-app browser startup/readiness boundary. It does not establish a privacy failure, leaked prior outbox browser, bad timeout choice, Chrome version incompatibility, or a particular runner resource fault. The absence of browser stderr/readiness detail is an evidence gap, not evidence of a process leak. There is no screenshot or page trace to recover from this pre-context failure. This web job has no artifact-upload step; original per-job logs and metadata are retained in scratch with hashes and selected line ranges here.
+
+## Matched prior hosted control
+
+Earlier f90 Core run 42428215935, job 128571029976 passed all **14 browser checks** (history parent, twelve scenarios, outbox). Six eligible cases proved actual persisted BFCache restoration; six no-store controls used cold history navigation. History took 12.866 seconds; the full browser invocation took 14.153 seconds. Both jobs used Chrome **156.0.8078.79** and Ubuntu image **20261101.360.1**.
+
+The entire `web/` tree and `.github/workflows/ci.yml` have no diff from f90 to 15f216b; individual test/package/workflow hashes are pinned in `review-receipt.json`. The previous same-source/environment pass narrows concern toward a startup/environment nonreproduction, but does not establish the underlying cause or replace the failed current result. A further local macOS Chrome run would not reproduce the original Ubuntu startup context, so no extra local browser run was used to claim a repair.
+
+## Process and fixture ownership audit
+
+The history fixture starts its loopback HTTP server and registers cleanup before launch. That cleanup releases any response gate, closes connections and awaits server closure. `browser.close()` is registered after successful launch, when a Browser handle exists; contexts use `finally` cleanup. At this failure boundary no context or navigation exists. Each Playwright launch creates its own temporary profile. Serial file execution and history-first order rule out this invocation's outbox fixture as a prior browser owner.
+
+The package-lock-pinned Playwright 1.65.0 tarball was recovered from existing local npm cache and its SHA-512 integrity verified before read-only source extraction. Its launcher registers child-process cleanup, attempts close/kill on launch failure, and has process-exit cleanup for its owned process group/temp directories. Its nonpersistent Chromium connection waits for CDP `Browser.getVersion` and auto-attach setup before returning. The original log does not identify which protocol/initialization operation stalled or confirm when the failed child was reaped. Source cleanup paths are not proof that every hosted cleanup action completed. No library or fixture cleanup defect is established.
+
+The test intentionally uses stock Chrome with only Playwright's BFCache-disabling default removed; the complete original history assertions depend on real persisted restoration. Changing that browser/flag or treating cold navigation as a pass would change coverage without a demonstrated causal remedy.
+
+## Smallest next diagnostic, uninstalled
+
+`browser-start-diagnostics.patch` adds only `DEBUG: pw:browser` to the existing browser CI step. This is the documented Playwright browser-launch diagnostic: [Debugging browser launches](https://playwright.dev/docs/ci#debugging-browser-launches). It leaves the 15-second launch timeout, 45-second Node test limit, two-minute CI-step limit, serial execution, selectors, assertions and launch options unchanged. It adds no retries, warmup, new browser, skipped checks or failure suppression. `git apply --check` passed against pinned source; the workflow was not edited or dispatched.
+
+In the audited package, browser logging emits executable/arguments and the temporary profile path, process IDs, process stdout/stderr, exit/signal information and cleanup events. It does not enable Playwright protocol/API logs, dump environment variables, or add screenshots/storage-state/network bodies. Both test fixtures use fresh browser profiles and synthetic loopback identities/content, with no live sign-in or real household. Raw browser stderr is still unstructured and should be reviewed before durable publication; do not assume every possible Chrome diagnostic is payload-free. Existing CI time limits bound execution; this two-line proposal adds no independent byte cap.
+
+On the next separately authorized normal run, inspect launch→PID→stderr→exit/cleanup chronology and retain the failed result if launch times out. A passing run is nonreproduction. Browser-only logging may expose missing dependencies/crash/profile/process-cleanup evidence; if it remains silent it cannot prove a specific blocked CDP command or resource cause. Any later deeper trace should be separately scoped. Current 15f216b remains unchanged while its cohort finishes.
+
+Original full logs (77,351 and 80,673 bytes), cached package and extracted package source remain under `.build/CI15F216Nov08/`. This folder contains compact excerpts, exact job/source/package receipts and the uninstalled diagnostic proposal. No native/iOS/042-helper changes, CI dispatch/push/cancel, source modification or commit occurred in this investigation.
