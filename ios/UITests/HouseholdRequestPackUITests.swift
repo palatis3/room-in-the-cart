@@ -298,6 +298,7 @@ import XCTest
             XCTAssertEqual(app.staticTexts.matching(identifier: "fixture.s24.posts").firstMatch.label, "Fixture applied decisions: 0")
             XCTAssertEqual(app.staticTexts.matching(identifier: "fixture.s24.lines").firstMatch.label, "Fixture saved lines: 0")
         }
+        var headerSize: CGSize?
         func assertControl(_ state: String) {
             reveal(label, fullyVisible: true)
             capture("S24-other-meals-" + state)
@@ -328,6 +329,14 @@ import XCTest
             XCTAssertGreaterThanOrEqual(snapshot.frame.width, 44)
             XCTAssertGreaterThanOrEqual(snapshot.frame.height, 44)
             XCTAssertTrue(snapshot.frame.contains(label.frame), "The named action must include its visible label")
+            if let headerSize {
+                XCTAssertEqual(snapshot.frame.width, headerSize.width, accuracy: 1,
+                               "Opening details must keep the header width stable")
+                XCTAssertEqual(snapshot.frame.height, headerSize.height, accuracy: 1,
+                               "Changing the chevron must not rewrap the header")
+            } else {
+                headerSize = snapshot.frame.size
+            }
         }
 
         assertReviewedFacts()

@@ -1,0 +1,9 @@
+# Disclosure headings keep their size when expanded
+
+The prior largest-text Other meals captures showed a two-line collapsed heading becoming three lines when expanded: the forward and down chevrons had different intrinsic widths. The shared disclosure style now lays both symbols in the same stack and changes only their visibility. Both states reserve the same native symbol dimensions at each Dynamic Type size, without a fixed font size or label-width estimate. The symbol stack remains hidden from accessibility; the named full-row button and expansion binding are unchanged.
+
+The existing Other meals regression now asserts stable header width and height through collapsed/expanded/expanded/collapsed states. It retains full-label taps, minimum44-point controls, ordinary dinner facts, both protected lunches, all checkout amounts, disabled Apply and zero writes. It passes on iOS17.0 light/Large, iOS26.2 light/Large and iOS26.2 dark at the largest accessibility text size. The two standard phases additionally pass the nested checkout and included-charges disclosure journey. All five case executions and strict checks pass, with zero recorded runtime warnings and no observed animation-idle/restart messages in their supplied logs.
+
+Root reviewed all15 screenshots and24 control/discovery text attachments. See each phase's root review for measured sizes and scope. Original attachments are preserved, including repeated states. The unchanged source also compiles as an unsigned arm64 iPhone Release app and passes compiled-bundle validation.
+
+This qualifies the shared layout correction in the exercised request contexts. It is not a complete accessibility audit, physical VoiceOver check, all-caller visual walkthrough, or signed distribution qualification. The separate unfiltered S24 audit remains required. [Prior wrapping evidence](../request-other-meals-disclosure-20261108/README.md).

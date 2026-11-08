@@ -1,0 +1,4 @@
+Expected state: Expanded
+Named button count: 1
+Visible label: Other meals in this shop
+Label frame: (32.0, 343.0, 338.0, 187.33333333333348)

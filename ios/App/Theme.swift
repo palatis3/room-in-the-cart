@@ -41,8 +41,12 @@ struct WorkingForm<Content: View>: View {
             HStack {
                 configuration.label
                 Spacer(minLength: 12)
-                Image(systemName: configuration.isExpanded ? "chevron.down" : "chevron.forward")
-                    .font(.body.weight(.semibold)).foregroundStyle(.tint).accessibilityHidden(true)
+                // Reserve both symbol widths so expansion cannot rewrap the label.
+                ZStack {
+                    Image(systemName: "chevron.down").opacity(configuration.isExpanded ? 1 : 0)
+                    Image(systemName: "chevron.forward").opacity(configuration.isExpanded ? 0 : 1)
+                }
+                .font(.body.weight(.semibold)).foregroundStyle(.tint).accessibilityHidden(true)
             }
             .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
             .contentShape(Rectangle())

@@ -1,0 +1,232 @@
+{
+  "phase": "current-light",
+  "selector": "RoomInTheCartUITests/HouseholdRequestPackUITests/testOtherMealsDisclosureHasNamed44PointControlAndLabelTapsPreserveReviewedFacts",
+  "sourceManifestSHA256": "ffd68bf9a00de16e7be6c7d2121b2502da3b134626b5b3810cd65820434fd763",
+  "captures": [
+    {
+      "semanticName": "S24-other-meals-Collapsed",
+      "firstMetadataEncounter": 0,
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S24-other-meals-Collapsed_0_6DA57688-2D41-4E62-BE8E-1C165A5E2157.png",
+        "payloadId": "0~lCJOXJe5P7kd02d2QSYkpE2ZtMni-V4eIrZqr5UnVN_90mPV2T4WhLsCvK1vUj_z6UM1avCwuxIKM0nBFTICdA==",
+        "timestamp": 1794168841.652,
+        "uuid": "1A273A82-BA83-407F-8F72-51CEF580D4A7"
+      },
+      "sequence": 0,
+      "path": "attachment-00/1A273A82-BA83-407F-8F72-51CEF580D4A7.png",
+      "bytes": 312712,
+      "sha256": "8c2d0c8774292f7f5e55316ed44d38b1d5b7350f979dc82a539a425e0bd1e5b5",
+      "exportExit": 0
+    },
+    {
+      "semanticName": "S24-other-meals-Collapsed-discovery",
+      "firstMetadataEncounter": 1,
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S24-other-meals-Collapsed-discovery_0_45ACBF5D-9744-4E6A-B103-0F57EF0B54C3.txt",
+        "payloadId": "0~bBDAX-s0GGXvFQNxmzG2Upo_um4jHYt51v8EyArJ9Pyx-lTLBn35PIDa0lZWsTG-Awu8tmFl5pHmnyLRnQV6sA==",
+        "timestamp": 1794168841.862,
+        "uuid": "558E9A51-9953-4E04-9AE2-7CF86E08A997"
+      },
+      "sequence": 1,
+      "path": "attachment-01/558E9A51-9953-4E04-9AE2-7CF86E08A997.txt",
+      "bytes": 140,
+      "sha256": "45a48ea70c23082ca838eda454d1926d3d0d8500c2363602fd45b50d9327831b",
+      "exportExit": 0
+    },
+    {
+      "semanticName": "S24-other-meals-Collapsed-control",
+      "firstMetadataEncounter": 2,
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S24-other-meals-Collapsed-control_0_580CE23C-78C7-4BF5-9CE7-9CDE0672F87E.txt",
+        "payloadId": "0~exlESuvUZZruz_T1ROqkxQz9zfdp0HoKJmk6FUrzX8fC28-ZlIliVflH1Ai1NNtAmuAcHxWSCDFASTUBJyHfDw==",
+        "timestamp": 1794168841.972,
+        "uuid": "66BAC667-9A80-439F-9182-4743D1FEAD5D"
+      },
+      "sequence": 2,
+      "path": "attachment-02/66BAC667-9A80-439F-9182-4743D1FEAD5D.txt",
+      "bytes": 140,
+      "sha256": "8e80a493021ac30a233f2ea563f15a69cab3da331eb585bc5d49e99d14ca11ab",
+      "exportExit": 0
+    },
+    {
+      "semanticName": "S24-other-meals-Expanded",
+      "firstMetadataEncounter": 3,
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S24-other-meals-Expanded_0_A9A5FF3E-CBC9-4CB3-9489-08932D40BFFC.png",
+        "payloadId": "0~bt1vQnOPiPqVGLQ0Tn6_3CdWa1o3ewNohcEZQ7IWFye8-akKZkTjvQh-sT8QP0yf72rgH8mM2w1wShPWxDLeSQ==",
+        "timestamp": 1794168845.217,
+        "uuid": "915624EE-5F49-441F-9B25-C73836A42DE3"
+      },
+      "sequence": 3,
+      "path": "attachment-03/915624EE-5F49-441F-9B25-C73836A42DE3.png",
+      "bytes": 307883,
+      "sha256": "841fb6e6ca5e7bdb65069ddb55c4c31a89fca9f96f284f96c170e2c786d13df7",
+      "exportExit": 0
+    },
+    {
+      "semanticName": "S24-other-meals-Expanded-discovery",
+      "firstMetadataEncounter": 4,
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S24-other-meals-Expanded-discovery_0_7C052C82-190A-462F-AC02-7C9AE868A22D.txt",
+        "payloadId": "0~pKyI4xd-FxLPryuzHH-AJDHD_PXDpakBYcxn2hXKGjeGcze5rrUyl9leyzqpvea17aUHCyUjOCO32-p6MgEorQ==",
+        "timestamp": 1794168845.43,
+        "uuid": "71860443-E0C9-4876-8B2F-D6017C91DBCF"
+      },
+      "sequence": 4,
+      "path": "attachment-04/71860443-E0C9-4876-8B2F-D6017C91DBCF.txt",
+      "bytes": 138,
+      "sha256": "6903a224e38b703821148cac939b3caf49c6df841583f13a80bd89575ad3dc8f",
+      "exportExit": 0
+    },
+    {
+      "semanticName": "S24-other-meals-Expanded-control",
+      "firstMetadataEncounter": 5,
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S24-other-meals-Expanded-control_0_CC2E9C58-7980-49B1-8592-A87E6F41825E.txt",
+        "payloadId": "0~YLFGE_6AZMDfxtUxeVeowpUWNk_qqOgCDYp-Xp8JBLgKSnIUqDnPnNs3kCFIvfwP1tER0KHkxEPQwlH74qK2xA==",
+        "timestamp": 1794168845.543,
+        "uuid": "6B377522-6585-4617-88F1-F9001E0031B0"
+      },
+      "sequence": 5,
+      "path": "attachment-05/6B377522-6585-4617-88F1-F9001E0031B0.txt",
+      "bytes": 138,
+      "sha256": "1495db2b88124c20538e02f104b274ff4abcd74ccd25f61907ff128ff931213d",
+      "exportExit": 0
+    },
+    {
+      "semanticName": "S24-other-meals-expanded-ordinary-facts",
+      "firstMetadataEncounter": 6,
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S24-other-meals-expanded-ordinary-facts_0_E21EE725-995B-41D9-8F6A-44E7D96685E5.png",
+        "payloadId": "0~bt1vQnOPiPqVGLQ0Tn6_3CdWa1o3ewNohcEZQ7IWFye8-akKZkTjvQh-sT8QP0yf72rgH8mM2w1wShPWxDLeSQ==",
+        "timestamp": 1794168847.487,
+        "uuid": "6109D57C-413B-430C-AFFC-BEE9DDF2DC76"
+      },
+      "sequence": 6,
+      "path": "attachment-06/6109D57C-413B-430C-AFFC-BEE9DDF2DC76.png",
+      "bytes": 307883,
+      "sha256": "841fb6e6ca5e7bdb65069ddb55c4c31a89fca9f96f284f96c170e2c786d13df7",
+      "exportExit": 0
+    },
+    {
+      "semanticName": "S24-other-meals-Expanded",
+      "firstMetadataEncounter": 7,
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S24-other-meals-Expanded_0_A8B4002B-062B-4AAF-ABD1-175E72AE60D5.png",
+        "payloadId": "0~bt1vQnOPiPqVGLQ0Tn6_3CdWa1o3ewNohcEZQ7IWFye8-akKZkTjvQh-sT8QP0yf72rgH8mM2w1wShPWxDLeSQ==",
+        "timestamp": 1794168861.968,
+        "uuid": "305B67B5-3FD0-47A6-98E8-F7460FFD2DFB"
+      },
+      "sequence": 7,
+      "path": "attachment-07/305B67B5-3FD0-47A6-98E8-F7460FFD2DFB.png",
+      "bytes": 307883,
+      "sha256": "841fb6e6ca5e7bdb65069ddb55c4c31a89fca9f96f284f96c170e2c786d13df7",
+      "exportExit": 0
+    },
+    {
+      "semanticName": "S24-other-meals-Expanded-discovery",
+      "firstMetadataEncounter": 8,
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S24-other-meals-Expanded-discovery_0_FC869711-B9B0-4090-857B-C369A8BB357F.txt",
+        "payloadId": "0~pKyI4xd-FxLPryuzHH-AJDHD_PXDpakBYcxn2hXKGjeGcze5rrUyl9leyzqpvea17aUHCyUjOCO32-p6MgEorQ==",
+        "timestamp": 1794168862.157,
+        "uuid": "1F724171-22E4-4BC2-B47C-A7019F2AF7ED"
+      },
+      "sequence": 8,
+      "path": "attachment-08/1F724171-22E4-4BC2-B47C-A7019F2AF7ED.txt",
+      "bytes": 138,
+      "sha256": "6903a224e38b703821148cac939b3caf49c6df841583f13a80bd89575ad3dc8f",
+      "exportExit": 0
+    },
+    {
+      "semanticName": "S24-other-meals-Expanded-control",
+      "firstMetadataEncounter": 9,
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S24-other-meals-Expanded-control_0_70345A0E-C9D5-49C5-9E98-EAF4C0B7C624.txt",
+        "payloadId": "0~YLFGE_6AZMDfxtUxeVeowpUWNk_qqOgCDYp-Xp8JBLgKSnIUqDnPnNs3kCFIvfwP1tER0KHkxEPQwlH74qK2xA==",
+        "timestamp": 1794168862.258,
+        "uuid": "F95A0ACE-535B-4674-9880-0DACB17A2EB3"
+      },
+      "sequence": 9,
+      "path": "attachment-09/F95A0ACE-535B-4674-9880-0DACB17A2EB3.txt",
+      "bytes": 138,
+      "sha256": "1495db2b88124c20538e02f104b274ff4abcd74ccd25f61907ff128ff931213d",
+      "exportExit": 0
+    },
+    {
+      "semanticName": "S24-other-meals-Collapsed",
+      "firstMetadataEncounter": 10,
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S24-other-meals-Collapsed_0_5CBB4052-6491-4614-AE2D-2A6206901F4C.png",
+        "payloadId": "0~lCJOXJe5P7kd02d2QSYkpE2ZtMni-V4eIrZqr5UnVN_90mPV2T4WhLsCvK1vUj_z6UM1avCwuxIKM0nBFTICdA==",
+        "timestamp": 1794168865.175,
+        "uuid": "A33974D6-E6B0-4538-A55A-3CA2A6121782"
+      },
+      "sequence": 10,
+      "path": "attachment-10/A33974D6-E6B0-4538-A55A-3CA2A6121782.png",
+      "bytes": 312712,
+      "sha256": "8c2d0c8774292f7f5e55316ed44d38b1d5b7350f979dc82a539a425e0bd1e5b5",
+      "exportExit": 0
+    },
+    {
+      "semanticName": "S24-other-meals-Collapsed-discovery",
+      "firstMetadataEncounter": 11,
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S24-other-meals-Collapsed-discovery_0_D03B6574-7EAF-404F-84E6-AD63179B865A.txt",
+        "payloadId": "0~bBDAX-s0GGXvFQNxmzG2Upo_um4jHYt51v8EyArJ9Pyx-lTLBn35PIDa0lZWsTG-Awu8tmFl5pHmnyLRnQV6sA==",
+        "timestamp": 1794168865.375,
+        "uuid": "7BD8B06A-E46D-423A-9E53-C5F052ED7664"
+      },
+      "sequence": 11,
+      "path": "attachment-11/7BD8B06A-E46D-423A-9E53-C5F052ED7664.txt",
+      "bytes": 140,
+      "sha256": "45a48ea70c23082ca838eda454d1926d3d0d8500c2363602fd45b50d9327831b",
+      "exportExit": 0
+    },
+    {
+      "semanticName": "S24-other-meals-Collapsed-control",
+      "firstMetadataEncounter": 12,
+      "attachment": {
+        "lifetime": "keepAlways",
+        "name": "S24-other-meals-Collapsed-control_0_371FF02E-F0A9-4060-B39C-C0193ECAC7FD.txt",
+        "payloadId": "0~exlESuvUZZruz_T1ROqkxQz9zfdp0HoKJmk6FUrzX8fC28-ZlIliVflH1Ai1NNtAmuAcHxWSCDFASTUBJyHfDw==",
+        "timestamp": 1794168865.481,
+        "uuid": "4CEC0D2F-90C1-445D-A21B-94E18B449836"
+      },
+      "sequence": 12,
+      "path": "attachment-12/4CEC0D2F-90C1-445D-A21B-94E18B449836.txt",
+      "bytes": 140,
+      "sha256": "8e80a493021ac30a233f2ea563f15a69cab3da331eb585bc5d49e99d14ca11ab",
+      "exportExit": 0
+    }
+  ],
+  "stateObservationOrder": [
+    "Collapsed",
+    "Expanded",
+    "Expanded",
+    "Collapsed"
+  ],
+  "selection": "All13 exact named observations retained, including both occurrences of each state; duplicate references deduplicated by UUID/name/payload, never payload alone. Sort by original attachment timestamp then first metadata encounter; expected source semantic sequence verified.",
+  "equalTimestampAdjacentPairs": [],
+  "activityReads": 1,
+  "activitySHA256": "d80e61a7d3945a2065e70b32c414bb09883f73569c6d553d2b26388a834c5a45",
+  "inspectionCopyOnly": true,
+  "originalUnchanged": true,
+  "sourceUnchanged": true,
+  "timeoutPerCommandSeconds": 45,
+  "perFileLimitBytes": 4000000,
+  "totalBudgetBytes": 20000000,
+  "visualReview": "pending root"
+}

@@ -1,0 +1,145 @@
+[
+  {
+    "semanticName": "S24-other-meals-Collapsed",
+    "firstMetadataEncounter": 0,
+    "attachment": {
+      "lifetime": "keepAlways",
+      "name": "S24-other-meals-Collapsed_0_785B82AA-1CA7-4A95-9E20-BEEEDE76A85D.png",
+      "payloadId": "0~cwETpeI6BJejix3Mxm9Juhxc06QOyoEHMGsY6iX4yX9MpUdvfxiK0Ya-UkFTLBHKPSym3MritmkC4MSKsdAs7g==",
+      "timestamp": 1794169125.124,
+      "uuid": "CA0C9BF4-ADD0-4ECF-BB33-D47CD7EC5AEF"
+    }
+  },
+  {
+    "semanticName": "S24-other-meals-Collapsed-discovery",
+    "firstMetadataEncounter": 1,
+    "attachment": {
+      "lifetime": "keepAlways",
+      "name": "S24-other-meals-Collapsed-discovery_0_68207B5E-71A9-4551-A7C4-8CC26328087A.txt",
+      "payloadId": "0~OwIRALMBEVMo27geNeOTxcdHpnbJt0tElmj_0RLQwKwmk5uyciQ6H5k5Ly8CGmEynDQplJAgRnWmltTltl4k6w==",
+      "timestamp": 1794169125.344,
+      "uuid": "3D14A148-B5D3-4ED4-941C-DFDD050880F2"
+    }
+  },
+  {
+    "semanticName": "S24-other-meals-Collapsed-control",
+    "firstMetadataEncounter": 2,
+    "attachment": {
+      "lifetime": "keepAlways",
+      "name": "S24-other-meals-Collapsed-control_0_CC4DC649-4A77-4A40-9DBE-049E5FAFA423.txt",
+      "payloadId": "0~3ZwV_J8_Ma_kzcNo6OsPpfMey8XVZp7aJ3LPryNrIFTKPUxTkvR6xARKBDgf5rGGBekmFgen7kU-0yMyhgPrwg==",
+      "timestamp": 1794169125.469,
+      "uuid": "918A4D6C-596B-4A2A-92DF-F2A73E42933E"
+    }
+  },
+  {
+    "semanticName": "S24-other-meals-Expanded",
+    "firstMetadataEncounter": 3,
+    "attachment": {
+      "lifetime": "keepAlways",
+      "name": "S24-other-meals-Expanded_0_D3EA4D73-46DD-4273-A549-AD78CC7D1A28.png",
+      "payloadId": "0~nKwSK1iDgxoVfn-_KuF-1W7_KjnBOqtbw30UXsmP9z_Z_r9snEIdZZ_qWfZ1nk9BXj96Xwux-mcVH2u_mIl8Cg==",
+      "timestamp": 1794169133.143,
+      "uuid": "8B41B47C-2851-417D-BD2D-7C525AE0A536"
+    }
+  },
+  {
+    "semanticName": "S24-other-meals-Expanded-discovery",
+    "firstMetadataEncounter": 4,
+    "attachment": {
+      "lifetime": "keepAlways",
+      "name": "S24-other-meals-Expanded-discovery_0_3BDE5508-DBE5-41A3-B0BE-CF649EFA1070.txt",
+      "payloadId": "0~uakUb4babCBdp2bpYtatc_llw4gKhSWDnNI2gYIs4wtBRIigE-9i_ylH-Hgc6C7Jq0hwAlWdDlVyqD6PkV0kEQ==",
+      "timestamp": 1794169133.311,
+      "uuid": "F659C45C-A427-4044-B1C0-243EEE85F9E3"
+    }
+  },
+  {
+    "semanticName": "S24-other-meals-Expanded-control",
+    "firstMetadataEncounter": 5,
+    "attachment": {
+      "lifetime": "keepAlways",
+      "name": "S24-other-meals-Expanded-control_0_08A4F075-3586-4C80-A36F-C72422930AF5.txt",
+      "payloadId": "0~yZmWHE6z7KWLCKlrLAoe4Pd_j_uWHRQaci0mFQLmvXWCWXaBkSc-4oWQ0GdBQjHfUTtBpCK8ar1Si7F7MTz3TQ==",
+      "timestamp": 1794169133.4,
+      "uuid": "3FD1D96E-628E-47CC-A9C6-554822846DED"
+    }
+  },
+  {
+    "semanticName": "S24-other-meals-expanded-ordinary-facts",
+    "firstMetadataEncounter": 6,
+    "attachment": {
+      "lifetime": "keepAlways",
+      "name": "S24-other-meals-expanded-ordinary-facts_0_B9B60C44-9352-4D7A-8DAF-8D714AE99CB5.png",
+      "payloadId": "0~UNUBVREs7eA5kO1lggkPXYFmvBXAP0l484gsrACWwLS0w7BjpUrZNCyenDksdWnKjPwlu0rQeHp3wfnlfFC93g==",
+      "timestamp": 1794169189.923,
+      "uuid": "6F3777B0-2BCB-487C-81C8-78ACDBB2197D"
+    }
+  },
+  {
+    "semanticName": "S24-other-meals-Expanded",
+    "firstMetadataEncounter": 7,
+    "attachment": {
+      "lifetime": "keepAlways",
+      "name": "S24-other-meals-Expanded_0_2288567B-30ED-4C71-8360-F61B07B090DA.png",
+      "payloadId": "0~wNNWDjDPEUiHJ5bRt7k8ZWJxkIHvyi2897uIVUWtPEfscHPx-1w1H60unwoj8TtJs7lYDYTDr9gVJITMGFwPsQ==",
+      "timestamp": 1794169298.908,
+      "uuid": "F91F7927-2934-4B53-8BFA-F2E6486CA3F5"
+    }
+  },
+  {
+    "semanticName": "S24-other-meals-Expanded-discovery",
+    "firstMetadataEncounter": 8,
+    "attachment": {
+      "lifetime": "keepAlways",
+      "name": "S24-other-meals-Expanded-discovery_0_1465C5C0-F6DE-4118-A5A4-9B41EE0A2269.txt",
+      "payloadId": "0~2EFsfGA69Le9tcpjYIJq9jdaZOptUl6sBf0Xk8e68FrF2aVbzdJagWFt5iEQpEFVr_5Fx-2RJ29E93GkZHM6KQ==",
+      "timestamp": 1794169299.079,
+      "uuid": "854E4DEF-1E1E-4B62-A9D0-668D2EDD4B4D"
+    }
+  },
+  {
+    "semanticName": "S24-other-meals-Expanded-control",
+    "firstMetadataEncounter": 9,
+    "attachment": {
+      "lifetime": "keepAlways",
+      "name": "S24-other-meals-Expanded-control_0_9108D070-7288-43AD-B55F-64A13FC4AA5D.txt",
+      "payloadId": "0~rfLmWaBV83k3grKRK_V3hMFX9HYiUDtD1xJ1xt0HN5hNH5sgSEGF7HkMOQ7Rrdmmbej8BF4DZLfQCuMgQcSKrQ==",
+      "timestamp": 1794169299.165,
+      "uuid": "796725B7-DED8-4BB3-BA72-8B82CA797F5D"
+    }
+  },
+  {
+    "semanticName": "S24-other-meals-Collapsed",
+    "firstMetadataEncounter": 10,
+    "attachment": {
+      "lifetime": "keepAlways",
+      "name": "S24-other-meals-Collapsed_0_3FC3BE13-0406-422C-9FC9-67ABBCD4B488.png",
+      "payloadId": "0~u_kYrPU_bxiY4hce6kFl5TwQ_VK7NnjUhhUSzu0rR6VUmXCuqbg6jpibEToP2pkPTQU-zk40l-lMrWaPNqq8JA==",
+      "timestamp": 1794169301.581,
+      "uuid": "52246473-06D3-4758-86AF-4F46BE526FF1"
+    }
+  },
+  {
+    "semanticName": "S24-other-meals-Collapsed-discovery",
+    "firstMetadataEncounter": 11,
+    "attachment": {
+      "lifetime": "keepAlways",
+      "name": "S24-other-meals-Collapsed-discovery_0_A6A2A3D6-6BB2-4802-98DC-D4D3C5E61B5A.txt",
+      "payloadId": "0~VS3c-GbcUHhbSKztxbesPZWhdj2H3IjU9TCAfzqnujnISmNpMTXFpP92csujCysvJybP_7lmWE8lUj1dTLvigw==",
+      "timestamp": 1794169301.741,
+      "uuid": "E5B3CA00-97B2-4530-8D16-D4855CA44693"
+    }
+  },
+  {
+    "semanticName": "S24-other-meals-Collapsed-control",
+    "firstMetadataEncounter": 12,
+    "attachment": {
+      "lifetime": "keepAlways",
+      "name": "S24-other-meals-Collapsed-control_0_98A8B30D-072B-4766-B589-6E2A11961554.txt",
+      "payloadId": "0~J6c0xT75qEzyZdgPd07vTSDlgGwdP6VaHrL2nWkUhaoy_DPZdCmqkt4Lbxt2wvvS9obj8ITsmlLkFDZyEwxIOQ==",
+      "timestamp": 1794169301.823,
+      "uuid": "F5B0EF8D-044B-409A-A54B-15EF8AE72C1A"
+    }
+  }
+]
