@@ -1,0 +1,110 @@
+OWNER
+Attributes: Button, 0x1234b5f40, {{16.0, 602.0}, {370.0, 74.0}}, identifier: 'household.decision.checkoutDetails', label: 'Checkout calculation details', value: Collapsed
+Element subtree:
+ →Button, 0x1234b5f40, {{16.0, 602.0}, {370.0, 74.0}}, identifier: 'household.decision.checkoutDetails', label: 'Checkout calculation details', value: Collapsed
+    StaticText, 0x1234b6060, {{32.0, 617.0}, {338.0, 44.0}}, label: 'Checkout calculation details'
+    Image, 0x1234b6180, {{360.0, 631.7}, {9.0, 15.0}}, identifier: 'chevron.forward', label: 'Forward'
+Path to element:
+ →Application, 0x1234a99c0, pid: 74781, label: 'Room in the Cart'
+  ↳Window (Main), 0x1234a9440, {{0.0, 0.0}, {402.0, 874.0}}
+   ↳Other, 0x1234af460, {{0.0, 0.0}, {402.0, 874.0}}
+    ↳Other, 0x1234af6a0, {{0.0, 62.0}, {402.0, 812.0}}
+     ↳Other, 0x1234af7c0, {{0.0, 62.0}, {402.0, 812.0}}
+      ↳Other, 0x1234af8e0, {{0.0, 62.0}, {402.0, 812.0}}
+       ↳Other, 0x1234afa00, {{0.0, 62.0}, {402.0, 812.0}}
+        ↳Other, 0x1234afb20, {{0.0, 62.0}, {402.0, 812.0}}
+         ↳Other, 0x1234afc40, {{0.0, 62.0}, {402.0, 812.0}}
+          ↳Other, 0x1234b0300, {{0.0, 62.0}, {402.0, 812.0}}
+           ↳Other, 0x1234b0420, {{0.0, 62.0}, {402.0, 812.0}}
+            ↳Other, 0x1234b0540, {{0.0, 62.0}, {402.0, 812.0}}
+             ↳Other, 0x1234b0660, {{0.0, 62.0}, {402.0, 812.0}}
+              ↳CollectionView, 0x1234b0780, {{0.0, 62.0}, {402.0, 812.0}}
+               ↳Cell, 0x1234b5880, {{16.0, 602.0}, {370.0, 74.0}}
+                ↳Other, 0x1234b5be0, {{16.0, 602.0}, {370.0, 74.0}}
+                 ↳Other, 0x1234b5d00, {{16.0, 602.0}, {370.0, 74.0}}
+                  ↳Other, 0x1234b5e20, {{16.0, 602.0}, {370.0, 74.0}}
+                   ↳Button, 0x1234b5f40, {{16.0, 602.0}, {370.0, 74.0}}, identifier: 'household.decision.checkoutDetails', label: 'Checkout calculation details', value: Collapsed
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x124a42440, pid: 74781, label: 'Room in the Cart'
+  }
+  ↪︎Find: Descendants matching type Button
+    Output: {
+      Button, 0x124a345b0, {{96.0, 106.7}, {210.0, 20.3}}, identifier: 'fixture.s24.end-access', label: 'Fixture end shopper access'
+      Button, 0x124a38ea0, {{20.0, 82.0}, {76.7, 36.0}}, identifier: 'household.decision.cancel', label: 'Cancel'
+      Button, 0x124a35c00, {{16.0, 263.0}, {370.0, 52.0}}, label: 'Refresh requests'
+      Button, 0x124a374c0, {{16.0, 445.3}, {370.0, 147.3}}, identifier: 'household.request.44444444-4444-4444-8444-444444444444', label: 'Brown rice cereal, Sam, 1 box, Received, waiting for review, Nov 2, 2026 at 7:00 PM'
+      Button, 0x124a3ed20, {{16.0, 602.0}, {370.0, 74.0}}, identifier: 'household.decision.checkoutDetails', label: 'Checkout calculation details', value: Collapsed
+      Button, 0x124a40ee0, {{16.0, 780.0}, {370.0, 52.0}}, identifier: 'household.decision.apply', label: 'Apply reviewed decision', Disabled
+      Button, 0x124a417e0, {{16.0, 832.0}, {370.0, 52.0}}, label: 'Cancel preview'
+    }
+    ↪︎Find: Elements matching predicate '"household.decision.checkoutDetails" IN identifiers'
+      Output: {
+        Button, 0x1233e0090, {{16.0, 602.0}, {370.0, 74.0}}, identifier: 'household.decision.checkoutDetails', label: 'Checkout calculation details', value: Collapsed
+      }
+      ↪︎Find: First Match
+        Output: {
+          Button, 0x1233ceda0, {{16.0, 602.0}, {370.0, 74.0}}, identifier: 'household.decision.checkoutDetails', label: 'Checkout calculation details', value: Collapsed
+        }
+
+TARGET
+Attributes: StaticText, 0x124a60a00, {{32.0, 617.0}, {338.0, 44.0}}, label: 'Checkout calculation details'
+Element subtree:
+ →StaticText, 0x124a60a00, {{32.0, 617.0}, {338.0, 44.0}}, label: 'Checkout calculation details'
+Path to element:
+ →Application, 0x12377bdf0, pid: 74781, label: 'Room in the Cart'
+  ↳Window (Main), 0x12377a930, {{0.0, 0.0}, {402.0, 874.0}}
+   ↳Other, 0x123780830, {{0.0, 0.0}, {402.0, 874.0}}
+    ↳Other, 0x123780a70, {{0.0, 62.0}, {402.0, 812.0}}
+     ↳Other, 0x123780b90, {{0.0, 62.0}, {402.0, 812.0}}
+      ↳Other, 0x123780cb0, {{0.0, 62.0}, {402.0, 812.0}}
+       ↳Other, 0x123780dd0, {{0.0, 62.0}, {402.0, 812.0}}
+        ↳Other, 0x123780ef0, {{0.0, 62.0}, {402.0, 812.0}}
+         ↳Other, 0x123781010, {{0.0, 62.0}, {402.0, 812.0}}
+          ↳Other, 0x1237816d0, {{0.0, 62.0}, {402.0, 812.0}}
+           ↳Other, 0x1237817f0, {{0.0, 62.0}, {402.0, 812.0}}
+            ↳Other, 0x123781910, {{0.0, 62.0}, {402.0, 812.0}}
+             ↳Other, 0x123781a30, {{0.0, 62.0}, {402.0, 812.0}}
+              ↳CollectionView, 0x123781b50, {{0.0, 62.0}, {402.0, 812.0}}
+               ↳Cell, 0x124a60220, {{16.0, 602.0}, {370.0, 74.0}}
+                ↳Other, 0x124a60580, {{16.0, 602.0}, {370.0, 74.0}}
+                 ↳Other, 0x124a606a0, {{16.0, 602.0}, {370.0, 74.0}}
+                  ↳Other, 0x124a607c0, {{16.0, 602.0}, {370.0, 74.0}}
+                   ↳Button, 0x124a608e0, {{16.0, 602.0}, {370.0, 74.0}}, identifier: 'household.decision.checkoutDetails', label: 'Checkout calculation details', value: Collapsed
+                    ↳StaticText, 0x124a60a00, {{32.0, 617.0}, {338.0, 44.0}}, label: 'Checkout calculation details'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x124a34850, pid: 74781, label: 'Room in the Cart'
+  }
+  ↪︎Find: Descendants matching type Button
+    Output: {
+      Button, 0x124a358d0, {{96.0, 106.7}, {210.0, 20.3}}, identifier: 'fixture.s24.end-access', label: 'Fixture end shopper access'
+      Button, 0x124a3a0d0, {{20.0, 82.0}, {76.7, 36.0}}, identifier: 'household.decision.cancel', label: 'Cancel'
+      Button, 0x124a36e30, {{16.0, 263.0}, {370.0, 52.0}}, label: 'Refresh requests'
+      Button, 0x124a386f0, {{16.0, 445.3}, {370.0, 147.3}}, identifier: 'household.request.44444444-4444-4444-8444-444444444444', label: 'Brown rice cereal, Sam, 1 box, Received, waiting for review, Nov 2, 2026 at 7:00 PM'
+      Button, 0x124a3ff50, {{16.0, 602.0}, {370.0, 74.0}}, identifier: 'household.decision.checkoutDetails', label: 'Checkout calculation details', value: Collapsed
+      Button, 0x124a42110, {{16.0, 780.0}, {370.0, 52.0}}, identifier: 'household.decision.apply', label: 'Apply reviewed decision', Disabled
+      Button, 0x124acec20, {{16.0, 832.0}, {370.0, 52.0}}, label: 'Cancel preview'
+    }
+    ↪︎Find: Elements matching predicate '"household.decision.checkoutDetails" IN identifiers'
+      Output: {
+        Button, 0x124acae10, {{16.0, 602.0}, {370.0, 74.0}}, identifier: 'household.decision.checkoutDetails', label: 'Checkout calculation details', value: Collapsed
+      }
+      ↪︎Find: First Match
+        Output: {
+          Button, 0x124e06360, {{16.0, 602.0}, {370.0, 74.0}}, identifier: 'household.decision.checkoutDetails', label: 'Checkout calculation details', value: Collapsed
+        }
+        ↪︎Find: Descendants matching type StaticText
+          Output: {
+            StaticText, 0x124ab7f80, {{32.0, 617.0}, {338.0, 44.0}}, label: 'Checkout calculation details'
+          }
+          ↪︎Find: Elements matching predicate 'label == "Checkout calculation details"'
+            Output: {
+              StaticText, 0x124aa67e0, {{32.0, 617.0}, {338.0, 44.0}}, label: 'Checkout calculation details'
+            }
+            ↪︎Find: First Match
+              Output: {
+                StaticText, 0x124b151b0, {{32.0, 617.0}, {338.0, 44.0}}, label: 'Checkout calculation details'
+              }

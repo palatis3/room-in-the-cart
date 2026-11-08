@@ -1,0 +1,257 @@
+{
+  "sourceInspection": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection",
+  "files": [
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/AD4FDC9F-0BD8-4BDD-826B-FCF28D346427.txt",
+      "path": "ancestry/small-preview-outcome.txt",
+      "sha256": "17035082a48f2f996b906f8426aed4540aaa9253bc0ee21fadfcd83d897f8f01",
+      "attachmentName": "S24-measure-small-preview-outcome-ancestry_0_7297B50D-C981-455D-BB61-C201BD92D0ED.txt",
+      "timestamp": 1794129177.008
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/C1E08389-1D08-4894-94E2-594588FDE7E8.png",
+      "path": "crop/small-preview-outcome.png",
+      "sha256": "8f572969ebcb11b34f5a90e6886131d83922c7c97eb8eddb24c17e18402b335b",
+      "attachmentName": "S24-measure-small-preview-outcome-crop_0_23AF5995-7EC8-4A5D-95A2-FC897443E47E.png",
+      "timestamp": 1794129174.99
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/915F16F1-817C-4DAC-8CFF-ACA753CD8BE3.txt",
+      "path": "metrics/small-preview-outcome.json",
+      "sha256": "cb5bcd7e8c34f37a3e27480f2601c5b298b35292bce8e64908b8c87aa40b03f2",
+      "attachmentName": "S24-measure-small-preview-outcome-metrics_0_10775603-5512-45A6-9646-DF12800E073D.json",
+      "timestamp": 1794129177.928
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/324F0760-60B5-4B7B-A3C5-19D03544BE8A.png",
+      "path": "screen/small-preview-outcome.png",
+      "sha256": "e576daba5e6b8843e1a4d38ba2ffb3460f705da4574f8e1732026f8a73d8ca25",
+      "attachmentName": "S24-measure-small-preview-outcome-screen_0_E0C29F0B-7FF7-4272-9817-9899F93325AF.png",
+      "timestamp": 1794129175.155
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/F8B34707-952D-452C-9639-EB36AB061F35.txt",
+      "path": "ancestry/small-checkout-details.txt",
+      "sha256": "5574e017eaec3dbd4ffc12ad234185b1a4fc38d8d8d51fd6c3b62fdb2c64efa1",
+      "attachmentName": "S24-measure-small-checkout-details-ancestry_0_43493799-9427-4A2B-950C-1194F3516D7A.txt",
+      "timestamp": 1794129187.907
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/95D95935-B6CA-4A01-8231-FEB13DA0F018.png",
+      "path": "crop/small-checkout-details.png",
+      "sha256": "5d3bb9020ac76a45c19e734b1bfb7f2fe5c408d06e60c768c2e7704d40812918",
+      "attachmentName": "S24-measure-small-checkout-details-crop_0_0808495D-053F-490E-89FF-1AB3C6BA4E14.png",
+      "timestamp": 1794129186.08
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/B1BED140-4785-4022-96F0-D2ABA0B5F3AB.txt",
+      "path": "metrics/small-checkout-details.json",
+      "sha256": "9a91872c003c168e701f776739c3ad2ef7da81851ff9ab0da89a5da03ecd154d",
+      "attachmentName": "S24-measure-small-checkout-details-metrics_0_4676BDC4-DE12-496F-9ABB-3D12470B5527.json",
+      "timestamp": 1794129189.394
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/EEADF110-3602-43B1-AD4C-0205AB016AD0.png",
+      "path": "screen/small-checkout-details.png",
+      "sha256": "3bc351dc1e29c4fe99e7c932ef0b4a0229826800e6a602adc527be04942e7aa1",
+      "attachmentName": "S24-measure-small-checkout-details-screen_0_447B4A89-E22D-4F3C-8CA2-D7B1D6102C75.png",
+      "timestamp": 1794129186.292
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/37A96E54-8791-431B-A7D5-8C08A13DAAB6.txt",
+      "path": "ancestry/small-navigation-cancel.txt",
+      "sha256": "637903602ab9eb8399bc1dd0794b489699b43feb86054fa510f754c4a73272f4",
+      "attachmentName": "S24-measure-small-navigation-cancel-ancestry_0_ACDD20CB-B008-42B8-B26E-67EB089C88DB.txt",
+      "timestamp": 1794129192.922
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/F92B5410-DA0F-45D7-94D6-BE2BAA0EC848.png",
+      "path": "crop/small-navigation-cancel.png",
+      "sha256": "a8eec48e2bfba5515bf261bbeb6fa8e0088fe84917b55334d1643e5d55667cb1",
+      "attachmentName": "S24-measure-small-navigation-cancel-crop_0_6A99A101-765F-4699-925C-85D6222EDD88.png",
+      "timestamp": 1794129190.886
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/78D894CB-0CCF-4C83-9F05-78688F7A3DAD.txt",
+      "path": "metrics/small-navigation-cancel.json",
+      "sha256": "d7fb6c95aad168899e771210f288a44cbd9271d8cc39175d8815a0cea78b1546",
+      "attachmentName": "S24-measure-small-navigation-cancel-metrics_0_7CA2C05A-B3BE-4918-AC14-3B355D123A3A.json",
+      "timestamp": 1794129193.314
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/CFEBB262-02EA-4EBD-A93C-F431EEFA1B5E.png",
+      "path": "screen/small-navigation-cancel.png",
+      "sha256": "3bc351dc1e29c4fe99e7c932ef0b4a0229826800e6a602adc527be04942e7aa1",
+      "attachmentName": "S24-measure-small-navigation-cancel-screen_0_D3EC1FA2-1557-434D-B3E8-B171A35A648B.png",
+      "timestamp": 1794129191.077
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/04F1F356-D2F3-4653-8D3D-071461BD2195.txt",
+      "path": "ancestry/large-preview-outcome.txt",
+      "sha256": "979487d1aa6e2c6d26aeda41ed48f2b2e0fade8767b4fdeca02caff318e24fa8",
+      "attachmentName": "S24-measure-large-preview-outcome-ancestry_0_E373DCED-73CC-4AEC-9103-B04EFC3B0635.txt",
+      "timestamp": 1794129054.713
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/EE11141C-85B0-48A7-AF43-64C9DBF5D905.png",
+      "path": "crop/large-preview-outcome.png",
+      "sha256": "d533ff044befdde32ce79273f7045dff278d5a9d8028a551c10f00df842e0769",
+      "attachmentName": "S24-measure-large-preview-outcome-crop_0_F641B71E-E400-471C-9F7E-934D7B5BF4C7.png",
+      "timestamp": 1794129052.708
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/7BE2A847-3069-42B3-BA33-43B78AED6097.txt",
+      "path": "metrics/large-preview-outcome.json",
+      "sha256": "2762d0ec22b0f3484d2efcd5a9a9652057025647ee383f6f933d886e8c37cfdf",
+      "attachmentName": "S24-measure-large-preview-outcome-metrics_0_3C747E63-F272-4E04-8DA5-E9C01971A8A6.json",
+      "timestamp": 1794129055.569
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/68D57D5C-3938-41BD-B229-0485685A87D1.png",
+      "path": "screen/large-preview-outcome.png",
+      "sha256": "d95d321030746ac4fc765fa3ec755adaecd51ee68114d71ebd2bf0abc1a4039e",
+      "attachmentName": "S24-measure-large-preview-outcome-screen_0_53844889-B9BB-4275-827F-386729C066DF.png",
+      "timestamp": 1794129052.895
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/6E011E55-7A5A-4576-B919-9F171F479B62.txt",
+      "path": "ancestry/large-checkout-details.txt",
+      "sha256": "2f153218a179c5c91833322b61ee5ee55043ff07cb31483266e2b38c707c8600",
+      "attachmentName": "S24-measure-large-checkout-details-ancestry_0_347ABFF7-12B8-4031-8E4F-A0A30252062C.txt",
+      "timestamp": 1794129064.179
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/637038CC-83E6-4700-B276-2E9A5289E246.png",
+      "path": "crop/large-checkout-details.png",
+      "sha256": "d455afbc75883566fbcae7e84eba2b0847262d46292eee8c3770432f48d14814",
+      "attachmentName": "S24-measure-large-checkout-details-crop_0_9BC4FBE5-7967-4EE4-A634-58D7DD951384.png",
+      "timestamp": 1794129062.391
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/AB8B64C4-A3CB-4ADA-BA58-EB296D87AC90.txt",
+      "path": "metrics/large-checkout-details.json",
+      "sha256": "4cd24a83d8e24226ff6f7bb3226b0e51e1d1abb8e3981956315be380bc06c8f3",
+      "attachmentName": "S24-measure-large-checkout-details-metrics_0_CDE921BD-900B-4795-98D6-0182D0B4F45A.json",
+      "timestamp": 1794129065.621
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/C37A24E2-6004-4393-8AAE-9DD4CE69A37F.png",
+      "path": "screen/large-checkout-details.png",
+      "sha256": "a7e68664764ad99565e8f7dc306963339d3287ac5342aa8729c196350ea559d3",
+      "attachmentName": "S24-measure-large-checkout-details-screen_0_03526D46-B379-4887-8DBD-5C18F2F87A8D.png",
+      "timestamp": 1794129062.566
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/257FA169-2352-47E3-B5AE-F1D3EE50ECCD.txt",
+      "path": "ancestry/large-navigation-cancel.txt",
+      "sha256": "6ed5f64b69823d1047a84fb7bc61575f6863446efea18bea8c566f4b3a404cdd",
+      "attachmentName": "S24-measure-large-navigation-cancel-ancestry_0_FA375C55-8A46-4DDB-96E1-77A689025B93.txt",
+      "timestamp": 1794129068.899
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/4366F482-FFF0-4D64-AEA8-F2E1A92EE763.png",
+      "path": "crop/large-navigation-cancel.png",
+      "sha256": "a8eec48e2bfba5515bf261bbeb6fa8e0088fe84917b55334d1643e5d55667cb1",
+      "attachmentName": "S24-measure-large-navigation-cancel-crop_0_D894129C-D6DD-47C5-8874-2472FD4BD307.png",
+      "timestamp": 1794129067.011
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/185665C0-926F-469D-9E9A-270F75BCF8D9.txt",
+      "path": "metrics/large-navigation-cancel.json",
+      "sha256": "da6639cb9c89563d0fdc8cafec75cdbdbfa9bc19ce693c5cba62d360110a6254",
+      "attachmentName": "S24-measure-large-navigation-cancel-metrics_0_8C5A1E8A-9AC7-49A0-86E1-0CC24838E1A3.json",
+      "timestamp": 1794129069.267
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/13461E3C-C533-44DD-9B90-150366011040.png",
+      "path": "screen/large-navigation-cancel.png",
+      "sha256": "a7e68664764ad99565e8f7dc306963339d3287ac5342aa8729c196350ea559d3",
+      "attachmentName": "S24-measure-large-navigation-cancel-screen_0_F1B65A0B-E523-4CDC-BF61-8E86812F8A5D.png",
+      "timestamp": 1794129067.187
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/F1838BF7-2325-4567-A635-431F16AFCB2F.txt",
+      "path": "ancestry/ax5-preview-outcome.txt",
+      "sha256": "4c8ed3255118162bd127488db6513ef603ad38eb4c67245ff2d1be38a5b9e84a",
+      "attachmentName": "S24-measure-ax5-preview-outcome-ancestry_0_0E48FA3A-D826-47DE-9AE1-CE12D4B343DD.txt",
+      "timestamp": 1794128916.357
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/670C1CE8-02B9-47E1-B5AD-82087B27778A.png",
+      "path": "crop/ax5-preview-outcome.png",
+      "sha256": "4058b95f96d7f078a7a63acf5468398a752d34d6d9eb59626d385fab8d101df6",
+      "attachmentName": "S24-measure-ax5-preview-outcome-crop_0_66AE2A7C-7957-470C-A971-1402206E6F56.png",
+      "timestamp": 1794128914.677
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/1623A440-AF5F-4336-8896-D3769FBD9332.txt",
+      "path": "metrics/ax5-preview-outcome.json",
+      "sha256": "1663e20279cd3ff404d3242d614d29b19284bd26b831269a2e5d3421e3610f11",
+      "attachmentName": "S24-measure-ax5-preview-outcome-metrics_0_84AE3A0E-22A4-4D30-B770-602AED4602F6.json",
+      "timestamp": 1794128917.468
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/70FDE091-F5BA-4F01-94DD-85C2F288818F.png",
+      "path": "screen/ax5-preview-outcome.png",
+      "sha256": "8e6fef3d7dc543dd4fd2cd16d3d9e84160ea7a53280550f7d923ad4553c3cd07",
+      "attachmentName": "S24-measure-ax5-preview-outcome-screen_0_AD231BBF-9D1C-485C-99FB-12591CA7268C.png",
+      "timestamp": 1794128914.842
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/C1DB373D-ABA2-4619-BDFC-100F82EA1D4F.txt",
+      "path": "ancestry/ax5-checkout-details.txt",
+      "sha256": "647552d8a231a9c3fd235e8b25c5d52b83dae3cb1d52c1f898ff1da446c3eadc",
+      "attachmentName": "S24-measure-ax5-checkout-details-ancestry_0_E2C66799-AD79-4B5C-B7F5-7627479B2F76.txt",
+      "timestamp": 1794128944.147
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/EBF76CCE-01C5-471F-A61E-1493D71B6542.png",
+      "path": "crop/ax5-checkout-details.png",
+      "sha256": "aeb301a27737f44fed732133d3c374b88ba65b41ba4f33db49f1f02570246eff",
+      "attachmentName": "S24-measure-ax5-checkout-details-crop_0_AD3D597F-27C9-4746-8A08-30202EA36671.png",
+      "timestamp": 1794128942.598
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/8F4F6410-FA02-4FC7-8229-35338310E562.txt",
+      "path": "metrics/ax5-checkout-details.json",
+      "sha256": "931799a82a856569ff09cbbe9186ee761505c07c0188f815d83dfc15b72ad424",
+      "attachmentName": "S24-measure-ax5-checkout-details-metrics_0_EFC9290F-6218-4FF3-8408-F1EB12094580.json",
+      "timestamp": 1794128945.651
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/800B47CE-43CC-476F-B4F7-340A5FDE9D10.png",
+      "path": "screen/ax5-checkout-details.png",
+      "sha256": "480312c4554e00fbcf33fd29689b6120b0749c41096668f494881005c97eed8b",
+      "attachmentName": "S24-measure-ax5-checkout-details-screen_0_78C48190-D842-42D5-B68D-73CCF7F62D36.png",
+      "timestamp": 1794128942.774
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/E0691AFD-3DC0-4B7B-85A4-0D89F469224F.txt",
+      "path": "ancestry/ax5-navigation-cancel.txt",
+      "sha256": "1a4c1da798704799d7a851ec17ebb0951c581a87f0142822882669567c583469",
+      "attachmentName": "S24-measure-ax5-navigation-cancel-ancestry_0_166DAF88-6444-4422-BF21-D09A8B67E273.txt",
+      "timestamp": 1794128948.609
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/8B520F3E-2552-46F6-BC2B-D9FFE4A7FA06.png",
+      "path": "crop/ax5-navigation-cancel.png",
+      "sha256": "2881052573bb75680d2cc0eef94ca507fb9e9f9ba98090da8af8a0fad80e244b",
+      "attachmentName": "S24-measure-ax5-navigation-cancel-crop_0_4AF1E603-9397-46A4-A69E-A7470E2CC5E6.png",
+      "timestamp": 1794128946.988
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/0BF5473A-1EF2-457A-9919-EC783B04DA96.txt",
+      "path": "metrics/ax5-navigation-cancel.json",
+      "sha256": "1dd3ff2b9a874c63b921952e4e6fd1f7e5f15e8039377d886b0be76ab259bfc7",
+      "attachmentName": "S24-measure-ax5-navigation-cancel-metrics_0_1E0C456C-44BC-4B4A-940F-489838F43DED.json",
+      "timestamp": 1794128948.983
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/91BADE2F-ABF3-49BB-A284-16A51449308E.png",
+      "path": "screen/ax5-navigation-cancel.png",
+      "sha256": "480312c4554e00fbcf33fd29689b6120b0749c41096668f494881005c97eed8b",
+      "attachmentName": "S24-measure-ax5-navigation-cancel-screen_0_567EC621-ABC2-47A1-9578-212A8E53D645.png",
+      "timestamp": 1794128947.164
+    }
+  ]
+}

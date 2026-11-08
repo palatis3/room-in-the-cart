@@ -1,0 +1,1814 @@
+{
+  "status": "complete-export-inventory",
+  "acceptance": "not assessed",
+  "limits": "Complete attachment inventory only. No test, font-scaling, contrast, accessibility-audit or physical acceptance pass is inferred. Ink masks may include decoration or miss pale glyphs; review crops. Bitmap row order is retained.",
+  "manifest": {
+    "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/manifest.json",
+    "bytes": 17295,
+    "sha256": "1921ddaa416748d7d1ba0e80e907c989efd143c8282798742bf3c4f19658ecd3"
+  },
+  "deviceConfiguration": [
+    "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+    "RITC-Placed-Receipt-Nov07",
+    "Test Scheme Action"
+  ],
+  "expectedGroups": 9,
+  "observedGroups": 9,
+  "expectedAttachments": 36,
+  "observedAttachments": 36,
+  "imageFiles": {
+    "small/preview-outcome": {
+      "crop": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/C1E08389-1D08-4894-94E2-594588FDE7E8.png",
+        "bytes": 11100,
+        "sha256": "8f572969ebcb11b34f5a90e6886131d83922c7c97eb8eddb24c17e18402b335b",
+        "dimensionsPixels": [
+          1110,
+          150
+        ],
+        "attachmentName": "S24-measure-small-preview-outcome-crop_0_23AF5995-7EC8-4A5D-95A2-FC897443E47E.png",
+        "timestamp": 1794129174.99
+      },
+      "screen": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/324F0760-60B5-4B7B-A3C5-19D03544BE8A.png",
+        "bytes": 296080,
+        "sha256": "e576daba5e6b8843e1a4d38ba2ffb3460f705da4574f8e1732026f8a73d8ca25",
+        "dimensionsPixels": [
+          1206,
+          2622
+        ],
+        "attachmentName": "S24-measure-small-preview-outcome-screen_0_E0C29F0B-7FF7-4272-9817-9899F93325AF.png",
+        "timestamp": 1794129175.155
+      }
+    },
+    "small/checkout-details": {
+      "crop": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/95D95935-B6CA-4A01-8231-FEB13DA0F018.png",
+        "bytes": 11373,
+        "sha256": "5d3bb9020ac76a45c19e734b1bfb7f2fe5c408d06e60c768c2e7704d40812918",
+        "dimensionsPixels": [
+          1014,
+          132
+        ],
+        "attachmentName": "S24-measure-small-checkout-details-crop_0_0808495D-053F-490E-89FF-1AB3C6BA4E14.png",
+        "timestamp": 1794129186.08
+      },
+      "screen": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/EEADF110-3602-43B1-AD4C-0205AB016AD0.png",
+        "bytes": 312591,
+        "sha256": "3bc351dc1e29c4fe99e7c932ef0b4a0229826800e6a602adc527be04942e7aa1",
+        "dimensionsPixels": [
+          1206,
+          2622
+        ],
+        "attachmentName": "S24-measure-small-checkout-details-screen_0_447B4A89-E22D-4F3C-8CA2-D7B1D6102C75.png",
+        "timestamp": 1794129186.292
+      }
+    },
+    "small/navigation-cancel": {
+      "crop": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/F92B5410-DA0F-45D7-94D6-BE2BAA0EC848.png",
+        "bytes": 6593,
+        "sha256": "a8eec48e2bfba5515bf261bbeb6fa8e0088fe84917b55334d1643e5d55667cb1",
+        "dimensionsPixels": [
+          230,
+          108
+        ],
+        "attachmentName": "S24-measure-small-navigation-cancel-crop_0_6A99A101-765F-4699-925C-85D6222EDD88.png",
+        "timestamp": 1794129190.886
+      },
+      "screen": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/CFEBB262-02EA-4EBD-A93C-F431EEFA1B5E.png",
+        "bytes": 312591,
+        "sha256": "3bc351dc1e29c4fe99e7c932ef0b4a0229826800e6a602adc527be04942e7aa1",
+        "dimensionsPixels": [
+          1206,
+          2622
+        ],
+        "attachmentName": "S24-measure-small-navigation-cancel-screen_0_D3EC1FA2-1557-434D-B3E8-B171A35A648B.png",
+        "timestamp": 1794129191.077
+      }
+    },
+    "large/preview-outcome": {
+      "crop": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/EE11141C-85B0-48A7-AF43-64C9DBF5D905.png",
+        "bytes": 12098,
+        "sha256": "d533ff044befdde32ce79273f7045dff278d5a9d8028a551c10f00df842e0769",
+        "dimensionsPixels": [
+          1110,
+          156
+        ],
+        "attachmentName": "S24-measure-large-preview-outcome-crop_0_F641B71E-E400-471C-9F7E-934D7B5BF4C7.png",
+        "timestamp": 1794129052.708
+      },
+      "screen": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/68D57D5C-3938-41BD-B229-0485685A87D1.png",
+        "bytes": 302120,
+        "sha256": "d95d321030746ac4fc765fa3ec755adaecd51ee68114d71ebd2bf0abc1a4039e",
+        "dimensionsPixels": [
+          1206,
+          2622
+        ],
+        "attachmentName": "S24-measure-large-preview-outcome-screen_0_53844889-B9BB-4275-827F-386729C066DF.png",
+        "timestamp": 1794129052.895
+      }
+    },
+    "large/checkout-details": {
+      "crop": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/637038CC-83E6-4700-B276-2E9A5289E246.png",
+        "bytes": 12280,
+        "sha256": "d455afbc75883566fbcae7e84eba2b0847262d46292eee8c3770432f48d14814",
+        "dimensionsPixels": [
+          1014,
+          132
+        ],
+        "attachmentName": "S24-measure-large-checkout-details-crop_0_9BC4FBE5-7967-4EE4-A634-58D7DD951384.png",
+        "timestamp": 1794129062.391
+      },
+      "screen": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/C37A24E2-6004-4393-8AAE-9DD4CE69A37F.png",
+        "bytes": 328124,
+        "sha256": "a7e68664764ad99565e8f7dc306963339d3287ac5342aa8729c196350ea559d3",
+        "dimensionsPixels": [
+          1206,
+          2622
+        ],
+        "attachmentName": "S24-measure-large-checkout-details-screen_0_03526D46-B379-4887-8DBD-5C18F2F87A8D.png",
+        "timestamp": 1794129062.566
+      }
+    },
+    "large/navigation-cancel": {
+      "crop": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/4366F482-FFF0-4D64-AEA8-F2E1A92EE763.png",
+        "bytes": 6593,
+        "sha256": "a8eec48e2bfba5515bf261bbeb6fa8e0088fe84917b55334d1643e5d55667cb1",
+        "dimensionsPixels": [
+          230,
+          108
+        ],
+        "attachmentName": "S24-measure-large-navigation-cancel-crop_0_D894129C-D6DD-47C5-8874-2472FD4BD307.png",
+        "timestamp": 1794129067.011
+      },
+      "screen": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/13461E3C-C533-44DD-9B90-150366011040.png",
+        "bytes": 328124,
+        "sha256": "a7e68664764ad99565e8f7dc306963339d3287ac5342aa8729c196350ea559d3",
+        "dimensionsPixels": [
+          1206,
+          2622
+        ],
+        "attachmentName": "S24-measure-large-navigation-cancel-screen_0_F1B65A0B-E523-4CDC-BF61-8E86812F8A5D.png",
+        "timestamp": 1794129067.187
+      }
+    },
+    "ax5/preview-outcome": {
+      "crop": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/670C1CE8-02B9-47E1-B5AD-82087B27778A.png",
+        "bytes": 37878,
+        "sha256": "4058b95f96d7f078a7a63acf5468398a752d34d6d9eb59626d385fab8d101df6",
+        "dimensionsPixels": [
+          1110,
+          466
+        ],
+        "attachmentName": "S24-measure-ax5-preview-outcome-crop_0_66AE2A7C-7957-470C-A971-1402206E6F56.png",
+        "timestamp": 1794128914.677
+      },
+      "screen": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/70FDE091-F5BA-4F01-94DD-85C2F288818F.png",
+        "bytes": 259612,
+        "sha256": "8e6fef3d7dc543dd4fd2cd16d3d9e84160ea7a53280550f7d923ad4553c3cd07",
+        "dimensionsPixels": [
+          1206,
+          2622
+        ],
+        "attachmentName": "S24-measure-ax5-preview-outcome-screen_0_AD231BBF-9D1C-485C-99FB-12591CA7268C.png",
+        "timestamp": 1794128914.842
+      }
+    },
+    "ax5/checkout-details": {
+      "crop": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/EBF76CCE-01C5-471F-A61E-1493D71B6542.png",
+        "bytes": 48773,
+        "sha256": "aeb301a27737f44fed732133d3c374b88ba65b41ba4f33db49f1f02570246eff",
+        "dimensionsPixels": [
+          1014,
+          562
+        ],
+        "attachmentName": "S24-measure-ax5-checkout-details-crop_0_AD3D597F-27C9-4746-8A08-30202EA36671.png",
+        "timestamp": 1794128942.598
+      },
+      "screen": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/800B47CE-43CC-476F-B4F7-340A5FDE9D10.png",
+        "bytes": 286189,
+        "sha256": "480312c4554e00fbcf33fd29689b6120b0749c41096668f494881005c97eed8b",
+        "dimensionsPixels": [
+          1206,
+          2622
+        ],
+        "attachmentName": "S24-measure-ax5-checkout-details-screen_0_78C48190-D842-42D5-B68D-73CCF7F62D36.png",
+        "timestamp": 1794128942.774
+      }
+    },
+    "ax5/navigation-cancel": {
+      "crop": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/8B520F3E-2552-46F6-BC2B-D9FFE4A7FA06.png",
+        "bytes": 7449,
+        "sha256": "2881052573bb75680d2cc0eef94ca507fb9e9f9ba98090da8af8a0fad80e244b",
+        "dimensionsPixels": [
+          262,
+          108
+        ],
+        "attachmentName": "S24-measure-ax5-navigation-cancel-crop_0_4AF1E603-9397-46A4-A69E-A7470E2CC5E6.png",
+        "timestamp": 1794128946.988
+      },
+      "screen": {
+        "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/91BADE2F-ABF3-49BB-A284-16A51449308E.png",
+        "bytes": 286189,
+        "sha256": "480312c4554e00fbcf33fd29689b6120b0749c41096668f494881005c97eed8b",
+        "dimensionsPixels": [
+          1206,
+          2622
+        ],
+        "attachmentName": "S24-measure-ax5-navigation-cancel-screen_0_567EC621-ABC2-47A1-9578-212A8E53D645.png",
+        "timestamp": 1794128947.164
+      }
+    }
+  },
+  "measurements": [
+    {
+      "size": "small",
+      "key": "preview-outcome",
+      "label": "Add packs to this shop",
+      "ownerLabel": "Add packs to this shop",
+      "ownerIdentifier": "",
+      "requestedCategory": "UICTContentSizeCategoryS",
+      "targetFrame": {
+        "height": 50.00000000000006,
+        "width": 370,
+        "x": 16,
+        "y": 489.6666666666667
+      },
+      "ownerFrame": {
+        "height": 50.00000000000006,
+        "width": 370,
+        "x": 16,
+        "y": 489.6666666666667
+      },
+      "cropScope": "exact preview outcome static text; historical finding 22",
+      "cropDimensionsPixels": [
+        1110,
+        150
+      ],
+      "pixelsPerPoint": [
+        3,
+        2.9999999999999964
+      ],
+      "imageScale": 3,
+      "inkCandidates": [
+        {
+          "absoluteLinearLuminanceDelta": 0.1,
+          "boundsInBitmapPixels": {
+            "height": 150,
+            "width": 1110,
+            "x": 0,
+            "y": 0
+          },
+          "pixelCount": 160461,
+          "touchesCropEdge": true,
+          "boundsInPointsBitmapOrder": {
+            "height": 50.00000000000006,
+            "width": 370.0,
+            "x": 0.0,
+            "y": 0.0
+          }
+        },
+        {
+          "absoluteLinearLuminanceDelta": 0.2,
+          "boundsInBitmapPixels": {
+            "height": 43,
+            "width": 484,
+            "x": 49,
+            "y": 56
+          },
+          "pixelCount": 6355,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 14.33333333333335,
+            "width": 161.33333333333334,
+            "x": 16.333333333333332,
+            "y": 18.66666666666669
+          }
+        }
+      ],
+      "percentileContrastEstimate": 21,
+      "backgroundLuminance": 0.8909690727455939,
+      "referenceFonts": [
+        {
+          "ascender": 14.2822265625,
+          "capHeight": 10.56884765625,
+          "descender": -3.6181640625,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 17.900390625,
+          "pointSize": 15,
+          "reference": "body",
+          "textBounds": {
+            "height": 20,
+            "width": 156.07177734375,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 7.8955078125
+        },
+        {
+          "ascender": 14.2822265625,
+          "capHeight": 10.56884765625,
+          "descender": -3.6181640625,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 17.900390625,
+          "pointSize": 15,
+          "reference": "body-size-monospaced-digits",
+          "textBounds": {
+            "height": 17.900390625,
+            "width": 156.07177734375,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 7.8955078125
+        },
+        {
+          "ascender": 10.4736328125,
+          "capHeight": 7.75048828125,
+          "descender": -2.6533203125,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 13.126953125,
+          "pointSize": 11,
+          "reference": "caption1",
+          "textBounds": {
+            "height": 13.126953125,
+            "width": 119.65185546875,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 5.7900390625
+        },
+        {
+          "ascender": 14.2822265625,
+          "capHeight": 10.56884765625,
+          "descender": -3.6181640625,
+          "fontName": ".SFUI-Semibold",
+          "lineHeight": 17.900390625,
+          "pointSize": 15,
+          "reference": "headline",
+          "textBounds": {
+            "height": 20,
+            "width": 162.24785149097443,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 8.00537109375
+        }
+      ],
+      "referenceScope": "Framework button/section style not inferred; comparison references only, not observed app font",
+      "appTraitsObservation": "Requested category only; actual app appearance/contrast must be recorded by operator and checked against screenshots",
+      "osVersion": "Version 26.2 (Build 23C54)",
+      "files": {
+        "ancestry": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/AD4FDC9F-0BD8-4BDD-826B-FCF28D346427.txt",
+          "bytes": 6708,
+          "sha256": "17035082a48f2f996b906f8426aed4540aaa9253bc0ee21fadfcd83d897f8f01",
+          "attachmentName": "S24-measure-small-preview-outcome-ancestry_0_7297B50D-C981-455D-BB61-C201BD92D0ED.txt",
+          "timestamp": 1794129177.008
+        },
+        "crop": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/C1E08389-1D08-4894-94E2-594588FDE7E8.png",
+          "bytes": 11100,
+          "sha256": "8f572969ebcb11b34f5a90e6886131d83922c7c97eb8eddb24c17e18402b335b",
+          "dimensionsPixels": [
+            1110,
+            150
+          ],
+          "attachmentName": "S24-measure-small-preview-outcome-crop_0_23AF5995-7EC8-4A5D-95A2-FC897443E47E.png",
+          "timestamp": 1794129174.99
+        },
+        "metrics": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/915F16F1-817C-4DAC-8CFF-ACA753CD8BE3.txt",
+          "bytes": 4255,
+          "sha256": "cb5bcd7e8c34f37a3e27480f2601c5b298b35292bce8e64908b8c87aa40b03f2",
+          "attachmentName": "S24-measure-small-preview-outcome-metrics_0_10775603-5512-45A6-9646-DF12800E073D.json",
+          "timestamp": 1794129177.928
+        },
+        "screen": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/324F0760-60B5-4B7B-A3C5-19D03544BE8A.png",
+          "bytes": 296080,
+          "sha256": "e576daba5e6b8843e1a4d38ba2ffb3460f705da4574f8e1732026f8a73d8ca25",
+          "dimensionsPixels": [
+            1206,
+            2622
+          ],
+          "attachmentName": "S24-measure-small-preview-outcome-screen_0_E0C29F0B-7FF7-4272-9817-9899F93325AF.png",
+          "timestamp": 1794129175.155
+        }
+      }
+    },
+    {
+      "size": "small",
+      "key": "checkout-details",
+      "label": "Checkout calculation details",
+      "ownerLabel": "Checkout calculation details",
+      "ownerIdentifier": "household.decision.checkoutDetails",
+      "requestedCategory": "UICTContentSizeCategoryS",
+      "targetFrame": {
+        "height": 44,
+        "width": 338,
+        "x": 32,
+        "y": 585.6666666666666
+      },
+      "ownerFrame": {
+        "height": 74,
+        "width": 370,
+        "x": 16,
+        "y": 570.6666666666666
+      },
+      "cropScope": "exact disclosure label child; historical finding 10",
+      "cropDimensionsPixels": [
+        1014,
+        132
+      ],
+      "pixelsPerPoint": [
+        3,
+        3
+      ],
+      "imageScale": 3,
+      "inkCandidates": [
+        {
+          "absoluteLinearLuminanceDelta": 0.1,
+          "boundsInBitmapPixels": {
+            "height": 40,
+            "width": 1009,
+            "x": 2,
+            "y": 46
+          },
+          "pixelCount": 7042,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 13.333333333333334,
+            "width": 336.3333333333333,
+            "x": 0.6666666666666666,
+            "y": 15.333333333333334
+          }
+        },
+        {
+          "absoluteLinearLuminanceDelta": 0.2,
+          "boundsInBitmapPixels": {
+            "height": 40,
+            "width": 1009,
+            "x": 2,
+            "y": 46
+          },
+          "pixelCount": 6831,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 13.333333333333334,
+            "width": 336.3333333333333,
+            "x": 0.6666666666666666,
+            "y": 15.333333333333334
+          }
+        }
+      ],
+      "percentileContrastEstimate": 21,
+      "backgroundLuminance": 1,
+      "referenceFonts": [
+        {
+          "ascender": 14.2822265625,
+          "capHeight": 10.56884765625,
+          "descender": -3.6181640625,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 17.900390625,
+          "pointSize": 15,
+          "reference": "body",
+          "textBounds": {
+            "height": 20,
+            "width": 192.5537109375,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 7.8955078125
+        },
+        {
+          "ascender": 14.2822265625,
+          "capHeight": 10.56884765625,
+          "descender": -3.6181640625,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 17.900390625,
+          "pointSize": 15,
+          "reference": "body-size-monospaced-digits",
+          "textBounds": {
+            "height": 17.900390625,
+            "width": 192.5537109375,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 7.8955078125
+        },
+        {
+          "ascender": 10.4736328125,
+          "capHeight": 7.75048828125,
+          "descender": -2.6533203125,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 13.126953125,
+          "pointSize": 11,
+          "reference": "caption1",
+          "textBounds": {
+            "height": 13.126953125,
+            "width": 147.8232421875,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 5.7900390625
+        },
+        {
+          "ascender": 14.2822265625,
+          "capHeight": 10.56884765625,
+          "descender": -3.6181640625,
+          "fontName": ".SFUI-Semibold",
+          "lineHeight": 17.900390625,
+          "pointSize": 15,
+          "reference": "headline",
+          "textBounds": {
+            "height": 20,
+            "width": 201.59865617752075,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 8.00537109375
+        }
+      ],
+      "referenceScope": "Framework button/section style not inferred; comparison references only, not observed app font",
+      "appTraitsObservation": "Requested category only; actual app appearance/contrast must be recorded by operator and checked against screenshots",
+      "osVersion": "Version 26.2 (Build 23C54)",
+      "files": {
+        "ancestry": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/F8B34707-952D-452C-9639-EB36AB061F35.txt",
+          "bytes": 7860,
+          "sha256": "5574e017eaec3dbd4ffc12ad234185b1a4fc38d8d8d51fd6c3b62fdb2c64efa1",
+          "attachmentName": "S24-measure-small-checkout-details-ancestry_0_43493799-9427-4A2B-950C-1194F3516D7A.txt",
+          "timestamp": 1794129187.907
+        },
+        "crop": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/95D95935-B6CA-4A01-8231-FEB13DA0F018.png",
+          "bytes": 11373,
+          "sha256": "5d3bb9020ac76a45c19e734b1bfb7f2fe5c408d06e60c768c2e7704d40812918",
+          "dimensionsPixels": [
+            1014,
+            132
+          ],
+          "attachmentName": "S24-measure-small-checkout-details-crop_0_0808495D-053F-490E-89FF-1AB3C6BA4E14.png",
+          "timestamp": 1794129186.08
+        },
+        "metrics": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/B1BED140-4785-4022-96F0-D2ABA0B5F3AB.txt",
+          "bytes": 4208,
+          "sha256": "9a91872c003c168e701f776739c3ad2ef7da81851ff9ab0da89a5da03ecd154d",
+          "attachmentName": "S24-measure-small-checkout-details-metrics_0_4676BDC4-DE12-496F-9ABB-3D12470B5527.json",
+          "timestamp": 1794129189.394
+        },
+        "screen": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/EEADF110-3602-43B1-AD4C-0205AB016AD0.png",
+          "bytes": 312591,
+          "sha256": "3bc351dc1e29c4fe99e7c932ef0b4a0229826800e6a602adc527be04942e7aa1",
+          "dimensionsPixels": [
+            1206,
+            2622
+          ],
+          "attachmentName": "S24-measure-small-checkout-details-screen_0_447B4A89-E22D-4F3C-8CA2-D7B1D6102C75.png",
+          "timestamp": 1794129186.292
+        }
+      }
+    },
+    {
+      "size": "small",
+      "key": "navigation-cancel",
+      "label": "Cancel",
+      "ownerLabel": "Cancel",
+      "ownerIdentifier": "household.decision.cancel",
+      "requestedCategory": "UICTContentSizeCategoryS",
+      "targetFrame": {
+        "height": 36,
+        "width": 76.66666666666667,
+        "x": 20,
+        "y": 82
+      },
+      "ownerFrame": {
+        "height": 36,
+        "width": 76.66666666666667,
+        "x": 20,
+        "y": 82
+      },
+      "cropScope": "exact navigation-bar button including padding; historical finding 11",
+      "cropDimensionsPixels": [
+        230,
+        108
+      ],
+      "pixelsPerPoint": [
+        3,
+        3
+      ],
+      "imageScale": 3,
+      "inkCandidates": [
+        {
+          "absoluteLinearLuminanceDelta": 0.1,
+          "boundsInBitmapPixels": {
+            "height": 108,
+            "width": 230,
+            "x": 0,
+            "y": 0
+          },
+          "pixelCount": 2457,
+          "touchesCropEdge": true,
+          "boundsInPointsBitmapOrder": {
+            "height": 36.0,
+            "width": 76.66666666666667,
+            "x": 0.0,
+            "y": 0.0
+          }
+        },
+        {
+          "absoluteLinearLuminanceDelta": 0.2,
+          "boundsInBitmapPixels": {
+            "height": 73,
+            "width": 230,
+            "x": 0,
+            "y": 35
+          },
+          "pixelCount": 2142,
+          "touchesCropEdge": true,
+          "boundsInPointsBitmapOrder": {
+            "height": 24.333333333333332,
+            "width": 76.66666666666667,
+            "x": 0.0,
+            "y": 11.666666666666666
+          }
+        }
+      ],
+      "percentileContrastEstimate": 8.083152534800092,
+      "backgroundLuminance": 0.9728421001988297,
+      "referenceFonts": [
+        {
+          "ascender": 14.2822265625,
+          "capHeight": 10.56884765625,
+          "descender": -3.6181640625,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 17.900390625,
+          "pointSize": 15,
+          "reference": "body",
+          "textBounds": {
+            "height": 20,
+            "width": 47.11669921875,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 7.8955078125
+        },
+        {
+          "ascender": 14.2822265625,
+          "capHeight": 10.56884765625,
+          "descender": -3.6181640625,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 17.900390625,
+          "pointSize": 15,
+          "reference": "body-size-monospaced-digits",
+          "textBounds": {
+            "height": 17.900390625,
+            "width": 47.11669921875,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 7.8955078125
+        },
+        {
+          "ascender": 10.4736328125,
+          "capHeight": 7.75048828125,
+          "descender": -2.6533203125,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 13.126953125,
+          "pointSize": 11,
+          "reference": "caption1",
+          "textBounds": {
+            "height": 13.126953125,
+            "width": 35.97021484375,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 5.7900390625
+        },
+        {
+          "ascender": 14.2822265625,
+          "capHeight": 10.56884765625,
+          "descender": -3.6181640625,
+          "fontName": ".SFUI-Semibold",
+          "lineHeight": 17.900390625,
+          "pointSize": 15,
+          "reference": "headline",
+          "textBounds": {
+            "height": 20,
+            "width": 49.07643735408783,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 8.00537109375
+        }
+      ],
+      "referenceScope": "Framework button/section style not inferred; comparison references only, not observed app font",
+      "appTraitsObservation": "Requested category only; actual app appearance/contrast must be recorded by operator and checked against screenshots",
+      "osVersion": "Version 26.2 (Build 23C54)",
+      "files": {
+        "ancestry": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/37A96E54-8791-431B-A7D5-8C08A13DAAB6.txt",
+          "bytes": 5316,
+          "sha256": "637903602ab9eb8399bc1dd0794b489699b43feb86054fa510f754c4a73272f4",
+          "attachmentName": "S24-measure-small-navigation-cancel-ancestry_0_ACDD20CB-B008-42B8-B26E-67EB089C88DB.txt",
+          "timestamp": 1794129192.922
+        },
+        "crop": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/F92B5410-DA0F-45D7-94D6-BE2BAA0EC848.png",
+          "bytes": 6593,
+          "sha256": "a8eec48e2bfba5515bf261bbeb6fa8e0088fe84917b55334d1643e5d55667cb1",
+          "dimensionsPixels": [
+            230,
+            108
+          ],
+          "attachmentName": "S24-measure-small-navigation-cancel-crop_0_6A99A101-765F-4699-925C-85D6222EDD88.png",
+          "timestamp": 1794129190.886
+        },
+        "metrics": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/78D894CB-0CCF-4C83-9F05-78688F7A3DAD.txt",
+          "bytes": 4270,
+          "sha256": "d7fb6c95aad168899e771210f288a44cbd9271d8cc39175d8815a0cea78b1546",
+          "attachmentName": "S24-measure-small-navigation-cancel-metrics_0_7CA2C05A-B3BE-4918-AC14-3B355D123A3A.json",
+          "timestamp": 1794129193.314
+        },
+        "screen": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/CFEBB262-02EA-4EBD-A93C-F431EEFA1B5E.png",
+          "bytes": 312591,
+          "sha256": "3bc351dc1e29c4fe99e7c932ef0b4a0229826800e6a602adc527be04942e7aa1",
+          "dimensionsPixels": [
+            1206,
+            2622
+          ],
+          "attachmentName": "S24-measure-small-navigation-cancel-screen_0_D3EC1FA2-1557-434D-B3E8-B171A35A648B.png",
+          "timestamp": 1794129191.077
+        }
+      }
+    },
+    {
+      "size": "large",
+      "key": "preview-outcome",
+      "label": "Add packs to this shop",
+      "ownerLabel": "Add packs to this shop",
+      "ownerIdentifier": "",
+      "requestedCategory": "UICTContentSizeCategoryL",
+      "targetFrame": {
+        "height": 52,
+        "width": 370,
+        "x": 16,
+        "y": 359.3333333333333
+      },
+      "ownerFrame": {
+        "height": 52,
+        "width": 370,
+        "x": 16,
+        "y": 359.3333333333333
+      },
+      "cropScope": "exact preview outcome static text; historical finding 22",
+      "cropDimensionsPixels": [
+        1110,
+        156
+      ],
+      "pixelsPerPoint": [
+        3,
+        3
+      ],
+      "imageScale": 3,
+      "inkCandidates": [
+        {
+          "absoluteLinearLuminanceDelta": 0.1,
+          "boundsInBitmapPixels": {
+            "height": 156,
+            "width": 1110,
+            "x": 0,
+            "y": 0
+          },
+          "pixelCount": 166898,
+          "touchesCropEdge": true,
+          "boundsInPointsBitmapOrder": {
+            "height": 52.0,
+            "width": 370.0,
+            "x": 0.0,
+            "y": 0.0
+          }
+        },
+        {
+          "absoluteLinearLuminanceDelta": 0.2,
+          "boundsInBitmapPixels": {
+            "height": 48,
+            "width": 537,
+            "x": 50,
+            "y": 58
+          },
+          "pixelCount": 8105,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 16.0,
+            "width": 179.0,
+            "x": 16.666666666666668,
+            "y": 19.333333333333332
+          }
+        }
+      ],
+      "percentileContrastEstimate": 21,
+      "backgroundLuminance": 0.8909690727455939,
+      "referenceFonts": [
+        {
+          "ascender": 16.1865234375,
+          "capHeight": 11.97802734375,
+          "descender": -4.1005859375,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 20.287109375,
+          "pointSize": 17,
+          "reference": "body",
+          "textBounds": {
+            "height": 22,
+            "width": 173.22900390625,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 8.9482421875
+        },
+        {
+          "ascender": 16.1865234375,
+          "capHeight": 11.97802734375,
+          "descender": -4.1005859375,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 20.287109375,
+          "pointSize": 17,
+          "reference": "body-size-monospaced-digits",
+          "textBounds": {
+            "height": 20.287109375,
+            "width": 173.22900390625,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 8.9482421875
+        },
+        {
+          "ascender": 11.42578125,
+          "capHeight": 8.455078125,
+          "descender": -2.89453125,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 14.3203125,
+          "pointSize": 12,
+          "reference": "caption1",
+          "textBounds": {
+            "height": 16,
+            "width": 128.982421875,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 6.31640625
+        },
+        {
+          "ascender": 16.1865234375,
+          "capHeight": 11.97802734375,
+          "descender": -4.1005859375,
+          "fontName": ".SFUI-Semibold",
+          "lineHeight": 20.287109375,
+          "pointSize": 17,
+          "reference": "headline",
+          "textBounds": {
+            "height": 22,
+            "width": 180.22855460643768,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 9.07275390625
+        }
+      ],
+      "referenceScope": "Framework button/section style not inferred; comparison references only, not observed app font",
+      "appTraitsObservation": "Requested category only; actual app appearance/contrast must be recorded by operator and checked against screenshots",
+      "osVersion": "Version 26.2 (Build 23C54)",
+      "files": {
+        "ancestry": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/04F1F356-D2F3-4653-8D3D-071461BD2195.txt",
+          "bytes": 6370,
+          "sha256": "979487d1aa6e2c6d26aeda41ed48f2b2e0fade8767b4fdeca02caff318e24fa8",
+          "attachmentName": "S24-measure-large-preview-outcome-ancestry_0_E373DCED-73CC-4AEC-9103-B04EFC3B0635.txt",
+          "timestamp": 1794129054.713
+        },
+        "crop": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/EE11141C-85B0-48A7-AF43-64C9DBF5D905.png",
+          "bytes": 12098,
+          "sha256": "d533ff044befdde32ce79273f7045dff278d5a9d8028a551c10f00df842e0769",
+          "dimensionsPixels": [
+            1110,
+            156
+          ],
+          "attachmentName": "S24-measure-large-preview-outcome-crop_0_F641B71E-E400-471C-9F7E-934D7B5BF4C7.png",
+          "timestamp": 1794129052.708
+        },
+        "metrics": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/7BE2A847-3069-42B3-BA33-43B78AED6097.txt",
+          "bytes": 4214,
+          "sha256": "2762d0ec22b0f3484d2efcd5a9a9652057025647ee383f6f933d886e8c37cfdf",
+          "attachmentName": "S24-measure-large-preview-outcome-metrics_0_3C747E63-F272-4E04-8DA5-E9C01971A8A6.json",
+          "timestamp": 1794129055.569
+        },
+        "screen": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/68D57D5C-3938-41BD-B229-0485685A87D1.png",
+          "bytes": 302120,
+          "sha256": "d95d321030746ac4fc765fa3ec755adaecd51ee68114d71ebd2bf0abc1a4039e",
+          "dimensionsPixels": [
+            1206,
+            2622
+          ],
+          "attachmentName": "S24-measure-large-preview-outcome-screen_0_53844889-B9BB-4275-827F-386729C066DF.png",
+          "timestamp": 1794129052.895
+        }
+      }
+    },
+    {
+      "size": "large",
+      "key": "checkout-details",
+      "label": "Checkout calculation details",
+      "ownerLabel": "Checkout calculation details",
+      "ownerIdentifier": "household.decision.checkoutDetails",
+      "requestedCategory": "UICTContentSizeCategoryL",
+      "targetFrame": {
+        "height": 44,
+        "width": 338,
+        "x": 32,
+        "y": 617
+      },
+      "ownerFrame": {
+        "height": 74,
+        "width": 370,
+        "x": 16,
+        "y": 602
+      },
+      "cropScope": "exact disclosure label child; historical finding 10",
+      "cropDimensionsPixels": [
+        1014,
+        132
+      ],
+      "pixelsPerPoint": [
+        3,
+        3
+      ],
+      "imageScale": 3,
+      "inkCandidates": [
+        {
+          "absoluteLinearLuminanceDelta": 0.1,
+          "boundsInBitmapPixels": {
+            "height": 45,
+            "width": 1007,
+            "x": 3,
+            "y": 44
+          },
+          "pixelCount": 8767,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 15.0,
+            "width": 335.6666666666667,
+            "x": 1.0,
+            "y": 14.666666666666666
+          }
+        },
+        {
+          "absoluteLinearLuminanceDelta": 0.2,
+          "boundsInBitmapPixels": {
+            "height": 45,
+            "width": 1007,
+            "x": 3,
+            "y": 44
+          },
+          "pixelCount": 8573,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 15.0,
+            "width": 335.6666666666667,
+            "x": 1.0,
+            "y": 14.666666666666666
+          }
+        }
+      ],
+      "percentileContrastEstimate": 21,
+      "backgroundLuminance": 1,
+      "referenceFonts": [
+        {
+          "ascender": 16.1865234375,
+          "capHeight": 11.97802734375,
+          "descender": -4.1005859375,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 20.287109375,
+          "pointSize": 17,
+          "reference": "body",
+          "textBounds": {
+            "height": 22,
+            "width": 213.5791015625,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 8.9482421875
+        },
+        {
+          "ascender": 16.1865234375,
+          "capHeight": 11.97802734375,
+          "descender": -4.1005859375,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 20.287109375,
+          "pointSize": 17,
+          "reference": "body-size-monospaced-digits",
+          "textBounds": {
+            "height": 20.287109375,
+            "width": 213.5791015625,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 8.9482421875
+        },
+        {
+          "ascender": 11.42578125,
+          "capHeight": 8.455078125,
+          "descender": -2.89453125,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 14.3203125,
+          "pointSize": 12,
+          "reference": "caption1",
+          "textBounds": {
+            "height": 16,
+            "width": 159.29296875,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 6.31640625
+        },
+        {
+          "ascender": 16.1865234375,
+          "capHeight": 11.97802734375,
+          "descender": -4.1005859375,
+          "fontName": ".SFUI-Semibold",
+          "lineHeight": 20.287109375,
+          "pointSize": 17,
+          "reference": "headline",
+          "textBounds": {
+            "height": 22,
+            "width": 223.83003950119019,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 9.07275390625
+        }
+      ],
+      "referenceScope": "Framework button/section style not inferred; comparison references only, not observed app font",
+      "appTraitsObservation": "Requested category only; actual app appearance/contrast must be recorded by operator and checked against screenshots",
+      "osVersion": "Version 26.2 (Build 23C54)",
+      "files": {
+        "ancestry": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/6E011E55-7A5A-4576-B919-9F171F479B62.txt",
+          "bytes": 7610,
+          "sha256": "2f153218a179c5c91833322b61ee5ee55043ff07cb31483266e2b38c707c8600",
+          "attachmentName": "S24-measure-large-checkout-details-ancestry_0_347ABFF7-12B8-4031-8E4F-A0A30252062C.txt",
+          "timestamp": 1794129064.179
+        },
+        "crop": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/637038CC-83E6-4700-B276-2E9A5289E246.png",
+          "bytes": 12280,
+          "sha256": "d455afbc75883566fbcae7e84eba2b0847262d46292eee8c3770432f48d14814",
+          "dimensionsPixels": [
+            1014,
+            132
+          ],
+          "attachmentName": "S24-measure-large-checkout-details-crop_0_9BC4FBE5-7967-4EE4-A634-58D7DD951384.png",
+          "timestamp": 1794129062.391
+        },
+        "metrics": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/AB8B64C4-A3CB-4ADA-BA58-EB296D87AC90.txt",
+          "bytes": 4186,
+          "sha256": "4cd24a83d8e24226ff6f7bb3226b0e51e1d1abb8e3981956315be380bc06c8f3",
+          "attachmentName": "S24-measure-large-checkout-details-metrics_0_CDE921BD-900B-4795-98D6-0182D0B4F45A.json",
+          "timestamp": 1794129065.621
+        },
+        "screen": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/C37A24E2-6004-4393-8AAE-9DD4CE69A37F.png",
+          "bytes": 328124,
+          "sha256": "a7e68664764ad99565e8f7dc306963339d3287ac5342aa8729c196350ea559d3",
+          "dimensionsPixels": [
+            1206,
+            2622
+          ],
+          "attachmentName": "S24-measure-large-checkout-details-screen_0_03526D46-B379-4887-8DBD-5C18F2F87A8D.png",
+          "timestamp": 1794129062.566
+        }
+      }
+    },
+    {
+      "size": "large",
+      "key": "navigation-cancel",
+      "label": "Cancel",
+      "ownerLabel": "Cancel",
+      "ownerIdentifier": "household.decision.cancel",
+      "requestedCategory": "UICTContentSizeCategoryL",
+      "targetFrame": {
+        "height": 36.000000000000014,
+        "width": 76.66666666666667,
+        "x": 20,
+        "y": 82.00000000000003
+      },
+      "ownerFrame": {
+        "height": 36.000000000000014,
+        "width": 76.66666666666667,
+        "x": 20,
+        "y": 82.00000000000003
+      },
+      "cropScope": "exact navigation-bar button including padding; historical finding 11",
+      "cropDimensionsPixels": [
+        230,
+        108
+      ],
+      "pixelsPerPoint": [
+        3,
+        2.9999999999999987
+      ],
+      "imageScale": 3,
+      "inkCandidates": [
+        {
+          "absoluteLinearLuminanceDelta": 0.1,
+          "boundsInBitmapPixels": {
+            "height": 108,
+            "width": 230,
+            "x": 0,
+            "y": 0
+          },
+          "pixelCount": 2457,
+          "touchesCropEdge": true,
+          "boundsInPointsBitmapOrder": {
+            "height": 36.000000000000014,
+            "width": 76.66666666666667,
+            "x": 0.0,
+            "y": 0.0
+          }
+        },
+        {
+          "absoluteLinearLuminanceDelta": 0.2,
+          "boundsInBitmapPixels": {
+            "height": 73,
+            "width": 230,
+            "x": 0,
+            "y": 35
+          },
+          "pixelCount": 2142,
+          "touchesCropEdge": true,
+          "boundsInPointsBitmapOrder": {
+            "height": 24.333333333333343,
+            "width": 76.66666666666667,
+            "x": 0.0,
+            "y": 11.666666666666671
+          }
+        }
+      ],
+      "percentileContrastEstimate": 8.083152534800092,
+      "backgroundLuminance": 0.9728421001988297,
+      "referenceFonts": [
+        {
+          "ascender": 16.1865234375,
+          "capHeight": 11.97802734375,
+          "descender": -4.1005859375,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 20.287109375,
+          "pointSize": 17,
+          "reference": "body",
+          "textBounds": {
+            "height": 22,
+            "width": 52.40283203125,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 8.9482421875
+        },
+        {
+          "ascender": 16.1865234375,
+          "capHeight": 11.97802734375,
+          "descender": -4.1005859375,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 20.287109375,
+          "pointSize": 17,
+          "reference": "body-size-monospaced-digits",
+          "textBounds": {
+            "height": 20.287109375,
+            "width": 52.40283203125,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 8.9482421875
+        },
+        {
+          "ascender": 11.42578125,
+          "capHeight": 8.455078125,
+          "descender": -2.89453125,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 14.3203125,
+          "pointSize": 12,
+          "reference": "caption1",
+          "textBounds": {
+            "height": 16,
+            "width": 38.818359375,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 6.31640625
+        },
+        {
+          "ascender": 16.1865234375,
+          "capHeight": 11.97802734375,
+          "descender": -4.1005859375,
+          "fontName": ".SFUI-Semibold",
+          "lineHeight": 20.287109375,
+          "pointSize": 17,
+          "reference": "headline",
+          "textBounds": {
+            "height": 22,
+            "width": 54.62386858463287,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 9.07275390625
+        }
+      ],
+      "referenceScope": "Framework button/section style not inferred; comparison references only, not observed app font",
+      "appTraitsObservation": "Requested category only; actual app appearance/contrast must be recorded by operator and checked against screenshots",
+      "osVersion": "Version 26.2 (Build 23C54)",
+      "files": {
+        "ancestry": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/257FA169-2352-47E3-B5AE-F1D3EE50ECCD.txt",
+          "bytes": 5316,
+          "sha256": "6ed5f64b69823d1047a84fb7bc61575f6863446efea18bea8c566f4b3a404cdd",
+          "attachmentName": "S24-measure-large-navigation-cancel-ancestry_0_FA375C55-8A46-4DDB-96E1-77A689025B93.txt",
+          "timestamp": 1794129068.899
+        },
+        "crop": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/4366F482-FFF0-4D64-AEA8-F2E1A92EE763.png",
+          "bytes": 6593,
+          "sha256": "a8eec48e2bfba5515bf261bbeb6fa8e0088fe84917b55334d1643e5d55667cb1",
+          "dimensionsPixels": [
+            230,
+            108
+          ],
+          "attachmentName": "S24-measure-large-navigation-cancel-crop_0_D894129C-D6DD-47C5-8874-2472FD4BD307.png",
+          "timestamp": 1794129067.011
+        },
+        "metrics": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/185665C0-926F-469D-9E9A-270F75BCF8D9.txt",
+          "bytes": 4361,
+          "sha256": "da6639cb9c89563d0fdc8cafec75cdbdbfa9bc19ce693c5cba62d360110a6254",
+          "attachmentName": "S24-measure-large-navigation-cancel-metrics_0_8C5A1E8A-9AC7-49A0-86E1-0CC24838E1A3.json",
+          "timestamp": 1794129069.267
+        },
+        "screen": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/13461E3C-C533-44DD-9B90-150366011040.png",
+          "bytes": 328124,
+          "sha256": "a7e68664764ad99565e8f7dc306963339d3287ac5342aa8729c196350ea559d3",
+          "dimensionsPixels": [
+            1206,
+            2622
+          ],
+          "attachmentName": "S24-measure-large-navigation-cancel-screen_0_F1B65A0B-E523-4CDC-BF61-8E86812F8A5D.png",
+          "timestamp": 1794129067.187
+        }
+      }
+    },
+    {
+      "size": "ax5",
+      "key": "preview-outcome",
+      "label": "Add packs to this shop",
+      "ownerLabel": "Add packs to this shop",
+      "ownerIdentifier": "",
+      "requestedCategory": "UICTContentSizeCategoryAccessibilityXXXL",
+      "targetFrame": {
+        "height": 155.33333333333337,
+        "width": 370,
+        "x": 16,
+        "y": 542.0000000000002
+      },
+      "ownerFrame": {
+        "height": 155.33333333333337,
+        "width": 370,
+        "x": 16,
+        "y": 542.0000000000002
+      },
+      "cropScope": "exact preview outcome static text; historical finding 22",
+      "cropDimensionsPixels": [
+        1110,
+        466
+      ],
+      "pixelsPerPoint": [
+        3,
+        2.999999999999999
+      ],
+      "imageScale": 3,
+      "inkCandidates": [
+        {
+          "absoluteLinearLuminanceDelta": 0.1,
+          "boundsInBitmapPixels": {
+            "height": 466,
+            "width": 1110,
+            "x": 0,
+            "y": 0
+          },
+          "pixelCount": 77548,
+          "touchesCropEdge": true,
+          "boundsInPointsBitmapOrder": {
+            "height": 155.33333333333337,
+            "width": 370.0,
+            "x": 0.0,
+            "y": 0.0
+          }
+        },
+        {
+          "absoluteLinearLuminanceDelta": 0.2,
+          "boundsInBitmapPixels": {
+            "height": 326,
+            "width": 917,
+            "x": 49,
+            "y": 84
+          },
+          "pixelCount": 71391,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 108.6666666666667,
+            "width": 305.6666666666667,
+            "x": 16.333333333333332,
+            "y": 28.000000000000007
+          }
+        }
+      ],
+      "percentileContrastEstimate": 21,
+      "backgroundLuminance": 1,
+      "referenceFonts": [
+        {
+          "ascender": 50.4638671875,
+          "capHeight": 37.34326171875,
+          "descender": -12.7841796875,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 63.248046875,
+          "pointSize": 53,
+          "reference": "body",
+          "textBounds": {
+            "height": 125.248046875,
+            "width": 303.43017578125,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 26.9140625
+        },
+        {
+          "ascender": 50.4638671875,
+          "capHeight": 37.34326171875,
+          "descender": -12.7841796875,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 63.248046875,
+          "pointSize": 53,
+          "reference": "body-size-monospaced-digits",
+          "textBounds": {
+            "height": 126.49609375,
+            "width": 303.43017578125,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 26.9140625
+        },
+        {
+          "ascender": 40.9423828125,
+          "capHeight": 30.29736328125,
+          "descender": -10.3720703125,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 51.314453125,
+          "pointSize": 43,
+          "reference": "caption1",
+          "textBounds": {
+            "height": 102.314453125,
+            "width": 323.15087890625,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 21.8359375
+        },
+        {
+          "ascender": 50.4638671875,
+          "capHeight": 37.34326171875,
+          "descender": -12.7841796875,
+          "fontName": ".SFUI-Semibold",
+          "lineHeight": 63.248046875,
+          "pointSize": 53,
+          "reference": "headline",
+          "textBounds": {
+            "height": 125.248046875,
+            "width": 318.74581921100616,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 27.431640625
+        }
+      ],
+      "referenceScope": "Framework button/section style not inferred; comparison references only, not observed app font",
+      "appTraitsObservation": "Requested category only; actual app appearance/contrast must be recorded by operator and checked against screenshots",
+      "osVersion": "Version 26.2 (Build 23C54)",
+      "files": {
+        "ancestry": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/F1838BF7-2325-4567-A635-431F16AFCB2F.txt",
+          "bytes": 5850,
+          "sha256": "4c8ed3255118162bd127488db6513ef603ad38eb4c67245ff2d1be38a5b9e84a",
+          "attachmentName": "S24-measure-ax5-preview-outcome-ancestry_0_0E48FA3A-D826-47DE-9AE1-CE12D4B343DD.txt",
+          "timestamp": 1794128916.357
+        },
+        "crop": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/670C1CE8-02B9-47E1-B5AD-82087B27778A.png",
+          "bytes": 37878,
+          "sha256": "4058b95f96d7f078a7a63acf5468398a752d34d6d9eb59626d385fab8d101df6",
+          "dimensionsPixels": [
+            1110,
+            466
+          ],
+          "attachmentName": "S24-measure-ax5-preview-outcome-crop_0_66AE2A7C-7957-470C-A971-1402206E6F56.png",
+          "timestamp": 1794128914.677
+        },
+        "metrics": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/1623A440-AF5F-4336-8896-D3769FBD9332.txt",
+          "bytes": 4289,
+          "sha256": "1663e20279cd3ff404d3242d614d29b19284bd26b831269a2e5d3421e3610f11",
+          "attachmentName": "S24-measure-ax5-preview-outcome-metrics_0_84AE3A0E-22A4-4D30-B770-602AED4602F6.json",
+          "timestamp": 1794128917.468
+        },
+        "screen": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/70FDE091-F5BA-4F01-94DD-85C2F288818F.png",
+          "bytes": 259612,
+          "sha256": "8e6fef3d7dc543dd4fd2cd16d3d9e84160ea7a53280550f7d923ad4553c3cd07",
+          "dimensionsPixels": [
+            1206,
+            2622
+          ],
+          "attachmentName": "S24-measure-ax5-preview-outcome-screen_0_AD231BBF-9D1C-485C-99FB-12591CA7268C.png",
+          "timestamp": 1794128914.842
+        }
+      }
+    },
+    {
+      "size": "ax5",
+      "key": "checkout-details",
+      "label": "Checkout calculation details",
+      "ownerLabel": "Checkout calculation details",
+      "ownerIdentifier": "household.decision.checkoutDetails",
+      "requestedCategory": "UICTContentSizeCategoryAccessibilityXXXL",
+      "targetFrame": {
+        "height": 187.33333333333337,
+        "width": 338,
+        "x": 32,
+        "y": 563.3333333333339
+      },
+      "ownerFrame": {
+        "height": 217.33333333333337,
+        "width": 370,
+        "x": 16,
+        "y": 548.3333333333339
+      },
+      "cropScope": "exact disclosure label child; historical finding 10",
+      "cropDimensionsPixels": [
+        1014,
+        562
+      ],
+      "pixelsPerPoint": [
+        3,
+        2.9999999999999996
+      ],
+      "imageScale": 3,
+      "inkCandidates": [
+        {
+          "absoluteLinearLuminanceDelta": 0.1,
+          "boundsInBitmapPixels": {
+            "height": 488,
+            "width": 1001,
+            "x": 4,
+            "y": 37
+          },
+          "pixelCount": 72235,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 162.66666666666669,
+            "width": 333.6666666666667,
+            "x": 1.3333333333333333,
+            "y": 12.333333333333336
+          }
+        },
+        {
+          "absoluteLinearLuminanceDelta": 0.2,
+          "boundsInBitmapPixels": {
+            "height": 488,
+            "width": 1001,
+            "x": 4,
+            "y": 37
+          },
+          "pixelCount": 71694,
+          "touchesCropEdge": false,
+          "boundsInPointsBitmapOrder": {
+            "height": 162.66666666666669,
+            "width": 333.6666666666667,
+            "x": 1.3333333333333333,
+            "y": 12.333333333333336
+          }
+        }
+      ],
+      "percentileContrastEstimate": 21,
+      "backgroundLuminance": 1,
+      "referenceFonts": [
+        {
+          "ascender": 50.4638671875,
+          "capHeight": 37.34326171875,
+          "descender": -12.7841796875,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 63.248046875,
+          "pointSize": 53,
+          "reference": "body",
+          "textBounds": {
+            "height": 187.248046875,
+            "width": 253.40625,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 26.9140625
+        },
+        {
+          "ascender": 50.4638671875,
+          "capHeight": 37.34326171875,
+          "descender": -12.7841796875,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 63.248046875,
+          "pointSize": 53,
+          "reference": "body-size-monospaced-digits",
+          "textBounds": {
+            "height": 189.744140625,
+            "width": 253.40625,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 26.9140625
+        },
+        {
+          "ascender": 40.9423828125,
+          "capHeight": 30.29736328125,
+          "descender": -10.3720703125,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 51.314453125,
+          "pointSize": 43,
+          "reference": "caption1",
+          "textBounds": {
+            "height": 102.314453125,
+            "width": 326.951171875,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 21.8359375
+        },
+        {
+          "ascender": 50.4638671875,
+          "capHeight": 37.34326171875,
+          "descender": -12.7841796875,
+          "fontName": ".SFUI-Semibold",
+          "lineHeight": 63.248046875,
+          "pointSize": 53,
+          "reference": "headline",
+          "textBounds": {
+            "height": 187.248046875,
+            "width": 269.36106956005096,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 27.431640625
+        }
+      ],
+      "referenceScope": "Framework button/section style not inferred; comparison references only, not observed app font",
+      "appTraitsObservation": "Requested category only; actual app appearance/contrast must be recorded by operator and checked against screenshots",
+      "osVersion": "Version 26.2 (Build 23C54)",
+      "files": {
+        "ancestry": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/C1DB373D-ABA2-4619-BDFC-100F82EA1D4F.txt",
+          "bytes": 7018,
+          "sha256": "647552d8a231a9c3fd235e8b25c5d52b83dae3cb1d52c1f898ff1da446c3eadc",
+          "attachmentName": "S24-measure-ax5-checkout-details-ancestry_0_E2C66799-AD79-4B5C-B7F5-7627479B2F76.txt",
+          "timestamp": 1794128944.147
+        },
+        "crop": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/EBF76CCE-01C5-471F-A61E-1493D71B6542.png",
+          "bytes": 48773,
+          "sha256": "aeb301a27737f44fed732133d3c374b88ba65b41ba4f33db49f1f02570246eff",
+          "dimensionsPixels": [
+            1014,
+            562
+          ],
+          "attachmentName": "S24-measure-ax5-checkout-details-crop_0_AD3D597F-27C9-4746-8A08-30202EA36671.png",
+          "timestamp": 1794128942.598
+        },
+        "metrics": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/8F4F6410-FA02-4FC7-8229-35338310E562.txt",
+          "bytes": 4302,
+          "sha256": "931799a82a856569ff09cbbe9186ee761505c07c0188f815d83dfc15b72ad424",
+          "attachmentName": "S24-measure-ax5-checkout-details-metrics_0_EFC9290F-6218-4FF3-8408-F1EB12094580.json",
+          "timestamp": 1794128945.651
+        },
+        "screen": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/800B47CE-43CC-476F-B4F7-340A5FDE9D10.png",
+          "bytes": 286189,
+          "sha256": "480312c4554e00fbcf33fd29689b6120b0749c41096668f494881005c97eed8b",
+          "dimensionsPixels": [
+            1206,
+            2622
+          ],
+          "attachmentName": "S24-measure-ax5-checkout-details-screen_0_78C48190-D842-42D5-B68D-73CCF7F62D36.png",
+          "timestamp": 1794128942.774
+        }
+      }
+    },
+    {
+      "size": "ax5",
+      "key": "navigation-cancel",
+      "label": "Cancel",
+      "ownerLabel": "Cancel",
+      "ownerIdentifier": "household.decision.cancel",
+      "requestedCategory": "UICTContentSizeCategoryAccessibilityXXXL",
+      "targetFrame": {
+        "height": 36,
+        "width": 87.66666666666667,
+        "x": 20.000000000000004,
+        "y": 82
+      },
+      "ownerFrame": {
+        "height": 36,
+        "width": 87.66666666666667,
+        "x": 20.000000000000004,
+        "y": 82
+      },
+      "cropScope": "exact navigation-bar button including padding; historical finding 11",
+      "cropDimensionsPixels": [
+        262,
+        108
+      ],
+      "pixelsPerPoint": [
+        2.988593155893536,
+        3
+      ],
+      "imageScale": 3,
+      "inkCandidates": [
+        {
+          "absoluteLinearLuminanceDelta": 0.1,
+          "boundsInBitmapPixels": {
+            "height": 108,
+            "width": 262,
+            "x": 0,
+            "y": 0
+          },
+          "pixelCount": 3399,
+          "touchesCropEdge": true,
+          "boundsInPointsBitmapOrder": {
+            "height": 36.0,
+            "width": 87.66666666666667,
+            "x": 0.0,
+            "y": 0.0
+          }
+        },
+        {
+          "absoluteLinearLuminanceDelta": 0.2,
+          "boundsInBitmapPixels": {
+            "height": 78,
+            "width": 262,
+            "x": 0,
+            "y": 30
+          },
+          "pixelCount": 3069,
+          "touchesCropEdge": true,
+          "boundsInPointsBitmapOrder": {
+            "height": 26.0,
+            "width": 87.66666666666667,
+            "x": 0.0,
+            "y": 10.0
+          }
+        }
+      ],
+      "percentileContrastEstimate": 8.018775213667857,
+      "backgroundLuminance": 0.964695794154427,
+      "referenceFonts": [
+        {
+          "ascender": 50.4638671875,
+          "capHeight": 37.34326171875,
+          "descender": -12.7841796875,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 63.248046875,
+          "pointSize": 53,
+          "reference": "body",
+          "textBounds": {
+            "height": 187.248046875,
+            "width": 82.5537109375,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 26.9140625
+        },
+        {
+          "ascender": 50.4638671875,
+          "capHeight": 37.34326171875,
+          "descender": -12.7841796875,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 63.248046875,
+          "pointSize": 53,
+          "reference": "body-size-monospaced-digits",
+          "textBounds": {
+            "height": 189.744140625,
+            "width": 82.5537109375,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 26.9140625
+        },
+        {
+          "ascender": 40.9423828125,
+          "capHeight": 30.29736328125,
+          "descender": -10.3720703125,
+          "fontName": ".SFUI-Regular",
+          "lineHeight": 51.314453125,
+          "pointSize": 43,
+          "reference": "caption1",
+          "textBounds": {
+            "height": 102.314453125,
+            "width": 74.80908203125,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 21.8359375
+        },
+        {
+          "ascender": 50.4638671875,
+          "capHeight": 37.34326171875,
+          "descender": -12.7841796875,
+          "fontName": ".SFUI-Semibold",
+          "lineHeight": 63.248046875,
+          "pointSize": 53,
+          "reference": "headline",
+          "textBounds": {
+            "height": 187.248046875,
+            "width": 87.10169494152069,
+            "x": 0,
+            "y": 0
+          },
+          "xHeight": 27.431640625
+        }
+      ],
+      "referenceScope": "Framework button/section style not inferred; comparison references only, not observed app font",
+      "appTraitsObservation": "Requested category only; actual app appearance/contrast must be recorded by operator and checked against screenshots",
+      "osVersion": "Version 26.2 (Build 23C54)",
+      "files": {
+        "ancestry": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/E0691AFD-3DC0-4B7B-85A4-0D89F469224F.txt",
+          "bytes": 5314,
+          "sha256": "1a4c1da798704799d7a851ec17ebb0951c581a87f0142822882669567c583469",
+          "attachmentName": "S24-measure-ax5-navigation-cancel-ancestry_0_166DAF88-6444-4422-BF21-D09A8B67E273.txt",
+          "timestamp": 1794128948.609
+        },
+        "crop": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/8B520F3E-2552-46F6-BC2B-D9FFE4A7FA06.png",
+          "bytes": 7449,
+          "sha256": "2881052573bb75680d2cc0eef94ca507fb9e9f9ba98090da8af8a0fad80e244b",
+          "dimensionsPixels": [
+            262,
+            108
+          ],
+          "attachmentName": "S24-measure-ax5-navigation-cancel-crop_0_4AF1E603-9397-46A4-A69E-A7470E2CC5E6.png",
+          "timestamp": 1794128946.988
+        },
+        "metrics": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/0BF5473A-1EF2-457A-9919-EC783B04DA96.txt",
+          "bytes": 4370,
+          "sha256": "1dd3ff2b9a874c63b921952e4e6fd1f7e5f15e8039377d886b0be76ab259bfc7",
+          "attachmentName": "S24-measure-ax5-navigation-cancel-metrics_0_1E0C456C-44BC-4B4A-940F-489838F43DED.json",
+          "timestamp": 1794128948.983
+        },
+        "screen": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/91BADE2F-ABF3-49BB-A284-16A51449308E.png",
+          "bytes": 286189,
+          "sha256": "480312c4554e00fbcf33fd29689b6120b0749c41096668f494881005c97eed8b",
+          "dimensionsPixels": [
+            1206,
+            2622
+          ],
+          "attachmentName": "S24-measure-ax5-navigation-cancel-screen_0_567EC621-ABC2-47A1-9578-212A8E53D645.png",
+          "timestamp": 1794128947.164
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "status": "terminal",
+  "startedAtUTC": "2026-11-08T09:03:13.820052+00:00",
+  "sourceCommit": "ba95951f49f5bf13aae20a6be7a672e843b648b9",
+  "sourceManifestSHA256": "3a57a95b46842cbf567e954326dbab0aa707bb29e8919474d0e581b6a9ac3cb2",
+  "reviewedManifestSHA256": "448c085684ce14371d04e6c66ecb4aec804f74c1a6c660fc71d88ca8954481e2",
+  "expectedCount": 3,
+  "selectors": [
+    "RoomInTheCartUITests/HouseholdRequestPackUITests/testMeasureRequestDecisionMoneyAndReviewLabelsSmall",
+    "RoomInTheCartUITests/HouseholdRequestPackUITests/testMeasureRequestDecisionMoneyAndReviewLabelsLarge",
+    "RoomInTheCartUITests/HouseholdRequestPackUITests/testMeasureRequestDecisionMoneyAndReviewLabelsAX5"
+  ],
+  "automaticRetries": 0,
+  "toolchain": "Xcode 27.1\nBuild version 27A9275",
+  "runtimeEnvironment": {
+    "SIMULATOR_ROOT": "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot",
+    "SIMULATOR_RUNTIME_VERSION": "26.2",
+    "SIMULATOR_RUNTIME_BUILD_VERSION": "23C54"
+  },
+  "deviceSettings": {
+    "appearance": "light",
+    "increase_contrast": "disabled",
+    "content_size": "large"
+  },
+  "compilationConditions": "DEBUG CONTRIBUTOR_CAPTURE_UI_FIXTURE STOCK_REVIEW_UI_FIXTURE AWAY_CARRYOVER_UI_FIXTURE",
+  "nativeExitCode": 0,
+  "sourceFilesVerifiedAfter": 4550,
+  "sourceUnchangedAfter": true,
+  "endedAtUTC": "2026-11-08T09:13:19.606704+00:00"
+}

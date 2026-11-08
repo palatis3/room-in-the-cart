@@ -1,0 +1,148 @@
+{
+  "appTraitsObservation" : "Requested category only; actual app appearance\/contrast must be recorded by operator and checked against screenshots",
+  "cropHeightPixels" : 562,
+  "cropScope" : "exact disclosure label child; historical finding 10",
+  "cropWidthPixels" : 1014,
+  "dragArea" : {
+    "height" : 630,
+    "width" : 354,
+    "x" : 24,
+    "y" : 144
+  },
+  "enabled" : true,
+  "hittable" : true,
+  "imageScale" : 3,
+  "interpretation" : "Raw crop\/glyph candidates only. No font-scaling or accessibility pass inferred; inspect screen\/crop and reconcile requested versus observed size.",
+  "key" : "checkout-details",
+  "label" : "Checkout calculation details",
+  "launchArgument" : "UICTContentSizeCategoryAccessibilityXXXL",
+  "osVersion" : "Version 26.2 (Build 23C54)",
+  "ownerFrame" : {
+    "height" : 217.33333333333337,
+    "width" : 370,
+    "x" : 16,
+    "y" : 548.33333333333394
+  },
+  "ownerIdentifier" : "household.decision.checkoutDetails",
+  "ownerLabel" : "Checkout calculation details",
+  "pixels" : {
+    "backgroundEstimate" : "median outer border linear luminance",
+    "backgroundLuminance" : 1,
+    "borderP01" : 1,
+    "borderP99" : 1,
+    "colorSpace" : "sRGB",
+    "cropLuminanceP01" : 0,
+    "cropLuminanceP99" : 1,
+    "inkCandidates" : [
+      {
+        "absoluteLinearLuminanceDelta" : 0.10000000000000001,
+        "boundsInBitmapPixels" : {
+          "height" : 488,
+          "width" : 1001,
+          "x" : 4,
+          "y" : 37
+        },
+        "pixelCount" : 72235,
+        "touchesCropEdge" : false
+      },
+      {
+        "absoluteLinearLuminanceDelta" : 0.20000000000000001,
+        "boundsInBitmapPixels" : {
+          "height" : 488,
+          "width" : 1001,
+          "x" : 4,
+          "y" : 37
+        },
+        "pixelCount" : 71694,
+        "touchesCropEdge" : false
+      }
+    ],
+    "layout" : "32-bit big-endian RGBX",
+    "limits" : "Threshold masks can include borders\/shadows or omit low-contrast glyphs. Bounds use bitmap row order; no OCR\/font identification or contrast pass. Review crop before interpretation.",
+    "percentileContrastEstimate" : 21
+  },
+  "pixelsPerPointX" : 3,
+  "pixelsPerPointY" : 2.9999999999999996,
+  "readingViewport" : {
+    "height" : 630,
+    "width" : 402,
+    "x" : 0,
+    "y" : 144
+  },
+  "referenceFonts" : [
+    {
+      "ascender" : 50.4638671875,
+      "capHeight" : 37.34326171875,
+      "descender" : -12.7841796875,
+      "fontName" : ".SFUI-Regular",
+      "lineHeight" : 63.248046875,
+      "pointSize" : 53,
+      "reference" : "body",
+      "textBounds" : {
+        "height" : 187.248046875,
+        "width" : 253.40625,
+        "x" : 0,
+        "y" : 0
+      },
+      "xHeight" : 26.9140625
+    },
+    {
+      "ascender" : 50.4638671875,
+      "capHeight" : 37.34326171875,
+      "descender" : -12.7841796875,
+      "fontName" : ".SFUI-Regular",
+      "lineHeight" : 63.248046875,
+      "pointSize" : 53,
+      "reference" : "body-size-monospaced-digits",
+      "textBounds" : {
+        "height" : 189.744140625,
+        "width" : 253.40625,
+        "x" : 0,
+        "y" : 0
+      },
+      "xHeight" : 26.9140625
+    },
+    {
+      "ascender" : 40.9423828125,
+      "capHeight" : 30.29736328125,
+      "descender" : -10.3720703125,
+      "fontName" : ".SFUI-Regular",
+      "lineHeight" : 51.314453125,
+      "pointSize" : 43,
+      "reference" : "caption1",
+      "textBounds" : {
+        "height" : 102.314453125,
+        "width" : 326.951171875,
+        "x" : 0,
+        "y" : 0
+      },
+      "xHeight" : 21.8359375
+    },
+    {
+      "ascender" : 50.4638671875,
+      "capHeight" : 37.34326171875,
+      "descender" : -12.7841796875,
+      "fontName" : ".SFUI-Semibold",
+      "lineHeight" : 63.248046875,
+      "pointSize" : 53,
+      "reference" : "headline",
+      "textBounds" : {
+        "height" : 187.248046875,
+        "width" : 269.36106956005096,
+        "x" : 0,
+        "y" : 0
+      },
+      "xHeight" : 27.431640625
+    }
+  ],
+  "referenceScope" : "Framework button\/section style not inferred; comparison references only, not observed app font",
+  "requestedCategory" : "UICTContentSizeCategoryAccessibilityXXXL",
+  "schema" : 1,
+  "size" : "ax5",
+  "targetFrame" : {
+    "height" : 187.33333333333337,
+    "width" : 338,
+    "x" : 32,
+    "y" : 563.33333333333394
+  }
+}

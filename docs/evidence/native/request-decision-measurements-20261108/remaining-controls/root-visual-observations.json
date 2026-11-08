@@ -1,0 +1,144 @@
+{
+  "reviewer": "root",
+  "reviewedAtUTC": "2026-11-08T09:18:38.008151+00:00",
+  "scope": "All nine additional crops and nine corresponding full-screen captures viewed; full screens rendered downscaled by viewer. Numeric pixel geometry comes from unedited attachment metadata, not viewer scaling.",
+  "observations": {
+    "preview-outcome": "Complete text at Small and Large on one line; AX5 wraps Add packs to / this shop in two complete lines. Full screens identify separate preview heading, not Outcome picker. Rounded container and separator contaminate low-threshold ink mask.",
+    "checkout-details": "Complete text at Small and Large on one line; AX5 wraps Checkout / calculation / details in three complete lines beside a chevron. Chevron contributes to measured ink width; this is not glyph-only font measurement.",
+    "navigation-cancel": "Complete Cancel text visible within navigation control at each size, visibly wider at AX5. No title overlap in these stills. Crops include material/rounded background, so edge masks are not text-only. The recorded 36-point accessibility frame does not establish the physical hit area."
+  },
+  "limits": [
+    "No fresh unfiltered audit; all 36 historical findings retained as unresolved complete set.",
+    "No physical VoiceOver, Switch Control, continuous-animation, dark-mode, localization or other-device acceptance.",
+    "Framework navigation typography is not inferred to follow the body-font reference curve.",
+    "Percentile contrast estimates and ink masks do not override audit results."
+  ],
+  "images": [
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/C1E08389-1D08-4894-94E2-594588FDE7E8.png",
+      "path": "crop/small-preview-outcome.png",
+      "sha256": "8f572969ebcb11b34f5a90e6886131d83922c7c97eb8eddb24c17e18402b335b",
+      "attachmentName": "S24-measure-small-preview-outcome-crop_0_23AF5995-7EC8-4A5D-95A2-FC897443E47E.png",
+      "timestamp": 1794129174.99
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/324F0760-60B5-4B7B-A3C5-19D03544BE8A.png",
+      "path": "screen/small-preview-outcome.png",
+      "sha256": "e576daba5e6b8843e1a4d38ba2ffb3460f705da4574f8e1732026f8a73d8ca25",
+      "attachmentName": "S24-measure-small-preview-outcome-screen_0_E0C29F0B-7FF7-4272-9817-9899F93325AF.png",
+      "timestamp": 1794129175.155
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/95D95935-B6CA-4A01-8231-FEB13DA0F018.png",
+      "path": "crop/small-checkout-details.png",
+      "sha256": "5d3bb9020ac76a45c19e734b1bfb7f2fe5c408d06e60c768c2e7704d40812918",
+      "attachmentName": "S24-measure-small-checkout-details-crop_0_0808495D-053F-490E-89FF-1AB3C6BA4E14.png",
+      "timestamp": 1794129186.08
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/EEADF110-3602-43B1-AD4C-0205AB016AD0.png",
+      "path": "screen/small-checkout-details.png",
+      "sha256": "3bc351dc1e29c4fe99e7c932ef0b4a0229826800e6a602adc527be04942e7aa1",
+      "attachmentName": "S24-measure-small-checkout-details-screen_0_447B4A89-E22D-4F3C-8CA2-D7B1D6102C75.png",
+      "timestamp": 1794129186.292
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/F92B5410-DA0F-45D7-94D6-BE2BAA0EC848.png",
+      "path": "crop/small-navigation-cancel.png",
+      "sha256": "a8eec48e2bfba5515bf261bbeb6fa8e0088fe84917b55334d1643e5d55667cb1",
+      "attachmentName": "S24-measure-small-navigation-cancel-crop_0_6A99A101-765F-4699-925C-85D6222EDD88.png",
+      "timestamp": 1794129190.886
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/CFEBB262-02EA-4EBD-A93C-F431EEFA1B5E.png",
+      "path": "screen/small-navigation-cancel.png",
+      "sha256": "3bc351dc1e29c4fe99e7c932ef0b4a0229826800e6a602adc527be04942e7aa1",
+      "attachmentName": "S24-measure-small-navigation-cancel-screen_0_D3EC1FA2-1557-434D-B3E8-B171A35A648B.png",
+      "timestamp": 1794129191.077
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/EE11141C-85B0-48A7-AF43-64C9DBF5D905.png",
+      "path": "crop/large-preview-outcome.png",
+      "sha256": "d533ff044befdde32ce79273f7045dff278d5a9d8028a551c10f00df842e0769",
+      "attachmentName": "S24-measure-large-preview-outcome-crop_0_F641B71E-E400-471C-9F7E-934D7B5BF4C7.png",
+      "timestamp": 1794129052.708
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/68D57D5C-3938-41BD-B229-0485685A87D1.png",
+      "path": "screen/large-preview-outcome.png",
+      "sha256": "d95d321030746ac4fc765fa3ec755adaecd51ee68114d71ebd2bf0abc1a4039e",
+      "attachmentName": "S24-measure-large-preview-outcome-screen_0_53844889-B9BB-4275-827F-386729C066DF.png",
+      "timestamp": 1794129052.895
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/637038CC-83E6-4700-B276-2E9A5289E246.png",
+      "path": "crop/large-checkout-details.png",
+      "sha256": "d455afbc75883566fbcae7e84eba2b0847262d46292eee8c3770432f48d14814",
+      "attachmentName": "S24-measure-large-checkout-details-crop_0_9BC4FBE5-7967-4EE4-A634-58D7DD951384.png",
+      "timestamp": 1794129062.391
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/C37A24E2-6004-4393-8AAE-9DD4CE69A37F.png",
+      "path": "screen/large-checkout-details.png",
+      "sha256": "a7e68664764ad99565e8f7dc306963339d3287ac5342aa8729c196350ea559d3",
+      "attachmentName": "S24-measure-large-checkout-details-screen_0_03526D46-B379-4887-8DBD-5C18F2F87A8D.png",
+      "timestamp": 1794129062.566
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/4366F482-FFF0-4D64-AEA8-F2E1A92EE763.png",
+      "path": "crop/large-navigation-cancel.png",
+      "sha256": "a8eec48e2bfba5515bf261bbeb6fa8e0088fe84917b55334d1643e5d55667cb1",
+      "attachmentName": "S24-measure-large-navigation-cancel-crop_0_D894129C-D6DD-47C5-8874-2472FD4BD307.png",
+      "timestamp": 1794129067.011
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/13461E3C-C533-44DD-9B90-150366011040.png",
+      "path": "screen/large-navigation-cancel.png",
+      "sha256": "a7e68664764ad99565e8f7dc306963339d3287ac5342aa8729c196350ea559d3",
+      "attachmentName": "S24-measure-large-navigation-cancel-screen_0_F1B65A0B-E523-4CDC-BF61-8E86812F8A5D.png",
+      "timestamp": 1794129067.187
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/670C1CE8-02B9-47E1-B5AD-82087B27778A.png",
+      "path": "crop/ax5-preview-outcome.png",
+      "sha256": "4058b95f96d7f078a7a63acf5468398a752d34d6d9eb59626d385fab8d101df6",
+      "attachmentName": "S24-measure-ax5-preview-outcome-crop_0_66AE2A7C-7957-470C-A971-1402206E6F56.png",
+      "timestamp": 1794128914.677
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/70FDE091-F5BA-4F01-94DD-85C2F288818F.png",
+      "path": "screen/ax5-preview-outcome.png",
+      "sha256": "8e6fef3d7dc543dd4fd2cd16d3d9e84160ea7a53280550f7d923ad4553c3cd07",
+      "attachmentName": "S24-measure-ax5-preview-outcome-screen_0_AD231BBF-9D1C-485C-99FB-12591CA7268C.png",
+      "timestamp": 1794128914.842
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/EBF76CCE-01C5-471F-A61E-1493D71B6542.png",
+      "path": "crop/ax5-checkout-details.png",
+      "sha256": "aeb301a27737f44fed732133d3c374b88ba65b41ba4f33db49f1f02570246eff",
+      "attachmentName": "S24-measure-ax5-checkout-details-crop_0_AD3D597F-27C9-4746-8A08-30202EA36671.png",
+      "timestamp": 1794128942.598
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/800B47CE-43CC-476F-B4F7-340A5FDE9D10.png",
+      "path": "screen/ax5-checkout-details.png",
+      "sha256": "480312c4554e00fbcf33fd29689b6120b0749c41096668f494881005c97eed8b",
+      "attachmentName": "S24-measure-ax5-checkout-details-screen_0_78C48190-D842-42D5-B68D-73CCF7F62D36.png",
+      "timestamp": 1794128942.774
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/8B520F3E-2552-46F6-BC2B-D9FFE4A7FA06.png",
+      "path": "crop/ax5-navigation-cancel.png",
+      "sha256": "2881052573bb75680d2cc0eef94ca507fb9e9f9ba98090da8af8a0fad80e244b",
+      "attachmentName": "S24-measure-ax5-navigation-cancel-crop_0_4AF1E603-9397-46A4-A69E-A7470E2CC5E6.png",
+      "timestamp": 1794128946.988
+    },
+    {
+      "source": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/91BADE2F-ABF3-49BB-A284-16A51449308E.png",
+      "path": "screen/ax5-navigation-cancel.png",
+      "sha256": "480312c4554e00fbcf33fd29689b6120b0749c41096668f494881005c97eed8b",
+      "attachmentName": "S24-measure-ax5-navigation-cancel-screen_0_567EC621-ABC2-47A1-9578-212A8E53D645.png",
+      "timestamp": 1794128947.164
+    }
+  ]
+}

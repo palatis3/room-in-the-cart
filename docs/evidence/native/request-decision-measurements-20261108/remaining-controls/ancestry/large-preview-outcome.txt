@@ -1,0 +1,123 @@
+OWNER
+Attributes: StaticText, 0x123305ee0, {{16.0, 359.3}, {370.0, 52.0}}, label: 'Add packs to this shop'
+Element subtree:
+ →StaticText, 0x123305ee0, {{16.0, 359.3}, {370.0, 52.0}}, label: 'Add packs to this shop'
+Path to element:
+ →Application, 0x122cf6ee0, pid: 74781, label: 'Room in the Cart'
+  ↳Window (Main), 0x122ceb9e0, {{0.0, 0.0}, {402.0, 874.0}}
+   ↳Other, 0x122cfb9d0, {{0.0, 0.0}, {402.0, 874.0}}
+    ↳Other, 0x122cfbc10, {{0.0, 62.0}, {402.0, 812.0}}
+     ↳Other, 0x122cfbd30, {{0.0, 62.0}, {402.0, 812.0}}
+      ↳Other, 0x122cfbe50, {{0.0, 62.0}, {402.0, 812.0}}
+       ↳Other, 0x122cfbf70, {{0.0, 62.0}, {402.0, 812.0}}
+        ↳Other, 0x122cfc090, {{0.0, 62.0}, {402.0, 812.0}}
+         ↳Other, 0x122cfc1b0, {{0.0, 62.0}, {402.0, 812.0}}
+          ↳Other, 0x122cfc870, {{0.0, 62.0}, {402.0, 812.0}}
+           ↳Other, 0x122cfc990, {{0.0, 62.0}, {402.0, 812.0}}
+            ↳Other, 0x122cfcab0, {{0.0, 62.0}, {402.0, 812.0}}
+             ↳Other, 0x122cfcbd0, {{0.0, 62.0}, {402.0, 812.0}}
+              ↳CollectionView, 0x122cfccf0, {{0.0, 62.0}, {402.0, 812.0}}
+               ↳Cell, 0x123305820, {{16.0, 359.3}, {370.0, 52.0}}
+                ↳Other, 0x123305b80, {{16.0, 359.3}, {370.0, 52.0}}
+                 ↳Other, 0x123305ca0, {{16.0, 359.3}, {370.0, 52.0}}
+                  ↳Other, 0x123305dc0, {{16.0, 359.3}, {370.0, 52.0}}
+                   ↳StaticText, 0x123305ee0, {{16.0, 359.3}, {370.0, 52.0}}, label: 'Add packs to this shop'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x123342d30, pid: 74781, label: 'Room in the Cart'
+  }
+  ↪︎Find: Descendants matching type Cell
+    Output: {
+      Cell, 0x123174a00, {{16.0, 263.0}, {370.0, 52.0}}
+      Cell, 0x1231751e0, {{16.0, 315.0}, {370.0, 72.3}}
+      Cell, 0x123175c00, {{16.0, 404.7}, {370.0, 40.3}}
+      Cell, 0x1231762c0, {{16.0, 445.3}, {370.0, 147.3}}
+      Cell, 0x123178c60, {{16.0, 21.3}, {370.0, 52.0}}
+      Cell, 0x12317a1c0, {{16.0, 73.3}, {370.0, 52.0}}
+      Cell, 0x12317af40, {{16.0, 125.3}, {370.0, 52.0}}
+      Cell, 0x12317b840, {{16.0, 177.3}, {370.0, 72.3}}
+      Cell, 0x12317c380, {{16.0, 249.7}, {370.0, 52.0}}
+      Cell, 0x12317cda0, {{16.0, 319.0}, {370.0, 40.3}}
+      Cell, 0x12317d460, {{16.0, 359.3}, {370.0, 52.0}}
+      Cell, 0x12317dc40, {{16.0, 411.3}, {370.0, 432.7}}
+      Cell, 0x123180dc0, {{16.0, 844.0}, {370.0, 74.0}}
+    }
+    ↪︎Find: Elements containing elements matching type StaticText with identifier 'Add packs to this shop'
+      Output: {
+        Cell, 0x12316a010, {{16.0, 359.3}, {370.0, 52.0}}
+      }
+      ↪︎Find: Element at index 0
+        Output: {
+          Cell, 0x123158d90, {{16.0, 359.3}, {370.0, 52.0}}
+        }
+        ↪︎Find: Descendants matching type StaticText
+          Output: {
+            StaticText, 0x12333bd30, {{16.0, 359.3}, {370.0, 52.0}}, label: 'Add packs to this shop'
+          }
+          ↪︎Find: Elements matching predicate 'label == "Add packs to this shop"'
+            Output: {
+              StaticText, 0x12308b0e0, {{16.0, 359.3}, {370.0, 52.0}}, label: 'Add packs to this shop'
+            }
+
+TARGET
+Attributes: StaticText, 0x123305ca0, {{16.0, 359.3}, {370.0, 52.0}}, label: 'Add packs to this shop'
+Element subtree:
+ →StaticText, 0x123305ca0, {{16.0, 359.3}, {370.0, 52.0}}, label: 'Add packs to this shop'
+Path to element:
+ →Application, 0x1231a0de0, pid: 74781, label: 'Room in the Cart'
+  ↳Window (Main), 0x123191790, {{0.0, 0.0}, {402.0, 874.0}}
+   ↳Other, 0x1233793b0, {{0.0, 0.0}, {402.0, 874.0}}
+    ↳Other, 0x123306120, {{0.0, 62.0}, {402.0, 812.0}}
+     ↳Other, 0x123306240, {{0.0, 62.0}, {402.0, 812.0}}
+      ↳Other, 0x123306360, {{0.0, 62.0}, {402.0, 812.0}}
+       ↳Other, 0x123306480, {{0.0, 62.0}, {402.0, 812.0}}
+        ↳Other, 0x1233065a0, {{0.0, 62.0}, {402.0, 812.0}}
+         ↳Other, 0x1233066c0, {{0.0, 62.0}, {402.0, 812.0}}
+          ↳Other, 0x123306d80, {{0.0, 62.0}, {402.0, 812.0}}
+           ↳Other, 0x123306ea0, {{0.0, 62.0}, {402.0, 812.0}}
+            ↳Other, 0x123306fc0, {{0.0, 62.0}, {402.0, 812.0}}
+             ↳Other, 0x1233070e0, {{0.0, 62.0}, {402.0, 812.0}}
+              ↳CollectionView, 0x123307200, {{0.0, 62.0}, {402.0, 812.0}}
+               ↳Cell, 0x1233055e0, {{16.0, 359.3}, {370.0, 52.0}}
+                ↳Other, 0x123305940, {{16.0, 359.3}, {370.0, 52.0}}
+                 ↳Other, 0x123305a60, {{16.0, 359.3}, {370.0, 52.0}}
+                  ↳Other, 0x123305b80, {{16.0, 359.3}, {370.0, 52.0}}
+                   ↳StaticText, 0x123305ca0, {{16.0, 359.3}, {370.0, 52.0}}, label: 'Add packs to this shop'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x11ef2b980, pid: 74781, label: 'Room in the Cart'
+  }
+  ↪︎Find: Descendants matching type Cell
+    Output: {
+      Cell, 0x123174870, {{16.0, 263.0}, {370.0, 52.0}}
+      Cell, 0x123175050, {{16.0, 315.0}, {370.0, 72.3}}
+      Cell, 0x123175a70, {{16.0, 404.7}, {370.0, 40.3}}
+      Cell, 0x123176130, {{16.0, 445.3}, {370.0, 147.3}}
+      Cell, 0x123178ad0, {{16.0, 21.3}, {370.0, 52.0}}
+      Cell, 0x12317a030, {{16.0, 73.3}, {370.0, 52.0}}
+      Cell, 0x12317adb0, {{16.0, 125.3}, {370.0, 52.0}}
+      Cell, 0x12317b6b0, {{16.0, 177.3}, {370.0, 72.3}}
+      Cell, 0x12317c1f0, {{16.0, 249.7}, {370.0, 52.0}}
+      Cell, 0x12317cc10, {{16.0, 319.0}, {370.0, 40.3}}
+      Cell, 0x12317d2d0, {{16.0, 359.3}, {370.0, 52.0}}
+      Cell, 0x12317dab0, {{16.0, 411.3}, {370.0, 432.7}}
+      Cell, 0x123180c30, {{16.0, 844.0}, {370.0, 74.0}}
+    }
+    ↪︎Find: Elements containing elements matching type StaticText with identifier 'Add packs to this shop'
+      Output: {
+        Cell, 0x123429e20, {{16.0, 359.3}, {370.0, 52.0}}
+      }
+      ↪︎Find: Element at index 0
+        Output: {
+          Cell, 0x123336110, {{16.0, 359.3}, {370.0, 52.0}}
+        }
+        ↪︎Find: Descendants matching type StaticText
+          Output: {
+            StaticText, 0x123416700, {{16.0, 359.3}, {370.0, 52.0}}, label: 'Add packs to this shop'
+          }
+          ↪︎Find: Elements matching predicate 'label == "Add packs to this shop"'
+            Output: {
+              StaticText, 0x123406360, {{16.0, 359.3}, {370.0, 52.0}}, label: 'Add packs to this shop'
+            }

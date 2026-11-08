@@ -1,0 +1,24 @@
+--- r1/ios/UITests/HouseholdRequestPackUITests.swift
++++ r2/ios/UITests/HouseholdRequestPackUITests.swift
+@@ -256,10 +256,18 @@
+             moneyReference: false)
+ 
+         // Historical finding 22 is the preview's StaticText, not the Outcome picker.
+-        let outcomeQuery = app.staticTexts.matching(NSPredicate(format: "label == %@", "Add packs to this shop"))
+-        let outcome = outcomeQuery.firstMatch
++        let outcomeCells = app.cells.containing(.staticText, identifier: "Add packs to this shop")
++            .allElementsBoundByIndex.filter { cell in
++                cell.buttons.matching(identifier: "household.decision.choice").count == 0 &&
++                    cell.buttons.count == 0 &&
++                    cell.staticTexts.matching(NSPredicate(format: "label == %@", "Add packs to this shop")).count > 0
++            }
++        XCTAssertEqual(outcomeCells.count, 1, "Ambiguous preview-only outcome cell")
++        let outcomeCell = try XCTUnwrap(outcomeCells.count == 1 ? outcomeCells.first : nil)
++        let outcomeQuery = outcomeCell.staticTexts.matching(NSPredicate(format: "label == %@", "Add packs to this shop"))
++        XCTAssertEqual(outcomeQuery.count, 1, "Ambiguous preview outcome text")
++        let outcome = outcomeQuery.element
+         centerForReading(outcome)
+-        XCTAssertEqual(outcomeQuery.count, 1, "Ambiguous preview outcome text")
+         try captureRequestDecisionMeasurement(outcome, owner: outcome, key: "preview-outcome", size: name,
+             category: category, launchArgument: argument, cropScope: "exact preview outcome static text; historical finding 22",
+             moneyReference: false)

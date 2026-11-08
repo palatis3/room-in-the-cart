@@ -1,0 +1,323 @@
+{
+  "reviewer": "shared_amendment_audit",
+  "reviewedAtUTC": "2026-11-08T09:20:41.256195+00:00",
+  "method": "File-only view_image inspection of all nine original target crops and nine full-screen captures; no image modification, native tool, simulator or UI interaction. Full screens were displayed by the tool at 942x2048 from original1206x2622; crops retained original dimensions. Original files are hashed below.",
+  "summary": {
+    "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-summary.json",
+    "sha256": "d7478e601b7167d2c839b9338ebe5afa1e3dfd0eb79fc27e021020e8f8029447"
+  },
+  "observations": [
+    {
+      "size": "small",
+      "key": "preview-outcome",
+      "label": "Add packs to this shop",
+      "observation": "Complete single-line bold Add packs to this shop in both crop and screen, beneath Review before applying and above After this decision; no ellipsis or cut glyph visible. Crop includes rounded card corners and bottom separator.",
+      "files": {
+        "crop": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/C1E08389-1D08-4894-94E2-594588FDE7E8.png",
+          "sha256": "8f572969ebcb11b34f5a90e6886131d83922c7c97eb8eddb24c17e18402b335b",
+          "originalDimensionsPixels": [
+            1110,
+            150
+          ],
+          "viewed": true
+        },
+        "screen": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/324F0760-60B5-4B7B-A3C5-19D03544BE8A.png",
+          "sha256": "e576daba5e6b8843e1a4d38ba2ffb3460f705da4574f8e1732026f8a73d8ca25",
+          "originalDimensionsPixels": [
+            1206,
+            2622
+          ],
+          "viewed": true
+        }
+      },
+      "targetFrameFromMetadata": {
+        "height": 50.00000000000006,
+        "width": 370,
+        "x": 16,
+        "y": 489.6666666666667
+      }
+    },
+    {
+      "size": "small",
+      "key": "checkout-details",
+      "label": "Checkout calculation details",
+      "observation": "Complete one-line Checkout calculation details, with separate trailing chevron. Full screen places it between coverage guidance and Preview expires, away from the navigation bar. Crop includes chevron and starts at the first glyph edge; the full screen confirms left margin and complete text.",
+      "files": {
+        "crop": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/95D95935-B6CA-4A01-8231-FEB13DA0F018.png",
+          "sha256": "5d3bb9020ac76a45c19e734b1bfb7f2fe5c408d06e60c768c2e7704d40812918",
+          "originalDimensionsPixels": [
+            1014,
+            132
+          ],
+          "viewed": true
+        },
+        "screen": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/EEADF110-3602-43B1-AD4C-0205AB016AD0.png",
+          "sha256": "3bc351dc1e29c4fe99e7c932ef0b4a0229826800e6a602adc527be04942e7aa1",
+          "originalDimensionsPixels": [
+            1206,
+            2622
+          ],
+          "viewed": true
+        }
+      },
+      "targetFrameFromMetadata": {
+        "height": 44,
+        "width": 338,
+        "x": 32,
+        "y": 585.6666666666666
+      }
+    },
+    {
+      "size": "small",
+      "key": "navigation-cancel",
+      "label": "Cancel",
+      "observation": "Complete single-line Cancel in the pill at top left; no overlap with Review request title. Crop includes pill/material background and rounded corners. Visual capture does not establish physical touch area.",
+      "files": {
+        "crop": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/F92B5410-DA0F-45D7-94D6-BE2BAA0EC848.png",
+          "sha256": "a8eec48e2bfba5515bf261bbeb6fa8e0088fe84917b55334d1643e5d55667cb1",
+          "originalDimensionsPixels": [
+            230,
+            108
+          ],
+          "viewed": true
+        },
+        "screen": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/CFEBB262-02EA-4EBD-A93C-F431EEFA1B5E.png",
+          "sha256": "3bc351dc1e29c4fe99e7c932ef0b4a0229826800e6a602adc527be04942e7aa1",
+          "originalDimensionsPixels": [
+            1206,
+            2622
+          ],
+          "viewed": true
+        }
+      },
+      "targetFrameFromMetadata": {
+        "height": 36,
+        "width": 76.66666666666667,
+        "x": 20,
+        "y": 82
+      }
+    },
+    {
+      "size": "large",
+      "key": "preview-outcome",
+      "label": "Add packs to this shop",
+      "observation": "Complete single-line bold Add packs to this shop in both crop and screen; distinct preview row below the section heading. Larger glyphs than Small are visible. Crop includes rounded card corners and bottom separator.",
+      "files": {
+        "crop": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/EE11141C-85B0-48A7-AF43-64C9DBF5D905.png",
+          "sha256": "d533ff044befdde32ce79273f7045dff278d5a9d8028a551c10f00df842e0769",
+          "originalDimensionsPixels": [
+            1110,
+            156
+          ],
+          "viewed": true
+        },
+        "screen": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/68D57D5C-3938-41BD-B229-0485685A87D1.png",
+          "sha256": "d95d321030746ac4fc765fa3ec755adaecd51ee68114d71ebd2bf0abc1a4039e",
+          "originalDimensionsPixels": [
+            1206,
+            2622
+          ],
+          "viewed": true
+        }
+      },
+      "targetFrameFromMetadata": {
+        "height": 52,
+        "width": 370,
+        "x": 16,
+        "y": 359.3333333333333
+      }
+    },
+    {
+      "size": "large",
+      "key": "checkout-details",
+      "label": "Checkout calculation details",
+      "observation": "Complete one-line Checkout calculation details with a separated trailing chevron; full screen shows row between guidance and Preview expires. Crop includes chevron, so total ink width is not text-only.",
+      "files": {
+        "crop": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/637038CC-83E6-4700-B276-2E9A5289E246.png",
+          "sha256": "d455afbc75883566fbcae7e84eba2b0847262d46292eee8c3770432f48d14814",
+          "originalDimensionsPixels": [
+            1014,
+            132
+          ],
+          "viewed": true
+        },
+        "screen": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/C37A24E2-6004-4393-8AAE-9DD4CE69A37F.png",
+          "sha256": "a7e68664764ad99565e8f7dc306963339d3287ac5342aa8729c196350ea559d3",
+          "originalDimensionsPixels": [
+            1206,
+            2622
+          ],
+          "viewed": true
+        }
+      },
+      "targetFrameFromMetadata": {
+        "height": 44,
+        "width": 338,
+        "x": 32,
+        "y": 617
+      }
+    },
+    {
+      "size": "large",
+      "key": "navigation-cancel",
+      "label": "Cancel",
+      "observation": "Complete single-line Cancel with visible gap before Review request; crop and screen agree. Appears same glyph size as Small in these captures; not a claim about the expected framework scaling curve.",
+      "files": {
+        "crop": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/4366F482-FFF0-4D64-AEA8-F2E1A92EE763.png",
+          "sha256": "a8eec48e2bfba5515bf261bbeb6fa8e0088fe84917b55334d1643e5d55667cb1",
+          "originalDimensionsPixels": [
+            230,
+            108
+          ],
+          "viewed": true
+        },
+        "screen": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/13461E3C-C533-44DD-9B90-150366011040.png",
+          "sha256": "a7e68664764ad99565e8f7dc306963339d3287ac5342aa8729c196350ea559d3",
+          "originalDimensionsPixels": [
+            1206,
+            2622
+          ],
+          "viewed": true
+        }
+      },
+      "targetFrameFromMetadata": {
+        "height": 36.000000000000014,
+        "width": 76.66666666666667,
+        "x": 20,
+        "y": 82.00000000000003
+      }
+    },
+    {
+      "size": "ax5",
+      "key": "preview-outcome",
+      "label": "Add packs to this shop",
+      "observation": "Complete two-line heading: Add packs to / this shop. Both lines visible within the preview card and crop; no ellipsis or overlap with section heading or following After this decision. Large surrounding rows extend outside the screen, so this is target-specific visibility.",
+      "files": {
+        "crop": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/670C1CE8-02B9-47E1-B5AD-82087B27778A.png",
+          "sha256": "4058b95f96d7f078a7a63acf5468398a752d34d6d9eb59626d385fab8d101df6",
+          "originalDimensionsPixels": [
+            1110,
+            466
+          ],
+          "viewed": true
+        },
+        "screen": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/70FDE091-F5BA-4F01-94DD-85C2F288818F.png",
+          "sha256": "8e6fef3d7dc543dd4fd2cd16d3d9e84160ea7a53280550f7d923ad4553c3cd07",
+          "originalDimensionsPixels": [
+            1206,
+            2622
+          ],
+          "viewed": true
+        }
+      },
+      "targetFrameFromMetadata": {
+        "height": 155.33333333333337,
+        "width": 370,
+        "x": 16,
+        "y": 542.0000000000002
+      }
+    },
+    {
+      "size": "ax5",
+      "key": "checkout-details",
+      "label": "Checkout calculation details",
+      "observation": "Complete three-line label: Checkout / calculation / details. Trailing chevron is beside calculation with visible separation and no text overlap. All three lines fit the captured row and full screen; surrounding content is naturally scrolled outside the viewport.",
+      "files": {
+        "crop": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/EBF76CCE-01C5-471F-A61E-1493D71B6542.png",
+          "sha256": "aeb301a27737f44fed732133d3c374b88ba65b41ba4f33db49f1f02570246eff",
+          "originalDimensionsPixels": [
+            1014,
+            562
+          ],
+          "viewed": true
+        },
+        "screen": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/800B47CE-43CC-476F-B4F7-340A5FDE9D10.png",
+          "sha256": "480312c4554e00fbcf33fd29689b6120b0749c41096668f494881005c97eed8b",
+          "originalDimensionsPixels": [
+            1206,
+            2622
+          ],
+          "viewed": true
+        }
+      },
+      "targetFrameFromMetadata": {
+        "height": 187.33333333333337,
+        "width": 338,
+        "x": 32,
+        "y": 563.3333333333339
+      }
+    },
+    {
+      "size": "ax5",
+      "key": "navigation-cancel",
+      "label": "Cancel",
+      "observation": "Complete single-line Cancel; wider visible pill/text than Small/Large, still clear of Review request title. Navigation remains much smaller than large Form text. No clipping or ellipsis visible; no body-font equivalence or touch-area claim.",
+      "files": {
+        "crop": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/8B520F3E-2552-46F6-BC2B-D9FFE4A7FA06.png",
+          "sha256": "2881052573bb75680d2cc0eef94ca507fb9e9f9ba98090da8af8a0fad80e244b",
+          "originalDimensionsPixels": [
+            262,
+            108
+          ],
+          "viewed": true
+        },
+        "screen": {
+          "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/measurements/additional-export/91BADE2F-ABF3-49BB-A284-16A51449308E.png",
+          "sha256": "480312c4554e00fbcf33fd29689b6120b0749c41096668f494881005c97eed8b",
+          "originalDimensionsPixels": [
+            1206,
+            2622
+          ],
+          "viewed": true
+        }
+      },
+      "targetFrameFromMetadata": {
+        "height": 36,
+        "width": 87.66666666666667,
+        "x": 20.000000000000004,
+        "y": 82
+      }
+    }
+  ],
+  "draftREADMEReview": {
+    "path": "/Users/palatis/Room in the Cart/docs/evidence/native/request-decision-measurements-20261108/remaining-controls/README.md",
+    "sha256": "969318dfc808ef1a71f2915725080e5f946d1fa0e0fd62f646767f3d8f5b79df",
+    "assessment": "Accurate within stated scope; no correction requested. Two-line preview/three-line details/complete nonoverlapping Cancel descriptions match all eighteen viewed files. Retained R1 selector failure and non-closure language are appropriate.",
+    "supportingStrictReceipt": {
+      "path": "/Users/palatis/Room in the Cart/docs/evidence/native/request-decision-measurements-20261108/remaining-controls/strict-verification.txt",
+      "sha256": "5b09fb2bdd6eb54f681c0eac8140be872a54044d56312747a01f923ec0ff7197"
+    },
+    "inspectionVerification": {
+      "path": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/remaining-named-controls-execution-r2/run/named-controls-inspection/verification.json",
+      "sha256": "e22120e95702e3635ea3d80f616d4274aedab7117045cd03c7725d94aab8a8b5"
+    }
+  },
+  "limits": [
+    "Nine selected target/size observations, not a whole-screen or continuous-layout audit.",
+    "English light appearance on the captured simulator/toolchain only; no physical VoiceOver/Switch Control/hardware-keyboard qualification.",
+    "No closure of any original audit finding inferred, and no closure of the retained36 as a complete set.",
+    "No physical44-point touch-area claim from the36-point Cancel AX frame.",
+    "No production-font identity or expected navigation scaling curve inferred from reference fonts or visual glyph growth.",
+    "Crops include rounded backgrounds/separators or chevron; percentile/mask values are not text-only contrast or font measurements.",
+    "Strict/pass/zero-warning/zero-idle facts are read from completed receipts/log-derived reports, not independently rerun native tests."
+  ],
+  "nativeCommandsExecuted": false,
+  "canonicalEdits": false
+}
