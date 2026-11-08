@@ -1,0 +1,46 @@
+{
+  "README.md": {
+    "sha256": "1dcc6bd6f6b3c010151a86d24fa6896146830c732e720e6e3853be8d8b013a0c",
+    "bytes": 3388
+  },
+  "artifact-verification.json": {
+    "sha256": "61609c2ab1d8fe51f6c2a2d0a5f075d84c86acf95d659b4d118caf4d2c041b3b",
+    "bytes": 397
+  },
+  "cook-events.json": {
+    "sha256": "fa21dc618e4040ef49ef7a2ee5b1f5d05747152af7604b06ef46c657a11708fb",
+    "bytes": 33672
+  },
+  "speech/activity-timing.json": {
+    "sha256": "bd07a918f611323b08b0df2bc2be101a2adbca5fe0eec2bb2c05527376866054",
+    "bytes": 852
+  },
+  "speech/blocked-stacks.json": {
+    "sha256": "942422de010a0574dec8f6377aec6127a97086e45d424cd23d0d491bfe59cbc2",
+    "bytes": 30376
+  },
+  "speech/owner-qos-assessment.md": {
+    "sha256": "21d433352b62ab73b927f4ab139df9382c81bdf96415b0d798e4e9920b405844",
+    "bytes": 4664
+  },
+  "speech/r5-prior-actual-app-evidence.json": {
+    "sha256": "0685917065702038c7233a7f0b66b15aac6b40308ec9c86179e41deb825f0124",
+    "bytes": 3102
+  },
+  "speech/selected-product-receipt.json": {
+    "sha256": "8f7efe046d9e1c1ebf72cd155dc00f643af5a189cd47d99fb78a5bb7574b9c7f",
+    "bytes": 552
+  },
+  "speech/uuid-bound-symbols.json": {
+    "sha256": "358b312ca0e9a704d5a32aedf2426d52b7ea85d6a4243cf18fec426ed7293701",
+    "bytes": 9934
+  },
+  "terminal-run.json": {
+    "sha256": "531cb05504d09d7dd8619b1b8d34129664d25e2100e0c73c9452ade850c05f06",
+    "bytes": 9414
+  },
+  "verification.json": {
+    "sha256": "73e06ea8ba180a07e1bf263cc9496307a9c32cd6c0d9b8775406f5c6be2f5f67",
+    "bytes": 3461
+  }
+}

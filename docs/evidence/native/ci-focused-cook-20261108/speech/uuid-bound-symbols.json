@@ -1,0 +1,128 @@
+[
+  {
+    "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+    "path": "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/Frameworks/Foundation.framework/Foundation",
+    "uuidOutput": "UUID: C153116F-DD31-3FA9-89BB-04B47C1FA83D (arm64) /private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/Frameworks/Foundation.framework/Foundation\n",
+    "symbols": {
+      "0x8d2288": "-[_NSThreadPerformInfo wait] (in Foundation) + 40",
+      "0x8d43b8": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:modes:] (in Foundation) + 596",
+      "0x8d4620": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:] (in Foundation) + 104"
+    }
+  },
+  {
+    "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+    "path": "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/PrivateFrameworks/TextToSpeech.framework/TextToSpeech",
+    "uuidOutput": "UUID: 36A9A6AF-ED55-351F-9F47-2BF260E8B01B (arm64) /private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/PrivateFrameworks/TextToSpeech.framework/TextToSpeech\n",
+    "symbols": {
+      "0x26f94": "0x00026f94 (in TextToSpeech) + 44",
+      "0x27074": "0x00027074 (in TextToSpeech) + 44",
+      "0x27154": "0x00027154 (in TextToSpeech) + 44",
+      "0x276fc": "0x000276fc (in TextToSpeech) + 48",
+      "0x2c844": "0x0002c844 (in TextToSpeech) + 300",
+      "0x334c8": "0x000334c8 (in TextToSpeech) + 116",
+      "0x37fa4": "0x00037fa4 (in TextToSpeech) + 100",
+      "0x387e4": "0x000387e4 (in TextToSpeech) + 116",
+      "0x38ef8": "0x00038ef8 (in TextToSpeech) + 116",
+      "0x390ac": "0x000390ac (in TextToSpeech) + 116",
+      "0x39344": "0x00039344 (in TextToSpeech) + 344"
+    }
+  },
+  {
+    "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+    "path": "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/usr/lib/system/libdispatch.dylib",
+    "uuidOutput": "UUID: EC9ECF10-959D-3DA1-A055-6DE970159B9D (arm64) /private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/usr/lib/system/libdispatch.dylib\n",
+    "symbols": {
+      "0x17a8": "_dispatch_call_block_and_release (in libdispatch.dylib) + 24",
+      "0x10e6c": "_dispatch_main_queue_callback_4CF (in libdispatch.dylib) + 40",
+      "0x1131c": "_dispatch_main_queue_drain (in libdispatch.dylib) + 1184",
+      "0x1c4b0": "_dispatch_client_callout (in libdispatch.dylib) + 12",
+      "0x384a0": "<deduplicated_symbol> (in libdispatch.dylib) + 24"
+    }
+  },
+  {
+    "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+    "path": "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation",
+    "uuidOutput": "UUID: 4F6D050D-95EE-3A95-969C-3A98B29DF6FF (arm64) /private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation\n",
+    "symbols": {
+      "0x574ac": "__CFMachPortPerform (in CoreFoundation) + 164",
+      "0x8ccec": "_CFRunLoopRunSpecificWithOptions (in CoreFoundation) + 496",
+      "0x920b0": "__CFRunLoopRun (in CoreFoundation) + 1884",
+      "0x92188": "__CFRunLoopRun (in CoreFoundation) + 2100",
+      "0x92ed8": "__CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__ (in CoreFoundation) + 12",
+      "0x930c0": "__CFRunLoopDoSource1 (in CoreFoundation) + 480",
+      "0x93aa8": "__CFRUNLOOP_IS_CALLING_OUT_TO_A_SOURCE1_PERFORM_FUNCTION__ (in CoreFoundation) + 56"
+    }
+  },
+  {
+    "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+    "path": "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/PrivateFrameworks/GraphicsServices.framework/GraphicsServices",
+    "uuidOutput": "UUID: 4E5B0462-6170-3367-9475-4FF8B8DFE4E6 (arm64) /private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/PrivateFrameworks/GraphicsServices.framework/GraphicsServices\n",
+    "symbols": {
+      "0x29bc": "GSEventRunModal (in GraphicsServices) + 116"
+    }
+  },
+  {
+    "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+    "path": "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/PrivateFrameworks/UIKitCore.framework/UIKitCore",
+    "uuidOutput": "UUID: 196154FF-BA04-33CD-9277-98F9AA0B7499 (arm64) /private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/PrivateFrameworks/UIKitCore.framework/UIKitCore\n",
+    "symbols": {
+      "0x691378": "_UIUpdateSequenceRunNext (in UIKitCore) + 120",
+      "0xc5e090": "-[UIGestureEnvironment _updateForEvent:window:] (in UIKitCore) + 468",
+      "0xc66bb0": "-[UIGestureRecognizerTarget _sendActionWithGestureRecognizer:] (in UIKitCore) + 76",
+      "0xc6c62c": "-[UIGestureRecognizer _updateGestureForActiveEvents] (in UIKitCore) + 320",
+      "0xc6ca68": "_UIGestureRecognizerSendActions (in UIKitCore) + 296",
+      "0xc6fd84": "_UIGestureRecognizerSendTargetActions (in UIKitCore) + 88",
+      "0xc712c8": "-[UIGestureRecognizer gestureNode:didUpdatePhase:] (in UIKitCore) + 296",
+      "0x106e4d0": "updateCycleEntry (in UIKitCore) + 168",
+      "0x1073270": "__dispatchPreprocessedEventFromEventQueue (in UIKitCore) + 1184",
+      "0x1075f24": "__processEventQueue (in UIKitCore) + 4800",
+      "0x10c60a4": "schedulerStepScheduledMainSectionContinue (in UIKitCore) + 56",
+      "0x11aa574": "-[UIApplication _run] (in UIKitCore) + 772",
+      "0x11ae79c": "UIApplicationMain (in UIKitCore) + 124",
+      "0x11c42e4": "-[UIApplication sendEvent:] (in UIKitCore) + 376",
+      "0x11e6450": "-[UIWindow sendEvent:] (in UIKitCore) + 2796"
+    }
+  },
+  {
+    "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+    "path": "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/Frameworks/SwiftUI.framework/SwiftUI",
+    "uuidOutput": "UUID: 719CF349-8C4A-3054-9536-23EB53648EE0 (arm64) /private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/Frameworks/SwiftUI.framework/SwiftUI\n",
+    "symbols": {
+      "0xb68f0": "<deduplicated_symbol> (in SwiftUI) + 52",
+      "0x28e2c4": "<deduplicated_symbol> (in SwiftUI) + 20",
+      "0x54742c": "static App.main() (in SwiftUI) + 148",
+      "0x54ade0": "<deduplicated_symbol> (in SwiftUI) + 44",
+      "0x69370c": "ButtonBehavior.ended() (in SwiftUI) + 224",
+      "0x699258": "partial apply for implicit closure #2 in implicit closure #1 in ButtonBehavior.body.getter (in SwiftUI) + 32",
+      "0x6fb920": "<deduplicated_symbol> (in SwiftUI) + 24",
+      "0x7b9368": "runApp<A>(_:) (in SwiftUI) + 180",
+      "0x7b9620": "closure #1 in KitRendererCommon(_:) (in SwiftUI) + 164",
+      "0x9548e0": "UIKitResponderEventBindingBridge.flushActions() (in SwiftUI) + 400",
+      "0x95493c": "@objc UIKitResponderEventBindingBridge.flushActions() (in SwiftUI) + 24",
+      "0xd6e9f4": "closure #2 in closure #1 in _ButtonGesture.internalBody.getter (in SwiftUI) + 80",
+      "0xd73818": "partial apply for closure #1 in closure #2 in closure #1 in _ButtonGesture.internalBody.getter (in SwiftUI) + 28",
+      "0xd749a8": "partial apply for closure #2 in PrimitiveButtonGestureCallbacks.dispatch(phase:state:) (in SwiftUI) + 84",
+      "0xdc77ac": "ButtonAction.callAsFunction() (in SwiftUI) + 388",
+      "0xdfcdb0": "specialized static MainActor.assumeIsolated<A>(_:file:line:) (in SwiftUI) + 132"
+    }
+  },
+  {
+    "uuid": "159C6DCF-4C20-3DC9-A67A-A734176E116E",
+    "path": ".build/CIFocusedCookNov08/speech-review-r1/RoomInTheCart.debug.dylib",
+    "uuidOutput": "UUID: 159C6DCF-4C20-3DC9-A67A-A734176E116E (arm64) .build/CIFocusedCookNov08/speech-review-r1/RoomInTheCart.debug.dylib\n",
+    "symbols": {
+      "0x3030ec": "CookReadbackModel.pause() (in RoomInTheCart.debug.dylib) + 124",
+      "0x30a488": "closure #1 in closure #1 in closure #1 in CookReadbackView.body.getter (in RoomInTheCart.debug.dylib) + 164",
+      "0x35177c": "LocalCookSpeech.pause() (in RoomInTheCart.debug.dylib) + 84",
+      "0x352880": "protocol witness for CookSpeechPlayback.pause() in conformance LocalCookSpeech (in RoomInTheCart.debug.dylib) + 12",
+      "0x20a059c": "static RoomInTheCartContributorFixtureApp.$main() (in RoomInTheCart.debug.dylib) + 40",
+      "0x20ae4d0": "__debug_main_executable_dylib_entry_point (in RoomInTheCart.debug.dylib) + 12"
+    }
+  },
+  {
+    "uuid": "32C3B5C8-3956-39DA-9F28-036E4D517700",
+    "path": ".build/CIFocusedCookNov08/speech-review-r1/RoomInTheCart",
+    "uuidOutput": "UUID: 32C3B5C8-3956-39DA-9F28-036E4D517700 (arm64) .build/CIFocusedCookNov08/speech-review-r1/RoomInTheCart\n",
+    "symbols": {}
+  }
+]

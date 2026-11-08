@@ -1,0 +1,68 @@
+[
+  {
+    "package": ".build/CIA305065Nov08/cook-causal-review/thread-state-r5-proposal-r1",
+    "nativeExit": 0,
+    "traceExit": 1,
+    "captureComplete": false,
+    "passedTests": 1,
+    "runtimeWarnings": [
+      {
+        "issueType": "Runtime Warning",
+        "message": "[Internal] Thread running at User-initiated quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions"
+      },
+      {
+        "issueType": "Runtime Warning",
+        "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions"
+      }
+    ],
+    "strictExit": 1,
+    "sourceManifestSHA256": "d2f233f64af0540e77cd66b995c39bada71522bc9f8f6b4fab1ee2927e36c590",
+    "files": [
+      {
+        "path": ".build/CIA305065Nov08/cook-causal-review/thread-state-r5-proposal-r1/capture/run.json",
+        "sha256": "a2472774923d3dc599b5f6282325b17dee9dc738b51c3ef56dbc621d421201d5"
+      },
+      {
+        "path": ".build/CIA305065Nov08/cook-causal-review/thread-state-r5-proposal-r1/inspection/summary.json",
+        "sha256": "45e9bdfcf35f1e3c825801d50990a9ca3499941e7099d45275ab352f10430d5a"
+      },
+      {
+        "path": ".build/CIA305065Nov08/cook-causal-review/thread-state-r5-proposal-r1/inspection/verification.json",
+        "sha256": "f1ab1d155c4a5d4156d4904a941598c7977735c9ac3c72fd44342426c1bf2f06"
+      }
+    ]
+  },
+  {
+    "package": ".build/CIA305065Nov08/cook-causal-review/thread-state-r5-attach-proposal-r1",
+    "nativeExit": 0,
+    "traceExit": -9,
+    "captureComplete": false,
+    "passedTests": 1,
+    "runtimeWarnings": [
+      {
+        "issueType": "Runtime Warning",
+        "message": "[Internal] Thread running at User-initiated quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions"
+      },
+      {
+        "issueType": "Runtime Warning",
+        "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions"
+      }
+    ],
+    "strictExit": 1,
+    "sourceManifestSHA256": "d2f233f64af0540e77cd66b995c39bada71522bc9f8f6b4fab1ee2927e36c590",
+    "files": [
+      {
+        "path": ".build/CIA305065Nov08/cook-causal-review/thread-state-r5-attach-proposal-r1/capture/run.json",
+        "sha256": "3bb651cbdc280b39cc4883e7bbd9b0e5aae9cb4b0bca411ee4eead094664eb7e"
+      },
+      {
+        "path": ".build/CIA305065Nov08/cook-causal-review/thread-state-r5-attach-proposal-r1/inspection/summary.json",
+        "sha256": "065aef9872e05c5addf45dd96b41ef2dc9816e00473c48c570c7e4f3831d8fea"
+      },
+      {
+        "path": ".build/CIA305065Nov08/cook-causal-review/thread-state-r5-attach-proposal-r1/inspection/verification.json",
+        "sha256": "8d22798847720f742240fdcf9e71cf3d473ae12ec2f893dec6c217b5c0b470e7"
+      }
+    ]
+  }
+]

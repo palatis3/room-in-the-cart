@@ -1,0 +1,83 @@
+{
+  "runID": 42527730777,
+  "head": "348dcdd2ab25180665e8e040de06f6930d4b59b3",
+  "nativePassed": 5,
+  "nativeFailed": 0,
+  "selectedInventoryMatches": true,
+  "nativeCaseResults": [
+    {
+      "selector": "RoomInTheCartUITests/SharedDeliveryUITests/testShopperClosesWithPendingCreditThenLinksItToTheOriginalNetCharge",
+      "result": "Passed",
+      "seconds": 210.84698510169983
+    },
+    {
+      "selector": "RoomInTheCartUITests/SharedDeliveryUITests/testShopperLeavesOriginalDinnerOpenAfterAnUnresolvedReplacementPreview",
+      "result": "Passed",
+      "seconds": 52.97148597240448
+    },
+    {
+      "selector": "RoomInTheCartUITests/SharedDeliveryUITests/testShopperReplacesWednesdayAfterPickupAndKeepsTuesdaysShortage",
+      "result": "Passed",
+      "seconds": 116.27378702163696
+    },
+    {
+      "selector": "RoomInTheCartUITests/SharedDeliveryUITests/testShopperReviewsExactEditedCookWordingBeforeReadback",
+      "result": "Passed",
+      "seconds": 57.344279050827026
+    },
+    {
+      "selector": "RoomInTheCartUITests/SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord",
+      "result": "Passed",
+      "seconds": 128.8925279378891
+    }
+  ],
+  "serialLogFailures": [],
+  "animationIdle": {
+    "lineCount": 2551,
+    "testStarts": 5,
+    "restartLines": [],
+    "groups": []
+  },
+  "hostedWorkflowConclusion": "failure",
+  "strictOutcome": "warning inventory unavailable; not a passing cohort",
+  "checkerSHA256": "d5aeb8c6217d1f49153986cbaa6a6505681ef781aa19a76278272355828f8652",
+  "checkerMatchesHostedSource": true,
+  "retainedActivityExportSHA256": "bbd27a573dbfb11a3fc8c1bfe38eb7a8ce17592707c3d6c766483ea497f86a6f",
+  "retainedWarningNodes": 1,
+  "independentParserRejection": "Malformed XCTest runtime warning activity '[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions'. Expected one Complete Issue Description.txt attachment, found 0.",
+  "fullResultBundleReplayed": false,
+  "cookLogSHA256": "13a2caab4b963fef308af7226c0ddcd4baad817ff5f3c65e0ab328f1ce9387ec",
+  "cookLogRecords": 89,
+  "cookPIDBoundToOriginalCaseTermination": 31382,
+  "cookEventCounts": {
+    "appear": 2,
+    "recipient-changed": 10,
+    "invalidate-enter": 16,
+    "clear-correction": 17,
+    "invalidate-return": 16,
+    "check-recipient-enter": 4,
+    "baseline-accepted": 4,
+    "check-recipient-exit": 4,
+    "mark-sent-enter": 1,
+    "mark-sent-exit": 1,
+    "disappear": 1,
+    "review-enter": 3,
+    "review-result": 3,
+    "review-exit": 3,
+    "setter-enter": 1,
+    "setter-return": 1,
+    "state-change": 2
+  },
+  "cookInterpretation": "Original complete cook-copy journey passed and one false-to-true setter/change was captured. This is an instrumented nonreproduction, not a fix or exhaustive delivery proof. Prior failed confirmation remains open.",
+  "collectorStderr": "getpwuid_r did not find a match for uid 501\n",
+  "originalArchiveVerification": {
+    "artifactID": 13636582446,
+    "runID": 42527730777,
+    "headSHA": "348dcdd2ab25180665e8e040de06f6930d4b59b3",
+    "archiveSHA256": "0c309ee0397068a372d89913e1fcad2d640794ef5b38c8d56d6aa92a00d50c3e",
+    "archiveBytes": 105034440,
+    "entryCount": 1164,
+    "expandedBytes": 106445518,
+    "validated": "digest, size, duplicate/path/symlink/encryption limits; Python extraction CRC; original preserved"
+  }
+}

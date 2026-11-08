@@ -1,0 +1,27 @@
+[
+  {
+    "timestampUTC": "2026-11-08T22:18:33.155000+00:00",
+    "title": "Tap \"capture.readback.play\" Button",
+    "attachmentCount": 0
+  },
+  {
+    "timestampUTC": "2026-11-08T22:18:33.832000+00:00",
+    "title": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions",
+    "attachmentCount": 0
+  },
+  {
+    "timestampUTC": "2026-11-08T22:18:35.948000+00:00",
+    "title": "Tap \"Pause readback\" Button",
+    "attachmentCount": 0
+  },
+  {
+    "timestampUTC": "2026-11-08T22:18:37.487000+00:00",
+    "title": "Tap \"Resume readback\" Button",
+    "attachmentCount": 0
+  },
+  {
+    "timestampUTC": "2026-11-08T22:18:39.060000+00:00",
+    "title": "Tap \"Stop readback\" Button",
+    "attachmentCount": 0
+  }
+]
