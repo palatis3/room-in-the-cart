@@ -1,0 +1,17 @@
+{
+  "status": "r2-prepared-not-executed",
+  "manifestIdentity": "bffa8e626fc1f2e5645864c38d0017ab215e19170aef59383c3d417cb6ddcb62",
+  "fixtureAndDOMTests": 13,
+  "pureVerifierControls": 31,
+  "node22Syntax": true,
+  "bundleAndHelperPinsVerified": true,
+  "r1FilesPreserved": 17,
+  "serverLaunched": false,
+  "browserLaunched": false,
+  "nativeExecuted": false,
+  "verifiedBuild": {
+    "commit": "975cfb15ccc402b55d31960f6d03d46c66104d69",
+    "receipt": "/Users/palatis/Room in the Cart/.build/StagingCandidate042Nov08/verified-inputs.json",
+    "sha256": "6e451cf0e6ea29e497635680ff241f1d2c5032ae28e2e7de166d0392ed61d7d4"
+  }
+}

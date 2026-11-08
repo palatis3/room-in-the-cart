@@ -1,0 +1,47 @@
+{
+  "status": "prepared-not-executed",
+  "commit": "daee50c8439d8cfb9f037f143bd76acf4a4e2a3a",
+  "bundleOrigin": "byte-identical to root independently built pinned975cfb1 and deployed041 assets",
+  "verifiedBuild": {
+    "commit": "975cfb15ccc402b55d31960f6d03d46c66104d69",
+    "receipt": "/Users/palatis/Room in the Cart/.build/StagingCandidate042Nov08/verified-inputs.json",
+    "sha256": "6e451cf0e6ea29e497635680ff241f1d2c5032ae28e2e7de166d0392ed61d7d4"
+  },
+  "bundle": {
+    "apple-touch-icon.png": "e69ddd65f0718ffef895c0b82a63873d580722b920af40e86b1478a5cd9427e3",
+    "assets/index-B9I61_lh.css": "7cf18dacddae715ef01363daf5f2770fb9562762a10d2d2e4d41daf406224cee",
+    "assets/index-BcYhp7mE.js": "5bec4196cdf13ce38656be49ea5db6d18877a1e57d2c60aee62a77812fce5a61",
+    "icon.png": "dd8314efcedbe096fbce5c43f09af13a335d713a1dcfae43f82b4904d9e58914",
+    "index.html": "00e32d49f4136b5dc6e2115812ae27f69cda69f43a313b3fd283af13047ae84b"
+  },
+  "source": {
+    "api.ts": "c32e5596b858dafd66b04317691372c1582384e3f6a4c4f4905d30bce71b9ecc",
+    "app.ts": "92756619c5c9e5f384376e19b254240964cc25c59ba8dabc4aee09eeed3f2535",
+    "browser-sign-out.ts": "465269f619e1ad67b51366bf178bbc935f79a682381f6d86e33c975e676753c3",
+    "child-invitation-page.ts": "b3cf24c37911445043ac6b8080a332c37daa0e1b107119497d49fc99026adbf5",
+    "child-invitation.ts": "1d2f26a723c818344138b3776c6bc63f5ebf79d59bccd4d919059b294fe431db",
+    "config.ts": "c3c421cc03af511faaa5d3a1e2588bc8f3dae3e4f50d09d53dcec3133abeb090",
+    "i18n.ts": "b66fd8ae7d664201cde68aacd403a75ec7a09138c35e8d488640044d42757fdc",
+    "main.ts": "2d8c565430d4267acf49983209240dbb6914d20c66083c4bbfc7f1e6f1740e1c",
+    "outbox.ts": "add5fb28a9d22068a565ec19697db9189a02f06b62b440ece42742afec378cbd",
+    "public-pages-content.ts": "57661a3e73f3e36a1455bd6e8aceb6de12ed3fd696be5c7d0e9a072dc88a273a",
+    "public-pages.css": "5720c8c6d112e728eb9341f220e313a5ca6e3cd646819de02ce5459a526d85e3",
+    "public-pages.ts": "0a4d954a671663a81eecd27e9b21780465099982835b2920697467a156598661",
+    "public-site-configuration.ts": "1b529d8692fd71a1ca64b4b4c4e0e6700327144fad3595b6e00f590b457d1518",
+    "style.css": "0f4388a8942c624ba6b5b36d0e8cada9564943ff55271719f3458d4c71c20fba",
+    "theme.css": "39b339ff38c3ebf4bee9a7a3a59254f87f01331d0a1df69b0c163d1d5c475ba5"
+  },
+  "helpers": {
+    "README.md": "6266c82b79e783712b9d39028500a47d9ff1a79e6056372efb0ccb8c4c3fe03b",
+    "fixture.mjs": "c526e26180cd74198f45d90113742b39e49d695e5e325b9b1864d883008515f5",
+    "fixture.test.mjs": "e42dd7507fbfd99adaf2c2af26e7222ce39d9d1b2c638a183a79275c7d4b847d",
+    "observation.mjs": "9895ac940211242d8ee357fe072a9fdca6b343729c0de3d033b0117b422c19a3",
+    "pin.mjs": "58fbf81962e6a9c800ba42d189e10037d097fff3446ad3a8c2572b17082f00e4",
+    "probe.js": "aba06331ecf63d3191a0abce9722e9dc5496406125df4d172019776dd2359918",
+    "probe.test.mjs": "7891f96585ada62a15d5a13f870965bc28e26b48baa203eebe2cf4bd495b4d6b",
+    "server.mjs": "230f39e2d830f12b7ba633ca4255df55cf7b09e265eb707909596cb67fede8ab",
+    "verify-case.mjs": "180b6258f761fcdefefe316e7b19889b6c655e6c918d6cbbf0a303b1ea7ac26c",
+    "verify-pin.mjs": "ce831e1967e495cb85953eecf3dbf54596c6ea2dc81b0b2e1de62109ab9e73de"
+  },
+  "identity": "bffa8e626fc1f2e5645864c38d0017ab215e19170aef59383c3d417cb6ddcb62"
+}

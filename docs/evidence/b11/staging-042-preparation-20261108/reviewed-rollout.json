@@ -1,0 +1,93 @@
+{
+  "status": "prepared for separate042 staging approval; not deployed",
+  "project": "Room in the Cart Staging",
+  "supabaseProject": "uwjxrotnocxxomqdetzk",
+  "vercelProject": "prj_MsdHyy06CKCuFeAvoOCpnJRQ1vGa",
+  "runtimeSource": "975cfb15ccc402b55d31960f6d03d46c66104d69",
+  "migration042SHA256": "1bc54c2d91fe9a38f494078463b95aaec0b20314fc486ff23ae141edc93751f8",
+  "ownerRunner": {
+    "status": "passed",
+    "mode": "local-only owner-runner rehearsal",
+    "finalRegistryCount": 42,
+    "originalNonRegistryTablesPreserved": 129,
+    "allOwnedRestoreServersStopped": true,
+    "readonlyKeychainReopenVerified": true,
+    "proofSHA256": "cbfcb7f873c7556f83f88e3deef0d8a946d713c07489b892ce10e0b87bb143eb",
+    "sourceLockSHA256": "cfe0462f0fe6ace0862e82d31d1670f95584df05148eb53ffe578d26dbf131bf",
+    "restoreImageDetached": true,
+    "captureImageDetached": true
+  },
+  "upload": {
+    "status": "verified local deployment inputs; no hosted deploy",
+    "sourceCommit": "975cfb15ccc402b55d31960f6d03d46c66104d69",
+    "regularFiles": 167,
+    "regularBytes": 1623768,
+    "pathSHA256Manifest": "cd1b910b40d57e2e4a61abc215c75998d59680d5f9408818d452e93d96f5667a",
+    "regularFilesUnchangedAfterBuildAndTestFixture": true,
+    "directoryEntriesBefore": 4,
+    "directoryEntriesAfter": 8,
+    "trackedSourcesUnchanged": true,
+    "webAssetsEqualDeployed041": true,
+    "webAssetSHA256": {
+      "icon.png": "dd8314efcedbe096fbce5c43f09af13a335d713a1dcfae43f82b4904d9e58914",
+      "index.html": "00e32d49f4136b5dc6e2115812ae27f69cda69f43a313b3fd283af13047ae84b",
+      "apple-touch-icon.png": "e69ddd65f0718ffef895c0b82a63873d580722b920af40e86b1478a5cd9427e3",
+      "assets/index-B9I61_lh.css": "7cf18dacddae715ef01363daf5f2770fb9562762a10d2d2e4d41daf406224cee",
+      "assets/index-BcYhp7mE.js": "5bec4196cdf13ce38656be49ea5db6d18877a1e57d2c60aee62a77812fce5a61"
+    },
+    "serviceBuild": "passed",
+    "webBuild": "passed",
+    "serviceTests": {
+      "passed": 450,
+      "skipped": 1
+    },
+    "webTests": {
+      "passed": 140,
+      "skipped": 0
+    },
+    "retainedPreparationFailures": [
+      "First web unit run139/140: missing excluded canonical policy identity test prerequisite; restored exact pinned config and full140/140passed.",
+      "First dry-list equality included directory entries. Regular-file path/mode/SHA/size equality remains exact; newly listed ignored directories contain no uploaded files."
+    ],
+    "runtimeVariants": {
+      "maintenance": "same source plus deployment-only SERVICE_MAINTENANCE=true",
+      "serving": "same source plus deployment-only SERVICE_MAINTENANCE=false"
+    },
+    "limits": "No production secrets included in upload source. Hosted build/environment/route and promotion checks are pending approval."
+  },
+  "protectionPreparation": {
+    "completeCurrentListedDeployments": 7,
+    "immutableAnonymousRedirectChecks": 42,
+    "aliases": [
+      {
+        "alias": "room-in-the-cart-staging-doorframe-staging.vercel.app",
+        "deploymentId": "dpl_F2S6YE9JQ7rhoYWr67wbZHDJo9v2"
+      },
+      {
+        "alias": "room-in-the-cart-staging.vercel.app",
+        "deploymentId": "dpl_F2S6YE9JQ7rhoYWr67wbZHDJo9v2"
+      }
+    ],
+    "currentCronDeployment": "dpl_F2S6YE9JQ7rhoYWr67wbZHDJo9v2",
+    "cronPath": "/internal/maintenance",
+    "cronSchedule": "0 8 * * *",
+    "scope": "All historical immutable URLs are protected from anonymous GET at checked paths; public alias remains serving041. Reverify routing/cron/operator isolation at approved maintenance window."
+  },
+  "actionsRequested": [
+    "Create protected maintenance and serving deployments from exact reviewed source using deployment-only SERVICE_MAINTENANCE values.",
+    "Route public staging through maintenance and verify dynamic read/write/operations rejection, oldURLprotection/cron target and drained in-flight work.",
+    "Verify unchanged041empty application/Auth-user state, then apply042once with advisory lock and strict postflight.",
+    "Verify protected serving042HTTP/web boundaries and promote; retain verifiedmaintenance for forwardrepair."
+  ],
+  "excluded": [
+    "Provider deletion activation",
+    "SMTP or KWS activation",
+    "App Store or TestFlight publication",
+    "Live database restore or destructive rollback"
+  ],
+  "original041Deployment": "dpl_F2S6YE9JQ7rhoYWr67wbZHDJo9v2",
+  "recoveryBoundary": "Do not promote041after042amendmentuse. Keep042withmaintenance/forwardrepair; any restore requires later-write and deletion-journal reconciliation.",
+  "sourceLockSHA256": "cfe0462f0fe6ace0862e82d31d1670f95584df05148eb53ffe578d26dbf131bf",
+  "inputManifestSHA256": "cd1b910b40d57e2e4a61abc215c75998d59680d5f9408818d452e93d96f5667a",
+  "remainingUnderApprovedExecution": "Hosted candidate builds, actual maintenance routing/probes, fresh live preflight, exact apply/postflight, serving smoke/promotion. Stop on drift or uncertainty; no blind rerun."
+}

@@ -1,0 +1,54 @@
+{
+  "recordedAtUTC": "2026-11-08T03:18:42.267373+00:00",
+  "scope": "read-only exact owned simulator metadata; no UI interaction or app launch",
+  "device": {
+    "udid": "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+    "name": "RITC-Placed-Receipt-Nov07",
+    "state": "Booted",
+    "isAvailable": true,
+    "deviceTypeIdentifier": "com.apple.CoreSimulator.SimDeviceType.iPhone-17"
+  },
+  "runtime": {
+    "identifier": "com.apple.CoreSimulator.SimRuntime.iOS-26-2",
+    "name": "iOS 26.2",
+    "version": "26.2",
+    "buildversion": "23C52",
+    "isAvailable": true
+  },
+  "safari": {
+    "CFBundleIdentifier": "com.apple.mobilesafari",
+    "CFBundleName": null,
+    "CFBundleExecutable": "MobileSafari",
+    "CFBundleShortVersionString": "26.2",
+    "CFBundleVersion": "8623.1.14.10.9",
+    "DTPlatformName": "iphonesimulator",
+    "DTPlatformVersion": "26.2",
+    "DTSDKName": "iphonesimulator26.2.internal",
+    "bundlePath": "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/Applications/MobileSafari.app",
+    "infoSHA256": "3cdcf7216d8a41f4932c59833396da2989a289739c365fbc598f54f3ee1a7305",
+    "executableSHA256": "65fcdb30b82aef3a163c67650d0fdf2373fc7ab18e1be10319e75dacc5c7437c"
+  },
+  "globalLocale": {
+    "AppleLanguages": {
+      "exitCode": 0,
+      "value": "(\n    \"en-US\"\n)",
+      "unavailable": false
+    },
+    "AppleLocale": {
+      "exitCode": 0,
+      "value": "en_US",
+      "unavailable": false
+    }
+  },
+  "safariProcesses": [
+    {
+      "pid": 3395,
+      "lastExitStatus": "0",
+      "launchLabel": "UIKitApplication:com.apple.mobilesafari[983c][rb-legacy]",
+      "hostProcessIdentity": "3395 /var/run/com.app Sat Nov  7 22:14:40 2026",
+      "executablePath": "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/Applications/MobileSafari.app/MobileSafari",
+      "executableMatchesBundle": true
+    }
+  ],
+  "localeLimit": "Global simulator language/locale values; no Safari per-site preferences, navigation history, cookies or website storage read."
+}
