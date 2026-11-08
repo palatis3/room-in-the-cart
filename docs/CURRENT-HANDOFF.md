@@ -1,5 +1,31 @@
 # Room in the Cart current handoff
 
+## November 8, supply-navigation R1 terminal and R2 preparation
+
+Previous goal turn made progress: completed live-font proof is committed as
+`c0c27cb5`, including visual review of all12PNG targets across root/helper,
+six geometry records and native0/strict0. No repeated export/run is needed.
+[Result](evidence/native/request-live-type-transition-20261108/README.md).
+
+Supply-navigation R1 build29844/PID58189 passed in162.106seconds with bundle
+check0. Test90701/PID59071 and inspector94347 are terminal65. The original
+English journey fails202.343seconds in, before first Done, on height36<44 at
+FreeJourneyUITests1714. No animation-idle messages or runtime warnings were
+observed; later assertions are unexecuted. Root exported/viewed the one
+Free-flow-failure screenshot from the inspected copy. Original results,
+prior English timeout evidence and preserved source/products remain unchanged.
+[Retained failure](evidence/native/supply-navigation-target-20261108/rejected-r1/README.md),
+commit `917c3468`. Do not rerun or reinspect R1 unchanged.
+
+`english_keyboard_review` is preparing a separate R2 minimum44-point Done label
+and English-only guarded execution package. It must preserve R1 source/products
+before reusing the same isolated source/DD. Root review and execution have not
+occurred. The partial `supply-navigation-followup-r1` is unexecuted and has no
+reviewed runnable package; do not use it. Broader Spanish/AX5/minimum17/Release
+qualification follows only a passing corrected English journey. No local native
+process remains active at this checkpoint. Canonical556 native source remains
+`8d0eb48f`; no PR push or deployment occurred. Full52/27 scope remains active.
+
 ## November 8, workflow operating rules and live-font terminal result
 
 Workflow efficiency remains implemented in `648e86ff` and `13a2437e`, published

@@ -1,5 +1,24 @@
 # Current implementation and acceptance map
 
+## November 8, live-font proof and supply target correction
+
+The live large→AX5→large request-expiry measurement is terminal native0/strict0.
+All18 attachments, system-size readbacks and restoration verify; all12 PNGs and
+six geometry records have been reviewed across root/helper. The expiry title
+and date remain complete, grow from20.333 to125.333points in height and return
+to their original geometry. This is scoped live-resizing evidence, not closure
+of the broader accessibility audit. [Verified result](evidence/native/request-live-type-transition-20261108/README.md).
+
+The isolated supply-navigation candidate compiled and passed the built-app check,
+but its original English journey failed before the first Done tap: the button's
+accessibility frame is36points high instead of the required44. Native65/strict1,
+zero observed idle messages and incomplete later interactions are retained.
+[Rejected candidate](evidence/native/supply-navigation-target-20261108/rejected-r1/README.md).
+The original timeout is not repaired by this early failure. Canonical app source
+is unchanged; a new minimum-target candidate is being prepared. Spanish,
+minimum-OS and Release follow-up remain conditional on the corrected original
+journey passing. Full52/27 acceptance and owner-deferred release gates remain open.
+
 ## November 8, hosted cook terminal and live-font execution
 
 Previous goal turn was progress: the original English diagnostic reproduced a720-second timeout, its result and bounded probe were collected/verified once, and focused hosted cook evidence is now fully retained. Hosted42527730777 is terminal failure at348dcdd2: **all five native journeys passed**, but strict warning provenance fails because the readback warning activity has no Complete Issue Description attachment. Its89cook trace records show the expected false→true confirmation in that passing case; this is not a repair. Archive/product digests, exact speech UUID symbols and original results are preserved. [Hosted outcome](evidence/native/ci-focused-cook-20261108/README.md), commit `6b6177a7`. No hosted run remains from this dispatch; no successor was launched. Do not download/re-export the same artifacts. A complete xcresult replay was not performed; the exact hosted parser rejection was independently reproduced against the verified retained activity export.
