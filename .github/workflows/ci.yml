@@ -122,6 +122,7 @@ jobs:
           lint_dir="$RUNNER_TEMP/actionlint"
           mkdir -p "$lint_dir"
           curl --fail --silent --show-error --location \
+            --retry 3 --retry-max-time 90 --connect-timeout 10 --max-time 30 \
             https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz \
             --output "$lint_dir/actionlint.tar.gz"
           echo '8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  actionlint.tar.gz' \

@@ -2,7 +2,13 @@
 
 Updated November 8, 2026 UTC. The full first-version goal is active and release acceptance remains incomplete. The owner's migration 041 approval has already been executed and verified. The separate 042 approval is pending; a repeated 041 approval does not authorize 042. Historical snapshots are preserved in [the handoff archive](CURRENT-HANDOFF-HISTORY-20261106.md).
 
-## Latest execution state — November 8, 10:21 UTC
+## Current hosted candidate — November 8, 10:25 UTC
+
+Published PR1 head is `a30506596ad3a0103396fccb29800c629c92bc30`; PR remains draft. All six workflows started. Native Swift HTTPS/PostgreSQL passed its six Node cases and ten Swift scenarios. Source checks failed on an actionlint download HTTP504 before checksum/lint; security's Actions CodeQL job separately failed downloading its CLI after built-in retries. JavaScript/TypeScript CodeQL and dependency review passed. Remaining workflows are still running. Exact private receipts are under `.build/CIA305065Nov08/`; ci_f90_monitor owns read-only monitoring. No local native operation is active.
+
+A bounded retry for the single actionlint download is now locally qualified: transient504 recovery, permanent404 failure and exhausted503 failure all behave correctly, and full workflow lint passes. URL/version/checksum and lint behavior remain unchanged. [Follow-up proof](evidence/native/ci-download-retry-20261108/README.md). Keep this change local while the current cohort runs; do not restart the batch or count either hosted failure as resolved. No later staging migration is authorized by the repeated041 approval.
+
+## Previous execution state — November 8, 10:21 UTC
 
 The first-version goal remains active; this continuation made progress through original-artifact inspection and actual accessibility runs. Migration041 is already live and verified. Separate042 approval remains pending. No deployment, push, retry, cancellation or production keyboard change occurred. Canonical head before this checkpoint is `d87939ac11542bd54b2b86f9b09b6a8e48f96771`; the published PR1 head remains `14ac1e39021eaa2047e21bd3ac24328e6b36a068`. Keep the PR draft; cohort collection and targeted voice-preparation review/validation are complete. The next combined candidate is ready to publish.
 
