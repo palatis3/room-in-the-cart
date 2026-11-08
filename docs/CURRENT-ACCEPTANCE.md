@@ -1,5 +1,30 @@
 # Current implementation and acceptance map
 
+## November 8, native Done observation terminal; actual touch behavior next
+
+The isolated native Done observer compiled (native0/bundle0). Its original English
+journey remains native65/strict1 at the unchanged36<44 AX-frame assertion, before
+Done; zero idle misses. Root reviewed the before screenshot and geometry.
+The process/source/nonce-bound observer returned unknown: one semantic view found,
+but no unambiguous public UIControl binding. No touch samples were produced.
+[Evidence and limits](evidence/native/native-done-hit-observation-20261108/README.md).
+
+All handles are terminal: preparation64831, build72869/PID70967,
+test42046/PID71333, inspection61210. Do not rerun inspection or collect the fixed
+cache file again. Reused source/DD now hold this diagnostic (561-source
+`e87bcc713bb47290f5ddbe0ce782aefbf9627a4c9c0f1cf600a58fecf32e57b9`);
+pre-observer R3 source/products are preserved in
+`.build/EnglishKeyboardReviewNov08/native-done-hit-execution-r1/preservation`.
+Canonical556 app source remains unchanged. No new hosted dispatch or deployment.
+
+Agent `english_keyboard_review` is preparing a scratch-only direct touch-behavior
+proposal based on preserved R3, removing the observer and retaining every original
+business/restart assertion. Correct the unsupported AX-frame-as-hit-area test
+assumption; use explicit target-region taps and verify actual dismissal/value
+preservation. No further introspection iteration or arbitrary label-sizing guess.
+Full52/27 acceptance remains open; this result is diagnostic progress, not repair.
+
+
 ## November 8, R3 terminal and touch-region evidence gap
 
 R3 compiled, but its original English test and strict inspection failed before

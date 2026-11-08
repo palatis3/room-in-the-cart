@@ -1,0 +1,1 @@
+field=Amount, optional; valueBefore=" "; doneFrame=(314.0, 66.00000000000003, 68.0, 36.000000000000014); barFrame=(0.0, 62.00000000000002, 402.0, 53.99999999999999); otherBarButtons=["Dinner ideas"=(16.0, 62.00000000000002, 44.0, 43.99999999999999)]; doneHittable=true

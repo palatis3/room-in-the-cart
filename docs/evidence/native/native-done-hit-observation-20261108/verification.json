@@ -1,0 +1,60 @@
+{
+  "sourceManifestSHA256": "e87bcc713bb47290f5ddbe0ce782aefbf9627a4c9c0f1cf600a58fecf32e57b9",
+  "executionManifestSHA256": "1236652d5162a5dd0d27fc4b3952ee77bc543c6d42ba75f0f5f06e674f04b9e6",
+  "build": {
+    "nativeExit": 0,
+    "compiledAppCheckExit": 0,
+    "nativeElapsedSeconds": 47.34219
+  },
+  "test": {
+    "nativeExit": 65,
+    "nativeElapsedSeconds": 67.082951417,
+    "nativeStartedAtUTC": "2026-11-08T23:41:49.571190+00:00",
+    "nativeFinishedAtUTC": "2026-11-08T23:42:56.651009+00:00"
+  },
+  "strictExit": 1,
+  "animationIdleMessages": 0,
+  "originalUnchanged": true,
+  "sourceUnchanged": true,
+  "preservedInputsUnchanged": true,
+  "observation": {
+    "classification": "unknown",
+    "reason": "semantic-view-not-bound-to-enabled-done-control",
+    "boundToNoncePIDSourceAndCase": true,
+    "sha256": "9b5d14997949cefbb0fb27ef5648a06d3733ca6dcef04f458eb8a5f3f6fa2823",
+    "sourceUnchanged": true,
+    "caseMarkers": [
+      {
+        "kind": "CASE_BEGIN",
+        "runID": "4f9e0af4-121f-495d-8559-e9fb4540dc54",
+        "source": "e87bcc713bb47290f5ddbe0ce782aefbf9627a4c9c0f1cf600a58fecf32e57b9",
+        "unix": 1794181315.894504,
+        "line": 16
+      },
+      {
+        "kind": "LAUNCHED",
+        "runID": "4f9e0af4-121f-495d-8559-e9fb4540dc54",
+        "source": "e87bcc713bb47290f5ddbe0ce782aefbf9627a4c9c0f1cf600a58fecf32e57b9",
+        "unix": 1794181321.508438,
+        "line": 25
+      },
+      {
+        "kind": "CASE_END",
+        "runID": "4f9e0af4-121f-495d-8559-e9fb4540dc54",
+        "source": "e87bcc713bb47290f5ddbe0ce782aefbf9627a4c9c0f1cf600a58fecf32e57b9",
+        "unix": 1794181353.909606,
+        "line": 203
+      }
+    ]
+  },
+  "processWitness": {
+    "status": "identified",
+    "pid": 71364,
+    "onePSInvocation": true,
+    "observedAtUTC": "2026-11-08T23:42:01.663573+00:00"
+  },
+  "qualificationPassed": false,
+  "screenshotReviewed": true,
+  "geometryReviewed": true,
+  "noTouchSamplesProduced": true
+}
