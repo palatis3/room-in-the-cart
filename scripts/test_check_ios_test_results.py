@@ -1,16 +1,20 @@
 #!/usr/bin/env python3
 import json
 import copy
+import hashlib
 import os
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
+from types import SimpleNamespace
 import unittest
+from unittest.mock import patch
 
 from check_ios_test_results import (
     INTERNAL_ACTIVITY, MULTIPLE_WARNINGS, OBSERVED_DEVICE, OBSERVED_MENU_WARNINGS, OBSERVED_WARNING,
-    animation_idle_report, execution_log_failures, inspect_execution_log, markdown_cell,
+    activity_warning_paths, animation_idle_report, append_runtime_warning_report,
+    execution_log_failures, inspect_execution_log, markdown_cell,
     inspect_runtime_warnings, test_cases,
 )
 
@@ -257,6 +261,123 @@ class AnimationIdleTests(unittest.TestCase):
         report = '\n'.join(animation_idle_report(idle))
         self.assertIn('Target/Suite&#124;&lt;x&gt;/test&#96;One', report)
         self.assertEqual(markdown_cell('one\r\ntwo'), 'one&#13;&#10;two')
+
+
+class ActivityRetentionTests(unittest.TestCase):
+    def run_report(self, root, raw_exports, inspector, *, cap=None):
+        bundle = root / 'Tests.xcresult'
+        bundle.mkdir(exist_ok=True)
+        (bundle / 'Info.plist').touch()
+        args = SimpleNamespace(result_bundle=bundle, tests=root / 'test-details.json')
+        report, failures = [], []
+        replies = [subprocess.CompletedProcess([], 0, stdout=raw, stderr=b'') for raw in raw_exports]
+        with patch('check_ios_test_results.subprocess.run', side_effect=replies) as exporter, \
+             patch('check_ios_test_results.inspect_runtime_warnings', side_effect=inspector), \
+             patch('check_ios_test_results.MAX_ACTIVITY_DIAGNOSTIC_BYTES', cap or 8 * 1024 * 1024):
+            append_runtime_warning_report(args, {}, [], [], report, failures)
+        return report, failures, exporter
+
+    def test_missing_attachment_retains_exact_per_case_stdout_without_logging_payload(self):
+        raw = (b'{\r\n "activities": [{"title": "Fixture private text", "isAssociatedWithFailure": false},'
+               b'{"title":"QoS warning", "isAssociatedWithFailure":false}]\r\n}\r\n')
+        first = b'{"activities": []}\n'
+
+        def inspect(summary, nodes, cases, details, activities):
+            activities('test://Target/Suite/first')
+            value = activities('test://Target/Suite/second')
+            list(activity_warning_paths(value['activities'], {'QoS warning'}))
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            report, failures, exporter = self.run_report(root, [first, raw], inspect)
+            diagnostic = json.loads((root / 'test-runtime-warning-activities.json').read_text())
+            evidence = json.loads((root / 'test-runtime-warnings.json').read_text())
+            self.assertEqual(evidence['status'], 'unavailable')
+            self.assertNotIn('runtimeWarningCount', evidence)
+            self.assertIn('found 0', failures[0])
+            self.assertEqual(exporter.call_count, 2)
+            self.assertEqual([x['testIdentifierURL'] for x in diagnostic['exports']],
+                             ['test://Target/Suite/first', 'test://Target/Suite/second'])
+            self.assertEqual([x['rawJSON'].encode('utf-8') for x in diagnostic['exports']], [first, raw])
+            self.assertEqual([x['sha256'] for x in diagnostic['exports']],
+                             [hashlib.sha256(value).hexdigest() for value in [first, raw]])
+            self.assertEqual(diagnostic['retainedBytes'], len(first) + len(raw))
+            self.assertNotIn('Fixture private text', '\n'.join(report + failures))
+
+    def test_retention_limit_is_explicit_and_does_not_discard_later_small_export_or_change_gate(self):
+        large, small = b'{"padding":"' + b'x' * 100 + b'"}', b'{}'
+
+        def inspect(summary, nodes, cases, details, activities):
+            activities('test://large'); activities('test://small')
+            return {'status': 'unexpected-warnings', 'runtimeWarningCount': 1,
+                    'examinedTestCount': 2, 'summaryWarningCount': 1,
+                    'warnings': [{'selector': 'Target/Suite/testOne', 'count': 1, 'maximum': 0, 'message': 'QoS'}]}
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            _, failures, _ = self.run_report(root, [large, small], inspect, cap=64)
+            diagnostic = json.loads((root / 'test-runtime-warning-activities.json').read_text())
+            self.assertIn('Unexpected runtime warning count', failures[0])
+            self.assertEqual(diagnostic['exports'][0]['bytes'], len(large))
+            self.assertIn('unavailable', diagnostic['exports'][0])
+            self.assertNotIn('rawJSON', diagnostic['exports'][0])
+            self.assertEqual(diagnostic['exports'][1]['rawJSON'], '{}')
+            self.assertEqual(diagnostic['retainedBytes'], len(small))
+
+    def test_malformed_export_retained_before_parse_but_success_has_no_diagnostic_payload(self):
+        def malformed(summary, nodes, cases, details, activities):
+            return activities('test://Target/Suite/testOne')
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            _, failures, _ = self.run_report(root, [b'{ malformed JSON\n'], malformed)
+            diagnostic = json.loads((root / 'test-runtime-warning-activities.json').read_text())
+            self.assertTrue(failures)
+            self.assertEqual(diagnostic['exports'][0]['rawJSON'], '{ malformed JSON\n')
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            clean = {'status': 'passed', 'runtimeWarningCount': 0, 'examinedTestCount': 1,
+                     'summaryWarningCount': None, 'warnings': []}
+            _, failures, exporter = self.run_report(root, [], lambda *args: clean)
+            self.assertEqual(failures, [])
+            self.assertFalse((root / 'test-runtime-warning-activities.json').exists())
+            exporter.assert_not_called()
+
+    def test_failure_then_success_removes_only_prior_generated_activity_diagnostic(self):
+        clean = {'status': 'passed', 'runtimeWarningCount': 0, 'examinedTestCount': 1,
+                 'summaryWarningCount': None, 'warnings': []}
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            unrelated = root / 'retained-original.json'
+            unrelated.write_text('original evidence')
+            _, failures, _ = self.run_report(root, [b'{ malformed JSON\n'],
+                lambda summary, nodes, cases, details, activities: activities('test://Target/Suite/testOne'))
+            diagnostic = root / 'test-runtime-warning-activities.json'
+            self.assertTrue(failures)
+            self.assertTrue(diagnostic.is_file())
+            _, failures, _ = self.run_report(root, [], lambda *args: clean)
+            self.assertEqual(failures, [])
+            self.assertFalse(diagnostic.exists())
+            self.assertEqual(unrelated.read_text(), 'original evidence')
+            self.assertEqual(json.loads((root / 'test-runtime-warnings.json').read_text())['status'], 'passed')
+
+    def test_stale_diagnostic_cleanup_failure_is_reported_without_changing_warning_acceptance(self):
+        clean = {'status': 'passed', 'runtimeWarningCount': 0, 'examinedTestCount': 1,
+                 'summaryWarningCount': None, 'warnings': []}
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.run_report(root, [b'{ malformed JSON\n'],
+                lambda summary, nodes, cases, details, activities: activities('test://Target/Suite/testOne'))
+            diagnostic = root / 'test-runtime-warning-activities.json'
+            original = diagnostic.read_bytes()
+            with patch.object(Path, 'unlink', side_effect=PermissionError('fixture denial')) as unlink:
+                report, failures, _ = self.run_report(root, [], lambda *args: clean)
+            unlink.assert_called_once_with()
+            self.assertEqual(failures, [])
+            self.assertEqual(diagnostic.read_bytes(), original)
+            self.assertIn('stale/unavailable', '\n'.join(report))
+            self.assertIn('Do not interpret it as current-run evidence', '\n'.join(report))
+            self.assertEqual(json.loads((root / 'test-runtime-warnings.json').read_text())['status'], 'passed')
 
 
 class RuntimeWarningTests(unittest.TestCase):

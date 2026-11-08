@@ -2,6 +2,7 @@
 """Require complete XCTest execution and verify recorded runtime warnings."""
 import argparse
 from collections import Counter, defaultdict
+import hashlib
 import html
 from itertools import chain, tee
 import json
@@ -217,6 +218,7 @@ OBSERVED_DEVICE = {
     "architecture": "arm64", "platform": "iOS Simulator",
 }
 MULTIPLE_WARNINGS = "Multiple Runtime Warnings"
+MAX_ACTIVITY_DIAGNOSTIC_BYTES = 8 * 1024 * 1024
 
 
 # xcresulttool's TestNodeType schema. An unrecognized node may carry evidence
@@ -261,12 +263,14 @@ def export_test_details(bundle, identifier_url):
     return json.loads(result.stdout)
 
 
-def export_test_activities(bundle, identifier_url):
+def export_test_activities(bundle, identifier_url, capture=None):
     result = subprocess.run(
         ["xcrun", "xcresulttool", "get", "test-results", "activities",
          "--path", str(bundle), "--test-id", identifier_url, "--compact"],
-        check=True, capture_output=True, text=True,
+        check=True, capture_output=True,
     )
+    if capture is not None:
+        capture(identifier_url, result.stdout)
     return json.loads(result.stdout)
 
 
@@ -458,18 +462,64 @@ def append_runtime_warning_report(args, summary, nodes, cases, report, failures)
     if args.result_bundle is None:
         report.append("XCTest runtime warnings were not verified. Supply --result-bundle to check them.")
         return
+    # Preserve exporter stdout before parsing/validation. Never print activities:
+    # titles can contain entered text. Existing CI test-*.json artifact globs
+    # retain this evidence; the private Records shard excludes those globs.
+    raw_activities = []
+    retained_bytes = 0
+
+    def capture_activities(url, raw):
+        nonlocal retained_bytes
+        row = {"testIdentifierURL": url, "bytes": len(raw), "sha256": hashlib.sha256(raw).hexdigest()}
+        if retained_bytes + len(raw) <= MAX_ACTIVITY_DIAGNOSTIC_BYTES:
+            try:
+                row["rawJSON"] = raw.decode("utf-8")
+                retained_bytes += len(raw)
+            except UnicodeError:
+                row["unavailable"] = "Exporter stdout was not UTF-8; raw payload not retained."
+        else:
+            row["unavailable"] = "Raw payload exceeds the aggregate 8 MiB retention limit."
+        raw_activities.append(row)
+
     try:
         if not (args.result_bundle / "Info.plist").is_file():
             raise ValueError("Missing XCTest result bundle")
         evidence = inspect_runtime_warnings(
             summary, nodes, cases,
             lambda url: export_test_details(args.result_bundle, url),
-            lambda url: export_test_activities(args.result_bundle, url),
+            lambda url: export_test_activities(args.result_bundle, url, capture_activities),
         )
     except (KeyError, TypeError, ValueError, OSError, subprocess.CalledProcessError) as error:
         evidence = {"status": "unavailable", "error": str(error)}
         failures.append(f"XCTest runtime warning evidence is unavailable. {error}")
     args.tests.with_name("test-runtime-warnings.json").write_text(json.dumps(evidence, indent=2) + "\n", encoding="utf-8")
+    activity_diagnostic = args.tests.with_name("test-runtime-warning-activities.json")
+    if evidence["status"] != "passed":
+        diagnostic = {
+            "schema": 1, "warningValidationStatus": evidence["status"],
+            "resultBundle": str(args.result_bundle),
+            "scope": "Completed per-case activity exports requested before validation stopped; not all cases or warnings. "
+                     "rawJSON is unmodified UTF-8 stdout, not a parsed/reformatted activity tree.",
+            "retainedBytes": retained_bytes, "exports": raw_activities,
+        }
+        try:
+            activity_diagnostic.write_text(
+                json.dumps(diagnostic, indent=2) + "\n", encoding="utf-8")
+            report.append("Runtime-warning activity export diagnostics: test-runtime-warning-activities.json "
+                          "(artifact only; unavailable payloads are explicitly marked).")
+        except OSError:
+            report.append("Could not retain runtime-warning activity export diagnostics; warning validation remains failed.")
+    else:
+        # Only this generated diagnostic belongs to us. Unlinking a symlink
+        # removes the link, never its target; never recursively remove a path.
+        try:
+            activity_diagnostic.unlink()
+        except FileNotFoundError:
+            pass
+        except OSError:
+            report.append("Runtime-warning activity export diagnostic is stale/unavailable: could not remove "
+                          "test-runtime-warning-activities.json from a prior run. Do not interpret it as current-run evidence. "
+                          "Warning validation is unchanged.")
     if evidence["status"] == "unavailable":
         return
     report.append(f"The XCTest test export recorded {evidence['runtimeWarningCount']} runtime warning occurrences "
