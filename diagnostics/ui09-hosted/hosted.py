@@ -71,6 +71,33 @@ def prepare():
 def verify_sources():
     for name, want in json.loads((OUT/'source-pins.json').read_text()).items(): assert sha(ROOT/name)==want,name
 
+def observe_appearance(owned, budget=30):
+    """Optional metadata only: one total budget, no retry and no setting changes."""
+    expected=dict(appearance='light',content_size='large',increase_contrast='disabled')
+    began=time.monotonic(); values={}; errors=[]; attempted=[]
+    for key in expected:
+        remaining=budget-(time.monotonic()-began)
+        if remaining<=0:
+            errors.append(dict(key=key,kind='totalObservationBudgetExhausted')); break
+        attempted.append(key)
+        try:
+            value=capture(['/usr/bin/xcrun','simctl','ui',owned,key],timeout=remaining)
+            if len(value)>256: raise ValueError('unexpected optional observation output length')
+            values[key]=value
+        except (subprocess.SubprocessError,OSError,ValueError) as error:
+            errors.append(dict(key=key,kind=type(error).__name__,exitCode=getattr(error,'returncode',None)))
+            break  # A failed metadata query is not a reason to probe again or with a longer timeout.
+    differences={key:dict(expected=expected[key],observed=value) for key,value in values.items() if value!=expected[key]}
+    observation=dict(status='observed' if len(values)==len(expected) else 'partial' if values else 'unavailable',
+                     observedUTC=now(),elapsedSeconds=time.monotonic()-began,totalBudgetSeconds=budget,
+                     values=values,errors=errors,notAttempted=[key for key in expected if key not in attempted],
+                     expectedDefaults=expected,observedDifferences=differences,
+                     defaultsMatch=False if differences else True if len(values)==len(expected) else None,
+                     acceptanceInvariant=False,settingsChanged=False,
+                     interpretation='Optional appearance metadata; unknown is not evidence of expected values or simulator readiness.')
+    write('appearance.json',observation)
+    return observation
+
 def build():
     guard(); verify_sources(); assert not DD.exists()
     command=['xcodebuild','-project','ios/RoomInTheCart.xcodeproj','-scheme','RoomInTheCart',
@@ -86,29 +113,50 @@ def build():
     with tarfile.open(OUT/'test-products.tar.gz','w:gz') as archive: archive.add(products,arcname='Products')
 
 def test():
-    guard(); verify_sources(); products=DD/'Build/Products'
-    before=json.loads((OUT/'product-pins.json').read_text()); assert tree(products)==before
-    runs=list(products.glob('RoomInTheCart_iphonesimulator*.xctestrun')); assert len(runs)==1
-    appearance={key:capture(['/usr/bin/xcrun','simctl','ui',device(),key]) for key in ('appearance','content_size','increase_contrast')}
-    write('appearance.json',appearance)
-    assert appearance==dict(appearance='light',content_size='large',increase_contrast='disabled')
+    OUT.mkdir(parents=True,exist_ok=True)
+    if (OUT/'run.json').exists(): raise FileExistsError('test receipt exists; no overwrite or retry')
+    receipt=dict(status='preparing',stage='mandatoryGuard',startedUTC=now(),nativeStarted=False,
+                 nativeExit=None,stopReason=None,nativeOuterLimitSeconds=2280,originalStepLimitSeconds=2400)
+    write('run.json',receipt)  # Before guards, hashes, optional queries or collector startup can fail.
+    try:
+        guard()
+        receipt['stage']='sourcePins'; verify_sources()
+        products=DD/'Build/Products'
+        receipt['stage']='productPins'
+        before=json.loads((OUT/'product-pins.json').read_text()); assert tree(products)==before
+        receipt['stage']='testProductSelection'
+        runs=list(products.glob('RoomInTheCart_iphonesimulator*.xctestrun')); assert len(runs)==1
+        receipt['stage']='optionalAppearance'; write('run.json',receipt)
+        receipt['appearanceObservation']=observe_appearance(device())
+        receipt['stage']='collectorAndNative'; write('run.json',receipt)
+        _run_test(receipt,products,before,runs)
+        receipt['status']='passed-instrumented-tests'
+    except BaseException as error:
+        receipt['status']='failed' if receipt['nativeStarted'] else 'setupFailed'
+        receipt['primaryFailure']=dict(stage=receipt['stage'],kind=type(error).__name__,message=str(error),observedUTC=now())
+        raise
+    finally:
+        receipt['finishedUTC']=now(); write('run.json',receipt)
+
+def _run_test(receipt,products,before,runs):
     command=['xcodebuild','-xctestrun',str(runs[0]),'-destination','platform=iOS Simulator,id='+device(),
        '-resultBundlePath',str(OUT/'Tests.xcresult'),'-parallel-testing-enabled','NO',
        '-test-timeouts-enabled','YES','-default-test-execution-time-allowance','720',
        '-maximum-test-execution-time-allowance','900','-collect-test-diagnostics','never']
     command += ['-only-testing:'+s for s in selectors()]+['test-without-building']
-    receipt=dict(command=command,startedUTC=now(),nativeExit=None,stopReason=None,
-                 nativeOuterLimitSeconds=2280,originalStepLimitSeconds=2400)
+    receipt['command']=command
     write('run.json',receipt); observer=Collector(device(),OUT)
-    thread=threading.Thread(target=observer.run,daemon=True); thread.start()
-    assert observer.ready.wait(5), 'observer failed to become ready'
+    thread=threading.Thread(target=observer.run,daemon=True)
     process=None; started=time.monotonic()
     def interrupted(signum, frame): raise KeyboardInterrupt('hosted cancellation '+str(signum))
     signal.signal(signal.SIGTERM,interrupted)
     try:
+        thread.start()
+        assert observer.ready.wait(5), 'observer failed to become ready'
         with (OUT/'Tests.log').open('xb') as log:
             process=subprocess.Popen(command,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
-            receipt['nativePID']=process.pid
+            receipt.update(nativePID=process.pid,nativeStarted=True,nativeStartedUTC=now(),status='running')
+            write('run.json',receipt)
             while process.poll() is None:
                 time.sleep(1)
                 if time.monotonic()-started>2280:
@@ -120,8 +168,10 @@ def test():
         receipt['wrapperError']=type(error).__name__+': '+str(error)
         raise
     finally:
-        if process is not None: stop(process)
-        observer.stop.set(); thread.join(15)
+        if process is not None:
+            stop(process); receipt['nativeExit']=process.returncode
+        observer.stop.set()
+        if thread.ident is not None: thread.join(15)
         receipt.update(finishedUTC=now(),elapsedSeconds=time.monotonic()-started,
                        collectorJoined=not thread.is_alive(),collectorError=observer.error)
         closed=list((OUT/'observer').glob('*.closed.ndjson'))
@@ -144,7 +194,20 @@ def test():
 
 def inspect():
     # Copy only after native terminal. Original bundle remains untouched by xcresulttool.
-    result=OUT/'Tests.xcresult'; original=tree(result); assert original
+    result=OUT/'Tests.xcresult'
+    original=tree(result) if result.is_dir() else {}
+    if not original:
+        try: receipt=json.loads((OUT/'run.json').read_text())
+        except (OSError,ValueError): receipt={}
+        prelaunch_failure=(receipt.get('status')=='setupFailed' and receipt.get('nativeStarted') is False
+                           and receipt.get('nativeExit') is None and 'nativePID' not in receipt
+                           and isinstance(receipt.get('primaryFailure'),dict) and bool(receipt['primaryFailure']))
+        write('inspection.json',dict(status='skipped' if prelaunch_failure else 'failed',
+              reason='recordedPrelaunchFailure' if prelaunch_failure else 'missingOrEmptyResultWithoutPrelaunchFailure',
+              observedUTC=now(),nativeStarted=receipt.get('nativeStarted'),nativeAccepted=False,strictCheckRun=False,
+              primaryFailure=receipt.get('primaryFailure')))
+        if prelaunch_failure: return  # Caller retains the original nonzero setup status.
+        raise RuntimeError('Missing or empty native result; no recorded prelaunch failure permits a skip')
     log_before=sha(OUT/'Tests.log')
     write('original-before-inspection.json',original)
     copy=ROOT/'.build/ui09-inspection/Tests.xcresult'; copy.parent.mkdir(exist_ok=False)

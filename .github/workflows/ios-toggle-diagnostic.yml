@@ -53,7 +53,9 @@ jobs:
         run: |
           status=0
           python3 diagnostics/ui09-hosted/hosted.py test || status=$?
-          python3 diagnostics/ui09-hosted/hosted.py inspect || status=1
+          inspection_status=0
+          python3 diagnostics/ui09-hosted/hosted.py inspect || inspection_status=$?
+          if [[ "$status" -eq 0 ]]; then status="$inspection_status"; fi
           exit "$status"
       - name: Shut down only the created simulator
         if: always()
