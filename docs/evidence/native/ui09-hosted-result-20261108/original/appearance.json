@@ -1,0 +1,28 @@
+{
+  "status": "unavailable",
+  "observedUTC": "2026-11-08T16:07:08.379821+00:00",
+  "elapsedSeconds": 33.18727583400005,
+  "totalBudgetSeconds": 30,
+  "values": {},
+  "errors": [
+    {
+      "key": "appearance",
+      "kind": "TimeoutExpired",
+      "exitCode": null
+    }
+  ],
+  "notAttempted": [
+    "content_size",
+    "increase_contrast"
+  ],
+  "expectedDefaults": {
+    "appearance": "light",
+    "content_size": "large",
+    "increase_contrast": "disabled"
+  },
+  "observedDifferences": {},
+  "defaultsMatch": null,
+  "acceptanceInvariant": false,
+  "settingsChanged": false,
+  "interpretation": "Optional appearance metadata; unknown is not evidence of expected values or simulator readiness."
+}

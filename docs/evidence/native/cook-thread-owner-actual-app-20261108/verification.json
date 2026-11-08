@@ -1,0 +1,12 @@
+{
+  "nativeExit": 0,
+  "strictExit": 1,
+  "expectedCount": 5,
+  "originalUnchanged": true,
+  "sourceUnchanged": true,
+  "compiledProductsUnchanged": true,
+  "sourceManifestSHA256": "6cd2a19a5153214a55ff97e57b166f415f14bd2d8bb642eadfcf0ffb643dedfe",
+  "inspectedAtUTC": "2026-11-08T16:34:01.160567+00:00",
+  "checkerSHA256": "d5aeb8c6217d1f49153986cbaa6a6505681ef781aa19a76278272355828f8652",
+  "scope": "Original five actual app fixture journeys; verify real control taps separately from allowed unavailable-voice fallback; physical acoustics not proven"
+}

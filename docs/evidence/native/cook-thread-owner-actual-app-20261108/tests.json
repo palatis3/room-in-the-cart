@@ -1,0 +1,95 @@
+{
+  "devices" : [
+    {
+      "architecture" : "arm64",
+      "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+      "deviceName" : "RITC-Placed-Receipt-Nov07",
+      "modelName" : "iPhone 17",
+      "osBuildNumber" : "23C54",
+      "osVersion" : "26.2",
+      "platform" : "iOS Simulator"
+    }
+  ],
+  "testNodes" : [
+    {
+      "children" : [
+        {
+          "children" : [
+            {
+              "children" : [
+                {
+                  "duration" : "3m 23s",
+                  "durationInSeconds" : 203.83024096488953,
+                  "name" : "testShopperClosesWithPendingCreditThenLinksItToTheOriginalNetCharge()",
+                  "nodeIdentifier" : "SharedDeliveryUITests/testShopperClosesWithPendingCreditThenLinksItToTheOriginalNetCharge()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/SharedDeliveryUITests/testShopperClosesWithPendingCreditThenLinksItToTheOriginalNetCharge",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "53s",
+                  "durationInSeconds" : 53.887991070747375,
+                  "name" : "testShopperLeavesOriginalDinnerOpenAfterAnUnresolvedReplacementPreview()",
+                  "nodeIdentifier" : "SharedDeliveryUITests/testShopperLeavesOriginalDinnerOpenAfterAnUnresolvedReplacementPreview()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/SharedDeliveryUITests/testShopperLeavesOriginalDinnerOpenAfterAnUnresolvedReplacementPreview",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "1m 56s",
+                  "durationInSeconds" : 116.52654600143433,
+                  "name" : "testShopperReplacesWednesdayAfterPickupAndKeepsTuesdaysShortage()",
+                  "nodeIdentifier" : "SharedDeliveryUITests/testShopperReplacesWednesdayAfterPickupAndKeepsTuesdaysShortage()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/SharedDeliveryUITests/testShopperReplacesWednesdayAfterPickupAndKeepsTuesdaysShortage",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "children" : [
+                    {
+                      "name" : "Multiple Runtime Warnings",
+                      "nodeType" : "Runtime Warning"
+                    }
+                  ],
+                  "duration" : "56s",
+                  "durationInSeconds" : 56.45561194419861,
+                  "name" : "testShopperReviewsExactEditedCookWordingBeforeReadback()",
+                  "nodeIdentifier" : "SharedDeliveryUITests/testShopperReviewsExactEditedCookWordingBeforeReadback()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/SharedDeliveryUITests/testShopperReviewsExactEditedCookWordingBeforeReadback",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "2m 11s",
+                  "durationInSeconds" : 131.67257499694824,
+                  "name" : "testShopperSavesDatedCookCopyAndReopensRecipientSendRecord()",
+                  "nodeIdentifier" : "SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                }
+              ],
+              "name" : "SharedDeliveryUITests",
+              "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/SharedDeliveryUITests",
+              "nodeType" : "Test Suite",
+              "result" : "Passed"
+            }
+          ],
+          "name" : "RoomInTheCartUITests",
+          "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests",
+          "nodeType" : "UI test bundle",
+          "result" : "Passed"
+        }
+      ],
+      "name" : "RoomInTheCart",
+      "nodeType" : "Test Plan",
+      "result" : "Passed"
+    }
+  ],
+  "testPlanConfigurations" : [
+    {
+      "configurationId" : "1",
+      "configurationName" : "Test Scheme Action"
+    }
+  ]
+}
