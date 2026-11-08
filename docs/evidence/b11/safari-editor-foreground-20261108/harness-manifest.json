@@ -1,0 +1,98 @@
+{
+  "status": "editor-foreground-prepared-not-executed",
+  "scope": [
+    "editor-foreground-revoked"
+  ],
+  "derivativeOf": {
+    "manifestPath": "/Users/palatis/Room in the Cart/.build/SafariQualificationNov08/foreground-fixed/manifest.json",
+    "manifestSHA256": "149d2c3ef241300b0c1f6b161431622be508890a9a220c7235ba295278d1deed"
+  },
+  "verifiedBuild": {
+    "commit": "58419f9822b26a93820c2f4cfa4a45e7cd257a11",
+    "receipt": "/Users/palatis/Room in the Cart/.build/SafariQualificationNov08/editor-foreground-r1/build-receipt.json",
+    "sha256": "076e56f429de76022c4e8e3f994a7ace2478e62044839f62d8d63ebf970b0015"
+  },
+  "currentInputs": {
+    "web/.gitignore": "9c4f366e62e43bbc00c66813239c86ec51ac9271cc75dcbba26a02b945097567",
+    "web/README.md": "295218c42210509883e5af6286eb74a624f1a9a4f2e5b30b8e65d8f1568909b3",
+    "web/index.html": "f2fb02d20bb94bd0a6c6f91426194ee08a85952cadb19d87046fd1fd94855fe0",
+    "web/package-lock.json": "2034a9f535c9bc91b6c7c0136c78794aa927051537818e5899775248dce8d6fe",
+    "web/package.json": "39d57746a050cf9e0a1476aa63a078347d9499e222a01c70749b231ab0ab111c",
+    "web/public/apple-touch-icon.png": "e69ddd65f0718ffef895c0b82a63873d580722b920af40e86b1478a5cd9427e3",
+    "web/public/icon.png": "dd8314efcedbe096fbce5c43f09af13a335d713a1dcfae43f82b4904d9e58914",
+    "web/src/api.ts": "c32e5596b858dafd66b04317691372c1582384e3f6a4c4f4905d30bce71b9ecc",
+    "web/src/app.ts": "d74c7761859fced292053af0ee5aecd924ab0b4c665427e80eda3b557c35d5e3",
+    "web/src/browser-sign-out.ts": "465269f619e1ad67b51366bf178bbc935f79a682381f6d86e33c975e676753c3",
+    "web/src/child-invitation-page.ts": "b3cf24c37911445043ac6b8080a332c37daa0e1b107119497d49fc99026adbf5",
+    "web/src/child-invitation.ts": "1d2f26a723c818344138b3776c6bc63f5ebf79d59bccd4d919059b294fe431db",
+    "web/src/config.ts": "c3c421cc03af511faaa5d3a1e2588bc8f3dae3e4f50d09d53dcec3133abeb090",
+    "web/src/i18n.ts": "b66fd8ae7d664201cde68aacd403a75ec7a09138c35e8d488640044d42757fdc",
+    "web/src/main.ts": "4ba02ec6b83d18aeab12062f0665b053a5ad4065f04bac28e97570ffdf8f07ac",
+    "web/src/outbox.ts": "add5fb28a9d22068a565ec19697db9189a02f06b62b440ece42742afec378cbd",
+    "web/src/public-pages-content.ts": "57661a3e73f3e36a1455bd6e8aceb6de12ed3fd696be5c7d0e9a072dc88a273a",
+    "web/src/public-pages.css": "5720c8c6d112e728eb9341f220e313a5ca6e3cd646819de02ce5459a526d85e3",
+    "web/src/public-pages.ts": "0a4d954a671663a81eecd27e9b21780465099982835b2920697467a156598661",
+    "web/src/public-site-configuration.ts": "1b529d8692fd71a1ca64b4b4c4e0e6700327144fad3595b6e00f590b457d1518",
+    "web/src/style.css": "0f4388a8942c624ba6b5b36d0e8cada9564943ff55271719f3458d4c71c20fba",
+    "web/src/theme.css": "39b339ff38c3ebf4bee9a7a3a59254f87f01331d0a1df69b0c163d1d5c475ba5",
+    "web/tsconfig.json": "af93987394f772829050871e984e908a33ed31c875f2ac9d2d63186f3b0e8d96",
+    "web/vite.config.ts": "ed81c0a3444796e9adf93e46fe2a5f0d3a37c7649fa1a4e408cd333bfcf3254e"
+  },
+  "canonicalRoot": "/Users/palatis/Room in the Cart",
+  "bundle": {
+    "apple-touch-icon.png": "e69ddd65f0718ffef895c0b82a63873d580722b920af40e86b1478a5cd9427e3",
+    "assets/index-B9I61_lh.css": "7cf18dacddae715ef01363daf5f2770fb9562762a10d2d2e4d41daf406224cee",
+    "assets/index-GykSVZ9a.js": "2cba5fdc7fa659a1d91c6a68e83598783aeb6acdd2c1ce465bf261b508aff5e2",
+    "icon.png": "dd8314efcedbe096fbce5c43f09af13a335d713a1dcfae43f82b4904d9e58914",
+    "index.html": "8cb81feedc84fcbddb59b09044cb9f10dd2dafc2d54be50ed7e558b32620dc6b"
+  },
+  "source": {
+    "api.ts": "c32e5596b858dafd66b04317691372c1582384e3f6a4c4f4905d30bce71b9ecc",
+    "app.ts": "d74c7761859fced292053af0ee5aecd924ab0b4c665427e80eda3b557c35d5e3",
+    "browser-sign-out.ts": "465269f619e1ad67b51366bf178bbc935f79a682381f6d86e33c975e676753c3",
+    "child-invitation-page.ts": "b3cf24c37911445043ac6b8080a332c37daa0e1b107119497d49fc99026adbf5",
+    "child-invitation.ts": "1d2f26a723c818344138b3776c6bc63f5ebf79d59bccd4d919059b294fe431db",
+    "config.ts": "c3c421cc03af511faaa5d3a1e2588bc8f3dae3e4f50d09d53dcec3133abeb090",
+    "i18n.ts": "b66fd8ae7d664201cde68aacd403a75ec7a09138c35e8d488640044d42757fdc",
+    "main.ts": "4ba02ec6b83d18aeab12062f0665b053a5ad4065f04bac28e97570ffdf8f07ac",
+    "outbox.ts": "add5fb28a9d22068a565ec19697db9189a02f06b62b440ece42742afec378cbd",
+    "public-pages-content.ts": "57661a3e73f3e36a1455bd6e8aceb6de12ed3fd696be5c7d0e9a072dc88a273a",
+    "public-pages.css": "5720c8c6d112e728eb9341f220e313a5ca6e3cd646819de02ce5459a526d85e3",
+    "public-pages.ts": "0a4d954a671663a81eecd27e9b21780465099982835b2920697467a156598661",
+    "public-site-configuration.ts": "1b529d8692fd71a1ca64b4b4c4e0e6700327144fad3595b6e00f590b457d1518",
+    "style.css": "0f4388a8942c624ba6b5b36d0e8cada9564943ff55271719f3458d4c71c20fba",
+    "theme.css": "39b339ff38c3ebf4bee9a7a3a59254f87f01331d0a1df69b0c163d1d5c475ba5"
+  },
+  "helpers": {
+    "README.md": "50f6dda63d5116c881b58b1e7e0df8300318c880e8d184605c64be21af4f2226",
+    "fixture.mjs": "8dd54f39467746fc1cbb6eb4b3e4fadff7efe50ff2736257df9910f3c2ee211e",
+    "fixture.test.mjs": "f82514b1d06f42a2696e603d85dbbd1c8e65d34c3583a4dc22b3b9e23af022c5",
+    "foreground.test.mjs": "dead8d8be489919e5f85ebff58fb2d3912e57d4137d87cd5b728363b2a936707",
+    "observation.mjs": "95caf98b9afab3b1393fab2bb8decc63d0fa01610712893154cf7525f5023ae1",
+    "pin.mjs": "dadb9b702dc10313a07e36df06b923d25b19ac2faa3fb378ab4a582e622c2eaa",
+    "probe.js": "c3621b00b0363cc0b0727565be74b17d96d608e5ada75495054f5a7f98a390a0",
+    "probe.test.mjs": "d9979e9c4fbbdda9d813ccc2ced65cbb554cda290761ea2baa861c09dab3609b",
+    "server.mjs": "3d6e0cf72c054a1905803704eae88fe2cee8b980cef625fc9374cc7064cb5ac5",
+    "source-probe.test.mjs": "5b32fe9aeb5d2dec3ae9d191576982a33fa4d360fabd9e4285061a69a3018530",
+    "test-support.mjs": "90334e59943d56c3ad93b742268b9a96fa727f94e9b997c28108ae15a1e8ac3e",
+    "verify-case.mjs": "b3941f7212b62108b220d85528a2da7d8c1e642fde523081fa4ffa0f496eeb36",
+    "verify-foreground.mjs": "cd391aa87834f05d50afb9ae339126d61a144f944a4fea256a9d389a9bfba956",
+    "verify-pin.mjs": "2571ca56367ff016083e9fd1bcf065b69c8ead39376e49a2952e22694d34740b"
+  },
+  "artifacts": {
+    "build-receipt.json": "076e56f429de76022c4e8e3f994a7ace2478e62044839f62d8d63ebf970b0015",
+    "offline-tests-r1.log": "27e61f7b70c30fc279ca43aab10dd79771f0e1c185fa24a27f8ca2e83a2f3c6c",
+    "offline-tests-r2.log": "3edbc15128614a9d4046be57a00b6f46cdbbcb80b61dfdc7673fb71acf6dcea1",
+    "offline-tests-r3.log": "4ea53e3a7141ec02f3ca41e6ed3bbe6f8f066e6fb3dadf7e303dcadad54ed663",
+    "offline-tests-r4.log": "b9586025ba1baf2a4e1affc5d330b576965700944a540caab69e16e2b2858724",
+    "offline-tests-r5.log": "6845ac083ddd05f70bbd566d06c6f0a11e291087d92a8a48ee3d56d5f7eaaa21",
+    "offline-tests-r6.log": "db8b39f02c30506987ba5b16be0a68cbbff51e35d28b33640609fcae9e99d4d1",
+    "original-preservation.json": "60a32508f6f65509bb5c61ad07e9ea082434f4cfe5a441f083938eff317e784c",
+    "source-equality.json": "26ab6f4fae3ac9bcccf59bc237afce3c7713c6fbbbe1c9e9c1ccb0fd44474567",
+    "source-probe-r2-failed.txt": "c30792050be2a31db769323e51b51b53a6c7f3246a65ee173349b9b37dffecfd",
+    "source-probe.test.mjs.r3-failed.txt": "1dd794d1f37c33c7885ba7075414eb65052b228908efff0f60d8fae6c5e6463d",
+    "syntax-checks.json": "37d6b5796aac79d6f0058a6822927d7986e95f229cc335db1ba6c4c0cc135e3a",
+    "test-support.mjs.r3-failed.txt": "5f8a5d5bbbf2b77ecc0b7308719250b328972366e119c2077602c056a5a9d277"
+  },
+  "identity": "7dd7b55a7e0c35ef9a67b3190ed9260ecf9a04a213bd07d2d469b9aff1d5eaf1"
+}

@@ -1,0 +1,41 @@
+{
+  "verifiedAtUTC": "2026-11-08T11:56:03.051826+00:00",
+  "verifier": "Independent read-only rerun of original verify-case.mjs after root stopped listener",
+  "exitCode": 0,
+  "result": {
+    "status": "passed-scoped",
+    "case": "editor-foreground-revoked",
+    "sameDocument": true,
+    "observedHiddenVisibleCycle": true,
+    "concealedAfterVisibleTaskAndThroughRevocation": true,
+    "commandAttempts": 0,
+    "commandEffects": 0,
+    "forbiddenResponseCount": 0
+  },
+  "receiptSHA256": "89ec707a09799e875e68fa47babea0c7b9c0cea18b8bc61254af1a7ad01af94d",
+  "manifestIdentity": "7dd7b55a7e0c35ef9a67b3190ed9260ecf9a04a213bd07d2d469b9aff1d5eaf1",
+  "originalManifestSHA256": "e6f31dcd034ad87be6d5906fce59b43bc5ccf576d0aed6d8c74b7dfd75f57737",
+  "originalPinsVerified": true,
+  "originalForegroundFixedFilesVerified": 32,
+  "currentRuntimeInputsVerified": 24,
+  "nativeObservationsAttribution": "Root CUA observations, not independent visual reinspection",
+  "apiResponseStatusSequence": [
+    200,
+    200,
+    200,
+    200,
+    403
+  ],
+  "apiProductRequestCount": 5,
+  "phaseEventCounts": [
+    2,
+    7,
+    8
+  ],
+  "limits": [
+    "Sampled Simulator Safari evidence; synthetic editor grant and API.",
+    "Received suggestion exact wording verified by DOM flag; not fully visually inspected.",
+    "Transcript images only; no standalone screenshot/video export.",
+    "Independent review ran no native/browser/listener operation."
+  ]
+}

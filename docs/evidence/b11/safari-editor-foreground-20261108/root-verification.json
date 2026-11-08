@@ -1,0 +1,16 @@
+{
+  "verifiedAtUTC": "2026-11-08T11:54:05.582187+00:00",
+  "exitCode": 0,
+  "result": {
+    "status": "passed-scoped",
+    "case": "editor-foreground-revoked",
+    "sameDocument": true,
+    "observedHiddenVisibleCycle": true,
+    "concealedAfterVisibleTaskAndThroughRevocation": true,
+    "commandAttempts": 0,
+    "commandEffects": 0,
+    "forbiddenResponseCount": 0
+  },
+  "receiptSHA256": "89ec707a09799e875e68fa47babea0c7b9c0cea18b8bc61254af1a7ad01af94d",
+  "manifestIdentity": "7dd7b55a7e0c35ef9a67b3190ed9260ecf9a04a213bd07d2d469b9aff1d5eaf1"
+}

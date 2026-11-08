@@ -1,0 +1,434 @@
+TAP version 13
+# Subtest: actual API parser accepts exact editor projection and recovered suggestion wire
+ok 1 - actual API parser accepts exact editor projection and recovered suggestion wire
+  ---
+  duration_ms: 203.660083
+  type: 'test'
+  ...
+# Subtest: reject and count every POST product request without effect
+ok 2 - reject and count every POST product request without effect
+  ---
+  duration_ms: 0.910209
+  type: 'test'
+  ...
+# Subtest: reject and count every PUT product request without effect
+ok 3 - reject and count every PUT product request without effect
+  ---
+  duration_ms: 0.205916
+  type: 'test'
+  ...
+# Subtest: reject and count every PATCH product request without effect
+ok 4 - reject and count every PATCH product request without effect
+  ---
+  duration_ms: 0.141708
+  type: 'test'
+  ...
+# Subtest: reject and count every DELETE product request without effect
+ok 5 - reject and count every DELETE product request without effect
+  ---
+  duration_ms: 0.558458
+  type: 'test'
+  ...
+# Subtest: reject and count every HEAD product request without effect
+ok 6 - reject and count every HEAD product request without effect
+  ---
+  duration_ms: 0.213375
+  type: 'test'
+  ...
+# Subtest: reject and count every OPTIONS product request without effect
+ok 7 - reject and count every OPTIONS product request without effect
+  ---
+  duration_ms: 0.459542
+  type: 'test'
+  ...
+# Subtest: wrong-grant and wrong-route reads denied, never return server-only canaries
+ok 8 - wrong-grant and wrong-route reads denied, never return server-only canaries
+  ---
+  duration_ms: 0.466334
+  type: 'test'
+  ...
+# Subtest: actual API rejects changed projection grantId
+ok 9 - actual API rejects changed projection grantId
+  ---
+  duration_ms: 95.130958
+  type: 'test'
+  ...
+# Subtest: actual API rejects changed projection shopId
+ok 10 - actual API rejects changed projection shopId
+  ---
+  duration_ms: 92.817375
+  type: 'test'
+  ...
+# Subtest: hold remains pending until explicit release and then denies revoked grant
+ok 11 - hold remains pending until explicit release and then denies revoked grant
+  ---
+  duration_ms: 15.94175
+  type: 'test'
+  ...
+# Subtest: unknown or widened control fields rejected
+ok 12 - unknown or widened control fields rejected
+  ---
+  duration_ms: 13.41275
+  type: 'test'
+  ...
+# Subtest: source app plus real API parser renders suggestion/draft, conceals held authority, clears revoked final
+ok 13 - source app plus real API parser renders suggestion/draft, conceals held authority, clears revoked final
+  ---
+  duration_ms: 403.835291
+  type: 'test'
+  ...
+# Subtest: synthetic valid receipt passes exact bounded shape, not browser acceptance
+ok 14 - synthetic valid receipt passes exact bounded shape, not browser acceptance
+  ---
+  duration_ms: 4.5125
+  type: 'test'
+  ...
+# Subtest: reject exposed held household
+ok 15 - reject exposed held household
+  ---
+  duration_ms: 3.409667
+  type: 'test'
+  ...
+# Subtest: reject exposed held shop
+ok 16 - reject exposed held shop
+  ---
+  duration_ms: 1.337833
+  type: 'test'
+  ...
+# Subtest: reject exposed held instruction
+ok 17 - reject exposed held instruction
+  ---
+  duration_ms: 0.955292
+  type: 'test'
+  ...
+# Subtest: reject exposed held amount
+ok 18 - reject exposed held amount
+  ---
+  duration_ms: 0.572042
+  type: 'test'
+  ...
+# Subtest: reject exposed held action
+ok 19 - reject exposed held action
+  ---
+  duration_ms: 1.221958
+  type: 'test'
+  ...
+# Subtest: reject exposed held suggestion
+ok 20 - reject exposed held suggestion
+  ---
+  duration_ms: 1.460042
+  type: 'test'
+  ...
+# Subtest: reject exposed held draft
+ok 21 - reject exposed held draft
+  ---
+  duration_ms: 0.681292
+  type: 'test'
+  ...
+# Subtest: reject exposed held draftPresent
+ok 22 - reject exposed held draftPresent
+  ---
+  duration_ms: 1.52575
+  type: 'test'
+  ...
+# Subtest: reject exposed held editorControlsPresent
+ok 23 - reject exposed held editorControlsPresent
+  ---
+  duration_ms: 2.028167
+  type: 'test'
+  ...
+# Subtest: reject exposed held editorReady
+ok 24 - reject exposed held editorReady
+  ---
+  duration_ms: 1.121666
+  type: 'test'
+  ...
+# Subtest: reject exposed held cookHeadingPresent
+ok 25 - reject exposed held cookHeadingPresent
+  ---
+  duration_ms: 0.836666
+  type: 'test'
+  ...
+# Subtest: reject exposed held datedRevision
+ok 26 - reject exposed held datedRevision
+  ---
+  duration_ms: 0.453875
+  type: 'test'
+  ...
+# Subtest: reject missing-received-suggestion
+ok 27 - reject missing-received-suggestion
+  ---
+  duration_ms: 0.444792
+  type: 'test'
+  ...
+# Subtest: reject wrong-unsent-correction
+ok 28 - reject wrong-unsent-correction
+  ---
+  duration_ms: 0.3925
+  type: 'test'
+  ...
+# Subtest: reject missing-editor-controls
+ok 29 - reject missing-editor-controls
+  ---
+  duration_ms: 0.344417
+  type: 'test'
+  ...
+# Subtest: reject intermediate-exposure-before-held
+ok 30 - reject intermediate-exposure-before-held
+  ---
+  duration_ms: 0.346833
+  type: 'test'
+  ...
+# Subtest: reject late-exposure-after-release
+ok 31 - reject late-exposure-after-release
+  ---
+  duration_ms: 0.376167
+  type: 'test'
+  ...
+# Subtest: reject missing-hidden-cycle
+ok 32 - reject missing-hidden-cycle
+  ---
+  duration_ms: 1.129667
+  type: 'test'
+  ...
+# Subtest: reject missing-post-visible-task
+ok 33 - reject missing-post-visible-task
+  ---
+  duration_ms: 1.348
+  type: 'test'
+  ...
+# Subtest: reject no-authority-hold
+ok 34 - reject no-authority-hold
+  ---
+  duration_ms: 0.366625
+  type: 'test'
+  ...
+# Subtest: reject duplicate-authority-hold
+ok 35 - reject duplicate-authority-hold
+  ---
+  duration_ms: 0.586958
+  type: 'test'
+  ...
+# Subtest: reject missing-server-authority-held
+ok 36 - reject missing-server-authority-held
+  ---
+  duration_ms: 0.459834
+  type: 'test'
+  ...
+# Subtest: reject wrong-control-actor
+ok 37 - reject wrong-control-actor
+  ---
+  duration_ms: 0.897792
+  type: 'test'
+  ...
+# Subtest: reject fresh-read-during-hold
+ok 38 - reject fresh-read-during-hold
+  ---
+  duration_ms: 1.70125
+  type: 'test'
+  ...
+# Subtest: reject document-replaced
+ok 39 - reject document-replaced
+  ---
+  duration_ms: 0.577958
+  type: 'test'
+  ...
+# Subtest: reject wrong-final-notice
+ok 40 - reject wrong-final-notice
+  ---
+  duration_ms: 7.013666
+  type: 'test'
+  ...
+# Subtest: reject disabled-refresh
+ok 41 - reject disabled-refresh
+  ---
+  duration_ms: 1.656375
+  type: 'test'
+  ...
+# Subtest: reject busy-final
+ok 42 - reject busy-final
+  ---
+  duration_ms: 1.095708
+  type: 'test'
+  ...
+# Subtest: reject product-write
+ok 43 - reject product-write
+  ---
+  duration_ms: 1.147833
+  type: 'test'
+  ...
+# Subtest: reject nonzero-attempt-count
+ok 44 - reject nonzero-attempt-count
+  ---
+  duration_ms: 1.15075
+  type: 'test'
+  ...
+# Subtest: reject nonzero-effect
+ok 45 - reject nonzero-effect
+  ---
+  duration_ms: 1.170709
+  type: 'test'
+  ...
+# Subtest: reject forbidden-wire-value
+ok 46 - reject forbidden-wire-value
+  ---
+  duration_ms: 0.584125
+  type: 'test'
+  ...
+# Subtest: reject forbidden-dom-value
+ok 47 - reject forbidden-dom-value
+  ---
+  duration_ms: 0.3285
+  type: 'test'
+  ...
+# Subtest: reject unrelated-contributor-control
+ok 48 - reject unrelated-contributor-control
+  ---
+  duration_ms: 0.334125
+  type: 'test'
+  ...
+# Subtest: reject navigation-instead-of-home
+ok 49 - reject navigation-instead-of-home
+  ---
+  duration_ms: 0.492458
+  type: 'test'
+  ...
+# Subtest: reject changed-event-prefix
+ok 50 - reject changed-event-prefix
+  ---
+  duration_ms: 0.916708
+  type: 'test'
+  ...
+# Subtest: reject truncation
+ok 51 - reject truncation
+  ---
+  duration_ms: 0.269459
+  type: 'test'
+  ...
+# Subtest: reject desktop-user-agent
+ok 52 - reject desktop-user-agent
+  ---
+  duration_ms: 0.217208
+  type: 'test'
+  ...
+# Subtest: reject storage-unavailable
+ok 53 - reject storage-unavailable
+  ---
+  duration_ms: 1.2815
+  type: 'test'
+  ...
+# Subtest: reject unexpected-initial-route
+ok 54 - reject unexpected-initial-route
+  ---
+  duration_ms: 0.74525
+  type: 'test'
+  ...
+# Subtest: before-listener context is not treated as post-task leak
+ok 55 - before-listener context is not treated as post-task leak
+  ---
+  duration_ms: 0.485875
+  type: 'test'
+  ...
+# Subtest: optional stop release accepted
+ok 56 - optional stop release accepted
+  ---
+  duration_ms: 0.549875
+  type: 'test'
+  ...
+# Subtest: exact granted fields, received suggestion and unsent correction recognized
+ok 57 - exact granted fields, received suggestion and unsent correction recognized
+  ---
+  duration_ms: 110.791
+  type: 'test'
+  ...
+# Subtest: wrong correction cannot satisfy exact original
+ok 58 - wrong correction cannot satisfy exact original
+  ---
+  duration_ms: 19.70575
+  type: 'test'
+  ...
+# Subtest: disabled Send proposal still counts as private editor control
+ok 59 - disabled Send proposal still counts as private editor control
+  ---
+  duration_ms: 13.520667
+  type: 'test'
+  ...
+# Subtest: disabled Check received suggestions still counts as private editor control
+ok 60 - disabled Check received suggestions still counts as private editor control
+  ---
+  duration_ms: 12.276708
+  type: 'test'
+  ...
+# Subtest: disabled Retry original suggestion still counts as private editor control
+ok 61 - disabled Retry original suggestion still counts as private editor control
+  ---
+  duration_ms: 14.118625
+  type: 'test'
+  ...
+# Subtest: disabled Review current instructions still counts as private editor control
+ok 62 - disabled Review current instructions still counts as private editor control
+  ---
+  duration_ms: 15.602625
+  type: 'test'
+  ...
+# Subtest: hidden textarea retains private control status
+ok 63 - hidden textarea retains private control status
+  ---
+  duration_ms: 13.048917
+  type: 'test'
+  ...
+# Subtest: revoked status and enabled Refresh require exact outcome
+ok 64 - revoked status and enabled Refresh require exact outcome
+  ---
+  duration_ms: 52.90825
+  type: 'test'
+  ...
+# Subtest: server-only forbidden markers and unrelated contributor control detected
+ok 65 - server-only forbidden markers and unrelated contributor control detected
+  ---
+  duration_ms: 23.528709
+  type: 'test'
+  ...
+# Subtest: probe retains native-listener ordering model with next-task concealed sample
+ok 66 - probe retains native-listener ordering model with next-task concealed sample
+  ---
+  duration_ms: 38.744667
+  type: 'test'
+  ...
+# Subtest: schema rejects arbitrary text and unknown fields
+ok 67 - schema rejects arbitrary text and unknown fields
+  ---
+  duration_ms: 16.391708
+  type: 'test'
+  ...
+# Subtest: pinned actual main/API/probe compose across held editor foreground revocation
+not ok 68 - pinned actual main/API/probe compose across held editor foreground revocation
+  ---
+  duration_ms: 994.945708
+  type: 'test'
+  location: '/Users/palatis/Room in the Cart/.build/SafariQualificationNov08/editor-foreground-r1/source-probe.test.mjs:4:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The expression evaluated to a falsy value:
+    
+      assert(final.current.accessEnded&&final.current.refreshAvailable)
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///Users/palatis/Room%20in%20the%20Cart/.build/SafariQualificationNov08/editor-foreground-r1/source-probe.test.mjs:12:215)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+1..68
+# tests 68
+# suites 0
+# pass 67
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4794.465166
