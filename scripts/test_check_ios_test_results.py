@@ -78,6 +78,69 @@ class ExecutionLogTests(unittest.TestCase):
     start = case + "started."
     done = case + "passed (71.217 seconds)."
     success = "** TEST EXECUTE SUCCEEDED **"
+    split_prefix = "2026-11-08 00:36:46.274412+0000 RoomInThe"
+    split_suffix = 'Cart[26733:75724] [Default] Error in products service call: Error Domain=ASDErrorDomain Code=511 "(null)"'
+
+    def test_hosted_f90_storekit_complete_record_inside_split_process_header(self):
+        # Exact failing hosted artifact, StoreKit.log lines 4422–4426. The
+        # console mux split RoomInTheCart's header around a complete pass record.
+        log = [
+            "Test Case '-[RoomInTheCartTests.StoreKitScenarioTests testUnavailableProductKeepsFreeRoute]' started.",
+            "2026-11-08 00:36:46.274412+0000 RoomInTheTest Case '-[RoomInTheCartTests.StoreKitScenarioTests testUnavailableProductKeepsFreeRoute]' passed (0.101 seconds).",
+            'Cart[26733:75724] [Default] Error in products service call: Error Domain=ASDErrorDomain Code=511 "(null)"',
+            "Test Case '-[RoomInTheCartTests.StoreKitScenarioTests testUnverifiedLocalTransactionGrantsNothing]' started.",
+            "Test Case '-[RoomInTheCartTests.StoreKitScenarioTests testUnverifiedLocalTransactionGrantsNothing]' passed (0.245 seconds).",
+            self.success,
+        ]
+        expected = [
+            "RoomInTheCartTests/StoreKitScenarioTests/testUnavailableProductKeepsFreeRoute",
+            "RoomInTheCartTests/StoreKitScenarioTests/testUnverifiedLocalTransactionGrantsNothing",
+        ]
+        self.assertEqual(execution_log_failures(iter(line + "\r\n" for line in log), expected), [])
+
+    def test_split_process_recovery_preserves_lifecycle_gates(self):
+        def split(record):
+            return [self.split_prefix + record, self.split_suffix]
+
+        self.assertEqual(execution_log_failures(
+            [*split(self.start), *split(self.done), self.success], [self.selector]), [])
+        for log, reason in (
+            ([self.start, *split(self.start), self.done, self.success], "one start then one pass"),
+            ([self.start, self.done, *split(self.done), self.success], "one start then one pass"),
+            ([*split(self.done), self.start, self.success], "one start then one pass"),
+            ([self.start, self.success, *split(self.done)], "out-of-order"),
+            ([self.start, *split(self.case + "failed (0.101 seconds)."), self.done, self.success], "non-passing"),
+            ([self.start, *split(self.case + "exceeded execution time allowance of 1 minute."), self.done, self.success], "timeout"),
+            ([self.start, *split(self.done), "Restarting after unexpected exit, crash, or test timeout; retry", self.success], "restarted"),
+            ([self.start, self.split_prefix + self.done,
+              "Cart[26733:75724] [logging] BUG IN CLIENT OF libsqlite3.dylib: API misuse", self.success], "SQLite"),
+        ):
+            with self.subTest(log=log):
+                self.assertTrue(any(reason in error for error in execution_log_failures(log, [self.selector])))
+
+    def test_embedded_or_unproven_records_cannot_supply_missing_completion(self):
+        for fragment in (
+            ["some output: " + self.done],
+            [self.split_prefix + "Cart[26733:75724] [Default] " + self.done],
+            [self.split_prefix + "Cart[26733:75724] [Default] quoted: \"" + self.done + '"'],
+            ["arbitrary prefix " + self.done, self.split_suffix],
+            [self.split_prefix + self.done],  # No following process fragment.
+            [self.split_prefix + self.done, "unrelated line", self.split_suffix],
+            [self.split_prefix + self.done, self.split_suffix.replace("Cart[", "Other[")],
+            [self.split_prefix + self.done, self.split_suffix.replace("26733:75724", "not-a-pid")],
+            [self.split_prefix.replace("2026-11-08", "not-a-date") + self.done, self.split_suffix],
+            [self.split_prefix + self.done[:-1], self.split_suffix],
+            [self.split_prefix + self.done + " trailing quoted text", self.split_suffix],
+            [self.split_prefix + self.done.split(" passed")[0], self.split_suffix],
+        ):
+            with self.subTest(fragment=fragment):
+                self.assertTrue(execution_log_failures(
+                    [self.start, *fragment, self.success], [self.selector]))
+
+    def test_quoted_record_in_regular_message_is_not_an_extra_completion(self):
+        message = self.split_prefix + 'Cart[26733:75724] [Default] quoted: "' + self.done + '"'
+        self.assertEqual(execution_log_failures(
+            [self.start, self.done, message, self.success], [self.selector]), [])
 
     def test_passing_cases_cannot_hide_sqlite_api_misuse(self):
         warning = (

@@ -2,6 +2,7 @@
 """Require complete XCTest execution and verify recorded runtime warnings."""
 import argparse
 from collections import Counter, defaultdict
+from itertools import chain, tee
 import json
 import os
 from pathlib import Path
@@ -16,6 +17,27 @@ XCTEST_CASE_ERROR = re.compile(rf".+:\d+(?::\d+)?: error: -\[{XCTEST_CASE_ID}\] 
 XCTEST_CASE_PASSED = re.compile(r"passed \([0-9]+(?:\.[0-9]+)? seconds\)\.")
 XCTEST_RESULT_BANNER = re.compile(r"\*\* TEST (?:EXECUTE )?(SUCCEEDED|FAILED) \*\*")
 XCTEST_RESTART = "Restarting after unexpected exit, crash, or test timeout;"
+XCTEST_SPLIT_PROCESS_PREFIX = re.compile(
+    r"[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{6}[+-][0-9]{4} "
+    r"(?P<process>[A-Za-z]+)(?P<record>Test Case .+)"
+)
+XCTEST_SPLIT_PROCESS_SUFFIX = re.compile(
+    r"(?P<process>[A-Za-z]+)\[[0-9]+:[0-9]+\] \[[A-Za-z][A-Za-z0-9_.-]*\] .*"
+)
+
+
+def recover_interleaved_case(line, following_line):
+    """Recover the observed stdout/stderr split inside the app's process name."""
+    prefix = XCTEST_SPLIT_PROCESS_PREFIX.fullmatch(line)
+    if prefix is None:
+        return line
+    suffix = XCTEST_SPLIT_PROCESS_SUFFIX.fullmatch(following_line)
+    # Require the adjacent fragments to reconstruct the known process header.
+    # Never search a logging message's payload for quoted XCTest records.
+    if (suffix is not None and prefix["process"] + suffix["process"] == "RoomInTheCart"
+            and XCTEST_CASE_LINE.fullmatch(prefix["record"])):
+        return prefix["record"]
+    return line
 
 
 def execution_log_failures(lines, expected):
@@ -23,7 +45,9 @@ def execution_log_failures(lines, expected):
     events = defaultdict(list)
     failures = []
     banners = []
-    for number, raw_line in enumerate(lines, 1):
+    current_lines, following_lines = tee(lines)
+    next(following_lines, None)
+    for number, (raw_line, following_line) in enumerate(zip(current_lines, chain(following_lines, [""])), 1):
         line = raw_line.rstrip("\r\n")
         # SQLite can report an unsafe live-file deletion outside XCTest's
         # runtime-warning export, even when every assertion passes.
@@ -38,6 +62,7 @@ def execution_log_failures(lines, expected):
         if error:
             selector = "/".join(error.group("target", "suite", "method"))
             failures.append(f"XCTest logged a failure for {selector} at log line {number}.")
+        line = recover_interleaved_case(line, following_line.rstrip("\r\n"))
         if not line.startswith("Test Case "):
             continue
         case = XCTEST_CASE_LINE.fullmatch(line)

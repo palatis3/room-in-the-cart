@@ -1,0 +1,73 @@
+{
+  "purpose": "Narrow XCTest console parser recovery for a complete lifecycle record interleaved inside the RoomInTheCart process name.",
+  "baselineCommit": "1e79df687d4f90a3684475a5f869789efceef19b",
+  "sourceArtifactDirectory": ".build/CIF90Nov07/storekit-en",
+  "sourceHashes": {
+    ".build/CIF90Nov07/storekit-en/StoreKit.log": "c75a9dc57009df3e99acf62ff0de907084937a4fc906e59baede3b31d6fbf429",
+    ".build/CIF90Nov07/storekit-en/storekit-summary.json": "c799f3d3fb5d0b8d1e101bb18ca62d547d16fd03ad484ec9171c17a1e7359521",
+    ".build/CIF90Nov07/storekit-en/storekit-tests.json": "882ce02174a1823e2506d24730579aab06439c339304317e3279964eb290d0a6",
+    ".build/CIF90Nov07/storekit-en/test-runtime-warnings.json": "e53e392d02a0f2d30975bb3c9757d1fafcc6fe351e82aa62ae5e49918bf554af",
+    ".build/CIF90Nov07/storekit-en/storekit-verification.txt": "8f7f24c1609c6e1c3520c4e8dfd9cf1291c0bec08abb2d3ccfaf164fcd63f464",
+    "scripts/ios_storekit_test_selectors.txt": "61a37a131db3fc847fb8d4861814389cfc18d2827b68e76348869adad96bf0ca"
+  },
+  "originalLogExcerpt": [
+    {
+      "line": 4422,
+      "text": "Test Case '-[RoomInTheCartTests.StoreKitScenarioTests testUnavailableProductKeepsFreeRoute]' started."
+    },
+    {
+      "line": 4423,
+      "text": "2026-11-08 00:36:46.274412+0000 RoomInTheTest Case '-[RoomInTheCartTests.StoreKitScenarioTests testUnavailableProductKeepsFreeRoute]' passed (0.101 seconds)."
+    },
+    {
+      "line": 4424,
+      "text": "Cart[26733:75724] [Default] Error in products service call: Error Domain=ASDErrorDomain Code=511 \"(null)\""
+    },
+    {
+      "line": 4425,
+      "text": "Test Case '-[RoomInTheCartTests.StoreKitScenarioTests testUnverifiedLocalTransactionGrantsNothing]' started."
+    },
+    {
+      "line": 4426,
+      "text": "Test Case '-[RoomInTheCartTests.StoreKitScenarioTests testUnverifiedLocalTransactionGrantsNothing]' passed (0.245 seconds)."
+    }
+  ],
+  "originalConsoleFailures": [
+    "XCTest log requires one start then one pass for RoomInTheCartTests/StoreKitScenarioTests/testUnavailableProductKeepsFreeRoute; found ['start']."
+  ],
+  "recheckedConsoleFailures": [],
+  "selectedTestCount": 15,
+  "artifactRecheckCommand": [
+    "scripts/check_ios_test_results.py",
+    "--selectors",
+    "scripts/ios_storekit_test_selectors.txt",
+    "--expected-count",
+    "15",
+    "--summary",
+    ".build/CIF90Nov07/storekit-en/storekit-summary.json",
+    "--tests",
+    ".build/CIF90Nov07/storekit-en/storekit-tests.json",
+    "--test-log",
+    ".build/CIF90Nov07/storekit-en/StoreKit.log"
+  ],
+  "artifactRecheckExitCode": 0,
+  "originalHostedRuntimeWarningReceipt": {
+    "status": "passed",
+    "summaryWarningCount": null,
+    "runtimeWarningCount": 0,
+    "examinedTestCount": 15,
+    "detailExportCount": 15,
+    "activityExportCount": 0,
+    "warnings": []
+  },
+  "runtimeWarningScope": "The hosted receipt is retained as original evidence. This local parser recheck uses exported summary/tests/log only; it does not rerun xcresulttool or certify runtime warnings anew.",
+  "regressionTests": {
+    "command": "python3 -m unittest discover -s scripts -p test_check_ios_test_results.py",
+    "testCount": 37,
+    "status": "passed"
+  },
+  "scope": "No app change, warning suppression, test retry, Xcode/simulator invocation, or hosted run restart.",
+  "originalLogExcerptLineConvention": "Physical LF-delimited lines in the original artifact; carriage returns elsewhere in xcodebuild output are not extra source lines.",
+  "hostedRunURL": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428216003",
+  "hostedRunSource": "ci_f90_monitor receipt identifying the English StoreKit failure and downloaded artifact directory."
+}
