@@ -1,0 +1,33 @@
+{
+  "expected": [
+    "RoomInTheCartUITests/SharedDeliveryUITests/testShopperClosesWithPendingCreditThenLinksItToTheOriginalNetCharge",
+    "RoomInTheCartUITests/SharedDeliveryUITests/testShopperLeavesOriginalDinnerOpenAfterAnUnresolvedReplacementPreview",
+    "RoomInTheCartUITests/SharedDeliveryUITests/testShopperReplacesWednesdayAfterPickupAndKeepsTuesdaysShortage",
+    "RoomInTheCartUITests/SharedDeliveryUITests/testShopperReviewsExactEditedCookWordingBeforeReadback",
+    "RoomInTheCartUITests/SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord"
+  ],
+  "observedStarts": [
+    {
+      "line": 1017,
+      "selector": "RoomInTheCartUITests/SharedDeliveryUITests/testShopperClosesWithPendingCreditThenLinksItToTheOriginalNetCharge"
+    },
+    {
+      "line": 1953,
+      "selector": "RoomInTheCartUITests/SharedDeliveryUITests/testShopperLeavesOriginalDinnerOpenAfterAnUnresolvedReplacementPreview"
+    },
+    {
+      "line": 2192,
+      "selector": "RoomInTheCartUITests/SharedDeliveryUITests/testShopperReplacesWednesdayAfterPickupAndKeepsTuesdaysShortage"
+    },
+    {
+      "line": 2708,
+      "selector": "RoomInTheCartUITests/SharedDeliveryUITests/testShopperReviewsExactEditedCookWordingBeforeReadback"
+    },
+    {
+      "line": 2979,
+      "selector": "RoomInTheCartUITests/SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord"
+    }
+  ],
+  "exactOriginalOrder": true,
+  "consoleFailures": []
+}

@@ -1,0 +1,201 @@
+{
+  "scope": "Original structured runtime issues, independently of destination state; strict checker remains authoritative for complete warning evidence.",
+  "speechReadback": [
+    {
+      "issueRowID": 1,
+      "uuid": "82C528A1-D263-4337-814C-0AB7940662D6",
+      "issueType": "Runtime Warning",
+      "compactDescription": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions",
+      "timestamp": 815798757.7349999,
+      "sourceCodeContext_fk": 1,
+      "identifierURL": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/SharedDeliveryUITests/testShopperReviewsExactEditedCookWordingBeforeReadback",
+      "sourceFrames": [
+        {
+          "orderInContainer": 0,
+          "address": "0",
+          "symbolInfo_fk": null,
+          "context_fk": 1,
+          "imageName": null,
+          "symbolName": null
+        },
+        {
+          "orderInContainer": 1,
+          "address": "0",
+          "symbolInfo_fk": null,
+          "context_fk": 1,
+          "imageName": null,
+          "symbolName": null
+        },
+        {
+          "orderInContainer": 2,
+          "address": "0",
+          "symbolInfo_fk": null,
+          "context_fk": 1,
+          "imageName": null,
+          "symbolName": null
+        },
+        {
+          "orderInContainer": 3,
+          "address": "0",
+          "symbolInfo_fk": null,
+          "context_fk": 1,
+          "imageName": null,
+          "symbolName": null
+        },
+        {
+          "orderInContainer": 4,
+          "address": "0",
+          "symbolInfo_fk": null,
+          "context_fk": 1,
+          "imageName": null,
+          "symbolName": null
+        },
+        {
+          "orderInContainer": 5,
+          "address": "0",
+          "symbolInfo_fk": null,
+          "context_fk": 1,
+          "imageName": null,
+          "symbolName": null
+        },
+        {
+          "orderInContainer": 6,
+          "address": "0",
+          "symbolInfo_fk": null,
+          "context_fk": 1,
+          "imageName": null,
+          "symbolName": null
+        },
+        {
+          "orderInContainer": 7,
+          "address": "0",
+          "symbolInfo_fk": null,
+          "context_fk": 1,
+          "imageName": null,
+          "symbolName": null
+        },
+        {
+          "orderInContainer": 8,
+          "address": "0",
+          "symbolInfo_fk": null,
+          "context_fk": 1,
+          "imageName": null,
+          "symbolName": null
+        },
+        {
+          "orderInContainer": 9,
+          "address": "0",
+          "symbolInfo_fk": null,
+          "context_fk": 1,
+          "imageName": null,
+          "symbolName": null
+        },
+        {
+          "orderInContainer": 10,
+          "address": "0",
+          "symbolInfo_fk": null,
+          "context_fk": 1,
+          "imageName": null,
+          "symbolName": null
+        },
+        {
+          "orderInContainer": 11,
+          "address": "0",
+          "symbolInfo_fk": null,
+          "context_fk": 1,
+          "imageName": null,
+          "symbolName": null
+        },
+        {
+          "orderInContainer": 12,
+          "address": "0",
+          "symbolInfo_fk": null,
+          "context_fk": 1,
+          "imageName": null,
+          "symbolName": null
+        },
+        {
+          "orderInContainer": 13,
+          "address": "0",
+          "symbolInfo_fk": null,
+          "context_fk": 1,
+          "imageName": null,
+          "symbolName": null
+        },
+        {
+          "orderInContainer": 14,
+          "address": "0",
+          "symbolInfo_fk": null,
+          "context_fk": 1,
+          "imageName": null,
+          "symbolName": null
+        },
+        {
+          "orderInContainer": 15,
+          "address": "0",
+          "symbolInfo_fk": null,
+          "context_fk": 1,
+          "imageName": null,
+          "symbolName": null
+        },
+        {
+          "orderInContainer": 16,
+          "address": "0",
+          "symbolInfo_fk": null,
+          "context_fk": 1,
+          "imageName": null,
+          "symbolName": null
+        },
+        {
+          "orderInContainer": 17,
+          "address": "0",
+          "symbolInfo_fk": null,
+          "context_fk": 1,
+          "imageName": null,
+          "symbolName": null
+        },
+        {
+          "orderInContainer": 18,
+          "address": "0",
+          "symbolInfo_fk": null,
+          "context_fk": 1,
+          "imageName": null,
+          "symbolName": null
+        },
+        {
+          "orderInContainer": 19,
+          "address": "0",
+          "symbolInfo_fk": null,
+          "context_fk": 1,
+          "imageName": null,
+          "symbolName": null
+        },
+        {
+          "orderInContainer": 20,
+          "address": "0",
+          "symbolInfo_fk": null,
+          "context_fk": 1,
+          "imageName": null,
+          "symbolName": null
+        },
+        {
+          "orderInContainer": 21,
+          "address": "0",
+          "symbolInfo_fk": null,
+          "context_fk": 1,
+          "imageName": null,
+          "symbolName": null
+        },
+        {
+          "orderInContainer": 22,
+          "address": "0",
+          "symbolInfo_fk": null,
+          "context_fk": 1,
+          "imageName": null,
+          "symbolName": null
+        }
+      ]
+    }
+  ],
+  "otherCases": []
+}

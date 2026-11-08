@@ -1,0 +1,8 @@
+{
+  "status": "corrected for lazy SQLite materialization; ready for root-authorized read-only audit",
+  "priorScriptSHA256": "a78634d81e0caa1c3b3b965c9287830c6f40ff660efae5b864bde392dfb5a1b7",
+  "scriptSHA256": "5064fe6dc83c358d6379de89623b034c2c70f69b50acd97debfce1ed3275d859",
+  "change": "Hash-copy original first; summary/tests tools operate on copy; finished-action SQLite read then targets only materialized copy. Original preserved.",
+  "stdoutCapBytes": 256000000,
+  "nativeActions": false
+}

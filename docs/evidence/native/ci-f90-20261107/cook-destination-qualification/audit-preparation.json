@@ -1,0 +1,15 @@
+{
+  "status": "prepared, syntax parsed, not executed",
+  "scriptSHA256": "a78634d81e0caa1c3b3b965c9287830c6f40ff660efae5b864bde392dfb5a1b7",
+  "files": [
+    {
+      "file": "post-terminal-audit.py",
+      "sha256": "a78634d81e0caa1c3b3b965c9287830c6f40ff660efae5b864bde392dfb5a1b7"
+    },
+    {
+      "file": "POST-TERMINAL-AUDIT.md",
+      "sha256": "d010c11e9f96b328ff15da4bd9e4072129b8f7c2e1d167fc63d44e7cf5d8a9a3"
+    }
+  ],
+  "nativeOrSimulatorActions": false
+}

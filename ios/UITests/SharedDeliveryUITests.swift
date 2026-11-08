@@ -442,6 +442,7 @@ import XCTest
     }
 
     func testShopperSavesDatedCookCopyAndReopensRecipientSendRecord() {
+        app.launchEnvironment["S24_COOK_DESTINATION_TRACE_SCOPE"] = "SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord"
         launch("en", locale: "en_US", cookCopies: true)
         tap(app.buttons["Delivered food by meal"])
         let occurrence = "AAAAAAA1-AAAA-4AAA-8AAA-AAAAAAAAAAAA"

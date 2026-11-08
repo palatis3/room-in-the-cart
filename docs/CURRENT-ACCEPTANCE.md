@@ -1,5 +1,13 @@
 # Current implementation and acceptance map
 
+## November 8 current CI and recovery boundary
+
+The original f90 cohort is terminal and fully collected. All684model tests passed; ordinary UI passed62/67 and fixture native assertions passed65/67 across17jobs. Security, native HTTPS/PostgreSQL and all3Release performance gates passed. Original UI failures, disconnected Swift CodeQL runner, strict StoreKit log-parser failure and incomplete speech-warning evidence remain recorded; no combined acceptance is claimed. [Terminal snapshot](evidence/native/ci-f90-20261107/monitor-20261108T024722Z.json).
+
+Later local corrections pass the full checkout-review, store-quote and Spanish save journeys without weakening their original assertions. Fixture-only pack and cook switch traces qualify capture, not a causal repair. The cook five-case execution passes all native assertions but still fails strict verification on the preceding speech warning’s missing diagnostic attachment. The warning gate remains intact. Both traces are absent from the unsigned Release app and its extensions. Hosted confirmation of this accumulated candidate is pending.
+
+A fresh encrypted041 backup and two new actual restores now pass the local042 upgrade rehearsal. Existing data and the untouched baseline are preserved, and both images are detached. The first catalog-rendering mismatch remains recorded and its narrow correction retains real-FK-change negative controls. [Recovery proof](evidence/b11/staging-042-preparation-20261108/README.md). Live staging remains041;042 rollout approval, maintenance routing and deployment verification remain separate. Signed distribution, provider activation and physical-device/human acceptance are still open.
+
 ## November 7 store-quote and Spanish save navigation
 
 Both complete original journeys now pass locally with their existing limits, strict2/2 and zero warnings/skips/restarts. The known top branch header is found without scrolling away from it; Spanish Save is fully visible before the existing single tap. Store comparison adoption/revision/original proof and Spanish save/reopen checks remain intact. Application behavior is unchanged. Original failures and pending hosted26.3 acceptance remain explicit. [Proof](evidence/native/core-navigation-20261107/README.md).

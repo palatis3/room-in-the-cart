@@ -1,0 +1,50 @@
+{
+  "originalPath": "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/native.log",
+  "originalSHA256": "344a8058ff01aaea856a7286573054fe31b9fda326a7722503ac07731b7e5a97",
+  "events": [
+    {
+      "line": 1017,
+      "text": "Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperClosesWithPendingCreditThenLinksItToTheOriginalNetCharge]' started."
+    },
+    {
+      "line": 1952,
+      "text": "Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperClosesWithPendingCreditThenLinksItToTheOriginalNetCharge]' passed (193.920 seconds)."
+    },
+    {
+      "line": 1953,
+      "text": "Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperLeavesOriginalDinnerOpenAfterAnUnresolvedReplacementPreview]' started."
+    },
+    {
+      "line": 2191,
+      "text": "Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperLeavesOriginalDinnerOpenAfterAnUnresolvedReplacementPreview]' passed (48.809 seconds)."
+    },
+    {
+      "line": 2192,
+      "text": "Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperReplacesWednesdayAfterPickupAndKeepsTuesdaysShortage]' started."
+    },
+    {
+      "line": 2707,
+      "text": "Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperReplacesWednesdayAfterPickupAndKeepsTuesdaysShortage]' passed (109.399 seconds)."
+    },
+    {
+      "line": 2708,
+      "text": "Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperReviewsExactEditedCookWordingBeforeReadback]' started."
+    },
+    {
+      "line": 2978,
+      "text": "Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperReviewsExactEditedCookWordingBeforeReadback]' passed (53.412 seconds)."
+    },
+    {
+      "line": 2979,
+      "text": "Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperSavesDatedCookCopyAndReopensRecipientSendRecord]' started."
+    },
+    {
+      "line": 3608,
+      "text": "Test Case '-[RoomInTheCartUITests.SharedDeliveryUITests testShopperSavesDatedCookCopyAndReopensRecipientSendRecord]' passed (123.181 seconds)."
+    },
+    {
+      "line": 3624,
+      "text": "** TEST SUCCEEDED **"
+    }
+  ]
+}

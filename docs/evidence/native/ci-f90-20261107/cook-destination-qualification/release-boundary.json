@@ -1,0 +1,20 @@
+{
+  "originalLogPath": "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/release.log",
+  "originalLogSHA256": "ee1c289167379c6a4c2279b37b87ec6cfd82b7927e0712064614ed77595ac62d",
+  "rootReportedTerminalExit": 0,
+  "appPath": "/Users/palatis/Room in the Cart/.build/S24TraceNov07/release-dd/Build/Products/Release-iphoneos/RoomInTheCart.app",
+  "selectedLines": [
+    {
+      "line": 1,
+      "text": "Command line invocation:"
+    },
+    {
+      "line": 2,
+      "text": "    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart -configuration Release -destination generic/platform=iOS -derivedDataPath .build/S24TraceNov07/release-dd -jobs 2 CODE_SIGNING_ALLOWED=NO build"
+    },
+    {
+      "line": 260,
+      "text": "** BUILD SUCCEEDED **"
+    }
+  ]
+}

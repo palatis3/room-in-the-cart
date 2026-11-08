@@ -1,0 +1,227 @@
+{
+  "retainedAtUTC": "2026-11-08T02:50:28.614212+00:00",
+  "exactCopies": [
+    {
+      "file": "run.json",
+      "bytes": 3108,
+      "sha256": "00c12409f206d422331d42adafc204ea0a820206cd71f80457d892fe878c056e",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/run.json"
+    },
+    {
+      "file": "audit-first-refusal.json",
+      "bytes": 453,
+      "sha256": "c58f85281aeb0001461dfc9c0a34051351472e5226b17a3ba40b58c230a29cf6",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/audit-first-refusal.json"
+    },
+    {
+      "file": "audit-preparation.json",
+      "bytes": 468,
+      "sha256": "4c1a3bf3ffaff92b0176dd3364dfc3105f8bb89575342db84c9bc7653c39201a",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/audit-preparation.json"
+    },
+    {
+      "file": "audit-v2-preparation.json",
+      "bytes": 500,
+      "sha256": "96847c5201fe5c0195aca04194ce66336f57b6a3cdc6f9e11d3f40a6fe22a1b3",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/audit-v2-preparation.json"
+    },
+    {
+      "file": "post-terminal-audit-v1.py",
+      "bytes": 13754,
+      "sha256": "a78634d81e0caa1c3b3b965c9287830c6f40ff660efae5b864bde392dfb5a1b7",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/post-terminal-audit-v1.py"
+    },
+    {
+      "file": "post-terminal-audit.py",
+      "bytes": 14113,
+      "sha256": "5064fe6dc83c358d6379de89623b034c2c70f69b50acd97debfce1ed3275d859",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/post-terminal-audit.py"
+    },
+    {
+      "file": "POST-TERMINAL-AUDIT.md",
+      "bytes": 2891,
+      "sha256": "d010c11e9f96b328ff15da4bd9e4072129b8f7c2e1d167fc63d44e7cf5d8a9a3",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/POST-TERMINAL-AUDIT.md"
+    },
+    {
+      "file": "release-trace-exclusion.json",
+      "bytes": 925,
+      "sha256": "02bd43daf7a36313e17b1d30d5224aa99b2c479f539f23f1b1b02f9b4b404b48",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/release-trace-exclusion.json"
+    },
+    {
+      "file": "release-built-app.txt",
+      "bytes": 105,
+      "sha256": "f235bbb8dff89745abba14e5dbe8f0247778c5a7063582549dc3dd95af685c76",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/release-built-app.txt"
+    },
+    {
+      "file": "audit/terminal-input.json",
+      "bytes": 995,
+      "sha256": "6db3828c4dde88a388fb7dafbf3e8dd270894dee31b7bd7c1f151293f55c51c9",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/post-terminal-audit/terminal-input.json"
+    },
+    {
+      "file": "audit/original-result-manifest.json",
+      "bytes": 9540,
+      "sha256": "801969b9359aa8fb6e99a895d679299b7839b6c5aec87962f735e1ecae092793",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/post-terminal-audit/original-result-manifest.json"
+    },
+    {
+      "file": "audit/order-audit.json",
+      "bytes": 1468,
+      "sha256": "006f9b2f26f2fb4a4ec4f9bc878ccc7bf9212b88082b049c484565e226f74774",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/post-terminal-audit/order-audit.json"
+    },
+    {
+      "file": "audit/summary.json",
+      "bytes": 1276,
+      "sha256": "0bcfb4c17ee0e12d12d498b35d4373efcbea6a2787360656843cfd3f151bdea7",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/post-terminal-audit/summary.json"
+    },
+    {
+      "file": "audit/tests.json",
+      "bytes": 4681,
+      "sha256": "a04c772125b76699c7c37ab65e73d94107285b6eec41e35f00003dc378d9efba",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/post-terminal-audit/tests.json"
+    },
+    {
+      "file": "audit/summary.receipt.json",
+      "bytes": 441,
+      "sha256": "bf0de29a11a89e47017a22d1df82e99a08b42f16370f0eb44248d11090bec542",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/post-terminal-audit/summary.receipt.json"
+    },
+    {
+      "file": "audit/tests.receipt.json",
+      "bytes": 439,
+      "sha256": "c54a79a34281df0a373c5fbaee8f3267eb9e58079228f3fb8cae130dd8563574",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/post-terminal-audit/tests.receipt.json"
+    },
+    {
+      "file": "audit/strict.stdout",
+      "bytes": 1147,
+      "sha256": "a5ded7188ad0c1ab4ffc0b1d7ef6dc6b918e068680f2c1a018bcca6ee87124d4",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/post-terminal-audit/strict.stdout"
+    },
+    {
+      "file": "audit/strict.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/post-terminal-audit/strict.stderr"
+    },
+    {
+      "file": "audit/strict.receipt.json",
+      "bytes": 926,
+      "sha256": "8666edbd596c79a8ab359966cd4a2cde3401b614ffd7ecd07a3167cb02ddb578",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/post-terminal-audit/strict.receipt.json"
+    },
+    {
+      "file": "audit/strict-status.json",
+      "bytes": 81,
+      "sha256": "b9ecdfa10edafc483c9971ec306a9911b683b76e3da7c14100aea3b52bf0692b",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/post-terminal-audit/strict-status.json"
+    },
+    {
+      "file": "audit/test-runtime-warnings.json",
+      "bytes": 346,
+      "sha256": "c7800357c492169550fc48812417a5a2c91e5030d99f23f4581c92692bc521fa",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/post-terminal-audit/test-runtime-warnings.json"
+    },
+    {
+      "file": "audit/runtime-issues-separate.json",
+      "bytes": 5384,
+      "sha256": "7ee9e49cd48b09d5a4fbeccad13e7b6fb474864ec2a82a302689a7009e6a0d16",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/post-terminal-audit/runtime-issues-separate.json"
+    },
+    {
+      "file": "audit/materialization-receipt.json",
+      "bytes": 229,
+      "sha256": "901ca9eccd7b6690052e9ec2e5b00729a0335aa090c8bc2be7c5af38d1a5cfac",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/post-terminal-audit/materialization-receipt.json"
+    },
+    {
+      "file": "audit/capture-receipt.json",
+      "bytes": 792,
+      "sha256": "327903cd116166aee86ec37c674c9ee0afb4a7e58bfecfdde0f643e4589fa9ca",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/post-terminal-audit/capture-receipt.json"
+    },
+    {
+      "file": "audit/stdout-preflight.json",
+      "bytes": 547,
+      "sha256": "8d44ca8be58cd33415dd291e389f75215d90be82f43a45211af653cbd935f53b",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/post-terminal-audit/stdout-preflight.json"
+    },
+    {
+      "file": "audit/app-stdout-export.receipt.json",
+      "bytes": 712,
+      "sha256": "2cdf7be715c4863a15be63404d4c0b64b2d93d67e9e7e582cb1001fba7d8dbe3",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/post-terminal-audit/app-stdout-export.receipt.json"
+    },
+    {
+      "file": "audit/markers.json",
+      "bytes": 42290,
+      "sha256": "378320c84fc67ae5ba56b40343acdae429fe4a36f5f420d81bb39d606eb8bcb6",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/post-terminal-audit/markers.json"
+    },
+    {
+      "file": "audit/continuity.json",
+      "bytes": 32504,
+      "sha256": "5d35515f0e59e87c0a8d38db8f580230caabc527b34c2e7e3bf3df3ee254af07",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/post-terminal-audit/continuity.json"
+    },
+    {
+      "file": "audit/audit-status.json",
+      "bytes": 1981,
+      "sha256": "c11825088dd0e38741ac8a32592ef6d318435ff74ab2e0ce099ecc4e2f0f2046",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/post-terminal-audit/audit-status.json"
+    },
+    {
+      "file": "audit/selectors.txt",
+      "bytes": 532,
+      "sha256": "14afce1ee41211348af391106eccf800d6071bfead42a0a1e3202d28751abd99",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/post-terminal-audit/selectors.txt"
+    },
+    {
+      "file": "proposal/destination-state-diagnostic.patch",
+      "bytes": 10695,
+      "sha256": "e956e0b47191a453b84e214120ee8a41e8df26cb55465fa87ee0a158e665ba2c",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/speech-inspection/destination-diagnostic/destination-state-diagnostic.patch"
+    },
+    {
+      "file": "proposal/source-pins.json",
+      "bytes": 1426,
+      "sha256": "fcab56db1c7107297e28b4bb2fcd847151e8141c059846624b08cabb4735d836",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/speech-inspection/destination-diagnostic/source-pins.json"
+    },
+    {
+      "file": "proposal/REVIEW.md",
+      "bytes": 7132,
+      "sha256": "34a88c7bcc4036bcf85c2ea039176643c41baa3cea6c9b7977c0269055f65cec",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/speech-inspection/destination-diagnostic/REVIEW.md"
+    },
+    {
+      "file": "proposal/original-five-case-order.txt",
+      "bytes": 532,
+      "sha256": "14afce1ee41211348af391106eccf800d6071bfead42a0a1e3202d28751abd99",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/speech-inspection/destination-diagnostic/original-five-case-order.txt"
+    },
+    {
+      "file": "audit-execution-v1.log",
+      "bytes": 56,
+      "sha256": "bd7dc277b0d91748808fdb6b058444339d488ed9cfaaf918e56ebdb9e5307372",
+      "originalAbsolutePath": "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/audit-execution.log"
+    }
+  ],
+  "originalAppStdout": {
+    "path": "/Users/palatis/Room in the Cart/.build/CookDestinationTraceNov08/post-terminal-audit/app-stdout-private.txt",
+    "bytes": 62150929,
+    "sha256": "76a59edf43218dd427c24c6fdf4864eaa88a68eb5b8a4ae2457307b5d17df854"
+  },
+  "excluded": [
+    "full app stdout",
+    "xcresult inspection and original bundles",
+    "derived data and binaries",
+    "full native and Release logs"
+  ],
+  "status": "Installed diagnostic qualified locally; original hosted native failure unresolved; local strict warning gate failed/unavailable"
+}

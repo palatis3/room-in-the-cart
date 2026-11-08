@@ -1,0 +1,45 @@
+{
+  "completed": true,
+  "strictExit": 1,
+  "originalBundleUnchanged": true,
+  "sourcePins": {
+    "sourceHEAD": "a0195caa8eea9a5247cf1232902cbb2e215844d7",
+    "status": "scratch only, uninstalled, uncompiled, no native execution",
+    "files": [
+      {
+        "path": "ios/Features/Household/SharedCookHistoryView.swift",
+        "originalSHA256": "0e85741fd30ec1007a762f752f6d21b9e05bf6fc0e0235e3ca57d02b771d6d52",
+        "candidateSHA256": "f193f2edc427112795cc17d5fd89ac5dfd86a7b163194f6bbf285dc92cca7460"
+      },
+      {
+        "path": "ios/UITests/SharedDeliveryUITests.swift",
+        "originalSHA256": "971db8c4b3cc37cdae5d4704cb58942952902fbcf2fdb4986b139afee1ee5f7a",
+        "candidateSHA256": "fc602c61180e82c49823ddfc36378034164250b6d635594f980df6d1c8fd7884"
+      }
+    ],
+    "patchSHA256": "e956e0b47191a453b84e214120ee8a41e8df26cb55465fa87ee0a158e665ba2c",
+    "originalSelectorList": "/Users/palatis/Room in the Cart/.build/CIF90Nov07/speech/pristine-members/test-plan/SharedDeliveryUITests-recovery-cook-and-closeout.txt",
+    "staticChecks": {
+      "nonfixtureViewAfterConditionalRemovalWhitespaceNormalized": "identical",
+      "entireSharedDeliveryUITestsExceptOneEnvironmentLine": "byte-identical",
+      "compiled": false,
+      "nativeExecuted": false
+    },
+    "auditSourceHashes": {
+      "ios/Features/Household/HouseholdShopModel.swift": "ea637300c639dc178e8b2acfb81bf358fc920bcd197f14e5409a9f93105dbe9f",
+      "ios/Features/Household/HouseholdModel.swift": "6f48f4184c5249b153042d9e8e17980408750acea921381ed050806e13bdae21"
+    }
+  },
+  "sourceHashesAtAudit": [
+    {
+      "path": "ios/Features/Household/SharedCookHistoryView.swift",
+      "sha256": "f193f2edc427112795cc17d5fd89ac5dfd86a7b163194f6bbf285dc92cca7460",
+      "matchesRunPin": true
+    },
+    {
+      "path": "ios/UITests/SharedDeliveryUITests.swift",
+      "sha256": "fc602c61180e82c49823ddfc36378034164250b6d635594f980df6d1c8fd7884",
+      "matchesRunPin": true
+    }
+  ]
+}

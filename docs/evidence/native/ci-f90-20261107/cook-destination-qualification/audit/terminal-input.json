@@ -1,0 +1,16 @@
+{
+  "nativeExit": 0,
+  "banner": "SUCCEEDED",
+  "runJSONSHA256": "00c12409f206d422331d42adafc204ea0a820206cd71f80457d892fe878c056e",
+  "nativeLogSHA256": "344a8058ff01aaea856a7286573054fe31b9fda326a7722503ac07731b7e5a97",
+  "originalSelectorsSHA256": "14afce1ee41211348af391106eccf800d6071bfead42a0a1e3202d28751abd99",
+  "expectedSelectors": [
+    "RoomInTheCartUITests/SharedDeliveryUITests/testShopperClosesWithPendingCreditThenLinksItToTheOriginalNetCharge",
+    "RoomInTheCartUITests/SharedDeliveryUITests/testShopperLeavesOriginalDinnerOpenAfterAnUnresolvedReplacementPreview",
+    "RoomInTheCartUITests/SharedDeliveryUITests/testShopperReplacesWednesdayAfterPickupAndKeepsTuesdaysShortage",
+    "RoomInTheCartUITests/SharedDeliveryUITests/testShopperReviewsExactEditedCookWordingBeforeReadback",
+    "RoomInTheCartUITests/SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord"
+  ],
+  "runStatusAtAudit": "native complete",
+  "noNativeOrSimulatorActions": true
+}

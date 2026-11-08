@@ -1,0 +1,9 @@
+{
+  "status": "first root invocation refused before output directory creation",
+  "reason": "unable to open database file",
+  "source": "root observed terminal invocation report",
+  "originalBundleState": "Fresh xcresult has Data and Info.plist; database.sqlite3 not materialized",
+  "scriptSHA256": "a78634d81e0caa1c3b3b965c9287830c6f40ff660efae5b864bde392dfb5a1b7",
+  "originalBundleDatabaseCreatedByAudit": false,
+  "outputDirectoryCreated": false
+}

@@ -1,0 +1,218 @@
+--- a/ios/Features/Household/SharedCookHistoryView.swift
++++ b/ios/Features/Household/SharedCookHistoryView.swift
+@@ -85,6 +85,10 @@
+     @EnvironmentObject private var membership: MembershipCoordinator
+     @State private var sharing: Message?
+     @State private var destinationConfirmed = false
++    #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
++    // Diagnostic identity is unrelated to any household, recipient, copy or request.
++    @State private var destinationTraceID = UUID()
++    #endif
+     @State private var correction: HandoffCorrection?
+     @State private var fullWording = ""
+     @State private var wordingConfirmed = false
+@@ -153,9 +157,15 @@
+                                 Toggle(pTr("I know the previous copy went to this recipient"), isOn: Binding(
+                                     get: { destinationConfirmed },
+                                     set: { value in
++                                        #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
++                                        traceDestination("setter-enter", from: destinationConfirmed, to: value)
++                                        #endif
+                                         requestID = nil
+                                         clearCorrection()
+                                         destinationConfirmed = value
++                                        #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
++                                        traceDestination("setter-return")
++                                        #endif
+                                     }))
+                                     .accessibilityIdentifier("delivery.cook.confirmDestination")
+                             }
+@@ -198,15 +208,36 @@
+         }
+         .navigationTitle(ht("Dated copy"))
+         .onAppear {
++            #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
++            traceDestination("appear")
++            #endif
+             if recipient.isEmpty, allowed, let pending = model.pendingCookRecipient(for: occurrence) {
+                 recipient = pending
+             }
+         }
+-        .onChange(of: recipient) { _, _ in invalidate() }
+-        .onChange(of: allowed) { _, active in if !active { recipient = ""; sharing = nil; invalidate() } }
+-        .onChange(of: scenePhase) { _, phase in if phase != .active { invalidate() } }
++        .onChange(of: recipient) { _, _ in
++            #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
++            traceDestination("recipient-changed")
++            #endif
++            invalidate()
++        }
++        .onChange(of: allowed) { _, active in
++            #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
++            traceDestination("allowed-changed")
++            #endif
++            if !active { recipient = ""; sharing = nil; invalidate() }
++        }
++        .onChange(of: scenePhase) { _, phase in
++            #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
++            traceDestination("scene-changed")
++            #endif
++            if phase != .active { invalidate() }
++        }
+         .onChange(of: fullWording) { _, _ in wordingConfirmed = false }
+         .onChange(of: paid) { _, _ in
++            #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
++            traceDestination("paid-changed")
++            #endif
+             requestID = nil
+             if sharing?.assisted == true { sharing = nil }
+             clearCorrection()
+@@ -214,16 +245,41 @@
+         .task(id: seatDeadline) {
+             guard let end = seatDeadline else { return }
+             do { try await Task.sleep(for: .seconds(max(0, end.timeIntervalSinceNow))) } catch { return }
++            #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
++            traceDestination("seat-deadline-fired")
++            #endif
+             if sharing?.assisted == true { sharing = nil }
+             clearCorrection()
+         }
+-        .onDisappear { invalidate() }
++        .onDisappear {
++            #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
++            traceDestination("disappear")
++            #endif
++            invalidate()
++        }
++        #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
++        .onChange(of: destinationConfirmed) { old, new in
++            traceDestination("state-change", from: old, to: new)
++        }
++        .onChange(of: copy.copyId) { _, _ in traceDestination("copy-identity-changed") }
++        .onChange(of: page) { _, _ in traceDestination("page-changed") }
++        .onChange(of: ObjectIdentifier(model)) { _, _ in traceDestination("model-identity-changed") }
++        #endif
+         .sheet(item: $sharing) { message in
+             if allowed && (!message.assisted || paid) {
+                 PickupActivitySheet(text: message.text) { _, _ in sharing = nil }
+             }
+         }
+     }
++
++    #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
++    private func traceDestination(_ event: String, from: Bool? = nil, to: Bool? = nil) {
++        guard CookDestinationTrace.enabled else { return }
++        CookDestinationTrace.emit(event, state: destinationTraceID, from: from, to: to,
++            confirmed: destinationConfirmed, hasReview: reviewed != nil, hasRequest: requestID != nil,
++            hasCorrection: correction != nil, allowed: allowed, paid: paid, active: scenePhase == .active)
++    }
++    #endif
+ 
+     private var canShareCorrection: Bool {
+         switch correction {
+@@ -233,12 +289,27 @@
+         }
+     }
+ 
+-    private func clearCorrection() { correction = nil; fullWording = ""; wordingConfirmed = false }
++    private func clearCorrection() {
++        #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
++        traceDestination("clear-correction")
++        #endif
++        correction = nil; fullWording = ""; wordingConfirmed = false
++    }
+     private func invalidate() {
++        #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
++        traceDestination("invalidate-enter")
++        #endif
+         requestID = nil; reviewed = nil; failure = false; destinationConfirmed = false; clearCorrection()
++        #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
++        traceDestination("invalidate-return")
++        #endif
+     }
+ 
+     private func reviewCorrection(_ review: RecipientReview, sharingReviewed: Bool = false) async {
++        #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
++        traceDestination("review-enter")
++        defer { traceDestination("review-exit") }
++        #endif
+         guard latest, canCheck, review.name.utf8.elementsEqual(name.utf8) else { return }
+         let previous = correction, id = UUID(), confirmed = destinationConfirmed
+         let wording = fullWording
+@@ -247,6 +318,9 @@
+         do {
+             let result = try await model.reviewedCookCorrection(copy, recipient: review.name, baseline: review.baseline,
+                 destinationConfirmed: confirmed, paid: paid, occurrence: occurrence, reviewed: page)
++            #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
++            traceDestination("review-result")
++            #endif
+             guard id == requestID, allowed, scenePhase == .active, review.name.utf8.elementsEqual(name.utf8),
+                   reviewed?.baseline?.send.sendId == review.baseline?.send.sendId, destinationConfirmed == confirmed else { return }
+             if case .changes = result, !paid { clearCorrection(); return }
+@@ -269,6 +343,10 @@
+     }
+ 
+     private func checkRecipient() async {
++        #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
++        traceDestination("check-recipient-enter")
++        defer { traceDestination("check-recipient-exit") }
++        #endif
+         guard canCheck, !name.isEmpty else { return }
+         let selected = name, id = UUID()
+         enteringName = false
+@@ -279,12 +357,19 @@
+             let baseline = try await model.cookCopyBaseline(recipient: selected, occurrence: occurrence, reviewed: page)
+             guard requestID == id, allowed, selected.utf8.elementsEqual(name.utf8) else { return }
+             reviewed = .init(name: selected, baseline: baseline)
++            #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
++            traceDestination("baseline-accepted")
++            #endif
+         } catch {
+             if requestID == id { failure = true }
+         }
+     }
+ 
+     private func markSent(_ review: RecipientReview) async {
++        #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
++        traceDestination("mark-sent-enter")
++        defer { traceDestination("mark-sent-exit") }
++        #endif
+         guard canMark, review.name.utf8.elementsEqual(name.utf8),
+               reviewed?.name.utf8.elementsEqual(name.utf8) == true,
+               reviewed?.baseline?.send.sendId == review.baseline?.send.sendId else { return }
+@@ -299,3 +384,25 @@
+         if saved { await checkRecipient() } else { failure = true }
+     }
+ }
++
++#if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
++// Temporary fixture-only diagnostics. Never include product IDs, wording, recipient text or errors.
++private enum CookDestinationTrace {
++    private static let scope = "SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord"
++    static let enabled: Bool = {
++        let process = ProcessInfo.processInfo
++        return process.arguments.contains("--ui-testing") &&
++            process.arguments.contains("--shared-delivery-fixture") &&
++            process.arguments.contains("--shared-cook-copies-fixture") &&
++            process.environment["S24_COOK_DESTINATION_TRACE_SCOPE"] == scope
++    }()
++    static func emit(_ event: String, state: UUID, from: Bool?, to: Bool?, confirmed: Bool,
++                     hasReview: Bool, hasRequest: Bool, hasCorrection: Bool,
++                     allowed: Bool, paid: Bool, active: Bool) {
++        guard enabled else { return }
++        let process = ProcessInfo.processInfo
++        let old = from.map { String($0) } ?? "-", new = to.map { String($0) } ?? "-"
++        print("S24_COOK_DESTINATION_TRACE uptime=\(process.systemUptime) pid=\(process.processIdentifier) scope=\(scope) event=\(event) state=\(state) from=\(old) to=\(new) confirmed=\(confirmed) review=\(hasReview) request=\(hasRequest) correction=\(hasCorrection) allowed=\(allowed) paid=\(paid) active=\(active)")
++    }
++}
++#endif
+--- a/ios/UITests/SharedDeliveryUITests.swift
++++ b/ios/UITests/SharedDeliveryUITests.swift
+@@ -442,6 +442,7 @@
+     }
+ 
+     func testShopperSavesDatedCookCopyAndReopensRecipientSendRecord() {
++        app.launchEnvironment["S24_COOK_DESTINATION_TRACE_SCOPE"] = "SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord"
+         launch("en", locale: "en_US", cookCopies: true)
+         tap(app.buttons["Delivered food by meal"])
+         let occurrence = "AAAAAAA1-AAAA-4AAA-8AAA-AAAAAAAAAAAA"

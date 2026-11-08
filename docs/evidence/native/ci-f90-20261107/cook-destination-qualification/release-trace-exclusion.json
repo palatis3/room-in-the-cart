@@ -1,0 +1,30 @@
+{
+  "status": "passed",
+  "scope": "All three Mach-O files in unsigned generic Release app; main and both extensions. Trace literals absent in ASCII/UTF16LE/UTF16BE.",
+  "markers": [
+    "S24_PACK_TRACE",
+    "S24_PACK_TRACE_SCOPE",
+    "S24_COOK_DESTINATION_TRACE",
+    "S24_COOK_DESTINATION_TRACE_SCOPE"
+  ],
+  "binaries": [
+    {
+      "file": "RoomInTheCart",
+      "bytes": 58044936,
+      "sha256": "923b3df6f7d426bea64e39f9f5e4d4919543c1adc47bd71cd72ec4eb66d217d0",
+      "matches": []
+    },
+    {
+      "file": "PlugIns/RoomInTheCartShare.appex/RoomInTheCartShare",
+      "bytes": 653960,
+      "sha256": "b5869d6fe4dffdc03864c6a72931ea02145a86cd157dd780ed2d6d49b0653cfa",
+      "matches": []
+    },
+    {
+      "file": "PlugIns/RoomInTheCartWidget.appex/RoomInTheCartWidget",
+      "bytes": 572344,
+      "sha256": "48459538368d3e41d0279edf16f04c9f5eb7e7b86b1e8dd474ee924e4d0eb8e7",
+      "matches": []
+    }
+  ]
+}
