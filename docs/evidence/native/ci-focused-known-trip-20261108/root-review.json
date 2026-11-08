@@ -1,0 +1,9 @@
+{
+  "scope": "Three hosted screenshots reviewed: known trip, unknown-trip break-even, frozen order",
+  "findings": "Unknown-trip break-even $3.00 is fully visible. Total trip cash remains unresolved. Frozen order is read-only, old prices invalid, counters show2saves/1proposal/1adoption/4POSTs. All intermediate journey assertions passed in the strict test result.",
+  "files": {
+    "0FA009D4-BAF4-40EF-AEEE-0C73AFDCC6EC.png": "e4b79008788610106b42a69158bdd75a79f63a056e2ecc10422a1ed66f955a64",
+    "E462A2D9-8B2D-4EDE-A633-5CC5BCB4E555.png": "4cfba071ec3548d6ae0758b12bc4ce4a706bf5fef12c18dc6f99c5f2680be602",
+    "ECD3E251-0515-432C-90BE-C9B517EEB911.png": "7edb93474f0d64f7fc852f053de30b59f0635d2e4a6797ac755ef9d95ab0a273"
+  }
+}

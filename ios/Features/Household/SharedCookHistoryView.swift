@@ -1,5 +1,8 @@
 import HouseholdClient
 import SwiftUI
+#if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
+import os
+#endif
 
 extension SharedCookCopy {
     func handoff(pieces: [(section: SharedCookFactIndex.Section, wording: String)]) -> HandoffCopy {
@@ -390,6 +393,7 @@ private struct SharedCookSavedView: View {
 #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
 // Temporary fixture-only diagnostics. Never include product IDs, wording, recipient text or errors.
 private enum CookDestinationTrace {
+    private static let logger = Logger(subsystem: "dev.roominthecart.fixture", category: "cook-destination")
     private static let scope = "SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord"
     static let enabled: Bool = {
         let process = ProcessInfo.processInfo
@@ -404,7 +408,9 @@ private enum CookDestinationTrace {
         guard enabled else { return }
         let process = ProcessInfo.processInfo
         let old = from.map { String($0) } ?? "-", new = to.map { String($0) } ?? "-"
-        print("S24_COOK_DESTINATION_TRACE uptime=\(process.systemUptime) pid=\(process.processIdentifier) scope=\(scope) event=\(event) state=\(state) from=\(old) to=\(new) confirmed=\(confirmed) review=\(hasReview) request=\(hasRequest) correction=\(hasCorrection) allowed=\(allowed) paid=\(paid) active=\(active)")
+        let message = "S24_COOK_DESTINATION_TRACE uptime=\(process.systemUptime) pid=\(process.processIdentifier) scope=\(scope) event=\(event) state=\(state) from=\(old) to=\(new) confirmed=\(confirmed) review=\(hasReview) request=\(hasRequest) correction=\(hasCorrection) allowed=\(allowed) paid=\(paid) active=\(active)"
+        print(message)
+        logger.notice("\(message, privacy: .public)")
     }
 }
 #endif

@@ -236,7 +236,20 @@ jobs:
               echo 'Speech runtime diagnostics could not be collected.' >> "$GITHUB_STEP_SUMMARY"
             fi
           fi
-      - name: Clean up only the owned simulator after result and speech export
+      - name: Retain scoped cook confirmation diagnostics
+        if: always() && matrix.shard == 'SharedDeliveryUITests-recovery-cook-and-closeout'
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          if [[ -s .build/test-speech-start.txt ]]; then
+            if ! xcrun simctl spawn "$SIMULATOR_ID" log show \
+              --start "$(cat .build/test-speech-start.txt)" --style json --timezone UTC \
+              --predicate 'process == "RoomInTheCart" AND subsystem == "dev.roominthecart.fixture" AND category == "cook-destination"' \
+              > .build/test-cook-destination.json 2> .build/test-cook-destination-error.txt; then
+              echo 'Cook confirmation diagnostics could not be collected.' >> "$GITHUB_STEP_SUMMARY"
+            fi
+          fi
+      - name: Clean up only the owned simulator after result and diagnostic export
         if: always()
         timeout-minutes: 2
         run: python3 scripts/select_ci_iphone.py --cleanup-owned .build/test-simulator-ownership.json
@@ -251,6 +264,7 @@ jobs:
             .build/Tests*.log
             .build/test-*.json
             .build/test-speech-*.txt
+            .build/test-cook-*.txt
             .build/test-plan/
           retention-days: 7
           if-no-files-found: ignore
