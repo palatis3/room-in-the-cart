@@ -1,0 +1,34 @@
+User will not be able to change the font size of this SwiftUI.AccessibilityNode
+Attributes: StaticText, 0x11a53a020, {{32.0, 375.5}, {150.0, 20.3}}, label: 'Before this decision'
+Element subtree:
+ →StaticText, 0x11a53a020, {{32.0, 375.5}, {150.0, 20.3}}, label: 'Before this decision'
+Path to element:
+ →Application, 0x108ec11a0, pid: 48299, label: 'Room in the Cart'
+  ↳Window (Main), 0x108ec12c0, {{0.0, 0.0}, {402.0, 874.0}}
+   ↳Other, 0x11a534ce0, {{0.0, 0.0}, {402.0, 874.0}}
+    ↳Other, 0x11a534f20, {{0.0, 62.0}, {402.0, 812.0}}
+     ↳Other, 0x11a535040, {{0.0, 62.0}, {402.0, 812.0}}
+      ↳Other, 0x11a535160, {{0.0, 62.0}, {402.0, 812.0}}
+       ↳Other, 0x11a535280, {{0.0, 62.0}, {402.0, 812.0}}
+        ↳Other, 0x11a5353a0, {{0.0, 62.0}, {402.0, 812.0}}
+         ↳Other, 0x11a5354c0, {{0.0, 62.0}, {402.0, 812.0}}
+          ↳Other, 0x11a535b80, {{0.0, 62.0}, {402.0, 812.0}}
+           ↳Other, 0x11a535ca0, {{0.0, 62.0}, {402.0, 812.0}}
+            ↳Other, 0x11a535dc0, {{0.0, 62.0}, {402.0, 812.0}}
+             ↳Other, 0x11a535ee0, {{0.0, 62.0}, {402.0, 812.0}}
+              ↳CollectionView, 0x11a536000, {{0.0, 62.0}, {402.0, 812.0}}
+               ↳Cell, 0x11a538ac0, {{16.0, 192.3}, {370.0, 499.7}}
+                ↳Other, 0x11a538f40, {{16.0, 192.3}, {370.0, 499.7}}
+                 ↳Other, 0x11a539060, {{16.0, 192.3}, {370.0, 499.7}}
+                  ↳Other, 0x11a539180, {{16.0, 192.3}, {370.0, 499.7}}
+                   ↳StaticText, 0x11a539f00, {{32.0, 375.5}, {338.0, 20.3}}, identifier: 'household.decision.before-total', label: 'Before this decision, $37.20'
+                    ↳StaticText, 0x11a53a020, {{32.0, 375.5}, {150.0, 20.3}}, label: 'Before this decision'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x1040bda40, pid: 48299, label: 'Room in the Cart'
+  }
+  ↪︎Find: Descendant with identity binding to AX element pid: 48299, elementOrHash.elementID: 4387745360.389
+    Output: {
+      StaticText, 0x11a1a2f20, {{32.0, 375.5}, {150.0, 20.3}}, label: 'Before this decision'
+    }

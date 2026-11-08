@@ -1,0 +1,33 @@
+User will not be able to change the font size of this SwiftUI.AccessibilityNode
+Attributes: StaticText, 0x11a5d4a00, {{32.0, 488.8}, {234.7, 20.3}}, label: 'Protected meal commitments'
+Element subtree:
+ →StaticText, 0x11a5d4a00, {{32.0, 488.8}, {234.7, 20.3}}, label: 'Protected meal commitments'
+Path to element:
+ →Application, 0x1040d0010, pid: 48299, label: 'Room in the Cart'
+  ↳Window (Main), 0x1040cdfa0, {{0.0, 0.0}, {402.0, 874.0}}
+   ↳Other, 0x11a5cea60, {{0.0, 0.0}, {402.0, 874.0}}
+    ↳Other, 0x11a5ceca0, {{0.0, 62.0}, {402.0, 812.0}}
+     ↳Other, 0x11a5cedc0, {{0.0, 62.0}, {402.0, 812.0}}
+      ↳Other, 0x11a5ceee0, {{0.0, 62.0}, {402.0, 812.0}}
+       ↳Other, 0x11a5cf000, {{0.0, 62.0}, {402.0, 812.0}}
+        ↳Other, 0x11a5cf120, {{0.0, 62.0}, {402.0, 812.0}}
+         ↳Other, 0x11a5cf240, {{0.0, 62.0}, {402.0, 812.0}}
+          ↳Other, 0x11a5cf900, {{0.0, 62.0}, {402.0, 812.0}}
+           ↳Other, 0x11a5cfa20, {{0.0, 62.0}, {402.0, 812.0}}
+            ↳Other, 0x11a5cfb40, {{0.0, 62.0}, {402.0, 812.0}}
+             ↳Other, 0x11a5cfc60, {{0.0, 62.0}, {402.0, 812.0}}
+              ↳CollectionView, 0x11a5cfd80, {{0.0, 62.0}, {402.0, 812.0}}
+               ↳Cell, 0x11a5d2840, {{16.0, 192.3}, {370.0, 499.7}}
+                ↳Other, 0x11a5d2cc0, {{16.0, 192.3}, {370.0, 499.7}}
+                 ↳Other, 0x11a5d2de0, {{16.0, 192.3}, {370.0, 499.7}}
+                  ↳Other, 0x11a5d2f00, {{16.0, 192.3}, {370.0, 499.7}}
+                   ↳StaticText, 0x11a5d4a00, {{32.0, 488.8}, {234.7, 20.3}}, label: 'Protected meal commitments'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x11c911180, pid: 48299, label: 'Room in the Cart'
+  }
+  ↪︎Find: Descendant with identity binding to AX element pid: 48299, elementOrHash.elementID: 4388092368.379
+    Output: {
+      StaticText, 0x11c909dc0, {{32.0, 488.8}, {234.7, 20.3}}, label: 'Protected meal commitments'
+    }

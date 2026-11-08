@@ -1,0 +1,81 @@
+{
+  "sourceSHA256": "c0e83935417cd067d6adaab85240346f358d210e3c91a1e8f203ce3021acd508",
+  "callbackCount": 6,
+  "uniqueScreenshotHashes": 2,
+  "reviewedAllCallbackScreenshots": true,
+  "rows": [
+    {
+      "finding": 1,
+      "category": "Contrast failed",
+      "target": "Review decision",
+      "screenshot": "E0180304-1C5A-4868-BA9B-E9542DB7FC82.png",
+      "screenshotSHA256": "fde1fa28e443e2d331533389bc5e9f6d5072da5bbb86244fa5b581dada4297ef",
+      "context": "938A09F7-3ECC-4A45-8A68-EB3B08ADB451.txt",
+      "callbackStarted": 1794175570.9597101,
+      "screenshotAttachmentDelaySeconds": 0.19028997421264648,
+      "contextAttachmentDelaySeconds": 0.8962898254394531,
+      "findingDetailAttachmentDelaySeconds": 1.5702898502349854
+    },
+    {
+      "finding": 2,
+      "category": "Contrast failed",
+      "target": null,
+      "screenshot": "8280A56B-FF6C-425B-86BE-58B544DF9DBE.png",
+      "screenshotSHA256": "e9e409d4b79eddd6e8561e13a412a40508f143d3a3618edd1d8f89db88862772",
+      "context": "6A579F7B-D491-4B06-A487-78C758AAFB1F.txt",
+      "callbackStarted": 1794175572.7525249,
+      "screenshotAttachmentDelaySeconds": 0.17647504806518555,
+      "contextAttachmentDelaySeconds": 0.9244751930236816,
+      "findingDetailAttachmentDelaySeconds": 3.1144752502441406
+    },
+    {
+      "finding": 3,
+      "category": "Potentially inaccessible text",
+      "target": null,
+      "screenshot": "4B166019-3B5A-4EF1-9170-82A535709B77.png",
+      "screenshotSHA256": "e9e409d4b79eddd6e8561e13a412a40508f143d3a3618edd1d8f89db88862772",
+      "context": "A372E7F5-7B02-4B2A-B858-4DCA961ED990.txt",
+      "callbackStarted": 1794175578.0473151,
+      "screenshotAttachmentDelaySeconds": 0.18268489837646484,
+      "contextAttachmentDelaySeconds": 0.9566848278045654,
+      "findingDetailAttachmentDelaySeconds": 0.9576849937438965
+    },
+    {
+      "finding": 4,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "target": "1",
+      "screenshot": "C26F1EB5-D2A4-42B9-A568-72EEF1FDF074.png",
+      "screenshotSHA256": "e9e409d4b79eddd6e8561e13a412a40508f143d3a3618edd1d8f89db88862772",
+      "context": "A8632B43-6C43-4001-A3E6-28B61D218CBD.txt",
+      "callbackStarted": 1794175579.007184,
+      "screenshotAttachmentDelaySeconds": 0.19981598854064941,
+      "contextAttachmentDelaySeconds": 0.9588160514831543,
+      "findingDetailAttachmentDelaySeconds": 1.5858159065246582
+    },
+    {
+      "finding": 35,
+      "category": "Text clipped",
+      "target": "Preview expires",
+      "screenshot": "6AB62207-85AE-4FA0-9A39-8799DB24E7AA.png",
+      "screenshotSHA256": "e9e409d4b79eddd6e8561e13a412a40508f143d3a3618edd1d8f89db88862772",
+      "context": "676109FC-521A-434A-AC30-0DB1B34E591E.txt",
+      "callbackStarted": 1794175603.483416,
+      "screenshotAttachmentDelaySeconds": 0.18358397483825684,
+      "contextAttachmentDelaySeconds": 0.9385838508605957,
+      "findingDetailAttachmentDelaySeconds": 1.4575839042663574
+    },
+    {
+      "finding": 36,
+      "category": "Text clipped",
+      "target": "Dec 31, 2098 at 7:00\u202fPM",
+      "screenshot": "7969322E-249C-40B5-86D5-67149090D72E.png",
+      "screenshotSHA256": "e9e409d4b79eddd6e8561e13a412a40508f143d3a3618edd1d8f89db88862772",
+      "context": "9ECDE415-CC99-476E-8754-9666891288B8.txt",
+      "callbackStarted": 1794175605.133494,
+      "screenshotAttachmentDelaySeconds": 0.1755061149597168,
+      "contextAttachmentDelaySeconds": 0.8785061836242676,
+      "findingDetailAttachmentDelaySeconds": 1.40950608253479
+    }
+  ],
+  "interpretation": "All callback screenshots show the same standard-size review viewport. Review decision is absent from visible pixels and its AX frame is behind the top chrome. Preview expiry label/date are visible at standard size. Callback captures do not observe internal audit Dynamic Type sampling. No finding waived; no count change treated as a fix."
+}

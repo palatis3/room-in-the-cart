@@ -1,0 +1,1494 @@
+{
+  "oldIssueCount": 41,
+  "newIssueCount": 36,
+  "categories": {
+    "Contrast failed": 2,
+    "Potentially inaccessible text": 1,
+    "Dynamic Type font sizes are partially unsupported": 29,
+    "Dynamic Type font sizes are unsupported": 2,
+    "Text clipped": 2
+  },
+  "callbackCorrelation": {
+    "count": 36,
+    "timestampSpreadSeconds": 0.009000062942504883,
+    "automaticDescriptionMultisetMatches": true
+  },
+  "oldSourceSHA256": "b75ba930edc3efbd183c4a05e1446adeaa358ea39b224bd4736f22a897718c28",
+  "newIssues": [
+    {
+      "finding": 1,
+      "category": "Contrast failed",
+      "description": "Contrast failed for SwiftUI.AccessibilityNode",
+      "target": {
+        "attributes": "Attributes: Button, 0x108e36050, {{16.0, 26.3}, {370.0, 52.0}}, identifier: 'household.decision.review', label: 'Review decision'",
+        "label": "Review decision",
+        "type": "Button",
+        "context": null,
+        "identifier": "household.decision.review",
+        "disabled": false,
+        "key": [
+          "Button",
+          "Review decision",
+          null
+        ]
+      },
+      "consoleLine": 5283,
+      "timestamp": 1794175572.53,
+      "attachmentPath": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/callback-context-r1/run/inspection/custom-issues/AA35667F-C538-4650-88F0-C75B23113EB6.txt",
+      "attachmentSHA256": "c339eef002d5d98c5f55e884118025d789f9ac4fb054462601f8a865a2b300d2",
+      "old41SameTargetSameCategory": [],
+      "old41SameTargetOtherCategory": [],
+      "disposition": "named-target/category-not-matched-to-old41",
+      "provenRegression": false
+    },
+    {
+      "finding": 2,
+      "category": "Contrast failed",
+      "description": "Contrast failed for SwiftUI.AccessibilityNode",
+      "target": {
+        "attributes": null,
+        "label": null,
+        "type": null,
+        "context": null,
+        "identifier": null,
+        "disabled": null,
+        "key": null
+      },
+      "consoleLine": 5296,
+      "timestamp": 1794175575.867,
+      "attachmentPath": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/callback-context-r1/run/inspection/custom-issues/CA327EDE-B4BF-4308-B741-13FF79FB200C.txt",
+      "attachmentSHA256": "060f9d27e6a5d501fa49a391bf1608d50af8c6c6d370ad7d33358e19a89536eb",
+      "old41SameTargetSameCategory": [],
+      "old41SameTargetOtherCategory": [],
+      "disposition": "unattributed",
+      "provenRegression": false
+    },
+    {
+      "finding": 3,
+      "category": "Potentially inaccessible text",
+      "description": "This element appears to display text that should be represented using the accessibility API.",
+      "target": {
+        "attributes": null,
+        "label": null,
+        "type": null,
+        "context": null,
+        "identifier": null,
+        "disabled": null,
+        "key": null
+      },
+      "consoleLine": 5303,
+      "timestamp": 1794175579.005,
+      "attachmentPath": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/callback-context-r1/run/inspection/custom-issues/43946C2A-453A-47AB-89E2-3DBF75B08800.txt",
+      "attachmentSHA256": "0c07f8c606d617d0b1e0d1bcb90d9b29f6542ae361c69196ebccaba356e7b0f8",
+      "old41SameTargetSameCategory": [],
+      "old41SameTargetOtherCategory": [],
+      "disposition": "unattributed",
+      "provenRegression": false
+    },
+    {
+      "finding": 4,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "description": "User will not be able to change the font size of this SwiftUI.AccessibilityNode",
+      "target": {
+        "attributes": "Attributes: StaticText, 0x118c22830, {{359.7, 553.5}, {10.3, 20.3}}, label: '1'",
+        "label": "1",
+        "type": "StaticText",
+        "context": "Sam protected meal8888",
+        "identifier": null,
+        "disabled": false,
+        "key": [
+          "StaticText",
+          "1",
+          "Sam protected meal8888"
+        ]
+      },
+      "consoleLine": 5319,
+      "timestamp": 1794175580.593,
+      "attachmentPath": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/callback-context-r1/run/inspection/custom-issues/ED8D19C9-549E-4015-8349-6D391F9F8B77.txt",
+      "attachmentSHA256": "8a95bf530776f32c9c982b844365d249d1284fee9bfe67b03a012e5a0a25d186",
+      "old41SameTargetSameCategory": [
+        26
+      ],
+      "old41SameTargetOtherCategory": [],
+      "disposition": "observed-again",
+      "provenRegression": false
+    },
+    {
+      "finding": 5,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "description": "User will not be able to change the font size of this SwiftUI.AccessibilityNode",
+      "target": {
+        "attributes": "Attributes: StaticText, 0x118b50ed0, {{16.0, 136.0}, {370.0, 56.3}}, label: 'Add packs to this shop'",
+        "label": "Add packs to this shop",
+        "type": "StaticText",
+        "context": null,
+        "identifier": null,
+        "disabled": false,
+        "key": [
+          "StaticText",
+          "Add packs to this shop",
+          null
+        ]
+      },
+      "consoleLine": 5330,
+      "timestamp": 1794175581.399,
+      "attachmentPath": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/callback-context-r1/run/inspection/custom-issues/AD4A7989-6274-4DE6-8129-EE5784AC351F.txt",
+      "attachmentSHA256": "27a5e709783deba26665458da2e8faa1d0f5e520cf0901dfcf9505dd5565d426",
+      "old41SameTargetSameCategory": [],
+      "old41SameTargetOtherCategory": [
+        {
+          "finding": 2,
+          "category": "Contrast failed"
+        }
+      ],
+      "disposition": "named-target/category-not-matched-to-old41",
+      "provenRegression": false
+    },
+    {
+      "finding": 6,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "description": "User will not be able to change the font size of this SwiftUI.AccessibilityNode",
+      "target": {
+        "attributes": "Attributes: StaticText, 0x118b6c9b0, {{32.0, 318.8}, {48.3, 20.3}}, label: 'Scope'",
+        "label": "Scope",
+        "type": "StaticText",
+        "context": null,
+        "identifier": null,
+        "disabled": false,
+        "key": [
+          "StaticText",
+          "Scope",
+          null
+        ]
+      },
+      "consoleLine": 5341,
+      "timestamp": 1794175582.125,
+      "attachmentPath": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/callback-context-r1/run/inspection/custom-issues/B9B75F0F-3B54-48DE-B604-ED61738AECDE.txt",
+      "attachmentSHA256": "5862e059e60a8c9ffab268b35d61f68f5a7aa2899c873e21a00521044d066c90",
+      "old41SameTargetSameCategory": [
+        34
+      ],
+      "old41SameTargetOtherCategory": [],
+      "disposition": "observed-again",
+      "provenRegression": false
+    },
+    {
+      "finding": 7,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "description": "User will not be able to change the font size of this SwiftUI.AccessibilityNode",
+      "target": {
+        "attributes": "Attributes: StaticText, 0x118a67000, {{314.0, 375.5}, {56.0, 20.3}}, label: '$37.20'",
+        "label": "$37.20",
+        "type": "StaticText",
+        "context": null,
+        "identifier": null,
+        "disabled": false,
+        "key": [
+          "StaticText",
+          "$37.20",
+          null
+        ]
+      },
+      "consoleLine": 5352,
+      "timestamp": 1794175582.915,
+      "attachmentPath": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/callback-context-r1/run/inspection/custom-issues/AC3BF809-1E2A-42E4-ACF1-7299CC7818F5.txt",
+      "attachmentSHA256": "2fb182f080276e0ea55eacdacc474dbfc86bcf3776ca7956f92a99b03b6ea2d3",
+      "old41SameTargetSameCategory": [
+        37
+      ],
+      "old41SameTargetOtherCategory": [],
+      "disposition": "observed-again",
+      "provenRegression": false
+    },
+    {
+      "finding": 8,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "description": "User will not be able to change the font size of this SwiftUI.AccessibilityNode",
+      "target": {
+        "attributes": "Attributes: StaticText, 0x118c90100, {{32.0, 537.2}, {151.3, 14.3}}, label: 'Lunch · November 4, 2026'",
+        "label": "Lunch · November 4, 2026",
+        "type": "StaticText",
+        "context": null,
+        "identifier": null,
+        "disabled": false,
+        "key": [
+          "StaticText",
+          "Lunch · November 4, 2026",
+          null
+        ]
+      },
+      "consoleLine": 5363,
+      "timestamp": 1794175583.639,
+      "attachmentPath": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/callback-context-r1/run/inspection/custom-issues/D7663949-EBF6-4ECD-87CD-453C101C98F1.txt",
+      "attachmentSHA256": "d3c38256405a0e453b3d1c3ca08c48ca8b1630b8c192043ecee99771a55c7ff4",
+      "old41SameTargetSameCategory": [
+        36
+      ],
+      "old41SameTargetOtherCategory": [],
+      "disposition": "observed-again",
+      "provenRegression": false
+    },
+    {
+      "finding": 9,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "description": "User will not be able to change the font size of this SwiftUI.AccessibilityNode",
+      "target": {
+        "attributes": "Attributes: StaticText, 0x118bd2690, {{32.0, 601.8}, {151.3, 14.3}}, label: 'Lunch · November 5, 2026'",
+        "label": "Lunch · November 5, 2026",
+        "type": "StaticText",
+        "context": null,
+        "identifier": null,
+        "disabled": false,
+        "key": [
+          "StaticText",
+          "Lunch · November 5, 2026",
+          null
+        ]
+      },
+      "consoleLine": 5374,
+      "timestamp": 1794175584.341,
+      "attachmentPath": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/callback-context-r1/run/inspection/custom-issues/9BF9755A-E959-417E-ABB9-3C2C0B52BB79.txt",
+      "attachmentSHA256": "e23812b28e0c7d430be6a1ebd0466e288afc2a16fb75c004e827f24ef59ae1b9",
+      "old41SameTargetSameCategory": [
+        31
+      ],
+      "old41SameTargetOtherCategory": [],
+      "disposition": "observed-again",
+      "provenRegression": false
+    },
+    {
+      "finding": 10,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "description": "User will not be able to change the font size of this SwiftUI.AccessibilityNode",
+      "target": {
+        "attributes": "Attributes: StaticText, 0x118f3d560, {{247.0, 460.5}, {123.0, 20.3}}, label: 'Whole checkout'",
+        "label": "Whole checkout",
+        "type": "StaticText",
+        "context": "Cap scope",
+        "identifier": null,
+        "disabled": false,
+        "key": [
+          "StaticText",
+          "Whole checkout",
+          "Cap scope"
+        ]
+      },
+      "consoleLine": 5385,
+      "timestamp": 1794175585.066,
+      "attachmentPath": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/callback-context-r1/run/inspection/custom-issues/AD0B4D49-496B-47F6-8DB5-907E03FE5F3F.txt",
+      "attachmentSHA256": "3d9719e32e20605ad33ea55d407781dc188350ee54525a702341238068addf03",
+      "old41SameTargetSameCategory": [
+        29
+      ],
+      "old41SameTargetOtherCategory": [],
+      "disposition": "observed-again",
+      "provenRegression": false
+    },
+    {
+      "finding": 11,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "description": "User will not be able to change the font size of this SwiftUI.AccessibilityNode",
+      "target": {
+        "attributes": "Attributes: StaticText, 0x118f62e40, {{32.0, 517.2}, {126.0, 18.0}}, label: 'Sam’s wrap lunch'",
+        "label": "Sam’s wrap lunch",
+        "type": "StaticText",
+        "context": null,
+        "identifier": null,
+        "disabled": false,
+        "key": [
+          "StaticText",
+          "Sam’s wrap lunch",
+          null
+        ]
+      },
+      "consoleLine": 5396,
+      "timestamp": 1794175585.77,
+      "attachmentPath": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/callback-context-r1/run/inspection/custom-issues/7C96DAC6-E067-42CA-9B92-7D9E9CD99FA8.txt",
+      "attachmentSHA256": "7d1147e2353566e22721bb4b7e90d9a20f0d8b8a192e0da77d413cf51d473dcd",
+      "old41SameTargetSameCategory": [
+        19
+      ],
+      "old41SameTargetOtherCategory": [],
+      "disposition": "observed-again",
+      "provenRegression": false
+    },
+    {
+      "finding": 12,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "description": "User will not be able to change the font size of this SwiftUI.AccessibilityNode",
+      "target": {
+        "attributes": "Attributes: StaticText, 0x11904c510, {{32.0, 257.8}, {110.0, 20.3}}, label: 'Expected total'",
+        "label": "Expected total",
+        "type": "StaticText",
+        "context": null,
+        "identifier": null,
+        "disabled": false,
+        "key": [
+          "StaticText",
+          "Expected total",
+          null
+        ]
+      },
+      "consoleLine": 5407,
+      "timestamp": 1794175586.564,
+      "attachmentPath": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/callback-context-r1/run/inspection/custom-issues/05229808-AC03-490F-AE68-8F2614F2E7C0.txt",
+      "attachmentSHA256": "ffee12a5d2151178468c4d3652952edd371a2c18ed9b9f938eb268dc1de320f4",
+      "old41SameTargetSameCategory": [
+        28
+      ],
+      "old41SameTargetOtherCategory": [],
+      "disposition": "observed-again",
+      "provenRegression": false
+    },
+    {
+      "finding": 13,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "description": "User will not be able to change the font size of this SwiftUI.AccessibilityNode",
+      "target": {
+        "attributes": "Attributes: StaticText, 0x118f88dd0, {{324.0, 290.5}, {46.0, 20.3}}, label: '$2.69'",
+        "label": "$2.69",
+        "type": "StaticText",
+        "context": null,
+        "identifier": null,
+        "disabled": false,
+        "key": [
+          "StaticText",
+          "$2.69",
+          null
+        ]
+      },
+      "consoleLine": 5418,
+      "timestamp": 1794175587.312,
+      "attachmentPath": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/callback-context-r1/run/inspection/custom-issues/A867E528-09F8-4345-97D0-BF2E15AA1C20.txt",
+      "attachmentSHA256": "e8c60df4a6e106a118f25b22210baad7a6cc1c11feb48056964d5af0bb4fbcc9",
+      "old41SameTargetSameCategory": [
+        23
+      ],
+      "old41SameTargetOtherCategory": [],
+      "disposition": "observed-again",
+      "provenRegression": false
+    },
+    {
+      "finding": 14,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "description": "User will not be able to change the font size of this SwiftUI.AccessibilityNode",
+      "target": {
+        "attributes": "Attributes: StaticText, 0x10475b540, {{32.0, 646.5}, {338.0, 30.3}}, label: 'Check usable food separately; this review does not confirm meal coverage.'",
+        "label": "Check usable food separately; this review does not confirm meal coverage.",
+        "type": "StaticText",
+        "context": null,
+        "identifier": null,
+        "disabled": false,
+        "key": [
+          "StaticText",
+          "Check usable food separately; this review does not confirm meal coverage.",
+          null
+        ]
+      },
+      "consoleLine": 5429,
+      "timestamp": 1794175588.089,
+      "attachmentPath": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/callback-context-r1/run/inspection/custom-issues/F0668407-258E-4075-8506-8506BD8FF368.txt",
+      "attachmentSHA256": "fed5d2e3d7720d59fd3b8aeca287cf229e44ee56e1e97a39a11945e19cdeef01",
+      "old41SameTargetSameCategory": [
+        33
+      ],
+      "old41SameTargetOtherCategory": [],
+      "disposition": "observed-again",
+      "provenRegression": false
+    },
+    {
+      "finding": 15,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "description": "User will not be able to change the font size of this SwiftUI.AccessibilityNode",
+      "target": {
+        "attributes": "Attributes: StaticText, 0x118fd54f0, {{324.0, 403.8}, {46.0, 20.3}}, label: '$3.49'",
+        "label": "$3.49",
+        "type": "StaticText",
+        "context": null,
+        "identifier": null,
+        "disabled": false,
+        "key": [
+          "StaticText",
+          "$3.49",
+          null
+        ]
+      },
+      "consoleLine": 5440,
+      "timestamp": 1794175588.818,
+      "attachmentPath": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/callback-context-r1/run/inspection/custom-issues/DA53EA9C-ECF7-41C1-A16A-25256B13C1B9.txt",
+      "attachmentSHA256": "6172ac7f424c12ae2d0f084926da436985d4a7607669c06d518db2de5a97ac42",
+      "old41SameTargetSameCategory": [
+        9
+      ],
+      "old41SameTargetOtherCategory": [],
+      "disposition": "observed-again",
+      "provenRegression": false
+    },
+    {
+      "finding": 16,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "description": "User will not be able to change the font size of this SwiftUI.AccessibilityNode",
+      "target": {
+        "attributes": "Attributes: StaticText, 0x118ff2300, {{252.3, 241.8}, {117.7, 40.7}}, label: '$40.69'",
+        "label": "$40.69",
+        "type": "StaticText",
+        "context": null,
+        "identifier": null,
+        "disabled": false,
+        "key": [
+          "StaticText",
+          "$40.69",
+          null
+        ]
+      },
+      "consoleLine": 5451,
+      "timestamp": 1794175589.59,
+      "attachmentPath": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/callback-context-r1/run/inspection/custom-issues/009911D2-7F4C-4BCC-8496-A5B0F1F3BA87.txt",
+      "attachmentSHA256": "095e841f1b64262f87dde94ada744114308d9969223ea460c6ba0dd514a7690a",
+      "old41SameTargetSameCategory": [
+        21
+      ],
+      "old41SameTargetOtherCategory": [],
+      "disposition": "observed-again",
+      "provenRegression": false
+    },
+    {
+      "finding": 17,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "description": "User will not be able to change the font size of this SwiftUI.AccessibilityNode",
+      "target": {
+        "attributes": "Attributes: StaticText, 0x119e155c0, {{359.7, 618.2}, {10.3, 20.3}}, label: '1'",
+        "label": "1",
+        "type": "StaticText",
+        "context": "Mia protected meal9999",
+        "identifier": null,
+        "disabled": false,
+        "key": [
+          "StaticText",
+          "1",
+          "Mia protected meal9999"
+        ]
+      },
+      "consoleLine": 5462,
+      "timestamp": 1794175590.357,
+      "attachmentPath": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/callback-context-r1/run/inspection/custom-issues/FD390689-8193-436B-9C09-3C43B77BCCEA.txt",
+      "attachmentSHA256": "2365991a994777ae231c6b50eb9919b4e058a69f277e10f296db31c3e86bc108",
+      "old41SameTargetSameCategory": [
+        27
+      ],
+      "old41SameTargetOtherCategory": [],
+      "disposition": "observed-again",
+      "provenRegression": false
+    },
+    {
+      "finding": 18,
+      "category": "Dynamic Type font sizes are unsupported",
+      "description": "User will not be able to change the font size of this SwiftUI.AccessibilityNode",
+      "target": {
+        "attributes": "Attributes: StaticText, 0x11a0413c0, {{32.0, 781.8}, {119.0, 20.3}}, label: 'Preview expires'",
+        "label": "Preview expires",
+        "type": "StaticText",
+        "context": null,
+        "identifier": null,
+        "disabled": false,
+        "key": [
+          "StaticText",
+          "Preview expires",
+          null
+        ]
+      },
+      "consoleLine": 5473,
+      "timestamp": 1794175591.145,
+      "attachmentPath": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/callback-context-r1/run/inspection/custom-issues/4DDB86B1-83F4-4649-9C5B-B783D11DB3DD.txt",
+      "attachmentSHA256": "2323aba36ba244230b5d711a9288f0e654141eae0d5f7c4e6faf90962acbc7ca",
+      "old41SameTargetSameCategory": [],
+      "old41SameTargetOtherCategory": [],
+      "disposition": "named-target/category-not-matched-to-old41",
+      "provenRegression": false
+    },
+    {
+      "finding": 19,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "description": "User will not be able to change the font size of this SwiftUI.AccessibilityNode",
+      "target": {
+        "attributes": "Attributes: StaticText, 0x10476ba20, {{32.0, 347.2}, {185.3, 20.3}}, identifier: 'household.decision.feeBasis', label: 'Fixed retailer fee: $1.99.'",
+        "label": "Fixed retailer fee: $1.99.",
+        "type": "StaticText",
+        "context": null,
+        "identifier": "household.decision.feeBasis",
+        "disabled": false,
+        "key": [
+          "StaticText",
+          "Fixed retailer fee: $1.99.",
+          null
+        ]
+      },
+      "consoleLine": 5484,
+      "timestamp": 1794175591.943,
+      "attachmentPath": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/callback-context-r1/run/inspection/custom-issues/16099DA5-D027-4BC1-B434-DEF21F0CF226.txt",
+      "attachmentSHA256": "13c52a11a16690459d2d4fb16ccf7928bafb89532845ae197279f89fe6a81b75",
+      "old41SameTargetSameCategory": [],
+      "old41SameTargetOtherCategory": [],
+      "disposition": "named-target/category-not-matched-to-old41",
+      "provenRegression": false
+    },
+    {
+      "finding": 20,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "description": "User will not be able to change the font size of this SwiftUI.AccessibilityNode",
+      "target": {
+        "attributes": "Attributes: StaticText, 0x119d71ec0, {{32.0, 581.8}, {120.0, 18.0}}, label: 'Mia’s wrap lunch'",
+        "label": "Mia’s wrap lunch",
+        "type": "StaticText",
+        "context": null,
+        "identifier": null,
+        "disabled": false,
+        "key": [
+          "StaticText",
+          "Mia’s wrap lunch",
+          null
+        ]
+      },
+      "consoleLine": 5495,
+      "timestamp": 1794175592.654,
+      "attachmentPath": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/callback-context-r1/run/inspection/custom-issues/1BFFD20C-1CAF-48F5-91AD-B1CD3ADFA39A.txt",
+      "attachmentSHA256": "9bc0bf3c298dbbc59e222769021cbb6517feba053875d161f390b8787f9efa41",
+      "old41SameTargetSameCategory": [
+        35
+      ],
+      "old41SameTargetOtherCategory": [],
+      "disposition": "observed-again",
+      "provenRegression": false
+    },
+    {
+      "finding": 21,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "description": "User will not be able to change the font size of this SwiftUI.AccessibilityNode",
+      "target": {
+        "attributes": "Attributes: StaticText, 0x11a096270, {{32.0, 707.0}, {338.0, 44.0}}, label: 'Checkout calculation details'",
+        "label": "Checkout calculation details",
+        "type": "StaticText",
+        "context": null,
+        "identifier": null,
+        "disabled": false,
+        "key": [
+          "StaticText",
+          "Checkout calculation details",
+          null
+        ]
+      },
+      "consoleLine": 5506,
+      "timestamp": 1794175593.432,
+      "attachmentPath": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/callback-context-r1/run/inspection/custom-issues/79A09B70-ED01-43C0-BBF6-A81E38D73F01.txt",
+      "attachmentSHA256": "f428812ec9ef3c6fe73c698e1ae6f763e0020d8a9d1d2141818976eb623fe598",
+      "old41SameTargetSameCategory": [
+        25
+      ],
+      "old41SameTargetOtherCategory": [],
+      "disposition": "observed-again",
+      "provenRegression": false
+    },
+    {
+      "finding": 22,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "description": "User will not be able to change the font size of this SwiftUI.AccessibilityNode",
+      "target": {
+        "attributes": "Attributes: StaticText, 0x11a0b44e0, {{32.0, 553.5}, {142.3, 20.3}}, label: 'Protected portions'",
+        "label": "Protected portions",
+        "type": "StaticText",
+        "context": "Sam protected meal8888",
+        "identifier": null,
+        "disabled": false,
+        "key": [
+          "StaticText",
+          "Protected portions",
+          "Sam protected meal8888"
+        ]
+      },
+      "consoleLine": 5517,
+      "timestamp": 1794175594.157,
+      "attachmentPath": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/callback-context-r1/run/inspection/custom-issues/5B3BF7B6-AA55-44AE-9FB5-91A41BFF70A0.txt",
+      "attachmentSHA256": "a31a153878bd5f45a9d816616cce6d63c6c995f62658ef51660b51cdfd0c7b2f",
+      "old41SameTargetSameCategory": [
+        12
+      ],
+      "old41SameTargetOtherCategory": [],
+      "disposition": "observed-again",
+      "provenRegression": false
+    },
+    {
+      "finding": 23,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "description": "User will not be able to change the font size of this SwiftUI.AccessibilityNode",
+      "target": {
+        "attributes": "Attributes: StaticText, 0x119ecd460, {{32.0, 618.2}, {142.3, 20.3}}, label: 'Protected portions'",
+        "label": "Protected portions",
+        "type": "StaticText",
+        "context": "Mia protected meal9999",
+        "identifier": null,
+        "disabled": false,
+        "key": [
+          "StaticText",
+          "Protected portions",
+          "Mia protected meal9999"
+        ]
+      },
+      "consoleLine": 5528,
+      "timestamp": 1794175594.857,
+      "attachmentPath": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/callback-context-r1/run/inspection/custom-issues/63FE255B-D1A7-4706-83CC-4AFD26A31B10.txt",
+      "attachmentSHA256": "1f20b429d9df3915a0da9d25d85f5081b847a8bd8455f0d7bce4033274b8617f",
+      "old41SameTargetSameCategory": [
+        32
+      ],
+      "old41SameTargetOtherCategory": [],
+      "disposition": "observed-again",
+      "provenRegression": false
+    },
+    {
+      "finding": 24,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "description": "User will not be able to change the font size of this SwiftUI.AccessibilityNode",
+      "target": {
+        "attributes": "Attributes: StaticText, 0x11a0ee490, {{32.0, 403.8}, {96.3, 20.3}}, label: 'Cost change'",
+        "label": "Cost change",
+        "type": "StaticText",
+        "context": null,
+        "identifier": null,
+        "disabled": false,
+        "key": [
+          "StaticText",
+          "Cost change",
+          null
+        ]
+      },
+      "consoleLine": 5539,
+      "timestamp": 1794175595.581,
+      "attachmentPath": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/callback-context-r1/run/inspection/custom-issues/CF5A275A-AA67-4205-9591-88BAB0D58B32.txt",
+      "attachmentSHA256": "26495f98ea6d709fd58bb0010e675fd65a856c83618d4c48a291a700d452f19f",
+      "old41SameTargetSameCategory": [
+        10
+      ],
+      "old41SameTargetOtherCategory": [],
+      "disposition": "observed-again",
+      "provenRegression": false
+    },
+    {
+      "finding": 25,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "description": "User will not be able to change the font size of this SwiftUI.AccessibilityNode",
+      "target": {
+        "attributes": "Attributes: StaticText, 0x11a318ac0, {{32.0, 290.5}, {69.0, 20.3}}, label: 'Over cap'",
+        "label": "Over cap",
+        "type": "StaticText",
+        "context": null,
+        "identifier": null,
+        "disabled": false,
+        "key": [
+          "StaticText",
+          "Over cap",
+          null
+        ]
+      },
+      "consoleLine": 5550,
+      "timestamp": 1794175596.281,
+      "attachmentPath": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/callback-context-r1/run/inspection/custom-issues/F26A49F4-A8F9-4694-8A03-1E46A6EE25F3.txt",
+      "attachmentSHA256": "68d29d95f82dbf8530b05c2ad17a8ec09c3235be822bbbd209b3a841443171da",
+      "old41SameTargetSameCategory": [
+        17
+      ],
+      "old41SameTargetOtherCategory": [],
+      "disposition": "observed-again",
+      "provenRegression": false
+    },
+    {
+      "finding": 26,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "description": "User will not be able to change the font size of this SwiftUI.AccessibilityNode",
+      "target": {
+        "attributes": "Attributes: StaticText, 0x11a4285f0, {{247.0, 318.8}, {123.0, 20.3}}, label: 'Whole checkout'",
+        "label": "Whole checkout",
+        "type": "StaticText",
+        "context": "Scope",
+        "identifier": null,
+        "disabled": false,
+        "key": [
+          "StaticText",
+          "Whole checkout",
+          "Scope"
+        ]
+      },
+      "consoleLine": 5561,
+      "timestamp": 1794175596.973,
+      "attachmentPath": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/callback-context-r1/run/inspection/custom-issues/426D412F-EE7F-4B3E-9441-8CBEB83BFC00.txt",
+      "attachmentSHA256": "0e5aa1c01cb2104cec65e5a5e61776fdf528e4bff3830d38533c4f8a94f906de",
+      "old41SameTargetSameCategory": [
+        5
+      ],
+      "old41SameTargetOtherCategory": [],
+      "disposition": "observed-again",
+      "provenRegression": false
+    },
+    {
+      "finding": 27,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "description": "User will not be able to change the font size of this SwiftUI.AccessibilityNode",
+      "target": {
+        "attributes": "Attributes: StaticText, 0x11a53a020, {{32.0, 375.5}, {150.0, 20.3}}, label: 'Before this decision'",
+        "label": "Before this decision",
+        "type": "StaticText",
+        "context": null,
+        "identifier": null,
+        "disabled": false,
+        "key": [
+          "StaticText",
+          "Before this decision",
+          null
+        ]
+      },
+      "consoleLine": 5572,
+      "timestamp": 1794175597.74,
+      "attachmentPath": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/callback-context-r1/run/inspection/custom-issues/FB8DB35C-8368-4B47-BA29-E7E139D3D0B0.txt",
+      "attachmentSHA256": "030d7708a8674f201d79690fa0524aa391edd31cdcef14f97423a6068310c4ec",
+      "old41SameTargetSameCategory": [
+        7
+      ],
+      "old41SameTargetOtherCategory": [],
+      "disposition": "observed-again",
+      "provenRegression": false
+    },
+    {
+      "finding": 28,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "description": "User will not be able to change the font size of this SwiftUI.AccessibilityNode",
+      "target": {
+        "attributes": "Attributes: StaticText, 0x1047915f0, {{32.0, 432.2}, {30.7, 20.3}}, label: 'Cap'",
+        "label": "Cap",
+        "type": "StaticText",
+        "context": null,
+        "identifier": null,
+        "disabled": false,
+        "key": [
+          "StaticText",
+          "Cap",
+          null
+        ]
+      },
+      "consoleLine": 5583,
+      "timestamp": 1794175598.543,
+      "attachmentPath": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/callback-context-r1/run/inspection/custom-issues/B0F3BEC8-8DE0-4916-AA43-1BAADC5545B9.txt",
+      "attachmentSHA256": "6621c00558eba4183e1f34cdd94b50173c854369d3c0e468c89bd72280cd6ff5",
+      "old41SameTargetSameCategory": [
+        16
+      ],
+      "old41SameTargetOtherCategory": [],
+      "disposition": "observed-again",
+      "provenRegression": false
+    },
+    {
+      "finding": 29,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "description": "User will not be able to change the font size of this SwiftUI.AccessibilityNode",
+      "target": {
+        "attributes": "Attributes: Button, 0x11a1c01d0, {{20.0, 82.0}, {76.7, 36.0}}, identifier: 'household.decision.cancel', label: 'Cancel'",
+        "label": "Cancel",
+        "type": "Button",
+        "context": null,
+        "identifier": "household.decision.cancel",
+        "disabled": false,
+        "key": [
+          "Button",
+          "Cancel",
+          null
+        ]
+      },
+      "consoleLine": 5594,
+      "timestamp": 1794175599.216,
+      "attachmentPath": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/callback-context-r1/run/inspection/custom-issues/91C60CE0-A9EB-4E42-A1A7-B5844869BEF9.txt",
+      "attachmentSHA256": "02b1125202f51d02bb2c30c55b5fef1a079a8043d4e0cd9102241b2d85322ca8",
+      "old41SameTargetSameCategory": [
+        30
+      ],
+      "old41SameTargetOtherCategory": [],
+      "disposition": "observed-again",
+      "provenRegression": false
+    },
+    {
+      "finding": 30,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "description": "User will not be able to change the font size of this SwiftUI.AccessibilityNode",
+      "target": {
+        "attributes": "Attributes: StaticText, 0x11a1be5b0, {{314.0, 432.2}, {56.0, 20.3}}, label: '$38.00'",
+        "label": "$38.00",
+        "type": "StaticText",
+        "context": null,
+        "identifier": null,
+        "disabled": false,
+        "key": [
+          "StaticText",
+          "$38.00",
+          null
+        ]
+      },
+      "consoleLine": 5605,
+      "timestamp": 1794175599.968,
+      "attachmentPath": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/callback-context-r1/run/inspection/custom-issues/2398E280-4730-441E-832F-DAE5D2173A66.txt",
+      "attachmentSHA256": "7d110ad1ea2a982302edd2c9936934b0a8bfb1a8c76e2fca4def69dd240afdef",
+      "old41SameTargetSameCategory": [
+        18
+      ],
+      "old41SameTargetOtherCategory": [],
+      "disposition": "observed-again",
+      "provenRegression": false
+    },
+    {
+      "finding": 31,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "description": "User will not be able to change the font size of this SwiftUI.AccessibilityNode",
+      "target": {
+        "attributes": "Attributes: StaticText, 0x11a5d4a00, {{32.0, 488.8}, {234.7, 20.3}}, label: 'Protected meal commitments'",
+        "label": "Protected meal commitments",
+        "type": "StaticText",
+        "context": null,
+        "identifier": null,
+        "disabled": false,
+        "key": [
+          "StaticText",
+          "Protected meal commitments",
+          null
+        ]
+      },
+      "consoleLine": 5616,
+      "timestamp": 1794175600.798,
+      "attachmentPath": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/callback-context-r1/run/inspection/custom-issues/55F19BAC-5F35-4EBB-BEF2-1F08B5464E8D.txt",
+      "attachmentSHA256": "e465e3bb5d1a0120249204c1068fd9148a353f22b411159afff4611d34c979e9",
+      "old41SameTargetSameCategory": [
+        14
+      ],
+      "old41SameTargetOtherCategory": [
+        {
+          "finding": 38,
+          "category": "Text clipped"
+        }
+      ],
+      "disposition": "observed-again",
+      "provenRegression": false
+    },
+    {
+      "finding": 32,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "description": "User will not be able to change the font size of this SwiftUI.AccessibilityNode",
+      "target": {
+        "attributes": "Attributes: StaticText, 0x11ca05ee0, {{32.0, 207.5}, {171.0, 26.3}}, label: 'After this decision'",
+        "label": "After this decision",
+        "type": "StaticText",
+        "context": null,
+        "identifier": null,
+        "disabled": false,
+        "key": [
+          "StaticText",
+          "After this decision",
+          null
+        ]
+      },
+      "consoleLine": 5627,
+      "timestamp": 1794175601.603,
+      "attachmentPath": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/callback-context-r1/run/inspection/custom-issues/23166BAE-5E12-43E5-95BA-A961DDCF7125.txt",
+      "attachmentSHA256": "45e0593c96eec58b9225c503b4b7f995e7dada813b53ea63d8421fb74bfd6096",
+      "old41SameTargetSameCategory": [],
+      "old41SameTargetOtherCategory": [
+        {
+          "finding": 3,
+          "category": "Contrast failed"
+        }
+      ],
+      "disposition": "named-target/category-not-matched-to-old41",
+      "provenRegression": false
+    },
+    {
+      "finding": 33,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "description": "User will not be able to change the font size of this SwiftUI.AccessibilityNode",
+      "target": {
+        "attributes": "Attributes: StaticText, 0x103e64180, {{32.0, 460.5}, {81.7, 20.3}}, label: 'Cap scope'",
+        "label": "Cap scope",
+        "type": "StaticText",
+        "context": null,
+        "identifier": null,
+        "disabled": false,
+        "key": [
+          "StaticText",
+          "Cap scope",
+          null
+        ]
+      },
+      "consoleLine": 5638,
+      "timestamp": 1794175602.388,
+      "attachmentPath": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/callback-context-r1/run/inspection/custom-issues/7D69FF40-40EF-4BF0-999B-8BF4978E2854.txt",
+      "attachmentSHA256": "bacf86073ea8c5d27cc977281626d58a8da59777ce2b7dc98aa13ff7b81bc339",
+      "old41SameTargetSameCategory": [
+        24
+      ],
+      "old41SameTargetOtherCategory": [],
+      "disposition": "observed-again",
+      "provenRegression": false
+    },
+    {
+      "finding": 34,
+      "category": "Dynamic Type font sizes are unsupported",
+      "description": "User will not be able to change the font size of this SwiftUI.AccessibilityNode",
+      "target": {
+        "attributes": "Attributes: StaticText, 0x11cb38b90, {{183.7, 781.8}, {186.3, 20.3}}, label: 'Dec 31, 2098 at 7:00 PM'",
+        "label": "Dec 31, 2098 at 7:00 PM",
+        "type": "StaticText",
+        "context": null,
+        "identifier": null,
+        "disabled": false,
+        "key": [
+          "StaticText",
+          "Dec 31, 2098 at 7:00 PM",
+          null
+        ]
+      },
+      "consoleLine": 5649,
+      "timestamp": 1794175603.264,
+      "attachmentPath": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/callback-context-r1/run/inspection/custom-issues/0A4A20B6-C415-4F89-8F85-E6D0F3A133EB.txt",
+      "attachmentSHA256": "275797ad0e50bee9681d17e6bdcb88fbfe064f9765769f38f4ac3d9fa7696e31",
+      "old41SameTargetSameCategory": [],
+      "old41SameTargetOtherCategory": [],
+      "disposition": "named-target/category-not-matched-to-old41",
+      "provenRegression": false
+    },
+    {
+      "finding": 35,
+      "category": "Text clipped",
+      "description": "Text of this SwiftUI.AccessibilityNode may be clipped at larger Dynamic Type sizes.",
+      "target": {
+        "attributes": "Attributes: StaticText, 0x11ca54730, {{32.0, 781.8}, {119.0, 20.3}}, label: 'Preview expires'",
+        "label": "Preview expires",
+        "type": "StaticText",
+        "context": null,
+        "identifier": null,
+        "disabled": false,
+        "key": [
+          "StaticText",
+          "Preview expires",
+          null
+        ]
+      },
+      "consoleLine": 5665,
+      "timestamp": 1794175604.941,
+      "attachmentPath": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/callback-context-r1/run/inspection/custom-issues/15BEFE23-1141-4C95-A0CF-B9528FFEEE59.txt",
+      "attachmentSHA256": "3b19f9d1ff7437ced2a2cd33b6fd10f8c42906f9774719a44d9befd03ce2d2bf",
+      "old41SameTargetSameCategory": [],
+      "old41SameTargetOtherCategory": [],
+      "disposition": "named-target/category-not-matched-to-old41",
+      "provenRegression": false
+    },
+    {
+      "finding": 36,
+      "category": "Text clipped",
+      "description": "Text of this SwiftUI.AccessibilityNode may be clipped at larger Dynamic Type sizes.",
+      "target": {
+        "attributes": "Attributes: StaticText, 0x11c891760, {{183.7, 781.8}, {186.3, 20.3}}, label: 'Dec 31, 2098 at 7:00 PM'",
+        "label": "Dec 31, 2098 at 7:00 PM",
+        "type": "StaticText",
+        "context": null,
+        "identifier": null,
+        "disabled": false,
+        "key": [
+          "StaticText",
+          "Dec 31, 2098 at 7:00 PM",
+          null
+        ]
+      },
+      "consoleLine": 5681,
+      "timestamp": 1794175606.543,
+      "attachmentPath": "/Users/palatis/Room in the Cart/.build/RequestDecisionAccessibilityNov08/callback-context-r1/run/inspection/custom-issues/D7970109-22A0-48E2-8B50-4B3FD0299B1B.txt",
+      "attachmentSHA256": "6492a343739646779937eeefa106641306270eb8514c10a881c785606747f486",
+      "old41SameTargetSameCategory": [],
+      "old41SameTargetOtherCategory": [],
+      "disposition": "named-target/category-not-matched-to-old41",
+      "provenRegression": false
+    }
+  ],
+  "old41Reconciliation": [
+    {
+      "finding": 1,
+      "category": "Contrast failed",
+      "target": null,
+      "context": null,
+      "freshSameCategory": [],
+      "freshOtherCategory": [],
+      "status": "unattributed-unmatchable",
+      "closed": false
+    },
+    {
+      "finding": 2,
+      "category": "Contrast failed",
+      "target": "Add packs to this shop",
+      "context": null,
+      "freshSameCategory": [],
+      "freshOtherCategory": [
+        {
+          "finding": 5,
+          "category": "Dynamic Type font sizes are partially unsupported"
+        }
+      ],
+      "status": "different-category-observed",
+      "closed": false
+    },
+    {
+      "finding": 3,
+      "category": "Contrast failed",
+      "target": "After this decision",
+      "context": null,
+      "freshSameCategory": [],
+      "freshOtherCategory": [
+        {
+          "finding": 32,
+          "category": "Dynamic Type font sizes are partially unsupported"
+        }
+      ],
+      "status": "different-category-observed",
+      "closed": false
+    },
+    {
+      "finding": 4,
+      "category": "Contrast failed",
+      "target": "Apply reviewed decision",
+      "context": null,
+      "freshSameCategory": [],
+      "freshOtherCategory": [],
+      "status": "not-observed-in-this-run",
+      "closed": false
+    },
+    {
+      "finding": 5,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "target": "Whole checkout",
+      "context": "Scope",
+      "freshSameCategory": [
+        26
+      ],
+      "freshOtherCategory": [],
+      "status": "observed-again",
+      "closed": false
+    },
+    {
+      "finding": 6,
+      "category": "Dynamic Type font sizes are unsupported",
+      "target": "Apply reviewed decision",
+      "context": null,
+      "freshSameCategory": [],
+      "freshOtherCategory": [],
+      "status": "not-observed-in-this-run",
+      "closed": false
+    },
+    {
+      "finding": 7,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "target": "Before this decision",
+      "context": null,
+      "freshSameCategory": [
+        27
+      ],
+      "freshOtherCategory": [],
+      "status": "observed-again",
+      "closed": false
+    },
+    {
+      "finding": 8,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "target": null,
+      "context": null,
+      "freshSameCategory": [],
+      "freshOtherCategory": [],
+      "status": "unattributed-unmatchable",
+      "closed": false
+    },
+    {
+      "finding": 9,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "target": "$3.49",
+      "context": null,
+      "freshSameCategory": [
+        15
+      ],
+      "freshOtherCategory": [],
+      "status": "observed-again",
+      "closed": false
+    },
+    {
+      "finding": 10,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "target": "Cost change",
+      "context": null,
+      "freshSameCategory": [
+        24
+      ],
+      "freshOtherCategory": [],
+      "status": "observed-again",
+      "closed": false
+    },
+    {
+      "finding": 11,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "target": null,
+      "context": null,
+      "freshSameCategory": [],
+      "freshOtherCategory": [],
+      "status": "unattributed-unmatchable",
+      "closed": false
+    },
+    {
+      "finding": 12,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "target": "Protected portions",
+      "context": "Sam protected meal8888",
+      "freshSameCategory": [
+        22
+      ],
+      "freshOtherCategory": [],
+      "status": "observed-again",
+      "closed": false
+    },
+    {
+      "finding": 13,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "target": null,
+      "context": null,
+      "freshSameCategory": [],
+      "freshOtherCategory": [],
+      "status": "unattributed-unmatchable",
+      "closed": false
+    },
+    {
+      "finding": 14,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "target": "Protected meal commitments",
+      "context": null,
+      "freshSameCategory": [
+        31
+      ],
+      "freshOtherCategory": [],
+      "status": "observed-again",
+      "closed": false
+    },
+    {
+      "finding": 15,
+      "category": "Dynamic Type font sizes are unsupported",
+      "target": null,
+      "context": null,
+      "freshSameCategory": [],
+      "freshOtherCategory": [],
+      "status": "unattributed-unmatchable",
+      "closed": false
+    },
+    {
+      "finding": 16,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "target": "Cap",
+      "context": null,
+      "freshSameCategory": [
+        28
+      ],
+      "freshOtherCategory": [],
+      "status": "observed-again",
+      "closed": false
+    },
+    {
+      "finding": 17,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "target": "Over cap",
+      "context": null,
+      "freshSameCategory": [
+        25
+      ],
+      "freshOtherCategory": [],
+      "status": "observed-again",
+      "closed": false
+    },
+    {
+      "finding": 18,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "target": "$38.00",
+      "context": null,
+      "freshSameCategory": [
+        30
+      ],
+      "freshOtherCategory": [],
+      "status": "observed-again",
+      "closed": false
+    },
+    {
+      "finding": 19,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "target": "Sam’s wrap lunch",
+      "context": null,
+      "freshSameCategory": [
+        11
+      ],
+      "freshOtherCategory": [],
+      "status": "observed-again",
+      "closed": false
+    },
+    {
+      "finding": 20,
+      "category": "Dynamic Type font sizes are unsupported",
+      "target": "Cancel preview",
+      "context": null,
+      "freshSameCategory": [],
+      "freshOtherCategory": [],
+      "status": "not-observed-in-this-run",
+      "closed": false
+    },
+    {
+      "finding": 21,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "target": "$40.69",
+      "context": null,
+      "freshSameCategory": [
+        16
+      ],
+      "freshOtherCategory": [],
+      "status": "observed-again",
+      "closed": false
+    },
+    {
+      "finding": 22,
+      "category": "Dynamic Type font sizes are unsupported",
+      "target": null,
+      "context": null,
+      "freshSameCategory": [],
+      "freshOtherCategory": [],
+      "status": "unattributed-unmatchable",
+      "closed": false
+    },
+    {
+      "finding": 23,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "target": "$2.69",
+      "context": null,
+      "freshSameCategory": [
+        13
+      ],
+      "freshOtherCategory": [],
+      "status": "observed-again",
+      "closed": false
+    },
+    {
+      "finding": 24,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "target": "Cap scope",
+      "context": null,
+      "freshSameCategory": [
+        33
+      ],
+      "freshOtherCategory": [],
+      "status": "observed-again",
+      "closed": false
+    },
+    {
+      "finding": 25,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "target": "Checkout calculation details",
+      "context": null,
+      "freshSameCategory": [
+        21
+      ],
+      "freshOtherCategory": [],
+      "status": "observed-again",
+      "closed": false
+    },
+    {
+      "finding": 26,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "target": "1",
+      "context": "Sam protected meal8888",
+      "freshSameCategory": [
+        4
+      ],
+      "freshOtherCategory": [],
+      "status": "observed-again",
+      "closed": false
+    },
+    {
+      "finding": 27,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "target": "1",
+      "context": "Mia protected meal9999",
+      "freshSameCategory": [
+        17
+      ],
+      "freshOtherCategory": [],
+      "status": "observed-again",
+      "closed": false
+    },
+    {
+      "finding": 28,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "target": "Expected total",
+      "context": null,
+      "freshSameCategory": [
+        12
+      ],
+      "freshOtherCategory": [],
+      "status": "observed-again",
+      "closed": false
+    },
+    {
+      "finding": 29,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "target": "Whole checkout",
+      "context": "Cap scope",
+      "freshSameCategory": [
+        10
+      ],
+      "freshOtherCategory": [],
+      "status": "observed-again",
+      "closed": false
+    },
+    {
+      "finding": 30,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "target": "Cancel",
+      "context": null,
+      "freshSameCategory": [
+        29
+      ],
+      "freshOtherCategory": [],
+      "status": "observed-again",
+      "closed": false
+    },
+    {
+      "finding": 31,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "target": "Lunch · November 5, 2026",
+      "context": null,
+      "freshSameCategory": [
+        9
+      ],
+      "freshOtherCategory": [],
+      "status": "observed-again",
+      "closed": false
+    },
+    {
+      "finding": 32,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "target": "Protected portions",
+      "context": "Mia protected meal9999",
+      "freshSameCategory": [
+        23
+      ],
+      "freshOtherCategory": [],
+      "status": "observed-again",
+      "closed": false
+    },
+    {
+      "finding": 33,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "target": "Check usable food separately; this review does not confirm meal coverage.",
+      "context": null,
+      "freshSameCategory": [
+        14
+      ],
+      "freshOtherCategory": [],
+      "status": "observed-again",
+      "closed": false
+    },
+    {
+      "finding": 34,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "target": "Scope",
+      "context": null,
+      "freshSameCategory": [
+        6
+      ],
+      "freshOtherCategory": [],
+      "status": "observed-again",
+      "closed": false
+    },
+    {
+      "finding": 35,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "target": "Mia’s wrap lunch",
+      "context": null,
+      "freshSameCategory": [
+        20
+      ],
+      "freshOtherCategory": [],
+      "status": "observed-again",
+      "closed": false
+    },
+    {
+      "finding": 36,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "target": "Lunch · November 4, 2026",
+      "context": null,
+      "freshSameCategory": [
+        8
+      ],
+      "freshOtherCategory": [],
+      "status": "observed-again",
+      "closed": false
+    },
+    {
+      "finding": 37,
+      "category": "Dynamic Type font sizes are partially unsupported",
+      "target": "$37.20",
+      "context": null,
+      "freshSameCategory": [
+        7
+      ],
+      "freshOtherCategory": [],
+      "status": "observed-again",
+      "closed": false
+    },
+    {
+      "finding": 38,
+      "category": "Text clipped",
+      "target": "Protected meal commitments",
+      "context": null,
+      "freshSameCategory": [],
+      "freshOtherCategory": [
+        {
+          "finding": 31,
+          "category": "Dynamic Type font sizes are partially unsupported"
+        }
+      ],
+      "status": "different-category-observed",
+      "closed": false
+    },
+    {
+      "finding": 39,
+      "category": "Text clipped",
+      "target": "Cancel preview",
+      "context": null,
+      "freshSameCategory": [],
+      "freshOtherCategory": [],
+      "status": "not-observed-in-this-run",
+      "closed": false
+    },
+    {
+      "finding": 40,
+      "category": "Text clipped",
+      "target": "Apply reviewed decision",
+      "context": null,
+      "freshSameCategory": [],
+      "freshOtherCategory": [],
+      "status": "not-observed-in-this-run",
+      "closed": false
+    },
+    {
+      "finding": 41,
+      "category": "Text clipped",
+      "target": null,
+      "context": null,
+      "freshSameCategory": [],
+      "freshOtherCategory": [],
+      "status": "unattributed-unmatchable",
+      "closed": false
+    }
+  ],
+  "scope": "Exact unfiltered audit. Not-observed is not closed; unattributed findings are unmatched. Compare targets/categories/context and later rendered behavior, never subtract counts as bug fixes."
+}

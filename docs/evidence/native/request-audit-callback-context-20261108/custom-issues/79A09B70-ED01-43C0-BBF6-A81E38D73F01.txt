@@ -1,0 +1,34 @@
+User will not be able to change the font size of this SwiftUI.AccessibilityNode
+Attributes: StaticText, 0x11a096270, {{32.0, 707.0}, {338.0, 44.0}}, label: 'Checkout calculation details'
+Element subtree:
+ →StaticText, 0x11a096270, {{32.0, 707.0}, {338.0, 44.0}}, label: 'Checkout calculation details'
+Path to element:
+ →Application, 0x10465a4f0, pid: 48299, label: 'Room in the Cart'
+  ↳Window (Main), 0x104656700, {{0.0, 0.0}, {402.0, 874.0}}
+   ↳Other, 0x11a065980, {{0.0, 0.0}, {402.0, 874.0}}
+    ↳Other, 0x11a065bc0, {{0.0, 62.0}, {402.0, 812.0}}
+     ↳Other, 0x11a065ce0, {{0.0, 62.0}, {402.0, 812.0}}
+      ↳Other, 0x11a065e00, {{0.0, 62.0}, {402.0, 812.0}}
+       ↳Other, 0x11a065f20, {{0.0, 62.0}, {402.0, 812.0}}
+        ↳Other, 0x11a066040, {{0.0, 62.0}, {402.0, 812.0}}
+         ↳Other, 0x11a066160, {{0.0, 62.0}, {402.0, 812.0}}
+          ↳Other, 0x11a066820, {{0.0, 62.0}, {402.0, 812.0}}
+           ↳Other, 0x11a066940, {{0.0, 62.0}, {402.0, 812.0}}
+            ↳Other, 0x11a066a60, {{0.0, 62.0}, {402.0, 812.0}}
+             ↳Other, 0x11a08faf0, {{0.0, 62.0}, {402.0, 812.0}}
+              ↳CollectionView, 0x11a08fc10, {{0.0, 62.0}, {402.0, 812.0}}
+               ↳Cell, 0x11a095970, {{16.0, 692.0}, {370.0, 74.0}}
+                ↳Other, 0x11a095df0, {{16.0, 692.0}, {370.0, 74.0}}
+                 ↳Other, 0x11a095f10, {{16.0, 692.0}, {370.0, 74.0}}
+                  ↳Other, 0x11a096030, {{16.0, 692.0}, {370.0, 74.0}}
+                   ↳Button, 0x11a096150, {{16.0, 692.0}, {370.0, 74.0}}, identifier: 'household.decision.checkoutDetails', label: 'Checkout calculation details', value: Collapsed
+                    ↳StaticText, 0x11a096270, {{32.0, 707.0}, {338.0, 44.0}}, label: 'Checkout calculation details'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x119e91450, pid: 48299, label: 'Room in the Cart'
+  }
+  ↪︎Find: Descendant with identity binding to AX element pid: 48299, elementOrHash.elementID: 4401386352.423
+    Output: {
+      StaticText, 0x119da85f0, {{32.0, 707.0}, {338.0, 44.0}}, label: 'Checkout calculation details'
+    }

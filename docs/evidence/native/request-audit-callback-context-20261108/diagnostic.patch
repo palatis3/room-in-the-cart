@@ -1,0 +1,37 @@
+diff --git a/ios/UITests/HouseholdRequestPackUITests.swift b/.build/RequestDecisionAccessibilityNov08/callback-context-r1/source/ios/UITests/HouseholdRequestPackUITests.swift
+index fcf654b4..f9b5437e 100644
+--- a/ios/UITests/HouseholdRequestPackUITests.swift
++++ b/.build/RequestDecisionAccessibilityNov08/callback-context-r1/source/ios/UITests/HouseholdRequestPackUITests.swift
+@@ -122,6 +122,32 @@ import XCTest
+         XCTAssertTrue(sam.label.contains("Sam’s wrap lunch") && sam.label.contains("Protected portions") && sam.label.contains("1"))
+         XCTAssertTrue(mia.label.contains("Mia’s wrap lunch") && mia.label.contains("Protected portions") && mia.label.contains("1"))
+         capture("S24-cereal-checkout-with-two-named-protected-lunches")
++        continueAfterFailure = true
++        var auditIssueIndex = 0
++        var capturedDynamicTypeContext = false
++        try app.performAccessibilityAudit { issue in
++            auditIssueIndex += 1
++            let callbackStarted = Date().timeIntervalSince1970
++            let isDynamicType = issue.auditType.contains(.dynamicType)
++            let captureContext = !isDynamicType || !capturedDynamicTypeContext
++            if captureContext {
++                if isDynamicType { capturedDynamicTypeContext = true }
++                let screenshot = XCTAttachment(screenshot: self.app.screenshot())
++                screenshot.name = "S24-audit-callback-viewport-\(auditIssueIndex)"
++                screenshot.lifetime = .keepAlways
++                self.add(screenshot)
++                let context = XCTAttachment(string: "issueIndex=\(auditIssueIndex)\ncallbackStarted=\(callbackStarted)\nauditType=\(issue.auditType.rawValue)\ncompactDescription=\(issue.compactDescription)\n" + self.app.debugDescription)
++                context.name = "S24-audit-callback-context-\(auditIssueIndex)"
++                context.lifetime = .keepAlways
++                self.add(context)
++            }
++            let details = XCTAttachment(string: issue.detailedDescription + "\n" + (issue.element?.debugDescription ?? ""))
++            details.name = "Family request review accessibility"
++            details.lifetime = .keepAlways
++            self.add(details)
++            return false
++        }
++        continueAfterFailure = false
+         // Do not scroll between the existing shared viewport proof and these quantity checks.
+         try assertReadablePortions(sam, category: .large, name: "S24-standard-Sam-portions")
+         try assertReadablePortions(mia, category: .large, name: "S24-standard-Mia-portions")

@@ -1,0 +1,33 @@
+User will not be able to change the font size of this SwiftUI.AccessibilityNode
+Attributes: StaticText, 0x10476ba20, {{32.0, 347.2}, {185.3, 20.3}}, identifier: 'household.decision.feeBasis', label: 'Fixed retailer fee: $1.99.'
+Element subtree:
+ →StaticText, 0x10476ba20, {{32.0, 347.2}, {185.3, 20.3}}, identifier: 'household.decision.feeBasis', label: 'Fixed retailer fee: $1.99.'
+Path to element:
+ →Application, 0x10408ed20, pid: 48299, label: 'Room in the Cart'
+  ↳Window (Main), 0x10408ef50, {{0.0, 0.0}, {402.0, 874.0}}
+   ↳Other, 0x119e437c0, {{0.0, 0.0}, {402.0, 874.0}}
+    ↳Other, 0x119e46cf0, {{0.0, 62.0}, {402.0, 812.0}}
+     ↳Other, 0x119e46e10, {{0.0, 62.0}, {402.0, 812.0}}
+      ↳Other, 0x119e46f30, {{0.0, 62.0}, {402.0, 812.0}}
+       ↳Other, 0x119e47050, {{0.0, 62.0}, {402.0, 812.0}}
+        ↳Other, 0x119e47170, {{0.0, 62.0}, {402.0, 812.0}}
+         ↳Other, 0x119e47290, {{0.0, 62.0}, {402.0, 812.0}}
+          ↳Other, 0x119e47950, {{0.0, 62.0}, {402.0, 812.0}}
+           ↳Other, 0x119e47a70, {{0.0, 62.0}, {402.0, 812.0}}
+            ↳Other, 0x119e47b90, {{0.0, 62.0}, {402.0, 812.0}}
+             ↳Other, 0x119e47cb0, {{0.0, 62.0}, {402.0, 812.0}}
+              ↳CollectionView, 0x119e47dd0, {{0.0, 62.0}, {402.0, 812.0}}
+               ↳Cell, 0x1040926d0, {{16.0, 192.3}, {370.0, 499.7}}
+                ↳Other, 0x104092b50, {{16.0, 192.3}, {370.0, 499.7}}
+                 ↳Other, 0x104092c70, {{16.0, 192.3}, {370.0, 499.7}}
+                  ↳Other, 0x104092d90, {{16.0, 192.3}, {370.0, 499.7}}
+                   ↳StaticText, 0x10476ba20, {{32.0, 347.2}, {185.3, 20.3}}, identifier: 'household.decision.feeBasis', label: 'Fixed retailer fee: $1.99.'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x119e5b920, pid: 48299, label: 'Room in the Cart'
+  }
+  ↪︎Find: Descendant with identity binding to AX element pid: 48299, elementOrHash.elementID: 4387891440.374
+    Output: {
+      StaticText, 0x119e54ae0, {{32.0, 347.2}, {185.3, 20.3}}, identifier: 'household.decision.feeBasis', label: 'Fixed retailer fee: $1.99.'
+    }
