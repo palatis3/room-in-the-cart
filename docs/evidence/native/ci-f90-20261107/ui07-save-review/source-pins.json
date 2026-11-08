@@ -1,0 +1,36 @@
+{
+  "oldCommit": "f90ad75a2e561891b2014ecb234d19639bcaed4c",
+  "currentCommit": "975cfb15ccc402b55d31960f6d03d46c66104d69",
+  "files": [
+    {
+      "path": "ios/UITests/RoomInTheCartUITests.swift",
+      "f90SHA256": "b757069c938aaad1604aa4a4e29ea30d0c19ed1d62f0505114398be6ddeb5d46",
+      "currentSHA256": "b757069c938aaad1604aa4a4e29ea30d0c19ed1d62f0505114398be6ddeb5d46",
+      "identical": true
+    },
+    {
+      "path": "ios/Features/Shop/ComparisonView.swift",
+      "f90SHA256": "cb1e419eccc3af825d6eeaad331d628dd0230d6377244c93c8c6b8d866b1d8a4",
+      "currentSHA256": "cb1e419eccc3af825d6eeaad331d628dd0230d6377244c93c8c6b8d866b1d8a4",
+      "identical": true
+    },
+    {
+      "path": "ios/Features/Shop/ComparisonModel.swift",
+      "f90SHA256": "e72a8fcc94420e16986c573be22b142b95a5f59c7a6463af4df5de9ebc23331d",
+      "currentSHA256": "e72a8fcc94420e16986c573be22b142b95a5f59c7a6463af4df5de9ebc23331d",
+      "identical": true
+    },
+    {
+      "path": "ios/App/L10n.swift",
+      "f90SHA256": "ddccd37fae72b11250ab564c165762cdc93716d8f23b5ed4ba8683987259907f",
+      "currentSHA256": "ddccd37fae72b11250ab564c165762cdc93716d8f23b5ed4ba8683987259907f",
+      "identical": true
+    },
+    {
+      "path": "ios/Resources/Localizable.xcstrings",
+      "f90SHA256": "7886483ce866cafaabb767d0bf01b519766b2d5859995f4215db6d669789f974",
+      "currentSHA256": "7886483ce866cafaabb767d0bf01b519766b2d5859995f4215db6d669789f974",
+      "identical": true
+    }
+  ]
+}

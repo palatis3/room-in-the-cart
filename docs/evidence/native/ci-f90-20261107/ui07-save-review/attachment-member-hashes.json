@@ -1,0 +1,58 @@
+[
+  {
+    "file": "Tests.xcresult/Data/data.0~tKrkg6fEhc9TGexGPbrywKMZc-Kw3Zj33vTpwpB6KuUV04kJ5iiKS0LbEF2-ndj6H7VWZrPHRudksMMjmNduNA==",
+    "bytes": 273694,
+    "sha256": "93636757788b9cd66b66eb51016f7500eeb50ad3563320841c74013f2ce186e5",
+    "zipCRC": 2352924104,
+    "CRCVerified": true
+  },
+  {
+    "file": "Tests.xcresult/Data/refs.0~tKrkg6fEhc9TGexGPbrywKMZc-Kw3Zj33vTpwpB6KuUV04kJ5iiKS0LbEF2-ndj6H7VWZrPHRudksMMjmNduNA==",
+    "bytes": 1,
+    "sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+    "zipCRC": 3523407757,
+    "CRCVerified": true
+  },
+  {
+    "file": "Tests.xcresult/Data/data.0~5ZaOWL8gHd_qXmWf0SfvTwrJ7eNSMq01nPS0T5cmNRZ22q1M3K2xA5DPvsFulHgpXs-dkkdVcd-Kyyrke8o_pQ==",
+    "bytes": 994,
+    "sha256": "7620f667ca922babcc76e1ba75931f03aa216dbd80cbb1b7800f52e168f053c8",
+    "zipCRC": 730279466,
+    "CRCVerified": true
+  },
+  {
+    "file": "Tests.xcresult/Data/refs.0~5ZaOWL8gHd_qXmWf0SfvTwrJ7eNSMq01nPS0T5cmNRZ22q1M3K2xA5DPvsFulHgpXs-dkkdVcd-Kyyrke8o_pQ==",
+    "bytes": 1,
+    "sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+    "zipCRC": 3523407757,
+    "CRCVerified": true
+  },
+  {
+    "file": "Tests.xcresult/Data/data.0~jfdy7OcSlJ-U09GUNXUKLH9MMX9NXELVtqyGCioji69Q8qnPa7c_W9EnWnWYiMHmmo-rTbsWJqGN6tTo3lPukg==",
+    "bytes": 1436,
+    "sha256": "7b1110d9245b0b557aadd7a9db323ec60c412e375f1d59e583e4cb85d2598eca",
+    "zipCRC": 3020936117,
+    "CRCVerified": true
+  },
+  {
+    "file": "Tests.xcresult/Data/refs.0~jfdy7OcSlJ-U09GUNXUKLH9MMX9NXELVtqyGCioji69Q8qnPa7c_W9EnWnWYiMHmmo-rTbsWJqGN6tTo3lPukg==",
+    "bytes": 1,
+    "sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+    "zipCRC": 3523407757,
+    "CRCVerified": true
+  },
+  {
+    "file": "Tests.xcresult/Data/data.0~B52fZ64b1i4xQd3673uzQzC0OLHJqIa52ba8RmFTu6cYdKP1vm-GRutmdrhpKDjUhEP0i-fNSMEykzxprr3ZrQ==",
+    "bytes": 263963,
+    "sha256": "17e9be76a3707975fa5e5689745f1e897a9f7fc5ad07302f6a409d5baeee5997",
+    "zipCRC": 4062063785,
+    "CRCVerified": true
+  },
+  {
+    "file": "Tests.xcresult/Data/refs.0~B52fZ64b1i4xQd3673uzQzC0OLHJqIa52ba8RmFTu6cYdKP1vm-GRutmdrhpKDjUhEP0i-fNSMEykzxprr3ZrQ==",
+    "bytes": 1,
+    "sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+    "zipCRC": 3523407757,
+    "CRCVerified": true
+  }
+]

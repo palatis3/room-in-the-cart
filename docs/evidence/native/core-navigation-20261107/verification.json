@@ -1,0 +1,53 @@
+{
+  "status": "passed",
+  "baseCommit": "975cfb15ccc402b55d31960f6d03d46c66104d69",
+  "selectors": [
+    "RoomInTheCartUITests/ContextualNavigationUITests/testEnteredStoreQuotesKeepTripCostsSeparateAndAdoptOnlyReviewedSavedProof",
+    "RoomInTheCartUITests/RoomInTheCartUITests/testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer"
+  ],
+  "sourceSHA256": {
+    "ios/UITests/ContextualNavigationUITests.swift": "c59477daa1b60ba20efc8aa93caa52cdf296d65e7698293b96eda11dafbc6045",
+    "ios/UITests/RoomInTheCartUITests.swift": "eed5de8923816ed52b97c02f88171ee0720022c025c0b83e0a6bacab2df4c258"
+  },
+  "conditions": "DEBUG",
+  "defaultTestAllowance": 720,
+  "maximumTestAllowance": 900,
+  "simulator": "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+  "derivedData": ".build/ShopEntryNov07/dd",
+  "log": "native.log",
+  "result": "native.xcresult",
+  "execSession": 27945,
+  "nativeExit": 0,
+  "strictExit": 0,
+  "passed": 2,
+  "failed": 0,
+  "skipped": 0,
+  "runtimeWarnings": 0,
+  "runnerRestarts": 0,
+  "localXcode": "27.1 /27A9275",
+  "iOS": "26.2 /23C54",
+  "hostedXcode": "26.3",
+  "hostedAcceptance": "pending",
+  "durationsSeconds": {
+    "storeQuoteFullJourney": 336.617,
+    "spanishSaveRestart": 80.915
+  },
+  "headerSearch": {
+    "firstStart": 196.3,
+    "firstReadback": 203.04,
+    "elapsedSeconds": 6.74,
+    "direction": "two downward gestures toward top",
+    "limits": "Different local and hosted toolchains; no general speedup attribution."
+  },
+  "artifactSHA256": {
+    ".build/CoreNavigationNov07/native.log": "7d51c6fe37c2cdceb5191957a050c377022f2cbeb08b7eddb77bfe0eef69b536",
+    "docs/evidence/native/core-navigation-20261107/known-top-header.log": "0a432523b13926c9cda2fb96dc53e444f53815592af0de68a82ac1cc714672d4",
+    "docs/evidence/native/core-navigation-20261107/original-store-proof-after-revision.png": "4a225775b2f16ad5857a68b29e463d26f4e3cca6fb2a4d48dcf387a36b95450e",
+    "docs/evidence/native/core-navigation-20261107/spanish-reopened-result.png": "a6980ef8269ec5662914350ad3ff94cdab44e58067b8a52c6b7debecde3dfef5",
+    "docs/evidence/native/core-navigation-20261107/spanish-save-ready-frames.txt": "f5a5f61a78b6742c5b1b7e739907f20ebb10fadfeb0db0baed62c3046b153ed8",
+    "docs/evidence/native/core-navigation-20261107/spanish-save-ready.png": "7cab443fc597012317858214c897835fb3444e0023739c9cd4e84e625da2574f",
+    "docs/evidence/native/core-navigation-20261107/strict.txt": "3039d7a7f8efcedb52c89e5b1b4b0d473b378b1b16480b2ff0390b93b478b968",
+    "docs/evidence/native/core-navigation-20261107/summary.json": "04fb8c59ce7cb27a2ca27c09ef44aadb50599fb00bc57d06d1988e354c921909",
+    "docs/evidence/native/core-navigation-20261107/tests.json": "0cdb0e9c6b3c9ac3cdc6274a9b4c5cc9e5ca6e7876190e867946824cda293dce"
+  }
+}

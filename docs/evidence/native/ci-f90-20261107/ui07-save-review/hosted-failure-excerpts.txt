@@ -1,0 +1,54 @@
+5193-2026-11-08T02:00:13.6094220Z     t =   175.08s     Wait for dev.roominthecart.app.debug to idle
+5194-2026-11-08T02:00:13.6350750Z     t =   175.08s     Find the "comparisonResultsScroll" CollectionView
+5195-2026-11-08T02:00:13.9638190Z     t =   175.41s     Check for interrupting elements affecting "comparisonResultsScroll" CollectionView
+5196-2026-11-08T02:00:14.0604390Z     t =   175.58s     Synthesize event
+5197-2026-11-08T02:00:14.7985790Z     t =   176.23s     Wait for dev.roominthecart.app.debug to idle
+5198-2026-11-08T02:00:15.5539170Z     t =   176.99s Checking existence of `StaticText (First Match)`
+5199:2026-11-08T02:00:18.2110450Z /Users/runner/work/room-in-the-cart/room-in-the-cart/ios/UITests/RoomInTheCartUITests.swift:537: error: -[RoomInTheCartUITests.RoomInTheCartUITests testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer] : failed - Could not reveal StaticText (First Match)
+5200-2026-11-08T02:00:18.2246420Z     t =   179.71s Tear Down
+5201-2026-11-08T02:00:18.2257170Z     t =   179.72s     Find the Target Application 'dev.roominthecart.app.debug'
+5202-2026-11-08T02:00:18.5727600Z     t =   180.01s     Added attachment named 'Failure'
+5203-2026-11-08T02:00:18.5735930Z     t =   180.01s     Terminate dev.roominthecart.app.debug:65520
+5204:2026-11-08T02:00:20.3991500Z Test Case '-[RoomInTheCartUITests.RoomInTheCartUITests testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer]' failed (181.908 seconds).
+5205-2026-11-08T02:00:20.4263020Z Test Suite 'RoomInTheCartUITests' failed at 2026-11-08 02:00:20.383.
+5206-2026-11-08T02:00:20.4432100Z 	 Executed 4 tests, with 1 failure (0 unexpected) in 403.643 (403.648) seconds
+5207-2026-11-08T02:00:20.4450780Z Test Suite 'RoomInTheCartUITests.xctest' failed at 2026-11-08 02:00:20.385.
+5208-2026-11-08T02:00:20.4457330Z 	 Executed 8 tests, with 1 failure (0 unexpected) in 1315.221 (1315.242) seconds
+5209-2026-11-08T02:00:20.4465590Z Test Suite 'Selected tests' failed at 2026-11-08 02:00:20.385.
+5210-2026-11-08T02:00:20.4470300Z 	 Executed 8 tests, with 1 failure (0 unexpected) in 1315.221 (1315.243) seconds
+--
+5215-2026-11-08T02:00:30.0162310Z Test session results, code coverage, and logs:
+5216-2026-11-08T02:00:30.0177370Z 	/Users/runner/work/room-in-the-cart/room-in-the-cart/.build/Tests.xcresult
+5217-2026-11-08T02:00:30.0204440Z 
+5218-2026-11-08T02:00:30.0205720Z ** TEST EXECUTE FAILED **
+5219-2026-11-08T02:00:30.0206160Z 
+5220-2026-11-08T02:00:41.9423430Z Testing started
+5221:2026-11-08T02:00:57.2232710Z Executed 8 of 8 selected tests.
+5222-2026-11-08T02:00:57.2234890Z 
+5223-2026-11-08T02:00:57.2235030Z | Test | Result | Seconds |
+5224-2026-11-08T02:00:57.2236940Z |---|---|---|
+5225-2026-11-08T02:00:57.2237780Z | RoomInTheCartUITests/FreeJourneyUITests/testDinnerMoveAcrossDisplayedWeeksKeepsLunchAndOccurrence | Passed | 347.36 |
+5226-2026-11-08T02:00:57.2238950Z | RoomInTheCartUITests/ContextualNavigationUITests/testAuthorizationHoldIsOptionalAndSeparateFromCheckoutCap | Passed | 327.09 |
+5227-2026-11-08T02:00:57.2240370Z | RoomInTheCartUITests/RoomInTheCartUITests/testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer | Failed | 181.91 |
+5228-2026-11-08T02:00:57.2257520Z | RoomInTheCartUITests/LedgerConfirmedStockPackUITests/testHidingProtectedLunchKeepsTotalAndTwoWholePacksWithoutStock | Passed | 170.74 |
+5229-2026-11-08T02:00:57.2258560Z | RoomInTheCartUITests/RoomInTheCartUITests/testConfirmedComparisonDeletionSurvivesRestart | Passed | 167.58 |
+5230-2026-11-08T02:00:57.2259730Z | RoomInTheCartUITests/ContextualNavigationUITests/testOversizedNativePasteKeepsTheOriginalAndAcceptsASmallerList | Passed | 66.38 |
+5231-2026-11-08T02:00:57.2260980Z | RoomInTheCartUITests/RoomInTheCartUITests/testAccountDeletionSettingsExplainsScopeInEnglishAndSpanishBeforeSignIn | Passed | 34.23 |
+5232-2026-11-08T02:00:57.2261940Z | RoomInTheCartUITests/RoomInTheCartUITests/testLargestTextShopRepairShortcutRemainsInsideViewportAndOpens | Passed | 19.92 |
+5233-2026-11-08T02:00:57.2263020Z 
+5234:2026-11-08T02:00:57.2263400Z The XCTest test export recorded 0 runtime warning occurrences across 8 examined tests.
+5235-2026-11-08T02:00:57.2264130Z The XCTest summary does not expose a runtime warnings field.
+5236-2026-11-08T02:00:57.2264580Z Executed and passing counts do not match the selected tests
+5237-2026-11-08T02:00:57.2265220Z The shard contains failures, expected failures or skipped tests
+5238-2026-11-08T02:00:57.2265910Z Every selected test must individually report Passed
+5239-2026-11-08T02:00:57.2266700Z XCTest logged a failure for RoomInTheCartUITests/RoomInTheCartUITests/testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer at log line 4744.
+5240:2026-11-08T02:00:57.2268060Z XCTest log requires one start then one pass for RoomInTheCartUITests/RoomInTheCartUITests/testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer; found ['start', 'non-passing or unrecognized completion'].
+5241:2026-11-08T02:00:57.2279360Z XCTest log requires one successful result banner; found ['FAILED'].
+5242-2026-11-08T02:00:57.2279600Z 
+5243:2026-11-08T02:00:57.4323100Z ##[error]Process completed with exit code 1.
+5244-2026-11-08T02:00:57.6002110Z ##[group]Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+5245-2026-11-08T02:00:57.6015250Z with:
+5246-2026-11-08T02:00:57.6016260Z   name: iphone-results-ui-07-1
+5247-2026-11-08T02:00:57.6017000Z   include-hidden-files: true
+5248-2026-11-08T02:00:57.6017620Z   path: .build/Tests*.xcresult
+5249-.build/Tests*.log

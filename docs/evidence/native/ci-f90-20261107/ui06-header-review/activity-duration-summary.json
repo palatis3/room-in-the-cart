@@ -1,0 +1,135 @@
+{
+  "basis": "Top-level non-overlapping activities with completed duration, available pre-timeout SQLite records; not exclusive app CPU time.",
+  "groups": {
+    "Other": [
+      188,
+      41.21200132369995
+    ],
+    "Open/relaunch": [
+      3,
+      35.01900005340576
+    ],
+    "Existence": [
+      389,
+      141.14800333976746
+    ],
+    "Find": [
+      751,
+      156.51399540901184
+    ],
+    "Tap": [
+      66,
+      112.86400055885315
+    ],
+    "Text entry": [
+      22,
+      22.184999704360962
+    ],
+    "Drag/scroll": [
+      68,
+      194.18000102043152
+    ]
+  },
+  "longest": [
+    {
+      "seconds": 20.216000080108643,
+      "startSeconds": 412.0130000114441,
+      "title": "Find the \"Checkout plus trip cash, second minus first: $1.00\" StaticText"
+    },
+    {
+      "seconds": 17.585999965667725,
+      "startSeconds": 0.7710001468658447,
+      "title": "Open dev.roominthecart.app.debug"
+    },
+    {
+      "seconds": 16.819000005722046,
+      "startSeconds": 432.53600001335144,
+      "title": "Checking existence of `\"Checkout plus trip cash, second minus first: $1.00\" StaticText`"
+    },
+    {
+      "seconds": 9.88099980354309,
+      "startSeconds": 41.96500015258789,
+      "title": "Tap \"ledgerImport\" Button"
+    },
+    {
+      "seconds": 9.021000146865845,
+      "startSeconds": 577.0299999713898,
+      "title": "Open dev.roominthecart.app.debug"
+    },
+    {
+      "seconds": 8.411999940872192,
+      "startSeconds": 707.1920001506805,
+      "title": "Open dev.roominthecart.app.debug"
+    },
+    {
+      "seconds": 6.944999933242798,
+      "startSeconds": 21.90400004386902,
+      "title": "Find the \"openPickupList\" Any"
+    },
+    {
+      "seconds": 4.562000036239624,
+      "startSeconds": 73.58100008964539,
+      "title": "Checking existence of `\"ledgerReviewImport\" Any`"
+    },
+    {
+      "seconds": 4.499000072479248,
+      "startSeconds": 59.62700009346008,
+      "title": "Tap \"ledgerImportText\" TextView"
+    },
+    {
+      "seconds": 4.440999984741211,
+      "startSeconds": 500.90900015830994,
+      "title": "Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 647.2) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 266.8) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds "
+    },
+    {
+      "seconds": 4.261999845504761,
+      "startSeconds": 546.8340001106262,
+      "title": "Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 266.8) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 647.2) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds "
+    },
+    {
+      "seconds": 4.21399998664856,
+      "startSeconds": 31.48300004005432,
+      "title": "Tap \"openPickupList\" Button"
+    },
+    {
+      "seconds": 3.7320001125335693,
+      "startSeconds": 239.84500002861023,
+      "title": "Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (24.0, 647.2) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (24.0, 266.8) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds "
+    },
+    {
+      "seconds": 3.6540000438690186,
+      "startSeconds": 392.86500000953674,
+      "title": "Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 647.2) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 266.8) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds "
+    },
+    {
+      "seconds": 3.63700008392334,
+      "startSeconds": 276.86899995803833,
+      "title": "Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (24.0, 481.6) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (24.0, 225.4) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds "
+    },
+    {
+      "seconds": 3.6059999465942383,
+      "startSeconds": 602.4070000648499,
+      "title": "Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 647.2) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 266.8) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds "
+    },
+    {
+      "seconds": 3.44599986076355,
+      "startSeconds": 672.1130001544952,
+      "title": "Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 647.2) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 266.8) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds "
+    },
+    {
+      "seconds": 3.435999870300293,
+      "startSeconds": 680.1560001373291,
+      "title": "Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 647.2) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 266.8) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds "
+    },
+    {
+      "seconds": 3.4200000762939453,
+      "startSeconds": 96.07500004768372,
+      "title": "Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 647.2) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 266.8) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds "
+    },
+    {
+      "seconds": 3.4200000762939453,
+      "startSeconds": 552.2750000953674,
+      "title": "Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 266.8) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 647.2) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds "
+    }
+  ]
+}

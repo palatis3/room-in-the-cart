@@ -1,0 +1,14 @@
+{
+  "originalOutcome": "failed7/8; unchanged",
+  "scope": "Read-only original artifact diagnosis; root installed reviewed case-local patch",
+  "installedPatchVerified": true,
+  "installedTestSHA256": "eed5de8923816ed52b97c02f88171ee0720022c025c0b83e0a6bacab2df4c258",
+  "fullLocalExecution": "running; no result claimed",
+  "limitations": [
+    "No full archive digest verification",
+    "Pre-save screenshot precedes event; edge target is observed but activation and storage outcome unproven",
+    "Exported snapshot has no child hierarchy",
+    "Original test never reached terminate/reopen assertions"
+  ],
+  "proof": "proof.json"
+}

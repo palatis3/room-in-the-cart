@@ -10,6 +10,10 @@ The local 041→042 compatibility audit found that an ordinary application rollb
 
 The hosted speech warning still needs an attributable blocking stack. The next fixture run captures the app’s Hang Risk runtime log for that suite alongside its existing XCTest result. Required warning checks still fail on the unresolved issue.
 
+## Completed original CI navigation follow-up
+
+Exec27945 is terminal0: complete UI06 store-quote journey336.617s and UI07 Spanish comparison80.915s pass strict2/2 with zero warnings/skips/restarts. Both scoped test-only corrections preserve all original business/restart assertions and720/900budgets: search toward the known top header, and fully reveal the Save button before its original single tap. [Verification](evidence/native/core-navigation-20261107/README.md). Products at `.build/ShopEntryNov07/dd` remain ordinary `DEBUG`; no native run is active. Original f90 failures remain and hosted26.3 acceptance is pending. Balanced03 matched-switch failure remains unexplained; its diagnostic is scratch-only/uninstalled.
+
 ## November 7 closed-pickup correction and large-text recovery
 
 The final local batch permits reviewed late deliveries, arrival/usable corrections, ingredient matches and protected set-asides after shared pickup closure. The original checkout, retailer-confirmed amendments, sealed meal plan, financial entries and closed status remain unchanged. A new negative control also proved that another pickup’s delivery review could clear the old pickup’s durable action; exact operation/shop guards now preserve it until the original pickup is reviewed. The old backend guard, old screen guard and old retry-scope behavior each retain their failing controls.

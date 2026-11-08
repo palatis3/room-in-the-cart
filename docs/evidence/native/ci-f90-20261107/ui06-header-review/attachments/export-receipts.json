@@ -1,0 +1,44 @@
+[
+  {
+    "attachment": {
+      "rowid": 186,
+      "xcResultKitPayloadRefId": "0~-4xFwp5YhaEHQqJeTan_DPwOsXHNJtDpwixvtaw7vffv8nqD16E40KkyWJ1v2pVXyg9RzkqdBEyD-pUpyMCUzg==",
+      "uuid": "B98DA141-9077-4019-BF0F-23E71ABCCD8B",
+      "uniformTypeIdentifier": "public.png",
+      "lifetime": "keepAlways",
+      "userInfo_fk": 95,
+      "activity_fk": 1537,
+      "name": "S27-complete-store-differences",
+      "timestamp": 815794656.6659999,
+      "filenameOverride": "S27-complete-store-differences_0_4FA5C307-9C37-4B03-B8E5-392B05451652.png",
+      "testIssue_fk": null,
+      "inActivityIdentifier": 0
+    },
+    "file": "exports/S27-complete-store-differences.png",
+    "exit": 0,
+    "stderr": "",
+    "bytes": 439474,
+    "sha256": "8444c259f7ca7a059ce8e6687e0c271cc8584129eb5d68048ede91edd8dea5cd"
+  },
+  {
+    "attachment": {
+      "rowid": 253,
+      "xcResultKitPayloadRefId": "0~E1BF5kJ1mINKcwSmO1tnXIW-4EIfe847YLj3PYvKbtJdHK6NLrtWSbsHfGr5G4km_JDtlvICgtwgzSEuCXBekg==",
+      "uuid": "D172AD38-9644-48A1-ABFC-4DF4AA65D8B8",
+      "uniformTypeIdentifier": "public.png",
+      "lifetime": "keepAlways",
+      "userInfo_fk": 129,
+      "activity_fk": 2110,
+      "name": "S27-reopened-adopted-branch-and-dated-comparison",
+      "timestamp": 815794812.346,
+      "filenameOverride": "S27-reopened-adopted-branch-and-dated-comparison_0_54B24C5F-D38F-4EB0-89D3-E86C7DE63375.png",
+      "testIssue_fk": null,
+      "inActivityIdentifier": 0
+    },
+    "file": "exports/S27-reopened-adopted-branch-and-dated-comparison.png",
+    "exit": 0,
+    "stderr": "",
+    "bytes": 488813,
+    "sha256": "c96f380435d9cb8d8eb0c282354f0bd0021da4b958360b1800b335499f2342b0"
+  }
+]

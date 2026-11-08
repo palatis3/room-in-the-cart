@@ -1,0 +1,86 @@
+[
+  {
+    "attachment": {
+      "rowid": 63,
+      "uniformTypeIdentifier": "public.png",
+      "userInfo_fk": 41,
+      "name": "Spanish-known-result-original-food-name",
+      "xcResultKitPayloadRefId": "0~tKrkg6fEhc9TGexGPbrywKMZc-Kw3Zj33vTpwpB6KuUV04kJ5iiKS0LbEF2-ndj6H7VWZrPHRudksMMjmNduNA==",
+      "uuid": "1F8E5B5E-2200-42D0-B219-B42C11AD4BC7",
+      "timestamp": 815795929.1719999,
+      "inActivityIdentifier": 0,
+      "activity_fk": 3385,
+      "filenameOverride": "Spanish-known-result-original-food-name_0_96BC19DD-890D-4179-970F-CB7D4D6CD51A.png",
+      "testIssue_fk": null,
+      "lifetime": "keepAlways"
+    },
+    "file": "exports/Spanish-known-result-original-food-name.png",
+    "exit": 0,
+    "stderr": "",
+    "bytes": 273694,
+    "sha256": "93636757788b9cd66b66eb51016f7500eeb50ad3563320841c74013f2ce186e5"
+  },
+  {
+    "attachment": {
+      "rowid": 64,
+      "uniformTypeIdentifier": "com.apple.dt.xctest.element-snapshot",
+      "userInfo_fk": null,
+      "name": "kXCTAttachmentLegacySnapshot",
+      "xcResultKitPayloadRefId": "0~5ZaOWL8gHd_qXmWf0SfvTwrJ7eNSMq01nPS0T5cmNRZ22q1M3K2xA5DPvsFulHgpXs-dkkdVcd-Kyyrke8o_pQ==",
+      "uuid": "A370DE6A-9A31-4F43-8067-7584A3A40239",
+      "timestamp": 815795932.4619999,
+      "inActivityIdentifier": 0,
+      "activity_fk": 3390,
+      "filenameOverride": "Snapshot_0_767D79B4-BCE6-46F1-8811-B3CD0551D51C",
+      "testIssue_fk": null,
+      "lifetime": "deleteOnSuccess"
+    },
+    "file": "exports/kXCTAttachmentLegacySnapshot.snapshot",
+    "exit": 0,
+    "stderr": "",
+    "bytes": 1211,
+    "sha256": "8c61d258cde0afd1769fdb2943c0554ebff912e0e0665954b272a06e63376681"
+  },
+  {
+    "attachment": {
+      "rowid": 65,
+      "uniformTypeIdentifier": "com.apple.dt.xctest.synthesized-event-record",
+      "userInfo_fk": 42,
+      "name": "kXCTAttachmentLegacySynthesizedEvent",
+      "xcResultKitPayloadRefId": "0~jfdy7OcSlJ-U09GUNXUKLH9MMX9NXELVtqyGCioji69Q8qnPa7c_W9EnWnWYiMHmmo-rTbsWJqGN6tTo3lPukg==",
+      "uuid": "E00AABCE-B1D4-43DD-B0C8-7862CF866745",
+      "timestamp": 815795932.7809999,
+      "inActivityIdentifier": 1,
+      "activity_fk": 3390,
+      "filenameOverride": "SynthesizedEvent_1_767D79B4-BCE6-46F1-8811-B3CD0551D51C",
+      "testIssue_fk": null,
+      "lifetime": "deleteOnSuccess"
+    },
+    "file": "exports/kXCTAttachmentLegacySynthesizedEvent.snapshot",
+    "exit": 0,
+    "stderr": "",
+    "bytes": 1903,
+    "sha256": "4ec3bef0e2c83927b0f9903d03af3fae2ee82a054429ab9c38d88fd9a2be338d"
+  },
+  {
+    "attachment": {
+      "rowid": 150,
+      "uniformTypeIdentifier": "public.png",
+      "userInfo_fk": 85,
+      "name": "Failure",
+      "xcResultKitPayloadRefId": "0~B52fZ64b1i4xQd3673uzQzC0OLHJqIa52ba8RmFTu6cYdKP1vm-GRutmdrhpKDjUhEP0i-fNSMEykzxprr3ZrQ==",
+      "uuid": "1DD8F572-6E33-4261-AB99-66025A1201AE",
+      "timestamp": 815796018.48,
+      "inActivityIdentifier": 0,
+      "activity_fk": 3692,
+      "filenameOverride": "Failure_0_4C255094-D955-4871-BC26-E66DBC3F025D.png",
+      "testIssue_fk": null,
+      "lifetime": "keepAlways"
+    },
+    "file": "exports/Failure.png",
+    "exit": 0,
+    "stderr": "",
+    "bytes": 263963,
+    "sha256": "17e9be76a3707975fa5e5689745f1e897a9f7fc5ad07302f6a409d5baeee5997"
+  }
+]

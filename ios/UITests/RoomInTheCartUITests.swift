@@ -171,6 +171,11 @@ final class RoomInTheCartUITests: XCTestCase {
         screenshot("Spanish-original-food-name-and-item-scope")
         assertKnownTotals()
         screenshot("Spanish-known-result-original-food-name")
+        let save = element("saveComparison")
+        revealFullyInComparison(save)
+        XCTAssertTrue(save.isEnabled)
+        captureComparisonFrames("Spanish-save-ready")
+        screenshot("Spanish-save-ready")
         saveAndAssertDurableStatus(savedLabel: "Guardado en este iPhone")
 
         app.terminate()

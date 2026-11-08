@@ -1,0 +1,62 @@
+[
+  {
+    "directoryRef": "0~FNsN1dnC3Ic67PHz3ZLUxqM1PxIBBHfIBKpwVkbY2htlxv3jUjl3R9roS1NtQvtffzrGSr2qpr7Xq1LLYqaaPg==",
+    "entries": [
+      {
+        "name": "My Mac_3f5ac6eceeeeea9d86c143975c8850000a471e22",
+        "type": 2,
+        "id": "0~4VqMqsI5lOfxRppnud6-VDWcNsU8J7VgFCJfW2dXPwOcAkvU-I8Um5yp9n0Zv6nr3VmcxYggaVMDFfR0U_vjKw=="
+      },
+      {
+        "name": "RoomInTheCartUITests-6D5CF2C5-FD10-44CC-93BF-DF2B87FB0187-Configuration-Test Scheme Action-Iteration-1",
+        "type": 2,
+        "id": "0~9FuF38mRhziDdT1CiKrm0mCfPcUM_ob9xQEXCKmr4GTbeWn8Vm-4jZr_LyCt5iOqD24QbzutsjJNIQ_UuVi4Kw=="
+      },
+      {
+        "name": "iPhone 17_BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+        "type": 2,
+        "id": "0~Q1I-SZoRv2xMpMl3PkeQzXvUuZYRkJvvrxMnzUi-LCGXjQ0ql6YhscmDYRvq7QDlFMPEjTF7emJjxtVEuEp9dA=="
+      }
+    ]
+  },
+  {
+    "directoryRef": "0~9FuF38mRhziDdT1CiKrm0mCfPcUM_ob9xQEXCKmr4GTbeWn8Vm-4jZr_LyCt5iOqD24QbzutsjJNIQ_UuVi4Kw==",
+    "entries": [
+      {
+        "name": "RoomInTheCartUITests-D76AAF77-2F06-4214-948C-50F7A7A3AFD6",
+        "type": 2,
+        "id": "0~7yHVzNY5mVyxzqOoZO0NmcueY2ScJ3mzeasRoTTWOwD3NqBNo7hknfa_ETJNnsltzJaY9JgL2-A9SeQ3r3BmeQ=="
+      },
+      {
+        "name": "scheduling.log",
+        "type": 1,
+        "id": "0~IGMM5W7pUC_mo8bQwPtKdusPtZ4tIoGzqcNWfv3EKlR5Z9rd7eTt3JU6DsvCODxYG4OXBCQMZp3Zepbw_wJWuA=="
+      }
+    ]
+  },
+  {
+    "directoryRef": "0~7yHVzNY5mVyxzqOoZO0NmcueY2ScJ3mzeasRoTTWOwD3NqBNo7hknfa_ETJNnsltzJaY9JgL2-A9SeQ3r3BmeQ==",
+    "entries": [
+      {
+        "type": 1,
+        "name": "Session-RoomInTheCartUITests-2026-11-08_012739-ADS67J.log",
+        "id": "0~MZy8QELtbZZP8F7aRCaO7x1btSh8OR_yPQRHJi8f16_dORkDg3QiMtb2Z1TwvoOdMoRfCEbHKJ4FAx4vI4zTDg=="
+      },
+      {
+        "type": 1,
+        "name": "Session-RoomInTheCartUITests-2026-11-08_014315-Jf5Tfa.log",
+        "id": "0~EZi0o78TAcYAt74Ol2-PkJSA9BW-WgGHEfwRSjvrEUQgy-1j2JJbWc_4kmPSWS4HLLu-gaH4s8-h5q50qusHdA=="
+      },
+      {
+        "type": 1,
+        "name": "StandardOutputAndStandardError-dev.roominthecart.app.debug.txt",
+        "id": "0~X5u7wdrEFTRQNNp77lJVZ0C8PTNsi7Mv0aC9ulZ6gr_tbxp8UcuZIqi4s4O8dHElBfbcWYIp40MdpZa0x75Fpg=="
+      },
+      {
+        "type": 1,
+        "name": "StandardOutputAndStandardError.txt",
+        "id": "0~r819hG62X6kxGwx4Gws3GcjAdcNOT7mKI74_B13pSWoFqfY7P_rqlfJZ2MohYgVUW2GbyU0A6nJEj3elVuGHKw=="
+      }
+    ]
+  }
+]

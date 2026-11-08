@@ -1,5 +1,9 @@
 # Current implementation and acceptance map
 
+## November 7 store-quote and Spanish save navigation
+
+Both complete original journeys now pass locally with their existing limits, strict2/2 and zero warnings/skips/restarts. The known top branch header is found without scrolling away from it; Spanish Save is fully visible before the existing single tap. Store comparison adoption/revision/original proof and Spanish save/reopen checks remain intact. Application behavior is unchanged. Original failures and pending hosted26.3 acceptance remain explicit. [Proof](evidence/native/core-navigation-20261107/README.md).
+
 ## November 7 complete checkout-review journey
 
 The full ordinary Free journey passes locally after following both existing pricing-review confirmations. It verifies preserved old prices, fresh source and inclusive$3.00, the committed result, placement, short fill, protected-lunch repair, settlement, next-shop reuse and restarted history. Strict1/1 passes with zero warnings/skips/restarts; no application guard or later assertion changed. Both earlier failed attempts remain retained, and hosted26.3 follow-up is pending. [Evidence](evidence/native/ci-f90-20261107/ui04-pricing-review/local-followup/README.md).

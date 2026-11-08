@@ -1,0 +1,98 @@
+2666:     t =   718.53s Checking existence of `"Compare two store trips" Button`
+2667:     t =   718.69s Find the Target Application 'dev.roominthecart.app.debug'
+2668:     t =   718.78s Get all elements bound by index for: Descendants matching type Keyboard
+2669:     t =   718.90s Checking existence of `"Compare two store trips" Button`
+2670:     t =   719.01s Find the Target Application 'dev.roominthecart.app.debug'
+2671:     t =   719.07s Get all elements bound by index for: Descendants matching type Keyboard
+2672:     t =   719.15s Find the Target Application 'dev.roominthecart.app.debug'
+2673:     t =   719.20s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 647.2) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 266.8) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+2674:     t =   719.20s     Wait for dev.roominthecart.app.debug to idle
+2675:     t =   719.21s     Find the Target Application 'dev.roominthecart.app.debug'
+2676:     t =   719.30s     Check for interrupting elements affecting "Room in the Cart" Application
+2677:     t =   719.37s     Synthesize event
+2678:     t =   719.38s         Find the Target Application 'dev.roominthecart.app.debug'
+2679:     t =   719.44s         Find the Target Application 'dev.roominthecart.app.debug'
+2680:     t =   719.49s         Find the Target Application 'dev.roominthecart.app.debug'
+2681:     t =   719.53s         Find the Target Application 'dev.roominthecart.app.debug'
+2682:     t =   719.60s         Find the Target Application 'dev.roominthecart.app.debug'
+2683: Test Case '-[RoomInTheCartUITests.ContextualNavigationUITests testEnteredStoreQuotesKeepTripCostsSeparateAndAdoptOnlyReviewedSavedProof]' exceeded execution time allowance of 12 minutes. The test may have hung; check Xcode's test report for additional diagnostics. If the test requires additional time, use -[XCTestCase executionTimeAllowance] or one of xcodebuild's command-line overrides.
+2684:     t =   720.70s     Wait for dev.roominthecart.app.debug to idle
+2685:     t =   721.43s Checking existence of `"Compare two store trips" Button`
+2686:     t =   721.60s Find the "Compare two store trips" Button
+2687:     t =   721.79s Find the "Compare two store trips" Button
+2688:     t =   721.93s Tap "Compare two store trips" Button
+2689:     t =   721.93s     Wait for dev.roominthecart.app.debug to idle
+2690:     t =   722.22s     Find the "Compare two store trips" Button
+2691:     t =   722.39s     Check for interrupting elements affecting "Compare two store trips" Button
+2692:     t =   722.64s     Synthesize event
+2693:     t =   723.59s     Wait for dev.roominthecart.app.debug to idle
+2694:     t =   727.82s Checking existence of `"Market A and Market B · comparison 1" Button`
+2695:     t =   728.38s Find the "Market A and Market B · comparison 1" Button
+2696:     t =   728.69s Find the "Market A and Market B · comparison 1" Button
+2697:     t =   728.84s Tap "Market A and Market B · comparison 1" Button
+2698:     t =   728.84s     Wait for dev.roominthecart.app.debug to idle
+2699:     t =   728.85s     Find the "Market A and Market B · comparison 1" Button
+2700:     t =   728.92s     Check for interrupting elements affecting "Market A and Market B · comparison 1" Button
+2701:     t =   729.19s     Synthesize event
+2702:     t =   729.57s     Wait for dev.roominthecart.app.debug to idle
+2703:     t =   730.54s Checking existence of `"quoteSecondResult" StaticText`
+2704:     t =   733.29s Find the Target Application 'dev.roominthecart.app.debug'
+2705:     t =   733.38s Get all elements bound by index for: Descendants matching type Keyboard
+2706:     t =   733.48s Checking existence of `"quoteSecondResult" StaticText`
+2707:     t =   735.73s Find the Target Application 'dev.roominthecart.app.debug'
+2708:     t =   735.85s Get all elements bound by index for: Descendants matching type Keyboard
+2709:     t =   735.97s Find the Target Application 'dev.roominthecart.app.debug'
+2710:     t =   736.04s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 647.2) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 266.8) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+2711:     t =   736.04s     Wait for dev.roominthecart.app.debug to idle
+2712:     t =   736.04s     Find the Target Application 'dev.roominthecart.app.debug'
+2713:     t =   736.15s     Check for interrupting elements affecting "Room in the Cart" Application
+2714:     t =   736.28s     Synthesize event
+2715:     t =   736.28s         Find the Target Application 'dev.roominthecart.app.debug'
+2716:     t =   736.41s         Find the Target Application 'dev.roominthecart.app.debug'
+2717:     t =   736.52s         Find the Target Application 'dev.roominthecart.app.debug'
+2718:     t =   736.59s         Find the Target Application 'dev.roominthecart.app.debug'
+2719:     t =   736.69s         Find the Target Application 'dev.roominthecart.app.debug'
+2720:     t =   737.84s     Wait for dev.roominthecart.app.debug to idle
+2721:     t =   739.37s Checking existence of `"quoteSecondResult" StaticText`
+2722:     t =   740.34s Find the "quoteSecondResult" StaticText
+2723:     t =   741.33s Find the "quoteSecondResult" StaticText
+2724:     t =   742.53s Checking existence of `StaticText (First Match)`
+2725:     t =   743.45s Find the Target Application 'dev.roominthecart.app.debug'
+2726:     t =   743.55s Get all elements bound by index for: Descendants matching type Keyboard
+2727:     t =   743.64s Checking existence of `StaticText (First Match)`
+2728:     t =   744.55s Find the Target Application 'dev.roominthecart.app.debug'
+2729:     t =   744.63s Get all elements bound by index for: Descendants matching type Keyboard
+2730:     t =   744.69s Find the Target Application 'dev.roominthecart.app.debug'
+2731:     t =   744.77s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 647.2) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 266.8) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+2732:     t =   744.77s     Wait for dev.roominthecart.app.debug to idle
+2733:     t =   744.78s     Find the Target Application 'dev.roominthecart.app.debug'
+2734:     t =   744.86s     Check for interrupting elements affecting "Room in the Cart" Application
+2735:     t =   744.95s     Synthesize event
+2736:     t =   744.95s         Find the Target Application 'dev.roominthecart.app.debug'
+2737:     t =   745.02s         Find the Target Application 'dev.roominthecart.app.debug'
+2738:     t =   745.12s         Find the Target Application 'dev.roominthecart.app.debug'
+2739:     t =   745.21s         Find the Target Application 'dev.roominthecart.app.debug'
+2740:     t =   745.32s         Find the Target Application 'dev.roominthecart.app.debug'
+2741:     t =   746.45s     Wait for dev.roominthecart.app.debug to idle
+2742:     t =   747.98s Checking existence of `StaticText (First Match)`
+2743:     t =   749.37s Find the StaticText (First Match)
+2744:     t =   751.62s Checking existence of `"This saved comparison uses an earlier pickup revision. Review the store options again to change the current pickup." StaticText`
+2745:     t =   752.43s Find the "This saved comparison uses an earlier pickup revision. Review the store options again to change the current pickup." StaticText
+2746:     t =   753.45s Find the Target Application 'dev.roominthecart.app.debug'
+2747:     t =   753.74s Added attachment named 'S27-original-observations-survive-corrected-comparison'
+2748:     t =   753.98s Tear Down
+2749:     t =   753.98s     Terminate dev.roominthecart.app.debug:55990
+2750: 
+2751: 
+2752: *** If you believe this error represents a bug, please attach the result bundle at /Users/runner/work/room-in-the-cart/room-in-the-cart/.build/Tests.xcresult
+2753: 
+2754: 2026-11-08 01:43:19.054654+0000 RoomInTheCartUITests-Runner[59251:156338] [Default] Running tests...
+2755:     t =      nans Interface orientation changed to Portrait
+2756: 
+2757: Restarting after unexpected exit, crash, or test timeout; summary will include totals from previous launches.
+2758: 
+2759: Test Suite 'Selected tests' started at 2026-11-08 01:43:23.629.
+2760: Test Suite 'RoomInTheCartUITests.xctest' started at 2026-11-08 01:43:23.630.
+2761: Test Suite 'ContextualNavigationUITests' started at 2026-11-08 01:43:23.630.
+2762: Test Case '-[RoomInTheCartUITests.ContextualNavigationUITests testPrintedFluidOuncesKeepTheirVolumeAndPackLabelAfterRestart]' started.
+2763:     t =     0.00s Start Test at 2026-11-08 01:43:23.631

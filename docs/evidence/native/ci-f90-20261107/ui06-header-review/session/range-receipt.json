@@ -1,0 +1,72 @@
+{
+  "artifactID": 13599975417,
+  "requests": [
+    {
+      "file": "0001.bin",
+      "start": 29920399,
+      "end": 29920420,
+      "bytes": 22,
+      "sha256": "3b1f1d7b481a31ef34995162b1c270f420ba07a90fa759cfbade2592c0569db9"
+    },
+    {
+      "file": "0002.bin",
+      "start": 29920379,
+      "end": 29920398,
+      "bytes": 20,
+      "sha256": "186ea7d503b83def40d74bbccb0abd6821d5043baedba65b4d119bb6923a21bc"
+    },
+    {
+      "file": "0003.bin",
+      "start": 29877276,
+      "end": 29920398,
+      "bytes": 43123,
+      "sha256": "8f35ed4b7a69cc50ae8683f05e9dd769d82cf6a1e954d6d8a7df0cdc9b2787a9"
+    },
+    {
+      "file": "0004.bin",
+      "start": 2994088,
+      "end": 2994117,
+      "bytes": 30,
+      "sha256": "0ea1ba1fadb95cfc514c66273301b7a410ea8fc0df75536d85276fd2c59fccd0"
+    },
+    {
+      "file": "0005.bin",
+      "start": 2994118,
+      "end": 2994232,
+      "bytes": 115,
+      "sha256": "c780ae26aaa4dd31c03d82ef849885cad1ce0047c31b419ce4bec6762ac209b5"
+    },
+    {
+      "file": "0006.bin",
+      "start": 2994233,
+      "end": 3970059,
+      "bytes": 975827,
+      "sha256": "f4ce11ae18c20d59a90342dd548b3fe00339e4ce08933a9d9e9bfdeb7149362c"
+    },
+    {
+      "file": "0007.bin",
+      "start": 29498348,
+      "end": 29498377,
+      "bytes": 30,
+      "sha256": "0ea1ba1fadb95cfc514c66273301b7a410ea8fc0df75536d85276fd2c59fccd0"
+    },
+    {
+      "file": "0008.bin",
+      "start": 29498378,
+      "end": 29498492,
+      "bytes": 115,
+      "sha256": "33a808d90c18e4a4629a297781efeac14612b19d53a99296c7f964e188c010d8"
+    },
+    {
+      "file": "0009.bin",
+      "start": 29498493,
+      "end": 29498495,
+      "bytes": 3,
+      "sha256": "e9238ddb2b450e586127f0c74344099c6803b19375718f54f3f2056089002fc8"
+    }
+  ],
+  "totalBytes": 1019285,
+  "fullArchiveDownloaded": false,
+  "fullArchiveAPIHashVerified": false,
+  "scope": "Declared diagnostic directory metadata and one exact-invocation XCTest Session log only."
+}

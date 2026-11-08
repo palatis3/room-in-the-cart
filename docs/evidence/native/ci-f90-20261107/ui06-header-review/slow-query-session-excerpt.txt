@@ -1,0 +1,569 @@
+108842:     t =   412.01s Find the "Checkout plus trip cash, second minus first: $1.00" StaticText
+108843: 01:36:57.106 xcodebuild[25478:71669] _XCT_testCaseWithIdentifier:<XCTTestIdentifier leaf, method ["none", "none"]> didFinishActivity:<XCActivityRecord: 0x600003cfdf40> 2026-11-08 01:36:54 +0000: Checking existence of `"Checkout plus trip cash, second minus first: $1.00" StaticText` (2.44519s)
+108844: 01:36:57.191 xcodebuild[25478:71669] Nothing to delete
+108845: 01:36:56.869 RoomInTheCartUITests-Runner[31509:87411] <XCTContext: 0x600002114730> started activity <XCActivityRecord: 0x600002154dc0> 2026-11-08 01:36:56 +0000: Find the "Checkout plus trip cash, second minus first: $1.00" StaticText
+108846: 01:36:57.191 xcodebuild[25478:71669] _XCT_testCaseWithIdentifier:<XCTTestIdentifier leaf, method ["none", "none"]> willStartActivity:<XCActivityRecord: 0x600003cfe170> 2026-11-08 01:36:56 +0000: Find the "Checkout plus trip cash, second minus first: $1.00" StaticText
+108847: 01:36:57.191 xcodebuild[25478:71669] Nothing to delete
+108848: 01:36:56.869 RoomInTheCartUITests-Runner[31509:87411] Executing query:
+108849: ↪︎ Descendants matching type StaticText
+108850:     ↪︎ Elements containing elements matching predicate 'label CONTAINS "Checkout plus trip cash, second minus first: $1.00"' (First Match)
+108851: 01:36:56.870 RoomInTheCartUITests-Runner[31509:87411] Should evaluate query remotely? XCTDisableRemoteQueryEvaluation(d-write): NO, hasAutomationSession: YES, supportsRemoteEvaluation: YES
+108852: 01:36:56.870 RoomInTheCartUITests-Runner[31509:87411] Getting matching snapshots for remotely evaluated query
+108853: 01:36:56.870 RoomInTheCartUITests-Runner[31509:87411] Creating future for 'evaluating UI query' with timeout 30.00
+108854: 01:36:56.870 RoomInTheCartUITests-Runner[31509:87411] <XCTWaiter: 0x600001008ab0> entering wait loop for 30.00s with expectations: `evaluating UI query`
+108855: 01:36:56.934 RoomInTheCartUITests-Runner[31509:93013] Handling kAXPidStatusChangedNotification
+108856: 01:36:56.934 RoomInTheCartUITests-Runner[31509:93013] Got kAXPidStatusChangedNotification for pid 25367: active
+108857: 01:36:56.973 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 25367, caching
+108858: 01:36:58.170 RoomInTheCartUITests-Runner[31509:93013] Handling kAXPidStatusChangedNotification
+108859: 01:36:58.172 RoomInTheCartUITests-Runner[31509:93013] Got kAXPidStatusChangedNotification for pid 44850: active
+108860: 01:36:58.173 RoomInTheCartUITests-Runner[31509:93013] Handling kAXPidStatusChangedNotification
+108861: 01:36:58.173 RoomInTheCartUITests-Runner[31509:93013] Got kAXPidStatusChangedNotification for pid 44850: active
+108862: 01:36:58.244 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 44850, caching
+108863: 01:36:58.244 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 44850, caching
+108864: 01:36:59.968 RoomInTheCartUITests-Runner[31509:106172] Handling kAXPidStatusChangedNotification
+108865: 01:36:59.978 RoomInTheCartUITests-Runner[31509:106172] Got kAXPidStatusChangedNotification for pid 31676: active
+108866: 01:37:00.154 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31676, caching
+108867: 01:37:00.248 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+108868: 01:37:00.249 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 44842: active
+108869: 01:37:00.261 RoomInTheCartUITests-Runner[31509:106172] Handling kAXPidStatusChangedNotification
+108870: 01:37:00.268 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 44842, caching
+108871: 01:37:00.326 RoomInTheCartUITests-Runner[31509:106172] Got kAXPidStatusChangedNotification for pid 31905: active
+108872: 01:37:00.328 RoomInTheCartUITests-Runner[31509:106172] Handling kAXPidStatusChangedNotification
+108873: 01:37:00.328 RoomInTheCartUITests-Runner[31509:106172] Got kAXPidStatusChangedNotification for pid 31905: active
+108874: 01:37:00.342 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+108875: 01:37:00.342 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 44842: active
+108876: 01:37:00.378 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31905, caching
+108877: 01:37:00.378 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31905, caching
+108878: 01:37:00.378 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 44842, caching
+108879: 01:37:01.016 RoomInTheCartUITests-Runner[31509:106172] Handling kAXPidStatusChangedNotification
+108880: 01:37:01.017 RoomInTheCartUITests-Runner[31509:106172] Got kAXPidStatusChangedNotification for pid 44842: active
+108881: 01:37:01.062 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 44842, caching
+108882: 01:37:01.183 RoomInTheCartUITests-Runner[31509:106172] Handling kAXPidStatusChangedNotification
+108883: 01:37:01.183 RoomInTheCartUITests-Runner[31509:106172] Got kAXPidStatusChangedNotification for pid 31805: active
+108884: 01:37:01.286 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31805, caching
+108885: 01:37:01.293 RoomInTheCartUITests-Runner[31509:106172] Handling kAXPidStatusChangedNotification
+108886: 01:37:01.302 RoomInTheCartUITests-Runner[31509:106172] Got kAXPidStatusChangedNotification for pid 31639: active
+108887: 01:37:01.354 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+108888: 01:37:01.354 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31877: active
+108889: 01:37:01.387 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+108890: 01:37:01.387 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31676: active
+108891: 01:37:01.389 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31639, caching
+108892: 01:37:01.389 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31877, caching
+108893: 01:37:01.389 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31676, caching
+108894: 01:37:01.608 RoomInTheCartUITests-Runner[31509:106172] Handling kAXPidStatusChangedNotification
+108895: 01:37:01.609 RoomInTheCartUITests-Runner[31509:106172] Got kAXPidStatusChangedNotification for pid 31843: active
+108896: 01:37:01.609 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31843, caching
+108897: 01:37:01.722 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+108898: 01:37:01.723 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31761: active
+108899: 01:37:01.724 RoomInTheCartUITests-Runner[31509:106172] Handling kAXPidStatusChangedNotification
+108900: 01:37:01.724 RoomInTheCartUITests-Runner[31509:106172] Got kAXPidStatusChangedNotification for pid 31905: active
+108901: 01:37:01.823 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31761, caching
+108902: 01:37:01.823 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31905, caching
+108903: 01:37:01.866 RoomInTheCartUITests-Runner[31509:93013] Handling kAXPidStatusChangedNotification
+108904: 01:37:01.866 RoomInTheCartUITests-Runner[31509:93013] Got kAXPidStatusChangedNotification for pid 31916: active
+108905: 01:37:01.928 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31916, caching
+108906: 01:37:01.966 RoomInTheCartUITests-Runner[31509:93013] Handling kAXPidStatusChangedNotification
+108907: 01:37:01.967 RoomInTheCartUITests-Runner[31509:93013] Got kAXPidStatusChangedNotification for pid 31877: active
+108908: 01:37:02.040 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31877, caching
+108909: 01:37:03.049 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+108910: 01:37:03.050 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31805: active
+108911: 01:37:03.120 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31805, caching
+108912: 01:37:03.555 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+108913: 01:37:03.555 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 44856: active
+108914: 01:37:03.558 RoomInTheCartUITests-Runner[31509:106172] Handling kAXPidStatusChangedNotification
+108915: 01:37:03.559 RoomInTheCartUITests-Runner[31509:106172] Got kAXPidStatusChangedNotification for pid 44856: active
+108916: 01:37:03.559 RoomInTheCartUITests-Runner[31509:106172] Handling kAXPidStatusChangedNotification
+108917: 01:37:03.559 RoomInTheCartUITests-Runner[31509:106172] Got kAXPidStatusChangedNotification for pid 31924: active
+108918: 01:37:03.630 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+108919: 01:37:03.630 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31676: active
+108920: 01:37:03.666 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 44856, caching
+108921: 01:37:03.666 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 44856, caching
+108922: 01:37:03.666 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31924, caching
+108923: 01:37:03.666 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31676, caching
+108924: 01:37:05.967 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+108925: 01:37:05.969 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31916: active
+108926: 01:37:05.970 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+108927: 01:37:05.970 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 44863: active
+108928: 01:37:05.971 RoomInTheCartUITests-Runner[31509:106172] Handling kAXPidStatusChangedNotification
+108929: 01:37:05.971 RoomInTheCartUITests-Runner[31509:106172] Got kAXPidStatusChangedNotification for pid 44863: active
+108930: 01:37:05.974 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31916, caching
+108931: 01:37:05.974 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 44863, caching
+108932: 01:37:05.975 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 44863, caching
+108933: 01:37:06.191 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+108934: 01:37:06.191 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31905: active
+108935: 01:37:06.223 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31905, caching
+108936: 01:37:06.305 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+108937: 01:37:06.305 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31891: active
+108938: 01:37:06.314 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+108939: 01:37:06.325 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31732: active
+108940: 01:37:06.332 RoomInTheCartUITests-Runner[31509:93013] Handling kAXPidStatusChangedNotification
+108941: 01:37:06.334 RoomInTheCartUITests-Runner[31509:93013] Got kAXPidStatusChangedNotification for pid 31916: active
+108942: 01:37:06.334 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31891, caching
+108943: 01:37:06.334 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31732, caching
+108944: 01:37:06.334 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31916, caching
+108945: 01:37:06.385 RoomInTheCartUITests-Runner[31509:93013] Handling kAXPidStatusChangedNotification
+108946: 01:37:06.385 RoomInTheCartUITests-Runner[31509:93013] Got kAXPidStatusChangedNotification for pid 31877: active
+108947: 01:37:06.463 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31877, caching
+108948: 01:37:06.494 RoomInTheCartUITests-Runner[31509:93013] Handling kAXPidStatusChangedNotification
+108949: 01:37:06.494 RoomInTheCartUITests-Runner[31509:93013] Got kAXPidStatusChangedNotification for pid 31473: active
+108950: 01:37:06.494 RoomInTheCartUITests-Runner[31509:93013] Handling kAXPidStatusChangedNotification
+108951: 01:37:06.495 RoomInTheCartUITests-Runner[31509:93013] Got kAXPidStatusChangedNotification for pid 31916: active
+108952: 01:37:06.499 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+108953: 01:37:06.499 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31877: active
+108954: 01:37:06.565 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31473, caching
+108955: 01:37:06.566 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31916, caching
+108956: 01:37:06.566 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31877, caching
+108957: 01:37:06.915 RoomInTheCartUITests-Runner[31509:106172] Handling kAXPidStatusChangedNotification
+108958: 01:37:06.916 RoomInTheCartUITests-Runner[31509:106172] Got kAXPidStatusChangedNotification for pid 44850: active
+108959: 01:37:07.015 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 44850, caching
+108960: 01:37:09.457 RoomInTheCartUITests-Runner[31509:93013] Handling kAXPidStatusChangedNotification
+108961: 01:37:09.459 RoomInTheCartUITests-Runner[31509:93013] Got kAXPidStatusChangedNotification for pid 44856: active
+108962: 01:37:09.473 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 44856, caching
+108963: 01:37:10.728 RoomInTheCartUITests-Runner[31509:93013] Handling kAXPidStatusChangedNotification
+108964: 01:37:10.728 RoomInTheCartUITests-Runner[31509:93013] Got kAXPidStatusChangedNotification for pid 31676: active
+108965: 01:37:10.769 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31676, caching
+108966: 01:37:10.820 RoomInTheCartUITests-Runner[31509:106172] Handling kAXPidStatusChangedNotification
+108967: 01:37:10.820 RoomInTheCartUITests-Runner[31509:106172] Got kAXPidStatusChangedNotification for pid 31905: active
+108968: 01:37:10.874 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31905, caching
+108969: 01:37:10.966 RoomInTheCartUITests-Runner[31509:93013] Handling kAXPidStatusChangedNotification
+108970: 01:37:10.966 RoomInTheCartUITests-Runner[31509:93013] Got kAXPidStatusChangedNotification for pid 44870: active
+108971: 01:37:10.971 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+108972: 01:37:10.971 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 44870: active
+108973: 01:37:10.975 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 44870, caching
+108974: 01:37:10.976 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 44870, caching
+108975: 01:37:11.025 RoomInTheCartUITests-Runner[31509:93013] Handling kAXPidStatusChangedNotification
+108976: 01:37:11.025 RoomInTheCartUITests-Runner[31509:93013] Got kAXPidStatusChangedNotification for pid 31877: active
+108977: 01:37:11.084 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31877, caching
+108978: 01:37:11.244 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+108979: 01:37:11.245 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31805: active
+108980: 01:37:11.323 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31805, caching
+108981: 01:37:11.356 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+108982: 01:37:11.356 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31924: active
+108983: 01:37:11.428 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31924, caching
+108984: 01:37:11.541 RoomInTheCartUITests-Runner[31509:106172] Handling kAXPidStatusChangedNotification
+108985: 01:37:11.541 RoomInTheCartUITests-Runner[31509:106172] Got kAXPidStatusChangedNotification for pid 31924: active
+108986: 01:37:11.542 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31924, caching
+108987: 01:37:11.639 RoomInTheCartUITests-Runner[31509:106172] Handling kAXPidStatusChangedNotification
+108988: 01:37:11.639 RoomInTheCartUITests-Runner[31509:106172] Got kAXPidStatusChangedNotification for pid 31676: active
+108989: 01:37:11.643 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+108990: 01:37:11.643 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31877: active
+108991: 01:37:11.644 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31676, caching
+108992: 01:37:11.644 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31877, caching
+108993: 01:37:11.644 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+108994: 01:37:11.644 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31473: active
+108995: 01:37:11.688 RoomInTheCartUITests-Runner[31509:106172] Handling kAXPidStatusChangedNotification
+108996: 01:37:11.689 RoomInTheCartUITests-Runner[31509:106172] Got kAXPidStatusChangedNotification for pid 31905: active
+108997: 01:37:11.745 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+108998: 01:37:11.746 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31676: active
+108999: 01:37:11.746 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+109000: 01:37:11.746 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31843: active
+109001: 01:37:11.746 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31473, caching
+109002: 01:37:11.746 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31905, caching
+109003: 01:37:11.746 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31676, caching
+109004: 01:37:11.746 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31843, caching
+109005: 01:37:11.752 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+109006: 01:37:11.752 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 44863: active
+109007: 01:37:11.795 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+109008: 01:37:11.795 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31523: active
+109009: 01:37:11.849 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 44863, caching
+109010: 01:37:11.850 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31523, caching
+109011: 01:37:11.902 RoomInTheCartUITests-Runner[31509:106172] Handling kAXPidStatusChangedNotification
+109012: 01:37:11.903 RoomInTheCartUITests-Runner[31509:106172] Got kAXPidStatusChangedNotification for pid 31835: active
+109013: 01:37:11.903 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+109014: 01:37:11.903 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31905: active
+109015: 01:37:11.957 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31835, caching
+109016: 01:37:11.957 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31905, caching
+109017: 01:37:11.968 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+109018: 01:37:11.969 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31568: active
+109019: 01:37:12.063 RoomInTheCartUITests-Runner[31509:106172] Handling kAXPidStatusChangedNotification
+109020: 01:37:12.063 RoomInTheCartUITests-Runner[31509:106172] Got kAXPidStatusChangedNotification for pid 31924: active
+109021: 01:37:12.068 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31568, caching
+109022: 01:37:12.068 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31924, caching
+109023: 01:37:12.112 RoomInTheCartUITests-Runner[31509:93013] Handling kAXPidStatusChangedNotification
+109024: 01:37:12.113 RoomInTheCartUITests-Runner[31509:93013] Got kAXPidStatusChangedNotification for pid 31594: active
+109025: 01:37:12.179 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31594, caching
+109026: 01:37:12.195 RoomInTheCartUITests-Runner[31509:93013] Handling kAXPidStatusChangedNotification
+109027: 01:37:12.195 RoomInTheCartUITests-Runner[31509:93013] Got kAXPidStatusChangedNotification for pid 31568: active
+109028: 01:37:12.284 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31568, caching
+109029: 01:37:13.555 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+109030: 01:37:13.556 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31538: active
+109031: 01:37:13.584 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31538, caching
+109032: 01:37:13.656 RoomInTheCartUITests-Runner[31509:93013] Handling kAXPidStatusChangedNotification
+109033: 01:37:13.657 RoomInTheCartUITests-Runner[31509:93013] Got kAXPidStatusChangedNotification for pid 31835: active
+109034: 01:37:13.690 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31835, caching
+109035: 01:37:15.189 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+109036: 01:37:15.189 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31594: active
+109037: 01:37:15.191 RoomInTheCartUITests-Runner[31509:93013] Handling kAXPidStatusChangedNotification
+109038: 01:37:15.191 RoomInTheCartUITests-Runner[31509:93013] Got kAXPidStatusChangedNotification for pid 31523: active
+109039: 01:37:15.276 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31594, caching
+109040: 01:37:15.276 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31523, caching
+109041: 01:37:15.474 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+109042: 01:37:15.474 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31805: active
+109043: 01:37:15.490 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31805, caching
+109044: 01:37:16.138 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+109045: 01:37:16.144 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 44882: active
+109046: 01:37:16.156 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 44882, caching
+109047: 01:37:16.168 RoomInTheCartUITests-Runner[31509:93013] Handling kAXPidStatusChangedNotification
+109048: 01:37:16.168 RoomInTheCartUITests-Runner[31509:93013] Got kAXPidStatusChangedNotification for pid 44882: active
+109049: 01:37:16.263 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 44882, caching
+109050: 01:37:16.896 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+109051: 01:37:16.896 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31538: active
+109052: 01:37:16.993 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31538, caching
+109053: 01:37:17.082 RoomInTheCartUITests-Runner[31509:87411] Returning result XCTWaiterResultCompleted for synchronous waiter <XCTWaiter: 0x600001008ab0>
+109054: 01:37:17.082 RoomInTheCartUITests-Runner[31509:87411] Wait <XCTWaiterWait: 0x60000178f380> completed after 20.212s
+109055: 01:37:17.082 RoomInTheCartUITests-Runner[31509:87411] cleaning up evaluating UI query
+109056: 01:37:17.083 RoomInTheCartUITests-Runner[31509:87411] results tree:
+109057: App element pid: 32177
+109058:   Window
+109059:     Other
+109060:       Other
+109061:         Other
+109062:           Other
+109063:             Other
+109064:               Other
+109065:                 Other
+109066:                   Other
+109067:                     Other
+109068:                       Other
+109069:                         Other
+109070:                           Other
+109071:                             Other
+109072:                               Other
+109073:                                 Other
+109074:                                   CollectionView
+109075:                                     Cell
+109076:                                       Other
+109077:                                         Other
+109078:                                           Other
+109079:                                             StaticText, label: 'Checkout plus trip cash, second minus first: $1.00'
+109080: 01:37:17.083 RoomInTheCartUITests-Runner[31509:87411] matches: {(
+109081:     StaticText, label: 'Checkout plus trip cash, second minus first: $1.00'
+109082: )}
+109083: 01:37:17.085 RoomInTheCartUITests-Runner[31509:87411] <XCTContext: 0x600002114730> finished activity <XCActivityRecord: 0x600002154dc0> 2026-11-08 01:36:56 +0000: Find the "Checkout plus trip cash, second minus first: $1.00" StaticText (20.2159s)
+109084: 01:37:17.260 xcodebuild[25478:71669] _XCT_testCaseWithIdentifier:<XCTTestIdentifier leaf, method ["none", "none"]> didFinishActivity:<XCActivityRecord: 0x600003ceeda0> 2026-11-08 01:36:56 +0000: Find the "Checkout plus trip cash, second minus first: $1.00" StaticText (20.2159s)
+109085: 01:37:17.262 xcodebuild[25478:71669] Nothing to delete
+109086: 01:37:17.086 RoomInTheCartUITests-Runner[31509:87411] Computing hit point for StaticText, label: 'Checkout plus trip cash, second minus first: $1.00'
+109087: 01:37:17.086 RoomInTheCartUITests-Runner[31509:87411] Creating future for 'fetching attributes 'XC_kAXXCAttributeVisiblePoint' for AX element pid: 32177, elementOrHash.elementID: 4849713024.1876' with timeout 30.00
+109088: 01:37:17.086 RoomInTheCartUITests-Runner[31509:87411] <XCTWaiter: 0x6000010081e0> entering wait loop for 30.00s with expectations: `fetching attributes 'XC_kAXXCAttributeVisiblePoint' for AX element pid: 32177, elementOrHash.elementID: 4849713024.1876`
+109089: 01:37:17.140 RoomInTheCartUITests-Runner[31509:87411] Returning result XCTWaiterResultCompleted for synchronous waiter <XCTWaiter: 0x6000010081e0>
+109090: 01:37:17.141 RoomInTheCartUITests-Runner[31509:87411] Wait <XCTWaiterWait: 0x600001914740> completed after 0.054s
+109091: 01:37:17.141 RoomInTheCartUITests-Runner[31509:87411] cleaning up fetching attributes 'XC_kAXXCAttributeVisiblePoint' for AX element pid: 32177, elementOrHash.elementID: 4849713024.1876
+109092: 01:37:17.141 RoomInTheCartUITests-Runner[31509:87411] StaticText, label: 'Checkout plus trip cash, second minus first: $1.00' (AX element pid: 32177, elementOrHash.elementID: 4849713024.1876) faulted in {
+109093:     "XC_kAXXCAttributeVisiblePoint" =     {
+109094:         X = 201;
+109095:         Y = "526.8333333333333";
+109096:     };
+109097: }: (no error) for activationPoint using XC_kAXXCAttributeVisiblePoint
+109098: 01:37:17.141 RoomInTheCartUITests-Runner[31509:87411] Creating future for 'fetching attributes 'XC_kAXXCAttributeWindowContextId' for AX element pid: 32177, elementOrHash.elementID: 4849713024.1876' with timeout 30.00
+109099: 01:37:17.142 RoomInTheCartUITests-Runner[31509:87411] <XCTWaiter: 0x6000010001e0> entering wait loop for 30.00s with expectations: `fetching attributes 'XC_kAXXCAttributeWindowContextId' for AX element pid: 32177, elementOrHash.elementID: 4849713024.1876`
+109100: 01:37:17.266 RoomInTheCartUITests-Runner[31509:87411] Returning result XCTWaiterResultCompleted for synchronous waiter <XCTWaiter: 0x6000010001e0>
+109101: 01:37:17.268 RoomInTheCartUITests-Runner[31509:87411] Wait <XCTWaiterWait: 0x600001910a80> completed after 0.126s
+109102: 01:37:17.268 RoomInTheCartUITests-Runner[31509:87411] cleaning up fetching attributes 'XC_kAXXCAttributeWindowContextId' for AX element pid: 32177, elementOrHash.elementID: 4849713024.1876
+109103: 01:37:17.268 RoomInTheCartUITests-Runner[31509:87411] StaticText, label: 'Checkout plus trip cash, second minus first: $1.00' (AX element pid: 32177, elementOrHash.elementID: 4849713024.1876) faulted in {
+109104:     "XC_kAXXCAttributeWindowContextId" = 777341419;
+109105: }: (no error) for windowContextID using XC_kAXXCAttributeWindowContextId
+109106: 01:37:17.268 RoomInTheCartUITests-Runner[31509:87411] Creating future for 'fetching attributes 'XC_kAXXCAttributeWindowDisplayId' for AX element pid: 32177, elementOrHash.elementID: 4849713024.1876' with timeout 30.00
+109107: 01:37:17.268 RoomInTheCartUITests-Runner[31509:87411] <XCTWaiter: 0x600001001920> entering wait loop for 30.00s with expectations: `fetching attributes 'XC_kAXXCAttributeWindowDisplayId' for AX element pid: 32177, elementOrHash.elementID: 4849713024.1876`
+109108: 01:37:17.316 RoomInTheCartUITests-Runner[31509:87411] Returning result XCTWaiterResultCompleted for synchronous waiter <XCTWaiter: 0x600001001920>
+109109: 01:37:17.316 RoomInTheCartUITests-Runner[31509:87411] Wait <XCTWaiterWait: 0x600001911340> completed after 0.048s
+109110: 01:37:17.316 RoomInTheCartUITests-Runner[31509:87411] cleaning up fetching attributes 'XC_kAXXCAttributeWindowDisplayId' for AX element pid: 32177, elementOrHash.elementID: 4849713024.1876
+109111: 01:37:17.317 RoomInTheCartUITests-Runner[31509:87411] StaticText, label: 'Checkout plus trip cash, second minus first: $1.00' (AX element pid: 32177, elementOrHash.elementID: 4849713024.1876) faulted in {
+109112:     "XC_kAXXCAttributeWindowDisplayId" = 1;
+109113: }: (no error) for displayID using XC_kAXXCAttributeWindowDisplayId
+109114: 01:37:17.317 RoomInTheCartUITests-Runner[31509:87411] getting parameterized attribute XC_kAXXCParameterizedAttributeConvertHostedViewPositionFromContext with parameter (
+109115:         {
+109116:         X = 201;
+109117:         Y = "526.8333333333333";
+109118:     },
+109119:     777341419,
+109120:     1
+109121: )
+109122: 01:37:17.317 RoomInTheCartUITests-Runner[31509:87411] Creating future for 'getting parameterized attribute XC_kAXXCParameterizedAttributeConvertHostedViewPositionFromContext' with timeout 65.00
+109123: 01:37:17.318 RoomInTheCartUITests-Runner[31509:87411] <XCTWaiter: 0x600001008ea0> entering wait loop for 65.00s with expectations: `getting parameterized attribute XC_kAXXCParameterizedAttributeConvertHostedViewPositionFromContext`
+109124: 01:37:17.320 RoomInTheCartUITests-Runner[31509:88683] Got parameterized attribute fetch for XC_kAXXCParameterizedAttributeConvertHostedViewPositionFromContext response with values {
+109125:     X = 201;
+109126:     Y = "526.8333333333333";
+109127: }, error: (null)
+109128: 01:37:17.320 RoomInTheCartUITests-Runner[31509:87411] Returning result XCTWaiterResultCompleted for synchronous waiter <XCTWaiter: 0x600001008ea0>
+109129: 01:37:17.320 RoomInTheCartUITests-Runner[31509:87411] Wait <XCTWaiterWait: 0x600001914200> completed after 0.003s
+109130: 01:37:17.320 RoomInTheCartUITests-Runner[31509:87411] cleaning up getting parameterized attribute XC_kAXXCParameterizedAttributeConvertHostedViewPositionFromContext
+109131: 01:37:17.321 RoomInTheCartUITests-Runner[31509:87411] Creating future for 'fetching attributes 'XC_kAXXCAttributeFrame', 'XC_kAXXCAttributeWindowDisplayId', 'XC_kAXXCAttributeWindowContextId' for AX element pid: 32177, elementOrHash.elementID: 4849713024.1876' with timeout 30.00
+109132: 01:37:17.321 RoomInTheCartUITests-Runner[31509:87411] <XCTWaiter: 0x600001000a50> entering wait loop for 30.00s with expectations: `fetching attributes 'XC_kAXXCAttributeFrame', 'XC_kAXXCAttributeWindowDisplayId', 'XC_kAXXCAttributeWindowContextId' for AX element pid: 32177, elementOrHash.elementID: 4849713024.1876`
+109133: 01:37:17.364 RoomInTheCartUITests-Runner[31509:87411] Returning result XCTWaiterResultCompleted for synchronous waiter <XCTWaiter: 0x600001000a50>
+109134: 01:37:17.364 RoomInTheCartUITests-Runner[31509:87411] Wait <XCTWaiterWait: 0x6000019109c0> completed after 0.043s
+109135: 01:37:17.364 RoomInTheCartUITests-Runner[31509:87411] cleaning up fetching attributes 'XC_kAXXCAttributeFrame', 'XC_kAXXCAttributeWindowDisplayId', 'XC_kAXXCAttributeWindowContextId' for AX element pid: 32177, elementOrHash.elementID: 4849713024.1876
+109136: 01:37:17.364 RoomInTheCartUITests-Runner[31509:87411] StaticText, label: 'Checkout plus trip cash, second minus first: $1.00' (AX element pid: 32177, elementOrHash.elementID: 4849713024.1876) faulted in {
+109137:     "XC_kAXXCAttributeFrame" =     {
+109138:         Height = "72.33333333333337";
+109139:         Width = 370;
+109140:         X = 16;
+109141:         Y = "490.6666666666666";
+109142:     };
+109143:     "XC_kAXXCAttributeWindowContextId" = 777341419;
+109144:     "XC_kAXXCAttributeWindowDisplayId" = 1;
+109145: }: (no error) for frame using XC_kAXXCAttributeFrame, XC_kAXXCAttributeWindowDisplayId, XC_kAXXCAttributeWindowContextId
+109146: 01:37:17.364 RoomInTheCartUITests-Runner[31509:87411] getting parameterized attribute XC_kAXXCParameterizedAttributeConvertHostedViewFrame with parameter (
+109147:         {
+109148:         Height = "72.33333333333337";
+109149:         Width = 370;
+109150:         X = 16;
+109151:         Y = "490.6666666666666";
+109152:     },
+109153:     777341419,
+109154:     1
+109155: )
+109156: 01:37:17.364 RoomInTheCartUITests-Runner[31509:87411] Creating future for 'getting parameterized attribute XC_kAXXCParameterizedAttributeConvertHostedViewFrame' with timeout 65.00
+109157: 01:37:17.364 RoomInTheCartUITests-Runner[31509:87411] <XCTWaiter: 0x6000010012c0> entering wait loop for 65.00s with expectations: `getting parameterized attribute XC_kAXXCParameterizedAttributeConvertHostedViewFrame`
+109158: 01:37:17.365 RoomInTheCartUITests-Runner[31509:88683] Got parameterized attribute fetch for XC_kAXXCParameterizedAttributeConvertHostedViewFrame response with values {
+109159:     Height = "72.33333333333331";
+109160:     Width = 370;
+109161:     X = 16;
+109162:     Y = "490.6666666666667";
+109163: }, error: (null)
+109164: 01:37:17.366 RoomInTheCartUITests-Runner[31509:87411] Returning result XCTWaiterResultCompleted for synchronous waiter <XCTWaiter: 0x6000010012c0>
+109165: 01:37:17.366 RoomInTheCartUITests-Runner[31509:87411] Wait <XCTWaiterWait: 0x600001911500> completed after 0.001s
+109166: 01:37:17.366 RoomInTheCartUITests-Runner[31509:87411] cleaning up getting parameterized attribute XC_kAXXCParameterizedAttributeConvertHostedViewFrame
+109167: 01:37:17.366 RoomInTheCartUITests-Runner[31509:87411] transformed {{16, 490.66666666666663}, {370, 72.333333333333371}} to {{16, 490.66666666666669}, {370, 72.333333333333314}}
+109168: 01:37:17.366 RoomInTheCartUITests-Runner[31509:87411] Fetching application interface orientation
+109169: 01:37:17.366 RoomInTheCartUITests-Runner[31509:87411] Creating future for 'getting interface orientation' with timeout 65.00
+109170: 01:37:17.366 RoomInTheCartUITests-Runner[31509:87411] <XCTWaiter: 0x6000010013b0> entering wait loop for 65.00s with expectations: `getting interface orientation`
+109171: 01:37:17.368 RoomInTheCartUITests-Runner[31509:87411] Returning result XCTWaiterResultCompleted for synchronous waiter <XCTWaiter: 0x6000010013b0>
+109172: 01:37:17.368 RoomInTheCartUITests-Runner[31509:87411] Wait <XCTWaiterWait: 0x6000019117c0> completed after 0.002s
+109173: 01:37:17.368 RoomInTheCartUITests-Runner[31509:87411] cleaning up getting interface orientation
+109174: 01:37:17.368 RoomInTheCartUITests-Runner[31509:87411] Creating future for 'getting screen identifiers' with timeout 30.00
+109175: 01:37:17.368 RoomInTheCartUITests-Runner[31509:87411] <XCTWaiter: 0x600001005200> entering wait loop for 30.00s with expectations: `getting screen identifiers`
+109176: 01:37:17.368 RoomInTheCartUITests-Runner[31509:87411] Returning result XCTWaiterResultCompleted for synchronous waiter <XCTWaiter: 0x600001005200>
+109177: 01:37:17.368 RoomInTheCartUITests-Runner[31509:87411] Wait <XCTWaiterWait: 0x600001788440> completed after 0.000s
+109178: 01:37:17.368 RoomInTheCartUITests-Runner[31509:87411] cleaning up getting screen identifiers
+109179: 01:37:17.368 RoomInTheCartUITests-Runner[31509:87411] Creating future for 'getting screen bounds' with timeout 30.00
+109180: 01:37:17.368 RoomInTheCartUITests-Runner[31509:87411] <XCTWaiter: 0x600001004030> entering wait loop for 30.00s with expectations: `getting screen bounds`
+109181: 01:37:17.368 RoomInTheCartUITests-Runner[31509:87411] Returning result XCTWaiterResultCompleted for synchronous waiter <XCTWaiter: 0x600001004030>
+109182: 01:37:17.368 RoomInTheCartUITests-Runner[31509:87411] Wait <XCTWaiterWait: 0x600001782440> completed after 0.000s
+109183: 01:37:17.368 RoomInTheCartUITests-Runner[31509:87411] cleaning up getting screen bounds
+109184: 01:37:17.369 RoomInTheCartUITests-Runner[31509:87411] Creating future for 'getting screen scale' with timeout 30.00
+109185: 01:37:17.369 RoomInTheCartUITests-Runner[31509:87411] <XCTWaiter: 0x600001004030> entering wait loop for 30.00s with expectations: `getting screen scale`
+109186: 01:37:17.369 RoomInTheCartUITests-Runner[31509:87411] Returning result XCTWaiterResultCompleted for synchronous waiter <XCTWaiter: 0x600001004030>
+109187: 01:37:17.369 RoomInTheCartUITests-Runner[31509:87411] Wait <XCTWaiterWait: 0x600001775a40> completed after 0.000s
+109188: 01:37:17.369 RoomInTheCartUITests-Runner[31509:87411] cleaning up getting screen scale
+109189: 01:37:17.369 RoomInTheCartUITests-Runner[31509:87411] Checking that activation point {201, 526.83333333333326} is inside event synthesis frame {{16, 490.66666666666669}, {370, 72.333333333333314}} (or is the {-1, -1} sentinel for unhittable)
+109190: 01:37:17.369 RoomInTheCartUITests-Runner[31509:87411] hit point computation for StaticText, {{16.0, 490.7}, {370.0, 72.3}}, label: 'Checkout plus trip cash, second minus first: $1.00' took 0.3s and 1 attempts
+109191: 01:37:17.369 RoomInTheCartUITests-Runner[31509:87411] Computed hit point {201.0, 526.8} (hittable)
+109192: 01:37:17.369 RoomInTheCartUITests-Runner[31509:87411] Creating future for 'fetching attributes 'XC_kAXXCAttributeValue' for AX element pid: 32177, elementOrHash.elementID: 4849713024.1876' with timeout 30.00
+109193: 01:37:17.369 RoomInTheCartUITests-Runner[31509:87411] <XCTWaiter: 0x600001005da0> entering wait loop for 30.00s with expectations: `fetching attributes 'XC_kAXXCAttributeValue' for AX element pid: 32177, elementOrHash.elementID: 4849713024.1876`
+109194: 01:37:17.374 RoomInTheCartUITests-Runner[31509:87411] Returning result XCTWaiterResultCompleted for synchronous waiter <XCTWaiter: 0x600001005da0>
+109195: 01:37:17.376 RoomInTheCartUITests-Runner[31509:87411] Wait <XCTWaiterWait: 0x600001761c80> completed after 0.007s
+109196: 01:37:17.376 RoomInTheCartUITests-Runner[31509:87411] cleaning up fetching attributes 'XC_kAXXCAttributeValue' for AX element pid: 32177, elementOrHash.elementID: 4849713024.1876
+109197: 01:37:17.376 RoomInTheCartUITests-Runner[31509:87411] StaticText, {{16.0, 490.7}, {370.0, 72.3}}, label: 'Checkout plus trip cash, second minus first: $1.00' (AX element pid: 32177, elementOrHash.elementID: 4849713024.1876) faulted in {
+109198: }: (no error) for value using XC_kAXXCAttributeValue
+109199: 01:37:17.376 RoomInTheCartUITests-Runner[31509:87411] Creating future for 'fetching attributes 'XC_kAXXCAttributePlaceholderValue' for AX element pid: 32177, elementOrHash.elementID: 4849713024.1876' with timeout 30.00
+109200: 01:37:17.376 RoomInTheCartUITests-Runner[31509:87411] <XCTWaiter: 0x6000010096b0> entering wait loop for 30.00s with expectations: `fetching attributes 'XC_kAXXCAttributePlaceholderValue' for AX element pid: 32177, elementOrHash.elementID: 4849713024.1876`
+109201: 01:37:17.378 RoomInTheCartUITests-Runner[31509:87411] Returning result XCTWaiterResultCompleted for synchronous waiter <XCTWaiter: 0x6000010096b0>
+109202: 01:37:17.378 RoomInTheCartUITests-Runner[31509:87411] Wait <XCTWaiterWait: 0x600001914bc0> completed after 0.002s
+109203: 01:37:17.379 RoomInTheCartUITests-Runner[31509:87411] cleaning up fetching attributes 'XC_kAXXCAttributePlaceholderValue' for AX element pid: 32177, elementOrHash.elementID: 4849713024.1876
+109204: 01:37:17.379 RoomInTheCartUITests-Runner[31509:87411] StaticText, {{16.0, 490.7}, {370.0, 72.3}}, label: 'Checkout plus trip cash, second minus first: $1.00' (AX element pid: 32177, elementOrHash.elementID: 4849713024.1876) faulted in {
+109205: }: (no error) for placeholderValue using XC_kAXXCAttributePlaceholderValue
+109206: 01:37:17.379 RoomInTheCartUITests-Runner[31509:87411] Creating future for 'fetching attributes 'XC_kAXXCAttributeIdentifier' for AX element pid: 32177, elementOrHash.elementID: 4849713024.1876' with timeout 30.00
+109207: 01:37:17.379 RoomInTheCartUITests-Runner[31509:87411] <XCTWaiter: 0x6000010058c0> entering wait loop for 30.00s with expectations: `fetching attributes 'XC_kAXXCAttributeIdentifier' for AX element pid: 32177, elementOrHash.elementID: 4849713024.1876`
+109208: 01:37:17.391 RoomInTheCartUITests-Runner[31509:87411] Returning result XCTWaiterResultCompleted for synchronous waiter <XCTWaiter: 0x6000010058c0>
+109209: 01:37:17.391 RoomInTheCartUITests-Runner[31509:87411] Wait <XCTWaiterWait: 0x600001910040> completed after 0.012s
+109210: 01:37:17.392 RoomInTheCartUITests-Runner[31509:87411] cleaning up fetching attributes 'XC_kAXXCAttributeIdentifier' for AX element pid: 32177, elementOrHash.elementID: 4849713024.1876
+109211: 01:37:17.392 RoomInTheCartUITests-Runner[31509:87411] StaticText, {{16.0, 490.7}, {370.0, 72.3}}, label: 'Checkout plus trip cash, second minus first: $1.00' (AX element pid: 32177, elementOrHash.elementID: 4849713024.1876) faulted in {
+109212: }: (no error) for identifier using XC_kAXXCAttributeIdentifier
+109213: 01:37:17.392 RoomInTheCartUITests-Runner[31509:87411] <XCTContext: 0x600002114730> started activity <XCActivityRecord: 0x600002158a50> 2026-11-08 01:37:17 +0000: Checking existence of `"Checkout plus trip cash, second minus first: $1.00" StaticText`
+109214: 01:37:17.430 xcodebuild[25478:71669] _XCT_testCaseWithIdentifier:<XCTTestIdentifier leaf, method ["none", "none"]> willStartActivity:<XCActivityRecord: 0x600003cef480> 2026-11-08 01:37:17 +0000: Checking existence of `"Checkout plus trip cash, second minus first: $1.00" StaticText`
+109215: 01:37:17.430 xcodebuild[25478:71669] Nothing to delete
+109216: 01:37:17.392 RoomInTheCartUITests-Runner[31509:87411] Executing query:
+109217: ↪︎ Descendants matching type StaticText
+109218:     ↪︎ Elements containing elements matching predicate 'label CONTAINS "Checkout plus trip cash, second minus first: $1.00"' (First Match)
+109219: 01:37:17.393 RoomInTheCartUITests-Runner[31509:87411] Should evaluate query remotely? XCTDisableRemoteQueryEvaluation(d-write): NO, hasAutomationSession: YES, supportsRemoteEvaluation: YES
+109220: 01:37:17.393 RoomInTheCartUITests-Runner[31509:87411] Getting matching snapshots for remotely evaluated query
+109221: 01:37:17.393 RoomInTheCartUITests-Runner[31509:87411] Creating future for 'evaluating UI query' with timeout 30.00
+109222: 01:37:17.393 RoomInTheCartUITests-Runner[31509:87411] <XCTWaiter: 0x600001009830> entering wait loop for 30.00s with expectations: `evaluating UI query`
+109223:     t =   432.54s Checking existence of `"Checkout plus trip cash, second minus first: $1.00" StaticText`
+109224: 01:37:17.546 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+109225: 01:37:17.546 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 44889: active
+109226: 01:37:17.607 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 44889, caching
+109227: 01:37:17.625 RoomInTheCartUITests-Runner[31509:114061] Handling kAXPidStatusChangedNotification
+109228: 01:37:17.626 RoomInTheCartUITests-Runner[31509:114061] Got kAXPidStatusChangedNotification for pid 44889: active
+109229: 01:37:17.671 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+109230: 01:37:17.671 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31594: active
+109231: 01:37:17.715 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+109232: 01:37:17.715 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31758: active
+109233: 01:37:17.731 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 44889, caching
+109234: 01:37:17.731 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31594, caching
+109235: 01:37:17.731 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31758, caching
+109236: 01:37:17.750 RoomInTheCartUITests-Runner[31509:114061] Handling kAXPidStatusChangedNotification
+109237: 01:37:17.750 RoomInTheCartUITests-Runner[31509:114061] Got kAXPidStatusChangedNotification for pid 31805: active
+109238: 01:37:17.766 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+109239: 01:37:17.767 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31510: active
+109240: 01:37:17.808 RoomInTheCartUITests-Runner[31509:114061] Handling kAXPidStatusChangedNotification
+109241: 01:37:17.809 RoomInTheCartUITests-Runner[31509:114061] Got kAXPidStatusChangedNotification for pid 25343: active
+109242: 01:37:17.901 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31805, caching
+109243: 01:37:17.901 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31510, caching
+109244: 01:37:17.902 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 25343, caching
+109245: 01:37:17.985 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+109246: 01:37:17.986 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31805: active
+109247: 01:37:17.989 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+109248: 01:37:17.994 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 25343: active
+109249: 01:37:18.001 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+109250: 01:37:18.001 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31761: active
+109251: 01:37:18.023 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+109252: 01:37:18.023 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31805: active
+109253: 01:37:18.026 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31805, caching
+109254: 01:37:18.027 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 25343, caching
+109255: 01:37:18.027 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31761, caching
+109256: 01:37:18.027 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31805, caching
+109257: 01:37:18.145 RoomInTheCartUITests-Runner[31509:106172] Handling kAXPidStatusChangedNotification
+109258: 01:37:18.146 RoomInTheCartUITests-Runner[31509:106172] Got kAXPidStatusChangedNotification for pid 31594: active
+109259: 01:37:18.171 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+109260: 01:37:18.171 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31732: active
+109261: 01:37:18.253 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31594, caching
+109262: 01:37:18.253 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31732, caching
+109263: 01:37:18.333 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+109264: 01:37:18.333 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31805: active
+109265: 01:37:18.361 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31805, caching
+109266: 01:37:20.498 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+109267: 01:37:20.500 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 44900: active
+109268: 01:37:20.500 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 44900, caching
+109269: 01:37:20.501 RoomInTheCartUITests-Runner[31509:114061] Handling kAXPidStatusChangedNotification
+109270: 01:37:20.501 RoomInTheCartUITests-Runner[31509:114061] Got kAXPidStatusChangedNotification for pid 44900: active
+109271: 01:37:20.605 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 44900, caching
+109272: 01:37:21.831 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+109273: 01:37:21.834 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31473: active
+109274: 01:37:21.885 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31473, caching
+109275: 01:37:21.889 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+109276: 01:37:21.889 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31761: active
+109277: 01:37:21.990 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31761, caching
+109278: 01:37:22.935 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+109279: 01:37:22.936 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31538: active
+109280: 01:37:22.959 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31538, caching
+109281: 01:37:23.830 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+109282: 01:37:23.831 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31761: active
+109283: 01:37:23.832 RoomInTheCartUITests-Runner[31509:114061] Handling kAXPidStatusChangedNotification
+109284: 01:37:23.832 RoomInTheCartUITests-Runner[31509:114061] Got kAXPidStatusChangedNotification for pid 31510: active
+109285: 01:37:23.833 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31761, caching
+109286: 01:37:23.833 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31510, caching
+109287: 01:37:23.834 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+109288: 01:37:23.834 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31758: active
+109289: 01:37:23.840 RoomInTheCartUITests-Runner[31509:114061] Handling kAXPidStatusChangedNotification
+109290: 01:37:23.841 RoomInTheCartUITests-Runner[31509:114061] Got kAXPidStatusChangedNotification for pid 44889: active
+109291: 01:37:23.937 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31758, caching
+109292: 01:37:23.937 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 44889, caching
+109293: 01:37:24.610 RoomInTheCartUITests-Runner[31509:114061] Handling kAXPidStatusChangedNotification
+109294: 01:37:24.611 RoomInTheCartUITests-Runner[31509:114061] Got kAXPidStatusChangedNotification for pid 31523: active
+109295: 01:37:24.634 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+109296: 01:37:24.635 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31594: active
+109297: 01:37:24.677 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31523, caching
+109298: 01:37:24.678 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31594, caching
+109299: 01:37:24.717 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+109300: 01:37:24.717 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31523: active
+109301: 01:37:24.721 RoomInTheCartUITests-Runner[31509:114061] Handling kAXPidStatusChangedNotification
+109302: 01:37:24.721 RoomInTheCartUITests-Runner[31509:114061] Got kAXPidStatusChangedNotification for pid 31761: active
+109303: 01:37:24.723 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+109304: 01:37:24.723 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31758: active
+109305: 01:37:24.788 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31523, caching
+109306: 01:37:24.789 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31761, caching
+109307: 01:37:24.789 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31758, caching
+109308: 01:37:24.831 RoomInTheCartUITests-Runner[31509:114061] Handling kAXPidStatusChangedNotification
+109309: 01:37:24.831 RoomInTheCartUITests-Runner[31509:114061] Got kAXPidStatusChangedNotification for pid 31594: active
+109310: 01:37:24.885 RoomInTheCartUITests-Runner[31509:114061] Handling kAXPidStatusChangedNotification
+109311: 01:37:24.885 RoomInTheCartUITests-Runner[31509:114061] Got kAXPidStatusChangedNotification for pid 31594: active
+109312: 01:37:24.898 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31594, caching
+109313: 01:37:24.898 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31594, caching
+109314: 01:37:25.008 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+109315: 01:37:25.009 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31758: active
+109316: 01:37:25.010 RoomInTheCartUITests-Runner[31509:114061] Handling kAXPidStatusChangedNotification
+109317: 01:37:25.010 RoomInTheCartUITests-Runner[31509:114061] Got kAXPidStatusChangedNotification for pid 31538: active
+109318: 01:37:25.119 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31758, caching
+109319: 01:37:25.119 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31538, caching
+109320: 01:37:25.123 RoomInTheCartUITests-Runner[31509:114061] Handling kAXPidStatusChangedNotification
+109321: 01:37:25.124 RoomInTheCartUITests-Runner[31509:114061] Got kAXPidStatusChangedNotification for pid 31758: active
+109322: 01:37:25.223 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31758, caching
+109323: 01:37:25.412 RoomInTheCartUITests-Runner[31509:114061] Handling kAXPidStatusChangedNotification
+109324: 01:37:25.412 RoomInTheCartUITests-Runner[31509:114061] Got kAXPidStatusChangedNotification for pid 31473: active
+109325: 01:37:25.440 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31473, caching
+109326: 01:37:25.825 RoomInTheCartUITests-Runner[31509:114061] Handling kAXPidStatusChangedNotification
+109327: 01:37:25.825 RoomInTheCartUITests-Runner[31509:114061] Got kAXPidStatusChangedNotification for pid 31594: active
+109328: 01:37:25.874 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31594, caching
+109329: 01:37:26.508 RoomInTheCartUITests-Runner[31509:114061] Handling kAXPidStatusChangedNotification
+109330: 01:37:26.508 RoomInTheCartUITests-Runner[31509:114061] Got kAXPidStatusChangedNotification for pid 31523: active
+109331: 01:37:26.607 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31523, caching
+109332: 01:37:27.112 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+109333: 01:37:27.112 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31758: active
+109334: 01:37:27.113 RoomInTheCartUITests-Runner[31509:114061] Handling kAXPidStatusChangedNotification
+109335: 01:37:27.113 RoomInTheCartUITests-Runner[31509:114061] Got kAXPidStatusChangedNotification for pid 44900: active
+109336: 01:37:27.144 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31758, caching
+109337: 01:37:27.144 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 44900, caching
+109338: 01:37:27.177 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+109339: 01:37:27.177 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31594: active
+109340: 01:37:27.246 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31594, caching
+109341: 01:37:27.452 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+109342: 01:37:27.453 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31805: active
+109343: 01:37:27.459 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31805, caching
+109344: 01:37:28.325 RoomInTheCartUITests-Runner[31509:106172] Handling kAXPidStatusChangedNotification
+109345: 01:37:28.325 RoomInTheCartUITests-Runner[31509:106172] Got kAXPidStatusChangedNotification for pid 31523: active
+109346: 01:37:28.326 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+109347: 01:37:28.326 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31732: active
+109348: 01:37:28.418 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31523, caching
+109349: 01:37:28.418 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31732, caching
+109350: 01:37:28.423 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+109351: 01:37:28.423 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 31594: active
+109352: 01:37:28.520 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 31594, caching
+109353: 01:37:30.219 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+109354: 01:37:30.219 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 44870: active
+109355: 01:37:30.229 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 44870, caching
+109356: 01:37:30.991 RoomInTheCartUITests-Runner[31509:88683] Handling kAXPidStatusChangedNotification
+109357: 01:37:30.992 RoomInTheCartUITests-Runner[31509:88683] Got kAXPidStatusChangedNotification for pid 44882: active
+109358: 01:37:31.073 RoomInTheCartUITests-Runner[31509:87411] No application process found matching pid 44882, caching
+109359: 01:37:34.210 RoomInTheCartUITests-Runner[31509:87411] Returning result XCTWaiterResultCompleted for synchronous waiter <XCTWaiter: 0x600001009830>
+109360: 01:37:34.210 RoomInTheCartUITests-Runner[31509:87411] Wait <XCTWaiterWait: 0x600001914f80> completed after 16.817s
+109361: 01:37:34.210 RoomInTheCartUITests-Runner[31509:87411] cleaning up evaluating UI query
+109362: 01:37:34.210 RoomInTheCartUITests-Runner[31509:87411] results tree:
+109363: App element pid: 32177
+109364:   Window
+109365:     Other
+109366:       Other
+109367:         Other
+109368:           Other
+109369:             Other
+109370:               Other
+109371:                 Other
+109372:                   Other
+109373:                     Other
+109374:                       Other
+109375:                         Other
+109376:                           Other
+109377:                             Other
+109378:                               Other
+109379:                                 Other
+109380:                                   CollectionView
+109381:                                     Cell
+109382:                                       Other
+109383:                                         Other
+109384:                                           Other
+109385:                                             StaticText, label: 'Checkout plus trip cash, second minus first: $1.00'
+109386: 01:37:34.211 RoomInTheCartUITests-Runner[31509:87411] matches: {(
+109387:     StaticText, label: 'Checkout plus trip cash, second minus first: $1.00'
+109388: )}
+109389: 01:37:34.211 RoomInTheCartUITests-Runner[31509:87411] <XCTContext: 0x600002114730> finished activity <XCActivityRecord: 0x600002158a50> 2026-11-08 01:37:17 +0000: Checking existence of `"Checkout plus trip cash, second minus first: $1.00" StaticText` (16.8195s)
+109390: 01:37:34.224 xcodebuild[25478:71669] _XCT_testCaseWithIdentifier:<XCTTestIdentifier leaf, method ["none", "none"]> didFinishActivity:<XCActivityRecord: 0x600003ced180> 2026-11-08 01:37:17 +0000: Checking existence of `"Checkout plus trip cash, second minus first: $1.00" StaticText` (16.8195s)
+109391: 01:37:34.226 xcodebuild[25478:71669] Nothing to delete
+109392: 01:37:34.213 RoomInTheCartUITests-Runner[31509:87411] <XCTContext: 0x600002114730> started activity <XCActivityRecord: 0x600002151ef0> 2026-11-08 01:37:34 +0000: Find the "Checkout plus trip cash, second minus first: $1.00" StaticText
+109393: 01:37:34.229 xcodebuild[25478:71669] _XCT_testCaseWithIdentifier:<XCTTestIdentifier leaf, method ["none", "none"]> willStartActivity:<XCActivityRecord: 0x600003cecf50> 2026-11-08 01:37:34 +0000: Find the "Checkout plus trip cash, second minus first: $1.00" StaticText
+109394: 01:37:34.229 xcodebuild[25478:71669] Nothing to delete
+109395: 01:37:34.213 RoomInTheCartUITests-Runner[31509:87411] Executing query:
+109396: ↪︎ Descendants matching type StaticText
+109397:     ↪︎ Elements containing elements matching predicate 'label CONTAINS "Checkout plus trip cash, second minus first: $1.00"' (First Match)
+109398: 01:37:34.214 RoomInTheCartUITests-Runner[31509:87411] Should evaluate query remotely? XCTDisableRemoteQueryEvaluation(d-write): NO, hasAutomationSession: YES, supportsRemoteEvaluation: YES
+109399: 01:37:34.214 RoomInTheCartUITests-Runner[31509:87411] Getting matching snapshots for remotely evaluated query
+109400: 01:37:34.214 RoomInTheCartUITests-Runner[31509:87411] Creating future for 'evaluating UI query' with timeout 30.00
+109401: 01:37:34.214 RoomInTheCartUITests-Runner[31509:87411] <XCTWaiter: 0x600001006100> entering wait loop for 30.00s with expectations: `evaluating UI query`
+109402:     t =   449.36s Find the "Checkout plus trip cash, second minus first: $1.00" StaticText
+109403: 01:37:34.927 RoomInTheCartUITests-Runner[31509:87411] Returning result XCTWaiterResultCompleted for synchronous waiter <XCTWaiter: 0x600001006100>
+109404: 01:37:34.928 RoomInTheCartUITests-Runner[31509:87411] Wait <XCTWaiterWait: 0x600001736c00> completed after 0.713s
+109405: 01:37:34.928 RoomInTheCartUITests-Runner[31509:87411] cleaning up evaluating UI query
+109406: 01:37:34.928 RoomInTheCartUITests-Runner[31509:87411] results tree:
+109407: App element pid: 32177
+109408:   Window
+109409:     Other
+109410:       Other
