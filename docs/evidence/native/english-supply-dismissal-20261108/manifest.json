@@ -1,0 +1,26 @@
+{
+  "README.md": {
+    "sha256": "c271152d672da655e869d1eb22d589a2d1e76cc4edc7681e1fb32935e3ea09fc",
+    "bytes": 2330
+  },
+  "price-probe.ndjson": {
+    "sha256": "97e8c35c1b3f43a35e911c2aaf5a00ce0c0be0d77cd1d897916c41bc85dfced7",
+    "bytes": 123820
+  },
+  "probe-collection.json": {
+    "sha256": "51a767d6197bbc1279d967b768363ef4773921b25fe5ffccf5e76a77c32592d6",
+    "bytes": 2465
+  },
+  "run.json": {
+    "sha256": "5879411c8a7439138f58b7e383541f791d8a9b2a23bea8c7ea1262505eb30a65",
+    "bytes": 3298
+  },
+  "strict.txt": {
+    "sha256": "c4e3d8ef923e5a2ad7c2050dca39af6ccd7ed2b7c3760713b40bfa2ee06c0713",
+    "bytes": 1348
+  },
+  "verification.json": {
+    "sha256": "7f9a6f661352083b30e80cb066982b2e08a4b5329138c7dd828dcbbae50ed297",
+    "bytes": 623
+  }
+}
