@@ -1,0 +1,15 @@
+{
+  "inspectedAtUTC": "2026-11-08T21:35:43.310190+00:00",
+  "nativeExit": 0,
+  "strictExit": 0,
+  "expectedCount": 2,
+  "sourceManifestSHA256": "7a98427be259ea40764fdae396013ebe78cf8a43cf02d4b9508ee849c9284d99",
+  "sourceUnchanged": true,
+  "originalUnchanged": true,
+  "exports": {
+    "0-screens": 0,
+    "0-geometry": 0,
+    "1-screens": 0,
+    "1-geometry": 0
+  }
+}

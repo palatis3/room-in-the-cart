@@ -1,0 +1,41 @@
+{
+  "status": "completed",
+  "startedAtUTC": "2026-11-08T21:31:50.920630+00:00",
+  "sourceManifestSHA256": "7a98427be259ea40764fdae396013ebe78cf8a43cf02d4b9508ee849c9284d99",
+  "expectedCount": 2,
+  "cwd": "/Users/palatis/Room in the Cart",
+  "scope": "Native text protected heading with original standard simultaneous checkout/lunch journey and enhanced existing AX5 heading/expiry bounds, contrast and cancellation regression. Same selectors and limits; incremental cached build.",
+  "device": {
+    "runtimeIdentifier": "com.apple.CoreSimulator.SimRuntime.iOS-26-2",
+    "dataPath": "/Users/palatis/Library/Developer/CoreSimulator/Devices/858A2244-001F-4BAD-AFE0-A6E7AF02F41A/data",
+    "dataPathSize": 4168671232,
+    "logPath": "/Users/palatis/Library/Logs/CoreSimulator/858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+    "udid": "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+    "lastUsedAt": "2026-11-08T11:10:25Z",
+    "isAvailable": true,
+    "logPathSize": 454656,
+    "deviceTypeIdentifier": "com.apple.CoreSimulator.SimDeviceType.iPhone-17-Pro",
+    "state": "Booted",
+    "name": "RITC S24 Current Audit Nov08"
+  },
+  "bootedRuntimeRoot": "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot",
+  "systemVersion": {
+    "BuildID": "28797834-D251-11F0-A935-FBAB4C799B22",
+    "ProductBuildVersion": "23C54",
+    "ProductCopyright": "1983-2025 Apple Inc.",
+    "ProductName": "iPhone OS",
+    "ProductVersion": "26.2",
+    "SystemImageID": "5A79EE63-AF0F-43EF-884D-7F08B93ED590"
+  },
+  "settings": {
+    "appearance": "dark",
+    "content_size": "large",
+    "increase_contrast": "disabled"
+  },
+  "pid": 39993,
+  "nativeExit": 0,
+  "finishedAtUTC": "2026-11-08T21:35:30.568406+00:00",
+  "sourceUnchanged": true,
+  "preservedProductsUnchanged": true,
+  "privateRunReceiptSHA256": "1969c4e483d9b37263e9bc8300db2f42e05b9c3c8a68c257b304a4802f9a33d1"
+}

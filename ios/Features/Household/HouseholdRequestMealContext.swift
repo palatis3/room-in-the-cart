@@ -37,7 +37,7 @@ struct HouseholdRequestMealContextView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Label(ht("Protected meal commitments"), systemImage: "lock")
+            Text(ht("Protected meal commitments"))
                 .font(.headline)
                 .lineLimit(nil)
                 .fixedSize(horizontal: false, vertical: true)

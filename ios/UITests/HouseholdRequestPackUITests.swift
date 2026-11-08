@@ -366,6 +366,8 @@ import XCTest
         let meals = [("88888888-8888-4888-8888-888888888888", "Sam’s wrap lunch"),
                      ("99999999-9999-4999-8999-999999999999", "Mia’s wrap lunch")]
         let traits = UITraitCollection(preferredContentSizeCategory: .accessibilityExtraExtraExtraLarge)
+        try assertCompleteDecisionText(app.staticTexts["Protected meal commitments"], style: .headline,
+                                       category: .accessibilityExtraExtraExtraLarge, name: "S24-AX5-protected-heading")
         for ((id, name), date) in zip(meals, dates) {
             let row = element("household.decision.meal." + id)
             centerForReading(row)
@@ -382,12 +384,43 @@ import XCTest
             try assertReadablePortions(row, category: .accessibilityExtraExtraExtraLarge,
                                        name: "S24-AX5-" + id + "-portions")
         }
+        let expiry = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Preview expires,")).firstMatch
+        centerForReading(expiry)
+        let expiryDate = expiry.staticTexts.allElementsBoundByIndex.filter { $0.label != "Preview expires" }
+        XCTAssertEqual(expiryDate.count, 1)
+        let date = try XCTUnwrap(expiryDate.first)
+        XCTAssertTrue(date.label.contains("2098"))
+        try assertCompleteDecisionText(expiry.staticTexts["Preview expires"], style: .body,
+                                       category: .accessibilityExtraExtraExtraLarge, name: "S24-AX5-expiry-title")
+        try assertCompleteDecisionText(date, style: .body,
+                                       category: .accessibilityExtraExtraExtraLarge, name: "S24-AX5-expiry-date")
         try assertDisabledApplyRejectsActivation(element("household.decision.apply"), name: "S24-largest-disabled-apply")
         centerForReading(app.buttons["Cancel preview"])
         capture("Largest text review actions")
         tap(element("household.decision.cancel"))
         XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 0")
         XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 0")
+    }
+
+    private func assertCompleteDecisionText(_ text: XCUIElement, style: UIFont.TextStyle,
+                                            category: UIContentSizeCategory, name: String) throws {
+        centerForReading(text)
+        let frame = text.frame, area = scrollableArea(bottomInset: 16)
+        let viewport = CGRect(x: app.frame.minX, y: area.minY, width: app.frame.width, height: area.height)
+        let font = UIFont.preferredFont(forTextStyle: style,
+                                       compatibleWith: UITraitCollection(preferredContentSizeCategory: category))
+        let required = (text.label as NSString).boundingRect(
+            with: CGSize(width: frame.width, height: .greatestFiniteMagnitude),
+            options: [.usesLineFragmentOrigin, .usesFontLeading], attributes: [.font: font], context: nil)
+        capture(name)
+        let ink = XCTAttachment(screenshot: text.screenshot())
+        ink.name = name + "-ink"; ink.lifetime = .keepAlways; add(ink)
+        let geometry = XCTAttachment(string: "label=\(text.label); frame=\(frame); viewport=\(viewport); lineHeight=\(font.lineHeight); requiredBounds=\(required)")
+        geometry.name = name + "-geometry"; geometry.lifetime = .keepAlways; add(geometry)
+        XCTAssertTrue(viewport.contains(frame), name)
+        XCTAssertTrue(text.isHittable, name)
+        XCTAssertGreaterThanOrEqual(frame.height + 2, max(font.lineHeight, required.height), name)
+        try assertReadableContrast(text)
     }
 
     // These are essential quantities. Check actual rendered bounds and pixels, not a source font declaration.

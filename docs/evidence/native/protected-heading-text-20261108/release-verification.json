@@ -1,0 +1,65 @@
+{
+  "status": "completed",
+  "startedAtUTC": "2026-11-08T21:36:11.704239+00:00",
+  "sourceManifest": "/Users/palatis/Room in the Cart/.build/S24TextHeadingNov08/execution-r1/fixed-source-manifest.json",
+  "sourceManifestSHA256": "7a98427be259ea40764fdae396013ebe78cf8a43cf02d4b9508ee849c9284d99",
+  "runnerSHA256": "2ed6a0b98200a8890382eee6a0ffcf676a7d33ff053df4c7cdea5f8cb43de5cb",
+  "command": [
+    "/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild",
+    "-project",
+    "ios/RoomInTheCart.xcodeproj",
+    "-scheme",
+    "RoomInTheCart-Release",
+    "-configuration",
+    "Release",
+    "-sdk",
+    "iphoneos",
+    "-destination",
+    "generic/platform=iOS",
+    "-jobs",
+    "2",
+    "-derivedDataPath",
+    "/Users/palatis/Room in the Cart/.build/CookVoicePreparationNov08/release-style-r2/dd",
+    "ARCHS=arm64",
+    "CODE_SIGNING_REQUIRED=NO",
+    "CODE_SIGNING_ALLOWED=NO",
+    "build"
+  ],
+  "bundleCheckCommand": [
+    "python3",
+    "scripts/check_built_app.py",
+    "/Users/palatis/Room in the Cart/.build/CookVoicePreparationNov08/release-style-r2/dd/Build/Products/Release-iphoneos/RoomInTheCart.app",
+    "--configuration",
+    "Release"
+  ],
+  "rootReviews": {
+    "run": {
+      "path": "/Users/palatis/Room in the Cart/.build/S24TextHeadingNov08/execution-r1/run/root-review.json",
+      "sha256": "8073f66a2bd22e306fdfb750e7600d2e250e9eedbacdcf28ddf1d87308cf16ec",
+      "verificationSHA256": "e828ca65b58781892d606c85dc92d013b7794de4273a6b86f670150e16fbf635"
+    },
+    "minimum17-run": {
+      "path": "/Users/palatis/Room in the Cart/.build/S24TextHeadingNov08/execution-r1/minimum17-run/root-review.json",
+      "sha256": "0c51209488411f485ff12f325244246a0a4e204bec2ec0358bdd5c2cf3ee3eaa",
+      "verificationSHA256": "f24cf594eaecbc944122b9b754a5ccc2d8ece8fbbd743a5fe4ef5d0388256c5b"
+    },
+    "current-dark-run": {
+      "path": "/Users/palatis/Room in the Cart/.build/S24TextHeadingNov08/execution-r1/current-dark-run/root-review.json",
+      "sha256": "bd9e1e7c73aae2d914ef358b949fef973a0e06a948bcabd21e5b6a90fbb7ef3d",
+      "verificationSHA256": "c6d61e3ad23da459cb31a1dd7db5dec8e7c6c63b6269c5690544647b4ca129c6"
+    }
+  },
+  "priorReleaseRun": "/Users/palatis/Room in the Cart/.build/DisclosureStableIndicatorNov08/release-r1/run/run.json",
+  "priorReleaseRunSHA256": "903ae8dd13fad389280401ccfa71dd65cf9af0fcf6043be93a0668ef10db4d9f",
+  "scope": "Native protected-meal text heading candidate unsigned generic iPhone arm64 Release and compiled-bundle validation; no distribution or physical acceptance",
+  "buildWatchdogSeconds": 1800,
+  "diskFloorBytes": 8589934592,
+  "bundleCheckTimeoutSeconds": 60,
+  "pid": 40970,
+  "buildExit": 0,
+  "bundleCheckExit": 0,
+  "finishedAtUTC": "2026-11-08T21:36:36.691298+00:00",
+  "sourceUnchanged": true,
+  "preservedProductsUnchanged": true,
+  "privateRunReceiptSHA256": "bc43529b111d30af4cf5970cfa2fd00f0c7fdf9c6af3cc0d452774c8f9e6f76c"
+}

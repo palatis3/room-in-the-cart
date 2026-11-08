@@ -1,0 +1,62 @@
+[
+  {
+    "phase": "current-light",
+    "nativeExit": 0,
+    "inspection": {
+      "inspectedAtUTC": "2026-11-08T21:26:17.938212+00:00",
+      "nativeExit": 0,
+      "strictExit": 0,
+      "expectedCount": 2,
+      "sourceManifestSHA256": "7a98427be259ea40764fdae396013ebe78cf8a43cf02d4b9508ee849c9284d99",
+      "sourceUnchanged": true,
+      "originalUnchanged": true,
+      "exports": {
+        "0-screens": 0,
+        "0-geometry": 0,
+        "1-screens": 0,
+        "1-geometry": 0
+      }
+    },
+    "rootReviewSHA256": "8073f66a2bd22e306fdfb750e7600d2e250e9eedbacdcf28ddf1d87308cf16ec"
+  },
+  {
+    "phase": "minimum17-light",
+    "nativeExit": 0,
+    "inspection": {
+      "inspectedAtUTC": "2026-11-08T21:30:42.263616+00:00",
+      "nativeExit": 0,
+      "strictExit": 0,
+      "expectedCount": 2,
+      "sourceManifestSHA256": "7a98427be259ea40764fdae396013ebe78cf8a43cf02d4b9508ee849c9284d99",
+      "sourceUnchanged": true,
+      "originalUnchanged": true,
+      "exports": {
+        "0-screens": 0,
+        "0-geometry": 0,
+        "1-screens": 0,
+        "1-geometry": 0
+      }
+    },
+    "rootReviewSHA256": "0c51209488411f485ff12f325244246a0a4e204bec2ec0358bdd5c2cf3ee3eaa"
+  },
+  {
+    "phase": "current-dark",
+    "nativeExit": 0,
+    "inspection": {
+      "inspectedAtUTC": "2026-11-08T21:35:43.310190+00:00",
+      "nativeExit": 0,
+      "strictExit": 0,
+      "expectedCount": 2,
+      "sourceManifestSHA256": "7a98427be259ea40764fdae396013ebe78cf8a43cf02d4b9508ee849c9284d99",
+      "sourceUnchanged": true,
+      "originalUnchanged": true,
+      "exports": {
+        "0-screens": 0,
+        "0-geometry": 0,
+        "1-screens": 0,
+        "1-geometry": 0
+      }
+    },
+    "rootReviewSHA256": "bd9e1e7c73aae2d914ef358b949fef973a0e06a948bcabd21e5b6a90fbb7ef3d"
+  }
+]

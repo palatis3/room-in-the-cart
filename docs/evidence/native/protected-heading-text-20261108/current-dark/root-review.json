@@ -1,0 +1,13 @@
+{
+  "status": "scoped pass reviewed",
+  "sourceManifestSHA256": "7a98427be259ea40764fdae396013ebe78cf8a43cf02d4b9508ee849c9284d99",
+  "reviewer": "root",
+  "scope": "Standard checkout/two lunches, AX5 heading full screen and ink, AX5 expiry screen; not full accessibility audit acceptance",
+  "findings": "Complete heading and date, full heading crop includes all wrapped lines; dark text visibly separated from dark background; numeric contrast and bounds assertions passed.",
+  "files": {
+    "inspection/0-screens/0317CCFD-34AA-4BFD-8843-2A4BB047781A.png": "15838530c67b8c96e298b4409fe2c0a8f90f8c41832c59aea433b87f0bbb659e",
+    "inspection/1-screens/998D0FDB-80F8-409C-9B14-D550A5E0375D.png": "727425c0fcec835c7f33416ca992ab8cd4eb95a316d3956f8bf3e11c1d98236b",
+    "inspection/1-screens/F7C61126-0419-4211-A8E7-2F73F2DEDA28.png": "d33be5dc7ae5030d95cb57d5ce97954b8761b64da3d991cc7ec3864c6cbefad8",
+    "inspection/1-screens/1E8BA4D2-21FD-4564-9FBE-0911AD01D426.png": "e6aebff91ad3bfce6c34cb31bb10cbb3b5b2c826cb902a94ad9d93ea38435c30"
+  }
+}
