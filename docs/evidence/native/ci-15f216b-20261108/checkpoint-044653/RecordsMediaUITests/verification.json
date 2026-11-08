@@ -1,0 +1,58 @@
+{
+  "observedAtUtc": "2026-11-08T04:28:18+00:00",
+  "source": "15f216b01e41c111ec99bbd812419cec32e6a5e4",
+  "runId": 42440464791,
+  "job": {
+    "completedAt": "2026-11-08T04:25:07Z",
+    "conclusion": "success",
+    "failedSteps": [],
+    "id": 128620991581,
+    "name": "Fixture (RecordsMediaUITests)",
+    "startedAt": "2026-11-08T04:14:02Z",
+    "status": "completed"
+  },
+  "artifact": {
+    "id": 13603623653,
+    "name": "iphone-fixture-results-RecordsMediaUITests-1",
+    "digest": "sha256:412e165c8c877f2fc28c0d2ae9743c4fbf9365f4037e658cba3e1a5802c2b28f",
+    "size_in_bytes": 33033,
+    "workflow_run": {
+      "id": 42440464791,
+      "repository_id": 1445928007,
+      "head_repository_id": 1445928007,
+      "head_branch": "codex/parallel-ios-ci",
+      "head_sha": "15f216b01e41c111ec99bbd812419cec32e6a5e4"
+    }
+  },
+  "collection": {
+    "rangeBytes": 2527,
+    "exactArchiveMemberAllowlistVerified": true,
+    "fullArchiveDownloaded": false,
+    "rangeReceiptSHA256": "114687c5975a3d123d63f647ca515790b75bc96dbe6af85591659b1ba4935fd3",
+    "members": [
+      {
+        "file": "records-test-report.md",
+        "bytes": 364,
+        "sha256": "c67d2e46f00ad827219757db8a4be5e0ad5085705b693e968df4dbe8a933d924",
+        "zipCRC": 1443529081,
+        "CRCVerified": true
+      },
+      {
+        "file": "test-plan/RecordsMediaUITests.txt",
+        "bytes": 122,
+        "sha256": "1cd1b7dadf0cef4f124e88261cd491a0e960a2e874b6938c80e288c5fb07927b",
+        "zipCRC": 2651544548,
+        "CRCVerified": true
+      }
+    ]
+  },
+  "nativeResult": {
+    "selected": 1,
+    "executed": 1,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": 0
+  },
+  "scope": "Original hosted strict job and byte-identical redacted count report. No raw console, xcresult, hierarchy, screenshot or attachment collected."
+}

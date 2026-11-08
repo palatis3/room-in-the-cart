@@ -1,0 +1,11 @@
+{
+  "README.md": "55c37201f63901c31a86d00f91f1c6e0a27c1159bbbe3e613d5328116b8b6287",
+  "RecordsMediaUITests/verification.json": "d284bb830c65899f524fa823042e74c5fb3df180fbbdcc38c283d6d63c3f42ec",
+  "SharedDeliveryUITests-stock-and-purchase/verification.json": "1bc6ac18c2f88f4c04028b84c51a11da0d6a00b6b7daebceb8475b0e235b9c77",
+  "checkpoint.json": "dd70c08df8eac0a6ac16cc1aa1a1976aa0fdc1c224aa43f55d14cfe26c0830e9",
+  "contributor-balanced-03/verification.json": "f2e3abfbc1986250213316038f121732a87873abb531fb812717496d8a225c22",
+  "ui-06/verification.json": "f8778a9eac851b252a0d39d36437aa692e10e35922d8595a8b550b3ed3644885",
+  "ui-07/timeout-boundary.json": "dfbb2fad102fdc2d82fe168b42eaafa05d19b92398bebceb79045e9cd1295b10",
+  "ui-07/verification.json": "1dbb40bc126fa6522338fc6f8532c8d1a6fa351a5bd37f4263653b497c0c527a",
+  "ui-09/verification.json": "fe8f08d9993901b0348366d7c86671e67ccb57051a172b09c9254d767be95c6f"
+}

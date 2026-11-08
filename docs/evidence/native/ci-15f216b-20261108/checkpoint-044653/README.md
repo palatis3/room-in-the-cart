@@ -1,0 +1,13 @@
+# Hosted CI checkpoint — November 8, 04:46:53 UTC
+
+Candidate `15f216b01e41c111ec99bbd812419cec32e6a5e4`, existing pull-request attempt1. The cohort is incomplete; no push, cancellation, rerun or dispatch accompanied this collection. [Exact checkpoint](checkpoint.json) pins all original private receipts and remaining job names.
+
+Ordinary UI has59native passes and2failures among61executed of68selected cases.47cases belong to wholly passing strict jobs; the remaining12passes occurred beside failures and do not make those jobs green. Available receipts contain zero runtime warnings and one runner restart, in UI07. UI10 remains active. New bounded receipts confirm [UI06:8/8](ui-06/verification.json), [UI09:8/8](ui-09/verification.json) and preserve [UI07:7/8](ui-07/verification.json).
+
+UI07 times out in `testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer` under its unchanged720-second allowance. Its first60-second idle wait follows the aQuantity Listo action at31.66seconds; eleven idle waits complete, and timeout occurs at bQuantity Done. It never reaches Save. The seven predecessors pass, with the last phone-shortcuts case18.137seconds. [Original timeout boundary](ui-07/timeout-boundary.json). No product cause or repair is established by these observations. This is separate from UI05's early Branch readback and Core web's Chromium startup failure.
+
+Fixture UI has51native passes and1failure among52executed of69source-selected cases;50cases belong to wholly passing strict jobs. Available receipts have zero warnings/restarts. Additional strict passes are [balanced03:10/10](contributor-balanced-03/verification.json), [records media:1/1](RecordsMediaUITests/verification.json) and [stock/purchase:6/6](SharedDeliveryUITests-stock-and-purchase/verification.json), including both new confirmation cases. Records-media collection used only its allowlisted redacted report, without fetching the media archive. SharedFallback retains its first-toggle failure. Cook/closeout, meal-idea, remaining quote and dinner-sheet jobs remain active, pending or not yet listed; the source inventory prevents absent rows from being treated as passed.
+
+Deep, Release performance, native wire and Security are terminal success. Their exact receipts are pinned in the checkpoint and earlier evidence. Performance has no emitted animation-hitch series; Swift CodeQL retains11extractor diagnostics despite zero findings. Neither condition is converted into stronger acceptance. The full app is not release-ready from this checkpoint.
+
+Only bounded receipts are copied here. Original artifact identities, range/CRC receipts and complete logs stay under `.build/CI15F216Nov08/`. Hashes below bind this durable subset.
