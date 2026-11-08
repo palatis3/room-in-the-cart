@@ -1,0 +1,17 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "72E6E781-FD43-44F5-A7E8-4AD9769D6B44.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-cereal-checkout-with-two-named-protected-lunches_0_0E053958-D93A-46DA-BB3E-67E21A872A43.png",
+        "timestamp" : 1794174176.622
+      }
+    ],
+    "testIdentifier" : "HouseholdRequestPackUITests/testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite()",
+    "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/HouseholdRequestPackUITests/testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite"
+  }
+]

@@ -1,0 +1,34 @@
+User will not be able to change the font size of this SwiftUI.AccessibilityNode
+Attributes: StaticText, 0x11964d400, {{32.0, 257.8}, {110.0, 20.3}}, label: 'Expected total'
+Element subtree:
+ →StaticText, 0x11964d400, {{32.0, 257.8}, {110.0, 20.3}}, label: 'Expected total'
+Path to element:
+ →Application, 0x1040480c0, pid: 42894, label: 'Room in the Cart'
+  ↳Window (Main), 0x1040481e0, {{0.0, 0.0}, {402.0, 874.0}}
+   ↳Other, 0x119648c00, {{0.0, 0.0}, {402.0, 874.0}}
+    ↳Other, 0x119648e40, {{0.0, 62.0}, {402.0, 812.0}}
+     ↳Other, 0x119648f60, {{0.0, 62.0}, {402.0, 812.0}}
+      ↳Other, 0x119649080, {{0.0, 62.0}, {402.0, 812.0}}
+       ↳Other, 0x1196491a0, {{0.0, 62.0}, {402.0, 812.0}}
+        ↳Other, 0x1196492c0, {{0.0, 62.0}, {402.0, 812.0}}
+         ↳Other, 0x1196493e0, {{0.0, 62.0}, {402.0, 812.0}}
+          ↳Other, 0x119649aa0, {{0.0, 62.0}, {402.0, 812.0}}
+           ↳Other, 0x119649bc0, {{0.0, 62.0}, {402.0, 812.0}}
+            ↳Other, 0x119649ce0, {{0.0, 62.0}, {402.0, 812.0}}
+             ↳Other, 0x119649e00, {{0.0, 62.0}, {402.0, 812.0}}
+              ↳CollectionView, 0x119649f20, {{0.0, 62.0}, {402.0, 812.0}}
+               ↳Cell, 0x11964c9e0, {{16.0, 192.3}, {370.0, 499.7}}
+                ↳Other, 0x11964ce60, {{16.0, 192.3}, {370.0, 499.7}}
+                 ↳Other, 0x11964cf80, {{16.0, 192.3}, {370.0, 499.7}}
+                  ↳Other, 0x11964d0a0, {{16.0, 192.3}, {370.0, 499.7}}
+                   ↳StaticText, 0x11964d2e0, {{32.0, 241.8}, {338.0, 40.7}}, identifier: 'household.decision.after-total', label: 'Expected total, $40.69'
+                    ↳StaticText, 0x11964d400, {{32.0, 257.8}, {110.0, 20.3}}, label: 'Expected total'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x1041590e0, pid: 42894, label: 'Room in the Cart'
+  }
+  ↪︎Find: Descendant with identity binding to AX element pid: 42894, elementOrHash.elementID: 4850736368.386
+    Output: {
+      StaticText, 0x1192fb8b0, {{32.0, 257.8}, {110.0, 20.3}}, label: 'Expected total'
+    }

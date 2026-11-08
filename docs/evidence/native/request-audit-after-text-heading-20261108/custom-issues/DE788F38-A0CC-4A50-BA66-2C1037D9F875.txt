@@ -1,0 +1,35 @@
+User will not be able to change the font size of this SwiftUI.AccessibilityNode
+Attributes: StaticText, 0x11a786600, {{359.7, 618.2}, {10.3, 20.3}}, label: '1'
+Element subtree:
+ →StaticText, 0x11a786600, {{359.7, 618.2}, {10.3, 20.3}}, label: '1'
+Path to element:
+ →Application, 0x1041acb90, pid: 42894, label: 'Room in the Cart'
+  ↳Window (Main), 0x1041add10, {{0.0, 0.0}, {402.0, 874.0}}
+   ↳Other, 0x11a583770, {{0.0, 0.0}, {402.0, 874.0}}
+    ↳Other, 0x11a5839b0, {{0.0, 62.0}, {402.0, 812.0}}
+     ↳Other, 0x11a583ad0, {{0.0, 62.0}, {402.0, 812.0}}
+      ↳Other, 0x11a583bf0, {{0.0, 62.0}, {402.0, 812.0}}
+       ↳Other, 0x11a583d10, {{0.0, 62.0}, {402.0, 812.0}}
+        ↳Other, 0x11a583e30, {{0.0, 62.0}, {402.0, 812.0}}
+         ↳Other, 0x11a583f50, {{0.0, 62.0}, {402.0, 812.0}}
+          ↳Other, 0x11a584610, {{0.0, 62.0}, {402.0, 812.0}}
+           ↳Other, 0x11a584730, {{0.0, 62.0}, {402.0, 812.0}}
+            ↳Other, 0x11a584850, {{0.0, 62.0}, {402.0, 812.0}}
+             ↳Other, 0x11a584970, {{0.0, 62.0}, {402.0, 812.0}}
+              ↳CollectionView, 0x11a584a90, {{0.0, 62.0}, {402.0, 812.0}}
+               ↳Cell, 0x11a587550, {{16.0, 192.3}, {370.0, 499.7}}
+                ↳Other, 0x11a5879d0, {{16.0, 192.3}, {370.0, 499.7}}
+                 ↳Other, 0x11a587af0, {{16.0, 192.3}, {370.0, 499.7}}
+                  ↳Other, 0x11a587c10, {{16.0, 192.3}, {370.0, 499.7}}
+                   ↳StaticText, 0x11a5894d0, {{32.0, 581.8}, {338.0, 56.7}}, identifier: 'household.decision.meal.99999999-9999-4999-8999-999999999999', label: 'Mia’s wrap lunch, Lunch · November 5, 2026, Protected portions, 1'
+                    ↳StaticText, 0x11a7863c0, {{32.0, 618.2}, {338.0, 20.3}}, label: 'Protected portions, 1'
+                     ↳StaticText, 0x11a786600, {{359.7, 618.2}, {10.3, 20.3}}, label: '1'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x10a4ee140, pid: 42894, label: 'Room in the Cart'
+  }
+  ↪︎Find: Descendant with identity binding to AX element pid: 42894, elementOrHash.elementID: 4850784992.409
+    Output: {
+      StaticText, 0x11a5a5a50, {{359.7, 618.2}, {10.3, 20.3}}, label: '1'
+    }

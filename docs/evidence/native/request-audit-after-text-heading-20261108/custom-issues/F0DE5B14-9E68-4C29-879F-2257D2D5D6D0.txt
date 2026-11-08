@@ -1,0 +1,34 @@
+User will not be able to change the font size of this SwiftUI.AccessibilityNode
+Attributes: StaticText, 0x11a5abfd0, {{314.0, 375.5}, {56.0, 20.3}}, label: '$37.20'
+Element subtree:
+ →StaticText, 0x11a5abfd0, {{314.0, 375.5}, {56.0, 20.3}}, label: '$37.20'
+Path to element:
+ →Application, 0x1041add10, pid: 42894, label: 'Room in the Cart'
+  ↳Window (Main), 0x1041acb90, {{0.0, 0.0}, {402.0, 874.0}}
+   ↳Other, 0x11a584ff0, {{0.0, 0.0}, {402.0, 874.0}}
+    ↳Other, 0x11a585230, {{0.0, 62.0}, {402.0, 812.0}}
+     ↳Other, 0x11a585350, {{0.0, 62.0}, {402.0, 812.0}}
+      ↳Other, 0x11a585470, {{0.0, 62.0}, {402.0, 812.0}}
+       ↳Other, 0x11a585590, {{0.0, 62.0}, {402.0, 812.0}}
+        ↳Other, 0x11a5856b0, {{0.0, 62.0}, {402.0, 812.0}}
+         ↳Other, 0x11a5857d0, {{0.0, 62.0}, {402.0, 812.0}}
+          ↳Other, 0x11a585e90, {{0.0, 62.0}, {402.0, 812.0}}
+           ↳Other, 0x11a585fb0, {{0.0, 62.0}, {402.0, 812.0}}
+            ↳Other, 0x11a5860d0, {{0.0, 62.0}, {402.0, 812.0}}
+             ↳Other, 0x11a5861f0, {{0.0, 62.0}, {402.0, 812.0}}
+              ↳CollectionView, 0x11a586310, {{0.0, 62.0}, {402.0, 812.0}}
+               ↳Cell, 0x11a588cb0, {{16.0, 192.3}, {370.0, 499.7}}
+                ↳Other, 0x11a589130, {{16.0, 192.3}, {370.0, 499.7}}
+                 ↳Other, 0x11a589250, {{16.0, 192.3}, {370.0, 499.7}}
+                  ↳Other, 0x11a589370, {{16.0, 192.3}, {370.0, 499.7}}
+                   ↳StaticText, 0x11a5abd90, {{32.0, 375.5}, {338.0, 20.3}}, identifier: 'household.decision.before-total', label: 'Before this decision, $37.20'
+                    ↳StaticText, 0x11a5abfd0, {{314.0, 375.5}, {56.0, 20.3}}, label: '$37.20'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x10a0d4530, pid: 42894, label: 'Room in the Cart'
+  }
+  ↪︎Find: Descendant with identity binding to AX element pid: 42894, elementOrHash.elementID: 4850763104.393
+    Output: {
+      StaticText, 0x11a5d8310, {{314.0, 375.5}, {56.0, 20.3}}, label: '$37.20'
+    }
