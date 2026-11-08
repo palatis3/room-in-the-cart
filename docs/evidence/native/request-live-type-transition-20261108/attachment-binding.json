@@ -1,0 +1,128 @@
+[
+  {
+    "name": "S24-live-type-before-expiry-title",
+    "originalFile": "96EFDE32-33E6-4527-B5C0-806795F04931.png",
+    "bytes": 334211,
+    "sha256": "c7eded82db8173f57427c3d288328285f7196491950b71bda9a51eb5ee109cbc",
+    "copiedTo": null
+  },
+  {
+    "name": "S24-live-type-before-expiry-title-ink",
+    "originalFile": "E5CE1AA3-D95B-49C8-8BFB-9722C2363600.png",
+    "bytes": 8592,
+    "sha256": "c94ff2682549d6d733d1c96c5d8ac6e17dd09c698b7a1c0463d4847016c42d77",
+    "copiedTo": "screens/before-expiry-title-ink.png"
+  },
+  {
+    "name": "S24-live-type-before-expiry-title-geometry",
+    "originalFile": "7EDDF559-E015-43C6-841E-1BE08A714824.txt",
+    "bytes": 193,
+    "sha256": "6169bc40e038f88db3ab233829aacaf755dd30a6052f3a57c6b12f75fae4057e",
+    "copiedTo": "geometry/before-expiry-title-geometry.txt"
+  },
+  {
+    "name": "S24-live-type-before-expiry-date",
+    "originalFile": "5589B09E-BF0E-4723-99E4-91971799B986.png",
+    "bytes": 334211,
+    "sha256": "c7eded82db8173f57427c3d288328285f7196491950b71bda9a51eb5ee109cbc",
+    "copiedTo": "screens/before-expiry-date.png"
+  },
+  {
+    "name": "S24-live-type-before-expiry-date-ink",
+    "originalFile": "3578581F-F2AD-4381-8509-5507C76F0FB1.png",
+    "bytes": 13884,
+    "sha256": "82c64744a179bb4a0ca774f34d46617ca32702821cb7fc4283efad28e97afa7d",
+    "copiedTo": "screens/before-expiry-date-ink.png"
+  },
+  {
+    "name": "S24-live-type-before-expiry-date-geometry",
+    "originalFile": "4E6761D5-62C1-49EE-98EC-9D006D760CF8.txt",
+    "bytes": 230,
+    "sha256": "4fcc5856479e927b600b64f201ed60328a22a9fd9700e43437d34043b6835c07",
+    "copiedTo": "geometry/before-expiry-date-geometry.txt"
+  },
+  {
+    "name": "S24-live-type-AX5-expiry-title",
+    "originalFile": "CBBD5482-759A-4C2F-98B8-47F02E6CBCC7.png",
+    "bytes": 286347,
+    "sha256": "af1a418a73efd22559068e34a07ed0b1ea9397efbb63de9388999f8ed65f6014",
+    "copiedTo": null
+  },
+  {
+    "name": "S24-live-type-AX5-expiry-title-ink",
+    "originalFile": "8926B41C-7858-4F9F-B8CB-BB341EF94C44.png",
+    "bytes": 26967,
+    "sha256": "29785fc5bae6e204b60664a45863476d3770c3c1d42fe0a51e086ff5bfeb9a59",
+    "copiedTo": "screens/AX5-expiry-title-ink.png"
+  },
+  {
+    "name": "S24-live-type-AX5-expiry-title-geometry",
+    "originalFile": "F67A0397-FE9B-4E8C-A566-9CC89C0BD053.txt",
+    "bytes": 201,
+    "sha256": "d8817a7e069b655061ae80f3222a53ed29f25758c54af3caf6a6abc1ee628183",
+    "copiedTo": "geometry/AX5-expiry-title-geometry.txt"
+  },
+  {
+    "name": "S24-live-type-AX5-expiry-date",
+    "originalFile": "DF685315-3AC6-4DA3-A6B1-307EB13F25ED.png",
+    "bytes": 286347,
+    "sha256": "af1a418a73efd22559068e34a07ed0b1ea9397efbb63de9388999f8ed65f6014",
+    "copiedTo": "screens/AX5-expiry-date.png"
+  },
+  {
+    "name": "S24-live-type-AX5-expiry-date-ink",
+    "originalFile": "9D6D3AFF-126C-4651-B3BF-9A5E82E7E32B.png",
+    "bytes": 45596,
+    "sha256": "81ccb905b8a11fba972e2daddd317ba996b76ad521492dfa1c6c5adef92246a7",
+    "copiedTo": "screens/AX5-expiry-date-ink.png"
+  },
+  {
+    "name": "S24-live-type-AX5-expiry-date-geometry",
+    "originalFile": "EF787924-640B-4511-BD4F-AAFC693AEB5D.txt",
+    "bytes": 221,
+    "sha256": "9ec02edbf27ba2496015147eecfd5e763cbd3cc3f141c4b7128ddc411882cb34",
+    "copiedTo": "geometry/AX5-expiry-date-geometry.txt"
+  },
+  {
+    "name": "S24-live-type-restored-expiry-title",
+    "originalFile": "D0BC3DD9-53FA-4880-900F-AD16F8799D05.png",
+    "bytes": 328383,
+    "sha256": "9b0ce44540ba2c934ff683c2e7ecc774bb83bc1ff27944d62abc1d510bc05dd2",
+    "copiedTo": null
+  },
+  {
+    "name": "S24-live-type-restored-expiry-title-ink",
+    "originalFile": "304C3411-E4A8-4EA7-BA59-FD62884B7010.png",
+    "bytes": 8592,
+    "sha256": "c94ff2682549d6d733d1c96c5d8ac6e17dd09c698b7a1c0463d4847016c42d77",
+    "copiedTo": "screens/restored-expiry-title-ink.png"
+  },
+  {
+    "name": "S24-live-type-restored-expiry-title-geometry",
+    "originalFile": "38A91A48-96E9-413A-A2A5-EBB8BEC723F5.txt",
+    "bytes": 181,
+    "sha256": "e1b3146937d3eb7708b5822605ad0cc8ac13c8b7ed7091fc6c7aab8615076203",
+    "copiedTo": "geometry/restored-expiry-title-geometry.txt"
+  },
+  {
+    "name": "S24-live-type-restored-expiry-date",
+    "originalFile": "44D19AD3-77CE-42A9-862E-89FF5CFB5CB1.png",
+    "bytes": 328383,
+    "sha256": "9b0ce44540ba2c934ff683c2e7ecc774bb83bc1ff27944d62abc1d510bc05dd2",
+    "copiedTo": "screens/restored-expiry-date.png"
+  },
+  {
+    "name": "S24-live-type-restored-expiry-date-ink",
+    "originalFile": "18EC2695-D650-4066-A9A9-C6D434F6644C.png",
+    "bytes": 13884,
+    "sha256": "82c64744a179bb4a0ca774f34d46617ca32702821cb7fc4283efad28e97afa7d",
+    "copiedTo": "screens/restored-expiry-date-ink.png"
+  },
+  {
+    "name": "S24-live-type-restored-expiry-date-geometry",
+    "originalFile": "FF8F66A5-BD39-4ADC-8E38-89A644DD9786.txt",
+    "bytes": 218,
+    "sha256": "37c3b00aa562280cf00fe6dda156e14538d5624ab64242b3db3416a06c47d654",
+    "copiedTo": "geometry/restored-expiry-date-geometry.txt"
+  }
+]

@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "scope": "Targeted live Dynamic Type adaptation of expiry title/date within the existing request review; not broad accessibility audit acceptance.",
+  "test": "RoomInTheCartUITests/HouseholdRequestPackUITests/testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite",
+  "nativeExit": 0,
+  "strictExit": 0,
+  "passedTests": 1,
+  "failedTests": 0,
+  "skippedTests": 0,
+  "runtimeWarningCount": 0,
+  "toolchain": "Xcode 27.1\nBuild version 27A9275",
+  "device": {
+    "model": "iPhone 17 Pro",
+    "runtime": "iOS 26.2",
+    "runtimeBuild": "23C54",
+    "architecture": "arm64"
+  },
+  "settings": {
+    "appearance": "light",
+    "content_size": "large",
+    "increase_contrast": "disabled"
+  },
+  "sourceManifestSHA256": "3504044d3b5cce5eb4a87f128f4ca9a6e858025e3b2a1713a01acdebb19be6a1",
+  "canonicalSourceManifestSHA256": "8d0eb48f5f54f1ac22b43a01966509d9637b34ec88d9f13a06d3a145967f5d1a",
+  "startedAtUTC": "2026-11-08T22:34:22.763795+00:00",
+  "finishedAtUTC": "2026-11-08T22:40:20.788542+00:00",
+  "inspectedAtUTC": "2026-11-08T22:42:43.005297+00:00",
+  "sourceUnchanged": true,
+  "originalUnchanged": true,
+  "requiredEvidenceCount": 18,
+  "requiredEvidenceComplete": true,
+  "attachmentsRehashedForThisPackage": true,
+  "transitionProtocolComplete": true,
+  "transitionReadbacksVerified": true,
+  "transitions": [
+    {
+      "requestedSize": "accessibility-extra-extra-extra-large",
+      "startedAtUTC": "2026-11-08T22:39:19.514883+00:00",
+      "exitCode": 0,
+      "readback": "accessibility-extra-extra-extra-large",
+      "readbackExit": 0,
+      "finishedAtUTC": "2026-11-08T22:39:20.202059+00:00"
+    },
+    {
+      "requestedSize": "large",
+      "startedAtUTC": "2026-11-08T22:39:57.651754+00:00",
+      "exitCode": 0,
+      "readback": "large",
+      "readbackExit": 0,
+      "finishedAtUTC": "2026-11-08T22:39:58.314740+00:00"
+    }
+  ],
+  "restoration": {
+    "finishedAtUTC": "2026-11-08T22:40:21.458568+00:00",
+    "exitCode": 0,
+    "readbackExit": 0,
+    "readback": "large"
+  },
+  "contrastEvidence": "Existing six target-text pixel assertions passed a 4.5 threshold; numerical ratios were not exported. No new contrast computation.",
+  "fontMeasurementLimit": "Reference UIFont values and observed element bounds; not an inspection of app font-point size or internal audit sampling.",
+  "publicRawLogIncluded": false
+}

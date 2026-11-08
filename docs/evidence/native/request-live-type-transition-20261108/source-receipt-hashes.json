@@ -1,0 +1,26 @@
+[
+  {
+    "privateSourceRelativePath": "inspection/verification.json",
+    "sha256": "3f7e24e21beced131fe201478cdf2ba883fc0b6bf51c28d67701dff2f46eb11a"
+  },
+  {
+    "privateSourceRelativePath": "inspection/summary.json",
+    "sha256": "e61be476a373ee2e8f8cf61e3675a82e52223bba1109eea3312d8480df68de45"
+  },
+  {
+    "privateSourceRelativePath": "inspection/test-runtime-warnings.json",
+    "sha256": "ce5f63a49527481ca5704f8996eb8eea682d8688c3381353dd8f23ad6759bffb"
+  },
+  {
+    "privateSourceRelativePath": "run.json",
+    "sha256": "7ffd977c31c086e55bfcef42a7bba76a5fe3b272efb2f996e73f03aee083d42c"
+  },
+  {
+    "privateSourceRelativePath": "transitions.json",
+    "sha256": "443a6a6cbdf1031e9d889ce0805d7bb2d3ebeadea93b6e8e1c703f8e3a6fa28f"
+  },
+  {
+    "privateSourceRelativePath": "text-size-restoration.json",
+    "sha256": "89accc2b6e85848b58298cdfb7c60842ec41a70107ac764fb0fbc7fc2431f3ed"
+  }
+]
