@@ -1,0 +1,185 @@
+OWNER
+Attributes: StaticText, 0x11e8ec710, {{16.0, 544.0}, {370.0, 145.3}}, label: 'Review before applying'
+Element subtree:
+ →StaticText, 0x11e8ec710, {{16.0, 544.0}, {370.0, 145.3}}, label: 'Review before applying'
+Path to element:
+ →Application, 0x11d1f6570, pid: 19562, label: 'Room in the Cart'
+  ↳Window (Main), 0x11d1ebaa0, {{0.0, 0.0}, {402.0, 874.0}}
+   ↳Other, 0x11ea89620, {{0.0, 0.0}, {402.0, 874.0}}
+    ↳Other, 0x11ea89860, {{0.0, 62.0}, {402.0, 812.0}}
+     ↳Other, 0x11ea89980, {{0.0, 62.0}, {402.0, 812.0}}
+      ↳Other, 0x11ea89aa0, {{0.0, 62.0}, {402.0, 812.0}}
+       ↳Other, 0x11ea89bc0, {{0.0, 62.0}, {402.0, 812.0}}
+        ↳Other, 0x11ea89ce0, {{0.0, 62.0}, {402.0, 812.0}}
+         ↳Other, 0x11ea89e00, {{0.0, 62.0}, {402.0, 812.0}}
+          ↳Other, 0x11ea8a4c0, {{0.0, 62.0}, {402.0, 812.0}}
+           ↳Other, 0x11ea8a5e0, {{0.0, 62.0}, {402.0, 812.0}}
+            ↳Other, 0x11ea8a700, {{0.0, 62.0}, {402.0, 812.0}}
+             ↳Other, 0x11ea8a820, {{0.0, 62.0}, {402.0, 812.0}}
+              ↳CollectionView, 0x11ea8a940, {{0.0, 62.0}, {402.0, 812.0}}
+               ↳Cell, 0x11e8ec170, {{16.0, 544.0}, {370.0, 145.3}}
+                ↳Other, 0x11e8ec3b0, {{16.0, 544.0}, {370.0, 145.3}}
+                 ↳Other, 0x11e8ec4d0, {{16.0, 544.0}, {370.0, 145.3}}
+                  ↳Other, 0x11e8ec5f0, {{16.0, 544.0}, {370.0, 145.3}}
+                   ↳StaticText, 0x11e8ec710, {{16.0, 544.0}, {370.0, 145.3}}, label: 'Review before applying'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x11ee6b890, pid: 19562, label: 'Room in the Cart'
+  }
+  ↪︎Find: Descendants matching type StaticText
+    Output: {
+      StaticText, 0x11ecba570, {{31.2, 62.0}, {339.7, 125.3}}, identifier: 'fixture.s24.posts', label: 'Fixture applied decisions: 0'
+      StaticText, 0x11ecba690, {{46.8, 186.3}, {308.3, 125.3}}, identifier: 'fixture.s24.lines', label: 'Fixture saved lines: 0'
+      StaticText, 0x11ecbabc0, {{2.5, 436.3}, {397.0, 48.0}}, identifier: 'fixture.s24.preview-diagnostics', label: 'Fixture previews: 1; busy: false; selected: 44444444-4444-4444-8444-444444444444; choice: add; price: 3.49; preview: 55555555-5555-4555-8555-555555555555; notice: none'
+      StaticText, 0x11ecbaf20, {{99.7, 528.3}, {202.3, 25.3}}, label: 'S24 request decision'
+      StaticText, 0x11e3efb40, {{127.3, 87.3}, {147.0, 25.3}}, label: 'Review request'
+      StaticText, 0x11ecbc5a0, {{16.0, 123.7}, {370.0, 403.3}}, label: 'Each request keeps its own outcome. Linking a line does not add another pack.'
+      StaticText, 0x11e8f8200, {{16.0, 544.7}, {370.0, 145.3}}, label: 'Requests for this shop'
+      StaticText, 0x11e8f8b00, {{32.0, 705.0}, {243.7, 125.3}}, label: 'Brown rice cereal'
+      StaticText, 0x11e8f8c20, {{32.0, 836.3}, {94.3, 58.7}}, label: 'Sam'
+      StaticText, 0x11e8f8d40, {{32.0, 901.0}, {116.7, 63.3}}, label: '1 box'
+      StaticText, 0x11e8f8e60, {{32.0, 970.3}, {242.3, 187.3}}, label: 'Received, waiting for review'
+      StaticText, 0x11e8f8f80, {{32.0, 1163.7}, {280.3, 102.3}}, label: 'Nov 2, 2026 at 7:00 PM'
+      StaticText, 0x11e7e3aa0, {{16.0, -1403.7}, {370.0, 93.3}}, label: '1 box'
+      StaticText, 0x11eaa8280, {{16.0, 544.0}, {370.0, 145.3}}, label: 'Review before applying'
+      StaticText, 0x11eaa8a60, {{16.0, 689.3}, {370.0, 155.3}}, label: 'Add packs to this shop'
+      StaticText, 0x11e3efea0, {{32.0, 859.7}, {228.3, 125.3}}, label: 'After this decision'
+      StaticText, 0x11e3effc0, {{32.0, 993.0}, {320.0, 130.7}}, identifier: 'household.decision.after-total', label: 'Expected total, $40.69'
+      StaticText, 0x11e3f0320, {{32.0, 1131.7}, {202.7, 130.7}}, identifier: 'household.decision.over-cap', label: 'Over cap, $2.69'
+      StaticText, 0x11e8fa060, {{32.0, 1270.3}, {208.0, 192.7}}, label: 'Scope, Whole checkout'
+      StaticText, 0x11e8fa3c0, {{32.0, 1471.0}, {248.7, 192.7}}, identifier: 'household.decision.before-total', label: 'Before this decision, $37.20'
+      StaticText, 0x11e3f0680, {{32.0, 1671.7}, {285.3, 130.7}}, label: 'Cost change, $3.49'
+      StaticText, 0x11e3f0a10, {{32.0, 1810.3}, {173.7, 130.7}}, label: 'Cap, $38.00'
+      StaticText, 0x11e3f0d70, {{32.0, 1949.0}, {241.7, 192.7}}, label: 'Cap scope, Whole checkout'
+      StaticText, 0x11e3f11f0, {{51.3, 2149.7}, {307.7, 187.3}}, label: 'Protected meal commitments'
+      StaticText, 0x11e3f1310, {{32.0, 2345.0}, {338.0, 329.7}}, identifier: 'household.decision.meal.88888888-8888-4888-8888-888888888888', label: 'Sam’s wrap lunch, Lunch · November 4, 2026, Protected portions, 1'
+      StaticText, 0x11e3f19d0, {{32.0, 2682.7}, {338.0, 329.7}}, identifier: 'household.decision.meal.99999999-9999-4999-8999-999999999999', label: 'Mia’s wrap lunch, Lunch · November 5, 2026, Protected portions, 1'
+      StaticText, 0x11e3f2090, {{32.0, 3020.3}, {314.7, 255.3}}, label: 'Check usable food separately; this review does not confirm meal coverage.'
+      StaticText, 0x11ee6c3a0, {{32.0, 107.0}, {248.7, 249.3}}, label: 'Counts toward the retailer fee threshold'
+      StaticText, 0x11e3f00e0, {{32.0, 993.0}, {320.0, 63.3}}, label: 'Expected total'
+      StaticText, 0x11e3f0200, {{32.0, 1060.3}, {173.7, 63.3}}, label: '$40.69'
+      StaticText, 0x11e3f0440, {{32.0, 1131.7}, {202.7, 63.3}}, label: 'Over cap'
+      StaticText, 0x11ebb2540, {{32.0, 1199.0}, {141.3, 63.3}}, label: '$2.69'
+      StaticText, 0x11e8fa180, {{32.0, 1270.3}, {144.0, 63.3}}, label: 'Scope'
+      StaticText, 0x11e8fa2a0, {{32.0, 1337.7}, {208.0, 125.3}}, label: 'Whole checkout'
+      StaticText, 0x11e8fa4e0, {{32.0, 1471.0}, {248.7, 125.3}}, label: 'Before this decision'
+      StaticText, 0x11e3f0560, {{32.0, 1600.3}, {173.7, 63.3}}, label: '$37.20'
+      StaticText, 0x11e3f07d0, {{32.0, 1671.7}, {285.3, 63.3}}, label: 'Cost change'
+      StaticText, 0x11e3f08f0, {{32.0, 1739.0}, {141.3, 63.3}}, label: '$3.49'
+      StaticText, 0x11e3f0b30, {{32.0, 1810.3}, {93.3, 63.3}}, label: 'Cap'
+      StaticText, 0x11e3f0c50, {{32.0, 1877.7}, {173.7, 63.3}}, label: '$38.00'
+      StaticText, 0x11e3f0e90, {{32.0, 1949.0}, {241.7, 63.3}}, label: 'Cap scope'
+      StaticText, 0x11e3f0fb0, {{32.0, 2016.3}, {208.0, 125.3}}, label: 'Whole checkout'
+      StaticText, 0x11e3f1430, {{32.0, 2345.0}, {260.7, 116.7}}, label: 'Sam’s wrap lunch'
+      StaticText, 0x11e3f1550, {{32.0, 2463.7}, {338.0, 102.3}}, label: 'Lunch · November 4, 2026'
+      StaticText, 0x11e3f1670, {{32.0, 2568.0}, {337.3, 106.7}}, label: 'Protected portions, 1'
+      StaticText, 0x11e3f1af0, {{32.0, 2682.7}, {242.0, 116.7}}, label: 'Mia’s wrap lunch'
+      StaticText, 0x11e3f1c10, {{32.0, 2801.3}, {338.0, 102.3}}, label: 'Lunch · November 5, 2026'
+      StaticText, 0x11e3f1d30, {{32.0, 2905.7}, {337.3, 106.7}}, label: 'Protected portions, 1'
+      StaticText, 0x11e3f1790, {{32.0, 2568.0}, {337.3, 51.3}}, label: 'Protected portions'
+      StaticText, 0x11e3f18b0, {{32.0, 2623.3}, {26.7, 51.3}}, label: '1'
+      StaticText, 0x11e3f1e50, {{32.0, 2905.7}, {337.3, 51.3}}, label: 'Protected portions'
+      StaticText, 0x11e3f1f70, {{32.0, 2961.0}, {26.7, 51.3}}, label: '1'
+    }
+    ↪︎Find: Elements matching predicate 'label == "Review before applying"'
+      Output: {
+        StaticText, 0x11eaa71f0, {{16.0, 544.0}, {370.0, 145.3}}, label: 'Review before applying'
+      }
+      ↪︎Find: First Match
+        Output: {
+          StaticText, 0x11e7dc2e0, {{16.0, 544.0}, {370.0, 145.3}}, label: 'Review before applying'
+        }
+
+TARGET
+Attributes: StaticText, 0x11ebdb710, {{16.0, 544.0}, {370.0, 145.3}}, label: 'Review before applying'
+Element subtree:
+ →StaticText, 0x11ebdb710, {{16.0, 544.0}, {370.0, 145.3}}, label: 'Review before applying'
+Path to element:
+ →Application, 0x11fc2a860, pid: 19562, label: 'Room in the Cart'
+  ↳Window (Main), 0x11fc2b440, {{0.0, 0.0}, {402.0, 874.0}}
+   ↳Other, 0x11fc2faa0, {{0.0, 0.0}, {402.0, 874.0}}
+    ↳Other, 0x11fc2fce0, {{0.0, 62.0}, {402.0, 812.0}}
+     ↳Other, 0x11fc2fe00, {{0.0, 62.0}, {402.0, 812.0}}
+      ↳Other, 0x11fc2ff20, {{0.0, 62.0}, {402.0, 812.0}}
+       ↳Other, 0x11fc30040, {{0.0, 62.0}, {402.0, 812.0}}
+        ↳Other, 0x11fc30160, {{0.0, 62.0}, {402.0, 812.0}}
+         ↳Other, 0x11fc30280, {{0.0, 62.0}, {402.0, 812.0}}
+          ↳Other, 0x11fc30940, {{0.0, 62.0}, {402.0, 812.0}}
+           ↳Other, 0x11fc30a60, {{0.0, 62.0}, {402.0, 812.0}}
+            ↳Other, 0x11ee81aa0, {{0.0, 62.0}, {402.0, 812.0}}
+             ↳Other, 0x11ee81bc0, {{0.0, 62.0}, {402.0, 812.0}}
+              ↳CollectionView, 0x11ee81ce0, {{0.0, 62.0}, {402.0, 812.0}}
+               ↳Cell, 0x11ebdb170, {{16.0, 544.0}, {370.0, 145.3}}
+                ↳Other, 0x11ebdb3b0, {{16.0, 544.0}, {370.0, 145.3}}
+                 ↳Other, 0x11ebdb4d0, {{16.0, 544.0}, {370.0, 145.3}}
+                  ↳Other, 0x11ebdb5f0, {{16.0, 544.0}, {370.0, 145.3}}
+                   ↳StaticText, 0x11ebdb710, {{16.0, 544.0}, {370.0, 145.3}}, label: 'Review before applying'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x11f823670, pid: 19562, label: 'Room in the Cart'
+  }
+  ↪︎Find: Descendants matching type StaticText
+    Output: {
+      StaticText, 0x11eaa7f50, {{31.2, 62.0}, {339.7, 125.3}}, identifier: 'fixture.s24.posts', label: 'Fixture applied decisions: 0'
+      StaticText, 0x11ecba320, {{46.8, 186.3}, {308.3, 125.3}}, identifier: 'fixture.s24.lines', label: 'Fixture saved lines: 0'
+      StaticText, 0x11ecba560, {{2.5, 436.3}, {397.0, 48.0}}, identifier: 'fixture.s24.preview-diagnostics', label: 'Fixture previews: 1; busy: false; selected: 44444444-4444-4444-8444-444444444444; choice: add; price: 3.49; preview: 55555555-5555-4555-8555-555555555555; notice: none'
+      StaticText, 0x11ecba8c0, {{99.7, 528.3}, {202.3, 25.3}}, label: 'S24 request decision'
+      StaticText, 0x11ecfe2a0, {{127.3, 87.3}, {147.0, 25.3}}, label: 'Review request'
+      StaticText, 0x11ecbbf40, {{16.0, 123.7}, {370.0, 403.3}}, label: 'Each request keeps its own outcome. Linking a line does not add another pack.'
+      StaticText, 0x11ecfbc80, {{16.0, 544.7}, {370.0, 145.3}}, label: 'Requests for this shop'
+      StaticText, 0x11ecfc830, {{32.0, 705.0}, {243.7, 125.3}}, label: 'Brown rice cereal'
+      StaticText, 0x11ecfc950, {{32.0, 836.3}, {94.3, 58.7}}, label: 'Sam'
+      StaticText, 0x11ecfca70, {{32.0, 901.0}, {116.7, 63.3}}, label: '1 box'
+      StaticText, 0x11ecfcb90, {{32.0, 970.3}, {242.3, 187.3}}, label: 'Received, waiting for review'
+      StaticText, 0x11ecfccb0, {{32.0, 1163.7}, {280.3, 102.3}}, label: 'Nov 2, 2026 at 7:00 PM'
+      StaticText, 0x11ebb22e0, {{16.0, -1403.7}, {370.0, 93.3}}, label: '1 box'
+      StaticText, 0x11ebeac60, {{16.0, 544.0}, {370.0, 145.3}}, label: 'Review before applying'
+      StaticText, 0x11ecfede0, {{16.0, 689.3}, {370.0, 155.3}}, label: 'Add packs to this shop'
+      StaticText, 0x11ebeb440, {{32.0, 859.7}, {228.3, 125.3}}, label: 'After this decision'
+      StaticText, 0x11ebeb560, {{32.0, 993.0}, {320.0, 130.7}}, identifier: 'household.decision.after-total', label: 'Expected total, $40.69'
+      StaticText, 0x11ebeb8c0, {{32.0, 1131.7}, {202.7, 130.7}}, identifier: 'household.decision.over-cap', label: 'Over cap, $2.69'
+      StaticText, 0x11ebebc20, {{32.0, 1270.3}, {208.0, 192.7}}, label: 'Scope, Whole checkout'
+      StaticText, 0x11ebebf80, {{32.0, 1471.0}, {248.7, 192.7}}, identifier: 'household.decision.before-total', label: 'Before this decision, $37.20'
+      StaticText, 0x11ebec2e0, {{32.0, 1671.7}, {285.3, 130.7}}, label: 'Cost change, $3.49'
+      StaticText, 0x11ebec640, {{32.0, 1810.3}, {173.7, 130.7}}, label: 'Cap, $38.00'
+      StaticText, 0x11ebec9a0, {{32.0, 1949.0}, {241.7, 192.7}}, label: 'Cap scope, Whole checkout'
+      StaticText, 0x11ecff4a0, {{51.3, 2149.7}, {307.7, 187.3}}, label: 'Protected meal commitments'
+      StaticText, 0x11ecff5c0, {{32.0, 2345.0}, {338.0, 329.7}}, identifier: 'household.decision.meal.88888888-8888-4888-8888-888888888888', label: 'Sam’s wrap lunch, Lunch · November 4, 2026, Protected portions, 1'
+      StaticText, 0x11ecffc80, {{32.0, 2682.7}, {338.0, 329.7}}, identifier: 'household.decision.meal.99999999-9999-4999-8999-999999999999', label: 'Mia’s wrap lunch, Lunch · November 5, 2026, Protected portions, 1'
+      StaticText, 0x11e7e18a0, {{32.0, 3020.3}, {314.7, 255.3}}, label: 'Check usable food separately; this review does not confirm meal coverage.'
+      StaticText, 0x11ebe9940, {{32.0, 107.0}, {248.7, 249.3}}, label: 'Counts toward the retailer fee threshold'
+      StaticText, 0x11ebeb680, {{32.0, 993.0}, {320.0, 63.3}}, label: 'Expected total'
+      StaticText, 0x11ebeb7a0, {{32.0, 1060.3}, {173.7, 63.3}}, label: '$40.69'
+      StaticText, 0x11ebeb9e0, {{32.0, 1131.7}, {202.7, 63.3}}, label: 'Over cap'
+      StaticText, 0x11ebebb00, {{32.0, 1199.0}, {141.3, 63.3}}, label: '$2.69'
+      StaticText, 0x11ebebd40, {{32.0, 1270.3}, {144.0, 63.3}}, label: 'Scope'
+      StaticText, 0x11ebebe60, {{32.0, 1337.7}, {208.0, 125.3}}, label: 'Whole checkout'
+      StaticText, 0x11ebec0a0, {{32.0, 1471.0}, {248.7, 125.3}}, label: 'Before this decision'
+      StaticText, 0x11ebec1c0, {{32.0, 1600.3}, {173.7, 63.3}}, label: '$37.20'
+      StaticText, 0x11ebec400, {{32.0, 1671.7}, {285.3, 63.3}}, label: 'Cost change'
+      StaticText, 0x11ebec520, {{32.0, 1739.0}, {141.3, 63.3}}, label: '$3.49'
+      StaticText, 0x11ebec760, {{32.0, 1810.3}, {93.3, 63.3}}, label: 'Cap'
+      StaticText, 0x11ebec880, {{32.0, 1877.7}, {173.7, 63.3}}, label: '$38.00'
+      StaticText, 0x11ebecac0, {{32.0, 1949.0}, {241.7, 63.3}}, label: 'Cap scope'
+      StaticText, 0x11ebecbe0, {{32.0, 2016.3}, {208.0, 125.3}}, label: 'Whole checkout'
+      StaticText, 0x11ecff6e0, {{32.0, 2345.0}, {260.7, 116.7}}, label: 'Sam’s wrap lunch'
+      StaticText, 0x11ecff800, {{32.0, 2463.7}, {338.0, 102.3}}, label: 'Lunch · November 4, 2026'
+      StaticText, 0x11ecff920, {{32.0, 2568.0}, {337.3, 106.7}}, label: 'Protected portions, 1'
+      StaticText, 0x11ecffda0, {{32.0, 2682.7}, {242.0, 116.7}}, label: 'Mia’s wrap lunch'
+      StaticText, 0x11ecffec0, {{32.0, 2801.3}, {338.0, 102.3}}, label: 'Lunch · November 5, 2026'
+      StaticText, 0x121804080, {{32.0, 2905.7}, {337.3, 106.7}}, label: 'Protected portions, 1'
+      StaticText, 0x11ecffa40, {{32.0, 2568.0}, {337.3, 51.3}}, label: 'Protected portions'
+      StaticText, 0x11ecffb60, {{32.0, 2623.3}, {26.7, 51.3}}, label: '1'
+      StaticText, 0x1218041a0, {{32.0, 2905.7}, {337.3, 51.3}}, label: 'Protected portions'
+      StaticText, 0x11e7e1780, {{32.0, 2961.0}, {26.7, 51.3}}, label: '1'
+    }
+    ↪︎Find: Elements matching predicate 'label == "Review before applying"'
+      Output: {
+        StaticText, 0x11ecf7620, {{16.0, 544.0}, {370.0, 145.3}}, label: 'Review before applying'
+      }
+      ↪︎Find: First Match
+        Output: {
+          StaticText, 0x11f821580, {{16.0, 544.0}, {370.0, 145.3}}, label: 'Review before applying'
+        }

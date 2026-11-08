@@ -1,0 +1,37 @@
+Finding,Audit issue,Public label,Matching stock finding numbers,Observation
+1,Dynamic Type font sizes are partially unsupported,Sam’s wrap lunch,17,The screen-size comparison verifies growth for this content. Real name/date truncation is covered separately by the AX5 rendered-line test.
+2,Dynamic Type font sizes are partially unsupported,After this decision,24,Also reported on the same named stock control. Its exact scale response was not independently quantified.
+3,Dynamic Type font sizes are partially unsupported,$38.00,,The full audit still reports this target. No matching standalone finding and direct scale measurement were established for this exact target.
+4,Dynamic Type font sizes are partially unsupported,$3.49,,The full audit still reports this target. No matching standalone finding and direct scale measurement were established for this exact target.
+5,Dynamic Type font sizes are partially unsupported,"Lunch · November 5, 2026",,The screen-size comparison verifies growth for this content. Real name/date truncation is covered separately by the AX5 rendered-line test.
+6,Dynamic Type font sizes are partially unsupported,,,XCTest supplied no public target. Attribution remains open.
+7,Dynamic Type font sizes are partially unsupported,Before this decision,27,Also reported on the same named stock control. Its exact scale response was not independently quantified.
+8,Dynamic Type font sizes are partially unsupported,$40.69,,The screen-size comparison verifies growth for this content. Real name/date truncation is covered separately by the AX5 rendered-line test.
+9,Dynamic Type font sizes are partially unsupported,$37.20,,The full audit still reports this target. No matching standalone finding and direct scale measurement were established for this exact target.
+10,Dynamic Type font sizes are partially unsupported,Checkout calculation details,,The full audit still reports this target. No matching standalone finding and direct scale measurement were established for this exact target.
+11,Dynamic Type font sizes are partially unsupported,Cancel,18,Also reported on the same named stock control. Its exact scale response was not independently quantified.
+12,Dynamic Type font sizes are partially unsupported,$2.69,,The full audit still reports this target. No matching standalone finding and direct scale measurement were established for this exact target.
+13,Dynamic Type font sizes are partially unsupported,Mia’s wrap lunch,16,The screen-size comparison verifies growth for this content. Real name/date truncation is covered separately by the AX5 rendered-line test.
+14,Dynamic Type font sizes are partially unsupported,Cap scope,,The full audit still reports this target. No matching standalone finding and direct scale measurement were established for this exact target.
+15,Dynamic Type font sizes are partially unsupported,Protected portions,"10,25",The screen-size comparison verifies growth for this content. Real name/date truncation is covered separately by the AX5 rendered-line test.
+16,Dynamic Type font sizes are partially unsupported,Cap,,The full audit still reports this target. No matching standalone finding and direct scale measurement were established for this exact target.
+17,Dynamic Type font sizes are partially unsupported,Scope,,The full audit still reports this target. No matching standalone finding and direct scale measurement were established for this exact target.
+18,Dynamic Type font sizes are partially unsupported,Whole checkout,,The full audit still reports this target. No matching standalone finding and direct scale measurement were established for this exact target.
+19,Dynamic Type font sizes are partially unsupported,1,,The full audit still reports this target. No matching standalone finding and direct scale measurement were established for this exact target.
+20,Dynamic Type font sizes are partially unsupported,1,,The full audit still reports this target. No matching standalone finding and direct scale measurement were established for this exact target.
+21,Dynamic Type font sizes are unsupported,,,XCTest supplied no public target. Attribution remains open.
+22,Dynamic Type font sizes are partially unsupported,Add packs to this shop,,The full audit still reports this target. No matching standalone finding and direct scale measurement were established for this exact target.
+23,Dynamic Type font sizes are partially unsupported,"Lunch · November 4, 2026","15,19",The screen-size comparison verifies growth for this content. Real name/date truncation is covered separately by the AX5 rendered-line test.
+24,Dynamic Type font sizes are partially unsupported,Over cap,23,Also reported on the same named stock control. Its exact scale response was not independently quantified.
+25,Dynamic Type font sizes are partially unsupported,Whole checkout,,The full audit still reports this target. No matching standalone finding and direct scale measurement were established for this exact target.
+26,Dynamic Type font sizes are partially unsupported,Cost change,,The full audit still reports this target. No matching standalone finding and direct scale measurement were established for this exact target.
+27,Dynamic Type font sizes are partially unsupported,Review before applying,26,Also reported on the same named stock control. Its exact scale response was not independently quantified.
+28,Dynamic Type font sizes are partially unsupported,Protected portions,"10,25",The screen-size comparison verifies growth for this content. Real name/date truncation is covered separately by the AX5 rendered-line test.
+29,Dynamic Type font sizes are partially unsupported,Protected meal commitments,20,The screen-size comparison verifies growth for this content. Real name/date truncation is covered separately by the AX5 rendered-line test.
+30,Dynamic Type font sizes are partially unsupported,Check usable food separately; this review does not confirm meal coverage.,14,The screen-size comparison verifies growth for this content. Real name/date truncation is covered separately by the AX5 rendered-line test.
+31,Dynamic Type font sizes are partially unsupported,,,XCTest supplied no public target. Attribution remains open.
+32,Dynamic Type font sizes are partially unsupported,Expected total,21,The screen-size comparison verifies growth for this content. Real name/date truncation is covered separately by the AX5 rendered-line test.
+33,Text clipped,Protected meal commitments,28,The entire heading wraps at AX5 when centered on the screen. The stock sheet also flags this heading.
+34,Contrast failed,Review decision,,"The audit element screenshot contains the navigation bar (Cancel and Review request). The scrolled-off button glyphs are absent from this crop, so it cannot establish their rendered contrast."
+35,Contrast failed,Review before applying,,The audit element screenshot shows the section heading. In the reported screen rectangle the 1st/99th percentile sRGB luminance contrast measures 6.40:1. XCTest still reports a contrast failure.
+36,Potentially inaccessible text,,,XCTest supplied no public target. Attribution remains open.

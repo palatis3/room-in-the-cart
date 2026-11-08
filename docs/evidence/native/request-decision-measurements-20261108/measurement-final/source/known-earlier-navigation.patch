@@ -1,0 +1,38 @@
+--- a/ios/UITests/HouseholdRequestPackUITests.swift
++++ b/ios/UITests/HouseholdRequestPackUITests.swift
+@@ -235,6 +235,9 @@
+ 
+         let reviewQuery = app.buttons.matching(identifier: "household.decision.review")
+         let review = reviewQuery.firstMatch
++        // The review button precedes every money row already measured above.
++        // A lazy Form may omit that earlier row from the accessibility tree.
++        guard revealKnownEarlierMeasurementTarget(review) else { return }
+         centerForReading(review)
+         XCTAssertEqual(reviewQuery.count, 1)
+         XCTAssertEqual(review.label, "Review decision")
+@@ -260,6 +263,25 @@
+         XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 0")
+         XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 0")
+         capture("S24-measure-" + name + "-cancel-zero-writes")
++    }
++
++    private func revealKnownEarlierMeasurementTarget(_ target: XCUIElement) -> Bool {
++        // Measurement-only navigation: preserve the existing 24-drag budget,
++        // but search toward the known earlier row while its frame is absent.
++        for _ in 0..<24 {
++            if target.exists && target.isHittable { return true }
++            let area = scrollableArea()
++            let upward: Bool
++            if target.exists && !target.frame.isEmpty {
++                upward = target.frame.midY > area.midY
++            } else {
++                upward = false
++            }
++            scrollContent(upward: upward)
++        }
++        let actionable = target.exists && target.isHittable
++        XCTAssertTrue(actionable, "Missing known earlier measurement target: \(target.debugDescription)")
++        return actionable
+     }
+ 
+     private func captureRequestDecisionMeasurement(_ target: XCUIElement, owner: XCUIElement,

@@ -1,0 +1,148 @@
+{
+  "appTraitsObservation" : "Requested category only; actual app appearance\/contrast must be recorded by operator and checked against screenshots",
+  "cropHeightPixels" : 60,
+  "cropScope" : "exact amount child of exact combined row",
+  "cropWidthPixels" : 168,
+  "dragArea" : {
+    "height" : 630,
+    "width" : 354,
+    "x" : 24,
+    "y" : 144.00000000000003
+  },
+  "enabled" : true,
+  "hittable" : true,
+  "imageScale" : 3,
+  "interpretation" : "Raw crop\/glyph candidates only. No font-scaling or accessibility pass inferred; inspect screen\/crop and reconcile requested versus observed size.",
+  "key" : "cap",
+  "label" : "$38.00",
+  "launchArgument" : "UICTContentSizeCategoryL",
+  "osVersion" : "Version 26.2 (Build 23C54)",
+  "ownerFrame" : {
+    "height" : 20.33331298828125,
+    "width" : 338,
+    "x" : 32,
+    "y" : 596.33331298828125
+  },
+  "ownerIdentifier" : "",
+  "ownerLabel" : "Cap, $38.00",
+  "pixels" : {
+    "backgroundEstimate" : "median outer border linear luminance",
+    "backgroundLuminance" : 1,
+    "borderP01" : 1,
+    "borderP99" : 1,
+    "colorSpace" : "sRGB",
+    "cropLuminanceP01" : 0.098241716849145164,
+    "cropLuminanceP99" : 1,
+    "inkCandidates" : [
+      {
+        "absoluteLinearLuminanceDelta" : 0.10000000000000001,
+        "boundsInBitmapPixels" : {
+          "height" : 44,
+          "width" : 163,
+          "x" : 3,
+          "y" : 9
+        },
+        "pixelCount" : 2414,
+        "touchesCropEdge" : false
+      },
+      {
+        "absoluteLinearLuminanceDelta" : 0.20000000000000001,
+        "boundsInBitmapPixels" : {
+          "height" : 44,
+          "width" : 163,
+          "x" : 3,
+          "y" : 9
+        },
+        "pixelCount" : 2365,
+        "touchesCropEdge" : false
+      }
+    ],
+    "layout" : "32-bit big-endian RGBX",
+    "limits" : "Threshold masks can include borders\/shadows or omit low-contrast glyphs. Bounds use bitmap row order; no OCR\/font identification or contrast pass. Review crop before interpretation.",
+    "percentileContrastEstimate" : 7.0830264403137537
+  },
+  "pixelsPerPointX" : 3,
+  "pixelsPerPointY" : 2.9508196721311419,
+  "readingViewport" : {
+    "height" : 630,
+    "width" : 402,
+    "x" : 0,
+    "y" : 144.00000000000003
+  },
+  "referenceFonts" : [
+    {
+      "ascender" : 16.1865234375,
+      "capHeight" : 11.97802734375,
+      "descender" : -4.1005859375,
+      "fontName" : ".SFUI-Regular",
+      "lineHeight" : 20.287109375,
+      "pointSize" : 17,
+      "reference" : "body",
+      "textBounds" : {
+        "height" : 22,
+        "width" : 54.8515625,
+        "x" : 0,
+        "y" : 0
+      },
+      "xHeight" : 8.9482421875
+    },
+    {
+      "ascender" : 16.1865234375,
+      "capHeight" : 11.97802734375,
+      "descender" : -4.1005859375,
+      "fontName" : ".SFUI-Regular",
+      "lineHeight" : 20.287109375,
+      "pointSize" : 17,
+      "reference" : "body-size-monospaced-digits",
+      "textBounds" : {
+        "height" : 20.287109375,
+        "width" : 55.9970703125,
+        "x" : 0,
+        "y" : 0
+      },
+      "xHeight" : 8.9482421875
+    },
+    {
+      "ascender" : 11.42578125,
+      "capHeight" : 8.455078125,
+      "descender" : -2.89453125,
+      "fontName" : ".SFUI-Regular",
+      "lineHeight" : 14.3203125,
+      "pointSize" : 12,
+      "reference" : "caption1",
+      "textBounds" : {
+        "height" : 16,
+        "width" : 40.546875,
+        "x" : 0,
+        "y" : 0
+      },
+      "xHeight" : 6.31640625
+    },
+    {
+      "ascender" : 16.1865234375,
+      "capHeight" : 11.97802734375,
+      "descender" : -4.1005859375,
+      "fontName" : ".SFUI-Semibold",
+      "lineHeight" : 20.287109375,
+      "pointSize" : 17,
+      "reference" : "headline",
+      "textBounds" : {
+        "height" : 44,
+        "width" : 47.072218656539917,
+        "x" : 0,
+        "y" : 0
+      },
+      "xHeight" : 9.07275390625
+    }
+  ],
+  "referenceScope" : "Production body with monospacedDigit; reference metrics, not observed app font",
+  "requestedCategory" : "UICTContentSizeCategoryL",
+  "schema" : 1,
+  "size" : "large",
+  "targetFrame" : {
+    "height" : 20.333333333333371,
+    "width" : 56,
+    "x" : 314,
+    "y" : 596.33333333333337
+  }
+}

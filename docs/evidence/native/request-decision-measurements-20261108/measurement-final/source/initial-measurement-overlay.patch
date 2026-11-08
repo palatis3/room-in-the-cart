@@ -1,0 +1,202 @@
+--- a/ios/UITests/HouseholdRequestPackUITests.swift
++++ b/ios/UITests/HouseholdRequestPackUITests.swift
+@@ -191,6 +191,199 @@
+         XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 0")
+     }
+ 
++    // Diagnostic only: raw rendered evidence, not a font-scaling or audit pass.
++    func testMeasureRequestDecisionMoneyAndReviewLabelsSmall() throws {
++        try measureRequestDecision(category: .small, argument: "UICTContentSizeCategoryS", name: "small")
++    }
++    func testMeasureRequestDecisionMoneyAndReviewLabelsLarge() throws {
++        try measureRequestDecision(category: .large, argument: "UICTContentSizeCategoryL", name: "large")
++    }
++    func testMeasureRequestDecisionMoneyAndReviewLabelsAX5() throws {
++        try measureRequestDecision(category: .accessibilityExtraExtraExtraLarge,
++                                   argument: "UICTContentSizeCategoryAccessibilityXXXL", name: "ax5")
++    }
++
++    private func measureRequestDecision(category: UIContentSizeCategory, argument: String, name: String) throws {
++        openCerealReview(extraArguments: ["-UIPreferredContentSizeCategoryName", argument])
++        // The exact combined AX row parents are present in the original grouped
++        // audit (reports 3/4); never match a global amount or the input field.
++        let rows: [(key: String, title: String, value: String, identifier: String?)] = [
++            ("after", "Expected total", "$40.69", "household.decision.after-total"),
++            ("over", "Over cap", "$2.69", "household.decision.over-cap"),
++            ("before", "Before this decision", "$37.20", "household.decision.before-total"),
++            ("change", "Cost change", "$3.49", nil),
++            ("cap", "Cap", "$38.00", nil),
++        ]
++        for spec in rows {
++            let query: XCUIElementQuery
++            if let identifier = spec.identifier {
++                query = app.descendants(matching: .any).matching(identifier: identifier)
++            } else {
++                query = app.staticTexts.matching(NSPredicate(format: "label == %@", spec.title + ", " + spec.value))
++            }
++            let row = query.firstMatch
++            centerForReading(row)
++            XCTAssertEqual(query.count, 1, "Ambiguous money row: " + spec.key)
++            XCTAssertEqual(row.label, spec.title + ", " + spec.value)
++            let values = row.staticTexts.matching(NSPredicate(format: "label == %@", spec.value))
++            XCTAssertEqual(values.count, 1, "Missing unique descendant amount: " + spec.key)
++            let value = values.firstMatch
++            try captureRequestDecisionMeasurement(value, owner: row, key: spec.key, size: name,
++                category: category, launchArgument: argument, cropScope: "exact amount child of exact combined row",
++                moneyReference: true)
++        }
++
++        let reviewQuery = app.buttons.matching(identifier: "household.decision.review")
++        let review = reviewQuery.firstMatch
++        centerForReading(review)
++        XCTAssertEqual(reviewQuery.count, 1)
++        XCTAssertEqual(review.label, "Review decision")
++        XCTAssertTrue(review.isEnabled)
++        // Plain text button crop intentionally includes its padding. The raw ink
++        // algorithm reports bounds within that crop; it does not call it a font.
++        try captureRequestDecisionMeasurement(review, owner: review, key: "review-decision", size: name,
++            category: category, launchArgument: argument, cropScope: "whole plain text button including padding",
++            moneyReference: false)
++        let headingQuery = app.staticTexts.matching(NSPredicate(format: "label == %@", "Review before applying"))
++        let heading = headingQuery.firstMatch
++        centerForReading(heading)
++        XCTAssertEqual(headingQuery.count, 1)
++        try captureRequestDecisionMeasurement(heading, owner: heading, key: "review-heading", size: name,
++            category: category, launchArgument: argument, cropScope: "section heading static text including padding",
++            moneyReference: false)
++
++        // No apply, overage acceptance, repeated review, or other domain mutation.
++        tap(element("household.decision.cancel"))
++        let request = element("household.request.44444444-4444-4444-8444-444444444444")
++        XCTAssertTrue(request.waitForExistence(timeout: 5))
++        XCTAssertTrue(request.label.contains("Received, waiting for review"))
++        XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 0")
++        XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 0")
++        capture("S24-measure-" + name + "-cancel-zero-writes")
++    }
++
++    private func captureRequestDecisionMeasurement(_ target: XCUIElement, owner: XCUIElement,
++        key: String, size: String, category: UIContentSizeCategory, launchArgument: String,
++        cropScope: String, moneyReference: Bool) throws {
++        let dragArea = scrollableArea()
++        // Existing helper uses inset X for a safe drag, not the readable screen
++        // width. Full-width Form controls must fit the app horizontally and the
++        // same unobscured content interval vertically.
++        let viewport = CGRect(x: app.frame.minX, y: dragArea.minY,
++                              width: app.frame.width, height: dragArea.height)
++        for item in [owner, target] {
++            XCTAssertTrue(item.exists && item.isHittable, item.debugDescription)
++            XCTAssertFalse(item.frame.isEmpty)
++            XCTAssertTrue(viewport.contains(item.frame), "Clipped measurement: " + item.debugDescription)
++        }
++        XCTAssertFalse(app.keyboards.firstMatch.exists)
++        let frame = target.frame
++        let screenshot = target.screenshot()
++        let uiImage = screenshot.image
++        XCTAssertEqual(uiImage.imageOrientation, .up, "Pixel coordinates require an upright screenshot")
++        let image = try XCTUnwrap(uiImage.cgImage)
++        let prefix = "S24-measure-" + size + "-" + key
++        let crop = XCTAttachment(screenshot: screenshot)
++        crop.name = prefix + "-crop"; crop.lifetime = .keepAlways; add(crop)
++        capture(prefix + "-screen")
++        let hierarchy = XCTAttachment(string: "OWNER\n" + owner.debugDescription + "\nTARGET\n" + target.debugDescription)
++        hierarchy.name = prefix + "-ancestry"; hierarchy.lifetime = .keepAlways; add(hierarchy)
++        let traits = UITraitCollection(preferredContentSizeCategory: category)
++        let body = UIFont.preferredFont(forTextStyle: .body, compatibleWith: traits)
++        let references: [(String, UIFont)] = [
++            ("body", body),
++            ("body-size-monospaced-digits", UIFont.monospacedDigitSystemFont(ofSize: body.pointSize, weight: .regular)),
++            ("caption1", UIFont.preferredFont(forTextStyle: .caption1, compatibleWith: traits)),
++            ("headline", UIFont.preferredFont(forTextStyle: .headline, compatibleWith: traits)),
++        ]
++        let fontMetadata: [[String: Any]] = references.map { kind, font in
++            let bounds = (target.label as NSString).boundingRect(with: CGSize(width: frame.width, height: .greatestFiniteMagnitude),
++                options: [.usesLineFragmentOrigin, .usesFontLeading], attributes: [.font: font], context: nil)
++            return ["reference": kind, "fontName": font.fontName, "pointSize": font.pointSize,
++                    "lineHeight": font.lineHeight, "capHeight": font.capHeight, "xHeight": font.xHeight,
++                    "ascender": font.ascender, "descender": font.descender, "textBounds": measurementRect(bounds)]
++        }
++        let metadata: [String: Any] = [
++            "schema": 1, "size": size, "requestedCategory": category.rawValue,
++            "launchArgument": launchArgument, "key": key, "label": target.label,
++            "ownerLabel": owner.label, "ownerIdentifier": owner.identifier,
++            "ownerFrame": measurementRect(owner.frame), "targetFrame": measurementRect(frame),
++            "readingViewport": measurementRect(viewport), "dragArea": measurementRect(dragArea),
++            "enabled": target.isEnabled, "hittable": target.isHittable, "cropScope": cropScope,
++            "cropWidthPixels": image.width, "cropHeightPixels": image.height,
++            "pixelsPerPointX": Double(image.width) / Double(frame.width),
++            "pixelsPerPointY": Double(image.height) / Double(frame.height),
++            "imageScale": uiImage.scale, "osVersion": ProcessInfo.processInfo.operatingSystemVersionString,
++            "appTraitsObservation": "Requested category only; actual app appearance/contrast must be recorded by operator and checked against screenshots",
++            "referenceFonts": fontMetadata,
++            "referenceScope": moneyReference ? "Production body with monospacedDigit; reference metrics, not observed app font" :
++                "Framework button/section style not inferred; comparison references only, not observed app font",
++            "pixels": try measurementPixels(image),
++            "interpretation": "Raw crop/glyph candidates only. No font-scaling or accessibility pass inferred; inspect screen/crop and reconcile requested versus observed size."
++        ]
++        let data = try JSONSerialization.data(withJSONObject: metadata, options: [.sortedKeys, .prettyPrinted])
++        let attachment = XCTAttachment(string: try XCTUnwrap(String(data: data, encoding: .utf8)))
++        attachment.name = prefix + "-metrics.json"; attachment.lifetime = .keepAlways; add(attachment)
++    }
++
++    private func measurementRect(_ rect: CGRect) -> [String: Double] {
++        ["x": Double(rect.minX), "y": Double(rect.minY), "width": Double(rect.width), "height": Double(rect.height)]
++    }
++
++    private func measurementPixels(_ image: CGImage) throws -> [String: Any] {
++        let width = image.width, height = image.height
++        // Bounded individual crop, not an unbounded framebuffer/export allocation.
++        guard width > 0, height > 0, width <= 4096, height <= 4096, width * height <= 4_000_000 else {
++            throw NSError(domain: "S24Measurement", code: 1, userInfo: [NSLocalizedDescriptionKey: "Crop exceeds 4M pixel bound"])
++        }
++        let space = try XCTUnwrap(CGColorSpace(name: CGColorSpace.sRGB))
++        let bitmap = try XCTUnwrap(CGContext(data: nil, width: width, height: height, bitsPerComponent: 8,
++            bytesPerRow: width * 4, space: space,
++            bitmapInfo: CGBitmapInfo.byteOrder32Big.rawValue | CGImageAlphaInfo.noneSkipLast.rawValue))
++        bitmap.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
++        let bytes = try XCTUnwrap(bitmap.data).assumingMemoryBound(to: UInt8.self)
++        let linear = (0...255).map { byte -> Double in
++            let value = Double(byte) / 255
++            return value <= 0.04045 ? value / 12.92 : pow((value + 0.055) / 1.055, 2.4)
++        }
++        let luminance = (0..<(width * height)).map { pixel in
++            let index = pixel * 4
++            return 0.2126 * linear[Int(bytes[index])] + 0.7152 * linear[Int(bytes[index + 1])]
++                + 0.0722 * linear[Int(bytes[index + 2])]
++        }
++        var border: [Double] = []
++        for y in 0..<height {
++            for x in 0..<width where x == 0 || x == width - 1 || y == 0 || y == height - 1 {
++                border.append(luminance[y * width + x])
++            }
++        }
++        border.sort()
++        let background = border[border.count / 2]
++        let sorted = luminance.sorted(), trim = luminance.count / 100
++        let low = sorted[trim], high = sorted[sorted.count - 1 - trim]
++        let candidates: [[String: Any]] = [0.10, 0.20].map { threshold in
++            var minX = width, minY = height, maxX = -1, maxY = -1, count = 0
++            for y in 0..<height {
++                for x in 0..<width where abs(luminance[y * width + x] - background) >= threshold {
++                    minX = min(minX, x); minY = min(minY, y)
++                    maxX = max(maxX, x); maxY = max(maxY, y); count += 1
++                }
++            }
++            var bounds: Any = NSNull()
++            if count > 0 { bounds = measurementRect(CGRect(x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1)) }
++            return ["absoluteLinearLuminanceDelta": threshold, "pixelCount": count,
++                    "boundsInBitmapPixels": bounds,
++                    "touchesCropEdge": count > 0 && (minX == 0 || minY == 0 || maxX == width - 1 || maxY == height - 1)]
++        }
++        return ["colorSpace": "sRGB", "layout": "32-bit big-endian RGBX",
++                "backgroundEstimate": "median outer border linear luminance", "backgroundLuminance": background,
++                "borderP01": border[border.count / 100], "borderP99": border[border.count - 1 - border.count / 100],
++                "cropLuminanceP01": low, "cropLuminanceP99": high,
++                "percentileContrastEstimate": (high + 0.05) / (low + 0.05),
++                "inkCandidates": candidates,
++                "limits": "Threshold masks can include borders/shadows or omit low-contrast glyphs. Bounds use bitmap row order; no OCR/font identification or contrast pass. Review crop before interpretation."]
++    }
++
+     // Measure the ink and background of this visible, single-color text element.
+     // Ignore the outermost 1% of values so individual antialiasing pixels cannot pass it.
+     private func assertReadableContrast(_ text: XCUIElement) throws {

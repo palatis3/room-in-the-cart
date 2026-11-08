@@ -1,0 +1,803 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "00637A66-A6CD-4F32-BBBF-0DE6E265785E.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-ax5-cancel-zero-writes_0_922AD742-7A0B-40F8-9324-772710F9AD6E.png",
+        "timestamp" : 1794112316.237
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "A352E49A-84FD-43ED-92D4-2D6AB6CF8961.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-ax5-review-heading-metrics_0_6830E397-39DE-4E9E-AAF4-2D573885E1BA.json",
+        "timestamp" : 1794112312.524
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "269E915F-EAA4-45EA-A7FF-ABFB7258255D.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-ax5-review-heading-ancestry_0_05AD635B-EB57-4EDA-BB50-2EFA45BFED7C.txt",
+        "timestamp" : 1794112310.359
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "D5E67E83-5A8C-4EB7-B92B-6C8D045504CB.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-ax5-review-heading-screen_0_6F7568D2-F6A3-49F3-B796-D0EFB37562F9.png",
+        "timestamp" : 1794112307.592
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "9E79F1B1-E4D1-4E9B-AEEB-140E0B579791.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-ax5-review-heading-crop_0_6FEEF33A-43A4-4D86-BCF5-4513D23C18DA.png",
+        "timestamp" : 1794112307.364
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "9ADDF0FD-FCDB-4383-A7F2-633721DE9E5B.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-ax5-review-decision-metrics_0_CC17674A-EAFB-4C98-AF0F-8A9C3590365B.json",
+        "timestamp" : 1794112302.43
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "6DF41A94-A6D4-4D9B-839B-68338829093B.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-ax5-review-decision-ancestry_0_C56BA491-AE91-470A-91A0-DEC15369ADBD.txt",
+        "timestamp" : 1794112300.142
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "1588AB5B-282A-4BD4-A929-11CB9F2F2844.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-ax5-review-decision-screen_0_9CC16E63-F479-49DD-9BB3-CFE04485A932.png",
+        "timestamp" : 1794112298.258
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "8842E8D6-5F16-444E-BC49-8D5D88533BEA.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-ax5-review-decision-crop_0_8E5B119A-500D-49E8-99B2-607B33370BA8.png",
+        "timestamp" : 1794112298.028
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "AE0B0366-9BEA-4489-AA63-0E11C00E9DCF.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-ax5-cap-metrics_0_4E2245B8-301B-4057-9E83-9D484095DA23.json",
+        "timestamp" : 1794112278.411
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "106B1BDA-35A3-4AC3-BB05-445F4AFF2BDC.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-ax5-cap-ancestry_0_DE626320-3300-4D02-9B18-1D6D25DBD242.txt",
+        "timestamp" : 1794112276.764
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "9089DFF7-B3BD-4968-BF96-E449A8067F82.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-ax5-cap-screen_0_9B2CE7CF-091A-4B1A-A5F2-6580A0574EE3.png",
+        "timestamp" : 1794112274.207
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "02506B8C-325B-450A-A3D7-22004F0D6656.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-ax5-cap-crop_0_8B1077A4-8FD1-4747-81B3-F170B8FA1D94.png",
+        "timestamp" : 1794112273.982
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "B84B736A-7C12-45E8-A087-716774BDADA5.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-ax5-change-metrics_0_81026E7C-4B4C-4538-9141-0C0570E09C41.json",
+        "timestamp" : 1794112266.329
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "B4079660-9587-4C84-AE2B-3B451BA371DB.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-ax5-change-ancestry_0_30E5C31B-E112-4482-B9F8-5CB285EBDF31.txt",
+        "timestamp" : 1794112264.849
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "81ED0857-2633-4FB6-8169-34E99354B487.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-ax5-change-screen_0_A50802EB-350E-4317-BE6C-0DC686A93E00.png",
+        "timestamp" : 1794112261.997
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "CC3378D7-9788-4FC1-9B40-754ED38A0240.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-ax5-change-crop_0_E50B1DB2-EA21-4CA4-A009-3A63A628AC6F.png",
+        "timestamp" : 1794112261.772
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "E835E590-9C17-4150-B61B-DB8212E84A5C.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-ax5-before-metrics_0_47FC9F1B-69FF-4DE6-8E5A-57370D3F0D84.json",
+        "timestamp" : 1794112257.031
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "4948D284-C046-4EC1-AD61-1FFF81C943C2.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-ax5-before-ancestry_0_EA74B35B-C90D-42B0-AF93-1C5F2975A457.txt",
+        "timestamp" : 1794112254.636
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "E253F1E0-31B2-4886-93B3-80A72ABA87E6.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-ax5-before-screen_0_F001E2EA-95AE-404C-8629-33E18661D64A.png",
+        "timestamp" : 1794112250.393
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "47702D8C-E226-4BA4-8036-C4F02956E3E3.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-ax5-before-crop_0_56C6A2C9-D799-495D-A727-1249010F6C46.png",
+        "timestamp" : 1794112250.168
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "1E401619-EF08-46C3-B85A-A3963787756C.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-ax5-over-metrics_0_7767848F-D998-45BF-A7B5-48AD758C57CA.json",
+        "timestamp" : 1794112236.868
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "F6F805D0-FF6B-4592-BFA9-E8DA59840485.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-ax5-over-ancestry_0_C980AB9C-8E49-4D68-B107-FB4D3846A947.txt",
+        "timestamp" : 1794112234.434
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "A4F0B729-1780-4640-8EE3-FFC19B46E81D.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-ax5-over-screen_0_0F68BC10-72D4-40C4-88D7-7DAA98FE38CE.png",
+        "timestamp" : 1794112230.108
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "D2D37F03-DA05-4E78-A83C-5CA68A814561.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-ax5-over-crop_0_6AE4F792-F593-46BB-8CD1-F0510F404D5F.png",
+        "timestamp" : 1794112229.902
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "4AEAA6B4-6BD4-455F-87AF-BDD473D29C11.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-ax5-after-metrics_0_2290908E-1B13-4E65-8124-48C7738AC927.json",
+        "timestamp" : 1794112223.784
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "9BDC73FA-B0AD-4E2A-8F0A-72993FD38FAE.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-ax5-after-ancestry_0_AED3725F-8885-4028-8AE7-EBA533FF1F68.txt",
+        "timestamp" : 1794112221.373
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "C21BFBB3-FD43-4EE8-A18E-0CC45B9D8623.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-ax5-after-screen_0_A468DFC6-B658-4B44-89B4-93789F4E77FA.png",
+        "timestamp" : 1794112216.758
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "33FC58BD-ECDE-477C-ACA5-C9B2FE2362D2.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-ax5-after-crop_0_713C3751-3299-4424-A8CE-4C4ACF7201D6.png",
+        "timestamp" : 1794112216.53
+      }
+    ],
+    "testIdentifier" : "HouseholdRequestPackUITests/testMeasureRequestDecisionMoneyAndReviewLabelsAX5()",
+    "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/HouseholdRequestPackUITests/testMeasureRequestDecisionMoneyAndReviewLabelsAX5"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "B47F36D3-9C79-446E-880F-E07345212216.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-large-cancel-zero-writes_0_72723B1A-A3D5-4F8C-A671-B03EE6A0F5C3.png",
+        "timestamp" : 1794112454.059
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "28045E7D-D3D6-44F3-A94A-BE9C675748B0.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-large-review-heading-metrics_0_A5F02F6C-ED28-4AA3-A4AF-91DDA0D72DF9.json",
+        "timestamp" : 1794112450.13
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "368A298A-798C-4694-A33E-F32BEBF7DFA3.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-large-review-heading-ancestry_0_240F7EDB-A0E5-46A2-B8F2-9122B2666C07.txt",
+        "timestamp" : 1794112448.251
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "068A98E7-8FC8-4ABC-91CD-5B8F7DCD8057.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-large-review-heading-screen_0_450D28D3-93C2-4A94-9232-0421D6EA9549.png",
+        "timestamp" : 1794112445.538
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "D3DB691C-D0ED-4DFB-8747-36A993D059FA.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-large-review-heading-crop_0_C1FF6F85-9473-40C4-92A0-244AE56CB352.png",
+        "timestamp" : 1794112445.305
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "0F6D9829-EDE5-423E-BF1B-D96760A136B7.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-large-review-decision-metrics_0_B1BCCD15-BE61-4B9E-A398-CB2482EA3AEC.json",
+        "timestamp" : 1794112439.849
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "82456843-07F1-4AD4-988D-4D33D7680DB3.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-large-review-decision-ancestry_0_372D0B7F-44EA-44ED-A127-B1341C1639D1.txt",
+        "timestamp" : 1794112438.146
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "5008A570-FF4F-4A9F-8256-1716524FC352.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-large-review-decision-screen_0_DCCED764-BFEA-4D5F-8537-A14F827FCD00.png",
+        "timestamp" : 1794112436.138
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "915EBD8F-AC46-48F1-9E63-1B2E5AB1A6DB.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-large-review-decision-crop_0_DCBE7E0E-5FFC-49CB-A0F1-47CE2FB881BB.png",
+        "timestamp" : 1794112435.917
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "7F6A7179-52D4-40E7-A3B0-867D793CC342.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-large-cap-metrics_0_8DDD8F92-18D8-4003-BD21-5843CE967031.json",
+        "timestamp" : 1794112430.393
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "A8B7DAC5-EB98-4B9B-84D7-C5B0CC471E06.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-large-cap-ancestry_0_C5F908D1-94BF-4369-A034-59D005534C0E.txt",
+        "timestamp" : 1794112428.645
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "9C341EBB-E0BF-4C9A-B774-D88904C4ACE3.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-large-cap-screen_0_2131D927-D437-4253-A0EA-DC1D19C41EF2.png",
+        "timestamp" : 1794112425.324
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "E24850B7-68EC-4CC6-B193-56DA9BDAD9EA.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-large-cap-crop_0_F327F147-7F32-4450-830A-8C19ADF162B9.png",
+        "timestamp" : 1794112425.081
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "89F97CF5-40B8-4FF2-BABB-1C5593076ED9.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-large-change-metrics_0_BB4C08D7-6F86-4273-9265-5F2E3872EA8F.json",
+        "timestamp" : 1794112419.543
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "D906056B-F2DA-4A1B-A26B-8FD880F1EEBC.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-large-change-ancestry_0_D6AF30D8-2F06-4504-A0B9-A9765E2DDCA4.txt",
+        "timestamp" : 1794112417.794
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "3AF63466-4D50-4219-9CF9-37A78BEAE634.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-large-change-screen_0_82E5360F-1D5C-443C-ADF6-5CC8266ECA45.png",
+        "timestamp" : 1794112414.56
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "DEDC6B4E-169B-4F94-B5A0-BD230E4A9DDA.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-large-change-crop_0_7A8B99CC-C42B-4C80-BAFF-84C527CDD788.png",
+        "timestamp" : 1794112414.328
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "C06639E2-471C-40A0-9FC8-6783EC537DBB.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-large-before-metrics_0_54614C0F-FDB2-4C5D-9D92-A971CCC57C12.json",
+        "timestamp" : 1794112408.74
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "08BB12FB-0763-4BB9-AD3E-945AAC9ADD5A.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-large-before-ancestry_0_F64C9DCC-85A1-44E1-A607-AD6F97E1FC0E.txt",
+        "timestamp" : 1794112405.455
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "43D6208C-7F63-49F7-8FF4-D629846B9C16.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-large-before-screen_0_977F98A3-C03C-4BA2-8A5C-88AB37BB7257.png",
+        "timestamp" : 1794112399.521
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "3B54A243-03AD-478B-B1E7-4F975A3D09FC.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-large-before-crop_0_2E702525-A0ED-496F-BFD9-992FF3510722.png",
+        "timestamp" : 1794112399.292
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "12E877D9-BE96-4E28-A03F-3F060B37BAEA.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-large-over-metrics_0_97A22E59-4E98-42E1-ABE9-18DF9C6DA1D3.json",
+        "timestamp" : 1794112388.928
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "39D13139-92D8-41EF-93A4-2732DE62BF56.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-large-over-ancestry_0_12B7F554-1C21-41A8-B95E-12EA1F6427BD.txt",
+        "timestamp" : 1794112385.532
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "3649576B-322B-440A-AD46-93C971AD0A94.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-large-over-screen_0_238D99BC-245E-40FB-9AE4-BE170084EBA5.png",
+        "timestamp" : 1794112378.78
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "D6404208-59A0-4342-95CD-CE1CE4FD7776.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-large-over-crop_0_C3CABEB8-B541-4242-B3FF-17596C0B81F5.png",
+        "timestamp" : 1794112378.531
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "DE8E50D3-708C-4993-AB5B-B4EA1E51B616.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-large-after-metrics_0_48870524-1F19-412A-ABE2-8EC925E1B222.json",
+        "timestamp" : 1794112370.495
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "8D213330-391A-48D4-8E04-CED7620E23CF.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-large-after-ancestry_0_D267116D-AF23-45D0-B2C8-08F48FC2AEA2.txt",
+        "timestamp" : 1794112367.342
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "40065F46-C313-48A8-BB52-9C58F2411C0B.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-large-after-screen_0_B7F765D5-F1AE-4C93-BF53-FFB2D7128478.png",
+        "timestamp" : 1794112361.064
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "3012C6B7-66AC-4AAD-A6EA-297E4EAFD702.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-large-after-crop_0_15680B24-1F2C-4B53-B4B0-079192F9CF41.png",
+        "timestamp" : 1794112360.815
+      }
+    ],
+    "testIdentifier" : "HouseholdRequestPackUITests/testMeasureRequestDecisionMoneyAndReviewLabelsLarge()",
+    "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/HouseholdRequestPackUITests/testMeasureRequestDecisionMoneyAndReviewLabelsLarge"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "C245A844-CA48-43D1-A987-AD8C7B11DE35.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-small-cancel-zero-writes_0_477C4515-E078-44A2-80EF-D90509E43FFE.png",
+        "timestamp" : 1794112595.131
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "E2F1FA7A-D900-4F04-BA0E-9AB38126338C.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-small-review-heading-metrics_0_A0CB7FDB-77C8-4D39-8290-96F1746FBE98.json",
+        "timestamp" : 1794112591.309
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "48239EA7-3484-48C1-9EC1-EEE9C799A47C.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-small-review-heading-ancestry_0_37C7ACA3-489E-4517-9733-59B849FA48D6.txt",
+        "timestamp" : 1794112589.431
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "16D1D573-C5F8-4948-BCCA-802D91B62E17.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-small-review-heading-screen_0_BA8D8B0A-2B96-4DF3-8367-EE156F734FEB.png",
+        "timestamp" : 1794112586.576
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "08259782-BA95-4195-86A8-39A5FCAE6375.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-small-review-heading-crop_0_60198E0A-1AD0-4C6E-B4F7-783B1919B651.png",
+        "timestamp" : 1794112586.341
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "9413716E-29D2-405B-AC37-AFA4C2B8816E.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-small-review-decision-metrics_0_9E15D372-A587-4695-8A7D-F77E0C01483A.json",
+        "timestamp" : 1794112580.816
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "68B32F96-FC68-4F54-8225-E691B7F48FCE.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-small-review-decision-ancestry_0_E90A8561-031F-45D4-8532-34A794FA3317.txt",
+        "timestamp" : 1794112578.658
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "E82FD4B0-05BC-428E-A2D2-695788C9C856.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-small-review-decision-screen_0_710D2122-ED4E-414D-834F-2894B90E9846.png",
+        "timestamp" : 1794112576.489
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "0AF084B3-0131-4E7C-9844-6389F346828E.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-small-review-decision-crop_0_71FB7FE1-CC52-491C-B2C8-F58B8FDA56DD.png",
+        "timestamp" : 1794112576.237
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "AA1EC43F-0577-4697-9C51-41A67740B030.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-small-cap-metrics_0_2FC0FF48-C383-46DA-B4EB-0DECCF9F7236.json",
+        "timestamp" : 1794112570.198
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "9ECB6E23-7DAF-4C3A-9D7B-6F030E02559D.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-small-cap-ancestry_0_3B56B1CF-2739-4AE5-9611-C1E6EB58F693.txt",
+        "timestamp" : 1794112568.294
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "3FABA6C8-2CD1-43A9-992E-1DA61B848D2D.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-small-cap-screen_0_4230A125-F5C1-49C6-A4DC-EDD40F331C4C.png",
+        "timestamp" : 1794112564.715
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "451230D2-F645-43B7-A4E2-80F274D0AE98.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-small-cap-crop_0_93A1F16C-D1AD-453D-86CF-98F453915268.png",
+        "timestamp" : 1794112564.481
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "A8280D1C-D3EB-4E25-A350-D1C9D0BF7709.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-small-change-metrics_0_B47B39B9-6540-40BB-949A-6D71EE33FC87.json",
+        "timestamp" : 1794112558.552
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "DA255F43-02EC-4AA7-8C96-E152C466330D.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-small-change-ancestry_0_8E798B9C-CEB4-4E9E-8759-25AFF75C4A60.txt",
+        "timestamp" : 1794112556.692
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "459701E1-A725-47E7-9B14-9183AE053704.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-small-change-screen_0_3FA1BF3B-6E32-42A4-9B54-DB6920089129.png",
+        "timestamp" : 1794112552.929
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "75DD92B5-32B7-4D2C-A281-B87C169BC761.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-small-change-crop_0_43046236-78BA-4B97-AB35-21C851AE5D6A.png",
+        "timestamp" : 1794112552.683
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "D18C7D3C-3914-45CB-B259-E2435AA1EAC6.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-small-before-metrics_0_B9A6EAD1-4D52-4949-8D25-F329F72E070A.json",
+        "timestamp" : 1794112546.72
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "5A73BB36-0811-4393-8364-8236DE78ABA5.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-small-before-ancestry_0_1D02C8AC-91BB-43AA-A53C-9530E9EE9FF7.txt",
+        "timestamp" : 1794112543.342
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "203932DD-D180-48DA-AD54-ECAF71DE72CB.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-small-before-screen_0_FC2EF6C7-59A3-43D5-91F9-F5046BF3F7DF.png",
+        "timestamp" : 1794112537.001
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "8AE48017-80A7-443B-8C56-48C665EBC3C2.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-small-before-crop_0_28E740B4-6575-4AFD-8319-5A4E478FA492.png",
+        "timestamp" : 1794112536.745
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "1DB7394B-ECD2-4DB3-A418-8C53F337EDF8.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-small-over-metrics_0_C40AABE4-E3C8-4690-B0D5-5E6878E1CE3C.json",
+        "timestamp" : 1794112528.432
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "19391763-018B-4229-8515-A0CE70A3F3CB.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-small-over-ancestry_0_DD4FFDED-8A7F-4B17-B7EA-16129DBF6A27.txt",
+        "timestamp" : 1794112525.173
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "15CB6B8E-8825-4BED-B14B-BCB101249DFB.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-small-over-screen_0_BB45DF76-0013-4F40-8B76-49F4DE7054D1.png",
+        "timestamp" : 1794112518.865
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "A48FD624-8ACD-4ADF-81A4-E4608299757A.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-small-over-crop_0_11A4C3D1-BE30-4BEC-B8C5-B25B13626C9A.png",
+        "timestamp" : 1794112518.626
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "1183C0F3-50AF-4D6C-9ECF-A8B1EE0EAC59.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-small-after-metrics_0_B9D052E8-73A7-400D-AF21-300F3D8DDC82.json",
+        "timestamp" : 1794112510.417
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "2C317481-7EE8-4BF8-9F6D-592270F7554C.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-small-after-ancestry_0_F1629FB7-7D1B-458E-A9AF-42A143ED8413.txt",
+        "timestamp" : 1794112507.124
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "99483CE3-3193-485B-96F8-4FCEF0005022.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-small-after-screen_0_F2718C66-D00B-4F5D-9172-91F5E5EBDB4E.png",
+        "timestamp" : 1794112500.444
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4C7FAE04-D40B-4ADC-8F75-1366C09B1695",
+        "deviceName" : "RITC-Placed-Receipt-Nov07",
+        "exportedFileName" : "04D4F79E-51E9-4803-A114-51A6C61DE983.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-measure-small-after-crop_0_6750B707-3944-42CB-9818-CAED5CE9851B.png",
+        "timestamp" : 1794112499.914
+      }
+    ],
+    "testIdentifier" : "HouseholdRequestPackUITests/testMeasureRequestDecisionMoneyAndReviewLabelsSmall()",
+    "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/HouseholdRequestPackUITests/testMeasureRequestDecisionMoneyAndReviewLabelsSmall"
+  }
+]

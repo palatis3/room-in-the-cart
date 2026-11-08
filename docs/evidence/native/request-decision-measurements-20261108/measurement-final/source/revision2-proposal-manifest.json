@@ -1,0 +1,47 @@
+[
+  {
+    "path": "REVIEW.md",
+    "bytes": 5673,
+    "sha256": "02b0f0cabcdc424e7af7995a6ae34cc68af324db0ab843926b11dae1f33bd323"
+  },
+  {
+    "path": "baseline-HouseholdRequestPackUITests.swift",
+    "bytes": 37847,
+    "sha256": "6d85c240f7609e5274462af98fbf89024f00a5487d7034068091004910701fec"
+  },
+  {
+    "path": "candidate-HouseholdRequestPackUITests.swift",
+    "bytes": 38908,
+    "sha256": "7cee914c8599fb30616c9907dd8b051a758a1bb850a4c1ff8e79ee004eb0e4ab"
+  },
+  {
+    "path": "known-earlier-helper.swift.txt",
+    "bytes": 831,
+    "sha256": "85b45fe081f658face3105a2c6350c298d6a59be7d4b9bf1776560b48f20b34d"
+  },
+  {
+    "path": "measurement-r2.patch",
+    "bytes": 1847,
+    "sha256": "98ef5bde027c118ca8b5197183bd4c433ab079d9b468158a4eede898882cce3d"
+  },
+  {
+    "path": "patch-dry-run.txt",
+    "bytes": 62,
+    "sha256": "af167d544ec429a562bda455cddc9dc0a617f9460d0764d02b59712ebe5a41cf"
+  },
+  {
+    "path": "pins.json",
+    "bytes": 771895,
+    "sha256": "153ec4ac7239094cba4cf7e9c6843027391d827d8ca21b1fe76182d426181611"
+  },
+  {
+    "path": "preparation-checks.json",
+    "bytes": 395,
+    "sha256": "be32750fd8fc60dd79fc024aebc1bc1c46968487651382a320a8d74df72d65a7"
+  },
+  {
+    "path": "verify-proposal.py",
+    "bytes": 2142,
+    "sha256": "54b2e887e07f1b30e49ef145431568ba34abdd3dc86f5cb810a864b155e4af3b"
+  }
+]

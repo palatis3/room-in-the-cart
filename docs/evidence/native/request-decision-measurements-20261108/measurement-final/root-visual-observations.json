@@ -1,0 +1,110 @@
+{
+  "source": "Root review message, 2026-11-08, after strict terminal result",
+  "scope": "Reported visual observations on these captured targets only; not an accessibility audit or physical acceptance result.",
+  "reviewedCrops": [
+    {
+      "path": "crops/small-after.png",
+      "sha256": "a98c5ce1c44af89819a1ac1a1f63f39937405eef348315b6f840eab0be7ce086"
+    },
+    {
+      "path": "crops/small-over.png",
+      "sha256": "daa2a924fafc0b5b877219d86ee5355649ddb70abe3b2fc9b765a9e18632e3d3"
+    },
+    {
+      "path": "crops/small-before.png",
+      "sha256": "80a64c5156377c04823a0b2625859a266db047d5c0951a16ff5df91eced74352"
+    },
+    {
+      "path": "crops/small-change.png",
+      "sha256": "38b3558d5ca54e9e497d2d1d190b0c10ee2c765fe5d07208fa37cbf3940b1173"
+    },
+    {
+      "path": "crops/small-cap.png",
+      "sha256": "468b1bac9b9acb43bc3f7ec495d13d8745505309b9fd66f4809a0369bf82879d"
+    },
+    {
+      "path": "crops/small-review-decision.png",
+      "sha256": "cb04e8ec9c991bca1a2cd0e438544884e8c9e3ea7325a659405712cece40036e"
+    },
+    {
+      "path": "crops/small-review-heading.png",
+      "sha256": "b1a989ddefb436e38c020d671a222a348bb98b20a3c07e23737c63826c455704"
+    },
+    {
+      "path": "crops/large-after.png",
+      "sha256": "49cd24ac2d6351d0a7d0fc3eccebfc371709299f6968763a8d975d6563e7bbdf"
+    },
+    {
+      "path": "crops/large-over.png",
+      "sha256": "546cd9925a6e75047818abf707eca8382baa3719fa59d17890f48c3d1087fa83"
+    },
+    {
+      "path": "crops/large-before.png",
+      "sha256": "bc82a5166f0052181f5f748cf1b133fa8a06ba7d5a9843c9d0cea2900696eca3"
+    },
+    {
+      "path": "crops/large-change.png",
+      "sha256": "63ff7d4deb4bcd53f292eefd8f10e84b9bef3059ecf344734f06f237fb6e1b13"
+    },
+    {
+      "path": "crops/large-cap.png",
+      "sha256": "73ef4d79d068a18d5947415b38263bc24cbf08043c7f70fdc5cc906c0724ca87"
+    },
+    {
+      "path": "crops/large-review-decision.png",
+      "sha256": "1e684bf58c624abc9fba20a89c9eb600e4883715257ffd995b2042e5e0815987"
+    },
+    {
+      "path": "crops/large-review-heading.png",
+      "sha256": "584663c4c6229fe7f6696d2a9ec59a45e815ba15448ee2276c96ebaaa95df0bb"
+    },
+    {
+      "path": "crops/ax5-after.png",
+      "sha256": "f44da3605f3a03a11604a7177fe26a1551c91f648de5e09db9bb33399e48f393"
+    },
+    {
+      "path": "crops/ax5-over.png",
+      "sha256": "a6784106217cdf6ffbe3bc5f6b55bd67582836dbf9b2ef43e6fcb7e0e3827977"
+    },
+    {
+      "path": "crops/ax5-before.png",
+      "sha256": "24c1000038583a79de2a5acdb4d74b33c39eec66589107c65838f61758eddb1a"
+    },
+    {
+      "path": "crops/ax5-change.png",
+      "sha256": "39ee71cd992f30b51faac6c27a8625ea3adf9f5916b8f424de4715be94362c89"
+    },
+    {
+      "path": "crops/ax5-cap.png",
+      "sha256": "16abd232ff90a056d41fcd0d5095f480e02aa0d6fa88af75916c698ded2acede"
+    },
+    {
+      "path": "crops/ax5-review-decision.png",
+      "sha256": "7b6145053289ae7da4abf3ddd119be7a7be77b254e0f6f38259859f4f14b9121"
+    },
+    {
+      "path": "crops/ax5-review-heading.png",
+      "sha256": "15d7b6b9a5ebe08718bda3c2a63ad0f79deeed0ec60008f3992c9c89c837dfae"
+    }
+  ],
+  "reviewedFullScreens": [
+    {
+      "path": "screens/large-after.png",
+      "sha256": "d275db27705aaeb8af34128ccdc8e300e1ae2e8169d4411b97e8e76f4d1e4c6c"
+    },
+    {
+      "path": "screens/ax5-review-decision.png",
+      "sha256": "76e041d222473403c3b39a03ff9bfacdf052e30b31682bca8f3df25940598f1f"
+    },
+    {
+      "path": "screens/ax5-review-heading.png",
+      "sha256": "76e041d222473403c3b39a03ff9bfacdf052e30b31682bca8f3df25940598f1f"
+    }
+  ],
+  "observations": [
+    "Root reported text complete in all21 crops.",
+    "Root reported AX5 review button and heading fully wrap over two lines.",
+    "Root reported full AX5 screen contains both review targets and Large full screen shows all5 monetary values."
+  ],
+  "measurementCaution": "Button0.10 ink mask includes background curve. Use0.20 raw candidate bounds for review with decoration/threshold caveats; no automated font or contrast acceptance inferred."
+}

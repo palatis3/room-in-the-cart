@@ -1,0 +1,435 @@
+OWNER
+Attributes: StaticText, 0x11a4262a0, {{32.0, 617.0}, {202.7, 130.7}}, identifier: 'household.decision.over-cap', label: 'Over cap, $2.69'
+Element subtree:
+ →StaticText, 0x11a4262a0, {{32.0, 617.0}, {202.7, 130.7}}, identifier: 'household.decision.over-cap', label: 'Over cap, $2.69'
+    StaticText, 0x11a4263c0, {{32.0, 617.0}, {202.7, 63.3}}, label: 'Over cap'
+    StaticText, 0x11a4264e0, {{32.0, 684.3}, {141.3, 63.3}}, label: '$2.69'
+Path to element:
+ →Application, 0x1039ed1f0, pid: 19562, label: 'Room in the Cart'
+  ↳Window (Main), 0x118e2f1a0, {{0.0, 0.0}, {402.0, 874.0}}
+   ↳Other, 0x11a421e00, {{0.0, 0.0}, {402.0, 874.0}}
+    ↳Other, 0x11a422040, {{0.0, 62.0}, {402.0, 812.0}}
+     ↳Other, 0x11a422160, {{0.0, 62.0}, {402.0, 812.0}}
+      ↳Other, 0x11a422280, {{0.0, 62.0}, {402.0, 812.0}}
+       ↳Other, 0x11a4223a0, {{0.0, 62.0}, {402.0, 812.0}}
+        ↳Other, 0x11a4224c0, {{0.0, 62.0}, {402.0, 812.0}}
+         ↳Other, 0x11a4225e0, {{0.0, 62.0}, {402.0, 812.0}}
+          ↳Other, 0x11a422ca0, {{0.0, 62.0}, {402.0, 812.0}}
+           ↳Other, 0x11a422dc0, {{0.0, 62.0}, {402.0, 812.0}}
+            ↳Other, 0x11a422ee0, {{0.0, 62.0}, {402.0, 812.0}}
+             ↳Other, 0x11a423000, {{0.0, 62.0}, {402.0, 812.0}}
+              ↳CollectionView, 0x11a423120, {{0.0, 62.0}, {402.0, 812.0}}
+               ↳Cell, 0x11a425760, {{16.0, 330.0}, {370.0, 2446.0}}
+                ↳Other, 0x11a425ac0, {{16.0, 330.0}, {370.0, 2446.0}}
+                 ↳Other, 0x11a425be0, {{16.0, 330.0}, {370.0, 2446.0}}
+                  ↳Other, 0x11a425d00, {{16.0, 330.0}, {370.0, 2446.0}}
+                   ↳StaticText, 0x11a4262a0, {{32.0, 617.0}, {202.7, 130.7}}, identifier: 'household.decision.over-cap', label: 'Over cap, $2.69'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x11a64c150, pid: 19562, label: 'Room in the Cart'
+  }
+  ↪︎Find: Descendants matching type Any
+    Output: {
+      Window (Main), 0x11a455070, {{0.0, 0.0}, {402.0, 874.0}}
+      Window, 0x11a64b3d0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11a457de0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11a6473b0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11a64b4f0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x119160cd0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11a6474d0, {{-402.0, -874.0}, {1206.0, 2622.0}}
+      Other, 0x11a6475f0, {{0.0, 62.0}, {402.0, 812.0}}
+      Other, 0x11a64b610, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x119161870, {{-402.0, -874.0}, {1206.0, 2622.0}}
+      Other, 0x119161990, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11a647710, {{0.0, 62.0}, {402.0, 812.0}}
+      Other, 0x118e3a460, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11a647830, {{0.0, 62.0}, {402.0, 812.0}}
+      StaticText, 0x119161630, {{31.2, 62.0}, {339.7, 125.3}}, identifier: 'fixture.s24.posts', label: 'Fixture applied decisions: 0'
+      StaticText, 0x119161750, {{46.8, 186.3}, {308.3, 125.3}}, identifier: 'fixture.s24.lines', label: 'Fixture saved lines: 0'
+      Button, 0x118f22b80, {{23.7, 310.7}, {354.7, 125.3}}, identifier: 'fixture.s24.end-access', label: 'Fixture end shopper access'
+      StaticText, 0x118f22ca0, {{2.5, 436.3}, {397.0, 48.0}}, identifier: 'fixture.s24.preview-diagnostics', label: 'Fixture previews: 1; busy: false; selected: 44444444-4444-4444-8444-444444444444; choice: add; price: 3.49; preview: 55555555-5555-4555-8555-555555555555; notice: none'
+      Other, 0x119160df0, {{0.0, 509.0}, {402.0, 365.0}}
+      Other, 0x11a647950, {{0.0, 62.0}, {402.0, 812.0}}
+      NavigationBar, 0x119160f10, {{0.0, 519.0}, {402.0, 54.0}}, identifier: 'S24 request decision'
+      Other, 0x119161bd0, {{0.0, 509.0}, {402.0, 365.0}}
+      Other, 0x11a647170, {{0.0, 509.0}, {402.0, 365.0}}
+      Other, 0x11a647a70, {{0.0, 62.0}, {402.0, 812.0}}
+      StaticText, 0x119161ab0, {{99.7, 528.3}, {202.3, 25.3}}, label: 'S24 request decision'
+      Other, 0x119161cf0, {{0.0, 509.0}, {402.0, 365.0}}
+      Other, 0x11a647290, {{0.0, 509.0}, {402.0, 365.0}}
+      Other, 0x11a647b90, {{0.0, 62.0}, {402.0, 812.0}}
+      Other, 0x119161e10, {{0.0, 509.0}, {402.0, 365.0}}
+      NavigationBar, 0x11a647cb0, {{0.0, 78.0}, {402.0, 54.0}}, identifier: 'Review request'
+      Other, 0x11a648250, {{0.0, 62.0}, {402.0, 812.0}}
+      Other, 0x11a64b190, {{0.0, 62.0}, {402.0, 812.0}}
+      Other, 0x119161f30, {{0.0, 509.0}, {402.0, 365.0}}
+      Other, 0x11a647dd0, {{20.0, 82.0}, {87.7, 36.0}}, identifier: 'household.decision.cancel', label: 'Cancel'
+      StaticText, 0x11a648130, {{127.3, 87.3}, {147.0, 25.3}}, label: 'Review request'
+      Other, 0x11a648370, {{0.0, 62.0}, {402.0, 812.0}}
+      Other, 0x11a64b2b0, {{0.0, 62.0}, {402.0, 812.0}}
+      CollectionView, 0x119162050, {{0.0, 509.0}, {402.0, 365.0}}
+      Other, 0x11a647ef0, {{20.0, 82.0}, {87.7, 36.0}}
+      Other, 0x11a648490, {{0.0, 62.0}, {402.0, 812.0}}
+      Other, 0x119162170, {{-16.0, -761.7}, {434.0, 1306.3}}
+      Cell, 0x119162290, {{16.0, -31.7}, {370.0, 155.3}}
+      Cell, 0x11a455db0, {{16.0, 123.7}, {370.0, 403.3}}
+      Other, 0x11a556650, {{0.0, 509.0}, {402.0, 365.0}}
+      Other, 0x11a556770, {{0.0, 509.0}, {402.0, 365.0}}
+      Other, 0x11a557300, {{-16.0, 544.7}, {434.0, 1486.3}}
+      Cell, 0x11a557420, {{16.0, 544.7}, {370.0, 145.3}}
+      Cell, 0x11a557ae0, {{16.0, 690.0}, {370.0, 591.0}}
+      Other, 0x11a646cc0, {{369.0, 563.0}, {30.0, 249.0}}, label: 'Vertical scroll bar, 5 pages', value: 57%
+      Button, 0x11a648010, {{20.0, 82.0}, {87.7, 36.0}}, identifier: 'household.decision.cancel', label: 'Cancel'
+      Other, 0x11a6485b0, {{0.0, 62.0}, {402.0, 812.0}}
+      Other, 0x1191623b0, {{16.0, -31.7}, {370.0, 155.3}}
+      Other, 0x1191625f0, {{16.0, -31.7}, {370.0, 155.3}}
+      Other, 0x11a4567c0, {{16.0, 123.7}, {370.0, 403.3}}
+      Other, 0x11a458020, {{16.0, 123.7}, {370.0, 403.3}}
+      Other, 0x11a556890, {{0.0, 509.0}, {402.0, 118.8}}
+      Other, 0x11a557540, {{16.0, 544.7}, {370.0, 145.3}}
+      Other, 0x11a557660, {{16.0, 544.7}, {370.0, 145.3}}
+      Other, 0x11a557c00, {{16.0, 690.0}, {370.0, 591.0}}
+      Other, 0x11a458140, {{16.0, 690.0}, {370.0, 591.0}}
+      Other, 0x11a646de0, {{396.0, 802.0}, {3.0, 7.0}}
+      CollectionView, 0x11a6486d0, {{0.0, 62.0}, {402.0, 812.0}}
+      Other, 0x1191624d0, {{16.0, -31.7}, {370.0, 155.3}}
+      Other, 0x119162710, {{16.0, -31.7}, {370.0, 155.3}}
+      Other, 0x11a457f00, {{16.0, 123.7}, {370.0, 403.3}}
+      Other, 0x11a5562f0, {{16.0, 123.7}, {370.0, 403.3}}
+      Other, 0x11a5569b0, {{0.0, 509.0}, {402.0, 44.7}}
+      Other, 0x11a556ad0, {{0.0, 509.0}, {402.0, 118.8}}
+      Other, 0x11a556d10, {{0.0, 509.0}, {402.0, 118.8}}
+      Other, 0x11a556f50, {{0.0, 509.0}, {402.0, 118.8}}
+      Other, 0x11a557780, {{16.0, 544.7}, {370.0, 145.3}}
+      Other, 0x11a557d20, {{16.0, 690.0}, {370.0, 591.0}}
+      Other, 0x11a458260, {{16.0, 690.0}, {370.0, 591.0}}
+      Cell, 0x11a6487f0, {{16.0, -1918.3}, {370.0, 93.3}}
+      Other, 0x11a648fd0, {{-16.0, 29.3}, {434.0, 3059.3}}
+      Cell, 0x11a6490f0, {{16.0, 29.3}, {370.0, 145.3}}
+      Other, 0x11a6497b0, {{0.0, 62.0}, {402.0, 812.0}}
+      Other, 0x11a6498d0, {{0.0, 62.0}, {402.0, 812.0}}
+      Cell, 0x11a64a530, {{16.0, 174.7}, {370.0, 155.3}}
+      Cell, 0x11a64ad10, {{16.0, 330.0}, {370.0, 2446.0}}
+      Other, 0x11a45ae40, {{32.0, 329.0}, {338.0, 1.0}}
+      Other, 0x11a45af60, {{369.0, 132.0}, {30.0, 680.0}}, label: 'Vertical scroll bar, 9 pages', value: 44%
+      Other, 0x119162830, {{16.0, -31.7}, {370.0, 155.3}}
+      Other, 0x11a556410, {{16.0, 123.7}, {370.0, 403.3}}
+      Other, 0x11a556bf0, {{0.0, 509.0}, {402.0, 118.8}}
+      Other, 0x11a556e30, {{0.0, 509.0}, {402.0, 118.8}}
+      Other, 0x11a557070, {{0.0, 509.0}, {402.0, 118.8}}
+      Other, 0x11a557190, {{0.0, 509.0}, {402.0, 118.8}}
+      Other, 0x11a5578a0, {{16.0, 544.7}, {370.0, 145.3}}
+      Other, 0x11a458380, {{16.0, 690.0}, {370.0, 591.0}}
+      Other, 0x11a648910, {{16.0, -1918.3}, {370.0, 93.3}}
+      Other, 0x11a648b50, {{16.0, -1918.3}, {370.0, 93.3}}
+      Other, 0x11a649210, {{16.0, 29.3}, {370.0, 145.3}}
+      Other, 0x11a649330, {{16.0, 29.3}, {370.0, 145.3}}
+      Other, 0x11a6499f0, {{0.0, 62.0}, {402.0, 124.8}}
+      Other, 0x11a64a650, {{16.0, 174.7}, {370.0, 155.3}}
+      Other, 0x11a64a890, {{16.0, 174.7}, {370.0, 155.3}}
+      Other, 0x11a64ae30, {{16.0, 330.0}, {370.0, 2446.0}}
+      Other, 0x11a64b070, {{16.0, 330.0}, {370.0, 2446.0}}
+      Other, 0x11a45b080, {{396.0, 393.7}, {3.0, 85.7}}
+      Button, 0x119162950, {{16.0, -31.7}, {370.0, 155.3}}, label: 'Refresh requests'
+      StaticText, 0x11a556530, {{16.0, 123.7}, {370.0, 403.3}}, label: 'Each request keeps its own outcome. Linking a line does not add another pack.'
+      StaticText, 0x11a5579c0, {{16.0, 544.7}, {370.0, 145.3}}, label: 'Requests for this shop'
+      Button, 0x11a4584a0, {{16.0, 690.0}, {370.0, 591.0}}, identifier: 'household.request.44444444-4444-4444-8444-444444444444', label: 'Brown rice cereal, Sam, 1 box, Received, waiting for review, Nov 2, 2026 at 7:00 PM'
+      Other, 0x11a648a30, {{16.0, -1918.3}, {370.0, 93.3}}
+      Other, 0x11a648c70, {{16.0, -1918.3}, {370.0, 93.3}}
+      Other, 0x11a649450, {{16.0, 29.3}, {370.0, 145.3}}
+      Image, 0x11a649b10, {{-120.0, -58.0}, {642.0, 240.0}}, identifier: 'AdditionalDimmingOverlay'
+      Other, 0x11a649c30, {{0.0, 62.0}, {402.0, 60.0}}
+      Other, 0x11a649d50, {{0.0, 62.0}, {402.0, 124.8}}
+      Other, 0x11a649f90, {{0.0, 62.0}, {402.0, 124.8}}
+      Other, 0x11a64a1d0, {{0.0, 62.0}, {402.0, 124.8}}
+      Other, 0x11a64a770, {{16.0, 174.7}, {370.0, 155.3}}
+      Other, 0x11a64a9b0, {{16.0, 174.7}, {370.0, 155.3}}
+      Other, 0x11a64af50, {{16.0, 330.0}, {370.0, 2446.0}}
+      Other, 0x119162a70, {{16.0, 330.0}, {370.0, 2446.0}}
+      StaticText, 0x11a646190, {{32.0, 705.0}, {243.7, 125.3}}, label: 'Brown rice cereal'
+      StaticText, 0x11a646840, {{32.0, 836.3}, {94.3, 58.7}}, label: 'Sam'
+      StaticText, 0x11a646960, {{32.0, 901.0}, {116.7, 63.3}}, label: '1 box'
+      StaticText, 0x11a646a80, {{32.0, 970.3}, {242.3, 187.3}}, label: 'Received, waiting for review'
+      StaticText, 0x11a646ba0, {{32.0, 1163.7}, {280.3, 102.3}}, label: 'Nov 2, 2026 at 7:00 PM'
+      Other, 0x11a648d90, {{16.0, -1918.3}, {370.0, 93.3}}
+      Other, 0x11a649570, {{16.0, 29.3}, {370.0, 145.3}}
+      Other, 0x11a649e70, {{0.0, 62.0}, {402.0, 124.8}}
+      Other, 0x11a64a0b0, {{0.0, 62.0}, {402.0, 124.8}}
+      Other, 0x11a64a2f0, {{0.0, 62.0}, {402.0, 124.8}}
+      Other, 0x11a64a410, {{0.0, 62.0}, {402.0, 124.8}}
+      Other, 0x11a64aad0, {{16.0, 174.7}, {370.0, 155.3}}
+      Other, 0x119162b90, {{16.0, 330.0}, {370.0, 2446.0}}
+      StaticText, 0x11a648eb0, {{16.0, -1918.3}, {370.0, 93.3}}, label: '1 box'
+      StaticText, 0x11a649690, {{16.0, 29.3}, {370.0, 145.3}}, label: 'Review before applying'
+      StaticText, 0x11a64abf0, {{16.0, 174.7}, {370.0, 155.3}}, label: 'Add packs to this shop'
+      StaticText, 0x119162cb0, {{32.0, 345.0}, {228.3, 125.3}}, label: 'After this decision'
+      StaticText, 0x11a4585c0, {{32.0, 478.3}, {320.0, 130.7}}, identifier: 'household.decision.after-total', label: 'Expected total, $40.69'
+      StaticText, 0x11a458920, {{32.0, 617.0}, {202.7, 130.7}}, identifier: 'household.decision.over-cap', label: 'Over cap, $2.69'
+      StaticText, 0x11a458c80, {{32.0, 755.7}, {208.0, 192.7}}, label: 'Scope, Whole checkout'
+      StaticText, 0x11a458fe0, {{32.0, 956.3}, {248.7, 192.7}}, identifier: 'household.decision.before-total', label: 'Before this decision, $37.20'
+      StaticText, 0x11a459340, {{32.0, 1157.0}, {285.3, 130.7}}, label: 'Cost change, $3.49'
+      StaticText, 0x11a4596a0, {{32.0, 1295.7}, {173.7, 130.7}}, label: 'Cap, $38.00'
+      StaticText, 0x11a459a00, {{32.0, 1434.3}, {241.7, 192.7}}, label: 'Cap scope, Whole checkout'
+      Image, 0x11a459d60, {{51.3, 1645.3}, {29.3, 41.3}}, identifier: 'lock', label: 'Lock'
+      StaticText, 0x11a459e80, {{51.3, 1635.0}, {307.7, 187.3}}, label: 'Protected meal commitments'
+      StaticText, 0x11a459fa0, {{32.0, 1830.3}, {338.0, 329.7}}, identifier: 'household.decision.meal.88888888-8888-4888-8888-888888888888', label: 'Sam’s wrap lunch, Lunch · November 4, 2026, Protected portions, 1'
+      StaticText, 0x11a45a660, {{32.0, 2168.0}, {338.0, 329.7}}, identifier: 'household.decision.meal.99999999-9999-4999-8999-999999999999', label: 'Mia’s wrap lunch, Lunch · November 5, 2026, Protected portions, 1'
+      StaticText, 0x11a45ad20, {{32.0, 2505.7}, {314.7, 255.3}}, label: 'Check usable food separately; this review does not confirm meal coverage.'
+      StaticText, 0x11a4586e0, {{32.0, 478.3}, {320.0, 63.3}}, label: 'Expected total'
+      StaticText, 0x11a458800, {{32.0, 545.7}, {173.7, 63.3}}, label: '$40.69'
+      StaticText, 0x11a458a40, {{32.0, 617.0}, {202.7, 63.3}}, label: 'Over cap'
+      StaticText, 0x11a458b60, {{32.0, 684.3}, {141.3, 63.3}}, label: '$2.69'
+      StaticText, 0x11a458da0, {{32.0, 755.7}, {144.0, 63.3}}, label: 'Scope'
+      StaticText, 0x11a458ec0, {{32.0, 823.0}, {208.0, 125.3}}, label: 'Whole checkout'
+      StaticText, 0x11a459100, {{32.0, 956.3}, {248.7, 125.3}}, label: 'Before this decision'
+      StaticText, 0x11a459220, {{32.0, 1085.7}, {173.7, 63.3}}, label: '$37.20'
+      StaticText, 0x11a459460, {{32.0, 1157.0}, {285.3, 63.3}}, label: 'Cost change'
+      StaticText, 0x11a459580, {{32.0, 1224.3}, {141.3, 63.3}}, label: '$3.49'
+      StaticText, 0x11a4597c0, {{32.0, 1295.7}, {93.3, 63.3}}, label: 'Cap'
+      StaticText, 0x11a4598e0, {{32.0, 1363.0}, {173.7, 63.3}}, label: '$38.00'
+      StaticText, 0x11a459b20, {{32.0, 1434.3}, {241.7, 63.3}}, label: 'Cap scope'
+      StaticText, 0x11a459c40, {{32.0, 1501.7}, {208.0, 125.3}}, label: 'Whole checkout'
+      StaticText, 0x11a45a0c0, {{32.0, 1830.3}, {260.7, 116.7}}, label: 'Sam’s wrap lunch'
+      StaticText, 0x11a45a1e0, {{32.0, 1949.0}, {338.0, 102.3}}, label: 'Lunch · November 4, 2026'
+      StaticText, 0x11a45a300, {{32.0, 2053.3}, {337.3, 106.7}}, label: 'Protected portions, 1'
+      StaticText, 0x11a45a780, {{32.0, 2168.0}, {242.0, 116.7}}, label: 'Mia’s wrap lunch'
+      StaticText, 0x11a45a8a0, {{32.0, 2286.7}, {338.0, 102.3}}, label: 'Lunch · November 5, 2026'
+      StaticText, 0x11a45a9c0, {{32.0, 2391.0}, {337.3, 106.7}}, label: 'Protected portions, 1'
+      StaticText, 0x11a45a420, {{32.0, 2053.3}, {337.3, 51.3}}, label: 'Protected portions'
+      StaticText, 0x11a45a540, {{32.0, 2108.7}, {26.7, 51.3}}, label: '1'
+      StaticText, 0x11a45aae0, {{32.0, 2391.0}, {337.3, 51.3}}, label: 'Protected portions'
+      StaticText, 0x11a45ac00, {{32.0, 2446.3}, {26.7, 51.3}}, label: '1'
+    }
+    ↪︎Find: Elements matching predicate '"household.decision.over-cap" IN identifiers'
+      Output: {
+        StaticText, 0x118e2bf50, {{32.0, 617.0}, {202.7, 130.7}}, identifier: 'household.decision.over-cap', label: 'Over cap, $2.69'
+      }
+      ↪︎Find: First Match
+        Output: {
+          StaticText, 0x119158ea0, {{32.0, 617.0}, {202.7, 130.7}}, identifier: 'household.decision.over-cap', label: 'Over cap, $2.69'
+        }
+
+TARGET
+Attributes: StaticText, 0x11a92bed0, {{32.0, 684.3}, {141.3, 63.3}}, label: '$2.69'
+Element subtree:
+ →StaticText, 0x11a92bed0, {{32.0, 684.3}, {141.3, 63.3}}, label: '$2.69'
+Path to element:
+ →Application, 0x11a72c010, pid: 19562, label: 'Room in the Cart'
+  ↳Window (Main), 0x11a707e50, {{0.0, 0.0}, {402.0, 874.0}}
+   ↳Other, 0x11a334930, {{0.0, 0.0}, {402.0, 874.0}}
+    ↳Other, 0x11a334b70, {{0.0, 62.0}, {402.0, 812.0}}
+     ↳Other, 0x11a334c90, {{0.0, 62.0}, {402.0, 812.0}}
+      ↳Other, 0x11a334db0, {{0.0, 62.0}, {402.0, 812.0}}
+       ↳Other, 0x11a334ed0, {{0.0, 62.0}, {402.0, 812.0}}
+        ↳Other, 0x11a334ff0, {{0.0, 62.0}, {402.0, 812.0}}
+         ↳Other, 0x11a335110, {{0.0, 62.0}, {402.0, 812.0}}
+          ↳Other, 0x11a3357d0, {{0.0, 62.0}, {402.0, 812.0}}
+           ↳Other, 0x11aa1f3c0, {{0.0, 62.0}, {402.0, 812.0}}
+            ↳Other, 0x11aa210d0, {{0.0, 62.0}, {402.0, 812.0}}
+             ↳Other, 0x11aa10c10, {{0.0, 62.0}, {402.0, 812.0}}
+              ↳CollectionView, 0x11aa0c130, {{0.0, 62.0}, {402.0, 812.0}}
+               ↳Cell, 0x11a92b390, {{16.0, 330.0}, {370.0, 2446.0}}
+                ↳Other, 0x11a831f70, {{16.0, 330.0}, {370.0, 2446.0}}
+                 ↳Other, 0x118f55550, {{16.0, 330.0}, {370.0, 2446.0}}
+                  ↳Other, 0x11a92b6f0, {{16.0, 330.0}, {370.0, 2446.0}}
+                   ↳StaticText, 0x11a92bc90, {{32.0, 617.0}, {202.7, 130.7}}, identifier: 'household.decision.over-cap', label: 'Over cap, $2.69'
+                    ↳StaticText, 0x11a92bed0, {{32.0, 684.3}, {141.3, 63.3}}, label: '$2.69'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x11ab0ab90, pid: 19562, label: 'Room in the Cart'
+  }
+  ↪︎Find: Descendants matching type Any
+    Output: {
+      Window (Main), 0x1038dabf0, {{0.0, 0.0}, {402.0, 874.0}}
+      Window, 0x11a30e180, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x1038dafb0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11ab08e50, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11a30e2a0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x1038db0d0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11ab08f70, {{-402.0, -874.0}, {1206.0, 2622.0}}
+      Other, 0x11ab09090, {{0.0, 62.0}, {402.0, 812.0}}
+      Other, 0x11a30e3c0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x1038dad10, {{-402.0, -874.0}, {1206.0, 2622.0}}
+      Other, 0x1038dae30, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11a6464f0, {{0.0, 62.0}, {402.0, 812.0}}
+      Other, 0x1038db1f0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x11a646610, {{0.0, 62.0}, {402.0, 812.0}}
+      StaticText, 0x1038db310, {{31.2, 62.0}, {339.7, 125.3}}, identifier: 'fixture.s24.posts', label: 'Fixture applied decisions: 0'
+      StaticText, 0x1038db430, {{46.8, 186.3}, {308.3, 125.3}}, identifier: 'fixture.s24.lines', label: 'Fixture saved lines: 0'
+      Button, 0x1038db550, {{23.7, 310.7}, {354.7, 125.3}}, identifier: 'fixture.s24.end-access', label: 'Fixture end shopper access'
+      StaticText, 0x1038db670, {{2.5, 436.3}, {397.0, 48.0}}, identifier: 'fixture.s24.preview-diagnostics', label: 'Fixture previews: 1; busy: false; selected: 44444444-4444-4444-8444-444444444444; choice: add; price: 3.49; preview: 55555555-5555-4555-8555-555555555555; notice: none'
+      Other, 0x1038db790, {{0.0, 509.0}, {402.0, 365.0}}
+      Other, 0x11a646730, {{0.0, 62.0}, {402.0, 812.0}}
+      NavigationBar, 0x1038db8b0, {{0.0, 519.0}, {402.0, 54.0}}, identifier: 'S24 request decision'
+      Other, 0x11a30bed0, {{0.0, 509.0}, {402.0, 365.0}}
+      Other, 0x11ab08c10, {{0.0, 509.0}, {402.0, 365.0}}
+      Other, 0x11a646850, {{0.0, 62.0}, {402.0, 812.0}}
+      StaticText, 0x11a30c860, {{99.7, 528.3}, {202.3, 25.3}}, label: 'S24 request decision'
+      Other, 0x11a30d520, {{0.0, 509.0}, {402.0, 365.0}}
+      Other, 0x11ab08d30, {{0.0, 509.0}, {402.0, 365.0}}
+      Other, 0x11a646970, {{0.0, 62.0}, {402.0, 812.0}}
+      Other, 0x11a30d640, {{0.0, 509.0}, {402.0, 365.0}}
+      NavigationBar, 0x11a646a90, {{0.0, 78.0}, {402.0, 54.0}}, identifier: 'Review request'
+      Other, 0x11a647030, {{0.0, 62.0}, {402.0, 812.0}}
+      Other, 0x11a30df40, {{0.0, 62.0}, {402.0, 812.0}}
+      Other, 0x11a30d760, {{0.0, 509.0}, {402.0, 365.0}}
+      Other, 0x11a646bb0, {{20.0, 82.0}, {87.7, 36.0}}, identifier: 'household.decision.cancel', label: 'Cancel'
+      StaticText, 0x11a646f10, {{127.3, 87.3}, {147.0, 25.3}}, label: 'Review request'
+      Other, 0x11a647150, {{0.0, 62.0}, {402.0, 812.0}}
+      Other, 0x11a30e060, {{0.0, 62.0}, {402.0, 812.0}}
+      CollectionView, 0x11a30d880, {{0.0, 509.0}, {402.0, 365.0}}
+      Other, 0x11a646cd0, {{20.0, 82.0}, {87.7, 36.0}}
+      Other, 0x11a647270, {{0.0, 62.0}, {402.0, 812.0}}
+      Other, 0x11a30d9a0, {{-16.0, -761.7}, {434.0, 1306.3}}
+      Cell, 0x11a30dac0, {{16.0, -31.7}, {370.0, 155.3}}
+      Cell, 0x11a455490, {{16.0, 123.7}, {370.0, 403.3}}
+      Other, 0x1038dbd30, {{0.0, 509.0}, {402.0, 365.0}}
+      Other, 0x1038dbe50, {{0.0, 509.0}, {402.0, 365.0}}
+      Other, 0x1038dc990, {{-16.0, 544.7}, {434.0, 1486.3}}
+      Cell, 0x11ab08430, {{16.0, 544.7}, {370.0, 145.3}}
+      Cell, 0x118f239f0, {{16.0, 690.0}, {370.0, 591.0}}
+      Other, 0x11ab08790, {{369.0, 563.0}, {30.0, 249.0}}, label: 'Vertical scroll bar, 5 pages', value: 57%
+      Button, 0x11a646df0, {{20.0, 82.0}, {87.7, 36.0}}, identifier: 'household.decision.cancel', label: 'Cancel'
+      Other, 0x11a647390, {{0.0, 62.0}, {402.0, 812.0}}
+      Other, 0x11a30dbe0, {{16.0, -31.7}, {370.0, 155.3}}
+      Other, 0x11a30de20, {{16.0, -31.7}, {370.0, 155.3}}
+      Other, 0x11a455070, {{16.0, 123.7}, {370.0, 403.3}}
+      Other, 0x11a4567c0, {{16.0, 123.7}, {370.0, 403.3}}
+      Other, 0x1038dbf70, {{0.0, 509.0}, {402.0, 118.8}}
+      Other, 0x11ab08550, {{16.0, 544.7}, {370.0, 145.3}}
+      Other, 0x11ab08670, {{16.0, 544.7}, {370.0, 145.3}}
+      Other, 0x118f23b10, {{16.0, 690.0}, {370.0, 591.0}}
+      Other, 0x118f23d50, {{16.0, 690.0}, {370.0, 591.0}}
+      Other, 0x11ab088b0, {{396.0, 802.0}, {3.0, 7.0}}
+      CollectionView, 0x11a6474b0, {{0.0, 62.0}, {402.0, 812.0}}
+      Other, 0x11a30dd00, {{16.0, -31.7}, {370.0, 155.3}}
+      Other, 0x11a5562f0, {{16.0, -31.7}, {370.0, 155.3}}
+      Other, 0x11a455db0, {{16.0, 123.7}, {370.0, 403.3}}
+      Other, 0x11a457f60, {{16.0, 123.7}, {370.0, 403.3}}
+      Other, 0x1038dc090, {{0.0, 509.0}, {402.0, 44.7}}
+      Other, 0x1038dc1b0, {{0.0, 509.0}, {402.0, 118.8}}
+      Other, 0x1038dc3f0, {{0.0, 509.0}, {402.0, 118.8}}
+      Other, 0x1038dc630, {{0.0, 509.0}, {402.0, 118.8}}
+      Other, 0x11a63dd40, {{16.0, 544.7}, {370.0, 145.3}}
+      Other, 0x118f23c30, {{16.0, 690.0}, {370.0, 591.0}}
+      Other, 0x118f23e70, {{16.0, 690.0}, {370.0, 591.0}}
+      Cell, 0x11a6475d0, {{16.0, -1918.3}, {370.0, 93.3}}
+      Other, 0x11a647db0, {{-16.0, 29.3}, {434.0, 3059.3}}
+      Cell, 0x11a647ed0, {{16.0, 29.3}, {370.0, 145.3}}
+      Other, 0x118f24890, {{0.0, 62.0}, {402.0, 812.0}}
+      Other, 0x118f249b0, {{0.0, 62.0}, {402.0, 812.0}}
+      Cell, 0x103ae2a90, {{16.0, 174.7}, {370.0, 155.3}}
+      Cell, 0x11ab092d0, {{16.0, 330.0}, {370.0, 2446.0}}
+      Other, 0x11ab0a710, {{32.0, 329.0}, {338.0, 1.0}}
+      Other, 0x11ab0a830, {{369.0, 132.0}, {30.0, 680.0}}, label: 'Vertical scroll bar, 9 pages', value: 44%
+      Other, 0x11a556410, {{16.0, -31.7}, {370.0, 155.3}}
+      Other, 0x1038dbaf0, {{16.0, 123.7}, {370.0, 403.3}}
+      Other, 0x1038dc2d0, {{0.0, 509.0}, {402.0, 118.8}}
+      Other, 0x1038dc510, {{0.0, 509.0}, {402.0, 118.8}}
+      Other, 0x1038dc750, {{0.0, 509.0}, {402.0, 118.8}}
+      Other, 0x1038dc870, {{0.0, 509.0}, {402.0, 118.8}}
+      Other, 0x11a641cd0, {{16.0, 544.7}, {370.0, 145.3}}
+      Other, 0x118f23f90, {{16.0, 690.0}, {370.0, 591.0}}
+      Other, 0x11a6476f0, {{16.0, -1918.3}, {370.0, 93.3}}
+      Other, 0x11a647930, {{16.0, -1918.3}, {370.0, 93.3}}
+      Other, 0x11a647ff0, {{16.0, 29.3}, {370.0, 145.3}}
+      Other, 0x118f24410, {{16.0, 29.3}, {370.0, 145.3}}
+      Other, 0x118f24ad0, {{0.0, 62.0}, {402.0, 124.8}}
+      Other, 0x103ae2bb0, {{16.0, 174.7}, {370.0, 155.3}}
+      Other, 0x103ae2df0, {{16.0, 174.7}, {370.0, 155.3}}
+      Other, 0x11ab093f0, {{16.0, 330.0}, {370.0, 2446.0}}
+      Other, 0x11ab09630, {{16.0, 330.0}, {370.0, 2446.0}}
+      Other, 0x11ab0a950, {{396.0, 393.7}, {3.0, 85.7}}
+      Button, 0x1038db9d0, {{16.0, -31.7}, {370.0, 155.3}}, label: 'Refresh requests'
+      StaticText, 0x1038dbc10, {{16.0, 123.7}, {370.0, 403.3}}, label: 'Each request keeps its own outcome. Linking a line does not add another pack.'
+      StaticText, 0x118f6a7c0, {{16.0, 544.7}, {370.0, 145.3}}, label: 'Requests for this shop'
+      Button, 0x118f240b0, {{16.0, 690.0}, {370.0, 591.0}}, identifier: 'household.request.44444444-4444-4444-8444-444444444444', label: 'Brown rice cereal, Sam, 1 box, Received, waiting for review, Nov 2, 2026 at 7:00 PM'
+      Other, 0x11a647810, {{16.0, -1918.3}, {370.0, 93.3}}
+      Other, 0x11a647a50, {{16.0, -1918.3}, {370.0, 93.3}}
+      Other, 0x118f24530, {{16.0, 29.3}, {370.0, 145.3}}
+      Image, 0x118f24bf0, {{-120.0, -58.0}, {642.0, 240.0}}, identifier: 'AdditionalDimmingOverlay'
+      Other, 0x118f24d10, {{0.0, 62.0}, {402.0, 60.0}}
+      Other, 0x118f24e30, {{0.0, 62.0}, {402.0, 124.8}}
+      Other, 0x11a556650, {{0.0, 62.0}, {402.0, 124.8}}
+      Other, 0x103ae2490, {{0.0, 62.0}, {402.0, 124.8}}
+      Other, 0x103ae2cd0, {{16.0, 174.7}, {370.0, 155.3}}
+      Other, 0x103ae2f10, {{16.0, 174.7}, {370.0, 155.3}}
+      Other, 0x11ab09510, {{16.0, 330.0}, {370.0, 2446.0}}
+      Other, 0x11ab09750, {{16.0, 330.0}, {370.0, 2446.0}}
+      StaticText, 0x118f241d0, {{32.0, 705.0}, {243.7, 125.3}}, label: 'Brown rice cereal'
+      StaticText, 0x118f242f0, {{32.0, 836.3}, {94.3, 58.7}}, label: 'Sam'
+      StaticText, 0x11a646190, {{32.0, 901.0}, {116.7, 63.3}}, label: '1 box'
+      StaticText, 0x11a6462b0, {{32.0, 970.3}, {242.3, 187.3}}, label: 'Received, waiting for review'
+      StaticText, 0x11a6463d0, {{32.0, 1163.7}, {280.3, 102.3}}, label: 'Nov 2, 2026 at 7:00 PM'
+      Other, 0x11a647b70, {{16.0, -1918.3}, {370.0, 93.3}}
+      Other, 0x118f24650, {{16.0, 29.3}, {370.0, 145.3}}
+      Other, 0x11a556530, {{0.0, 62.0}, {402.0, 124.8}}
+      Other, 0x103ae1fa0, {{0.0, 62.0}, {402.0, 124.8}}
+      Other, 0x103ae25b0, {{0.0, 62.0}, {402.0, 124.8}}
+      Other, 0x103ae26d0, {{0.0, 62.0}, {402.0, 124.8}}
+      Other, 0x11a648110, {{16.0, 174.7}, {370.0, 155.3}}
+      Other, 0x11ab09870, {{16.0, 330.0}, {370.0, 2446.0}}
+      StaticText, 0x11a647c90, {{16.0, -1918.3}, {370.0, 93.3}}, label: '1 box'
+      StaticText, 0x118f24770, {{16.0, 29.3}, {370.0, 145.3}}, label: 'Review before applying'
+      StaticText, 0x11ab091b0, {{16.0, 174.7}, {370.0, 155.3}}, label: 'Add packs to this shop'
+      StaticText, 0x11ab09990, {{32.0, 345.0}, {228.3, 125.3}}, label: 'After this decision'
+      StaticText, 0x11a458080, {{32.0, 478.3}, {320.0, 130.7}}, identifier: 'household.decision.after-total', label: 'Expected total, $40.69'
+      StaticText, 0x11ab09ab0, {{32.0, 617.0}, {202.7, 130.7}}, identifier: 'household.decision.over-cap', label: 'Over cap, $2.69'
+      StaticText, 0x11a4583e0, {{32.0, 755.7}, {208.0, 192.7}}, label: 'Scope, Whole checkout'
+      StaticText, 0x11a458740, {{32.0, 956.3}, {248.7, 192.7}}, identifier: 'household.decision.before-total', label: 'Before this decision, $37.20'
+      StaticText, 0x11a458aa0, {{32.0, 1157.0}, {285.3, 130.7}}, label: 'Cost change, $3.49'
+      StaticText, 0x1039f06e0, {{32.0, 1295.7}, {173.7, 130.7}}, label: 'Cap, $38.00'
+      StaticText, 0x1039ee940, {{32.0, 1434.3}, {241.7, 192.7}}, label: 'Cap scope, Whole checkout'
+      Image, 0x118e80d60, {{51.3, 1645.3}, {29.3, 41.3}}, identifier: 'lock', label: 'Lock'
+      StaticText, 0x118e80e80, {{51.3, 1635.0}, {307.7, 187.3}}, label: 'Protected meal commitments'
+      StaticText, 0x118e39c00, {{32.0, 1830.3}, {338.0, 329.7}}, identifier: 'household.decision.meal.88888888-8888-4888-8888-888888888888', label: 'Sam’s wrap lunch, Lunch · November 4, 2026, Protected portions, 1'
+      StaticText, 0x11ab09f30, {{32.0, 2168.0}, {338.0, 329.7}}, identifier: 'household.decision.meal.99999999-9999-4999-8999-999999999999', label: 'Mia’s wrap lunch, Lunch · November 5, 2026, Protected portions, 1'
+      StaticText, 0x11ab0a5f0, {{32.0, 2505.7}, {314.7, 255.3}}, label: 'Check usable food separately; this review does not confirm meal coverage.'
+      StaticText, 0x11a4581a0, {{32.0, 478.3}, {320.0, 63.3}}, label: 'Expected total'
+      StaticText, 0x11a4582c0, {{32.0, 545.7}, {173.7, 63.3}}, label: '$40.69'
+      StaticText, 0x11ab09bd0, {{32.0, 617.0}, {202.7, 63.3}}, label: 'Over cap'
+      StaticText, 0x11ab09cf0, {{32.0, 684.3}, {141.3, 63.3}}, label: '$2.69'
+      StaticText, 0x11a458500, {{32.0, 755.7}, {144.0, 63.3}}, label: 'Scope'
+      StaticText, 0x11a458620, {{32.0, 823.0}, {208.0, 125.3}}, label: 'Whole checkout'
+      StaticText, 0x11a458860, {{32.0, 956.3}, {248.7, 125.3}}, label: 'Before this decision'
+      StaticText, 0x11a458980, {{32.0, 1085.7}, {173.7, 63.3}}, label: '$37.20'
+      StaticText, 0x11a458bc0, {{32.0, 1157.0}, {285.3, 63.3}}, label: 'Cost change'
+      StaticText, 0x11a458ce0, {{32.0, 1224.3}, {141.3, 63.3}}, label: '$3.49'
+      StaticText, 0x118e30390, {{32.0, 1295.7}, {93.3, 63.3}}, label: 'Cap'
+      StaticText, 0x118e39250, {{32.0, 1363.0}, {173.7, 63.3}}, label: '$38.00'
+      StaticText, 0x118e2d150, {{32.0, 1434.3}, {241.7, 63.3}}, label: 'Cap scope'
+      StaticText, 0x118e36f80, {{32.0, 1501.7}, {208.0, 125.3}}, label: 'Whole checkout'
+      StaticText, 0x118e39d20, {{32.0, 1830.3}, {260.7, 116.7}}, label: 'Sam’s wrap lunch'
+      StaticText, 0x11a556770, {{32.0, 1949.0}, {338.0, 102.3}}, label: 'Lunch · November 4, 2026'
+      StaticText, 0x11a556890, {{32.0, 2053.3}, {337.3, 106.7}}, label: 'Protected portions, 1'
+      StaticText, 0x11ab0a050, {{32.0, 2168.0}, {242.0, 116.7}}, label: 'Mia’s wrap lunch'
+      StaticText, 0x11ab0a170, {{32.0, 2286.7}, {338.0, 102.3}}, label: 'Lunch · November 5, 2026'
+      StaticText, 0x11ab0a290, {{32.0, 2391.0}, {337.3, 106.7}}, label: 'Protected portions, 1'
+      StaticText, 0x11a5569b0, {{32.0, 2053.3}, {337.3, 51.3}}, label: 'Protected portions'
+      StaticText, 0x11ab09e10, {{32.0, 2108.7}, {26.7, 51.3}}, label: '1'
+      StaticText, 0x11ab0a3b0, {{32.0, 2391.0}, {337.3, 51.3}}, label: 'Protected portions'
+      StaticText, 0x11ab0a4d0, {{32.0, 2446.3}, {26.7, 51.3}}, label: '1'
+    }
+    ↪︎Find: Elements matching predicate '"household.decision.over-cap" IN identifiers'
+      Output: {
+        StaticText, 0x11a9790c0, {{32.0, 617.0}, {202.7, 130.7}}, identifier: 'household.decision.over-cap', label: 'Over cap, $2.69'
+      }
+      ↪︎Find: First Match
+        Output: {
+          StaticText, 0x11a87cb40, {{32.0, 617.0}, {202.7, 130.7}}, identifier: 'household.decision.over-cap', label: 'Over cap, $2.69'
+        }
+        ↪︎Find: Descendants matching type StaticText
+          Output: {
+            StaticText, 0x11a86c5e0, {{32.0, 617.0}, {202.7, 63.3}}, label: 'Over cap'
+            StaticText, 0x11a86c700, {{32.0, 684.3}, {141.3, 63.3}}, label: '$2.69'
+          }
+          ↪︎Find: Elements matching predicate 'label == "$2.69"'
+            Output: {
+              StaticText, 0x11a865d30, {{32.0, 684.3}, {141.3, 63.3}}, label: '$2.69'
+            }
+            ↪︎Find: First Match
+              Output: {
+                StaticText, 0x11a853c80, {{32.0, 684.3}, {141.3, 63.3}}, label: '$2.69'
+              }
