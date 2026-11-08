@@ -42,6 +42,11 @@
     "rangedImportQuantityAddition": {
       "added": 1,
       "basis": "CoreDomainTests.ShoppingLedgerTests/testRangedImportsKeepUncertainAmountsOutOfSavedSupply verifies that numeric and bilingual spoken ranges retain their source and remain unresolved through import."
+    },
+    "sharedConfirmedOrderAddition": {
+      "sourceCommit": "bc2acda",
+      "added": 4,
+      "basis": "Four compiled HouseholdClientTests selectors cover amendment receipt scope, chain identity, revoked capability/wrong-shop reads and independent retailer evidence. Original three wire-fixture skips remain unchanged. Local full-package verification is retained in docs/evidence/native/package-inventory-20261108/."
     }
   },
   "packages": {
@@ -276,7 +281,11 @@
     ],
     "HouseholdClient": [
       "HouseholdClientTests.HouseholdClientTests/testAllDeviceSignOutRequestsGlobalScope",
+      "HouseholdClientTests.HouseholdClientTests/testAmendmentReceiptMustMatchExactOperationPlacementEpochAndRevision",
       "HouseholdClientTests.HouseholdClientTests/testCarryUsesBothReviewedShopsAndRejectsSubstitutedPagesOrReceipts",
+      "HouseholdClientTests.HouseholdClientTests/testConfirmedOrderChainRejectsRetiredIdentitiesWrongHeadsAndChangedNames",
+      "HouseholdClientTests.HouseholdClientTests/testConfirmedOrderReadRechecksShopperCapabilityAndResponseScope",
+      "HouseholdClientTests.HouseholdClientTests/testConfirmedOrderReviewKeepsOriginalAndRequiresChangedIndependentEvidence",
       "HouseholdClientTests.HouseholdClientTests/testContributorCannotFetchShopperPayloadDespiteAdvertisedCapabilities",
       "HouseholdClientTests.HouseholdClientTests/testCookCopyCommandsBindSealedFactsAndRejectMismatchedReceipts",
       "HouseholdClientTests.HouseholdClientTests/testCookCopyHistoryAndBaselineRejectDuplicatesWrongMealRecipientAndAbsentHead",
