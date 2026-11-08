@@ -2,6 +2,7 @@
 """Require complete XCTest execution and verify recorded runtime warnings."""
 import argparse
 from collections import Counter, defaultdict
+import html
 from itertools import chain, tee
 import json
 import os
@@ -17,6 +18,10 @@ XCTEST_CASE_ERROR = re.compile(rf".+:\d+(?::\d+)?: error: -\[{XCTEST_CASE_ID}\] 
 XCTEST_CASE_PASSED = re.compile(r"passed \([0-9]+(?:\.[0-9]+)? seconds\)\.")
 XCTEST_RESULT_BANNER = re.compile(r"\*\* TEST (?:EXECUTE )?(SUCCEEDED|FAILED) \*\*")
 XCTEST_RESTART = "Restarting after unexpected exit, crash, or test timeout;"
+XCTEST_ANIMATION_IDLE = re.compile(
+    r"[ \t]*(?:t[ \t]*=[ \t]*(?P<elapsed>[0-9]+(?:\.[0-9]+)?)s[ \t]+)?"
+    r"App animations complete notification not received, will attempt to continue\."
+)
 XCTEST_SPLIT_PROCESS_PREFIX = re.compile(
     r"[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{6}[+-][0-9]{4} "
     r"(?P<process>[A-Za-z]+)(?P<record>Test Case .+)"
@@ -40,24 +45,46 @@ def recover_interleaved_case(line, following_line):
     return line
 
 
-def execution_log_failures(lines, expected):
-    """Verify the serial XCTest lifecycle, which the result bundle may collapse."""
+def inspect_execution_log(lines, expected):
+    """Verify lifecycle and separately summarize observed animation-idle messages."""
     events = defaultdict(list)
     failures = []
     banners = []
+    idle = {"lineCount": 0, "testStarts": 0, "restartLines": [], "groups": []}
+    idle_groups = {}
+    current_case = None
+    runner_segment = 1
     current_lines, following_lines = tee(lines)
     next(following_lines, None)
     for number, (raw_line, following_line) in enumerate(zip(current_lines, chain(following_lines, [""])), 1):
         line = raw_line.rstrip("\r\n")
+        idle["lineCount"] = number
         # SQLite can report an unsafe live-file deletion outside XCTest's
         # runtime-warning export, even when every assertion passes.
         if "BUG IN CLIENT OF libsqlite3.dylib:" in line:
             failures.append(f"SQLite reported an API misuse diagnostic at log line {number}.")
         if line.startswith(XCTEST_RESTART):
             failures.append(f"XCTest restarted its runner at log line {number}.")
+            current_case = None
+            runner_segment += 1
+            idle["restartLines"].append(number)
         banner = XCTEST_RESULT_BANNER.fullmatch(line)
         if banner:
             banners.append(banner[1])
+            current_case = None
+        animation = XCTEST_ANIMATION_IDLE.fullmatch(line)
+        if animation:
+            key = (runner_segment, current_case)
+            if key not in idle_groups:
+                idle_groups[key] = {
+                    "runnerSegment": runner_segment,
+                    "selector": current_case[0] if current_case else None,
+                    "caseStartLine": current_case[1] if current_case else None,
+                    "count": 0, "firstLine": number,
+                    "firstElapsedSeconds": animation["elapsed"],
+                }
+                idle["groups"].append(idle_groups[key])
+            idle_groups[key]["count"] += 1
         error = XCTEST_CASE_ERROR.match(line)
         if error:
             selector = "/".join(error.group("target", "suite", "method"))
@@ -68,17 +95,23 @@ def execution_log_failures(lines, expected):
         case = XCTEST_CASE_LINE.fullmatch(line)
         if case is None or banners:
             failures.append(f"Unrecognized or out-of-order XCTest case record at log line {number}.")
+            current_case = None
             continue
         selector = "/".join(case.group("target", "suite", "method"))
         event = case["event"]
         if event == "started.":
             events[selector].append("start")
+            current_case = (selector, number)
+            idle["testStarts"] += 1
         elif XCTEST_CASE_PASSED.fullmatch(event):
             events[selector].append("pass")
+            current_case = None
         elif event.startswith("exceeded execution time allowance "):
             events[selector].append("timeout")
+            current_case = None
         else:
             events[selector].append("non-passing or unrecognized completion")
+            current_case = None
 
     missing = set(expected) - events.keys()
     unexpected = events.keys() - set(expected)
@@ -89,7 +122,37 @@ def execution_log_failures(lines, expected):
             failures.append(f"XCTest log requires one start then one pass for {selector}; found {lifecycle}.")
     if banners != ["SUCCEEDED"]:
         failures.append(f"XCTest log requires one successful result banner; found {banners}.")
-    return failures
+    return failures, idle
+
+
+def execution_log_failures(lines, expected):
+    """Verify the serial XCTest lifecycle, which the result bundle may collapse."""
+    return inspect_execution_log(lines, expected)[0]
+
+
+def markdown_cell(value):
+    return html.escape(str(value)).replace("|", "&#124;").replace("`", "&#96;").replace("\r", "&#13;").replace("\n", "&#10;")
+
+
+def animation_idle_report(idle):
+    if idle is None:
+        return ["Animation-idle diagnostics unavailable: no readable execution log; coverage is unknown."]
+    groups = idle["groups"]
+    report = [f"Animation-idle diagnostics: {sum(row['count'] for row in groups)} observed messages in "
+              f"{idle['lineCount']} log lines ({idle['testStarts']} case starts, "
+              f"{len(idle['restartLines'])} runner restart boundaries). "
+              "Diagnostic only; native results and runtime-warning checks are unchanged."]
+    if not groups:
+        report.append("No matching messages observed in the supplied log; this does not establish complete log coverage or absence of idle delays.")
+        return report
+    report.extend(["First elapsed is the message's XCTest timestamp, not the wait duration; unknown means the message had no timestamp.", "",
+                   "| Runner segment | Test (start line) | Messages | First elapsed (s) | First log line |",
+                   "|---|---|---|---|---|"])
+    for row in groups:
+        label = f"{row['selector']} (line {row['caseStartLine']})" if row['selector'] else "Unattributed"
+        report.append(f"| {row['runnerSegment']} | {markdown_cell(label)} | {row['count']} | "
+                      f"{row['firstElapsedSeconds'] or 'unknown'} | {row['firstLine']} |")
+    return report
 
 
 def test_cases(nodes):
@@ -448,17 +511,19 @@ def main():
         failures.append("Every selected test must individually report Passed")
     report = [f"Executed {len(actual)} of {len(expected)} selected tests.", "", "| Test | Result | Seconds |", "|---|---|---|"]
     for identifier, node in sorted(cases, key=lambda item: item[1].get("durationInSeconds", 0), reverse=True):
-        report.append(f"| {identifier} | {node.get('result', 'Unknown')} | {node.get('durationInSeconds', 0):.2f} |")
+        report.append(f"| {markdown_cell(identifier)} | {markdown_cell(node.get('result', 'Unknown'))} | {node.get('durationInSeconds', 0):.2f} |")
+    idle = None
     if args.test_log is not None:
         try:
             with args.test_log.open(encoding="utf-8") as log:
-                log_failures = execution_log_failures(log, expected)
+                log_failures, idle = inspect_execution_log(log, expected)
         except (OSError, UnicodeError) as error:
             log_failures = [f"XCTest execution log is unavailable. {error}"]
         if log_failures:
             failures.extend(log_failures)
         else:
             report.append("The XCTest log confirms one start and one passing completion per selected test.")
+    report.extend(["", *animation_idle_report(idle)])
     append_runtime_warning_report(args, summary, nodes, cases, report, failures)
     report.extend(failures)
     output = "\n".join(report) + "\n"

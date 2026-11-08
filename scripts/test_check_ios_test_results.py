@@ -10,7 +10,7 @@ import unittest
 
 from check_ios_test_results import (
     INTERNAL_ACTIVITY, MULTIPLE_WARNINGS, OBSERVED_DEVICE, OBSERVED_MENU_WARNINGS, OBSERVED_WARNING,
-    execution_log_failures,
+    animation_idle_report, execution_log_failures, inspect_execution_log, markdown_cell,
     inspect_runtime_warnings, test_cases,
 )
 
@@ -18,7 +18,7 @@ SCRIPT = Path(__file__).with_name('check_ios_test_results.py')
 
 
 class ExecutionInventoryTests(unittest.TestCase):
-    def check_case(self, identifiers, *, selected=None, skipped=0, result='Passed', expected_failures=0, case_result='Passed', log=None):
+    def check_case(self, identifiers, *, selected=None, skipped=0, result='Passed', expected_failures=0, case_result='Passed', log=None, output=False):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             (root / 'selection.txt').write_text('\n'.join(selected or ['Target/Suite/testOne']) + '\n')
@@ -40,7 +40,8 @@ class ExecutionInventoryTests(unittest.TestCase):
                 if log != 'missing':
                     path.write_text(log)
                 args += ['--test-log', str(path)]
-            return subprocess.run(args, env=env, capture_output=True, text=True).returncode
+            result = subprocess.run(args, env=env, capture_output=True, text=True)
+            return result if output else result.returncode
 
     def test_exact_execution_passes(self):
         self.assertEqual(self.check_case(['Target/Suite/testOne']), 0)
@@ -70,6 +71,21 @@ class ExecutionInventoryTests(unittest.TestCase):
         self.assertEqual(self.check_case(['Target/Suite/testOne'], log=start + done + banner), 0)
         self.assertEqual(self.check_case(['Target/Suite/testOne'], log=start + done + start + done + banner), 1)
         self.assertEqual(self.check_case(['Target/Suite/testOne'], log='missing'), 1)
+
+    def test_idle_diagnostics_do_not_change_acceptance_or_claim_missing_log_coverage(self):
+        log = ("Test Case '-[Target.Suite testOne]' started.\n"
+               "    t =    91.69s App animations complete notification not received, will attempt to continue.\n"
+               "Test Case '-[Target.Suite testOne]' passed (92.000 seconds).\n"
+               "** TEST EXECUTE SUCCEEDED **\n")
+        result = self.check_case(['Target/Suite/testOne'], log=log, output=True)
+        self.assertEqual(result.returncode, 0)
+        self.assertIn('| Target/Suite/testOne (line 1) | 1 | 91.69 | 2 |', result.stdout)
+        for value, code in [(None, 0), ('missing', 1)]:
+            with self.subTest(log=value):
+                result = self.check_case(['Target/Suite/testOne'], log=value, output=True)
+                self.assertEqual(result.returncode, code)
+                self.assertIn('coverage is unknown', result.stdout)
+                self.assertNotIn('0 observed messages', result.stdout)
 
 
 class ExecutionLogTests(unittest.TestCase):
@@ -187,6 +203,60 @@ class ExecutionLogTests(unittest.TestCase):
         ):
             with self.subTest(log=log):
                 self.assertTrue(any(reason in error for error in execution_log_failures(log, [self.selector])))
+
+
+class AnimationIdleTests(unittest.TestCase):
+    marker = 'App animations complete notification not received, will attempt to continue.'
+    case = "Test Case '-[RoomInTheCartUITests.RoomInTheCartUITests testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer]' "
+    selector = 'RoomInTheCartUITests/RoomInTheCartUITests/testSpanishEntryPreservesOriginalFoodNameAndSavedAnswer'
+
+    def test_original_ui07_lines_and_crlf_preserve_first_timestamp_not_duration(self):
+        # Original UI07 Tests.log 4144–4153: two completed ~60s idle waits.
+        lines = [self.case + 'started.',
+                 '    t =    31.66s     Wait for dev.roominthecart.app.debug to idle',
+                 '    t =    91.69s ' + self.marker,
+                 '    t =    94.91s     Wait for dev.roominthecart.app.debug to idle',
+                 '    t =   154.93s ' + self.marker,
+                 self.case + 'exceeded execution time allowance of 12.0 minutes.',
+                 '** TEST EXECUTE FAILED **']
+        failures, idle = inspect_execution_log(iter(x + '\r\n' for x in lines), [self.selector])
+        self.assertTrue(failures)
+        self.assertEqual(idle['groups'], [{'runnerSegment': 1, 'selector': self.selector,
+            'caseStartLine': 1, 'count': 2, 'firstLine': 3, 'firstElapsedSeconds': '91.69'}])
+
+    def test_restart_and_completion_clear_attribution_and_repeated_case_stays_separate(self):
+        start = self.case + 'started.'
+        lines = [self.marker, start, 't = 60.00s ' + self.marker,
+                 'Restarting after unexpected exit, crash, or test timeout; retry',
+                 't = 62.00s ' + self.marker, start, 't = 61.00s ' + self.marker,
+                 self.case + 'passed (62.000 seconds).', self.marker]
+        failures, idle = inspect_execution_log(lines, [self.selector])
+        self.assertTrue(any('restarted' in x for x in failures))
+        self.assertEqual(idle['restartLines'], [4])
+        self.assertEqual([(g['runnerSegment'], g['caseStartLine'], g['count'], g['firstElapsedSeconds'])
+                         for g in idle['groups']], [(1, None, 1, None), (1, 2, 1, '60.00'),
+                                                   (2, None, 2, '62.00'), (2, 6, 1, '61.00')])
+
+    def test_exact_records_only_and_existing_mux_recovery_clears_attribution(self):
+        lines = [self.case + 'started.', 'quoted: "t = 60.00s ' + self.marker + '"',
+                 '2026-11-08 00:36:46.274412+0000 RoomInThe' + self.case + 'passed (1.000 seconds).',
+                 'Cart[26733:75724] [Default] fixture log', self.marker,
+                 'Test Case malformed record', 't = 4.00s ' + self.marker]
+        _, idle = inspect_execution_log(lines, [self.selector])
+        self.assertEqual(len(idle['groups']), 1)
+        self.assertIsNone(idle['groups'][0]['selector'])
+        self.assertEqual(idle['groups'][0]['count'], 2)
+        self.assertIsNone(idle['groups'][0]['firstElapsedSeconds'])
+        self.assertIn('| unknown |', '\n'.join(animation_idle_report(idle)))
+
+    def test_empty_log_does_not_claim_coverage_and_identifiers_cannot_break_markdown(self):
+        _, empty = inspect_execution_log([], [])
+        self.assertIn('does not establish complete log coverage', '\n'.join(animation_idle_report(empty)))
+        _, idle = inspect_execution_log(["Test Case '-[Target.Suite|<x> test`One]' started.",
+                                        't = 1.00s ' + self.marker], [])
+        report = '\n'.join(animation_idle_report(idle))
+        self.assertIn('Target/Suite&#124;&lt;x&gt;/test&#96;One', report)
+        self.assertEqual(markdown_cell('one\r\ntwo'), 'one&#13;&#10;two')
 
 
 class RuntimeWarningTests(unittest.TestCase):
