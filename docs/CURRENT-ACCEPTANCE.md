@@ -1,5 +1,20 @@
 # Current implementation and acceptance map
 
+## November 8, earlier editor stall and R3 qualification
+
+The second supply target candidate encountered four animation waits in the
+earlier Dinner idea Amount edit before reaching supply. Root stopped the
+known-failed diagnostic early; native75/strict1 and original evidence remain
+preserved. It establishes no new supply target-size or complete-journey result.
+[Interrupted R2](evidence/native/supply-navigation-target-20261108/interrupted-r2/README.md).
+
+The separate R3 candidate covers both observed forms while preserving the
+original unknown-quantity rejection, restored amount, supply review, approval
+and relaunch assertions. Its build and built-app check pass; the original
+English journey is active under session82246/PID64813. No product repair is
+accepted yet. See the first section of CURRENT-HANDOFF.md for exact source and
+continuation commands. Full52/27 acceptance remains open.
+
 ## November 8, live-font proof and supply target correction
 
 The live large→AX5→large request-expiry measurement is terminal native0/strict0.

@@ -1,5 +1,42 @@
 # Room in the Cart current handoff
 
+## November 8, R3 dinner editor qualification active
+
+R2 is terminal and inspected: native75/strict1 after root deliberately sent
+SIGINT once repeated animation waits made zero-idle qualification impossible.
+Four waits occurred before the changed supply sheet, starting after the earlier
+Dinner idea Amount Done at33.11s. The supply44-point target remains unmeasured;
+this is an interrupted failure, not a completed720-second reproduction. Original
+evidence and preserved inputs verify. [Retained outcome](evidence/native/supply-navigation-target-20261108/interrupted-r2/README.md),
+commit `47b74f57`. Do not repeat R2 inspection or its unchanged execution.
+
+Root reviewed and prepared R3 at
+`.build/EnglishKeyboardReviewNov08/supply-navigation-qualification-r3`.
+Package `fde9fa4b8ed059da7883a3adeea47b14bd46f9d1caf0b9fdaac5d762f0cb38e1`,
+561-source manifest `0ee6fb0af4b0de5eb757883b4dce0f6d2ac85a0b966922e1dbe16407b38a2b1d`.
+R2 source/products were APFS-preserved before replacing exactly DinnerEditors
+and FreeJourneyUITests in the reused source/DD. R3 retains R2 supply changes,
+moves idea-purpose editor Done into the native bar, and adds two opt-in Amount
+before/after value/keyboard/target checks. Manual/reusable editor purposes and
+all original business/restart assertions remain unchanged. Ten screens and five
+completion geometry records are mandatory; two early precheck geometry records
+also preserve rejected-target evidence.
+
+Build66710/PID64263 passed native0/bundle0 in27.212seconds. Test **82246/PID64813**
+is active, started2026-11-08T23:14:11.961188+00:00. Poll that same handle;
+no second local native job. After terminal, run R3 `inspect_qualification.py`
+exactly once and verify strict/idle/required attachments and preserved inputs.
+No canonical native changes are installed; the556-source baseline is still
+`8d0eb48f`. Spanish/AX5/minimum17/Release follow-up remains conditional.
+
+Agent `english_keyboard_review` is completed. Agent `speech_hosted_fault_review`
+is preparing a scratch manual-only hosted core-UI diagnostic in
+`.build/CoreUIDiagnosticNov08`: exact English or Spanish dinner selector after
+full compiled-inventory validation, one macOS slot, unchanged strict runner,
+distinct check name, no replacement of PR/release gates. No canonical workflow
+edit or external dispatch is authorized by that preparation alone; root review
+and existing user scope govern installation. No new PR push or deployment.
+
 ## November 8, supply-navigation R1 terminal and R2 preparation
 
 Previous goal turn made progress: completed live-font proof is committed as
