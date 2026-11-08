@@ -1,0 +1,23 @@
+{
+  "status": "observed",
+  "observedUTC": "2026-11-08T17:02:18.721516+00:00",
+  "elapsedSeconds": 6.564560916000005,
+  "totalBudgetSeconds": 30,
+  "values": {
+    "appearance": "light",
+    "content_size": "large",
+    "increase_contrast": "disabled"
+  },
+  "errors": [],
+  "notAttempted": [],
+  "expectedDefaults": {
+    "appearance": "light",
+    "content_size": "large",
+    "increase_contrast": "disabled"
+  },
+  "observedDifferences": {},
+  "defaultsMatch": true,
+  "acceptanceInvariant": false,
+  "settingsChanged": false,
+  "interpretation": "Optional appearance metadata; unknown is not evidence of expected values or simulator readiness."
+}

@@ -1,0 +1,217 @@
+{
+  "schema": 1,
+  "headSha": "7f3d3cefcd433ad4c233ee91ec57cd84dc265ae7",
+  "appBaseSha": "a30506596ad3a0103396fccb29800c629c92bc30",
+  "previousDiagnosticHead": "2397704ca4392281d396c152b40e350b60c0183e",
+  "runId": 42502133362,
+  "jobId": 128796976031,
+  "runConclusion": "failure",
+  "failureCategory": "observer process discovery exhausted before target admission",
+  "terminalReceipt": {
+    "path": "terminal-receipt.json",
+    "sha256": "fe0d887030088a897ef283215f0328eaeb0d6d1590248065d81e4d58f0a211bb"
+  },
+  "artifact": {
+    "id": 13625904410,
+    "name": "ui09-a305-observer-42502133362-1",
+    "bytes": 90391796,
+    "githubReportedDigest": "sha256:5c61160152afcad737ea7004c22e207c9644a44a7f6e48724e047b24f13a90ce",
+    "fullArchiveDownloaded": false,
+    "fullArchiveDigestIndependentlyVerified": false,
+    "transferredRangeBytes": 18913,
+    "memberManifest": {
+      "path": "small-terminal-members/pristine-manifest.json",
+      "sha256": "e713a42757743ac85e9d921b37d1c5717f85f3766b565c9264b38ab798db747b"
+    },
+    "rangeReceipt": {
+      "path": "small-terminal-members/range-receipt.json",
+      "sha256": "e0adb58878dd6cb7aa377927c7c61aba61e88ee7d05f2cc369d91e65011007c0"
+    },
+    "missingAllowlistedMembers": [
+      "inspection.json"
+    ]
+  },
+  "source": {
+    "changedPathsFromR3": [
+      "diagnostics/ui09-hosted/collect.py",
+      "diagnostics/ui09-hosted/hosted.py",
+      "diagnostics/ui09-hosted/pins.json"
+    ],
+    "selectedSourceHashes": {
+      "diagnostics/ui09-hosted/collect.py": "417f7efd5e83f1cbe5b4863467e255d190be7217a09296183cf399fa7b841f28",
+      "diagnostics/ui09-hosted/hosted.py": "6ccf10e6c32e58c959f5925ca67deb6d5f7906fb232510ee11f55084faa717b1",
+      "diagnostics/ui09-hosted/pins.json": "1fb077227700657e2e2ba44d7a49594dcec2a3541fa57103d84b48ea71b51464"
+    },
+    "selectorSHA256": "cb9657808f4c27eff4ccbb89f712120cd1e990f2e58a0094dd70b6af5aafb022",
+    "hostedSourcesUnchanged": true,
+    "hostedProductsUnchanged": true
+  },
+  "native": {
+    "selected": 8,
+    "executed": 8,
+    "passed": 8,
+    "failed": 0,
+    "skipped": 0,
+    "nativeExit": 0,
+    "strictExit": 0,
+    "nativePID": 14766,
+    "exactSelectorOrder": [
+      "RoomInTheCartUITests/ContextualNavigationUITests/testFirstRunCheckOneChangeCanLeaveOrSaveAndReopenExactRetailerEvidence",
+      "RoomInTheCartUITests/ContextualNavigationUITests/testFreeContextualRoutesKeepPrivateAndSharedWorkSeparate",
+      "RoomInTheCartUITests/ContextualNavigationUITests/testLargeTextKeepsLongNativePasteEditableAndReviewReachable",
+      "RoomInTheCartUITests/ContextualReminderUITests/testNextShopDeferralRequestsReminderOnlyAfterExplicitScheduleAndCanCancel",
+      "RoomInTheCartUITests/FreeJourneyUITests/testCancelledImportAndIngredientReturnPreserveLongFilteredListContext",
+      "RoomInTheCartUITests/FreeJourneyUITests/testFreeCookCorrectionAndExplicitRecipientAcknowledgment",
+      "RoomInTheCartUITests/FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval",
+      "RoomInTheCartUITests/RoomInTheCartUITests/testShopRepairShortcutRemainsInsideViewportAndOpens"
+    ],
+    "caseDurationsSeconds": {
+      "RoomInTheCartUITests/ContextualReminderUITests/testNextShopDeferralRequestsReminderOnlyAfterExplicitScheduleAndCanCancel": 216.23,
+      "RoomInTheCartUITests/ContextualNavigationUITests/testFirstRunCheckOneChangeCanLeaveOrSaveAndReopenExactRetailerEvidence": 198.74,
+      "RoomInTheCartUITests/FreeJourneyUITests/testFreeCookCorrectionAndExplicitRecipientAcknowledgment": 181.47,
+      "RoomInTheCartUITests/ContextualNavigationUITests/testFreeContextualRoutesKeepPrivateAndSharedWorkSeparate": 173.69,
+      "RoomInTheCartUITests/FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval": 113.17,
+      "RoomInTheCartUITests/FreeJourneyUITests/testCancelledImportAndIngredientReturnPreserveLongFilteredListContext": 76.84,
+      "RoomInTheCartUITests/ContextualNavigationUITests/testLargeTextKeepsLongNativePasteEditableAndReviewReachable": 53.0,
+      "RoomInTheCartUITests/RoomInTheCartUITests/testShopRepairShortcutRemainsInsideViewportAndOpens": 14.48
+    },
+    "targetPassedSeconds": 173.69,
+    "startedAtUtc": "2026-11-08T17:02:18.857920+00:00",
+    "finishedAtUtc": "2026-11-08T17:20:54.397423+00:00",
+    "recordedTestExportRuntimeWarnings": 0,
+    "runtimeWarningSummaryFieldAvailable": false,
+    "animationIdleMessagesObserved": 0,
+    "runnerRestartBoundariesObserved": 0,
+    "analyzedConsoleLines": 4533
+  },
+  "observer": {
+    "captureStatus": "unavailable",
+    "transportSealed": false,
+    "quality": null,
+    "processDiscovery": {
+      "status": "exhausted",
+      "attempts": 3,
+      "successfulPolls": 0,
+      "totalFailures": 3,
+      "totalFailureLimit": 3,
+      "recoveredGaps": 0,
+      "unresolvedGap": {
+        "startedUTC": "2026-11-08T17:02:18.743875+00:00",
+        "startedElapsedSeconds": 0.005134625000096094,
+        "targetEndedBeforeGap": false,
+        "targetAssociationAffected": false
+      },
+      "targetAssociationAffected": false,
+      "maxFailedPollMS": 2791.3094580000006,
+      "startupHandshake": "threadStartedOnly",
+      "threadStartedHandshakeObserved": true,
+      "threadStartedUTC": "2026-11-08T17:02:18.743114+00:00",
+      "initialSnapshotState": "failed",
+      "successfulSnapshotObserved": false,
+      "firstSuccessfulSnapshotUTC": null,
+      "fatalDiscoveryError": null,
+      "requestedPerQueryTimeoutSeconds": 2,
+      "allProcessObservationsPresent": false
+    },
+    "discoveryBeforeNativeLaunch": {
+      "status": "noObservedPollFailures",
+      "attempts": 1,
+      "successfulPolls": 0,
+      "totalFailures": 0,
+      "totalFailureLimit": 3,
+      "recoveredGaps": 0,
+      "unresolvedGap": null,
+      "targetAssociationAffected": false,
+      "maxFailedPollMS": 0.0,
+      "startupHandshake": "threadStartedOnly",
+      "threadStartedHandshakeObserved": true,
+      "threadStartedUTC": "2026-11-08T17:02:18.743114+00:00",
+      "initialSnapshotState": "inProgress",
+      "successfulSnapshotObserved": false,
+      "firstSuccessfulSnapshotUTC": null,
+      "fatalDiscoveryError": null,
+      "requestedPerQueryTimeoutSeconds": 2,
+      "allProcessObservationsPresent": false
+    },
+    "collectorFinishedAtUtc": "2026-11-08T17:02:29.146565+00:00",
+    "firstPollBeganBeforeNativeSeconds": 0.114045,
+    "collectorEndedAfterNativeLaunchSeconds": 10.288645,
+    "failedPollEvents": [
+      {
+        "event": "processPollFailed",
+        "observedUTC": "2026-11-08T17:02:21.407002+00:00",
+        "elapsedSeconds": 2.6685178750000205,
+        "attempt": 1,
+        "totalFailures": 1,
+        "totalFailureLimit": 3,
+        "errorType": "TimeoutExpired",
+        "exitCode": null,
+        "requestedTimeoutSeconds": 2,
+        "pollMS": 2644.784999999956,
+        "activeCase": null,
+        "logByteOffsetObserved": 0,
+        "targetAssociationAffected": false,
+        "interpretation": "No process snapshot; previous identities retained without asserting presence or absence."
+      },
+      {
+        "event": "processPollFailed",
+        "observedUTC": "2026-11-08T17:02:25.313565+00:00",
+        "elapsedSeconds": 6.574858375000076,
+        "attempt": 2,
+        "totalFailures": 2,
+        "totalFailureLimit": 3,
+        "errorType": "TimeoutExpired",
+        "exitCode": null,
+        "requestedTimeoutSeconds": 2,
+        "pollMS": 2791.3094580000006,
+        "activeCase": null,
+        "logByteOffsetObserved": 0,
+        "targetAssociationAffected": false,
+        "interpretation": "No process snapshot; previous identities retained without asserting presence or absence."
+      },
+      {
+        "event": "processPollFailed",
+        "observedUTC": "2026-11-08T17:02:29.067574+00:00",
+        "elapsedSeconds": 10.328881334000016,
+        "attempt": 3,
+        "totalFailures": 3,
+        "totalFailureLimit": 3,
+        "errorType": "TimeoutExpired",
+        "exitCode": null,
+        "requestedTimeoutSeconds": 2,
+        "pollMS": 2513.9884169999505,
+        "activeCase": null,
+        "logByteOffsetObserved": 0,
+        "targetAssociationAffected": false,
+        "interpretation": "No process snapshot; previous identities retained without asserting presence or absence."
+      }
+    ],
+    "targetStartedObserved": false,
+    "targetPIDs": [],
+    "probesPreserved": 0
+  },
+  "appearance": {
+    "status": "observed",
+    "observedUTC": "2026-11-08T17:02:18.721516+00:00",
+    "elapsedSeconds": 6.564560916000005,
+    "totalBudgetSeconds": 30,
+    "values": {
+      "appearance": "light",
+      "content_size": "large",
+      "increase_contrast": "disabled"
+    },
+    "errors": [],
+    "notAttempted": [],
+    "expectedDefaults": {
+      "appearance": "light",
+      "content_size": "large",
+      "increase_contrast": "disabled"
+    },
+    "observedDifferences": {},
+    "defaultsMatch": true,
+    "acceptanceInvariant": false,
+    "settingsChanged": false,
+    "interpretation": "Optional appearance metadata; unknown is not evidence of expected values or simulator readiness."
+  },
+  "scope": "Six byte-exact allowlisted members, verified by CRC-32 and SHA-256. Native and strict acceptance passed while probe coverage remained unavailable. A second instrumented nonreproduction does not establish the earlier UI09 timeout cause."
+}

@@ -1,0 +1,40 @@
+{
+  "status": "completed",
+  "startedAtUTC": "2026-11-08T17:19:48.898567+00:00",
+  "command": [
+    "/usr/bin/xcrun",
+    "xctrace",
+    "export",
+    "--input",
+    "/Users/palatis/Room in the Cart/.build/CIA305065Nov08/cook-causal-review/retained-system-trace-toc-r1/inspection/retained.trace",
+    "--toc"
+  ],
+  "stdoutLimitBytes": 8388608,
+  "stderrLimitBytes": 65536,
+  "timeoutSeconds": 30,
+  "recordingExecuted": false,
+  "originalUnchanged": true,
+  "clonedBytes": 2011364648,
+  "pid": 81325,
+  "nativeExit": 10,
+  "stopReason": null,
+  "outputBytes": {
+    "stdout": 0,
+    "stderr": 47
+  },
+  "elapsedSeconds": 2.0537323329999997,
+  "tocReadable": false,
+  "finishedAtUTC": "2026-11-08T17:19:50.956616+00:00",
+  "cloneAfter": {
+    "Trace1.run/RunIssues.storedata": {
+      "bytes": 40960,
+      "sha256": "abafaae604e481fac8e17c213aff3a33bf3e02dd449435f651881cd082b39a54"
+    },
+    "Trace1.run/Attachments/trace-data.atrc": {
+      "bytes": 2011323688,
+      "sha256": "9e4eec58003241ba9840da3acafb066726a739fce175f40e6f54f8e586be0321"
+    }
+  },
+  "priorReceiptUnchanged": true,
+  "runnerExit": 2
+}

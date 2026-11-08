@@ -1,0 +1,29 @@
+{
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 1070,
+      "sha256": "fbaac30bdb61fd78f3489b106811d7eb9315da900ed11a043028a5de8587d19b"
+    },
+    {
+      "path": "REVIEW.md",
+      "bytes": 3454,
+      "sha256": "afabb48fceaf42e5bbf4d3792aa984a59ee814872753525604c22215c18fbef6"
+    },
+    {
+      "path": "plan.json",
+      "bytes": 3815,
+      "sha256": "ac60536b340645b787ed9ee074f7c4bb367784c9b45df7e54b8b87b8849463ba"
+    },
+    {
+      "path": "receipt.json",
+      "bytes": 1400,
+      "sha256": "b8466fb2e7d6d155532c395beafb2cc8a57d47cfe942951f53f5b56e7451efae"
+    },
+    {
+      "path": "scoped-runner-excerpt.txt",
+      "bytes": 4507,
+      "sha256": "8fad0e42fc0b57d57722ded02ca3c974c9711674acbb90d4b6c23d0f8b752c0e"
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+Scoped excerpts from an incomplete 4,000,000-byte prefix; original source line numbers retained. Leading indentation removed only. Full attachment not available.
+Partial SHA256: b197db1d0ec0045c85f283f50c1a3dcd6f96031d12449228daa6ccd58bb0b268
+
+1: Date/Time:        2026-11-08 10:38:45.453 -0500
+2: End time:         2026-11-08 10:38:50.456 -0500
+12: Reason:           Requested by testmanagerd [243] - XCTest Diagnostics
+14: Command:          RoomInTheCartUITests-Runner
+16: Identifier:       dev.roominthecart.RoomInTheCartUITests.xctrunner
+23: PID:              56247
+26: Duration:         5.00s
+27: Duration Sampled: 4.99s (event ends 0.01s after samples)
+28: Steps:            114 (10ms sampling interval)
+58: Process:          RoomInTheCartUITests-Runner [56247] [unique pid 2824995]
+79: Thread 0x18ce72d    DispatchQueue "com.apple.main-thread"(1)    114 samples (1-114)    priority 31 (base 31)    cpu time 0.004s (10.6M cycles, 3.8M instructions, 2.80c/i, 2.47GHz avg)    last ran 0.040s ago
+155: 114  @objc FreeJourneyUITests.testFirstPickupCanStartFromDinnersAndReviewAnEditablePattern() + 56 (<compiler-generated> in RoomInTheCartUITests + 486360) [0x10efe6bd8] 1-114
+156: 114  FreeJourneyUITests.testFirstPickupCanStartFromDinnersAndReviewAnEditablePattern() + 36 (FreeJourneyUITests.swift:1269,13 in RoomInTheCartUITests + 475308) [0x10efe40ac] 1-114
+157: 114  FreeJourneyUITests.reviewAndApprovePattern(spanish:) + 7908 (FreeJourneyUITests.swift:1699,9 in RoomInTheCartUITests + 483268) [0x10efe5fc4] 1-114
+158: 114  FreeJourneyUITests.fill(_:into:replacing:requireDone:useVisibleCenter:) + 1144 (FreeJourneyUITests.swift:1855,18 in RoomInTheCartUITests + 262168) [0x10efb0018] 1-114
+159: 114  FreeJourneyUITests.tap(_:) + 68 (FreeJourneyUITests.swift:1813,70 in RoomInTheCartUITests + 259668) [0x10efaf654] 1-114
+160: 114  -[XCUIElement(XCUIElementTouchEvents) tap] + 44 (XCUIAutomation + 313428) [0x105e40854] 1-114
+161: 114  -[XCUIElementEmbeddedEventTarget tapWithError:] + 292 (XCUIAutomation + 356364) [0x105e4b00c] 1-114
+162: 114  -[XCUIElementBaseEventTarget dispatchEventWithDescription:eventBuilder:error:] + 312 (XCUIAutomation + 337008) [0x105e46470] 1-114
+163: 114  -[XCTContext runInternalActivityNamed:block:] + 120 (XCTestCore + 35784) [0x105bdcbc8] 1-114
+164: 114  -[XCTContext _runActivityNamed:type:block:] + 180 (XCTestCore + 40392) [0x105bdddc8] 1-114
+165: 114  __78-[XCUIElementBaseEventTarget dispatchEventWithDescription:eventBuilder:error:]_block_invoke + 68 (XCUIAutomation + 337496) [0x105e46658] 1-114
+166: 114  -[XCUIElementBaseEventTarget _dispatchEventWithEventBuilder:error:] + 1504 (XCUIAutomation + 336544) [0x105e462a0] 1-114
+167: 114  -[XCUIApplication _waitForQuiescenceAsPreEvent:] + 96 (XCUIAutomation + 51192) [0x105e007f8] 1-114
+168: 114  -[XCUIApplicationProcess waitForQuiescenceIncludingAnimationsIdle:usingActivity:isPreEvent:] + 332 (XCUIAutomation + 91504) [0x105e0a570] 1-114
+169: 114  -[XCTContext runInternalActivityNamed:block:] + 120 (XCTestCore + 35784) [0x105bdcbc8] 1-114
+170: 114  -[XCTContext _runActivityNamed:type:block:] + 180 (XCTestCore + 40392) [0x105bdddc8] 1-114
+171: 114  __92-[XCUIApplicationProcess waitForQuiescenceIncludingAnimationsIdle:usingActivity:isPreEvent:]_block_invoke + 136 (XCUIAutomation + 91716) [0x105e0a644] 1-114
+172: 114  XCUIWaitAndLog + 120 (XCUIAutomation + 112580) [0x105e0f7c4] 1-114
+173: 114  +[XCTWaiter waitForExpectations:timeout:enforceOrder:] + 68 (XCTestCore + 474628) [0x105c47e04] 1-114
+174: 114  -[XCTWaiter waitForExpectations:timeout:enforceOrder:] + 108 (XCTestCore + 473732) [0x105c47a84] 1-114
+175: 114  -[XCTWaiter _waitForExpectations:timeout:enforceOrder:synchronously:completionHandler:] + 484 (XCTestCore + 474296) [0x105c47cb8] 1-114
+176: 114  -[XCTWaiter _performWait:manager:completionHandler:] + 808 (XCTestCore + 482080) [0x105c49b20] 1-114
+177: 114  +[XCTWaiter _synchronouslyWaitForTimeInterval:] + 108 (XCTestCore + 480032) [0x105c49320] 1-114
+178: 114  ??? [0x18044fcec] 1-114
+179: 114  ??? [0x180454dbc] 1-114
+180: 114  ??? [0x180455c04] 1-114
+181: 114  mach_msg + 20 (libsystem_kernel.dylib + 3804) [0x105facedc] 1-114
+182: 114  mach_msg_overwrite + 484 (libsystem_kernel.dylib + 35928) [0x105fb4c58] 1-114
+183: 114  mach_msg2_trap + 8 (libsystem_kernel.dylib + 2908) [0x105facb5c] 1-114
+184: *92   ??? (kernel.release.t8132 + 198992) [0xfffffe000bc88950] 1-92
+185: <3698ms gap with no samples>
+186: *22   ??? (kernel.release.t8132 + 198992) [0xfffffe000bc88950] 93-114
