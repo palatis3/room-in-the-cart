@@ -1,5 +1,13 @@
 # Room in the Cart current handoff
 
+## November 8, 21:06 UTC checkpoint
+
+The measured CI-efficiency change is committed locally as `648e86ff`: optional manual exact-shard selection runs one complete fixture group and only its required build profile. Default PR/release runs retain all17groups and existing checks. Workflow validation and all245Python tests pass. [Timing and validation evidence](evidence/native/ci-workflow-efficiency-20261108/README.md). The published fe3e143 cohort is terminal; five macOS slots were91.22% utilized over150.70minutes. No new remote push/dispatch occurred; the focused hosted path remains unverified. Prefer focused feedback on a branch without an open PR, then one full regression batch for a coherent fix set.
+
+The S24 heading-wrapper candidate r2 is terminal native65/strict1 and rejected: it creates ambiguous same-label nodes while retaining the narrow heading frame in its hierarchy. No canonical app change was installed. [Retained failure](evidence/native/request-named-audit-measurements-20261108/rejected-heading-wrapper/README.md). Both its inspection/exports and r1 baseline collection are finished; do not repeat. Next use a native text heading and preserve the original bounds assertion; aim to reuse a stable incremental build path rather than another cold source directory.
+
+No local native build/test or export remains active. Canonical iOS inputs remain `ffd68bf9…`. The store-quote coherent-snapshot proposal remains prepared/uncompiled at `.build/CIFe3e143Nov08/known-trip-visible-label-proposal-r1`. Four hosted execution failures, cook-warning evidence, the unfiltered37 accessibility findings and full52-requirement/27-screen release acceptance remain open. Migration041 is live;042 remains separately pending. No provider/distribution activation occurred.
+
 ## November 8, 20:56 UTC checkpoint
 
 Published `fe3e143` is fully terminal:47jobs passed,4executionjobs failed, and the aggregate CI gate failed as a consequence. Deep, Security and NativeWire passed. Core UI02–10 passed; fixtures18jobs passed/2failed. The four execution failures are the English dinner-pattern timeout, scroll metric-count mismatch, cook-copy confirmation, and store-quote break-even target lookup. The cook warning inventory also remains unavailable. [Terminal inventory](evidence/native/ci-fe3e143-20261108/TERMINAL.md). No hosted job remains active; no new push occurred. A focused coherent-snapshot reveal proposal is prepared but uncompiled/uninstalled at `.build/CIFe3e143Nov08/known-trip-visible-label-proposal-r1`.
