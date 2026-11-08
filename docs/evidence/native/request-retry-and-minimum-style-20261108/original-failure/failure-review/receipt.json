@@ -1,0 +1,114 @@
+{
+  "test": {
+    "children": [
+      {
+        "name": "XCTAssertTrue failed",
+        "nodeType": "Failure Message",
+        "sourceLocation": {
+          "filePath": "/Users/palatis/Room in the Cart/ios/UITests/HouseholdRequestPackUITests.swift",
+          "lineNumber": 50
+        }
+      }
+    ],
+    "duration": "31s",
+    "durationInSeconds": 31.898119926452637,
+    "name": "testShopperCarriesEarlierRequestOnceAndReviewsCurrentPackPrice()",
+    "nodeIdentifier": "HouseholdRequestPackUITests/testShopperCarriesEarlierRequestOnceAndReviewsCurrentPackPrice()",
+    "nodeIdentifierURL": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/HouseholdRequestPackUITests/testShopperCarriesEarlierRequestOnceAndReviewsCurrentPackPrice",
+    "nodeType": "Test Case",
+    "result": "Failed"
+  },
+  "testsSHA256": "1a3398b69aded1a79b439a912925c023488f694cb42d7affe0c2c3d0bb1f291e",
+  "limitBytesPerFile": 4194304,
+  "limitSecondsPerExport": 45,
+  "exports": [
+    {
+      "argv": [
+        "/usr/bin/xcrun",
+        "xcresulttool",
+        "export",
+        "attachments",
+        "--path",
+        "/Users/palatis/Room in the Cart/.build/S24DisabledActionNov08/row-qualification-r2/minimum-fixture-run/inspection/native.xcresult",
+        "--test-id",
+        "HouseholdRequestPackUITests/testShopperCarriesEarlierRequestOnceAndReviewsCurrentPackPrice()",
+        "--output-path",
+        "/Users/palatis/Room in the Cart/.build/S24DisabledActionNov08/row-qualification-r2/minimum-fixture-run/failure-review/png",
+        "--filter",
+        "S24-request-pack-failure*.png"
+      ],
+      "exit": 0,
+      "seconds": 0.10043429100000001
+    },
+    {
+      "argv": [
+        "/usr/bin/xcrun",
+        "xcresulttool",
+        "export",
+        "attachments",
+        "--path",
+        "/Users/palatis/Room in the Cart/.build/S24DisabledActionNov08/row-qualification-r2/minimum-fixture-run/inspection/native.xcresult",
+        "--test-id",
+        "HouseholdRequestPackUITests/testShopperCarriesEarlierRequestOnceAndReviewsCurrentPackPrice()",
+        "--output-path",
+        "/Users/palatis/Room in the Cart/.build/S24DisabledActionNov08/row-qualification-r2/minimum-fixture-run/failure-review/hierarchy",
+        "--filter",
+        "S24-failure-accessibility-hierarchy*.txt"
+      ],
+      "exit": 0,
+      "seconds": 0.09256012500000002
+    },
+    {
+      "argv": [
+        "/usr/bin/xcrun",
+        "xcresulttool",
+        "export",
+        "attachments",
+        "--path",
+        "/Users/palatis/Room in the Cart/.build/S24DisabledActionNov08/row-qualification-r2/minimum-fixture-run/inspection/native.xcresult",
+        "--test-id",
+        "HouseholdRequestPackUITests/testShopperCarriesEarlierRequestOnceAndReviewsCurrentPackPrice()",
+        "--output-path",
+        "/Users/palatis/Room in the Cart/.build/S24DisabledActionNov08/row-qualification-r2/minimum-fixture-run/failure-review/diagnostics",
+        "--filter",
+        "S24-failure-preview-diagnostics*.txt"
+      ],
+      "exit": 0,
+      "seconds": 0.10226462500000003
+    }
+  ],
+  "originalUnchanged": true,
+  "originalFileCount": 75,
+  "files": [
+    {
+      "path": "png/10802B7E-3111-4C69-87D5-6892C2227D0E.png",
+      "bytes": 112766,
+      "sha256": "d3779be79932fc900a1abd4ce18e410055d665c43b1164a41b77bb4d664c378b"
+    },
+    {
+      "path": "png/manifest.json",
+      "bytes": 786,
+      "sha256": "b779f02387eec5812b33eed462ca95890fbe545191cd9c4945260f627d807753"
+    },
+    {
+      "path": "hierarchy/manifest.json",
+      "bytes": 798,
+      "sha256": "b3bb2da4302f1367512b91d2607ccaa8e09df336c7b16fba105f44718f6b7fcf"
+    },
+    {
+      "path": "hierarchy/9576C03E-0AFD-4DEA-B7F6-16B54D9AF80D.txt",
+      "bytes": 7380,
+      "sha256": "01a30bdc4add961087d40299eb5a926d4637fcc5f851858147ef809912205226"
+    },
+    {
+      "path": "diagnostics/manifest.json",
+      "bytes": 794,
+      "sha256": "4a97640294d048e2c7e8dc3e4e8f7af107793f80dc7693358f3ea773f185085d"
+    },
+    {
+      "path": "diagnostics/163D5F71-924A-4CC6-B80A-E01BA84102B3.txt",
+      "bytes": 190,
+      "sha256": "2e123cb8d8468ca64cb801175caa008926cc547578cd3526e2731019c5bd095f"
+    }
+  ]
+}

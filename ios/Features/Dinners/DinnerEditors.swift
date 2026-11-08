@@ -18,6 +18,16 @@ func dinnerDraftBinding<Element: Identifiable>(_ snapshot: Element, in collectio
     })
 }
 
+// Own the full Form row hit area while keeping the semantic label colors.
+private struct DinnerIdeaAcceptanceButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        PrimaryActionLabel(label: configuration.label, isPressed: configuration.isPressed)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 15)
+            .contentShape(Rectangle())
+    }
+}
+
 enum DinnerEditorPurpose { case manual, reusable, idea }
 struct DinnerTemplateEditor: View {
     @ObservedObject var model: DinnerFeatureModel
@@ -84,13 +94,11 @@ struct DinnerTemplateEditor: View {
                             if let value { supplyEvidence.append(value) }
                             reviewedIdea?.supplyEvidence = supplyEvidence
                         }
-                        // Let the Form handle activation across the entire accessible row.
-                        Button {
+                        Button(dinnerText("Accept idea")) {
                             Task { completed = await model.acceptIdea(idea, acceptedID: acceptedID) }
-                        } label: {
-                            PrimaryActionLabel(label: Text(dinnerText("Accept idea")))
                         }
-                        .buttonStyle(.automatic)
+                        .buttonStyle(DinnerIdeaAcceptanceButtonStyle())
+                        .listRowInsets(EdgeInsets())
                         .disabled(!review.canAccept || !model.editable)
                         .accessibilityIdentifier("dinnerAcceptIdea")
                         Button(dinnerText("Save editable draft")) { Task { completed = await model.saveIdea(idea) } }

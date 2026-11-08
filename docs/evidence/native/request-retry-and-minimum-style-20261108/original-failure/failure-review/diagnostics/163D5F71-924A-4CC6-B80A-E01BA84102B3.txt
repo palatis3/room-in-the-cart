@@ -1,0 +1,1 @@
+Fixture previews: 0; busy: false; selected: none; choice: defer; price: ; preview: none; notice: The service could not confirm this decision. Retry the pending decision to avoid a duplicate.

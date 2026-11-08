@@ -1,0 +1,30 @@
+{
+  "status": "passed",
+  "scope": "iPhoneSE3 iOS17.0 light Large original carry/retry/current-price journey; selected disabled shared Apply control only",
+  "rootViewedPNGs": 2,
+  "labels": "Complete sharp centered label and rounded outline; native disabled control remains disabled. No clipping in whole control or interior.",
+  "measurements": {
+    "contrast": 15.213849827934512,
+    "RGB": [
+      23,
+      41,
+      37
+    ],
+    "background": [
+      255,
+      255,
+      255
+    ],
+    "components": 23
+  },
+  "nativeAndStrict": {
+    "passed": 1,
+    "durationSeconds": 125.74,
+    "runtimeWarnings": 0,
+    "idleMessages": 0,
+    "runnerRestarts": 0
+  },
+  "interaction": "Exact carry retry, original request identity/status and2commandattempts/0lines; unknown price keeps Apply disabled and tapping cannot add a command; cancel preserves outcome; reviewed4.25price returns to confirmed original request with1savedline/3commandattempts.",
+  "sourceManifestSHA256": "24fc718e4ad3173ede4888f4ba9eccac148869e7cad3b1a30481773933a411ca",
+  "remaining": "Release build; English animation timeout; wider and human/physical acceptance"
+}

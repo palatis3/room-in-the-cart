@@ -1,0 +1,9 @@
+# Disabled actions and confirmed-retry correction: Release build
+
+The current frozen source compiles as an unsigned arm64 iPhone Release app on Xcode 27.1. Build and compiled-bundle checks both exit0; the emitted incremental build log has no warning/error matches. The bundle checker verifies executable, assets, privacy, environment and embedded extensions. Source and preserved prior products are unchanged.
+
+The app changes keep disabled primary-action labels readable, preserve the native full-row dinner acceptance hit area, and clear an obsolete delivery error only after a validated confirmation. Later cleanup/refresh warnings remain visible. Regression coverage adds actual-label contrast, disabled no-write checks, row-padding activation and three exact-retry model cases.
+
+All19 request-pack model cases and the corrected complete iOS17 carry/current-price journey pass native/strict checks. Current26.2 Spanish light/dark and minimum17 Spanish dinner acceptance retain their exact prior proof: those dinner/style sources and the dinner test body remain unchanged by the final household-only correction. The original minimum17 offscreen-row failure is retained, and the final test uses its existing bounded reveal before the unchanged8-second assertion. See [dark proof](../disabled-primary-action-dark-20261108/README.md) and [minimum/retry proof](../request-retry-and-minimum-style-20261108/README.md).
+
+`changes.patch` records all six current app/test files relative to the precommit repository. `run.json` binds the exact command/toolchain and result; `fixed-source-manifest.json` pins all556 iOS inputs. The original full build log and products remain private locally. This is compilation and scoped regression evidence, not signed/App Store distribution or closure of the separate English animation timeout, speech warnings, broader accessibility or human/physical acceptance.

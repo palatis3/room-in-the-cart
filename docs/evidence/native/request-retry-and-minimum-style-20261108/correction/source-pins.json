@@ -1,0 +1,14 @@
+{
+  "ios/Features/Household/HouseholdInboxModel.swift": {
+    "originalSHA256": "dbb2a316625ced9b52737501c8f1ab8a773c1a7d11bdf268c05081712772120a",
+    "candidateSHA256": "11d83f35d1bcaa4573166a45b06fc11d1141cb545f13fa8ca926a48600f51428"
+  },
+  "ios/UITests/HouseholdRequestPackUITests.swift": {
+    "originalSHA256": "5a3e3283a66a0d163310633b1c597d86dcc58a188265bbc1b5c670eb3636a1c2",
+    "candidateSHA256": "bec66901e1dcdee2f58909f94bf940e0ae8f1977f856cc94e1847b0c873d57d6"
+  },
+  "ios/Tests/HouseholdRequestPackReviewTests.swift": {
+    "originalSHA256": "d34c113d51d1c92086dfef8e32552a330440ed89906888568f8382eabd85b2ec",
+    "candidateSHA256": "50784333780fde0d04edb685631f1872a6497bdd4e62fb3421edb359bc44c202"
+  }
+}

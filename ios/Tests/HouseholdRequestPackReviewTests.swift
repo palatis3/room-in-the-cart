@@ -77,6 +77,107 @@ final class HouseholdRequestPackReviewTests: XCTestCase {
         await model.apply(); XCTAssertEqual(server.commandCount,1); XCTAssertEqual(server.lineCount,1)
         await model.apply(); XCTAssertEqual(server.commandCount,1)
     }
+    @MainActor func testConfirmedExactRetryClearsObsoleteDeliveryNotice() async throws {
+        try await checkConfirmedRetryNotice(failure: .none)
+    }
+
+    @MainActor func testConfirmedExactRetryRetainsNewCleanupWarning() async throws {
+        try await checkConfirmedRetryNotice(failure: .cleanup)
+    }
+
+    @MainActor func testConfirmedExactRetryRetainsNewRefreshWarning() async throws {
+        try await checkConfirmedRetryNotice(failure: .refresh)
+    }
+
+    private enum ConfirmedRetryFailure { case none, cleanup, refresh }
+
+    @MainActor private func checkConfirmedRetryNotice(failure: ConfirmedRetryFailure) async throws {
+        let (model, server, url) = try await setup()
+        defer {
+            S24FixtureProtocol.intercept = nil
+            try? FileManager.default.removeItem(at: url.deletingLastPathComponent())
+        }
+        model.price = "3.00"; await model.review()
+        var sentBodies: [Data] = []
+        let retainedQueue = url.appendingPathExtension("before-cleanup")
+        S24FixtureProtocol.intercept = { task in
+            if task.request.url?.path.hasSuffix("/commands") == true {
+                do {
+                    // URLSession may expose the body as a stream. Replay the same
+                    // captured bytes to the existing idempotent service fixture.
+                    var request = task.request
+                    var body = request.httpBody ?? Data()
+                    if body.isEmpty, let stream = request.httpBodyStream {
+                        stream.open(); defer { stream.close() }
+                        var buffer = [UInt8](repeating: 0, count: 4096)
+                        while stream.hasBytesAvailable {
+                            let size = stream.read(&buffer, maxLength: buffer.count)
+                            guard size >= 0 else { throw URLError(.cannotDecodeRawData) }
+                            if size == 0 { break }
+                            body.append(buffer, count: size)
+                        }
+                    }
+                    request.httpBodyStream = nil; request.httpBody = body
+                    sentBodies.append(body)
+                    let (status, receipt) = try server.respond(request)
+                    if sentBodies.count == 1 {
+                        // Commit once, then lose the receipt through a gateway503.
+                        finishS24OutcomeResponse(task, status: 503, data: Data())
+                    } else {
+                        if failure == .cleanup {
+                            // Preserve the exact durable queue, then make only its
+                            // owned file path unwritable as a file during remove().
+                            try FileManager.default.moveItem(at: url, to: retainedQueue)
+                            try FileManager.default.createDirectory(at: url, withIntermediateDirectories: false)
+                        }
+                        finishS24OutcomeResponse(task, status: status, data: receipt)
+                    }
+                } catch { task.client?.urlProtocol(task, didFailWithError: error) }
+                return true
+            }
+            if failure == .refresh, sentBodies.count == 2,
+               task.request.url?.path.hasSuffix("/inbox") == true {
+                task.client?.urlProtocol(task, didFailWithError: URLError(.timedOut))
+                return true
+            }
+            return false
+        }
+        await model.apply()
+        XCTAssertEqual(model.delivery, .waiting)
+        XCTAssertEqual(model.notice, "The service could not confirm this decision. Retry the pending decision to avoid a duplicate.")
+        let pending = try XCTUnwrap(model.pending)
+        let queueBeforeRetry = try Data(contentsOf: url)
+        XCTAssertEqual(server.commandCount, 1); XCTAssertEqual(server.lineCount, 1)
+        // Honor the production retry deadline; do not alter its clock/backoff.
+        while model.retryAfter > .now {
+            try await Task.sleep(for: .seconds(model.retryAfter.timeIntervalSinceNow))
+        }
+        await model.retry()
+        guard case .confirmed(let receipt) = model.delivery else { return XCTFail("Expected the stored receipt on exact retry") }
+        XCTAssertEqual(receipt.kind, "request.apply")
+        XCTAssertEqual(receipt.requestId, S24FixtureServer.requestID)
+        XCTAssertEqual(sentBodies, [pending.bytes, pending.bytes])
+        XCTAssertEqual(server.commandCount, 2); XCTAssertEqual(server.lineCount, 1)
+        XCTAssertNil(model.pending); XCTAssertFalse(model.busy)
+        switch failure {
+        case .none:
+            XCTAssertNil(model.notice)
+            XCTAssertEqual(model.confirmedDecisionRequestID, S24FixtureServer.requestID)
+        case .cleanup:
+            XCTAssertEqual(model.notice, "The decision was confirmed. Local retry cleanup needs another attempt.")
+            XCTAssertEqual(try Data(contentsOf: retainedQueue), queueBeforeRetry)
+            XCTAssertEqual(model.confirmedDecisionRequestID, S24FixtureServer.requestID)
+        case .refresh:
+            XCTAssertEqual(model.notice, "The decision was confirmed. Refresh requests to see the latest state.")
+            XCTAssertNil(model.confirmedDecisionRequestID)
+            XCTAssertTrue(model.requests.isEmpty)
+        }
+        if failure != .cleanup {
+            let remaining = try await OperationOutbox(url: url).operations()
+            XCTAssertTrue(remaining.isEmpty)
+        }
+    }
+
     @MainActor func testConfirmedApplyWaitsForRefreshedOriginalOutcomeBeforeReturning() async throws {
         let (model, server, url) = try await setup()
         defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }

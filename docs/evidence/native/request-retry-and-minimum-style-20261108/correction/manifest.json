@@ -1,0 +1,12 @@
+{
+  "files": {
+    "README.md": "13671bbd3804f02a3b8d9d784ec14a9fe6219b13f8f9cdb298164a276e84122d",
+    "candidate/ios/Features/Household/HouseholdInboxModel.swift": "11d83f35d1bcaa4573166a45b06fc11d1141cb545f13fa8ca926a48600f51428",
+    "candidate/ios/Tests/HouseholdRequestPackReviewTests.swift": "50784333780fde0d04edb685631f1872a6497bdd4e62fb3421edb359bc44c202",
+    "candidate/ios/UITests/HouseholdRequestPackUITests.swift": "bec66901e1dcdee2f58909f94bf940e0ae8f1977f856cc94e1847b0c873d57d6",
+    "correction.patch": "345734eb60781bad128946dc59c8232118e7e67827c4c34a03dc8638209be9f3",
+    "source-pins.json": "13e3771ef631ff0f813704faa2da1ae538bc787ef6dd90398ff253ec17a38fb6"
+  },
+  "canonicalInputPinsStillMatch": true,
+  "validation": "git apply --check passed; no build/test execution"
+}

@@ -335,6 +335,9 @@ enum ShopperDelivery: Equatable {
             let receipt = try await service.executeShopper(operation)
             guard start == generation else { return }
             guard receipt.shopId == shopID else { throw ClientError.invalidResponse }
+            // The valid receipt supersedes a prior delivery error. Cleanup and
+            // refresh below may still report their own actionable warning.
+            notice = nil
             delivery = .confirmed(receipt); pending = nil; selected = nil; clarification = ""; invalidatePreview()
             do { try await outbox.remove(operation.id) }
             catch { notice = ht("The decision was confirmed. Local retry cleanup needs another attempt.") }

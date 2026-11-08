@@ -7,6 +7,7 @@ enum Theme {
     static let secondary = Color("secondary")
     static let action = Color("accent")
     static let onAction = Color("on_accent")
+    static let controlEdge = Color("control_edge")
     static let error = Color("error")
     static let warning = Color("warning")
     static let warningSurface = Color("warning_surface")
@@ -72,8 +73,18 @@ struct PrimaryActionLabel<Label: View>: View {
     var body: some View {
         label.font(.headline).fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, minHeight: 44)
             .padding(.horizontal, 12).padding(.vertical, 4)
-            .foregroundStyle(Theme.onAction).background(Theme.action, in: RoundedRectangle(cornerRadius: 14))
-            .opacity(isEnabled ? (isPressed ? 0.8 : 1) : 0.45)
+            .foregroundStyle(isEnabled ? Theme.onAction : Theme.ink)
+            // Normalize label rendering only; the enclosing control keeps its disabled state.
+            .environment(\.isEnabled, true)
+            .background(isEnabled ? Theme.action : Theme.surface, in: RoundedRectangle(cornerRadius: 14))
+            .overlay {
+                if !isEnabled {
+                    RoundedRectangle(cornerRadius: 14)
+                        .strokeBorder(Theme.controlEdge, lineWidth: 1)
+                        .accessibilityHidden(true)
+                }
+            }
+            .opacity(isEnabled && isPressed ? 0.8 : 1)
     }
 }
 

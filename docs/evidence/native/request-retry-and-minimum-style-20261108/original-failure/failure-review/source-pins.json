@@ -1,0 +1,22 @@
+{
+  "ios/Features/Household/HouseholdInboxModel.swift": {
+    "currentSHA256": "dbb2a316625ced9b52737501c8f1ab8a773c1a7d11bdf268c05081712772120a",
+    "runSHA256": "dbb2a316625ced9b52737501c8f1ab8a773c1a7d11bdf268c05081712772120a",
+    "matchesRun": true
+  },
+  "ios/Features/Household/HouseholdInboxView.swift": {
+    "currentSHA256": "774e70c9484c705476413e92c2262a72b8cacb72b547d098afd9847070d31e35",
+    "runSHA256": "774e70c9484c705476413e92c2262a72b8cacb72b547d098afd9847070d31e35",
+    "matchesRun": true
+  },
+  "ios/UITests/HouseholdRequestPackUITests.swift": {
+    "currentSHA256": "5a3e3283a66a0d163310633b1c597d86dcc58a188265bbc1b5c670eb3636a1c2",
+    "runSHA256": "5a3e3283a66a0d163310633b1c597d86dcc58a188265bbc1b5c670eb3636a1c2",
+    "matchesRun": true
+  },
+  "ios/UITestSupport/HouseholdRequestPackUIFixture.swift": {
+    "currentSHA256": "7b7e6744ce659b7565ce281212b2e65a42d3de999dbe0816d314fba3487721c3",
+    "runSHA256": "7b7e6744ce659b7565ce281212b2e65a42d3de999dbe0816d314fba3487721c3",
+    "matchesRun": true
+  }
+}

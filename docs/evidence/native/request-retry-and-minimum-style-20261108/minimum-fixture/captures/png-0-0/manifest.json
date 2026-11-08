@@ -1,0 +1,17 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "D420C2CA-0E73-4213-9B96-1EB62EB061F6",
+        "deviceName" : "RITC Cook Voice Minimum OS Nov08",
+        "exportedFileName" : "9AC52F1E-252B-44F8-98C3-9419257EC9EE.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "S24-unknown-price-disabled-apply-whole-button_0_D017D460-9B33-4C29-AFFE-B7ECB39099BD.png",
+        "timestamp" : 1794157105.583
+      }
+    ],
+    "testIdentifier" : "HouseholdRequestPackUITests/testShopperCarriesEarlierRequestOnceAndReviewsCurrentPackPrice()",
+    "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/HouseholdRequestPackUITests/testShopperCarriesEarlierRequestOnceAndReviewsCurrentPackPrice"
+  }
+]

@@ -1265,8 +1265,8 @@ import XCTest
         XCTAssertTrue(element("ledgerListOptions").exists)
     }
 
-    func testFirstPickupCanStartFromDinnersAndReviewAnEditablePattern() {
-        reviewAndApprovePattern(spanish: false)
+    func testFirstPickupCanStartFromDinnersAndReviewAnEditablePattern() throws {
+        try reviewAndApprovePattern(spanish: false)
     }
 
     func testMealWeekReservationDraftCannotFollowAnotherPickup() {
@@ -1645,10 +1645,10 @@ import XCTest
         assertText("Manually matched code: SUPPLIER-TEST-2")
     }
 
-    func testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval() {
-        reviewAndApprovePattern(spanish: true)
+    func testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval() throws {
+        try reviewAndApprovePattern(spanish: true)
     }
-    private func reviewAndApprovePattern(spanish: Bool) {
+    private func reviewAndApprovePattern(spanish: Bool) throws {
         func copy(_ english: String, _ translation: String) -> String { spanish ? translation : english }
         launch(reset: true, spanish: spanish)
         tap(app.tabBars.buttons[copy("Dinners", "Cenas")])
@@ -1659,7 +1659,36 @@ import XCTest
         choose(copy("Starting meal", "Comida que usarás como base"), value: copy("Bean and cabbage wraps", "Tortillas rellenas de frijoles y repollo"))
         tap(app.buttons[copy("Prepare editable idea", "Preparar idea editable")])
         tap(app.buttons[copy("Review prepared idea", "Revisar idea preparada")])
+        let amountLabel = copy("Amount, optional", "Cantidad, opcional")
+        let amount = app.textFields.matching(identifier: amountLabel).firstMatch
+        reveal(amount)
+        let originalAmount = amount.value as? String ?? ""
+        XCTAssertFalse(originalAmount.isEmpty || originalAmount == amount.placeholderValue)
+        // An unknown ingredient quantity is reviewable, but the domain forbids acceptance.
+        fill(" ", into: amountLabel, replacing: true, requireDone: true, useVisibleCenter: true)
         tap(element("ledgerReviewDinner"))
+        let unknownQuantity = copy("Review unknown ingredient quantities", "Revisa las cantidades de ingredientes desconocidas")
+        assertText(unknownQuantity)
+        let accept = element("dinnerAcceptIdea")
+        reveal(accept)
+        XCTAssertEqual(accept.elementType, .button)
+        XCTAssertFalse(accept.isEnabled)
+        let disabledState = XCTAttachment(string: accept.debugDescription)
+        disabledState.name = "Dinner-unknown-quantity-disabled-accept"; disabledState.lifetime = .keepAlways; add(disabledState)
+        capture("Dinner-unknown-quantity-disabled-accept")
+        try assertReadableDinnerAcceptance(accept, name: "Dinner-disabled-accept")
+        tapVisibleFormRow(accept, marker: "DISABLED_DINNER_ACCEPT_TAP")
+        XCTAssertTrue(accept.exists)
+        XCTAssertFalse(accept.isEnabled)
+        tapDinnerAcceptancePadding(accept, topEdge: spanish)
+        XCTAssertTrue(accept.exists)
+        XCTAssertFalse(accept.isEnabled)
+        XCTAssertFalse(app.staticTexts[copy("Dinner saved. Choose it separately to add grocery needs.", "Cena guardada. Elígela por separado para agregar sus necesidades de compra.")].exists)
+        assertText(unknownQuantity)
+        tap(app.buttons[copy("Continue editing", "Seguir editando")])
+        fill(originalAmount, into: amountLabel, replacing: true, requireDone: true, useVisibleCenter: true)
+        tap(element("ledgerReviewDinner"))
+        reveal(accept); XCTAssertTrue(accept.isEnabled)
         assertText(copy("Bean and cabbage wraps", "Tortillas rellenas de frijoles y repollo"))
         assertText(copy("Shredded cabbage", "Repollo rallado"))
         assertText(copy("Usable yield is unconfirmed", "El rendimiento aprovechable no está confirmado"))
@@ -1674,7 +1703,9 @@ import XCTest
         assertText(copy("Estimated item cost: $2.50", "Costo estimado del artículo: $2.50"))
         capture(spanish ? "Primera-compra-paquete-revisado" : "First-pickup-reviewed-tortilla-pack")
         assertText(copy("Recipe needs: 1 cup", "La receta necesita: 1 taza"))
-        tap(element("dinnerAcceptIdea"))
+        try assertReadableDinnerAcceptance(accept, name: "Dinner-enabled-accept")
+        XCTAssertTrue(accept.isEnabled)
+        tapDinnerAcceptancePadding(accept, topEdge: spanish)
         assertText(copy("Dinner saved. Choose it separately to add grocery needs.", "Cena guardada. Elígela por separado para agregar sus necesidades de compra."))
         app.terminate(); launch(reset: false, spanish: spanish)
         tap(app.tabBars.buttons[copy("Dinners", "Cenas")])
@@ -1682,8 +1713,85 @@ import XCTest
         tap(element("dinnerLibrary"))
         assertText(copy("Bean and cabbage wraps", "Tortillas rellenas de frijoles y repollo"))
         XCTAssertTrue(app.buttons["ledgerChooseTemplate"].isEnabled)
+        XCTAssertEqual(app.buttons.matching(identifier: "ledgerChooseTemplate").count, 1)
         openShoppingList()
         assertText(copy("Add the groceries you need for this pickup.", "Añade los alimentos que necesitas para esta compra."))
+    }
+
+    private func dinnerAcceptanceViewport(for gestureArea: CGRect) -> CGRect {
+        // Horizontal gesture safety margins are not obstructions over a native Form row.
+        let bounds = app.frame
+        return CGRect(x: bounds.minX, y: gestureArea.minY + 12, width: bounds.width,
+                      height: max(0, gestureArea.height - 24))
+    }
+
+    private func revealDinnerAcceptanceRow(_ button: XCUIElement) {
+        for attempt in 0..<24 {
+            let area = scrollableArea()
+            let viewport = dinnerAcceptanceViewport(for: area)
+            if button.exists && button.isHittable && viewport.contains(button.frame) { break }
+            let upward = button.exists && !button.frame.isEmpty ? button.frame.midY > area.midY : attempt < 16
+            scrollContent(upward: upward, area: area)
+        }
+        let viewport = dinnerAcceptanceViewport(for: scrollableArea())
+        XCTAssertTrue(button.exists && button.isHittable && viewport.contains(button.frame))
+        XCTAssertEqual(button.elementType, .button)
+        XCTAssertEqual(app.buttons.matching(identifier: "dinnerAcceptIdea").count, 1)
+        let cell = app.cells.containing(.button, identifier: "dinnerAcceptIdea").firstMatch
+        XCTAssertTrue(cell.exists)
+        // Compare to the actual native row, not a screen-width assumption.
+        for (actual, expected) in [(button.frame.minX, cell.frame.minX), (button.frame.minY, cell.frame.minY),
+                                   (button.frame.width, cell.frame.width), (button.frame.height, cell.frame.height)] {
+            XCTAssertEqual(actual, expected, accuracy: 1, "Accept must own the complete native Form row")
+        }
+    }
+
+    private func tapDinnerAcceptancePadding(_ button: XCUIElement, topEdge: Bool) {
+        revealDinnerAcceptanceRow(button)
+        let frame = button.frame
+        let point = topEdge ? CGPoint(x: frame.midX, y: frame.minY + 4) : CGPoint(x: frame.minX + 4, y: frame.midY)
+        XCTAssertTrue(dinnerAcceptanceViewport(for: scrollableArea()).contains(point) && frame.contains(point))
+        XCTAssertFalse(frame.insetBy(dx: 16, dy: 15).contains(point), "Exercise native row padding outside the painted shape")
+        let evidence = XCTAttachment(string: "\(button.debugDescription)\nrowPaddingTap=\(point); topEdge=\(topEdge)")
+        evidence.name = "Dinner-accept-row-padding-target"; evidence.lifetime = .keepAlways; add(evidence)
+        button.coordinate(withNormalizedOffset: .zero)
+            .withOffset(CGVector(dx: point.x - frame.minX, dy: point.y - frame.minY)).tap()
+    }
+
+    private func assertReadableDinnerAcceptance(_ button: XCUIElement, name: String) throws {
+        revealDinnerAcceptanceRow(button)
+        let full = button.screenshot()
+        let image = try XCTUnwrap(full.image.cgImage)
+        let frame = button.frame
+        XCTAssertGreaterThan(frame.width, 66); XCTAssertGreaterThan(frame.height, 34)
+        let scaleX = CGFloat(image.width) / frame.width, scaleY = CGFloat(image.height) / frame.height
+        // Remove native row padding and the entire outline, including corner antialiasing.
+        let crop = CGRect(x: ceil(33 * scaleX), y: ceil(17 * scaleY),
+                          width: floor((frame.width - 66) * scaleX), height: floor((frame.height - 34) * scaleY))
+        let interior = try XCTUnwrap(image.cropping(to: crop))
+        let whole = XCTAttachment(screenshot: full)
+        whole.name = name + "-whole-button"; whole.lifetime = .keepAlways; add(whole)
+        let label = XCTAttachment(image: UIImage(cgImage: interior))
+        label.name = name + "-label-interior"; label.lifetime = .keepAlways; add(label)
+        let state = XCTAttachment(string: "\(button.debugDescription)\nlabelInteriorPixels=\(crop); sourcePixels=\(image.width)x\(image.height)")
+        state.name = name + "-state-and-crop"; state.lifetime = .keepAlways; add(state)
+        let space = try XCTUnwrap(CGColorSpace(name: CGColorSpace.sRGB))
+        let bitmap = try XCTUnwrap(CGContext(data: nil, width: interior.width, height: interior.height, bitsPerComponent: 8,
+            bytesPerRow: interior.width * 4, space: space, bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue))
+        bitmap.draw(interior, in: CGRect(x: 0, y: 0, width: interior.width, height: interior.height))
+        let bytes = try XCTUnwrap(bitmap.data).assumingMemoryBound(to: UInt8.self)
+        let linear = (0...255).map { byte -> Double in
+            let value = Double(byte) / 255
+            return value <= 0.04045 ? value / 12.92 : pow((value + 0.055) / 1.055, 2.4)
+        }
+        let luminance = (0..<(interior.width * interior.height)).map { pixel in
+            let index = pixel * 4
+            return 0.2126 * linear[Int(bytes[index])] + 0.7152 * linear[Int(bytes[index + 1])]
+                + 0.0722 * linear[Int(bytes[index + 2])]
+        }.sorted()
+        let trim = luminance.count / 100
+        let contrast = (luminance[luminance.count - 1 - trim] + 0.05) / (luminance[trim] + 0.05)
+        XCTAssertGreaterThanOrEqual(contrast, 4.5, button.label)
     }
 
     private func launch(reset: Bool, spanish: Bool = false, privateRecovery: Bool = false) {

@@ -1,0 +1,9 @@
+{
+  "buildLogSHA256": "7450e0a1915fd730f27a87719b3b5945cff542932de3d144061db3152ac7629a",
+  "buildLogLines": 428,
+  "emittedWarningOrErrorMatches": [],
+  "bundleCheckSHA256": "f235bbb8dff89745abba14e5dbe8f0247778c5a7063582549dc3dd95af685c76",
+  "currentSourceManifestSHA256": "24fc718e4ad3173ede4888f4ba9eccac148869e7cad3b1a30481773933a411ca",
+  "status": "unsigned Release build0 and bundlecheck0; source/priorproductsunchanged",
+  "scope": "Incremental current-source generic iPhone arm64 build; no signed distribution, physical execution or closure of separate speech/English animation issues"
+}

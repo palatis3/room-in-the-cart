@@ -1,0 +1,1 @@
+Initial hash check stopped before exports because original-manifest.json wraps entries in manifest, unlike the earlier flat receipt. Adapted only to its exact schema; no hash mismatch or result-tool invocation occurred.
