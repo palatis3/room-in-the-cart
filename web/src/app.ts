@@ -84,6 +84,13 @@ export class WebApp {
     if(this.busy){this.historyResumePending=true;return;}
     void this.start();
   }
+  resumeWithFreshAuthority():void {
+    // Visibility/pageshow can describe the same return. Keep an existing
+    // concealed read (or its deferred refresh) instead of starting another.
+    if(this.historySuspended&&!this.historyAway&&this.busy)return;
+    this.historySuspended=true;this.historyGeneration++;this.render();
+    this.resumeFromHistory();
+  }
   async start():Promise<void> {
     if(this.historyAway)return;
     if(!this.supportedRoute()){this.render();return;}
