@@ -1,0 +1,34 @@
+Text of this SwiftUI.AccessibilityNode may be clipped at larger Dynamic Type sizes.
+Attributes: StaticText, 0x11e207440, {{183.7, 781.8}, {186.3, 20.3}}, label: 'Dec 31, 2098 at 7:00 PM'
+Element subtree:
+ →StaticText, 0x11e207440, {{183.7, 781.8}, {186.3, 20.3}}, label: 'Dec 31, 2098 at 7:00 PM'
+Path to element:
+ →Application, 0x105ded770, pid: 24970, label: 'Room in the Cart'
+  ↳Window (Main), 0x105ded3a0, {{0.0, 0.0}, {402.0, 874.0}}
+   ↳Other, 0x11c5faae0, {{0.0, 0.0}, {402.0, 874.0}}
+    ↳Other, 0x11c5fad20, {{0.0, 62.0}, {402.0, 812.0}}
+     ↳Other, 0x11c5fae40, {{0.0, 62.0}, {402.0, 812.0}}
+      ↳Other, 0x11c5faf60, {{0.0, 62.0}, {402.0, 812.0}}
+       ↳Other, 0x11c5fb080, {{0.0, 62.0}, {402.0, 812.0}}
+        ↳Other, 0x11c5fb1a0, {{0.0, 62.0}, {402.0, 812.0}}
+         ↳Other, 0x11c5fb2c0, {{0.0, 62.0}, {402.0, 812.0}}
+          ↳Other, 0x11c3f7a80, {{0.0, 62.0}, {402.0, 812.0}}
+           ↳Other, 0x11c3f8450, {{0.0, 62.0}, {402.0, 812.0}}
+            ↳Other, 0x11c3f8a40, {{0.0, 62.0}, {402.0, 812.0}}
+             ↳Other, 0x11c3f6550, {{0.0, 62.0}, {402.0, 812.0}}
+              ↳CollectionView, 0x11c382660, {{0.0, 62.0}, {402.0, 812.0}}
+               ↳Cell, 0x11e206a20, {{16.0, 766.0}, {370.0, 52.0}}
+                ↳Other, 0x11e206ea0, {{16.0, 766.0}, {370.0, 52.0}}
+                 ↳Other, 0x11e206fc0, {{16.0, 766.0}, {370.0, 52.0}}
+                  ↳Other, 0x11e2070e0, {{16.0, 766.0}, {370.0, 52.0}}
+                   ↳StaticText, 0x11e207200, {{16.0, 766.0}, {370.0, 52.0}}, label: 'Preview expires, Dec 31, 2098 at 7:00 PM'
+                    ↳StaticText, 0x11e207440, {{183.7, 781.8}, {186.3, 20.3}}, label: 'Dec 31, 2098 at 7:00 PM'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x1063a2a10, pid: 24970, label: 'Room in the Cart'
+  }
+  ↪︎Find: Descendant with identity binding to AX element pid: 24970, elementOrHash.elementID: 4910660528.431
+    Output: {
+      StaticText, 0x10d9c6bc0, {{183.7, 781.8}, {186.3, 20.3}}, label: 'Dec 31, 2098 at 7:00 PM'
+    }

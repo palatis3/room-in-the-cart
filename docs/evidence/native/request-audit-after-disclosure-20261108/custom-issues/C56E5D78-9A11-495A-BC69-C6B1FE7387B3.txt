@@ -1,0 +1,34 @@
+User will not be able to change the font size of this SwiftUI.AccessibilityNode
+Attributes: StaticText, 0x11bbcc7e0, {{32.0, 517.2}, {126.0, 18.0}}, label: 'Sam’s wrap lunch'
+Element subtree:
+ →StaticText, 0x11bbcc7e0, {{32.0, 517.2}, {126.0, 18.0}}, label: 'Sam’s wrap lunch'
+Path to element:
+ →Application, 0x11bbbe7e0, pid: 24970, label: 'Room in the Cart'
+  ↳Window (Main), 0x11bbb5630, {{0.0, 0.0}, {402.0, 874.0}}
+   ↳Other, 0x11bbc64e0, {{0.0, 0.0}, {402.0, 874.0}}
+    ↳Other, 0x11bbc6720, {{0.0, 62.0}, {402.0, 812.0}}
+     ↳Other, 0x11bbc6840, {{0.0, 62.0}, {402.0, 812.0}}
+      ↳Other, 0x11bbc6960, {{0.0, 62.0}, {402.0, 812.0}}
+       ↳Other, 0x11bbc6a80, {{0.0, 62.0}, {402.0, 812.0}}
+        ↳Other, 0x11bbc6ba0, {{0.0, 62.0}, {402.0, 812.0}}
+         ↳Other, 0x11bbc6cc0, {{0.0, 62.0}, {402.0, 812.0}}
+          ↳Other, 0x11bbc7380, {{0.0, 62.0}, {402.0, 812.0}}
+           ↳Other, 0x11bbc74a0, {{0.0, 62.0}, {402.0, 812.0}}
+            ↳Other, 0x11bbc75c0, {{0.0, 62.0}, {402.0, 812.0}}
+             ↳Other, 0x11bbc76e0, {{0.0, 62.0}, {402.0, 812.0}}
+              ↳CollectionView, 0x11bbc7800, {{0.0, 62.0}, {402.0, 812.0}}
+               ↳Cell, 0x11bbca2c0, {{16.0, 192.3}, {370.0, 499.7}}
+                ↳Other, 0x11bbca740, {{16.0, 192.3}, {370.0, 499.7}}
+                 ↳Other, 0x11bbca860, {{16.0, 192.3}, {370.0, 499.7}}
+                  ↳Other, 0x11bbca980, {{16.0, 192.3}, {370.0, 499.7}}
+                   ↳StaticText, 0x11bbcc6c0, {{32.0, 517.2}, {338.0, 56.7}}, identifier: 'household.decision.meal.88888888-8888-4888-8888-888888888888', label: 'Sam’s wrap lunch, Lunch · November 4, 2026, Protected portions, 1'
+                    ↳StaticText, 0x11bbcc7e0, {{32.0, 517.2}, {126.0, 18.0}}, label: 'Sam’s wrap lunch'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x11bf0b2f0, pid: 24970, label: 'Room in the Cart'
+  }
+  ↪︎Find: Descendant with identity binding to AX element pid: 24970, elementOrHash.elementID: 4910615408.401
+    Output: {
+      StaticText, 0x11bbfc830, {{32.0, 517.2}, {126.0, 18.0}}, label: 'Sam’s wrap lunch'
+    }
