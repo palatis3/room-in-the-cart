@@ -1,0 +1,64 @@
+{
+  "originalLogSHA256": "d5015ac898f1f745a98a66445b900c0c0ca63b1afb2047cb73ae69798b9c75d8",
+  "originalBytes": 139342,
+  "originalLines": 997,
+  "lines": [
+    {
+      "line": 376,
+      "text": "2026-11-08 13:36:08.555 xcodebuild[99721:26384239] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232)."
+    },
+    {
+      "line": 388,
+      "text": "2026-11-08 13:36:12.053 xcodebuild[99721:26384239] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232)."
+    },
+    {
+      "line": 945,
+      "text": "    t =    75.92s Added attachment named 'S24-other-meals-expanded-ordinary-facts'"
+    },
+    {
+      "line": 946,
+      "text": "    t =    75.92s Find the Target Application 'dev.roominthecart.app.debug'"
+    },
+    {
+      "line": 963,
+      "text": "    t =    76.98s Find the \"household.decision.meal.88888888-8888-4888-8888-888888888888\" Any"
+    },
+    {
+      "line": 964,
+      "text": "2026-11-08 13:37:28.314 xcodebuild[99721:26384239] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232)."
+    },
+    {
+      "line": 965,
+      "text": "2026-11-08 13:37:28.314 xcodebuild[99721:26384239] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232)."
+    },
+    {
+      "line": 972,
+      "text": "/Users/palatis/Room in the Cart/ios/UITests/HouseholdRequestPackUITests.swift:551: error: -[RoomInTheCartUITests.HouseholdRequestPackUITests testOtherMealsDisclosureHasNamed44PointControlAndLabelTapsPreserveReviewedFacts] : Failed to get matching snapshot: Application dev.roominthecart.app.debug is not running"
+    },
+    {
+      "line": 975,
+      "text": "Test Case '-[RoomInTheCartUITests.HouseholdRequestPackUITests testOtherMealsDisclosureHasNamed44PointControlAndLabelTapsPreserveReviewedFacts]' failed (101.782 seconds)."
+    },
+    {
+      "line": 982,
+      "text": "2026-11-08 13:37:53.051 xcodebuild[99721:26384239] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232)."
+    },
+    {
+      "line": 983,
+      "text": "2026-11-08 13:37:53.052 xcodebuild[99721:26384239] [MT] IDESchemeActionSDKRecord: operatingSystemBuild = <DVTBuildVersion 24A94232>, error = invalidDigitCount(94232)."
+    },
+    {
+      "line": 984,
+      "text": "2026-11-08 13:47:53.399 xcodebuild[99721:26390256]  IDETestOperationsObserverDebug: Failure collecting diagnostics from simulator: Timed out after 600.0 seconds while waiting for a response from the invoked process"
+    },
+    {
+      "line": 985,
+      "text": "2026-11-08 13:47:53.436 xcodebuild[99721:26384239] [MT] IDETestOperationsObserverDebug: 704.962 elapsed -- Testing started completed."
+    },
+    {
+      "line": 995,
+      "text": "** TEST FAILED **"
+    }
+  ],
+  "scope": "Final completed native log, bounded boundary/termination/diagnostic excerpt only. The600s postfailure diagnostic timeout is separate from the case101.782s failure."
+}

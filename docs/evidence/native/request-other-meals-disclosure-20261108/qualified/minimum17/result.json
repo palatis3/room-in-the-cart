@@ -1,0 +1,121 @@
+{
+  "phase": "minimum17",
+  "nativeExit": 0,
+  "strictExit": 0,
+  "caseSeconds": 88.61,
+  "runtime": {
+    "BuildID": "C789FCDA-4AAB-11EE-AE48-7EDEE72CB155",
+    "ProductBuildVersion": "21A328",
+    "ProductCopyright": "1983-2023 Apple Inc.",
+    "ProductName": "iPhone OS",
+    "ProductVersion": "17.0"
+  },
+  "device": "RITC Cook Voice Minimum OS Nov08",
+  "settings": {
+    "appearance": "light",
+    "content_size": "large",
+    "increase_contrast": "disabled"
+  },
+  "sourceManifestSHA256": "a5624f8feb151fdbbe28e980849861d766ec239480967389d7bc1ac36909ab26",
+  "sourceUnchanged": true,
+  "originalUnchanged": true,
+  "stateOrder": [
+    "Collapsed",
+    "Expanded",
+    "Expanded",
+    "Collapsed"
+  ],
+  "captures": [
+    {
+      "file": "00-S24-other-meals-Collapsed.png",
+      "sha256": "2767a9bb340e65b0d6d34728ae8ebec1fae377ec896df7ac541b2d1589fa9dd7",
+      "sequence": 0,
+      "timestamp": 1794166924.688
+    },
+    {
+      "file": "01-S24-other-meals-Collapsed-discovery.txt",
+      "sha256": "f709c84736ddcbee02acf5024eb0d7670bb5df8aa9f7cffcef7bf67b6d810bbc",
+      "sequence": 1,
+      "timestamp": 1794166924.953
+    },
+    {
+      "file": "02-S24-other-meals-Collapsed-control.txt",
+      "sha256": "66d31972ac7357b04f1fc1bc5fe663a09534e71f1984fc081d758461eedc355a",
+      "sequence": 2,
+      "timestamp": 1794166925.116
+    },
+    {
+      "file": "03-S24-other-meals-Expanded.png",
+      "sha256": "5745b7bb585f8a06220b27b4918c967d8f9c9b36d11bcf00fa46cd29e27d56b9",
+      "sequence": 3,
+      "timestamp": 1794166933.712
+    },
+    {
+      "file": "04-S24-other-meals-Expanded-discovery.txt",
+      "sha256": "3efdd4072380fc777622ba2b5b1cd1d55051d54fe73a97204b420114d2afa57b",
+      "sequence": 4,
+      "timestamp": 1794166933.918
+    },
+    {
+      "file": "05-S24-other-meals-Expanded-control.txt",
+      "sha256": "7be39b23f1b7df6e90d3011bdfb97940a92bb46a4a984dbd34cdd25a6a9d35c6",
+      "sequence": 5,
+      "timestamp": 1794166934.03
+    },
+    {
+      "file": "06-S24-other-meals-expanded-ordinary-facts.png",
+      "sha256": "9396b541c361838e23cbf9cfd475e5d36aabf94761c30275ba3cb4f0db3134c4",
+      "sequence": 6,
+      "timestamp": 1794166935.667
+    },
+    {
+      "file": "07-S24-other-meals-Expanded.png",
+      "sha256": "e67cbef08c9812b617f57567c4d4621d4c5296667717d3bab2cd2edf7a432ecd",
+      "sequence": 7,
+      "timestamp": 1794166951.581
+    },
+    {
+      "file": "08-S24-other-meals-Expanded-discovery.txt",
+      "sha256": "46701094f82b50873745d8d06de5d236d1d4fdb25ac137375d0cb5e6ac8e4895",
+      "sequence": 8,
+      "timestamp": 1794166951.792
+    },
+    {
+      "file": "09-S24-other-meals-Expanded-control.txt",
+      "sha256": "0e220b267422e7cfae503e94909f45035aec62b100935a1337183c418fc9142a",
+      "sequence": 9,
+      "timestamp": 1794166951.907
+    },
+    {
+      "file": "10-S24-other-meals-Collapsed.png",
+      "sha256": "a599861d02eaa67b6f8f8704dcdcb4dc4d99e22cc39e76aaf7945bd08b545015",
+      "sequence": 10,
+      "timestamp": 1794166954.581
+    },
+    {
+      "file": "11-S24-other-meals-Collapsed-discovery.txt",
+      "sha256": "5b9888be80aeff0afa8228febc04f35c4733c0f501e79ede1d20ef9ae2280c2a",
+      "sequence": 11,
+      "timestamp": 1794166954.789
+    },
+    {
+      "file": "12-S24-other-meals-Collapsed-control.txt",
+      "sha256": "bfcb60a1ffea2793ac79a9477dac63f59ad4b299eba4fb58a87d1fcaa350ed93",
+      "sequence": 12,
+      "timestamp": 1794166954.911
+    }
+  ],
+  "rootReview": {
+    "reviewedAtUTC": "2026-11-08T19:43:28.701852+00:00",
+    "sourceManifestSHA256": "a5624f8feb151fdbbe28e980849861d766ec239480967389d7bc1ac36909ab26",
+    "status": "scoped pass reviewed",
+    "screenshotsReviewed": 5,
+    "textAttachmentsReviewed": 8,
+    "observations": [
+      "All four state observations C/E/E/C have exactly one named button311x44 and label inside frame.",
+      "Expanded ordinary dinner/name/date/fourportions readable; collapses afterward.",
+      "Protected lunches preserved. Full test passed budget/disabledApply/zeroWrites before,during,after.",
+      "Screenshots intentionally scroll through sheet; not proof all fields visible simultaneously or physical VoiceOver."
+    ]
+  }
+}

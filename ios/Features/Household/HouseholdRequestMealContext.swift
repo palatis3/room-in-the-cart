@@ -56,6 +56,8 @@ struct HouseholdRequestMealContextView: View {
                     DisclosureGroup(ht("Other meals in this shop")) {
                         ForEach(context.otherMeals) { occurrence in HouseholdRequestMealFacts(occurrence: occurrence) }
                     }
+                    .disclosureGroupStyle(LabeledFormDisclosureStyle(label: ht("Other meals in this shop"),
+                                                                     identifier: "household.decision.otherMeals"))
                 }
             }
             Text(ht("Check usable food separately; this review does not confirm meal coverage."))

@@ -53,8 +53,10 @@ final class S24FixtureServer: @unchecked Sendable {
     }
     let cerealScenario: Bool
     let includeMealFacts: Bool
-    init(includeExistingLine: Bool = false, cerealScenario: Bool = false, includeMealFacts: Bool = true, deferredScenario: Bool = false) {
+    let includeOtherMeal: Bool
+    init(includeExistingLine: Bool = false, cerealScenario: Bool = false, includeMealFacts: Bool = true, deferredScenario: Bool = false, includeOtherMeal: Bool = false) {
         self.deferredScenario = deferredScenario
+        self.includeOtherMeal = includeOtherMeal
         self.includeExistingLine = includeExistingLine; self.cerealScenario = cerealScenario; self.includeMealFacts = includeMealFacts
     }
     static let protectedLunches: [[String: Any]] = [
@@ -62,6 +64,11 @@ final class S24FixtureServer: @unchecked Sendable {
          "meal":["title":"Sam’s wrap lunch", "day":"2026-11-04", "kind":"lunch", "portions":1, "protected":true]],
         ["occurrenceId":"99999999-9999-4999-8999-999999999999", "revision":1,
          "meal":["title":"Mia’s wrap lunch", "day":"2026-11-05", "kind":"lunch", "portions":1, "protected":true]]
+    ]
+    // Opt-in only: existing protected-lunch scenarios keep their original meal facts.
+    static let otherDinner: [String: Any] = [
+        "occurrenceId":"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", "revision":1,
+        "meal":["title":"Family rice dinner", "day":"2026-11-06", "kind":"dinner", "portions":4, "protected":false]
     ]
     var changed: ((Int, Int) -> Void)?
     var previewChanged: ((Int) -> Void)?
@@ -105,7 +112,7 @@ final class S24FixtureServer: @unchecked Sendable {
                 discountsMinor: cerealScenario ? CerealCheckout.discounts : 0, observedAt: Date().addingTimeInterval(-60), expiresAt: Date().addingTimeInterval(3600))
             let data = try JSONSerialization.jsonObject(with: JSONEncoder().encode(quote))
             var shop: [String: Any] = ["shopId":Self.shop,"shopRevision":revision + (recordedLines.isEmpty ? 0 : 1),"authorityEpoch":1,"phase":"draft","quote":data,"lines":recordedLines + (cerealScenario ? [["lineId":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","originalItem":"Original pickup items","packs":1,"unitPriceMinor":CerealCheckout.items,"feeEligible":true]] : []) + (includeExistingLine ? [["lineId":"77777777-7777-4777-8777-777777777777","originalItem":"Existing wraps","packs":1,"unitPriceMinor":0,"feeEligible":true]] : [])]
-            if includeMealFacts { shop["meals"] = Self.protectedLunches }
+            if includeMealFacts { shop["meals"] = Self.protectedLunches + (includeOtherMeal ? [Self.otherDinner] : []) }
             return try json(shop)
         }
         if path.hasSuffix("/previews") {
@@ -194,7 +201,7 @@ import SwiftUI
     @Published var lines = 0
     @Published var failed = false
     @Published var previews = 0
-    private let server = S24FixtureServer(cerealScenario: ProcessInfo.processInfo.arguments.contains("--request-meal-fixture"), includeMealFacts: !ProcessInfo.processInfo.arguments.contains("--request-meals-unknown"), deferredScenario: ProcessInfo.processInfo.arguments.contains("--deferred-request-fixture"))
+    private let server = S24FixtureServer(cerealScenario: ProcessInfo.processInfo.arguments.contains("--request-meal-fixture"), includeMealFacts: !ProcessInfo.processInfo.arguments.contains("--request-meals-unknown"), deferredScenario: ProcessInfo.processInfo.arguments.contains("--deferred-request-fixture"), includeOtherMeal: ProcessInfo.processInfo.arguments.contains("--request-other-meal-fixture"))
     func endShopperAccess() async { server.revokeAccess(); await model?.load() }
     func start() async {
         guard model == nil, ProcessInfo.processInfo.arguments.contains("--ui-testing"),ProcessInfo.processInfo.arguments.contains("--request-pack-fixture") else { return }

@@ -1,0 +1,123 @@
+{
+  "phase": "current-dark-AX5",
+  "nativeExit": 0,
+  "strictExit": 0,
+  "caseSeconds": 427.16,
+  "runtime": {
+    "BuildID": "28797834-D251-11F0-A935-FBAB4C799B22",
+    "ProductBuildVersion": "23C54",
+    "ProductCopyright": "1983-2025 Apple Inc.",
+    "ProductName": "iPhone OS",
+    "ProductVersion": "26.2",
+    "SystemImageID": "5A79EE63-AF0F-43EF-884D-7F08B93ED590"
+  },
+  "device": "RITC S24 Current Audit Nov08",
+  "settings": {
+    "appearance": "dark",
+    "content_size": "accessibility-extra-extra-extra-large",
+    "increase_contrast": "disabled"
+  },
+  "sourceManifestSHA256": "a5624f8feb151fdbbe28e980849861d766ec239480967389d7bc1ac36909ab26",
+  "sourceUnchanged": true,
+  "originalUnchanged": true,
+  "stateOrder": [
+    "Collapsed",
+    "Expanded",
+    "Expanded",
+    "Collapsed"
+  ],
+  "captures": [
+    {
+      "file": "00-S24-other-meals-Collapsed.png",
+      "sha256": "45e72371e0b8a672afe95a1c64b4225358c8cb9111b40986f9d47a809aadc7f7",
+      "sequence": 0,
+      "timestamp": 1794167390.149
+    },
+    {
+      "file": "01-S24-other-meals-Collapsed-discovery.txt",
+      "sha256": "55e8dca1f9735568a33ecd446d666268189a4f9fae141db8a1fe41e66e521c7d",
+      "sequence": 1,
+      "timestamp": 1794167390.327
+    },
+    {
+      "file": "02-S24-other-meals-Collapsed-control.txt",
+      "sha256": "7eee9fe3d3f21eb0b169800a8fe0f2e33a639f2264c97d37fd020f06146788a7",
+      "sequence": 2,
+      "timestamp": 1794167390.419
+    },
+    {
+      "file": "03-S24-other-meals-Expanded.png",
+      "sha256": "5be4a5bffb6cdc3a5884f53a108c10523d0ab7051720f2f189a95b2e25f1d288",
+      "sequence": 3,
+      "timestamp": 1794167400.827
+    },
+    {
+      "file": "04-S24-other-meals-Expanded-discovery.txt",
+      "sha256": "f3a09e03126d297d0fe95d046ac059325f0b2e5ea31d05a3edcb9eebcb764682",
+      "sequence": 4,
+      "timestamp": 1794167400.987
+    },
+    {
+      "file": "05-S24-other-meals-Expanded-control.txt",
+      "sha256": "3c54025fb0eaf7cd8d60e76597998758f2629b6222049002a1a8e48051527fd8",
+      "sequence": 5,
+      "timestamp": 1794167401.07
+    },
+    {
+      "file": "06-S24-other-meals-expanded-ordinary-facts.png",
+      "sha256": "270c62b0f0e9defba2a168581c45ff47b98e2b60f76e8665adb7b773521ee554",
+      "sequence": 6,
+      "timestamp": 1794167406.711
+    },
+    {
+      "file": "07-S24-other-meals-Expanded.png",
+      "sha256": "f85a86c1f721457f7e3e86553788e1b4c5d3285f07e94933c3e834f87ea2fb57",
+      "sequence": 7,
+      "timestamp": 1794167548.699
+    },
+    {
+      "file": "08-S24-other-meals-Expanded-discovery.txt",
+      "sha256": "f3a09e03126d297d0fe95d046ac059325f0b2e5ea31d05a3edcb9eebcb764682",
+      "sequence": 8,
+      "timestamp": 1794167548.862
+    },
+    {
+      "file": "09-S24-other-meals-Expanded-control.txt",
+      "sha256": "3c54025fb0eaf7cd8d60e76597998758f2629b6222049002a1a8e48051527fd8",
+      "sequence": 9,
+      "timestamp": 1794167548.943
+    },
+    {
+      "file": "10-S24-other-meals-Collapsed.png",
+      "sha256": "a567272cfa356a8483113a84873677d201bb2e7c7e7958a22c8b6ab05d988482",
+      "sequence": 10,
+      "timestamp": 1794167551.391
+    },
+    {
+      "file": "11-S24-other-meals-Collapsed-discovery.txt",
+      "sha256": "9a82c76cbdfe89f83621ca22d679e69b57137b96935a3ea0aaa8cdb95c3d854b",
+      "sequence": 11,
+      "timestamp": 1794167551.573
+    },
+    {
+      "file": "12-S24-other-meals-Collapsed-control.txt",
+      "sha256": "730a90b8172a16e59d5382081c96276a70139fc6fdd902b315045f42b6d8c504",
+      "sequence": 12,
+      "timestamp": 1794167551.669
+    }
+  ],
+  "rootReview": {
+    "reviewedAtUTC": "2026-11-08T19:54:57.597677+00:00",
+    "sourceManifestSHA256": "a5624f8feb151fdbbe28e980849861d766ec239480967389d7bc1ac36909ab26",
+    "status": "scoped pass reviewed",
+    "screenshotsReviewed": 5,
+    "textAttachmentsReviewed": 8,
+    "observations": [
+      "All C/E/E/C control states named and tappable; width338points, height125.333collapsed/187.333expanded.",
+      "Whole ordinary dinner name,date,4portions readable together in selectedordinary screenshot.",
+      "Header text wraps2lines collapsed and3lines expanded because chevron widths differ; no truncation but stable indicator-width refinement remains useful.",
+      "Assertions preserve protected lunches, all amounts, disabledApply, zeroWrites beforeduringafter.",
+      "Visual review scopes to retained targets; no physicalVoiceOver or entireaudit closure."
+    ]
+  }
+}

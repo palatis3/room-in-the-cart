@@ -185,6 +185,90 @@ import XCTest
         XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 0")
     }
 
+    func testOtherMealsDisclosureHasNamed44PointControlAndLabelTapsPreserveReviewedFacts() {
+        openCerealReview(extraArguments: ["--request-other-meal-fixture"])
+        let title = "Other meals in this shop"
+        let controls = app.buttons.matching(NSPredicate(format: "label == %@", title))
+        let control = controls.firstMatch
+        let label = app.staticTexts.matching(NSPredicate(format: "label == %@", title)).firstMatch
+        let other = app.staticTexts.matching(NSPredicate(format: "identifier == %@", "household.decision.meal.bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb")).firstMatch
+
+        func assertReviewedFacts() {
+            for (id, expected) in [
+                ("88888888-8888-4888-8888-888888888888", ["Sam’s wrap lunch", "Lunch · November 4, 2026", "Protected portions, 1"]),
+                ("99999999-9999-4999-8999-999999999999", ["Mia’s wrap lunch", "Lunch · November 5, 2026", "Protected portions, 1"])
+            ] {
+                let row = app.staticTexts.matching(NSPredicate(format: "identifier == %@", "household.decision.meal." + id)).firstMatch
+                reveal(row, fullyVisible: true)
+                let observedLabel = row.label
+                for fact in expected { XCTAssertTrue(observedLabel.contains(fact), observedLabel) }
+            }
+            for (id, amount) in [("household.decision.before-total", "$37.20"),
+                                 ("household.decision.after-total", "$40.69"),
+                                 ("household.decision.over-cap", "$2.69")] {
+                let total = app.staticTexts.matching(identifier: id).firstMatch
+                reveal(total)
+                let observedLabel = total.label
+                XCTAssertTrue(observedLabel.contains(amount), observedLabel)
+            }
+            let apply = app.buttons.matching(identifier: "household.decision.apply").firstMatch
+            reveal(apply); XCTAssertFalse(apply.isEnabled, "Disclosure cannot accept the overage")
+            XCTAssertEqual(app.staticTexts.matching(identifier: "fixture.s24.posts").firstMatch.label, "Fixture applied decisions: 0")
+            XCTAssertEqual(app.staticTexts.matching(identifier: "fixture.s24.lines").firstMatch.label, "Fixture saved lines: 0")
+        }
+        func assertControl(_ state: String) {
+            reveal(label, fullyVisible: true)
+            capture("S24-other-meals-" + state)
+            let count = controls.count
+            let discovery = XCTAttachment(string: "Expected state: \(state)\nNamed button count: \(count)\n" +
+                "Visible label: \(title)\nLabel frame: \(label.frame)")
+            discovery.name = "S24-other-meals-" + state + "-discovery"
+            discovery.lifetime = .keepAlways; add(discovery)
+            // Never ask an absent firstMatch for debugDescription or a snapshot.
+            // The header screenshot and discovery facts survive this intended failure.
+            guard count == 1 else {
+                XCTFail("Expected exactly one button named \(title); found \(count)")
+                return
+            }
+            guard let snapshot = try? control.snapshot() else {
+                XCTFail("The named Other meals control could not be snapshotted")
+                return
+            }
+            let details = "Type: \(snapshot.elementType)\nLabel: \(snapshot.label)\n" +
+                "Value: \(String(describing: snapshot.value))\nFrame: \(snapshot.frame)"
+            let evidence = XCTAttachment(string: String(details.prefix(4096)))
+            evidence.name = "S24-other-meals-" + state + "-control"
+            evidence.lifetime = .keepAlways; add(evidence)
+            XCTAssertEqual(snapshot.elementType, .button)
+            XCTAssertEqual(snapshot.label, title)
+            XCTAssertEqual(snapshot.value as? String, state)
+            XCTAssertTrue(snapshot.isEnabled && control.isHittable)
+            XCTAssertGreaterThanOrEqual(snapshot.frame.width, 44)
+            XCTAssertGreaterThanOrEqual(snapshot.frame.height, 44)
+            XCTAssertTrue(snapshot.frame.contains(label.frame), "The named action must include its visible label")
+        }
+
+        assertReviewedFacts()
+        assertControl("Collapsed")
+        XCTAssertFalse(other.exists)
+        // Tap the actual text center, never the trailing disclosure chevron.
+        label.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        assertControl("Expanded")
+        reveal(other, fullyVisible: true)
+        let ordinaryLabel = other.label
+        for fact in ["Family rice dinner", "Dinner · November 6, 2026", "Portions, 4"] {
+            XCTAssertTrue(ordinaryLabel.contains(fact), ordinaryLabel)
+        }
+        XCTAssertFalse(ordinaryLabel.contains("Protected portions"))
+        capture("S24-other-meals-expanded-ordinary-facts")
+        assertReviewedFacts()
+        assertControl("Expanded")
+        label.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        assertControl("Collapsed")
+        XCTAssertFalse(other.exists)
+        assertReviewedFacts()
+    }
+
     func testLargestTextShowsCompleteProtectedLunchNamesAndDates() throws {
         openCerealReview(extraArguments: ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"])
         let dates = ["Lunch · November 4, 2026", "Lunch · November 5, 2026"]

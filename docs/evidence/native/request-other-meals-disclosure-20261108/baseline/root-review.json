@@ -1,0 +1,15 @@
+{
+  "status": "reproduced",
+  "sourceManifestSHA256": "3dade26e9a7702f3520f6ff736d76ce679fb47f9f48782d6aa4f7cddfa43df9b",
+  "reviewedAtUTC": "2026-11-08T18:35:36.320961+00:00",
+  "reviewer": "root",
+  "evidence": "Viewed original header PNG and read discovery plus exact adjacent hierarchy lines from once-only selected collection.",
+  "findings": [
+    "Visible Other meals label is separate StaticText,frame32,131.5,184.5,20.5.",
+    "Its adjacent Button has no label,identifier collapsed,frame332.5,135,10.5,13.5.",
+    "Namedbuttoncount0 is reproduced; exposedbuttonbounds below44pt in bothdimensions."
+  ],
+  "limits": [
+    "No label-tap result or fullphysicalVoiceOver task claimed; baseline stopped on missingnamedbutton."
+  ]
+}

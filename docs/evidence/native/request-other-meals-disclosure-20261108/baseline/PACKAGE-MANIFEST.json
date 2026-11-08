@@ -1,0 +1,70 @@
+{
+  "files": {
+    "README.md": {
+      "sha256": "d7f30504fd255436d44f7f6975a531c96dd5016155483701c83de80b9cd07785",
+      "bytes": 3854
+    },
+    "capture-receipt.json": {
+      "sha256": "a78ae9556813748c6137e27cfe65f43a8b38732a8f4f979edfd3deb63a0afbad",
+      "bytes": 2315
+    },
+    "copy-and-verification-receipt.json": {
+      "sha256": "66289e66d415580d5e5aefd492ff44ebc8ede20f57fbcfb7da821a40f4c97a1f",
+      "bytes": 2877
+    },
+    "discovery.txt": {
+      "sha256": "8f2a44a04bdc52fdaced81a2af3deec8f0104c4b19a8c666d6b6750a0201c8cd",
+      "bytes": 127
+    },
+    "hierarchy-excerpt.json": {
+      "sha256": "91b9653727262c0ed3ca435f0a73b999888017076876d3fec57a9b0defd2d237",
+      "bytes": 971
+    },
+    "images/other-meals-collapsed.png": {
+      "sha256": "77fca157b2d5c03192dd1df170e2712dc8873e46b47f72d38473200b71fc6239",
+      "bytes": 125509
+    },
+    "root-review.json": {
+      "sha256": "d63d78cee460f5c8bc8f18844818fc09181f5bbd054660538341a16c1a2bb2df",
+      "bytes": 737
+    },
+    "run/failure-and-diagnostic-timeline.json": {
+      "sha256": "37f75b6f86d79bd38517530630d3f86b18d02eddb46aaab8d3ba4eef4def1de1",
+      "bytes": 3472
+    },
+    "run/receipt-summary.json": {
+      "sha256": "e74f91c28f3a8289de30e99c2086f37f1c261c6d7af6d79bd0ac26adf8217b51",
+      "bytes": 2853
+    },
+    "run/selectors.txt": {
+      "sha256": "f6d132f5a749c32be2fc895cdac5a1d437d7a34ad81ac1baddb4d940155450d5",
+      "bytes": 129
+    },
+    "run/strict.txt": {
+      "sha256": "1cf93a8fef1bbb1ea5acc87ca156e6a3d1eec880321d83f230f8b45cd3892b93",
+      "bytes": 1280
+    },
+    "run/summary.json": {
+      "sha256": "2e8d24dea8eb729268c252efebddbbfbde70d584a2dd7043527079b36e71b306",
+      "bytes": 1669
+    },
+    "run/test-runtime-warnings.json": {
+      "sha256": "ce5f63a49527481ca5704f8996eb8eea682d8688c3381353dd8f23ad6759bffb",
+      "bytes": 179
+    },
+    "run/tests.json": {
+      "sha256": "5794d7816a563ddd7795f116e5abcf5b9da42c88baef045fed48fe0cedb3f356",
+      "bytes": 2384
+    },
+    "run/verification.json": {
+      "sha256": "e8ad80b71a2c1864034ee13a1abed448db6aa042a2849c397e94b6ee55dad9ab",
+      "bytes": 270
+    },
+    "source-pins.json": {
+      "sha256": "7005c17222ac5adaa8d537eb42fed783034600d5e515183f6dcdbe9ba599d562",
+      "bytes": 1187
+    }
+  },
+  "fileCount": 16,
+  "totalBytes": 149813
+}
