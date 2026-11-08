@@ -1,0 +1,803 @@
+[
+  {
+    "issue": {
+      "rowid": 1,
+      "associatedError_fk": null,
+      "issueType": "Runtime Warning",
+      "sourceCodeContext_fk": 1,
+      "compactDescription": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions",
+      "orderInOwner": 0,
+      "detailedDescription": null,
+      "testCaseRun_fk": 4,
+      "testSuiteRun_fk": null,
+      "sanitizedDescription": null,
+      "timestamp": 815796766.0,
+      "isTopLevel": 1,
+      "uuid": "A649EB69-D1C3-4DDD-88D6-E5D72D58B5B3",
+      "expression_fk": null
+    },
+    "run": {
+      "rowid": 4,
+      "repetitionPolicy_fk": null,
+      "skipNotice_fk": null,
+      "result": "Success",
+      "dynamicTestParameters_fk": null,
+      "orderInTestSuiteRun": 3,
+      "duration": 70.76317203044891,
+      "testCase_fk": 4,
+      "testSuiteRun_fk": 1
+    },
+    "case": {
+      "rowid": 4,
+      "identifier": "SharedDeliveryUITests/testShopperReviewsExactEditedCookWordingBeforeReadback()",
+      "identifierURL": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/SharedDeliveryUITests/testShopperReviewsExactEditedCookWordingBeforeReadback",
+      "name": "testShopperReviewsExactEditedCookWordingBeforeReadback()",
+      "orderInTestSuite": 3,
+      "testSuite_fk": 1,
+      "summary": null
+    },
+    "frames": [
+      {
+        "rowid": 1,
+        "address": "0",
+        "symbolInfo_fk": null,
+        "orderInContainer": 0,
+        "context_fk": 1
+      },
+      {
+        "rowid": 2,
+        "address": "0",
+        "symbolInfo_fk": null,
+        "orderInContainer": 1,
+        "context_fk": 1
+      },
+      {
+        "rowid": 3,
+        "address": "0",
+        "symbolInfo_fk": null,
+        "orderInContainer": 2,
+        "context_fk": 1
+      },
+      {
+        "rowid": 4,
+        "address": "0",
+        "symbolInfo_fk": null,
+        "orderInContainer": 3,
+        "context_fk": 1
+      },
+      {
+        "rowid": 5,
+        "address": "0",
+        "symbolInfo_fk": null,
+        "orderInContainer": 4,
+        "context_fk": 1
+      },
+      {
+        "rowid": 6,
+        "address": "0",
+        "symbolInfo_fk": null,
+        "orderInContainer": 5,
+        "context_fk": 1
+      },
+      {
+        "rowid": 7,
+        "address": "0",
+        "symbolInfo_fk": null,
+        "orderInContainer": 6,
+        "context_fk": 1
+      },
+      {
+        "rowid": 8,
+        "address": "0",
+        "symbolInfo_fk": null,
+        "orderInContainer": 7,
+        "context_fk": 1
+      },
+      {
+        "rowid": 9,
+        "address": "0",
+        "symbolInfo_fk": null,
+        "orderInContainer": 8,
+        "context_fk": 1
+      },
+      {
+        "rowid": 10,
+        "address": "0",
+        "symbolInfo_fk": null,
+        "orderInContainer": 9,
+        "context_fk": 1
+      },
+      {
+        "rowid": 11,
+        "address": "0",
+        "symbolInfo_fk": null,
+        "orderInContainer": 10,
+        "context_fk": 1
+      },
+      {
+        "rowid": 12,
+        "address": "0",
+        "symbolInfo_fk": null,
+        "orderInContainer": 11,
+        "context_fk": 1
+      },
+      {
+        "rowid": 13,
+        "address": "0",
+        "symbolInfo_fk": null,
+        "orderInContainer": 12,
+        "context_fk": 1
+      },
+      {
+        "rowid": 14,
+        "address": "0",
+        "symbolInfo_fk": null,
+        "orderInContainer": 13,
+        "context_fk": 1
+      },
+      {
+        "rowid": 15,
+        "address": "0",
+        "symbolInfo_fk": null,
+        "orderInContainer": 14,
+        "context_fk": 1
+      },
+      {
+        "rowid": 16,
+        "address": "0",
+        "symbolInfo_fk": null,
+        "orderInContainer": 15,
+        "context_fk": 1
+      },
+      {
+        "rowid": 17,
+        "address": "0",
+        "symbolInfo_fk": null,
+        "orderInContainer": 16,
+        "context_fk": 1
+      },
+      {
+        "rowid": 18,
+        "address": "0",
+        "symbolInfo_fk": null,
+        "orderInContainer": 17,
+        "context_fk": 1
+      },
+      {
+        "rowid": 19,
+        "address": "0",
+        "symbolInfo_fk": null,
+        "orderInContainer": 18,
+        "context_fk": 1
+      },
+      {
+        "rowid": 20,
+        "address": "0",
+        "symbolInfo_fk": null,
+        "orderInContainer": 19,
+        "context_fk": 1
+      },
+      {
+        "rowid": 21,
+        "address": "0",
+        "symbolInfo_fk": null,
+        "orderInContainer": 20,
+        "context_fk": 1
+      },
+      {
+        "rowid": 22,
+        "address": "0",
+        "symbolInfo_fk": null,
+        "orderInContainer": 21,
+        "context_fk": 1
+      },
+      {
+        "rowid": 23,
+        "address": "0",
+        "symbolInfo_fk": null,
+        "orderInContainer": 22,
+        "context_fk": 1
+      }
+    ]
+  },
+  {
+    "issue": {
+      "rowid": 2,
+      "associatedError_fk": null,
+      "issueType": "Assertion Failure",
+      "sourceCodeContext_fk": 2,
+      "compactDescription": "XCTAssertEqual failed: (\"Optional(\"0\")\") is not equal to (\"Optional(\"1\")\")",
+      "orderInOwner": 0,
+      "detailedDescription": null,
+      "testCaseRun_fk": 5,
+      "testSuiteRun_fk": null,
+      "sanitizedDescription": "XCTAssertEqual failed: ((multiple strings))",
+      "timestamp": 815796919.5969999,
+      "isTopLevel": 1,
+      "uuid": "AC09244C-DAC9-42EA-9AD4-A468CFC4B8ED",
+      "expression_fk": null
+    },
+    "run": {
+      "rowid": 5,
+      "repetitionPolicy_fk": null,
+      "skipNotice_fk": null,
+      "result": "Failure",
+      "dynamicTestParameters_fk": null,
+      "orderInTestSuiteRun": 4,
+      "duration": 129.01890802383423,
+      "testCase_fk": 5,
+      "testSuiteRun_fk": 1
+    },
+    "case": {
+      "rowid": 5,
+      "identifier": "SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord()",
+      "identifierURL": "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord",
+      "name": "testShopperSavesDatedCookCopyAndReopensRecipientSendRecord()",
+      "orderInTestSuite": 4,
+      "testSuite_fk": 1,
+      "summary": null
+    },
+    "frames": [
+      {
+        "rowid": 24,
+        "address": "4387846604",
+        "symbolInfo_fk": null,
+        "orderInContainer": 0,
+        "context_fk": 2
+      },
+      {
+        "rowid": 25,
+        "address": "4387304767",
+        "symbolInfo_fk": null,
+        "orderInContainer": 1,
+        "context_fk": 2
+      },
+      {
+        "rowid": 26,
+        "address": "4387304235",
+        "symbolInfo_fk": null,
+        "orderInContainer": 2,
+        "context_fk": 2
+      },
+      {
+        "rowid": 27,
+        "address": "4387305751",
+        "symbolInfo_fk": null,
+        "orderInContainer": 3,
+        "context_fk": 2
+      },
+      {
+        "rowid": 28,
+        "address": "4426017207",
+        "symbolInfo_fk": null,
+        "orderInContainer": 4,
+        "context_fk": 2
+      },
+      {
+        "rowid": 29,
+        "address": "4473154051",
+        "symbolInfo_fk": null,
+        "orderInContainer": 5,
+        "context_fk": 2
+      },
+      {
+        "rowid": 30,
+        "address": "4473161539",
+        "symbolInfo_fk": null,
+        "orderInContainer": 6,
+        "context_fk": 2
+      },
+      {
+        "rowid": 31,
+        "address": "6447684511",
+        "symbolInfo_fk": null,
+        "orderInContainer": 7,
+        "context_fk": 2
+      },
+      {
+        "rowid": 32,
+        "address": "6447672643",
+        "symbolInfo_fk": null,
+        "orderInContainer": 8,
+        "context_fk": 2
+      },
+      {
+        "rowid": 33,
+        "address": "4387764463",
+        "symbolInfo_fk": null,
+        "orderInContainer": 9,
+        "context_fk": 2
+      },
+      {
+        "rowid": 34,
+        "address": "4387764391",
+        "symbolInfo_fk": null,
+        "orderInContainer": 10,
+        "context_fk": 2
+      },
+      {
+        "rowid": 35,
+        "address": "4387762451",
+        "symbolInfo_fk": null,
+        "orderInContainer": 11,
+        "context_fk": 2
+      },
+      {
+        "rowid": 36,
+        "address": "4387703443",
+        "symbolInfo_fk": null,
+        "orderInContainer": 12,
+        "context_fk": 2
+      },
+      {
+        "rowid": 37,
+        "address": "4387857751",
+        "symbolInfo_fk": null,
+        "orderInContainer": 13,
+        "context_fk": 2
+      },
+      {
+        "rowid": 38,
+        "address": "4387857911",
+        "symbolInfo_fk": null,
+        "orderInContainer": 14,
+        "context_fk": 2
+      },
+      {
+        "rowid": 39,
+        "address": "4387703207",
+        "symbolInfo_fk": null,
+        "orderInContainer": 15,
+        "context_fk": 2
+      },
+      {
+        "rowid": 40,
+        "address": "4387761907",
+        "symbolInfo_fk": null,
+        "orderInContainer": 16,
+        "context_fk": 2
+      },
+      {
+        "rowid": 41,
+        "address": "4387763703",
+        "symbolInfo_fk": null,
+        "orderInContainer": 17,
+        "context_fk": 2
+      },
+      {
+        "rowid": 42,
+        "address": "4387764603",
+        "symbolInfo_fk": null,
+        "orderInContainer": 18,
+        "context_fk": 2
+      },
+      {
+        "rowid": 43,
+        "address": "4387376319",
+        "symbolInfo_fk": null,
+        "orderInContainer": 19,
+        "context_fk": 2
+      },
+      {
+        "rowid": 44,
+        "address": "4387377935",
+        "symbolInfo_fk": null,
+        "orderInContainer": 20,
+        "context_fk": 2
+      },
+      {
+        "rowid": 45,
+        "address": "4387399823",
+        "symbolInfo_fk": null,
+        "orderInContainer": 21,
+        "context_fk": 2
+      },
+      {
+        "rowid": 46,
+        "address": "4387376903",
+        "symbolInfo_fk": null,
+        "orderInContainer": 22,
+        "context_fk": 2
+      },
+      {
+        "rowid": 47,
+        "address": "4387383567",
+        "symbolInfo_fk": null,
+        "orderInContainer": 23,
+        "context_fk": 2
+      },
+      {
+        "rowid": 48,
+        "address": "4387399823",
+        "symbolInfo_fk": null,
+        "orderInContainer": 24,
+        "context_fk": 2
+      },
+      {
+        "rowid": 49,
+        "address": "4387382031",
+        "symbolInfo_fk": null,
+        "orderInContainer": 25,
+        "context_fk": 2
+      },
+      {
+        "rowid": 50,
+        "address": "4387691007",
+        "symbolInfo_fk": null,
+        "orderInContainer": 26,
+        "context_fk": 2
+      },
+      {
+        "rowid": 51,
+        "address": "4387690751",
+        "symbolInfo_fk": null,
+        "orderInContainer": 27,
+        "context_fk": 2
+      },
+      {
+        "rowid": 52,
+        "address": "4387380711",
+        "symbolInfo_fk": null,
+        "orderInContainer": 28,
+        "context_fk": 2
+      },
+      {
+        "rowid": 53,
+        "address": "4387364675",
+        "symbolInfo_fk": null,
+        "orderInContainer": 29,
+        "context_fk": 2
+      },
+      {
+        "rowid": 54,
+        "address": "4387425167",
+        "symbolInfo_fk": null,
+        "orderInContainer": 30,
+        "context_fk": 2
+      },
+      {
+        "rowid": 55,
+        "address": "4387424603",
+        "symbolInfo_fk": null,
+        "orderInContainer": 31,
+        "context_fk": 2
+      },
+      {
+        "rowid": 56,
+        "address": "4387421927",
+        "symbolInfo_fk": null,
+        "orderInContainer": 32,
+        "context_fk": 2
+      },
+      {
+        "rowid": 57,
+        "address": "4387691007",
+        "symbolInfo_fk": null,
+        "orderInContainer": 33,
+        "context_fk": 2
+      },
+      {
+        "rowid": 58,
+        "address": "4387690751",
+        "symbolInfo_fk": null,
+        "orderInContainer": 34,
+        "context_fk": 2
+      },
+      {
+        "rowid": 59,
+        "address": "4387421795",
+        "symbolInfo_fk": null,
+        "orderInContainer": 35,
+        "context_fk": 2
+      },
+      {
+        "rowid": 60,
+        "address": "4387423243",
+        "symbolInfo_fk": null,
+        "orderInContainer": 36,
+        "context_fk": 2
+      },
+      {
+        "rowid": 61,
+        "address": "4387364675",
+        "symbolInfo_fk": null,
+        "orderInContainer": 37,
+        "context_fk": 2
+      },
+      {
+        "rowid": 62,
+        "address": "4387425167",
+        "symbolInfo_fk": null,
+        "orderInContainer": 38,
+        "context_fk": 2
+      },
+      {
+        "rowid": 63,
+        "address": "4387424603",
+        "symbolInfo_fk": null,
+        "orderInContainer": 39,
+        "context_fk": 2
+      },
+      {
+        "rowid": 64,
+        "address": "4387421927",
+        "symbolInfo_fk": null,
+        "orderInContainer": 40,
+        "context_fk": 2
+      },
+      {
+        "rowid": 65,
+        "address": "4387691007",
+        "symbolInfo_fk": null,
+        "orderInContainer": 41,
+        "context_fk": 2
+      },
+      {
+        "rowid": 66,
+        "address": "4387690751",
+        "symbolInfo_fk": null,
+        "orderInContainer": 42,
+        "context_fk": 2
+      },
+      {
+        "rowid": 67,
+        "address": "4387421795",
+        "symbolInfo_fk": null,
+        "orderInContainer": 43,
+        "context_fk": 2
+      },
+      {
+        "rowid": 68,
+        "address": "4387423243",
+        "symbolInfo_fk": null,
+        "orderInContainer": 44,
+        "context_fk": 2
+      },
+      {
+        "rowid": 69,
+        "address": "4387364675",
+        "symbolInfo_fk": null,
+        "orderInContainer": 45,
+        "context_fk": 2
+      },
+      {
+        "rowid": 70,
+        "address": "4387425167",
+        "symbolInfo_fk": null,
+        "orderInContainer": 46,
+        "context_fk": 2
+      },
+      {
+        "rowid": 71,
+        "address": "4387424603",
+        "symbolInfo_fk": null,
+        "orderInContainer": 47,
+        "context_fk": 2
+      },
+      {
+        "rowid": 72,
+        "address": "4387421927",
+        "symbolInfo_fk": null,
+        "orderInContainer": 48,
+        "context_fk": 2
+      },
+      {
+        "rowid": 73,
+        "address": "4387691007",
+        "symbolInfo_fk": null,
+        "orderInContainer": 49,
+        "context_fk": 2
+      },
+      {
+        "rowid": 74,
+        "address": "4387690751",
+        "symbolInfo_fk": null,
+        "orderInContainer": 50,
+        "context_fk": 2
+      },
+      {
+        "rowid": 75,
+        "address": "4387421795",
+        "symbolInfo_fk": null,
+        "orderInContainer": 51,
+        "context_fk": 2
+      },
+      {
+        "rowid": 76,
+        "address": "4387423243",
+        "symbolInfo_fk": null,
+        "orderInContainer": 52,
+        "context_fk": 2
+      },
+      {
+        "rowid": 77,
+        "address": "4387364675",
+        "symbolInfo_fk": null,
+        "orderInContainer": 53,
+        "context_fk": 2
+      },
+      {
+        "rowid": 78,
+        "address": "4387552663",
+        "symbolInfo_fk": null,
+        "orderInContainer": 54,
+        "context_fk": 2
+      },
+      {
+        "rowid": 79,
+        "address": "4387691007",
+        "symbolInfo_fk": null,
+        "orderInContainer": 55,
+        "context_fk": 2
+      },
+      {
+        "rowid": 80,
+        "address": "4387690751",
+        "symbolInfo_fk": null,
+        "orderInContainer": 56,
+        "context_fk": 2
+      },
+      {
+        "rowid": 81,
+        "address": "4387552331",
+        "symbolInfo_fk": null,
+        "orderInContainer": 57,
+        "context_fk": 2
+      },
+      {
+        "rowid": 82,
+        "address": "4387498327",
+        "symbolInfo_fk": null,
+        "orderInContainer": 58,
+        "context_fk": 2
+      },
+      {
+        "rowid": 83,
+        "address": "4387503135",
+        "symbolInfo_fk": null,
+        "orderInContainer": 59,
+        "context_fk": 2
+      },
+      {
+        "rowid": 84,
+        "address": "4387503543",
+        "symbolInfo_fk": null,
+        "orderInContainer": 60,
+        "context_fk": 2
+      },
+      {
+        "rowid": 85,
+        "address": "4387497943",
+        "symbolInfo_fk": null,
+        "orderInContainer": 61,
+        "context_fk": 2
+      },
+      {
+        "rowid": 86,
+        "address": "4387497375",
+        "symbolInfo_fk": null,
+        "orderInContainer": 62,
+        "context_fk": 2
+      },
+      {
+        "rowid": 87,
+        "address": "4387498635",
+        "symbolInfo_fk": null,
+        "orderInContainer": 63,
+        "context_fk": 2
+      },
+      {
+        "rowid": 88,
+        "address": "4387490479",
+        "symbolInfo_fk": null,
+        "orderInContainer": 64,
+        "context_fk": 2
+      },
+      {
+        "rowid": 89,
+        "address": "4387574211",
+        "symbolInfo_fk": null,
+        "orderInContainer": 65,
+        "context_fk": 2
+      },
+      {
+        "rowid": 90,
+        "address": "4387488923",
+        "symbolInfo_fk": null,
+        "orderInContainer": 66,
+        "context_fk": 2
+      },
+      {
+        "rowid": 91,
+        "address": "4387496543",
+        "symbolInfo_fk": null,
+        "orderInContainer": 67,
+        "context_fk": 2
+      },
+      {
+        "rowid": 92,
+        "address": "4371849187",
+        "symbolInfo_fk": null,
+        "orderInContainer": 68,
+        "context_fk": 2
+      },
+      {
+        "rowid": 93,
+        "address": "4371848691",
+        "symbolInfo_fk": null,
+        "orderInContainer": 69,
+        "context_fk": 2
+      },
+      {
+        "rowid": 94,
+        "address": "6446997871",
+        "symbolInfo_fk": null,
+        "orderInContainer": 70,
+        "context_fk": 2
+      },
+      {
+        "rowid": 95,
+        "address": "6446995703",
+        "symbolInfo_fk": null,
+        "orderInContainer": 71,
+        "context_fk": 2
+      },
+      {
+        "rowid": 96,
+        "address": "6446992443",
+        "symbolInfo_fk": null,
+        "orderInContainer": 72,
+        "context_fk": 2
+      },
+      {
+        "rowid": 97,
+        "address": "6446972139",
+        "symbolInfo_fk": null,
+        "orderInContainer": 73,
+        "context_fk": 2
+      },
+      {
+        "rowid": 98,
+        "address": "6755346875",
+        "symbolInfo_fk": null,
+        "orderInContainer": 74,
+        "context_fk": 2
+      },
+      {
+        "rowid": 99,
+        "address": "6546556275",
+        "symbolInfo_fk": null,
+        "orderInContainer": 75,
+        "context_fk": 2
+      },
+      {
+        "rowid": 100,
+        "address": "6546573211",
+        "symbolInfo_fk": null,
+        "orderInContainer": 76,
+        "context_fk": 2
+      },
+      {
+        "rowid": 101,
+        "address": "4371850047",
+        "symbolInfo_fk": null,
+        "orderInContainer": 77,
+        "context_fk": 2
+      },
+      {
+        "rowid": 102,
+        "address": "4374598607",
+        "symbolInfo_fk": null,
+        "orderInContainer": 78,
+        "context_fk": 2
+      },
+      {
+        "rowid": 103,
+        "address": "4373375895",
+        "symbolInfo_fk": null,
+        "orderInContainer": 79,
+        "context_fk": 2
+      }
+    ]
+  }
+]

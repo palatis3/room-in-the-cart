@@ -1,0 +1,308 @@
+{
+  "headSha": "f90ad75a2e561891b2014ecb234d19639bcaed4c",
+  "runId": 42428215965,
+  "attempt": 1,
+  "jobId": 128589072389,
+  "jobUrl": "https://github.com/palatis3/room-in-the-cart/actions/runs/42428215965/job/128589072389",
+  "artifact": {
+    "id": 13600750432,
+    "name": "iphone-fixture-results-SharedDeliveryUITests-recovery-cook-and-closeout-1",
+    "size_in_bytes": 63221229,
+    "digest": "sha256:3f26f9d25354dfbc75d516f72044efbe2e73ec9bd9fb4c308cd4a01c04083da6"
+  },
+  "localRangeReceipt": ".build/CIF90Nov07/speech/range-receipt.json",
+  "rangeReceiptSHA256": "bd8b1c74775303315553aa7b83f32ac9393eb0905e70ab8ab26c2da47c8f78f2",
+  "transferredBytes": 42610,
+  "fullArchiveDigestVerified": false,
+  "verifiedMembers": [
+    {
+      "file": "Tests.log",
+      "bytes": 145377,
+      "sha256": "d01542dd0fc9373c9008d3243e8264a200691df04522cfa170c21c83cf308a99",
+      "zipCRC": 3691189093,
+      "CRCVerified": true
+    },
+    {
+      "file": "test-details.json",
+      "bytes": 3405,
+      "sha256": "9b6c1218d1e4a28204e08ec6c591d37cd40c68df9886d25ca756ab56bcc97908",
+      "zipCRC": 3963834843,
+      "CRCVerified": true
+    },
+    {
+      "file": "test-plan/SharedDeliveryUITests-recovery-cook-and-closeout.txt",
+      "bytes": 532,
+      "sha256": "14afce1ee41211348af391106eccf800d6071bfead42a0a1e3202d28751abd99",
+      "zipCRC": 3384510446,
+      "CRCVerified": true
+    },
+    {
+      "file": "test-runtime-warnings.json",
+      "bytes": 346,
+      "sha256": "c7800357c492169550fc48812417a5a2c91e5030d99f23f4581c92692bc521fa",
+      "zipCRC": 343625567,
+      "CRCVerified": true
+    },
+    {
+      "file": "test-speech-runtime-error.txt",
+      "bytes": 44,
+      "sha256": "8b9e4a529f3e367142876bd0ce03ed7c7f10a50657c9a73fda0d6e30867e7523",
+      "zipCRC": 957490032,
+      "CRCVerified": true
+    },
+    {
+      "file": "test-speech-runtime.json",
+      "bytes": 45064,
+      "sha256": "20315c9ec37df59ce35c0588ccc2197c608f834661503259736bff6d16017f77",
+      "zipCRC": 4072597752,
+      "CRCVerified": true
+    },
+    {
+      "file": "test-speech-start.txt",
+      "bytes": 20,
+      "sha256": "6e02ffa2fe4af09ac9d4c17eb6f6e3aff273847f973681c65efc1a1930539ef0",
+      "zipCRC": 2166795731,
+      "CRCVerified": true
+    },
+    {
+      "file": "test-summary.json",
+      "bytes": 1205,
+      "sha256": "e4d58f2fcdeeeaca31c0f49dd4ddc4a7633906ed67cffac727df2c85084179c5",
+      "zipCRC": 2093345093,
+      "CRCVerified": true
+    }
+  ],
+  "hostedWarningTest": {
+    "selector": "RoomInTheCartUITests/SharedDeliveryUITests/testShopperReviewsExactEditedCookWordingBeforeReadback",
+    "nativeResult": "Passed",
+    "warningTreeMarkerCount": 1,
+    "marker": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions",
+    "strictWarningStatus": "unavailable",
+    "strictWarningError": "Malformed XCTest runtime warning activity '[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions'. Expected one Complete Issue Description.txt attachment, found 0."
+  },
+  "separateNativeFailure": {
+    "selector": "RoomInTheCartUITests/SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord",
+    "durationSeconds": 129.01890802383423,
+    "summary": "XCTAssertEqual failed: (\"Optional(\"0\")\") is not equal to (\"Optional(\"1\")\")",
+    "consoleReplayFailures": [
+      "XCTest logged a failure for RoomInTheCartUITests/SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord at log line 1955.",
+      "XCTest log requires one start then one pass for RoomInTheCartUITests/SharedDeliveryUITests/testShopperSavesDatedCookCopyAndReopensRecipientSendRecord; found ['start', 'non-passing or unrecognized completion'].",
+      "XCTest log requires one successful result banner; found ['FAILED']."
+    ]
+  },
+  "diagnostic": {
+    "captureStartedAt": "2026-11-08T02:04:02Z",
+    "testStartedAt": "2026-11-08T02:12:02.018000+00:00",
+    "testControlTapElapsedSeconds": {
+      "play": 43.08,
+      "pause": 46.09,
+      "resume": 48.23,
+      "stop": 50.03
+    },
+    "faultTrigger": "-[NSCondition wait]",
+    "records": [
+      {
+        "recordIndex": 0,
+        "timestampUtc": "2026-11-08 02:12:45.994006+0000",
+        "testElapsedSeconds": 43.976006,
+        "processId": 31379,
+        "threadId": 92122,
+        "frameCount": 33,
+        "blockedFrameStartIndex": 9,
+        "first20Matches": {
+          "readback-runtime.json": [
+            0
+          ],
+          "control-runtime.json": [
+            0
+          ]
+        }
+      },
+      {
+        "recordIndex": 1,
+        "timestampUtc": "2026-11-08 02:12:48.475920+0000",
+        "testElapsedSeconds": 46.45792,
+        "processId": 31379,
+        "threadId": 92122,
+        "frameCount": 33,
+        "blockedFrameStartIndex": 9,
+        "first20Matches": {
+          "readback-runtime.json": [
+            4
+          ],
+          "control-runtime.json": [
+            1
+          ]
+        }
+      },
+      {
+        "recordIndex": 2,
+        "timestampUtc": "2026-11-08 02:12:48.898352+0000",
+        "testElapsedSeconds": 46.880352,
+        "processId": 31379,
+        "threadId": 92122,
+        "frameCount": 59,
+        "blockedFrameStartIndex": 9,
+        "first20Matches": {
+          "readback-runtime.json": [],
+          "control-runtime.json": []
+        }
+      },
+      {
+        "recordIndex": 3,
+        "timestampUtc": "2026-11-08 02:12:48.924878+0000",
+        "testElapsedSeconds": 46.906878,
+        "processId": 31379,
+        "threadId": 92122,
+        "frameCount": 33,
+        "blockedFrameStartIndex": 9,
+        "first20Matches": {
+          "readback-runtime.json": [
+            2
+          ],
+          "control-runtime.json": []
+        }
+      },
+      {
+        "recordIndex": 4,
+        "timestampUtc": "2026-11-08 02:12:50.542941+0000",
+        "testElapsedSeconds": 48.524941,
+        "processId": 31379,
+        "threadId": 92122,
+        "frameCount": 33,
+        "blockedFrameStartIndex": 9,
+        "first20Matches": {
+          "readback-runtime.json": [
+            3
+          ],
+          "control-runtime.json": []
+        }
+      },
+      {
+        "recordIndex": 5,
+        "timestampUtc": "2026-11-08 02:12:51.958449+0000",
+        "testElapsedSeconds": 49.940449,
+        "processId": 31379,
+        "threadId": 92122,
+        "frameCount": 33,
+        "blockedFrameStartIndex": 9,
+        "first20Matches": {
+          "readback-runtime.json": [
+            4
+          ],
+          "control-runtime.json": [
+            1
+          ]
+        }
+      }
+    ],
+    "first20ExactFrameworkFramesForRecord0": [
+      {
+        "image": "Foundation",
+        "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+        "offset": "0x8d2288"
+      },
+      {
+        "image": "Foundation",
+        "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+        "offset": "0x8d43b8"
+      },
+      {
+        "image": "Foundation",
+        "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+        "offset": "0x8d4620"
+      },
+      {
+        "image": "TextToSpeech",
+        "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+        "offset": "0x334c8"
+      },
+      {
+        "image": "TextToSpeech",
+        "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+        "offset": "0x387e4"
+      },
+      {
+        "image": "TextToSpeech",
+        "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+        "offset": "0x26f94"
+      },
+      {
+        "image": "libdispatch.dylib",
+        "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+        "offset": "0x17a8"
+      },
+      {
+        "image": "libdispatch.dylib",
+        "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+        "offset": "0x1c4b0"
+      },
+      {
+        "image": "libdispatch.dylib",
+        "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+        "offset": "0x384a0"
+      },
+      {
+        "image": "libdispatch.dylib",
+        "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+        "offset": "0x1131c"
+      },
+      {
+        "image": "libdispatch.dylib",
+        "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+        "offset": "0x10e6c"
+      },
+      {
+        "image": "CoreFoundation",
+        "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+        "offset": "0x92ed8"
+      },
+      {
+        "image": "CoreFoundation",
+        "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+        "offset": "0x920b0"
+      },
+      {
+        "image": "CoreFoundation",
+        "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+        "offset": "0x8ccec"
+      },
+      {
+        "image": "GraphicsServices",
+        "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+        "offset": "0x29bc"
+      },
+      {
+        "image": "UIKitCore",
+        "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+        "offset": "0x11aa574"
+      },
+      {
+        "image": "UIKitCore",
+        "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+        "offset": "0x11ae79c"
+      },
+      {
+        "image": "SwiftUI",
+        "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+        "offset": "0x7b9620"
+      },
+      {
+        "image": "SwiftUI",
+        "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+        "offset": "0x7b9368"
+      },
+      {
+        "image": "SwiftUI",
+        "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+        "offset": "0x54742c"
+      }
+    ],
+    "priorReferenceSHA256": {
+      "verification.json": "4a02799907dba4d5d8e7a1081fd5e683bcea3f56f8cc0a2614aff09cea50c0c7",
+      "readback-runtime.json": "0890482b36f0a49221cc85567fb074832762fc48b2a451614cb639b506f1d0fb",
+      "control-runtime.json": "cc72c4a1b6e0b1ace7c28e85718576806d4e3c11e854afba248c29a9a935914d"
+    },
+    "scope": "The first hosted blocked stack shares its first twenty UUID and image-offset pairs with both the prior product replay and the standalone speech-only control. Record 2 lacks a first-twenty match in either retained control. Event counts and XCTest warning markers are separate. This comparison identifies the waiting framework path during playback; the owner thread and exact wait functions remain open in this receipt."
+  }
+}

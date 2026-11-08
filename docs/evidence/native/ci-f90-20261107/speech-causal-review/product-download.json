@@ -1,0 +1,8 @@
+{
+  "artifactID": 13597036999,
+  "bytes": 64912155,
+  "sha256": "812d621bb514c5f0bd1bccda4faf0a8fcc6ef45ed2589459d2c9e3f5b4d8183f",
+  "fullArchiveAPIHashVerified": true,
+  "authorization": "Root exact-artifact allowance <=70,000,000 bytes; existing prefix refusal retained separately",
+  "extractedMembers": []
+}

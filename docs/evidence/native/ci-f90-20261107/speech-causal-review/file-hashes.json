@@ -1,0 +1,142 @@
+[
+  {
+    "file": "README.md",
+    "bytes": 6968,
+    "sha256": "5459f571a60e80aedb77ce835e36a9d295b9a801cdcb7c56ee0de11e7a10cf01"
+  },
+  {
+    "file": "api-boundary.json",
+    "bytes": 926,
+    "sha256": "ad88cb812ce3aa3032bad76d7dc19a53c124e03ba55eeb74b6e4835cee9dd40e"
+  },
+  {
+    "file": "attachment-exports.json",
+    "bytes": 4238,
+    "sha256": "2b4f72a3d9a0b8c1299964eb2863124dfbaa61ae72eeb53f3c04544f342b7a3e"
+  },
+  {
+    "file": "attachment-ranges.json",
+    "bytes": 6526,
+    "sha256": "a28385e6677167a2f1433dfccf355b9b1a4115344961db02d393a14d7663fe73"
+  },
+  {
+    "file": "decoded-stacks.json",
+    "bytes": 59589,
+    "sha256": "114c470781dccb02b449d86731eca60aeed377916a080e8b0994001f1045b74e"
+  },
+  {
+    "file": "exact-hosted-symbols.txt",
+    "bytes": 594,
+    "sha256": "c6de8a28ec8e9fa7003473225b9ebf6fcacca818293dfd7ed68b256abca501ae"
+  },
+  {
+    "file": "exact-member-refusal.json",
+    "bytes": 156,
+    "sha256": "776a3b66ad98ac9664435c284d953bb90381fdc893d388b112bdcd976f1bc9d6"
+  },
+  {
+    "file": "failure.png",
+    "bytes": 322965,
+    "sha256": "31b06169d55069a4975e5901fb0a2f0d2c3046676184b213461d0f2868cff511"
+  },
+  {
+    "file": "metadata-pristine-manifest.json",
+    "bytes": 992,
+    "sha256": "74b0d527db19f3bbe94f940eb61fd7239bef3d41aaf41b9dd7022bf83fcf4b57"
+  },
+  {
+    "file": "metadata-ranges.json",
+    "bytes": 3088,
+    "sha256": "07ff9b50b09fff91b6fabe59cc668a5395eaf6f98cae732545dd2e27802dc4ab"
+  },
+  {
+    "file": "mitigation-review.md",
+    "bytes": 2911,
+    "sha256": "67bfc515ae5edd4e8908895a49f7b574056084c80bbcb17e7f2ae3741461fe9b"
+  },
+  {
+    "file": "native-issues.json",
+    "bytes": 18858,
+    "sha256": "6fd87b1433f0e8ce53ae2d55e8719675e352cd72137703eb68a9187254ccd3fb"
+  },
+  {
+    "file": "origin-manifest.json",
+    "bytes": 5683,
+    "sha256": "3c03da3453cd933517ef037281a708cc45ad0212ee0aea2740bbd1a012c9ba20"
+  },
+  {
+    "file": "pre-tap-hierarchy.txt",
+    "bytes": 20501,
+    "sha256": "94cf9720281469d673fdd016ff2d37a9a7c456b12130275aba7895fa04b87e72"
+  },
+  {
+    "file": "prefix-refusal.json",
+    "bytes": 2739,
+    "sha256": "8538cec2f211db94be000c24bcb7bdc9861c0b850664933d8cf6643e9db405e5"
+  },
+  {
+    "file": "prior-control-summary.json",
+    "bytes": 6717,
+    "sha256": "52255df8f98b469874019d7e901ded894fc89f174c921dcbe4f834d4f5350ea1"
+  },
+  {
+    "file": "prior-expanded-control-match.json",
+    "bytes": 20345,
+    "sha256": "33988e6716de403a1d8fe5855970021bef4a3308dcbb96ab77ae1f9a41c65503"
+  },
+  {
+    "file": "prior-worker-control.swift",
+    "bytes": 1094,
+    "sha256": "a89a9ba54bc1afe3991c8610725d70011882dfb1e7ef76bc24a93d7993cf63bf"
+  },
+  {
+    "file": "privacy-review.json",
+    "bytes": 7882,
+    "sha256": "9af7b841e43d09c7a1be6b7b20943a5c22682bf68552f5e5362df158ffdd3579"
+  },
+  {
+    "file": "product-artifact-metadata.json",
+    "bytes": 817,
+    "sha256": "849f58f8ec7fdd43b42a8851dda3fb6db19289d4f0ff137163ad41adc1414446"
+  },
+  {
+    "file": "product-download.json",
+    "bytes": 313,
+    "sha256": "94e54b189a71b435aa1041701854dbee7a522c7011ad67c2e386c0245e10e6a7"
+  },
+  {
+    "file": "product-extraction.json",
+    "bytes": 4749,
+    "sha256": "c393fbed71837755945577c7bfe9b8c4508fc41cf5ea3d4a61c8bb4cc13c8e70"
+  },
+  {
+    "file": "readback-timing.txt",
+    "bytes": 5326,
+    "sha256": "d9926ad18a5083eb5a048615b24fe751a2b97de6f3f4b23c828e5f048eb5e44b"
+  },
+  {
+    "file": "session-range-receipt.json",
+    "bytes": 5375,
+    "sha256": "7d1410d059d20374ebb4f4442e907c45cfc72e332d8f9d8a26b12f502267f07c"
+  },
+  {
+    "file": "session-source-receipt.json",
+    "bytes": 345,
+    "sha256": "36f0dfea77db35257aabd737ccc026fce0cfab9e1dc9322979b2d849426cbdc9"
+  },
+  {
+    "file": "source-audit.json",
+    "bytes": 1114,
+    "sha256": "aa0bd34eaa3cccfa88c29a68d1eb757aa0469fa726ec90bacc51270c51b82075"
+  },
+  {
+    "file": "switch-failure.txt",
+    "bytes": 12484,
+    "sha256": "d4e656840d5da4c815c1ec09f8223343476b1fb0e3630456d68b9b39291463d5"
+  },
+  {
+    "file": "switch-runner-excerpt.txt",
+    "bytes": 78598,
+    "sha256": "de8ff229527d53165c81065b7cc05e56be3b0b72bf5a0852c979eb00cd4a3989"
+  }
+]

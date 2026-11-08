@@ -1,0 +1,10 @@
+{
+  "officialDocumentation": [
+    "https://developer.apple.com/documentation/avfaudio/avspeechsynthesizer",
+    "https://developer.apple.com/documentation/avfaudio/avspeechsynthesizer/pausespeaking(at:)"
+  ],
+  "observedContract": "pauseSpeaking returns Bool success and immediate boundary resumes at exact pause point. Consulted docs do not specify a main-thread-only requirement or arbitrary concurrent access guarantee.",
+  "localSDKHeader": "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk/System/Library/Frameworks/AVFAudio.framework/Headers/AVSpeechSynthesis.h",
+  "headerSHA256": "28c9da1d6867a15dea4d343e16101fa763fc96aa6899ea2fb336de269d81c6b4",
+  "SDKObservation": "AVSpeechSynthesizer declaration NS_SWIFT_NONSENDABLE; no main-actor annotation on inspected declaration. App protocol and adapter explicitly MainActor. No downloaded code executed."
+}

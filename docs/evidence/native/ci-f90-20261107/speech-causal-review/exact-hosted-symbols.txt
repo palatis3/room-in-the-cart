@@ -1,0 +1,7 @@
+UUID: 833C6162-D442-337B-B14B-16247723C52A (arm64) .build/CIF90Nov07/speech-symbol-full/RoomInTheCart.debug.dylib
+
+Command: atos -arch arm64 -o .build/CIF90Nov07/speech-symbol-full/RoomInTheCart.debug.dylib -l 0 0x34e618 0x34f464 0x300b64 0x307f00
+LocalCookSpeech.pause() (in RoomInTheCart.debug.dylib) + 84
+protocol witness for CookSpeechPlayback.pause() in conformance LocalCookSpeech (in RoomInTheCart.debug.dylib) + 12
+CookReadbackModel.pause() (in RoomInTheCart.debug.dylib) + 124
+closure #1 in closure #1 in closure #1 in CookReadbackView.body.getter (in RoomInTheCart.debug.dylib) + 164
