@@ -152,7 +152,9 @@ def _run_test(receipt,products,before,runs):
     signal.signal(signal.SIGTERM,interrupted)
     try:
         thread.start()
-        assert observer.ready.wait(5), 'observer failed to become ready'
+        assert observer.ready.wait(5), 'collector thread did not start; discovery readiness is not implied'
+        receipt['collectorProcessDiscoveryBeforeNativeLaunch']=observer.discovery_summary()
+        write('run.json',receipt)
         with (OUT/'Tests.log').open('xb') as log:
             process=subprocess.Popen(command,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
             receipt.update(nativePID=process.pid,nativeStarted=True,nativeStartedUTC=now(),status='running')
@@ -173,7 +175,8 @@ def _run_test(receipt,products,before,runs):
         observer.stop.set()
         if thread.ident is not None: thread.join(15)
         receipt.update(finishedUTC=now(),elapsedSeconds=time.monotonic()-started,
-                       collectorJoined=not thread.is_alive(),collectorError=observer.error)
+                       collectorJoined=not thread.is_alive(),collectorError=observer.error,
+                       observerProcessDiscovery=observer.discovery_summary())
         closed=list((OUT/'observer').glob('*.closed.ndjson'))
         partial=list((OUT/'observer').glob('*.incomplete.ndjson'))
         candidate=next(iter(observer.candidates.values())) if len(observer.candidates)==1 else None

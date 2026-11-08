@@ -7,6 +7,7 @@ TARGET = 'ContextualNavigationUITests/testFreeContextualRoutesKeepPrivateAndShar
 CASE = re.compile(rb"^Test Case '-\[([A-Za-z0-9_.]+) ([A-Za-z0-9_]+)\]' (started|passed|failed)(?:[. (]|$)")
 FILE_CAP = 128 * 1024
 EVENT_CAP = 1024 * 1024 - 4096
+MAX_PROCESS_POLL_FAILURES = 3  # Total failures, never reset on recovery.
 OFFSETS = [0, 0.016, 0.05, 0.1, 0.25, 0.5, 1, 2, 4, 8, 16, 32, 64]
 KEYBOARD_EVENTS = {'willFrame', 'didFrame', 'willHide', 'didHide'}
 
@@ -97,13 +98,19 @@ class Collector:
         self.root = Path.home() / 'Library/Developer/CoreSimulator/Devices' / device
         self.out = evidence / 'observer'; self.out.mkdir()
         self.log = evidence / 'Tests.log'
-        self.stop = threading.Event(); self.ready = threading.Event()
+        self.stop = threading.Event(); self.ready = threading.Event()  # Thread-start handshake, not discovery readiness.
         self.started = time.monotonic(); self.written = 0; self.polls = 0
         self.offset = 0; self.pending = b''; self.current_case = None
         self.target_started = False; self.target_ended = False
         self.previous = {}; self.candidates = {}; self.transitions = 0
         self.ambiguous = False
         self.absent_pids = set()
+        self.poll_attempts = 0; self.poll_failures = 0; self.recovered_gaps = 0
+        self.discovery_gap = None; self.discovery_exhausted = False
+        self.discovery_target_affected = False; self.max_failed_poll_ms = 0.
+        self.thread_started_utc = None; self.initial_snapshot_state = 'notAttempted'
+        self.first_successful_snapshot_utc = None
+        self.fatal_discovery_error = None
         self.max_poll_ms = 0.; self.error = None
         self.events = (self.out / 'events.ndjson').open('xb')
 
@@ -162,6 +169,82 @@ class Collector:
                 self.event('processPresent' if pid in current else 'processAbsent', pid=pid,
                            executableRelativeToOwnedDevice=(current.get(pid) or self.previous[pid]),
                            activeCase=self.current_case, logByteOffsetObserved=self.offset)
+
+    def case_log_caught_up(self):
+        return not self.pending and (not self.log.exists() or self.log.stat().st_size == self.offset)
+
+    def mark_gap_target(self):
+        gap = self.discovery_gap
+        if gap and self.target_started and not gap['targetEndedBeforeGap']:
+            gap['targetAssociationAffected'] = True
+            self.discovery_target_affected = True
+            self.ambiguous = True  # A later baseline can never undo target ambiguity.
+
+    def poll_processes(self):
+        """Missing discovery is unknown, not absence. No app/native-test retry."""
+        began = time.monotonic(); began_utc = utc(); ended_before = self.target_ended
+        self.poll_attempts += 1
+        if self.poll_attempts == 1: self.initial_snapshot_state = 'inProgress'
+        try:
+            current = self.processes()
+        except (subprocess.TimeoutExpired, subprocess.CalledProcessError) as error:
+            elapsed_ms = (time.monotonic()-began)*1000
+            if self.poll_attempts == 1: self.initial_snapshot_state = 'failed'
+            self.poll_failures += 1; self.max_failed_poll_ms = max(self.max_failed_poll_ms, elapsed_ms)
+            if self.discovery_gap is None:
+                self.discovery_gap = dict(startedUTC=began_utc, startedElapsedSeconds=began-self.started,
+                                          targetEndedBeforeGap=ended_before, targetAssociationAffected=False)
+            # Read newly written markers after the failed query before classifying the gap.
+            self.cases(); self.mark_gap_target()
+            self.event('processPollFailed',attempt=self.poll_attempts,totalFailures=self.poll_failures,
+                       totalFailureLimit=MAX_PROCESS_POLL_FAILURES,errorType=type(error).__name__,
+                       exitCode=getattr(error,'returncode',None),requestedTimeoutSeconds=2,pollMS=elapsed_ms,
+                       activeCase=self.current_case,logByteOffsetObserved=self.offset,
+                       targetAssociationAffected=self.discovery_target_affected,
+                       interpretation='No process snapshot; previous identities retained without asserting presence or absence.')
+            if self.poll_failures >= MAX_PROCESS_POLL_FAILURES:
+                self.discovery_exhausted = True
+                raise RuntimeError('process discovery exhausted after three failed polls total') from error
+            return None
+        except Exception as error:
+            if self.poll_attempts == 1: self.initial_snapshot_state = 'failed'
+            self.fatal_discovery_error = type(error).__name__
+            raise  # Identity/parser/file failures are not transient ps timeout recovery.
+        self.polls += 1
+        if self.poll_attempts == 1: self.initial_snapshot_state = 'succeeded'
+        if self.first_successful_snapshot_utc is None: self.first_successful_snapshot_utc = utc()
+        # Case output may have arrived while ps ran; do not label recovery pre-target from stale markers.
+        self.cases(); self.mark_gap_target()
+        if self.discovery_gap is not None and self.case_log_caught_up():
+            gap = self.discovery_gap
+            # Before the target, only an observed empty owned-app snapshot establishes a fresh baseline.
+            # If a process remains and markers are delayed, keep the gap unresolved rather than guessing.
+            can_close = gap['targetAssociationAffected'] or gap['targetEndedBeforeGap'] or (not self.target_started and not current)
+            if can_close:
+                self.recovered_gaps += 1
+                self.event('processDiscoveryRecovered',gapStartedUTC=gap['startedUTC'],
+                           gapSeconds=time.monotonic()-self.started-gap['startedElapsedSeconds'],
+                           targetAssociationAffected=gap['targetAssociationAffected'],
+                           recoveredBeforeTarget=not self.target_started and not current,
+                           activeCase=self.current_case,logByteOffsetObserved=self.offset,
+                           priorTargetAmbiguityRetained=self.ambiguous)
+                self.discovery_gap = None
+        return current
+
+    def discovery_summary(self):
+        return dict(status='exhausted' if self.discovery_exhausted else 'fatalSnapshotFailure' if self.fatal_discovery_error else
+                    'unresolvedGap' if self.discovery_gap else
+                    'recoveredWithLoss' if self.poll_failures else 'noObservedPollFailures',
+                    attempts=self.poll_attempts,successfulPolls=self.polls,totalFailures=self.poll_failures,
+                    totalFailureLimit=MAX_PROCESS_POLL_FAILURES,recoveredGaps=self.recovered_gaps,
+                    unresolvedGap=self.discovery_gap,targetAssociationAffected=self.discovery_target_affected,
+                    maxFailedPollMS=self.max_failed_poll_ms,
+                    startupHandshake='threadStartedOnly',threadStartedHandshakeObserved=self.ready.is_set(),
+                    threadStartedUTC=self.thread_started_utc,initialSnapshotState=self.initial_snapshot_state,
+                    successfulSnapshotObserved=self.first_successful_snapshot_utc is not None,
+                    firstSuccessfulSnapshotUTC=self.first_successful_snapshot_utc,
+                    fatalDiscoveryError=self.fatal_discovery_error,requestedPerQueryTimeoutSeconds=2,
+                    allProcessObservationsPresent=self.poll_attempts>0 and self.poll_attempts==self.polls)
 
     def bind(self, pid, executable):
         if len(self.candidates) >= 8: raise ValueError('target PID cap')
@@ -239,24 +322,28 @@ class Collector:
 
     def run(self):
         try:
+            self.thread_started_utc = utc()
             self.event('collectorStarted', device=self.device, target=TARGET, pollSeconds=1,
                        perFileBytes=FILE_CAP, targetPIDLimit=8, eventBytes=EVENT_CAP,
+                       startupHandshake='threadStartedOnly; process discovery not established',
                        uncertainty='one-second sampling, query duration and log buffering; no unique mapping if target has multiple PIDs')
             self.ready.set()
             while not self.stop.is_set() and time.monotonic()-self.started < 2400:
-                began = time.monotonic(); self.cases(); current = self.processes(); self.polls += 1
-                self.process_events(current)
-                if self.current_case == TARGET:
-                    if len(current) > 1: self.ambiguous = True
-                    for pid, exe in current.items():
-                        if pid not in self.candidates: self.bind(pid, exe)
+                began = time.monotonic(); self.cases(); current = self.poll_processes()
+                if current is not None:
+                    self.process_events(current)
+                    if self.current_case == TARGET:
+                        if len(current) > 1: self.ambiguous = True
+                        for pid, exe in current.items():
+                            if pid not in self.candidates: self.bind(pid, exe)
                 for pid, candidate in self.candidates.items():
-                    if pid in current and current[pid] != candidate['executable']: raise ValueError('PID reused')
-                    self.read_probe(pid, candidate, pid in current)
-                    if pid not in current: self.save(pid, candidate, 'PIDAbsentWithoutFooter')
-                self.previous = current
+                    if current is not None and pid in current and current[pid] != candidate['executable']: raise ValueError('PID reused')
+                    self.read_probe(pid, candidate, None if current is None else pid in current)
+                    if current is not None and pid not in current: self.save(pid, candidate, 'PIDAbsentWithoutFooter')
+                if current is not None: self.previous = current
                 self.max_poll_ms = max(self.max_poll_ms, (time.monotonic()-began)*1000)
-                self.stop.wait(max(0, 1-(time.monotonic()-began)))
+                # Failed polls wait one second before the next ordinary sampling cycle; no tight retry loop.
+                self.stop.wait(1 if current is None else max(0, 1-(time.monotonic()-began)))
         except Exception as error:
             self.error = type(error).__name__ + ': ' + str(error)
         finally:
@@ -269,6 +356,7 @@ class Collector:
                            error=self.error, targetStarted=self.target_started, targetEnded=self.target_ended,
                            targetPIDs=list(self.candidates), uniqueSampledPID=len(self.candidates)==1,
                            associationAmbiguous=self.ambiguous or len(self.candidates)>1,
+                           processDiscovery=self.discovery_summary(),
                            probes=[dict(pid=pid,transportSealed=c['closed'],
                                         quality=c['latest']['quality'] if c['latest'] else None)
                                    for pid,c in self.candidates.items()],
