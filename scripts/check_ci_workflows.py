@@ -31,7 +31,7 @@ POLICY = {
     ('ios-deep.yml', 'sanitizers'): ([('thread', 0), ('address', 1)], 'sanitizer'),
     ('ios-deep.yml', 'storekit'): ([('en', 2), ('es', 3)], 'locale'),
     ('ios-native-wire.yml', 'native-wire'): 4,
-    ('ios-toggle-diagnostic.yml', 'control'): 4,
+    ('ios-toggle-diagnostic.yml', 'core-dinner-diagnostic'): 3,
 }
 
 

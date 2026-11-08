@@ -232,7 +232,8 @@ class OwnedSimulatorWorkflowTests(unittest.TestCase):
     def test_only_execution_shards_opt_in_and_cleanup_precedes_receipt_upload(self):
         from check_ci_workflows import parse_workflow
         root = Path(__file__).resolve().parents[1]
-        expected = {('ci.yml', 'ios-tests'), ('ios-fixtures.yml', 'fixture-tests')}
+        expected = {('ci.yml', 'ios-tests'), ('ios-fixtures.yml', 'fixture-tests'),
+                    ('ios-toggle-diagnostic.yml', 'core-dinner-diagnostic')}
         observed = set()
         default_callers = set()
         for path in sorted((root / '.github/workflows').glob('*.yml')):
@@ -253,6 +254,21 @@ class OwnedSimulatorWorkflowTests(unittest.TestCase):
                 observed.add(key)
                 self.assertEqual(len(create), 1); self.assertEqual(len(clean), 1)
                 self.assertEqual(steps[create[0]]['timeout-minutes'], 8)
+                if key == ('ios-toggle-diagnostic.yml', 'core-dinner-diagnostic'):
+                    # Discovery already uses the unchanged bounded boot helper. This
+                    # reviewed combined build/test job retains a fresh owned device.
+                    discovery = next(i for i, s in enumerate(steps) if 'scripts/discover_ios_tests.py' in s.get('run', ''))
+                    run = next(i for i, s in enumerate(steps) if s.get('run') == 'bash scripts/run_ios_test_shard.sh')
+                    self.assertLess(create[0], discovery); self.assertLess(discovery, run)
+                    self.assertLess(run, clean[0])
+                    self.assertEqual(steps[discovery]['timeout-minutes'], 15)
+                    self.assertEqual(steps[run]['timeout-minutes'], 40)
+                    self.assertEqual(steps[clean[0]]['if'], "always() && steps.checkout.outcome == 'success'")
+                    self.assertEqual(steps[clean[0]]['timeout-minutes'], 2)
+                    uploads = [i for i, step in enumerate(steps) if 'actions/upload-artifact@' in step.get('uses', '')]
+                    self.assertEqual(len(uploads), 1); self.assertLess(clean[0], uploads[0])
+                    self.assertIn('.build/test-simulator-ownership.json', steps[uploads[0]]['with']['path'].splitlines())
+                    continue
                 boot = next(i for i, s in enumerate(steps) if 'scripts/boot_ios_simulator.py' in s.get('run', ''))
                 run = next(i for i, s in enumerate(steps) if 'bash scripts/run_ios_test_shard.sh' in s.get('run', ''))
                 self.assertLess(create[0], boot); self.assertLess(boot, run); self.assertLess(run, clean[0])

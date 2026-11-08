@@ -50,6 +50,21 @@ simulator setup and one original quote journey. The unused dinner build was
 skipped. This confirms the focused path works; it does not establish a faster
 full-suite duration. [Verified hosted result](evidence/native/ci-focused-known-trip-20261108/README.md).
 
+A branch-only core dinner diagnostic is available on
+`codex/core-dinner-ui-diagnostic-20261108`, using the already registered
+`ios-toggle-diagnostic.yml` path. It builds ordinary core Debug products once,
+validates the complete compiled inventory, then runs exactly one original
+English (`en`) or Spanish (`es`) dinner journey through the unchanged strict
+shard runner. Build and test share one of the five macOS slots, so products do
+not need an upload/download round trip. The distinct diagnostic check is not a
+required PR or release check.
+
+Dispatch requires an explicit language and the full commit SHA of that branch.
+Use a candidate branch containing this workflow; do not create a PR just to
+launch it. The workflow rejects a mismatched SHA or the default `choose` input.
+Do not merge the diagnostic-path substitution into the integration branch.
+Static validation passed; its first hosted execution is still pending.
+
 The performance workflow likewise accepts a manual `case`: `all` (default),
 `launch`, `rendered` or `scroll`. For example:
 

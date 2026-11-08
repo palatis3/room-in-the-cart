@@ -1,108 +1,147 @@
-name: Standalone Form toggle diagnostic
+name: Core dinner UI diagnostic
+run-name: Core dinner UI diagnostic · ${{ inputs.dinner_case }} · ${{ inputs.candidate_sha }}
 
 on:
-  pull_request:
-    types: [labeled]
   workflow_dispatch:
     inputs:
       candidate_sha:
-        description: Exact 40-character SHA of the selected workflow ref
+        description: Exact lowercase 40-character SHA of the selected workflow ref
         type: string
         required: true
+      dinner_case:
+        description: Explicitly choose one existing dinner-pattern journey
+        type: choice
+        required: true
+        default: choose
+        options: [choose, en, es]
 
 permissions:
   contents: read
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
-  control:
+  core-dinner-diagnostic:
+    name: Core dinner diagnostic (${{ inputs.dinner_case }})
+    runs-on: macos-15
+    timeout-minutes: 100
     concurrency:
-      group: ritc-macos-slot-4
+      group: ritc-macos-slot-3
       queue: max
       cancel-in-progress: false
-    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'diagnostic:form-toggle'
-    runs-on: macos-15
-    timeout-minutes: 45
     env:
       DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
-      EXPECTED_SHA: ${{ github.event.pull_request.head.sha || inputs.candidate_sha }}
-      EVENT_SHA: ${{ github.sha }}
-      EVENT_NAME: ${{ github.event_name }}
-      EVIDENCE: ${{ github.workspace }}/.build/form-toggle-diagnostic
-      PRODUCTS: ${{ github.workspace }}/.build/form-toggle-products/Build/Products
+      CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+      DINNER_CASE: ${{ inputs.dinner_case }}
+      TEST_SHARD: core-dinner-diagnostic
+      EXPECTED_TEST_COUNT: '1'
     steps:
-      - name: Require an immutable candidate identity
+      - name: Require an explicit case and immutable workflow-ref SHA
         run: |
           python3 - <<'PY'
           import os, re
-          candidate = os.environ['EXPECTED_SHA']
-          if not re.fullmatch('[0-9a-f]{40}', candidate):
-              raise SystemExit('An exact candidate SHA is required')
-          if os.environ['EVENT_NAME'] == 'workflow_dispatch' and candidate != os.environ['EVENT_SHA']:
-              raise SystemExit('Dispatch candidate must match the selected workflow ref SHA')
+          candidate = os.environ['CANDIDATE_SHA']
+          if os.environ['GITHUB_EVENT_NAME'] != 'workflow_dispatch':
+              raise SystemExit('This diagnostic is manual-only')
+          if not re.fullmatch('[0-9a-f]{40}', candidate) or candidate != os.environ['GITHUB_SHA']:
+              raise SystemExit('Candidate SHA must exactly match the selected workflow ref')
+          if os.environ['DINNER_CASE'] not in ('en', 'es'):
+              raise SystemExit('Explicitly choose en or es; choose is not runnable')
           PY
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        id: checkout
         with:
-          ref: ${{ env.EXPECTED_SHA }}
+          ref: ${{ inputs.candidate_sha }}
           persist-credentials: false
-      - name: Verify source and hosted environment; create a fresh simulator
-        run: bash diagnostics/swiftui-toggle/require-environment.sh
-      - name: Build and freeze standalone products
-        timeout-minutes: 12
+      - name: Verify checkout identity and existing source guards
         run: |
           set -euo pipefail
-          xcodebuild -project diagnostics/swiftui-toggle/FormToggleDiagnostic.xcodeproj \
-            -scheme FormToggleDiagnostic -configuration Debug \
-            -destination 'generic/platform=iOS Simulator' -parallel-testing-enabled NO -jobs 2 \
-            -derivedDataPath .build/form-toggle-products CODE_SIGN_IDENTITY=- build-for-testing \
-            2>&1 | tee "$EVIDENCE/Build.log"
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          git diff --exit-code HEAD
+          mkdir -p .build
+          python3 scripts/test_ui_automation_contract.py
+          python3 scripts/generate_xcode_project.py --check
+          python3 scripts/generate_theme.py --check
+          python3 scripts/check_localization.py
           python3 - <<'PY'
-          import hashlib, json, os
+          import json, os
           from pathlib import Path
-          files = {}
-          for root in [Path('diagnostics/swiftui-toggle'), Path(os.environ['PRODUCTS'])]:
-              for path in sorted(root.rglob('*')):
-                  if path.is_file():
-                      files[str(path)] = hashlib.sha256(path.read_bytes()).hexdigest()
-          (Path(os.environ['EVIDENCE']) / 'source-products-sha256.json').write_text(json.dumps(files, indent=2) + '\n')
+          Path('.build/core-ui-identity.json').write_text(json.dumps({
+              'candidateSHA': os.environ['CANDIDATE_SHA'], 'eventSHA': os.environ['GITHUB_SHA'],
+              'event': os.environ['GITHUB_EVENT_NAME'], 'case': os.environ['DINNER_CASE'],
+              'runID': os.environ['GITHUB_RUN_ID'], 'attempt': os.environ['GITHUB_RUN_ATTEMPT'],
+              'diagnosticOnly': True}, indent=2) + '\n')
           PY
-          tar -czf "$EVIDENCE/source.tar.gz" diagnostics/swiftui-toggle scripts/check_ios_test_results.py
-          tar -czf "$EVIDENCE/products.tar.gz" -C .build/form-toggle-products/Build Products
-      - name: Boot the dedicated simulator
+      - name: Record toolchain and create only an owned iPhone simulator
         timeout-minutes: 8
-        run: python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"
-      - name: Run the single control with normal XCTest idle behavior
-        timeout-minutes: 17
-        run: bash diagnostics/swiftui-toggle/run-test.sh
-      - name: Shut down the owned simulator
-        if: always()
+        run: |
+          set -euo pipefail
+          xcodebuild -version | tee .build/core-ui-toolchain.log
+          swift --version | tee -a .build/core-ui-toolchain.log
+          xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py \
+            --create-owned .build/test-simulator-ownership.json
+      - name: Build ordinary core Debug products once
+        timeout-minutes: 30
+        run: |
+          set -euo pipefail
+          xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart \
+            -configuration Debug -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
+            -jobs 2 -derivedDataPath .build/DerivedData CODE_SIGN_IDENTITY=- build-for-testing \
+            2>&1 | tee .build/CoreUIDiagnosticBuild.log
+          python3 scripts/check_built_app.py \
+            .build/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCart.app --configuration Debug
+      - name: Verify the full compiled core inventory before selecting one journey
+        timeout-minutes: 15
+        run: |
+          set -euo pipefail
+          python3 scripts/discover_ios_tests.py --simulator "$SIMULATOR_ID"
+          python3 scripts/select_core_ui_diagnostic.py --checkout-sha "$(git rev-parse HEAD)"
+      - name: Record product hashes without archiving products or app data
         run: |
           python3 - <<'PY'
-          import json, os, subprocess, uuid
+          import hashlib, json
           from pathlib import Path
-          root = Path(os.environ['EVIDENCE'])
-          path = root / 'simulator-id.txt'
-          if not path.exists():
-              raise SystemExit(0)  # Environment checks failed before device creation.
-          device = path.read_text().strip()
-          try:
-              uuid.UUID(device)
-          except ValueError:
-              (root / 'cleanup-status.json').write_text(json.dumps({
-                  'status': 'unavailable', 'reason': 'Simulator creation returned no valid owned UUID'}) + '\n')
-              raise SystemExit('Cannot clean up without an exact owned simulator UUID')
-          inventory = json.loads(subprocess.check_output(['xcrun', 'simctl', 'list', 'devices', '-j']))
-          matches = [x for group in inventory['devices'].values() for x in group if x['udid'] == device]
-          if len(matches) != 1:
-              raise SystemExit('Owned diagnostic simulator is missing or ambiguous')
-          code = 0 if matches[0]['state'] == 'Shutdown' else subprocess.run(['xcrun', 'simctl', 'shutdown', device]).returncode
-          (root / 'cleanup-status.json').write_text(json.dumps({'simulatorID': device, 'exitCode': code}) + '\n')
-          raise SystemExit(code)
+          root = Path('.build/DerivedData/Build/Products')
+          files = {str(p.relative_to(root)): {'bytes': p.stat().st_size,
+                   'sha256': hashlib.sha256(p.read_bytes()).hexdigest()}
+                   for p in sorted(root.rglob('*')) if p.is_file()}
+          Path('.build/core-ui-products.json').write_text(json.dumps(files, indent=2) + '\n')
           PY
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        if: always()
+      - name: Run the chosen original journey with normal XCTest and strict inspection
+        timeout-minutes: 40
+        run: bash scripts/run_ios_test_shard.sh
+      - name: Verify checkout integrity after diagnostic execution
+        if: always() && steps.checkout.outcome == 'success'
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          git diff --exit-code HEAD
+      - name: Clean up only the owned simulator after result export
+        if: always() && steps.checkout.outcome == 'success'
+        timeout-minutes: 2
+        run: python3 scripts/select_ci_iphone.py --cleanup-owned .build/test-simulator-ownership.json
+      - name: Retain diagnostic evidence without simulator containers or Records
+        if: always() && steps.checkout.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: standalone-form-toggle-${{ github.run_attempt }}
-          path: .build/form-toggle-diagnostic/
+          name: core-dinner-diagnostic-${{ inputs.dinner_case }}-${{ github.run_id }}-${{ github.run_attempt }}
           include-hidden-files: true
+          path: |
+            .build/CoreUIDiagnosticBuild.log
+            .build/core-ui-*.json
+            .build/core-ui-toolchain.log
+            .build/Tests*.xcresult
+            .build/Tests*.log
+            .build/test-summary.json
+            .build/test-details.json
+            .build/test-runtime-warnings.json
+            .build/test-runtime-warning-activities.json
+            .build/test-simulator-ownership.json
+            .build/test-plan/
+            .build/test-discovery/stages.txt
+            .build/test-discovery/attempt-1.json
+            .build/test-discovery/attempt-2.json
           retention-days: 7
           if-no-files-found: error
