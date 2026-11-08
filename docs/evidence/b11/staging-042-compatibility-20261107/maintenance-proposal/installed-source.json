@@ -1,0 +1,26 @@
+{
+  "status": "installed locally; not deployed",
+  "patchSHA256": "9e844130a0ca84c21dd06d084981e59d0aec2c712fe0f0e213993a48e6583aa6",
+  "filesMatchTestedScratchExactly": true,
+  "sha256": {
+    "service/.env.example": "0f5fad9aca8969867ada131968d0792e5eef79b1c37df3596cef1027fa94cca8",
+    "service/OPERATIONS.md": "89dc24abc31fbcdef7f2d2dd97eb37ec31e0f06031de617325c97013bcda0b06",
+    "service/src/main.ts": "12aae5d2e5e505deae4e4ac17e8bf2478b7e15863b65f1964a77d66baed70d6f",
+    "service/src/operations-http.ts": "868a24351c66acb29b5d524d673d832191e8605dfcbdf197dd5ed571104840e9",
+    "service/src/runtime.ts": "e060beac09505b71e6529f81067edd2450780ecbcaba350c66873fdad628381b",
+    "service/src/service-availability.ts": "11f504c61e97f9822b38931c998e615a7d84b3c9decaa2b59a9e941c5a7c6321",
+    "service/tests/service-availability.test.mjs": "bf9192e2ef4317276ce214ae3f8b50b759473a3f6cedfe22c0d35a7abf0760d3"
+  },
+  "rootBuildExit": 0,
+  "rootFocused": {
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0
+  },
+  "rootReview": "Verified early gate precedes startup, normal auth remains intact, shared local/deployed entrypoints and operations protected, cleanup preserves serving behavior. Full scratch unit/Postgres/operations proof applies to identical installed files.",
+  "deployment": "not performed; no live environment changes",
+  "rootLogSHA256": {
+    "installed-build.log": "441395328eef3f9a5f1e21646dddbbe4fdb76fceddcd7cc76224c3b463d3a7e3",
+    "installed-focused.log": "64e3c841395ef05de23068d6fb5f6a9e068400dab16a3e5419b268d77f6aad86"
+  }
+}

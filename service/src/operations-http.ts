@@ -1,9 +1,13 @@
+import {serviceAvailability,maintenanceResponse} from './service-availability.js';
 import {createHash,timingSafeEqual} from 'node:crypto';
 import {createServer,type IncomingMessage,type ServerResponse} from 'node:http';
 import {createOperationsRuntime,OPERATIONS_DEADLINE_MS} from './operations-runtime.js';
 
 /** Authentication precedes pool construction, so public probes cannot open DB connections. */
 export function createOperationsHandler(environment:NodeJS.ProcessEnv=process.env){
+ if(serviceAvailability(environment).mode==='maintenance'){
+  return{handler:async(request:IncomingMessage,response:ServerResponse)=>maintenanceResponse(request,response),close:async()=>{}};
+ }
  let runtime:ReturnType<typeof createOperationsRuntime>|undefined;
  const secret=environment.CRON_SECRET;
  const expected=secret&&/^[A-Za-z0-9_-]{32,256}$/.test(secret)?createHash('sha256').update('Bearer '+secret).digest():undefined;

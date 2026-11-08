@@ -1,0 +1,109 @@
+TAP version 13
+# Subtest: maintenance requires the separate worker role and does not grant raw access
+ok 1 - maintenance requires the separate worker role and does not grant raw access
+  ---
+  duration_ms: 25.03025
+  type: 'test'
+  ...
+# Subtest: logout outage is durably retried without refreshing revoked credentials
+ok 2 - logout outage is durably retried without refreshing revoked credentials
+  ---
+  duration_ms: 23.416625
+  type: 'test'
+  ...
+# Subtest: lease claim is exclusive, rejects wrong completion and recovers an abandoned lease
+ok 3 - lease claim is exclusive, rejects wrong completion and recovers an abandoned lease
+  ---
+  duration_ms: 12.412917
+  type: 'test'
+  ...
+# Subtest: expired access is honestly unconfirmed while an absent exact provider session is complete
+ok 4 - expired access is honestly unconfirmed while an absent exact provider session is complete
+  ---
+  duration_ms: 11.404834
+  type: 'test'
+  ...
+# Subtest: expired authentication and temporary email cleanup are bounded and missing provider remains pending
+ok 5 - expired authentication and temporary email cleanup are bounded and missing provider remains pending
+  ---
+  duration_ms: 15.603541
+  type: 'test'
+  ...
+# Subtest: actual HTTP adapter denies unauthorized requests before parsing or connecting worker credentials
+ok 6 - actual HTTP adapter denies unauthorized requests before parsing or connecting worker credentials
+  ---
+  duration_ms: 46.508625
+  type: 'test'
+  ...
+# Subtest: adapter rejects queries, unexpected paths, methods and bodies without running maintenance
+ok 7 - adapter rejects queries, unexpected paths, methods and bodies without running maintenance
+  ---
+  duration_ms: 7.287417
+  type: 'test'
+  ...
+# {"event":"operations_failed","error":"operations_unavailable"}
+# {"event":"operations_failed","error":"operations_unavailable"}
+# {"event":"operations_failed","error":"operations_unavailable"}
+# Subtest: deployed runtime role gate rejects application, administrator and combined worker credentials
+ok 8 - deployed runtime role gate rejects application, administrator and combined worker credentials
+  ---
+  duration_ms: 30.475875
+  type: 'test'
+  ...
+# {"event":"operations_result","mode":"run","durationMs":16,"batchSize":25,"logoutProviderConfigured":false,"privacyJobProcessingEnabled":false,"privacyJournal":{"state":"disabled","capacity":null},"auth":{"expiredQueued":0,"emailsCleared":0,"authPurged":0,"rateBucketsPurged":0,"logoutCompleted":0,"logoutRetryScheduled":0,"logoutExpiredUnconfirmed":0,"leaseLost":0},"privacy":{"receiptsCleared":0,"jobsPurged":0},"guardian":{"expired":0,"purged":0,"retentionConfigured":false},"health":{"authDue":0,"authRetryPending":0,"authExpiredUnconfirmed":0,"privacyPending":0,"privacyDue":0},"attentionRequired":false}
+# Subtest: disabled email deployment with public provider metadata still runs housekeeping without an encryption key
+ok 9 - disabled email deployment with public provider metadata still runs housekeeping without an encryption key
+  ---
+  duration_ms: 19.671083
+  type: 'test'
+  ...
+# Subtest: worker startup applies actual PostgreSQL statement and lock limits without table access
+ok 10 - worker startup applies actual PostgreSQL statement and lock limits without table access
+  ---
+  duration_ms: 7.985833
+  type: 'test'
+  ...
+# {"event":"operations_result","mode":"run","durationMs":26,"batchSize":25,"logoutProviderConfigured":true,"privacyJobProcessingEnabled":false,"privacyJournal":{"state":"disabled","capacity":null},"auth":{"expiredQueued":1,"emailsCleared":0,"authPurged":0,"rateBucketsPurged":0,"logoutCompleted":0,"logoutRetryScheduled":1,"logoutExpiredUnconfirmed":0,"leaseLost":0},"privacy":{"receiptsCleared":0,"jobsPurged":0},"guardian":{"expired":0,"purged":0,"retentionConfigured":false},"health":{"authDue":0,"authRetryPending":1,"authExpiredUnconfirmed":0,"privacyPending":0,"privacyDue":0},"attentionRequired":true}
+# {"event":"operations_result","mode":"run","durationMs":6,"batchSize":25,"logoutProviderConfigured":true,"privacyJobProcessingEnabled":false,"privacyJournal":{"state":"disabled","capacity":null},"auth":{"expiredQueued":0,"emailsCleared":0,"authPurged":0,"rateBucketsPurged":0,"logoutCompleted":0,"logoutRetryScheduled":0,"logoutExpiredUnconfirmed":0,"leaseLost":0},"privacy":{"receiptsCleared":0,"jobsPurged":0},"guardian":{"expired":0,"purged":0,"retentionConfigured":false},"health":{"authDue":0,"authRetryPending":1,"authExpiredUnconfirmed":0,"privacyPending":0,"privacyDue":0},"attentionRequired":true}
+# {"event":"operations_result","mode":"run","durationMs":11,"batchSize":25,"logoutProviderConfigured":true,"privacyJobProcessingEnabled":false,"privacyJournal":{"state":"disabled","capacity":null},"auth":{"expiredQueued":0,"emailsCleared":0,"authPurged":0,"rateBucketsPurged":0,"logoutCompleted":1,"logoutRetryScheduled":0,"logoutExpiredUnconfirmed":0,"leaseLost":0},"privacy":{"receiptsCleared":0,"jobsPurged":0},"guardian":{"expired":0,"purged":0,"retentionConfigured":false},"health":{"authDue":0,"authRetryPending":0,"authExpiredUnconfirmed":0,"privacyPending":0,"privacyDue":0},"attentionRequired":false}
+# Subtest: real HTTP/Postgres expiry and provider outage retry keep credentials until confirmed logout
+ok 11 - real HTTP/Postgres expiry and provider outage retry keep credentials until confirmed logout
+  ---
+  duration_ms: 55.524708
+  type: 'test'
+  ...
+# {"event":"operations_result","mode":"run","durationMs":35,"batchSize":25,"logoutProviderConfigured":true,"privacyJobProcessingEnabled":false,"privacyJournal":{"state":"disabled","capacity":null},"auth":{"expiredQueued":0,"emailsCleared":0,"authPurged":1,"rateBucketsPurged":0,"logoutCompleted":1,"logoutRetryScheduled":0,"logoutExpiredUnconfirmed":1,"leaseLost":0},"privacy":{"receiptsCleared":0,"jobsPurged":0},"guardian":{"expired":0,"purged":0,"retentionConfigured":false},"health":{"authDue":0,"authRetryPending":0,"authExpiredUnconfirmed":1,"privacyPending":0,"privacyDue":0},"attentionRequired":true}
+# Subtest: runtime reports expired provider sessions as unconfirmed and absent sessions as confirmed
+ok 12 - runtime reports expired provider sessions as unconfirmed and absent sessions as confirmed
+  ---
+  duration_ms: 40.931042
+  type: 'test'
+  ...
+# {"event":"operations_result","mode":"run","durationMs":22,"batchSize":25,"logoutProviderConfigured":true,"privacyJobProcessingEnabled":false,"privacyJournal":{"state":"disabled","capacity":null},"auth":{"expiredQueued":0,"emailsCleared":0,"authPurged":2,"rateBucketsPurged":0,"logoutCompleted":0,"logoutRetryScheduled":0,"logoutExpiredUnconfirmed":0,"leaseLost":0},"privacy":{"receiptsCleared":2,"jobsPurged":1},"guardian":{"expired":0,"purged":0,"retentionConfigured":false},"health":{"authDue":0,"authRetryPending":0,"authExpiredUnconfirmed":0,"privacyPending":1,"privacyDue":1},"attentionRequired":true}
+# Subtest: production cleanup honors completed retention dates and leaves every pending privacy job unclaimed
+ok 13 - production cleanup honors completed retention dates and leaves every pending privacy job unclaimed
+  ---
+  duration_ms: 30.242917
+  type: 'test'
+  ...
+# Subtest: aggregate deadline leaves an interrupted provider outcome leased rather than falsely completed
+ok 14 - aggregate deadline leaves an interrupted provider outcome leased rather than falsely completed
+  ---
+  duration_ms: 40.750666
+  type: 'test'
+  ...
+# Subtest: runnable operator CLI status emits aggregate evidence, and bad credentials fail without connection text
+ok 15 - runnable operator CLI status emits aggregate evidence, and bad credentials fail without connection text
+  ---
+  duration_ms: 696.23675
+  type: 'test'
+  ...
+1..15
+# tests 15
+# suites 0
+# pass 15
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1328.202167

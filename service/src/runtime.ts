@@ -1,9 +1,10 @@
 import type { PoolConfig } from 'pg';
-import type { IncomingMessage } from 'node:http';
+import {createServer,type IncomingMessage,type Server} from 'node:http';
+import {serviceAvailability,maintenanceResponse} from './service-availability.js';
 import { isIP } from 'node:net';
 import { BillingService } from './billing/service.js';
 import { appleGatewayFromEnvironment } from './billing/apple.js';
-import { Pool, assertRuntimeRole } from './database.js';
+import { Pool, assertRuntimeRole,type Database } from './database.js';
 import { JWTIdentityVerifier, DenyIdentityVerifier, SupabaseSessionVerifier } from './auth.js';
 import { HouseholdRepository } from './repository.js';
 import { createHTTPServer } from './http.js';
@@ -24,6 +25,10 @@ export function deploymentClientAddress(environment: NodeJS.ProcessEnv): ((reque
   };
 }
 
+export type ApplicationRuntime =
+ | {mode:'maintenance';server:Server;close:()=>Promise<void>;pool?:never}
+ | {mode:'serving';server:Server;close:()=>Promise<void>;pool:Database};
+
 /** One runtime for the local process and deployed function; never a migration role. */
 export function databaseConfiguration(environment: NodeJS.ProcessEnv): PoolConfig {
   if (!environment.DATABASE_URL) throw new Error('DATABASE_URL is required');
@@ -43,7 +48,12 @@ export function databaseConfiguration(environment: NodeJS.ProcessEnv): PoolConfi
   };
 }
 
-export async function createRuntime(environment: NodeJS.ProcessEnv = process.env) {
+export async function createRuntime(environment: NodeJS.ProcessEnv = process.env):Promise<ApplicationRuntime> {
+  if(serviceAvailability(environment).mode==='maintenance'){
+    const server=createServer(maintenanceResponse);
+    server.requestTimeout=15_000;server.headersTimeout=10_000;
+    return{mode:'maintenance',server,close:async()=>{}};
+  }
   const pool = new Pool(databaseConfiguration(environment));
   pool.on('error', () => { console.error(JSON.stringify({ event: 'database_idle_connection_error' })); });
   let guardianPool:Awaited<ReturnType<typeof guardianRuntime>>['pool'];
@@ -82,9 +92,11 @@ export async function createRuntime(environment: NodeJS.ProcessEnv = process.env
       ...(webOrigin ? { webOrigin } : {}), ...(browserAuth ? { browserAuth } : {}), ...(clientAddress ? { clientAddress } : {}) });
     server.requestTimeout = 15_000;
     server.headersTimeout = 10_000;
-    if(guardianPool)server.once('close',()=>{void guardianPool!.end();});
-    server.once('close',()=>{void privacyRuntime?.close();});
-    return { server, pool };
+    let auxiliaryClosing:Promise<void>|undefined,closing:Promise<void>|undefined;
+    const closeAuxiliary=()=>auxiliaryClosing??=Promise.all([guardianPool?.end(),privacyRuntime?.close()]).then(()=>{});
+    server.once('close',()=>{void closeAuxiliary();});
+    const close=()=>closing??=Promise.all([closeAuxiliary(),pool.end()]).then(()=>{});
+    return { mode:'serving',server,pool,close };
   } catch (error) {
     await privacyRuntime?.close();
     if(guardianPool)await guardianPool.end();

@@ -1,0 +1,9 @@
+# Local service suspension before recovery
+
+The reviewed gate is installed locally. Both the application and operations HTTP entrypoints return503 with no-store and Retry-After before database, identity, provider, worker or body processing when SERVICE_MAINTENANCE is true or malformed. Absent or exact false retains normal behavior. Public static help/privacy/support documents and intentional recovery CLI commands remain separate.
+
+Root reviewed the patch, verified that all seven installed files byte-match the tested scratch candidate, and independently passed the build and seven focused tests. Scratch verification passed450unit cases with one existing skip,243PostgreSQL cases with three opt-in wire skips, and15operations cases. The first scratch PostgreSQL attempt omitted the archived grocery fixture; that failure is retained and the corrected fresh-database run passed. [Installed proof](installed-source.json) · [Full tested proposal](verification.json).
+
+A real TCP negative control records zero database connections with the gate enabled and startup attempts when absent/false. Actual API module imports, direct API paths, cookie/bearer inputs, cron and an incomplete request body are exercised. The setting is captured at runtime startup and requires a new Vercel deployment; it cannot suspend old immutable deployment URLs. Prepare a maintenance deployment and independently verify old URL protection before the042 rollout. Do not promote041 to serve households after amendment use: its successful response omits delivery identities.
+
+No hosted deployment, environment change, fresh live backup or042 migration is claimed. Retain042 and repair forward, or reconcile later writes and replay the deletion journal before reopening a restored database. [Operational procedure](../../../../../service/OPERATIONS.md).
