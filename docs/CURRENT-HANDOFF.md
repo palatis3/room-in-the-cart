@@ -2,6 +2,14 @@
 
 Updated November 8, 2026 UTC. The full first-version goal is active and release acceptance remains incomplete. The owner's migration 041 approval has already been executed and verified. The separate 042 approval is pending; a repeated 041 approval does not authorize 042. Historical snapshots are preserved in [the handoff archive](CURRENT-HANDOFF-HISTORY-20261106.md).
 
+## Latest verified state — November 8, 17:48 UTC
+
+The documented raw `.atrc` import/TOC check completed successfully, exit0 in163.529seconds. Original/clone/source/receipts are unchanged. It exposes65 table declarations, but the reported run range17:34:34.277–17:34:42.611UTC ends before actual Play43.962 and Pause47.132. It cannot qualify those waits; no table rows or causal chain were exported. [Sanitized recovered metadata](evidence/native/cook-raw-trace-toc-20261108/README.md). Root93305 is terminal; all current native/inspection handles are terminal. A separately frozen app-PID attachment proposal is being prepared; no additional all-process recording is planned or authorized by these results.
+
+The accessibility audit found a concrete remaining quantity-typography mismatch in `HouseholdRequestMealContext.swift`: portions use caption, while Foundation requires body/headline. Astra S24 has prepared the one-line body correction plus actual label/value visibility, rendered-size and contrast checks in the two existing standard/AX5 journeys. The frozen proposal is `.build/S24PortionTypographyNov08/proposal-r1` (manifest5474ba50db5e7f92e259ed8698b73946e4c3f9b0014c64b25cf3d2ae2fb2c5eb). It is not installed or executed; a preserved-product execution package is being prepared. The Other meals disclosure and Cancel preview focus remain separate unqualified paths. No source-supported repair was found for the English animation timeout.
+
+Canonical speech remains unchanged; r5's actual speech journey is native1/1 but strict1, while its43 model cases pass. CI failure diagnostics are committed locally as2910ca0 with17 workflow tests and lint passing, but not pushed. Hosted UI09 is terminal native8/8/strict0 with unavailable observer; no successor was dispatched. Current app Release compilation remains qualified in its earlier scope. Full first-version acceptance remains open.
+
 ## Latest verified state — November 8, 17:40 UTC
 
 The isolated r5 actual speech journey passed native 1/1 in 62.276 seconds with observed Play/Pause/Resume/Stop, but strict inspection failed on two priority-inversion records without required issue descriptions. The inspector is complete and must not be repeated. The separately passing 43 model/owner tests remain preserved. Canonical speech remains unchanged. [Actual API result and limits](evidence/native/cook-r5-actual-api-20261108/README.md).

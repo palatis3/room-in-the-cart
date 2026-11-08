@@ -1,0 +1,35 @@
+{
+  "rawTOCSHA256": "37bb0f2f0389972ba093a82b9c2c3716300fd8b560a6cdee9722ec1038b254c5",
+  "rawTOCBytes": 172315,
+  "reportedRunSummary": {
+    "start-date": "2026-11-08T12:34:34.277-05:00",
+    "end-date": "2026-11-08T12:34:42.611-05:00",
+    "duration": "8.334749",
+    "template-name": "System Trace"
+  },
+  "selectedTableDeclarations": [
+    {
+      "schema": "syscall",
+      "target-pid": "ALL",
+      "documentation": "A system call that was active on a given thread for a given interval of time."
+    },
+    {
+      "schema": "thread-info",
+      "documentation": "Associates threads with their owning process."
+    },
+    {
+      "schema": "thread-state",
+      "target-pid": "ALL",
+      "documentation": "Determines that state of a thread during a given interval of time."
+    },
+    {
+      "schema": "process-info",
+      "documentation": "Associates processes with their process names."
+    }
+  ],
+  "actualTableRowsExported": false,
+  "dataEventMinMaxEstablished": false,
+  "actualPlayUTC": "2026-11-08T17:34:43.962+00:00",
+  "actualPauseUTC": "2026-11-08T17:34:47.132+00:00",
+  "scope": "Sanitized run summary and selected declarations only; raw TOC stays private"
+}
