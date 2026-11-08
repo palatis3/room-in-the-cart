@@ -1,5 +1,30 @@
 # Room in the Cart current handoff
 
+## November 8, focused dinner CI published; no new native execution
+
+Published branch `codex/core-dinner-ui-diagnostic-20261108`, commit `1d49a382`,
+contains the reviewed branch-only registered-path diagnostic. It builds once and
+runs one explicitly selected original English or Spanish dinner journey. The
+full compiled inventory, strict checks and five-slot policy remain intact. Root
+verified all five installed source hashes, 59 static/mocked tests, paired
+workflow lint (15 queue nodes) and nine shell blocks. No app source changed.
+The isolated worktree is
+`/Users/palatis/.codex/worktrees/core-dinner-ui-diagnostic/Room in the Cart`.
+No PR or hosted run was created; hosted execution of this workflow is pending.
+Do not merge its replacement of `ios-toggle-diagnostic.yml` into canonical.
+See `docs/CI-VALIDATION.md` for the focused-run operating procedure.
+
+The hit-region observer proposal is now prepared, not reviewed or executed, at
+`.build/EnglishKeyboardReviewNov08/native-done-hit-observation-r1`.
+Manifest SHA256 `9c85dd614c88c81eb385087071989628fa54d4865f6e0bba05e9c56d28416e0b`.
+It requires explicit run UUID/source arguments and binds output to process/time.
+Helper reports unchanged native button/action, R3 assertions and Release
+projection; root review and Swift typechecking remain pending. No canonical
+native change, source/DD mutation or new native test occurred during the CI
+workflow update. Both preparation helpers are terminal. R3 remains the last
+native result and is not qualified; the full first-version objective is open.
+
+
 ## November 8, R3 terminal; inspect hit-region semantics next
 
 R3 test82246/PID64813 and inspector81958 are terminal65; native65/strict1,
