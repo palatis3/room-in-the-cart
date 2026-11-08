@@ -50,7 +50,7 @@ struct SharedDeliveryView: View {
                             RequestPurchasesView(model: model, inbox: inbox, shopID: shopID)
                         }.accessibilityIdentifier("delivery.requestPurchases")
                     }
-                    if model.shop?.phase == "placed", model.pending == nil, !page.lines.isEmpty {
+                    if ["placed", "closed"].contains(model.shop?.phase ?? ""), model.pending == nil, !page.lines.isEmpty {
                         Button(ht("Add a delivery")) { choosingLine = true }
                     }
                     if model.canReadMealRecovery, model.shop?.phase == "placed" {
@@ -83,7 +83,7 @@ struct SharedDeliveryView: View {
                             if source.usable != nil, source.usable?.arrivalObservationId != source.arrival?.observationId {
                                 Text(ht("The arrival changed. Check the usable quantity again."))
                             }
-                            if model.shop?.phase == "placed", model.pending == nil {
+                            if ["placed", "closed"].contains(model.shop?.phase ?? ""), model.pending == nil {
                                 Button(ht("Record arrival")) { form = .arrival(source) }
                                 if source.arrival != nil {
                                     Button(ht("Record usable quantity")) { form = .usable(source) }
@@ -174,7 +174,7 @@ private struct DeliveryMealMatches: View {
                                                 groupReservation(group, ingredient: ingredient, target: target, matched: matched)
                                             }
                                         }
-                                        if model.shop?.phase == "placed", model.pending == nil {
+                                        if ["placed", "closed"].contains(model.shop?.phase ?? ""), model.pending == nil {
                                             Section {
                                                 Button(matched ? ht("Remove ingredient match") : ht("Match this ingredient")) {
                                                     Task { error = await save(.match(source: source.id, ingredient: target, matched: !matched)) }
@@ -223,7 +223,7 @@ private struct DeliveryMealMatches: View {
         if let reserved = head?.quantity {
             LabeledContent(ht("Set aside from this delivery"), value: deliveryQuantityText(reserved))
         }
-        if matched, reviewed.reservationsAvailable == true, model.shop?.phase == "placed", model.pending == nil,
+        if matched, reviewed.reservationsAvailable == true, ["placed", "closed"].contains(model.shop?.phase ?? ""), model.pending == nil,
            let groupAmount, let unit = UnitOfMeasure(rawValue: groupAmount.unit),
            head?.quantity != nil || source.confirmed != nil {
             NavigationLink {

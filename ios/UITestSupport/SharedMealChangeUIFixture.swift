@@ -39,6 +39,7 @@ private final class S17FixtureServer: @unchecked Sendable {
 
     func respond(_ request: URLRequest) throws -> (Int,Data) {
         lock.lock(); defer { lock.unlock() }
+        deliveries?.shopRevision = revision
         guard request.url?.host?.hasSuffix(".invalid") == true else { throw URLError(.unsupportedURL) }
         if let confirmedOrder { revision = confirmedOrder.revision }
         let path = request.url!.path

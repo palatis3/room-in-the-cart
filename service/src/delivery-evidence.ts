@@ -183,7 +183,10 @@ async function reserveDelivery(ctx:Context,shop:Shop,row:ReservationWrite,operat
 // Called in HouseholdRepository's household-locked command transaction, after device,
 // replay, shopper and checkout-revision validation. The receipt and evidence commit together.
 export async function recordDelivery(ctx: Context, shop: Shop, kind: Kind, input: unknown, operationId: string, verifyEffective?:()=>Promise<void>) {
-  requirePlaced(shop);
+  // Closure records app/financial review, not a claim that every bag arrived.
+  // Late physical evidence and ingredient identity corrections remain append-only.
+  // Reviewed set-asides still target the same sealed meal/group and physical stock.
+  requirePlaced(shop,true);
   const scope=[ctx.householdId,shop.shop_id], revision=shop.supply_revision+1;
   let sourceId:string;
   if(kind==='delivery.reserve') {

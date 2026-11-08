@@ -47,6 +47,7 @@ ISOLATED_SUITES = {"SharedMealIdeaUITests", "SharedStoreQuoteUITests"}
 DELIVERY_SHARDS = {
     "SharedDeliveryUITests-stock-and-purchase": (
         "testConfirmedOrderCancelAndLostReplyRecoverOnceAfterRestart",
+        "testSpanishLargestTextConfirmedOrderCancelAndLostReplyRecoverOnceAfterRestart",
         "testShopperRecordsAndCorrectsDeliveryThenReopensIt",
         "testSpanishShopperDistinguishesFractionalUsableFoodZeroAndUnknown",
         "testShopperReviewsFreezerBatchCoverageBeforeCorrectingFiveToThree",

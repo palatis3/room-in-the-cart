@@ -216,7 +216,7 @@ if(process.env.RITC_TEST_NATIVE_WIRE==='1') test('actual Swift planner proposal 
  await exerciseSharedMealClient({service:server,owner:f.planner,householdId:f.h,shopId:f.shopId,shopper:false});
  assert.equal(ok(await call(f.owner,f.path)).shopRevision,3);
  await exerciseSharedMealClient({service:server,owner:f.owner,householdId:f.h,shopId:f.shopId,shopper:true});
- const current=ok(await call(f.owner,f.path));assert.equal(current.shopRevision,8);assert.equal(current.placedRevision,5);
+ const current=ok(await call(f.owner,f.path));assert.equal(current.shopRevision,9);assert.equal(current.placedRevision,5);assert.equal(current.phase,'closed');
  assert.equal(current.meals[0].meal.title,'Reviewed native guest plan');
  const saved=ok(await call(f.owner,f.path+'/delivery-evidence'));
  const deadline={at:'2099-11-01T06:30:00Z',zone};
@@ -228,10 +228,15 @@ if(process.env.RITC_TEST_NATIVE_WIRE==='1') test('actual Swift planner proposal 
  assert.equal(recovered.due,deadline.at);assert.equal(recovered.zone,zone);
  assert(recovered.needs.length>0 && recovered.needs.every(n=>n.due===deadline.at));
  assert.equal(saved.sources.length,2);
- const physicalSource=saved.sources.find(s=>s.confirmed!==null);
+ const physicalSource=saved.sources.find(s=>s.foodName==='Cannellini beans');
  assert.equal(physicalSource.confirmed.quantity.amount.numerator,7);
  const addedSource=saved.sources.find(s=>s.foodName==='Independently confirmed replacement');
- assert.equal(addedSource.arrival,null);assert.equal(addedSource.confirmed,null);
+ assert.equal(addedSource.arrival.received.amount.numerator,2);assert.equal(addedSource.confirmed.quantity.amount.numerator,1);
+ assert.equal(addedSource.confirmed.arrivalId,addedSource.arrival.observationId);assert.equal(addedSource.confirmed.usableId,addedSource.usable.observationId);
+ // Twelve delivery changes, one effective-meal recovery, one amendment-line registration, and three closed corrections.
+ assert.equal(saved.supplyRevision,17);
+ const closedFinancial=ok(await call(f.owner,f.path+'/financial-evidence'));
+ assert.deepEqual(closedFinancial.entries.map(e=>[e.kind,e.amountMinor]),[['postedCharge',3720],['pendingCredit',240]]);
  const confirmedOrder=ok(await call(f.owner,f.path+'/confirmed-order'));
  assert.equal(confirmedOrder.amendments.length,2);assert.deepEqual(confirmedOrder.current.lines,[]);
  assert.deepEqual(confirmedOrder.original.lines,current.lines);
@@ -549,7 +554,11 @@ test('durable named reservations bind exact group, predecessor and authority thr
  ok(await f.write('delivery.reserve',{...r,supplyRevision:15,predecessorId:released.operationId,quantity:f.quantity(1)}));
  await admin.query("UPDATE ritc.shop SET phase='closed' WHERE household_id=$1 AND shop_id=$2",[f.h,f.shopId]);
  assert.equal((await f.coverage()).needs[1].reservations[0].backed.numerator,'1');
- assert.equal((await f.write('delivery.reserve',{...r,supplyRevision:13})).data.error.code,'placed_order_required');
+ assert.equal((await f.write('delivery.reserve',{...r,supplyRevision:13})).data.error.code,'stale_supply');
+ const closedHead=(await f.delivery()).sources[0].reservations.find(p=>p.groupId===f.lunch.id);
+ ok(await f.write('delivery.reserve',{...r,supplyRevision:16,predecessorId:closedHead.reservationId,quantity:null}));
+ assert.deepEqual((await f.coverage()).needs[1].reservations,[]);
+ assert.equal(ok(await call(f.owner,f.path)).phase,'closed');
 });
 
 test('durable named reservations reject excluded food and ambiguous group splits',async()=>{
@@ -1292,4 +1301,63 @@ test('paid fallback ranking uses the accepted household library, current physica
  subscriptions.set(state.originalTransactionID,{...subscription,status:'expired',expiresAt:Date.now()-1000,signedAt:Date.now()+2000});
  assert.deepEqual(ok(await f.send(command)),receipt); // Read back the committed receipt after the seat lapses.
  assert.deepEqual(ok(await call(f.owner,path)).meals,saved.meals);
+});
+
+
+test('closed pickup accepts late amended-line arrivals and earlier corrections without reopening orders or changing money',async()=>{
+ const f=await reservationFixture();
+ const pin=ok(await f.write('delivery.reserve',{...f.reservation,supplyRevision:4}));
+ const beforeCoverage=await f.coverage();assert.equal(beforeCoverage.needs[0].missing.numerator,'1');
+ const charge=randomUUID(),credit=randomUUID();
+ await f.financial({id:randomUUID(),evidenceKey:charge,kind:'postedCharge',amountMinor:3720,currency:'USD',occurredAt:new Date().toISOString(),creditId:null,chargeEvidenceKey:null,holdEvidenceKey:null,sourceText:'Original checkout'});
+ await f.financial({id:randomUUID(),evidenceKey:randomUUID(),kind:'pendingCredit',amountMinor:240,currency:'USD',occurredAt:new Date().toISOString(),creditId:credit,chargeEvidenceKey:charge,holdEvidenceKey:null,sourceText:'Still pending'});
+ const closed=ok(await call(f.owner,f.path+'/financial-reviews','POST',{clientKey:randomUUID(),sourceVersion:await f.version(),allEvidenceEntered:false,closeShop:true}));
+ assert.equal(closed.appShopClosed,true);f.snapshot.shopRevision=closed.sourceVersion.shopRevision;
+ const sealed=(await admin.query('SELECT revision,snapshot,digest FROM ritc.shop_snapshot WHERE household_id=$1 ORDER BY revision',[f.h])).rows;
+ const original=ok(await call(f.owner,f.path+'/confirmed-order'));
+ const replacement={lineId:randomUUID(),originalItem:'Retailer replacement wraps',packs:1,unitPriceMinor:399,feeEligible:true};
+ const amended=ok(await f.write('amendment.recordResponse',{placedRevision:original.placedRevision,predecessorId:null,
+  retailerReference:'Retailer confirmed later replacement',confirmedAt:new Date().toISOString(),lines:[replacement]}));
+ f.snapshot.shopRevision=amended.shopRevision;
+ const order=ok(await call(f.owner,f.path+'/confirmed-order')),shop=ok(await call(f.owner,f.path));
+ const financial=ok(await call(f.owner,f.path+'/financial-evidence'));
+ const registeredCommand=f.command('delivery.register',{placedRevision:original.placedRevision,supplyRevision:5,lineId:replacement.lineId,
+  segmentKey:randomUUID(),foodName:'Replacement wraps',exclusionTags:[]});
+ const results=await Promise.all([f.send(registeredCommand),f.send(registeredCommand)]),registered=ok(results[0]);assert.deepEqual(ok(results[1]),registered);
+ const late=registered.sourceId,arrivalId=randomUUID();
+ const arrival=f.command('delivery.arrival',{sourceId:late,supplyRevision:6,observationId:arrivalId,predecessorId:null,
+  arrivedAt:new Date(Date.now()-1000).toISOString(),received:f.quantity(2)});
+ const arrivalReceipt=ok(await f.send(arrival));assert.deepEqual(ok(await f.send(arrival)),arrivalReceipt);
+ assert.equal((await f.delivery()).sources.find(s=>s.sourceId===late).confirmed,null);
+ ok(await f.write('delivery.usable',{sourceId:late,supplyRevision:7,observationId:randomUUID(),predecessorId:null,
+  arrivalObservationId:arrivalId,confirmedAt:new Date().toISOString(),usable:f.quantity(2)}));
+ ok(await f.write('delivery.match',{...f.match,sourceId:late,supplyRevision:8}));
+ let coverage=await f.coverage();assert.equal(coverage.needs[0].missing.numerator,'0');assert.equal(coverage.needs[1].missing.numerator,'0');
+ const correctedArrival=randomUUID();
+ const correction=f.command('delivery.arrival',{sourceId:f.sourceId,supplyRevision:9,observationId:correctedArrival,
+  predecessorId:f.usable.arrivalObservationId,arrivedAt:new Date(Date.now()-2000).toISOString(),received:f.quantity(3)});
+ ok(await f.send(correction));assert.equal((await f.delivery()).sources.find(s=>s.sourceId===f.sourceId).confirmed,null);
+ assert.equal((await f.write('delivery.usable',{...f.usable,supplyRevision:10,predecessorId:f.usable.observationId,observationId:randomUUID()})).data.error.code,'stale_supply');
+ const usableCorrection={...f.usable,supplyRevision:10,predecessorId:f.usable.observationId,observationId:randomUUID(),
+  arrivalObservationId:correctedArrival,confirmedAt:new Date().toISOString(),usable:f.quantity(2)};
+ ok(await f.write('delivery.usable',usableCorrection));
+ coverage=await f.coverage();assert.equal(coverage.needs[0].missing.numerator,'2');assert.equal(coverage.needs[1].missing.numerator,'0');
+ assert.equal(coverage.needs[1].reservations[0].reservationId,pin.operationId);assert.equal(coverage.needs[1].reservations[0].backed.numerator,'2');
+ const release=f.command('delivery.reserve',{...f.reservation,supplyRevision:11,predecessorId:pin.operationId,quantity:null});
+ const released=ok(await f.send(release));assert.deepEqual(ok(await f.send(release)),released);
+ assert.deepEqual((await f.coverage()).needs[1].reservations,[]);
+ assert.equal((await f.write('delivery.reserve',{...f.reservation,supplyRevision:12,predecessorId:released.operationId,quantity:f.quantity(3)})).data.error.code,'reservation_review_required');
+ ok(await f.write('delivery.reserve',{...f.reservation,supplyRevision:12,predecessorId:released.operationId,quantity:f.quantity(1)}));
+ const correctedPin=(await f.coverage()).needs[1].reservations[0];assert.equal(correctedPin.requested.numerator,'1');assert.equal(correctedPin.backed.numerator,'1');
+ const final=await f.delivery();assert.equal(final.sources.length,2);assert.equal(final.supplyRevision,13);
+ assert.deepEqual(ok(await f.send(arrival)),arrivalReceipt);assert.equal((await f.delivery()).supplyRevision,13);
+ assert.equal((await f.send({...correction,clientKey:randomUUID()})).data.error.code,'stale_supply');
+ assert.equal((await f.send({...correction,clientKey:randomUUID(),base:{...f.snapshot,authorityEpoch:2}})).data.error.code,'authority_changed');
+ assert.equal((await f.send({...correction,replayWindow:f.planner.window},f.planner)).status,404);
+ assert.deepEqual(ok(await call(f.owner,f.path)),shop);assert.equal(shop.phase,'closed');
+ const orderAfter=ok(await call(f.owner,f.path+'/confirmed-order'));delete order.asOf;delete orderAfter.asOf;assert.deepEqual(orderAfter,order);
+ assert.deepEqual(ok(await call(f.owner,f.path+'/financial-evidence')),financial);
+ assert.deepEqual((await admin.query('SELECT revision,snapshot,digest FROM ritc.shop_snapshot WHERE household_id=$1 ORDER BY revision',[f.h])).rows,sealed);
+ const newShop=await f.shop();assert.notEqual(newShop,f.shopId);assert.equal(ok(await call(f.owner,f.base+'/shops/'+newShop)).phase,'draft');
+ assert.equal(ok(await call(f.owner,f.path)).phase,'closed');assert.equal((await f.delivery()).supplyRevision,13);
 });

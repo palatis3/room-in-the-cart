@@ -731,6 +731,38 @@
           }
         }
       }
+    },
+    "Confirmation date": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmation date"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fecha de confirmación"
+          }
+        }
+      }
+    },
+    "Confirmation time": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmation time"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hora de confirmación"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

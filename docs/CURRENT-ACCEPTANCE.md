@@ -1,5 +1,11 @@
 # Current implementation and acceptance map
 
+## November 7 closed-pickup corrections
+
+S08/S11 now preserve later physical correction after closure: an assigned shopper can register late food, revise received/usable quantities and correct protected portions without reopening the pickup or changing its order or spending. A reproduced pending-action bug is also fixed: another shop’s review cannot clear the original durable delivery. The complete iOS 17 batch passed 696 model tests and three UI journeys; both selected iOS 26.2 journeys passed, all with zero skips or recorded runtime warnings. Real Swift/HTTPS/PostgreSQL, backend regressions and the unsigned Release build passed in their [documented scopes](evidence/native/closed-delivery-20261107/README.md). Spanish largest-text confirmation recovery is covered; human language and physical assistive-access acceptance remain separate.
+
+The earlier hosted f90 candidate now passes all three Release performance gates, including the previously missing five-sample scroll metric. [Exact performance proof](evidence/native/ci-f90-20261107/performance/README.md). Other hosted gates remain incomplete, and these later local changes are not yet hosted or deployed to staging.
+
 ## November 7 shared confirmation acceptance
 
 The assigned shopper can review and record independently retailer-confirmed shared-order changes while retaining the original order, quote, actual food and financial evidence. Exact retry after a lost reply and restart is covered in the full iPhone journey on iOS 17 and 26.2. The final iOS 17 run passed 693 model tests and that UI case, with zero recorded runtime warnings. Real Swift HTTPS/PostgreSQL scenarios cover confirmation, replay, new independent delivery sources and full cancellation. Backend tenant/authority, erasure and populated-restore checks passed; the unsigned Release iPhone build passed. [Exact verification and limits](evidence/native/shared-amendment-20261107/README.md).

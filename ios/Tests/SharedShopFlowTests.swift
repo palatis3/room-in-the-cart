@@ -103,6 +103,111 @@ import HouseholdClient
         XCTAssertNil(shared.pending); XCTAssertFalse(shared.reviewedCurrentFacts)
         let stillSaved = try await outbox.operations(); XCTAssertEqual(stillSaved, [operation])
     }
+    func testDeliveryRetryStaysWithOriginalShopAndCannotBeClearedByAnotherShopsFacts() async throws {
+        let fixture = SharedFlowService()
+        let queue = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathComponent("delivery-scope.json")
+        let adult = try await createdHousehold(fixture, queue: queue), shared = try XCTUnwrap(adult.sharedShop)
+        enterShop(shared); await shared.applyReviewed()
+        fixture.placedRevision = fixture.revision; fixture.phase = "closed"; fixture.revision += 1
+        await shared.load(); await shared.loadDelivery()
+        let page = try XCTUnwrap(shared.deliveryRecord), line = try XCTUnwrap(page.lines.first)
+        let originalShop = try XCTUnwrap(fixture.shopID)
+        let edit = SharedDeliveryEdit.register(lineID: line.id, segment: UUID(), name: line.name, exclusions: [])
+        let envelope = CommandEnvelope(replayWindow: UUID().uuidString.lowercased(), shopId: originalShop, kind: edit.kind,
+            base: .init(shopRevision: page.shopRevision, authorityEpoch: page.authorityEpoch), body: try edit.body(reviewed: page))
+        let operation = try PendingOperation(envelope: envelope, householdID: fixture.household, memberID: fixture.miaID, deviceID: "mia-device")
+        let outbox = OperationOutbox(url: queue.deletingPathExtension().appendingPathExtension("shared-shop.json"))
+        try await outbox.append(operation)
+        await shared.load(); await shared.loadDelivery()
+        XCTAssertEqual(shared.pending, operation); XCTAssertTrue(shared.reviewedCurrentFacts)
+        let sentBefore = fixture.commandBodies.count
+        fixture.shopID = UUID().uuidString.lowercased()
+        await shared.load(); await shared.loadDelivery()
+        XCTAssertNil(shared.pending); XCTAssertFalse(shared.reviewedCurrentFacts)
+        await shared.clearPendingAfterReview()
+        let retained = try await outbox.operations()
+        XCTAssertEqual(retained, [operation], "Another shop's delivery facts cannot erase the original durable intent")
+        XCTAssertEqual(fixture.commandBodies.count, sentBefore)
+        await shared.retry()
+        XCTAssertEqual(fixture.commandBodies.count, sentBefore)
+        fixture.shopID = originalShop
+        await shared.load()
+        XCTAssertEqual(shared.pending, operation); XCTAssertFalse(shared.reviewedCurrentFacts)
+        await shared.clearPendingAfterReview()
+        XCTAssertEqual(shared.pending, operation)
+        await shared.loadDelivery()
+        XCTAssertTrue(shared.reviewedCurrentFacts)
+        await shared.clearPendingAfterReview()
+        let cleared = try await outbox.operations()
+        XCTAssertNil(shared.pending); XCTAssertTrue(cleared.isEmpty)
+        XCTAssertEqual(fixture.commandBodies.count, sentBefore)
+    }
+    func testClosedSharedPickupRecordsLateArrivalAndCorrectionWithoutChangingOrderOrClosure() async throws {
+        let fixture = SharedFlowService(), adult = try await createdHousehold(fixture)
+        let shared = try XCTUnwrap(adult.sharedShop)
+        enterShop(shared); await shared.applyReviewed()
+        fixture.placedRevision = fixture.revision; fixture.phase = "closed"; fixture.revision += 1
+        await shared.load(); await shared.loadDelivery()
+        let original = try XCTUnwrap(shared.shop), initial = try XCTUnwrap(shared.deliveryRecord)
+        let line = try XCTUnwrap(initial.lines.first)
+        let saved1 = await shared.saveDelivery(.register(lineID: line.id, segment: UUID(), name: line.name, exclusions: []), reviewed: initial)
+        XCTAssertTrue(saved1)
+        await shared.loadDelivery()
+        let registered = try XCTUnwrap(shared.deliveryRecord), source = try XCTUnwrap(registered.sources.first)
+        let arrival = UUID(), quantity = SharedMealQuantity(amount: .init(numerator: 6, denominator: 1), unit: "count", originalLiteral: "6")
+        let saved2 = await shared.saveDelivery(.arrival(source: source.id, previous: nil, observation: arrival,
+            date: Date().addingTimeInterval(-10), received: quantity), reviewed: registered)
+        XCTAssertTrue(saved2)
+        await shared.loadDelivery()
+        let arrived = try XCTUnwrap(shared.deliveryRecord)
+        XCTAssertNil(arrived.sources.first?.confirmed)
+        let usable = UUID()
+        let saved3 = await shared.saveDelivery(.usable(source: source.id, previous: nil, arrival: arrival, observation: usable,
+            date: Date(), quantity: quantity), reviewed: arrived)
+        XCTAssertTrue(saved3)
+        await shared.loadDelivery()
+        let reviewed = try XCTUnwrap(shared.deliveryRecord)
+        let reduced = SharedMealQuantity(amount: .init(numerator: 3, denominator: 1), unit: "count", originalLiteral: "3")
+        let saved4 = await shared.saveDelivery(.usable(source: source.id, previous: usable, arrival: arrival, observation: UUID(),
+            date: Date(), quantity: reduced), reviewed: reviewed)
+        XCTAssertTrue(saved4)
+        await shared.loadDelivery()
+        XCTAssertEqual(shared.deliveryRecord?.sources.first?.confirmed?.quantity, reduced)
+        XCTAssertEqual(shared.deliveryRecord?.supplyRevision, 4)
+        XCTAssertEqual(shared.shop, original)
+        let before = fixture.commandBodies.count
+        let saved5 = await shared.saveDelivery(.arrival(source: source.id, previous: nil, observation: UUID(),
+            date: Date(), received: quantity), reviewed: registered)
+        XCTAssertFalse(saved5)
+        XCTAssertEqual(fixture.commandBodies.count, before, "Stale delivery review cannot send a correction")
+        shared.reviewPhaseChange("shop.reopen")
+        XCTAssertNil(shared.review)
+    }
+    func testLostClosedArrivalReplyRestoresExactDurableCommandWithoutSecondDelivery() async throws {
+        let fixture = SharedFlowService()
+        let queue = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathComponent("closed-delivery.json")
+        let adult = try await createdHousehold(fixture, queue: queue), shared = try XCTUnwrap(adult.sharedShop)
+        enterShop(shared); await shared.applyReviewed()
+        fixture.placedRevision = fixture.revision; fixture.phase = "closed"; fixture.revision += 1
+        await shared.load(); await shared.loadDelivery()
+        let initial = try XCTUnwrap(shared.deliveryRecord), line = try XCTUnwrap(initial.lines.first)
+        let saved6 = await shared.saveDelivery(.register(lineID: line.id, segment: UUID(), name: line.name, exclusions: []), reviewed: initial)
+        XCTAssertTrue(saved6)
+        await shared.loadDelivery()
+        let registered = try XCTUnwrap(shared.deliveryRecord), source = try XCTUnwrap(registered.sources.first)
+        fixture.loseDeliveryResponse = true
+        let saved7 = await shared.saveDelivery(.arrival(source: source.id, previous: nil, observation: UUID(), date: Date(), received: nil), reviewed: registered)
+        XCTAssertTrue(saved7)
+        let pending = try XCTUnwrap(shared.pending)
+        XCTAssertEqual(shared.delivery, .waiting)
+        fixture.loseDeliveryResponse = false
+        let outbox = OperationOutbox(url: queue.deletingPathExtension().appendingPathExtension("shared-shop.json"))
+        let restored = HouseholdShopModel(scope: shared.scope, service: try XCTUnwrap(adult.service), outbox: outbox, onConfirmed: {}, onAccessEnded: {})
+        await restored.load(); await restored.retry(); await restored.loadDelivery()
+        XCTAssertNil(restored.pending); XCTAssertEqual(restored.shop?.phase, "closed")
+        XCTAssertEqual(restored.deliveryRecord?.sources.count, 1); XCTAssertEqual(restored.deliveryRecord?.supplyRevision, 2)
+        XCTAssertEqual(fixture.commandBodies.filter { $0.kind == "delivery.arrival" }.map(\.bytes), [pending.bytes, pending.bytes])
+    }
     func testFreshHouseholdNativeFlowCreatesInvitesReceivesApprovesFreezesAndReopens() async throws {
         let fixture = SharedFlowService(); let mia = try await createdHousehold(fixture)
         let shared = try XCTUnwrap(mia.sharedShop); XCTAssertTrue(shared.canCreate)
@@ -368,6 +473,9 @@ private final class SharedFlowService {
     var readFailureAfterCreate: Int?
     var placedRevision: Int?
     var confirmedOrderFailure: (Int, String)?
+    var deliverySources: [[String: Any]] = []
+    var supplyRevision = 0
+    var loseDeliveryResponse = false
     func data(_ value: Any) throws -> Data { try JSONSerialization.data(withJSONObject: value, options: [.sortedKeys]) }
     func body(_ request: URLRequest) throws -> Data {
         if let body = request.httpBody { return body }
@@ -395,7 +503,7 @@ private final class SharedFlowService {
             let shopper = actor == "mia" && shopID != nil && !shopperTransferred
             return try ok(["household":["id":household,"label":"Our home"],"memberId":actor == "mia" ? miaID : samID,
                 "role":shopper ? "shopper" : actor == "mia" ? "organizer" : "contributor", "canSelectShop":canSelectShop, "shopId":shopID as Any? ?? NSNull(),"enrolled":true,"queueConsent":false,
-                "capabilities":["own_requests"] + (actor == "mia" ? ["household_admin"] : []) + (shopper ? ["shopper_inbox","request_preview","shopper_commands","accepted_fallbacks"] + (placedRevision == nil ? [] : ["confirmed_order"]) : [])])
+                "capabilities":["own_requests"] + (actor == "mia" ? ["household_admin"] : []) + (shopper ? ["shopper_inbox","request_preview","shopper_commands","accepted_fallbacks"] + (placedRevision == nil ? [] : ["confirmed_order", "delivery_evidence"]) : [])])
         }
         if path.hasSuffix("/accepted-fallbacks"), let shopID {
             if transferAfterLibraryRead { shopperTransferred = true }
@@ -416,6 +524,12 @@ private final class SharedFlowService {
                 "currency": "USD", "occurredAt": "2026-01-01T12:00:00.000Z", "sourceText": "Hold on the entered receipt"]], "nextCursor": NSNull()])
         }
         if path.hasSuffix("/inbox") { return try ok(["requests":requests.map { $0.merging(["authorAlias":"Sam"]) { _, new in new } },"nextCursor":NSNull()]) }
+        if path.hasSuffix("/delivery-evidence"), let shopID, let placedRevision {
+            return try ok(["shopId":shopID,"shopRevision":revision,"authorityEpoch":1,"placedRevision":placedRevision,
+                "supplyRevision":supplyRevision,"coverageAvailable":false,"reservationsAvailable":false,"meals":[],
+                "lines":lines.map { ["lineId":$0["lineId"]!,"name":$0["originalItem"]!,"packs":$0["packs"]!] },
+                "sources":deliverySources,"nextCursor":NSNull()])
+        }
         if path.hasSuffix("/confirmed-order"), let shopID, let placedRevision {
             if let (status, code) = confirmedOrderFailure { return try ok(["error":["code":code,"correlationId":"test"]],status) }
             return try ok(["shopId":shopID,"shopRevision":revision,"authorityEpoch":1,"placedRevision":placedRevision,
@@ -437,6 +551,28 @@ private final class SharedFlowService {
             commandBodies.append((kind,input))
             if let prior = receipts[key] { return try ok(prior) }
             kinds.append(kind)
+            if kind.hasPrefix("delivery.") {
+                let operation = UUID().uuidString.lowercased()
+                guard body["supplyRevision"] as? Int == supplyRevision else { return try ok(["error":["code":"stale_supply"]],409) }
+                let sourceID = kind == "delivery.register" ? operation : body["sourceId"] as! String
+                if kind == "delivery.register" {
+                    deliverySources.append(["sourceId":sourceID,"foodId":sourceID,"lineId":body["lineId"]!,"segmentKey":body["segmentKey"]!,
+                        "foodName":body["foodName"]!,"exclusionTags":body["exclusionTags"]!,"arrival":NSNull(),"usable":NSNull(),"confirmed":NSNull()])
+                } else if let index = deliverySources.firstIndex(where: { $0["sourceId"] as? String == sourceID }) {
+                    if kind == "delivery.arrival" { deliverySources[index]["arrival"] = body; deliverySources[index]["confirmed"] = NSNull() }
+                    if kind == "delivery.usable" {
+                        deliverySources[index]["usable"] = body
+                        deliverySources[index]["confirmed"] = ["sourceId":sourceID,"foodId":sourceID,"quantity":body["usable"]!,
+                            "arrivalId":body["arrivalObservationId"]!,"usableId":body["observationId"]!]
+                    }
+                }
+                supplyRevision += 1
+                let receipt: [String: Any] = ["operationId":operation,"kind":kind,"shopId":shopID!,"shopRevision":revision,
+                    "authorityEpoch":1,"disposition":"recorded","sourceId":sourceID,"supplyRevision":supplyRevision]
+                receipts[key] = receipt
+                if loseDeliveryResponse { throw URLError(.networkConnectionLost) }
+                return try ok(receipt)
+            }
             if kind == "shop.create" { sharedShopCreates += 1; shopID = json["shopId"] as? String; revision = 1; quote = body["quote"] as! [String:Any]; lines = body["lines"] as! [[String:Any]] }
             if kind == "shop.patch" { quote = body["quote"] as! [String:Any]; lines = body["lines"] as! [[String:Any]]; revision += 1 }
             if kind == "shop.patch", let edit = body["mealEdit"] as? [String:Any], let id = edit["occurrenceId"] as? String {

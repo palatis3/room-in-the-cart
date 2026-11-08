@@ -142,7 +142,7 @@ struct SharedShopTransfer: Equatable {
         if scope.shopId != value.shopId || scope.role != value.role || Set(scope.capabilities) != Set(value.capabilities) {
             financialRecord = nil; financialRetry = nil; deliveryRecord = nil; review = nil; acknowledged = false
             reviewedCookRecipient = nil; pendingMarkOccurrence = nil; reviewedCookOperation = nil; reviewedAmendmentOperation = nil
-            if scope.shopId != value.shopId, pendingCookCopy || pendingPantry || pendingMealRecovery || pendingAmendment { pending = nil; delivery = .none; reviewedCurrentFacts = false }
+            if scope.shopId != value.shopId, pendingCookCopy || pendingPantry || pendingMealRecovery || pendingAmendment || pendingDelivery { pending = nil; delivery = .none; reviewedCurrentFacts = false }
             draft = .init()
             editing = false; creatingAnother = false
             shop = nil
@@ -261,18 +261,20 @@ struct SharedShopTransfer: Equatable {
     }
     func loadDelivery() async {
         guard canReadDelivery, let shop, shop.placedRevision != nil, !busy else { return }
-        let start = generation
+        let start = generation, actor = scope, operation = pending
         busy = true; defer { busy = false }
         do {
             let page = try await service.deliveryEvidence(shopID: shop.shopId)
-            guard start == generation, canReadDelivery, scope.shopId == shop.shopId, self.shop == shop,
+            guard start == generation, scope == actor, canReadDelivery, scope.shopId == shop.shopId, self.shop == shop,
                   UUID(uuidString: shop.shopId) == page.shopId else { return }
             guard page.shopRevision == shop.shopRevision, page.authorityEpoch == shop.authorityEpoch,
                   page.placedRevision == shop.placedRevision else {
                 throw ClientError.service(status: 409, code: "stale_supply", correlationID: nil, retryAfter: nil)
             }
             deliveryRecord = page; notice = nil
-            if pendingDelivery { reviewedCurrentFacts = true }
+            if let operation, pending == operation, pendingDelivery,
+               operation.householdID == actor.household.id, operation.memberID == actor.memberId,
+               pendingEnvelope?.shopId == shop.shopId { reviewedCurrentFacts = true }
         } catch {
             guard start == generation else { return }
             deliveryRecord = nil
@@ -593,11 +595,13 @@ struct SharedShopTransfer: Equatable {
     private func saveReviewedChange(kind: String, reviewed page: SharedDeliveryPage, reviewedPantry: SharedPantryPage? = nil, reviewedRecovery: SharedRecoveryPage? = nil, expires: Date? = nil, body: () throws -> [String: JSONValue]) async -> Bool {
         let cookCopy = kind.hasPrefix("cookCopy."), pantryEdit = kind.hasPrefix("pantry.")
         let recovering = kind == "mealRecovery.apply"
+        let physicalCorrection = ["delivery.register", "delivery.arrival", "delivery.usable", "delivery.match", "delivery.reserve"].contains(kind)
         if let reviewedRecovery, !canReadMealRecovery || recoveryRecord != reviewedRecovery { return false }
         if recovering, (expires ?? .distantPast) <= Date() { return false }
         if let reviewedPantry, !canReadPantry || pantryRecord != reviewedPantry { return false }
         guard canReadDelivery, !busy, pending == nil, let shop, scope.shopId == shop.shopId,
-              cookCopy ? (canReadCookCopies && ["placed", "closed"].contains(shop.phase)) : shop.phase == "placed",
+              cookCopy ? (canReadCookCopies && ["placed", "closed"].contains(shop.phase)) :
+                  (shop.phase == "placed" || (physicalCorrection && shop.phase == "closed")),
               page == deliveryRecord, UUID(uuidString: shop.shopId) == page.shopId, page.shopRevision == shop.shopRevision,
               page.authorityEpoch == shop.authorityEpoch, page.placedRevision == shop.placedRevision else { return false }
         busy = true; let start = generation, actorScope = scope
@@ -777,6 +781,7 @@ struct SharedShopTransfer: Equatable {
     func retry() async {
         guard authorized, !busy, let pending, delivery == .waiting else { return }
         if pendingEnvelope?.kind == "amendment.recordResponse" && (!canReadConfirmedOrder || pendingEnvelope?.shopId != scope.shopId) { return }
+        if pendingDelivery && (!canReadDelivery || pendingEnvelope?.shopId != scope.shopId) { return }
         if pendingMealRecovery && (!canReadMealRecovery || pendingEnvelope?.shopId != scope.shopId) { return }
         if pendingCookCopy && (!canRetryCookCopy || pendingEnvelope?.shopId != scope.shopId) { return }
         if pendingPantry && (!canReadPantry || pendingEnvelope?.shopId != scope.shopId) { return }
@@ -791,6 +796,7 @@ struct SharedShopTransfer: Equatable {
             let cookCopy = envelope.kind.hasPrefix("cookCopy."), pantryEdit = envelope.kind.hasPrefix("pantry.")
             let recovering = envelope.kind == "mealRecovery.apply"
             if envelope.kind == "amendment.recordResponse", pending != operation || !canReadConfirmedOrder || scope.shopId != envelope.shopId { return }
+            if envelope.kind.hasPrefix("delivery."), pending != operation || !canReadDelivery || scope.shopId != envelope.shopId { return }
             if recovering, pending != operation || !canReadMealRecovery || scope.shopId != envelope.shopId { return }
             if pantryEdit, pending != operation || !canReadPantry || scope.shopId != envelope.shopId { return }
             if cookCopy, pending != operation || !canReadCookCopies || scope.shopId != envelope.shopId { return }
@@ -844,6 +850,7 @@ struct SharedShopTransfer: Equatable {
     }
     func clearPendingAfterReview() async {
         guard authorized, !busy, reviewedCurrentFacts, let pending else { return }
+        if pendingDelivery, pendingEnvelope?.shopId != scope.shopId { return }
         busy = true; defer { busy = false }; let start = generation
         do {
             try await outbox.remove(pending.id); guard start == generation else { return }

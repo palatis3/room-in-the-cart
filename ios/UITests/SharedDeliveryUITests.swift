@@ -13,8 +13,23 @@ import XCTest
     }
 
     func testConfirmedOrderCancelAndLostReplyRecoverOnceAfterRestart() {
+        exerciseConfirmedOrderRecovery(spanishLargestText: false)
+    }
+
+    func testSpanishLargestTextConfirmedOrderCancelAndLostReplyRecoverOnceAfterRestart() {
+        exerciseConfirmedOrderRecovery(spanishLargestText: true)
+    }
+
+    private func exerciseConfirmedOrderRecovery(spanishLargestText: Bool) {
+        let language = spanishLargestText ? "es" : "en"
+        let done = spanishLargestText ? "Listo" : "Done"
+        let cancel = spanishLargestText ? "Cancelar" : "Cancel"
+        let packsLabel = spanishLargestText ? "Paquetes:" : "Packs:"
         func open(reset: Bool) {
-            app.launchArguments = ["--ui-testing", "--shared-delivery-fixture", "--confirmed-order-fixture", "--confirmed-order-drop-reply", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+            app.launchArguments = ["--ui-testing", "--shared-delivery-fixture", "--confirmed-order-fixture", "--confirmed-order-drop-reply", "-AppleLanguages", "(\(language))", "-AppleLocale", "\(language)_US"]
+            if spanishLargestText {
+                app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+            }
             if reset { app.launchArguments.append("--reset-confirmed-order-fixture") }
             app.launch()
             tap(app.buttons["sharedShop.confirmedOrder"])
@@ -24,33 +39,42 @@ import XCTest
         }
         func prepare() {
             tap(app.buttons["sharedOrder.amend"])
-            tap(app.buttons["Edit Entered soup packs"])
+            tap(app.buttons[spanishLargestText ? "Editar Entered soup packs" : "Edit Entered soup packs"])
             let packs=app.textFields["sharedOrder.packs"]
             tap(packs); packs.typeText(XCUIKeyboardKey.delete.rawValue + "3")
-            tap(app.buttons["Done"])
+            tap(app.buttons[done])
             tap(app.buttons["sharedOrder.keepLine"])
             let reference=app.textFields["sharedOrder.reference"]
             tap(reference); reference.typeText("Native market ABC-51")
-            tap(app.buttons["Done"])
+            tap(app.buttons[done])
+            if spanishLargestText {
+                let date = app.datePickers["sharedOrder.date"]
+                let time = app.datePickers["sharedOrder.time"]
+                reveal(date); XCTAssertTrue(date.isEnabled)
+                reveal(time); XCTAssertTrue(time.isEnabled)
+                let capture = XCTAttachment(screenshot: app.screenshot())
+                capture.name = "Shared-confirmation-date-Spanish-largest-text"
+                capture.lifetime = .keepAlways; add(capture)
+            }
             tap(app.buttons["sharedOrder.review"])
         }
         open(reset:true)
-        reveal(row("sharedOrder.original"));XCTAssertTrue(row("sharedOrder.original").label.contains("Packs: 1"))
-        prepare();tap(app.buttons["Cancel"])
+        reveal(row("sharedOrder.original"));XCTAssertTrue(row("sharedOrder.original").label.contains("\(packsLabel) 1"))
+        prepare();tap(app.buttons[cancel])
         XCTAssertFalse(app.staticTexts["Native market ABC-51"].exists)
         XCTAssertFalse(row("sharedOrder.current").exists)
         prepare();tap(app.buttons["sharedOrder.confirm"])
-        let retry=app.buttons["Retry the same shared shop action"]
+        let retry=app.buttons[spanishLargestText ? "Reintentar la misma acción de compra compartida" : "Retry the same shared shop action"]
         XCTAssertTrue(retry.waitForExistence(timeout:10), "A lost reply must retain the original durable operation")
         app.terminate();open(reset:false)
         XCTAssertTrue(retry.waitForExistence(timeout:10))
         tap(retry)
         XCTAssertTrue(retry.waitForNonExistence(timeout:10))
-        reveal(row("sharedOrder.original"));XCTAssertTrue(row("sharedOrder.original").label.contains("Packs: 1"))
-        reveal(row("sharedOrder.current"));XCTAssertTrue(row("sharedOrder.current").label.contains("Packs: 3"))
+        reveal(row("sharedOrder.original"));XCTAssertTrue(row("sharedOrder.original").label.contains("\(packsLabel) 1"))
+        reveal(row("sharedOrder.current"));XCTAssertTrue(row("sharedOrder.current").label.contains("\(packsLabel) 3"))
         let reference=app.staticTexts["Native market ABC-51"]
         reveal(reference);XCTAssertEqual(app.staticTexts.matching(identifier: "Native market ABC-51").count,1)
-        let capture=XCTAttachment(screenshot:app.screenshot());capture.name="Shared-confirmed-amendment-after-lost-reply";capture.lifetime = .keepAlways;add(capture)
+        let capture=XCTAttachment(screenshot:app.screenshot());capture.name=spanishLargestText ? "Shared-confirmed-amendment-Spanish-largest-text" : "Shared-confirmed-amendment-after-lost-reply";capture.lifetime = .keepAlways;add(capture)
     }
 
     private func launch(_ language: String, locale: String, cookCopies: Bool = false, pantry: Bool = false, recovery: Bool = false, financial: Bool = false) {
@@ -616,6 +640,53 @@ import XCTest
         tap(app.buttons["Refresh deliveries"])
         tap(app.buttons["Delivered food by meal"])
         assertFact("Uncovered by deliveries", "2 units")
+        tap(app.buttons["Done"])
+        let addDelivery = app.buttons["Add a delivery"]
+        XCTAssertTrue(addDelivery.waitForExistence(timeout: 5), "Closing with unresolved food must preserve later physical correction")
+        tap(addDelivery)
+        tap(app.buttons["Ordered wraps"])
+        enter("Late kitchen wraps", in: app.textFields["Food that came home"])
+        let save = app.buttons["Save to shared shop"]
+        tap(save)
+        tap(app.buttons["Record arrival"])
+        app.switches["Arrival time known"].coordinate(withNormalizedOffset: .init(dx: 0.92, dy: 0.5)).tap()
+        enter("8", in: app.textFields["delivery.amount"])
+        tap(save)
+        tap(app.buttons["Record usable quantity"])
+        enter("1", in: app.textFields["delivery.amount"])
+        tap(save)
+        XCTAssertTrue(hasUsable("1 unit"))
+        let matches = app.buttons["Meal ingredient matches"]
+        let ingredient = app.buttons.containing(.staticText, identifier: "Tortillas").firstMatch
+        tap(matches); tap(ingredient); tap(app.buttons["Match this ingredient"])
+        tap(app.buttons["Delivered food by meal"])
+        assertFact("Covered by deliveries", "1 unit")
+        assertFact("Uncovered by deliveries", "1 unit")
+        tap(app.buttons["Done"])
+        tap(app.buttons["Record usable quantity"])
+        enter(XCUIKeyboardKey.delete.rawValue + "2", in: app.textFields["delivery.amount"])
+        tap(save)
+        XCTAssertTrue(hasUsable("2 units"))
+        let reserve = app.buttons["Review amount to set aside for School lunch"]
+        tap(matches); tap(ingredient); tap(reserve)
+        enter("2", in: app.textFields["delivery.reservation.amount"])
+        tap(app.buttons["Save amount set aside"])
+        tap(matches); tap(ingredient); tap(reserve)
+        enter(XCUIKeyboardKey.delete.rawValue + "1", in: app.textFields["delivery.reservation.amount"])
+        tap(app.buttons["Save amount set aside"])
+        tap(app.buttons["Delivered food by meal"])
+        assertFact("Uncovered by deliveries", "0 units")
+        assertFact("Amount set aside", "1 unit")
+        assertFact("Still backed by this delivery", "1 unit")
+        tap(app.buttons["Done"])
+        tap(app.buttons["delivery.financial"])
+        XCTAssertTrue(app.staticTexts["Closed"].waitForExistence(timeout: 6))
+        assertFact("Paid so far", "$37.20")
+        assertFact("Pending credits", "$0.00")
+        assertFact("Credits already included in charges", "$2.40")
+        let capture = XCTAttachment(screenshot: app.screenshot())
+        capture.name = "Closed-pickup-after-late-delivery-correction"
+        capture.lifetime = .keepAlways; add(capture)
     }
 
     func testSpanishShopperDistinguishesFractionalUsableFoodZeroAndUnknown() {

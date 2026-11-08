@@ -4,6 +4,7 @@ import HouseholdClient
 struct SharedOrderAmendmentView: View {
     @ObservedObject var model: HouseholdShopModel
     let shopID: String
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var page: SharedConfirmedOrder?
     @State private var editing = false
     @State private var lines: [ShopperBasketLine] = []
@@ -14,17 +15,23 @@ struct SharedOrderAmendmentView: View {
     @State private var message: String?
     @State private var loading = false
     @FocusState private var referenceFocused: Bool
+    @AccessibilityFocusState private var retryFocused: Bool
     private var canRead: Bool { model.canReadConfirmedOrder && model.scope.shopId == shopID }
+    private var readyRetryID: String? {
+        canRead && !loading && !model.busy && model.delivery == .waiting ? model.pending?.id : nil
+    }
 
     var body: some View {
+        ScrollViewReader { proxy in
         Form {
             if canRead {
                 if model.pending != nil {
                     Section(OrderAmendmentCopy.text("Pending confirmation")) {
-                        Text(OrderAmendmentCopy.text("The result is not confirmed. Retry the saved action without creating another confirmation."))
                         if model.delivery == .waiting {
                             Button(ht("Retry the same shared shop action")) { Task { await model.retry(); await refresh() } }
+                                .id("shared-order-retry").accessibilityFocused($retryFocused)
                         }
+                        Text(OrderAmendmentCopy.text("The result is not confirmed. Retry the saved action without creating another confirmation."))
                     }
                 }
                 if let message { Text(message) }
@@ -37,6 +44,7 @@ struct SharedOrderAmendmentView: View {
             } else { Text(ht("Shared shop access has ended. Return to household settings.")) }
         }
         .navigationTitle(OrderAmendmentCopy.text("Confirmed order"))
+        .navigationBarTitleDisplayMode(typeSize.isAccessibilitySize ? .inline : .automatic)
         .disabled(model.busy || loading)
         .keyboardDoneAction(visible: referenceFocused, title: ht("Done")) { referenceFocused = false }
         .task { await refresh() }
@@ -52,6 +60,14 @@ struct SharedOrderAmendmentView: View {
             }
         }
         .onChange(of: canRead) { _, allowed in if !allowed { page = nil; clearDraft() } }
+        .task(id: readyRetryID) {
+            guard let id = readyRetryID else { return }
+            await Task.yield()
+            guard !Task.isCancelled, readyRetryID == id else { return }
+            proxy.scrollTo("shared-order-retry", anchor: .top)
+            retryFocused = true
+        }
+        }
     }
     @ViewBuilder private func history(_ page: SharedConfirmedOrder) -> some View {
         Section(OrderAmendmentCopy.text("Original placed order")) {
@@ -107,7 +123,15 @@ struct SharedOrderAmendmentView: View {
             Section(OrderAmendmentCopy.text("Retailer confirmation")) {
                 TextField(OrderAmendmentCopy.text("Retailer reference or confirmation details"), text: $reference)
                     .focused($referenceFocused).accessibilityIdentifier("sharedOrder.reference")
-                DatePicker(OrderAmendmentCopy.text("Retailer confirmed at"), selection: $confirmedAt, in: ...Date())
+                if typeSize.isAccessibilitySize {
+                    Text(OrderAmendmentCopy.text("Retailer confirmed at"))
+                    DatePicker(OrderAmendmentCopy.text("Confirmation date"), selection: $confirmedAt, in: ...Date(), displayedComponents: .date)
+                        .labelsHidden().accessibilityIdentifier("sharedOrder.date")
+                    DatePicker(OrderAmendmentCopy.text("Confirmation time"), selection: $confirmedAt, in: ...Date(), displayedComponents: .hourAndMinute)
+                        .labelsHidden().accessibilityIdentifier("sharedOrder.time")
+                } else {
+                    DatePicker(OrderAmendmentCopy.text("Retailer confirmed at"), selection: $confirmedAt, in: ...Date())
+                }
                 Button(OrderAmendmentCopy.text("Review confirmed changes")) {
                     referenceFocused = false
                     let value = SharedOrderConfirmation(reference: reference, confirmedAt: confirmedAt, lines: lines)

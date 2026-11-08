@@ -39,6 +39,7 @@ final class SharedDeliveryFixtureRecords {
     private var recipientHeads: [Recipient:[String:Any]] = [:]
     private var recordedCommands: [String:Data] = [:]
     private(set) var revision = 0
+    var shopRevision = 2
     private var source: [String:Any]?
     private var receipts: [String:[String:Any]] = [:]
     private let line = "66666666-6666-4666-8666-666666666666"
@@ -55,7 +56,7 @@ final class SharedDeliveryFixtureRecords {
             "groups":[["id":group,"name":"School lunch","servings":["numerator":2,"denominator":1],"protected":true]],
             "ingredients":[["id":ingredient,"name":"Tortillas","quantity":quantity,"groupIds":[group],"exclusions":["sesame"]]]]
         let meal: [String:Any] = ["title":"Lunch wraps","day":"2026-11-08","kind":"lunch","portions":2,"protected":true,"planning":plan]
-        return ["shopId":shop, "coverageAvailable":true,"reservationsAvailable":true,"recoveryRevision":recovery?.revision ?? 0,"meals":recovery?.sealedMeals ?? pantry?.meals ?? [["occurrenceId":occurrence,"revision":1,"meal":meal]], "placedRevision":1, "shopRevision":2, "authorityEpoch":1, "supplyRevision":revision,
+        return ["shopId":shop, "coverageAvailable":true,"reservationsAvailable":true,"recoveryRevision":recovery?.revision ?? 0,"meals":recovery?.sealedMeals ?? pantry?.meals ?? [["occurrenceId":occurrence,"revision":1,"meal":meal]], "placedRevision":1, "shopRevision":shopRevision, "authorityEpoch":1, "supplyRevision":revision,
          "lines":[["lineId":line,"name":"Ordered wraps","packs":2]], "sources":source.map { [$0] } ?? [], "nextCursor":NSNull()]
     }
     func coverage(shop: String) throws -> [String:Any] {
@@ -88,7 +89,7 @@ final class SharedDeliveryFixtureRecords {
         let need: [String:Any] = ["occurrenceId":occurrence,"mealRevision":1,"ingredientId":ingredient,"groupIds":[group],
             "protected":true,"required":required,"covered":fraction(covered),"missing":fraction(try target.subtracting(covered)),"allocations":allocations,
             "issues":issues, "reservations":reservations]
-        return ["shopId":shop,"shopRevision":2,"placedRevision":1,"authorityEpoch":1,"supplyRevision":revision,
+        return ["shopId":shop,"shopRevision":shopRevision,"placedRevision":1,"authorityEpoch":1,"supplyRevision":revision,
                 "asOf":"2026-11-07T12:00:00Z","unplannedOccurrenceIds":[],"needs":[need]]
     }
     enum CookFailure: Error { case invalid, staleBase, staleSupply, replayConflict }
@@ -139,7 +140,7 @@ final class SharedDeliveryFixtureRecords {
     }
 
     private func recordCook(shop: String, kind: String, base: [String:Any]?, body: [String:Any]) throws -> [String:Any] {
-        guard supportsCookCopies, base?["shopRevision"] as? Int == 2, base?["authorityEpoch"] as? Int == 1 else {
+        guard supportsCookCopies, base?["shopRevision"] as? Int == shopRevision, base?["authorityEpoch"] as? Int == 1 else {
             throw CookFailure.staleBase
         }
         let copyID: String, operation = UUID().uuidString.lowercased(), at = ISO8601DateFormatter().string(from: Date())
@@ -152,7 +153,7 @@ final class SharedDeliveryFixtureRecords {
                   let text = body["text"] as? String, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw CookFailure.invalid }
             copyID = operation
             let version = copies.filter { $0["occurrenceId"] as? String == occurrenceID }.count + 1
-            var copy: [String:Any] = ["copyId":copyID,"occurrenceId":occurrenceID,"mealRevision":1,"shopId":shop,"shopRevision":2,
+            var copy: [String:Any] = ["copyId":copyID,"occurrenceId":occurrenceID,"mealRevision":1,"shopId":shop,"shopRevision":shopRevision,
                                       "placedRevision":1,"authorityEpoch":1,"supplyRevision":revision,"language":language,
                                       "text":text,"version":version,"createdAt":at]
             if let pantryRevision = body["pantryRevision"] as? Int {
@@ -180,7 +181,7 @@ final class SharedDeliveryFixtureRecords {
             recipientHeads[recipientKey] = ["sendId":operation,"copyId":copyID,"recipient":name,"sentAt":at]
         default: throw CookFailure.invalid
         }
-        return ["kind":kind,"operationId":operation,"shopId":shop,"shopRevision":2,"authorityEpoch":1,
+        return ["kind":kind,"operationId":operation,"shopId":shop,"shopRevision":shopRevision,"authorityEpoch":1,
                 "disposition":"recorded","copyId":copyID]
     }
 
@@ -198,12 +199,12 @@ final class SharedDeliveryFixtureRecords {
             let receipt: [String:Any]
             if kind == "mealRecovery.apply" {
                 guard let recovery, let pantry, let base = command["base"] as? [String:Any],
-                      base["shopRevision"] as? Int == 2, base["authorityEpoch"] as? Int == 1 else { throw CookFailure.staleBase }
+                      base["shopRevision"] as? Int == shopRevision, base["authorityEpoch"] as? Int == 1 else { throw CookFailure.staleBase }
                 receipt = try recovery.apply(shop: shop, body: body)
                 revision += 1
                 pantry.revision += 1
             } else if kind.hasPrefix("pantry.") {
-                guard let pantry, let base = command["base"] as? [String:Any], base["shopRevision"] as? Int == 2,
+                guard let pantry, let base = command["base"] as? [String:Any], base["shopRevision"] as? Int == shopRevision,
                       base["authorityEpoch"] as? Int == 1 else { throw CookFailure.staleBase }
                 receipt = try pantry.record(shop: shop, supply: revision, kind: kind, body: body)
             } else {
@@ -251,7 +252,7 @@ final class SharedDeliveryFixtureRecords {
         guard let id = source?["sourceId"] as? String else { throw URLError(.badServerResponse) }
         revision += 1
         pantry?.revision += 1
-        let receipt: [String:Any] = ["kind":kind,"operationId":op,"shopId":shop,"shopRevision":2,"authorityEpoch":1,
+        let receipt: [String:Any] = ["kind":kind,"operationId":op,"shopId":shop,"shopRevision":shopRevision,"authorityEpoch":1,
             "disposition":"recorded","sourceId":id,"supplyRevision":revision]
         recordedCommands[key] = bytes
         receipts[key] = receipt

@@ -140,6 +140,61 @@ final class SharedMealNativeWireTests: XCTestCase {
         XCTAssertEqual(retained.sources, registered.sources); XCTAssertEqual(retained.supplyRevision, registered.supplyRevision)
         let finalFinancial = try await service.shopperFinancialRecord(shopID: id)
         XCTAssertEqual(finalFinancial.entries, financial.entries)
+
+        // Closing the app review does not claim that every physical bag arrived.
+        let charge = ShopperFinancialEntry(kind: .postedCharge, amountMinor: 3720, occurredAt: Date().ISO8601Format(), sourceText: "Native closed pickup receipt")
+        try await service.executeFinancial(service.prepareFinancial(.append(charge), reviewed: finalFinancial))
+        let charged = try await service.shopperFinancialRecord(shopID: id)
+        let pendingCredit = ShopperFinancialEntry(kind: .pendingCredit, amountMinor: 240, occurredAt: Date().ISO8601Format(),
+            sourceText: "Native refund still pending", creditId: UUID(), chargeEvidenceKey: charge.evidenceKey)
+        try await service.executeFinancial(service.prepareFinancial(.append(pendingCredit), reviewed: charged))
+        let beforeClose = try await service.shopperFinancialRecord(shopID: id)
+        let close = try await service.prepareFinancial(.close, reviewed: beforeClose)
+        try await service.executeFinancial(close)
+        try await service.executeFinancial(close)
+        let closedShop = try await service.shopperShop(shopID: id)
+        let closedOrder = try await service.confirmedOrder(shopID: shopID)
+        let closedFinancial = try await service.shopperFinancialRecord(shopID: id)
+        let closedPhysical = try await service.deliveryEvidence(shopID: id)
+        XCTAssertEqual(closedShop.phase, "closed")
+        XCTAssertEqual(closedShop.placedRevision, original.placedRevision)
+        XCTAssertEqual(closedFinancial.entries, beforeClose.entries)
+        XCTAssertEqual(closedPhysical.sources, retained.sources)
+        let lateSource = try XCTUnwrap(closedPhysical.sources.first(where: { $0.lineId == UUID(uuidString: added.lineId) }))
+        func saveClosed(_ edit: SharedDeliveryEdit, page: SharedDeliveryPage) async throws -> PendingOperation {
+            let window = try await service.replayWindow(), scope = try await service.bootstrap()
+            let command = try await service.prepare(envelope: .init(replayWindow: window.id, shopId: id, kind: edit.kind,
+                base: .init(shopRevision: page.shopRevision, authorityEpoch: page.authorityEpoch), body: edit.body(reviewed: page)), bootstrap: scope)
+            let receipt = try await service.executeSharedShop(command), retry = try await service.executeSharedShop(command)
+            XCTAssertEqual(receipt, retry); XCTAssertEqual(receipt.supplyRevision, page.supplyRevision + 1)
+            return command
+        }
+        func amount(_ n: Int) -> SharedMealQuantity { .init(amount: .init(numerator: n), unit: "count", originalLiteral: String(n)) }
+        let arrivalID = UUID(), usableID = UUID()
+        let lateArrival = try await saveClosed(.arrival(source: lateSource.id, previous: nil, observation: arrivalID,
+            date: Date(), received: amount(2)), page: closedPhysical)
+        let arrived = try await service.deliveryEvidence(shopID: id)
+        XCTAssertNil(arrived.sources.first(where: { $0.id == lateSource.id })?.confirmed)
+        _ = try await saveClosed(.usable(source: lateSource.id, previous: nil, arrival: arrivalID, observation: usableID,
+            date: Date(), quantity: amount(2)), page: arrived)
+        let usable = try await service.deliveryEvidence(shopID: id)
+        _ = try await saveClosed(.usable(source: lateSource.id, previous: usableID, arrival: arrivalID, observation: UUID(),
+            date: Date(), quantity: amount(1)), page: usable)
+        let corrected = try await service.deliveryEvidence(shopID: id)
+        XCTAssertEqual(corrected.sources.count, retained.sources.count)
+        XCTAssertEqual(corrected.supplyRevision, retained.supplyRevision + 3)
+        XCTAssertEqual(corrected.sources.first(where: { $0.id == lateSource.id })?.confirmed?.quantity, amount(1))
+        XCTAssertEqual(corrected.sources.filter { $0.id != lateSource.id }, retained.sources.filter { $0.id != lateSource.id })
+        _ = try await service.executeSharedShop(lateArrival)
+        let afterRetry = try await service.deliveryEvidence(shopID: id)
+        XCTAssertEqual(afterRetry, corrected)
+        let finalShop = try await service.shopperShop(shopID: id)
+        let finalOrder = try await service.confirmedOrder(shopID: shopID)
+        let unchangedFinancial = try await service.shopperFinancialRecord(shopID: id)
+        XCTAssertEqual(finalShop, closedShop)
+        XCTAssertEqual(finalOrder.original, closedOrder.original); XCTAssertEqual(finalOrder.current, closedOrder.current)
+        XCTAssertEqual(finalOrder.amendments, closedOrder.amendments); XCTAssertEqual(finalOrder.shopRevision, closedOrder.shopRevision)
+        XCTAssertEqual(unchangedFinancial, closedFinancial)
     }
     private func exerciseDelivery(_ service: HouseholdService, scope: HouseholdBootstrap, shopID: String) async throws {
         func save(_ change: SharedDeliveryEdit, page: SharedDeliveryPage) async throws -> ShopperReceipt {

@@ -1,12 +1,20 @@
 # Room in the Cart current handoff
 
-Updated November 7, 2026 UTC. The owner resumed and explicitly approved the reviewed hosted staging update; the full first-version goal is active and release acceptance remains incomplete. Historical snapshots are preserved in [the handoff archive](CURRENT-HANDOFF-HISTORY-20261106.md).
+Updated November 8, 2026 UTC. The owner resumed and explicitly approved the reviewed hosted staging update; the full first-version goal is active and release acceptance remains incomplete. Historical snapshots are preserved in [the handoff archive](CURRENT-HANDOFF-HISTORY-20261106.md).
 
 ## Current unfinished work
 
 Private and shared retailer-confirmed amendment flows are implemented and locally verified in the canonical checkout. Do not restart the superseded scratch implementation on `codex/private-order-amendments`. The hosted batch for `f90ad75` is still running; security and native HTTPS/PostgreSQL passed. Keep this later amendment batch local until that cohort finishes, to avoid cancelling its remaining tests. Staging remains through the approved migration 041; migration 042 has not been deployed. Hosted confirmation and the remaining first-version release gates are still open.
 
 The hosted speech warning still needs an attributable blocking stack. The next fixture run captures the app’s Hang Risk runtime log for that suite alongside its existing XCTest result. Required warning checks still fail on the unresolved issue.
+
+## November 7 closed-pickup correction and large-text recovery
+
+The final local batch permits reviewed late deliveries, arrival/usable corrections, ingredient matches and protected set-asides after shared pickup closure. The original checkout, retailer-confirmed amendments, sealed meal plan, financial entries and closed status remain unchanged. A new negative control also proved that another pickup’s delivery review could clear the old pickup’s durable action; exact operation/shop guards now preserve it until the original pickup is reviewed. The old backend guard, old screen guard and old retry-scope behavior each retain their failing controls.
+
+All **699 selected native tests (696 models plus three complete journeys)** passed on iOS 17, with strict zero, no skips and zero recorded runtime warnings. Both the closed-pickup and Spanish largest-text confirmation journeys passed on iOS 26.2 using the same products. The latter now brings pending recovery into view and separates date/time controls at accessibility sizes. Real Swift HTTPS/PostgreSQL passed six integration cases and ten scenarios; backend unit/PG checks passed 443/243 with declared skips. All 219 Python checks and the unsigned generic Release build/bundle checks passed. [Integrated proof](evidence/native/closed-delivery-20261107/README.md). The reviewed backend still requires the separate 042 staging rollout; current staging remains 041.
+
+Hosted f90 Release performance is terminal success, with all five required scroll duration samples and every approved time/memory limit satisfied. No hitch series was emitted. [Verified performance](evidence/native/ci-f90-20261107/performance/README.md). Core and fixtures remain active. UI04’s protected-lunch journey stopped because it changed retailer terms without the required replacement-pricing review, so the price-source row was intentionally unavailable. Its read-only original evidence and scratch-only sequence patch are in `docs/evidence/native/ci-f90-20261107/ui04-pricing-review/` and `.build/CIF90Nov07/ui-04-inspection/pricing-review-sequence.patch`. **Next:** review/apply that test-only patch and run the entire original journey. Preserve all remaining assertions; no keyboard, product, timeout or scroll-limit correction is established. Keep later source local while f90 drains; do not cancel remaining jobs. The queued speech artifact, Settings launch and disconnected CodeQL runner remain distinct unresolved gates.
 
 ## November 7 shared retailer-confirmed amendments
 

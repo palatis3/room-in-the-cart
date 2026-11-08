@@ -1,0 +1,187 @@
+Xcode 27.1
+Build version 27A9275
+swift-driver version: 1.168.6 Apple Swift version 6.4 (swiftlang-6.4.0.34.1 clang-2100.3.34.1)
+Target: arm64-apple-macosx27.2.0
+v22.23.4
+postgres (PostgreSQL) 17.11
+LibreSSL 3.3.6
+Building for debugging...
+[Planning deferred tasks]
+[28 / 52]
+[29 / 53] HouseholdClient
+[33 / 101]
+[37 / 101]
+[39 / 101]
+[44 / 101]
+[47 / 101]
+[49 / 101]
+[53 / 101]
+[55 / 101]
+[58 / 101]
+[61 / 101]
+[64 / 101]
+[65 / 101]
+[69 / 101] HouseholdClient
+[71 / 101] HouseholdClient
+[78 / 101] HouseholdClient
+[79 / 101] HouseholdClient
+[80 / 101] HouseholdClientTests-product
+[81 / 101] HouseholdClient
+[83 / 101]
+[85 / 101] HouseholdClient
+[90 / 102] HouseholdClientTests-product
+[91 / 102] HouseholdClientTests-product
+[94 / 146]
+[95 / 146]
+[97 / 146]
+[100 / 146]
+[103 / 146]
+[106 / 146]
+[107 / 146]
+[108 / 146]
+[110 / 146]
+[111 / 146]
+[114 / 146]
+[116 / 146]
+[119 / 146]
+[120 / 146]
+[121 / 146]
+[122 / 146]
+[123 / 146]
+[124 / 146]
+[127 / 146] HouseholdClientTests-product
+[131 / 146] HouseholdClientTests-product
+[135 / 146] HouseholdClientTests-product
+[137 / 146] HouseholdClientTests-product
+[138 / 146] HouseholdClientTests-product
+[139 / 146] HouseholdClientTests-product
+[140 / 146] HouseholdClientTests-product
+[140 / 146] AllIncludingTests
+[140 / 146] HouseholdClientTests-product
+[142 / 146] HouseholdClientTests-product
+[144 / 146] HouseholdClientTests-product
+Build complete! (42.89 sec)
+The files belonging to this database system will be owned by user "palatis".
+This user must also own the server process.
+
+The database cluster will be initialized with locale "C".
+The default text search configuration will be set to "english".
+
+Data page checksums are disabled.
+
+creating directory /var/folders/mv/8p5lhty96rd6kjk1_0z0yv400000gn/T/ritc-native-wire.v1Ci9u/postgres ... ok
+creating subdirectories ... ok
+selecting dynamic shared memory implementation ... posix
+selecting default "max_connections" ... 100
+selecting default "shared_buffers" ... 128MB
+selecting default time zone ... America/New_York
+creating configuration files ... ok
+running bootstrap script ... ok
+performing post-bootstrap initialization ... ok
+syncing data to disk ... ok
+
+Success. You can now start the database server using:
+
+    pg_ctl -D /var/folders/mv/8p5lhty96rd6kjk1_0z0yv400000gn/T//ritc-native-wire.v1Ci9u/postgres -l logfile start
+
+waiting for server to start.... done
+server started
+TAP version 13
+# Native wire XCTest passed history-free HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres
+# Test Case '-[HouseholdClientTests.NativeServiceWireTests testNativeClientAgainstPostgres]' passed (0.301 seconds).
+# Subtest: Swift household client records meals and price history over HTTPS and PostgreSQL (paid=false)
+ok 1 - Swift household client records meals and price history over HTTPS and PostgreSQL (paid=false)
+  ---
+  duration_ms: 2538.345833
+  type: 'test'
+  ...
+# Native wire XCTest passed history-paid HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres
+# Test Case '-[HouseholdClientTests.NativeServiceWireTests testNativeClientAgainstPostgres]' passed (0.380 seconds).
+# Subtest: Swift household client records meals and price history over HTTPS and PostgreSQL (paid=true)
+ok 2 - Swift household client records meals and price history over HTTPS and PostgreSQL (paid=true)
+  ---
+  duration_ms: 1978.885958
+  type: 'test'
+  ...
+# Native wire XCTest passed meal-planner HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres
+# Test Case '-[HouseholdClientTests.SharedMealNativeWireTests testSharedMealClientAgainstPostgres]' passed (0.226 seconds).
+# Native wire XCTest passed meal-shopper HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres
+# Test Case '-[HouseholdClientTests.SharedMealNativeWireTests testSharedMealClientAgainstPostgres]' passed (2.142 seconds).
+# Subtest: actual Swift planner proposal and separate shopper review travel over pinned loopback HTTPS and PostgreSQL
+not ok 3 - actual Swift planner proposal and separate shopper review travel over pinned loopback HTTPS and PostgreSQL
+  ---
+  duration_ms: 6270.758
+  type: 'test'
+  location: '/Users/palatis/Room in the Cart/service/tests/shared-meal-changes.integration.mjs:197:45'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    17 !== 16
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 16
+  actual: 17
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/palatis/Room%20in%20the%20Cart/service/tests/shared-meal-changes.integration.mjs:236:9)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Native wire XCTest passed quote-adult HouseholdClientTests.StoreQuoteNativeWireTests/testStoreQuoteClientAgainstPostgres
+# Test Case '-[HouseholdClientTests.StoreQuoteNativeWireTests testStoreQuoteClientAgainstPostgres]' passed (0.219 seconds).
+# Native wire XCTest passed quote-shopper HouseholdClientTests.StoreQuoteNativeWireTests/testStoreQuoteClientAgainstPostgres
+# Test Case '-[HouseholdClientTests.StoreQuoteNativeWireTests testStoreQuoteClientAgainstPostgres]' passed (0.124 seconds).
+# Subtest: real Swift adult proposal and separate shopper adoption use pinned loopback HTTPS and PostgreSQL
+ok 4 - real Swift adult proposal and separate shopper adoption use pinned loopback HTTPS and PostgreSQL
+  ---
+  duration_ms: 3709.871375
+  type: 'test'
+  ...
+# Native wire XCTest passed deferred-request HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres
+# Test Case '-[HouseholdClientTests.NativeServiceWireTests testNativeClientAgainstPostgres]' passed (0.196 seconds).
+# Subtest: assigned iPhone shopper carries a prior request and reprices it over pinned HTTPS
+ok 5 - assigned iPhone shopper carries a prior request and reprices it over pinned HTTPS
+  ---
+  duration_ms: 2232.477375
+  type: 'test'
+  ...
+# Native wire XCTest passed request-purchase HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres
+# Test Case '-[HouseholdClientTests.NativeServiceWireTests testNativeClientAgainstPostgres]' passed (0.128 seconds).
+# Native wire XCTest passed purchase-author HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres
+# Test Case '-[HouseholdClientTests.NativeServiceWireTests testNativeClientAgainstPostgres]' passed (0.045 seconds).
+# Subtest: assigned iPhone shopper confirms and corrects a placed request over pinned HTTPS
+ok 6 - assigned iPhone shopper confirms and corrects a placed request over pinned HTTPS
+  ---
+  duration_ms: 3699.070042
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 5
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 21206.315625
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Expected every selected Node integration case to pass
+    at file:///Users/palatis/Room%20in%20the%20Cart/service/scripts/test-native-wire.mjs:75:12
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v22.23.4
+waiting for server to shut down.... done
+server stopped

@@ -1,0 +1,34 @@
+TAP version 13
+# Subtest: closed pickup accepts late amended-line arrivals and earlier corrections without reopening orders or changing money
+not ok 1 - closed pickup accepts late amended-line arrivals and earlier corrections without reopening orders or changing money
+  ---
+  duration_ms: 1244.373709
+  type: 'test'
+  location: '/private/var/folders/mv/8p5lhty96rd6kjk1_0z0yv400000gn/T/ritc-amendment-pg-iniksp8f/closed-negative/tests/shared-meal-changes.integration.mjs:1302:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    {"error":{"code":"placed_order_required","correlationId":"8ec3c4ac-bcc7-437a-a5db-3683bbd9c32d","recovery":"Open the placed order for this delivery."}}
+    
+    409 !== 200
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 200
+  actual: 409
+  operator: 'strictEqual'
+  stack: |-
+    ok (file:///private/var/folders/mv/8p5lhty96rd6kjk1_0z0yv400000gn/T/ritc-amendment-pg-iniksp8f/closed-negative/tests/shared-meal-changes.integration.mjs:18:34)
+    TestContext.<anonymous> (file:///private/var/folders/mv/8p5lhty96rd6kjk1_0z0yv400000gn/T/ritc-amendment-pg-iniksp8f/closed-negative/tests/shared-meal-changes.integration.mjs:1321:100)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1720.744791

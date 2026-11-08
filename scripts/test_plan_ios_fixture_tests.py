@@ -89,7 +89,7 @@ class PlanIOSFixtureTests(unittest.TestCase):
         self.assertEqual(set(plans["dinner"]["shards"]), {"DinnerDecisionSheetUITests"})
         self.assertEqual(plans["dinner"]["shards"]["DinnerDecisionSheetUITests"]["suite"], "DinnerDecisionSheetUITests")
         self.assertEqual(sum(len(shard["test_identifiers"]) for plan in plans.values()
-                             for shard in plan["shards"].values()), 68)
+                             for shard in plan["shards"].values()), 69)
         large_lunches = f"{UI_TARGET}/HouseholdRequestPackUITests/testLargestTextShowsCompleteProtectedLunchNamesAndDates"
         decision_shard = plans["contributor"]["shards"]["contributor-balanced-03"]["test_identifiers"]
         self.assertIn(large_lunches, [identifier.removesuffix("()") for identifier in decision_shard])
@@ -116,7 +116,7 @@ class PlanIOSFixtureTests(unittest.TestCase):
         shards = make_plan(enumeration(self.enabled_for("contributor")), "contributor", self.inventory)["shards"]
         counts = {name: len(shard["test_identifiers"]) for name, shard in shards.items()
                   if shard.get("suite") == "SharedDeliveryUITests"}
-        self.assertEqual(counts, {"SharedDeliveryUITests-stock-and-purchase": 5,
+        self.assertEqual(counts, {"SharedDeliveryUITests-stock-and-purchase": 6,
                                   "SharedDeliveryUITests-recovery-cook-and-closeout": 5})
 
     def test_delivery_partition_rejects_unassigned_or_stale_methods(self):
