@@ -1,0 +1,1 @@
+category=UICTContentSizeCategoryL; label=Protected meal commitments; frame=(36.33333206176758, 410.3333435058594, 270.3333435058594, 21.666656494140625); viewport=(0.0, 144.00000000000003, 402.0, 714.0); lineHeight=20.287109375; requiredBounds=(0.0, 0.0, 234.5937877893448, 22.0)

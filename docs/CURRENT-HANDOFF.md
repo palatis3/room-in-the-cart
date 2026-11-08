@@ -1,5 +1,15 @@
 # Room in the Cart current handoff
 
+## November 8, 20:56 UTC checkpoint
+
+Published `fe3e143` is fully terminal:47jobs passed,4executionjobs failed, and the aggregate CI gate failed as a consequence. Deep, Security and NativeWire passed. Core UI02–10 passed; fixtures18jobs passed/2failed. The four execution failures are the English dinner-pattern timeout, scroll metric-count mismatch, cook-copy confirmation, and store-quote break-even target lookup. The cook warning inventory also remains unavailable. [Terminal inventory](evidence/native/ci-fe3e143-20261108/TERMINAL.md). No hosted job remains active; no new push occurred. A focused coherent-snapshot reveal proposal is prepared but uncompiled/uninstalled at `.build/CIFe3e143Nov08/known-trip-visible-label-proposal-r1`.
+
+The named S24 baseline is terminal native65/strict1: standard text passes, AX5 stops on protected-heading bounds before expiry/cancellation. Root's full-screen and crop review shows complete visible heading words but an AX frame that excludes lower-line left edges. Fully visible Review decision contrast passes at both sizes; standard expiry checks pass. [Retained baseline and limitations](evidence/native/request-named-audit-measurements-20261108/baseline/README.md). All exports and crop analysis are complete; do not repeat. The full unfiltered37-finding audit remains retained and open.
+
+Root session22638/PID30703 is testing a candidate in `.build/S24NamedAuditTargetsNov08/heading-r2`, manifest `79c69dc9e20c7a8d13bca97f52c471c6e238463a1583da5d70c496f9832594a0`. It gives only the existing heading Label a full-width accessibility element with its localized label and header trait. Diagnostic assertions are unchanged. Poll the same handle, then run its inspector once. No canonical product changes are installed and no other local native test should run concurrently. Protected preview remains untouched.
+
+Full52-requirement/27-screen acceptance remains incomplete. Migration041 is live;042 remains separately pending. Owner-deferred provider/distribution and physical/human gates remain open.
+
 ## November 8, 20:36 UTC continuation checkpoint
 
 The unfiltered S24 audit is terminal (native65/strict1), with37 retained findings:2 contrast,1 potentially inaccessible text,2 Dynamic Type unsupported,29 partially unsupported and3 clipping. Inspection and complete target/category/context reconciliation are finished; do not repeat the export. None is closed merely because the prior count was41. Five historical reports are outside the current captured viewport. [Audit evidence](evidence/native/request-audit-after-disclosure-20261108/README.md).
