@@ -101,6 +101,44 @@ import XCTest
         XCTAssertTrue(currentDraft.waitForExistence(timeout: 8), "Reading a prior order must preserve the active next-shop draft")
     }
 
+    func testRetailerConfirmedAmendmentChangesTheOrderAndKeepsItsPlacedSnapshotAfterRestart() {
+        freezeReviewedPickup()
+        tap(app.buttons["I placed this order"])
+        let start = app.buttons["pickup.amendment.open"]
+        XCTAssertTrue(start.waitForExistence(timeout: 8), "A placed receipt needs an entry for independent retailer confirmation")
+        tap(start)
+        tap(app.buttons["Edit wraps"])
+        fill("5", into: "pickup.amendment.amount", replacing: true)
+        tap(app.buttons["pickup.amendment.keepLine"])
+        fill("Market confirmation ABC-51", into: "pickup.amendment.reference")
+        tap(app.buttons["pickup.amendment.preview"])
+        let confirm = app.buttons["pickup.amendment.confirm"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 8))
+        assertText("5 units")
+        tap(confirm)
+        XCTAssertTrue(confirm.waitForNonExistence(timeout: 8))
+        app.terminate()
+        launch(reset: false)
+        shopRoot()
+        tap(app.buttons["Pickup, repairs and handoffs"])
+        tap(app.buttons["View placed order"])
+        let original = app.staticTexts["pickup.placedSnapshot"]
+        reveal(original)
+        XCTAssertTrue(original.label.contains("2 units"), original.label)
+        assertText("Market confirmation ABC-51")
+        assertText("5 units")
+        capture("S06-confirmed-amendment-and-original-receipt")
+        tap(app.tabBars.buttons["Records"])
+        tap(app.buttons["records.placedOrders"])
+        let order = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "records.placedOrder.")).firstMatch
+        tap(order)
+        reveal(original)
+        XCTAssertTrue(original.label.contains("2 units"))
+        assertText("5 units")
+        assertText("Market confirmation ABC-51")
+        XCTAssertFalse(app.buttons["pickup.amendment.open"].exists)
+    }
+
     func testSavedOfferReopensAndUpdatesResponseAfterRestart() throws {
         freezeReviewedPickup()
         tap(app.buttons["I placed this order"])
@@ -150,7 +188,12 @@ import XCTest
         tap(app.buttons["shop.resumeOffer"])
         XCTAssertTrue(app.navigationBars["What came home"].waitForExistence(timeout: 8))
         capture("Offer-resume-opens-actual-arrival")
-        tap(app.navigationBars["What came home"].buttons["BackButton"])
+        let arrivalBar = app.navigationBars["What came home"]
+        let shopBack = arrivalBar.buttons["Shop"]
+        // iOS 17 exposes the destination label; later runtimes may expose BackButton.
+        let back = shopBack.exists ? shopBack : arrivalBar.buttons["BackButton"]
+        XCTAssertTrue(back.waitForExistence(timeout: 5) && back.isHittable)
+        back.tap()
         XCTAssertTrue(app.navigationBars["Shop"].waitForExistence(timeout: 8))
         tap(app.buttons["Pickup, repairs and handoffs"])
         tap(app.buttons["Review a store offer"])

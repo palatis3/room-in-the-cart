@@ -336,9 +336,12 @@ public struct ConfirmedAmendment: Codable, Equatable, Sendable, Identifiable {
     public let lines: [BasketLine]
     public let confirmedAt: Date
     public let retailerReference: String
-    public init(id: UUID, placementID: UUID, previousAmendmentID: UUID?, lines: [BasketLine], confirmedAt: Date, retailerReference: String) {
+    public let recordedByLocalActorID: UUID?
+    public init(id: UUID, placementID: UUID, previousAmendmentID: UUID?, lines: [BasketLine], confirmedAt: Date,
+                retailerReference: String, recordedByLocalActorID: UUID? = nil) {
         self.id = id; self.placementID = placementID; self.previousAmendmentID = previousAmendmentID
         self.lines = lines; self.confirmedAt = confirmedAt; self.retailerReference = retailerReference
+        self.recordedByLocalActorID = recordedByLocalActorID
     }
 }
 public enum BasketPhase: String, Codable, Sendable { case draft, frozen, reportedPlaced }

@@ -415,6 +415,11 @@ struct PickupCheckoutView: View {
     }
 }
 
+func pickupReporterLabel(_ actorID: UUID?, localActorID: UUID) -> String {
+    guard let actorID else { return pTr("Shopper not recorded") }
+    return actorID == localActorID ? pTr("Local shopper on this iPhone") : pTr("Original local shopper")
+}
+
 private func pickupScopeLabel(_ scope: CheckoutScope) -> String {
     switch scope {
     case .wholeCheckout: pTr("Whole checkout")
@@ -566,8 +571,8 @@ private struct PickupPlacedOrderSections: View {
         if let basket = journey.basket, let placement = basket.placements.first,
            let snapshot = basket.snapshots.first(where: { $0.id == placement.snapshotID }) {
             let quote = journey.frozenQuotes[snapshot.id]
-            Section(pTr("Placement report")) {
-                LabeledContent(pTr("Reported by"), value: reporterLabel(placement.reportedByLocalActorID)).accessibilityIdentifier("pickup.placementReporter")
+            Section(pTr(basket.amendments.isEmpty ? "Placement report" : "Original placed order")) {
+                LabeledContent(pTr("Reported by"), value: pickupReporterLabel(placement.reportedByLocalActorID, localActorID: access.localActorID)).accessibilityIdentifier("pickup.placementReporter")
                 LabeledContent(pTr("Reported at"), value: placement.reportedAt.formatted(date: .long, time: .shortened))
                 if let quote {
                     LabeledContent(pTr("Store"), value: quote.context.storeID)
@@ -584,13 +589,10 @@ private struct PickupPlacedOrderSections: View {
                     .accessibilityIdentifier("pickup.placedSnapshot").textSelection(.enabled)
             }
             PickupHandoffHistory(actions: basket.handoffActions.filter { $0.snapshotID == snapshot.id })
+            PickupAmendmentHistory(basket: basket)
         }
     }
 
-    private func reporterLabel(_ actorID: UUID?) -> String {
-        guard let actorID else { return pTr("Shopper not recorded") }
-        return actorID == access.localActorID ? pTr("Local shopper on this iPhone") : pTr("Original local shopper")
-    }
 }
 
 private struct PickupHandoffHistory: View {
@@ -617,6 +619,9 @@ struct PickupHandoffView: View {
             if access.unlocked, let journey = model.journey, journey.id == shopID {
                 if journey.basket?.phase == .reportedPlaced {
                     PickupPlacedOrderSections(journey: journey)
+                    if let placement = journey.basket?.placements.first {
+                        PickupAmendmentSection(model: model, shopID: shopID, placement: placement)
+                    }
                 } else {
                     pendingHandoff(reviewing: journey)
                 }

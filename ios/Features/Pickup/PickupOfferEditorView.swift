@@ -48,7 +48,8 @@ private struct PickupOfferDraft: Equatable {
         return value
     }
     func offer(id: UUID, journey: PickupJourney, original: PickupOffer?) throws -> PickupOffer {
-        guard let line = journey.pickup?.orderLines.first(where: { $0.id == lineID }) else { throw PickupError.unknownOrderLine }
+        let availableLines = original == nil ? journey.retailerOrderLines : journey.pickup?.orderLines ?? []
+        guard let line = availableLines.first(where: { $0.id == lineID }) else { throw PickupError.unknownOrderLine }
         let evidence: CostEvidence
         switch priceKind {
         case "bounded":
@@ -148,7 +149,7 @@ struct PickupOfferEditorView: View {
         Section(pTr("Store offer")) {
             Picker(pTr("Original line"), selection: $draft.lineID) {
                 Text(pTr("Choose a line")).tag(UUID?.none)
-                ForEach(journey.pickup?.orderLines ?? []) { Text($0.name).tag(Optional($0.id)) }
+                ForEach(original == nil ? journey.retailerOrderLines : journey.pickup?.orderLines ?? []) { Text($0.name).tag(Optional($0.id)) }
             }.accessibilityIdentifier("pickup.offer.line").disabled(original != nil)
             TextField(pTr("Replacement and offered pack"), text: $draft.replacement).accessibilityIdentifier("pickup.offer.replacement")
             TextField(pTr("Required usable amount"), text: $draft.required).accessibilityIdentifier("pickup.offer.required")

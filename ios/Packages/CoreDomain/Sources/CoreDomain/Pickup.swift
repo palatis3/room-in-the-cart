@@ -123,6 +123,14 @@ public struct PickupLedger: Codable, Equatable, Sendable {
         self.orderID = orderID; self.orderLines = orderLines
     }
 
+    /// Rebase ordered expectations on retailer evidence, keeping independently recorded physical facts.
+    public func withOrderLines(_ lines: [PickupOrderLine]) throws -> Self {
+        var result = try Self(orderID: orderID, orderLines: lines)
+        for receipt in receipts { try result.receive(receipt) }
+        for observation in usableObservations { try result.confirmUsable(observation) }
+        return result
+    }
+
     private enum CodingKeys: String, CodingKey { case orderID, orderLines, receipts, usableObservations }
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)

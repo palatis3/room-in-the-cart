@@ -4,9 +4,15 @@ Updated November 7, 2026 UTC. The owner resumed and explicitly approved the revi
 
 ## Current unfinished work
 
-The private retailer-confirmed amendment flow is still being implemented on `codex/private-order-amendments`. Its new baseline UI test reached the placed receipt and failed at the missing amendment entry. The draft UI, attribution and effective-order projection have not passed verification or been integrated. Resume that work from its saved branch and working files. The current local build includes the completed placed receipt, independent Records history and reviewed usable-food correction.
+The private retailer-confirmed amendment flow is implemented and locally verified in the canonical checkout. Do not restart the superseded scratch implementation on `codex/private-order-amendments`. The hosted batch for `f90ad75` is still running; security and native HTTPS/PostgreSQL passed. Keep this later amendment batch local until that cohort finishes, to avoid cancelling its remaining tests. Hosted confirmation and the remaining first-version release gates are still open.
 
 The hosted speech warning still needs an attributable blocking stack. The next fixture run captures the app’s Hang Risk runtime log for that suite alongside its existing XCTest result. Required warning checks still fail on the unresolved issue.
+
+## November 7 retailer-confirmed amendments
+
+A private shopper can record independently confirmed quantity changes, removals and replacement items, review the difference, and save the retailer reference, confirmation time and local reporter. The original placed order and its quote remain immutable. The current checkout result becomes unavailable until pricing is rechecked. Physical arrivals, usable observations, meal needs, settlement and pickup closure are preserved, including when a later confirmation corrects a closed pickup. Stale reviews and changed authority cannot commit; a blocked SQLite write can retry the exact confirmation once. Earlier amendment documents retain unknown reporters and upgrade their ordered-quantity projection on decoding.
+
+The ordinary iOS 17 walkthrough placed two wraps, confirmed five, restarted, and read both the original and amended order from Records. Records did not expose the amendment editor. SQLite linked one confirmation to the original placement and reporting installation, with no invented arrival or payment. Cancelled items retain earlier offer history while leaving the new-offer picker and deadline reminders. The amendment and prior-order journeys passed with 689 then-current model tests. The final cancellation follow-up passed all 690 model tests and the ordinary saved-offer journey, including response edits, restart and cancellation, with zero skipped tests or runtime warnings. The first saved-offer attempt failed because its driver assumed a newer back-button identifier; using the observed Shop destination label fixed the iOS 17 navigation step without changing product assertions. All 433 runnable package tests and 215 Python tests passed; the three opt-in wire tests remain separately covered by integration. The final-source generic arm64 Release iPhone app compiled and passed its bundle checks, unsigned. [Verification and exact scopes](evidence/native/private-amendment-20261107/verification.json)
 
 ## November 7 usable-food correction
 

@@ -78,6 +78,10 @@ extension PickupModel {
         let matching = current.offers.filter { $0.id == offer.id }
         guard matching.count <= 1 else { return false }
         if matching.first == offer { error = nil; return true } // Exact replay: no new revision or action.
+        guard original != nil || current.retailerOrderLines.contains(where: { $0.id == offer.lineID }) else {
+            error = pTr("This item was removed from the confirmed order. Review its saved history.")
+            return false
+        }
         guard matching.first == original else {
             error = pTr("This offer changed. Reopen it before saving your review."); return false
         }
