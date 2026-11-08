@@ -1,0 +1,23 @@
+{
+  "nativeLogSHA256": "92225c8fcc674f44695c04e17a07590b7adf79f8de9b34ffd3822c9ed124d97a",
+  "logLines": 3431,
+  "errorLines": [],
+  "uniqueWarningLines": [
+    "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Packages/CoreDomain/Package.swift: CoreDomaindynamic-product: clang: warning: using sysroot for 'macOS 27.0' but targeting 'arm64-apple-ios17.0.0-simulator' [-Wincompatible-sysroot]",
+    "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Packages/CoreDomain/Package.swift: CoreDomaindynamic-product: clang: warning: using sysroot for 'macOS 27.0' but targeting 'x86_64-apple-ios17.0.0-simulator' [-Wincompatible-sysroot]",
+    "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Packages/DeviceSurfaces/Package.swift: DeviceSurfacesdynamic-product: clang: warning: using sysroot for 'macOS 27.0' but targeting 'arm64-apple-ios17.0.0-simulator' [-Wincompatible-sysroot]",
+    "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Packages/DeviceSurfaces/Package.swift: DeviceSurfacesdynamic-product: clang: warning: using sysroot for 'macOS 27.0' but targeting 'x86_64-apple-ios17.0.0-simulator' [-Wincompatible-sysroot]",
+    "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Packages/HouseholdClient/Package.swift: HouseholdClientdynamic-product: clang: warning: using sysroot for 'macOS 27.0' but targeting 'arm64-apple-ios17.0.0-simulator' [-Wincompatible-sysroot]",
+    "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Packages/HouseholdClient/Package.swift: HouseholdClientdynamic-product: clang: warning: using sysroot for 'macOS 27.0' but targeting 'x86_64-apple-ios17.0.0-simulator' [-Wincompatible-sysroot]",
+    "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Packages/LocalStore/Package.swift: LocalStoredynamic-product: clang: warning: using sysroot for 'macOS 27.0' but targeting 'arm64-apple-ios17.0.0-simulator' [-Wincompatible-sysroot]",
+    "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Packages/LocalStore/Package.swift: LocalStoredynamic-product: clang: warning: using sysroot for 'macOS 27.0' but targeting 'x86_64-apple-ios17.0.0-simulator' [-Wincompatible-sysroot]",
+    "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Packages/RecordArchive/Package.swift: RecordArchivedynamic-product: clang: warning: using sysroot for 'macOS 27.0' but targeting 'arm64-apple-ios17.0.0-simulator' [-Wincompatible-sysroot]",
+    "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Packages/RecordArchive/Package.swift: RecordArchivedynamic-product: clang: warning: using sysroot for 'macOS 27.0' but targeting 'x86_64-apple-ios17.0.0-simulator' [-Wincompatible-sysroot]",
+    "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Tests/HouseholdRequestPackFixtureSupport.swift:93:57: warning: 'S24FixtureProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]",
+    "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Tests/MembershipTests.swift:1294:68: warning: 'MembershipURLProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]",
+    "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Tests/NavigationRestorationTests.swift:302:66: warning: 'RestorationProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]",
+    "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Tests/PickupStockPrivateScopeIntegrationTests.swift:43:65: warning: 'StockScopeProtocol' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]",
+    "/Users/palatis/.codex/worktrees/cook-owner-r2/Room in the Cart/ios/Tests/RecordsMediaTests.swift:9:50: warning: immutable property will not be decoded because it is declared with an initial value which cannot be overwritten"
+  ],
+  "scope": "Full build log retained privately; known package sysroot and test declaration warnings remain."
+}

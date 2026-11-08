@@ -1,0 +1,143 @@
+--- a/ios/Features/Capture/LocalCookSpeech.swift
++++ b/ios/Features/Capture/LocalCookSpeech.swift
+@@ -586,10 +586,17 @@
+             let matchedTerminal = active.map { value in
+                 terminalSeen == value
+             } ?? false
+-            let stopped = CookSpeechStopPolicy.stop(hasAdmittedUtterance: active != nil, matchedTerminal: matchedTerminal,
+-                isSpeaking: engine.isSpeaking, isPaused: engine.isPaused) {
+-                    engine.stop()
+-                }
++            let stopped: Bool
++            if active != nil && !matchedTerminal {
++                // Without a matched terminal, idle flags cannot acknowledge Stop.
++                // Call native Stop directly; preserve its false-result barrier.
++                stopped = engine.stop()
++            } else {
++                stopped = CookSpeechStopPolicy.stop(hasAdmittedUtterance: active != nil, matchedTerminal: matchedTerminal,
++                    isSpeaking: engine.isSpeaking, isPaused: engine.isPaused) {
++                        engine.stop()
++                    }
++            }
+             if stopped { clearUtterance() }
+             // False active Stop remains unacknowledged. A matched terminal event
+             // may separately retire the generation after owner-observed idle.
+--- a/ios/Tests/CookReadbackTests.swift
++++ b/ios/Tests/CookReadbackTests.swift
+@@ -867,3 +867,116 @@
+         XCTAssertFalse(control.snapshot().contains { $0.name.hasPrefix("stop.") })
+     }
+ }
++
++// Added r5 tests: real owner transport; only native-engine getters/calls are faked.
++// A held gate would block any eager getter. Test completion must arrive while it
++// remains held; cleanup releases it even when that assertion fails.
++private final class StopStateGetterGate: @unchecked Sendable {
++    private let condition = NSCondition()
++    private var held = false
++    private var reads = 0
++    private var entered: (@Sendable () -> Void)?
++    func arm(_ entered: (@Sendable () -> Void)? = nil) {
++        condition.lock(); held = true; reads = 0; self.entered = entered; condition.unlock()
++    }
++    func beforeRead() {
++        condition.lock(); reads += 1
++        let callback = entered; entered = nil; condition.unlock(); callback?()
++        condition.lock(); while held { condition.wait() }; condition.unlock()
++    }
++    func count() -> Int { condition.lock(); defer { condition.unlock() }; return reads }
++    func release() { condition.lock(); held = false; condition.broadcast(); condition.unlock() }
++}
++
++private final class StopStateGatedEngine: CookNativeEngine {
++    private let inner: ThreadRecordedEngine
++    private let gate: StopStateGetterGate
++    init(_ control: OwnerEngineControl, _ gate: StopStateGetterGate) {
++        inner = ThreadRecordedEngine(control); self.gate = gate
++    }
++    var isSpeaking: Bool { gate.beforeRead(); return inner.isSpeaking }
++    var isPaused: Bool { gate.beforeRead(); return inner.isPaused }
++    func start(text: String, voice: AVSpeechSynthesisVoice?, startBefore: Date, generation: UUID, utterance: UUID,
++               terminal: @escaping @Sendable (CookNativeTerminal) -> Void) -> Bool {
++        inner.start(text: text, voice: voice, startBefore: startBefore, generation: generation,
++                    utterance: utterance, terminal: terminal)
++    }
++    func pause() -> Bool { inner.pause() }
++    func resume() -> Bool { inner.resume() }
++    func stop() -> Bool { inner.stop() }
++    func clearUtterance() { inner.clearUtterance() }
++}
++
++extension CookSpeechOwnerLifecycleTests {
++    private func makeStopGatedOwner(_ control: OwnerEngineControl, _ gate: StopStateGetterGate) -> ThreadCookSpeechOwner {
++        let owner = ThreadCookSpeechOwner(engineFactory: { StopStateGatedEngine(control, gate) })
++        addTeardownBlock {
++            gate.release(); control.releasePause(); control.releaseStop(); control.releaseGetter()
++            await MainActor.run { owner.shutdown { _ in } }
++        }
++        return owner
++    }
++    func testActiveStopBypassesHeldStateGettersAndCallsNativeStopExactlyOnce() async throws {
++        let control = OwnerEngineControl(), gate = StopStateGetterGate(), events = OwnerEventLog(), id = UUID()
++        let owner = makeStopGatedOwner(control, gate); defer { gate.release() }
++        try await start(owner, id, events)
++        gate.arm() // No callback has been delivered: active Stop must not sample state.
++        let stop = try XCTUnwrap(owner.stop(id))
++        await fulfillment(of: [events.result(stop, true)], timeout: 3)
++        XCTAssertEqual(gate.count(), 0)
++        XCTAssertEqual(control.snapshot().filter { $0.name == "stop.enter" }.count, 1)
++        XCTAssertEqual(control.snapshot().filter { $0.name == "stop.true" }.count, 1)
++        gate.release(); await finish(owner, control)
++    }
++    func testActiveFalseStopBypassesGettersButKeepsStartBarrierUntilExplicitRetry() async throws {
++        let control = OwnerEngineControl(), gate = StopStateGetterGate(), events = OwnerEventLog(), id = UUID()
++        let owner = makeStopGatedOwner(control, gate); defer { gate.release() }
++        try await start(owner, id, events); control.setStopResults([false, true]); gate.arm()
++        let rejected = try XCTUnwrap(owner.stop(id))
++        await fulfillment(of: [events.result(rejected, false)], timeout: 3)
++        XCTAssertEqual(gate.count(), 0)
++        XCTAssertEqual(control.snapshot().filter { $0.name == "stop.enter" }.count, 1)
++        XCTAssertFalse(owner.reserve(UUID(), events: { _ in }))
++        XCTAssertNil(owner.start(id, text: "Must remain blocked", voice: nil, startBefore: Date().addingTimeInterval(30)))
++        XCTAssertNil(owner.resume(id))
++        let accepted = try XCTUnwrap(owner.stop(id))
++        await fulfillment(of: [events.result(accepted, true)], timeout: 3)
++        XCTAssertEqual(gate.count(), 0)
++        XCTAssertEqual(control.snapshot().filter { $0.name == "stop.enter" }.count, 2)
++        XCTAssertEqual(control.snapshot().filter { $0.name == "stop.false" }.count, 1)
++        XCTAssertEqual(control.snapshot().filter { $0.name == "stop.true" }.count, 1)
++        XCTAssertTrue(owner.reserve(UUID(), events: { _ in }))
++        gate.release(); await finish(owner, control)
++    }
++    func testMatchedTerminalStillRequiresObservedIdleBeforeStopAcknowledgment() async throws {
++        let control = OwnerEngineControl(), gate = StopStateGetterGate(), events = OwnerEventLog(), id = UUID()
++        let owner = makeStopGatedOwner(control, gate); defer { gate.release() }
++        try await start(owner, id, events)
++        let identity = try XCTUnwrap(control.currentIdentity())
++        let terminalGetter = expectation(description: "Matched terminal waits in actual owner idle getter")
++        let inconsistent = events.expectation("Matched terminal with speaking flag retains barrier") {
++            if case .inconsistentTerminal(let value) = $0 { return value == id }; return false
++        }
++        gate.arm { terminalGetter.fulfill() }; control.emit(identity)
++        await fulfillment(of: [terminalGetter], timeout: 3)
++        XCTAssertFalse(owner.reserve(UUID(), events: { _ in }))
++        XCTAssertFalse(events.values.contains { if case .ended(let value) = $0 { return value == id }; return false })
++        gate.release(); await fulfillment(of: [inconsistent], timeout: 3)
++        XCTAssertFalse(owner.reserve(UUID(), events: { _ in }))
++        control.setIdle()
++        let stopGetter = expectation(description: "Stop with matched terminal still samples owner idle state")
++        gate.arm { stopGetter.fulfill() }
++        let stop = try XCTUnwrap(owner.stop(id))
++        await fulfillment(of: [stopGetter], timeout: 3)
++        XCTAssertFalse(events.values.contains {
++            if case .result(let received, let success) = $0 { return received == stop && success }; return false
++        })
++        XCTAssertFalse(owner.reserve(UUID(), events: { _ in }))
++        XCTAssertEqual(control.snapshot().filter { $0.name == "stop.enter" }.count, 0)
++        gate.release(); await fulfillment(of: [events.result(stop, true)], timeout: 3)
++        XCTAssertGreaterThanOrEqual(gate.count(), 2) // Both speaking and paused sampled in the idle-proof branch.
++        XCTAssertEqual(control.snapshot().filter { $0.name == "stop.enter" }.count, 0)
++        XCTAssertTrue(owner.reserve(UUID(), events: { _ in }))
++        await finish(owner, control)
++    }
++}

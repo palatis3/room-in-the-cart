@@ -1,0 +1,115 @@
+{
+  "scope": "Focused r5 controlled qualification; not actual AV or canonical installation",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 2685,
+      "sha256": "30ef01a466741c956853d24ea35f4acda8781886ba39df20d98a1d658d479d9d"
+    },
+    {
+      "path": "build-log-review.json",
+      "bytes": 4192,
+      "sha256": "802438e88e283cd02746d380a45d4fb31712684e508a2bbfbde297ddf8069dff"
+    },
+    {
+      "path": "execution/commands.json",
+      "bytes": 8224,
+      "sha256": "fe08416b0359ae65de2f0d85cd39705d288c9b8c933238492263c9473f429e75"
+    },
+    {
+      "path": "execution/common.py",
+      "bytes": 3940,
+      "sha256": "2ed4b7d390956b0b14876c42a6637f2f2ba2ad1fa32626feb56416b196d0062c"
+    },
+    {
+      "path": "execution/compiled-products.json",
+      "bytes": 48185,
+      "sha256": "50536ae7c3d9dc4061eb79ae56eb7f37828be73bee58f99ff17a4e8bf6c75402"
+    },
+    {
+      "path": "execution/execution-file-hashes.json",
+      "bytes": 1269,
+      "sha256": "48322bb058aa1ee827b0e429ef247d35604c20215dc0de26557308daf030d864"
+    },
+    {
+      "path": "execution/inspect.py",
+      "bytes": 2595,
+      "sha256": "8d9a6405546d7db7d78511084a5934195a5542673a94eb670fb29521dd544ef0"
+    },
+    {
+      "path": "execution/inspection/strict-command.json",
+      "bytes": 841,
+      "sha256": "076783f65f56e0f41acd47df17b203aeb5183c9dbdcb021972133fee469e6e7d"
+    },
+    {
+      "path": "execution/inspection/strict.txt",
+      "bytes": 6006,
+      "sha256": "b1e82705e05743c60761750becfeee86785f89dfc9983f038e3d704d79cfe370"
+    },
+    {
+      "path": "execution/inspection/summary.json",
+      "bytes": 1207,
+      "sha256": "b31b1becad1091d9b9e28308dddc588c21f8e45455857b64a9e53f8f82b59b94"
+    },
+    {
+      "path": "execution/inspection/tests.json",
+      "bytes": 29031,
+      "sha256": "d367ae3a034c34865727954dc37c3f430c3659969699fd0ee34f47e0c42585ab"
+    },
+    {
+      "path": "execution/inspection/verification.json",
+      "bytes": 431,
+      "sha256": "1174bb26b48d4815d79a667d4e992a7e52aeaa3bba6c36e6ed55419ff2108fad"
+    },
+    {
+      "path": "execution/installation.json",
+      "bytes": 762,
+      "sha256": "aa330ec70dab164c04ddbd25a3a8b8c343d4e4c8885a6921c5cf226773b36d78"
+    },
+    {
+      "path": "execution/phase1/run.json",
+      "bytes": 1631,
+      "sha256": "fd09a2e309ef7bdb34e8d1614d0cdb48c37be2671100d26d24426fa2844ea49f"
+    },
+    {
+      "path": "execution/phase2/native.log",
+      "bytes": 20988,
+      "sha256": "98a562564207d4cbab92ad72a00d865d996b8e63053314f3a23b3e63bf77eb8e"
+    },
+    {
+      "path": "execution/phase2/run.json",
+      "bytes": 7950,
+      "sha256": "d63b5dd311a6d2a03533d843008677bdc030d265aaaeb833178d34cab4bd03dc"
+    },
+    {
+      "path": "execution/r4-preservation.json",
+      "bytes": 63048,
+      "sha256": "d95c5bc2ebdecad08d76310582b65737dd5080ccb2fd119308259b567cf636ba"
+    },
+    {
+      "path": "execution/run.py",
+      "bytes": 3687,
+      "sha256": "44b4f163b9aef950501ffc386ed29eb0664a183fa4179c542373206f3d409b20"
+    },
+    {
+      "path": "proposal/file-hashes.json",
+      "bytes": 1520,
+      "sha256": "6b7da49637b15e32897c3d5e45625f7eaf3bbd0cb1625faf1d796eec205dc87c"
+    },
+    {
+      "path": "proposal/isolated-ios-candidate-manifest.json",
+      "bytes": 104617,
+      "sha256": "d2f233f64af0540e77cd66b995c39bada71522bc9f8f6b4fab1ee2927e36c590"
+    },
+    {
+      "path": "proposal/r4-to-r5.patch",
+      "bytes": 8476,
+      "sha256": "dbca3ad330f9c382cb3ef678ade2acdf6e47ba5e0372971d1bc4de7814eb695e"
+    },
+    {
+      "path": "proposal/selectors.txt",
+      "bytes": 4588,
+      "sha256": "0b2ef9b70aae087cb9acfe8881f5cd6d7dde38f2068c8c49ad1cfb7329d813cb"
+    }
+  ]
+}

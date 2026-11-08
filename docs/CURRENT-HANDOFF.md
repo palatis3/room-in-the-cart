@@ -2,6 +2,12 @@
 
 Updated November 8, 2026 UTC. The full first-version goal is active and release acceptance remains incomplete. The owner's migration 041 approval has already been executed and verified. The separate 042 approval is pending; a repeated 041 approval does not authorize 042. Historical snapshots are preserved in [the handoff archive](CURRENT-HANDOFF-HISTORY-20261106.md).
 
+## Latest verified state — November 8, 17:16 UTC
+
+The isolated r5 speech candidate now compiles and passes all 43 model/owner-transport cases, native 0 and strict 0. The three new cases verify removal of redundant active-Stop getters while preserving failed-Stop and matched-terminal idle barriers. No runtime warnings were recorded in this controlled test scope. Source, products, original result and preserved r4 evidence are unchanged at inspection. [Exact proof and limitations](evidence/native/cook-active-stop-20261108/README.md). Inspection is complete; do not repeat it. No local native process is active. Canonical speech remains unchanged; real AVFoundation/framework waits and the prior strict failure are unresolved.
+
+A revised bounded system-trace harness is being prepared, not launched. Read-only review also located the local English timeout's recorded spindump: the late timeout occurs during a Source-field post-event wait, with an earlier stall after Yield Done. Extraction of that one existing attachment is being prepared; neither timing association proves the cause. Hosted diagnostic 42502133362 remains the single active run at the latest check, with zero queued; its final outcome is not yet known. No main PR push or staging deployment occurred. The full first-version scope and remaining acceptance gates stay open.
+
 ## Latest verified state — November 8, 17:04 UTC
 
 The disabled-action and confirmed-retry corrections are locally qualified. The current frozen556-input source24fc718 passes all19 request-pack model cases and the complete minimum17 carry/current-price journey (125.74s), native0/strict0 with zero recorded runtime warnings. The latter preserves exact retry, unknown-price disabled/no-command behavior, cancellation and final4.25price with one saved line. Its prior failure was an offscreen lazy row on the375×667 screen; the test now calls the existing bounded reveal before its unchanged8-second assertion. The model separately clears the stale503 notice only after a validated receipt, preserving new cleanup/refresh warnings. [Original failure, correction and current proof](evidence/native/request-retry-and-minimum-style-20261108/README.md).

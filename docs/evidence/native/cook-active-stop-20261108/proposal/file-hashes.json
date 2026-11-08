@@ -1,0 +1,50 @@
+{
+  "status": "frozen-r5-scratch-uncompiled-unexecuted",
+  "files": [
+    {
+      "path": "ActiveStopGetterTests.swift",
+      "bytes": 6869,
+      "sha256": "b7cbdd1106a695210f23ed55534a12e2ede74171ff2a1bac5ea682a5ecb14314"
+    },
+    {
+      "path": "README.md",
+      "bytes": 3233,
+      "sha256": "1489bb94125e165212cc0d9c75b60133351061be5c369bc88c5040c591889bc0"
+    },
+    {
+      "path": "focused-selectors.txt",
+      "bytes": 357,
+      "sha256": "8a26d386df3777ee71fb3a66db7febe616c6e352b006e2d4c4e2212167a01fb9"
+    },
+    {
+      "path": "isolated-ios-candidate-manifest.json",
+      "bytes": 104617,
+      "sha256": "d2f233f64af0540e77cd66b995c39bada71522bc9f8f6b4fab1ee2927e36c590"
+    },
+    {
+      "path": "overlay/ios/Features/Capture/LocalCookSpeech.swift",
+      "bytes": 38283,
+      "sha256": "45c6ac82606b64706b3f9a84e3a16d1727df9ab80174f015531b7191fc19adb6"
+    },
+    {
+      "path": "overlay/ios/Tests/CookReadbackTests.swift",
+      "bytes": 59599,
+      "sha256": "e7b2eb2c36dc9737309c73a2bd9cd05e04a0fa299b9f30546d860ec84963d3af"
+    },
+    {
+      "path": "preparation.json",
+      "bytes": 1375,
+      "sha256": "0817221f17ce40f352087a7e22a4ccda606d0e1b289adb3a08445c124cf4f452"
+    },
+    {
+      "path": "r4-to-r5.patch",
+      "bytes": 8476,
+      "sha256": "dbca3ad330f9c382cb3ef678ade2acdf6e47ba5e0372971d1bc4de7814eb695e"
+    },
+    {
+      "path": "selectors.txt",
+      "bytes": 4588,
+      "sha256": "0b2ef9b70aae087cb9acfe8881f5cd6d7dde38f2068c8c49ad1cfb7329d813cb"
+    }
+  ]
+}

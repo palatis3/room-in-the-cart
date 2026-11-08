@@ -1,0 +1,16 @@
+[
+  "python3",
+  "scripts/check_ios_test_results.py",
+  "--selectors",
+  "/Users/palatis/Room in the Cart/.build/CIA305065Nov08/cook-causal-review/thread-owner-adapter-r5-execution/inspection/selectors.txt",
+  "--expected-count",
+  "43",
+  "--summary",
+  "/Users/palatis/Room in the Cart/.build/CIA305065Nov08/cook-causal-review/thread-owner-adapter-r5-execution/inspection/summary.json",
+  "--tests",
+  "/Users/palatis/Room in the Cart/.build/CIA305065Nov08/cook-causal-review/thread-owner-adapter-r5-execution/inspection/tests.json",
+  "--result-bundle",
+  "/Users/palatis/Room in the Cart/.build/CIA305065Nov08/cook-causal-review/thread-owner-adapter-r5-execution/inspection/test.xcresult",
+  "--test-log",
+  "/Users/palatis/Room in the Cart/.build/CIA305065Nov08/cook-causal-review/thread-owner-adapter-r5-execution/phase2/native.log"
+]

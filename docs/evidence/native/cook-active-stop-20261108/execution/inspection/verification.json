@@ -1,0 +1,11 @@
+{
+  "nativeExit": 0,
+  "expectedCount": 43,
+  "scope": "Model and production owner transport with confined fake engine; not actual AV/acoustic qualification",
+  "strictExit": 0,
+  "originalUnchanged": true,
+  "compiledProductsUnchanged": true,
+  "inspectedAtUTC": "2026-11-08T17:15:13.094400+00:00",
+  "checkerSHA256": "d5aeb8c6217d1f49153986cbaa6a6505681ef781aa19a76278272355828f8652",
+  "sourceAndPriorEvidenceUnchanged": true
+}
