@@ -1,0 +1,31 @@
+# Request input on minimum iOS · 2026-11-08
+
+The complete request-pack and confirmed-return journey passes native and strict **1/1 on iOS 17.0 build 21A328**, in **286.68 seconds**, after a test-only input/reveal correction. The examined XCTest export records zero runtime warnings; the supplied 2,728-line console records zero animation-idle messages and zero runner restarts. Those observations do not prove lossless logging. This qualifies this selected synthetic-fixture journey, not the whole app on minimum iOS, physical VoiceOver, or a framework crash remedy. The same final-source iOS 26.2 counterpart run also passes native and strict 2/2; its scoped receipts are retained below.
+
+## Preserved typed-only failure
+
+The preceding typed-lookup run failed native 65/strict 1 in 210.552 seconds while revealing `household.pack.a.source`, before tapping/typing that field or reaching Apply. Its failure PNG and hierarchy show the complete source field at **(16,535,343,44)**, bottom 579, inside the375 × 667 viewport with no visible software keyboard. The active Review request navigation ends at 96. Root also reviewed that PNG. The field was not visually obstructed at the recorded final state; a screenshot alone does not establish native hittability or event delivery.
+
+The test used its conservative gesture area as the full-visibility rectangle. Without a keyboard that area ended at 667 − 100 = 567, rejecting the visible field by 12 points. The console records **24 alternating 275.4-point drags** from 83.72 through 203.44 seconds, between y 475.2 and 199.8. The complete event list and bounded original-log excerpt are retained in `typed-only-failure/failure-review/`. Intermediate field positions were not captured on every gesture; the alternating gesture directions are directly recorded. The earlier genuinely clipped need-field record at y 652–696 remains distinct and must still fail visibility checks.
+
+## Exact test-only change
+
+`source/comparison.json` binds the final source to commit **7be0075393c7eeffe756853028524656cf7f853d**. All 556 iOS files were compared against the exact Git tree and candidate SHA-256 manifest: only `ios/UITests/HouseholdRequestPackUITests.swift` changed; the other 555 files, including production code, match. The copied patch is byte-identical to the Git diff from that commit. The final test SHA-256 is `ee6c2911882972258af70e97382d63621b999b9dd056986a207c60ecade61df0`.
+
+The change uses exact-identifier TextField lookup, then separates full-visibility containment from gesture safety bounds. Full containment uses 16-point bottom clearance while the existing gestures and direction calculations retain their 100-point margin. With no keyboard the content bound ends at 651: the visible source bottom 579 passes, while the prior clipped field bottom 696 still fails. Native hittability, navigation/keyboard clearance, 24 attempts, original gesture size, exact outcome/effect assertions and 720/900 case allowances remain. No logging suppression or extra input retry was added. The intermediate `baseline-source-manifest.json` describes the typed-only failed source, not the original Git commit; the independent commit comparison is explicit.
+
+## Final result and visual scope
+
+`final-ios17/` contains selectors, native/strict verification, summary, tests and warning receipt. Root reviewed the single exact final-return PNG at its original 750 × 1334 dimensions: the original **Wraps for lunch / Sam / 8 wraps / date** and **Added to the plan** are fully visible after dismissal, with fixture counters 1/1. The upper receipt is partly above the viewport following the return scroll. This demonstrates the captured return location, not full-screen content visibility or actual VoiceOver focus. See `final-ios17/root-visual-review.json`.
+
+The PNG was identified in per-case activity metadata before an exact filename-filtered export from the completed inspection copy. The export was bounded at 4,000,000 bytes per file and 45 seconds, succeeded, and left the original bundle's hashes unchanged. Only that final PNG is copied; full activities remain private with hashes retained. The typed-only failure PNG/TXT and its completed export receipts are also byte-preserved.
+
+The earlier instrumentation crash remains documented in the [7be-era termination summary](../request-outcome-return-20261108/minimum-ios-instrumentation-crash/termination-summary.json). This later successful journey neither erases that original failure nor identifies a framework-causal repair. No whole-app minimum-OS or physical accessibility claim follows. Existing product-return/Release evidence remains in its original package; it is not reinterpreted here.
+
+`run-summary.json` files are bounded projections with the original private `run.json` paths and exact SHA-256 values, omitting their huge product manifests. `provenance.json` preserves original paths and hashes for all copied files. `manifest.json` covers the publication except itself. Publishing performed only completed-result reads/filtered attachment exports and local evidence writes; no app/build/test/simulator action, product edit, parent-document edit or commit was performed.
+
+## Completed current-OS counterparts
+
+`final-ios26/` retains native/strict **2/2** on iOS 26.2 build 23C54, light/Large: the original request-pack journey passed in 198.21 seconds and the carried-earlier-request/current-pack-price journey in 94.13 seconds. Both use the identical final source manifest `daec8686c9f933b3889a0f52b7af6f59e0d97899f00cbce089a24820a6e704cc` and exact retained selectors. The inspected export records zero runtime warnings across two tests; the supplied 2,362-line console records zero animation-idle messages and zero runner restarts. Original result and source preservation checks pass. These observations do not establish lossless log coverage or broader app acceptance.
+
+The public run summary binds the exact private full run JSON by SHA-256, while omitting its large product inventory. No new result-tool inspection, screenshot export, native execution or source change was performed to add these completed receipts. Earlier failures, visual limits, physical VoiceOver uncertainty and the absence of a framework-causal claim remain unchanged.

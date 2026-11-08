@@ -1,0 +1,219 @@
+Optional(Attributes: Application, 0x11e70e130, pid: 21505, label: 'Room in the Cart'
+Element subtree:
+ →Application, 0x11e70e130, pid: 21505, label: 'Room in the Cart'
+    Window (Main), 0x11e70e7e0, {{0.0, 0.0}, {375.0, 667.0}}
+      Other, 0x11e71b5c0, {{0.0, 0.0}, {375.0, 667.0}}
+        Other, 0x11e484be0, {{16.0, 30.0}, {343.0, 610.1}}
+          Other, 0x11e4883a0, {{-327.0, -580.1}, {1029.0, 1830.2}}
+          Other, 0x11e485c90, {{16.0, 30.0}, {343.0, 610.1}}
+            Other, 0x11e47ea20, {{16.0, 30.0}, {343.0, 610.1}}
+              StaticText, 0x11e47e600, {{92.4, 48.3}, {190.3, 18.8}}, identifier: 'fixture.s24.posts', label: 'Fixture applied decisions: 0'
+              StaticText, 0x11e485870, {{114.6, 68.9}, {145.9, 18.8}}, identifier: 'fixture.s24.lines', label: 'Fixture saved lines: 0'
+              Button, 0x11e487f20, {{91.5, 89.5}, {192.1, 18.8}}, identifier: 'fixture.s24.end-access', label: 'Fixture end shopper access'
+              StaticText, 0x11e488040, {{16.7, 108.2}, {341.6, 12.3}}, identifier: 'fixture.s24.preview-diagnostics', label: 'Fixture previews: 0; busy: false; selected: 44444444-4444-4444-8444-444444444444; choice: add; price: ; preview: none; notice: none'
+              Other, 0x11e488160, {{16.0, 127.0}, {343.0, 513.1}}
+                NavigationBar, 0x11e488280, {{16.0, 127.0}, {343.0, 87.8}}, identifier: 'S24 request decision'
+                  StaticText, 0x11e488530, {{30.6, 170.4}, {306.0, 37.5}}, label: 'S24 request decision'
+                Other, 0x11e488650, {{16.0, 127.0}, {343.0, 513.1}}
+                  Other, 0x11e488770, {{16.0, 127.0}, {343.0, 513.1}}
+                    Other, 0x11e488890, {{16.0, 127.0}, {343.0, 513.1}}
+                      Other, 0x11e4889b0, {{16.0, 127.0}, {343.0, 513.1}}
+                        CollectionView, 0x11e488ad0, {{16.0, 127.0}, {343.0, 513.1}}
+                          Other, 0x11e488bf0, {{1.4, -811.5}, {372.3, 1161.6}}
+                          Cell, 0x11e488d10, {{30.6, 214.8}, {313.7, 40.2}}
+                            Other, 0x11e488e30, {{30.6, 214.8}, {313.7, 40.2}}
+                              Other, 0x11e488f50, {{30.6, 214.8}, {313.7, 40.2}}
+                            Other, 0x11e489070, {{30.6, 214.8}, {313.7, 40.2}}
+                              Other, 0x11e489190, {{30.6, 214.8}, {313.7, 40.2}}
+                                Other, 0x11e4892b0, {{30.6, 214.8}, {313.7, 40.2}}
+                                  Button, 0x11e4893d0, {{30.6, 214.8}, {313.7, 40.2}}, label: 'Refresh requests'
+                          Cell, 0x11e4894f0, {{30.6, 255.0}, {313.7, 79.1}}
+                            Other, 0x11e489610, {{30.6, 255.0}, {313.7, 79.1}}
+                              Other, 0x11e489730, {{30.6, 255.0}, {313.7, 79.1}}
+                            Other, 0x11e489850, {{30.6, 255.0}, {313.7, 79.1}}
+                              Other, 0x11e489970, {{30.6, 255.0}, {313.7, 79.1}}
+                                Other, 0x11e489a90, {{30.6, 255.0}, {313.7, 79.1}}
+                                  StaticText, 0x11e489bb0, {{30.6, 255.0}, {313.7, 79.1}}, label: 'Each request keeps its own outcome. Linking a line does not add another pack.'
+                          Other, 0x11e489cd0, {{45.3, 254.6}, {299.1, 0.5}}
+                          Other, 0x11e489df0, {{1.4, 350.1}, {372.3, 1208.3}}
+                          Cell, 0x11e489f10, {{30.6, 350.1}, {313.7, 35.7}}
+                            Other, 0x11e48a030, {{30.6, 350.1}, {313.7, 35.7}}
+                            Other, 0x11e48a150, {{30.6, 350.1}, {313.7, 35.7}}
+                              Other, 0x11e48a270, {{30.6, 350.1}, {313.7, 35.7}}
+                                Other, 0x11e48a390, {{30.6, 350.1}, {313.7, 35.7}}
+                                  StaticText, 0x11e48a4b0, {{30.6, 350.1}, {313.7, 35.7}}, label: 'Requests for this shop'
+                          Cell, 0x11e48a5d0, {{30.6, 385.8}, {313.7, 128.1}}
+                            Other, 0x11e48a6f0, {{30.6, 385.8}, {313.7, 128.1}}
+                              Other, 0x11e48a810, {{30.6, 385.8}, {313.7, 128.1}}
+                            Other, 0x11e48a930, {{30.6, 385.8}, {313.7, 128.1}}
+                              Other, 0x11e48aa50, {{30.6, 385.8}, {313.7, 128.1}}
+                                Other, 0x11e48ab70, {{30.6, 385.8}, {313.7, 128.1}}
+                                  Other, 0x11e48ac90, {{45.3, 395.9}, {284.5, 107.9}}
+                                    Button, 0x11e48adb0, {{45.3, 395.9}, {284.5, 83.7}}, identifier: 'household.request.44444444-4444-4444-8444-444444444444', label: 'Wraps for lunch, Sam, 8 wraps, Nov 2, 2026 at 7:00 PM'
+                                      StaticText, 0x11e48aed0, {{45.3, 395.9}, {114.8, 18.8}}, label: 'Wraps for lunch'
+                                      StaticText, 0x11e48aff0, {{45.3, 420.1}, {27.9, 16.5}}, label: 'Sam'
+                                      StaticText, 0x11e48b110, {{45.3, 442.1}, {55.8, 18.8}}, label: '8 wraps'
+                                      StaticText, 0x11e48b230, {{45.3, 466.3}, {121.2, 13.3}}, label: 'Nov 2, 2026 at 7:00 PM'
+                                    StaticText, 0x11e48b350, {{45.3, 485.0}, {193.9, 18.8}}, identifier: 'household.request.outcome.44444444-4444-4444-8444-444444444444', label: 'Received, waiting for review'
+                          Other, 0x11e48b470, {{328.8, 167.2}, {27.4, 472.9}}, label: 'Vertical scroll bar, 1 page', value: 0%
+      Other, 0x11e48b590, {{0.0, 0.0}, {375.0, 667.0}}
+        Other, 0x11e48b6b0, {{-375.0, -667.0}, {1125.0, 2001.0}}
+        Other, 0x11e48b7d0, {{0.0, 40.0}, {375.0, 627.0}}
+          Other, 0x11e48b8f0, {{0.0, 40.0}, {375.0, 627.0}}
+            Other, 0x11e48ba10, {{0.0, 40.0}, {375.0, 627.0}}
+              Other, 0x11e48bb30, {{0.0, 40.0}, {375.0, 627.0}}
+                Other, 0x1079f54e0, {{0.0, 40.0}, {375.0, 627.0}}
+                  Other, 0x1079ec550, {{0.0, 40.0}, {375.0, 627.0}}
+                    NavigationBar, 0x1079f6ae0, {{0.0, 40.0}, {375.0, 56.0}}, identifier: 'Review request'
+                      Other, 0x11e585780, {{16.0, 54.0}, {60.5, 28.5}}, identifier: 'household.decision.cancel', label: 'Cancel'
+                        Other, 0x11e586db0, {{16.0, 54.0}, {60.5, 28.5}}
+                          Button, 0x11e586ed0, {{16.0, 54.0}, {60.5, 28.5}}, identifier: 'household.decision.cancel', label: 'Cancel'
+                      StaticText, 0x11e586ff0, {{126.5, 58.0}, {122.0, 20.5}}, label: 'Review request'
+                    Other, 0x11e588250, {{0.0, 40.0}, {375.0, 627.0}}
+                      Other, 0x11e588370, {{0.0, 40.0}, {375.0, 627.0}}
+                        Other, 0x11e588490, {{0.0, 40.0}, {375.0, 627.0}}
+                          Other, 0x11e5885b0, {{0.0, 40.0}, {375.0, 627.0}}
+                            CollectionView, 0x11e5899d0, {{0.0, 40.0}, {375.0, 627.0}}
+                              Other, 0x11e589af0, {{-16.0, -360.5}, {407.0, 2200.5}}
+                              Cell, 0x11e589c10, {{16.0, 7.0}, {343.0, 44.0}}
+                                Other, 0x11e589d30, {{16.0, 7.0}, {343.0, 44.0}}
+                                  Other, 0x11e589e50, {{16.0, 7.0}, {343.0, 44.0}}
+                                Other, 0x11e589f70, {{16.0, 7.0}, {343.0, 44.0}}
+                                  Other, 0x11e58a090, {{16.0, 7.0}, {343.0, 44.0}}
+                                    Other, 0x11e58a1b0, {{16.0, 7.0}, {343.0, 44.0}}
+                                      StaticText, 0x11e58a2d0, {{16.0, 7.0}, {343.0, 44.0}}, label: 'Pack A'
+                              Cell, 0x11e58a3f0, {{16.0, 51.0}, {343.0, 44.0}}
+                                Other, 0x11e58a510, {{16.0, 51.0}, {343.0, 44.0}}
+                                  Other, 0x11e58a630, {{16.0, 51.0}, {343.0, 44.0}}
+                                Other, 0x11e58a750, {{16.0, 51.0}, {343.0, 44.0}}
+                                  Other, 0x11e58a870, {{16.0, 51.0}, {343.0, 44.0}}
+                                    Other, 0x11e58a990, {{16.0, 51.0}, {343.0, 44.0}}
+                                      StaticText, 0x11e58aab0, {{16.0, 51.0}, {343.0, 44.0}}, label: 'Reviewed pack label'
+                              Other, 0x11e58abd0, {{32.0, 50.5}, {327.0, 0.5}}
+                              Cell, 0x11e58acf0, {{16.0, 95.0}, {343.0, 44.0}}
+                                Other, 0x11e58ae10, {{16.0, 95.0}, {343.0, 44.0}}
+                                  Other, 0x11e58af30, {{16.0, 95.0}, {343.0, 44.0}}
+                                Other, 0x11e58b050, {{16.0, 95.0}, {343.0, 44.0}}
+                                  Other, 0x11e58b170, {{16.0, 95.0}, {343.0, 44.0}}
+                                    Other, 0x11e58b290, {{16.0, 95.0}, {343.0, 44.0}}
+                                      TextField, 0x11e58b3b0, {{16.0, 95.0}, {343.0, 44.0}}, identifier: 'household.pack.a.label', placeholderValue: 'Reviewed pack label', value: Reviewed pack a
+                              Other, 0x11e58b4d0, {{32.0, 94.5}, {327.0, 0.5}}
+                              Cell, 0x11e58b5f0, {{16.0, 139.0}, {343.0, 44.0}}
+                                Other, 0x11e58b710, {{16.0, 139.0}, {343.0, 44.0}}
+                                  Other, 0x11e58b830, {{16.0, 139.0}, {343.0, 44.0}}
+                                Other, 0x11e58b950, {{16.0, 139.0}, {343.0, 44.0}}
+                                  Other, 0x11e58ba70, {{16.0, 139.0}, {343.0, 44.0}}
+                                    Other, 0x11e58bb90, {{16.0, 139.0}, {343.0, 44.0}}
+                                      StaticText, 0x11e58bcb0, {{16.0, 139.0}, {343.0, 44.0}}, label: 'Usable amount in one pack, blank if unknown'
+                              Other, 0x11e58bdd0, {{32.0, 138.5}, {327.0, 0.5}}
+                              Cell, 0x11e58bef0, {{16.0, 183.0}, {343.0, 44.0}}
+                                Other, 0x11e58c010, {{16.0, 183.0}, {343.0, 44.0}}
+                                  Other, 0x11e58c130, {{16.0, 183.0}, {343.0, 44.0}}
+                                Other, 0x11e58c250, {{16.0, 183.0}, {343.0, 44.0}}
+                                  Other, 0x11e58c370, {{16.0, 183.0}, {343.0, 44.0}}
+                                    Other, 0x11e58c490, {{16.0, 183.0}, {343.0, 44.0}}
+                                      TextField, 0x11e58c5b0, {{16.0, 183.0}, {343.0, 44.0}}, identifier: 'household.pack.a.usable', placeholderValue: 'Usable amount in one pack, blank if unknown', value: 4
+                              Other, 0x11e58c6d0, {{32.0, 182.5}, {327.0, 0.5}}
+                              Cell, 0x11e58c7f0, {{16.0, 227.0}, {343.0, 44.0}}
+                                Other, 0x11e58c910, {{16.0, 227.0}, {343.0, 44.0}}
+                                  Other, 0x11e58ca30, {{16.0, 227.0}, {343.0, 44.0}}
+                                Other, 0x11e58cb50, {{16.0, 227.0}, {343.0, 44.0}}
+                                  Other, 0x11e58cc70, {{16.0, 227.0}, {343.0, 44.0}}
+                                    Other, 0x11e58cd90, {{16.0, 227.0}, {343.0, 44.0}}
+                                      StaticText, 0x11e58ceb0, {{32.0, 238.8}, {124.5, 20.5}}, label: 'Pack usable unit'
+                                      Button, 0x11e58cfd0, {{16.0, 227.0}, {343.0, 44.0}}, label: 'Pack usable unit, items'
+                                        StaticText, 0x11e58d0f0, {{285.5, 239.0}, {41.5, 20.5}}, label: 'items'
+                              Other, 0x11e58d210, {{32.0, 226.5}, {327.0, 0.5}}
+                              Cell, 0x11e58d330, {{16.0, 271.0}, {343.0, 44.0}}
+                                Other, 0x11e58d450, {{16.0, 271.0}, {343.0, 44.0}}
+                                  Other, 0x11e58d570, {{16.0, 271.0}, {343.0, 44.0}}
+                                Other, 0x11e58d690, {{16.0, 271.0}, {343.0, 44.0}}
+                                  Other, 0x11e58d7b0, {{16.0, 271.0}, {343.0, 44.0}}
+                                    Other, 0x11e58d8d0, {{16.0, 271.0}, {343.0, 44.0}}
+                                      StaticText, 0x11e58d9f0, {{16.0, 271.0}, {343.0, 44.0}}, label: 'Price per pack in USD, blank if unknown'
+                              Other, 0x11e58db10, {{32.0, 270.5}, {327.0, 0.5}}
+                              Cell, 0x11e58dc30, {{16.0, 315.0}, {343.0, 44.0}}
+                                Other, 0x11e58dd50, {{16.0, 315.0}, {343.0, 44.0}}
+                                  Other, 0x11e58de70, {{16.0, 315.0}, {343.0, 44.0}}
+                                Other, 0x11e58df90, {{16.0, 315.0}, {343.0, 44.0}}
+                                  Other, 0x11e58e0b0, {{16.0, 315.0}, {343.0, 44.0}}
+                                    Other, 0x11e58e1d0, {{16.0, 315.0}, {343.0, 44.0}}
+                                      TextField, 0x11e58e2f0, {{16.0, 315.0}, {343.0, 44.0}}, identifier: 'household.pack.a.price', placeholderValue: 'Price per pack in USD, blank if unknown', value: 3.00
+                              Other, 0x11e58e410, {{32.0, 314.5}, {327.0, 0.5}}
+                              Cell, 0x11e58e530, {{16.0, 359.0}, {343.0, 44.0}}
+                                Other, 0x11e58e650, {{16.0, 359.0}, {343.0, 44.0}}
+                                  Other, 0x11e58e770, {{16.0, 359.0}, {343.0, 44.0}}
+                                Other, 0x11e58e890, {{16.0, 359.0}, {343.0, 44.0}}
+                                  Other, 0x11e58e9b0, {{16.0, 359.0}, {343.0, 44.0}}
+                                    Other, 0x11e58ead0, {{16.0, 359.0}, {343.0, 44.0}}
+                                      StaticText, 0x11e58ebf0, {{32.0, 370.8}, {156.0, 20.5}}, label: 'Reviewed availability'
+                                      Button, 0x11e58ed10, {{16.0, 359.0}, {343.0, 44.0}}, identifier: 'household.pack.a.availability', label: 'Reviewed availability, Available'
+                                        StaticText, 0x11e58ee30, {{259.5, 371.0}, {67.5, 20.5}}, label: 'Available'
+                              Other, 0x11e58ef50, {{32.0, 358.5}, {327.0, 0.5}}
+                              Cell, 0x11e58f070, {{16.0, 403.0}, {343.0, 44.0}}
+                                Other, 0x11e58f190, {{16.0, 403.0}, {343.0, 44.0}}
+                                  Other, 0x11e58f2b0, {{16.0, 403.0}, {343.0, 44.0}}
+                                Other, 0x11e58f3d0, {{16.0, 403.0}, {343.0, 44.0}}
+                                  Other, 0x11e58f4f0, {{16.0, 403.0}, {343.0, 44.0}}
+                                    Other, 0x11e58f610, {{16.0, 403.0}, {343.0, 44.0}}
+                                      StaticText, 0x11e58f730, {{16.0, 403.0}, {343.0, 44.0}}, label: 'Available pack limit, blank if unlimited confirmed'
+                              Other, 0x11e58f850, {{32.0, 402.5}, {327.0, 0.5}}
+                              Cell, 0x11e58f970, {{16.0, 447.0}, {343.0, 44.0}}
+                                Other, 0x11e58fa90, {{16.0, 447.0}, {343.0, 44.0}}
+                                  Other, 0x11e58fbb0, {{16.0, 447.0}, {343.0, 44.0}}
+                                Other, 0x11e58fcd0, {{16.0, 447.0}, {343.0, 44.0}}
+                                  Other, 0x11e58fdf0, {{16.0, 447.0}, {343.0, 44.0}}
+                                    Other, 0x11e58ff10, {{16.0, 447.0}, {343.0, 44.0}}
+                                      TextField, 0x11e590030, {{16.0, 447.0}, {343.0, 44.0}}, placeholderValue: 'Available pack limit, blank if unlimited confirmed'
+                              Other, 0x11e590150, {{32.0, 446.5}, {327.0, 0.5}}
+                              Cell, 0x11e590270, {{16.0, 491.0}, {343.0, 44.0}}
+                                Other, 0x11e590390, {{16.0, 491.0}, {343.0, 44.0}}
+                                  Other, 0x11e5904b0, {{16.0, 491.0}, {343.0, 44.0}}
+                                Other, 0x11e5905d0, {{16.0, 491.0}, {343.0, 44.0}}
+                                  Other, 0x11e5906f0, {{16.0, 491.0}, {343.0, 44.0}}
+                                    Other, 0x11e590810, {{16.0, 491.0}, {343.0, 44.0}}
+                                      StaticText, 0x11e590930, {{16.0, 491.0}, {343.0, 44.0}}, label: 'Price source'
+                              Other, 0x11e590a50, {{32.0, 490.5}, {327.0, 0.5}}
+                              Cell, 0x11e590b70, {{16.0, 535.0}, {343.0, 44.0}}
+                                Other, 0x11e590c90, {{16.0, 535.0}, {343.0, 44.0}}
+                                  Other, 0x11e590db0, {{16.0, 535.0}, {343.0, 44.0}}
+                                Other, 0x11e590ed0, {{16.0, 535.0}, {343.0, 44.0}}
+                                  Other, 0x11e590ff0, {{16.0, 535.0}, {343.0, 44.0}}
+                                    Other, 0x11e591110, {{16.0, 535.0}, {343.0, 44.0}}
+                                      TextField, 0x11e591230, {{16.0, 535.0}, {343.0, 44.0}}, identifier: 'household.pack.a.source', placeholderValue: 'Price source'
+                              Other, 0x11e591350, {{32.0, 534.5}, {327.0, 0.5}}
+                              Cell, 0x11e591470, {{16.0, 579.0}, {343.0, 64.5}}
+                                Other, 0x11e591590, {{16.0, 579.0}, {343.0, 64.5}}
+                                  Other, 0x11e5916b0, {{16.0, 579.0}, {343.0, 64.5}}
+                                Other, 0x11e5917d0, {{16.0, 579.0}, {343.0, 64.5}}
+                                  Other, 0x11e5918f0, {{16.0, 579.0}, {343.0, 64.5}}
+                                    Other, 0x11e591a10, {{16.0, 579.0}, {343.0, 64.5}}
+                                      StaticText, 0x11e591b30, {{32.0, 590.0}, {71.5, 42.5}}, label: 'Price observed'
+                                      DatePicker, 0x11e591c50, {{134.0, 593.5}, {209.0, 36.0}}
+                                        Button, 0x11e591d70, {{134.0, 593.5}, {209.0, 36.0}}, label: 'Date and Time Picker', value: 7:49 AM, Nov 8, 2026
+                                          Button, 0x11e591e90, {{134.0, 593.5}, {118.0, 36.0}}, label: 'Nov 8, 2026'
+                                          Button, 0x11e591fb0, {{256.0, 593.5}, {87.0, 36.0}}, label: '7:49 AM'
+                              Other, 0x11e592220, {{32.0, 578.5}, {327.0, 0.5}}
+                              Cell, 0x11e592340, {{16.0, 643.5}, {343.0, 64.5}}
+                                Other, 0x11e592460, {{16.0, 643.5}, {343.0, 64.5}}
+                                  Other, 0x11e592580, {{16.0, 643.5}, {343.0, 64.5}}
+                                Other, 0x11e5926a0, {{16.0, 643.5}, {343.0, 64.5}}
+                                  Other, 0x11e5927c0, {{16.0, 643.5}, {343.0, 64.5}}
+                                    Other, 0x11e5928e0, {{16.0, 643.5}, {343.0, 64.5}}
+                                      Switch, 0x11e592a00, {{16.0, 643.5}, {343.0, 64.5}}, identifier: 'household.pack.a.matched', label: 'I confirmed this pack matches the request and intended use', value: 0
+                                        StaticText, 0x11e592b20, {{32.0, 654.5}, {233.5, 42.5}}, label: 'I confirmed this pack matches the request and intended use'
+                                        Switch, 0x11e592c40, {{294.0, 660.5}, {51.0, 31.0}}, value: 0
+                              Other, 0x11e592d60, {{32.0, 643.0}, {327.0, 0.5}}
+                              Other, 0x11e592e80, {{342.0, 96.0}, {30.0, 571.0}}, label: 'Vertical scroll bar, 5 pages', value: 34%
+    Window, 0x11e5931a0, {{0.0, 0.0}, {375.0, 667.0}}
+      Other, 0x11e5932c0, {{0.0, 0.0}, {375.0, 667.0}}
+        Other, 0x11e5933e0, {{0.0, 0.0}, {375.0, 667.0}}
+        Other, 0x11e593500, {{0.0, 667.0}, {375.0, 216.0}}
+Path to element:
+ →Application, 0x11e70e130, pid: 21505, label: 'Room in the Cart'
+Query chain:
+ →Find: Target Application 'dev.roominthecart.app.debug'
+  Output: {
+    Application, 0x11e32bf20, pid: 21505, label: 'Room in the Cart'
+  }
+)

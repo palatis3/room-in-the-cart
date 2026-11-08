@@ -1,0 +1,40 @@
+{
+  "attachment": {
+    "lifetime": "keepAlways",
+    "name": "S23-request-returned-once-without-manual-dismissal_0_6F16E134-B543-45F2-B338-AE173573964A.png",
+    "payloadId": "0~1-gkjxPW4uLIHlu6Q3k9a-vvpTXzcHZFJKsS2Ja8bCHASxbASdg0tx7_X2o56byIaJphUnM3Nrlgcgg3ROFbLA==",
+    "timestamp": 1794142920.715,
+    "uuid": "23BF4B1A-FEB7-4404-A826-953E52868AC7"
+  },
+  "argv": [
+    "/usr/bin/xcrun",
+    "xcresulttool",
+    "export",
+    "attachments",
+    "--path",
+    "/Users/palatis/Room in the Cart/.build/S24VisibleFieldNov08/ios17-run/inspection/native.xcresult",
+    "--test-id",
+    "HouseholdRequestPackUITests/testReviewedCheapestAvailablePackUsesActualDecisionAndCancelHasNoWrite()",
+    "--output-path",
+    "/Users/palatis/Room in the Cart/.build/S24VisibleFieldNov08/ios17-run/return-capture/png",
+    "--filter",
+    "S23-request-returned-once-without-manual-dismissal_0_6F16E134-B543-45F2-B338-AE173573964A.png"
+  ],
+  "exitCode": 0,
+  "perFileCapBytes": 4000000,
+  "timeoutSeconds": 45,
+  "files": [
+    {
+      "path": "png/manifest.json",
+      "bytes": 829,
+      "sha256": "c4fa61c41ddb398403fe544834b129b3278302e5d7b058e548e8212c4db7be17"
+    },
+    {
+      "path": "png/23BF4B1A-FEB7-4404-A826-953E52868AC7.png",
+      "bytes": 143416,
+      "sha256": "2bc322c9092552fa9899db52f366aa0ce4bfc5703d454c093013bacfa1a57390"
+    }
+  ],
+  "originalUnchanged": true,
+  "visualReview": "Awaiting root"
+}

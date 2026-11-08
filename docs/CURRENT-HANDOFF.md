@@ -2,6 +2,18 @@
 
 Updated November 8, 2026 UTC. The full first-version goal is active and release acceptance remains incomplete. The owner's migration 041 approval has already been executed and verified. The separate 042 approval is pending; a repeated 041 approval does not authorize 042. Historical snapshots are preserved in [the handoff archive](CURRENT-HANDOFF-HISTORY-20261106.md).
 
+## Latest verified state — November 8, 13:10 UTC
+
+Migration 041 is already deployed and verified; the repeated approval requires no duplicate update. Migration 042 remains separately pending. Published PR1 remains `a305065`; no new push, dispatch, cancellation or deployment occurred.
+
+**Request input and return:** the final test-only correction passes the complete primary journey on iOS 17.0 (1/1, 286.68 seconds) and both primary/carried journeys on iOS 26.2 (2/2). Strict checks pass with zero recorded runtime warnings, animation-idle messages or runner restarts. The correction selects exact TextFields and separates full-visibility bounds from the conservative swipe margin; gesture geometry, native hittability, assertions and time limits remain unchanged. All 555 other iOS files match the qualified `7be0075` source, including product code. The existing unsigned arm64 Release build and bundle checks remain applicable. The original instrumentation crash and typed-only visibility failure are preserved; passing follow-ups do not establish a framework-crash repair. [Final evidence](evidence/native/request-minimum-os-input-20261108/README.md).
+
+**Hosted CI is fully terminal:** all six `a305065` workflows finished. There are 47 successful jobs and five failed jobs, representing four underlying failures plus the derivative Core gate. Models pass 702/702; ordinary UI passes 67/68; fixture native assertions pass 69/69, with 64 strictly accepted and five blocked by unavailable speech-warning details. Deep, NativeWire and Performance pass; animation-hitch samples remain unavailable. The UI09 timeout and two HTTP504 tool downloads remain recorded. [Terminal evidence](evidence/native/ci-a305065-20261108/terminal/README.md) is committed in `cfb9e7a`. The old collection hold is fulfilled; fixes still require qualification before a new combined publication.
+
+**Remaining investigations:** original UI09 logs establish main-loop idle while animation completion stayed false and later absence of the keyboard, but do not identify the animation owner. Exact cook binary symbolication identifies synchronous Pause leading to the framework wait; ownership, blocking duration and a safe mitigation remain unproven. Reviewed Apple speech documentation does not establish safe off-main migration of the current non-Sendable synthesizer/utterance objects. Scratch diagnostic and semantic styling proposals are not installed. Physical VoiceOver, S24 audit findings and other release acceptance remain open.
+
+No native build/test or result inspection remains active. Both final input-run inspections are complete; do not repeat them. Earlier sections below retain historical state and are superseded by this checkpoint.
+
 ## Latest verified state — November 8, 12:45 UTC
 
 The latest local request-return fix is qualified in the scopes below. Published PR1 remains `a305065`; keep publication on hold until its remaining Fixtures workflow is collected. Migration041 is already deployed and verified; the repeated approval required no duplicate rollout and does not authorize042. Safari editor privacy evidence is committed locally in `a1e63d9`.

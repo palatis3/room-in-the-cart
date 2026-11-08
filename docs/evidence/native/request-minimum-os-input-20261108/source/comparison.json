@@ -1,0 +1,15 @@
+{
+  "baselineCommit": "7be0075393c7eeffe756853028524656cf7f853d",
+  "gitTreeFilesCompared": 556,
+  "changedFiles": [
+    "ios/UITests/HouseholdRequestPackUITests.swift"
+  ],
+  "unchangedProductAndOtherFiles": 555,
+  "comparisonMethod": "Each current frozen iOS file checked against candidate SHA256 and git blob SHA1 from exact commit tree; exact git diff equals copied patch.",
+  "finalSourceManifestSHA256": "daec8686c9f933b3889a0f52b7af6f59e0d97899f00cbce089a24820a6e704cc",
+  "typedOnlySourceManifestSHA256": "d8935f41e0cc374eb022d93f25d86427b6c340bcf2eb4f1bdc71e49c9b3d31f2",
+  "finalTestSHA256": "ee6c2911882972258af70e97382d63621b999b9dd056986a207c60ecade61df0",
+  "typedOnlyTestSHA256": "4fff6a5bee695558efd5627dae91f50c444461559701e587b98f6abc04c44531",
+  "patchSHA256": "f9b1ec5f79ae8518691cd76e01bdb2bd8fb339a904a85cd92270a39ce3f25c6d",
+  "baselineSourceManifestMeaning": "Immediately preceding typed-only failed source, not commit7be; exact commit comparison performed separately above."
+}

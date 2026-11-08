@@ -1,0 +1,7 @@
+Source: .build/S24TypedFieldNov08/ios17-run/native.log
+SHA256: 7c953d73d51dd67517c29aab1b0767f486911922ac0ce8aa67329ddea807ac7a
+Physical LF lines:
+928:     t =    83.72s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (187.5, 369.6) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (187.5, 173.4) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+962:     t =    88.46s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (187.5, 199.8) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (187.5, 475.2) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+1687:     t =   198.45s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (187.5, 475.2) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (187.5, 199.8) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+1721:     t =   203.44s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (187.5, 199.8) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (187.5, 475.2) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
