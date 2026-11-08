@@ -1,0 +1,50 @@
+[
+  {
+    "source": ".build/CIF90Nov07/settings-original/attachments/D87A1B18-06C8-45E2-96ED-954E54FE461C.txt",
+    "sourceSHA256": "fec28a0ed0d4f6e0ce8cb95a82eaa9cf336d16a81e0615412f1c6c3ea6fd997e",
+    "lines": [
+      {
+        "line": 1,
+        "text": "Application, 0x107141e40, pid: 14068, label: 'Settings' <App element pid: 14068>"
+      },
+      {
+        "line": 11,
+        "text": "                    NavigationBar, 0x107157d20, {{0.0, 62.0}, {402.0, 106.0}}, identifier: 'Settings' <AX element pid: 14068, elementOrHash.elementID: 4305942560.14>"
+      },
+      {
+        "line": 56,
+        "text": "                                      Button, 0x1071595d0, {{16.0, 345.3}, {370.0, 52.0}}, identifier: 'com.apple.settings.accessibility', label: 'Accessibility' <AX element pid: 14068, elementOrHash.elementID: 4648717280.121>"
+      },
+      {
+        "line": 58,
+        "text": "                                        StaticText, 0x1071347a0, {{29.7, 357.0}, {137.0, 29.0}}, label: 'Accessibility' <AX element pid: 14068, elementOrHash.elementID: 4648715072.139>"
+      }
+    ],
+    "containsMotionLabel": false,
+    "containsReduceMotionLabel": false
+  },
+  {
+    "source": ".build/CIF90Nov07/settings-original/attachments/6CA6769A-0012-4246-8457-6873ACD6C9C6.txt",
+    "sourceSHA256": "8539d006b7841c16883430ad4067af404d46187ac83ee72951a868f6261eef21",
+    "lines": [
+      {
+        "line": 1,
+        "text": "Application, 0x1070fa910, pid: 14068, label: 'Settings' <App element pid: 14068>"
+      },
+      {
+        "line": 11,
+        "text": "                    NavigationBar, 0x107086e00, {{0.0, 62.0}, {402.0, 106.0}}, identifier: 'Settings' <AX element pid: 14068, elementOrHash.elementID: 4305942560.14>"
+      },
+      {
+        "line": 56,
+        "text": "                                      Button, 0x10708e530, {{16.0, 345.3}, {370.0, 52.0}}, identifier: 'com.apple.settings.accessibility', label: 'Accessibility' <AX element pid: 14068, elementOrHash.elementID: 4648717280.121>"
+      },
+      {
+        "line": 58,
+        "text": "                                        StaticText, 0x10709a8b0, {{29.7, 357.0}, {137.0, 29.0}}, label: 'Accessibility' <AX element pid: 14068, elementOrHash.elementID: 4648715072.139>"
+      }
+    ],
+    "containsMotionLabel": false,
+    "containsReduceMotionLabel": false
+  }
+]

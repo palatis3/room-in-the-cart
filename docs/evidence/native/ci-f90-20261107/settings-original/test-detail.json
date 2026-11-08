@@ -1,0 +1,58 @@
+{
+  "devices" : [
+    {
+      "architecture" : "arm64",
+      "deviceId" : "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+      "deviceName" : "iPhone 17",
+      "modelName" : "iPhone 17",
+      "osBuildNumber" : "23C54",
+      "osVersion" : "26.2",
+      "platform" : "iOS Simulator"
+    }
+  ],
+  "duration" : "Ran for 58 seconds",
+  "durationInSeconds" : 58.420122027397156,
+  "hasMediaAttachments" : true,
+  "hasPerformanceMetrics" : false,
+  "startTime" : 1794097937.672,
+  "testDescription" : "Test case with 1 run",
+  "testIdentifier" : "FreeJourneyUITests/testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced()",
+  "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced",
+  "testName" : "testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced()",
+  "testPlanConfigurations" : [
+    {
+      "configurationId" : "1",
+      "configurationName" : "Test Scheme Action"
+    }
+  ],
+  "testResult" : "Failed",
+  "testRuns" : [
+    {
+      "children" : [
+        {
+          "children" : [
+            {
+              "name" : "Failed to launch com.apple.Preferences: Timed out attempting to launch app.",
+              "nodeType" : "Test Case Run",
+              "result" : "Failed"
+            }
+          ],
+          "duration" : "58s",
+          "durationInSeconds" : 58.420122027397156,
+          "name" : "Test Scheme Action",
+          "nodeIdentifier" : "1",
+          "nodeIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/FreeJourneyUITests/testCancellingSystemShareWithReduceMotionKeepsTheFrozenPickupUnplaced",
+          "nodeType" : "Test Plan Configuration",
+          "result" : "Failed"
+        }
+      ],
+      "details" : "iOS Simulator 26.2",
+      "duration" : "58s",
+      "durationInSeconds" : 58.420122027397156,
+      "name" : "iPhone 17",
+      "nodeIdentifier" : "BC7CEBFB-6B90-4D7E-B85E-BB0102C99F06",
+      "nodeType" : "Device",
+      "result" : "Failed"
+    }
+  ]
+}
