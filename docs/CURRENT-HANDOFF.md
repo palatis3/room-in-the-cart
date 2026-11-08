@@ -2,6 +2,12 @@
 
 Updated November 7, 2026 UTC. The owner resumed and explicitly approved the reviewed hosted staging update; the full first-version goal is active and release acceptance remains incomplete. Historical snapshots are preserved in [the handoff archive](CURRENT-HANDOFF-HISTORY-20261106.md).
 
+## Current unfinished work
+
+The private retailer-confirmed amendment flow is still being implemented on `codex/private-order-amendments`. Its new baseline UI test reached the placed receipt and failed at the missing amendment entry. The draft UI, attribution and effective-order projection have not passed verification or been integrated. Resume that work from its saved branch and working files. The current local build includes the completed placed receipt, independent Records history and reviewed usable-food correction.
+
+The hosted speech warning still needs an attributable blocking stack. The next fixture run captures the app’s Hang Risk runtime log for that suite alongside its existing XCTest result. Required warning checks still fail on the unresolved issue.
+
 ## November 7 usable-food correction
 
 The correction screen now shows the saved usable amount and previews affected meals before saving. A six-to-seven-wrap correction preserved two protected lunch wraps, increased taco coverage from four to five and left the quesadilla need open. Saving rejects an outdated observation or changed meal allocation. After relaunch, SQLite retained the original observation and its linked correction on the same physical receipt. All 684 model tests and the shopper journey passed on iOS 17 with zero recorded runtime warnings. The five targeted iOS 26.2 checks passed before integration. [Verification](evidence/native/arrival-correction-20261107/verification.json)
