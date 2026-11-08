@@ -1,0 +1,14 @@
+{
+  "matrix": {
+    "include": [
+      {
+        "profile": "contributor",
+        "shard": "SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption",
+        "macos_slot": 2
+      }
+    ]
+  },
+  "build_contributor": true,
+  "build_dinner": false,
+  "scope": "targeted diagnostic"
+}

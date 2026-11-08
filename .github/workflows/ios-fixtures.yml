@@ -1,4 +1,5 @@
 name: iOS fixture checks
+run-name: iOS fixtures · ${{ inputs.shard || 'full suite' }}
 
 on:
   pull_request:
@@ -14,6 +15,12 @@ on:
       - 'scripts/plan_ios_fixture_tests.py'
       - 'scripts/test_plan_ios_fixture_tests.py'
   workflow_dispatch:
+    inputs:
+      shard:
+        description: Exact fixture group for a focused diagnostic; leave blank for the full suite
+        type: string
+        required: false
+        default: ''
   workflow_call:
 
 permissions:
@@ -32,18 +39,23 @@ jobs:
     timeout-minutes: 10
     outputs:
       test_matrix: ${{ steps.plan.outputs.matrix }}
+      build_contributor: ${{ steps.plan.outputs.build_contributor }}
+      build_dinner: ${{ steps.plan.outputs.build_dinner }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Validate fixture coverage and balanced contributor groups
         id: plan
+        env:
+          REQUESTED_FIXTURE_SHARD: ${{ github.event_name == 'workflow_dispatch' && inputs.shard || '' }}
         run: |
           python3 scripts/test_ui_automation_contract.py
           python3 scripts/generate_xcode_project.py --check
           python3 scripts/test_plan_ios_fixture_tests.py
-          matrix=$(python3 scripts/plan_ios_fixture_tests.py matrix)
-          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+          python3 scripts/test_select_ios_fixture_work.py
+          python3 scripts/select_ios_fixture_work.py --github-output "$GITHUB_OUTPUT"
 
   build-contributor:
+    if: needs.fixture-plan.outputs.build_contributor == 'true'
     concurrency:
       group: ritc-macos-slot-0
       queue: max
@@ -110,6 +122,7 @@ jobs:
           if-no-files-found: ignore
 
   build-dinner:
+    if: needs.fixture-plan.outputs.build_dinner == 'true'
     concurrency:
       group: ritc-macos-slot-1
       queue: max
@@ -125,6 +138,12 @@ jobs:
     steps: *fixture-build-steps
 
   fixture-tests:
+    if: >-
+      always() && !cancelled() && needs.fixture-plan.result == 'success' &&
+      (needs.build-contributor.result == 'success' ||
+       (needs.fixture-plan.outputs.build_contributor == 'false' && needs.build-contributor.result == 'skipped')) &&
+      (needs.build-dinner.result == 'success' ||
+       (needs.fixture-plan.outputs.build_dinner == 'false' && needs.build-dinner.result == 'skipped'))
     concurrency:
       group: ritc-macos-slot-${{ matrix.macos_slot }}
       queue: max

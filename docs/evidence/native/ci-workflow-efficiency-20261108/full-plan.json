@@ -1,0 +1,94 @@
+{
+  "matrix": {
+    "include": [
+      {
+        "profile": "contributor",
+        "shard": "contributor-balanced-02",
+        "macos_slot": 0
+      },
+      {
+        "profile": "contributor",
+        "shard": "contributor-balanced-05",
+        "macos_slot": 1
+      },
+      {
+        "profile": "contributor",
+        "shard": "contributor-balanced-01",
+        "macos_slot": 2
+      },
+      {
+        "profile": "contributor",
+        "shard": "contributor-balanced-04",
+        "macos_slot": 3
+      },
+      {
+        "profile": "contributor",
+        "shard": "contributor-balanced-03",
+        "macos_slot": 4
+      },
+      {
+        "profile": "contributor",
+        "shard": "RecordsMediaUITests",
+        "macos_slot": 0
+      },
+      {
+        "profile": "contributor",
+        "shard": "SharedDeliveryUITests-stock-and-purchase",
+        "macos_slot": 1
+      },
+      {
+        "profile": "contributor",
+        "shard": "SharedDeliveryUITests-recovery-cook-and-closeout",
+        "macos_slot": 2
+      },
+      {
+        "profile": "contributor",
+        "shard": "SharedFallbackUITests",
+        "macos_slot": 3
+      },
+      {
+        "profile": "contributor",
+        "shard": "SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview",
+        "macos_slot": 4
+      },
+      {
+        "profile": "contributor",
+        "shard": "SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn",
+        "macos_slot": 0
+      },
+      {
+        "profile": "contributor",
+        "shard": "SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult",
+        "macos_slot": 1
+      },
+      {
+        "profile": "contributor",
+        "shard": "SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption",
+        "macos_slot": 2
+      },
+      {
+        "profile": "contributor",
+        "shard": "SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave",
+        "macos_slot": 3
+      },
+      {
+        "profile": "contributor",
+        "shard": "SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable",
+        "macos_slot": 4
+      },
+      {
+        "profile": "contributor",
+        "shard": "SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction",
+        "macos_slot": 0
+      },
+      {
+        "profile": "dinner",
+        "shard": "DinnerDecisionSheetUITests",
+        "macos_slot": 1
+      }
+    ]
+  },
+  "build_contributor": true,
+  "build_dinner": true,
+  "scope": "full fixture suite"
+}

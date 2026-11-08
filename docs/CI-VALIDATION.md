@@ -1,5 +1,43 @@
 # Local CI validation
 
+## Focused hosted feedback
+
+`iOS fixture checks` now accepts an optional manual `shard` input. Leave it blank
+for all fixture groups. An exact shard selects that complete group and only its
+required build profile; it preserves the same compiled-inventory validation,
+selectors, runtime-warning checks, privacy handling, timeouts and five-slot limit.
+The run title names the selected group. A targeted pass is diagnostic evidence,
+not full PR or release acceptance.
+
+List valid groups with `python3 scripts/plan_ios_fixture_tests.py matrix`. Once
+the workflow change is published, a focused run can be dispatched on a development
+branch without an open PR, for example:
+
+```sh
+gh workflow run ios-fixtures.yml --ref codex/my-reviewed-fix \
+  -f shard=SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption
+```
+
+Use a separate development branch for this feedback. Pushing to an open PR still
+starts its full required checks. PR runs and reusable release calls expose no
+shard selection and retain all fixture coverage. Unknown manual names fail in
+the Linux planning job before allocating a macOS build. A failed required build
+cannot be bypassed by the optional-profile skip condition.
+
+Work in this order: reproduce and isolate the failure; keep the original journey
+and assertions; run the focused local/hosted check; then publish a coherent set
+of qualified fixes to the PR for a full regression batch. Reuse a stable local
+DerivedData directory when the toolchain/profile is unchanged, preserving the
+tested source revision/diff and results. Avoid a fresh source path and cold build
+for every small experiment. Keep CI failure diagnostics enabled; collect heavier
+local diagnostics when they answer the failure being investigated.
+
+The November 8 baseline took 150.70 minutes across 43 macOS jobs and 687.37 macOS
+runner-minutes, about 91.22% of five-slot capacity. More static shards alone cannot
+remove most of that work. Source compilation, simulator startup, slow UI
+interactions and unnecessary full diagnostic batches are separate optimization
+targets. [Measured timing evidence](evidence/native/ci-workflow-efficiency-20261108/README.md).
+
 The pre-release workflow launches the Staging scheme on an iPhone simulator. It verifies the installed build’s anonymous service and authentication responses and opens Help and Support from native Settings into Safari. The release gate requires all three cases to run and pass its runtime-warning checks. This job uses one of the existing five macOS slots.
 
 The Linux source check runs the Foundation 2.1 verifier with Python 3.13. It checks the 52 launch requirements, 27 screen contracts, source checksums, SQLite constraints and reference grocery scenarios. The PostgreSQL job separately executes all twenty grocery inbox scenarios against the service.

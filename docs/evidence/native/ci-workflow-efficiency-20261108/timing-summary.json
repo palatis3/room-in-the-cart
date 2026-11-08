@@ -1,0 +1,276 @@
+{
+  "source": "Authenticated GitHub job startedAt/completedAt; full job execution windows, not test times",
+  "cohortSHA": "fe3e14306eee08f0464215b560dccaf21054c6a8",
+  "wallMinutes": 150.7,
+  "macJobCount": 43,
+  "macRunnerMinutes": 687.37,
+  "minutesByActiveMacJobs": {
+    "0": 0.05,
+    "1": 1.18,
+    "2": 1.52,
+    "3": 16.88,
+    "4": 22.83,
+    "5": 108.23
+  },
+  "fiveSlotCapacityUtilization": 0.9122,
+  "jobs": [
+    {
+      "workflow": "Build and test",
+      "job": "swift-packages",
+      "start": 1794161891.0,
+      "end": 1794162063.0
+    },
+    {
+      "workflow": "Build and test",
+      "job": "ios-build",
+      "start": 1794161892.0,
+      "end": 1794162534.0
+    },
+    {
+      "workflow": "Build and test",
+      "job": "ios-release",
+      "start": 1794161892.0,
+      "end": 1794162319.0
+    },
+    {
+      "workflow": "Build and test",
+      "job": "ios-swift-codeql",
+      "start": 1794162014.0,
+      "end": 1794164177.0
+    },
+    {
+      "workflow": "Build and test",
+      "job": "ios-tests (ui-04, 6)",
+      "start": 1794164179.0,
+      "end": 1794165754.0
+    },
+    {
+      "workflow": "Build and test",
+      "job": "ios-tests (ui-02, 7)",
+      "start": 1794163442.0,
+      "end": 1794165114.0
+    },
+    {
+      "workflow": "Build and test",
+      "job": "ios-tests (ui-01, 5)",
+      "start": 1794163153.0,
+      "end": 1794165106.0
+    },
+    {
+      "workflow": "Build and test",
+      "job": "ios-tests (ui-03, 6)",
+      "start": 1794163288.0,
+      "end": 1794164939.0
+    },
+    {
+      "workflow": "Build and test",
+      "job": "ios-tests (models, 713)",
+      "start": 1794163001.0,
+      "end": 1794163511.0
+    },
+    {
+      "workflow": "Build and test",
+      "job": "ios-tests (ui-05, 6)",
+      "start": 1794165091.0,
+      "end": 1794166188.0
+    },
+    {
+      "workflow": "Build and test",
+      "job": "ios-tests (ui-06, 8)",
+      "start": 1794167088.0,
+      "end": 1794168217.0
+    },
+    {
+      "workflow": "Build and test",
+      "job": "ios-tests (ui-07, 8)",
+      "start": 1794166879.0,
+      "end": 1794168363.0
+    },
+    {
+      "workflow": "Build and test",
+      "job": "ios-tests (ui-08, 7)",
+      "start": 1794166385.0,
+      "end": 1794167673.0
+    },
+    {
+      "workflow": "Build and test",
+      "job": "ios-tests (ui-09, 8)",
+      "start": 1794167677.0,
+      "end": 1794169373.0
+    },
+    {
+      "workflow": "Build and test",
+      "job": "ios-tests (ui-10, 7)",
+      "start": 1794166635.0,
+      "end": 1794167981.0
+    },
+    {
+      "workflow": "iOS fixture checks",
+      "job": "Build dinner decision fixture",
+      "start": 1794162472.0,
+      "end": 1794163150.0
+    },
+    {
+      "workflow": "iOS fixture checks",
+      "job": "Build contributor, stock and carryover fixtures",
+      "start": 1794162308.0,
+      "end": 1794162997.0
+    },
+    {
+      "workflow": "iOS fixture checks",
+      "job": "Fixture (contributor-balanced-02)",
+      "start": 1794164038.0,
+      "end": 1794165088.0
+    },
+    {
+      "workflow": "iOS fixture checks",
+      "job": "Fixture (contributor-balanced-01)",
+      "start": 1794165572.0,
+      "end": 1794166876.0
+    },
+    {
+      "workflow": "iOS fixture checks",
+      "job": "Fixture (contributor-balanced-05)",
+      "start": 1794165866.0,
+      "end": 1794167085.0
+    },
+    {
+      "workflow": "iOS fixture checks",
+      "job": "Fixture (contributor-balanced-03)",
+      "start": 1794165758.0,
+      "end": 1794167674.0
+    },
+    {
+      "workflow": "iOS fixture checks",
+      "job": "Fixture (contributor-balanced-04)",
+      "start": 1794164943.0,
+      "end": 1794166382.0
+    },
+    {
+      "workflow": "iOS fixture checks",
+      "job": "Fixture (RecordsMediaUITests)",
+      "start": 1794166190.0,
+      "end": 1794166632.0
+    },
+    {
+      "workflow": "iOS fixture checks",
+      "job": "Fixture (SharedDeliveryUITests-stock-and-purchase)",
+      "start": 1794168220.0,
+      "end": 1794169413.0
+    },
+    {
+      "workflow": "iOS fixture checks",
+      "job": "Fixture (SharedDeliveryUITests-recovery-cook-and-closeout)",
+      "start": 1794168366.0,
+      "end": 1794169365.0
+    },
+    {
+      "workflow": "iOS fixture checks",
+      "job": "Fixture (SharedFallbackUITests)",
+      "start": 1794167675.0,
+      "end": 1794168403.0
+    },
+    {
+      "workflow": "iOS fixture checks",
+      "job": "Fixture (SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview)",
+      "start": 1794169377.0,
+      "end": 1794170259.0
+    },
+    {
+      "workflow": "iOS fixture checks",
+      "job": "Fixture (SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn)",
+      "start": 1794167983.0,
+      "end": 1794168617.0
+    },
+    {
+      "workflow": "iOS fixture checks",
+      "job": "Fixture (SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult)",
+      "start": 1794169417.0,
+      "end": 1794170063.0
+    },
+    {
+      "workflow": "iOS fixture checks",
+      "job": "Fixture (SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption)",
+      "start": 1794169368.0,
+      "end": 1794170341.0
+    },
+    {
+      "workflow": "iOS fixture checks",
+      "job": "Fixture (SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave)",
+      "start": 1794169369.0,
+      "end": 1794170525.0
+    },
+    {
+      "workflow": "iOS fixture checks",
+      "job": "Fixture (SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable)",
+      "start": 1794170263.0,
+      "end": 1794170772.0
+    },
+    {
+      "workflow": "iOS fixture checks",
+      "job": "Fixture (SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction)",
+      "start": 1794170067.0,
+      "end": 1794170930.0
+    },
+    {
+      "workflow": "iOS fixture checks",
+      "job": "Fixture (DinnerDecisionSheetUITests)",
+      "start": 1794170263.0,
+      "end": 1794170859.0
+    },
+    {
+      "workflow": "iOS Release performance",
+      "job": "Build optimized iPhone test products",
+      "start": 1794161892.0,
+      "end": 1794162589.0
+    },
+    {
+      "workflow": "iOS Release performance",
+      "job": "Release performance (rendered)",
+      "start": 1794165109.0,
+      "end": 1794165863.0
+    },
+    {
+      "workflow": "iOS Release performance",
+      "job": "Release performance (scroll)",
+      "start": 1794165116.0,
+      "end": 1794165570.0
+    },
+    {
+      "workflow": "iOS Release performance",
+      "job": "Release performance (launch)",
+      "start": 1794163514.0,
+      "end": 1794164035.0
+    },
+    {
+      "workflow": "iOS deep checks",
+      "job": "sanitizers (thread)",
+      "start": 1794162067.0,
+      "end": 1794162305.0
+    },
+    {
+      "workflow": "iOS deep checks",
+      "job": "storekit (en, US English \u2014 local StoreKit)",
+      "start": 1794162595.0,
+      "end": 1794163439.0
+    },
+    {
+      "workflow": "iOS deep checks",
+      "job": "sanitizers (address)",
+      "start": 1794162322.0,
+      "end": 1794162468.0
+    },
+    {
+      "workflow": "iOS deep checks",
+      "job": "storekit (es, US Spanish app \u00b7 Spanish (Mexico) offer \u00b7 USA storefront)",
+      "start": 1794162538.0,
+      "end": 1794163285.0
+    },
+    {
+      "workflow": "Native Swift HTTPS and PostgreSQL",
+      "job": "native-wire",
+      "start": 1794161891.0,
+      "end": 1794162011.0
+    }
+  ]
+}

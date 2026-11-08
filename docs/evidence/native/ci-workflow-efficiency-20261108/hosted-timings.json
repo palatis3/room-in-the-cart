@@ -1,0 +1,5084 @@
+[
+  {
+    "id": 42509307282,
+    "createdAt": "2026-11-08T18:18:08Z",
+    "jobs": [
+      {
+        "completedAt": "2026-11-08T18:18:36Z",
+        "conclusion": "success",
+        "databaseId": 128818687379,
+        "name": "source-checks",
+        "startedAt": "2026-11-08T18:18:12Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T18:18:14Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T18:18:13Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:21Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T18:18:14Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:25Z",
+            "conclusion": "success",
+            "name": "Validate workflow syntax and expression references",
+            "number": 3,
+            "startedAt": "2026-11-08T18:18:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:25Z",
+            "conclusion": "success",
+            "name": "Verify the pinned Node release is supported and security-current",
+            "number": 4,
+            "startedAt": "2026-11-08T18:18:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:32Z",
+            "conclusion": "success",
+            "name": "Validate generated files, localization and CI test selection",
+            "number": 5,
+            "startedAt": "2026-11-08T18:18:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:32Z",
+            "conclusion": "success",
+            "name": "Run actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+            "number": 6,
+            "startedAt": "2026-11-08T18:18:32Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:32Z",
+            "conclusion": "success",
+            "name": "Verify the Foundation 2.1 product contracts and reference scenarios",
+            "number": 7,
+            "startedAt": "2026-11-08T18:18:32Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:33Z",
+            "conclusion": "success",
+            "name": "Post Run actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+            "number": 13,
+            "startedAt": "2026-11-08T18:18:32Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:33Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 14,
+            "startedAt": "2026-11-08T18:18:33Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:33Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 15,
+            "startedAt": "2026-11-08T18:18:33Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307282/job/128818687379"
+      },
+      {
+        "completedAt": "2026-11-08T18:20:02Z",
+        "conclusion": "success",
+        "databaseId": 128818687452,
+        "name": "service-postgres",
+        "startedAt": "2026-11-08T18:18:12Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T18:18:14Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T18:18:13Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:27Z",
+            "conclusion": "success",
+            "name": "Initialize containers",
+            "number": 2,
+            "startedAt": "2026-11-08T18:18:14Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:30Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 3,
+            "startedAt": "2026-11-08T18:18:27Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:32Z",
+            "conclusion": "success",
+            "name": "Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "number": 4,
+            "startedAt": "2026-11-08T18:18:30Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:34Z",
+            "conclusion": "success",
+            "name": "Run npm ci --ignore-scripts",
+            "number": 5,
+            "startedAt": "2026-11-08T18:18:32Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:39Z",
+            "conclusion": "success",
+            "name": "Build the web client for the PostgreSQL browser retry tests",
+            "number": 6,
+            "startedAt": "2026-11-08T18:18:34Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:39Z",
+            "conclusion": "success",
+            "name": "Prepare disposable provider-session and maintenance fixtures",
+            "number": 7,
+            "startedAt": "2026-11-08T18:18:39Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:40Z",
+            "conclusion": "success",
+            "name": "Run npm run migrate",
+            "number": 8,
+            "startedAt": "2026-11-08T18:18:39Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:40Z",
+            "conclusion": "success",
+            "name": "Create restricted app, guardian verification and worker roles",
+            "number": 9,
+            "startedAt": "2026-11-08T18:18:40Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:19:57Z",
+            "conclusion": "success",
+            "name": "Run npm test && npm run test:integration",
+            "number": 10,
+            "startedAt": "2026-11-08T18:18:40Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:19:59Z",
+            "conclusion": "success",
+            "name": "Verify maintenance with a separate database and worker role",
+            "number": 11,
+            "startedAt": "2026-11-08T18:19:57Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:19:59Z",
+            "conclusion": "success",
+            "name": "Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "number": 20,
+            "startedAt": "2026-11-08T18:19:59Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:19:59Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 21,
+            "startedAt": "2026-11-08T18:19:59Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:19:59Z",
+            "conclusion": "success",
+            "name": "Stop containers",
+            "number": 22,
+            "startedAt": "2026-11-08T18:19:59Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:20:00Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 23,
+            "startedAt": "2026-11-08T18:19:59Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307282/job/128818687452"
+      },
+      {
+        "completedAt": "2026-11-08T18:18:40Z",
+        "conclusion": "success",
+        "databaseId": 128818687498,
+        "name": "typescript (service)",
+        "startedAt": "2026-11-08T18:18:12Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T18:18:14Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T18:18:13Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:20Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T18:18:14Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:22Z",
+            "conclusion": "success",
+            "name": "Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "number": 3,
+            "startedAt": "2026-11-08T18:18:20Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:24Z",
+            "conclusion": "success",
+            "name": "Run npm ci --ignore-scripts",
+            "number": 4,
+            "startedAt": "2026-11-08T18:18:22Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:37Z",
+            "conclusion": "success",
+            "name": "Run npm test",
+            "number": 5,
+            "startedAt": "2026-11-08T18:18:24Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:37Z",
+            "conclusion": "skipped",
+            "name": "Check contributor outbox and history privacy in Chrome",
+            "number": 6,
+            "startedAt": "2026-11-08T18:18:37Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:37Z",
+            "conclusion": "success",
+            "name": "Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "number": 11,
+            "startedAt": "2026-11-08T18:18:37Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:37Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 12,
+            "startedAt": "2026-11-08T18:18:37Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:37Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 13,
+            "startedAt": "2026-11-08T18:18:37Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307282/job/128818687498"
+      },
+      {
+        "completedAt": "2026-11-08T18:21:03Z",
+        "conclusion": "success",
+        "databaseId": 128818687514,
+        "name": "swift-packages",
+        "startedAt": "2026-11-08T18:18:11Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T18:18:12Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T18:18:12Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:21Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T18:18:12Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:20:54Z",
+            "conclusion": "success",
+            "name": "Test Swift packages and collect coverage",
+            "number": 3,
+            "startedAt": "2026-11-08T18:18:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:20:59Z",
+            "conclusion": "success",
+            "name": "Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+            "number": 4,
+            "startedAt": "2026-11-08T18:20:54Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:21:00Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 8,
+            "startedAt": "2026-11-08T18:20:59Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:21:02Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 9,
+            "startedAt": "2026-11-08T18:21:00Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307282/job/128818687514"
+      },
+      {
+        "completedAt": "2026-11-08T18:18:38Z",
+        "conclusion": "success",
+        "databaseId": 128818687524,
+        "name": "typescript (web)",
+        "startedAt": "2026-11-08T18:18:11Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T18:18:12Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T18:18:12Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:20Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T18:18:12Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:20Z",
+            "conclusion": "success",
+            "name": "Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "number": 3,
+            "startedAt": "2026-11-08T18:18:20Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:22Z",
+            "conclusion": "success",
+            "name": "Run npm ci --ignore-scripts",
+            "number": 4,
+            "startedAt": "2026-11-08T18:18:20Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:29Z",
+            "conclusion": "success",
+            "name": "Run npm test",
+            "number": 5,
+            "startedAt": "2026-11-08T18:18:22Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:37Z",
+            "conclusion": "success",
+            "name": "Check contributor outbox and history privacy in Chrome",
+            "number": 6,
+            "startedAt": "2026-11-08T18:18:29Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:37Z",
+            "conclusion": "success",
+            "name": "Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "number": 11,
+            "startedAt": "2026-11-08T18:18:37Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:37Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 12,
+            "startedAt": "2026-11-08T18:18:37Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:37Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 13,
+            "startedAt": "2026-11-08T18:18:37Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307282/job/128818687524"
+      },
+      {
+        "completedAt": "2026-11-08T18:28:54Z",
+        "conclusion": "success",
+        "databaseId": 128818687530,
+        "name": "ios-build",
+        "startedAt": "2026-11-08T18:18:12Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T18:18:15Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T18:18:13Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:24Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T18:18:15Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:25Z",
+            "conclusion": "success",
+            "name": "Check supported keyboard automation before simulator setup",
+            "number": 3,
+            "startedAt": "2026-11-08T18:18:24Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:39Z",
+            "conclusion": "success",
+            "name": "Record toolchain and select iPhone",
+            "number": 4,
+            "startedAt": "2026-11-08T18:18:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:22:37Z",
+            "conclusion": "success",
+            "name": "Build iPhone simulator test products once",
+            "number": 5,
+            "startedAt": "2026-11-08T18:18:39Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:22:38Z",
+            "conclusion": "success",
+            "name": "Verify the compiled simulator app",
+            "number": 6,
+            "startedAt": "2026-11-08T18:22:37Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:27:31Z",
+            "conclusion": "success",
+            "name": "Discover compiled tests and balance UI groups",
+            "number": 7,
+            "startedAt": "2026-11-08T18:22:38Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:27:36Z",
+            "conclusion": "success",
+            "name": "Retain test discovery attempts",
+            "number": 8,
+            "startedAt": "2026-11-08T18:27:31Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:28:10Z",
+            "conclusion": "success",
+            "name": "Package test products and exact selection",
+            "number": 9,
+            "startedAt": "2026-11-08T18:27:36Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:28:15Z",
+            "conclusion": "success",
+            "name": "Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+            "number": 10,
+            "startedAt": "2026-11-08T18:28:10Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:28:19Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 20,
+            "startedAt": "2026-11-08T18:28:16Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:28:52Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 21,
+            "startedAt": "2026-11-08T18:28:19Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307282/job/128818687530"
+      },
+      {
+        "completedAt": "2026-11-08T18:25:19Z",
+        "conclusion": "success",
+        "databaseId": 128818687542,
+        "name": "ios-release",
+        "startedAt": "2026-11-08T18:18:12Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T18:18:15Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T18:18:14Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:24Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T18:18:15Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:25:12Z",
+            "conclusion": "success",
+            "name": "Compile unsigned Release for iPhone",
+            "number": 3,
+            "startedAt": "2026-11-08T18:18:24Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:25:13Z",
+            "conclusion": "success",
+            "name": "Verify the compiled iPhone app and embedded extensions",
+            "number": 4,
+            "startedAt": "2026-11-08T18:25:12Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:25:15Z",
+            "conclusion": "success",
+            "name": "Retain Release compilation log",
+            "number": 5,
+            "startedAt": "2026-11-08T18:25:13Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:25:16Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 10,
+            "startedAt": "2026-11-08T18:25:15Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:25:18Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 11,
+            "startedAt": "2026-11-08T18:25:16Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307282/job/128818687542"
+      },
+      {
+        "completedAt": "2026-11-08T18:56:17Z",
+        "conclusion": "success",
+        "databaseId": 128818688202,
+        "name": "ios-swift-codeql",
+        "startedAt": "2026-11-08T18:20:14Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T18:20:16Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T18:20:15Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:20:26Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T18:20:16Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:20:34Z",
+            "conclusion": "success",
+            "name": "Record Swift analysis toolchain",
+            "number": 3,
+            "startedAt": "2026-11-08T18:20:26Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:20:56Z",
+            "conclusion": "success",
+            "name": "Validate Release Swift settings before tracing",
+            "number": 4,
+            "startedAt": "2026-11-08T18:20:34Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:21:19Z",
+            "conclusion": "success",
+            "name": "Initialize Swift security analysis",
+            "number": 5,
+            "startedAt": "2026-11-08T18:20:56Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:53:36Z",
+            "conclusion": "success",
+            "name": "Compile Release Swift sources for CodeQL",
+            "number": 6,
+            "startedAt": "2026-11-08T18:21:19Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:55:46Z",
+            "conclusion": "success",
+            "name": "Analyze Swift security findings",
+            "number": 7,
+            "startedAt": "2026-11-08T18:53:36Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:55:47Z",
+            "conclusion": "success",
+            "name": "Retain Swift analysis compilation logs",
+            "number": 8,
+            "startedAt": "2026-11-08T18:55:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:55:47Z",
+            "conclusion": "success",
+            "name": "Post Analyze Swift security findings",
+            "number": 14,
+            "startedAt": "2026-11-08T18:55:47Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:56:07Z",
+            "conclusion": "success",
+            "name": "Post Initialize Swift security analysis",
+            "number": 15,
+            "startedAt": "2026-11-08T18:55:47Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:56:11Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 16,
+            "startedAt": "2026-11-08T18:56:07Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:56:13Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 17,
+            "startedAt": "2026-11-08T18:56:11Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307282/job/128818688202"
+      },
+      {
+        "completedAt": "2026-11-08T19:22:34Z",
+        "conclusion": "success",
+        "databaseId": 128821441506,
+        "name": "ios-tests (ui-04, 6)",
+        "startedAt": "2026-11-08T18:56:19Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T18:56:22Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T18:56:20Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:56:33Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T18:56:22Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:56:35Z",
+            "conclusion": "success",
+            "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+            "number": 3,
+            "startedAt": "2026-11-08T18:56:33Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:56:36Z",
+            "conclusion": "success",
+            "name": "Restore iPhone test products and selection",
+            "number": 4,
+            "startedAt": "2026-11-08T18:56:35Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:57:50Z",
+            "conclusion": "success",
+            "name": "Select iPhone simulator with owned-device pilot for ui-01",
+            "number": 5,
+            "startedAt": "2026-11-08T18:56:36Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:59:23Z",
+            "conclusion": "success",
+            "name": "Wait for simulator boot",
+            "number": 6,
+            "startedAt": "2026-11-08T18:57:50Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:22:18Z",
+            "conclusion": "success",
+            "name": "Run selected tests and verify complete execution",
+            "number": 7,
+            "startedAt": "2026-11-08T18:59:23Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:22:19Z",
+            "conclusion": "success",
+            "name": "Clean up only the owned simulator after result export",
+            "number": 8,
+            "startedAt": "2026-11-08T19:22:18Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:22:22Z",
+            "conclusion": "success",
+            "name": "Retain result bundles, screenshots, logs and timing",
+            "number": 9,
+            "startedAt": "2026-11-08T19:22:19Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:22:22Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 18,
+            "startedAt": "2026-11-08T19:22:22Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:22:34Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 19,
+            "startedAt": "2026-11-08T19:22:22Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307282/job/128821441506"
+      },
+      {
+        "completedAt": "2026-11-08T19:11:54Z",
+        "conclusion": "success",
+        "databaseId": 128821441752,
+        "name": "ios-tests (ui-02, 7)",
+        "startedAt": "2026-11-08T18:44:02Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T18:44:05Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T18:44:04Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:44:17Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T18:44:05Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:44:23Z",
+            "conclusion": "success",
+            "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+            "number": 3,
+            "startedAt": "2026-11-08T18:44:17Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:44:24Z",
+            "conclusion": "success",
+            "name": "Restore iPhone test products and selection",
+            "number": 4,
+            "startedAt": "2026-11-08T18:44:23Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:44:55Z",
+            "conclusion": "success",
+            "name": "Select iPhone simulator with owned-device pilot for ui-01",
+            "number": 5,
+            "startedAt": "2026-11-08T18:44:24Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:46:47Z",
+            "conclusion": "success",
+            "name": "Wait for simulator boot",
+            "number": 6,
+            "startedAt": "2026-11-08T18:44:55Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:11:29Z",
+            "conclusion": "success",
+            "name": "Run selected tests and verify complete execution",
+            "number": 7,
+            "startedAt": "2026-11-08T18:46:47Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:11:30Z",
+            "conclusion": "success",
+            "name": "Clean up only the owned simulator after result export",
+            "number": 8,
+            "startedAt": "2026-11-08T19:11:29Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:11:34Z",
+            "conclusion": "success",
+            "name": "Retain result bundles, screenshots, logs and timing",
+            "number": 9,
+            "startedAt": "2026-11-08T19:11:30Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:11:35Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 18,
+            "startedAt": "2026-11-08T19:11:34Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:11:52Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 19,
+            "startedAt": "2026-11-08T19:11:35Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307282/job/128821441752"
+      },
+      {
+        "completedAt": "2026-11-08T19:11:46Z",
+        "conclusion": "failure",
+        "databaseId": 128821441785,
+        "name": "ios-tests (ui-01, 5)",
+        "startedAt": "2026-11-08T18:39:13Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T18:39:14Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T18:39:13Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:39:25Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T18:39:14Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:39:27Z",
+            "conclusion": "success",
+            "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+            "number": 3,
+            "startedAt": "2026-11-08T18:39:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:39:27Z",
+            "conclusion": "success",
+            "name": "Restore iPhone test products and selection",
+            "number": 4,
+            "startedAt": "2026-11-08T18:39:27Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:40:20Z",
+            "conclusion": "success",
+            "name": "Select iPhone simulator with owned-device pilot for ui-01",
+            "number": 5,
+            "startedAt": "2026-11-08T18:39:27Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:42:00Z",
+            "conclusion": "success",
+            "name": "Wait for simulator boot",
+            "number": 6,
+            "startedAt": "2026-11-08T18:40:20Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:11:19Z",
+            "conclusion": "failure",
+            "name": "Run selected tests and verify complete execution",
+            "number": 7,
+            "startedAt": "2026-11-08T18:42:01Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:11:30Z",
+            "conclusion": "success",
+            "name": "Clean up only the owned simulator after result export",
+            "number": 8,
+            "startedAt": "2026-11-08T19:11:19Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:11:41Z",
+            "conclusion": "success",
+            "name": "Retain result bundles, screenshots, logs and timing",
+            "number": 9,
+            "startedAt": "2026-11-08T19:11:30Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:11:42Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 18,
+            "startedAt": "2026-11-08T19:11:41Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:11:45Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 19,
+            "startedAt": "2026-11-08T19:11:42Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307282/job/128821441785"
+      },
+      {
+        "completedAt": "2026-11-08T19:08:59Z",
+        "conclusion": "success",
+        "databaseId": 128821441811,
+        "name": "ios-tests (ui-03, 6)",
+        "startedAt": "2026-11-08T18:41:28Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T18:41:30Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T18:41:28Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:41:39Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T18:41:30Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:41:41Z",
+            "conclusion": "success",
+            "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+            "number": 3,
+            "startedAt": "2026-11-08T18:41:39Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:41:41Z",
+            "conclusion": "success",
+            "name": "Restore iPhone test products and selection",
+            "number": 4,
+            "startedAt": "2026-11-08T18:41:41Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:42:36Z",
+            "conclusion": "success",
+            "name": "Select iPhone simulator with owned-device pilot for ui-01",
+            "number": 5,
+            "startedAt": "2026-11-08T18:41:41Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:43:50Z",
+            "conclusion": "success",
+            "name": "Wait for simulator boot",
+            "number": 6,
+            "startedAt": "2026-11-08T18:42:36Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:08:31Z",
+            "conclusion": "success",
+            "name": "Run selected tests and verify complete execution",
+            "number": 7,
+            "startedAt": "2026-11-08T18:43:50Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:08:32Z",
+            "conclusion": "success",
+            "name": "Clean up only the owned simulator after result export",
+            "number": 8,
+            "startedAt": "2026-11-08T19:08:31Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:08:35Z",
+            "conclusion": "success",
+            "name": "Retain result bundles, screenshots, logs and timing",
+            "number": 9,
+            "startedAt": "2026-11-08T19:08:32Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:08:37Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 18,
+            "startedAt": "2026-11-08T19:08:35Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:08:57Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 19,
+            "startedAt": "2026-11-08T19:08:37Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307282/job/128821441811"
+      },
+      {
+        "completedAt": "2026-11-08T18:45:11Z",
+        "conclusion": "success",
+        "databaseId": 128821441900,
+        "name": "ios-tests (models, 713)",
+        "startedAt": "2026-11-08T18:36:41Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T18:36:43Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T18:36:42Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:36:54Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T18:36:43Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:37:00Z",
+            "conclusion": "success",
+            "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+            "number": 3,
+            "startedAt": "2026-11-08T18:36:54Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:37:01Z",
+            "conclusion": "success",
+            "name": "Restore iPhone test products and selection",
+            "number": 4,
+            "startedAt": "2026-11-08T18:37:00Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:37:25Z",
+            "conclusion": "success",
+            "name": "Select iPhone simulator with owned-device pilot for ui-01",
+            "number": 5,
+            "startedAt": "2026-11-08T18:37:01Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:39:02Z",
+            "conclusion": "success",
+            "name": "Wait for simulator boot",
+            "number": 6,
+            "startedAt": "2026-11-08T18:37:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:44:42Z",
+            "conclusion": "success",
+            "name": "Run selected tests and verify complete execution",
+            "number": 7,
+            "startedAt": "2026-11-08T18:39:02Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:44:43Z",
+            "conclusion": "success",
+            "name": "Clean up only the owned simulator after result export",
+            "number": 8,
+            "startedAt": "2026-11-08T18:44:42Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:44:50Z",
+            "conclusion": "success",
+            "name": "Retain result bundles, screenshots, logs and timing",
+            "number": 9,
+            "startedAt": "2026-11-08T18:44:43Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:44:51Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 18,
+            "startedAt": "2026-11-08T18:44:50Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:45:09Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 19,
+            "startedAt": "2026-11-08T18:44:51Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307282/job/128821441900"
+      },
+      {
+        "completedAt": "2026-11-08T19:29:48Z",
+        "conclusion": "success",
+        "databaseId": 128825507751,
+        "name": "ios-tests (ui-05, 6)",
+        "startedAt": "2026-11-08T19:11:31Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T19:11:32Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T19:11:31Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:11:45Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T19:11:32Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:11:48Z",
+            "conclusion": "success",
+            "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+            "number": 3,
+            "startedAt": "2026-11-08T19:11:45Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:11:49Z",
+            "conclusion": "success",
+            "name": "Restore iPhone test products and selection",
+            "number": 4,
+            "startedAt": "2026-11-08T19:11:48Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:12:04Z",
+            "conclusion": "success",
+            "name": "Select iPhone simulator with owned-device pilot for ui-01",
+            "number": 5,
+            "startedAt": "2026-11-08T19:11:49Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:13:07Z",
+            "conclusion": "success",
+            "name": "Wait for simulator boot",
+            "number": 6,
+            "startedAt": "2026-11-08T19:12:04Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:29:33Z",
+            "conclusion": "success",
+            "name": "Run selected tests and verify complete execution",
+            "number": 7,
+            "startedAt": "2026-11-08T19:13:07Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:29:33Z",
+            "conclusion": "success",
+            "name": "Clean up only the owned simulator after result export",
+            "number": 8,
+            "startedAt": "2026-11-08T19:29:33Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:29:36Z",
+            "conclusion": "success",
+            "name": "Retain result bundles, screenshots, logs and timing",
+            "number": 9,
+            "startedAt": "2026-11-08T19:29:33Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:29:36Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 18,
+            "startedAt": "2026-11-08T19:29:36Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:29:46Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 19,
+            "startedAt": "2026-11-08T19:29:36Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307282/job/128825507751"
+      },
+      {
+        "completedAt": "2026-11-08T20:03:37Z",
+        "conclusion": "success",
+        "databaseId": 128831586850,
+        "name": "ios-tests (ui-06, 8)",
+        "startedAt": "2026-11-08T19:44:48Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T19:44:50Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T19:44:48Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:44:57Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T19:44:50Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:45:03Z",
+            "conclusion": "success",
+            "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+            "number": 3,
+            "startedAt": "2026-11-08T19:44:57Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:45:03Z",
+            "conclusion": "success",
+            "name": "Restore iPhone test products and selection",
+            "number": 4,
+            "startedAt": "2026-11-08T19:45:03Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:45:23Z",
+            "conclusion": "success",
+            "name": "Select iPhone simulator with owned-device pilot for ui-01",
+            "number": 5,
+            "startedAt": "2026-11-08T19:45:03Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:46:21Z",
+            "conclusion": "success",
+            "name": "Wait for simulator boot",
+            "number": 6,
+            "startedAt": "2026-11-08T19:45:23Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:03:20Z",
+            "conclusion": "success",
+            "name": "Run selected tests and verify complete execution",
+            "number": 7,
+            "startedAt": "2026-11-08T19:46:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:03:20Z",
+            "conclusion": "success",
+            "name": "Clean up only the owned simulator after result export",
+            "number": 8,
+            "startedAt": "2026-11-08T20:03:20Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:03:23Z",
+            "conclusion": "success",
+            "name": "Retain result bundles, screenshots, logs and timing",
+            "number": 9,
+            "startedAt": "2026-11-08T20:03:20Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:03:24Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 18,
+            "startedAt": "2026-11-08T20:03:23Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:03:35Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 19,
+            "startedAt": "2026-11-08T20:03:24Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307282/job/128831586850"
+      },
+      {
+        "completedAt": "2026-11-08T20:06:03Z",
+        "conclusion": "success",
+        "databaseId": 128832321169,
+        "name": "ios-tests (ui-07, 8)",
+        "startedAt": "2026-11-08T19:41:19Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T19:41:21Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T19:41:19Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:41:34Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T19:41:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:41:37Z",
+            "conclusion": "success",
+            "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+            "number": 3,
+            "startedAt": "2026-11-08T19:41:34Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:41:38Z",
+            "conclusion": "success",
+            "name": "Restore iPhone test products and selection",
+            "number": 4,
+            "startedAt": "2026-11-08T19:41:37Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:42:59Z",
+            "conclusion": "success",
+            "name": "Select iPhone simulator with owned-device pilot for ui-01",
+            "number": 5,
+            "startedAt": "2026-11-08T19:41:38Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:44:56Z",
+            "conclusion": "success",
+            "name": "Wait for simulator boot",
+            "number": 6,
+            "startedAt": "2026-11-08T19:42:59Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:05:47Z",
+            "conclusion": "success",
+            "name": "Run selected tests and verify complete execution",
+            "number": 7,
+            "startedAt": "2026-11-08T19:44:58Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:05:47Z",
+            "conclusion": "success",
+            "name": "Clean up only the owned simulator after result export",
+            "number": 8,
+            "startedAt": "2026-11-08T20:05:47Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:05:50Z",
+            "conclusion": "success",
+            "name": "Retain result bundles, screenshots, logs and timing",
+            "number": 9,
+            "startedAt": "2026-11-08T20:05:47Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:05:51Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 18,
+            "startedAt": "2026-11-08T20:05:50Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:06:02Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 19,
+            "startedAt": "2026-11-08T20:05:51Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307282/job/128832321169"
+      },
+      {
+        "completedAt": "2026-11-08T19:54:33Z",
+        "conclusion": "success",
+        "databaseId": 128832354942,
+        "name": "ios-tests (ui-08, 7)",
+        "startedAt": "2026-11-08T19:33:05Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T19:33:08Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T19:33:06Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:33:19Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T19:33:08Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:33:22Z",
+            "conclusion": "success",
+            "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+            "number": 3,
+            "startedAt": "2026-11-08T19:33:19Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:33:23Z",
+            "conclusion": "success",
+            "name": "Restore iPhone test products and selection",
+            "number": 4,
+            "startedAt": "2026-11-08T19:33:22Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:33:46Z",
+            "conclusion": "success",
+            "name": "Select iPhone simulator with owned-device pilot for ui-01",
+            "number": 5,
+            "startedAt": "2026-11-08T19:33:23Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:35:34Z",
+            "conclusion": "success",
+            "name": "Wait for simulator boot",
+            "number": 6,
+            "startedAt": "2026-11-08T19:33:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:54:11Z",
+            "conclusion": "success",
+            "name": "Run selected tests and verify complete execution",
+            "number": 7,
+            "startedAt": "2026-11-08T19:35:34Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:54:12Z",
+            "conclusion": "success",
+            "name": "Clean up only the owned simulator after result export",
+            "number": 8,
+            "startedAt": "2026-11-08T19:54:11Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:54:16Z",
+            "conclusion": "success",
+            "name": "Retain result bundles, screenshots, logs and timing",
+            "number": 9,
+            "startedAt": "2026-11-08T19:54:12Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:54:17Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 18,
+            "startedAt": "2026-11-08T19:54:16Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:54:31Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 19,
+            "startedAt": "2026-11-08T19:54:17Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307282/job/128832354942"
+      },
+      {
+        "completedAt": "2026-11-08T20:22:53Z",
+        "conclusion": "success",
+        "databaseId": 128835123975,
+        "name": "ios-tests (ui-09, 8)",
+        "startedAt": "2026-11-08T19:54:37Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T19:54:39Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T19:54:38Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:54:49Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T19:54:39Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:54:52Z",
+            "conclusion": "success",
+            "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+            "number": 3,
+            "startedAt": "2026-11-08T19:54:49Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:54:52Z",
+            "conclusion": "success",
+            "name": "Restore iPhone test products and selection",
+            "number": 4,
+            "startedAt": "2026-11-08T19:54:52Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:55:36Z",
+            "conclusion": "success",
+            "name": "Select iPhone simulator with owned-device pilot for ui-01",
+            "number": 5,
+            "startedAt": "2026-11-08T19:54:52Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:57:23Z",
+            "conclusion": "success",
+            "name": "Wait for simulator boot",
+            "number": 6,
+            "startedAt": "2026-11-08T19:55:36Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:22:31Z",
+            "conclusion": "success",
+            "name": "Run selected tests and verify complete execution",
+            "number": 7,
+            "startedAt": "2026-11-08T19:57:29Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:22:32Z",
+            "conclusion": "success",
+            "name": "Clean up only the owned simulator after result export",
+            "number": 8,
+            "startedAt": "2026-11-08T20:22:31Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:22:37Z",
+            "conclusion": "success",
+            "name": "Retain result bundles, screenshots, logs and timing",
+            "number": 9,
+            "startedAt": "2026-11-08T20:22:32Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:22:38Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 18,
+            "startedAt": "2026-11-08T20:22:37Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:22:51Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 19,
+            "startedAt": "2026-11-08T20:22:38Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307282/job/128835123975"
+      },
+      {
+        "completedAt": "2026-11-08T19:59:41Z",
+        "conclusion": "success",
+        "databaseId": 128836960270,
+        "name": "ios-tests (ui-10, 7)",
+        "startedAt": "2026-11-08T19:37:15Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T19:37:16Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T19:37:15Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:37:30Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T19:37:16Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:37:31Z",
+            "conclusion": "success",
+            "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+            "number": 3,
+            "startedAt": "2026-11-08T19:37:30Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:37:32Z",
+            "conclusion": "success",
+            "name": "Restore iPhone test products and selection",
+            "number": 4,
+            "startedAt": "2026-11-08T19:37:31Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:37:55Z",
+            "conclusion": "success",
+            "name": "Select iPhone simulator with owned-device pilot for ui-01",
+            "number": 5,
+            "startedAt": "2026-11-08T19:37:32Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:39:43Z",
+            "conclusion": "success",
+            "name": "Wait for simulator boot",
+            "number": 6,
+            "startedAt": "2026-11-08T19:37:55Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:59:19Z",
+            "conclusion": "success",
+            "name": "Run selected tests and verify complete execution",
+            "number": 7,
+            "startedAt": "2026-11-08T19:39:44Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:59:19Z",
+            "conclusion": "success",
+            "name": "Clean up only the owned simulator after result export",
+            "number": 8,
+            "startedAt": "2026-11-08T19:59:19Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:59:23Z",
+            "conclusion": "success",
+            "name": "Retain result bundles, screenshots, logs and timing",
+            "number": 9,
+            "startedAt": "2026-11-08T19:59:19Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:59:23Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 18,
+            "startedAt": "2026-11-08T19:59:23Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:59:39Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 19,
+            "startedAt": "2026-11-08T19:59:23Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307282/job/128836960270"
+      },
+      {
+        "completedAt": "2026-11-08T20:22:59Z",
+        "conclusion": "failure",
+        "databaseId": 128850665203,
+        "name": "CI gate",
+        "startedAt": "2026-11-08T20:22:56Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T20:22:57Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T20:22:57Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:22:57Z",
+            "conclusion": "failure",
+            "name": "Require every build and test job to succeed",
+            "number": 2,
+            "startedAt": "2026-11-08T20:22:57Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:22:57Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 3,
+            "startedAt": "2026-11-08T20:22:57Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307282/job/128850665203"
+      }
+    ],
+    "name": "Build and test",
+    "startedAt": "2026-11-08T18:18:08Z",
+    "updatedAt": "2026-11-08T20:23:00Z"
+  },
+  {
+    "id": 42509307308,
+    "createdAt": "2026-11-08T18:18:08Z",
+    "jobs": [
+      {
+        "completedAt": "2026-11-08T18:18:22Z",
+        "conclusion": "success",
+        "databaseId": 128818687314,
+        "name": "fixture-plan",
+        "startedAt": "2026-11-08T18:18:12Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T18:18:13Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T18:18:13Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:20Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T18:18:13Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:20Z",
+            "conclusion": "success",
+            "name": "Validate fixture coverage and balanced contributor groups",
+            "number": 3,
+            "startedAt": "2026-11-08T18:18:20Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:20Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 6,
+            "startedAt": "2026-11-08T18:18:20Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:20Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 7,
+            "startedAt": "2026-11-08T18:18:20Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307308/job/128818687314"
+      },
+      {
+        "completedAt": "2026-11-08T18:39:10Z",
+        "conclusion": "success",
+        "databaseId": 128818750513,
+        "name": "Build dinner decision fixture",
+        "startedAt": "2026-11-08T18:27:52Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T18:27:53Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T18:27:52Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:28:04Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T18:27:53Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:30:16Z",
+            "conclusion": "success",
+            "name": "Record Xcode and select an iPhone simulator",
+            "number": 3,
+            "startedAt": "2026-11-08T18:28:04Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:34:38Z",
+            "conclusion": "success",
+            "name": "Build fixture app and UI tests for iPhone",
+            "number": 4,
+            "startedAt": "2026-11-08T18:30:16Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:38:39Z",
+            "conclusion": "success",
+            "name": "Enumerate compiled tests and package fixture products",
+            "number": 5,
+            "startedAt": "2026-11-08T18:34:38Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:38:43Z",
+            "conclusion": "success",
+            "name": "Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+            "number": 6,
+            "startedAt": "2026-11-08T18:38:39Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:38:43Z",
+            "conclusion": "skipped",
+            "name": "Retain fixture discovery diagnostics on failure",
+            "number": 7,
+            "startedAt": "2026-11-08T18:38:43Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:38:44Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 14,
+            "startedAt": "2026-11-08T18:38:43Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:39:08Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 15,
+            "startedAt": "2026-11-08T18:38:44Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307308/job/128818750513"
+      },
+      {
+        "completedAt": "2026-11-08T18:36:37Z",
+        "conclusion": "success",
+        "databaseId": 128818750783,
+        "name": "Build contributor, stock and carryover fixtures",
+        "startedAt": "2026-11-08T18:25:08Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T18:25:09Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T18:25:08Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:25:18Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T18:25:09Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:25:47Z",
+            "conclusion": "success",
+            "name": "Record Xcode and select an iPhone simulator",
+            "number": 3,
+            "startedAt": "2026-11-08T18:25:18Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:30:44Z",
+            "conclusion": "success",
+            "name": "Build fixture app and UI tests for iPhone",
+            "number": 4,
+            "startedAt": "2026-11-08T18:25:47Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:36:05Z",
+            "conclusion": "success",
+            "name": "Enumerate compiled tests and package fixture products",
+            "number": 5,
+            "startedAt": "2026-11-08T18:30:44Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:36:10Z",
+            "conclusion": "success",
+            "name": "Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+            "number": 6,
+            "startedAt": "2026-11-08T18:36:05Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:36:10Z",
+            "conclusion": "skipped",
+            "name": "Retain fixture discovery diagnostics on failure",
+            "number": 7,
+            "startedAt": "2026-11-08T18:36:10Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:36:11Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 14,
+            "startedAt": "2026-11-08T18:36:10Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:36:35Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 15,
+            "startedAt": "2026-11-08T18:36:11Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307308/job/128818750783"
+      },
+      {
+        "completedAt": "2026-11-08T19:11:28Z",
+        "conclusion": "success",
+        "databaseId": 128824028792,
+        "name": "Fixture (contributor-balanced-02)",
+        "startedAt": "2026-11-08T18:53:58Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T18:54:01Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T18:53:59Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:54:13Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T18:54:01Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:54:19Z",
+            "conclusion": "success",
+            "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+            "number": 3,
+            "startedAt": "2026-11-08T18:54:13Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:54:20Z",
+            "conclusion": "success",
+            "name": "Restore matching fixture products and selector list",
+            "number": 4,
+            "startedAt": "2026-11-08T18:54:19Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:54:55Z",
+            "conclusion": "success",
+            "name": "Select iPhone simulator with owned-device pilot for contributor-balanced-01",
+            "number": 5,
+            "startedAt": "2026-11-08T18:54:20Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:55:57Z",
+            "conclusion": "success",
+            "name": "Boot the iPhone simulator",
+            "number": 6,
+            "startedAt": "2026-11-08T18:54:55Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:11:11Z",
+            "conclusion": "success",
+            "name": "Run selected fixture tests and require complete execution",
+            "number": 7,
+            "startedAt": "2026-11-08T18:55:57Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:11:11Z",
+            "conclusion": "skipped",
+            "name": "Retain speech runtime diagnostics",
+            "number": 8,
+            "startedAt": "2026-11-08T19:11:11Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:11:12Z",
+            "conclusion": "success",
+            "name": "Clean up only the owned simulator after result and speech export",
+            "number": 9,
+            "startedAt": "2026-11-08T19:11:11Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:11:16Z",
+            "conclusion": "success",
+            "name": "Retain fixture results and timing",
+            "number": 10,
+            "startedAt": "2026-11-08T19:11:12Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:11:16Z",
+            "conclusion": "skipped",
+            "name": "Retain Records media result counts and timing",
+            "number": 11,
+            "startedAt": "2026-11-08T19:11:16Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:11:17Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 22,
+            "startedAt": "2026-11-08T19:11:16Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:11:26Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 23,
+            "startedAt": "2026-11-08T19:11:17Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307308/job/128824028792"
+      },
+      {
+        "completedAt": "2026-11-08T19:41:16Z",
+        "conclusion": "success",
+        "databaseId": 128824028811,
+        "name": "Fixture (contributor-balanced-01)",
+        "startedAt": "2026-11-08T19:19:32Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T19:19:34Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T19:19:32Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:19:43Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T19:19:34Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:19:44Z",
+            "conclusion": "success",
+            "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+            "number": 3,
+            "startedAt": "2026-11-08T19:19:43Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:19:45Z",
+            "conclusion": "success",
+            "name": "Restore matching fixture products and selector list",
+            "number": 4,
+            "startedAt": "2026-11-08T19:19:44Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:20:02Z",
+            "conclusion": "success",
+            "name": "Select iPhone simulator with owned-device pilot for contributor-balanced-01",
+            "number": 5,
+            "startedAt": "2026-11-08T19:19:45Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:21:19Z",
+            "conclusion": "success",
+            "name": "Boot the iPhone simulator",
+            "number": 6,
+            "startedAt": "2026-11-08T19:20:02Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:40:56Z",
+            "conclusion": "success",
+            "name": "Run selected fixture tests and require complete execution",
+            "number": 7,
+            "startedAt": "2026-11-08T19:21:19Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:40:56Z",
+            "conclusion": "skipped",
+            "name": "Retain speech runtime diagnostics",
+            "number": 8,
+            "startedAt": "2026-11-08T19:40:56Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:41:06Z",
+            "conclusion": "success",
+            "name": "Clean up only the owned simulator after result and speech export",
+            "number": 9,
+            "startedAt": "2026-11-08T19:40:56Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:41:09Z",
+            "conclusion": "success",
+            "name": "Retain fixture results and timing",
+            "number": 10,
+            "startedAt": "2026-11-08T19:41:06Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:41:09Z",
+            "conclusion": "skipped",
+            "name": "Retain Records media result counts and timing",
+            "number": 11,
+            "startedAt": "2026-11-08T19:41:09Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:41:10Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 22,
+            "startedAt": "2026-11-08T19:41:09Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:41:14Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 23,
+            "startedAt": "2026-11-08T19:41:10Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307308/job/128824028811"
+      },
+      {
+        "completedAt": "2026-11-08T19:44:45Z",
+        "conclusion": "success",
+        "databaseId": 128824028860,
+        "name": "Fixture (contributor-balanced-05)",
+        "startedAt": "2026-11-08T19:24:26Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T19:24:28Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T19:24:26Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:24:35Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T19:24:28Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:24:41Z",
+            "conclusion": "success",
+            "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+            "number": 3,
+            "startedAt": "2026-11-08T19:24:35Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:24:41Z",
+            "conclusion": "success",
+            "name": "Restore matching fixture products and selector list",
+            "number": 4,
+            "startedAt": "2026-11-08T19:24:41Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:24:48Z",
+            "conclusion": "success",
+            "name": "Select iPhone simulator with owned-device pilot for contributor-balanced-01",
+            "number": 5,
+            "startedAt": "2026-11-08T19:24:41Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:25:49Z",
+            "conclusion": "success",
+            "name": "Boot the iPhone simulator",
+            "number": 6,
+            "startedAt": "2026-11-08T19:24:48Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:44:26Z",
+            "conclusion": "success",
+            "name": "Run selected fixture tests and require complete execution",
+            "number": 7,
+            "startedAt": "2026-11-08T19:25:49Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:44:26Z",
+            "conclusion": "skipped",
+            "name": "Retain speech runtime diagnostics",
+            "number": 8,
+            "startedAt": "2026-11-08T19:44:26Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:44:27Z",
+            "conclusion": "success",
+            "name": "Clean up only the owned simulator after result and speech export",
+            "number": 9,
+            "startedAt": "2026-11-08T19:44:26Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:44:32Z",
+            "conclusion": "success",
+            "name": "Retain fixture results and timing",
+            "number": 10,
+            "startedAt": "2026-11-08T19:44:27Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:44:32Z",
+            "conclusion": "skipped",
+            "name": "Retain Records media result counts and timing",
+            "number": 11,
+            "startedAt": "2026-11-08T19:44:32Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:44:33Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 22,
+            "startedAt": "2026-11-08T19:44:32Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:44:43Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 23,
+            "startedAt": "2026-11-08T19:44:33Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307308/job/128824028860"
+      },
+      {
+        "completedAt": "2026-11-08T19:54:34Z",
+        "conclusion": "success",
+        "databaseId": 128824028875,
+        "name": "Fixture (contributor-balanced-03)",
+        "startedAt": "2026-11-08T19:22:38Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T19:22:43Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T19:22:39Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:22:53Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T19:22:44Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:23:00Z",
+            "conclusion": "success",
+            "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+            "number": 3,
+            "startedAt": "2026-11-08T19:22:53Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:23:01Z",
+            "conclusion": "success",
+            "name": "Restore matching fixture products and selector list",
+            "number": 4,
+            "startedAt": "2026-11-08T19:23:00Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:23:26Z",
+            "conclusion": "success",
+            "name": "Select iPhone simulator with owned-device pilot for contributor-balanced-01",
+            "number": 5,
+            "startedAt": "2026-11-08T19:23:02Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:25:20Z",
+            "conclusion": "success",
+            "name": "Boot the iPhone simulator",
+            "number": 6,
+            "startedAt": "2026-11-08T19:23:26Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:54:02Z",
+            "conclusion": "success",
+            "name": "Run selected fixture tests and require complete execution",
+            "number": 7,
+            "startedAt": "2026-11-08T19:25:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:54:02Z",
+            "conclusion": "skipped",
+            "name": "Retain speech runtime diagnostics",
+            "number": 8,
+            "startedAt": "2026-11-08T19:54:02Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:54:03Z",
+            "conclusion": "success",
+            "name": "Clean up only the owned simulator after result and speech export",
+            "number": 9,
+            "startedAt": "2026-11-08T19:54:02Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:54:16Z",
+            "conclusion": "success",
+            "name": "Retain fixture results and timing",
+            "number": 10,
+            "startedAt": "2026-11-08T19:54:03Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:54:16Z",
+            "conclusion": "skipped",
+            "name": "Retain Records media result counts and timing",
+            "number": 11,
+            "startedAt": "2026-11-08T19:54:16Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:54:17Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 22,
+            "startedAt": "2026-11-08T19:54:16Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:54:32Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 23,
+            "startedAt": "2026-11-08T19:54:18Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307308/job/128824028875"
+      },
+      {
+        "completedAt": "2026-11-08T19:33:02Z",
+        "conclusion": "success",
+        "databaseId": 128824028880,
+        "name": "Fixture (contributor-balanced-04)",
+        "startedAt": "2026-11-08T19:09:03Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T19:09:06Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T19:09:04Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:09:18Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T19:09:06Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:09:25Z",
+            "conclusion": "success",
+            "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+            "number": 3,
+            "startedAt": "2026-11-08T19:09:18Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:09:27Z",
+            "conclusion": "success",
+            "name": "Restore matching fixture products and selector list",
+            "number": 4,
+            "startedAt": "2026-11-08T19:09:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:10:51Z",
+            "conclusion": "success",
+            "name": "Select iPhone simulator with owned-device pilot for contributor-balanced-01",
+            "number": 5,
+            "startedAt": "2026-11-08T19:09:27Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:12:56Z",
+            "conclusion": "success",
+            "name": "Boot the iPhone simulator",
+            "number": 6,
+            "startedAt": "2026-11-08T19:10:51Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:32:42Z",
+            "conclusion": "success",
+            "name": "Run selected fixture tests and require complete execution",
+            "number": 7,
+            "startedAt": "2026-11-08T19:12:57Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:32:42Z",
+            "conclusion": "skipped",
+            "name": "Retain speech runtime diagnostics",
+            "number": 8,
+            "startedAt": "2026-11-08T19:32:42Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:32:43Z",
+            "conclusion": "success",
+            "name": "Clean up only the owned simulator after result and speech export",
+            "number": 9,
+            "startedAt": "2026-11-08T19:32:42Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:32:47Z",
+            "conclusion": "success",
+            "name": "Retain fixture results and timing",
+            "number": 10,
+            "startedAt": "2026-11-08T19:32:43Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:32:47Z",
+            "conclusion": "skipped",
+            "name": "Retain Records media result counts and timing",
+            "number": 11,
+            "startedAt": "2026-11-08T19:32:47Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:32:48Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 22,
+            "startedAt": "2026-11-08T19:32:47Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:33:00Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 23,
+            "startedAt": "2026-11-08T19:32:48Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307308/job/128824028880"
+      },
+      {
+        "completedAt": "2026-11-08T19:37:12Z",
+        "conclusion": "success",
+        "databaseId": 128832246434,
+        "name": "Fixture (RecordsMediaUITests)",
+        "startedAt": "2026-11-08T19:29:50Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T19:29:51Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T19:29:50Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:29:59Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T19:29:51Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:30:00Z",
+            "conclusion": "success",
+            "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+            "number": 3,
+            "startedAt": "2026-11-08T19:29:59Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:30:01Z",
+            "conclusion": "success",
+            "name": "Restore matching fixture products and selector list",
+            "number": 4,
+            "startedAt": "2026-11-08T19:30:00Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:30:15Z",
+            "conclusion": "success",
+            "name": "Select iPhone simulator with owned-device pilot for contributor-balanced-01",
+            "number": 5,
+            "startedAt": "2026-11-08T19:30:01Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:31:15Z",
+            "conclusion": "success",
+            "name": "Boot the iPhone simulator",
+            "number": 6,
+            "startedAt": "2026-11-08T19:30:15Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:36:57Z",
+            "conclusion": "success",
+            "name": "Run selected fixture tests and require complete execution",
+            "number": 7,
+            "startedAt": "2026-11-08T19:31:15Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:36:57Z",
+            "conclusion": "skipped",
+            "name": "Retain speech runtime diagnostics",
+            "number": 8,
+            "startedAt": "2026-11-08T19:36:57Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:36:57Z",
+            "conclusion": "success",
+            "name": "Clean up only the owned simulator after result and speech export",
+            "number": 9,
+            "startedAt": "2026-11-08T19:36:57Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:36:57Z",
+            "conclusion": "skipped",
+            "name": "Retain fixture results and timing",
+            "number": 10,
+            "startedAt": "2026-11-08T19:36:57Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:36:59Z",
+            "conclusion": "success",
+            "name": "Retain Records media result counts and timing",
+            "number": 11,
+            "startedAt": "2026-11-08T19:36:57Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:36:59Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 22,
+            "startedAt": "2026-11-08T19:36:59Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:37:11Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 23,
+            "startedAt": "2026-11-08T19:36:59Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307308/job/128832246434"
+      },
+      {
+        "completedAt": "2026-11-08T20:23:33Z",
+        "conclusion": "success",
+        "databaseId": 128837810474,
+        "name": "Fixture (SharedDeliveryUITests-stock-and-purchase)",
+        "startedAt": "2026-11-08T20:03:40Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T20:03:43Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T20:03:41Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:03:51Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T20:03:43Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:03:58Z",
+            "conclusion": "success",
+            "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+            "number": 3,
+            "startedAt": "2026-11-08T20:03:51Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:03:59Z",
+            "conclusion": "success",
+            "name": "Restore matching fixture products and selector list",
+            "number": 4,
+            "startedAt": "2026-11-08T20:03:58Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:05:08Z",
+            "conclusion": "success",
+            "name": "Select iPhone simulator with owned-device pilot for contributor-balanced-01",
+            "number": 5,
+            "startedAt": "2026-11-08T20:03:59Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:06:58Z",
+            "conclusion": "success",
+            "name": "Boot the iPhone simulator",
+            "number": 6,
+            "startedAt": "2026-11-08T20:05:08Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:23:08Z",
+            "conclusion": "success",
+            "name": "Run selected fixture tests and require complete execution",
+            "number": 7,
+            "startedAt": "2026-11-08T20:06:58Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:23:08Z",
+            "conclusion": "skipped",
+            "name": "Retain speech runtime diagnostics",
+            "number": 8,
+            "startedAt": "2026-11-08T20:23:08Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:23:09Z",
+            "conclusion": "success",
+            "name": "Clean up only the owned simulator after result and speech export",
+            "number": 9,
+            "startedAt": "2026-11-08T20:23:08Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:23:13Z",
+            "conclusion": "success",
+            "name": "Retain fixture results and timing",
+            "number": 10,
+            "startedAt": "2026-11-08T20:23:09Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:23:13Z",
+            "conclusion": "skipped",
+            "name": "Retain Records media result counts and timing",
+            "number": 11,
+            "startedAt": "2026-11-08T20:23:13Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:23:15Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 22,
+            "startedAt": "2026-11-08T20:23:13Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:23:31Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 23,
+            "startedAt": "2026-11-08T20:23:15Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307308/job/128837810474"
+      },
+      {
+        "completedAt": "2026-11-08T20:22:45Z",
+        "conclusion": "failure",
+        "databaseId": 128838829640,
+        "name": "Fixture (SharedDeliveryUITests-recovery-cook-and-closeout)",
+        "startedAt": "2026-11-08T20:06:06Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T20:06:07Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T20:06:06Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:06:19Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T20:06:07Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:06:21Z",
+            "conclusion": "success",
+            "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+            "number": 3,
+            "startedAt": "2026-11-08T20:06:19Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:06:21Z",
+            "conclusion": "success",
+            "name": "Restore matching fixture products and selector list",
+            "number": 4,
+            "startedAt": "2026-11-08T20:06:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:06:51Z",
+            "conclusion": "success",
+            "name": "Select iPhone simulator with owned-device pilot for contributor-balanced-01",
+            "number": 5,
+            "startedAt": "2026-11-08T20:06:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:08:15Z",
+            "conclusion": "success",
+            "name": "Boot the iPhone simulator",
+            "number": 6,
+            "startedAt": "2026-11-08T20:06:51Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:22:06Z",
+            "conclusion": "failure",
+            "name": "Run selected fixture tests and require complete execution",
+            "number": 7,
+            "startedAt": "2026-11-08T20:08:15Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:22:14Z",
+            "conclusion": "success",
+            "name": "Retain speech runtime diagnostics",
+            "number": 8,
+            "startedAt": "2026-11-08T20:22:06Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:22:15Z",
+            "conclusion": "success",
+            "name": "Clean up only the owned simulator after result and speech export",
+            "number": 9,
+            "startedAt": "2026-11-08T20:22:14Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:22:28Z",
+            "conclusion": "success",
+            "name": "Retain fixture results and timing",
+            "number": 10,
+            "startedAt": "2026-11-08T20:22:15Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:22:28Z",
+            "conclusion": "skipped",
+            "name": "Retain Records media result counts and timing",
+            "number": 11,
+            "startedAt": "2026-11-08T20:22:28Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:22:29Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 22,
+            "startedAt": "2026-11-08T20:22:28Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:22:43Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 23,
+            "startedAt": "2026-11-08T20:22:29Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307308/job/128838829640"
+      },
+      {
+        "completedAt": "2026-11-08T20:06:43Z",
+        "conclusion": "success",
+        "databaseId": 128839875410,
+        "name": "Fixture (SharedFallbackUITests)",
+        "startedAt": "2026-11-08T19:54:35Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T19:54:37Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T19:54:35Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:54:46Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T19:54:37Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:54:47Z",
+            "conclusion": "success",
+            "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+            "number": 3,
+            "startedAt": "2026-11-08T19:54:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:54:48Z",
+            "conclusion": "success",
+            "name": "Restore matching fixture products and selector list",
+            "number": 4,
+            "startedAt": "2026-11-08T19:54:47Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:55:43Z",
+            "conclusion": "success",
+            "name": "Select iPhone simulator with owned-device pilot for contributor-balanced-01",
+            "number": 5,
+            "startedAt": "2026-11-08T19:54:48Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:57:02Z",
+            "conclusion": "success",
+            "name": "Boot the iPhone simulator",
+            "number": 6,
+            "startedAt": "2026-11-08T19:55:43Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:06:23Z",
+            "conclusion": "success",
+            "name": "Run selected fixture tests and require complete execution",
+            "number": 7,
+            "startedAt": "2026-11-08T19:57:02Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:06:23Z",
+            "conclusion": "skipped",
+            "name": "Retain speech runtime diagnostics",
+            "number": 8,
+            "startedAt": "2026-11-08T20:06:23Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:06:24Z",
+            "conclusion": "success",
+            "name": "Clean up only the owned simulator after result and speech export",
+            "number": 9,
+            "startedAt": "2026-11-08T20:06:23Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:06:26Z",
+            "conclusion": "success",
+            "name": "Retain fixture results and timing",
+            "number": 10,
+            "startedAt": "2026-11-08T20:06:24Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:06:26Z",
+            "conclusion": "skipped",
+            "name": "Retain Records media result counts and timing",
+            "number": 11,
+            "startedAt": "2026-11-08T20:06:26Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:06:27Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 22,
+            "startedAt": "2026-11-08T20:06:26Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:06:42Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 23,
+            "startedAt": "2026-11-08T20:06:27Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307308/job/128839875410"
+      },
+      {
+        "completedAt": "2026-11-08T20:37:39Z",
+        "conclusion": "success",
+        "databaseId": 128840755028,
+        "name": "Fixture (SharedMealIdeaUITests-testAdultFractionalIdeaCancelApproveThenSeparateProposalAndShopperReview)",
+        "startedAt": "2026-11-08T20:22:57Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T20:23:00Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T20:22:58Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:23:09Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T20:23:00Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:23:16Z",
+            "conclusion": "success",
+            "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+            "number": 3,
+            "startedAt": "2026-11-08T20:23:09Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:23:17Z",
+            "conclusion": "success",
+            "name": "Restore matching fixture products and selector list",
+            "number": 4,
+            "startedAt": "2026-11-08T20:23:16Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:23:51Z",
+            "conclusion": "success",
+            "name": "Select iPhone simulator with owned-device pilot for contributor-balanced-01",
+            "number": 5,
+            "startedAt": "2026-11-08T20:23:17Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:26:08Z",
+            "conclusion": "success",
+            "name": "Boot the iPhone simulator",
+            "number": 6,
+            "startedAt": "2026-11-08T20:23:51Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:37:10Z",
+            "conclusion": "success",
+            "name": "Run selected fixture tests and require complete execution",
+            "number": 7,
+            "startedAt": "2026-11-08T20:26:08Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:37:11Z",
+            "conclusion": "skipped",
+            "name": "Retain speech runtime diagnostics",
+            "number": 8,
+            "startedAt": "2026-11-08T20:37:10Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:37:11Z",
+            "conclusion": "success",
+            "name": "Clean up only the owned simulator after result and speech export",
+            "number": 9,
+            "startedAt": "2026-11-08T20:37:11Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:37:14Z",
+            "conclusion": "success",
+            "name": "Retain fixture results and timing",
+            "number": 10,
+            "startedAt": "2026-11-08T20:37:11Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:37:14Z",
+            "conclusion": "skipped",
+            "name": "Retain Records media result counts and timing",
+            "number": 11,
+            "startedAt": "2026-11-08T20:37:14Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:37:15Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 22,
+            "startedAt": "2026-11-08T20:37:14Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:37:37Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 23,
+            "startedAt": "2026-11-08T20:37:15Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307308/job/128840755028"
+      },
+      {
+        "completedAt": "2026-11-08T20:10:17Z",
+        "conclusion": "success",
+        "databaseId": 128843256229,
+        "name": "Fixture (SharedMealIdeaUITests-testApprovedProposalStaysReadyAfterParentDisappearsAndOnReturn)",
+        "startedAt": "2026-11-08T19:59:43Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T19:59:45Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T19:59:44Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:59:55Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T19:59:45Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:59:56Z",
+            "conclusion": "success",
+            "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+            "number": 3,
+            "startedAt": "2026-11-08T19:59:55Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:59:57Z",
+            "conclusion": "success",
+            "name": "Restore matching fixture products and selector list",
+            "number": 4,
+            "startedAt": "2026-11-08T19:59:56Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:00:20Z",
+            "conclusion": "success",
+            "name": "Select iPhone simulator with owned-device pilot for contributor-balanced-01",
+            "number": 5,
+            "startedAt": "2026-11-08T19:59:57Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:01:36Z",
+            "conclusion": "success",
+            "name": "Boot the iPhone simulator",
+            "number": 6,
+            "startedAt": "2026-11-08T20:00:20Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:09:57Z",
+            "conclusion": "success",
+            "name": "Run selected fixture tests and require complete execution",
+            "number": 7,
+            "startedAt": "2026-11-08T20:01:36Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:09:57Z",
+            "conclusion": "skipped",
+            "name": "Retain speech runtime diagnostics",
+            "number": 8,
+            "startedAt": "2026-11-08T20:09:57Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:09:58Z",
+            "conclusion": "success",
+            "name": "Clean up only the owned simulator after result and speech export",
+            "number": 9,
+            "startedAt": "2026-11-08T20:09:57Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:10:02Z",
+            "conclusion": "success",
+            "name": "Retain fixture results and timing",
+            "number": 10,
+            "startedAt": "2026-11-08T20:09:58Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:10:02Z",
+            "conclusion": "skipped",
+            "name": "Retain Records media result counts and timing",
+            "number": 11,
+            "startedAt": "2026-11-08T20:10:02Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:10:04Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 22,
+            "startedAt": "2026-11-08T20:10:02Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:10:17Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 23,
+            "startedAt": "2026-11-08T20:10:04Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307308/job/128843256229"
+      },
+      {
+        "completedAt": "2026-11-08T20:34:23Z",
+        "conclusion": "success",
+        "databaseId": 128846402409,
+        "name": "Fixture (SharedStoreQuoteUITests-testFilledFinancialFieldsRetainVisibleMeaningAndGrantActionNamesAdult)",
+        "startedAt": "2026-11-08T20:23:37Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T20:23:39Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T20:23:37Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:23:51Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T20:23:39Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:23:58Z",
+            "conclusion": "success",
+            "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+            "number": 3,
+            "startedAt": "2026-11-08T20:23:51Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:23:59Z",
+            "conclusion": "success",
+            "name": "Restore matching fixture products and selector list",
+            "number": 4,
+            "startedAt": "2026-11-08T20:23:58Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:24:25Z",
+            "conclusion": "success",
+            "name": "Select iPhone simulator with owned-device pilot for contributor-balanced-01",
+            "number": 5,
+            "startedAt": "2026-11-08T20:23:59Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:26:10Z",
+            "conclusion": "success",
+            "name": "Boot the iPhone simulator",
+            "number": 6,
+            "startedAt": "2026-11-08T20:24:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:33:48Z",
+            "conclusion": "success",
+            "name": "Run selected fixture tests and require complete execution",
+            "number": 7,
+            "startedAt": "2026-11-08T20:26:10Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:33:48Z",
+            "conclusion": "skipped",
+            "name": "Retain speech runtime diagnostics",
+            "number": 8,
+            "startedAt": "2026-11-08T20:33:48Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:33:50Z",
+            "conclusion": "success",
+            "name": "Clean up only the owned simulator after result and speech export",
+            "number": 9,
+            "startedAt": "2026-11-08T20:33:48Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:33:53Z",
+            "conclusion": "success",
+            "name": "Retain fixture results and timing",
+            "number": 10,
+            "startedAt": "2026-11-08T20:33:50Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:33:53Z",
+            "conclusion": "skipped",
+            "name": "Retain Records media result counts and timing",
+            "number": 11,
+            "startedAt": "2026-11-08T20:33:53Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:33:55Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 22,
+            "startedAt": "2026-11-08T20:33:53Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:34:20Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 23,
+            "startedAt": "2026-11-08T20:33:55Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307308/job/128846402409"
+      },
+      {
+        "completedAt": "2026-11-08T20:39:01Z",
+        "conclusion": "failure",
+        "databaseId": 128847355844,
+        "name": "Fixture (SharedStoreQuoteUITests-testKnownTripUnknownBreakEvenPrivateProposalAndExplicitShopperAdoption)",
+        "startedAt": "2026-11-08T20:22:48Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T20:22:51Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T20:22:49Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:23:01Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T20:22:51Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:23:03Z",
+            "conclusion": "success",
+            "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+            "number": 3,
+            "startedAt": "2026-11-08T20:23:01Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:23:04Z",
+            "conclusion": "success",
+            "name": "Restore matching fixture products and selector list",
+            "number": 4,
+            "startedAt": "2026-11-08T20:23:03Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:23:54Z",
+            "conclusion": "success",
+            "name": "Select iPhone simulator with owned-device pilot for contributor-balanced-01",
+            "number": 5,
+            "startedAt": "2026-11-08T20:23:04Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:25:31Z",
+            "conclusion": "success",
+            "name": "Boot the iPhone simulator",
+            "number": 6,
+            "startedAt": "2026-11-08T20:23:54Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:38:17Z",
+            "conclusion": "failure",
+            "name": "Run selected fixture tests and require complete execution",
+            "number": 7,
+            "startedAt": "2026-11-08T20:25:33Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:38:17Z",
+            "conclusion": "skipped",
+            "name": "Retain speech runtime diagnostics",
+            "number": 8,
+            "startedAt": "2026-11-08T20:38:17Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:38:18Z",
+            "conclusion": "success",
+            "name": "Clean up only the owned simulator after result and speech export",
+            "number": 9,
+            "startedAt": "2026-11-08T20:38:17Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:38:40Z",
+            "conclusion": "success",
+            "name": "Retain fixture results and timing",
+            "number": 10,
+            "startedAt": "2026-11-08T20:38:18Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:38:40Z",
+            "conclusion": "skipped",
+            "name": "Retain Records media result counts and timing",
+            "number": 11,
+            "startedAt": "2026-11-08T20:38:40Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:38:41Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 22,
+            "startedAt": "2026-11-08T20:38:40Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:39:00Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 23,
+            "startedAt": "2026-11-08T20:38:41Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307308/job/128847355844"
+      },
+      {
+        "completedAt": "2026-11-08T20:42:05Z",
+        "conclusion": "success",
+        "databaseId": 128850633254,
+        "name": "Fixture (SharedStoreQuoteUITests-testLostReplyRelaunchRestoresExactRetryWithoutDuplicatingPrivateSave)",
+        "startedAt": "2026-11-08T20:22:49Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T20:22:51Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T20:22:49Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:23:00Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T20:22:51Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:23:07Z",
+            "conclusion": "success",
+            "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+            "number": 3,
+            "startedAt": "2026-11-08T20:23:00Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:23:08Z",
+            "conclusion": "success",
+            "name": "Restore matching fixture products and selector list",
+            "number": 4,
+            "startedAt": "2026-11-08T20:23:07Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:23:19Z",
+            "conclusion": "success",
+            "name": "Select iPhone simulator with owned-device pilot for contributor-balanced-01",
+            "number": 5,
+            "startedAt": "2026-11-08T20:23:08Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:25:00Z",
+            "conclusion": "success",
+            "name": "Boot the iPhone simulator",
+            "number": 6,
+            "startedAt": "2026-11-08T20:23:19Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:41:46Z",
+            "conclusion": "success",
+            "name": "Run selected fixture tests and require complete execution",
+            "number": 7,
+            "startedAt": "2026-11-08T20:25:00Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:41:46Z",
+            "conclusion": "skipped",
+            "name": "Retain speech runtime diagnostics",
+            "number": 8,
+            "startedAt": "2026-11-08T20:41:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:41:46Z",
+            "conclusion": "success",
+            "name": "Clean up only the owned simulator after result and speech export",
+            "number": 9,
+            "startedAt": "2026-11-08T20:41:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:41:50Z",
+            "conclusion": "success",
+            "name": "Retain fixture results and timing",
+            "number": 10,
+            "startedAt": "2026-11-08T20:41:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:41:50Z",
+            "conclusion": "skipped",
+            "name": "Retain Records media result counts and timing",
+            "number": 11,
+            "startedAt": "2026-11-08T20:41:50Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:41:51Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 22,
+            "startedAt": "2026-11-08T20:41:50Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:42:02Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 23,
+            "startedAt": "2026-11-08T20:41:51Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307308/job/128850633254"
+      },
+      {
+        "completedAt": "2026-11-08T20:46:12Z",
+        "conclusion": "success",
+        "databaseId": 128850839343,
+        "name": "Fixture (SharedStoreQuoteUITests-testSpanishLargestTextKeepsRealQuoteEntryDiscoverable)",
+        "startedAt": "2026-11-08T20:37:43Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T20:37:46Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T20:37:44Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:37:55Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T20:37:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:38:02Z",
+            "conclusion": "success",
+            "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+            "number": 3,
+            "startedAt": "2026-11-08T20:37:55Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:38:03Z",
+            "conclusion": "success",
+            "name": "Restore matching fixture products and selector list",
+            "number": 4,
+            "startedAt": "2026-11-08T20:38:02Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:38:25Z",
+            "conclusion": "success",
+            "name": "Select iPhone simulator with owned-device pilot for contributor-balanced-01",
+            "number": 5,
+            "startedAt": "2026-11-08T20:38:03Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:40:07Z",
+            "conclusion": "success",
+            "name": "Boot the iPhone simulator",
+            "number": 6,
+            "startedAt": "2026-11-08T20:38:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:45:31Z",
+            "conclusion": "success",
+            "name": "Run selected fixture tests and require complete execution",
+            "number": 7,
+            "startedAt": "2026-11-08T20:40:08Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:45:31Z",
+            "conclusion": "skipped",
+            "name": "Retain speech runtime diagnostics",
+            "number": 8,
+            "startedAt": "2026-11-08T20:45:31Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:45:33Z",
+            "conclusion": "success",
+            "name": "Clean up only the owned simulator after result and speech export",
+            "number": 9,
+            "startedAt": "2026-11-08T20:45:31Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:45:37Z",
+            "conclusion": "success",
+            "name": "Retain fixture results and timing",
+            "number": 10,
+            "startedAt": "2026-11-08T20:45:33Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:45:37Z",
+            "conclusion": "skipped",
+            "name": "Retain Records media result counts and timing",
+            "number": 11,
+            "startedAt": "2026-11-08T20:45:37Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:45:38Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 22,
+            "startedAt": "2026-11-08T20:45:37Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:46:10Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 23,
+            "startedAt": "2026-11-08T20:45:38Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307308/job/128850839343"
+      },
+      {
+        "completedAt": "2026-11-08T20:48:50Z",
+        "conclusion": "success",
+        "databaseId": 128853648044,
+        "name": "Fixture (SharedStoreQuoteUITests-testStaleReviewedSaveCannotBeRebasedAndLockedShopHasNoNewComparisonAction)",
+        "startedAt": "2026-11-08T20:34:27Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T20:34:30Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T20:34:28Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:34:40Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T20:34:30Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:34:47Z",
+            "conclusion": "success",
+            "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+            "number": 3,
+            "startedAt": "2026-11-08T20:34:40Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:34:48Z",
+            "conclusion": "success",
+            "name": "Restore matching fixture products and selector list",
+            "number": 4,
+            "startedAt": "2026-11-08T20:34:47Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:35:16Z",
+            "conclusion": "success",
+            "name": "Select iPhone simulator with owned-device pilot for contributor-balanced-01",
+            "number": 5,
+            "startedAt": "2026-11-08T20:34:48Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:37:15Z",
+            "conclusion": "success",
+            "name": "Boot the iPhone simulator",
+            "number": 6,
+            "startedAt": "2026-11-08T20:35:16Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:48:16Z",
+            "conclusion": "success",
+            "name": "Run selected fixture tests and require complete execution",
+            "number": 7,
+            "startedAt": "2026-11-08T20:37:17Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:48:16Z",
+            "conclusion": "skipped",
+            "name": "Retain speech runtime diagnostics",
+            "number": 8,
+            "startedAt": "2026-11-08T20:48:16Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:48:17Z",
+            "conclusion": "success",
+            "name": "Clean up only the owned simulator after result and speech export",
+            "number": 9,
+            "startedAt": "2026-11-08T20:48:16Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:48:21Z",
+            "conclusion": "success",
+            "name": "Retain fixture results and timing",
+            "number": 10,
+            "startedAt": "2026-11-08T20:48:17Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:48:21Z",
+            "conclusion": "skipped",
+            "name": "Retain Records media result counts and timing",
+            "number": 11,
+            "startedAt": "2026-11-08T20:48:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:48:22Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 22,
+            "startedAt": "2026-11-08T20:48:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:48:47Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 23,
+            "startedAt": "2026-11-08T20:48:22Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307308/job/128853648044"
+      },
+      {
+        "completedAt": "2026-11-08T20:47:39Z",
+        "conclusion": "success",
+        "databaseId": 128854504959,
+        "name": "Fixture (DinnerDecisionSheetUITests)",
+        "startedAt": "2026-11-08T20:37:43Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T20:37:44Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T20:37:43Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:37:53Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T20:37:44Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:38:00Z",
+            "conclusion": "success",
+            "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+            "number": 3,
+            "startedAt": "2026-11-08T20:37:53Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:38:02Z",
+            "conclusion": "success",
+            "name": "Restore matching fixture products and selector list",
+            "number": 4,
+            "startedAt": "2026-11-08T20:38:00Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:38:47Z",
+            "conclusion": "success",
+            "name": "Select iPhone simulator with owned-device pilot for contributor-balanced-01",
+            "number": 5,
+            "startedAt": "2026-11-08T20:38:02Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:40:28Z",
+            "conclusion": "success",
+            "name": "Boot the iPhone simulator",
+            "number": 6,
+            "startedAt": "2026-11-08T20:38:47Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:47:04Z",
+            "conclusion": "success",
+            "name": "Run selected fixture tests and require complete execution",
+            "number": 7,
+            "startedAt": "2026-11-08T20:40:28Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:47:04Z",
+            "conclusion": "skipped",
+            "name": "Retain speech runtime diagnostics",
+            "number": 8,
+            "startedAt": "2026-11-08T20:47:04Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:47:05Z",
+            "conclusion": "success",
+            "name": "Clean up only the owned simulator after result and speech export",
+            "number": 9,
+            "startedAt": "2026-11-08T20:47:04Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:47:08Z",
+            "conclusion": "success",
+            "name": "Retain fixture results and timing",
+            "number": 10,
+            "startedAt": "2026-11-08T20:47:05Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:47:08Z",
+            "conclusion": "skipped",
+            "name": "Retain Records media result counts and timing",
+            "number": 11,
+            "startedAt": "2026-11-08T20:47:08Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:47:09Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 22,
+            "startedAt": "2026-11-08T20:47:08Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T20:47:36Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 23,
+            "startedAt": "2026-11-08T20:47:09Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307308/job/128854504959"
+      }
+    ],
+    "name": "iOS fixture checks",
+    "startedAt": "2026-11-08T18:18:08Z",
+    "updatedAt": "2026-11-08T20:48:50Z"
+  },
+  {
+    "id": 42509307171,
+    "createdAt": "2026-11-08T18:18:08Z",
+    "jobs": [
+      {
+        "completedAt": "2026-11-08T18:29:49Z",
+        "conclusion": "success",
+        "databaseId": 128818687290,
+        "name": "Build optimized iPhone test products",
+        "startedAt": "2026-11-08T18:18:12Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T18:18:15Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T18:18:14Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:30Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T18:18:15Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:31Z",
+            "conclusion": "success",
+            "name": "Check performance evidence validation",
+            "number": 3,
+            "startedAt": "2026-11-08T18:18:30Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:19:24Z",
+            "conclusion": "success",
+            "name": "Record Xcode and select an iPhone simulator",
+            "number": 4,
+            "startedAt": "2026-11-08T18:18:31Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:29:19Z",
+            "conclusion": "success",
+            "name": "Build the Release app and dedicated performance tests",
+            "number": 5,
+            "startedAt": "2026-11-08T18:19:24Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:29:22Z",
+            "conclusion": "success",
+            "name": "Check the compiled XCTest inventory and plan performance jobs",
+            "number": 6,
+            "startedAt": "2026-11-08T18:29:19Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:29:35Z",
+            "conclusion": "success",
+            "name": "Verify and package Release test products",
+            "number": 7,
+            "startedAt": "2026-11-08T18:29:22Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:29:44Z",
+            "conclusion": "success",
+            "name": "Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+            "number": 8,
+            "startedAt": "2026-11-08T18:29:35Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:29:45Z",
+            "conclusion": "success",
+            "name": "Retain Release build log",
+            "number": 9,
+            "startedAt": "2026-11-08T18:29:44Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:29:46Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 18,
+            "startedAt": "2026-11-08T18:29:45Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:29:46Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 19,
+            "startedAt": "2026-11-08T18:29:46Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307171/job/128818687290"
+      },
+      {
+        "completedAt": "2026-11-08T19:24:23Z",
+        "conclusion": "success",
+        "databaseId": 128821661195,
+        "name": "Release performance (rendered)",
+        "startedAt": "2026-11-08T19:11:49Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T19:11:51Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T19:11:50Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:12:00Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T19:11:51Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:12:09Z",
+            "conclusion": "success",
+            "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+            "number": 3,
+            "startedAt": "2026-11-08T19:12:00Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:12:13Z",
+            "conclusion": "success",
+            "name": "Restore Release products and record the toolchain",
+            "number": 4,
+            "startedAt": "2026-11-08T19:12:09Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:12:21Z",
+            "conclusion": "success",
+            "name": "Select an iPhone simulator",
+            "number": 5,
+            "startedAt": "2026-11-08T19:12:13Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:16:02Z",
+            "conclusion": "success",
+            "name": "Boot and verify a fresh Release installation",
+            "number": 6,
+            "startedAt": "2026-11-08T19:12:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:23:39Z",
+            "conclusion": "success",
+            "name": "Run one Release performance case",
+            "number": 7,
+            "startedAt": "2026-11-08T19:16:03Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:23:45Z",
+            "conclusion": "success",
+            "name": "Export available XCTest metrics, attachments and test results",
+            "number": 8,
+            "startedAt": "2026-11-08T19:23:39Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:23:45Z",
+            "conclusion": "skipped",
+            "name": "Capture scroll signpost diagnostic",
+            "number": 9,
+            "startedAt": "2026-11-08T19:23:45Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:23:48Z",
+            "conclusion": "success",
+            "name": "Require exact test execution and complete performance evidence",
+            "number": 10,
+            "startedAt": "2026-11-08T19:23:45Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:23:52Z",
+            "conclusion": "success",
+            "name": "Retain Release performance evidence",
+            "number": 11,
+            "startedAt": "2026-11-08T19:23:48Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:23:53Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 22,
+            "startedAt": "2026-11-08T19:23:52Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:24:21Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 23,
+            "startedAt": "2026-11-08T19:23:53Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307171/job/128821661195"
+      },
+      {
+        "completedAt": "2026-11-08T19:19:30Z",
+        "conclusion": "failure",
+        "databaseId": 128821661268,
+        "name": "Release performance (scroll)",
+        "startedAt": "2026-11-08T19:11:56Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T19:11:59Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T19:11:57Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:12:07Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T19:11:59Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:12:11Z",
+            "conclusion": "success",
+            "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+            "number": 3,
+            "startedAt": "2026-11-08T19:12:07Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:12:15Z",
+            "conclusion": "success",
+            "name": "Restore Release products and record the toolchain",
+            "number": 4,
+            "startedAt": "2026-11-08T19:12:11Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:13:32Z",
+            "conclusion": "success",
+            "name": "Select an iPhone simulator",
+            "number": 5,
+            "startedAt": "2026-11-08T19:12:15Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:15:22Z",
+            "conclusion": "success",
+            "name": "Boot and verify a fresh Release installation",
+            "number": 6,
+            "startedAt": "2026-11-08T19:13:32Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:18:45Z",
+            "conclusion": "failure",
+            "name": "Run one Release performance case",
+            "number": 7,
+            "startedAt": "2026-11-08T19:15:22Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:18:49Z",
+            "conclusion": "success",
+            "name": "Export available XCTest metrics, attachments and test results",
+            "number": 8,
+            "startedAt": "2026-11-08T19:18:45Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:18:53Z",
+            "conclusion": "success",
+            "name": "Capture scroll signpost diagnostic",
+            "number": 9,
+            "startedAt": "2026-11-08T19:18:49Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:18:53Z",
+            "conclusion": "skipped",
+            "name": "Require exact test execution and complete performance evidence",
+            "number": 10,
+            "startedAt": "2026-11-08T19:18:53Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:19:06Z",
+            "conclusion": "success",
+            "name": "Retain Release performance evidence",
+            "number": 11,
+            "startedAt": "2026-11-08T19:18:53Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:19:07Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 22,
+            "startedAt": "2026-11-08T19:19:06Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T19:19:29Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 23,
+            "startedAt": "2026-11-08T19:19:07Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307171/job/128821661268"
+      },
+      {
+        "completedAt": "2026-11-08T18:53:55Z",
+        "conclusion": "success",
+        "databaseId": 128821661365,
+        "name": "Release performance (launch)",
+        "startedAt": "2026-11-08T18:45:14Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T18:45:16Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T18:45:14Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:45:27Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T18:45:16Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:45:29Z",
+            "conclusion": "success",
+            "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+            "number": 3,
+            "startedAt": "2026-11-08T18:45:27Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:45:34Z",
+            "conclusion": "success",
+            "name": "Restore Release products and record the toolchain",
+            "number": 4,
+            "startedAt": "2026-11-08T18:45:29Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:47:40Z",
+            "conclusion": "success",
+            "name": "Select an iPhone simulator",
+            "number": 5,
+            "startedAt": "2026-11-08T18:45:34Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:49:36Z",
+            "conclusion": "success",
+            "name": "Boot and verify a fresh Release installation",
+            "number": 6,
+            "startedAt": "2026-11-08T18:47:40Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:53:18Z",
+            "conclusion": "success",
+            "name": "Run one Release performance case",
+            "number": 7,
+            "startedAt": "2026-11-08T18:49:36Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:53:24Z",
+            "conclusion": "success",
+            "name": "Export available XCTest metrics, attachments and test results",
+            "number": 8,
+            "startedAt": "2026-11-08T18:53:18Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:53:24Z",
+            "conclusion": "skipped",
+            "name": "Capture scroll signpost diagnostic",
+            "number": 9,
+            "startedAt": "2026-11-08T18:53:24Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:53:25Z",
+            "conclusion": "success",
+            "name": "Require exact test execution and complete performance evidence",
+            "number": 10,
+            "startedAt": "2026-11-08T18:53:24Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:53:28Z",
+            "conclusion": "success",
+            "name": "Retain Release performance evidence",
+            "number": 11,
+            "startedAt": "2026-11-08T18:53:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:53:29Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 22,
+            "startedAt": "2026-11-08T18:53:28Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:53:54Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 23,
+            "startedAt": "2026-11-08T18:53:29Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307171/job/128821661365"
+      }
+    ],
+    "name": "iOS Release performance",
+    "startedAt": "2026-11-08T18:18:08Z",
+    "updatedAt": "2026-11-08T19:24:24Z"
+  },
+  {
+    "id": 42509307464,
+    "createdAt": "2026-11-08T18:18:08Z",
+    "jobs": [
+      {
+        "completedAt": "2026-11-08T18:25:05Z",
+        "conclusion": "success",
+        "databaseId": 128818689212,
+        "name": "sanitizers (thread)",
+        "startedAt": "2026-11-08T18:21:07Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T18:21:08Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T18:21:07Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:21:20Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T18:21:08Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:24:59Z",
+            "conclusion": "success",
+            "name": "Check package tests for memory errors or data races",
+            "number": 3,
+            "startedAt": "2026-11-08T18:21:20Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:25:01Z",
+            "conclusion": "success",
+            "name": "Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+            "number": 4,
+            "startedAt": "2026-11-08T18:24:59Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:25:01Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 8,
+            "startedAt": "2026-11-08T18:25:01Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:25:04Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 9,
+            "startedAt": "2026-11-08T18:25:01Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307464/job/128818689212"
+      },
+      {
+        "completedAt": "2026-11-08T18:43:59Z",
+        "conclusion": "success",
+        "databaseId": 128818689267,
+        "name": "storekit (en, US English — local StoreKit)",
+        "startedAt": "2026-11-08T18:29:55Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T18:29:56Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T18:29:55Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:30:05Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T18:29:56Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:32:15Z",
+            "conclusion": "success",
+            "name": "Select iPhone",
+            "number": 3,
+            "startedAt": "2026-11-08T18:30:05Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:43:17Z",
+            "conclusion": "success",
+            "name": "Run purchase, restore, renewal and revocation scenarios",
+            "number": 4,
+            "startedAt": "2026-11-08T18:32:15Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:43:26Z",
+            "conclusion": "success",
+            "name": "Export StoreKit results even after a failed scenario",
+            "number": 5,
+            "startedAt": "2026-11-08T18:43:17Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:43:28Z",
+            "conclusion": "success",
+            "name": "Verify exact StoreKit configuration and all scenario results",
+            "number": 6,
+            "startedAt": "2026-11-08T18:43:26Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:43:32Z",
+            "conclusion": "success",
+            "name": "Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+            "number": 7,
+            "startedAt": "2026-11-08T18:43:28Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:43:33Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 14,
+            "startedAt": "2026-11-08T18:43:32Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:43:56Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 15,
+            "startedAt": "2026-11-08T18:43:33Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307464/job/128818689267"
+      },
+      {
+        "completedAt": "2026-11-08T18:27:48Z",
+        "conclusion": "success",
+        "databaseId": 128818689292,
+        "name": "sanitizers (address)",
+        "startedAt": "2026-11-08T18:25:22Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T18:25:24Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T18:25:23Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:25:32Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T18:25:24Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:27:44Z",
+            "conclusion": "success",
+            "name": "Check package tests for memory errors or data races",
+            "number": 3,
+            "startedAt": "2026-11-08T18:25:32Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:27:45Z",
+            "conclusion": "success",
+            "name": "Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+            "number": 4,
+            "startedAt": "2026-11-08T18:27:44Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:27:45Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 8,
+            "startedAt": "2026-11-08T18:27:45Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:27:46Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 9,
+            "startedAt": "2026-11-08T18:27:45Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307464/job/128818689292"
+      },
+      {
+        "completedAt": "2026-11-08T18:41:25Z",
+        "conclusion": "success",
+        "databaseId": 128818689294,
+        "name": "storekit (es, US Spanish app · Spanish (Mexico) offer · USA storefront)",
+        "startedAt": "2026-11-08T18:28:58Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T18:29:00Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T18:28:58Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:29:09Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T18:29:00Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:30:29Z",
+            "conclusion": "success",
+            "name": "Select iPhone",
+            "number": 3,
+            "startedAt": "2026-11-08T18:29:09Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:40:41Z",
+            "conclusion": "success",
+            "name": "Run purchase, restore, renewal and revocation scenarios",
+            "number": 4,
+            "startedAt": "2026-11-08T18:30:29Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:40:50Z",
+            "conclusion": "success",
+            "name": "Export StoreKit results even after a failed scenario",
+            "number": 5,
+            "startedAt": "2026-11-08T18:40:41Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:40:53Z",
+            "conclusion": "success",
+            "name": "Verify exact StoreKit configuration and all scenario results",
+            "number": 6,
+            "startedAt": "2026-11-08T18:40:50Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:40:57Z",
+            "conclusion": "success",
+            "name": "Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+            "number": 7,
+            "startedAt": "2026-11-08T18:40:53Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:40:58Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 14,
+            "startedAt": "2026-11-08T18:40:57Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:41:24Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 15,
+            "startedAt": "2026-11-08T18:40:58Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307464/job/128818689294"
+      }
+    ],
+    "name": "iOS deep checks",
+    "startedAt": "2026-11-08T18:18:08Z",
+    "updatedAt": "2026-11-08T18:43:59Z"
+  },
+  {
+    "id": 42509307191,
+    "createdAt": "2026-11-08T18:18:08Z",
+    "jobs": [
+      {
+        "completedAt": "2026-11-08T18:18:17Z",
+        "conclusion": "success",
+        "databaseId": 128818686843,
+        "name": "Dependency review",
+        "startedAt": "2026-11-08T18:18:11Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T18:18:13Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T18:18:12Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:16Z",
+            "conclusion": "success",
+            "name": "Run actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294",
+            "number": 2,
+            "startedAt": "2026-11-08T18:18:13Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:16Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 3,
+            "startedAt": "2026-11-08T18:18:16Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307191/job/128818686843"
+      },
+      {
+        "completedAt": "2026-11-08T18:18:49Z",
+        "conclusion": "success",
+        "databaseId": 128818686975,
+        "name": "CodeQL (actions)",
+        "startedAt": "2026-11-08T18:18:11Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T18:18:13Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T18:18:12Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:20Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 2,
+            "startedAt": "2026-11-08T18:18:13Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:29Z",
+            "conclusion": "success",
+            "name": "Run github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066",
+            "number": 3,
+            "startedAt": "2026-11-08T18:18:20Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:46Z",
+            "conclusion": "success",
+            "name": "Run github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066",
+            "number": 4,
+            "startedAt": "2026-11-08T18:18:29Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:46Z",
+            "conclusion": "success",
+            "name": "Post Run github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066",
+            "number": 6,
+            "startedAt": "2026-11-08T18:18:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:47Z",
+            "conclusion": "success",
+            "name": "Post Run github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066",
+            "number": 7,
+            "startedAt": "2026-11-08T18:18:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:47Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 8,
+            "startedAt": "2026-11-08T18:18:47Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:47Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 9,
+            "startedAt": "2026-11-08T18:18:47Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307191/job/128818686975"
+      },
+      {
+        "completedAt": "2026-11-08T18:19:41Z",
+        "conclusion": "success",
+        "databaseId": 128818687111,
+        "name": "CodeQL (javascript-typescript)",
+        "startedAt": "2026-11-08T18:18:12Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T18:18:13Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T18:18:12Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:20Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 2,
+            "startedAt": "2026-11-08T18:18:13Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:32Z",
+            "conclusion": "success",
+            "name": "Run github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066",
+            "number": 3,
+            "startedAt": "2026-11-08T18:18:20Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:19:38Z",
+            "conclusion": "success",
+            "name": "Run github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066",
+            "number": 4,
+            "startedAt": "2026-11-08T18:18:32Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:19:39Z",
+            "conclusion": "success",
+            "name": "Post Run github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066",
+            "number": 6,
+            "startedAt": "2026-11-08T18:19:38Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:19:39Z",
+            "conclusion": "success",
+            "name": "Post Run github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066",
+            "number": 7,
+            "startedAt": "2026-11-08T18:19:39Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:19:40Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 8,
+            "startedAt": "2026-11-08T18:19:39Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:19:40Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 9,
+            "startedAt": "2026-11-08T18:19:40Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307191/job/128818687111"
+      }
+    ],
+    "name": "Security checks",
+    "startedAt": "2026-11-08T18:18:08Z",
+    "updatedAt": "2026-11-08T18:19:42Z"
+  },
+  {
+    "id": 42509307183,
+    "createdAt": "2026-11-08T18:18:08Z",
+    "jobs": [
+      {
+        "completedAt": "2026-11-08T18:20:11Z",
+        "conclusion": "success",
+        "databaseId": 128818687333,
+        "name": "native-wire",
+        "startedAt": "2026-11-08T18:18:11Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-08T18:18:12Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-08T18:18:12Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:22Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 2,
+            "startedAt": "2026-11-08T18:18:12Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:22Z",
+            "conclusion": "success",
+            "name": "Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "number": 3,
+            "startedAt": "2026-11-08T18:18:22Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:31Z",
+            "conclusion": "success",
+            "name": "Install PostgreSQL 17",
+            "number": 4,
+            "startedAt": "2026-11-08T18:18:22Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:18:38Z",
+            "conclusion": "success",
+            "name": "Build the service",
+            "number": 5,
+            "startedAt": "2026-11-08T18:18:31Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:20:07Z",
+            "conclusion": "success",
+            "name": "Require all native wire cases over pinned loopback HTTPS",
+            "number": 6,
+            "startedAt": "2026-11-08T18:18:38Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:20:08Z",
+            "conclusion": "success",
+            "name": "Preserve native wire test evidence",
+            "number": 7,
+            "startedAt": "2026-11-08T18:20:07Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:20:08Z",
+            "conclusion": "success",
+            "name": "Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "number": 13,
+            "startedAt": "2026-11-08T18:20:08Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:20:09Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "number": 14,
+            "startedAt": "2026-11-08T18:20:08Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-08T18:20:10Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 15,
+            "startedAt": "2026-11-08T18:20:09Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42509307183/job/128818687333"
+      }
+    ],
+    "name": "Native Swift HTTPS and PostgreSQL",
+    "startedAt": "2026-11-08T18:18:08Z",
+    "updatedAt": "2026-11-08T18:20:12Z"
+  }
+]
