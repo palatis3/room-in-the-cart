@@ -26,7 +26,7 @@ struct SharedFallbackRoot: View {
             else { Text(sharedRecoveryText("Refresh the current meal record.")) }
         }
         .navigationTitle(fallbackText("Household fallback recipes"))
-        .task(id: access) {
+        .task(id: access) { [shop, household] in
             model?.invalidate()
             model = nil
             guard let selected = access, let service = household.service else { return }

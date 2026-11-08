@@ -34,5 +34,13 @@
     "ios/Tests/PickupModelTests.swift": "c520200a0c3263f5611e275476976d4d05937619fcb94ec8fe0823cab9b5f9a7",
     "ios/UITests/FreeJourneyUITests.swift": "b86079eb30921e2cd1d86353dea1f88e1789aa8fff3e15edb4370d75e60d167d"
   },
-  "strictSHA256": "b12ea98e7d6f89681c57cfc8995d47c01301ef9692ea74f0f5e399833e7b6f90"
+  "strictSHA256": "b12ea98e7d6f89681c57cfc8995d47c01301ef9692ea74f0f5e399833e7b6f90",
+  "deviceBuild": {
+    "configuration": "Release",
+    "architecture": "arm64",
+    "destination": "generic iPhone",
+    "signed": false,
+    "result": "Build succeeded. Executable, assets, privacy, environment and embedded extensions verified.",
+    "verificationSHA256": "f235bbb8dff89745abba14e5dbe8f0247778c5a7063582549dc3dd95af685c76"
+  }
 }
