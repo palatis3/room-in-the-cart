@@ -61,7 +61,9 @@ struct PickupArrivalView: View {
                                 Text(pTr("Future-dated evidence is not counted as available food."))
                             }
                         } else { Text(pTr("Usable amount unverified")) }
-                        NavigationLink(pTr("Correct usable amount")) { PickupUsableCorrectionView(model: model, receipt: receipt) }
+                        NavigationLink(pTr("Correct usable amount")) {
+                            PickupUsableCorrectionView(model: model, receipt: receipt).id(receipt.key)
+                        }
                     }
                 }
             }
@@ -83,32 +85,6 @@ struct PickupArrivalView: View {
         } catch { formError = pTr("Choose a line, name the delivery segment and enter valid quantities. No fill requires zero received.") }
     }
 }
-struct PickupUsableCorrectionView: View {
-    @ObservedObject var model: PickupModel
-    let receipt: ReceiptFragment
-    @State private var amount = ""
-    @State private var matched = false
-    @State private var operationID = UUID()
-    @Environment(\.dismiss) private var dismiss
-    var body: some View {
-        Form {
-            PickupSaveStatus(model: model)
-            Text(receipt.itemName)
-            Text("\(pTr("Received")): \(pQuantity(receipt.received))")
-            TextField(pTr("Correct confirmed usable amount"), text: $amount).keyboardType(.decimalPad)
-            Toggle(pTr("I checked the identity, units and meal constraints"), isOn: $matched)
-            Button(pTr("Save correction and recheck meals")) { Task {
-                do {
-                    guard let quantity = try ComparisonModel.quantity(amount, receipt.received.unit) else { return }
-                    let previous = model.journey?.pickup?.usableObservations.last { $0.receipt == receipt.key }
-                    let observation = UsableObservation(id: operationID, receipt: receipt.key, usable: quantity, confirmedAt: Date(), supersedesID: previous?.id, confirmedMatchToOrderLine: matched)
-                    if await model.confirmUsable(observation) { dismiss() }
-                } catch { model.error = pTr("Usable amount must be valid and no larger than the received amount.") }
-            } }
-        }.navigationTitle(pTr("Usable food"))
-    }
-}
-
 struct PickupOfferView: View {
     @ObservedObject var model: PickupModel
     @State private var editor: OfferEditorSelection?

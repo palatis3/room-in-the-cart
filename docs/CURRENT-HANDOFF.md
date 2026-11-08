@@ -2,9 +2,15 @@
 
 Updated November 7, 2026 UTC. The owner resumed and explicitly approved the reviewed hosted staging update; the full first-version goal is active and release acceptance remains incomplete. Historical snapshots are preserved in [the handoff archive](CURRENT-HANDOFF-HISTORY-20261106.md).
 
+## November 7 usable-food correction
+
+The correction screen now shows the saved usable amount and previews affected meals before saving. A six-to-seven-wrap correction preserved two protected lunch wraps, increased taco coverage from four to five and left the quesadilla need open. Saving rejects an outdated observation or changed meal allocation. After relaunch, SQLite retained the original observation and its linked correction on the same physical receipt. All 684 model tests and the shopper journey passed on iOS 17 with zero recorded runtime warnings. The five targeted iOS 26.2 checks passed before integration. [Verification](evidence/native/arrival-correction-20261107/verification.json)
+
 ## November 7 private retailer handoff
 
 The shopper can leave checkout unconfirmed, return later to report placement, and reopen the original dated order after restarting the app. The receipt identifies the reporting installation for new private reports. Earlier reports retain their unknown reporter. On the iOS 17 simulator the reopened order contained two wraps and the $3.00 whole-checkout quote from the original branch and slot. The placement, frozen revision, quote and reporting installation matched in SQLite and private preferences. All 683 model tests and both selected app journeys passed with zero recorded runtime warnings. [Verification](evidence/native/placed-order-20261107/verification.json)
+
+The Records tab now lists placed orders by their report date. Opening an earlier order reads its immutable lines and checkout quote without selecting that pickup in Shop. The iOS 17 walkthrough created a new draft, read the previous two-wrap order and $3.00 quote, and returned to the same open draft. SQLite retained one placed order, one fresh draft and the original placed basket. The new Records test failed on the prior product and passed after the change with zero recorded runtime warnings. The generic arm64 Release iPhone app compiled and passed the executable, asset, privacy, environment and extension checks. This build was unsigned.
 
 ## November 7 retailer prices and package labels
 
@@ -21,6 +27,8 @@ English and Spanish quantity ranges now stay unresolved until the shopper enters
 An English or Spanish measure now keeps its exact quantity in list entry and structured capture. On an iPhone SE running iOS 17, the shopper entered “1 1/2 cups of arroz”, merged “1 1/2 tazas de arroz”, and reopened the same item after restarting the app. The list showed 3/2 US cups. SQLite held one line, both original contributions and the duplicate link. The native capture regression also covers a two-pack Spanish fluid-ounce entry and unresolved spoon measures. The five new CoreDomain regressions are in the compiled package gate. [Verification record](evidence/native/list-import-20261107/verification.json)
 
 ## November 7 hosted regression follow-up
+
+All six workflows for `5edf632` are terminal. The batch had 45 successful jobs and seven failures, including the aggregate core gate. Six checks failed independently. The shared stock-and-purchase case failed while waiting for the system share sheet’s Close button, and the store-quote case timed out while entering the second store. The updated share test passed locally and now shares the existing two-stage presentation check with private handoff cancellation. The unchanged original app also passed locally, so hosted confirmation remains open. [Terminal jobs](evidence/native/ci-5edf632-20261107/terminal.json)
 
 The recipe-source, 500-item search and keyboard Done checks that failed on hosted revision `5edf632` each passed on the corrected local iPhone simulator runs. The keyboard test also rejected a deliberate missed tap. The search test retained its measured sample count and time budget. Hosted reruns of these changes are pending. [Tests, failed GitHub jobs and local verification](evidence/native/ci-5edf632-20261107/verification.json)
 

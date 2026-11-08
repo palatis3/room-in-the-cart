@@ -1,6 +1,40 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Preview corrected usable amount": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview corrected usable amount"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar la cantidad aprovechable corregida"
+          }
+        }
+      }
+    },
+    "The saved usable amount changed. Reopen this delivery to review the current observation.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The saved usable amount changed. Reopen this delivery to review the current observation."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cantidad aprovechable guardada cambió. Vuelve a abrir esta entrega para revisar la observación actual."
+          }
+        }
+      }
+    },
     "Placed orders": {
       "extractionState": "manual",
       "localizations": {

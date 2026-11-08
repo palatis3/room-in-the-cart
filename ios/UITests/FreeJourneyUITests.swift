@@ -16,6 +16,40 @@ import XCTest
     }
 
 #if DEBUG && targetEnvironment(simulator)
+    func testReceiptUsableCorrectionShowsProtectedMealEffectsBeforeSaving() {
+        launch(reset: true, privateRecovery: true)
+        func arrivals() {
+            shopRoot()
+            tap(app.buttons["Pickup, repairs and handoffs"])
+            tap(app.buttons["Record what came home"])
+            XCTAssertTrue(app.navigationBars["What came home"].waitForExistence(timeout: 8))
+        }
+        arrivals()
+        tap(app.buttons["Correct usable amount"])
+        XCTAssertTrue(app.navigationBars["Usable food"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.staticTexts["Usable: 6 units"].waitForExistence(timeout: 5))
+        fill("7", into: "Correct confirmed usable amount")
+        enableSwitch("I checked the identity, units and meal constraints")
+        tap(app.buttons["Preview corrected usable amount"])
+        func checkMeal(_ name: String, before: String, after: String) {
+            let row = app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@",
+                "receiptCorrection.meal.", name)).firstMatch
+            reveal(row)
+            XCTAssertTrue(row.label.contains(before), row.label)
+            XCTAssertTrue(row.label.contains(after), row.label)
+        }
+        checkMeal("Lunch", before: "Before this change: Allocated: 2 units", after: "After this change: Allocated: 2 units")
+        checkMeal("Tuesday tacos", before: "Before this change: Allocated: 4 units", after: "After this change: Allocated: 5 units")
+        checkMeal("Wednesday quesadillas", before: "Before this change: Allocated: 0 units", after: "After this change: Allocated: 0 units")
+        capture("S08-corrected-receipt-dependent-meals")
+        tap(app.buttons["Save correction and recheck meals"])
+        XCTAssertTrue(app.navigationBars["What came home"].waitForExistence(timeout: 8))
+        restart()
+        arrivals()
+        assertText("Usable: 7 units")
+        XCTAssertEqual(app.buttons.matching(identifier: "Correct usable amount").count, 1)
+    }
+
     private func createReplacementFromPrivatePickup() {
         launch(reset: true, privateRecovery: true)
         shopRoot()
@@ -281,30 +315,7 @@ import XCTest
         XCTAssertTrue(snapshot.exists && snapshot.isHittable, "Show the exact frozen snapshot before opening Share")
         let frozenText = snapshot.label
         tap(app.buttons["Share dated list"])
-        let close = app.buttons.matching(NSPredicate(format: "identifier == %@ OR label == %@", "header.closeButton", "Close")).firstMatch
-        let activityHost = app.otherElements["ActivityListView"].firstMatch
-        let remoteContent = activityHost.descendants(matching: .other)["ShareSheet.RemoteContainerView"].firstMatch
-        func waitForShareState(_ description: String, timeout: TimeInterval, until ready: @escaping () -> Bool) -> Bool {
-            let started = Date()
-            let condition = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in ready() }, object: nil)
-            let result = XCTWaiter.wait(for: [condition], timeout: timeout)
-            if result == .completed { return true }
-
-            // Capture the system screen before a slow hierarchy query changes the evidence.
-            let facts = XCTAttachment(string: "\(description); waiter: \(result); allowance: \(timeout)s; observed wait: \(Date().timeIntervalSince(started))s; Reduce Motion: \(UIAccessibility.isReduceMotionEnabled)")
-            facts.name = "Share-readiness-failed-boundary"; facts.lifetime = .keepAlways; add(facts)
-            captureSystemScreen("Share-readiness-failed-before-debug-hierarchy")
-            XCTFail("\(description). \(app.debugDescription)")
-            return false
-        }
-        guard waitForShareState("The system share sheet did not begin presenting", timeout: 15, until: {
-            remoteContent.exists || (close.exists && close.isEnabled && close.isHittable)
-        }) else { return }
-        // UIKit presents the remote container before the system activity service
-        // supplies its controls. Only a usable Close permits cancellation.
-        guard waitForShareState("The presented system share sheet did not load its Close control", timeout: 45, until: {
-            close.exists && close.isEnabled && close.isHittable
-        }) else { return }
+        guard let close = readySystemShareClose(in: app) else { return }
         captureSystemScreen("Retailer-share-sheet-ready-to-cancel")
         func waitForShareDismissal(timeout: TimeInterval) -> Bool {
             let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in

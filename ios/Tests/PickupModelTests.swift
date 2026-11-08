@@ -254,6 +254,58 @@ extension PickupModelTests {
         return (model, foodID, lunchID, dinnerID)
     }
 
+    @MainActor func testReceiptCorrectionRejectsSupersededHeadAndReplaysOnlyReviewedMealEffects() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appendingPathComponent("receipt.sqlite"), now = Date()
+        let (model, food, lunch, dinner) = try await arrivalFixture(url: url, clock: { now })
+        let key = ReceiptKey(sourceEventID: "bag", orderLineID: food, branchID: "Main", segmentID: "one")
+        let receipt = ReceiptFragment(key: key, itemName: "Wraps", received: quantity(6), disposition: .partial, receivedAt: now)
+        let received = await model.receive(receipt, usable: nil)
+        XCTAssertTrue(received)
+        let unchecked = try XCTUnwrap(model.journey)
+        let firstHead = PickupReceiptHead(journey: unchecked, receipt: receipt)
+        XCTAssertNil(firstHead.previous)
+        let first = try PickupUsableCorrectionReview(head: firstHead, quantity: quantity(4), matched: true, in: unchecked, at: now)
+        let competing = try PickupUsableCorrectionReview(head: firstHead, quantity: quantity(3), matched: true, in: unchecked, at: now)
+        XCTAssertEqual(model.journey, unchecked)
+        let saved = await model.applyReceiptCorrection(first)
+        XCTAssertTrue(saved)
+        let firstSaved = try XCTUnwrap(model.journey)
+        let rejected = await model.applyReceiptCorrection(competing)
+        XCTAssertFalse(rejected)
+        XCTAssertThrowsError(try PickupUsableCorrectionReview(head: firstHead, quantity: quantity(3), matched: true, in: firstSaved, at: now))
+        XCTAssertEqual(model.journey, firstSaved)
+
+        let current = PickupReceiptHead(journey: firstSaved, receipt: receipt)
+        let unmatched = try PickupUsableCorrectionReview(head: current, quantity: quantity(6), matched: false, in: firstSaved, at: now)
+        XCTAssertEqual(unmatched.after.demands.first { $0.id == lunch }?.allocated, .zero)
+        XCTAssertEqual(unmatched.after.demands.first { $0.id == dinner }?.allocated, .zero)
+        let correction = try PickupUsableCorrectionReview(head: current, quantity: quantity(5), matched: true, in: firstSaved, at: now)
+        XCTAssertEqual(correction.meals.first { $0.id == lunch }?.before?.allocated, try Rational(2))
+        XCTAssertEqual(correction.meals.first { $0.id == lunch }?.after?.allocated, try Rational(2))
+        XCTAssertEqual(correction.meals.first { $0.id == dinner }?.before?.shortfall, try Rational(2))
+        XCTAssertEqual(correction.meals.first { $0.id == dinner }?.after?.shortfall, .one)
+        let changed = await model.change { $0.stockNeeds.append(.init(id: UUID(), foodID: food, name: "Another lunch", amount: self.quantity(1), priority: .protected)) }
+        XCTAssertTrue(changed)
+        let rejectedEffects = await model.applyReceiptCorrection(correction)
+        XCTAssertFalse(rejectedEffects)
+        let refreshed = try PickupUsableCorrectionReview(head: current, quantity: quantity(5), matched: true, in: XCTUnwrap(model.journey), at: now)
+        let applied = await model.applyReceiptCorrection(refreshed)
+        XCTAssertTrue(applied)
+        let completed = try XCTUnwrap(model.journey)
+        let replayed = await model.applyReceiptCorrection(refreshed)
+        XCTAssertTrue(replayed)
+        XCTAssertEqual(model.journey, completed)
+        XCTAssertEqual(completed.pickup?.usableObservations, [first.observation, refreshed.observation])
+        XCTAssertEqual(completed.pickup?.receipts, [receipt])
+        XCTAssertEqual(completed.basket, unchecked.basket)
+        XCTAssertEqual(completed.settlement.entries, unchecked.settlement.entries)
+        let reopened = PickupModel(databaseURL: url, clock: { now })
+        await reopened.load()
+        XCTAssertEqual(reopened.journey, completed)
+    }
+
     @MainActor func testFutureArrivalAndUsableWritesLeaveProtectedFoodUnconfirmed() async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: directory) }

@@ -53,9 +53,7 @@ import XCTest
         }
         if openShare {
             tap(app.buttons["delivery.cook.share"], file: file, line: line)
-            let close = app.buttons.matching(NSPredicate(format: "identifier == %@ OR label == %@", "header.closeButton", "Close")).firstMatch
-            let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND hittable == true"), object: close)
-            XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 15), .completed, file: file, line: line)
+            guard let close = readySystemShareClose(in: app, file: file, line: line) else { return }
             close.tap()
             reveal(preview, file: file, line: line)
             XCTAssertEqual(preview.label, copy, file: file, line: line)
