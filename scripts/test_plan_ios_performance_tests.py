@@ -1,9 +1,11 @@
 from pathlib import Path
+import io
 import subprocess
 import unittest
 from unittest.mock import patch
 
-from plan_ios_performance_tests import CLASS_PREFIX, METHODS, SUITE, UI_TARGET, performance_matrix, plan_from_binary
+from plan_ios_performance_tests import (CLASS_PREFIX, METHODS, SUITE, UI_TARGET, performance_matrix,
+                                        plan_from_binary, select_matrix, validate_request, main)
 
 
 def symbol(method, effects=""):
@@ -14,6 +16,51 @@ COMPILED = [symbol(METHODS["launch"]), symbol(METHODS["rendered"], " throws"), s
 
 
 class PlanIOSPerformanceTests(unittest.TestCase):
+    def test_normal_and_release_selection_keeps_all_cases(self):
+        full = performance_matrix("\n".join(COMPILED))
+        for event in ("pull_request", "workflow_call", "workflow_dispatch", "push", ""):
+            with self.subTest(event=event):
+                self.assertEqual(select_matrix(full, event, ""), full)
+
+    def test_manual_selection_preserves_selector_and_slot(self):
+        full = performance_matrix("\n".join(COMPILED))
+        for row in full["include"]:
+            with self.subTest(case=row["case"]):
+                self.assertEqual(select_matrix(full, "workflow_dispatch", row["case"]), {"include": [row]})
+        self.assertEqual(len(full["include"]), 3)
+
+    def test_selection_rejects_nonmanual_unknown_and_incomplete_inventory(self):
+        for event in ("pull_request", "workflow_call", "push", "schedule", ""):
+            with self.subTest(event=event), self.assertRaises(ValueError):
+                validate_request(event, "scroll")
+        for requested in (None, "*", "scroll\nmatrix={}", "missing"):
+            with self.subTest(requested=requested), self.assertRaises(ValueError):
+                validate_request("workflow_dispatch", requested)
+        full = performance_matrix("\n".join(COMPILED))
+        for rows in ([], full["include"][:-1], [full["include"][0]] * 3):
+            with self.assertRaises(ValueError):
+                select_matrix({"include": rows}, "workflow_dispatch", "launch")
+
+    def test_linux_preflight_does_not_call_native_tools(self):
+        with patch("sys.argv", ["planner", "--validate-request"]), \
+                patch.dict("os.environ", {"GITHUB_EVENT_NAME": "workflow_dispatch", "REQUESTED_PERFORMANCE_CASE": "scroll"}), \
+                patch("plan_ios_performance_tests.subprocess.check_output") as native, \
+                patch("sys.stdout", new_callable=io.StringIO) as output:
+            main()
+            native.assert_not_called()
+            self.assertIn('"cases": ["scroll"]', output.getvalue())
+
+    def test_focused_cli_still_rejects_missing_unselected_compiled_case(self):
+        symbols = "\n".join(COMPILED[:-1]).encode()
+        with patch("sys.argv", ["planner", "fixture.xctest"]), \
+                patch.dict("os.environ", {"GITHUB_EVENT_NAME": "workflow_dispatch", "REQUESTED_PERFORMANCE_CASE": "launch"}), \
+                patch("plan_ios_performance_tests.subprocess.check_output", side_effect=[b"symbols", symbols]), \
+                patch("sys.stderr", new_callable=io.StringIO) as error, \
+                self.assertRaises(SystemExit) as result:
+            main()
+        self.assertEqual(result.exception.code, 1)
+        self.assertIn("Missing", error.getvalue())
+
     def test_matrix_uses_exact_objc_tests_and_ignores_unrelated_symbols(self):
         unrelated = [COMPILED[0].removeprefix("@objc "),
                      "partial apply forwarder for closure #1 in " + COMPILED[1],

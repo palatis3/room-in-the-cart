@@ -1,5 +1,18 @@
 # Local CI validation
 
+## Fast validation before macOS work
+
+Core macOS entry jobs now wait for `source-checks`: Swift packages, Release
+compilation, Swift CodeQL and the shared UI-test build. The measured source job
+took 24 seconds in the November 8 batch. A generated-file, workflow or product
+contract failure therefore stops these expensive jobs before they claim a macOS
+slot. The final `CI gate` still rejects any failed or skipped required job.
+Independent service/web checks continue in parallel. This trades a short startup
+dependency on passing runs for less wasted work on invalid revisions.
+
+Performance planning and Python evidence-validator tests also run on Linux before
+the optimized build. The compiled XCTest inventory is still verified on macOS.
+
 ## Focused hosted feedback
 
 `iOS fixture checks` now accepts an optional manual `shard` input. Leave it blank
@@ -31,6 +44,27 @@ DerivedData directory when the toolchain/profile is unchanged, preserving the
 tested source revision/diff and results. Avoid a fresh source path and cold build
 for every small experiment. Keep CI failure diagnostics enabled; collect heavier
 local diagnostics when they answer the failure being investigated.
+
+The performance workflow likewise accepts a manual `case`: `all` (default),
+`launch`, `rendered` or `scroll`. For example:
+
+```sh
+gh workflow run ios-performance.yml --ref codex/my-reviewed-fix \
+  -f case=scroll -f enforce_baselines=true
+```
+
+The complete compiled performance inventory must match before selection. A
+focused case retains its original selector, slot, execution deadline and evidence
+validation. PRs run all three cases. The reusable release workflow exposes no
+case selector and enforces all approved baselines. A focused result cannot stand
+in for the full release gate. The baseline-enforcement input retains its existing
+behavior; keep it `true` when checking an environment with approved limits.
+
+Do not dispatch repeated copies while a diagnostic is queued or running. Record
+the branch SHA and run URL, inspect one terminal result, and group the resulting
+qualified fixes into the next full PR batch. A rerun uses the original revision;
+changed source needs a new run. Preserve the first failure's evidence before
+retrying. Full release acceptance remains tied to one exact revision.
 
 The November 8 baseline took 150.70 minutes across 43 macOS jobs and 687.37 macOS
 runner-minutes, about 91.22% of five-slot capacity. More static shards alone cannot

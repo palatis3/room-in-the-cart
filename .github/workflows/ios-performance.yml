@@ -1,4 +1,5 @@
 name: iOS Release performance
+run-name: iOS performance · ${{ inputs.case || 'all' }}
 
 on:
   pull_request:
@@ -22,6 +23,11 @@ on:
       - 'ios/RoomInTheCart.xcodeproj/xcshareddata/xcschemes/RoomInTheCart-Performance.xcscheme'
   workflow_dispatch:
     inputs:
+      case:
+        description: Diagnostic case; use all for the full performance suite
+        type: choice
+        options: [all, launch, rendered, scroll]
+        default: all
       enforce_baselines:
         description: Require approved limits for this Xcode and simulator environment
         type: boolean
@@ -42,9 +48,23 @@ concurrency:
 
 env:
   DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+  REQUESTED_PERFORMANCE_CASE: ${{ github.event_name == 'workflow_dispatch' && inputs.case != 'all' && inputs.case || '' }}
 
 jobs:
+  performance-plan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Validate performance selection before allocating macOS
+        run: |
+          python3 scripts/test_plan_ios_performance_tests.py
+          python3 scripts/test_check_ios_performance.py
+          python3 scripts/test_scroll_signpost_diagnostic.py
+          python3 scripts/plan_ios_performance_tests.py --validate-request
+
   performance-build:
+    needs: performance-plan
     concurrency:
       group: ritc-macos-slot-2
       queue: max
@@ -57,10 +77,6 @@ jobs:
       test_matrix: ${{ steps.plan.outputs.matrix }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - name: Check performance evidence validation
-        run: |
-          python3 scripts/test_check_ios_performance.py
-          python3 scripts/test_scroll_signpost_diagnostic.py
       - name: Record Xcode and select an iPhone simulator
         run: |
           xcodebuild -version

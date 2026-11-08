@@ -151,6 +151,7 @@ jobs:
           FOUNDATION_PYTHON: ${{ steps.foundation-python.outputs.python-path }}
         run: '"$FOUNDATION_PYTHON" -B verify.py'
   swift-packages:
+    needs: source-checks
     concurrency:
       group: ritc-macos-slot-0
       queue: max
@@ -182,6 +183,7 @@ jobs:
             ios/Packages/**/.build/**/codecov/*.json
           retention-days: 7
   ios-release:
+    needs: source-checks
     concurrency:
       group: ritc-macos-slot-1
       queue: max
@@ -220,6 +222,7 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
   ios-swift-codeql:
+    needs: source-checks
     concurrency:
       group: ritc-macos-slot-4
       queue: max
@@ -378,6 +381,7 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
   ios-build:
+    needs: source-checks
     concurrency:
       group: ritc-macos-slot-3
       queue: max
