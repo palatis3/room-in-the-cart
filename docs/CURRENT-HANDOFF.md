@@ -49,9 +49,14 @@ still Xcode26.3/17C529 with iOS26.2/23C54; it cannot approve the new environment
    remains absent from originalSQLite andJSON. Device/runtime identity is bound;
    preservation and owned cleanup pass. Fresh device alone did not repair it.
    [Exact result](evidence/native/fresh-performance-simulator-20261109/README.md).
-   No hosted work remains active in this cohort. Producer plans agree on the
-   allowlisted settings. The new producer/consumer provenance gate passed409offline
-   checks and17queue-node validation; its hosted consumer observation is pending.
+   Follow-up42611979729 atd3eb3ea is terminal failure: both producer/consumer
+   provenance gates pass, native1/1 passes119.078seconds, preserved store and owned
+   cleanup pass, but required Scroll_DraggingAndDeceleration.duration remains
+   missing. Bounded artifact review is complete under hosted-42611979729.
+   [Exact outcome and timing caveat](evidence/native/verified-performance-artifacts-20261109/README.md).
+   Declared checker-library reference is readable producer/missing consumer
+   pre-setup; loaded-process state and postboot availability remain unknown.
+   No unchanged retry. The provenance gate passed409offline checks and17queue nodes.
    [Implementation proof](evidence/native/performance-plan-provenance-20261109/README.md).
    Do not retry an unchanged native experiment.
 2. **Local performance:** both original Release launch and scroll have complete
@@ -70,7 +75,7 @@ still Xcode26.3/17C529 with iOS26.2/23C54; it cannot approve the new environment
 4. **Fixture isolation:** Membership/Restoration corrections are installed byte-for-byte
    from the independently reviewed and natively qualified candidate. Both old-API
    controls failed as predicted; all74affected tests then passed native/strict checks
-   with0warnings. All561canonical product inputs match source manifest
+   with0warnings. At that integration,561canonical product inputs matched source manifest
    `f0706a9cd416a0fa738e973f1bbb516dc5ac3a751a8b2d2e4db395dc58ea2559`.
    [Proof and workflow follow-through](evidence/native/ci-workflow-followthrough-20261109/README.md).
 5. **Optional signpost collector:** predicate-bound framing/footer and duplicate-key
@@ -78,73 +83,52 @@ still Xcode26.3/17C529 with iOS26.2/23C54; it cannot approve the new environment
    UID501 stderr remains a qualification failure; no suppression or new transport
    acceptance. [Proof](evidence/native/scroll-capture-framing-20261109/README.md).
 
-## Current isolated product follow-up
+## Installed clarification follow-up
 
-Retained clarification-screen pixels measure guidance3.11:1 and empty Question
-prompt1.72:1, below the existing4.5:1 check. `.build/ClarificationContrastNov09/`
-contains source-bound measurements, preserved native custody and guarded runners. A two-line style fix uses Theme.secondary
-and the existing native workingTextField. Canonical product remains unchanged.
-The focused test proposal also exposed a fixture blind spot: rejected clarification
-attempts could leave visible posts at0. R2 adds command-attempt observation and a
-rejected-send control; it remains isolated, not installed into canonical product.
+Clarification guidance and empty Question originally measured3.111655:1 and
+1.723392:1 against the unchanged4.5:1 requirement. Baseline4 is retained accepted
+negative-control proof with exactly those two failures and all behavioral controls
+reached. Product candidate uses Theme.secondary and existing workingTextField,
+plus a stable Question identifier. Fixture instrumentation observes every command
+attempt, including rejected sends, without claiming pending-operation cancellation.
+Nine compiler warning sites are corrected without changing synchronization behavior.
 
-Baseline1 full-contributor compilation and enumeration passed (68 contributor
-cases). Its new test failed before contrast assertions: a swipe gesture area's
-24-point horizontal inset incorrectly rejected a fully visible Form row at x16.
-The row also includes native padding, so its frame is not a text-ink rectangle.
-The 19.915-second test finalized normally after629.308seconds, including broad
-failure diagnostics. Native65/strict1, screenshots, geometry and original hashes
-are retained. This is a harness failure, not accepted negative contrast proof.
-Source/products and executable modes were verified in
-`.build/NativeQualificationArchivesNov09/5d323e329534e8c46baec7659d4af415ed5b3bec5e02278d9838e56f05178b68/`.
-Baselines1–4 are terminal and their source/products/modes are archived. Baseline2
-found native placeholder-vs-label identity; baseline3 found that placeholder
-identity disappears after typing. R5 adds `household.decision.question` to both
-original-color and styled candidates and retains exact empty-title/draft checks.
+Current frozen source is positive-r5:
+`2f880895b40c37e3662f83ffedae2ae0d0f45169857f9669cdcd0f8f7a63b84f`.
+Its contributor build and bundle check pass in7.061seconds. The full largest-text
+light diagnostic passes93.660seconds; separate on-failure positive qualification
+passes native/strict in98.699seconds. DarkAX5, lightLarge, darkLarge and original
+Cancel also pass native/strict on the same source. All native processes are terminal.
+All four trait captures received independent visual review with no target clipping.
+Compiled inventory68contributor cases assigns the new selector once to balanced03.
 
-Baseline4 is accepted **negative-control proof**, not a passing app test: it
-completed normally in85.628seconds with exactly the two intended native contrast
-assertion failures (3.111655:1 guidance,1.723392:1 empty prompt against4.5), no
-additional assertion failures, and no observed runtime warnings/restarts/idle
-messages. Multiline editing and Cancel reach0fixture attempts/applied/lines; an
-intentional rejected-send control reaches1attempt/0applied/0lines. Full/target
-screenshots, geometry, traits and control attachments are retained; Large full
-screenshots were manually reviewed for complete wording and no target clipping.
-This does not prove zero local-file writes or cancel the rejected pending operation.
-Receipt: `.build/ClarificationContrastNov09/baseline-r4/negative-control.json`.
-Source manifest: `e078096286ceaf0806189a70808197ccf2b2767bbba16ca5aac59a9975163d83`.
+Retained failures changed the next action: initial AX5 needed scrolling to
+materialize the request; the guidance helper incorrectly considered background
+navigation bounds; final rejected-send dismissal needed bounded request existence
+search without tapping a possibly disabled row. The new test alone opts into the
+foreground Review request bounds and existing fine positioning. All original
+assertions, contrast thresholds and deadlines remain. Layout investigation may
+omit verbose sysdiagnose per CI-VALIDATION; positive qualification/CI retain
+on-failure diagnostics. Original results and strict checks remain required.
+Positive-r3 testcase81.806seconds finalized normally after691.807seconds; it was
+not interrupted. Positive-r4's layout investigation finalized after100.678seconds.
 
-All nine identified compiler warning sites are absent in the isolated candidate.
-Clarification/test/fixture changes remain isolated. The CoreDomain source-removal fix below is installed and verified.
+Positive-r2/3/4/5 source and products, including executable modes, are archived
+under `.build/NativeQualificationArchivesNov09/<source-SHA>/`. Old executors are
+historical. Exact records and one-time exports remain in
+`.build/ClarificationContrastNov09/`. Explicit app-preference appearance tests do
+not qualify system-following appearance propagation.
 
-Positive1 source `77b380afdf17d90659f19fd4b94d6ade1fdba8afa131b2efc6e1ec1ad84359c5`
-passed light/Large native+strict, with7.083026:1 for both targets. Dark/Large failed
-its unchanged actual-palette check: API readback was dark but pixels remained
-light. Preconfiguring and verifying simulator dark before XCTest also failed;
-that original completed normally after638.363seconds and is retained. All three
-positive1 cases are terminal, inspected once; source/products/modes are archived.
-This is not a qualified dark-mode result or a proven product system-mode defect.
-
-Reviewed `appearance-parity-r2/appearance-parity.patch` adds the ordinary app's
-appearance preference path only for explicit light/dark opt-in in S24 fixture.
-All assertions remain; other roots and absent-argument S24 behavior are unchanged.
-Stable source is now positive2 manifest
-`14215009e8ce6d6af649d1c859801eb981971d8321f492fd095d3488c39e8894`.
-`positive-r2/` full contributor compilation passed in24.194seconds. Dark/Large
-passes native/strict with8.295239:1 for both targets and actual dark pixels;
-light/Large also passes7.083026:1 and original Cancel passes native/strict.
-AX5/light fails before opening the form: the lazy request row is below the
-fixture header and initial list viewport; the test waits without scrolling.
-All four executed cases are terminal and inspected once; complete source/products
-and modes are archived under14215009. No darkAX5 run or unchanged retry.
-[Exact partial result](evidence/native/clarification-traits-20261109/README.md).
-Reviewed scratch proposal `navigation-r1/navigation.patch` adds only the existing
-bounded reveal before the initial exact request assertion; patchSHA
-`7914e4d22a1562a7e3cdfa6cc2e13a6710c3ceb04f3ab257c42dbf8b8098f517`.
-It is not installed or natively tested. Next: prepare a new frozen source and
-qualify largest-text behavior before installing the clarification files and
-planner fixture count73. Keep canonical CoreDomain fix intact during integration. Positive/CI diagnostics remain on-failure. System-following
-appearance propagation is not qualified by explicit app-preference tests.
+The ten-source-file allowlist plus planner patch is installed byte-for-byte;
+canonical CoreDomain fixes are preserved. All409offline tests and17queue checks
+pass after integration and the after-setup provenance workflow addition.
+[Compact product proof](evidence/native/clarification-contrast-fix-20261109/README.md).
+Combined native inputs have manifest
+`f9d4f7717b3b19967be7f24466b36c2c31973ba14361e47f4b4c37d4ceb80ba6`;
+full combined CI remains outstanding. Next local work is F02 native/SQLite below.
+Next performance question is unchanged library availability after setup; the
+new separate receipt is installed but not yet observed in a hosted run. No rebinding,
+checker disabling or baseline weakening is justified by the preboot discrepancy.
 
 ## Source-removal acceptance follow-up
 
@@ -170,7 +154,7 @@ and unchanged compiled products are preserved. Corrected-input execution passed
 with no warnings. Fix and regression are installed byte-verified in canonical;
 [compact proof](evidence/native/source-removal-tombstones-20261109/README.md).
 No model process remains active. Native F02/SQLite acceptance remains pending.
-Finish positive2 before changing the stable native profile for F02.
+Positive-r5 custody is complete; prepare the ordinary Debug F02 profile next.
 
 ## Installed product fixes and evidence boundaries
 
@@ -200,12 +184,12 @@ with the latest product archive at `builds/<product-SHA>/products`.
 Verify complete manifests and executable modes before mutation; each successor
 needs its own custody/source/product receipts. Old executors become historical.
 
-Owned iPhone17/iOS27.0 device: `A50C91FC-4966-47FF-A8CB-7640FBD513EB` (booted; positive2 is terminal, traits restored to light/Large). Launch-only4C01A9AC was deleted after preserving proof.
+Owned iPhone17/iOS27.0 device: `A50C91FC-4966-47FF-A8CB-7640FBD513EB` (booted; positive-r5 is terminal, light/Large restored). Launch-only4C01A9AC was deleted after preserving proof.
 Protected preview `5FDE1E82-1FF7-4556-9C14-0746F6295944`: never reset or use for fixtures.
 Owned minimum17.0 deviceD420C2CA and17.5 device9DE280AC remain available; recheck state.
 Multiple26.2 runtime builds are installed, so version alone is insufficient identity.
 
-Latest observed free storage is13.87GiB, replacing earlier41GiB readings.
+Latest observed free storage is13.3GiB, replacing earlier41GiB readings.
 Keep8GiB reserve; no SDK download is needed. Do not broadly delete evidence/caches,
 repurpose PostgreSQL port55432 or remove unowned resources.
 

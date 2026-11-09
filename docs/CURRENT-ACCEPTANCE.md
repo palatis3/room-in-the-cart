@@ -2,6 +2,19 @@
 
 ## Current checkpoint — November 9, workflow and combined-candidate qualification
 
+Clarification contrast is now corrected and installed. Five same-source native
+cases pass, with independent light/dark Large/AX5 target review. Both targets
+measure7.083:1 light and8.295:1 dark; original colors failed the unchanged4.5limit.
+The new existing-shard regression distinguishes0cancelled command attempts from
+1rejected attempt, and all409offline/17queue checks pass after integration.
+[Scoped proof](evidence/native/clarification-contrast-fix-20261109/README.md).
+
+Hosted42611979729 verifies producer/consumer plan and executable identity, passes
+native scroll and500-row persistence, but still lacks required scroll duration.
+A pre-setup checker-library availability difference is not execution-time proof;
+a distinct after-setup receipt is now prepared for the next justified observation.
+[Exact failure and limits](evidence/native/verified-performance-artifacts-20261109/README.md).
+
 Latest model fix: removing one dinner now preserves earlier deletion dates on
 unrelated rows. The new regression fails on the original implementation, then
 all196CoreDomain tests pass with the fix. Native removal/SQLite and combined CI

@@ -250,6 +250,21 @@ class PerformanceProvenanceWorkflowTests(unittest.TestCase):
         self.assertIn('timeout-minutes: 2', gate); self.assertNotIn('continue-on-error', gate); self.assertNotIn('||', gate)
         self.assertIn('--output .build/performance/plan-provenance.json', gate)
         self.assertIn('--producer .build/DerivedData/Build/Products/performance-plan-producer.json', gate)
+        setup = consumer.index('      - name: Boot and verify a fresh Release installation')
+        after = consumer.index('      - name: Observe unchanged performance provenance after simulator setup')
+        native = consumer.index('      - name: Run one Release performance case')
+        self.assertLess(setup, after); self.assertLess(after, native)
+        self.assertIn('scripts/prepare_ios_performance_simulator.py', consumer[setup:after])
+        after_gate = consumer[after:native]
+        self.assertIn('timeout-minutes: 2', after_gate)
+        self.assertNotIn('if:', after_gate)  # Success-only: never describe failed setup as after-setup.
+        self.assertNotIn('continue-on-error', after_gate)
+        self.assertEqual(after_gate.split('        run: |\n', 1)[1].strip(),
+                         gate.split('        run: |\n', 1)[1].strip().replace(
+                             'plan-provenance.json', 'plan-provenance-after-setup.json'))
+        self.assertEqual(consumer.count('--output .build/performance/plan-provenance.json'), 1)
+        self.assertEqual(consumer.count('--output .build/performance/plan-provenance-after-setup.json'), 1)
+        self.assertEqual(consumer.count('performance_plan_provenance.py consumer'), 2)
         upload = consumer[consumer.index('      - name: Retain Release performance evidence'):]
         self.assertIn('if: always()', upload); self.assertIn('path: .build/performance/', upload)
 

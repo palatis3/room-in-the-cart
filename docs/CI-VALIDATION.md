@@ -482,6 +482,14 @@ approve performance baselines or replace the existing strict checks.
 Producer evidence is retained with the build log; consumer evidence is
 `plan-provenance.json` in the existing performance artifact. Preserve the original
 receipt with the first failure and inspect it before another experiment.
+After successful simulator preparation, the same immutable comparison now runs
+again and writes a distinct `plan-provenance-after-setup.json` before XCTest.
+This preserves the original pre-setup observation and distinguishes a runtime
+reference becoming available during setup from a persistent path difference.
+The later receipt still observes filesystem availability, not loaded libraries.
+Do not rebind a plan solely because its preboot reference was missing. Both
+receipts remain in the existing artifact; no job, test or baseline rule changes.
+[Observed discrepancy and limits](evidence/native/verified-performance-artifacts-20261109/README.md).
 
 ### Fresh-simulator performance pilot
 

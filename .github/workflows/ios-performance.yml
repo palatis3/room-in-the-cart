@@ -261,6 +261,12 @@ jobs:
           python3 scripts/prepare_ios_performance_simulator.py \
             --simulator "$SIMULATOR_ID" --case "$PERFORMANCE_CASE" --fixture "$FIXTURE" \
             --output .build/performance/setup.json
+      - name: Observe unchanged performance provenance after simulator setup
+        timeout-minutes: 2
+        run: |
+          python3 scripts/performance_plan_provenance.py consumer --products .build/DerivedData/Build/Products \
+            --producer .build/DerivedData/Build/Products/performance-plan-producer.json \
+            --output .build/performance/plan-provenance-after-setup.json
       - name: Run one Release performance case
         timeout-minutes: 30
         shell: bash
