@@ -29,6 +29,11 @@ RUNTIME = 'com.apple.CoreSimulator.SimRuntime.iOS-27-0'
 KNOWN = ('com.apple.UIKit', 'ScrollView', 'Scroll_DraggingAndDeceleration')
 MAX_EVENTS, MAX_METADATA, MAX_RAW, MAX_LINE = 2048, 512 * 1024, 4 * 1024 * 1024, 65536
 STREAM_SECONDS, CONTROL_SECONDS, SHOW_SECONDS, COMMAND_SECONDS = 300, 5, 30, 10
+HELP_TOKENS = {
+    'stream': ('--signpost', 'ndjson', '--timeout', '--predicate', '--level'),
+    'show': ('--signpost', 'ndjson', '--start', '--end', '--predicate', '--info', '--debug'),
+    'emit': ('signpost-event', '--type', '--subsystem', '--category'),
+}
 SOURCE_PINS = {
     'ios/UITests/ReleasePerformanceUITests.swift': 'af3ce3e975b57940a45314f29f8f6b97fe81d7ae48b7d676b0d2a497af79b788',
     'scripts/check_ios_performance.py': 'f203f21510455a8a83300ee6968e8c5ac2bb14dd8c6afd5a6adb5caa7ce8a4c7',
@@ -307,6 +312,22 @@ def command(argv, seconds=COMMAND_SECONDS, help_receipt=None, journal=None, stag
     return stage(journal, stage_name, lambda entry: command_result(argv, seconds, help_receipt, entry))
 
 
+def help_result(argv, pump):
+    # Only the exact simulator-local help invocation used by runtime_preflight.
+    mode = (argv[6] if len(argv) == 7 and argv[:3] == ['xcrun', 'simctl', 'spawn']
+            and argv[4:6] == ['log', 'help'] and argv[6] in HELP_TOKENS else None)
+    combined = bytes(pump.stdout) + b'\n' + bytes(pump.help_stderr)
+    normalized = combined.replace(b'--[no-]', b'--').replace(b'--[no]-', b'--')
+    usage = bool(mode and combined.lstrip().startswith(('usage: log ' + mode + ' ').encode()))
+    tokens = bool(mode and all(token.encode() in normalized for token in HELP_TOKENS[mode]))
+    return {'stdoutBytes': len(pump.stdout), 'stderrBytes': len(pump.help_stderr),
+            'stdoutSHA256': digest(pump.stdout), 'stderrSHA256': digest(pump.help_stderr),
+            'combinedSHA256': digest(combined), 'exitCode': pump.exit_code,
+            'fixedHelpCommand': mode is not None, 'recognizedUsage': usage,
+            'requiredTokensPresent': tokens,
+            'acceptedUsageExit64': bool(pump.exit_code == 64 and not pump.errors and usage and tokens)}
+
+
 def command_result(argv, seconds, help_receipt, entry):
     entry['timeoutSeconds'] = seconds
     pump = Pump(argv, seconds, help_channels=help_receipt is not None).start()
@@ -321,12 +342,13 @@ def command_result(argv, seconds, help_receipt, entry):
                           'stderrBytes': pump.stderr_bytes, 'rawBytesConsumed': pump.raw_bytes,
                           'stderrMarkers': sorted(pump.stderr_markers),
                           'terminatedOnRequest': pump.terminated_on_request})
-    if pump.errors or pump.exit_code != 0:
+            if help_receipt is not None:
+                help_receipt.update(help_result(argv, pump))
+                entry['help'] = dict(help_receipt)  # Hashes/status survive failed help commands too.
+    accepted_help_usage = help_receipt is not None and help_receipt.get('acceptedUsageExit64') is True
+    if pump.errors or (pump.exit_code != 0 and not accepted_help_usage):
         raise ValueError('capability_command_failed')
     if help_receipt is not None:
-        help_receipt.update({'stdoutBytes': len(pump.stdout), 'stderrBytes': len(pump.help_stderr),
-                             'stdoutSHA256': digest(pump.stdout), 'stderrSHA256': digest(pump.help_stderr),
-                             'exitCode': pump.exit_code})
         return bytes(pump.stdout) + b'\n' + bytes(pump.help_stderr)
     return bytes(pump.stdout)
 
@@ -430,9 +452,7 @@ def runtime_preflight(simulator, journal=None, identity_path=None):
         raise ValueError('runtime_drift')
     prefix = ['xcrun', 'simctl', 'spawn', simulator, 'log']
     capabilities = {}
-    for mode, tokens in (('stream', ('--signpost', 'ndjson', '--timeout', '--predicate', '--level')),
-                         ('show', ('--signpost', 'ndjson', '--start', '--end', '--predicate', '--info', '--debug')),
-                         ('emit', ('signpost-event', '--type', '--subsystem', '--category'))):
+    for mode, tokens in HELP_TOKENS.items():
         help_receipt = {}
         help_text = command(prefix + ['help', mode], help_receipt=help_receipt, journal=journal, stage_name='help-' + mode)
         # Both optional-negation spellings appear in the installed public manual.

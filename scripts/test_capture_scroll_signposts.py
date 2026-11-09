@@ -500,5 +500,88 @@ class IdentityReuseTests(unittest.TestCase):
                          probe.digest((root / 'scripts/check_ios_performance_environment.py').read_bytes()))
 
 
+class HelpExitTests(unittest.TestCase):
+    def argv(self, mode='stream'):
+        return ['xcrun', 'simctl', 'spawn', 'test-simulator', 'log', 'help', mode]
+
+    def usage(self, mode='stream'):
+        return ('\nusage: log ' + mode + ' [options]\n' + ' '.join(probe.HELP_TOKENS[mode])).encode()
+
+    def invoke(self, argv, output, code=64, errors=(), help_enabled=True):
+        pump = Mock()
+        pump.start.return_value = pump
+        pump.stdout = bytearray()
+        pump.help_stderr = bytearray(output)
+        pump.stderr_bytes = len(output)
+        pump.raw_bytes = len(output)
+        pump.stderr_markers = set()
+        pump.errors = set(errors)
+        pump.exit_code = code
+        pump.terminated_on_request = False
+        self.entry, self.help = {}, {} if help_enabled else None
+        with patch.object(probe, 'Pump', return_value=pump):
+            return probe.command_result(argv, 10, self.help, self.entry)
+
+    def test_known_help_usage_exit64_requires_all_capabilities(self):
+        for mode in probe.HELP_TOKENS:
+            with self.subTest(mode=mode):
+                raw = self.usage(mode)
+                self.assertIn(raw, self.invoke(self.argv(mode), raw))
+                self.assertTrue(self.help['recognizedUsage'])
+                self.assertTrue(self.help['requiredTokensPresent'])
+                self.assertTrue(self.help['acceptedUsageExit64'])
+                self.assertEqual(self.entry['exitCode'], 64)
+                self.assertEqual(self.entry['help']['stderrSHA256'], probe.digest(raw))
+
+    def test_wrong_usage_prefix_and_mode_are_rejected(self):
+        for prefix in ('usage: log show ', 'usage: log streamish ', 'error: usage: log stream '):
+            raw = (prefix + '[options]\n' + ' '.join(probe.HELP_TOKENS['stream'])).encode()
+            with self.subTest(prefix=prefix), self.assertRaises(ValueError):
+                self.invoke(self.argv(), raw)
+            self.assertFalse(self.help['recognizedUsage'])
+            self.assertFalse(self.help['acceptedUsageExit64'])
+
+    def test_exit64_missing_each_required_token_is_rejected(self):
+        for mode, tokens in probe.HELP_TOKENS.items():
+            for missing in tokens:
+                raw = ('usage: log ' + mode + ' [options]\n' + ' '.join(token for token in tokens if token != missing)).encode()
+                with self.subTest(mode=mode, missing=missing), self.assertRaises(ValueError):
+                    self.invoke(self.argv(mode), raw)
+                self.assertFalse(self.help['requiredTokensPresent'])
+
+    def test_usage64_never_overrides_pump_errors_or_caps(self):
+        for error in ('deadline', 'raw_cap', 'preflight_output_cap', 'process_io_error'):
+            with self.subTest(error=error), self.assertRaises(ValueError):
+                self.invoke(self.argv(), self.usage(), errors=[error])
+            self.assertFalse(self.help['acceptedUsageExit64'])
+            self.assertEqual(self.entry['errors'], [error])
+
+    def test_exit64_not_allowed_for_nonhelp_or_different_invocation(self):
+        for argv in (['xcodebuild', '-version'], ['/usr/bin/log', 'help', 'stream'],
+                     ['xcrun', 'simctl', 'spawn', 'test-simulator', 'log', 'emit', 'event'],
+                     self.argv() + ['--extra']):
+            with self.subTest(argv=argv), self.assertRaises(ValueError):
+                self.invoke(argv, self.usage())
+            self.assertFalse(self.help['fixedHelpCommand'])
+        with self.assertRaises(ValueError):
+            self.invoke(self.argv(), self.usage(), help_enabled=False)
+
+    def test_exit_zero_keeps_prior_command_semantics(self):
+        raw = ('old zero-exit help header\n' + ' '.join(probe.HELP_TOKENS['stream'])).encode()
+        self.assertIn(raw, self.invoke(self.argv(), raw, code=0))
+        self.assertFalse(self.help['recognizedUsage'])
+        self.assertFalse(self.help['acceptedUsageExit64'])
+        self.assertTrue(self.help['requiredTokensPresent'])
+
+    def test_failed_help_keeps_hashes_and_labels_but_no_raw_text(self):
+        raw = b'PRIVATE_ERROR_CONTENT'
+        with self.assertRaises(ValueError):
+            self.invoke(self.argv(), raw, code=64)
+        self.assertEqual(self.entry['help']['stderrSHA256'], probe.digest(raw))
+        self.assertEqual(self.entry['help']['stderrBytes'], len(raw))
+        self.assertEqual(self.entry['help']['exitCode'], 64)
+        self.assertNotIn(raw.decode(), json.dumps(self.entry))
+
+
 if __name__ == '__main__':
     unittest.main()
