@@ -1,0 +1,72 @@
+--- a/ios/UITests/FreeJourneyUITests.swift
++++ b/ios/UITests/FreeJourneyUITests.swift
+@@ -1657,8 +1657,8 @@
+             let target = app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
+             revealScrollableContent(target, initiallyUpward: initiallyUpward)
+         }
+-        func tapDinnerControl(_ target: XCUIElement) {
+-            revealScrollableContent(target)
++        func tapDinnerControl(_ target: XCUIElement, initiallyUpward: Bool = true) {
++            revealScrollableContent(target, initiallyUpward: initiallyUpward)
+             target.tap()
+         }
+         launch(reset: true, spanish: spanish)
+@@ -1684,7 +1684,7 @@
+              focusedDoneEvidence: (copy("Dinner idea", "Idea para cenar"), copy("Done", "Listo"), "Dinner-idea-Done-cleared-amount", copy("Dinner ideas", "Ideas para cenar"), .center))
+         tapDinnerControl(element("ledgerReviewDinner"))
+         let unknownQuantity = copy("Review unknown ingredient quantities", "Revisa las cantidades de ingredientes desconocidas")
+-        assertReviewedText(unknownQuantity)
++        assertReviewedText(unknownQuantity, initiallyUpward: false)
+         let accept = element("dinnerAcceptIdea")
+         revealDinnerAcceptanceRow(accept)
+         XCTAssertEqual(accept.elementType, .button)
+@@ -1705,16 +1705,22 @@
+         fill(originalAmount, into: amountID, replacing: true, requireDone: true, useVisibleCenter: true, initiallyUpward: false, expectedPriorValue: " ",
+              focusedDoneEvidence: (copy("Dinner idea", "Idea para cenar"), copy("Done", "Listo"), "Dinner-idea-Done-restored-amount", copy("Dinner ideas", "Ideas para cenar"), .top))
+         tapDinnerControl(element("ledgerReviewDinner"))
+-        revealDinnerAcceptanceRow(accept); XCTAssertTrue(accept.isEnabled)
++        // Check the upper review facts before descending to the acceptance row.
+         assertReviewedText(copy("Bean and cabbage wraps", "Tortillas rellenas de frijoles y repollo"), initiallyUpward: false)
+         assertReviewedText(copy("Shredded cabbage", "Repollo rallado"))
+         assertReviewedText(copy("Usable yield is unconfirmed", "El rendimiento aprovechable no está confirmado"))
+         capture("First-pickup-editable-dinner-pattern")
+-        tapDinnerControl(app.buttons[copy("Review stock and pack for Tortillas", "Revisar existencias y paquete de Tortillas")])
++        revealDinnerAcceptanceRow(accept); XCTAssertTrue(accept.isEnabled)
++        // Supply rows precede Accept; start toward them without visiting the title again.
++        tapDinnerControl(app.buttons[copy("Review stock and pack for Tortillas", "Revisar existencias y paquete de Tortillas")], initiallyUpward: false)
+         let supplyHeading = app.staticTexts["ideaSupplyHeading"]
+         revealScrollableContent(supplyHeading, entireRow: true)
+         XCTAssertEqual(supplyHeading.label, copy("Review ingredient supply", "Revisar el abastecimiento del ingrediente"))
+         capture("Dinner-supply-full-heading")
++        let selectedFood = app.staticTexts["ideaSupplySelectedFood"]
++        revealScrollableContent(selectedFood, entireRow: true)
++        XCTAssertEqual(selectedFood.label, copy("No confirmed match", "Sin coincidencia confirmada"))
++        capture("Dinner-supply-selected-food")
+         func fillSupply(_ text: String, into id: String, sample: FocusedDoneSample) {
+             let field = editableElement(id)
+             tap(field)
+--- a/ios/Features/Dinners/DinnerIdeaSupplyViews.swift
++++ b/ios/Features/Dinners/DinnerIdeaSupplyViews.swift
+@@ -126,6 +126,10 @@
+                     Text(dinnerText("No confirmed match")).tag(nil as UUID?)
+                     ForEach(foods) { food in Text(food.name + " · " + food.detail).tag(Optional(food.id)) }
+                 }
++                // Native menu selection labels can truncate at accessibility sizes.
++                // Mirror the selected option in a wrapping, independently readable row.
++                Text(selectedFoodDescription).fixedSize(horizontal: false, vertical: true)
++                    .accessibilityIdentifier("ideaSupplySelectedFood")
+                 Text(dinnerText("Check the food identity and exclusions before matching it."))
+             }
+             Section(dinnerText("Observed pack, optional")) {
+@@ -144,6 +148,11 @@
+             if let error { Text(error).foregroundStyle(.red) }
+             Button(dinnerText("Use these reviewed details")) { apply() }.accessibilityIdentifier("ideaSupplyConfirm")
+         }
++    }
++
++    private var selectedFoodDescription: String {
++        foods.first(where: { $0.id == foodID }).map { $0.name + " · " + $0.detail }
++            ?? dinnerText("No confirmed match")
+     }
+ 
+     private func supplyField(_ title: String, value: Binding<String>, focus: Field,

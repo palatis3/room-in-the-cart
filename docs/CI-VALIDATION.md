@@ -25,6 +25,23 @@ start. The last measured batch already used 91.22% of five-slot capacity.
 Shared archives already avoid recompression; additional splitting or caching
 needs measured benefit. A new layout is not automatically a faster one.
 
+## Reduce repeated UI traversal before increasing deadlines
+
+The retained Spanish AX5 Dinner run reached all five keyboard checks and approval
+but exhausted its720s allowance at relaunch. Its restored-review block used49
+scroll gestures, including20 to Accept followed by20 back to the meal title.
+The isolated R4 candidate groups the existing upper-page assertions before the
+first enabled-Accept check, then searches back toward the supply row. Every
+original assertion, gesture bound, deadline and persistence check remains.
+Qualification and timing savings are pending; do not count a timeout as a pass.
+[Exact candidate and retained evidence](evidence/native/dinner-accessible-fields-20261109/README.md).
+
+Keep local and hosted toolchain differences explicit when triaging framework
+failures. This Mac currently has only Xcode27.1; workflows pin26.3. Align the
+local version with CI before treating a local-only failure as a hosted regression,
+when disk capacity and official installer access permit. Do not change the hosted
+pin merely to hide a failure or reuse products across mismatched toolchains.
+
 ## Independent fixture pipelines and shared billing build
 
 Contributor and dinner fixture tests now wait only for their own profile build.

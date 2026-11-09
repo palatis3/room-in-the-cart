@@ -1,0 +1,17 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "E605333C-63A7-443F-BE58-84F9EE2D9158.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Dinner-supply-full-heading_0_9742F8F9-4470-43F0-95F4-F49D6A345B44.png",
+        "timestamp" : 1794195433.868
+      }
+    ],
+    "testIdentifier" : "FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval()",
+    "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval"
+  }
+]

@@ -1,0 +1,1 @@
+found after 0 gestures; target=ingredient.60FAD324-EDB2-472A-B387-829051D60301.amount; frame=(32.0, 490.6666666666667, 338.0, 64.99999999999994)

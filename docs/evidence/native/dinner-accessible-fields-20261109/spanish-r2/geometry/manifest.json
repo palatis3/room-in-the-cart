@@ -1,0 +1,44 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "40F239BC-5C21-442F-93FE-FD32E9DD29BF.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Dinner-idea-Done-restored-amount-geometry_0_C3CB3AD5-282F-43FF-A50B-C1FE860143BE.txt",
+        "timestamp" : 1794194490.374
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "E7C13759-58B5-46A2-95D9-2DFF6F434BD8.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Dinner-idea-Done-restored-amount-target-before_0_12E5C5FF-2969-4F99-8E33-7A6EACF79D53.txt",
+        "timestamp" : 1794194485.327
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "2C240366-4DEB-49B4-A5D8-705BD97B122D.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Dinner-idea-Done-cleared-amount-geometry_0_7A61A477-8B16-4302-B562-545D0D8E951D.txt",
+        "timestamp" : 1794194189.286
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "858A2244-001F-4BAD-AFE0-A6E7AF02F41A",
+        "deviceName" : "RITC S24 Current Audit Nov08",
+        "exportedFileName" : "C5039E69-F837-4F47-BDAC-A36C296BFF3F.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Dinner-idea-Done-cleared-amount-target-before_0_2B306460-A20E-4037-8E8D-BF39A52DC004.txt",
+        "timestamp" : 1794194183.686
+      }
+    ],
+    "testIdentifier" : "FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval()",
+    "testIdentifierURL" : "test://com.apple.xcode/RoomInTheCart/RoomInTheCartUITests/FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval"
+  }
+]

@@ -1,0 +1,18 @@
+{
+  "startedAt": "2026-11-09T03:04:35.810768+00:00",
+  "nativeExit": 0,
+  "sourceSHA256": "7f68068a87a58630d4875a48bd9bbf40a39d8a42594d55a57a3c94523d3e1e1c",
+  "strictExit": 0,
+  "screensExportExit": 0,
+  "geometryExportExit": 0,
+  "scrollExportExit": 0,
+  "failureExportExit": 0,
+  "headingExportExit": 0,
+  "animationIdleMessages": 0,
+  "requiredEvidenceComplete": true,
+  "headingEvidenceComplete": true,
+  "journeyPassed": true,
+  "finishedAt": "2026-11-09T03:04:37.526667+00:00",
+  "originalUnchanged": true,
+  "sourceUnchanged": true
+}

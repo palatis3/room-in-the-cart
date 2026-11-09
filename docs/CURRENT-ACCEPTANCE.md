@@ -24,8 +24,12 @@ recovery probe passes but is not original-journey acceptance. A separate product
 candidate now fixes truncated ingredient/supply labels; its original English
 Large journey passes native/strict validation and all 11 screenshots are reviewed.
 The candidate is not installed. Spanish AX5, minimum OS, Release and combined
-hosted regression remain outstanding. No native process is active; next R2
-preparation is incomplete, not a running build.
+hosted regression remain outstanding. The subsequent R2 AX5 failure was traced to restoring a different lazy Amount
+field; R3 stable field IDs fix that targeting error. R3 passes all5Done and meal
+approval but reaches the720s test limit at relaunch, leaving persistence unproven.
+R4 preserves all assertions while removing redundant review traversals and adds
+a full wrapping selection summary for the truncated picker value. See the current
+handoff for its exact execution state; no broad accessibility pass is claimed.
 [Scroll evidence](evidence/native/dinner-scroll-progress-20261109/README.md).
 
 [Repair evidence](evidence/native/dinner-top-done-20261108/README.md),

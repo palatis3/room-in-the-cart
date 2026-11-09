@@ -1,0 +1,58 @@
+--- a/ios/Features/Dinners/DinnerEditors.swift
++++ b/ios/Features/Dinners/DinnerEditors.swift
+@@ -262,7 +262,7 @@
+             TextField(title, text: value, prompt: Text(""), axis: axis)
+                 .fixedSize(horizontal: false, vertical: true)
+                 .focused(focus, equals: key)
+-                .accessibilityLabel(title)
++                .accessibilityLabel(title).accessibilityIdentifier(key)
+         }
+     }
+ }
+--- a/ios/UITests/FreeJourneyUITests.swift
++++ b/ios/UITests/FreeJourneyUITests.swift
+@@ -1673,10 +1673,14 @@
+         let amountLabel = copy("Amount, optional", "Cantidad, opcional")
+         let amount = editableElement(amountLabel)
+         reveal(amount)
++        // Lazy ingredient rows share a localized Amount label. Retain the same
++        // ingredient identity across scrolling and the review/edit transition.
++        let amountID = amount.identifier
++        XCTAssertTrue(amountID.hasPrefix("ingredient.") && amountID.hasSuffix(".amount"))
+         let originalAmount = amount.value as? String ?? ""
+         XCTAssertFalse(originalAmount.isEmpty || originalAmount == amount.placeholderValue)
+         // An unknown ingredient quantity is reviewable, but the domain forbids acceptance.
+-        fill(" ", into: amountLabel, replacing: true, requireDone: true, useVisibleCenter: true,
++        fill(" ", into: amountID, replacing: true, requireDone: true, useVisibleCenter: true, expectedPriorValue: originalAmount,
+              focusedDoneEvidence: (copy("Dinner idea", "Idea para cenar"), copy("Done", "Listo"), "Dinner-idea-Done-cleared-amount", copy("Dinner ideas", "Ideas para cenar"), .center))
+         tapDinnerControl(element("ledgerReviewDinner"))
+         let unknownQuantity = copy("Review unknown ingredient quantities", "Revisa las cantidades de ingredientes desconocidas")
+@@ -1698,7 +1702,7 @@
+         XCTAssertFalse(app.staticTexts[copy("Dinner saved. Choose it separately to add grocery needs.", "Cena guardada. Elígela por separado para agregar sus necesidades de compra.")].exists)
+         assertReviewedText(unknownQuantity, initiallyUpward: false)
+         tapDinnerControl(app.buttons[copy("Continue editing", "Seguir editando")])
+-        fill(originalAmount, into: amountLabel, replacing: true, requireDone: true, useVisibleCenter: true, initiallyUpward: false,
++        fill(originalAmount, into: amountID, replacing: true, requireDone: true, useVisibleCenter: true, initiallyUpward: false, expectedPriorValue: " ",
+              focusedDoneEvidence: (copy("Dinner idea", "Idea para cenar"), copy("Done", "Listo"), "Dinner-idea-Done-restored-amount", copy("Dinner ideas", "Ideas para cenar"), .top))
+         tapDinnerControl(element("ledgerReviewDinner"))
+         revealDinnerAcceptanceRow(accept); XCTAssertTrue(accept.isEnabled)
+@@ -2024,7 +2028,7 @@
+         return FocusedDoneTarget(coordinate: coordinate, frame: frame, details: details)
+     }
+ 
+-    private func fill(_ text: String, into id: String, replacing: Bool = false, requireDone: Bool = false, useVisibleCenter: Bool = false, initiallyUpward: Bool = true,
++    private func fill(_ text: String, into id: String, replacing: Bool = false, requireDone: Bool = false, useVisibleCenter: Bool = false, initiallyUpward: Bool = true, expectedPriorValue: String? = nil,
+                       focusedDoneEvidence: (title: String, label: String, name: String, back: String, sample: FocusedDoneSample)? = nil) {
+         // Persistent labels can share the field's accessible name. Match only
+         // editable controls, including lazily materialized Form rows.
+@@ -2043,6 +2047,10 @@
+                 tapVisibleFormRow(field, marker: "RECOVERY_FIELD_TAP")
+             }
+         } else { tap(field) }
++        if let expectedPriorValue {
++            XCTAssertEqual(field.identifier, id, "Keep the originally selected ingredient field")
++            XCTAssertEqual(field.value as? String, expectedPriorValue, "Verify the same ingredient before replacing its amount")
++        }
+         if replacing, let old = field.value as? String, old != field.placeholderValue { field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count)) }
+         field.typeText(text)
+         let done = app.buttons.matching(NSPredicate(format: "label IN %@", ["Done", "Listo"])).firstMatch

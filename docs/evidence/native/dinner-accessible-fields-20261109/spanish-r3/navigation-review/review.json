@@ -1,0 +1,120 @@
+{
+  "immutableSource": "/Users/palatis/Room in the Cart/.build/EnglishKeyboardReviewNov08/current-r1/execution-r1/source/ios/UITests/FreeJourneyUITests.swift",
+  "sourceSHA256": "f1318e2a86fa11c19d8216420472e8c1dfec91938c0b3f44a3e8f56d4e3a05eb",
+  "proposedSHA256": "36bcffccd7fff6092e5daf92c5ba8c6f20344d1a8f644e8f65cb83ccb05f36e1",
+  "patchSHA256": "e12752a1afa3491d408c17a102adb1d02a81e2fa2bfb6d7d8795479caaa86bf7",
+  "log": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09R3/spanish-ax5/native.log",
+  "observedLogPrefixBytes": 385468,
+  "observedLogPrefixSHA256": "e382d8b66a1c3d5010c531a58836e732095e4cac89af46a9aebf7ac13326c42b",
+  "logMayStillGrow": true,
+  "segments": [
+    {
+      "name": "restoredReviewToEnabledAccept",
+      "startElapsed": 471.97,
+      "endElapsed": 531.5,
+      "gestures": 20,
+      "first": [
+        {
+          "line": 2708,
+          "elapsed": 472.21,
+          "text": "t =   472.21s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 644.8) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 257.2) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds"
+        }
+      ],
+      "last": [
+        {
+          "line": 2995,
+          "elapsed": 526.35,
+          "text": "t =   526.35s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 644.8) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 257.2) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds"
+        }
+      ]
+    },
+    {
+      "name": "enabledAcceptToMealTitle",
+      "startElapsed": 531.5,
+      "endElapsed": 583.49,
+      "gestures": 20,
+      "first": [
+        {
+          "line": 3034,
+          "elapsed": 531.78,
+          "text": "t =   531.78s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 257.2) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 644.8) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds"
+        }
+      ],
+      "last": [
+        {
+          "line": 3319,
+          "elapsed": 580.53,
+          "text": "t =   580.53s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 257.2) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 644.8) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds"
+        }
+      ]
+    },
+    {
+      "name": "mealFactsToTortillasSearch",
+      "startElapsed": 583.49,
+      "endElapsed": 610,
+      "gestures": 9,
+      "first": [
+        {
+          "line": 3343,
+          "elapsed": 583.99,
+          "text": "t =   583.99s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 644.8) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 257.2) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds"
+        }
+      ],
+      "last": [
+        {
+          "line": 3491,
+          "elapsed": 606.61,
+          "text": "t =   606.61s Press Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 644.8) for 0.1 seconds, then drag to Target Application 'dev.roominthecart.app.debug'[0.00, 0.00] -> (201.0, 257.2) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds"
+        }
+      ],
+      "qualification": "Coarse log time window includes additional gesture; exact Tortillas trace below proves 8, not 9."
+    }
+  ],
+  "allExplicitAssertionLinesPreserved": true,
+  "sourceAndCanonicalUnmodified": true,
+  "helper24GestureLoopsUnmodified": true,
+  "nativeExecuted": false,
+  "resultExported": false,
+  "existingExportTraceEvidence": [
+    {
+      "file": ".build/DinnerAccessibleFieldsNov09R3/spanish-ax5/inspection/scroll/5D1A0C03-03B6-418B-A288-94BE5646A834.txt",
+      "sha256": "41138956b3ec0b5cef9efb44ac8b07acd7c25c349b964d0eedf99881779df144",
+      "timestamp": 1794195350.276,
+      "upwardGestures": 20,
+      "downwardGestures": 0,
+      "terminal": "found after 20 gestures; target=dinnerAcceptIdea; frame=(16.0, 483.66666666666606, 370.0, 101.33333333333337)"
+    },
+    {
+      "file": ".build/DinnerAccessibleFieldsNov09R3/spanish-ax5/inspection/scroll/3A80CA58-591C-451E-AA28-AE7EE3024B2A.txt",
+      "sha256": "faac7e9687adbdd5b75849fbc0fff46889a9291ba19637984113c0316225e175",
+      "timestamp": 1794195404.56,
+      "upwardGestures": 0,
+      "downwardGestures": 20,
+      "terminal": "found after 20 gestures; target=; frame=(16.0, 79.33333333333334, 370.0, 279.33333333333337)"
+    },
+    {
+      "file": ".build/DinnerAccessibleFieldsNov09R3/spanish-ax5/inspection/scroll/23385928-96D3-4D30-9405-5CF54FA0AA79.txt",
+      "sha256": "81a15d39dc468d3d425239020d6f3b914e6cb08c8ee4cfab1cda7f524ade91fb",
+      "timestamp": 1794195408.059,
+      "upwardGestures": 1,
+      "downwardGestures": 0,
+      "terminal": "found after 1 gestures; target=; frame=(16.0, 448.00000000000006, 370.0, 155.66666666666669)"
+    },
+    {
+      "file": ".build/DinnerAccessibleFieldsNov09R3/spanish-ax5/inspection/scroll/C4C768DD-9130-4B73-8EAE-3897784B9936.txt",
+      "sha256": "0dfd758047c0f4fd8a2b40b989b153c2c9d75e6d14c9c38443f0d019b8d38314",
+      "timestamp": 1794195408.599,
+      "upwardGestures": 0,
+      "downwardGestures": 0,
+      "terminal": "found after 0 gestures; target=; frame=(16.0, 603.6666666666667, 370.0, 279.33333333333326)"
+    },
+    {
+      "file": ".build/DinnerAccessibleFieldsNov09R3/spanish-ax5/inspection/scroll/6F1F46BF-FB8E-4AA7-BCCB-C74B92FFCED4.txt",
+      "sha256": "5e39fd3d2d9ac027478f866bbb6ebc06a69709e488fa2db5058d3d63ae0974d4",
+      "timestamp": 1794195431.634,
+      "upwardGestures": 8,
+      "downwardGestures": 0,
+      "terminal": "found after 8 gestures; target=ideaSupplyEdit-60FAD324-EDB2-472A-B387-829051D60301; frame=(32.0, 577.666666666667, 298.0, 249.33333333333348)"
+    }
+  ]
+}

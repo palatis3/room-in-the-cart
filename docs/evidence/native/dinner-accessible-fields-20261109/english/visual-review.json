@@ -1,0 +1,194 @@
+{
+  "scope": "Read-only visual review of 11 already-exported screenshots and ten geometry/target records, original English journey, contentSize large. No new exports or native work.",
+  "candidateSourceManifestSHA256": "7f68068a87a58630d4875a48bd9bbf40a39d8a42594d55a57a3c94523d3e1e1c",
+  "locale": "en_US",
+  "contentSize": "large",
+  "recordedRunResult": {
+    "nativeExit": 0,
+    "strictExit": 0,
+    "animationIdleMessages": 0,
+    "journeyPassed": true,
+    "sourceUnchanged": true
+  },
+  "result": "Sampled English Large ingredient/supply labels, values and actions are complete where observed. Five Done samples retain their values/container and are visually separate from navigation controls. This is not AX5 or global accessibility qualification.",
+  "pairs": [
+    {
+      "case": "cleared_amount",
+      "before": {
+        "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09/english/inspection/screens/282E1E86-8B05-4AE5-B9BF-726A2F3CF954.png",
+        "attachment": "Dinner-idea-Done-cleared-amount-before_0_2B476B2D-7678-4F8C-B90E-2DE50D9C515B.png",
+        "sha256": "1f65e89730e8be9aa10484440bb050f0341dbece740ed2a9498d3e5318fd745c"
+      },
+      "after": {
+        "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09/english/inspection/screens/D321A5B4-61C0-4213-B08B-C2A81BF72D04.png",
+        "attachment": "Dinner-idea-Done-cleared-amount-after_0_90859671-BE13-4721-BC84-ED7ACDBEABAE.png",
+        "sha256": "78dab9284a9a9d0bcc2167562e73d1820874c07a766a1eb606b846c20bd79865"
+      },
+      "geometry": {
+        "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09/english/inspection/geometry/BC1C9FD9-91CE-48E6-9405-156F4CD7B76C.txt",
+        "attachment": "Dinner-idea-Done-cleared-amount-geometry_0_1C2682F5-D369-45E5-8F78-26F25A8F0572.txt",
+        "sha256": "257365d37f43013111ad222b2a7389146d141aba959e6d430c7e91a3c4b89249"
+      },
+      "targetBefore": {
+        "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09/english/inspection/geometry/119B6757-284E-4497-9A9B-7FB804010B98.txt",
+        "attachment": "Dinner-idea-Done-cleared-amount-target-before_0_4BC80052-20E2-4A9C-A078-12053DCA0A3C.txt",
+        "sha256": "6397da2eb953de986c7b165ec82076ceb5b0ccf009994a3d4715be950a2b6c5d"
+      },
+      "retainedValue": " ",
+      "sample": "center",
+      "visualObservation": "Amount, optional remains visibly labeled despite a blank-looking value. Exact space retention comes from geometry, not the image. After Done, Ingredient notes, Ingredient exclusions, one per line, Remove ingredient, Tortillas and Cooked beans are complete in the visible content.",
+      "doneLabelCompleteBefore": true,
+      "doneSeparatedFromNavigationAndBackOrCancel": true,
+      "keyboardAndDoneAbsentAfter": true,
+      "geometryConfirmsExactRetainedValueAndContainer": true
+    },
+    {
+      "case": "restored_amount",
+      "before": {
+        "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09/english/inspection/screens/3BD3FE8E-6707-4BA6-B770-FAD329E3E3B3.png",
+        "attachment": "Dinner-idea-Done-restored-amount-before_0_F65D201D-080F-4CF1-80BE-4EE920E35BA5.png",
+        "sha256": "bcaeb90a50c85457bbe695573cc5a6230753969ab738c744e260bf7b33ed45de"
+      },
+      "after": {
+        "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09/english/inspection/screens/75799DE6-0F1C-4BDD-9F86-61F82B8E9367.png",
+        "attachment": "Dinner-idea-Done-restored-amount-after_0_DEB640B7-0C1C-4026-BFB3-7AB7083B5222.png",
+        "sha256": "58f0a1527bb229bff1998b65671ab5526d85b1e0b27c92f07edcfa5e1a61c15b"
+      },
+      "geometry": {
+        "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09/english/inspection/geometry/D9DA4C9B-7B94-4A8E-95DE-1753248812A2.txt",
+        "attachment": "Dinner-idea-Done-restored-amount-geometry_0_5A1C58E1-6B47-4DD9-91C7-D65C97AAE5FD.txt",
+        "sha256": "3431916aad04eee5d4e61b3f34008a0dc069ee7d9b0ea7049de20c0a067b6252"
+      },
+      "targetBefore": {
+        "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09/english/inspection/geometry/A6E51EE9-AFF3-4B87-ADFB-231D5935C3B2.txt",
+        "attachment": "Dinner-idea-Done-restored-amount-target-before_0_CB5186FA-978A-4E0F-B71D-3BFDF7A8469A.txt",
+        "sha256": "fcff40412b94d21afb03069d51753e92950d9def3a9c9a6a5837b87a5af10927"
+      },
+      "retainedValue": "4",
+      "sample": "top",
+      "visualObservation": "Amount, optional and 4 are fully visible before and after. After Done, the ingredient name, notes, exclusions and removal wording are complete, with Tortillas and Cooked beans fully readable.",
+      "doneLabelCompleteBefore": true,
+      "doneSeparatedFromNavigationAndBackOrCancel": true,
+      "keyboardAndDoneAbsentAfter": true,
+      "geometryConfirmsExactRetainedValueAndContainer": true
+    },
+    {
+      "case": "yield",
+      "before": {
+        "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09/english/inspection/screens/E0BDD9D6-B672-4888-9EF5-514F2204B6E7.png",
+        "attachment": "Dinner-supply-Done-ideaSupplyYield-before_0_68DF4AFB-1E5F-4F9D-97A2-5E06B7BDF559.png",
+        "sha256": "d0b9ff279c85aeb6c48c7f8c55a90bba344344f7e3f3fa8245ba01b6c4c0a829"
+      },
+      "after": {
+        "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09/english/inspection/screens/DA5DB7C8-7E8E-4B47-BFCB-CDA8D8568C7A.png",
+        "attachment": "Dinner-supply-Done-ideaSupplyYield-after_0_7A9BAE2F-3E84-4FC2-9F26-4D09A5AF5F69.png",
+        "sha256": "a6261b5b497dac82cd2d8f48c6e251931c26072a744c03b3dc454b2a611b3df1"
+      },
+      "geometry": {
+        "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09/english/inspection/geometry/89816B58-E4EE-45A9-B877-BA1497A282CD.txt",
+        "attachment": "Dinner-supply-Done-ideaSupplyYield-geometry_0_82ADEEA5-3697-4969-8F62-F111ECEE1932.txt",
+        "sha256": "520c4cd424da6faf893068ae0f10de909baa49f22fe1f70f3c7dd9d89b95f620"
+      },
+      "targetBefore": {
+        "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09/english/inspection/geometry/EA010C24-4178-4972-9AED-FB3998185C57.txt",
+        "attachment": "Dinner-supply-Done-ideaSupplyYield-target-before_0_FBE33B9D-C4E7-4563-9F47-55D6523C79B6.txt",
+        "sha256": "0b04f6b7283f0bdad7bb135178b14b195e834c4759b3fdffb214b462bf62ee99"
+      },
+      "retainedValue": "8",
+      "sample": "bottom",
+      "visualObservation": "Usable amount per pack persists beside the complete value 8 before and after Done.",
+      "doneLabelCompleteBefore": true,
+      "doneSeparatedFromNavigationAndBackOrCancel": true,
+      "keyboardAndDoneAbsentAfter": true,
+      "geometryConfirmsExactRetainedValueAndContainer": true
+    },
+    {
+      "case": "price",
+      "before": {
+        "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09/english/inspection/screens/E5C1F134-0558-4190-94F9-E25346D0C65C.png",
+        "attachment": "Dinner-supply-Done-ideaSupplyPrice-before_0_15F13A18-FDAC-4A5C-B270-AC3AE657215F.png",
+        "sha256": "12dc9f177f7731c8caee2ce147225908ed2baa7c47436ba78fd9dde7d405d37c"
+      },
+      "after": {
+        "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09/english/inspection/screens/8BE3C103-CE09-44F6-933B-ADAA60D251BD.png",
+        "attachment": "Dinner-supply-Done-ideaSupplyPrice-after_0_280500BB-87FF-46A1-979B-4986A064E333.png",
+        "sha256": "7652cb40855b510a6ef062a76dee1040f90d13a34aa00154f1ad3bccc1a29ba9"
+      },
+      "geometry": {
+        "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09/english/inspection/geometry/BB84D27B-B362-41B3-B9FB-F99670B4D138.txt",
+        "attachment": "Dinner-supply-Done-ideaSupplyPrice-geometry_0_EBAE458E-A6E6-4B2F-9C18-32C39DDE64D0.txt",
+        "sha256": "d8d66db1dc2c3535288451c5c0f21ea8cfac288fbec9833f0da2bc8b097ee906"
+      },
+      "targetBefore": {
+        "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09/english/inspection/geometry/1760FE13-1424-4FAD-96EC-99FC21703C8E.txt",
+        "attachment": "Dinner-supply-Done-ideaSupplyPrice-target-before_0_93AEF824-163A-4EA8-9D40-2A534BCBCF90.txt",
+        "sha256": "c3d41c3d4c4e5797f64798b4bf8f1c35c3915cf9967e5985ecc5a6abf11fc969"
+      },
+      "retainedValue": "2.50",
+      "sample": "left",
+      "visualObservation": "Price per pack in USD persists beside the complete value 2.50 before and after Done; yield 8 and its label remain visible.",
+      "doneLabelCompleteBefore": true,
+      "doneSeparatedFromNavigationAndBackOrCancel": true,
+      "keyboardAndDoneAbsentAfter": true,
+      "geometryConfirmsExactRetainedValueAndContainer": true
+    },
+    {
+      "case": "source",
+      "before": {
+        "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09/english/inspection/screens/2AB1BADD-5C3F-46ED-A8C2-0FF1550D0304.png",
+        "attachment": "Dinner-supply-Done-ideaSupplySource-before_0_44A85FEE-2E16-4131-A619-A54678A288CF.png",
+        "sha256": "0cbcac2f262b931839b3462ce7f7b0dfafd2a10093859a09f768a1229744d02a"
+      },
+      "after": {
+        "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09/english/inspection/screens/D205927E-0BF2-47EB-A841-D5FEBC9A6E18.png",
+        "attachment": "Dinner-supply-Done-ideaSupplySource-after_0_F58E7D7E-FFA1-4206-96EF-697121F9695C.png",
+        "sha256": "dcbc52448d842b44a2a1b529d458776ecfbb6f62dc93fccab1596b7fa78de06c"
+      },
+      "geometry": {
+        "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09/english/inspection/geometry/2ADB2C0F-6925-4B5C-A063-8880A758E560.txt",
+        "attachment": "Dinner-supply-Done-ideaSupplySource-geometry_0_7EA6CB49-8B98-4317-9F86-2DA9E5C58438.txt",
+        "sha256": "d80ab07a14e58863e02a506ccb66b2fe41f3a1cb33fb1fbd793d20adc9e4289e"
+      },
+      "targetBefore": {
+        "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09/english/inspection/geometry/B4571752-78E4-4DE9-B802-CC26EB65368C.txt",
+        "attachment": "Dinner-supply-Done-ideaSupplySource-target-before_0_58C2CF41-4EA4-4BDC-827F-464DCEA61B71.txt",
+        "sha256": "1babb9c06bd7ed1618dc2b738913798c11ad145ef2135f8a7b406d649a25982a"
+      },
+      "retainedValue": "Bag label",
+      "sample": "right",
+      "visualObservation": "Evidence source persists beside the complete value Bag label before and after Done; yield/price purposes and their entered values remain visible.",
+      "doneLabelCompleteBefore": true,
+      "doneSeparatedFromNavigationAndBackOrCancel": true,
+      "keyboardAndDoneAbsentAfter": true,
+      "geometryConfirmsExactRetainedValueAndContainer": true
+    }
+  ],
+  "heading": {
+    "evidence": {
+      "path": "/Users/palatis/Room in the Cart/.build/DinnerAccessibleFieldsNov09/english/inspection/heading/8E3E4463-4184-4099-8344-54E9A7A4BA90.png",
+      "attachment": "Dinner-supply-full-heading_0_2FD8B0DF-192C-4BE9-A1AA-FA9F7D81368D.png",
+      "sha256": "fac1556c97148b14537fc4e3d581fa131350782c2b4ee9cdd200cc22252c105e"
+    },
+    "observation": "Review ingredient supply is fully rendered in both the native inline title and the in-content heading, separated from Cancel. The body heading is fully in view in this dedicated capture."
+  },
+  "geometrySummary": {
+    "doneFramePoints": [
+      44,
+      44
+    ],
+    "sampleRegionPoints": [
+      44,
+      44
+    ],
+    "doneBelowNavigationPoints": 8,
+    "sparseSamplesOnly": true
+  },
+  "limitations": [
+    "No Spanish or AX5 candidate images reviewed in this report.",
+    "No dark mode, other devices/OS, long-value, VoiceOver reading-order or exhaustive touch-target result is inferred.",
+    "Blank versus a space cannot be distinguished from screenshots.",
+    "Scrolled content behind translucent navigation/tab chrome at frame edges does not prove missing or unreachable content.",
+    "The removal label is readable in these frames; deletion behavior was not exercised by this visual review.",
+    "The geometry covers Done sample points, not a complete Cancel target qualification."
+  ]
+}

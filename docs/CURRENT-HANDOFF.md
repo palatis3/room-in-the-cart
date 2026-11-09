@@ -26,7 +26,17 @@ for this focused work. Recheck remote state before publishing.
   suites with strict verification. The shared build and final gate pass.
   Logs and terminal inventory were collected once. Do not dispatch a duplicate.
   [Billing proof](evidence/native/membership-pending-reconciliation-20261108/README.md).
-- No local native build/test is active at this checkpoint. Spanish scroll R2 is
+- Current native work: AccessibleFields R4 Spanish AX5 is active, session99626,
+  xcodebuildPID27880, `.build/DinnerAccessibleFieldsNov09R4/run_spanish_ax5.py`.
+  Build/bundle and all three source checks pass. Poll this same handle; no competing
+  native work. R3 fixed the proven wrong-ingredient restoration and passed all5Done
+  and approval, but hit720s at relaunch; native65/strict1 with zero idle misses.
+  All11screens reviewed, original evidence unchanged, Large text restored.
+  R4 checks upper review facts before enabled Accept, then returns toward supply;
+  R3 had49gestures in that block. It keeps every assertion/gesture/time allowance.
+  A wrapping full selection summary fixes the observed truncated no-match value.
+  Runtime savings and final R4 visual/persistence qualification remain unproven.
+  Earlier Spanish scroll R2 is
   terminal native65/strict1: all five Done probes and approval passed, followed by
   a failure recovering the lazy root/library after relaunch. Large text restored.
   The isolated retained-state root-recovery R4 probe passes native/strict checks;
@@ -42,10 +52,11 @@ for this focused work. Recheck remote state before publishing.
   Source checks and the UI automation contract pass. No product candidate changes
   are installed in the canonical app yet.
 - Reused source/DD remain at `.build/EnglishKeyboardReviewNov08/current-r1/execution-r1`.
-  Readback confirms SOURCE still exactly matches the English-passing manifest.
-  `.build/DinnerAccessibleFieldsNov09R2` is an incomplete preparation: preservation
-  and runners exist, but no source manifest or build receipt, and no active native
-  process. Do not describe it as a running build. Inspect before resuming preparation.
+  SOURCE matches the R4 manifest
+  `58e371426c6080af493d3cc38a6f063ac68c73541a5c1f5c9e7bd63ed436ee35`.
+  Each prior source/product pair is verified in the next candidate preservation directory. All three exact
+  source validators pass; a read-only review found no regression/assertion waiver.
+  [Product candidate proof](evidence/native/dinner-accessible-fields-20261109/README.md).
 - Workflow improvements at1e632421 are published on
   `codex/ci-feedback-efficiency-20261108`;274Python/workflow checks pass. No full
   PR batch was triggered. [Workflow evidence](evidence/native/ci-feedback-efficiency-20261108/README.md).
@@ -74,14 +85,14 @@ Earlier sibling-row/background-only candidates failed visual review; top-inset
 failed the Review postcondition. Their source/products/results remain preserved.
 All earlier inspectors and exports are complete; do not repeat them.
 
-Next product work: finish AccessibleFields R2 preparation, preserving the passing
-source/products. Apply the two reviewed editable-field query follow-ups from
-`.build/DinnerAccessibleFieldsNov09/query-followup/editable-field-queries.patch`
-and use the scoped progress-aware helper for both dinner Review taps. Build once,
-then run the original Spanish AX5 journey and inspect its one result. The scratch
-retained-state probe must remain excluded from the candidate. Qualify Spanish
-Large on owned iOS17 and unsigned Release before installation; combined hosted
-coverage is still required. No deployment occurred.
+Next product work: finish the same AccessibleFields R4 Spanish AX5 run and inspect
+its terminal bundle once; confirm Large restoration and review screenshots.
+Then qualify final English, Spanish Large on owned iOS17, and original cases
+`testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop` and
+`testDinnerMoveAcrossDisplayedWeeksKeepsLunchAndOccurrence` using prepared
+run_affected.py/inspect_affected.py. Run unsigned Release via run_release.py after
+native tests. Source/DD remain immutable while testing. No candidate installation
+or deployment yet; full combined hosted coverage is still required.
 
 Workflow follow-up: compact failure-first monitoring and the documented feedback
 loop are validated by 276 Python checks, workflow lint and live read-only billing
@@ -89,6 +100,15 @@ reporting. Shared archives already avoid recompression; no further shard changes
 are justified until the next comparable full batch is measured.
 
 ## Other open failures and workflow
+
+- N03 actual code gap: CookReadbackView/model do not subscribe to audio route changes.
+  `.build/ReleaseGapCurrentNov09/route-change-proposal` r1 is rejected: blanket
+  category exclusion and delayed-generation races. revision-r2 has a synchronous
+  generation fence plus six notification tests, but all-category stopping still
+  conflicts with own activation. It is uncompiled and NOT ready to install.
+  Coordinate the two category writers (CookAudioSession/OnDeviceSpeechCapture)
+  without timing/origin guesses; see revision-r2/DESIGN-REVIEW.md. No patch applied.
+  This is separate from framework Cook wait/QoS evidence below.
 
 - Scroll performance: original metric cardinality4→3 failure; missing producer
   is unproven. Read-only SQLite inspection now confirms zero archived metric rows,
