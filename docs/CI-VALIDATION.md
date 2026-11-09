@@ -446,6 +446,18 @@ checker. Opt into verbose diagnostics when the investigation needs system-level
 evidence (for example a hang or infrastructure failure). CI keeps its existing
 on-failure setting.
 
+Use that same local-only `never` mode for a focused hypothesis about an already
+preserved failure when fresh native logs, attachments, the full result bundle and
+strict validation answer whether the failure cleared. Record the hypothesis and
+the retained system-diagnostics original. A successful focused run supports
+candidate integration; the final exact-revision regression still uses the normal
+CI settings. Do not repeat an unchanged successful focused case solely to change
+verbose capture mode. Use `on-failure` when new system-level evidence is needed.
+The direct-label minimum-OS experiment took145.596test seconds but752.058seconds
+to finalize with verbose failure collection: approximately606seconds outside the
+testcase. That observation is overhead in this failed local run, not an app speed
+comparison or a reason to remove assertions, warning gates or CI diagnostics.
+
 For a local expected-negative contrast control, an explicit `never` override is
 also appropriate when pixels, geometry and trait receipts answer the question.
 Accept that control only after normal native completion with exactly the intended

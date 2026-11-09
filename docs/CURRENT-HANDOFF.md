@@ -15,7 +15,7 @@ contracts and B11 acceptance. Read [APP-BASELINE](product/APP-BASELINE.md), then
 Use `/Users/palatis/Room in the Cart`, branch `codex/parallel-ios-ci`, with explicit
 working directories. The ambient `spanish-done-diagnostic` worktree is stale.
 Publication target is `codex/combined-candidate-20261109`; before this update its
-verified head was `1ec0f92f58a3f0b6ba3a5b854707fd9570ab4c43`. Recheck current Git
+verified head was `02aaed31d77eac837ce08217fd31276f2ef9bd3e`. Recheck current Git
 and run state before publishing. Draft PR1 is a separate older candidate.
 No complete combined regression or merge has passed.
 
@@ -43,10 +43,12 @@ competing local native processes or mutate a candidate while it is executing.
 The latest [workflow follow-through](evidence/native/workflow-policy-followthrough-20261109/README.md)
 adds a compact ranking of measured pre-start delays and a selected-runtime checker
 observer in existing performance scopes. It adds no jobs or native slots.
-Use capability-only collection to inspect the corresponding runtime library
-before another build; matching bytes still do not prove test-host loading.
-Hosted execution of that new observer is pending. Disk currently reports about
-13GiB available; avoid unnecessary downloads and duplicated raw evidence.
+Capability-only run42625593343 now passes: the selected runtime contains exactly
+the producer checker bytes. Effective test-host loading is still unobserved.
+Disk currently reports about16GiB available; avoid unnecessary downloads and
+duplicated raw evidence. Known local failures can reuse retained system diagnostics
+while collecting fresh full test results/logs/attachments and strict validation;
+see CI-VALIDATION. Final CI retains on-failure diagnostics.
 All431 offline checks and workflow validation of17 native job definitions pass
 for this update. The existing full-release preflight correctly rejects the still
 unapproved27.1 performance profile. No new full regression was dispatched.
@@ -58,39 +60,44 @@ still Xcode26.3/17C529 with iOS26.2/23C54; it cannot approve the new environment
 
 ## Current findings and next work
 
-Latest follow-ups at79ea8c03 are terminal; no local native process or hosted run
-remains active. [Exact outcomes and retained proof](evidence/native/diagnostic-followthrough-20261109/README.md).
-Local corrected-SDK Spanish minimum-OS test failed197.227seconds/native65/strict1;
-full xcodebuild finalized naturally836.511seconds. AppSIGSEGV is proven, but no
-fresh stack was recovered because crash reporting produced no saved report.
-Root owns the next bounded debugger diagnostic; no debugger has attached yet.
+All current local/hosted attempts are terminal; no debugger or native process
+remains. The original missing-stack uncertainty is resolved by a direct first-fault
+capture, while one narrowly scoped query optimization failed and is not installed.
 
-1. **Hosted performance:** run42620394385 at79ea8c03 is terminal failure.
-   Native1/1 passes115.850seconds, store500/500/0/revision3 and owned cleanup pass;
-   required scroll duration remains absent (three memory series x5 only).
-   Producer/consumer provenance passes. The declared checker reference is readable
-   producer but missing consumer both before and after simulator setup. This rules
-   out the timing uncertainty, not the loaded-process state or metric cause.
-   `.build/HostedPerformanceAfterSetupNov09/monitor/` retains two digest-verified
-   small ZIPs and terminal report. No large product download. No unchanged retry,
-   checker disabling, plan rebinding or new baseline. Next distinguish effective
-   runtime loading or verify the consumer runtime's corresponding library before
-   any reviewed plan change. Prior42611979729 and42598431187 remain preserved.
-2. **Local performance:** both original Release launch and scroll have complete
-   required metrics on Xcode27.1/iOS27.0; hosted omissions are not universal removal.
-   Hitches remain unavailable. Local host27.2 differs from hosted27.0.1.
+1. **Hosted performance:** capability-only run42625593343 at02aaed31 passes without
+   build/XCTest. Selected iPhone17/iOS27.0/24A434 checker338880bytes exactly matches
+   the earlier producer SHA1ab99e516a208f4ce91fcde55af17ee83a4aedfc9687ec1eeade456943ea32e8;
+   arm64 UUIDE40A186A-8D7D-3029-B5CD-D42C967992C0. The3465-byte ZIP is digest-verified.
+   [Proof](evidence/native/selected-runtime-checker-20261109/README.md).
+   Earlier native42620394385 still fails required scroll duration despite1/1test
+   pass and valid500/500/0/revision3 store. Matching filesystem bytes do not prove
+   test-host loading or metric causation. No baseline, plan rebinding or checker
+   disabling is justified. Existing screenshots prove hosted rendering; a local
+   versus headless difference is unmeasured, not an established cause. Next review
+   a bounded post-measure test-host loaded-image/UUID observation if it resolves the
+   provenance question; preserve original metric gates and identify the changed
+   diagnostic executable. Do not rerun the unchanged library probe.
+2. **Local performance:** original Release launch and scroll have complete required
+   metrics on27.1/iOS27.0; hitches remain unavailable. Host27.2 differs from hosted27.0.1.
    [Proof and limitations](evidence/native/local-performance-metrics-20261109/README.md).
-3. **Minimum iOS:** the supply focus correction is installed. Earlier full
-   Spanish17.0/17.5 failures implicated XCTest's logging callback/quarantine path;
-   the newest corrected-SDK17.0 run proves SIGSEGV but has no recovered stack.
-   Do not assign that newest fault the earlier mechanism without evidence. A reduced
-   reproducer is nonreproducing, not acceptance. Apple support ranges include the
-   current configuration; reviewed release notes did not establish a remedy.
-   Two preserved17.5 IPS reports also show null x0 at strcmp, with x1 resolving
-   to the exact framework's `com.apple.runtime-issues` string. This does not prove
-   the null's origin. No justified query-only repair was found.
-   Private report and new addendum: `.build/MinimumOSXCTestReproducerNov09/apple-report-draft/`.
-   User permission to submit the reviewed report to Apple is pending; nothing sent.
+3. **Minimum iOS:** direct r2 LLDB capture confirms EXC_BAD_ACCESS/null x0 in strcmp,
+   then XCTest runtime_issue_os_log_fault_callback and libtrace logging quarantine
+   during an accessibility query. Source/products were verified; capture is complete.
+   Detach(False) succeeded; the untraced app retained a stop and one exact-PID
+   SIGCONT completed cleanup. Debugger timing makes this diagnostic-only.
+   [Full proof and cleanup](evidence/native/minimum-os-first-fault-20261109/README.md).
+   Subsequent one-line containing-to-matching experiment built16.090seconds but
+   full uninstrumented Spanish17.0 failed145.596seconds/native65/strict1. Xcode
+   finalized naturally752.058seconds; no unchanged retry or source installation.
+   No demonstrated safe logging/checker-preserving configuration remedy was found.
+   An archived quarantine query returned empty JSON; its derived-only receipt is
+   explicit that raw output was not retained, and cannot disprove the captured stack.
+   Updated private Apple submission package is ready at
+   `.build/MinimumOSXCTestReproducerNov09/apple-report-draft/reviewed-first-fault-package/`.
+   Approval question is pending for only report/10KBcapture/hashes; nothing sent.
+   No more query guesses, resource-pressure reruns or claim that a reduced pass
+   qualifies the original journey.
+
 4. **Fixture isolation:** Membership/Restoration corrections are installed byte-for-byte
    from the independently reviewed and natively qualified candidate. Both old-API
    controls failed as predicted; all74affected tests then passed native/strict checks
@@ -145,11 +152,9 @@ pass after integration and the after-setup provenance workflow addition.
 At that integration, combined native inputs had manifest
 `f9d4f7717b3b19967be7f24466b36c2c31973ba14361e47f4b4c37d4ceb80ba6`;
 full combined CI remains outstanding. F02 native/SQLite now passes as recorded below.
-The separate after-setup receipt now confirms the declared reference remains
-missing. Effective runtime loading and the current consumer's corresponding
-   library remain unverified; the new no-build observer is ready for the latter
-   question, not yet hosted evidence. No checker
-disabling or baseline weakening is justified by this filesystem discrepancy.
+The declared reference remains missing in the prior consumer, while the latest
+capability-only run proves matching bytes at its selected runtime mount. Effective
+loading remains unknown. No checker disabling or baseline weakening is justified.
 
 ## Source-removal acceptance follow-up
 
@@ -157,8 +162,9 @@ The four reviewed files are installed: reset-only fixture variant, ordinary
 FreeJourney regression, exact saved-SQLite verifier and its eight controls.
 All561canonical native inputs match source manifest
 `bbe56492fa0890d1705b44b8e63f805621eaf5637152735d6ffa0cc971a629fd`.
-Current products have manifest
-`780efdedff4d84bfb126d14a412c3e357addc80a16d5baf5206264fc328b372e`.
+The qualified products have manifest
+`780efdedff4d84bfb126d14a412c3e357addc80a16d5baf5206264fc328b372e`
+and are now archived under the build-qualified subdirectory described below.
 All419offline tests pass; compiled discovery740models/69UI assigns the new case
 once to existingui-07. This is inventory, not a claim all cases executed.
 [Compact proof](evidence/native/source-removal-journey-20261109/README.md).
@@ -176,15 +182,16 @@ The original native-r1 failure was a new-test label mismatch: expected12units,
 actual quantity control12items. Original result/store are retained. The corrected
 native-r2 passed native/strict and persisted readback; its source/products/modes
 are archived under `.build/NativeQualificationArchivesNov09/bbe56492.../` before
-native-r3's clean SDK correction. Do not overwrite that archive with r3 products;
-use a new build-qualified subdirectory before any future product mutation.
+native-r3's clean SDK correction. The r3source/products/modes are separately
+cloned and verified under that source directory
+`/sdk27.1-products-780efdedff4d84bf/`; never overwrite the older r2archive.
 The installed CoreDomain tombstone fix previously passed all196model tests and
 its original negative control. [Model proof](evidence/native/source-removal-tombstones-20261109/README.md).
 Native/SQLite proof here closes only ordinary local removal; shared-device F02
 and final combined regression remain separate. The helper is not wired as a
 hosted SQLite gate; the UI regression joins the existing compiled inventory.
 
-## Corrected local SDK environment and next minimum-OS test
+## Corrected local SDK environment and retained minimum-OS evidence
 
 Inherited SDKROOT selected macOS27.0 in the generated dynamic package linker.
 Driver probes under `.build/SDKRootDiagnosisNov09/` reproduced the warning and
@@ -207,12 +214,26 @@ and original result unchanged. The on-failure run, strict failure,159attachments
 its volume alone does not prove cause. No new app stack was recovered.
 
 Host ReportCrash logs show interrupted service connections, missing post-reporting
-data and no saved app report; they do not establish a reporter crash. The prior
-XCTest strcmp mechanism therefore remains unconfirmed for this new fault.
-Next is the reviewed diagnostic-only LLDB first-fault capture plan in
-`.build/MinimumOSCorrectSDKNov09/r1/NEXT.md`. Bind exact owned-device executable,
-PID/UID/starttime/UUID; no name-only attach, activity-log suppression, expression
-execution or OS security changes. Debugger runs cannot qualify acceptance.
+data and no saved app report; they do not establish a reporter crash. That uninstrumented attempt alone did not establish the earlier XCTest mechanism;
+the later direct r2capture now records it on the same corrected source/products.
+The first-fault capture is now complete as recorded above. Its controller r1
+initially failed before attachment because monotonic origins differ across these
+Python processes; preserved r2uses an epoch deadline converted to local monotonic.
+All22offline controller checks pass; clocks/deadlines and API cleanup limits are
+explicit. No further debugger run is justified by the same observed fault.
+
+**Current scratch execution paths differ from canonical source.**
+`.build/Xcode27WarningReviewNov09/execution-r1/source` and its sibling DD now hold
+only the rejected direct-label experiment, not the qualified F02r3products.
+Candidate `.build/MinimumOSDirectLabelNov09/` has source manifest
+`83cb0b28776cd26cc0d6458600d76647f0abd9ba90bce391f77f38db257ac32e` and product manifest
+`a666b70e53e9a97fdbfaa75000143a0818badf8e5e4fe71b40389ea6b95e932f`.
+Its terminal result was inspected/exported once; source/products/original are
+unchanged. Canonical FreeJourney is unchanged. Archive this failed candidate before
+any further scratch mutation, or restore the separately verified r3archive with
+an explicit custody receipt; never run a historical executor against successor
+paths and describe it as the old source. No product change from this investigation
+has been integrated.
 R4/preservation/source is not exact R4 source: do not use it as such without
 manifest verification. Old product hashes were independently verified.
 
