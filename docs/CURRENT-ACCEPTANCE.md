@@ -14,8 +14,9 @@ title. Its full original English journey passes all five coordinate samples,
 unknown-quantity rejection, supply approval and persistence: native0, strict0,
 zero idle misses. Root/helper reviewed all ten screenshots and five after-action
 records; title and control separation now pass. The two visual failures and the
-failed top-inset alternative remain preserved. Spanish largest-text case failed to locate Accept idea; its live Xcode process
-is still finalizing diagnostics. That scope is not qualified. MinimumOS, Release
+failed top-inset alternative remain preserved. Spanish largest-text case is terminal native65/strict1 after failing to locate
+Accept idea. Inspection is complete and text size is restored to Large. That
+scope is not qualified. MinimumOS, Release
 and combined hosted regression also remain open.
 [Repair evidence](evidence/native/dinner-top-done-20261108/README.md),
 [current handles and next action](CURRENT-HANDOFF.md).

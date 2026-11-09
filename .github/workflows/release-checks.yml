@@ -11,7 +11,40 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  source-preflight:
+    name: Validate source before native release work
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Validate workflow syntax and expression references
+        shell: bash
+        run: |
+          yaml_env="$RUNNER_TEMP/ci-yaml"
+          python3 -m venv "$yaml_env"
+          "$yaml_env/bin/python" -m pip install --disable-pip-version-check --no-cache-dir \
+            --no-deps --require-hashes --only-binary=:all: -r scripts/ci_yaml_requirements.txt
+          echo "$yaml_env/bin" >> "$GITHUB_PATH"
+          lint_dir="$RUNNER_TEMP/actionlint"
+          mkdir -p "$lint_dir"
+          curl --fail --silent --show-error --location \
+            --retry 3 --retry-max-time 90 --connect-timeout 10 --max-time 30 \
+            https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz \
+            --output "$lint_dir/actionlint.tar.gz"
+          echo '8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  actionlint.tar.gz' \
+            | (cd "$lint_dir" && sha256sum --check)
+          tar -xzf "$lint_dir/actionlint.tar.gz" -C "$lint_dir" actionlint
+          "$yaml_env/bin/python" scripts/check_ci_workflows.py --actionlint "$lint_dir/actionlint" \
+            --report .build/workflow-lint.json
+      - name: Validate generated files, localization and CI test selection
+        run: |
+          python3 scripts/generate_theme.py --check
+          python3 scripts/check_localization.py
+          python3 scripts/generate_xcode_project.py --check
+          python3 -m unittest discover -s scripts -p 'test_*.py'
+          bash -n scripts/run_ios_test_shard.sh
   core:
+    needs: source-preflight
     name: Core build and tests
     permissions:
       contents: read
@@ -27,20 +60,25 @@ jobs:
       security-events: write
     uses: ./.github/workflows/security.yml
   diagnostics:
+    needs: source-preflight
     name: Sanitizers and local billing
     uses: ./.github/workflows/ios-deep.yml
   fixtures:
+    needs: source-preflight
     name: Household and dinner regressions
     uses: ./.github/workflows/ios-fixtures.yml
   native-wire:
+    needs: source-preflight
     name: Native Swift HTTPS integration
     uses: ./.github/workflows/ios-native-wire.yml
   performance:
+    needs: source-preflight
     name: Release performance
     uses: ./.github/workflows/ios-performance.yml
     with:
       enforce_baselines: true
   staging-iphone:
+    needs: source-preflight
     name: Installed iPhone app against staging
     concurrency:
       group: ritc-macos-slot-2
@@ -108,7 +146,7 @@ jobs:
         run: npm audit --package-lock-only --audit-level=high
   release-checks:
     name: Automated release gate
-    needs: [core, security, diagnostics, fixtures, native-wire, performance, staging-iphone, dependencies]
+    needs: [source-preflight, core, security, diagnostics, fixtures, native-wire, performance, staging-iphone, dependencies]
     if: always()
     runs-on: ubuntu-24.04
     timeout-minutes: 10

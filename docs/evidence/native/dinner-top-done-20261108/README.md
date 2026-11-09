@@ -40,10 +40,15 @@ A visible title and the original behavior are both required. The final candidate
 returns to the sibling row and changes only the supply title's display mode to
 native inline. It is a supported presentation choice, not proof of the underlying
 framework cause. This three-file product/test repair is now installed locally;
-All261Python checks, including20app-configuration tests, and generated-project
+All 261 Python checks, including 20 app-configuration tests, and generated-project
 validation pass. The original Spanish largest-text case failed to locate Accept
-idea; Xcode is still finalizing failure diagnostics. That scope is unqualified; see [CURRENT-HANDOFF](../../../CURRENT-HANDOFF.md)
-for its exact handle. Minimum OS, Release and combined hosted checks remain open.
+idea: terminal native65/strict1, zero idle misses. The testcase took193.448s;
+the full command took800.080585s including verbose failure diagnostics. The
+result was inspected once, and the settings receipt confirms Large restoration.
+The retained failure screen shows large-text supply review content, without
+Accept in the viewport; it does not prove the control is absent or a scroll
+boundary was reached. That scope is unqualified; see
+[CURRENT-HANDOFF](../../../CURRENT-HANDOFF.md) for the next investigation. Minimum OS, Release and combined hosted checks remain open.
 
 Original sources, products and complete results are retained under `.build/` in
 `DinnerTopDoneNov08`, `DinnerTopDoneSafeAreaNov08`, `DinnerTopInsetNov08` and

@@ -29,6 +29,15 @@ slot. The final `CI gate` still rejects any failed or skipped required job.
 Independent service/web checks continue in parallel. This trades a short startup
 dependency on passing runs for less wasted work on invalid revisions.
 
+The pre-release entry point now has its own Linux `source-preflight` before core,
+deep checks, fixtures, native-wire, performance and installed staging-app work.
+It checks generated files, localization, workflow syntax, Python checks and shell
+syntax. These native paths start in parallel after preflight; they do not wait
+for the whole core suite. Security and dependency audits remain independent.
+The release gate requires preflight success, so a failure or skip cannot turn the
+release green. Standalone workflow checks and the core validation remain intact.
+This deliberately repeats inexpensive checks at the release boundary.
+
 Performance planning and Python evidence-validator tests also run on Linux before
 the optimized build. The compiled XCTest inventory is still verified on macOS.
 
@@ -192,6 +201,23 @@ high.
 
 The shared iOS shard runner, StoreKit and Release-performance workflows, and optional local UI check use `-collect-test-diagnostics on-failure`. This lets Xcode collect system diagnostics when XCTest encounters a failure or error. Test selections, warning gates, retries and execution deadlines remain unchanged.
 
+For a focused **local layout or control-discovery investigation**, use
+`-collect-test-diagnostics never` when screenshots, accessibility state, the native
+log and the complete result bundle answer the question. The installed Xcode help
+defines this switch as controlling verbose diagnostics such as a sysdiagnose.
+Keep the original selectors, assertions, timeouts, result export and strict
+checker. Opt into verbose diagnostics when the investigation needs system-level
+evidence (for example a hang or infrastructure failure). CI keeps its existing
+on-failure setting.
+
+This distinction has measured value: the Spanish AX5 control-discovery testcase
+failed after 193.448 seconds; the whole command finished after 800.080585 seconds.
+Its owned `simctl diagnose` child used `--timeout=600`. The native process was
+left to finalize; it was not restarted, killed or relabeled as passing. Native65,
+strict1 and the original evidence are preserved; text size is restored to Large. For another
+local layout check, that broad capture does not answer whether a control was
+scrolled into view. Preserve the failure artifacts once and use targeted evidence.
+
 Existing CI result-bundle uploads retain those diagnostics for seven days, including after failures. The Records media shard continues to exclude raw bundles and logs from uploads; its sanitized artifacts remain the only published results. Collection can increase failure-run time and disk use, and an outer deadline may prevent complete finalization or upload. Inspect the actual failed-run artifacts before claiming complete evidence.
 
 A later strict-checker rejection of an otherwise passing XCTest run is not itself an XCTest failure. This option therefore does not guarantee collection for a runtime-warning attachment that is missing from a passing test. Required issue descriptions remain mandatory; changing diagnostic collection does not repair or waive a warning.
@@ -214,3 +240,45 @@ As of November6, `main` requires a pull request, an up-to-date branch, resolved 
 These are the unfiltered core/security PR gates. Path-filtered fixture, deep, performance and native-wire workflows are not directly required by branch protection: a documentation-only change can skip them. A merge passing the baseline therefore does not establish full regression acceptance.
 
 Before distribution, run the unfiltered `Pre-release regression checks` workflow on the exact release branch head and require its `Automated release gate` to succeed. It includes all six workflow scopes, strict release metadata, full lockfile vulnerability audits and exact-commit CodeQL/open-finding checks. Source changes invalidate that candidate's release result. Actual signing, live-provider acceptance and physical/human gates remain required. The future distribution integration must enforce this boundary; this manual workflow does not itself upload or technically prevent an independent App Store upload.
+
+
+The shared shard runner now implements the local option explicitly:
+
+```sh
+# Requires the existing compiled products and test-plan manifest for this shard.
+# SIMULATOR_ID, TEST_SHARD and EXPECTED_TEST_COUNT must already identify that work.
+LOCAL_TEST_DIAGNOSTICS=never bash scripts/run_ios_test_shard.sh
+```
+
+Default behavior stays `on-failure`. `never` is rejected before native execution
+when either `CI` or `GITHUB_ACTIONS` is set. Invalid modes also fail early. The
+mode is printed in the log; the original selectors, 720/900-second allowances,
+full result bundle, strict checker and failure exit remain unchanged. This option
+avoids verbose system capture; it does not skip XCTest evidence or make a failed
+test pass. One-off local runners must record the same explicit flag in their new
+command receipt; do not edit a retained run's provenance.
+
+## Exact-run monitoring without repeated log downloads
+
+Use the read-only reporter before allocating more CI work:
+
+```sh
+python3 scripts/ci_feedback.py --run 42544579944
+python3 scripts/ci_feedback.py --sha d1705d920595be12a3eb8c378f50ad04dbf65ccd
+```
+
+It reports the exact revision and attempt, all paginated jobs, failed step names,
+three longest steps per job, execution time and time before starting. The latter
+includes dependency/slot/scheduling delay, not just the runner queue. Repeated
+failed step names are investigation leads, not a count of independent bugs.
+Potential duplicate active runs share workflow, branch and SHA; compare manual
+scope before cancelling anything. Active counts apply only to the requested
+revision/run, not the whole repository.
+
+Completed job summaries are cached in `.build/ci-feedback` by repository, run and
+attempt; run metadata is refreshed before reuse. Live snapshots are not cached.
+The reporter neither launches/retries/cancels runs nor downloads logs. Fetch the
+specific failed job's log only when the summary identifies what needs inspection.
+An empty revision result exits nonzero; absence of runs is not a green release.
+Keep one coordinator for dispatches and one owner per independent root cause.
+Batch qualified fixes for one full PR regression at the combined revision.

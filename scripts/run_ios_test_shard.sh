@@ -3,6 +3,19 @@ set -euo pipefail
 : "${SIMULATOR_ID:?Select an iPhone simulator first}"
 : "${TEST_SHARD:?Choose a shard from the build manifest}"
 : "${EXPECTED_TEST_COUNT:?Use the count from the build matrix}"
+# Verbose system capture can add minutes to a simple local layout failure.
+# Hosted/release evidence always keeps the original on-failure policy.
+diagnostics="${LOCAL_TEST_DIAGNOSTICS:-on-failure}"
+case "$diagnostics" in
+    on-failure) ;;
+    never)
+        if [ -n "${CI:-}" ] || [ -n "${GITHUB_ACTIONS:-}" ]; then
+            echo 'LOCAL_TEST_DIAGNOSTICS=never is for local investigations only.' >&2
+            exit 2
+        fi ;;
+    *) echo 'LOCAL_TEST_DIAGNOSTICS must be on-failure or never.' >&2; exit 2 ;;
+esac
+echo "XCTest verbose diagnostics: $diagnostics"
 selection=".build/test-plan/$TEST_SHARD.txt"
 test -s "$selection"
 test_runs=(.build/DerivedData/Build/Products/RoomInTheCart_iphonesimulator*.xctestrun)
@@ -18,7 +31,7 @@ run_tests() {
         -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
         -resultBundlePath "$bundle" -parallel-testing-enabled NO \
         -test-timeouts-enabled YES -default-test-execution-time-allowance 720 \
-        -maximum-test-execution-time-allowance 900 -collect-test-diagnostics on-failure \
+        -maximum-test-execution-time-allowance 900 -collect-test-diagnostics "$diagnostics" \
         "${selectors[@]}" test-without-building 2>&1 | tee "$log"
 }
 result=.build/Tests.xcresult

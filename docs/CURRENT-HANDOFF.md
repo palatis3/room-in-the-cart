@@ -26,23 +26,24 @@ for this focused work. Recheck remote state before publishing.
   suites with strict verification. The shared build and final gate pass.
   Logs and terminal inventory were collected once. Do not dispatch a duplicate.
   [Billing proof](evidence/native/membership-pending-reconciliation-20261108/README.md).
-- The original Spanish dinner journey at largest Dynamic Type is active:
-  root session **60355**, `.build/DinnerInlineTitleNov08/run_spanish_ax5.py`.
-  The testcase failed after193.448s: dinnerAcceptIdea was not found following
-  the first successful Done and unknown-quantity review. Xcode PID1814 remains
-  live finalizing failure diagnostics; no terminal native receipt exists yet.
-  It reuses the exact English-qualified products. The wrapper records the AX5
-  readback and restores Large in `finally`; check its settings receipt before
-  continuing. Poll that handle/exact PID; no concurrent local native work.
-- All helpers are terminal. Source/log review confirms Review succeeded and the
-  unknown-quantity text was found at121.60s. CTA discovery then used16upward and
-  eight downward drags, with no scroll-progress/bottom evidence. Underreach is
-  plausible, not proven; a missing app control is also unproven. Wait for the
-  failure screenshot before changing behavior or its test. Root/helper reviewed
-  all ten English screenshots and five geometry records without a blocking defect.
-- Latest app commit: `556d69e5`. Last live recheck:2026-11-09T02:01:09Z,
-  session60355/PID1814 still running (elapsed7m38s); no inspection output exists
-  for Spanish yet. Native finalization and Large restoration remain pending.
+- The original Spanish dinner journey at largest Dynamic Type is **terminal failed**:
+  native65/strict1, zero idle misses. Testcase193.448s, full command800.080585s.
+  Accept idea was not discovered after the first successful Done and unknown-
+  quantity review. Its complete result and inspection are retained under
+  `.build/DinnerInlineTitleNov08/spanish-ax5`; do not rerun/export that result.
+  The settings receipt confirms restoration to Large. No native run is active.
+- Source/log review confirms Review succeeded and the unknown-quantity text was
+  found. CTA discovery used16upward then8downward drags without scroll-progress
+  evidence. Root viewed the final failure image: it shows the large-text supply
+  review content, with no Accept action in the viewport. That does not establish
+  the furthest scroll position or absence of the app control. Underreach remains
+  plausible, not proven. All ten English screens were previously reviewed.
+- Latest app commit: `556d69e5`. Workflow improvements now add a Linux release
+  preflight, a local-only lighter diagnostic option and read-only exact-run CI
+  reporting. All274 Python checks and workflow validation pass.
+  [Workflow evidence](evidence/native/ci-feedback-efficiency-20261108/README.md).
+  See [working loop](CI-VALIDATION.md). They do not qualify the failed
+  Spanish scope or trigger a new full regression automatically.
 
 ## Installed Dinner repair and next action
 
@@ -55,30 +56,28 @@ It matches the installed app/test bytes and includes the current Membership fix.
 The old `8d0eb48f` native pin is obsolete.
 
 Focused Done has its own top-content row for dinner ideas and supply, a rectangular
-minimum44-point target and8-point vertical padding. It clears focus without
+minimum 44-point target and 8-point vertical padding. It clears focus without
 changing values, saving or cancelling. The supply screen uses a native inline
 localized title. Manual/reusable editing keeps its existing behavior.
 
 Build and Debug bundle checks pass. The original English journey passes native
 and strict checks with zero idle misses, all five symmetric coordinate samples,
 unknown-quantity rejection, supply approval and relaunch persistence. All ten
-screens and five geometry records are reviewed. All261Python checks (including20app-configuration tests)
+screens and five geometry records are reviewed. All 261 Python checks (including 20 app-configuration tests)
 and generated-project validation pass. [Evidence and rejected alternatives](evidence/native/dinner-top-done-20261108/README.md).
 Earlier sibling-row/background-only candidates failed visual review; top-inset
 failed the Review postcondition. Their source/products/results remain preserved.
 All earlier inspectors and exports are complete; do not repeat them.
 
-Next: wait for the SAME Spanish AX5 process to finalize, then execute
-`.build/DinnerInlineTitleNov08/inspect.py spanish-ax5` exactly once, inspect its
-screens and confirm Large restoration. The first premature inspection guard
-rejected missing nativeExit before creating an inspection directory or exporting
-anything; no result was inspected. Classify/fix the missing-CTA failure before
-claiming AX5 qualification. Then run the original Spanish journey at
-Large text on owned iOS17 (`run_native.py spanish-ios17`), followed by an unsigned
-Release build/bundle check. These variants are still unproven. Restore/preserve
-compatible products before changing build profiles. Full combined hosted and
-release acceptance remains required; this is a locally installed repair, not a
-release claim. No new full PR batch or deployment has been started.
+Next: classify/fix the Spanish missing-CTA failure using the retained screenshot
+and scroll evidence before another native run. Keep the original business
+assertions; do not blindly increase attempts or claim AX5 qualification. For the
+next focused local layout experiment, use targeted diagnostics as documented in
+CI-VALIDATION. Then run the original Spanish journey at Large text on owned
+iOS17 (`run_native.py spanish-ios17`), followed by an unsigned Release
+build/bundle check. These variants are still unproven. Preserve compatible
+products before changing build profiles. Full combined hosted and release
+acceptance remains required. No deployment occurred in this workflow work.
 
 ## Other open failures and workflow
 
