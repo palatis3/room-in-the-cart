@@ -2,6 +2,14 @@
 
 ## Current checkpoint — November 9, workflow and combined-candidate qualification
 
+Current-candidate hostedscroll42592941333 at e95fcec9 reproduces missing duration:
+original native test and500-row persistence pass, but only three memory metrics
+exist in both originalSQLite andJSON. Local required metrics remain complete; no
+hosted baseline is approved. [Retained current failure](evidence/native/current-hosted-scroll-20261109/README.md).
+The optional collector's observed framing/count errors are corrected with64focused
+and378offline passes; stderr still fails qualification. This parser correction is
+not a remedy for the hosted result, which ran with optional capture disabled.
+
 At909f7c9b, the original local Release scroll and cold-launch cases pass native,
 strict and required measurement checks on Xcode27.1/27A9275+iOS27.0/24A434. All five
 original-duration samples are present in each case; scroll also has all three

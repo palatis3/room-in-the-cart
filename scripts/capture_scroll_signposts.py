@@ -124,9 +124,30 @@ def terminate_owned(process):
             process.wait(timeout=1)
 
 
+def unique_object(pairs):
+    value = {}
+    for key, item in pairs:
+        if key in value:
+            raise ValueError('duplicate_json_member')
+        value[key] = item
+    return value
+
+
+def capture_filter(namespace):
+    if not re.fullmatch(r'dev\.roominthecart\.scrollprobe\.[0-9a-f]{32}', namespace):
+        raise ValueError('invalid_capture_namespace')
+    predicate = f'eventType == "signpostEvent" AND (process == "RoomInTheCart" OR subsystem == "{namespace}")'
+    # Exact framing observed from this issued predicate on the pinned runtime.
+    # Never accept a generic text prefix or unrelated/late/duplicate banner.
+    banner = ('Filtering the log data using "' + predicate.replace('eventType == "signpostEvent"', 'type == 1536', 1) + '"').encode()
+    return predicate, banner
+
+
 class Metadata:
-    def __init__(self, namespace, salt):
+    def __init__(self, namespace, salt, expected_banner=None):
         self.namespace, self.salt = namespace, salt
+        self.expected_banner = expected_banner
+        self.banner_seen = self.record_seen = False
         self.events, self.controls = [], set()
         self.metadata_bytes = 0
         self.errors = set()
@@ -138,15 +159,26 @@ class Metadata:
 
     def line(self, raw):
         try:
-            event = json.loads(raw)
+            if self.finished:
+                self.errors.add('record_after_terminal')
+                return
+            if self.expected_banner is not None and raw == self.expected_banner:
+                if self.banner_seen or self.record_seen:
+                    self.errors.add('unexpected_banner')
+                self.banner_seen = True
+                return
+            self.record_seen = True
+            event = json.loads(raw, object_pairs_hook=unique_object)
             if not isinstance(event, dict):
                 raise ValueError()
             if 'finished' in event:
-                # The public NDJSON format documents a terminal record, but does
-                # not promise loss-free delivery. Nonzero/unknown trailer fields
-                # conservatively make this diagnostic unqualified.
+                # The observed NDJSON footer counts emitted records, not losses.
+                # Bind it to validated events; unknown/drop fields still fail.
+                # A matching count alone does not promise loss-free delivery.
                 self.finished = True
-                if any(value not in (0, False, None, '') for key, value in event.items() if key != 'finished'):
+                if (set(event) != {'count', 'finished'} or type(event['finished']) is not int
+                        or event['finished'] != 1 or type(event.get('count')) is not int
+                        or event['count'] < 0 or event['count'] != len(self.events)):
                     self.errors.add('unqualified_terminal_record')
                 return
             if event.get('eventType') != 'signpostEvent':
@@ -605,7 +637,7 @@ def main():
     namespace = 'dev.roominthecart.scrollprobe.' + uuid.uuid4().hex
     salt = os.urandom(32)  # Shared live/show equality; discarded, never written.
     prefix = ['xcrun', 'simctl', 'spawn', args.simulator, 'log']
-    predicate = f'eventType == "signpostEvent" AND (process == "RoomInTheCart" OR subsystem == "{namespace}")'
+    predicate, banner = capture_filter(namespace)
     live = persisted = native = None
     native_code = None
     prior_handlers = {}
@@ -623,7 +655,7 @@ def main():
         start = utc_now()
         live = Pump(prefix + ['stream', '--signpost', '--style', 'ndjson', '--level', 'debug',
                               '--timeout', str(STREAM_SECONDS), '--predicate', predicate],
-                    STREAM_SECONDS, Metadata(namespace, salt)).start()
+                    STREAM_SECONDS, Metadata(namespace, salt, banner)).start()
         if not handshake(live, prefix, namespace, 'pre', journal):
             raise ValueError('pre_control_unqualified_no_native_run')
         receipt['nativeAttempted'] = True
@@ -648,7 +680,7 @@ def main():
         persisted = Pump(prefix + ['show', '--start', log_date(start), '--end', log_date(end, end=True),
                                    '--signpost', '--info', '--debug',
                                    '--style', 'ndjson', '--predicate', predicate],
-                         SHOW_SECONDS, Metadata(namespace, salt)).start()
+                         SHOW_SECONDS, Metadata(namespace, salt, banner)).start()
         persisted.thread.join(SHOW_SECONDS + 4)
         persisted.close()
         receipt['captureStartUTC'], receipt['captureEndUTC'] = start, end

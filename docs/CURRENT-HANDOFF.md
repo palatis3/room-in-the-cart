@@ -40,6 +40,29 @@ execution. The additive proposal/validation receipts are preserved in
 
 ## Latest active work — November 9
 
+- Hosted current-candidate scroll42592941333 at e95fcec9 is terminal failure:
+  build/native1of1/500-row readback pass, but required duration is absent from both
+  originalSQLite andJSON; only3memoryseries with5samples each. Originalartifact
+ 13663171664 was retained once and hash-verified. No automatic repeat.
+  [Exact outcome](evidence/native/current-hosted-scroll-20261109/README.md).
+- Optional collector framing is corrected and independently reviewed: exact initial
+  predicate-bound banner, strict terminal count/schema, duplicate-member rejection,
+  no post-footer records.64focused/378offline tests pass. Stderr failure remains;
+  no new transport qualification, suppression, metric or baseline change.
+  [Parser evidence](evidence/native/scroll-capture-framing-20261109/README.md).
+- Next performance variable under review: job-owned fresh simulator instead of the
+  hosted image device. Runtime/type, originalcases and strict requirements stay fixed.
+  All hosted/native work is terminal. The launch-only local simulator4C01A9AC was
+  removed after preserving results; protectedpreview untouched, scrollA50C91FC retained.
+- Independent fixture review prepared two-file Membership/Restoration isolation
+  candidates at `.build/MembershipRestorationIsolationNov09/`. Two original-API
+  negative controls plus minimal fixes are scratch-only; no compile/native proof or
+  installation yet. Root must prove failures before installing.74total affectedcases.
+- Apple's published support ranges include Xcode27.1/macOS27.2/iOS17; no matching
+  callback remedy found in reviewed27.1/27.2 notes. No older-Xcode download justified.
+  Private report supplement prepared at `.build/MinimumOSXCTestReproducerNov09/apple-report-draft/support-review-20261109/`;
+  nothing submitted. Minimum-iOS fulljourney remains failed.
+
 - Original local Release scroll AND cold-launch tests now pass native/strict and
   complete required metric validation at909f7c9b. Scroll has five duration samples
   plus all three memory series and independent500-row readback; launch has five

@@ -88,11 +88,82 @@ class MetadataTests(unittest.TestCase):
         self.assertTrue(meta.finished)
         self.assertIn('unqualified_terminal_record', meta.errors)
 
-    def test_plain_terminal_record_is_accepted(self):
+    def test_zero_count_terminal_record_is_accepted(self):
         meta = self.make()
-        meta.line(b'{"finished":1}')
+        meta.line(b'{"count":0,"finished":1}')
         self.assertTrue(meta.finished)
         self.assertFalse(meta.errors)
+
+    def test_capture_filter_matches_observed_actual_predicate_banner(self):
+        namespace = 'dev.roominthecart.scrollprobe.f564e682b42d4a46b9e2dd77070caead'
+        predicate, banner = probe.capture_filter(namespace)
+        self.assertEqual(predicate, 'eventType == "signpostEvent" AND (process == "RoomInTheCart" OR subsystem == "' + namespace + '")')
+        self.assertEqual(banner, ('Filtering the log data using "type == 1536 AND (process == "RoomInTheCart" OR subsystem == "' + namespace + '")"').encode())
+        for invalid in ('other', namespace + '"', namespace.upper(), namespace[:-1]):
+            with self.subTest(namespace=invalid), self.assertRaisesRegex(ValueError, 'invalid_capture_namespace'):
+                probe.capture_filter(invalid)
+
+    def test_duplicate_json_members_are_rejected_even_when_equal(self):
+        for raw in (b'{"count":999,"count":0,"finished":1}',
+                    b'{"count":0,"finished":0,"finished":1}',
+                    b'{"count":0,"count":0,"finished":1}',
+                    event().replace(b'"processID": 123', b'"processID": 999,"processID": 123')):
+            with self.subTest(raw=raw):
+                meta = self.make()
+                meta.line(raw)
+                self.assertIn('unsupported_record_or_schema', meta.errors)
+                self.assertFalse(meta.events)
+
+    def test_exact_initial_banner_and_three_event_footer(self):
+        banner = b'Filtering the log data using "exact synthetic predicate"'
+        meta = probe.Metadata('control.ns', b'salt', banner)
+        meta.line(banner)
+        for pid in (101, 102, 103):
+            meta.line(event(subsystem='control.ns', category='pre', signpostName='log-emit',
+                            signpostType='event', processID=pid, signpostID=17216892719917625070,
+                            processImagePath='/usr/bin/log'))
+        meta.line(b'{"count":3,"finished":1}')
+        self.assertEqual(len(meta.events), 3)
+        self.assertEqual(meta.controls, {'pre'})
+        self.assertTrue(meta.finished)
+        self.assertFalse(meta.errors)
+
+    def test_wrong_duplicate_and_late_banners_fail(self):
+        banner = b'Filtering the log data using "exact synthetic predicate"'
+        for lines in ([banner + b' extra'], [b'Filtering the log data using "other predicate"'],
+                      [banner, banner], [event(), banner]):
+            with self.subTest(lines=lines):
+                meta = probe.Metadata('control.ns', b'salt', banner)
+                for line in lines:
+                    meta.line(line)
+                self.assertTrue(meta.errors)
+
+    def test_footer_requires_exact_schema_types_and_validated_event_count(self):
+        for footer in ({'finished': 1}, {'count': 0}, {'count': -1, 'finished': 1},
+                       {'count': True, 'finished': 1}, {'count': 1.0, 'finished': 1},
+                       {'count': '1', 'finished': 1}, {'count': 1, 'finished': True},
+                       {'count': 1, 'finished': 0}, {'count': 0, 'finished': 1},
+                       {'count': 2, 'finished': 1}, {'count': 1, 'finished': 1, 'dropped': 0}):
+            with self.subTest(footer=footer):
+                meta = self.make()
+                meta.line(event())
+                meta.line(json.dumps(footer).encode())
+                self.assertTrue(meta.errors)
+
+    def test_footer_does_not_rescue_errors_and_no_records_may_follow_it(self):
+        for trailing in (b'{"count":1,"finished":1}', event(), b'arbitrary text'):
+            with self.subTest(trailing=trailing):
+                meta = self.make()
+                meta.line(event())
+                meta.line(b'{"count":1,"finished":1}')
+                meta.line(trailing)
+                self.assertIn('record_after_terminal', meta.errors)
+                self.assertEqual(len(meta.events), 1)
+        with patch.object(probe, 'MAX_EVENTS', 0):
+            meta = self.make()
+            meta.line(event())
+            meta.line(b'{"count":0,"finished":1}')
+            self.assertIn('metadata_cap', meta.errors)
 
     def test_logging_environment_redacts_unknown_values_and_names(self):
         with patch.dict(os.environ, {'OS_LOG_PRIVATE_secret': 'secret value'}, clear=True):
@@ -117,6 +188,22 @@ class PumpTests(unittest.TestCase):
         self.assertIn('stderr_present', pump.errors)
         self.assertEqual(pump.stderr_bytes, 13)
         self.assertNotIn('private error', json.dumps(pump.receipt()))
+
+    def test_chunk_split_framing_passes_but_uid_warning_still_fails(self):
+        banner = b'Filtering the log data using "exact synthetic predicate"'
+        payload = banner + b'\n' + event() + b'\n{"count":1,"finished":1}\n'
+        code = ('import os; data=' + repr(payload) +
+                '; [os.write(1, data[i:i+7]) for i in range(0, len(data), 7)]')
+        for warning in (False, True):
+            with self.subTest(warning=warning):
+                meta = probe.Metadata('control.ns', b'salt', banner)
+                child = code + ('; os.write(2, b"getpwuid_r did not find a match for uid 501\\n")' if warning else '')
+                pump = self.run_python(child, metadata=meta)
+                self.assertEqual(len(meta.events), 1)
+                self.assertTrue(meta.finished)
+                self.assertFalse(meta.errors)
+                self.assertEqual(pump.errors, {'stderr_present'} if warning else set())
+                self.assertEqual(pump.stderr_bytes, 44 if warning else 0)
 
     def test_help_may_use_either_channel_but_nonhelp_stderr_still_fails(self):
         argv = [sys.executable, '-c', 'import sys; print("usage"); sys.stderr.write("signpost-event")']
