@@ -283,6 +283,7 @@ struct S17SharedMealFixtureRoot: View {
     @State private var shopperMode = ProcessInfo.processInfo.arguments.contains("--shopper-meal-seed") || ProcessInfo.processInfo.arguments.contains("--shared-meal-deadline-fixture")
     @State private var directSeed = ProcessInfo.processInfo.arguments.contains("--shopper-meal-seed")
     @State private var directShopReview = ProcessInfo.processInfo.arguments.contains("--shared-meal-deadline-fixture")
+    private var focusedDaySheet: Bool { ProcessInfo.processInfo.arguments.contains("--shared-meal-day-sheet-fixture") }
     private var seed: SharedMealChangeSeed { .init(localOccurrenceID: UUID(uuidString:"88888888-8888-4888-8888-888888888888")!, title:"Fixture guest soup",portions:6,planning:.init(groups:[],ingredients:[])) }
     @ViewBuilder var body: some View {
         if ProcessInfo.processInfo.arguments.contains("--shared-meal-civil-date-fixture") {
@@ -291,14 +292,18 @@ struct S17SharedMealFixtureRoot: View {
     }
     private var sharedMealContent: some View {
         VStack {
-            Text("Fixture shared proposals: \(state.proposals)").accessibilityIdentifier("fixture.s17.proposals")
-            Text("Fixture shared applications: \(state.applications)").accessibilityIdentifier("fixture.s17.applications")
+            if !focusedDaySheet {
+                Text("Fixture shared proposals: \(state.proposals)").accessibilityIdentifier("fixture.s17.proposals")
+                Text("Fixture shared applications: \(state.applications)").accessibilityIdentifier("fixture.s17.applications")
+            }
             if let planner = state.planner, let shopper = state.shopper {
-                Button("Switch to assigned shopper") { shopperMode = true; directSeed = false; directShopReview = false }.accessibilityIdentifier("fixture.s17.switch")
-                Button("Open shopper local evidence") { shopperMode = true; directSeed = true; directShopReview = false }.accessibilityIdentifier("fixture.s17.seed")
+                if !focusedDaySheet {
+                    Button("Switch to assigned shopper") { shopperMode = true; directSeed = false; directShopReview = false }.accessibilityIdentifier("fixture.s17.switch")
+                    Button("Open shopper local evidence") { shopperMode = true; directSeed = true; directShopReview = false }.accessibilityIdentifier("fixture.s17.seed")
+                }
                 NavigationStack {
                     if ProcessInfo.processInfo.arguments.contains("--shared-meal-undated-fixture"), let model = shopper.sharedShop {
-                        SharedUndatedMealFixtureEditor(model: model)
+                        SharedUndatedMealFixtureEditor(model: model, compactReadbacks: focusedDaySheet)
                     } else if shopperMode && !directSeed {
                         if directShopReview { HouseholdShopView(model:shopper) } else { DinnerSharedPlanningEntry(household:shopper) }
                     }
@@ -313,19 +318,30 @@ struct S17SharedMealFixtureRoot: View {
 /// Uses the loaded HTTP fixture shop and production editor, including the actual review model.
 private struct SharedUndatedMealFixtureEditor: View {
     @ObservedObject var model: HouseholdShopModel
+    let compactReadbacks: Bool
+    @State private var mealDaySelection: SharedMealDaySelection?
+    @ViewBuilder private var readbacks: some View {
+        Text(model.draft.mealEdit?.occurrenceID.uuidString ?? "none")
+            .accessibilityIdentifier("fixture.undated.occurrence")
+        Text(model.draft.mealEdit?.meal?.planning?.ingredients.first?.id.uuidString ?? "none")
+            .accessibilityIdentifier("fixture.undated.ingredient")
+    }
     var body: some View {
         VStack {
-            Text(model.draft.mealEdit?.occurrenceID.uuidString ?? "none")
-                .accessibilityIdentifier("fixture.undated.occurrence")
-            Text(model.draft.mealEdit?.meal?.planning?.ingredients.first?.id.uuidString ?? "none")
-                .accessibilityIdentifier("fixture.undated.ingredient")
+            if compactReadbacks {
+                // Test-only identity readbacks must not consume the product's AX5
+                // viewport. The editor and presented calendar retain full Dynamic Type.
+                readbacks.font(.caption2).dynamicTypeSize(.medium).lineLimit(1)
+            } else { readbacks }
             Form {
-                SharedMealEditor(model: model, meals: model.shop?.meals ?? [])
+                SharedMealEditor(model: model, meals: model.shop?.meals ?? []) { mealDaySelection = $0 }
                 Button("Review fixture meal") { model.reviewDraft() }
                     .accessibilityIdentifier("fixture.undated.review")
                 Text(model.review?.mealEdit?.occurrenceID.uuidString ?? "none")
                     .accessibilityIdentifier("fixture.undated.reviewedOccurrence")
             }
+        }.sheet(item: $mealDaySelection) { selected in
+            SharedMealDaySheet(model: model, selection: selected)
         }.task { model.beginEditing() }
     }
 }

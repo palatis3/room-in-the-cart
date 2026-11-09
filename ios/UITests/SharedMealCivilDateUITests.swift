@@ -27,6 +27,126 @@ import XCTest
         checkOptionalNight(language: "es", locale: "es_US", edit: "Editar esta comida", discard: "Descartar los cambios en la comida", unscheduled: "Sin programar")
     }
 
+    func testEnglishDaySheetStagesCancelAndConfirmWithoutLosingCivilIdentity() {
+        checkDaySheet(language: "en", largeText: false)
+    }
+
+    func testSpanishDaySheetStagesCancelAndConfirmWithoutLosingCivilIdentity() {
+        checkDaySheet(language: "es", largeText: false)
+    }
+
+    func testEnglishDaySheetRemainsUsableAtLargestTextSize() {
+        checkDaySheet(language: "en", largeText: true)
+    }
+
+    func testSpanishDaySheetRemainsUsableAtLargestTextSize() {
+        checkDaySheet(language: "es", largeText: true)
+    }
+
+    private func checkDaySheet(language: String, largeText: Bool) {
+        let spanish = language == "es"
+        let originalDay = spanish ? "1 de noviembre de 2026" : "November 1, 2026"
+        let changedDay = spanish ? "2 de noviembre de 2026" : "November 2, 2026"
+        // The editor fixture supplies stable identity; the deadline fixture overlays a
+        // known civil day and deadline, so cancel/confirm has real timing to preserve.
+        app.launchArguments = ["--ui-testing", "--shared-meal-fixture", "--shared-meal-undated-fixture",
+            "--shared-meal-deadline-fixture", "-AppleLanguages", "(\(language))", "-AppleLocale", spanish ? "es_US" : "en_US"]
+        if largeText {
+            app.launchArguments += ["--shared-meal-day-sheet-fixture",
+                "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+        }
+        app.launch()
+        XCTAssertTrue(app.staticTexts["shared-meal-civil-date"].waitForExistence(timeout: 25))
+        XCTAssertEqual(app.staticTexts["shared-meal-civil-date"].label, originalDay)
+        let edit = app.buttons[spanish ? "Editar esta comida" : "Edit this meal"]
+        revealDayControl(edit); edit.tap()
+        let occurrence = app.staticTexts["fixture.undated.occurrence"]
+        let originalID = occurrence.label
+        XCTAssertEqual(originalID.lowercased(), "55555555-5555-4555-8555-555555555555")
+        let day = app.buttons["sharedMeal.day"]
+        revealDayControl(day)
+        XCTAssertEqual(day.value as? String, originalDay)
+        day.tap()
+        let preview = app.staticTexts["sharedMeal.dayPreview"]
+        XCTAssertTrue(preview.waitForExistence(timeout: 5)); XCTAssertEqual(preview.label, originalDay)
+        let calendar = app.descendants(matching: .any)["sharedMeal.dayCalendar"]
+        XCTAssertTrue(calendar.exists)
+        func selectNextDay() {
+            if largeText {
+                // Locate the native day wheel by its unique current value; locale
+                // determines wheel order, so never address a wheel by position.
+                let dayWheels = calendar.pickerWheels.matching(NSPredicate(format: "value == %@", "1"))
+                XCTAssertEqual(dayWheels.count, 1)
+                let dayWheel = dayWheels.firstMatch
+                revealDayControl(dayWheel)
+                dayWheel.adjust(toPickerWheelValue: "2")
+            } else {
+                // Match localized spoken month/day, never a calendar cell index.
+                let next = calendar.collectionViews.buttons.matching(NSPredicate(format: "label CONTAINS[c] %@", spanish ? "2 de noviembre" : "November 2")).firstMatch
+                revealDayControl(next); next.tap()
+            }
+        }
+        selectNextDay()
+        revealDayControl(preview); XCTAssertEqual(preview.label, changedDay)
+        captureDaySheet("selected-\(language)-\(largeText ? "AX5" : "default")")
+        let cancel = app.buttons["sharedMeal.cancelDay"]
+        XCTAssertTrue(cancel.isHittable); cancel.tap()
+        XCTAssertTrue(preview.waitForNonExistence(timeout: 5))
+        revealDayControl(day); XCTAssertEqual(day.value as? String, originalDay)
+        XCTAssertEqual(occurrence.label, originalID)
+        let deadline = app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", "America/New_York (UTC−04:00)")).firstMatch
+        revealDayControl(deadline)
+        XCTAssertTrue(deadline.exists, "Cancelling a staged date must retain the existing deadline")
+        if !largeText {
+            revealDayControl(day); day.tap()
+            XCTAssertTrue(preview.waitForExistence(timeout: 5))
+            selectNextDay()
+            let header = app.navigationBars[spanish ? "Día de la comida" : "Meal day"]
+            XCTAssertTrue(header.isHittable)
+            // A bar-relative swipe travels only its height; drag the sheet toward
+            // the bottom of the screen to exercise interactive dismissal.
+            header.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+                .press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.85)))
+            XCTAssertTrue(preview.waitForNonExistence(timeout: 5))
+            revealDayControl(day); XCTAssertEqual(day.value as? String, originalDay)
+            revealDayControl(deadline)
+            XCTAssertTrue(deadline.exists, "Dismissing the sheet must discard its staged date")
+        }
+
+        revealDayControl(day); day.tap()
+        XCTAssertTrue(preview.waitForExistence(timeout: 5)); XCTAssertEqual(preview.label, originalDay)
+        let use = app.buttons["sharedMeal.useDay"]
+        revealDayControl(use); use.tap()
+        XCTAssertTrue(preview.waitForNonExistence(timeout: 5))
+        revealDayControl(deadline)
+        XCTAssertTrue(deadline.exists, "Confirming the same day must retain the existing deadline")
+        revealDayControl(day); day.tap()
+        XCTAssertTrue(preview.waitForExistence(timeout: 5))
+        selectNextDay()
+        revealDayControl(use); use.tap()
+        XCTAssertTrue(preview.waitForNonExistence(timeout: 5))
+        revealDayControl(day); XCTAssertEqual(day.value as? String, changedDay)
+        XCTAssertEqual(occurrence.label, originalID)
+        XCTAssertFalse(deadline.exists, "Only confirming a changed day clears its former deadline")
+        captureDaySheet("confirmed-\(language)-\(largeText ? "AX5" : "default")")
+    }
+
+    private func revealDayControl(_ element: XCUIElement) {
+        for attempt in 0..<16 {
+            if element.exists && element.isHittable { return }
+            if element.exists && !element.frame.isEmpty {
+                if element.frame.midY > app.frame.midY { app.swipeUp() } else { app.swipeDown() }
+            } else if attempt < 8 { app.swipeUp() } else { app.swipeDown() }
+        }
+        XCTAssertTrue(element.exists && element.isHittable, element.debugDescription)
+    }
+
+    private func captureDaySheet(_ name: String) {
+        let attachment = XCTAttachment(screenshot: app.screenshot())
+        attachment.name = "shared-civil-day-sheet-" + name
+        attachment.lifetime = .keepAlways; add(attachment)
+    }
+
     private func checkOptionalNight(language: String, locale: String, edit: String, discard: String, unscheduled: String) {
         app.launchArguments = ["--ui-testing", "--shared-meal-fixture", "--shared-meal-undated-fixture",
             "-AppleLanguages", "(\(language))", "-AppleLocale", locale]

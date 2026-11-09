@@ -14,6 +14,7 @@ private struct SharedShopContent: View {
     @ObservedObject var model: HouseholdShopModel
     @ObservedObject var household: HouseholdModel
     @State private var clearingRetry = false
+    @State private var mealDaySelection: SharedMealDaySelection?
     var body: some View {
         Form {
             if model.authorized {
@@ -86,7 +87,9 @@ private struct SharedShopContent: View {
                     }
                     if model.creatingAnother && model.editing { Text(ht("Enter a new shared shop. Your existing shop stays separate.")) }
                     if model.editing {
-                        if !model.creatingAnother, model.canManage, let meals = model.shop?.meals { SharedMealEditor(model: model, meals: meals) }
+                        if !model.creatingAnother, model.canManage, let meals = model.shop?.meals {
+                            SharedMealEditor(model: model, meals: meals) { mealDaySelection = $0 }
+                        }
                         SharedShopEditor(model: model)
                     }
                     if let review = model.review {
@@ -116,6 +119,8 @@ private struct SharedShopContent: View {
                 if let notice = model.notice { Section { Text(notice).accessibilityIdentifier("household.shop.notice") } }
                 if model.busy { ProgressView(ht("Checking service…")) }
             } else { Text(ht("Shared shop access has ended. Return to household settings.")) }
+        }.sheet(item: $mealDaySelection) { selected in
+            SharedMealDaySheet(model: model, selection: selected)
         }.disabled(model.busy).task { await model.load() }
         .confirmationDialog(ht("Clear this local shared-shop retry?"), isPresented: $clearingRetry, titleVisibility: .visible) {
             Button(ht("I reviewed the current shop; clear retry"), role: .destructive) { Task { await model.clearPendingAfterReview() } }

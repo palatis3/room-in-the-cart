@@ -109,6 +109,14 @@ a failed native or strict check green. An infrastructure retry gets a separate
 `test-run-timing-retry.json`; both files use the existing artifact upload paths.
 [Validation and retained timing evidence](evidence/ci/native-finalization-timing-20261109/README.md).
 
+For changed layout, localization or Dynamic Type behavior, inspect the affected
+retained English/Spanish screenshots at ordinary and largest text sizes as well
+as the test outcome. A successful date-selection journey still exposed overlapping
+Spanish calendar controls in its saved image. Native wheels then exposed a
+duplicate visible label wrapping into a narrow column. Fix the observed layout
+without capping production text size or removing behavior assertions. Export from
+a verified result copy; do not rerun an unchanged journey just to view its images.
+
 ### Candidate qualification order
 
 Use this order for the combined candidate going forward:

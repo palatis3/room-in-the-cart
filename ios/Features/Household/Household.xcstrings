@@ -15182,6 +15182,23 @@
           }
         }
       }
+    },
+    "Use this day": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use this day"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar este día"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -106,17 +106,24 @@ import XCTest
         tap(app.buttons["Edit shared items and quote"])
         tap(app.buttons["Edit this meal"])
         let picker = element("sharedMeal.day")
-        reveal(picker)
-        let dateButton = picker.buttons.firstMatch
-        if dateButton.exists { tap(dateButton) }
-        else { picker.coordinate(withNormalizedOffset: CGVector(dx: 0.82, dy: 0.5)).tap() }
-        let nextDay = app.datePickers.collectionViews.buttons.matching(NSPredicate(format: "label CONTAINS %@", "November 2")).firstMatch
+        tap(picker)
+        XCTAssertEqual(element("sharedMeal.dayPreview").label, "November 1, 2026")
+        let nextDay = element("sharedMeal.dayCalendar").collectionViews.buttons.matching(NSPredicate(format: "label CONTAINS %@", "November 2")).firstMatch
         XCTAssertTrue(nextDay.waitForExistence(timeout: 5))
-        nextDay.tap()
-        if nextDay.exists {
-            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.07)).tap()
-            XCTAssertTrue(nextDay.waitForNonExistence(timeout: 5))
-        }
+        tap(nextDay)
+        XCTAssertEqual(element("sharedMeal.dayPreview").label, "November 2, 2026")
+        tap(element("sharedMeal.cancelDay"))
+        XCTAssertEqual(picker.value as? String, "November 1, 2026")
+        assertText("America/New_York (UTC−05:00)")
+        tap(picker)
+        // Confirming the unchanged date must also preserve the reviewed deadline.
+        tap(element("sharedMeal.useDay"))
+        assertText("America/New_York (UTC−05:00)")
+        tap(picker)
+        tap(nextDay)
+        tap(element("sharedMeal.useDay"))
+        XCTAssertTrue(element("sharedMeal.dayCalendar").waitForNonExistence(timeout: 5))
+        XCTAssertEqual(picker.value as? String, "November 2, 2026")
         assertText("The new day has no deadline until you set one.")
         tap(app.buttons["Review entered shared shop"])
         assertText("Previously planned")

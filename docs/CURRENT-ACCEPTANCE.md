@@ -2,9 +2,12 @@
 
 ## Current checkpoint — November 9, workflow and combined-candidate qualification
 
-The latest workflow follow-through passes 449 offline source checks and 17 queue
-contracts. Core/fixture build logs and per-invocation native-wire failure receipts
-are retained without weakening gates. [Workflow proof](evidence/ci/workflow-followthrough-20261109/README.md).
+The latest workflow update passes 457 offline source checks, including the existing
+queue contracts. Native shards report test-suite time separately from post-test
+observer work and retain distinct retry evidence. The earlier build/native-wire
+retention update passed 449 checks and all 17 queue contracts. Gates and hosted
+diagnostic defaults remain unchanged. [Timing proof](evidence/ci/native-finalization-timing-20261109/README.md),
+[retention proof](evidence/ci/workflow-followthrough-20261109/README.md).
 
 The shared source-removal regression now passes the complete expanded wire lane:
 8 Node cases and 15 actual Swift HTTPS/PostgreSQL scenarios, zero failures/skips.
@@ -12,14 +15,23 @@ It checks cancellation, one committed removal despite a restored-operation retry
 preserved meals/manual basket lines/history, and a separately authorized planner’s
 fresh restricted projection. This does not complete shared F02 UI or typed manual
 quantity merging. [Scoped proof](evidence/native/shared-meal-removal-wire-20261109/README.md).
+The new pure shared-demand contract/reducer passes 50 focused tests and isolated
+TypeScript compilation. Exact quantity conservation, exclusion checks and protected
+source removal are implemented; database/API/native route integration remains open.
+[Domain proof](evidence/service/shared-demand-domain-20261109/README.md).
 
 The standalone simulator collector now has qualified readiness, normal exits and
 exact expected events, with 13 offline controls. This enables a scoped app capture
 investigation; it does not resolve hosted missing measurements or approve a
 performance baseline. [Collector proof](evidence/native/simulator-collector-control-20261109/README.md).
-The compact Spanish shared-meal date remains English in the isolated comparison;
-explicit inherited-locale forwarding did not fix it and is not installed.
-[Locale observation](evidence/native/shared-picker-locale-20261109/README.md).
+The compact Spanish date defect is now handled by a localized full-date button and
+staged sheet with stable outer presentation ownership. All four final English/Spanish
+date-sheet journeys pass at ordinary/largest text on one build, with strict checks
+and screenshot review. Accessibility sizes use native wheels without the duplicate
+visible label. The earlier nine-case date/deadline regression remains separate
+historical evidence. Human accessibility and minimum-OS acceptance remain open.
+[Date-sheet proof](evidence/native/shared-day-sheet-20261109/README.md),
+[original locale observation](evidence/native/shared-picker-locale-20261109/README.md).
 
 Minimum-OS qualification remains failed, but the immediate crash is now captured:
 the original Spanish iOS17.0 journey reached a null-pointer fault in XCTest's

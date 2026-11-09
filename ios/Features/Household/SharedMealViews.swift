@@ -65,6 +65,7 @@ struct SharedMealFacts: View {
 struct SharedMealEditor: View {
     @ObservedObject var model: HouseholdShopModel
     let meals: [SharedMealOccurrence]
+    let presentDay: (SharedMealDaySelection) -> Void
 
     private func start(_ id: UUID, _ meal: SharedMeal?) {
         model.draft.mealEdit = .init(occurrenceID: id, meal: meal)
@@ -109,13 +110,9 @@ struct SharedMealEditor: View {
             start(id, current)
         })).accessibilityIdentifier("sharedMeal.assignNight")
         if let day = meal.day {
-            DatePicker(ht("Meal day"), selection: Binding(get: { sharedMealDate(day) ?? Date() },
-                set: { date in
-                    guard let edit = model.draft.mealEdit, edit.occurrenceID == id, var current = edit.meal else { return }
-                    current.move(to: sharedMealDay(date)); start(id, current)
-                }), displayedComponents: .date)
-                .environment(\.timeZone, mealCalendar().timeZone)
-                .accessibilityIdentifier("sharedMeal.day")
+            SharedMealDayEditor(day: day) {
+                if let selection = SharedMealDaySelection(occurrenceID: id, day: day) { presentDay(selection) }
+            }
         } else {
             Text(ht("Unscheduled")).accessibilityIdentifier("sharedMeal.unscheduled")
         }
@@ -138,6 +135,119 @@ struct SharedMealEditor: View {
             current[keyPath: key] = newValue
             start(id, current)
         })
+    }
+}
+
+/// Presentation belongs to the outer form, so recycling a meal row cannot dismiss it.
+struct SharedMealDaySelection: Identifiable {
+    let id = UUID()
+    let occurrenceID: UUID
+    let originalDay: String
+    let date: Date
+
+    init?(occurrenceID: UUID, day: String) {
+        guard let date = sharedMealDate(day) else { return nil }
+        self.occurrenceID = occurrenceID; originalDay = day; self.date = date
+    }
+}
+
+struct SharedMealDaySheet: View {
+    @ObservedObject var model: HouseholdShopModel
+    let selection: SharedMealDaySelection
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            SharedMealDayPicker(date: selection.date) { selectedDay in
+                defer { dismiss() }
+                guard let edit = model.draft.mealEdit, edit.occurrenceID == selection.occurrenceID,
+                      var current = edit.meal, current.day == selection.originalDay else { return }
+                current.move(to: selectedDay)
+                model.draft.mealEdit = .init(occurrenceID: selection.occurrenceID, meal: current)
+            }
+        }
+    }
+}
+
+/// The selected civil day is rendered by our locale-aware formatter. Calendar edits
+/// remain local to the sheet until confirmed, before the separate shared-shop review.
+private struct SharedMealDayEditor: View {
+    let day: String
+    let present: () -> Void
+    @Environment(\.locale) private var locale
+
+    var body: some View {
+        Button(action: present) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(ht("Meal day")).foregroundStyle(.primary)
+                Text(verbatim: sharedMealScheduleText(day, locale: locale))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+            .contentShape(Rectangle())
+        }
+        .accessibilityLabel(ht("Meal day"))
+        .accessibilityValue(sharedMealScheduleText(day, locale: locale))
+        .accessibilityIdentifier("sharedMeal.day")
+        .disabled(sharedMealDate(day) == nil)
+    }
+}
+
+private struct SharedMealDayPicker: View {
+    let save: (String) -> Void
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.locale) private var locale
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @State private var selected: Date
+
+    init(date: Date, save: @escaping (String) -> Void) {
+        self.save = save
+        _selected = State(initialValue: date)
+    }
+
+    private var calendar: Calendar {
+        var calendar = mealCalendar()
+        calendar.locale = locale
+        return calendar
+    }
+
+    @ViewBuilder private var dateControl: some View {
+        let picker = DatePicker(ht("Meal day"), selection: $selected, displayedComponents: .date)
+            .environment(\.calendar, calendar)
+            .environment(\.timeZone, calendar.timeZone)
+            .accessibilityIdentifier("sharedMeal.dayCalendar")
+        if dynamicTypeSize.isAccessibilitySize {
+            // Native adjustable wheels avoid overlapping month-navigation controls
+            // while retaining the user's text size and the same staged civil day.
+            picker.datePickerStyle(.wheel)
+                .labelsHidden()
+        } else {
+            picker.datePickerStyle(.graphical)
+        }
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                Text(verbatim: sharedMealScheduleText(sharedMealDay(selected), locale: locale))
+                    .font(.headline)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("sharedMeal.dayPreview")
+                dateControl
+                Button(ht("Use this day")) { save(sharedMealDay(selected)) }
+                    .buttonStyle(.borderedProminent)
+                    .frame(minHeight: 44)
+                    .accessibilityIdentifier("sharedMeal.useDay")
+            }.padding()
+        }
+        .navigationTitle(ht("Meal day"))
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button(ht("Cancel")) { dismiss() }
+                    .accessibilityIdentifier("sharedMeal.cancelDay")
+            }
+        }
     }
 }
 

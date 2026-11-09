@@ -10,15 +10,16 @@ and all earlier native preservation paths remain at
 ## Workspace and execution ownership
 
 Canonical checkout: `/Users/palatis/Room in the Cart`, local branch
-`codex/parallel-ios-ci`. Publish to `codex/combined-candidate-20261109`; its verified
-head before this checkpoint was 4e11b477. Recheck current Git/run state before dispatch.
+`codex/parallel-ios-ci`. Publish to `codex/combined-candidate-20261109`; verify its
+current remote head and run state before dispatch. The previous remote checkpoint
+was cb426276; subsequent local commits include 5d5676a7 and e56d184b.
 The ambient `spanish-done-diagnostic` worktree is stale. Draft PR1 is an older
 candidate. No full combined qualification or merge has passed.
 
 No Dot/Lumpy. Astra High helpers and Sol6.1 Extra High monitoring are authorized.
 Root owns integration and dispatch. One owner per cause, one local native process,
 no source/product mutation during execution. Historical attempts below are terminal;
-all optional-night native and wire attempts are now terminal. No debugger remains. Disk last reported approximately 146 GiB free;
+all optional-night native and wire attempts are now terminal. No debugger remains. Disk last reported approximately 166 GiB free;
 keep 8 GiB reserve and avoid downloads/duplicate raw archives.
 
 ## Implemented workflow
@@ -63,6 +64,30 @@ CodeQL retains its required macOS15/Xcode 26.3 exception. Minimum iOS remains 17
 The only approved performance profile is 26.3/17C529 with iOS 26.2/23C54; 27.1 remains
 unapproved. Do not dispatch full release expecting this mismatch to pass.
 
+## November 9 workflow follow-through
+
+Native shards now retain log-bound timing before result export, including failed
+attempts and separate infrastructure retries. The report distinguishes test-suite
+execution from post-suite observer work and leaves missing/ambiguous boundaries
+unknown. The real retained eight-case run has a 344.985-second suite followed by
+600.335 seconds, including a system-diagnostic timeout. All 457 Python checks,
+shell syntax, localization and diff checks pass. Hosted diagnostic defaults,
+selector coverage, deadlines and strict acceptance remain unchanged. Focused local
+UI retries may omit a duplicate verbose system dump only with an explained failure
+and retained evidence. [Proof](evidence/ci/native-finalization-timing-20261109/README.md).
+
+The exact shared-demand contract/reducer slice is committed as 5d5676a7: rational
+quantities, stable original sources, bounded duplicate/within-existing allocations,
+aggregate exclusion checks, protected-source conservation and conflict-aware Undo.
+50 focused tests and isolated TypeScript compilation pass. This is pure domain
+work, not F01/F02 route completion, database integration or deployment.
+[Proof](evidence/service/shared-demand-domain-20261109/README.md).
+Next persistence plan: `.build/SharedDemandGraphNov09/persistence-plan-r1/PLAN.md`,
+SHA256 `4c031973b4c9407e2df6cd6040325a2897cfa1028fcf6356f8d1a0ea0f8d9f79`.
+It requires atomic/replay-bound migration043, all writer fences, source provenance,
+privacy erasure and restore protection. No 043 implementation or deployment yet;
+staging authorization remains through041.
+
 ## New verified changes
 
 0. **Shared recovery ordering:** a real original-product HTTP negative control
@@ -96,9 +121,9 @@ unapproved. Do not dispatch full release expecting this mismatch to pass.
 
 The last fully qualified 561-input native snapshot used source manifest
 `a357a09918cf6dc15093dccb8dc992dc16e5baaff789b8eb490fddb5f9708791`.
-Execution workspace `.build/Xcode27WarningReviewNov09/execution-r1/{source,dd}` now
-has since advanced to the locally verified optional-night successor described below.
-Its focused verification does not establish a full combined regression pass.
+Execution workspace `.build/Xcode27WarningReviewNov09/execution-r1/{source,dd}` has
+advanced through optional-night and locale work to the date-sheet successor below.
+Focused verification does not establish a full combined regression pass.
 The following products and executors are historical; their archived proof remains valid.
 Debug products manifest f51f027c66f299c08f8c719076bd956a8af631d025bcf283bbf432f7f954ff55
 is archived with source under `.build/NativeQualificationArchivesNov09/<source-SHA>/shared-match-debug-products-f51f027c66f299c0/`.
@@ -184,23 +209,43 @@ No production changes, migration, deployment or full hosted batch in this patch.
 
 ## Remaining diagnostic work
 
-- Locale observation remains open. Three runs of the same first diagnostic
-  reproduced English compact `Nov 9, 2026` with Spanish expanded calendar,
-  including actual Spanish system preferences on dedicated device
-  `289CA7B9-66C7-44DD-8629-A04B09099B76` (now shut down). One new isolated build
-  compared baseline and explicit inherited-locale forwarding: both native/strict
-  selectors pass, both compact values remain English. SwiftUI locale and enclosing
-  calendar locale both report es_US. This does not establish internal picker state.
-  The ineffective experiment is not in canonical app source or normal CI inventory.
-  [Scoped evidence](evidence/native/shared-picker-locale-20261109/README.md).
+- The compact native date control's Spanish-label problem was reproduced and
+  inherited-locale forwarding did not resolve it. The successor renders a full
+  locale-aware civil date and stages calendar changes in a separate sheet.
+  Cancel/dismiss preserve the original day/deadline; confirming a changed day
+  clears its former deadline. Full confirmation still goes through shop review.
+  Earlier diagnostic evidence remains at
+  [locale observation](evidence/native/shared-picker-locale-20261109/README.md).
 
-  Current stable execution source manifest:
-  `5a91e32882523e7ded2a0b60546d21ab6a504a1cc9506e7186b88ded0732a477`;
-  products `f03804af7df7992b192cf90b6a22639ceffcc08d681badf63bd90ba49528c3d8`.
-  Root scripts/results: `.build/SharedMealLocaleNov09/execution-r2/`.
-  Prior 691d8f source/bfc26c products are verified under
-  `.build/NativeQualificationArchivesNov09/691d8f25724bcb1752884018e1386d4997869218727aac2f5eee0296581acb8f/shared-locale-r1-before-inherited-comparison/`.
-  Neither build nor UI runs remain active. Human localization is not signed off.
+  Current date-sheet source manifest:
+  `eb4b6e7985938b990edff722328eddc2a36289b0a5c3826752f8d9a9d931e0bd`;
+  products `c5b9d4500c3e377905c44d1d138a1d9ffd9cd4b7a73090d13d38dc090cc5d327`.
+  Root executor/results: `.build/SharedMealDaySheetNov09/execution-r6/`.
+  R6 Debug build/bundle verification pass. Earlier r4 build succeeded but copied
+  validation initially lacked resource links. Its separate
+  `build-debug/bundle-verification-r2/receipt.json` verifies the unchanged products
+  after correcting those links; no recompilation. A mistaken r4 test selector was
+  rejected by compiled-symbol preflight before native execution.
+
+  Prior date attempts remain preserved: r1 exposed a too-short test dismissal
+  gesture; r2 passed six of eight tests but AX5 fixture instrumentation left only
+  123 points for the Form; r3 removed that clutter and exposed the real sheet
+  disappearing after a valid tap. R4 moves presentation state outside lazy rows.
+  All nine r4 affected journeys pass native/strict on one immutable build. Screenshot
+  review then found Spanish AX5 month-header chevrons overlapping despite passing
+  interaction tests. R5 uses native adjustable date wheels at accessibility sizes,
+  preserving graphical calendars otherwise and all staged day/deadline assertions.
+  R5's English AX5 and both default-language cases pass, but Spanish AX5 failed:
+  its duplicate visible wheel label wrapped almost one character per line. Retained
+  screenshot proves the cause. R6 hides only that duplicate visible label, retaining
+  the localized accessibility label, full preview, title and original assertions.
+  All four final r6 date-sheet journeys pass native/strict on the same unchanged
+  source/products: English/Spanish at ordinary/AX5 sizes. All four saved screenshots
+  were reviewed and are readable. All 562 source members match canonical.
+  [Final scope and retained proof](evidence/native/shared-day-sheet-20261109/README.md).
+  R4's complete nine-case result remains historical, not a full r6 regression claim.
+  Prior source/products are verified under `.build/NativeQualificationArchivesNov09/`.
+  Human localization/accessibility review and minimum-OS qualification remain open.
 
 - New manual `enable_performance_diagnostics` is false by default, single launch/scroll
   only, baseline enforcement off, and incompatible with another live collector.
@@ -247,8 +292,24 @@ No production changes, migration, deployment or full hosted batch in this patch.
   [Compact proof](evidence/native/simulator-collector-control-20261109/README.md).
   Authoritative receipt: `.build/SimulatorSignpostControlNov09/capture-r3-validation/qualification.json`,
   SHA256 `ed30721e3685682c2faf2bed055ec6a71173e140d3f80dab4c00193b86b995d6`.
-  All native/control processes are terminal. Next step: design one app-process
-  capture with verified measurement-window coverage using the qualified transport.
+  The successor app-process capture is implemented in scratch at
+  `.build/AppSignpostCaptureNov09/implementation-r1/`: 45 offline controls pass;
+  frozen 19-file manifest SHA256
+  `e78670f3638a48140adb49e21597b59bee482aa11f5ccaaa25d2ab7de77730c3`.
+  It uses a fresh historical Release source/build with app/runner handshakes outside
+  the original measured block, exact owned process identities and bounded capture.
+  Swift compilation, native protocol verification and independent metric checks
+  remain. It is diagnostic only, not the current candidate or baseline acceptance.
+  Root preparation is frozen at `.build/AppSignpostCaptureNov09/root-execution-r1/`.
+  Source manifest `8bf01c2ee81c65e4f4ce8519cf512771ff52f0fbc224c84a13c87a72c06784e9`;
+  preparation manifest `9b835afa8d70e5adf86c00f0c359079a6762b4aab1f733b2b398777e2f320037`.
+  Root verified all seven preparation files and 561 source members. Read
+  `CHECKLIST.md`; first phase is `root_execute.py settings --native-slot-released`
+  with the exact interpreter in `tools.json`, only after prior native owners finish.
+  Future DD is absent; no native capture/setup/build phase has run. The first
+  file-only SDK-directory assumption failed and was corrected using bound SDK
+  metadata without recopying source. Canonical/stable Debug source is untouched.
+  Root owns the next native slot; no capture runs concurrently with the date tests.
   Do not repeat the helper unchanged or infer hosted metrics/baseline qualification.
 
 - Latest hosted 42639339096 attempt 1 at dc343f3e is terminal failure: arm64-only
