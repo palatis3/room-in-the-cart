@@ -18,11 +18,14 @@ failed top-inset alternative remain preserved. Spanish largest-text case is term
 Accept idea. Inspection is complete and text size is restored to Large. That
 scope is not qualified. MinimumOS, Release
 and combined hosted regression also remain open.
-A scratch progress-aware test now reaches that acceptance row after21gestures
-and passes disabled/contrast/padding checks, then fails on a separate quantity-
-field center helper that omits its final observation. R2 is running; neither
-scratch test candidate is installed or qualified. The AX5 image also reveals
-visually truncated ingredient labels requiring a product correction.
+Scratch scroll R2 subsequently passes all five Done probes and approval, then
+fails on lazy root/library recovery after relaunch. The short retained-state
+recovery probe passes but is not original-journey acceptance. A separate product
+candidate now fixes truncated ingredient/supply labels; its original English
+Large journey passes native/strict validation and all 11 screenshots are reviewed.
+The candidate is not installed. Spanish AX5, minimum OS, Release and combined
+hosted regression remain outstanding. No native process is active; next R2
+preparation is incomplete, not a running build.
 [Scroll evidence](evidence/native/dinner-scroll-progress-20261109/README.md).
 
 [Repair evidence](evidence/native/dinner-top-done-20261108/README.md),

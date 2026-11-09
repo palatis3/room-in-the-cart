@@ -1,0 +1,2 @@
+gesture=1; upward=true; exists=false; frame=(0.0, 0.0, 0.0, 0.0); area=(24.0, 128.0, 354.0, 646.0); unchanged=0; reversed=false; visible=["48||Cantidad sin resolver|[32.0, 649.0, 252.0, 125.0]", "48||Porciones: 2|[16.0, 479.0, 370.0, 93.0]", "48||Revisar cena|[16.0, 116.0, 370.0, 83.0]", "48||Tortillas rellenas de frijoles y repollo|[16.0, 199.0, 370.0, 279.0]", "48||Tortillas, Cantidad sin resolver|[16.0, 572.0, 370.0, 218.0]", "48||Tortillas|[32.0, 587.0, 172.0, 63.0]"]
+found after 1 gestures; target=; frame=(16.0, 785.6666666666666, 370.0, 279.33333333333337)

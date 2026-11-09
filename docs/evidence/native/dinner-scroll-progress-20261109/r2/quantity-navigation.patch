@@ -1,0 +1,61 @@
+diff --git a/Users/palatis/Room in the Cart/.build/DinnerScrollProgressNov09R2/preservation/source/ios/UITests/FreeJourneyUITests.swift b/Users/palatis/Room in the Cart/.build/EnglishKeyboardReviewNov08/current-r1/execution-r1/source/ios/UITests/FreeJourneyUITests.swift
+index 71efa0c8..c7f7fcb9 100644
+--- a/Users/palatis/Room in the Cart/.build/DinnerScrollProgressNov09R2/preservation/source/ios/UITests/FreeJourneyUITests.swift	
++++ b/Users/palatis/Room in the Cart/.build/EnglishKeyboardReviewNov08/current-r1/execution-r1/source/ios/UITests/FreeJourneyUITests.swift	
+@@ -1522,7 +1522,7 @@ import XCTest
+     private func tapVisibleFormRow(_ row: XCUIElement, marker: String = "S25_ROW_TAP") {
+         // XCUI's default activation point can lie above the scrolled content.
+         // Use the visible row center, clear of navigation and tab bars.
+-        for attempt in 0..<24 {
++        for attempt in 0...24 {
+             let area = scrollableArea().insetBy(dx: 0, dy: 12)
+             let exists = row.exists
+             let frame = exists ? row.frame : .zero
+@@ -1531,6 +1531,9 @@ import XCTest
+                 row.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+                 return
+             }
++            // Observe the result of the final allowed drag before failing.
++            // There are still at most 24 gestures, not 25.
++            if attempt == 24 { break }
+             // A lazy row outside the viewport can be above or below the current position.
+             scrollContent(upward: exists ? frame.midY > area.midY : attempt < 12)
+         }
+@@ -1695,7 +1698,7 @@ import XCTest
+         XCTAssertFalse(app.staticTexts[copy("Dinner saved. Choose it separately to add grocery needs.", "Cena guardada. Elígela por separado para agregar sus necesidades de compra.")].exists)
+         assertReviewedText(unknownQuantity, initiallyUpward: false)
+         tapReviewed(app.buttons[copy("Continue editing", "Seguir editando")])
+-        fill(originalAmount, into: amountLabel, replacing: true, requireDone: true, useVisibleCenter: true,
++        fill(originalAmount, into: amountLabel, replacing: true, requireDone: true, useVisibleCenter: true, initiallyUpward: false,
+              focusedDoneEvidence: (copy("Dinner idea", "Idea para cenar"), copy("Done", "Listo"), "Dinner-idea-Done-restored-amount", copy("Dinner ideas", "Ideas para cenar"), .top))
+         tap(element("ledgerReviewDinner"))
+         revealDinnerAcceptanceRow(accept); XCTAssertTrue(accept.isEnabled)
+@@ -2010,7 +2013,7 @@ import XCTest
+         return FocusedDoneTarget(coordinate: coordinate, frame: frame, details: details)
+     }
+ 
+-    private func fill(_ text: String, into id: String, replacing: Bool = false, requireDone: Bool = false, useVisibleCenter: Bool = false,
++    private func fill(_ text: String, into id: String, replacing: Bool = false, requireDone: Bool = false, useVisibleCenter: Bool = false, initiallyUpward: Bool = true,
+                       focusedDoneEvidence: (title: String, label: String, name: String, back: String, sample: FocusedDoneSample)? = nil) {
+         // Persistent labels can share the field's accessible name. Match only
+         // editable controls, including lazily materialized Form rows.
+@@ -2018,7 +2021,18 @@ import XCTest
+         let field = app.descendants(matching: .any).matching(identifier: id)
+             .matching(NSPredicate(format: "elementType IN %@", editableTypes.map { $0.rawValue })).firstMatch
+         if useVisibleCenter {
+-            tapVisibleFormRow(field, marker: "RECOVERY_FIELD_TAP")
++            if focusedDoneEvidence != nil {
++                // This scoped dinner editor can retain a deep review offset.
++                // Find the original field using observed progress, then tap the
++                // same visible center without granting another scroll budget.
++                revealDinnerReview(field, initiallyUpward: initiallyUpward, entireRow: true)
++                let frame = field.frame, area = scrollableArea().insetBy(dx: 0, dy: 12)
++                XCTAssertTrue(field.isHittable && area.contains(CGPoint(x: frame.midX, y: frame.midY)))
++                print("RECOVERY_FIELD_TAP id=\(field.identifier) frame=\(frame) area=\(area)")
++                field.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
++            } else {
++                tapVisibleFormRow(field, marker: "RECOVERY_FIELD_TAP")
++            }
+         } else { tap(field) }
+         if replacing, let old = field.value as? String, old != field.placeholderValue { field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count)) }
+         field.typeText(text)

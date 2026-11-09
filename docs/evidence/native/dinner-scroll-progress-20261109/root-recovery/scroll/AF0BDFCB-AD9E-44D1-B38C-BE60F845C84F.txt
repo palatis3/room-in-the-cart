@@ -1,0 +1,1 @@
+found after 0 gestures; target=newComparison; frame=(40.16666666666666, 641.6666666666666, 306.66666666666663, 128.0)

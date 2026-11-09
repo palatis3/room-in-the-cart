@@ -1,0 +1,12 @@
+{
+  "scope": "Retained-workspace root diagnostic only, not original journey or release acceptance",
+  "startedAt": "2026-11-09T02:55:35.605922+00:00",
+  "nativeExit": 0,
+  "sourceSHA256": "a912e135d0172276db3d89b6361bbd3e4243a169408468f6907b661294a4c180",
+  "strictExit": 0,
+  "animationIdleMessages": 0,
+  "diagnosticPassed": true,
+  "finishedAt": "2026-11-09T02:55:36.279267+00:00",
+  "originalUnchanged": true,
+  "sourceUnchanged": true
+}

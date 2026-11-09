@@ -1,0 +1,211 @@
+{
+  "scope": "Visual review of 10 retained screenshots and 10 retained text geometry/target attachments only; Spanish AX5 R2. No export or execution performed.",
+  "result": "Done separation and the sampled post-tap retained state are supported; product readability limitations remain. Not a complete AX5 accessibility pass.",
+  "run_context": "Original native journey failed later during root recovery; these screenshots do not establish full journey or release acceptance.",
+  "geometry_summary": {
+    "done_size_points": [
+      115.33333333333331,
+      63.33333333333334
+    ],
+    "sample_region_points": [
+      44,
+      44
+    ],
+    "done_top_below_navigation_bottom_points": 8,
+    "samples_are_sparse": true,
+    "cancel_touch_target_qualified": false
+  },
+  "pairs": [
+    {
+      "case": "cleared_amount",
+      "before": {
+        "path": "/Users/palatis/Room in the Cart/.build/DinnerScrollProgressNov09R2/spanish-ax5/inspection/screens/0FAF926B-3AE1-4B7D-99C1-7F145D83E2FF.png",
+        "attachment": "Dinner-idea-Done-cleared-amount-before_0_F22C6400-72CE-497A-A4C1-22FD3BE5A10F.png",
+        "sha256": "d561367ab61055b98c928a3eb6721f9f75ac5b2ad8e46a46b50d95fe0afd7afe"
+      },
+      "after": {
+        "path": "/Users/palatis/Room in the Cart/.build/DinnerScrollProgressNov09R2/spanish-ax5/inspection/screens/986F2C89-6CAD-4FAA-8BC7-B991DCA45EB5.png",
+        "attachment": "Dinner-idea-Done-cleared-amount-after_0_BF458161-FFD0-48BD-B163-082FAF77926D.png",
+        "sha256": "3b08ae0f2679d6c824cbc3c41902628d333f429510d7b1511b46cc118d0656e5"
+      },
+      "geometry": {
+        "path": "/Users/palatis/Room in the Cart/.build/DinnerScrollProgressNov09R2/spanish-ax5/inspection/geometry/04FB8FB4-BC08-478E-BB52-45B1C421E617.txt",
+        "attachment": "Dinner-idea-Done-cleared-amount-geometry_0_B8CEE8B1-15A5-46E4-9248-10B5F76C6F31.txt",
+        "sha256": "d17c784b1ce1bb6bf2a8490f298ec023c4a78b9e7f8a74fd2e4ba6d49f8bb63c"
+      },
+      "target_before": {
+        "path": "/Users/palatis/Room in the Cart/.build/DinnerScrollProgressNov09R2/spanish-ax5/inspection/geometry/2C1968DC-84B8-4076-862A-1D112089EC46.txt",
+        "attachment": "Dinner-idea-Done-cleared-amount-target-before_0_AADDA6C4-4EE4-4A27-9351-97105864911F.txt",
+        "sha256": "6eb1af49b9bceb5abce0f37a026bd3db7eaad1f50181d87adc7afd0e4cb90109"
+      },
+      "observed": "Blank amount is consistent with a space but exact whitespace cannot be verified visually; it is retained in geometry. Done and keyboard disappear; editor and Tortillas remain.",
+      "visible_limits": [
+        "Notes/exclusions prompts visibly ellipsized after Done. Removal wording is ellipsized and partly behind the tab bar at this captured scroll position.",
+        "Amount has no persistent visible purpose label."
+      ],
+      "done_fully_rendered": true,
+      "done_visually_separate_from_navigation_and_back_or_cancel": true,
+      "expected_retained_value": " ",
+      "sample": "center",
+      "geometry_records_keyboard_and_done_gone": true,
+      "geometry_records_container_retained": true,
+      "geometry_records_equal_before_after": true
+    },
+    {
+      "case": "restored_amount",
+      "before": {
+        "path": "/Users/palatis/Room in the Cart/.build/DinnerScrollProgressNov09R2/spanish-ax5/inspection/screens/D19A7E65-2B0B-4B2F-AA4C-164F97BD1A34.png",
+        "attachment": "Dinner-idea-Done-restored-amount-before_0_CE8A56A8-9420-4F67-9A04-A20CB662000F.png",
+        "sha256": "bbbfafd62449d91c968b1a519db0fcdb8c7e3d62d729aaf3bf66e91e6f8076d8"
+      },
+      "after": {
+        "path": "/Users/palatis/Room in the Cart/.build/DinnerScrollProgressNov09R2/spanish-ax5/inspection/screens/56B466A9-B772-49C3-A738-0FAD346D83F9.png",
+        "attachment": "Dinner-idea-Done-restored-amount-after_0_538754E0-C262-42A8-A576-2E72C658CD15.png",
+        "sha256": "83edfa53b54c1e2bcafee1a8a4b5287a1264b6be3d5ea365f59b321ddc8eae61"
+      },
+      "geometry": {
+        "path": "/Users/palatis/Room in the Cart/.build/DinnerScrollProgressNov09R2/spanish-ax5/inspection/geometry/045E52C3-A85C-4749-990A-04E763B5D4F2.txt",
+        "attachment": "Dinner-idea-Done-restored-amount-geometry_0_33AA9961-037B-480D-9FA5-8B1069B86C39.txt",
+        "sha256": "68ee69f6c84c0b9a798ecc06039bbdf049114ad1df998d6772f5a17e6101749b"
+      },
+      "target_before": {
+        "path": "/Users/palatis/Room in the Cart/.build/DinnerScrollProgressNov09R2/spanish-ax5/inspection/geometry/4003A056-09B1-483F-A820-48DA80D4046B.txt",
+        "attachment": "Dinner-idea-Done-restored-amount-target-before_0_4A17DED2-8A1E-4421-B829-A726035FA9DC.txt",
+        "sha256": "855ea1b1551667a814ea3fa193e837464a45aeeff6228a6fdcc955559735ba52"
+      },
+      "observed": "4 is fully visible before and after Done; keyboard and Done disappear; editor and Tortillas remain.",
+      "visible_limits": [
+        "Notes/exclusions prompts and removal label visibly ellipsized after Done.",
+        "Amount purpose is absent once its placeholder is replaced."
+      ],
+      "done_fully_rendered": true,
+      "done_visually_separate_from_navigation_and_back_or_cancel": true,
+      "expected_retained_value": "4",
+      "sample": "top",
+      "geometry_records_keyboard_and_done_gone": true,
+      "geometry_records_container_retained": true,
+      "geometry_records_equal_before_after": true
+    },
+    {
+      "case": "supply_yield",
+      "before": {
+        "path": "/Users/palatis/Room in the Cart/.build/DinnerScrollProgressNov09R2/spanish-ax5/inspection/screens/24879F8F-D385-4196-8200-63B8844F7A12.png",
+        "attachment": "Dinner-supply-Done-ideaSupplyYield-before_0_61DF8829-579B-44DD-8526-08E8BB02B1C6.png",
+        "sha256": "305d09cd8896f74891bff79286fb1029ff96a08961aae7938b815898d24416ac"
+      },
+      "after": {
+        "path": "/Users/palatis/Room in the Cart/.build/DinnerScrollProgressNov09R2/spanish-ax5/inspection/screens/8328B534-C063-4565-B816-CE824A512994.png",
+        "attachment": "Dinner-supply-Done-ideaSupplyYield-after_0_05ECC168-8D7C-4BA1-8B0F-BE9243DB4E6C.png",
+        "sha256": "04240a63c0ade11dceff511134c7967c1545de24aed17405188dbded83871d53"
+      },
+      "geometry": {
+        "path": "/Users/palatis/Room in the Cart/.build/DinnerScrollProgressNov09R2/spanish-ax5/inspection/geometry/18EF9830-8184-4FA3-A316-B4BCA78F7F2D.txt",
+        "attachment": "Dinner-supply-Done-ideaSupplyYield-geometry_0_1AC45941-BBAD-4955-AE2B-6970FC87FC9F.txt",
+        "sha256": "547c77e29c3611d958dcd4e4a9e41f6619d43a9b923d51909f9ed5d6c0af7d86"
+      },
+      "target_before": {
+        "path": "/Users/palatis/Room in the Cart/.build/DinnerScrollProgressNov09R2/spanish-ax5/inspection/geometry/0C40A1C2-B494-478C-9D19-CC6652F9C76F.txt",
+        "attachment": "Dinner-supply-Done-ideaSupplyYield-target-before_0_C8B5BFBC-51E0-41A0-BD3F-F44DE00703A3.txt",
+        "sha256": "c6fbd9be53cb487cd492f8f2797ed72193a851b31a7fd7ac5d375c771f6d8a80"
+      },
+      "observed": "8 is fully visible before and after Done. Keyboard and Done disappear; Cancel and the same supply sheet remain.",
+      "visible_limits": [
+        "Native inline sheet title visibly ellipsized before and after.",
+        "8 has no persistent visible Usable amount per pack label; Observed pack, optional is group context only."
+      ],
+      "done_fully_rendered": true,
+      "done_visually_separate_from_navigation_and_back_or_cancel": true,
+      "expected_retained_value": "8",
+      "sample": "bottom",
+      "geometry_records_keyboard_and_done_gone": true,
+      "geometry_records_container_retained": true,
+      "geometry_records_equal_before_after": true
+    },
+    {
+      "case": "supply_price",
+      "before": {
+        "path": "/Users/palatis/Room in the Cart/.build/DinnerScrollProgressNov09R2/spanish-ax5/inspection/screens/8AF3A3DD-9BD4-4318-B31C-0249DAEBD0DE.png",
+        "attachment": "Dinner-supply-Done-ideaSupplyPrice-before_0_C08244DA-30E3-45B2-918B-6A995AFF1207.png",
+        "sha256": "b9f6d709f21c09cfa422ae8a759c0b2230d1020a0a91210c54391fda4454c050"
+      },
+      "after": {
+        "path": "/Users/palatis/Room in the Cart/.build/DinnerScrollProgressNov09R2/spanish-ax5/inspection/screens/5624FEAF-333D-478A-8E3A-7FE6F7EC298D.png",
+        "attachment": "Dinner-supply-Done-ideaSupplyPrice-after_0_A9BB6586-E636-48D6-A841-49C2A476FB3E.png",
+        "sha256": "1d36afd7f82d4c8ddae9c609087c93c0d897318622c297aa1caf698eeab016d6"
+      },
+      "geometry": {
+        "path": "/Users/palatis/Room in the Cart/.build/DinnerScrollProgressNov09R2/spanish-ax5/inspection/geometry/8D473EFD-E07B-448A-BD6E-EEC98AD9EF40.txt",
+        "attachment": "Dinner-supply-Done-ideaSupplyPrice-geometry_0_0E245F26-00C7-4C7C-9B0C-818CDFE51D94.txt",
+        "sha256": "133e974cfabbc137b8df03af438796c4a79574bda12f408463947b4b78a64e42"
+      },
+      "target_before": {
+        "path": "/Users/palatis/Room in the Cart/.build/DinnerScrollProgressNov09R2/spanish-ax5/inspection/geometry/C90C5610-5CCD-4B20-AFE3-571205D0768A.txt",
+        "attachment": "Dinner-supply-Done-ideaSupplyPrice-target-before_0_C4AAF0FE-6333-441B-B66D-B8180673B435.txt",
+        "sha256": "07f052e6887408685278f71a5f1b62ca567e9f93b0bfca1bb2e046133095a97b"
+      },
+      "observed": "2.50 is fully visible before and after Done; 8 and the units control remain visible. Keyboard and Done disappear; Cancel and the sheet remain.",
+      "visible_limits": [
+        "Native inline sheet title visibly ellipsized before and after.",
+        "Price per pack in USD disappears when the value replaces the placeholder; 2.50 alone omits that purpose and currency qualifier."
+      ],
+      "done_fully_rendered": true,
+      "done_visually_separate_from_navigation_and_back_or_cancel": true,
+      "expected_retained_value": "2.50",
+      "sample": "left",
+      "geometry_records_keyboard_and_done_gone": true,
+      "geometry_records_container_retained": true,
+      "geometry_records_equal_before_after": true
+    },
+    {
+      "case": "supply_source",
+      "before": {
+        "path": "/Users/palatis/Room in the Cart/.build/DinnerScrollProgressNov09R2/spanish-ax5/inspection/screens/F50D5E15-4ED0-4720-AB8B-E27770C4D2FD.png",
+        "attachment": "Dinner-supply-Done-ideaSupplySource-before_0_FDBA6EF6-3155-4042-A86F-EE2805E9562C.png",
+        "sha256": "633183578b9691ece6cdd06b02f2d81056a32502a1b00512baecf80009cb8953"
+      },
+      "after": {
+        "path": "/Users/palatis/Room in the Cart/.build/DinnerScrollProgressNov09R2/spanish-ax5/inspection/screens/9D318619-9B73-4311-AA06-FB8F9C960E54.png",
+        "attachment": "Dinner-supply-Done-ideaSupplySource-after_0_5963D740-605A-4377-A248-BDE0DDC26C82.png",
+        "sha256": "9d83ea99d0454a3c6dadeda9d3f2818c6392990c4b4c4ed30e1d8b9bd27aeeea"
+      },
+      "geometry": {
+        "path": "/Users/palatis/Room in the Cart/.build/DinnerScrollProgressNov09R2/spanish-ax5/inspection/geometry/9B4A7BCE-91CA-4E21-A318-C24C2DF143E7.txt",
+        "attachment": "Dinner-supply-Done-ideaSupplySource-geometry_0_EB32AFD8-8D3E-4465-A227-A16415AC8A40.txt",
+        "sha256": "8b1457d1f643326cadb1d2f4e8e7d640b4df755f15398a9f349fdefaed6a63b3"
+      },
+      "target_before": {
+        "path": "/Users/palatis/Room in the Cart/.build/DinnerScrollProgressNov09R2/spanish-ax5/inspection/geometry/5AD9E095-083C-4629-81CB-7FBC4A183624.txt",
+        "attachment": "Dinner-supply-Done-ideaSupplySource-target-before_0_05C9E8B2-6BAB-459E-AF46-7CA016753390.txt",
+        "sha256": "a8c0a1063854c247f8b6d0f4e2b9928e6102516bb9e69489cf83a203175701d6"
+      },
+      "observed": "Bag label is fully visible before and after Done; 2.50 remains visible. Keyboard and Done disappear; Cancel and the sheet remain.",
+      "visible_limits": [
+        "Native inline sheet title visibly ellipsized before and after.",
+        "Evidence source disappears when the value replaces the placeholder.",
+        "The red dotted underline under Bag is visible; this review does not infer a validation error from it."
+      ],
+      "done_fully_rendered": true,
+      "done_visually_separate_from_navigation_and_back_or_cancel": true,
+      "expected_retained_value": "Bag label",
+      "sample": "right",
+      "geometry_records_keyboard_and_done_gone": true,
+      "geometry_records_container_retained": true,
+      "geometry_records_equal_before_after": true
+    }
+  ],
+  "cross_cutting_observations": [
+    "No overlap between the rendered Listo label and the Back/Cancelar controls is visible in the five before screenshots.",
+    "All supply titles render with an ellipsis. A complete accessibility name does not establish a complete visible title.",
+    "Some scrolled content remains visible through translucent navigation/tab chrome; these captures do not prove it cannot be scrolled into view.",
+    "Empty supply placeholders look light in the captured frames; no contrast ratio was measured, so no numerical contrast conclusion is made."
+  ],
+  "not_established": [
+    "Full journey success",
+    "Other locales, text sizes, appearances or OS versions",
+    "VoiceOver order or complete accessible names from screenshots alone",
+    "Every point in the Done or Cancel touch targets",
+    "Persistent labels or full values beyond these five samples",
+    "Native title full visual readability",
+    "Product proposal runtime behavior"
+  ]
+}
