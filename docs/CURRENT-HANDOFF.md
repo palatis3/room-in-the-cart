@@ -5,9 +5,11 @@
 Current canonical candidate adds one unfinished-transaction reconciliation after
 purchase returns pending. All60membership model tests and the unchanged original
 Spanish Ask to Buy case pass native/strict on owned858A/iOS26.2, with both build
-profiles and original results preserved. Hosted repair remains unproven; next
-publish the reviewed candidate and run the existing deep workflow once at its
-new SHA. [Evidence](evidence/native/membership-pending-reconciliation-20261108/README.md).
+profiles and original results preserved. Hosted repair remains unproven. Candidate code commitccdbd768 is published
+with evidence atd1705d920595be12a3eb8c378f50ad04dbf65ccd on
+`codex/ci-focus-pending-recovery-20261108`. Deep run42544579944 is confirmed
+in_progress: Linux preflight passed; both sanitizers and shared build running.
+Poll that same run to terminal; do not dispatch a duplicate. [Evidence](evidence/native/membership-pending-reconciliation-20261108/README.md).
 Canonical native inputs now include MembershipModel.swift and MembershipTests.swift
 changes; do not reuse the old8d0eb48f canonical pin for new execution preparation.
 No dinner/speech candidate was installed. No local native job remains active.
@@ -16,7 +18,8 @@ The workflow validation at50e89363 is terminal: fixture42541292817 passed its
 original quote journey and new gate; deep42541290758 passed preflight/sanitizers/
 shared build/English15, but Spanish14/15 failed the approved-transaction delivery
 predicate. The aggregate gate correctly failed. Both watcher sessions are terminal;
-no old hosted validation remains active. Do not dispatch the old source again.
+no old hosted validation remains active. Only the new candidate run42544579944
+is active from this work. Do not dispatch the old source again.
 [Workflow evidence](evidence/native/ci-bottleneck-update-20261108/README.md).
 
 The standalone render-only speech experiment built after3CoreFoundation spelling

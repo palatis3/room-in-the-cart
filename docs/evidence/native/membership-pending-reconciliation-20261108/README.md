@@ -42,3 +42,9 @@ repair and full bilingual billing suite remain unproven. A new reviewed source
 revision needs hosted validation; do not blindly rerun the old failed revision.
 No provider settings, database migrations, paid products or App Store deployment
 were changed.
+
+Hosted validation is now [run42544579944](https://github.com/palatis3/room-in-the-cart/actions/runs/42544579944),
+at source revisiond1705d920595be12a3eb8c378f50ad04dbf65ccd on
+`codex/ci-focus-pending-recovery-20261108` (code changeccdbd768). Preflight passed;
+the shared build and sanitizers were verified running at the checkpoint. Follow
+this existing run; no terminal hosted result is claimed yet.
