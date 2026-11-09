@@ -78,7 +78,7 @@ class PlanIOSPerformanceTests(unittest.TestCase):
 
     def test_linux_preflight_does_not_call_native_tools(self):
         with patch("sys.argv", ["planner", "--validate-request"]), \
-                patch.dict("os.environ", {"GITHUB_EVENT_NAME": "workflow_dispatch", "REQUESTED_PERFORMANCE_CASE": "scroll"}), \
+                patch.dict("os.environ", {"GITHUB_EVENT_NAME": "workflow_dispatch", "REQUESTED_PERFORMANCE_CASE": "scroll"}, clear=True), \
                 patch("plan_ios_performance_tests.subprocess.check_output") as native, \
                 patch("sys.stdout", new_callable=io.StringIO) as output:
             main()
@@ -88,7 +88,7 @@ class PlanIOSPerformanceTests(unittest.TestCase):
     def test_focused_cli_still_rejects_missing_unselected_compiled_case(self):
         symbols = "\n".join(COMPILED[:-1]).encode()
         with patch("sys.argv", ["planner", "fixture.xctest"]), \
-                patch.dict("os.environ", {"GITHUB_EVENT_NAME": "workflow_dispatch", "REQUESTED_PERFORMANCE_CASE": "launch"}), \
+                patch.dict("os.environ", {"GITHUB_EVENT_NAME": "workflow_dispatch", "REQUESTED_PERFORMANCE_CASE": "launch"}, clear=True), \
                 patch("plan_ios_performance_tests.subprocess.check_output", side_effect=[b"symbols", symbols]), \
                 patch("sys.stderr", new_callable=io.StringIO) as error, \
                 self.assertRaises(SystemExit) as result:
@@ -182,7 +182,8 @@ class FreshPerformanceWorkflowTests(unittest.TestCase):
                 env = dict(os.environ, PATH=str(root) + os.pathsep + os.defpath, ARGUMENTS=str(args),
                            NATIVE_EXIT=str(native_exit), SIMULATOR_ID='fixture-device', ENABLE_PERFORMANCE_DIAGNOSTICS=enabled,
                            GITHUB_EVENT_NAME='workflow_dispatch', REQUESTED_PERFORMANCE_CASE='scroll', ENFORCE_BASELINES=enforce,
-                           CAPTURE_SCROLL_SIGNPOSTS='false', CAPTURE_PREFLIGHT_ONLY='false')
+                           CAPTURE_SCROLL_SIGNPOSTS='false', CAPTURE_PREFLIGHT_ONLY='false',
+                           OBSERVE_APP_SCROLL_SIGNPOSTS='false', FRESH_PERFORMANCE_SIMULATOR='false')
                 r = subprocess.run(['bash', '--noprofile', '--norc', '-e', '-o', 'pipefail', '-c', script],
                                    cwd=root, env=env, capture_output=True, text=True, timeout=10)
                 if enabled == enforce == 'true':
@@ -308,7 +309,9 @@ class FreshPerformanceWorkflowTests(unittest.TestCase):
         self.assertNotIn('||', block)
         retained = self.consumer[upload:]
         self.assertIn('if: always()', retained)
-        self.assertIn('path: .build/performance/', retained)
+        self.assertIn("path: ${{ inputs.observe_app_scroll_signposts && "
+                      "(steps.observation_archive.outputs.artifact_path || '.build/app-observation-portable/report/') "
+                      "|| '.build/performance/' }}", retained)
         self.assertIn('include-hidden-files: true', retained)
         run = self.consumer[self.consumer.index('      - name: Run one Release performance case'):cleanup]
         self.assertIn('timeout-minutes: 30', run)

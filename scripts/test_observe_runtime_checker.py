@@ -186,7 +186,9 @@ class RuntimeCheckerWorkflowTests(unittest.TestCase):
         self.assertIn('--output .build/performance/runtime-checker.json', step)
         self.assertTrue(after.startswith(' Run one Release performance case'))
         self.assertNotIn('continue-on-error', step)
-        self.assertIn('path: .build/performance/', after)
+        self.assertIn("path: ${{ inputs.observe_app_scroll_signposts && "
+                      "(steps.observation_archive.outputs.artifact_path || '.build/app-observation-portable/report/') "
+                      "|| '.build/performance/' }}", after)
 
 
 if __name__ == '__main__':

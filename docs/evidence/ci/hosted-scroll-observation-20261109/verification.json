@@ -197,5 +197,10 @@
   "ordinaryAcceptanceUnchanged": true,
   "hostedExecution": false,
   "baselineApproved": false,
-  "fullCombinedCandidateQualified": false
+  "fullCombinedCandidateQualified": false,
+  "qualificationCorrection": {
+    "reason": "The 281 reported controls came from incremental preparation checkpoints. Some workflow-dependent suites were not rerun after artifact/profile changes; first hosted preflight and local full-step checks exposed stale assertions and inherited settings.",
+    "supersedingDispatchReadiness": "docs/evidence/ci/performance-dispatch-parity-20261109/verification.json",
+    "originalLogsAndFrozenPayloadPreserved": true
+  }
 }

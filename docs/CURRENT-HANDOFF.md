@@ -129,6 +129,16 @@ capture was performed during preparation. One manual scroll/fresh-device/observe
 run is the next justified diagnostic; strict metrics/baselines remain unchanged.
 [Prepared workflow and limits](evidence/ci/hosted-scroll-observation-20261109/README.md).
 
+Published observer checkpoint 28925824 ran 42697685059. It failed the Ubuntu planner
+before any Mac job: ordinary fixtures inherited the observer setting and artifact
+assertions still expected the former path. Do not reuse the earlier 281 incremental
+control count as a final preflight pass. Three test files now isolate ordinary
+fixtures/verify both artifact branches. The new local parity tool executes the
+actual cheap workflow step with its selected environment; both observer and ordinary
+profiles pass 227 checks in about 6s, with unchanged source manifests. This is local
+preflight evidence, not native/hosted qualification. Root owns the one corrected
+successor dispatch. [Proof](evidence/ci/performance-dispatch-parity-20261109/README.md).
+
 New local diagnostic rules in CI-VALIDATION require exact SDK/architecture helper
 typechecks before full compilation, export-only recovery after normal collection,
 and log names that remain distinct on a case-insensitive Mac. The app-signpost

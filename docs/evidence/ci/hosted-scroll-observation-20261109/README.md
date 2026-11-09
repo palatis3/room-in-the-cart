@@ -18,9 +18,12 @@ is explicitly unqualified. Disk checks reserve 8 GiB plus archive headroom.
 Normally collected evidence can support a separately reviewed export-only recovery,
 without rebuilding or rerunning the app; no retry is automatic.
 
-Root verified all 22 canonical files, the frozen payload and all retained test-log
-hashes. **281 offline controls pass**, including existing checker/workflow tests;
-workflow lint and all 17 queue definitions pass. Complete gated helper declarations
+Root verified all 22 canonical files, the frozen payload and retained test-log
+hashes. Preparation recorded **281 passing controls across incremental checkpoints**.
+Those logs did not establish a final combined preflight after workflow edits;
+the first hosted run exposed stale assertions and inherited diagnostic settings.
+[Complete profile checks now supersede that count for dispatch readiness](../performance-dispatch-parity-20261109/README.md).
+Workflow lint and all 17 queue definitions pass. Complete gated helper declarations
 typecheck against arm64 simulator SDK 27.1, Swift 5, with no warnings or errors.
 The helper process exited normally. This is not a complete app build or a hosted
 transport result.

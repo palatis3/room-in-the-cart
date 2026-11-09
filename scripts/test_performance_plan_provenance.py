@@ -273,7 +273,7 @@ class PerformanceProvenanceWorkflowTests(unittest.TestCase):
                 result = subprocess.run(['bash', '--noprofile', '--norc', '-e', '-o', 'pipefail', '-c', script],
                     cwd=root, env={**os.environ, 'PATH': str(root) + os.pathsep + os.defpath,
                                    'SIMULATOR_ID': 'fixture-device', 'STUB_ARGUMENTS': str(args_path),
-                                   'STUB_EXIT': str(native_exit)}, capture_output=True, text=True, timeout=10)
+                                   'STUB_EXIT': str(native_exit), 'OBSERVE_APP_SCROLL_SIGNPOSTS': 'false'}, capture_output=True, text=True, timeout=10)
                 self.assertEqual(result.returncode, native_exit, result.stderr)
                 self.assertEqual(args_path.read_bytes().decode().split('\0')[:-1], expected)
                 self.assertEqual((root / '.build/PerformanceBuild.log').read_text(), 'fixture native diagnostic\n')
@@ -322,7 +322,10 @@ class PerformanceProvenanceWorkflowTests(unittest.TestCase):
         self.assertEqual(consumer.count('--output .build/performance/plan-provenance-after-setup.json'), 1)
         self.assertEqual(consumer.count('performance_plan_provenance.py consumer'), 2)
         upload = consumer[consumer.index('      - name: Retain Release performance evidence'):]
-        self.assertIn('if: always()', upload); self.assertIn('path: .build/performance/', upload)
+        self.assertIn('if: always()', upload)
+        self.assertIn("path: ${{ inputs.observe_app_scroll_signposts && "
+                      "(steps.observation_archive.outputs.artifact_path || '.build/app-observation-portable/report/') "
+                      "|| '.build/performance/' }}", upload)
 
 
 if __name__ == '__main__':

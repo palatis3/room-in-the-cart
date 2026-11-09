@@ -162,6 +162,25 @@ a verified result copy; do not rerun an unchanged journey just to view its image
 
 ### Candidate qualification order
 
+Before a manual performance dispatch, run the entire existing cheap workflow step
+with the exact planned inputs, not only the changed test module. For the current
+observer profile:
+
+```sh
+.build/ci-yaml/bin/python scripts/check_performance_dispatch.py \
+  --case scroll --fresh-performance-simulator --observe-app-scroll-signposts \
+  --evidence .build/performance-dispatch-NEW-ATTEMPT
+```
+
+Use a new evidence directory each time. The tool needs PyYAML, as does the existing
+workflow validator. It reads the workflow's actual step/environment, bounds local
+execution and records source hashes before/after. Before dispatch, verify the
+receipt still matches current inputs. Test fixtures must explicitly declare their
+own profile instead of inheriting diagnostic flags. A workflow edit can invalidate
+an unchanged test's previous result; incremental passing logs are not a combined
+preflight pass. Check the ordinary profile as well when changing profile routing.
+[First complete profile checks](evidence/ci/performance-dispatch-parity-20261109/README.md).
+
 Use this order for the combined candidate going forward:
 
 1. Resolve missing launch/scroll measurements before approving the Xcode 27.1

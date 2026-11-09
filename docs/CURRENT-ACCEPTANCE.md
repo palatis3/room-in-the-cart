@@ -62,8 +62,13 @@ envelopes contain the named UIKit scroll intervals. Saved-artifact recovery comp
 without another app run; original XML-cap and inspector-filename failures remain
 retained. Animation hitches remain unavailable, and the hosted missing-duration
 cause is still open. [Local diagnostic proof](evidence/native/app-signpost-export-recovery-20261109/README.md).
-A new default-off hosted app observation is prepared with 281 passing offline
-controls, workflow lint, exact helper typecheck and verified portable evidence.
+A new default-off hosted app observation is prepared with workflow lint, exact
+helper typecheck and portable evidence. Its first hosted run 42697685059 failed
+Ubuntu preflight; both Mac jobs were skipped. The 281-control preparation count
+covered incremental checkpoints, not the final profile. Ordinary-fixture isolation
+and artifact expectations are now fixed. The actual complete cheap step passes
+227 checks under both observer and ordinary profiles, with source-bound receipts.
+[Dispatch parity proof](evidence/ci/performance-dispatch-parity-20261109/README.md).
 It retains the separate producer/consumer and original required metrics. Its
 actual hosted build/transport and any baseline decision remain unproven.
 [Prepared workflow](evidence/ci/hosted-scroll-observation-20261109/README.md).
