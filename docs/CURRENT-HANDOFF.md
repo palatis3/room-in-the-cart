@@ -1,6 +1,6 @@
 # Room in the Cart current handoff
 
-Updated November 8, 2026 (local time). This file is the actionable checkpoint;
+Updated November 9, 2026 (local time). This file is the actionable checkpoint;
 older chronology is preserved verbatim in [the November 8 archive](CURRENT-HANDOFF-HISTORY-20261108.md).
 Historical running/blocked statements there do not describe current processes.
 
@@ -14,11 +14,108 @@ maps remain in [CURRENT-ACCEPTANCE](CURRENT-ACCEPTANCE.md#launch-requirement-tra
 
 Use `/Users/palatis/Room in the Cart`, branch `codex/parallel-ios-ci`, with an
 explicit working directory. The ambient `spanish-done-diagnostic` worktree is old.
-Current Dinner changes are installed locally; their exact source proof is below.
+The canonical app retains its earlier installed Dinner baseline; the latest
+combined Dinner/audio candidate remains isolated as identified below.
 Draft PR 1 remains a separate integration candidate; no full batch was pushed
 for this focused work. Recheck remote state before publishing.
 
+## Current authorized improvements
+
+User explicitly requested upgrading primary CI to Xcode 27.1, replacing the
+initial additive-lane plan. Build/test jobs migrated to the official
+xcode-27 preview image with the existing five-slot policy. Swift CodeQL is the
+necessary narrow exception: GitHub documents Xcode 27 / Swift 6.4 traced scanning
+as unsupported, so that required security job stays on macOS 15 / Xcode 26.3.
+No local 26.3 installation is planned. Exact performance calibration remains a
+release requirement; do not relabel the existing 26.3 baseline as 27.1 evidence.
+Minimum deployment remains iOS 17, with minimum-OS native qualification local;
+there is no existing hosted iOS 17 lane. Shared audio-session ownership/route
+fencing is being prepared in isolation from the complete reviewed design; not
+installed. No Dot/Lumpy. Helpers own CI migration and audio; root owns native
+execution. The additive proposal/validation receipts are preserved in
+`.build/Xcode27CompatibilityNov09` but are superseded by this migration plan.
+
+## Latest active work — November 9
+
+- Workflow follow-up b29d999375a1e2cceb1004a49c6156611567012b is published on
+  `codex/xcode27-ci-migration-20261109`, including prior5157fake-boot test fix.
+  Adds incremental capture stage receipts and build-free capability-only mode.
+  All336offline tests and17native queue definitions pass; independent review clear.
+  Run42570562637 is terminal failure at the post-boot toolchain command:
+  `xcodebuild -version`,10s deadline,16.801s including cleanup,exit-15,zero captured bytes.
+  Source-contract passed; later capability checks never ran. No compilation,
+  products, log transport or XCTest. One636byte artifact and terminal receipts
+  retained under `.build/Xcode27ScrollDiagnosticNov09/preflight-r2/hosted-42570562637`.
+  Read-only review found four same-job version queries; next narrow proposal is
+  reusing a freshly bound same-consumer-job identity receipt for only the fourth,
+  retaining standalone and actual runtime/log checks. Not implemented or dispatched.
+  The budget includes process creation/scheduling; zero captured bytes do not prove
+  zero emitted output. No retry or timeout extension. All hosted monitoring is complete.
+- Hosted diagnostic42566724355 at230f503a137290b626a193c612da6ef4ff5625bc
+  is terminal. Attempt1 setup failed at pasteboard; one failed-job retry reused
+  the build, passed setup, then failed capability preflight (no command identity).
+  Neither attempt executed XCTest. Monitor receipts/artifacts retained once under
+  `.build/Xcode27PrimaryMigrationNov09/hosted-42566724355`. The stage-receipt
+  correction is now published and exercised above; no unchanged rerun. Previous42561415704 core is green;42561773341 performance
+  retains missing launch/scroll metrics and passing rendered strict evidence.
+- Combined product R4 remains isolated; source manifest
+  ea06e1901c7921deb33eb322d667053de2f47534c8273f7487413457540fd968 at
+  `.build/DinnerAudioCombinedNov09R4`. Build/source checks pass. Original English
+  journey passes native/strict (238.47s); all13images/10geometry receipts reviewed:
+  stock quantity now wraps fully, all5Done probes retain input and dismiss keyboard.
+ 64audio regressions pass on both26.2 and17.0. No canonical app installation yet.
+- R4 Spanish17.0 failed in the same XCTest logging callback/quarantine, now before
+  the narrowed confirmation query, during Done geometry. Native65/strict1; inspector
+  completed once; crash SHA dee6d11407b2e84191b57d55ebe8a59c0eb765e4e1657a60f5f58efee595eb54.
+  Stop query-only reruns. R3/R4 originals and source/product preservations retained.
+- Short native sequence35280 completed successfully:64audio both OS versions,
+  original Free repair and original meal move, native/strict pass. All inspections
+  completed once. Source/DD remain frozen. Spanish AX5 session25694 now passed
+  native/strict,696.241s test /712.819s command; all13screens/10geometry reviewed.
+  Stock-summary AX5 wrapping remains unsampled. Large text size restored.
+  Unsigned Release session26401 is terminal native0/bundle0 in418.832s, same
+  frozen source, separateDD. R4/qualification-checkpoint.json binds per-case receipts.
+  No canonical product installation yet.
+- Official iOS17.5/21F79 installed and new owned SE3 device
+  9DE280AC-A466-4FD4-8BDE-426C149D3F36 created. Original Spanish run session31974
+  is terminal native65/strict1 (144.923s); inspector75326 completed once. Review
+  confirms the same XCTest callback/quarantine fault family during ledger review
+  lookup, not the confirmation query. Crash review manifest SHA256
+  b5abefeebff7cd86789484cdce7a62db1d061a202ddbb8852e5e3cfdb3870e1c.
+  Next diagnostic should be a bounded independent reproducer; no compatibility pass.
+  Receipt root `.build/DinnerAudioCombinedNov09R4/spanish-ios17_5`.
+  CUA completed; no pending GUI handoff. Free space20.5GiB after Release; reserve8GiB retained.
+
+- A test-only startup-readiness correction was committed at5157b785;
+ 327offline tests pass again. It separates a bounded fake-CLI startup handshake
+  from the unchanged1second hang assertion, with a delayed-startup control.
+  Production deadlines are unchanged. This fix is published with b29d9993; hosted230f503a is terminal.
+
+Earlier checkpoint details below retain their own revision/scope; this latest
+block supersedes their active-process and not-yet-pushed statements.
+
 ## Current execution
+
+- Primary CI migration and first-class manual Dinner scope committed at
+  `df49c37d6aa6e77cf4504890f3b2e840eea7b0e0`, published on the non-PR branch
+  `codex/xcode27-ci-migration-20261109`. 286 Python checks, pinned workflow lint
+  (17 native queue nodes), generation, localization and shell checks pass.
+  First hosted run [42561415704](https://github.com/palatis3/room-in-the-cart/actions/runs/42561415704)
+  is TERMINAL SUCCESS at that exact SHA with `ios_scope=dinner`: all11jobs,
+  717 model tests, two original dinner UI journeys, release compilation, Swift
+  CodeQL and strict diagnostic gate pass. This is focused qualification, not
+  full release acceptance; no repeat is needed. Sol helper
+  `xcode27_monitor` owns read-only status/log collection; do not duplicate dispatch.
+  Performance collection run42561773341 is terminal on the same SHA (`case=all`,
+  `enforce_baselines=false`): scroll and launch native tests passed but strict
+  evidence validation failed; rendered passed strict validation with20persisted
+  checkoffs and complete measurements. Scroll lacks the
+  required stored signpost metric on27.1 too; launch lacks the expected metrics
+  entry: metrics.json is empty and original SQLite stores zero metric rows.
+  Scroll stores three memory series only; neither is a proved parser rename. Sol monitor owns status/single artifact reads;
+  scroll_metric_next_step owns read-only diagnosis. Do not rerun or drop metrics.
+  Draft PR1 remains atfe3e1430; do not imply the full integration branch is pushed.
+
 
 - Hosted billing run [42544579944](https://github.com/palatis3/room-in-the-cart/actions/runs/42544579944)
   is **terminal success**, source `d1705d920595be12a3eb8c378f50ad04dbf65ccd`.
@@ -26,16 +123,30 @@ for this focused work. Recheck remote state before publishing.
   suites with strict verification. The shared build and final gate pass.
   Logs and terminal inventory were collected once. Do not dispatch a duplicate.
   [Billing proof](evidence/native/membership-pending-reconciliation-20261108/README.md).
-- Current native work: AccessibleFields R4 Spanish AX5 is active, session99626,
-  xcodebuildPID27880, `.build/DinnerAccessibleFieldsNov09R4/run_spanish_ax5.py`.
-  Build/bundle and all three source checks pass. Poll this same handle; no competing
-  native work. R3 fixed the proven wrong-ingredient restoration and passed all5Done
-  and approval, but hit720s at relaunch; native65/strict1 with zero idle misses.
-  All11screens reviewed, original evidence unchanged, Large text restored.
-  R4 checks upper review facts before enabled Accept, then returns toward supply;
-  R3 had49gestures in that block. It keeps every assertion/gesture/time allowance.
-  A wrapping full selection summary fixes the observed truncated no-match value.
-  Runtime savings and final R4 visual/persistence qualification remain unproven.
+- Dinner R6 now passes BOTH original Spanish AX5 and English Large journeys:
+  native0/strict0, zero runtime warnings/idle misses. Spanish command683.920s
+  (test676.083s); English command230.930s (test223.560s). All five Done probes,
+  heading, selected-food summary, native Edit names, approval and restart
+  persistence pass. Both inspections completed once in sequence85919. Large
+  restored. Helper reviewed all13 images and10 receipts per locale; root sampled
+  keyboard/Edit frames. One separate English stock-summary ellipsis remains
+  documented; no whole-screen or global accessibility acceptance is claimed.
+- Combined Dinner+audio R2 compiled native0/bundle0 with the new implicit-capture
+  warning corrected. Exact64 audio/capture/projection regressions pass native0 and
+  strict0 on BOTH iOS26.2 and iOS17. Source manifest:
+  `e8c0a6b3985eb2256f3fe40770567687e3ec156608fa4d32043c5924bde1b73a`.
+  Every inspector completed once; originals/source/products are unchanged.
+  An initial remaining-sequence attempt stopped BEFORE native start at the8GiB
+  disk guard; preserved as remaining-sequence-disk-preflight.json. Space then
+  recovered (latest about41GiB), and Spanish iOS17 resumed. It failed native65 /
+  strict1 after142.51seconds: typing into ideaSupplyYield failed because neither
+  the element nor a descendant had keyboard focus (native.log:1611). Cause is
+  unclassified; no unchanged rerun. The inspector completed once, preserving
+  original bundle/source. remaining-sequence.json now records this actual native
+  failure and stops before the two affected Dinner cases and unsigned Release.
+  Native is idle. Owned current858A was reset before storage recovered; boot it
+  before its cases. Protected preview was untouched. Do not repeat cleanup.
+  No canonical app candidate installation yet.
   Earlier Spanish scroll R2 is
   terminal native65/strict1: all five Done probes and approval passed, followed by
   a failure recovering the lazy root/library after relaunch. Large text restored.
@@ -52,8 +163,10 @@ for this focused work. Recheck remote state before publishing.
   Source checks and the UI automation contract pass. No product candidate changes
   are installed in the canonical app yet.
 - Reused source/DD remain at `.build/EnglishKeyboardReviewNov08/current-r1/execution-r1`.
-  SOURCE matches the R4 manifest
-  `58e371426c6080af493d3cc38a6f063ac68c73541a5c1f5c9e7bd63ed436ee35`.
+  SOURCE is combined Dinner+audio R2 manifest
+  `e8c0a6b3985eb2256f3fe40770567687e3ec156608fa4d32043c5924bde1b73a`. Dinner R6 manifest was
+  `dc1b3def23b3f631aa613cc11ec7b1671335430143ea85063057dac323c19c9c`
+  and is preserved under combinedR1/preservation/source.
   Each prior source/product pair is verified in the next candidate preservation directory. All three exact
   source validators pass; a read-only review found no regression/assertion waiver.
   [Product candidate proof](evidence/native/dinner-accessible-fields-20261109/README.md).
@@ -85,9 +198,8 @@ Earlier sibling-row/background-only candidates failed visual review; top-inset
 failed the Review postcondition. Their source/products/results remain preserved.
 All earlier inspectors and exports are complete; do not repeat them.
 
-Next product work: finish the same AccessibleFields R4 Spanish AX5 run and inspect
-its terminal bundle once; confirm Large restoration and review screenshots.
-Then qualify final English, Spanish Large on owned iOS17, and original cases
+Next product work: after free disk exceeds8GiB, run the final combined source
+for Spanish17 and the original Dinner cases
 `testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop` and
 `testDinnerMoveAcrossDisplayedWeeksKeepsLunchAndOccurrence` using prepared
 run_affected.py/inspect_affected.py. Run unsigned Release via run_release.py after
@@ -101,14 +213,21 @@ are justified until the next comparable full batch is measured.
 
 ## Other open failures and workflow
 
-- N03 actual code gap: CookReadbackView/model do not subscribe to audio route changes.
-  `.build/ReleaseGapCurrentNov09/route-change-proposal` r1 is rejected: blanket
-  category exclusion and delayed-generation races. revision-r2 has a synchronous
-  generation fence plus six notification tests, but all-category stopping still
-  conflicts with own activation. It is uncompiled and NOT ready to install.
-  Coordinate the two category writers (CookAudioSession/OnDeviceSpeechCapture)
-  without timing/origin guesses; see revision-r2/DESIGN-REVIEW.md. No patch applied.
-  This is separate from framework Cook wait/QoS evidence below.
+- N03 route handling: complete shared ownership proposal is frozen at
+  `.build/ReleaseGapCurrentNov09/audio-owner-proposal-r3`. Patch SHA
+  `8826b751d599c58f9e7832dd0918e0b5419f524b825055afc045beb55cae5460`, manifest
+  `d99d2c6168ba7cd3b5e1161511614839c13e0db2047babc857c166b668ac0c6f`.
+  Four existing Swift files, no project addition. Independent review resolved
+  playback option normalization and two unsupported legacy capture arguments;
+  no remaining source blocker. Original16 readback tests are byte-identical.
+  Exact regression selection is64:35 readback,14 capture,15 cook projection.
+  Combined R1 compiled, R2 is qualifying the one-line warning correction; neither
+  is installed canonically. Before any future overlay, verify those
+  four base hashes before overlaying into owned SOURCE/DD, preserve prior products,
+  and freeze a NEW combined manifest (proposal49a546 describes canonical-only
+  overlay, not Dinner). Compile first, then exact64 strict tests. Physical route,
+  Pause/Resume and VoiceOver remain separate; this does not solve the existing
+  framework QoS warning. Earlier r1/r2 partial proposals remain rejected history.
 
 - Scroll performance: original metric cardinality4→3 failure; missing producer
   is unproven. Read-only SQLite inspection now confirms zero archived metric rows,
@@ -134,7 +253,9 @@ Owned current simulator: `858A2244-001F-4BAD-AFE0-A6E7AF02F41A`, iOS26.2/23C54.
 Owned minimum-OS simulator: `D420C2CA-0E73-4213-9B96-1EB62EB061F6`, iOS17.0.
 Protected preview: `5FDE1E82-1FF7-4556-9C14-0746F6295944`; never reset or use it
 for fixtures. Recheck owned devices before use. Local Xcode27.1 CLI27A9275;
-hosted Xcode26.3 differs. Keep8GiB disk reserve and preserve original evidence.
+hosted primary CI now qualifies27.1/27A9275 on iOS27.0; only Swift CodeQL remains
+on26.3. Local current runtime is still26.2. Keep8GiB disk reserve and preserve
+original evidence; latest observed free space about41GiB. No additional SDK is needed.
 Do not repurpose existing PostgreSQL port55432 or delete unowned resources.
 
 Do not use Dot/Lumpy. Astra High helpers are authorized; Sol6.1 Extra High can
@@ -152,3 +273,56 @@ and support operations, live mixed-phone household flows, human US-Spanish,
 physical camera/audio/share/widgets/printing/reminders and VoiceOver/Switch Control,
 signed distribution and complete route/App Store acceptance. Simulator and
 synthetic-provider passes do not establish those gates.
+
+## User-requested remaining-bottleneck research
+
+Astra's completed read-only audit is `.build/MergeBottleneckAuditNov09/README.md`.
+It distinguishes merge requirements from release/B11 and confirms: known exact
+performance-profile mismatch should fail before native build;49 commits await PR
+integration; most diff volume is retained evidence; historical JS CodeQL extracted
+archived evidence sources (current cost unmeasured); five-slot utilization already
+91.22%. No blanket security exclusions or history/evidence deletion approved by
+this audit. Root requested a bounded early performance guard as the next local
+workflow improvement; current hosted df49 branch stays immutable while runs finish.
+
+Early performance environment rejection is implemented and committed locally at
+`9f4dfa227403498734109572743fc7dbfba8ef2d` after294 offline tests and17-slot workflow
+validation. Calibration still validates identity, skipping only baseline matching.
+Old baseline JSON and late exact metric gates remain unchanged. This follow-up has
+NOT been pushed; active hosted branch remains immutable atdf49. Receipts and final
+patch are `.build/PerformanceEnvironmentPreflightNov09/*-r2.*`.
+
+Published research checkpoint: docs/evidence/native/ci-merge-bottleneck-audit-20261109/README.md. Remaining performance diagnosis: .build/Xcode27ScrollMetricReviewNov09/README.md. No new diagnostic has been dispatched.
+
+## November 9 workflow implementation and next native candidate
+
+The user authorized implementing the audit recommendations and confirmed storage
+was freed. Latest observed reserve is about40GiB. `RELEASE-EXECUTION.md` now orders
+the remaining merge, staged integration and B11 requirements with direct evidence
+and owner-deferred setup kept explicit. Workflow helper owns a bounded exact-SHA
+receipt checker and CI-VALIDATION changes; performance helper owns an isolated
+capture proposal. Neither owns hosted dispatch or native execution.
+
+Combined R2 Spanish17 failure is retained. Read-only review identifies a probable
+labeled-row focus hit gap; the original tap coordinate was not captured, so this
+is an inference. R3 adds only a whole supply-row content shape/tap that assigns the
+existing native field focus binding. Original tests, assertions and time limits
+are unchanged. R2 source/products are preserved before rebuilding.
+
+R3 root: `.build/DinnerAudioCombinedNov09R3`; source manifest SHA256
+`a23fd98d2fe0068e4d96172605a0ca7fa2a1d082e11086f68b1079537c342a71`.
+Build/bundle checks pass (44.196s); project generation, localization and automation
+source checks pass. Initial attempts to run absent scripts in the sparse isolated
+source failed before checks; corrected canonical validators explicitly target
+the isolated source, with both attempts retained. The original Spanish17 test
+is terminal native65/strict1. All5Done probes complete, then app PID57226 crashes
+in runtime_issue_os_log_fault_callback while XCTest queries ideaSupplyConfirm.
+The captured stack includes logging-volume quarantine and XCElementSnapshot
+label/identifier access. Native194.757s; original inspector completed once in
+session48923 with original/source unchanged. Preserved crash SHA256:
+0d76f40928e9b46a088526352fc113ce8360fc1c5897b72717a45a2eff077583.
+Astra release-gap helper owns read-only cause review; no unchanged native retry.
+Source/products remain frozen pending that review. Separate one-line stock-summary
+wrapping proposal exists, not applied. Hosted performance is terminal; rendered
+strict evidence passed, launch/scroll remain incomplete. No hosted jobs active
+in this owned cohort and no new dispatch.

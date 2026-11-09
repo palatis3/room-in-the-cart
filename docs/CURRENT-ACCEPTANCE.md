@@ -1,6 +1,50 @@
 # Current implementation and acceptance map
 
-## Current checkpoint — November 8, billing hosted pass and dinner visual correction
+## Current checkpoint — November 9, workflow and combined-candidate qualification
+
+Workflow improvements through `b29d9993` are published to the CI candidate branch.
+All 336 offline tests and 17 queue checks pass. The build-free diagnostic
+42570562637 skipped compilation/XCTest and identified a post-boot collector budget
+expiry around `xcodebuild -version`; its cause remains unresolved. The earlier
+42566724355 attempts failed setup and then opaque capability preflight, both
+before XCTest. Stage receipts and the build-free route now prevent repeating
+that expensive opaque experiment. No new performance baseline is approved.
+
+The isolated combined R4 candidate passes original English, Spanish AX5 on 26.2,
+64 audio regressions on each of 17.0/26.2, Free repair and cross-week meal move.
+Spanish AX5's 13 screenshots and 10 geometry records were reviewed; stock-summary
+wrapping remains unsampled at AX5 and is verified only in the English profile.
+Unsigned Release compilation and bundle validation also pass on the same source.
+Spanish on 17.0 and 17.5 still fails in the XCTest logging callback. The combined
+app remains isolated; full integration, merge and release gates remain open.
+
+Hosted focused core run42561415704 passed all11jobs atdf49c37d:717 model tests,
+two original Dinner journeys, unsigned Release compilation and Swift CodeQL.
+This is focused evidence, not the final combined regression. Performance
+run42561773341 is terminal: all3native cases passed, rendered pickup has complete
+strict evidence and20persisted checkoffs; launch has no metric rows and scroll
+lacks its required duration. No new baseline is approved.
+
+Dinner R6 passed the original English Large and Spanish AX5 journeys with strict
+validation. Combined Dinner/audio R2 passed64selected audio/capture/projection
+regressions on both iOS17 and26.2, then failed Spanish17 field focus. R3 adds a
+whole-row focus gesture: build/source checks pass and the original Spanish17 run
+now completes all5Done probes, but then crashes in XCTest's logging callback
+while locating the supply-confirm control. Native65/strict1; the full journey
+remains failed. Original evidence is retained and diagnosis is active. The
+combined product changes remain isolated, not installed canonically.
+
+Early performance-environment rejection, exact-revision receipts and compact
+retention policy are implemented. Free space is about20.5GiB after installing the
+official17.5 simulator and compiling Release, above the8GiB native guard. Current process/source
+identities and next action belong in [current handoff](CURRENT-HANDOFF.md).
+
+The [release execution checklist](RELEASE-EXECUTION.md) orders remaining merge,
+staging, physical/human/provider and signed-distribution work. Full52requirements,
+27routes and B11 acceptance remain incomplete. Historical checkpoints below
+preserve earlier evidence; their running/blocked statements are not current.
+
+## November 8 checkpoint (historical)
 
 The pending-purchase reconciliation is locally qualified by all 60 MembershipTests
 and the unchanged Spanish Ask to Buy case. Hosted run42544579944 atd1705d92 is
@@ -28,8 +72,14 @@ hosted regression remain outstanding. The subsequent R2 AX5 failure was traced t
 field; R3 stable field IDs fix that targeting error. R3 passes all5Done and meal
 approval but reaches the720s test limit at relaunch, leaving persistence unproven.
 R4 preserves all assertions while removing redundant review traversals and adds
-a full wrapping selection summary for the truncated picker value. See the current
-handoff for its exact execution state; no broad accessibility pass is claimed.
+a full wrapping selection summary for the truncated picker value. R4 reduced its
+restored-review block from49 to29gestures, reached the final list assertion at
+715.60s, then timed out during teardown; it remains native65/strict1. R5 adds
+Edit/Editar in the review navigation bar to avoid another long trip to the bottom;
+R5 retained native65/strict1 despite fewer gestures. R6 removes redundant test
+accessibility queries, preserves every assertion/limit, and uses matching native
+Edit/Editar names; build/source checks pass and qualification is active. See the
+current handoff for execution state; no broad accessibility pass is claimed.
 [Scroll evidence](evidence/native/dinner-scroll-progress-20261109/README.md).
 
 [Repair evidence](evidence/native/dinner-top-done-20261108/README.md),
@@ -771,6 +821,10 @@ The isolated [keyboard diagnostic](evidence/native/keyboard-hosted-preparation-2
 The [measurement-boundary diagnostic](evidence/native/scroll-measurement-boundaries-20261106/STATUS.md) has one pending hosted run42309808686 on isolated775961d. It preserves all performance gates and adds buffered call timestamps/scoped endpoint receipts. Instrumentation overhead is explicit; no causal fix, native result or release acceptance is established.
 
 ## Remaining production work and release gates
+
+Use the [first-release execution checklist](RELEASE-EXECUTION.md) to order these
+remaining gates and record candidate identity, executor, environment and direct
+proof. A merged PR or focused CI success does not complete B11.
 
 - **Current local milestone:** all six follow-up flow scopes now have passing dedicated UI evidence across their separately pinned runs; current polished Release/ordinary Debug and privacy resources compile/verify, and the preview is replaced without resetting its inventoried data. This is local implementation/acceptance progress, not a combined all-green regression or full27-route/device release gate. Recheck evidence affected by later changes. Preserve failed runs, the S21 logging accommodation and unlocated invalid-frame diagnostics.
 - **Production journal implementation:** migrations 024–029 cover the private observer, restore bounds, worker capacity, runtime source binding, rotation and chained quarantine replay. The local two-cluster rehearsal verifies receipt completion, signed capacity telemetry, and independent recovery including a real dump and restore. Local writer contention and continued operation are covered by the dedicated test. Local successor registration and archive continuity are verified. Same-source activation is verified in a disposable database. Chained replay passed on a local pre-switch dump with exact preimages. Hosted alert delivery, backup and restore, provider reconciliation and runtime activation remain open. The default operations runtime performs receipt cleanup only.
