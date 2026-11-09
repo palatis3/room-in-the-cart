@@ -517,7 +517,9 @@ def runtime_preflight(simulator, journal=None, identity_path=None):
     else:
         identity_hash = stage(journal, 'toolchain-identity',
                               lambda _: read_toolchain_identity(identity_path, simulator, architecture))
-    inventory = json.loads(command(['xcrun', 'simctl', 'list', 'devices', 'available', '-j'], journal=journal, stage_name='devices'))
+    # CLI substring filtering reduces returned inventory only; it is not identity
+    # or availability validation. The exact selected-device checks below remain.
+    inventory = json.loads(command(['xcrun', 'simctl', 'list', 'devices', simulator, '-j'], journal=journal, stage_name='devices'))
     inventory.update(json.loads(command(['xcrun', 'simctl', 'list', 'runtimes', '-j'], journal=journal, stage_name='runtimes')))
     devices = [(runtime, device) for runtime, items in inventory['devices'].items()
                for device in items if device.get('udid') == simulator]

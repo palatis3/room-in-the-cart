@@ -446,6 +446,10 @@ output buffers or parsers and cannot rescue the deadline failure. Use them to
 distinguish slow process creation, collection delay and unread output; they do not
 prove simulator readiness. The deadline and owned-process cleanup budgets remain
 unchanged, and fresh post-boot device checks cannot be replaced by pre-boot data.
+Device discovery now asks `simctl list devices <selected-UUID> -j` to narrow
+returned rows. Its substring search is only a prefilter: exact UUID uniqueness,
+availability, boot state, device type and the full runtime checks remain required.
+This preserves admission; a hosted speed improvement has not been established.
 
 For opted-in capture, the existing runner environment guard writes a fresh local
 `runner-identity.json` after successful environment and applicable baseline
