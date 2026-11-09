@@ -1,11 +1,24 @@
 # Room in the Cart current handoff
 
-## November 8, workflow efficiency changes in progress; center diagnostic terminal
+## November 8, workflow bottleneck update committed and hosted validation running
 
-Current user request is to remove CI bottlenecks. Canonical workflow edits split
-fixture consumers by build profile and share one LocalStoreKit build across both
-locale jobs; review, static checks and isolated hosted verification are in progress.
-Do not push a full PR batch just to test these changes. No canonical app changes.
+Current user task: reduce CI bottlenecks. Implementation commit50e89363 on canonical
+`codex/parallel-ios-ci` partitions fixture consumers by profile, retains all17rows
+and slots, adds a strict aggregate fixture gate, and shares one LocalStoreKit build
+across both locale consumers. All261Python tests, actionlint8workflows/17slotnodes,
+and33shellblocks pass. No canonical app changes or weakened thresholds.
+Published isolated branch `codex/ci-bottlenecks-20261108`; no PR/full batch dispatch.
+
+Continue these exact existing runs at sourceSHA50e893637d5047b1d276232fdf30b0e46c658abd:
+- Deep42541290758: preflight, both sanitizers, shared StoreKit build passed; locales running.
+- Focused quote42541292817: planner passed, dinner skipped as requested, contributor build running.
+Local `gh run watch` sessions98320/deep and40784/fixture retain logs in
+`.build/CIWorkflowBottlenecksNov08/hosted-{deep,fixture}-watch.log`; do not launch
+copies. Poll these runs to terminal, inspect any new failure, record actual timing
+and keep full PR acceptance separate. Evidence: `docs/evidence/native/ci-bottleneck-update-20261108`.
+Helper english_keyboard_review finished; speech proposal also finished. No helpers
+or local native tests are active. Do not push the full integration branch simply
+to repeat focused validation; combine qualified app fixes for the next full batch.
 
 The already-running restored-Amount center diagnostic completed: native65,
 strict1, zero idle misses, case223.682s. Restored Amount center dismissal passed;

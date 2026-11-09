@@ -23,7 +23,13 @@ including compilation, simulator setup and result collection. Shared products
 remove duplicate compilation but add an artifact transfer and another job setup;
 actual hosted savings must be measured, not inferred from that baseline.
 
-Hosted verification is pending. Publish a development branch without an open PR
-and dispatch deep checks plus the previously passing focused quote fixture.
-Do not replace full PR/release coverage with these focused results. The operating
-procedure is in docs/CI-VALIDATION.md; do not launch duplicate active diagnostics.
+Hosted validation is running at source commit
+`50e893637d5047b1d276232fdf30b0e46c658abd` on
+`codex/ci-bottlenecks-20261108` (no open PR/full regression dispatch):
+
+- [Deep checks](https://github.com/palatis3/room-in-the-cart/actions/runs/42541290758): Linux preflight, both sanitizers and shared StoreKit compilation passed; both locale jobs are still running at this checkpoint.
+- [Focused quote fixture](https://github.com/palatis3/room-in-the-cart/actions/runs/42541292817): planner passed, dinner profile correctly skipped, contributor build running.
+
+These are in-progress results, not terminal acceptance or a measured full-suite
+speedup. Continue these run IDs; do not dispatch duplicates. The complete PR and
+release scopes remain required. See docs/CI-VALIDATION.md for the working loop.
