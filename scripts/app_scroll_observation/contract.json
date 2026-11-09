@@ -12,7 +12,7 @@
     "scripts/app_scroll_observation/archive.py": "ec522ab2ad8233da3354d9a4e9a14ea987dc6e67287488ed156c92feb5ac03e7",
     "scripts/app_scroll_observation/capture.py": "6236becf41dfced17b39891a1eb8b8658193b6da97468959747fa592ac15c706",
     "scripts/app_scroll_observation/consumer.py": "2db8a7b2901b46746db1e824cc6ad841499cd5f0ddf5909abd37a034b7f0e7c4",
-    "scripts/app_scroll_observation/contract.py": "9c0d646c2f909904ed1b00ae30d9369be8ddd2e6350bbf75452f4ddcba6b40c3",
+    "scripts/app_scroll_observation/contract.py": "043b9e84a550166f1566de454489c98e8c9a4a2a8bb33d0ac917cc83df79d6f8",
     "scripts/app_scroll_observation/export.py": "3aaa673486d854bef7591b8e18e7199ffc8e1c51941f17effc1390b19c7ead09",
     "scripts/app_scroll_observation/native_environment.py": "498769cb3381a721ef9957203d198be6b1c90ca5f8d9d4e309319c884fe8b26c",
     "scripts/app_scroll_observation/owned.py": "3555ce4a8f1feb78709b366919875c7b6f3cb8bd578e575f6fd02cfff1c2a5e9",
@@ -51,5 +51,16 @@
     "swift-frontend": "c90fc92073e78cd2b3c65efcacf65acfaf4290b02f7a9d301853563b85f4a993",
     "xcresulttool": "b6bac309528f521fe7508f8b7daed31983c913cfb98d8ec94bbaf032a1e5fe35"
   },
-  "qualifiedSDKSettingsSHA256": "a0c2eeb34a130e69052b4212873bcc1c6b2347904d8f26167da7b8b42d8480d1"
+  "qualifiedSDKSettingsSHA256": "a0c2eeb34a130e69052b4212873bcc1c6b2347904d8f26167da7b8b42d8480d1",
+  "reviewedHostedToolProfile": {
+    "name": "hosted-xcode-27.1-27A9275-arm64-cms-20261109",
+    "toolHashes": {
+      "xcodebuild": "f1c058333e9483ac9d24ca0dda3654d4918ac060aa97809e84086b669a3883e9",
+      "xctrace": "d0d54b54a42c504bdc4ec797bd1d287225c485573f63e9e8889843b59c48e384",
+      "swift-frontend": "d54d5ca10dc4fcb4d29cab20630e176747659074f7bebe2f4c1dfc5cf45dd59e",
+      "xcresulttool": "c886bb4824e871bf348b97202f0a8693c1312da0012c6c3538666efb9ce9b15e"
+    },
+    "reviewProofSHA256": "7d664fe68c115cafe407222c703e7bf2ae2fa95e25afc16b2d809a326a4969c8",
+    "reviewedArtifactDigest": "sha256:d4a97d0f4973aa78b42fb08a2d4a29427ca8aeac83f25200aa352e31dfb4c8bb"
+  }
 }

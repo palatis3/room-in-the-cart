@@ -19,6 +19,8 @@ CONDITION = '#if RELEASE && APP_SIGNPOST_CAPTURE_CONTROL && targetEnvironment(si
 FLAG = 'SWIFT_ACTIVE_COMPILATION_CONDITIONS=$(inherited) RELEASE APP_SIGNPOST_CAPTURE_CONTROL'
 SOURCE_PATHS = ('ios', 'scripts', 'shared', 'config', '.github/workflows/ios-performance.yml')
 PRODUCT_METADATA = {'performance-plan-producer.json', 'app-observation-producer.json'}
+LOCAL_TOOL_PROFILE = 'local-xcode-27.1-27A9275-arm64'
+HOSTED_TOOL_PROFILE = 'hosted-xcode-27.1-27A9275-arm64-cms-20261109'
 
 
 def read(path, cap=8*1024**2):
@@ -124,6 +126,8 @@ def tool_inventory(developer, expected):
     developer=Path(developer).resolve()
     result={'schema':1,'diagnosticOnly':True,'releaseAcceptance':False,'admission':'not-evaluated',
             'developer':str(developer),'complete':True,'entries':{},
+            'expectedToolProfiles':{LOCAL_TOOL_PROFILE:expected['qualifiedToolHashes'],
+                                    HOSTED_TOOL_PROFILE:expected['reviewedHostedToolProfile']['toolHashes']},
             'limits':{'seconds':30,'fileBytes':512*1024**2,'totalHashBytes':1024**3,
                       'additionalMachOReadBytes':1024**3,'metadataBytes':64*1024}}
     def sample(label,path,expected_sha=None,expected_fields=None,metadata=False,metadata_fields=None):
@@ -241,7 +245,14 @@ def tools(developer):
                          'xcresulttool':'usr/bin/xcresulttool','swift-frontend':'Toolchains/XcodeDefault.xctoolchain/usr/bin/swift-frontend'}.items():
         path=developer/relative; require(path.is_file() and not path.is_symlink(),'literal_tool:'+name)
         result[name]={'path':str(path),'sha256':sha(path)}
-    for name,digest in contract['qualifiedToolHashes'].items(): require(result[name]['sha256']==digest,'qualified_tool_changed:'+name)
+    hosted=contract['reviewedHostedToolProfile'];names={'xcodebuild','xctrace','swift-frontend','xcresulttool'}
+    require(hosted['name']==HOSTED_TOOL_PROFILE and set(contract['qualifiedToolHashes'])==names
+            and set(hosted['toolHashes'])==names,'qualified_tool_profile_shape')
+    profiles={LOCAL_TOOL_PROFILE:contract['qualifiedToolHashes'],HOSTED_TOOL_PROFILE:hosted['toolHashes']}
+    observed={name:result[name]['sha256'] for name in names}
+    selected=[name for name,digests in profiles.items() if observed==digests]
+    require(len(selected)==1,'qualified_tool_profile_mismatch')
+    result['toolProfile']=selected[0]
     # The public simctl entrypoint is a launcher; bind its actual executable too.
     lines=Path(result['simctl']['path']).read_text().splitlines()
     match=re.fullmatch(r'exec "([^"]+)" "\$\{@\}"',lines[-1]); require(match is not None,'simctl_launcher')

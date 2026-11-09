@@ -33,6 +33,9 @@ class PreflightRetentionTests(unittest.TestCase):
         self.paths['simctl'].write_text('#!/bin/bash\nexec "'+str(self.actual)+'" "${@}"\n')
         self.expected={'qualifiedToolHashes':{n:sha(p) for n,p in self.paths.items() if n!='simctl'},
                        'qualifiedSDKSettingsSHA256':sha(self.sdk/'SDKSettings.plist')}
+        self.hosted={name:thin()+bytes([i]) for i,name in enumerate(self.expected['qualifiedToolHashes'],1)}
+        self.expected['reviewedHostedToolProfile']={'name':contract.HOSTED_TOOL_PROFILE,
+            'toolHashes':{name:hashlib.sha256(raw).hexdigest() for name,raw in self.hosted.items()}}
     def inventory(self):return contract.tool_inventory(self.developer,self.expected)
     def prepare_failure(self,reason):
         output=self.root/'prepare'
@@ -50,7 +53,7 @@ class PreflightRetentionTests(unittest.TestCase):
         return receipt,inventory
     def test_rejected_xcodebuild_retains_all_tools_sdk_and_version_without_runner(self):
         self.expected['qualifiedToolHashes']['xcodebuild']='f'*64
-        before=copy.deepcopy(self.expected);receipt,value=self.prepare_failure('qualified_tool_changed:xcodebuild')
+        before=copy.deepcopy(self.expected);receipt,value=self.prepare_failure('qualified_tool_profile_mismatch')
         self.assertEqual(receipt['stage'],'exact-tool-admission');self.assertEqual(self.expected,before)
         self.assertEqual(set(value['entries']),{'xcode-version','sdk-settings',*self.paths,'simctl-executable','coresimulator-version'})
         row=value['entries']['xcodebuild'];self.assertFalse(row['matchesExpectedSHA256'])
@@ -90,14 +93,14 @@ class PreflightRetentionTests(unittest.TestCase):
         raw=thin();offset=64
         fat=struct.pack('>II',0xcafebabe,1)+struct.pack('>IIIII',0x0100000c,0,offset,len(raw),0)
         self.paths['xcodebuild'].write_bytes(fat+b'\0'*(offset-len(fat))+raw)
-        _,value=self.prepare_failure('qualified_tool_changed:xcodebuild')
+        _,value=self.prepare_failure('qualified_tool_profile_mismatch')
         observed=value['entries']['xcodebuild']['observed']
         self.assertEqual(observed['container'],'universal')
         self.assertEqual(observed['arm64SliceSHA256'],hashlib.sha256(raw).hexdigest())
         self.assertNotEqual(observed['sha256'],observed['arm64SliceSHA256'])
     def test_bad_macho_parse_is_diagnostic_and_never_waives_hash_guard(self):
         self.paths['xcodebuild'].write_bytes(b'\xcf\xfa\xed\xfeinvalid')
-        _,value=self.prepare_failure('qualified_tool_changed:xcodebuild')
+        _,value=self.prepare_failure('qualified_tool_profile_mismatch')
         self.assertIn('machODiagnosticError',value['entries']['xcodebuild']);self.assertTrue(value['complete'])
     def test_oversize_file_is_not_read_and_remaining_rows_are_retained(self):
         with self.paths['xcodebuild'].open('wb') as stream:stream.truncate(512*1024**2+1)
@@ -177,6 +180,54 @@ class PreflightRetentionTests(unittest.TestCase):
         value=self.inventory()
         self.assertEqual(value['entries']['coresimulator-version']['diagnostic'],'launcher_target_not_known_framework_path')
         self.assertEqual(value['entries']['coresimulator-version']['observed'],{})
+    def admitted_tools(self):
+        with patch.object(contract,'frozen',return_value=self.expected),\
+                patch.object(contract.subprocess,'run',side_effect=AssertionError('No commands permitted')):
+            return contract.tools(self.developer)
+    def test_complete_local_profile_records_selected_name_and_actual_simctl_hash(self):
+        value=self.admitted_tools()
+        self.assertEqual(value['toolProfile'],contract.LOCAL_TOOL_PROFILE)
+        self.assertEqual({name:value[name]['sha256'] for name in self.hosted},self.expected['qualifiedToolHashes'])
+        self.assertEqual(value['simctl']['executableSHA256'],sha(self.actual))
+    def test_complete_reviewed_hosted_profile_records_selected_name(self):
+        for name,raw in self.hosted.items():self.paths[name].write_bytes(raw)
+        value=self.admitted_tools()
+        self.assertEqual(value['toolProfile'],contract.HOSTED_TOOL_PROFILE)
+        self.assertEqual({name:value[name]['sha256'] for name in self.hosted},self.expected['reviewedHostedToolProfile']['toolHashes'])
+        self.assertEqual(value['simctl']['executableSHA256'],sha(self.actual))
+    def test_mixed_profile_rejected_even_with_identical_arm64_uuid(self):
+        before=contract.arm64_uuid(self.paths['xcodebuild'])
+        self.paths['xcodebuild'].write_bytes(self.hosted['xcodebuild'])
+        self.assertEqual(before,contract.arm64_uuid(self.paths['xcodebuild']))
+        with self.assertRaisesRegex(ValueError,'qualified_tool_profile_mismatch'):self.admitted_tools()
+    def test_unknown_whole_hash_rejected_even_with_identical_arm64_uuid(self):
+        before=contract.arm64_uuid(self.paths['xcodebuild'])
+        for name,raw in self.hosted.items():self.paths[name].write_bytes(raw)
+        self.paths['xcodebuild'].write_bytes(self.hosted['xcodebuild']+b'unknown')
+        self.assertEqual(before,contract.arm64_uuid(self.paths['xcodebuild']))
+        with self.assertRaisesRegex(ValueError,'qualified_tool_profile_mismatch'):self.admitted_tools()
+    def test_missing_tool_rejected(self):
+        self.paths['xctrace'].unlink()
+        with self.assertRaisesRegex(ValueError,'literal_tool:xctrace'):self.admitted_tools()
+    def test_incomplete_profile_definition_rejected(self):
+        for profile in (self.expected['qualifiedToolHashes'],self.expected['reviewedHostedToolProfile']['toolHashes']):
+            with self.subTest(profile=profile):
+                digest=profile.pop('xctrace')
+                with self.assertRaisesRegex(ValueError,'qualified_tool_profile_shape'):self.admitted_tools()
+                profile['xctrace']=digest
+    def test_unknown_profile_name_rejected(self):
+        self.expected['reviewedHostedToolProfile']['name']='unreviewed'
+        with self.assertRaisesRegex(ValueError,'qualified_tool_profile_shape'):self.admitted_tools()
+    def test_profile_selection_remains_bound_to_actual_whole_hashes_between_phases(self):
+        value=self.admitted_tools()
+        with patch.object(contract,'frozen',return_value=self.expected):
+            contract.verify_tools(value)
+            for name,raw in self.hosted.items():self.paths[name].write_bytes(raw)
+            with self.assertRaisesRegex(ValueError,'tool_or_SDK_changed'):contract.verify_tools(value)
+    def test_actual_simctl_remains_independently_bound_without_profile_equivalence(self):
+        value=self.admitted_tools();self.actual.write_bytes(thin()+b'changed-runtime-tool')
+        with patch.object(contract,'frozen',return_value=self.expected),self.assertRaisesRegex(ValueError,'tool_or_SDK_changed'):
+            contract.verify_tools(value)
     def test_existing_output_is_not_overwritten(self):
         out=self.root/'prepare';out.mkdir();(out/'receipt.json').write_text('first failure')
         with patch.object(producer,'tool_inventory') as inventory,self.assertRaisesRegex(ValueError,'prepare_output_already_exists'):
