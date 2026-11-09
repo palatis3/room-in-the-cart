@@ -38,12 +38,49 @@ const count=async(f,t)=>(await admin.query(`SELECT count(*)::int n FROM ritc.${t
 
 test('shared demand preview Cancel, atomic adoption, exact replay and second device persisted read',async()=>{
  const f=await fixture(),before=ok(await call(f.owner,f.path)),legacy=ok(await call(f.owner,f.path+'/demand'));assert.equal(legacy.status,'legacy');assert.deepEqual(legacy.totals,[]);
+ assert.deepEqual(legacy.legacySources,{sources:[]});
  const input=draft(f),p=ok(await preview(f,input));assert.deepEqual(p.beforeTotals,[]);assert.deepEqual(p.afterTotals,[{lineId:f.basket.lineId,unit:'count',quantity:{numerator:'12',denominator:'1'},activeContributionIds:[input.change.contributions[0].id]}]);assert.deepEqual(ok(await call(f.owner,f.path)),before);assert.equal(await count(f,'shared_demand_revision'),0);
  const a=await apply(f,input,p),receipt=ok(a.response);assert.equal(receipt.shopRevision,2);assert.deepEqual(ok(await call(f.owner,f.base+'/commands','POST',a.command)),receipt);assert.equal(await count(f,'shared_demand_revision'),1);
  assert.equal(await count(f,'shared_demand_preview'),0);const second=await actor(f.owner.subject);await enroll(second,f.h);
  const saved=ok(await call(second,f.path+'/demand'));assert.deepEqual(saved.totals,p.afterTotals);assert.deepEqual(saved.graph,p.after);assert.equal(saved.graph.contributions[0].quantity.amount.numerator,'12');
+ assert.equal(saved.legacySources,null);
  const snap=(await admin.query('SELECT snapshot FROM ritc.shop_snapshot WHERE household_id=$1 AND shop_id=$2 AND revision=2',[f.h,f.shopId])).rows[0].snapshot;assert.equal(snap.demand.revision,1);assert.match(snap.demand.digest,/^[a-f0-9]{64}$/);
  assert.equal((await call(second,f.base+'/commands','POST',{...a.command,replayWindow:second.window})).status,409);
+});
+test('legacy adoption catalog preserves exact meal, protected unknown and accepted-request identities',async()=>{
+ const f=await fixture(),occurrenceId=randomUUID(),ingredientId=randomUUID(),groupId=randomUUID();
+ const meal={title:'Tacos with protected lunch',day:null,kind:'dinner',portions:3,protected:false,
+  planning:{groups:[{id:groupId,name:'Lunch',servings:{numerator:1,denominator:1},protected:true}],
+   ingredients:[{id:ingredientId,name:'Wraps',quantity:{amount:{numerator:12,denominator:2},unit:'count',originalLiteral:'six wraps'},groupIds:[groupId],exclusions:['Sesame']}],exclusions:['Peanuts']}};
+ ok(await send(f,'shop.patch',{quote:f.quote,lines:[f.basket],mealEdit:{occurrenceId,baseMealRevision:null,meal}},1));
+ const author=await invited(f),sent=ok(await send(f,'request.send',{clientRequestId:randomUUID(),originalItem:'Wraps for guest',ownQuantity:'two bags maybe?',authoredAt:new Date().toISOString()},2,1,author));
+ const requestId=sent.request.requestId;
+ const rp=ok(await call(f.owner,f.path+'/previews','POST',{requestId,base:{shopRevision:2,authorityEpoch:1,requestRevision:1},decision:{choice:'link',lineId:f.basket.lineId,promote:false}}));
+ ok(await send(f,'request.apply',{requestId,previewId:rp.previewId,acceptOverage:false,acceptUnknown:false},2,1,f.owner,{base:{shopRevision:2,authorityEpoch:1,requestRevision:1}}));
+ const page=ok(await call(f.owner,f.path+'/demand'));assert.equal(page.shopRevision,3);
+ const sources=page.legacySources.sources;assert.equal(sources.length,3);
+ assert.deepEqual(ok(await call(f.owner,f.path+'/demand')),page,'refresh preserves source identities');
+ const m=sources.find(s=>s.source.kind==='meal'),protectedNeed=sources.find(s=>s.source.kind==='reservation'),request=sources.find(s=>s.source.kind==='request');
+ assert.deepEqual(m.quantity.amount,{numerator:'6',denominator:'1'});assert.equal(m.quantity.originalLiteral,'six wraps');
+ assert.equal(m.source.occurrenceId,occurrenceId);assert.equal(m.source.ingredientId,ingredientId);assert.equal(m.sourceLabel,meal.title);
+ assert.equal(protectedNeed.source.groupId,groupId);assert.equal(protectedNeed.quantity,null);assert.equal(m.sourceExclusions.length,2);
+ assert.deepEqual(request.source,{kind:'request',requestId,appliedRequestRevision:1});assert.equal(request.requiredLineId,f.basket.lineId);
+ assert.equal(request.originalQuantityText,'two bags maybe?');assert.equal(request.quantity,null);
+ assert.equal((await call(author,f.path+'/demand')).status,404,'contributor cannot read the source catalog');
+ const input=draft(f);input.base.shopRevision=3;input.packs[0].acceptUnresolved=true;
+ input.change.contributions=sources.map(s=>({id:s.id,lineId:s.requiredLineId??f.basket.lineId,source:s.source,productKey:'wraps',productName:s.productName,originalText:s.originalText,quantity:s.quantity,sourceExclusions:s.sourceExclusions,exclusions:[],contains:[],removedAt:null}));
+ const p=ok(await preview(f,input));assert.equal(ok(await call(f.owner,f.path+'/demand')).status,'legacy','preview does not adopt');
+ ok((await apply(f,input,p)).response);const adopted=ok(await call(f.owner,f.path+'/demand'));
+ assert.equal(adopted.status,'enabled');assert.equal(adopted.legacySources,null);assert.deepEqual(adopted.graph.contributions.map(c=>c.id),sources.map(s=>s.id));
+});
+test('legacy request catalog rejects revoked source authority before returning private text',async()=>{
+ const f=await fixture(),author=await invited(f),secret='Private family request';
+ const requestId=ok(await send(f,'request.send',{clientRequestId:randomUUID(),originalItem:secret,ownQuantity:'some',authoredAt:new Date().toISOString()},1,1,author)).request.requestId;
+ const p=ok(await call(f.owner,f.path+'/previews','POST',{requestId,base:{shopRevision:1,authorityEpoch:1,requestRevision:1},decision:{choice:'link',lineId:f.basket.lineId,promote:false}}));
+ ok(await send(f,'request.apply',{requestId,previewId:p.previewId,acceptOverage:false,acceptUnknown:false},1,1,f.owner,{base:{shopRevision:1,authorityEpoch:1,requestRevision:1}}));
+ await admin.query("UPDATE ritc.member SET state='revoked' WHERE household_id=$1 AND member_id=$2",[f.h,author.id]);
+ const result=await call(f.owner,f.path+'/demand');assert.equal(result.status,409);assert.equal(result.data.error.code,'demand_source_unavailable');
+ assert.equal(JSON.stringify(result.data).includes(secret),false);
 });
 test('legacy remains usable; graph adoption retains typed unknown and rejects insufficient reviewed packs',async()=>{
  const f=await fixture();ok(await send(f,'shop.patch',{quote:f.quote,lines:[f.basket]},1));
@@ -191,6 +228,27 @@ test('whole protected known ingredient without group bindings stays one known re
  ok(await send(f,'shop.patch',{quote:f.quote,lines:[f.basket],mealEdit:{occurrenceId:m.occurrenceId,baseMealRevision:2,meal:m.meal}},2));m.input.base.shopRevision=3;
  m.c.source={kind:'reservation',reservationId:randomUUID(),purpose:'Whole protected meal',originOccurrenceId:m.occurrenceId,ingredientId:m.ingredientId,groupId:null,bindingId:null};
  const p=ok(await preview(f,m.input));ok((await apply(f,m.input,p)).response);const graph=ok(await call(f.owner,f.path+'/demand')).graph;assert.equal(graph.contributions.length,2);assert.equal(graph.contributions.find(c=>c.id===m.c.id).quantity.amount.numerator,'6');
+});
+test('explicit protected product clarification preserves its need when adding a matching source',async()=>{
+ const f=await fixture(),m=await mealGraph(f);m.meal.protected=true;m.meal.planning.bindings=[];
+ ok(await send(f,'shop.patch',{quote:f.quote,lines:[f.basket],mealEdit:{occurrenceId:m.occurrenceId,baseMealRevision:2,meal:m.meal}},2));
+ m.c.source={kind:'reservation',reservationId:randomUUID(),purpose:'Protected lunch',originOccurrenceId:m.occurrenceId,ingredientId:m.ingredientId,groupId:null,bindingId:null};m.c.productKey=null;
+ const input={...m.input,base:{shopRevision:3,authorityEpoch:1,graphRevision:0},change:{...empty(),lines:m.input.change.lines,contributions:[m.c]}};
+ ok((await apply(f,input,ok(await preview(f,input)))).response);
+ const before=ok(await call(f.owner,f.path+'/demand')),confirmed={...m.c,productKey:'wraps'},additional=source(f,q(2));
+ const update={...input,mode:'change',base:{shopRevision:4,authorityEpoch:1,graphRevision:1},change:{...empty(),contributions:[confirmed,additional]}};
+ assert.equal((await preview(f,update)).data.error.code,'protected_share_changed');
+ update.change.clarifyReservationProductIds=[m.c.id];
+ const p=ok(await preview(f,update));assert.deepEqual(ok(await call(f.owner,f.path+'/demand')),before,'Cancel leaves the unknown identity and need intact');
+ const receipt=ok((await apply(f,update,p)).response),saved=ok(await call(f.owner,f.path+'/demand'));
+ assert.deepEqual(saved.graph.contributions.find(c=>c.id===m.c.id),confirmed);assert.deepEqual(saved.totals[0].quantity,{numerator:'8',denominator:'1'});
+ const current={...update,base:{shopRevision:5,authorityEpoch:1,graphRevision:2}};
+ const review={...current,mode:'review',change:{...empty(),clarifyReservationProductIds:[m.c.id]}};
+ assert.equal((await preview(f,review)).data.error.code,'invalid_demand_review');
+ const undo={...current,mode:'undo',undoOperationId:receipt.operationId,change:{...empty(),clarifyReservationProductIds:[m.c.id]}};
+ assert.equal((await preview(f,undo)).data.error.code,'invalid_demand_undo');
+ undo.change=empty();assert.equal((await preview(f,undo)).status,422,'Undo cannot erase a confirmed protected identity');
+ assert.deepEqual(ok(await call(f.owner,f.path+'/demand')),saved);
 });
 test('two-thousand-source adoption and unchanged review use bounded set-based origin queries',async()=>{
  const f=await fixture(),input=draft(f);input.change.contributions=Array.from({length:2000},(_,i)=>({...source(f,q(1)),originalText:'One reviewed wrap '+i}));input.action.body.lines[0].packs=334;

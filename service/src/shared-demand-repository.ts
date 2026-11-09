@@ -8,6 +8,7 @@ import {checkout} from './checkout.js';
 import {sharedDemandChangeSchema,demandQuantitySchema,demandReviewSchema,type DemandGraph,type DemandContribution} from './shared-demand-contracts.js';
 import {applyDemandChange,undoDemandChange,validateDemandGraph,demandLineTotals,convertDemandQuantity} from './shared-demand-domain.js';
 import {sharedMealSchema,preserveProtectedMeal} from './shared-meal-planning.js';
+import {mealDemandSources,mealSourceKey,exactSourceExclusions,requestDemandSource} from './shared-demand-sources.js';
 const id=z.string().uuid().transform(s=>s.toLowerCase());
 const delta=sharedDemandChangeSchema.omit({schemaVersion:true,operationId:true,householdId:true,shopId:true,baseRevision:true,at:true});
 const pack=z.object({lineId:id,usablePerPack:demandQuantitySchema.nullable(),acceptUnresolved:z.boolean()}).strict();
@@ -16,7 +17,7 @@ const inputSchema=z.object({mode:z.enum(['adopt','change','undo','review']),base
 type Input=z.infer<typeof inputSchema>;
 const fail=(code='demand_review_required')=>new ServiceError(409,code,'Review the current shared quantities and exact source changes.');
 function assert(value:unknown,code?:string):asserts value{if(!value)throw fail(code);}
-function noChanges(c:Input['change']){return c.lines.length+c.contributions.length+c.edges.length+c.removeEdgeIds.length+c.removeSourceIds.length+(c.quantifyReservationIds?.length??0)===0;}
+function noChanges(c:Input['change']){return c.lines.length+c.contributions.length+c.edges.length+c.removeEdgeIds.length+c.removeSourceIds.length+(c.quantifyReservationIds?.length??0)+(c.clarifyReservationProductIds?.length??0)===0;}
 export async function loadDemand(ctx:Context,shop:Shop):Promise<{graph:DemandGraph;fingerprint:string;receipt:unknown}|null>{
  if(!shop.demand_revision)return null;
  const row=(await ctx.db.query('SELECT graph,graph_digest,receipt FROM ritc.shared_demand_revision WHERE household_id=$1 AND shop_id=$2 AND revision=$3',[ctx.householdId,shop.shop_id,shop.demand_revision])).rows[0];
@@ -27,7 +28,17 @@ export async function loadDemand(ctx:Context,shop:Shop):Promise<{graph:DemandGra
 }
 export async function readDemand(repo:HouseholdRepository,ctx:Context,shop:Shop){
  repo.requireShopper(ctx,shop);const current=await loadDemand(ctx,shop);
- return {schemaVersion:1,shopId:shop.shop_id,shopRevision:shop.revision,authorityEpoch:shop.authority_epoch,status:current?(shop.demand_review_required?'reviewRequired':'enabled'):'legacy',graph:current?.graph??null,totals:current?demandLineTotals(current.graph):[]};
+ let legacySources=null;
+ if(!current){
+  const links=(await ctx.db.query(`SELECT l.request_id,l.line_id,l.reviewed_revision,r.original_item,r.own_quantity,r.author_id
+   FROM ritc.request_link l JOIN ritc.request r ON (r.household_id,r.shop_id,r.request_id)=(l.household_id,l.shop_id,l.request_id)
+   WHERE l.household_id=$1 AND l.shop_id=$2 ORDER BY l.request_id`,[ctx.householdId,shop.shop_id])).rows;
+  const authors=(await ctx.db.query<Member>('SELECT * FROM ritc.member WHERE household_id=$1 AND member_id=ANY($2::uuid[])',[ctx.householdId,[...new Set(links.map(r=>r.author_id))]])).rows;
+  const liveAuthors=new Set<string>();for(const author of authors){assert(author.state==='active','demand_source_unavailable');await repo.consent(ctx.db,ctx.householdId,author);liveAuthors.add(author.member_id);}
+  assert(links.every(r=>liveAuthors.has(r.author_id)),'demand_source_unavailable');
+  legacySources={sources:[...mealDemandSources(shop.shop_id,await repo.meals(ctx,shop.shop_id)),...links.map(r=>requestDemandSource(shop.shop_id,r))]};
+ }
+ return {schemaVersion:1,shopId:shop.shop_id,shopRevision:shop.revision,authorityEpoch:shop.authority_epoch,status:current?(shop.demand_review_required?'reviewRequired':'enabled'):'legacy',graph:current?.graph??null,totals:current?demandLineTotals(current.graph):[],legacySources};
 }
 export async function demandSnapshotRef(ctx:Context,shop:Shop,allowReviewRequired=false){
  if(!shop.demand_revision)return undefined;const row=(await ctx.db.query('SELECT graph_digest FROM ritc.shared_demand_revision WHERE household_id=$1 AND shop_id=$2 AND revision=$3',[ctx.householdId,shop.shop_id,shop.demand_revision])).rows[0];
@@ -65,35 +76,17 @@ async function actionFacts(repo:HouseholdRepository,ctx:Context,shop:Shop,input:
  }
  checkout(lines,quote);return {body,lines,quote,meals,request};
 }
-function verifySourceExclusions(c:DemandContribution,occurrenceId:string,meal:any,ingredient:any){
- const expected=[...(meal.planning?.exclusions??[]).map((label:string)=>({occurrenceId,ingredientId:null,label})),...ingredient.exclusions.map((label:string)=>({occurrenceId,ingredientId:ingredient.id,label}))];
- const key=(e:any)=>JSON.stringify([e.occurrenceId,e.ingredientId,e.label]);const required=new Set(expected.map(key));
- const supplied=c.sourceExclusions??[];assert(supplied.length===required.size&&supplied.every(e=>required.has(key(e))),'demand_exclusion_mapping_required');
-}
 async function verifySources(repo:HouseholdRepository,ctx:Context,shop:Shop,graph:DemandGraph,facts:Awaited<ReturnType<typeof actionFacts>>){
  const active=graph.contributions.filter(c=>c.removedAt===null),expected=new Set<string>();
- // Selected meal ingredients and explicit group bindings are authoritative; the
- // graph cannot omit a need or counterfeit a reservation from another meal.
- for(const m of facts.meals){const meal=sharedMealSchema.parse(m.meal);for(const ingredient of meal.planning?.ingredients??[]){
-  const bindings=meal.planning?.bindings?.filter(b=>b.ingredientId===ingredient.id)??[];
-  const wholeRow=active.some(c=>c.source.kind==='reservation'&&c.source.originOccurrenceId===m.occurrenceId&&c.source.ingredientId===ingredient.id&&c.source.groupId===null&&c.source.bindingId===null);
-  if(!bindings.length||(meal.protected&&wholeRow)){
-   const wholeProtected=meal.protected;
-   const rows=active.filter(c=>wholeProtected?c.source.kind==='reservation'&&c.source.originOccurrenceId===m.occurrenceId&&c.source.ingredientId===ingredient.id&&c.source.groupId===null&&c.source.bindingId===null:
-    c.source.kind==='meal'&&c.source.occurrenceId===m.occurrenceId&&c.source.ingredientId===ingredient.id&&c.source.bindingId===null);
-   assert(rows.length===1&&quantityMatches(rows[0]!.quantity,ingredient.quantity),'demand_meal_mismatch');verifySourceExclusions(rows[0]!,m.occurrenceId,meal,ingredient);expected.add(rows[0]!.id);
-  }else for(const b of bindings){const protectedGroup=meal.protected||meal.planning!.groups.find(g=>g.id===b.groupId)!.protected;
-   const rows=active.filter(c=>protectedGroup?c.source.kind==='reservation'&&c.source.originOccurrenceId===m.occurrenceId&&c.source.bindingId===b.id&&c.source.groupId===b.groupId&&c.source.ingredientId===ingredient.id:
-    c.source.kind==='meal'&&c.source.occurrenceId===m.occurrenceId&&c.source.bindingId===b.id&&c.source.groupId===b.groupId&&c.source.ingredientId===ingredient.id);
-   assert(rows.length===1&&quantityMatches(rows[0]!.quantity,b.quantity),'demand_meal_mismatch');verifySourceExclusions(rows[0]!,m.occurrenceId,meal,ingredient);expected.add(rows[0]!.id);
-  }
-  // Missing group quantities are protected unknowns, not inferred proportions.
-  // A whole protected ingredient with no bindings is already represented once.
-  if(!(meal.protected&&(!bindings.length||wholeRow)))for(const group of meal.planning!.groups.filter(g=>(meal.protected||g.protected)&&ingredient.groupIds.includes(g.id)&&!bindings.some(b=>b.groupId===g.id))){
-   const rows=active.filter(c=>c.source.kind==='reservation'&&c.source.originOccurrenceId===m.occurrenceId&&c.source.ingredientId===ingredient.id&&c.source.groupId===group.id&&c.source.bindingId===null);
-   assert(rows.length===1&&rows[0]!.quantity===null,'demand_protected_unknown_required');verifySourceExclusions(rows[0]!,m.occurrenceId,meal,ingredient);expected.add(rows[0]!.id);
-  }
- }}
+ const wholeProtected=new Set(active.flatMap(c=>c.source.kind==='reservation'&&c.source.originOccurrenceId&&c.source.groupId===null&&c.source.bindingId===null?[c.source.originOccurrenceId+'/'+c.source.ingredientId]:[]));
+ // The same authoritative enumeration supplies adoption and validates committed sources.
+ for(const source of mealDemandSources(shop.shop_id,facts.meals,wholeProtected)){
+  const rows=active.filter(c=>mealSourceKey(c.source)===mealSourceKey(source.source));
+  const unknownProtected=source.source.kind==='reservation'&&source.source.groupId!==null&&source.source.bindingId===null&&source.quantity===null;
+  assert(rows.length===1&&quantityMatches(rows[0]!.quantity,source.quantity),unknownProtected?'demand_protected_unknown_required':'demand_meal_mismatch');
+  assert(exactSourceExclusions(rows[0]!.sourceExclusions??[],source.sourceExclusions),'demand_exclusion_mapping_required');
+  expected.add(rows[0]!.id);
+ }
  const requestIds=active.flatMap(c=>c.source.kind==='request'?[c.source.requestId]:[]);
  const requests=new Map((await ctx.db.query('SELECT * FROM ritc.request WHERE household_id=$1 AND shop_id=$2 AND request_id=ANY($3::uuid[])',[ctx.householdId,shop.shop_id,requestIds])).rows.map(r=>[r.request_id,r]));
  const links=(await ctx.db.query('SELECT request_id,line_id,reviewed_revision FROM ritc.request_link WHERE household_id=$1 AND shop_id=$2',[ctx.householdId,shop.shop_id])).rows;

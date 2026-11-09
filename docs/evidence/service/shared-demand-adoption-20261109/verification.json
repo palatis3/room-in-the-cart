@@ -1,0 +1,25 @@
+{
+  "scope": "Authoritative legacy sources, protected product clarification, early database fixture assets",
+  "sourceManifestSHA256": "60e65a0f974f1dbd91a553f357e0221f574b109280f5c81e4e3502bfce24f0e8",
+  "distManifestSHA256": "d4fb84426344f8a3c600af871e545d7a943b3e108f7b5a6f9f1856578c635c39",
+  "sourceUnchanged": true,
+  "compiledOutputUnchanged": true,
+  "offline": {
+    "passed": 569,
+    "failed": 0,
+    "skipped": 1
+  },
+  "postgres": {
+    "passed": 285,
+    "failed": 0,
+    "skipped": 3,
+    "stopped": true
+  },
+  "receipts": {
+    "build-receipt.json": "fbbefbe5ecd0b7f3b4434effc9f0e472e31127ad49228bf85bf6c0da064c29ad",
+    "offline-receipt.json": "e2e8021d107ad52b34bda14ddb76852abc89920860227d01be6dfdc245e99a3e",
+    "pg-run-1.json": "34ab87746cb1c84a3ee34ae692c2d81798776b6b206e3b2a1efb6383f2a9cfb1"
+  },
+  "deployment": false,
+  "nativeAcceptance": false
+}

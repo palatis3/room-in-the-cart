@@ -1,7 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {spawnSync} from 'node:child_process';
-import {integrationTestEnvironment,preflightIntegrationDatabase} from '../scripts/database-test-preflight.mjs';
+import {mkdtemp,mkdir,writeFile,rm} from 'node:fs/promises';
+import {pathToFileURL} from 'node:url';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {integrationTestEnvironment,preflightIntegrationAssets,preflightIntegrationDatabase} from '../scripts/database-test-preflight.mjs';
 const url=user=>`postgresql://${user}:fixture-only@127.0.0.1:5432/ritc_test`;
 const environment=()=>({TEST_ADMIN_DATABASE_URL:url('owner'),TEST_DATABASE_URL:url('runtime'),TEST_WORKER_DATABASE_URL:url('ritc_test_worker')});
 const roles=()=>[
@@ -18,6 +22,27 @@ function catalog({rows=roles(),present=false,origin=false}={}){
   throw Error('Unexpected preflight query');
  }};
 }
+
+test('required Foundation assets are checked without a database connection',async()=>{
+ await preflightIntegrationAssets();
+});
+
+test('isolated checkout missing or malformed Foundation data fails before database setup',async t=>{
+ const directory=await mkdtemp(join(tmpdir(),'ritc-preflight-assets-'));
+ t.after(()=>rm(directory,{recursive:true,force:true}));
+ const root=pathToFileURL(directory+'/');
+ await assert.rejects(preflightIntegrationAssets(root),/Required Foundation routing fixture is missing or invalid/);
+ const path=new URL('docs/product/foundation-gen2.1/references/grocery30/inbox-scenarios.json',root);
+ await mkdir(new URL('.',path),{recursive:true});
+ await writeFile(path,'{ invalid JSON');
+ await assert.rejects(preflightIntegrationAssets(root),/missing or invalid/);
+ for(const value of [null,{}, {routing:[]},{routing:'invalid'}]){
+  await writeFile(path,JSON.stringify(value));
+  await assert.rejects(preflightIntegrationAssets(root),/has no routing scenarios/);
+ }
+ await writeFile(path,JSON.stringify({routing:[{label:'fixture'}]}));
+ await preflightIntegrationAssets(root);
+});
 
 test('CI environment keeps verifier and billing defaults and optional execution flags',()=>{
  const env={...environment(),RITC_TEST_WEB_WIRE:'1',RITC_TEST_NATIVE_WIRE:'1'};

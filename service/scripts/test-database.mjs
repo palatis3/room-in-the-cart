@@ -3,8 +3,9 @@ import { readdir,mkdtemp,chmod } from 'node:fs/promises';
 import { preparePrivacyJournalFixture,fencePrivacyJournalFixture } from '../tests/privacy-journal-fixture.mjs';
 import pg from 'pg';
 import { migrate } from './migrate.mjs';
-import { integrationTestEnvironment,preflightIntegrationDatabase,preflightIntegrationConnections } from './database-test-preflight.mjs';
+import { integrationTestEnvironment,preflightIntegrationAssets,preflightIntegrationDatabase,preflightIntegrationConnections } from './database-test-preflight.mjs';
 const configuration=integrationTestEnvironment(process.env);
+await preflightIntegrationAssets();
 const {TEST_ADMIN_DATABASE_URL}=configuration.environment;
 const fixtureAdmin=new pg.Client({connectionString:TEST_ADMIN_DATABASE_URL,connectionTimeoutMillis:5000,query_timeout:5000});
 try{await fixtureAdmin.connect();}catch{await fixtureAdmin.end().catch(()=>{});throw Error('Database test preflight: Cannot verify admin fixture connection; check its local endpoint and credentials.');}

@@ -32,7 +32,7 @@ export const sharedDemandGraphSchema=z.object({schemaVersion:z.literal(1),conver
 /** Upserts have stable IDs; removed sources are tombstones, never hard deletes. */
 export const sharedDemandChangeSchema=z.object({schemaVersion:z.literal(1),operationId:id,householdId:id,shopId:id,baseRevision:revision,at:time,
  lines:z.array(demandLineSchema).max(200),contributions:z.array(demandContributionSchema).max(2000),edges:z.array(demandEdgeSchema).max(4000),
- removeSourceIds:z.array(id).max(2000),removeEdgeIds:z.array(id).max(4000),quantifyReservationIds:z.array(id).max(2000).optional()}).strict();
+ removeSourceIds:z.array(id).max(2000),removeEdgeIds:z.array(id).max(4000),quantifyReservationIds:z.array(id).max(2000).optional(),clarifyReservationProductIds:z.array(id).max(2000).optional()}).strict();
 function delta<T extends z.ZodType>(value:T){return z.object({id,before:value.nullable(),after:value.nullable()}).strict();}
 export const sharedDemandReceiptSchema=z.object({schemaVersion:z.literal(1),operationId:id,householdId:id,shopId:id,
  baseRevision:revision,resultRevision:revision,lines:z.array(delta(demandLineSchema)).max(200),

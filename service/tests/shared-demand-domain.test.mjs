@@ -257,3 +257,71 @@ test('protected unknown becomes quantified only through explicit same-reservatio
  fails(()=>undo(result.graph,result.receipt,change(result.graph,{},301)),'protected_quantification_undo');
  fails(()=>apply(g,change(g,{contributions:[{...next,source:{...next.source,groupId:id(998)}}],quantifyReservationIds:[unknown.id]})),'source_identity_changed');
 });
+
+function unidentifiedReservation(){const g=graph();g.edges=[];g.contributions=[g.contributions[3]];g.contributions[0].productKey=null;return g;}
+test('explicit protected product clarification changes only the unknown key and preserves exact protected need',()=>{
+ for(const quantity of [graph().contributions[3].quantity,null]){
+  const g=unidentifiedReservation();g.contributions[0].quantity=quantity;const before=structuredClone(g),old=g.contributions[0];
+  const replacement={...structuredClone(old),productKey:'food.confirmed-wrap'};
+  const result=apply(g,change(g,{contributions:[replacement],clarifyReservationProductIds:[old.id]}));
+  assert.deepEqual(g,before);assert.equal(result.graph.contributions.length,1);
+  assert.deepEqual(result.graph.contributions[0],replacement);
+  assert.deepEqual({...result.graph.contributions[0],productKey:null},old);
+  assert.deepEqual(total(result.graph,id(1)),total(g,id(1)));
+  assert.deepEqual(result.receipt.contributions,[{id:old.id,before:old,after:replacement}]);
+ }
+});
+test('unlisted protected null product clarification remains forbidden',()=>{
+ const g=unidentifiedReservation(),old=g.contributions[0];
+ fails(()=>apply(g,change(g,{contributions:[{...old,productKey:'food.confirmed-wrap'}]})),'protected_share_changed');
+});
+for(const [label,mutate] of [
+ ['source identity',c=>c.source.reservationId=id(992)],['source binding',c=>c.source.bindingId=id(993)],
+ ['source kind',c=>c.source={kind:'manual'}],['line identity',c=>c.lineId=id(994)],
+ ['original source text',c=>c.originalText+=' changed'],['product name',c=>c.productName+=' changed'],
+ ['contains',c=>c.contains.push('sesame')],['added exclusion',c=>c.exclusions.push('sesame')],
+ ['removed exclusion',c=>c.exclusions=[]],['source exclusion provenance',c=>c.sourceExclusions=[]],
+ ['protected quantity reduction',c=>c.quantity=quantity(1)],['protected quantity increase',c=>c.quantity=quantity(3)],
+ ['quantity uncertainty',c=>c.quantity=null],['tombstone',c=>c.removedAt=at],
+])test('identity clarification does not authorize '+label,()=>{
+ const g=unidentifiedReservation(),old=g.contributions[0],next={...structuredClone(old),productKey:'food.confirmed-wrap'};mutate(next);
+ fails(()=>apply(g,change(g,{contributions:[next],clarifyReservationProductIds:[old.id]})),'invalid_reservation_product_clarification');
+});
+test('clarification rejects non-null reassignment and already-known no-op',()=>{
+ const g=unidentifiedReservation(),old=g.contributions[0];old.productKey='food.first';
+ for(const productKey of ['food.second','food.first'])fails(()=>apply(g,change(g,{contributions:[{...old,productKey}],clarifyReservationProductIds:[old.id]})),'invalid_reservation_product_clarification');
+});
+test('clarification rejects unknown, omitted, duplicate, removed and nonreservation IDs',()=>{
+ const g=unidentifiedReservation(),old=g.contributions[0],next={...old,productKey:'food.confirmed-wrap'};
+ fails(()=>apply(g,change(g,{contributions:[next],clarifyReservationProductIds:[id(999)]})),'invalid_reservation_product_clarification');
+ fails(()=>apply(g,change(g,{clarifyReservationProductIds:[old.id]})),'invalid_reservation_product_clarification');
+ fails(()=>apply(g,change(g,{contributions:[old],clarifyReservationProductIds:[old.id]})),'invalid_reservation_product_clarification');
+ fails(()=>apply(g,change(g,{contributions:[next],clarifyReservationProductIds:[old.id,old.id]})),'duplicate_identity');
+ for(const altered of [{...old,removedAt:at},{...old,source:{kind:'manual'}}]){
+  const other=structuredClone(g);other.contributions=[altered];
+  fails(()=>apply(other,change(other,{contributions:[{...altered,productKey:'food.confirmed-wrap'}],clarifyReservationProductIds:[old.id]})),'invalid_reservation_product_clarification');
+ }
+});
+test('identity clarification cannot quantify or rebind the same reservation',()=>{
+ const g=unidentifiedReservation(),old=g.contributions[0];old.quantity=null;old.source.bindingId=null;
+ const next={...structuredClone(old),productKey:'food.confirmed-wrap',quantity:quantity(2),source:{...old.source,bindingId:id(999)}};
+ fails(()=>apply(g,change(g,{contributions:[next],quantifyReservationIds:[old.id],clarifyReservationProductIds:[old.id]})),'invalid_reservation_product_clarification');
+});
+test('protected clarification cannot be undone into unknown and Undo cannot carry clarification intent',()=>{
+ const g=unidentifiedReservation(),old=g.contributions[0],next={...old,productKey:'food.confirmed-wrap'};
+ const result=apply(g,change(g,{contributions:[next],clarifyReservationProductIds:[old.id]}));
+ fails(()=>undo(result.graph,result.receipt,change(result.graph,{},301)),'protected_product_clarification_undo');
+ fails(()=>undo(result.graph,result.receipt,change(result.graph,{clarifyReservationProductIds:[old.id]},301)),'undo_has_changes');
+});
+test('ordinary manual product edit and unrelated Undo remain available',()=>{
+ const g=unidentifiedReservation(),old=g.contributions[0];old.source={kind:'manual'};
+ const result=apply(g,change(g,{contributions:[{...old,productKey:'food.confirmed-wrap'}]}));
+ const reversed=undo(result.graph,result.receipt,change(result.graph,{},301));assert.deepEqual(reversed.graph.contributions,g.contributions);
+ const protectedGraph=unidentifiedReservation(),protectedSource=protectedGraph.contributions[0];
+ const clarified=apply(protectedGraph,change(protectedGraph,{contributions:[{...protectedSource,productKey:'food.confirmed-wrap'}],clarifyReservationProductIds:[protectedSource.id]}));
+ const manual={...clarified.graph.contributions[0],id:id(998),source:{kind:'manual'}};
+ const added=apply(clarified.graph,change(clarified.graph,{contributions:[manual]},302));
+ const undone=undo(added.graph,added.receipt,change(added.graph,{},303));
+ assert.deepEqual(undone.graph.contributions.find(c=>c.id===protectedSource.id),clarified.graph.contributions[0]);
+ assert.equal(undone.graph.contributions.find(c=>c.id===manual.id).removedAt,at);
+});

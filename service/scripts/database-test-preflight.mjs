@@ -1,7 +1,17 @@
 import pg from 'pg';
+import {readFile} from 'node:fs/promises';
 
 const groups=['ritc_app','ritc_worker','ritc_guardian_verifier'];
 const fail=message=>{throw new Error('Database test preflight: '+message);};
+/** Required external test data must be available before connecting or mutating fixtures. */
+export async function preflightIntegrationAssets(root=new URL('../../',import.meta.url)){
+ const path='docs/product/foundation-gen2.1/references/grocery30/inbox-scenarios.json';
+ let value;
+ try{value=JSON.parse(await readFile(new URL(path,root),'utf8'));}
+ catch{fail('Required Foundation routing fixture is missing or invalid: '+path);}
+ if(!Array.isArray(value?.routing)||value.routing.length===0)
+  fail('Required Foundation routing fixture has no routing scenarios: '+path);
+}
 function target(value,label){
  if(!value)fail(label+' is required.');
  let url,parameters;
