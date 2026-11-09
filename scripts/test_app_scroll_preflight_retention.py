@@ -52,7 +52,7 @@ class PreflightRetentionTests(unittest.TestCase):
         self.expected['qualifiedToolHashes']['xcodebuild']='f'*64
         before=copy.deepcopy(self.expected);receipt,value=self.prepare_failure('qualified_tool_changed:xcodebuild')
         self.assertEqual(receipt['stage'],'exact-tool-admission');self.assertEqual(self.expected,before)
-        self.assertEqual(set(value['entries']),{'xcode-version','sdk-settings',*self.paths,'simctl-executable'})
+        self.assertEqual(set(value['entries']),{'xcode-version','sdk-settings',*self.paths,'simctl-executable','coresimulator-version'})
         row=value['entries']['xcodebuild'];self.assertFalse(row['matchesExpectedSHA256'])
         self.assertEqual(row['expectedSHA256'],'f'*64);self.assertEqual(row['observed']['sha256'],sha(self.paths['xcodebuild']))
         self.assertEqual(row['observed']['bytes'],len(thin()));self.assertEqual(row['observed']['magic'],'cffaedfe')
@@ -109,12 +109,18 @@ class PreflightRetentionTests(unittest.TestCase):
         with patch.object(contract.time,'monotonic',side_effect=[0]+[31]*100):value=self.inventory()
         self.assertFalse(value['complete']);self.assertIn('inventory_deadline',value['entries']['xcodebuild']['error'])
     def test_final_macho_row_deadline_is_mandatory_after_parser_and_slice_hash(self):
-        for stage in ('parser','slice-hash'):
+        for stage in ('parser','slice-hash','signature-regions'):
             with self.subTest(stage=stage):
                 clock=[0];original_uuid=contract.arm64_uuid;original_hash=contract.hashlib.sha256
+                at_final=[False]
+                def regions(*args):
+                    if at_final[0] and stage=='signature-regions':clock[0]=31
+                    raise ValueError('synthetic_signature_absent')
                 def uuid(path):
                     value=original_uuid(path)
-                    if Path(path)==self.actual and stage=='parser':clock[0]=31
+                    if Path(path)==self.actual:
+                        at_final[0]=True
+                        if stage=='parser':clock[0]=31
                     return value
                 calls=[0]
                 def digest(raw):
@@ -124,17 +130,24 @@ class PreflightRetentionTests(unittest.TestCase):
                     return original_hash(raw)
                 with patch.object(contract.time,'monotonic',side_effect=lambda:clock[0]),\
                         patch.object(contract,'arm64_uuid',side_effect=uuid),\
-                        patch.object(contract.hashlib,'sha256',side_effect=digest):value=self.inventory()
+                        patch.object(contract.hashlib,'sha256',side_effect=digest),\
+                        patch.object(contract,'signature_regions',side_effect=regions):value=self.inventory()
                 self.assertFalse(value['complete'])
                 self.assertIn('inventory_macho_changed_or_deadline',value['entries']['simctl-executable']['error'])
                 self.assertNotIn('error',value['entries']['swift-frontend'])
     def test_final_macho_row_drift_is_mandatory_after_parser_and_slice_hash(self):
-        for stage in ('parser','slice-hash'):
+        for stage in ('parser','slice-hash','signature-regions'):
             with self.subTest(stage=stage):
                 self.actual.write_bytes(thin());original_uuid=contract.arm64_uuid;original_hash=contract.hashlib.sha256
+                at_final=[False]
+                def regions(*args):
+                    if at_final[0] and stage=='signature-regions':self.actual.write_bytes(thin()+b'drift')
+                    raise ValueError('synthetic_signature_absent')
                 def uuid(path):
                     value=original_uuid(path)
-                    if Path(path)==self.actual and stage=='parser':self.actual.write_bytes(thin()+b'drift')
+                    if Path(path)==self.actual:
+                        at_final[0]=True
+                        if stage=='parser':self.actual.write_bytes(thin()+b'drift')
                     return value
                 calls=[0]
                 def digest(raw):
@@ -142,10 +155,28 @@ class PreflightRetentionTests(unittest.TestCase):
                     if calls[0]==13 and stage=='slice-hash':self.actual.write_bytes(thin()+b'drift')
                     return original_hash(raw)
                 with patch.object(contract,'arm64_uuid',side_effect=uuid),\
-                        patch.object(contract.hashlib,'sha256',side_effect=digest):value=self.inventory()
+                        patch.object(contract.hashlib,'sha256',side_effect=digest),\
+                        patch.object(contract,'signature_regions',side_effect=regions):value=self.inventory()
                 self.assertFalse(value['complete'])
                 self.assertIn('inventory_macho_changed_or_deadline',value['entries']['simctl-executable']['error'])
                 self.assertNotIn('error',value['entries']['swift-frontend'])
+    def test_framework_metadata_only_for_exact_known_resolved_launcher_target(self):
+        known='/Library/Developer/PrivateFrameworks/CoreSimulator.framework/Versions/A/Resources/bin/simctl'
+        fake=self.root/'CoreSimulator.framework/Versions/A/Resources/bin/simctl'
+        fake.parent.mkdir(parents=True);fake.write_bytes(thin())
+        metadata=fake.parents[1]/'Info.plist'
+        fields={'CFBundleIdentifier':'com.apple.CoreSimulator','CFBundleVersion':'1174.9.2','CFBundleShortVersionString':'1174.9.2'}
+        metadata.write_bytes(plistlib.dumps(fields))
+        self.paths['simctl'].write_text('#!/bin/bash\nexec "'+known+'" "${@}"\n')
+        def path(value):return fake if str(value)==known else Path(value)
+        with patch.object(contract,'Path',side_effect=path):value=self.inventory()
+        self.assertEqual(value['entries']['coresimulator-version']['observed']['fields'],fields)
+        self.assertEqual(value['entries']['coresimulator-version']['observed']['sha256'],sha(metadata))
+        self.assertTrue(value['complete'])
+    def test_other_launcher_target_never_reads_framework_metadata(self):
+        value=self.inventory()
+        self.assertEqual(value['entries']['coresimulator-version']['diagnostic'],'launcher_target_not_known_framework_path')
+        self.assertEqual(value['entries']['coresimulator-version']['observed'],{})
     def test_existing_output_is_not_overwritten(self):
         out=self.root/'prepare';out.mkdir();(out/'receipt.json').write_text('first failure')
         with patch.object(producer,'tool_inventory') as inventory,self.assertRaisesRegex(ValueError,'prepare_output_already_exists'):
@@ -167,6 +198,70 @@ class PreflightRetentionTests(unittest.TestCase):
         source=inspect.getsource(contract.tool_inventory)
         self.assertNotIn('subprocess',source);self.assertNotIn('Runner(',source)
         self.assertNotIn('Popen',source)
+
+
+def signed_macho(blob=None, trailing=b'trailer'):
+    if blob is None:
+        directory=struct.pack('>II',0xfade0c02,12)+b'code'
+        blob=struct.pack('>III',0xfade0cc0,32,1)+struct.pack('>II',0,20)+directory
+    header=struct.pack('<8I',0xfeedfacf,0x0100000c,0,2,2,40,0,0)
+    return header+thin()[32:]+struct.pack('<4I',0x1d,16,80,len(blob))+b'EXECBYTE'+blob+trailing
+
+
+class SignatureRegionTests(unittest.TestCase):
+    def test_all_bytes_covered_and_code_directory_hash_bound(self):
+        raw=signed_macho();value=contract.signature_regions(raw)
+        self.assertEqual(value['signatureOffset'],80);self.assertEqual(value['signatureBytes'],32)
+        self.assertEqual(value['coveredBytes'],len(raw));self.assertEqual(value['suffix']['bytes'],7)
+        self.assertEqual(value['prefix']['sha256'],hashlib.sha256(raw[:80]).hexdigest())
+        self.assertEqual(value['suffix']['sha256'],hashlib.sha256(b'trailer').hexdigest())
+        self.assertEqual(value['nonSignatureSHA256'],hashlib.sha256(raw[:80]+raw[112:]).hexdigest())
+        self.assertEqual(value['codeDirectories'][0]['sha256'],hashlib.sha256(raw[100:112]).hexdigest())
+    def test_executable_mutation_changes_non_signature_hash(self):
+        raw=signed_macho();changed=bytearray(raw);changed[72]^=1
+        first=contract.signature_regions(raw);second=contract.signature_regions(changed)
+        self.assertNotEqual(first['nonSignatureSHA256'],second['nonSignatureSHA256'])
+        self.assertEqual(first['signatureSHA256'],second['signatureSHA256'])
+    def test_signature_only_mutation_preserves_non_signature_hash(self):
+        raw=signed_macho();changed=bytearray(raw);changed[108]^=1
+        first=contract.signature_regions(raw);second=contract.signature_regions(changed)
+        self.assertEqual(first['nonSignatureSHA256'],second['nonSignatureSHA256'])
+        self.assertNotEqual(first['signatureSHA256'],second['signatureSHA256'])
+        self.assertNotEqual(first['codeDirectories'],second['codeDirectories'])
+    def test_trailing_file_bytes_are_not_excluded(self):
+        first=contract.signature_regions(signed_macho())
+        second=contract.signature_regions(signed_macho(trailing=b'Trailer'))
+        self.assertNotEqual(first['suffix']['sha256'],second['suffix']['sha256'])
+        self.assertNotEqual(first['nonSignatureSHA256'],second['nonSignatureSHA256'])
+        self.assertEqual(first['signatureSHA256'],second['signatureSHA256'])
+    def test_signature_padding_is_covered(self):
+        blob=signed_macho()[80:112]+b'padding'
+        first=contract.signature_regions(signed_macho(blob));second=contract.signature_regions(signed_macho(blob[:-1]+b'G'))
+        self.assertEqual(first['superBlobTrailingBytes'],7)
+        self.assertNotEqual(first['signatureSHA256'],second['signatureSHA256'])
+        self.assertEqual(first['nonSignatureSHA256'],second['nonSignatureSHA256'])
+    def test_absent_or_duplicate_signature_is_explicit(self):
+        with self.assertRaisesRegex(ValueError,'signature_absent_or_duplicate'):contract.signature_regions(thin())
+        raw=bytearray(signed_macho());struct.pack_into('<II',raw,16,3,56)
+        raw[72:72]=struct.pack('<4I',0x1d,16,80,32)
+        with self.assertRaisesRegex(ValueError,'signature_absent_or_duplicate'):contract.signature_regions(raw)
+    def test_bad_signature_and_load_command_ranges_rejected(self):
+        for index,value in ((64,4),(64,99999),(68,99999),(60,8),(20,32)):
+            with self.subTest(index=index,value=value):
+                raw=bytearray(signed_macho());struct.pack_into('<I',raw,index,value)
+                with self.assertRaises(ValueError):contract.signature_regions(raw)
+    def test_overlapping_or_out_of_range_superblob_entries_rejected(self):
+        directory=struct.pack('>II',0xfade0c02,12)+b'code'
+        overlap=struct.pack('>III',0xfade0cc0,40,2)+struct.pack('>4I',0,28,0x1000,28)+directory
+        with self.assertRaisesRegex(ValueError,'signature_child_overlap'):contract.signature_regions(signed_macho(overlap))
+        for slot,offset in ((0,4),(0,9999)):
+            blob=struct.pack('>III',0xfade0cc0,32,1)+struct.pack('>II',slot,offset)+directory
+            with self.assertRaisesRegex(ValueError,'signature_index_bounds'):contract.signature_regions(signed_macho(blob))
+    def test_selected_slice_preserves_all_other_container_bytes(self):
+        raw=b'CONTAINER'+signed_macho()+b'OTHER-SLICE'
+        value=contract.signature_regions(raw,9,len(signed_macho()))
+        self.assertEqual(value['signatureOffset'],89);self.assertEqual(value['coveredBytes'],len(raw))
+        self.assertEqual(value['nonSignatureSHA256'],hashlib.sha256(raw[:89]+raw[121:]).hexdigest())
 
 
 if __name__=='__main__':unittest.main()

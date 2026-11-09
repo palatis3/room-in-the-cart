@@ -73,6 +73,51 @@ def products_snapshot(root):
 
 
 
+def signature_regions(raw, slice_start=0, slice_size=None):
+    """Static byte-region diagnostics, not signature verification or tool admission."""
+    view=memoryview(raw);size=len(raw)-slice_start if slice_size is None else slice_size
+    require(0<=slice_start and 32<=size and slice_start+size<=len(raw),'signature_slice_bounds')
+    macho=view[slice_start:slice_start+size]
+    magic,cpu,_,_,count,commands_size,_,_=struct.unpack_from('<8I',macho)
+    require(magic==0xfeedfacf and cpu==0x0100000c,'signature_arm64_header')
+    require(count<=4096 and commands_size<=16*1024**2 and 32+commands_size<=size,'signature_commands_bounds')
+    cursor=32;declared=[]
+    for _ in range(count):
+        require(cursor+8<=32+commands_size,'signature_command_header')
+        command,length=struct.unpack_from('<II',macho,cursor)
+        require(length>=8 and length%8==0 and cursor+length<=32+commands_size,'signature_command_bounds')
+        if command==0x1d:
+            require(length==16,'signature_command_size')
+            declared.append(struct.unpack_from('<II',macho,cursor+8))
+        cursor+=length
+    require(cursor==32+commands_size,'signature_commands_coverage')
+    require(len(declared)==1,'signature_absent_or_duplicate')
+    offset,length=declared[0]
+    require(offset>=cursor and length>=12 and offset+length<=size,'signature_blob_bounds')
+    start=slice_start+offset;end=start+length;blob=view[start:end]
+    magic,total,count=struct.unpack_from('>III',blob)
+    require(magic==0xfade0cc0 and 12<=total<=length and count<=16 and 12+8*count<=total,'signature_superblob_bounds')
+    entries=[];ranges=[];slots=set()
+    for i in range(count):
+        slot,at=struct.unpack_from('>II',blob,12+8*i)
+        require(slot not in slots and at>=12+8*count and at+8<=total,'signature_index_bounds')
+        slots.add(slot);kind,blob_size=struct.unpack_from('>II',blob,at)
+        require(blob_size>=8 and at+blob_size<=total,'signature_child_bounds')
+        require(all(at+blob_size<=a or at>=b for a,b in ranges),'signature_child_overlap')
+        ranges.append((at,at+blob_size))
+        entries.append({'slot':slot,'magic':hex(kind),'offset':start+at,'bytes':blob_size,
+                        'sha256':hashlib.sha256(blob[at:at+blob_size]).hexdigest(),
+                        'codeDirectory':kind==0xfade0c02})
+    prefix=view[:start];suffix=view[end:];digest=hashlib.sha256();digest.update(prefix);digest.update(suffix)
+    return {'sliceOffset':slice_start,'sliceBytes':size,'signatureOffset':start,'signatureBytes':length,
+            'prefix':{'offset':0,'bytes':start,'sha256':hashlib.sha256(prefix).hexdigest()},
+            'signatureSHA256':hashlib.sha256(blob).hexdigest(),
+            'suffix':{'offset':end,'bytes':len(raw)-end,'sha256':hashlib.sha256(suffix).hexdigest()},
+            'nonSignatureSHA256':digest.hexdigest(),'coveredBytes':len(prefix)+len(blob)+len(suffix),
+            'superBlobBytes':total,'superBlobTrailingBytes':length-total,'blobs':entries,
+            'codeDirectories':[entry for entry in entries if entry['codeDirectory']]}
+
+
 def tool_inventory(developer, expected):
     """Bounded read-only diagnostics. Observed identity never changes admission pins."""
     started=time.monotonic();deadline=started+30;remaining=1024**3
@@ -81,7 +126,7 @@ def tool_inventory(developer, expected):
             'developer':str(developer),'complete':True,'entries':{},
             'limits':{'seconds':30,'fileBytes':512*1024**2,'totalHashBytes':1024**3,
                       'additionalMachOReadBytes':1024**3,'metadataBytes':64*1024}}
-    def sample(label,path,expected_sha=None,expected_fields=None,metadata=False):
+    def sample(label,path,expected_sha=None,expected_fields=None,metadata=False,metadata_fields=None):
         nonlocal remaining
         path=Path(path);row={'path':str(path),'expectedSHA256':expected_sha,
                             'expectedFields':expected_fields or {},'observed':{}}
@@ -109,11 +154,11 @@ def tool_inventory(developer, expected):
             row['matchesExpectedSHA256']=None if expected_sha is None else observed['sha256']==expected_sha
             if metadata:
                 value=plistlib.loads(raw);observed['fields']={}
-                for key in expected_fields:
+                for key in metadata_fields or expected_fields:
                     field=value.get(key)
                     require(isinstance(field,str) and len(field)<=256,'inventory_metadata_field')
                     observed['fields'][key]=field
-                row['matchesExpectedFields']=observed['fields']==expected_fields
+                if expected_fields is not None:row['matchesExpectedFields']=observed['fields']==expected_fields
             elif raw[:4] in (b'\xcf\xfa\xed\xfe',b'\xca\xfe\xba\xbe',b'\xca\xfe\xba\xbf'):
                 try:
                     # Reuse the already qualified UUID parser; its extra read is bounded by
@@ -124,7 +169,7 @@ def tool_inventory(developer, expected):
                 require(unchanged() and time.monotonic()<deadline,'inventory_macho_changed_or_deadline')
                 try:
                     require('machODiagnosticError' not in row,'inventory_uuid_unavailable')
-                    magic=struct.unpack_from('>I',raw)[0];slices=[]
+                    magic=struct.unpack_from('>I',raw)[0];slices=[];slice_start=0
                     if magic in (0xcafebabe,0xcafebabf):
                         count=struct.unpack_from('>I',raw,4)[0];require(0<count<=16,'inventory_fat_count')
                         stride=20 if magic==0xcafebabe else 32
@@ -132,16 +177,22 @@ def tool_inventory(developer, expected):
                             offset=8+i*stride;cpu=struct.unpack_from('>I',raw,offset)[0]
                             start,size=struct.unpack_from('>II' if stride==20 else '>QQ',raw,offset+8)
                             require(start+size<=len(raw),'inventory_fat_bounds')
-                            if cpu==0x0100000c:slices.append(memoryview(raw)[start:start+size])
+                            if cpu==0x0100000c:
+                                slices.append(memoryview(raw)[start:start+size]);slice_start=start
                         observed['container']='universal'
                     else:slices=[raw];observed['container']='thin'
                     require(len(slices)==1,'inventory_unique_arm64_slice')
                     observed['arm64SliceSHA256']=hashlib.sha256(slices[0]).hexdigest()
                     observed['arm64SliceBytes']=len(slices[0])
+                    try:
+                        observed['codeSignature']=signature_regions(raw,slice_start,len(slices[0]))
+                    except Exception as exc:
+                        row['codeSignatureDiagnosticError']=type(exc).__name__+': '+str(exc)[:256]
                 except Exception as exc:
                     row.setdefault('machODiagnosticError',type(exc).__name__+': '+str(exc)[:256])
                     # A parse failure is diagnostic only; unchanged tools() still decides admission.
                 require(unchanged() and time.monotonic()<deadline,'inventory_macho_changed_or_deadline')
+            require(unchanged() and time.monotonic()<deadline,'inventory_final_changed_or_deadline')
         except Exception as exc:
             row['error']=type(exc).__name__+': '+str(exc)[:256];result['complete']=False
         return raw
@@ -163,6 +214,12 @@ def tool_inventory(developer, expected):
         require(lines[0]=='#!/bin/bash' and match is not None,'inventory_launcher_shape')
         actual=Path(match[1]);require(actual.is_absolute(),'inventory_launcher_absolute')
         sample('simctl-executable',actual)
+        known=Path('/Library/Developer/PrivateFrameworks/CoreSimulator.framework/Versions/A/Resources/bin/simctl')
+        if actual==known and actual.resolve()==known:
+            sample('coresimulator-version',known.parents[1]/'Info.plist',metadata=True,
+                   metadata_fields=('CFBundleIdentifier','CFBundleVersion','CFBundleShortVersionString'))
+        else:
+            result['entries']['coresimulator-version']={'observed':{},'diagnostic':'launcher_target_not_known_framework_path'}
     except Exception as exc:
         result['entries']['simctl-executable']={'expectedSHA256':None,'observed':{},'error':type(exc).__name__+': '+str(exc)[:256]}
         result['complete']=False
