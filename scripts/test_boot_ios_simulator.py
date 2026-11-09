@@ -2,6 +2,7 @@ import contextlib
 import io
 import os
 from pathlib import Path
+import selectors
 import signal
 import subprocess
 import sys
@@ -149,16 +150,23 @@ sys.exit(status)
     def test_outer_deadline_can_still_stop_hung_fake_boot(self):
         environment = dict(self.environment, FAKE_OUTPUT="waiting\n", FAKE_HANG="1")
         process = subprocess.Popen(self.command, env=environment, stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE, text=True, start_new_session=True)
+                                   stderr=subprocess.PIPE, start_new_session=True)
         try:
+            # Start the outer deadline once the wrapper forwards the fake boot's ready marker.
+            marker = b"waiting\n"
+            with selectors.DefaultSelector() as ready:
+                ready.register(process.stdout, selectors.EVENT_READ)
+                self.assertTrue(ready.select(timeout=10), "fake boot did not report readiness")
+            # Read only available bytes so a partial line cannot block the startup check.
+            self.assertEqual(os.read(process.stdout.fileno(), len(marker)), marker)
             with self.assertRaises(subprocess.TimeoutExpired):
                 process.communicate(timeout=1)
         finally:
             # This process group contains only the fake CLI and its wrapper.
-            os.killpg(process.pid, signal.SIGTERM)
-            stdout, _ = process.communicate(timeout=5)
+            with contextlib.suppress(ProcessLookupError):
+                os.killpg(process.pid, signal.SIGTERM)
+            process.communicate(timeout=5)
         self.assertEqual(process.returncode, -signal.SIGTERM)
-        self.assertIn("waiting", stdout)
 
 
 if __name__ == "__main__":
