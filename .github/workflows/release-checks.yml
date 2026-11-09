@@ -55,6 +55,8 @@ jobs:
           tar -xzf "$lint_dir/actionlint.tar.gz" -C "$lint_dir" actionlint
           "$yaml_env/bin/python" scripts/check_ci_workflows.py --actionlint "$lint_dir/actionlint" \
             --report .build/workflow-lint.json
+      - name: Reject known performance incompatibility before the full release batch
+        run: python3 scripts/check_release_performance_preflight.py
       - name: Validate generated files, localization and CI test selection
         run: |
           python3 scripts/generate_theme.py --check

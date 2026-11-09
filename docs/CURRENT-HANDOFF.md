@@ -15,7 +15,7 @@ contracts and B11 acceptance. Read [APP-BASELINE](product/APP-BASELINE.md), then
 Use `/Users/palatis/Room in the Cart`, branch `codex/parallel-ios-ci`, with explicit
 working directories. The ambient `spanish-done-diagnostic` worktree is stale.
 Publication target is `codex/combined-candidate-20261109`; before this update its
-verified head was `df2dbae5d29937c58346d5eac6e55001c745567b`. Recheck current Git
+verified head was `f20553398467004075e691f4f28f043c470bc3a7`. Recheck current Git
 and run state before publishing. Draft PR1 is a separate older candidate.
 No complete combined regression or merge has passed.
 
@@ -28,6 +28,9 @@ competing local native processes or mutate a candidate while it is executing.
 [CI-VALIDATION](CI-VALIDATION.md) is the working procedure:
 
 - Resolve missing measurements before approving a new performance baseline.
+- Full release source preflight now checks configured baseline compatibility
+  before all native fan-out, reusing performance workflow pins. Focused
+  calibration remains available; no new jobs or relaxed limits.
 - Finish focused fixes, freeze one source SHA, then qualify the complete candidate.
   Full release dispatch rejects an input/event/checkout SHA mismatch before Macs.
 - Preserve original failures, exact source/product/environment identities and
@@ -138,7 +141,25 @@ removing → Cancel/Apply; retained LedgerMealsView's direct button is not live.
 Proposal `.build/SourceRemovalAcceptanceNov09/proposal-r1/` contains a reset-only
 variant of the existing private-recovery seed, one ordinary FreeJourney case and
 an exact persisted SQLite verifier. Eight pure verifier controls passed; they do
-not prove runtime storage. Native/SQLite acceptance has not run. No new CI jobs.
+not prove runtime storage. No new CI jobs.
+
+Ordinary Debug build and bundle check pass in134.023seconds on isolated source
+`7a085fe04042e0580c44093b1fab922c0f0e4a7e6657953336bed6fa7d3059eb`.
+The local route investigation is terminal: native65/strict1, testcase94.647seconds,
+because the `12 units` static-text lookup found no match. No unchanged retry and
+no positive qualification. Inspect the retained screenshot/hierarchy before
+changing the query or product. Result export and owned SQLite online backup are
+complete under `.build/SourceRemovalAcceptanceNov09/native-r1/layout/`;
+original result/source/products are unchanged. Snapshot SHA256:
+`5dfba6cadb3e13572b624af1f6754422ee39bc1d7cc051180f59b36e526ac9d2`.
+The sequence did not finish, so this snapshot does not establish F02 acceptance.
+The proposed two native source changes remain isolated, not installed in canonical.
+
+Compilation also reports a macOS27.0 sysroot against an iOS17 simulator target
+in the generated CoreDomaindynamic-product link. CoreDomain.o identifies iOS
+Simulator SDK27.1; generated framework identifies SDK27.0. Cause is unproven;
+do not suppress the warning or claim a warning-free build. Preserve the existing
+source/products before any successor mutation.
 
 The proposed CoreDomain regression **confirmed** a product defect: removing one
 linked dinner rewrites all three older orphan-row tombstone timestamps, while
@@ -153,8 +174,10 @@ The initial full run omitted two external JSON fixtures; that failed preparation
 and unchanged compiled products are preserved. Corrected-input execution passed
 with no warnings. Fix and regression are installed byte-verified in canonical;
 [compact proof](evidence/native/source-removal-tombstones-20261109/README.md).
-No model process remains active. Native F02/SQLite acceptance remains pending.
-Positive-r5 custody is complete; prepare the ordinary Debug F02 profile next.
+No model or native process remains active. Native F02/SQLite acceptance remains
+pending after the failed route investigation. Positive-r5 custody is complete;
+the stable execution source/products now contain F02 native-r1, so old
+clarification executors are historical.
 
 ## Installed product fixes and evidence boundaries
 

@@ -6,8 +6,10 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from check_ci_workflows import parse_workflow
+from check_release_performance_preflight import validate as validate_performance
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -83,6 +85,53 @@ class ReleasePreflightTests(unittest.TestCase):
                 self.assertNotIn("if", self.jobs[name])
         for name in ("security", "dependencies"):
             self.assertNotIn("needs", self.jobs[name])
+
+    def test_release_checks_performance_before_source_tests_and_native_fanout(self):
+        steps = self.jobs['source-preflight']['steps']
+        guard = next(i for i, step in enumerate(steps)
+                     if step.get('run') == 'python3 scripts/check_release_performance_preflight.py')
+        setup = next(i for i, step in enumerate(steps)
+                     if step.get('name') == 'Validate workflow syntax and expression references')
+        tests = next(i for i, step in enumerate(steps)
+                     if step.get('name') == 'Validate generated files, localization and CI test selection')
+        self.assertLess(setup, guard)
+        self.assertLess(guard, tests)
+        self.assertNotIn('env', steps[guard])  # No calibration override on full release.
+        performance = parse_workflow(ROOT / '.github/workflows/ios-performance.yml')[0]
+        self.assertEqual(performance['jobs']['performance-plan']['steps'][-1]['run'],
+                         'python3 scripts/check_ios_performance_environment.py configured --architecture arm64')
+
+    def test_release_performance_reads_workflow_pins_and_fails_before_native_queries(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / '.github/workflows').mkdir(parents=True)
+            (root / 'scripts').mkdir()
+            workflow = root / '.github/workflows/ios-performance.yml'
+            workflow.write_bytes((ROOT / '.github/workflows/ios-performance.yml').read_bytes())
+            baseline_path = root / 'scripts/ios_performance_baselines.json'
+            baseline = json.loads((ROOT / 'scripts/ios_performance_baselines.json').read_text())
+            # Synthetic profiles establish both outcomes without approving real calibration.
+            baseline['profiles'][0]['environment'].update(
+                xcode='Xcode 0.0\nBuild version fixture-build', osVersion='0.0')
+            baseline_path.write_text(json.dumps(baseline))
+            with patch('check_ios_performance_environment.subprocess.check_output') as native:
+                with self.assertRaisesRegex(ValueError, 'No approved baseline'):
+                    validate_performance(root)
+                pins = parse_workflow(workflow)[0]['env']
+                baseline['profiles'][0]['environment'].update(
+                    xcode='Xcode ' + pins['DEVELOPER_DIR'].split('Xcode_')[1].split('.app')[0]
+                          + '\nBuild version fixture-build',
+                    osVersion=pins['CI_IPHONE_RUNTIME'].split('iOS-')[1].replace('-', '.'),
+                    modelName=pins['CI_IPHONE_NAME'], architecture='arm64')
+                baseline_path.write_text(json.dumps(baseline))
+                result = validate_performance(root)
+                self.assertEqual(result['compatibleProfiles'], 1)
+                self.assertFalse(result['releaseAcceptance'])
+                workflow.write_text(workflow.read_text().replace('CI_IPHONE_NAME: iPhone 17',
+                                                                  'CI_IPHONE_NAME: Changed device'))
+                with self.assertRaisesRegex(ValueError, 'No approved baseline'):
+                    validate_performance(root)
+                native.assert_not_called()
 
     def test_preflight_runs_existing_source_validators_without_failure_bypasses(self):
         core = parse_workflow(ROOT / ".github/workflows/ci.yml")[0]["jobs"]["source-checks"]

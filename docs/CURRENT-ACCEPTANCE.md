@@ -2,6 +2,11 @@
 
 ## Current checkpoint — November 9, workflow and combined-candidate qualification
 
+Full-release source preflight now rejects known performance-baseline mismatches
+before any native suite starts. It reuses the performance workflow configuration
+and existing validator, preserving focused calibration and every downstream gate.
+[Workflow proof](evidence/native/release-batch-preflight-20261109/README.md).
+
 Clarification contrast is now corrected and installed. Five same-source native
 cases pass, with independent light/dark Large/AX5 target review. Both targets
 measure7.083:1 light and8.295:1 dark; original colors failed the unchanged4.5limit.
@@ -17,7 +22,9 @@ a distinct after-setup receipt is now prepared for the next justified observatio
 
 Latest model fix: removing one dinner now preserves earlier deletion dates on
 unrelated rows. The new regression fails on the original implementation, then
-all196CoreDomain tests pass with the fix. Native removal/SQLite and combined CI
+all196CoreDomain tests pass with the fix. The ordinary native source-removal
+investigation subsequently failed its `12 units` UI lookup; the original result
+and SQLite snapshot are preserved. Full native removal/SQLite and combined CI
 remain pending. [Evidence](evidence/native/source-removal-tombstones-20261109/README.md).
 Workflow artifact provenance checks pass409offline checks and17queue-node checks;
 current execution state is maintained in [CURRENT-HANDOFF](CURRENT-HANDOFF.md).

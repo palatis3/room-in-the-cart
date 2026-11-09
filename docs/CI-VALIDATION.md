@@ -140,6 +140,16 @@ Calibration-only runs skip baseline availability checks and retain every late
 evidence requirement. The current 26.3 baseline therefore fails enforced Linux
 planning immediately, while explicitly requested calibration remains available.
 
+The full `release-checks.yml` entry point also runs
+`check_release_performance_preflight.py` in its Linux source preflight, before
+any native suite can start. It reads the existing performance workflow pins and
+uses the same compatibility validator without a calibration bypass. A known
+baseline mismatch therefore blocks the entire expensive release batch, not only
+its performance jobs. Source security and dependency checks remain independent;
+focused diagnostic workflows remain available. Actual runner identity and final
+metric validation still run downstream after a compatible profile is approved.
+[Change and verification](evidence/native/release-batch-preflight-20261109/README.md).
+
 ### First hosted migration qualification
 
 After reviewing and publishing a candidate revision, use the already registered
