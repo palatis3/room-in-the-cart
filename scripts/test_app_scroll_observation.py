@@ -270,6 +270,141 @@ class ExportControls(unittest.TestCase):
         with self.assertRaises(ValueError):validate_receipt(value)
 
 
+class ContainerLookupControls(unittest.TestCase):
+    ABSENT = ('An error was encountered processing the command (domain=NSPOSIXErrorDomain, code=2):\n'
+              'The operation couldn’t be completed. No such file or directory\nNo such file or directory\n')
+    def setUp(self):
+        self.temp=tempfile.TemporaryDirectory();self.addCleanup(self.temp.cleanup)
+        self.root=Path(self.temp.name).resolve();self.now=0;self.query_end=10;self.native_end=float('inf')
+        self.query_code=0;self.query_stderr='';self.spawn_delay=0;self.drift=None;self.budget_error=None
+        self.control=capture.Capture.__new__(capture.Capture);self.control.out=self.root;self.control.device=DEVICE
+        self.control.native_started=0;self.control.bound={};self.control.save=lambda:None
+        self.path=self.root/'Library/Developer/CoreSimulator/Devices'/DEVICE/'data/Containers/Data/Application/app'
+        self.path.mkdir(parents=True);self.query_stdout=str(self.path)+'\n';self.spawned=[]
+        self.native_binding=dict(pid=101,startTimeMicros=1,uid=501,parentPID=50,executable='/native')
+        self.query_binding=dict(pid=102,startTimeMicros=2,uid=501,parentPID=50,executable='/simctl')
+        self.native={'record':{'label':'native'},'binding':self.native_binding,
+                     'process':type('Process',(),{'poll':lambda _:0 if self.now>=self.native_end else None})()}
+        def identity(pid):
+            value=self.native_binding if pid==101 else self.query_binding
+            return dict(value,startTimeMicros=99) if self.drift and self.drift[0]==pid and self.now>=self.drift[1] else dict(value)
+        self.control.identity=type('Identity',(),{'read':lambda _,pid:identity(pid)})()
+        def budget():
+            if self.budget_error and self.now>=self.budget_error[0]:raise ValueError(self.budget_error[1])
+        self.control.budget=budget
+        def spawn(label,key,tail,allow):
+            self.assertTrue(all(item['process'].poll() is not None for item in self.spawned),'overlapping query')
+            self.assertEqual((key,tail,allow),('simctl',self.expected_tail,True))
+            self.now=round(self.now+self.spawn_delay,6)
+            (self.root/(label+'-stdout.log')).write_text(self.query_stdout)
+            (self.root/(label+'-stderr.log')).write_text(self.query_stderr)
+            item={'record':{'label':label,'signals':[]},'binding':dict(self.query_binding),
+                  'process':type('Process',(),{'poll':lambda _:self.query_code if self.now>=self.query_end else None})()}
+            self.spawned.append(item);return item
+        self.control.tool_spawn=spawn
+        def cleanup(item):
+            self.assertIsNotNone(item['process'].poll());item['record']['terminalVerified']=True
+        self.control.cleanup=cleanup
+        for patcher in (mock.patch.object(capture.time,'monotonic',side_effect=lambda:self.now),
+                        mock.patch.object(capture.time,'sleep',side_effect=lambda seconds:setattr(self,'now',round(self.now+seconds,6))),
+                        mock.patch.object(capture.Path,'home',return_value=self.root),
+                        mock.patch.object(capture,'sha',side_effect=AssertionError('No repeated binary hashing while waiting'))):
+            patcher.start();self.addCleanup(patcher.stop)
+    def lookup(self,startup=True,label='container-data-1',bundle='dev.roominthecart.app',kind='data'):
+        self.expected_tail=['get_app_container',DEVICE,bundle,kind]
+        return self.control.query_container(bundle,kind,label,startup_native=self.native if startup else None)
+    def test_initial_lookup_succeeds_after_five_seconds_with_no_signals(self):
+        self.assertEqual(self.lookup(),self.path);self.assertEqual(self.now,10)
+        self.assertEqual(self.spawned[0]['record']['signals'],[])
+        self.assertEqual(self.spawned[0]['record']['containerLookupBudgetSeconds'],120)
+    def test_permanent_hang_stops_at_original_startup_deadline(self):
+        self.now=17;self.query_end=float('inf')
+        with self.assertRaisesRegex(ValueError,'app_data_deadline'):self.lookup()
+        self.assertEqual(self.now,120);self.assertEqual(len(self.spawned),1)
+        self.assertEqual(self.spawned[0]['record']['containerLookupBudgetSeconds'],103)
+    def test_late_started_query_uses_remaining_budget_not_new_120_seconds(self):
+        self.now=113;self.query_end=119
+        self.assertEqual(self.lookup(),self.path);self.assertEqual(self.now,119)
+        self.assertEqual(self.spawned[0]['record']['containerLookupBudgetSeconds'],7)
+    def test_binding_time_consumes_original_deadline(self):
+        self.now=119;self.spawn_delay=2;self.query_end=120
+        with self.assertRaisesRegex(ValueError,'app_data_deadline'):self.lookup()
+        self.assertEqual(self.now,121);self.assertEqual(len(self.spawned),1)
+    def test_expired_startup_deadline_never_spawns(self):
+        self.now=120
+        with self.assertRaisesRegex(ValueError,'app_data_deadline'):self.lookup()
+        self.assertEqual(self.spawned,[])
+    def test_query_identity_drift_aborts_without_continuing(self):
+        self.drift=(102,2)
+        with self.assertRaisesRegex(ValueError,'container-data-1_identity_changed'):self.lookup()
+        self.assertEqual(self.now,2);self.assertEqual(len(self.spawned),1)
+    def test_query_exit_between_poll_and_identity_read_is_reaped_normally(self):
+        original=self.control.identity.read
+        def identity(pid):
+            if pid==102 and self.now>=2:
+                self.query_end=self.now
+                return None
+            return original(pid)
+        self.control.identity.read=identity
+        self.assertEqual(self.lookup(),self.path);self.assertEqual(self.now,2)
+        self.assertTrue(self.spawned[0]['record']['terminalVerified'])
+        self.assertEqual(self.spawned[0]['record']['signals'],[])
+    def test_native_identity_drift_aborts_promptly(self):
+        self.drift=(101,2)
+        with self.assertRaisesRegex(ValueError,'native_identity_before_app'):self.lookup()
+        self.assertEqual(self.now,2)
+    def test_native_early_exit_aborts_promptly(self):
+        self.native_end=2
+        with self.assertRaisesRegex(ValueError,'native_exited_before_app'):self.lookup()
+        self.assertEqual(self.now,2)
+    def test_budget_failure_propagates_without_more_queries(self):
+        self.budget_error=(2,'tool_log_cap')
+        with self.assertRaisesRegex(ValueError,'tool_log_cap'):self.lookup()
+        self.assertEqual(self.now,2);self.assertEqual(len(self.spawned),1)
+    def test_output_written_at_terminal_exit_is_capped_before_read(self):
+        self.query_end=1;self.control.cleaning=False
+        self.control.budget=lambda:capture.Capture.budget(self.control)
+        cleanup=self.control.cleanup
+        def late_output(item):
+            cleanup(item)
+            (self.root/(item['record']['label']+'-stdout.log')).write_bytes(b'x'*(1024**2+1))
+        self.control.cleanup=late_output
+        with mock.patch.object(capture.shutil,'disk_usage',return_value=type('Usage',(),{'free':16*1024**3})()),\
+                self.assertRaisesRegex(ValueError,'tool_log_cap'):
+            self.lookup()
+        self.assertTrue(self.spawned[0]['record']['terminalVerified'])
+        self.assertNotIn('expectedContainerAbsent',self.spawned[0]['record'])
+    def test_only_exact_enoent_is_pending_and_next_query_does_not_overlap(self):
+        self.query_end=1;self.query_code=2;self.query_stdout='';self.query_stderr=self.ABSENT
+        self.assertIsNone(self.lookup());self.assertTrue(self.spawned[0]['record']['expectedContainerAbsent'])
+        self.assertTrue(self.spawned[0]['record']['terminalVerified'])
+        self.query_end=8;self.query_code=0;self.query_stdout=str(self.path)+'\n';self.query_stderr=''
+        # Freeze the already completed process result before adjusting the next fake process.
+        self.spawned[0]['process']=type('Done',(),{'poll':lambda _:2})()
+        self.assertEqual(self.lookup(label='container-data-2'),self.path);self.assertEqual(len(self.spawned),2)
+    def test_unknown_exit_and_diagnostics_are_rejected(self):
+        for code,stdout,stderr in [(1,'','failure'),(2,'','Permission denied'),(2,'',self.ABSENT.replace('NSPOSIXErrorDomain','OtherDomain')),
+                                   (2,'unexpected',self.ABSENT),(0,str(self.path)+'\n','unknown warning')]:
+            with self.subTest(code=code,stderr=stderr):
+                self.now=0;self.query_end=0;self.query_code=code;self.query_stdout=stdout;self.query_stderr=stderr;self.spawned=[]
+                with self.assertRaisesRegex(ValueError,'container_query_failed'):self.lookup()
+                self.assertFalse(self.spawned[0]['record']['expectedContainerAbsent'])
+    def test_post_arm_lookup_still_has_five_second_limit(self):
+        for bundle in ('dev.roominthecart.app','dev.roominthecart.RoomInTheCartUITests.xctrunner'):
+            with self.subTest(bundle=bundle):
+                self.now=0;self.spawned=[]
+                with self.assertRaisesRegex(ValueError,'installed_deadline'):
+                    self.lookup(startup=False,label='installed',bundle=bundle,kind='app')
+                self.assertEqual(self.now,5);self.assertEqual(self.spawned[0]['record']['containerLookupBudgetSeconds'],5)
+    def test_startup_extension_cannot_apply_after_binding(self):
+        self.control.bound={'app':{}}
+        with self.assertRaisesRegex(ValueError,'startup_container_scope'):self.lookup()
+        self.assertEqual(self.spawned,[])
+    def test_signal_rejection_still_covers_discovery_queries(self):
+        receipt=good_receipt();receipt['processes'].append(dict(label='container-data-1',signals=['SIGINT'],terminalVerified=True,exitCode=-2,expectedContainerAbsent=True))
+        with self.assertRaisesRegex(ValueError,'process_cleanup'):validate_receipt(receipt)
+
+
 class CollectionBudgetControls(unittest.TestCase):
     def setUp(self):
         self.temp=tempfile.TemporaryDirectory();self.addCleanup(self.temp.cleanup)

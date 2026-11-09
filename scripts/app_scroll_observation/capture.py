@@ -82,14 +82,50 @@ class Capture(NativeEnvironmentSpawn, Supervisor):
                     item['record']['terminalQueryBeforeBinding'] = True; self.save(); return item
             raise
 
-    def query_container(self, bundle, kind, label):
+    def query_container(self, bundle, kind, label, startup_native=None):
         started = time.monotonic()
+        startup = startup_native is not None
+        if startup:
+            require(bundle == 'dev.roominthecart.app' and kind == 'data' and not self.bound
+                    and self.native_started is not None and startup_native['record']['label'] == 'native',
+                    'startup_container_scope')
+        deadline = self.native_started + 120 if startup else started + 5
+        def check_native():
+            if startup:
+                require(startup_native['process'].poll() is None, 'native_exited_before_app')
+                value = startup_native['binding']
+                require(value is not None and self.identity.read(value['pid']) == value, 'native_identity_before_app')
+                require(time.monotonic() < deadline, 'app_data_deadline')
+        check_native(); self.budget()
         item = self.tool_spawn(label, 'simctl', ['get_app_container', self.device, bundle, kind], True)
-        code = self.wait(item, max(0.001, 5-(time.monotonic()-started)))
-        item['record']['expectedContainerAbsent'] = code != 0
+        item['record'].update(containerLookupPhase='startup' if startup else 'installed',
+                              containerLookupBudgetSeconds=max(0, deadline-started))
+        self.save()
+        while True:
+            self.budget(); check_native()
+            require(time.monotonic() < deadline, label+'_deadline')
+            code = item['process'].poll()
+            if code is not None: break
+            value = item['binding']
+            if value is None or self.identity.read(value['pid']) != value:
+                # The owned query may exit between poll and libproc. Only its terminal
+                # Popen state permits this race; a changed live identity remains fatal.
+                require(item['process'].poll() is not None, label+'_identity_changed')
+                continue
+            # Full tuple liveness only: tool bytes are checked at invocation and before cleanup signals.
+            time.sleep(min(0.05, max(0, deadline-time.monotonic())))
+        item['record'].update(exitCode=code, containerLookupElapsedSeconds=time.monotonic()-started)
         self.cleanup(item)
-        if code != 0: return None
-        lines = (self.out/(label+'-stdout.log')).read_text().splitlines()
+        self.budget()  # Include bytes written between the last poll and terminal exit.
+        stdout = (self.out/(label+'-stdout.log')).read_text()
+        stderr = (self.out/(label+'-stderr.log')).read_text()
+        absent = code == 2 and not stdout and stderr.splitlines() == [
+            'An error was encountered processing the command (domain=NSPOSIXErrorDomain, code=2):',
+            'The operation couldn’t be completed. No such file or directory', 'No such file or directory']
+        item['record']['expectedContainerAbsent'] = absent; self.save()
+        if absent: return None
+        require(code == 0 and not stderr, 'container_query_failed:'+label)
+        lines = stdout.splitlines()
         require(len(lines) == 1, 'container_response')
         path = Path(lines[0]).resolve()
         expected = (Path.home()/'Library/Developer/CoreSimulator/Devices')/self.device/'data/Containers'
@@ -191,7 +227,7 @@ class Capture(NativeEnvironmentSpawn, Supervisor):
             while data is None and time.monotonic() < deadline:
                 require(native['process'].poll() is None, 'native_exited_before_app')
                 self.budget(); query += 1
-                data = self.query_container('dev.roominthecart.app','data','container-data-'+str(query))
+                data = self.query_container('dev.roominthecart.app','data','container-data-'+str(query),startup_native=native)
                 if data is None: time.sleep(0.25)
             require(data is not None, 'app_data_deadline')
             self.control_directory = data/'Library/Application Support/AppCaptureControl'/self.nonce
