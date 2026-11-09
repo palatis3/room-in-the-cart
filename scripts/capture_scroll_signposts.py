@@ -35,6 +35,53 @@ SOURCE_PINS = {
     'scripts/check_ios_performance_environment.py': 'a459dfa7ed3c0bf9337f622dcdb6aa51e80bdcc4c2dac7092240a2f3b75c46b4',
     'scripts/ios_performance_baselines.json': '38742a9b5f5eea668c608f117db602ac6a2b73aa56691c3ec3f90c291d15c38e',
 }
+STAGES = {'source-contract', 'xctestrun-contract', 'toolchain', 'devices', 'runtimes',
+          'runtime-identity', 'help-stream', 'help-show', 'help-emit', 'emit-pre', 'emit-post'}
+STDERR_MARKERS = {
+    b'unknown command': 'unknown_command', b'unrecognized option': 'unrecognized_option',
+    b'invalid option': 'invalid_option', b'permission denied': 'permission_denied',
+    b'operation not permitted': 'operation_not_permitted', b'no such file': 'not_found',
+    b'timed out': 'reported_timeout', b'unable to boot': 'boot_unavailable',
+}
+
+
+class Journal:
+    """Fixed labels and bounded structured fields only; atomically save each boundary."""
+    def __init__(self, receipt, path):
+        self.receipt, self.path = receipt, path
+        self.receipt['stages'] = []
+        self.save()
+
+    def save(self):
+        temporary = self.path.with_suffix(self.path.suffix + '.tmp')
+        with temporary.open('w') as output:
+            output.write(json.dumps(self.receipt, separators=(',', ':')) + '\n')
+            output.flush()
+            os.fsync(output.fileno())
+        temporary.replace(self.path)
+
+    def run(self, name, action):
+        if name not in STAGES or len(self.receipt['stages']) >= 32:
+            raise ValueError('invalid_journal_stage')
+        entry = {'stage': name, 'status': 'running', 'exitCode': None, 'startedUTC': utc_now()}
+        self.receipt['stages'].append(entry)
+        self.save()
+        started = time.monotonic()
+        try:
+            result = action(entry)
+            entry['status'] = 'passed'
+            return result
+        except BaseException as error:
+            entry['status'] = 'interrupted' if isinstance(error, (KeyboardInterrupt, SystemExit)) else 'failed'
+            entry['reason'] = 'command_failed' if entry.get('commandObserved') else 'validation_failed'
+            raise
+        finally:
+            entry['elapsedSeconds'] = round(time.monotonic() - started, 3)
+            self.save()
+
+
+def stage(journal, name, action):
+    return journal.run(name, action) if journal else action({})
 
 
 def digest(value):
@@ -147,6 +194,8 @@ class Pump:
         self.help_stderr = bytearray()
         self.help_channels = help_channels
         self.stderr_bytes = 0
+        self.stderr_markers = set()
+        self.stderr_tail = b''
         self.raw_bytes = 0
         self.errors = set()
         self.exit_code = None
@@ -186,6 +235,9 @@ class Pump:
                         break
                     if key.data == 'err':
                         self.stderr_bytes += len(data)
+                        fragment = (self.stderr_tail + data).lower()
+                        self.stderr_markers.update(code for token, code in STDERR_MARKERS.items() if token in fragment)
+                        self.stderr_tail = data[-64:]  # Transient only; never serialized.
                         if self.help_channels:
                             if len(self.stdout) + len(self.help_stderr) + len(data) > MAX_LINE:
                                 self.errors.add('preflight_output_cap')
@@ -249,12 +301,24 @@ class Pump:
                 'finishedRecord': self.metadata.finished if self.metadata else False}
 
 
-def command(argv, seconds=COMMAND_SECONDS, help_receipt=None):
+def command(argv, seconds=COMMAND_SECONDS, help_receipt=None, journal=None, stage_name=None):
+    return stage(journal, stage_name, lambda entry: command_result(argv, seconds, help_receipt, entry))
+
+
+def command_result(argv, seconds, help_receipt, entry):
+    entry['timeoutSeconds'] = seconds
     pump = Pump(argv, seconds, help_channels=help_receipt is not None).start()
     try:
         pump.thread.join(seconds + 4)
     finally:
-        pump.close()
+        try:
+            pump.close()
+        finally:
+            entry.update({'commandObserved': True, 'exitCode': pump.exit_code,
+                          'errors': sorted(pump.errors), 'stdoutBytes': len(pump.stdout),
+                          'stderrBytes': pump.stderr_bytes, 'rawBytesConsumed': pump.raw_bytes,
+                          'stderrMarkers': sorted(pump.stderr_markers),
+                          'terminatedOnRequest': pump.terminated_on_request})
     if pump.errors or pump.exit_code != 0:
         raise ValueError('capability_command_failed')
     if help_receipt is not None:
@@ -293,7 +357,17 @@ def environment_summary(plist):
     return rows
 
 
-def preflight(simulator, test_run, argv):
+def source_contract():
+    if os.environ.get('PERFORMANCE_CASE') != 'scroll':
+        raise ValueError('not_the_original_scroll_case')
+    if os.environ.get('ENFORCE_BASELINES') != 'false':
+        raise ValueError('instrumented_diagnostic_requires_calibration_mode')
+    if any(digest(Path(path).read_bytes()) != expected for path, expected in SOURCE_PINS.items()):
+        raise ValueError('protected_source_drift')
+    return SOURCE_PINS
+
+
+def preflight(simulator, test_run, argv, journal=None):
     expected = ['xcodebuild', '-xctestrun', str(test_run), '-destination', f'platform=iOS Simulator,id={simulator}',
                 '-parallel-testing-enabled', 'NO', '-test-timeouts-enabled', 'YES',
                 '-default-test-execution-time-allowance', '900', '-maximum-test-execution-time-allowance', '1200',
@@ -301,16 +375,22 @@ def preflight(simulator, test_run, argv):
                 '-only-testing:' + SELECTOR, 'test-without-building']
     if argv != expected or os.environ.get('PERFORMANCE_CASE') != 'scroll':
         raise ValueError('not_the_original_scroll_command')
-    if os.environ.get('ENFORCE_BASELINES') != 'false':
-        raise ValueError('instrumented_diagnostic_requires_calibration_mode')
-    if any(digest(Path(path).read_bytes()) != expected for path, expected in SOURCE_PINS.items()):
-        raise ValueError('protected_source_drift')
-    if test_run.stat().st_size > 1024 * 1024:
-        raise ValueError('xctestrun_size_cap')
-    if platform.machine() != 'arm64' or command(['xcodebuild', '-version']).decode().strip() != 'Xcode 27.1\nBuild version 27A9275':
+    stage(journal, 'source-contract', lambda _: source_contract())
+    def inspect_test_run(_):
+        if test_run.stat().st_size > 1024 * 1024:
+            raise ValueError('xctestrun_size_cap')
+        return {'xctestrunSHA256': digest(test_run.read_bytes()),
+                'loggingEnvironment': environment_summary(plistlib.loads(test_run.read_bytes())),
+                'environmentLimitation': 'Actual launched app environment is not observed.'}
+    local = stage(journal, 'xctestrun-contract', inspect_test_run)
+    return dict(runtime_preflight(simulator, journal), **local)
+
+
+def runtime_preflight(simulator, journal=None):
+    if platform.machine() != 'arm64' or command(['xcodebuild', '-version'], journal=journal, stage_name='toolchain').decode().strip() != 'Xcode 27.1\nBuild version 27A9275':
         raise ValueError('toolchain_drift')
-    inventory = json.loads(command(['xcrun', 'simctl', 'list', 'devices', 'available', '-j']))
-    inventory.update(json.loads(command(['xcrun', 'simctl', 'list', 'runtimes', '-j'])))
+    inventory = json.loads(command(['xcrun', 'simctl', 'list', 'devices', 'available', '-j'], journal=journal, stage_name='devices'))
+    inventory.update(json.loads(command(['xcrun', 'simctl', 'list', 'runtimes', '-j'], journal=journal, stage_name='runtimes')))
     devices = [(runtime, device) for runtime, items in inventory['devices'].items()
                for device in items if device.get('udid') == simulator]
     runtimes = [item for item in inventory['runtimes'] if item.get('identifier') == RUNTIME]
@@ -326,7 +406,7 @@ def preflight(simulator, test_run, argv):
                          ('show', ('--signpost', 'ndjson', '--start', '--end', '--predicate', '--info', '--debug')),
                          ('emit', ('signpost-event', '--type', '--subsystem', '--category'))):
         help_receipt = {}
-        help_text = command(prefix + ['help', mode], help_receipt=help_receipt)
+        help_text = command(prefix + ['help', mode], help_receipt=help_receipt, journal=journal, stage_name='help-' + mode)
         # Both optional-negation spellings appear in the installed public manual.
         normalized_help = help_text.replace(b'--[no-]', b'--').replace(b'--[no]-', b'--')
         if not all(token.encode() in normalized_help for token in tokens):
@@ -335,12 +415,10 @@ def preflight(simulator, test_run, argv):
     return {'protectedSourceSHA256': SOURCE_PINS,
             'exactRuntime': {'xcode': '27.1', 'xcodeBuild': '27A9275', 'iOS': '27.0',
                             'iOSBuild': '24A434', 'deviceType': 'iPhone 17', 'hostArchitecture': 'arm64'},
-            'capabilities': capabilities, 'xctestrunSHA256': digest(test_run.read_bytes()),
-            'loggingEnvironment': environment_summary(plistlib.loads(test_run.read_bytes())),
-            'environmentLimitation': 'Actual launched app environment is not observed.'}
+            'capabilities': capabilities}
 
 
-def handshake(pump, prefix, namespace, name):
+def handshake(pump, prefix, namespace, name, journal=None):
     deadline = time.monotonic() + CONTROL_SECONDS
     # At most three markers, outside the native invocation, to tolerate log's
     # subscription startup. This never retries a native case. A single emitter
@@ -350,7 +428,8 @@ def handshake(pump, prefix, namespace, name):
         if remaining <= 0 or pump.errors or not pump.thread.is_alive():
             return False
         command(prefix + ['emit', '--type', 'signpost-event', '--subsystem', namespace,
-                          '--category', name, 'RITC diagnostic transport control'], min(1, remaining))
+                          '--category', name, 'RITC diagnostic transport control'], min(1, remaining),
+                journal=journal, stage_name='emit-' + name)
         wait_until = min(deadline, time.monotonic() + 1)
         while time.monotonic() < wait_until:
             if pump.errors or pump.metadata.errors or not pump.thread.is_alive():
@@ -364,20 +443,28 @@ def handshake(pump, prefix, namespace, name):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--simulator', required=True)
-    parser.add_argument('--xctestrun', type=Path, required=True)
+    parser.add_argument('--xctestrun', type=Path)
+    parser.add_argument('--capabilities-only', action='store_true')
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('command', nargs=argparse.REMAINDER)
     args = parser.parse_args()
     argv = args.command[1:] if args.command[:1] == ['--'] else args.command
+    if args.capabilities_only:
+        if args.xctestrun is not None or argv:
+            parser.error('Capabilities-only mode rejects xctestrun and native command arguments')
+    elif args.xctestrun is None or not argv:
+        parser.error('Capture mode requires xctestrun and the original native command')
     # Refuse accidental overwrite; all temporary raw data lives in bounded RAM.
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    output = args.output.open('x')
+    args.output.touch(exist_ok=False)
     receipt = {'schemaVersion': 1, 'diagnosticOnly': True, 'releaseAcceptance': False,
                'nativeAttempted': False, 'status': 'preflight_incomplete',
+               'capabilitiesOnly': args.capabilities_only,
                'limits': {'liveSeconds': STREAM_SECONDS, 'controlWaitSecondsEach': CONTROL_SECONDS,
                           'persistedSeconds': SHOW_SECONDS, 'metadataEventsPerSource': MAX_EVENTS,
                           'metadataBytesPerSource': MAX_METADATA, 'rawBytesPerSource': MAX_RAW,
                           'rawLineBytes': MAX_LINE, 'childTermSeconds': 2, 'childKillSeconds': 1}}
+    journal = Journal(receipt, args.output)
     namespace = 'dev.roominthecart.scrollprobe.' + uuid.uuid4().hex
     salt = os.urandom(32)  # Shared live/show equality; discarded, never written.
     prefix = ['xcrun', 'simctl', 'spawn', args.simulator, 'log']
@@ -390,23 +477,30 @@ def main():
     for signum in (signal.SIGTERM, signal.SIGINT):
         prior_handlers[signum] = signal.signal(signum, interrupted)
     try:
-        receipt['preflight'] = preflight(args.simulator, args.xctestrun, argv)
+        if args.capabilities_only:
+            stage(journal, 'source-contract', lambda _: source_contract())
+            receipt['preflight'] = runtime_preflight(args.simulator, journal)
+            receipt['status'] = 'capabilities_checked_not_transport'
+            return 0
+        receipt['preflight'] = preflight(args.simulator, args.xctestrun, argv, journal)
         start = utc_now()
         live = Pump(prefix + ['stream', '--signpost', '--style', 'ndjson', '--level', 'debug',
                               '--timeout', str(STREAM_SECONDS), '--predicate', predicate],
                     STREAM_SECONDS, Metadata(namespace, salt)).start()
-        if not handshake(live, prefix, namespace, 'pre'):
+        if not handshake(live, prefix, namespace, 'pre', journal):
             raise ValueError('pre_control_unqualified_no_native_run')
         receipt['nativeAttempted'] = True
         receipt['nativeStartUTC'] = utc_now()
+        journal.save()  # A hard termination must not leave nativeAttempted=false.
         # Inherits stdout/stderr for the existing tee and unchanged test log.
         native = subprocess.Popen(argv, start_new_session=True)
         native_code = native.wait()  # Original XCTest and workflow deadlines retained.
         receipt['nativeExitCode'] = native_code
         receipt['nativeEndUTC'] = utc_now()
+        journal.save()  # Persist native completion before any post-control work.
         if live.thread.is_alive():
             try:
-                receipt['postControlReceived'] = handshake(live, prefix, namespace, 'post')
+                receipt['postControlReceived'] = handshake(live, prefix, namespace, 'post', journal)
             except ValueError:
                 receipt['postControlReceived'] = False
         else:
@@ -450,8 +544,7 @@ def main():
              and persisted.metadata.finished and not persisted.errors and not persisted.metadata.errors)
         if receipt['status'] == 'captured_diagnostic_only' and not receipt['liveTransportQualified']:
             receipt['status'] = 'unqualified'
-        output.write(json.dumps(receipt, separators=(',', ':')) + '\n')
-        output.close()
+        journal.save()
         for signum, handler in prior_handlers.items():
             signal.signal(signum, handler)
     # After execution, retain original native status; separate diagnostic receipt

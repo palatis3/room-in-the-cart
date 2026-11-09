@@ -420,6 +420,24 @@ limits and outcome alongside the original evidence. An instrumented pass is not
 an approved performance baseline or release acceptance. Run once for the written
 capture question, inspect the result and stop; do not retry until green.
 
+For a capability failure before XCTest, first use the default-off manual
+`capture_preflight_only=true` with `capture_scroll_signposts=true`, `case=scroll`
+and `enforce_baselines=false`. It uses the existing slot, boots the simulator and
+checks the six CLI/runtime capabilities. It compiles nothing, reads no test
+products, starts no log transport and invokes no XCTest. Its separate cancellation
+group does not replace ordinary qualification. Success means
+`capabilities_checked_not_transport`, never a performance pass.
+
+Opted-in full captures also check these capabilities before compilation, then
+repeat the guards on the actual test runner. Incremental atomic receipts retain
+fixed command labels, status, exit code, elapsed time and bounded error categories;
+raw command output and private payloads are not retained. An interruption may
+leave a `running` stage, which is incomplete evidence. Preserve the first failure
+and use the named stage to choose the next change instead of extending timeouts
+or rerunning unchanged. The capability artifact is
+`iphone-scroll-capture-capabilities-<attempt>`; original capture/metric acceptance
+requirements remain unchanged.
+
 ### Exact-revision qualification receipt
 
 Before scheduling the combined regression batch, create one receipt for the

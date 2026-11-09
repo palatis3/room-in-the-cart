@@ -232,10 +232,25 @@ class AdmissionTests(unittest.TestCase):
                     output = Path(directory) / 'receipt.json'
                     argv = ['probe', '--simulator', 'test-simulator', '--xctestrun', 'test.xctestrun',
                             '--output', str(output), '--', 'xcodebuild', 'unchanged']
+                    def observe_spawn(*_args, **_kwargs):
+                        boundary = json.loads(output.read_text())
+                        self.assertTrue(boundary['nativeAttempted'])
+                        self.assertIn('nativeStartUTC', boundary)
+                        self.assertNotIn('nativeExitCode', boundary)
+                        return process
+                    control_calls = []
+                    def observe_control(*_args, **_kwargs):
+                        control_calls.append(True)
+                        if len(control_calls) == 1:
+                            return True
+                        boundary = json.loads(output.read_text())
+                        self.assertEqual(boundary['nativeExitCode'], native_code)
+                        self.assertIn('nativeEndUTC', boundary)
+                        raise ValueError('emit_failed')
                     with patch.object(sys, 'argv', argv), patch.object(probe, 'preflight', return_value={}), \
                          patch.object(probe, 'Pump', return_value=pump), \
-                         patch.object(probe, 'handshake', side_effect=[True, ValueError('emit_failed')]), \
-                         patch.object(probe.subprocess, 'Popen', return_value=process) as native:
+                         patch.object(probe, 'handshake', side_effect=observe_control), \
+                         patch.object(probe.subprocess, 'Popen', side_effect=observe_spawn) as native:
                         self.assertEqual(probe.main(), native_code if native_code >= 0 else 128 - native_code)
                     native.assert_called_once_with(['xcodebuild', 'unchanged'], start_new_session=True)
                     receipt = json.loads(output.read_text())
@@ -244,6 +259,32 @@ class AdmissionTests(unittest.TestCase):
 
 
 class WorkflowTests(unittest.TestCase):
+    def test_capabilities_only_has_no_build_products_or_xctest_path(self):
+        text = (Path(__file__).resolve().parents[1] / '.github/workflows/ios-performance.yml').read_text()
+        build = text[text.index('  performance-build:'):text.index('  performance-tests:')]
+        self.assertIn("inputs.capture_preflight_only && 'Check scroll capture capabilities (no build)'", build)
+        for name in ('Build the Release app and dedicated performance tests',
+                     'Check the compiled XCTest inventory and plan performance jobs',
+                     'Verify and package Release test products'):
+            self.assertIn('      - name: ' + name + '\n        if: ${{ !inputs.capture_preflight_only }}', build)
+        self.assertIn('id: upload\n        if: ${{ !inputs.capture_preflight_only }}', build)
+        self.assertIn('  performance-tests:\n    if: ${{ !inputs.capture_preflight_only }}', text)
+        gate = build[build.index('      - name: Boot diagnostic simulator'):build.index('      - name: Build the Release')]
+        self.assertIn('--capabilities-only', gate)
+        self.assertIn('if: inputs.capture_scroll_signposts', gate)
+        self.assertIn('if: always() && inputs.capture_scroll_signposts', gate)
+        for forbidden in ('pbcopy', 'prepare_ios_performance_simulator', 'build-for-testing', 'test-without-building', '--xctestrun'):
+            self.assertNotIn(forbidden, gate)
+        self.assertIn("${{ inputs.capture_preflight_only && '-capabilities-only' || '' }}", text)
+
+    def test_capabilities_only_requires_capture_input_before_macos(self):
+        text = (Path(__file__).resolve().parents[1] / '.github/workflows/ios-performance.yml').read_text()
+        start = text.index('          if [[ "${{ inputs.capture_preflight_only }}" == true ]]; then')
+        guard = text[start:text.index('          fi', start) + len('          fi')]
+        for only, capture, expected in (('true', 'false', 1), ('true', 'true', 0), ('false', 'false', 0)):
+            code = guard.replace('${{ inputs.capture_preflight_only }}', only).replace('${{ inputs.capture_scroll_signposts }}', capture)
+            self.assertEqual(subprocess.run(['bash', '-e', '-c', code]).returncode, expected)
+
     def test_manual_scroll_calibration_only_guard_before_macos(self):
         text = (Path(__file__).resolve().parents[1] / '.github/workflows/ios-performance.yml').read_text()
         start = text.index('          if [[ "${{ inputs.capture_scroll_signposts }}" == true ]]; then')
@@ -266,6 +307,107 @@ class WorkflowTests(unittest.TestCase):
         self.assertIn("${{ inputs.capture_scroll_signposts && ' · signpost capture (diagnostic only)' || '' }}", text)
         plan = text[text.index('  performance-plan:'):text.index('  performance-build:')]
         self.assertIn('python3 scripts/test_capture_scroll_signposts.py', plan)
+
+
+class JournalTests(unittest.TestCase):
+    def test_failed_capabilities_only_keeps_last_stage_and_skips_native(self):
+        with tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parents[1]) as directory:
+            path = Path(directory) / 'receipt.json'
+            argv = ['probe', '--capabilities-only', '--simulator', 'test-simulator', '--output', str(path)]
+            def failure(_simulator, journal):
+                journal.run('toolchain', lambda _: None)
+                def fail(entry):
+                    entry.update(commandObserved=True, exitCode=17, errors=['stderr_present'])
+                    raise ValueError('capability_command_failed')
+                journal.run('devices', fail)
+            with patch.object(sys, 'argv', argv), patch.object(probe, 'source_contract', return_value={}), \
+                 patch.object(probe, 'runtime_preflight', side_effect=failure), patch.object(probe, 'Pump') as pump, \
+                 patch.object(probe.subprocess, 'Popen') as native:
+                self.assertEqual(probe.main(), 78)
+            pump.assert_not_called()
+            native.assert_not_called()
+            receipt = json.loads(path.read_text())
+            self.assertEqual([row['stage'] for row in receipt['stages']], ['source-contract', 'toolchain', 'devices'])
+            self.assertEqual(receipt['stages'][-1]['exitCode'], 17)
+            self.assertEqual(receipt['stages'][-1]['status'], 'failed')
+            self.assertFalse(receipt['nativeAttempted'])
+
+    def test_failed_command_is_persisted_without_stderr_text(self):
+        with tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parents[1]) as directory:
+            path = Path(directory) / 'receipt.json'
+            journal = probe.Journal({'nativeAttempted': False}, path)
+            argv = [sys.executable, '-c', 'import sys; sys.stderr.write("permission denied SECRET_TOKEN /private/path"); sys.exit(17)']
+            with self.assertRaisesRegex(ValueError, 'capability_command_failed'):
+                probe.command(argv, journal=journal, stage_name='help-emit')
+            row = json.loads(path.read_text())['stages'][0]
+            self.assertEqual(row['stage'], 'help-emit')
+            self.assertEqual(row['status'], 'failed')
+            self.assertEqual(row['exitCode'], 17)
+            self.assertIn('permission_denied', row['stderrMarkers'])
+            self.assertGreater(row['stderrBytes'], 0)
+            self.assertIn('elapsedSeconds', row)
+            self.assertIn('startedUTC', row)
+            for private in ('SECRET_TOKEN', '/private/path', 'permission denied'):
+                self.assertNotIn(private, path.read_text())
+
+    def test_running_and_interrupted_stage_are_both_saved(self):
+        with tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parents[1]) as directory:
+            path = Path(directory) / 'receipt.json'
+            journal = probe.Journal({}, path)
+            def interrupted(_):
+                self.assertEqual(json.loads(path.read_text())['stages'][0]['status'], 'running')
+                raise KeyboardInterrupt()
+            with self.assertRaises(KeyboardInterrupt):
+                journal.run('toolchain', interrupted)
+            self.assertEqual(json.loads(path.read_text())['stages'][0]['status'], 'interrupted')
+
+    def test_timeout_has_owned_child_exit_and_reason(self):
+        with tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parents[1]) as directory:
+            path = Path(directory) / 'receipt.json'
+            journal = probe.Journal({}, path)
+            with self.assertRaises(ValueError):
+                probe.command([sys.executable, '-c', 'import time; time.sleep(10)'], seconds=0.1,
+                              journal=journal, stage_name='devices')
+            row = json.loads(path.read_text())['stages'][0]
+            self.assertIn('deadline', row['errors'])
+            self.assertIsNotNone(row['exitCode'])
+
+    def test_capabilities_only_never_starts_transport_or_native_or_reads_products(self):
+        with tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parents[1]) as directory:
+            path = Path(directory) / 'receipt.json'
+            argv = ['probe', '--capabilities-only', '--simulator', 'test-simulator', '--output', str(path)]
+            with patch.object(sys, 'argv', argv), patch.object(probe, 'source_contract', return_value={}), \
+                 patch.object(probe, 'runtime_preflight', return_value={}) as runtime, \
+                 patch.object(probe, 'preflight') as products, patch.object(probe, 'Pump') as pump, \
+                 patch.object(probe.subprocess, 'Popen') as native:
+                self.assertEqual(probe.main(), 0)
+            runtime.assert_called_once()
+            products.assert_not_called()
+            pump.assert_not_called()
+            native.assert_not_called()
+            receipt = json.loads(path.read_text())
+            self.assertFalse(receipt['nativeAttempted'])
+            self.assertFalse(receipt['liveTransportQualified'])
+            self.assertEqual(receipt['status'], 'capabilities_checked_not_transport')
+
+    def test_capabilities_only_rejects_native_arguments(self):
+        argv = ['probe', '--capabilities-only', '--simulator', 'test-simulator', '--output', 'unused', '--', 'xcodebuild']
+        with patch.object(sys, 'argv', argv), patch('sys.stderr', new=io.StringIO()), \
+             patch.object(probe, 'runtime_preflight') as runtime:
+            with self.assertRaises(SystemExit) as error:
+                probe.main()
+        self.assertEqual(error.exception.code, 2)
+        runtime.assert_not_called()
+
+    def test_journal_rejects_unbounded_or_unknown_stage_labels(self):
+        with tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parents[1]) as directory:
+            journal = probe.Journal({}, Path(directory) / 'receipt.json')
+            with self.assertRaises(ValueError):
+                journal.run('private arbitrary content', lambda _: None)
+            for _ in range(32):
+                journal.run('devices', lambda _: None)
+            with self.assertRaises(ValueError):
+                journal.run('devices', lambda _: None)
 
 
 if __name__ == '__main__':

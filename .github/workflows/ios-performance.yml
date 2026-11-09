@@ -1,5 +1,5 @@
 name: iOS Release performance
-run-name: iOS performance · ${{ inputs.case || 'all' }}${{ inputs.capture_scroll_signposts && ' · signpost capture (diagnostic only)' || '' }}
+run-name: iOS performance · ${{ inputs.case || 'all' }}${{ inputs.capture_preflight_only && ' · capability-only' || '' }}${{ inputs.capture_scroll_signposts && ' · signpost capture (diagnostic only)' || '' }}
 
 on:
   pull_request:
@@ -32,6 +32,10 @@ on:
         description: One scroll-only live/persisted signpost transport diagnostic (no acceptance)
         type: boolean
         default: false
+      capture_preflight_only:
+        description: Capability checks only; requires scroll capture and calibration mode; no compilation or XCTest
+        type: boolean
+        default: false
       enforce_baselines:
         description: Require approved limits for this Xcode and simulator environment
         type: boolean
@@ -47,7 +51,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: ios-performance-${{ github.workflow }}-${{ github.ref }}${{ inputs.capture_scroll_signposts && '-scroll-capture' || '' }}
+  group: ios-performance-${{ github.workflow }}-${{ github.ref }}${{ inputs.capture_scroll_signposts && '-scroll-capture' || '' }}${{ inputs.capture_preflight_only && '-capabilities-only' || '' }}
   cancel-in-progress: true
 
 env:
@@ -75,6 +79,9 @@ jobs:
             test "${{ inputs.case }}" = scroll
             test "$ENFORCE_BASELINES" = false
           fi
+          if [[ "${{ inputs.capture_preflight_only }}" == true ]]; then
+            test "${{ inputs.capture_scroll_signposts }}" = true
+          fi
       - name: Reject known baseline incompatibility before allocating macOS
         run: python3 scripts/check_ios_performance_environment.py configured --architecture arm64
 
@@ -84,7 +91,7 @@ jobs:
       group: ritc-macos-slot-2
       queue: max
       cancel-in-progress: false
-    name: Build optimized iPhone test products
+    name: ${{ inputs.capture_preflight_only && 'Check scroll capture capabilities (no build)' || 'Build optimized iPhone test products' }}
     runs-on: xcode-27
     timeout-minutes: 35
     outputs:
@@ -100,7 +107,29 @@ jobs:
           xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
       - name: Verify actual baseline environment before compiling
         run: python3 scripts/check_ios_performance_environment.py runner
+      - name: Boot diagnostic simulator before capability checks
+        if: inputs.capture_scroll_signposts
+        timeout-minutes: 3
+        run: python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"
+      - name: Check capture capabilities before compilation
+        if: inputs.capture_scroll_signposts
+        timeout-minutes: 2
+        env:
+          PERFORMANCE_CASE: scroll
+        run: |
+          python3 scripts/capture_scroll_signposts.py --capabilities-only --simulator "$SIMULATOR_ID" \
+            --output .build/capture-preflight/capabilities.json
+      - name: Retain capture capability stages
+        if: always() && inputs.capture_scroll_signposts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: iphone-scroll-capture-capabilities-${{ github.run_attempt }}
+          path: .build/capture-preflight/
+          include-hidden-files: true
+          retention-days: 7
+          if-no-files-found: warn
       - name: Build the Release app and dedicated performance tests
+        if: ${{ !inputs.capture_preflight_only }}
         shell: bash
         run: |
           mkdir -p .build
@@ -111,6 +140,7 @@ jobs:
             -enableUndefinedBehaviorSanitizer NO CODE_SIGN_IDENTITY=- build-for-testing \
             2>&1 | tee .build/PerformanceBuild.log
       - name: Check the compiled XCTest inventory and plan performance jobs
+        if: ${{ !inputs.capture_preflight_only }}
         id: plan
         run: |
           products=.build/DerivedData/Build/Products/Release-iphonesimulator
@@ -118,11 +148,13 @@ jobs:
           matrix=$(python3 scripts/plan_ios_performance_tests.py "$executable")
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
       - name: Verify and package Release test products
+        if: ${{ !inputs.capture_preflight_only }}
         run: |
           python3 scripts/check_built_app.py .build/DerivedData/Build/Products/Release-iphonesimulator/RoomInTheCart.app --configuration Release
           tar -czf "$RUNNER_TEMP/iphone-performance-products.tar.gz" -C .build/DerivedData/Build Products
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         id: upload
+        if: ${{ !inputs.capture_preflight_only }}
         with:
           name: iphone-performance-products-${{ github.run_attempt }}
           path: ${{ runner.temp }}/iphone-performance-products.tar.gz
@@ -140,6 +172,7 @@ jobs:
           if-no-files-found: ignore
 
   performance-tests:
+    if: ${{ !inputs.capture_preflight_only }}
     concurrency:
       group: ritc-macos-slot-${{ matrix.macos_slot }}
       queue: max
