@@ -1,0 +1,24 @@
+{
+  "commit": "8f58b7f40480b05ff17b2e00810e35b03763051b",
+  "profiles": {
+    "diagnostic": {
+      "checks": 263,
+      "seconds": 6.564,
+      "receiptSHA256": "a81b8aac2e1f3188539b250963f198246cd64cd010c0919187125389d0a5f2bc",
+      "sourceManifestSHA256": "ed44c3b9d202fef359c81fb34e0cd99c1fc13851ad7d5fd95ccda118378a1290",
+      "logSHA256": "abfcd69519118f9cd4637bfe8473ffb714ef04aae50d94b426be6059d4e7d4c5"
+    },
+    "ordinary": {
+      "checks": 263,
+      "seconds": 5.951,
+      "receiptSHA256": "e019a720c4bb9e8b620eb782f04938b0b7e76b02e02acff1e2004751d4939e40",
+      "sourceManifestSHA256": "ed44c3b9d202fef359c81fb34e0cd99c1fc13851ad7d5fd95ccda118378a1290",
+      "logSHA256": "9d5dd06dd664d10aa26ae17477b92b9efdd996bff236e74d58d704058c6c5d5c"
+    }
+  },
+  "sourceProofSHA256": "e67497a97cdccbfc79aa1d426123afbfd198abd9fc50e2251dfe0f7b9f2b7ba8",
+  "toolReviewSHA256": "7d664fe68c115cafe407222c703e7bf2ae2fa95e25afc16b2d809a326a4969c8",
+  "artifactDigest": "sha256:d4a97d0f4973aa78b42fb08a2d4a29427ca8aeac83f25200aa352e31dfb4c8bb",
+  "baselineQualified": false,
+  "completeCandidateQualified": false
+}

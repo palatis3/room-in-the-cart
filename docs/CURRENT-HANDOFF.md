@@ -12,7 +12,8 @@ and all earlier native preservation paths remain at
 Canonical checkout: `/Users/palatis/Room in the Cart`, local branch
 `codex/parallel-ios-ci`. Publish to `codex/combined-candidate-20261109`; verify its
 current remote head and run state before dispatch. The last verified remote
-checkpoint is 506fef51, containing the complete local dispatch preflight. Client
+source checkpoints are176a8480 (native shared-food flow) and4f188b26 (backend).
+Hosted diagnostics used the earlier frozen8f58b7f4 tool-profile revision. Client
 checkpoint 5d737882 and observer checkpoint 28925824 precede it.
 The ambient `spanish-done-diagnostic` worktree is stale. Draft PR1 is an older
 candidate. No full combined qualification or merge has passed.
@@ -22,6 +23,32 @@ Root owns integration and dispatch. One owner per cause, one local native proces
 no source/product mutation during execution. Historical attempts below are terminal;
 all optional-night native and wire attempts are now terminal. No debugger remains. Disk last reported approximately 166 GiB free;
 keep 8 GiB reserve and avoid downloads/duplicate raw archives.
+
+## Immediate work
+
+Focused hosted observer run42707391568 at8f58b7f4 is terminal. All263 early
+controls, observer typecheck and Release producer build/upload passed. Consumer
+startup stopped at container-data-9_deadline: a5-second lookup interrupted runner
+installation before the120-second startup budget expired. No selected-case verdict
+or required measurements were established. Retained archives and first failure are
+verified. A narrow correction using the existing startup deadline is under review;
+keep normal-exit, ownership, ARM/GO and performance gates intact. No performance
+baseline or full combined regression is approved.
+
+Native shared-food adoption/change/review now compiles with its90-key EN/ES
+catalog and passes45 strict native model tests plus122 client-package tests
+(3 expected integration skips). Combined backend passes569 offline tests
+(1 expected DB skip) and285 PostgreSQL tests (3 optional browser skips). Root
+local native and database attempts are terminal; no local test owner remains.
+Exact proof: shared-food-manual-flow-20261109 and shared-demand-adoption-20261109.
+
+Next complete app milestone: restore existing quote/item editor saves after graph
+adoption, especially expired-quote replacement. Quote/pack-only changes reuse
+.review; additions/removals need explicit conserved sources. Then request Add/Link
+must retain its exact reviewed ShopperDecision/line UUID, using the inbox outbox.
+Changed meals/proposals need authoritative sources for the proposed revision-bound
+action; do not duplicate server protected-group enumeration in Swift. No shared
+F01/F02 UI, mixed-device or final combined qualification is claimed.
 
 ## Implemented workflow
 

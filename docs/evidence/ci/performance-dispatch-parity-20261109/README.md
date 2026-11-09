@@ -58,3 +58,39 @@ and local file-only identity inventory remain in `preflight-retention-r1/` and
 `preflight-retention-r2/`; final workflow integration receipts are
 `dispatch-retention-final-diagnostic/` and `dispatch-retention-final-ordinary/`.
 A hosted retry is needed to obtain the previously unreported tool identity.
+
+Hosted runs [42703089031](https://github.com/palatis3/room-in-the-cart/actions/runs/42703089031)
+and [42705491175](https://github.com/palatis3/room-in-the-cart/actions/runs/42705491175)
+verified failure-time retention. The latter passed 254 early controls and retained
+a digest-verified 5,000-byte archive. All four Xcode tools have matching bytes
+outside their declared signature regions and identical CodeDirectories; their
+CMS signing envelopes differ. The actual CoreSimulator executable also differs
+(1174.21 hosted versus 1174.9.2 local); equivalence is not claimed.
+
+Commit `8f58b7f40480b05ff17b2e00810e35b03763051b` admits the one complete
+reviewed hosted four-tool hash set alongside the original local set. Mixed,
+missing, unknown and changed tool identities remain rejected. SDK pins and
+subsequent actual executable stability checks remain intact. This is diagnostic
+compatibility, not baseline approval or hosted signature-chain verification.
+
+Both complete local workflow profiles pass **263 checks**, in 6.564 and 5.951
+seconds. They ran in an isolated committed-source checkout, excluding unfinished
+app changes; every source hash was checked against that commit. Local originals
+are `reviewed-hosted-profile-r1/` and `hosted-profile-candidate-r1/`. The successor
+[42707391568](https://github.com/palatis3/room-in-the-cart/actions/runs/42707391568)
+is the single focused hosted observation for this change. Its outcome must be
+recorded separately; these local checks do not establish native success.
+
+The successor 42707391568 passed all263 early controls, observer helper admission
+and Release build/package/upload. Its separate consumer passed restored-product
+provenance and fresh-simulator setup, then stopped during startup. The ninth
+app-data container query hit its5-second deadline while the testmanager logs showed
+runner installation in progress, about19.55seconds after native dispatch. The
+original startup budget was120seconds. No test-case verdict, trace or required
+duration was established. Later custody/export failures follow that interruption.
+
+Producer and consumer diagnostic ZIPs are digest-verified, with52 verified consumer
+archive members. Originals and root verification are in
+`hosted-42707391568/`. This proves hosted build/transport and failure preservation;
+it does not answer the missing-metric question. A narrow startup-budget correction
+is being reviewed before another run; no baseline or cleanup waiver is approved.

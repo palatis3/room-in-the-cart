@@ -30,5 +30,10 @@
   "scope": "18 new shared-food cases plus19 existing shop and8 helper-review cases",
   "uiJourneyAcceptance": false,
   "fullCandidateAcceptance": false,
-  "deployment": false
+  "deployment": false,
+  "structuralChecks": {
+    "generatedProject": "passed",
+    "localization": "27 catalogs,4403 en/es entries,4011 literal source keys; format arguments match",
+    "humanLocalizationAcceptance": false
+  }
 }

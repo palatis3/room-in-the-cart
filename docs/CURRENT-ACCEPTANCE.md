@@ -2,6 +2,15 @@
 
 ## Current checkpoint — November 9, workflow and combined-candidate qualification
 
+The latest shared-food slice compiles under Xcode27.1 and passes45 native model
+regressions,122 client-package tests (3 expected integration skips),569 backend
+offline tests (1 expected database-only skip), and285 PostgreSQL tests (3 optional
+browser skips). These are scoped passes, not a complete combined release run.
+Quote/item, request Add/Link and changed-meal editors still need graph-aware saves;
+UI journeys and mixed-device acceptance remain open.
+[Native proof](evidence/native/shared-food-manual-flow-20261109/README.md),
+[backend proof](evidence/service/shared-demand-adoption-20261109/README.md).
+
 The latest workflow update passes 457 offline source checks, including the existing
 queue contracts. Native shards report test-suite time separately from post-test
 observer work and retain distinct retry evidence. The earlier build/native-wire
@@ -73,9 +82,13 @@ Corrected run 42700832046 at 506fef51 passed all 227 controls on GitHub, then
 rejected the hosted xcodebuild file hash before compilation. The observed hash was
 not retained. Failure-time identity reporting is now fixed and covered by 16 new
 regressions; both complete local profiles pass 243 checks and workflow lint passes.
-Hosted retention verification and identity review are next. The separate
-producer/consumer and original required metrics remain. Actual hosted build/transport
-and any baseline decision remain unproven.
+Hosted retention verification and static identity review now pass. Exact reviewed
+hosted tool admission is committed at 8f58b7f4; both isolated complete local
+profiles pass 263 controls. Run42707391568 passed the observer helper and Release producer build/upload.
+Its consumer stopped at an early container lookup timeout during runner installation.
+No selected-case verdict or measurements were established. The separate
+producer/consumer and original required metrics remain; native observation,
+performance baseline and combined acceptance are still unproven.
 [Prepared workflow](evidence/ci/hosted-scroll-observation-20261109/README.md).
 The earlier diagnostic workflow update passed 438 offline checks and 17 native
 queue-definition checks; the later follow-through total is recorded above. Its

@@ -19,6 +19,12 @@ tests while `tsc` is still replacing `dist` files. Bind the source and compiled
 output hashes to the finished attempt, and serialize source changes, builds and
 dependent tests. Independent read-only reviews can continue in parallel.
 
+When reusing DerivedData, select the exact test plan produced by the completed
+build and bind its hash. An older plan for another architecture may share the same
+SDK version. Preserve test class names when assembling focused selectors, then
+verify each selector against the compiled inventory before launching XCTest. A
+selection-only failure should reuse the verified build after correction.
+
 ### Validate the contract before escalating
 
 Before changing application behavior, compare the failure with the current API,
@@ -47,7 +53,9 @@ candidate still needs its own complete qualification.
 For the database suite, run
 `node --test service/tests/database-test-preflight.test.mjs` first, then use
 `npm --prefix service run test:integration` with the declared local fixture URLs.
-The harness preflight checks local disposable `ritc_` targets, consistent database
+The harness checks required Foundation routing assets before opening a connection.
+Missing or malformed external test data is a setup failure. It also checks local
+disposable `ritc_` targets, consistent database
 scope, actual bounded runtime/worker/verifier connections and the restricted app,
 worker, verifier and combined negative-test roles before auth DDL, migrations, journal provisioning or child tests. It does not
 create roles or repair permissions; use the explicit fixture setup in `ci.yml`.
