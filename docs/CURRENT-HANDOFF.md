@@ -34,10 +34,15 @@ for this focused work. Recheck remote state before publishing.
   It reuses the exact English-qualified products. The wrapper records the AX5
   readback and restores Large in `finally`; check its settings receipt before
   continuing. Poll that handle/exact PID; no concurrent local native work.
-- Helper `english_keyboard_review` is reviewing only source/log evidence for
-  the Spanish scrolling failure. No native/export work is delegated. Root/helper
-  reviewed all ten English screenshots and five after-action geometry records;
-  no blocking title/Done/value defect in that scope.
+- All helpers are terminal. Source/log review confirms Review succeeded and the
+  unknown-quantity text was found at121.60s. CTA discovery then used16upward and
+  eight downward drags, with no scroll-progress/bottom evidence. Underreach is
+  plausible, not proven; a missing app control is also unproven. Wait for the
+  failure screenshot before changing behavior or its test. Root/helper reviewed
+  all ten English screenshots and five geometry records without a blocking defect.
+- Latest app commit: `556d69e5`. Last live recheck:2026-11-09T02:01:09Z,
+  session60355/PID1814 still running (elapsed7m38s); no inspection output exists
+  for Spanish yet. Native finalization and Large restoration remain pending.
 
 ## Installed Dinner repair and next action
 
