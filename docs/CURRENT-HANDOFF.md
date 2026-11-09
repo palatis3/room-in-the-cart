@@ -15,7 +15,7 @@ contracts and B11 acceptance. Read [APP-BASELINE](product/APP-BASELINE.md), then
 Use `/Users/palatis/Room in the Cart`, branch `codex/parallel-ios-ci`, with explicit
 working directories. The ambient `spanish-done-diagnostic` worktree is stale.
 Publication target is `codex/combined-candidate-20261109`; before this update its
-verified head was `1f189975adbaca5117730b0fbed5a57b85569b42`. Recheck current Git
+verified head was `79ea8c03c21f900d7eaa4db0ed2b92014404ac96`. Recheck current Git
 and run state before publishing. Draft PR1 is a separate older candidate.
 No complete combined regression or merge has passed.
 
@@ -47,21 +47,24 @@ still Xcode26.3/17C529 with iOS26.2/23C54; it cannot approve the new environment
 
 ## Current findings and next work
 
-1. **Hosted performance:** fresh-device run42598431187 at040ec583 is terminal
-   failure. Native1/1 and persisted500-row pickup pass; required scroll duration
-   remains absent from originalSQLite andJSON. Device/runtime identity is bound;
-   preservation and owned cleanup pass. Fresh device alone did not repair it.
-   [Exact result](evidence/native/fresh-performance-simulator-20261109/README.md).
-   Follow-up42611979729 atd3eb3ea is terminal failure: both producer/consumer
-   provenance gates pass, native1/1 passes119.078seconds, preserved store and owned
-   cleanup pass, but required Scroll_DraggingAndDeceleration.duration remains
-   missing. Bounded artifact review is complete under hosted-42611979729.
-   [Exact outcome and timing caveat](evidence/native/verified-performance-artifacts-20261109/README.md).
-   Declared checker-library reference is readable producer/missing consumer
-   pre-setup; loaded-process state and postboot availability remain unknown.
-   No unchanged retry. The provenance gate passed409offline checks and17queue nodes.
-   [Implementation proof](evidence/native/performance-plan-provenance-20261109/README.md).
-   Do not retry an unchanged native experiment.
+Latest follow-ups at79ea8c03 are terminal; no local native process or hosted run
+remains active. [Exact outcomes and retained proof](evidence/native/diagnostic-followthrough-20261109/README.md).
+Local corrected-SDK Spanish minimum-OS test failed197.227seconds/native65/strict1;
+full xcodebuild finalized naturally836.511seconds. AppSIGSEGV is proven, but no
+fresh stack was recovered because crash reporting produced no saved report.
+Root owns the next bounded debugger diagnostic; no debugger has attached yet.
+
+1. **Hosted performance:** run42620394385 at79ea8c03 is terminal failure.
+   Native1/1 passes115.850seconds, store500/500/0/revision3 and owned cleanup pass;
+   required scroll duration remains absent (three memory series x5 only).
+   Producer/consumer provenance passes. The declared checker reference is readable
+   producer but missing consumer both before and after simulator setup. This rules
+   out the timing uncertainty, not the loaded-process state or metric cause.
+   `.build/HostedPerformanceAfterSetupNov09/monitor/` retains two digest-verified
+   small ZIPs and terminal report. No large product download. No unchanged retry,
+   checker disabling, plan rebinding or new baseline. Next distinguish effective
+   runtime loading or verify the consumer runtime's corresponding library before
+   any reviewed plan change. Prior42611979729 and42598431187 remain preserved.
 2. **Local performance:** both original Release launch and scroll have complete
    required metrics on Xcode27.1/iOS27.0; hosted omissions are not universal removal.
    Hitches remain unavailable. Local host27.2 differs from hosted27.0.1.
@@ -96,7 +99,7 @@ plus a stable Question identifier. Fixture instrumentation observes every comman
 attempt, including rejected sends, without claiming pending-operation cancellation.
 Nine compiler warning sites are corrected without changing synchronization behavior.
 
-Current frozen source is positive-r5:
+The clarification-qualified source is positive-r5:
 `2f880895b40c37e3662f83ffedae2ae0d0f45169857f9669cdcd0f8f7a63b84f`.
 Its contributor build and bundle check pass in7.061seconds. The full largest-text
 light diagnostic passes93.660seconds; separate on-failure positive qualification
@@ -126,12 +129,13 @@ The ten-source-file allowlist plus planner patch is installed byte-for-byte;
 canonical CoreDomain fixes are preserved. All409offline tests and17queue checks
 pass after integration and the after-setup provenance workflow addition.
 [Compact product proof](evidence/native/clarification-contrast-fix-20261109/README.md).
-Combined native inputs have manifest
+At that integration, combined native inputs had manifest
 `f9d4f7717b3b19967be7f24466b36c2c31973ba14361e47f4b4c37d4ceb80ba6`;
 full combined CI remains outstanding. F02 native/SQLite now passes as recorded below.
-Next performance question is unchanged library availability after setup; the
-new separate receipt is installed but not yet observed in a hosted run. No rebinding,
-checker disabling or baseline weakening is justified by the preboot discrepancy.
+The separate after-setup receipt now confirms the declared reference remains
+missing. Effective runtime loading and the current consumer's corresponding
+library remain unverified; see the newest performance finding above. No checker
+disabling or baseline weakening is justified by this filesystem discrepancy.
 
 ## Source-removal acceptance follow-up
 
@@ -178,14 +182,23 @@ No Swift compiler warnings were observed. AppIntents extraction and signed
 extension stripping warnings remain retained; do not claim a warning-free build.
 CI-VALIDATION now documents target-scoped SDK selection for future local work.
 
-Astra verified that the five archived R4 package products used SDK27.0 and match
-R4/build/products.json. This justifies one full minimum-OS qualification with the
-new products, not a claim that SDKROOT caused the XCTest strcmp crash. Next
-question: does the original full Spanish Dinner journey still fail when correctly
-linked? Use iPhoneSE3/iOS17.0/21A328/D420C2CA-0E73-4213-9B96-1EB62EB061F6,
-Spanish es_US, light/Large, original selector and720/900second allowances. Keep
-strict assertions and warning checks; explicitly record diagnostic policy.
-Recheck device/runtime identity and preserve the first terminal result.
+Astra verified the five archived R4 package products used SDK27.0 and match
+R4/build/products.json. The justified corrected-product qualification has now run
+on iPhoneSE3/iOS17.0/21A328/D420C2CA-0E73-4213-9B96-1EB62EB061F6, Spanish es_US,
+light/Large, full original selector and720/900allowances. It still fails: appPID67561
+SIGSEGV11 at12:53:28.964Z, then app-not-running XCTest assertion. Source/products
+and original result unchanged. The on-failure run, strict failure,159attachments,
+968diagnostic files and compact positive OS events are preserved in
+`.build/MinimumOSCorrectSDKNov09/r1/`. Relevant app output is110MB of AX diagnostics;
+its volume alone does not prove cause. No new app stack was recovered.
+
+Host ReportCrash logs show interrupted service connections, missing post-reporting
+data and no saved app report; they do not establish a reporter crash. The prior
+XCTest strcmp mechanism therefore remains unconfirmed for this new fault.
+Next is the reviewed diagnostic-only LLDB first-fault capture plan in
+`.build/MinimumOSCorrectSDKNov09/r1/NEXT.md`. Bind exact owned-device executable,
+PID/UID/starttime/UUID; no name-only attach, activity-log suppression, expression
+execution or OS security changes. Debugger runs cannot qualify acceptance.
 R4/preservation/source is not exact R4 source: do not use it as such without
 manifest verification. Old product hashes were independently verified.
 

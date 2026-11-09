@@ -2,6 +2,13 @@
 
 ## Current checkpoint — November 9, workflow and combined-candidate qualification
 
+Corrected-SDK minimum-OS qualification remains failed: the app exited with
+SIGSEGV on the full Spanish iOS17.0 journey, and failed crash reporting left no
+fresh app stack. Hosted42620394385 passes native scroll but still lacks its
+required duration; the declared checker path is missing before and after setup.
+No new performance baseline or full combined acceptance. Both first results are
+terminal and preserved. [Diagnostic follow-through](evidence/native/diagnostic-followthrough-20261109/README.md).
+
 The ordinary F02 Dinner-removal journey and actual saved SQLite now pass together
 on the corrected SDK27.1 build, including Cancel, Apply and restart. The existing
 private-pickup recovery control also passes. The new UI regression is installed
