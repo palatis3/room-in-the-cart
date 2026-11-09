@@ -51,6 +51,27 @@ class FeedbackTests(unittest.TestCase):
         skipped = dict(JOB, conclusion='skipped')
         self.assertIsNone(summarize(RUN, [skipped])['jobs'][0]['execution_seconds'])
 
+    def test_compact_waits_are_ranked_bounded_and_exclude_skipped_or_unstarted_jobs(self):
+        jobs = [dict(JOB, id=index, name=f'Wait {index}',
+                     started_at=f'2026-11-08T00:{index:02d}:00Z',
+                     completed_at=f'2026-11-08T00:{index + 1:02d}:00Z') for index in range(1, 8)]
+        jobs += [dict(JOB, id=8, name='Skipped', conclusion='skipped',
+                      started_at='2026-11-08T01:00:00Z'),
+                 dict(JOB, id=9, name='Queued', status='queued', conclusion=None, started_at=None),
+                 dict(JOB, id=10, name='No delay', started_at=JOB['created_at'])]
+        text = render_text({'runs': [summarize(RUN, jobs)], 'active_run_count': 1,
+                            'possible_duplicate_runs': []})
+        waits = [line.strip() for line in text.splitlines() if 'm before start |' in line]
+        self.assertEqual(waits, [f'{index:.1f}m before start | Wait {index}'
+                                 for index in range(7, 2, -1)])
+        self.assertIn('dependencies and scheduling, not pure runner queue time', text)
+        self.assertIn('Queued: queued', text)
+
+    def test_compact_wait_section_absent_without_measured_positive_waits(self):
+        report = summarize(RUN, [dict(JOB, started_at=None)])
+        text = render_text({'runs': [report], 'active_run_count': 0, 'possible_duplicate_runs': []})
+        self.assertNotIn('Longest time before jobs started', text)
+
     def test_paginated_jobs_and_terminal_cache_are_bound_to_attempt_and_source(self):
         with tempfile.TemporaryDirectory() as directory:
             api = GitHub('gh', 'example/app', Path(directory))

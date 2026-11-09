@@ -255,7 +255,9 @@ class PerformanceProvenanceWorkflowTests(unittest.TestCase):
         native = consumer.index('      - name: Run one Release performance case')
         self.assertLess(setup, after); self.assertLess(after, native)
         self.assertIn('scripts/prepare_ios_performance_simulator.py', consumer[setup:after])
-        after_gate = consumer[after:native]
+        observation = consumer.index('      - name: Observe selected-runtime checker identity')
+        self.assertLess(after, observation); self.assertLess(observation, native)
+        after_gate = consumer[after:observation]
         self.assertIn('timeout-minutes: 2', after_gate)
         self.assertNotIn('if:', after_gate)  # Success-only: never describe failed setup as after-setup.
         self.assertNotIn('continue-on-error', after_gate)

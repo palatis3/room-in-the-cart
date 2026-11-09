@@ -121,6 +121,14 @@ def render_text(payload):
                 if job['slowest_steps']:
                     step = job['slowest_steps'][0]
                     lines.append(f"    longest step: {step['seconds'] / 60:.1f}m | {step['name']}")
+        waiting = sorted((job for job in run['jobs']
+                          if job.get('conclusion') != 'skipped' and
+                          job.get('pre_start_seconds') is not None and job['pre_start_seconds'] > 0),
+                         key=lambda job: job['pre_start_seconds'], reverse=True)[:5]
+        if waiting:
+            lines.append('Longest time before jobs started (dependencies and scheduling, not pure runner queue time):')
+            for job in waiting:
+                lines.append(f"  {job['pre_start_seconds'] / 60:.1f}m before start | {job['name']}")
     for group in payload['possible_duplicate_runs']:
         lines.append('Possible active duplicates; compare scopes: ' + ', '.join(map(str, group)))
     lines += ['', 'Counts cover this query only. Focused passes do not establish release acceptance.',

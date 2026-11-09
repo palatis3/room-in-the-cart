@@ -37,8 +37,12 @@ critical-path improvements justify them within the existing five slots.
 
 The compact report lists every unsuccessful or unfinished job, including skipped
 and cancelled jobs with no failed step. It includes the five longest execution
-windows and their longest steps. These are triage hints, not a critical-path
-calculation or a count of distinct bugs. Omit `--format text` for complete JSON.
+windows and their longest steps, plus the five longest measured delays before
+jobs started. These delays include dependency and scheduling waits, not just
+runner queues; skipped jobs and jobs without a start timestamp do not enter
+that ranking. Compare waiting with execution before changing slot allocation.
+These are triage hints, not a critical-path calculation or a count of distinct
+bugs. Omit `--format text` for complete JSON.
 Neither format dispatches work or downloads logs.
 
 Before changing shard allocation, compare like-for-like full batches: elapsed
@@ -529,6 +533,24 @@ The later receipt still observes filesystem availability, not loaded libraries.
 Do not rebind a plan solely because its preboot reference was missing. Both
 receipts remain in the existing artifact; no job, test or baseline rule changes.
 [Observed discrepancy and limits](evidence/native/verified-performance-artifacts-20261109/README.md).
+
+`observe_runtime_checker.py` separately observes the selected simulator runtime's
+literal `libMainThreadChecker.dylib`: size, SHA256 and arm64 Mach-O UUID. The
+existing capability-only scope can collect this without compilation or XCTest.
+After normal consumer setup, it also binds the successful provenance receipt and
+rechecks the unchanged plan hash before comparing the selected-runtime bytes
+with the producer's declared checker. Both scopes retain `runtime-checker.json`
+in their existing artifact. No extra job or native slot is added.
+
+Keep three questions separate: whether the plan's declared path exists, whether
+the selected runtime contains matching library bytes, and whether the test host
+actually loaded that library. This observer answers only the second question;
+`loadedState` stays `unknown`. The declared insertion is in the test-host
+`TestingEnvironmentVariables` scope, not the UI target app's environment.
+Matching bytes do not explain missing measurements or authorize plan rebinding,
+checker disabling or a new performance baseline. A malformed identity or plan
+binding fails the observer; a missing or different library remains an explicit
+diagnostic observation requiring investigation.
 
 ### Fresh-simulator performance pilot
 

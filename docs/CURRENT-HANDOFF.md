@@ -15,7 +15,7 @@ contracts and B11 acceptance. Read [APP-BASELINE](product/APP-BASELINE.md), then
 Use `/Users/palatis/Room in the Cart`, branch `codex/parallel-ios-ci`, with explicit
 working directories. The ambient `spanish-done-diagnostic` worktree is stale.
 Publication target is `codex/combined-candidate-20261109`; before this update its
-verified head was `79ea8c03c21f900d7eaa4db0ed2b92014404ac96`. Recheck current Git
+verified head was `1ec0f92f58a3f0b6ba3a5b854707fd9570ab4c43`. Recheck current Git
 and run state before publishing. Draft PR1 is a separate older candidate.
 No complete combined regression or merge has passed.
 
@@ -39,6 +39,17 @@ competing local native processes or mutate a candidate while it is executing.
   before adding shards; the last full batch used 91.22% of five-slot capacity.
 - Retain originals once; commit compact reports with verified links and hashes.
 - Track merge and App Store requirements separately in [RELEASE-EXECUTION](RELEASE-EXECUTION.md).
+
+The latest [workflow follow-through](evidence/native/workflow-policy-followthrough-20261109/README.md)
+adds a compact ranking of measured pre-start delays and a selected-runtime checker
+observer in existing performance scopes. It adds no jobs or native slots.
+Use capability-only collection to inspect the corresponding runtime library
+before another build; matching bytes still do not prove test-host loading.
+Hosted execution of that new observer is pending. Disk currently reports about
+13GiB available; avoid unnecessary downloads and duplicated raw evidence.
+All431 offline checks and workflow validation of17 native job definitions pass
+for this update. The existing full-release preflight correctly rejects the still
+unapproved27.1 performance profile. No new full regression was dispatched.
 
 Primary CI is Xcode27.1/27A9275 on `xcode-27`, iPhone17 arm64, iOS27.0; observed
 runtime build24A434. Swift CodeQL remains the required macOS15/Xcode26.3 exception.
@@ -69,8 +80,10 @@ Root owns the next bounded debugger diagnostic; no debugger has attached yet.
    required metrics on Xcode27.1/iOS27.0; hosted omissions are not universal removal.
    Hitches remain unavailable. Local host27.2 differs from hosted27.0.1.
    [Proof and limitations](evidence/native/local-performance-metrics-20261109/README.md).
-3. **Minimum iOS:** the supply focus correction is installed. Full Spanish17.0/17.5
-   journeys remain failed in XCTest's logging callback/quarantine path. A reduced
+3. **Minimum iOS:** the supply focus correction is installed. Earlier full
+   Spanish17.0/17.5 failures implicated XCTest's logging callback/quarantine path;
+   the newest corrected-SDK17.0 run proves SIGSEGV but has no recovered stack.
+   Do not assign that newest fault the earlier mechanism without evidence. A reduced
    reproducer is nonreproducing, not acceptance. Apple support ranges include the
    current configuration; reviewed release notes did not establish a remedy.
    Two preserved17.5 IPS reports also show null x0 at strcmp, with x1 resolving
@@ -134,7 +147,8 @@ At that integration, combined native inputs had manifest
 full combined CI remains outstanding. F02 native/SQLite now passes as recorded below.
 The separate after-setup receipt now confirms the declared reference remains
 missing. Effective runtime loading and the current consumer's corresponding
-library remain unverified; see the newest performance finding above. No checker
+   library remain unverified; the new no-build observer is ready for the latter
+   question, not yet hosted evidence. No checker
 disabling or baseline weakening is justified by this filesystem discrepancy.
 
 ## Source-removal acceptance follow-up
