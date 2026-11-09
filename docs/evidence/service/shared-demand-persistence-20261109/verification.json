@@ -1,0 +1,53 @@
+{
+  "sourceFiles": 14,
+  "canonicalDistUnchanged": true,
+  "canonicalDistFiles": 128,
+  "typescriptSourceMatchesCleanR7Build": true,
+  "typescriptInputs": 63,
+  "fullOffline": {
+    "pass": 527,
+    "fail": 0,
+    "skip": "billing PostgreSQL case requires DB; covered by real integration",
+    "proof": "regression-r2/offline.log"
+  },
+  "fullPostgres": {
+    "pass": 281,
+    "fail": 0,
+    "skip": "existing optional real-browser cases",
+    "proof": "regression-r3/tests-1.log"
+  },
+  "focusedDemandPostgres": 21,
+  "pureDomain": 54,
+  "runtimeQueryBudget": {
+    "sources": 2000,
+    "adoption": 58,
+    "unchangedReview": 59,
+    "bound": 120
+  },
+  "noHostedDeployment": true,
+  "noNativeExecution": true,
+  "ownedPostgresStopped": true,
+  "rootVerification": {
+    "canonicalSourceFiles": 14,
+    "canonicalSourceBytesSizesModesMatch": true,
+    "finalTypeScriptInputs": 63,
+    "finalDatabaseInputs": 112,
+    "frozenPackagePayloads": 21,
+    "retainedProofFiles": 7
+  },
+  "retainedRoot": ".build/SharedDemandGraphNov09",
+  "proofSha256": {
+    "persistence-r7/build.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "persistence-r7/input-manifest.json": "7c94df7110e316a288ed82f884ea1f7571fb9a976e1b38d773e54918564455ba",
+    "persistence-r5/pure-tests-2.log": "6c598474c84a7f4050af3f383a97b02692348f8c1047c4186589a0e88895d87f",
+    "regression-r2/offline.log": "d2de18e5f03686e57f6c6286aada8c390efc0673b12356622974da039a773b9d",
+    "regression-r3/tests-1.log": "016e890de312c7954758cbbfee92d4881c807c4364e3416787e55a135998a943",
+    "regression-r3/pg-run-1.json": "951de91cf5e15c089da505c091a1fcd1425c66561c6b5ee910e962364d738b84",
+    "regression-r3/input-manifest.json": "a7d14872120feca4df92237ca18c7f80d776aaf0bcf3595d88ed4f589278eb33"
+  },
+  "packageSha256": {
+    "source-manifest.json": "ac5af5e819408428cfd2d9d11bb2a4703d5bd7ea4ec4a40f903e1b4ffbcebf7a",
+    "implementation.patch": "08bab7a1b8aeccd31a2ef10fb38d117b6c0d16158d06a29e8dbbb320d579fc42",
+    "manifest.json": "64ee37f266f7c2cec4b8527fa77bf78c27668e2a5eab1e2d724df5e1439daf5f"
+  }
+}

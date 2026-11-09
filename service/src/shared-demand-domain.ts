@@ -59,14 +59,21 @@ export function validateDemandGraph(input:unknown):DemandGraph {
  for(const c of g.contributions){requireThat(lines.has(c.lineId),'unknown_line');if(active(c))requireThat(lines.get(c.lineId)!.trashedAt===null,'trashed_source_line');
   unique(c.exclusions,'duplicate_exclusion');unique(c.contains,'duplicate_product_fact');requireThat(!c.exclusions.some(x=>c.contains.includes(x)),'excluded_product');
   if(c.quantity)checkQuantity(c.quantity);
+  unique((c.sourceExclusions??[]).map(e=>JSON.stringify([e.occurrenceId,e.ingredientId,e.label])),'duplicate_source_exclusion');
+  for(const e of c.sourceExclusions??[]){
+   const occurrence=c.source.kind==='meal'?c.source.occurrenceId:c.source.kind==='reservation'?c.source.originOccurrenceId:null;
+   requireThat(occurrence!==null&&e.occurrenceId===occurrence&&(c.source.kind==='meal'||c.source.kind==='reservation')&&(e.ingredientId===null||e.ingredientId===c.source.ingredientId),'invalid_exclusion_origin');
+   if(e.resolution.kind==='mapped'){unique(e.resolution.tags,'duplicate_exclusion');requireThat(e.resolution.tags.every(tag=>c.exclusions.includes(tag)),'missing_mapped_exclusion');}
+  }
   if(c.source.kind==='request')provenance.push('request/'+c.source.requestId);
   if(c.source.kind==='import')provenance.push('import/'+c.source.batchId+'/'+c.source.entryId);
   if(c.source.kind==='meal') {requireThat((c.source.groupId===null)===(c.source.bindingId===null),'invalid_group_binding');provenance.push('meal/'+c.source.occurrenceId+'/'+c.source.ingredientId+'/'+c.source.groupId);}
-  if(c.source.kind==='reservation')provenance.push('reservation/'+c.source.reservationId);
+  if(c.source.kind==='reservation'){requireThat(c.source.bindingId===null||c.source.groupId!==null,'invalid_group_binding');provenance.push('reservation/'+c.source.reservationId);}
  }
  unique(provenance,'duplicate_source');unique(g.edges.filter(e=>e.kind==='duplicate').map(e=>e.demandId+'/'+e.supplyId),'duplicate_edge');
  for(const e of g.edges){const d=sources.get(e.demandId),s=sources.get(e.supplyId);
   requireThat(d&&s&&d.id!==s.id&&active(d)&&active(s)&&d.lineId===s.lineId,'invalid_edge_reference');sameProduct(d,s);
+  requireThat(![d,s].some(c=>c.sourceExclusions?.some(e=>e.resolution.kind==='unresolved')),'unresolved_exclusion');
   requireThat(d.quantity&&s.quantity,'unknown_edge_quantity');checkQuantity(e.quantity);
   const unit=lines.get(d.lineId)!.unit;
   const needed=convertDemandQuantity(d.quantity,unit),used=convertDemandQuantity(e.quantity,unit),available=convertDemandQuantity(s.quantity,unit);
@@ -116,14 +123,15 @@ function lineTotal(g:DemandGraph,id:string):{amount:{numerator:string;denominato
  return {amount:{numerator:total.n.toString(),denominator:total.d.toString()},unit};
 }
 export function demandLineQuantity(graph:unknown,lineId:string){const g=validateDemandGraph(graph);requireThat(g.lines.some(l=>l.id===lineId),'unknown_line');return lineTotal(g,lineId);}
-function conserve(before:DemandGraph,after:DemandGraph,restoring:ReadonlySet<string>=new Set()){
+function conserve(before:DemandGraph,after:DemandGraph,restoring:ReadonlySet<string>=new Set(),quantifying:ReadonlySet<string>=new Set()){
  for(const old of before.contributions){const next=after.contributions.find(c=>c.id===old.id);requireThat(next,'source_hard_delete');
-  requireThat(eq(next.source,old.source),'source_identity_changed');
+  const bindingResolved=quantifying.has(old.id)&&old.source.kind==='reservation'&&next.source.kind==='reservation'&&old.source.bindingId===null&&next.source.bindingId!==null&&eq({...next.source,bindingId:null},old.source);
+  requireThat(eq(next.source,old.source)||bindingResolved,'source_identity_changed');
   requireThat(next.originalText===old.originalText,'original_source_text_changed');
   if(old.removedAt!==null&&!restoring.has(old.id))requireThat(eq(next,old),'tombstone_changed');
   if(active(old)&&old.source.kind==='reservation'){
    requireThat(active(next)&&next.productKey===old.productKey&&next.productName===old.productName&&eq(next.contains,old.contains)&&old.exclusions.every(e=>next.exclusions.includes(e)),'protected_share_changed');
-   if(old.quantity===null)requireThat(eq(next.quantity,old.quantity),'protected_unknown_changed');
+   if(old.quantity===null)requireThat(eq(next.quantity,old.quantity)||(quantifying.has(old.id)&&next.quantity!==null),'protected_unknown_changed');
    else {const q=next.quantity&&convertDemandQuantity(next.quantity,old.quantity.unit);requireThat(q&&cmp(q,rat(old.quantity.amount))>=0n,'protected_quantity_reduced');}
   }
  }
@@ -134,8 +142,8 @@ function repairId(operation:string,demand:string,supplyId:string){
 }
 function delta<T extends {id:string}>(before:T[],after:T[]){const ids=new Set([...before,...after].map(x=>x.id));return [...ids].flatMap(id=>{
  const b=before.find(x=>x.id===id)??null,a=after.find(x=>x.id===id)??null;return eq(a,b)?[]:[{id,before:b,after:a}];});}
-function finish(before:DemandGraph,next:DemandGraph,operationId:string,restoring:ReadonlySet<string>=new Set()){
- requireThat(before.revision<2147483647,'revision_overflow');next.revision=before.revision+1;conserve(before,next,restoring);next=validateDemandGraph(next);
+function finish(before:DemandGraph,next:DemandGraph,operationId:string,restoring:ReadonlySet<string>=new Set(),quantifying:ReadonlySet<string>=new Set()){
+ requireThat(before.revision<2147483647,'revision_overflow');next.revision=before.revision+1;conserve(before,next,restoring,quantifying);next=validateDemandGraph(next);
  const receipt=sharedDemandReceiptSchema.parse({schemaVersion:1,operationId,householdId:before.householdId,shopId:before.shopId,baseRevision:before.revision,resultRevision:next.revision,
   lines:delta(before.lines,next.lines),contributions:delta(before.contributions,next.contributions),edges:delta(before.edges,next.edges)});
  requireThat(receipt.lines.length+receipt.contributions.length+receipt.edges.length>0,'no_change');return {graph:next,receipt};
@@ -143,6 +151,8 @@ function finish(before:DemandGraph,next:DemandGraph,operationId:string,restoring
 export function applyDemandChange(input:unknown,change:unknown){
  const g=validateDemandGraph(input),c=sharedDemandChangeSchema.parse(change),next=structuredClone(g);
  requireThat(c.householdId===g.householdId&&c.shopId===g.shopId,'wrong_scope');requireThat(c.baseRevision===g.revision,'stale_revision');
+ unique(c.quantifyReservationIds??[]);const quantifying=new Set(c.quantifyReservationIds??[]);
+ for(const id of quantifying){const old=g.contributions.find(x=>x.id===id),next=c.contributions.find(x=>x.id===id);requireThat(old&&active(old)&&old.source.kind==='reservation'&&old.quantity===null&&next?.quantity!==null&&next?.quantity!==undefined,'invalid_reservation_quantification');}
  const touched=[...c.lines,...c.contributions,...c.edges].map(x=>x.id);unique(touched);unique(c.removeSourceIds);unique(c.removeEdgeIds);
  requireThat(!c.removeSourceIds.some(id=>touched.includes(id))&&!c.removeEdgeIds.some(id=>touched.includes(id)),'conflicting_change');
  function upsert<T extends {id:string}>(rows:T[],updates:T[]){for(const row of updates){const index=rows.findIndex(x=>x.id===row.id);
@@ -170,15 +180,16 @@ export function applyDemandChange(input:unknown,change:unknown){
   }
  }
  for(const line of next.lines)if(line.trashedAt===null&&!next.contributions.some(s=>active(s)&&s.lineId===line.id))line.trashedAt=c.at;
- return finish(g,next,c.operationId);
+ return finish(g,next,c.operationId,new Set(),quantifying);
 }
 /** Receipt must come from trusted persisted reducer output, never an unchecked client body.
  * Authorization, operation replay, preview expiry and durable atomicity belong to the future API. */
 export function undoDemandChange(input:unknown,storedReceipt:unknown,command:unknown){
  const g=validateDemandGraph(input),r=sharedDemandReceiptSchema.parse(storedReceipt),c=sharedDemandChangeSchema.parse(command);
- requireThat(c.lines.length+c.contributions.length+c.edges.length+c.removeSourceIds.length+c.removeEdgeIds.length===0,'undo_has_changes');
+ requireThat(c.lines.length+c.contributions.length+c.edges.length+c.removeSourceIds.length+c.removeEdgeIds.length+(c.quantifyReservationIds?.length??0)===0,'undo_has_changes');
  requireThat(c.householdId===g.householdId&&c.shopId===g.shopId&&r.householdId===g.householdId&&r.shopId===g.shopId,'wrong_scope');
  requireThat(c.baseRevision===g.revision&&r.resultRevision<=g.revision&&r.resultRevision===r.baseRevision+1,'stale_revision');
+ requireThat(!r.contributions.some(x=>x.before?.source.kind==='reservation'&&x.before.quantity===null&&x.after?.quantity!==null),'protected_quantification_undo');
  const next=structuredClone(g);
  for(const rows of [r.lines,r.contributions,r.edges]){unique(rows.map(x=>x.id));for(const row of rows)requireThat((row.before===null||row.before.id===row.id)&&(row.after===null||row.after.id===row.id),'invalid_receipt');}
  function restore<T extends {id:string}>(rows:T[],changes:{id:string;before:T|null;after:T|null}[],created:(row:T)=>T|null):T[]{

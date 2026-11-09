@@ -1,3 +1,5 @@
+import {SharedDemandError} from './shared-demand-domain.js';
+import {previewDemand,readDemand} from './shared-demand-repository.js';
 import { readConfirmedOrder } from './order-amendments.js';
 import {rankSharedFallbacks,requireAssistance} from './shared-fallback-options.js';
 import {previewCurrentPantryObservation,readSharedRecoveryCoverage} from './shared-recovery-basis.js';
@@ -42,6 +44,7 @@ async function body(req:IncomingMessage,maxBytes=65_536):Promise<unknown>{try{re
 // A disclosed recipe may be larger than an ordinary command. Keep the
 // command's byte limit for every other kind, including JSON whitespace.
 async function householdBody(req:IncomingMessage,path:string) {
+  if(path.endsWith('/demand/previews')) return body(req,1_800_000);
   if(path.endsWith('/accepted-fallbacks')) return body(req,540_000);
   if(path.endsWith('/meal-recovery/options') || path.endsWith('/meal-recovery/preview')) return body(req,1_800_000);
   if(path!=='/commands') return body(req);
@@ -389,6 +392,8 @@ export function createHTTPServer(options:HTTPOptions) {
           if(tail==='/meal-plan/planner'&&method==='PUT')return mealMoves.grant(ctx,shopId,grantChange.parse(payload));
           if(tail==='/meal-plan/dismissals'&&method==='POST')return mealMoves.dismiss(ctx,shopId,dismissMove.parse(payload));
           if(tail==='/meal-plan/proposals'&&method==='POST')return mealMoves.propose(ctx,shopId,moveRequest.parse(payload));
+          if(tail==='/demand'&&method==='GET')return readDemand(repository,ctx,await repository.shop(ctx,shopId));
+          if(tail==='/demand/previews'&&method==='POST')return previewDemand(repository,ctx,await repository.shop(ctx,shopId),payload);
           if(tail===''&&method==='GET')return repository.adultShop(ctx,shopId);
           if(tail==='/deferred-requests'&&method==='GET'){const cursor=url.searchParams.get('cursor');if(cursor!==null)uuid.parse(cursor);return repository.deferredRequests(ctx,shopId,cursor);}
           if(tail==='/inbox'&&method==='GET'){const cursor=url.searchParams.get('cursor');if(cursor)uuid.parse(cursor);return repository.requests(ctx,cursor,shopId);}
@@ -401,6 +406,7 @@ export function createHTTPServer(options:HTTPOptions) {
       let safe:ServiceError;
       if(error instanceof ServiceError)safe=error;
       else if(error instanceof z.ZodError)safe=invalid();
+      else if(error instanceof SharedDemandError)safe=new ServiceError(422,error.code,'Review the shared source quantities and allocation choices.');
       else if(error&&typeof error==='object'&&'code'in error&&error.code==='23505')safe=new ServiceError(409,'identity_conflict','Refresh current records before retrying.');
       else if(error&&typeof error==='object'&&'code'in error&&['23503','23514'].includes(String(error.code)))safe=new ServiceError(422,'invalid_candidate','Review linked records and required values.');
       else {safe=new ServiceError(503,'storage_unavailable','Keep your draft and retry the same operation key.');if(!res.destroyed&&!res.headersSent)res.setHeader('Retry-After','1');}

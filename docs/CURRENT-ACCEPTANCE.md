@@ -15,10 +15,15 @@ It checks cancellation, one committed removal despite a restored-operation retry
 preserved meals/manual basket lines/history, and a separately authorized planner’s
 fresh restricted projection. This does not complete shared F02 UI or typed manual
 quantity merging. [Scoped proof](evidence/native/shared-meal-removal-wire-20261109/README.md).
-The new pure shared-demand contract/reducer passes 50 focused tests and isolated
-TypeScript compilation. Exact quantity conservation, exclusion checks and protected
-source removal are implemented; database/API/native route integration remains open.
-[Domain proof](evidence/service/shared-demand-domain-20261109/README.md).
+The shared-demand contract/reducer and local persistence/API boundary now pass 527
+offline and 281 PostgreSQL tests, including 54 pure domain and 21 shared-demand
+database cases. Exact quantities, reviewed pack capacity, protected reservations,
+atomic replay, tenant isolation and actual privacy restore/replay are covered.
+One database-only offline skip and three existing optional browser skips remain
+explicit. Native DTO/UI, real HTTPS mixed-client acceptance, scoped downstream
+projections and shared export/import remain open. Migration043 is not deployed.
+[Persistence proof and limits](evidence/service/shared-demand-persistence-20261109/README.md),
+[original domain proof](evidence/service/shared-demand-domain-20261109/README.md).
 
 The standalone simulator collector now has qualified readiness, normal exits and
 exact expected events, with 13 offline controls. This enables a scoped app capture

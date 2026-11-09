@@ -17,11 +17,12 @@ const source=z.discriminatedUnion('kind',[
  z.object({kind:z.literal('request'),requestId:id,appliedRequestRevision:z.number().int().min(0).max(2147483647)}).strict(),
  z.object({kind:z.literal('import'),batchId:id,entryId:id}).strict(),
  z.object({kind:z.literal('meal'),occurrenceId:id,ingredientId:id,groupId:id.nullable(),bindingId:id.nullable()}).strict(),
- z.object({kind:z.literal('reservation'),reservationId:id,purpose:text,originOccurrenceId:id.nullable(),ingredientId:id,groupId:id,bindingId:id}).strict(),
+ z.object({kind:z.literal('reservation'),reservationId:id,purpose:text,originOccurrenceId:id.nullable(),ingredientId:id,groupId:id.nullable(),bindingId:id.nullable()}).strict(),
 ]);
 export const demandLineSchema=z.object({id,name:text,unit:demandUnitSchema,originalOrder:z.number().int().min(0).max(10000),trashedAt:time.nullable()}).strict();
+export const sourceExclusionSchema=z.object({occurrenceId:id,ingredientId:id.nullable(),label:z.string().min(1).max(240),resolution:z.discriminatedUnion('kind',[z.object({kind:z.literal('unresolved')}).strict(),z.object({kind:z.literal('mapped'),tags:z.array(tag).min(1).max(60),confirmedAt:time}).strict()])}).strict();
 export const demandContributionSchema=z.object({id,lineId:id,source,productKey:tag.nullable(),productName:text,
- originalText:text,quantity:demandQuantitySchema.nullable(),exclusions:z.array(tag).max(60),contains:z.array(tag).max(60),removedAt:time.nullable()}).strict();
+ originalText:text,quantity:demandQuantitySchema.nullable(),sourceExclusions:z.array(sourceExclusionSchema).max(40).optional(),exclusions:z.array(tag).max(60),contains:z.array(tag).max(60),removedAt:time.nullable()}).strict();
 export const demandEdgeSchema=z.object({id,kind:z.enum(['duplicate','withinExisting']),demandId:id,supplyId:id,quantity:demandQuantitySchema,
  confirmation:z.object({productMatchConfirmed:z.literal(true),confirmedAt:time,evidence:text}).strict()}).strict();
 const revision=z.number().int().min(0).max(2147483647);
@@ -31,7 +32,7 @@ export const sharedDemandGraphSchema=z.object({schemaVersion:z.literal(1),conver
 /** Upserts have stable IDs; removed sources are tombstones, never hard deletes. */
 export const sharedDemandChangeSchema=z.object({schemaVersion:z.literal(1),operationId:id,householdId:id,shopId:id,baseRevision:revision,at:time,
  lines:z.array(demandLineSchema).max(200),contributions:z.array(demandContributionSchema).max(2000),edges:z.array(demandEdgeSchema).max(4000),
- removeSourceIds:z.array(id).max(2000),removeEdgeIds:z.array(id).max(4000)}).strict();
+ removeSourceIds:z.array(id).max(2000),removeEdgeIds:z.array(id).max(4000),quantifyReservationIds:z.array(id).max(2000).optional()}).strict();
 function delta<T extends z.ZodType>(value:T){return z.object({id,before:value.nullable(),after:value.nullable()}).strict();}
 export const sharedDemandReceiptSchema=z.object({schemaVersion:z.literal(1),operationId:id,householdId:id,shopId:id,
  baseRevision:revision,resultRevision:revision,lines:z.array(delta(demandLineSchema)).max(200),
@@ -48,3 +49,5 @@ export function sharedDemandJSONSchema(){return {$schema:'https://json-schema.or
  title:'Shared draft demand graph v1', $ref:'#/$defs/graph',
  $defs:{graph:z.toJSONSchema(sharedDemandGraphSchema),change:z.toJSONSchema(sharedDemandChangeSchema),receipt:z.toJSONSchema(sharedDemandReceiptSchema)},
  'x-semantic-validation':'shared-demand-domain.validateDemandGraph/applyDemandChange; reduced Int64 rationals, identity/reference/cycle, product/exclusion, capacity and protected conservation checks remain mandatory.'};}
+
+export const demandReviewSchema=z.object({previewId:id,previewDigest:z.string().regex(/^[0-9a-f]{64}$/)}).strict();

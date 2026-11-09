@@ -11,8 +11,8 @@ and all earlier native preservation paths remain at
 
 Canonical checkout: `/Users/palatis/Room in the Cart`, local branch
 `codex/parallel-ios-ci`. Publish to `codex/combined-candidate-20261109`; verify its
-current remote head and run state before dispatch. The previous remote checkpoint
-was cb426276; subsequent local commits include 5d5676a7 and e56d184b.
+current remote head and run state before dispatch. The last verified remote
+checkpoint before this update was 2e3ef60e.
 The ambient `spanish-done-diagnostic` worktree is stale. Draft PR1 is an older
 candidate. No full combined qualification or merge has passed.
 
@@ -82,11 +82,26 @@ aggregate exclusion checks, protected-source conservation and conflict-aware Und
 50 focused tests and isolated TypeScript compilation pass. This is pure domain
 work, not F01/F02 route completion, database integration or deployment.
 [Proof](evidence/service/shared-demand-domain-20261109/README.md).
-Next persistence plan: `.build/SharedDemandGraphNov09/persistence-plan-r1/PLAN.md`,
-SHA256 `4c031973b4c9407e2df6cd6040325a2897cfa1028fcf6356f8d1a0ea0f8d9f79`.
-It requires atomic/replay-bound migration043, all writer fences, source provenance,
-privacy erasure and restore protection. No 043 implementation or deployment yet;
-staging authorization remains through041.
+The following local persistence boundary is now implemented: migration043,
+atomic/replay-bound graph previews and Apply, legacy writer fences, server-derived
+provenance, privacy erasure and actual backup restore/replay protection. Final
+verification passes 527 offline tests (one database-only skip) and 281 PostgreSQL
+tests (three existing optional browser skips). Root independently verified all 14
+owned source files and all 112 final database-run inputs against the frozen
+manifests. A 2,000-source graph uses 58/59 runtime queries for adoption/review.
+The original 26-input plan and failed attempts remain retained; native DTO/UI,
+mixed-client HTTPS, downstream projections and shared export/import acceptance
+remain open. [Proof and limits](evidence/service/shared-demand-persistence-20261109/README.md).
+Migration043 is not deployed; staging authorization remains through041.
+
+New local diagnostic rules in CI-VALIDATION require exact SDK/architecture helper
+typechecks before full compilation and export-only recovery after normal collection.
+The latest app-signpost attempt reused verified source/products and completed both
+XCTest and its 60-second trace normally. Only the XML export exceeded its 8 MiB cap;
+the original failed receipt remains unchanged. Root audit confirms terminal native
+processes and stable artifacts. Export recovery and independent strict/fixture/
+measurement inspection are pending under `.build/AppSignpostCaptureNov09/`.
+This historical diagnostic does not qualify the combined app or hosted baseline.
 
 ## New verified changes
 

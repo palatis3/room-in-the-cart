@@ -1,3 +1,4 @@
+import {demandReviewSchema} from './shared-demand-contracts.js';
 import { recoveryPreviewSchema, pantryBodies, deliveryReservationBody, deliveryMatchBody, deliverySourceBody, deliveryArrivalBody, deliveryUsableBody } from './recovery-contracts.js';
 import { z } from 'zod';
 import { sharedMealSchema } from './shared-meal-planning.js';
@@ -89,7 +90,7 @@ export const bodySchemas = {
   'cookCopy.save':cookCopySaveBody, 'cookCopy.markSent':cookCopySendBody,
   'delivery.reserve': deliveryReservationBody, 'delivery.match': deliveryMatchBody, 'delivery.register': deliverySourceBody, 'delivery.arrival': deliveryArrivalBody, 'delivery.usable': deliveryUsableBody,
   'shop.create': z.object({ quote: quoteSchema, lines: z.array(lineSchema).max(200) }).strict(),
-  'shop.patch': z.object({ quote: quoteSchema, lines: z.array(lineSchema).max(200), mealEdit: mealEdit.optional(), reviewedStoreBasisRevision: z.number().int().positive().optional() }).strict(),
+  'shop.patch': z.object({ quote: quoteSchema, lines: z.array(lineSchema).max(200), mealEdit: mealEdit.optional(), demandReview:demandReviewSchema.optional(), reviewedStoreBasisRevision: z.number().int().positive().optional() }).strict(),
   'shop.freeze': empty, 'shop.reopen': empty,
   'shop.reportPlaced': z.object({ occurredAt: timestamp }).strict(),
   'shop.reconcileReport': z.object({ reportId: uuid, choice: z.enum(['apply','reject']) }).strict(),
@@ -101,7 +102,7 @@ export const bodySchemas = {
   'request.confirmPurchase': z.object({requestId:uuid.toLowerCase(),lineId:uuid.toLowerCase(),placedRevision:copyRevision,
     outcome:z.enum(['bought','notBought','unknown'])}).strict(),
   'request.clarify': z.object({ requestId: uuid, question: z.string().trim().min(1).max(300) }).strict(),
-  'request.apply': z.object({ requestId: uuid, previewId: uuid, acceptOverage: z.boolean(), acceptUnknown: z.boolean() }).strict(),
+  'request.apply': z.object({ requestId: uuid, previewId: uuid, acceptOverage: z.boolean(), acceptUnknown: z.boolean(), demandReview:demandReviewSchema.optional() }).strict(),
 };
 export type Envelope = z.infer<typeof envelopeSchema>;
 export type Decision = z.infer<typeof decisionSchema>;

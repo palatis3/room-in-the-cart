@@ -1,3 +1,4 @@
+import {applyDemand,demandOperation,demandSnapshotRef,assertDemandReplay,assertPriceOnly,assertDemandPlacement} from './shared-demand-repository.js';
 import { recordOrderAmendment } from './order-amendments.js';
 import { carryRequest, deferredRequests, reauthorizeCarry } from './deferred-requests.js';
 import type {BillingService} from './billing/service.js';
@@ -17,7 +18,7 @@ import { checkout } from './checkout.js';
 export interface AuthContext { identity:VerifiedIdentity; deviceToken?:string; trustedDeviceId?:string;viewGrantId?:string;selectedShopId?:string;historicalReportShopId?:string }
 export interface Member { member_id:string; kind:'adult'|'child'; organizer:boolean; can_contribute:boolean; alias:string; state:string }
 export interface Context { db:Transaction; householdId:string; member:Member; deviceId:string; now:Date;viewGrantId?:string;selectedShopId?:string }
-export interface Shop { household_id:string;shop_id:string;shopper_id:string;authority_epoch:number;revision:number;phase:string;quote:QuoteBasis;frozen_revision:number|null;placed_revision:number|null;supply_revision:number;recovery_revision?:number;store_basis_revision?:number|null;store_review_required?:boolean;confirmed_order_erased?:boolean }
+export interface Shop { household_id:string;shop_id:string;shopper_id:string;authority_epoch:number;revision:number;phase:string;quote:QuoteBasis;frozen_revision:number|null;placed_revision:number|null;supply_revision:number;recovery_revision?:number;store_basis_revision?:number|null;store_review_required?:boolean;confirmed_order_erased?:boolean;demand_revision?:number|null;demand_review_required?:boolean }
 interface RequestRow { carried_forward?:boolean;from_previous_shop?:boolean; purchase_outcome?:RequestPurchaseOutcome|null;request_id:string;author_id:string;shop_id:string;original_item:string;own_quantity:string|null;revision:number;authored_at:Date;received_at:Date;route:'current'|'next';status:OwnRequest['status'];clarification:string|null;followup_to:string|null }
 const editable=(r:RequestRow)=>!r.carried_forward && (r.status==='pending'||r.status==='clarified');
 export function ownRequest(r:RequestRow):OwnRequest {
@@ -254,7 +255,8 @@ export class HouseholdRepository {
   private async snapshot(ctx:Context,shopId:string,operationId:string,purpose:string) {
     const shop=await this.shop(ctx,shopId),lines=await this.lines(ctx,shopId);
     const mealRefs=(await this.meals(ctx,shopId)).map(({occurrenceId,revision})=>({occurrenceId,revision}));
-    const snapshot={shopId,...(mealRefs.length ? {mealRefs} : {}),revision:shop.revision,phase:shop.phase,quote:shop.quote,lines,budget:checkout(lines,shop.quote)};
+    const demand=await demandSnapshotRef(ctx,shop,purpose==='reopen');
+    const snapshot={shopId,...(demand?{demand}:{}),...(mealRefs.length ? {mealRefs} : {}),revision:shop.revision,phase:shop.phase,quote:shop.quote,lines,budget:checkout(lines,shop.quote)};
     await ctx.db.query('INSERT INTO ritc.shop_snapshot(household_id,shop_id,revision,purpose,snapshot,digest,operation_id) VALUES($1,$2,$3,$4,$5,$6,$7)',[ctx.householdId,shopId,shop.revision,purpose,snapshot,digest(snapshot),operationId]);
   }
   private validateQuote(quote:QuoteBasis,now:Date) {
@@ -302,7 +304,7 @@ export class HouseholdRepository {
       VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,[ctx.householdId,previewId,shopId,ctx.member.member_id,r.request_id,shop.revision,r.revision,shop.authority_epoch,input.decision,fingerprint,expiresAt]);
     return{previewId,expiresAt:expiresAt.toISOString(),shopRevision:shop.revision,authorityEpoch:shop.authority_epoch,requestRevision:r.revision,choice:input.decision.choice,...facts};
   }
-  async execute(ctx:Context,command:Envelope,billing?:BillingService,queueGrant?:string):Promise<unknown> {
+  async execute(ctx:Context,command:Envelope,billing?:BillingService,queueGrant?:string,internalPriceOnly=false):Promise<unknown> {
     if(ctx.selectedShopId && command.shopId!==ctx.selectedShopId) throw unavailable();
     const window=(await ctx.db.query('SELECT 1 FROM ritc.replay_window WHERE household_id=$1 AND window_id=$2 AND member_id=$3 AND device_id=$4 AND revoked_at IS NULL AND expires_at>$5',[ctx.householdId,command.replayWindow,ctx.member.member_id,ctx.deviceId,ctx.now])).rowCount;
     const queueEnded=()=>new ServiceError(409,'queue_permission_ended','Review current received requests before sending a new request.');
@@ -316,6 +318,7 @@ export class HouseholdRepository {
       // Reauthorize the original scope before returning anything about a prior result.
       if(prior.response_scope==='shopper'){
         const shop=await this.shop(ctx,prior.shop_id);this.requireShopper(ctx,shop);
+        await assertDemandReplay(ctx,shop,prior.operation_id);
         if(prior.kind==='amendment.recordResponse' && (prior.response?.authorityEpoch!==shop.authority_epoch || shop.confirmed_order_erased || !(await ctx.db.query(
           'SELECT 1 FROM ritc.order_amendment WHERE household_id=$1 AND shop_id=$2 AND operation_id=$3',[ctx.householdId,shop.shop_id,prior.operation_id])).rowCount)) throw refresh();
         if(prior.kind==='request.carry')await reauthorizeCarry(ctx,shop,this.carryNotice,prior.operation_id);
@@ -354,7 +357,7 @@ export class HouseholdRepository {
     if(queueGrant && queueAuthority?.requestQueueGrant!==queueGrant) {
       throw queueEnded();
     }
-    const operationId=randomUUID();
+    const operationId=await demandOperation(ctx,command);
     let scope:'own'|'shopper'|'organizer'|'reporter'='shopper';
     let response:unknown;
     if(command.kind==='shop.create') {
@@ -386,7 +389,7 @@ export class HouseholdRepository {
         response=await this.receipt(ctx,command,operationId,'transferred');
       }else {
         this.requireShopper(ctx,shop);this.checkBase(shop,command.base);
-        response=await this.shopperCommand(ctx,shop,command,operationId,billing);
+        response=await this.shopperCommand(ctx,shop,command,operationId,billing,internalPriceOnly);
       }
     }
     await ctx.db.query(`INSERT INTO ritc.operation(household_id,operation_id,actor_id,device_id,client_key,window_id,kind,shop_id,payload_digest,response_scope)
@@ -418,7 +421,7 @@ export class HouseholdRepository {
     }
     return{operationId,kind:c.kind,request:ownRequest(await this.request(ctx,id,shop.shop_id,true))};
   }
-  private async shopperCommand(ctx:Context,shop:Shop,c:Envelope,operationId:string,billing?:BillingService) {
+  private async shopperCommand(ctx:Context,shop:Shop,c:Envelope,operationId:string,billing?:BillingService,internalPriceOnly=false) {
     if(c.kind==='mealRecovery.apply') {
       const applied=await recordSharedRecovery(ctx,shop,c.body,operationId,billing);
       return {...await this.receipt(ctx,c,operationId,'recorded'),...applied};
@@ -454,6 +457,8 @@ export class HouseholdRepository {
     if(c.kind==='request.apply')return this.apply(ctx,shop,c,operationId);
     if(c.kind==='shop.patch') {
       this.requireDraft(shop);const b=bodySchemas['shop.patch'].parse(c.body);this.validateQuote(b.quote,ctx.now);checkout(b.lines,b.quote);
+      if(b.demandReview)await applyDemand(this,ctx,shop,c,operationId);
+      else if(shop.demand_revision){if(!internalPriceOnly)throw new ServiceError(409,'demand_review_required','Review shared source quantities before changing this shop.');await assertPriceOnly(this,ctx,shop,c);}
       if(b.mealEdit) {
         const {occurrenceId,meal}=b.mealEdit;
         const current=await this.meals(ctx,shop.shop_id);
@@ -498,6 +503,7 @@ export class HouseholdRepository {
     }
     if(c.kind==='shop.freeze') {
       this.requireDraft(shop);
+      if(shop.demand_review_required)throw new ServiceError(409,'demand_review_required','Review shared source quantities before freezing this shop.');
       if (shop.store_review_required) {
         throw new ServiceError(409,'store_review_required','Review current item prices and charges after changing stores.');
       }
@@ -514,6 +520,7 @@ export class HouseholdRepository {
       const r=(await ctx.db.query('SELECT * FROM ritc.placement_report WHERE household_id=$1 AND report_id=$2 AND shop_id=$3',[ctx.householdId,b.reportId,shop.shop_id])).rows[0];
       if(!r)throw unavailable();if(r.state!=='pending_reconciliation')throw new ServiceError(409,'already_handled','Review the recorded report.');
       if(b.choice==='apply') {
+        await assertDemandPlacement(ctx,shop,r.reported_revision);
         if(shop.phase!=='frozen'||shop.frozen_revision!==r.reported_revision)throw new ServiceError(409,'reconciliation_required','The report differs from the frozen basket. Preserve both records for review.');
         await this.place(ctx,shop,operationId,r.reported_revision);
       }
@@ -545,6 +552,7 @@ export class HouseholdRepository {
     const p=(await ctx.db.query('SELECT * FROM ritc.preview WHERE household_id=$1 AND preview_id=$2 AND actor_id=$3 AND shop_id=$4 AND request_id=$5',[ctx.householdId,b.previewId,ctx.member.member_id,shop.shop_id,r.request_id])).rows[0];
     if(!p)throw unavailable();
     const decision=decisionSchema.parse(p.decision);
+    if(b.demandReview&&decision.choice!=='add'&&decision.choice!=='link')throw new ServiceError(409,'demand_action_changed','Use the exact reviewed source action.');
     if(r.carried_forward||!editable(r)&&!(r.status==='deferred'&&('promote'in decision)&&decision.promote))throw new ServiceError(409,'already_handled','Review the current request.');
     if(r.revision!==c.base.requestRevision||p.request_revision!==r.revision||p.shop_revision!==shop.revision||p.authority_epoch!==shop.authority_epoch||p.expires_at<=ctx.now)throw new ServiceError(409,'stale_preview','Review a fresh preview.');
     const lines=await this.lines(ctx,shop.shop_id);
@@ -554,6 +562,8 @@ export class HouseholdRepository {
     if(facts.requiresUnknownAcceptance&&!b.acceptUnknown)throw new ServiceError(409,'unknown_acceptance_required','Review the missing costs or defer.');
     if(decision.choice==='add'||decision.choice==='link') {
       this.requireDraft(shop);
+      if(b.demandReview)await applyDemand(this,ctx,shop,c,operationId);
+      else if(shop.demand_revision)throw new ServiceError(409,'demand_review_required','Review the request quantity against current shared sources.');
       if(Date.parse(shop.quote.expiresAt)<=ctx.now.getTime())throw new ServiceError(409,'stale_quote','Record a fresh quote.');
       if(r.route==='next'&&!decision.promote)throw new ServiceError(409,'next_shop','Review promotion into this shop.');
       // Recheck the request author's current consent when turning their data into a basket change.
@@ -570,6 +580,7 @@ export class HouseholdRepository {
     return this.receipt(ctx,c,operationId,status,{requestId:r.request_id,requestRevision:r.revision+1});
   }
   private async place(ctx:Context,shop:Shop,operationId:string,snapshotRevision:number) {
+    await assertDemandPlacement(ctx,shop,snapshotRevision);
     await ctx.db.query("UPDATE ritc.shop SET phase='placed',placed_revision=$3,revision=revision+1 WHERE household_id=$1 AND shop_id=$2",[ctx.householdId,shop.shop_id,snapshotRevision]);
     await ctx.db.query("UPDATE ritc.request SET route='next',revision=revision+1 WHERE household_id=$1 AND shop_id=$2 AND status IN('pending','clarified') AND route='current'",[ctx.householdId,shop.shop_id]);
     await this.snapshot(ctx,shop.shop_id,operationId,'placed');
@@ -581,6 +592,7 @@ export class HouseholdRepository {
     if(!authority.rowCount)throw unavailable();
     const snapshot=await ctx.db.query('SELECT 1 FROM ritc.shop_snapshot WHERE household_id=$1 AND shop_id=$2 AND revision=$3',[ctx.householdId,shop.shop_id,c.base.shopRevision]);
     if(!snapshot.rowCount)throw new ServiceError(409,'stale_base','Identify the actual dated snapshot that was sent.');
+    if(shop.demand_review_required)throw new ServiceError(409,'demand_review_required','Review shared source quantities before recording placement.');
     if(Date.parse(b.occurredAt)>ctx.now.getTime()+5*60_000)throw invalid();
     const current=shop.shopper_id===ctx.member.member_id&&shop.authority_epoch===c.base.authorityEpoch&&shop.revision===c.base.shopRevision&&(shop.phase==='draft'||shop.phase==='frozen');
     const reportId=randomUUID();

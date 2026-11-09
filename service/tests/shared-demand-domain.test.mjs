@@ -235,3 +235,25 @@ test('confirmed cross-dimension basis requires timestamped explicit evidence',()
  const q={...quantity(1,'cup'),confirmedConversion:{sourceUnit:'cup',targetUnit:'gram',targetAmountPerSourceUnit:{numerator:'120',denominator:'1'},sourceNote:'Reviewed density'}};
  assert.throws(()=>convert(q,'gram'));q.confirmedConversion.confirmedAt=at;assert.deepEqual(convert(q,'gram'),{n:120n,d:1n});
 });
+test('unresolved exact inherited restriction remains representable but cannot authorize allocations',()=>{
+ const g=graph();g.contributions[1].sourceExclusions=[{occurrenceId:g.contributions[1].source.occurrenceId,ingredientId:g.contributions[1].source.ingredientId,label:'No sesame',resolution:{kind:'unresolved'}}];
+ fails(()=>validate(g),'unresolved_exclusion');g.edges=g.edges.filter(e=>e.demandId!==g.contributions[1].id);assert.doesNotThrow(()=>validate(g));assert.equal(total(g,id(1)).amount.numerator,'18');
+});
+test('explicit timestamped mapping must preserve exact label identity and enforce mapped tags',()=>{
+ const g=graph(),c=g.contributions[1];c.sourceExclusions=[{occurrenceId:c.source.occurrenceId,ingredientId:c.source.ingredientId,label:'No sesame',resolution:{kind:'mapped',tags:['sesame'],confirmedAt:at}}];
+ fails(()=>validate(g),'missing_mapped_exclusion');c.exclusions.push('sesame');assert.doesNotThrow(()=>validate(g));g.contributions[0].contains.push('sesame');fails(()=>validate(g),'excluded_product');
+});
+test('source restriction identity cannot be forged by another contribution or source kind',()=>{
+ const g=graph(),source=g.contributions[1],entry={occurrenceId:source.source.occurrenceId,ingredientId:source.source.ingredientId,label:'No sesame',resolution:{kind:'unresolved'}};
+ g.edges=[];source.sourceExclusions=[entry];assert.doesNotThrow(()=>validate(g));entry.ingredientId=null;assert.doesNotThrow(()=>validate(g));
+ entry.occurrenceId=id(999);fails(()=>validate(g),'invalid_exclusion_origin');entry.occurrenceId=source.source.occurrenceId;entry.ingredientId=id(998);fails(()=>validate(g),'invalid_exclusion_origin');
+ source.sourceExclusions=[];for(const kind of [{kind:'manual'},{kind:'import',batchId:id(700),entryId:id(701)},{kind:'request',requestId:id(702),appliedRequestRevision:1}]){const other=structuredClone(g);other.contributions[0].source=kind;other.contributions[0].sourceExclusions=[{...entry,ingredientId:null}];fails(()=>validate(other),'invalid_exclusion_origin');}
+});
+test('protected unknown becomes quantified only through explicit same-reservation intent and cannot discard its accepted minimum via Undo',()=>{
+ const g=graph();g.edges=g.edges.filter(e=>e.demandId!==id(14));const unknown=g.contributions[3];unknown.quantity=null;unknown.source.bindingId=null;
+ const next={...structuredClone(unknown),quantity:quantity(2),source:{...unknown.source,bindingId:id(999)}};
+ fails(()=>apply(g,change(g,{contributions:[next]})),'source_identity_changed');
+ const result=apply(g,change(g,{contributions:[next],quantifyReservationIds:[unknown.id]}));assert.equal(result.graph.contributions.length,4);assert.equal(result.graph.contributions[3].id,unknown.id);
+ fails(()=>undo(result.graph,result.receipt,change(result.graph,{},301)),'protected_quantification_undo');
+ fails(()=>apply(g,change(g,{contributions:[{...next,source:{...next.source,groupId:id(998)}}],quantifyReservationIds:[unknown.id]})),'source_identity_changed');
+});

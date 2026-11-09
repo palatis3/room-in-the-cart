@@ -1,0 +1,75 @@
+{
+  "base": "2e3ef60e95d3a3f18db67522edc2031a0882c9ca",
+  "files": {
+    "service/migrations/043_shared_demand_graph.sql": {
+      "sha256": "113d5da0a767ff3549779ff7e43427aab80dea383448b8a70e01d4e05f133c66",
+      "bytes": 9250,
+      "mode": "0o644"
+    },
+    "service/src/contracts.ts": {
+      "sha256": "5d393d390ea318dc4c4c646c04573abeb03d4bf56677beecc321c72ccc9481b5",
+      "bytes": 12033,
+      "mode": "0o644"
+    },
+    "service/src/http.ts": {
+      "sha256": "84143089ed71abb972f061b5b8f0117f764f310f72bb1fd03be5fbd40d2cdee5",
+      "bytes": 40450,
+      "mode": "0o644"
+    },
+    "service/src/repository.ts": {
+      "sha256": "e1c4e7ace9196f6dc77e6d8e9877f115ecc987bb585f82a97410291af455aabd",
+      "bytes": 63165,
+      "mode": "0o644"
+    },
+    "service/src/shared-demand-contracts.ts": {
+      "sha256": "f409f1bfa4ab5524a2790a33c67fdbc2f3553994291ad365fa190461a4294e13",
+      "bytes": 5350,
+      "mode": "0o644"
+    },
+    "service/src/shared-demand-domain.ts": {
+      "sha256": "2be6276f31281b266276c4e2970fca5065364f3b1e31a988a9725c1718dfa98f",
+      "bytes": 19776,
+      "mode": "0o644"
+    },
+    "service/src/shared-demand-repository.ts": {
+      "sha256": "cb1c03a1eaeb2dfb8c9084b55b6f84076b83d371748232d7d968278450e024cf",
+      "bytes": 23543,
+      "mode": "0o644"
+    },
+    "service/src/shared-store-quotes.ts": {
+      "sha256": "77ed0145ef2e5415163d696c46aefc3665e3a26cc022ff7dafc8032d778863b0",
+      "bytes": 18500,
+      "mode": "0o644"
+    },
+    "service/tests/shared-demand-domain.test.mjs": {
+      "sha256": "ea2e89a285210cdf4f75fb4019864b0d89495a1070c11193c8070ee70dcdad57",
+      "bytes": 22807,
+      "mode": "0o644"
+    },
+    "service/tests/shared-demand-restore.integration.mjs": {
+      "sha256": "1815fab465064ff1ba27268ac77abcedf2284ec6f7d2ee1fe2ca32098022eb77",
+      "bytes": 14968,
+      "mode": "0o644"
+    },
+    "service/tests/shared-demand.integration.mjs": {
+      "sha256": "a6924eb5edaa47b0adb52ce182beb7613987d9bfc5b97d72696e92fda99622be",
+      "bytes": 42303,
+      "mode": "0o644"
+    },
+    "shared/contracts/shared-demand-api.md": {
+      "sha256": "9ee23db402921855ca7bad47a868713d04b2df0a46ebe65d2bd30648092b3639",
+      "bytes": 4820,
+      "mode": "0o644"
+    },
+    "shared/contracts/shared-demand.schema.json": {
+      "sha256": "910762e9253e86e6fc56711d98b6beef8ae94b7c05dba393259218a04a2cdb93",
+      "bytes": 129353,
+      "mode": "0o644"
+    },
+    "shared/fixtures/shared-demand/source-exclusions-v1.json": {
+      "sha256": "1b0b6d4c899bcd4c7fa67c42c7f94e5ee2f0cb7337a61a08b9461026f23a0506",
+      "bytes": 1050,
+      "mode": "0o644"
+    }
+  }
+}
