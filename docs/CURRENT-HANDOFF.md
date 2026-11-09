@@ -1,5 +1,25 @@
 # Room in the Cart current handoff
 
+## November 8, workflow efficiency changes in progress; center diagnostic terminal
+
+Current user request is to remove CI bottlenecks. Canonical workflow edits split
+fixture consumers by build profile and share one LocalStoreKit build across both
+locale jobs; review, static checks and isolated hosted verification are in progress.
+Do not push a full PR batch just to test these changes. No canonical app changes.
+
+The already-running restored-Amount center diagnostic completed: native65,
+strict1, zero idle misses, case223.682s. Restored Amount center dismissal passed;
+the later ideaSupplyYield dismissal failed. This is diagnostic only, not 44-point
+qualification. Inspector ran once and is terminal; do not re-export it. Evidence
+and preservation are under `.build/EnglishKeyboardReviewNov08/native-done-restored-center-r1`.
+Source remains3a6a09c0; execution manifestf3e47bcd; root reviewed result metadata,
+not all newly exported screens. The prior symmetric AUTO and PLAIN top samples
+also failed; their immutable packages remain beside it. No candidate was installed.
+
+Speech helper finished scratch-only `CookBufferSpeechReviewNov08/render-only-r1`
+under `.build`, manifest0770a943. It remains uncompiled/unexecuted and needs root
+review before any native action. No speech or dinner work is running now.
+
 ## November 8, plain Done candidate terminal; review edge sampling
 
 Plain style compiled (native0/bundle0), changed Done's AX frame from68×36 to44×44,

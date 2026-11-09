@@ -38,7 +38,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     outputs:
-      test_matrix: ${{ steps.plan.outputs.matrix }}
+      contributor_matrix: ${{ steps.plan.outputs.contributor_matrix }}
+      dinner_matrix: ${{ steps.plan.outputs.dinner_matrix }}
       build_contributor: ${{ steps.plan.outputs.build_contributor }}
       build_dinner: ${{ steps.plan.outputs.build_dinner }}
     steps:
@@ -137,33 +138,29 @@ jobs:
       artifact: ${{ steps.upload.outputs.artifact-id }}
     steps: *fixture-build-steps
 
-  fixture-tests:
-    if: >-
-      always() && !cancelled() && needs.fixture-plan.result == 'success' &&
-      (needs.build-contributor.result == 'success' ||
-       (needs.fixture-plan.outputs.build_contributor == 'false' && needs.build-contributor.result == 'skipped')) &&
-      (needs.build-dinner.result == 'success' ||
-       (needs.fixture-plan.outputs.build_dinner == 'false' && needs.build-dinner.result == 'skipped'))
+  contributor-tests:
+    if: needs.fixture-plan.outputs.build_contributor == 'true'
     concurrency:
       group: ritc-macos-slot-${{ matrix.macos_slot }}
       queue: max
       cancel-in-progress: false
     name: Fixture (${{ matrix.shard }})
-    needs: [fixture-plan, build-contributor, build-dinner]
+    needs: [fixture-plan, build-contributor]
     runs-on: macos-15
     timeout-minutes: 55
     strategy:
       fail-fast: false
       max-parallel: 5
-      matrix: ${{ fromJSON(needs.fixture-plan.outputs.test_matrix) }}
+      matrix: ${{ fromJSON(needs.fixture-plan.outputs.contributor_matrix) }}
     env:
+      TEST_PRODUCTS_ARTIFACT: ${{ needs.build-contributor.outputs.artifact }}
       FIXTURE_PROFILE: ${{ matrix.profile }}
       TEST_SHARD: ${{ matrix.shard }}
-    steps:
+    steps: &fixture-test-steps
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
-          artifact-ids: ${{ matrix.profile == 'contributor' && needs.build-contributor.outputs.artifact || needs.build-dinner.outputs.artifact }}
+          artifact-ids: ${{ env.TEST_PRODUCTS_ARTIFACT }}
           path: .build/download
           merge-multiple: true
       - name: Restore matching fixture products and selector list
@@ -280,3 +277,35 @@ jobs:
             .build/test-plan/
           retention-days: 7
           if-no-files-found: ignore
+
+  dinner-tests:
+    if: needs.fixture-plan.outputs.build_dinner == 'true'
+    concurrency:
+      group: ritc-macos-slot-${{ matrix.macos_slot }}
+      queue: max
+      cancel-in-progress: false
+    name: Fixture (${{ matrix.shard }})
+    needs: [fixture-plan, build-dinner]
+    runs-on: macos-15
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix: ${{ fromJSON(needs.fixture-plan.outputs.dinner_matrix) }}
+    env:
+      TEST_PRODUCTS_ARTIFACT: ${{ needs.build-dinner.outputs.artifact }}
+      FIXTURE_PROFILE: ${{ matrix.profile }}
+      TEST_SHARD: ${{ matrix.shard }}
+    steps: *fixture-test-steps
+
+  fixture-gate:
+    name: Fixture gate
+    needs: [fixture-plan, build-contributor, build-dinner, contributor-tests, dinner-tests]
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      JOB_RESULTS: ${{ toJSON(needs) }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - run: python3 scripts/select_ios_fixture_work.py --check-results

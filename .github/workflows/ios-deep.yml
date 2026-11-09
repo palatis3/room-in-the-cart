@@ -65,7 +65,110 @@ jobs:
           include-hidden-files: true
           path: .build/sanitizer-results/
           retention-days: 7
+  storekit-plan:
+    name: Validate shared StoreKit test plan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Check both locale configurations and artifact workflow before macOS
+        run: |
+          python3 -m venv .build/storekit-workflow-venv
+          .build/storekit-workflow-venv/bin/pip install --require-hashes --only-binary=:all: -r scripts/ci_yaml_requirements.txt
+          .build/storekit-workflow-venv/bin/python scripts/test_storekit_workflow.py
+  storekit-build:
+    name: Build shared LocalStoreKit test products
+    needs: storekit-plan
+    concurrency:
+      group: ritc-macos-slot-2
+      queue: max
+      cancel-in-progress: false
+    runs-on: macos-15
+    timeout-minutes: 35
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+    outputs:
+      artifact: ${{ steps.upload.outputs['artifact-id'] }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Select iPhone
+        run: xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
+      - name: Build both LocalStoreKit configurations once
+        timeout-minutes: 30
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p .build
+          xcodebuild -version | tee .build/StoreKitToolchain.txt
+          xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart-LocalStoreKit \
+            -configuration Debug -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
+            -parallel-testing-enabled NO -jobs 2 -derivedDataPath .build/StoreKitDerivedData \
+            CODE_SIGN_IDENTITY=- build-for-testing 2>&1 | tee .build/StoreKitBuild.log
+      - name: Verify both compiled configurations and package shared products
+        id: storekit-inventory
+        shell: bash
+        run: |
+          python3 - <<'PYCODE'
+          import json, os, plistlib
+          from pathlib import Path
+          products = Path(".build/StoreKitDerivedData/Build/Products")
+          runs = list(products.glob("*.xctestrun"))
+          assert len(runs) == 1, "Expected exactly one LocalStoreKit xctestrun"
+          run = plistlib.loads(runs[0].read_bytes())
+          plan_path = Path("ios/Tests/LocalStoreKit.xctestplan")
+          plan = json.loads(plan_path.read_text())
+          expected = {row["name"]: row["options"] for row in plan["configurations"]}
+          configs = run["TestConfigurations"]
+          assert len(configs) == len(expected) == 2
+          assert {row["Name"] for row in configs} == set(expected)
+          for row in configs:
+              assert row.get("IsEnabled", True) is True
+              targets = row["TestTargets"]
+              assert len(targets) == 1
+              target = targets[0]
+              assert target["BlueprintName"] == "RoomInTheCartTests"
+              assert target["OnlyTestIdentifiers"] == ["StoreKitScenarioTests"]
+              assert not target.get("SkipTestIdentifiers")
+              assert target["TestHostPath"] == "__TESTROOT__/Debug-iphonesimulator/RoomInTheCart.app"
+              assert target["TestBundlePath"] == "__TESTHOST__/PlugIns/RoomInTheCartTests.xctest"
+              options = expected[row["Name"]]
+              assert target["TestLanguage"] == options["language"] and target["TestRegion"] == options["region"]
+              for entry in options["environmentVariableEntries"]:
+                  assert target["EnvironmentVariables"][entry["key"]] == entry["value"]
+          resource = products / "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/HouseholdLocalTesting.storekit"
+          assert resource.is_file(), "Local StoreKit resource must travel inside the test bundle"
+          selectors = Path("scripts/ios_storekit_test_selectors.txt")
+          names = selectors.read_text().splitlines()
+          assert len(names) == len(set(names)) == 15
+          inventory = {"commit": os.environ["GITHUB_SHA"], "configurations": sorted(expected),
+                       "xctestrun": runs[0].name, "expectedCountPerLocale": 15}
+          Path(".build/storekit-product-inventory.json").write_text(json.dumps(inventory, indent=2) + "\n")
+          PYCODE
+          tar -czf "$RUNNER_TEMP/storekit-test-products.tar.gz" \
+            -C .build/StoreKitDerivedData/Build Products \
+            -C "$GITHUB_WORKSPACE/.build" storekit-product-inventory.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        id: upload
+        with:
+          name: storekit-test-products-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/storekit-test-products.tar.gz
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: error
+      - name: Preserve StoreKit build evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: storekit-build-${{ github.run_attempt }}
+          include-hidden-files: true
+          path: |
+            .build/StoreKitBuild.log
+            .build/StoreKitToolchain.txt
+            .build/storekit-product-inventory.json
+          retention-days: 7
+          if-no-files-found: warn
   storekit:
+    needs: storekit-build
     name: storekit (${{ matrix.locale }}, ${{ matrix.configuration }})
     concurrency:
       group: ritc-macos-slot-${{ matrix.macos_slot }}
@@ -88,6 +191,29 @@ jobs:
       STOREKIT_CONFIGURATION: ${{ matrix.configuration }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          artifact-ids: ${{ needs.storekit-build.outputs.artifact }}
+          path: .build/storekit-download
+          merge-multiple: true
+      - name: Restore and verify exact shared StoreKit products
+        id: storekit-restore
+        shell: bash
+        run: |
+          mkdir -p .build/StoreKitDerivedData/Build
+          tar -xzf .build/storekit-download/storekit-test-products.tar.gz -C .build/StoreKitDerivedData/Build
+          mv .build/StoreKitDerivedData/Build/storekit-product-inventory.json .build/storekit-product-inventory.json
+          python3 - <<'PYCODE'
+          import json, os
+          from pathlib import Path
+          products = Path(".build/StoreKitDerivedData/Build/Products")
+          inventory = json.loads(Path(".build/storekit-product-inventory.json").read_text())
+          assert inventory["commit"] == os.environ["GITHUB_SHA"]
+          assert os.environ["STOREKIT_CONFIGURATION"] in inventory["configurations"]
+          assert inventory["expectedCountPerLocale"] == 15
+          runs = list(products.glob("*.xctestrun"))
+          assert len(runs) == 1 and runs[0].name == inventory["xctestrun"]
+          PYCODE
       - name: Select iPhone
         run: xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
       - name: Run purchase, restore, renewal and revocation scenarios
@@ -97,13 +223,15 @@ jobs:
           set -o pipefail
           mkdir -p .build
           python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"
-          xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart-LocalStoreKit \
-            -configuration Debug -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
+          test_runs=(.build/StoreKitDerivedData/Build/Products/*.xctestrun)
+          test "${#test_runs[@]}" -eq 1
+          test -f "${test_runs[0]}"
+          xcodebuild -xctestrun "${test_runs[0]}" -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
             -only-test-configuration "$STOREKIT_CONFIGURATION" -parallel-testing-enabled NO \
             -test-timeouts-enabled YES -default-test-execution-time-allowance 120 \
             -maximum-test-execution-time-allowance 120 -collect-test-diagnostics on-failure \
-            -derivedDataPath .build/StoreKitDerivedData -resultBundlePath .build/StoreKit.xcresult \
-            CODE_SIGN_IDENTITY=- test 2>&1 | tee .build/StoreKit.log
+            -resultBundlePath .build/StoreKit.xcresult \
+            test-without-building 2>&1 | tee .build/StoreKit.log
       - name: Export StoreKit results even after a failed scenario
         id: storekit-results
         if: always()
@@ -133,4 +261,24 @@ jobs:
             .build/storekit-tests.json
             .build/storekit-verification.txt
             .build/test-runtime-warnings.json
+            .build/storekit-product-inventory.json
           retention-days: 7
+  storekit-gate:
+    name: StoreKit build and both locales gate
+    needs: [storekit-plan, storekit-build, storekit]
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      JOB_RESULTS: ${{ toJSON(needs) }}
+    steps:
+      - name: Require shared build and both locale jobs to succeed
+        run: |
+          python3 - <<'PYCODE'
+          import json, os
+          jobs = json.loads(os.environ["JOB_RESULTS"])
+          assert set(jobs) == {"storekit-plan", "storekit-build", "storekit"}
+          failures = {name: job["result"] for name, job in jobs.items() if job["result"] != "success"}
+          if failures:
+              raise SystemExit(f"StoreKit checks did not pass: {failures}")
+          PYCODE

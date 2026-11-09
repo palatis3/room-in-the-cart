@@ -1,5 +1,24 @@
 # Local CI validation
 
+## Independent fixture pipelines and shared billing build
+
+Contributor and dinner fixture tests now wait only for their own profile build.
+The planner partitions the existing 17 rows without changing their test selectors,
+order within each profile, or assigned macOS slots. Both pipelines retain the
+same runner, timeouts, warning checks and Records privacy handling. A failed
+profile does not block evidence from the other profile; the final `Fixture gate`
+still fails unless every selected build and test job succeeds. Only a profile
+explicitly excluded by a focused manual selection may be skipped.
+
+Local StoreKit English and Spanish checks share one compiled test product. Their
+runtime language/storefront configurations and all 15 scenarios per language
+remain required. The shared build and the two consumers use the existing global
+five-slot limit; a shared build failure cannot pass the final billing gate.
+
+These changes remove a cross-profile wait and one duplicate StoreKit build.
+They do not establish a new full-suite duration: artifact transfer, simulator
+startup and actual job scheduling still need hosted measurement.
+
 ## Fast validation before macOS work
 
 Core macOS entry jobs now wait for `source-checks`: Swift packages, Release
@@ -120,6 +139,34 @@ Use one coordinator to own dispatches and the integration branch. Give each
 independent failure one investigation owner; helpers should return a patch and
 its evidence before overlapping files are installed. Monitoring should reuse
 the existing run ID rather than launch another copy.
+
+Keep the working loop small:
+
+1. Group failures by root cause before assigning helpers. One shared failure
+   should have one owner, even when it appears in several jobs.
+2. Run the affected cheap checks first, then one focused native diagnostic that
+   answers a written question. Reuse compatible local build products and preserve
+   the original failure. Avoid rebuilding unchanged products just to inspect logs.
+3. Use a development branch without an open PR for focused hosted diagnostics.
+   Record its exact commit, run ID, selected scope and next decision. Check for an
+   existing queued/running copy before dispatching another.
+4. If a run failed for an identified transient infrastructure reason, retry only
+   the affected job and its dependents at the same revision. A product failure
+   needs a fix, not repeated attempts until it turns green. Changed source needs
+   a new run; retained products are evidence only for their original revision.
+5. Combine independently verified fixes into one PR regression batch. Run the
+   unfiltered release gate on the final combined revision before distribution.
+
+After repeated experiments fail to distinguish the competing explanations,
+switch to a smaller reproducer or source-level investigation before another long
+journey. Add diagnostics only when they answer the current question. Update the
+handoff at a meaningful result or ownership change, and reuse downloaded artifacts
+instead of repeatedly exporting the same result bundle.
+
+GitHub supports [rerunning one job or failed jobs with their dependents](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/re-run-workflows-and-jobs).
+Keep workflow supersession enabled so a newer branch revision cancels its stale
+run; keep the shared macOS slot queues non-cancelling so unrelated jobs do not
+evict each other. See [GitHub concurrency behavior](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency).
 
 | Situation | Next work |
 | --- | --- |

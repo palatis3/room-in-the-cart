@@ -195,7 +195,7 @@ class OwnedSimulatorWorkflowTests(unittest.TestCase):
         from check_ci_workflows import parse_workflow
         root = Path(__file__).resolve().parents[1]
         pilots = [('ci.yml', 'ios-tests', 'ui-01'),
-                  ('ios-fixtures.yml', 'fixture-tests', 'contributor-balanced-01')]
+                  ('ios-fixtures.yml', 'contributor-tests', 'contributor-balanced-01')]
         with tempfile.TemporaryDirectory() as directory:
             folder = Path(directory)
             # Run the actual workflow shell with inert CLI replacements only.
@@ -232,7 +232,8 @@ class OwnedSimulatorWorkflowTests(unittest.TestCase):
     def test_only_execution_shards_opt_in_and_cleanup_precedes_receipt_upload(self):
         from check_ci_workflows import parse_workflow
         root = Path(__file__).resolve().parents[1]
-        expected = {('ci.yml', 'ios-tests'), ('ios-fixtures.yml', 'fixture-tests')}
+        expected = {('ci.yml', 'ios-tests'), ('ios-fixtures.yml', 'contributor-tests'),
+                    ('ios-fixtures.yml', 'dinner-tests')}
         observed = set()
         default_callers = set()
         for path in sorted((root / '.github/workflows').glob('*.yml')):

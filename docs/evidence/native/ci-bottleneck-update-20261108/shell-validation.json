@@ -1,0 +1,200 @@
+[
+  {
+    "workflow": "ios-fixtures.yml",
+    "job": "fixture-plan",
+    "step": "Validate fixture coverage and balanced contributor groups",
+    "exit": 0
+  },
+  {
+    "workflow": "ios-fixtures.yml",
+    "job": "build-contributor",
+    "step": "Record Xcode and select an iPhone simulator",
+    "exit": 0
+  },
+  {
+    "workflow": "ios-fixtures.yml",
+    "job": "build-contributor",
+    "step": "Build fixture app and UI tests for iPhone",
+    "exit": 0
+  },
+  {
+    "workflow": "ios-fixtures.yml",
+    "job": "build-contributor",
+    "step": "Enumerate compiled tests and package fixture products",
+    "exit": 0
+  },
+  {
+    "workflow": "ios-fixtures.yml",
+    "job": "build-dinner",
+    "step": "Record Xcode and select an iPhone simulator",
+    "exit": 0
+  },
+  {
+    "workflow": "ios-fixtures.yml",
+    "job": "build-dinner",
+    "step": "Build fixture app and UI tests for iPhone",
+    "exit": 0
+  },
+  {
+    "workflow": "ios-fixtures.yml",
+    "job": "build-dinner",
+    "step": "Enumerate compiled tests and package fixture products",
+    "exit": 0
+  },
+  {
+    "workflow": "ios-fixtures.yml",
+    "job": "contributor-tests",
+    "step": "Restore matching fixture products and selector list",
+    "exit": 0
+  },
+  {
+    "workflow": "ios-fixtures.yml",
+    "job": "contributor-tests",
+    "step": "Select iPhone simulator with owned-device pilot for contributor-balanced-01",
+    "exit": 0
+  },
+  {
+    "workflow": "ios-fixtures.yml",
+    "job": "contributor-tests",
+    "step": "Boot the iPhone simulator",
+    "exit": 0
+  },
+  {
+    "workflow": "ios-fixtures.yml",
+    "job": "contributor-tests",
+    "step": "Run selected fixture tests and require complete execution",
+    "exit": 0
+  },
+  {
+    "workflow": "ios-fixtures.yml",
+    "job": "contributor-tests",
+    "step": "Retain speech runtime diagnostics",
+    "exit": 0
+  },
+  {
+    "workflow": "ios-fixtures.yml",
+    "job": "contributor-tests",
+    "step": "Retain scoped cook confirmation diagnostics",
+    "exit": 0
+  },
+  {
+    "workflow": "ios-fixtures.yml",
+    "job": "contributor-tests",
+    "step": "Clean up only the owned simulator after result and diagnostic export",
+    "exit": 0
+  },
+  {
+    "workflow": "ios-fixtures.yml",
+    "job": "dinner-tests",
+    "step": "Restore matching fixture products and selector list",
+    "exit": 0
+  },
+  {
+    "workflow": "ios-fixtures.yml",
+    "job": "dinner-tests",
+    "step": "Select iPhone simulator with owned-device pilot for contributor-balanced-01",
+    "exit": 0
+  },
+  {
+    "workflow": "ios-fixtures.yml",
+    "job": "dinner-tests",
+    "step": "Boot the iPhone simulator",
+    "exit": 0
+  },
+  {
+    "workflow": "ios-fixtures.yml",
+    "job": "dinner-tests",
+    "step": "Run selected fixture tests and require complete execution",
+    "exit": 0
+  },
+  {
+    "workflow": "ios-fixtures.yml",
+    "job": "dinner-tests",
+    "step": "Retain speech runtime diagnostics",
+    "exit": 0
+  },
+  {
+    "workflow": "ios-fixtures.yml",
+    "job": "dinner-tests",
+    "step": "Retain scoped cook confirmation diagnostics",
+    "exit": 0
+  },
+  {
+    "workflow": "ios-fixtures.yml",
+    "job": "dinner-tests",
+    "step": "Clean up only the owned simulator after result and diagnostic export",
+    "exit": 0
+  },
+  {
+    "workflow": "ios-fixtures.yml",
+    "job": "fixture-gate",
+    "step": "inline",
+    "exit": 0
+  },
+  {
+    "workflow": "ios-deep.yml",
+    "job": "sanitizers",
+    "step": "Check package tests for memory errors or data races",
+    "exit": 0
+  },
+  {
+    "workflow": "ios-deep.yml",
+    "job": "storekit-plan",
+    "step": "Check both locale configurations and artifact workflow before macOS",
+    "exit": 0
+  },
+  {
+    "workflow": "ios-deep.yml",
+    "job": "storekit-build",
+    "step": "Select iPhone",
+    "exit": 0
+  },
+  {
+    "workflow": "ios-deep.yml",
+    "job": "storekit-build",
+    "step": "Build both LocalStoreKit configurations once",
+    "exit": 0
+  },
+  {
+    "workflow": "ios-deep.yml",
+    "job": "storekit-build",
+    "step": "Verify both compiled configurations and package shared products",
+    "exit": 0
+  },
+  {
+    "workflow": "ios-deep.yml",
+    "job": "storekit",
+    "step": "Restore and verify exact shared StoreKit products",
+    "exit": 0
+  },
+  {
+    "workflow": "ios-deep.yml",
+    "job": "storekit",
+    "step": "Select iPhone",
+    "exit": 0
+  },
+  {
+    "workflow": "ios-deep.yml",
+    "job": "storekit",
+    "step": "Run purchase, restore, renewal and revocation scenarios",
+    "exit": 0
+  },
+  {
+    "workflow": "ios-deep.yml",
+    "job": "storekit",
+    "step": "Export StoreKit results even after a failed scenario",
+    "exit": 0
+  },
+  {
+    "workflow": "ios-deep.yml",
+    "job": "storekit",
+    "step": "Verify exact StoreKit configuration and all scenario results",
+    "exit": 0
+  },
+  {
+    "workflow": "ios-deep.yml",
+    "job": "storekit-gate",
+    "step": "Require shared build and both locale jobs to succeed",
+    "exit": 0
+  }
+]

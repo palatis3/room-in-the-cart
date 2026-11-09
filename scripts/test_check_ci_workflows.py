@@ -39,7 +39,7 @@ class WorkflowGuardTests(unittest.TestCase):
     def test_current_inventory_and_existing_workflow_supersession(self):
         positions = validate_workflows(sorted((ROOT / '.github/workflows').glob('*.yml')))
         self.assertEqual(len(positions), len(POLICY))
-        self.assertEqual(len(positions), 15)
+        self.assertEqual(len(positions), 17)
         data, _, _ = parse_workflow(self.path)
         self.assertIn('on', data)
         self.assertEqual(data['concurrency'], {'group': 'original-pr-${{ github.ref }}', 'cancel-in-progress': True})
