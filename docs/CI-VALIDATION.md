@@ -136,6 +136,10 @@ provenance tests preserve the arm64-only plan's name, bytes and product identiti
 Qualify changed products on a frozen hosted revision before using them as release
 evidence. Compare compile tasks, archive size and build time under recorded cache
 conditions before claiming a speedup.
+The first [hosted qualification](evidence/native/hosted-arm64-observer-20261109/README.md)
+verified actual arm64-only products and unchanged producer/consumer identity. Its
+native scroll case passed, while the required duration remained missing. This
+qualifies the narrower build change, not performance completeness or release.
 
 The official [runner catalog](https://github.com/actions/runner-images/blob/main/README.md)
 and [Xcode 27 image](https://github.com/actions/runner-images/blob/main/images/macos/xcode-27-arm64-Readme.md)

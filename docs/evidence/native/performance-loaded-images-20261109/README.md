@@ -45,9 +45,9 @@ unchanged. Two new controls execute the actual producer shell with a stub compil
 All 95 targeted planner/provenance/capture controls, the final 433-test offline suite
 and workflow lint pass.
 
-The local diagnostic above used the prior dual-architecture command. The optimized
-producer still needs its own frozen hosted qualification. No before/after timing
-claim or new performance baseline is made. Hosted missing measurements and the
+The local diagnostic above used the prior dual-architecture command. The subsequent [frozen hosted run](../hosted-arm64-observer-20261109/README.md)
+verifies the optimized products and original native case, but still lacks required
+scroll duration. No controlled timing claim or new performance baseline is made. Hosted missing measurements and the
 original minimum-iOS failure remain open; full combined regression and merge are
 not approved.
 

@@ -124,7 +124,7 @@
     }
   ],
   "releaseAcceptance": false,
-  "arm64OnlyProducerQualification": "Pending; local diagnostic build retained the earlier dual-architecture configuration.",
+  "arm64OnlyProducerQualification": "Hosted run42639339096 atdc343f3e verifies arm64 products, producer/consumer identity and native scroll. Required scroll duration remains missing; no release acceptance.",
   "offlineTestsPassed": 433,
   "workflowQueueDefinitionsValidated": 17
 }

@@ -11,13 +11,13 @@ and all earlier native preservation paths remain at
 
 Canonical checkout: `/Users/palatis/Room in the Cart`, local branch
 `codex/parallel-ios-ci`. Publish to `codex/combined-candidate-20261109`; its verified
-head before this update was 21f69b5f. Recheck current Git/run state before dispatch.
+head before this evidence update was dc343f3e. Recheck current Git/run state before dispatch.
 The ambient `spanish-done-diagnostic` worktree is stale. Draft PR1 is an older
 candidate. No full combined qualification or merge has passed.
 
 No Dot/Lumpy. Astra High helpers and Sol6.1 Extra High monitoring are authorized.
 Root owns integration and dispatch. One owner per cause, one local native process,
-no source/product mutation during execution. All local attempts below are terminal;
+no source/product mutation during execution. All local and hosted attempts below are terminal;
 no native process or debugger remains. Disk last reported approximately 15 GiB free;
 keep 8 GiB reserve and avoid downloads/duplicate raw archives.
 
@@ -35,8 +35,9 @@ New: copy only changed source bytes/modes when assembling successors, preserving
 unchanged modification times. The performance simulator producer now explicitly
 builds arm64 only, removing unused Intel compilation from that lane. Generated
 Release defaults, device archives, consumers and strict gates are unchanged.
-433 offline checks and all 17 workflow queue definitions pass. Actual optimized
-producer qualification and any timing benefit are still pending.
+433 offline checks and all 17 workflow queue definitions pass. The optimized hosted producer, actual arm64 products and original native scroll
+now pass. Required hosted scroll duration remains missing; the 451-versus-618-second
+build observation is not a controlled speed comparison.
 
 Primary CI: Xcode 27.1/27A9275, arm64 `xcode-27`, iPhone 17 / iOS 27.0/24A434. Swift
 CodeQL retains its required macOS15/Xcode 26.3 exception. Minimum iOS remains 17.0.
@@ -60,7 +61,8 @@ unapproved. Do not dispatch full release expecting this mismatch to pass.
    scroll passes native/strict and required metrics: 5 durations, median 2.581955166 s;
    memory complete, hitches unavailable. Saved 500 rows / 500 contributions / 0 checkoffs / rev 3.
    Post-measure runner observes MTC UUID E40A186A-8D7D-3029-B5CD-D42C967992C0 once;
-   RPAC has no match. No during-measure loading/activity or metric-cause inference.
+   RPAC has no match. The hosted runner now reports the same post-measure identity.
+   No during-measure loading/activity or metric-cause inference.
    [Exact proof and inspection caveat](evidence/native/performance-loaded-images-20261109/README.md).
 
 All 561 canonical native inputs match source manifest
@@ -71,7 +73,9 @@ under `.build/PerformanceLoadedImagesNov09/execution-r1/`.
 Debug products manifest f51f027c66f299c08f8c719076bd956a8af631d025bcf283bbf432f7f954ff55
 is archived with source under `.build/NativeQualificationArchivesNov09/<source-SHA>/shared-match-debug-products-f51f027c66f299c0/`.
 Release products manifest 3de01fde66170f6ffdbcf9b3fe7d7fa2bdd477e3a0a44e220e4fb6c5d58138a8
-remains in the execution path; preserve before the next rebuild. Both source and
+is also archived under the same source-SHA directory in
+`performance-observer-release-products-3de01fde66170f6f/products`, with a preservation
+receipt referencing the already-verified Debug source archive. Do not overwrite it. Both source and
 products stayed unchanged during their test executions.
 
 The initial scroll setup failed before XCTest because an old Release test app was
@@ -86,16 +90,26 @@ the prior dual-architecture command, so it does not qualify the optimized produc
 
 ## Remaining diagnostic work
 
-- Next justified hosted scope: one changed-runner scroll on the frozen new commit,
-  calibration mode, fresh owned simulator, no optional signpost transport capture.
-  Inspect actual arm64-only project products, producer/consumer provenance, original
-  strict metrics and post-measure attachment. Missing attachment means unknown.
-  Keep declared-path observations and baseline limits unchanged. Existing screenshot
-  evidence proves hosted rendering; do not assume headless means no rendered UI.
-- Latest completed hosted capability run 42625593343 at 02aaed31 passes and proves
-  selected-runtime checker bytes equal producer bytes. Do not rerun that unchanged
-  probe. Earlier 42620394385 still lacks required scroll duration despite native 1/1
-  pass. Local post-measure MTC loading is now observed; hosted loading is not yet.
+- Latest hosted 42639339096 attempt 1 at dc343f3e is terminal failure: arm64-only
+  producer, immutable plan/products, native 1/1 and cleanup pass; required scroll
+  duration is absent, with only 3 memory series × 5. Selected-runtime bytes match
+  producer. Crucially, the post-measure runner attachment matches local exactly
+  except PID: MTC UUID E40A186A-8D7D-3029-B5CD-D42C967992C0 present, RPAC no match,
+  1,130 callbacks / 5,263,912 bytes / complete. The declared producer path is still absent
+  pre/post setup, but it does not establish absent runner loading.
+  [Final report and retained hashes](evidence/native/hosted-arm64-observer-20261109/README.md).
+  Coordinator independently verified all 3 GitHub ZIP digests and read actual Mach-O
+  headers for app/tests/extensions and all 5 static package objects: arm64-only.
+  Monitor originals: `.build/HostedLoadedImagesNov09/monitor/`; product original and
+  architecture proof: `.build/HostedLoadedImagesNov09/products/`.
+- The post-measure runner-image question is closed. Do not repeat filesystem/image
+  probes, rewrite plans or disable checkers. Before another expensive run, identify
+  one discriminator for measured-window collection/transport or relevant application
+  environment. Screenshots already prove rendering; Simulator.app visibility and
+  during-measure/AUT states remain unmeasured, not established causes. A post-hoc
+  query found zero matching events but cannot distinguish emission from transport.
+- Capability-only 42625593343 and earlier 42620394385 remain preserved historical
+  results. No baseline or full combined acceptance follows from these diagnostics.
 - Original Spanish iOS 17.0 journey still fails. Direct LLDB capture confirms null
   x0/strcmp → XCTest runtime_issue_os_log_fault_callback → libtrace quarantine
   during accessibility query. Null origin remains unknown. One exact-PID resume
