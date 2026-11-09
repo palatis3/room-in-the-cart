@@ -2,13 +2,13 @@
 
 ## Current checkpoint — November 9, workflow and combined-candidate qualification
 
-Workflow improvements through `b29d9993` are published to the CI candidate branch.
-All 336 offline tests and 17 queue checks pass. The build-free diagnostic
-42570562637 skipped compilation/XCTest and identified a post-boot collector budget
-expiry around `xcodebuild -version`; its cause remains unresolved. The earlier
-42566724355 attempts failed setup and then opaque capability preflight, both
-before XCTest. Stage receipts and the build-free route now prevent repeating
-that expensive opaque experiment. No new performance baseline is approved.
+Workflow improvements through `d2016380` are published to the CI candidate branch.
+All **353 offline tests** and **17 queue-node checks** pass. Build-free capability
+checks, incremental stage receipts and fresh same-job toolchain identity reuse
+are implemented. Exact log-help exit64 handling is offline-tested but remains
+hosted-unqualified: the latest run42574682497 stopped earlier at device discovery
+(timeout10s,exit-15). No compilation, transport or XCTest ran. Prior failures and
+single-download artifacts are preserved. No new performance baseline is approved.
 
 The isolated combined R4 candidate passes original English, Spanish AX5 on 26.2,
 64 audio regressions on each of 17.0/26.2, Free repair and cross-week meal move.
@@ -16,7 +16,10 @@ Spanish AX5's 13 screenshots and 10 geometry records were reviewed; stock-summar
 wrapping remains unsampled at AX5 and is verified only in the English profile.
 Unsigned Release compilation and bundle validation also pass on the same source.
 Spanish on 17.0 and 17.5 still fails in the XCTest logging callback. The combined
-app remains isolated; full integration, merge and release gates remain open.
+app remains isolated; full integration, merge and release gates remain open. The
+independent iOS17.5 reduction R2 builds but fails before typing because its amount
+field lacks focus. It has not reproduced the original logging crash; its reduced
+single-control row needs fidelity review before another native experiment.
 
 Hosted focused core run42561415704 passed all11jobs atdf49c37d:717 model tests,
 two original Dinner journeys, unsigned Release compilation and Swift CodeQL.

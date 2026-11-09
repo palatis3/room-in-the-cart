@@ -27,15 +27,14 @@ needs measured benefit. A new layout is not automatically a faster one.
 
 ## Reduce repeated UI traversal before increasing deadlines
 
-The retained Spanish AX5 Dinner R3 run reached all five keyboard checks and
-approval but exhausted its 720-second allowance at relaunch. R4 reduced the
-restored-review block from 49 to 29 gestures and reached final acceptance 56.77
-seconds earlier. The final empty-list assertion completed at 715.60 seconds,
-but teardown exceeded the unchanged allowance at 720.251 seconds: native65/strict1.
-This remains a failed run. R5 adds persistent access to Continue editing to remove
-the remaining 19-gesture trip; its completed run remains unsuccessful (native65).
-This change has not established a full journey pass.
-Every original assertion, gesture bound, deadline and persistence check remains.
+The retained Spanish AX5 Dinner R3/R4 attempts measured repeated review traversal
+as expensive work. The later isolated combined R4 candidate now passes the full
+original Spanish AX5 journey on iOS26.2 in696.241 test seconds, including all five
+Done probes and persistence. Its source manifest and qualification receipt bind
+that result; it is not minimum-OS or final combined-hosted acceptance.
+Keep every original assertion and deadline when optimizing queries and gestures.
+Measure the same journey and environment before claiming a speedup; local/hosted
+or different-revision focused results do not establish a like-for-like gain.
 [Exact candidate and retained evidence](evidence/native/dinner-accessible-fields-20261109/README.md).
 
 ## Primary Xcode 27.1 toolchain

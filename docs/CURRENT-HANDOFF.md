@@ -37,20 +37,27 @@ execution. The additive proposal/validation receipts are preserved in
 
 ## Latest active work — November 9
 
-- Workflow follow-up b29d999375a1e2cceb1004a49c6156611567012b is published on
-  `codex/xcode27-ci-migration-20261109`, including prior5157fake-boot test fix.
-  Adds incremental capture stage receipts and build-free capability-only mode.
-  All336offline tests and17native queue definitions pass; independent review clear.
-  Run42570562637 is terminal failure at the post-boot toolchain command:
-  `xcodebuild -version`,10s deadline,16.801s including cleanup,exit-15,zero captured bytes.
-  Source-contract passed; later capability checks never ran. No compilation,
-  products, log transport or XCTest. One636byte artifact and terminal receipts
-  retained under `.build/Xcode27ScrollDiagnosticNov09/preflight-r2/hosted-42570562637`.
-  Read-only review found four same-job version queries; next narrow proposal is
-  reusing a freshly bound same-consumer-job identity receipt for only the fourth,
-  retaining standalone and actual runtime/log checks. Not implemented or dispatched.
-  The budget includes process creation/scheduling; zero captured bytes do not prove
-  zero emitted output. No retry or timeout extension. All hosted monitoring is complete.
+- Workflow improvements are published through `d2016380cbac0a49497c79806ea64431800394d6`
+  on `codex/xcode27-ci-migration-20261109`. All **353 offline tests** pass;
+  the unchanged workflow passes **17 native queue-node checks**. Commit219d2f66
+  reuses a bounded, freshly verified same-job toolchain identity; invalid receipts
+  fail closed, and live runtime checks remain. Commitd2016380 recognizes exit64
+  only for exact log-help commands with expected usage/tokens and no collector error.
+- Both new capability-only runs are terminal failures before compilation/XCTest.
+  Run42573256459 at219d2f66 passed identity and runtime discovery, then exposed
+  log-help stream exit64 (2116 stderr bytes). Local help-only checks confirmed
+  valid usage exits64; equal hosted byte count alone does not establish equal text.
+  Run42574682497 atd2016380 passed source and identity checks, then device discovery
+  exceeded its unchanged10s collector budget (exit-15,10.459s,zero captured bytes).
+  Runtimes/help were not reached: the help correction remains hosted-unqualified.
+  No transport, products or native tests ran, and no baseline is approved.
+  Originals retained once under `.build/Xcode27ScrollDiagnosticNov09/identity-reuse-r1/hosted-42573256459`
+  and `help-exit-r1/hosted-42574682497`. Do not repeat downloads or unchanged runs.
+  Earlier42570562637's duplicate-version failure is preserved under `preflight-r2`.
+  Next add bounded collector phase timings and a nonblocking late-byte observation
+  on timeout, keeping the failure/deadline unchanged. This can distinguish startup,
+  scheduling and collection from readiness; zero captured bytes do not prove zero
+  emitted output. Do not substitute pre-boot inventory for fresh post-boot state.
 - Hosted diagnostic42566724355 at230f503a137290b626a193c612da6ef4ff5625bc
   is terminal. Attempt1 setup failed at pasteboard; one failed-job retry reused
   the build, passed setup, then failed capability preflight (no command identity).
@@ -85,6 +92,23 @@ execution. The additive proposal/validation receipts are preserved in
   Next diagnostic should be a bounded independent reproducer; no compatibility pass.
   Receipt root `.build/DinnerAudioCombinedNov09R4/spanish-ios17_5`.
   CUA completed; no pending GUI handoff. Free space20.5GiB after Release; reserve8GiB retained.
+
+- Independent minimum-OS reduction is retained under `.build/MinimumOSXCTestReproducerNov09`.
+  R1 built, failed its field reveal, then reached the600s outer driver deadline;
+  its incomplete bundle was inspected once. R2 built in25.15s and returned native65
+  in24.14s (strict1): amount typing lacked keyboard focus before either Done probe.
+  The exported field frame includes the whole84.5pt row. This does not reproduce
+  the original XCTest logging crash or qualify minimum OS. R2 reduced the actual
+  multi-control ingredient row to one field. Original17.5 exposes a22pt amount
+  child; the reduction exposes the84.5pt whole cell. Restore actual sibling-control
+  structure for the next reduction, keeping center taps and original assertions.
+  Custom deferred diagnostic attachments are absent from the failure export;
+  the measured evidence here is the retained issue description and hierarchy.
+  R2 uses `-collect-test-diagnostics never` only in this local reduction, keeping
+  runtime logging/checkers enabled. Production workflows are unchanged. Both
+  original result sets/source/products remain preserved; no re-export needed.
+  No local native execution or hosted monitoring remains active at this checkpoint.
+  Free space is approximately20GiB, above the8GiB native reserve.
 
 - A test-only startup-readiness correction was committed at5157b785;
  327offline tests pass again. It separates a bounded fake-CLI startup handshake
