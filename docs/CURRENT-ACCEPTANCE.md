@@ -2,6 +2,25 @@
 
 ## Current checkpoint — November 9, workflow and combined-candidate qualification
 
+The latest workflow follow-through passes 449 offline source checks and 17 queue
+contracts. Core/fixture build logs and per-invocation native-wire failure receipts
+are retained without weakening gates. [Workflow proof](evidence/ci/workflow-followthrough-20261109/README.md).
+
+The shared source-removal regression now passes the complete expanded wire lane:
+8 Node cases and 15 actual Swift HTTPS/PostgreSQL scenarios, zero failures/skips.
+It checks cancellation, one committed removal despite a restored-operation retry,
+preserved meals/manual basket lines/history, and a separately authorized planner’s
+fresh restricted projection. This does not complete shared F02 UI or typed manual
+quantity merging. [Scoped proof](evidence/native/shared-meal-removal-wire-20261109/README.md).
+
+The standalone simulator collector now has qualified readiness, normal exits and
+exact expected events, with 13 offline controls. This enables a scoped app capture
+investigation; it does not resolve hosted missing measurements or approve a
+performance baseline. [Collector proof](evidence/native/simulator-collector-control-20261109/README.md).
+The compact Spanish shared-meal date remains English in the isolated comparison;
+explicit inherited-locale forwarding did not fix it and is not installed.
+[Locale observation](evidence/native/shared-picker-locale-20261109/README.md).
+
 Minimum-OS qualification remains failed, but the immediate crash is now captured:
 the original Spanish iOS17.0 journey reached a null-pointer fault in XCTest's
 runtime logging callback during an accessibility query. A direct-label query
@@ -15,8 +34,9 @@ PID, including Main Thread Checker UUID; RPAC is not observed in either. Filesys
 path absence does not establish absent runner loading. The metric collection cause
 remains open. [Hosted proof](evidence/native/hosted-arm64-observer-20261109/README.md).
 No new performance baseline, full combined acceptance or merge is approved.
-All 438 offline checks and 17 native queue-definition checks pass for the latest
-workflow update. Its opt-in performance diagnostic preserves default commands and
+The earlier diagnostic workflow update passed 438 offline checks and 17 native
+queue-definition checks; the later follow-through total is recorded above. Its
+opt-in performance diagnostic preserves default commands and
 rejects release-enforced requests. One local original scroll control passes native,
 strict and required measurements, but the accepted diagnostics flag retains no
 trace. No hosted repeat is justified by that control yet.

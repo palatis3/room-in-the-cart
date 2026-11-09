@@ -58,20 +58,23 @@ does not clear an application failure or qualify a different source revision.
 Core and fixture simulator builds now save `build.log` and a small `receipt.txt`
 under `.build/ios-build-evidence/`. The receipt records the actual checkout SHA,
 run and attempt, build configuration/profile and selected Xcode. The build's
-`pipefail` preserves compiler failures when output passes through `tee`. An
-always-attempted, best-effort artifact upload keeps these diagnostics available
+`pipefail` preserves compiler failures when output passes through `tee`. A
+best-effort artifact upload after an attempted build keeps diagnostics available
 without changing the existing build/test gates. An upload failure remains visible;
 it is not proof that the logs were retained. Keep the relevant originals with
 hashes before the seven-day Actions retention expires.
 
 The native Swift HTTPS/PostgreSQL harness creates a fresh
 `.build/native-wire-results/attempt.*` directory for every invocation. It retains
-bounded stdout/stderr and a receipt for each Swift scenario, including failures;
-later attempts never replace those files. The original 180-second subprocess
-limit, 2 MB per-stream bound, seven Node cases and twelve exact XCTest scenarios
-remain required. A stopped failed database, journal and TLS material stay in their
-owner-only temporary directory, outside the uploaded artifact tree. That directory
-has a private custody receipt; public results contain only cleanup metadata.
+bounded stdout/stderr and a receipt for each launched Swift invocation, including
+failures; later attempts never replace those files. The original 180-second subprocess
+limit and 2 MB per-stream bound remain unchanged. The exact required case and
+scenario lists are in `service/scripts/test-native-wire.mjs` (currently eight Node
+cases and fifteen Swift scenarios). On failure, the wrapper preserves its
+owner-only attempt directory and any database or journal state already created,
+outside the uploaded artifact tree. Per-scenario TLS files are removed when their
+helpers clean up. Private custody metadata records retained paths; public results
+report shutdown and retention status without those paths.
 Successful attempts remove their private state. A failed stop remains a failure
 and preserves the state for investigation. On GitHub-hosted runners, private
 state disappears when the runner is destroyed; it is not a durable backup.
@@ -739,6 +742,16 @@ and `root-review.json` separately qualify this host control. Its initial capture
 receipt remains unchanged. This is a starting point for a small simulator control,
 not evidence that simulator/app collection works or that the hosted metric defect
 is fixed. Do not launch another full app journey on the host result alone.
+
+The subsequent standalone simulator control also passes readiness, normal exits
+and exact exported events. [Evidence](evidence/native/simulator-collector-control-20261109/README.md)
+records two preserved failures and the final bounded control. When a public CLI is
+a launcher script, distinguish its invocation path/hash from the literal executable
+it starts; process identity must match the latter. Keep both identities verified.
+The successful control allowed thirty seconds for finalization; this does not
+establish how much time it required. It is a local diagnostic setting, not a change
+to hosted or application performance limits.
+App-process/measurement-window coverage and hosted metrics remain unqualified.
 
 Bind collector/helper binaries and outputs to their hashes, exact owned process
 identity and runtime. Preserve original artifacts; inspect copies when tools may

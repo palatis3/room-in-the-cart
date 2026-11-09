@@ -1632,3 +1632,66 @@ if(process.env.RITC_TEST_NATIVE_WIRE==='1') test('actual Swift undated selection
  assert.deepEqual(await operations(),[{kind:'shop.create',n:1},{kind:'shop.patch',n:2}]);
  const finalSnapshots=await snapshots();assert.equal(finalSnapshots.length,3);assert.deepEqual(finalSnapshots.slice(0,2),selectedSnapshots);
 });
+
+if(process.env.RITC_TEST_NATIVE_WIRE==='1') test('actual Swift source removal preserves other meals and manual lines across authorized clients',async()=>{
+ const {exerciseSharedMealClient}=await import('./shared-meal-native-wire.mjs');
+ const f=await fixture(),path=f.base+'/shops/'+f.shopId,changePath=path+'/meal-plan/changes';
+ const initial=ok(await call(f.owner,path));
+ // The shared basket contract has packs, not a typed manual usable-quantity edge.
+ // These are twelve manual basket packs; never label them twelve wraps.
+ const lines=[{lineId:randomUUID(),originalItem:'Manual wraps',packs:12,unitPriceMinor:100,feeEligible:false},
+   {lineId:randomUUID(),originalItem:'Shared meal wraps',packs:2,unitPriceMinor:250,feeEligible:false}].sort((a,b)=>a.lineId.localeCompare(b.lineId));
+ const quantity=n=>({amount:{numerator:n,denominator:1},unit:'count',originalLiteral:`${n} wraps`});
+ function meal(title,n,day,protectedMeal){
+   const occurrenceId=randomUUID(),group=randomUUID(),ingredient=randomUUID(),binding=randomUUID();
+   return {occurrenceId,meal:{title,day,kind:protectedMeal?'lunch':'dinner',portions:n,protected:protectedMeal,
+     planning:{sourceOccurrenceId:randomUUID(),groups:[{id:group,name:protectedMeal?'Protected lunch':'Dinner',servings:{numerator:n,denominator:1},protected:protectedMeal}],
+       ingredients:[{id:ingredient,name:'Wraps',quantity:quantity(n),groupIds:[group],exclusions:['no peanuts']}],
+       bindings:[{id:binding,ingredientId:ingredient,groupId:group,quantity:quantity(n)}]}}};
+ }
+ const entries=[meal('Tacos to remove',6,null,false),meal('Quesadillas to keep',4,'2099-11-01',false),meal('Lunch to protect',2,'2099-11-01',true)];
+ const command=(revision,edit)=>({v:1,replayWindow:f.owner.window,clientKey:randomUUID(),shopId:f.shopId,kind:'shop.patch',
+   base:{shopRevision:revision,authorityEpoch:1},body:{quote:initial.quote,lines,mealEdit:edit}});
+ for(const [index,entry] of entries.entries()) {
+   ok(await call(f.owner,f.base+'/commands','POST',command(index+1,{...entry,baseMealRevision:null})));
+   entry.revision=index+2;
+ }
+ const expectedMeals=entries.map(({occurrenceId,revision,meal})=>({occurrenceId,revision,meal}));
+ const before=ok(await call(f.owner,path));assert.equal(before.shopRevision,4);
+ assert.deepEqual(new Map(before.meals.map(m=>[m.occurrenceId,m])),new Map(expectedMeals.map(m=>[m.occurrenceId,m])));
+ assert.deepEqual(before.lines,lines);assert.deepEqual(before.quote,initial.quote);
+ const history=async()=> (await admin.query('SELECT occurrence_id,revision,meal FROM ritc.shared_meal_revision WHERE household_id=$1 AND shop_id=$2 ORDER BY revision',[f.h,f.shopId])).rows;
+ const operations=async()=> (await admin.query('SELECT kind,count(*)::int n FROM ritc.operation WHERE household_id=$1 AND shop_id=$2 GROUP BY kind ORDER BY kind',[f.h,f.shopId])).rows;
+ const snapshots=async()=> (await admin.query('SELECT revision,snapshot FROM ritc.shop_snapshot WHERE household_id=$1 AND shop_id=$2 ORDER BY revision',[f.h,f.shopId])).rows;
+ const oldHistory=await history(),oldSnapshots=await snapshots(),oldOperations=await operations();
+ assert.deepEqual(oldHistory,expectedMeals.map(m=>({occurrence_id:m.occurrenceId,revision:m.revision,meal:m.meal})));
+ assert.equal(oldSnapshots.length,4);assert.deepEqual(oldOperations,[{kind:'shop.create',n:1},{kind:'shop.patch',n:3}]);
+ // Negative contract: the distinct protected lunch cannot itself be removed.
+ const rejected=await call(f.owner,f.base+'/commands','POST',command(4,{occurrenceId:entries[2].occurrenceId,baseMealRevision:4,meal:null}));
+ assert.equal(rejected.status,409);assert.equal(rejected.data.error.code,'protected_meal');
+ assert.deepEqual(await history(),oldHistory);assert.deepEqual(await snapshots(),oldSnapshots);assert.deepEqual(await operations(),oldOperations);
+ const planner=await actor(),invite=ok(await call(f.owner,f.base+'/invites','POST',{kind:'adult_contributor'}));
+ planner.id=ok(await call(planner,'/v1/invites/redeem','POST',{token:invite.token,intent:'join',adultAttestation:true,alias:'Separate reader'})).memberId;
+ await enroll(planner,f.h);await f.paid();const seats=ok(await call(f.owner,f.base+'/entitlements'));
+ ok(await call(f.owner,f.base+'/billing/seats','PUT',{revision:seats.revision,userIDs:[f.owner.id,planner.id]}));
+ ok(await call(f.owner,path+'/meal-plan/planner','PUT',{authorityEpoch:1,grantRevision:0,plannerId:planner.id}));
+ const expected={target:entries[0].occurrenceId,revision:4,meals:expectedMeals,lines,quote:initial.quote};
+ const run=(phase,owner=f.owner)=>exerciseSharedMealClient({service:server,owner,householdId:f.h,shopId:f.shopId,shopper:owner===f.owner,removal:{phase,expected}});
+ assert.deepEqual(await run('cancel'),{commandAttempts:0});
+ assert.deepEqual(ok(await call(f.owner,path)),before);
+ assert.deepEqual(await history(),oldHistory);assert.deepEqual(await snapshots(),oldSnapshots);assert.deepEqual(await operations(),oldOperations);
+ assert.deepEqual(await run('remove'),{commandAttempts:2});
+ const after=ok(await call(f.owner,path));assert.equal(after.shopRevision,5);
+ const survivors=expectedMeals.slice(1);
+ assert.deepEqual(new Map(after.meals.map(m=>[m.occurrenceId,m])),new Map(survivors.map(m=>[m.occurrenceId,m])));
+ assert.deepEqual(after.lines,lines);assert.deepEqual(after.quote,initial.quote);
+ const finalHistory=[...oldHistory,{occurrence_id:entries[0].occurrenceId,revision:5,meal:null}];
+ assert.deepEqual(await history(),finalHistory);
+ const finalOperations=[{kind:'shop.create',n:1},{kind:'shop.patch',n:4}];assert.deepEqual(await operations(),finalOperations);
+ const finalSnapshots=await snapshots();assert.equal(finalSnapshots.length,5);assert.deepEqual(finalSnapshots.slice(0,4),oldSnapshots);
+ assert.deepEqual(await run('read',planner),{commandAttempts:0});
+ const reader=ok(await call(planner,changePath));assert.equal(reader.shopper,false);assert.equal(reader.shopRevision,5);
+ assert.deepEqual(new Map(reader.meals.map(m=>[m.occurrenceId,m])),new Map(survivors.map(m=>[m.occurrenceId,m])));
+ assert.equal(reader.lines,undefined);assert.equal(reader.quote,undefined);assert.equal((await call(planner,path)).status,404);
+ assert.deepEqual(await history(),finalHistory);assert.deepEqual(await snapshots(),finalSnapshots);assert.deepEqual(await operations(),finalOperations);
+});

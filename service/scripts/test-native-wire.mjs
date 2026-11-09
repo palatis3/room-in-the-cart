@@ -25,6 +25,7 @@ const cases = [
   history(true),
   'actual Swift planner proposal and separate shopper review travel over pinned loopback HTTPS and PostgreSQL',
   'actual Swift undated selection survives process restart and schedules once over PostgreSQL',
+  'actual Swift source removal preserves other meals and manual lines across authorized clients',
   'real Swift adult proposal and separate shopper adoption use pinned loopback HTTPS and PostgreSQL',
 ];
 const swiftRuns = [
@@ -38,6 +39,9 @@ const swiftRuns = [
   'meal-fallback HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
   'meal-undated-select HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
   'meal-undated-schedule HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'meal-removal-cancel HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'meal-removal-remove HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'meal-removal-read HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
   'quote-adult HouseholdClientTests.StoreQuoteNativeWireTests/testStoreQuoteClientAgainstPostgres',
   'quote-shopper HouseholdClientTests.StoreQuoteNativeWireTests/testStoreQuoteClientAgainstPostgres',
 ];

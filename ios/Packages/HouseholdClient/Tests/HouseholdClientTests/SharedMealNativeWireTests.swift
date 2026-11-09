@@ -27,6 +27,10 @@ final class SharedMealNativeWireTests: XCTestCase {
 
     func testSharedMealClientAgainstPostgres() async throws {
         let env = ProcessInfo.processInfo.environment
+        if env["RITC_WIRE_REMOVAL_PHASE"] != nil {
+            try await exerciseSourceRemovalAcrossClients()
+            return
+        }
         if env["RITC_WIRE_UNDATED_PHASE"] != nil {
             try await exerciseUnscheduledSelectionAcrossRestart()
             return
@@ -102,6 +106,76 @@ final class SharedMealNativeWireTests: XCTestCase {
             XCTAssertEqual(updated.proposals.count, 1); XCTAssertEqual(updated.proposals[0].request, intent.request)
             XCTAssertEqual(updated.meals, page.meals)
         }
+    }
+
+    private struct RemovalExpectation: Decodable {
+        let target: UUID
+        let revision: Int
+        let meals: [SharedMealOccurrence]
+        let lines: [ShopperBasketLine]
+        let quote: ShopperQuote
+    }
+
+    /// Real public routes, with independently seeded identities. Cancel means a
+    /// prepared client operation is discarded; this does not simulate a UI tap.
+    private func exerciseSourceRemovalAcrossClients() async throws {
+        let env = ProcessInfo.processInfo.environment
+        let phase = try XCTUnwrap(env["RITC_WIRE_REMOVAL_PHASE"])
+        guard ["cancel", "remove", "read"].contains(phase) else { return XCTFail("Unknown removal phase") }
+        let expected = try JSONDecoder().decode(RemovalExpectation.self, from: Data(XCTUnwrap(env["RITC_WIRE_REMOVAL_EXPECTED"]).utf8))
+        let base = try XCTUnwrap(URL(string: "https://127.0.0.1:\(try XCTUnwrap(env["RITC_WIRE_PORT"]))"))
+        let cert = try Data(contentsOf: URL(fileURLWithPath: XCTUnwrap(env["RITC_WIRE_CERT"])))
+        let session = URLSession(configuration: .ephemeral, delegate: SharedMealLoopbackTrust(certificate: cert), delegateQueue: nil)
+        defer { session.invalidateAndCancel() }
+        let transport = HTTPTransport(session: session)
+        let auth = AdultAuth(configuration: try .init(projectURL: base, publishableKey: "sb_publishable_meal_fixture"), vault: MemoryVault(), transport: transport)
+        _ = try await auth.verifyEmailCode(email: "wire@example.invalid", code: XCTUnwrap(env["RITC_WIRE_CODE"]))
+        let service = HouseholdService(configuration: try .init(baseURL: base), auth: auth, deviceVault: MemoryVault(), transport: transport)
+        _ = try await service.enroll(householdID: XCTUnwrap(env["RITC_WIRE_HOUSEHOLD"]))
+        let shopID = try XCTUnwrap(UUID(uuidString: XCTUnwrap(env["RITC_WIRE_SHOP"])))
+        let scope = try await service.selectShop(shopID)
+        let survivors = expected.meals.filter { $0.id != expected.target }
+        func assertMeals(_ actual: [SharedMealOccurrence], _ wanted: [SharedMealOccurrence]) {
+            XCTAssertEqual(actual.count, wanted.count)
+            for meal in wanted { XCTAssertEqual(actual.first(where: { $0.id == meal.id }), meal) }
+            XCTAssertEqual(Set(actual.map(\.id)), Set(wanted.map(\.id)))
+        }
+        if phase == "read" {
+            let page = try await service.sharedMealChanges(shopID: shopID)
+            XCTAssertFalse(page.shopper)
+            XCTAssertEqual(page.shopRevision, expected.revision + 1)
+            assertMeals(page.meals, survivors)
+            XCTAssertFalse(page.meals.contains(where: { $0.id == expected.target }))
+            return
+        }
+        let current = try await service.shopperShop(shopID: shopID.uuidString.lowercased())
+        XCTAssertEqual(current.shopRevision, expected.revision)
+        assertMeals(current.meals ?? [], expected.meals)
+        XCTAssertEqual(current.lines, expected.lines); XCTAssertEqual(current.quote, expected.quote)
+        let removed = try XCTUnwrap(expected.meals.first(where: { $0.id == expected.target }))
+        var edit = SharedMealEdit(occurrenceID: expected.target, meal: nil)
+        edit.baseMealRevision = removed.revision
+        var body = try ShopperShopCandidate(quote: current.quote, lines: current.lines).commandBody()
+        body["mealEdit"] = try edit.commandValue()
+        let window = try await service.replayWindow()
+        let operation = try await service.prepare(envelope: .init(replayWindow: window.id, shopId: current.shopId,
+            kind: "shop.patch", base: .init(shopRevision: current.shopRevision, authorityEpoch: current.authorityEpoch), body: body), bootstrap: scope)
+        if phase == "cancel" {
+            // No execute call: parent independently asserts zero /commands and
+            // byte-equivalent authoritative history, snapshots and current facts.
+            let unchanged = try await service.shopperShop(shopID: current.shopId)
+            XCTAssertEqual(unchanged, current)
+            return
+        }
+        let restored = try JSONDecoder().decode(PendingOperation.self, from: JSONEncoder().encode(operation))
+        XCTAssertEqual(restored.bytes, operation.bytes); XCTAssertEqual(restored, operation)
+        let first = try await service.executeSharedShop(operation)
+        let retry = try await service.executeSharedShop(restored)
+        XCTAssertEqual(first, retry); XCTAssertEqual(first.shopRevision, expected.revision + 1)
+        let final = try await service.shopperShop(shopID: current.shopId)
+        XCTAssertEqual(final.shopRevision, expected.revision + 1)
+        XCTAssertEqual(final.lines, expected.lines); XCTAssertEqual(final.quote, expected.quote)
+        assertMeals(final.meals ?? [], survivors)
     }
 
     /// Two separate Swift processes share only the real PostgreSQL shop and fixture IDs.

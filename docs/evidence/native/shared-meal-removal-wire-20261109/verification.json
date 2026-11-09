@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "baseCommit": "4e11b477bef7086faae72a8eb688ada39cf54def",
+  "scope": "Local real Swift HTTPS/PostgreSQL shared source-removal regression",
+  "sourceChanges": {
+    "ios/Packages/HouseholdClient/Tests/HouseholdClientTests/SharedMealNativeWireTests.swift": "bf1625bdff34c78262bf92e865bc7c53de7e4cbdf1a78c4d9fdf8f919a6464c2",
+    "service/scripts/test-native-wire.mjs": "16ba061586502956c49cf5943c11b254d196a81060bbbc85e3903eaa5bf7e75c",
+    "service/tests/shared-meal-changes.integration.mjs": "6c16f174203523d42b7f5fa9f678384d931c2f1ed9f67a4b4c87a1c3bbe3b3a1",
+    "service/tests/shared-meal-native-wire.mjs": "775ca56717ab793c9756580997371d4b5c8651cfa3a0623024eeca23e940ca10"
+  },
+  "nodeCases": 8,
+  "swiftScenarios": 15,
+  "failures": 0,
+  "skips": 0,
+  "seconds": 132.895950209,
+  "sourceUnchanged": true,
+  "privateStateRemoved": true,
+  "scenarios": [
+    "deferred-request",
+    "history-free",
+    "history-paid",
+    "meal-fallback",
+    "meal-planner",
+    "meal-removal-cancel",
+    "meal-removal-read",
+    "meal-removal-remove",
+    "meal-shopper",
+    "meal-undated-schedule",
+    "meal-undated-select",
+    "purchase-author",
+    "quote-adult",
+    "quote-shopper",
+    "request-purchase"
+  ],
+  "retainedEvidence": {
+    ".build/SharedF02RemovalNov09/native-wire-r1/source.json": "5e46174a2cd3e20fd36073fd56aae4fa7571a79d8c73697445dd812bd20d75d7",
+    ".build/SharedF02RemovalNov09/native-wire-r1/run.json": "6bcc026e33ed29573fb67aa2e50df263b208bff09e8b558aa3b65062b30b9de4",
+    ".build/SharedF02RemovalNov09/native-wire-r1/run.log": "193532f226dca296efb9374636e2c695887d554258079075aec9a645a8c91de8",
+    ".build/SharedF02RemovalNov09/native-wire-r1/public-evidence.json": "aace28ecdbe2761c36e8e588e897a4182d0bc005968fc160e3ebddd41820b53b",
+    ".build/native-wire-results/attempt.rh7Ret/tests.tap": "beacdc31228c0aa8eed328e03b96e6f1a8ec4cd42505f4dd40331d57c60ffdea",
+    ".build/native-wire-results/attempt.rh7Ret/cleanup.json": "be29484d650d1d3ed7ae8ab1ffece6ab612bc450f32ca17a7c949a5d93b37b47"
+  },
+  "limits": [
+    "Cancel proof is a discarded prepared native operation, not a UI tap.",
+    "Manual quantity is twelve basket packs; this does not establish a typed manual wrap contribution or full shared F02.",
+    "No migration, deployment, full hosted qualification or App Store acceptance."
+  ]
+}

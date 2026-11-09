@@ -11,14 +11,14 @@ and all earlier native preservation paths remain at
 
 Canonical checkout: `/Users/palatis/Room in the Cart`, local branch
 `codex/parallel-ios-ci`. Publish to `codex/combined-candidate-20261109`; its verified
-head before this workflow update was ed6d297c. Recheck current Git/run state before dispatch.
+head before this checkpoint was 4e11b477. Recheck current Git/run state before dispatch.
 The ambient `spanish-done-diagnostic` worktree is stale. Draft PR1 is an older
 candidate. No full combined qualification or merge has passed.
 
 No Dot/Lumpy. Astra High helpers and Sol6.1 Extra High monitoring are authorized.
 Root owns integration and dispatch. One owner per cause, one local native process,
 no source/product mutation during execution. Historical attempts below are terminal;
-all optional-night native and wire attempts are now terminal. No debugger remains. Disk last reported approximately 89 GiB free;
+all optional-night native and wire attempts are now terminal. No debugger remains. Disk last reported approximately 146 GiB free;
 keep 8 GiB reserve and avoid downloads/duplicate raw archives.
 
 ## Implemented workflow
@@ -35,7 +35,8 @@ New: copy only changed source bytes/modes when assembling successors, preserving
 unchanged modification times. The performance simulator producer now explicitly
 builds arm64 only, removing unused Intel compilation from that lane. Generated
 Release defaults, device archives, consumers and strict gates are unchanged.
-438 offline checks and all 17 workflow queue definitions pass. The optimized hosted producer, actual arm64 products and original native scroll
+That earlier update passed 438 offline checks and all 17 workflow queue definitions.
+The optimized hosted producer, actual arm64 products and original native scroll
 now pass. Required hosted scroll duration remains missing; the 451-versus-618-second
 build observation is not a controlled speed comparison.
 
@@ -47,8 +48,9 @@ events must pass on a small control before full app diagnostics. 109 Python,
 
 Follow-through now retains core/fixture build logs and checkout/toolchain receipts,
 plus unique native-wire attempts with bounded per-scenario output and structured
-failures. Failed database/journal/TLS state stays owner-only outside upload paths;
-success removes it. 449 Python source contracts, output/custody controls and 17 queue
+failures. Failed database/journal state stays owner-only outside upload paths;
+success removes it. Scenario helpers remove their TLS files during cleanup.
+449 Python source contracts, output/custody controls and 17 queue
 definitions pass. The actual revised wire harness passes 7 Node/12 Swift scenarios
 in 134.77 seconds, with every scenario output/hash verified, sources unchanged and
 private fixture state removed. `.build/WorkflowFollowthroughNov09/native-wire-r1/`
@@ -138,11 +140,11 @@ switch taps did not change its state, and the review marker needed scrolling.
 Tests now target the visible thumb, assert its state, use a generic compact-date
 identifier and reveal the marker. No production behavior/assertion was suppressed.
 
-Current native source manifest:
+Last optional-night native source manifest (preserved before the locale successor):
 `a1aba92422d05be5eecc332240939c59b01b134e22e5763caff39fc64409c8f6`.
-Current executor/results: `.build/SharedUndatedNov09/native-fixture-r3/`.
+Optional-night executor/results: `.build/SharedUndatedNov09/native-fixture-r3/`.
 Stable source/DD: `.build/Xcode27WarningReviewNov09/execution-r1/`.
-Current fixture products manifest:
+Optional-night fixture products manifest:
 `94d798eeeb35e7ee577b4ed53c06f408801edc637f8b62a6f67c3a1771d12af4`.
 Every successor preserved prior source/products with verified bytes/modes under
 `.build/NativeQualificationArchivesNov09/`. Ordinary model proof is under
@@ -163,17 +165,42 @@ This proves native-client process restart, not a complete iPhone UI relaunch.
 Physical/human/live-provider and final combined-hosted acceptance remain separate.
 No migration, staging deployment or full-release dispatch occurred.
 
+## Shared source-removal regression
+
+The additional reviewed test case now passes the entire real wire lane: 8 Node
+cases and 15 exact Swift scenarios, zero failures/skips, in 132.90 seconds. The
+original 7/12 remain required. Cancellation sends no command; a Codable-restored
+retry commits removal once; another authorized planner reads the exact survivors
+without basket or budget access. Protected lunch rejection, meal identities,
+quantities, manual packs, quotes and immutable prior snapshots are checked.
+Source hashes stayed unchanged, all scenario logs/hashes were verified, and the
+owned PostgreSQL/private fixture state was stopped and removed.
+[Compact proof](evidence/native/shared-meal-removal-wire-20261109/README.md).
+
+This is not full shared F02: Cancel is a discarded native operation, not a UI tap;
+manual input is twelve basket packs, not a typed twelve-wrap contribution. Shared
+UI Apply/relaunch and manual/meal contribution merging remain separate acceptance.
+No production changes, migration, deployment or full hosted batch in this patch.
+
 ## Remaining diagnostic work
 
-- Locale follow-up: the optional-night screenshot has Spanish labels but compact
-  picker text `Nov 9, 2026`. App source has no forced English locale. Existing
-  civil-day tests cover explicit formatting, not the system picker. Cause is
-  unproven; inspect effective locale diagnostics and a dedicated Spanish simulator
-  before product edits. Exact image and proposed discriminator are saved in
-  `.build/SharedUndatedNov09/locale-followup.md`. Human localization is not signed off.
-  The opt-in diagnostic patch is prepared under `.build/SharedMealLocaleNov09/r1/`;
-  it has not been installed, built or run. Apply only to a preserved isolated
-  snapshot; its separate diagnostic suite is not in the normal CI inventory.
+- Locale observation remains open. Three runs of the same first diagnostic
+  reproduced English compact `Nov 9, 2026` with Spanish expanded calendar,
+  including actual Spanish system preferences on dedicated device
+  `289CA7B9-66C7-44DD-8629-A04B09099B76` (now shut down). One new isolated build
+  compared baseline and explicit inherited-locale forwarding: both native/strict
+  selectors pass, both compact values remain English. SwiftUI locale and enclosing
+  calendar locale both report es_US. This does not establish internal picker state.
+  The ineffective experiment is not in canonical app source or normal CI inventory.
+  [Scoped evidence](evidence/native/shared-picker-locale-20261109/README.md).
+
+  Current stable execution source manifest:
+  `5a91e32882523e7ded2a0b60546d21ab6a504a1cc9506e7186b88ded0732a477`;
+  products `f03804af7df7992b192cf90b6a22639ceffcc08d681badf63bd90ba49528c3d8`.
+  Root scripts/results: `.build/SharedMealLocaleNov09/execution-r2/`.
+  Prior 691d8f source/bfc26c products are verified under
+  `.build/NativeQualificationArchivesNov09/691d8f25724bcb1752884018e1386d4997869218727aac2f5eee0296581acb8f/shared-locale-r1-before-inherited-comparison/`.
+  Neither build nor UI runs remain active. Human localization is not signed off.
 
 - New manual `enable_performance_diagnostics` is false by default, single launch/scroll
   only, baseline enforcement off, and incompatible with another live collector.
@@ -207,9 +234,22 @@ No migration, staging deployment or full-release dispatch occurred.
   Original `capture-r1/receipt.json` remains unmodified and unqualified; the later
   receipt supplies event verification. First compile failed because resolving the
   swiftc symlink invoked swift-frontend directly; preserved `compile-r2.json`
-  records successful driver-path compilation. Next step is a small simulator
-  control, not a full app rerun. Host success does not fix hosted missing metrics
-  or approve the 27.1 baseline. All control processes are terminal.
+  records successful driver-path compilation. The simulator successor below now
+  qualifies collection, without establishing an app or hosted metric repair.
+
+- Standalone simulator control r3 now qualifies: readiness, exact owned helper
+  events (two boundaries/three matching positive intervals), normal zero exits,
+  no signals, 13 offline controls and independent root hash review. The r1
+  supervisor falsely compared a launcher-script path with the actual process;
+  r2 verifies both launcher and final executable but needed finalization cleanup.
+  Those failures remain preserved. R3 changed only the local finalization allowance
+  from 15 to 30 seconds and finished normally in 21.75 seconds overall.
+  [Compact proof](evidence/native/simulator-collector-control-20261109/README.md).
+  Authoritative receipt: `.build/SimulatorSignpostControlNov09/capture-r3-validation/qualification.json`,
+  SHA256 `ed30721e3685682c2faf2bed055ec6a71173e140d3f80dab4c00193b86b995d6`.
+  All native/control processes are terminal. Next step: design one app-process
+  capture with verified measurement-window coverage using the qualified transport.
+  Do not repeat the helper unchanged or infer hosted metrics/baseline qualification.
 
 - Latest hosted 42639339096 attempt 1 at dc343f3e is terminal failure: arm64-only
   producer, immutable plan/products, native 1/1 and cleanup pass; required scroll

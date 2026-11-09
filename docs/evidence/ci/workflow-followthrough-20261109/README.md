@@ -7,11 +7,13 @@ The new diagnostic uploads are best effort, warn if absent and retain two files
 for seven days. Existing gates, build arguments, test coverage and five slots
 are unchanged.
 
-Native wire invocations use unique attempt directories. Each Swift scenario
-retains bounded output, stream hashes and structured failure metadata. Later
-attempts cannot replace previous evidence. A failed local database/journal/TLS
-fixture remains owner-only outside upload paths, with private custody metadata;
-a successful attempt removes it. Failed shutdown cannot delete live state.
+Native wire invocations use unique attempt directories. Each launched Swift
+invocation retains bounded output, stream hashes and structured failure metadata.
+Later attempts cannot replace previous evidence. On failure, the wrapper retains
+its private attempt directory and any database or journal state already created,
+with private custody metadata. Scenario helpers
+remove their TLS files when cleanup runs. A successful attempt removes its private
+state. Failed shutdown cannot delete live state.
 Private state on a hosted runner lasts only for that runner's lifetime.
 
 Validation: all 449 Python source-contract checks pass, including five shell
