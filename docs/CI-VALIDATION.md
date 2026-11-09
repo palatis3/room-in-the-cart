@@ -1,5 +1,30 @@
 # Local CI validation
 
+## Default feedback loop
+
+1. Read the existing run's compact report before scheduling more work:
+   `python3 scripts/ci_feedback.py --run RUN_ID --format text`.
+   Assign one owner per independent cause; the coordinator owns dispatches and integration.
+2. Validate changed source and workflow contracts locally. Use one focused original
+   journey to qualify a fix, with a recorded source revision, question and expected
+   result. Reuse compatible build products; retain the first failure's evidence.
+3. Inspect the existing result once. If the experiment did not distinguish causes,
+   investigate source or use a smaller reproducer before repeating a long journey.
+4. Combine verified fixes into one PR regression batch. Full release checks must
+   pass at the final combined revision; focused passes are supporting evidence.
+
+The compact report lists every unsuccessful or unfinished job, including skipped
+and cancelled jobs with no failed step. It includes the five longest execution
+windows and their longest steps. These are triage hints, not a critical-path
+calculation or a count of distinct bugs. Omit `--format text` for complete JSON.
+Neither format dispatches work or downloads logs.
+
+Before changing shard allocation, compare like-for-like full batches: elapsed
+time, Mac runner-minutes, build/setup/test/evidence time and time before jobs
+start. The last measured batch already used 91.22% of five-slot capacity.
+Shared archives already avoid recompression; additional splitting or caching
+needs measured benefit. A new layout is not automatically a faster one.
+
 ## Independent fixture pipelines and shared billing build
 
 Contributor and dinner fixture tests now wait only for their own profile build.

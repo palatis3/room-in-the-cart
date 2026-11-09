@@ -94,6 +94,40 @@ class GitHub:
         return report
 
 
+def render_text(payload):
+    """Compact triage view; JSON remains the complete machine-readable evidence."""
+    lines = [f"Runs: {len(payload['runs'])}; active: {payload['active_run_count']}"]
+    if not payload['runs']:
+        lines.append('No runs found; this is not a passing result.')
+    for run in payload['runs']:
+        lines += ['', f"{run.get('workflow') or 'Workflow'} | run {run['id']} attempt {run['attempt']}",
+                  f"{run['sha']} | {run['status']} / {run.get('conclusion') or 'pending'}",
+                  run['url']]
+        counts = Counter(job.get('conclusion') or job['status'] for job in run['jobs'])
+        lines.append('Jobs: ' + ', '.join(f'{name}={count}' for name, count in sorted(counts.items())))
+        # Include every unsuccessful/unfinished job, even if it has no failed step.
+        for job in run['jobs']:
+            if job['status'] != 'completed' or job.get('conclusion') != 'success':
+                lines.append(f"  {job['name']}: {job.get('conclusion') or job['status']}")
+                lines.extend(f'    failed step: {step}' for step in job['failed_steps'])
+                if job.get('url'):
+                    lines.append(f"    {job['url']}")
+        timed = sorted((job for job in run['jobs'] if job['execution_seconds'] is not None),
+                       key=lambda job: job['execution_seconds'], reverse=True)[:5]
+        if timed:
+            lines.append('Longest job execution windows (not a critical-path calculation):')
+            for job in timed:
+                lines.append(f"  {job['execution_seconds'] / 60:.1f}m | {job['name']}")
+                if job['slowest_steps']:
+                    step = job['slowest_steps'][0]
+                    lines.append(f"    longest step: {step['seconds'] / 60:.1f}m | {step['name']}")
+    for group in payload['possible_duplicate_runs']:
+        lines.append('Possible active duplicates; compare scopes: ' + ', '.join(map(str, group)))
+    lines += ['', 'Counts cover this query only. Focused passes do not establish release acceptance.',
+              'Read-only: no dispatch, retry, cancellation or log download.']
+    return '\n'.join(lines)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     target = parser.add_mutually_exclusive_group(required=True)
@@ -102,6 +136,8 @@ def main():
     parser.add_argument('--repo', default='palatis3/room-in-the-cart')
     parser.add_argument('--gh', default=shutil.which('gh') or str(ROOT / '.tools/github-cli/bin/gh'))
     parser.add_argument('--cache', type=Path, default=ROOT / '.build/ci-feedback')
+    parser.add_argument('--format', choices=('json', 'text'), default='json',
+                        help='Use text for a compact failure-first triage view; JSON retains all job details')
     args = parser.parse_args()
     if not re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', args.repo) or '..' in args.repo:
         parser.error('--repo must be owner/repository')
@@ -117,7 +153,7 @@ def main():
             key = (run.get('workflow_id'), run.get('head_branch'), run['head_sha'])
             groups.setdefault(key, []).append(run['id'])
     reports = [github.report(run) for run in runs]
-    print(json.dumps({
+    payload = {
         'runs': reports,
         'active_run_count': sum(run['status'] != 'completed' for run in runs),
         'possible_duplicate_runs': [ids for ids in groups.values() if len(ids) > 1],
@@ -128,7 +164,8 @@ def main():
             'pre_start_seconds includes dependencies and scheduling, not just runner queue time.',
             'A focused green run does not establish full PR or release acceptance.',
         ],
-    }, indent=2))
+    }
+    print(render_text(payload) if args.format == 'text' else json.dumps(payload, indent=2))
     return 0 if runs else 1
 
 

@@ -6,7 +6,7 @@ import threading
 import unittest
 from unittest.mock import patch
 
-from ci_feedback import GitHub, seconds, summarize
+from ci_feedback import GitHub, seconds, summarize, render_text
 
 RUN = {'id': 42, 'run_attempt': 1, 'head_sha': 'a' * 40, 'status': 'completed',
        'conclusion': 'failure', 'html_url': 'https://github.com/example/app/actions/runs/42'}
@@ -20,6 +20,27 @@ JOB = {'id': 1, 'name': 'Original journey', 'status': 'completed', 'conclusion':
 
 
 class FeedbackTests(unittest.TestCase):
+    def test_compact_view_keeps_cancelled_skipped_and_active_jobs_without_failed_steps(self):
+        jobs = [JOB] + [dict(JOB, id=index, name=f'Job {state}', conclusion=conclusion,
+                            status=state, steps=[]) for index, (state, conclusion) in enumerate([
+                                ('completed', 'cancelled'), ('completed', 'skipped'),
+                                ('queued', None), ('in_progress', None)], start=2)]
+        report = summarize(RUN, jobs)
+        text = render_text({'runs': [report], 'active_run_count': 0, 'possible_duplicate_runs': [[42, 43]]})
+        for value in ('run 42 attempt 1', 'a' * 40, RUN['html_url'], 'Strict verification',
+                      'cancelled', 'skipped', 'queued', 'in_progress', '42, 43', '3.0m',
+                      'not a critical-path', 'do not establish release acceptance'):
+            self.assertIn(value, text)
+
+    def test_compact_view_bounds_timing_rows_but_never_hides_failures(self):
+        jobs = [dict(JOB, id=index, name=f'Failure {index}') for index in range(12)]
+        text = render_text({'runs': [summarize(RUN, jobs)], 'active_run_count': 0,
+                            'possible_duplicate_runs': []})
+        self.assertEqual(text.count('failed step: Strict verification'), 12)
+        self.assertEqual(text.count('longest step:'), 5)
+        empty = render_text({'runs': [], 'active_run_count': 0, 'possible_duplicate_runs': []})
+        self.assertIn('No runs found; this is not a passing result.', empty)
+
     def test_timing_failed_step_and_missing_timestamps(self):
         report = summarize(RUN, [JOB])
         self.assertEqual(report['jobs'][0]['pre_start_seconds'], 60)

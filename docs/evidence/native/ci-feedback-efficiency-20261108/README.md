@@ -35,3 +35,24 @@ steps are triage hints, not proof of identical scope or a shared root cause.
 Keep one coordinator for dispatches, one owner per independent failure, targeted
 checks first and a combined full PR/release regression at the final revision.
 See [operating instructions](../../../CI-VALIDATION.md).
+
+## Follow-up: compact triage and measured scheduling review
+
+`ci_feedback.py --format text` now presents exact run/revision/attempt, status
+counts, every unsuccessful or unfinished job (including skips/cancellations
+without failed steps), and the five longest execution windows. Full JSON remains
+the default. The report retains read-only behavior and terminal-cache semantics;
+its timing list is not a critical-path calculation.
+
+All 276 Python checks passed in 7.779s; actionlint plus the repository validator
+passed all 17 queue nodes. Live read-only reporting of run42544579944 attempt1
+shows seven successful jobs atd1705d920595be12a3eb8c378f50ad04dbf65ccd.
+This is reporter validation, not a hosted run of the new workflow code.
+
+Independent review found no further scheduling edit justified by retained
+measurements: product archives already skip recompression, fixture profiles start
+independently, and five-slot utilization was91.22%. Native-wire's service setup
+and Postgres setup took only7s and9s respectively in the reviewed run. The next
+comparable full batch should measure savings before further sharding/caching.
+The default operating loop is now prominent in docs/CI-VALIDATION.md. No new
+hosted/native run, retry, cancellation or deployment was triggered here.
