@@ -53,6 +53,32 @@ the origin, replace its lineage or substitute a no-op journal to rerun the suite
 Keep private keys outside evidence. A fresh database fixes isolation only; it
 does not clear an application failure or qualify a different source revision.
 
+### Retain the first failure before retrying
+
+Core and fixture simulator builds now save `build.log` and a small `receipt.txt`
+under `.build/ios-build-evidence/`. The receipt records the actual checkout SHA,
+run and attempt, build configuration/profile and selected Xcode. The build's
+`pipefail` preserves compiler failures when output passes through `tee`. An
+always-attempted, best-effort artifact upload keeps these diagnostics available
+without changing the existing build/test gates. An upload failure remains visible;
+it is not proof that the logs were retained. Keep the relevant originals with
+hashes before the seven-day Actions retention expires.
+
+The native Swift HTTPS/PostgreSQL harness creates a fresh
+`.build/native-wire-results/attempt.*` directory for every invocation. It retains
+bounded stdout/stderr and a receipt for each Swift scenario, including failures;
+later attempts never replace those files. The original 180-second subprocess
+limit, 2 MB per-stream bound, seven Node cases and twelve exact XCTest scenarios
+remain required. A stopped failed database, journal and TLS material stay in their
+owner-only temporary directory, outside the uploaded artifact tree. That directory
+has a private custody receipt; public results contain only cleanup metadata.
+Successful attempts remove their private state. A failed stop remains a failure
+and preserves the state for investigation. On GitHub-hosted runners, private
+state disappears when the runner is destroyed; it is not a durable backup.
+
+Inspect the retained build or scenario failure before retrying. Do not rerun a
+long journey just to recover output that was available in its first attempt.
+
 ### Candidate qualification order
 
 Use this order for the combined candidate going forward:
@@ -703,6 +729,16 @@ original scroll test but no tracer readiness, tracer exit 1 and trace export 10
 (`Document Missing Template Error`). That capture is unqualified. It establishes
 neither missing app signposts nor a collector fix; do not repeat the full journey
 to rediscover it.
+
+The subsequent standalone macOS control now passes: the selected Logging
+template reported readiness, recording and TOC export exited normally, and the
+exported `os-signpost` table contains the exact owned helper's two boundary events
+and three ordered positive intervals. Original trace bytes remained unchanged.
+Evidence is under `.build/HostSignpostControlNov09/`; `validation-r1/qualification.json`
+and `root-review.json` separately qualify this host control. Its initial capture
+receipt remains unchanged. This is a starting point for a small simulator control,
+not evidence that simulator/app collection works or that the hosted metric defect
+is fixed. Do not launch another full app journey on the host result alone.
 
 Bind collector/helper binaries and outputs to their hashes, exact owned process
 identity and runtime. Preserve original artifacts; inspect copies when tools may

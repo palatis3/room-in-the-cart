@@ -11,14 +11,14 @@ and all earlier native preservation paths remain at
 
 Canonical checkout: `/Users/palatis/Room in the Cart`, local branch
 `codex/parallel-ios-ci`. Publish to `codex/combined-candidate-20261109`; its verified
-head before this feature update was 5d1ca0a5. Recheck current Git/run state before dispatch.
+head before this workflow update was ed6d297c. Recheck current Git/run state before dispatch.
 The ambient `spanish-done-diagnostic` worktree is stale. Draft PR1 is an older
 candidate. No full combined qualification or merge has passed.
 
 No Dot/Lumpy. Astra High helpers and Sol6.1 Extra High monitoring are authorized.
 Root owns integration and dispatch. One owner per cause, one local native process,
 no source/product mutation during execution. Historical attempts below are terminal;
-all optional-night native and wire attempts are now terminal. No debugger remains. Disk last reported approximately 32 GiB free;
+all optional-night native and wire attempts are now terminal. No debugger remains. Disk last reported approximately 89 GiB free;
 keep 8 GiB reserve and avoid downloads/duplicate raw archives.
 
 ## Implemented workflow
@@ -44,6 +44,17 @@ problems before integration setup. Collector readiness/readable output/expected
 events must pass on a small control before full app diagnostics. 109 Python,
 18 harness and 7 actual PostgreSQL checks pass; 17 queue contracts remain intact.
 [Validation](evidence/ci/workflow-preflight-20261109/README.md).
+
+Follow-through now retains core/fixture build logs and checkout/toolchain receipts,
+plus unique native-wire attempts with bounded per-scenario output and structured
+failures. Failed database/journal/TLS state stays owner-only outside upload paths;
+success removes it. 449 Python source contracts, output/custody controls and 17 queue
+definitions pass. The actual revised wire harness passes 7 Node/12 Swift scenarios
+in 134.77 seconds, with every scenario output/hash verified, sources unchanged and
+private fixture state removed. `.build/WorkflowFollowthroughNov09/native-wire-r1/`
+and `.build/native-wire-results/attempt.IXnzY7/` retain the terminal proof. New upload
+execution remains for a future hosted run; no full batch was dispatched.
+[Compact evidence](evidence/ci/workflow-followthrough-20261109/README.md).
 
 Primary CI: Xcode 27.1/27A9275, arm64 `xcode-27`, iPhone 17 / iOS 27.0/24A434. Swift
 CodeQL retains its required macOS15/Xcode 26.3 exception. Minimum iOS remains 17.0.
@@ -84,7 +95,8 @@ unapproved. Do not dispatch full release expecting this mismatch to pass.
 The last fully qualified 561-input native snapshot used source manifest
 `a357a09918cf6dc15093dccb8dc992dc16e5baaff789b8eb490fddb5f9708791`.
 Execution workspace `.build/Xcode27WarningReviewNov09/execution-r1/{source,dd}` now
-has since advanced to the unqualified optional-night successor described below.
+has since advanced to the locally verified optional-night successor described below.
+Its focused verification does not establish a full combined regression pass.
 The following products and executors are historical; their archived proof remains valid.
 Debug products manifest f51f027c66f299c08f8c719076bd956a8af631d025bcf283bbf432f7f954ff55
 is archived with source under `.build/NativeQualificationArchivesNov09/<source-SHA>/shared-match-debug-products-f51f027c66f299c0/`.
@@ -104,7 +116,7 @@ no removals, stable added Xcode results database and successful SQLite check. Do
 rewrite the first receipt or rerun native work for that addition. Local Release used
 the prior dual-architecture command, so it does not qualify the optimized producer.
 
-## Pending optional-night implementation
+## Verified optional-night implementation
 
 Local shared meals now accept a required `day` key with explicit null, preserving
 identities when later scheduled. The backend passes 3 focused HTTP, 98 domain,
@@ -153,6 +165,16 @@ No migration, staging deployment or full-release dispatch occurred.
 
 ## Remaining diagnostic work
 
+- Locale follow-up: the optional-night screenshot has Spanish labels but compact
+  picker text `Nov 9, 2026`. App source has no forced English locale. Existing
+  civil-day tests cover explicit formatting, not the system picker. Cause is
+  unproven; inspect effective locale diagnostics and a dedicated Spanish simulator
+  before product edits. Exact image and proposed discriminator are saved in
+  `.build/SharedUndatedNov09/locale-followup.md`. Human localization is not signed off.
+  The opt-in diagnostic patch is prepared under `.build/SharedMealLocaleNov09/r1/`;
+  it has not been installed, built or run. Apply only to a preserved isolated
+  snapshot; its separate diagnostic suite is not in the normal CI inventory.
+
 - New manual `enable_performance_diagnostics` is false by default, single launch/scroll
   only, baseline enforcement off, and incompatible with another live collector.
   Ordinary commands, original tests and same-run provenance remain intact. Available
@@ -175,15 +197,19 @@ No migration, staging deployment or full-release dispatch occurred.
 
 - Read-only collector follow-up confirms the prior command selected implicit
   **Blank + os_signpost** (recorded in instruments.log), so missing `--template`
-  is not an established cause. Next discriminator: small owned host signpost
-  emitter, explicit built-in Logging template,15-second readiness and5-second
-  recording, two boundary events/three interval pairs, normal readable finalization
-  and exact-PID cleanup. This qualifies host capture only; simulator proof remains
-  separate. No tracing/compiler experiment has run for this proposal. Prepared source and a
-  bounded supervisor are under `.build/HostSignpostControlNov09/r1/`. Python AST
-  parsing only; root must review/compile and pin the exact helper/xctrace binaries.
-  Its `captureQualified` deliberately stays false until actual exported event
-  schema and expected events are verified.
+  is not an established cause. The standalone host control now qualifies: explicit
+  Logging template, readiness in the 15-second budget, 5-second recording, two
+  boundary events and three ordered matching positive intervals in the actual
+  exported table. Helper, tracer and TOC export exit 0 without signals. Ten offline
+  parser controls and independent root review pass; source/trace/export originals
+  are unchanged. `.build/HostSignpostControlNov09/validation-r1/qualification.json`
+  SHA256 `32d80b9156265983f6586de90e6125f57d1ebd1f920d3e8bde3c2b65c8dfa707`.
+  Original `capture-r1/receipt.json` remains unmodified and unqualified; the later
+  receipt supplies event verification. First compile failed because resolving the
+  swiftc symlink invoked swift-frontend directly; preserved `compile-r2.json`
+  records successful driver-path compilation. Next step is a small simulator
+  control, not a full app rerun. Host success does not fix hosted missing metrics
+  or approve the 27.1 baseline. All control processes are terminal.
 
 - Latest hosted 42639339096 attempt 1 at dc343f3e is terminal failure: arm64-only
   producer, immutable plan/products, native 1/1 and cleanup pass; required scroll

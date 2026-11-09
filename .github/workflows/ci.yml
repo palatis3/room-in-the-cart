@@ -425,16 +425,23 @@ jobs:
         run: python3 scripts/check_swift_syntax.py
       - name: Check supported keyboard automation before simulator setup
         run: python3 scripts/test_ui_automation_contract.py
-      - name: Record toolchain and select iPhone
+      - name: Record Swift version and select iPhone
         run: |
-          xcodebuild -version
           swift --version
           xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
       - name: Build iPhone simulator test products once
-        run: >-
-          xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart
-          -configuration Debug -destination "platform=iOS Simulator,id=$SIMULATOR_ID"
-          -jobs 2 -derivedDataPath .build/DerivedData CODE_SIGN_IDENTITY=- build-for-testing
+        id: build
+        shell: bash
+        env:
+          REQUESTED_IOS_SCOPE: ${{ github.event_name == 'workflow_dispatch' && inputs.ios_scope || 'full' }}
+        run: |
+          set -o pipefail
+          configuration=Debug
+          bash scripts/record_ios_build_receipt.sh "$configuration" "$REQUESTED_IOS_SCOPE"
+          xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart \
+            -configuration "$configuration" -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
+            -jobs 2 -derivedDataPath .build/DerivedData CODE_SIGN_IDENTITY=- build-for-testing \
+            2>&1 | tee .build/ios-build-evidence/build.log
       - name: Verify the compiled simulator app
         run: python3 scripts/check_built_app.py .build/DerivedData/Build/Products/Debug-iphonesimulator/RoomInTheCart.app --configuration Debug
       - name: Discover compiled tests and balance UI groups
@@ -468,6 +475,18 @@ jobs:
           compression-level: 0
           retention-days: 7
           if-no-files-found: error
+      - name: Retain iPhone simulator build evidence
+        if: always() && steps.build.outcome != 'skipped'
+        continue-on-error: true
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: iphone-test-build-log-${{ github.run_attempt }}
+          path: |
+            .build/ios-build-evidence/build.log
+            .build/ios-build-evidence/receipt.txt
+          include-hidden-files: true
+          retention-days: 7
+          if-no-files-found: warn
   ios-tests:
     name: ios-tests (${{ matrix.shard }}, ${{ matrix.expected_count }})
     concurrency:

@@ -75,21 +75,24 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Require the reviewed Xcode 27.1 toolchain
         run: bash scripts/check_ci_xcode27.sh
-      - name: Record Xcode and select an iPhone simulator
-        run: |
-          xcodebuild -version
-          xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
+      - name: Select an iPhone simulator
+        run: xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
       - name: Check Swift syntax before compilation
         timeout-minutes: 3
         run: python3 scripts/check_swift_syntax.py
       - name: Build fixture app and UI tests for iPhone
+        id: build
         shell: bash
         run: |
+          set -o pipefail
+          configuration=Debug
+          bash scripts/record_ios_build_receipt.sh "$configuration" "$FIXTURE_PROFILE"
           conditions=$(python3 scripts/plan_ios_fixture_tests.py conditions "$FIXTURE_PROFILE")
           xcodebuild -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart \
-            -configuration Debug -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
+            -configuration "$configuration" -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
             -parallel-testing-enabled NO -jobs 2 -derivedDataPath .build/DerivedData \
-            CODE_SIGN_IDENTITY=- "SWIFT_ACTIVE_COMPILATION_CONDITIONS=$conditions" build-for-testing
+            CODE_SIGN_IDENTITY=- "SWIFT_ACTIVE_COMPILATION_CONDITIONS=$conditions" build-for-testing \
+            2>&1 | tee .build/ios-build-evidence/build.log
       - name: Enumerate compiled tests and package fixture products
         shell: bash
         run: |
@@ -128,6 +131,18 @@ jobs:
             .build/test-planning.log
           retention-days: 7
           if-no-files-found: ignore
+      - name: Retain fixture build evidence
+        if: always() && steps.build.outcome != 'skipped'
+        continue-on-error: true
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: iphone-fixture-build-log-${{ env.FIXTURE_PROFILE }}-${{ github.run_attempt }}
+          path: |
+            .build/ios-build-evidence/build.log
+            .build/ios-build-evidence/receipt.txt
+          include-hidden-files: true
+          retention-days: 7
+          if-no-files-found: warn
 
   build-dinner:
     if: needs.fixture-plan.outputs.build_dinner == 'true'
