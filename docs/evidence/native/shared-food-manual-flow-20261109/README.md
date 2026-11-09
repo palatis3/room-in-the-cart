@@ -7,13 +7,13 @@ then saves through the existing durable parent outbox. Unknown amounts stay unkn
 Inherited restrictions need explicit mapping; product labels never silently merge
 needs. Protected unknown identities use the dedicated identity-only confirmation.
 
-The installed app builds under Xcode27.1 and passes the compiled-bundle check.
-All **45 selected simulator model tests** pass strict result validation:18 new
-shared-food cases,19 existing shared-shop cases and8 helper-review cases. Coverage
+The installed app builds under Xcode 27.1 and passes the compiled-bundle check.
+All **45 selected simulator model tests** pass strict result validation: 18 new
+shared-food cases, 19 existing shared-shop cases and 8 helper-review cases. Coverage
 includes exact fractions/Spanish decimal entry, stable source IDs, protected needs,
 pack-only review, cancellation, revoked access, and a lost response followed by
 relaunch and retry of the same reserved operation. The client package passes
-**122 tests**, with3 expected integration-only skips and zero failures.
+**122 tests**, with 3 expected integration-only skips and zero failures.
 
 The first local test selection assigned eight existing helper tests to the wrong
 class. Compiled-selector admission stopped before XCTest. A subsequent setup check
@@ -24,7 +24,7 @@ the same source and products; no build or app test was repeated for either failu
 Original source/copy review is in
 `.build/SharedDemandGraphNov09/native-manual-flow-r1/`; installed-source, build,
 package and strict model evidence is in `.build/SharedDemandNativeManualNov09/r1/`.
-The installed catalog has90 English/Spanish keys. Translation presence is not human
+The installed catalog has 90 English/Spanish keys. Translation presence is not human
 localization acceptance.
 
 This is the first manual-food vertical path, not complete F01/F02 acceptance.

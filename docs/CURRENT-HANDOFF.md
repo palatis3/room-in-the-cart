@@ -12,8 +12,8 @@ and all earlier native preservation paths remain at
 Canonical checkout: `/Users/palatis/Room in the Cart`, local branch
 `codex/parallel-ios-ci`. Publish to `codex/combined-candidate-20261109`; verify its
 current remote head and run state before dispatch. The last verified remote
-source checkpoints are176a8480 (native shared-food flow) and4f188b26 (backend).
-Hosted diagnostics used the earlier frozen8f58b7f4 tool-profile revision. Client
+source checkpoints are 176a8480 (native shared-food flow) and 4f188b26 (backend).
+Hosted diagnostics used the earlier frozen 8f58b7f4 tool-profile revision. Client
 checkpoint 5d737882 and observer checkpoint 28925824 precede it.
 The ambient `spanish-done-diagnostic` worktree is stale. Draft PR1 is an older
 candidate. No full combined qualification or merge has passed.
@@ -26,20 +26,23 @@ keep 8 GiB reserve and avoid downloads/duplicate raw archives.
 
 ## Immediate work
 
-Focused hosted observer run42707391568 at8f58b7f4 is terminal. All263 early
+Focused hosted observer run 42707391568 at 8f58b7f4 is terminal. All 263 early
 controls, observer typecheck and Release producer build/upload passed. Consumer
-startup stopped at container-data-9_deadline: a5-second lookup interrupted runner
-installation before the120-second startup budget expired. No selected-case verdict
+startup stopped at container-data-9_deadline: a five-second lookup interrupted runner
+installation before the 120-second startup budget expired. No selected-case verdict
 or required measurements were established. Retained archives and first failure are
-verified. A narrow correction using the existing startup deadline is under review;
+verified. That correction is committed at ca3cf777 and passes 279 complete early controls
+in both profiles. Focused successor 42711707477 targets that exact frozen commit;
 keep normal-exit, ownership, ARM/GO and performance gates intact. No performance
 baseline or full combined regression is approved.
 
-Native shared-food adoption/change/review now compiles with its90-key EN/ES
-catalog and passes45 strict native model tests plus122 client-package tests
-(3 expected integration skips). Combined backend passes569 offline tests
-(1 expected DB skip) and285 PostgreSQL tests (3 optional browser skips). Root
+Native shared-food adoption/change/review now compiles with its 90-key EN/ES
+catalog and passes 45 strict native model tests plus 122 client-package tests
+(3 expected integration skips). Combined backend passes 569 offline tests
+(1 expected DB skip) and 285 PostgreSQL tests (3 optional browser skips). Root
 local native and database attempts are terminal; no local test owner remains.
+Astra release-gap owns the next quote/item editor source edits; root owns CI
+integration and dispatch. Do not include those unfinished edits in CI fixes.
 Exact proof: shared-food-manual-flow-20261109 and shared-demand-adoption-20261109.
 
 Next complete app milestone: restore existing quote/item editor saves after graph

@@ -81,16 +81,35 @@ are `reviewed-hosted-profile-r1/` and `hosted-profile-candidate-r1/`. The succes
 is the single focused hosted observation for this change. Its outcome must be
 recorded separately; these local checks do not establish native success.
 
-The successor 42707391568 passed all263 early controls, observer helper admission
+The successor 42707391568 passed all 263 early controls, observer helper admission
 and Release build/package/upload. Its separate consumer passed restored-product
 provenance and fresh-simulator setup, then stopped during startup. The ninth
-app-data container query hit its5-second deadline while the testmanager logs showed
-runner installation in progress, about19.55seconds after native dispatch. The
-original startup budget was120seconds. No test-case verdict, trace or required
+app-data container query hit its five-second deadline while the testmanager logs showed
+runner installation in progress, about 19.55 seconds after native dispatch. The
+original startup budget was 120 seconds. No test-case verdict, trace or required
 duration was established. Later custody/export failures follow that interruption.
 
-Producer and consumer diagnostic ZIPs are digest-verified, with52 verified consumer
+Producer and consumer diagnostic ZIPs are digest-verified, with 52 verified consumer
 archive members. Originals and root verification are in
 `hosted-42707391568/`. This proves hosted build/transport and failure preservation;
 it does not answer the missing-metric question. A narrow startup-budget correction
 is being reviewed before another run; no baseline or cleanup waiver is approved.
+
+Commit `ca3cf777c93196300bf5045b9d60a8e41315eabe` corrects that early cutoff:
+only initial app-data discovery uses the remaining existing 120-second startup
+budget. Later installed-container queries retain five seconds. Every wait checks the
+owned native/query identities and output/disk budgets; only the observed ENOENT
+response counts as an absent container. A query exiting between polling and
+identity sampling is reaped normally; live identity changes still reject. Final
+output is checked after termination before reading. Receipt validation continues
+to reject every signaled process; no cleanup exception was added.
+
+All 102 observer controls pass, including 16 new fake-clock/process cases. Both
+complete workflow profiles pass 279 controls in 5.766 and 5.847 seconds. All input
+bytes/modes match the committed Git tree. Batched tree verification replaces
+per-file Git subprocesses; both profiles plus source verification took 12.36 seconds.
+Frozen originals are `startup-container-budget-r1/` and `startup-candidate-r1/`.
+[Focused successor 42711707477](https://github.com/palatis3/room-in-the-cart/actions/runs/42711707477)
+targets that exact revision. Native observer qualification remains pending its
+terminal result; the run also contains the separately validated new app/backend
+slice, so it is not a controlled before/after performance comparison.

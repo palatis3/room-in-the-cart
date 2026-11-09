@@ -2,9 +2,9 @@
 
 ## Current checkpoint — November 9, workflow and combined-candidate qualification
 
-The latest shared-food slice compiles under Xcode27.1 and passes45 native model
+The latest shared-food slice compiles under Xcode 27.1 and passes 45 native model
 regressions,122 client-package tests (3 expected integration skips),569 backend
-offline tests (1 expected database-only skip), and285 PostgreSQL tests (3 optional
+offline tests (1 expected database-only skip), and 285 PostgreSQL tests (3 optional
 browser skips). These are scoped passes, not a complete combined release run.
 Quote/item, request Add/Link and changed-meal editors still need graph-aware saves;
 UI journeys and mixed-device acceptance remain open.
@@ -84,9 +84,11 @@ not retained. Failure-time identity reporting is now fixed and covered by 16 new
 regressions; both complete local profiles pass 243 checks and workflow lint passes.
 Hosted retention verification and static identity review now pass. Exact reviewed
 hosted tool admission is committed at 8f58b7f4; both isolated complete local
-profiles pass 263 controls. Run42707391568 passed the observer helper and Release producer build/upload.
+profiles pass 263 controls. Run 42707391568 passed the observer helper and Release producer build/upload.
 Its consumer stopped at an early container lookup timeout during runner installation.
-No selected-case verdict or measurements were established. The separate
+No selected-case verdict or measurements were established. The narrow initial
+lookup correction at ca3cf777 passes 279 complete early controls in both profiles;
+focused successor 42711707477 is running. The separate
 producer/consumer and original required metrics remain; native observation,
 performance baseline and combined acceptance are still unproven.
 [Prepared workflow](evidence/ci/hosted-scroll-observation-20261109/README.md).
@@ -156,7 +158,7 @@ and378offline passes; stderr still fails qualification. This parser correction i
 not a remedy for the hosted result, which ran with optional capture disabled.
 
 At909f7c9b, the original local Release scroll and cold-launch cases pass native,
-strict and required measurement checks on Xcode27.1/27A9275+iOS27.0/24A434. All five
+strict and required measurement checks on Xcode 27.1/27A9275+iOS27.0/24A434. All five
 original-duration samples are present in each case; scroll also has all three
 memory series and verified500-row persistence. Hitches remain unavailable.
 This is local calibration evidence, not a hosted baseline or final combined pass.
@@ -174,7 +176,7 @@ and does not change the combined candidate's runtime or performance baseline.
 
 
 Five test-fixture declaration corrections are now installed. Debug compilation
-and bundle checks pass on Xcode27.1; all55 selected request, membership, restoration,
+and bundle checks pass on Xcode 27.1; all55 selected request, membership, restoration,
 stock-privacy and media regressions pass native/strict on 26.2. Five targeted
 compiler warnings are gone. Actual fixture shared-state synchronization remains
 separate. [Evidence](evidence/native/xcode27-native-followup-20261109/README.md).
@@ -570,7 +572,7 @@ Disabled-action follow-up: seven selected native/strict executions pass, but scr
 
 The isolated speech-ordering prototype now passes12/12 deterministic tests, including duplicate callback/sequence rejection and delayed Pause/Stop ordering. [Exact evidence](evidence/native/cook-control-ordering-20261108/README.md). Real AVSpeech ownership, responsiveness, natural end/teardown, notifications and acoustic behavior remain separate integration and acceptance work. The first-version goal remains active; no new deployment or hosted CI result is claimed.
 
-Latest follow-up, 14:36 UTC: The isolated animation observer compiled successfully, and the original eight UI09 cases passed native/strict 8/8 with zero recorded runtime warnings, idle messages or restarts. The previously failing second case passed in130.127s. Its exact PID-bound capture shows normal keyboard spring completion by0.534s after dismissal, while fifteen preexisting UIKit decorative-layer keys remain during successful progression. This is a passing diagnostic baseline, not a reproduction or fix of the hosted stall. The original a305 test sources, limits and order were unchanged; local Xcode27.1 differs from hosted26.3. [Bounded diagnostic evidence](evidence/native/ui09-animation-baseline-20261108/README.md).
+Latest follow-up, 14:36 UTC: The isolated animation observer compiled successfully, and the original eight UI09 cases passed native/strict 8/8 with zero recorded runtime warnings, idle messages or restarts. The previously failing second case passed in130.127s. Its exact PID-bound capture shows normal keyboard spring completion by0.534s after dismissal, while fifteen preexisting UIKit decorative-layer keys remain during successful progression. This is a passing diagnostic baseline, not a reproduction or fix of the hosted stall. The original a305 test sources, limits and order were unchanged; local Xcode 27.1 differs from hosted26.3. [Bounded diagnostic evidence](evidence/native/ui09-animation-baseline-20261108/README.md).
 
 The wrapper correctly stopped on its preservation assertion because database.sqlite3 appeared during result inspection. All79 preexisting result entries and the native log remained unchanged; root separately preserved the exact preinspection file set and verified all196 build-product entries unchanged. The original failed wrapper receipt remains intact. No native rerun, repeat export or result deletion occurred. UI09 test and process monitor are terminal; its result inspections and target-case trace collection are complete. Do not repeat them.
 

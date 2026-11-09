@@ -1,0 +1,24 @@
+{
+  "sourceCommit": "ca3cf777c93196300bf5045b9d60a8e41315eabe",
+  "profiles": {
+    "diagnostic": {
+      "checks": 279,
+      "seconds": 5.766,
+      "sourceManifestSHA256": "2e9034c9a2b2c10435c8f61037ea4d706f07e8cb972747f7e5e66a7802faa978",
+      "receiptSHA256": "7ec75abd8149c2144912e0b5aa982fa7bb2b6c7ba4045d2a6776e74929f370f3"
+    },
+    "ordinary": {
+      "checks": 279,
+      "seconds": 5.847,
+      "sourceManifestSHA256": "2e9034c9a2b2c10435c8f61037ea4d706f07e8cb972747f7e5e66a7802faa978",
+      "receiptSHA256": "cb202071586e1ed220657fe7cd7e44fc766b819e8a9f9d3090678d75ab00ea9a"
+    }
+  },
+  "sourceProofSHA256": "ebcd8ccb505402f0f5de45db58f255cbf7163e3118c3e3d52bda8079921baeda",
+  "reviewReceiptSHA256": "2892248bbc2509e2cd43bc45baf99ef8cc8913cbc74c36cf84b308a307f26a06",
+  "signalRejectionUnchanged": true,
+  "originalNativeStartupSeconds": 120,
+  "laterLookupSeconds": 5,
+  "hostedRun": 42711707477,
+  "baselineQualified": false
+}
