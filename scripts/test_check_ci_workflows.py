@@ -74,6 +74,14 @@ class WorkflowGuardTests(unittest.TestCase):
             with self.subTest(group=group), self.assertRaises(ValueError):
                 self.validate(TEXT.replace('ritc-macos-slot-0', group))
 
+    def test_xcode_runner_cannot_bypass_native_slot_inventory(self):
+        text = TEXT.replace('runs-on: macos-15', 'runs-on: xcode-27')
+        self.assertEqual(len(self.validate(text)), 1)
+        with self.assertRaisesRegex(ValueError, 'Unreviewed native job'):
+            self.validate(text, {})
+        with self.assertRaises(ValueError):
+            self.validate(text.replace('ritc-macos-slot-0', 'preview-private-slot'))
+
     def test_slots_cannot_be_owned_by_workflow_caller_or_linux_job(self):
         for text in (TEXT.replace('original-pr-${{ github.ref }}', 'ritc-macos-slot-0'),
                      TEXT.replace('  cancel-in-progress: true\n', '  cancel-in-progress: true\n  queue: max\n'),

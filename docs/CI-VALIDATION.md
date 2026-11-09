@@ -27,20 +27,104 @@ needs measured benefit. A new layout is not automatically a faster one.
 
 ## Reduce repeated UI traversal before increasing deadlines
 
-The retained Spanish AX5 Dinner run reached all five keyboard checks and approval
-but exhausted its720s allowance at relaunch. Its restored-review block used49
-scroll gestures, including20 to Accept followed by20 back to the meal title.
-The isolated R4 candidate groups the existing upper-page assertions before the
-first enabled-Accept check, then searches back toward the supply row. Every
-original assertion, gesture bound, deadline and persistence check remains.
-Qualification and timing savings are pending; do not count a timeout as a pass.
+The retained Spanish AX5 Dinner R3 run reached all five keyboard checks and
+approval but exhausted its 720-second allowance at relaunch. R4 reduced the
+restored-review block from 49 to 29 gestures and reached final acceptance 56.77
+seconds earlier. The final empty-list assertion completed at 715.60 seconds,
+but teardown exceeded the unchanged allowance at 720.251 seconds: native65/strict1.
+This remains a failed run. R5 adds persistent access to Continue editing to remove
+the remaining 19-gesture trip; its completed run remains unsuccessful (native65).
+This change has not established a full journey pass.
+Every original assertion, gesture bound, deadline and persistence check remains.
 [Exact candidate and retained evidence](evidence/native/dinner-accessible-fields-20261109/README.md).
 
-Keep local and hosted toolchain differences explicit when triaging framework
-failures. This Mac currently has only Xcode27.1; workflows pin26.3. Align the
-local version with CI before treating a local-only failure as a hosted regression,
-when disk capacity and official installer access permit. Do not change the hosted
-pin merely to hide a failure or reuse products across mismatched toolchains.
+## Primary Xcode 27.1 toolchain
+
+Existing native workflows now use Xcode 27.1 build 27A9275 at
+`/Applications/Xcode_27.1.app` on the arm64 `xcode-27` hosted runner. Local Xcode
+27.1 matches this exact compiler build; no local download is needed. Existing
+PR, manual and release triggers retain their original coverage and strict gates.
+There is no additional compatibility workflow or duplicate scheduled suite.
+All 17 native job definitions still share the same five global slot queues;
+16 migrate and the required Swift CodeQL job retains the security exception below.
+
+The official [runner catalog](https://github.com/actions/runner-images/blob/main/README.md)
+and [Xcode 27 image](https://github.com/actions/runner-images/blob/main/images/macos/xcode-27-arm64-Readme.md)
+were checked November 9, 2026. `xcode-27` is a **public preview** runner, distinct
+from `macos-26`. Published image `20261026.0314.1` includes the selected toolchain
+and iPhone 17 on iOS 27.0. Each migrated job checks the exact Xcode version/build
+and arm64 architecture after checkout. Simulator selection requires both
+`com.apple.CoreSimulator.SimRuntime.iOS-27-0` and `iPhone 17`, including when
+creating an owned device. It cannot silently select the image's newer iOS 27.1
+runtime, which currently offers iPhone Duo instead. The actual runtime build is
+recorded; the image documentation does not publish its build identifier.
+The rolling preview label is not an immutable image pin. Runner availability and
+successful hosted execution still need qualification at the migrated revision.
+
+`ios-swift-codeql` remains required on `macos-15` with Xcode 26.3. GitHub's
+[official CodeQL support notice](https://github.blog/changelog/2026-10-19-codeql-changes-for-macos-27-xcode-27-and-swift-6-4/)
+explicitly excludes Swift 6.4 and traced Xcode 27 builds; `build-mode: none` is
+not a Swift replacement. This hosted security exception preserves manual Swift
+analysis and its gate. It does not inherit the iOS 27 runtime selector and does
+not require installing Xcode 26.3 locally. Remove it only after official support
+and a successful equivalent analysis are established.
+
+The iOS 17 deployment contract and separately required local minimum-OS testing
+remain unchanged. There was no hosted iOS 17 runtime lane to migrate, and the
+preview image does not advertise that runtime. Compiler equality alone does not
+establish OS/runtime or hardware equivalence; products must not cross incompatible
+toolchains. Historical results and their original environment identities remain
+historical evidence.
+
+### Performance calibration blocks release until approved
+
+The approved performance profile remains byte-for-byte unchanged at Xcode
+26.3/17C529, iOS 26.2/23C54, iPhone 17, arm64, Release/TestSchemeAction. It cannot
+approve measurements from Xcode 27.1/iOS 27.0. PR and full release enforcement
+remain enabled, so they fail closed without an exact approved new profile.
+Use the existing manual `ios-performance.yml` workflow with `case=all` and
+`enforce_baselines=false` to collect the new environment's complete metrics and
+retained evidence. Review those actual measurements before adding an approved
+profile; do not relabel the old baseline, drop a metric or treat collection as a
+release pass. Missing metrics and test/warning failures still fail collection.
+
+### First hosted migration qualification
+
+After reviewing and publishing a candidate revision, use the already registered
+core workflow's first-class manual Dinner scope:
+
+```sh
+gh workflow run ci.yml --ref codex/my-reviewed-fix -f ios_scope=dinner
+```
+
+Confirm the selected ref's immutable SHA and existing runs before dispatch and
+record the returned run's `head_sha`. Full compiled inventory validation happens
+before narrowing work. Every enabled ordinary model test is retained, plus exactly
+these original UI journeys in `ui-01`:
+
+- `FreeJourneyUITests/testFirstPickupCanStartFromDinnersAndReviewAnEditablePattern`
+- `FreeJourneyUITests/testSpanishDinnerIdeaReviewsPacksAndLeavesListEmptyAfterApproval`
+
+The original full manifest, selector files and compiled enumeration remain in the
+retained test-plan artifact. The same runner verifies exact executed selectors,
+counts and warnings with unchanged test allowances. Every other core job remains
+required, including release compilation, package tests and Swift CodeQL. This
+reduces core UI work; it is not a single-job smoke test or complete release coverage.
+
+`ios_scope` defaults to `full` and is exposed only for manual dispatch, never as a
+reusable workflow input. PR, push and release calls retain the full suite. The
+focused run is named a Dinner diagnostic, has a distinct `Dinner diagnostic gate`,
+and uses its own workflow concurrency group, so it cannot cancel a full run on the
+same ref or present its success as the normal `CI gate`. Native jobs still share
+the same five non-cancelling slot queues. Unknown scopes and attempted narrowing
+outside manual dispatch fail closed. No temporary alias workflow is required.
+
+Follow the focused run with performance collection and the full existing
+core/deep/fixture/native-wire/release batch once the combined app revision is ready.
+An independent fixture smoke remains available through `ios-fixtures.yml` with
+`shard=DinnerDecisionSheetUITests`, retaining that entire original fixture group.
+Keep the first failure and inspect it before repeating work. This migration has
+no hosted pass until the corresponding run receipts are recorded.
 
 ## Independent fixture pipelines and shared billing build
 

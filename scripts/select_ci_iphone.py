@@ -10,17 +10,23 @@ import sys
 from uuid import UUID, uuid4
 
 
-def select_iphone(devices_by_runtime):
+def select_iphone(devices_by_runtime, required_runtime=None, required_name=None):
+    if bool(required_runtime) != bool(required_name):
+        raise ValueError('Pin both CI_IPHONE_RUNTIME and CI_IPHONE_NAME, or neither')
     candidates = []
     for runtime, devices in devices_by_runtime.items():
         if ".iOS-" not in runtime:
             continue
+        if required_runtime and runtime != required_runtime:
+            continue
         version = tuple(map(int, runtime.split(".iOS-", 1)[1].split("-")))
         for device in devices:
+            if required_name and device['name'] != required_name:
+                continue
             if device["name"].startswith("iPhone") and device.get("isAvailable"):
                 candidates.append((version, runtime, device))
     if not candidates:
-        raise ValueError("No available iPhone simulator")
+        raise ValueError("No available iPhone simulator matching the requested runtime/device")
     _, runtime, device = max(candidates, key=lambda item: (item[0], item[2]["name"] == "iPhone 17"))
     return runtime, device
 
@@ -91,7 +97,7 @@ def current_owned_device(receipt):
 def provision(devices, path):
     if path.exists() or path.is_symlink():
         raise ValueError("Refusing to replace an existing simulator ownership receipt")
-    runtime, source = select_iphone(devices)
+    runtime, source = select_iphone(devices, os.environ.get('CI_IPHONE_RUNTIME'), os.environ.get('CI_IPHONE_NAME'))
     owner = owner_identity()
     source_id = str(UUID(source["udid"])).upper()
     device_type = source.get("deviceTypeIdentifier")
@@ -193,7 +199,7 @@ def main():
             if args.create_owned:
                 provision(devices, args.create_owned)
             else:
-                _, device = select_iphone(devices)
+                _, device = select_iphone(devices, os.environ.get('CI_IPHONE_RUNTIME'), os.environ.get('CI_IPHONE_NAME'))
                 publish(device["udid"], device["name"])
     except (KeyError, ValueError, OSError, subprocess.SubprocessError) as error:
         parser.exit(1, f"Simulator selection/ownership failed: {error}\n")

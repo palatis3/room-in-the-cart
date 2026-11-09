@@ -1,0 +1,5 @@
+# Official arm64 preview runner. This registers a hosted label with actionlint;
+# the repository's independent native-slot validator still requires its slot.
+self-hosted-runner:
+  labels:
+    - xcode-27

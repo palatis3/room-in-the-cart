@@ -4,7 +4,7 @@ set -euo pipefail
 mkdir -p "$EVIDENCE"
 test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
 xcodebuild -version | tee "$EVIDENCE/toolchain.txt"
-test "$(cat "$EVIDENCE/toolchain.txt")" = $'Xcode 26.3\nBuild version 17C529'
+test "$(cat "$EVIDENCE/toolchain.txt")" = $'Xcode 27.1\nBuild version 27A9275'
 test "$(uname -m)" = arm64
 sw_vers > "$EVIDENCE/host.txt"
 xcrun simctl list -j > "$EVIDENCE/simulator-inventory.json"
@@ -14,10 +14,10 @@ from pathlib import Path
 
 root = Path(os.environ['EVIDENCE'])
 data = json.loads((root / 'simulator-inventory.json').read_text())
-runtime_id = 'com.apple.CoreSimulator.SimRuntime.iOS-26-2'
+runtime_id = 'com.apple.CoreSimulator.SimRuntime.iOS-27-0'
 runtime, = [x for x in data['runtimes'] if x['identifier'] == runtime_id and x['isAvailable']]
-if runtime['buildversion'] != '23C54':
-    raise SystemExit('Expected hosted iOS 26.2 build 23C54; comparison is unavailable on this image')
+if runtime.get('version') != '27.0' or not runtime.get('buildversion'):
+    raise SystemExit('Expected hosted iOS 27.0 with an exact recorded runtime build')
 with (root / 'simulator-id.txt').open('w') as identity_output:
     subprocess.run(['xcrun', 'simctl', 'create', 'RITC Form toggle control',
         'com.apple.CoreSimulator.SimDeviceType.iPhone-17', runtime_id], stdout=identity_output, check=True)

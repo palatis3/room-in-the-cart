@@ -109,7 +109,7 @@ def native_job(job):
         labels = [labels]
     require(isinstance(labels, list) and all(isinstance(label, str) and '${{' not in label for label in labels),
             'Review dynamic or grouped runs-on before changing the native-job inventory')
-    return any(re.match(r'^macos(?:-|$)', label, re.I) for label in labels)
+    return any(re.match(r'^(?:macos|xcode)(?:-|$)', label, re.I) for label in labels)
 
 
 def nonleaf_group_is_disjoint(group):

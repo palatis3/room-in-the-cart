@@ -31,7 +31,9 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+  DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
+  CI_IPHONE_RUNTIME: com.apple.CoreSimulator.SimRuntime.iOS-27-0
+  CI_IPHONE_NAME: iPhone 17
 
 jobs:
   fixture-plan:
@@ -63,7 +65,7 @@ jobs:
       cancel-in-progress: false
     name: Build contributor, stock and carryover fixtures
     needs: fixture-plan
-    runs-on: macos-15
+    runs-on: xcode-27
     timeout-minutes: 35
     env:
       FIXTURE_PROFILE: contributor
@@ -71,6 +73,8 @@ jobs:
       artifact: ${{ steps.upload.outputs.artifact-id }}
     steps: &fixture-build-steps
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Require the reviewed Xcode 27.1 toolchain
+        run: bash scripts/check_ci_xcode27.sh
       - name: Record Xcode and select an iPhone simulator
         run: |
           xcodebuild -version
@@ -130,7 +134,7 @@ jobs:
       cancel-in-progress: false
     name: Build dinner decision fixture
     needs: fixture-plan
-    runs-on: macos-15
+    runs-on: xcode-27
     timeout-minutes: 35
     env:
       FIXTURE_PROFILE: dinner
@@ -146,7 +150,7 @@ jobs:
       cancel-in-progress: false
     name: Fixture (${{ matrix.shard }})
     needs: [fixture-plan, build-contributor]
-    runs-on: macos-15
+    runs-on: xcode-27
     timeout-minutes: 55
     strategy:
       fail-fast: false
@@ -158,6 +162,8 @@ jobs:
       TEST_SHARD: ${{ matrix.shard }}
     steps: &fixture-test-steps
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Require the reviewed Xcode 27.1 toolchain
+        run: bash scripts/check_ci_xcode27.sh
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           artifact-ids: ${{ env.TEST_PRODUCTS_ARTIFACT }}
@@ -286,7 +292,7 @@ jobs:
       cancel-in-progress: false
     name: Fixture (${{ matrix.shard }})
     needs: [fixture-plan, build-dinner]
-    runs-on: macos-15
+    runs-on: xcode-27
     timeout-minutes: 55
     strategy:
       fail-fast: false

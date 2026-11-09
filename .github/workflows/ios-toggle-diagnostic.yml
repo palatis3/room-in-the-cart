@@ -20,10 +20,12 @@ jobs:
       queue: max
       cancel-in-progress: false
     if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'diagnostic:form-toggle'
-    runs-on: macos-15
+    runs-on: xcode-27
     timeout-minutes: 45
     env:
-      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+      DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
+      CI_IPHONE_RUNTIME: com.apple.CoreSimulator.SimRuntime.iOS-27-0
+      CI_IPHONE_NAME: iPhone 17
       EXPECTED_SHA: ${{ github.event.pull_request.head.sha || inputs.candidate_sha }}
       EVENT_SHA: ${{ github.sha }}
       EVENT_NAME: ${{ github.event_name }}
@@ -44,6 +46,8 @@ jobs:
         with:
           ref: ${{ env.EXPECTED_SHA }}
           persist-credentials: false
+      - name: Require the reviewed Xcode 27.1 toolchain
+        run: bash scripts/check_ci_xcode27.sh
       - name: Verify source and hosted environment; create a fresh simulator
         run: bash diagnostics/swiftui-toggle/require-environment.sh
       - name: Build and freeze standalone products

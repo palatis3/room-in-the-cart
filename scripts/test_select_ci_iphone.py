@@ -82,6 +82,29 @@ class OwnedSimulatorTests(unittest.TestCase):
         self.assertEqual(select_iphone(data)[0], RUNTIME)
         self.assertEqual(self.calls, [])
 
+    def test_explicit_runtime_device_pin_beats_newer_duo_and_never_falls_back(self):
+        data = copy.deepcopy(self.original)
+        data['com.apple.CoreSimulator.SimRuntime.iOS-27-1'] = [
+            {'name': 'iPhone Duo', 'isAvailable': True, 'udid': 'newer'}]
+        self.assertEqual(select_iphone(data, RUNTIME, 'iPhone 17')[1]['udid'], SOURCE)
+        for runtime, name in [(RUNTIME, 'iPhone missing'), ('missing', 'iPhone 17'),
+                              (RUNTIME, None), (None, 'iPhone 17')]:
+            with self.subTest(runtime=runtime, name=name), self.assertRaises(ValueError):
+                select_iphone(data, runtime, name)
+        with patch.dict(os.environ, {'CI_IPHONE_RUNTIME': RUNTIME, 'CI_IPHONE_NAME': 'iPhone 17'}), \
+             patch('sys.argv', ['select_ci_iphone.py']), patch('sys.stdin', io.StringIO(json.dumps({'devices': data}))):
+            main()
+        self.assertEqual(self.env_file.read_text(), f'SIMULATOR_ID={SOURCE}\n')
+        self.assertEqual(self.calls, [])
+
+    def test_owned_device_provisioning_honors_same_runtime_pin(self):
+        self.original['com.apple.CoreSimulator.SimRuntime.iOS-27-1'] = [
+            {'name': 'iPhone Duo', 'isAvailable': True, 'udid': 'newer'}]
+        with patch.dict(os.environ, {'CI_IPHONE_RUNTIME': RUNTIME, 'CI_IPHONE_NAME': 'iPhone 17'}):
+            receipt = self.create()
+        self.assertEqual(receipt['runtime']['identifier'], RUNTIME)
+        self.assertEqual(receipt['deviceTypeIdentifier'], TYPE)
+
     def test_create_binds_exact_runtime_type_and_owner_then_deletes_only_owned_uuid(self):
         receipt = self.create()
         self.assertEqual(receipt['runtime'], {k: self.runtimes[0][k] for k in ('identifier', 'version', 'buildversion', 'bundlePath')})

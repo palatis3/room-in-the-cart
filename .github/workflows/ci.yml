@@ -1,9 +1,16 @@
 name: Build and test
+run-name: Build and test · ${{ github.event_name == 'workflow_dispatch' && inputs.ios_scope == 'dinner' && 'Dinner diagnostic (all models + 2 original UI journeys)' || 'full suite' }}
 on:
   push:
     branches: [main]
   pull_request:
   workflow_dispatch:
+    inputs:
+      ios_scope:
+        description: Full suite, or a manual Dinner diagnostic that cannot qualify release
+        type: choice
+        options: [full, dinner]
+        default: full
   workflow_call:
     inputs:
       require_release_metadata:
@@ -13,7 +20,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: core-ci-${{ github.workflow }}-${{ github.ref }}
+  group: core-ci-${{ github.workflow }}-${{ github.ref }}-${{ github.event_name == 'workflow_dispatch' && inputs.ios_scope == 'dinner' && 'dinner-diagnostic' || 'full' }}
   cancel-in-progress: true
 jobs:
   typescript:
@@ -156,12 +163,16 @@ jobs:
       group: ritc-macos-slot-0
       queue: max
       cancel-in-progress: false
-    runs-on: macos-15
+    runs-on: xcode-27
     timeout-minutes: 25
     env:
-      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+      DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
+      CI_IPHONE_RUNTIME: com.apple.CoreSimulator.SimRuntime.iOS-27-0
+      CI_IPHONE_NAME: iPhone 17
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Require the reviewed Xcode 27.1 toolchain
+        run: bash scripts/check_ci_xcode27.sh
       - name: Test Swift packages and collect coverage
         run: |
           set -o pipefail
@@ -188,13 +199,17 @@ jobs:
       group: ritc-macos-slot-1
       queue: max
       cancel-in-progress: false
-    runs-on: macos-15
+    runs-on: xcode-27
     timeout-minutes: 45
     env:
-      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+      DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
+      CI_IPHONE_RUNTIME: com.apple.CoreSimulator.SimRuntime.iOS-27-0
+      CI_IPHONE_NAME: iPhone 17
       REQUIRE_RELEASE_METADATA: ${{ inputs.require_release_metadata }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Require the reviewed Xcode 27.1 toolchain
+        run: bash scripts/check_ci_xcode27.sh
       - name: Compile unsigned Release for iPhone
         timeout-minutes: 30
         shell: bash
@@ -222,6 +237,9 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
   ios-swift-codeql:
+    # GitHub does not support traced Swift extraction with Xcode 27 / Swift 6.4.
+    # Keep this required security-only compiler exception until upstream support exists.
+    # https://github.blog/changelog/2026-10-19-codeql-changes-for-macos-27-xcode-27-and-swift-6-4/
     needs: source-checks
     concurrency:
       group: ritc-macos-slot-4
@@ -386,15 +404,19 @@ jobs:
       group: ritc-macos-slot-3
       queue: max
       cancel-in-progress: false
-    runs-on: macos-15
+    runs-on: xcode-27
     timeout-minutes: 35
     env:
-      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+      DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
+      CI_IPHONE_RUNTIME: com.apple.CoreSimulator.SimRuntime.iOS-27-0
+      CI_IPHONE_NAME: iPhone 17
     outputs:
       test_products_artifact: ${{ steps.upload.outputs['artifact-id'] }}
       test_matrix: ${{ steps.plan.outputs.matrix }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Require the reviewed Xcode 27.1 toolchain
+        run: bash scripts/check_ci_xcode27.sh
       - name: Check supported keyboard automation before simulator setup
         run: python3 scripts/test_ui_automation_contract.py
       - name: Record toolchain and select iPhone
@@ -412,9 +434,11 @@ jobs:
       - name: Discover compiled tests and balance UI groups
         id: plan
         shell: bash
+        env:
+          REQUESTED_IOS_SCOPE: ${{ github.event_name == 'workflow_dispatch' && inputs.ios_scope || 'full' }}
         run: |
           python3 scripts/discover_ios_tests.py --simulator "$SIMULATOR_ID"
-          python3 -c 'import json; from pathlib import Path; p=json.loads(Path(".build/test-plan/manifest.json").read_text()); print("matrix=" + json.dumps({"include":p["include"]}))' >> "$GITHUB_OUTPUT"
+          python3 scripts/select_ios_core_work.py --github-output "$GITHUB_OUTPUT"
       - name: Retain test discovery attempts
         if: always() && steps.plan.outcome != 'skipped'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -445,18 +469,22 @@ jobs:
       queue: max
       cancel-in-progress: false
     needs: ios-build
-    runs-on: macos-15
+    runs-on: xcode-27
     timeout-minutes: 55
     strategy:
       fail-fast: false
       max-parallel: 5
       matrix: ${{ fromJSON(needs.ios-build.outputs.test_matrix) }}
     env:
-      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+      DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
+      CI_IPHONE_RUNTIME: com.apple.CoreSimulator.SimRuntime.iOS-27-0
+      CI_IPHONE_NAME: iPhone 17
       TEST_SHARD: ${{ matrix.shard }}
       EXPECTED_TEST_COUNT: ${{ matrix.expected_count }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Require the reviewed Xcode 27.1 toolchain
+        run: bash scripts/check_ci_xcode27.sh
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           artifact-ids: ${{ needs.ios-build.outputs.test_products_artifact }}
@@ -500,7 +528,7 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
   ci-gate:
-    name: CI gate
+    name: ${{ github.event_name == 'workflow_dispatch' && inputs.ios_scope == 'dinner' && 'Dinner diagnostic gate' || 'CI gate' }}
     needs: [typescript, service-postgres, source-checks, swift-packages, ios-release, ios-swift-codeql, ios-build, ios-tests]
     if: always()
     runs-on: ubuntu-24.04
