@@ -2,6 +2,12 @@
 
 ## Current checkpoint — November 9, workflow and combined-candidate qualification
 
+The ordinary F02 Dinner-removal journey and actual saved SQLite now pass together
+on the corrected SDK27.1 build, including Cancel, Apply and restart. The existing
+private-pickup recovery control also passes. The new UI regression is installed
+in existingui-07; all419offline tests pass. Shared-device F02 work remains open.
+[Exact source, native results and persisted proof](evidence/native/source-removal-journey-20261109/README.md).
+
 Full-release source preflight now rejects known performance-baseline mismatches
 before any native suite starts. It reuses the performance workflow configuration
 and existing validator, preserving focused calibration and every downstream gate.
@@ -22,10 +28,10 @@ a distinct after-setup receipt is now prepared for the next justified observatio
 
 Latest model fix: removing one dinner now preserves earlier deletion dates on
 unrelated rows. The new regression fails on the original implementation, then
-all196CoreDomain tests pass with the fix. The ordinary native source-removal
-investigation subsequently failed its `12 units` UI lookup; the original result
-and SQLite snapshot are preserved. Full native removal/SQLite and combined CI
-remain pending. [Evidence](evidence/native/source-removal-tombstones-20261109/README.md).
+all196CoreDomain tests pass with the fix. The initial native investigation's
+`12 units` lookup failure is preserved; exact `ledgerIngredientTotal`/`12 items`
+verification now passes with the complete native/SQLite proof above. Combined CI
+remains pending. [Model evidence](evidence/native/source-removal-tombstones-20261109/README.md).
 Workflow artifact provenance checks pass409offline checks and17queue-node checks;
 current execution state is maintained in [CURRENT-HANDOFF](CURRENT-HANDOFF.md).
 
@@ -821,7 +827,7 @@ Results belong to their own immutable source and binary identities. Do not add t
 | D15 | Scoped exports, correction, deletion/undo, account exit/erasure and isolated recovery; N526, F07, RESTORE, B175, RECOVERY-FILES. | Production provider erasure, policy and durable journal. Physical Files delivery remains. |
 | D16 | Optional coded feedback, separate versioned consent and zero benefit for ties; N526, MEASUREMENT, B175. | Consented household study and human language review. |
 | F01 | Money/Quantity/Rational/UnitBasis and explicit unknowns; domain and capture; N526. | Physical dual-label/locale fixtures. |
-| F02 | Stable contribution/allocation identities, explicit duplicate/match and exclusions; N526, PLANNING, STOCK. | Complete end-to-end source-removal and shared-device task. |
+| F02 | Stable contribution/allocation identities, explicit duplicate/match and exclusions; N526, PLANNING, STOCK. Ordinary native removal/Cancel/restart plus exact SQLite history pass on the reviewed source. | Complete the shared-device task and final combined qualification. |
 | F03 | Independent templates, drafts, snapshots, placed originals, retailer-confirmed amendments, proposals and fills; shared confirmation/retry never implies arrival or payment. [Shared evidence](evidence/native/shared-amendment-20261107/verification.json). | Final hosted and real OS external-action/retry journey. |
 | F04 | Scoped dated price evidence; expected/hold/pending/posted/included-credit/top-up separation; N526, B175, QUOTES. | Real manually entered evidence and final receipt/settlement task. |
 | F05 | Distinct principal/member/device/grant/seat/shopper; 023 enrollment fence and scoped device revocation; B175, G29, DEVICE. | S21 native rerun, hosted and mixed-device authority. |

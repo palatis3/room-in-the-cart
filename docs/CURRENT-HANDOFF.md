@@ -15,7 +15,7 @@ contracts and B11 acceptance. Read [APP-BASELINE](product/APP-BASELINE.md), then
 Use `/Users/palatis/Room in the Cart`, branch `codex/parallel-ios-ci`, with explicit
 working directories. The ambient `spanish-done-diagnostic` worktree is stale.
 Publication target is `codex/combined-candidate-20261109`; before this update its
-verified head was `f20553398467004075e691f4f28f043c470bc3a7`. Recheck current Git
+verified head was `1f189975adbaca5117730b0fbed5a57b85569b42`. Recheck current Git
 and run state before publishing. Draft PR1 is a separate older candidate.
 No complete combined regression or merge has passed.
 
@@ -128,56 +128,66 @@ pass after integration and the after-setup provenance workflow addition.
 [Compact product proof](evidence/native/clarification-contrast-fix-20261109/README.md).
 Combined native inputs have manifest
 `f9d4f7717b3b19967be7f24466b36c2c31973ba14361e47f4b4c37d4ceb80ba6`;
-full combined CI remains outstanding. Next local work is F02 native/SQLite below.
+full combined CI remains outstanding. F02 native/SQLite now passes as recorded below.
 Next performance question is unchanged library availability after setup; the
 new separate receipt is installed but not yet observed in a hosted run. No rebinding,
 checker disabling or baseline weakening is justified by the preboot discrepancy.
 
 ## Source-removal acceptance follow-up
 
-Astra's product audit identified F02/B11 native source-removal proof as incomplete.
-The actual route is Dinners → All chosen dinners → chosen dinner → Preview
-removing → Cancel/Apply; retained LedgerMealsView's direct button is not live.
-Proposal `.build/SourceRemovalAcceptanceNov09/proposal-r1/` contains a reset-only
-variant of the existing private-recovery seed, one ordinary FreeJourney case and
-an exact persisted SQLite verifier. Eight pure verifier controls passed; they do
-not prove runtime storage. No new CI jobs.
+The four reviewed files are installed: reset-only fixture variant, ordinary
+FreeJourney regression, exact saved-SQLite verifier and its eight controls.
+All561canonical native inputs match source manifest
+`bbe56492fa0890d1705b44b8e63f805621eaf5637152735d6ffa0cc971a629fd`.
+Current products have manifest
+`780efdedff4d84bfb126d14a412c3e357addc80a16d5baf5206264fc328b372e`.
+All419offline tests pass; compiled discovery740models/69UI assigns the new case
+once to existingui-07. This is inventory, not a claim all cases executed.
+[Compact proof](evidence/native/source-removal-journey-20261109/README.md).
 
-Ordinary Debug build and bundle check pass in134.023seconds on isolated source
-`7a085fe04042e0580c44093b1fab922c0f0e4a7e6657953336bed6fa7d3059eb`.
-The local route investigation is terminal: native65/strict1, testcase94.647seconds,
-because the `12 units` static-text lookup found no match. No unchanged retry and
-no positive qualification. Inspect the retained screenshot/hierarchy before
-changing the query or product. Result export and owned SQLite online backup are
-complete under `.build/SourceRemovalAcceptanceNov09/native-r1/layout/`;
-original result/source/products are unchanged. Snapshot SHA256:
-`5dfba6cadb3e13572b624af1f6754422ee39bc1d7cc051180f59b36e526ac9d2`.
-The sequence did not finish, so this snapshot does not establish F02 acceptance.
-The proposed two native source changes remain isolated, not installed in canonical.
+Actual final execution is `.build/SourceRemovalAcceptanceNov09/native-r3/`:
+- Clean Debug build/bundle pass142.079seconds.
+- Full removal/Cancel/Apply/restart passes native0/strict0 in77.516seconds.
+- Owned SQLite online backup and final UI IDs pass whole-document comparison:
+  exactly seed/removal revisions, manual12/other dinner4/Lunch2 preserved, old
+  tombstones unchanged. Snapshot SHA304ac3297f0b24862dab6a6529e411e2174c961e5c194b76a343da69f060e4b3.
+- Existing receipt correction/private-pickup control passes native0/strict0 in
+  57.436seconds. All result exports are complete; no native process remains.
 
-Compilation also reports a macOS27.0 sysroot against an iOS17 simulator target
-in the generated CoreDomaindynamic-product link. CoreDomain.o identifies iOS
-Simulator SDK27.1; generated framework identifies SDK27.0. Cause is unproven;
-do not suppress the warning or claim a warning-free build. Preserve the existing
-source/products before any successor mutation.
+The original native-r1 failure was a new-test label mismatch: expected12units,
+actual quantity control12items. Original result/store are retained. The corrected
+native-r2 passed native/strict and persisted readback; its source/products/modes
+are archived under `.build/NativeQualificationArchivesNov09/bbe56492.../` before
+native-r3's clean SDK correction. Do not overwrite that archive with r3 products;
+use a new build-qualified subdirectory before any future product mutation.
+The installed CoreDomain tombstone fix previously passed all196model tests and
+its original negative control. [Model proof](evidence/native/source-removal-tombstones-20261109/README.md).
+Native/SQLite proof here closes only ordinary local removal; shared-device F02
+and final combined regression remain separate. The helper is not wired as a
+hosted SQLite gate; the UI regression joins the existing compiled inventory.
 
-The proposed CoreDomain regression **confirmed** a product defect: removing one
-linked dinner rewrites all three older orphan-row tombstone timestamps, while
-remaining quantities and IDs survive. The unchanged product failed exactly this
-one assertion; zero compiler warnings. Negative source/cache/result are retained
-in `.build/SourceRemovalAcceptanceNov09/model/`; source manifest
-`fe942c8181726c096e6767605d9d79ed5ac35658b223ce7d10919830e7fc0228`.
-The one-line fix only timestamps an empty row that has no existing tombstone.
-All196CoreDomain tests now pass on complete45-input manifest
-`0f6ced9125af985a3759609e99b2e1b3dbc7eae95b1de962160b6d0532e30ac9`.
-The initial full run omitted two external JSON fixtures; that failed preparation
-and unchanged compiled products are preserved. Corrected-input execution passed
-with no warnings. Fix and regression are installed byte-verified in canonical;
-[compact proof](evidence/native/source-removal-tombstones-20261109/README.md).
-No model or native process remains active. Native F02/SQLite acceptance remains
-pending after the failed route investigation. Positive-r5 custody is complete;
-the stable execution source/products now contain F02 native-r1, so old
-clarification executors are historical.
+## Corrected local SDK environment and next minimum-OS test
+
+Inherited SDKROOT selected macOS27.0 in the generated dynamic package linker.
+Driver probes under `.build/SDKRootDiagnosisNov09/` reproduced the warning and
+wrongSDK27.0 metadata. Unsetting SDKROOT instead selectedSDK17.0. Explicit
+`xcrun --sdk iphonesimulator --show-sdk-path` in the build subprocess selected27.1.
+The clean r3 build verifies all five actual frameworks as
+IOSSIMULATOR/minimum17.0/SDK27.1 and removes the incompatible-sysroot warning.
+No Swift compiler warnings were observed. AppIntents extraction and signed
+extension stripping warnings remain retained; do not claim a warning-free build.
+CI-VALIDATION now documents target-scoped SDK selection for future local work.
+
+Astra verified that the five archived R4 package products used SDK27.0 and match
+R4/build/products.json. This justifies one full minimum-OS qualification with the
+new products, not a claim that SDKROOT caused the XCTest strcmp crash. Next
+question: does the original full Spanish Dinner journey still fail when correctly
+linked? Use iPhoneSE3/iOS17.0/21A328/D420C2CA-0E73-4213-9B96-1EB62EB061F6,
+Spanish es_US, light/Large, original selector and720/900second allowances. Keep
+strict assertions and warning checks; explicitly record diagnostic policy.
+Recheck device/runtime identity and preserve the first terminal result.
+R4/preservation/source is not exact R4 source: do not use it as such without
+manifest verification. Old product hashes were independently verified.
 
 ## Installed product fixes and evidence boundaries
 
@@ -207,7 +217,7 @@ with the latest product archive at `builds/<product-SHA>/products`.
 Verify complete manifests and executable modes before mutation; each successor
 needs its own custody/source/product receipts. Old executors become historical.
 
-Owned iPhone17/iOS27.0 device: `A50C91FC-4966-47FF-A8CB-7640FBD513EB` (booted; positive-r5 is terminal, light/Large restored). Launch-only4C01A9AC was deleted after preserving proof.
+Owned iPhone17/iOS27.0 device: `A50C91FC-4966-47FF-A8CB-7640FBD513EB` (booted; F02 native-r3 is terminal, light/Large verified). Launch-only4C01A9AC was deleted after preserving proof.
 Protected preview `5FDE1E82-1FF7-4556-9C14-0746F6295944`: never reset or use for fixtures.
 Owned minimum17.0 deviceD420C2CA and17.5 device9DE280AC remain available; recheck state.
 Multiple26.2 runtime builds are installed, so version alone is insufficient identity.

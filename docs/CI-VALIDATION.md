@@ -49,6 +49,35 @@ needs measured benefit. A new layout is not automatically a faster one.
 
 ## Reuse local build paths with preserved proof
 
+For local iOS simulator builds, bind `SDKROOT` to the selected Xcode's simulator
+SDK in the build subprocess. An inherited host macOS SDK can contaminate the
+generated Swift package framework linker even when Swift receives `-sdk` for
+iPhoneSimulator. Use the same `DEVELOPER_DIR` for SDK lookup and execution:
+
+```sh
+export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+SDKROOT="$(xcrun --sdk iphonesimulator --show-sdk-path)" xcodebuild \
+  -project ios/RoomInTheCart.xcodeproj -scheme RoomInTheCart \
+  -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
+  -derivedDataPath "$RITC_DERIVED_DATA" CODE_SIGN_IDENTITY=- build-for-testing
+```
+
+Set `SIMULATOR_ID` to the owned device and `RITC_DERIVED_DATA` to the preserved
+execution directory before using that command; retain the run's original profile
+and test-selection settings when adapting it.
+
+In a Python executor, resolve that path with `subprocess.check_output` using the
+selected environment, then set `SDKROOT` only on the child environment. Record
+the chosen path. Do not apply a simulator SDK to macOS package tests or device
+archives. Merely unsetting the host variable is insufficient: the retained
+Xcode27.1 driver probe then reported SDK17.0 metadata. The explicit simulator
+setting produced SDK27.1, and a clean build verified all five package frameworks
+as iOS Simulator/minimum17.0/SDK27.1. Preserve previous products before rebuilding
+when their SDK provenance is wrong; an incremental no-op cannot validate a fix.
+The original warning, driver probes and actual build readback remain under
+`.build/SDKRootDiagnosisNov09/` and
+`.build/SourceRemovalAcceptanceNov09/native-r3/build/`.
+
 For a small native source change, keep the execution source and DerivedData paths
 stable so Xcode can reuse compatible products. Before mutation, require the
 previous process to be terminal, archive its complete source and products, and

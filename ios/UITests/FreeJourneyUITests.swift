@@ -16,6 +16,79 @@ import XCTest
     }
 
 #if DEBUG && targetEnvironment(simulator)
+    /// F02: ordinary Dinners removal, with an independently checked SQLite history.
+    func testRemovingOneDinnerPreservesOtherMealManualGroceriesAndProtectedLunchAfterRestart() throws {
+        launch(reset: true, sourceRemoval: true)
+        func openAllDinners() {
+            tap(app.tabBars.buttons["Dinners"])
+            dinnerRoot()
+            tap(app.buttons["All chosen dinners, including earlier dates"])
+            XCTAssertTrue(app.navigationBars["All chosen dinners"].waitForExistence(timeout: 8))
+        }
+        func meal(_ title: String) -> XCUIElement {
+            app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@",
+                "dinnerOccurrence-", title)).firstMatch
+        }
+        openAllDinners()
+        let removed = meal("Tuesday tacos"), survivor = meal("Wednesday quesadillas")
+        reveal(removed); let removedID = removed.identifier
+        reveal(survivor); let survivorID = survivor.identifier
+        XCTAssertNotEqual(removedID, survivorID)
+        let removedUUID = try XCTUnwrap(UUID(uuidString: String(removedID.dropFirst("dinnerOccurrence-".count))))
+        let survivorUUID = try XCTUnwrap(UUID(uuidString: String(survivorID.dropFirst("dinnerOccurrence-".count))))
+        tap(removed)
+        let remove = app.buttons["Preview removing this dinner"]
+        tap(remove)
+        let projected = app.staticTexts.matching(NSPredicate(format: "identifier == %@", "dinnerPreviewMeal-" + removedUUID.uuidString)).firstMatch
+        reveal(projected)
+        XCTAssertTrue(projected.label.contains("Tuesday tacos"))
+        XCTAssertTrue(projected.label.contains("Remove chosen dinner"))
+        capture("F02-removal-preview-before-cancel")
+        tap(app.buttons["dinnerCancelPreview"])
+        XCTAssertTrue(app.navigationBars["Chosen dinner"].waitForExistence(timeout: 5))
+        openAllDinners()
+        reveal(meal("Tuesday tacos")); XCTAssertEqual(meal("Tuesday tacos").identifier, removedID)
+        reveal(meal("Wednesday quesadillas")); XCTAssertEqual(meal("Wednesday quesadillas").identifier, survivorID)
+        capture("F02-cancel-retains-both-dinners")
+        tap(meal("Tuesday tacos")); tap(remove)
+        reveal(projected); XCTAssertTrue(projected.label.contains("Remove chosen dinner"))
+        let apply = app.buttons["dinnerApply"]
+        reveal(apply); XCTAssertTrue(apply.isEnabled); apply.tap()
+        XCTAssertTrue(apply.waitForNonExistence(timeout: 8))
+        openAllDinners()
+        reveal(meal("Wednesday quesadillas")); XCTAssertEqual(meal("Wednesday quesadillas").identifier, survivorID)
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier == %@", removedID)).firstMatch.exists)
+        openShoppingList()
+        let wraps = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label == %@", "ledgerInspect-", "Inspect Wraps")).firstMatch
+        reveal(wraps); let lineID = wraps.identifier
+        let lineUUID = try XCTUnwrap(UUID(uuidString: String(lineID.dropFirst("ledgerInspect-".count))))
+        tap(wraps)
+        let total = element("ledgerIngredientTotal")
+        reveal(total); XCTAssertEqual(total.label, "12 items")
+        assertText("Manually added")
+        assertText("Wednesday quesadillas"); assertText("Protected: Lunch")
+        capture("F02-surviving-grocery-sources")
+        restart()
+        openAllDinners()
+        reveal(meal("Wednesday quesadillas")); XCTAssertEqual(meal("Wednesday quesadillas").identifier, survivorID)
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier == %@", removedID)).firstMatch.exists)
+        openShoppingList()
+        let restored = app.buttons.matching(NSPredicate(format: "identifier == %@", lineID)).firstMatch
+        reveal(restored); XCTAssertEqual(restored.label, "Inspect Wraps"); tap(restored)
+        reveal(total); XCTAssertEqual(total.label, "12 items")
+        assertText("Manually added")
+        assertText("Wednesday quesadillas"); assertText("Protected: Lunch")
+        capture("F02-relaunched-surviving-sources")
+        // Companion check_source_removal_store.py binds these UI IDs to both
+        // immutable saved snapshots. A native pass alone is not the full proof.
+        let binding: [String: Any] = ["schema": 1, "sequenceFinished": true,
+            "removedOccurrenceID": removedUUID.uuidString, "survivingOccurrenceID": survivorUUID.uuidString,
+            "manualLineID": lineUUID.uuidString]
+        let receipt = XCTAttachment(data: try JSONSerialization.data(withJSONObject: binding, options: [.sortedKeys]),
+                                    uniformTypeIdentifier: "public.json")
+        receipt.name = "F02-source-removal-persistence-binding"; receipt.lifetime = .keepAlways; add(receipt)
+    }
+
     func testReceiptUsableCorrectionShowsProtectedMealEffectsBeforeSaving() {
         launch(reset: true, privateRecovery: true)
         func arrivals() {
@@ -1931,10 +2004,11 @@ import XCTest
         XCTAssertGreaterThanOrEqual(contrast, 4.5, button.label)
     }
 
-    private func launch(reset: Bool, spanish: Bool = false, privateRecovery: Bool = false) {
+    private func launch(reset: Bool, spanish: Bool = false, privateRecovery: Bool = false, sourceRemoval: Bool = false) {
         app.launchArguments = ["--ui-testing", "-AppleLanguages", spanish ? "(es)" : "(en)", "-AppleLocale", spanish ? "es_US" : "en_US"]
         if reset { app.launchArguments.append("--reset-test-workspace") }
         if privateRecovery { app.launchArguments.append("--seed-private-recovery") }
+        if sourceRemoval { app.launchArguments.append("--seed-source-removal") }
         app.launch()
         XCTAssertTrue(app.tabBars.buttons[spanish ? "Compras" : "Shop"].waitForExistence(timeout: 15))
     }

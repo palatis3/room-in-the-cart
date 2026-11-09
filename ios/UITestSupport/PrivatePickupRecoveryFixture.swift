@@ -6,15 +6,20 @@ import Foundation
 @MainActor final class PrivatePickupRecoveryFixture: ObservableObject {
     enum Phase { case idle, preparing, ready, failed }
     private enum SetupError: Error { case invalid }
-    let requested = Set(["--ui-testing", "--reset-test-workspace", "--seed-private-recovery"])
-        .isSubset(of: Set(ProcessInfo.processInfo.arguments))
+    private let arguments = Set(ProcessInfo.processInfo.arguments)
+    var requested: Bool {
+        Set(["--ui-testing", "--reset-test-workspace"]).isSubset(of: arguments) &&
+            (!arguments.isDisjoint(with: ["--seed-private-recovery", "--seed-source-removal"]))
+    }
     @Published private(set) var phase = Phase.idle
 
     func prepare(ledger: LedgerModel, pickup: PickupModel) async {
         guard requested, phase == .idle, ledger.ready, pickup.ready else { return }
         phase = .preparing
         do {
-            guard ledger.workspace.shops.isEmpty, pickup.journeys.isEmpty else { throw SetupError.invalid }
+            guard ledger.workspace.shops.isEmpty, pickup.journeys.isEmpty,
+                  !(arguments.contains("--seed-private-recovery") && arguments.contains("--seed-source-removal"))
+            else { throw SetupError.invalid }
             try await seed(ledger: ledger, pickup: pickup)
             phase = .ready
         } catch { phase = .failed }
@@ -50,6 +55,9 @@ import Foundation
             workspace.selectedShopID = shop.id
         }
         guard saved else { throw SetupError.invalid }
+        // The source-removal case uses these same groceries in an ordinary draft.
+        // No pickup, placement, arrival or recovery is manufactured for this case.
+        if arguments.contains("--seed-source-removal") { return }
         let checkout = try LedgerCheckoutAdapter.review(shop: shop, workspaceRevision: ledger.revision,
             previous: nil, workspaceID: ledger.sourceWorkspaceID)
         guard try await LedgerCheckoutAdapter.apply(checkout, ledger: ledger, pickup: pickup),
