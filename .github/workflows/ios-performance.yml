@@ -163,6 +163,10 @@ jobs:
           include-hidden-files: true
           retention-days: 7
           if-no-files-found: warn
+      - name: Check Swift syntax before compilation
+        if: ${{ !inputs.capture_preflight_only }}
+        timeout-minutes: 3
+        run: python3 scripts/check_swift_syntax.py
       - name: Build the Release app and dedicated performance tests
         if: ${{ !inputs.capture_preflight_only }}
         shell: bash

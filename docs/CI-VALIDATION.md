@@ -19,6 +19,40 @@ tests while `tsc` is still replacing `dist` files. Bind the source and compiled
 output hashes to the finished attempt, and serialize source changes, builds and
 dependent tests. Independent read-only reviews can continue in parallel.
 
+### Validate the contract before escalating
+
+Before changing application behavior, compare the failure with the current API,
+schema/migration, fixture or selector contract. Classify a stale harness, invalid
+setup and an application defect separately. Run the smallest relevant contract
+check first; escalate to a build or original journey only when the cheaper check
+passes and a written question remains. For changed iOS Swift, run
+`python3 scripts/check_swift_syntax.py --changed` before compilation. This catches
+syntax errors such as the observed missing bracket; parsing does not establish
+type correctness, successful linking or UI behavior.
+
+Bind each attempt to its source and finished build outputs. Reuse terminal logs,
+exports and failure receipts before requesting new evidence. A failed control
+needs a changed input or a smaller experiment, not another unchanged full run.
+Focused evidence qualifies only its exact source and scope; the final combined
+candidate still needs its own complete qualification.
+
+For the database suite, run
+`node --test service/tests/database-test-preflight.test.mjs` first, then use
+`npm --prefix service run test:integration` with the declared local fixture URLs.
+The harness preflight checks local disposable `ritc_` targets, consistent database
+scope, actual bounded runtime/worker/verifier connections and the restricted app,
+worker, verifier and combined negative-test roles before auth DDL, migrations, journal provisioning or child tests. It does not
+create roles or repair permissions; use the explicit fixture setup in `ci.yml`.
+Missing credentials or incorrect memberships are setup failures, not application
+regressions.
+
+Use a fresh disposable database for each integration-suite attempt. The real
+fixture journal is single-use: an existing `ritc.privacy_journal_origin` blocks
+reuse. Preserve the failed database and retained journal evidence; never delete
+the origin, replace its lineage or substitute a no-op journal to rerun the suite.
+Keep private keys outside evidence. A fresh database fixes isolation only; it
+does not clear an application failure or qualify a different source revision.
+
 ### Candidate qualification order
 
 Use this order for the combined candidate going forward:
@@ -186,6 +220,8 @@ The diagnostic adds Apple's `-enablePerformanceTestsDiagnostics YES`, preserves
 the original test and strict measurement checks, and exports available diagnostics
 alongside the result bundle. An export failure stays visible as a failed step;
 successful export alone does not prove that a useful performance trace exists.
+Apply the [collector qualification rule](#qualify-collectors-before-app-diagnostics)
+before spending another original app journey on a new collection mechanism.
 
 Inspect the retained trace for the application's events and actual measurement
 windows before choosing another experiment. Missing events are inconclusive
@@ -649,6 +685,32 @@ and hosted image-device runs. It does not establish simulator state as the cause
 approve a baseline, or replace normal coverage. Confirm the receipt's observed
 runtime build matches the comparison target, inspect one result and stop before
 choosing any further change.
+
+### Qualify collectors before app diagnostics
+
+First qualify the smallest owned emitter/collector control, separate from the
+application journey. Define the expected event identity and count, selected
+device/process, startup deadline, capture/output limits and cleanup deadline
+before starting. Require actual readiness, a normally finalized readable artifact
+and the expected events in exported data. CLI help, accepted options, a created
+directory or a zero wrapper exit are insufficient. A failed control blocks app
+and hosted escalation; retain its receipt and inspect the cause before changing
+one input. Do not relax checkers, rewrite plans or enable private tracing flags.
+
+The retained `performance-instruments-r1/capture-qualification.json` under
+`.build/PerformanceLoadedImagesNov09/execution-r1/.build/` records a passing
+original scroll test but no tracer readiness, tracer exit 1 and trace export 10
+(`Document Missing Template Error`). That capture is unqualified. It establishes
+neither missing app signposts nor a collector fix; do not repeat the full journey
+to rediscover it.
+
+Bind collector/helper binaries and outputs to their hashes, exact owned process
+identity and runtime. Preserve original artifacts; inspect copies when tools may
+modify them. Bound startup, recording, export and cleanup separately, retain
+actual exits/timeouts, and verify owned-process cleanup without affecting unrelated
+processes. A later app capture must additionally cover the relevant intervals;
+gesture activity windows alone are not exact XCTest measurement boundaries.
+Collection success remains separate from native, strict and release acceptance.
 
 ### Bounded scroll measurement diagnostic
 

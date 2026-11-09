@@ -173,6 +173,9 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Require the reviewed Xcode 27.1 toolchain
         run: bash scripts/check_ci_xcode27.sh
+      - name: Check Swift syntax before compilation
+        timeout-minutes: 3
+        run: python3 scripts/check_swift_syntax.py
       - name: Test Swift packages and collect coverage
         run: |
           set -o pipefail
@@ -417,6 +420,9 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Require the reviewed Xcode 27.1 toolchain
         run: bash scripts/check_ci_xcode27.sh
+      - name: Check Swift syntax before compilation
+        timeout-minutes: 3
+        run: python3 scripts/check_swift_syntax.py
       - name: Check supported keyboard automation before simulator setup
         run: python3 scripts/test_ui_automation_contract.py
       - name: Record toolchain and select iPhone

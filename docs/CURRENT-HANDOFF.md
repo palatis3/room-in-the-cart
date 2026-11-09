@@ -11,14 +11,14 @@ and all earlier native preservation paths remain at
 
 Canonical checkout: `/Users/palatis/Room in the Cart`, local branch
 `codex/parallel-ios-ci`. Publish to `codex/combined-candidate-20261109`; its verified
-head before this evidence update was dc343f3e. Recheck current Git/run state before dispatch.
+head before this workflow update was d978cbea. Recheck current Git/run state before dispatch.
 The ambient `spanish-done-diagnostic` worktree is stale. Draft PR1 is an older
 candidate. No full combined qualification or merge has passed.
 
 No Dot/Lumpy. Astra High helpers and Sol6.1 Extra High monitoring are authorized.
 Root owns integration and dispatch. One owner per cause, one local native process,
 no source/product mutation during execution. All local and hosted attempts below are terminal;
-no native process or debugger remains. Disk last reported approximately 15 GiB free;
+no native process or debugger remains. Disk last reported approximately 32 GiB free;
 keep 8 GiB reserve and avoid downloads/duplicate raw archives.
 
 ## Implemented workflow
@@ -38,6 +38,12 @@ Release defaults, device archives, consumers and strict gates are unchanged.
 438 offline checks and all 17 workflow queue definitions pass. The optimized hosted producer, actual arm64 products and original native scroll
 now pass. Required hosted scroll duration remains missing; the 451-versus-618-second
 build observation is not a controlled speed comparison.
+
+New workflow gates catch Swift syntax before compilation and database fixture
+problems before integration setup. Collector readiness/readable output/expected
+events must pass on a small control before full app diagnostics. 109 Python,
+18 harness and 7 actual PostgreSQL checks pass; 17 queue contracts remain intact.
+[Validation](evidence/ci/workflow-preflight-20261109/README.md).
 
 Primary CI: Xcode 27.1/27A9275, arm64 `xcode-27`, iPhone 17 / iOS 27.0/24A434. Swift
 CodeQL retains its required macOS15/Xcode 26.3 exception. Minimum iOS remains 17.0.
@@ -75,11 +81,11 @@ unapproved. Do not dispatch full release expecting this mismatch to pass.
    No during-measure loading/activity or metric-cause inference.
    [Exact proof and inspection caveat](evidence/native/performance-loaded-images-20261109/README.md).
 
-All 561 canonical native inputs match source manifest
+The last fully qualified 561-input native snapshot used source manifest
 `a357a09918cf6dc15093dccb8dc992dc16e5baaff789b8eb490fddb5f9708791`.
 Execution workspace `.build/Xcode27WarningReviewNov09/execution-r1/{source,dd}` now
-contains this successor; old executors are historical. Current receipts/scripts are
-under `.build/PerformanceLoadedImagesNov09/execution-r1/`.
+has since advanced to the unqualified optional-night successor described below.
+The following products and executors are historical; their archived proof remains valid.
 Debug products manifest f51f027c66f299c08f8c719076bd956a8af631d025bcf283bbf432f7f954ff55
 is archived with source under `.build/NativeQualificationArchivesNov09/<source-SHA>/shared-match-debug-products-f51f027c66f299c0/`.
 Release products manifest 3de01fde66170f6ffdbcf9b3fe7d7fa2bdd477e3a0a44e220e4fb6c5d58138a8
@@ -98,6 +104,26 @@ no removals, stable added Xcode results database and successful SQLite check. Do
 rewrite the first receipt or rerun native work for that addition. Local Release used
 the prior dual-architecture command, so it does not qualify the optimized producer.
 
+## Pending optional-night implementation
+
+Local shared meals now accept a required `day` key with explicit null, preserving
+identities when later scheduled. The backend passes 3 focused HTTP, 98 domain,
+454 fast (1 DB skip), and 260 integration checks (3 browser skips). No migration
+or deployment. Source and evidence hashes: `.build/SharedUndatedNov09/verification.json`.
+Older native clients cannot decode null days; coordinate native/service rollout.
+
+Native edits remain uncommitted and unqualified. First Debug build failed on a
+missing fixture bracket after 56.6 seconds; its source and log are unchanged in
+`.build/SharedUndatedNov09/native-r1/` and the stable execution source directory.
+The canonical fixture is fixed. A syntax-only negative control reproduced the
+original error in 1.5 seconds and accepts the fix; all 469 selected Swift files
+parse in Release and Debug fixture modes. HouseholdClient package tests pass
+108 cases with 3 wire/environment skips; log at
+`.build/SharedUndatedNov09/package-r1/tests.log`. This does not qualify the app.
+Before updating the stable execution source, preserve the failed source and partial
+products, then copy only changed bytes/modes and record a new successor receipt.
+Next: Debug build, affected model/UI journeys, localization and strict acceptance.
+
 ## Remaining diagnostic work
 
 - New manual `enable_performance_diagnostics` is false by default, single launch/scroll
@@ -113,6 +139,12 @@ the prior dual-architecture command, so it does not qualify the optimized produc
   results unchanged; inspection used a verified clone. All processes terminal.
   [Proof](evidence/native/performance-diagnostics-20261109/README.md);
   originals `.build/PerformanceLoadedImagesNov09/execution-r1/.build/performance-trace-r1/`.
+
+- A subsequent app-scoped Instruments control also failed capture: no readiness,
+  tracer exit 1, unreadable trace/export exit 10. Original native scroll and required
+  metrics passed; capture did not. Exact owned tracer cleanup completed. Do not
+  repeat the full journey: qualify a small collector control first.
+  [Preserved evidence](evidence/native/performance-instruments-20261109/README.md).
 
 - Latest hosted 42639339096 attempt 1 at dc343f3e is terminal failure: arm64-only
   producer, immutable plan/products, native 1/1 and cleanup pass; required scroll
@@ -141,14 +173,16 @@ the prior dual-architecture command, so it does not qualify the optimized produc
   The later direct-label query experiment also failed and is not installed; its
   source/products are archived. No unchanged query/resource/checker-suppression retry.
   [First-fault proof](evidence/native/minimum-os-first-fault-20261109/README.md).
-- The owner approved the private Apple report, accepted Feedback Assistant's
-  first-use terms and signed in. Its XCTest report form is filled; the attachment
-  chooser has not opened through computer control, and the owner has been asked
-  to open it directly. No submission confirmation yet. Exact approved package:
+- The owner approved the private Apple report and completed Feedback Assistant's
+  terms/sign-in. The native app now confirms **Feedback Sent** for the XCTest
+  report with exactly the three approved attachments. No automatic system
+  diagnostics were added. Apple says attachment transfer continues in the
+  background; that upload completion and a feedback ID were not yet observed.
+  Receipt: `.build/MinimumOSXCTestReproducerNov09/apple-report-draft/submission-confirmation-20261109.json`.
+  Exact immutable approved package:
   `.build/MinimumOSXCTestReproducerNov09/apple-report-draft/reviewed-first-fault-package/`
-  with REPORT.md, 10 KB capture and manifest only. Approval persists: finish that
-  exact submission and record Apple's confirmation; do not request approval again
-  or include automatic system diagnostics.
+  with REPORT.md, 10 KB capture and manifest only. Do not duplicate submission or
+  reinterpret the old immutable manifest's `notSubmitted` field as current status.
 
 Then finish remaining fixes, freeze one final commit, run full combined regression,
 review required checks and merge only when its gates pass. Focused results from

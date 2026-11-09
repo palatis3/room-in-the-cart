@@ -79,6 +79,9 @@ jobs:
         run: |
           xcodebuild -version
           xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
+      - name: Check Swift syntax before compilation
+        timeout-minutes: 3
+        run: python3 scripts/check_swift_syntax.py
       - name: Build fixture app and UI tests for iPhone
         shell: bash
         run: |
