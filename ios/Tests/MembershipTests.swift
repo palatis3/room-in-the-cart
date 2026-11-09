@@ -1373,7 +1373,7 @@ import Combine
     func sync() async throws { syncCount += 1 }
 }
 
-private final class MembershipURLProtocol: URLProtocol, @unchecked Sendable {
+private final class MembershipURLProtocol: URLProtocol {
     static var handler: ((URLRequest) -> (Int, Data))?
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }

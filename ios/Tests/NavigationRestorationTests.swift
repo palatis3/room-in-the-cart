@@ -299,7 +299,7 @@ private final class RestorationServer: @unchecked Sendable {
         return (200, try JSONSerialization.data(withJSONObject: value))
     }
 }
-private final class RestorationProtocol: URLProtocol, @unchecked Sendable {
+private final class RestorationProtocol: URLProtocol {
     static var server: RestorationServer?
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }

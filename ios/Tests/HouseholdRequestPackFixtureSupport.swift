@@ -90,7 +90,7 @@ final class S24FixtureServer: @unchecked Sendable {
         throw URLError(.unsupportedURL)
     }
 }
-final class S24FixtureProtocol: URLProtocol, @unchecked Sendable {
+final class S24FixtureProtocol: URLProtocol {
     static var server: S24FixtureServer?
     static var intercept: ((S24FixtureProtocol) -> Bool)?
     override class func canInit(with request: URLRequest) -> Bool { true }

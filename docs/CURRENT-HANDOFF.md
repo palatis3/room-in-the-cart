@@ -14,8 +14,9 @@ maps remain in [CURRENT-ACCEPTANCE](CURRENT-ACCEPTANCE.md#launch-requirement-tra
 
 Use `/Users/palatis/Room in the Cart`, branch `codex/parallel-ios-ci`, with an
 explicit working directory. The ambient `spanish-done-diagnostic` worktree is old.
-The canonical app now contains the exact reviewed eight-file combined Dinner/audio
-candidate. All 561 product inputs match the preserved R4 source identified below.
+The canonical app contains the reviewed combined Dinner/audio candidate plus five
+tested fixture declaration corrections. All 561 product inputs match the warning
+follow-up candidate; its five test files are the only product differences from R4.
 Combined-candidate publication target: `codex/combined-candidate-20261109`.
 The earlier CI-only diagnostic branch remains pinned to its own tested revisions.
 Draft PR 1 remains a separate integration candidate; no full batch was pushed
@@ -39,6 +40,19 @@ execution. The additive proposal/validation receipts are preserved in
 
 ## Latest active work — November 9
 
+- Five reviewed test-fixture declaration corrections are installed: four unsupported
+  URLProtocol Sendable claims removed; encoding-only media fixture uses Encodable.
+  Xcode27.1 build/bundle checks pass; targeted warnings gone. All55 native/strict
+  regressions pass on26.2 and all561 canonical product inputs match the tested
+  source. Shared mutable fixture-state risks remain a separate follow-up.
+  [Native follow-up](evidence/native/xcode27-native-followup-20261109/README.md).
+- Minimum-iOS snapshot traversal experiment is terminal and scratch-only. Original
+  Spanish17.5 run advanced into supply Done but failed native65/strict1; exact
+  first13 crash frames match the prior XCTest callback/quarantine failure. No fix
+  claimed, no unchanged repeat. Symbol attribution identifies accessibility
+  attribute fetches, not a proven product-code cause. No native/hosted work remains
+  active from this checkpoint; original logs/results are preserved once.
+
 - Workflow follow-up separates device/runtime discovery into bounded 30-second
   infrastructure commands; help/version remain 10 seconds, capability step 3 minutes.
   No app limits or acceptance gates changed. All 366 offline checks and 17 native
@@ -49,8 +63,8 @@ execution. The additive proposal/validation receipts are preserved in
   regression or baseline acceptance.
   [Change and evidence](evidence/native/ci-inventory-budget-20261109/README.md).
 
-- Combined product consolidation is complete locally: exact8reviewed R4 files,
-  all561product inputs equal the tested frozen source. Project/theme/localization
+- Combined product consolidation completed at e7ba6ab4 with the exact eight R4
+  files. The five tested fixture declarations above are the subsequent changes. Project/theme/localization
   checks pass; scoped native evidence is reused by byte equality, not rerun merely
   for installation. No full combined CI, PR/main merge or release acceptance.
   [Integration evidence](evidence/native/combined-candidate-integration-20261109/README.md).

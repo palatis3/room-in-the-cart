@@ -40,7 +40,7 @@ private final class StockScopeServer: @unchecked Sendable {
         return try JSONSerialization.data(withJSONObject: value)
     }
 }
-private final class StockScopeProtocol: URLProtocol, @unchecked Sendable {
+private final class StockScopeProtocol: URLProtocol {
     private static let lock = NSLock()
     private static var servers: [String: StockScopeServer] = [:]
     static func register(_ server: StockScopeServer, host: String) { lock.lock(); defer { lock.unlock() }; servers[host] = server }

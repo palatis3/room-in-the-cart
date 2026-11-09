@@ -6,7 +6,7 @@ import UIKit
 @testable import RoomInTheCart
 
 @MainActor final class RecordsMediaTests: XCTestCase {
-    private struct LedgerDocument: Codable { let formatVersion = 1; let workspace: LedgerWorkspace }
+    private struct LedgerDocument: Encodable { let formatVersion = 1; let workspace: LedgerWorkspace }
     private func location() throws -> URL {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)

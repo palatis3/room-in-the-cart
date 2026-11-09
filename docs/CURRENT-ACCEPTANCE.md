@@ -2,15 +2,25 @@
 
 ## Current checkpoint — November 9, workflow and combined-candidate qualification
 
-Workflow improvements through `e2bbdad0` are published to the CI candidate branch.
-All **363 offline tests** and **17 queue-node checks** pass. Build-free capability
-checks, incremental stage receipts and fresh same-job toolchain identity reuse
-are implemented. The latest addition records bounded process/pipe timings and
-late-buffer byte counts without changing deadline failure. Capability-only run
-42578578778 is terminal ate2bbdad0: UUID-scoped discovery again hit10s with the child
-running and no normal/late pipe bytes. Runtime/help/compilation/transport/XCTest
-were not reached. Exact log-help handling remains hosted-unqualified. Artifacts
-are preserved; no baseline is approved.
+Five test-fixture declaration corrections are now installed. Debug compilation
+and bundle checks pass on Xcode27.1; all55 selected request, membership, restoration,
+stock-privacy and media regressions pass native/strict on26.2. Five targeted
+compiler warnings are gone. Actual fixture shared-state synchronization remains
+separate. [Evidence](evidence/native/xcode27-native-followup-20261109/README.md).
+The isolated snapshot traversal optimization did not fix the original17.5 journey:
+its later crash has the same first13 framework frames and remains native65/strict1.
+It is not installed.
+
+Workflow improvements through `c97bbc00` are published to the combined candidate
+branch; its terminal outcome is recorded at `e92f97e2`. All **366 offline tests**
+and **17 queue-node checks** pass. Build-free capability checks, bounded stage
+receipts, same-job identity reuse and separate inventory infrastructure budgets
+are implemented. Capability-only run42580515105 is terminal failure on the exact
+c97 revision: UUID-scoped device discovery hit30seconds with the child running
+and no normal/late pipe bytes. Runtime/help/compilation/transport/XCTest were not
+reached. The longer bounded allowance did not resolve the hosted bottleneck;
+no further timeout increase or unchanged retry is planned. Exact log-help
+handling remains hosted-unqualified and no performance baseline is approved.
 
 The now-integrated combined R4 product inputs pass original English, Spanish AX5 on 26.2,
 64 audio regressions on each of 17.0/26.2, Free repair and cross-week meal move.
