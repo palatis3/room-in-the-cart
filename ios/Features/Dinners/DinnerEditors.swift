@@ -67,6 +67,22 @@ struct DinnerTemplateEditor: View {
         }
     }
     private var editor: some View {
+        Group {
+            if purpose == .idea {
+                VStack(spacing: 0) {
+                    if inputFocus != nil { DinnerFocusedDoneBar { inputFocus = nil } }
+                    editorForm
+                }
+            } else {
+                editorForm
+            }
+        }
+        .navigationTitle(purpose == .manual ? dinnerText("Manual dinner") : purpose == .idea ? dinnerText("Dinner idea") : dinnerText("Reusable dinner"))
+        .dinnerAccess(model)
+        .keyboardDoneAction(visible: purpose != .idea && inputFocus != nil, title: dinnerText("Done")) { inputFocus = nil }
+        .dinnerApplyPresentation(model, presented: $showPreview)
+    }
+    private var editorForm: some View {
         WorkingForm {
             if completed {
                 Section {
@@ -149,9 +165,7 @@ struct DinnerTemplateEditor: View {
                 Section { Button(dinnerText("Review"), action: review).buttonStyle(PrimaryAction()).disabled(!model.editable).accessibilityIdentifier("ledgerReviewDinner") }
             }
             DinnerFeedback(model: model)
-        }.navigationTitle(purpose == .manual ? dinnerText("Manual dinner") : purpose == .idea ? dinnerText("Dinner idea") : dinnerText("Reusable dinner")).dinnerAccess(model)
-            .keyboardDoneAction(visible: inputFocus != nil, title: dinnerText("Done")) { inputFocus = nil }
-            .dinnerApplyPresentation(model, presented: $showPreview)
+        }
     }
     private func review() {
         do {
@@ -333,5 +347,30 @@ struct DinnerIdeasView: View {
             .onChange(of: patternIndex) { _,_ in generated = nil }
             .onChange(of: exclusions) { _,_ in generated = nil }
             .dinnerAccess(model).disabled(!model.editable)
+    }
+}
+
+/// A form sibling gives Done its own rectangular target, clear of navigation and keyboard chrome.
+struct DinnerFocusedDoneBar: View {
+    let dismissKeyboard: () -> Void
+
+    var body: some View {
+        HStack {
+            Spacer()
+            Button(action: dismissKeyboard) {
+                Text(dinnerText("Done"))
+                    .font(.body.weight(.semibold))
+                    .frame(minWidth: 44, minHeight: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(Theme.action)
+            .accessibilityIdentifier("dinnerFocusedKeyboardDone")
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .background(Theme.canvas, ignoresSafeAreaEdges: [])
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("dinnerFocusedKeyboardDoneBar")
     }
 }

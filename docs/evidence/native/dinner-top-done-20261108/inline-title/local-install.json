@@ -1,0 +1,20 @@
+{
+  "files": {
+    "ios/Features/Dinners/DinnerEditors.swift": "03645277dad3843189450b5acbb8d1db6955b9c662446a35b645df619eff7979",
+    "ios/Features/Dinners/DinnerIdeaSupplyViews.swift": "6f2de0bbed41674ecf0f9e9007704540376179547c8098db45c7fe966700bd62",
+    "ios/UITests/FreeJourneyUITests.swift": "ee91d7f8273a086a9bc886b69587c573d12fa8e16954045541c5116e03e27da9"
+  },
+  "sourceSHA256": "1b4696e19ef030cb754148b23eb3bd9b65f0c3f9a617c2ad9b2e99e4fde7a0b5",
+  "nativeExit": 0,
+  "strictExit": 0,
+  "rootReviewed": [
+    "ideaSupplyYield-before",
+    "ideaSupplyPrice-before"
+  ],
+  "remainingQualification": [
+    "Spanish largest Dynamic Type",
+    "Spanish iOS17",
+    "Release",
+    "full combined hosted CI"
+  ]
+}

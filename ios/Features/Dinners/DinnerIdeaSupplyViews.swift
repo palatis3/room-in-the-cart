@@ -103,36 +103,43 @@ private struct IdeaSupplyEditor: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section {
-                    Text(ingredient.name).font(.headline)
-                    Picker(dinnerText("Matched shopping list or pantry food"), selection: $foodID) {
-                        Text(dinnerText("No confirmed match")).tag(nil as UUID?)
-                        ForEach(foods) { food in Text(food.name + " · " + food.detail).tag(Optional(food.id)) }
-                    }
-                    Text(dinnerText("Check the food identity and exclusions before matching it."))
-                }
-                Section(dinnerText("Observed pack, optional")) {
-                    TextField(dinnerText("Usable amount per pack"), text: $packYield)
-                        .focused($field, equals: .packYield).accessibilityIdentifier("ideaSupplyYield")
-                    DinnerUnitPicker(unit: $unit)
-                    if budget {
-                        TextField(dinnerText("Price per pack in USD"), text: $price)
-                            .focused($field, equals: .price).accessibilityIdentifier("ideaSupplyPrice")
-                    }
-                    TextField(dinnerText("Evidence source"), text: $source)
-                        .focused($field, equals: .source).accessibilityIdentifier("ideaSupplySource")
-                    DatePicker(dinnerText("Observed at"), selection: $observedAt, in: ...Date())
-                    Text(dinnerText("Leave missing pack terms blank. An existing current pack review can be used for the matched list food."))
-                }
-                if let error { Text(error).foregroundStyle(.red) }
-                Button(dinnerText("Use these reviewed details")) { apply() }.accessibilityIdentifier("ideaSupplyConfirm")
+            VStack(spacing: 0) {
+                if field != nil { DinnerFocusedDoneBar { field = nil } }
+                supplyForm
             }
-            .keyboardDoneAction(visible: field != nil, title: dinnerText("Done")) { field = nil }
             .navigationTitle(dinnerText("Review ingredient supply"))
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button(dinnerText("Cancel")) { dismiss() } }
             }
+        }
+    }
+
+    private var supplyForm: some View {
+        Form {
+            Section {
+                Text(ingredient.name).font(.headline)
+                Picker(dinnerText("Matched shopping list or pantry food"), selection: $foodID) {
+                    Text(dinnerText("No confirmed match")).tag(nil as UUID?)
+                    ForEach(foods) { food in Text(food.name + " · " + food.detail).tag(Optional(food.id)) }
+                }
+                Text(dinnerText("Check the food identity and exclusions before matching it."))
+            }
+            Section(dinnerText("Observed pack, optional")) {
+                TextField(dinnerText("Usable amount per pack"), text: $packYield)
+                    .focused($field, equals: .packYield).accessibilityIdentifier("ideaSupplyYield")
+                DinnerUnitPicker(unit: $unit)
+                if budget {
+                    TextField(dinnerText("Price per pack in USD"), text: $price)
+                        .focused($field, equals: .price).accessibilityIdentifier("ideaSupplyPrice")
+                }
+                TextField(dinnerText("Evidence source"), text: $source)
+                    .focused($field, equals: .source).accessibilityIdentifier("ideaSupplySource")
+                DatePicker(dinnerText("Observed at"), selection: $observedAt, in: ...Date())
+                Text(dinnerText("Leave missing pack terms blank. An existing current pack review can be used for the matched list food."))
+            }
+            if let error { Text(error).foregroundStyle(.red) }
+            Button(dinnerText("Use these reviewed details")) { apply() }.accessibilityIdentifier("ideaSupplyConfirm")
         }
     }
 

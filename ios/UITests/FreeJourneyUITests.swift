@@ -1665,7 +1665,8 @@ import XCTest
         let originalAmount = amount.value as? String ?? ""
         XCTAssertFalse(originalAmount.isEmpty || originalAmount == amount.placeholderValue)
         // An unknown ingredient quantity is reviewable, but the domain forbids acceptance.
-        fill(" ", into: amountLabel, replacing: true, requireDone: true, useVisibleCenter: true)
+        fill(" ", into: amountLabel, replacing: true, requireDone: true, useVisibleCenter: true,
+             focusedDoneEvidence: (copy("Dinner idea", "Idea para cenar"), copy("Done", "Listo"), "Dinner-idea-Done-cleared-amount", copy("Dinner ideas", "Ideas para cenar"), .center))
         tap(element("ledgerReviewDinner"))
         let unknownQuantity = copy("Review unknown ingredient quantities", "Revisa las cantidades de ingredientes desconocidas")
         assertText(unknownQuantity)
@@ -1686,7 +1687,8 @@ import XCTest
         XCTAssertFalse(app.staticTexts[copy("Dinner saved. Choose it separately to add grocery needs.", "Cena guardada. Elígela por separado para agregar sus necesidades de compra.")].exists)
         assertText(unknownQuantity)
         tap(app.buttons[copy("Continue editing", "Seguir editando")])
-        fill(originalAmount, into: amountLabel, replacing: true, requireDone: true, useVisibleCenter: true)
+        fill(originalAmount, into: amountLabel, replacing: true, requireDone: true, useVisibleCenter: true,
+             focusedDoneEvidence: (copy("Dinner idea", "Idea para cenar"), copy("Done", "Listo"), "Dinner-idea-Done-restored-amount", copy("Dinner ideas", "Ideas para cenar"), .top))
         tap(element("ledgerReviewDinner"))
         reveal(accept); XCTAssertTrue(accept.isEnabled)
         assertText(copy("Bean and cabbage wraps", "Tortillas rellenas de frijoles y repollo"))
@@ -1694,9 +1696,49 @@ import XCTest
         assertText(copy("Usable yield is unconfirmed", "El rendimiento aprovechable no está confirmado"))
         capture("First-pickup-editable-dinner-pattern")
         tap(app.buttons[copy("Review stock and pack for Tortillas", "Revisar existencias y paquete de Tortillas")])
-        fill("8", into: "ideaSupplyYield")
-        fill("2.50", into: "ideaSupplyPrice")
-        fill("Bag label", into: "ideaSupplySource")
+        func fillSupply(_ text: String, into id: String, sample: FocusedDoneSample) {
+            let field = app.textFields[id]
+            tap(field)
+            field.typeText(text)
+            XCTAssertEqual(field.value as? String, text, "Entered supply value before Done: " + id)
+            XCTAssertTrue(app.keyboards.firstMatch.exists, "Supply entry must show the keyboard: " + id)
+            let bar = app.navigationBars[copy("Review ingredient supply", "Revisar el abastecimiento del ingrediente")]
+            XCTAssertTrue(bar.exists)
+            let doneLabel = copy("Done", "Listo")
+            let doneBar = app.otherElements["dinnerFocusedKeyboardDoneBar"]
+            XCTAssertTrue(doneBar.exists)
+            let doneButtons = doneBar.buttons.matching(identifier: "dinnerFocusedKeyboardDone")
+            let done = doneButtons.firstMatch
+            XCTAssertTrue(done.waitForExistence(timeout: 5), "The sheet must offer a top-content Done: " + id)
+            XCTAssertEqual(doneButtons.count, 1)
+            XCTAssertEqual(done.label, doneLabel)
+            XCTAssertEqual(app.buttons.matching(NSPredicate(format: "label == %@", doneLabel)).count, 1)
+            XCTAssertTrue(done.isEnabled && done.isHittable)
+            let cancel = bar.buttons[copy("Cancel", "Cancelar")]
+            XCTAssertTrue(cancel.exists && cancel.isHittable)
+            guard let target = focusedDoneTarget(done, in: doneBar, below: bar, avoiding: cancel, sample: sample,
+                                                    name: "Dinner-supply-Done-" + id) else { return }
+            let frame = target.frame
+            XCTAssertEqual(done.frame, frame, "Done geometry must remain stable before the coordinate tap")
+            target.coordinate.tap()
+            XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5), "Done must hide the keyboard: " + id)
+            XCTAssertTrue(done.waitForNonExistence(timeout: 5), "Unfocused supply must have no Done: " + id)
+            XCTAssertTrue(doneBar.waitForNonExistence(timeout: 5), "No empty Done row after dismissal")
+            XCTAssertTrue(bar.exists && cancel.exists, "Done must retain this unsaved supply editor")
+            XCTAssertEqual(field.value as? String, text, "Retained supply value after Done: " + id)
+            capture("Dinner-supply-Done-" + id + "-after")
+            let evidence = XCTAttachment(string: "field=\(id); valueBefore=\(text); valueAfter=\(field.value as? String ?? ""); doneFrame=\(frame); \(target.details); keyboardGone=\(!app.keyboards.firstMatch.exists); doneGone=\(!done.exists); sheetRetained=\(bar.exists)")
+            evidence.name = "Dinner-supply-Done-" + id + "-geometry"
+            evidence.lifetime = .keepAlways; add(evidence)
+        }
+        fillSupply("8", into: "ideaSupplyYield", sample: .bottom)
+        fillSupply("2.50", into: "ideaSupplyPrice", sample: .left)
+        fillSupply("Bag label", into: "ideaSupplySource", sample: .right)
+        let reviewedDetails = element("ideaSupplyConfirm")
+        reveal(reviewedDetails)
+        XCTAssertEqual(reviewedDetails.elementType, .button)
+        XCTAssertEqual(reviewedDetails.label, copy("Use these reviewed details", "Usar estos datos revisados"))
+        XCTAssertEqual(app.buttons.matching(identifier: "ideaSupplyConfirm").count, 1)
         tap(element("ideaSupplyConfirm"))
         assertText(copy("Usable in one pack: 8 units", "Cantidad aprovechable en un paquete: 8 unidades"))
         assertText(copy("Whole packs for the remainder: 1", "Paquetes enteros para lo que falta: 1"))
@@ -1844,7 +1886,74 @@ import XCTest
         hierarchy.name = name + "-accessibility"; hierarchy.lifetime = .keepAlways; add(hierarchy)
         captureSystemScreen(name)
     }
-    private func fill(_ text: String, into id: String, replacing: Bool = false, requireDone: Bool = false, useVisibleCenter: Bool = false) {
+    private enum FocusedDoneSample: String { case center, top, bottom, left, right }
+    private struct FocusedDoneTarget {
+        let coordinate: XCUICoordinate
+        let frame: CGRect
+        let details: String
+    }
+    /// One sampled coordinate is exercised per existing interaction; this is not a hit-region map.
+    private func focusedDoneTarget(_ done: XCUIElement, in bar: XCUIElement, below navigationBar: XCUIElement,
+                                      avoiding other: XCUIElement, sample: FocusedDoneSample,
+                                      name: String) -> FocusedDoneTarget? {
+        let frame = done.frame, barFrame = bar.frame, otherFrame = other.frame, appFrame = app.frame
+        let navigationFrame = navigationBar.frame, keyboardFrame = app.keyboards.firstMatch.frame
+        let region = CGRect(x: frame.midX - 22, y: frame.midY - 22, width: 44, height: 44)
+        // Reuse the existing before capture to measure rendered pixels per UI-test point.
+        let screenshot = app.screenshot()
+        let before = XCTAttachment(screenshot: screenshot)
+        before.name = name + "-before"; before.lifetime = .keepAlways; add(before)
+        guard let image = screenshot.image.cgImage,
+              image.width > 0, image.height > 0, appFrame.width > 0, appFrame.height > 0 else {
+            XCTFail("Cannot establish screenshot pixel/point conversion for Done"); return nil
+        }
+        let pixelX = appFrame.width / CGFloat(image.width)
+        let pixelY = appFrame.height / CGFloat(image.height)
+        guard pixelX.isFinite, pixelY.isFinite, pixelX > 0, pixelY > 0,
+              pixelX <= 1, pixelY <= 1, abs(pixelX - pixelY) < 0.000001 else {
+            XCTFail("Unexpected screenshot/app coordinate scale for Done"); return nil
+        }
+        var point = CGPoint(x: region.midX, y: region.midY)
+        // Predeclared symmetric interior-edge policy: half a captured pixel inside every edge.
+        switch sample {
+        case .center: break
+        case .top: point.y = region.minY + pixelY / 2
+        case .bottom: point.y = region.maxY - pixelY / 2
+        case .left: point.x = region.minX + pixelX / 2
+        case .right: point.x = region.maxX - pixelX / 2
+        }
+        let coordinate = app.coordinate(withNormalizedOffset: .zero)
+            .withOffset(CGVector(dx: point.x - appFrame.minX, dy: point.y - appFrame.minY))
+        // This measures raster-edge alignment; it does not assert touch-event quantization.
+        let edgePixels = [(region.minX - appFrame.minX) / pixelX, (region.maxX - appFrame.minX) / pixelX,
+                          (region.minY - appFrame.minY) / pixelY, (region.maxY - appFrame.minY) / pixelY]
+        let edgePixelResiduals = edgePixels.map { $0 - $0.rounded() }
+        let details = "policy=symmetric-half-rendered-pixel-inset-v1; edgePixelResiduals=minX,maxX,minY,maxY:\(edgePixelResiduals); sample=\(sample.rawValue); AXFrame=\(frame); region44=\(region); plannedPoint=\(point); coordinatePoint=\(coordinate.screenPoint); pixelX=\(pixelX); pixelY=\(pixelY); barFrame=\(barFrame); navigationFrame=\(navigationFrame); keyboardFrame=\(keyboardFrame); otherButtonFrame=\(otherFrame); sparseSampleOnly=true"
+        let geometry = XCTAttachment(string: details)
+        geometry.name = name + "-target-before"; geometry.lifetime = .keepAlways; add(geometry)
+        XCTAssertTrue([frame.minX, frame.minY, frame.width, frame.height, barFrame.minX, barFrame.minY,
+                       barFrame.width, barFrame.height, navigationFrame.minY, navigationFrame.maxY,
+                       keyboardFrame.minY, keyboardFrame.maxY, otherFrame.minX, otherFrame.minY,
+                       otherFrame.width, otherFrame.height, point.x, point.y].allSatisfy(\.isFinite))
+        // Millipoint tolerance covers CGFloat roundoff, not a smaller target or shifted tap.
+        XCTAssertGreaterThanOrEqual(frame.width, 44 - 0.001)
+        XCTAssertGreaterThanOrEqual(frame.height, 44 - 0.001)
+        XCTAssertTrue(frame.insetBy(dx: -0.001, dy: -0.001).contains(region))
+        XCTAssertTrue(barFrame.contains(region), "The planned 44-point region must stay inside the owned Done row")
+        XCTAssertGreaterThanOrEqual(region.minY, navigationFrame.maxY + 8 - 0.001)
+        XCTAssertGreaterThanOrEqual(region.minY, barFrame.minY + 8 - 0.001)
+        XCTAssertLessThanOrEqual(region.maxY, barFrame.maxY - 8 + 0.001)
+        XCTAssertFalse(keyboardFrame.intersects(region))
+        XCTAssertTrue(appFrame.contains(region))
+        XCTAssertFalse(otherFrame.intersects(region), "The planned region must avoid the separate Back/Cancel target")
+        XCTAssertTrue(region.contains(point) && barFrame.contains(point))
+        XCTAssertEqual(coordinate.screenPoint.x, point.x, accuracy: 0.000001)
+        XCTAssertEqual(coordinate.screenPoint.y, point.y, accuracy: 0.000001)
+        return FocusedDoneTarget(coordinate: coordinate, frame: frame, details: details)
+    }
+
+    private func fill(_ text: String, into id: String, replacing: Bool = false, requireDone: Bool = false, useVisibleCenter: Bool = false,
+                      focusedDoneEvidence: (title: String, label: String, name: String, back: String, sample: FocusedDoneSample)? = nil) {
         // Persistent labels can share the field's accessible name. Match only
         // editable controls, including lazily materialized Form rows.
         let editableTypes: [XCUIElement.ElementType] = [.textField, .textView, .secureTextField, .searchField]
@@ -1857,7 +1966,44 @@ import XCTest
         field.typeText(text)
         let done = app.buttons.matching(NSPredicate(format: "label IN %@", ["Done", "Listo"])).firstMatch
         if requireDone { XCTAssertTrue(done.waitForExistence(timeout: 5) && done.isHittable, "Done must be reachable from \(id)") }
-        if done.exists && done.isHittable { done.tap() }
+        var evidenceFrame: CGRect?
+        var focusedTarget: FocusedDoneTarget?
+        if let evidence = focusedDoneEvidence {
+            XCTAssertEqual(field.value as? String, text, "Entered amount before Done")
+            XCTAssertTrue(app.keyboards.firstMatch.exists)
+            let bar = app.navigationBars[evidence.title]
+            XCTAssertTrue(bar.exists)
+            let doneBar = app.otherElements["dinnerFocusedKeyboardDoneBar"]
+            XCTAssertTrue(doneBar.exists)
+            let barDone = doneBar.buttons.matching(identifier: "dinnerFocusedKeyboardDone")
+            XCTAssertEqual(barDone.count, 1)
+            XCTAssertEqual(app.buttons.matching(NSPredicate(format: "label IN %@", ["Done", "Listo"])).count, 1)
+            XCTAssertEqual(done.label, evidence.label)
+            XCTAssertTrue(done.isEnabled && done.isHittable)
+            let back = bar.buttons[evidence.back]
+            XCTAssertTrue(back.exists && back.isHittable)
+            guard let target = focusedDoneTarget(done, in: doneBar, below: bar, avoiding: back,
+                                                    sample: evidence.sample, name: evidence.name) else { return }
+            evidenceFrame = target.frame
+            focusedTarget = target
+        }
+        var doneTapped = false
+        if let target = focusedTarget {
+            XCTAssertEqual(done.frame, target.frame, "Done geometry must remain stable before the coordinate tap")
+            target.coordinate.tap(); doneTapped = true
+        } else if done.exists && done.isHittable { done.tap(); doneTapped = true }
+        if let evidence = focusedDoneEvidence {
+            XCTAssertTrue(doneTapped, "The original Done action must execute exactly once")
+            XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
+            XCTAssertTrue(done.waitForNonExistence(timeout: 5))
+            XCTAssertTrue(app.otherElements["dinnerFocusedKeyboardDoneBar"].waitForNonExistence(timeout: 5))
+            let bar = app.navigationBars[evidence.title]
+            XCTAssertTrue(bar.exists, "Done must retain the editable idea before Review")
+            XCTAssertEqual(field.value as? String, text, "Exact entered amount must survive Done")
+            capture(evidence.name + "-after")
+            let geometry = XCTAttachment(string: "field=\(id); valueBefore=\(String(reflecting: text)); valueAfter=\(String(reflecting: field.value as? String ?? "<missing>")); doneFrame=\(String(describing: evidenceFrame)); \(focusedTarget?.details ?? "<missing>"); keyboardGone=\(!app.keyboards.firstMatch.exists); doneGone=\(!done.exists); editorRetained=\(bar.exists); doneTapped=\(doneTapped)")
+            geometry.name = evidence.name + "-geometry"; geometry.lifetime = .keepAlways; add(geometry)
+        }
     }
     private func reveal(_ target: XCUIElement, initiallyUpward: Bool = true) {
         for attempt in 0..<24 {

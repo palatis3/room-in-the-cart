@@ -14,7 +14,7 @@ maps remain in [CURRENT-ACCEPTANCE](CURRENT-ACCEPTANCE.md#launch-requirement-tra
 
 Use `/Users/palatis/Room in the Cart`, branch `codex/parallel-ios-ci`, with an
 explicit working directory. The ambient `spanish-done-diagnostic` worktree is old.
-App code checkpoint before this documentation update: `e9bbff4c`.
+Current Dinner changes are installed locally; their exact source proof is below.
 Draft PR 1 remains a separate integration candidate; no full batch was pushed
 for this focused work. Recheck remote state before publishing.
 
@@ -26,49 +26,54 @@ for this focused work. Recheck remote state before publishing.
   suites with strict verification. The shared build and final gate pass.
   Logs and terminal inventory were collected once. Do not dispatch a duplicate.
   [Billing proof](evidence/native/membership-pending-reconciliation-20261108/README.md).
-- Both local dinner journeys and their inspectors are terminal. The safe-area
-  followup passed native/strict with zero idle misses, but visual review still
-  rejects its missing supply title. No local native job is active.
-- Helper `english_keyboard_review` is preparing a two-file top-inset proposal
-  against the current isolated source. No helper owns native execution or Git.
-  Root must review that proposal before source changes or execution.
+- The original Spanish dinner journey at largest Dynamic Type is active:
+  root session **60355**, `.build/DinnerInlineTitleNov08/run_spanish_ax5.py`.
+  The testcase failed after193.448s: dinnerAcceptIdea was not found following
+  the first successful Done and unknown-quantity review. Xcode PID1814 remains
+  live finalizing failure diagnostics; no terminal native receipt exists yet.
+  It reuses the exact English-qualified products. The wrapper records the AX5
+  readback and restores Large in `finally`; check its settings receipt before
+  continuing. Poll that handle/exact PID; no concurrent local native work.
+- Helper `english_keyboard_review` is reviewing only source/log evidence for
+  the Spanish scrolling failure. No native/export work is delegated. Root/helper
+  reviewed all ten English screenshots and five after-action geometry records;
+  no blocking title/Done/value defect in that scope.
 
-## Dinner candidate and next action
+## Installed Dinner repair and next action
 
-Canonical Dinner sources are unchanged. Isolated working source and reusable DD:
+Three files are installed locally: DinnerEditors.swift, DinnerIdeaSupplyViews.swift
+and FreeJourneyUITests.swift. Isolated source and reusable DD remain at
 `.build/EnglishKeyboardReviewNov08/current-r1/execution-r1/{source,dd}`.
-Current 561-file manifest is `.build/DinnerTopDoneSafeAreaNov08/source.json`,
-SHA256 `94c871796090b737893661a45ab10117fbce1ee9c06cea48a4aab1cb7e923a5a`.
-It includes the current Membership changes, unlike obsolete `8d0eb48f` inputs.
+The 561-file manifest `.build/DinnerInlineTitleNov08/source.json` has SHA256
+`1b4696e19ef030cb754148b23eb3bd9b65f0c3f9a617c2ad9b2e99e4fde7a0b5`.
+It matches the installed app/test bytes and includes the current Membership fix.
+The old `8d0eb48f` native pin is obsolete.
 
-The reviewed three-file proposal moves focused Done to an owned top-content row
-for dinner ideas and supply only. Manual/reusable editing retains its current
-behavior. Done dismisses focus without committing, cancelling or changing values.
-The original five symmetric touch samples and complete business/relaunch
-assertions are retained. Draft: `.build/EnglishKeyboardReviewNov08/top-content-done-proposal-r1`.
+Focused Done has its own top-content row for dinner ideas and supply, a rectangular
+minimum44-point target and8-point vertical padding. It clears focus without
+changing values, saving or cancelling. The supply screen uses a native inline
+localized title. Manual/reusable editing keeps its existing behavior.
 
-First candidate `.build/DinnerTopDoneNov08`: build/bundle pass; complete original
-English journey native0/strict0/zero idle misses, all five samples and persistence
-pass. Visual review rejected the missing supply title while focused. Its row
-background extended into the navigation safe area. Source/products and original
-results are preserved; do not re-export or rerun that unchanged candidate.
+Build and Debug bundle checks pass. The original English journey passes native
+and strict checks with zero idle misses, all five symmetric coordinate samples,
+unknown-quantity rejection, supply approval and relaunch persistence. All ten
+screens and five geometry records are reviewed. All261Python checks (including20app-configuration tests)
+and generated-project validation pass. [Evidence and rejected alternatives](evidence/native/dinner-top-done-20261108/README.md).
+Earlier sibling-row/background-only candidates failed visual review; top-inset
+failed the Review postcondition. Their source/products/results remain preserved.
+All earlier inspectors and exports are complete; do not repeat them.
 
-Current followup changes only that row to
-`.background(Theme.canvas, ignoresSafeAreaEdges: [])`. Source/products from the
-first candidate are APFS-preserved under the followup's `preserved/` directory.
-The followup's original English run and inspector are terminal: native0/strict0,
-zero idle misses and all five touch/persistence checks pass. Root reviewed Yield
-and Price before screenshots; the title is still absent even though the background
-now respects the safe area. Do not re-export or rerun this unchanged candidate.
-Background overpaint alone is not the explanation. The next distinct hypothesis
-is a top safe-area inset on the Form, preserving the same Done control while
-keeping the Form as primary navigation content instead of inserting a VStack
-sibling. It must preserve visible titles and the original full journey.
-After that correction passes, next checks are the original Spanish journey at largest Dynamic
-Type on current iOS, Spanish at Large text on iOS17, and an unsigned Release
-build/bundle check. The prepared runner supports those two Spanish scopes;
-set/read back the intended content size and restore it afterward. Do not bypass
-failed behavior or replace full integration/release acceptance with these checks.
+Next: wait for the SAME Spanish AX5 process to finalize, then execute
+`.build/DinnerInlineTitleNov08/inspect.py spanish-ax5` exactly once, inspect its
+screens and confirm Large restoration. The first premature inspection guard
+rejected missing nativeExit before creating an inspection directory or exporting
+anything; no result was inspected. Classify/fix the missing-CTA failure before
+claiming AX5 qualification. Then run the original Spanish journey at
+Large text on owned iOS17 (`run_native.py spanish-ios17`), followed by an unsigned
+Release build/bundle check. These variants are still unproven. Restore/preserve
+compatible products before changing build profiles. Full combined hosted and
+release acceptance remains required; this is a locally installed repair, not a
+release claim. No new full PR batch or deployment has been started.
 
 ## Other open failures and workflow
 

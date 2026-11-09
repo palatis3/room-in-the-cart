@@ -9,15 +9,16 @@ sanitizers, shared build and strict aggregate gate passed. No retry occurred.
 [Exact hosted result](evidence/native/membership-pending-reconciliation-20261108/README.md).
 This closes that focused billing validation, not full combined release acceptance.
 
-The isolated top-content Done candidate passed the complete original English
-dinner journey, all five coordinate samples, native/strict checks and relaunch,
-with zero idle misses. Visual review rejected its supply title being covered
-while focused. A one-line background safe-area correction also passed the full
-journey and strict checks, but the title remains visually absent. Neither candidate
-is accepted or installed. A top-inset placement preserving the Form's navigation
-relationship is the next reviewed direction, not a demonstrated fix.
-See [the current handoff](CURRENT-HANDOFF.md) for exact live handles, source and
-next action; older running statements below are historical checkpoints.
+The top-content Done repair is now installed locally with a native inline supply
+title. Its full original English journey passes all five coordinate samples,
+unknown-quantity rejection, supply approval and persistence: native0, strict0,
+zero idle misses. Root/helper reviewed all ten screenshots and five after-action
+records; title and control separation now pass. The two visual failures and the
+failed top-inset alternative remain preserved. Spanish largest-text case failed to locate Accept idea; its live Xcode process
+is still finalizing diagnostics. That scope is not qualified. MinimumOS, Release
+and combined hosted regression also remain open.
+[Repair evidence](evidence/native/dinner-top-done-20261108/README.md),
+[current handles and next action](CURRENT-HANDOFF.md).
 
 Cook readback's render-only alternative reproduced the framework-main wait and
 remains rejected. Scroll metric cardinality, broader accessibility and the full

@@ -1,0 +1,20 @@
+{
+  "baseCommit": "e9bbff4cd6ce4c4b222b9251ff259cd2cd95b514",
+  "patchSHA256": "22a3414c9802d54697df4e1575444831e58bda7e9c0115db252be6ed75cdc24e",
+  "refreshedFromCanonical": [
+    "ios/Features/Dinners/DinnerEditors.swift",
+    "ios/Features/Dinners/DinnerIdeaSupplyViews.swift",
+    "ios/Features/Membership/MembershipModel.swift",
+    "ios/Tests/MembershipTests.swift",
+    "ios/UITests/FreeJourneyUITests.swift"
+  ],
+  "candidateFiles": [
+    "ios/Features/Dinners/DinnerEditors.swift",
+    "ios/Features/Dinners/DinnerIdeaSupplyViews.swift",
+    "ios/UITests/FreeJourneyUITests.swift"
+  ],
+  "preservedProductsVerified": true,
+  "sourceFiles": 561,
+  "priorImagesReviewed": 5,
+  "preparedAt": "2026-11-09T01:25:54.302638+00:00"
+}

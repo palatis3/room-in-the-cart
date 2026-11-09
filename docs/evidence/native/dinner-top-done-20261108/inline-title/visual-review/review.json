@@ -1,0 +1,128 @@
+{
+  "scope": "Manual review of8requested retained English screenshots and5after-geometry records;2before screenshots already reviewed by root excluded.",
+  "result": "No blocking visual defect observed in reviewed Done/title/value scope.",
+  "screenshots": [
+    {
+      "file": "7B59A60C-8FF7-4168-8065-C29E47F3BE4D.png",
+      "name": "Dinner-supply-Done-ideaSupplySource-after_0_0E6FB2C0-7FB6-4F5C-85E7-CD88FE3DB0C6.png",
+      "sha256": "15e6fc878707b9e955260b1675d01a7cfefa5f03c25c01528774314b85b25afb",
+      "observation": "Full supply title and Cancel visible;8,2.50 and Bag label retained; Done/keyboard absent; separate commit fully readable."
+    },
+    {
+      "file": "480E7150-564D-4E71-9045-5ABA739BE585.png",
+      "name": "Dinner-supply-Done-ideaSupplySource-before_0_5EFAA5E4-3F64-4004-AB44-1295A565B555.png",
+      "sha256": "79eaa6efad8a5f420e5cb45f8456f05bd0660addb3c22adde18d4d9fad985b23",
+      "observation": "Full supply title, separate Cancel and Done visible; focused Bag label readable above keyboard; yield8 and price2.50 retained."
+    },
+    {
+      "file": "22333FB8-5116-4C8A-ACF0-3D48AF2EE829.png",
+      "name": "Dinner-supply-Done-ideaSupplyPrice-after_0_C44E3473-3CF5-43FC-B016-36F0B7701983.png",
+      "sha256": "680b7c0afb52d312fd37a242c818dd15d56c3758079c0b3713f3a2a3ab2d6ac2",
+      "observation": "Full supply title and Cancel visible; yield8 and price2.50 retained; no Done/keyboard; separate commit fully readable."
+    },
+    {
+      "file": "68DA6618-F290-4E1F-B20B-B9D42FB1615D.png",
+      "name": "Dinner-supply-Done-ideaSupplyYield-after_0_D1F8E211-6729-4A05-BDD8-A22CD0D11F93.png",
+      "sha256": "019673b5a3af3c3132bb0e2c68812f56499862fd5ed75266dd8b5a591954d14d",
+      "observation": "Full Review ingredient supply title and separate Cancel visible; yield8 retained; Done/keyboard absent. Commit row is partially at lower scroll boundary."
+    },
+    {
+      "file": "265D721E-867E-4206-B355-1429FD351D73.png",
+      "name": "Dinner-idea-Done-restored-amount-after_0_5CE363D8-F234-48B2-908D-13BF9125BA18.png",
+      "sha256": "b03672ec35507ec628ad8048ad101364d04217f09329c92b8b03f86c841e0b46",
+      "observation": "Amount4 retained with visible Dinner idea title; no keyboard or residual Done row."
+    },
+    {
+      "file": "8918AC09-2C35-45B5-91D6-16F6E2E67C39.png",
+      "name": "Dinner-idea-Done-restored-amount-before_0_74B30DCB-E6DD-453A-B309-8D0006C74D26.png",
+      "sha256": "221911edc6477f9e57aba3ef869a39f483df2b0183b1f868a1048d3a8c1cf761",
+      "observation": "Dinner idea title, Back and Done visible and separate; focused amount4 readable."
+    },
+    {
+      "file": "B34A201A-A473-45E5-8598-E5D9FDDC2151.png",
+      "name": "Dinner-idea-Done-cleared-amount-after_0_37495744-ABF2-4296-8D64-143B1FE0ED4F.png",
+      "sha256": "3bd2942d4fd832f21ff868c68e1cf1a7adb6e2819e4392d1ffb423fb3467349d",
+      "observation": "Dinner idea title and blank amount retained; Done row and keyboard absent; remaining form expands upward."
+    },
+    {
+      "file": "A05FE256-74FB-449B-A100-166B915E2A61.png",
+      "name": "Dinner-idea-Done-cleared-amount-before_0_EDBEC131-49CA-48F9-A45E-B405097CF0C9.png",
+      "sha256": "406ea636e8f9d6aca38fb7de2b40b1298035261e3a985f7c48312717fad2117b",
+      "observation": "Dinner idea title, Back and separate Done visible; cleared focused amount visually blank; active row unobscured."
+    }
+  ],
+  "geometry": [
+    {
+      "file": "E0E4170A-9E27-4B76-A4D1-E83BD4BC511B.txt",
+      "sha256": "d80ab07a14e58863e02a506ccb66b2fe41f3a1cb33fb1fbd793d20adc9e4289e",
+      "field": "ideaSupplySource",
+      "sample": "right",
+      "valueBefore": "Bag label",
+      "valueAfter": "Bag label",
+      "keyboardGone": true,
+      "doneGone": true,
+      "editorRetained": true,
+      "doneFrame": "(342.0, 140.0, 44.0, 44.0)"
+    },
+    {
+      "file": "A09C3BC6-E5BF-4A5D-97FB-24519A6CE2D9.txt",
+      "sha256": "d8d66db1dc2c3535288451c5c0f21ea8cfac288fbec9833f0da2bc8b097ee906",
+      "field": "ideaSupplyPrice",
+      "sample": "left",
+      "valueBefore": "2.50",
+      "valueAfter": "2.50",
+      "keyboardGone": true,
+      "doneGone": true,
+      "editorRetained": true,
+      "doneFrame": "(342.0, 140.0, 44.0, 44.0)"
+    },
+    {
+      "file": "C4544928-52FA-4F49-9159-0D934090951A.txt",
+      "sha256": "3431916aad04eee5d4e61b3f34008a0dc069ee7d9b0ea7049de20c0a067b6252",
+      "field": "Amount, optional",
+      "sample": "top",
+      "valueBefore": "\"4\"",
+      "valueAfter": "\"4\"",
+      "keyboardGone": true,
+      "doneGone": true,
+      "editorRetained": true,
+      "doneFrame": "Optional((342.0, 124.0, 44.0, 44.0))"
+    },
+    {
+      "file": "D8D3EA76-75B2-4FAB-9270-162B01CEF26F.txt",
+      "sha256": "520c4cd424da6faf893068ae0f10de909baa49f22fe1f70f3c7dd9d89b95f620",
+      "field": "ideaSupplyYield",
+      "sample": "bottom",
+      "valueBefore": "8",
+      "valueAfter": "8",
+      "keyboardGone": true,
+      "doneGone": true,
+      "editorRetained": true,
+      "doneFrame": "(342.0, 140.0, 44.0, 44.0)"
+    },
+    {
+      "file": "86811C81-A54D-425A-8F9D-70FE8BB2A748.txt",
+      "sha256": "257365d37f43013111ad222b2a7389146d141aba959e6d430c7e91a3c4b89249",
+      "field": "Amount, optional",
+      "sample": "center",
+      "valueBefore": "\" \"",
+      "valueAfter": "\" \"",
+      "keyboardGone": true,
+      "doneGone": true,
+      "editorRetained": true,
+      "doneFrame": "Optional((342.0, 124.0, 44.0, 44.0))"
+    }
+  ],
+  "geometryInterpretation": "All5records retain exact values and report keyboard/Done gone, editor/sheet retained. Done AX rectangles44x44. Idea row116..176/control124..168 and supply row132..192/control140..184 provide8pt vertical clearance; regions separate from navigation/Back/Cancel/keyboard. Actual action evidence comes from test behavior; dimensions are not continuous hit coverage.",
+  "visibleFindings": [
+    "All reviewed navigation titles fully visible; no title/Done/Cancel overlap.",
+    "All5after screenshots show no keyboard, Done label or residual owned Done row.",
+    "Restored4 and supply8/2.50/Bag label visually retained; exact single-space preservation supported by geometry, not pixels.",
+    "Some unrelated content is partially visible at normal scroll/keyboard/tab-bar boundaries: Completed steps above the active ingredient, lower Remove ingredient while typing, Tortillas heading after supply scrolling, commit partially below viewport in yield-after. These captures do not establish whole-form no-clipping. No clipping of the reviewed title, Done text or active field value observed."
+  ],
+  "limits": [
+    "English/current simulator/default size only. SpanishAX5, minimumOS, Release and broader accessibility/physical acceptance remain pending.",
+    "No new exports/native execution/source edits; read retained files and wrote this review only.",
+    "Sparse5point behavior does not prove a continuous44pt hit area or full VoiceOver acceptance."
+  ]
+}
