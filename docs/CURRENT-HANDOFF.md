@@ -15,7 +15,7 @@ contracts and B11 acceptance. Read [APP-BASELINE](product/APP-BASELINE.md), then
 Use `/Users/palatis/Room in the Cart`, branch `codex/parallel-ios-ci`, with explicit
 working directories. The ambient `spanish-done-diagnostic` worktree is stale.
 Publication target is `codex/combined-candidate-20261109`; before this update its
-verified head was `11491843f8e60b15702dff2321cbf22c94dd47e7`. Recheck current Git
+verified head was `1d7f938b`. Recheck current Git
 and run state before publishing. Draft PR1 is a separate older candidate.
 No complete combined regression or merge has passed.
 
@@ -114,15 +114,54 @@ This does not prove zero local-file writes or cancel the rejected pending operat
 Receipt: `.build/ClarificationContrastNov09/baseline-r4/negative-control.json`.
 Source manifest: `e078096286ceaf0806189a70808197ccf2b2767bbba16ca5aac59a9975163d83`.
 
-All nine identified compiler warning sites are absent in the isolated candidate;
-the App Intents metadata tool still reports no framework dependency. None of
-these new fixture/test/product changes is installed in canonical source yet.
-Next apply only `proposal-r5/style-after-identifier.patch` to the archived-and-verified
-stable source, create `positive-r1/source.json`, then build and run the prepared
-positive runner (light/dark × Large/AX5 plus original Cancel case). All positive
-and CI executions retain on-failure diagnostics. `positive-r1/` contains executors
-only; no positive compilation or test has started. Install canonical changes only
-after qualification and screenshot review. No native process remains active.
+All nine identified compiler warning sites are absent in the isolated candidate.
+Clarification/test/fixture changes remain isolated. The CoreDomain source-removal fix below is installed and verified.
+
+Positive1 source `77b380afdf17d90659f19fd4b94d6ade1fdba8afa131b2efc6e1ec1ad84359c5`
+passed light/Large native+strict, with7.083026:1 for both targets. Dark/Large failed
+its unchanged actual-palette check: API readback was dark but pixels remained
+light. Preconfiguring and verifying simulator dark before XCTest also failed;
+that original completed normally after638.363seconds and is retained. All three
+positive1 cases are terminal, inspected once; source/products/modes are archived.
+This is not a qualified dark-mode result or a proven product system-mode defect.
+
+Reviewed `appearance-parity-r2/appearance-parity.patch` adds the ordinary app's
+appearance preference path only for explicit light/dark opt-in in S24 fixture.
+All assertions remain; other roots and absent-argument S24 behavior are unchanged.
+Stable source is now positive2 manifest
+`14215009e8ce6d6af649d1c859801eb981971d8321f492fd095d3488c39e8894`.
+`positive-r2/` full contributor compilation passed in24.194seconds. Dark/Large
+passes native/strict with8.295239:1 for both targets and actual dark pixels;
+light/Large is executing. Finish exact-source four traits plus original Cancel,
+inspect pixels/geometry, then install canonical byte-verified changes and planner
+fixture count73. Positive/CI diagnostics remain on-failure. System-following
+appearance propagation is not qualified by explicit app-preference tests.
+
+## Source-removal acceptance follow-up
+
+Astra's product audit identified F02/B11 native source-removal proof as incomplete.
+The actual route is Dinners → All chosen dinners → chosen dinner → Preview
+removing → Cancel/Apply; retained LedgerMealsView's direct button is not live.
+Proposal `.build/SourceRemovalAcceptanceNov09/proposal-r1/` contains a reset-only
+variant of the existing private-recovery seed, one ordinary FreeJourney case and
+an exact persisted SQLite verifier. Eight pure verifier controls passed; they do
+not prove runtime storage. Native/SQLite acceptance has not run. No new CI jobs.
+
+The proposed CoreDomain regression **confirmed** a product defect: removing one
+linked dinner rewrites all three older orphan-row tombstone timestamps, while
+remaining quantities and IDs survive. The unchanged product failed exactly this
+one assertion; zero compiler warnings. Negative source/cache/result are retained
+in `.build/SourceRemovalAcceptanceNov09/model/`; source manifest
+`fe942c8181726c096e6767605d9d79ed5ac35658b223ce7d10919830e7fc0228`.
+The one-line fix only timestamps an empty row that has no existing tombstone.
+All196CoreDomain tests now pass on complete45-input manifest
+`0f6ced9125af985a3759609e99b2e1b3dbc7eae95b1de962160b6d0532e30ac9`.
+The initial full run omitted two external JSON fixtures; that failed preparation
+and unchanged compiled products are preserved. Corrected-input execution passed
+with no warnings. Fix and regression are installed byte-verified in canonical;
+[compact proof](evidence/native/source-removal-tombstones-20261109/README.md).
+No model process remains active. Native F02/SQLite acceptance remains pending.
+Finish positive2 before changing the stable native profile for F02.
 
 ## Installed product fixes and evidence boundaries
 
@@ -152,7 +191,7 @@ with the latest product archive at `builds/<product-SHA>/products`.
 Verify complete manifests and executable modes before mutation; each successor
 needs its own custody/source/product receipts. Old executors become historical.
 
-Owned iPhone17/iOS27.0 device: `A50C91FC-4966-47FF-A8CB-7640FBD513EB` (booted for clarification qualification; baseline1 is terminal). Launch-only4C01A9AC was deleted after preserving proof.
+Owned iPhone17/iOS27.0 device: `A50C91FC-4966-47FF-A8CB-7640FBD513EB` (booted; positive1 is terminal, traits restored to light/Large). Launch-only4C01A9AC was deleted after preserving proof.
 Protected preview `5FDE1E82-1FF7-4556-9C14-0746F6295944`: never reset or use for fixtures.
 Owned minimum17.0 deviceD420C2CA and17.5 device9DE280AC remain available; recheck state.
 Multiple26.2 runtime builds are installed, so version alone is insufficient identity.

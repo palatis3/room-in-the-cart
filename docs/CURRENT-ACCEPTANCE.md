@@ -2,6 +2,14 @@
 
 ## Current checkpoint — November 9, workflow and combined-candidate qualification
 
+Latest model fix: removing one dinner now preserves earlier deletion dates on
+unrelated rows. The new regression fails on the original implementation, then
+all196CoreDomain tests pass with the fix. Native removal/SQLite and combined CI
+remain pending. [Evidence](evidence/native/source-removal-tombstones-20261109/README.md).
+Workflow artifact provenance checks pass409offline checks and17queue-node checks;
+current execution state is maintained in [CURRENT-HANDOFF](CURRENT-HANDOFF.md).
+
+
 Current-candidate hostedscroll42592941333 at e95fcec9 reproduces missing duration:
 original native test and500-row persistence pass, but only three memory metrics
 exist in both originalSQLite andJSON. Local required metrics remain complete; no

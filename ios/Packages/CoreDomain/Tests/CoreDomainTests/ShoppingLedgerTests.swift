@@ -347,6 +347,38 @@ final class ShoppingLedgerTests: XCTestCase {
         XCTAssertEqual(ledger, unchanged)
     }
 
+    func testRemovingOneLinkedMealPreservesPriorTombstonesAndOtherSources() throws {
+        var ledger = ShoppingLedger()
+        let line = try ledger.addManualLine(name: "wraps", quantity: q(12), at: instant)
+        let manual = try source(ledger, lineID: line)
+        let target = try ledger.chooseMeal(taco(), at: instant)
+        let targetNeed = try mealSource(ledger, occurrenceID: target)
+        try ledger.linkContribution(contributionID: targetNeed, within: manual, quantity: q(6), at: instant)
+        let other = try ledger.chooseMeal(taco(4), at: instant)
+        let otherNeed = try mealSource(ledger, occurrenceID: other)
+        try ledger.linkContribution(contributionID: otherNeed, within: manual, quantity: q(4), at: instant)
+        let lunch = try ledger.addProtectedNeed(name: "wraps", quantity: q(2), purpose: "Lunch", within: manual, at: instant)
+        let before = ledger, removal = instant.addingTimeInterval(60)
+        XCTAssertEqual(before.lines.filter { $0.trashedAt != nil }.count, 3)
+        try ledger.removeMeal(occurrenceID: target, at: removal)
+        XCTAssertEqual(ledger.lines, before.lines, "Previously linked-away rows retain their original tombstone dates; active manual supply survives")
+        XCTAssertEqual(ledger.contributions.filter { $0.id != targetNeed }, before.contributions.filter { $0.id != targetNeed })
+        XCTAssertEqual(ledger.mealOccurrences.filter { $0.id != target }, before.mealOccurrences.filter { $0.id != target })
+        XCTAssertEqual(ledger.allocations, before.allocations.filter { $0.demandContributionID != targetNeed })
+        XCTAssertEqual(Set(ledger.contributions(forLineID: line).map(\.id)), [manual, otherNeed, lunch])
+        XCTAssertEqual(try ledger.quantity(forLineID: line)?.amount, try Rational(12))
+        var expectedSource = try XCTUnwrap(before.contributions.first { $0.id == targetNeed })
+        expectedSource.removedAt = removal
+        XCTAssertEqual(ledger.contributions.first { $0.id == targetNeed }, expectedSource)
+        var expectedMeal = try XCTUnwrap(before.mealOccurrences.first { $0.id == target })
+        expectedMeal.removedAt = removal
+        XCTAssertEqual(ledger.mealOccurrences.first { $0.id == target }, expectedMeal)
+        XCTAssertEqual(ledger.revision, before.revision + 1)
+        try ledger.validate()
+        let reopened: ShoppingLedger = try roundTrip(ledger)
+        XCTAssertEqual(reopened, ledger)
+    }
+
     func testTacosLunchAndManualStapleConserveSourcesAcrossRemoval() throws {
         var ledger = ShoppingLedger()
         let staple = try ledger.addManualLine(name: "wraps", quantity: q(12), at: instant)

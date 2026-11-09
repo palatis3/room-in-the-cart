@@ -1261,7 +1261,7 @@ public struct ShoppingLedger: Codable, Equatable, Sendable, Identifiable {
             }
         }
         for index in contributions.indices where removed.contains(contributions[index].id) { contributions[index].removedAt = at }
-        for index in lines.indices where contributions(forLineID: lines[index].id).isEmpty { lines[index].trashedAt = at }
+        for index in lines.indices where lines[index].trashedAt == nil && contributions(forLineID: lines[index].id).isEmpty { lines[index].trashedAt = at }
     }
 
     private func duplicateRoots(for members: [LedgerContribution], edges: [AllocationEdge]? = nil) -> [UUID: UUID] {
