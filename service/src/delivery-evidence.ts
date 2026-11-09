@@ -3,7 +3,7 @@ import {deliveryCoverage,type SealedMeal,type ReservationHead,type DeliverySourc
 import { z } from 'zod';
 import type { Context, Shop } from './repository.js';
 import { deliveryReservationBody, deliveryMatchBody, deliverySourceBody, deliveryArrivalBody, deliveryUsableBody } from './recovery-contracts.js';
-import { fitsReceived, confirmedLot } from './recovery-domain.js';
+import { fitsReceived, confirmedLot, exclusionConflict } from './recovery-domain.js';
 import { amount, add, cmp, dimension, zero } from './physical-quantity.js';
 import { ServiceError, invalid, unavailable } from './errors.js';
 
@@ -18,6 +18,10 @@ interface SourceRow {
 }
 
 export const reviewReservation = () => new ServiceError(409,'reservation_review_required','Review the named reservation, confirmed food and protected portions.');
+export function requireCompatibleMatch(need:{name:string;exclusions:string[]},source:{foodName:string;exclusionTags:string[]}) {
+  if(exclusionConflict(need,{name:source.foodName,exclusionTags:source.exclusionTags}))
+    throw new ServiceError(409,'match_exclusion_conflict','This food conflicts with the reviewed ingredient exclusions. Choose another source.');
+}
 const stale = () => new ServiceError(409, 'stale_supply', 'Reopen the delivery and review the latest observation.');
 export function requirePlaced(shop: Shop, allowClosed = false) {
   if (shop.placed_revision === null || (shop.phase !== 'placed' && !(allowClosed && shop.phase === 'closed'))) {
@@ -208,10 +212,15 @@ export async function recordDelivery(ctx: Context, shop: Shop, kind: Kind, input
     const source=(await ctx.db.query<SourceRow>(heads+' AND s.source_id=$3',[...scope,sourceId])).rows[0];
     if(!source) throw unavailable();
     if(!row.matched && source.reservations.some(p=>p.quantity && sameTarget(p,row))) throw reviewReservation();
-    const meal=await ctx.db.query(sealedMeals+` AND m.occurrence_id=$4 AND m.revision=$5
+    const meal=await ctx.db.query<SealedMeal>(sealedMeals+` AND m.occurrence_id=$4 AND m.revision=$5
       AND EXISTS(SELECT 1 FROM jsonb_array_elements(m.meal->'planning'->'ingredients') i WHERE (i->>'id')::uuid=$6)`,
       [...scope,shop.placed_revision,row.occurrenceId,row.mealRevision,row.ingredientId]);
     if(!meal.rowCount) throw unavailable();
+    if(row.matched && !verifyEffective){
+      const plan=meal.rows[0]!.meal.planning!,ingredient=plan.ingredients.find(i=>i.id===row.ingredientId)!;
+      requireCompatibleMatch({name:ingredient.name,exclusions:[...(plan.exclusions??[]),...ingredient.exclusions]},
+        {foodName:source.food_name,exclusionTags:source.exclusion_tags});
+    }
     if(source.matches.some(m=>m.occurrenceId===row.occurrenceId && m.mealRevision===row.mealRevision &&
       m.ingredientId===row.ingredientId)===row.matched) throw stale();
     await ctx.db.query(`INSERT INTO ritc.delivery_ingredient_review(household_id,shop_id,source_id,occurrence_id,

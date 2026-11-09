@@ -9,6 +9,7 @@ import shutil
 import subprocess
 import tarfile
 import tempfile
+import textwrap
 import time
 import unittest
 from unittest.mock import patch
@@ -89,6 +90,21 @@ class PerformancePlanProvenanceTests(unittest.TestCase):
         self.assertNotIn(str(self.root), json.dumps(result))
         self.assertLess(len(json.dumps(result)), proof.MAX_METADATA)
         self.assertTrue(all(c.args[0] == ['git', 'rev-parse', 'HEAD'] for c in self.git.call_args_list))
+
+    def test_arm64_only_plan_preserves_producer_consumer_identity(self):
+        original_bytes = self.plan.read_bytes()
+        self.plan = self.plan.rename(self.plan.with_name(
+            'RoomInTheCart-Performance_iphonesimulator27.1-arm64.xctestrun'))
+        original = self.produce()
+        restored = self.restore()
+        result = self.consume(restored)
+        self.assertEqual((restored / self.plan.name).read_bytes(), original_bytes)
+        self.assertEqual(result['immutable']['planName'], self.plan.name)
+        self.assertEqual(result['immutable']['planSHA256'], hashlib.sha256(original_bytes).hexdigest())
+        self.assertEqual(result['status'], 'passed')
+        self.assertTrue(result['comparison']['immutableMatch'])
+        self.assertEqual(result['immutable'], original['immutable'])
+        self.assertEqual(set(result['immutable']['products']), {'app', 'runner', 'tests', 'share', 'widget'})
 
     def test_changed_executable_and_missing_extension_fail_before_test_admission(self):
         self.produce()
@@ -231,6 +247,44 @@ class PerformancePlanProvenanceTests(unittest.TestCase):
 
 
 class PerformanceProvenanceWorkflowTests(unittest.TestCase):
+    def test_producer_shell_builds_only_arm64_and_propagates_native_failure(self):
+        workflow = (Path(__file__).resolve().parents[1] / '.github/workflows/ios-performance.yml').read_text()
+        build = workflow.split('      - name: Build the Release app and dedicated performance tests\n', 1)[1].split('      - name:', 1)[0]
+        self.assertIn('        shell: bash\n', build)
+        self.assertNotIn('continue-on-error', build)
+        script = textwrap.dedent(build.split('        run: |\n', 1)[1])
+        self.assertNotIn('${{', script)
+        # Execute the real workflow shell with GitHub's explicit-bash fail-fast flags.
+        # Only xcodebuild is replaced; tee must not mask its failure.
+        expected = ['-project', 'ios/RoomInTheCart.xcodeproj', '-scheme', 'RoomInTheCart-Performance',
+                    '-configuration', 'Release', '-destination', 'platform=iOS Simulator,id=fixture-device',
+                    '-parallel-testing-enabled', 'NO', '-jobs', '2', '-derivedDataPath', '.build/DerivedData',
+                    '-enableCodeCoverage', 'NO', '-enableAddressSanitizer', 'NO', '-enableThreadSanitizer', 'NO',
+                    '-enableUndefinedBehaviorSanitizer', 'NO', 'CODE_SIGN_IDENTITY=-',
+                    'ARCHS=arm64', 'ONLY_ACTIVE_ARCH=YES', 'build-for-testing']
+        for native_exit in (0, 17):
+            with self.subTest(native_exit=native_exit), tempfile.TemporaryDirectory(prefix='performance shell ') as temp:
+                root = Path(temp)
+                stub = root / 'xcodebuild'
+                stub.write_text('#!/bin/bash\nprintf "%s\\0" "$@" > "$STUB_ARGUMENTS"\n'
+                                'printf "fixture native diagnostic\\n" >&2\nexit "$STUB_EXIT"\n')
+                stub.chmod(0o755)
+                args_path = root / 'arguments'
+                result = subprocess.run(['bash', '--noprofile', '--norc', '-e', '-o', 'pipefail', '-c', script],
+                    cwd=root, env={**os.environ, 'PATH': str(root) + os.pathsep + os.defpath,
+                                   'SIMULATOR_ID': 'fixture-device', 'STUB_ARGUMENTS': str(args_path),
+                                   'STUB_EXIT': str(native_exit)}, capture_output=True, text=True, timeout=10)
+                self.assertEqual(result.returncode, native_exit, result.stderr)
+                self.assertEqual(args_path.read_bytes().decode().split('\0')[:-1], expected)
+                self.assertEqual((root / '.build/PerformanceBuild.log').read_text(), 'fixture native diagnostic\n')
+                self.assertIn('fixture native diagnostic', result.stdout)
+        # These overrides belong only to the producer, never the restored consumer.
+        self.assertEqual(workflow.count('ARCHS=arm64'), 1)
+        self.assertEqual(workflow.count('ONLY_ACTIVE_ARCH=YES'), 1)
+        consumer = workflow.split('  performance-tests:', 1)[1]
+        self.assertNotIn('ARCHS=', consumer)
+        self.assertNotIn('ONLY_ACTIVE_ARCH=', consumer)
+
     def test_linux_validation_producer_packaging_and_consumer_admission_order(self):
         text = (Path(__file__).resolve().parents[1] / '.github/workflows/ios-performance.yml').read_text()
         plan = text[text.index('  performance-plan:'):text.index('  performance-build:')]

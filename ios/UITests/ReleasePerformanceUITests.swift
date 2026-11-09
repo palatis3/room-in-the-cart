@@ -1,5 +1,7 @@
 #if RELEASE
 import XCTest
+import MachO
+import Darwin
 
 /// Each case uses a fresh Release installation. The pickup cases take the
 /// bundled fictional fixture from the simulator pasteboard through native Paste.
@@ -187,6 +189,7 @@ final class ReleasePerformanceUITests: XCTestCase {
             XCTAssertTrue(!top.exists || top.frame.midY < startY, "The measured gesture must scroll the list")
         }
         screenshot("Populated pickup list after measured scroll")
+        try attachJSON(PerformanceLoadedImages.report(), name: "post-measure-loaded-images")
     }
 
     private func importFixture() throws {
@@ -300,6 +303,207 @@ final class ReleasePerformanceUITests: XCTestCase {
         attachment.name = name
         attachment.lifetime = .keepAlways
         add(attachment)
+    }
+}
+// MARK: - Post-measure loaded-image diagnostic (not performance acceptance)
+// dyld has no public unregister operation. The callback and its fixed storage
+// stay alive for the process lifetime; after capture the callback is a no-op.
+private struct PerformanceImageRecord {
+    var kind = 0 // 0 = unrelated, 1 = MainThreadChecker, 2 = RPAC
+    var malformed = false
+    var cpu: UInt32 = 0
+    var cpuSubtype: UInt32 = 0
+    var uuid: uuid_t = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+}
+
+private enum PerformanceImageParser {
+    static let maxCommands = 512
+    static let maxCommandBytes = 65_536
+
+    static func word(_ bytes: UnsafeRawPointer, _ offset: Int) -> UInt32 {
+        UInt32(littleEndian: bytes.loadUnaligned(fromByteOffset: offset, as: UInt32.self))
+    }
+
+    // All parsing is bounded by the dyld-owned Mach-O load-command region.
+    // No dyld lookups, strings, JSON, Foundation or allocating collections here.
+    static func parse(_ bytes: UnsafeRawPointer, available: Int) -> PerformanceImageRecord {
+        var result = PerformanceImageRecord()
+        guard available >= 32, word(bytes, 0) == 0xfeedfacf else {
+            result.malformed = true; return result
+        }
+        guard word(bytes, 12) == 6 else { return result } // MH_DYLIB only
+        result.cpu = word(bytes, 4)
+        result.cpuSubtype = word(bytes, 8)
+        let count = Int(word(bytes, 16)), size = Int(word(bytes, 20))
+        guard count <= maxCommands, size <= maxCommandBytes, size <= available - 32 else {
+            result.malformed = true; return result
+        }
+        let end = 32 + size
+        var offset = 32, hasID = false, hasUUID = false
+        for _ in 0..<count {
+            guard offset <= end - 8 else { result.malformed = true; return result }
+            let command = word(bytes, offset), length = Int(word(bytes, offset + 4))
+            guard length >= 8, length % 8 == 0, length <= end - offset else {
+                result.malformed = true; return result
+            }
+            if command == 0xD { // LC_ID_DYLIB
+                guard !hasID, length >= 24 else { result.malformed = true; return result }
+                hasID = true
+                let nameOffset = Int(word(bytes, offset + 8))
+                guard nameOffset >= 24, nameOffset < length, length - nameOffset <= 4096 else {
+                    result.malformed = true; return result
+                }
+                var cursor = offset + nameOffset, basename = cursor
+                while cursor < offset + length && bytes.load(fromByteOffset: cursor, as: UInt8.self) != 0 {
+                    if bytes.load(fromByteOffset: cursor, as: UInt8.self) == 47 { basename = cursor + 1 }
+                    cursor += 1
+                }
+                guard cursor < offset + length else { result.malformed = true; return result }
+                if matches(bytes, start: basename, end: cursor, name: "libMainThreadChecker.dylib") { result.kind = 1 }
+                if matches(bytes, start: basename, end: cursor, name: "libRPAC.dylib") { result.kind = 2 }
+            } else if command == 0x1B { // LC_UUID
+                guard !hasUUID, length == 24 else { result.malformed = true; return result }
+                hasUUID = true
+                result.uuid = bytes.loadUnaligned(fromByteOffset: offset + 8, as: uuid_t.self)
+                var nonzero: UInt8 = 0
+                for index in 0..<16 { nonzero |= bytes.load(fromByteOffset: offset + 8 + index, as: UInt8.self) }
+                guard nonzero != 0 else { result.malformed = true; return result }
+            }
+            offset += length
+        }
+        guard offset == end, hasID else { result.malformed = true; return result }
+        if result.kind != 0 && (!hasUUID || (result.cpu != 0x0100000c && result.cpu != 0x01000007)) {
+            result.malformed = true
+        }
+        return result
+    }
+
+    private static func matches(_ bytes: UnsafeRawPointer, start: Int, end: Int, name: StaticString) -> Bool {
+        guard end - start == name.utf8CodeUnitCount else { return false }
+        for index in 0..<name.utf8CodeUnitCount {
+            if bytes.load(fromByteOffset: start + index, as: UInt8.self) != name.utf8Start[index] { return false }
+        }
+        return true
+    }
+}
+
+private final class PerformanceImageStorage: @unchecked Sendable {
+    // Only immutable fields are accessed without this dedicated mutex. No dyld
+    // calls or attachment/JSON work occur while it is held, avoiding lock inversion.
+    let mutex: UnsafeMutablePointer<pthread_mutex_t>
+    let initializationError: Int32
+    var registered = false
+    var active = false
+    var callbacks = 0
+    var parsedBytes = 0
+    var deadline: UInt64 = 0
+    var capped = false
+    var malformed = false
+    var checker = PerformanceImageRecord()
+    var rpac = PerformanceImageRecord()
+    var checkerCount = 0
+    var rpacCount = 0
+
+    init() {
+        mutex = .allocate(capacity: 1)
+        mutex.initialize(to: pthread_mutex_t())
+        initializationError = pthread_mutex_init(mutex, nil)
+    }
+    // Intentionally process lifetime: freeing/destroying this mutex while dyld
+    // still retains the C callback would be unsafe. There is exactly one instance.
+    static let shared = PerformanceImageStorage()
+}
+
+private func performanceImageAdded(_ header: UnsafePointer<mach_header>?, _ slide: Int) {
+    let storage = PerformanceImageStorage.shared // initialized before registration
+    guard storage.initializationError == 0 else { return }
+    pthread_mutex_lock(storage.mutex)
+    defer { pthread_mutex_unlock(storage.mutex) }
+    guard storage.active else { return }
+    guard storage.callbacks < 2048, mach_absolute_time() < storage.deadline else {
+        storage.capped = true; return
+    }
+    storage.callbacks += 1
+    guard let header else { storage.malformed = true; return }
+    let bytes = UnsafeRawPointer(header)
+    let size = Int(PerformanceImageParser.word(bytes, 20))
+    guard size <= PerformanceImageParser.maxCommandBytes,
+          storage.parsedBytes <= 64 * 1024 * 1024 - size - 32 else {
+        storage.capped = true; return
+    }
+    storage.parsedBytes += size + 32
+    let image = PerformanceImageParser.parse(bytes, available: size + 32)
+    if image.malformed { storage.malformed = true; return }
+    if image.kind == 1 {
+        storage.checkerCount += 1
+        if storage.checkerCount == 1 { storage.checker = image }
+    } else if image.kind == 2 {
+        storage.rpacCount += 1
+        if storage.rpacCount == 1 { storage.rpac = image }
+    }
+}
+
+private enum PerformanceLoadedImages {
+    static func report() -> [String: Any] {
+        let storage = PerformanceImageStorage.shared
+        var report: [String: Any] = [
+            "schemaVersion": 1, "diagnosticOnly": true, "releaseAcceptance": false,
+            "processRole": "xctest-runner", "processID": getpid(), "phase": "post-measure",
+            "scope": "Images observed during post-measure dyld registration; not proof of loading, initialization or metric transport during measurement.",
+            "status": "error", "collectionComplete": false,
+        ]
+        guard storage.initializationError == 0 else { report["error"] = "mutex_initialization"; return report }
+        var timebase = mach_timebase_info_data_t()
+        guard mach_timebase_info(&timebase) == KERN_SUCCESS, timebase.numer > 0 else {
+            report["error"] = "clock_timebase"; return report
+        }
+        let started = mach_absolute_time()
+        let budget = UInt64(2_000_000_000.0 * Double(timebase.denom) / Double(timebase.numer))
+        pthread_mutex_lock(storage.mutex)
+        guard !storage.registered else {
+            pthread_mutex_unlock(storage.mutex)
+            report["error"] = "already_registered"; return report
+        }
+        storage.registered = true
+        storage.deadline = started &+ budget
+        storage.active = true
+        pthread_mutex_unlock(storage.mutex)
+        // Synchronously reports existing images. Registration itself can wait
+        // for dyld's lock: the 2-second limit is cooperative, never a hard timeout.
+        _dyld_register_func_for_add_image(performanceImageAdded)
+        pthread_mutex_lock(storage.mutex)
+        storage.active = false
+        let capped = storage.capped || mach_absolute_time() >= storage.deadline
+        let malformed = storage.malformed
+        let checker = storage.checker, rpac = storage.rpac
+        let checkerCount = storage.checkerCount, rpacCount = storage.rpacCount
+        let callbacks = storage.callbacks, parsedBytes = storage.parsedBytes
+        pthread_mutex_unlock(storage.mutex)
+        // All allocation/string formatting happens after the callback window.
+        func entry(_ name: String, _ image: PerformanceImageRecord, _ count: Int) -> [String: Any] {
+            var value: [String: Any] = ["name": name, "matchCount": count]
+            if capped { value["status"] = "error" }
+            else if malformed { value["status"] = "malformed" }
+            else if count == 0 { value["status"] = "no-match" }
+            else if count > 1 { value["status"] = "ambiguous" }
+            else {
+                value["status"] = "complete"
+                value["uuid"] = UUID(uuid: image.uuid).uuidString
+                value["architecture"] = image.cpu == 0x0100000c ? "arm64" : "x86_64"
+                value["cpuType"] = image.cpu
+                value["cpuSubtype"] = image.cpuSubtype
+            }
+            return value
+        }
+        report["status"] = capped ? "error" : malformed ? "malformed" :
+            (checkerCount > 1 || rpacCount > 1) ? "ambiguous" :
+            (checkerCount == 0 || rpacCount == 0) ? "no-match" : "complete"
+        report["collectionComplete"] = !capped && !malformed
+        report["callbacks"] = callbacks
+        report["parsedBytes"] = parsedBytes
+        report["budgetExceeded"] = capped
+        report["libraries"] = [entry("libMainThreadChecker.dylib", checker, checkerCount), entry("libRPAC.dylib", rpac, rpacCount)]
+        return report
     }
 }
 #endif

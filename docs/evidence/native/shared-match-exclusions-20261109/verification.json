@@ -1,0 +1,64 @@
+{
+  "service": {
+    "head": "21f69b5f7f81dc2ab11767c8de83d7c42d1c746b",
+    "branch": "codex/parallel-ios-ci",
+    "source_sha256": {
+      "service/src/delivery-evidence.ts": "7accdbd0bdd5306ff29659d6bc39921ec3624c3350b4a72a40b6f335f7d85415",
+      "service/src/pantry-lots.ts": "a15d4721457044f5fee696045f77efb83ef351a2231d8046b5860b8d70cc98a9",
+      "service/src/shared-recovery-basis.ts": "b592b17cbb2428c5c41cdd1321ec297dda60fcd1fb132f0b05d527658ced970c",
+      "service/tests/shared-meal-changes.integration.mjs": "0d02991abaafc8b7c32096236c377f4a8f2cf87bb23e055ac2f5f0fa597ec18b",
+      "service/tests/shared-meal-ideas.integration.mjs": "a10c4ce7c769a71bcab985a5c0f736ece86378837aa81d7e8785ba90a1bfc3bb"
+    },
+    "evidence_sha256": {
+      "original-negative-regression.log": "e4fbf0da4f0686f607911bd9c94edd49c42335dc458f2090feaa1a91b9212b82",
+      "original-negative-regression.patch": "1f525bbe633fed49f65ed86200fe5da2f022221b04d67a26b44ba69aa7308096",
+      "shared-meal-full.log": "ecc7efb54fc15fd80d4db26c35bcf24dd50393f1970058b0342f3f508a2c6344",
+      "service-fast.log": "9d881b46f2011d84ed6e35d2eae36609dbc9e827146742a381f8928e476b4e7c",
+      "service-integration.log": "0d5d87a9834aed3d087340d288c96b6b202cb0b958114c10d23bd2a059cb7633",
+      "final-service.patch": "a788aa7af310f9934901a0a457486c32ea6cd7f0cf3732bcf42ff8eca4525014"
+    },
+    "results": {
+      "original_negative": {
+        "tests": 2,
+        "pass": 0,
+        "fail": 2,
+        "actual_status": 200,
+        "expected_status": 409
+      },
+      "shared_meal_http_postgres": {
+        "tests": 38,
+        "pass": 38,
+        "fail": 0,
+        "skip": 0
+      },
+      "fast": {
+        "tests": 451,
+        "pass": 450,
+        "fail": 0,
+        "skip": 1
+      },
+      "all_http_postgres": {
+        "tests": 253,
+        "pass": 250,
+        "fail": 0,
+        "skip": 3
+      }
+    },
+    "database": "Disposable isolated loopback PostgreSQL 17.11; least-privilege runtime, separate fixture worker and verifier. Stopped and removed after verification.",
+    "deployment": "No migrations, hosted changes, provider operations, commits, or pushes."
+  },
+  "native": {
+    "sourceManifestSHA256": "a357a09918cf6dc15093dccb8dc992dc16e5baaff789b8eb490fddb5f9708791",
+    "debugBuildReceiptSHA256": "16731c33fc9f4c50c33b36f8e127d2979c7448f0b47f1810ce7bc60cfff2c017",
+    "productsManifestSHA256": "f51f027c66f299c08f8c719076bd956a8af631d025bcf283bbf432f7f954ff55",
+    "flowReceiptSHA256": "91a39c98ecd9eae48dc449fe23e32aff65ded096ad3cdd2a9dd5ecfcb582297a",
+    "flowStrictSHA256": "0b3e05100c70be5e13d622e591ed9fc84903e4f96d9b41eb0d2119ec5b3e1cf1",
+    "passed": 19,
+    "failed": 0,
+    "sourceUnchanged": true,
+    "productsUnchanged": true
+  },
+  "retention": "Original evidence retained locally under .build/SharedMatchExclusionNov09 and .build/PerformanceLoadedImagesNov09/execution-r1; Debug products and source separately archived under .build/NativeQualificationArchivesNov09/a357a09918cf6dc15093dccb8dc992dc16e5baaff789b8eb490fddb5f9708791/shared-match-debug-products-f51f027c66f299c0",
+  "releaseAcceptance": false,
+  "deployed": false
+}

@@ -185,15 +185,18 @@ test('an approved meal keeps its reviewed restrictions and time through checkout
  assert.equal(sealed.revision,3);assert.deepEqual(sealed.meal,received);
  const {sourceId}=ok(await save(command('delivery.register',{supplyRevision:0,placedRevision:3,
    lineId:f.initial.lines[0].lineId,segmentKey:randomUUID(),foodName:'Rice mix',exclusionTags:['SÉSAMO']})));
- ok(await save(command('delivery.match',{sourceId,supplyRevision:1,occurrenceId:sealed.occurrenceId,
-   mealRevision:sealed.revision,ingredientId:plan.ingredients[0].id,matched:true})));
+ const match=command('delivery.match',{sourceId,supplyRevision:1,occurrenceId:sealed.occurrenceId,
+   mealRevision:sealed.revision,ingredientId:plan.ingredients[0].id,matched:true});
+ const rejected=await save(match);assert.equal(rejected.status,409);assert.equal(rejected.data.error.code,'match_exclusion_conflict');
+ const unchanged=ok(await call(f.owner,delivery));assert.equal(unchanged.supplyRevision,1);assert.deepEqual(unchanged.sources[0].matches,[]);
+ assert.equal((await admin.query('SELECT 1 FROM ritc.operation WHERE household_id=$1 AND client_key=$2',[f.h,match.clientKey])).rowCount,0);
  const quantity=plan.ingredients[0].quantity,arrival=randomUUID();
- ok(await save(command('delivery.arrival',{sourceId,supplyRevision:2,observationId:arrival,predecessorId:null,
+ ok(await save(command('delivery.arrival',{sourceId,supplyRevision:1,observationId:arrival,predecessorId:null,
    arrivedAt:new Date(Date.now()-1000).toISOString(),received:quantity})));
- ok(await save(command('delivery.usable',{sourceId,supplyRevision:3,observationId:randomUUID(),predecessorId:null,
+ ok(await save(command('delivery.usable',{sourceId,supplyRevision:2,observationId:randomUUID(),predecessorId:null,
    arrivalObservationId:arrival,confirmedAt:new Date().toISOString(),usable:quantity})));
  const need=ok(await call(f.owner,delivery+'/coverage')).needs.find(n=>n.occurrenceId===sealed.occurrenceId);
- assert.deepEqual(need.issues,['exclusion']);assert.deepEqual(need.allocations,[]);
+ assert.deepEqual(need.issues,['noMatch']);assert.deepEqual(need.allocations,[]);
  assert.equal(need.covered.numerator,'0');assert.equal(need.missing.numerator,'600');
 });
 

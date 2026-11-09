@@ -446,13 +446,14 @@ test('a shopper can record completed prep and zero lead time without removing a 
  assert.deepEqual(protectedMeal,meal);
 });
 
-async function reservationFixture({excluded=false,split=true,rival=false,day,rivalDay,deadline}={}) {
+async function reservationFixture({legacyExcluded=false,split=true,rival=false,day,rivalDay,deadline,planExclusions=[]}={}) {
  const f=await mealFixture(),commands=f.base+'/commands',path=f.path+'/delivery-evidence';
  const quantity=n=>({amount:{numerator:n,denominator:1},unit:'count',originalLiteral:String(n)});
  const meal=structuredClone(f.meal),[plates,lunch]=meal.planning.groups,ingredient=meal.planning.ingredients[0];
  if(day) meal.day=day;
  if(deadline) meal.planning.deadline=deadline;
  ingredient.quantity=quantity(6);
+ meal.planning.exclusions=planExclusions;
  if(split) meal.planning.bindings.forEach((b,i)=>b.quantity=quantity(i===0?4:2));
  else delete meal.planning.bindings;
  const occurrenceId=randomUUID();
@@ -483,9 +484,11 @@ async function reservationFixture({excluded=false,split=true,rival=false,day,riv
    return {...page,needs:page.needs.filter(n=>n.occurrenceId===occurrenceId)};
  };
  const sourceId=ok(await write('delivery.register',{supplyRevision:0,placedRevision:snapshot.shopRevision-1,lineId:f.initial.lines[0].lineId,
-   segmentKey:randomUUID(),foodName:'Wraps',exclusionTags:excluded?['sesame']:[]})).sourceId;
+   segmentKey:randomUUID(),foodName:'Wraps',exclusionTags:[]})).sourceId;
  const match={sourceId,...target,matched:true};
  ok(await write('delivery.match',{...match,supplyRevision:1}));
+ // Seed pre-fix legacy corruption only through the isolated fixture owner.
+ if(legacyExcluded) await admin.query('UPDATE ritc.delivery_source SET exclusion_tags=$3 WHERE household_id=$1 AND source_id=$2',[f.h,sourceId,['sesame']]);
  const reservation={sourceId,...target,groupId:lunch.id,quantity:quantity(2),predecessorId:null};
  assert.equal((await write('delivery.reserve',{...reservation,supplyRevision:2})).data.error.code,'reservation_review_required');
  const arrival=randomUUID();
@@ -562,7 +565,7 @@ test('durable named reservations bind exact group, predecessor and authority thr
 });
 
 test('durable named reservations reject excluded food and ambiguous group splits',async()=>{
- for(const settings of [{excluded:true},{split:false}]) {
+ for(const settings of [{legacyExcluded:true},{split:false}]) {
    const f=await reservationFixture(settings);
    const result=await f.write('delivery.reserve',{...f.reservation,supplyRevision:4});
    assert.equal(result.data.error.code,'reservation_review_required');
@@ -853,8 +856,10 @@ test('stored delivery retains one physical count across two shops and protects o
  assert.equal(correction.result.otherShopsAffected,true);assert.deepEqual(correction.result.needs,[]);
  assert(!JSON.stringify(correction.result).includes(otherShop));
  ok(await p.send(correction.cmd));assert.equal((await other.joint()).needs[0].missing.numerator,'1');
- const excluded=(await p.create('Sesame wraps',['sesame'])).lotId;
+ const excluded=(await p.create('Legacy wraps')).lotId;
  await p.edit('pantry.select',{lotId:excluded,selected:true});await p.edit('pantry.match',{lotId:excluded,...p.match,matched:true});
+ // Preserve read-side coverage of a pre-fix bad edge without accepting a new one.
+ await admin.query('UPDATE ritc.pantry_lot SET exclusion_tags=$3 WHERE household_id=$1 AND lot_id=$2',[f.h,excluded,['sesame']]);
  const e=await p.preview(excluded,q(30));ok(await p.send(e.cmd));
  const excludedNeeds=(await p.joint()).needs.filter(n=>n.occurrenceId===p.match.occurrenceId);
  assert(excludedNeeds.every(n=>n.issues.includes('exclusion') && !n.allocations.some(a=>a.sourceId===excluded)));
@@ -1360,4 +1365,106 @@ test('closed pickup accepts late amended-line arrivals and earlier corrections w
  assert.deepEqual((await admin.query('SELECT revision,snapshot,digest FROM ritc.shop_snapshot WHERE household_id=$1 ORDER BY revision',[f.h])).rows,sealed);
  const newShop=await f.shop();assert.notEqual(newShop,f.shopId);assert.equal(ok(await call(f.owner,f.base+'/shops/'+newShop)).phase,'draft');
  assert.equal(ok(await call(f.owner,f.path)).phase,'closed');assert.equal((await f.delivery()).supplyRevision,13);
+});
+
+// Authoritative match rejection must leave no accepted edge, revision or durable receipt.
+async function matchWriteState(f) {
+ const scope=[f.h,f.shopId];
+ const revision=(await admin.query(`SELECT s.revision,s.supply_revision,h.pantry_revision FROM ritc.shop s
+   JOIN ritc.household h USING(household_id) WHERE s.household_id=$1 AND s.shop_id=$2`,scope)).rows;
+ const counts={};
+ for(const table of ['delivery_ingredient_review','pantry_event','operation','operation_response','event'])
+   counts[table]=(await admin.query('SELECT count(*)::int AS n FROM ritc.'+table+' WHERE household_id=$1',[f.h])).rows[0].n;
+ return {revision,counts};
+}
+async function candidateMatch(f,p,kind,foodName,exclusionTags) {
+ if(kind==='delivery') {
+   const page=await f.delivery();
+   const sourceId=ok(await f.write('delivery.register',{supplyRevision:page.supplyRevision,placedRevision:page.placedRevision,
+     lineId:f.initial.lines[0].lineId,segmentKey:randomUUID(),foodName,exclusionTags})).sourceId;
+   return f.command('delivery.match',{...f.match,sourceId,supplyRevision:page.supplyRevision+1});
+ }
+ const {lotId}=await p.create(foodName,exclusionTags);await p.edit('pantry.select',{lotId,selected:true});
+ return p.envelope('pantry.match',{...await p.scope(),lotId,...p.match,matched:true});
+}
+async function rejectMatchWithoutMutation(f,command) {
+ const before=await matchWriteState(f);
+ for(let attempt=0;attempt<2;attempt++) {
+   const result=await f.send(command);
+   assert.equal(result.status,409,JSON.stringify(result.data));assert.equal(result.data.error.code,'match_exclusion_conflict');
+   assert.deepEqual(await matchWriteState(f),before);
+ }
+}
+for(const kind of ['delivery','pantry']) test(`new ${kind} ingredient match rejects excluded stock atomically`,async()=>{
+ const f=await reservationFixture({planExclusions:['sin sésamo']}),p=pantryHarness(f);
+ // Ingredient restriction + explicit tag; normalized source name; meal-wide restriction.
+ for(const [name,tags] of [['Wraps',['sesame']],['SESAME wraps',[]],['Wraps',['sesamo']]])
+   await rejectMatchWithoutMutation(f,await candidateMatch(f,p,kind,name,tags));
+ const compatible=await candidateMatch(f,p,kind,'Plain wraps',[]),before=await matchWriteState(f);
+ const receipt=ok(await f.send(compatible));assert.deepEqual(ok(await f.send(compatible)),receipt);
+ assert.equal((await matchWriteState(f)).counts.operation,before.counts.operation+1);
+ const changed={...compatible,body:{...compatible.body,matched:false}};
+ assert.equal((await f.send(changed)).data.error.code,'key_reused');
+ assert.equal((await f.write(kind+'.match',compatible.body,f.planner)).status,404);
+ ok(await f.write('shop.transferAuthority',{newShopperId:f.planner.id}));
+ assert.equal((await f.send(compatible)).status,404);
+});
+
+for(const kind of ['delivery','pantry']) test(`legacy excluded ${kind} match remains uncovered and removable`,async()=>{
+ const f=await reservationFixture(),p=pantryHarness(f),command=await candidateMatch(f,p,kind,'Legacy wraps',[]);
+ const accepted=ok(await f.send(command)),id=command.body.sourceId??command.body.lotId;
+ if(kind==='delivery') {
+   await admin.query('UPDATE ritc.delivery_source SET exclusion_tags=$3 WHERE household_id=$1 AND source_id=$2',[f.h,id,['sesame']]);
+ }else{
+   const observed=await p.preview(id,f.quantity(30));ok(await p.send(observed.cmd));
+   await admin.query('UPDATE ritc.pantry_lot SET exclusion_tags=$3 WHERE household_id=$1 AND lot_id=$2',[f.h,id,['sesame']]);
+ }
+ const needs=(await p.joint()).needs.filter(n=>n.occurrenceId===f.match.occurrenceId);
+ assert(needs.length>0);assert(needs.every(n=>n.issues.includes('exclusion')&&!n.allocations.some(a=>a.sourceId===id)));
+ // Durable replay is historical evidence, not a new positive match.
+ assert.deepEqual(ok(await f.send(command)),accepted);
+ const body={...command.body,...await p.scope(),matched:false};if(kind==='delivery') delete body.pantryRevision;
+ const remove=f.command(kind+'.match',body);ok(await f.send(remove));
+ const page=kind==='delivery'?await f.delivery():await p.stock();
+ assert.deepEqual((kind==='delivery'?page.sources.find(s=>s.sourceId===id):page.lots.find(l=>l.lotId===id)).matches,[]);
+ const retry={...command,clientKey:randomUUID(),body:{...body,matched:true,...await p.scope()}};
+ if(kind==='delivery') delete retry.body.pantryRevision;
+ await rejectMatchWithoutMutation(f,retry);
+});
+
+for(const kind of ['delivery','pantry']) test(`new ${kind} match enforces retained needs after HTTP recovery publication`,async()=>{
+ const f=await reservationFixture(),p=pantryHarness(f),path=f.path+'/meal-recovery';
+ const desk=ok(await call(f.owner,path)),target=desk.meals.find(m=>m.occurrenceId===f.match.occurrenceId);
+ const replacement={...target,revisionId:randomUUID(),title:'Reviewed rice dinner',needs:target.needs.map(n=>n.priority==='protected'?n:
+   {...n,id:randomUUID(),ingredientId:randomUUID(),name:'Rice',matchedSourceIds:[]})};
+ const input={v:1,base:desk.base,intent:{occurrenceId:target.occurrenceId,targetDigest:desk.targetDigests.find(d=>d.occurrenceId===target.occurrenceId).digest,
+   replacement,reviewedAt:desk.asOf,repeatOfOccurrenceId:null,agreesToRepeat:false,proposesExtraTrip:false,agreesToExtraTrip:false,acceptsUnresolved:true}};
+ const preview=ok(await call(f.owner,path+'/preview','POST',input));
+ ok(await f.send(f.command('mealRecovery.apply',{...input,previewId:preview.previewId,previewDigest:preview.previewDigest})));
+ await rejectMatchWithoutMutation(f,await candidateMatch(f,p,kind,'Wraps',['sesame']));
+ const compatible=await candidateMatch(f,p,kind,'Plain wraps',[]),receipt=ok(await f.send(compatible));
+ assert.deepEqual(ok(await f.send(compatible)),receipt);
+ const current=ok(await call(f.owner,path)),retained=current.meals.find(m=>m.occurrenceId===target.occurrenceId).needs.find(n=>n.priority==='protected');
+ assert(retained.matchedSourceIds.includes(compatible.body.sourceId??compatible.body.lotId));
+});
+
+// Exercise the publication loader boundary with different retained restrictions.
+// This proves legacy handlers consult the supplied effective need, not sealed text.
+test('effective match guards use every retained group restriction from the trusted recovery basis',async()=>{
+ const {recordCurrentDelivery,recordCurrentPantry}=await import('../dist/shared-recovery-basis.js');
+ const f=await reservationFixture(),p=pantryHarness(f);
+ const commands=[];for(const kind of ['delivery','pantry']) commands.push(await candidateMatch(f,p,kind,'Wraps',['peanuts']));
+ const original=(await realRecoveryRead(f)).context.meals.find(m=>m.occurrenceId===f.match.occurrenceId);
+ const replacement={...original,revisionId:randomUUID(),needs:original.needs.map((n,i)=>i===1?{...n,exclusions:[...n.exclusions,'No peanuts']}:n)};
+ const load=async()=>({...emptyRecoveryPublication(),recoveryRevision:1,meals:[replacement]});
+ for(const command of commands) {
+   const before=await matchWriteState(f),body={...command.body,...await p.scope()};
+   await assert.rejects(repo.transaction(f.h,async(db,now)=>{
+     const member=await repo.member(db,f.h,{issuer,subject:f.owner.subject}),ctx={db,now,householdId:f.h,member,selectedShopId:f.shopId};
+     const shop=await repo.shop(ctx,f.shopId);
+     return command.kind==='delivery.match'?recordCurrentDelivery(ctx,shop,command.kind,body,randomUUID(),load):
+       recordCurrentPantry(ctx,shop,command.kind,body,randomUUID(),load);
+   }),e=>e.code==='match_exclusion_conflict');
+   assert.deepEqual(await matchWriteState(f),before);
+ }
 });

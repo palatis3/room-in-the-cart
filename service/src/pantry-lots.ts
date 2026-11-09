@@ -3,7 +3,7 @@ import {z} from 'zod';
 import {digest} from './database.js';
 import {ServiceError,invalid,unavailable} from './errors.js';
 import {pantryBodies,pantryObservation,type Quantity} from './recovery-contracts.js';
-import {jointDeliveryInputs,requirePlaced,storedDeliveryEvidence,reviewReservation,sameTarget,lower,validateReservation} from './delivery-evidence.js';
+import {jointDeliveryInputs,requirePlaced,requireCompatibleMatch,storedDeliveryEvidence,reviewReservation,sameTarget,lower,validateReservation} from './delivery-evidence.js';
 import {deliveryCoverage,type DeliverySource,type ReservationHead,type SealedMeal} from './delivery-coverage.js';
 import {add,amount,cmp,dimension,wire,zero} from './physical-quantity.js';
 
@@ -242,6 +242,10 @@ export async function recordPantry(ctx:Context,shop:Shop,kind:Kind,input:unknown
         if(!meal?.meal.planning?.ingredients.some(i=>i.id===m.ingredientId)) throw unavailable();
         const matched=current.matches.some(r=>sameTarget(r,body));
         if('matched' in body){
+          if(body.matched && !verifyEffective){
+            const plan=meal.meal.planning!,ingredient=plan.ingredients.find(i=>i.id===m.ingredientId)!;
+            requireCompatibleMatch({name:ingredient.name,exclusions:[...(plan.exclusions??[]),...ingredient.exclusions]},source);
+          }
           if(matched===body.matched) throw stale();
           if(body.matched && source.matches.some(r=>sameTarget(r,m)) ||
              !body.matched && current.reservations.some(p=>p.quantity && sameTarget(p,body))) throw reviewReservation();

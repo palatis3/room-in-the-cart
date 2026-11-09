@@ -625,7 +625,7 @@ struct SharedShopTransfer: Equatable {
                 if !cookCopy { deliveryRecord = nil }
                 return true
             }
-            return !recovering && !cookCopy && !pantryEdit && pending != nil
+            return !recovering && !cookCopy && !pantryEdit && delivery == .waiting && pending != nil
         } catch { await handle(error, start: start); return false }
     }
     func loadFinancialEntries() async {
@@ -870,6 +870,9 @@ struct SharedShopTransfer: Equatable {
         guard start == generation else { return }
         switch error as? ClientError {
         case .accessEnded, .sessionNeeded, .service(status: 404, code: _, correlationID: _, retryAfter: _): clear(); await onAccessEnded()
+        case .service(status: 409, code: "match_exclusion_conflict", correlationID: _, retryAfter: _):
+            review = nil; acknowledged = false
+            notice = ht("This food conflicts with an exclusion for this ingredient. The match was not saved. Review the food and ingredient exclusions before trying another match.")
         case .service(status: 409, code: "reservation_review_required", correlationID: _, retryAfter: _):
             review = nil; acknowledged = false
             notice = ht("Review the usable amount, ingredient match and existing reservations before setting food aside.")

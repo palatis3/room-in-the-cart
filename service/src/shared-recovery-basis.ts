@@ -1,6 +1,6 @@
 import {createHash} from 'node:crypto';
 import {deliveryCoverage,type SealedMeal,type DeliverySource} from './delivery-coverage.js';
-import {requirePlaced,recordDelivery,reviewReservation,validateReservation,lower} from './delivery-evidence.js';
+import {requirePlaced,recordDelivery,requireCompatibleMatch,reviewReservation,validateReservation,lower} from './delivery-evidence.js';
 import {unavailable,ServiceError} from './errors.js';
 import {jointInputs,pantryRevision,guardDeliveryEdit,recordPantry,previewPantryObservation,type PantryProjectionLoader} from './pantry-lots.js';
 import {add,amount,cmp,dimension,inUnit,sub,wire,zero,type Rat} from './physical-quantity.js';
@@ -353,6 +353,12 @@ async function effectiveEdit(ctx:Context,shop:Shop,kind:DeliveryKind|PantryKind,
     meal.original.needs.some(o=>o.id===n.id));
   if(body.occurrenceId && !retained?.length && body.matched!==false && body.quantity!==null)
     throw new ServiceError(409,'stale_supply','Review the current meal and its physical sources.');
+  if((kind==='pantry.match'||kind==='delivery.match') && body.matched===true){
+    const source=old.sources.find(s=>s.sourceId===id);
+    // A legacy ingredient edge serves every retained group need. Validate each
+    // current restriction, not the obsolete sealed definition or coverage total.
+    if(source) for(const need of retained??[]) requireCompatibleMatch(need,source);
+  }
   const reserve=kind==='pantry.reserve'||kind==='delivery.reserve';
   if(reserve && body.quantity){
     const request=kind==='delivery.reserve'?deliveryReservationBody.parse(body):{...pantryBodies['pantry.reserve'].parse(body),sourceId:id};

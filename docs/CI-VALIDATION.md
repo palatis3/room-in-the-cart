@@ -92,6 +92,13 @@ different builds/configurations. The old execution script is historical once its
 working paths contain a successor. Archived xctestruns may retain absolute paths,
 so any independent replay requires a reviewed rebind and new receipt.
 
+When assembling the successor, compare file contents and executable modes before
+copying. Leave identical files and their modification times alone; rewriting an
+unchanged source tree can trigger avoidable compiler work. Verify the complete
+successor manifest after synchronization, including removed inputs. This is a
+build-efficiency rule, not permission to reuse mismatched products. Record actual
+build time before claiming a gain.
+
 The S24 correction used this process: prior fresh-path builds took 211–213 seconds;
 the changed-test builds took 13–16seconds. These are observations with different
 inputs, not a performance guarantee. Do not reuse products with mismatched inputs
@@ -118,6 +125,17 @@ PR, manual and release triggers retain their original coverage and strict gates.
 There is no additional compatibility workflow or duplicate scheduled suite.
 All 17 native job definitions still share the same five global slot queues;
 16 migrate and the required Swift CodeQL job retains the security exception below.
+
+The performance simulator producer explicitly uses `ARCHS=arm64
+ONLY_ACTIVE_ARCH=YES`. Its runner and consumer already require arm64, so compiling
+an unused Intel simulator slice adds no execution coverage to this lane. Keep this
+override on the simulator producer command: generated Release defaults, device
+archives and restored consumer commands retain their existing configuration.
+Command-level tests verify the actual arguments and native failure propagation;
+provenance tests preserve the arm64-only plan's name, bytes and product identities.
+Qualify changed products on a frozen hosted revision before using them as release
+evidence. Compare compile tasks, archive size and build time under recorded cache
+conditions before claiming a speedup.
 
 The official [runner catalog](https://github.com/actions/runner-images/blob/main/README.md)
 and [Xcode 27 image](https://github.com/actions/runner-images/blob/main/images/macos/xcode-27-arm64-Readme.md)

@@ -2,12 +2,27 @@
 
 ## Current checkpoint — November 9, workflow and combined-candidate qualification
 
-Corrected-SDK minimum-OS qualification remains failed: the app exited with
-SIGSEGV on the full Spanish iOS17.0 journey, and failed crash reporting left no
-fresh app stack. Hosted42620394385 passes native scroll but still lacks its
-required duration; the declared checker path is missing before and after setup.
-No new performance baseline or full combined acceptance. Both first results are
-terminal and preserved. [Diagnostic follow-through](evidence/native/diagnostic-followthrough-20261109/README.md).
+Minimum-OS qualification remains failed, but the immediate crash is now captured:
+the original Spanish iOS17.0 journey reached a null-pointer fault in XCTest's
+runtime logging callback during an accessibility query. A direct-label query
+experiment also failed and is not installed. This is a diagnostic result, not a
+passing minimum-OS journey. [First-fault evidence](evidence/native/minimum-os-first-fault-20261109/README.md).
+
+Hosted42620394385 still lacks required scroll duration despite a passing native
+test. Capability-only42625593343 verifies that the selected runtime contains the
+same checker bytes as the producer; effective runner loading remains unobserved.
+Do not repeat that unchanged probe or approve a baseline from a passing XCTest
+without measurements. [Runtime identity proof](evidence/native/selected-runtime-checker-20261109/README.md).
+No new performance baseline, full combined acceptance or merge is approved.
+All431 offline checks and17native queue-definition checks passed at02aaed31.
+
+Shared match acceptance is now corrected locally: explicit exclusions reject new
+pantry and delivery matches before saving, including effective recovery needs.
+Original negative controls reproduced both incorrect successes; 38 focused and
+250 broad PostgreSQL/HTTP integration tests pass. The iOS build and all 19 shared
+shop flow tests pass, including rejection feedback and lost-response retries.
+This does not complete authenticated mixed-device F02 acceptance or deploy the
+service. [Exact verification](evidence/native/shared-match-exclusions-20261109/README.md).
 
 The ordinary F02 Dinner-removal journey and actual saved SQLite now pass together
 on the corrected SDK27.1 build, including Cancel, Apply and restart. The existing

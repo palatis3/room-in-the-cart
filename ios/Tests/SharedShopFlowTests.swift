@@ -208,6 +208,79 @@ import HouseholdClient
         XCTAssertEqual(restored.deliveryRecord?.sources.count, 1); XCTAssertEqual(restored.deliveryRecord?.supplyRevision, 2)
         XCTAssertEqual(fixture.commandBodies.filter { $0.kind == "delivery.arrival" }.map(\.bytes), [pending.bytes, pending.bytes])
     }
+    func testExcludedDeliveryMatchIsRejectedWithoutReportingSuccessOrDiscardingPendingReview() async throws {
+        try await assertExcludedMatchIsRejected(pantry: false)
+    }
+    func testExcludedPantryMatchKeepsTheSameNoticeAndDurableReviewCleanup() async throws {
+        try await assertExcludedMatchIsRejected(pantry: true)
+    }
+    private func assertExcludedMatchIsRejected(pantry: Bool) async throws {
+        let fixture = SharedFlowService()
+        let queue = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathComponent("excluded-match.json")
+        let adult = try await createdHousehold(fixture, queue: queue), shared = try XCTUnwrap(adult.sharedShop)
+        enterShop(shared); await shared.applyReviewed()
+        let ingredient = SharedMealPlanning.Ingredient(name: "Milk", quantity: nil, groupIds: [], exclusions: ["dairy"])
+        let meal = SharedMeal(title: "Dinner", day: "2026-11-05", kind: "dinner", portions: 3, protected: false,
+            planning: .init(groups: [], ingredients: [ingredient]))
+        shared.beginEditing()
+        shared.draft.mealEdit = SharedMealEdit(occurrenceID: UUID(), meal: meal)
+        shared.reviewDraft(); shared.acknowledged = true; await shared.applyReviewed()
+        fixture.placedRevision = fixture.revision; fixture.phase = "placed"; fixture.revision += 1
+        fixture.pantryAvailable = pantry
+        if pantry {
+            fixture.pantryLots = [["lotId": UUID().uuidString.lowercased(), "origin": "manual", "location": "pantry",
+                "storedAt": NSNull(), "useFirstAt": NSNull(), "foodName": "Milk", "exclusionTags": ["dairy"],
+                "selected": true, "observation": NSNull(), "matches": [], "reservations": []]]
+        }
+        await shared.load(); await shared.loadDelivery()
+        if !pantry {
+            let initial = try XCTUnwrap(shared.deliveryRecord), line = try XCTUnwrap(initial.lines.first)
+            let registered = await shared.saveDelivery(.register(lineID: line.id, segment: UUID(), name: "Milk", exclusions: ["dairy"]), reviewed: initial)
+            XCTAssertTrue(registered)
+            await shared.loadDelivery()
+        }
+        let page = try XCTUnwrap(shared.deliveryRecord), occurrence = try XCTUnwrap(page.meals?.first)
+        let target = SharedDeliveryPage.IngredientMatch(occurrence: occurrence, ingredient: ingredient)
+        let outbox = OperationOutbox(url: queue.deletingPathExtension().appendingPathExtension("shared-shop.json"))
+        let receiptCount = fixture.receipts.count, supplyRevision = fixture.supplyRevision
+        fixture.rejectExcludedMatch = true
+        let saved: Bool
+        if pantry {
+            await shared.loadPantry(reviewed: page)
+            let record = try XCTUnwrap(shared.pantryRecord), lot = try XCTUnwrap(record.lots.first)
+            saved = await shared.savePantry(.match(lot: lot.id, ingredient: target, matched: true), reviewed: record, delivery: page)
+            XCTAssertEqual(shared.pantryRecord, record)
+            XCTAssertTrue(shared.pantryRecord?.lots.first?.matches.isEmpty == true)
+        } else {
+            let source = try XCTUnwrap(page.sources.first)
+            saved = await shared.saveDelivery(.match(source: source.id, ingredient: target, matched: true), reviewed: page)
+            XCTAssertTrue(shared.deliveryRecord?.sources.first?.matches?.isEmpty == true)
+        }
+        XCTAssertFalse(saved, "A terminal rejection must never close the editor as a successful match")
+        XCTAssertEqual(shared.delivery, .needsReview)
+        XCTAssertEqual(shared.notice, ht("This food conflicts with an exclusion for this ingredient. The match was not saved. Review the food and ingredient exclusions before trying another match."))
+        XCTAssertNil(shared.review); XCTAssertFalse(shared.acknowledged); XCTAssertFalse(shared.reviewedCurrentFacts)
+        XCTAssertEqual(shared.deliveryRecord, page)
+        XCTAssertEqual(fixture.supplyRevision, supplyRevision); XCTAssertEqual(fixture.receipts.count, receiptCount)
+        let operation = try XCTUnwrap(shared.pending)
+        let kind = pantry ? "pantry.match" : "delivery.match"
+        let sent = fixture.commandBodies.filter { $0.kind == kind }
+        XCTAssertEqual(sent.map(\.bytes), [operation.bytes], "The rejection must come from the submitted HTTP command")
+        let envelope = try JSONDecoder().decode(CommandEnvelope.self, from: operation.bytes)
+        XCTAssertEqual(envelope.kind, kind); XCTAssertEqual(envelope.body["matched"], .bool(true))
+        let retained = try await outbox.operations(); XCTAssertEqual(retained, [operation])
+        await shared.retry(); await shared.clearPendingAfterReview()
+        XCTAssertEqual(shared.pending, operation)
+        XCTAssertEqual(fixture.commandBodies.filter { $0.kind == kind }.count, 1)
+        let stillRetained = try await outbox.operations(); XCTAssertEqual(stillRetained, [operation])
+        await shared.loadDelivery()
+        if pantry { await shared.loadPantry(reviewed: try XCTUnwrap(shared.deliveryRecord)) }
+        XCTAssertTrue(shared.reviewedCurrentFacts)
+        await shared.clearPendingAfterReview()
+        XCTAssertNil(shared.pending); XCTAssertEqual(shared.delivery, .none)
+        let cleared = try await outbox.operations(); XCTAssertTrue(cleared.isEmpty)
+        XCTAssertEqual(fixture.commandBodies.filter { $0.kind == kind }.count, 1)
+    }
     func testFreshHouseholdNativeFlowCreatesInvitesReceivesApprovesFreezesAndReopens() async throws {
         let fixture = SharedFlowService(); let mia = try await createdHousehold(fixture)
         let shared = try XCTUnwrap(mia.sharedShop); XCTAssertTrue(shared.canCreate)
@@ -476,6 +549,8 @@ private final class SharedFlowService {
     var deliverySources: [[String: Any]] = []
     var supplyRevision = 0
     var loseDeliveryResponse = false
+    var rejectExcludedMatch = false, pantryAvailable = false
+    var pantryLots: [[String: Any]] = []
     func data(_ value: Any) throws -> Data { try JSONSerialization.data(withJSONObject: value, options: [.sortedKeys]) }
     func body(_ request: URLRequest) throws -> Data {
         if let body = request.httpBody { return body }
@@ -501,9 +576,10 @@ private final class SharedFlowService {
         if path.hasSuffix("/bootstrap") {
             if shopID != nil, let status = readFailureAfterCreate { return try ok(["error":["code":"access_ended","correlationId":"test"]],status) }
             let shopper = actor == "mia" && shopID != nil && !shopperTransferred
+            let evidenceCapabilities = placedRevision == nil ? [] : ["confirmed_order", "delivery_evidence"] + (pantryAvailable ? ["pantry_lots"] : [])
             return try ok(["household":["id":household,"label":"Our home"],"memberId":actor == "mia" ? miaID : samID,
                 "role":shopper ? "shopper" : actor == "mia" ? "organizer" : "contributor", "canSelectShop":canSelectShop, "shopId":shopID as Any? ?? NSNull(),"enrolled":true,"queueConsent":false,
-                "capabilities":["own_requests"] + (actor == "mia" ? ["household_admin"] : []) + (shopper ? ["shopper_inbox","request_preview","shopper_commands","accepted_fallbacks"] + (placedRevision == nil ? [] : ["confirmed_order", "delivery_evidence"]) : [])])
+                "capabilities":["own_requests"] + (actor == "mia" ? ["household_admin"] : []) + (shopper ? ["shopper_inbox","request_preview","shopper_commands","accepted_fallbacks"] + evidenceCapabilities : [])])
         }
         if path.hasSuffix("/accepted-fallbacks"), let shopID {
             if transferAfterLibraryRead { shopperTransferred = true }
@@ -526,9 +602,13 @@ private final class SharedFlowService {
         if path.hasSuffix("/inbox") { return try ok(["requests":requests.map { $0.merging(["authorAlias":"Sam"]) { _, new in new } },"nextCursor":NSNull()]) }
         if path.hasSuffix("/delivery-evidence"), let shopID, let placedRevision {
             return try ok(["shopId":shopID,"shopRevision":revision,"authorityEpoch":1,"placedRevision":placedRevision,
-                "supplyRevision":supplyRevision,"coverageAvailable":false,"reservationsAvailable":false,"meals":[],
+                "supplyRevision":supplyRevision,"coverageAvailable":false,"reservationsAvailable":false,"meals":meals,
                 "lines":lines.map { ["lineId":$0["lineId"]!,"name":$0["originalItem"]!,"packs":$0["packs"]!] },
                 "sources":deliverySources,"nextCursor":NSNull()])
+        }
+        if path.hasSuffix("/pantry-lots"), let shopID, let placedRevision {
+            return try ok(["shopId":shopID,"shopRevision":revision,"authorityEpoch":1,"placedRevision":placedRevision,
+                "supplyRevision":supplyRevision,"pantryRevision":0,"asOf":Date().ISO8601Format(),"lots":pantryLots,"nextCursor":NSNull()])
         }
         if path.hasSuffix("/confirmed-order"), let shopID, let placedRevision {
             if let (status, code) = confirmedOrderFailure { return try ok(["error":["code":code,"correlationId":"test"]],status) }
@@ -551,13 +631,16 @@ private final class SharedFlowService {
             commandBodies.append((kind,input))
             if let prior = receipts[key] { return try ok(prior) }
             kinds.append(kind)
+            if rejectExcludedMatch, ["delivery.match", "pantry.match"].contains(kind), body["matched"] as? Bool == true {
+                return try ok(["error":["code":"match_exclusion_conflict","correlationId":"test"]],409)
+            }
             if kind.hasPrefix("delivery.") {
                 let operation = UUID().uuidString.lowercased()
                 guard body["supplyRevision"] as? Int == supplyRevision else { return try ok(["error":["code":"stale_supply"]],409) }
                 let sourceID = kind == "delivery.register" ? operation : body["sourceId"] as! String
                 if kind == "delivery.register" {
                     deliverySources.append(["sourceId":sourceID,"foodId":sourceID,"lineId":body["lineId"]!,"segmentKey":body["segmentKey"]!,
-                        "foodName":body["foodName"]!,"exclusionTags":body["exclusionTags"]!,"arrival":NSNull(),"usable":NSNull(),"confirmed":NSNull()])
+                        "foodName":body["foodName"]!,"exclusionTags":body["exclusionTags"]!,"matches":[],"reservations":[],"arrival":NSNull(),"usable":NSNull(),"confirmed":NSNull()])
                 } else if let index = deliverySources.firstIndex(where: { $0["sourceId"] as? String == sourceID }) {
                     if kind == "delivery.arrival" { deliverySources[index]["arrival"] = body; deliverySources[index]["confirmed"] = NSNull() }
                     if kind == "delivery.usable" {

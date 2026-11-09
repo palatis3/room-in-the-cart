@@ -1191,6 +1191,23 @@
         }
       }
     },
+    "This food conflicts with an exclusion for this ingredient. The match was not saved. Review the food and ingredient exclusions before trying another match.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This food conflicts with an exclusion for this ingredient. The match was not saved. Review the food and ingredient exclusions before trying another match."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este alimento entra en conflicto con una exclusión de este ingrediente. No se guardó el vínculo. Revisa las exclusiones del alimento y del ingrediente antes de intentar crear otro vínculo."
+          }
+        }
+      }
+    },
     "Review the usable amount, ingredient match and existing reservations before setting food aside.": {
       "extractionState": "manual",
       "localizations": {
