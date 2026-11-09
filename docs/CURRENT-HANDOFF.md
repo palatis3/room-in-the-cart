@@ -39,10 +39,13 @@ execution. The additive proposal/validation receipts are preserved in
 
 ## Latest active work — November 9
 
-- Workflow follow-up separates device/runtime discovery into bounded30-second
-  infrastructure commands; help/version remain10seconds, capability step3minutes.
-  No app limits or acceptance gates changed. All366 offline checks and17 native
-  queue-node checks pass. One capability-only hosted probe is pending; no full
+- Workflow follow-up separates device/runtime discovery into bounded 30-second
+  infrastructure commands; help/version remain 10 seconds, capability step 3 minutes.
+  No app limits or acceptance gates changed. All 366 offline checks and 17 native
+  queue-node checks pass. Capability-only run 42580515105 at c97bbc00 is failed:
+  fresh device inventory still hit 30 seconds (stage 31.001s, exit -15, no bytes).
+  Runtime/help/compilation/XCTest were not reached. No further timeout increase
+  or unchanged retry; investigate readiness or runner contention. No full
   regression or baseline acceptance.
   [Change and evidence](evidence/native/ci-inventory-budget-20261109/README.md).
 
@@ -58,8 +61,8 @@ execution. The additive proposal/validation receipts are preserved in
   Runtime/help/build/transport/XCTest were not reached. Artifact/terminal collection
   complete once under `.build/Xcode27ScrollDiagnosticNov09/uuid-inventory-r1`.
   Narrowing results did not resolve the timeout; no automatic repeat or speed claim.
-  Next decide a separate bounded inventory-readiness budget or a specifically
-  supported service-readiness check; these censored timings do not calibrate a limit.
+  This led to the separate bounded inventory allowance above; those censored
+  timings do not calibrate an app performance limit.
 - Apple framework report draft is local only at
   `.build/MinimumOSXCTestReproducerNov09/apple-report-draft/REPORT-DRAFT.md`.
   It labels R3 non-reproducing and keeps raw messages private. Nothing submitted.
