@@ -675,7 +675,7 @@ class IdentityReuseTests(unittest.TestCase):
             self.assertEqual(result['toolchainIdentitySHA256'], probe.digest(path.read_bytes()))
             observed = [call.args[0] for call in commands.call_args_list]
             self.assertEqual(observed[:2], [['xcrun', 'simctl', 'list', 'devices', 'test-simulator', '-j'],
-                                             ['xcrun', 'simctl', 'list', 'runtimes', '-j']])
+                                             ['xcrun', 'simctl', 'list', 'runtimes', probe.RUNTIME, '-j']])
             self.assertEqual([argv[-2:] for argv in observed[2:]], [['help', 'stream'], ['help', 'show'], ['help', 'emit']])
             self.assertEqual([(call.kwargs['stage_name'], call.kwargs.get('seconds', probe.COMMAND_SECONDS))
                               for call in commands.call_args_list],
@@ -711,7 +711,7 @@ class IdentityReuseTests(unittest.TestCase):
             self.assertEqual(commands.call_count, 3)
             self.assertEqual(commands.call_args_list[1].args[0],
                              ['xcrun', 'simctl', 'list', 'devices', 'selected-uuid', '-j'])
-            self.assertEqual(commands.call_args_list[2].args[0], ['xcrun', 'simctl', 'list', 'runtimes', '-j'])
+            self.assertEqual(commands.call_args_list[2].args[0], ['xcrun', 'simctl', 'list', 'runtimes', probe.RUNTIME, '-j'])
 
     def test_device_search_ignores_other_rows_without_relaxing_runtime_checks(self):
         selected = {'udid': 'selected-uuid', 'state': 'Booted', 'isAvailable': True,
@@ -731,6 +731,30 @@ class IdentityReuseTests(unittest.TestCase):
                 else:
                     with self.assertRaisesRegex(ValueError, 'runtime_drift'):
                         probe.runtime_preflight('selected-uuid')
+
+    def test_runtime_search_cannot_replace_exact_identity_or_build_checks(self):
+        device = {'udid': 'selected-uuid', 'state': 'Booted', 'isAvailable': True,
+                  'deviceTypeIdentifier': 'com.apple.CoreSimulator.SimDeviceType.iPhone-17'}
+        runtime = {'identifier': probe.RUNTIME, 'isAvailable': True, 'version': '27.0', 'buildversion': '24A434'}
+        cases = {
+            'missing': [],
+            'description-only-match': [dict(runtime, identifier='other-runtime', name=probe.RUNTIME)],
+            'duplicate': [runtime, runtime],
+            'unavailable': [dict(runtime, isAvailable=False)],
+            'wrong-version': [dict(runtime, version='27.1')],
+            'wrong-build': [dict(runtime, buildversion='24A999')],
+        }
+        for name, runtimes in cases.items():
+            responses = [b'Xcode 27.1\nBuild version 27A9275',
+                         json.dumps({'devices': {probe.RUNTIME: [device]}}).encode(),
+                         json.dumps({'runtimes': runtimes}).encode()]
+            with self.subTest(name=name), patch.object(probe.platform, 'machine', return_value='arm64'), \
+                 patch.object(probe, 'command', side_effect=responses) as commands:
+                with self.assertRaisesRegex(ValueError, 'runtime_drift'):
+                    probe.runtime_preflight('selected-uuid')
+            self.assertEqual(len(commands.call_args_list), 3)
+            self.assertEqual(commands.call_args_list[2].args[0],
+                             ['xcrun', 'simctl', 'list', 'runtimes', probe.RUNTIME, '-j'])
 
     def test_every_bound_context_field_and_version_architecture_rejects_drift(self):
         env = self.environment()

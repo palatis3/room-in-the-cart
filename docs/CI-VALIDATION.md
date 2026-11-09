@@ -216,6 +216,21 @@ The release gate requires preflight success, so a failure or skip cannot turn th
 release green. Standalone workflow checks and the core validation remain intact.
 This deliberately repeats inexpensive checks at the release boundary.
 
+Full release dispatch requires the reviewed, full lowercase commit SHA:
+
+```sh
+gh workflow run release-checks.yml --ref REVIEWED_BRANCH \
+  -f candidate_sha=FULL_40_CHARACTER_REVIEWED_COMMIT_SHA
+```
+
+Use the frozen commit recorded for qualification, not a newly resolved branch tip.
+Immediately after checkout, Linux preflight requires that input to match both
+the dispatch event's `GITHUB_SHA` and the actual checkout's `HEAD`. A malformed
+SHA or an advanced branch fails before native jobs can claim a slot. This check
+does not replace the exact-revision evidence receipt or establish minimum-iOS,
+merge or distribution acceptance. Existing workflow-level cancellation still
+applies before preflight; do not dispatch another run to probe an active one.
+
 Performance planning and Python evidence-validator tests also run on Linux before
 the optimized build. The compiled XCTest inventory is still verified on macOS.
 

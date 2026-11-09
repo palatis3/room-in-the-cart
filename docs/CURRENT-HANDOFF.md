@@ -40,6 +40,25 @@ execution. The additive proposal/validation receipts are preserved in
 
 ## Latest active work — November 9
 
+- Workflow follow-through: full release dispatch now requires the reviewed commit
+  SHA and checks it against the event and actual checkout before native jobs.
+  Other audit policies remain: metrics before calibration, one frozen combined
+  revision, five shared slots, compact retained evidence and separate release gates.
+- Local iPhone17/iOS27.0/24A434 capability probe exposed oversized all-runtime
+  inventory. The collector now requests only its configured runtime, keeping exact
+  identity/build/availability checks, output caps and deadlines. Changed preflight
+  passes all seven stages in4.557s; no transport or XCTest was executed. Original
+  failure remains preserved. Hosted discovery stalls and missing native metrics
+  are not resolved by this local pass.
+  [Change and validation](evidence/native/workflow-followthrough-20261109/README.md).
+- Dedicated local simulator A50C91FC-4966-47FF-A8CB-7640FBD513EB is owned by this
+  diagnostic, booted and available. Runtime27.0 and27.1 were already installed;
+  nothing was downloaded. Three prior owned test simulators were shut down to
+  reduce load; the protected preview was untouched. Free storage was19.89GiB
+  before creating the device, above the8GiB reserve. Next: preserve current
+  stable-workspace source/products before building the original Release scroll
+  capture; do not claim capability-only success as performance acceptance.
+
 - Confirmed S24 fixture cross-routing is fixed and installed. The original-API
   negative control failed with A receiving B's totals/counts; the same regression
   now passes with all 26 original cases plus two new ones (28 native/strict passes).

@@ -2,6 +2,11 @@ name: Pre-release regression checks
 
 on:
   workflow_dispatch:
+    inputs:
+      candidate_sha:
+        description: Full reviewed commit SHA to qualify; must match the selected ref
+        type: string
+        required: true
 
 permissions:
   contents: read
@@ -17,6 +22,20 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Require the reviewed release candidate
+        env:
+          REVIEWED_CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+        run: |
+          python3 - <<'PY'
+          import os, re, subprocess
+          candidate = os.environ.get("REVIEWED_CANDIDATE_SHA", "")
+          if re.fullmatch(r"[0-9a-f]{40}", candidate) is None:
+              raise SystemExit("Release candidate must be a full lowercase commit SHA")
+          checkout = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+          if candidate != os.environ.get("GITHUB_SHA") or candidate != checkout:
+              raise SystemExit("Reviewed release candidate differs from the dispatched or checked-out revision")
+          print(f"Validated frozen release candidate {candidate}")
+          PY
       - name: Validate workflow syntax and expression references
         shell: bash
         run: |

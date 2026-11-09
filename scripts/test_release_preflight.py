@@ -4,6 +4,7 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 import unittest
 
 from check_ci_workflows import parse_workflow
@@ -13,8 +14,63 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class ReleasePreflightTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.checkout = tempfile.TemporaryDirectory()
+        cls.addClassCleanup(cls.checkout.cleanup)
+        subprocess.run(["git", "init", "--quiet", cls.checkout.name], check=True, capture_output=True)
+        subprocess.run(["git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid",
+                        "-c", "commit.gpgsign=false", "commit", "--quiet", "--allow-empty", "-m", "Fixture"],
+                       cwd=cls.checkout.name, check=True, capture_output=True)
+        cls.sha = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=cls.checkout.name, text=True).strip()
+
     def setUp(self):
-        self.jobs = parse_workflow(ROOT / ".github/workflows/release-checks.yml")[0]["jobs"]
+        self.workflow = parse_workflow(ROOT / ".github/workflows/release-checks.yml")[0]
+        self.jobs = self.workflow["jobs"]
+
+    def candidate_guard(self):
+        return next(step for step in self.jobs["source-preflight"]["steps"]
+                    if step.get("name") == "Require the reviewed release candidate")
+
+    def run_candidate_guard(self, candidate, event_sha):
+        return subprocess.run(["bash", "-e", "-o", "pipefail", "-c", self.candidate_guard()["run"]],
+                              cwd=self.checkout.name,
+                              env={**os.environ, "REVIEWED_CANDIDATE_SHA": candidate, "GITHUB_SHA": event_sha},
+                              capture_output=True, text=True, check=False)
+
+    def test_required_candidate_is_checked_after_checkout_before_expensive_preflight(self):
+        self.assertEqual(set(self.workflow["on"]), {"workflow_dispatch"})
+        spec = self.workflow["on"]["workflow_dispatch"]["inputs"]["candidate_sha"]
+        self.assertEqual(spec["type"], "string")
+        self.assertIs(spec["required"], True)
+        self.assertNotIn("default", spec)
+        steps = self.jobs["source-preflight"]["steps"]
+        self.assertTrue(steps[0]["uses"].startswith("actions/checkout@"))
+        self.assertEqual(steps[1], self.candidate_guard())
+        self.assertEqual(steps[2]["name"], "Validate workflow syntax and expression references")
+        self.assertEqual(self.candidate_guard()["env"], {"REVIEWED_CANDIDATE_SHA": "${{ inputs.candidate_sha }}"})
+        self.assertNotIn("${{", self.candidate_guard()["run"])
+
+    def test_candidate_guard_accepts_matching_dispatch_and_actual_checkout(self):
+        result = self.run_candidate_guard(self.sha, self.sha)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn(self.sha, result.stdout)
+
+    def test_candidate_guard_rejects_malformed_inputs_without_shell_execution(self):
+        for candidate in ("", self.sha[:7], "A" * 40, "g" * 40, self.sha + "\n", "$(touch candidate-injection)"):
+            with self.subTest(candidate=candidate):
+                result = self.run_candidate_guard(candidate, self.sha)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("full lowercase commit SHA", result.stderr)
+        self.assertFalse((Path(self.checkout.name) / "candidate-injection").exists())
+
+    def test_candidate_guard_rejects_dispatch_mismatch_and_checkout_drift(self):
+        other = "b" * 40 if self.sha != "b" * 40 else "c" * 40
+        for candidate, event_sha in ((self.sha, other), (other, other)):
+            with self.subTest(candidate=candidate, event_sha=event_sha):
+                result = self.run_candidate_guard(candidate, event_sha)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("differs from the dispatched or checked-out revision", result.stderr)
 
     def test_native_paths_wait_for_linux_validation_without_holding_a_slot(self):
         preflight = self.jobs["source-preflight"]
@@ -35,7 +91,7 @@ class ReleasePreflightTests(unittest.TestCase):
             "Validate generated files, localization and CI test selection",
         }
         expected = [step for step in core["steps"] if step.get("name") in names]
-        actual = [step for step in self.jobs["source-preflight"]["steps"] if "run" in step]
+        actual = [step for step in self.jobs["source-preflight"]["steps"] if step.get("name") in names]
         self.assertEqual(len(expected), 2)
         self.assertEqual(actual, expected)
         self.assertNotIn("continue-on-error", self.jobs["source-preflight"])
