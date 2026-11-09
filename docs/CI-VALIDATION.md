@@ -437,6 +437,16 @@ or rerunning unchanged. The capability artifact is
 `iphone-scroll-capture-capabilities-<attempt>`; original capture/metric acceptance
 requirements remain unchanged.
 
+The collector also records ten fixed process/pipe phase offsets, a bounded
+selector-return count and the largest observed loop gap. On a deadline it records
+the immediate child state and makes at most one nonblocking read per pipe, capped
+at8192 bytes each and sharing the remaining raw-byte budget. Only discarded-byte
+counts and fixed status labels survive. These observations never enter normal
+output buffers or parsers and cannot rescue the deadline failure. Use them to
+distinguish slow process creation, collection delay and unread output; they do not
+prove simulator readiness. The deadline and owned-process cleanup budgets remain
+unchanged, and fresh post-boot device checks cannot be replaced by pre-boot data.
+
 For opted-in capture, the existing runner environment guard writes a fresh local
 `runner-identity.json` after successful environment and applicable baseline
 validation. The collector can reuse that exact version check within the same

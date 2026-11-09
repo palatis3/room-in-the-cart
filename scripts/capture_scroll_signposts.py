@@ -29,6 +29,9 @@ RUNTIME = 'com.apple.CoreSimulator.SimRuntime.iOS-27-0'
 KNOWN = ('com.apple.UIKit', 'ScrollView', 'Scroll_DraggingAndDeceleration')
 MAX_EVENTS, MAX_METADATA, MAX_RAW, MAX_LINE = 2048, 512 * 1024, 4 * 1024 * 1024, 65536
 STREAM_SECONDS, CONTROL_SECONDS, SHOW_SECONDS, COMMAND_SECONDS = 300, 5, 30, 10
+PUMP_PHASES = ('commandEntry', 'workerEntry', 'budgetStart', 'spawnStart', 'spawnReturned',
+               'pipesReady', 'firstRead', 'deadlineObserved', 'cleanupStart', 'cleanupComplete')
+MAX_SELECTOR_RETURNS, LATE_READ_BYTES_PER_PIPE = 4096, 8192
 HELP_TOKENS = {
     'stream': ('--signpost', 'ndjson', '--timeout', '--predicate', '--level'),
     'show': ('--signpost', 'ndjson', '--start', '--end', '--predicate', '--info', '--debug'),
@@ -195,6 +198,13 @@ class Metadata:
 class Pump:
     """Bounded nonblocking reader; raw bytes never reach a file or stdout."""
     def __init__(self, argv, seconds, metadata=None, help_channels=False):
+        self.origin = time.monotonic()
+        self.phase_seconds = dict.fromkeys(PUMP_PHASES)
+        self.phase_seconds['commandEntry'] = 0.0
+        self.selector_returns = 0
+        self.selector_returns_capped = False
+        self.max_loop_gap = 0.0
+        self.deadline_observation = None
         self.argv, self.seconds, self.metadata = argv, seconds, metadata
         self.stop = threading.Event()
         self.stdout = bytearray()  # Only used for bounded, non-log preflight data.
@@ -214,27 +224,91 @@ class Pump:
         self.thread.start()
         return self
 
+    def mark(self, name, instant=None):
+        if name not in PUMP_PHASES:
+            raise ValueError('unknown_pump_phase')
+        self.phase_seconds[name] = round((time.monotonic() if instant is None else instant) - self.origin, 6)
+
+    def observe_deadline(self):
+        # Diagnostics only, after the deadline error is permanent. Each pipe is
+        # already nonblocking: one read, no retry/wait, no parsing or acceptance.
+        if 'deadline' not in self.errors or self.deadline_observation is not None:
+            return
+        observation = {'processState': 'unknown', 'exitCode': None, 'pipes': {}}
+        self.deadline_observation = observation
+        try:
+            code = self.process.poll()
+            observation.update(processState='running' if code is None else 'exited', exitCode=code)
+        except OSError:
+            observation['processState'] = 'poll_error'
+        remaining = max(0, MAX_RAW - self.raw_bytes)
+        for name, pipe in (('stdout', self.process.stdout), ('stderr', self.process.stderr)):
+            row = {'attempts': 0, 'bytes': 0, 'status': 'raw_budget_exhausted'}
+            observation['pipes'][name] = row
+            if remaining == 0:
+                continue
+            row['attempts'] = 1
+            try:
+                data = os.read(pipe.fileno(), min(LATE_READ_BYTES_PER_PIPE, remaining))
+                row.update(bytes=len(data), status='bytes_discarded' if data else 'eof')
+                remaining -= len(data)
+            except BlockingIOError:
+                row['status'] = 'would_block'
+            except InterruptedError:
+                row['status'] = 'interrupted'
+            except OSError:
+                row['status'] = 'read_error'
+
+    def observation(self):
+        deadline = None
+        if self.deadline_observation is not None:
+            deadline = dict(self.deadline_observation)
+            deadline['pipes'] = {name: dict(row) for name, row in dict(deadline['pipes']).items()}
+        return {'phaseSeconds': dict(self.phase_seconds), 'selectorReturns': self.selector_returns,
+                'selectorReturnsCapped': self.selector_returns_capped,
+                'maxLoopGapSeconds': round(self.max_loop_gap, 6),
+                'deadlineObservation': deadline}
+
     def run(self):
+        self.mark('workerEntry')
         buffer = bytearray()
         selector = selectors.DefaultSelector()
-        deadline = time.monotonic() + self.seconds
+        budget_start = time.monotonic()
+        deadline = budget_start + self.seconds
+        self.mark('budgetStart', budget_start)
         try:
+            self.mark('spawnStart')
             self.process = subprocess.Popen(self.argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                             start_new_session=True)
+            self.mark('spawnReturned')
             for pipe, channel in ((self.process.stdout, 'out'), (self.process.stderr, 'err')):
                 os.set_blocking(pipe.fileno(), False)
                 selector.register(pipe, selectors.EVENT_READ, channel)
+            last_loop = time.monotonic()
+            self.mark('pipesReady', last_loop)
             while selector.get_map():
+                now = time.monotonic()
+                self.max_loop_gap = max(self.max_loop_gap, now - last_loop)
+                last_loop = now
                 if self.stop.is_set():
                     break
-                if time.monotonic() >= deadline:
+                if now >= deadline:
                     self.errors.add('deadline')
+                    self.mark('deadlineObserved', now)
+                    self.observe_deadline()
                     break
-                for key, _ in selector.select(timeout=0.1):
+                ready = selector.select(timeout=0.1)
+                if self.selector_returns < MAX_SELECTOR_RETURNS:
+                    self.selector_returns += 1
+                else:
+                    self.selector_returns_capped = True
+                for key, _ in ready:
                     data = os.read(key.fd, 8192)
                     if not data:
                         selector.unregister(key.fileobj)
                         continue
+                    if self.phase_seconds['firstRead'] is None:
+                        self.mark('firstRead')
                     self.raw_bytes += len(data)
                     if self.raw_bytes > MAX_RAW:
                         self.errors.add('raw_cap')
@@ -278,6 +352,7 @@ class Pump:
         except (OSError, subprocess.SubprocessError):
             self.errors.add('process_io_error')
         finally:
+            self.mark('cleanupStart')
             selector.close()
             if self.process is not None:
                 if not self.stop.is_set() and not self.errors and self.process.poll() is None:
@@ -290,6 +365,7 @@ class Pump:
                 self.exit_code = self.process.returncode
                 self.process.stdout.close()
                 self.process.stderr.close()
+            self.mark('cleanupComplete')
 
     def close(self):
         self.stop.set()
@@ -299,6 +375,7 @@ class Pump:
 
     def receipt(self):
         return {'exitCode': self.exit_code, 'errors': sorted(self.errors),
+                'pump': self.observation(),
                 'terminatedOnRequest': self.terminated_on_request,
                 'rawBytesConsumed': self.raw_bytes, 'stderrBytesDiscarded': self.stderr_bytes,
                 'events': self.metadata.events if self.metadata else [],
@@ -341,6 +418,7 @@ def command_result(argv, seconds, help_receipt, entry):
                           'errors': sorted(pump.errors), 'stdoutBytes': len(pump.stdout),
                           'stderrBytes': pump.stderr_bytes, 'rawBytesConsumed': pump.raw_bytes,
                           'stderrMarkers': sorted(pump.stderr_markers),
+                          'pump': pump.observation(),
                           'terminatedOnRequest': pump.terminated_on_request})
             if help_receipt is not None:
                 help_receipt.update(help_result(argv, pump))

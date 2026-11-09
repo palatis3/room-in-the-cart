@@ -11,6 +11,7 @@ import sys
 import tempfile
 import unittest
 from unittest.mock import Mock, patch
+from types import SimpleNamespace
 
 import capture_scroll_signposts as probe
 
@@ -145,6 +146,187 @@ class PumpTests(unittest.TestCase):
             pump = self.run_python('print("x" * 200)')
         self.assertIn('preflight_output_cap', pump.errors)
         self.assertLessEqual(len(pump.stdout), 100)
+
+
+class PumpPhaseTests(unittest.TestCase):
+    """Controlled clocks/real nonblocking pipes: no native child or wall-time sleeps."""
+    def controlled_command(self, mode, worker_delay=0):
+        clock = SimpleNamespace(now=0.0)
+        reads = [os.pipe(), os.pipe()]
+        process = SimpleNamespace(stdout=os.fdopen(reads[0][0], 'rb'),
+                                  stderr=os.fdopen(reads[1][0], 'rb'), returncode=None)
+        writes = [pair[1] for pair in reads]
+        def finish(code):
+            process.returncode = code
+            while writes:
+                os.close(writes.pop())
+        process.poll = lambda: process.returncode
+        process.wait = lambda timeout: process.returncode
+        def spawn(*_args, **_kwargs):
+            if mode == 'delayed-spawn':
+                clock.now += 11
+            return process
+        class Thread:
+            def __init__(self, target, daemon):
+                self.target = target
+            def start(self):
+                clock.now += worker_delay
+                self.target()
+            def join(self, timeout):
+                pass
+            def is_alive(self):
+                return False
+        class Selector:
+            def __init__(self):
+                self.keys = {}
+                self.emitted = False
+            def register(self, pipe, _event, channel):
+                self.keys[pipe.fileno()] = SimpleNamespace(fileobj=pipe, fd=pipe.fileno(), data=channel)
+            def unregister(self, pipe):
+                del self.keys[pipe.fileno()]
+            def get_map(self):
+                return self.keys
+            def select(self, timeout):
+                if mode == 'unread-buffer':
+                    os.write(writes[0], b'PRIVATE_COMPLETE_OUTPUT')
+                    os.write(writes[1], b'PRIVATE_ERROR')
+                    finish(0)
+                    clock.now += 11
+                    return []  # Data exists, but no normal read occurs before expiry.
+                clock.now += 0.25 if mode == 'delayed-output' else timeout
+                if mode == 'delayed-output' and clock.now >= 3:
+                    if not self.emitted:
+                        os.write(writes[0], b'ordinary-output')
+                        finish(0)
+                        self.emitted = True
+                    return [(key, None) for key in self.keys.values()]
+                return []
+            def close(self):
+                self.keys.clear()
+        entry = {}
+        try:
+            with patch.object(probe.time, 'monotonic', side_effect=lambda: clock.now), \
+                 patch.object(probe.threading, 'Thread', Thread), \
+                 patch.object(probe.selectors, 'DefaultSelector', Selector), \
+                 patch.object(probe.subprocess, 'Popen', side_effect=spawn), \
+                 patch.object(probe, 'terminate_owned', side_effect=lambda child: finish(-15) if child.poll() is None else None):
+                if mode == 'delayed-output':
+                    output = probe.command_result(['synthetic-child'], 10, None, entry)
+                else:
+                    with self.assertRaisesRegex(ValueError, 'capability_command_failed'):
+                        probe.command_result(['synthetic-child'], 10, None, entry)
+                    output = None
+            return entry, output
+        finally:
+            for descriptor in writes:
+                os.close(descriptor)
+            process.stdout.close()
+            process.stderr.close()
+
+    def test_delayed_spawn_is_visible_and_budget_still_includes_creation(self):
+        entry, output = self.controlled_command('delayed-spawn', worker_delay=0.5)
+        phases = entry['pump']['phaseSeconds']
+        self.assertEqual(phases['workerEntry'], 0.5)
+        self.assertEqual(phases['spawnReturned'] - phases['spawnStart'], 11)
+        self.assertEqual(phases['deadlineObserved'] - phases['budgetStart'], 11)
+        self.assertIsNone(phases['firstRead'])
+        self.assertEqual(entry['errors'], ['deadline'])
+        self.assertEqual(entry['exitCode'], -15)
+        self.assertIsNone(output)
+
+    def test_delayed_output_is_separate_from_spawn_and_is_normally_accepted(self):
+        entry, output = self.controlled_command('delayed-output')
+        phases = entry['pump']['phaseSeconds']
+        self.assertEqual(phases['spawnReturned'], phases['spawnStart'])
+        self.assertEqual(phases['firstRead'], 3)
+        self.assertIsNone(phases['deadlineObserved'])
+        self.assertIsNone(entry['pump']['deadlineObservation'])
+        self.assertEqual(output, b'ordinary-output')
+        self.assertEqual(entry['errors'], [])
+        self.assertEqual(set(phases), set(probe.PUMP_PHASES))
+        self.assertEqual(len(phases), 10)
+        self.assertIsNotNone(phases['cleanupComplete'])
+
+    def test_unread_buffer_and_exit_zero_never_rescue_a_deadline(self):
+        entry, output = self.controlled_command('unread-buffer')
+        observation = entry['pump']['deadlineObservation']
+        self.assertEqual(observation['processState'], 'exited')
+        self.assertEqual(observation['exitCode'], 0)
+        self.assertEqual(entry['exitCode'], 0)
+        self.assertEqual(entry['errors'], ['deadline'])
+        self.assertEqual(entry['stdoutBytes'], 0)
+        self.assertEqual(entry['stderrBytes'], 0)
+        self.assertEqual(entry['rawBytesConsumed'], 0)
+        self.assertEqual(observation['pipes']['stdout']['bytes'], len(b'PRIVATE_COMPLETE_OUTPUT'))
+        self.assertEqual(observation['pipes']['stderr']['bytes'], len(b'PRIVATE_ERROR'))
+        self.assertIsNone(entry['pump']['phaseSeconds']['firstRead'])
+        self.assertEqual(entry['pump']['maxLoopGapSeconds'], 11)
+        self.assertNotIn('PRIVATE', json.dumps(entry))
+        self.assertIsNone(output)
+
+    def test_no_output_preserves_deadline_cleanup_and_records_empty_polls(self):
+        entry, _ = self.controlled_command('no-output')
+        observation = entry['pump']['deadlineObservation']
+        self.assertEqual(observation['processState'], 'running')
+        self.assertIsNone(observation['exitCode'])
+        for row in observation['pipes'].values():
+            self.assertEqual(row, {'attempts': 1, 'bytes': 0, 'status': 'would_block'})
+        self.assertGreaterEqual(entry['pump']['selectorReturns'], 90)
+        self.assertLessEqual(entry['pump']['selectorReturns'], 110)
+        self.assertAlmostEqual(entry['pump']['maxLoopGapSeconds'], 0.1)
+        self.assertEqual(entry['errors'], ['deadline'])
+        self.assertEqual(entry['exitCode'], -15)
+
+    def test_late_observation_is_one_read_per_pipe_with_a_fixed_byte_bound(self):
+        pump = probe.Pump(['synthetic-child'], 10)
+        pump.errors.add('deadline')
+        pump.process = SimpleNamespace(poll=Mock(return_value=None),
+                                       stdout=SimpleNamespace(fileno=lambda: 10),
+                                       stderr=SimpleNamespace(fileno=lambda: 11))
+        with patch.object(probe.os, 'read', side_effect=lambda _fd, count: b'x' * count) as read:
+            pump.observe_deadline()
+            pump.observe_deadline()
+        self.assertEqual([call.args for call in read.call_args_list], [(10, 8192), (11, 8192)])
+        pump.process.poll.assert_called_once()
+        self.assertEqual(sum(row['bytes'] for row in pump.deadline_observation['pipes'].values()), 16384)
+        self.assertEqual(pump.stdout, b'')
+        self.assertEqual(pump.stderr_bytes, 0)
+        self.assertEqual(pump.errors, {'deadline'})
+        snapshot = pump.observation()
+        pump.deadline_observation['pipes']['stdout']['bytes'] = 0
+        self.assertEqual(snapshot['deadlineObservation']['pipes']['stdout']['bytes'], 8192)
+
+    def test_late_bytes_share_the_existing_raw_budget_without_extending_it(self):
+        for remaining in (3, 0):
+            pump = probe.Pump(['synthetic-child'], 10)
+            pump.errors.add('deadline')
+            pump.raw_bytes = probe.MAX_RAW - remaining
+            pump.process = SimpleNamespace(poll=lambda: None, stdout=SimpleNamespace(fileno=lambda: 10),
+                                           stderr=SimpleNamespace(fileno=lambda: 11))
+            with self.subTest(remaining=remaining), patch.object(probe.os, 'read', side_effect=lambda _fd, count: b'x' * count) as read:
+                pump.observe_deadline()
+            consumed = sum(row['bytes'] for row in pump.deadline_observation['pipes'].values())
+            self.assertEqual(pump.raw_bytes + consumed, probe.MAX_RAW)
+            self.assertEqual(read.call_count, 1 if remaining else 0)
+            self.assertEqual(pump.deadline_observation['pipes']['stderr']['status'], 'raw_budget_exhausted')
+
+    def test_observation_cannot_consume_before_deadline_or_grow_phase_keys(self):
+        pump = probe.Pump(['synthetic-child'], 10)
+        with patch.object(probe.os, 'read') as read:
+            pump.observe_deadline()
+        read.assert_not_called()
+        self.assertIsNone(pump.deadline_observation)
+        with self.assertRaisesRegex(ValueError, 'unknown_pump_phase'):
+            pump.mark('arbitrary_label')
+        self.assertEqual(set(pump.phase_seconds), set(probe.PUMP_PHASES))
+
+    def test_selector_counter_saturates_without_changing_acceptance(self):
+        with patch.object(probe, 'MAX_SELECTOR_RETURNS', 2):
+            entry, output = self.controlled_command('delayed-output')
+        self.assertEqual(entry['pump']['selectorReturns'], 2)
+        self.assertTrue(entry['pump']['selectorReturnsCapped'])
+        self.assertEqual(entry['errors'], [])
+        self.assertEqual(output, b'ordinary-output')
 
 
 class AdmissionTests(unittest.TestCase):
@@ -518,6 +700,7 @@ class HelpExitTests(unittest.TestCase):
         pump.errors = set(errors)
         pump.exit_code = code
         pump.terminated_on_request = False
+        pump.observation.return_value = {}
         self.entry, self.help = {}, {} if help_enabled else None
         with patch.object(probe, 'Pump', return_value=pump):
             return probe.command_result(argv, 10, self.help, self.entry)
