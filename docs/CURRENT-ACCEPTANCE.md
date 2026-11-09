@@ -1,39 +1,31 @@
 # Current implementation and acceptance map
 
-## November 8, pending-purchase recovery locally qualified; render-only warning rejected
+## Current checkpoint — November 8, billing hosted pass and dinner visual correction
 
-Current canonical candidate adds one unfinished-transaction reconciliation after
-purchase returns pending. All60membership model tests and the unchanged original
-Spanish Ask to Buy case pass native/strict on owned858A/iOS26.2, with both build
-profiles and original results preserved. Hosted repair remains unproven. Candidate code commitccdbd768 is published
-with evidence atd1705d920595be12a3eb8c378f50ad04dbf65ccd on
-`codex/ci-focus-pending-recovery-20261108`. Deep run42544579944 is confirmed
-in_progress: Linux preflight passed; both sanitizers and shared build running.
-Poll that same run to terminal; do not dispatch a duplicate. [Evidence](evidence/native/membership-pending-reconciliation-20261108/README.md).
-Canonical native inputs now include MembershipModel.swift and MembershipTests.swift
-changes; do not reuse the old8d0eb48f canonical pin for new execution preparation.
-No dinner/speech candidate was installed. No local native job remains active.
+The pending-purchase reconciliation is locally qualified by all 60 MembershipTests
+and the unchanged Spanish Ask to Buy case. Hosted run42544579944 atd1705d92 is
+now terminal success: all seven jobs, both 15-scenario locale suites, both
+sanitizers, shared build and strict aggregate gate passed. No retry occurred.
+[Exact hosted result](evidence/native/membership-pending-reconciliation-20261108/README.md).
+This closes that focused billing validation, not full combined release acceptance.
 
-The workflow validation at50e89363 is terminal: fixture42541292817 passed its
-original quote journey and new gate; deep42541290758 passed preflight/sanitizers/
-shared build/English15, but Spanish14/15 failed the approved-transaction delivery
-predicate. The aggregate gate correctly failed. Both watcher sessions are terminal;
-no old hosted validation remains active. Only the new candidate run42544579944
-is active from this work. Do not dispatch the old source again.
-[Workflow evidence](evidence/native/ci-bottleneck-update-20261108/README.md).
+The isolated top-content Done candidate passed the complete original English
+dinner journey, all five coordinate samples, native/strict checks and relaunch,
+with zero idle misses. Visual review rejected its supply title being covered
+while focused. A one-line background safe-area correction also passed the full
+journey and strict checks, but the title remains visually absent. Neither candidate
+is accepted or installed. A top-inset placement preserving the Form's navigation
+relationship is the next reviewed direction, not a demonstrated fix.
+See [the current handoff](CURRENT-HANDOFF.md) for exact live handles, source and
+next action; older running statements below are historical checkpoints.
 
-The standalone render-only speech experiment built after3CoreFoundation spelling
-corrections, then failed native/strict.18UUID-bound runtime records reproduce the
-framework-main waiter without playback; a separate two-copy limit also failed.
-The single XCTest warning still lacks its required attachment. Do not advance
-that hypothesis to a player or raise the cap to obtain green. Diagnostic app
-uninstalled from owned858A; original data and compact reproducer retained.
-[Evidence](evidence/native/cook-render-only-20261108/README.md).
+Cook readback's render-only alternative reproduced the framework-main wait and
+remains rejected. Scroll metric cardinality, broader accessibility and the full
+52requirements/27routes/B11 scope remain incomplete. Owner-deferred SMTP and Apple
+distribution, actual KWS activation, physical/human/provider and separate042
+rollout gates remain open. Requirement and route traceability below is unchanged.
 
-Full acceptance across52Foundation requirements,27screen contracts and B11
-remains incomplete; the local repair is not release approval. SMTP, paid Apple distribution,
-KWS activation, physical/human/provider gates and separate042approval remain as
-previously recorded. All helpers are terminal. Continue independent app work.
+## Historical checkpoints
 
 ## November 8, plain Done candidate terminal; review edge sampling
 

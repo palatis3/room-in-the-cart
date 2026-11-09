@@ -37,14 +37,26 @@ preparation error; no test retry or timeout adjustment occurred.
 
 This proves the recovery behavior in deterministic model cases and one real
 local StoreKit execution. The hosted failure's original trace did not measure
-unfinished availability at the exact pending-return instant; a complete hosted
-repair and full bilingual billing suite remain unproven. A new reviewed source
-revision needs hosted validation; do not blindly rerun the old failed revision.
+unfinished availability at the exact pending-return instant. The new hosted run
+below now passes both complete locale suites; it does not establish the original
+framework event-delivery cause or guarantee every possible transaction timing.
 No provider settings, database migrations, paid products or App Store deployment
 were changed.
 
-Hosted validation is now [run42544579944](https://github.com/palatis3/room-in-the-cart/actions/runs/42544579944),
+Hosted validation passed in [run 42544579944](https://github.com/palatis3/room-in-the-cart/actions/runs/42544579944),
 at source revisiond1705d920595be12a3eb8c378f50ad04dbf65ccd on
-`codex/ci-focus-pending-recovery-20261108` (code changeccdbd768). Preflight passed;
-the shared build and sanitizers were verified running at the checkpoint. Follow
-this existing run; no terminal hosted result is claimed yet.
+`codex/ci-focus-pending-recovery-20261108` (code change ccdbd768). All seven jobs
+passed: Linux preflight, address and thread sanitizers, shared build, both locale
+consumers and the final aggregate gate. English and Spanish each passed all 15
+original scenarios and exact-configuration/strict result verification. Ask to Buy
+passed in 2.707 seconds in English and 6.128 seconds in Spanish, within the
+unchanged predicate and execution limits. No retry was dispatched.
+
+The shared build took 306 seconds; English and Spanish jobs took 363 and 438
+seconds, respectively (1,107 macOS seconds combined). These job windows include
+setup and evidence collection. Native scenario totals were 35.255 and 41.804
+seconds; the remainder must not be described as test execution or attributed to
+one setup phase without further measurement. This is a passing focused deep run,
+not a new full-release duration. The complete integration/release scope remains
+open. Terminal inventory, input hashes and all 30 strict result rows are retained
+in `hosted-terminal.json` and `hosted-test-excerpts.log` beside this report.
