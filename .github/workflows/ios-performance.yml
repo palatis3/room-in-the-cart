@@ -1,5 +1,5 @@
 name: iOS Release performance
-run-name: iOS performance · ${{ inputs.case || 'all' }}
+run-name: iOS performance · ${{ inputs.case || 'all' }}${{ inputs.capture_scroll_signposts && ' · signpost capture (diagnostic only)' || '' }}
 
 on:
   pull_request:
@@ -28,6 +28,10 @@ on:
         type: choice
         options: [all, launch, rendered, scroll]
         default: all
+      capture_scroll_signposts:
+        description: One scroll-only live/persisted signpost transport diagnostic (no acceptance)
+        type: boolean
+        default: false
       enforce_baselines:
         description: Require approved limits for this Xcode and simulator environment
         type: boolean
@@ -43,7 +47,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: ios-performance-${{ github.workflow }}-${{ github.ref }}
+  group: ios-performance-${{ github.workflow }}-${{ github.ref }}${{ inputs.capture_scroll_signposts && '-scroll-capture' || '' }}
   cancel-in-progress: true
 
 env:
@@ -64,7 +68,13 @@ jobs:
           python3 scripts/test_plan_ios_performance_tests.py
           python3 scripts/test_check_ios_performance.py
           python3 scripts/test_scroll_signpost_diagnostic.py
+          python3 scripts/test_capture_scroll_signposts.py
           python3 scripts/plan_ios_performance_tests.py --validate-request
+          if [[ "${{ inputs.capture_scroll_signposts }}" == true ]]; then
+            test "${{ github.event_name }}" = workflow_dispatch
+            test "${{ inputs.case }}" = scroll
+            test "$ENFORCE_BASELINES" = false
+          fi
       - name: Reject known baseline incompatibility before allocating macOS
         run: python3 scripts/check_ios_performance_environment.py configured --architecture arm64
 
@@ -178,7 +188,13 @@ jobs:
           test_runs=(.build/DerivedData/Build/Products/RoomInTheCart-Performance_iphonesimulator*.xctestrun)
           test "${#test_runs[@]}" -eq 1
           test -f "${test_runs[0]}"
-          xcodebuild -xctestrun "${test_runs[0]}" -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
+          capture=()
+          if [[ "${{ inputs.capture_scroll_signposts }}" == true ]]; then
+            test "$PERFORMANCE_CASE" = scroll
+            capture=(python3 scripts/capture_scroll_signposts.py --simulator "$SIMULATOR_ID"
+              --xctestrun "${test_runs[0]}" --output .build/performance/live-signpost-diagnostic.json --)
+          fi
+          "${capture[@]}" xcodebuild -xctestrun "${test_runs[0]}" -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
             -parallel-testing-enabled NO -test-timeouts-enabled YES \
             -default-test-execution-time-allowance 900 -maximum-test-execution-time-allowance 1200 \
             -resultBundlePath .build/performance/Performance.xcresult -collect-test-diagnostics on-failure \

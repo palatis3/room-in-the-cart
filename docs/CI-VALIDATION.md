@@ -400,6 +400,26 @@ command receipt; do not edit a retained run's provenance.
 
 ## Exact-run monitoring without repeated log downloads
 
+### Bounded scroll measurement diagnostic
+
+The manual performance workflow has an optional `capture_scroll_signposts`
+input, default off. It is permitted only with `case=scroll` and explicit
+`enforce_baselines=false`. Linux checks reject other combinations before allocating
+Macs; the wrapper independently rejects them. The run name and workflow cancellation
+group distinguish this diagnostic from ordinary performance qualification. The
+existing five native slots, original test command, assertions, metrics and strict
+validators remain unchanged.
+
+The wrapper checks the pinned source/toolchain/runtime, then requires a separate
+signpost transport control before starting the original XCTest case. It retains
+bounded metadata only, comparing live capture with persisted logs. Unsupported
+capabilities, schema or a missing pre-control stop before the test; loss/caps or a
+missing post-control make the diagnostic inconclusive. It does not change logging
+configuration or retain raw messages. `live-signpost-diagnostic.json` records the
+limits and outcome alongside the original evidence. An instrumented pass is not
+an approved performance baseline or release acceptance. Run once for the written
+capture question, inspect the result and stop; do not retry until green.
+
 ### Exact-revision qualification receipt
 
 Before scheduling the combined regression batch, create one receipt for the
