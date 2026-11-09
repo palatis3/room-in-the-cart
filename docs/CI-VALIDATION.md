@@ -400,6 +400,124 @@ command receipt; do not edit a retained run's provenance.
 
 ## Exact-run monitoring without repeated log downloads
 
+### Exact-revision qualification receipt
+
+Before scheduling the combined regression batch, create one receipt for the
+immutable **tested** revision. Update it after inspecting each terminal attempt,
+then check it before describing the revision as qualified:
+
+```sh
+python3 scripts/check_qualification_receipt.py --init FULL_40_CHARACTER_TESTED_SHA > .build/qualification.json
+python3 scripts/check_qualification_receipt.py --receipt .build/qualification.json
+```
+
+The generated template is deliberately incomplete and defaults to `merge` scope.
+The checker exits 1 for missing/unsuccessful qualification and 2 for inconsistent
+or changed evidence. Exit 0 means only that the offline checklist is consistent
+and complete for its declared scope. It does not fetch current branch protection,
+approve a merge, or establish distribution readiness. Follow
+[the release execution plan](RELEASE-EXECUTION.md) for the separate live-provider,
+physical, language, accessibility and distribution requirements; the receipt
+hashes that plan rather than duplicating its checklist.
+
+The three scopes cannot substitute for one another:
+
+| Scope | Required evidence |
+| --- | --- |
+| `focused` | Terminal successful diagnostic runs with exact checkout identity; supporting evidence only. |
+| `merge` | PR runs supplying `CI gate`, both CodeQL language checks and `Dependency review` at the same tested revision. Live branch freshness and conversation resolution still require current GitHub review. |
+| `automated_release` | The existing full `Pre-release regression checks` run and its successful `Automated release gate`; all separate release execution requirements remain. |
+
+Reuse JSON already saved from `ci_feedback.py`; the new checker makes no API calls
+and downloads nothing. Preserve the exact `run_id` and `attempt` when adding a
+`runs` entry. Every file reference has this form, with paths relative to the
+repository root (absolute paths are also supported):
+
+```json
+{"path": ".build/qualification/run-123-attempt-2.json", "sha256": "FULL_64_CHARACTER_FILE_SHA256"}
+```
+
+A run entry names `run_id`, `attempt`, `coverage` (one of the three scopes),
+`feedback` (the saved reporter payload), `checkout_proof`, `question`, and
+`change_since_prior_attempt`. The checkout proof is a small JSON identity record
+with exactly these fields, transcribed from retained checkout/build provenance:
+
+```json
+{"run_id": 123, "attempt": 2, "head_sha": "FULL_40_CHARACTER_RUN_HEAD_SHA", "tested_sha": "FULL_40_CHARACTER_TESTED_SHA", "provenance": {"path": ".build/qualification/original-checkout-record.json", "sha256": "FULL_64_CHARACTER_FILE_SHA256"}}
+```
+
+For example, this `runs` entry records a focused attempt without upgrading it
+to merge evidence. Replace every illustrative identity and digest with retained
+values; `shasum -a 256 FILE` computes a local file digest.
+
+```json
+{
+  "run_id": 123,
+  "attempt": 2,
+  "coverage": "focused",
+  "feedback": {"path": ".build/qualification/feedback.json", "sha256": "FULL_FILE_SHA256"},
+  "checkout_proof": {"path": ".build/qualification/checkout.json", "sha256": "FULL_FILE_SHA256"},
+  "question": "Do both original Dinner journeys pass with the reviewed input fix?",
+  "change_since_prior_attempt": "First qualification of the reviewed fix; previous failure retained separately",
+  "prior_attempts": [{"path": ".build/qualification/first-failure.json", "sha256": "FULL_FILE_SHA256"}]
+}
+```
+
+For PR runs, GitHub's head SHA and the checked-out merge SHA may differ. Record
+both, and bind every contributing run to the same `tested_sha`; do not relabel
+head-only evidence as a tested merge revision. For other events the head must
+equal the tested revision. The checker verifies consistency with the saved
+report and verifies the referenced original provenance file's digest. It does not
+independently establish the truth of a hand-written checkout attestation: review
+the linked source record. Unfilled `REPLACE:` template fields keep the checklist
+incomplete. Keep the question concrete and record what changed since the prior
+attempt, or state that this is its first qualification. Add prior failure file
+references under `prior_attempts`; a later pass must not overwrite those bytes.
+An unchanged repeat needs an explicit new diagnostic question before scheduling.
+
+### Compact evidence for future batches
+
+Commit the decision, source-change map, exact SHA/scope/run/attempt identities,
+important readbacks, unresolved findings and digest-bound original locations.
+Keep source changes in `source_changes`, separate from evidence inventory. Avoid
+committing another complete source snapshot or repeated exported payload solely
+to restate an existing result. This policy does not delete retained history,
+rewrite commits or exclude executable evidence from security scanning.
+
+Each contributing run needs an `originals` entry: `run_id`, `attempt`,
+`retrieved_copy` (a verified local file reference), `immutable_uri`, `retention`
+set to `project-lifetime`, `custodian`, and timezone-bearing
+`retrieval_verified_at`. A private retained original may use an absolute local
+archive path or `file:///absolute/archive/path`; the checker reads that file and
+verifies the same digest, reporting it as **local-only**, not independently
+archived. No external account, upload, publication or paid storage is required.
+A remote URI must identify a committed blob at a full commit SHA, or a
+digest-addressed archive containing the same SHA256 in its path, for example
+`https://ARCHIVE_HOST/sha256/FULL_64_CHARACTER_FILE_SHA256`. Remote locations are
+reported as attestations with checked local bytes, never independently fetched.
+The original
+should preserve the complete required raw evidence, including result bundles,
+logs and inventory/provenance, not just a selected screenshot. A seven-day
+Actions artifact link is not a durable original. Do not remove an existing local
+or committed original merely because a receipt exists. If replacing its retained
+location, first independently retrieve the proposed archive, verify its digest,
+and confirm project-lifetime retention with the named custodian. The offline tool
+checks the local archive/retrieved bytes and recorded attestation; it cannot
+verify remote availability or a storage provider's retention promise. No archive
+service or paid storage is provisioned by this workflow.
+
+Optional `timing` on a run accepts a hash-bound `jobs` JSON reference containing
+the complete `total_count`/`jobs` response and a `phase_steps` mapping. Map exact
+observed step names to `setup`, `build`, `test_and_validation`, or `collection`.
+For example, map `Run selected tests and verify complete execution` to
+`test_and_validation`, preserving that combined work. The checker rejects
+wrong run attempts, duplicate job IDs, incomplete counts and overlapping phase
+assignments; it reports unmapped and untimed steps explicitly. These are sums of
+whole step windows, which may overlap across jobs, not critical-path duration,
+Mac runner-minutes or pure XCTest time. Reuse retained job metadata if available;
+do not download another result bundle just to populate this optional table.
+Use the existing reporter's execution/pre-start windows for scheduling context.
+
 Use the read-only reporter before allocating more CI work:
 
 ```sh
