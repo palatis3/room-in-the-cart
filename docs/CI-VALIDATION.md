@@ -403,6 +403,15 @@ checker. Opt into verbose diagnostics when the investigation needs system-level
 evidence (for example a hang or infrastructure failure). CI keeps its existing
 on-failure setting.
 
+For a local expected-negative contrast control, an explicit `never` override is
+also appropriate when pixels, geometry and trait receipts answer the question.
+Accept that control only after normal native completion with exactly the intended
+contrast failures, both measured below the unchanged threshold, all required
+attachments present, and no additional harness failure or runtime warning.
+An unexpected failure is inconclusive, not successful negative proof. Record
+omitted verbose diagnostics and preserve the prior failed attempt unchanged.
+Positive qualification and CI continue to use `on-failure`.
+
 This distinction has measured value: the Spanish AX5 control-discovery testcase
 failed after 193.448 seconds; the whole command finished after 800.080585 seconds.
 Its owned `simctl diagnose` child used `--timeout=600`. The native process was
@@ -452,6 +461,27 @@ test pass. One-off local runners must record the same explicit flag in their new
 command receipt; do not edit a retained run's provenance.
 
 ## Exact-run monitoring without repeated log downloads
+
+### Performance artifact provenance
+
+The Release build records the selected test-plan hash, the app/runner/test/share/
+widget executable and Info.plist hashes and modes, plus source hashes for the
+performance test, ledger fixture and scheme. The producer receipt travels inside
+the existing Products archive. Each consumer verifies it before simulator setup;
+missing or changed required products, plan, source or run identity fail early.
+A retry may restore an earlier producer attempt from the same run and exact source,
+with both attempt identities recorded. No extra macOS job or native test is added.
+
+Compact receipts also record fixed, allowlisted instrumentation settings and
+recognized library-path availability. Invoking-environment and host-library
+changes are observations, not proof of the launched process environment or loaded
+libraries. Unrecognized values are marked without retaining arbitrary environment
+contents or absolute paths. Matching receipts do not restore missing measurements,
+approve performance baselines or replace the existing strict checks.
+
+Producer evidence is retained with the build log; consumer evidence is
+`plan-provenance.json` in the existing performance artifact. Preserve the original
+receipt with the first failure and inspect it before another experiment.
 
 ### Fresh-simulator performance pilot
 

@@ -17,6 +17,8 @@ on:
       - 'scripts/test_check_ios_performance.py'
       - 'scripts/plan_ios_performance_tests.py'
       - 'scripts/test_plan_ios_performance_tests.py'
+      - 'scripts/performance_plan_provenance.py'
+      - 'scripts/test_performance_plan_provenance.py'
       - 'scripts/ios_performance_baselines.json'
       - 'ios/UITests/ReleasePerformanceUITests.swift'
       - 'ios/UITests/Fixtures/ReleaseLedger500.txt'
@@ -74,6 +76,7 @@ jobs:
       - name: Validate performance selection before allocating macOS
         run: |
           python3 scripts/test_plan_ios_performance_tests.py
+          python3 scripts/test_performance_plan_provenance.py
           python3 scripts/test_preserve_performance_store.py
           python3 scripts/test_check_ios_performance.py
           python3 scripts/test_scroll_signpost_diagnostic.py
@@ -171,6 +174,9 @@ jobs:
         if: ${{ !inputs.capture_preflight_only }}
         run: |
           python3 scripts/check_built_app.py .build/DerivedData/Build/Products/Release-iphonesimulator/RoomInTheCart.app --configuration Release
+          python3 scripts/performance_plan_provenance.py producer --products .build/DerivedData/Build/Products \
+            --output .build/performance-plan-producer.json
+          cp .build/performance-plan-producer.json .build/DerivedData/Build/Products/performance-plan-producer.json
           tar -czf "$RUNNER_TEMP/iphone-performance-products.tar.gz" -C .build/DerivedData/Build Products
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         id: upload
@@ -186,7 +192,9 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: iphone-performance-build-log-${{ github.run_attempt }}
-          path: .build/PerformanceBuild.log
+          path: |
+            .build/PerformanceBuild.log
+            .build/performance-plan-producer.json
           include-hidden-files: true
           retention-days: 7
           if-no-files-found: ignore
@@ -225,6 +233,12 @@ jobs:
           tar -xzf .build/download/iphone-performance-products.tar.gz -C .build/DerivedData/Build
           xcodebuild -version | tee .build/performance/toolchain.txt
           printf '%s\n' "$TEST_SELECTOR" > .build/performance/selector.txt
+      - name: Verify restored performance plan and product provenance
+        timeout-minutes: 2
+        run: |
+          python3 scripts/performance_plan_provenance.py consumer --products .build/DerivedData/Build/Products \
+            --producer .build/DerivedData/Build/Products/performance-plan-producer.json \
+            --output .build/performance/plan-provenance.json
       - name: Select an iPhone simulator
         timeout-minutes: 8
         run: |

@@ -15,7 +15,7 @@ contracts and B11 acceptance. Read [APP-BASELINE](product/APP-BASELINE.md), then
 Use `/Users/palatis/Room in the Cart`, branch `codex/parallel-ios-ci`, with explicit
 working directories. The ambient `spanish-done-diagnostic` worktree is stale.
 Publication target is `codex/combined-candidate-20261109`; before this update its
-verified head was `ebbbdb30c187d66da7104d34eecc0bff317e7e85`. Recheck current Git
+verified head was `040ec583e80cc2a70b215df81df60695c99f01fd`. Recheck current Git
 and run state before publishing. Draft PR1 is a separate older candidate.
 No complete combined regression or merge has passed.
 
@@ -44,14 +44,16 @@ still Xcode26.3/17C529 with iOS26.2/23C54; it cannot approve the new environment
 
 ## Current findings and next work
 
-1. **Hosted performance:** run42592941333 at e95fcec9 is terminal failure. Build,
-   original scroll1/1 and500-row persisted pickup pass, but required duration is
-   absent from originalSQLite andJSON; three memory series have five samples each.
-   No baseline was approved. [Exact outcome](evidence/native/current-hosted-scroll-20261109/README.md).
-   The prepared controlled diagnostic uses a fresh job-owned simulator with unchanged
-   original scroll test/runtime/type/strict checks. Reviewed failure-path database
-   preservation is installed;394offline checks and17queue-node validation pass.
-   Confirm the published SHA before one dispatch; do not repeat unchanged failures.
+1. **Hosted performance:** fresh-device run42598431187 at040ec583 is terminal
+   failure. Native1/1 and persisted500-row pickup pass; required scroll duration
+   remains absent from originalSQLite andJSON. Device/runtime identity is bound;
+   preservation and owned cleanup pass. Fresh device alone did not repair it.
+   [Exact result](evidence/native/fresh-performance-simulator-20261109/README.md).
+   No hosted work remains active in this cohort. Producer plans agree on the
+   allowlisted settings. The new producer/consumer provenance gate passed409offline
+   checks and17queue-node validation; its hosted consumer observation is pending.
+   [Implementation proof](evidence/native/performance-plan-provenance-20261109/README.md).
+   Do not retry an unchanged native experiment.
 2. **Local performance:** both original Release launch and scroll have complete
    required metrics on Xcode27.1/iOS27.0; hosted omissions are not universal removal.
    Hitches remain unavailable. Local host27.2 differs from hosted27.0.1.
@@ -60,7 +62,11 @@ still Xcode26.3/17C529 with iOS26.2/23C54; it cannot approve the new environment
    journeys remain failed in XCTest's logging callback/quarantine path. A reduced
    reproducer is nonreproducing, not acceptance. Apple support ranges include the
    current configuration; reviewed release notes did not establish a remedy.
-   Private unsubmitted report: `.build/MinimumOSXCTestReproducerNov09/apple-report-draft/`.
+   Two preserved17.5 IPS reports also show null x0 at strcmp, with x1 resolving
+   to the exact framework's `com.apple.runtime-issues` string. This does not prove
+   the null's origin. No justified query-only repair was found.
+   Private report and new addendum: `.build/MinimumOSXCTestReproducerNov09/apple-report-draft/`.
+   User permission to submit the reviewed report to Apple is pending; nothing sent.
 4. **Fixture isolation:** Membership/Restoration corrections are installed byte-for-byte
    from the independently reviewed and natively qualified candidate. Both old-API
    controls failed as predicted; all74affected tests then passed native/strict checks
@@ -71,6 +77,39 @@ still Xcode26.3/17C529 with iOS26.2/23C54; it cannot approve the new environment
    handling are corrected at ebbbdb30;64focused/378offline checks passed.
    UID501 stderr remains a qualification failure; no suppression or new transport
    acceptance. [Proof](evidence/native/scroll-capture-framing-20261109/README.md).
+
+## Current isolated product follow-up
+
+Retained clarification-screen pixels measure guidance3.11:1 and empty Question
+prompt1.72:1, below the existing4.5:1 check. `.build/ClarificationContrastNov09/`
+contains source-bound measurements, preserved native custody and guarded runners. A two-line style fix uses Theme.secondary
+and the existing native workingTextField. Canonical product remains unchanged.
+The focused test proposal also exposed a fixture blind spot: rejected clarification
+attempts could leave visible posts at0. R2 adds command-attempt observation and a
+rejected-send control; it remains isolated, not installed into canonical product.
+
+Baseline1 full-contributor compilation and enumeration passed (68 contributor
+cases). Its new test failed before contrast assertions: a swipe gesture area's
+24-point horizontal inset incorrectly rejected a fully visible Form row at x16.
+The row also includes native padding, so its frame is not a text-ink rectangle.
+The 19.915-second test finalized normally after629.308seconds, including broad
+failure diagnostics. Native65/strict1, screenshots, geometry and original hashes
+are retained. This is a harness failure, not accepted negative contrast proof.
+Source/products and executable modes were verified in
+`.build/NativeQualificationArchivesNov09/5d323e329534e8c46baec7659d4af415ed5b3bec5e02278d9838e56f05178b68/`.
+Baselines1–3 are terminal and their source/products/modes are archived. Baseline2
+confirmed the original native field exposes its title as a placeholder, not label.
+R4 reached both intended contrast failures in baseline3 but lost its locator after
+typing because the placeholder disappears. That additional harness failure makes
+it incomplete negative-control proof. The latest frozen source manifest is
+`e678a8eb3d1720b889de61bdb42e10a03fbce78f1b66dfca86004217e0b271fc`.
+All nine identified compiler warning sites are absent; the App Intents metadata
+tool still reports no framework dependency. A stable field identifier is being
+prepared for both original-style and styled candidates. No canonical product
+change is installed. Check `.build/ClarificationContrastNov09/` before native work.
+Local expected-negative controls explicitly omit broad system diagnostics but
+retain screenshots, geometry, traits, complete results and strict validation;
+positive qualification and CI stay on-failure.
 
 ## Installed product fixes and evidence boundaries
 
@@ -100,13 +139,12 @@ with the latest product archive at `builds/<product-SHA>/products`.
 Verify complete manifests and executable modes before mutation; each successor
 needs its own custody/source/product receipts. Old executors become historical.
 
-Owned iPhone17/iOS27.0 device: `A50C91FC-4966-47FF-A8CB-7640FBD513EB` (restored to Shutdown
-after completed local qualification). Launch-only4C01A9AC was deleted after preserving proof.
+Owned iPhone17/iOS27.0 device: `A50C91FC-4966-47FF-A8CB-7640FBD513EB` (booted for clarification qualification; baseline1 is terminal). Launch-only4C01A9AC was deleted after preserving proof.
 Protected preview `5FDE1E82-1FF7-4556-9C14-0746F6295944`: never reset or use for fixtures.
 Owned minimum17.0 deviceD420C2CA and17.5 device9DE280AC remain available; recheck state.
 Multiple26.2 runtime builds are installed, so version alone is insufficient identity.
 
-Latest observed free storage is13.73GiB, replacing earlier41GiB readings.
+Latest observed free storage is14.84GiB, replacing earlier41GiB readings.
 Keep8GiB reserve; no SDK download is needed. Do not broadly delete evidence/caches,
 repurpose PostgreSQL port55432 or remove unowned resources.
 
