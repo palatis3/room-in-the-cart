@@ -1468,3 +1468,73 @@ test('effective match guards use every retained group restriction from the trust
    assert.deepEqual(await matchWriteState(f),before);
  }
 });
+
+for(const mode of ['distinct','equal','unknown']) for(const laterFirst of [true,false]) test(`same-day recovery honors deadline before occurrence order (${mode}; ${laterFirst?'later':'earlier'} occurrence first)`,async()=>{
+ const f=await fixture(),path=f.base+'/shops/'+f.shopId,initial=ok(await call(f.owner,path)),base={shopRevision:1,authorityEpoch:1};
+ const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`,q=n=>({amount:{numerator:n,denominator:1},unit:'count',originalLiteral:String(n)});
+ const day=new Date(Date.now()+86_400_000).toISOString().slice(0,10),group=id(10),ingredient=id(11);
+ const late=id(laterFirst?20:21),early=id(laterFirst?21:20);
+ const command=(kind,body)=>({v:1,replayWindow:f.owner.window,clientKey:randomUUID(),shopId:f.shopId,kind,body,base:{...base}});
+ const send=cmd=>call(f.owner,f.base+'/commands','POST',cmd),write=(kind,body)=>send(command(kind,body));
+ for(const [occurrenceId,hour] of [[late,19],[early,18]]){
+   const meal={title:occurrenceId===late?'Later dinner':'Earlier dinner',day,kind:'dinner',portions:4,protected:false,
+     planning:{...(mode==='unknown'?{}:{deadline:{at:`${day}T${mode==='equal'?18:hour}:00:00.000Z`,zone:'UTC'}}),groups:[{id:group,name:'Dinner',servings:{numerator:4,denominator:1},protected:false}],
+       ingredients:[{id:ingredient,name:'Wraps',quantity:q(4),groupIds:[group],exclusions:[]}]}};
+   ok(await write('shop.patch',{quote:initial.quote,lines:initial.lines,mealEdit:{occurrenceId,baseMealRevision:null,meal}}));base.shopRevision++;
+ }
+ ok(await write('shop.reportPlaced',{occurredAt:new Date().toISOString()}));base.shopRevision++;
+ let supplyRevision=0;
+ const supply=async(kind,body)=>{const result=ok(await write(kind,{...body,supplyRevision}));supplyRevision=result.supplyRevision;return result;};
+ const addSource=async(name,quantity,targets)=>{
+   const {sourceId}=await supply('delivery.register',{placedRevision:3,lineId:initial.lines[0].lineId,segmentKey:randomUUID(),foodName:name,exclusionTags:[]});
+   for(const [occurrenceId,mealRevision] of targets) await supply('delivery.match',{sourceId,occurrenceId,mealRevision,ingredientId:ingredient,matched:true});
+   const observationId=randomUUID();await supply('delivery.arrival',{sourceId,observationId,predecessorId:null,arrivedAt:new Date(Date.now()-1000).toISOString(),received:q(quantity)});
+   await supply('delivery.usable',{sourceId,observationId:randomUUID(),predecessorId:null,arrivalObservationId:observationId,confirmedAt:new Date().toISOString(),usable:q(quantity)});
+   return sourceId;
+ };
+ await addSource('Shared wraps',6,[[late,2],[early,3]]);
+ const fallback=await addSource('Confirmed fallback',5,[]),recovery=path+'/meal-recovery',desk=ok(await call(f.owner,recovery));
+ const target=desk.meals.find(m=>m.occurrenceId===late),other=desk.meals.find(m=>m.occurrenceId===early);
+ const replacement={...target,revisionId:randomUUID(),title:'Separate fallback dinner',remainingElapsedMinutes:20,
+   needs:target.needs.map(n=>({...n,id:randomUUID(),ingredientId:randomUUID(),matchedSourceIds:[fallback]}))};
+ const input={v:1,base:desk.base,intent:{occurrenceId:late,targetDigest:desk.targetDigests.find(d=>d.occurrenceId===late).digest,
+   replacement,reviewedAt:desk.asOf,repeatOfOccurrenceId:null,agreesToRepeat:false,proposesExtraTrip:false,agreesToExtraTrip:false,acceptsUnresolved:mode==='unknown'}};
+ const preview=ok(await call(f.owner,recovery+'/preview','POST',input));
+ assert.equal(preview.foodConfirmed,true);assert.equal(preview.timingConfirmed,mode!=='unknown');
+ assert.equal(preview.feasible,mode!=='unknown');assert.equal(preview.consentSatisfied,true);
+ const expectedLate=mode==='distinct'?'2':target.needs[0].id<other.needs[0].id?'4':'2';
+ const expectedEarly=expectedLate==='2'?'4':'2';
+ const allocated=(projection,id)=>projection.demands.find(n=>n.needId===id).allocated.numerator;
+ assert.equal(allocated(preview.before,target.needs[0].id),expectedLate);assert.equal(allocated(preview.before,other.needs[0].id),expectedEarly);
+ assert.equal(allocated(preview.after,replacement.needs[0].id),'4');assert.equal(allocated(preview.after,other.needs[0].id),'4');
+ for(const endpoint of ['/delivery-evidence/coverage','/pantry-lots/coverage','/meal-recovery/coverage']){
+   const coverage=ok(await call(f.owner,path+endpoint));
+   assert.equal(coverage.needs.find(n=>n.occurrenceId===late).covered.numerator,expectedLate);
+   assert.equal(coverage.needs.find(n=>n.occurrenceId===early).covered.numerator,expectedEarly);
+ }
+ const apply=command('mealRecovery.apply',{...input,previewId:preview.previewId,previewDigest:preview.previewDigest});
+ const receipt=ok(await send(apply));assert.deepEqual(ok(await send(apply)),receipt);
+ const current=ok(await call(f.owner,recovery+'/coverage'));assert(current.needs.every(n=>n.covered.numerator==='4'));
+});
+
+test('connected-shop allocation preserves PostgreSQL microsecond creation order and exact timestamp UUID ties',async()=>{
+ const {jointDeliveryInputs}=await import('../dist/delivery-evidence.js');
+ const f=await reservationFixture(),other=await f.shop(),initial=ok(await call(f.owner,f.base+'/shops/'+other));
+ const meal=structuredClone(f.meal),occurrenceId=randomUUID();
+ ok(await f.send({...f.command('shop.patch',{quote:initial.quote,lines:initial.lines,mealEdit:{occurrenceId,baseMealRevision:null,meal}}),
+   shopId:other,base:{shopRevision:1,authorityEpoch:1}}));
+ ok(await f.send({...f.command('shop.reportPlaced',{occurredAt:new Date().toISOString()}),shopId:other,base:{shopRevision:2,authorityEpoch:1}}));
+ const [low,high]=[f.shopId,other].sort();
+ const ordered=()=>repo.transaction(f.h,async(db,now)=>{
+   const member=await repo.member(db,f.h,{issuer,subject:f.owner.subject}),ctx={db,now,householdId:f.h,member};
+   const inputs=await jointDeliveryInputs(ctx,[low,high],[]);
+   const scopes=new Map(inputs.meals.map(m=>[m.shopId,m.allocationScope]));
+   return {ids:[...scopes.keys()],scopes};
+ });
+ // Date.toISOString() would truncate these to the same millisecond and then
+ // incorrectly put the lower UUID ahead of the genuinely older shop.
+ await admin.query("UPDATE ritc.shop SET created_at=CASE WHEN shop_id=$2 THEN '2026-11-01T00:00:00.000001Z'::timestamptz ELSE '2026-11-01T00:00:00.000002Z'::timestamptz END WHERE household_id=$1 AND shop_id=ANY($3::uuid[])",[f.h,high,[low,high]]);
+ const distinct=await ordered();assert.deepEqual(distinct.ids,[high,low]);assert(distinct.scopes.get(high)<distinct.scopes.get(low));
+ await admin.query("UPDATE ritc.shop SET created_at='2026-11-01T00:00:00.000001Z' WHERE household_id=$1 AND shop_id=ANY($2::uuid[])",[f.h,[low,high]]);
+ const tied=await ordered();assert.deepEqual(tied.ids,[low,high]);assert(tied.scopes.get(low)<tied.scopes.get(high));
+});

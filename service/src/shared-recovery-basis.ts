@@ -1,4 +1,5 @@
-import {createHash} from 'node:crypto';
+import {reviewedID} from './reviewed-identity.js';
+export {reviewedID} from './reviewed-identity.js';
 import {deliveryCoverage,type SealedMeal,type DeliverySource} from './delivery-coverage.js';
 import {requirePlaced,recordDelivery,requireCompatibleMatch,reviewReservation,validateReservation,lower} from './delivery-evidence.js';
 import {unavailable,ServiceError} from './errors.js';
@@ -19,14 +20,6 @@ type Stock=Awaited<ReturnType<typeof jointInputs>>;
 type Origin='delivery'|'pantry'|'freezer';
 interface ScopedMeal {shopId:string;sealed:SealedMeal;original:RecoveryMeal;current:RecoveryMeal|null}
 
-// UUIDv5 within the occurrence namespace. Scoped recipe copies can legitimately
-// reuse every ingredient, binding and named-group UUID of another dinner.
-export function reviewedID(occurrence:string,...parts:(string|number)[]){
-  const hash=createHash('sha1').update(Buffer.from(occurrence.replaceAll('-',''),'hex')).update(JSON.stringify(parts)).digest();
-  hash[6]=((hash[6]??0)&0x0f)|0x50;hash[8]=((hash[8]??0)&0x3f)|0x80;
-  const hex=hash.toString('hex',0,16);
-  return [hex.slice(0,8),hex.slice(8,12),hex.slice(12,16),hex.slice(16,20),hex.slice(20)].join('-');
-}
 const unique=<T>(values:T[])=>[...new Set(values)];
 export function sealedRecoveryMeal(fact:SealedMeal,shopId:string,sources:Stock['sources']):RecoveryMeal {
   const meal=sharedMealSchema.parse(fact.meal);
@@ -121,7 +114,7 @@ function effectiveGraph(stock:Stock,meals:ScopedMeal[]){
       }
       return {id:key,name:n.name,quantity:n.quantity,groupIds:ids,exclusions:n.exclusions};
     });
-    return [{...m.sealed,protectedIngredientIds:meal.needs.filter(n=>n.priority==='protected').map(n=>m.shopId+'/'+n.id),
+    return [{...m.sealed,allocationOrder:new Map(meal.needs.map(n=>[m.shopId+'/'+n.id,{id:n.id,due:n.due}])),protectedIngredientIds:meal.needs.filter(n=>n.priority==='protected').map(n=>m.shopId+'/'+n.id),
       meal:{...m.sealed.meal,title:meal.title,day:meal.day,portions:meal.portions,
       planning:{groups:meal.groups,ingredients}}}];
   });

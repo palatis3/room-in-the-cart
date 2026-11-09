@@ -1,14 +1,18 @@
 from pathlib import Path
 import io
 import itertools
+import json
 import os
+import shlex
+import sys
 import tempfile
+import textwrap
 import subprocess
 import unittest
 from unittest.mock import patch
 
 from plan_ios_performance_tests import (CLASS_PREFIX, METHODS, SUITE, UI_TARGET, performance_matrix,
-                                        plan_from_binary, select_matrix, validate_request, main)
+                                        plan_from_binary, select_matrix, validate_request, validate_diagnostics_request, main)
 
 
 def symbol(method, effects=""):
@@ -19,6 +23,34 @@ COMPILED = [symbol(METHODS["launch"]), symbol(METHODS["rendered"], " throws"), s
 
 
 class PlanIOSPerformanceTests(unittest.TestCase):
+    def test_diagnostics_admission_is_manual_single_case_and_never_acceptance(self):
+        for event, case, enforce, capture, preflight in itertools.product(
+                ('workflow_dispatch', 'pull_request', 'workflow_call'),
+                ('', 'launch', 'scroll', 'rendered'), ('false', 'true'),
+                ('false', 'true'), ('false', 'true')):
+            allowed = event == 'workflow_dispatch' and case in ('launch', 'scroll') and enforce == capture == preflight == 'false'
+            args = (event, case, 'true', enforce, capture, preflight)
+            with self.subTest(args=args):
+                if allowed: validate_diagnostics_request(*args)
+                else:
+                    with self.assertRaises(ValueError): validate_diagnostics_request(*args)
+        for enabled in ('', 'false'):
+            validate_diagnostics_request('workflow_call', '', enabled, 'true', '', '')
+        for enabled in ('YES', '1', None):
+            with self.assertRaises(ValueError):
+                validate_diagnostics_request('workflow_dispatch', 'scroll', enabled, 'false', 'false', 'false')
+
+    def test_invalid_diagnostics_cli_rejects_before_native_inventory(self):
+        with patch('sys.argv', ['planner', 'fixture.xctest']), \
+                patch.dict(os.environ, {'GITHUB_EVENT_NAME': 'workflow_dispatch',
+                    'REQUESTED_PERFORMANCE_CASE': 'scroll', 'ENABLE_PERFORMANCE_DIAGNOSTICS': 'true',
+                    'ENFORCE_BASELINES': 'true'}, clear=True), \
+                patch('plan_ios_performance_tests.subprocess.check_output') as native, \
+                patch('sys.stderr', new_callable=io.StringIO), self.assertRaises(SystemExit) as result:
+            main()
+        self.assertEqual(result.exception.code, 1)
+        native.assert_not_called()
+
     def test_normal_and_release_selection_keeps_all_cases(self):
         full = performance_matrix("\n".join(COMPILED))
         for event in ("pull_request", "workflow_call", "workflow_dispatch", "push", ""):
@@ -113,6 +145,80 @@ class FreshPerformanceWorkflowTests(unittest.TestCase):
         self.plan = self.text[self.text.index('  performance-plan:'):self.text.index('  performance-build:')]
         self.build = self.text[self.text.index('  performance-build:'):self.text.index('  performance-tests:')]
         self.consumer = self.text[self.text.index('  performance-tests:'):]
+
+    def test_diagnostics_default_is_off_and_not_a_reusable_release_input(self):
+        dispatch, reusable = self.text.split('  workflow_call:', 1)
+        self.assertIn('      enable_performance_diagnostics:\n        description: Collect a trace for one launch or scroll case (diagnostic only, no baseline approval)\n        type: boolean\n        default: false', dispatch)
+        self.assertNotIn('enable_performance_diagnostics', reusable.split('permissions:', 1)[0])
+        self.assertIn('ENABLE_PERFORMANCE_DIAGNOSTICS: ${{ inputs.enable_performance_diagnostics || false }}', self.text)
+        self.assertIn('CAPTURE_SCROLL_SIGNPOSTS: ${{ inputs.capture_scroll_signposts || false }}', self.text)
+        self.assertIn('CAPTURE_PREFLIGHT_ONLY: ${{ inputs.capture_preflight_only || false }}', self.text)
+
+    def test_actual_consumer_shell_keeps_default_argv_and_diagnostic_failures(self):
+        block = self.consumer.split('      - name: Run one Release performance case\n', 1)[1].split('      - name:', 1)[0]
+        script = textwrap.dedent(block.split('        run: |\n', 1)[1])
+        for option in ('capture_scroll_signposts', 'fresh_performance_simulator'):
+            script = script.replace('${{ inputs.' + option + ' }}', 'false')
+        planner = Path(__file__).resolve().with_name('plan_ios_performance_tests.py')
+        selector = f'{UI_TARGET}/{SUITE}/{METHODS["scroll"]}'
+        plan = '.build/DerivedData/Build/Products/RoomInTheCart-Performance_iphonesimulator27.1-arm64.xctestrun'
+        expected = ['-xctestrun', plan, '-destination', 'platform=iOS Simulator,id=fixture-device',
+                    '-parallel-testing-enabled', 'NO', '-test-timeouts-enabled', 'YES',
+                    '-default-test-execution-time-allowance', '900', '-maximum-test-execution-time-allowance', '1200',
+                    '-resultBundlePath', '.build/performance/Performance.xcresult', '-collect-test-diagnostics', 'on-failure',
+                    '-only-testing:' + selector]
+        for enabled, enforce, native_exit in (('false', 'true', 0), ('false', 'true', 17),
+                                               ('true', 'false', 0), ('true', 'false', 17), ('true', 'true', 0)):
+            with self.subTest(enabled=enabled, enforce=enforce, native_exit=native_exit), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                (root / plan).parent.mkdir(parents=True); (root / plan).write_text('immutable-plan')
+                evidence = root / '.build/performance'; evidence.mkdir(); (evidence / 'selector.txt').write_text(selector + '\n')
+                for name, source in {
+                    'xcodebuild': '#!/bin/sh\nprintf "%s\\0" "$@" > "$ARGUMENTS"\nprintf "native diagnostic\\n" >&2\nexit "$NATIVE_EXIT"\n',
+                    'python3': '#!/bin/sh\nshift\nexec ' + shlex.quote(sys.executable) + ' ' + shlex.quote(str(planner)) + ' "$@"\n',
+                }.items():
+                    f = root / name; f.write_text(source); f.chmod(0o755)
+                args = root / 'arguments'
+                env = dict(os.environ, PATH=str(root) + os.pathsep + os.defpath, ARGUMENTS=str(args),
+                           NATIVE_EXIT=str(native_exit), SIMULATOR_ID='fixture-device', ENABLE_PERFORMANCE_DIAGNOSTICS=enabled,
+                           GITHUB_EVENT_NAME='workflow_dispatch', REQUESTED_PERFORMANCE_CASE='scroll', ENFORCE_BASELINES=enforce,
+                           CAPTURE_SCROLL_SIGNPOSTS='false', CAPTURE_PREFLIGHT_ONLY='false')
+                r = subprocess.run(['bash', '--noprofile', '--norc', '-e', '-o', 'pipefail', '-c', script],
+                                   cwd=root, env=env, capture_output=True, text=True, timeout=10)
+                if enabled == enforce == 'true':
+                    self.assertEqual(r.returncode, 1); self.assertFalse(args.exists())
+                else:
+                    self.assertEqual(r.returncode, native_exit, r.stderr)
+                    self.assertEqual(args.read_bytes().decode().split('\0')[:-1], expected +
+                        (['-enablePerformanceTestsDiagnostics', 'YES'] if enabled == 'true' else []) + ['test-without-building'])
+                    self.assertEqual((evidence / 'Performance.log').read_text(), 'native diagnostic\n')
+                self.assertEqual((root / plan).read_text(), 'immutable-plan')
+
+    def test_diagnostics_export_retains_status_and_propagates_failure(self):
+        block = self.consumer.split('      - name: Export requested performance diagnostics\n', 1)[1].split('      - name:', 1)[0]
+        self.assertIn('if: always() && inputs.enable_performance_diagnostics', block)
+        self.assertIn('timeout-minutes: 2', block)
+        self.assertNotIn('continue-on-error', block)
+        script = textwrap.dedent(block.split('        run: |\n', 1)[1])
+        for present, status, expected in ((True, 0, 'exported'), (True, 19, 'export_failed'), (False, 0, 'missing_result')):
+            with self.subTest(present=present, status=status), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp); evidence = root / '.build/performance'; evidence.mkdir(parents=True)
+                if present: (evidence / 'Performance.xcresult').mkdir()
+                stub = root / 'xcrun'; stub.write_text('#!/bin/sh\nprintf "%s\\n" "$@" > "$ARGUMENTS"\nprintf "export diagnostic\\n" >&2\nexit "$EXPORT_EXIT"\n'); stub.chmod(0o755)
+                args = root / 'arguments'
+                r = subprocess.run(['bash', '-e', '-o', 'pipefail', '-c', script], cwd=root,
+                    env=dict(os.environ, PATH=str(root) + os.pathsep + os.defpath, ARGUMENTS=str(args), EXPORT_EXIT=str(status)),
+                    capture_output=True, text=True, timeout=10)
+                self.assertEqual(r.returncode, status if present else 1)
+                receipt = json.loads((evidence / 'performance-diagnostics.json').read_text())
+                self.assertEqual(receipt['status'], expected); self.assertIs(receipt['diagnosticOnly'], True)
+                self.assertIs(receipt['releaseAcceptance'], False)
+                if present:
+                    self.assertEqual(receipt['exitCode'], status)
+                    self.assertEqual(args.read_text().splitlines(), ['xcresulttool', 'export', 'diagnostics', '--path',
+                        '.build/performance/Performance.xcresult', '--output-path', '.build/performance/performance-diagnostics'])
+                    self.assertEqual((evidence / 'performance-diagnostics-export.log').read_text(), 'export diagnostic\n')
+                else: self.assertFalse(args.exists())
 
     def test_fresh_pilot_admission_executes_actual_linux_guard(self):
         start = self.plan.index('          if [[ "${{ inputs.fresh_performance_simulator }}" == true ]]; then')

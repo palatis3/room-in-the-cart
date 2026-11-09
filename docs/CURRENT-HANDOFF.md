@@ -35,7 +35,7 @@ New: copy only changed source bytes/modes when assembling successors, preserving
 unchanged modification times. The performance simulator producer now explicitly
 builds arm64 only, removing unused Intel compilation from that lane. Generated
 Release defaults, device archives, consumers and strict gates are unchanged.
-433 offline checks and all 17 workflow queue definitions pass. The optimized hosted producer, actual arm64 products and original native scroll
+438 offline checks and all 17 workflow queue definitions pass. The optimized hosted producer, actual arm64 products and original native scroll
 now pass. Required hosted scroll duration remains missing; the 451-versus-618-second
 build observation is not a controlled speed comparison.
 
@@ -45,6 +45,16 @@ The only approved performance profile is 26.3/17C529 with iOS 26.2/23C54; 27.1 r
 unapproved. Do not dispatch full release expecting this mismatch to pass.
 
 ## New verified changes
+
+0. **Shared recovery ordering:** a real original-product HTTP negative control
+   reproduced a feasible repair rejected because coverage and recovery assigned
+   scarce stock in different orders. Both now preserve protected/named priorities,
+   exact connected-shop precedence, then deadline and reviewed need identity.
+   Numeric scope ordinals preserve SQL microsecond ordering. Strict verifier and
+   reviewed UUID generation unchanged. Seven focused HTTP, 93 domain, 452 fast
+   (one DB-only skip) and 257 broad integration checks (three browser-only skips)
+   pass. Disposable DB stopped/removed; no migration/deployment/native change.
+   [Proof](evidence/service/shared-recovery-order-20261109/README.md).
 
 1. **Shared exclusion matches:** original HTTP negative controls reproduced two
    incorrect 200 responses. Pantry/delivery now reject explicit conflicts with 409
@@ -90,6 +100,20 @@ the prior dual-architecture command, so it does not qualify the optimized produc
 
 ## Remaining diagnostic work
 
+- New manual `enable_performance_diagnostics` is false by default, single launch/scroll
+  only, baseline enforcement off, and incompatible with another live collector.
+  Ordinary commands, original tests and same-run provenance remain intact. Available
+  diagnostics export to existing evidence; failed export fails visibly.
+  One local original scroll with the supported flag passes native (92.578s), strict
+  and complete required metrics, but retains no trace. Session explicitly records
+  `enablePerformanceTestsDiagnostics:1`, `traceCollectionEnabled:(null)`; eight
+  exported files contain only logs, screenshot and loaded-image JSON. No proven
+  transport error or capture-start. Do not dispatch a hosted repeat until a useful
+  collection mechanism/discriminator is established. Source/products/original
+  results unchanged; inspection used a verified clone. All processes terminal.
+  [Proof](evidence/native/performance-diagnostics-20261109/README.md);
+  originals `.build/PerformanceLoadedImagesNov09/execution-r1/.build/performance-trace-r1/`.
+
 - Latest hosted 42639339096 attempt 1 at dc343f3e is terminal failure: arm64-only
   producer, immutable plan/products, native 1/1 and cleanup pass; required scroll
   duration is absent, with only 3 memory series × 5. Selected-runtime bytes match
@@ -117,10 +141,14 @@ the prior dual-architecture command, so it does not qualify the optimized produc
   The later direct-label query experiment also failed and is not installed; its
   source/products are archived. No unchanged query/resource/checker-suppression retry.
   [First-fault proof](evidence/native/minimum-os-first-fault-20261109/README.md).
-- Private Apple report approval remains pending. Nothing sent. Exact package:
+- The owner approved the private Apple report, accepted Feedback Assistant's
+  first-use terms and signed in. Its XCTest report form is filled; the attachment
+  chooser has not opened through computer control, and the owner has been asked
+  to open it directly. No submission confirmation yet. Exact approved package:
   `.build/MinimumOSXCTestReproducerNov09/apple-report-draft/reviewed-first-fault-package/`
-  with REPORT.md, 10 KB capture and manifest only. Do not resend the question or submit
-  without the user's answer.
+  with REPORT.md, 10 KB capture and manifest only. Approval persists: finish that
+  exact submission and record Apple's confirmation; do not request approval again
+  or include automatic system diagnostics.
 
 Then finish remaining fixes, freeze one final commit, run full combined regression,
 review required checks and merge only when its gates pass. Focused results from

@@ -13,6 +13,12 @@
 4. Combine verified fixes into one PR regression batch. Full release checks must
    pass at the final combined revision; focused passes are supporting evidence.
 
+Wait for every producing build to finish before starting checks that consume its
+output. This also applies to TypeScript service tests: do not start database/HTTP
+tests while `tsc` is still replacing `dist` files. Bind the source and compiled
+output hashes to the finished attempt, and serialize source changes, builds and
+dependent tests. Independent read-only reviews can continue in parallel.
+
 ### Candidate qualification order
 
 Use this order for the combined candidate going forward:
@@ -170,6 +176,29 @@ toolchains. Historical results and their original environment identities remain
 historical evidence.
 
 ### Performance calibration blocks release until approved
+
+For a missing launch or scroll measurement, the manual performance workflow has
+an opt-in `enable_performance_diagnostics=true` setting. Use it with exactly one
+`case=launch` or `case=scroll` and `enforce_baselines=false`. The Linux planner
+rejects full-suite, release-enforced and concurrent live-collector combinations
+before allocating a native runner. Ordinary runs keep the existing command.
+The diagnostic adds Apple's `-enablePerformanceTestsDiagnostics YES`, preserves
+the original test and strict measurement checks, and exports available diagnostics
+alongside the result bundle. An export failure stays visible as a failed step;
+successful export alone does not prove that a useful performance trace exists.
+
+Inspect the retained trace for the application's events and actual measurement
+windows before choosing another experiment. Missing events are inconclusive
+without verified capture coverage. If enabling diagnostics makes a previously
+missing metric appear, that is evidence of changed instrumentation behavior,
+not an approved performance baseline. Diagnostic runs never substitute for the
+ordinary combined candidate's regression and performance checks.
+
+Preserve the same-run producer/consumer provenance contract. Reusing an artifact
+from a different workflow run is not authorized merely because its source SHA
+matches; do not spoof run identity or rewrite the plan to bypass that guard.
+Use already-compatible local products for a local control, or one fresh hosted
+producer when a changed workflow needs hosted qualification.
 
 The approved performance profile remains byte-for-byte unchanged at Xcode
 26.3/17C529, iOS 26.2/23C54, iPhone 17, arm64, Release/TestSchemeAction. It cannot

@@ -1,10 +1,16 @@
-import { type Edge, connect, allocate } from './physical-allocation.js';
+import { type Edge, connect, allocate, compareDemandOrder } from './physical-allocation.js';
 import type { Quantity } from './recovery-contracts.js';
 import type { SharedMealValue } from './shared-meal-planning.js';
+import {reviewedID} from './reviewed-identity.js';
 import { exclusionConflict } from './recovery-domain.js';
 import { type Rat, zero, add, sub, min, amount, dimension, inUnit } from './physical-quantity.js';
 
-export interface SealedMeal { occurrenceId:string; revision:number; meal:SharedMealValue; protectedIngredientIds?:string[] }
+export interface SealedMeal {
+  occurrenceId:string; revision:number; meal:SharedMealValue; protectedIngredientIds?:string[];
+  shopId?:string; allocationScope?:number;
+  // Effective recovery ingredients each represent one already-reviewed need.
+  allocationOrder?:ReadonlyMap<string,{id:string;due:string|null}>;
+}
 export interface Match { occurrenceId:string; mealRevision:number; ingredientId:string }
 export interface ReservationHead extends Match {
   groupId:string; reservationId:string; quantity:Quantity|null;
@@ -17,6 +23,7 @@ type Issue = 'unknownQuantity'|'unknownSplit'|'noMatch'|'unconfirmed'|'unitMisma
 interface Need extends Match {
   groupIds:string[]; protected:boolean; required:Quantity|null; issues:Set<Issue>;
   eligible:DeliverySource[];
+  order:{id:string;due:string|null;scope?:number};
 }
 const targetKey = (target:Match) => [target.occurrenceId,target.mealRevision,target.ingredientId].join('/');
 
@@ -36,7 +43,7 @@ export function deliveryCoverage(meals:SealedMeal[],sources:DeliverySource[]) {
   }
   const needs:Need[]=[];
   const unplannedOccurrenceIds:string[]=[];
-  for(const {occurrenceId,revision,meal,protectedIngredientIds} of meals) {
+  for(const {occurrenceId,revision,meal,protectedIngredientIds,shopId,allocationScope,allocationOrder} of meals) {
     const plan=meal.planning;
     if(!plan?.ingredients.length) { unplannedOccurrenceIds.push(occurrenceId);continue; }
     for(const ingredient of plan.ingredients) {
@@ -59,7 +66,13 @@ export function deliveryCoverage(meals:SealedMeal[],sources:DeliverySource[]) {
           return true;
         });
         const protectedGroup=protectedIngredientIds?.includes(ingredient.id) || meal.protected || plan.groups.some(g=>g.protected && groupIds.includes(g.id));
-        needs.push({...target,groupIds,required,protected:protectedGroup,issues,eligible});
+        const [scope,occurrence]=occurrenceId.includes('/')?occurrenceId.split('/'):[shopId,occurrenceId];
+        const reviewed=allocationOrder?.get(ingredient.id)??{
+          id:scope?reviewedID(occurrence!,scope,revision,'need',ingredient.id,...groupIds):[occurrence,ingredient.id,...groupIds].join('/'),
+          due:plan.deadline?.at??null,
+        };
+        const order={...reviewed,id:scope?scope+'/'+reviewed.id:reviewed.id,...(allocationScope===undefined?{}:{scope:allocationScope})};
+        needs.push({...target,groupIds,required,protected:protectedGroup,issues,eligible,order});
       }
     }
   }
@@ -88,8 +101,9 @@ export function deliveryCoverage(meals:SealedMeal[],sources:DeliverySource[]) {
   // Each priority first sets aside its named amounts on their exact sources. A
   // source-to-sink path can reroute earlier flexible allocations without undoing
   // their coverage. Fixed quantities have no reverse edge to another source.
+  const ordered=[...rows].sort((a,b)=>compareDemandOrder(a.need.order,b.need.order));
   for(const priority of [true,false]) {
-    const group=rows.filter(row=>row.need.protected===priority);
+    const group=ordered.filter(row=>row.need.protected===priority);
     for(const row of group) for(const pin of row.reservations) {
       const requested=amount(pin.quantity);
       if(row.need.required && row.edges.some(edge=>edge.sourceId===pin.sourceId)) {
@@ -103,7 +117,7 @@ export function deliveryCoverage(meals:SealedMeal[],sources:DeliverySource[]) {
     for(const row of group) row.missing=allocate(graph,row.index,sink,row.missing);
   }
   return {unplannedOccurrenceIds, needs:rows.map(({need,edges,reservations,missing})=>{
-    const {eligible,issues,required,...identity}=need;
+    const {eligible,issues,required,order,...identity}=need;
     const fixed=new Map(reservations.map(pin=>[pin.sourceId,pin.backed]));
     return {...identity,required,issues:[...issues],covered:required?inUnit(sub(amount(required),missing),required.unit):null,
       missing:required?inUnit(missing,required.unit):null,

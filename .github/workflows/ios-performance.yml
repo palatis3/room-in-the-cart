@@ -1,5 +1,5 @@
 name: iOS Release performance
-run-name: iOS performance · ${{ inputs.case || 'all' }}${{ inputs.capture_preflight_only && ' · capability-only' || '' }}${{ inputs.capture_scroll_signposts && ' · signpost capture (diagnostic only)' || '' }}${{ inputs.fresh_performance_simulator && ' · fresh simulator (diagnostic only)' || '' }}
+run-name: iOS performance · ${{ inputs.case || 'all' }}${{ inputs.capture_preflight_only && ' · capability-only' || '' }}${{ inputs.capture_scroll_signposts && ' · signpost capture (diagnostic only)' || '' }}${{ inputs.fresh_performance_simulator && ' · fresh simulator (diagnostic only)' || '' }}${{ inputs.enable_performance_diagnostics && ' · performance trace (diagnostic only)' || '' }}
 
 on:
   pull_request:
@@ -42,6 +42,10 @@ on:
         description: One original scroll case on a new job-owned simulator (calibration only)
         type: boolean
         default: false
+      enable_performance_diagnostics:
+        description: Collect a trace for one launch or scroll case (diagnostic only, no baseline approval)
+        type: boolean
+        default: false
       enforce_baselines:
         description: Require approved limits for this Xcode and simulator environment
         type: boolean
@@ -57,7 +61,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: ios-performance-${{ github.workflow }}-${{ github.ref }}${{ inputs.capture_scroll_signposts && '-scroll-capture' || '' }}${{ inputs.capture_preflight_only && '-capabilities-only' || '' }}${{ inputs.fresh_performance_simulator && '-fresh-simulator' || '' }}
+  group: ios-performance-${{ github.workflow }}-${{ github.ref }}${{ inputs.capture_scroll_signposts && '-scroll-capture' || '' }}${{ inputs.capture_preflight_only && '-capabilities-only' || '' }}${{ inputs.fresh_performance_simulator && '-fresh-simulator' || '' }}${{ inputs.enable_performance_diagnostics && '-performance-diagnostics' || '' }}
   cancel-in-progress: true
 
 env:
@@ -66,6 +70,9 @@ env:
   CI_IPHONE_NAME: iPhone 17
   ENFORCE_BASELINES: ${{ github.event_name == 'pull_request' || inputs.enforce_baselines }}
   REQUESTED_PERFORMANCE_CASE: ${{ github.event_name == 'workflow_dispatch' && inputs.case != 'all' && inputs.case || '' }}
+  ENABLE_PERFORMANCE_DIAGNOSTICS: ${{ inputs.enable_performance_diagnostics || false }}
+  CAPTURE_SCROLL_SIGNPOSTS: ${{ inputs.capture_scroll_signposts || false }}
+  CAPTURE_PREFLIGHT_ONLY: ${{ inputs.capture_preflight_only || false }}
 
 jobs:
   performance-plan:
@@ -285,6 +292,11 @@ jobs:
           test_runs=(.build/DerivedData/Build/Products/RoomInTheCart-Performance_iphonesimulator*.xctestrun)
           test "${#test_runs[@]}" -eq 1
           test -f "${test_runs[0]}"
+          diagnostics=()
+          if [[ "$ENABLE_PERFORMANCE_DIAGNOSTICS" == true ]]; then
+            python3 scripts/plan_ios_performance_tests.py --validate-request
+            diagnostics=(-enablePerformanceTestsDiagnostics YES)
+          fi
           capture=()
           if [[ "${{ inputs.capture_scroll_signposts }}" == true ]]; then
             test "$PERFORMANCE_CASE" = scroll
@@ -299,7 +311,7 @@ jobs:
             -parallel-testing-enabled NO -test-timeouts-enabled YES \
             -default-test-execution-time-allowance 900 -maximum-test-execution-time-allowance 1200 \
             -resultBundlePath .build/performance/Performance.xcresult -collect-test-diagnostics on-failure \
-            "-only-testing:$(cat .build/performance/selector.txt)" test-without-building \
+            "-only-testing:$(cat .build/performance/selector.txt)" "${diagnostics[@]}" test-without-building \
             2>&1 | tee .build/performance/Performance.log
       - name: Export available XCTest metrics, attachments and test results
         if: always()
@@ -312,6 +324,27 @@ jobs:
             xcrun xcresulttool get test-results metrics --path "$result" --compact > "$evidence/metrics.json" || echo '::warning::XCTest metric JSON export unavailable.'
             xcrun xcresulttool export metrics --path "$result" --output-path "$evidence/metrics-csv" || echo '::warning::XCTest metrics CSV export unavailable.'
             xcrun xcresulttool export attachments --path "$result" --output-path "$evidence/attachments" || echo '::warning::XCTest attachments export unavailable.'
+          fi
+      - name: Export requested performance diagnostics
+        if: always() && inputs.enable_performance_diagnostics
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          evidence=.build/performance
+          mkdir -p "$evidence"
+          receipt="$evidence/performance-diagnostics.json"
+          printf '%s\n' '{"diagnosticOnly":true,"releaseAcceptance":false,"status":"export_started"}' > "$receipt"
+          if [[ ! -d "$evidence/Performance.xcresult" ]]; then
+            printf '%s\n' '{"diagnosticOnly":true,"releaseAcceptance":false,"status":"missing_result"}' > "$receipt"
+            exit 1
+          fi
+          if xcrun xcresulttool export diagnostics --path "$evidence/Performance.xcresult" \
+              --output-path "$evidence/performance-diagnostics" > "$evidence/performance-diagnostics-export.log" 2>&1; then
+            printf '%s\n' '{"diagnosticOnly":true,"releaseAcceptance":false,"status":"exported","exitCode":0}' > "$receipt"
+          else
+            status=$?
+            printf '{"diagnosticOnly":true,"releaseAcceptance":false,"status":"export_failed","exitCode":%s}\n' "$status" > "$receipt"
+            exit "$status"
           fi
       - name: Capture scroll signpost diagnostic
         if: always() && matrix.case == 'scroll'

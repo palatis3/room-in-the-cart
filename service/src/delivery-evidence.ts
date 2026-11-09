@@ -83,14 +83,19 @@ export async function jointDeliveryInputs(ctx:Context,shopIds:string[],lotIds:st
     WHERE ss.household_id=$1 AND ss.shop_id=ANY($2::uuid[]) ORDER BY sh.created_at,sh.shop_id,m.meal->>'day',m.occurrence_id`,[ctx.householdId,shopIds]);
   const sources=await ctx.db.query<SourceRow>(sourceHeads+` WHERE s.household_id=$1 AND s.shop_id=ANY($2::uuid[])
     AND ($4::boolean OR s.source_id=ANY($3::uuid[]) OR jsonb_array_length(matches.current)>0) ORDER BY s.source_id`,[ctx.householdId,shopIds,lotIds,includeInventory]);
-  return {meals:meals.rows,sources:sources.rows.map(r=>({shopId:r.shop_id,physical:sourceEvidence(r,ctx.now.toISOString())}))};
+  // Keep PostgreSQL's exact creation-time/UUID order. JS Date would discard
+  // sub-millisecond precision and could reverse two existing commitments.
+  const scopes=new Map<string,number>();
+  for(const meal of meals.rows) if(!scopes.has(meal.shopId)) scopes.set(meal.shopId,scopes.size);
+  return {meals:meals.rows.map(meal=>({...meal,allocationScope:scopes.get(meal.shopId)!})),
+    sources:sources.rows.map(r=>({shopId:r.shop_id,physical:sourceEvidence(r,ctx.now.toISOString())}))};
 }
 async function coverageInputs(ctx:Context,shop:Shop) {
   const scope=[ctx.householdId,shop.shop_id];
   const meals=await ctx.db.query<SealedMeal>(sealedMeals+" ORDER BY m.meal->>'day',m.occurrence_id",[...scope,shop.placed_revision]);
   const sources=await ctx.db.query<SourceRow>(heads+" AND jsonb_array_length(matches.current)>0 ORDER BY s.source_id",scope);
   const asOf=ctx.now.toISOString();
-  return {meals:meals.rows,sources:sources.rows.map(row=>sourceEvidence(row,asOf)),asOf};
+  return {meals:meals.rows.map(meal=>({...meal,shopId:shop.shop_id})),sources:sources.rows.map(row=>sourceEvidence(row,asOf)),asOf};
 }
 
 export async function readDeliveryCoverage(ctx:Context,shop:Shop) {

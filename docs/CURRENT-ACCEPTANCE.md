@@ -15,7 +15,19 @@ PID, including Main Thread Checker UUID; RPAC is not observed in either. Filesys
 path absence does not establish absent runner loading. The metric collection cause
 remains open. [Hosted proof](evidence/native/hosted-arm64-observer-20261109/README.md).
 No new performance baseline, full combined acceptance or merge is approved.
-All 433 offline checks and 17 native queue-definition checks pass for the code update.
+All 438 offline checks and 17 native queue-definition checks pass for the latest
+workflow update. Its opt-in performance diagnostic preserves default commands and
+rejects release-enforced requests. One local original scroll control passes native,
+strict and required measurements, but the accepted diagnostics flag retains no
+trace. No hosted repeat is justified by that control yet.
+[Diagnostic option and limits](evidence/native/performance-diagnostics-20261109/README.md).
+
+Shared recovery now consistently orders scarce-stock allocation across delivery,
+pantry and effective repair projections. An original HTTP negative control failed;
+the final fix passes seven focused HTTP, 93 domain, 452 fast service and 257 broad
+integration checks. Protected portions, reservations, exact older-shop precedence
+and strict verification remain intact. No deployment or new native acceptance.
+[Ordering regression proof](evidence/service/shared-recovery-order-20261109/README.md).
 
 Shared match acceptance is now corrected locally: explicit exclusions reject new
 pantry and delivery matches before saving, including effective recovery needs.

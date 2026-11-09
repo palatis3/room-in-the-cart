@@ -163,3 +163,40 @@ test('named amounts report exact converted fractions and remain held back for un
  assert.deepEqual(row.reservations[0].backed,value(0));assert.deepEqual(row.allocations,[]);
  assert.ok(row.issues.includes('protectedQuantityUnknown') && row.issues.includes('reservationShortfall'));
 });
+
+test('deadline ordering is stable under meal permutations while protection and named promises retain priority',()=>{
+ const late=meal('late',q(4)),early=meal('early',q(4)),lunch=meal('lunch',q(2),{protectedMeal:true});
+ early.meal.planning.deadline={at:'2026-11-07T18:00:00Z',zone:'UTC'};
+ late.meal.planning.deadline={at:'2026-11-07T19:00:00Z',zone:'UTC'};
+ const lot=source('shared',q(8),['late','early','lunch']);
+ // A named promise is backed within its tier before flexible demand; protection
+ // still precedes every required promise, even with no known lunch deadline.
+ lot.reservations=[{reservationId:'promise',occurrenceId:'late',mealRevision:2,ingredientId:'wrap',groupId:'plates',quantity:q(3)}];
+ late.meal.planning.groups=[{id:'plates',protected:false}];late.meal.planning.ingredients[0].groupIds=['plates'];
+ for(const meals of [[late,early,lunch],[lunch,early,late],[early,late,lunch]]){
+   for(const quantity of [8,3]){
+     const result=deliveryCoverage(meals,[{...lot,confirmed:{quantity:q(quantity)}}]);
+     const byID=Object.fromEntries(result.needs.map(n=>[n.occurrenceId,n]));
+     assert.deepEqual(byID.lunch.covered,value(2));
+     assert.deepEqual(byID.late.covered,value(quantity===8?3:1));
+     assert.deepEqual(byID.early.covered,value(quantity===8?3:0));
+     assert.deepEqual(byID.late.reservations[0].backed,value(quantity===8?3:1));
+     assert.equal(result.needs.reduce((sum,n)=>sum+Number(n.covered.numerator),0),quantity);
+   }
+   const unreserved=deliveryCoverage(meals,[{...lot,reservations:[]}]);
+   assert.deepEqual(unreserved.needs.find(n=>n.occurrenceId==='early').covered,value(4));
+   assert.deepEqual(unreserved.needs.find(n=>n.occurrenceId==='late').covered,value(2));
+ }
+});
+
+test('a later connected shop cannot reorder an older shop commitment by deadline or occurrence identity',()=>{
+ const older={...meal('z-older',q(4)),allocationScope:0};
+ const later={...meal('a-later',q(4)),allocationScope:1};
+ later.meal.planning.deadline={at:'2026-11-07T18:00:00Z',zone:'UTC'};
+ const lot=source('shared',q(6),['z-older','a-later']);
+ for(const meals of [[older,later],[later,older]]){
+   const result=deliveryCoverage(meals,[lot]);
+   assert.deepEqual(result.needs.find(n=>n.occurrenceId==='z-older').covered,value(4));
+   assert.deepEqual(result.needs.find(n=>n.occurrenceId==='a-later').covered,value(2));
+ }
+});

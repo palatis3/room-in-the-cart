@@ -1,5 +1,15 @@
 import { type Rat, zero, add, sub, min } from './physical-quantity.js';
 
+// Within a protection/reservation tier, preserve the established order of
+// connected shops. Within one shop, known deadlines precede unknown ones and
+// stable reviewed need identity breaks ties independently of query/input order.
+export function compareDemandOrder(a:{due:string|null;id:string;scope?:number},b:{due:string|null;id:string;scope?:number}) {
+  const scope=(a.scope??0)-(b.scope??0);
+  if(scope) return scope;
+  const deadline=(a.due===null?Infinity:Date.parse(a.due))-(b.due===null?Infinity:Date.parse(b.due));
+  return deadline || (a.id<b.id?-1:a.id>b.id?1:0);
+}
+
 export interface Edge { to:number; capacity:Rat; reverse:Edge }
 export function connect(graph:Edge[][],from:number,to:number,capacity:Rat):Edge {
   const reverse = {to:from,capacity:zero} as Edge;

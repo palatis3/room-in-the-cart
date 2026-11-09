@@ -1,5 +1,5 @@
 import {type Rat,zero,add,sub,cmp,min,wire,amount,inUnit,dimension} from './physical-quantity.js';
-import {type Edge, connect, allocate as sendFlow} from './physical-allocation.js';
+import {type Edge, connect, compareDemandOrder, allocate as sendFlow} from './physical-allocation.js';
 import {createHash} from 'node:crypto';
 import {recoveryBasisSchema,recoveryPreviewSchema,type RecoveryBasis,type RecoveryMeal,type RecoveryNeed,type Quantity} from './recovery-contracts.js';
 
@@ -209,8 +209,7 @@ function allocateLegacy(b: RecoveryBasis, needs: KnownNeed[], lots: PhysicalLot[
   // before any required dinner, including one with a physical-source pin.
   const rank = (need: KnownNeed) => need.priority === 'protected' ? 0 : pins.get(need.id)!.length ? 1 : 2;
   const ordered = [...needs].sort((a, c) => rank(a) - rank(c) ||
-    (a.due === null ? Infinity : instant(a.due)) - (c.due === null ? Infinity : instant(c.due)) ||
-    (a.id < c.id ? -1 : 1));
+    compareDemandOrder(a,c));
 
   for (const need of ordered) {
     const food = b.foods.find(value => value.id === need.foodId);
@@ -345,9 +344,7 @@ function allocate(b:RecoveryBasis, needs:RecoveryNeed[], lots:PhysicalLot[], asO
     }
   }
 
-  const sorted = [...rows].sort((a,c) =>
-    (a.need.due === null ? Infinity : instant(a.need.due)) - (c.need.due === null ? Infinity : instant(c.need.due)) ||
-    (a.need.id < c.need.id ? -1 : 1));
+  const sorted = [...rows].sort((a,c) => compareDemandOrder(a.need,c.need));
   for (const priority of ['protected','required']) {
     const group = sorted.filter(row => row.need.priority === priority);
     for (const row of group) {

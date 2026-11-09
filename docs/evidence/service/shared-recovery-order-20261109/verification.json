@@ -1,0 +1,82 @@
+{
+  "base_head": "44de9a5e81329290e0695592a7202e12bcabf0c2",
+  "branch": "codex/parallel-ios-ci",
+  "requirements": [
+    "P04: feasible recovery from actual fill, exclusions, timing and protected portions",
+    "B04/B08: manual dinner repair preserving existing commitments"
+  ],
+  "ordering": [
+    "protected before required",
+    "named reservations before flexible demand within each priority",
+    "existing connected-shop order from exact PostgreSQL created_at then shop_id",
+    "known meal deadlines ascending within a shop; unknown deadlines last",
+    "stable reviewed need identity tie-breaker"
+  ],
+  "source_sha256": {
+    "service/src/delivery-coverage.ts": "4e9b49173baf11c716f79c76027f5e43fe3c317ee825879e4ded6f9c92f77d7a",
+    "service/src/delivery-evidence.ts": "e2f440a1c2aa81da15af715019b759d3e648bdd2b1413e0400d5db2ad6947b78",
+    "service/src/physical-allocation.ts": "7278f9dcb35115fc302fedadfa7c2314eed42bfa972d35c7e1952014568ab44b",
+    "service/src/recovery-domain.ts": "dcfec2f277685db9400ece289fd514303406047e4bc87a1cfeee2cb5fb13a9f3",
+    "service/src/shared-recovery-basis.ts": "985aa25c9e7cbd7930910ecf678ec2df28492cb9c2678bccf52f0a4ca25e29fe",
+    "service/src/reviewed-identity.ts": "6578a35bea8823c9c5443e46013d90956373bee0dcd6a3d5ce7ea035d442703f",
+    "service/tests/delivery-coverage.test.mjs": "2bfea2258dda73c07ca948e3f407f65e8939c56737348aa92bbb2e17051504cb",
+    "service/tests/shared-meal-changes.integration.mjs": "289639fb92a9e64324765fdd05695e2148cba3bedf3f5917f3d6f43c789c02c1"
+  },
+  "evidence_sha256": {
+    "original-http-negative.log": "fcfa2f85328998c24e4ede4a15cbdb45e548c27d9a39f75b63d9955f51252a58",
+    "original-http-negative.patch": "9097db7c5a1c04fd007a2f7545dc1784646666bc7abb0e8e65fefc5b45b8019f",
+    "intermediate-microsecond-negative.log": "28084928c430344cfc80800346f14f4ae4a3733e841148a33ba4b8151ec0e0a7",
+    "build.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "focused-http.log": "b84723b6fa1dea8ad4319b972f120677310b4203e82ec582b6cad0de83afa1ed",
+    "focused-domain.log": "ac2fe32afd6168eb1dcb1419803295bd75fcfd8d822d38dee1c3bb5d3599b2fd",
+    "service-fast.log": "6dccc489f4a8371aea4cc403ae584243443914f22a61ed0ae70721977ddef783",
+    "service-integration.log": "6704b2db7827acf9df784363bef44818d52fb02ffef218c56c6a89b2667b887d",
+    "final-service.patch": "2065ccbbe397af7578ed529e9c21669a35412f3a75df697da67afeb2b11269a4"
+  },
+  "checks": {
+    "typescript_build_exit": 0,
+    "diff_check_exit": 0,
+    "original_http_negative": {
+      "tests": 2,
+      "passed": 1,
+      "failed": 1,
+      "skipped": 0
+    },
+    "intermediate_microsecond_negative": {
+      "tests": 1,
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0
+    },
+    "focused_http": {
+      "tests": 7,
+      "passed": 7,
+      "failed": 0,
+      "skipped": 0
+    },
+    "focused_domain": {
+      "tests": 93,
+      "passed": 93,
+      "failed": 0,
+      "skipped": 0
+    },
+    "fast": {
+      "tests": 453,
+      "passed": 452,
+      "failed": 0,
+      "skipped": 1
+    },
+    "full_integration": {
+      "tests": 260,
+      "passed": 257,
+      "failed": 0,
+      "skipped": 3
+    }
+  },
+  "limitations": [
+    "Fast suite database-only group is skipped there and executed in the full integration harness.",
+    "Three browser-only full integration cases remain skipped; no native run or deployment."
+  ],
+  "teardown": "Dedicated loopback PostgreSQL cluster stopped and raw database files removed.",
+  "scope": "No migrations, .env/live credentials, native commands, hosted/provider actions, commits or pushes."
+}

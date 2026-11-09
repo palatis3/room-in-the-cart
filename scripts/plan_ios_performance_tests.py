@@ -54,6 +54,17 @@ def validate_request(event, requested_case):
         raise ValueError("Only an explicit manual dispatch may select launch, rendered or scroll")
 
 
+def validate_diagnostics_request(event, requested_case, enabled, enforce_baselines, capture, preflight):
+    if enabled not in ("", "false", "true"):
+        raise ValueError("Performance diagnostics must be an explicit boolean")
+    if enabled != "true":
+        return
+    if (event != "workflow_dispatch" or requested_case not in ("launch", "scroll")
+            or enforce_baselines != "false" or capture != "false" or preflight != "false"):
+        raise ValueError("Performance diagnostics require a manual single launch/scroll case, "
+                         "calibration mode and no other collector; never release acceptance")
+
+
 def select_matrix(full_matrix, event, requested_case):
     validate_request(event, requested_case)
     rows = full_matrix["include"]
@@ -74,6 +85,11 @@ def main():
         event = os.environ.get("GITHUB_EVENT_NAME", "")
         requested = os.environ.get("REQUESTED_PERFORMANCE_CASE", "")
         validate_request(event, requested)
+        validate_diagnostics_request(event, requested,
+            os.environ.get("ENABLE_PERFORMANCE_DIAGNOSTICS", "false"),
+            os.environ.get("ENFORCE_BASELINES", ""),
+            os.environ.get("CAPTURE_SCROLL_SIGNPOSTS", "false"),
+            os.environ.get("CAPTURE_PREFLIGHT_ONLY", "false"))
         if args.validate_request:
             print(json.dumps({"scope": "targeted diagnostic" if requested else "full performance suite",
                               "cases": [requested] if requested else list(METHODS)}))
