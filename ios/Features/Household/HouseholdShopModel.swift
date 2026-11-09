@@ -137,12 +137,15 @@ struct SharedShopTransfer: Equatable {
         guard canStartAnother, !busy, !editing, pending == nil else { return }
         draft = .init(); creatingAnother = true; editing = true
     }
+    private var reviewedFood: SharedDemandReview?
+
     func updateScope(_ value: HouseholdBootstrap) {
         guard value.household.id == householdID, value.memberId == memberID, value.grantId == nil else { clear(); return }
         if scope.shopId != value.shopId || scope.role != value.role || Set(scope.capabilities) != Set(value.capabilities) {
+            reviewedFood = nil
             financialRecord = nil; financialRetry = nil; deliveryRecord = nil; review = nil; acknowledged = false
             reviewedCookRecipient = nil; pendingMarkOccurrence = nil; reviewedCookOperation = nil; reviewedAmendmentOperation = nil
-            if scope.shopId != value.shopId, pendingCookCopy || pendingPantry || pendingMealRecovery || pendingAmendment || pendingDelivery { pending = nil; delivery = .none; reviewedCurrentFacts = false }
+            if scope.shopId != value.shopId, pendingCookCopy || pendingPantry || pendingMealRecovery || pendingAmendment || pendingDelivery || pending?.sharedDemandBinding != nil { pending = nil; delivery = .none; reviewedCurrentFacts = false }
             draft = .init()
             editing = false; creatingAnother = false
             shop = nil
@@ -164,7 +167,10 @@ struct SharedShopTransfer: Equatable {
                     delivery = matches ? .waiting : .needsReview
                 }
             }
-            if pendingAmendment {
+            if pending?.sharedDemandBinding != nil {
+                if !canManage { delivery = .needsReview }
+                reviewedCurrentFacts = true
+            } else if pendingAmendment {
                 if !canReadConfirmedOrder { delivery = .needsReview }
                 reviewedCurrentFacts = !canReadConfirmedOrder || pending?.id == reviewedAmendmentOperation
             } else if pendingMealRecovery {
@@ -192,6 +198,7 @@ struct SharedShopTransfer: Equatable {
             let value = try await service.shopperShop(shopID: id)
             guard start == generation, scope == fresh else { throw ClientError.cancelled }
             if shop != value {
+                reviewedFood = nil
                 financialRecord = nil; financialRetry = nil
                 deliveryRecord = nil
                 review = nil; acknowledged = false
@@ -785,6 +792,7 @@ struct SharedShopTransfer: Equatable {
         if pendingMealRecovery && (!canReadMealRecovery || pendingEnvelope?.shopId != scope.shopId) { return }
         if pendingCookCopy && (!canRetryCookCopy || pendingEnvelope?.shopId != scope.shopId) { return }
         if pendingPantry && (!canReadPantry || pendingEnvelope?.shopId != scope.shopId) { return }
+        if pending.sharedDemandBinding != nil && (!canManage || pendingEnvelope?.shopId != scope.shopId) { return }
         guard Date() >= retryAfter, attempts < 5 else { notice = ht("Wait before retrying, or review this action after several failed attempts."); return }
         busy = true; defer { busy = false }; await deliver(pending, start: generation)
     }
@@ -792,7 +800,11 @@ struct SharedShopTransfer: Equatable {
         attempts += 1
         do {
             let envelope = try JSONDecoder().decode(CommandEnvelope.self, from: operation.bytes)
-            let receipt = try await service.executeSharedShop(operation); guard start == generation else { return }
+            let receipt: ShopperReceipt
+            if operation.sharedDemandBinding != nil { receipt = try await service.executeSharedDemand(operation) }
+            else { receipt = try await service.executeSharedShop(operation) }
+            guard start == generation else { return }
+            if operation.sharedDemandBinding != nil, pending != operation || !canManage || scope.shopId != envelope.shopId { return }
             let cookCopy = envelope.kind.hasPrefix("cookCopy."), pantryEdit = envelope.kind.hasPrefix("pantry.")
             let recovering = envelope.kind == "mealRecovery.apply"
             if envelope.kind == "amendment.recordResponse", pending != operation || !canReadConfirmedOrder || scope.shopId != envelope.shopId { return }
@@ -859,6 +871,7 @@ struct SharedShopTransfer: Equatable {
         } catch { await handle(error, start: start) }
     }
     func clear() {
+        reviewedFood = nil
         reviewedAmendmentOperation = nil; reviewedCurrentFacts = false
         reviewedCookRecipient = nil; pendingMarkOccurrence = nil; reviewedCookOperation = nil
         recoveryRecord = nil; reviewedRecovery = nil; reviewedRecoveryOperation = nil
@@ -881,5 +894,57 @@ struct SharedShopTransfer: Equatable {
         case .cancelled: break
         default: notice = ht("The shared shop change is not confirmed. Keep the pending action and retry it unchanged.")
         }
+    }
+}
+
+
+extension HouseholdShopModel: SharedDemandFlowAccess {
+    var foodShop: ShopperShop? { shop }
+    var canReadFood: Bool {
+        authorized && scope.grantId == nil && scope.role == "shopper" && scope.capabilities.contains("shopper_commands") &&
+        scope.shopId != nil && shop?.shopId == scope.shopId && shop?.phase == "draft"
+    }
+    var foodPending: Bool { pending != nil }
+    func readFood() async throws -> SharedDemandPage {
+        guard canReadFood, !busy, pending == nil else { throw ClientError.accessEnded }
+        busy = true; defer { busy = false }; let start = generation
+        do {
+            try await refreshFacts(start: start)
+            guard canReadFood, let shop, let id = UUID(uuidString: shop.shopId) else { throw ClientError.accessEnded }
+            let actor = scope
+            let page = try await service.sharedDemand(shopID: id)
+            guard start == generation, scope == actor, self.shop == shop, canReadFood,
+                  page.shopRevision == shop.shopRevision, page.authorityEpoch == shop.authorityEpoch else { throw ClientError.cancelled }
+            reviewedFood = nil
+            return page
+        } catch { await handle(error, start: start); throw error }
+    }
+    func previewFood(_ request: SharedDemandPreviewRequest) async throws -> SharedDemandReview {
+        guard canReadFood, canManage, !busy, pending == nil, let shop, let id = UUID(uuidString: shop.shopId),
+              request.base.shopRevision == shop.shopRevision, request.base.authorityEpoch == shop.authorityEpoch else { throw ClientError.cancelled }
+        let start = generation, actor = scope
+        busy = true; defer { busy = false }; reviewedFood = nil
+        do {
+            let value = try await service.previewSharedDemand(shopID: id, request: request)
+            guard start == generation, actor == scope, self.shop == shop, canReadFood, pending == nil else { throw ClientError.cancelled }
+            reviewedFood = value; return value
+        } catch { await handle(error, start: start); throw error }
+    }
+    func applyFood(_ review: SharedDemandReview) async throws {
+        guard canReadFood, canManage, !busy, pending == nil, reviewedFood == review,
+              shop?.shopId == review.shopID.uuidString.lowercased(), shop?.shopRevision == review.request.base.shopRevision,
+              shop?.authorityEpoch == review.request.base.authorityEpoch else { throw ClientError.cancelled }
+        let start = generation, actor = scope
+        busy = true; defer { busy = false }
+        do {
+            let operation = try await service.prepareSharedDemandApply(review)
+            guard start == generation, scope == actor, canReadFood, pending == nil, reviewedFood == review else { throw ClientError.cancelled }
+            // Append before delivery. Relaunch and retry use these exact bytes,
+            // key, preview and reserved operation through the existing outbox.
+            try await outbox.append(operation)
+            guard start == generation, scope == actor else { throw ClientError.cancelled }
+            pending = operation; delivery = .waiting; attempts = 0; reviewedCurrentFacts = false; reviewedFood = nil
+            await deliver(operation, start: start)
+        } catch { await handle(error, start: start); throw error }
     }
 }

@@ -201,8 +201,9 @@ public struct SharedDemandChange: Codable, Equatable, Sendable {
     public var removeSourceIds: [SharedDemandID]
     public var removeEdgeIds: [SharedDemandID]
     public var quantifyReservationIds: [SharedDemandID]?
-    public init(lines: [SharedDemandLine] = [], contributions: [SharedDemandContribution] = [], edges: [SharedDemandEdge] = [], removeSourceIds: [SharedDemandID] = [], removeEdgeIds: [SharedDemandID] = [], quantifyReservationIds: [SharedDemandID]? = nil) {
-        self.lines = lines; self.contributions = contributions; self.edges = edges; self.removeSourceIds = removeSourceIds; self.removeEdgeIds = removeEdgeIds; self.quantifyReservationIds = quantifyReservationIds
+    public var clarifyReservationProductIds: [SharedDemandID]?
+    public init(lines: [SharedDemandLine] = [], contributions: [SharedDemandContribution] = [], edges: [SharedDemandEdge] = [], removeSourceIds: [SharedDemandID] = [], removeEdgeIds: [SharedDemandID] = [], quantifyReservationIds: [SharedDemandID]? = nil, clarifyReservationProductIds: [SharedDemandID]? = nil) {
+        self.lines = lines; self.contributions = contributions; self.edges = edges; self.removeSourceIds = removeSourceIds; self.removeEdgeIds = removeEdgeIds; self.quantifyReservationIds = quantifyReservationIds; self.clarifyReservationProductIds = clarifyReservationProductIds
     }
 }
 
@@ -306,6 +307,8 @@ public struct SharedDemandReceipt: Codable, Equatable, Sendable {
     public let edges: [SharedDemandDelta<SharedDemandEdge>]
 }
 public struct SharedDemandPage: Codable, Equatable, Sendable {
+    /// Absent on an older server. Missing is not an empty adoption catalog.
+    public var legacySources: SharedDemandLegacySources? = nil
     public enum Status: String, Codable, Sendable { case legacy, enabled, reviewRequired }
     public let schemaVersion: Int
     public let shopId: SharedDemandID

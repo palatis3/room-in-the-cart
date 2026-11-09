@@ -116,13 +116,18 @@ extension SharedDemandGraph {
     }
 }
 extension SharedDemandChange {
-    var isEmpty: Bool { lines.isEmpty && contributions.isEmpty && edges.isEmpty && removeSourceIds.isEmpty && removeEdgeIds.isEmpty && (quantifyReservationIds ?? []).isEmpty }
+    public var isEmpty: Bool { lines.isEmpty && contributions.isEmpty && edges.isEmpty && removeSourceIds.isEmpty && removeEdgeIds.isEmpty && (quantifyReservationIds ?? []).isEmpty && (clarifyReservationProductIds ?? []).isEmpty }
     public func validate() throws {
-        try demandRequire(lines.count <= 200 && contributions.count <= 2000 && edges.count <= 4000 && removeSourceIds.count <= 2000 && removeEdgeIds.count <= 4000 && (quantifyReservationIds?.count ?? 0) <= 2000)
-        try demandIDs((removeSourceIds + removeEdgeIds + (quantifyReservationIds ?? [])).map(Optional.some))
+        try demandRequire(lines.count <= 200 && contributions.count <= 2000 && edges.count <= 4000 && removeSourceIds.count <= 2000 && removeEdgeIds.count <= 4000 && (quantifyReservationIds?.count ?? 0) <= 2000 && (clarifyReservationProductIds?.count ?? 0) <= 2000)
+        try demandIDs((removeSourceIds + removeEdgeIds + (quantifyReservationIds ?? []) + (clarifyReservationProductIds ?? [])).map(Optional.some))
         let ids = lines.map(\.id) + contributions.map(\.id) + edges.map(\.id)
-        try demandRequire(demandUnique(ids) && demandUnique(removeSourceIds) && demandUnique(removeEdgeIds) && demandUnique(quantifyReservationIds ?? []))
+        try demandRequire(demandUnique(ids) && demandUnique(removeSourceIds) && demandUnique(removeEdgeIds) && demandUnique(quantifyReservationIds ?? []) && demandUnique(clarifyReservationProductIds ?? []))
         try demandRequire(Set(ids).isDisjoint(with: removeSourceIds + removeEdgeIds))
+        try demandRequire(Set(clarifyReservationProductIds ?? []).isDisjoint(with: (quantifyReservationIds ?? []) + removeSourceIds))
+        for id in clarifyReservationProductIds ?? [] {
+            guard let row = contributions.first(where: { $0.id == id }) else { throw ClientError.invalidResponse }
+            try demandRequire(row.source.isReservation && row.removedAt == nil && row.productKey != nil)
+        }
         for line in lines { try line.validate() }; for c in contributions { try c.validate() }; for e in edges { try e.validate() }
     }
 }
@@ -146,6 +151,8 @@ extension SharedDemandPage {
     public func validate(householdID: String, shopID: UUID) throws {
         try demandRequire(schemaVersion == 1 && shopId.uuid == shopID && demandRevision(shopRevision) && demandRevision(authorityEpoch))
         try demandRequire((status == .legacy) == (graph == nil))
+        try demandRequire(status == .legacy || legacySources == nil)
+        try legacySources?.validate()
         try validateDemandTotals(totals, graph: graph)
         if let graph { try graph.validate(); try demandRequire(graph.householdId.string == householdID.lowercased() && graph.shopId == shopId && graph.revision > 0) }
     }
@@ -180,11 +187,22 @@ extension SharedDemandReview {
         try validateDemandTotals(preview.beforeTotals, graph: before); try validateDemandTotals(preview.afterTotals, graph: after)
         if request.mode == .adopt { try demandRequire(before.lines.isEmpty && before.contributions.isEmpty && before.edges.isEmpty && before.usedIds.isEmpty) }
         if request.mode == .review { try demandRequire(receipt.lines.isEmpty && receipt.contributions.isEmpty && receipt.edges.isEmpty) }
+        for id in request.change.clarifyReservationProductIds ?? [] {
+            guard let old = before.contributions.first(where: { $0.id == id }),
+                  let next = after.contributions.first(where: { $0.id == id }),
+                  old.source.isReservation, old.removedAt == nil, old.productKey == nil, next.productKey != nil,
+                  request.change.contributions.contains(next) else { throw ClientError.invalidResponse }
+            var expected = old; expected.productKey = next.productKey
+            try demandRequire(next == expected)
+        }
         for old in before.contributions {
             guard let next = after.contributions.first(where: { $0.id == old.id }) else { throw ClientError.invalidResponse }
             let quantified = (request.change.quantifyReservationIds ?? []).contains(old.id) && old.quantity == nil && next.quantity != nil && next.source.isQuantification(of: old.source)
             try demandRequire((next.source == old.source || quantified) && next.originalText == old.originalText)
-            if old.source.isReservation && old.removedAt == nil { try demandRequire(next.removedAt == nil) }
+            if old.source.isReservation && old.removedAt == nil {
+                try demandRequire(next.removedAt == nil)
+                if old.productKey != next.productKey { try demandRequire((request.change.clarifyReservationProductIds ?? []).contains(old.id)) }
+            }
         }
         if case .request(let action) = request.action {
             let sources = after.contributions.filter { row in if case .request(let id, _) = row.source { return row.removedAt == nil && id == action.requestId }; return false }

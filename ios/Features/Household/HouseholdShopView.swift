@@ -64,6 +64,8 @@ private struct SharedShopContent: View {
                             }
                             if household.canReviewHouseholdRequests { NavigationLink(ht("Review family requests")) { HouseholdInboxView(model: household) } }
                             if shop.phase == "draft", model.canManage {
+                                NavigationLink(SharedDemandCopy.text("Food quantities and sources")) { SharedDemandFlowView(shopModel: model) }
+                                    .accessibilityIdentifier("sharedShop.foodQuantities")
                                 Button(ht("Edit shared items and quote")) { model.beginEditing() }
                                 Button(ht("Review freezing this shop")) { model.reviewPhaseChange("shop.freeze") }
                             } else if shop.phase == "frozen", model.canManage {
@@ -196,7 +198,7 @@ private struct SharedShopEditor: View {
     }
     private func costField(_ key: String, _ binding: Binding<String>) -> some View { TextField(ht(key), text: binding).keyboardType(.decimalPad) }
 }
-private struct SharedShopFields: View {
+struct SharedShopFields: View {
     let quote: ShopperQuote; let lines: [ShopperBasketLine]
     var body: some View {
         ForEach(lines) { line in
