@@ -50,6 +50,7 @@ env:
   DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
   CI_IPHONE_RUNTIME: com.apple.CoreSimulator.SimRuntime.iOS-27-0
   CI_IPHONE_NAME: iPhone 17
+  ENFORCE_BASELINES: ${{ github.event_name == 'pull_request' || inputs.enforce_baselines }}
   REQUESTED_PERFORMANCE_CASE: ${{ github.event_name == 'workflow_dispatch' && inputs.case != 'all' && inputs.case || '' }}
 
 jobs:
@@ -64,6 +65,8 @@ jobs:
           python3 scripts/test_check_ios_performance.py
           python3 scripts/test_scroll_signpost_diagnostic.py
           python3 scripts/plan_ios_performance_tests.py --validate-request
+      - name: Reject known baseline incompatibility before allocating macOS
+        run: python3 scripts/check_ios_performance_environment.py configured --architecture arm64
 
   performance-build:
     needs: performance-plan
@@ -85,6 +88,8 @@ jobs:
         run: |
           xcodebuild -version
           xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
+      - name: Verify actual baseline environment before compiling
+        run: python3 scripts/check_ios_performance_environment.py runner
       - name: Build the Release app and dedicated performance tests
         shell: bash
         run: |
@@ -140,7 +145,6 @@ jobs:
     env:
       PERFORMANCE_CASE: ${{ matrix.case }}
       TEST_SELECTOR: ${{ matrix.selector }}
-      ENFORCE_BASELINES: ${{ github.event_name == 'pull_request' || inputs.enforce_baselines }}
       FIXTURE: ios/UITests/Fixtures/ReleaseLedger500.txt
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -159,6 +163,8 @@ jobs:
           printf '%s\n' "$TEST_SELECTOR" > .build/performance/selector.txt
       - name: Select an iPhone simulator
         run: xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
+      - name: Reject runner environment drift before boot and testing
+        run: python3 scripts/check_ios_performance_environment.py runner
       - name: Boot and verify a fresh Release installation
         timeout-minutes: 8
         run: |

@@ -88,6 +88,20 @@ retained evidence. Review those actual measurements before adding an approved
 profile; do not relabel the old baseline, drop a metric or treat collection as a
 release pass. Missing metrics and test/warning failures still fail collection.
 
+Enforced performance runs reject proven environment incompatibility before
+expensive native work. The Linux planner compares configured Xcode version,
+iOS version, device model and runner architecture with approved profiles. It
+reuses the existing workflow pins; it cannot know the hosted runtime build.
+After simulator selection, the build runner reads the actual runtime build,
+device type, architecture and Xcode version/build before compiling. Test runners
+repeat this read-only check before boot to detect image drift between jobs.
+These checks neither boot a device nor run tests. A compatible profile at this
+stage is only permission to proceed: the unchanged post-test validator still
+requires the exact complete result environment, all metrics and approved limits.
+Calibration-only runs skip baseline availability checks and retain every late
+evidence requirement. The current 26.3 baseline therefore fails enforced Linux
+planning immediately, while explicitly requested calibration remains available.
+
 ### First hosted migration qualification
 
 After reviewing and publishing a candidate revision, use the already registered

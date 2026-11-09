@@ -76,7 +76,7 @@ class Xcode27MigrationTests(unittest.TestCase):
         self.assertTrue(release['jobs']['performance']['with']['enforce_baselines'])
         performance = parse_workflow(ROOT / '.github/workflows/ios-performance.yml')[0]
         self.assertTrue(performance['on']['workflow_call']['inputs']['enforce_baselines']['default'])
-        self.assertEqual(performance['jobs']['performance-tests']['env']['ENFORCE_BASELINES'],
+        self.assertEqual(performance['env']['ENFORCE_BASELINES'],
                          "${{ github.event_name == 'pull_request' || inputs.enforce_baselines }}")
         gate = parse_workflow(ROOT / '.github/workflows/ci.yml')[0]['jobs']['ci-gate']
         self.assertIn('ios-swift-codeql', gate['needs'])
