@@ -5,6 +5,7 @@ import copy
 import json
 import os
 import plistlib
+import re
 import subprocess
 from pathlib import Path
 import sys
@@ -150,7 +151,8 @@ class PumpTests(unittest.TestCase):
 
 class PumpPhaseTests(unittest.TestCase):
     """Controlled clocks/real nonblocking pipes: no native child or wall-time sleeps."""
-    def controlled_command(self, mode, worker_delay=0):
+    def controlled_command(self, mode, worker_delay=0, seconds=10, output_at=3, expect_success=None):
+        should_succeed = mode == 'delayed-output' if expect_success is None else expect_success
         clock = SimpleNamespace(now=0.0)
         reads = [os.pipe(), os.pipe()]
         process = SimpleNamespace(stdout=os.fdopen(reads[0][0], 'rb'),
@@ -194,7 +196,7 @@ class PumpPhaseTests(unittest.TestCase):
                     clock.now += 11
                     return []  # Data exists, but no normal read occurs before expiry.
                 clock.now += 0.25 if mode == 'delayed-output' else timeout
-                if mode == 'delayed-output' and clock.now >= 3:
+                if mode == 'delayed-output' and clock.now >= output_at:
                     if not self.emitted:
                         os.write(writes[0], b'ordinary-output')
                         finish(0)
@@ -210,11 +212,11 @@ class PumpPhaseTests(unittest.TestCase):
                  patch.object(probe.selectors, 'DefaultSelector', Selector), \
                  patch.object(probe.subprocess, 'Popen', side_effect=spawn), \
                  patch.object(probe, 'terminate_owned', side_effect=lambda child: finish(-15) if child.poll() is None else None):
-                if mode == 'delayed-output':
-                    output = probe.command_result(['synthetic-child'], 10, None, entry)
+                if should_succeed:
+                    output = probe.command_result(['synthetic-child'], seconds, None, entry)
                 else:
                     with self.assertRaisesRegex(ValueError, 'capability_command_failed'):
-                        probe.command_result(['synthetic-child'], 10, None, entry)
+                        probe.command_result(['synthetic-child'], seconds, None, entry)
                     output = None
             return entry, output
         finally:
@@ -233,6 +235,32 @@ class PumpPhaseTests(unittest.TestCase):
         self.assertEqual(entry['errors'], ['deadline'])
         self.assertEqual(entry['exitCode'], -15)
         self.assertIsNone(output)
+
+    def test_inventory_policy_allows_later_output_but_other_commands_still_expire(self):
+        self.assertEqual(probe.INVENTORY_COMMAND_SECONDS, 30)
+        self.assertEqual(probe.COMMAND_SECONDS, 10)
+        entry, output = self.controlled_command('delayed-output', seconds=probe.INVENTORY_COMMAND_SECONDS, output_at=15)
+        self.assertEqual(output, b'ordinary-output')
+        self.assertEqual(entry['timeoutSeconds'], 30)
+        self.assertEqual(entry['pump']['phaseSeconds']['firstRead'], 15)
+        entry, output = self.controlled_command('delayed-output', seconds=probe.COMMAND_SECONDS,
+                                               output_at=15, expect_success=False)
+        self.assertEqual(entry['timeoutSeconds'], 10)
+        self.assertEqual(entry['errors'], ['deadline'])
+        self.assertEqual(entry['exitCode'], -15)
+        self.assertIsNone(output)
+
+    def test_inventory_boundary_still_fails_closed_with_original_cleanup(self):
+        entry, output = self.controlled_command('delayed-output', seconds=probe.INVENTORY_COMMAND_SECONDS,
+                                               output_at=30, expect_success=False)
+        self.assertEqual(entry['timeoutSeconds'], 30)
+        self.assertEqual(entry['errors'], ['deadline'])
+        self.assertEqual(entry['pump']['phaseSeconds']['deadlineObserved'], 30)
+        self.assertIsNotNone(entry['pump']['phaseSeconds']['cleanupComplete'])
+        self.assertIsNone(output)
+        entry, _ = self.controlled_command('no-output', seconds=probe.INVENTORY_COMMAND_SECONDS)
+        self.assertEqual(entry['errors'], ['deadline'])
+        self.assertEqual(entry['exitCode'], -15)
 
     def test_delayed_output_is_separate_from_spawn_and_is_normally_accepted(self):
         entry, output = self.controlled_command('delayed-output')
@@ -442,6 +470,19 @@ class AdmissionTests(unittest.TestCase):
 
 
 class WorkflowTests(unittest.TestCase):
+    def test_capability_step_reserves_inventory_help_and_existing_join_cleanup_bounds(self):
+        text = (Path(__file__).resolve().parents[1] / '.github/workflows/ios-performance.yml').read_text()
+        block = text[text.index('      - name: Check capture capabilities before compilation'):
+                     text.index('      - name: Retain capture capability stages')]
+        outer_seconds = int(re.search(r'timeout-minutes: (\d+)', block)[1]) * 60
+        self.assertIn('--toolchain-identity', block)  # No sixth/direct version command on this route.
+        command_count = 2 + len(probe.HELP_TOKENS)
+        # Existing command_result join permits budget+4, then close joins for4.
+        # Reserve both tolerances; this is an outer infrastructure envelope,
+        # not a measurement or a guarantee against arbitrary host starvation.
+        required_seconds = 2 * probe.INVENTORY_COMMAND_SECONDS + len(probe.HELP_TOKENS) * probe.COMMAND_SECONDS + command_count * 8
+        self.assertGreaterEqual(outer_seconds, required_seconds)
+
     def test_each_capture_consumer_writes_and_uses_its_own_identity(self):
         text = (Path(__file__).resolve().parents[1] / '.github/workflows/ios-performance.yml').read_text()
         build = text[text.index('  performance-build:'):text.index('  performance-tests:')]
@@ -636,6 +677,9 @@ class IdentityReuseTests(unittest.TestCase):
             self.assertEqual(observed[:2], [['xcrun', 'simctl', 'list', 'devices', 'test-simulator', '-j'],
                                              ['xcrun', 'simctl', 'list', 'runtimes', '-j']])
             self.assertEqual([argv[-2:] for argv in observed[2:]], [['help', 'stream'], ['help', 'show'], ['help', 'emit']])
+            self.assertEqual([(call.kwargs['stage_name'], call.kwargs.get('seconds', probe.COMMAND_SECONDS))
+                              for call in commands.call_args_list],
+                             [('devices', 30), ('runtimes', 30), ('help-stream', 10), ('help-show', 10), ('help-emit', 10)])
             self.assertFalse(any('xcodebuild' in argv for argv in observed))
             # A valid toolchain receipt is never a substitute for live runtime identity.
             drifted = list(responses); drifted[1] = drifted[1].replace(b'24A434', b'24A999')

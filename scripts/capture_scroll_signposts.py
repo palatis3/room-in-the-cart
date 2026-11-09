@@ -29,6 +29,9 @@ RUNTIME = 'com.apple.CoreSimulator.SimRuntime.iOS-27-0'
 KNOWN = ('com.apple.UIKit', 'ScrollView', 'Scroll_DraggingAndDeceleration')
 MAX_EVENTS, MAX_METADATA, MAX_RAW, MAX_LINE = 2048, 512 * 1024, 4 * 1024 * 1024, 65536
 STREAM_SECONDS, CONTROL_SECONDS, SHOW_SECONDS, COMMAND_SECONDS = 300, 5, 30, 10
+# Infrastructure policy for simulator inventory only, not a measured app
+# performance baseline. Toolchain/help commands retain COMMAND_SECONDS.
+INVENTORY_COMMAND_SECONDS = 30
 PUMP_PHASES = ('commandEntry', 'workerEntry', 'budgetStart', 'spawnStart', 'spawnReturned',
                'pipesReady', 'firstRead', 'deadlineObserved', 'cleanupStart', 'cleanupComplete')
 MAX_SELECTOR_RETURNS, LATE_READ_BYTES_PER_PIPE = 4096, 8192
@@ -519,8 +522,10 @@ def runtime_preflight(simulator, journal=None, identity_path=None):
                               lambda _: read_toolchain_identity(identity_path, simulator, architecture))
     # CLI substring filtering reduces returned inventory only; it is not identity
     # or availability validation. The exact selected-device checks below remain.
-    inventory = json.loads(command(['xcrun', 'simctl', 'list', 'devices', simulator, '-j'], journal=journal, stage_name='devices'))
-    inventory.update(json.loads(command(['xcrun', 'simctl', 'list', 'runtimes', '-j'], journal=journal, stage_name='runtimes')))
+    inventory = json.loads(command(['xcrun', 'simctl', 'list', 'devices', simulator, '-j'],
+                                   seconds=INVENTORY_COMMAND_SECONDS, journal=journal, stage_name='devices'))
+    inventory.update(json.loads(command(['xcrun', 'simctl', 'list', 'runtimes', '-j'],
+                                        seconds=INVENTORY_COMMAND_SECONDS, journal=journal, stage_name='runtimes')))
     devices = [(runtime, device) for runtime, items in inventory['devices'].items()
                for device in items if device.get('udid') == simulator]
     runtimes = [item for item in inventory['runtimes'] if item.get('identifier') == RUNTIME]
@@ -592,6 +597,7 @@ def main():
                'nativeAttempted': False, 'status': 'preflight_incomplete',
                'capabilitiesOnly': args.capabilities_only,
                'limits': {'liveSeconds': STREAM_SECONDS, 'controlWaitSecondsEach': CONTROL_SECONDS,
+                          'inventoryCommandSeconds': INVENTORY_COMMAND_SECONDS, 'otherCommandSeconds': COMMAND_SECONDS,
                           'persistedSeconds': SHOW_SECONDS, 'metadataEventsPerSource': MAX_EVENTS,
                           'metadataBytesPerSource': MAX_METADATA, 'rawBytesPerSource': MAX_RAW,
                           'rawLineBytes': MAX_LINE, 'childTermSeconds': 2, 'childKillSeconds': 1}}

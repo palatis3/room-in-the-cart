@@ -119,7 +119,8 @@ jobs:
         run: python3 scripts/boot_ios_simulator.py "$SIMULATOR_ID"
       - name: Check capture capabilities before compilation
         if: inputs.capture_scroll_signposts
-        timeout-minutes: 2
+        # Infrastructure discovery has its own bounded allowance; app limits stay unchanged.
+        timeout-minutes: 3
         env:
           PERFORMANCE_CASE: scroll
         run: |

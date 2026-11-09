@@ -13,6 +13,28 @@
 4. Combine verified fixes into one PR regression batch. Full release checks must
    pass at the final combined revision; focused passes are supporting evidence.
 
+### Candidate qualification order
+
+Use this order for the combined candidate going forward:
+
+1. Resolve missing launch/scroll measurements before approving the Xcode 27.1
+   performance baseline. A passing XCTest with absent metrics remains incomplete.
+2. Resolve the original minimum-iOS journey failure. A passing reduced reproducer
+   does not qualify the full app. Keep framework faults distinct from app assertions.
+3. Install reviewed fixes, record one immutable candidate SHA, and freeze it for
+   the full regression batch. Record each run's tested checkout and scope with
+   `check_qualification_receipt.py`; do not assemble a green result from different
+   revisions. Any subsequent source change invalidates that candidate's acceptance.
+4. Review required merge gates on that candidate. Track physical-device, human
+   accessibility/localization, provider and signed-distribution work separately in
+   `RELEASE-EXECUTION.md`; green merge checks alone do not authorize App Store release.
+
+Keep one coordinator for dispatch and one owner per failure cause. Before an
+expensive run, record the diagnostic question, changed input, expected distinction
+and stopping condition. Reuse retained outputs and compatible products rather than
+repeating an unchanged successful focused run. Add shards only after measured
+critical-path improvements justify them within the existing five slots.
+
 The compact report lists every unsuccessful or unfinished job, including skipped
 and cancelled jobs with no failed step. It includes the five longest execution
 windows and their longest steps. These are triage hints, not a critical-path
@@ -432,8 +454,8 @@ repeat the guards on the actual test runner. Incremental atomic receipts retain
 fixed command labels, status, exit code, elapsed time and bounded error categories;
 raw command output and private payloads are not retained. An interruption may
 leave a `running` stage, which is incomplete evidence. Preserve the first failure
-and use the named stage to choose the next change instead of extending timeouts
-or rerunning unchanged. The capability artifact is
+and use the named stage to choose the next change instead of blindly extending
+timeouts or rerunning unchanged. The capability artifact is
 `iphone-scroll-capture-capabilities-<attempt>`; original capture/metric acceptance
 requirements remain unchanged.
 
@@ -444,12 +466,23 @@ at8192 bytes each and sharing the remaining raw-byte budget. Only discarded-byte
 counts and fixed status labels survive. These observations never enter normal
 output buffers or parsers and cannot rescue the deadline failure. Use them to
 distinguish slow process creation, collection delay and unread output; they do not
-prove simulator readiness. The deadline and owned-process cleanup budgets remain
-unchanged, and fresh post-boot device checks cannot be replaced by pre-boot data.
+prove simulator readiness. Owned-process cleanup budgets remain unchanged, and
+fresh post-boot device checks cannot be replaced by pre-boot data.
 Device discovery now asks `simctl list devices <selected-UUID> -j` to narrow
 returned rows. Its substring search is only a prefilter: exact UUID uniqueness,
 availability, boot state, device type and the full runtime checks remain required.
 This preserves admission; a hosted speed improvement has not been established.
+
+Device and runtime inventory now each have a separate 30-second infrastructure
+budget; version/help commands retain 10 seconds. The capability-only workflow step
+allows 3 minutes to contain discovery, help and cleanup. These are bounded setup
+policy limits, not performance measurements or approved app baselines. Prior
+10-second failures were censored observations of a running child with empty pipes;
+they do not establish a correct latency target. No retries, cached boot state,
+app deadlines, runtime-warning exemptions or metric thresholds are added. If the
+new bounded probe fails, preserve its stage receipt and diagnose that cause before
+another dispatch. GitHub's [step timeout and concurrency syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax)
+defines the outer workflow limits independently of the collector's commands.
 
 For opted-in capture, the existing runner environment guard writes a fresh local
 `runner-identity.json` after successful environment and applicable baseline

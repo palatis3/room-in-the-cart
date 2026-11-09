@@ -39,6 +39,13 @@ execution. The additive proposal/validation receipts are preserved in
 
 ## Latest active work — November 9
 
+- Workflow follow-up separates device/runtime discovery into bounded30-second
+  infrastructure commands; help/version remain10seconds, capability step3minutes.
+  No app limits or acceptance gates changed. All366 offline checks and17 native
+  queue-node checks pass. One capability-only hosted probe is pending; no full
+  regression or baseline acceptance.
+  [Change and evidence](evidence/native/ci-inventory-budget-20261109/README.md).
+
 - Combined product consolidation is complete locally: exact8reviewed R4 files,
   all561product inputs equal the tested frozen source. Project/theme/localization
   checks pass; scoped native evidence is reused by byte equality, not rerun merely
