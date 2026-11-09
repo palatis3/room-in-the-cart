@@ -94,6 +94,22 @@ mixed-client HTTPS, downstream projections and shared export/import acceptance
 remain open. [Proof and limits](evidence/service/shared-demand-persistence-20261109/README.md).
 Migration043 is not deployed; staging authorization remains through041.
 
+The native adapter exposed one API gap: no canonical line-food totals accompanied
+the graph. Reads now include totals and previews include before/after totals using
+the existing reducer arithmetic. Pack validation reuses one batch rather than
+revalidating the graph per line. Isolated TS and all 63 focused domain/summary tests
+pass; the original 281 PostgreSQL tests pass with three optional browser skips.
+The owned cluster is stopped. [Proof](evidence/service/shared-demand-totals-20261109/README.md).
+The typed Swift client, durable reviewed-operation binding and actual HTTPS
+multi-device cases are in progress with Astra; native UI acceptance is still open.
+
+Current coordination: root owns service totals and App flow integration;
+astra_release_gap owns HouseholdClient and its dedicated wire tests;
+simulator_capture_control owns the default-off hosted app-observation port and
+compile-gated App/performance-test hooks. No local native execution is authorized
+until root reviews a frozen candidate and releases the single execution slot.
+Do not compile a mixed snapshot while either helper is changing its owned source.
+
 New local diagnostic rules in CI-VALIDATION require exact SDK/architecture helper
 typechecks before full compilation, export-only recovery after normal collection,
 and log names that remain distinct on a case-insensitive Mac. The app-signpost

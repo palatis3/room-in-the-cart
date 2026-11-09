@@ -1,0 +1,37 @@
+{
+  "base": "2a075828df72cae380061ccad57e6070559d4dcc",
+  "isolatedTypeScriptBuild": "passed",
+  "pureTests": {
+    "pass": 63,
+    "fail": 0,
+    "skip": 0
+  },
+  "existingPostgresSuite": {
+    "pass": 281,
+    "fail": 0,
+    "skip": 3,
+    "scope": "Three existing optional real-browser skips; new native totals decoding/HTTPS evidence remains pending."
+  },
+  "postgresStopped": true,
+  "canonicalDistUnchanged": true,
+  "noHostedDeployment": true,
+  "sourceSha256": {
+    "service/src/shared-demand-domain.ts": "9ebd0fb1b2557d1ff243b6924df4316fb3ef0acf7b9290988f6fd46e874de82b",
+    "service/src/shared-demand-repository.ts": "dc1fd2c372c3b03576e8a820a48b5523c251a86802d9e468a142a44f6aee8e24",
+    "shared/contracts/shared-demand-api.md": "4116e92aef06be47ccd150e64f9c0f1a063e71b2048f5cf9b5d61ee484fd5bde",
+    "service/tests/shared-demand-totals.test.mjs": "91ab5650787f3933f0bd3f64cdf457269e3247d432fc91945c2878fd264fb04d"
+  },
+  "retainedRoot": ".build/SharedDemandGraphNov09",
+  "retainedSha256": {
+    "totals-r1/inputs.json": "38d71ec7414c126503b4d73f3edb3f7b2b514a732326168abf1a00c348092b51",
+    "totals-r1/build-receipt.json": "e797394a81b99d063787b2fc0db2ed500662b7b04c3b1e35574132ca71d6de0e",
+    "totals-r1/build.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "totals-r1/tests-r1.log": "1df7d9c96457ad69e14914977c5c9baf96bc3021dc1e6b20c33e82eda7c17937",
+    "totals-r1/tests-r2.log": "20dc3251727f69bb0e02651700e585039f355bc5217c844949f9c0d20f139700",
+    "totals-r1/tests-r2.json": "6fa2c72b7a566455af534fd2b419df24f0b771883992b75df47c64b8b472b853",
+    "totals-r1/benchmark.json": "d4368a7d3d3d32a7bf7de287f2befa37c469ee2bc8545a8888df6291682cffc6",
+    "totals-pg-r1/tests-1.log": "86d7257af7eb707d5e55367d6902b4dc6be8828330bad4316a5c2983b103535b",
+    "totals-pg-r1/pg-run-1.json": "e3a330ca252aec20630a179544f8c602882d11c9666c50e66f33f8e58a5e224a",
+    "totals-pg-r1/input-manifest.json": "45fb9dde991b23d101a52d8bdd3f6c952fb22b17d35ecb04d6f9eb738c845217"
+  }
+}

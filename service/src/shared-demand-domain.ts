@@ -123,6 +123,15 @@ function lineTotal(g:DemandGraph,id:string):{amount:{numerator:string;denominato
  return {amount:{numerator:total.n.toString(),denominator:total.d.toString()},unit};
 }
 export function demandLineQuantity(graph:unknown,lineId:string){const g=validateDemandGraph(graph);requireThat(g.lines.some(l=>l.id===lineId),'unknown_line');return lineTotal(g,lineId);}
+/** Derived food needs, not pack counts or a claim that restrictions are resolved. */
+export function demandLineTotals(graph:unknown){
+ const g=validateDemandGraph(graph);
+ return g.lines.flatMap(line=>{
+  const activeContributionIds=g.contributions.filter(c=>active(c)&&c.lineId===line.id).map(c=>c.id);
+  if(line.trashedAt!==null||!activeContributionIds.length)return [];
+  return [{lineId:line.id,unit:line.unit,quantity:lineTotal(g,line.id)?.amount??null,activeContributionIds}];
+ });
+}
 function conserve(before:DemandGraph,after:DemandGraph,restoring:ReadonlySet<string>=new Set(),quantifying:ReadonlySet<string>=new Set()){
  for(const old of before.contributions){const next=after.contributions.find(c=>c.id===old.id);requireThat(next,'source_hard_delete');
   const bindingResolved=quantifying.has(old.id)&&old.source.kind==='reservation'&&next.source.kind==='reservation'&&old.source.bindingId===null&&next.source.bindingId!==null&&eq({...next.source,bindingId:null},old.source);

@@ -8,6 +8,16 @@ Both routes use the existing live session/device, tenant, member/consent and ass
 
 `GET /v1/households/{household}/shops/{shop}/demand` returns `schemaVersion:1`, shop ID/revision/authority epoch, status `legacy|enabled|reviewRequired`, and nullable current graph. Legacy has no graph. The graph carries its own independent revision.
 
+The read also returns `totals` in graph-line order, one row for each non-trashed line
+with active contributions: `{lineId,unit,quantity,activeContributionIds}`. `quantity`
+is the canonical reduced `{numerator:string,denominator:string}` food amount after
+duplicate and within-existing allocations, or explicit `null` when unresolved.
+It is not a pack count. Legacy reads return `totals:[]`. Retired contributions are
+excluded from `activeContributionIds`; their original graph records remain intact.
+The server derives these rows using the same arithmetic used by pack verification.
+A known amount does not establish that restrictions, conversions on other lines,
+prices or fulfillment are resolved.
+
 `POST .../demand/previews` accepts at most 1,800,000 bytes and:
 
 - `mode`: `adopt|change|undo|review`.
@@ -17,7 +27,10 @@ Both routes use the existing live session/device, tenant, member/consent and ass
 - `action`: kind `shop.patch|request.apply` and the exact ordinary command body, without nested demandReview. Request decisions must be add/link and reference the existing current request preview.
 - `packs`: one `{lineId,usablePerPack,acceptUnresolved}` per active basket line. A usable quantity is explicit or null. Known totals must fit the entered integer packs. Accepting unresolved facts does not waive a known insufficient quantity. Inherited restriction labels stay exact and individually mapped or unresolved; unresolved restrictions cannot qualify allocations as safe.
 
-The response has before/after graphs, reducer receipt, reviewed packs, exact shop/authority bases, previewId, previewDigest and expiresAt. The server reserves the applying operation UUID, uses database time, and binds actor/device, shop, authority, graph digest, normalized action, source facts and reviewed quote. Lifetime is ten minutes; at most 100 live actor previews per household. Cancellation makes no graph/basket/meal/operation change; transient previews may remain until expiry cleanup.
+The response has before/after graphs, their `beforeTotals`/`afterTotals` in the same
+format, reducer receipt, reviewed packs, exact shop/authority bases, previewId,
+previewDigest and expiresAt. Each totals array belongs to its corresponding graph
+revision. The server reserves the applying operation UUID, uses database time, and binds actor/device, shop, authority, graph digest, normalized action, source facts and reviewed quote. Lifetime is ten minutes; at most 100 live actor previews per household. Cancellation makes no graph/basket/meal/operation change; transient previews may remain until expiry cleanup.
 
 Apply uses the existing `/v1/households/{household}/commands` envelope and original action body plus `demandReview:{previewId,previewDigest}`. The command retains the existing 65,536-byte limit and exact replay-window/client-key/device rules. Apply reauthorizes, recomputes the preview and consumes it only in the successful transaction. Exact retry returns the one original operation while its authority/content remain available. A privacy-erased receipt cannot replay or Undo.
 

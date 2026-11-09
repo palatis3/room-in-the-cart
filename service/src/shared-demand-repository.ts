@@ -6,7 +6,7 @@ import {digest} from './database.js';
 import {ServiceError,refresh,unavailable} from './errors.js';
 import {checkout} from './checkout.js';
 import {sharedDemandChangeSchema,demandQuantitySchema,demandReviewSchema,type DemandGraph,type DemandContribution} from './shared-demand-contracts.js';
-import {applyDemandChange,undoDemandChange,validateDemandGraph,demandLineQuantity,convertDemandQuantity} from './shared-demand-domain.js';
+import {applyDemandChange,undoDemandChange,validateDemandGraph,demandLineTotals,convertDemandQuantity} from './shared-demand-domain.js';
 import {sharedMealSchema,preserveProtectedMeal} from './shared-meal-planning.js';
 const id=z.string().uuid().transform(s=>s.toLowerCase());
 const delta=sharedDemandChangeSchema.omit({schemaVersion:true,operationId:true,householdId:true,shopId:true,baseRevision:true,at:true});
@@ -27,7 +27,7 @@ export async function loadDemand(ctx:Context,shop:Shop):Promise<{graph:DemandGra
 }
 export async function readDemand(repo:HouseholdRepository,ctx:Context,shop:Shop){
  repo.requireShopper(ctx,shop);const current=await loadDemand(ctx,shop);
- return {schemaVersion:1,shopId:shop.shop_id,shopRevision:shop.revision,authorityEpoch:shop.authority_epoch,status:current?(shop.demand_review_required?'reviewRequired':'enabled'):'legacy',graph:current?.graph??null};
+ return {schemaVersion:1,shopId:shop.shop_id,shopRevision:shop.revision,authorityEpoch:shop.authority_epoch,status:current?(shop.demand_review_required?'reviewRequired':'enabled'):'legacy',graph:current?.graph??null,totals:current?demandLineTotals(current.graph):[]};
 }
 export async function demandSnapshotRef(ctx:Context,shop:Shop,allowReviewRequired=false){
  if(!shop.demand_revision)return undefined;const row=(await ctx.db.query('SELECT graph_digest FROM ritc.shared_demand_revision WHERE household_id=$1 AND shop_id=$2 AND revision=$3',[ctx.householdId,shop.shop_id,shop.demand_revision])).rows[0];
@@ -111,14 +111,14 @@ async function verifySources(repo:HouseholdRepository,ctx:Context,shop:Shop,grap
  for(const r of links)assert(requestIds.includes(r.request_id),'demand_request_mismatch');
 }
 function verifyPacks(graph:DemandGraph,facts:Awaited<ReturnType<typeof actionFacts>>,packs:Input['packs']){
- const lines=graph.lines.filter(l=>l.trashedAt===null&&graph.contributions.some(c=>c.lineId===l.id&&c.removedAt===null));
- assert(new Set(packs.map(p=>p.lineId)).size===packs.length&&packs.length===facts.lines.length&&lines.length===facts.lines.length,'demand_basket_mismatch');
- for(const basket of facts.lines){const line=lines.find(l=>l.id===basket.lineId),review=packs.find(p=>p.lineId===basket.lineId);assert(line&&review,'demand_basket_mismatch');
+ const totals=new Map(demandLineTotals(graph).map(total=>[total.lineId,total]));
+ assert(new Set(packs.map(p=>p.lineId)).size===packs.length&&packs.length===facts.lines.length&&totals.size===facts.lines.length,'demand_basket_mismatch');
+ for(const basket of facts.lines){const line=graph.lines.find(l=>l.id===basket.lineId),total=totals.get(basket.lineId),review=packs.find(p=>p.lineId===basket.lineId);assert(line&&total&&review,'demand_basket_mismatch');
   assert(line.name===basket.originalItem,'demand_basket_mismatch');const unresolvedExclusions=graph.contributions.some(c=>c.lineId===line.id&&c.removedAt===null&&c.sourceExclusions?.some(e=>e.resolution.kind==='unresolved'));
-  const need=demandLineQuantity(graph,line.id),usable=review.usablePerPack&&convertDemandQuantity(review.usablePerPack,line.unit);
+  const need=total.quantity,usable=review.usablePerPack&&convertDemandQuantity(review.usablePerPack,line.unit);
   if(unresolvedExclusions)assert(review.acceptUnresolved,'demand_unknown_acceptance');
   if(!need||!usable){assert(review.acceptUnresolved,'demand_unknown_acceptance');continue;}
-  assert(usable.n*BigInt(basket.packs)*BigInt(need.amount.denominator)>=BigInt(need.amount.numerator)*usable.d,'demand_insufficient_packs');
+  assert(usable.n*BigInt(basket.packs)*BigInt(need.denominator)>=BigInt(need.numerator)*usable.d,'demand_insufficient_packs');
  }
 }
 async function evaluate(repo:HouseholdRepository,ctx:Context,shop:Shop,input:Input,operationId:string,at:string){
@@ -142,7 +142,7 @@ export async function previewDemand(repo:HouseholdRepository,ctx:Context,shop:Sh
  const count=(await ctx.db.query('SELECT count(*)::integer AS n FROM ritc.shared_demand_preview WHERE household_id=$1 AND actor_id=$2',[ctx.householdId,ctx.member.member_id])).rows[0].n;assert(count<100,'demand_preview_limit');
  await ctx.db.query(`INSERT INTO ritc.shared_demand_preview(household_id,shop_id,preview_id,operation_id,actor_id,device_id,authority_epoch,shop_revision,graph_revision,graph_digest,intent,accepted_digest,created_at,expires_at)
  VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,[ctx.householdId,shop.shop_id,previewId,operationId,ctx.member.member_id,ctx.deviceId,shop.authority_epoch,shop.revision,reviewed.before.revision,reviewed.baseDigest,input,reviewed.acceptedDigest,ctx.now,expiresAt]);
- return {previewId,previewDigest:reviewed.acceptedDigest,expiresAt:expiresAt.toISOString(),before:reviewed.before,after:reviewed.result.graph,receipt:reviewed.result.receipt,packs:input.packs,shopRevision:shop.revision,authorityEpoch:shop.authority_epoch};
+ return {previewId,previewDigest:reviewed.acceptedDigest,expiresAt:expiresAt.toISOString(),before:reviewed.before,after:reviewed.result.graph,beforeTotals:demandLineTotals(reviewed.before),afterTotals:demandLineTotals(reviewed.result.graph),receipt:reviewed.result.receipt,packs:input.packs,shopRevision:shop.revision,authorityEpoch:shop.authority_epoch};
 }
 async function boundPreview(ctx:Context,shopId:string,review:unknown){
  const b=demandReviewSchema.parse(review),p=(await ctx.db.query('SELECT * FROM ritc.shared_demand_preview WHERE household_id=$1 AND shop_id=$2 AND preview_id=$3 AND actor_id=$4 AND device_id=$5 AND accepted_digest=$6 AND expires_at>$7',[ctx.householdId,shopId,b.previewId,ctx.member.member_id,ctx.deviceId,b.previewDigest,ctx.now])).rows[0];if(!p)throw refresh();return p;
