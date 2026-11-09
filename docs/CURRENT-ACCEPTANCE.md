@@ -2,6 +2,14 @@
 
 ## Current checkpoint — November 9, workflow and combined-candidate qualification
 
+At909f7c9b, the original local Release scroll and cold-launch cases pass native,
+strict and required measurement checks on Xcode27.1/27A9275+iOS27.0/24A434. All five
+original-duration samples are present in each case; scroll also has all three
+memory series and verified500-row persistence. Hitches remain unavailable.
+This is local calibration evidence, not a hosted baseline or final combined pass.
+The optional capture tool remains unqualified; hosted42561773341's omissions
+remain unresolved. [Exact source, custody and limits](evidence/native/local-performance-metrics-20261109/README.md).
+
 S24 test-fixture routing is now independently isolated per model/session. A native
 negative control proved the former shared-server defect; all 28 affected tests
 (26 original plus 2 new) now pass native/strict on 26.2. App/production networking is

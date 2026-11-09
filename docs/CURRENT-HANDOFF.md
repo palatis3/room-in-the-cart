@@ -40,6 +40,25 @@ execution. The additive proposal/validation receipts are preserved in
 
 ## Latest active work — November 9
 
+- Original local Release scroll AND cold-launch tests now pass native/strict and
+  complete required metric validation at909f7c9b. Scroll has five duration samples
+  plus all three memory series and independent500-row readback; launch has five
+  responsive samples. Hitches remain unavailable, no new baseline approved.
+  This rules out universal metric removal on27.1; hosted omissions remain unresolved.
+  [Exact results and limitations](evidence/native/local-performance-metrics-20261109/README.md).
+- Optional live capture stopped before XCTest: the log tool emits a non-JSON banner,
+  an event-count footer and a UID501 stderr warning. Delayed synthetic controls
+  delivered3/3 events. No warning suppression or parser relaxation installed.
+  Native original cases ran separately; neither qualifies the optional collector.
+- Current stable DD products include the verified Release build. Manifest6053a60d
+  is archived under the existing7e9f3a6c source archive's builds/<product-SHA> child;
+  source and all executable modes verified. Current receipts/executors reside at
+  `.build/LocalPerformanceCaptureNov09/execution-r1/`. Old S24 executors are historical.
+  All native work is terminal; no hosted dispatch occurred. Next compare retained
+  hosted/local conditions before one focused hosted experiment. Do not repeat local
+  passes. Scroll deviceA50C91FC is shut down; fresh launch device4C01A9AC is booted.
+  Free11.82GiB after preservation; keep8GiB reserve and avoid new downloads.
+
 - Workflow follow-through: full release dispatch now requires the reviewed commit
   SHA and checks it against the event and actual checkout before native jobs.
   Other audit policies remain: metrics before calibration, one frozen combined
@@ -52,12 +71,11 @@ execution. The additive proposal/validation receipts are preserved in
   are not resolved by this local pass.
   [Change and validation](evidence/native/workflow-followthrough-20261109/README.md).
 - Dedicated local simulator A50C91FC-4966-47FF-A8CB-7640FBD513EB is owned by this
-  diagnostic, booted and available. Runtime27.0 and27.1 were already installed;
+  diagnostic; its initial capability result below preceded the completed original tests. Runtime27.0 and27.1 were already installed;
   nothing was downloaded. Three prior owned test simulators were shut down to
   reduce load; the protected preview was untouched. Free storage was19.89GiB
-  before creating the device, above the8GiB reserve. Next: preserve current
-  stable-workspace source/products before building the original Release scroll
-  capture; do not claim capability-only success as performance acceptance.
+  before creating the device, above the8GiB reserve. Source/products were subsequently preserved and the Release work above completed;
+  capability-only success itself is not performance acceptance.
 
 - Confirmed S24 fixture cross-routing is fixed and installed. The original-API
   negative control failed with A receiving B's totals/counts; the same regression
