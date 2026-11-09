@@ -1,0 +1,16 @@
+{
+  "startedAt": "2026-11-09T02:28:30.116449+00:00",
+  "nativeExit": 65,
+  "sourceSHA256": "066476fcb9f8b60b733c2d23ce0c03a39bcbc2f7cb1802bf443634116aff3e07",
+  "strictExit": 1,
+  "screensExportExit": 0,
+  "geometryExportExit": 0,
+  "scrollExportExit": 0,
+  "failureExportExit": 0,
+  "animationIdleMessages": 0,
+  "requiredEvidenceComplete": false,
+  "journeyPassed": false,
+  "finishedAt": "2026-11-09T02:28:32.934463+00:00",
+  "originalUnchanged": true,
+  "sourceUnchanged": true
+}

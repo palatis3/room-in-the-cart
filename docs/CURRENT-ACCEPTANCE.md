@@ -18,6 +18,13 @@ failed top-inset alternative remain preserved. Spanish largest-text case is term
 Accept idea. Inspection is complete and text size is restored to Large. That
 scope is not qualified. MinimumOS, Release
 and combined hosted regression also remain open.
+A scratch progress-aware test now reaches that acceptance row after21gestures
+and passes disabled/contrast/padding checks, then fails on a separate quantity-
+field center helper that omits its final observation. R2 is running; neither
+scratch test candidate is installed or qualified. The AX5 image also reveals
+visually truncated ingredient labels requiring a product correction.
+[Scroll evidence](evidence/native/dinner-scroll-progress-20261109/README.md).
+
 [Repair evidence](evidence/native/dinner-top-done-20261108/README.md),
 [current handles and next action](CURRENT-HANDOFF.md).
 

@@ -26,33 +26,40 @@ for this focused work. Recheck remote state before publishing.
   suites with strict verification. The shared build and final gate pass.
   Logs and terminal inventory were collected once. Do not dispatch a duplicate.
   [Billing proof](evidence/native/membership-pending-reconciliation-20261108/README.md).
-- The original Spanish dinner journey at largest Dynamic Type is **terminal failed**:
-  native65/strict1, zero idle misses. Testcase193.448s, full command800.080585s.
-  Accept idea was not discovered after the first successful Done and unknown-
-  quantity review. Its complete result and inspection are retained under
-  `.build/DinnerInlineTitleNov08/spanish-ax5`; do not rerun/export that result.
-  The settings receipt confirms restoration to Large. No native run is active.
-- Source/log review confirms Review succeeded and the unknown-quantity text was
-  found. CTA discovery used16upward then8downward drags without scroll-progress
-  evidence. Root viewed the final failure image: it shows the large-text supply
-  review content, with no Accept action in the viewport. That does not establish
-  the furthest scroll position or absence of the app control. Underreach remains
-  plausible, not proven. All ten English screens were previously reviewed.
-- Latest app commit: `556d69e5`. Workflow improvements now add a Linux release
-  preflight, a local-only lighter diagnostic option and read-only exact-run CI
-  reporting. All274 Python checks and workflow validation pass.
-  [Workflow evidence](evidence/native/ci-feedback-efficiency-20261108/README.md).
-  See [working loop](CI-VALIDATION.md). They do not qualify the failed
-  Spanish scope or trigger a new full regression automatically.
+- Spanish AX5 progress-aware test R1 is terminal native65/strict1 with zero idle
+  misses. It finds acceptance after21gestures and passes the original disabled,
+  contrast and padding checks; the old16-up/8-down search underreached. It then
+  fails at quantity-field recovery: the old center helper never observes the
+  result of its final drag. Failure screenshot shows the field in the editor;
+  final hittability remains unproven. Large text restored; inspection/export done
+  once. [Evidence](evidence/native/dinner-scroll-progress-20261109/README.md).
+- R2 original Spanish AX5 run is **active**, root session31796/PID10852,
+  `.build/DinnerScrollProgressNov09R2/run_spanish_ax5.py`. Last verified live at
+  elapsed26s. It corrects scoped quantity discovery and final observation without
+  more gestures or weaker assertions. Build/bundle pass; no native qualification
+  yet. Poll the same process, then inspect once after terminal receipt and check
+  Large restoration. Do not run another local native job concurrently.
+- Reused source/DD remain at `.build/EnglishKeyboardReviewNov08/current-r1/execution-r1`.
+  Current scratch manifest SHA256 is
+  `0d80786c427546b979f4b303376cc03be0218e62d2766bbd6e40c04818138ac3`.
+  Only FreeJourneyUITests.swift differs from the English-qualified app baseline;
+  no scratch test change is installed in the main tree. Prior source/products
+  are APFS-preserved in each new candidate's `preservation` directory.
+- AX5 screenshot exposes visually truncated ingredient prompts/removal label.
+  A helper is preparing a scratch product proposal; do not conflate complete AX
+  names with complete visible text. View changes wait for test-cause isolation.
+- Workflow improvements at1e632421 are published on
+  `codex/ci-feedback-efficiency-20261108`;274Python/workflow checks pass. No full
+  PR batch was triggered. [Workflow evidence](evidence/native/ci-feedback-efficiency-20261108/README.md).
 
 ## Installed Dinner repair and next action
 
 Three files are installed locally: DinnerEditors.swift, DinnerIdeaSupplyViews.swift
-and FreeJourneyUITests.swift. Isolated source and reusable DD remain at
-`.build/EnglishKeyboardReviewNov08/current-r1/execution-r1/{source,dd}`.
+and FreeJourneyUITests.swift. The reusable source/DD paths now hold the scratch test candidate above.
 The 561-file manifest `.build/DinnerInlineTitleNov08/source.json` has SHA256
 `1b4696e19ef030cb754148b23eb3bd9b65f0c3f9a617c2ad9b2e99e4fde7a0b5`.
-It matches the installed app/test bytes and includes the current Membership fix.
+This baseline matches the installed app/test bytes and includes the Membership fix;
+it is distinct from the current scratch test manifest above.
 The old `8d0eb48f` native pin is obsolete.
 
 Focused Done has its own top-content row for dinner ideas and supply, a rectangular
@@ -69,20 +76,19 @@ Earlier sibling-row/background-only candidates failed visual review; top-inset
 failed the Review postcondition. Their source/products/results remain preserved.
 All earlier inspectors and exports are complete; do not repeat them.
 
-Next: classify/fix the Spanish missing-CTA failure using the retained screenshot
-and scroll evidence before another native run. Keep the original business
-assertions; do not blindly increase attempts or claim AX5 qualification. For the
-next focused local layout experiment, use targeted diagnostics as documented in
-CI-VALIDATION. Then run the original Spanish journey at Large text on owned
-iOS17 (`run_native.py spanish-ios17`), followed by an unsigned Release
-build/bundle check. These variants are still unproven. Preserve compatible
-products before changing build profiles. Full combined hosted and release
-acceptance remains required. No deployment occurred in this workflow work.
+Next: finish the same R2 Spanish run and inspect its one terminal result. Retain
+all original acceptance, value and touch assertions. Resolve the documented AX5
+visual truncation, then qualify English, Spanish largest text, Spanish Large on
+owned iOS17 and unsigned Release. Preserve source/products before changing the
+shared build. No current scratch candidate is broadly qualified or installed.
+Full combined hosted/release acceptance remains required. No deployment occurred.
 
 ## Other open failures and workflow
 
 - Scroll performance: original metric cardinality4→3 failure; missing producer
-  is unproven. `.build/ScrollMetricReviewNov08/README.md` is a conditional proposal,
+  is unproven. Read-only SQLite inspection now confirms zero archived metric rows,
+  not merely an empty JSON export. [Unsubmitted addendum](evidence/native/apple-scroll-feedback-20261106/FOLLOWUP-NOV08.md).
+  `.build/ScrollMetricReviewNov08/README.md` is a conditional proposal,
   not permission to run interposition without review. Do not drop required metrics.
 - Cook readback: standalone render-only generation reproduced framework-main
   waits before playback. That direction is rejected; no cap increase/player

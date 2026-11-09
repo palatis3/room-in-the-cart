@@ -1,0 +1,155 @@
+diff --git a/Users/palatis/Room in the Cart/.build/DinnerScrollProgressNov09/preservation/source/ios/UITests/FreeJourneyUITests.swift b/Users/palatis/Room in the Cart/.build/EnglishKeyboardReviewNov08/current-r1/execution-r1/source/ios/UITests/FreeJourneyUITests.swift
+index d7974ac7..71efa0c8 100644
+--- a/Users/palatis/Room in the Cart/.build/DinnerScrollProgressNov09/preservation/source/ios/UITests/FreeJourneyUITests.swift	
++++ b/Users/palatis/Room in the Cart/.build/EnglishKeyboardReviewNov08/current-r1/execution-r1/source/ios/UITests/FreeJourneyUITests.swift	
+@@ -1650,6 +1650,14 @@ import XCTest
+     }
+     private func reviewAndApprovePattern(spanish: Bool) throws {
+         func copy(_ english: String, _ translation: String) -> String { spanish ? translation : english }
++        func assertReviewedText(_ text: String, initiallyUpward: Bool = true) {
++            let target = app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
++            revealDinnerReview(target, initiallyUpward: initiallyUpward)
++        }
++        func tapReviewed(_ target: XCUIElement) {
++            revealDinnerReview(target)
++            target.tap()
++        }
+         launch(reset: true, spanish: spanish)
+         tap(app.tabBars.buttons[copy("Dinners", "Cenas")])
+         tap(element("dinnerStartPickup"))
+@@ -1669,9 +1677,9 @@ import XCTest
+              focusedDoneEvidence: (copy("Dinner idea", "Idea para cenar"), copy("Done", "Listo"), "Dinner-idea-Done-cleared-amount", copy("Dinner ideas", "Ideas para cenar"), .center))
+         tap(element("ledgerReviewDinner"))
+         let unknownQuantity = copy("Review unknown ingredient quantities", "Revisa las cantidades de ingredientes desconocidas")
+-        assertText(unknownQuantity)
++        assertReviewedText(unknownQuantity)
+         let accept = element("dinnerAcceptIdea")
+-        reveal(accept)
++        revealDinnerAcceptanceRow(accept)
+         XCTAssertEqual(accept.elementType, .button)
+         XCTAssertFalse(accept.isEnabled)
+         let disabledState = XCTAttachment(string: accept.debugDescription)
+@@ -1685,17 +1693,17 @@ import XCTest
+         XCTAssertTrue(accept.exists)
+         XCTAssertFalse(accept.isEnabled)
+         XCTAssertFalse(app.staticTexts[copy("Dinner saved. Choose it separately to add grocery needs.", "Cena guardada. Elígela por separado para agregar sus necesidades de compra.")].exists)
+-        assertText(unknownQuantity)
+-        tap(app.buttons[copy("Continue editing", "Seguir editando")])
++        assertReviewedText(unknownQuantity, initiallyUpward: false)
++        tapReviewed(app.buttons[copy("Continue editing", "Seguir editando")])
+         fill(originalAmount, into: amountLabel, replacing: true, requireDone: true, useVisibleCenter: true,
+              focusedDoneEvidence: (copy("Dinner idea", "Idea para cenar"), copy("Done", "Listo"), "Dinner-idea-Done-restored-amount", copy("Dinner ideas", "Ideas para cenar"), .top))
+         tap(element("ledgerReviewDinner"))
+-        reveal(accept); XCTAssertTrue(accept.isEnabled)
+-        assertText(copy("Bean and cabbage wraps", "Tortillas rellenas de frijoles y repollo"))
+-        assertText(copy("Shredded cabbage", "Repollo rallado"))
+-        assertText(copy("Usable yield is unconfirmed", "El rendimiento aprovechable no está confirmado"))
++        revealDinnerAcceptanceRow(accept); XCTAssertTrue(accept.isEnabled)
++        assertReviewedText(copy("Bean and cabbage wraps", "Tortillas rellenas de frijoles y repollo"), initiallyUpward: false)
++        assertReviewedText(copy("Shredded cabbage", "Repollo rallado"))
++        assertReviewedText(copy("Usable yield is unconfirmed", "El rendimiento aprovechable no está confirmado"))
+         capture("First-pickup-editable-dinner-pattern")
+-        tap(app.buttons[copy("Review stock and pack for Tortillas", "Revisar existencias y paquete de Tortillas")])
++        tapReviewed(app.buttons[copy("Review stock and pack for Tortillas", "Revisar existencias y paquete de Tortillas")])
+         func fillSupply(_ text: String, into id: String, sample: FocusedDoneSample) {
+             let field = app.textFields[id]
+             tap(field)
+@@ -1740,11 +1748,11 @@ import XCTest
+         XCTAssertEqual(reviewedDetails.label, copy("Use these reviewed details", "Usar estos datos revisados"))
+         XCTAssertEqual(app.buttons.matching(identifier: "ideaSupplyConfirm").count, 1)
+         tap(element("ideaSupplyConfirm"))
+-        assertText(copy("Usable in one pack: 8 units", "Cantidad aprovechable en un paquete: 8 unidades"))
+-        assertText(copy("Whole packs for the remainder: 1", "Paquetes enteros para lo que falta: 1"))
+-        assertText(copy("Estimated item cost: $2.50", "Costo estimado del artículo: $2.50"))
++        assertReviewedText(copy("Usable in one pack: 8 units", "Cantidad aprovechable en un paquete: 8 unidades"), initiallyUpward: false)
++        assertReviewedText(copy("Whole packs for the remainder: 1", "Paquetes enteros para lo que falta: 1"))
++        assertReviewedText(copy("Estimated item cost: $2.50", "Costo estimado del artículo: $2.50"))
+         capture(spanish ? "Primera-compra-paquete-revisado" : "First-pickup-reviewed-tortilla-pack")
+-        assertText(copy("Recipe needs: 1 cup", "La receta necesita: 1 taza"))
++        assertReviewedText(copy("Recipe needs: 1 cup", "La receta necesita: 1 taza"))
+         try assertReadableDinnerAcceptance(accept, name: "Dinner-enabled-accept")
+         XCTAssertTrue(accept.isEnabled)
+         tapDinnerAcceptancePadding(accept, topEdge: spanish)
+@@ -1767,15 +1775,65 @@ import XCTest
+                       height: max(0, gestureArea.height - 24))
+     }
+ 
+-    private func revealDinnerAcceptanceRow(_ button: XCUIElement) {
++    /// Dinner review can span many screens at accessibility sizes. Keep moving
++    /// through observed content; a gesture count alone does not mean we reached an end.
++    private func revealDinnerReview(_ target: XCUIElement, initiallyUpward: Bool = true, entireRow: Bool = false) {
++        var upward = initiallyUpward
++        var previous: [String] = []
++        var previousArea: CGRect?
++        var unchanged = 0
++        var reversed = false
++        var trace: [String] = []
++        defer {
++            let evidence = XCTAttachment(string: trace.joined(separator: "\n"))
++            evidence.name = "Dinner-review-scroll-progress"
++            evidence.lifetime = .keepAlways
++            add(evidence)
++        }
+         for attempt in 0..<24 {
+-            let area = scrollableArea()
++            let snapshot = try? app.snapshot()
++            let area = scrollableArea(from: snapshot)
+             let viewport = dinnerAcceptanceViewport(for: area)
+-            if button.exists && button.isHittable && viewport.contains(button.frame) { break }
+-            let upward = button.exists && !button.frame.isEmpty ? button.frame.midY > area.midY : attempt < 16
++            let exists = target.exists
++            let frame = exists ? target.frame : .zero
++            if exists && target.isHittable && (!entireRow || viewport.contains(frame)) {
++                trace.append("found after \(attempt) gestures; target=\(target.identifier); frame=\(frame)")
++                return
++            }
++            var visible: [String] = []
++            var elements = snapshot.map { [$0] } ?? []
++            while let element = elements.popLast() {
++                if [.navigationBar, .tabBar, .keyboard].contains(element.elementType) { continue }
++                let frame = element.frame
++                if [.staticText, .button].contains(element.elementType), !frame.isEmpty, frame.intersects(area) {
++                    // Keep full frames: clipping a tall label to the viewport hides movement.
++                    let geometry = [frame.minX, frame.minY, frame.width, frame.height].map { $0.rounded() }
++                    visible.append("\(element.elementType.rawValue)|\(element.identifier)|\(element.label)|\(geometry)")
++                }
++                elements.append(contentsOf: element.children)
++            }
++            visible.sort()
++            let stable = !visible.isEmpty && visible == previous && previousArea == area
++            unchanged = stable ? unchanged + 1 : 0
++            if exists && !frame.isEmpty {
++                upward = frame.midY > area.midY
++            } else if unchanged >= 2 && !reversed {
++                // Repeated no progress can be an end or an intercepted gesture.
++                // It justifies one bounded search in the other direction, not a pass.
++                upward.toggle(); reversed = true; unchanged = 0
++            }
++            trace.append("gesture=\(attempt + 1); upward=\(upward); exists=\(exists); frame=\(frame); area=\(area); unchanged=\(unchanged); reversed=\(reversed); visible=\(visible)")
++            previous = visible; previousArea = area
+             scrollContent(upward: upward, area: area)
+         }
+         let viewport = dinnerAcceptanceViewport(for: scrollableArea())
++        XCTAssertTrue(target.exists && target.isHittable && (!entireRow || viewport.contains(target.frame)),
++                      "Dinner review target not reached within 24 gestures")
++    }
++
++    private func revealDinnerAcceptanceRow(_ button: XCUIElement) {
++        revealDinnerReview(button, entireRow: true)
++        let viewport = dinnerAcceptanceViewport(for: scrollableArea())
+         XCTAssertTrue(button.exists && button.isHittable && viewport.contains(button.frame))
+         XCTAssertEqual(button.elementType, .button)
+         XCTAssertEqual(app.buttons.matching(identifier: "dinnerAcceptIdea").count, 1)
+@@ -2022,10 +2080,10 @@ import XCTest
+         }
+         XCTAssertTrue(target.isHittable, "Missing actionable UI element: \(target.debugDescription)")
+     }
+-    private func scrollableArea() -> CGRect {
++    private func scrollableArea(from suppliedSnapshot: (any XCUIElementSnapshot)? = nil) -> CGRect {
+         // Navigation and sheet transitions can replace a bar between separate
+         // XCUI queries. Measure the keyboard and bars from one captured tree.
+-        let snapshot = try? app.snapshot()
++        let snapshot = suppliedSnapshot ?? (try? app.snapshot())
+         let bounds = snapshot?.frame ?? app.frame
+         var keyboardTop = bounds.maxY
+         var barBottom = bounds.minY + 88
