@@ -15,6 +15,7 @@ const database = `127.0.0.1:${port}/ritc_native_wire`;
 const adminURL = `postgresql://postgres:fixture-only@${database}`;
 process.env.TEST_ADMIN_DATABASE_URL = adminURL;
 process.env.TEST_DATABASE_URL = `postgresql://ritc_runtime:fixture-only@${database}`;
+process.env.TEST_WORKER_DATABASE_URL = `postgresql://ritc_test_worker:fixture-only@${database}`;
 process.env.RITC_TEST_NATIVE_WIRE = '1';
 
 const history = paid => `Swift household client records meals and price history over HTTPS and PostgreSQL (paid=${paid})`;
@@ -27,6 +28,7 @@ const cases = [
   'actual Swift undated selection survives process restart and schedules once over PostgreSQL',
   'actual Swift source removal preserves other meals and manual lines across authorized clients',
   'real Swift adult proposal and separate shopper adoption use pinned loopback HTTPS and PostgreSQL',
+  'actual Swift shared demand preserves typed sources and exact durable operations over HTTPS and PostgreSQL',
 ];
 const swiftRuns = [
   'deferred-request HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres',
@@ -44,8 +46,17 @@ const swiftRuns = [
   'meal-removal-read HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
   'quote-adult HouseholdClientTests.StoreQuoteNativeWireTests/testStoreQuoteClientAgainstPostgres',
   'quote-shopper HouseholdClientTests.StoreQuoteNativeWireTests/testStoreQuoteClientAgainstPostgres',
+  'demand-adopt-cancel HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'demand-adopt-apply HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'demand-stale-device HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'demand-remove HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'demand-undo HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'demand-request HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'demand-denied HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'demand-privacy HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+
 ];
-const files = ['history', 'shared-meal-changes', 'shared-store-quotes', 'service']
+const files = ['history', 'shared-meal-changes', 'shared-store-quotes', 'service', 'shared-demand']
   .map(name => fileURLToPath(new URL(`../tests/${name}.integration.mjs`, import.meta.url)));
 const admin = new pg.Client({ connectionString: adminURL });
 await admin.connect();

@@ -37,18 +37,18 @@ async function invited(f){const a=await actor(),i=ok(await call(f.owner,f.base+'
 const count=async(f,t)=>(await admin.query(`SELECT count(*)::int n FROM ritc.${t} WHERE household_id=$1 AND shop_id=$2`,[f.h,f.shopId])).rows[0].n;
 
 test('shared demand preview Cancel, atomic adoption, exact replay and second device persisted read',async()=>{
- const f=await fixture(),before=ok(await call(f.owner,f.path));assert.equal(ok(await call(f.owner,f.path+'/demand')).status,'legacy');
- const input=draft(f),p=ok(await preview(f,input));assert.deepEqual(ok(await call(f.owner,f.path)),before);assert.equal(await count(f,'shared_demand_revision'),0);
+ const f=await fixture(),before=ok(await call(f.owner,f.path)),legacy=ok(await call(f.owner,f.path+'/demand'));assert.equal(legacy.status,'legacy');assert.deepEqual(legacy.totals,[]);
+ const input=draft(f),p=ok(await preview(f,input));assert.deepEqual(p.beforeTotals,[]);assert.deepEqual(p.afterTotals,[{lineId:f.basket.lineId,unit:'count',quantity:{numerator:'12',denominator:'1'},activeContributionIds:[input.change.contributions[0].id]}]);assert.deepEqual(ok(await call(f.owner,f.path)),before);assert.equal(await count(f,'shared_demand_revision'),0);
  const a=await apply(f,input,p),receipt=ok(a.response);assert.equal(receipt.shopRevision,2);assert.deepEqual(ok(await call(f.owner,f.base+'/commands','POST',a.command)),receipt);assert.equal(await count(f,'shared_demand_revision'),1);
  assert.equal(await count(f,'shared_demand_preview'),0);const second=await actor(f.owner.subject);await enroll(second,f.h);
- const saved=ok(await call(second,f.path+'/demand'));assert.deepEqual(saved.graph,p.after);assert.equal(saved.graph.contributions[0].quantity.amount.numerator,'12');
+ const saved=ok(await call(second,f.path+'/demand'));assert.deepEqual(saved.totals,p.afterTotals);assert.deepEqual(saved.graph,p.after);assert.equal(saved.graph.contributions[0].quantity.amount.numerator,'12');
  const snap=(await admin.query('SELECT snapshot FROM ritc.shop_snapshot WHERE household_id=$1 AND shop_id=$2 AND revision=2',[f.h,f.shopId])).rows[0].snapshot;assert.equal(snap.demand.revision,1);assert.match(snap.demand.digest,/^[a-f0-9]{64}$/);
  assert.equal((await call(second,f.base+'/commands','POST',{...a.command,replayWindow:second.window})).status,409);
 });
 test('legacy remains usable; graph adoption retains typed unknown and rejects insufficient reviewed packs',async()=>{
  const f=await fixture();ok(await send(f,'shop.patch',{quote:f.quote,lines:[f.basket]},1));
  const input=draft(f);input.base.shopRevision=2;input.change.contributions[0].quantity={...q(2),unit:'ounce'};input.packs[0].acceptUnresolved=true;
- const p=ok(await preview(f,input));assert.equal(p.after.contributions[0].quantity.unit,'ounce');ok((await apply(f,input,p)).response);
+ const p=ok(await preview(f,input));assert.equal(p.afterTotals[0].quantity,null);assert.equal(p.after.contributions[0].quantity.unit,'ounce');ok((await apply(f,input,p)).response);
  const g=await fixture(),short=draft(g);short.packs[0].usablePerPack=q(5);assert.equal((await preview(g,short)).data.error.code,'demand_insufficient_packs');
 });
 test('unreviewed graph writer is fenced; exact action, expiry, authority and device are bound',async()=>{
@@ -128,6 +128,8 @@ test('persisted twelve/six/four/two source removal conserves distinct protected 
   ok(await send(f,'shop.patch',{quote:f.quote,lines:[f.basket],mealEdit:{occurrenceId,baseMealRevision:null,meal}},revision++));meals.push({occurrenceId,groupId,ingredientId,bindingId,n,protectedMeal,meal,revision});
  }
  const input=draft(f);input.base.shopRevision=4;const manual=input.change.contributions[0];
+ const imported=source(f,q(12));imported.source={kind:'import',batchId:randomUUID(),entryId:randomUUID()};imported.originalText='Imported duplicate twelve wraps';input.change.contributions.push(imported);
+ input.change.edges.push({id:randomUUID(),kind:'duplicate',demandId:imported.id,supplyId:manual.id,quantity:q(12),confirmation:{productMatchConfirmed:true,confirmedAt:new Date().toISOString(),evidence:'Explicitly reviewed duplicate import of the same twelve wraps'}});
  for(const m of meals){const c=source(f,q(m.n));c.originalText=m.meal.title+' wraps';c.source=m.protectedMeal?{kind:'reservation',reservationId:randomUUID(),purpose:'Protected lunch',originOccurrenceId:m.occurrenceId,ingredientId:m.ingredientId,groupId:m.groupId,bindingId:m.bindingId}:{kind:'meal',occurrenceId:m.occurrenceId,ingredientId:m.ingredientId,groupId:m.groupId,bindingId:m.bindingId};m.sourceId=c.id;input.change.contributions.push(c);input.change.edges.push({id:randomUUID(),kind:'withinExisting',demandId:c.id,supplyId:manual.id,quantity:q(m.n),confirmation:{productMatchConfirmed:true,confirmedAt:new Date().toISOString(),evidence:'Reviewed within twelve wraps'}});}
  const first=ok(await preview(f,input));ok((await apply(f,input,first)).response);const original=ok(await call(f.owner,f.path+'/demand')).graph;
  const remove={...input,mode:'change',base:{shopRevision:5,authorityEpoch:1,graphRevision:1},change:{...empty(),removeSourceIds:[meals[0].sourceId]},action:{kind:'shop.patch',body:{quote:f.quote,lines:[f.basket],mealEdit:{occurrenceId:meals[0].occurrenceId,baseMealRevision:2,meal:null}}}};
@@ -254,4 +256,51 @@ test('erasing a source author invalidates another shopper preview before any gra
  await assert.rejects(admin.query('SELECT ritc.privacy_erase_extension($1,$2)',[f.h,author.id]),e=>e.message==='erasure authority required');
  ok(await call(author,'/v1/privacy/deletions','POST',{clientKey:randomUUID(),statusToken:randomBytes(32).toString('base64url'),confirm:true,households:[{householdId:f.h,organizer:'transfer',organizerMemberId:shopper.id,shops:[],eraseChildProfiles:[]}]}),202);assert.equal((await maintenance.run({batchSize:1})).completed,1);
  assert.equal(await count(f,'shared_demand_preview'),0);assert.equal(await count(f,'shared_demand_revision'),0);assert.equal((await apply(f,pending.input,pending.p)).response.status,409);assert.equal(ok(await call(shopper,f.path+'/demand')).status,'legacy');
+});
+
+test('canonical HTTP totals omit retired lines and their source identities',async()=>{
+ const f=await fixture(),a=await adopt(f),input={...draft(f),mode:'change',base:{shopRevision:2,authorityEpoch:1,graphRevision:1},change:{...empty(),removeSourceIds:[a.input.change.contributions[0].id]},action:{kind:'shop.patch',body:{quote:f.quote,lines:[]}},packs:[]};
+ const p=ok(await preview(f,input));assert.equal(p.beforeTotals.length,1);assert.deepEqual(p.afterTotals,[]);ok((await apply(f,input,p)).response);
+ const page=ok(await call(f.owner,f.path+'/demand'));assert.deepEqual(page.totals,[]);assert.equal(page.graph.lines[0].trashedAt!==null,true);assert.equal(page.graph.contributions[0].removedAt!==null,true);
+});
+
+if(process.env.RITC_TEST_NATIVE_WIRE==='1')test('actual Swift shared demand preserves typed sources and exact durable operations over HTTPS and PostgreSQL',async()=>{
+ const {exerciseSharedDemandClient}=await import('./shared-demand-native-wire.mjs');const {mkdtemp,chmod}=await import('node:fs/promises');const {join}=await import('node:path');const {tmpdir}=await import('node:os');
+ const privateState=await mkdtemp(join(process.env.RITC_NATIVE_WIRE_STATE??tmpdir(),'shared-demand-client-'));await chmod(privateState,0o700);
+ const f=await fixture(),meals=[];let revision=1;
+ for(const [title,n,protectedMeal] of [['Tacos',6,false],['Quesadillas',4,false],['Lunch',2,true]]){
+  const occurrenceId=randomUUID(),groupId=randomUUID(),ingredientId=randomUUID(),bindingId=randomUUID(),quantity={amount:{numerator:n,denominator:1},unit:'count',originalLiteral:n+' wraps'};
+  const meal={title,day:null,kind:protectedMeal?'lunch':'dinner',portions:n,protected:protectedMeal,planning:{groups:[{id:groupId,name:title,servings:{numerator:n,denominator:1},protected:protectedMeal}],ingredients:[{id:ingredientId,name:'Wraps',quantity,groupIds:[groupId],exclusions:title==='Tacos'?['No sesame']:[]}],bindings:[{id:bindingId,groupId,ingredientId,quantity}]}};
+  ok(await send(f,'shop.patch',{quote:f.quote,lines:[f.basket],mealEdit:{occurrenceId,baseMealRevision:null,meal}},revision++));meals.push({occurrenceId,groupId,ingredientId,bindingId,n,protectedMeal,meal,revision});
+ }
+ const input=draft(f);input.base.shopRevision=4;const manual=input.change.contributions[0];
+ const imported=source(f,q(12));imported.source={kind:'import',batchId:randomUUID(),entryId:randomUUID()};imported.originalText='Imported duplicate twelve wraps';input.change.contributions.push(imported);
+ input.change.edges.push({id:randomUUID(),kind:'duplicate',demandId:imported.id,supplyId:manual.id,quantity:q(12),confirmation:{productMatchConfirmed:true,confirmedAt:new Date().toISOString(),evidence:'Explicitly reviewed duplicate import of the same twelve wraps'}});
+ for(const m of meals){const c=source(f,q(m.n));c.originalText=m.meal.title+' original wraps';c.source=m.protectedMeal?{kind:'reservation',reservationId:randomUUID(),purpose:'Protected lunch',originOccurrenceId:m.occurrenceId,ingredientId:m.ingredientId,groupId:m.groupId,bindingId:m.bindingId}:{kind:'meal',occurrenceId:m.occurrenceId,ingredientId:m.ingredientId,groupId:m.groupId,bindingId:m.bindingId};
+  if(m.meal.title==='Tacos'){c.exclusions=['sesame'];c.sourceExclusions=[{occurrenceId:m.occurrenceId,ingredientId:m.ingredientId,label:'No sesame',resolution:{kind:'mapped',tags:['sesame'],confirmedAt:new Date().toISOString()}}];}
+  m.sourceId=c.id;input.change.contributions.push(c);input.change.edges.push({id:randomUUID(),kind:'withinExisting',demandId:c.id,supplyId:manual.id,quantity:q(m.n),confirmation:{productMatchConfirmed:true,confirmedAt:new Date().toISOString(),evidence:'Explicitly reviewed within twelve wraps'}});
+ }
+ const wire=async(phase,requests=[],owner=f.owner,extra={})=>exerciseSharedDemandClient({service:server,owner,householdId:f.h,shopId:f.shopId,phase,requests,before:owner===f.owner?ok(await call(f.owner,f.path+'/demand')):null,privateState,...extra});
+ const before=ok(await call(f.owner,f.path)),operations=await count(f,'operation');
+ assert.equal((await wire('adopt-cancel',[input])).attempts,0);assert.deepEqual(ok(await call(f.owner,f.path)),before);assert.equal(await count(f,'operation'),operations);assert.equal(await count(f,'shared_demand_revision'),0);
+ const applied=await wire('adopt-apply',[input],f.owner,{dropFirstReply:true});assert.equal(applied.attempts,2);assert.equal(applied.dropped,1);assert.deepEqual(applied.commands[0],applied.commands[1]);assert.equal(await count(f,'operation'),operations+1);
+ const adopted=ok(await call(f.owner,f.path+'/demand'));assert.equal(adopted.graph.revision,1);assert.deepEqual(adopted.graph.contributions,input.change.contributions);assert.deepEqual(adopted.totals[0].quantity,{numerator:'12',denominator:'1'});
+ const review={...input,mode:'review',base:{shopRevision:5,authorityEpoch:1,graphRevision:1},change:empty()};assert.equal((await wire('stale-device',[review])).attempts,3);assert.equal(await count(f,'shared_demand_revision'),2);
+ const remove={...input,mode:'change',base:{shopRevision:6,authorityEpoch:1,graphRevision:2},change:{...empty(),removeSourceIds:[meals[0].sourceId]},action:{kind:'shop.patch',body:{quote:f.quote,lines:[f.basket],mealEdit:{occurrenceId:meals[0].occurrenceId,baseMealRevision:2,meal:null}}}};
+ assert.equal((await wire('remove',[remove])).attempts,1);const removed=ok(await call(f.owner,f.path+'/demand'));assert.equal(removed.graph.revision,3);assert.equal(removed.graph.contributions.filter(c=>c.removedAt!==null).length,1);
+ for(const c of adopted.graph.contributions.filter(c=>c.id!==meals[0].sourceId))assert.deepEqual(removed.graph.contributions.find(x=>x.id===c.id),c);
+ assert.deepEqual(removed.graph.edges,adopted.graph.edges.filter(e=>e.demandId!==meals[0].sourceId));assert.deepEqual(removed.totals[0].quantity,{numerator:'12',denominator:'1'});assert.ok(!removed.totals[0].activeContributionIds.includes(meals[0].sourceId));
+ const removalOperation=(await admin.query('SELECT operation_id FROM ritc.shared_demand_revision WHERE household_id=$1 AND shop_id=$2 AND revision=3',[f.h,f.shopId])).rows[0].operation_id;
+ const extra=source(f,q(3));extra.originalText='Unrelated added three wraps';const basket={...f.basket,packs:3};const add={...input,mode:'change',base:{shopRevision:7,authorityEpoch:1,graphRevision:3},change:{...empty(),contributions:[extra]},action:{kind:'shop.patch',body:{quote:f.quote,lines:[basket]}}};
+ const undo={...add,mode:'undo',base:{shopRevision:8,authorityEpoch:1,graphRevision:4},change:empty(),undoOperationId:removalOperation,action:{kind:'shop.patch',body:{quote:f.quote,lines:[basket],mealEdit:{occurrenceId:meals[0].occurrenceId,baseMealRevision:null,meal:meals[0].meal}}}};
+ assert.equal((await wire('undo',[add,undo])).attempts,2);const restored=ok(await call(f.owner,f.path+'/demand'));assert.equal(restored.graph.revision,5);assert.deepEqual(restored.graph.contributions.find(c=>c.id===extra.id),extra);for(const c of adopted.graph.contributions)assert.deepEqual(restored.graph.contributions.find(x=>x.id===c.id),c);assert.deepEqual(restored.totals[0].quantity,{numerator:'15',denominator:'1'});
+ const author=await invited(f);const request=ok(await send(f,'request.send',{clientRequestId:randomUUID(),originalItem:'Guest wraps unknown quantity',ownQuantity:null,authoredAt:new Date().toISOString()},9,1,author)).request;
+ const rp=ok(await call(f.owner,f.path+'/previews','POST',{requestId:request.requestId,base:{shopRevision:9,authorityEpoch:1,requestRevision:1},decision:{choice:'link',lineId:f.basket.lineId,promote:false}}));
+ const requested={...source(f,null),source:{kind:'request',requestId:request.requestId,appliedRequestRevision:1},originalText:request.originalItem};
+ const requestInput={...add,base:{shopRevision:9,authorityEpoch:1,graphRevision:5},change:{...empty(),contributions:[requested]},action:{kind:'request.apply',body:{requestId:request.requestId,previewId:rp.previewId,acceptUnknown:false,acceptOverage:false}},packs:[{...input.packs[0],acceptUnresolved:true}]};
+ assert.equal((await wire('request',[requestInput])).attempts,1);assert.equal(ok(await call(f.owner,f.path+'/demand')).totals[0].quantity,null);assert.equal((await wire('denied',[],author)).attempts,0);
+ ok(await call(author,'/v1/privacy/deletions','POST',{clientKey:randomUUID(),statusToken:randomBytes(32).toString('base64url'),confirm:true,households:[{householdId:f.h,organizer:'none',shops:[],eraseChildProfiles:[]}]}),202);assert.equal((await maintenance.run({batchSize:1})).completed,1);
+ const privacyPage=ok(await call(f.owner,f.path+'/demand'));assert.equal(privacyPage.status,'reviewRequired');assert.deepEqual(privacyPage.graph.contributions.find(c=>c.id===manual.id),manual);assert.deepEqual(privacyPage.graph.contributions.find(c=>c.id===meals[2].sourceId),adopted.graph.contributions.find(c=>c.id===meals[2].sourceId));
+ for(const table of ['shared_demand_revision','shared_demand_preview','basket_line','shop_snapshot','operation_response'])assert.ok(!JSON.stringify((await admin.query('SELECT to_jsonb(t) value FROM ritc.'+table+' t WHERE household_id=$1',[f.h])).rows).includes(request.originalItem));
+ assert.equal((await wire('privacy')).attempts,1);
 });

@@ -27,6 +27,7 @@ final class SharedMealNativeWireTests: XCTestCase {
 
     func testSharedMealClientAgainstPostgres() async throws {
         let env = ProcessInfo.processInfo.environment
+        if env["RITC_WIRE_DEMAND_PHASE"] != nil { try await exerciseSharedDemandWire(); return }
         if env["RITC_WIRE_REMOVAL_PHASE"] != nil {
             try await exerciseSourceRemovalAcrossClients()
             return

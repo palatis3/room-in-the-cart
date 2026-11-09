@@ -260,6 +260,12 @@ public actor HouseholdService {
         return try await perform(path, method: method, body: body)
     }
 
+    func sharedDemandContext(shopID: UUID) throws -> SharedDemandContext {
+        guard selectedGrantID == nil, selectedShopID == nil || selectedShopID == shopID,
+              let subject, let householdID, let memberID, let enrollment else { throw ClientError.accessEnded }
+        return SharedDemandContext(subject: subject, householdID: householdID, memberID: memberID, deviceID: enrollment.deviceId)
+    }
+
     func storeQuoteContext(shopID: UUID) throws -> StoreQuoteContext {
         guard selectedGrantID == nil, selectedShopID == nil || selectedShopID == shopID,
               let subject, let householdID, let memberID, let enrollment else {
@@ -581,6 +587,11 @@ public actor HouseholdService {
         let start = generation
         guard let enrollment, operation.householdID == householdID, operation.deviceID == enrollment.deviceId else { throw ClientError.accessEnded }
         let envelope = try JSONDecoder().decode(CommandEnvelope.self, from: operation.bytes)
+        if envelope.body["demandReview"] != nil {
+            guard let binding = operation.sharedDemandBinding, let shopID = UUID(uuidString: envelope.shopId),
+                  try sharedDemandContext(shopID: shopID) == binding.context else { throw ClientError.accessEnded }
+            _ = try binding.validate(operation)
+        } else if operation.sharedDemandBinding != nil { throw ClientError.configuration }
         let confirming = envelope.kind == "request.confirmPurchase"
         let capability: String?
         switch envelope.kind {
@@ -613,6 +624,7 @@ public actor HouseholdService {
                   let source = receipt.sourceRequestId, envelope.body["requestId"] == .string(source)
             else { throw ClientError.invalidResponse }
         }
+        if let binding = operation.sharedDemandBinding { try binding.validateReceipt(receipt, envelope: envelope) }
         return receipt
     }
     /// Shop creation is organizer-only; updates remain restricted to the currently assigned shopper.
@@ -622,6 +634,11 @@ public actor HouseholdService {
         guard selectedGrantID == nil, let enrollment, operation.householdID == householdID,
               operation.deviceID == enrollment.deviceId else { throw ClientError.accessEnded }
         let envelope = try JSONDecoder().decode(CommandEnvelope.self, from: operation.bytes)
+        if envelope.body["demandReview"] != nil {
+            guard let binding = operation.sharedDemandBinding, let shopID = UUID(uuidString: envelope.shopId),
+                  try sharedDemandContext(shopID: shopID) == binding.context else { throw ClientError.accessEnded }
+            _ = try binding.validate(operation)
+        } else if operation.sharedDemandBinding != nil { throw ClientError.configuration }
         guard envelope.clientKey == operation.clientKey, UUID(uuidString: envelope.shopId) != nil,
               ["shop.create", "shop.patch", "shop.freeze", "shop.reopen", "shop.transferAuthority",
                "delivery.register", "delivery.arrival", "delivery.usable", "delivery.match", "delivery.reserve",
@@ -664,6 +681,7 @@ public actor HouseholdService {
                 guard UUID(uuidString: receipt.operationId) == sourceID else { throw ClientError.invalidResponse }
             } else if envelope.body["sourceId"] != .string(sourceID.uuidString.lowercased()) { throw ClientError.invalidResponse }
         }
+        if let binding = operation.sharedDemandBinding { try binding.validateReceipt(receipt, envelope: envelope) }
         return receipt
     }
     /// For other native service adapters; returning a token never grants a role.

@@ -100,15 +100,24 @@ the existing reducer arithmetic. Pack validation reuses one batch rather than
 revalidating the graph per line. Isolated TS and all 63 focused domain/summary tests
 pass; the original 281 PostgreSQL tests pass with three optional browser skips.
 The owned cluster is stopped. [Proof](evidence/service/shared-demand-totals-20261109/README.md).
-The typed Swift client, durable reviewed-operation binding and actual HTTPS
-multi-device cases are in progress with Astra; native UI acceptance is still open.
+The typed Swift client and durable reviewed-operation binding now compile and pass
+114 package tests with three expected database-only skips. The first wire attempt
+passed the eight existing Node cases/15 Swift scenarios, then caught a new fixture
+body-consumption bug. After two offline controls proved the fixture correction,
+all eight new demand scenarios passed over real HTTPS/PostgreSQL using the same
+compiled Swift products, in 19.518 seconds. Root verified the 12 owned source files,
+retained scenario hashes and unchanged compiled executable. The successful fixture
+is removed and the failed fixtures are stopped/preserved. Native UI acceptance and
+full combined-revision qualification are still open.
+[Proof and original attempts](evidence/native/shared-demand-client-wire-20261109/README.md).
 
 Current coordination: root owns service totals and App flow integration;
-astra_release_gap owns HouseholdClient and its dedicated wire tests;
+astra_release_gap's HouseholdClient and dedicated wire changes are frozen/verified;
 simulator_capture_control owns the default-off hosted app-observation port and
 compile-gated App/performance-test hooks. No local native execution is authorized
 until root reviews a frozen candidate and releases the single execution slot.
-Do not compile a mixed snapshot while either helper is changing its owned source.
+The root's isolated wire attempts are terminal. Do not compile a mixed snapshot
+while the observer helper is changing its owned source.
 
 New local diagnostic rules in CI-VALIDATION require exact SDK/architecture helper
 typechecks before full compilation, export-only recovery after normal collection,
