@@ -319,7 +319,7 @@ public actor HouseholdService {
             authorityEpoch: page.authorityEpoch, grantRevision: page.grantRevision, meal: meal, reason: reason)
         return try SharedMealChangeIntent(subject: subject, householdID: householdID, memberID: memberID, deviceID: enrollment.deviceId, shopID: page.shopId, request: request)
     }
-    public func prepareNewSharedMealChange(shopID: UUID, idea: SharedMealIdeaPage.Idea, day: String) async throws -> SharedMealChangeIntent {
+    public func prepareNewSharedMealChange(shopID: UUID, idea: SharedMealIdeaPage.Idea, day: String?) async throws -> SharedMealChangeIntent {
         let start = generation
         let ideas = try await sharedMealIdeas(shopID: shopID)
         guard start == generation, ideas.ideas.contains(idea), idea.state == "approved", idea.preview.canApprove,

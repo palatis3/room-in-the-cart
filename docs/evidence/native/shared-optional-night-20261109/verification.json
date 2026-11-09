@@ -1,0 +1,70 @@
+{
+  "nativeSourceManifestSHA256": "a1aba92422d05be5eecc332240939c59b01b134e22e5763caff39fc64409c8f6",
+  "wireSourceManifestSHA256": "e8b57881f703afdd2c207d35b4763d9b4b01c9e5cb86b76be1e3de668ea09865",
+  "checks": {
+    "serviceFast": {
+      "passed": 454,
+      "skipped": 1
+    },
+    "serviceIntegration": {
+      "passed": 260,
+      "browserSkipped": 3
+    },
+    "clientPackage": {
+      "passed": 108,
+      "approvedWireSkipped": 3
+    },
+    "nativeModel": {
+      "passed": 69,
+      "strictExit": 0
+    },
+    "civilDateUI": {
+      "passed": 2,
+      "note": "Initial four-case run retained both civil-date passes and two new-flow failures."
+    },
+    "optionalNightUI": {
+      "passed": 2,
+      "strictExit": 0
+    },
+    "actualNativeWire": {
+      "nodeCases": 7,
+      "exactSwiftScenarios": 12,
+      "passed": true
+    },
+    "inventoryPython": 24,
+    "localization": "26 catalogs;4312 EN/ES entries; structure only"
+  },
+  "testOnlyChangesAfterModelAcceptance": [
+    "ios/Packages/HouseholdClient/Tests/HouseholdClientTests/SharedMealNativeWireTests.swift",
+    "ios/UITests/SharedMealCivilDateUITests.swift"
+  ],
+  "evidenceSHA256": {
+    ".build/SharedUndatedNov09/verification.json": "844c05bb172d96a3288efffecf03e0be81e4c4f03f0cfeb6275b0845f4012346",
+    ".build/SharedUndatedNov09/native-r1/build-debug/run.json": "a9268557a5b1c316f8678d1cb0362c552d29ad7ff4c650028fab1c940894d12d",
+    ".build/SharedUndatedNov09/native-r2/build-debug/run.json": "547606297fb68de19413f8cdd0f8facf82ece8c882eea44664070ec7a20fd32b",
+    ".build/SharedUndatedNov09/native-r3/build-debug/run.json": "191c0563eef6c80aa39ed07014f81c1169743b4799ee9165bed3c3b7b777ac3d",
+    ".build/SharedUndatedNov09/native-r3/shared-models-r2/run.json": "f60d11caa1d5071135a40e0de20991420598764ce2245526031a13db8f91420d",
+    ".build/SharedUndatedNov09/native-r3/shared-models-r2/strict.log": "7ec21601f2f4d99f4ddae53ef1d6710348040c753b3f06b21425f0299760d1b1",
+    ".build/SharedUndatedNov09/native-fixture-r1/civil-date-ui/run.json": "44712f4dbfca193c2bcd0ee72698ef10a55ac9d435879fda3cd523324daedeec",
+    ".build/SharedUndatedNov09/native-fixture-r1/civil-date-ui/inspection/receipt.json": "209d7550098a74b6b0fdf88595aa5040da5accf93397a9727a17e590edc7276e",
+    ".build/SharedUndatedNov09/native-fixture-r2/civil-date-ui/run.json": "b9ea4f0fa7f819cd7fb6d17e9daaab385581269b328af6b1a96466dd368ce292",
+    ".build/SharedUndatedNov09/native-fixture-r2/civil-date-ui/inspection/receipt.json": "b4d9d2d04028573fc0c51d7bc06e646b783355de28175cc479d384ff27e0b631",
+    ".build/SharedUndatedNov09/native-fixture-r3/build-debug/run.json": "5cb716bd728eda3d5fbc3e8b5bc371351d02833648ddb2d51d5decbfef125faf",
+    ".build/SharedUndatedNov09/native-fixture-r3/civil-date-ui/run.json": "64ecc0ec1ac21f8406995f0560ac5e1ba04f8bd358029448ca0021d1eb08495b",
+    ".build/SharedUndatedNov09/native-fixture-r3/civil-date-ui/strict.log": "6e7a473e732c3cf423acecac1d9d7fe30cd5c840096f1a8099ef452605ef9bae",
+    ".build/SharedUndatedNov09/package-r1/tests.log": "94948181efabb1f340c021d80be2d66be9a4f4597b62d2f0c16f5ca2eecb52eb",
+    ".build/SharedUndatedNov09/package-r1/compiled-inventory.txt": "0f23918a7a75b11591c5d524c5f1d30899fb7ba07ea43f7df0590f7a7c03305e",
+    ".build/SharedUndatedNov09/wire-r1/run.json": "f2d988df34eb60cb91df922ad183ec2f189f7a7f947a55ff090aaeb812c3cb73",
+    ".build/SharedUndatedNov09/wire-r1/source.json": "e8b57881f703afdd2c207d35b4763d9b4b01c9e5cb86b76be1e3de668ea09865",
+    ".build/SharedUndatedNov09/wire-r1/results/tests.tap": "cf17a0f45bb419c89bf80031f335e31b168c0718d3009fd1b9cfcff898f1bc50",
+    ".build/SharedUndatedNov09/localization-final.log": "e5076901ce7433f2463a62d15db57b8ebce8e7f860b5ece20af99833720b95a1",
+    ".build/SharedUndatedNov09/project-final.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ".build/SharedUndatedNov09/inventory-final.log": "d1354a401f5e5088510ede33a5bc14a487525864ce0b851f439ae611a769a254"
+  },
+  "limitations": [
+    "Focused local evidence, not full combined hosted or release qualification.",
+    "Native wire proves Swift client process restart, not iPhone UI app termination/relaunch.",
+    "No migration/deployment; old native decoders require coordinated rollout before null records.",
+    "Physical-device and human accessibility/localization review remain separate."
+  ]
+}

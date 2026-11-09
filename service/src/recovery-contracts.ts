@@ -16,13 +16,16 @@ export const recoveryNeedSchema = z.object({id,foodId:id.nullable(),matchedSourc
 export const recoveryMealSchema = z.object({
   occurrenceId:id,revisionId:id,sourceMealRevision:revision,title:label,notes,sourceURL,
   // Match the current shared service contract; reject fractional total servings.
-  portions:z.number().int().min(1).max(1000),day:z.iso.date(),zone:z.string().min(1).max(100).refine(s=>{try{new Intl.DateTimeFormat('en',{timeZone:s});return true;}catch{return false;}}).nullable(),
+  portions:z.number().int().min(1).max(1000),day:z.iso.date().nullable(),zone:z.string().min(1).max(100).refine(s=>{try{new Intl.DateTimeFormat('en',{timeZone:s});return true;}catch{return false;}}).nullable(),
   due:time.nullable(),exclusions:z.array(label).max(20),
   template:z.object({id,version:revision}).strict().nullable(),
   groups:z.array(z.object({id,name:label,servings:mealAmount,protected:z.boolean(),exclusions:z.array(label).max(20)}).strict()).max(30),
   needs:z.array(recoveryNeedSchema).max(260),
   remainingElapsedMinutes:z.number().int().min(0).max(1_000_000).nullable(),requiredLeadMinutes:z.number().int().min(0).max(1_000_000).nullable(),advanceStepsCompleted:z.boolean(),
-}).strict();
+}).strict().superRefine((meal,ctx)=>{
+  if(meal.day===null && (meal.due!==null || meal.needs.some(need=>need.due!==null)))
+    ctx.addIssue({code:'custom',path:['day'],message:'Keep the deadline unresolved until a meal night is selected.'});
+});
 const minutes=z.number().int().min(0).max(1_000_000);
 const minor=z.number().int().min(0).max(1_000_000_000);
 const fallbackOffer=z.object({packId:id.optional(),label,exclusionTags:z.array(label).max(20),

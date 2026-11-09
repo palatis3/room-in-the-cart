@@ -14,7 +14,7 @@ struct SharedMealChangeScope: Hashable {
     }
 }
 protocol SharedMealChangesServing: Sendable {
-    func prepareNewSharedMealChange(shopID: UUID, idea: SharedMealIdeaPage.Idea, day: String) async throws -> SharedMealChangeIntent
+    func prepareNewSharedMealChange(shopID: UUID, idea: SharedMealIdeaPage.Idea, day: String?) async throws -> SharedMealChangeIntent
     func sharedMealChanges(shopID: UUID) async throws -> SharedMealChangePage
     func prepareSharedMealChange(page: SharedMealChangePage, occurrenceID: UUID, meal: SharedMeal, reason: String) async throws -> SharedMealChangeIntent
     func authorizeSharedMealChange(_ intent: SharedMealChangeIntent) async throws
@@ -22,7 +22,7 @@ protocol SharedMealChangesServing: Sendable {
     func dismissSharedMealChange(_ proposal: SharedMealChangePage.Proposal, page: SharedMealChangePage) async throws
 }
 extension SharedMealChangesServing {
-    func prepareNewSharedMealChange(shopID: UUID, idea: SharedMealIdeaPage.Idea, day: String) async throws -> SharedMealChangeIntent { throw ClientError.configuration }
+    func prepareNewSharedMealChange(shopID: UUID, idea: SharedMealIdeaPage.Idea, day: String?) async throws -> SharedMealChangeIntent { throw ClientError.configuration }
 }
 extension HouseholdService: SharedMealChangesServing {}
 
@@ -74,7 +74,7 @@ extension HouseholdService: SharedMealChangesServing {}
             guard current(start), scope.matches(intent) else { return }; review = intent
         } catch { fail(error, start: start) }
     }
-    func prepareNew(idea: SharedMealIdeaPage.Idea, day: String) async {
+    func prepareNew(idea: SharedMealIdeaPage.Idea, day: String?) async {
         guard live, !busy, !hasPending, epoch != nil else { return }
         let start = generation; busy = true; review = nil; notice = nil
         defer { if current(start) { busy = false } }

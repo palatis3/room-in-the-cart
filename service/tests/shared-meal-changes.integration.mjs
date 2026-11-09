@@ -450,7 +450,7 @@ async function reservationFixture({legacyExcluded=false,split=true,rival=false,d
  const f=await mealFixture(),commands=f.base+'/commands',path=f.path+'/delivery-evidence';
  const quantity=n=>({amount:{numerator:n,denominator:1},unit:'count',originalLiteral:String(n)});
  const meal=structuredClone(f.meal),[plates,lunch]=meal.planning.groups,ingredient=meal.planning.ingredients[0];
- if(day) meal.day=day;
+ if(day!==undefined) meal.day=day;
  if(deadline) meal.planning.deadline=deadline;
  ingredient.quantity=quantity(6);
  meal.planning.exclusions=planExclusions;
@@ -462,7 +462,7 @@ async function reservationFixture({legacyExcluded=false,split=true,rival=false,d
  const rivalOccurrence=randomUUID();
  if(rival){
    const other=structuredClone(meal);
-   if(rivalDay) other.day=rivalDay;
+   if(rivalDay!==undefined) other.day=rivalDay;
    other.title='Another supper';other.planning.groups=[plates];other.planning.ingredients[0].groupIds=[plates.id];
    other.planning.ingredients[0].quantity=quantity(4);delete other.planning.bindings;
    ok(await call(f.owner,commands,'POST',f.patch(3,{occurrenceId:rivalOccurrence,baseMealRevision:null,meal:other})));
@@ -1537,4 +1537,98 @@ test('connected-shop allocation preserves PostgreSQL microsecond creation order 
  const distinct=await ordered();assert.deepEqual(distinct.ids,[high,low]);assert(distinct.scopes.get(high)<distinct.scopes.get(low));
  await admin.query("UPDATE ritc.shop SET created_at='2026-11-01T00:00:00.000001Z' WHERE household_id=$1 AND shop_id=ANY($2::uuid[])",[f.h,[low,high]]);
  const tied=await ordered();assert.deepEqual(tied.ids,[low,high]);assert(tied.scopes.get(low)<tied.scopes.get(high));
+});
+
+test('undated shared selection reloads and later schedules the same occurrence and protected needs exactly once',async()=>{
+ const f=await mealFixture({day:null}),occurrenceId=f.proposal.occurrenceId;
+ const before=ok(await call(f.owner,f.path));
+ assert.equal(before.meals[0].meal.day,null);
+ const secondDevice={...f.owner};await enroll(secondDevice,f.h);
+ assert.deepEqual(ok(await call(secondDevice,f.path)).meals,before.meals);
+ assert.equal(ok(await call(f.planner,f.path+'/meal-plan')).meals[0].meal.day,null);
+ const snapshot=async()=> (await admin.query(`SELECT
+   (SELECT count(*)::int FROM ritc.operation WHERE household_id=$1) operations,
+   (SELECT count(*)::int FROM ritc.shared_meal_revision WHERE household_id=$1) meals`,[f.h])).rows[0];
+ const persisted=await snapshot();
+ const deadline={at:'2099-11-01T18:00:00Z',zone:'UTC'};
+ const invalid={...f.meal,planning:{...f.meal.planning,deadline}};
+ assert.equal((await call(f.owner,f.base+'/commands','POST',f.patch(2,{occurrenceId,baseMealRevision:2,meal:invalid}))).status,422);
+ const missing=structuredClone(f.meal);delete missing.day;
+ assert.equal((await call(f.owner,f.base+'/commands','POST',f.patch(2,{occurrenceId,baseMealRevision:2,meal:missing}))).status,422);
+ assert.deepEqual(await snapshot(),persisted);
+ assert.deepEqual(ok(await call(f.owner,f.path)),before);
+ const move={proposalId:randomUUID(),occurrenceId,day:'2099-11-01',shopRevision:2,authorityEpoch:1,grantRevision:1};
+ ok(await call(f.planner,f.path+'/meal-plan/proposals','POST',move));
+ assert.equal(ok(await call(f.owner,f.path)).meals[0].meal.day,null,'Proposal alone must not schedule the occurrence');
+ const meal={...f.meal,day:move.day},command=f.patch(2,{occurrenceId,baseMealRevision:2,proposalId:move.proposalId,meal});
+ const receipt=ok(await call(f.owner,f.base+'/commands','POST',command));
+ assert.deepEqual(ok(await call(f.owner,f.base+'/commands','POST',command)),receipt);
+ const after=ok(await call(secondDevice,f.path));
+ assert.equal(after.meals.length,1);assert.equal(after.meals[0].occurrenceId,occurrenceId);
+ assert.deepEqual(after.meals[0].meal,meal);assert.deepEqual(after.lines,before.lines);
+ assert.deepEqual(after.meals[0].meal.planning,before.meals[0].meal.planning);
+ const history=(await admin.query('SELECT revision,meal FROM ritc.shared_meal_revision WHERE household_id=$1 AND occurrence_id=$2 ORDER BY revision',[f.h,occurrenceId])).rows;
+ assert.deepEqual(history.map(row=>[row.revision,row.meal.day]),[[2,null],[3,move.day]]);
+});
+
+test('undated placed meals keep unknown timing through coverage recovery publication and cook handoff',async()=>{
+ const f=await reservationFixture({day:null}),occurrenceId=f.reservation.occurrenceId,path=f.path+'/meal-recovery';
+ const desk=ok(await call(f.owner,path)),target=desk.meals.find(m=>m.occurrenceId===occurrenceId);
+ assert(target);assert.equal(target.day,null);assert.equal(target.zone,null);assert.equal(target.due,null);
+ assert(target.needs.every(n=>n.due===null));
+ assert.equal((await f.delivery()).meals.find(m=>m.occurrenceId===occurrenceId).meal.day,null);
+ const immutable=(await admin.query('SELECT snapshot FROM ritc.shop_snapshot WHERE household_id=$1 AND shop_id=$2 ORDER BY revision',[f.h,f.shopId])).rows;
+ const replacement={...target,title:'Unscheduled reviewed supper',revisionId:randomUUID(),remainingElapsedMinutes:0,
+   needs:target.needs.map(n=>n.priority==='protected'?n:{...n,id:randomUUID(),quantity:f.quantity(3)})};
+ const input={v:1,base:desk.base,intent:{occurrenceId,targetDigest:desk.targetDigests.find(d=>d.occurrenceId===occurrenceId).digest,
+   replacement,reviewedAt:desk.asOf,repeatOfOccurrenceId:null,agreesToRepeat:false,proposesExtraTrip:false,agreesToExtraTrip:false,acceptsUnresolved:true}};
+ const review=ok(await call(f.owner,path+'/preview','POST',input));
+ assert.equal(review.timingConfirmed,false);assert.equal(review.feasible,false);
+ assert(review.after.demands.filter(n=>replacement.needs.some(t=>t.id===n.needId)).every(n=>n.deadlineStatus==='unknown'));
+ const forged=structuredClone(input);forged.intent.replacement.due='2099-11-01T18:00:00Z';
+ assert.equal((await call(f.owner,path+'/preview','POST',forged)).status,422);
+ const apply=f.command('mealRecovery.apply',{...input,previewId:review.previewId,previewDigest:review.previewDigest});
+ const receipt=ok(await f.send(apply));assert.deepEqual(ok(await f.send(apply)),receipt);
+ const current=ok(await call(f.owner,path)),saved=current.meals.find(m=>m.occurrenceId===occurrenceId);
+ assert.equal(saved.day,null);assert.equal(saved.due,null);assert.deepEqual(saved.needs,replacement.needs);
+ const copies=ok(await f.write('cookCopy.save',{placedRevision:desk.placedRevision,supplyRevision:current.base.supplyRevision,pantryRevision:current.base.pantryRevision,
+   occurrenceId,mealRevision:target.sourceMealRevision,revisionId:saved.revisionId,recoveryRevision:current.base.recoveryRevision,
+   language:'en',text:'Preparation reviewed today. Meal night and deadline remain unknown.'}));
+ assert(copies.copyId);
+ const handoff=ok(await call(f.owner,f.path+'/cook-copies?occurrenceId='+occurrenceId));
+ assert.equal(handoff.copies[0].text,'Preparation reviewed today. Meal night and deadline remain unknown.');
+ assert.deepEqual((await admin.query('SELECT snapshot FROM ritc.shop_snapshot WHERE household_id=$1 AND shop_id=$2 ORDER BY revision',[f.h,f.shopId])).rows,immutable);
+});
+
+if(process.env.RITC_TEST_NATIVE_WIRE==='1') test('actual Swift undated selection survives process restart and schedules once over PostgreSQL',async()=>{
+ const {exerciseSharedMealClient}=await import('./shared-meal-native-wire.mjs');
+ const f=await fixture(),path=f.base+'/shops/'+f.shopId;
+ const ids=Object.fromEntries(['occurrence','dinner','lunch','ingredient','dinnerAllocation','lunchAllocation'].map(key=>[key,randomUUID()]));
+ const initial=ok(await call(f.owner,path));assert.equal(initial.shopRevision,1);assert.deepEqual(initial.meals,[]);
+ const quantity=n=>({amount:{numerator:n,denominator:1},unit:'count',originalLiteral:`${n} wraps`});
+ const planning={groups:[{id:ids.dinner,name:'Dinner',servings:{numerator:4,denominator:1},protected:false},
+   {id:ids.lunch,name:'Lunch',servings:{numerator:2,denominator:1},protected:true}],
+   ingredients:[{id:ids.ingredient,name:'Wraps',quantity:quantity(6),groupIds:[ids.dinner,ids.lunch],exclusions:['no peanuts']}],
+   bindings:[{id:ids.dinnerAllocation,groupId:ids.dinner,ingredientId:ids.ingredient,quantity:quantity(4)},
+     {id:ids.lunchAllocation,groupId:ids.lunch,ingredientId:ids.ingredient,quantity:quantity(2)}]};
+ const meal={title:'Undated native supper',day:null,kind:'dinner',portions:6,protected:false,planning};
+ const history=async()=> (await admin.query('SELECT occurrence_id,revision,meal FROM ritc.shared_meal_revision WHERE household_id=$1 AND shop_id=$2 ORDER BY revision',[f.h,f.shopId])).rows;
+ const operations=async()=> (await admin.query('SELECT kind,count(*)::int n FROM ritc.operation WHERE household_id=$1 AND shop_id=$2 GROUP BY kind ORDER BY kind',[f.h,f.shopId])).rows;
+ const snapshots=async()=> (await admin.query('SELECT revision,snapshot FROM ritc.shop_snapshot WHERE household_id=$1 AND shop_id=$2 ORDER BY revision',[f.h,f.shopId])).rows;
+ const originalSnapshots=await snapshots();assert.equal(originalSnapshots.length,1);
+ // Each awaited invocation launches, checks, and terminates a distinct Swift XCTest process.
+ await exerciseSharedMealClient({service:server,owner:f.owner,householdId:f.h,shopId:f.shopId,shopper:true,undated:{phase:'select',ids}});
+ const selected=ok(await call(f.owner,path));assert.equal(selected.shopRevision,2);
+ assert.deepEqual(selected.meals,[{occurrenceId:ids.occurrence,revision:2,meal}]);
+ assert.deepEqual(selected.lines,initial.lines);assert.deepEqual(selected.quote,initial.quote);
+ assert.deepEqual(await history(),[{occurrence_id:ids.occurrence,revision:2,meal}]);
+ assert.deepEqual(await operations(),[{kind:'shop.create',n:1},{kind:'shop.patch',n:1}]);
+ const selectedSnapshots=await snapshots();assert.equal(selectedSnapshots.length,2);assert.deepEqual(selectedSnapshots.slice(0,1),originalSnapshots);
+ await exerciseSharedMealClient({service:server,owner:f.owner,householdId:f.h,shopId:f.shopId,shopper:true,undated:{phase:'schedule',ids}});
+ const scheduled={...meal,day:'2099-11-01'},after=ok(await call(f.owner,path));
+ assert.equal(after.shopRevision,3);assert.deepEqual(after.meals,[{occurrenceId:ids.occurrence,revision:3,meal:scheduled}]);
+ assert.deepEqual(after.lines,initial.lines);assert.deepEqual(after.quote,initial.quote);
+ assert.deepEqual(await history(),[{occurrence_id:ids.occurrence,revision:2,meal},{occurrence_id:ids.occurrence,revision:3,meal:scheduled}]);
+ assert.deepEqual(await operations(),[{kind:'shop.create',n:1},{kind:'shop.patch',n:2}]);
+ const finalSnapshots=await snapshots();assert.equal(finalSnapshots.length,3);assert.deepEqual(finalSnapshots.slice(0,2),selectedSnapshots);
 });

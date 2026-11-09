@@ -55,6 +55,20 @@ final class SharedDeliveryCookDraftTests: XCTestCase {
         return try SharedDeliveryCookDraft.make(page: record, coverage: decode(SharedDeliveryCoverage.self, c), occurrence: meal, language: language)
     }
 
+    func testUndatedCookCopyKeepsFoodNeedsAndDeadlineUnknownInBothLanguages() throws {
+        var unscheduled = meal; unscheduled["day"] = NSNull()
+        var wire = page
+        wire["meals"] = [["occurrenceId": occurrence.uuidString, "revision": 4, "meal": unscheduled] as Object]
+        for (language, label, unknown) in [("en-US", "Unscheduled", "Meal deadline: Unknown"),
+                                            ("es-US", "Sin programar", "Hora límite de la comida: Desconocido")] {
+            let text = try XCTUnwrap(draft(wire, coverage, language: language))
+            XCTAssertTrue(text.contains(label), text)
+            XCTAssertTrue(text.contains(unknown), text)
+            XCTAssertTrue(text.contains(mealName)); XCTAssertTrue(text.contains(groupName))
+            XCTAssertFalse(text.contains("Optional("))
+        }
+    }
+
     func testDatedCookCopyShowsOnlyThisMealWithExactCoverageSourcesAndPreparationInBothLanguages() throws {
         // Extra wire fields cannot enter a recipient's plain text.
         var wire = page

@@ -152,7 +152,7 @@ private struct SharedMealChangeContent: View {
             if let seed { LabeledContent(ht("Local source meal"), value: seed.title); LabeledContent(ht("Mapped local occurrence"), value: seed.localOccurrenceID.uuidString) }
             Picker(ht("Shared occurrence"), selection: $selected) {
                 Text(ht("Choose a meal")).tag(nil as UUID?)
-                ForEach(page.meals) { Text(verbatim: "\($0.meal.title) · \($0.meal.day) · \($0.id.uuidString.prefix(8))").tag(Optional($0.id)) }
+                ForEach(page.meals) { Text(verbatim: "\($0.meal.title) · \(sharedMealScheduleText($0.meal.day)) · \($0.id.uuidString.prefix(8))").tag(Optional($0.id)) }
             }.accessibilityIdentifier("meal-change-occurrence")
             .onChange(of: selected) { _, id in
                 candidate = page.meals.first(where: { $0.id == id })?.meal

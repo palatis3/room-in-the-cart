@@ -76,7 +76,7 @@ struct SharedFoodCoverageView: View {
                     }
                     .accessibilityIdentifier("pantry.coverage.cook." + occurrence.id.uuidString)
                 } header: {
-                    Text(verbatim: occurrence.meal.title + " · " + (sharedMealDayText(occurrence.meal.day, locale: locale) ?? occurrence.meal.day))
+                    Text(verbatim: occurrence.meal.title + " · " + (sharedMealScheduleText(occurrence.meal.day, locale: locale)))
                 }
             }
         }

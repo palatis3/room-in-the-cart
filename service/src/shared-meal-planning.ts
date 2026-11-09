@@ -54,7 +54,8 @@ export const mealPlanning = z.object({
   }
 });
 export const sharedMealSchema = z.object({
-  title: label, day: z.iso.date(), kind: z.enum(['dinner','lunch','side']),
+  // A selected shop occurrence may be unscheduled; omission is not an explicit choice.
+  title: label, day: z.iso.date().nullable(), kind: z.enum(['dinner','lunch','side']),
   portions: z.number().int().min(1).max(1000), protected: z.boolean(), planning: mealPlanning.optional(),
 }).strict().superRefine((meal,ctx) => {
   const deadline = meal.planning?.deadline;

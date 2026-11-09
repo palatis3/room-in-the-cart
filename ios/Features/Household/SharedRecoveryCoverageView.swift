@@ -42,7 +42,7 @@ struct SharedRecoveryCoverageView: View {
                                     coverage: .recovered(snapshot.record, snapshot.coverage, meal), occurrence: sealed)
                             }.accessibilityIdentifier("recovery.cook." + meal.id.uuidString)
                         }
-                    } header: { Text(verbatim: meal.title + " · " + (sharedMealDayText(meal.day, locale: locale) ?? meal.day)) }
+                    } header: { Text(verbatim: meal.title + " · " + (sharedMealScheduleText(meal.day, locale: locale))) }
                 }
             } else if failed || !allowed || snapshot != nil {
                 Text(sharedRecoveryText("Refresh the current meal record."))

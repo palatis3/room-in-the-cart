@@ -15114,6 +15114,74 @@
           }
         }
       }
+    },
+    "Add a meal": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a meal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir una comida"
+          }
+        }
+      }
+    },
+    "Assign a night": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assign a night"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Asignar una noche"
+          }
+        }
+      }
+    },
+    "Unscheduled": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unscheduled"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin programar"
+          }
+        }
+      }
+    },
+    "Choose an optional night and review this proposal. Only the current shopper can apply shared packs.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose an optional night and review this proposal. Only the current shopper can apply shared packs."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puedes asignar una noche y revisar esta propuesta. Solo la persona encargada de comprar puede aplicar cambios a los paquetes compartidos."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

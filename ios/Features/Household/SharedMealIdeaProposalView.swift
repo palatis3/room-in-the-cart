@@ -27,6 +27,7 @@ private struct SharedMealIdeaProposalContent: View {
     let scope: SharedMealChangeScope
     @ObservedObject var model: SharedMealChangeModel
     @State private var day = Date()
+    @State private var assignNight = false
     @State private var showingShopperReview = false
     @State private var openSharedShop = false
     @State private var sharedReviewReady = false
@@ -34,7 +35,7 @@ private struct SharedMealIdeaProposalContent: View {
         Form {
             Text(verbatim: idea.draft.title)
             SharedMealIdeaPreviewView(idea: idea)
-            Text(ht("An approved idea stays separate from the week. Choose a real date and review this proposal; only the current shopper can apply shared packs."))
+            Text(ht("Choose an optional night and review this proposal. Only the current shopper can apply shared packs."))
             if model.live {
                 if let review = model.review {
                     SharedMealFacts(meal: review.request.meal)
@@ -44,9 +45,13 @@ private struct SharedMealIdeaProposalContent: View {
                     SharedMealFacts(meal: pending.request.meal)
                     Button(ht("Retry saved proposal")) { Task { await model.retry() } }
                 } else if !model.hasPending {
-                    DatePicker(ht("Meal day"), selection: $day, displayedComponents: .date)
-                        .environment(\.timeZone, TimeZone(secondsFromGMT: 0)!)
-                    Button(ht("Review new household meal proposal")) { Task { await model.prepareNew(idea: idea, day: sharedMealDay(day)) } }
+                    Toggle(ht("Assign a night"), isOn: $assignNight)
+                        .accessibilityIdentifier("household-idea-assign-night")
+                    if assignNight {
+                        DatePicker(ht("Meal day"), selection: $day, displayedComponents: .date)
+                            .environment(\.timeZone, TimeZone(secondsFromGMT: 0)!)
+                    } else { Text(ht("Unscheduled")) }
+                    Button(ht("Review new household meal proposal")) { Task { await model.prepareNew(idea: idea, day: assignNight ? sharedMealDay(day) : nil) } }
                         .accessibilityIdentifier("household-idea-prepare-proposal")
                 }
                 if let notice = model.notice { Text(notice) }

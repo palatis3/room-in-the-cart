@@ -30,6 +30,13 @@ private final class S17FixtureServer: @unchecked Sendable {
     private var posts = 0
     var changed: (@Sendable (Int,Int) -> Void)?
     init() {
+        if ProcessInfo.processInfo.arguments.contains("--shared-meal-undated-fixture") {
+            meal["day"] = NSNull()
+            let ingredient: [String: Any] = [
+                "id": "77777777-7777-4777-8777-777777777777", "name": "Beans", "quantity": NSNull(),
+                "groupIds": [], "exclusions": []]
+            meal["planning"] = ["groups": [], "ingredients": [ingredient]] as [String: Any]
+        }
         if ProcessInfo.processInfo.arguments.contains("--shared-meal-deadline-fixture") {
             meal["day"] = "2026-11-01"
             meal["planning"] = ["groups": [], "ingredients": [],
@@ -290,7 +297,9 @@ struct S17SharedMealFixtureRoot: View {
                 Button("Switch to assigned shopper") { shopperMode = true; directSeed = false; directShopReview = false }.accessibilityIdentifier("fixture.s17.switch")
                 Button("Open shopper local evidence") { shopperMode = true; directSeed = true; directShopReview = false }.accessibilityIdentifier("fixture.s17.seed")
                 NavigationStack {
-                    if shopperMode && !directSeed {
+                    if ProcessInfo.processInfo.arguments.contains("--shared-meal-undated-fixture"), let model = shopper.sharedShop {
+                        SharedUndatedMealFixtureEditor(model: model)
+                    } else if shopperMode && !directSeed {
                         if directShopReview { HouseholdShopView(model:shopper) } else { DinnerSharedPlanningEntry(household:shopper) }
                     }
                     else { SharedMealChangesView(household:shopperMode ? shopper:planner,seed:seed,onReviewOpened:{ directSeed = false; shopperMode = true; directShopReview = true }) }
@@ -298,6 +307,26 @@ struct S17SharedMealFixtureRoot: View {
             } else if let failure = state.failure { Text(failure).accessibilityIdentifier("fixture.failure") }
             else { ProgressView("Opening isolated shared meal fixture") }
         }.task { await state.start() }
+    }
+}
+
+/// Uses the loaded HTTP fixture shop and production editor, including the actual review model.
+private struct SharedUndatedMealFixtureEditor: View {
+    @ObservedObject var model: HouseholdShopModel
+    var body: some View {
+        VStack {
+            Text(model.draft.mealEdit?.occurrenceID.uuidString ?? "none")
+                .accessibilityIdentifier("fixture.undated.occurrence")
+            Text(model.draft.mealEdit?.meal?.planning?.ingredients.first?.id.uuidString ?? "none")
+                .accessibilityIdentifier("fixture.undated.ingredient")
+            Form {
+                SharedMealEditor(model: model, meals: model.shop?.meals ?? [])
+                Button("Review fixture meal") { model.reviewDraft() }
+                    .accessibilityIdentifier("fixture.undated.review")
+                Text(model.review?.mealEdit?.occurrenceID.uuidString ?? "none")
+                    .accessibilityIdentifier("fixture.undated.reviewedOccurrence")
+            }
+        }.task { model.beginEditing() }
     }
 }
 

@@ -129,7 +129,7 @@ private struct SharedPantryObservationView: View {
                             if let meal = record.delivery.meals?.first(where: { $0.id == row.occurrenceId && $0.revision == row.mealRevision }),
                                let plan = meal.meal.planning, let ingredient = plan.ingredients.first(where: { $0.id == row.ingredientId }) {
                                 VStack(alignment: .leading, spacing: 6) {
-                                    Text(meal.meal.title + " · " + meal.meal.day).font(.headline)
+                                    Text(meal.meal.title + " · " + sharedMealScheduleText(meal.meal.day)).font(.headline)
                                     Text(ingredient.name)
                                     Text(plan.groups.filter { row.groupIds.contains($0.id) }.map(\.name).joined(separator: ", "))
                                     impact(ht("Covered before"), row.beforeCovered, row.required)

@@ -13,7 +13,8 @@ func sharedMealDay(_ date: Date) -> String {
     return String(format: "%04d-%02d-%02d", fields.year!, fields.month!, fields.day!)
 }
 
-func sharedMealDate(_ day: String) -> Date? {
+func sharedMealDate(_ day: String?) -> Date? {
+    guard let day else { return nil }
     let parts = day.split(separator: "-").compactMap { Int($0) }
     guard parts.count == 3,
           let date = mealCalendar().date(from: DateComponents(year: parts[0], month: parts[1], day: parts[2])),
@@ -21,10 +22,20 @@ func sharedMealDate(_ day: String) -> Date? {
     return date
 }
 
-func sharedMealDayText(_ day: String, locale: Locale) -> String? {
+func sharedMealDayText(_ day: String?, locale: Locale) -> String? {
     guard let date = sharedMealDate(day) else { return nil }
     return date.formatted(Date.FormatStyle(date: .long, time: .omitted, locale: locale,
         calendar: mealCalendar(), timeZone: mealCalendar().timeZone))
+}
+
+// Render unknown scheduling explicitly, including recipient-selected cook-copy language.
+func sharedMealScheduleText(_ day: String?, locale: Locale = .current) -> String {
+    guard let day else {
+        let language = locale.language.languageCode?.identifier ?? "en"
+        let bundle = Bundle.main.path(forResource: language, ofType: "lproj").flatMap(Bundle.init(path:)) ?? .main
+        return bundle.localizedString(forKey: "Unscheduled", value: "Unscheduled", table: "Household")
+    }
+    return sharedMealDayText(day, locale: locale) ?? day
 }
 
 private func mealKind(_ kind: String) -> String {
@@ -39,11 +50,8 @@ struct SharedMealFacts: View {
         VStack(alignment: .leading) {
             Text(meal.title).font(.headline)
             Text(mealKind(meal.kind))
-            if let day = sharedMealDayText(meal.day, locale: locale) {
-                // Date-aware Text resolves its format against the view's time zone again.
-                // Resolve this civil day first so an environment override cannot move it.
-                Text(verbatim: day).accessibilityIdentifier("shared-meal-civil-date")
-            }
+            Text(verbatim: sharedMealScheduleText(meal.day, locale: locale))
+                .accessibilityIdentifier("shared-meal-civil-date")
             LabeledContent(sharedRecoveryText("Meal deadline"), value: meal.planning?.deadline?.display(locale: locale) ?? ht("Unknown"))
                 .accessibilityElement(children: .combine)
                 .accessibilityIdentifier(deadlineIdentifier)
@@ -75,11 +83,10 @@ struct SharedMealEditor: View {
                         Button(ht("Review removing this meal"), role: .destructive) { start(occurrence.id, nil) }
                     }.buttonStyle(.borderless)
                 }
-                Button(ht("Add a dated meal")) {
-                    let localDay = Calendar(identifier: .gregorian).dateComponents([.year,.month,.day], from: Date())
-                    let day = sharedMealDay(mealCalendar().date(from: localDay) ?? Date())
-                    start(UUID(), SharedMeal(title: "", day: day, kind: "dinner", portions: 1, protected: false))
+                Button(ht("Add a meal")) {
+                    start(UUID(), SharedMeal(title: "", day: nil, kind: "dinner", portions: 1, protected: false))
                 }.disabled(meals.count >= 100)
+                    .accessibilityIdentifier("sharedMeal.add")
             } else {
                 Text(ht("Review meal removal alongside the packs below."))
             }
@@ -95,13 +102,23 @@ struct SharedMealEditor: View {
         Picker(ht("Meal type"), selection: field(id, meal, \.kind)) {
             ForEach(["dinner","lunch","side"], id: \.self) { Text(mealKind($0)).tag($0) }
         }
-        DatePicker(ht("Meal day"), selection: Binding(get: { sharedMealDate(meal.day) ?? Date() },
-            set: { date in
-                guard let edit = model.draft.mealEdit, edit.occurrenceID == id, var current = edit.meal else { return }
-                current.move(to: sharedMealDay(date)); start(id, current)
-            }), displayedComponents: .date)
-            .environment(\.timeZone, mealCalendar().timeZone)
-            .accessibilityIdentifier("sharedMeal.day")
+        Toggle(ht("Assign a night"), isOn: Binding(get: { meal.day != nil }, set: { assigned in
+            guard let edit = model.draft.mealEdit, edit.occurrenceID == id, var current = edit.meal else { return }
+            let localDay = Calendar(identifier: .gregorian).dateComponents([.year, .month, .day], from: Date())
+            current.move(to: assigned ? sharedMealDay(mealCalendar().date(from: localDay) ?? Date()) : nil)
+            start(id, current)
+        })).accessibilityIdentifier("sharedMeal.assignNight")
+        if let day = meal.day {
+            DatePicker(ht("Meal day"), selection: Binding(get: { sharedMealDate(day) ?? Date() },
+                set: { date in
+                    guard let edit = model.draft.mealEdit, edit.occurrenceID == id, var current = edit.meal else { return }
+                    current.move(to: sharedMealDay(date)); start(id, current)
+                }), displayedComponents: .date)
+                .environment(\.timeZone, mealCalendar().timeZone)
+                .accessibilityIdentifier("sharedMeal.day")
+        } else {
+            Text(ht("Unscheduled")).accessibilityIdentifier("sharedMeal.unscheduled")
+        }
         if let original = meals.first(where: { $0.id == id })?.meal, original.day != meal.day,
            original.planning?.deadline != nil && meal.planning?.deadline == nil {
             Text(sharedRecoveryText("The new day has no deadline until you set one."))
@@ -166,7 +183,7 @@ struct SharedMealMovesView: View {
                     Section(ht("Propose a meal move")) {
                         Picker(ht("Meal to move"), selection: $occurrenceID) {
                             Text(ht("Choose a meal")).tag(nil as UUID?)
-                            ForEach(plan.meals) { Text(verbatim: "\($0.meal.title) · \($0.meal.day)").tag(Optional($0.id)) }
+                            ForEach(plan.meals) { Text(verbatim: "\($0.meal.title) · \(sharedMealScheduleText($0.meal.day))").tag(Optional($0.id)) }
                         }
                         if let occurrence = plan.meals.first(where: { $0.id == occurrenceID }) {
                             SharedMealFacts(meal: occurrence.meal)

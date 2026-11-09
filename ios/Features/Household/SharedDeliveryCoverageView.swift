@@ -44,7 +44,7 @@ struct SharedDeliveryCoverageView: View {
                                 }
                                 .accessibilityIdentifier("delivery.cook." + occurrence.id.uuidString)
                             }
-                        } header: { Text(occurrence.meal.title + " · " + occurrence.meal.day) }
+                        } header: { Text(occurrence.meal.title + " · " + sharedMealScheduleText(occurrence.meal.day)) }
                     }
                 } else if failed {
                     Text(ht("Refresh deliveries and review the current record."))

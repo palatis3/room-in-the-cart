@@ -41,7 +41,7 @@ struct SharedFallbackOptionsView: View {
         Form {
             if live {
                 Section(target.title) {
-                    if let date = sharedMealDayText(target.day, locale: .current) { Text(verbatim: date) }
+                    Text(verbatim: sharedMealScheduleText(target.day))
                     if !target.exclusions.isEmpty { LabeledContent(ht("Meal exclusions"), value: target.exclusions.joined(separator: ", ")) }
                     LabeledContent(sharedRecoveryText("Meal deadline"), value: deadline)
                 }

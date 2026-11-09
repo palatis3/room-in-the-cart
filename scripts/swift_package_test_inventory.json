@@ -47,6 +47,10 @@
       "sourceCommit": "bc2acda",
       "added": 4,
       "basis": "Four compiled HouseholdClientTests selectors cover amendment receipt scope, chain identity, revoked capability/wrong-shop reads and independent retailer evidence. Original three wire-fixture skips remain unchanged. Local full-package verification is retained in docs/evidence/native/package-inventory-20261108/."
+    },
+    "sharedOptionalNightAddition": {
+      "added": 3,
+      "basis": "All 111 compiled HouseholdClient cases executed locally:108 passes and the same3 approved HTTPS/database skips. Explicit null HTTP proposal/read/scheduling and malformed day/deadline controls. Retained .build/SharedUndatedNov09/package-r1 inventory and log."
     }
   },
   "packages": {
@@ -385,6 +389,9 @@
       "HouseholdClientTests.HouseholdClientTests/testStoreQuoteDefaultShopPinsHeaderAndExactRetrySurvivesStaleRevisionThenRevocation",
       "HouseholdClientTests.HouseholdClientTests/testStoreQuoteDifferentSelectedShopCannotReadOrReplay",
       "HouseholdClientTests.HouseholdClientTests/testStoreQuoteUnknownsEncodeNullAndAdoptionDoesNotLeakOtherActionFields",
+      "HouseholdClientTests.HouseholdClientTests/testUndatedMealRequiresExplicitNullAndRejectsDeadlineWithoutNight",
+      "HouseholdClientTests.HouseholdClientTests/testUndatedRecoveryRequiresExplicitNullAndCannotInventTiming",
+      "HouseholdClientTests.HouseholdClientTests/testUndatedSharedMealHTTPReadProposalAndLaterScheduleKeepNeedIdentity",
       "HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres",
       "HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres",
       "HouseholdClientTests.StoreQuoteNativeWireTests/testStoreQuoteClientAgainstPostgres"

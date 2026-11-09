@@ -11,14 +11,14 @@ and all earlier native preservation paths remain at
 
 Canonical checkout: `/Users/palatis/Room in the Cart`, local branch
 `codex/parallel-ios-ci`. Publish to `codex/combined-candidate-20261109`; its verified
-head before this workflow update was d978cbea. Recheck current Git/run state before dispatch.
+head before this feature update was 5d1ca0a5. Recheck current Git/run state before dispatch.
 The ambient `spanish-done-diagnostic` worktree is stale. Draft PR1 is an older
 candidate. No full combined qualification or merge has passed.
 
 No Dot/Lumpy. Astra High helpers and Sol6.1 Extra High monitoring are authorized.
 Root owns integration and dispatch. One owner per cause, one local native process,
-no source/product mutation during execution. All local and hosted attempts below are terminal;
-no native process or debugger remains. Disk last reported approximately 32 GiB free;
+no source/product mutation during execution. Historical attempts below are terminal;
+all optional-night native and wire attempts are now terminal. No debugger remains. Disk last reported approximately 32 GiB free;
 keep 8 GiB reserve and avoid downloads/duplicate raw archives.
 
 ## Implemented workflow
@@ -112,17 +112,44 @@ identities when later scheduled. The backend passes 3 focused HTTP, 98 domain,
 or deployment. Source and evidence hashes: `.build/SharedUndatedNov09/verification.json`.
 Older native clients cannot decode null days; coordinate native/service rollout.
 
-Native edits remain uncommitted and unqualified. First Debug build failed on a
-missing fixture bracket after 56.6 seconds; its source and log are unchanged in
-`.build/SharedUndatedNov09/native-r1/` and the stable execution source directory.
-The canonical fixture is fixed. A syntax-only negative control reproduced the
-original error in 1.5 seconds and accepts the fix; all 469 selected Swift files
-parse in Release and Debug fixture modes. HouseholdClient package tests pass
-108 cases with 3 wire/environment skips; log at
-`.build/SharedUndatedNov09/package-r1/tests.log`. This does not qualify the app.
-Before updating the stable execution source, preserve the failed source and partial
-products, then copy only changed bytes/modes and record a new successor receipt.
-Next: Debug build, affected model/UI journeys, localization and strict acceptance.
+The optional-night implementation is locally verified and ready for the combined
+candidate. [Compact proof](evidence/native/shared-optional-night-20261109/README.md)
+binds retained source/test evidence. Ordinary Debug build passes;69 affected model
+tests pass native/strict;108 HouseholdClient package cases pass with3 approved wire
+skips;24 inventory checks and structural localization pass. The two unchanged
+EN/ES civil-date journeys passed in the initial run. The two new optional-night
+journeys now pass completely (native/strict), including same IDs, date/deadline
+availability, unassignment, review, and a fresh selection starting unscheduled.
+The initial bracket and optional Placement facts compile failures are preserved.
+UI failures were diagnosed from retained events/video/accessibility: centre-row
+switch taps did not change its state, and the review marker needed scrolling.
+Tests now target the visible thumb, assert its state, use a generic compact-date
+identifier and reveal the marker. No production behavior/assertion was suppressed.
+
+Current native source manifest:
+`a1aba92422d05be5eecc332240939c59b01b134e22e5763caff39fc64409c8f6`.
+Current executor/results: `.build/SharedUndatedNov09/native-fixture-r3/`.
+Stable source/DD: `.build/Xcode27WarningReviewNov09/execution-r1/`.
+Current fixture products manifest:
+`94d798eeeb35e7ee577b4ed53c06f408801edc637f8b62a6f67c3a1771d12af4`.
+Every successor preserved prior source/products with verified bytes/modes under
+`.build/NativeQualificationArchivesNov09/`. Ordinary model proof is under
+`native-r3/shared-models-r2/`; production native files did not change afterward,
+only the UI test and native-wire test helper. Source/products remained unchanged
+through their test runs. All native tool sessions are terminal.
+
+The reviewed `wire-review-r2` test patch is now installed and executed. Full
+native HTTPS/PostgreSQL lane passes all7 Node cases and12 exact Swift scenarios.
+Two actual Swift processes persist null, reconstruct the client, read the same
+meal, schedule with identical ingredient/group/protected-lunch allocations, and
+retry a Codable-restored operation. SQL proves preserved history/snapshots and
+two committed patches despite four sends. Original ordinary3-skip policy remains.
+Evidence: `.build/SharedUndatedNov09/wire-r1/`; complete source manifest
+`e8b57881f703afdd2c207d35b4763d9b4b01c9e5cb86b76be1e3de668ea09865`.
+Owned PostgreSQL cluster/private fixture state were stopped and removed.
+This proves native-client process restart, not a complete iPhone UI relaunch.
+Physical/human/live-provider and final combined-hosted acceptance remain separate.
+No migration, staging deployment or full-release dispatch occurred.
 
 ## Remaining diagnostic work
 
@@ -145,6 +172,18 @@ Next: Debug build, affected model/UI journeys, localization and strict acceptanc
   metrics passed; capture did not. Exact owned tracer cleanup completed. Do not
   repeat the full journey: qualify a small collector control first.
   [Preserved evidence](evidence/native/performance-instruments-20261109/README.md).
+
+- Read-only collector follow-up confirms the prior command selected implicit
+  **Blank + os_signpost** (recorded in instruments.log), so missing `--template`
+  is not an established cause. Next discriminator: small owned host signpost
+  emitter, explicit built-in Logging template,15-second readiness and5-second
+  recording, two boundary events/three interval pairs, normal readable finalization
+  and exact-PID cleanup. This qualifies host capture only; simulator proof remains
+  separate. No tracing/compiler experiment has run for this proposal. Prepared source and a
+  bounded supervisor are under `.build/HostSignpostControlNov09/r1/`. Python AST
+  parsing only; root must review/compile and pin the exact helper/xctrace binaries.
+  Its `captureQualified` deliberately stays false until actual exported event
+  schema and expected events are verified.
 
 - Latest hosted 42639339096 attempt 1 at dc343f3e is terminal failure: arm64-only
   producer, immutable plan/products, native 1/1 and cleanup pass; required scroll
@@ -183,6 +222,15 @@ Next: Debug build, affected model/UI journeys, localization and strict acceptanc
   `.build/MinimumOSXCTestReproducerNov09/apple-report-draft/reviewed-first-fault-package/`
   with REPORT.md, 10 KB capture and manifest only. Do not duplicate submission or
   reinterpret the old immutable manifest's `notSubmitted` field as current status.
+
+Read-only minimum-OS follow-up: a separately built26.3 UI runner targeting the
+same27.1 app is only a proposed diagnostic, not qualified acceptance. Apple lists
+26.3 host support through macOS26.x; this Mac27.2 is outside that range, so any
+probe needs a supported separate host. Do not run27.1-built XCTest bundles with
+old xcodebuild. No retained26.3/iOS17 original-Spanish pass was found; older Spanish
+passes used26.2 runtime. A27.1/iOS17 request journey has passed, so the fault is not
+universal. Any experiment must preserve the exact app, original Spanish assertions,
+checker settings and720/900 limits, and prove app/runner/runtime identity.
 
 Then finish remaining fixes, freeze one final commit, run full combined regression,
 review required checks and merge only when its gates pass. Focused results from

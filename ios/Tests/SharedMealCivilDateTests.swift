@@ -28,6 +28,13 @@ final class SharedMealCivilDateTests: XCTestCase {
             "November 5, 2026")
     }
 
+    func testUnscheduledLabelIsLocalizedWithoutManufacturingACivilDay() {
+        XCTAssertNil(sharedMealDate(nil))
+        XCTAssertNil(sharedMealDayText(nil, locale: Locale(identifier: "en_US")))
+        XCTAssertEqual(sharedMealScheduleText(nil, locale: Locale(identifier: "en_US")), "Unscheduled")
+        XCTAssertEqual(sharedMealScheduleText(nil, locale: Locale(identifier: "es_US")), "Sin programar")
+    }
+
     func testMalformedOrImpossibleCivilDaysDoNotProduceADifferentDayLabel() {
         for day in ["", "2026-2-03", "2026-02-30", "2026-02-29", "2026-13-01", "2026-00-01",
                     "2026-11-00", "2026-11-31", "2026-11-05T00:00:00Z", "2026-11-05-06", "2026/11/05"] {

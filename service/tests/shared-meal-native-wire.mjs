@@ -11,7 +11,7 @@ const run = promisify(execFile);
 
 // A fixture identity provider returns one real signed test JWT. Household requests
 // keep their original headers and body and go through the normal API and database.
-export async function exerciseSharedMealClient({service, owner, householdId, shopId, shopper, beforeFallbackReplay}) {
+export async function exerciseSharedMealClient({service, owner, householdId, shopId, shopper, beforeFallbackReplay, undated}) {
   const dir = await mkdtemp(join(tmpdir(), 'ritc-native-wire-'));
   const key = join(dir, 'tls.key'), cert = join(dir, 'tls.pem'), code = randomUUID();
   let tls;
@@ -51,8 +51,9 @@ export async function exerciseSharedMealClient({service, owner, householdId, sho
     await new Promise((resolve,reject)=>tls.once('error',reject).listen(0,'127.0.0.1',resolve));
     await runNativeWireTest({
       suite: 'SharedMealNativeWireTests', method: 'testSharedMealClientAgainstPostgres',
-      scenario: fallback ? 'meal-fallback' : shopper ? 'meal-shopper' : 'meal-planner', unsuccessful,
-      env:{RITC_WIRE_PORT:String(tls.address().port),RITC_WIRE_CERT:der,RITC_WIRE_CODE:code,
+      scenario: undated ? 'meal-undated-' + undated.phase : fallback ? 'meal-fallback' : shopper ? 'meal-shopper' : 'meal-planner', unsuccessful,
+      env:{...(undated ? {RITC_WIRE_UNDATED_PHASE:undated.phase,RITC_WIRE_UNDATED_IDS:JSON.stringify(undated.ids)} : {}),
+        RITC_WIRE_PORT:String(tls.address().port),RITC_WIRE_CERT:der,RITC_WIRE_CODE:code,
         RITC_WIRE_FALLBACK:fallback?"1":"0",RITC_WIRE_SHOPPER:shopper?"1":"0",RITC_WIRE_HOUSEHOLD:householdId,RITC_WIRE_SHOP:shopId},
     });
   } finally {

@@ -57,3 +57,30 @@ test('sealed deadline and zone reach every recovery need and govern elapsed prep
   assert.equal(legacy.zone,null);assert.equal(legacy.due,null);assert.equal(legacy.needs[0].due,null);
   assert.deepEqual(sealed,immutable);
 });
+
+test('explicit unknown night remains distinct from omitted or invalid date and cannot carry a deadline',()=>{
+  const meal=planned(null);
+  assert.deepEqual(sharedMealSchema.parse(meal),meal);
+  for(const day of [undefined,'','tomorrow','2026-02-30']) assert.equal(sharedMealSchema.safeParse({...meal,day}).success,false);
+  assert.equal(sharedMealSchema.safeParse(planned(null,{at:'2026-11-01T18:00:00Z',zone:'UTC'})).success,false);
+  assert.deepEqual(moveSharedMeal(meal,'2026-11-01'),{...meal,day:'2026-11-01'});
+  const b=fixture(),sealed={occurrenceId:b.shopId+'/'+id(21),revision:1,meal};
+  const recovery=sealedRecoveryMeal(sealed,b.shopId,[]);
+  assert.equal(recovery.day,null);assert.equal(recovery.due,null);assert.equal(recovery.zone,null);
+  assert(recovery.needs.every(n=>n.due===null));
+});
+
+test('an undated recovery preserves physical coverage but never manufactures on-time feasibility',()=>{
+  const b=fixture();b.meals[1].day=null;b.meals[1].due=null;
+  b.meals[1].needs.forEach(n=>n.due=null);
+  const input=request(b),at='2026-11-10T17:00:00Z';input.intent.replacement.remainingElapsedMinutes=0;
+  const result=previewRecovery(b,input,at);
+  assert.equal(result.foodConfirmed,true);assert.equal(result.timingConfirmed,false);assert.equal(result.feasible,false);
+  assert.equal(result.after.meals[1].day,null);
+  assert.equal(result.after.meals[1].zone,b.meals[1].zone,'Known zone is independent of unknown meal night');
+  assert(result.after.demands.filter(n=>n.needId===id(201)).every(n=>n.deadlineStatus==='unknown'));
+  for(const mutate of [m=>m.due='2026-11-11T18:00:00Z',m=>m.needs[0].due='2026-11-11T18:00:00Z']){
+    const forged=structuredClone(input);mutate(forged.intent.replacement);
+    assert.throws(()=>previewRecovery(b,forged,at));
+  }
+});

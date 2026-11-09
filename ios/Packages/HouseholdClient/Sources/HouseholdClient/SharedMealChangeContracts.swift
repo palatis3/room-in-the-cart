@@ -91,7 +91,9 @@ extension SharedMeal {
     public func validatePlanning() throws {
         guard sharedMealText(title, 240), ["dinner","lunch","side"].contains(kind), (1...1000).contains(portions) else { throw ClientError.configuration }
         let f = DateFormatter(); f.locale = Locale(identifier: "en_US_POSIX"); f.timeZone = TimeZone(secondsFromGMT: 0); f.dateFormat = "yyyy-MM-dd"; f.isLenient = false
-        guard let date = f.date(from: day), f.string(from: date) == day else { throw ClientError.configuration }
+        if let day {
+            guard let date = f.date(from: day), f.string(from: date) == day else { throw ClientError.configuration }
+        }
         try planning?.deadline?.validate(day: day)
         try planning?.validate()
     }

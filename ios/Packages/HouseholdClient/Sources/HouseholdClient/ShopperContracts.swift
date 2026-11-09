@@ -74,7 +74,7 @@ public struct ShopperShopCandidate: Codable, Equatable, Sendable {
 }
 public struct SharedMeal: Codable, Equatable, Sendable {
     public var title: String
-    public var day: String
+    public var day: String?
     public var kind: String
     public var portions: Int
     public var protected: Bool
@@ -83,14 +83,24 @@ public struct SharedMeal: Codable, Equatable, Sendable {
     public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
         title = try values.decode(String.self, forKey: .title)
-        day = try values.decode(String.self, forKey: .day)
+        day = try values.decode(String?.self, forKey: .day)
         kind = try values.decode(String.self, forKey: .kind)
         portions = try values.decode(Int.self, forKey: .portions)
         protected = try values.decode(Bool.self, forKey: .protected)
         planning = try values.decodeIfPresent(SharedMealPlanning.self, forKey: .planning)
         try planning?.deadline?.validate(day: day)
     }
-    public init(title: String, day: String, kind: String, portions: Int, protected: Bool, planning: SharedMealPlanning? = nil) {
+    public func encode(to encoder: Encoder) throws {
+        var values = encoder.container(keyedBy: CodingKeys.self)
+        try values.encode(title, forKey: .title)
+        // A required null means deliberately unscheduled; an omitted key is malformed.
+        try values.encode(day, forKey: .day)
+        try values.encode(kind, forKey: .kind)
+        try values.encode(portions, forKey: .portions)
+        try values.encode(protected, forKey: .protected)
+        try values.encodeIfPresent(planning, forKey: .planning)
+    }
+    public init(title: String, day: String?, kind: String, portions: Int, protected: Bool, planning: SharedMealPlanning? = nil) {
         self.title = title; self.day = day; self.kind = kind; self.portions = portions; self.protected = protected; self.planning = planning
     }
 }

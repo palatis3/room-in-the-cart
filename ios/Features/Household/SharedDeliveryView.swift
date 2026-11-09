@@ -161,7 +161,7 @@ private struct DeliveryMealMatches: View {
                                             LabeledContent(ht("Delivery exclusions"), value: source.exclusionTags.joined(separator: ", "))
                                         }
                                         Section(occurrence.meal.title) {
-                                            Text(verbatim: occurrence.meal.day)
+                                            Text(verbatim: sharedMealScheduleText(occurrence.meal.day))
                                             SharedMealPreparationFacts(planning: plan)
                                             LabeledContent(ht("Ingredient quantity"), value: deliveryQuantityText(ingredient.quantity))
                                             if !ingredient.exclusions.isEmpty {
@@ -196,7 +196,7 @@ private struct DeliveryMealMatches: View {
                                     else { Text(ingredient.name) }
                                 }
                             }
-                        } header: { Text(occurrence.meal.title + " · " + occurrence.meal.day) }
+                        } header: { Text(occurrence.meal.title + " · " + sharedMealScheduleText(occurrence.meal.day)) }
                     }
                 }
             }
@@ -272,7 +272,7 @@ private struct DeliveryReservationEditor: View {
             Section {
                 if let meal = reviewed.meals?.first(where: { $0.id == target.occurrenceId })?.meal {
                     LabeledContent(ht("Meal name"), value: meal.title)
-                    Text(verbatim: meal.day)
+                    Text(verbatim: sharedMealScheduleText(meal.day))
                     if let plan = meal.planning { SharedMealPreparationFacts(planning: plan) }
                 }
                 LabeledContent(ht("Serving group"), value: group.name)

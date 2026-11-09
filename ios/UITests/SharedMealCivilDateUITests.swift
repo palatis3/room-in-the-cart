@@ -19,6 +19,68 @@ import XCTest
             "31 de octubre de 2026", "1 de noviembre de 2026", "2 de noviembre de 2026", "3 de noviembre de 2026", "5 de noviembre de 2026"])
     }
 
+    func testEnglishUnscheduledMealCanBeScheduledWithoutReplacingItsNeeds() {
+        checkOptionalNight(language: "en", locale: "en_US", edit: "Edit this meal", discard: "Discard meal edit", unscheduled: "Unscheduled")
+    }
+
+    func testSpanishUnscheduledMealCanBeScheduledWithoutReplacingItsNeeds() {
+        checkOptionalNight(language: "es", locale: "es_US", edit: "Editar esta comida", discard: "Descartar los cambios en la comida", unscheduled: "Sin programar")
+    }
+
+    private func checkOptionalNight(language: String, locale: String, edit: String, discard: String, unscheduled: String) {
+        app.launchArguments = ["--ui-testing", "--shared-meal-fixture", "--shared-meal-undated-fixture",
+            "-AppleLanguages", "(\(language))", "-AppleLocale", locale]
+        app.launch()
+        let facts = app.staticTexts["shared-meal-civil-date"]
+        XCTAssertTrue(facts.waitForExistence(timeout: 25)); XCTAssertEqual(facts.label, unscheduled)
+        app.buttons[edit].tap()
+        let identity = app.staticTexts["fixture.undated.occurrence"]
+        let ingredient = app.staticTexts["fixture.undated.ingredient"]
+        let originalID = identity.label, originalNeed = ingredient.label
+        XCTAssertEqual(originalID.lowercased(), "55555555-5555-4555-8555-555555555555")
+        XCTAssertEqual(originalNeed.lowercased(), "77777777-7777-4777-8777-777777777777")
+        let toggle = app.switches["sharedMeal.assignNight"]
+        let dayControl = app.descendants(matching: .any)["sharedMeal.day"]
+        XCTAssertEqual(toggle.value as? String, "0")
+        XCTAssertFalse(dayControl.exists)
+        XCTAssertFalse(app.buttons["sharedMeal.editDeadline"].isEnabled)
+        // SwiftUI exposes the whole labelled row as a switch; target its visible thumb.
+        XCTAssertTrue(toggle.isHittable)
+        toggle.coordinate(withNormalizedOffset: .init(dx: 0.92, dy: 0.5)).tap()
+        XCTAssertEqual(toggle.value as? String, "1")
+        XCTAssertTrue(dayControl.waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["sharedMeal.unscheduled"].exists)
+        let assigned = XCTAttachment(screenshot: app.screenshot())
+        assigned.name = "shared-night-assigned-\(locale)"; assigned.lifetime = .keepAlways; add(assigned)
+        XCTAssertTrue(app.buttons["sharedMeal.editDeadline"].isEnabled)
+        XCTAssertEqual(identity.label, originalID); XCTAssertEqual(ingredient.label, originalNeed)
+        toggle.coordinate(withNormalizedOffset: .init(dx: 0.92, dy: 0.5)).tap()
+        XCTAssertEqual(toggle.value as? String, "0")
+        XCTAssertFalse(dayControl.exists)
+        XCTAssertFalse(app.buttons["sharedMeal.editDeadline"].isEnabled)
+        XCTAssertEqual(app.staticTexts["sharedMeal.unscheduled"].label, unscheduled)
+        XCTAssertEqual(identity.label, originalID); XCTAssertEqual(ingredient.label, originalNeed)
+        let review = app.buttons["fixture.undated.review"]
+        for _ in 0..<5 where !review.isHittable { app.swipeUp() }
+        XCTAssertTrue(review.isHittable); review.tap()
+        let reviewed = app.staticTexts["fixture.undated.reviewedOccurrence"]
+        for _ in 0..<5 where !reviewed.exists { app.swipeUp() }
+        XCTAssertTrue(reviewed.waitForExistence(timeout: 5))
+        XCTAssertEqual(reviewed.label, originalID)
+        let discardButton = app.buttons[discard]
+        for _ in 0..<5 where !discardButton.isHittable { app.swipeDown() }
+        XCTAssertTrue(discardButton.isHittable); discardButton.tap()
+        let addMeal = app.buttons["sharedMeal.add"]
+        for _ in 0..<5 where !addMeal.isHittable { app.swipeUp() }
+        XCTAssertTrue(addMeal.isHittable); addMeal.tap()
+        XCTAssertEqual(app.switches["sharedMeal.assignNight"].value as? String, "0")
+        XCTAssertEqual(app.staticTexts["sharedMeal.unscheduled"].label, unscheduled)
+        XCTAssertFalse(dayControl.exists)
+        XCTAssertNotEqual(identity.label, originalID)
+        let capture = XCTAttachment(screenshot: app.screenshot())
+        capture.name = "shared-optional-night-\(locale)"; capture.lifetime = .keepAlways; add(capture)
+    }
+
     private func checkDays(language: String, locale: String, labels: [String]) {
         let days = ["2026-03-07", "2026-03-08", "2026-03-09", "2026-10-31",
             "2026-11-01", "2026-11-02", "2026-11-03", "2026-11-05"]

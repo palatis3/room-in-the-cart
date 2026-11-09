@@ -347,3 +347,24 @@ test('accepted fallback registry paginates whole recipes within native read boun
  }while(cursor);
  assert.equal(seen.size,25);
 });
+
+test('approved shared idea can be selected with unknown night before a separate date proposal',async()=>{
+ const f=await mealFixture(),a=await approved(f),before=ok(await call(f.owner,f.path));
+ const proposal={...a.proposal,meal:{...a.proposal.meal,day:null}};
+ const submitted=ok(await call(f.planner,f.changePath,'POST',proposal));
+ assert.deepEqual(ok(await call(f.planner,f.changePath,'POST',proposal)),submitted);
+ assert.deepEqual(ok(await call(f.owner,f.path)),before);
+ const edit={occurrenceId:proposal.occurrenceId,baseMealRevision:null,meal:proposal.meal,changeProposalId:proposal.proposalId};
+ const command=f.patch(2,edit),receipt=ok(await call(f.owner,f.base+'/commands','POST',command));
+ assert.deepEqual(ok(await call(f.owner,f.base+'/commands','POST',command)),receipt);
+ const selected=ok(await call(f.owner,f.path)),occurrence=selected.meals.find(m=>m.occurrenceId===proposal.occurrenceId);
+ assert.deepEqual(occurrence.meal,proposal.meal);assert.deepEqual(selected.lines,before.lines);
+ assert.equal(selected.meals.at(-1).occurrenceId,proposal.occurrenceId,'Unknown nights sort after dated occurrences');
+ const move={proposalId:randomUUID(),occurrenceId:proposal.occurrenceId,day:'2099-11-01',shopRevision:3,authorityEpoch:1,grantRevision:1};
+ ok(await call(f.planner,f.path+'/meal-plan/proposals','POST',move));
+ const scheduled={...proposal.meal,day:move.day};
+ ok(await call(f.owner,f.base+'/commands','POST',f.patch(3,{occurrenceId:move.occurrenceId,baseMealRevision:3,meal:scheduled,proposalId:move.proposalId})));
+ const after=ok(await call(f.owner,f.path));assert.equal(after.meals.length,selected.meals.length);
+ assert.deepEqual(after.meals.find(m=>m.occurrenceId===move.occurrenceId).meal,scheduled);
+ assert.deepEqual(after.lines,before.lines);
+});

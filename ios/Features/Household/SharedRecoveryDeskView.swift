@@ -65,7 +65,7 @@ struct SharedRecoveryDeskView: View {
                     Button { selection = Selection(meal: meal, page: page); applied = false } label: {
                         VStack(alignment: .leading) {
                             Text(verbatim: meal.title).font(.headline)
-                            Text(verbatim: sharedMealDayText(meal.day, locale: .current) ?? meal.day)
+                            Text(verbatim: sharedMealScheduleText(meal.day, locale: .current))
                         }
                     }
                     .disabled(!meal.needs.contains { $0.priority == "required" } || model.pending != nil)
@@ -166,7 +166,7 @@ private struct SharedRecoveryEditor: View {
             if allowed {
                 Section {
                     Text(verbatim: target.title).font(.headline)
-                    LabeledContent(sharedRecoveryText("Scheduled day"), value: sharedMealDayText(target.day, locale: .current) ?? target.day)
+                    LabeledContent(sharedRecoveryText("Scheduled day"), value: sharedMealScheduleText(target.day, locale: .current))
                     LabeledContent(sharedRecoveryText("Scheduled time zone"), value: target.zone ?? ht("Unknown"))
                     LabeledContent(sharedRecoveryText("Meal deadline"), value: target.due.flatMap { SharedMealDeadline(at: $0, zone: target.zone ?? "UTC").display(locale: .current) } ?? ht("Unknown"))
                     LabeledContent(ht("Portions"), value: String(target.portions))
@@ -183,7 +183,7 @@ private struct SharedRecoveryEditor: View {
                     Picker(sharedRecoveryText("Replacement"), selection: Binding(get: { draft.repeatID }, set: choose)) {
                         Text(sharedRecoveryText("Enter a replacement")).tag(UUID?.none)
                         ForEach(donors) { donor in
-                            Text(verbatim: sharedRecoveryText("Repeat") + " · " + donor.title + " · " + (sharedMealDayText(donor.day, locale: .current) ?? donor.day)).tag(Optional(donor.id))
+                            Text(verbatim: sharedRecoveryText("Repeat") + " · " + donor.title + " · " + (sharedMealScheduleText(donor.day, locale: .current))).tag(Optional(donor.id))
                         }
                     }.accessibilityIdentifier("recovery.method")
                     if draft.repeatID == nil {

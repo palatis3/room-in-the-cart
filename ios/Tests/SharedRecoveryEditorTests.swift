@@ -92,7 +92,7 @@ final class SharedRecoveryEditorTests: XCTestCase {
                         "delivered":f("0"),"pantry":f("0"),"freezer":f("2"),"reservations":[],"issues":[],
                         "allocations":[["sourceId":source.uuidString,"amount":f("2"),"kind":"freezer"] as Object]]
         let snapshot=try decode(SharedRecoveryCoverage.self,base.merging(["shopId":shop.uuidString,"placedRevision":3,"asOf":time,"needs":[row],"unplannedOccurrenceIds":[]]) { _,new in new })
-        let sealedMeal:Object=["title":"Original wraps","kind":"dinner","day":meal.day,"portions":4,"protected":false,
+        let sealedMeal:Object=["title":"Original wraps","kind":"dinner","day":meal.day.map { $0 as Any } ?? NSNull(),"portions":4,"protected":false,
                                "planning":["groups":[],"ingredients":[],"deadline":["at":deadline.at,"zone":deadline.zone]] as Object]
         let delivery=try decode(SharedDeliveryPage.self,base.merging(["shopId":shop.uuidString,"coverageAvailable":true,"reservationsAvailable":true,
             "lines":[],"sources":[],"meals":[["occurrenceId":meal.id.uuidString,"revision":2,"meal":sealedMeal] as Object]]) { _,new in new })

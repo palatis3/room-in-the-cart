@@ -97,8 +97,8 @@ struct SharedDeliveryCookDraft {
         if case let .recovered(_, _, meal) = report,
            meal.id != occurrence.id || meal.day != occurrence.meal.day || meal.sourceMealRevision != occurrence.revision { return nil }
         let locale = Locale(identifier: language)
-        guard let renderer = Self(language: language),
-              let day = sharedMealDayText(occurrence.meal.day, locale: locale) else { return nil }
+        guard let renderer = Self(language: language) else { return nil }
+        let day = sharedMealScheduleText(occurrence.meal.day, locale: locale)
         let date = DateFormatter()
         date.locale = locale
         date.dateStyle = .long

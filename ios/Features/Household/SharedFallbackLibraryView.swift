@@ -90,7 +90,7 @@ struct SharedFallbackLibraryView: View {
                         ForEach(recovery.meals) { meal in
                             Button { Task { await loadSource(.meal(occurrenceId: meal.id, mealRevision: meal.sourceMealRevision,
                                 revisionId: meal.revisionId), library) } } label: {
-                                Text(verbatim: meal.title + " · " + (sharedMealDayText(meal.day, locale: .current) ?? meal.day))
+                                Text(verbatim: meal.title + " · " + (sharedMealScheduleText(meal.day, locale: .current)))
                             }.accessibilityIdentifier("fallback.meal." + meal.id.uuidString)
                         }
                         ForEach(sourceIdeas) { idea in

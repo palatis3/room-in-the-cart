@@ -54,7 +54,8 @@ public struct SharedRecoveryMeal: Codable, Equatable, Sendable, Identifiable {
     public var id: UUID { occurrenceId }
     public var occurrenceId, revisionId: UUID
     public var sourceMealRevision, portions: Int
-    public var title, notes, day: String
+    public var title, notes: String
+    @RecoveryNullable public var day: String?
     @RecoveryNullable public var sourceURL: String?
     @RecoveryNullable public var zone: String?
     @RecoveryNullable public var due: String?

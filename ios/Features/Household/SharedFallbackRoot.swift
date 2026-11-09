@@ -67,7 +67,7 @@ private struct SharedFallbackMenu: View {
                             } label: {
                                 VStack(alignment: .leading) {
                                     Text(verbatim: target.title)
-                                    Text(verbatim: sharedMealDayText(target.day, locale: .current) ?? target.day).font(.subheadline)
+                                    Text(verbatim: sharedMealScheduleText(target.day, locale: .current)).font(.subheadline)
                                 }
                             }.accessibilityIdentifier("fallback.target." + target.id.uuidString)
                         }

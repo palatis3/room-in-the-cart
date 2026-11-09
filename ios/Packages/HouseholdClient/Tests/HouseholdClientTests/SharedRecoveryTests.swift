@@ -62,12 +62,46 @@ private struct RecoveryFixture {
 }
 
 extension HouseholdClientTests {
+    func testUndatedRecoveryRequiresExplicitNullAndCannotInventTiming() throws {
+        let f = RecoveryFixture()
+        var row = f.target
+        row["day"] = NSNull()
+        let meal = try decodeRecovery(SharedRecoveryMeal.self, row)
+        XCTAssertNil(meal.day); XCTAssertNil(meal.due); XCTAssertNil(meal.zone)
+        let wire = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(meal)) as? RecoveryRow)
+        XCTAssertTrue(wire["day"] is NSNull)
+        row.removeValue(forKey: "day")
+        XCTAssertThrowsError(try decodeRecovery(SharedRecoveryMeal.self, row))
+        var desk = try f.desk()
+        var meals = try XCTUnwrap(desk["meals"] as? [RecoveryRow])
+        meals[0]["day"] = NSNull(); meals[0]["zone"] = "America/New_York"; desk["meals"] = meals
+        let decoded = try decodeRecovery(SharedRecoveryPage.self, desk)
+        var replacement = decoded.meals[0]; replacement.revisionId = UUID()
+        replacement.needs[0].id = UUID(); replacement.needs[0].ingredientId = UUID()
+        let intent = SharedRecoveryIntent(occurrenceId: replacement.id, targetDigest: try decoded.meals[0].targetDigest(),
+            replacement: replacement, reviewedAt: f.now, repeatOfOccurrenceId: nil, agreesToRepeat: false,
+            proposesExtraTrip: false, agreesToExtraTrip: false, acceptsUnresolved: true)
+        // Validation of a replacement must reject scheduling evidence without a night.
+        var invalid = replacement; invalid.due = "2026-11-09T18:00:00Z"
+        let invalidIntent = SharedRecoveryIntent(occurrenceId: replacement.id, targetDigest: intent.targetDigest,
+            replacement: invalid, reviewedAt: f.now, repeatOfOccurrenceId: nil, agreesToRepeat: false,
+            proposesExtraTrip: false, agreesToExtraTrip: false, acceptsUnresolved: true)
+        // Use matching current digest, as it is part of the reviewed target identity.
+        desk["targetDigests"] = try decoded.meals.map { ["occurrenceId": $0.id.uuidString, "digest": try $0.targetDigest()] }
+        let reviewed = try decodeRecovery(SharedRecoveryPage.self, desk)
+        try intent.validate(page: reviewed)
+        XCTAssertEqual(intent.replacement.zone, "America/New_York")
+        XCTAssertNil(intent.replacement.due)
+        XCTAssertThrowsError(try invalidIntent.validate(page: reviewed))
+
+    }
+
     func testMealRecoveryDeskRejectsForeignSourcesProvenanceAndAlteredText() throws {
         let f = RecoveryFixture(), row = try f.desk(), page = try decodeRecovery(SharedRecoveryPage.self, row)
         var evidence = f.scope
         evidence["sources"] = []; evidence["lines"] = []
         evidence["meals"] = page.meals.map { ["occurrenceId": $0.id.uuidString, "revision": 2, "meal":
-            ["title": $0.title, "day": $0.day, "kind": "dinner", "portions": 2, "protected": false]] as RecoveryRow }
+            ["title": $0.title, "day": $0.day.map { $0 as Any } ?? NSNull(), "kind": "dinner", "portions": 2, "protected": false]] as RecoveryRow }
         let delivery = try decodeRecovery(SharedDeliveryPage.self, evidence)
         var stock = f.scope; stock["lots"] = []; stock["nextCursor"] = NSNull()
         let pantry = try decodeRecovery(SharedPantryPage.self, stock)

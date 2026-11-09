@@ -64,7 +64,8 @@ private extension SharedRecoveryMeal {
     func validate(options: Set<UUID>) throws {
         let groupIDs = groups.map(\.id)
         guard sharedMealText(title, 240), notes.utf8.count <= 8192, (sourceURL?.utf8.count ?? 0) <= 2048,
-              day.utf8.count == 10, (1...1000).contains(portions), sourceMealRevision > 0, template == nil,
+              day.map({ $0.utf8.count == 10 }) ?? true,
+              day != nil || (due == nil && needs.allSatisfy { $0.due == nil }), (1...1000).contains(portions), sourceMealRevision > 0, template == nil,
               zone.map({ TimeZone(identifier: $0) != nil }) ?? true, due.map(validHelperTimestamp) ?? true,
               (0...1_000_000).contains(remainingElapsedMinutes ?? 0), (0...1_000_000).contains(requiredLeadMinutes ?? 0),
               exclusions.count <= 20, exclusions.allSatisfy({ sharedMealText($0, 240) }),

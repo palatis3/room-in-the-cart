@@ -11,7 +11,7 @@ struct SharedPantryMatches: View {
             if let review = PantryLotReview(model: model, shopID: shopID, lotID: lotID), review.lot.selected {
                 ForEach(review.delivery.meals ?? []) { occurrence in
                     if let plan = occurrence.meal.planning, !plan.ingredients.isEmpty {
-                        Section(occurrence.meal.title + " · " + occurrence.meal.day) {
+                        Section(occurrence.meal.title + " · " + sharedMealScheduleText(occurrence.meal.day)) {
                             ForEach(plan.ingredients) { ingredient in
                                 let target = SharedDeliveryPage.IngredientMatch(occurrence: occurrence, ingredient: ingredient)
                                 NavigationLink {
@@ -54,7 +54,7 @@ private struct PantryIngredientView: View {
                         LabeledContent(ht("Food exclusions"), value: record.lot.exclusionTags.joined(separator: ", "))
                     }
                 }
-                Section(occurrence.meal.title + " · " + occurrence.meal.day) {
+                Section(occurrence.meal.title + " · " + sharedMealScheduleText(occurrence.meal.day)) {
                     SharedMealPreparationFacts(planning: planning)
                     LabeledContent(ht("Ingredient quantity"), value: deliveryQuantityText(ingredient.quantity))
                     if !ingredient.exclusions.isEmpty {

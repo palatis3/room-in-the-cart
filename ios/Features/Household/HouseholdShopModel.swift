@@ -726,7 +726,7 @@ struct SharedShopTransfer: Equatable {
                         try meal.validatePlanning()
                         guard !meal.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, meal.title.count <= 240,
                               (1...1000).contains(meal.portions), ["dinner", "lunch", "side"].contains(meal.kind),
-                              sharedMealDate(meal.day) != nil else { throw ClientError.configuration }
+                              (meal.day == nil || sharedMealDate(meal.day) != nil) else { throw ClientError.configuration }
                     } else if !meals.contains(where: { $0.id == edit.occurrenceID }) { throw ClientError.configuration }
                 }
                 review = .init(shopID: shop.shopId, kind: "shop.patch", base: .init(shopRevision: shop.shopRevision, authorityEpoch: shop.authorityEpoch), candidate: candidate, mealEdit: reviewedMeal)

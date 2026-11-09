@@ -59,7 +59,7 @@ struct SharedRecoveryReview: View {
                             }.accessibilityIdentifier("recovery.before." + meal.id.uuidString)
                         }
                         mealFacts(meal, projection: preview.after)
-                    } header: { Text(verbatim: (sharedMealDayText(meal.day, locale: .current) ?? meal.day) + " · " + meal.title) }
+                    } header: { Text(verbatim: (sharedMealScheduleText(meal.day, locale: .current)) + " · " + meal.title) }
                     .accessibilityIdentifier("recovery.after." + meal.id.uuidString)
                 }
                 Section {

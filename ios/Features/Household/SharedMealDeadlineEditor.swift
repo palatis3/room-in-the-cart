@@ -11,6 +11,7 @@ struct SharedMealDeadlineEditor: View {
         LabeledContent(sharedRecoveryText("Meal deadline"), value: meal.planning?.deadline?.display(locale: locale) ?? ht("Unknown"))
         Button(sharedRecoveryText("Set meal deadline")) { editing = true }
             .accessibilityIdentifier("sharedMeal.editDeadline")
+            .disabled(meal.day == nil)
             .sheet(isPresented: $editing) {
                 NavigationStack {
                     SharedMealDeadlinePicker(meal: meal) { deadline in save(deadline); editing = false }
@@ -58,7 +59,7 @@ private struct SharedMealDeadlinePicker: View {
 
     var body: some View {
         Form {
-            LabeledContent(sharedRecoveryText("Scheduled day"), value: sharedMealDayText(meal.day, locale: locale) ?? meal.day)
+            LabeledContent(sharedRecoveryText("Scheduled day"), value: sharedMealScheduleText(meal.day, locale: locale))
             NavigationLink {
                 List(zones, id: \.self) { zone in
                     ZoneRow(zone: zone, selected: zone == zoneID) { changeZone(zone) }

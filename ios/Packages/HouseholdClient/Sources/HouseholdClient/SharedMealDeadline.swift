@@ -28,8 +28,8 @@ public struct SharedMealDeadline: Codable, Equatable, Sendable {
         return householdTimestamp(at)
     }
 
-    public func validate(day: String) throws {
-        guard let instant, let timeZone else { throw ClientError.configuration }
+    public func validate(day: String?) throws {
+        guard let day, let instant, let timeZone else { throw ClientError.configuration }
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = timeZone
         let components = calendar.dateComponents([.year, .month, .day], from: instant)
@@ -51,7 +51,7 @@ public struct SharedMealDeadline: Codable, Equatable, Sendable {
 
 extension SharedMeal {
     /// Date-only moves leave the time unknown until a shopper enters the new deadline.
-    public mutating func move(to newDay: String) {
+    public mutating func move(to newDay: String?) {
         if day != newDay { planning?.deadline = nil }
         day = newDay
     }

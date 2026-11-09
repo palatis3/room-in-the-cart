@@ -103,7 +103,7 @@ public struct SharedMealIdeaDraft: Codable, Equatable, Sendable {
                   i.usableNumerator == nil || i.usableDenominator == nil || i.usableNumerator! <= i.usableDenominator! else { throw ClientError.configuration }
         }
     }
-    public func proposedMeal(day: String) throws -> SharedMeal {
+    public func proposedMeal(day: String?) throws -> SharedMeal {
         try validate()
         let ingredients = ingredients.map { i in
             SharedMealPlanning.Ingredient(id: i.id, name: i.name,

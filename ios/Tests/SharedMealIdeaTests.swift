@@ -24,6 +24,17 @@ private actor IdeaServiceFixture: SharedMealIdeasServing {
     private func page(_ scope: SharedMealChangeScope) throws -> SharedMealIdeaPage {
         try JSONDecoder().decode(SharedMealIdeaPage.self, from: JSONSerialization.data(withJSONObject: ["shopId":scope.shopID.uuidString,"shopRevision":1,"authorityEpoch":1,"grantRevision":1,"shopper":false,"ideas":[]]))
     }
+    func testApprovedIdeaCanBecomeAnUnscheduledOccurrenceBeforeItsNightIsKnown() throws {
+        let approved = draft()
+        var occurrence = try approved.proposedMeal(day: nil)
+        XCTAssertNil(occurrence.day); XCTAssertNil(occurrence.planning?.deadline)
+        XCTAssertEqual(occurrence.planning?.ingredients.map(\.id), approved.ingredients.map(\.id))
+        let planning = occurrence.planning
+        occurrence.move(to: "2026-11-09")
+        XCTAssertEqual(occurrence.planning, planning)
+        XCTAssertNil(occurrence.planning?.deadline)
+    }
+
     func testUnknownHouseholdEvidenceEncodesAsExplicitNullNotPrivateDefaults() throws {
         let value = SharedMealIdeaDraft(title: "Manual", ingredients: [.init(name: "Rice", evidence: "Not checked")])
         try value.validate()

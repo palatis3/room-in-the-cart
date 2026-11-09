@@ -27,6 +27,10 @@ final class SharedMealNativeWireTests: XCTestCase {
 
     func testSharedMealClientAgainstPostgres() async throws {
         let env = ProcessInfo.processInfo.environment
+        if env["RITC_WIRE_UNDATED_PHASE"] != nil {
+            try await exerciseUnscheduledSelectionAcrossRestart()
+            return
+        }
         guard let rawPort = env["RITC_WIRE_PORT"] else { throw XCTSkip("Run isolated shared meal PostgreSQL tests with RITC_TEST_NATIVE_WIRE=1.") }
         let base = try XCTUnwrap(URL(string: "https://127.0.0.1:\(rawPort)"))
         let cert = try Data(contentsOf: URL(fileURLWithPath: XCTUnwrap(env["RITC_WIRE_CERT"])))
@@ -99,6 +103,73 @@ final class SharedMealNativeWireTests: XCTestCase {
             XCTAssertEqual(updated.meals, page.meals)
         }
     }
+
+    /// Two separate Swift processes share only the real PostgreSQL shop and fixture IDs.
+    private func exerciseUnscheduledSelectionAcrossRestart() async throws {
+        let env = ProcessInfo.processInfo.environment
+        let phase = try XCTUnwrap(env["RITC_WIRE_UNDATED_PHASE"])
+        XCTAssertTrue(["select", "schedule"].contains(phase))
+        let base = try XCTUnwrap(URL(string: "https://127.0.0.1:\(try XCTUnwrap(env["RITC_WIRE_PORT"]))"))
+        let cert = try Data(contentsOf: URL(fileURLWithPath: XCTUnwrap(env["RITC_WIRE_CERT"])))
+        let session = URLSession(configuration: .ephemeral, delegate: SharedMealLoopbackTrust(certificate: cert), delegateQueue: nil)
+        defer { session.invalidateAndCancel() }
+        let transport = HTTPTransport(session: session)
+        let auth = AdultAuth(configuration: try .init(projectURL: base, publishableKey: "sb_publishable_meal_fixture"), vault: MemoryVault(), transport: transport)
+        _ = try await auth.verifyEmailCode(email: "wire@example.invalid", code: XCTUnwrap(env["RITC_WIRE_CODE"]))
+        let service = HouseholdService(configuration: try .init(baseURL: base), auth: auth, deviceVault: MemoryVault(), transport: transport)
+        _ = try await service.enroll(householdID: XCTUnwrap(env["RITC_WIRE_HOUSEHOLD"]))
+        let shopID = try XCTUnwrap(UUID(uuidString: XCTUnwrap(env["RITC_WIRE_SHOP"])))
+        let scope = try await service.selectShop(shopID)
+        let ids = try JSONDecoder().decode([String: UUID].self, from: Data(XCTUnwrap(env["RITC_WIRE_UNDATED_IDS"]).utf8))
+        let occurrence = try XCTUnwrap(ids["occurrence"]), dinner = try XCTUnwrap(ids["dinner"])
+        let lunch = try XCTUnwrap(ids["lunch"]), ingredient = try XCTUnwrap(ids["ingredient"])
+        func quantity(_ n: Int) -> SharedMealQuantity { .init(amount: .init(numerator: n), unit: "count", originalLiteral: "\(n) wraps") }
+        let planning = SharedMealPlanning(groups: [
+            .init(id: dinner, name: "Dinner", servings: .init(numerator: 4), protected: false),
+            .init(id: lunch, name: "Lunch", servings: .init(numerator: 2), protected: true)],
+            ingredients: [.init(id: ingredient, name: "Wraps", quantity: quantity(6), groupIds: [dinner,lunch], exclusions: ["no peanuts"])],
+            bindings: [.init(id: try XCTUnwrap(ids["dinnerAllocation"]), groupId: dinner, ingredientId: ingredient, quantity: quantity(4)),
+                       .init(id: try XCTUnwrap(ids["lunchAllocation"]), groupId: lunch, ingredientId: ingredient, quantity: quantity(2))])
+        var expected = SharedMeal(title: "Undated native supper", day: nil, kind: "dinner", portions: 6, protected: false, planning: planning)
+        let current = try await service.shopperShop(shopID: shopID.uuidString.lowercased())
+        let existing = current.meals ?? []
+        let baseMealRevision: Int?
+        if phase == "select" {
+            XCTAssertEqual(current.shopRevision, 1); XCTAssertTrue(existing.isEmpty)
+            baseMealRevision = nil
+        } else {
+            // This process has fresh auth, transport, device vault and service actors.
+            // Its expected IDs come from the parent, never from the just-read meal.
+            XCTAssertEqual(current.shopRevision, 2); XCTAssertEqual(existing.count, 1)
+            let saved = try XCTUnwrap(existing.first)
+            XCTAssertEqual(saved.id, occurrence); XCTAssertEqual(saved.revision, 2)
+            XCTAssertEqual(saved.meal, expected)
+            var moved = saved.meal; moved.move(to: "2099-11-01")
+            XCTAssertEqual(moved.planning, planning); XCTAssertNil(moved.planning?.deadline)
+            expected = moved; baseMealRevision = saved.revision
+        }
+        var edit = SharedMealEdit(occurrenceID: occurrence, meal: expected)
+        edit.baseMealRevision = baseMealRevision
+        var body = try ShopperShopCandidate(quote: current.quote, lines: current.lines).commandBody()
+        body["mealEdit"] = try edit.commandValue()
+        let window = try await service.replayWindow()
+        let operation = try await service.prepare(envelope: .init(replayWindow: window.id, shopId: current.shopId,
+            kind: "shop.patch", base: .init(shopRevision: current.shopRevision, authorityEpoch: current.authorityEpoch), body: body), bootstrap: scope)
+        let restored = try JSONDecoder().decode(PendingOperation.self, from: JSONEncoder().encode(operation))
+        XCTAssertEqual(restored, operation); XCTAssertEqual(restored.bytes, operation.bytes)
+        let first = try await service.executeSharedShop(operation)
+        let retry = try await service.executeSharedShop(restored)
+        XCTAssertEqual(first, retry); XCTAssertEqual(first.shopRevision, current.shopRevision + 1)
+        let final = try await service.shopperShop(shopID: current.shopId)
+        XCTAssertEqual(final.shopRevision, current.shopRevision + 1)
+        XCTAssertEqual(final.lines, current.lines); XCTAssertEqual(final.quote, current.quote)
+        XCTAssertEqual(final.meals?.count, 1)
+        let saved = try XCTUnwrap(final.meals?.first)
+        XCTAssertEqual(saved.id, occurrence); XCTAssertEqual(saved.revision, final.shopRevision)
+        XCTAssertEqual(saved.meal, expected); XCTAssertEqual(saved.meal.planning, planning)
+        XCTAssertNil(saved.meal.planning?.deadline)
+    }
+
     private func exerciseConfirmedAmendment(_ service: HouseholdService, shopID: UUID) async throws {
         let id = shopID.uuidString.lowercased(), page = try await service.confirmedOrder(shopID: shopID)
         let original = try await service.shopperShop(shopID: id)

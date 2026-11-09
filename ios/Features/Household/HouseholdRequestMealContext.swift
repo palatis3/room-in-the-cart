@@ -20,7 +20,11 @@ struct HouseholdRequestMealContext: Equatable {
 
     private func sorted(_ values: [SharedMealOccurrence]) -> [SharedMealOccurrence] {
         values.sorted {
-            if $0.meal.day != $1.meal.day { return $0.meal.day < $1.meal.day }
+            if $0.meal.day != $1.meal.day {
+                guard let left = $0.meal.day else { return false }
+                guard let right = $1.meal.day else { return true }
+                return left < right
+            }
             return $0.id.uuidString < $1.id.uuidString
         }
     }
@@ -83,7 +87,7 @@ private struct HouseholdRequestMealFacts: View {
         VStack(alignment: .leading, spacing: 2) {
             Text(occurrence.meal.title).font(.subheadline.weight(.semibold))
                 .fixedSize(horizontal: false, vertical: true)
-            Text([kind, sharedMealDayText(occurrence.meal.day, locale: locale) ?? ht("Meal day unknown")].joined(separator: " · "))
+            Text([kind, sharedMealScheduleText(occurrence.meal.day, locale: locale)].joined(separator: " · "))
                 .font(.caption)
                 .fixedSize(horizontal: false, vertical: true)
             HouseholdDecisionFact(occurrence.meal.protected ? ht("Protected portions") : ht("Portions"), value: occurrence.meal.portions.formatted())
