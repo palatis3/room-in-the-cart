@@ -15,7 +15,7 @@ contracts and B11 acceptance. Read [APP-BASELINE](product/APP-BASELINE.md), then
 Use `/Users/palatis/Room in the Cart`, branch `codex/parallel-ios-ci`, with explicit
 working directories. The ambient `spanish-done-diagnostic` worktree is stale.
 Publication target is `codex/combined-candidate-20261109`; before this update its
-verified head was `040ec583e80cc2a70b215df81df60695c99f01fd`. Recheck current Git
+verified head was `11491843f8e60b15702dff2321cbf22c94dd47e7`. Recheck current Git
 and run state before publishing. Draft PR1 is a separate older candidate.
 No complete combined regression or merge has passed.
 
@@ -97,19 +97,32 @@ failure diagnostics. Native65/strict1, screenshots, geometry and original hashes
 are retained. This is a harness failure, not accepted negative contrast proof.
 Source/products and executable modes were verified in
 `.build/NativeQualificationArchivesNov09/5d323e329534e8c46baec7659d4af415ed5b3bec5e02278d9838e56f05178b68/`.
-Baselines1–3 are terminal and their source/products/modes are archived. Baseline2
-confirmed the original native field exposes its title as a placeholder, not label.
-R4 reached both intended contrast failures in baseline3 but lost its locator after
-typing because the placeholder disappears. That additional harness failure makes
-it incomplete negative-control proof. The latest frozen source manifest is
-`e678a8eb3d1720b889de61bdb42e10a03fbce78f1b66dfca86004217e0b271fc`.
-All nine identified compiler warning sites are absent; the App Intents metadata
-tool still reports no framework dependency. A stable field identifier is being
-prepared for both original-style and styled candidates. No canonical product
-change is installed. Check `.build/ClarificationContrastNov09/` before native work.
-Local expected-negative controls explicitly omit broad system diagnostics but
-retain screenshots, geometry, traits, complete results and strict validation;
-positive qualification and CI stay on-failure.
+Baselines1–4 are terminal and their source/products/modes are archived. Baseline2
+found native placeholder-vs-label identity; baseline3 found that placeholder
+identity disappears after typing. R5 adds `household.decision.question` to both
+original-color and styled candidates and retains exact empty-title/draft checks.
+
+Baseline4 is accepted **negative-control proof**, not a passing app test: it
+completed normally in85.628seconds with exactly the two intended native contrast
+assertion failures (3.111655:1 guidance,1.723392:1 empty prompt against4.5), no
+additional assertion failures, and no observed runtime warnings/restarts/idle
+messages. Multiline editing and Cancel reach0fixture attempts/applied/lines; an
+intentional rejected-send control reaches1attempt/0applied/0lines. Full/target
+screenshots, geometry, traits and control attachments are retained; Large full
+screenshots were manually reviewed for complete wording and no target clipping.
+This does not prove zero local-file writes or cancel the rejected pending operation.
+Receipt: `.build/ClarificationContrastNov09/baseline-r4/negative-control.json`.
+Source manifest: `e078096286ceaf0806189a70808197ccf2b2767bbba16ca5aac59a9975163d83`.
+
+All nine identified compiler warning sites are absent in the isolated candidate;
+the App Intents metadata tool still reports no framework dependency. None of
+these new fixture/test/product changes is installed in canonical source yet.
+Next apply only `proposal-r5/style-after-identifier.patch` to the archived-and-verified
+stable source, create `positive-r1/source.json`, then build and run the prepared
+positive runner (light/dark × Large/AX5 plus original Cancel case). All positive
+and CI executions retain on-failure diagnostics. `positive-r1/` contains executors
+only; no positive compilation or test has started. Install canonical changes only
+after qualification and screenshot review. No native process remains active.
 
 ## Installed product fixes and evidence boundaries
 
@@ -144,7 +157,7 @@ Protected preview `5FDE1E82-1FF7-4556-9C14-0746F6295944`: never reset or use for
 Owned minimum17.0 deviceD420C2CA and17.5 device9DE280AC remain available; recheck state.
 Multiple26.2 runtime builds are installed, so version alone is insufficient identity.
 
-Latest observed free storage is14.84GiB, replacing earlier41GiB readings.
+Latest observed free storage is14.98GiB, replacing earlier41GiB readings.
 Keep8GiB reserve; no SDK download is needed. Do not broadly delete evidence/caches,
 repurpose PostgreSQL port55432 or remove unowned resources.
 
