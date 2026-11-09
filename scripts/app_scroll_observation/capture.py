@@ -138,12 +138,62 @@ class Capture(NativeEnvironmentSpawn, Supervisor):
         self.check_deadlines()
         return item
 
+    def acquire_startup_query(self, item, check_native, deadline):
+        """Continue one owned read-only startup query; an interpreter is never a signal target."""
+        label = item['record']['label']; process = item['process']; tool = self.config['tools']['simctl']
+        launcher_identity(tool['path'], tool['sha256'], item['expected'], item['digest'])
+        interpreter = str(Path('/bin/bash').resolve())  # Exact shebang checked by launcher_identity.
+        diagnostic = dict(startMonotonic=time.monotonic(), samples=0, missing=0, interpreter=0,
+                          expected=0, first=[], last=None)
+        item['record']['startupAcquisition'] = diagnostic; self.save()
+        origin = None
+        while True:
+            self.budget(); check_native()
+            require(time.monotonic() < deadline, label+'_deadline')
+            if process.poll() is not None:
+                item['record']['terminalQueryBeforeBinding'] = True
+                item['record']['exitCode'] = process.returncode
+                diagnostic['outcome'] = 'terminal_before_binding'; self.save()
+                return item
+            value = self.identity.read(process.pid)
+            sample = dict(monotonic=time.monotonic(), identity=value)
+            diagnostic['samples'] += 1; diagnostic['last'] = sample
+            if len(diagnostic['first']) < 4: diagnostic['first'].append(sample)
+            kind = 'missing' if value is None else 'expected' if value['executable'] == item['expected'] else 'interpreter' if value['executable'] == interpreter else 'other'
+            diagnostic[kind] = diagnostic.get(kind, 0)+1
+            # Bound persistent receipt writes; failure cleanup also saves the latest in-memory sample.
+            if diagnostic['samples'] <= 4 or diagnostic['samples'] % 20 == 0 or kind == 'other': self.save()
+            self.budget(); check_native()  # Sampling and receipt I/O cannot waive phase expiry.
+            if process.poll() is not None: continue  # Owned exit raced libproc; never signal it.
+            if value is not None:
+                require(value['pid'] == process.pid and value['parentPID'] == os.getpid()
+                        and value['uid'] == os.getuid()
+                        and value['startTimeMicros'] >= int(item['record']['spawnEpoch']*1_000_000),
+                        label+'_startup_identity')
+                current = {key: value[key] for key in ('pid','parentPID','uid','startTimeMicros')}
+                require(origin is None or origin == current, label+'_startup_identity_changed')
+                origin = current
+                require(kind in ('expected','interpreter'), label+'_startup_executable')
+                if kind == 'expected':
+                    require(sha(item['expected']) == item['digest'], label+'_binary_identity')
+                    self.budget(); check_native()
+                    if process.poll() is not None: continue
+                    latest = self.identity.read(process.pid)
+                    if latest != value:
+                        require(process.poll() is not None, label+'_startup_identity_changed')
+                        continue
+                    self.check_deadlines()
+                    item['binding'] = value; item['record']['binding'] = value
+                    diagnostic['outcome'] = 'bound'; self.save(); return item
+            time.sleep(min(0.05, max(0, deadline-time.monotonic())))
+
     def query_container(self, bundle, kind, label, startup_native=None):
         started = time.monotonic()
         startup = startup_native is not None
         if startup:
             require(bundle == 'dev.roominthecart.app' and kind == 'data' and not self.bound
-                    and self.native_started is not None and startup_native['record']['label'] == 'native',
+                    and self.native_started is not None and self.phase == 'binding'
+                    and startup_native['record']['label'] == 'native',
                     'startup_container_scope')
         deadline = self.native_started + BIND_SECONDS if startup else started + 5
         def check_native():
@@ -153,7 +203,18 @@ class Capture(NativeEnvironmentSpawn, Supervisor):
                 require(value is not None and self.identity.read(value['pid']) == value, 'native_identity_before_app')
                 require(time.monotonic() < deadline, 'app_data_deadline')
         check_native(); self.budget()
-        item = self.tool_spawn(label, 'simctl', ['get_app_container', self.device, bundle, kind], True)
+        process_count = len(self.processes)
+        try:
+            item = self.tool_spawn(label, 'simctl', ['get_app_container', self.device, bundle, kind], True)
+        except RuntimeError as error:
+            if not startup or str(error) != label+'_unbound_or_early_exit': raise
+            require(len(self.processes) == process_count+1, 'startup_query_ownership')
+            item = self.processes[-1]
+            require(item['record']['label'] == label and item['binding'] is None
+                    and item['record']['pid'] == item['process'].pid
+                    and item['record']['argv'] == [str(Path(self.config['tools']['simctl']['path']).resolve()),
+                        'get_app_container', self.device, bundle, kind], 'startup_query_ownership')
+            item = self.acquire_startup_query(item, check_native, deadline)
         item['record'].update(containerLookupPhase='startup' if startup else 'installed',
                               containerLookupBudgetSeconds=max(0, deadline-started))
         self.save()

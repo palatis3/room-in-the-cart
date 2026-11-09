@@ -43,3 +43,68 @@ Explicit optional `clarifyReservationProductIds` permits only reviewed product i
 Graph-enabled shops reject old pack-only draft edits and request add/link with `demand_review_required`. Existing unadopted shops retain their original behavior. The server-only store-price path preserves identical line identities, names and pack counts and never changes the graph. Snapshots pin graph revision/digest. Privacy invalidates affected digests/receipts and all transient household demand previews, including copies created by a different shopper before any graph was committed. Persisted unrelated contributions remain selective. The current affected head becomes reviewRequired; it never selects an older head. Reopen may pin an explicit `{schemaVersion:1,revision,digest:null,status:"reviewRequired"}` reference so a frozen shop can recover. That reference and every erased dated snapshot remain ineligible for direct placement or reconciliation; fresh review and an accepted snapshot are required.
 
 Deploying migration043 does not backfill or activate native adoption. Once adopted graphs exist, rollback to a server without writer/privacy fences is unsafe: preserve history and roll forward or explicitly stop affected writes. Do not drop graph history to undo deployment. Shared native export/import, scoped downstream projections and original-route mixed-device acceptance remain separate required integration work.
+
+## Proposed meal-action source catalog
+
+`GET .../demand` additionally returns `graphDigest`: the server's current graph
+fingerprint only when status is `enabled`; otherwise `null`. Clients echo this
+value; they do not duplicate server canonicalization.
+
+`POST .../demand/action-sources` is read-only and retains the ordinary 65,536-byte
+request cap. It accepts `{base,action}`. `base` contains exact `shopRevision`,
+`authorityEpoch`, positive `graphRevision`, and lowercase 64-hex `graphDigest`.
+`action` is `{kind:"shop.patch",body:<ordinary shop.patch body>}` with exactly one
+`mealEdit` and no `demandReview`. It accepts direct edits, approved change proposals
+(`changeProposalId`) and existing move proposals (`proposalId`). The existing body
+schema disallows both proposal IDs together. This milestone excludes request.apply.
+
+Only an enabled graph is eligible. Legacy editing retains its original path;
+there is no merge of legacy and proposed-action catalogs. `reviewRequired` must
+first complete surviving-food recovery and reread the enabled graph/digest.
+Absent graph or recovery state rejects with `demand_enabled_required`; mismatched
+graph revision/digest rejects with `stale_demand`. Existing shop/authority errors
+remain unchanged. The endpoint runs within the authenticated household transaction
+and requires the assigned adult shopper, live device/session, draft shop and bases.
+
+The response is `{schemaVersion:1,shopId,base,graphDigest,normalizedAction,
+actionDigest,sources,retirementCandidates,retainedContributionIds}`. `actionDigest`
+binds the normalized ordinary action. `sources` enumerates authoritative *meal and
+reservation* facts after the action; each row contains:
+
+- `before`: the exact existing graph contribution, or `null` for a genuinely new source.
+- `proposed`: the existing catalog fact shape (`id`, `source`, `sourceLabel`,
+  `productName`, immutable `originalText`, `originalQuantityText`, exact reduced
+  `quantity`, scoped `sourceExclusions`, and `requiredLineId`). Existing IDs and
+  reservation purpose/identity are preserved. `requiredLineId` is the existing
+  contribution line, or null for a new source. Matching scoped exclusion labels
+  keep their existing reviewed mappings; new labels remain unresolved.
+- `transition`: `retain|update|new|quantifyReservation`. Quantification is a fact
+  transition, not permission: the final request must still explicitly list the
+  reservation in `quantifyReservationIds` and pass the original reducer checks.
+
+`retirementCandidates` lists disappeared nonprotected meal contribution IDs for
+explicit review; it does not perform removal. `retainedContributionIds` identifies
+all other graph contributions, including unrelated manual/import/request records
+and tombstones, which remain unchanged. Existing allocation edges are not rewritten
+by this catalog. Before/after preview remains the only way to validate repairs.
+
+Matching preserves arbitrary existing IDs rather than replacing them with generated
+legacy IDs. Whole-protected representations remain whole. Missing protected rows,
+ambiguous matches, non-null binding replacement, retired provenance, or reused IDs
+fail explicitly. There is no silent resurrection or weakening of protected needs.
+No product key, product match, conversion, allocation or usable pack quantity is
+inferred. Exact retained facts do not authorize a new product match.
+
+Catalog and demand preview use the same read-only proposal checks as commit:
+current actor/member, authority epoch, planner grant, shop/meal revisions, pending
+proposal and exact proposed meal; new occurrences also revalidate their approved
+idea and revision. Only commit consumes a proposal. A changed/revoked/dismissed
+proposal or changed approved idea makes subsequent catalog/preview/Apply fail even
+if the graph revision itself has not changed.
+
+The catalog creates no preview, operation, graph, meal revision or proposal update.
+It is informational, not an Apply token. Cancel has no effect. Existing demand
+preview and Apply independently reauthorize and recompute source facts and enforce
+conservation, quantities, exclusions, edge/pack rules and original command limits.
+Source rows are capped at 2,000 and encoded response bytes at 1,800,000; over-limit
+facts are rejected, never truncated. No schema version bump or migration is needed.

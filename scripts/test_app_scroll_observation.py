@@ -282,7 +282,7 @@ class ContainerLookupControls(unittest.TestCase):
         self.control.native_started=0;self.control.bound={};self.control.save=lambda:None
         self.control.phase='binding';self.control.phase_deadline=180;self.control.cleaning=False
         self.path=self.root/'Library/Developer/CoreSimulator/Devices'/DEVICE/'data/Containers/Data/Application/app'
-        self.path.mkdir(parents=True);self.query_stdout=str(self.path)+'\n';self.spawned=[]
+        self.path.mkdir(parents=True);self.query_stdout=str(self.path)+'\n';self.spawned=[];self.control.processes=[]
         self.native_binding=dict(pid=101,startTimeMicros=1,uid=501,parentPID=50,executable='/native')
         self.query_binding=dict(pid=102,startTimeMicros=2,uid=501,parentPID=50,executable='/simctl')
         self.native={'record':{'label':'native'},'binding':self.native_binding,
@@ -915,6 +915,176 @@ class LoggingTemplatePreflightControls(unittest.TestCase):
                     self.assertTrue(instance.processes[-1]['record']['terminalQueryBeforeBinding'])
                 else:
                     with self.assertRaises(RuntimeError):instance.command('templates','xctrace',tail,10,terminal_query=True)
+
+
+class AcquisitionControls(unittest.TestCase):
+    lookup=ContainerLookupControls.lookup
+    def setUp(self):
+        ContainerLookupControls.setUp(self)
+        self.control.processes=[];self.control.receipt={'processes':[]}
+        self.control.config={'tools':{'simctl':dict(path='/launcher',sha256='launcher-hash',executable='/simctl',executableSHA256='target-hash')}}
+        self.control.tool_spawn=capture.Capture.tool_spawn.__get__(self.control)
+        self.bind_at=4;self.spawn_error=None;self.bad_sample=None;self.hash_drift=False;self.hash_delay=0;self.race=False;self.lookup_reads=0
+        self.launcher_checks=mock.Mock()
+        def read(pid):
+            if pid==101:return dict(self.native_binding,startTimeMicros=99) if self.drift and self.now>=self.drift[1] else dict(self.native_binding)
+            self.lookup_reads+=1
+            if self.race:self.query_end=self.now;return None
+            if self.bad_sample is not None:return self.bad_sample
+            if self.now<self.bind_at:return None if self.now<3 else dict(self.query_binding,executable=str(Path('/bin/bash').resolve()))
+            return dict(self.query_binding)
+        self.control.identity.read=read
+        old_budget=self.control.budget
+        self.control.budget=lambda:(self.control.check_deadlines(),old_budget())
+        parent=self
+        class Process:
+            pid=102;returncode=None;stdin=None
+            def poll(self):
+                if parent.now>=parent.query_end:self.returncode=parent.query_code
+                return self.returncode
+            def send_signal(self,*args):raise AssertionError('Unverified query cannot receive signal')
+        def spawn(label,argv,expected,digest,stdin=False):
+            self.assertFalse(self.spawned,'no query respawn')
+            (self.root/(label+'-stdout.log')).write_text(self.query_stdout)
+            (self.root/(label+'-stderr.log')).write_text(self.query_stderr)
+            record=dict(label=label,argv=argv,pid=102,spawnEpoch=0,signals=[])
+            item=dict(record=record,process=Process(),binding=None,expected='/simctl',digest='target-hash',streams=[])
+            self.spawned.append(item);self.control.processes.append(item);self.control.receipt['processes'].append(record)
+            self.now=round(self.now+2,6)
+            raise RuntimeError(self.spawn_error or label+'_unbound_or_early_exit')
+        self.control.spawn=spawn
+        def sha(path):
+            if str(path)=='/simctl':
+                self.now=round(self.now+self.hash_delay,6)
+                return 'changed' if self.hash_drift else 'target-hash'
+            return 'launcher-hash'
+        for patcher in (mock.patch.object(capture,'sha',side_effect=sha),mock.patch.object(capture,'launcher_identity',self.launcher_checks),mock.patch.object(capture.os,'getpid',return_value=50),mock.patch.object(capture.os,'getuid',return_value=501)):
+            patcher.start();self.addCleanup(patcher.stop)
+    def absent(self):self.query_code=2;self.query_stdout='';self.query_stderr=ContainerLookupControls.ABSENT
+    def reset(self):self.now=0;self.spawned=[];self.control.processes=[]
+    def test_delayed_interpreter_then_expected_binding_same_process(self):
+        self.assertEqual(self.lookup(),self.path);item=self.spawned[0]
+        self.assertEqual(item['binding'],self.query_binding);self.assertEqual(item['record']['signals'],[])
+        diag=item['record']['startupAcquisition'];self.assertEqual(diag['outcome'],'bound');self.assertGreater(diag['missing'],0);self.assertGreater(diag['interpreter'],0)
+        self.assertEqual(len(diag['first']),4);self.assertEqual(diag['last']['identity'],self.query_binding)
+        self.launcher_checks.assert_called_once_with('/launcher','launcher-hash','/simctl','target-hash')
+    def test_missing_image_then_exact_enoent_terminal_not_signal_target(self):
+        self.bind_at=999;self.query_end=2.5;self.absent();self.assertIsNone(self.lookup());item=self.spawned[0]
+        self.assertIsNone(item['binding']);self.assertEqual(item['record']['exitCode'],2)
+        for key in ('terminalQueryBeforeBinding','expectedContainerAbsent','terminalVerified'):self.assertTrue(item['record'][key])
+        self.assertEqual(item['record']['signals'],[])
+    def test_exit_race_is_terminal(self):
+        self.race=True;self.absent();self.assertIsNone(self.lookup());self.assertTrue(self.spawned[0]['record']['terminalVerified']);self.assertIsNone(self.spawned[0]['binding'])
+    def test_unknown_live_executable_rejected(self):
+        self.bad_sample=dict(self.query_binding,executable='/unrelated')
+        with self.assertRaisesRegex(ValueError,'startup_executable'):self.lookup()
+    def test_terminal_success_path_without_live_binding(self):
+        self.bind_at=999;self.query_end=2.5
+        self.assertEqual(self.lookup(),self.path);self.assertIsNone(self.spawned[0]['binding'])
+        self.assertTrue(self.spawned[0]['record']['terminalVerified'])
+    def test_post_hash_identity_race_with_exit_is_terminal(self):
+        original=self.control.identity.read;reads=[]
+        def identity(pid):
+            if pid==102 and self.now>=4:
+                reads.append(pid)
+                if len(reads)==2:self.query_end=self.now;return None
+            return original(pid)
+        self.control.identity.read=identity
+        self.assertEqual(self.lookup(),self.path);self.assertIsNone(self.spawned[0]['binding'])
+    def test_post_hash_identity_drift_while_live_rejected(self):
+        original=self.control.identity.read;reads=[]
+        def identity(pid):
+            if pid==102 and self.now>=4:
+                reads.append(pid)
+                if len(reads)==2:return dict(self.query_binding,startTimeMicros=99)
+            return original(pid)
+        self.control.identity.read=identity
+        with self.assertRaisesRegex(ValueError,'startup_identity_changed'):self.lookup()
+    def test_wrong_owned_item_arguments_rejected(self):
+        original=self.control.spawn
+        def spawn(*args,**kwargs):
+            try:return original(*args,**kwargs)
+            finally:self.spawned[0]['record']['argv'][-1]='app'
+        self.control.spawn=spawn
+        with self.assertRaisesRegex(ValueError,'startup_query_ownership'):self.lookup()
+        self.launcher_checks.assert_not_called()
+    def test_only_binding_phase_accepts_startup_scope(self):
+        self.control.phase='arm'
+        with self.assertRaisesRegex(ValueError,'startup_container_scope'):self.lookup()
+        self.assertEqual(self.spawned,[])
+    def test_wrong_identity_fields_rejected(self):
+        for key,value in [('pid',999),('parentPID',999),('uid',999),('startTimeMicros',-1)]:
+            with self.subTest(key=key):
+                self.reset();self.bad_sample=dict(self.query_binding,**{key:value})
+                with self.assertRaisesRegex(ValueError,'startup_identity'):self.lookup()
+    def test_start_identity_drift_after_interpreter_rejected(self):
+        original=self.control.identity.read
+        self.control.identity.read=lambda pid:dict(self.query_binding,startTimeMicros=99) if pid==102 and self.now>=4 else original(pid)
+        with self.assertRaisesRegex(ValueError,'startup_identity_changed'):self.lookup()
+    def test_expected_binary_drift_rejected(self):
+        self.hash_drift=True
+        with self.assertRaisesRegex(ValueError,'binary_identity'):self.lookup()
+    def test_native_early_exit_while_unbound(self):
+        self.native_end=2.5
+        with self.assertRaisesRegex(ValueError,'native_exited_before_app'):self.lookup()
+    def test_native_identity_drift_while_unbound(self):
+        self.drift=(101,2.5)
+        with self.assertRaisesRegex(ValueError,'native_identity_before_app'):self.lookup()
+    def test_budget_failure_while_unbound(self):
+        self.budget_error=(2.5,'tool_log_cap')
+        with self.assertRaisesRegex(ValueError,'tool_log_cap'):self.lookup()
+    def test_terminal_late_output_capped_before_read(self):
+        self.bind_at=999;self.query_end=2.5;self.absent();original=self.control.cleanup
+        def cleanup(item):original(item);self.budget_error=(self.now,'tool_log_cap')
+        self.control.cleanup=cleanup
+        with self.assertRaisesRegex(ValueError,'tool_log_cap'):self.lookup()
+        self.assertNotIn('expectedContainerAbsent',self.spawned[0]['record'])
+    def test_unbound_hang_original_deadline_no_signal_or_retry(self):
+        self.bind_at=999;self.query_end=999;self.now=170
+        with self.assertRaisesRegex(ValueError,'binding_deadline'):self.lookup()
+        self.assertEqual(self.now,180);self.assertEqual(len(self.spawned),1);self.assertIsNone(self.spawned[0]['binding']);self.assertEqual(self.spawned[0]['record']['signals'],[])
+        self.control.cleanup=capture.Supervisor.cleanup.__get__(self.control);self.control.cleanup(self.spawned[0])
+        self.assertEqual(self.spawned[0]['record']['cleanupError'],'identity_unverified_no_signal')
+    def test_exact_deadline_terminal_or_binding_rejected(self):
+        for terminal in (True,False):
+            with self.subTest(terminal=terminal):
+                self.reset();self.now=176;self.bind_at=999 if terminal else 180;self.query_end=180 if terminal else 999
+                with self.assertRaisesRegex(ValueError,'binding_deadline'):self.lookup()
+                self.assertEqual(self.now,180);self.assertIsNone(self.spawned[0]['binding'])
+    def test_hash_work_cannot_cross_deadline(self):
+        self.now=176;self.bind_at=178;self.hash_delay=2;self.query_end=999
+        with self.assertRaisesRegex(ValueError,'binding_deadline'):self.lookup()
+        self.assertIsNone(self.spawned[0]['binding'])
+    def test_absolute_deadline_still_enforced(self):
+        self.control.phase_deadline=999;self.now=417;self.bind_at=999;self.query_end=999
+        with mock.patch.object(capture,'BIND_SECONDS',500),self.assertRaisesRegex(ValueError,'native_wall_deadline'):self.lookup()
+        self.assertEqual(len(self.spawned),1)
+    def test_unknown_terminal_error_not_absence(self):
+        self.bind_at=999;self.query_end=2.5;self.query_code=2;self.query_stdout='';self.query_stderr='Permission denied'
+        with self.assertRaisesRegex(ValueError,'container_query_failed'):self.lookup()
+    def test_installed_query_does_not_defer(self):
+        with self.assertRaisesRegex(RuntimeError,'unbound_or_early_exit'):self.lookup(startup=False,bundle='dev.roominthecart.app',kind='app')
+        self.assertEqual(self.now,2);self.launcher_checks.assert_not_called()
+    def test_native_tracer_do_not_defer(self):
+        for key in ('xcodebuild','xctrace'):
+            with self.subTest(key=key):
+                self.reset();self.control.config['tools'][key]=dict(path='/launcher',sha256='launcher-hash')
+                with self.assertRaisesRegex(RuntimeError,'unbound_or_early_exit'):self.control.tool_spawn(key,key,[])
+                self.assertEqual(self.now,2);self.launcher_checks.assert_not_called()
+    def test_other_runtime_errors_never_deferred(self):
+        for suffix in ('binary_identity','start_identity'):
+            with self.subTest(suffix=suffix):
+                self.reset();self.spawn_error='container-data-1_'+suffix
+                with self.assertRaisesRegex(RuntimeError,suffix):self.lookup()
+                self.launcher_checks.assert_not_called()
+    def test_launcher_contract_failure_before_sampling(self):
+        self.launcher_checks.side_effect=ValueError('tool_file_identity')
+        with self.assertRaisesRegex(ValueError,'tool_file_identity'):self.lookup()
+        self.assertEqual(self.lookup_reads,0)
+    def test_hash_not_per_poll_and_diagnostics_bounded(self):
+        self.bind_at=20;self.query_end=21;self.assertEqual(self.lookup(),self.path)
+        self.assertEqual(capture.sha.call_count,2);diag=self.spawned[0]['record']['startupAcquisition']
+        self.assertGreater(diag['samples'],300);self.assertEqual(len(diag['first']),4)
 
 
 if __name__=='__main__':unittest.main()

@@ -8,6 +8,7 @@ import { sharedMealSchema, moveSharedMeal, preserveProtectedMeal } from './share
 import { cookCopyStillExists, recordCookCopy } from './cook-copy.js';
 import { isPantryCommand, pantryOperationExists } from './pantry-lots.js';
 import { consumeSharedMealChange } from './shared-meal-changes.js';
+import {requireMealMove} from './meal-moves.js';
 import { randomBytes, randomUUID } from 'node:crypto';
 import type { OwnRequest, ShopperReceipt, RequestPurchaseOutcome, RequestPreview, QuoteBasis, BasketLine } from '../../shared/contracts/service-v1.js';
 import type { VerifiedIdentity,SessionStatusVerifier } from './auth.js';
@@ -469,14 +470,7 @@ export class HouseholdRepository {
           throw new ServiceError(409,'stale_meal','Review this occurrence again before applying a change.');
         if(b.mealEdit.changeProposalId) await consumeSharedMealChange(ctx,shop,b.mealEdit.changeProposalId,occurrenceId,b.mealEdit.baseMealRevision,meal);
         if(b.mealEdit.proposalId) {
-          const proposal=(await ctx.db.query(`SELECT m.proposed_day::text FROM ritc.meal_move m
-            JOIN ritc.meal_planner p USING(household_id,shop_id,authority_epoch)
-            JOIN ritc.member a ON a.household_id=m.household_id AND a.member_id=m.actor_id AND a.state='active'
-            WHERE m.household_id=$1 AND m.shop_id=$2 AND m.proposal_id=$3 AND m.occurrence_id=$4 AND m.shop_revision=$5
-            AND m.authority_epoch=$6 AND m.state='pending' AND p.planner_id=m.actor_id AND m.grant_revision=p.revision`,
-            [ctx.householdId,shop.shop_id,b.mealEdit.proposalId,occurrenceId,shop.revision,shop.authority_epoch])).rows[0];
-          if(!proposal || !original || digest(meal)!==digest(moveSharedMeal(sharedMealSchema.parse(original.meal),proposal.proposed_day)))
-            throw new ServiceError(409,'stale_proposal','Read the current proposal and review its exact move.');
+          await requireMealMove(ctx,shop,b.mealEdit.proposalId,occurrenceId,original?sharedMealSchema.parse(original.meal):undefined,meal);
           await ctx.db.query("UPDATE ritc.meal_move SET state='applied' WHERE household_id=$1 AND shop_id=$2 AND proposal_id=$3",
             [ctx.householdId,shop.shop_id,b.mealEdit.proposalId]);
         }

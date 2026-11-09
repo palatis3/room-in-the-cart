@@ -1,5 +1,5 @@
 import {SharedDemandError} from './shared-demand-domain.js';
-import {previewDemand,readDemand} from './shared-demand-repository.js';
+import {previewDemand,readDemand,readActionDemandSources} from './shared-demand-repository.js';
 import { readConfirmedOrder } from './order-amendments.js';
 import {rankSharedFallbacks,requireAssistance} from './shared-fallback-options.js';
 import {previewCurrentPantryObservation,readSharedRecoveryCoverage} from './shared-recovery-basis.js';
@@ -393,6 +393,7 @@ export function createHTTPServer(options:HTTPOptions) {
           if(tail==='/meal-plan/dismissals'&&method==='POST')return mealMoves.dismiss(ctx,shopId,dismissMove.parse(payload));
           if(tail==='/meal-plan/proposals'&&method==='POST')return mealMoves.propose(ctx,shopId,moveRequest.parse(payload));
           if(tail==='/demand'&&method==='GET')return readDemand(repository,ctx,await repository.shop(ctx,shopId));
+          if(tail==='/demand/action-sources'&&method==='POST')return readActionDemandSources(repository,ctx,await repository.shop(ctx,shopId),payload);
           if(tail==='/demand/previews'&&method==='POST')return previewDemand(repository,ctx,await repository.shop(ctx,shopId),payload);
           if(tail===''&&method==='GET')return repository.adultShop(ctx,shopId);
           if(tail==='/deferred-requests'&&method==='GET'){const cursor=url.searchParams.get('cursor');if(cursor!==null)uuid.parse(cursor);return repository.deferredRequests(ctx,shopId,cursor);}

@@ -86,8 +86,16 @@ ARM to normal native completion, with a 420-second absolute limit. Its existing
 15-second collector readiness, 60-second recording and 90-second post-readiness
 wait limits remain. A prior successful hosted journey reached fixture readiness
 at about 133.8 seconds, beyond the old absolute 120-second ARM limit. Current
-whole-profile preflight passes 298 checks in each ordinary/observer profile;
-only a new hosted attempt can establish collection success.
+whole-profile preflight passes324 checks in each ordinary/observer profile.
+The initial container query may continue observing its same owned process beyond
+the shared supervisor’s two-second image-acquisition window, within the original
+180-second binding deadline. Only an exact verified target identity permits
+signaling; an interpreter stays pending, and output requires a real terminal
+exit. Unknown identities/errors still reject. Bounded first/last identity samples
+make the next failure diagnosable. Installed queries, native/tracer acquisition,
+all phase deadlines and required metrics remain unchanged.
+[Verified checks and first-failure evidence](evidence/ci/performance-dispatch-parity-20261109/query-acquisition-verification.json).
+Only a new hosted attempt can establish collection success.
 
 ### Retain the first failure before retrying
 

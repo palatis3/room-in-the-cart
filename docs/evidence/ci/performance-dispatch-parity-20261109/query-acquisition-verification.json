@@ -1,0 +1,33 @@
+{
+  "profiles": {
+    "diagnostic": {
+      "checks": 324,
+      "seconds": 10.166,
+      "receiptSHA256": "a820e65815e2299c621434a35df4b5ea0f0783b1945bd358dd9534c85b36a1cd",
+      "sourceManifestSHA256": "109bbf3c5eb934614693db7efdfb955d014e1c0ff56da6369f6f537f2f2793ef"
+    },
+    "ordinary": {
+      "checks": 324,
+      "seconds": 10.166,
+      "receiptSHA256": "d6d95418afa982f8b111b615b1cc047a593fca5f42c67ae41a5a26f49731751a",
+      "sourceManifestSHA256": "109bbf3c5eb934614693db7efdfb955d014e1c0ff56da6369f6f537f2f2793ef"
+    }
+  },
+  "focusedObserverControls": 147,
+  "newAcquisitionControls": 26,
+  "protectedInputsUnchanged": true,
+  "nativeExecution": false,
+  "releaseAcceptance": false,
+  "reviewedPatchSHA256": "8b1cc3fef37d3d57aab44d419d172e5c3eaf3029906d6a6514b9e3d7753a41ca",
+  "hostedPredecessor": {
+    "run": 42717128576,
+    "headSHA": "7a55a376349340d803e99668b54acf05b1dc5057",
+    "monitoringReceiptSHA256": "bb8cd29e49b7df0aa6feac67b6833c913e1947d7b53301b22dbd355d6f0ccca4",
+    "retainedFilesVerified": 23,
+    "archiveMembersVerified": 54,
+    "firstFailure": "container-data-10_unbound_or_early_exit during independent2s process-image binding window, before phase deadlines",
+    "qualification": false
+  },
+  "rawEvidence": ".build/HostedAppObservationNov09/query-bind-candidate-r1",
+  "sourceScope": "Current combined uncommitted candidate; exact committed blob comparison required before dispatch"
+}

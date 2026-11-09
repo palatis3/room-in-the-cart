@@ -1,4 +1,7 @@
 import {randomUUID} from 'node:crypto';
+import {actionDemandSources} from './shared-demand-action-sources.js';
+import {requireSharedMealChange} from './shared-meal-changes.js';
+import {requireMealMove} from './meal-moves.js';
 import {z} from 'zod';
 import type {Context,HouseholdRepository,Shop,Member} from './repository.js';
 import {bodySchemas,decisionSchema,type Envelope} from './contracts.js';
@@ -12,7 +15,10 @@ import {mealDemandSources,mealSourceKey,exactSourceExclusions,requestDemandSourc
 const id=z.string().uuid().transform(s=>s.toLowerCase());
 const delta=sharedDemandChangeSchema.omit({schemaVersion:true,operationId:true,householdId:true,shopId:true,baseRevision:true,at:true});
 const pack=z.object({lineId:id,usablePerPack:demandQuantitySchema.nullable(),acceptUnresolved:z.boolean()}).strict();
-const inputSchema=z.object({mode:z.enum(['adopt','change','undo','review']),base:z.object({shopRevision:z.number().int().positive(),authorityEpoch:z.number().int().positive(),graphRevision:z.number().int().min(0)}).strict(),
+const baseSchema=z.object({shopRevision:z.number().int().positive(),authorityEpoch:z.number().int().positive(),graphRevision:z.number().int().min(0)}).strict();
+export const demandActionSourcesInputSchema=z.object({base:baseSchema.extend({graphRevision:z.number().int().positive(),graphDigest:z.string().regex(/^[0-9a-f]{64}$/)}),action:z.object({kind:z.literal('shop.patch'),body:bodySchemas['shop.patch']}).strict()}).strict()
+ .refine(v=>v.action.body.mealEdit!==undefined&&v.action.body.demandReview===undefined,'Review one meal edit without a nested demand review.');
+const inputSchema=z.object({mode:z.enum(['adopt','change','undo','review']),base:baseSchema,
  change:delta,undoOperationId:id.optional(),action:z.object({kind:z.enum(['shop.patch','request.apply']),body:z.record(z.string(),z.unknown())}).strict(),packs:z.array(pack).max(200)}).strict();
 type Input=z.infer<typeof inputSchema>;
 const fail=(code='demand_review_required')=>new ServiceError(409,code,'Review the current shared quantities and exact source changes.');
@@ -38,7 +44,7 @@ export async function readDemand(repo:HouseholdRepository,ctx:Context,shop:Shop)
   assert(links.every(r=>liveAuthors.has(r.author_id)),'demand_source_unavailable');
   legacySources={sources:[...mealDemandSources(shop.shop_id,await repo.meals(ctx,shop.shop_id)),...links.map(r=>requestDemandSource(shop.shop_id,r))]};
  }
- return {schemaVersion:1,shopId:shop.shop_id,shopRevision:shop.revision,authorityEpoch:shop.authority_epoch,status:current?(shop.demand_review_required?'reviewRequired':'enabled'):'legacy',graph:current?.graph??null,totals:current?demandLineTotals(current.graph):[],legacySources};
+ return {schemaVersion:1,shopId:shop.shop_id,shopRevision:shop.revision,authorityEpoch:shop.authority_epoch,status:current?(shop.demand_review_required?'reviewRequired':'enabled'):'legacy',graph:current?.graph??null,graphDigest:current&&!shop.demand_review_required?current.fingerprint:null,totals:current?demandLineTotals(current.graph):[],legacySources};
 }
 export async function demandSnapshotRef(ctx:Context,shop:Shop,allowReviewRequired=false){
  if(!shop.demand_revision)return undefined;const row=(await ctx.db.query('SELECT graph_digest FROM ritc.shared_demand_revision WHERE household_id=$1 AND shop_id=$2 AND revision=$3',[ctx.householdId,shop.shop_id,shop.demand_revision])).rows[0];
@@ -59,11 +65,14 @@ function quantityMatches(actual:DemandContribution['quantity'],expected:any){
  if(expected===null)return actual===null;if(!actual)return false;
  return actual.unit===expected.unit&&BigInt(actual.amount.numerator)*BigInt(expected.amount.denominator)===BigInt(expected.amount.numerator)*BigInt(actual.amount.denominator);
 }
-async function actionFacts(repo:HouseholdRepository,ctx:Context,shop:Shop,input:Input){
+async function actionFacts(repo:HouseholdRepository,ctx:Context,shop:Shop,input:Pick<Input,'action'>){
  const meals=await repo.meals(ctx,shop.shop_id);let request:any=null;let body:any,lines:any[],quote=shop.quote;
  if(input.action.kind==='shop.patch'){
   assert(!('demandReview' in input.action.body),'nested_demand_review');body=bodySchemas['shop.patch'].parse(input.action.body);lines=body.lines;quote=body.quote;
   if(body.mealEdit){const e=body.mealEdit,old=meals.find(m=>m.occurrenceId===e.occurrenceId);assert((old?.revision??null)===e.baseMealRevision,'stale_meal');preserveProtectedMeal(old?sharedMealSchema.parse(old.meal):undefined,e.meal);
+   assert(old||e.meal,'stale_meal');assert(old||meals.length<100,'meal_limit');
+   if(e.changeProposalId)await requireSharedMealChange(ctx,shop,e.changeProposalId,e.occurrenceId,e.baseMealRevision,e.meal);
+   if(e.proposalId)await requireMealMove(ctx,shop,e.proposalId,e.occurrenceId,old?sharedMealSchema.parse(old.meal):undefined,e.meal);
    const index=meals.findIndex(m=>m.occurrenceId===e.occurrenceId);if(index>=0)meals.splice(index,1);if(e.meal)meals.push({occurrenceId:e.occurrenceId,revision:shop.revision+1,meal:e.meal});}
  }else{
   assert(!('demandReview' in input.action.body),'nested_demand_review');body=bodySchemas['request.apply'].parse(input.action.body);
@@ -128,6 +137,21 @@ async function evaluate(repo:HouseholdRepository,ctx:Context,shop:Shop,input:Inp
  const facts=await actionFacts(repo,ctx,shop,input);await verifySources(repo,ctx,shop,result.graph,facts);verifyPacks(result.graph,facts,input.packs);
  return {before,result,facts,baseDigest:current?.fingerprint??digest(before),acceptedDigest:digest({input,operationId,at,graph:result.graph,receipt:result.receipt,lines:facts.lines,quote:facts.quote,meals:facts.meals,requestRevision:facts.request?.revision??null})};
 }
+/** Informational, read-only facts. Existing preview/apply revalidate all authority and source rules. */
+export async function readActionDemandSources(repo:HouseholdRepository,ctx:Context,shop:Shop,raw:unknown){
+ repo.requireShopper(ctx,shop);repo.requireDraft(shop);
+ const input=demandActionSourcesInputSchema.parse(raw);repo.checkBase(shop,input.base);
+ const current=await loadDemand(ctx,shop);assert(current&&!shop.demand_review_required,'demand_enabled_required');
+ assert(current.graph.revision===input.base.graphRevision&&current.fingerprint===input.base.graphDigest,'stale_demand');
+ const facts=await actionFacts(repo,ctx,shop,input);
+ const catalog=actionDemandSources(shop.shop_id,facts.meals,current.graph);
+ const normalizedAction={kind:'shop.patch' as const,body:bodySchemas['shop.patch'].parse(facts.body)};
+ const response={schemaVersion:1 as const,shopId:shop.shop_id,base:input.base,graphDigest:current?.fingerprint??null,
+  normalizedAction,actionDigest:digest(normalizedAction),...catalog};
+ assert(Buffer.byteLength(JSON.stringify(response),'utf8')<=1_800_000,'demand_source_limit');
+ return response;
+}
+export type DemandActionSourcesResponse=Awaited<ReturnType<typeof readActionDemandSources>>;
 export async function previewDemand(repo:HouseholdRepository,ctx:Context,shop:Shop,raw:unknown){
  const input=inputSchema.parse(raw);input.action.body=bodySchemas[input.action.kind].parse(input.action.body);
  const operationId=randomUUID(),at=ctx.now.toISOString(),reviewed=await evaluate(repo,ctx,shop,input,operationId,at),previewId=randomUUID(),expiresAt=new Date(ctx.now.getTime()+600000);

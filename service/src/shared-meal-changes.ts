@@ -67,8 +67,8 @@ export class SharedMealChanges {
     return {saved:true,proposalId:input.proposalId};
   }
 }
-/** Runs inside the existing authenticated, household-serialized shop.patch transaction. */
-export async function consumeSharedMealChange(ctx: Context, shop: {shop_id:string;revision:number;authority_epoch:number},
+/** Read-only authority check, shared by catalog, preview and commit. */
+export async function requireSharedMealChange(ctx: Context, shop: {shop_id:string;revision:number;authority_epoch:number},
   proposalId:string, occurrenceId:string, baseMealRevision:number|null, meal:unknown) {
   const proposal = (await ctx.db.query(`SELECT c.body,c.actor_id,c.grant_revision FROM ritc.shared_meal_change c
     LEFT JOIN ritc.meal_planner p USING(household_id,shop_id,authority_epoch)
@@ -81,5 +81,10 @@ export async function consumeSharedMealChange(ctx: Context, shop: {shop_id:strin
   if (!proposal || digest(proposal.body.meal) !== digest(meal)) throw stale();
   if(baseMealRevision===null) await requireApprovedSharedIdea(ctx,shop.shop_id,shop.authority_epoch,proposal.grant_revision,
     proposal.actor_id,proposal.body.approvedIdeaId,proposal.body.approvedIdeaRevision,meal);
+}
+/** Consumption remains exclusively inside the successful shop.patch transaction. */
+export async function consumeSharedMealChange(ctx:Context,shop:{shop_id:string;revision:number;authority_epoch:number},
+ proposalId:string,occurrenceId:string,baseMealRevision:number|null,meal:unknown) {
+  await requireSharedMealChange(ctx,shop,proposalId,occurrenceId,baseMealRevision,meal);
   await ctx.db.query("UPDATE ritc.shared_meal_change SET state='applied' WHERE household_id=$1 AND shop_id=$2 AND proposal_id=$3",[ctx.householdId,shop.shop_id,proposalId]);
 }

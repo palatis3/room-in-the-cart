@@ -386,3 +386,93 @@ if(process.env.RITC_TEST_NATIVE_WIRE==='1')test('actual Swift shared demand pres
  for(const table of ['shared_demand_revision','shared_demand_preview','basket_line','shop_snapshot','operation_response'])assert.ok(!JSON.stringify((await admin.query('SELECT to_jsonb(t) value FROM ritc.'+table+' t WHERE household_id=$1',[f.h])).rows).includes(request.originalItem));
  assert.equal((await wire('privacy')).attempts,1);
 });
+
+// Proposed-action catalog regression lane. Uses this suite's existing isolated database fixture.
+async function catalogInput(f,action){const page=ok(await call(f.owner,f.path+'/demand'));return{base:{shopRevision:page.shopRevision,authorityEpoch:page.authorityEpoch,graphRevision:page.graph.revision,graphDigest:page.graphDigest},action};}
+const catalog=(f,input,a=f.owner)=>call(a,f.path+'/demand/action-sources','POST',input);
+test('action source catalog: exact graph binding, read-only cancellation and preserved arbitrary IDs/edges',async()=>{
+ const f=await fixture(),m=await mealGraph(f);ok((await apply(f,m.input,ok(await preview(f,m.input)))).response);
+ const before=ok(await call(f.owner,f.path+'/demand')),other=await invited(f),changed=structuredClone(m.meal);
+ changed.planning.ingredients[0].quantity.amount.numerator=5;changed.planning.bindings[0].quantity.amount.numerator=5;
+ const action={kind:'shop.patch',body:{quote:f.quote,lines:[f.basket],mealEdit:{occurrenceId:m.occurrenceId,baseMealRevision:2,meal:changed}}},input=await catalogInput(f,action);
+ const countBefore=await count(f,'shared_demand_preview'),out=ok(await catalog(f,input));
+ assert.equal(out.graphDigest,before.graphDigest);assert.deepEqual(out.base,input.base);
+ const row=out.sources.find(r=>r.proposed.id===m.c.id);assert.deepEqual(row.before,m.c);assert.equal(row.proposed.quantity.amount.numerator,'5');assert.equal(row.proposed.originalText,m.c.originalText);
+ assert.deepEqual(out.retainedContributionIds,[m.input.change.contributions[0].id]);assert.deepEqual(out.retirementCandidates,[]);
+ assert.deepEqual(ok(await call(f.owner,f.path+'/demand')),before);assert.equal(await count(f,'shared_demand_preview'),countBefore,'catalog does not reserve or mutate a preview');
+ assert.equal((await catalog(f,input,other)).status,404);
+ for(const base of [{...input.base,graphRevision:2},{...input.base,graphDigest:'0'.repeat(64)},{...input.base,shopRevision:2},{...input.base,authorityEpoch:2}])assert.equal((await catalog(f,{...input,base})).status,409);
+ const update={...m.input,mode:'change',base:{shopRevision:3,authorityEpoch:1,graphRevision:1},change:{...empty(),contributions:[{...row.before,quantity:row.proposed.quantity}],edges:[{...m.edge,quantity:q(5)}]},action};
+ const p=ok(await preview(f,update));assert.deepEqual(p.after.contributions.find(c=>c.id===m.input.change.contributions[0].id),m.input.change.contributions[0]);
+ ok((await apply(f,update,p)).response);assert.equal((await catalog(f,input)).status,409,'old catalog base cannot authorize another edit');
+});
+test('action source catalog: legacy and privacy reviewRequired reject until surviving-food recovery',async()=>{
+ const f=await fixture(),legacy=ok(await call(f.owner,f.path+'/demand'));assert.equal(legacy.graphDigest,null);
+ const fake={base:{shopRevision:1,authorityEpoch:1,graphRevision:1,graphDigest:'0'.repeat(64)},action:{kind:'shop.patch',body:{quote:f.quote,lines:[f.basket],mealEdit:{occurrenceId:randomUUID(),baseMealRevision:null,meal:{title:'Meal',day:null,kind:'dinner',portions:1,protected:false}}}}};
+ assert.equal((await catalog(f,fake)).data.error.code,'demand_enabled_required');
+ await adopt(f);const input=await catalogInput(f,fake.action);
+ await admin.query('UPDATE ritc.shop SET demand_review_required=true WHERE household_id=$1 AND shop_id=$2',[f.h,f.shopId]);
+ assert.equal(ok(await call(f.owner,f.path+'/demand')).graphDigest,null);
+ assert.equal((await catalog(f,input)).data.error.code,'demand_enabled_required');
+});
+test('action source catalog: proposal grant revocation rejects catalog, preview and previously reviewed Apply',async()=>{
+ const f=await fixture(),m=await mealGraph(f),planner=await invited(f);ok((await apply(f,m.input,ok(await preview(f,m.input)))).response);
+ const changed=structuredClone(m.meal);changed.planning.ingredients[0].quantity.amount.numerator=5;changed.planning.bindings[0].quantity.amount.numerator=5;
+ const proposalId=randomUUID();await admin.query('INSERT INTO ritc.meal_planner(household_id,shop_id,authority_epoch,revision,planner_id) VALUES($1,$2,1,1,$3)',[f.h,f.shopId,planner.id]);
+ await admin.query('INSERT INTO ritc.shared_meal_change(household_id,shop_id,proposal_id,actor_id,authority_epoch,grant_revision,shop_revision,occurrence_id,base_meal_revision,body,original_meal,fingerprint) VALUES($1,$2,$3,$4,1,1,3,$5,2,$6,$7,$8)',[f.h,f.shopId,proposalId,planner.id,m.occurrenceId,{meal:changed},m.meal,'e'.repeat(64)]);
+ const action={kind:'shop.patch',body:{quote:f.quote,lines:[f.basket],mealEdit:{occurrenceId:m.occurrenceId,baseMealRevision:2,changeProposalId:proposalId,meal:changed}}},input=await catalogInput(f,action);
+ ok(await catalog(f,input));const update={...m.input,mode:'change',base:{shopRevision:3,authorityEpoch:1,graphRevision:1},change:{...empty(),contributions:[{...m.c,quantity:q(5)}],edges:[{...m.edge,quantity:q(5)}]},action},p=ok(await preview(f,update));
+ const state=async()=>(await admin.query('SELECT state FROM ritc.shared_meal_change WHERE household_id=$1 AND proposal_id=$2',[f.h,proposalId])).rows[0].state;
+ assert.equal(await state(),'pending','catalog and preview cannot consume');
+ await admin.query('UPDATE ritc.meal_planner SET revision=2 WHERE household_id=$1 AND shop_id=$2',[f.h,f.shopId]);
+ assert.equal((await catalog(f,input)).data.error.code,'stale_proposal');assert.equal((await preview(f,update)).data.error.code,'stale_proposal');
+ assert.equal((await apply(f,update,p)).response.status,409);assert.equal(await state(),'pending');assert.equal(ok(await call(f.owner,f.path+'/demand')).graph.revision,1);
+});
+test('action source catalog: exact move proposal remains pending and dismissal invalidates catalog/preview',async()=>{
+ const f=await fixture(),m=await mealGraph(f),planner=await invited(f);ok((await apply(f,m.input,ok(await preview(f,m.input)))).response);
+ const proposalId=randomUUID(),day='2026-11-12';await admin.query('INSERT INTO ritc.meal_planner(household_id,shop_id,authority_epoch,revision,planner_id) VALUES($1,$2,1,1,$3)',[f.h,f.shopId,planner.id]);
+ await admin.query('INSERT INTO ritc.meal_move(household_id,shop_id,proposal_id,actor_id,authority_epoch,grant_revision,shop_revision,occurrence_id,proposed_day) VALUES($1,$2,$3,$4,1,1,3,$5,$6)',[f.h,f.shopId,proposalId,planner.id,m.occurrenceId,day]);
+ const action={kind:'shop.patch',body:{quote:f.quote,lines:[f.basket],mealEdit:{occurrenceId:m.occurrenceId,baseMealRevision:2,proposalId,meal:{...m.meal,day}}}},input=await catalogInput(f,action);
+ const out=ok(await catalog(f,input));assert.ok(out.sources.every(r=>r.transition==='retain'));
+ const review={...m.input,mode:'review',base:{shopRevision:3,authorityEpoch:1,graphRevision:1},change:empty(),action};ok(await preview(f,review));
+ assert.equal((await admin.query('SELECT state FROM ritc.meal_move WHERE household_id=$1 AND proposal_id=$2',[f.h,proposalId])).rows[0].state,'pending');
+ await admin.query("UPDATE ritc.meal_move SET state='dismissed' WHERE household_id=$1 AND proposal_id=$2",[f.h,proposalId]);
+ assert.equal((await catalog(f,input)).data.error.code,'stale_proposal');assert.equal((await preview(f,review)).data.error.code,'stale_proposal');
+});
+test('action source catalog: approved idea becomes stale independently of shop/graph revision',async()=>{
+ const f=await fixture(),a=await adopt(f),ideaId=randomUUID(),ingredientId=randomUUID(),ideaPath=f.path+'/meal-plan/ideas';
+ const idea={title:'Reviewed wraps',source:'manual',servings:1,minutes:5,assumedExtras:[],exclusions:[],ingredients:[{id:ingredientId,name:'Wraps',required:2,unit:'count',stock:0,reservations:[],pack:6,usableNumerator:1,usableDenominator:1,evidence:'Shopper checked package'}]};
+ const write={clientKey:randomUUID(),ideaId,baseRevision:null,shopRevision:2,authorityEpoch:1,grantRevision:0,action:'save',draft:idea,reviewedHouseholdEvidence:false};
+ const saved=ok(await call(f.owner,ideaPath,'POST',write));const approved=ok(await call(f.owner,ideaPath,'POST',{...write,clientKey:randomUUID(),baseRevision:saved.revision,action:'approve',reviewedHouseholdEvidence:true}));
+ const meal={title:idea.title,day:null,kind:'dinner',portions:1,protected:false,planning:{leadTimeMinutes:5,groups:[],ingredients:[{id:ingredientId,name:'Wraps',quantity:{amount:{numerator:2,denominator:1},unit:'count',originalLiteral:'2 count'},groupIds:[],exclusions:[]}]}};
+ const proposal={proposalId:randomUUID(),occurrenceId:randomUUID(),baseMealRevision:null,shopRevision:2,authorityEpoch:1,grantRevision:0,approvedIdeaId:ideaId,approvedIdeaRevision:approved.revision,meal,reason:'Reviewed exact meal'};
+ ok(await call(f.owner,f.path+'/meal-plan/changes','POST',proposal));
+ const action={kind:'shop.patch',body:{quote:f.quote,lines:[f.basket],mealEdit:{occurrenceId:proposal.occurrenceId,baseMealRevision:null,changeProposalId:proposal.proposalId,meal}}},input=await catalogInput(f,action),out=ok(await catalog(f,input)),row=out.sources[0].proposed;
+ assert.equal(out.sources[0].transition,'new');assert.equal(row.quantity.amount.numerator,'2');
+ const contribution={id:row.id,lineId:f.basket.lineId,source:row.source,productKey:'wraps',productName:row.productName,originalText:row.originalText,quantity:row.quantity,sourceExclusions:row.sourceExclusions,exclusions:[],contains:[],removedAt:null};
+ const edge={id:randomUUID(),kind:'withinExisting',demandId:row.id,supplyId:a.input.change.contributions[0].id,quantity:q(2),confirmation:{productMatchConfirmed:true,confirmedAt:new Date().toISOString(),evidence:'Shopper confirms same wraps'}};
+ const update={...a.input,mode:'change',base:{shopRevision:2,authorityEpoch:1,graphRevision:1},change:{...empty(),contributions:[contribution],edges:[edge]},action},p=ok(await preview(f,update));
+ ok(await call(f.owner,ideaPath,'POST',{...write,clientKey:randomUUID(),baseRevision:approved.revision,draft:{...idea,title:'Changed idea'}}));
+ assert.equal((await catalog(f,input)).data.error.code,'stale_idea');assert.equal((await preview(f,update)).data.error.code,'stale_idea');assert.equal((await apply(f,update,p)).response.status,409);
+ assert.equal(ok(await call(f.owner,f.path+'/demand')).graph.revision,1);assert.equal((await admin.query('SELECT state FROM ritc.shared_meal_change WHERE household_id=$1 AND proposal_id=$2',[f.h,proposal.proposalId])).rows[0].state,'pending');
+});
+
+test('action source catalog: same-identity protected unknown requires explicit quantification before persisted Apply',async()=>{
+ const f=await fixture(),occurrenceId=randomUUID(),ingredientId=randomUUID();
+ const meal={title:'Protected lunch',day:null,kind:'lunch',portions:2,protected:true,planning:{groups:[],ingredients:[{id:ingredientId,name:'Wraps',quantity:null,groupIds:[],exclusions:[]}]}};
+ ok(await send(f,'shop.patch',{quote:f.quote,lines:[f.basket],mealEdit:{occurrenceId,baseMealRevision:null,meal}},1));
+ const reserve={...source(f,null),originalText:'Original protected lunch',source:{kind:'reservation',reservationId:randomUUID(),purpose:'Protected lunch',originOccurrenceId:occurrenceId,ingredientId,groupId:null,bindingId:null}};
+ const adoption=draft(f,reserve);adoption.base.shopRevision=2;adoption.packs[0].acceptUnresolved=true;
+ ok((await apply(f,adoption,ok(await preview(f,adoption)))).response);
+ const before=ok(await call(f.owner,f.path+'/demand')),changed=structuredClone(meal);changed.planning.ingredients[0].quantity={amount:{numerator:6,denominator:1},unit:'count',originalLiteral:'6 wraps'};
+ const action={kind:'shop.patch',body:{quote:f.quote,lines:[f.basket],mealEdit:{occurrenceId,baseMealRevision:2,meal:changed}}},input=await catalogInput(f,action),previews=await count(f,'shared_demand_preview');
+ const out=ok(await catalog(f,input)),row=out.sources[0];assert.equal(row.transition,'quantifyReservation');assert.equal(row.proposed.id,reserve.id);assert.deepEqual(row.proposed.source,reserve.source);
+ assert.deepEqual(ok(await call(f.owner,f.path+'/demand')),before);assert.equal(await count(f,'shared_demand_preview'),previews);
+ const quantified={...row.before,source:row.proposed.source,quantity:row.proposed.quantity};
+ const update={...adoption,mode:'change',base:{shopRevision:3,authorityEpoch:1,graphRevision:1},change:{...empty(),contributions:[quantified]},action};
+ assert.equal((await preview(f,update)).data.error.code,'protected_unknown_changed');
+ update.change.quantifyReservationIds=[row.proposed.id];const reviewed=ok(await preview(f,update));assert.deepEqual(ok(await call(f.owner,f.path+'/demand')),before);
+ const applied=await apply(f,update,reviewed),receipt=ok(applied.response);assert.deepEqual(ok(await call(f.owner,f.base+'/commands','POST',applied.command)),receipt);
+ const saved=ok(await call(f.owner,f.path+'/demand'));assert.equal(saved.graph.revision,2);assert.deepEqual(saved.graph.contributions,[quantified]);assert.equal(await count(f,'shared_demand_revision'),2);
+ assert.equal((await catalog(f,input)).status,409);
+});
