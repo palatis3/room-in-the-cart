@@ -23,13 +23,16 @@ including compilation, simulator setup and result collection. Shared products
 remove duplicate compilation but add an artifact transfer and another job setup;
 actual hosted savings must be measured, not inferred from that baseline.
 
-Hosted validation is running at source commit
+Hosted validation started at source commit
 `50e893637d5047b1d276232fdf30b0e46c658abd` on
 `codex/ci-bottlenecks-20261108` (no open PR/full regression dispatch):
 
-- [Deep checks](https://github.com/palatis3/room-in-the-cart/actions/runs/42541290758): Linux preflight, both sanitizers and shared StoreKit compilation passed; both locale jobs are still running at this checkpoint.
-- [Focused quote fixture](https://github.com/palatis3/room-in-the-cart/actions/runs/42541292817): planner passed, dinner profile correctly skipped, contributor build running.
+- [Deep checks](https://github.com/palatis3/room-in-the-cart/actions/runs/42541290758): terminal failure: preflight, both sanitizers, shared StoreKit build and English15/15 passed. Spanish14/15 passed; Ask to Buy approval failed its unchanged delivery predicate. The new aggregate gate correctly rejected it. See spanish-storekit-review.md for retained evidence and the limits of historical comparison.
+- [Focused quote fixture](https://github.com/palatis3/room-in-the-cart/actions/runs/42541292817): terminal success: planner/build, one original quote journey (425.622s), strict verification and the new Fixture gate passed; unused dinner build/tests were correctly skipped.
 
-These are in-progress results, not terminal acceptance or a measured full-suite
-speedup. Continue these run IDs; do not dispatch duplicates. The complete PR and
+Both runs are terminal. The failed deep run must not be blindly rerun. A local billing recovery candidate is being qualified separately.
+The shared StoreKit build plus two locale jobs used1008seconds of macOS time,
+versus1591seconds in the earlier passing cohort. Because the new Spanish
+scenario failed, this is timing evidence, not a like-for-like successful-run
+speedup or full-suite acceptance. No new hosted run is active from this validation batch. The complete PR and
 release scopes remain required. See docs/CI-VALIDATION.md for the working loop.

@@ -1,5 +1,37 @@
 # Current implementation and acceptance map
 
+## November 8, pending-purchase recovery locally qualified; render-only warning rejected
+
+Current canonical candidate adds one unfinished-transaction reconciliation after
+purchase returns pending. All60membership model tests and the unchanged original
+Spanish Ask to Buy case pass native/strict on owned858A/iOS26.2, with both build
+profiles and original results preserved. Hosted repair remains unproven; next
+publish the reviewed candidate and run the existing deep workflow once at its
+new SHA. [Evidence](evidence/native/membership-pending-reconciliation-20261108/README.md).
+Canonical native inputs now include MembershipModel.swift and MembershipTests.swift
+changes; do not reuse the old8d0eb48f canonical pin for new execution preparation.
+No dinner/speech candidate was installed. No local native job remains active.
+
+The workflow validation at50e89363 is terminal: fixture42541292817 passed its
+original quote journey and new gate; deep42541290758 passed preflight/sanitizers/
+shared build/English15, but Spanish14/15 failed the approved-transaction delivery
+predicate. The aggregate gate correctly failed. Both watcher sessions are terminal;
+no old hosted validation remains active. Do not dispatch the old source again.
+[Workflow evidence](evidence/native/ci-bottleneck-update-20261108/README.md).
+
+The standalone render-only speech experiment built after3CoreFoundation spelling
+corrections, then failed native/strict.18UUID-bound runtime records reproduce the
+framework-main waiter without playback; a separate two-copy limit also failed.
+The single XCTest warning still lacks its required attachment. Do not advance
+that hypothesis to a player or raise the cap to obtain green. Diagnostic app
+uninstalled from owned858A; original data and compact reproducer retained.
+[Evidence](evidence/native/cook-render-only-20261108/README.md).
+
+Full acceptance across52Foundation requirements,27screen contracts and B11
+remains incomplete; the local repair is not release approval. SMTP, paid Apple distribution,
+KWS activation, physical/human/provider gates and separate042approval remain as
+previously recorded. All helpers are terminal. Continue independent app work.
+
 ## November 8, plain Done candidate terminal; review edge sampling
 
 Plain style compiled (native0/bundle0), changed Done's AX frame from68×36 to44×44,

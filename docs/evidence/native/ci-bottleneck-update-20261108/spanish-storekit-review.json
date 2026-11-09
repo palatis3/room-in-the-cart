@@ -1,0 +1,47 @@
+{
+  "runID": 42541290758,
+  "commit": "50e893637d5047b1d276232fdf30b0e46c658abd",
+  "spanishJobID": 128917549009,
+  "spanishArtifactID": 13641414463,
+  "englishArtifactID": 13641344458,
+  "artifactAcquisition": "gh run download, once per locale; archive SHA256 not independently retained",
+  "targetedAttachmentExports": 1,
+  "selector": "StoreKitScenarioTests/testAskToBuyApprovalRemainsUndelivered()",
+  "spanish": {
+    "nativeExit": 65,
+    "strictExit": 1,
+    "passed": 14,
+    "failed": 1,
+    "skipped": 0,
+    "runtimeWarnings": 0,
+    "caseSeconds": 75.333,
+    "predicateSeconds": 10,
+    "nativeCaseAllowanceSeconds": 120
+  },
+  "english": {
+    "passed": 15,
+    "failed": 0,
+    "skipped": 0,
+    "approvalCaseSeconds": 3.215
+  },
+  "observations": {
+    "count": 68,
+    "currentReads": 64,
+    "dropped": 0,
+    "firstCurrentRead": "1.362008875 seconds stage=current-read finished=true busy=false report=pending deliveryTotal=0 deliverySample=[] deliveryTruncated=false callbackTotal=0 callbackSample=[] callbacksTruncated=false currentRead=true currentTotal=1 sampleCount=1 sampleTruncated=false sampleVerified=1 sampleProductMatches=1 sampleTokenMatches=1 sampleNilTokens=0 sampleUnverified=0 approvedCount=1 matchingOutcome=absent",
+    "lastCurrentRead": "10.069465916 seconds stage=current-read finished=true busy=false report=pending deliveryTotal=0 deliverySample=[] deliveryTruncated=false callbackTotal=0 callbackSample=[] callbacksTruncated=false currentRead=true currentTotal=1 sampleCount=1 sampleTruncated=false sampleVerified=1 sampleProductMatches=1 sampleTokenMatches=1 sampleNilTokens=0 sampleUnverified=0 approvedCount=1 matchingOutcome=absent",
+    "lastObservation": "72.0401545 seconds stage=test-exit finished=true busy=false report=pending deliveryTotal=0 deliverySample=[] deliveryTruncated=false callbackTotal=0 callbackSample=[] callbacksTruncated=false currentRead=false currentCounts=not-read approvedCount=not-read matchingOutcome=not-read"
+  },
+  "interpretation": "Verified matching approved entitlement exists, purchase finished pending; no admitted delivery or rejected callback observable during predicate. Existing observer-path failure class, not demonstrated shared-build regression. SDK emission vs adapter subscription/forwarding vs model receipt cannot be distinguished by current trace.",
+  "files": {
+    "spanish-job.log": "4a6a36f4a32ef87bf22e400c90317a0d1947d6f77a7836ee2e6923a239adc496",
+    "artifacts.json": "833bab8fc7c61e75085d83a8ac9ddc4a04b325e475aa668004a0b724a3500b24",
+    "approval-attachments/BD7D46BB-6BE6-4316-B9BD-43505CE2D8B3.txt": "e1bfe152d5185f6197b292b1a18ce47a81cf835804dbf6ba14d7fab10ed3d120",
+    "approval-attachments/manifest.json": "99605c5418fea2c2a1a6eda5c9af2688636e0b964e88e95ad581a6261571577e",
+    "spanish-artifact/storekit-summary.json": "d8e7fb5688d671dbe199836f896dd4223587f75025d524e4009bf612f749e5c6",
+    "spanish-artifact/storekit-tests.json": "8afac79d5df2d34c8608d2f07559d7f7c5bc14a538f11baae7a1b63732070333",
+    "spanish-artifact/test-runtime-warnings.json": "e53e392d02a0f2d30975bb3c9757d1fafcc6fe351e82aa62ae5e49918bf554af",
+    "spanish-artifact/storekit-product-inventory.json": "28a72cc4babc3146bf926577637dc547d46596e0305cade5368d3ac1b41048ca",
+    "english-artifact/storekit-summary.json": "ab55a5003aff8a92d1f283fa4da96c1576ea4fcf4050ebb40b14ca6df880752a"
+  }
+}

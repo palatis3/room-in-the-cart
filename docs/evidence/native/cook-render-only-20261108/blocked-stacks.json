@@ -1,0 +1,2122 @@
+{
+  "source": "/Users/palatis/Room in the Cart/.build/CookBufferSpeechReviewNov08/render-execution-r1/runtime-issues.json",
+  "sha256": "6ee211f29349dc03bade43b43d187387bf65ffbb81dd2c4d0169105e04607261",
+  "decoder": "eventMessage text-backtrace: 16-byte UUID + little-endian uint32 image offset; trailing zero sentinel excluded. Structured emission stack remains distinct.",
+  "records": [
+    {
+      "index": 0,
+      "timestamp": "2026-11-08 19:54:58.720802-0500",
+      "pid": 88226,
+      "threadID": 27142959,
+      "processImageUUID": "3717FD25-9277-3C97-8139-FB76E8B4EF9B",
+      "blockedFrames": [
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d2288",
+          "symbol": "-[_NSThreadPerformInfo wait] (in Foundation) + 40"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d43b8",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:modes:] (in Foundation) + 596"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d4620",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:] (in Foundation) + 104"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x334c8",
+          "symbol": "0x000334c8 (in TextToSpeech) + 116"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x387e4",
+          "symbol": "0x000387e4 (in TextToSpeech) + 116"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x26f94",
+          "symbol": "0x00026f94 (in TextToSpeech) + 44"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x17a8",
+          "symbol": "_dispatch_call_block_and_release (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1c4b0",
+          "symbol": "_dispatch_client_callout (in libdispatch.dylib) + 12"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x384a0",
+          "symbol": "<deduplicated_symbol> (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1131c",
+          "symbol": "_dispatch_main_queue_drain (in libdispatch.dylib) + 1184"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x10e6c",
+          "symbol": "_dispatch_main_queue_callback_4CF (in libdispatch.dylib) + 40"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x92ed8",
+          "symbol": "__CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__ (in CoreFoundation) + 12"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x920b0",
+          "symbol": "__CFRunLoopRun (in CoreFoundation) + 1884"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x8ccec",
+          "symbol": "_CFRunLoopRunSpecificWithOptions (in CoreFoundation) + 496"
+        },
+        {
+          "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+          "offset": "0x29bc",
+          "symbol": "GSEventRunModal (in GraphicsServices) + 116"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11aa574",
+          "symbol": "-[UIApplication _run] (in UIKitCore) + 772"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11ae79c",
+          "symbol": "UIApplicationMain (in UIKitCore) + 124"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9620",
+          "symbol": "closure #1 in KitRendererCommon(_:) (in SwiftUI) + 164"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9368",
+          "symbol": "runApp<A>(_:) (in SwiftUI) + 180"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x54742c",
+          "symbol": "static App.main() (in SwiftUI) + 148"
+        },
+        {
+          "uuid": "2EE2FC16-4276-310E-9CB7-6B253A49A7D9",
+          "offset": "0x1abc",
+          "symbol": "static CookRenderDiagnostic.$main() (in CookRenderDiagnostic.debug.dylib) (/<compiler-generated>:0)"
+        },
+        {
+          "uuid": "2EE2FC16-4276-310E-9CB7-6B253A49A7D9",
+          "offset": "0x1422c",
+          "symbol": "__debug_main_executable_dylib_entry_point (in CookRenderDiagnostic.debug.dylib) (CookRenderDiagnostic.swift:0)"
+        }
+      ],
+      "structuredEmissionFrameCount": 33
+    },
+    {
+      "index": 1,
+      "timestamp": "2026-11-08 19:54:59.806048-0500",
+      "pid": 88226,
+      "threadID": 27142959,
+      "processImageUUID": "3717FD25-9277-3C97-8139-FB76E8B4EF9B",
+      "blockedFrames": [
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d2288",
+          "symbol": "-[_NSThreadPerformInfo wait] (in Foundation) + 40"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d43b8",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:modes:] (in Foundation) + 596"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d4620",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:] (in Foundation) + 104"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x334c8",
+          "symbol": "0x000334c8 (in TextToSpeech) + 116"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x374c8",
+          "symbol": "0x000374c8 (in TextToSpeech) + 104"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x17a8",
+          "symbol": "_dispatch_call_block_and_release (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1c4b0",
+          "symbol": "_dispatch_client_callout (in libdispatch.dylib) + 12"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x384a0",
+          "symbol": "<deduplicated_symbol> (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1131c",
+          "symbol": "_dispatch_main_queue_drain (in libdispatch.dylib) + 1184"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x10e6c",
+          "symbol": "_dispatch_main_queue_callback_4CF (in libdispatch.dylib) + 40"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x92ed8",
+          "symbol": "__CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__ (in CoreFoundation) + 12"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x920b0",
+          "symbol": "__CFRunLoopRun (in CoreFoundation) + 1884"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x8ccec",
+          "symbol": "_CFRunLoopRunSpecificWithOptions (in CoreFoundation) + 496"
+        },
+        {
+          "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+          "offset": "0x29bc",
+          "symbol": "GSEventRunModal (in GraphicsServices) + 116"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11aa574",
+          "symbol": "-[UIApplication _run] (in UIKitCore) + 772"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11ae79c",
+          "symbol": "UIApplicationMain (in UIKitCore) + 124"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9620",
+          "symbol": "closure #1 in KitRendererCommon(_:) (in SwiftUI) + 164"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9368",
+          "symbol": "runApp<A>(_:) (in SwiftUI) + 180"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x54742c",
+          "symbol": "static App.main() (in SwiftUI) + 148"
+        },
+        {
+          "uuid": "2EE2FC16-4276-310E-9CB7-6B253A49A7D9",
+          "offset": "0x1abc",
+          "symbol": "static CookRenderDiagnostic.$main() (in CookRenderDiagnostic.debug.dylib) (/<compiler-generated>:0)"
+        },
+        {
+          "uuid": "2EE2FC16-4276-310E-9CB7-6B253A49A7D9",
+          "offset": "0x1422c",
+          "symbol": "__debug_main_executable_dylib_entry_point (in CookRenderDiagnostic.debug.dylib) (CookRenderDiagnostic.swift:0)"
+        }
+      ],
+      "structuredEmissionFrameCount": 32
+    },
+    {
+      "index": 2,
+      "timestamp": "2026-11-08 19:54:59.812691-0500",
+      "pid": 88226,
+      "threadID": 27142959,
+      "processImageUUID": "3717FD25-9277-3C97-8139-FB76E8B4EF9B",
+      "blockedFrames": [
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d2288",
+          "symbol": "-[_NSThreadPerformInfo wait] (in Foundation) + 40"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d43b8",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:modes:] (in Foundation) + 596"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d4620",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:] (in Foundation) + 104"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x334c8",
+          "symbol": "0x000334c8 (in TextToSpeech) + 116"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x39344",
+          "symbol": "0x00039344 (in TextToSpeech) + 344"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x276fc",
+          "symbol": "0x000276fc (in TextToSpeech) + 48"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x17a8",
+          "symbol": "_dispatch_call_block_and_release (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1c4b0",
+          "symbol": "_dispatch_client_callout (in libdispatch.dylib) + 12"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x384a0",
+          "symbol": "<deduplicated_symbol> (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1131c",
+          "symbol": "_dispatch_main_queue_drain (in libdispatch.dylib) + 1184"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x10e6c",
+          "symbol": "_dispatch_main_queue_callback_4CF (in libdispatch.dylib) + 40"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x92ed8",
+          "symbol": "__CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__ (in CoreFoundation) + 12"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x920b0",
+          "symbol": "__CFRunLoopRun (in CoreFoundation) + 1884"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x8ccec",
+          "symbol": "_CFRunLoopRunSpecificWithOptions (in CoreFoundation) + 496"
+        },
+        {
+          "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+          "offset": "0x29bc",
+          "symbol": "GSEventRunModal (in GraphicsServices) + 116"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11aa574",
+          "symbol": "-[UIApplication _run] (in UIKitCore) + 772"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11ae79c",
+          "symbol": "UIApplicationMain (in UIKitCore) + 124"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9620",
+          "symbol": "closure #1 in KitRendererCommon(_:) (in SwiftUI) + 164"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9368",
+          "symbol": "runApp<A>(_:) (in SwiftUI) + 180"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x54742c",
+          "symbol": "static App.main() (in SwiftUI) + 148"
+        },
+        {
+          "uuid": "2EE2FC16-4276-310E-9CB7-6B253A49A7D9",
+          "offset": "0x1abc",
+          "symbol": "static CookRenderDiagnostic.$main() (in CookRenderDiagnostic.debug.dylib) (/<compiler-generated>:0)"
+        },
+        {
+          "uuid": "2EE2FC16-4276-310E-9CB7-6B253A49A7D9",
+          "offset": "0x1422c",
+          "symbol": "__debug_main_executable_dylib_entry_point (in CookRenderDiagnostic.debug.dylib) (CookRenderDiagnostic.swift:0)"
+        }
+      ],
+      "structuredEmissionFrameCount": 33
+    },
+    {
+      "index": 3,
+      "timestamp": "2026-11-08 19:54:59.824561-0500",
+      "pid": 88226,
+      "threadID": 27142959,
+      "processImageUUID": "3717FD25-9277-3C97-8139-FB76E8B4EF9B",
+      "blockedFrames": [
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d2288",
+          "symbol": "-[_NSThreadPerformInfo wait] (in Foundation) + 40"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d43b8",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:modes:] (in Foundation) + 596"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d4620",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:] (in Foundation) + 104"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x334c8",
+          "symbol": "0x000334c8 (in TextToSpeech) + 116"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x374c8",
+          "symbol": "0x000374c8 (in TextToSpeech) + 104"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x17a8",
+          "symbol": "_dispatch_call_block_and_release (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1c4b0",
+          "symbol": "_dispatch_client_callout (in libdispatch.dylib) + 12"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x384a0",
+          "symbol": "<deduplicated_symbol> (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1131c",
+          "symbol": "_dispatch_main_queue_drain (in libdispatch.dylib) + 1184"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x10e6c",
+          "symbol": "_dispatch_main_queue_callback_4CF (in libdispatch.dylib) + 40"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x92ed8",
+          "symbol": "__CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__ (in CoreFoundation) + 12"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x920b0",
+          "symbol": "__CFRunLoopRun (in CoreFoundation) + 1884"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x8ccec",
+          "symbol": "_CFRunLoopRunSpecificWithOptions (in CoreFoundation) + 496"
+        },
+        {
+          "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+          "offset": "0x29bc",
+          "symbol": "GSEventRunModal (in GraphicsServices) + 116"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11aa574",
+          "symbol": "-[UIApplication _run] (in UIKitCore) + 772"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11ae79c",
+          "symbol": "UIApplicationMain (in UIKitCore) + 124"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9620",
+          "symbol": "closure #1 in KitRendererCommon(_:) (in SwiftUI) + 164"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9368",
+          "symbol": "runApp<A>(_:) (in SwiftUI) + 180"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x54742c",
+          "symbol": "static App.main() (in SwiftUI) + 148"
+        },
+        {
+          "uuid": "2EE2FC16-4276-310E-9CB7-6B253A49A7D9",
+          "offset": "0x1abc",
+          "symbol": "static CookRenderDiagnostic.$main() (in CookRenderDiagnostic.debug.dylib) (/<compiler-generated>:0)"
+        },
+        {
+          "uuid": "2EE2FC16-4276-310E-9CB7-6B253A49A7D9",
+          "offset": "0x1422c",
+          "symbol": "__debug_main_executable_dylib_entry_point (in CookRenderDiagnostic.debug.dylib) (CookRenderDiagnostic.swift:0)"
+        }
+      ],
+      "structuredEmissionFrameCount": 32
+    },
+    {
+      "index": 4,
+      "timestamp": "2026-11-08 19:54:59.937816-0500",
+      "pid": 88226,
+      "threadID": 27142959,
+      "processImageUUID": "3717FD25-9277-3C97-8139-FB76E8B4EF9B",
+      "blockedFrames": [
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d2288",
+          "symbol": "-[_NSThreadPerformInfo wait] (in Foundation) + 40"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d43b8",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:modes:] (in Foundation) + 596"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d4620",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:] (in Foundation) + 104"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x334c8",
+          "symbol": "0x000334c8 (in TextToSpeech) + 116"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x39344",
+          "symbol": "0x00039344 (in TextToSpeech) + 344"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x276fc",
+          "symbol": "0x000276fc (in TextToSpeech) + 48"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x17a8",
+          "symbol": "_dispatch_call_block_and_release (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1c4b0",
+          "symbol": "_dispatch_client_callout (in libdispatch.dylib) + 12"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x384a0",
+          "symbol": "<deduplicated_symbol> (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1131c",
+          "symbol": "_dispatch_main_queue_drain (in libdispatch.dylib) + 1184"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x10e6c",
+          "symbol": "_dispatch_main_queue_callback_4CF (in libdispatch.dylib) + 40"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x92ed8",
+          "symbol": "__CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__ (in CoreFoundation) + 12"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x920b0",
+          "symbol": "__CFRunLoopRun (in CoreFoundation) + 1884"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x8ccec",
+          "symbol": "_CFRunLoopRunSpecificWithOptions (in CoreFoundation) + 496"
+        },
+        {
+          "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+          "offset": "0x29bc",
+          "symbol": "GSEventRunModal (in GraphicsServices) + 116"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11aa574",
+          "symbol": "-[UIApplication _run] (in UIKitCore) + 772"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11ae79c",
+          "symbol": "UIApplicationMain (in UIKitCore) + 124"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9620",
+          "symbol": "closure #1 in KitRendererCommon(_:) (in SwiftUI) + 164"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9368",
+          "symbol": "runApp<A>(_:) (in SwiftUI) + 180"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x54742c",
+          "symbol": "static App.main() (in SwiftUI) + 148"
+        },
+        {
+          "uuid": "2EE2FC16-4276-310E-9CB7-6B253A49A7D9",
+          "offset": "0x1abc",
+          "symbol": "static CookRenderDiagnostic.$main() (in CookRenderDiagnostic.debug.dylib) (/<compiler-generated>:0)"
+        },
+        {
+          "uuid": "2EE2FC16-4276-310E-9CB7-6B253A49A7D9",
+          "offset": "0x1422c",
+          "symbol": "__debug_main_executable_dylib_entry_point (in CookRenderDiagnostic.debug.dylib) (CookRenderDiagnostic.swift:0)"
+        }
+      ],
+      "structuredEmissionFrameCount": 33
+    },
+    {
+      "index": 5,
+      "timestamp": "2026-11-08 19:54:59.947484-0500",
+      "pid": 88226,
+      "threadID": 27142959,
+      "processImageUUID": "3717FD25-9277-3C97-8139-FB76E8B4EF9B",
+      "blockedFrames": [
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d2288",
+          "symbol": "-[_NSThreadPerformInfo wait] (in Foundation) + 40"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d43b8",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:modes:] (in Foundation) + 596"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d4620",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:] (in Foundation) + 104"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x334c8",
+          "symbol": "0x000334c8 (in TextToSpeech) + 116"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x374c8",
+          "symbol": "0x000374c8 (in TextToSpeech) + 104"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x17a8",
+          "symbol": "_dispatch_call_block_and_release (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1c4b0",
+          "symbol": "_dispatch_client_callout (in libdispatch.dylib) + 12"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x384a0",
+          "symbol": "<deduplicated_symbol> (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1131c",
+          "symbol": "_dispatch_main_queue_drain (in libdispatch.dylib) + 1184"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x10e6c",
+          "symbol": "_dispatch_main_queue_callback_4CF (in libdispatch.dylib) + 40"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x92ed8",
+          "symbol": "__CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__ (in CoreFoundation) + 12"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x920b0",
+          "symbol": "__CFRunLoopRun (in CoreFoundation) + 1884"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x8ccec",
+          "symbol": "_CFRunLoopRunSpecificWithOptions (in CoreFoundation) + 496"
+        },
+        {
+          "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+          "offset": "0x29bc",
+          "symbol": "GSEventRunModal (in GraphicsServices) + 116"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11aa574",
+          "symbol": "-[UIApplication _run] (in UIKitCore) + 772"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11ae79c",
+          "symbol": "UIApplicationMain (in UIKitCore) + 124"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9620",
+          "symbol": "closure #1 in KitRendererCommon(_:) (in SwiftUI) + 164"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9368",
+          "symbol": "runApp<A>(_:) (in SwiftUI) + 180"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x54742c",
+          "symbol": "static App.main() (in SwiftUI) + 148"
+        },
+        {
+          "uuid": "2EE2FC16-4276-310E-9CB7-6B253A49A7D9",
+          "offset": "0x1abc",
+          "symbol": "static CookRenderDiagnostic.$main() (in CookRenderDiagnostic.debug.dylib) (/<compiler-generated>:0)"
+        },
+        {
+          "uuid": "2EE2FC16-4276-310E-9CB7-6B253A49A7D9",
+          "offset": "0x1422c",
+          "symbol": "__debug_main_executable_dylib_entry_point (in CookRenderDiagnostic.debug.dylib) (CookRenderDiagnostic.swift:0)"
+        }
+      ],
+      "structuredEmissionFrameCount": 32
+    },
+    {
+      "index": 6,
+      "timestamp": "2026-11-08 19:55:00.029299-0500",
+      "pid": 88226,
+      "threadID": 27142959,
+      "processImageUUID": "3717FD25-9277-3C97-8139-FB76E8B4EF9B",
+      "blockedFrames": [
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d2288",
+          "symbol": "-[_NSThreadPerformInfo wait] (in Foundation) + 40"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d43b8",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:modes:] (in Foundation) + 596"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d4620",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:] (in Foundation) + 104"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x334c8",
+          "symbol": "0x000334c8 (in TextToSpeech) + 116"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x39344",
+          "symbol": "0x00039344 (in TextToSpeech) + 344"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x276fc",
+          "symbol": "0x000276fc (in TextToSpeech) + 48"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x17a8",
+          "symbol": "_dispatch_call_block_and_release (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1c4b0",
+          "symbol": "_dispatch_client_callout (in libdispatch.dylib) + 12"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x384a0",
+          "symbol": "<deduplicated_symbol> (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1131c",
+          "symbol": "_dispatch_main_queue_drain (in libdispatch.dylib) + 1184"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x10e6c",
+          "symbol": "_dispatch_main_queue_callback_4CF (in libdispatch.dylib) + 40"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x92ed8",
+          "symbol": "__CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__ (in CoreFoundation) + 12"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x920b0",
+          "symbol": "__CFRunLoopRun (in CoreFoundation) + 1884"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x8ccec",
+          "symbol": "_CFRunLoopRunSpecificWithOptions (in CoreFoundation) + 496"
+        },
+        {
+          "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+          "offset": "0x29bc",
+          "symbol": "GSEventRunModal (in GraphicsServices) + 116"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11aa574",
+          "symbol": "-[UIApplication _run] (in UIKitCore) + 772"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11ae79c",
+          "symbol": "UIApplicationMain (in UIKitCore) + 124"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9620",
+          "symbol": "closure #1 in KitRendererCommon(_:) (in SwiftUI) + 164"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9368",
+          "symbol": "runApp<A>(_:) (in SwiftUI) + 180"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x54742c",
+          "symbol": "static App.main() (in SwiftUI) + 148"
+        },
+        {
+          "uuid": "2EE2FC16-4276-310E-9CB7-6B253A49A7D9",
+          "offset": "0x1abc",
+          "symbol": "static CookRenderDiagnostic.$main() (in CookRenderDiagnostic.debug.dylib) (/<compiler-generated>:0)"
+        },
+        {
+          "uuid": "2EE2FC16-4276-310E-9CB7-6B253A49A7D9",
+          "offset": "0x1422c",
+          "symbol": "__debug_main_executable_dylib_entry_point (in CookRenderDiagnostic.debug.dylib) (CookRenderDiagnostic.swift:0)"
+        }
+      ],
+      "structuredEmissionFrameCount": 33
+    },
+    {
+      "index": 7,
+      "timestamp": "2026-11-08 19:55:00.041573-0500",
+      "pid": 88226,
+      "threadID": 27142959,
+      "processImageUUID": "3717FD25-9277-3C97-8139-FB76E8B4EF9B",
+      "blockedFrames": [
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d2288",
+          "symbol": "-[_NSThreadPerformInfo wait] (in Foundation) + 40"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d43b8",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:modes:] (in Foundation) + 596"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d4620",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:] (in Foundation) + 104"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x334c8",
+          "symbol": "0x000334c8 (in TextToSpeech) + 116"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x374c8",
+          "symbol": "0x000374c8 (in TextToSpeech) + 104"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x17a8",
+          "symbol": "_dispatch_call_block_and_release (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1c4b0",
+          "symbol": "_dispatch_client_callout (in libdispatch.dylib) + 12"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x384a0",
+          "symbol": "<deduplicated_symbol> (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1131c",
+          "symbol": "_dispatch_main_queue_drain (in libdispatch.dylib) + 1184"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x10e6c",
+          "symbol": "_dispatch_main_queue_callback_4CF (in libdispatch.dylib) + 40"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x92ed8",
+          "symbol": "__CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__ (in CoreFoundation) + 12"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x920b0",
+          "symbol": "__CFRunLoopRun (in CoreFoundation) + 1884"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x8ccec",
+          "symbol": "_CFRunLoopRunSpecificWithOptions (in CoreFoundation) + 496"
+        },
+        {
+          "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+          "offset": "0x29bc",
+          "symbol": "GSEventRunModal (in GraphicsServices) + 116"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11aa574",
+          "symbol": "-[UIApplication _run] (in UIKitCore) + 772"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11ae79c",
+          "symbol": "UIApplicationMain (in UIKitCore) + 124"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9620",
+          "symbol": "closure #1 in KitRendererCommon(_:) (in SwiftUI) + 164"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9368",
+          "symbol": "runApp<A>(_:) (in SwiftUI) + 180"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x54742c",
+          "symbol": "static App.main() (in SwiftUI) + 148"
+        },
+        {
+          "uuid": "2EE2FC16-4276-310E-9CB7-6B253A49A7D9",
+          "offset": "0x1abc",
+          "symbol": "static CookRenderDiagnostic.$main() (in CookRenderDiagnostic.debug.dylib) (/<compiler-generated>:0)"
+        },
+        {
+          "uuid": "2EE2FC16-4276-310E-9CB7-6B253A49A7D9",
+          "offset": "0x1422c",
+          "symbol": "__debug_main_executable_dylib_entry_point (in CookRenderDiagnostic.debug.dylib) (CookRenderDiagnostic.swift:0)"
+        }
+      ],
+      "structuredEmissionFrameCount": 32
+    },
+    {
+      "index": 8,
+      "timestamp": "2026-11-08 19:55:00.131449-0500",
+      "pid": 88226,
+      "threadID": 27142959,
+      "processImageUUID": "3717FD25-9277-3C97-8139-FB76E8B4EF9B",
+      "blockedFrames": [
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d2288",
+          "symbol": "-[_NSThreadPerformInfo wait] (in Foundation) + 40"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d43b8",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:modes:] (in Foundation) + 596"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d4620",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:] (in Foundation) + 104"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x334c8",
+          "symbol": "0x000334c8 (in TextToSpeech) + 116"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x39344",
+          "symbol": "0x00039344 (in TextToSpeech) + 344"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x276fc",
+          "symbol": "0x000276fc (in TextToSpeech) + 48"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x17a8",
+          "symbol": "_dispatch_call_block_and_release (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1c4b0",
+          "symbol": "_dispatch_client_callout (in libdispatch.dylib) + 12"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x384a0",
+          "symbol": "<deduplicated_symbol> (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1131c",
+          "symbol": "_dispatch_main_queue_drain (in libdispatch.dylib) + 1184"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x10e6c",
+          "symbol": "_dispatch_main_queue_callback_4CF (in libdispatch.dylib) + 40"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x92ed8",
+          "symbol": "__CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__ (in CoreFoundation) + 12"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x920b0",
+          "symbol": "__CFRunLoopRun (in CoreFoundation) + 1884"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x8ccec",
+          "symbol": "_CFRunLoopRunSpecificWithOptions (in CoreFoundation) + 496"
+        },
+        {
+          "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+          "offset": "0x29bc",
+          "symbol": "GSEventRunModal (in GraphicsServices) + 116"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11aa574",
+          "symbol": "-[UIApplication _run] (in UIKitCore) + 772"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11ae79c",
+          "symbol": "UIApplicationMain (in UIKitCore) + 124"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9620",
+          "symbol": "closure #1 in KitRendererCommon(_:) (in SwiftUI) + 164"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9368",
+          "symbol": "runApp<A>(_:) (in SwiftUI) + 180"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x54742c",
+          "symbol": "static App.main() (in SwiftUI) + 148"
+        },
+        {
+          "uuid": "2EE2FC16-4276-310E-9CB7-6B253A49A7D9",
+          "offset": "0x1abc",
+          "symbol": "static CookRenderDiagnostic.$main() (in CookRenderDiagnostic.debug.dylib) (/<compiler-generated>:0)"
+        },
+        {
+          "uuid": "2EE2FC16-4276-310E-9CB7-6B253A49A7D9",
+          "offset": "0x1422c",
+          "symbol": "__debug_main_executable_dylib_entry_point (in CookRenderDiagnostic.debug.dylib) (CookRenderDiagnostic.swift:0)"
+        }
+      ],
+      "structuredEmissionFrameCount": 33
+    },
+    {
+      "index": 9,
+      "timestamp": "2026-11-08 19:55:00.142833-0500",
+      "pid": 88226,
+      "threadID": 27142959,
+      "processImageUUID": "3717FD25-9277-3C97-8139-FB76E8B4EF9B",
+      "blockedFrames": [
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d2288",
+          "symbol": "-[_NSThreadPerformInfo wait] (in Foundation) + 40"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d43b8",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:modes:] (in Foundation) + 596"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d4620",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:] (in Foundation) + 104"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x334c8",
+          "symbol": "0x000334c8 (in TextToSpeech) + 116"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x374c8",
+          "symbol": "0x000374c8 (in TextToSpeech) + 104"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x17a8",
+          "symbol": "_dispatch_call_block_and_release (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1c4b0",
+          "symbol": "_dispatch_client_callout (in libdispatch.dylib) + 12"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x384a0",
+          "symbol": "<deduplicated_symbol> (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1131c",
+          "symbol": "_dispatch_main_queue_drain (in libdispatch.dylib) + 1184"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x10e6c",
+          "symbol": "_dispatch_main_queue_callback_4CF (in libdispatch.dylib) + 40"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x92ed8",
+          "symbol": "__CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__ (in CoreFoundation) + 12"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x920b0",
+          "symbol": "__CFRunLoopRun (in CoreFoundation) + 1884"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x8ccec",
+          "symbol": "_CFRunLoopRunSpecificWithOptions (in CoreFoundation) + 496"
+        },
+        {
+          "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+          "offset": "0x29bc",
+          "symbol": "GSEventRunModal (in GraphicsServices) + 116"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11aa574",
+          "symbol": "-[UIApplication _run] (in UIKitCore) + 772"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11ae79c",
+          "symbol": "UIApplicationMain (in UIKitCore) + 124"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9620",
+          "symbol": "closure #1 in KitRendererCommon(_:) (in SwiftUI) + 164"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9368",
+          "symbol": "runApp<A>(_:) (in SwiftUI) + 180"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x54742c",
+          "symbol": "static App.main() (in SwiftUI) + 148"
+        },
+        {
+          "uuid": "2EE2FC16-4276-310E-9CB7-6B253A49A7D9",
+          "offset": "0x1abc",
+          "symbol": "static CookRenderDiagnostic.$main() (in CookRenderDiagnostic.debug.dylib) (/<compiler-generated>:0)"
+        },
+        {
+          "uuid": "2EE2FC16-4276-310E-9CB7-6B253A49A7D9",
+          "offset": "0x1422c",
+          "symbol": "__debug_main_executable_dylib_entry_point (in CookRenderDiagnostic.debug.dylib) (CookRenderDiagnostic.swift:0)"
+        }
+      ],
+      "structuredEmissionFrameCount": 32
+    },
+    {
+      "index": 10,
+      "timestamp": "2026-11-08 19:55:00.273029-0500",
+      "pid": 88226,
+      "threadID": 27142959,
+      "processImageUUID": "3717FD25-9277-3C97-8139-FB76E8B4EF9B",
+      "blockedFrames": [
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d2288",
+          "symbol": "-[_NSThreadPerformInfo wait] (in Foundation) + 40"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d43b8",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:modes:] (in Foundation) + 596"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d4620",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:] (in Foundation) + 104"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x334c8",
+          "symbol": "0x000334c8 (in TextToSpeech) + 116"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x39344",
+          "symbol": "0x00039344 (in TextToSpeech) + 344"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x276fc",
+          "symbol": "0x000276fc (in TextToSpeech) + 48"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x17a8",
+          "symbol": "_dispatch_call_block_and_release (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1c4b0",
+          "symbol": "_dispatch_client_callout (in libdispatch.dylib) + 12"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x384a0",
+          "symbol": "<deduplicated_symbol> (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1131c",
+          "symbol": "_dispatch_main_queue_drain (in libdispatch.dylib) + 1184"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x10e6c",
+          "symbol": "_dispatch_main_queue_callback_4CF (in libdispatch.dylib) + 40"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x92ed8",
+          "symbol": "__CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__ (in CoreFoundation) + 12"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x920b0",
+          "symbol": "__CFRunLoopRun (in CoreFoundation) + 1884"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x8ccec",
+          "symbol": "_CFRunLoopRunSpecificWithOptions (in CoreFoundation) + 496"
+        },
+        {
+          "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+          "offset": "0x29bc",
+          "symbol": "GSEventRunModal (in GraphicsServices) + 116"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11aa574",
+          "symbol": "-[UIApplication _run] (in UIKitCore) + 772"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11ae79c",
+          "symbol": "UIApplicationMain (in UIKitCore) + 124"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9620",
+          "symbol": "closure #1 in KitRendererCommon(_:) (in SwiftUI) + 164"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9368",
+          "symbol": "runApp<A>(_:) (in SwiftUI) + 180"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x54742c",
+          "symbol": "static App.main() (in SwiftUI) + 148"
+        },
+        {
+          "uuid": "2EE2FC16-4276-310E-9CB7-6B253A49A7D9",
+          "offset": "0x1abc",
+          "symbol": "static CookRenderDiagnostic.$main() (in CookRenderDiagnostic.debug.dylib) (/<compiler-generated>:0)"
+        },
+        {
+          "uuid": "2EE2FC16-4276-310E-9CB7-6B253A49A7D9",
+          "offset": "0x1422c",
+          "symbol": "__debug_main_executable_dylib_entry_point (in CookRenderDiagnostic.debug.dylib) (CookRenderDiagnostic.swift:0)"
+        }
+      ],
+      "structuredEmissionFrameCount": 33
+    },
+    {
+      "index": 11,
+      "timestamp": "2026-11-08 19:55:00.286659-0500",
+      "pid": 88226,
+      "threadID": 27142959,
+      "processImageUUID": "3717FD25-9277-3C97-8139-FB76E8B4EF9B",
+      "blockedFrames": [
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d2288",
+          "symbol": "-[_NSThreadPerformInfo wait] (in Foundation) + 40"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d43b8",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:modes:] (in Foundation) + 596"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d4620",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:] (in Foundation) + 104"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x334c8",
+          "symbol": "0x000334c8 (in TextToSpeech) + 116"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x374c8",
+          "symbol": "0x000374c8 (in TextToSpeech) + 104"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x17a8",
+          "symbol": "_dispatch_call_block_and_release (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1c4b0",
+          "symbol": "_dispatch_client_callout (in libdispatch.dylib) + 12"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x384a0",
+          "symbol": "<deduplicated_symbol> (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1131c",
+          "symbol": "_dispatch_main_queue_drain (in libdispatch.dylib) + 1184"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x10e6c",
+          "symbol": "_dispatch_main_queue_callback_4CF (in libdispatch.dylib) + 40"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x92ed8",
+          "symbol": "__CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__ (in CoreFoundation) + 12"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x920b0",
+          "symbol": "__CFRunLoopRun (in CoreFoundation) + 1884"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x8ccec",
+          "symbol": "_CFRunLoopRunSpecificWithOptions (in CoreFoundation) + 496"
+        },
+        {
+          "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+          "offset": "0x29bc",
+          "symbol": "GSEventRunModal (in GraphicsServices) + 116"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11aa574",
+          "symbol": "-[UIApplication _run] (in UIKitCore) + 772"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11ae79c",
+          "symbol": "UIApplicationMain (in UIKitCore) + 124"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9620",
+          "symbol": "closure #1 in KitRendererCommon(_:) (in SwiftUI) + 164"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9368",
+          "symbol": "runApp<A>(_:) (in SwiftUI) + 180"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x54742c",
+          "symbol": "static App.main() (in SwiftUI) + 148"
+        },
+        {
+          "uuid": "2EE2FC16-4276-310E-9CB7-6B253A49A7D9",
+          "offset": "0x1abc",
+          "symbol": "static CookRenderDiagnostic.$main() (in CookRenderDiagnostic.debug.dylib) (/<compiler-generated>:0)"
+        },
+        {
+          "uuid": "2EE2FC16-4276-310E-9CB7-6B253A49A7D9",
+          "offset": "0x1422c",
+          "symbol": "__debug_main_executable_dylib_entry_point (in CookRenderDiagnostic.debug.dylib) (CookRenderDiagnostic.swift:0)"
+        }
+      ],
+      "structuredEmissionFrameCount": 32
+    },
+    {
+      "index": 12,
+      "timestamp": "2026-11-08 19:55:00.577897-0500",
+      "pid": 88226,
+      "threadID": 27142959,
+      "processImageUUID": "3717FD25-9277-3C97-8139-FB76E8B4EF9B",
+      "blockedFrames": [
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d2288",
+          "symbol": "-[_NSThreadPerformInfo wait] (in Foundation) + 40"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d43b8",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:modes:] (in Foundation) + 596"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d4620",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:] (in Foundation) + 104"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x334c8",
+          "symbol": "0x000334c8 (in TextToSpeech) + 116"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x39344",
+          "symbol": "0x00039344 (in TextToSpeech) + 344"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x276fc",
+          "symbol": "0x000276fc (in TextToSpeech) + 48"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x17a8",
+          "symbol": "_dispatch_call_block_and_release (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1c4b0",
+          "symbol": "_dispatch_client_callout (in libdispatch.dylib) + 12"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x384a0",
+          "symbol": "<deduplicated_symbol> (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1131c",
+          "symbol": "_dispatch_main_queue_drain (in libdispatch.dylib) + 1184"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x10e6c",
+          "symbol": "_dispatch_main_queue_callback_4CF (in libdispatch.dylib) + 40"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x92ed8",
+          "symbol": "__CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__ (in CoreFoundation) + 12"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x920b0",
+          "symbol": "__CFRunLoopRun (in CoreFoundation) + 1884"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x8ccec",
+          "symbol": "_CFRunLoopRunSpecificWithOptions (in CoreFoundation) + 496"
+        },
+        {
+          "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+          "offset": "0x29bc",
+          "symbol": "GSEventRunModal (in GraphicsServices) + 116"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11aa574",
+          "symbol": "-[UIApplication _run] (in UIKitCore) + 772"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11ae79c",
+          "symbol": "UIApplicationMain (in UIKitCore) + 124"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9620",
+          "symbol": "closure #1 in KitRendererCommon(_:) (in SwiftUI) + 164"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9368",
+          "symbol": "runApp<A>(_:) (in SwiftUI) + 180"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x54742c",
+          "symbol": "static App.main() (in SwiftUI) + 148"
+        },
+        {
+          "uuid": "2EE2FC16-4276-310E-9CB7-6B253A49A7D9",
+          "offset": "0x1abc",
+          "symbol": "static CookRenderDiagnostic.$main() (in CookRenderDiagnostic.debug.dylib) (/<compiler-generated>:0)"
+        },
+        {
+          "uuid": "2EE2FC16-4276-310E-9CB7-6B253A49A7D9",
+          "offset": "0x1422c",
+          "symbol": "__debug_main_executable_dylib_entry_point (in CookRenderDiagnostic.debug.dylib) (CookRenderDiagnostic.swift:0)"
+        }
+      ],
+      "structuredEmissionFrameCount": 33
+    },
+    {
+      "index": 13,
+      "timestamp": "2026-11-08 19:55:00.587539-0500",
+      "pid": 88226,
+      "threadID": 27142959,
+      "processImageUUID": "3717FD25-9277-3C97-8139-FB76E8B4EF9B",
+      "blockedFrames": [
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d2288",
+          "symbol": "-[_NSThreadPerformInfo wait] (in Foundation) + 40"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d43b8",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:modes:] (in Foundation) + 596"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d4620",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:] (in Foundation) + 104"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x334c8",
+          "symbol": "0x000334c8 (in TextToSpeech) + 116"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x374c8",
+          "symbol": "0x000374c8 (in TextToSpeech) + 104"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x17a8",
+          "symbol": "_dispatch_call_block_and_release (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1c4b0",
+          "symbol": "_dispatch_client_callout (in libdispatch.dylib) + 12"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x384a0",
+          "symbol": "<deduplicated_symbol> (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1131c",
+          "symbol": "_dispatch_main_queue_drain (in libdispatch.dylib) + 1184"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x10e6c",
+          "symbol": "_dispatch_main_queue_callback_4CF (in libdispatch.dylib) + 40"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x92ed8",
+          "symbol": "__CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__ (in CoreFoundation) + 12"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x920b0",
+          "symbol": "__CFRunLoopRun (in CoreFoundation) + 1884"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x8ccec",
+          "symbol": "_CFRunLoopRunSpecificWithOptions (in CoreFoundation) + 496"
+        },
+        {
+          "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+          "offset": "0x29bc",
+          "symbol": "GSEventRunModal (in GraphicsServices) + 116"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11aa574",
+          "symbol": "-[UIApplication _run] (in UIKitCore) + 772"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11ae79c",
+          "symbol": "UIApplicationMain (in UIKitCore) + 124"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9620",
+          "symbol": "closure #1 in KitRendererCommon(_:) (in SwiftUI) + 164"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9368",
+          "symbol": "runApp<A>(_:) (in SwiftUI) + 180"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x54742c",
+          "symbol": "static App.main() (in SwiftUI) + 148"
+        },
+        {
+          "uuid": "2EE2FC16-4276-310E-9CB7-6B253A49A7D9",
+          "offset": "0x1abc",
+          "symbol": "static CookRenderDiagnostic.$main() (in CookRenderDiagnostic.debug.dylib) (/<compiler-generated>:0)"
+        },
+        {
+          "uuid": "2EE2FC16-4276-310E-9CB7-6B253A49A7D9",
+          "offset": "0x1422c",
+          "symbol": "__debug_main_executable_dylib_entry_point (in CookRenderDiagnostic.debug.dylib) (CookRenderDiagnostic.swift:0)"
+        }
+      ],
+      "structuredEmissionFrameCount": 32
+    },
+    {
+      "index": 14,
+      "timestamp": "2026-11-08 19:55:00.627884-0500",
+      "pid": 88226,
+      "threadID": 27142959,
+      "processImageUUID": "3717FD25-9277-3C97-8139-FB76E8B4EF9B",
+      "blockedFrames": [
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d2288",
+          "symbol": "-[_NSThreadPerformInfo wait] (in Foundation) + 40"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d43b8",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:modes:] (in Foundation) + 596"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d4620",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:] (in Foundation) + 104"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x334c8",
+          "symbol": "0x000334c8 (in TextToSpeech) + 116"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x3935c",
+          "symbol": "0x0003935c (in TextToSpeech) + 368"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x276fc",
+          "symbol": "0x000276fc (in TextToSpeech) + 48"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x17a8",
+          "symbol": "_dispatch_call_block_and_release (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1c4b0",
+          "symbol": "_dispatch_client_callout (in libdispatch.dylib) + 12"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x384a0",
+          "symbol": "<deduplicated_symbol> (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1131c",
+          "symbol": "_dispatch_main_queue_drain (in libdispatch.dylib) + 1184"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x10e6c",
+          "symbol": "_dispatch_main_queue_callback_4CF (in libdispatch.dylib) + 40"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x92ed8",
+          "symbol": "__CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__ (in CoreFoundation) + 12"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x920b0",
+          "symbol": "__CFRunLoopRun (in CoreFoundation) + 1884"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x8ccec",
+          "symbol": "_CFRunLoopRunSpecificWithOptions (in CoreFoundation) + 496"
+        },
+        {
+          "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+          "offset": "0x29bc",
+          "symbol": "GSEventRunModal (in GraphicsServices) + 116"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11aa574",
+          "symbol": "-[UIApplication _run] (in UIKitCore) + 772"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11ae79c",
+          "symbol": "UIApplicationMain (in UIKitCore) + 124"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9620",
+          "symbol": "closure #1 in KitRendererCommon(_:) (in SwiftUI) + 164"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9368",
+          "symbol": "runApp<A>(_:) (in SwiftUI) + 180"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x54742c",
+          "symbol": "static App.main() (in SwiftUI) + 148"
+        },
+        {
+          "uuid": "2EE2FC16-4276-310E-9CB7-6B253A49A7D9",
+          "offset": "0x1abc",
+          "symbol": "static CookRenderDiagnostic.$main() (in CookRenderDiagnostic.debug.dylib) (/<compiler-generated>:0)"
+        },
+        {
+          "uuid": "2EE2FC16-4276-310E-9CB7-6B253A49A7D9",
+          "offset": "0x1422c",
+          "symbol": "__debug_main_executable_dylib_entry_point (in CookRenderDiagnostic.debug.dylib) (CookRenderDiagnostic.swift:0)"
+        }
+      ],
+      "structuredEmissionFrameCount": 33
+    },
+    {
+      "index": 15,
+      "timestamp": "2026-11-08 19:55:00.632592-0500",
+      "pid": 88226,
+      "threadID": 27142959,
+      "processImageUUID": "3717FD25-9277-3C97-8139-FB76E8B4EF9B",
+      "blockedFrames": [
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d2288",
+          "symbol": "-[_NSThreadPerformInfo wait] (in Foundation) + 40"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d43b8",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:modes:] (in Foundation) + 596"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d4620",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:] (in Foundation) + 104"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x334c8",
+          "symbol": "0x000334c8 (in TextToSpeech) + 116"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x374c8",
+          "symbol": "0x000374c8 (in TextToSpeech) + 104"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x17a8",
+          "symbol": "_dispatch_call_block_and_release (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1c4b0",
+          "symbol": "_dispatch_client_callout (in libdispatch.dylib) + 12"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x384a0",
+          "symbol": "<deduplicated_symbol> (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1131c",
+          "symbol": "_dispatch_main_queue_drain (in libdispatch.dylib) + 1184"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x10e6c",
+          "symbol": "_dispatch_main_queue_callback_4CF (in libdispatch.dylib) + 40"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x92ed8",
+          "symbol": "__CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__ (in CoreFoundation) + 12"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x920b0",
+          "symbol": "__CFRunLoopRun (in CoreFoundation) + 1884"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x8ccec",
+          "symbol": "_CFRunLoopRunSpecificWithOptions (in CoreFoundation) + 496"
+        },
+        {
+          "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+          "offset": "0x29bc",
+          "symbol": "GSEventRunModal (in GraphicsServices) + 116"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11aa574",
+          "symbol": "-[UIApplication _run] (in UIKitCore) + 772"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11ae79c",
+          "symbol": "UIApplicationMain (in UIKitCore) + 124"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9620",
+          "symbol": "closure #1 in KitRendererCommon(_:) (in SwiftUI) + 164"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9368",
+          "symbol": "runApp<A>(_:) (in SwiftUI) + 180"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x54742c",
+          "symbol": "static App.main() (in SwiftUI) + 148"
+        },
+        {
+          "uuid": "2EE2FC16-4276-310E-9CB7-6B253A49A7D9",
+          "offset": "0x1abc",
+          "symbol": "static CookRenderDiagnostic.$main() (in CookRenderDiagnostic.debug.dylib) (/<compiler-generated>:0)"
+        },
+        {
+          "uuid": "2EE2FC16-4276-310E-9CB7-6B253A49A7D9",
+          "offset": "0x1422c",
+          "symbol": "__debug_main_executable_dylib_entry_point (in CookRenderDiagnostic.debug.dylib) (CookRenderDiagnostic.swift:0)"
+        }
+      ],
+      "structuredEmissionFrameCount": 32
+    },
+    {
+      "index": 16,
+      "timestamp": "2026-11-08 19:55:00.648753-0500",
+      "pid": 88226,
+      "threadID": 27142959,
+      "processImageUUID": "3717FD25-9277-3C97-8139-FB76E8B4EF9B",
+      "blockedFrames": [
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d2288",
+          "symbol": "-[_NSThreadPerformInfo wait] (in Foundation) + 40"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d43b8",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:modes:] (in Foundation) + 596"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d4620",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:] (in Foundation) + 104"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x334c8",
+          "symbol": "0x000334c8 (in TextToSpeech) + 116"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x3935c",
+          "symbol": "0x0003935c (in TextToSpeech) + 368"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x276fc",
+          "symbol": "0x000276fc (in TextToSpeech) + 48"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x17a8",
+          "symbol": "_dispatch_call_block_and_release (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1c4b0",
+          "symbol": "_dispatch_client_callout (in libdispatch.dylib) + 12"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x384a0",
+          "symbol": "<deduplicated_symbol> (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1131c",
+          "symbol": "_dispatch_main_queue_drain (in libdispatch.dylib) + 1184"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x10e6c",
+          "symbol": "_dispatch_main_queue_callback_4CF (in libdispatch.dylib) + 40"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x92ed8",
+          "symbol": "__CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__ (in CoreFoundation) + 12"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x920b0",
+          "symbol": "__CFRunLoopRun (in CoreFoundation) + 1884"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x8ccec",
+          "symbol": "_CFRunLoopRunSpecificWithOptions (in CoreFoundation) + 496"
+        },
+        {
+          "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+          "offset": "0x29bc",
+          "symbol": "GSEventRunModal (in GraphicsServices) + 116"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11aa574",
+          "symbol": "-[UIApplication _run] (in UIKitCore) + 772"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11ae79c",
+          "symbol": "UIApplicationMain (in UIKitCore) + 124"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9620",
+          "symbol": "closure #1 in KitRendererCommon(_:) (in SwiftUI) + 164"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9368",
+          "symbol": "runApp<A>(_:) (in SwiftUI) + 180"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x54742c",
+          "symbol": "static App.main() (in SwiftUI) + 148"
+        },
+        {
+          "uuid": "2EE2FC16-4276-310E-9CB7-6B253A49A7D9",
+          "offset": "0x1abc",
+          "symbol": "static CookRenderDiagnostic.$main() (in CookRenderDiagnostic.debug.dylib) (/<compiler-generated>:0)"
+        },
+        {
+          "uuid": "2EE2FC16-4276-310E-9CB7-6B253A49A7D9",
+          "offset": "0x1422c",
+          "symbol": "__debug_main_executable_dylib_entry_point (in CookRenderDiagnostic.debug.dylib) (CookRenderDiagnostic.swift:0)"
+        }
+      ],
+      "structuredEmissionFrameCount": 33
+    },
+    {
+      "index": 17,
+      "timestamp": "2026-11-08 19:55:00.653263-0500",
+      "pid": 88226,
+      "threadID": 27142959,
+      "processImageUUID": "3717FD25-9277-3C97-8139-FB76E8B4EF9B",
+      "blockedFrames": [
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d2288",
+          "symbol": "-[_NSThreadPerformInfo wait] (in Foundation) + 40"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d43b8",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:modes:] (in Foundation) + 596"
+        },
+        {
+          "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+          "offset": "0x8d4620",
+          "symbol": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:] (in Foundation) + 104"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x334c8",
+          "symbol": "0x000334c8 (in TextToSpeech) + 116"
+        },
+        {
+          "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+          "offset": "0x374c8",
+          "symbol": "0x000374c8 (in TextToSpeech) + 104"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x17a8",
+          "symbol": "_dispatch_call_block_and_release (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1c4b0",
+          "symbol": "_dispatch_client_callout (in libdispatch.dylib) + 12"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x384a0",
+          "symbol": "<deduplicated_symbol> (in libdispatch.dylib) + 24"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x1131c",
+          "symbol": "_dispatch_main_queue_drain (in libdispatch.dylib) + 1184"
+        },
+        {
+          "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+          "offset": "0x10e6c",
+          "symbol": "_dispatch_main_queue_callback_4CF (in libdispatch.dylib) + 40"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x92ed8",
+          "symbol": "__CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__ (in CoreFoundation) + 12"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x920b0",
+          "symbol": "__CFRunLoopRun (in CoreFoundation) + 1884"
+        },
+        {
+          "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+          "offset": "0x8ccec",
+          "symbol": "_CFRunLoopRunSpecificWithOptions (in CoreFoundation) + 496"
+        },
+        {
+          "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+          "offset": "0x29bc",
+          "symbol": "GSEventRunModal (in GraphicsServices) + 116"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11aa574",
+          "symbol": "-[UIApplication _run] (in UIKitCore) + 772"
+        },
+        {
+          "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+          "offset": "0x11ae79c",
+          "symbol": "UIApplicationMain (in UIKitCore) + 124"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9620",
+          "symbol": "closure #1 in KitRendererCommon(_:) (in SwiftUI) + 164"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x7b9368",
+          "symbol": "runApp<A>(_:) (in SwiftUI) + 180"
+        },
+        {
+          "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+          "offset": "0x54742c",
+          "symbol": "static App.main() (in SwiftUI) + 148"
+        },
+        {
+          "uuid": "2EE2FC16-4276-310E-9CB7-6B253A49A7D9",
+          "offset": "0x1abc",
+          "symbol": "static CookRenderDiagnostic.$main() (in CookRenderDiagnostic.debug.dylib) (/<compiler-generated>:0)"
+        },
+        {
+          "uuid": "2EE2FC16-4276-310E-9CB7-6B253A49A7D9",
+          "offset": "0x1422c",
+          "symbol": "__debug_main_executable_dylib_entry_point (in CookRenderDiagnostic.debug.dylib) (CookRenderDiagnostic.swift:0)"
+        }
+      ],
+      "structuredEmissionFrameCount": 32
+    }
+  ]
+}

@@ -1,0 +1,90 @@
+[
+  {
+    "uuid": "C153116F-DD31-3FA9-89BB-04B47C1FA83D",
+    "path": "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/Frameworks/Foundation.framework/Foundation",
+    "uuidOutput": "UUID: C153116F-DD31-3FA9-89BB-04B47C1FA83D (arm64) /private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/Frameworks/Foundation.framework/Foundation\n",
+    "symbols": {
+      "0x8d2288": "-[_NSThreadPerformInfo wait] (in Foundation) + 40",
+      "0x8d43b8": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:modes:] (in Foundation) + 596",
+      "0x8d4620": "-[NSObject(NSThreadPerformAdditions) performSelector:onThread:withObject:waitUntilDone:] (in Foundation) + 104"
+    }
+  },
+  {
+    "uuid": "36A9A6AF-ED55-351F-9F47-2BF260E8B01B",
+    "path": "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/PrivateFrameworks/TextToSpeech.framework/TextToSpeech",
+    "uuidOutput": "UUID: 36A9A6AF-ED55-351F-9F47-2BF260E8B01B (arm64) /private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/PrivateFrameworks/TextToSpeech.framework/TextToSpeech\n",
+    "symbols": {
+      "0x26f94": "0x00026f94 (in TextToSpeech) + 44",
+      "0x276fc": "0x000276fc (in TextToSpeech) + 48",
+      "0x334c8": "0x000334c8 (in TextToSpeech) + 116",
+      "0x374c8": "0x000374c8 (in TextToSpeech) + 104",
+      "0x387e4": "0x000387e4 (in TextToSpeech) + 116",
+      "0x39344": "0x00039344 (in TextToSpeech) + 344",
+      "0x3935c": "0x0003935c (in TextToSpeech) + 368"
+    }
+  },
+  {
+    "uuid": "EC9ECF10-959D-3DA1-A055-6DE970159B9D",
+    "path": "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/usr/lib/system/libdispatch.dylib",
+    "uuidOutput": "UUID: EC9ECF10-959D-3DA1-A055-6DE970159B9D (arm64) /private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/usr/lib/system/libdispatch.dylib\n",
+    "symbols": {
+      "0x17a8": "_dispatch_call_block_and_release (in libdispatch.dylib) + 24",
+      "0x10e6c": "_dispatch_main_queue_callback_4CF (in libdispatch.dylib) + 40",
+      "0x1131c": "_dispatch_main_queue_drain (in libdispatch.dylib) + 1184",
+      "0x1c4b0": "_dispatch_client_callout (in libdispatch.dylib) + 12",
+      "0x384a0": "<deduplicated_symbol> (in libdispatch.dylib) + 24"
+    }
+  },
+  {
+    "uuid": "4F6D050D-95EE-3A95-969C-3A98B29DF6FF",
+    "path": "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation",
+    "uuidOutput": "UUID: 4F6D050D-95EE-3A95-969C-3A98B29DF6FF (arm64) /private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation\n",
+    "symbols": {
+      "0x8ccec": "_CFRunLoopRunSpecificWithOptions (in CoreFoundation) + 496",
+      "0x920b0": "__CFRunLoopRun (in CoreFoundation) + 1884",
+      "0x92ed8": "__CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__ (in CoreFoundation) + 12"
+    }
+  },
+  {
+    "uuid": "4E5B0462-6170-3367-9475-4FF8B8DFE4E6",
+    "path": "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/PrivateFrameworks/GraphicsServices.framework/GraphicsServices",
+    "uuidOutput": "UUID: 4E5B0462-6170-3367-9475-4FF8B8DFE4E6 (arm64) /private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/PrivateFrameworks/GraphicsServices.framework/GraphicsServices\n",
+    "symbols": {
+      "0x29bc": "GSEventRunModal (in GraphicsServices) + 116"
+    }
+  },
+  {
+    "uuid": "196154FF-BA04-33CD-9277-98F9AA0B7499",
+    "path": "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/PrivateFrameworks/UIKitCore.framework/UIKitCore",
+    "uuidOutput": "UUID: 196154FF-BA04-33CD-9277-98F9AA0B7499 (arm64) /private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/PrivateFrameworks/UIKitCore.framework/UIKitCore\n",
+    "symbols": {
+      "0x11aa574": "-[UIApplication _run] (in UIKitCore) + 772",
+      "0x11ae79c": "UIApplicationMain (in UIKitCore) + 124"
+    }
+  },
+  {
+    "uuid": "719CF349-8C4A-3054-9536-23EB53648EE0",
+    "path": "/private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/Frameworks/SwiftUI.framework/SwiftUI",
+    "uuidOutput": "UUID: 719CF349-8C4A-3054-9536-23EB53648EE0 (arm64) /private/var/run/com.apple.security.cryptexd/mnt/iOS_23C54/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.2.simruntime/Contents/Resources/RuntimeRoot/System/Library/Frameworks/SwiftUI.framework/SwiftUI\n",
+    "symbols": {
+      "0x54742c": "static App.main() (in SwiftUI) + 148",
+      "0x7b9368": "runApp<A>(_:) (in SwiftUI) + 180",
+      "0x7b9620": "closure #1 in KitRendererCommon(_:) (in SwiftUI) + 164"
+    }
+  },
+  {
+    "uuid": "2EE2FC16-4276-310E-9CB7-6B253A49A7D9",
+    "path": "/Users/palatis/Room in the Cart/.build/CookBufferSpeechReviewNov08/render-execution-r1/DerivedData/Build/Products/Debug-iphonesimulator/CookRenderDiagnostic.app/CookRenderDiagnostic.debug.dylib",
+    "uuidOutput": "UUID: 402AE1AA-648F-3F3A-825B-A7F276EAC106 (x86_64) /Users/palatis/Room in the Cart/.build/CookBufferSpeechReviewNov08/render-execution-r1/DerivedData/Build/Products/Debug-iphonesimulator/CookRenderDiagnostic.app/CookRenderDiagnostic.debug.dylib\nUUID: 2EE2FC16-4276-310E-9CB7-6B253A49A7D9 (arm64) /Users/palatis/Room in the Cart/.build/CookBufferSpeechReviewNov08/render-execution-r1/DerivedData/Build/Products/Debug-iphonesimulator/CookRenderDiagnostic.app/CookRenderDiagnostic.debug.dylib\n",
+    "symbols": {
+      "0x1abc": "static CookRenderDiagnostic.$main() (in CookRenderDiagnostic.debug.dylib) (/<compiler-generated>:0)",
+      "0x1422c": "__debug_main_executable_dylib_entry_point (in CookRenderDiagnostic.debug.dylib) (CookRenderDiagnostic.swift:0)"
+    }
+  },
+  {
+    "uuid": "3717FD25-9277-3C97-8139-FB76E8B4EF9B",
+    "path": "/Users/palatis/Room in the Cart/.build/CookBufferSpeechReviewNov08/render-execution-r1/DerivedData/Build/Products/Debug-iphonesimulator/CookRenderDiagnostic.app/CookRenderDiagnostic",
+    "uuidOutput": "UUID: 15E2401B-2F50-3DA3-9850-962C6205AE85 (x86_64) /Users/palatis/Room in the Cart/.build/CookBufferSpeechReviewNov08/render-execution-r1/DerivedData/Build/Products/Debug-iphonesimulator/CookRenderDiagnostic.app/CookRenderDiagnostic\nUUID: 3717FD25-9277-3C97-8139-FB76E8B4EF9B (arm64) /Users/palatis/Room in the Cart/.build/CookBufferSpeechReviewNov08/render-execution-r1/DerivedData/Build/Products/Debug-iphonesimulator/CookRenderDiagnostic.app/CookRenderDiagnostic\n",
+    "symbols": {}
+  }
+]

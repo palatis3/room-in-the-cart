@@ -1,0 +1,85 @@
+{
+  "scope": "Existing files read only; UUID-bound dwarfdump/atos only; no build/test/export/source edit",
+  "files": [
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/CookBufferSpeechReviewNov08/render-execution-r1/compile-fix.json",
+      "bytes": 260,
+      "sha256": "6fcfe6f1723d368d1188611d6b5dd9561a16d206aa84273f775e16659c717752"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/CookBufferSpeechReviewNov08/render-execution-r1/build-result.json",
+      "bytes": 50,
+      "sha256": "67835642d3b36607c48d4ccd310f750c50ea8a769e9aad7c7a378aabd7430216"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/CookBufferSpeechReviewNov08/render-execution-r1/build-fixed-result.json",
+      "bytes": 48,
+      "sha256": "41aec75ef14de1289badf85c06b54b9a0a953d24df9fc59d5eb83cd2fc03d343"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/CookBufferSpeechReviewNov08/render-execution-r1/CookRenderDiagnostic.before-compile-fix.swift",
+      "bytes": 23241,
+      "sha256": "27833e2e85d6b31e7770dad5c4f16250418dc165e198801e57292e39fdcdbb8a"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/CookBufferSpeechReviewNov08/render-execution-r1/source/CookRenderDiagnostic.swift",
+      "bytes": 23253,
+      "sha256": "ee81219a9b551a9061dabc7792908d1c6b27fb8c0ec495f548f1a9016deeaafa"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/CookBufferSpeechReviewNov08/render-execution-r1/source/CookRenderDiagnosticUITests.swift",
+      "bytes": 4032,
+      "sha256": "ea5cd8a1d89b12c0d6efbfe158840999756cec1d4e22640eb061d23e4792820b"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/CookBufferSpeechReviewNov08/render-execution-r1/product-hashes.json",
+      "bytes": 7159,
+      "sha256": "a1630780779b2784e54007f475a6b45f98a45162adf98cd8ca8a40bdec79d5e9"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/CookBufferSpeechReviewNov08/render-execution-r1/source-hashes.json",
+      "bytes": 570,
+      "sha256": "aa349875f3438a55f6a52dbcbd1907d05ca0edd15300b6fa0629c0313470199f"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/CookBufferSpeechReviewNov08/render-execution-r1/test-result.json",
+      "bytes": 50,
+      "sha256": "95ba56cdfa7c208984d86d8c580972e04696d04cc13c236f9884aa07ccba94fe"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/CookBufferSpeechReviewNov08/render-execution-r1/Tests.log",
+      "bytes": 6812,
+      "sha256": "8a36759fa02f13a0bc3fbc3175f9cd6836072026524b5a65d4a022114751abe4"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/CookBufferSpeechReviewNov08/render-execution-r1/verification.txt",
+      "bytes": 1619,
+      "sha256": "c1bdf920d016832ec2914ed7bd532bda9b5420f15d3907d493e28f1db7e58d02"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/CookBufferSpeechReviewNov08/render-execution-r1/strict-status.txt",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/CookBufferSpeechReviewNov08/render-execution-r1/metadata/FAA17C93-4F06-44AB-9867-76FC30BE7902.json",
+      "bytes": 3992,
+      "sha256": "400a9e4eea30aaba7585a788dc5c476ae8c0fea53f0950033f4fceb008c53afd"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/CookBufferSpeechReviewNov08/render-execution-r1/test-runtime-warnings.json",
+      "bytes": 346,
+      "sha256": "c7800357c492169550fc48812417a5a2c91e5030d99f23f4581c92692bc521fa"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/CookBufferSpeechReviewNov08/render-execution-r1/test-runtime-warning-activities.json",
+      "bytes": 8267,
+      "sha256": "76395bca7c348e77af5b7f7af69ce309150510e3b176f6de8524746985a67394"
+    },
+    {
+      "path": "/Users/palatis/Room in the Cart/.build/CookBufferSpeechReviewNov08/render-execution-r1/runtime-issues.json",
+      "bytes": 118369,
+      "sha256": "6ee211f29349dc03bade43b43d187387bf65ffbb81dd2c4d0169105e04607261"
+    }
+  ]
+}

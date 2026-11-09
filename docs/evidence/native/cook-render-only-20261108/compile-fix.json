@@ -1,0 +1,6 @@
+{
+  "reason": "Use Swift-imported CoreFoundation symbol reported by compiler",
+  "replacements": 3,
+  "before": "27833e2e85d6b31e7770dad5c4f16250418dc165e198801e57292e39fdcdbb8a",
+  "after": "ee81219a9b551a9061dabc7792908d1c6b27fb8c0ec495f548f1a9016deeaafa"
+}
