@@ -438,6 +438,17 @@ or rerunning unchanged. The capability artifact is
 `iphone-scroll-capture-capabilities-<attempt>`; original capture/metric acceptance
 requirements remain unchanged.
 
+For opted-in capture, the existing runner environment guard writes a fresh local
+`runner-identity.json` after successful environment and applicable baseline
+validation. The collector can reuse that exact version check within the same
+job instead of making its fourth `xcodebuild -version` query. Bindings include
+source SHA, run/attempt, job/runner, simulator, developer directory, enforcement
+mode and observed architecture/version. The test consumer creates its own receipt;
+it never restores one from the build job. Invalid supplied receipts fail closed.
+Without a supplied receipt, the standalone direct query remains. Live simulator
+and log capability checks still run. This is duplicate-work removal, not a fix or
+acceptance claim for missing metrics. Receipt write time is reported separately.
+
 ### Exact-revision qualification receipt
 
 Before scheduling the combined regression batch, create one receipt for the

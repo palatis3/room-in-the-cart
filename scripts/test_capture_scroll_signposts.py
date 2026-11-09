@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Pure/synthetic collector tests: no Xcode, simctl, log or app invocation."""
 import io
+import copy
 import json
 import os
 import plistlib
@@ -259,6 +260,19 @@ class AdmissionTests(unittest.TestCase):
 
 
 class WorkflowTests(unittest.TestCase):
+    def test_each_capture_consumer_writes_and_uses_its_own_identity(self):
+        text = (Path(__file__).resolve().parents[1] / '.github/workflows/ios-performance.yml').read_text()
+        build = text[text.index('  performance-build:'):text.index('  performance-tests:')]
+        tests = text[text.index('  performance-tests:'):]
+        for block, path in ((build, '.build/capture-preflight/runner-identity.json'),
+                            (tests, '.build/performance/runner-identity.json')):
+            self.assertIn('identity=(--identity-output ' + path + ')', block)
+            self.assertIn('--toolchain-identity ' + path, block)
+            self.assertLess(block.index('--identity-output'), block.index('--toolchain-identity'))
+            self.assertIn('identity=()', block)
+        self.assertNotIn('--toolchain-identity .build/capture-preflight/', tests)
+        self.assertIn('-C .build/DerivedData/Build Products', build)
+
     def test_capabilities_only_has_no_build_products_or_xctest_path(self):
         text = (Path(__file__).resolve().parents[1] / '.github/workflows/ios-performance.yml').read_text()
         build = text[text.index('  performance-build:'):text.index('  performance-tests:')]
@@ -314,7 +328,8 @@ class JournalTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parents[1]) as directory:
             path = Path(directory) / 'receipt.json'
             argv = ['probe', '--capabilities-only', '--simulator', 'test-simulator', '--output', str(path)]
-            def failure(_simulator, journal):
+            def failure(_simulator, journal, identity_path=None):
+                self.assertIsNone(identity_path)
                 journal.run('toolchain', lambda _: None)
                 def fail(entry):
                     entry.update(commandObserved=True, exitCode=17, errors=['stderr_present'])
@@ -408,6 +423,81 @@ class JournalTests(unittest.TestCase):
                 journal.run('devices', lambda _: None)
             with self.assertRaises(ValueError):
                 journal.run('devices', lambda _: None)
+
+
+class IdentityReuseTests(unittest.TestCase):
+    def environment(self):
+        return {'GITHUB_SHA': 'a' * 40, 'GITHUB_RUN_ID': '123', 'GITHUB_RUN_ATTEMPT': '1',
+                'GITHUB_JOB': 'performance-tests', 'RUNNER_NAME': 'fixture-runner',
+                'SIMULATOR_ID': 'test-simulator', 'ENFORCE_BASELINES': 'false',
+                'DEVELOPER_DIR': '/Applications/Xcode_27.1.app/Contents/Developer'}
+
+    def test_valid_identity_skips_only_version_query_and_keeps_live_runtime_and_help(self):
+        env = self.environment()
+        devices = {'devices': {probe.RUNTIME: [{'udid': 'test-simulator', 'state': 'Booted',
+                   'isAvailable': True, 'deviceTypeIdentifier': 'com.apple.CoreSimulator.SimDeviceType.iPhone-17'}]}}
+        runtimes = {'runtimes': [{'identifier': probe.RUNTIME, 'isAvailable': True,
+                                 'version': '27.0', 'buildversion': '24A434'}]}
+        responses = [json.dumps(devices).encode(), json.dumps(runtimes).encode(),
+                     b'--signpost ndjson --timeout --predicate --level',
+                     b'--signpost ndjson --start --end --predicate --info --debug',
+                     b'signpost-event --type --subsystem --category']
+        with tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parents[1]) as folder:
+            path = Path(folder) / 'identity.json'
+            path.write_text(json.dumps(probe.toolchain_identity(env, 'Xcode 27.1\nBuild version 27A9275', 'arm64')))
+            with patch.dict(os.environ, env, clear=True), patch.object(probe.platform, 'machine', return_value='arm64'), \
+                 patch.object(probe, 'command', side_effect=responses) as commands:
+                result = probe.runtime_preflight('test-simulator', identity_path=path)
+            self.assertEqual(result['toolchainIdentitySource'], 'same-job-receipt')
+            self.assertEqual(result['toolchainIdentitySHA256'], probe.digest(path.read_bytes()))
+            observed = [call.args[0] for call in commands.call_args_list]
+            self.assertEqual(observed[:2], [['xcrun', 'simctl', 'list', 'devices', 'available', '-j'],
+                                             ['xcrun', 'simctl', 'list', 'runtimes', '-j']])
+            self.assertEqual([argv[-2:] for argv in observed[2:]], [['help', 'stream'], ['help', 'show'], ['help', 'emit']])
+            self.assertFalse(any('xcodebuild' in argv for argv in observed))
+            # A valid toolchain receipt is never a substitute for live runtime identity.
+            drifted = list(responses); drifted[1] = drifted[1].replace(b'24A434', b'24A999')
+            with patch.dict(os.environ, env, clear=True), patch.object(probe.platform, 'machine', return_value='arm64'), \
+                 patch.object(probe, 'command', side_effect=drifted), self.assertRaisesRegex(ValueError, 'runtime_drift'):
+                probe.runtime_preflight('test-simulator', identity_path=path)
+
+    def test_every_bound_context_field_and_version_architecture_rejects_drift(self):
+        env = self.environment()
+        original = probe.toolchain_identity(env, 'Xcode 27.1\nBuild version 27A9275', 'arm64')
+        self.assertEqual(set(original['context']), set(env))
+        variants = []
+        for key in env:
+            wrong = copy.deepcopy(original); wrong['context'][key] += '-different'; variants.append(wrong)
+        for key, value in (('toolchain', 'Xcode 27.1\nBuild version different'), ('architecture', 'x86_64'),
+                           ('passed', False), ('releaseAcceptance', True), ('schemaVersion', True), ('extra', 'unexpected')):
+            wrong = copy.deepcopy(original); wrong[key] = value; variants.append(wrong)
+        with tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parents[1]) as folder:
+            path = Path(folder) / 'identity.json'
+            for wrong in variants:
+                path.write_text(json.dumps(wrong))
+                with self.subTest(wrong=wrong), patch.dict(os.environ, env, clear=True), \
+                     patch.object(probe.platform, 'machine', return_value='arm64'), patch.object(probe, 'command') as commands, \
+                     self.assertRaises(ValueError):
+                    probe.runtime_preflight('test-simulator', identity_path=path)
+                commands.assert_not_called()
+
+    def test_bad_supplied_receipt_never_falls_back(self):
+        env = self.environment()
+        with tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parents[1]) as folder:
+            path = Path(folder) / 'identity.json'
+            for raw in (None, '{invalid', 'x' * 8193, '[]'):
+                if raw is not None:
+                    path.write_text(raw)
+                with self.subTest(raw=None if raw is None else len(raw)), patch.dict(os.environ, env, clear=True), \
+                     patch.object(probe.platform, 'machine', return_value='arm64'), patch.object(probe, 'command') as commands, \
+                     self.assertRaises(ValueError):
+                    probe.runtime_preflight('test-simulator', identity_path=path)
+                commands.assert_not_called()
+
+    def test_source_pin_matches_reviewed_environment_helper(self):
+        root = Path(__file__).resolve().parents[1]
+        self.assertEqual(probe.SOURCE_PINS['scripts/check_ios_performance_environment.py'],
+                         probe.digest((root / 'scripts/check_ios_performance_environment.py').read_bytes()))
 
 
 if __name__ == '__main__':

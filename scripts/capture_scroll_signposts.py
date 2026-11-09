@@ -22,6 +22,8 @@ import threading
 import time
 import uuid
 
+from check_ios_performance_environment import toolchain_identity
+
 SELECTOR = 'RoomInTheCartUITests/ReleasePerformanceUITests/testScrollingPerformanceOnFiveHundredItemPickup'
 RUNTIME = 'com.apple.CoreSimulator.SimRuntime.iOS-27-0'
 KNOWN = ('com.apple.UIKit', 'ScrollView', 'Scroll_DraggingAndDeceleration')
@@ -32,10 +34,10 @@ SOURCE_PINS = {
     'scripts/check_ios_performance.py': 'f203f21510455a8a83300ee6968e8c5ac2bb14dd8c6afd5a6adb5caa7ce8a4c7',
     'scripts/scroll_signpost_diagnostic.py': 'e8fa85d6ceee7eb9c9a098338a002ea577df7605165d7b7b76b7cc9deb5aefa1',
     'ios/UITests/Fixtures/ReleaseLedger500.txt': '7411eb3a8a10911d6599237e1f2f618c0c3508667909a4766a4b5b14bef6e3b8',
-    'scripts/check_ios_performance_environment.py': 'a459dfa7ed3c0bf9337f622dcdb6aa51e80bdcc4c2dac7092240a2f3b75c46b4',
+    'scripts/check_ios_performance_environment.py': 'ca015a9ab4bcbf90d9a37220a00372d4dc714a5f0f8f4c156aad3f538c8f4300',
     'scripts/ios_performance_baselines.json': '38742a9b5f5eea668c608f117db602ac6a2b73aa56691c3ec3f90c291d15c38e',
 }
-STAGES = {'source-contract', 'xctestrun-contract', 'toolchain', 'devices', 'runtimes',
+STAGES = {'source-contract', 'xctestrun-contract', 'toolchain', 'toolchain-identity', 'devices', 'runtimes',
           'runtime-identity', 'help-stream', 'help-show', 'help-emit', 'emit-pre', 'emit-post'}
 STDERR_MARKERS = {
     b'unknown command': 'unknown_command', b'unrecognized option': 'unrecognized_option',
@@ -367,7 +369,7 @@ def source_contract():
     return SOURCE_PINS
 
 
-def preflight(simulator, test_run, argv, journal=None):
+def preflight(simulator, test_run, argv, journal=None, identity_path=None):
     expected = ['xcodebuild', '-xctestrun', str(test_run), '-destination', f'platform=iOS Simulator,id={simulator}',
                 '-parallel-testing-enabled', 'NO', '-test-timeouts-enabled', 'YES',
                 '-default-test-execution-time-allowance', '900', '-maximum-test-execution-time-allowance', '1200',
@@ -383,12 +385,38 @@ def preflight(simulator, test_run, argv, journal=None):
                 'loggingEnvironment': environment_summary(plistlib.loads(test_run.read_bytes())),
                 'environmentLimitation': 'Actual launched app environment is not observed.'}
     local = stage(journal, 'xctestrun-contract', inspect_test_run)
-    return dict(runtime_preflight(simulator, journal), **local)
+    return dict(runtime_preflight(simulator, journal, identity_path), **local)
 
 
-def runtime_preflight(simulator, journal=None):
-    if platform.machine() != 'arm64' or command(['xcodebuild', '-version'], journal=journal, stage_name='toolchain').decode().strip() != 'Xcode 27.1\nBuild version 27A9275':
+def read_toolchain_identity(path, simulator, architecture):
+    if (os.environ.get('SIMULATOR_ID') != simulator
+            or os.environ.get('DEVELOPER_DIR') != '/Applications/Xcode_27.1.app/Contents/Developer'
+            or not path.is_file()):
+        raise ValueError('toolchain_identity_context_mismatch')
+    with path.open('rb') as source:
+        raw = source.read(8193)
+    if len(raw) > 8192:
+        raise ValueError('toolchain_identity_size_cap')
+    observed = json.loads(raw)
+    expected = toolchain_identity(os.environ, 'Xcode 27.1\nBuild version 27A9275', architecture)
+    if (not isinstance(observed, dict) or type(observed.get('schemaVersion')) is not int
+            or observed.get('passed') is not True or observed.get('releaseAcceptance') is not False
+            or observed != expected):
+        raise ValueError('toolchain_identity_mismatch')
+    return digest(raw)
+
+
+def runtime_preflight(simulator, journal=None, identity_path=None):
+    architecture = platform.machine()
+    if architecture != 'arm64':
         raise ValueError('toolchain_drift')
+    identity_hash = None
+    if identity_path is None:
+        if command(['xcodebuild', '-version'], journal=journal, stage_name='toolchain').decode().strip() != 'Xcode 27.1\nBuild version 27A9275':
+            raise ValueError('toolchain_drift')
+    else:
+        identity_hash = stage(journal, 'toolchain-identity',
+                              lambda _: read_toolchain_identity(identity_path, simulator, architecture))
     inventory = json.loads(command(['xcrun', 'simctl', 'list', 'devices', 'available', '-j'], journal=journal, stage_name='devices'))
     inventory.update(json.loads(command(['xcrun', 'simctl', 'list', 'runtimes', '-j'], journal=journal, stage_name='runtimes')))
     devices = [(runtime, device) for runtime, items in inventory['devices'].items()
@@ -413,6 +441,8 @@ def runtime_preflight(simulator, journal=None):
             raise ValueError('unsupported_' + mode + '_capability')
         capabilities[mode] = dict(help_receipt, helpSHA256=digest(help_text), requiredTokensPresent=True)
     return {'protectedSourceSHA256': SOURCE_PINS,
+            'toolchainIdentitySource': 'same-job-receipt' if identity_path is not None else 'direct-query',
+            'toolchainIdentitySHA256': identity_hash,
             'exactRuntime': {'xcode': '27.1', 'xcodeBuild': '27A9275', 'iOS': '27.0',
                             'iOSBuild': '24A434', 'deviceType': 'iPhone 17', 'hostArchitecture': 'arm64'},
             'capabilities': capabilities}
@@ -445,6 +475,7 @@ def main():
     parser.add_argument('--simulator', required=True)
     parser.add_argument('--xctestrun', type=Path)
     parser.add_argument('--capabilities-only', action='store_true')
+    parser.add_argument('--toolchain-identity', type=Path, help='optional successful identity from this same consumer job')
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('command', nargs=argparse.REMAINDER)
     args = parser.parse_args()
@@ -479,10 +510,10 @@ def main():
     try:
         if args.capabilities_only:
             stage(journal, 'source-contract', lambda _: source_contract())
-            receipt['preflight'] = runtime_preflight(args.simulator, journal)
+            receipt['preflight'] = runtime_preflight(args.simulator, journal, args.toolchain_identity)
             receipt['status'] = 'capabilities_checked_not_transport'
             return 0
-        receipt['preflight'] = preflight(args.simulator, args.xctestrun, argv, journal)
+        receipt['preflight'] = preflight(args.simulator, args.xctestrun, argv, journal, args.toolchain_identity)
         start = utc_now()
         live = Pump(prefix + ['stream', '--signpost', '--style', 'ndjson', '--level', 'debug',
                               '--timeout', str(STREAM_SECONDS), '--predicate', predicate],

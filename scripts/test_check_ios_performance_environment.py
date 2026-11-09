@@ -9,13 +9,15 @@ import unittest
 from unittest.mock import patch
 
 from check_ci_workflows import parse_workflow
-from check_ios_performance_environment import configured_environment, main, require_compatible_baseline, runner_environment
+from check_ios_performance_environment import configured_environment, main, require_compatible_baseline, runner_environment, write_toolchain_identity
 
 ROOT = Path(__file__).resolve().parents[1]
 ENV = {'DEVELOPER_DIR': '/Applications/Xcode_27.1.app/Contents/Developer',
        'CI_IPHONE_RUNTIME': 'com.apple.CoreSimulator.SimRuntime.iOS-27-0',
        'CI_IPHONE_NAME': 'iPhone 17', 'SIMULATOR_ID': 'selected-device', 'ENFORCE_BASELINES': 'true'}
 XCODE = 'Xcode 27.1\nBuild version 27A9275'
+JOB = {'GITHUB_SHA': 'a' * 40, 'GITHUB_RUN_ID': '123', 'GITHUB_RUN_ATTEMPT': '1',
+       'GITHUB_JOB': 'performance-tests', 'RUNNER_NAME': 'fixture-runner'}
 # Fictional runtime build: tests must never invent an approved real calibration.
 INVENTORY = {'devices': {ENV['CI_IPHONE_RUNTIME']: [{'udid': 'selected-device', 'isAvailable': True,
     'deviceTypeIdentifier': 'com.apple.CoreSimulator.SimDeviceType.iPhone-17'}]},
@@ -30,6 +32,79 @@ def approved_fixture():
 
 
 class PerformanceEnvironmentTests(unittest.TestCase):
+    def test_identity_written_after_success_with_whitelisted_bindings_and_write_timing(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'identity.json'
+            env = {**ENV, **JOB, 'ENFORCE_BASELINES': 'false', 'SECRET': 'do-not-retain'}
+            with patch.dict(os.environ, env, clear=True), \
+                 patch('sys.argv', ['guard', 'runner', '--identity-output', str(path)]), \
+                 patch('check_ios_performance_environment.platform.machine', return_value='arm64'), \
+                 patch('check_ios_performance_environment.subprocess.check_output', side_effect=[json.dumps(INVENTORY), XCODE]) as native, \
+                 contextlib.redirect_stdout(io.StringIO()) as output:
+                main()
+            receipt = json.loads(path.read_text())
+            self.assertEqual(receipt['context'], {key: env[key] for key in receipt['context']})
+            self.assertEqual(receipt['toolchain'], XCODE)
+            self.assertEqual(receipt['architecture'], 'arm64')
+            self.assertTrue(receipt['passed'])
+            self.assertFalse(receipt['releaseAcceptance'])
+            self.assertNotIn('do-not-retain', path.read_text())
+            self.assertGreaterEqual(json.loads(output.getvalue())['identityReceiptWriteSeconds'], 0)
+            self.assertEqual(native.call_count, 2)
+
+    def test_no_identity_on_baseline_or_environment_failure(self):
+        with tempfile.TemporaryDirectory() as folder:
+            for mode in ('baseline', 'environment'):
+                path = Path(folder) / (mode + '.json')
+                env = {**ENV, **JOB, 'ENFORCE_BASELINES': 'true' if mode == 'baseline' else 'false'}
+                version = XCODE if mode == 'baseline' else XCODE.replace('27.1', '27.2')
+                with self.subTest(mode=mode), patch.dict(os.environ, env, clear=True), \
+                     patch('sys.argv', ['guard', 'runner', '--identity-output', str(path)]), \
+                     patch('check_ios_performance_environment.platform.machine', return_value='arm64'), \
+                     patch('check_ios_performance_environment.subprocess.check_output', side_effect=[json.dumps(INVENTORY), version]), \
+                     contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+                    main()
+                self.assertFalse(path.exists())
+
+    def test_identity_supported_after_approved_fixture_baseline_success(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'identity.json'; baseline = Path(folder) / 'baseline.json'
+            baseline.write_text(json.dumps(approved_fixture()))
+            with patch.dict(os.environ, {**ENV, **JOB}, clear=True), \
+                 patch('sys.argv', ['guard', 'runner', '--baseline', str(baseline), '--identity-output', str(path)]), \
+                 patch('check_ios_performance_environment.platform.machine', return_value='arm64'), \
+                 patch('check_ios_performance_environment.subprocess.check_output', side_effect=[json.dumps(INVENTORY), XCODE]), \
+                 contextlib.redirect_stdout(io.StringIO()) as output:
+                main()
+            self.assertEqual(json.loads(output.getvalue())['compatibleProfiles'], 1)
+            self.assertEqual(json.loads(path.read_text())['context']['ENFORCE_BASELINES'], 'true')
+
+    def test_identity_rejects_configured_stage_without_queries(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'identity.json'
+            with patch.dict(os.environ, {**ENV, **JOB}, clear=True), \
+                 patch('sys.argv', ['guard', 'configured', '--architecture', 'arm64', '--identity-output', str(path)]), \
+                 patch('check_ios_performance_environment.subprocess.check_output') as native, \
+                 contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+                main()
+            native.assert_not_called()
+            self.assertFalse(path.exists())
+
+    def test_identity_requires_complete_context_and_never_overwrites(self):
+        observed = runner_environment(ENV, INVENTORY, XCODE, 'arm64')
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'identity.json'
+            with self.assertRaises(KeyError):
+                write_toolchain_identity(path, ENV, observed)
+            self.assertFalse(path.exists())
+            with self.assertRaises(ValueError):
+                write_toolchain_identity(path, {**ENV, **JOB, 'GITHUB_SHA': 'short'}, observed)
+            write_toolchain_identity(path, {**ENV, **JOB}, observed)
+            before = path.read_bytes()
+            with self.assertRaises(FileExistsError):
+                write_toolchain_identity(path, {**ENV, **JOB}, observed)
+            self.assertEqual(path.read_bytes(), before)
+
     def test_real_old_baseline_rejected_in_both_stages_and_new_fixture_allowed(self):
         old = json.loads((ROOT / 'scripts/ios_performance_baselines.json').read_text())
         for environment in (configured_environment(ENV, 'arm64'), runner_environment(ENV, INVENTORY, XCODE, 'arm64')):
@@ -137,7 +212,10 @@ class PerformanceEnvironmentTests(unittest.TestCase):
         self.assertEqual(workflow['jobs']['performance-build']['needs'], 'performance-plan')
         for job_name, expensive in [('performance-build', 'build-for-testing'), ('performance-tests', 'scripts/prepare_ios_performance_simulator.py')]:
             steps = workflow['jobs'][job_name]['steps']
-            guard = next(i for i, step in enumerate(steps) if step.get('run') == 'python3 scripts/check_ios_performance_environment.py runner')
+            guard = next(i for i, step in enumerate(steps) if 'python3 scripts/check_ios_performance_environment.py runner' in step.get('run', ''))
+            self.assertIn('if [[ "${{ inputs.capture_scroll_signposts }}" == true ]]', steps[guard]['run'])
+            self.assertIn('identity=()', steps[guard]['run'])
+            self.assertIn('"${identity[@]}"', steps[guard]['run'])
             selection = next(i for i, step in enumerate(steps) if 'scripts/select_ci_iphone.py' in step.get('run', ''))
             work = next(i for i, step in enumerate(steps) if expensive in step.get('run', ''))
             self.assertLess(selection, guard); self.assertLess(guard, work)

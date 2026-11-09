@@ -106,7 +106,13 @@ jobs:
           xcodebuild -version
           xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
       - name: Verify actual baseline environment before compiling
-        run: python3 scripts/check_ios_performance_environment.py runner
+        shell: bash
+        run: |
+          identity=()
+          if [[ "${{ inputs.capture_scroll_signposts }}" == true ]]; then
+            identity=(--identity-output .build/capture-preflight/runner-identity.json)
+          fi
+          python3 scripts/check_ios_performance_environment.py runner "${identity[@]}"
       - name: Boot diagnostic simulator before capability checks
         if: inputs.capture_scroll_signposts
         timeout-minutes: 3
@@ -118,6 +124,7 @@ jobs:
           PERFORMANCE_CASE: scroll
         run: |
           python3 scripts/capture_scroll_signposts.py --capabilities-only --simulator "$SIMULATOR_ID" \
+            --toolchain-identity .build/capture-preflight/runner-identity.json \
             --output .build/capture-preflight/capabilities.json
       - name: Retain capture capability stages
         if: always() && inputs.capture_scroll_signposts
@@ -207,7 +214,13 @@ jobs:
       - name: Select an iPhone simulator
         run: xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
       - name: Reject runner environment drift before boot and testing
-        run: python3 scripts/check_ios_performance_environment.py runner
+        shell: bash
+        run: |
+          identity=()
+          if [[ "${{ inputs.capture_scroll_signposts }}" == true ]]; then
+            identity=(--identity-output .build/performance/runner-identity.json)
+          fi
+          python3 scripts/check_ios_performance_environment.py runner "${identity[@]}"
       - name: Boot and verify a fresh Release installation
         timeout-minutes: 8
         run: |
@@ -225,7 +238,8 @@ jobs:
           if [[ "${{ inputs.capture_scroll_signposts }}" == true ]]; then
             test "$PERFORMANCE_CASE" = scroll
             capture=(python3 scripts/capture_scroll_signposts.py --simulator "$SIMULATOR_ID"
-              --xctestrun "${test_runs[0]}" --output .build/performance/live-signpost-diagnostic.json --)
+              --xctestrun "${test_runs[0]}" --toolchain-identity .build/performance/runner-identity.json
+              --output .build/performance/live-signpost-diagnostic.json --)
           fi
           "${capture[@]}" xcodebuild -xctestrun "${test_runs[0]}" -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
             -parallel-testing-enabled NO -test-timeouts-enabled YES \
