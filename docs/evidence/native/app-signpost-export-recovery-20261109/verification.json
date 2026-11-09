@@ -1,0 +1,87 @@
+{
+  "diagnosticOnly": true,
+  "derivedDiagnosticQualified": true,
+  "releaseAcceptance": false,
+  "originalCaptureRemainsUnqualified": true,
+  "originalInspectorFailurePreserved": true,
+  "nativeRerunsForRecovery": 0,
+  "resultReexportsForFilenameRecovery": 0,
+  "offlineControls": {
+    "exportContinuation": 41,
+    "resultSupplement": 8
+  },
+  "export": {
+    "bytes": 13921452,
+    "seconds": 3.883,
+    "normalExit": true,
+    "signals": []
+  },
+  "strictXCTest": {
+    "status": "passed",
+    "exitCode": 0,
+    "runtimeWarnings": {
+      "status": "passed",
+      "summaryWarningCount": 0,
+      "runtimeWarningCount": 0,
+      "examinedTestCount": 1,
+      "detailExportCount": 1,
+      "activityExportCount": 0,
+      "warnings": []
+    }
+  },
+  "metricsAndFixture": {
+    "case": "scroll",
+    "environment": {
+      "osVersion": "27.0",
+      "osBuildNumber": "24A434",
+      "modelName": "iPhone 17",
+      "architecture": "arm64",
+      "xcode": "Xcode 27.1\nBuild version 27A9275",
+      "buildConfiguration": "Release",
+      "testConfiguration": "Test Scheme Action"
+    },
+    "releaseAcceptance": false,
+    "measurements": {
+      "status": "passed"
+    },
+    "persistedPickup": {
+      "status": "passed",
+      "result": {
+        "sqliteQuickCheck": "ok",
+        "revision": 3,
+        "payloadSHA256": "64ee5c8133eb4336ce8840d4c779ed44ff3e4f4e85c64f0cb53f8fe2642bfbbe",
+        "lineCount": 500,
+        "contributionCount": 500,
+        "importCount": 1,
+        "source": "paste",
+        "checkedCount": 0,
+        "checkedRowIDs": []
+      }
+    },
+    "status": "complete"
+  },
+  "scrollDurationSamples": 5,
+  "scrollMedianSeconds": 2.583362583,
+  "memorySeries": 3,
+  "hitches": "unavailable",
+  "observerEnvelopes": 6,
+  "uikitContainedIntervalPerEnvelope": true,
+  "sourceManifestSHA256": "5f156dc80b241c5914b7b9c098e6d44074700dc61e3540d70a710f1b00992bd3",
+  "productsManifestSHA256": "d23656755a0c7f3d9ebdf19110b29b472f1e76705ddcdb8777dbd727afa6782b",
+  "retainedRoot": ".build/AppSignpostCaptureNov09",
+  "retainedSHA256": {
+    "root-execution-r4/capture/attempt/receipt.json": "4e5c7a5f7ba6eb683ee1c1f74365ab6ae0a8968c5d38d9258eda91fc20388c7a",
+    "root-execution-r4/capture-root-audit.json": "3cc403860349a4f615cd53f1089120019975347cedf3c200ce5603c4a3a68573",
+    "export-continuation-r1/frozen.json": "31605720b3899cbb0e8e5e5740339862e5b922403878e8b1d7abbb15c20daa20",
+    "export-continuation-r1/root-offline-tests.log": "474bc139fa58138551960952d6a84271c2f975aea5941841221df50efc5f8a77",
+    "export-continuation-r1/export-r1/receipt.json": "dfc2d2bebb027883eb850a1d2a71c9d7e8293edde1fc529093c8b5e47c918163",
+    "export-continuation-r1/transport-r1/qualification.json": "683baa723025b484192e54f48aea017ddc6deafd399484812cf0ed9d5269616a",
+    "export-continuation-r1/results-r1/inspection.json": "5e9a4ac12d9aa454d35eedb7e58d102d31ece803919626841fb80f8e92802304",
+    "export-continuation-r1/metrics-root-r1/receipt.json": "db4837bf1cfda3b1ec6cb4032ed10ad1ba8e7762c53c51120e56eccf407c5a01",
+    "export-continuation-r1/metrics-root-r1/evidence-validation.json": "f3c2443acbe0f607b7cd55a4227f7a99cdb095c60c8047150c7913619983983d",
+    "export-continuation-r1/metrics-root-r1/calibration.json": "27dea1bd962b27f8a9a480cf36ae95b0c4ebb9d0ffade2e8cef2974a98e0b804",
+    "result-supplement-r1/frozen.json": "39723ee966060b954ca28135672eb49a2ab1281848137eeaeac3701f1d70de97",
+    "result-supplement-r1/root-offline-tests.log": "51b4e8cf8a4c03385e84eae68928a7e51959d2bee9d6644afc92bc9303967c01",
+    "result-supplement-r1/qualified-r1/qualification.json": "d405b7bcc175d6722691582481c08f096d88db3522134123012bf224843f1c4c"
+  }
+}

@@ -51,6 +51,12 @@ PID, including Main Thread Checker UUID; RPAC is not observed in either. Filesys
 path absence does not establish absent runner loading. The metric collection cause
 remains open. [Hosted proof](evidence/native/hosted-arm64-observer-20261109/README.md).
 No new performance baseline, full combined acceptance or merge is approved.
+Local app-signpost diagnostics now verify the original scroll XCTest, five duration
+samples, three memory series and the 500-row persisted fixture. Six outer observer
+envelopes contain the named UIKit scroll intervals. Saved-artifact recovery completed
+without another app run; original XML-cap and inspector-filename failures remain
+retained. Animation hitches remain unavailable, and the hosted missing-duration
+cause is still open. [Local diagnostic proof](evidence/native/app-signpost-export-recovery-20261109/README.md).
 The earlier diagnostic workflow update passed 438 offline checks and 17 native
 queue-definition checks; the later follow-through total is recorded above. Its
 opt-in performance diagnostic preserves default commands and

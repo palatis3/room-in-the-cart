@@ -95,13 +95,17 @@ remain open. [Proof and limits](evidence/service/shared-demand-persistence-20261
 Migration043 is not deployed; staging authorization remains through041.
 
 New local diagnostic rules in CI-VALIDATION require exact SDK/architecture helper
-typechecks before full compilation and export-only recovery after normal collection.
-The latest app-signpost attempt reused verified source/products and completed both
-XCTest and its 60-second trace normally. Only the XML export exceeded its 8 MiB cap;
-the original failed receipt remains unchanged. Root audit confirms terminal native
-processes and stable artifacts. Export recovery and independent strict/fixture/
-measurement inspection are pending under `.build/AppSignpostCaptureNov09/`.
-This historical diagnostic does not qualify the combined app or hosted baseline.
+typechecks before full compilation, export-only recovery after normal collection,
+and log names that remain distinct on a case-insensitive Mac. The app-signpost
+attempt reused verified source/products and completed XCTest and its trace normally.
+The XML-cap failure was recovered with one 3.883-second export; the result-inspector
+log-name collision was recovered with one 0.085-second check of saved exports.
+Original failures remain unchanged. Strict XCTest, runner acknowledgements,
+transport, all five duration samples, three memory series and the 500-row fixture
+pass both independently and in the combined diagnostic verifier. Root passed 41
+continuation and eight supplement controls. No app rerun or second result export
+occurred. Hitches remain unavailable; this historical diagnostic does not qualify the combined app or hosted
+baseline. [Compact proof](evidence/native/app-signpost-export-recovery-20261109/README.md).
 
 ## New verified changes
 

@@ -30,6 +30,14 @@ passes and a written question remains. For changed iOS Swift, run
 syntax errors such as the observed missing bracket; parsing does not establish
 type correctness, successful linking or UI behavior.
 
+For a new platform API helper, typecheck its complete declarations against the
+selected SDK, deployment target, Swift version and required framework/overlay
+search paths before a full app build. Include every architecture that the next
+build actually compiles. Missing imports are semantic errors that syntax parsing
+cannot catch. Retain setup failures separately from API failures; a malformed
+extraction or missing XCTest Swift overlay does not establish an application
+defect. A passing helper probe still needs the original app build and journey.
+
 Bind each attempt to its source and finished build outputs. Reuse terminal logs,
 exports and failure receipts before requesting new evidence. A failed control
 needs a changed input or a smaller experiment, not another unchanged full run.
@@ -81,6 +89,21 @@ state disappears when the runner is destroyed; it is not a durable backup.
 
 Inspect the retained build or scenario failure before retrying. Do not rerun a
 long journey just to recover output that was available in its first attempt.
+
+When collection completes normally but export or inspection fails, recover from
+the retained recording/result before repeating the app. Verify terminal process
+state and stable artifact hashes, then inspect a fresh copy with explicit time,
+size and disk bounds. Keep the original failed receipt unchanged. A successor
+report must bind the original collection to the new export and report collection,
+transport, strict XCTest, fixture and measurement checks separately; overall
+qualification still requires every applicable gate. Size limits may change only
+with recorded evidence, such as exported rows and their recording-time coverage.
+An export-only correction does not qualify another source revision or baseline.
+Give raw test logs and checker logs distinct descriptive names, such as
+`Performance.log` and `performance-checker.log`; case alone does not distinguish
+files on a default Mac filesystem. If a checker fails before evaluating retained
+exports, preserve that failure and run the missing check against verified copies.
+Do not re-export the result or repeat the app solely to fix the checker log path.
 
 For local UI follow-ups, distinguish XCTest's result evidence from its optional
 system diagnostic collection. A completed eight-case date batch spent additional
