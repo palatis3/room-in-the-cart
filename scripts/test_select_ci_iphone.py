@@ -256,7 +256,7 @@ class OwnedSimulatorWorkflowTests(unittest.TestCase):
         from check_ci_workflows import parse_workflow
         root = Path(__file__).resolve().parents[1]
         expected = {('ci.yml', 'ios-tests'), ('ios-fixtures.yml', 'contributor-tests'),
-                    ('ios-fixtures.yml', 'dinner-tests')}
+                    ('ios-fixtures.yml', 'dinner-tests'), ('ios-performance.yml', 'performance-tests')}
         observed = set()
         default_callers = set()
         for path in sorted((root / '.github/workflows').glob('*.yml')):
@@ -277,12 +277,15 @@ class OwnedSimulatorWorkflowTests(unittest.TestCase):
                 observed.add(key)
                 self.assertEqual(len(create), 1); self.assertEqual(len(clean), 1)
                 self.assertEqual(steps[create[0]]['timeout-minutes'], 8)
-                boot = next(i for i, s in enumerate(steps) if 'scripts/boot_ios_simulator.py' in s.get('run', ''))
-                run = next(i for i, s in enumerate(steps) if 'bash scripts/run_ios_test_shard.sh' in s.get('run', ''))
+                performance = key == ('ios-performance.yml', 'performance-tests')
+                boot_command = 'scripts/prepare_ios_performance_simulator.py' if performance else 'scripts/boot_ios_simulator.py'
+                test_command = 'test-without-building' if performance else 'bash scripts/run_ios_test_shard.sh'
+                boot = next(i for i, s in enumerate(steps) if boot_command in s.get('run', ''))
+                run = next(i for i, s in enumerate(steps) if test_command in s.get('run', ''))
                 self.assertLess(create[0], boot); self.assertLess(boot, run); self.assertLess(run, clean[0])
                 self.assertEqual(steps[boot]['timeout-minutes'], 8)
-                self.assertEqual(steps[run]['timeout-minutes'], 40)
-                self.assertEqual(steps[clean[0]]['if'], 'always()')
+                self.assertEqual(steps[run]['timeout-minutes'], 30 if performance else 40)
+                self.assertEqual(steps[clean[0]]['if'], 'always() && inputs.fresh_performance_simulator' if performance else 'always()')
                 self.assertEqual(steps[clean[0]]['timeout-minutes'], 2)
                 for i, step in enumerate(steps):
                     if step.get('name') == 'Retain speech runtime diagnostics': self.assertLess(i, clean[0])
@@ -292,12 +295,13 @@ class OwnedSimulatorWorkflowTests(unittest.TestCase):
                     if step.get('name') == 'Retain Records media result counts and timing':
                         self.assertEqual(set(paths), {'.build/records-test-report.md', '.build/test-plan/',
                                                     '.build/test-simulator-ownership.json'})
+                    elif performance:
+                        self.assertEqual(paths, ['.build/performance/'])
                     else:
                         self.assertIn('.build/test-*.json', paths)
         self.assertEqual(observed, expected)
         self.assertTrue({('ci.yml', 'ios-build'), ('ios-fixtures.yml', 'build-contributor'),
-                         ('ios-fixtures.yml', 'build-dinner'), ('ios-performance.yml', 'performance-build'),
-                         ('ios-performance.yml', 'performance-tests')}.issubset(default_callers))
+                         ('ios-fixtures.yml', 'build-dinner'), ('ios-performance.yml', 'performance-build')}.issubset(default_callers))
 
 
 if __name__ == '__main__':

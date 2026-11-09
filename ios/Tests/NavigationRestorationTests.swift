@@ -165,6 +165,24 @@ import HouseholdClient
         }
     }
 
+    func testRefreshingEarlierHouseholdDoesNotUseAnotherModelsRevokedServer() async throws {
+        let f = try await fixture()
+        let firstServer = RestorationServer()
+        let first = try householdModel(firstServer, directory: f.directory.appendingPathComponent("first"))
+        try await enroll(first)
+        let firstScope = try XCTUnwrap(first.projection)
+        let firstReads = firstServer.bootstrapReads
+        let secondServer = RestorationServer(); secondServer.revoked = true
+        let second = try householdModel(secondServer, directory: f.directory.appendingPathComponent("second"))
+        await first.refresh()
+        XCTAssertNotNil(first.projection, "Another model's revoked fixture must not revoke this household")
+        XCTAssertEqual(first.projection?.household.id, firstScope.household.id)
+        XCTAssertEqual(first.projection?.shopId, firstScope.shopId)
+        XCTAssertEqual(firstServer.bootstrapReads, firstReads + 1)
+        XCTAssertEqual(secondServer.bootstrapReads, 0)
+        XCTAssertNil(second.projection)
+    }
+
     func testHouseholdLocatorWaitsForFreshEnrollmentAndRevocationRemovesItDurably() async throws {
         let f = try await fixture()
         let server = RestorationServer(), household = try householdModel(server, directory: f.directory)
@@ -258,11 +276,10 @@ import HouseholdClient
         XCTAssertFalse(dismissed.showingVerifiedHousehold)
     }
     private func householdModel(_ server: RestorationServer, directory: URL) throws -> HouseholdModel {
-        RestorationProtocol.server = server
-        let configuration = URLSessionConfiguration.ephemeral; configuration.protocolClasses = [RestorationProtocol.self]
-        let transport = HTTPTransport(session: URLSession(configuration: configuration))
-        let auth = AdultAuth(configuration: try .init(projectURL: URL(string: "https://restoration-auth.invalid")!, publishableKey: "sb_publishable_fixture_only"), vault: RestorationVault(), transport: transport)
-        let service = HouseholdService(configuration: try .init(baseURL: URL(string: "https://restoration-service.invalid")!), auth: auth, deviceVault: RestorationVault(), transport: transport)
+        addTeardownBlock { server.close() }
+        let transport = HTTPTransport(session: server.makeSession())
+        let auth = AdultAuth(configuration: try .init(projectURL: server.baseURL, publishableKey: "sb_publishable_fixture_only"), vault: RestorationVault(), transport: transport)
+        let service = HouseholdService(configuration: try .init(baseURL: server.baseURL), auth: auth, deviceVault: RestorationVault(), transport: transport)
         return HouseholdModel(auth: auth, service: service, outboxURL: directory.appendingPathComponent("household.json"), deletionVault: RestorationVault(), exitVault: RestorationVault())
     }
     private func enroll(_ household: HouseholdModel) async throws {
@@ -273,39 +290,117 @@ import HouseholdClient
 }
 
 private final class RestorationServer: @unchecked Sendable {
-    var revoked = false
-    var subject = "restoration-adult"
-    var householdID = "11111111-1111-4111-8111-111111111111"
-    var member = "22222222-2222-4222-8222-222222222222"
-    var role = "shopper"
-    var shop = "33333333-3333-4333-8333-333333333333"
-    var capabilities = ["shopper_inbox", "request_preview", "shopper_commands"]
-    var bootstrapReads = 0
+    private let lock = NSLock()
+    let host = "restoration-" + UUID().uuidString.lowercased() + ".invalid"
+    var baseURL: URL { URL(string: "https://" + host)! }
+    private var sessions: [URLSession] = []
+    private var closed = false
+    private struct State {
+        var revoked = false
+        var subject = "restoration-adult"
+        var householdID = "11111111-1111-4111-8111-111111111111"
+        var member = "22222222-2222-4222-8222-222222222222"
+        var role = "shopper"
+        var shop = "33333333-3333-4333-8333-333333333333"
+        var capabilities = ["shopper_inbox", "request_preview", "shopper_commands"]
+        var bootstrapReads = 0
+    }
+    private var state = State()
+    var revoked: Bool {
+        get { lock.lock(); defer { lock.unlock() }; return state.revoked }
+        set { lock.lock(); defer { lock.unlock() }; state.revoked = newValue }
+    }
+    var subject: String {
+        get { lock.lock(); defer { lock.unlock() }; return state.subject }
+        set { lock.lock(); defer { lock.unlock() }; state.subject = newValue }
+    }
+    var householdID: String {
+        get { lock.lock(); defer { lock.unlock() }; return state.householdID }
+        set { lock.lock(); defer { lock.unlock() }; state.householdID = newValue }
+    }
+    var member: String {
+        get { lock.lock(); defer { lock.unlock() }; return state.member }
+        set { lock.lock(); defer { lock.unlock() }; state.member = newValue }
+    }
+    var role: String {
+        get { lock.lock(); defer { lock.unlock() }; return state.role }
+        set { lock.lock(); defer { lock.unlock() }; state.role = newValue }
+    }
+    var shop: String {
+        get { lock.lock(); defer { lock.unlock() }; return state.shop }
+        set { lock.lock(); defer { lock.unlock() }; state.shop = newValue }
+    }
+    var capabilities: [String] {
+        get { lock.lock(); defer { lock.unlock() }; return state.capabilities }
+        set { lock.lock(); defer { lock.unlock() }; state.capabilities = newValue }
+    }
+    var bootstrapReads: Int { lock.lock(); defer { lock.unlock() }; return state.bootstrapReads }
+    func makeSession() -> URLSession {
+        lock.lock(); defer { lock.unlock() }
+        precondition(!closed, "A closed fixture cannot be reused")
+        RestorationProtocol.register(self)
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [RestorationProtocol.self]
+        let session = URLSession(configuration: configuration)
+        // Existing restoration tests intentionally create multiple models for one server.
+        sessions.append(session)
+        return session
+    }
+    func close() {
+        lock.lock()
+        closed = true
+        let sessions = self.sessions; self.sessions = []
+        lock.unlock()
+        RestorationProtocol.remove(host: host)
+        for session in sessions { session.invalidateAndCancel() }
+    }
+    deinit { close() }
     func respond(_ request: URLRequest) throws -> (Int, Data) {
-        guard request.url?.host?.hasSuffix(".invalid") == true else { throw URLError(.unsupportedURL) }
+        lock.lock(); defer { lock.unlock() }
+        guard !closed, request.url?.host == host else { throw URLError(.unsupportedURL) }
         let path = request.url!.path
         let value: Any
         if path == "/auth/v1/verify" {
-            value = ["access_token":"fixture-access", "refresh_token":"fixture-refresh", "expires_in":3600, "user":["id":subject, "email_confirmed_at":"date"]]
-        } else if path == "/auth/v1/user" { value = ["id":subject, "email_confirmed_at":"date"]
+            value = ["access_token":"fixture-access", "refresh_token":"fixture-refresh", "expires_in":3600, "user":["id":state.subject, "email_confirmed_at":"date"]]
+        } else if path == "/auth/v1/user" { value = ["id":state.subject, "email_confirmed_at":"date"]
         } else if path.hasSuffix("/workspaces") {
-            value = ["workspaces":[["householdId":householdID, "label":"Fixture", "role":role]]]
+            value = ["workspaces":[["householdId":state.householdID, "label":"Fixture", "role":state.role]]]
         } else if path.hasSuffix("/devices") { value = ["deviceId":"fixture-device", "deviceToken":"fixture-device-token"]
         } else if path.hasSuffix("/bootstrap") {
-            bootstrapReads += 1
-            if revoked { return (403, Data("{\"error\":\"access_ended\"}".utf8)) }
-            value = ["household":["id":householdID, "label":"Fixture"], "memberId":member, "role":role, "shopId":shop, "enrolled":true, "queueConsent":false, "capabilities":capabilities]
+            state.bootstrapReads += 1
+            if state.revoked { return (403, Data("{\"error\":\"access_ended\"}".utf8)) }
+            value = ["household":["id":state.householdID, "label":"Fixture"], "memberId":state.member, "role":state.role, "shopId":state.shop, "enrolled":true, "queueConsent":false, "capabilities":state.capabilities]
         } else { throw URLError(.unsupportedURL) }
         return (200, try JSONSerialization.data(withJSONObject: value))
     }
 }
+private final class WeakRestorationServer {
+    weak var value: RestorationServer?
+    init(_ value: RestorationServer) { self.value = value }
+}
+
 private final class RestorationProtocol: URLProtocol {
-    static var server: RestorationServer?
+    private static let registryLock = NSLock()
+    private static var servers: [String: WeakRestorationServer] = [:]
+    static func register(_ server: RestorationServer) {
+        registryLock.lock(); defer { registryLock.unlock() }
+        servers[server.host] = WeakRestorationServer(server)
+    }
+    static func remove(host: String) {
+        registryLock.lock(); defer { registryLock.unlock() }; servers.removeValue(forKey: host)
+    }
+    private static func server(for request: URLRequest) -> RestorationServer? {
+        registryLock.lock(); defer { registryLock.unlock() }
+        guard request.url?.scheme == "https", let host = request.url?.host else { return nil }
+        return servers[host]?.value
+    }
+    // Claim unknown destinations too, so a missing fixture never reaches the network.
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
     override func startLoading() {
         do {
-            let (status, bytes) = try Self.server!.respond(request)
+            guard let server = Self.server(for: request) else { throw URLError(.unsupportedURL) }
+            let (status, bytes) = try server.respond(request)
             client?.urlProtocol(self, didReceive: HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: ["Content-Type":"application/json"])!, cacheStoragePolicy: .notAllowed)
             client?.urlProtocol(self, didLoad: bytes); client?.urlProtocolDidFinishLoading(self)
         } catch { client?.urlProtocol(self, didFailWithError: error) }
@@ -314,8 +409,9 @@ private final class RestorationProtocol: URLProtocol {
 }
 
 private final class RestorationVault: RefreshTokenVault, @unchecked Sendable {
+    private let lock = NSLock()
     private var value: String?
-    func read() throws -> String? { value }
-    func write(_ value: String) throws { self.value = value }
-    func clear() throws { value = nil }
+    func read() throws -> String? { lock.lock(); defer { lock.unlock() }; return value }
+    func write(_ value: String) throws { lock.lock(); defer { lock.unlock() }; self.value = value }
+    func clear() throws { lock.lock(); defer { lock.unlock() }; value = nil }
 }

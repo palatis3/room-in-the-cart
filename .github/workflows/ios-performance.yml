@@ -1,5 +1,5 @@
 name: iOS Release performance
-run-name: iOS performance · ${{ inputs.case || 'all' }}${{ inputs.capture_preflight_only && ' · capability-only' || '' }}${{ inputs.capture_scroll_signposts && ' · signpost capture (diagnostic only)' || '' }}
+run-name: iOS performance · ${{ inputs.case || 'all' }}${{ inputs.capture_preflight_only && ' · capability-only' || '' }}${{ inputs.capture_scroll_signposts && ' · signpost capture (diagnostic only)' || '' }}${{ inputs.fresh_performance_simulator && ' · fresh simulator (diagnostic only)' || '' }}
 
 on:
   pull_request:
@@ -36,6 +36,10 @@ on:
         description: Capability checks only; requires scroll capture and calibration mode; no compilation or XCTest
         type: boolean
         default: false
+      fresh_performance_simulator:
+        description: One original scroll case on a new job-owned simulator (calibration only)
+        type: boolean
+        default: false
       enforce_baselines:
         description: Require approved limits for this Xcode and simulator environment
         type: boolean
@@ -51,7 +55,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: ios-performance-${{ github.workflow }}-${{ github.ref }}${{ inputs.capture_scroll_signposts && '-scroll-capture' || '' }}${{ inputs.capture_preflight_only && '-capabilities-only' || '' }}
+  group: ios-performance-${{ github.workflow }}-${{ github.ref }}${{ inputs.capture_scroll_signposts && '-scroll-capture' || '' }}${{ inputs.capture_preflight_only && '-capabilities-only' || '' }}${{ inputs.fresh_performance_simulator && '-fresh-simulator' || '' }}
   cancel-in-progress: true
 
 env:
@@ -70,6 +74,7 @@ jobs:
       - name: Validate performance selection before allocating macOS
         run: |
           python3 scripts/test_plan_ios_performance_tests.py
+          python3 scripts/test_preserve_performance_store.py
           python3 scripts/test_check_ios_performance.py
           python3 scripts/test_scroll_signpost_diagnostic.py
           python3 scripts/test_capture_scroll_signposts.py
@@ -81,6 +86,13 @@ jobs:
           fi
           if [[ "${{ inputs.capture_preflight_only }}" == true ]]; then
             test "${{ inputs.capture_scroll_signposts }}" = true
+          fi
+          if [[ "${{ inputs.fresh_performance_simulator }}" == true ]]; then
+            test "${{ github.event_name }}" = workflow_dispatch
+            test "${{ inputs.case }}" = scroll
+            test "$ENFORCE_BASELINES" = false
+            test "${{ inputs.capture_scroll_signposts }}" = false
+            test "${{ inputs.capture_preflight_only }}" = false
           fi
       - name: Reject known baseline incompatibility before allocating macOS
         run: python3 scripts/check_ios_performance_environment.py configured --architecture arm64
@@ -195,6 +207,7 @@ jobs:
       matrix: ${{ fromJSON(needs.performance-build.outputs.test_matrix) }}
     env:
       PERFORMANCE_CASE: ${{ matrix.case }}
+      TEST_SHARD: performance-${{ matrix.case }}
       TEST_SELECTOR: ${{ matrix.selector }}
       FIXTURE: ios/UITests/Fixtures/ReleaseLedger500.txt
     steps:
@@ -213,7 +226,13 @@ jobs:
           xcodebuild -version | tee .build/performance/toolchain.txt
           printf '%s\n' "$TEST_SELECTOR" > .build/performance/selector.txt
       - name: Select an iPhone simulator
-        run: xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
+        timeout-minutes: 8
+        run: |
+          if [[ "${{ inputs.fresh_performance_simulator }}" == true ]]; then
+            xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py --create-owned .build/performance/test-simulator-ownership.json
+          else
+            xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
+          fi
       - name: Reject runner environment drift before boot and testing
         shell: bash
         run: |
@@ -241,6 +260,9 @@ jobs:
             capture=(python3 scripts/capture_scroll_signposts.py --simulator "$SIMULATOR_ID"
               --xctestrun "${test_runs[0]}" --toolchain-identity .build/performance/runner-identity.json
               --output .build/performance/live-signpost-diagnostic.json --)
+          fi
+          if [[ "${{ inputs.fresh_performance_simulator }}" == true ]]; then
+            python3 scripts/preserve_performance_store.py mark-attempt --evidence .build/performance
           fi
           "${capture[@]}" xcodebuild -xctestrun "${test_runs[0]}" -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
             -parallel-testing-enabled NO -test-timeouts-enabled YES \
@@ -309,6 +331,16 @@ jobs:
             args+=(--baseline scripts/ios_performance_baselines.json)
           fi
           python3 scripts/check_ios_performance.py "${args[@]}"
+      - name: Preserve the attempted pilot ledger before cleanup
+        if: always() && inputs.fresh_performance_simulator
+        timeout-minutes: 2
+        run: python3 scripts/preserve_performance_store.py preserve --evidence .build/performance
+      - name: Clean up the job-owned performance simulator
+        if: always() && inputs.fresh_performance_simulator
+        timeout-minutes: 2
+        run: |
+          python3 scripts/preserve_performance_store.py require-preserved --evidence .build/performance
+          python3 scripts/select_ci_iphone.py --cleanup-owned .build/performance/test-simulator-ownership.json
       - name: Retain Release performance evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

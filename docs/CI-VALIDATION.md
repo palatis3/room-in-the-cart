@@ -453,6 +453,41 @@ command receipt; do not edit a retained run's provenance.
 
 ## Exact-run monitoring without repeated log downloads
 
+### Fresh-simulator performance pilot
+
+For one controlled comparison, manually select `case=scroll`,
+`fresh_performance_simulator=true`, `enforce_baselines=false`,
+`capture_scroll_signposts=false` and `capture_preflight_only=false`. Linux admission
+rejects other combinations before allocating Macs. The input defaults off and is
+not exposed to reusable release calls; its run name and cancellation group are
+separate from ordinary qualification.
+
+Only the test consumer creates a new job-owned device of the configured runtime
+and device type. The build, original scroll case, metrics and strict validators
+stay unchanged; creation failure never falls back to the image device. Selection
+has an eight-minute ceiling, cleanup two minutes, and existing job/test budgets
+remain unchanged. Cleanup runs after exports, diagnostics and SQLite validation,
+even on failure, and failures remain fatal. The performance artifact retains
+`test-simulator-ownership.json`, including creation and cleanup outcomes.
+
+Before the original XCTest command, the pilot writes a bound attempt marker. An
+always-run preservation step checks the receipt's current job/owner/device/runtime,
+then backs up only that owned app's synthetic ledger through a read-only SQLite
+connection, including committed WAL data. `ledger-snapshot.sqlite` and
+`store-preservation.json` retain its SHA-256 and outcome even when native or strict
+validation fails. The collection step has a two-minute ceiling, a 90-second internal
+budget, 30-second command limits and a 32 MiB store/snapshot cap. No-attempt and
+no-created-device outcomes are explicit. Missing stores, ownership mismatch,
+timeouts or unsuccessful preservation after an attempt remain failures and block
+device deletion; cleanup requires the matching snapshot and hash. Artifact upload
+still runs. An attempt marker is conservative intent, not proof XCTest started.
+
+This probes the observed difference between successful local fresh-device runs
+and hosted image-device runs. It does not establish simulator state as the cause,
+approve a baseline, or replace normal coverage. Confirm the receipt's observed
+runtime build matches the comparison target, inspect one result and stop before
+choosing any further change.
+
 ### Bounded scroll measurement diagnostic
 
 The manual performance workflow has an optional `capture_scroll_signposts`

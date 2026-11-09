@@ -1023,7 +1023,29 @@ import Combine
         XCTAssertTrue(state.freeRecordsAndExportAvailable)
     }
 
+    func testHTTPAdaptersKeepTheirOwnResponsesAfterAnotherSessionIsCreated() async throws {
+        let firstFixture = httpFixture()
+        firstFixture.handler = { _ in
+            (409, Data("{\"error\":{\"code\":\"refresh_required\"}}".utf8))
+        }
+        let first = try httpService(firstFixture)
+        let secondFixture = httpFixture()
+        secondFixture.handler = { _ in
+            (409, Data("{\"error\":{\"code\":\"purchase_already_bound\"}}".utf8))
+        }
+        let second = try httpService(secondFixture)
+        defer { firstFixture.handler = nil; secondFixture.handler = nil }
+        let householdID = "11111111-1111-4111-8111-111111111111"
+        for (service, expected) in [(first, MembershipFailure.refreshRequired), (second, .wrongHousehold)] {
+            do {
+                _ = try await service.purchaseContext(householdID: householdID)
+                XCTFail("Expected the response belonging to this service's fixture")
+            } catch { XCTAssertEqual(error as? MembershipFailure, expected) }
+        }
+    }
+
     func testHTTPAdapterIncludesEnrolledDeviceAndDecodesServerDates() async throws {
+        let fixture = httpFixture()
         let householdID = "11111111-1111-4111-8111-111111111111"
         let actorID = "22222222-2222-4222-8222-222222222222"
         let accountToken = context.appAccountToken
@@ -1033,7 +1055,7 @@ import Combine
             verifiedAt: now, validUntil: now.addingTimeInterval(300),
             seats: [.init(userID: actorID, displayName: "Mia", isAdult: true)])
         let data = try encoder.encode(expected)
-        MembershipURLProtocol.handler = { request in
+        fixture.handler = { request in
             XCTAssertEqual(request.url?.path, "/v1/households/\(householdID)/entitlements")
             XCTAssertEqual(request.httpMethod, "GET")
             XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer test.access.token")
@@ -1041,15 +1063,16 @@ import Combine
             XCTAssertEqual(request.value(forHTTPHeaderField: "Cache-Control"), "no-store")
             return (200, data)
         }
-        defer { MembershipURLProtocol.handler = nil }
-        let service = try httpService()
+        defer { fixture.handler = nil }
+        let service = try httpService(fixture)
         let actual = try await service.fetch(context: .init(purchaserID: actorID, purchaserName: "Mia",
             householdID: householdID, householdName: "Home", appAccountToken: accountToken))
         XCTAssertEqual(actual, expected)
     }
 
     func testHTTPAdapterUsesSpecificServerFailureCodes() async throws {
-        let service = try httpService()
+        let fixture = httpFixture()
+        let service = try httpService(fixture)
         let cases: [(Int, String, MembershipFailure)] = [
             (409, "purchase_already_bound", .wrongHousehold), (409, "refresh_required", .refreshRequired),
             (409, "purchase_context_not_purchaser", .notPurchaser),
@@ -1057,9 +1080,9 @@ import Combine
             (403, "membership_inactive", .membershipInactive),
             (422, "billing_verification_failed", .unverified), (503, "billing_unavailable", .deliveryPending),
             (503, "storage_unavailable", .deliveryPending), (429, "rate_limited", .deliveryPending)]
-        defer { MembershipURLProtocol.handler = nil }
+        defer { fixture.handler = nil }
         for (status, code, expected) in cases {
-            MembershipURLProtocol.handler = { _ in
+            fixture.handler = { _ in
                 (status, Data("{\"error\":{\"code\":\"\(code)\"}}".utf8))
             }
             do {
@@ -1070,12 +1093,11 @@ import Combine
     }
 
     func testHTTPAdapterRequiresDeviceBeforeSendingPurchaseContext() async throws {
-        MembershipURLProtocol.handler = { _ in XCTFail("Missing device must not reach the network"); return (500, Data()) }
-        defer { MembershipURLProtocol.handler = nil }
-        let configuration = URLSessionConfiguration.ephemeral
-        configuration.protocolClasses = [MembershipURLProtocol.self]
-        let service = try HTTPMembershipEntitlementService(baseURL: URL(string: "https://service.example.test")!,
-            session: URLSession(configuration: configuration), deviceToken: { "" }, token: { "test.access.token" })
+        let fixture = httpFixture()
+        fixture.handler = { _ in XCTFail("Missing device must not reach the network"); return (500, Data()) }
+        defer { fixture.handler = nil }
+        let service = try HTTPMembershipEntitlementService(baseURL: fixture.baseURL,
+            session: fixture.session, deviceToken: { "" }, token: { "test.access.token" })
         do {
             _ = try await service.purchaseContext(householdID: "11111111-1111-4111-8111-111111111111")
             XCTFail("Expected missing-device rejection")
@@ -1088,11 +1110,15 @@ import Combine
         }
     }
 
-    private func httpService() throws -> HTTPMembershipEntitlementService {
-        let configuration = URLSessionConfiguration.ephemeral
-        configuration.protocolClasses = [MembershipURLProtocol.self]
-        return try HTTPMembershipEntitlementService(baseURL: URL(string: "https://service.example.test")!,
-            session: URLSession(configuration: configuration), deviceToken: { "test-device-token" }, token: { "test.access.token" })
+    private func httpFixture() -> MembershipHTTPFixture {
+        let fixture = MembershipHTTPFixture()
+        addTeardownBlock { @MainActor in fixture.close() }
+        return fixture
+    }
+
+    private func httpService(_ fixture: MembershipHTTPFixture) throws -> HTTPMembershipEntitlementService {
+        try HTTPMembershipEntitlementService(baseURL: fixture.baseURL,
+            session: fixture.session, deviceToken: { "test-device-token" }, token: { "test.access.token" })
     }
 
     private func session(household: String = "household-one", subject: String = "subject-one") -> MembershipSession {
@@ -1373,19 +1399,85 @@ import Combine
     func sync() async throws { syncCount += 1 }
 }
 
+// The test owns the fixture until teardown; the registry owns only a weak route.
+@MainActor private final class MembershipHTTPFixture {
+    private let responses = MembershipFixtureResponses()
+    let session: URLSession
+    var baseURL: URL { URL(string: "https://" + responses.host)! }
+    var handler: MembershipFixtureResponses.Handler? {
+        get { responses.handler }
+        set { responses.handler = newValue }
+    }
+    init() {
+        MembershipURLProtocol.register(responses)
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [MembershipURLProtocol.self]
+        session = URLSession(configuration: configuration)
+    }
+    func close() {
+        responses.close()
+        MembershipURLProtocol.remove(host: responses.host)
+        session.invalidateAndCancel()
+    }
+}
+
+private final class MembershipFixtureResponses {
+    typealias Handler = (URLRequest) -> (Int, Data)
+    let host = "membership-" + UUID().uuidString.lowercased() + ".invalid"
+    private let lock = NSLock()
+    private var closed = false
+    private var storedHandler: Handler?
+    var handler: Handler? {
+        get { lock.lock(); defer { lock.unlock() }; return storedHandler }
+        set { lock.lock(); defer { lock.unlock() }; if !closed { storedHandler = newValue } }
+    }
+    func respond(_ request: URLRequest) throws -> (Int, Data) {
+        lock.lock()
+        guard !closed, request.url?.host == host, let handler = storedHandler else {
+            lock.unlock(); throw URLError(.unsupportedURL)
+        }
+        lock.unlock()
+        // The request retains this handler snapshot; callbacks never run under a registry/state lock.
+        return handler(request)
+    }
+    func close() { lock.lock(); closed = true; storedHandler = nil; lock.unlock() }
+    deinit { MembershipURLProtocol.remove(host: host) }
+}
+
+private final class WeakMembershipResponses {
+    weak var value: MembershipFixtureResponses?
+    init(_ value: MembershipFixtureResponses) { self.value = value }
+}
+
 private final class MembershipURLProtocol: URLProtocol {
-    static var handler: ((URLRequest) -> (Int, Data))?
+    private static let registryLock = NSLock()
+    private static var routes: [String: WeakMembershipResponses] = [:]
+    static func register(_ responses: MembershipFixtureResponses) {
+        registryLock.lock(); defer { registryLock.unlock() }
+        routes[responses.host] = WeakMembershipResponses(responses)
+    }
+    static func remove(host: String) {
+        registryLock.lock(); defer { registryLock.unlock() }; routes.removeValue(forKey: host)
+    }
+    private static func responses(for request: URLRequest) -> MembershipFixtureResponses? {
+        registryLock.lock(); defer { registryLock.unlock() }
+        guard request.url?.scheme == "https", let host = request.url?.host else { return nil }
+        return routes[host]?.value
+    }
+    // Always intercept, including unknown destinations: never fall through to networking.
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
     override func startLoading() {
-        guard let handler = Self.handler, let url = request.url else {
-            client?.urlProtocol(self, didFailWithError: URLError(.badServerResponse)); return
-        }
-        let (status, data) = handler(request)
-        let response = HTTPURLResponse(url: url, statusCode: status, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json"])!
-        client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
-        client?.urlProtocol(self, didLoad: data)
-        client?.urlProtocolDidFinishLoading(self)
+        do {
+            guard let responses = Self.responses(for: request), let url = request.url else {
+                throw URLError(.unsupportedURL)
+            }
+            let (status, data) = try responses.respond(request)
+            let response = HTTPURLResponse(url: url, statusCode: status, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json"])!
+            client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+            client?.urlProtocol(self, didLoad: data)
+            client?.urlProtocolDidFinishLoading(self)
+        } catch { client?.urlProtocol(self, didFailWithError: error) }
     }
     override func stopLoading() {}
 }
