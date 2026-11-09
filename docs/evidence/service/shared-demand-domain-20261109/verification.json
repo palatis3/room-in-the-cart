@@ -1,0 +1,55 @@
+{
+  "scope": "Pure shared-demand contracts/reducer groundwork; no production integration or shared F01/F02 completion",
+  "source_changes": {
+    "service/src/shared-demand-contracts.ts": "0a9320fa93d020dbe7240bc51ea773f84a4bed9215b9cb20b6fa65c5ff001546",
+    "service/src/shared-demand-domain.ts": "9a49e9a0acf8e931f477d09273fb668fd0fc211d4420b51021e8e7666d155cc1",
+    "service/tests/shared-demand-domain.test.mjs": "c62221fd2b364c6f08412bac004a162b582c46df059f04db61201c32de298dfd",
+    "shared/contracts/shared-demand.schema.json": "f5788b5ef3e90714e4c9045da531753e05e0db19d12d23a684d8e430e1a3444e",
+    "shared/fixtures/shared-demand/conservation-v1.json": "3543e912788e5880ee48df2a052f8c6a5d2c4d0795f9a762fcf2575b1d918f2c",
+    "shared/fixtures/shared-demand/unit-conversions-v1.json": "2a830d15c215b41233d0bd85fdc8bf0a9cfb776baf57e7167e3c0b49c7bf93c9"
+  },
+  "validation": {
+    "typescriptCompileExitCode": 0,
+    "nodeTests": 50,
+    "failed": 0,
+    "skipped": 0
+  },
+  "originals": {
+    "source-manifest.json": {
+      "path": ".build/SharedDemandGraphNov09/domain-r1/source-manifest.json",
+      "sha256": "546998070bafe22aa4b38b0d04cd11e3d8cdaefe74fecc388814ccd8201f93e7"
+    },
+    "validation.json": {
+      "path": ".build/SharedDemandGraphNov09/domain-r1/validation.json",
+      "sha256": "4bf57ea32863514b06dcc2325cfee50bb20ad7acd448afc2b53bbef745beabfb"
+    },
+    "root-review.json": {
+      "path": ".build/SharedDemandGraphNov09/domain-r1/root-review.json",
+      "sha256": "9d8b7514767e73365e52fc444e6b483b71ec30c06a5036c58761b46c3c253a1f"
+    },
+    "build-final.log": {
+      "path": ".build/SharedDemandGraphNov09/domain-r1/build-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "tests-final.log": {
+      "path": ".build/SharedDemandGraphNov09/domain-r1/tests-final.log",
+      "sha256": "ad7a3cf71243231004323b14ae1c6673d8b2c9dfeea631cacfaa401fc16bdfd5"
+    },
+    "README.md": {
+      "path": ".build/SharedDemandGraphNov09/domain-r1/README.md",
+      "sha256": "4975d35b3b6d20cc9eb2c003a30872d8cf2a9ec757e32b319b29100219cd81a2"
+    }
+  },
+  "design": {
+    "path": ".build/SharedDemandGraphNov09/design-r1/DESIGN.md",
+    "sha256": "4119bc07ee819cffea2f1635b08b2a65dec924221c1b098a1a2b3880f12afac6"
+  },
+  "deployed": false,
+  "remaining": [
+    "persisted graph and previews with authoritative authorization and atomic command replay",
+    "reviewed package projection and native import/detail/Apply/Undo routes",
+    "protected reservation transfer and legacy writer compatibility",
+    "privacy projection/export/erase/restore and frozen order/history integration",
+    "real cross-client original-route acceptance"
+  ]
+}

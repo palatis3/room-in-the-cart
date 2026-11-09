@@ -1,0 +1,247 @@
+{
+  "description": "Manually entered twelve wraps already include taco six, quesadilla four and protected lunch two. No pack count is a demand quantity.",
+  "graph": {
+    "schemaVersion": 1,
+    "conversionTableVersion": "us-customary-metric-v1",
+    "householdId": "00000000-0000-4000-8000-000000000200",
+    "shopId": "00000000-0000-4000-8000-000000000201",
+    "revision": 1,
+    "lines": [
+      {
+        "id": "00000000-0000-4000-8000-000000000001",
+        "name": "Wraps",
+        "unit": "count",
+        "originalOrder": 0,
+        "trashedAt": null
+      }
+    ],
+    "contributions": [
+      {
+        "id": "00000000-0000-4000-8000-000000000011",
+        "lineId": "00000000-0000-4000-8000-000000000001",
+        "source": {
+          "kind": "manual"
+        },
+        "productKey": "wraps",
+        "productName": "Wraps",
+        "originalText": "12 wraps",
+        "quantity": {
+          "amount": {
+            "numerator": "12",
+            "denominator": "1"
+          },
+          "unit": "count",
+          "originalLiteral": "12 wraps",
+          "confirmedConversion": null
+        },
+        "exclusions": [
+          "peanut"
+        ],
+        "contains": [],
+        "removedAt": null
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000012",
+        "lineId": "00000000-0000-4000-8000-000000000001",
+        "source": {
+          "kind": "meal",
+          "occurrenceId": "00000000-0000-4000-8000-000000000100",
+          "ingredientId": "00000000-0000-4000-8000-000000000110",
+          "groupId": "00000000-0000-4000-8000-000000000120",
+          "bindingId": "00000000-0000-4000-8000-000000000130"
+        },
+        "productKey": "wraps",
+        "productName": "Wraps",
+        "originalText": "6 wraps",
+        "quantity": {
+          "amount": {
+            "numerator": "6",
+            "denominator": "1"
+          },
+          "unit": "count",
+          "originalLiteral": "6 wraps",
+          "confirmedConversion": null
+        },
+        "exclusions": [
+          "peanut"
+        ],
+        "contains": [],
+        "removedAt": null
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000013",
+        "lineId": "00000000-0000-4000-8000-000000000001",
+        "source": {
+          "kind": "meal",
+          "occurrenceId": "00000000-0000-4000-8000-000000000101",
+          "ingredientId": "00000000-0000-4000-8000-000000000111",
+          "groupId": "00000000-0000-4000-8000-000000000121",
+          "bindingId": "00000000-0000-4000-8000-000000000131"
+        },
+        "productKey": "wraps",
+        "productName": "Wraps",
+        "originalText": "4 wraps",
+        "quantity": {
+          "amount": {
+            "numerator": "4",
+            "denominator": "1"
+          },
+          "unit": "count",
+          "originalLiteral": "4 wraps",
+          "confirmedConversion": null
+        },
+        "exclusions": [
+          "peanut"
+        ],
+        "contains": [],
+        "removedAt": null
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000014",
+        "lineId": "00000000-0000-4000-8000-000000000001",
+        "source": {
+          "kind": "reservation",
+          "reservationId": "00000000-0000-4000-8000-000000000102",
+          "purpose": "School lunch",
+          "originOccurrenceId": "00000000-0000-4000-8000-000000000100",
+          "ingredientId": "00000000-0000-4000-8000-000000000112",
+          "groupId": "00000000-0000-4000-8000-000000000122",
+          "bindingId": "00000000-0000-4000-8000-000000000132"
+        },
+        "productKey": "wraps",
+        "productName": "Wraps",
+        "originalText": "2 wraps",
+        "quantity": {
+          "amount": {
+            "numerator": "2",
+            "denominator": "1"
+          },
+          "unit": "count",
+          "originalLiteral": "2 wraps",
+          "confirmedConversion": null
+        },
+        "exclusions": [
+          "peanut"
+        ],
+        "contains": [],
+        "removedAt": null
+      }
+    ],
+    "edges": [
+      {
+        "id": "00000000-0000-4000-8000-000000000021",
+        "kind": "withinExisting",
+        "demandId": "00000000-0000-4000-8000-000000000012",
+        "supplyId": "00000000-0000-4000-8000-000000000011",
+        "quantity": {
+          "amount": {
+            "numerator": "6",
+            "denominator": "1"
+          },
+          "unit": "count",
+          "originalLiteral": "6 wraps",
+          "confirmedConversion": null
+        },
+        "confirmation": {
+          "productMatchConfirmed": true,
+          "confirmedAt": "2026-11-09T12:00:00Z",
+          "evidence": "Reviewed same wraps within the original twelve"
+        }
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000022",
+        "kind": "withinExisting",
+        "demandId": "00000000-0000-4000-8000-000000000013",
+        "supplyId": "00000000-0000-4000-8000-000000000011",
+        "quantity": {
+          "amount": {
+            "numerator": "4",
+            "denominator": "1"
+          },
+          "unit": "count",
+          "originalLiteral": "4 wraps",
+          "confirmedConversion": null
+        },
+        "confirmation": {
+          "productMatchConfirmed": true,
+          "confirmedAt": "2026-11-09T12:00:00Z",
+          "evidence": "Reviewed same wraps within the original twelve"
+        }
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000023",
+        "kind": "withinExisting",
+        "demandId": "00000000-0000-4000-8000-000000000014",
+        "supplyId": "00000000-0000-4000-8000-000000000011",
+        "quantity": {
+          "amount": {
+            "numerator": "2",
+            "denominator": "1"
+          },
+          "unit": "count",
+          "originalLiteral": "2 wraps",
+          "confirmedConversion": null
+        },
+        "confirmation": {
+          "productMatchConfirmed": true,
+          "confirmedAt": "2026-11-09T12:00:00Z",
+          "evidence": "Reviewed same wraps within the original twelve"
+        }
+      }
+    ],
+    "usedIds": [
+      "00000000-0000-4000-8000-000000000001",
+      "00000000-0000-4000-8000-000000000011",
+      "00000000-0000-4000-8000-000000000012",
+      "00000000-0000-4000-8000-000000000013",
+      "00000000-0000-4000-8000-000000000014",
+      "00000000-0000-4000-8000-000000000021",
+      "00000000-0000-4000-8000-000000000022",
+      "00000000-0000-4000-8000-000000000023"
+    ]
+  },
+  "expected": {
+    "initial": {
+      "amount": {
+        "numerator": "12",
+        "denominator": "1"
+      },
+      "unit": "count"
+    },
+    "removeTacos": {
+      "amount": {
+        "numerator": "12",
+        "denominator": "1"
+      },
+      "unit": "count"
+    },
+    "removeManual": {
+      "amount": {
+        "numerator": "12",
+        "denominator": "1"
+      },
+      "unit": "count"
+    },
+    "removeManualAndTacos": {
+      "amount": {
+        "numerator": "6",
+        "denominator": "1"
+      },
+      "unit": "count"
+    },
+    "additionalTwelve": {
+      "amount": {
+        "numerator": "24",
+        "denominator": "1"
+      },
+      "unit": "count"
+    },
+    "duplicateTwelve": {
+      "amount": {
+        "numerator": "12",
+        "denominator": "1"
+      },
+      "unit": "count"
+    }
+  }
+}
