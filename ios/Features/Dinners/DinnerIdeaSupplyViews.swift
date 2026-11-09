@@ -30,6 +30,7 @@ struct DinnerIdeaSupplyViews: View {
                                                   reservation.name, dinnerQuantity(reservation.quantity)))
                             }
                             Text(dinnerFormat("Confirmed stock free for this idea: %@", dinnerQuantity(row.credited)))
+                                .fixedSize(horizontal: false, vertical: true)
                             Text(dinnerFormat("Still to cover: %@", dinnerQuantity(row.uncovered)))
                             Text(dinnerFormat("Usable in one pack: %@", dinnerQuantity(row.pack?.usableQuantity)))
                             Text(dinnerFormat("Whole packs for the remainder: %@", row.packs.map(String.init) ?? dinnerText("Unresolved")))
@@ -118,29 +119,57 @@ private struct IdeaSupplyEditor: View {
     private var supplyForm: some View {
         Form {
             Section {
+                Text(dinnerText("Review ingredient supply"))
+                    .font(.headline).fixedSize(horizontal: false, vertical: true)
+                    .accessibilityAddTraits(.isHeader).accessibilityIdentifier("ideaSupplyHeading")
                 Text(ingredient.name).font(.headline)
                 Picker(dinnerText("Matched shopping list or pantry food"), selection: $foodID) {
                     Text(dinnerText("No confirmed match")).tag(nil as UUID?)
                     ForEach(foods) { food in Text(food.name + " · " + food.detail).tag(Optional(food.id)) }
                 }
+                // Native menu selection labels can truncate at accessibility sizes.
+                // Mirror the selected option in a wrapping, independently readable row.
+                Text(selectedFoodDescription).fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("ideaSupplySelectedFood")
                 Text(dinnerText("Check the food identity and exclusions before matching it."))
             }
             Section(dinnerText("Observed pack, optional")) {
-                TextField(dinnerText("Usable amount per pack"), text: $packYield)
-                    .focused($field, equals: .packYield).accessibilityIdentifier("ideaSupplyYield")
+                supplyField(dinnerText("Usable amount per pack"), value: $packYield,
+                            focus: .packYield, identifier: "ideaSupplyYield")
                 DinnerUnitPicker(unit: $unit)
                 if budget {
-                    TextField(dinnerText("Price per pack in USD"), text: $price)
-                        .focused($field, equals: .price).accessibilityIdentifier("ideaSupplyPrice")
+                    supplyField(dinnerText("Price per pack in USD"), value: $price,
+                                focus: .price, identifier: "ideaSupplyPrice")
                 }
-                TextField(dinnerText("Evidence source"), text: $source)
-                    .focused($field, equals: .source).accessibilityIdentifier("ideaSupplySource")
+                supplyField(dinnerText("Evidence source"), value: $source,
+                            focus: .source, identifier: "ideaSupplySource", axis: .vertical)
                 DatePicker(dinnerText("Observed at"), selection: $observedAt, in: ...Date())
                 Text(dinnerText("Leave missing pack terms blank. An existing current pack review can be used for the matched list food."))
             }
             if let error { Text(error).foregroundStyle(.red) }
             Button(dinnerText("Use these reviewed details")) { apply() }.accessibilityIdentifier("ideaSupplyConfirm")
         }
+    }
+
+    private var selectedFoodDescription: String {
+        foods.first(where: { $0.id == foodID }).map { $0.name + " · " + $0.detail }
+            ?? dinnerText("No confirmed match")
+    }
+
+    private func supplyField(_ title: String, value: Binding<String>, focus: Field,
+                             identifier: String, axis: Axis = .horizontal) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title).font(.body).fixedSize(horizontal: false, vertical: true)
+                .accessibilityHidden(true)
+            TextField(title, text: value, prompt: Text(""), axis: axis)
+                .fixedSize(horizontal: false, vertical: true)
+                .focused($field, equals: focus)
+                .accessibilityLabel(title).accessibilityIdentifier(identifier)
+        }
+        // The native form can expose the label and entry as one accessibility
+        // frame. Make taps on its label or spacing focus the same editable field.
+        .contentShape(Rectangle())
+        .onTapGesture { field = focus }
     }
 
     private func apply() {

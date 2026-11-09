@@ -14,8 +14,10 @@ maps remain in [CURRENT-ACCEPTANCE](CURRENT-ACCEPTANCE.md#launch-requirement-tra
 
 Use `/Users/palatis/Room in the Cart`, branch `codex/parallel-ios-ci`, with an
 explicit working directory. The ambient `spanish-done-diagnostic` worktree is old.
-The canonical app retains its earlier installed Dinner baseline; the latest
-combined Dinner/audio candidate remains isolated as identified below.
+The canonical app now contains the exact reviewed eight-file combined Dinner/audio
+candidate. All 561 product inputs match the preserved R4 source identified below.
+Combined-candidate publication target: `codex/combined-candidate-20261109`.
+The earlier CI-only diagnostic branch remains pinned to its own tested revisions.
 Draft PR 1 remains a separate integration candidate; no full batch was pushed
 for this focused work. Recheck remote state before publishing.
 
@@ -30,12 +32,61 @@ No local 26.3 installation is planned. Exact performance calibration remains a
 release requirement; do not relabel the existing 26.3 baseline as 27.1 evidence.
 Minimum deployment remains iOS 17, with minimum-OS native qualification local;
 there is no existing hosted iOS 17 lane. Shared audio-session ownership/route
-fencing is being prepared in isolation from the complete reviewed design; not
-installed. No Dot/Lumpy. Helpers own CI migration and audio; root owns native
+fencing is now installed byte-for-byte from the reviewed R4 candidate; physical
+audio-route qualification remains open. No Dot/Lumpy. Helpers own CI migration and audio; root owns native
 execution. The additive proposal/validation receipts are preserved in
 `.build/Xcode27CompatibilityNov09` but are superseded by this migration plan.
 
 ## Latest active work — November 9
+
+- Combined product consolidation is complete locally: exact8reviewed R4 files,
+  all561product inputs equal the tested frozen source. Project/theme/localization
+  checks pass; scoped native evidence is reused by byte equality, not rerun merely
+  for installation. No full combined CI, PR/main merge or release acceptance.
+  [Integration evidence](evidence/native/combined-candidate-integration-20261109/README.md).
+- Selected-UUID inventory follow-up `e2bbdad0564c071e6bdf272bcce3bea7972f3485`
+  is published;363offline tests pass and local CLI search smoke returns the exact
+  owned device. Hosted42578578778 is terminal failure at unchanged10s inventory
+  deadline: spawn0.740s, childrunning, no normal/late pipe bytes, stage10.352s.
+  Runtime/help/build/transport/XCTest were not reached. Artifact/terminal collection
+  complete once under `.build/Xcode27ScrollDiagnosticNov09/uuid-inventory-r1`.
+  Narrowing results did not resolve the timeout; no automatic repeat or speed claim.
+  Next decide a separate bounded inventory-readiness budget or a specifically
+  supported service-readiness check; these censored timings do not calibrate a limit.
+- Apple framework report draft is local only at
+  `.build/MinimumOSXCTestReproducerNov09/apple-report-draft/REPORT-DRAFT.md`.
+  It labels R3 non-reproducing and keeps raw messages private. Nothing submitted.
+
+- Latest follow-up `259c42ba8d9db264c76e21a2f8ae9f71fd5de975` adds bounded
+  process/pipe phase timings and discarded late-byte counts on deadline, with
+  unchanged failure, cleanup, runtime and metric gates. Independent review clear;
+  all361offline tests pass. Capability-only run42576978686 is terminal failure
+  at the device inventory deadline. Spawn took1.419s; at10.237s from command entry
+  the child was still running with no normal/late pipe bytes. Cleanup completed
+  at10.980s; stage11.063s. No runtime/help/build/transport/XCTest was reached.
+  Terminal/artifact collection is complete once; no duplicate dispatch/download.
+  Evidence root `.build/Xcode27ScrollDiagnosticNov09/phase-timing-r1`.
+  This rules out unread pipe output in that immediate observation, not a service
+  or scheduling cause. Review a bounded next improvement before another run.
+- Independent minimum-OS reduction R3 now passes native/strict on17.5:38.93s test,
+ 44.25s command, zero reported warnings,92query entrypoints/17actions/4gestures/
+ 8snapshots/4screenshots. Actual sibling controls restore311x22pt field geometry;
+  the cached pre-typing attachment is retained. Root reviewed all4screens.
+  Original callback crash is NOT reproduced or resolved; no full-app compatibility
+  pass. Source/products/original unchanged, exports complete once. R3 source
+  manifest594e352389c94b849818a3ce0a4a48d8555c0c01f0ee15d3811bf8883b0f1e38.
+  [Bound execution and limitations](evidence/native/minimum-ios-reduction-20261109/README.md).
+- One exact original-PID67330 historical17.5 log query for05:45:09–05:45:15UTC
+  stopped at4MiBstdout cap in0.913s,exit143; no app rerun. Private raw prefix and
+  receipt under `r3/execution/original-pid-retained-logs`, relative to
+  `.build/MinimumOSXCTestReproducerNov09`. Prefix review is complete:2678complete
+  objects spanning0.128840s, allDefault/com.apple.dt.xctest and exact crash-image
+  XCTAutomationSupport;2579on the original faulting main thread. Counts are only
+  retained-prefix lower bounds; its tail ends5.404440s before crash. No larger query
+  or retry. Raw messages stay private. Original17.5MTC/RPAC UUIDs match actual17.5
+  runtime libraries, despite an older path in the generated plan. No injection
+  workaround justified. Upstream report preparation is local only, not submission.
+  No native app execution or hosted monitoring remains active.
 
 - Workflow improvements are published through `d2016380cbac0a49497c79806ea64431800394d6`
   on `codex/xcode27-ci-migration-20261109`. All **353 offline tests** pass;
@@ -65,12 +116,12 @@ execution. The additive proposal/validation receipts are preserved in
   `.build/Xcode27PrimaryMigrationNov09/hosted-42566724355`. The stage-receipt
   correction is now published and exercised above; no unchanged rerun. Previous42561415704 core is green;42561773341 performance
   retains missing launch/scroll metrics and passing rendered strict evidence.
-- Combined product R4 remains isolated; source manifest
+- Combined product R4 is now integrated locally; preserved source manifest
   ea06e1901c7921deb33eb322d667053de2f47534c8273f7487413457540fd968 at
   `.build/DinnerAudioCombinedNov09R4`. Build/source checks pass. Original English
   journey passes native/strict (238.47s); all13images/10geometry receipts reviewed:
   stock quantity now wraps fully, all5Done probes retain input and dismiss keyboard.
- 64audio regressions pass on both26.2 and17.0. No canonical app installation yet.
+ 64audio regressions pass on both26.2 and17.0. Now integrated byte-for-byte; frozen originals preserved.
 - R4 Spanish17.0 failed in the same XCTest logging callback/quarantine, now before
   the narrowed confirmation query, during Done geometry. Native65/strict1; inspector
   completed once; crash SHA dee6d11407b2e84191b57d55ebe8a59c0eb765e4e1657a60f5f58efee595eb54.
@@ -82,7 +133,7 @@ execution. The additive proposal/validation receipts are preserved in
   Stock-summary AX5 wrapping remains unsampled. Large text size restored.
   Unsigned Release session26401 is terminal native0/bundle0 in418.832s, same
   frozen source, separateDD. R4/qualification-checkpoint.json binds per-case receipts.
-  No canonical product installation yet.
+  Now integrated byte-for-byte; full qualification remains open.
 - Official iOS17.5/21F79 installed and new owned SE3 device
   9DE280AC-A466-4FD4-8BDE-426C149D3F36 created. Original Spanish run session31974
   is terminal native65/strict1 (144.923s); inspector75326 completed once. Review

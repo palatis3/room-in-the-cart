@@ -2,24 +2,32 @@
 
 ## Current checkpoint — November 9, workflow and combined-candidate qualification
 
-Workflow improvements through `d2016380` are published to the CI candidate branch.
-All **353 offline tests** and **17 queue-node checks** pass. Build-free capability
+Workflow improvements through `e2bbdad0` are published to the CI candidate branch.
+All **363 offline tests** and **17 queue-node checks** pass. Build-free capability
 checks, incremental stage receipts and fresh same-job toolchain identity reuse
-are implemented. Exact log-help exit64 handling is offline-tested but remains
-hosted-unqualified: the latest run42574682497 stopped earlier at device discovery
-(timeout10s,exit-15). No compilation, transport or XCTest ran. Prior failures and
-single-download artifacts are preserved. No new performance baseline is approved.
+are implemented. The latest addition records bounded process/pipe timings and
+late-buffer byte counts without changing deadline failure. Capability-only run
+42578578778 is terminal ate2bbdad0: UUID-scoped discovery again hit10s with the child
+running and no normal/late pipe bytes. Runtime/help/compilation/transport/XCTest
+were not reached. Exact log-help handling remains hosted-unqualified. Artifacts
+are preserved; no baseline is approved.
 
-The isolated combined R4 candidate passes original English, Spanish AX5 on 26.2,
+The now-integrated combined R4 product inputs pass original English, Spanish AX5 on 26.2,
 64 audio regressions on each of 17.0/26.2, Free repair and cross-week meal move.
 Spanish AX5's 13 screenshots and 10 geometry records were reviewed; stock-summary
 wrapping remains unsampled at AX5 and is verified only in the English profile.
 Unsigned Release compilation and bundle validation also pass on the same source.
 Spanish on 17.0 and 17.5 still fails in the XCTest logging callback. The combined
-app remains isolated; full integration, merge and release gates remain open. The
-independent iOS17.5 reduction R2 builds but fails before typing because its amount
-field lacks focus. It has not reproduced the original logging crash; its reduced
-single-control row needs fidelity review before another native experiment.
+app is consolidated locally; full combined CI, merge and release gates remain open.
+[Exact integration](evidence/native/combined-candidate-integration-20261109/README.md). The
+independent iOS17.5 reduction R3 restores the original ingredient row structure
+and now passes its two-edit/two-Done sequence with native/strict0. This fixes the
+reduction's fidelity problem; it does not reproduce or resolve the full app's
+logging callback crash. A six-second historical query for the original PID hit
+its4MiB cap;2678complete prefix records identify the same XCTest automation image
+as the crash. Partial records establish sender provenance, not the full cause or
+a repair. No logging suppression or framework injection change was applied.
+[Reduction outcome](evidence/native/minimum-ios-reduction-20261109/README.md).
 
 Hosted focused core run42561415704 passed all11jobs atdf49c37d:717 model tests,
 two original Dinner journeys, unsigned Release compilation and Swift CodeQL.
@@ -35,7 +43,7 @@ whole-row focus gesture: build/source checks pass and the original Spanish17 run
 now completes all5Done probes, but then crashes in XCTest's logging callback
 while locating the supply-confirm control. Native65/strict1; the full journey
 remains failed. Original evidence is retained and diagnosis is active. The
-combined product changes remain isolated, not installed canonically.
+combined product changes are now installed canonically by exact source equality.
 
 Early performance-environment rejection, exact-revision receipts and compact
 retention policy are implemented. Free space is about20.5GiB after installing the

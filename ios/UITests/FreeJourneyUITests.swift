@@ -419,7 +419,7 @@ import XCTest
             // Keep the keyboard between adjacent fields in this journey only.
             // reveal still measures the unobscured content before any drag.
             for (name, value) in fields {
-                let field = app.textFields[name]
+                let field = editableElement(name)
                 var tapped = false
                 for attempt in 0..<24 {
                     var area = scrollableArea()
@@ -1359,7 +1359,7 @@ import XCTest
             let fields = [("ledgerDinnerTitle", dinner), ("ledgerDinnerServings", "4"),
                           (ingredientField, ingredient), (amountField, "8")]
             for (identifier, value) in fields {
-                let field = app.textFields[identifier]
+                let field = editableElement(identifier)
                 tap(field)
                 field.typeText(value)
                 XCTAssertEqual(field.value as? String, value, "Manual dinner field: \(identifier)")
@@ -1522,7 +1522,7 @@ import XCTest
     private func tapVisibleFormRow(_ row: XCUIElement, marker: String = "S25_ROW_TAP") {
         // XCUI's default activation point can lie above the scrolled content.
         // Use the visible row center, clear of navigation and tab bars.
-        for attempt in 0..<24 {
+        for attempt in 0...24 {
             let area = scrollableArea().insetBy(dx: 0, dy: 12)
             let exists = row.exists
             let frame = exists ? row.frame : .zero
@@ -1531,6 +1531,9 @@ import XCTest
                 row.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
                 return
             }
+            // Observe the result of the final allowed drag before failing.
+            // There are still at most 24 gestures, not 25.
+            if attempt == 24 { break }
             // A lazy row outside the viewport can be above or below the current position.
             scrollContent(upward: exists ? frame.midY > area.midY : attempt < 12)
         }
@@ -1650,6 +1653,14 @@ import XCTest
     }
     private func reviewAndApprovePattern(spanish: Bool) throws {
         func copy(_ english: String, _ translation: String) -> String { spanish ? translation : english }
+        func assertReviewedText(_ text: String, initiallyUpward: Bool = true) {
+            let target = app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
+            revealScrollableContent(target, initiallyUpward: initiallyUpward)
+        }
+        func tapDinnerControl(_ target: XCUIElement, initiallyUpward: Bool = true) {
+            revealScrollableContent(target, initiallyUpward: initiallyUpward)
+            target.tap()
+        }
         launch(reset: true, spanish: spanish)
         tap(app.tabBars.buttons[copy("Dinners", "Cenas")])
         tap(element("dinnerStartPickup"))
@@ -1660,18 +1671,22 @@ import XCTest
         tap(app.buttons[copy("Prepare editable idea", "Preparar idea editable")])
         tap(app.buttons[copy("Review prepared idea", "Revisar idea preparada")])
         let amountLabel = copy("Amount, optional", "Cantidad, opcional")
-        let amount = app.textFields.matching(identifier: amountLabel).firstMatch
+        let amount = editableElement(amountLabel)
         reveal(amount)
+        // Lazy ingredient rows share a localized Amount label. Retain the same
+        // ingredient identity across scrolling and the review/edit transition.
+        let amountID = amount.identifier
+        XCTAssertTrue(amountID.hasPrefix("ingredient.") && amountID.hasSuffix(".amount"))
         let originalAmount = amount.value as? String ?? ""
         XCTAssertFalse(originalAmount.isEmpty || originalAmount == amount.placeholderValue)
         // An unknown ingredient quantity is reviewable, but the domain forbids acceptance.
-        fill(" ", into: amountLabel, replacing: true, requireDone: true, useVisibleCenter: true,
+        fill(" ", into: amountID, replacing: true, requireDone: true, useVisibleCenter: true, expectedPriorValue: originalAmount,
              focusedDoneEvidence: (copy("Dinner idea", "Idea para cenar"), copy("Done", "Listo"), "Dinner-idea-Done-cleared-amount", copy("Dinner ideas", "Ideas para cenar"), .center))
-        tap(element("ledgerReviewDinner"))
+        tapDinnerControl(element("ledgerReviewDinner"))
         let unknownQuantity = copy("Review unknown ingredient quantities", "Revisa las cantidades de ingredientes desconocidas")
-        assertText(unknownQuantity)
+        assertReviewedText(unknownQuantity, initiallyUpward: false)
         let accept = element("dinnerAcceptIdea")
-        reveal(accept)
+        revealDinnerAcceptanceRow(accept)
         XCTAssertEqual(accept.elementType, .button)
         XCTAssertFalse(accept.isEnabled)
         let disabledState = XCTAttachment(string: accept.debugDescription)
@@ -1685,19 +1700,37 @@ import XCTest
         XCTAssertTrue(accept.exists)
         XCTAssertFalse(accept.isEnabled)
         XCTAssertFalse(app.staticTexts[copy("Dinner saved. Choose it separately to add grocery needs.", "Cena guardada. Elígela por separado para agregar sus necesidades de compra.")].exists)
-        assertText(unknownQuantity)
-        tap(app.buttons[copy("Continue editing", "Seguir editando")])
-        fill(originalAmount, into: amountLabel, replacing: true, requireDone: true, useVisibleCenter: true,
+        assertReviewedText(unknownQuantity, initiallyUpward: false)
+        // Long reviews keep the same editing action available in the navigation bar.
+        let editReview = app.navigationBars[copy("Dinner idea", "Idea para cenar")].buttons["dinnerReviewEdit"]
+        XCTAssertTrue(editReview.exists && editReview.isHittable)
+        XCTAssertEqual(editReview.label, copy("Edit", "Editar"))
+        XCTAssertEqual(editReview.elementType, .button)
+        capture("Dinner-review-visible-edit-action")
+        editReview.tap()
+        XCTAssertFalse(editReview.exists)
+        fill(originalAmount, into: amountID, replacing: true, requireDone: true, useVisibleCenter: true, initiallyUpward: false, expectedPriorValue: " ",
              focusedDoneEvidence: (copy("Dinner idea", "Idea para cenar"), copy("Done", "Listo"), "Dinner-idea-Done-restored-amount", copy("Dinner ideas", "Ideas para cenar"), .top))
-        tap(element("ledgerReviewDinner"))
-        reveal(accept); XCTAssertTrue(accept.isEnabled)
-        assertText(copy("Bean and cabbage wraps", "Tortillas rellenas de frijoles y repollo"))
-        assertText(copy("Shredded cabbage", "Repollo rallado"))
-        assertText(copy("Usable yield is unconfirmed", "El rendimiento aprovechable no está confirmado"))
+        tapDinnerControl(element("ledgerReviewDinner"))
+        // Check the upper review facts before descending to the acceptance row.
+        assertReviewedText(copy("Bean and cabbage wraps", "Tortillas rellenas de frijoles y repollo"), initiallyUpward: false)
+        assertReviewedText(copy("Shredded cabbage", "Repollo rallado"))
+        assertReviewedText(copy("Usable yield is unconfirmed", "El rendimiento aprovechable no está confirmado"))
         capture("First-pickup-editable-dinner-pattern")
-        tap(app.buttons[copy("Review stock and pack for Tortillas", "Revisar existencias y paquete de Tortillas")])
+        revealDinnerAcceptanceRow(accept); XCTAssertTrue(accept.isEnabled)
+        XCTAssertTrue(editReview.exists && editReview.isHittable)
+        // Supply rows precede Accept; start toward them without visiting the title again.
+        tapDinnerControl(app.buttons[copy("Review stock and pack for Tortillas", "Revisar existencias y paquete de Tortillas")], initiallyUpward: false)
+        let supplyHeading = app.staticTexts["ideaSupplyHeading"]
+        revealScrollableContent(supplyHeading, entireRow: true)
+        XCTAssertEqual(supplyHeading.label, copy("Review ingredient supply", "Revisar el abastecimiento del ingrediente"))
+        capture("Dinner-supply-full-heading")
+        let selectedFood = app.staticTexts["ideaSupplySelectedFood"]
+        revealScrollableContent(selectedFood, entireRow: true)
+        XCTAssertEqual(selectedFood.label, copy("No confirmed match", "Sin coincidencia confirmada"))
+        capture("Dinner-supply-selected-food")
         func fillSupply(_ text: String, into id: String, sample: FocusedDoneSample) {
-            let field = app.textFields[id]
+            let field = editableElement(id)
             tap(field)
             field.typeText(text)
             XCTAssertEqual(field.value as? String, text, "Entered supply value before Done: " + id)
@@ -1734,47 +1767,109 @@ import XCTest
         fillSupply("8", into: "ideaSupplyYield", sample: .bottom)
         fillSupply("2.50", into: "ideaSupplyPrice", sample: .left)
         fillSupply("Bag label", into: "ideaSupplySource", sample: .right)
-        let reviewedDetails = element("ideaSupplyConfirm")
+        // Query the known native control by its explicit identifier. A broad
+        // Any query also fetches unrelated labels across the stacked forms.
+        let reviewedDetailButtons = app.buttons.matching(NSPredicate(format: "identifier == %@", "ideaSupplyConfirm"))
+        let reviewedDetails = reviewedDetailButtons.firstMatch
         reveal(reviewedDetails)
         XCTAssertEqual(reviewedDetails.elementType, .button)
         XCTAssertEqual(reviewedDetails.label, copy("Use these reviewed details", "Usar estos datos revisados"))
-        XCTAssertEqual(app.buttons.matching(identifier: "ideaSupplyConfirm").count, 1)
-        tap(element("ideaSupplyConfirm"))
-        assertText(copy("Usable in one pack: 8 units", "Cantidad aprovechable en un paquete: 8 unidades"))
-        assertText(copy("Whole packs for the remainder: 1", "Paquetes enteros para lo que falta: 1"))
-        assertText(copy("Estimated item cost: $2.50", "Costo estimado del artículo: $2.50"))
+        XCTAssertEqual(reviewedDetailButtons.count, 1)
+        reviewedDetails.tap()
+        assertReviewedText(copy("Usable in one pack: 8 units", "Cantidad aprovechable en un paquete: 8 unidades"), initiallyUpward: false)
+        assertReviewedText(copy("Whole packs for the remainder: 1", "Paquetes enteros para lo que falta: 1"))
+        assertReviewedText(copy("Estimated item cost: $2.50", "Costo estimado del artículo: $2.50"))
         capture(spanish ? "Primera-compra-paquete-revisado" : "First-pickup-reviewed-tortilla-pack")
-        assertText(copy("Recipe needs: 1 cup", "La receta necesita: 1 taza"))
+        assertReviewedText(copy("Recipe needs: 1 cup", "La receta necesita: 1 taza"))
         try assertReadableDinnerAcceptance(accept, name: "Dinner-enabled-accept")
         XCTAssertTrue(accept.isEnabled)
         tapDinnerAcceptancePadding(accept, topEdge: spanish)
         assertText(copy("Dinner saved. Choose it separately to add grocery needs.", "Cena guardada. Elígela por separado para agregar sus necesidades de compra."))
+        XCTAssertFalse(editReview.exists)
         app.terminate(); launch(reset: false, spanish: spanish)
         tap(app.tabBars.buttons[copy("Dinners", "Cenas")])
         dinnerRoot()
         tap(element("dinnerLibrary"))
         assertText(copy("Bean and cabbage wraps", "Tortillas rellenas de frijoles y repollo"))
+        revealScrollableContent(app.buttons["ledgerChooseTemplate"])
         XCTAssertTrue(app.buttons["ledgerChooseTemplate"].isEnabled)
         XCTAssertEqual(app.buttons.matching(identifier: "ledgerChooseTemplate").count, 1)
         openShoppingList()
         assertText(copy("Add the groceries you need for this pickup.", "Añade los alimentos que necesitas para esta compra."))
     }
 
-    private func dinnerAcceptanceViewport(for gestureArea: CGRect) -> CGRect {
+    private func dinnerAcceptanceViewport(for gestureArea: CGRect, bounds measuredBounds: CGRect? = nil) -> CGRect {
         // Horizontal gesture safety margins are not obstructions over a native Form row.
-        let bounds = app.frame
+        let bounds = measuredBounds ?? app.frame
         return CGRect(x: bounds.minX, y: gestureArea.minY + 12, width: bounds.width,
                       height: max(0, gestureArea.height - 24))
     }
 
-    private func revealDinnerAcceptanceRow(_ button: XCUIElement) {
-        for attempt in 0..<24 {
-            let area = scrollableArea()
-            let viewport = dinnerAcceptanceViewport(for: area)
-            if button.exists && button.isHittable && viewport.contains(button.frame) { break }
-            let upward = button.exists && !button.frame.isEmpty ? button.frame.midY > area.midY : attempt < 16
-            scrollContent(upward: upward, area: area)
+    /// Dinner review can span many screens at accessibility sizes. Keep moving
+    /// through observed content; a gesture count alone does not mean we reached an end.
+    private func revealScrollableContent(_ target: XCUIElement, initiallyUpward: Bool = true, entireRow: Bool = false) {
+        var upward = initiallyUpward
+        var previous: [String] = []
+        var previousArea: CGRect?
+        var unchanged = 0
+        var reversed = false
+        var trace: [String] = []
+        defer {
+            let evidence = XCTAttachment(string: trace.joined(separator: "\n"))
+            evidence.name = "Dinner-review-scroll-progress"
+            evidence.lifetime = .keepAlways
+            add(evidence)
         }
+        for attempt in 0..<24 {
+            let exists = target.exists
+            let frame = exists ? target.frame : .zero
+            let hittable = exists && target.isHittable
+            // A live actionable target needs no whole-screen geometry unless
+            // this caller also requires its complete row inside the viewport.
+            if hittable && !entireRow {
+                trace.append("found after \(attempt) gestures; target=\(target.identifier); frame=\(frame)")
+                return
+            }
+            let snapshot = try? app.snapshot()
+            let area = scrollableArea(from: snapshot)
+            let viewport = dinnerAcceptanceViewport(for: area, bounds: snapshot?.frame)
+            if hittable && viewport.contains(frame) {
+                trace.append("found after \(attempt) gestures; target=\(target.identifier); frame=\(frame)")
+                return
+            }
+            var visible: [String] = []
+            var elements = snapshot.map { [$0] } ?? []
+            while let element = elements.popLast() {
+                if [.navigationBar, .tabBar, .keyboard].contains(element.elementType) { continue }
+                let frame = element.frame
+                if [.staticText, .button].contains(element.elementType), !frame.isEmpty, frame.intersects(area) {
+                    // Keep full frames: clipping a tall label to the viewport hides movement.
+                    let geometry = [frame.minX, frame.minY, frame.width, frame.height].map { $0.rounded() }
+                    visible.append("\(element.elementType.rawValue)|\(element.identifier)|\(element.label)|\(geometry)")
+                }
+                elements.append(contentsOf: element.children)
+            }
+            visible.sort()
+            let stable = !visible.isEmpty && visible == previous && previousArea == area
+            unchanged = stable ? unchanged + 1 : 0
+            if exists && !frame.isEmpty {
+                upward = frame.midY > area.midY
+            } else if unchanged >= 2 && !reversed {
+                // Repeated no progress can be an end or an intercepted gesture.
+                // It justifies one bounded search in the other direction, not a pass.
+                upward.toggle(); reversed = true; unchanged = 0
+            }
+            trace.append("gesture=\(attempt + 1); upward=\(upward); exists=\(exists); frame=\(frame); area=\(area); unchanged=\(unchanged); reversed=\(reversed); visible=\(visible)")
+            previous = visible; previousArea = area
+            scrollContent(upward: upward, area: area, bounds: snapshot?.frame)
+        }
+        let viewport = dinnerAcceptanceViewport(for: scrollableArea())
+        XCTAssertTrue(target.exists && target.isHittable && (!entireRow || viewport.contains(target.frame)),
+                      "Dinner review target not reached within 24 gestures")
+    }
+
+    private func revealDinnerAcceptanceRow(_ button: XCUIElement) {
+        revealScrollableContent(button, entireRow: true)
         let viewport = dinnerAcceptanceViewport(for: scrollableArea())
         XCTAssertTrue(button.exists && button.isHittable && viewport.contains(button.frame))
         XCTAssertEqual(button.elementType, .button)
@@ -1852,6 +1947,12 @@ import XCTest
         }
     }
     private func element(_ id: String) -> XCUIElement { app.descendants(matching: .any).matching(identifier: id).firstMatch }
+    private func editableElement(_ id: String) -> XCUIElement {
+        let editableTypes: [XCUIElement.ElementType] = [.textField, .textView, .secureTextField, .searchField]
+        return app.descendants(matching: .any).matching(identifier: id)
+            .matching(NSPredicate(format: "elementType IN %@", editableTypes.map { $0.rawValue })).firstMatch
+    }
+
     private func tap(_ target: XCUIElement) { reveal(target); target.tap() }
     private func enableSwitch(_ label: String, diagnosticName: String? = nil) {
         let control = app.switches[label]
@@ -1952,16 +2053,29 @@ import XCTest
         return FocusedDoneTarget(coordinate: coordinate, frame: frame, details: details)
     }
 
-    private func fill(_ text: String, into id: String, replacing: Bool = false, requireDone: Bool = false, useVisibleCenter: Bool = false,
+    private func fill(_ text: String, into id: String, replacing: Bool = false, requireDone: Bool = false, useVisibleCenter: Bool = false, initiallyUpward: Bool = true, expectedPriorValue: String? = nil,
                       focusedDoneEvidence: (title: String, label: String, name: String, back: String, sample: FocusedDoneSample)? = nil) {
         // Persistent labels can share the field's accessible name. Match only
         // editable controls, including lazily materialized Form rows.
-        let editableTypes: [XCUIElement.ElementType] = [.textField, .textView, .secureTextField, .searchField]
-        let field = app.descendants(matching: .any).matching(identifier: id)
-            .matching(NSPredicate(format: "elementType IN %@", editableTypes.map { $0.rawValue })).firstMatch
+        let field = editableElement(id)
         if useVisibleCenter {
-            tapVisibleFormRow(field, marker: "RECOVERY_FIELD_TAP")
+            if focusedDoneEvidence != nil {
+                // This scoped dinner editor can retain a deep review offset.
+                // Find the original field using observed progress, then tap the
+                // same visible center without granting another scroll budget.
+                revealScrollableContent(field, initiallyUpward: initiallyUpward, entireRow: true)
+                let frame = field.frame, area = scrollableArea().insetBy(dx: 0, dy: 12)
+                XCTAssertTrue(field.isHittable && area.contains(CGPoint(x: frame.midX, y: frame.midY)))
+                print("RECOVERY_FIELD_TAP id=\(field.identifier) frame=\(frame) area=\(area)")
+                field.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+            } else {
+                tapVisibleFormRow(field, marker: "RECOVERY_FIELD_TAP")
+            }
         } else { tap(field) }
+        if let expectedPriorValue {
+            XCTAssertEqual(field.identifier, id, "Keep the originally selected ingredient field")
+            XCTAssertEqual(field.value as? String, expectedPriorValue, "Verify the same ingredient before replacing its amount")
+        }
         if replacing, let old = field.value as? String, old != field.placeholderValue { field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count)) }
         field.typeText(text)
         let done = app.buttons.matching(NSPredicate(format: "label IN %@", ["Done", "Listo"])).firstMatch
@@ -2022,10 +2136,10 @@ import XCTest
         }
         XCTAssertTrue(target.isHittable, "Missing actionable UI element: \(target.debugDescription)")
     }
-    private func scrollableArea() -> CGRect {
+    private func scrollableArea(from suppliedSnapshot: (any XCUIElementSnapshot)? = nil) -> CGRect {
         // Navigation and sheet transitions can replace a bar between separate
         // XCUI queries. Measure the keyboard and bars from one captured tree.
-        let snapshot = try? app.snapshot()
+        let snapshot = suppliedSnapshot ?? (try? app.snapshot())
         let bounds = snapshot?.frame ?? app.frame
         var keyboardTop = bounds.maxY
         var barBottom = bounds.minY + 88
@@ -2042,10 +2156,10 @@ import XCTest
         let bottom = min(bounds.maxY - 100, keyboardTop - 16)
         return CGRect(x: bounds.minX + 24, y: top, width: bounds.width - 48, height: max(80, bottom - top))
     }
-    private func scrollContent(upward: Bool, area measuredArea: CGRect? = nil) {
+    private func scrollContent(upward: Bool, area measuredArea: CGRect? = nil, bounds measuredBounds: CGRect? = nil) {
         // Whole-app swipes can start on the software keyboard. Drag only in
         // the observed unobscured content, and still require real hittability.
-        let area = measuredArea ?? scrollableArea(), bounds = app.frame
+        let area = measuredArea ?? scrollableArea(), bounds = measuredBounds ?? app.frame
         let high = area.minY + area.height * 0.2, low = area.minY + area.height * 0.8
         let origin = app.coordinate(withNormalizedOffset: .zero)
         let start = origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: (upward ? low : high) - bounds.minY))
@@ -2064,11 +2178,11 @@ import XCTest
         tap(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", label)).firstMatch)
         tap(app.buttons[value])
     }
-    private func dinnerRoot() { returnToVisibleAnchor(element("dinnerLibrary")) }
+    private func dinnerRoot() { returnToVisibleAnchor(element("dinnerLibrary"), rootTitles: ["Dinners", "Cenas"]) }
     private func shopRoot() {
         let tab = app.tabBars.buttons.matching(NSPredicate(format: "label IN %@", ["Shop", "Compras"])).firstMatch
         tap(tab)
-        returnToVisibleAnchor(element("newComparison"))
+        returnToVisibleAnchor(element("newComparison"), rootTitles: ["Shop", "Compras"])
     }
     private func openShoppingList() {
         // The caller requests this source through Shop. A restart may already
@@ -2095,8 +2209,24 @@ import XCTest
     private func back(to label: String) {
         returnToVisibleAnchor(app.buttons.matching(identifier: label).firstMatch)
     }
-    private func returnToVisibleAnchor(_ target: XCUIElement) {
+    private func returnToVisibleAnchor(_ target: XCUIElement, rootTitles: [String] = []) {
         for _ in 0..<8 {
+            let leading = app.navigationBars.buttons.allElementsBoundByIndex.filter {
+                $0.exists && $0.isHittable && $0.identifier != "settings" && $0.frame.midX < app.frame.midX
+            }.sorted { $0.frame.minX < $1.frame.minX }
+            if !rootTitles.isEmpty {
+                let rootBar = app.navigationBars.matching(NSPredicate(format: "identifier IN %@ OR label IN %@", rootTitles, rootTitles)).firstMatch
+                let rootTab = app.tabBars.buttons.matching(NSPredicate(format: "identifier IN %@ OR label IN %@", rootTitles, rootTitles)).firstMatch
+                if leading.isEmpty && rootTab.exists && rootTab.isSelected && rootBar.exists && rootBar.isHittable &&
+                    !rootBar.frame.isEmpty && rootBar.frame.intersects(app.frame) {
+                    // A root's lazy links may be below large introductory text.
+                    // A user-named detail can share the root title. Require
+                    // the selected tab and no actionable Back control as well.
+                    print("ROOT_ANCHOR_SCROLL root=\(rootBar.identifier)")
+                    revealScrollableContent(target)
+                    return
+                }
+            }
             if target.exists {
                 // A covered parent can still exist in the accessibility tree.
                 // Scroll only to reveal it, and return only if it is actionable.
@@ -2110,9 +2240,6 @@ import XCTest
                 }
                 if target.isHittable { return }
             }
-            let leading = app.navigationBars.buttons.allElementsBoundByIndex.filter {
-                $0.exists && $0.isHittable && $0.identifier != "settings" && $0.frame.midX < app.frame.midX
-            }.sorted { $0.frame.minX < $1.frame.minX }
             guard let button = leading.first else {
                 XCTFail("No visible back control while returning to \(target)")
                 return

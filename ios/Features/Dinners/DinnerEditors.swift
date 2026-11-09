@@ -78,6 +78,14 @@ struct DinnerTemplateEditor: View {
             }
         }
         .navigationTitle(purpose == .manual ? dinnerText("Manual dinner") : purpose == .idea ? dinnerText("Dinner idea") : dinnerText("Reusable dinner"))
+        .toolbar {
+            if purpose == .idea, reviewed != nil, reviewedIdea != nil, !completed, inputFocus == nil {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(dinnerText("Edit"), action: continueEditing)
+                        .accessibilityIdentifier("dinnerReviewEdit")
+                }
+            }
+        }
         .dinnerAccess(model)
         .keyboardDoneAction(visible: purpose != .idea && inputFocus != nil, title: dinnerText("Done")) { inputFocus = nil }
         .dinnerApplyPresentation(model, presented: $showPreview)
@@ -123,7 +131,7 @@ struct DinnerTemplateEditor: View {
                         Button(dinnerText("Save accepted dinner")) { Task { completed = await model.accept(reviewed, id: acceptedID, fallback: fallback) } }
                             .buttonStyle(PrimaryAction()).disabled(!model.editable).accessibilityIdentifier("ledgerSaveDinner")
                     }
-                    Button(dinnerText("Continue editing")) { self.reviewed = nil; reviewedIdea = nil }
+                    Button(dinnerText("Continue editing"), action: continueEditing)
                         .foregroundStyle(Theme.action)
                 }
             } else {
@@ -167,6 +175,11 @@ struct DinnerTemplateEditor: View {
             DinnerFeedback(model: model)
         }
     }
+    private func continueEditing() {
+        reviewed = nil
+        reviewedIdea = nil
+    }
+
     private func review() {
         do {
             let template = try draft.template(validate: purpose != .idea)
@@ -218,18 +231,19 @@ struct DinnerTemplateFields: View {
                 let row = dinnerDraftBinding(ingredient, in: $draft.ingredients)
                 let prefix = "ingredient.\(ingredient.id)."
                 VStack(alignment: .leading, spacing: 8) {
-                    workingTextField(dinnerText("Ingredient name"), text: row.name).focused(focus, equals: prefix + "name")
-                        .accessibilityLabel(dinnerText("Ingredient name"))
-                    workingTextField(dinnerText("Amount, optional"), text: row.amount).focused(focus, equals: prefix + "amount")
-                        .accessibilityLabel(dinnerText("Amount, optional"))
+                    ingredientField(dinnerText("Ingredient name"), value: row.name, key: prefix + "name")
+                    ingredientField(dinnerText("Amount, optional"), value: row.amount, key: prefix + "amount", axis: .horizontal)
                     DinnerUnitPicker(unit: row.unit)
-                    workingTextField(dinnerText("Ingredient notes"), text: row.notes, axis: .vertical).focused(focus, equals: prefix + "notes")
-                        .accessibilityLabel(dinnerText("Ingredient notes"))
-                    workingTextField(dinnerText("Ingredient exclusions, one per line"), text: row.exclusions, axis: .vertical)
-                        .focused(focus, equals: prefix + "exclusions")
-                        .accessibilityLabel(dinnerText("Ingredient exclusions, one per line"))
-                    Button(dinnerText("Remove ingredient"), role: .destructive) { draft.ingredients.removeAll { $0.id == ingredient.id } }
-                        .buttonStyle(.borderless).foregroundStyle(Theme.error)
+                    ingredientField(dinnerText("Ingredient notes"), value: row.notes, key: prefix + "notes")
+                    ingredientField(dinnerText("Ingredient exclusions, one per line"), value: row.exclusions, key: prefix + "exclusions")
+                    Button(role: .destructive) { draft.ingredients.removeAll { $0.id == ingredient.id } } label: {
+                        Text(dinnerText("Remove ingredient"))
+                            .fixedSize(horizontal: false, vertical: true)
+                            .multilineTextAlignment(.leading)
+                            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.borderless).foregroundStyle(Theme.error)
                 }.padding(.vertical, 6)
             }
             Button(dinnerText("Add ingredient")) { draft.ingredients.append(DinnerIngredientDraft()) }.foregroundStyle(Theme.action).disabled(draft.ingredients.count >= 200)
@@ -249,6 +263,19 @@ struct DinnerTemplateFields: View {
                 }.padding(.vertical, 6)
             }
             Button(dinnerText("Add serving group")) { draft.groups.append(DinnerGroupDraft()) }.foregroundStyle(Theme.action).disabled(draft.groups.count >= 100)
+        }
+    }
+
+    private func ingredientField(_ title: String, value: Binding<String>, key: String, axis: Axis = .vertical) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // Keep the purpose visible when a value replaces the native prompt.
+            // The editable field already exposes this same accessible name.
+            Text(title).font(.body).fixedSize(horizontal: false, vertical: true)
+                .accessibilityHidden(true)
+            TextField(title, text: value, prompt: Text(""), axis: axis)
+                .fixedSize(horizontal: false, vertical: true)
+                .focused(focus, equals: key)
+                .accessibilityLabel(title).accessibilityIdentifier(key)
         }
     }
 }

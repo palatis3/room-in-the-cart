@@ -12,9 +12,10 @@ import Speech
     private var continuation: AsyncThrowingStream<SpeechCaptureUpdate, Error>.Continuation?
     private var runID = UUID()
     private var hasTap = false
-    private var ownsAudioSession = false
+    private let audio: CookAudioSession
+    private var audioLease: CookCaptureAudioRequest?
 
-    init(bundle: Bundle = .main) { self.bundle = bundle }
+    init(bundle: Bundle = .main, audio: CookAudioSession = .shared) { self.bundle = bundle; self.audio = audio }
 
     func begin(localeIdentifier: String) async throws -> AsyncThrowingStream<SpeechCaptureUpdate, Error> {
         stop(); let run = runID
@@ -39,10 +40,16 @@ import Speech
         guard microphone else { throw CaptureFailure.permissionDenied }
         guard recognizer.supportsOnDeviceRecognition, recognizer.isAvailable else { throw CaptureFailure.onDeviceUnavailable }
         do {
-            let audio = AVAudioSession.sharedInstance()
-            try audio.setCategory(.record, mode: .measurement, options: [.duckOthers])
-            try audio.setActive(true, options: .notifyOthersOnDeactivation)
-            ownsAudioSession = true
+            let lease = CookCaptureAudioRequest(audio: audio); audioLease = lease
+            let acquired = await withTaskCancellationHandler {
+                await withCheckedContinuation { continuation in
+                    lease.acquire { continuation.resume(returning: $0) }
+                }
+            } onCancel: { lease.cancel() }
+            guard runID == run, audioLease === lease, !Task.isCancelled else {
+                lease.cancel(); throw CancellationError()
+            }
+            guard acquired else { throw CaptureFailure.audioUnavailable }
             let engine = AVAudioEngine()
             let request = SFSpeechAudioBufferRecognitionRequest()
             request.requiresOnDeviceRecognition = true
@@ -73,7 +80,8 @@ import Speech
             engine.prepare(); try engine.start()
             return stream
         } catch {
-            stop()
+            if runID == run { stop() } // A late cancelled begin must not stop a newer capture run.
+            if error is CancellationError { throw CancellationError() }
             throw error as? CaptureFailure ?? .audioUnavailable
         }
     }
@@ -85,9 +93,6 @@ import Speech
         request?.endAudio(); recognition?.cancel()
         continuation?.finish(); continuation = nil
         recognition = nil; request = nil; engine = nil; recognizer = nil
-        if ownsAudioSession {
-            try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
-            ownsAudioSession = false
-        }
+        if let audioLease { audioLease.cancel(); self.audioLease = nil }
     }
 }

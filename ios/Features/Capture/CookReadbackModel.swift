@@ -20,6 +20,15 @@ struct CookReadbackInstruction: Equatable, Sendable {
     func pause() -> Bool
     func resume() throws -> Bool
     func stop()
+    func beginIntent(_ id: UUID, changed: @escaping @MainActor @Sendable (UUID) -> Void) -> Bool
+    func intentGate(_ id: UUID) -> CookAudioGate
+    func admitPlayback(_ id: UUID) -> CookAudioGate
+}
+// Non-session fakes retain their existing contract; production LocalCookSpeech supplies all gates.
+extension CookSpeechPlayback {
+    func beginIntent(_ id: UUID, changed: @escaping @MainActor @Sendable (UUID) -> Void) -> Bool { true }
+    func intentGate(_ id: UUID) -> CookAudioGate { .ready }
+    func admitPlayback(_ id: UUID) -> CookAudioGate { .ready }
 }
 
 @MainActor final class CookReadbackModel: ObservableObject {
@@ -32,6 +41,8 @@ struct CookReadbackInstruction: Equatable, Sendable {
     private let authorize: (CookReadbackInstruction, Date) -> Bool
     private let clock: () -> Date
     private var playbackID: UUID?
+    private var preparationID: UUID?
+    private var readiness: (generation: UUID, attempt: UUID, resuming: Bool, ready: Bool)?
     private var watchdog: Task<Void, Never>?
     private var closed = false
 
@@ -48,7 +59,7 @@ struct CookReadbackInstruction: Equatable, Sendable {
         let now = clock()
         return now < instruction.startBefore && !voiceOverActive && canRead(at: now)
     }
-    var canResume: Bool { state == .paused && canContinue }
+    var canResume: Bool { state == .paused && canContinue && playbackID.map { speech.intentGate($0) == .ready } == true }
     private var canContinue: Bool { !voiceOverActive && canRead }
 
     private func canRead(at now: Date) -> Bool {
@@ -69,34 +80,64 @@ struct CookReadbackInstruction: Equatable, Sendable {
         guard canStart else { checkCurrent(); return }
         stop(); unavailable = false
         let id = UUID(); playbackID = id
+        guard speech.beginIntent(id, changed: { [weak self] id in self?.audioIntentChanged(id) }) else {
+            stop(); unavailable = true; return
+        }
         watch(id)
         prepareAudio(for: id, resuming: false)
     }
     private func prepareAudio(for id: UUID, resuming: Bool) {
+        let attempt = UUID(); preparationID = attempt; readiness = nil
         state = .preparing
         speech.prepareAudio(for: id) { [weak self] ready in
-            guard let self, self.playbackID == id, self.state == .preparing else { return }
-            // While the session was activating, this note, its authority, or the route may have changed.
-            guard resuming ? self.canContinue : self.canStart else { self.stop(); return }
-            do {
-                guard ready else { throw CaptureFailure.audioUnavailable }
-                if resuming {
-                    guard try self.speech.resume() else { throw CaptureFailure.audioUnavailable }
-                } else {
-                    try self.speech.speak(self.instruction.text, localeIdentifier: self.instruction.localeIdentifier, playbackID: id)
-                }
-                self.state = .speaking
-            } catch {
-                self.stop()
-                self.unavailable = true
+            guard let self, self.playbackID == id, self.preparationID == attempt, self.state == .preparing else { return }
+            self.readiness = (id, attempt, resuming, ready)
+            self.admitPreparedPlayback()
+        }
+    }
+    private func audioIntentChanged(_ id: UUID) {
+        guard playbackID == id else { return }
+        if speech.intentGate(id) == .invalid { stop() }
+        else { admitPreparedPlayback() }
+    }
+    private func admitPreparedPlayback() {
+        guard let candidate = readiness, playbackID == candidate.generation,
+              preparationID == candidate.attempt, state == .preparing else { return }
+        guard candidate.resuming ? canContinue : canStart else { stop(); return }
+        let intent = speech.intentGate(candidate.generation)
+        guard intent != .invalid else { stop(); return }
+        guard candidate.ready else { stop(); unavailable = true; return }
+        if intent == .pending { return } // Retain only this explicit request until every ticket resolves.
+        switch speech.admitPlayback(candidate.generation) { // Atomic receipt/admission boundary.
+        case .invalid: stop(); return
+        case .pending: return
+        case .ready: break
+        }
+        readiness = nil
+        do {
+            if candidate.resuming {
+                guard try speech.resume() else { throw CaptureFailure.audioUnavailable }
+            } else {
+                try speech.speak(instruction.text, localeIdentifier: instruction.localeIdentifier,
+                                 playbackID: candidate.generation)
             }
+            // A reentrant/foreign-thread event after admission requests Stop for this generation;
+            // never publish speaking after a revoked call returns. No lock spans the native call.
+            guard playbackID == candidate.generation, preparationID == candidate.attempt else { return }
+            guard speech.intentGate(candidate.generation) != .invalid else { stop(); return }
+            state = .speaking
+        } catch {
+            guard playbackID == candidate.generation else { return }
+            stop(); unavailable = true
         }
     }
     func pause() {
         guard state == .speaking else { return }
-        guard canContinue else { stop(); return }
-        if speech.pause() { state = .paused }
-        else { stop() }
+        guard canContinue, let playbackID, speech.intentGate(playbackID) != .invalid else { stop(); return }
+        if speech.pause() {
+            guard self.playbackID == playbackID, speech.intentGate(playbackID) != .invalid else { stop(); return }
+            state = .paused
+        } else { stop() }
     }
     func resume() {
         guard state == .paused else { return }
@@ -106,7 +147,8 @@ struct CookReadbackInstruction: Equatable, Sendable {
     /// Parent may call synchronously on an authority/source change; the watchdog also checks during playback.
     func checkCurrent() { if !canContinue { stop() } }
     func stop() {
-        playbackID = nil; watchdog?.cancel(); watchdog = nil
+        playbackID = nil; preparationID = nil; readiness = nil
+        watchdog?.cancel(); watchdog = nil
         speech.stop(); state = .stopped
     }
     func close() { stop(); closed = true; speech.onEnd = nil }
