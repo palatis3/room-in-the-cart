@@ -3,10 +3,11 @@ import Foundation
 import HouseholdClient
 
 final class S24FixtureVault: RefreshTokenVault, @unchecked Sendable {
+    private let lock = NSLock()
     private var value: String?
-    func read() throws -> String? { value }
-    func write(_ value: String) throws { self.value = value }
-    func clear() throws { value = nil }
+    func read() throws -> String? { lock.lock(); defer { lock.unlock() }; return value }
+    func write(_ value: String) throws { lock.lock(); defer { lock.unlock() }; self.value = value }
+    func clear() throws { lock.lock(); defer { lock.unlock() }; value = nil }
 }
 final class S24FixtureServer: @unchecked Sendable {
     static let household = "11111111-1111-4111-8111-111111111111"
@@ -14,6 +15,37 @@ final class S24FixtureServer: @unchecked Sendable {
     static let shop = "33333333-3333-4333-8333-333333333333"
     static let requestID = "44444444-4444-4444-8444-444444444444"
     private let lock = NSRecursiveLock()
+    let host = "s24-" + UUID().uuidString.lowercased() + ".invalid"
+    var baseURL: URL { URL(string: "https://" + host)! }
+    private var session: URLSession?
+    private var closed = false
+    private var interceptor: ((S24FixtureProtocol) -> Bool)?
+    var intercept: ((S24FixtureProtocol) -> Bool)? {
+        get { lock.lock(); defer { lock.unlock() }; return interceptor }
+        set { lock.lock(); defer { lock.unlock() }; interceptor = newValue }
+    }
+    func makeSession() -> URLSession {
+        lock.lock(); defer { lock.unlock() }
+        precondition(!closed, "A closed fixture cannot be reused")
+        if let session { return session }
+        S24FixtureProtocol.register(self)
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [S24FixtureProtocol.self]
+        let session = URLSession(configuration: configuration)
+        self.session = session
+        return session
+    }
+    func close() {
+        lock.lock()
+        closed = true
+        let session = self.session; self.session = nil
+        interceptor = nil; changeHandler = nil
+        lock.unlock()
+        S24FixtureProtocol.remove(host: host)
+        session?.invalidateAndCancel()
+    }
+    deinit { close() }
+
     private var recordedPreview: [String: Any]?
     private var recordedLines: [[String: Any]] = []
     private var receipts: [String: [String: Any]] = [:]
@@ -35,14 +67,23 @@ final class S24FixtureServer: @unchecked Sendable {
         ["occurrenceId":"99999999-9999-4999-8999-999999999999", "revision":1,
          "meal":["title":"Mia’s wrap lunch", "day":"2026-11-05", "kind":"lunch", "portions":1, "protected":true]]
     ]
-    var changed: ((Int, Int) -> Void)?
+    private var changeHandler: ((Int, Int) -> Void)?
+    var changed: ((Int, Int) -> Void)? {
+        get { lock.lock(); defer { lock.unlock() }; return changeHandler }
+        set { lock.lock(); defer { lock.unlock() }; changeHandler = newValue }
+    }
     var previewBody: [String: Any]? { lock.lock(); defer { lock.unlock() }; return recordedPreview }
     var commandCount: Int { lock.lock(); defer { lock.unlock() }; return count }
     var previewCount: Int { lock.lock(); defer { lock.unlock() }; return previews }
     var lineCount: Int { lock.lock(); defer { lock.unlock() }; return recordedLines.count }
     func respond(_ request: URLRequest) throws -> (Int, Data) {
-        lock.lock(); defer { lock.unlock() }
-        guard request.url?.host?.hasSuffix(".invalid") == true else { throw URLError(.unsupportedURL) }
+        lock.lock()
+        var change: (((Int, Int) -> Void), Int, Int)?
+        defer {
+            lock.unlock()
+            if let (callback, count, lines) = change { callback(count, lines) }
+        }
+        guard !closed, request.url?.host == host else { throw URLError(.unsupportedURL) }
         let path = request.url!.path
         var bytes = request.httpBody ?? Data()
         if bytes.isEmpty, let stream = request.httpBodyStream {
@@ -81,41 +122,81 @@ final class S24FixtureServer: @unchecked Sendable {
         if path.hasSuffix("/replay-windows") { return try json(["id":"66666666-6666-4666-8666-666666666666","expiresAt":"2099-01-01T00:00:00Z"]) }
         if path.hasSuffix("/commands"), let key = input["clientKey"] as? String {
             count += 1
-            if let receipt = receipts[key] { changed?(count,recordedLines.count); return try json(receipt) }
+            if let receipt = receipts[key] { if let callback = changeHandler { change = (callback, count, recordedLines.count) }; return try json(receipt) }
             guard input["kind"] as? String == "request.apply", let decision = recordedPreview?["decision"] as? [String: Any] else { throw URLError(.badServerResponse) }
             if let line = decision["line"] as? [String: Any] { recordedLines.append(line) }
             let receipt: [String: Any] = ["operationId":UUID().uuidString,"kind":"request.apply","shopId":Self.shop,"shopRevision":2,"authorityEpoch":1,"disposition":"added","requestId":Self.requestID,"requestRevision":2]
-            receipts[key] = receipt; changed?(count,recordedLines.count); return try json(receipt)
+            receipts[key] = receipt; if let callback = changeHandler { change = (callback, count, recordedLines.count) }; return try json(receipt)
         }
         throw URLError(.unsupportedURL)
     }
 }
+// Registry entries never own a fixture. Tests own it until teardown; a loading
+// protocol retains its original server until completion/cancellation.
+private final class S24WeakServer {
+    weak var value: S24FixtureServer?
+    init(_ value: S24FixtureServer) { self.value = value }
+}
 final class S24FixtureProtocol: URLProtocol {
-    static var server: S24FixtureServer?
-    static var intercept: ((S24FixtureProtocol) -> Bool)?
+    private static let registryLock = NSLock()
+    private static var servers: [String: S24WeakServer] = [:]
+    fileprivate static func register(_ server: S24FixtureServer) {
+        registryLock.lock(); defer { registryLock.unlock() }
+        servers[server.host] = S24WeakServer(server)
+    }
+    fileprivate static func remove(host: String) {
+        registryLock.lock(); defer { registryLock.unlock() }
+        servers.removeValue(forKey: host)
+    }
+    private static func server(for request: URLRequest) -> S24FixtureServer? {
+        registryLock.lock(); defer { registryLock.unlock() }
+        guard request.url?.scheme == "https", let host = request.url?.host else { return nil }
+        return servers[host]?.value
+    }
+    private let responseLock = NSLock()
+    private var boundServer: S24FixtureServer?
+    private var finished = false
+    // Claim all requests so an unknown destination fails here, never on a real network.
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
     override func startLoading() {
-        if Self.intercept?(self) == true { return }
+        guard let server = Self.server(for: request) else {
+            client?.urlProtocol(self, didFailWithError: URLError(.unsupportedURL)); return
+        }
+        // Copy the interceptor before invoking it; no registry/server lock is held
+        // during callbacks, which may change fixture state or hold this response.
+        let intercept = server.intercept
+        responseLock.lock()
+        guard !finished else { responseLock.unlock(); return }
+        boundServer = server
+        responseLock.unlock()
+        if intercept?(self) == true { return }
         finishResponse()
     }
     func finishResponse() {
+        responseLock.lock()
+        guard !finished, let server = boundServer else { responseLock.unlock(); return }
+        finished = true; boundServer = nil
+        responseLock.unlock()
         do {
-            guard let server = Self.server else { throw URLError(.unsupportedURL) }
-            let (status,data) = try server.respond(request)
+            let (status, data) = try server.respond(request)
             client?.urlProtocol(self, didReceive: HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: ["Content-Type":"application/json"])!, cacheStoragePolicy: .notAllowed)
             client?.urlProtocol(self, didLoad: data); client?.urlProtocolDidFinishLoading(self)
         } catch { client?.urlProtocol(self, didFailWithError: error) }
     }
-    override func stopLoading() {}
+    override func stopLoading() {
+        responseLock.lock()
+        finished = true
+        let server = boundServer; boundServer = nil
+        responseLock.unlock()
+        withExtendedLifetime(server) {}
+    }
 }
 @MainActor func s24FixtureModel(server: S24FixtureServer, outboxURL: URL) async throws -> HouseholdInboxModel {
-    S24FixtureProtocol.server = server
-    let configuration = URLSessionConfiguration.ephemeral; configuration.protocolClasses = [S24FixtureProtocol.self]
-    let transport = HTTPTransport(session: URLSession(configuration: configuration))
-    let auth = AdultAuth(configuration: try .init(projectURL: URL(string:"https://s24-identity.invalid")!,publishableKey:"sb_publishable_fixture_only"),vault:S24FixtureVault(),transport:transport)
+    let transport = HTTPTransport(session: server.makeSession())
+    let auth = AdultAuth(configuration: try .init(projectURL: server.baseURL,publishableKey:"sb_publishable_fixture_only"),vault:S24FixtureVault(),transport:transport)
     _ = try await auth.verifyEmailCode(email:"shopper@example.invalid",code:"123456")
-    let service = HouseholdService(configuration: try .init(baseURL:URL(string:"https://s24-household.invalid")!),auth:auth,deviceVault:S24FixtureVault(),transport:transport)
+    let service = HouseholdService(configuration: try .init(baseURL:server.baseURL),auth:auth,deviceVault:S24FixtureVault(),transport:transport)
     let bootstrap = try await service.enroll(householdID:S24FixtureServer.household)
     let model = HouseholdInboxModel(bootstrap:bootstrap,service:service,outbox:OperationOutbox(url:outboxURL),onAccessEnded:{})
     await model.load()

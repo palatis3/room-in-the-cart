@@ -47,6 +47,23 @@ start. The last measured batch already used 91.22% of five-slot capacity.
 Shared archives already avoid recompression; additional splitting or caching
 needs measured benefit. A new layout is not automatically a faster one.
 
+## Reuse local build paths with preserved proof
+
+For a small native source change, keep the execution source and DerivedData paths
+stable so Xcode can reuse compatible products. Before mutation, require the
+previous process to be terminal, archive its complete source and products, and
+verify content manifests plus executable modes. Preserve original result bundles,
+logs and receipts; record archival custody and give the successor its own manifest
+and output directory. Never overwrite an archive: the same source may have
+different builds/configurations. The old execution script is historical once its
+working paths contain a successor. Archived xctestruns may retain absolute paths,
+so any independent replay requires a reviewed rebind and new receipt.
+
+The S24 correction used this process: prior fresh-path builds took 211–213 seconds;
+the changed-test builds took 13–16seconds. These are observations with different
+inputs, not a performance guarantee. Do not reuse products with mismatched inputs
+or skip the appropriate regression. [Custody and execution proof](evidence/native/s24-fixture-isolation-20261109/README.md).
+
 ## Reduce repeated UI traversal before increasing deadlines
 
 The retained Spanish AX5 Dinner R3/R4 attempts measured repeated review traversal

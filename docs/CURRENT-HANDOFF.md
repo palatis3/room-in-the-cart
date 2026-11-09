@@ -15,8 +15,8 @@ maps remain in [CURRENT-ACCEPTANCE](CURRENT-ACCEPTANCE.md#launch-requirement-tra
 Use `/Users/palatis/Room in the Cart`, branch `codex/parallel-ios-ci`, with an
 explicit working directory. The ambient `spanish-done-diagnostic` worktree is old.
 The canonical app contains the reviewed combined Dinner/audio candidate plus five
-tested fixture declaration corrections. All 561 product inputs match the warning
-follow-up candidate; its five test files are the only product differences from R4.
+tested fixture declaration and S24 isolation corrections. All 561 product inputs
+match the S24 positive-r2 candidate; seven test files differ from the R4 source.
 Combined-candidate publication target: `codex/combined-candidate-20261109`.
 The earlier CI-only diagnostic branch remains pinned to its own tested revisions.
 Draft PR 1 remains a separate integration candidate; no full batch was pushed
@@ -40,10 +40,36 @@ execution. The additive proposal/validation receipts are preserved in
 
 ## Latest active work — November 9
 
+- Confirmed S24 fixture cross-routing is fixed and installed. The original-API
+  negative control failed with A receiving B's totals/counts; the same regression
+  now passes with all 26 original cases plus two new ones (28 native/strict passes).
+  Unique hosts, weak locked routing, held server ownership and teardown preserve
+  fixture identity. Final build/bundle checks passed in 13.102s with no warnings.
+  Source manifest 7e9f3a6c427ff90dd2b35f56acdbd78179e1ac28ab08c459b27e89c83ac7ff7a.
+  [Evidence](evidence/native/s24-fixture-isolation-20261109/README.md).
+- Local native qualification now reuses the absolute source/DerivedData paths at
+  `.build/Xcode27WarningReviewNov09/execution-r1/{source,dd}`. Before each change,
+  complete source/products/modes were verified into immutable archives under
+  `.build/NativeQualificationArchivesNov09/<source-manifest-SHA>/`. Prior run
+  executors are historical and must not be run on the newer working contents.
+  Current executor/manifest/results are `.build/S24FixtureIsolationNov09/positive-r2`.
+  Stable-path builds took 13–16s versus earlier fresh-path 211–213s; not a controlled
+  benchmark. Preserve this custody discipline and existing 8 GiB reserve.
+- Isolated standard-runner iOS 27.1/24A94425/Duo probe 78d82b30 is terminal failure
+  in run 42585657527. Preboot exact identity and boot passed; postboot device
+  discovery still hit 30s with no bytes. No runtime/help/build/transport/XCTest.
+  This runtime/device alternative did not resolve the bottleneck and is not
+  installed into the combined workflow. No unchanged rerun or timeout increase.
+  [Research and result](evidence/native/ios27-1-duo-capabilities-20261109/README.md).
+- All native/hosted processes from this checkpoint are terminal. A read-only
+  compiler-cache inventory is at `.build/CompilerCacheInventoryNov09/`; no caches
+  were deleted. Its 6.18 GiB logical top 20 is not promised APFS reclaim. Any cleanup
+  requires exact source/product/result custody review; active workspace is excluded.
+
 - Five reviewed test-fixture declaration corrections are installed: four unsupported
   URLProtocol Sendable claims removed; encoding-only media fixture uses Encodable.
   Xcode27.1 build/bundle checks pass; targeted warnings gone. All55 native/strict
-  regressions pass on26.2 and all561 canonical product inputs match the tested
+  regressions pass on 26.2 and all561 canonical product inputs match the tested
   source. Shared mutable fixture-state risks remain a separate follow-up.
   [Native follow-up](evidence/native/xcode27-native-followup-20261109/README.md).
 - Minimum-iOS snapshot traversal experiment is terminal and scratch-only. Original

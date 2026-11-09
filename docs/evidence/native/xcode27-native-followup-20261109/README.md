@@ -58,3 +58,12 @@ rerun, warning suppression or deployment-floor change was made.
 - `.build/DinnerSnapshotTraversalNov09/r1/spanish-ios17_5/inspection/verification.json` — SHA256 `d0e074906fd88f6489715d89a1091856b3d7f824c5048bba779a949e9608ad48`.
 - `.build/DinnerSnapshotTraversalNov09/r1/spanish-ios17_5/crash-review/manifest.json` — SHA256 `5b09e5c6fc096ce283ea0d93749a787f9d30973945b6bf239dc7e679d12cbb11`.
 - `.build/MinimumOSXCTestReproducerNov09/r3/execution/original-pid-retained-logs/symbol-review/manifest.json` — SHA256 `516743f94ff68a4954125948dc340bdffa387c224a1213a6531f44bed04d2958`.
+
+## Subsequent archival custody
+
+Before S24 qualification reused the execution workspace, all 561 source files and
+196 product files were independently verified and archived, including modes, at
+`.build/NativeQualificationArchivesNov09/bf2df6f24c150ec2d8d4e53e69ba7a0a97349a4714ca03b93ec6a92c4490fd30/`.
+The prior source/products remain there; original logs/results/receipts are unchanged.
+Old executor paths now contain newer working inputs and must not be rerun as proof
+for this candidate. Its `custody.json` and `workspace-reuse.json` record the transfer.

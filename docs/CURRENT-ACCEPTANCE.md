@@ -2,9 +2,19 @@
 
 ## Current checkpoint — November 9, workflow and combined-candidate qualification
 
+S24 test-fixture routing is now independently isolated per model/session. A native
+negative control proved the former shared-server defect; all 28 affected tests
+(26 original plus 2 new) now pass native/strict on 26.2. App/production networking is
+unchanged. Verified archived proof permits stable build-path reuse; the final
+incremental build passed in 13.102s. [Evidence](evidence/native/s24-fixture-isolation-20261109/README.md).
+The separate released 27.1/Duo hosted probe also failed postboot discovery despite
+verified exact preboot identity and successful boot. It did not execute XCTest
+and does not change the combined candidate's runtime or performance baseline.
+
+
 Five test-fixture declaration corrections are now installed. Debug compilation
 and bundle checks pass on Xcode27.1; all55 selected request, membership, restoration,
-stock-privacy and media regressions pass native/strict on26.2. Five targeted
+stock-privacy and media regressions pass native/strict on 26.2. Five targeted
 compiler warnings are gone. Actual fixture shared-state synchronization remains
 separate. [Evidence](evidence/native/xcode27-native-followup-20261109/README.md).
 The isolated snapshot traversal optimization did not fix the original17.5 journey:
@@ -16,7 +26,7 @@ branch; its terminal outcome is recorded at `e92f97e2`. All **366 offline tests*
 and **17 queue-node checks** pass. Build-free capability checks, bounded stage
 receipts, same-job identity reuse and separate inventory infrastructure budgets
 are implemented. Capability-only run42580515105 is terminal failure on the exact
-c97 revision: UUID-scoped device discovery hit30seconds with the child running
+c97 revision: UUID-scoped device discovery hit 30seconds with the child running
 and no normal/late pipe bytes. Runtime/help/compilation/transport/XCTest were not
 reached. The longer bounded allowance did not resolve the hosted bottleneck;
 no further timeout increase or unchanged retry is planned. Exact log-help
@@ -415,7 +425,7 @@ Latest follow-up, 13:10 UTC: the test-only request input/reveal correction passe
 
 The published `a305065` cohort is now fully terminal: 47 successful jobs, five failed jobs representing four underlying failures plus the derivative Core gate. Models pass 702/702; ordinary UI 67/68; fixtures 69/69 native and 64/69 strict, with five missing-warning-evidence failures. Deep, NativeWire and Performance pass; animation-hitch samples remain unavailable. UI09 timeout, cook warning evidence and two HTTP504 downloads remain unresolved. [Terminal record](evidence/native/ci-a305065-20261108/terminal/README.md). Migration 041 is already deployed; the repeated approval triggers no duplicate update and does not authorize 042. No combined green or release-ready claim. Earlier paragraphs are historical.
 
-Latest follow-up, 12:45 UTC: the confirmed request-return fix has an original preserved failure,16strict request-pack model passes,6strict meal-context model passes and6scoped current-OS UI journeys. Minimum17 additionally exposed an unnamed native disclosure, corrected with the existing full-row labeled style. The final affected primary/carried journeys pass strict2of2 on26.2; the final unsigned arm64 Release build and compiled-bundle checks pass. [Source-pinned evidence and all retained failures](evidence/native/request-outcome-return-20261108/README.md).
+Latest follow-up, 12:45 UTC: the confirmed request-return fix has an original preserved failure,16strict request-pack model passes,6strict meal-context model passes and6scoped current-OS UI journeys. Minimum17 additionally exposed an unnamed native disclosure, corrected with the existing full-row labeled style. The final affected primary/carried journeys pass strict2of2 on 26.2; the final unsigned arm64 Release build and compiled-bundle checks pass. [Source-pinned evidence and all retained failures](evidence/native/request-outcome-return-20261108/README.md).
 
 Minimum17 full UI remains open after an exactly matched XCTest logging/accessibility instrumentation crash. No logging suppression or warning waiver was applied; physical VoiceOver and the older S24 audit findings remain open. The actual synthetic Simulator Safari editor foreground-revocation case passes with no product writes, committed as `a1e63d9`. [Safari scope](evidence/b11/safari-editor-foreground-20261108/README.md).
 
