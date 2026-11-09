@@ -371,9 +371,9 @@ class AdmissionTests(unittest.TestCase):
 
     def test_exact_runtime_and_emit_capability_gate(self):
         inventory = {'devices': {probe.RUNTIME: [{'udid': 'test-simulator', 'state': 'Booted',
-                     'isAvailable': True, 'deviceTypeIdentifier': 'com.apple.CoreSimulator.SimDeviceType.iPhone-17'}]},
+                     'isAvailable': True, 'deviceTypeIdentifier': 'com.apple.CoreSimulator.SimDeviceType.iPhone-Duo'}]},
                      'runtimes': [{'identifier': probe.RUNTIME, 'isAvailable': True,
-                                   'version': '27.0', 'buildversion': '24A434'}]}
+                                   'version': '27.1', 'buildversion': '24A94425'}]}
         with tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parents[1]) as directory:
             test_run = Path(directory) / 'test.xctestrun'
             test_run.write_bytes(plistlib.dumps({}))
@@ -392,7 +392,7 @@ class AdmissionTests(unittest.TestCase):
                 if mode == 'xcode_drift':
                     data[0] = b'Xcode 27.1\nBuild version other'
                 elif mode == 'runtime_drift':
-                    data[2] = data[2].replace(b'24A434', b'24A999')
+                    data[2] = data[2].replace(b'24A94425', b'24A999')
                 elif mode == 'missing_emit':
                     data[-1] = b'--subsystem --category'
                 enforcement = 'true' if mode == 'enforced' else '' if mode == 'unspecified_enforcement' else 'false'
@@ -400,7 +400,7 @@ class AdmissionTests(unittest.TestCase):
                      patch.object(probe, 'SOURCE_PINS', {}), patch.object(probe.platform, 'machine', return_value='arm64'), \
                      patch.object(probe, 'command', side_effect=data) as command:
                     if mode == 'valid':
-                        self.assertEqual(probe.preflight('test-simulator', test_run, argv)['exactRuntime']['iOSBuild'], '24A434')
+                        self.assertEqual(probe.preflight('test-simulator', test_run, argv)['exactRuntime']['iOSBuild'], '24A94425')
                     else:
                         with self.assertRaises(ValueError):
                             probe.preflight('test-simulator', test_run, argv)
@@ -658,9 +658,9 @@ class IdentityReuseTests(unittest.TestCase):
     def test_valid_identity_skips_only_version_query_and_keeps_live_runtime_and_help(self):
         env = self.environment()
         devices = {'devices': {probe.RUNTIME: [{'udid': 'test-simulator', 'state': 'Booted',
-                   'isAvailable': True, 'deviceTypeIdentifier': 'com.apple.CoreSimulator.SimDeviceType.iPhone-17'}]}}
+                   'isAvailable': True, 'deviceTypeIdentifier': 'com.apple.CoreSimulator.SimDeviceType.iPhone-Duo'}]}}
         runtimes = {'runtimes': [{'identifier': probe.RUNTIME, 'isAvailable': True,
-                                 'version': '27.0', 'buildversion': '24A434'}]}
+                                 'version': '27.1', 'buildversion': '24A94425'}]}
         responses = [json.dumps(devices).encode(), json.dumps(runtimes).encode(),
                      b'--signpost ndjson --timeout --predicate --level',
                      b'--signpost ndjson --start --end --predicate --info --debug',
@@ -682,15 +682,15 @@ class IdentityReuseTests(unittest.TestCase):
                              [('devices', 30), ('runtimes', 30), ('help-stream', 10), ('help-show', 10), ('help-emit', 10)])
             self.assertFalse(any('xcodebuild' in argv for argv in observed))
             # A valid toolchain receipt is never a substitute for live runtime identity.
-            drifted = list(responses); drifted[1] = drifted[1].replace(b'24A434', b'24A999')
+            drifted = list(responses); drifted[1] = drifted[1].replace(b'24A94425', b'24A999')
             with patch.dict(os.environ, env, clear=True), patch.object(probe.platform, 'machine', return_value='arm64'), \
                  patch.object(probe, 'command', side_effect=drifted), self.assertRaisesRegex(ValueError, 'runtime_drift'):
                 probe.runtime_preflight('test-simulator', identity_path=path)
 
     def test_device_search_cannot_replace_exact_identity_availability_or_state(self):
         device = {'udid': 'selected-uuid', 'state': 'Booted', 'isAvailable': True,
-                  'deviceTypeIdentifier': 'com.apple.CoreSimulator.SimDeviceType.iPhone-17'}
-        runtime = {'identifier': probe.RUNTIME, 'isAvailable': True, 'version': '27.0', 'buildversion': '24A434'}
+                  'deviceTypeIdentifier': 'com.apple.CoreSimulator.SimDeviceType.iPhone-Duo'}
+        runtime = {'identifier': probe.RUNTIME, 'isAvailable': True, 'version': '27.1', 'buildversion': '24A94425'}
         cases = {
             'missing': {probe.RUNTIME: []},
             'description-only-match': {probe.RUNTIME: [dict(device, udid='other-uuid', name='selected-uuid')]},
@@ -715,9 +715,9 @@ class IdentityReuseTests(unittest.TestCase):
 
     def test_device_search_ignores_other_rows_without_relaxing_runtime_checks(self):
         selected = {'udid': 'selected-uuid', 'state': 'Booted', 'isAvailable': True,
-                    'deviceTypeIdentifier': 'com.apple.CoreSimulator.SimDeviceType.iPhone-17'}
+                    'deviceTypeIdentifier': 'com.apple.CoreSimulator.SimDeviceType.iPhone-Duo'}
         devices = {'devices': {probe.RUNTIME: [dict(selected, udid='other-uuid'), selected]}}
-        runtime = {'identifier': probe.RUNTIME, 'isAvailable': True, 'version': '27.0', 'buildversion': '24A434'}
+        runtime = {'identifier': probe.RUNTIME, 'isAvailable': True, 'version': '27.1', 'buildversion': '24A94425'}
         for valid in (True, False):
             responses = [b'Xcode 27.1\nBuild version 27A9275', json.dumps(devices).encode(),
                          json.dumps({'runtimes': [dict(runtime, isAvailable=valid)]}).encode(),
@@ -727,10 +727,60 @@ class IdentityReuseTests(unittest.TestCase):
             with self.subTest(runtimeAvailable=valid), patch.object(probe.platform, 'machine', return_value='arm64'), \
                  patch.object(probe, 'command', side_effect=responses):
                 if valid:
-                    self.assertEqual(probe.runtime_preflight('selected-uuid')['exactRuntime']['iOSBuild'], '24A434')
+                    self.assertEqual(probe.runtime_preflight('selected-uuid')['exactRuntime']['iOSBuild'], '24A94425')
                 else:
                     with self.assertRaisesRegex(ValueError, 'runtime_drift'):
                         probe.runtime_preflight('selected-uuid')
+
+    def test_diagnostic_duo_rejects_rc_old_runtime_and_other_device_before_help(self):
+        device = {'udid': 'selected-uuid', 'state': 'Booted', 'isAvailable': True,
+                  'deviceTypeIdentifier': 'com.apple.CoreSimulator.SimDeviceType.iPhone-Duo'}
+        runtime = {'identifier': probe.RUNTIME, 'isAvailable': True,
+                   'version': '27.1', 'buildversion': '24A94425'}
+        old_runtime = 'com.apple.CoreSimulator.SimRuntime.iOS-27-0'
+        cases = {
+            'release-candidate': (probe.RUNTIME, device, dict(runtime, buildversion='24A94232')),
+            'beta': (probe.RUNTIME, device, dict(runtime, buildversion='24A94401')),
+            'old-runtime': (old_runtime, device, dict(runtime, identifier=old_runtime,
+                                                    version='27.0', buildversion='24A434')),
+            'wrong-version': (probe.RUNTIME, device, dict(runtime, version='27.0')),
+            'wrong-device': (probe.RUNTIME, dict(device,
+                deviceTypeIdentifier='com.apple.CoreSimulator.SimDeviceType.iPhone-17'), runtime),
+        }
+        for name, (runtime_id, observed_device, observed_runtime) in cases.items():
+            responses = [b'Xcode 27.1\nBuild version 27A9275',
+                         json.dumps({'devices': {runtime_id: [observed_device]}}).encode(),
+                         json.dumps({'runtimes': [observed_runtime]}).encode()]
+            with self.subTest(case=name), patch.object(probe.platform, 'machine', return_value='arm64'), \
+                 patch.object(probe, 'command', side_effect=responses) as commands:
+                with self.assertRaisesRegex(ValueError, 'runtime_drift'):
+                    probe.runtime_preflight('selected-uuid')
+            self.assertEqual([call.kwargs['stage_name'] for call in commands.call_args_list],
+                             ['toolchain', 'devices', 'runtimes'])
+
+    def test_diagnostic_duo_workflow_and_receipt_match_exact_stable_target(self):
+        root = Path(__file__).resolve().parents[1]
+        workflow = (root / '.github/workflows/ios-performance.yml').read_text()
+        self.assertIn('CI_IPHONE_RUNTIME: com.apple.CoreSimulator.SimRuntime.iOS-27-1', workflow)
+        self.assertIn('CI_IPHONE_NAME: iPhone Duo', workflow)
+        self.assertNotIn('xcode-27-xlarge', workflow)
+        self.assertEqual(probe.RUNTIME, 'com.apple.CoreSimulator.SimRuntime.iOS-27-1')
+        responses = [b'Xcode 27.1\nBuild version 27A9275',
+                     json.dumps({'devices': {probe.RUNTIME: [{'udid': 'selected-uuid', 'state': 'Booted',
+                         'isAvailable': True,
+                         'deviceTypeIdentifier': 'com.apple.CoreSimulator.SimDeviceType.iPhone-Duo'}]}}).encode(),
+                     json.dumps({'runtimes': [{'identifier': probe.RUNTIME, 'isAvailable': True,
+                         'version': '27.1', 'buildversion': '24A94425'}]}).encode(),
+                     b'--signpost ndjson --timeout --predicate --level',
+                     b'--signpost ndjson --start --end --predicate --info --debug',
+                     b'signpost-event --type --subsystem --category']
+        with patch.object(probe.platform, 'machine', return_value='arm64'), \
+             patch.object(probe, 'command', side_effect=responses):
+            result = probe.runtime_preflight('selected-uuid')
+        self.assertEqual(result['exactRuntime'], {'xcode': '27.1', 'xcodeBuild': '27A9275',
+                         'iOS': '27.1', 'iOSBuild': '24A94425', 'deviceType': 'iPhone Duo',
+                         'hostArchitecture': 'arm64'})
+        self.assertEqual(set(result['capabilities']), {'stream', 'show', 'emit'})
 
     def test_every_bound_context_field_and_version_architecture_rejects_drift(self):
         env = self.environment()

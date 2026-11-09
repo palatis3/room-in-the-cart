@@ -56,8 +56,8 @@ concurrency:
 
 env:
   DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
-  CI_IPHONE_RUNTIME: com.apple.CoreSimulator.SimRuntime.iOS-27-0
-  CI_IPHONE_NAME: iPhone 17
+  CI_IPHONE_RUNTIME: com.apple.CoreSimulator.SimRuntime.iOS-27-1
+  CI_IPHONE_NAME: iPhone Duo
   ENFORCE_BASELINES: ${{ github.event_name == 'pull_request' || inputs.enforce_baselines }}
   REQUESTED_PERFORMANCE_CASE: ${{ github.event_name == 'workflow_dispatch' && inputs.case != 'all' && inputs.case || '' }}
 

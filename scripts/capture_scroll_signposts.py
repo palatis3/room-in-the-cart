@@ -25,7 +25,7 @@ import uuid
 from check_ios_performance_environment import toolchain_identity
 
 SELECTOR = 'RoomInTheCartUITests/ReleasePerformanceUITests/testScrollingPerformanceOnFiveHundredItemPickup'
-RUNTIME = 'com.apple.CoreSimulator.SimRuntime.iOS-27-0'
+RUNTIME = 'com.apple.CoreSimulator.SimRuntime.iOS-27-1'
 KNOWN = ('com.apple.UIKit', 'ScrollView', 'Scroll_DraggingAndDeceleration')
 MAX_EVENTS, MAX_METADATA, MAX_RAW, MAX_LINE = 2048, 512 * 1024, 4 * 1024 * 1024, 65536
 STREAM_SECONDS, CONTROL_SECONDS, SHOW_SECONDS, COMMAND_SECONDS = 300, 5, 30, 10
@@ -531,9 +531,9 @@ def runtime_preflight(simulator, journal=None, identity_path=None):
     runtimes = [item for item in inventory['runtimes'] if item.get('identifier') == RUNTIME]
     if (len(devices) != 1 or devices[0][0] != RUNTIME or devices[0][1].get('state') != 'Booted'
             or not devices[0][1].get('isAvailable')
-            or devices[0][1].get('deviceTypeIdentifier') != 'com.apple.CoreSimulator.SimDeviceType.iPhone-17'
+            or devices[0][1].get('deviceTypeIdentifier') != 'com.apple.CoreSimulator.SimDeviceType.iPhone-Duo'
             or len(runtimes) != 1 or not runtimes[0].get('isAvailable')
-            or runtimes[0].get('version') != '27.0' or runtimes[0].get('buildversion') != '24A434'):
+            or runtimes[0].get('version') != '27.1' or runtimes[0].get('buildversion') != '24A94425'):
         raise ValueError('runtime_drift')
     prefix = ['xcrun', 'simctl', 'spawn', simulator, 'log']
     capabilities = {}
@@ -548,8 +548,8 @@ def runtime_preflight(simulator, journal=None, identity_path=None):
     return {'protectedSourceSHA256': SOURCE_PINS,
             'toolchainIdentitySource': 'same-job-receipt' if identity_path is not None else 'direct-query',
             'toolchainIdentitySHA256': identity_hash,
-            'exactRuntime': {'xcode': '27.1', 'xcodeBuild': '27A9275', 'iOS': '27.0',
-                            'iOSBuild': '24A434', 'deviceType': 'iPhone 17', 'hostArchitecture': 'arm64'},
+            'exactRuntime': {'xcode': '27.1', 'xcodeBuild': '27A9275', 'iOS': '27.1',
+                            'iOSBuild': '24A94425', 'deviceType': 'iPhone Duo', 'hostArchitecture': 'arm64'},
             'capabilities': capabilities}
 
 

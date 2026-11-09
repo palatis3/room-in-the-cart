@@ -36,8 +36,12 @@ class Xcode27MigrationTests(unittest.TestCase):
                 else:
                     self.assertEqual(job['runs-on'], 'xcode-27', key)
                     self.assertEqual(env['DEVELOPER_DIR'], DEVELOPER, key)
-                    self.assertEqual(env['CI_IPHONE_RUNTIME'], RUNTIME, key)
-                    self.assertEqual(env['CI_IPHONE_NAME'], 'iPhone 17', key)
+                    # Isolated runtime/device hypothesis ref; all other lanes retain 27.0.
+                    diagnostic = key in {('ios-performance.yml', 'performance-build'),
+                                         ('ios-performance.yml', 'performance-tests')}
+                    self.assertEqual(env['CI_IPHONE_RUNTIME'],
+                                     'com.apple.CoreSimulator.SimRuntime.iOS-27-1' if diagnostic else RUNTIME, key)
+                    self.assertEqual(env['CI_IPHONE_NAME'], 'iPhone Duo' if diagnostic else 'iPhone 17', key)
                     checkout = next(i for i, step in enumerate(job['steps'])
                                     if step.get('uses', '').startswith('actions/checkout@'))
                     guard = [i for i, step in enumerate(job['steps'])
@@ -69,9 +73,10 @@ class Xcode27MigrationTests(unittest.TestCase):
         baseline = json.loads((ROOT / 'scripts/ios_performance_baselines.json').read_text())
         old = baseline['profiles'][0]['environment']
         self.assertEqual(old['xcode'], 'Xcode 26.3\nBuild version 17C529')
-        new = {**old, 'xcode': 'Xcode 27.1\nBuild version 27A9275', 'osVersion': '27.0'}
-        with self.assertRaisesRegex(ValueError, 'exactly one approved baseline'):
-            compare_baseline(baseline, new, 'launch', {'responsiveLaunchMedianSeconds': 1})
+        for version, model in [('27.0', 'iPhone 17'), ('27.1', 'iPhone Duo')]:
+            new = {**old, 'xcode': 'Xcode 27.1\nBuild version 27A9275', 'osVersion': version, 'modelName': model}
+            with self.subTest(version=version, model=model), self.assertRaisesRegex(ValueError, 'exactly one approved baseline'):
+                compare_baseline(baseline, new, 'launch', {'responsiveLaunchMedianSeconds': 1})
         release = parse_workflow(ROOT / '.github/workflows/release-checks.yml')[0]
         self.assertTrue(release['jobs']['performance']['with']['enforce_baselines'])
         performance = parse_workflow(ROOT / '.github/workflows/ios-performance.yml')[0]
