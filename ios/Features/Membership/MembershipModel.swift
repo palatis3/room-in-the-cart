@@ -289,6 +289,17 @@ import SwiftUI
             case .verified(let transaction): purchaseReport = .verified(transactionID: transaction.transactionID)
             }
             await receive(result, origin: .purchase)
+            if case .pending = result {
+                // Approval can already be unfinished when the purchase reports pending.
+                // Reconcile once through the normal delivery path; the pending report
+                // does not identify this transaction or establish membership access.
+                let unfinished = await storefront.unfinishedTransactions()
+                guard session == generation else { return }
+                for outcome in unfinished {
+                    guard session == generation else { return }
+                    await receive(outcome)
+                }
+            }
         } catch {
             guard session == generation else { return }
             let issue = error as? MembershipFailure ?? .unavailable

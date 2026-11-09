@@ -1,0 +1,131 @@
+diff --git a/ios/Features/Membership/MembershipModel.swift b/ios/Features/Membership/MembershipModel.swift
+index 19baaad4..19644031 100644
+--- a/ios/Features/Membership/MembershipModel.swift
++++ b/ios/Features/Membership/MembershipModel.swift
+@@ -289,6 +289,17 @@ import SwiftUI
+             case .verified(let transaction): purchaseReport = .verified(transactionID: transaction.transactionID)
+             }
+             await receive(result, origin: .purchase)
++            if case .pending = result {
++                // Approval can already be unfinished when the purchase reports pending.
++                // Reconcile once through the normal delivery path; the pending report
++                // does not identify this transaction or establish membership access.
++                let unfinished = await storefront.unfinishedTransactions()
++                guard session == generation else { return }
++                for outcome in unfinished {
++                    guard session == generation else { return }
++                    await receive(outcome)
++                }
++            }
+         } catch {
+             guard session == generation else { return }
+             let issue = error as? MembershipFailure ?? .unavailable
+diff --git a/ios/Tests/MembershipTests.swift b/ios/Tests/MembershipTests.swift
+index 9965e57d..a8f3e27e 100644
+--- a/ios/Tests/MembershipTests.swift
++++ b/ios/Tests/MembershipTests.swift
+@@ -626,6 +626,80 @@ import Combine
+         }
+     }
+ 
++    func testPendingCompletionReconcilesAvailableApprovalWithoutAnUpdateEvent() async {
++        for failsDelivery in [true, false] {
++            let service = FakeMembershipService(snapshot: snapshot(status: .free))
++            let store = FakeMembershipStorefront(); store.keepsUpdatesOpen = true
++            let model = makeModel(service, store)
++            defer { store.resolvePurchase(.cancelled); model.stop() }
++            await model.start()
++            let purchase = await pausedPurchase(model, store)
++            let readsBeforeCompletion = store.unfinishedReads
++            XCTAssertEqual(store.activeObservers, 1)
++            XCTAssertTrue(model.deliveryOutcomes.isEmpty)
++            XCTAssertFalse(model.hasPaidAccess)
++            // Approval is available while purchase is suspended, but no update is emitted.
++            store.unfinished = [.verified(transaction(id: "approved-B", token: context.appAccountToken))]
++            service.snapshot = snapshot(revision: 2)
++            service.submissionError = failsDelivery ? .notConfigured : nil
++            store.onFinish = { XCTAssertTrue(service.didCommit, "Only durable service acknowledgement permits finish") }
++            store.resolvePurchase(.pending); await purchase.value
++            XCTAssertEqual(store.unfinishedReads, readsBeforeCompletion + 1, "One reconciliation; no polling")
++            XCTAssertEqual(store.purchaseCount, 1); XCTAssertEqual(service.submissions, 1)
++            XCTAssertEqual(store.syncCount, 0); XCTAssertEqual(store.observerStarts, 1)
++            XCTAssertEqual(model.purchaseReport, .pending, "No transaction is inferred to resolve the pending request")
++            XCTAssertTrue(model.statusMessages.contains(.pendingReport))
++            if failsDelivery {
++                XCTAssertEqual(model.deliveryOutcomes["approved-B"], .failed(.notConfigured))
++                XCTAssertTrue(model.statusMessages.contains(.deliveryFailure(.notConfigured)))
++                XCTAssertTrue(store.finished.isEmpty); XCTAssertFalse(model.hasPaidAccess)
++            } else {
++                XCTAssertEqual(model.deliveryOutcomes["approved-B"], .delivered)
++                XCTAssertEqual(store.finished, ["approved-B"]); XCTAssertTrue(model.hasPaidAccess)
++            }
++        }
++    }
++
++    func testPendingCompletionReconciliationRejectsAnotherAccount() async {
++        let service = FakeMembershipService(snapshot: snapshot(status: .free))
++        let store = FakeMembershipStorefront(); store.keepsUpdatesOpen = true
++        let model = makeModel(service, store)
++        defer { store.resolvePurchase(.cancelled); model.stop() }
++        await model.start()
++        let purchase = await pausedPurchase(model, store)
++        store.unfinished = [.verified(transaction(id: "wrong-account", token: UUID()))]
++        store.resolvePurchase(.pending); await purchase.value
++        XCTAssertEqual(model.purchaseReport, .pending)
++        XCTAssertEqual(model.callbackRejections, [.accountMismatch])
++        XCTAssertTrue(model.deliveryOutcomes.isEmpty)
++        XCTAssertEqual(service.submissions, 0); XCTAssertTrue(store.finished.isEmpty)
++        XCTAssertFalse(model.hasPaidAccess)
++    }
++
++    func testStopDuringPendingReconciliationDiscardsItsLateSnapshot() async {
++        let service = FakeMembershipService(snapshot: snapshot(status: .free))
++        let store = FakeMembershipStorefront(); store.keepsUpdatesOpen = true
++        let model = makeModel(service, store)
++        defer {
++            store.resolvePurchase(.cancelled)
++            store.unfinishedContinuation?.resume(); store.unfinishedContinuation = nil
++            model.stop()
++        }
++        await model.start()
++        let purchase = await pausedPurchase(model, store)
++        store.unfinished = [.verified(transaction(id: "approved-B", token: context.appAccountToken))]
++        store.pauseUnfinishedRead = true
++        store.resolvePurchase(.pending)
++        await settle { store.unfinishedContinuation != nil }
++        model.stop()
++        let continuation = store.unfinishedContinuation; store.unfinishedContinuation = nil
++        continuation?.resume(); await purchase.value
++        XCTAssertTrue(model.isStopped); XCTAssertNil(model.purchaseReport)
++        XCTAssertTrue(model.deliveryOutcomes.isEmpty); XCTAssertTrue(model.callbackRejections.isEmpty)
++        XCTAssertEqual(service.submissions, 0); XCTAssertTrue(store.finished.isEmpty)
++        XCTAssertFalse(model.hasPaidAccess)
++    }
++
+     func testPendingCancellationAndUnverifiedNeverGrantSeatsOrFinish() async {
+         for outcome: MembershipPurchaseOutcome in [.pending, .cancelled, .unverified] {
+             let service = FakeMembershipService(snapshot: snapshot())
+@@ -1248,6 +1322,9 @@ import Combine
+     var finished: [String] = []
+     var current: [MembershipPurchaseOutcome] = []
+     var unfinished: [MembershipPurchaseOutcome] = []
++    var unfinishedReads = 0
++    var pauseUnfinishedRead = false
++    var unfinishedContinuation: CheckedContinuation<Void, Never>?
+     var syncCount = 0
+     var purchaseCount = 0
+     var pausePurchase = false
+@@ -1275,7 +1352,12 @@ import Combine
+         return outcome
+     }
+     func currentTransactions() async -> [MembershipPurchaseOutcome] { current }
+-    func unfinishedTransactions() async -> [MembershipPurchaseOutcome] { unfinished }
++    func unfinishedTransactions() async -> [MembershipPurchaseOutcome] {
++        unfinishedReads += 1
++        let snapshot = unfinished
++        if pauseUnfinishedRead { await withCheckedContinuation { unfinishedContinuation = $0 } }
++        return snapshot
++    }
+     func updates() -> AsyncStream<MembershipPurchaseOutcome> {
+         observerStarts += 1
+         guard keepsUpdatesOpen else { return AsyncStream { $0.finish() } }
