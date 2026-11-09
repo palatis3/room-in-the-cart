@@ -1,5 +1,33 @@
 # Current implementation and acceptance map
 
+## November 8, plain Done candidate terminal; review edge sampling
+
+Plain style compiled (native0/bundle0), changed Done's AX frame from68×36 to44×44,
+and preserved the successful center interaction and unknown-quantity safeguards.
+The top sample(360,62), exactly on the target/navigation-bar minimum edge, still
+left the keyboard open after5s. Native65/strict1,0idle; no supply/later approval/
+relaunch result. Root reviewed restored-Amount before image and all3geometry
+records. [Retained result and boundary limitation](evidence/native/native-done-plain-style-20261108/README.md).
+Do not describe the style as a no-op or a proven repair.
+
+All handles terminal: preparation94234, build42907/PID75063,
+test48485/PID75366, inspection17748. Do not repeat inspection/export.
+Current reused source/DD now contain plain candidate,561-source
+`80ac0da5e0b9ad919e985a244e0d3811a9c32fe9165c091c8bc58e9d9c289aa4`.
+Package `.build/EnglishKeyboardReviewNov08/native-done-plain-execution-r1`,
+manifest `a55bb8cb477edfd6b239c4a181145841775bf3c67d0b251214d87c3d68048b18`;
+its preservation retains automatic-style direct-touch source/products.
+Canonical556native stays8d0eb48f; no canonical app or new hosted/deployment change.
+
+Agent `english_keyboard_review` is reviewing the exact boundary/physical-pixel
+sampling assumption before further app code. Existing test is asymmetric: min
+edge exact, max inset one pixel. A principled symmetric first/last pixel-center
+policy, if justified, must be tested identically on automatic control and plain
+candidate; it is not permission to move one point only togreen. Preserve every
+old failure and all business/restart checks. No helper native execution/source
+mutation is authorized by this review task. Full52/27 goal remains active.
+
+
 ## November 8, direct Done touch result terminal
 
 The direct-touch candidate builds (native0/bundle0) and the first center Done tap
