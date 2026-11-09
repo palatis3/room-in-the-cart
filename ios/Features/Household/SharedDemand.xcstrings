@@ -210,6 +210,22 @@
         }
       }
     },
+    "Confirm that each changed basket label still refers to the same food sources.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm that each changed basket label still refers to the same food sources."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirma que cada nombre modificado de la cesta sigue haciendo referencia a las mismas fuentes de alimentos."
+          }
+        }
+      }
+    },
     "Confirmed conversion": {
       "localizations": {
         "en": {
@@ -350,6 +366,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Editar esta revisión"
+          }
+        }
+      }
+    },
+    "Entered items and quote": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entered items and quote"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artículos y presupuesto introducidos"
           }
         }
       }
@@ -498,6 +530,22 @@
         }
       }
     },
+    "Food sources being removed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Food sources being removed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fuentes de alimentos que se eliminarán"
+          }
+        }
+      }
+    },
     "Food total unit": {
       "localizations": {
         "en": {
@@ -606,6 +654,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Comida importada"
+          }
+        }
+      }
+    },
+    "Item marked for removal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item marked for removal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artículo marcado para eliminar"
+          }
+        }
+      }
+    },
+    "Keep this item and its sources": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep this item and its sources"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conservar este artículo y sus fuentes"
           }
         }
       }
@@ -786,6 +866,22 @@
         }
       }
     },
+    "Previous basket label": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous basket label"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre anterior en la cesta"
+          }
+        }
+      }
+    },
     "Protected food": {
       "localizations": {
         "en": {
@@ -850,6 +946,22 @@
         }
       }
     },
+    "Remove this item and its listed manual or imported food sources": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove this item and its listed manual or imported food sources"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar este artículo y las fuentes de alimentos manuales o importadas que se muestran"
+          }
+        }
+      }
+    },
     "Remove this unsaved entry": {
       "localizations": {
         "en": {
@@ -898,6 +1010,22 @@
         }
       }
     },
+    "Renaming an item does not replace its food sources. Add a new item for different food.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renaming an item does not replace its food sources. Add a new item for different food."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambiar el nombre de un artículo no sustituye sus fuentes de alimentos. Añade un artículo nuevo para un alimento diferente."
+          }
+        }
+      }
+    },
     "Return to the shared shop for confirmation or retry. A pending change is not yet confirmed.": {
       "localizations": {
         "en": {
@@ -926,6 +1054,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Revisa todas las comidas y solicitudes existentes antes de empezar a registrar comida compartida. Lo desconocido sigue siendo desconocido."
+          }
+        }
+      }
+    },
+    "Review every source on each removed item before confirming its removal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review every source on each removed item before confirming its removal."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa todas las fuentes de cada artículo retirado antes de confirmar su eliminación."
           }
         }
       }
@@ -990,6 +1134,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Revisa primero los datos de comida que se conservan. Aplica esta revisión sin cambios antes de añadir o vincular orígenes."
+          }
+        }
+      }
+    },
+    "Review the surviving food facts first. You can update prices and packs, but keep every item and its name unchanged for this review.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the surviving food facts first. You can update prices and packs, but keep every item and its name unchanged for this review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa primero los datos de alimentos que quedan. Puedes actualizar los precios y los paquetes, pero conserva todos los artículos y sus nombres sin cambios en esta revisión."
+          }
+        }
+      }
+    },
+    "Review the surviving food facts with your updated prices and packs. Food sources and relationships stay unchanged.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the surviving food facts with your updated prices and packs. Food sources and relationships stay unchanged."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa los datos de alimentos que quedan con los precios y paquetes actualizados. Las fuentes de alimentos y sus relaciones no cambian."
           }
         }
       }
@@ -1106,6 +1282,22 @@
         }
       }
     },
+    "The entered quote expired. Return to the item editor and update its expiry before reviewing again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The entered quote expired. Return to the item editor and update its expiry before reviewing again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El presupuesto introducido ha caducado. Vuelve al editor de artículos y actualiza su caducidad antes de revisarlo de nuevo."
+          }
+        }
+      }
+    },
     "The shop changed. Refresh and review again.": {
       "localizations": {
         "en": {
@@ -1118,6 +1310,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "La compra ha cambiado. Actualiza y vuelve a revisar."
+          }
+        }
+      }
+    },
+    "These are your entered item and quote changes. Review their food sources before applying.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These are your entered item and quote changes. Review their food sources before applying."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estos son los cambios que has introducido en los artículos y el presupuesto. Revisa sus fuentes de alimentos antes de aplicarlos."
+          }
+        }
+      }
+    },
+    "These meal, request or protected commitments remain. Keep their item to save your other edits.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These meal, request or protected commitments remain. Keep their item to save your other edits."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estos compromisos de comidas, solicitudes o alimentos protegidos siguen vigentes. Conserva su artículo para guardar los demás cambios."
+          }
+        }
+      }
+    },
+    "This label still refers to the same food sources": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This label still refers to the same food sources"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este nombre sigue haciendo referencia a las mismas fuentes de alimentos"
           }
         }
       }
@@ -1294,6 +1534,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Por qué se trata del mismo alimento"
+          }
+        }
+      }
+    },
+    "Your meal edit is still here. Saving meal edits with shared food tracking is not available yet; nothing was sent.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your meal edit is still here. Saving meal edits with shared food tracking is not available yet; nothing was sent."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu cambio de comida sigue aquí. Aún no se pueden guardar cambios de comidas con el seguimiento compartido de alimentos; no se ha enviado nada."
           }
         }
       }

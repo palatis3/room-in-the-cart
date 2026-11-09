@@ -6,9 +6,9 @@ struct SharedDemandFlowView: View {
     @StateObject private var model: SharedDemandFlowModel
     @Environment(\.dismiss) private var dismiss
     @FocusState private var editingText: String?
-    init(shopModel: HouseholdShopModel) {
+    init(shopModel: HouseholdShopModel, editor: SharedFoodEditorContext? = nil) {
         self.shopModel = shopModel
-        _model = StateObject(wrappedValue: SharedDemandFlowModel(access: shopModel))
+        _model = StateObject(wrappedValue: SharedDemandFlowModel(access: shopModel, editor: editor))
     }
     var body: some View {
         WorkingForm {
@@ -21,7 +21,13 @@ struct SharedDemandFlowView: View {
                     if let review = model.review { reviewed(review, shop: shop) }
                     else if !model.pending && !model.submitted {
                         current(page)
-                        if page.status == .reviewRequired { Text(sd("Review the surviving food facts first. Apply this unchanged review before adding or linking sources.")) }
+                        if page.status == .reviewRequired {
+                            if model.draft.editedCandidate == nil {
+                                Text(sd("Review the surviving food facts first. Apply this unchanged review before adding or linking sources."))
+                            } else {
+                                Text(sd("Review the surviving food facts with your updated prices and packs. Food sources and relationships stay unchanged."))
+                            }
+                        }
                         editor(page)
                         Section {
                             Button(sd("Review food changes")) { Task { await model.preview() } }
@@ -60,11 +66,37 @@ struct SharedDemandFlowView: View {
         }
     }
     @ViewBuilder private func editor(_ page: SharedDemandPage) -> some View {
+        if let candidate = model.draft.editedCandidate {
+            Section(sd("Entered items and quote")) {
+                Text(sd("These are your entered item and quote changes. Review their food sources before applying."))
+                SharedShopFields(quote: candidate.quote, lines: model.draft.lines.map {
+                    ShopperBasketLine(lineId: $0.id.uuid, originalItem: $0.name, packs: $0.packs, unitPriceMinor: $0.priceMinor, feeEligible: $0.feeEligible)
+                })
+            }
+        }
+        ForEach($model.draft.removedLines) { $removed in
+            Section(sd("Item marked for removal")) {
+                Text(removed.line.name).font(.headline)
+                ForEach(removed.sources, id: \.id) { source in sourceFacts(source, lines: page.graph?.lines ?? []) }
+                if removed.mustKeep {
+                    Text(sd("These meal, request or protected commitments remain. Keep their item to save your other edits."))
+                } else {
+                    Toggle(sd("Remove this item and its listed manual or imported food sources"), isOn: $removed.confirmed)
+                }
+                Button(sd("Keep this item and its sources")) { let id = removed.id; model.draft.restoreRemovedLine(id) }
+                    .accessibilityIdentifier("sharedFood.restoreItem." + removed.id.string)
+            }
+        }
         ForEach($model.draft.lines) { $line in
             Section(line.name.isEmpty ? sd("New basket item") : line.name) {
                 if !line.existing {
                     workingTextField(sd("Basket item"), text: $line.name, axis: .vertical).focused($editingText, equals: "line." + line.id.string)
                     Button(sd("Remove this unsaved item"), role: .destructive) { let id = line.id; model.draft.removeUnsavedLine(id) }
+                }
+                if let previous = page.graph?.lines.first(where: { $0.id == line.id }), previous.name != line.name {
+                    LabeledContent(sd("Previous basket label"), value: previous.name)
+                    Toggle(sd("This label still refers to the same food sources"), isOn: $line.confirmRename)
+                    Text(sd("Renaming an item does not replace its food sources. Add a new item for different food."))
                 }
                 if page.status == .legacy || !line.existing { unitPicker(sd("Food total unit"), selection: $line.unit) }
                 Stepper(sd("Whole packs") + ": \(line.packs)", value: $line.packs, in: 1...10000).disabled(page.status == .reviewRequired)
@@ -75,7 +107,7 @@ struct SharedDemandFlowView: View {
                         if case .reservation = source.source { return true }; return false
                     }) == true { Text(sd("Confirming a protected food's identity cannot be undone.")) }
                 }
-                Text(sd("Existing prices and quote stay unchanged. A new item has an unknown price."))
+                if model.draft.editedCandidate == nil { Text(sd("Existing prices and quote stay unchanged. A new item has an unknown price.")) }
                 amountFields($line.usable, title: sd("Usable food in one pack"), prefix: "pack." + line.id.string)
                 Toggle(sd("I accept unresolved quantities or restrictions for this item"), isOn: $line.acceptUnresolved)
             }
@@ -185,6 +217,15 @@ struct SharedDemandFlowView: View {
             totals(review.preview.afterTotals, graph: review.preview.after)
             ForEach(review.preview.after.contributions.filter { $0.removedAt == nil }, id: \.id) { source in sourceFacts(source, lines: review.preview.after.lines) }
             ForEach(review.preview.after.edges, id: \.id) { edge in edgeFacts(edge, sources: review.preview.after.contributions) }
+        }
+        let removed = review.preview.receipt.contributions.compactMap { delta -> SharedDemandContribution? in
+            guard let before = delta.before, before.removedAt == nil, delta.after?.removedAt != nil else { return nil }
+            return before
+        }
+        if !removed.isEmpty {
+            Section(sd("Food sources being removed")) {
+                ForEach(removed, id: \.id) { source in sourceFacts(source, lines: review.preview.before.lines) }
+            }
         }
         if case .patch(let body) = review.request.action {
             Section(sd("Whole packs and quote")) { SharedShopFields(quote: body.quote, lines: body.lines) }

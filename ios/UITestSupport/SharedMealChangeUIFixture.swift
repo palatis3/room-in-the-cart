@@ -93,6 +93,13 @@ private final class S17FixtureServer: @unchecked Sendable {
         }
         let scoped = "/v1/households/" + Self.household
         let deliveryPath = scoped + "/shops/" + Self.shop
+        if path == deliveryPath + "/demand", request.httpMethod == "GET" {
+            guard request.value(forHTTPHeaderField: "Authorization") == "Bearer fixture-shopper",
+                  request.value(forHTTPHeaderField: "X-Device-Token") == "shopper-token" else { return try denied() }
+            // This compatibility fixture has no demand graph or adoption catalog.
+            return try json(["schemaVersion": 1, "shopId": Self.shop, "shopRevision": revision,
+                             "authorityEpoch": 1, "status": "legacy", "graph": NSNull(), "totals": []])
+        }
         if let financial, path == deliveryPath + "/financial-evidence" || path == deliveryPath + "/financial-reviews" {
             guard request.value(forHTTPHeaderField: "Authorization") == "Bearer fixture-shopper",
                   request.value(forHTTPHeaderField: "X-Device-Token") == "shopper-token" else { return try denied() }

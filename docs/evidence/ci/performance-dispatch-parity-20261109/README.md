@@ -113,3 +113,35 @@ Frozen originals are `startup-container-budget-r1/` and `startup-candidate-r1/`.
 targets that exact revision. Native observer qualification remains pending its
 terminal result; the run also contains the separately validated new app/backend
 slice, so it is not a controlled before/after performance comparison.
+
+
+The focused successor42711707477 is terminal. All279 early checks, helper
+preparation and Release build/package passed. App-data discovery exhausted the
+original120-second startup deadline; runner installation began at+118.057 seconds.
+No selected case, trace or required measurement was established. The five-second
+lookup failure did not recur. Root verified both ZIP digests,21 retained files and
+all54 TAR members against the original archive receipt. Retained first failure:
+`hosted-42711707477/{monitoring-receipt,root-verification}.json`.
+
+Review of the prior successful run42639339096 found fixture readiness at about
++133.833 seconds after native dispatch. The observer's original absolute120-second
+ARM limit would reject that known successful journey. A bounded phase-budget
+correction is therefore justified for review; polling contention remains unproved.
+No unchanged retry, performance baseline or full-app qualification follows from
+this diagnostic evidence.
+
+
+The reviewed correction separates dispatch-to-binding (180 seconds), binding-to-ARM
+(120 seconds), and ARM-to-normal-native-completion (120 seconds), with a 420-second
+absolute limit. Phase deadlines start once, and ready statuses or slow identity
+checks cannot bypass expiry. Receipts now identify phase transitions and failure
+timing. This changes diagnostic startup allowance, not performance baselines or
+required measurements. Existing tracing, protocol, ownership and cleanup checks
+remain unchanged; installed-container queries still have five seconds.
+
+All 121 observer controls pass. Both actual cheap workflow profiles pass **298
+checks**, in 9.381 and 9.372 seconds while an independent app build was running.
+Root verified the frozen payload hashes and unchanged protected inputs.
+[Phase verification](phased-startup-verification.json) binds the originals in
+`phased-startup-budget-r1/` and `phased-candidate-r1/`. A hosted successor has not
+yet been dispatched; the missing-metric question remains open.

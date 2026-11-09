@@ -123,6 +123,8 @@ private struct SharedShopContent: View {
             } else { Text(ht("Shared shop access has ended. Return to household settings.")) }
         }.sheet(item: $mealDaySelection) { selected in
             SharedMealDaySheet(model: model, selection: selected)
+        }.sheet(item: Binding(get: { model.foodEditor }, set: { if $0 == nil { model.cancelFoodEditor() } })) { context in
+            NavigationStack { SharedDemandFlowView(shopModel: model, editor: context) }
         }.disabled(model.busy).task { await model.load() }
         .confirmationDialog(ht("Clear this local shared-shop retry?"), isPresented: $clearingRetry, titleVisibility: .visible) {
             Button(ht("I reviewed the current shop; clear retry"), role: .destructive) { Task { await model.clearPendingAfterReview() } }
@@ -189,7 +191,7 @@ private struct SharedShopEditor: View {
             DatePicker(ht("Quote recorded"), selection: $model.draft.observedAt)
             DatePicker(ht("Quote expires"), selection: $model.draft.expiresAt)
             Text(ht("Only enter zero when confirmed. Unknown or incomplete costs remain unresolved in request previews."))
-            Button(ht("Review entered shared shop")) { model.reviewDraft() }
+            Button(ht("Review entered shared shop")) { Task { await model.reviewEditor() } }
             Button(ht("Cancel shared shop edit")) { model.cancelEditing() }
         }
     }

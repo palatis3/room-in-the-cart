@@ -43,6 +43,7 @@ struct SharedFoodLineDraft: Identifiable, Equatable {
     var acceptUnresolved = false
     var existing = true
     var confirmExistingSources = false
+    var confirmRename = false
 }
 struct SharedFoodSourceDraft: Identifiable, Equatable {
     var id = SharedDemandID()
@@ -92,13 +93,35 @@ struct SharedFoodLinkDraft: Identifiable, Equatable {
     var confirmed = false
     var evidence = ""
 }
+enum SharedFoodEditorError: Error { case quoteExpired, retainedSources, removalReview, renameReview }
+
+struct SharedFoodEditorContext: Identifiable, Equatable {
+    let id = UUID()
+    let shop: ShopperShop
+    let page: SharedDemandPage
+    let candidate: ShopperShopCandidate
+}
+struct SharedFoodRemovedLine: Identifiable, Equatable {
+    let line: SharedFoodLineDraft
+    let sources: [SharedDemandContribution]
+    var originalIndex = 0
+    var confirmed = false
+    var id: SharedDemandID { line.id }
+    var mustKeep: Bool {
+        sources.contains { source in
+            switch source.source { case .manual, .imported: false; default: true }
+        }
+    }
+}
 struct SharedFoodDraft: Equatable {
     var lines: [SharedFoodLineDraft] = []
     var sources: [SharedFoodSourceDraft] = []
     var links: [SharedFoodLinkDraft] = []
+    var removedLines: [SharedFoodRemovedLine] = []
+    private(set) var editedCandidate: ShopperShopCandidate?
 
     init() {}
-    init(page: SharedDemandPage, shop: ShopperShop) throws {
+    init(page: SharedDemandPage, shop: ShopperShop, candidate: ShopperShopCandidate? = nil) throws {
         guard page.shopId.string == shop.shopId, page.shopRevision == shop.shopRevision, page.authorityEpoch == shop.authorityEpoch else { throw ClientError.cancelled }
         lines = try shop.lines.map { row in
             guard let id = UUID(uuidString: row.lineId) else { throw ClientError.invalidResponse }
@@ -119,6 +142,32 @@ struct SharedFoodDraft: Equatable {
                 return row
             }
         }
+        if let candidate { try useEditorCandidate(candidate, page: page, shop: shop) }
+    }
+    mutating func useEditorCandidate(_ candidate: ShopperShopCandidate, page: SharedDemandPage, shop: ShopperShop) throws {
+        guard page.status == .enabled || page.status == .reviewRequired, let graph = page.graph else { throw ClientError.configuration }
+        if page.status == .reviewRequired {
+            guard candidate.lines.count == shop.lines.count,
+                  zip(candidate.lines, shop.lines).allSatisfy({ entered, original in entered.lineId == original.lineId && entered.originalItem == original.originalItem }) else { throw ClientError.configuration }
+        }
+        let original = lines
+        let kept = Set(candidate.lines.map(\.lineId))
+        removedLines = original.filter { !kept.contains($0.id.string) }.map { line in
+            .init(line: line, sources: graph.contributions.filter { $0.removedAt == nil && $0.lineId == line.id }, originalIndex: original.firstIndex(where: { $0.id == line.id }) ?? 0)
+        }
+        lines = try candidate.lines.map { item in
+            guard let id = UUID(uuidString: item.lineId) else { throw ClientError.configuration }
+            var line = original.first { $0.id.uuid == id } ?? .init(id: .init(id), name: item.originalItem, unit: .count, packs: item.packs, priceMinor: item.unitPriceMinor, feeEligible: item.feeEligible, existing: false)
+            line.name = item.originalItem; line.packs = item.packs; line.priceMinor = item.unitPriceMinor; line.feeEligible = item.feeEligible
+            return line
+        }
+        editedCandidate = candidate
+    }
+    mutating func restoreRemovedLine(_ id: SharedDemandID) {
+        guard let removed = removedLines.first(where: { $0.id == id }) else { return }
+        // This is an explicit user action, never an automatic fallback. Preserve
+        // the removed line's original identity, packs, price and source bindings.
+        lines.insert(removed.line, at: min(removed.originalIndex, lines.count)); removedLines.removeAll { $0.id == id }
     }
     mutating func removeUnsavedLine(_ id: SharedDemandID) {
         guard lines.contains(where: { $0.id == id && !$0.existing }) else { return }
@@ -133,17 +182,25 @@ struct SharedFoodDraft: Equatable {
     }
     func request(page: SharedDemandPage, shop: ShopperShop, at: String) throws -> SharedDemandPreviewRequest {
         guard page.shopId.string == shop.shopId, page.shopRevision == shop.shopRevision, page.authorityEpoch == shop.authorityEpoch else { throw ClientError.cancelled }
-        let active = page.graph?.contributions.filter { $0.removedAt == nil } ?? []
+        if removedLines.contains(where: \.mustKeep) { throw SharedFoodEditorError.retainedSources }
+        if removedLines.contains(where: { !$0.confirmed }) { throw SharedFoodEditorError.removalReview }
+        if let editedCandidate, (serviceDate(editedCandidate.quote.expiresAt) ?? .distantPast) <= Date() { throw SharedFoodEditorError.quoteExpired }
+        let removedSourceIDs = removedLines.flatMap { $0.sources.map(\.id) }
+        let removing = Set(removedSourceIDs)
+        let active = page.graph?.contributions.filter { $0.removedAt == nil && !removing.contains($0.id) } ?? []
         let oldLines = page.graph?.lines ?? []
         var contributions: [SharedDemandContribution] = []
         var clarifications: [SharedDemandID] = []
         if page.status == .reviewRequired {
-            guard sources.isEmpty, links.isEmpty,
+            guard sources.isEmpty, links.isEmpty, removedLines.isEmpty,
                   lines.count == shop.lines.count,
                   zip(lines, shop.lines).allSatisfy({ line, original in
-                      line.id.string == original.lineId && line.name == original.originalItem && line.packs == original.packs &&
-                      line.priceMinor == original.unitPriceMinor && line.feeEligible == original.feeEligible && !line.confirmExistingSources
+                      line.id.string == original.lineId && line.name == original.originalItem && !line.confirmExistingSources && !line.confirmRename
                   }) else { throw ClientError.configuration }
+            let monetaryBase = editedCandidate?.lines ?? shop.lines
+            guard zip(lines, monetaryBase).allSatisfy({ line, entered in
+                line.id.string == entered.lineId && line.packs == entered.packs && line.priceMinor == entered.unitPriceMinor && line.feeEligible == entered.feeEligible
+            }) else { throw ClientError.configuration }
         }
         for line in lines where line.confirmExistingSources {
             let existing = active.filter { $0.lineId == line.id }
@@ -174,18 +231,22 @@ struct SharedFoodDraft: Equatable {
             return .init(id: link.id, kind: link.kind, demandId: demandID, supplyId: supplyID, quantity: quantity,
                          confirmation: .init(confirmedAt: at, evidence: link.evidence))
         }
-        let newLines = lines.enumerated().compactMap { index, line -> SharedDemandLine? in
-            guard !oldLines.contains(where: { $0.id == line.id }) else { return nil }
+        let newLines = try lines.enumerated().compactMap { index, line -> SharedDemandLine? in
+            if var old = oldLines.first(where: { $0.id == line.id }) {
+                guard old.name != line.name else { return nil }
+                guard line.confirmRename else { throw SharedFoodEditorError.renameReview }
+                old.name = line.name; return old
+            }
             return .init(id: line.id, name: line.name, unit: line.unit, originalOrder: (oldLines.map(\.originalOrder).max() ?? -1) + index + 1)
         }
         let basket = lines.map { ShopperBasketLine(lineId: $0.id.uuid, originalItem: $0.name, packs: $0.packs, unitPriceMinor: $0.priceMinor, feeEligible: $0.feeEligible) }
         let packs = try lines.map { SharedDemandPackReview(lineId: $0.id, usablePerPack: try $0.usable.quantity(), acceptUnresolved: $0.acceptUnresolved) }
-        let change = SharedDemandChange(lines: newLines, contributions: contributions, edges: edges, clarifyReservationProductIds: clarifications.isEmpty ? nil : clarifications)
+        let change = SharedDemandChange(lines: newLines, contributions: contributions, edges: edges, removeSourceIds: removedSourceIDs, clarifyReservationProductIds: clarifications.isEmpty ? nil : clarifications)
         let mode: SharedDemandPreviewRequest.Mode = page.status == .legacy ? .adopt : (change.isEmpty ? .review : .change)
         let result = SharedDemandPreviewRequest(mode: mode,
             base: .init(shopRevision: page.shopRevision, authorityEpoch: page.authorityEpoch, graphRevision: page.graph?.revision ?? 0),
             change: change,
-            action: .patch(.init(quote: shop.quote, lines: basket)), packs: packs)
+            action: .patch(.init(quote: editedCandidate?.quote ?? shop.quote, lines: basket, reviewedStoreBasisRevision: editedCandidate?.reviewedStoreBasisRevision)), packs: packs)
         try result.validate(); return result
     }
 }
@@ -194,10 +255,13 @@ struct SharedFoodDraft: Equatable {
     var foodShop: ShopperShop? { get }
     var canReadFood: Bool { get }
     var foodPending: Bool { get }
+    var foodEditorID: UUID? { get }
     func readFood() async throws -> SharedDemandPage
     func previewFood(_ request: SharedDemandPreviewRequest) async throws -> SharedDemandReview
     func applyFood(_ review: SharedDemandReview) async throws
 }
+
+@MainActor extension SharedDemandFlowAccess { var foodEditorID: UUID? { nil } }
 
 @MainActor final class SharedDemandFlowModel: ObservableObject {
     @Published private(set) var page: SharedDemandPage?
@@ -210,8 +274,9 @@ struct SharedFoodDraft: Equatable {
     @Published var acknowledged = false
     private let access: any SharedDemandFlowAccess
     private var generation = UUID()
-    init(access: any SharedDemandFlowAccess) { self.access = access }
-    var permitted: Bool { access.canReadFood && access.foodShop?.shopId == shop?.shopId }
+    private let editorContext: SharedFoodEditorContext?
+    init(access: any SharedDemandFlowAccess, editor: SharedFoodEditorContext? = nil) { self.access = access; editorContext = editor }
+    var permitted: Bool { access.canReadFood && access.foodShop?.shopId == shop?.shopId && (editorContext == nil || access.foodEditorID == editorContext?.id) }
     var pending: Bool { access.foodPending }
     func load() async {
         guard !busy else { return }
@@ -219,7 +284,10 @@ struct SharedFoodDraft: Equatable {
         do {
             let value = try await access.readFood()
             guard generation == token, access.canReadFood, let current = access.foodShop else { return }
-            let entered = try SharedFoodDraft(page: value, shop: current)
+            if let editorContext {
+                guard access.foodEditorID == editorContext.id, current == editorContext.shop, value == editorContext.page else { throw ClientError.cancelled }
+            }
+            let entered = try SharedFoodDraft(page: value, shop: current, candidate: editorContext?.candidate)
             shop = current; page = value; draft = entered
         } catch { failed(error, token: token) }
     }
@@ -250,6 +318,15 @@ struct SharedFoodDraft: Equatable {
     private func failed(_ error: Error, token: UUID) {
         guard token == generation else { return }
         review = nil; acknowledged = false
+        if let input = error as? SharedFoodEditorError {
+            switch input {
+            case .quoteExpired: notice = SharedDemandCopy.text("The entered quote expired. Return to the item editor and update its expiry before reviewing again.")
+            case .retainedSources: notice = SharedDemandCopy.text("These meal, request or protected commitments remain. Keep their item to save your other edits.")
+            case .removalReview: notice = SharedDemandCopy.text("Review every source on each removed item before confirming its removal.")
+            case .renameReview: notice = SharedDemandCopy.text("Confirm that each changed basket label still refers to the same food sources.")
+            }
+            return
+        }
         switch error as? ClientError {
         case .accessEnded, .sessionNeeded: cancel(); notice = SharedDemandCopy.text("Shared food access ended. Return to the household.")
         case .cancelled: cancel(); notice = SharedDemandCopy.text("The shop changed. Refresh and review again.")

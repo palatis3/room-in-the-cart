@@ -95,11 +95,12 @@ struct SharedShopTransfer: Equatable {
     @Published private(set) var creatingAnother = false
     @Published private(set) var requiresRefresh = false
     @Published private(set) var review: SharedShopReview?
+    @Published private(set) var foodEditor: SharedFoodEditorContext?
     @Published private(set) var pending: PendingOperation?
     @Published private(set) var delivery: ShopperDelivery = .none
     @Published private(set) var reviewedCurrentFacts = false
     @Published private(set) var notice: String?
-    @Published var draft = SharedShopDraft() { didSet { review = nil; acknowledged = false } }
+    @Published var draft = SharedShopDraft() { didSet { review = nil; acknowledged = false; foodEditor = nil; editorLookup = UUID() } }
     @Published var acknowledged = false
     let householdID: String; let memberID: String
     private let service: HouseholdService
@@ -138,11 +139,14 @@ struct SharedShopTransfer: Equatable {
         draft = .init(); creatingAnother = true; editing = true
     }
     private var reviewedFood: SharedDemandReview?
+    private var reviewedFoodEditorID: UUID?
+    private var editorLookup = UUID()
+    private var graphShopID: String?
 
     func updateScope(_ value: HouseholdBootstrap) {
         guard value.household.id == householdID, value.memberId == memberID, value.grantId == nil else { clear(); return }
         if scope.shopId != value.shopId || scope.role != value.role || Set(scope.capabilities) != Set(value.capabilities) {
-            reviewedFood = nil
+            reviewedFood = nil; reviewedFoodEditorID = nil; foodEditor = nil; editorLookup = UUID(); graphShopID = nil
             financialRecord = nil; financialRetry = nil; deliveryRecord = nil; review = nil; acknowledged = false
             reviewedCookRecipient = nil; pendingMarkOccurrence = nil; reviewedCookOperation = nil; reviewedAmendmentOperation = nil
             if scope.shopId != value.shopId, pendingCookCopy || pendingPantry || pendingMealRecovery || pendingAmendment || pendingDelivery || pending?.sharedDemandBinding != nil { pending = nil; delivery = .none; reviewedCurrentFacts = false }
@@ -198,7 +202,7 @@ struct SharedShopTransfer: Equatable {
             let value = try await service.shopperShop(shopID: id)
             guard start == generation, scope == fresh else { throw ClientError.cancelled }
             if shop != value {
-                reviewedFood = nil
+                reviewedFood = nil; reviewedFoodEditorID = nil; foodEditor = nil; editorLookup = UUID()
                 financialRecord = nil; financialRetry = nil
                 deliveryRecord = nil
                 review = nil; acknowledged = false
@@ -711,7 +715,7 @@ struct SharedShopTransfer: Equatable {
             do { draft = try .init(shop); editing = true } catch { notice = ht("The shared shop could not be opened for editing. Refresh before trying again.") }
         }
     }
-    func cancelEditing() { guard !busy, pending == nil else { return }; editing = false; creatingAnother = false; review = nil; acknowledged = false }
+    func cancelEditing() { guard !busy, pending == nil else { return }; editing = false; creatingAnother = false; review = nil; acknowledged = false; cancelFoodEditor() }
     func reviewDraft() {
         guard authorized, !busy, pending == nil, editing else { return }
         do {
@@ -741,6 +745,49 @@ struct SharedShopTransfer: Equatable {
             acknowledged = false; notice = nil
         } catch { notice = ht("Review every item and price. Leave unknown costs blank, enter a fee threshold when selected, and set a future quote expiry.") }
     }
+    /// UI entry for the existing editor. A demand lookup must finish before
+    /// either legacy approval or graph-aware approval becomes available.
+    func reviewEditor() async {
+        guard authorized, !busy, pending == nil, editing else { return }
+        review = nil; acknowledged = false; cancelFoodEditor()
+        reviewDraft()
+        guard let entered = review else { return }
+        // Creation has no existing graph. All existing shop.patch edits check
+        // the explicit server status; an unavailable response is never legacy.
+        guard entered.kind == "shop.patch", let candidate = entered.candidate,
+              let baseline = shop, let id = UUID(uuidString: entered.shopID) else { return }
+        let start = generation, actor = scope, lookup = UUID()
+        editorLookup = lookup; review = nil; acknowledged = false; foodEditor = nil; reviewedFood = nil; reviewedFoodEditorID = nil
+        busy = true; defer { busy = false }
+        do {
+            let page = try await service.sharedDemand(shopID: id)
+            guard start == generation, lookup == editorLookup, actor == scope, self.shop == baseline,
+                  editing, pending == nil, review == nil, canManage,
+                  page.shopRevision == entered.base.shopRevision, page.authorityEpoch == entered.base.authorityEpoch else { throw ClientError.cancelled }
+            graphShopID = page.graph == nil ? nil : entered.shopID
+            if page.status == .legacy { review = entered; return }
+            if page.status == .reviewRequired {
+                guard entered.mealEdit == nil, candidate.lines.count == baseline.lines.count,
+                      zip(candidate.lines, baseline.lines).allSatisfy({ entered, original in entered.lineId == original.lineId && entered.originalItem == original.originalItem }) else {
+                    notice = SharedDemandCopy.text("Review the surviving food facts first. You can update prices and packs, but keep every item and its name unchanged for this review."); return
+                }
+            }
+            guard entered.mealEdit == nil else {
+                notice = SharedDemandCopy.text("Your meal edit is still here. Saving meal edits with shared food tracking is not available yet; nothing was sent."); return
+            }
+            foodEditor = .init(shop: baseline, page: page, candidate: candidate)
+        } catch {
+            guard start == generation, lookup == editorLookup else { return }
+            review = nil; acknowledged = false; foodEditor = nil
+            await handle(error, start: start)
+            if authorized, (error as? ClientError) == .cancelled {
+                notice = SharedDemandCopy.text("The shop changed. Refresh and review again.")
+            }
+        }
+    }
+    func cancelFoodEditor() {
+        editorLookup = UUID(); foodEditor = nil; reviewedFood = nil; reviewedFoodEditorID = nil
+    }
     func reviewTransfer(_ assignment: ShopperAssignment, to adultID: UUID) {
         guard authorized, !busy, !editing, pending == nil, !requiresRefresh, scope.grantId == nil,
               scope.capabilities.contains("household_admin"), scope.shopId.flatMap(UUID.init(uuidString:)) == assignment.shopId,
@@ -760,6 +807,7 @@ struct SharedShopTransfer: Equatable {
     }
     func applyReviewed() async {
         guard authorized, !busy, pending == nil, acknowledged, let review else { return }
+        if review.kind == "shop.patch", graphShopID == review.shopID { await reviewEditor(); return }
         if let candidate = review.candidate, (serviceDate(candidate.quote.expiresAt) ?? .distantPast) <= Date() {
             self.review = nil; acknowledged = false; notice = ht("The reviewed quote expired. Update its evidence and review again."); return
         }
@@ -871,7 +919,7 @@ struct SharedShopTransfer: Equatable {
         } catch { await handle(error, start: start) }
     }
     func clear() {
-        reviewedFood = nil
+        reviewedFood = nil; reviewedFoodEditorID = nil; foodEditor = nil; editorLookup = UUID(); graphShopID = nil
         reviewedAmendmentOperation = nil; reviewedCurrentFacts = false
         reviewedCookRecipient = nil; pendingMarkOccurrence = nil; reviewedCookOperation = nil
         recoveryRecord = nil; reviewedRecovery = nil; reviewedRecoveryOperation = nil
@@ -900,6 +948,7 @@ struct SharedShopTransfer: Equatable {
 
 extension HouseholdShopModel: SharedDemandFlowAccess {
     var foodShop: ShopperShop? { shop }
+    var foodEditorID: UUID? { foodEditor?.id }
     var canReadFood: Bool {
         authorized && scope.grantId == nil && scope.role == "shopper" && scope.capabilities.contains("shopper_commands") &&
         scope.shopId != nil && shop?.shopId == scope.shopId && shop?.phase == "draft"
@@ -915,30 +964,33 @@ extension HouseholdShopModel: SharedDemandFlowAccess {
             let page = try await service.sharedDemand(shopID: id)
             guard start == generation, scope == actor, self.shop == shop, canReadFood,
                   page.shopRevision == shop.shopRevision, page.authorityEpoch == shop.authorityEpoch else { throw ClientError.cancelled }
-            reviewedFood = nil
+            graphShopID = page.graph == nil ? nil : shop.shopId
+            reviewedFood = nil; reviewedFoodEditorID = nil
             return page
         } catch { await handle(error, start: start); throw error }
     }
     func previewFood(_ request: SharedDemandPreviewRequest) async throws -> SharedDemandReview {
         guard canReadFood, canManage, !busy, pending == nil, let shop, let id = UUID(uuidString: shop.shopId),
               request.base.shopRevision == shop.shopRevision, request.base.authorityEpoch == shop.authorityEpoch else { throw ClientError.cancelled }
-        let start = generation, actor = scope
-        busy = true; defer { busy = false }; reviewedFood = nil
+        let start = generation, actor = scope, editorID = foodEditor?.id
+        busy = true; defer { busy = false }; reviewedFood = nil; reviewedFoodEditorID = nil
         do {
             let value = try await service.previewSharedDemand(shopID: id, request: request)
-            guard start == generation, actor == scope, self.shop == shop, canReadFood, pending == nil else { throw ClientError.cancelled }
-            reviewedFood = value; return value
+            guard start == generation, actor == scope, self.shop == shop, canReadFood, pending == nil, foodEditor?.id == editorID else { throw ClientError.cancelled }
+            reviewedFood = value; reviewedFoodEditorID = editorID; return value
         } catch { await handle(error, start: start); throw error }
     }
     func applyFood(_ review: SharedDemandReview) async throws {
-        guard canReadFood, canManage, !busy, pending == nil, reviewedFood == review,
+        guard canReadFood, canManage, !busy, pending == nil, reviewedFood == review, reviewedFoodEditorID == foodEditor?.id,
               shop?.shopId == review.shopID.uuidString.lowercased(), shop?.shopRevision == review.request.base.shopRevision,
               shop?.authorityEpoch == review.request.base.authorityEpoch else { throw ClientError.cancelled }
-        let start = generation, actor = scope
+        if foodEditor != nil, case .patch(let patch) = review.request.action,
+           (serviceDate(patch.quote.expiresAt) ?? .distantPast) <= Date() { throw SharedFoodEditorError.quoteExpired }
+        let start = generation, actor = scope, editorID = foodEditor?.id
         busy = true; defer { busy = false }
         do {
             let operation = try await service.prepareSharedDemandApply(review)
-            guard start == generation, scope == actor, canReadFood, pending == nil, reviewedFood == review else { throw ClientError.cancelled }
+            guard start == generation, scope == actor, canReadFood, pending == nil, reviewedFood == review, foodEditor?.id == editorID else { throw ClientError.cancelled }
             // Append before delivery. Relaunch and retry use these exact bytes,
             // key, preview and reserved operation through the existing outbox.
             try await outbox.append(operation)

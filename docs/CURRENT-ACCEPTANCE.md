@@ -6,8 +6,12 @@ The latest shared-food slice compiles under Xcode 27.1 and passes 45 native mode
 regressions,122 client-package tests (3 expected integration skips),569 backend
 offline tests (1 expected database-only skip), and 285 PostgreSQL tests (3 optional
 browser skips). These are scoped passes, not a complete combined release run.
-Quote/item, request Add/Link and changed-meal editors still need graph-aware saves;
-UI journeys and mixed-device acceptance remain open.
+The next quote/item editor slice now compiles and passes all 59 strict native model
+checks plus one real PostgreSQL expired-quote/privacy-recovery case. Independent review found two legacy fixture routes needing explicit demand status;
+they are corrected locally and their original UI checks are running. Graph-editor
+UI journeys remain open. Request Add/Link and changed-meal
+editors still need graph-aware saves; mixed-device acceptance remains open.
+[Editor proof](evidence/native/shared-food-editor-20261109/README.md).
 [Native proof](evidence/native/shared-food-manual-flow-20261109/README.md),
 [backend proof](evidence/service/shared-demand-adoption-20261109/README.md).
 
@@ -88,7 +92,9 @@ profiles pass 263 controls. Run 42707391568 passed the observer helper and Relea
 Its consumer stopped at an early container lookup timeout during runner installation.
 No selected-case verdict or measurements were established. The narrow initial
 lookup correction at ca3cf777 passes 279 complete early controls in both profiles;
-focused successor 42711707477 is running. The separate
+focused successor 42711707477 passed Release build but exhausted its original
+120-second startup deadline before selected-case execution. The earlier five-second
+query cutoff did not recur. A phase-budget correction is in review. The separate
 producer/consumer and original required metrics remain; native observation,
 performance baseline and combined acceptance are still unproven.
 [Prepared workflow](evidence/ci/hosted-scroll-observation-20261109/README.md).

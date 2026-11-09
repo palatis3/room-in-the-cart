@@ -10,7 +10,7 @@
     "ios/UITests/ReleasePerformanceUITests.swift": "2e2209c8b849b3ab9d1e323bb8534577b59dc8e810304127165648a5aca533ae",
     "scripts/app_scroll_observation/__init__.py": "3283c46663f2f89933619f374af2771911d1225c9d098cfdec84a69e1124f66e",
     "scripts/app_scroll_observation/archive.py": "ec522ab2ad8233da3354d9a4e9a14ea987dc6e67287488ed156c92feb5ac03e7",
-    "scripts/app_scroll_observation/capture.py": "d9bcf04b7656f9e94932b428a10116346a10ed28fb702c347e04677c6652f598",
+    "scripts/app_scroll_observation/capture.py": "fa05dd348a218a51eecc5940e787a21db76276db78576e0b859e4664dffa8379",
     "scripts/app_scroll_observation/consumer.py": "2db8a7b2901b46746db1e824cc6ad841499cd5f0ddf5909abd37a034b7f0e7c4",
     "scripts/app_scroll_observation/contract.py": "043b9e84a550166f1566de454489c98e8c9a4a2a8bb33d0ac917cc83df79d6f8",
     "scripts/app_scroll_observation/export.py": "3aaa673486d854bef7591b8e18e7199ffc8e1c51941f17effc1390b19c7ead09",
@@ -32,7 +32,7 @@
     "scripts/prepare_ios_performance_simulator.py": "10b677c778802bbd8fc3e5ff1aaf9f5542b5e5f7a0565cf68e13d44f0445b020",
     "scripts/preserve_performance_store.py": "52f0a220b861ea90369fbc0c1882e037462674e1600f32b53090ac9fddd06897",
     "scripts/select_ci_iphone.py": "0b186bb693357ddb69bce88fe6b08f32b4d4da8e222b3f6f094627d079998d00",
-    "scripts/test_app_scroll_observation.py": "9086a4c413e7b7787183db3c7304f84d6cfed914b1eff9d37a9c21c3b4840c0f"
+    "scripts/test_app_scroll_observation.py": "3f1edb888ba8e3ad06859b3e1b3d444e19aeb46dbb69740edb114803674b1f3c"
   },
   "ungatedSourceSHA256": {
     "ios/App/RoomInTheCartApp.swift": "e4a7c17a6016646beac6f31fe29eb0d4802db9b4f423b870d52da8fb374cb093",

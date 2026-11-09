@@ -14,6 +14,10 @@ from .owned import Supervisor, Identity, Notification
 from .support import SELECTOR, require, sha, manifest, modes, atomic_json, derive_plan, arm64_uuid, launcher_identity
 
 BASE = Path(__file__).resolve().parent
+BIND_SECONDS = 180
+ARM_SECONDS = 120
+COMPLETION_SECONDS = 120
+NATIVE_SECONDS = 420
 
 
 from .native_environment import NativeEnvironmentSpawn
@@ -28,23 +32,70 @@ class Capture(NativeEnvironmentSpawn, Supervisor):
         self.identity = Identity()  # No native identity query occurs merely by importing this module.
         self.processes, self.notifications = [], []
         self.bound = {}; self.control_directory = None; self.native_started = None; self.cleaning = False
+        self.phase = None; self.phase_deadline = None
         self.nonce = uuid.uuid4().hex
         self.receipt = {'schemaVersion': 1, 'diagnosticOnly': True, 'releaseAcceptance': False,
             'captureQualified': False, 'expectedEventsProven': False, 'outcome': 'running',
             'nonce': self.nonce, 'subsystem': 'dev.roominthecart.appcapture.' + self.nonce,
             'simulatorUDID': self.device, 'selector': SELECTOR, 'startedEpoch': time.time(),
             'readinessObserved': False, 'processes': [], 'bindings': {}, 'hostCommands': [],
-            'limits': {'nativeToArmSeconds': 120, 'readinessSeconds': 15, 'recordSeconds': 60,
+            'phaseTimings': {},
+            'limits': {'nativeToBindingSeconds': BIND_SECONDS, 'bindingToArmSeconds': ARM_SECONDS,
+                'armToNativeCompletionSeconds': COMPLETION_SECONDS, 'readinessSeconds': 15, 'recordSeconds': 60,
                 'postRecordFinalizationSeconds': 30, 'waitAfterReadinessSeconds': 90,
-                'nativeWallSeconds': 240, 'cleanupSecondsPerProcess': 7,
+                'nativeWallSeconds': NATIVE_SECONDS, 'cleanupSecondsPerProcess': 7,
                 'artifactBytes': 256*1024**2, 'traceBytesEach': 128*1024**2, 'xcresultBytes': 512*1024**2,
                 'nativeLogBytes': 16*1024**2, 'files': 2048},
             'preparedSources': {p.name: sha(p) for p in BASE.iterdir() if p.suffix in ('.py', '.json', '.fragment')}}
         self.save()
 
-    def budget(self):
+    def check_deadlines(self):
+        now = time.monotonic()
         if not self.cleaning and self.native_started is not None:
-            require(time.monotonic() - self.native_started <= 240, 'native_wall_deadline')
+            require(now < self.native_started + NATIVE_SECONDS, 'native_wall_deadline')
+            if self.phase_deadline is not None:
+                require(now < self.phase_deadline, self.phase + '_deadline')
+        return now
+
+    def start_native_clock(self):
+        require(self.native_started is None, 'native_clock_already_started')
+        self.native_started = time.monotonic()
+        self.receipt.update(nativeDispatchEpoch=time.time(), nativeDispatchMonotonic=self.native_started,
+                            nativeDeadlineMonotonic=self.native_started + NATIVE_SECONDS)
+        self.phase = 'binding'; self.phase_deadline = self.native_started + BIND_SECONDS
+        self.receipt['phaseTimings']['binding'] = dict(startMonotonic=self.native_started,
+            startEpoch=self.receipt['nativeDispatchEpoch'], deadlineMonotonic=self.phase_deadline)
+        self.save()
+
+    def advance_phase(self, expected, following, seconds=None):
+        require(self.phase == expected and following not in self.receipt['phaseTimings'], 'phase_transition')
+        now = self.check_deadlines()  # A ready status or completed expensive check cannot waive expiry.
+        epoch = time.time()
+        previous = self.receipt['phaseTimings'][expected]
+        previous.update(endMonotonic=now, endEpoch=epoch, elapsedSeconds=now-previous['startMonotonic'])
+        self.phase = following
+        self.phase_deadline = None if seconds is None else now + seconds
+        self.receipt['phaseTimings'][following] = dict(startMonotonic=now, startEpoch=epoch,
+                                                     deadlineMonotonic=self.phase_deadline)
+        self.save()
+
+    def remaining_native_time(self):
+        now = self.check_deadlines()
+        return min(self.native_started + NATIVE_SECONDS, self.phase_deadline) - now
+
+    def await_native_completion(self, native):
+        require(self.wait(native,self.remaining_native_time()) == 0, 'original_native_failed')
+        self.advance_phase('completion', 'nativeCompleted')
+
+    def check_waiting_native(self, native):
+        self.budget()
+        require(native['process'].poll() is None, 'native_exited_before_arm')
+        value = native['binding']
+        require(value is not None and self.identity.read(value['pid']) == value, 'native_identity_before_arm')
+        self.check_deadlines()
+
+    def budget(self):
+        self.check_deadlines()
         require(shutil.disk_usage(self.out).free >= 8 * 1024**3, 'disk_reserve')
         total = results = count = 0
         traces = {'app.trace': 0, 'inspection.trace': 0}
@@ -66,21 +117,26 @@ class Capture(NativeEnvironmentSpawn, Supervisor):
                 elif path.suffix == '.log': require(size <= 1024**2, 'tool_log_cap')
 
     def tool_spawn(self, label, key, tail, allow_terminal_query=False):
+        self.check_deadlines()
         tool = self.config['tools'][key]
         path, digest = Path(tool['path']), tool['sha256']
         expected = Path(tool.get('executable', tool['path']))
         expected_digest = tool.get('executableSHA256', digest)
         require(sha(path) == digest, key + '_invocation_hash')
+        self.check_deadlines()
         try:
-            return self.spawn(label, [str(path.resolve()), *tail], expected, expected_digest)
+            item = self.spawn(label, [str(path.resolve()), *tail], expected, expected_digest)
         except RuntimeError:
             # A completed query can exit before libproc samples its image. Its owned Popen is reaped;
             # it never becomes a signaling target. Native/tracer/exporter must bind live as usual.
             if allow_terminal_query and self.processes and self.processes[-1]['record']['label'] == label:
                 item = self.processes[-1]
                 if item['process'].poll() is not None:
-                    item['record']['terminalQueryBeforeBinding'] = True; self.save(); return item
+                    item['record']['terminalQueryBeforeBinding'] = True; self.save()
+                    self.check_deadlines(); return item
             raise
+        self.check_deadlines()
+        return item
 
     def query_container(self, bundle, kind, label, startup_native=None):
         started = time.monotonic()
@@ -89,7 +145,7 @@ class Capture(NativeEnvironmentSpawn, Supervisor):
             require(bundle == 'dev.roominthecart.app' and kind == 'data' and not self.bound
                     and self.native_started is not None and startup_native['record']['label'] == 'native',
                     'startup_container_scope')
-        deadline = self.native_started + 120 if startup else started + 5
+        deadline = self.native_started + BIND_SECONDS if startup else started + 5
         def check_native():
             if startup:
                 require(startup_native['process'].poll() is None, 'native_exited_before_app')
@@ -186,9 +242,11 @@ class Capture(NativeEnvironmentSpawn, Supervisor):
     def host_command(self, action):
         require(action in ('GO', 'Q', 'ABORT') and self.control_directory is not None, 'host_command_phase')
         if action != 'ABORT':
+            self.check_deadlines()
             require(self.bound_valid('app') and self.bound_valid('runner'), 'identity_before_release')
         if action == 'GO': require(self.receipt['readinessObserved'] is True, 'early_go')
         if action == 'Q': require(self.receipt.get('normalTracerExit') is True, 'early_q')
+        if action != 'ABORT': self.check_deadlines()  # Includes identity hashing before release.
         temp = self.control_directory/'host-command.tmp'
         temp.write_text(action+' '+self.nonce+'\n'); temp.replace(self.control_directory/'host-command.txt')
         self.receipt['hostCommands'].append({'command': action, 'epoch': time.time()}); self.save()
@@ -203,6 +261,46 @@ class Capture(NativeEnvironmentSpawn, Supervisor):
         self.receipt['simctlLaunchIdentity'] = launcher_identity(**c['launcherArguments'])
         self.receipt['config'] = c
         self.save(); self.budget()
+
+    def await_targets(self, native):
+        data = None; query = 0
+        while data is None:
+            self.check_waiting_native(native); query += 1
+            data = self.query_container('dev.roominthecart.app','data','container-data-'+str(query),startup_native=native)
+            if data is None: time.sleep(0.25)
+        self.control_directory = data/'Library/Application Support/AppCaptureControl'/self.nonce
+        value = None
+        while value is None:
+            self.check_waiting_native(native)
+            value = self.status()
+            if value is None: time.sleep(0.05)
+        self.check_waiting_native(native)
+        installed = self.query_container('dev.roominthecart.app','app','container-app')
+        self.check_waiting_native(native)
+        runner = self.query_container('dev.roominthecart.RoomInTheCartUITests.xctrunner','app','container-runner')
+        self.check_waiting_native(native)
+        require(installed is not None and runner is not None, 'installed_containers')
+        product = Path(self.config['productsRoot'])/'Release-iphonesimulator'
+        self.bind('app',value['pid'],installed/'RoomInTheCart',product/'RoomInTheCart.app/RoomInTheCart',value)
+        self.check_waiting_native(native)
+        self.bind('runner',value['runnerPID'],runner/'RoomInTheCartUITests-Runner',product/'RoomInTheCartUITests-Runner.app/RoomInTheCartUITests-Runner',value)
+        self.check_waiting_native(native)
+        self.receipt['initialStatus'] = value
+        self.advance_phase('binding', 'arm', ARM_SECONDS)
+        return value
+
+    def await_arm(self, native, value):
+        # Bind while the original fixture runs. Every ready status still faces the deadline.
+        while True:
+            self.check_waiting_native(native)
+            require(self.bound_alive('app') and self.bound_alive('runner'), 'target_identity_before_arm')
+            self.check_deadlines()
+            if value['stage'] == 'waitingForCollector': break
+            time.sleep(0.05); value = self.status()
+            require(value is not None, 'app_identity_receipt_disappeared')
+        self.receipt['armedStatus'] = value
+        self.advance_phase('arm', 'completion', COMPLETION_SECONDS)
+        return value
 
     def run(self):
         try:
@@ -220,51 +318,24 @@ class Capture(NativeEnvironmentSpawn, Supervisor):
                 '-default-test-execution-time-allowance','900','-maximum-test-execution-time-allowance','1200',
                 '-resultBundlePath',str(self.out/'Performance.xcresult'),'-collect-test-diagnostics','on-failure',
                 '-only-testing:'+SELECTOR,'test-without-building']
-            self.native_started = time.monotonic(); self.receipt['nativeDispatchEpoch'] = time.time()
+            self.start_native_clock()
             native = self.tool_spawn('native','xcodebuild',native_tail)
-            deadline = self.native_started+120
-            data = None; query = 0
-            while data is None and time.monotonic() < deadline:
-                require(native['process'].poll() is None, 'native_exited_before_app')
-                self.budget(); query += 1
-                data = self.query_container('dev.roominthecart.app','data','container-data-'+str(query),startup_native=native)
-                if data is None: time.sleep(0.25)
-            require(data is not None, 'app_data_deadline')
-            self.control_directory = data/'Library/Application Support/AppCaptureControl'/self.nonce
-            value = None
-            while time.monotonic() < deadline:
-                self.budget(); require(native['process'].poll() is None, 'native_exited_before_arm')
-                value = self.status()
-                if value: break
-                time.sleep(0.05)
-            require(value is not None, 'app_identity_receipt_deadline')
-            installed = self.query_container('dev.roominthecart.app','app','container-app')
-            runner = self.query_container('dev.roominthecart.RoomInTheCartUITests.xctrunner','app','container-runner')
-            require(installed is not None and runner is not None, 'installed_containers')
-            product = Path(self.config['productsRoot'])/'Release-iphonesimulator'
-            self.bind('app',value['pid'],installed/'RoomInTheCart',product/'RoomInTheCart.app/RoomInTheCart',value)
-            self.bind('runner',value['runnerPID'],runner/'RoomInTheCartUITests-Runner',product/'RoomInTheCartUITests-Runner.app/RoomInTheCartUITests-Runner',value)
-            self.receipt['initialStatus'] = value; self.save()
-            # Bind early while the original fixture runs: a setup failure must not lose known
-            # app/runner cleanup ownership. No collector starts until ARM.
-            while value['stage'] != 'waitingForCollector' and time.monotonic() < deadline:
-                self.budget(); require(native['process'].poll() is None, 'native_exited_before_arm')
-                require(self.bound_alive('app') and self.bound_alive('runner'), 'target_identity_before_arm')
-                time.sleep(0.05); value = self.status()
-                require(value is not None, 'app_identity_receipt_disappeared')
-            require(value['stage'] == 'waitingForCollector', 'arm_deadline')
-            self.receipt['armedStatus'] = value; self.save()
+            value = self.await_arm(native, self.await_targets(native))
+            self.check_waiting_native(native)
             require(self.bound_valid('app') and self.bound_valid('runner'), 'identity_before_attach')
+            self.check_deadlines()
             tracer_started = time.monotonic()
             tracer = self.tool_spawn('tracer','xctrace',['record','--template','Logging','--device',self.device,
                 '--attach',str(value['pid']),'--time-limit','60s','--output',str(self.out/'app.trace'),
                 '--notify-tracing-started',ready.name])
+            self.check_deadlines()
             ready_deadline = tracer_started+15
             while time.monotonic() < ready_deadline and tracer['process'].poll() is None:
                 self.budget()
                 if ready.received(0.05):
                     self.receipt.update(readinessObserved=True,readinessEpoch=time.time()); self.save(); break
             require(self.receipt['readinessObserved'], 'collector_readiness_deadline')
+            self.check_deadlines()
             require(self.valid(tracer), 'tracer_changed_before_go')
             self.host_command('GO')
             trace_deadline = time.monotonic()+90
@@ -281,7 +352,7 @@ class Capture(NativeEnvironmentSpawn, Supervisor):
             require('completedStatus' in self.receipt, 'trace_ended_before_samples_completed')
             self.receipt.update(normalTracerExit=True,tracerExitEpoch=time.time()); self.save()
             self.host_command('Q')
-            require(self.wait(native,max(0.1,240-(time.monotonic()-self.native_started))) == 0, 'original_native_failed')
+            self.await_native_completion(native)
             self.receipt['finalStatus'] = self.status()
             require(self.receipt['finalStatus']['stage'] == 'finished', 'finish_ack_missing')
             atomic_json(self.out/'app-status-final.json', self.receipt['finalStatus'])
@@ -299,6 +370,10 @@ class Capture(NativeEnvironmentSpawn, Supervisor):
             self.receipt.update(sourceUnchanged=True, productsUnchanged=True, outcome='collected_pending_independent_validation')
         except BaseException as error:
             self.receipt.update(outcome='unqualified',error=type(error).__name__+': '+str(error))
+            now = time.monotonic()
+            self.receipt['failureTiming'] = dict(monotonic=now, epoch=time.time(), phase=self.phase,
+                phaseDeadlineMonotonic=self.phase_deadline,
+                nativeElapsedSeconds=None if self.native_started is None else now-self.native_started)
         finally:
             self.cleaning = True
             signal.signal(signal.SIGINT,signal.SIG_IGN); signal.signal(signal.SIGTERM,signal.SIG_IGN)

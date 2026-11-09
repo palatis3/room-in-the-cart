@@ -69,6 +69,26 @@ the origin, replace its lineage or substitute a no-op journal to rerun the suite
 Keep private keys outside evidence. A fresh database fixes isolation only; it
 does not clear an application failure or qualify a different source revision.
 
+### Separate diagnostic setup from measurement
+
+An observer must allow the original successful journey to reach its measurement
+boundary. Compare retained stage timings before changing a timeout; installation,
+app/runner binding, fixture preparation and measurement are different phases.
+Record each phase's monotonic start, fixed deadline and elapsed time. A status poll
+or repeated missing-container response must never reset a deadline. Check expiry
+after expensive identity or hash checks as well as before them, and preserve a
+fixed total wall limit. Startup allowance does not qualify performance or change
+required metrics, original assertions, failure handling or cleanup ownership.
+
+The opt-in hosted scroll observer now allows 180 seconds from native dispatch to
+verified app/runner binding, 120 seconds from binding to ARM, and 120 seconds from
+ARM to normal native completion, with a 420-second absolute limit. Its existing
+15-second collector readiness, 60-second recording and 90-second post-readiness
+wait limits remain. A prior successful hosted journey reached fixture readiness
+at about 133.8 seconds, beyond the old absolute 120-second ARM limit. Current
+whole-profile preflight passes 298 checks in each ordinary/observer profile;
+only a new hosted attempt can establish collection success.
+
 ### Retain the first failure before retrying
 
 Core and fixture simulator builds now save `build.log` and a small `receipt.txt`

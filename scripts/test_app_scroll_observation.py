@@ -180,6 +180,7 @@ class FileControls(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             obj=capture.Capture.__new__(capture.Capture);obj.control_directory=Path(d);obj.bound_valid=lambda role:True
             obj.receipt={'readinessObserved':False};obj.nonce='a'*32
+            obj.native_started=None;obj.cleaning=False
             for action in ('GO','Q'):
                 with self.assertRaises(ValueError):obj.host_command(action)
             self.assertEqual(list(Path(d).iterdir()),[])
@@ -279,6 +280,7 @@ class ContainerLookupControls(unittest.TestCase):
         self.query_code=0;self.query_stderr='';self.spawn_delay=0;self.drift=None;self.budget_error=None
         self.control=capture.Capture.__new__(capture.Capture);self.control.out=self.root;self.control.device=DEVICE
         self.control.native_started=0;self.control.bound={};self.control.save=lambda:None
+        self.control.phase='binding';self.control.phase_deadline=180;self.control.cleaning=False
         self.path=self.root/'Library/Developer/CoreSimulator/Devices'/DEVICE/'data/Containers/Data/Application/app'
         self.path.mkdir(parents=True);self.query_stdout=str(self.path)+'\n';self.spawned=[]
         self.native_binding=dict(pid=101,startTimeMicros=1,uid=501,parentPID=50,executable='/native')
@@ -316,22 +318,22 @@ class ContainerLookupControls(unittest.TestCase):
     def test_initial_lookup_succeeds_after_five_seconds_with_no_signals(self):
         self.assertEqual(self.lookup(),self.path);self.assertEqual(self.now,10)
         self.assertEqual(self.spawned[0]['record']['signals'],[])
-        self.assertEqual(self.spawned[0]['record']['containerLookupBudgetSeconds'],120)
-    def test_permanent_hang_stops_at_original_startup_deadline(self):
+        self.assertEqual(self.spawned[0]['record']['containerLookupBudgetSeconds'],180)
+    def test_permanent_hang_stops_at_fixed_binding_deadline(self):
         self.now=17;self.query_end=float('inf')
         with self.assertRaisesRegex(ValueError,'app_data_deadline'):self.lookup()
-        self.assertEqual(self.now,120);self.assertEqual(len(self.spawned),1)
-        self.assertEqual(self.spawned[0]['record']['containerLookupBudgetSeconds'],103)
-    def test_late_started_query_uses_remaining_budget_not_new_120_seconds(self):
-        self.now=113;self.query_end=119
-        self.assertEqual(self.lookup(),self.path);self.assertEqual(self.now,119)
+        self.assertEqual(self.now,180);self.assertEqual(len(self.spawned),1)
+        self.assertEqual(self.spawned[0]['record']['containerLookupBudgetSeconds'],163)
+    def test_late_started_query_uses_remaining_budget_not_new_180_seconds(self):
+        self.now=173;self.query_end=179
+        self.assertEqual(self.lookup(),self.path);self.assertEqual(self.now,179)
         self.assertEqual(self.spawned[0]['record']['containerLookupBudgetSeconds'],7)
     def test_binding_time_consumes_original_deadline(self):
-        self.now=119;self.spawn_delay=2;self.query_end=120
+        self.now=179;self.spawn_delay=2;self.query_end=180
         with self.assertRaisesRegex(ValueError,'app_data_deadline'):self.lookup()
-        self.assertEqual(self.now,121);self.assertEqual(len(self.spawned),1)
+        self.assertEqual(self.now,181);self.assertEqual(len(self.spawned),1)
     def test_expired_startup_deadline_never_spawns(self):
-        self.now=120
+        self.now=180
         with self.assertRaisesRegex(ValueError,'app_data_deadline'):self.lookup()
         self.assertEqual(self.spawned,[])
     def test_query_identity_drift_aborts_without_continuing(self):
@@ -405,6 +407,174 @@ class ContainerLookupControls(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'process_cleanup'):validate_receipt(receipt)
 
 
+class PhaseBudgetControls(unittest.TestCase):
+    def setUp(self):
+        self.now=0;self.query_seconds=0;self.bind_seconds={};self.status_seconds=0;self.arm_at=float('inf')
+        self.absent=0;self.calls=[];self.native_end=float('inf');self.drift=False
+        self.temp=tempfile.TemporaryDirectory();self.addCleanup(self.temp.cleanup)
+        self.root=Path(self.temp.name)
+        c=self.control=capture.Capture.__new__(capture.Capture)
+        c.out=self.root;c.control_directory=self.root;c.config={'productsRoot':str(self.root)}
+        c.native_started=None;c.phase=None;c.phase_deadline=None;c.cleaning=False;c.bound={}
+        c.receipt={'phaseTimings':{}};c.save=lambda:None;c.nonce='a'*32
+        c.budget=c.check_deadlines
+        self.binding={'pid':101,'startTimeMicros':10,'uid':501,'parentPID':50,'executable':'/native'}
+        self.native={'binding':self.binding,'process':mock.Mock(), 'record':{'label':'native'}}
+        self.native['process'].poll.side_effect=lambda:0 if self.now>=self.native_end else None
+        c.identity=mock.Mock();c.identity.read.side_effect=lambda pid:None if self.drift else self.binding
+        def query(bundle,kind,label,startup_native=None):
+            self.calls.append(label);self.now+=self.query_seconds
+            if kind=='data' and self.absent:
+                self.absent-=1;return None
+            return self.root
+        c.query_container=query
+        def status():
+            self.now+=self.status_seconds
+            return dict(pid=102,runnerPID=103,stage='waitingForCollector' if self.now>=self.arm_at else 'registered')
+        c.status=status
+        def bind(role,*args):
+            self.calls.append('bind-'+role);self.now+=self.bind_seconds.get(role,0);c.bound[role]={}
+        c.bind=bind;c.bound_alive=lambda role:True
+        for patcher in (mock.patch.object(capture.time,'monotonic',side_effect=lambda:self.now),
+                        mock.patch.object(capture.time,'time',side_effect=lambda:1000+self.now),
+                        mock.patch.object(capture.time,'sleep',side_effect=lambda seconds:setattr(self,'now',round(self.now+seconds,6)))):
+            patcher.start();self.addCleanup(patcher.stop)
+        c.start_native_clock()
+
+    def reach_completion(self, binding_at=100, arm_at=190):
+        self.now=binding_at;self.control.advance_phase('binding','arm',capture.ARM_SECONDS)
+        self.now=arm_at;self.control.advance_phase('arm','completion',capture.COMPLETION_SECONDS)
+
+    def test_prior_hosted_timing_exceeding_120_seconds_reaches_arm(self):
+        self.now=44;value=self.control.await_targets(self.native)
+        self.arm_at=133.833
+        self.control.await_arm(self.native,value)
+        self.assertEqual(self.control.phase,'completion');self.assertGreater(self.now,120)
+        timings=self.control.receipt['phaseTimings']
+        self.assertEqual(timings['binding']['elapsedSeconds'],44)
+        self.assertEqual(timings['arm']['deadlineMonotonic'],164)
+        self.assertAlmostEqual(timings['completion']['startEpoch'],1000+self.now)
+        self.assertEqual(self.control.receipt['nativeDeadlineMonotonic'],420)
+
+    def test_app_binding_after_120_seconds_is_permitted_within_180(self):
+        self.now=150;self.control.await_targets(self.native)
+        self.assertEqual(self.control.phase_deadline,270)
+        self.assertEqual(self.control.receipt['phaseTimings']['binding']['elapsedSeconds'],150)
+
+    def test_exact_binding_boundary_rejected_before_query_or_retry(self):
+        self.now=180
+        with self.assertRaisesRegex(ValueError,'binding_deadline'):self.control.await_targets(self.native)
+        self.assertEqual(self.calls,[]);self.assertEqual(self.control.phase,'binding')
+
+    def test_slow_installed_lookup_cannot_cross_binding_deadline(self):
+        self.now=177;self.query_seconds=1
+        with self.assertRaisesRegex(ValueError,'binding_deadline'):self.control.await_targets(self.native)
+        self.assertEqual(self.calls,['container-data-1','container-app','container-runner'])
+        self.assertEqual(self.control.bound,{})
+
+    def test_slow_either_binding_hash_cannot_grant_new_arm_budget(self):
+        for role in ('app','runner'):
+            with self.subTest(role=role):
+                self.now=179;self.calls=[];self.control.bound={};self.bind_seconds={role:1}
+                with self.assertRaisesRegex(ValueError,'binding_deadline'):self.control.await_targets(self.native)
+                self.assertNotIn('arm',self.control.receipt['phaseTimings'])
+                if role=='app':self.assertNotIn('bind-runner',self.calls)
+
+    def test_successful_data_path_is_cached_while_status_is_absent(self):
+        original=self.control.status;missing=[None,None]
+        self.control.status=lambda:missing.pop() if missing else original()
+        self.control.await_targets(self.native)
+        self.assertEqual(self.calls.count('container-data-1'),1)
+        self.assertEqual(len([x for x in self.calls if x.startswith('container-data')]),1)
+
+    def test_enoent_does_not_reset_binding_deadline(self):
+        self.now=178;self.query_seconds=.6;self.absent=3
+        with self.assertRaisesRegex(ValueError,'binding_deadline'):self.control.await_targets(self.native)
+        self.assertEqual(self.control.phase_deadline,180)
+        self.assertEqual(len(self.calls),3)
+
+    def test_late_already_ready_status_cannot_bypass_arm_deadline(self):
+        self.now=50;self.control.await_targets(self.native);self.now=170
+        with self.assertRaisesRegex(ValueError,'arm_deadline'):
+            self.control.await_arm(self.native,{'stage':'waitingForCollector'})
+        self.assertNotIn('completion',self.control.receipt['phaseTimings'])
+
+    def test_status_read_crossing_arm_deadline_cannot_succeed(self):
+        self.now=50;value=self.control.await_targets(self.native)
+        self.now=169;self.status_seconds=1;self.arm_at=170
+        with self.assertRaisesRegex(ValueError,'arm_deadline'):self.control.await_arm(self.native,value)
+        self.assertEqual(self.control.phase_deadline,170)
+
+    def test_repeated_registered_status_never_resets_arm_deadline(self):
+        self.now=50;value=self.control.await_targets(self.native)
+        with self.assertRaisesRegex(ValueError,'arm_deadline'):self.control.await_arm(self.native,value)
+        self.assertEqual(self.now,170);self.assertEqual(self.control.phase_deadline,170)
+        with self.assertRaisesRegex(ValueError,'phase_transition'):
+            self.control.advance_phase('binding','arm',capture.ARM_SECONDS)
+
+    def test_native_exit_or_identity_drift_is_fatal_before_binding(self):
+        for exited in (True,False):
+            with self.subTest(exited=exited):
+                self.native_end=0 if exited else float('inf');self.drift=not exited
+                with self.assertRaisesRegex(ValueError,'native_(exited|identity)_before_arm'):
+                    self.control.await_targets(self.native)
+                self.assertEqual(self.calls,[])
+
+    def test_target_identity_drift_is_fatal_even_with_ready_status(self):
+        self.control.await_targets(self.native);self.control.bound_alive=lambda role:False
+        with self.assertRaisesRegex(ValueError,'target_identity_before_arm'):
+            self.control.await_arm(self.native,{'stage':'waitingForCollector'})
+
+    def test_post_arm_hash_expiry_prevents_go(self):
+        self.reach_completion();self.now=309;self.control.receipt['readinessObserved']=True
+        def valid(role):self.now+=.5;return True
+        self.control.bound_valid=valid
+        with self.assertRaisesRegex(ValueError,'completion_deadline'):self.control.host_command('GO')
+        self.assertFalse((self.root/'host-command.txt').exists())
+
+    def test_post_arm_invocation_hash_expiry_prevents_spawn(self):
+        self.reach_completion();self.now=309
+        self.control.config['tools']={'xctrace':{'path':str(self.root/'tool'),'sha256':'hash'}}
+        self.control.spawn=mock.Mock(side_effect=AssertionError('Must not spawn after deadline'))
+        def digest(path):self.now+=1;return 'hash'
+        with mock.patch.object(capture,'sha',side_effect=digest),self.assertRaisesRegex(ValueError,'completion_deadline'):
+            self.control.tool_spawn('tracer','xctrace',[])
+        self.control.spawn.assert_not_called()
+
+    def test_post_arm_spawn_binding_time_is_charged(self):
+        self.reach_completion();self.now=309
+        self.control.config['tools']={'xctrace':{'path':str(self.root/'tool'),'sha256':'hash'}}
+        def spawn(*args):self.now+=1;return {'record':{'label':'tracer'}}
+        self.control.spawn=mock.Mock(side_effect=spawn)
+        with mock.patch.object(capture,'sha',return_value='hash'),self.assertRaisesRegex(ValueError,'completion_deadline'):
+            self.control.tool_spawn('tracer','xctrace',[])
+        self.control.spawn.assert_called_once()
+
+    def test_native_wait_uses_remaining_phase_budget_and_checks_terminal_boundary(self):
+        self.reach_completion();self.now=300
+        def wait(item,seconds):self.assertEqual(seconds,10);self.now+=seconds;return 0
+        self.control.wait=mock.Mock(side_effect=wait)
+        with self.assertRaisesRegex(ValueError,'completion_deadline'):self.control.await_native_completion(self.native)
+        self.control.wait.assert_called_once();self.assertNotIn('nativeCompleted',self.control.receipt['phaseTimings'])
+
+    def test_native_completion_records_normal_terminal_transition(self):
+        self.reach_completion();self.now=300
+        self.control.wait=mock.Mock(return_value=0);self.control.await_native_completion(self.native)
+        self.assertEqual(self.control.receipt['phaseTimings']['completion']['elapsedSeconds'],110)
+        self.assertEqual(self.control.receipt['phaseTimings']['nativeCompleted']['startEpoch'],1300)
+
+    def test_native_nonzero_exit_never_completes_phase(self):
+        self.reach_completion();self.control.wait=mock.Mock(return_value=65)
+        with self.assertRaisesRegex(ValueError,'original_native_failed'):self.control.await_native_completion(self.native)
+        self.control.wait.assert_called_once();self.assertEqual(self.control.phase,'completion')
+
+    def test_absolute_wall_is_independent_of_phase_deadline(self):
+        self.reach_completion(179,298);self.control.phase_deadline=500;self.now=420
+        with self.assertRaisesRegex(ValueError,'native_wall_deadline'):self.control.check_deadlines()
+        with self.assertRaisesRegex(ValueError,'native_clock_already_started'):self.control.start_native_clock()
+        self.assertEqual(self.control.receipt['nativeDeadlineMonotonic'],420)
+
+
 class CollectionBudgetControls(unittest.TestCase):
     def setUp(self):
         self.temp=tempfile.TemporaryDirectory();self.addCleanup(self.temp.cleanup)
@@ -459,8 +629,8 @@ class CollectionBudgetControls(unittest.TestCase):
         self.put('Performance.xcresult/data',512*1024**2+1)
         with self.assertRaisesRegex(ValueError,'xcresult_cap'):self.control.budget()
 
-    def test_native_wall_limit_unchanged(self):
-        self.control.native_started=time.monotonic()-241
+    def test_absolute_native_wall_limit_is_420_seconds(self):
+        self.control.native_started=time.monotonic()-421
         with self.assertRaisesRegex(ValueError,'native_wall_deadline'):self.control.budget()
 
 

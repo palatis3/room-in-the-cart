@@ -250,6 +250,30 @@ test('explicit protected product clarification preserves its need when adding a 
  undo.change=empty();assert.equal((await preview(f,undo)).status,422,'Undo cannot erase a confirmed protected identity');
  assert.deepEqual(ok(await call(f.owner,f.path+'/demand')),saved);
 });
+test('privacy recovery replaces an expired quote without changing surviving food commitments',async()=>{
+ const f=await fixture();await adopt(f);const author=await invited(f);
+ const requestId=ok(await send(f,'request.send',{clientRequestId:randomUUID(),originalItem:'Private guest wraps',ownQuantity:'2 wraps',authoredAt:new Date().toISOString()},2,1,author)).request.requestId;
+ const rp=ok(await call(f.owner,f.path+'/previews','POST',{requestId,base:{shopRevision:2,authorityEpoch:1,requestRevision:1},decision:{choice:'link',lineId:f.basket.lineId,promote:false}}));
+ const requested={...source(f,q(2)),source:{kind:'request',requestId,appliedRequestRevision:1},originalText:'Private guest wraps'};
+ const add={...draft(f),mode:'change',base:{shopRevision:2,authorityEpoch:1,graphRevision:1},change:{...empty(),contributions:[requested]},action:{kind:'request.apply',body:{requestId,previewId:rp.previewId,acceptOverage:false,acceptUnknown:false}},packs:[{lineId:f.basket.lineId,usablePerPack:q(7),acceptUnresolved:false}]};
+ ok((await apply(f,add,ok(await preview(f,add)))).response);
+ ok(await call(author,'/v1/privacy/deletions','POST',{clientKey:randomUUID(),statusToken:randomBytes(32).toString('base64url'),confirm:true,households:[{householdId:f.h,organizer:'none',shops:[],eraseChildProfiles:[]}]}),202);
+ assert.equal((await maintenance.run({batchSize:1})).completed,1);
+ // Age only this synthetic fixture's stored quote, avoiding a timing-dependent sleep.
+ const expired={...f.quote,observedAt:new Date(Date.now()-7200000).toISOString(),expiresAt:new Date(Date.now()-3600000).toISOString()};
+ await admin.query('UPDATE ritc.shop SET quote=$3 WHERE household_id=$1 AND shop_id=$2',[f.h,f.shopId,expired]);
+ assert.ok(Date.parse(ok(await call(f.owner,f.path)).quote.expiresAt)<Date.now());
+ const before=ok(await call(f.owner,f.path+'/demand'));assert.equal(before.status,'reviewRequired');
+ const currentShop=ok(await call(f.owner,f.path)),currentLine=currentShop.lines.find(l=>l.lineId===f.basket.lineId);
+ assert.ok(currentLine);assert.equal(before.graph.lines.find(l=>l.id===currentLine.lineId).name,currentLine.originalItem);
+ assert.deepEqual(before.totals.find(t=>t.lineId===currentLine.lineId).quantity,{numerator:'12',denominator:'1'});
+ const freshQuote={...f.quote,observedAt:new Date().toISOString(),expiresAt:new Date(Date.now()+3600000).toISOString()},basket={...currentLine,packs:3,unitPriceMinor:125};
+ const input={...draft(f),mode:'review',base:{shopRevision:before.shopRevision,authorityEpoch:before.authorityEpoch,graphRevision:before.graph.revision},change:empty(),action:{kind:'shop.patch',body:{quote:freshQuote,lines:[basket]}}};
+ const p=ok(await preview(f,input));assert.deepEqual(p.beforeTotals,p.afterTotals);assert.deepEqual(p.receipt.contributions,[]);assert.deepEqual(p.receipt.lines,[]);assert.deepEqual(p.receipt.edges,[]);
+ assert.deepEqual(ok(await call(f.owner,f.path+'/demand')),before,'Cancel leaves surviving needs and review state intact');
+ ok((await apply(f,input,p)).response);const after=ok(await call(f.owner,f.path+'/demand')),shop=ok(await call(f.owner,f.path));
+ assert.equal(after.status,'enabled');assert.deepEqual(after.graph.contributions,before.graph.contributions);assert.deepEqual(after.totals,before.totals);assert.deepEqual(shop.quote,freshQuote);assert.deepEqual(shop.lines,[basket]);
+});
 test('two-thousand-source adoption and unchanged review use bounded set-based origin queries',async()=>{
  const f=await fixture(),input=draft(f);input.change.contributions=Array.from({length:2000},(_,i)=>({...source(f,q(1)),originalText:'One reviewed wrap '+i}));input.action.body.lines[0].packs=334;
  let start=runtimeQueries;const p=ok(await preview(f,input));ok((await apply(f,input,p)).response);const adoptionQueries=runtimeQueries-start;assert.ok(adoptionQueries<=120,`adoption made ${adoptionQueries} runtime queries`);

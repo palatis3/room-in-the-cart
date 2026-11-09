@@ -1,0 +1,34 @@
+{
+  "scope": "Shared-food item/quote editor and expired-quote privacy recovery",
+  "verifiedAt": "2026-11-09T22:54:25.193422+00:00",
+  "baseCommit": "ddf28659e48a754504500b2d8fc86ab01e05b4dc",
+  "native": {
+    "passed": 59,
+    "skipped": 0,
+    "strictPassed": true,
+    "buildSeconds": 119.856,
+    "testSeconds": 23.95
+  },
+  "postgres": {
+    "passed": 1,
+    "skipped": 0,
+    "stopped": true,
+    "productionBuildReused": true
+  },
+  "fullReleaseAcceptance": false,
+  "UIJourneyAcceptance": false,
+  "stagingDeployment": false,
+  "evidence": {
+    ".build/SharedDemandNativeEditorNov09/r1/source-manifest.json": "9b7b0952fa8cdd938936bb640c1d1c868384d97a1fba8ea5dfa21f8767ac9efb",
+    ".build/SharedDemandNativeEditorNov09/r1/products.json": "dedd4b8433f38d86b846fbcc053e8733281ec0b71911edbe71f2c3ea13722fac",
+    ".build/SharedDemandNativeEditorNov09/r1/build-receipt.json": "5a2d7b8fb40696283bf7cbe9ebd16ea2b782888b13a55ad777d0f18d992587bc",
+    ".build/SharedDemandNativeEditorNov09/r1/tests-receipt.json": "c56e78352ddfa61b31b91d9476f9297e9eb4556e6a97765ed053cb6564c7bc2b",
+    ".build/SharedDemandNativeEditorNov09/r1/strict-receipt.json": "d43e24267a1f8104d5c2bd8e9f25234017248f1091b37a18b2d687a455c42d11",
+    ".build/SharedDemandNativeEditorNov09/r1/summary.json": "f8ae7a2a0f0d29ff8a2cb8af409d5dfcf2d2399052b2d2beac4f24d8f49deba1",
+    ".build/SharedDemandNativeEditorNov09/r1/selectors.txt": "88510816b47cfdfb1a362de16399ce2d3466d2bd10b5c966eef505181439c8c5",
+    ".build/SharedDemandLegacySourcesNov09/quote-recovery-r2/pg-run-1.json": "2751bcfe5584614a86a857cd8d73a54ba7fa4ef5696fd9e2b34a35fb76c8ecce",
+    ".build/SharedDemandLegacySourcesNov09/quote-recovery-r2/tests-1.log": "ba32447cffafa1451e96d6722479615dc30cd0324c33308af4413573f75f5e64",
+    ".build/SharedDemandLegacySourcesNov09/quote-recovery-r2/reused-build.json": "d8c8d6b6b341ad0131fadcb8535e6b9958b9b52b9500b03bf37994d63a87cdd0",
+    ".build/SharedDemandGraphNov09/native-shop-editor-r1/manifest.json": "695aba398648b49f3644a216d62949a287a0a574d23d32a667f9609a733e0ddc"
+  }
+}

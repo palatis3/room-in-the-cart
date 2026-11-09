@@ -51,6 +51,13 @@ private final class S26FixtureServer: @unchecked Sendable {
         if path == "/v1/me/workspaces" { return try json(["workspaces":[["householdId":Self.household,"label":"Isolated household ideas","role":"contributor"]]]) }
         if path.hasSuffix("/devices") { return try json(["deviceId":shopper ? "shopper-device":"planner-device","deviceToken":shopper ? "shopper-token":"planner-token"],status:201) }
         if path.hasSuffix("/bootstrap") { return try json(["household":["id":Self.household,"label":"Isolated household ideas"],"memberId":shopper ? Self.shopper:Self.planner,"role":shopper ? "shopper":"contributor","shopId":Self.shop,"enrolled":true,"queueConsent":false,"capabilities":shopper ? ["shopper_commands","shopper_inbox","request_preview"]:["meal_proposals"]]) }
+        if path == "/v1/households/\(Self.household)/shops/\(Self.shop)/demand", request.httpMethod == "GET" {
+            guard request.value(forHTTPHeaderField: "Authorization") == "Bearer fixture-shopper",
+                  request.value(forHTTPHeaderField: "X-Device-Token") == "shopper-token" else { return try denied() }
+            // Omitted catalog means unavailable, not an assertion of no meal sources.
+            return try json(["schemaVersion": 1, "shopId": Self.shop, "shopRevision": revision,
+                             "authorityEpoch": 1, "status": "legacy", "graph": NSNull(), "totals": []])
+        }
         if path.hasSuffix("/inbox") { return try json(["requests":[],"nextCursor":NSNull()]) }
         if path.hasSuffix("/requests/mine") { return try json(["requests":[],"nextCursor":NSNull()]) }
         let occurrence: [String:Any] = ["occurrenceId":Self.occurrence,"revision":2,"meal":meal]
