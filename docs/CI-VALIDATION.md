@@ -82,6 +82,33 @@ state disappears when the runner is destroyed; it is not a durable backup.
 Inspect the retained build or scenario failure before retrying. Do not rerun a
 long journey just to recover output that was available in its first attempt.
 
+For local UI follow-ups, distinguish XCTest's result evidence from its optional
+system diagnostic collection. A completed eight-case date batch spent additional
+minutes in an owned `simctl diagnose --timeout=600` after two setup assertions had
+already failed. The parent stack confirmed simulator-diagnostic collection, not
+continued test execution. Retain that first attempt, its result bundle and the
+diagnostic outcome separately from the test duration.
+
+Once retained screenshots/hierarchy and the test log explain an ordinary UI
+assertion failure, a focused local follow-up may explicitly use
+`-collect-test-diagnostics never`. Record the prior evidence and reason in its
+receipt. Keep the result bundle, test logs, screenshots/recording, original
+assertions, selector accounting and strict validation. This avoids another full
+simulator system dump; it does not waive a failed test or missing evidence. Use
+`on-failure` for an unexplained crash, hang or framework fault. Hosted CI defaults
+remain unchanged. Measure result-finalization time separately before changing
+their policy.
+
+The shared native shard runner now writes `test-run-timing.json` before result
+export, including on a failed native attempt. It separates the root test-suite
+window from the interval until Xcode's test observer completes and records explicit
+diagnostic timeouts. Both values come from the same retained, hashed log; the latter
+includes remaining diagnostics/teardown and is not pure export time. Missing,
+restarted or inconsistent boundaries remain unknown. Timing reporting cannot turn
+a failed native or strict check green. An infrastructure retry gets a separate
+`test-run-timing-retry.json`; both files use the existing artifact upload paths.
+[Validation and retained timing evidence](evidence/ci/native-finalization-timing-20261109/README.md).
+
 ### Candidate qualification order
 
 Use this order for the combined candidate going forward:

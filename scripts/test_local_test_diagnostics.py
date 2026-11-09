@@ -21,9 +21,11 @@ class LocalDiagnosticsTests(unittest.TestCase):
             binaries = root / 'bin'
             binaries.mkdir()
             for name, body in {
-                'xcodebuild': 'printf "%s\\n" "$@" >> "$TRACE"\nexit "${NATIVE_EXIT:-0}"',
+                'xcodebuild': 'printf "%s\\n" "$@" >> "$TRACE"\nprintf "%s\\n" "${NATIVE_MESSAGE:-}"\nexit "${NATIVE_EXIT:-0}"',
                 'xcrun': 'printf "%s\\n" "$@" >> "$TRACE"\necho "{}"',
-                'python3': 'printf "%s\\n" "$@" >> "$TRACE"\nexit "${STRICT_EXIT:-0}"',
+                'python3': 'printf "%s\\n" "$@" >> "$TRACE"\n'
+                           'if [[ "$1" = scripts/report_ios_test_timing.py ]]; then exit "${TIMING_EXIT:-0}"; fi\n'
+                           'exit "${STRICT_EXIT:-0}"',
             }.items():
                 path = binaries / name
                 path.write_text('#!/bin/bash\n' + body + '\n')
@@ -50,6 +52,8 @@ class LocalDiagnosticsTests(unittest.TestCase):
                 self.assertIn('scripts/check_ios_test_results.py', args)
                 self.assertIn('--result-bundle', args)
                 self.assertIn('--test-log', args)
+                self.assertIn('scripts/report_ios_test_timing.py', args)
+                self.assertIn('.build/test-run-timing.json', args)
         status, args = self.run_shard(CI='true', GITHUB_ACTIONS='true')
         self.assertEqual(status, 0)
         self.assertEqual(args[args.index('-collect-test-diagnostics') + 1], 'on-failure')
@@ -67,6 +71,22 @@ class LocalDiagnosticsTests(unittest.TestCase):
                 self.assertNotEqual(status, 0)
                 self.assertEqual(args.count('test-without-building'), 1)
                 self.assertIn('scripts/check_ios_test_results.py', args)
+                self.assertIn('scripts/report_ios_test_timing.py', args)
+
+    def test_timing_failure_does_not_replace_native_or_strict_status(self):
+        for native, strict, expected in (('0', '0', 0), ('65', '0', 1), ('0', '1', 1)):
+            status, args = self.run_shard(NATIVE_EXIT=native, STRICT_EXIT=strict, TIMING_EXIT='1')
+            self.assertEqual(status, expected)
+            self.assertIn('scripts/check_ios_test_results.py', args)
+            self.assertEqual(args.count('test-without-building'), 1)
+
+    def test_infrastructure_retry_retains_distinct_timing_for_both_attempts(self):
+        status, args = self.run_shard(
+            NATIVE_EXIT='65', NATIVE_MESSAGE='Test crashed with signal kill before establishing connection.')
+        self.assertNotEqual(status, 0)
+        self.assertEqual(args.count('test-without-building'), 2)
+        self.assertEqual(args.count('.build/test-run-timing.json'), 1)
+        self.assertEqual(args.count('.build/test-run-timing-retry.json'), 1)
 
 
 if __name__ == '__main__':

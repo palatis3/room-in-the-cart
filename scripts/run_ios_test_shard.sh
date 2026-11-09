@@ -27,12 +27,19 @@ while IFS= read -r identifier; do
 done < "$selection"
 run_tests() {
     local bundle="$1" log="$2"
+    local native_status=0 timing=.build/test-run-timing.json
+    if [ "$log" = .build/Tests-retry.log ]; then timing=.build/test-run-timing-retry.json; fi
     xcodebuild -xctestrun "${test_runs[0]}" \
         -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
         -resultBundlePath "$bundle" -parallel-testing-enabled NO \
         -test-timeouts-enabled YES -default-test-execution-time-allowance 720 \
         -maximum-test-execution-time-allowance 900 -collect-test-diagnostics "$diagnostics" \
-        "${selectors[@]}" test-without-building 2>&1 | tee "$log"
+        "${selectors[@]}" test-without-building 2>&1 | tee "$log" || native_status=$?
+    # Record even failed native attempts before any potentially failing JSON
+    # export. Timing is diagnostic; preserve the native/strict acceptance gates.
+    python3 scripts/report_ios_test_timing.py --test-log "$log" --output "$timing" || \
+        echo 'Native timing observation unavailable; retained log remains authoritative.' >&2
+    return "$native_status"
 }
 result=.build/Tests.xcresult
 log=.build/Tests.log
