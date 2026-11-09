@@ -1,5 +1,8 @@
 """Frozen source/tool/profile contracts and portable file custody; no import-time I/O."""
 import json
+import hashlib
+import stat
+import struct
 import os
 from pathlib import Path
 import plistlib
@@ -8,7 +11,7 @@ import shutil
 import subprocess
 import time
 import uuid
-from .support import require, sha, manifest, modes, atomic_json, launcher_identity
+from .support import require, sha, manifest, modes, atomic_json, launcher_identity, arm64_uuid
 
 ROOT = Path(__file__).resolve().parents[2]
 HERE = Path(__file__).resolve().parent
@@ -67,6 +70,105 @@ def source_snapshot():
 def products_snapshot(root):
     value = snapshot(root,512*1024**2,8192)
     return {kind:{k:v for k,v in rows.items() if k not in PRODUCT_METADATA} for kind,rows in value.items()}
+
+
+
+def tool_inventory(developer, expected):
+    """Bounded read-only diagnostics. Observed identity never changes admission pins."""
+    started=time.monotonic();deadline=started+30;remaining=1024**3
+    developer=Path(developer).resolve()
+    result={'schema':1,'diagnosticOnly':True,'releaseAcceptance':False,'admission':'not-evaluated',
+            'developer':str(developer),'complete':True,'entries':{},
+            'limits':{'seconds':30,'fileBytes':512*1024**2,'totalHashBytes':1024**3,
+                      'additionalMachOReadBytes':1024**3,'metadataBytes':64*1024}}
+    def sample(label,path,expected_sha=None,expected_fields=None,metadata=False):
+        nonlocal remaining
+        path=Path(path);row={'path':str(path),'expectedSHA256':expected_sha,
+                            'expectedFields':expected_fields or {},'observed':{}}
+        result['entries'][label]=row;raw=None
+        try:
+            require(time.monotonic()<deadline,'inventory_deadline')
+            info=path.stat();observed=row['observed']
+            def unchanged():
+                now=path.stat()
+                return (now.st_dev,now.st_ino,now.st_size,now.st_mtime_ns,now.st_ctime_ns)==(info.st_dev,info.st_ino,info.st_size,info.st_mtime_ns,info.st_ctime_ns)
+            observed.update(resolvedPath=str(path.resolve()),symlink=path.is_symlink(),bytes=info.st_size)
+            require(stat.S_ISREG(info.st_mode),'inventory_not_regular')
+            require(info.st_size <= (1024**2 if metadata else 512*1024**2) and info.st_size<=remaining,'inventory_byte_cap')
+            chunks=[];count=0
+            with path.open('rb') as stream:
+                while True:
+                    require(time.monotonic()<deadline,'inventory_deadline')
+                    chunk=stream.read(min(1024**2,info.st_size-count+1))
+                    if not chunk:break
+                    count+=len(chunk);remaining-=len(chunk)
+                    require(count<=info.st_size and remaining>=0,'inventory_file_grew');chunks.append(chunk)
+            raw=b''.join(chunks)
+            require(unchanged() and count==info.st_size,'inventory_file_changed')
+            observed.update(sha256=hashlib.sha256(raw).hexdigest(),magic=raw[:4].hex())
+            row['matchesExpectedSHA256']=None if expected_sha is None else observed['sha256']==expected_sha
+            if metadata:
+                value=plistlib.loads(raw);observed['fields']={}
+                for key in expected_fields:
+                    field=value.get(key)
+                    require(isinstance(field,str) and len(field)<=256,'inventory_metadata_field')
+                    observed['fields'][key]=field
+                row['matchesExpectedFields']=observed['fields']==expected_fields
+            elif raw[:4] in (b'\xcf\xfa\xed\xfe',b'\xca\xfe\xba\xbe',b'\xca\xfe\xba\xbf'):
+                try:
+                    # Reuse the already qualified UUID parser; its extra read is bounded by
+                    # the checked regular-file size and stable stat identity above/below.
+                    observed['arm64UUID']=arm64_uuid(path)
+                except Exception as exc:
+                    row['machODiagnosticError']=type(exc).__name__+': '+str(exc)[:256]
+                require(unchanged() and time.monotonic()<deadline,'inventory_macho_changed_or_deadline')
+                try:
+                    require('machODiagnosticError' not in row,'inventory_uuid_unavailable')
+                    magic=struct.unpack_from('>I',raw)[0];slices=[]
+                    if magic in (0xcafebabe,0xcafebabf):
+                        count=struct.unpack_from('>I',raw,4)[0];require(0<count<=16,'inventory_fat_count')
+                        stride=20 if magic==0xcafebabe else 32
+                        for i in range(count):
+                            offset=8+i*stride;cpu=struct.unpack_from('>I',raw,offset)[0]
+                            start,size=struct.unpack_from('>II' if stride==20 else '>QQ',raw,offset+8)
+                            require(start+size<=len(raw),'inventory_fat_bounds')
+                            if cpu==0x0100000c:slices.append(memoryview(raw)[start:start+size])
+                        observed['container']='universal'
+                    else:slices=[raw];observed['container']='thin'
+                    require(len(slices)==1,'inventory_unique_arm64_slice')
+                    observed['arm64SliceSHA256']=hashlib.sha256(slices[0]).hexdigest()
+                    observed['arm64SliceBytes']=len(slices[0])
+                except Exception as exc:
+                    row.setdefault('machODiagnosticError',type(exc).__name__+': '+str(exc)[:256])
+                    # A parse failure is diagnostic only; unchanged tools() still decides admission.
+                require(unchanged() and time.monotonic()<deadline,'inventory_macho_changed_or_deadline')
+        except Exception as exc:
+            row['error']=type(exc).__name__+': '+str(exc)[:256];result['complete']=False
+        return raw
+    sample('xcode-version',developer.parent/'version.plist',expected_fields={
+        'CFBundleShortVersionString':'27.1','ProductBuildVersion':'27A9275'},metadata=True)
+    sdk=(developer/'Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk').resolve()
+    result['SDKROOT']=str(sdk)
+    sample('sdk-settings',sdk/'SDKSettings.plist',expected['qualifiedSDKSettingsSHA256'],
+           {'Version':'27.1','CanonicalName':'iphonesimulator27.1'},True)
+    launcher=None
+    for name,relative in {'xcodebuild':'usr/bin/xcodebuild','xctrace':'usr/bin/xctrace','simctl':'usr/bin/simctl',
+                         'xcresulttool':'usr/bin/xcresulttool','swift-frontend':'Toolchains/XcodeDefault.xctoolchain/usr/bin/swift-frontend'}.items():
+        raw=sample(name,developer/relative,expected['qualifiedToolHashes'].get(name))
+        if name=='simctl':launcher=raw
+    try:
+        require(launcher is not None and len(launcher)<=65536,'inventory_launcher_size')
+        lines=launcher.decode('utf-8').splitlines()
+        match=re.fullmatch(r'exec "([^"\n]+)" "\$\{@\}"',lines[-1])
+        require(lines[0]=='#!/bin/bash' and match is not None,'inventory_launcher_shape')
+        actual=Path(match[1]);require(actual.is_absolute(),'inventory_launcher_absolute')
+        sample('simctl-executable',actual)
+    except Exception as exc:
+        result['entries']['simctl-executable']={'expectedSHA256':None,'observed':{},'error':type(exc).__name__+': '+str(exc)[:256]}
+        result['complete']=False
+    result['hashedBytes']=1024**3-remaining;result['elapsedSeconds']=time.monotonic()-started
+    require(len(json.dumps(result).encode())<=64*1024,'inventory_metadata_cap')
+    return result
 
 
 def tools(developer):

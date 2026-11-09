@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 import shutil
 from .contract import (ROOT, CONDITION, FLAG, read, frozen, tools, environment, source_snapshot,
-                       selected_snapshot, products_snapshot)
+                       selected_snapshot, products_snapshot, tool_inventory)
 from .support import require, sha, atomic_json
 from .runner import Runner
 
@@ -56,8 +56,17 @@ def verify_logging_template(raw):
 
 
 def prepare(output, developer):
-    frozen();runner=Runner(output,tools(developer),360);error=None
+    output=Path(output);require(not output.exists(),'prepare_output_already_exists')
+    runner=None;inventory=None;error=None;stage='source-contract'
     try:
+        expected=frozen();stage='identity-inventory'
+        inventory=tool_inventory(developer,expected)
+        require(inventory['complete'],'identity_inventory_incomplete')
+        stage='exact-tool-admission';accepted=tools(developer)
+        stage='runner-setup';runner=Runner(output,accepted,360)
+        atomic_json(output/'identity-inventory.json',inventory)
+        runner.receipt['identityInventorySHA256']=sha(output/'identity-inventory.json')
+        runner.save();stage='producer-prerequisites'
         from app_configuration import load_configuration
         load_configuration(ROOT,'Release')
         runner.receipt['sourceSnapshot']=source_snapshot()
@@ -75,8 +84,20 @@ def prepare(output, developer):
         runner.receipt['resolvedSettings']=settings
         require(selected_snapshot(ROOT,runner.receipt['sourceSnapshot']['files'])==runner.receipt['sourceSnapshot'],'sources_changed_during_prepare')
         runner.receipt['contractSHA256']=sha(Path(__file__).with_name('contract.json'))
-    except BaseException as exc:error=type(exc).__name__+': '+str(exc)
-    finally:runner.finish(error)
+    except BaseException as exc:error=type(exc).__name__+': '+str(exc)[:1024]
+    finally:
+        if runner is not None:runner.finish(error)
+        else:
+            # No command can have started before Runner returns. Retain diagnostics in
+            # the existing always-uploaded prepare directory, including constructor failure.
+            output.mkdir(parents=True,exist_ok=True)
+            require(output.is_dir() and not output.is_symlink(),'prepare_failure_output')
+            if inventory is not None:atomic_json(output/'identity-inventory.json',inventory)
+            failure={'diagnosticOnly':True,'releaseAcceptance':False,'status':'failed','stage':stage,
+                     'error':error,'processes':[],'nativeCommandsStarted':False,
+                     'identityInventorySHA256':sha(output/'identity-inventory.json') if inventory is not None else None,
+                     'rootAction':'Review the retained expected/observed tool identity. Accepted hashes are unchanged; no automatic admission or retry.'}
+            atomic_json(output/'setup-failure.json',failure);atomic_json(output/'receipt.json',failure)
     require(error is None,error)
 
 

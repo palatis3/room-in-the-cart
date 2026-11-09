@@ -12,8 +12,8 @@ and all earlier native preservation paths remain at
 Canonical checkout: `/Users/palatis/Room in the Cart`, local branch
 `codex/parallel-ios-ci`. Publish to `codex/combined-candidate-20261109`; verify its
 current remote head and run state before dispatch. The last verified remote
-checkpoint before this update was 2a075828. Local client checkpoint is 5d737882;
-the prepared observer checkpoint follows it.
+checkpoint is 506fef51, containing the complete local dispatch preflight. Client
+checkpoint 5d737882 and observer checkpoint 28925824 precede it.
 The ambient `spanish-done-diagnostic` worktree is stale. Draft PR1 is an older
 candidate. No full combined qualification or merge has passed.
 
@@ -112,17 +112,17 @@ is removed and the failed fixtures are stopped/preserved. Native UI acceptance a
 full combined-revision qualification are still open.
 [Proof and original attempts](evidence/native/shared-demand-client-wire-20261109/README.md).
 
-Current coordination: root owns service totals and App flow integration;
-astra_release_gap's HouseholdClient and dedicated wire changes are frozen/verified;
-simulator_capture_control owns the default-off hosted app-observation port and
-compile-gated App/performance-test hooks. No local native execution is authorized
-until root reviews a frozen candidate and releases the single execution slot.
-The root's isolated wire attempts are terminal. Do not compile a mixed snapshot
-while the observer helper is changing its owned source.
+Current coordination: root owns integration and dispatch. The client/wire changes
+are frozen and verified; all local native attempts are terminal. The observer
+helper owns only failure-time tool identity retention. Astra separately inspects
+saved minimum-OS callback evidence without app execution. No local native work is
+authorized until root reviews a frozen candidate and releases the single slot.
 
 The observer is now frozen at HostedAppObservationNov09/implementation-r4: 22
-payload files, 281 offline checks, workflow lint/17 queue definitions and exact
-arm64 helper typecheck pass. Root independently verified payloads and log hashes.
+payload files, 281 incremental offline checks, workflow lint/17 queue definitions
+and exact arm64 helper typecheck. The incremental checks are not final combined
+preflight evidence; the complete profile results below supersede them. Root
+independently verified payloads and log hashes.
 It adds cheap Logging-template/SDK/settings prerequisites and one bounded portable
 artifact preserving modes without duplicate raw uploads. No app build or hosted
 capture was performed during preparation. One manual scroll/fresh-device/observer
@@ -136,8 +136,15 @@ control count as a final preflight pass. Three test files now isolate ordinary
 fixtures/verify both artifact branches. The new local parity tool executes the
 actual cheap workflow step with its selected environment; both observer and ordinary
 profiles pass 227 checks in about 6s, with unchanged source manifests. This is local
-preflight evidence, not native/hosted qualification. Root owns the one corrected
-successor dispatch. [Proof](evidence/ci/performance-dispatch-parity-20261109/README.md).
+preflight evidence, not native qualification. Corrected run 42700832046 passed all
+227 checks on GitHub at 506fef51, then rejected the hosted xcodebuild file hash
+before compilation. Its observed hash was not retained because receipt creation
+came later. The reporting gap is now fixed with 16 focused regressions, including
+four negative-control subcases caught during review. Both complete profiles now
+pass 243 checks locally; workflow lint and 17 queue contracts pass. Original tool
+identities/admission remain unchanged. Root owns one retry to capture the actual
+hosted mismatch; app and XCTest have not run in these two hosted attempts.
+[Proof](evidence/ci/performance-dispatch-parity-20261109/README.md).
 
 New local diagnostic rules in CI-VALIDATION require exact SDK/architecture helper
 typechecks before full compilation, export-only recovery after normal collection,
@@ -413,6 +420,12 @@ No production changes, migration, deployment or full hosted batch in this patch.
   `.build/MinimumOSXCTestReproducerNov09/apple-report-draft/reviewed-first-fault-package/`
   with REPORT.md, 10 KB capture and manifest only. Do not duplicate submission or
   reinterpret the old immutable manifest's `notSubmitted` field as current status.
+
+Saved-image follow-up now binds the iOS 17.5 callback's compared pointer to record
+offset 16, without a field-null guard before strcmp. Root verified exact image and
+instruction hashes. Its producer/null cause remains unknown; no live run occurred
+and no equivalence to the different 17.0 image or minimum-OS pass is implied.
+[Retained static proof](evidence/native/minimum-os-first-fault-20261109/README.md).
 
 Read-only minimum-OS follow-up: a separately built26.3 UI runner targeting the
 same27.1 app is only a proposed diagnostic, not qualified acceptance. Apple lists

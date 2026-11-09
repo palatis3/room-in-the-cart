@@ -89,3 +89,19 @@ candidate and must not be confused with the archived qualified source.
 | `build/products.json` | `a666b70e53e9a97fdbfaa75000143a0818badf8e5e4fe71b40389ea6b95e932f` |
 | `spanish/run.json` | `1277d0d4392a43a822cb8409470e1385212b046bdd537be1bfcb15eb5c30f516` |
 | `spanish/inspection/verification.json` | `c5895008b4d841dea3cbcc73c46e893297e19ff41d82096ba9cd3e34977a99da` |
+
+## Saved-image follow-up without another journey
+
+A bounded 64-instruction inspection of the separately identified iOS 17.5 image
+(UUID `417562C6-9B3A-3531-9650-5AF0B2667075`) matches both retained 17.5 crash
+return addresses. The callback guards its record pointer, then loads the compared
+string from record offset 16 and calls `strcmp` without guarding that field.
+The input producer, field contract and reason for null remain unknown. This is
+not an equivalence claim for the different iOS 17.0 image above or a product fix.
+No app, test, live-process attachment or further log collection ran. Root verified
+the retained hashes and relevant instructions against the unchanged image.
+
+Originals: `.build/MinimumOSXCTestReproducerNov09/static-callback-provenance-r1/`.
+Manifest SHA256 `ecf144228f921ea0787eb4b3c5ceb41c251bd353d8e40a7450d270a5fdd1d4e4`;
+receipt SHA256 `fc95a756fecac6c184faf2159299bf59ab4872b124b3a3c1832d546306486592`.
+The command completed in 0.012 seconds with 3,513 output bytes.

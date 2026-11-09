@@ -96,6 +96,7 @@ jobs:
           python3 scripts/test_scroll_signpost_diagnostic.py
           python3 scripts/test_capture_scroll_signposts.py
           python3 scripts/test_app_scroll_observation.py
+          python3 scripts/test_app_scroll_preflight_retention.py
           python3 scripts/plan_ios_performance_tests.py --validate-request
           if [[ "${{ inputs.capture_scroll_signposts }}" == true ]]; then
             test "${{ github.event_name }}" = workflow_dispatch

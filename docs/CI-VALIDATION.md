@@ -181,6 +181,13 @@ an unchanged test's previous result; incremental passing logs are not a combined
 preflight pass. Check the ordinary profile as well when changing profile routing.
 [First complete profile checks](evidence/ci/performance-dispatch-parity-20261109/README.md).
 
+A rejected toolchain preflight must retain the expected and observed identities
+before returning failure. Collect the bounded inventory in one pass, including
+tool file hashes, architecture/container details and SDK/version metadata. Preserve
+that report through the existing always-upload path even if no build log exists.
+Diagnostic inventory does not admit a mismatched tool or replace the original
+compatibility gate; review the difference before another expensive run.
+
 Use this order for the combined candidate going forward:
 
 1. Resolve missing launch/scroll measurements before approving the Xcode 27.1

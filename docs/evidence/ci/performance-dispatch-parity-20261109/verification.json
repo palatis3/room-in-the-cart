@@ -92,5 +92,70 @@
     "workflow_dispatch",
     "pull_request"
   ],
-  "workflowCallRejected": true
+  "workflowCallRejected": true,
+  "hostedSuccessor": {
+    "runID": 42700832046,
+    "headSHA": "506fef51dff21f894a9f0bc85a1ccb20640a7b01",
+    "ubuntuChecksPassed": 227,
+    "result": "Producer rejected xcodebuild SHA before build; consumer skipped",
+    "observedToolHashAvailable": false,
+    "artifactCount": 0,
+    "monitoringReceiptSHA256": "da2030d513306ad03228cc1aae4ca9389365f2b5f159edde52ae529f60d3e034"
+  },
+  "failureIdentityRetention": {
+    "acceptedIdentitiesAndGuardsUnchanged": true,
+    "focusedControlsPassed": 16,
+    "previousRevisionNegativeSubcases": 4,
+    "sourceSHA256": {
+      "scripts/app_scroll_observation/contract.py": "092373084feabc5e49b56ce458415360fa141a38d5c1ab32cf0bcd5238d66a58",
+      "scripts/app_scroll_observation/producer.py": "ef786d87b033c8efb5294a5ec7d17d23afe1058458d475c7505937577818beed",
+      "scripts/app_scroll_observation/contract.json": "5f3fbaae851fe72b57bfdfe3922907fb746a18e5735045a9602e52011cc92e26",
+      "scripts/test_app_scroll_preflight_retention.py": "d1b0d6a56b3ee1d3ee09d921dde07e85de77e799362b858361ee40f58bb34067",
+      ".github/workflows/ios-performance.yml": "11cfe9a9032b74b193344f8d117e67e3933949b2b2075ce49a7194a3a1fce839"
+    },
+    "frozenR2ReceiptSHA256": "d9cc6cb3fcd8a0c31aa8d8f9aaa7d065aede85290c79b2707e6c1a0bb8ee2763",
+    "frozenR2ManifestSHA256": "64e45a91bb461d6b52e1003e0eb6af5dd9345623fb8456658604958f4313663b",
+    "localInventorySHA256": "f81d34fb672832164da0773f53b850ac26628ab88068be8116dc1a905ce80616",
+    "localInventoryScope": "Read-only r1 inventory, no native commands; r2 changes mandatory deadline/drift handling only",
+    "workflowLintSHA256": "b399aa8597f392b3de0fc25191971e2aef57e0893d4ee68388c88d61b492a677",
+    "queueDefinitionsVerified": 17,
+    "finalProfiles": {
+      "dispatch-retention-final-diagnostic": {
+        "receiptSHA256": "7a9bd9ec559b0db5a6286a48649b8cb96213baed8447a34d6188107fb99e24dc",
+        "checks": 243,
+        "suites": 9,
+        "sourceManifestSHA256": "8869328413f01d76025003a2964934c7b7d52800adb85378bd843a396791c102",
+        "logSHA256": "1561dcb6ef3001a646fcd75ff8c4f81428cf4f8a4332630ee10b04e2056c1803",
+        "sourceFiles": 694,
+        "seconds": 6.425,
+        "inputs": {
+          "case": "scroll",
+          "observe_app_scroll_signposts": true,
+          "capture_scroll_signposts": false,
+          "capture_preflight_only": false,
+          "fresh_performance_simulator": true,
+          "enable_performance_diagnostics": false,
+          "enforce_baselines": false
+        }
+      },
+      "dispatch-retention-final-ordinary": {
+        "receiptSHA256": "fdb9d855280bf90ca459e3662aae0bdb703db8e4d75932781f8ca60d3ae2d693",
+        "checks": 243,
+        "suites": 9,
+        "sourceManifestSHA256": "8869328413f01d76025003a2964934c7b7d52800adb85378bd843a396791c102",
+        "logSHA256": "a93362c667edfda93ef5ab38a35403e2474e898792e17c11a546a7f792d26fb6",
+        "sourceFiles": 694,
+        "seconds": 6.408,
+        "inputs": {
+          "case": "all",
+          "observe_app_scroll_signposts": false,
+          "capture_scroll_signposts": false,
+          "capture_preflight_only": false,
+          "fresh_performance_simulator": false,
+          "enable_performance_diagnostics": false,
+          "enforce_baselines": false
+        }
+      }
+    }
+  }
 }

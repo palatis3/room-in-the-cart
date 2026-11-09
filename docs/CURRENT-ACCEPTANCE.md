@@ -69,8 +69,13 @@ covered incremental checkpoints, not the final profile. Ordinary-fixture isolati
 and artifact expectations are now fixed. The actual complete cheap step passes
 227 checks under both observer and ordinary profiles, with source-bound receipts.
 [Dispatch parity proof](evidence/ci/performance-dispatch-parity-20261109/README.md).
-It retains the separate producer/consumer and original required metrics. Its
-actual hosted build/transport and any baseline decision remain unproven.
+Corrected run 42700832046 at 506fef51 passed all 227 controls on GitHub, then
+rejected the hosted xcodebuild file hash before compilation. The observed hash was
+not retained. Failure-time identity reporting is now fixed and covered by 16 new
+regressions; both complete local profiles pass 243 checks and workflow lint passes.
+Hosted retention verification and identity review are next. The separate
+producer/consumer and original required metrics remain. Actual hosted build/transport
+and any baseline decision remain unproven.
 [Prepared workflow](evidence/ci/hosted-scroll-observation-20261109/README.md).
 The earlier diagnostic workflow update passed 438 offline checks and 17 native
 queue-definition checks; the later follow-through total is recorded above. Its

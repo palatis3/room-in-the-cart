@@ -35,3 +35,26 @@ The first three parity attempts retain their local
 setup/assertion failures. The compact verification file binds successful receipts
 and source manifests. A new hosted build/observation remains necessary; no metric,
 baseline, minimum-iOS or complete candidate acceptance is implied.
+
+Hosted successor [42700832046](https://github.com/palatis3/room-in-the-cart/actions/runs/42700832046)
+verified commit `506fef51dff21f894a9f0bc85a1ccb20640a7b01` and passed all 227
+Ubuntu controls. The producer then rejected the `xcodebuild` file hash before
+compilation. Its observed hash was not emitted, and the failed check preceded
+receipt creation; no artifact existed. Tool-identity retention is the next scoped
+correction. The helper, app build, XCTest and required metrics were not reached.
+
+The failure-time reporting correction now retains bounded expected/observed
+tool, SDK and version identities before exact admission. It preserves a failed
+setup receipt even before any command or build log exists. Original accepted
+identities and the exact admission functions are unchanged. The existing always
+uploaded prepare directory carries the report.
+
+Sixteen focused regressions pass. Four final-row deadline/file-drift subcases
+fail against the preserved first patch and pass after review correction. The
+new suite is part of the actual cheap workflow step: both final profiles now
+pass **243 checks across nine suites**, in about 6.4 seconds, on matching source
+manifests. Workflow lint and all 17 queue definitions pass. Frozen patches, logs
+and local file-only identity inventory remain in `preflight-retention-r1/` and
+`preflight-retention-r2/`; final workflow integration receipts are
+`dispatch-retention-final-diagnostic/` and `dispatch-retention-final-ordinary/`.
+A hosted retry is needed to obtain the previously unreported tool identity.
