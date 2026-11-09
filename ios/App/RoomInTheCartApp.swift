@@ -21,6 +21,9 @@ import DeviceSurfaces
     #endif
     @AppStorage("appearance") private var appearance = "system"
     init() {
+        #if RELEASE && APP_SIGNPOST_CAPTURE_CONTROL && targetEnvironment(simulator)
+        RITCAppCaptureProbe.install()
+        #endif
         // Keep inactive navigation labels legible against both system bar appearances.
         UITabBar.appearance().unselectedItemTintColor = UIColor(named: "secondary") ?? .secondaryLabel
     }
@@ -470,4 +473,203 @@ struct ComponentGallery: View {
 }
 #Preview("Shop") { RootView().environmentObject(AppModel()).environmentObject(LedgerModel()).environmentObject(PickupModel()).environmentObject(HouseholdModel()).environmentObject(WorkspaceAccess()).environmentObject(MembershipCoordinator()).environmentObject(DeviceSurfacesComposition()) }
 #Preview("Dark / largest type") { RootView().environmentObject(AppModel()).environmentObject(LedgerModel()).environmentObject(PickupModel()).environmentObject(HouseholdModel()).environmentObject(WorkspaceAccess()).environmentObject(MembershipCoordinator()).environmentObject(DeviceSurfacesComposition()).preferredColorScheme(.dark).dynamicTypeSize(.accessibility5) }
+#endif
+
+#if RELEASE && APP_SIGNPOST_CAPTURE_CONTROL && targetEnvironment(simulator)
+import notify
+import os
+import Darwin
+
+// Diagnostic-only. The serial queue never polls or writes files inside an envelope.
+private final class RITCAppCaptureProbe {
+    private static var retained: RITCAppCaptureProbe?
+    static func install() {
+        let env = ProcessInfo.processInfo.environment
+        guard let nonce = env["RITC_CAPTURE_NONCE"] else { return }
+        guard nonce.count == 32, nonce.allSatisfy({ $0.isHexDigit }),
+              let expected = env["RITC_CAPTURE_DEVICE"],
+              let runner = Int32(env["RITC_CAPTURE_RUNNER_PID"] ?? ""), runner > 1 else { return }
+        do {
+            let probe = try RITCAppCaptureProbe(nonce: nonce, expectedDevice: expected, runnerPID: runner)
+            retained = probe
+            probe.queue.async { probe.register() }
+        } catch { /* The runner's bounded ARM wait fails; no successful ACK exists. */ }
+    }
+
+    private let nonce: String
+    private let expectedDevice: String
+    private let runnerPID: Int32
+    private let directory: URL
+    private let queue = DispatchQueue(label: "dev.roominthecart.capture-control")
+    private let signposter: OSSignposter
+    private var commandToken: Int32 = -1
+    private var ackToken: Int32 = -1
+    private var lastSequence: UInt64 = 0
+    private var pending: UInt64?
+    private var phase = "registered"
+    private var terminalError: String?
+    private var interval: OSSignpostIntervalState?
+    private var activeID: UInt64?
+    private var ledger: [[String: Any]] = []
+    private var enabledAtReady = false
+    private var epoch = Date().timeIntervalSince1970
+    private var acknowledgedCommand: UInt64 = 0
+
+    private init(nonce: String, expectedDevice: String, runnerPID: Int32) throws {
+        self.nonce = nonce; self.expectedDevice = expectedDevice; self.runnerPID = runnerPID
+        signposter = OSSignposter(subsystem: "dev.roominthecart.appcapture." + nonce, category: "CoverageControl")
+        directory = try FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask,
+                                               appropriateFor: nil, create: true)
+            .appendingPathComponent("AppCaptureControl", isDirectory: true)
+            .appendingPathComponent(nonce, isDirectory: true)
+        // A nonce directory must be new; stale status can never become a new capture.
+        guard !FileManager.default.fileExists(atPath: directory.path) else {
+            throw NSError(domain: "RITCCapture", code: 1)
+        }
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    }
+
+    private func register() {
+        guard notify_register_check("dev.roominthecart.capture.\(nonce).ack", &ackToken) == 0,
+              notify_set_state(ackToken, 0) == 0,
+              notify_register_dispatch("dev.roominthecart.capture.\(nonce).command", &commandToken, queue,
+                                       { [weak self] _ in self?.receive() }) == 0 else {
+            fail("notification_registration", command: 0); return
+        }
+        guard ProcessInfo.processInfo.environment["SIMULATOR_UDID"]?.uppercased() == expectedDevice.uppercased()
+        else { fail("simulator_identity", command: 0); return }
+        do { try status() } catch { fail("initial_status_write", command: 0) }
+        // ARM cannot be lost to startup: inspect state after registration as well as notifications.
+        receive()
+    }
+
+    private func status() throws {
+        var value: [String: Any] = [
+            "schemaVersion": 1, "nonce": nonce, "stage": phase,
+            "pid": getpid(), "parentPID": getppid(), "uid": getuid(), "runnerPID": runnerPID,
+            "simulatorUDID": ProcessInfo.processInfo.environment["SIMULATOR_UDID"] ?? "",
+            "compiledForSimulator": true, "executable": Bundle.main.executableURL?.path ?? "",
+            "subsystem": "dev.roominthecart.appcapture." + nonce, "category": "CoverageControl",
+            "lastSequence": lastSequence, "acknowledgedCommand": acknowledgedCommand,
+            "enabledAtReady": enabledAtReady, "invocations": ledger, "startedEpoch": epoch,
+            "statusEpoch": Date().timeIntervalSince1970
+        ]
+        if let pending { value["pendingCommand"] = pending }
+        if let terminalError { value["error"] = terminalError }
+        let data = try JSONSerialization.data(withJSONObject: value, options: [.sortedKeys])
+        guard data.count <= 8192 else { throw NSError(domain: "RITCCapture", code: 2) }
+        try data.write(to: directory.appendingPathComponent("status.json"), options: .atomic)
+    }
+
+    private func acknowledge(_ command: UInt64) throws {
+        // A successful acknowledgement requires a completed operation and no terminal error.
+        guard terminalError == nil, pending == command else { throw NSError(domain: "RITCCapture", code: 3) }
+        guard notify_set_state(ackToken, command | (UInt64(1) << 56)) == 0,
+              notify_post("dev.roominthecart.capture.\(nonce).ack") == 0 else {
+            throw NSError(domain: "RITCCapture", code: 4)
+        }
+        acknowledgedCommand = command
+        pending = nil
+    }
+
+    private func fail(_ reason: String, command: UInt64) {
+        if terminalError == nil { terminalError = reason }
+        phase = "failed"
+        // Error status uses a different top byte. It can never match a success ACK.
+        if ackToken >= 0 {
+            _ = notify_set_state(ackToken, (command & 0x00ff_ffff_ffff_ffff) | (UInt64(2) << 56))
+            _ = notify_post("dev.roominthecart.capture.\(nonce).ack")
+        }
+        try? status()
+        if commandToken >= 0 { notify_cancel(commandToken); commandToken = -1 }
+        // Keep failure state available until app exit; cancel only the app's registration at completion.
+    }
+
+    private func hostGate(_ expected: String, seconds: Double, command: UInt64) throws {
+        let deadline = ProcessInfo.processInfo.systemUptime + seconds
+        while ProcessInfo.processInfo.systemUptime < deadline {
+            var current: UInt64 = 0
+            guard notify_get_state(commandToken, &current) == 0, current == command else {
+                throw NSError(domain: "RITCCapture.runner_aborted_or_replaced_pending_command", code: 5)
+            }
+            let file = directory.appendingPathComponent("host-command.txt")
+            if let bytes = try? Data(contentsOf: file) {
+                guard bytes.count <= 128, let text = String(data: bytes, encoding: .utf8) else {
+                    throw NSError(domain: "RITCCapture.host_command_shape", code: 6)
+                }
+                if text == expected + " " + nonce + "\n" { return }
+                if text == "ABORT " + nonce + "\n" {
+                    throw NSError(domain: "RITCCapture.host_abort", code: 7)
+                }
+                // FINISH may still see the previous GO. No other token is accepted.
+                guard expected == "Q" && text == "GO " + nonce + "\n" else {
+                    throw NSError(domain: "RITCCapture.host_command_nonce_or_phase", code: 8)
+                }
+            }
+            usleep(50_000)
+        }
+        throw NSError(domain: "RITCCapture.host_gate_deadline", code: 9)
+    }
+
+    private func receive() {
+        guard terminalError == nil, commandToken >= 0 else { return }
+        var command: UInt64 = 0
+        guard notify_get_state(commandToken, &command) == 0 else {
+            fail("read_command", command: 0); return
+        }
+        if command == 0 { return }
+        // Dispatch delivery can coalesce. Re-reading an already acknowledged identical state is inert.
+        // The protocol never reexecutes that command; a fresh sequence is required for every operation.
+        if command == acknowledgedCommand { return }
+        let operation = command & 0xff
+        let sequence = (command >> 8) & 0x00ff_ffff
+        let ordinal = (command >> 32) & 0xffff
+        guard command >> 48 == 0, sequence == lastSequence + 1, pending == nil else {
+            fail("sequence_or_pending_state", command: command); return
+        }
+        lastSequence = sequence; pending = command
+        do {
+            switch operation {
+            case 1:
+                guard phase == "registered", ordinal == 0 else { throw NSError(domain: "RITCCapture.arm_phase", code: 10) }
+                phase = "waitingForCollector"; try status()
+                try hostGate("GO", seconds: 30, command: command)
+                enabledAtReady = signposter.isEnabled
+                signposter.emitEvent("CaptureReady")
+                phase = "recording"; try status(); try acknowledge(command)
+            case 2:
+                guard phase == "recording", interval == nil, ordinal == UInt64(ledger.count + 1), ordinal <= 16 else {
+                    throw NSError(domain: "RITCCapture.begin_phase", code: 11)
+                }
+                let id = signposter.makeSignpostID()
+                interval = signposter.beginInterval("ObservedInvocation", id: id)
+                activeID = id.rawValue
+                try acknowledge(command)
+            case 3:
+                guard phase == "recording", let state = interval, let id = activeID,
+                      ordinal == UInt64(ledger.count + 1) else { throw NSError(domain: "RITCCapture.end_phase", code: 12) }
+                signposter.endInterval("ObservedInvocation", state)
+                ledger.append(["ordinal": ordinal, "signpostID": id, "beginSequence": sequence - 1, "endSequence": sequence])
+                interval = nil; activeID = nil
+                try acknowledge(command)
+            case 4:
+                guard phase == "recording", interval == nil, !ledger.isEmpty, ordinal == UInt64(ledger.count) else {
+                    throw NSError(domain: "RITCCapture.finish_phase", code: 13)
+                }
+                signposter.emitEvent("CaptureComplete")
+                phase = "waitingForFinalization"; try status()
+                try hostGate("Q", seconds: 100, command: command)
+                phase = "finished"
+                // Persist finished before ACK; the runner may terminate the app immediately after ACK.
+                acknowledgedCommand = command
+                try status()
+                try acknowledge(command)
+                notify_cancel(commandToken); commandToken = -1
+                notify_cancel(ackToken); ackToken = -1
+            default:
+                throw NSError(domain: "RITCCapture.abort_or_unknown_operation", code: 14)
+            }
+        } catch { fail(String(describing: error), command: command) }
+    }
+}
 #endif

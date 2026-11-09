@@ -12,7 +12,8 @@ and all earlier native preservation paths remain at
 Canonical checkout: `/Users/palatis/Room in the Cart`, local branch
 `codex/parallel-ios-ci`. Publish to `codex/combined-candidate-20261109`; verify its
 current remote head and run state before dispatch. The last verified remote
-checkpoint before this update was 2e3ef60e.
+checkpoint before this update was 2a075828. Local client checkpoint is 5d737882;
+the prepared observer checkpoint follows it.
 The ambient `spanish-done-diagnostic` worktree is stale. Draft PR1 is an older
 candidate. No full combined qualification or merge has passed.
 
@@ -118,6 +119,15 @@ compile-gated App/performance-test hooks. No local native execution is authorize
 until root reviews a frozen candidate and releases the single execution slot.
 The root's isolated wire attempts are terminal. Do not compile a mixed snapshot
 while the observer helper is changing its owned source.
+
+The observer is now frozen at HostedAppObservationNov09/implementation-r4: 22
+payload files, 281 offline checks, workflow lint/17 queue definitions and exact
+arm64 helper typecheck pass. Root independently verified payloads and log hashes.
+It adds cheap Logging-template/SDK/settings prerequisites and one bounded portable
+artifact preserving modes without duplicate raw uploads. No app build or hosted
+capture was performed during preparation. One manual scroll/fresh-device/observer
+run is the next justified diagnostic; strict metrics/baselines remain unchanged.
+[Prepared workflow and limits](evidence/ci/hosted-scroll-observation-20261109/README.md).
 
 New local diagnostic rules in CI-VALIDATION require exact SDK/architecture helper
 typechecks before full compilation, export-only recovery after normal collection,

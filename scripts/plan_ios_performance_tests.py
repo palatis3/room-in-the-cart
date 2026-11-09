@@ -65,6 +65,16 @@ def validate_diagnostics_request(event, requested_case, enabled, enforce_baselin
                          "calibration mode and no other collector; never release acceptance")
 
 
+def validate_app_observation_request(event, requested_case, enabled, enforcement, capture, preflight, diagnostics, fresh):
+    if enabled not in ('', 'false', 'true'):
+        raise ValueError('App observation must be an explicit boolean')
+    if enabled != 'true':
+        return
+    if (event != 'workflow_dispatch' or requested_case != 'scroll' or enforcement != 'false'
+            or capture != 'false' or preflight != 'false' or diagnostics != 'false' or fresh != 'true'):
+        raise ValueError('App observation requires one manual scroll, calibration, a fresh owned simulator and no other collector; never release acceptance')
+
+
 def select_matrix(full_matrix, event, requested_case):
     validate_request(event, requested_case)
     rows = full_matrix["include"]
@@ -90,6 +100,11 @@ def main():
             os.environ.get("ENFORCE_BASELINES", ""),
             os.environ.get("CAPTURE_SCROLL_SIGNPOSTS", "false"),
             os.environ.get("CAPTURE_PREFLIGHT_ONLY", "false"))
+        validate_app_observation_request(event, requested,
+            os.environ.get('OBSERVE_APP_SCROLL_SIGNPOSTS', 'false'),
+            os.environ.get('ENFORCE_BASELINES', ''), os.environ.get('CAPTURE_SCROLL_SIGNPOSTS', 'false'),
+            os.environ.get('CAPTURE_PREFLIGHT_ONLY', 'false'), os.environ.get('ENABLE_PERFORMANCE_DIAGNOSTICS', 'false'),
+            os.environ.get('FRESH_PERFORMANCE_SIMULATOR', 'false'))
         if args.validate_request:
             print(json.dumps({"scope": "targeted diagnostic" if requested else "full performance suite",
                               "cases": [requested] if requested else list(METHODS)}))

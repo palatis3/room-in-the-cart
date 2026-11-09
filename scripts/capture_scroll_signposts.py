@@ -41,7 +41,7 @@ HELP_TOKENS = {
     'emit': ('signpost-event', '--type', '--subsystem', '--category'),
 }
 SOURCE_PINS = {
-    'ios/UITests/ReleasePerformanceUITests.swift': '69a7462dd5a916cb243038d8708b829f6623601128f14d1e989e88680bdb3130',
+    'ios/UITests/ReleasePerformanceUITests.swift': '2e2209c8b849b3ab9d1e323bb8534577b59dc8e810304127165648a5aca533ae',
     'scripts/check_ios_performance.py': 'f203f21510455a8a83300ee6968e8c5ac2bb14dd8c6afd5a6adb5caa7ce8a4c7',
     'scripts/scroll_signpost_diagnostic.py': 'e8fa85d6ceee7eb9c9a098338a002ea577df7605165d7b7b76b7cc9deb5aefa1',
     'ios/UITests/Fixtures/ReleaseLedger500.txt': '7411eb3a8a10911d6599237e1f2f618c0c3508667909a4766a4b5b14bef6e3b8',

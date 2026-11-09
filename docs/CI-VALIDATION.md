@@ -77,8 +77,9 @@ The native Swift HTTPS/PostgreSQL harness creates a fresh
 bounded stdout/stderr and a receipt for each launched Swift invocation, including
 failures; later attempts never replace those files. The original 180-second subprocess
 limit and 2 MB per-stream bound remain unchanged. The exact required case and
-scenario lists are in `service/scripts/test-native-wire.mjs` (currently eight Node
-cases and fifteen Swift scenarios). On failure, the wrapper preserves its
+scenario lists are in `service/scripts/test-native-wire.mjs`; its exact roster is
+checked against the observed Node and Swift results. Use that roster rather than
+a copied count when adding coverage. On failure, the wrapper preserves its
 owner-only attempt directory and any database or journal state already created,
 outside the uploaded artifact tree. Per-scenario TLS files are removed when their
 helpers clean up. Private custody metadata records retained paths; public results
@@ -104,6 +105,25 @@ Give raw test logs and checker logs distinct descriptive names, such as
 files on a default Mac filesystem. If a checker fails before evaluating retained
 exports, preserve that failure and run the missing check against verified copies.
 Do not re-export the result or repeat the app solely to fix the checker log path.
+
+The optional `observe_app_scroll_signposts` profile is a single manual diagnostic,
+not part of ordinary PR or release acceptance. It keeps the separate performance
+producer and consumer, builds the gated observer once, and schedules only the
+original scroll selector. Admission requires baseline enforcement off, a fresh
+owned simulator, and the other collectors off. Cheap profile, source, SDK and
+helper typechecks precede the build. Preserve the ordinary test environment;
+record only allowlisted diagnostic settings, never a complete environment dump.
+
+Report collection, trace export, XCTest, fixture, required metrics and final
+qualification separately. Preserve evidence before deleting the owned simulator.
+The observer uploads one bounded archive with file modes preserved, excluding
+disposable inspection copies; a raw fallback is explicitly unqualified. Reserve
+8 GiB plus archive headroom before writing. This keeps later inspection possible
+without another test run or duplicate raw uploads.
+An observed UIKit interval is not a replacement XCTest duration sample. If adding
+the observer makes the missing duration reappear, that is an interaction to
+investigate, not a confirmed fix. No outcome from this profile approves the
+Xcode 27.1 baseline. Review the one terminal result before proposing another run.
 
 For local UI follow-ups, distinguish XCTest's result evidence from its optional
 system diagnostic collection. A completed eight-case date batch spent additional

@@ -159,6 +159,10 @@ final class ReleasePerformanceUITests: XCTestCase {
     }
 
     func testScrollingPerformanceOnFiveHundredItemPickup() throws {
+        #if RELEASE && APP_SIGNPOST_CAPTURE_CONTROL && targetEnvironment(simulator)
+        let captureProbe = try RITCCaptureRunner(app: app)
+        defer { captureProbe.close() }
+        #endif
         try importFixture()
         let list = app.collectionViews.firstMatch
         let top = list.staticTexts["Saved on this iPhone"].firstMatch
@@ -170,6 +174,9 @@ final class ReleasePerformanceUITests: XCTestCase {
         if #available(iOS 26.0, *) {
             metrics.append(XCTHitchMetric(application: app))
         }
+        #if RELEASE && APP_SIGNPOST_CAPTURE_CONTROL && targetEnvironment(simulator)
+        try captureProbe.awaitCollector()
+        #endif
         var restingY: CGFloat?
         measure(metrics: metrics, options: measurementOptions()) {
             // Reset before each iteration. XCTest waits for the swipe to settle.
@@ -182,14 +189,24 @@ final class ReleasePerformanceUITests: XCTestCase {
                 restingY = startY
             }
 
+            #if RELEASE && APP_SIGNPOST_CAPTURE_CONTROL && targetEnvironment(simulator)
+            guard captureProbe.begin() else { return }
+            #endif
             startMeasuring()
             list.swipeUp(velocity: .fast)
             stopMeasuring()
+            #if RELEASE && APP_SIGNPOST_CAPTURE_CONTROL && targetEnvironment(simulator)
+            guard captureProbe.end() else { return }
+            #endif
 
             XCTAssertTrue(!top.exists || top.frame.midY < startY, "The measured gesture must scroll the list")
         }
         screenshot("Populated pickup list after measured scroll")
         try attachJSON(PerformanceLoadedImages.report(), name: "post-measure-loaded-images")
+        #if RELEASE && APP_SIGNPOST_CAPTURE_CONTROL && targetEnvironment(simulator)
+        try captureProbe.finish()
+        try attachJSON(captureProbe.report(), name: "app-capture-runner-control")
+        #endif
     }
 
     private func importFixture() throws {
@@ -504,6 +521,104 @@ private enum PerformanceLoadedImages {
         report["budgetExceeded"] = capped
         report["libraries"] = [entry("libMainThreadChecker.dylib", checker, checkerCount), entry("libRPAC.dylib", rpac, rpacCount)]
         return report
+    }
+}
+#endif
+
+#if RELEASE && APP_SIGNPOST_CAPTURE_CONTROL && targetEnvironment(simulator)
+import notify
+// Control handshakes sit outside the original three-call measurement block.
+@MainActor private final class RITCCaptureRunner {
+    private let nonce: String
+    private var commandToken: Int32 = -1
+    private var ackToken: Int32 = -1
+    private var sequence: UInt64 = 0
+    private var currentCommand: UInt64 = 0
+    private var finished = false
+    private(set) var invocations = 0
+    private var acknowledgements: [UInt64] = []
+
+    init(app: XCUIApplication) throws {
+        let env = ProcessInfo.processInfo.environment
+        guard let nonce = env["RITC_CAPTURE_NONCE"], nonce.count == 32,
+              nonce.allSatisfy({ $0.isHexDigit }), let device = env["RITC_CAPTURE_DEVICE"],
+              UUID(uuidString: device)?.uuidString == device,
+              env["SIMULATOR_UDID"]?.uppercased() == device else {
+            throw NSError(domain: "RITCCapture.missing_reviewed_run_environment", code: 1)
+        }
+        self.nonce = nonce
+        guard notify_register_check("dev.roominthecart.capture.\(nonce).command", &commandToken) == 0,
+              notify_register_check("dev.roominthecart.capture.\(nonce).ack", &ackToken) == 0,
+              notify_set_state(commandToken, 0) == 0 else {
+            if commandToken >= 0 { notify_cancel(commandToken) }
+            if ackToken >= 0 { notify_cancel(ackToken) }
+            throw NSError(domain: "RITCCapture.notification_registration", code: 2)
+        }
+        app.launchEnvironment["RITC_CAPTURE_NONCE"] = nonce
+        app.launchEnvironment["RITC_CAPTURE_DEVICE"] = device
+        app.launchEnvironment["RITC_CAPTURE_RUNNER_PID"] = String(getpid())
+    }
+
+    private func exchange(_ phase: UInt64, ordinal: Int = 0, seconds: Double) throws {
+        guard sequence < 0x00ff_ffff, (0...16).contains(ordinal) else {
+            throw NSError(domain: "RITCCapture.protocol_bound", code: 3)
+        }
+        sequence += 1
+        let command = phase | (sequence << 8) | (UInt64(ordinal) << 32)
+        currentCommand = command
+        guard notify_set_state(commandToken, command) == 0,
+              notify_post("dev.roominthecart.capture.\(nonce).command") == 0 else {
+            throw NSError(domain: "RITCCapture.command_send", code: 4)
+        }
+        let deadline = ProcessInfo.processInfo.systemUptime + seconds
+        while ProcessInfo.processInfo.systemUptime < deadline {
+            var ack: UInt64 = 0
+            guard notify_get_state(ackToken, &ack) == 0 else {
+                throw NSError(domain: "RITCCapture.ack_read", code: 5)
+            }
+            if ack >> 56 == 2 { throw NSError(domain: "RITCCapture.app_reported_failure", code: 6) }
+            if ack == (command | (UInt64(1) << 56)) {
+                acknowledgements.append(ack); return
+            }
+            if ack >> 56 > 2 { throw NSError(domain: "RITCCapture.ack_encoding", code: 7) }
+            usleep(10_000)
+        }
+        abort()
+        throw NSError(domain: "RITCCapture.ack_deadline", code: 8)
+    }
+
+    func awaitCollector() throws { try exchange(1, seconds: 35) }
+    func begin() -> Bool {
+        do {
+            invocations += 1
+            try exchange(2, ordinal: invocations, seconds: 2)
+            return true
+        } catch { abort(); XCTFail("App capture BEGIN failed: \(error)"); return false }
+    }
+    func end() -> Bool {
+        do { try exchange(3, ordinal: invocations, seconds: 2); return true }
+        catch { abort(); XCTFail("App capture END failed: \(error)"); return false }
+    }
+    func finish() throws {
+        try exchange(4, ordinal: invocations, seconds: 105)
+        finished = true
+    }
+    func report() -> [String: Any] {
+        ["diagnosticOnly": true, "releaseAcceptance": false, "nonce": nonce,
+         "runnerPID": getpid(), "invocations": invocations, "acknowledgements": acknowledgements,
+         "finished": finished, "scope": "Outer app coverage envelopes, not XCTest sample durations or indexes"]
+    }
+    private func abort() {
+        guard commandToken >= 0, !finished else { return }
+        // A pending host gate re-reads this changed command and emits an explicit failure ACK.
+        let abortCommand = (currentCommand & ~UInt64(0xff)) | 5
+        _ = notify_set_state(commandToken, abortCommand)
+        _ = notify_post("dev.roominthecart.capture.\(nonce).command")
+    }
+    func close() {
+        if !finished { abort() }
+        if commandToken >= 0 { notify_cancel(commandToken); commandToken = -1 }
+        if ackToken >= 0 { notify_cancel(ackToken); ackToken = -1 }
     }
 }
 #endif

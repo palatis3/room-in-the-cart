@@ -1,0 +1,55 @@
+{
+  "schema": 1,
+  "diagnosticOnly": true,
+  "releaseAcceptance": false,
+  "localQualificationSHA256": "d405b7bcc175d6722691582481c08f096d88db3522134123012bf224843f1c4c",
+  "files": {
+    ".github/workflows/ios-performance.yml": "fd1b22218a8ee3e9acae6d2c88b4beadb0e9ccaf49872bb1e1b4e10b63674388",
+    "ios/App/RoomInTheCartApp.swift": "0a3b59ad276d007db41f8468cbcca38ee4645b2b80638fb56b43e1ab61548ecd",
+    "ios/UITests/Fixtures/ReleaseLedger500.txt": "7411eb3a8a10911d6599237e1f2f618c0c3508667909a4766a4b5b14bef6e3b8",
+    "ios/UITests/ReleasePerformanceUITests.swift": "2e2209c8b849b3ab9d1e323bb8534577b59dc8e810304127165648a5aca533ae",
+    "scripts/app_scroll_observation/__init__.py": "3283c46663f2f89933619f374af2771911d1225c9d098cfdec84a69e1124f66e",
+    "scripts/app_scroll_observation/archive.py": "ec522ab2ad8233da3354d9a4e9a14ea987dc6e67287488ed156c92feb5ac03e7",
+    "scripts/app_scroll_observation/capture.py": "6236becf41dfced17b39891a1eb8b8658193b6da97468959747fa592ac15c706",
+    "scripts/app_scroll_observation/consumer.py": "2db8a7b2901b46746db1e824cc6ad841499cd5f0ddf5909abd37a034b7f0e7c4",
+    "scripts/app_scroll_observation/contract.py": "aa0d8d2fc0196a06207b08f5417cb1e9275c1cf90f4b0ba44c24a9218bece3b8",
+    "scripts/app_scroll_observation/export.py": "3aaa673486d854bef7591b8e18e7199ffc8e1c51941f17effc1390b19c7ead09",
+    "scripts/app_scroll_observation/native_environment.py": "498769cb3381a721ef9957203d198be6b1c90ca5f8d9d4e309319c884fe8b26c",
+    "scripts/app_scroll_observation/owned.py": "3555ce4a8f1feb78709b366919875c7b6f3cb8bd578e575f6fd02cfff1c2a5e9",
+    "scripts/app_scroll_observation/producer.py": "6f717a9253d0746cabe9ebd58accd0f1cb1566c9ee7a87116016cde7220fb994",
+    "scripts/app_scroll_observation/protocol.py": "d9e0e255eec41249273a3ce83c03fde3aaf06a066a316e34a4b2f57d994c5d6f",
+    "scripts/app_scroll_observation/results.py": "37ab32c29c00f5a6813b620da00e482562e7716512499ca85d4d7717355327fc",
+    "scripts/app_scroll_observation/runner.py": "c701157649b618b25491f8140aada56209448b947fbbb4604009f3fc0e05f534",
+    "scripts/app_scroll_observation/schema.py": "1ec37f5f7c07615fc410221a25c7868884d3a953e9e3424b30a527bc399774a8",
+    "scripts/app_scroll_observation/support.py": "604d8fe3758577de3a561b513cb70016be38d2d72e9ff33666f5752783806cee",
+    "scripts/capture_app_scroll_observation.py": "37f6e1301248f13c56a34fc0991fc586a444434405a745830c420aed27804ba5",
+    "scripts/check_ios_performance.py": "f203f21510455a8a83300ee6968e8c5ac2bb14dd8c6afd5a6adb5caa7ce8a4c7",
+    "scripts/check_ios_performance_environment.py": "ca015a9ab4bcbf90d9a37220a00372d4dc714a5f0f8f4c156aad3f538c8f4300",
+    "scripts/check_ios_test_results.py": "d5aeb8c6217d1f49153986cbaa6a6505681ef781aa19a76278272355828f8652",
+    "scripts/ios_performance_baselines.json": "38742a9b5f5eea668c608f117db602ac6a2b73aa56691c3ec3f90c291d15c38e",
+    "scripts/performance_plan_provenance.py": "cab270919ddfcf69f70b0bf4e92901894e5d1df18da8dcabe42c3b0214a72317",
+    "scripts/plan_ios_performance_tests.py": "bbfe795d761a512e3b570fb11684cbdd4157696967ff5cb862302b18a39424ba",
+    "scripts/prepare_ios_performance_simulator.py": "10b677c778802bbd8fc3e5ff1aaf9f5542b5e5f7a0565cf68e13d44f0445b020",
+    "scripts/preserve_performance_store.py": "52f0a220b861ea90369fbc0c1882e037462674e1600f32b53090ac9fddd06897",
+    "scripts/select_ci_iphone.py": "0b186bb693357ddb69bce88fe6b08f32b4d4da8e222b3f6f094627d079998d00",
+    "scripts/test_app_scroll_observation.py": "900b13434f9f9abde8f608982fb66b59ed2d09f5ee230cc498a52008c3295157"
+  },
+  "ungatedSourceSHA256": {
+    "ios/App/RoomInTheCartApp.swift": "e4a7c17a6016646beac6f31fe29eb0d4802db9b4f423b870d52da8fb374cb093",
+    "ios/UITests/ReleasePerformanceUITests.swift": "69a7462dd5a916cb243038d8708b829f6623601128f14d1e989e88680bdb3130"
+  },
+  "checkerSHA256": {
+    "scripts/check_ios_test_results.py": "d5aeb8c6217d1f49153986cbaa6a6505681ef781aa19a76278272355828f8652",
+    "scripts/check_ios_performance.py": "f203f21510455a8a83300ee6968e8c5ac2bb14dd8c6afd5a6adb5caa7ce8a4c7",
+    "scripts/check_ios_performance_environment.py": "ca015a9ab4bcbf90d9a37220a00372d4dc714a5f0f8f4c156aad3f538c8f4300",
+    "scripts/ios_performance_baselines.json": "38742a9b5f5eea668c608f117db602ac6a2b73aa56691c3ec3f90c291d15c38e",
+    "ios/UITests/Fixtures/ReleaseLedger500.txt": "7411eb3a8a10911d6599237e1f2f618c0c3508667909a4766a4b5b14bef6e3b8"
+  },
+  "qualifiedToolHashes": {
+    "xcodebuild": "d37fbcb4198c2474d847e5d7d4bf8394a1a9443890ad0153a76bc3e1d5576ec1",
+    "xctrace": "1820e9bafac5a8710535a63c43716094d28fbbc7eb39839277bf2ddd53b12e29",
+    "swift-frontend": "c90fc92073e78cd2b3c65efcacf65acfaf4290b02f7a9d301853563b85f4a993",
+    "xcresulttool": "b6bac309528f521fe7508f8b7daed31983c913cfb98d8ec94bbaf032a1e5fe35"
+  },
+  "qualifiedSDKSettingsSHA256": "a0c2eeb34a130e69052b4212873bcc1c6b2347904d8f26167da7b8b42d8480d1"
+}

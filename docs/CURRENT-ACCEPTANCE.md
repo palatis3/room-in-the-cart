@@ -20,8 +20,13 @@ offline and 281 PostgreSQL tests, including 54 pure domain and 21 shared-demand
 database cases. Exact quantities, reviewed pack capacity, protected reservations,
 atomic replay, tenant isolation and actual privacy restore/replay are covered.
 One database-only offline skip and three existing optional browser skips remain
-explicit. Native DTO/UI, real HTTPS mixed-client acceptance, scoped downstream
-projections and shared export/import remain open. Migration043 is not deployed.
+explicit. Native UI, scoped downstream projections and shared export/import remain
+open. Migration043 is not deployed. The typed client now passes 114 package tests
+with three expected database-only skips. Its eight demand scenarios pass over real
+HTTPS/PostgreSQL after correcting a request-body observer in the test fixture;
+the verified Swift build was reused. Earlier eight Node/15 Swift wire passes stay
+separate evidence; the final combined lane has not run.
+[Client proof](evidence/native/shared-demand-client-wire-20261109/README.md).
 [Persistence proof and limits](evidence/service/shared-demand-persistence-20261109/README.md),
 [original domain proof](evidence/service/shared-demand-domain-20261109/README.md).
 
@@ -57,6 +62,11 @@ envelopes contain the named UIKit scroll intervals. Saved-artifact recovery comp
 without another app run; original XML-cap and inspector-filename failures remain
 retained. Animation hitches remain unavailable, and the hosted missing-duration
 cause is still open. [Local diagnostic proof](evidence/native/app-signpost-export-recovery-20261109/README.md).
+A new default-off hosted app observation is prepared with 281 passing offline
+controls, workflow lint, exact helper typecheck and verified portable evidence.
+It retains the separate producer/consumer and original required metrics. Its
+actual hosted build/transport and any baseline decision remain unproven.
+[Prepared workflow](evidence/ci/hosted-scroll-observation-20261109/README.md).
 The earlier diagnostic workflow update passed 438 offline checks and 17 native
 queue-definition checks; the later follow-through total is recorded above. Its
 opt-in performance diagnostic preserves default commands and
