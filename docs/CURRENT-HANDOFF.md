@@ -15,7 +15,7 @@ contracts and B11 acceptance. Read [APP-BASELINE](product/APP-BASELINE.md), then
 Use `/Users/palatis/Room in the Cart`, branch `codex/parallel-ios-ci`, with explicit
 working directories. The ambient `spanish-done-diagnostic` worktree is stale.
 Publication target is `codex/combined-candidate-20261109`; before this update its
-verified head was `1d7f938b`. Recheck current Git
+verified head was `df2dbae5d29937c58346d5eac6e55001c745567b`. Recheck current Git
 and run state before publishing. Draft PR1 is a separate older candidate.
 No complete combined regression or merge has passed.
 
@@ -132,9 +132,18 @@ Stable source is now positive2 manifest
 `14215009e8ce6d6af649d1c859801eb981971d8321f492fd095d3488c39e8894`.
 `positive-r2/` full contributor compilation passed in24.194seconds. Dark/Large
 passes native/strict with8.295239:1 for both targets and actual dark pixels;
-light/Large is executing. Finish exact-source four traits plus original Cancel,
-inspect pixels/geometry, then install canonical byte-verified changes and planner
-fixture count73. Positive/CI diagnostics remain on-failure. System-following
+light/Large also passes7.083026:1 and original Cancel passes native/strict.
+AX5/light fails before opening the form: the lazy request row is below the
+fixture header and initial list viewport; the test waits without scrolling.
+All four executed cases are terminal and inspected once; complete source/products
+and modes are archived under14215009. No darkAX5 run or unchanged retry.
+[Exact partial result](evidence/native/clarification-traits-20261109/README.md).
+Reviewed scratch proposal `navigation-r1/navigation.patch` adds only the existing
+bounded reveal before the initial exact request assertion; patchSHA
+`7914e4d22a1562a7e3cdfa6cc2e13a6710c3ceb04f3ab257c42dbf8b8098f517`.
+It is not installed or natively tested. Next: prepare a new frozen source and
+qualify largest-text behavior before installing the clarification files and
+planner fixture count73. Keep canonical CoreDomain fix intact during integration. Positive/CI diagnostics remain on-failure. System-following
 appearance propagation is not qualified by explicit app-preference tests.
 
 ## Source-removal acceptance follow-up
@@ -191,12 +200,12 @@ with the latest product archive at `builds/<product-SHA>/products`.
 Verify complete manifests and executable modes before mutation; each successor
 needs its own custody/source/product receipts. Old executors become historical.
 
-Owned iPhone17/iOS27.0 device: `A50C91FC-4966-47FF-A8CB-7640FBD513EB` (booted; positive1 is terminal, traits restored to light/Large). Launch-only4C01A9AC was deleted after preserving proof.
+Owned iPhone17/iOS27.0 device: `A50C91FC-4966-47FF-A8CB-7640FBD513EB` (booted; positive2 is terminal, traits restored to light/Large). Launch-only4C01A9AC was deleted after preserving proof.
 Protected preview `5FDE1E82-1FF7-4556-9C14-0746F6295944`: never reset or use for fixtures.
 Owned minimum17.0 deviceD420C2CA and17.5 device9DE280AC remain available; recheck state.
 Multiple26.2 runtime builds are installed, so version alone is insufficient identity.
 
-Latest observed free storage is14.98GiB, replacing earlier41GiB readings.
+Latest observed free storage is13.87GiB, replacing earlier41GiB readings.
 Keep8GiB reserve; no SDK download is needed. Do not broadly delete evidence/caches,
 repurpose PostgreSQL port55432 or remove unowned resources.
 
