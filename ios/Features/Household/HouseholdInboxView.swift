@@ -268,8 +268,9 @@ struct HouseholdRequestDecisionView: View {
                         if selected.ownActionAllowed {
                             Section(ht("Ask for clarification")) {
                                 Text(ht("Only this requester receives your question. Leave private costs and other requests out of it."))
-                                    .foregroundStyle(.secondary)
-                                TextField(ht("Question"), text: $model.clarification, axis: .vertical).lineLimit(2...5)
+                                    .foregroundStyle(Theme.secondary)
+                                workingTextField(ht("Question"), text: $model.clarification, axis: .vertical).lineLimit(2...5)
+                                    .accessibilityIdentifier("household.decision.question")
                                 Button(ht("Send clarification")) { Task { await model.sendClarification() } }
                                     .disabled(model.clarification.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                             }

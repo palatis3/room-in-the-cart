@@ -126,7 +126,7 @@ extension EnvironmentValues {
         if recoveredCount != count { recoveredCount = count }
         if sourceUnchanged != unchanged { sourceUnchanged = unchanged }
     }
-    private struct FixtureLedgerDocument: Codable { let formatVersion = 1; let workspace: LedgerWorkspace }
+    private struct FixtureLedgerDocument: Encodable { let formatVersion = 1; let workspace: LedgerWorkspace }
     private func referenceJPEG() throws -> Data {
         let image = UIGraphicsImageRenderer(size: CGSize(width: 420, height: 240)).image { context in
             UIColor(red: 0.97, green: 0.96, blue: 0.93, alpha: 1).setFill()

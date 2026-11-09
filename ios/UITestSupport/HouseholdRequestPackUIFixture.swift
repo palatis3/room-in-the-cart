@@ -35,6 +35,7 @@ final class S24FixtureServer: @unchecked Sendable {
     private var recordedLines: [[String: Any]] = []
     private var receipts: [String: [String: Any]] = [:]
     private var count = 0
+    private var attemptedCommands = 0
     private var previews = 0
     private var revision = 1
     func advanceSource() { lock.lock(); defer { lock.unlock() }; revision += 1 }
@@ -71,15 +72,27 @@ final class S24FixtureServer: @unchecked Sendable {
         "meal":["title":"Family rice dinner", "day":"2026-11-06", "kind":"dinner", "portions":4, "protected":false]
     ]
     var changed: ((Int, Int) -> Void)?
+    var commandAttempted: ((Int) -> Void)?
     var previewChanged: ((Int) -> Void)?
     var previewBody: [String: Any]? { lock.lock(); defer { lock.unlock() }; return recordedPreview }
     var commandCount: Int { lock.lock(); defer { lock.unlock() }; return count }
     var previewCount: Int { lock.lock(); defer { lock.unlock() }; return previews }
     var lineCount: Int { lock.lock(); defer { lock.unlock() }; return recordedLines.count }
     func respond(_ request: URLRequest) throws -> (Int, Data) {
-        lock.lock(); defer { lock.unlock() }
+        var attemptNotification: (callback: (Int) -> Void, count: Int)?
+        lock.lock()
+        defer {
+            lock.unlock()
+            // Observe even rejected commands, outside the server lock and before
+            // URLProtocol delivers the response or error to the app.
+            if let attemptNotification { attemptNotification.callback(attemptNotification.count) }
+        }
         guard request.url?.host?.hasSuffix(".invalid") == true else { throw URLError(.unsupportedURL) }
         let path = request.url!.path
+        if path.hasSuffix("/commands") {
+            attemptedCommands += 1
+            if let commandAttempted { attemptNotification = (commandAttempted, attemptedCommands) }
+        }
         var bytes = request.httpBody ?? Data()
         if bytes.isEmpty, let stream = request.httpBodyStream {
             stream.open(); defer { stream.close() }; var buffer = [UInt8](repeating: 0, count: 4096)
@@ -163,7 +176,7 @@ final class S24FixtureServer: @unchecked Sendable {
         throw URLError(.unsupportedURL)
     }
 }
-final class S24FixtureProtocol: URLProtocol, @unchecked Sendable {
+final class S24FixtureProtocol: URLProtocol {
     static var server: S24FixtureServer?
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
@@ -198,6 +211,7 @@ import SwiftUI
 @MainActor final class S24RequestPackFixtureState: ObservableObject {
     @Published var model: HouseholdInboxModel?
     @Published var posts = 0
+    @Published var commandAttempts = 0
     @Published var lines = 0
     @Published var failed = false
     @Published var previews = 0
@@ -207,6 +221,12 @@ import SwiftUI
         guard model == nil, ProcessInfo.processInfo.arguments.contains("--ui-testing"),ProcessInfo.processInfo.arguments.contains("--request-pack-fixture") else { return }
         do {
             server.changed = { [weak self] posts,lines in Task { @MainActor in self?.posts=posts;self?.lines=lines } }
+            server.commandAttempted = { [weak self] attempts in
+                Task { @MainActor in
+                    guard let self else { return }
+                    self.commandAttempts = max(self.commandAttempts, attempts)
+                }
+            }
             server.previewChanged = { [weak self] previews in Task { @MainActor in self?.previews = previews } }
             let url=FileManager.default.temporaryDirectory.appendingPathComponent("UITestWorkspace/S24-"+UUID().uuidString).appendingPathComponent("outbox.json")
             model=try await s24FixtureModel(server:server,outboxURL:url)
@@ -215,6 +235,15 @@ import SwiftUI
 }
 struct S24RequestPackFixtureRoot: View {
     @StateObject private var state=S24RequestPackFixtureState()
+    @AppStorage("appearance") private var appearance = "system"
+    private var explicitColorScheme: ColorScheme? {
+        let arguments = ProcessInfo.processInfo.arguments
+        guard let option = arguments.firstIndex(of: "-appearance"),
+              arguments.indices.contains(option + 1),
+              ["light", "dark"].contains(arguments[option + 1]) else { return nil }
+        // Match the ordinary app's preference only for an explicit fixture opt-in.
+        return appearance == "dark" ? .dark : appearance == "light" ? .light : nil
+    }
     var body: some View {
         VStack {
             Text("Fixture applied decisions: \(state.posts)").accessibilityIdentifier("fixture.s24.posts")
@@ -222,22 +251,26 @@ struct S24RequestPackFixtureRoot: View {
             Button("Fixture end shopper access") { Task { await state.endShopperAccess() } }
                 .accessibilityIdentifier("fixture.s24.end-access")
             if let model=state.model {
-                S24FixtureDecisionDiagnostics(model: model, previews: state.previews)
+                S24FixtureDecisionDiagnostics(model: model, previews: state.previews, commandAttempts: state.commandAttempts)
                 NavigationStack { ShopperInboxContent(model:model).navigationTitle("S24 request decision") }
             }
             else if state.failed { Text("Fixture setup failed").accessibilityIdentifier("fixture.failure") }
             else { ProgressView("Opening isolated S24 fixture") }
-        }.tint(Theme.action).task { await state.start() }
+        }.tint(Theme.action)
+            .preferredColorScheme(explicitColorScheme)
+            .task { await state.start() }
     }
 }
 
 private struct S24FixtureDecisionDiagnostics: View {
     @ObservedObject var model: HouseholdInboxModel
     let previews: Int
+    let commandAttempts: Int
     var body: some View {
-        Text("Fixture previews: \(previews); busy: \(model.busy); selected: \(model.selected?.id ?? "none"); choice: \(model.choice.rawValue); price: \(model.price); preview: \(model.preview?.previewId ?? "none"); notice: \(model.notice ?? "none")")
+        Text(verbatim: "Fixture previews: \(previews); busy: \(model.busy); selected: \(model.selected?.id ?? "none"); choice: \(model.choice.rawValue); price: \(model.price); preview: \(model.preview?.previewId ?? "none"); notice: \(model.notice ?? "none")")
             .font(.caption2).lineLimit(1)
             .accessibilityIdentifier("fixture.s24.preview-diagnostics")
+            .accessibilityValue("Fixture command attempts: \(commandAttempts)")
     }
 }
 

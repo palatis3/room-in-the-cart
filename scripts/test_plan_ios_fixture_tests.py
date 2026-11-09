@@ -89,7 +89,7 @@ class PlanIOSFixtureTests(unittest.TestCase):
         self.assertEqual(set(plans["dinner"]["shards"]), {"DinnerDecisionSheetUITests"})
         self.assertEqual(plans["dinner"]["shards"]["DinnerDecisionSheetUITests"]["suite"], "DinnerDecisionSheetUITests")
         self.assertEqual(sum(len(shard["test_identifiers"]) for plan in plans.values()
-                             for shard in plan["shards"].values()), 72)
+                             for shard in plan["shards"].values()), 73)
         later_page = f"{UI_TARGET}/RequestDuplicateComparisonUITests/testConfirmedLaterPageDecisionReturnsToSameLeeOutcomeWithoutScrolling"
         return_shard = plans["contributor"]["shards"]["contributor-balanced-01"]["test_identifiers"]
         self.assertEqual([value.removesuffix("()") for value in return_shard].count(later_page), 1)
@@ -100,6 +100,8 @@ class PlanIOSFixtureTests(unittest.TestCase):
         self.assertEqual([identifier.removesuffix("()") for identifier in decision_shard].count(other_meals), 1)
         cancel_preview = f"{UI_TARGET}/HouseholdRequestPackUITests/testCancelPreviewClearsOverageConsentRetainsEditableDraftAndRequiresFreshReview"
         self.assertEqual([identifier.removesuffix("()") for identifier in decision_shard].count(cancel_preview), 1)
+        clarification = f"{UI_TARGET}/HouseholdRequestPackUITests/testClarificationGuidanceAndEmptyQuestionStayReadableAndCancelDoesNotWrite"
+        self.assertEqual([identifier.removesuffix("()") for identifier in decision_shard].count(clarification), 1)
         carry = f"{UI_TARGET}/HouseholdRequestPackUITests/testShopperCarriesEarlierRequestOnceAndReviewsCurrentPackPrice"
         carry_shards = [shard for shard in plans["contributor"]["shards"].values()
                        if carry in [value.removesuffix("()") for value in shard["test_identifiers"]]]

@@ -4,6 +4,8 @@ import XCTest
 /// Dedicated isolated fixture build only; normal full-suite builds contain no S24 fixture test.
 @MainActor final class HouseholdRequestPackUITests: XCTestCase {
     private var app: XCUIApplication!
+    private var restoreClarificationAppearance: (() -> Void)?
+    private var useClarificationForegroundNavigation = false
     override func setUpWithError() throws {
         continueAfterFailure = false
         app = XCUIApplication(bundleIdentifier: "dev.roominthecart.app.debug")
@@ -19,6 +21,7 @@ import XCTest
             snapshot.name = "S24-failure-preview-diagnostics"; snapshot.lifetime = .keepAlways; add(snapshot)
         }
         app.terminate()
+        restoreClarificationAppearance?(); restoreClarificationAppearance = nil
     }
     func testShopperCarriesEarlierRequestOnceAndReviewsCurrentPackPrice() throws {
         app.launchArguments = ["--ui-testing", "--request-pack-fixture", "--deferred-request-fixture",
@@ -101,6 +104,181 @@ import XCTest
         assertReturnedToConfirmedRequest()
         XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 1")
         XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 3")
+    }
+
+    func testClarificationGuidanceAndEmptyQuestionStayReadableAndCancelDoesNotWrite() throws {
+        useClarificationForegroundNavigation = true
+        defer { useClarificationForegroundNavigation = false }
+        let environment = ProcessInfo.processInfo.environment
+        let size = environment["RITC_S24_CLARIFICATION_SIZE"] ?? "large"
+        let appearance = environment["RITC_S24_CLARIFICATION_APPEARANCE"] ?? "light"
+        guard ["large", "ax5"].contains(size), ["light", "dark"].contains(appearance) else {
+            XCTFail("Clarification traits must be large/ax5 and light/dark"); return
+        }
+        let category: UIContentSizeCategory = size == "ax5" ? .accessibilityExtraExtraExtraLarge : .large
+        let argument = size == "ax5" ? "UICTContentSizeCategoryAccessibilityXXXL" : "UICTContentSizeCategoryL"
+        let name = "S24-clarification-" + appearance + "-" + size
+        let previousAppearance = XCUIDevice.shared.appearance
+        restoreClarificationAppearance = { XCUIDevice.shared.appearance = previousAppearance }
+        defer { restoreClarificationAppearance?(); restoreClarificationAppearance = nil }
+        XCUIDevice.shared.appearance = appearance == "dark" ? .dark : .light
+        XCTAssertEqual(XCUIDevice.shared.appearance, appearance == "dark" ? .dark : .light)
+        let runnerCategory = UIApplication.shared.preferredContentSizeCategory
+        XCTAssertEqual(runnerCategory, category, "Establish the requested system text size before launching this test")
+        app.launchArguments = ["--ui-testing", "--request-pack-fixture", "--request-meal-fixture",
+                               "-AppleLanguages", "(en)", "-AppleLocale", "en_US",
+                               "-UIPreferredContentSizeCategoryName", argument,
+                               "-appearance", appearance]
+        app.launch()
+        let request = element("household.request.44444444-4444-4444-8444-444444444444")
+        reveal(request)
+        XCTAssertTrue(request.waitForExistence(timeout: 20)); tap(request)
+        XCTAssertTrue(element("household.decision.cancel").waitForExistence(timeout: 5))
+        let wording = "Only this requester receives your question. Leave private costs and other requests out of it."
+        let guidanceMatches = app.staticTexts.matching(NSPredicate(format: "label == %@", wording))
+        let guidance = guidanceMatches.firstMatch
+        centerForReading(guidance)
+        XCTAssertEqual(guidanceMatches.count, 1)
+        let guidanceImage = try captureClarificationText(guidance, text: wording, category: category,
+                                                        name: name + "-guidance", isPrompt: false)
+        let question = try revealClarificationQuestion()
+        XCTAssertEqual(question.identifier, "household.decision.question")
+        XCTAssertTrue(question.label == "Question" || question.placeholderValue == "Question", "Require the exact native Question title")
+        XCTAssertTrue((question.value as? String ?? "").isEmpty || question.value as? String == "Question")
+        XCTAssertFalse(app.keyboards.firstMatch.exists)
+        let questionImage = try captureClarificationText(question, text: "Question", category: category,
+                                                        name: name + "-empty-question", isPrompt: true)
+        var measurements: [[String: Any]] = []
+        // Collect both original failing targets; this does not forgive either failure.
+        do {
+            let prior = continueAfterFailure; continueAfterFailure = true
+            defer { continueAfterFailure = prior }
+            for (target, image) in [("privacy guidance", guidanceImage), ("empty Question prompt", questionImage)] {
+                let measured = try assertReadableContrast(image, label: name + " " + target)
+                measurements.append(["target": target, "contrast": measured.contrast,
+                                     "medianLuminance": measured.medianLuminance])
+            }
+        }
+        let report: [String: Any] = ["appearanceRequested": appearance, "deviceAppearanceObserved": XCUIDevice.shared.appearance.rawValue,
+                                    "categoryRequested": category.rawValue, "runnerCategoryObserved": runnerCategory.rawValue,
+                                    "appAppearancePreferenceRequested": appearance, "appearancePath": "S24 fixture mirrors ordinary app preferredColorScheme; system propagation is not qualified",
+                                    "locale": "en_US", "minimumContrast": 4.5, "measurements": measurements,
+                                    "traitEvidence": "Public device appearance readback, runner system category, native app category override, visible row geometry and observed background luminance; app text scale/wrapping require screenshot review, not inferred from padded row height"]
+        let receipt = XCTAttachment(data: try JSONSerialization.data(withJSONObject: report, options: [.sortedKeys]),
+                                    uniformTypeIdentifier: "public.json")
+        receipt.name = name + "-contrast-and-palette"; receipt.lifetime = .keepAlways; add(receipt)
+        for measured in measurements {
+            let background = try XCTUnwrap(measured["medianLuminance"] as? Double)
+            if appearance == "light" { XCTAssertGreaterThanOrEqual(background, 0.8, "Observed target must use a light surface") }
+            else { XCTAssertLessThanOrEqual(background, 0.2, "Observed target must use a dark surface") }
+        }
+        let send = app.buttons.matching(NSPredicate(format: "label == %@", "Send clarification"))
+        reveal(send.firstMatch, fullyVisible: true)
+        XCTAssertEqual(send.count, 1); XCTAssertFalse(send.firstMatch.isEnabled)
+        reveal(question, fullyVisible: true); question.tap()
+        let draft = "Which cereal?\nKeep the original request."
+        question.typeText(draft)
+        XCTAssertEqual(question.value as? String, draft)
+        dismissKeyboardIfPresent()
+        reveal(question, fullyVisible: true)
+        XCTAssertEqual(question.identifier, "household.decision.question")
+        XCTAssertEqual(question.value as? String, draft)
+        capture(name + "-multiline-draft")
+        reveal(send.firstMatch, fullyVisible: true); XCTAssertTrue(send.firstMatch.isEnabled)
+        tap(element("household.decision.cancel"))
+        XCTAssertTrue(request.waitForExistence(timeout: 5))
+        XCTAssertEqual(element("household.request.outcome.44444444-4444-4444-8444-444444444444").label, "Received, waiting for review")
+        XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 0")
+        XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 0")
+        let diagnostics = element("fixture.s24.preview-diagnostics")
+        XCTAssertEqual(diagnostics.value as? String, "Fixture command attempts: 0")
+        capture(name + "-cancelled-without-write")
+
+        // Positive control: a rejected clarification must still be observable as
+        // an attempted command. This intentionally leaves an isolated pending
+        // operation; the final Cancel dismisses the sheet, not that operation.
+        tap(request)
+        XCTAssertTrue(element("household.decision.cancel").waitForExistence(timeout: 5))
+        let controlQuestion = try revealClarificationQuestion()
+        controlQuestion.tap(); controlQuestion.typeText("Intentional rejected clarification control")
+        dismissKeyboardIfPresent()
+        reveal(send.firstMatch, fullyVisible: true)
+        XCTAssertEqual(send.count, 1); XCTAssertTrue(send.firstMatch.isEnabled)
+        send.firstMatch.tap()
+        let notice = element("household.decision.notice")
+        reveal(notice, fullyVisible: true)
+        XCTAssertTrue(notice.waitForExistence(timeout: 5))
+        XCTAssertEqual(notice.label, "The service could not confirm this decision. Retry the pending decision to avoid a duplicate.")
+        tap(element("household.decision.cancel"))
+        // The pending request can be disabled; reveal its identity without tapping it.
+        for _ in 0..<24 {
+            if request.exists { break }
+            scrollContent(upward: true)
+        }
+        XCTAssertTrue(request.waitForExistence(timeout: 5))
+        let observedAttempt = expectation(for: NSPredicate(format: "value == %@", "Fixture command attempts: 1"),
+                                          evaluatedWith: diagnostics)
+        wait(for: [observedAttempt], timeout: 5)
+        XCTAssertEqual(diagnostics.value as? String, "Fixture command attempts: 1")
+        XCTAssertEqual(element("fixture.s24.posts").label, "Fixture applied decisions: 0")
+        XCTAssertEqual(element("fixture.s24.lines").label, "Fixture saved lines: 0")
+        let control = XCTAttachment(string: "Rejected clarification positive control: \(diagnostics.value ?? "nil"); \(element("fixture.s24.posts").label); \(element("fixture.s24.lines").label). The pending operation is not claimed cancelled.")
+        control.name = name + "-rejected-attempt-observed"; control.lifetime = .keepAlways; add(control)
+        capture(name + "-rejected-attempt-control")
+    }
+
+    private func revealClarificationQuestion() throws -> XCUIElement {
+        let identity = NSPredicate(format: "identifier == %@", "household.decision.question")
+        let fields = app.textFields.matching(identity), views = app.textViews.matching(identity)
+        // Resolve both editable types on each observation; a lazy row must not
+        // permanently select the absent type before scrolling it into view.
+        for attempt in 0...24 {
+            let count = fields.count + views.count
+            if count > 0 {
+                XCTAssertEqual(count, 1, "Require one Question field with the stable identifier")
+                let field = fields.count == 1 ? fields.element : views.element
+                let gestureArea = scrollableArea(bottomInset: 16), bounds = app.frame
+                // Horizontal gesture margins do not obscure a visible Form row.
+                let viewport = CGRect(x: bounds.minX, y: gestureArea.minY,
+                                      width: bounds.width, height: gestureArea.height).intersection(bounds)
+                if field.isHittable && viewport.contains(field.frame) { return field }
+                if attempt < 24 { scrollContent(upward: field.frame.midY > gestureArea.midY) }
+            } else if attempt < 24 { scrollContent(upward: true) }
+        }
+        return try XCTUnwrap(nil as XCUIElement?, "Question field did not become wholly visible within 24 gestures")
+    }
+
+    private func captureClarificationText(_ target: XCUIElement, text: String, category: UIContentSizeCategory,
+                                          name: String, isPrompt: Bool) throws -> CGImage {
+        reveal(target, fullyVisible: true)
+        let frame = target.frame, gestureArea = scrollableArea(bottomInset: 16), bounds = app.frame
+        let viewport = CGRect(x: bounds.minX, y: gestureArea.minY,
+                              width: bounds.width, height: gestureArea.height).intersection(bounds)
+        let font = UIFont.preferredFont(forTextStyle: .body,
+                                       compatibleWith: UITraitCollection(preferredContentSizeCategory: category))
+        // AX exposes the padded Form row, not its glyph/content rectangle.
+        // Row-width wrapping is only a conservative minimum-space calculation.
+        let rowWidthMinimum = (text as NSString).boundingRect(with: CGSize(width: frame.width, height: .greatestFiniteMagnitude),
+            options: [.usesLineFragmentOrigin, .usesFontLeading], attributes: [.font: font], context: nil)
+        capture(name + "-full")
+        let screenshot = target.screenshot()
+        let ink = XCTAttachment(screenshot: screenshot)
+        ink.name = name + "-target"; ink.lifetime = .keepAlways; add(ink)
+        let geometry = XCTAttachment(string: "identifier=\(target.identifier); label=\(target.label); placeholderValue=\(target.placeholderValue ?? "nil"); value=\(target.value ?? "nil"); categoryRequested=\(category.rawValue); frame=\(frame); appBounds=\(bounds); gestureArea=\(gestureArea); visibleViewport=\(viewport); bodyPointSize=\(font.pointSize); lineHeight=\(font.lineHeight); rowWidthMinimumTextBounds=\(rowWidthMinimum); glyphBounds=unmeasured; wrappingAndAppFontScale=screenshot-review-required\n\(target.debugDescription)")
+        geometry.name = name + "-geometry"; geometry.lifetime = .keepAlways; add(geometry)
+        XCTAssertEqual(target.frame, frame, "Target geometry changed during capture")
+        if isPrompt {
+            XCTAssertTrue(target.label == text || target.placeholderValue == text, "Require the exact native prompt title")
+        } else { XCTAssertEqual(target.label, text) }
+        XCTAssertTrue(viewport.contains(frame)); XCTAssertTrue(target.isHittable)
+        XCTAssertGreaterThan(frame.width, 0)
+        XCTAssertGreaterThanOrEqual(frame.height + 2, font.lineHeight)
+        if !isPrompt {
+            // Padding makes a row-height upper bound invalid. Complete visible
+            // wrapping and actual text scale must also be reviewed in the images.
+            XCTAssertGreaterThanOrEqual(frame.height + 2, rowWidthMinimum.height)
+        }
+        return try XCTUnwrap(screenshot.image.cgImage)
     }
 
     func testCerealCheckoutAndTwoProtectedLunchesAreVisibleTogetherAndCancelDoesNotWrite() throws {
@@ -458,7 +636,7 @@ import XCTest
         try assertReadableContrast(try XCTUnwrap(text.screenshot().image.cgImage), label: text.label)
     }
 
-    private func assertReadableContrast(_ image: CGImage, label: String) throws {
+    @discardableResult private func assertReadableContrast(_ image: CGImage, label: String) throws -> (contrast: Double, medianLuminance: Double) {
         let space = try XCTUnwrap(CGColorSpace(name: CGColorSpace.sRGB))
         let bitmap = try XCTUnwrap(CGContext(data: nil, width: image.width, height: image.height, bitsPerComponent: 8,
             bytesPerRow: image.width * 4, space: space, bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue))
@@ -476,6 +654,7 @@ import XCTest
         let trim = luminance.count / 100
         let contrast = (luminance[luminance.count - 1 - trim] + 0.05) / (luminance[trim] + 0.05)
         XCTAssertGreaterThanOrEqual(contrast, 4.5, label)
+        return (contrast, luminance[luminance.count / 2])
     }
 
     private func assertDisabledApplyRejectsActivation(_ button: XCUIElement, name: String) throws {
@@ -681,7 +860,14 @@ import XCTest
     private func scrollableArea(bottomInset: CGFloat = 100) -> CGRect {
         let bounds = app.frame
         let keyboardTop = app.keyboards.allElementsBoundByIndex.filter { $0.exists }.map { $0.frame.minY }.min() ?? bounds.maxY
-        let barBottom = app.navigationBars.allElementsBoundByIndex.filter { $0.exists && $0.isHittable }.map { $0.frame.maxY }.max() ?? bounds.minY + 88
+        let barBottom: CGFloat
+        if useClarificationForegroundNavigation && app.navigationBars["Review request"].exists {
+            // The presented review owns the viewport; the fixture's underlying
+            // navigation bar may remain in the accessibility tree as hittable.
+            barBottom = app.navigationBars["Review request"].frame.maxY
+        } else {
+            barBottom = app.navigationBars.allElementsBoundByIndex.filter { $0.exists && $0.isHittable }.map { $0.frame.maxY }.max() ?? bounds.minY + 88
+        }
         let top = max(bounds.minY + 88, min(barBottom + 12, keyboardTop - 140))
         let bottom = min(bounds.maxY - bottomInset, keyboardTop - 16)
         return CGRect(x: bounds.minX + 24, y: top, width: bounds.width - 48, height: max(80, bottom - top))

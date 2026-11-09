@@ -72,7 +72,7 @@ private final class H09Server: @unchecked Sendable {
         return try unavailable()
     }
 }
-private final class H09Protocol: URLProtocol, @unchecked Sendable {
+private final class H09Protocol: URLProtocol {
     static var server: H09Server?
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }

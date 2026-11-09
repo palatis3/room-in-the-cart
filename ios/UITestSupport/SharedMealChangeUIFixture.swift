@@ -210,7 +210,7 @@ private final class S17FixtureServer: @unchecked Sendable {
         return try denied()
     }
 }
-private final class S17FixtureProtocol: URLProtocol, @unchecked Sendable {
+private final class S17FixtureProtocol: URLProtocol {
     static var server: S17FixtureServer?
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }

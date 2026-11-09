@@ -127,7 +127,7 @@ private final class S27Server: @unchecked Sendable {
         return try denied()
     }
 }
-private final class S27Protocol: URLProtocol, @unchecked Sendable {
+private final class S27Protocol: URLProtocol {
     static var server: S27Server?
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }

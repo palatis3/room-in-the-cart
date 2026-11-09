@@ -100,7 +100,7 @@ private final class MeasurementFixtureServer: @unchecked Sendable {
         return try denied()
     }
 }
-private final class MeasurementFixtureProtocol: URLProtocol, @unchecked Sendable {
+private final class MeasurementFixtureProtocol: URLProtocol {
     static var server: MeasurementFixtureServer?
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }

@@ -134,7 +134,7 @@ final class S23DuplicateFixtureVault: RefreshTokenVault, @unchecked Sendable {
     func write(_ value: String) throws { self.value = value }
     func clear() throws { value = nil }
 }
-final class S23DuplicateFixtureProtocol: URLProtocol, @unchecked Sendable {
+final class S23DuplicateFixtureProtocol: URLProtocol {
     static var server: S23DuplicateFixtureServer?
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
