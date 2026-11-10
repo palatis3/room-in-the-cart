@@ -1,0 +1,22 @@
+{
+  "status": "passed",
+  "scope": "Portable helper lifecycle controls only; no hosted simulator or app performance acceptance",
+  "tests": 281,
+  "addedTests": 9,
+  "inputs": {
+    "scripts/simulator_signpost_control/runner.py": "dc89ded6181e7751532425a9a64a36526b1e4f657955113605c85b7ed0f3a99b",
+    "scripts/test_simulator_signpost_control.py": "e1cfb67e8428d7f5c2b0d6f81291f1f560cd54aaf636c490f007a560c90ad175",
+    "scripts/app_scroll_observation/contract.json": "c237d0277bb885b6190fdeb89d36cd5971492d4dd53e30747a4d10c1b791acfd"
+  },
+  "logSHA256": "ffcf63a85ad553901059ace690b35ffacfae0eec93a4641a9372f2cffbdac681",
+  "execution": ".build/LifecycleExitObservationNov10/r1",
+  "firstCheck": {
+    "tests": 281,
+    "passed": 280,
+    "errors": 1,
+    "cause": "Source-contract test correctly rejected reviewed changes before the two source pins were refreshed."
+  },
+  "hostedReproductionRun": 42794015602,
+  "hostedSuccessorExecuted": false,
+  "releaseAcceptance": false
+}

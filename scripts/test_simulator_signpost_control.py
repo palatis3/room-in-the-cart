@@ -693,6 +693,65 @@ class BootstatusAcquisitionTests(unittest.TestCase):
         self.assertTrue(self.item['record']['terminalOwnedCommandBeforeBinding']);self.assertEqual(self.item['record']['signals'],[])
         self.assertEqual(self.item['record']['lifecycleAcquisition']['outcome'],'terminal_before_binding')
 
+class LifecycleExitObservationTests(unittest.TestCase):
+    sleep=AcquisitionTests.sleep
+    poll=AcquisitionTests.poll
+    identity=AcquisitionTests.identity
+    def setUp(self):
+        AcquisitionTests.setUp(self)
+        directory=tempfile.TemporaryDirectory();self.addCleanup(directory.cleanup)
+        self.r.out=Path(directory.name);self.item['binding']=self.value
+        for suffix in ('stdout','stderr'):(self.r.out/('before-'+suffix+'.log')).write_bytes(b'')
+        self.r.sample_runtime=mock.Mock();self.r.spawn_lifecycle=mock.Mock()
+        self.read_value=lambda:None
+    def check_no_intervention(self):
+        self.assertEqual(self.item['record']['signals'],[])
+        self.r.sample_runtime.assert_not_called();self.r.spawn_lifecycle.assert_not_called()
+    def test_bound_missing_identity_then_owned_exit_uses_original_child(self):
+        self.terminal=.15;diagnostic={}
+        self.assertEqual(self.r.lifecycle_wait(self.item,30,diagnostic),0)
+        self.assertGreater(diagnostic['missingIdentityObservations'],0)
+        self.assertEqual(diagnostic['firstMissingIdentityMonotonic'],0)
+        self.assertIs(self.item['binding'],self.value);self.check_no_intervention()
+    def test_missing_identity_does_not_turn_nonzero_exit_into_success(self):
+        def stop(seconds):self.clock+=seconds;self.process.returncode=70
+        with mock.patch.object(runner.time,'sleep',side_effect=stop):
+            self.assertEqual(self.r.lifecycle_wait(self.item,30,{}),70)
+        self.assertEqual(self.item['record']['exitCode'],70);self.check_no_intervention()
+    def test_missing_identity_never_extends_original_deadline(self):
+        with self.assertRaisesRegex(ValueError,'lifecycle_deadline'):self.r.lifecycle_wait(self.item,.2,{})
+        self.assertAlmostEqual(self.clock,.2);self.check_no_intervention()
+    def test_same_identity_can_return_after_observation_gap(self):
+        self.read_value=lambda:None if self.clock<.15 else self.value
+        self.terminal=.3;diagnostic={}
+        self.assertEqual(self.r.lifecycle_wait(self.item,30,diagnostic),0)
+        self.assertEqual(diagnostic['lastProgress']['identity'],self.value)
+        self.assertGreater(diagnostic['missingIdentityObservations'],0);self.check_no_intervention()
+    def test_changed_identity_after_gap_fails_without_intervention(self):
+        self.read_value=lambda:None if self.clock<.1 else {**self.value,'startTimeMicros':100_000_002}
+        with self.assertRaisesRegex(ValueError,'lifecycle_identity_changed'):self.r.lifecycle_wait(self.item,30,{})
+        self.assertAlmostEqual(self.clock,.1);self.check_no_intervention()
+    def test_observed_changed_identity_is_rejected_even_if_child_exits_during_read(self):
+        def replaced():self.process.returncode=0;return {**self.value,'executable':'/other'}
+        self.read_value=replaced
+        with self.assertRaisesRegex(ValueError,'lifecycle_identity_changed'):self.r.lifecycle_wait(self.item,30,{})
+        self.check_no_intervention()
+    def test_unbound_live_child_cannot_enter_exit_observation(self):
+        self.item['binding']=None
+        with self.assertRaisesRegex(ValueError,'lifecycle_identity_unbound'):self.r.lifecycle_wait(self.item,30,{})
+        self.check_no_intervention()
+    def test_no_diagnostic_sampling_while_identity_is_missing(self):
+        self.terminal=.3
+        self.r.sample_policy=lambda item:None if self.clock<.05 else (0,'before')
+        self.assertEqual(self.r.lifecycle_wait(self.item,30,{'startedMonotonic':0}),0)
+        self.check_no_intervention()
+    def test_log_budget_remains_enforced_during_exit_observation(self):
+        def budget():
+            if self.clock>=.1:raise ValueError('phase_log_cap')
+        self.r.budget.side_effect=budget
+        with self.assertRaisesRegex(ValueError,'phase_log_cap'):self.r.lifecycle_wait(self.item,30,{})
+        self.check_no_intervention()
+
 class LifecycleCleanupTests(unittest.TestCase):
     setUp=AcquisitionTests.setUp
     sleep=AcquisitionTests.sleep

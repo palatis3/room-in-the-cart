@@ -570,14 +570,14 @@ class HelperRunner(Runner):
             self._sample_timing=None
 
     def lifecycle_wait(self, item, deadline, diagnostic):
-        process=item['process'];next_sample=0
+        process=item['process'];next_sample=0;identity_missing=False
         while True:
             self.lifecycle_check(deadline)
             code=process.poll()
             if code is not None:
                 item['record']['exitCode']=code;self.save();return code
             now=time.monotonic()
-            policy=self.sample_policy(item) if not getattr(self,'sample_attempted',False) else None
+            policy=self.sample_policy(item) if not identity_missing and not getattr(self,'sample_attempted',False) else None
             if (policy is not None and now-diagnostic['startedMonotonic']>=policy[0]
                     and (self.out/(policy[1]+'-stdout.log')).stat().st_size==0
                     and (self.out/(policy[1]+'-stderr.log')).stat().st_size==0):
@@ -595,8 +595,19 @@ class HelperRunner(Runner):
                 first=diagnostic.setdefault('firstProgress',[])
                 if len(first)<4:first.append(sample)
                 self.save();self.lifecycle_check(deadline)
-                if process.poll() is None:require(item['binding'] is not None and value==item['binding'],'helper_lifecycle_identity_changed')
-                next_sample=now+1  # No repeated whole-binary hashing during wait.
+                if value is not None:
+                    require(item['binding'] is not None and value==item['binding'],'helper_lifecycle_identity_changed')
+                    identity_missing=False
+                elif process.poll() is None:
+                    # libproc can stop reporting an exiting child before waitpid
+                    # observes it. Keep the original Popen and absolute deadline;
+                    # missing identity is never permission to signal or sample.
+                    require(item['binding'] is not None,'helper_lifecycle_identity_unbound')
+                    identity_missing=True
+                    diagnostic['missingIdentityObservations']=diagnostic.get('missingIdentityObservations',0)+1
+                    diagnostic.setdefault('firstMissingIdentityMonotonic',now)
+                next_sample=now+(.05 if identity_missing else 1)
+                # No repeated whole-binary hashing, respawn or timeout reset.
             time.sleep(min(.05,max(0,deadline-time.monotonic())))
 
     def lifecycle(self, label, tail, seconds=30, *, absolute_deadline=None):
