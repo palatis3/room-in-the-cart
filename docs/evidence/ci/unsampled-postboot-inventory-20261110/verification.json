@@ -1,0 +1,15 @@
+{
+  "status": "passed",
+  "tests": 287,
+  "inputs": {
+    "scripts/simulator_signpost_control/run.py": "8e33f98fa4f06e513d51f174b4dab0423155d848ae4038bf28397416f7658349",
+    "scripts/simulator_signpost_control/runner.py": "d73f94ee3cce0633862ff5561a7293b2999664d34737b8b0f2c09be1341aa787",
+    "scripts/test_simulator_signpost_control.py": "1a64479eb187dbda5309f6a9b5df3a3ccc7485ffa0317678b819ae632802ca3e",
+    "scripts/app_scroll_observation/contract.json": "18c8b4253c57e92e4724c332e1a0441616e265ef7f7f62f0b069834445fbbebb"
+  },
+  "logSHA256": "eb7e422919b1dfb60ceff6edce90aa190c4c561825466ddeaa1c2bbb09be8661",
+  "execution": ".build/HostedAppObservationNov09/unsampled-postboot-root-r1",
+  "preparedPacket": ".build/HostedAppObservationNov09/unsampled-postboot-inventory-r1",
+  "hostedQualified": false,
+  "releaseAcceptance": false
+}

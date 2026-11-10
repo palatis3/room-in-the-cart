@@ -333,12 +333,12 @@ class HelperRunner(Runner):
             finally:self.save()
 
     def sample_policy(self, target):
-        """Only post-boot inventory is eligible; cold boot is not sampled."""
+        """Combined post-boot inventory is prospectively unsampled for the one-factor control."""
         tool=self.tools['simctl'];record=target['record'];argv=record.get('argv',[])
         if (sum(p is target for p in self.processes)!=1 or record.get('pid')!=target['process'].pid
                 or target.get('expected')!=tool['executable'] or target.get('digest')!=tool['executableSHA256']):return None
         stem=record.get('label')
-        tail={'booted-runtimes':['list','-j','runtimes'],'booted-inventory':['list','-j']}.get(stem)
+        tail={'booted-runtimes':['list','-j','runtimes']}.get(stem)
         executable=tool['executable'] if record.get('dispatch')=='verified_direct_inventory' else tool['path']
         if tail is not None and argv==[executable,*tail] and (record.get('dispatch')!='verified_direct_inventory' or self.direct_inventory_selected(tail,stem)):
             return (10,stem)

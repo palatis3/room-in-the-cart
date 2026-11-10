@@ -148,6 +148,8 @@ def run(output, developer):
         result['tools']=tool;result['stage']='prerequisites'
         runner=HelperRunner(output/'prepare',tool,300,1024**2);runner.device={}
         preparation_runner=runner
+        result['postBootInventorySampling']='disabled_one_factor_diagnostic'
+        runner.receipt['postBootInventorySampling']='disabled_one_factor_diagnostic'
         def check_sample_sources():
             # Exact bytes/modes, but only after target teardown. Check the existing
             # preparation bound between files rather than one uninterrupted 50-file pass.

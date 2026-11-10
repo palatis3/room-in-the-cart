@@ -2136,12 +2136,12 @@ class CombinedDirectInventoryTests(unittest.TestCase):
         value={'pid':42,'parentPID':os.getpid(),'uid':os.getuid(),'startTimeMicros':2*10**18,'executable':runner.CORE_SIMULATOR_EXECUTABLE}
         self.r.identity=SimpleNamespace(read=lambda pid:value)
         with mock.patch.object(runner,'sha',return_value='binary-digest'):self.r.acquire_lifecycle(item,runner.time.monotonic()+30)
-        self.assertEqual(item['binding'],value);self.assertEqual(self.r.sample_policy(item),(10,'booted-inventory'))
+        self.assertEqual(item['binding'],value);self.assertIsNone(self.r.sample_policy(item))
         item['record']['label']='created';self.assertFalse(self.r.acquisition_allowed(item));self.assertIsNone(self.r.sample_policy(item))
     def test_default_combined_still_uses_launcher(self):
         item,popen=self.spawn(['list','-j'],'booted-inventory')
         self.assertEqual(popen.call_args.args[0],[self.r.tools['simctl']['path'],'list','-j'])
-        self.assertNotIn('dispatch',item['record']);self.assertEqual(self.r.sample_policy(item),(10,'booted-inventory'))
+        self.assertNotIn('dispatch',item['record']);self.assertIsNone(self.r.sample_policy(item))
 
 class CombinedInventorySampleTests(unittest.TestCase):
     setUp=RuntimeSampleTests.setUp
@@ -2152,21 +2152,21 @@ class CombinedInventorySampleTests(unittest.TestCase):
         RuntimeSampleTests.prepare(self,tmp)
         self.item['record'].update(label='booted-inventory',argv=['/launcher','list','-j'])
         for suffix in ('stdout','stderr'):(self.r.out/('booted-inventory-'+suffix+'.log')).write_bytes(b'')
-    def test_same_ten_second_trigger_no_early_or_second_sample(self):
+    def test_combined_inventory_never_samples_past_old_threshold(self):
         with tempfile.TemporaryDirectory() as tmp:
             self.prepare(tmp);self.clock=9.9;self.terminal=10.1
             def sample(*args):self.assertGreaterEqual(self.clock,10);args[2]['stackSample']={'status':'passed'}
             self.r.sample_runtime=mock.Mock(side_effect=sample)
             self.assertEqual(self.r.lifecycle_wait(self.item,30,{'startedMonotonic':0}),0)
-            self.r.sample_runtime.assert_called_once()
+            self.r.sample_runtime.assert_not_called()
             self.process.returncode=None;self.clock=11;self.terminal=11.1
             self.assertEqual(self.r.lifecycle_wait(self.item,30,{'startedMonotonic':0}),0)
-            self.r.sample_runtime.assert_called_once()
+            self.r.sample_runtime.assert_not_called()
     def test_same_remaining_budget_guard_never_spawns(self):
         with tempfile.TemporaryDirectory() as tmp:
             self.prepare(tmp);self.clock=20;d={}
             with mock.patch.object(runner.subprocess,'Popen') as popen:self.r.sample_runtime(self.item,30,d)
-            popen.assert_not_called();self.assertIn('sample_remaining_budget',d['stackSample']['error'])
+            popen.assert_not_called();self.assertIn('sample_target_scope',d['stackSample']['error'])
             self.assertEqual(d['stackSample']['status'],'failed')
 
 class DeferredSamplerSourceTests(unittest.TestCase):
@@ -2237,14 +2237,13 @@ class DeferredSamplerSourceTests(unittest.TestCase):
             self.clock=299
             with self.assertRaisesRegex(ValueError,'phase_wall_cap'):self.r.finish()
             self.assertLess(self.clock,301);self.assertEqual(self.r.receipt['status'],'failed')
-    def test_combined_inventory_sample_has_runtime_label_and_correct_target(self):
+    def test_combined_inventory_direct_sampler_entry_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
             self.prepare(tmp);self.item['record'].update(label='booted-inventory',argv=['/launcher','list','-j'])
-            proc,spawn=self.sampler();d={}
-            with mock.patch.object(runner.subprocess,'Popen',side_effect=spawn) as popen:self.r.sample_runtime(self.item,30,d)
-            self.assertEqual(self.r.sample_child['record']['label'],'runtime-stack-sample')
-            self.assertEqual(popen.call_args.args[0][1],str(self.process.pid))
-            self.assertTrue(popen.call_args.args[0][-1].endswith('booted-inventory-stack.txt'))
+            d={}
+            with mock.patch.object(runner.subprocess,'Popen') as popen:self.r.sample_runtime(self.item,30,d)
+            popen.assert_not_called();self.assertIn('sample_target_scope',d['stackSample']['error'])
+            self.assertEqual(d['stackSample']['status'],'failed')
     def test_production_exact_check_is_after_proof_before_capture_and_checks_each_file(self):
         code=inspect.getsource(run.run)
         self.assertLess(code.index('verify_post_boot_device(runner,device)'),code.index('runner.finish();require('))
@@ -2252,5 +2251,43 @@ class DeferredSamplerSourceTests(unittest.TestCase):
         self.assertIn("for name,digest in sources['files'].items():",code)
         self.assertIn('selected_snapshot(ROOT,[name])',code);self.assertIn("sources['modes'][name]",code)
         self.assertGreaterEqual(code.count('preparation_runner.budget()'),3)
+
+class UnsampledInventoryControlTests(unittest.TestCase):
+    setUp=RuntimeSampleTests.setUp
+    sleep=AcquisitionTests.sleep
+    poll=AcquisitionTests.poll
+    identity=AcquisitionTests.identity
+    prepare=CombinedInventorySampleTests.prepare
+    def test_hung_query_hits_same_deadline_without_sampler_or_retry(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);self.r.sample_runtime=mock.Mock();d={'startedMonotonic':0}
+            with self.assertRaisesRegex(ValueError,'lifecycle_deadline'):self.r.lifecycle_wait(self.item,30,d)
+            self.assertAlmostEqual(self.clock,30);self.r.sample_runtime.assert_not_called()
+            self.assertNotIn('stackSample',d);self.assertEqual(self.item['record']['signals'],[])
+    def test_normal_query_after_old_sample_trigger_has_no_sample(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);self.terminal=23;self.r.sample_runtime=mock.Mock()
+            self.assertEqual(self.r.lifecycle_wait(self.item,30,{'startedMonotonic':0}),0)
+            self.assertAlmostEqual(self.clock,23);self.r.sample_runtime.assert_not_called()
+    def test_live_identity_contradiction_still_fatal(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);self.read_value=lambda:{**self.value,'startTimeMicros':1};self.r.sample_runtime=mock.Mock()
+            with self.assertRaisesRegex(ValueError,'identity_changed'):self.r.lifecycle_wait(self.item,30,{'startedMonotonic':0})
+            self.r.sample_runtime.assert_not_called();self.assertEqual(self.item['record']['signals'],[])
+    def test_existing_runtime_sampler_policy_retained(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            RuntimeSampleTests.prepare(self,tmp)
+            self.assertEqual(self.r.sample_policy(self.item),(10,'booted-runtimes'))
+    def test_prospective_policy_is_explicit_in_both_receipts(self):
+        source=inspect.getsource(run.run)
+        self.assertIn("result['postBootInventorySampling']='disabled_one_factor_diagnostic'",source)
+        self.assertIn("runner.receipt['postBootInventorySampling']='disabled_one_factor_diagnostic'",source)
+        self.assertLess(source.index("result['postBootInventorySampling']"),source.index("runner.command('templates'"))
+    def test_required_guards_remain_after_unsampled_query(self):
+        source=inspect.getsource(run.run)
+        names=['verify_post_boot_device(runner,device)','runner.finish();require(',"result['stage']='capture'",'controller.run()','validate_run(','validate_events(','helperTransportQualified=True']
+        pos=[source.index(n) for n in names];self.assertEqual(pos,sorted(pos))
+        self.assertIn("selected_snapshot(ROOT,sources['files'])==sources",source)
+        self.assertIn('verify_tools(tool)',source)
 
 if __name__=='__main__':unittest.main()
