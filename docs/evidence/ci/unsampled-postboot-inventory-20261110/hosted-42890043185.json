@@ -1,0 +1,40 @@
+{
+  "runID": 42890043185,
+  "sourceCommit": "844238c569100e33a11d972822b13cc6aafbfb60",
+  "status": "failed",
+  "artifactID": 13796564907,
+  "zipSHA256": "a2f6e2373cfb23b675d21b5c6e5bfe2c24c635b7f67b474c0963a86d73689f90",
+  "zipBytes": 52877,
+  "zipMembers": 3,
+  "tarMembers": 20,
+  "verifiedSourcePins": 50,
+  "samplersAttempted": false,
+  "boot": {
+    "outcome": "normal_exit",
+    "seconds": 82.23136658299998,
+    "exitCode": 0,
+    "signals": []
+  },
+  "inventory": {
+    "error": "ValueError: helper_lifecycle_deadline",
+    "commandSeconds": 30,
+    "seconds": 37.440724957999976,
+    "preSpawnRecordedSeconds": 18.622161149978638,
+    "bindingEstablished": false,
+    "exitCode": null,
+    "terminalVerified": false,
+    "stdoutBytes": 0,
+    "stderrBytes": 0
+  },
+  "cleanup": {
+    "diagnosticOnly": true,
+    "releaseAcceptance": false,
+    "status": "failed",
+    "error": "ValueError: helper_phase_not_terminal",
+    "ownedDeviceDeleted": false
+  },
+  "allKnownChildrenTerminal": false,
+  "interpretation": "No optional sampler ran. Boot completed normally. The postboot inventory deadline expired without a verified process binding or terminal state; unlike the previous run, this does not establish a bound external query hang. Cleanup correctly refused to proceed. Hosted job is terminal, but helper child termination was not proved. Controller pre-spawn delay needs diagnosis.",
+  "releaseAcceptance": false,
+  "repeatDispatched": false
+}
