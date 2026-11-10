@@ -1,16 +1,17 @@
 import Foundation
 
-/// Server-supplied existing-occurrence history, not a client inverse or cached authority.
+/// Server-supplied meal history, not a client inverse or cached authority.
 public struct SharedOperationUndoMeal: Codable, Equatable, Sendable {
     public enum Field: String, Codable, Hashable, Sendable { case membership, title, day, kind, portions, protected, planning }
     public struct Fact: Codable, Equatable, Sendable {
-        public let revision: Int
+        public let revision: Int?
         public let meal: SharedMeal?
         private enum K: String, CodingKey { case revision, meal }
         public init(from decoder: Decoder) throws {
             try demandExactKeys(decoder, ["revision", "meal"])
             let c = try decoder.container(keyedBy: K.self)
-            revision = try c.decode(Int.self, forKey: .revision)
+            if try c.decodeNil(forKey: .revision) { revision = nil }
+            else { revision = try c.decode(Int.self, forKey: .revision) }
             // decodeNil also throws for a missing required key.
             if try c.decodeNil(forKey: .meal) { meal = nil }
             else { meal = try undoDecodedMeal(c.superDecoder(forKey: .meal)) }
@@ -39,7 +40,7 @@ public struct SharedOperationUndoMeal: Codable, Equatable, Sendable {
     }
     public let occurrenceId: SharedDemandID
     public let targetBefore, targetAfter, current: Fact
-    public let restoredMeal: SharedMeal
+    public let restoredMeal: SharedMeal?
     public let touchedFields: [Field]
     public let proposal: Proposal?
     private enum K: String, CodingKey { case occurrenceId, targetBefore, targetAfter, current, restoredMeal, touchedFields, proposal }
@@ -48,32 +49,49 @@ public struct SharedOperationUndoMeal: Codable, Equatable, Sendable {
         let c = try decoder.container(keyedBy: K.self)
         occurrenceId = try c.decode(SharedDemandID.self, forKey: .occurrenceId)
         targetBefore = try c.decode(Fact.self, forKey: .targetBefore)
-        try demandRequire(targetBefore.meal != nil)
         targetAfter = try c.decode(Fact.self, forKey: .targetAfter)
         current = try c.decode(Fact.self, forKey: .current)
-        restoredMeal = try undoDecodedMeal(c.superDecoder(forKey: .restoredMeal))
+        if try c.decodeNil(forKey: .restoredMeal) { restoredMeal = nil }
+        else { restoredMeal = try undoDecodedMeal(c.superDecoder(forKey: .restoredMeal)) }
         touchedFields = try c.decode([Field].self, forKey: .touchedFields)
         proposal = try c.decode(Proposal?.self, forKey: .proposal)
+        if targetBefore.revision == nil {
+            try demandRequire(targetBefore.meal == nil && restoredMeal == nil && targetAfter == current &&
+                current.meal != nil && current.revision.map { demandRevision($0) } == true && touchedFields == [.membership] && proposal == nil)
+        } else { try demandRequire(targetBefore.meal != nil && restoredMeal != nil) }
+        try demandRequire(targetAfter.revision.map { demandRevision($0) } == true && current.revision.map { demandRevision($0) } == true)
     }
     public func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: K.self)
         try c.encode(occurrenceId, forKey: .occurrenceId)
         try c.encode(targetBefore, forKey: .targetBefore); try c.encode(targetAfter, forKey: .targetAfter)
-        try c.encode(current, forKey: .current); try c.encode(undoEncodedMeal(restoredMeal), forKey: .restoredMeal)
+        try c.encode(current, forKey: .current)
+        if let restoredMeal { try c.encode(undoEncodedMeal(restoredMeal), forKey: .restoredMeal) }
+        else { try c.encodeNil(forKey: .restoredMeal) }
         try c.encode(touchedFields, forKey: .touchedFields); try c.encode(proposal, forKey: .proposal)
     }
 
     func validate(scope: SharedOperationUndoScope, base: SharedDemandActionSourceBase, shop: ShopperShop, edit: SharedDemandMealEdit) throws {
         try demandIDs([occurrenceId, proposal?.proposalId])
-        guard let before = targetBefore.meal else { throw ClientError.invalidResponse }
-        try demandRequire(demandRevision(targetBefore.revision) && targetBefore.revision <= scope.baseShopRevision &&
-            targetAfter.revision == scope.resultShopRevision && current.revision >= targetAfter.revision && current.revision <= base.shopRevision)
+        guard let afterRevision = targetAfter.revision, let currentRevision = current.revision else { throw ClientError.invalidResponse }
+        try demandRequire(demandRevision(afterRevision) && demandRevision(currentRevision) &&
+            afterRevision == scope.resultShopRevision && currentRevision >= afterRevision && currentRevision <= base.shopRevision)
         try demandRequire(edit.occurrenceId == occurrenceId && edit.meal == restoredMeal && edit.proposalId == nil && edit.changeProposalId == nil)
         guard let meals = shop.meals else { throw ClientError.invalidResponse }
         let active = meals.filter { $0.id == occurrenceId.uuid }
         if let now = current.meal {
             try demandRequire(active.count == 1 && active[0].revision == current.revision && active[0].meal == now)
         } else { try demandRequire(active.isEmpty) }
+        if targetBefore.revision == nil {
+            guard let now = current.meal else { throw ClientError.invalidResponse }
+            try demandRequire(targetBefore.meal == nil && restoredMeal == nil && current == targetAfter &&
+                touchedFields == [.membership] && proposal == nil && edit.baseMealRevision == currentRevision)
+            try undoPreservesProtectedMeal(now, nil)
+            try now.validatePlanning()
+            return
+        }
+        guard let beforeRevision = targetBefore.revision, let before = targetBefore.meal, let restoredMeal else { throw ClientError.invalidResponse }
+        try demandRequire(demandRevision(beforeRevision) && beforeRevision <= scope.baseShopRevision)
         if let after = targetAfter.meal {
             guard let now = current.meal else { throw ClientError.invalidResponse }
             let ordered: [Field] = [.title, .day, .kind, .portions, .protected, .planning]
@@ -109,7 +127,7 @@ public struct SharedOperationUndoMeal: Codable, Equatable, Sendable {
 private enum UndoMealEditKey: String, CodingKey { case meal }
 func undoMealShapeInEdit(_ decoder: Decoder) throws {
     let c = try decoder.container(keyedBy: UndoMealEditKey.self)
-    _ = try undoDecodedMeal(c.superDecoder(forKey: .meal)) // Compensation always restores a nonnull meal.
+    if try !c.decodeNil(forKey: .meal) { _ = try undoDecodedMeal(c.superDecoder(forKey: .meal)) }
 }
 
 /// A typed roundtrip rejects unknown fields and omitted required-null fields,
@@ -165,7 +183,11 @@ private extension Dictionary where Key == String, Value == JSONValue {
 private func undoMealFraction(_ value: SharedMealAmount) -> SharedDeliveryCoverage.Fraction {
     .init(numerator: String(value.numerator), denominator: String(value.denominator))
 }
-private func undoPreservesProtectedMeal(_ old: SharedMeal, _ next: SharedMeal) throws {
+private func undoPreservesProtectedMeal(_ old: SharedMeal, _ next: SharedMeal?) throws {
+    guard let next else {
+        try demandRequire(!old.protected && !(old.planning?.groups.contains(where: { $0.protected }) ?? false))
+        return
+    }
     func atLeast(_ a: SharedMealAmount, _ b: SharedMealAmount) -> Bool { undoMealFraction(a).compare(undoMealFraction(b)) != .orderedAscending }
     if old.protected { try demandRequire(next.protected && next.portions >= old.portions && next.kind == old.kind) }
     let groups = old.planning?.groups.filter { old.protected || $0.protected } ?? []

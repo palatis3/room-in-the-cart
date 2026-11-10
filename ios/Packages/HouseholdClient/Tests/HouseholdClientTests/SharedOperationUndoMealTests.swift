@@ -23,8 +23,8 @@ final class SharedOperationUndoMealTests: XCTestCase {
         try roundtrip(rawCandidate["action"]!, as: SharedOperationUndoAction.self)
         try roundtrip(rawCandidate["mealUndo"]!, as: SharedOperationUndoMeal.self)
         let supplied = try XCTUnwrap(review.candidate.mealUndo)
-        XCTAssertEqual(supplied.restoredMeal.planning?.groups.first?.name, "00000000-0000-4000-8000-00000000A043")
-        XCTAssertEqual(supplied.restoredMeal.planning?.ingredients.first?.quantity?.originalLiteral, "ABCDEF six original wraps")
+        XCTAssertEqual(supplied.restoredMeal?.planning?.groups.first?.name, "00000000-0000-4000-8000-00000000A043")
+        XCTAssertEqual(supplied.restoredMeal?.planning?.ingredients.first?.quantity?.originalLiteral, "ABCDEF six original wraps")
         // Canonical encoding is not a relaxation of response decoding.
         var upper = rawCandidate, meal = upper["mealUndo"] as! [String: Any], restored = meal["restoredMeal"] as! [String: Any]
         var planning = restored["planning"] as! [String: Any], groups = planning["groups"] as! [[String: Any]]
@@ -119,7 +119,7 @@ final class SharedOperationUndoMealTests: XCTestCase {
         let review = try OperationUndoFixture.review(editedMealFixture())
         let meal = try XCTUnwrap(review.candidate.mealUndo)
         XCTAssertEqual(meal.touchedFields, [.day]); XCTAssertEqual(meal.current.revision, 6)
-        XCTAssertEqual(meal.restoredMeal.title, "Later taco title"); XCTAssertEqual(meal.restoredMeal.day, "2026-11-10")
+        XCTAssertEqual(meal.restoredMeal?.title, "Later taco title"); XCTAssertEqual(meal.restoredMeal?.day, "2026-11-10")
         XCTAssertEqual(review.response.action.body.mealEdit?.baseMealRevision, 6)
         XCTAssertTrue(review.candidate.scope.touchedLines.isEmpty); XCTAssertEqual(review.candidate.scope.graphRows, 0)
         XCTAssertFalse(review.candidate.scope.quoteChanged); XCTAssertEqual(review.candidate.action.body.lines, review.shop.lines)

@@ -147,7 +147,7 @@ import HouseholdClient
     func testSkippedMealCancelClearsHistoricalMealAndPreservesReadOnlyCounters() async throws {
         let access = try Access(OperationUndoFixture.mealObject()), model = await selected(access)
         XCTAssertNil(model.candidate?.mealUndo?.current.meal)
-        XCTAssertEqual(model.candidate?.mealUndo?.restoredMeal.title, "Original taco dinner")
+        XCTAssertEqual(model.candidate?.mealUndo?.restoredMeal?.title, "Original taco dinner")
         model.cancel()
         XCTAssertNil(model.candidate); XCTAssertNil(model.review); XCTAssertNil(model.currentShop)
         XCTAssertTrue(model.history.isEmpty); XCTAssertTrue(model.packs.isEmpty)

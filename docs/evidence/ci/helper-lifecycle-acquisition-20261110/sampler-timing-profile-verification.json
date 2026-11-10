@@ -1,0 +1,26 @@
+{
+  "commit": "03739511d77eb4024ede8330691e0b6e181fab0d",
+  "status": "passed",
+  "sourceFiles": 740,
+  "observerPins": 50,
+  "profiles": {
+    "ordinary": {
+      "checksPassed": 520,
+      "logSHA256": "2c93ee0986a694cd9c5c34dcd0df9304b693e083af6823a4d0b9bc5d85c5ed3d"
+    },
+    "diagnostic": {
+      "checksPassed": 520,
+      "logSHA256": "885c7d0dc6b1ac5d467a22dd12fc7fd69f5c366bce32458f4d723e4e9c3a597f"
+    },
+    "helper": {
+      "checksPassed": 520,
+      "logSHA256": "06eefbea3cb7286d7a857e85fbeb81059bdd9bd4d40d7984fa40ab209326e46c"
+    }
+  },
+  "receipt": ".build/PerformanceFinalCommitParityNov09/sampler-timing-03739511-qualification/receipt.json",
+  "receiptSHA256": "af18093a404fc55e5b48de3ece889eb811ec0ac5d4ae850a525b2b049827e8ba",
+  "runID": 42764945390,
+  "runURL": "https://github.com/palatis3/room-in-the-cart/actions/runs/42764945390",
+  "scope": "Exact committed helper instrumentation preflight; no app or release qualification",
+  "releaseAcceptance": false
+}

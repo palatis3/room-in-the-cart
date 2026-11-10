@@ -163,9 +163,9 @@ public struct SharedOperationUndoPatch: Codable, Equatable, Sendable {
         try c.encode(lines, forKey: .lines)
         try c.encode(quote, forKey: .quote)
         if let mealEdit {
-            guard let meal = mealEdit.meal else { throw ClientError.invalidResponse }
             var body = try JSONDecoder().decode([String: JSONValue].self, from: encoded(mealEdit))
-            body["meal"] = try undoEncodedMeal(meal)
+            if let meal = mealEdit.meal { body["meal"] = try undoEncodedMeal(meal) }
+            else { body["meal"] = .null }
             try c.encode(body, forKey: .mealEdit)
         }
     }

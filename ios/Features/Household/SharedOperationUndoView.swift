@@ -97,8 +97,13 @@ struct SharedOperationUndoView: View {
                 else { Text(u("This meal is currently skipped.")).accessibilityIdentifier("sharedUndo.meal.before.absent") }
             }
             Section(u("Meal after")) {
-                SharedMealFacts(meal: meal.restoredMeal, deadlineIdentifier: "sharedUndo.meal.after.deadline")
-                ForEach(meal.touchedFields, id: \.self) { Text(SharedOperationUndoCopy.mealField($0)) }
+                if let restored = meal.restoredMeal {
+                    SharedMealFacts(meal: restored, deadlineIdentifier: "sharedUndo.meal.after.deadline")
+                    ForEach(meal.touchedFields, id: \.self) { Text(SharedOperationUndoCopy.mealField($0)) }
+                } else {
+                    Text(u("Remove the added meal")).accessibilityIdentifier("sharedUndo.meal.after.removed")
+                    Text(u("This meal was not previously planned."))
+                }
                 Text(u("Other current meal details stay unchanged. Protected food remains reserved."))
             }
         }

@@ -1,0 +1,82 @@
+{
+  "scope": "Full offline and real PostgreSQL service regression, including new-meal creation Undo; no deployment/native wire/UI release acceptance",
+  "offline": {
+    "tests": 737,
+    "pass": 736,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 1,
+    "todo": 0,
+    "skippedNames": [
+      "PostgreSQL durable billing / RLS / named seats contract"
+    ],
+    "logSHA256": "2df3410bdabedbfd3d224f8d266a82a5aa62f63be494aa30371c6f80d96afc8a"
+  },
+  "database": {
+    "tests": 335,
+    "pass": 332,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 3,
+    "todo": 0,
+    "skippedNames": [
+      "real browser WebApp and API recover a dropped helper reply with exact original bytes after a newer projection",
+      "real full browser recreation recovers a lost received suggestion with read-only retries and fences identity, expiry and revocation",
+      "two contributor web sessions see only their own purchase receipt through shopper corrections"
+    ],
+    "logSHA256": "7d323aeb5523295d2ba9eceb79d1f4d25308d1aab282f52e784ac4819c4d1740"
+  },
+  "creationPurePassed": [
+    "creation Undo removes only target meal and its added food while restoring packs",
+    "independent later staple and price survive; compensation names no unrelated meal",
+    "later identical meal revision conflicts atomically",
+    "later title edit conflicts atomically",
+    "later skipped tombstone conflicts atomically",
+    "later recreate with original bytes conflicts atomically",
+    "missing accepted creation rejects both candidate and exact replay",
+    "erased historical bytes rejects both candidate and exact replay",
+    "changed history rejects both candidate and exact replay",
+    "inactive author rejects both candidate and exact replay",
+    "missing first-use proof rejects both candidate and exact replay",
+    "reused occurrence identity rejects both candidate and exact replay",
+    "wrong accepted scope rejects both candidate and exact replay",
+    "absence confused with missing rejects both candidate and exact replay",
+    "tombstone confused with absence rejects both candidate and exact replay",
+    "invented proposal rejects both candidate and exact replay",
+    "protected meal removal remains forbidden",
+    "protected source removal remains forbidden even without a whole-meal flag",
+    "later dependency on created food blocks whole inverse",
+    "exact replay validates original lineage without deriving or reapplying after a later edit",
+    "same-store boundary remains authoritative for created-meal compensation",
+    "meal-only creation has a genuine empty graph delta and nullable removal command",
+    "creation cannot disguise removal of an unrelated accepted meal reference"
+  ],
+  "creationHTTPPassed": [
+    "created meal transaction commits deferred operation lineage and complete Undo keeps later meal, staple and protected lunch",
+    "created meal late transaction failure rolls back identity, lineage, meal, graph and preview consumption before exact retry",
+    "created meal with no food delta emits explicit never-planned nulls and a real removal tombstone",
+    "created meal later same-occurrence edit and held preview cannot erase changed meal facts",
+    "created meal skip and recreation keep original used identity and never mint another creation certificate",
+    "created protected meal and later dependent allocation reject complete removal without writes",
+    "created meal Undo rejects lost device authority and erasure while immutable used identity survives",
+    "created meal same-store first Apply and original replay remain subject to revoked budget permission",
+    "created meal held first Apply cannot survive author erasure or restore erased meal text"
+  ],
+  "creationMigrationPassed": [
+    "created meal migration backfills erased snapshot identities without granting creation authority",
+    "created meal identity and effect tables enforce runtime tenant read and write isolation",
+    "created meal identity and acceptance evidence reject runtime mutation and privileged mutation without erasure authority"
+  ],
+  "sourceInputsVerified": 257,
+  "compiledEntriesVerified": 149,
+  "sourceManifestSHA256": "81b23aec3f9d0cd5d53e31e9cd07ae5c302ce0de3e86e6f4d69d731ae8b2a8ee",
+  "compiledManifestSHA256": "445cc98718010cba4cbbc66eec9f5bc61a9ba5dff35cc7855c8392b845ad9eaa",
+  "rootReceipt": ".build/SharedDemandGraphNov09/root-created-meal-undo-r1/receipt.json",
+  "rootReceiptSHA256": "6943c63a47f8fca1aa12ccba34a5c21ab268c6bc7f1120ac6770e4aeb93e6cbb",
+  "rootCleanup": ".build/SharedDemandGraphNov09/root-created-meal-undo-r1/root-cleanup.json",
+  "rootCleanupSHA256": "c516246969144b31bbed7909127cf9bb066c8d55c1e4a19734bc697a3eed3776",
+  "postgresStopped": true,
+  "privateStateRemoved": true,
+  "sourceDependenciesToolsProductsUnchanged": true,
+  "releaseAcceptance": false
+}

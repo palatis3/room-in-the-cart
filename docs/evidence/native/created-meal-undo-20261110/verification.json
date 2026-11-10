@@ -1,0 +1,34 @@
+{
+  "recordedAt": "2026-11-10T05:41:30.611621+00:00",
+  "baseCommit": "9f7fedf12c8c3a8683be093907919e1d79243313",
+  "scope": "Native client creation DTO/null and protection validation, localized review rendering compilation; not full creation service/UI acceptance",
+  "sourceSHA256": {
+    "ios/Packages/HouseholdClient/Sources/HouseholdClient/SharedOperationUndoMeal.swift": "d74506ef8e2e6ac5ebcae60101f4c12bbd77393b6bf7622b78a929f694c9c421",
+    "ios/Features/Household/SharedOperationUndoView.swift": "e5ecef93f4c1df175cedbefa68e3ac310a99d80ddfc9c177805934df96984275",
+    "ios/Features/Household/SharedOperationUndo.xcstrings": "52f6a49efeab92deb534c0f1d2fcb00df98ae038fde795a0d53578e7f3607999",
+    "ios/Packages/HouseholdClient/Tests/HouseholdClientTests/SharedOperationUndoCreationTests.swift": "345118c2d0641c6f2c0ad7391b54a0d823f3e8d90ee5ec130eb6aa8f8e57e8b7",
+    "ios/Packages/HouseholdClient/Tests/HouseholdClientTests/SharedOperationUndoMealTests.swift": "d9e1cb7b163cd4a951dd81287ca8eacc04afebb639cfb96df4c647e4ded8ac13",
+    "ios/Tests/SharedOperationUndoModelTests.swift": "ade8a950b9af491637933096229774c607d665e5d138d4cdc917a736a16f7ae0"
+  },
+  "package": {
+    "passed": 149,
+    "expectedWireSkips": 3,
+    "failed": 0,
+    "newCreationTests": 4,
+    "log": ".build/created-meal-client-r1.log",
+    "logSHA256": "66e352da981a6488b83e892f1f050394905a418795ac68c8bdbc27d2203de192"
+  },
+  "buildForTesting": {
+    "exitCode": 0,
+    "result": "TEST BUILD SUCCEEDED",
+    "log": ".build/CreatedMealNativeNov10/r1/build.log",
+    "logSHA256": "3af52e0ff14d6d0a4b727c3fa6a87bf5c253e546f31dc536221ab003b8e56d63",
+    "resultBundle": ".build/CreatedMealNativeNov10/r1/Build.xcresult",
+    "bundleManifest": ".build/CreatedMealNativeNov10/r1/bundle-sha256.json",
+    "bundleManifestSHA256": "2cee1f83e730fa59c88f5b553dae293fa8373b973975b31b84366816ba243640",
+    "bundleFiles": 7
+  },
+  "sourceIdentityNote": "Changed source hashes captured after terminal build; no assertion of a pre-build complete source manifest. Root held native sources unchanged during execution.",
+  "actualUIExecution": false,
+  "releaseAcceptance": false
+}

@@ -304,3 +304,48 @@ test('actual Swift same-store Undo binds selected quote authority through Cancel
  assert.equal(revocations,1);assert.equal(denied.attempts,2);assert.equal(denied.candidateAttempts,1);assert.equal(denied.previewAttempts,1);assert.deepEqual(denied.commands[0],denied.commands[1]);
  assert.deepEqual(await mealWirePage(g),gBefore);assert.deepEqual(await mealWireShop(g),gShop);assert.deepEqual(await mealWireCounts(g),{...gCounts,shared_demand_preview:gCounts.shared_demand_preview+1});
 });
+
+test('actual Swift created meal Undo removes only the new occurrence across Cancel lost reply retry and privacy authority',async()=>{
+ const f=await setupMealUndoWire(false),author=f.owner,originalOccurrence=f.occurrenceId,createdId=randomUUID(),ingredientId=randomUUID(),groupId=randomUUID(),bindingId=randomUUID();
+ const quantity={amount:{numerator:4,denominator:1},unit:'count',originalLiteral:'Four exact new wraps'};
+ const meal={title:'Private created dinner',day:null,kind:'dinner',portions:2,protected:false,planning:{groups:[{id:groupId,name:'New dinner',servings:{numerator:2,denominator:1},protected:false}],
+  ingredients:[{id:ingredientId,name:'New wraps',quantity,groupIds:[groupId],exclusions:[]}],bindings:[{id:bindingId,groupId,ingredientId,quantity}]}};
+ const created={...source(f,{...q(4),originalLiteral:quantity.originalLiteral}),originalText:'New wraps',source:{kind:'meal',occurrenceId:createdId,ingredientId,groupId,bindingId}};
+ f.target=await mealWirePatch(f,createdId,meal,{change:{...empty(),contributions:[created]},lines:[{...f.basket,packs:3}]});
+ f.occurrenceId=createdId;
+ const identity=(await admin.query('SELECT * FROM ritc.shared_meal_occurrence_identity WHERE household_id=$1 AND shop_id=$2 AND occurrence_id=$3',[f.h,f.shopId,createdId])).rows[0];
+ const lineage=(await admin.query('SELECT * FROM ritc.shared_food_meal_creation_effect WHERE household_id=$1 AND operation_id=$2',[f.h,f.target.operationId])).rows[0];
+ assert.equal(identity.first_operation_id,f.target.operationId);assert.equal(lineage.result_meal_revision,f.target.shopRevision);
+ const shopper=await invited(f),old=await mealWirePage(f);ok(await send(f,'shop.transferAuthority',{newShopperId:shopper.id},old.shopRevision,old.authorityEpoch));f.owner=shopper;
+ const laterId=randomUUID(),laterMeal={title:'Later independent soup',day:null,kind:'dinner',portions:2,protected:false};
+ const staple={lineId:randomUUID(),originalItem:'Later apples',packs:1,unitPriceMinor:200,feeEligible:false},apples={...source(f,q(1)),lineId:staple.lineId,productKey:'apples',productName:'Apples',originalText:'Later apples'};
+ await mealWirePatch(f,laterId,laterMeal,{change:{...empty(),lines:[{id:staple.lineId,name:staple.originalItem,unit:'count',originalOrder:9,trashedAt:null}],contributions:[apples]},lines:[{...f.basket,packs:3,unitPriceMinor:150},staple]});
+ f.packs.push({lineId:staple.lineId,usablePerPack:q(1),acceptUnresolved:false});
+ f.expectedMeal={occurrenceId:createdId,targetBefore:{revision:null,meal:null},targetAfter:{revision:f.target.shopRevision,meal},current:{revision:f.target.shopRevision,meal},restoredMeal:null,touchedFields:['membership'],proposal:null};
+ const state=await mealWireState(),shop=await mealWireShop(f),page=await mealWirePage(f),counts=await mealWireCounts(f);
+ const cancel=await mealWire(f,'cancel',state,'operation-undo-meal-create-cancel');assert.equal(cancel.attempts,0);assert.equal(cancel.candidateAttempts,1);assert.equal(cancel.previewAttempts,1);
+ assert.deepEqual(await mealWireShop(f),shop);assert.deepEqual(await mealWirePage(f),page);assert.deepEqual(await mealWireCounts(f),{...counts,shared_demand_preview:counts.shared_demand_preview+1});
+ const lost=await mealWire(f,'apply-lost',state,'operation-undo-meal-create-apply-lost',{dropFirstReply:true});assert.equal(lost.attempts,1);assert.equal(lost.dropped,1);assert.equal(lost.candidateAttempts,1);assert.equal(lost.previewAttempts,1);
+ const after=await mealWireShop(f),afterPage=await mealWirePage(f),committed=await mealWireCounts(f);
+ assert.equal(after.meals.some(m=>m.occurrenceId===createdId),false);
+ for(const id of [originalOccurrence,f.lunchId,laterId])assert.deepEqual(after.meals.find(m=>m.occurrenceId===id),shop.meals.find(m=>m.occurrenceId===id));
+ const removed=afterPage.graph.contributions.find(c=>c.id===created.id);assert.match(removed.removedAt,/^\d{4}-\d{2}-\d{2}T/);assert.deepEqual({...removed,removedAt:null},created);
+ assertMealWireRows(afterPage.graph.contributions.filter(c=>c.id!==created.id),[...f.originalGraph.contributions,apples],'id','Only the newly created meal contribution is retired');
+ assert.deepEqual(afterPage.graph.lines,page.graph.lines,'Retain line identity, array order and originalOrder');assert.deepEqual(afterPage.graph.usedIds,page.graph.usedIds);
+ assertMealWireRows(after.lines,[{...f.basket,unitPriceMinor:150},staple],'lineId','Restore original packs while preserving later price and unrelated staple');assert.deepEqual(after.quote,shop.quote);
+ assert.deepEqual(committed,{...counts,operation:counts.operation+1,shop_snapshot:counts.shop_snapshot+1,shared_demand_revision:counts.shared_demand_revision+1,shared_food_operation_effect:counts.shared_food_operation_effect+1,shared_meal_revision:counts.shared_meal_revision+1,shared_demand_preview:counts.shared_demand_preview+1});
+ const retry=await mealWire(f,'retry',state,'operation-undo-meal-create-retry');assert.equal(retry.attempts,1);assert.equal(retry.candidateAttempts,0);assert.equal(retry.previewAttempts,0);assertMealWireCommand({commands:[lost.commands[0],retry.commands[0]]},f);
+ assert.equal(JSON.parse(lost.commands[0]).body.mealEdit.meal,null);assert.deepEqual(await mealWireCounts(f),committed);assert.deepEqual(await mealWireShop(f),after);assert.deepEqual(await mealWirePage(f),afterPage);
+ assert.deepEqual((await admin.query('SELECT * FROM ritc.shared_food_meal_creation_effect WHERE household_id=$1 AND operation_id=$2',[f.h,f.target.operationId])).rows,[lineage]);
+ assert.equal((await admin.query('SELECT count(*)::int n FROM ritc.shared_food_operation_effect WHERE household_id=$1 AND reverses_operation_id=$2',[f.h,f.target.operationId])).rows[0].n,1);
+ ok(await call(author,'/v1/privacy/deletions','POST',{clientKey:randomUUID(),statusToken:randomBytes(32).toString('base64url'),confirm:true,households:[{householdId:f.h,organizer:'transfer',organizerMemberId:shopper.id,shops:[],eraseChildProfiles:[]}]}),202);assert.equal((await maintenance.run({batchSize:1})).completed,1);
+ const erased=await mealWirePage(f),erasedShop=await mealWireShop(f),erasedCounts=await mealWireCounts(f);assert.equal(erased.status,'reviewRequired');
+ assert.equal(JSON.stringify([erased,erasedShop,ok(await call(f.owner,f.path+'/demand/operations'))]).includes(meal.title),false);
+ assert.equal((await admin.query('SELECT count(*)::int n FROM ritc.shared_meal_revision WHERE household_id=$1 AND shop_id=$2 AND occurrence_id=$3',[f.h,f.shopId,createdId])).rows[0].n,0);
+ assert.deepEqual((await admin.query('SELECT * FROM ritc.shared_meal_occurrence_identity WHERE household_id=$1 AND shop_id=$2 AND occurrence_id=$3',[f.h,f.shopId,createdId])).rows,[identity]);
+ assert.deepEqual((await admin.query('SELECT * FROM ritc.shared_food_meal_creation_effect WHERE household_id=$1 AND operation_id=$2',[f.h,f.target.operationId])).rows,[lineage]);
+ assert.deepEqual(erasedShop.meals.find(m=>m.occurrenceId===laterId),after.meals.find(m=>m.occurrenceId===laterId));
+ const denied=await mealWire(f,'privacy',state,'operation-undo-meal-create-privacy');assert.deepEqual(denied.commands,[lost.commands[0]]);assert.deepEqual(await mealWireCounts(f),erasedCounts);
+ const successor=await invited(f);ok(await send(f,'shop.transferAuthority',{newShopperId:successor.id},erased.shopRevision,erased.authorityEpoch));
+ const revokedCounts=await mealWireCounts(f),revoked=await mealWire(f,'revoked',state,'operation-undo-meal-create-revoked');assert.equal(revoked.attempts,1);assert.deepEqual(revoked.commands,[lost.commands[0]]);assert.deepEqual(await mealWireCounts(f),revokedCounts);
+});

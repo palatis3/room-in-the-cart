@@ -1216,6 +1216,38 @@
           }
         }
       }
+    },
+    "Remove the added meal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove the added meal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar la comida añadida"
+          }
+        }
+      }
+    },
+    "This meal was not previously planned.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This meal was not previously planned."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta comida no estaba planificada antes."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

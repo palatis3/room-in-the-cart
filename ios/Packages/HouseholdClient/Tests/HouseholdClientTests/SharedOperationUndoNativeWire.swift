@@ -120,9 +120,16 @@ extension SharedMealNativeWireTests {
             XCTAssertEqual(shop.lines.sorted { $0.lineId < $1.lineId }, expected.action.body.lines.sorted { $0.lineId < $1.lineId }); XCTAssertEqual(shop.quote, expected.action.body.quote)
             if let basis = expected.storeBasis { XCTAssertEqual(shop.storeBasisRevision, basis.revision); XCTAssertEqual(shop.storeReviewRequired, false) }
             if let edit = expected.action.body.mealEdit {
-                let restored = try XCTUnwrap(shop.meals?.first { $0.id == edit.occurrenceId.uuid })
-                XCTAssertEqual(restored.meal, edit.meal)
-                XCTAssertEqual(restored.revision, page.shopRevision)
+                let meals = try XCTUnwrap(shop.meals)
+                if let expectedMeal = edit.meal {
+                    let restored = try XCTUnwrap(meals.first { $0.id == edit.occurrenceId.uuid })
+                    XCTAssertEqual(restored.meal, expectedMeal)
+                    XCTAssertEqual(restored.revision, page.shopRevision)
+                } else {
+                    XCTAssertNotNil(input.expectedMeal)
+                    XCTAssertNil(input.expectedMeal?.targetBefore.revision)
+                    XCTAssertFalse(meals.contains { $0.id == edit.occurrenceId.uuid })
+                }
                 XCTAssertEqual(expected.action.body.mealEdit?.meal, input.expectedMeal?.restoredMeal)
                 XCTAssertEqual(operation.sharedDemandBinding?.action, expected.action.commandAction)
             }
@@ -168,7 +175,13 @@ extension SharedMealNativeWireTests {
         if let meal = input.expectedMeal {
             guard case .object(let edit)? = envelope.body["mealEdit"] else { XCTFail("Complete mealEdit omitted"); return }
             XCTAssertEqual(Set(edit.keys), ["occurrenceId", "baseMealRevision", "meal"])
-            XCTAssertEqual(try JSONDecoder().decode(SharedMeal.self, from: encoded(try XCTUnwrap(edit["meal"]))), meal.restoredMeal)
+            if let restored = meal.restoredMeal {
+                XCTAssertEqual(try JSONDecoder().decode(SharedMeal.self, from: encoded(try XCTUnwrap(edit["meal"]))), restored)
+            } else {
+                XCTAssertEqual(edit["meal"], .null, "Creation inverse sends explicit null, never an omitted meal")
+                XCTAssertNil(meal.targetBefore.revision); XCTAssertNil(meal.targetBefore.meal)
+                XCTAssertEqual(meal.targetAfter, meal.current); XCTAssertEqual(meal.touchedFields, [.membership])
+            }
             XCTAssertEqual(operation.sharedDemandBinding?.action, review.response.action.commandAction)
         }
         if input.phase == "store-revoked-apply" {

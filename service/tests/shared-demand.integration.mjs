@@ -906,3 +906,183 @@ test('selected-store snapshot metadata preserves public receipt shape and origin
  assert.deepEqual(detail.report.snapshot.lines,shop.lines);assert.deepEqual(detail.report.snapshot.quote,shop.quote);
  assert.deepEqual(Object.keys(detail.report.snapshot).sort(),['shopId','storeBasis','demand','revision','phase','quote','lines','budget'].sort());
 });
+
+// Created-meal complete Undo (047): prepare through the real preview/command
+// routes; no client-supplied history or preseeded creation certificates.
+async function createdMealInput(f,{food=true,protectedMeal=false,occurrenceId=randomUUID()}={}){
+ const shop=ok(await call(f.owner,f.path)),page=ok(await call(f.owner,f.path+'/demand')),ingredientId=randomUUID();
+ const meal={title:'New taco dinner',day:null,kind:'dinner',portions:2,protected:protectedMeal,
+  planning:{groups:[],ingredients:food?[{id:ingredientId,name:'Wraps',quantity:{amount:{numerator:4,denominator:1},unit:'count',originalLiteral:'4 wraps'},groupIds:[],exclusions:[]}]:[]}};
+ const c={...source(f,q(4)),originalText:'New taco wraps',source:protectedMeal?{kind:'reservation',reservationId:randomUUID(),purpose:meal.title,originOccurrenceId:occurrenceId,ingredientId,groupId:null,bindingId:null}:{kind:'meal',occurrenceId,ingredientId,groupId:null,bindingId:null}};
+ const lines=shop.lines.map(l=>({...l,packs:l.lineId===f.basket.lineId&&food?l.packs+1:l.packs}));
+ const input={mode:food?'change':'review',base:{shopRevision:page.shopRevision,authorityEpoch:page.authorityEpoch,graphRevision:page.graph.revision},
+  change:{...empty(),contributions:food?[c]:[]},action:{kind:'shop.patch',body:{quote:shop.quote,lines,mealEdit:{occurrenceId,baseMealRevision:null,meal}}},
+  packs:lines.map(l=>({lineId:l.lineId,usablePerPack:q(6),acceptUnresolved:false}))};
+ return{input,meal,c,occurrenceId};
+}
+async function createUndoMeal(f,options){const m=await createdMealInput(f,options),p=ok(await preview(f,m.input)),a=await apply(f,m.input,p);return{...m,...a,receipt:ok(a.response)};}
+const creationRows=async(f,occurrenceId)=>({
+ identity:(await admin.query('SELECT * FROM ritc.shared_meal_occurrence_identity WHERE household_id=$1 AND shop_id=$2 AND occurrence_id=$3',[f.h,f.shopId,occurrenceId])).rows,
+ effect:(await admin.query('SELECT * FROM ritc.shared_food_meal_creation_effect WHERE household_id=$1 AND shop_id=$2 AND occurrence_id=$3',[f.h,f.shopId,occurrenceId])).rows,
+ meals:(await admin.query('SELECT * FROM ritc.shared_meal_revision WHERE household_id=$1 AND shop_id=$2 AND occurrence_id=$3 ORDER BY revision',[f.h,f.shopId,occurrenceId])).rows
+});
+test('created meal transaction commits deferred operation lineage and complete Undo keeps later meal, staple and protected lunch',async()=>{
+ const f=await fixture(),lunchId=randomUUID(),ingredientId=randomUUID(),lunch={title:'Protected lunch',day:null,kind:'lunch',portions:2,protected:true,
+  planning:{groups:[],ingredients:[{id:ingredientId,name:'Wraps',quantity:{amount:{numerator:2,denominator:1},unit:'count',originalLiteral:'2 wraps'},groupIds:[],exclusions:[]}]}};
+ f.basket.packs=3;ok(await send(f,'shop.patch',{quote:f.quote,lines:[f.basket],mealEdit:{occurrenceId:lunchId,baseMealRevision:null,meal:lunch}},1));
+ const legacy=ok(await call(f.owner,f.path+'/demand')).legacySources.sources[0];
+ const reservation={id:legacy.id,lineId:f.basket.lineId,source:legacy.source,productKey:'wraps',productName:legacy.productName,originalText:legacy.originalText,quantity:legacy.quantity,sourceExclusions:legacy.sourceExclusions,exclusions:[],contains:[],removedAt:null};
+ const adoption=draft(f);adoption.base.shopRevision=2;adoption.change.contributions.push(reservation);ok((await apply(f,adoption,ok(await preview(f,adoption)))).response);
+ const target=await createUndoMeal(f),rows=await creationRows(f,target.occurrenceId);
+ assert.equal(rows.identity.length,1);assert.equal(rows.identity[0].first_operation_id,target.receipt.operationId);assert.equal(rows.effect.length,1);
+ assert.equal(rows.meals[0].revision,target.receipt.shopRevision);assert.equal(rows.effect[0].result_meal_digest,digest({householdId:f.h,shopId:f.shopId,occurrenceId:target.occurrenceId,revision:rows.meals[0].revision,actorId:f.owner.id,meal:target.meal}));
+ const fk=(await admin.query("SELECT condeferrable,condeferred FROM pg_constraint WHERE conrelid='ritc.shared_meal_occurrence_identity'::regclass AND confrelid='ritc.operation'::regclass")).rows;
+ assert.deepEqual(fk,[{condeferrable:true,condeferred:true}]);
+ const laterId=randomUUID(),laterMeal={title:'Later soup',day:null,kind:'dinner',portions:2,protected:false};
+ const staple={lineId:randomUUID(),originalItem:'Later apples',packs:1,unitPriceMinor:200,feeEligible:false},apples={...source(f,q(1)),lineId:staple.lineId,productKey:'apples',productName:'Apples',originalText:'Later apples'};
+ await mealUndoPatch(f,laterId,laterMeal,{change:{...empty(),lines:[{id:staple.lineId,name:staple.originalItem,unit:'count',originalOrder:9,trashedAt:null}],contributions:[apples]},lines:[...target.input.action.body.lines,staple]});
+ const page=ok(await call(f.owner,f.path+'/demand')),shop=ok(await call(f.owner,f.path)),operations=await count(f,'operation');
+ const candidate=ok(await foodCandidate(f,target.receipt.operationId,page));assert.deepEqual(candidate.mealUndo.targetBefore,{revision:null,meal:null});
+ assert.equal(candidate.action.body.mealEdit.meal,null);assert.equal(candidate.action.body.mealEdit.baseMealRevision,target.receipt.shopRevision);
+ const packs=candidate.packReviewLineIds.map(lineId=>({lineId,usablePerPack:q(6),acceptUnresolved:false}));
+ ok(await foodPreview(f,candidate,packs));assert.deepEqual(ok(await call(f.owner,f.path)),shop);assert.equal(await count(f,'operation'),operations,'read-only Cancel');
+ const p=ok(await foodPreview(f,candidate,packs)),a=await apply(f,{action:p.action,base:candidate.base},p),receipt=ok(a.response);
+ assert.deepEqual(ok(await call(f.owner,f.base+'/commands','POST',a.command)),receipt);assert.equal(await count(f,'operation'),operations+1);
+ const after=ok(await call(f.owner,f.path)),graph=ok(await call(f.owner,f.path+'/demand')).graph;
+ assert.equal(after.meals.some(m=>m.occurrenceId===target.occurrenceId),false);
+ for(const id of [lunchId,laterId])assert.deepEqual(after.meals.find(m=>m.occurrenceId===id),shop.meals.find(m=>m.occurrenceId===id));
+ for(const row of [reservation,apples])assert.deepEqual(graph.contributions.find(c=>c.id===row.id),row);
+ assert.ok(graph.contributions.find(c=>c.id===target.c.id).removedAt);assert.equal(after.lines.find(l=>l.lineId===f.basket.lineId).packs,3);
+ assert.deepEqual(after.lines.find(l=>l.lineId===staple.lineId),staple);assert.deepEqual(after.quote,shop.quote);
+});
+test('created meal late transaction failure rolls back identity, lineage, meal, graph and preview consumption before exact retry',async()=>{
+ const f=await fixture();await adopt(f);const m=await createdMealInput(f),p=ok(await preview(f,m.input)),beforeShop=ok(await call(f.owner,f.path)),beforePage=ok(await call(f.owner,f.path+'/demand')),operations=await count(f,'operation');
+ await admin.query(`CREATE SEQUENCE ritc.fixture_creation_reached; GRANT USAGE,SELECT ON SEQUENCE ritc.fixture_creation_reached TO ritc_app;
+ CREATE FUNCTION ritc.fixture_reject_creation() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.shop_id='${f.shopId}'::uuid AND NEW.kind='shop.patch' THEN PERFORM nextval('ritc.fixture_creation_reached'); RAISE EXCEPTION 'fixture creation rollback'; END IF; RETURN NEW; END $$;
+ CREATE TRIGGER fixture_reject_creation BEFORE INSERT ON ritc.operation FOR EACH ROW EXECUTE FUNCTION ritc.fixture_reject_creation()`);
+ let failed;
+ try{
+  failed=await apply(f,m.input,p);assert.equal(failed.response.status,503);assert.equal((await admin.query('SELECT is_called FROM ritc.fixture_creation_reached')).rows[0].is_called,true,'reached operation insert after creation writes');
+  assert.deepEqual(await creationRows(f,m.occurrenceId),{identity:[],effect:[],meals:[]});assert.deepEqual(ok(await call(f.owner,f.path)),beforeShop);assert.deepEqual(ok(await call(f.owner,f.path+'/demand')),beforePage);
+  assert.equal(await count(f,'operation'),operations);assert.equal(await count(f,'shared_demand_preview'),1);
+ }finally{await admin.query('DROP TRIGGER fixture_reject_creation ON ritc.operation; DROP FUNCTION ritc.fixture_reject_creation(); DROP SEQUENCE ritc.fixture_creation_reached');}
+ const receipt=ok(await call(f.owner,f.base+'/commands','POST',failed.command));assert.deepEqual(ok(await call(f.owner,f.base+'/commands','POST',failed.command)),receipt);
+ const rows=await creationRows(f,m.occurrenceId);assert.equal(rows.identity.length,1);assert.equal(rows.effect.length,1);assert.equal(rows.meals.length,1);assert.equal(rows.identity[0].first_operation_id,receipt.operationId);
+});
+test('created meal with no food delta emits explicit never-planned nulls and a real removal tombstone',async()=>{
+ const f=await fixture();await adopt(f);const target=await createUndoMeal(f,{food:false}),page=ok(await call(f.owner,f.path+'/demand')),c=ok(await foodCandidate(f,target.receipt.operationId,page));
+ assert.deepEqual(c.mealUndo.targetBefore,{revision:null,meal:null});assert.equal(c.scope.graphRows,0);assert.deepEqual(c.scope.touchedLines,[]);
+ const p=ok(await foodPreview(f,c,target.input.packs)),a=await apply(f,{action:p.action,base:c.base},p);ok(a.response);
+ assert.equal(a.command.body.mealEdit.meal,null);const rows=await creationRows(f,target.occurrenceId);assert.equal(rows.meals.length,2);assert.equal(rows.meals[1].meal,null);
+ assert.equal((await foodCandidate(f,target.receipt.operationId,ok(await call(f.owner,f.path+'/demand')))).data.error.code,'food_undo_already_reversed');
+});
+test('created meal later same-occurrence edit and held preview cannot erase changed meal facts',async()=>{
+ const f=await fixture();await adopt(f);const target=await createUndoMeal(f,{food:false}),page=ok(await call(f.owner,f.path+'/demand')),c=ok(await foodCandidate(f,target.receipt.operationId,page)),p=ok(await foodPreview(f,c,target.input.packs));
+ await mealUndoPatch(f,target.occurrenceId,{...target.meal,title:'Later title'});
+ const shop=ok(await call(f.owner,f.path)),current=ok(await call(f.owner,f.path+'/demand')),n=await count(f,'operation');
+ assert.equal((await foodCandidate(f,target.receipt.operationId,current)).data.error.code,'food_undo_meal_conflict');assert.equal((await apply(f,{action:p.action,base:c.base},p)).response.status,409);
+ assert.deepEqual(ok(await call(f.owner,f.path)),shop);assert.equal(await count(f,'operation'),n);
+});
+test('created meal skip and recreation keep original used identity and never mint another creation certificate',async()=>{
+ const f=await fixture();await adopt(f);const target=await createUndoMeal(f,{food:false});await mealUndoPatch(f,target.occurrenceId,null);
+ const recreated=await createUndoMeal(f,{food:false,occurrenceId:target.occurrenceId}),page=ok(await call(f.owner,f.path+'/demand'));
+ assert.equal((await foodCandidate(f,target.receipt.operationId,page)).data.error.code,'food_undo_meal_conflict');assert.equal((await foodCandidate(f,recreated.receipt.operationId,page)).data.error.code,'food_undo_meal_action_unsupported');
+ const rows=await creationRows(f,target.occurrenceId);assert.equal(rows.identity.length,1);assert.equal(rows.identity[0].first_operation_id,target.receipt.operationId);assert.equal(rows.effect.length,1);
+});
+test('created protected meal and later dependent allocation reject complete removal without writes',async()=>{
+ const f=await fixture();await adopt(f);const protectedTarget=await createUndoMeal(f,{protectedMeal:true}),page=ok(await call(f.owner,f.path+'/demand')),n=await count(f,'operation');
+ assert.equal((await foodCandidate(f,protectedTarget.receipt.operationId,page)).data.error.code,'food_undo_meal_protected');assert.equal(await count(f,'operation'),n);
+ const g=await fixture(),adoption=await adopt(g),target=await createUndoMeal(g),old=ok(await call(g.owner,g.path+'/demand'));
+ const edge={id:randomUUID(),kind:'withinExisting',demandId:target.c.id,supplyId:adoption.input.change.contributions[0].id,quantity:q(1),confirmation:{productMatchConfirmed:true,confirmedAt:new Date().toISOString(),evidence:'Later allocation'}};
+ const input={...target.input,base:{shopRevision:old.shopRevision,authorityEpoch:old.authorityEpoch,graphRevision:old.graph.revision},change:{...empty(),edges:[edge]},action:{kind:'shop.patch',body:{quote:target.input.action.body.quote,lines:target.input.action.body.lines}}};ok((await apply(g,input,ok(await preview(g,input)))).response);
+ const before=ok(await call(g.owner,g.path)),countBefore=await count(g,'operation');const denied=await foodCandidate(g,target.receipt.operationId,ok(await call(g.owner,g.path+'/demand')));assert.equal(denied.status,422);assert.equal(denied.data.error.code,'invalid_edge_reference');
+ assert.deepEqual(ok(await call(g.owner,g.path)),before);assert.equal(await count(g,'operation'),countBefore);
+});
+test('created meal Undo rejects lost device authority and erasure while immutable used identity survives',async()=>{
+ const f=await fixture();await adopt(f);const target=await createUndoMeal(f,{food:false}),author=f.owner,page=ok(await call(f.owner,f.path+'/demand')),c=ok(await foodCandidate(f,target.receipt.operationId,page)),p=ok(await foodPreview(f,c,target.input.packs));
+ const second=await actor(author.subject);await enroll(second,f.h);assert.equal((await apply(f,{action:p.action,base:c.base},p,second)).response.status,409);
+ const shopper=await invited(f);ok(await send(f,'shop.transferAuthority',{newShopperId:shopper.id},page.shopRevision));assert.equal((await apply(f,{action:p.action,base:c.base},p)).response.status,404);f.owner=shopper;
+ const current=ok(await call(f.owner,f.path+'/demand')),c2=ok(await foodCandidate(f,target.receipt.operationId,current)),p2=ok(await foodPreview(f,c2,target.input.packs));
+ const accepted=await apply(f,{action:p2.action,base:c2.base},p2);ok(accepted.response);ok(await call(f.owner,f.base+'/commands','POST',accepted.command));
+ ok(await call(author,'/v1/privacy/deletions','POST',{clientKey:randomUUID(),statusToken:randomBytes(32).toString('base64url'),confirm:true,households:[{householdId:f.h,organizer:'transfer',organizerMemberId:shopper.id,shops:[],eraseChildProfiles:[]}]}),202);assert.equal((await maintenance.run({batchSize:1})).completed,1);
+ const rows=await creationRows(f,target.occurrenceId);assert.equal(rows.meals.length,0);assert.equal(rows.identity.length,1);assert.equal(rows.effect.length,1);assert.equal(JSON.stringify(rows).includes(target.meal.title),false);
+ assert.equal((await call(f.owner,f.base+'/commands','POST',accepted.command)).status,409);assert.ok((await foodHistory(f)).items.every(i=>i.eligibility.status==='unavailable'));
+ const snapshots=(await admin.query('SELECT snapshot,digest FROM ritc.shop_snapshot WHERE household_id=$1 AND shop_id=$2',[f.h,f.shopId])).rows;
+ assert.ok(snapshots.some(s=>s.digest==='0'.repeat(64)&&s.snapshot.mealRefs?.some(r=>r.occurrenceId===target.occurrenceId)),'erased refs remain rejection-only identity evidence');
+});
+test('created meal same-store first Apply and original replay remain subject to revoked budget permission',async()=>{
+ const f=await fixture();await adopt(f);const author=await invited(f);await undoSelectStore(f,{author});const target=await createUndoMeal(f,{food:false});
+ let page=ok(await call(f.owner,f.path+'/demand')),c=ok(await foodCandidate(f,target.receipt.operationId,page)),p=ok(await foodPreview(f,c,target.input.packs));
+ const accepted=await apply(f,{action:p.action,base:c.base},p);ok(accepted.response);
+ const held=await createUndoMeal(f,{food:false});page=ok(await call(f.owner,f.path+'/demand'));c=ok(await foodCandidate(f,held.receipt.operationId,page));p=ok(await foodPreview(f,c,held.input.packs));
+ const shop=ok(await call(f.owner,f.path)),n=await count(f,'operation');ok(await call(f.owner,f.path+'/store-quotes/grants','POST',{operationId:randomUUID(),shopRevision:shop.shopRevision,authorityEpoch:shop.authorityEpoch,grantRevision:0,adultId:author.id,enabled:false,targetRevision:1}));
+ assert.equal((await call(f.owner,f.base+'/commands','POST',accepted.command)).data.error.code,'food_undo_store_action_unsupported');assert.equal((await apply(f,{action:p.action,base:c.base},p)).response.data.error.code,'food_undo_store_action_unsupported');
+ assert.equal(await count(f,'operation'),n);assert.deepEqual(ok(await call(f.owner,f.path)),shop);
+});
+test('created meal held first Apply cannot survive author erasure or restore erased meal text',async()=>{
+ const f=await fixture();await adopt(f);const target=await createUndoMeal(f,{food:false}),author=f.owner,shopper=await invited(f);
+ ok(await send(f,'shop.transferAuthority',{newShopperId:shopper.id},target.receipt.shopRevision));f.owner=shopper;
+ const page=ok(await call(f.owner,f.path+'/demand')),c=ok(await foodCandidate(f,target.receipt.operationId,page)),p=ok(await foodPreview(f,c,target.input.packs));
+ ok(await call(author,'/v1/privacy/deletions','POST',{clientKey:randomUUID(),statusToken:randomBytes(32).toString('base64url'),confirm:true,households:[{householdId:f.h,organizer:'transfer',organizerMemberId:shopper.id,shops:[],eraseChildProfiles:[]}]}),202);assert.equal((await maintenance.run({batchSize:1})).completed,1);
+ const n=await count(f,'operation'),before=ok(await call(f.owner,f.path)),denied=await apply(f,{action:p.action,base:c.base},p);
+ assert.equal(denied.response.status,409);assert.equal(JSON.stringify(denied.response.data).includes(target.meal.title),false);assert.equal(await count(f,'operation'),n);assert.deepEqual(ok(await call(f.owner,f.path)),before);
+ const rows=await creationRows(f,target.occurrenceId);assert.equal(rows.meals.length,0);assert.equal(rows.identity.length,1);assert.equal(rows.effect.length,1);
+});
+
+// Exercise the exact migration backfill statement with transaction-local input
+// tables. Never drop/recreate installed tables or alter the migration ledger.
+test('created meal migration backfills erased snapshot identities without granting creation authority',async()=>{
+ const {readFile}=await import('node:fs/promises');
+ const sql=await readFile(new URL('../migrations/047_created_meal_undo.sql',import.meta.url),'utf8');
+ const begin=sql.indexOf('INSERT INTO ritc.shared_meal_occurrence_identity('),end=sql.indexOf(';',begin);
+ assert.ok(begin>=0&&end>begin);const statement=sql.slice(begin,end+1);
+ const projected=statement.replace(/\britc\.(shared_meal_occurrence_identity|shared_meal_revision|shop_snapshot)\b/g,'pg_temp.$1');
+ assert.equal(projected.includes('ritc.'),false);assert.ok(projected.includes('UNION ALL'));
+ const h=randomUUID(),s=randomUUID(),other=randomUUID(),active=randomUUID(),skipped=randomUUID(),erased=randomUUID();
+ const db=await admin.connect();try{
+  await db.query('BEGIN');
+  await db.query(`CREATE TEMP TABLE shared_meal_occurrence_identity(household_id uuid,shop_id uuid,occurrence_id uuid,first_operation_id uuid,first_shop_revision integer,PRIMARY KEY(household_id,shop_id,occurrence_id)) ON COMMIT DROP;
+   CREATE TEMP TABLE shared_meal_revision(household_id uuid,shop_id uuid,occurrence_id uuid,revision integer,meal jsonb) ON COMMIT DROP;
+   CREATE TEMP TABLE shop_snapshot(household_id uuid,shop_id uuid,snapshot jsonb,digest text) ON COMMIT DROP`);
+  await db.query('INSERT INTO pg_temp.shared_meal_revision VALUES($1,$2,$3,5,$4),($1,$2,$5,7,NULL)',[h,s,active,{title:'Private active label'},skipped]);
+  const refs=[{occurrenceId:active,revision:3},{occurrenceId:skipped,revision:4},{occurrenceId:erased,revision:2}];
+  await db.query('INSERT INTO pg_temp.shop_snapshot VALUES($1,$2,$3,$4),($1,$2,$3,$4),($5,$2,$6,$7)',[h,s,{mealRefs:refs,lines:[{originalItem:'Erased secret must never be copied'}]},'0'.repeat(64),other,{mealRefs:[{occurrenceId:erased,revision:9}]},'a'.repeat(64)]);
+  await db.query(projected);
+  const rows=(await db.query('SELECT * FROM pg_temp.shared_meal_occurrence_identity ORDER BY household_id,occurrence_id')).rows;
+  const expected=[{household_id:h,shop_id:s,occurrence_id:active,first_operation_id:null,first_shop_revision:3},{household_id:h,shop_id:s,occurrence_id:skipped,first_operation_id:null,first_shop_revision:4},{household_id:h,shop_id:s,occurrence_id:erased,first_operation_id:null,first_shop_revision:2},{household_id:other,shop_id:s,occurrence_id:erased,first_operation_id:null,first_shop_revision:9}];
+  const byIdentity=(a,b)=>(a.household_id+a.occurrence_id).localeCompare(b.household_id+b.occurrence_id);
+  assert.deepEqual(rows.sort(byIdentity),expected.sort(byIdentity));assert.equal(JSON.stringify(rows).includes('Private'),false);assert.equal(JSON.stringify(rows).includes('Erased secret'),false);
+  assert.equal((await db.query('SELECT count(*)::int n FROM pg_temp.shared_meal_revision WHERE occurrence_id=$1',[erased])).rows[0].n,0,'erased identity came only from invalidated snapshots');
+ }finally{await db.query('ROLLBACK');db.release();}
+});
+test('created meal identity and effect tables enforce runtime tenant read and write isolation',async()=>{
+ const f=await fixture();await adopt(f);const target=await createUndoMeal(f,{food:false}),foreign=await fixture();
+ const db=await runtime.connect();try{
+  for(const tenant of [f.h,foreign.h]){
+   await db.query('BEGIN');await db.query("SELECT set_config('app.household_id',$1,true)",[tenant]);
+   for(const table of ['shared_meal_occurrence_identity','shared_food_meal_creation_effect']){
+    const rows=await db.query('SELECT * FROM ritc.'+table+' WHERE household_id=$1 AND shop_id=$2 AND occurrence_id=$3',[f.h,f.shopId,target.occurrenceId]);assert.equal(rows.rowCount,tenant===f.h?1:0,table);
+   }
+   await db.query('ROLLBACK');
+  }
+  for(const [query,args] of [
+   ['INSERT INTO ritc.shared_meal_occurrence_identity(household_id,shop_id,occurrence_id,first_operation_id,first_shop_revision) VALUES($1,$2,$3,NULL,1)',[f.h,f.shopId,randomUUID()]],
+   ['INSERT INTO ritc.shared_food_meal_creation_effect(household_id,shop_id,operation_id,occurrence_id,base_shop_revision,result_meal_revision,absence_digest,result_meal_digest) VALUES($1,$2,$3,$4,1,2,$5,$5)',[f.h,f.shopId,randomUUID(),target.occurrenceId,'a'.repeat(64)]]
+  ]){await db.query('BEGIN');await db.query("SELECT set_config('app.household_id',$1,true)",[foreign.h]);await assert.rejects(db.query(query,args),e=>e.code==='42501');await db.query('ROLLBACK');}
+ }finally{await db.query('ROLLBACK');db.release();}
+ const rows=await creationRows(f,target.occurrenceId);assert.equal(rows.identity.length,1);assert.equal(rows.effect.length,1);
+});
+test('created meal identity and acceptance evidence reject runtime mutation and privileged mutation without erasure authority',async()=>{
+ const f=await fixture();await adopt(f);const target=await createUndoMeal(f,{food:false}),before=await creationRows(f,target.occurrenceId);
+ for(const pool of [runtime,admin]){
+  const db=await pool.connect();try{
+   for(const table of ['shared_meal_occurrence_identity','shared_food_meal_creation_effect'])for(const verb of ['UPDATE','DELETE']){
+    await db.query('BEGIN');await db.query("SELECT set_config('app.household_id',$1,true)",[f.h]);
+    const sql=verb==='UPDATE'?'UPDATE ritc.'+table+' SET occurrence_id=occurrence_id WHERE household_id=$1 AND shop_id=$2 AND occurrence_id=$3':'DELETE FROM ritc.'+table+' WHERE household_id=$1 AND shop_id=$2 AND occurrence_id=$3';
+    await assert.rejects(db.query(sql,[f.h,f.shopId,target.occurrenceId]),e=>e.code===(pool===runtime?'42501':'23514'));
+    await db.query('ROLLBACK');
+   }
+  }finally{await db.query('ROLLBACK');db.release();}
+ }
+ assert.deepEqual(await creationRows(f,target.occurrenceId),before);
+});
