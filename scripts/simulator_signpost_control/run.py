@@ -21,7 +21,8 @@ from .control import SimulatorSupervisor
 from .validate import validate_run, validate_events, SELECTOR
 
 RUNTIME='com.apple.CoreSimulator.SimRuntime.iOS-27-0'
-BOOT_PREPARATION_SECONDS=180  # Existing Boot diagnostic simulator step: timeout-minutes: 3.
+BOOT_PREPARATION_SECONDS=240  # Helper-only prospective cold-boot infrastructure allowance.
+POST_BOOT_VERIFICATION_RESERVE_SECONDS=30
 MIXED=('ENFORCE_BASELINES','OBSERVE_APP_SCROLL_SIGNPOSTS','CAPTURE_SCROLL_SIGNPOSTS',
        'CAPTURE_PREFLIGHT_ONLY','ENABLE_PERFORMANCE_DIAGNOSTICS','FRESH_PERFORMANCE_SIMULATOR')
 
@@ -52,23 +53,36 @@ def current_device(inventory, device, state=None, absent=False):
     if state:require(d.get('state')==state,'helper_device_state')
     return d
 
-def verify_post_boot_device(runner, device):
+def verify_scoped_device(runner, device, label, state=None, absent=False):
     """Fresh runtime + exact UUID listing; both commands share the original 30 seconds."""
     deadline=min(time.monotonic()+30,runner.started+runner.seconds)
     runner.lifecycle_check(deadline)
-    runtimes=read(runner.lifecycle('booted-runtimes',['list','-j','runtimes'],absolute_deadline=deadline))
+    runtimes=read(runner.lifecycle(label+'-runtimes',['list','-j','runtimes'],absolute_deadline=deadline))
     require(set(runtimes)=={'runtimes'},'helper_runtime_inventory_shape')
     require(runtime(runtimes)==device['runtime'],'helper_runtime_changed')
     runner.lifecycle_check(deadline)
-    devices=read(runner.lifecycle('booted-device',['list','-j','devices',device['createdUDID']],absolute_deadline=deadline))
+    devices=read(runner.lifecycle(label+'-device',['list','-j','devices',device['createdUDID']],absolute_deadline=deadline))
     require(set(devices)=={'devices'},'helper_device_inventory_shape')
     rows=[d for group in devices['devices'].values() for d in group]
-    require(len(rows)==1 and rows[0].get('udid')==device['createdUDID'],'helper_scoped_device_ambiguity')
+    require((not rows) if absent else (len(rows)==1 and rows[0].get('udid')==device['createdUDID']),
+            'helper_delete_not_verified' if absent else 'helper_scoped_device_ambiguity')
     # The public filter is substring matching, not authorization. Reuse exact equality,
     # uniqueness, name/type/runtime/state and availability gates on fresh returned rows.
-    value=current_device({**runtimes,**devices},device,'Booted')
+    value=current_device({**runtimes,**devices},device,state,absent)
     runner.lifecycle_check(deadline)
     return value
+
+def verify_post_boot_device(runner, device):
+    return verify_scoped_device(runner,device,'booted','Booted')
+
+def wait_for_boot(runner, device):
+    # Keep the original total prepare budget; boot cannot consume the final
+    # verification reserve. This is infrastructure calibration, not a transport gate.
+    deadline=min(time.monotonic()+BOOT_PREPARATION_SECONDS,
+                 runner.started+runner.seconds-POST_BOOT_VERIFICATION_RESERVE_SECONDS)
+    runner.lifecycle_check(deadline)  # Exhaustion must fail before launching a child.
+    return runner.lifecycle('bootstatus',['bootstatus',device['createdUDID'],'-b'],
+                            BOOT_PREPARATION_SECONDS,absolute_deadline=deadline)
 
 def verify_boot_output(stdout, stderr):
     # Same public boot guard as boot_ios_simulator.py; raw streams remain separate and unchanged.
@@ -145,7 +159,8 @@ def run(output, developer):
         current_device(read(runner.lifecycle('created',['list','-j'])),device,'Shutdown')
         result['stage']='boot';runner.lifecycle('boot',['boot',created])
         result['bootPreparationSeconds']=BOOT_PREPARATION_SECONDS
-        status=runner.lifecycle('bootstatus',['bootstatus',created,'-b'],BOOT_PREPARATION_SECONDS)
+        result['postBootVerificationReserveSeconds']=POST_BOOT_VERIFICATION_RESERVE_SECONDS
+        status=wait_for_boot(runner,device)
         verify_boot_output(status.read_bytes(),(runner.out/'bootstatus-stderr.log').read_bytes())
         runner.budget()
         verify_post_boot_device(runner,device)
@@ -254,12 +269,12 @@ def cleanup(output, archived, destination):
             if path.exists():require(read(path)['allKnownChildrenTerminal'] is True,'helper_phase_not_terminal')
         if (output/'capture').exists():terminal_capture(read(output/'capture/receipt.json'))
         runner=HelperRunner(destination,tool,90);runner.device=device
-        now=current_device(read(runner.lifecycle('before',['list','-j'])),device)
+        now=verify_scoped_device(runner,device,'before')
         require(now['state'] in ('Booted','Shutdown'),'helper_cleanup_state')
         if now['state']=='Booted':runner.lifecycle('shutdown',['shutdown',device['createdUDID']],30)
-        current_device(read(runner.lifecycle('shutdown-verified',['list','-j'])),device,'Shutdown')
+        verify_scoped_device(runner,device,'shutdown-verified','Shutdown')
         runner.lifecycle('delete',['delete',device['createdUDID']],30)
-        current_device(read(runner.lifecycle('deleted',['list','-j'])),device,absent=True)
+        verify_scoped_device(runner,device,'deleted',absent=True)
         runner.receipt.update(ownedDeviceDeleted=True,deviceReceiptSHA256=sha(output/'device.json'))
     except BaseException as exc:error=type(exc).__name__+': '+str(exc)
     finally:

@@ -412,11 +412,12 @@ class AcquisitionTests(unittest.TestCase):
             self.assertEqual(self.item['record']['signals'],[])
 
 class BootAndSummaryTests(unittest.TestCase):
-    def test_existing_boot_allowance_and_collector_limits(self):
-        self.assertEqual(run.BOOT_PREPARATION_SECONDS,180)
+    def test_calibrated_helper_boot_allowance_and_unchanged_collector_limits(self):
+        self.assertEqual(run.BOOT_PREPARATION_SECONDS,240)
         self.assertEqual((host_control.STARTUP_SECONDS,control.FINALIZE_SECONDS,host_control.EXPORT_SECONDS),(15,30,10))
         s=inspect.getsource(run.run);self.assertIn("HelperRunner(output/'prepare',tool,300",s)
-        self.assertIn('BOOT_PREPARATION_SECONDS)',s)
+        self.assertIn('wait_for_boot(runner,device)',s)
+        self.assertEqual(run.POST_BOOT_VERIFICATION_RESERVE_SECONDS,30)
         self.assertIn('HelperRunner(destination,tool,90)',inspect.getsource(run.cleanup))
     def test_zero_exit_migration_failure_output_rejected_on_either_stream(self):
         for text in (b'Data Migration Failed\n',b'  Data Migration Failed  \n',b'[2026-11-09] Status=3, isTerminal=YES, Elapsed=1\n',b'[time] Status=3, isTerminal=YES.\n'):
@@ -514,18 +515,69 @@ class ScopedPostBootTests(unittest.TestCase):
         self.clock=295
         run.verify_post_boot_device(self.r,DEVICE)
         self.assertEqual([x[2] for x in self.commands],[300,300])
+    def test_cleanup_before_accepts_booted_and_shutdown_as_observed(self):
+        for state in ('Booted','Shutdown'):
+            self.commands=[];self.clock=0;self.response=inventory()
+            self.response['devices'][run.RUNTIME][0]['state']=state
+            self.assertEqual(run.verify_scoped_device(self.r,DEVICE,'before')['state'],state)
+            self.assertEqual([c[0] for c in self.commands],['before-runtimes','before-device'])
+    def test_cleanup_shutdown_requires_fresh_shutdown_state(self):
+        with self.assertRaisesRegex(ValueError,'device_state'):
+            run.verify_scoped_device(self.r,DEVICE,'shutdown-verified','Shutdown')
+    def test_cleanup_scoped_lookup_rejects_missing_duplicate_and_wrong_identity(self):
+        for change in ('missing','duplicate','uuid','name','type','runtime','availability'):
+            self.commands=[];self.clock=0;self.response=inventory();rows=self.response['devices'][run.RUNTIME]
+            if change=='missing':rows.clear()
+            elif change=='duplicate':rows*=2
+            elif change=='uuid':rows[0]['udid']=DEVICE['sourceUDID']
+            elif change=='name':rows[0]['name']='not-owned'
+            elif change=='type':rows[0]['deviceTypeIdentifier']='other'
+            elif change=='availability':rows[0]['isAvailable']=False
+            else:self.response['devices']={'wrong-runtime':rows}
+            with self.subTest(change=change),self.assertRaises(ValueError):run.verify_scoped_device(self.r,DEVICE,'before')
+    def test_cleanup_deletion_requires_empty_filtered_result(self):
+        self.response['devices'][run.RUNTIME]=[]
+        self.assertIsNone(run.verify_scoped_device(self.r,DEVICE,'deleted',absent=True))
+        self.assertEqual(self.commands[1][1],['list','-j','devices',DEVICE['createdUDID']])
+    def test_cleanup_deletion_rejects_target_or_substring_other_device(self):
+        for udid in (DEVICE['createdUDID'],DEVICE['createdUDID']+'-other',DEVICE['sourceUDID']):
+            self.commands=[];self.clock=0;self.response=inventory()
+            self.response['devices'][run.RUNTIME][0]['udid']=udid
+            with self.assertRaisesRegex(ValueError,'delete_not_verified'):
+                run.verify_scoped_device(self.r,DEVICE,'deleted',absent=True)
+    def test_cleanup_deletion_still_requires_exact_fresh_runtime(self):
+        self.response['devices'][run.RUNTIME]=[];self.response['runtimes'][0]['buildversion']='changed'
+        with self.assertRaisesRegex(ValueError,'exact_runtime'):
+            run.verify_scoped_device(self.r,DEVICE,'deleted',absent=True)
+        self.assertEqual(len(self.commands),1)
+    def test_cleanup_queries_share_30_seconds_and_remaining_90_phase(self):
+        self.r.seconds=90;self.clock=85;self.costs=[3,3]
+        with self.assertRaisesRegex(ValueError,'lifecycle_deadline'):
+            run.verify_scoped_device(self.r,DEVICE,'before')
+        self.assertEqual([c[2] for c in self.commands],[90,90])
+    def test_cleanup_deletion_parse_cannot_succeed_at_boundary(self):
+        self.response['devices'][run.RUNTIME]=[];self.costs=[1,27];self.read_cost=1
+        with self.assertRaisesRegex(ValueError,'lifecycle_deadline'):
+            run.verify_scoped_device(self.r,DEVICE,'deleted',absent=True)
+    def test_cleanup_has_no_full_inventory_and_unchanged_phase(self):
+        source=inspect.getsource(run.cleanup)
+        self.assertNotIn("['list','-j']",source)
+        self.assertIn("verify_scoped_device(runner,device,'before')",source)
+        self.assertIn("verify_scoped_device(runner,device,'shutdown-verified','Shutdown')",source)
+        self.assertIn("verify_scoped_device(runner,device,'deleted',absent=True)",source)
+        self.assertIn('HelperRunner(destination,tool,90)',source)
     def test_new_inventory_whitelist_is_exact(self):
         for tail in (['list','-j','runtimes'],['list','-j','devices',DEVICE['createdUDID']]):
             self.assertTrue(runner.inventory_allowed(tail,DEVICE));self.assertTrue(runner.lifecycle_allowed(tail,DEVICE))
         for tail in (['list','-j','devices','available'],['list','-j','devices',DEVICE['sourceUDID']],['list','-j','devices'],['list','-j','runtimes','available'],['list','-j','pairs']):
             self.assertFalse(runner.inventory_allowed(tail,DEVICE));self.assertFalse(runner.lifecycle_allowed(tail,DEVICE))
         self.assertFalse(runner.inventory_allowed(['list','-j','devices',DEVICE['createdUDID']],{}))
-    def test_original_creation_and_cleanup_inventory_paths_unchanged(self):
+    def test_original_creation_and_scoped_cleanup_inventory_paths(self):
         source=inspect.getsource(run.run)
         self.assertIn("runner.command('inventory','simctl',['list','-j']",source)
         self.assertIn("runner.lifecycle('created',['list','-j'])",source)
         cleanup=inspect.getsource(run.cleanup)
-        for label in ('before','shutdown-verified','deleted'):self.assertIn("runner.lifecycle('"+label+"',['list','-j'])",cleanup)
+        for label in ('before','shutdown-verified','deleted'):self.assertIn("verify_scoped_device(runner,device,'"+label+"'",cleanup)
 
 class BootstatusAcquisitionTests(unittest.TestCase):
     sleep=AcquisitionTests.sleep
@@ -1589,5 +1641,41 @@ class HandledSIGINTTests(unittest.TestCase):
             p=self.r.out/'receipt.json';p.write_text(json.dumps({'helperTransportQualified':False,**summary}))
             with mock.patch('builtins.print'):printed=run.terminal_summary('run',p)
             self.assertFalse(printed['helperTransportQualified']);self.assertEqual(printed['samplerTerminations'],['handled_sigint_exit1'])
+
+
+
+class ColdBootBudgetTests(unittest.TestCase):
+    def check(self,deadline):
+        if self.now>=deadline:raise ValueError('helper_lifecycle_deadline')
+    def setup_runner(self,now=20):
+        self.now=now
+        return SimpleNamespace(started=0,seconds=300,lifecycle_check=self.check,lifecycle=mock.Mock(return_value='boot-log'))
+    def test_exact_240_second_command_allowance(self):
+        r=self.setup_runner()
+        with mock.patch.object(run.time,'monotonic',return_value=self.now):self.assertEqual(run.wait_for_boot(r,DEVICE),'boot-log')
+        r.lifecycle.assert_called_once_with('bootstatus',['bootstatus',DEVICE['createdUDID'],'-b'],240,absolute_deadline=260)
+    def test_phase_minus_30_reserve_caps_later_start(self):
+        r=self.setup_runner(100)
+        with mock.patch.object(run.time,'monotonic',return_value=self.now):run.wait_for_boot(r,DEVICE)
+        self.assertEqual(r.lifecycle.call_args.kwargs['absolute_deadline'],270)
+    def test_exact_reserve_boundary_and_past_fail_before_launch(self):
+        for now in (270,300,301):
+            r=self.setup_runner(now)
+            with mock.patch.object(run.time,'monotonic',return_value=now),self.assertRaisesRegex(ValueError,'lifecycle_deadline'):run.wait_for_boot(r,DEVICE)
+            r.lifecycle.assert_not_called()
+    def test_prior_177895_normal_and_latest_180_are_within_prospective_window(self):
+        r=self.setup_runner(21.282)
+        with mock.patch.object(run.time,'monotonic',return_value=self.now):run.wait_for_boot(r,DEVICE)
+        self.assertAlmostEqual(r.lifecycle.call_args.kwargs['absolute_deadline'],261.282)
+        self.assertGreater(300-261.282,30)
+    def test_lifecycle_failure_not_retried_or_reclassified(self):
+        r=self.setup_runner();r.lifecycle.side_effect=ValueError('helper_lifecycle_deadline')
+        with mock.patch.object(run.time,'monotonic',return_value=self.now),self.assertRaisesRegex(ValueError,'lifecycle_deadline'):run.wait_for_boot(r,DEVICE)
+        r.lifecycle.assert_called_once()
+    def test_full_post_boot_and_transport_validation_remain_mandatory(self):
+        source=inspect.getsource(run.run)
+        names=['status=wait_for_boot(runner,device)','verify_boot_output(', 'verify_post_boot_device(runner,device)', 'controller.run()', 'validate_run(', 'validate_events(', 'helperTransportQualified=True']
+        positions=[source.index(x) for x in names];self.assertEqual(positions,sorted(positions))
+        self.assertIn("HelperRunner(output/'prepare',tool,300",source)
 
 if __name__=='__main__':unittest.main()
