@@ -15,13 +15,19 @@ private final class OperationUndoFixtureServer: @unchecked Sendable {
     private let lock = NSLock(), file: URL
     private var state: Snapshot
     private let f: [String: Any]
-    init(directory: URL, workspace: UUID, reset: Bool, mealScenario: Bool) throws {
+    init(directory: URL, workspace: UUID, reset: Bool, mealScenario: Bool, sameStoreScenario: Bool) throws {
         host = "operation-undo-" + workspace.uuidString.lowercased() + ".test"
         if reset && FileManager.default.fileExists(atPath: directory.path) { try FileManager.default.removeItem(at: directory) }
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         file = directory.appendingPathComponent("synthetic-state.json")
         state = FileManager.default.fileExists(atPath: file.path) ? try JSONDecoder().decode(Snapshot.self, from: Data(contentsOf: file)) : Snapshot()
-        f = try mealScenario ? OperationUndoUIFacts.mealObject() : OperationUndoUIFacts.object()
+        var facts = try mealScenario ? OperationUndoUIFacts.mealObject() : OperationUndoUIFacts.object()
+        if sameStoreScenario {
+            let basis: [String: Any] = ["revision": 2, "pairId": "00000000-0000-4000-8000-000000000088", "choice": "first", "selectionDigest": String(repeating: "b", count: 64)]
+            for key in ["candidate", "response"] { var value = facts[key] as! [String: Any]; value["storeBasis"] = basis; facts[key] = value }
+            var shop = facts["shop"] as! [String: Any]; shop["storeBasisRevision"] = 2; shop["storeReviewRequired"] = false; facts["shop"] = shop
+        }
+        f = facts
     }
     func notify() { lock.lock(); let value = state; lock.unlock(); changed?(value) }
     private func save() throws {
@@ -163,7 +169,7 @@ private final class OperationUndoFixtureVault: RefreshTokenVault, @unchecked Sen
             guard ProcessInfo.processInfo.arguments.contains("--ui-testing"), ProcessInfo.processInfo.arguments.contains("--shared-operation-undo-fixture"),
                   let raw = ProcessInfo.processInfo.environment["RITC_OPERATION_UNDO_WORKSPACE"], let workspace = UUID(uuidString: raw) else { throw ClientError.configuration }
             let directory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("UITestWorkspace/OperationUndo-" + workspace.uuidString)
-            let server = try OperationUndoFixtureServer(directory: directory, workspace: workspace, reset: ProcessInfo.processInfo.environment["RITC_OPERATION_UNDO_RESET"] == "1", mealScenario: ProcessInfo.processInfo.environment["RITC_OPERATION_UNDO_MEAL"] == "1")
+            let server = try OperationUndoFixtureServer(directory: directory, workspace: workspace, reset: ProcessInfo.processInfo.environment["RITC_OPERATION_UNDO_RESET"] == "1", mealScenario: ProcessInfo.processInfo.environment["RITC_OPERATION_UNDO_MEAL"] == "1", sameStoreScenario: ProcessInfo.processInfo.environment["RITC_OPERATION_UNDO_STORE"] == "1")
             server.changed = { [weak self] value in Task { @MainActor in self?.snapshot = value } }; OperationUndoFixtureProtocol.registry.add(server); server.notify()
             let config = URLSessionConfiguration.ephemeral; config.protocolClasses = [OperationUndoFixtureProtocol.self]
             let transport = HTTPTransport(session: URLSession(configuration: config)), base = URL(string: "https://" + server.host)!

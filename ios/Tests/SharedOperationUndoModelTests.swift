@@ -186,4 +186,32 @@ import HouseholdClient
         XCTAssertEqual(access.retries, 1); XCTAssertEqual(access.candidates, 0); XCTAssertEqual(access.previewCalls, 0)
         XCTAssertNil(model.candidate); XCTAssertNil(model.review); XCTAssertTrue(model.history.isEmpty)
     }
+    private func sameStoreFacts() throws -> [String: Any] {
+        var facts = try OperationUndoFixture.object()
+        let basis: [String: Any] = ["revision": 2, "pairId": "00000000-0000-4000-8000-000000000088", "choice": "first", "selectionDigest": String(repeating: "b", count: 64)]
+        for key in ["candidate", "response"] { var value = facts[key] as! [String: Any]; value["storeBasis"] = basis; facts[key] = value }
+        var shop = facts["shop"] as! [String: Any]; shop["storeBasisRevision"] = 2; shop["storeReviewRequired"] = false; facts["shop"] = shop
+        return facts
+    }
+    func testSameStoreReviewCancelAndPendingUseOnlyExistingParentAction() async throws {
+        let access = try Access(sameStoreFacts()), cancelled = await selected(access)
+        try cancelled.acknowledgePack(access.fixture.request.packs[0]); await cancelled.preview()
+        XCTAssertEqual(cancelled.review?.response.storeBasis, access.fixture.candidate.storeBasis)
+        cancelled.cancel(); XCTAssertNil(cancelled.review); XCTAssertNil(cancelled.candidate); XCTAssertNil(access.retained); XCTAssertEqual(access.applies, 0)
+        let model = await selected(access)
+        try model.acknowledgePack(access.fixture.request.packs[0]); await model.preview(); model.monetaryAcknowledged = true
+        await model.apply()
+        XCTAssertEqual(access.applies, 1); XCTAssertEqual(access.appliedReview?.response.action, access.fixture.response.action)
+        XCTAssertEqual(access.appliedReview?.response.storeBasis, access.fixture.candidate.storeBasis)
+        let relaunched = SharedOperationUndoModel(access: access); await relaunched.load(); await relaunched.retry()
+        XCTAssertEqual(access.applies, 1); XCTAssertEqual(access.retries, 1); XCTAssertNil(relaunched.candidate)
+    }
+    func testSameStoreHeldPreviewCannotSurviveSelectionChange() async throws {
+        let facts = try sameStoreFacts(), access = try Access(facts), model = await selected(access)
+        try model.acknowledgePack(access.fixture.request.packs[0]); access.holdPreview = true
+        let task = Task { await model.preview() }; try await held(access)
+        var shop = facts["shop"] as! [String: Any]; shop["storeBasisRevision"] = 6; shop["storeReviewRequired"] = true
+        access.foodShop = try OperationUndoFixture.decode(shop); model.accessChanged(); access.release(); await task.value
+        XCTAssertNil(model.review); XCTAssertNil(model.candidate); XCTAssertNil(model.currentShop); XCTAssertEqual(access.applies, 0)
+    }
 }

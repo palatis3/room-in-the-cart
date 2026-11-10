@@ -1,0 +1,28 @@
+{
+  "runId": 42750066903,
+  "sourceCommit": "ba2617eec57a2074aa8760c801375a59939a44b4",
+  "zipBytes": 71496,
+  "zipSHA256": "62cc67c695bde0124a74ea90d9f19c496fbee24870f4509bd3701df23fcf6335",
+  "tarBytes": 471040,
+  "tarSHA256": "63e2c057313836ed8e2b38fe22e9550ba22909d0e84c428995e2bc45b044fcb0",
+  "tarMembersVerified": 22,
+  "committedSourcePinsVerified": 50,
+  "artifactVerified": true,
+  "plannerChecksPassed": 451,
+  "helperTransportQualified": false,
+  "firstFailure": {
+    "command": "booted-runtimes",
+    "seconds": 30.116,
+    "error": "ValueError: helper_lifecycle_deadline",
+    "emptyOutput": true,
+    "verifiedSIGINT": true,
+    "preparationChildrenTerminal": true
+  },
+  "cleanup": {
+    "error": "ValueError: helper_unbound_live_no_signal",
+    "lastCommand": "delete",
+    "noUnverifiedSignals": true,
+    "deletionVerified": false
+  },
+  "extractedCodeExecuted": false
+}

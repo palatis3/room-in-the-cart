@@ -110,4 +110,59 @@ final class SharedOperationUndoTests: XCTestCase {
         XCTAssertEqual(try binding.validate(try XCTUnwrap(restored.first)), envelope)
         XCTAssertEqual(binding.reservedOperationID, p.receipt.operationId)
     }
+    private func sameStoreFacts(_ supplied: [String: Any]? = nil) throws -> [String: Any] {
+        var facts = try supplied ?? OperationUndoFixture.object()
+        let basis: [String: Any] = ["revision": 2, "pairId": "00000000-0000-4000-8000-000000000088", "choice": "first", "selectionDigest": String(repeating: "b", count: 64)]
+        for key in ["candidate", "response"] { var value = facts[key] as! [String: Any]; value["storeBasis"] = basis; facts[key] = value }
+        var shop = facts["shop"] as! [String: Any]; shop["storeBasisRevision"] = 2; shop["storeReviewRequired"] = false; facts["shop"] = shop
+        return facts
+    }
+    func testSameStoreUndoRetainsActionAndStrictCodableBasis() throws {
+        let facts = try sameStoreFacts(), review = try OperationUndoFixture.review(facts), original = try OperationUndoFixture.review()
+        XCTAssertEqual(review.response.action, original.response.action)
+        XCTAssertEqual(review.candidate.after, original.candidate.after)
+        XCTAssertEqual(review.candidate.storeBasis?.revision, 2)
+        XCTAssertEqual(review.response.storeBasis, review.candidate.storeBasis)
+        XCTAssertEqual(try JSONDecoder().decode(SharedOperationUndoCandidate.self, from: JSONEncoder().encode(review.candidate)), review.candidate)
+        let request = try JSONSerialization.jsonObject(with: JSONEncoder().encode(review.request)) as! [String: Any]
+        XCTAssertNil(request["storeBasis"], "Selection identity is server evidence, not a client-selected inverse")
+        let originalMeal = try OperationUndoFixture.review(OperationUndoFixture.mealObject())
+        let selectedMeal = try OperationUndoFixture.review(sameStoreFacts(OperationUndoFixture.mealObject()))
+        XCTAssertEqual(selectedMeal.response.action, originalMeal.response.action)
+        XCTAssertEqual(selectedMeal.candidate.mealUndo, originalMeal.candidate.mealUndo)
+        XCTAssertEqual(selectedMeal.candidate.after, originalMeal.candidate.after, "Protected lunch and later staple remain exact")
+    }
+    func testSameStoreUndoRejectsMissingNullChangedAndExtraSelectionEvidence() throws {
+        for mode in ["missing", "null", "changed", "extra", "afterTarget", "pending", "switched"] {
+            var facts = try sameStoreFacts(), candidate = facts["candidate"] as! [String: Any], response = facts["response"] as! [String: Any], shop = facts["shop"] as! [String: Any]
+            var basis = candidate["storeBasis"] as! [String: Any]
+            switch mode {
+            case "missing": candidate.removeValue(forKey: "storeBasis")
+            case "null": candidate["storeBasis"] = NSNull()
+            case "changed": basis["selectionDigest"] = String(repeating: "c", count: 64); response["storeBasis"] = basis
+            case "extra": basis["label"] = "Untrusted store"; candidate["storeBasis"] = basis
+            case "afterTarget": basis["revision"] = 6; candidate["storeBasis"] = basis; response["storeBasis"] = basis; shop["storeBasisRevision"] = 6
+            case "pending": shop["storeReviewRequired"] = true
+            default: shop["storeBasisRevision"] = 3
+            }
+            facts["candidate"] = candidate; facts["response"] = response; facts["shop"] = shop
+            XCTAssertThrowsError(try OperationUndoFixture.review(facts), mode)
+        }
+        var facts = try OperationUndoFixture.object(), candidate = facts["candidate"] as! [String: Any]
+        candidate["storeBasis"] = (try sameStoreFacts()["candidate"] as! [String: Any])["storeBasis"]; facts["candidate"] = candidate
+        XCTAssertThrowsError(try OperationUndoFixture.review(facts), "A no-store shop cannot acquire selection authority from a response")
+    }
+    func testExistingPlacementDecoderIgnoresContentFreeSnapshotExtension() throws {
+        let facts = try OperationUndoFixture.object(), shop = facts["shop"] as! [String: Any], candidate = facts["candidate"] as! [String: Any]
+        var old: [String: Any] = ["shopId": shop["shopId"]!, "revision": shop["shopRevision"]!, "phase": "frozen", "quote": shop["quote"]!, "lines": shop["lines"]!, "budget": candidate["beforeCheckout"]!]
+        let expected: PlacementReportedSnapshot = try OperationUndoFixture.decode(old)
+        old["storeBasis"] = ["revision": 2, "reviewRequired": false]
+        let extended: PlacementReportedSnapshot = try OperationUndoFixture.decode(old)
+        XCTAssertEqual(extended, expected)
+        // The existing projection neither turns the new metadata into authority
+        // nor reserializes it as a replacement for the original server digest.
+        let encoded = try JSONSerialization.jsonObject(with: JSONEncoder().encode(extended)) as! [String: Any]
+        XCTAssertNil(encoded["storeBasis"])
+        XCTAssertEqual(extended.lines, expected.lines); XCTAssertEqual(extended.quote, expected.quote)
+    }
 }

@@ -5,6 +5,7 @@ import pg from 'pg';
 import {generateKeyPair,exportJWK,createLocalJWKSet,SignJWT} from 'jose';
 import {HouseholdRepository} from '../dist/repository.js';
 import {bodySchemas} from '../dist/contracts.js';
+import {digest} from '../dist/database.js';
 import {JWTIdentityVerifier,SupabaseSessionVerifier} from '../dist/auth.js';
 import {PrivacyService,PrivacyMaintenance} from '../dist/privacy.js';
 import {openPrivacyJournalFixture} from './privacy-journal-fixture.mjs';
@@ -798,4 +799,110 @@ test('meal Undo cannot return private history or exact replay after accepted mea
  const history=await foodHistory(f);assert.ok(history.items.every(x=>x.eligibility.status==='unavailable'));assert.equal(JSON.stringify(history).includes('Private meal title'),false);
  assert.equal((await admin.query('SELECT count(*)::int n FROM ritc.shared_meal_revision WHERE household_id=$1 AND shop_id=$2 AND occurrence_id=$3',[f.h,f.shopId,m.occurrenceId])).rows[0].n,0);
  assert.equal((await admin.query('SELECT count(*)::int n FROM ritc.shared_food_meal_effect WHERE household_id=$1 AND operation_id=$2',[f.h,target.receipt.operationId])).rows[0].n,1,'content-free lineage cannot resurrect erased meal facts');
+});
+
+// Same-store Undo exercises the original authorized store routes; no seeded store state.
+async function undoSelectStore(f,{author=f.owner,grantRevision=0,choice='first',restore=true}={}){
+ const before=ok(await call(f.owner,f.path)),path=f.path+'/store-quotes';
+ const envelope=(extra={},grant=grantRevision)=>({operationId:randomUUID(),shopRevision:before.shopRevision,authorityEpoch:before.authorityEpoch,grantRevision:grant,...extra});
+ if(author!==f.owner&&grantRevision===0){ok(await call(f.owner,path+'/grants','POST',envelope({adultId:author.id,enabled:true,targetRevision:0},0)));grantRevision=1;}
+ const option={label:'Reviewed selection',store:'Same store',branch:'A',mode:'pickup',slot:new Date(Date.now()+3600000).toISOString(),observedAt:new Date(Date.now()-60000).toISOString(),source:'Entered checkout',currency:'USD',terms:'Complete quote',itemsMinor:200,checkoutMinor:200,allChargesIncluded:true,available:true,quantitiesMatched:true,singleStore:true,tripAlreadyPlanned:true,tripMinor:0,extraMinutes:0,capMinor:10000,capScope:'wholeCheckout',eligibilityConfirmed:true};
+ const save=envelope({options:{first:option,second:{...option,branch:'B'}}},grantRevision);ok(await call(author,path+'/pairs','POST',save));
+ let proposalId=null;
+ if(author!==f.owner){const proposal=envelope({pairId:save.operationId,choice},grantRevision);ok(await call(author,path+'/proposals','POST',proposal));proposalId=proposal.operationId;}
+ const selected=ok(await call(f.owner,path+'/adoptions','POST',envelope({pairId:save.operationId,choice,proposalId},0)));
+ const adoptionSnapshot=(await admin.query('SELECT snapshot FROM ritc.shop_snapshot WHERE household_id=$1 AND shop_id=$2 AND revision=$3',[f.h,f.shopId,selected.shopRevision])).rows[0].snapshot;
+ assert.equal(Object.hasOwn(adoptionSnapshot,'storeBasis'),false,'An internal adoption snapshot must not attest its prior basis as the final selected store');
+ const current=ok(await call(f.owner,f.path));assert.equal(current.storeReviewRequired,true);assert.equal(current.storeBasisRevision,selected.shopRevision);
+ let repricing=null;
+ if(restore){
+  const page=ok(await call(f.owner,f.path+'/demand'));
+  const input={mode:'review',base:{shopRevision:page.shopRevision,authorityEpoch:page.authorityEpoch,graphRevision:page.graph.revision},change:empty(),
+   action:{kind:'shop.patch',body:{quote:before.quote,lines:before.lines,reviewedStoreBasisRevision:selected.shopRevision}},
+   packs:page.graph.lines.filter(l=>l.trashedAt===null).map(l=>({lineId:l.id,usablePerPack:q(l.id===f.basket.lineId?6:1),acceptUnresolved:false}))};
+  repricing=ok((await apply(f,input,ok(await preview(f,input)))).response);
+  assert.equal(ok(await call(f.owner,f.path)).storeReviewRequired,false);
+ }
+ return{basis:selected.shopRevision,pairId:save.operationId,choice,repricing,author,grantRevision};
+}
+test('same reviewed store permits complete Undo with Cancel, later staple and exact retry',async()=>{
+ const f=await fixture();await adopt(f);const selected=await undoSelectStore(f),target=await addedFoodOperation(f);
+ const page=ok(await call(f.owner,f.path+'/demand')),basket={lineId:randomUUID(),originalItem:'Later staple',packs:1,unitPriceMinor:250,feeEligible:false};
+ const extra={...source(f,q(1)),lineId:basket.lineId,productKey:'staple',productName:'Staple',originalText:'Later staple'};
+ const input={mode:'change',base:{shopRevision:page.shopRevision,authorityEpoch:page.authorityEpoch,graphRevision:page.graph.revision},change:{...empty(),lines:[{id:basket.lineId,name:basket.originalItem,unit:'count',originalOrder:9,trashedAt:null}],contributions:[extra]},
+  action:{kind:'shop.patch',body:{quote:target.input.action.body.quote,lines:[...target.input.action.body.lines,basket]}},packs:[...target.input.packs,{lineId:basket.lineId,usablePerPack:q(1),acceptUnresolved:false}]};
+ ok((await apply(f,input,ok(await preview(f,input)))).response);
+ const current=ok(await call(f.owner,f.path+'/demand')),oldShop=ok(await call(f.owner,f.path)),operations=await count(f,'operation'),revisions=await count(f,'shared_demand_revision');
+ // The private snapshot extension must not leak into existing public shop/receipt DTO shapes.
+ assert.deepEqual(Object.keys(oldShop).sort(),['shopId','shopRevision','authorityEpoch','phase','quote','meals','lines','frozenRevision','placedRevision','storeBasisRevision','storeReviewRequired'].sort());
+ assert.deepEqual(Object.keys(target.receipt).sort(),['operationId','kind','shopId','shopRevision','authorityEpoch','disposition'].sort());
+ const retained=(await admin.query('SELECT snapshot,digest FROM ritc.shop_snapshot WHERE household_id=$1 AND shop_id=$2 AND revision=$3',[f.h,f.shopId,oldShop.shopRevision])).rows[0];
+ assert.deepEqual(retained.snapshot.storeBasis,{revision:selected.basis,reviewRequired:false});
+ const c=ok(await foodCandidate(f,target.receipt.operationId,current));
+ assert.equal(c.storeBasis.revision,selected.basis);assert.equal(c.storeBasis.pairId,selected.pairId);assert.equal(c.storeBasis.choice,'first');assert.match(c.storeBasis.selectionDigest,/^[a-f0-9]{64}$/);
+ const p=ok(await foodPreview(f,c,input.packs));assert.deepEqual(p.storeBasis,c.storeBasis);
+ // Cancel is exactly no command; reads/previews cannot mutate basket, graph or operation count.
+ assert.deepEqual(ok(await call(f.owner,f.path)),oldShop);assert.deepEqual(ok(await call(f.owner,f.path+'/demand')),current);
+ assert.equal(await count(f,'operation'),operations);assert.equal(await count(f,'shared_demand_revision'),revisions);
+ const applied=await apply(f,{action:p.action,base:c.base},p),receipt=ok(applied.response);
+ assert.deepEqual(ok(await call(f.owner,f.base+'/commands','POST',applied.command)),receipt);
+ assert.equal(await count(f,'operation'),operations+1);assert.equal(await count(f,'shared_demand_revision'),revisions+1);
+ const after=ok(await call(f.owner,f.path)),graph=ok(await call(f.owner,f.path+'/demand'));
+ assert.equal(after.storeBasisRevision,selected.basis);assert.equal(after.storeReviewRequired,false);assert.deepEqual(after.quote,f.quote);
+ assert.equal(after.lines.find(l=>l.lineId===f.basket.lineId).packs,2);assert.deepEqual(after.lines.find(l=>l.lineId===basket.lineId),basket);
+ assert.deepEqual(graph.graph.contributions.find(v=>v.id===extra.id),extra);assert.ok(graph.graph.contributions.find(v=>v.id===target.extra.id).removedAt);
+ // A later real switch does not reapply the old inverse on exact acknowledgment retry.
+ await undoSelectStore(f,{choice:'second',restore:false});const switched=ok(await call(f.owner,f.path));
+ assert.deepEqual(ok(await call(f.owner,f.base+'/commands','POST',applied.command)),receipt);assert.deepEqual(ok(await call(f.owner,f.path)),switched);
+});
+test('same-store Undo rejects repricing itself, pending review and a later switch back to the same named option',async()=>{
+ const f=await fixture();await adopt(f);const first=await undoSelectStore(f),target=await addedFoodOperation(f);
+ let page=ok(await call(f.owner,f.path+'/demand'));
+ assert.equal((await foodCandidate(f,first.repricing.operationId,page)).data.error.code,'food_undo_store_action_unsupported');
+ await undoSelectStore(f,{choice:'second',restore:false});page=ok(await call(f.owner,f.path+'/demand'));
+ assert.equal((await foodCandidate(f,target.receipt.operationId,page)).data.error.code,'food_undo_store_action_unsupported');
+ // Switch again through real routes, then explicitly review fresh complete prices.
+ const shop=ok(await call(f.owner,f.path));
+ const reprice={mode:'review',base:{shopRevision:page.shopRevision,authorityEpoch:page.authorityEpoch,graphRevision:page.graph.revision},change:empty(),action:{kind:'shop.patch',body:{quote:target.input.action.body.quote,lines:target.input.action.body.lines,reviewedStoreBasisRevision:shop.storeBasisRevision}},packs:target.input.packs};
+ ok((await apply(f,reprice,ok(await preview(f,reprice)))).response);
+ await undoSelectStore(f,{choice:'first'});page=ok(await call(f.owner,f.path+'/demand'));
+ assert.equal((await foodCandidate(f,target.receipt.operationId,page)).data.error.code,'food_undo_store_action_unsupported');
+});
+test('same-store final Apply and replay cannot outlive revoked original budget permission',async()=>{
+ const f=await fixture();await adopt(f);const author=await invited(f);await undoSelectStore(f,{author});const target=await addedFoodOperation(f);
+ const page=ok(await call(f.owner,f.path+'/demand')),c=ok(await foodCandidate(f,target.receipt.operationId,page)),p=ok(await foodPreview(f,c,target.input.packs));
+ const applied=await apply(f,{action:p.action,base:c.base},p);ok(applied.response);
+ const freshTarget=await addedFoodOperation(f),current=ok(await call(f.owner,f.path+'/demand'));
+ const heldCandidate=ok(await foodCandidate(f,freshTarget.receipt.operationId,current)),heldPreview=ok(await foodPreview(f,heldCandidate,freshTarget.input.packs));
+ const shop=ok(await call(f.owner,f.path)),operations=await count(f,'operation'),revisions=await count(f,'shared_demand_revision');
+ ok(await call(f.owner,f.path+'/store-quotes/grants','POST',{operationId:randomUUID(),shopRevision:shop.shopRevision,authorityEpoch:shop.authorityEpoch,grantRevision:0,adultId:author.id,enabled:false,targetRevision:1}));
+ assert.equal((await call(f.owner,f.base+'/commands','POST',applied.command)).data.error.code,'food_undo_store_action_unsupported');
+ assert.equal((await apply(f,{action:heldPreview.action,base:heldCandidate.base},heldPreview)).response.data.error.code,'food_undo_store_action_unsupported');
+ assert.equal((await foodCandidate(f,freshTarget.receipt.operationId,current)).data.error.code,'food_undo_store_action_unsupported');
+ assert.equal(await count(f,'operation'),operations);assert.equal(await count(f,'shared_demand_revision'),revisions);
+ assert.deepEqual(ok(await call(f.owner,f.path)),shop);assert.deepEqual(ok(await call(f.owner,f.path+'/demand')),current);
+});
+test('same-store erased author removes selected proof without erasing unrelated food and denies retained inverse replay',async()=>{
+ const f=await fixture();await adopt(f);const author=await invited(f);await undoSelectStore(f,{author});const target=await addedFoodOperation(f);
+ const page=ok(await call(f.owner,f.path+'/demand')),c=ok(await foodCandidate(f,target.receipt.operationId,page)),p=ok(await foodPreview(f,c,target.input.packs));
+ const applied=await apply(f,{action:p.action,base:c.base},p);ok(applied.response);
+ const before=ok(await call(f.owner,f.path+'/demand'));
+ ok(await call(author,'/v1/privacy/deletions','POST',{clientKey:randomUUID(),statusToken:randomBytes(32).toString('base64url'),confirm:true,households:[{householdId:f.h,organizer:'none',shops:[],eraseChildProfiles:[]}]}),202);
+ assert.equal((await maintenance.run({batchSize:1})).completed,1);
+ assert.equal((await admin.query('SELECT count(*)::int n FROM ritc.store_quote_pair WHERE household_id=$1',[f.h])).rows[0].n,0);
+ const after=ok(await call(f.owner,f.path+'/demand'));assert.deepEqual(after.graph,before.graph);
+ const denied=await call(f.owner,f.base+'/commands','POST',applied.command);assert.equal(denied.status,409);assert.equal(denied.data.error.code,'food_undo_store_action_unsupported');
+});
+
+test('selected-store snapshot metadata preserves public receipt shape and original placement snapshot digest',async()=>{
+ const f=await fixture();await adopt(f);const selected=await undoSelectStore(f),shop=ok(await call(f.owner,f.path));
+ const frozen=ok(await send(f,'shop.freeze',{},shop.shopRevision,shop.authorityEpoch));
+ assert.deepEqual(Object.keys(frozen).sort(),['operationId','kind','shopId','shopRevision','authorityEpoch','disposition'].sort());
+ const reported=ok(await send(f,'shop.reportPlaced',{occurredAt:new Date().toISOString()},frozen.shopRevision,frozen.authorityEpoch));
+ assert.deepEqual(Object.keys(reported).sort(),['operationId','kind','reportId','disposition'].sort());
+ const detail=ok(await call(f.owner,f.path+'/placement-reports/'+reported.reportId));
+ assert.deepEqual(detail.report.snapshot.storeBasis,{revision:selected.basis,reviewRequired:false});
+ assert.equal(detail.report.snapshotDigest,digest(detail.report.snapshot));
+ assert.deepEqual(detail.report.snapshot.lines,shop.lines);assert.deepEqual(detail.report.snapshot.quote,shop.quote);
+ assert.deepEqual(Object.keys(detail.report.snapshot).sort(),['shopId','storeBasis','demand','revision','phase','quote','lines','budget'].sort());
 });

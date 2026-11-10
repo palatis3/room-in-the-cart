@@ -108,3 +108,30 @@ preview and Apply independently reauthorize and recompute source facts and enfor
 conservation, quantities, exclusions, edge/pack rules and original command limits.
 Source rows are capped at 2,000 and encoded response bytes at 1,800,000; over-limit
 facts are rejected, never truncated. No schema version bump or migration is needed.
+
+
+## Ordinary complete Undo after a reviewed store selection
+
+`demand/operation-undo-candidates` and `demand/operation-undo-previews` may include
+`storeBasis: { revision, pairId, choice: "first"|"second", selectionDigest }` for
+ordinary complete changes under one unchanged selected store. This field is omitted,
+not null, when no store selection exists. It is server evidence and part of the
+accepted effect digest, not an Apply token or a client-selectable inverse.
+
+New internal shop snapshots record content-free `storeBasis:{revision,reviewRequired}`
+inside their existing digest. A selected-store inverse requires both target snapshots
+to name the same reviewed basis as the current shop. The exact adoption/pair and live
+author/adopter/original permission must still authorize that basis. A missing old
+snapshot field does not authorize selected-store history. Existing public shop and
+command receipt shapes are unchanged. Existing no-store Undo responses omit the new
+field. An older strict client may reject the newly supported selected-store response;
+it cannot silently apply it or acquire new authority.
+
+Actual store selection/repricing operations remain unsupported. Switching away and
+back to the same displayed store is a different revision and does not authorize the
+old inverse. Price expiry, exact touched fields, protected source conservation,
+explicit pack review and current shopper/base/device/epoch checks remain unchanged.
+A successful exact retry acknowledges its prior result without reapplying; it still
+requires retained original selection proof and current authorization. Missing/erased
+proof or revoked original permission denies that retry. No migration or historical
+backfill is performed.

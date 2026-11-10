@@ -61,6 +61,10 @@
         "HouseholdClientTests.SharedOperationUndoMealTests/testMixedLetterMealUndoCodableRoundtripPreservesWordsAndExistingOutboxBytes"
       ],
       "pendingBasis": "One mixed-letter UUID response Codable/file-outbox regression prepared with the narrow strict Undo encoder correction; execution still required."
+    },
+    "sameStoreOperationUndoAddition": {
+      "added": 3,
+      "basis": "Prepared same-store candidate/preview identity, protected meal parity, no-store/placement decoder compatibility and invalid evidence controls. Source reviewed only; compiled discovery and execution pending root qualification. Existing selectors and three ordinary wire skips retained."
     }
   },
   "packages": {
@@ -352,6 +356,7 @@
       "HouseholdClientTests.HouseholdClientTests/testJointFoodCoverageEnforcesPhysicalTotalCategoryAndSealedRequirements",
       "HouseholdClientTests.HouseholdClientTests/testLegacySnapshotSaveCannotEraseOrResurrectReviewActions",
       "HouseholdClientTests.HouseholdClientTests/testLifecycleStoreRetainsFixedMembershipBytesAcrossRecreation",
+      "HouseholdClientTests.HouseholdClientTests/testMealOperationUndoHTTPIncludesCompleteMealEditThroughFileOutboxLostReplyAndRevocation",
       "HouseholdClientTests.HouseholdClientTests/testMealRecoveryDeskRejectsForeignSourcesProvenanceAndAlteredText",
       "HouseholdClientTests.HouseholdClientTests/testMealRecoveryPreviewPreservesUnknownsAndRequiresRepeatConsent",
       "HouseholdClientTests.HouseholdClientTests/testMealRecoveryReceiptAndPendingBytesBindReviewedTarget",
@@ -421,24 +426,26 @@
       "HouseholdClientTests.SharedDemandLegacySourceTests/testRequiredNullableDescriptorKeysCannotBeOmitted",
       "HouseholdClientTests.SharedDemandLegacySourceTests/testReservationClarificationIntentRejectsMissingWrongDuplicateOrCombinedRows",
       "HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres",
-      "HouseholdClientTests.SharedOperationUndoTests/testCandidateCannotSupplyApplyAndPreviewBodyContainsOnlyExplicitAcknowledgments",
-      "HouseholdClientTests.SharedOperationUndoTests/testCandidateRejectsExtraActionAndUnsupportedOrHiddenScope",
-      "HouseholdClientTests.SharedOperationUndoTests/testCandidateRejectsStaleGraphDigestAndWrongTargetRevision",
-      "HouseholdClientTests.SharedOperationUndoTests/testExistingOutboxRoundtripPreservesServerActionReservedReceiptAndExactBytes",
-      "HouseholdClientTests.SharedOperationUndoTests/testHistoryRejectsUnknownReasonsAndMismatchedEligibility",
-      "HouseholdClientTests.SharedOperationUndoTests/testOnlyNewTombstoneTimestampsMayDifferBetweenCandidateAndFinalPreview",
-      "HouseholdClientTests.SharedOperationUndoTests/testPreviewBindsExactEffectActionCheckoutReceiptAndCurrentGraph",
-      "HouseholdClientTests.SharedOperationUndoTests/testProtectedKnownQuantityCannotBecomeUnknownUnderUndo",
-      "HouseholdClientTests.StoreQuoteNativeWireTests/testStoreQuoteClientAgainstPostgres",
-      "HouseholdClientTests.HouseholdClientTests/testMealOperationUndoHTTPIncludesCompleteMealEditThroughFileOutboxLostReplyAndRevocation",
       "HouseholdClientTests.SharedOperationUndoMealTests/testChangedTouchedFieldsOrUntouchedTitleAndAtomicPlanningAreRejected",
       "HouseholdClientTests.SharedOperationUndoMealTests/testLaterRemovalTombstoneAndMissingActiveMealListCannotMasqueradeAsOriginalSkip",
       "HouseholdClientTests.SharedOperationUndoMealTests/testMealEvidenceRequiredNullsAndNonmealOmissionAreStrict",
       "HouseholdClientTests.SharedOperationUndoMealTests/testMealOnlyDayUndoKeepsLaterTitleAndUsesLatestActiveRevision",
       "HouseholdClientTests.SharedOperationUndoMealTests/testMealShapePreservesWordsAndRejectsUnknownFieldsMissingQuantityAndForgedProposalAction",
       "HouseholdClientTests.SharedOperationUndoMealTests/testMealUndoCannotReduceProtectedPortions",
+      "HouseholdClientTests.SharedOperationUndoMealTests/testMixedLetterMealUndoCodableRoundtripPreservesWordsAndExistingOutboxBytes",
       "HouseholdClientTests.SharedOperationUndoMealTests/testSkippedDinnerRestoresExactIdentityAndPreservesLunchAndLaterStaple",
-      "HouseholdClientTests.SharedOperationUndoMealTests/testMixedLetterMealUndoCodableRoundtripPreservesWordsAndExistingOutboxBytes"
+      "HouseholdClientTests.SharedOperationUndoTests/testCandidateCannotSupplyApplyAndPreviewBodyContainsOnlyExplicitAcknowledgments",
+      "HouseholdClientTests.SharedOperationUndoTests/testCandidateRejectsExtraActionAndUnsupportedOrHiddenScope",
+      "HouseholdClientTests.SharedOperationUndoTests/testCandidateRejectsStaleGraphDigestAndWrongTargetRevision",
+      "HouseholdClientTests.SharedOperationUndoTests/testExistingOutboxRoundtripPreservesServerActionReservedReceiptAndExactBytes",
+      "HouseholdClientTests.SharedOperationUndoTests/testExistingPlacementDecoderIgnoresContentFreeSnapshotExtension",
+      "HouseholdClientTests.SharedOperationUndoTests/testHistoryRejectsUnknownReasonsAndMismatchedEligibility",
+      "HouseholdClientTests.SharedOperationUndoTests/testOnlyNewTombstoneTimestampsMayDifferBetweenCandidateAndFinalPreview",
+      "HouseholdClientTests.SharedOperationUndoTests/testPreviewBindsExactEffectActionCheckoutReceiptAndCurrentGraph",
+      "HouseholdClientTests.SharedOperationUndoTests/testProtectedKnownQuantityCannotBecomeUnknownUnderUndo",
+      "HouseholdClientTests.SharedOperationUndoTests/testSameStoreUndoRejectsMissingNullChangedAndExtraSelectionEvidence",
+      "HouseholdClientTests.SharedOperationUndoTests/testSameStoreUndoRetainsActionAndStrictCodableBasis",
+      "HouseholdClientTests.StoreQuoteNativeWireTests/testStoreQuoteClientAgainstPostgres"
     ],
     "LocalStore": [
       "LocalStoreTests.ComparisonStoreTests/testBoundedPayloadAndInvalidDateDoNotMutate",

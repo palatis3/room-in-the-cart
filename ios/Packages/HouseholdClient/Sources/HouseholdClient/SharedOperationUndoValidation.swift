@@ -44,7 +44,10 @@ extension SharedOperationUndoCandidate {
     public func validate(page: SharedDemandPage, shop: ShopperShop, target: SharedOperationUndoHistoryItem) throws {
         let expected = try SharedDemandActionSourceBase(page: page)
         try demandRequire(schemaVersion == 1 && shopId == page.shopId && base == expected && before == page.graph && beforeTotals == page.totals)
-        try demandRequire(shop.storeBasisRevision == nil && shop.storeReviewRequired != true && shop.shopId == shopId.string && shop.phase == "draft" && shop.shopRevision == base.shopRevision && shop.authorityEpoch == base.authorityEpoch)
+        try demandRequire(shop.storeReviewRequired != true && shop.shopId == shopId.string && shop.phase == "draft" && shop.shopRevision == base.shopRevision && shop.authorityEpoch == base.authorityEpoch)
+        if let storeBasis {
+            try demandRequire(shop.storeBasisRevision == storeBasis.revision && storeBasis.revision <= scope.baseShopRevision)
+        } else { try demandRequire(shop.storeBasisRevision == nil) }
         try demandRequire(target.operationId == targetOperationId && target.kind == .patch && target.eligibility.status == .reviewable && target.eligibility.reason == .explicit_current_preview_required && undoDigest(effectDigest))
         try demandRequire(scope.targetOperationId == targetOperationId && demandRevision(scope.baseShopRevision) && scope.resultShopRevision == scope.baseShopRevision + 1 && scope.resultShopRevision == target.shopRevision && scope.resultShopRevision <= base.shopRevision)
         try demandRequire(!scope.requestsChanged && (0...6200).contains(scope.graphRows) && scope.touchedLines.count <= 200)
@@ -92,7 +95,7 @@ extension SharedOperationUndoReview {
         try candidate.validate(page: page, shop: shop, target: target); try request.validate(candidate: candidate)
         let p = response.preview, r = p.receipt
         try demandRequire(response.operationUndo.targetOperationId == candidate.targetOperationId && response.operationUndo.effectDigest == candidate.effectDigest && response.operationUndo.scope == candidate.scope && response.action == candidate.action)
-        try demandRequire(response.mealUndo == candidate.mealUndo)
+        try demandRequire(response.mealUndo == candidate.mealUndo && response.storeBasis == candidate.storeBasis)
         try demandRequire(response.beforeCheckout == candidate.beforeCheckout && response.afterCheckout == candidate.afterCheckout)
         try demandRequire(p.before == candidate.before && p.beforeTotals == candidate.beforeTotals && p.afterTotals == candidate.afterTotals && p.packs == request.packs)
         try demandRequire(p.shopRevision == candidate.base.shopRevision && p.authorityEpoch == candidate.base.authorityEpoch && undoDigest(p.previewDigest) && demandTime(p.expiresAt) != nil)

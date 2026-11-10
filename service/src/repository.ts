@@ -253,11 +253,13 @@ export class HouseholdRepository {
     const s=await this.shop(ctx,shopId);this.requireShopper(ctx,s);
     return{shopId:s.shop_id,shopRevision:s.revision,authorityEpoch:s.authority_epoch,phase:s.phase,quote:s.quote,meals:await this.meals(ctx,shopId),lines:await this.lines(ctx,shopId),frozenRevision:s.frozen_revision,placedRevision:s.placed_revision,storeBasisRevision:s.store_basis_revision??null,storeReviewRequired:s.store_review_required??false};
   }
-  private async snapshot(ctx:Context,shopId:string,operationId:string,purpose:string) {
+  private async snapshot(ctx:Context,shopId:string,operationId:string,purpose:string,storeBasisKnown=true) {
     const shop=await this.shop(ctx,shopId),lines=await this.lines(ctx,shopId);
     const mealRefs=(await this.meals(ctx,shopId)).map(({occurrenceId,revision})=>({occurrenceId,revision}));
     const demand=await demandSnapshotRef(ctx,shop,purpose==='reopen');
-    const snapshot={shopId,...(demand?{demand}:{}),...(mealRefs.length ? {mealRefs} : {}),revision:shop.revision,phase:shop.phase,quote:shop.quote,lines,budget:checkout(lines,shop.quote)};
+    // The internal store-adoption write precedes its basis update. Omit unknown
+    // basis there rather than attest the previous selection as its final state.
+    const snapshot={shopId,...(storeBasisKnown?{storeBasis:{revision:shop.store_basis_revision??null,reviewRequired:shop.store_review_required??false}}:{}),...(demand?{demand}:{}),...(mealRefs.length ? {mealRefs} : {}),revision:shop.revision,phase:shop.phase,quote:shop.quote,lines,budget:checkout(lines,shop.quote)};
     await ctx.db.query('INSERT INTO ritc.shop_snapshot(household_id,shop_id,revision,purpose,snapshot,digest,operation_id) VALUES($1,$2,$3,$4,$5,$6,$7)',[ctx.householdId,shopId,shop.revision,purpose,snapshot,digest(snapshot),operationId]);
   }
   private validateQuote(quote:QuoteBasis,now:Date) {
@@ -493,7 +495,7 @@ export class HouseholdRepository {
         await ctx.db.query('UPDATE ritc.shop SET store_review_required=false WHERE household_id=$1 AND shop_id=$2',
           [ctx.householdId,shop.shop_id]);
       }
-      await this.snapshot(ctx,shop.shop_id,operationId,'patch');return this.receipt(ctx,c,operationId,'patched');
+      await this.snapshot(ctx,shop.shop_id,operationId,'patch',!internalPriceOnly);return this.receipt(ctx,c,operationId,'patched');
     }
     if(c.kind==='shop.freeze') {
       this.requireDraft(shop);

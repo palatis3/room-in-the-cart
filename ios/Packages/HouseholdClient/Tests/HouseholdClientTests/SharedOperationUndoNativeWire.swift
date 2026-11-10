@@ -37,6 +37,7 @@ private struct OperationUndoWireInput: Decodable {
     let packs: [SharedDemandPackReview]
     let before: SharedDemandPage?
     let expectedMeal: SharedOperationUndoMeal?
+    let expectedStoreBasis: SharedOperationUndoStoreBasis?
 }
 /// Written from the actual typed server preview, not a fixture-computed inverse.
 private struct OperationUndoWireExpectation: Codable {
@@ -44,6 +45,7 @@ private struct OperationUndoWireExpectation: Codable {
     let afterGraph: SharedDemandGraph
     let afterTotals: [SharedDemandLineTotal]
     let action: SharedOperationUndoAction
+    let storeBasis: SharedOperationUndoStoreBasis?
 }
 private func saveUndoWire<T: Encodable>(_ value: T, to url: URL) throws {
     try encoded(value).write(to: url, options: .atomic)
@@ -81,6 +83,18 @@ extension SharedMealNativeWireTests {
         }
         let page = try await service.sharedDemand(shopID: input.shopId)
         XCTAssertEqual(page, input.before)
+        if input.phase == "store-erased" {
+            // The selected option author is independent of these food sources.
+            // Losing that proof denies old success replay, but must not erase the food.
+            XCTAssertEqual(page.status, .enabled)
+            let operation = try JSONDecoder().decode(PendingOperation.self, from: Data(contentsOf: confirmedURL))
+            let expected = try JSONDecoder().decode(OperationUndoWireExpectation.self, from: Data(contentsOf: expectedURL))
+            XCTAssertEqual(expected.storeBasis, input.expectedStoreBasis)
+            do { _ = try await service.executeSharedDemand(operation); XCTFail("Erased selected basis replayed a prior inverse") }
+            catch ClientError.service(let status, let code, _, _) { XCTAssertEqual(status, 409); XCTAssertEqual(code, "food_undo_store_action_unsupported") }
+            let after = try await service.sharedDemand(shopID: input.shopId); XCTAssertEqual(after, page)
+            return
+        }
         if input.phase == "privacy" {
             XCTAssertEqual(page.status, .reviewRequired)
             let history = try await service.sharedOperationHistory(shopID: input.shopId, page: page)
@@ -97,12 +111,14 @@ extension SharedMealNativeWireTests {
             let operation = try XCTUnwrap(pending.first)
             let expected = try JSONDecoder().decode(OperationUndoWireExpectation.self, from: Data(contentsOf: expectedURL))
             XCTAssertEqual(operation.sharedDemandBinding?.reservedOperationID, expected.reservedOperationID)
+            XCTAssertEqual(expected.storeBasis, input.expectedStoreBasis)
             XCTAssertEqual(page.graph, expected.afterGraph); XCTAssertEqual(page.totals, expected.afterTotals)
             let receipt = try await service.executeSharedDemand(operation)
             XCTAssertEqual(receipt.operationId, expected.reservedOperationID.string)
             let after = try await service.sharedDemand(shopID: input.shopId); XCTAssertEqual(after, page)
             let shop = try await service.shopperShop(shopID: input.shopId.uuidString.lowercased())
             XCTAssertEqual(shop.lines.sorted { $0.lineId < $1.lineId }, expected.action.body.lines.sorted { $0.lineId < $1.lineId }); XCTAssertEqual(shop.quote, expected.action.body.quote)
+            if let basis = expected.storeBasis { XCTAssertEqual(shop.storeBasisRevision, basis.revision); XCTAssertEqual(shop.storeReviewRequired, false) }
             if let edit = expected.action.body.mealEdit {
                 let restored = try XCTUnwrap(shop.meals?.first { $0.id == edit.occurrenceId.uuid })
                 XCTAssertEqual(restored.meal, edit.meal)
@@ -121,6 +137,8 @@ extension SharedMealNativeWireTests {
         XCTAssertEqual(target.eligibility.status, .reviewable)
         let candidate = try await service.sharedOperationUndoCandidate(page: page, shop: shop, target: target)
         XCTAssertEqual(candidate.targetOperationId, input.targetOperationId)
+        XCTAssertEqual(candidate.storeBasis, input.expectedStoreBasis)
+        if let basis = input.expectedStoreBasis { XCTAssertEqual(shop.storeBasisRevision, basis.revision); XCTAssertEqual(shop.storeReviewRequired, false) }
         if let meal = input.expectedMeal {
             XCTAssertEqual(candidate.mealUndo, meal)
             XCTAssertEqual(candidate.action.body.mealEdit?.occurrenceId, meal.occurrenceId)
@@ -133,6 +151,7 @@ extension SharedMealNativeWireTests {
         let readOnly = try await service.sharedDemand(shopID: input.shopId); XCTAssertEqual(readOnly, page)
         let review = try await service.previewSharedOperationUndo(page: page, shop: shop, target: target, candidate: candidate, packs: input.packs)
         XCTAssertEqual(review.response.action, candidate.action)
+        XCTAssertEqual(review.response.storeBasis, candidate.storeBasis)
         XCTAssertEqual(review.response.mealUndo, input.expectedMeal)
         XCTAssertEqual(review.response.preview.packs, input.packs)
         let cancelled = try await service.sharedDemand(shopID: input.shopId); XCTAssertEqual(cancelled, page)
@@ -151,6 +170,20 @@ extension SharedMealNativeWireTests {
             XCTAssertEqual(Set(edit.keys), ["occurrenceId", "baseMealRevision", "meal"])
             XCTAssertEqual(try JSONDecoder().decode(SharedMeal.self, from: encoded(try XCTUnwrap(edit["meal"]))), meal.restoredMeal)
             XCTAssertEqual(operation.sharedDemandBinding?.action, review.response.action.commandAction)
+        }
+        if input.phase == "store-revoked-apply" {
+            XCTAssertNotNil(input.expectedStoreBasis)
+            try await outbox.append(operation)
+            // beforeCommand revokes the real original quote author's permission
+            // once after this exact preview, before either command reaches PG.
+            for _ in 0..<2 {
+                do { _ = try await service.executeSharedDemand(operation); XCTFail("Revoked selected basis admitted Apply or its exact retry") }
+                catch ClientError.service(let status, let code, _, _) { XCTAssertEqual(status, 409); XCTAssertEqual(code, "food_undo_store_action_unsupported") }
+            }
+            let fresh = try await service.sharedDemand(shopID: input.shopId); XCTAssertEqual(fresh, page)
+            let retained = try await OperationOutbox(url: pendingURL).operations()
+            XCTAssertEqual(retained, [operation]); XCTAssertEqual(retained.first?.bytes, operation.bytes)
+            return
         }
         if input.phase == "meal-apply" {
             XCTAssertNotNil(input.expectedMeal)
@@ -188,7 +221,7 @@ extension SharedMealNativeWireTests {
         let existing = try await outbox.operations(); XCTAssertTrue(existing.isEmpty)
         try await outbox.append(operation)
         try saveUndoWire(OperationUndoWireExpectation(reservedOperationID: review.response.preview.receipt.operationId,
-            afterGraph: review.response.preview.after, afterTotals: review.response.preview.afterTotals, action: review.response.action), to: expectedURL)
+            afterGraph: review.response.preview.after, afterTotals: review.response.preview.afterTotals, action: review.response.action, storeBasis: review.response.storeBasis), to: expectedURL)
         do { _ = try await service.executeSharedDemand(operation); XCTFail("Expected actual committed response to be dropped") }
         catch { XCTAssertEqual(error as? ClientError, .transport) }
         let stored = try await OperationOutbox(url: pendingURL).operations()

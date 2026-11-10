@@ -5,6 +5,7 @@ import XCTest
 /// outbox. This journey does not stand in for real-service transaction acceptance.
 @MainActor final class SharedOperationUndoUITests: XCTestCase {
     private var app: XCUIApplication!
+    private var capturedFailureHierarchy = false
     private let target = "00000000-0000-4000-8000-000000000006"
     private let wraps = "00000000-0000-4000-8000-000000000003"
     private let apples = "00000000-0000-4000-8000-000000000011"
@@ -13,18 +14,39 @@ import XCTest
         app.launchEnvironment["RITC_OPERATION_UNDO_WORKSPACE"] = UUID().uuidString
         app.launchEnvironment["RITC_OPERATION_UNDO_RESET"] = "1"
         app.launchEnvironment["RITC_OPERATION_UNDO_MEAL"] = "0"
+        app.launchEnvironment["RITC_OPERATION_UNDO_STORE"] = "0"
     }
-    override func tearDownWithError() throws { if testRun?.failureCount ?? 0 > 0 { capture("Operation-Undo-failure") }; app.terminate() }
-    func testSavedChangeCancelApplyRelaunchExactRetryAndLaterFoodSurvives() { journey(spanish: false) }
-    func testSpanishSavedChangeCancelApplyRelaunchExactRetryAndLaterFoodSurvives() { journey(spanish: true) }
+    override func tearDownWithError() throws { if testRun?.failureCount ?? 0 > 0 { captureFailureHierarchy(); capture("Operation-Undo-failure") }; app.terminate() }
+    func testSavedChangeCancelApplyRelaunchExactRetryAndLaterFoodSurvives() { journey(spanish: false); sameStoreCopy(spanish: false) }
+    func testSpanishSavedChangeCancelApplyRelaunchExactRetryAndLaterFoodSurvives() { journey(spanish: true); sameStoreCopy(spanish: true) }
     func testSkippedDinnerUndoCancelRelaunchRetryKeepsProtectedLunchAndLaterStaple() { mealJourney(spanish: false) }
     func testSpanishSkippedDinnerUndoCancelRelaunchRetryKeepsProtectedLunchAndLaterStaple() { mealJourney(spanish: true) }
+    // Append one short read-only observation after the original no-store
+    // journey. A fresh workspace resets synthetic counters; no new CI shard.
+    private func sameStoreCopy(spanish: Bool) {
+        app.terminate()
+        app.launchEnvironment["RITC_OPERATION_UNDO_WORKSPACE"] = UUID().uuidString
+        app.launchEnvironment["RITC_OPERATION_UNDO_RESET"] = "1"
+        app.launchEnvironment["RITC_OPERATION_UNDO_STORE"] = "1"
+        app.launch(); waitForShop(spanish: spanish)
+        counts(previews: 0, posts: 0, writes: 0, retries: 0)
+        openHistory(); openCandidate(spanish: spanish)
+        let value = element("sharedUndo.store.unchanged")
+        reveal(value, initialSearchDirection: .towardStart)
+        XCTAssertEqual(value.label, spanish ? "Se mantendrá la tienda seleccionada." : "The selected store will stay the same.")
+        XCTAssertTrue(app.frame.contains(value.frame)); XCTAssertGreaterThan(value.frame.height, 0)
+        XCTAssertTrue(value.isHittable)
+        capture("Same-Store-Undo-\(spanish ? "es" : "en")-unchanged-store-copy")
+        tap(element("sharedUndo.cancel")); waitForShop(spanish: spanish)
+        counts(previews: 0, posts: 0, writes: 0, retries: 0)
+        app.launchEnvironment["RITC_OPERATION_UNDO_STORE"] = "0"
+    }
     private func mealJourney(spanish: Bool) {
         let language = spanish ? "es" : "en"
         app.launchEnvironment["RITC_OPERATION_UNDO_MEAL"] = "1"
         app.launchArguments = ["--ui-testing", "--shared-operation-undo-fixture", "-AppleLanguages", "(\(language))", "-AppleLocale", spanish ? "es_US" : "en_US", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launch(); waitForShop(spanish: spanish); counts(previews: 0, posts: 0, writes: 0, retries: 0)
-        assertText("Protected lunch"); assertText("Later apples")
+        assertText("Protected lunch"); assertText("Later apples", initialSearchDirection: .towardStart)
         openHistory(); openCandidate(spanish: spanish)
         assertText(spanish ? "Esta comida está omitida actualmente." : "This meal is currently skipped.")
         assertText("Original taco dinner"); enterPacks(amount: "8")
@@ -45,7 +67,7 @@ import XCTest
         XCTAssertTrue(element("sharedShop.retry").waitForNonExistence(timeout: 12))
         assertText(spanish ? "Cambio de compra compartida confirmado" : "Shared shop change confirmed")
         assertText("Original taco dinner", initialSearchDirection: .towardStart)
-        assertText("Protected lunch", initialSearchDirection: .towardStart); assertText("Later apples")
+        assertText("Protected lunch", initialSearchDirection: .towardStart); assertText("Later apples", initialSearchDirection: .towardStart)
         openHistory()
         let already = element("sharedUndo.unavailable." + target)
         reveal(already); XCTAssertEqual(already.label, spanish ? "Este cambio ya se deshizo." : "This change was already undone.")
@@ -108,9 +130,14 @@ import XCTest
     }
     private func assertUnknownTotal(spanish: Bool) {
         let expected = spanish ? "Cantidad desconocida (unidades)" : "Unknown amount (count)"
-        let total = app.staticTexts.matching(identifier: expected).firstMatch
+        // LabeledContent can expose its value on the row instead of as a
+        // standalone StaticText. Match complete wording, never a substring.
+        let exactCopy = NSPredicate(format:
+            "label == %@ OR (label == %@ AND value == %@) OR label == %@ OR label == %@",
+            expected, "Later apples", expected, "Later apples, " + expected, "Later apples\n" + expected)
+        let total = app.descendants(matching: .any).matching(exactCopy).firstMatch
         reveal(total, initialSearchDirection: .towardStart)
-        XCTAssertEqual(total.label, expected)
+        XCTAssertTrue(exactCopy.evaluate(with: total), "Complete localized unknown-total wording must match")
         XCTAssertTrue(app.frame.contains(total.frame), "Complete unknown-total value must fit the app")
         XCTAssertGreaterThan(total.frame.height, 0)
         capture("Operation-Undo-\(spanish ? "es" : "en")-unknown-total-copy")
@@ -202,6 +229,7 @@ import XCTest
             origin.withOffset(CGVector(dx: area.minX - bounds.minX, dy: (upward ? low : high) - bounds.minY))
                 .press(forDuration: 0.05, thenDragTo: origin.withOffset(CGVector(dx: area.minX - bounds.minX, dy: (upward ? high : low) - bounds.minY)))
         }
+        captureFailureHierarchy()
         XCTFail("Missing fully visible control: " + target.debugDescription)
     }
     private func scrollableArea() -> CGRect {
@@ -216,6 +244,14 @@ import XCTest
             nodes.append(contentsOf: node.children)
         }
         return CGRect(x: bounds.minX + 24, y: top, width: bounds.width - 48, height: max(80, bottom - top))
+    }
+    private func captureFailureHierarchy() {
+        guard !capturedFailureHierarchy else { return }
+        capturedFailureHierarchy = true
+        let attachment = XCTAttachment(string: app.debugDescription)
+        attachment.name = "Operation-Undo-first-failure-hierarchy"
+        attachment.lifetime = .keepAlways
+        add(attachment)
     }
     private func capture(_ name: String) {
         let attachment = XCTAttachment(screenshot: app.screenshot()); attachment.name = name; attachment.lifetime = .keepAlways; add(attachment)

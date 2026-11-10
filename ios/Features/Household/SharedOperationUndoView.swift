@@ -88,6 +88,7 @@ struct SharedOperationUndoView: View {
         let after = model.review?.response.preview.after ?? candidate.after
         Section {
             Text(u("Review the complete result below. Cancel leaves the shop unchanged."))
+            if candidate.storeBasis != nil { Text(u("The selected store will stay the same.")).accessibilityIdentifier("sharedUndo.store.unchanged") }
             if candidate.scope.quoteChanged { Text(u("The earlier quote will be restored.")) }
         }
         if let meal = candidate.mealUndo {

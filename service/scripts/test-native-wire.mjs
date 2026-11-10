@@ -34,6 +34,7 @@ const cases = [
   'actual Swift meal Undo preserves accepted change provenance and grouped protected bindings over HTTPS and PostgreSQL',
   'actual Swift meal Undo preserves accepted move provenance and grouped protected bindings over HTTPS and PostgreSQL',
   'actual Swift skipped meal Undo restores exact meals with lost reply restart retry and privacy authority over HTTPS and PostgreSQL',
+  'actual Swift same-store Undo binds selected quote authority through Cancel lost reply retry revocation and erasure',
 ];
 const swiftRuns = [
   'deferred-request HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres',
@@ -76,6 +77,11 @@ const swiftRuns = [
   'operation-undo-meal-skip-retry HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
   'operation-undo-meal-skip-privacy HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
   'operation-undo-meal-skip-revoked HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'operation-undo-store-cancel HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'operation-undo-store-apply-lost HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'operation-undo-store-retry HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'operation-undo-store-erased HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'operation-undo-store-revoked-apply HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
 
 ];
 const files = ['history', 'shared-meal-changes', 'shared-store-quotes', 'service', 'shared-demand']

@@ -199,3 +199,39 @@ test('a changed unrelated historical meal reference cannot be silently omitted f
 test('new-meal creation and unrecorded old meal effects remain explicitly unsupported',()=>{
  const f=mealSetup();delete f.evidence.meal;fails(f,'food_undo_meal_action_unsupported');
 });
+
+// Same-store compensation uses persisted basis metadata, never a client label.
+function selectedStoreFixture(f=setup()){
+ const basis={revision:1,pairId:id(880),choice:'first',selectionDigest:'b'.repeat(64)};
+ for(const side of ['before','after']){f.evidence[side].snapshot.storeBasis={revision:1,reviewRequired:false};f.evidence[side].digest=digest(f.evidence[side].snapshot);}
+ f.evidence.storeBasis=basis;f.current.storeBasis={revision:1,reviewRequired:false};return f;
+}
+test('same-store ordinary Undo binds exact immutable selection without changing action or conservation',()=>{
+ const f=selectedStoreFixture(),plain=setup().run(),x=f.run();
+ assert.deepEqual(x.action,plain.action);assert.deepEqual(x.result,plain.result);assert.deepEqual(x.scope,plain.scope);
+ assert.deepEqual(x.storeBasis,f.evidence.storeBasis);assert.notEqual(x.effectDigest,plain.effectDigest);
+ assert.equal(x.action.body.reviewedStoreBasisRevision,undefined);assert.equal(x.result.graph.contributions[0].quantity.amount.numerator,'12');
+ const changed=selectedStoreFixture();changed.evidence.storeBasis.choice='second';assert.notEqual(changed.run().effectDigest,x.effectDigest);
+ assert.doesNotThrow(()=>replay(f.evidence));
+ const meal=selectedStoreFixture(mealSetup()),plainMeal=mealSetup().run(),mealResult=meal.run();
+ assert.deepEqual(mealResult.action,plainMeal.action);assert.deepEqual(mealResult.mealUndo,plainMeal.mealUndo);
+ assert.deepEqual(mealResult.result,plainMeal.result);assert.deepEqual(mealResult.storeBasis,meal.evidence.storeBasis);
+ const protectedMeal=selectedStoreFixture(mealSetup()),m=protectedMeal.evidence.meal;
+ m.before.meal.protected=true;m.after.meal={...m.before.meal,portions:8};m.latest=structuredClone(m.after);protectedMeal.rehash();
+ fails(protectedMeal,'food_undo_meal_protected');
+});
+test('same-store history rejects switched pending unproven or missing selected basis',()=>{
+ for(const mutate of [
+  f=>{f.current.storeBasis.revision=2;},f=>{f.current.storeBasis.reviewRequired=true;},
+  f=>{f.evidence.storeBasis=null;},f=>{f.evidence.storeBasis.revision=2;},
+  f=>{delete f.evidence.before.snapshot.storeBasis;},f=>{f.evidence.before.snapshot.storeBasis.reviewRequired=true;},
+  f=>{f.evidence.after.snapshot.storeBasis.revision=2;},f=>{f.evidence.effect.classification='store_action';}
+ ]){const f=selectedStoreFixture();mutate(f);for(const side of ['before','after'])f.evidence[side].digest=digest(f.evidence[side].snapshot);fails(f,'food_undo_store_action_unsupported');}
+ const f=setup();f.current.storeBasis={revision:1,reviewRequired:false};fails(f,'food_undo_store_action_unsupported');
+});
+test('same-store replay still rejects erased basis and expired price restoration is not waived',()=>{
+ const f=selectedStoreFixture();f.evidence.storeBasis=null;assert.throws(()=>replay(f.evidence),e=>e.code==='food_undo_store_action_unsupported');
+ const expired=selectedStoreFixture();expired.evidence.before.snapshot.quote.expiresAt='2026-11-09T12:30:00.000Z';
+ expired.evidence.before.snapshot.budget=checkout(expired.evidence.before.snapshot.lines,expired.evidence.before.snapshot.quote);
+ expired.evidence.before.digest=digest(expired.evidence.before.snapshot);fails(expired,'food_undo_expired_quote');
+});

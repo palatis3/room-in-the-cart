@@ -1200,6 +1200,22 @@
           }
         }
       }
+    },
+    "The selected store will stay the same.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The selected store will stay the same."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se mantendrá la tienda seleccionada."
+          }
+        }
+      }
     }
   },
   "version": "1.0"
