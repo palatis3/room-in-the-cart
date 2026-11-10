@@ -1,3 +1,4 @@
+import type {TrackingMealProtection} from './shared-demand-tracking-meal-protection.js';
 /** Meal compensation. Historical facts and first-use evidence are never client input. */
 import {validateMealCreationHistory,recordCreatedMealUndoEffect,loadCreatedMealUndoRecord,type MealCreationProof} from './shared-food-meal-creation-undo.js';
 import {digest} from './database.js';
@@ -47,7 +48,7 @@ export function validateMealUndoHistory(e:MealUndoEvidence,scope:Scope,beforeRef
   &&e.proposal.kind===l.proposalKind&&e.proposal.digest===l.proposalDigest);
  return {before,after};
 }
-export function deriveMealUndo(e:MealUndoEvidence,scope:Scope,beforeRefs:Ref[],afterRefs:Ref[],currentShopRevision:number){
+export function deriveMealUndo(e:MealUndoEvidence,scope:Scope,beforeRefs:Ref[],afterRefs:Ref[],currentShopRevision:number,protectMeal?:TrackingMealProtection){
  const {before,after}=validateMealUndoHistory(e,scope,beforeRefs,afterRefs),l=e.lineage;
  requireThat(e.latest&&e.latest.revision>=l.afterRevision&&e.latest.revision<=currentShopRevision,'meal_conflict');
  if(e.latest.revision===l.afterRevision)requireThat(eq(e.latest,e.after));
@@ -74,7 +75,7 @@ export function deriveMealUndo(e:MealUndoEvidence,scope:Scope,beforeRefs:Ref[],a
  if(restored!==null){const candidate=sharedMealSchema.safeParse(restored);requireThat(candidate.success&&eq(candidate.data,restored),'meal_conflict');}
  // Planning is one atomic quantity/identity/deadline basis. Never splice groups,
  // bindings or exclusions from two independently valid revisions.
- try{preserveProtectedMeal(current??undefined,restored);}
+ try{if(protectMeal)protectMeal(current??undefined,restored,l.occurrenceId);else preserveProtectedMeal(current??undefined,restored);}
  catch(error){if(error instanceof ServiceError&&error.code==='protected_meal')throw fail('meal_protected');throw error;}
  return {occurrenceId:l.occurrenceId,targetBefore:{revision:l.beforeRevision,meal:before},
   targetAfter:{revision:l.afterRevision,meal:after},current:{revision:e.latest.revision,meal:current},

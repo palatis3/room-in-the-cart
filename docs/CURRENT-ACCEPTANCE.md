@@ -2,6 +2,8 @@
 
 ## Current checkpoint — November 10, component integration
 
+Protected conversion successor now passes fresh combined backend **1,031 offline / 433 PostgreSQL** with declared skips and actual signed restore/erasure. Expanded native transport passes **24 Node / 80 Swift** with zero failures/skips; both first-run failures are resolved. Records EN/ES UI qualification is active, additional route privacy coverage pending. [Combined component proof](evidence/service/records-protected-conversion-20261110/README.md).
+
 Latest Records integration builds and passes **135 focused simulator models**, zero runtime warnings; client **230 passes plus three separate wire skips**, archive **33 passes**. Current shared snapshot export/import and unknown-date presentation are installed; actual-service/UI qualification, full history, remote erasure reconciliation and guardian recovery remain open. Protected conversion successor is held for a confirmed inverse-basis review defect. These scoped results supersede older counts below without establishing final combined acceptance. [Records proof](evidence/native/shared-records-20261110/verification.json).
 
 Newest native integration: the partial-state meal client/editor now compiles in the app and passes all88focused simulator model tests, strict checks and zero runtime warnings. Root verified667current/archived inputs and phase hashes. Eight cases beyond r7 cover restored Undo pack evidence and fresh conversion review. Actual new service wire, visual journeys and one combined release candidate remain unqualified. [Native proof](evidence/native/partial-tracking-flow-20261110/verification.json). Later paragraphs are scoped earlier checkpoints, not the current installed state.

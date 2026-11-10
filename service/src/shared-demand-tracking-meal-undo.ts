@@ -1,3 +1,4 @@
+import {previewTrackingMealProtection,reviewedTrackingMealUndoProtection} from './shared-demand-tracking-meal-protection.js';
 import {z} from 'zod';
 /** Whole partial-meal inverse: immutable food/meal snapshots plus exact partition
  * changes. Nothing here accepts caller-supplied history or invents old authority. */
@@ -6,7 +7,7 @@ import {foodUndoEvidence,actionFacts} from './shared-demand-repository.js';
 import {deriveSharedFoodUndoCore,assertSharedFoodUndoReplay,type FoodUndoEvidence} from './shared-food-operation-undo.js';
 import {validateState,admitV1,trackingStateSchema,digest,coverage,PartitionError,type TrackingState} from './shared-demand-tracking.js';
 import {sharedDemandReceiptSchema} from './shared-demand-contracts.js';
-import {validateDetachedDemandChanges} from './shared-demand-domain.js';
+import {validateDetachedDemandInverse} from './shared-demand-domain.js';
 import {digest as storedDigest} from './database.js';
 import {trackingCatalog} from './shared-demand-tracking-repository.js';
 function check(v:unknown,code:string):asserts v{if(!v)throw new PartitionError(code);}
@@ -63,7 +64,7 @@ export function inverseMealPartition(before:TrackingState,after:TrackingState,cu
    const c=current[key].find(x=>x.factId===factId)??null;check(eq(c,a),'tracking_meal_partition_conflict');
    if(key==='unbound'){
     const old=(a as TrackingState['unbound'][number]|null)?.transferred,newRow=(b as TrackingState['unbound'][number]|null)?.transferred;
-    if(old&&newRow)validateDetachedDemandChanges([old],[newRow]);
+    if(old&&newRow)validateDetachedDemandInverse([old],[newRow],[old]);
     if(old&&!newRow)check(old.source.kind!=='reservation','tracking_meal_protected');
     if(newRow)check(!graph.contributions.some(x=>x.id===newRow.id)&&!graph.edges.some(x=>x.demandId===newRow.id||x.supplyId===newRow.id)&&graph.usedIds.includes(newRow.id),'tracking_meal_partition_conflict');
     transferredChanges.push({factId,before:c,after:b});
@@ -84,13 +85,13 @@ export async function deriveTrackingMealUndo(repo:HouseholdRepository,ctx:Contex
  check(before.privacyRevision===current.privacyRevision&&after.privacyRevision===current.privacyRevision,'tracking_meal_privacy_changed');
  const reversed=(await ctx.db.query('SELECT 1 FROM ritc.shared_tracking_revision WHERE household_id=$1 AND shop_id=$2 AND reverses_operation_id=$3',[ctx.householdId,shop.shop_id,target])).rowCount!==0;check(!reversed,'tracking_already_reversed');
  const result=deriveSharedFoodUndoCore(evidence,{graph:current.graph,lines:lines(current),quote:shop.quote,shopRevision:shop.revision,storeBasis:{revision:shop.store_basis_revision??null,reviewRequired:shop.store_review_required??false}},
-  {operationId,householdId:ctx.householdId,shopId:shop.shop_id,baseRevision:current.graph.revision,at},ctx.now);
- const partition=inverseMealPartition(before,after,current,result.result.graph),facts=await actionFacts(repo,ctx,shop,{action:result.action});
+  {operationId,householdId:ctx.householdId,shopId:shop.shop_id,baseRevision:current.graph.revision,at},ctx.now,previewTrackingMealProtection(current));
+ const partition=inverseMealPartition(before,after,current,result.result.graph),facts=await actionFacts(repo,ctx,shop,{action:result.action},previewTrackingMealProtection(current));
  const candidate={...current,graph:result.result.graph,bindings:partition.bindings,unbound:partition.unbound};
  const identities=[...current.catalog,...before.catalog.filter(f=>!current.catalog.some(c=>c.id===f.id))];
  const catalog=await trackingCatalog(repo,ctx,shop,facts,{...candidate.graph,contributions:[...candidate.graph.contributions,...candidate.unbound.flatMap(u=>u.transferred?[u.transferred]:[])]},identities);
  const basket=facts.lines.map(l=>({id:l.lineId,name:l.originalItem,packs:l.packs,priceMinor:l.unitPriceMinor,feeEligible:l.feeEligible})).sort((a,b)=>a.id.localeCompare(b.id));
  const state=validateState({...candidate,catalog,basket,quoteDigest:storedDigest(facts.quote),legacyLineIds:basket.filter(l=>!candidate.graph.lines.some(g=>g.id===l.id&&g.trashedAt===null)).map(l=>l.id),packReviews:packs},catalog);
- return{state,action:result.action,receipt:result.result.receipt,disclosure:{kind:'mealOperationUndo' as const,targetOperationId:target,mealUndo:result.mealUndo!,transferredChanges:partition.transferredChanges,
+ return{state,action:result.action,receipt:result.result.receipt,protectMeal:reviewedTrackingMealUndoProtection(current,state,before,after),disclosure:{kind:'mealOperationUndo' as const,targetOperationId:target,mealUndo:result.mealUndo!,transferredChanges:partition.transferredChanges,
   touchedBasket:result.scope.touchedLines,quote:{before:shop.quote,after:facts.quote},graphRows:result.scope.graphRows,beforeCoverage:coverage(current,current.catalog),afterCoverage:coverage(state,catalog)}};
 }

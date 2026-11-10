@@ -87,7 +87,12 @@ test('complete first adoption Undo transfers protected unknown identity, preserv
 });
 test('partial state rejects v1 reads, previews, raw Undo, legacy writes and unreviewed freeze without changing state',async()=>{
  const f=await fixture(),a=await first(f);await inverse(f,ok(a.response).operationId);const p=await page(f),before=await counts(f);
- assert.equal((await call(f.owner,f.path+'/demand')).status,409);assert.equal((await call(f.owner,f.path+'/records/snapshot')).status,409);
+ assert.equal((await call(f.owner,f.path+'/demand')).status,409);assert.equal((await call(f.owner,f.path+'/records/snapshot/v1')).status,409);
+ const exported=ok(await call(f.owner,f.path+'/records/snapshot'));assert.equal(exported.schemaVersion,2);
+ assert.deepEqual(exported.record.food.unbound,p.state.unbound);assert.deepEqual(exported.record.food.catalog,p.state.catalog);
+ assert.equal(exported.record.food.coverage.completeFoodCoverage,false);assert.deepEqual(exported.record.food.coverage.allocatableUnboundFactIds,[]);
+ const explicit=ok(await call(f.owner,f.path+'/records/snapshot/v2'));assert.deepEqual(explicit.record,exported.record);
+ for(const forbidden of ['authorityEpoch','freezeReview','previewId','basisDigest','replayWindow','operationId'])assert.ok(!JSON.stringify(exported).includes(forbidden));
  assert.equal((await preview(f,{...draft(f),mode:'review',base:{shopRevision:p.shopRevision,authorityEpoch:p.authorityEpoch,graphRevision:p.state.graph.revision},change:empty()})).status,409);
  assert.equal((await send(f,'shop.patch',{quote:f.quote,lines:[f.basket]},p.shopRevision)).status,409);
  const unreviewedFreeze=await send(f,'shop.freeze',{},p.shopRevision);assert.equal(unreviewedFreeze.status,409);assert.equal(unreviewedFreeze.data.error.code,'tracking_review_required');assert.deepEqual(await counts(f),before);

@@ -68,13 +68,33 @@ export function validateDemandContribution(input:unknown):DemandContribution {
 }
 /** No graph/line/allocation is manufactured. Only already-proved detached rows
  * may change, with the same immutable/protected policy used by the graph reducer. */
-export function validateDetachedDemandChanges(before:DemandContribution[],after:DemandContribution[],quantifying:string[]=[],clarifying:string[]=[]){
+function validateDetachedChanges(before:DemandContribution[],after:DemandContribution[],quantifying:string[],clarifying:string[],inverseBasis:InverseBasis=new Map()){
  unique(before.map(x=>x.id));unique(after.map(x=>x.id));unique(quantifying);unique(clarifying);
  requireThat(eq(before.map(x=>x.id).sort(),after.map(x=>x.id).sort()),'transfer_identity_changed');
  for(const row of [...before,...after])validateDemandContribution(row);
  for(const id of quantifying){const old=before.find(x=>x.id===id),next=after.find(x=>x.id===id);requireThat(old&&active(old)&&old.source.kind==='reservation'&&old.quantity===null&&next&&active(next)&&next.quantity!==null,'invalid_reservation_quantification');}
  for(const id of clarifying){const old=before.find(x=>x.id===id),next=after.find(x=>x.id===id);requireThat(old&&active(old)&&old.source.kind==='reservation'&&old.productKey===null&&next&&active(next)&&next.productKey!==null&&eq({...next,productKey:null},old),'invalid_reservation_product_clarification');}
- conserve({contributions:before},{contributions:after},new Set(),new Set(quantifying),new Set(clarifying));
+ conserve({contributions:before},{contributions:after},new Set(),new Set(quantifying),new Set(clarifying),inverseBasis);
+}
+/** Ordinary changes cannot borrow a conversion from a historical/current row. */
+export function validateDetachedDemandChanges(before:DemandContribution[],after:DemandContribution[],quantifying:string[]=[],clarifying:string[]=[]){
+ validateDetachedChanges(before,after,quantifying,clarifying);
+}
+type InverseBasis=ReadonlyMap<string,DemandQuantity['confirmedConversion']>;
+function recordedInverseBasis(rows:{before:DemandContribution|null;after:DemandContribution|null}[]):InverseBasis {
+ return new Map(rows.flatMap(({before,after})=>before?.source.kind==='reservation'&&before.quantity&&after?.quantity&&before.quantity.unit!==after.quantity.unit?
+  [[before.id,after.quantity.confirmedConversion] as const]:[]));
+}
+/** Trusted immutable tracking snapshots only. Current touched rows must exactly
+ * equal the recorded after rows; the original observation is restored unchanged.
+ * Recorded conversion evidence is used bidirectionally for comparison, not added
+ * to that original observation or treated as a fresh measurement. */
+export function validateDetachedDemandInverse(current:DemandContribution[],originalBefore:DemandContribution[],originalAfter:DemandContribution[]){
+ unique(originalBefore.map(x=>x.id));unique(originalAfter.map(x=>x.id));
+ requireThat(eq(current.map(x=>x.id).sort(),originalBefore.map(x=>x.id).sort())&&eq(current.map(x=>x.id).sort(),originalAfter.map(x=>x.id).sort()),'transfer_identity_changed');
+ for(const row of current)requireThat(eq(row,originalAfter.find(x=>x.id===row.id)),'undo_conflict');
+ validateDetachedDemandChanges(originalBefore,originalAfter);
+ validateDetachedChanges(current,originalBefore,[],[],recordedInverseBasis(originalBefore.map(before=>({before,after:originalAfter.find(x=>x.id===before.id)!}))));
 }
 export function validateDemandGraph(input:unknown):DemandGraph {
  const g=sharedDemandGraphSchema.parse(input);unique(g.usedIds);unique(g.lines.map(l=>l.originalOrder),'duplicate_order');
@@ -152,7 +172,7 @@ export function demandLineTotals(graph:unknown){
   return [{lineId:line.id,unit:line.unit,quantity:lineTotal(g,line.id)?.amount??null,activeContributionIds}];
  });
 }
-function conserve(before:Pick<DemandGraph,'contributions'>,after:Pick<DemandGraph,'contributions'>,restoring:ReadonlySet<string>=new Set(),quantifying:ReadonlySet<string>=new Set(),clarifying:ReadonlySet<string>=new Set()){
+function conserve(before:Pick<DemandGraph,'contributions'>,after:Pick<DemandGraph,'contributions'>,restoring:ReadonlySet<string>=new Set(),quantifying:ReadonlySet<string>=new Set(),clarifying:ReadonlySet<string>=new Set(),inverseBasis:InverseBasis=new Map()){
  for(const old of before.contributions){const next=after.contributions.find(c=>c.id===old.id);requireThat(next,'source_hard_delete');
   const bindingResolved=quantifying.has(old.id)&&old.source.kind==='reservation'&&next.source.kind==='reservation'&&old.source.bindingId===null&&next.source.bindingId!==null&&eq({...next.source,bindingId:null},old.source);
   requireThat(eq(next.source,old.source)||bindingResolved,'source_identity_changed');
@@ -161,7 +181,14 @@ function conserve(before:Pick<DemandGraph,'contributions'>,after:Pick<DemandGrap
   if(active(old)&&old.source.kind==='reservation'){
    requireThat(active(next)&&(next.productKey===old.productKey||(clarifying.has(old.id)&&old.productKey===null&&next.productKey!==null))&&next.productName===old.productName&&eq(next.contains,old.contains)&&old.exclusions.every(e=>next.exclusions.includes(e)),'protected_share_changed');
    if(old.quantity===null)requireThat(eq(next.quantity,old.quantity)||(quantifying.has(old.id)&&next.quantity!==null),'protected_unknown_changed');
-   else {const q=next.quantity&&convertDemandQuantity(next.quantity,old.quantity.unit);requireThat(q&&cmp(q,rat(old.quantity.amount))>=0n,'protected_quantity_reduced');}
+   else {
+    // A receipt/snapshot-bound inverse uses the accepted forward basis even
+    // when the restored observation has an older, contradictory conversion.
+    // Null is authoritative too: missing forward evidence cannot fall back to
+    // that older basis. This comparison never edits either stored observation.
+    const comparison=next.quantity&&inverseBasis.has(old.id)?{...next.quantity,confirmedConversion:inverseBasis.get(old.id)??null}:next.quantity;
+    const q=comparison&&convertDemandQuantity(comparison,old.quantity.unit);
+    requireThat(q&&cmp(q,rat(old.quantity.amount))>=0n,'protected_quantity_reduced');}
   }
  }
 }
@@ -171,8 +198,8 @@ function repairId(operation:string,demand:string,supplyId:string){
 }
 function delta<T extends {id:string}>(before:T[],after:T[]){const ids=new Set([...before,...after].map(x=>x.id));return [...ids].flatMap(id=>{
  const b=before.find(x=>x.id===id)??null,a=after.find(x=>x.id===id)??null;return eq(a,b)?[]:[{id,before:b,after:a}];});}
-function finish(before:DemandGraph,next:DemandGraph,operationId:string,restoring:ReadonlySet<string>=new Set(),quantifying:ReadonlySet<string>=new Set(),clarifying:ReadonlySet<string>=new Set()){
- requireThat(before.revision<2147483647,'revision_overflow');next.revision=before.revision+1;conserve(before,next,restoring,quantifying,clarifying);next=validateDemandGraph(next);
+function finish(before:DemandGraph,next:DemandGraph,operationId:string,restoring:ReadonlySet<string>=new Set(),quantifying:ReadonlySet<string>=new Set(),clarifying:ReadonlySet<string>=new Set(),inverseBasis:InverseBasis=new Map()){
+ requireThat(before.revision<2147483647,'revision_overflow');next.revision=before.revision+1;conserve(before,next,restoring,quantifying,clarifying,inverseBasis);next=validateDemandGraph(next);
  const receipt=sharedDemandReceiptSchema.parse({schemaVersion:1,operationId,householdId:before.householdId,shopId:before.shopId,baseRevision:before.revision,resultRevision:next.revision,
   lines:delta(before.lines,next.lines),contributions:delta(before.contributions,next.contributions),edges:delta(before.edges,next.edges)});
  requireThat(receipt.lines.length+receipt.contributions.length+receipt.edges.length>0,'no_change');return {graph:next,receipt};
@@ -237,5 +264,5 @@ export function undoDemandChange(input:unknown,storedReceipt:unknown,command:unk
  // Only the exact receipt-bound tombstones may be restored; finish still records
  // their actual prior state, and all protected/identity invariants remain checked.
  const restoring=new Set(r.contributions.filter(x=>x.before?.removedAt===null&&x.after?.removedAt!==null).map(x=>x.id));
- return finish(g,next,c.operationId,restoring);
+ return finish(g,next,c.operationId,restoring,new Set(),new Set(),recordedInverseBasis(r.contributions));
 }

@@ -1,3 +1,4 @@
+import type {TrackingMealProtection} from './shared-demand-tracking-meal-protection.js';
 import {deriveFoodUndoBasket} from './shared-food-undo-basket.js';
 /** Whole-operation inverse for the explicitly recorded, eligible shop.patch subset.
  * Never accepts client-supplied historical facts. All evidence is loaded under current
@@ -54,7 +55,7 @@ function persistedGraph(row:FoodUndoEvidence['beforeGraph']){
 function delta<T extends {id:string}>(before:T[],after:T[]){return [...new Set([...before,...after].map(r=>r.id))].flatMap(id=>{
  const b=before.find(r=>r.id===id)??null,a=after.find(r=>r.id===id)??null;return eq(b,a)?[]:[{id,before:b,after:a}];});}
 export function deriveSharedFoodUndoCore(e:FoodUndoEvidence,current:{graph:DemandGraph;lines:z.infer<typeof lineSchema>[];quote:z.infer<typeof quoteSchema>;shopRevision?:number;storeBasis?:{revision:number|null;reviewRequired:boolean}},
- command:{operationId:string;householdId:string;shopId:string;baseRevision:number;at:string},now:Date){
+ command:{operationId:string;householdId:string;shopId:string;baseRevision:number;at:string},now:Date,protectMeal?:TrackingMealProtection){
  const {operation:o,effect:f}=e;
  insist(o.household_id===command.householdId&&o.shop_id===command.shopId,'history_unavailable');
  insist(o.payload_digest!=='0'.repeat(64)&&/^[a-f0-9]{64}$/.test(o.payload_digest),'history_unavailable');
@@ -72,7 +73,7 @@ export function deriveSharedFoodUndoCore(e:FoodUndoEvidence,current:{graph:Deman
  const mealScope={householdId:o.household_id,shopId:o.shop_id,operationId:o.operation_id,
   baseShopRevision:f.base_shop_revision,resultShopRevision:f.result_shop_revision};
  const mealUndo=f.classification==='meal_action'&&e.meal
-  ?deriveMealUndo(e.meal,mealScope,before.mealRefs??[],after.mealRefs??[],current.shopRevision??0):undefined;
+  ?deriveMealUndo(e.meal,mealScope,before.mealRefs??[],after.mealRefs??[],current.shopRevision??0,protectMeal):undefined;
  if(!mealUndo)insist(eq(before.mealRefs??[],after.mealRefs??[]),'meal_action_unsupported');
  const receipt=sharedDemandReceiptSchema.parse(e.afterGraph!.receipt);
  insist(receipt.operationId===o.operation_id&&receipt.householdId===o.household_id&&receipt.shopId===o.shop_id

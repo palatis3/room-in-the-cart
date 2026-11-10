@@ -51,7 +51,7 @@ async function first(f,{withMeal=true}={}){
  const accepted=await applyIntent(f,input);return{before,manual,input,...accepted};
 }
 async function addLater(f){const current=await page(f),old=current.state,extra={lineId:randomUUID(),originalItem:'Later apples',packs:1,unitPriceMinor:120,feeEligible:true};const c={...source({...f,basket:extra},q(3)),productKey:'apples',productName:'Apples',originalText:'three apples'};
- const input={mode:'change',base:baseOf(current),change:{...empty(),lines:[{id:extra.lineId,name:extra.originalItem,unit:'count',originalOrder:1,trashedAt:null}],contributions:[c]},unboundFactIds:old.unbound.map(u=>u.factId),action:{kind:'shop.patch',body:{quote:f.quote,lines:[...old.basket.map(l=>({lineId:l.id,originalItem:l.name,packs:l.packs,unitPriceMinor:l.id===f.basket.lineId?120:l.priceMinor,feeEligible:l.feeEligible})),extra]}},packs:[...old.packReviews,{lineId:extra.lineId,usablePerPack:q(3),acceptUnresolved:false}]};await applyIntent(f,input);return{extra,c};}
+ const input={mode:'change',base:baseOf(current),change:{...empty(),lines:[{id:extra.lineId,name:extra.originalItem,unit:'count',originalOrder:Math.max(-1,...old.graph.lines.map(l=>l.originalOrder))+1,trashedAt:null}],contributions:[c]},unboundFactIds:old.unbound.map(u=>u.factId),action:{kind:'shop.patch',body:{quote:f.quote,lines:[...old.basket.map(l=>({lineId:l.id,originalItem:l.name,packs:l.packs,unitPriceMinor:l.id===f.basket.lineId?120:l.priceMinor,feeEligible:l.feeEligible})),extra]}},packs:[...old.packReviews,{lineId:extra.lineId,usablePerPack:q(3),acceptUnresolved:false}]};await applyIntent(f,input);return{extra,c};}
 async function inverse(f,target,packs){const current=await page(f);return applyIntent(f,{mode:'firstAdoptionUndo',base:baseOf(current),targetOperationId:target,packs:packs??[]});}
 async function counts(f){return Promise.all(['operation','shared_demand_revision','shared_tracking_revision','shared_tracking_adoption','basket_line'].map(t=>count(f,t)));}
 
@@ -230,4 +230,99 @@ test('actual Swift compound meal adoption Undo binds complete inverse and explic
  assert.deepEqual(after.state.graph.usedIds,beforeUndo.state.graph.usedIds);
  const retry=await wire(f,'compound-undo-retry',privateState,{survivor:later.c});assert.deepEqual(retry.commands,lost.commands);assert.equal(retry.candidateAttempts,0);assert.equal(retry.previewAttempts,0);
  assert.deepEqual(await page(f),after);assert.deepEqual(ok(await call(f.owner,f.path)),afterShop);assert.deepEqual(await counts(f),afterCounts);
+});
+
+// Partial-state successor scenarios keep all setup mutations on authenticated
+// routes. No tracking snapshot, fact, receipt or HTTP response is injected.
+const physical=(n,unit,literal,confirmedConversion=null)=>({amount:{numerator:String(n),denominator:'1'},unit,originalLiteral:literal,confirmedConversion});
+const mealQuantity=(n,unit,literal)=>({amount:{numerator:n,denominator:1},unit,originalLiteral:literal});
+const conversion=(sourceUnit,targetUnit,n,d,note)=>({sourceUnit,targetUnit,targetAmountPerSourceUnit:{numerator:String(n),denominator:String(d)},sourceNote:note,confirmedAt:new Date().toISOString()});
+const linesOf=p=>p.state.basket.map(l=>({lineId:l.id,originalItem:l.name,packs:l.packs,unitPriceMinor:l.priceMinor,feeEligible:l.feeEligible}));
+const head=async f=>ok(await call(f.owner,f.path));
+async function partialStoreSelection(f){
+ const s=await head(f),at=new Date(Date.now()+3600000).toISOString();
+ const option={label:'Reviewed partial pickup store',store:'Entered shop',branch:'A',mode:'pickup',slot:at,observedAt:new Date(Date.now()-60000).toISOString(),source:'Entered checkout',currency:'USD',terms:'Complete quote',itemsMinor:200,checkoutMinor:200,allChargesIncluded:true,available:true,quantitiesMatched:true,singleStore:true,tripAlreadyPlanned:true,tripMinor:0,extraMinutes:0,capMinor:10000,capScope:'wholeCheckout',eligibilityConfirmed:true};
+ const pair={operationId:randomUUID(),shopRevision:s.shopRevision,authorityEpoch:s.authorityEpoch,grantRevision:0,options:{first:option,second:{...option,branch:'B'}}};
+ ok(await call(f.owner,f.path+'/store-quotes/pairs','POST',pair));
+ return ok(await call(f.owner,f.path+'/store-quotes/adoptions','POST',{operationId:randomUUID(),shopRevision:s.shopRevision,authorityEpoch:s.authorityEpoch,grantRevision:0,pairId:pair.operationId,choice:'first',proposalId:null}));
+}
+async function partialConversionFixture(){
+ const f=await fixture(),wraps={...line(),originalItem:'Reserved lunch wraps'},flour={...f.basket,originalItem:'Flour'};
+ f.basket=flour;f.occurrenceId=randomUUID();f.ingredientId=randomUUID();f.lunchId=randomUUID();f.lunchIngredientId=randomUUID();
+ f.meal={title:'Flour dinner',day:null,kind:'dinner',portions:2,protected:false,planning:{groups:[],ingredients:[{id:f.ingredientId,name:'Flour',quantity:mealQuantity(1,'cup','one measured cup'),groupIds:[],exclusions:[]}],exclusions:[]}};
+ f.lunch={title:'Protected lunch',day:null,kind:'lunch',portions:2,protected:true,planning:{groups:[],ingredients:[{id:f.lunchIngredientId,name:'Wraps',quantity:mealQuantity(2,'count','two reserved wraps'),groupIds:[],exclusions:[]}],exclusions:[]}};
+ ok(await send(f,'shop.patch',{quote:f.quote,lines:[flour,wraps],mealEdit:{occurrenceId:f.occurrenceId,baseMealRevision:null,meal:f.meal}},1));
+ ok(await send(f,'shop.patch',{quote:f.quote,lines:[flour,wraps],mealEdit:{occurrenceId:f.lunchId,baseMealRevision:null,meal:f.lunch}},2));
+ let p=await page(f);const flourFact=p.state.catalog.find(x=>x.source.kind==='meal'),lunchFact=p.state.catalog.find(x=>x.source.kind==='reservation');assert.ok(flourFact);assert.ok(lunchFact);assert.equal(lunchFact.quantity.amount.numerator,'2');
+ const flourBasis=conversion('cup','gram',120,1,'Original measured flour density');
+ const bound=p.state.catalog.map(fact=>({id:fact.id,lineId:fact.id===flourFact.id?flour.lineId:wraps.lineId,source:fact.source,productKey:fact.id===flourFact.id?'flour':'wraps',productName:fact.originalText,originalText:fact.originalText,quantity:fact.id===flourFact.id?{...fact.quantity,confirmedConversion:flourBasis}:fact.quantity,sourceExclusions:fact.sourceExclusions,exclusions:[],contains:[],removedAt:null}));
+ const graphLines=[{id:flour.lineId,name:flour.originalItem,unit:'gram',originalOrder:0,trashedAt:null},{id:wraps.lineId,name:wraps.originalItem,unit:'count',originalOrder:1,trashedAt:null}];
+ const initial=await applyIntent(f,{mode:'adopt',base:baseOf(p),action:{kind:'shop.patch',body:{quote:f.quote,lines:[flour,wraps]}},change:{...empty(),lines:graphLines,contributions:bound},packs:[{lineId:flour.lineId,usablePerPack:physical(240,'gram','240 grams per pack'),acceptUnresolved:false},{lineId:wraps.lineId,usablePerPack:q(6),acceptUnresolved:false}]});
+ await inverse(f,ok(initial.response).operationId);p=await page(f);
+ assert.equal(p.state.unbound.length,2);assert.ok(p.state.unbound.every(u=>u.transferred));
+ const pack={lineId:flour.lineId,usablePerPack:physical(240,'gram','240 grams per pack'),acceptUnresolved:false};
+ await applyIntent(f,{mode:'rebind',base:baseOf(p),bindings:[{factId:flourFact.id,line:graphLines[0],basket:p.state.basket.find(b=>b.id===flour.lineId),packReview:pack}]});
+ p=await page(f);const manual={...source(f,physical(240,'gram','240 independent grams')),productKey:'flour',productName:'Flour',originalText:'Independent flour supply'};
+ const edge={id:randomUUID(),kind:'withinExisting',demandId:flourFact.id,supplyId:manual.id,quantity:physical(120,'gram','120 grams already included',flourBasis),confirmation:{productMatchConfirmed:true,confirmedAt:new Date().toISOString(),evidence:'Same measured flour'}};
+ await applyIntent(f,{mode:'change',base:baseOf(p),action:{kind:'shop.patch',body:{quote:f.quote,lines:linesOf(p)}},change:{...empty(),contributions:[manual],edges:[edge]},packs:p.state.packReviews,unboundFactIds:p.state.unbound.map(x=>x.factId)});
+ p=await page(f);assert.equal(p.coverage.status,'partial');assert.equal(p.state.graph.edges.length,1);assert.equal(p.state.unbound.length,1);assert.equal(p.state.unbound[0].transferred.source.kind,'reservation');
+ return{f,flourFact,lunchFact,manual,edge};
+}
+async function partialMealPayload(f,{protectedChange=false}={}){
+ const p=await page(f),s=await head(f),occurrenceId=protectedChange?f.lunchId:f.occurrenceId,current=s.meals.find(m=>m.occurrenceId===occurrenceId),next=structuredClone(current.meal);
+ next.planning.ingredients[0].quantity=protectedChange?mealQuantity(60,'gram','60 measured grams'):mealQuantity(2,'cup','two freshly measured cups');
+ const action={kind:'shop.patch',body:{quote:s.quote,lines:s.lines,mealEdit:{occurrenceId,baseMealRevision:current.revision,meal:next}}};
+ const catalog=ok(await call(f.owner,f.path+'/demand/tracking/meal-action-sources','POST',{base:baseOf(p),action}));
+ const row=catalog.sources.find(x=>x.factId===(protectedChange?p.state.unbound[0].factId:p.state.bindings[0].factId));assert.ok(row);assert.equal(row.transition,'update');assert.equal(row.proposed.quantity.confirmedConversion,null);
+ const basis=protectedChange?conversion('gram','count',1,30,'One protected wrap weighs 30 grams'):conversion('cup','gram',120,1,'Freshly reviewed flour density');
+ const after={...row.before,source:row.proposed.source,productName:row.proposed.productName,quantity:{...row.proposed.quantity,confirmedConversion:basis},sourceExclusions:row.proposed.sourceExclusions};
+ return{action,change:{...empty(),contributions:protectedChange?[]:[after]},packs:p.state.packReviews,unboundFactIds:catalog.proposedCatalog.filter(fact=>!p.state.bindings.some(binding=>binding.factId===fact.id)).map(fact=>fact.id),...(protectedChange?{transferredChanges:[{factId:row.factId,after}]}:{}),expectedMealCatalog:catalog};
+}
+function exactPartialCatalog(observed,payload){assert.equal(observed.mealCatalogAttempts,1);assert.deepEqual(observed.mealCatalogResponses,[payload.expectedMealCatalog]);}
+
+// Selecting a store and reviewing its actual basket prices remain distinct
+// operations. Cancellation has no graph/shop side effects; durable retry emits
+// the exact bytes of the command whose successful reply was lost.
+test('actual Swift partial store re-review preserves detached unknowns through Cancel lost reply and exact restart retry',async()=>{
+ const {f,input}=await catalogFixture(),initial=await applyIntent(f,input);await inverse(f,ok(initial.response).operationId);
+ const later=await addLater(f),selected=await partialStoreSelection(f),before=await page(f),beforeShop=await head(f),beforeCounts=await counts(f),privateState=await state();
+ assert.equal(before.coverage.status,'partial');assert.equal(beforeShop.storeReviewRequired,true);
+ const payload={action:{kind:'shop.patch',body:{quote:{...f.quote,capMinor:300},lines:beforeShop.lines.map(l=>({...l,unitPriceMinor:250})),reviewedStoreBasisRevision:beforeShop.storeBasisRevision}},packs:before.state.packReviews,acceptOverage:true,survivor:later.c};
+ const cancel=await wire(f,'partial-store-cancel',privateState,payload);exactReview(cancel,{acceptOverage:true});assert.equal(cancel.attempts,0);assert.deepEqual(await page(f),before);assert.deepEqual(await head(f),beforeShop);assert.deepEqual(await counts(f),beforeCounts);
+ const lost=await wire(f,'partial-store-lost',privateState,{...payload,dropFirstReply:true});const applied=exactApply(lost,{acceptOverage:true});assert.equal(lost.dropped,1);
+ const after=await page(f),shop=await head(f),afterCounts=await counts(f);assert.deepEqual(after.state,applied.c.after);assert.equal(shop.storeReviewRequired,false);assert.equal(shop.storeBasisRevision,selected.shopRevision);
+ assert.deepEqual(after.state.unbound,before.state.unbound);assert.deepEqual(after.state.catalog,before.state.catalog);assert.deepEqual(after.state.graph.contributions,before.state.graph.contributions);assert.deepEqual(after.coverage.allocatableUnboundFactIds,[]);
+ const retry=await wire(f,'partial-store-retry',privateState,{survivor:later.c});assert.deepEqual(retry.commands,lost.commands);assert.equal(retry.candidateAttempts,0);assert.equal(retry.previewAttempts,0);assert.equal(retry.mealCatalogAttempts,0);
+ assert.deepEqual(await page(f),after);assert.deepEqual(await head(f),shop);assert.deepEqual(await counts(f),afterCounts);
+});
+
+test('actual Swift partial meal fresh conversion keeps allocation through whole Undo Cancel lost reply and exact restart retry',async()=>{
+ const {f,manual,edge}=await partialConversionFixture(),before=await page(f),beforeShop=await head(f),beforeCounts=await counts(f),privateState=await state(),payload=await partialMealPayload(f);
+ const missingBasis=structuredClone(payload.change);missingBasis.contributions[0].quantity.confirmedConversion=null;
+ const denied=await candidate(f,{mode:'change',base:baseOf(before),action:payload.action,change:missingBasis,packs:payload.packs,unboundFactIds:payload.unboundFactIds});assert.equal(denied.status,422);assert.equal(denied.data.error.code,'incompatible_units');assert.deepEqual(await page(f),before);assert.deepEqual(await counts(f),beforeCounts);
+ const cancel=await wire(f,'partial-meal-cancel',privateState,payload);exactPartialCatalog(cancel,payload);exactReview(cancel);assert.equal(cancel.attempts,0);assert.deepEqual(await page(f),before);assert.deepEqual(await head(f),beforeShop);assert.deepEqual(await counts(f),beforeCounts);
+ const lost=await wire(f,'partial-meal-lost',privateState,{...payload,dropFirstReply:true});exactPartialCatalog(lost,payload);const applied=exactApply(lost);assert.equal(lost.dropped,1);
+ const after=await page(f),afterCounts=await counts(f);assert.deepEqual(after.state.graph.edges,[edge]);assert.deepEqual(after.state.graph.contributions.find(c=>c.id===manual.id),manual);assert.deepEqual(after.state.unbound,before.state.unbound);
+ assert.equal(after.coverage.trackedSubtotals.find(t=>t.lineId===f.basket.lineId).quantity.numerator,'360');assert.equal(after.state.graph.contributions.find(c=>c.id===edge.demandId).quantity.confirmedConversion.sourceNote,'Freshly reviewed flour density');
+ const retry=await wire(f,'partial-meal-retry',privateState);assert.deepEqual(retry.commands,lost.commands);assert.equal(retry.candidateAttempts,0);assert.equal(retry.previewAttempts,0);assert.deepEqual(await page(f),after);assert.deepEqual(await counts(f),afterCounts);
+ const target=(await admin.query('SELECT operation_id FROM ritc.operation WHERE household_id=$1 AND shop_id=$2 AND client_key=$3',[f.h,f.shopId,applied.command.clientKey])).rows;assert.equal(target.length,1);
+ const later=await addLater(f),beforeUndo=await page(f),shopBeforeUndo=await head(f),undoCounts=await counts(f),undoPayload={targetOperationId:target[0].operation_id,packs:beforeUndo.state.packReviews,survivor:later.c};
+ const undoCancel=await wire(f,'partial-meal-undo-cancel',privateState,undoPayload);exactReview(undoCancel);assert.equal(undoCancel.trackingHistoryAttempts,1);assert.equal(undoCancel.attempts,0);assert.deepEqual(await page(f),beforeUndo);assert.deepEqual(await head(f),shopBeforeUndo);assert.deepEqual(await counts(f),undoCounts);
+ const undoLost=await wire(f,'partial-meal-undo-lost',privateState,{...undoPayload,dropFirstReply:true});const inverseReview=exactApply(undoLost);assert.equal(undoLost.dropped,1);assert.equal(inverseReview.c.disclosure.changes.kind,'mealOperationUndo');
+ const restored=await page(f),restoredShop=await head(f),restoredCounts=await counts(f);assert.deepEqual(restored.state.graph.edges,[edge]);assert.deepEqual(restored.state.unbound,before.state.unbound);assert.deepEqual(restored.state.graph.contributions.find(c=>c.id===manual.id),manual);assert.deepEqual(restored.state.graph.contributions.find(c=>c.id===later.c.id),later.c);
+ assert.deepEqual(restoredShop.meals.find(m=>m.occurrenceId===f.occurrenceId).meal,beforeShop.meals.find(m=>m.occurrenceId===f.occurrenceId).meal);assert.deepEqual(restored.state.graph.contributions.find(c=>c.id===edge.demandId),before.state.graph.contributions.find(c=>c.id===edge.demandId));
+ const undoRetry=await wire(f,'partial-meal-undo-retry',privateState,{survivor:later.c});assert.deepEqual(undoRetry.commands,undoLost.commands);assert.equal(undoRetry.candidateAttempts,0);assert.equal(undoRetry.previewAttempts,0);assert.deepEqual(await page(f),restored);assert.deepEqual(await head(f),restoredShop);assert.deepEqual(await counts(f),restoredCounts);
+});
+
+test('actual Swift protected transferred unit change keeps equivalent reviewed quantity detached from all supply',async()=>{
+ const {f,manual,edge}=await partialConversionFixture(),before=await page(f),beforeCounts=await counts(f),privateState=await state(),payload=await partialMealPayload(f,{protectedChange:true});
+ // A missing basis does not prove that sixty grams preserve two wraps.
+ const missing=structuredClone(payload);missing.transferredChanges[0].after.quantity.confirmedConversion=null;
+ const denied=await candidate(f,{mode:'change',base:baseOf(before),action:missing.action,change:missing.change,packs:missing.packs,unboundFactIds:missing.unboundFactIds,transferredChanges:missing.transferredChanges});
+ assert.equal(denied.status,422);assert.equal(denied.data.error.code,'protected_quantity_reduced');assert.deepEqual(await page(f),before);assert.deepEqual(await counts(f),beforeCounts);
+ const reduced=structuredClone(payload);reduced.transferredChanges[0].after.quantity.confirmedConversion.targetAmountPerSourceUnit.denominator='60';
+ const reduction=await candidate(f,{mode:'change',base:baseOf(before),action:reduced.action,change:reduced.change,packs:reduced.packs,unboundFactIds:reduced.unboundFactIds,transferredChanges:reduced.transferredChanges});assert.equal(reduction.status,422);assert.equal(reduction.data.error.code,'protected_quantity_reduced');assert.deepEqual(await page(f),before);assert.deepEqual(await counts(f),beforeCounts);
+ const applied=await wire(f,'partial-protected-apply',privateState,payload);exactPartialCatalog(applied,payload);const reviewed=exactApply(applied);const after=await page(f);
+ assert.deepEqual(after.state,reviewed.c.after);assert.deepEqual(after.state.graph.contributions,before.state.graph.contributions);assert.deepEqual(after.state.graph.edges,[edge]);assert.deepEqual(after.state.graph.contributions.find(c=>c.id===manual.id),manual);assert.deepEqual(after.state.graph.usedIds,before.state.graph.usedIds);
+ const transfer=after.state.unbound.find(u=>u.factId===payload.transferredChanges[0].factId);assert.deepEqual(transfer.transferred,payload.transferredChanges[0].after);assert.equal(transfer.transferred.quantity.amount.numerator,'60');assert.equal(transfer.transferred.quantity.unit,'gram');assert.equal(transfer.transferred.quantity.confirmedConversion.targetAmountPerSourceUnit.denominator,'30');assert.deepEqual(after.coverage.allocatableUnboundFactIds,[]);assert.equal(after.coverage.status,'partial');
 });

@@ -1,0 +1,235 @@
+{
+  "schemaVersion": 2,
+  "asOf": "2026-11-10T12:00:00.000Z",
+  "recordDigest": "4319df1437fdd66d0bd73d63bb87efb10f0aa3b74f09442ccd6dd408011673ca",
+  "record": {
+    "schemaVersion": 2,
+    "projection": "assigned-shopper-independent-record-v2",
+    "origin": {
+      "householdId": "00000000-0000-4000-8000-000000000001",
+      "shopId": "00000000-0000-4000-8000-000000000002"
+    },
+    "shopRevision": 8,
+    "privacyRevision": 2,
+    "phase": "draft",
+    "storeBasisRevision": null,
+    "storeReviewRequired": false,
+    "quote": {
+      "currency": "USD",
+      "scope": "wholeCheckout",
+      "complete": false,
+      "capMinor": 2000,
+      "capScope": "wholeCheckout",
+      "fee": {
+        "kind": "fixed",
+        "amountMinor": null
+      },
+      "taxesMinor": 0,
+      "depositsMinor": 0,
+      "discountsMinor": 0,
+      "observedAt": "2026-11-10T12:00:00.000Z",
+      "expiresAt": "2026-11-11T12:00:00.000Z"
+    },
+    "mealOccurrences": [
+      {
+        "occurrenceId": "00000000-0000-4000-8000-000000000030",
+        "revision": 2,
+        "meal": {
+          "title": "Lunch",
+          "day": null,
+          "kind": "lunch",
+          "portions": 2,
+          "protected": true
+        }
+      }
+    ],
+    "food": {
+      "status": "enabled",
+      "graph": {
+        "schemaVersion": 1,
+        "conversionTableVersion": "us-customary-metric-v1",
+        "householdId": "00000000-0000-4000-8000-000000000001",
+        "shopId": "00000000-0000-4000-8000-000000000002",
+        "revision": 3,
+        "lines": [
+          {
+            "id": "00000000-0000-4000-8000-000000000010",
+            "name": "Apples",
+            "unit": "count",
+            "originalOrder": 0,
+            "trashedAt": null
+          },
+          {
+            "id": "00000000-0000-4000-8000-000000000011",
+            "name": "Wraps",
+            "unit": "count",
+            "originalOrder": 1,
+            "trashedAt": "2026-11-10T12:00:00.000Z"
+          }
+        ],
+        "contributions": [
+          {
+            "id": "00000000-0000-4000-8000-000000000020",
+            "lineId": "00000000-0000-4000-8000-000000000010",
+            "source": {
+              "kind": "manual"
+            },
+            "productKey": "apples",
+            "productName": "Apples",
+            "originalText": "Apples",
+            "quantity": {
+              "amount": {
+                "numerator": "3",
+                "denominator": "1"
+              },
+              "unit": "count",
+              "originalLiteral": "three apples",
+              "confirmedConversion": null
+            },
+            "sourceExclusions": [],
+            "exclusions": [],
+            "contains": [],
+            "removedAt": null
+          }
+        ],
+        "edges": [],
+        "usedIds": [
+          "00000000-0000-4000-8000-000000000010",
+          "00000000-0000-4000-8000-000000000011",
+          "00000000-0000-4000-8000-000000000020",
+          "00000000-0000-4000-8000-000000000021"
+        ]
+      },
+      "basket": [
+        {
+          "id": "00000000-0000-4000-8000-000000000010",
+          "name": "Apples",
+          "packs": 1,
+          "priceMinor": 200,
+          "feeEligible": true
+        },
+        {
+          "id": "00000000-0000-4000-8000-000000000011",
+          "name": "Wraps",
+          "packs": 2,
+          "priceMinor": null,
+          "feeEligible": true
+        }
+      ],
+      "catalog": [
+        {
+          "id": "00000000-0000-4000-8000-000000000021",
+          "revision": 2,
+          "source": {
+            "kind": "reservation",
+            "reservationId": "00000000-0000-4000-8000-000000000021",
+            "purpose": "School lunch — original words",
+            "originOccurrenceId": "00000000-0000-4000-8000-000000000030",
+            "ingredientId": "00000000-0000-4000-8000-000000000031",
+            "groupId": null,
+            "bindingId": null
+          },
+          "sourceLabel": "Protected lunch",
+          "originalText": "Unknown lunch wraps",
+          "originalQuantityText": null,
+          "quantity": null,
+          "sourceExclusions": [
+            {
+              "occurrenceId": "00000000-0000-4000-8000-000000000030",
+              "ingredientId": "00000000-0000-4000-8000-000000000031",
+              "label": "Exact family restriction",
+              "resolution": {
+                "kind": "unresolved"
+              }
+            }
+          ],
+          "requiredLineId": null
+        }
+      ],
+      "bindings": [],
+      "unbound": [
+        {
+          "factId": "00000000-0000-4000-8000-000000000021",
+          "transferred": {
+            "id": "00000000-0000-4000-8000-000000000021",
+            "lineId": "00000000-0000-4000-8000-000000000011",
+            "source": {
+              "kind": "reservation",
+              "reservationId": "00000000-0000-4000-8000-000000000021",
+              "purpose": "School lunch — original words",
+              "originOccurrenceId": "00000000-0000-4000-8000-000000000030",
+              "ingredientId": "00000000-0000-4000-8000-000000000031",
+              "groupId": null,
+              "bindingId": null
+            },
+            "productKey": "wraps",
+            "productName": "Wraps",
+            "originalText": "Unknown lunch wraps",
+            "quantity": null,
+            "sourceExclusions": [
+              {
+                "occurrenceId": "00000000-0000-4000-8000-000000000030",
+                "ingredientId": "00000000-0000-4000-8000-000000000031",
+                "label": "Exact family restriction",
+                "resolution": {
+                  "kind": "unresolved"
+                }
+              }
+            ],
+            "exclusions": [],
+            "contains": [],
+            "removedAt": null
+          }
+        }
+      ],
+      "legacyLineIds": [
+        "00000000-0000-4000-8000-000000000011"
+      ],
+      "packReview": {
+        "state": "recorded",
+        "values": [
+          {
+            "lineId": "00000000-0000-4000-8000-000000000010",
+            "usablePerPack": {
+              "amount": {
+                "numerator": "3",
+                "denominator": "1"
+              },
+              "unit": "count",
+              "originalLiteral": "three apples",
+              "confirmedConversion": null
+            },
+            "acceptUnresolved": false
+          }
+        ]
+      },
+      "coverage": {
+        "status": "partial",
+        "trackedSubtotals": [
+          {
+            "lineId": "00000000-0000-4000-8000-000000000010",
+            "unit": "count",
+            "quantity": {
+              "numerator": "3",
+              "denominator": "1"
+            },
+            "activeContributionIds": [
+              "00000000-0000-4000-8000-000000000020"
+            ]
+          }
+        ],
+        "completeFoodCoverage": false,
+        "unboundFactIds": [
+          "00000000-0000-4000-8000-000000000021"
+        ],
+        "untrackedBasketIds": [
+          "00000000-0000-4000-8000-000000000011"
+        ],
+        "protectedUnboundFactIds": [
+          "00000000-0000-4000-8000-000000000021"
+        ],
+        "allocatableUnboundFactIds": []
+      }
+    }
+  }
+}

@@ -30,6 +30,10 @@ private final class TrackingWireVault: RefreshTokenVault, @unchecked Sendable {
     func write(_ value: String) throws { lock.lock(); defer { lock.unlock() }; try Data(value.utf8).write(to:url,options:.atomic); try FileManager.default.setAttributes([.posixPermissions:0o600],ofItemAtPath:url.path) }
     func clear() throws { lock.lock(); defer { lock.unlock() }; if FileManager.default.fileExists(atPath:url.path) { try FileManager.default.removeItem(at:url) } }
 }
+private struct TrackingWireTransferredInput: Decodable {
+    let factId: SharedDemandID
+    let after: SharedDemandContribution?
+}
 private struct TrackingWireInput: Decodable {
     let phase, householdId: String
     let shopId: UUID
@@ -44,6 +48,9 @@ private struct TrackingWireInput: Decodable {
     let survivor: SharedDemandContribution?
     let originalQuantityText: String?
     let acceptOverage: Bool?
+    let unboundFactIds: [SharedDemandID]?
+    let transferredChanges: [TrackingWireTransferredInput]?
+    let expectedMealCatalog: SharedTrackingMealSources?
 }
 private struct TrackingApplyToken: Encodable { let previewId, previewDigest: String; let trackingVersion = 2 }
 private func saveTrackingWire<T: Encodable>(_ value: T, _ url: URL) throws {
@@ -89,6 +96,10 @@ extension SharedMealNativeWireTests {
         XCTAssertEqual(page, input.before)
         if let survivor = input.survivor {
             XCTAssertEqual(page.graph.contributions.first { $0.id == survivor.id }, input.phase == "privacy-adopt" ? nil : survivor)
+        }
+        if input.phase.hasPrefix("partial-") {
+            try await exercisePartialTrackingWire(input, service: service, page: page, stateURL: stateURL)
+            return
         }
         if input.phase.hasPrefix("request-undo-") && !["request-undo-accept", "request-undo-reaccept"].contains(input.phase) {
             try await exerciseRequestUndoWire(input, service: service, page: page, stateURL: stateURL)
@@ -290,5 +301,106 @@ func requestUndoWirePacks(candidate: SharedRequestUndoCandidate, existing: [Shar
         Set(existing.map(\.lineId)) == Set(candidate.packReviewLineIds))
     return try candidate.packReviewLineIds.map { id in
         try XCTUnwrap(existing.first { $0.lineId == id })
+    }
+}
+
+
+extension SharedMealNativeWireTests {
+    /// Every page, catalog, candidate, acknowledgment and command response comes
+    /// from the real service. Fixture inputs are explicitly entered intent only.
+    private func exercisePartialTrackingWire(_ input: TrackingWireInput, service: HouseholdService, page: SharedTrackingPage, stateURL: URL) async throws {
+        XCTAssertEqual(page.status, .enabled)
+        XCTAssertEqual(page.coverage?.status, .partial)
+        XCTAssertEqual(page.coverage?.allocatableUnboundFactIds, [])
+        let outbox = OperationOutbox(url: stateURL.appendingPathComponent("partial-tracking-pending.json"))
+        let savedURL = stateURL.appendingPathComponent("partial-tracking-confirmed.json")
+        let beforeShop = try await service.shopperShop(shopID: input.shopId.uuidString.lowercased())
+        if input.phase.hasSuffix("-retry") {
+            let saved = try JSONDecoder().decode(PendingOperation.self, from: Data(contentsOf: savedURL))
+            let pending = try await outbox.operations(); XCTAssertEqual(pending, [saved])
+            XCTAssertEqual(pending.first?.bytes, saved.bytes)
+            let receipt = try await service.sendSharedTracking(saved, outbox: outbox)
+            XCTAssertEqual(receipt.shopRevision, saved.sharedTrackingBinding!.base.shopRevision + 1)
+            let unchanged = try await service.sharedTracking(shopID: input.shopId)
+            let unchangedShop = try await service.shopperShop(shopID: beforeShop.shopId)
+            XCTAssertEqual(unchanged, page); XCTAssertEqual(unchangedShop, beforeShop)
+            let remaining = try await outbox.operations(); XCTAssertTrue(remaining.isEmpty)
+            return
+        }
+        let kind: SharedTrackingIntentKind
+        var catalog: SharedTrackingMealSources?
+        let transfers = input.transferredChanges?.map { SharedTrackingTransferredChange(factId: $0.factId, after: $0.after) }
+        if input.phase.hasPrefix("partial-store-") {
+            XCTAssertEqual(beforeShop.storeReviewRequired, true)
+            kind = .review(action: try XCTUnwrap(input.action), packs: input.packs)
+        } else if input.phase.hasPrefix("partial-meal-undo-") {
+            let target = try XCTUnwrap(input.targetOperationId)
+            let history = try await service.sharedTrackingHistory(page: page)
+            XCTAssertTrue(history.items.contains { $0.operationId == target && $0.reviewRoute == .trackingMeal && $0.status == .current_preview_required })
+            kind = .mealOperationUndo(targetOperationId: target, packs: input.packs)
+        } else {
+            XCTAssertTrue(input.phase.hasPrefix("partial-meal-") || input.phase == "partial-protected-apply")
+            let action = try XCTUnwrap(input.action)
+            catalog = try await service.sharedTrackingMealActionSources(page: page, action: action)
+            XCTAssertEqual(catalog, input.expectedMealCatalog)
+            kind = .change(action: action, change: try XCTUnwrap(input.change), packs: input.packs, unboundFactIds: try XCTUnwrap(input.unboundFactIds))
+        }
+        let candidate = try await service.sharedTrackingCandidate(page: page, kind: kind, mealSources: catalog, transferredChanges: transfers)
+        XCTAssertEqual(candidate.page, page)
+        if input.phase.hasPrefix("partial-store-") {
+            XCTAssertEqual(candidate.candidate.after.unbound, page.state?.unbound)
+            XCTAssertEqual(candidate.candidate.after.catalog, page.state?.catalog)
+            XCTAssertEqual(candidate.candidate.after.graph.contributions, page.state?.graph.contributions)
+            XCTAssertEqual(candidate.candidate.disclosure.money.after.status, "overCap")
+            do { _ = try await service.acceptSharedTrackingCandidate(candidate, acceptUnknown: true); XCTFail("Store overage lacked explicit consent") }
+            catch { XCTAssertEqual(error as? ClientError, .invalidResponse) }
+        } else if input.phase.hasPrefix("partial-meal-undo-") {
+            guard case .mealOperationUndo(let disclosure) = candidate.candidate.disclosure.changes else { return XCTFail("Whole-meal Undo disclosure missing") }
+            XCTAssertEqual(disclosure.targetOperationId, input.targetOperationId)
+        } else {
+            guard case .mealActionChange(let disclosure) = candidate.candidate.disclosure.changes else { return XCTFail("Enabled meal disclosure missing") }
+            XCTAssertEqual(disclosure.mealChange, catalog?.mealChange)
+            XCTAssertEqual(disclosure.transferredChanges.map(\.factId), transfers?.map(\.factId) ?? [])
+            if input.phase == "partial-protected-apply" {
+                let transfer = try XCTUnwrap(transfers?.first), after = try XCTUnwrap(transfer.after)
+                XCTAssertEqual(after.quantity?.unit, .gram)
+                XCTAssertEqual(after.quantity?.confirmedConversion?.targetUnit, .count)
+                XCTAssertTrue(candidate.candidate.after.unbound.contains { $0.factId == transfer.factId && $0.transferred == after })
+                XCTAssertFalse(candidate.candidate.after.graph.contributions.contains { $0.id == after.id })
+                XCTAssertFalse(candidate.candidate.after.graph.edges.contains { $0.demandId == after.id || $0.supplyId == after.id })
+            } else {
+                let changed = try XCTUnwrap(input.change?.contributions.first)
+                XCTAssertEqual(changed.quantity?.unit, .cup)
+                XCTAssertEqual(changed.quantity?.confirmedConversion?.targetUnit, .gram)
+                XCTAssertEqual(candidate.candidate.after.graph.edges, page.state?.graph.edges)
+                XCTAssertEqual(candidate.candidate.after.graph.contributions.first { $0.id == changed.id }, changed)
+            }
+        }
+        let accepted = try await service.acceptSharedTrackingCandidate(candidate, acceptOverage: input.acceptOverage ?? false, acceptUnknown: true)
+        XCTAssertEqual(accepted.preview.disclosure, candidate.candidate.disclosure)
+        let unchanged = try await service.sharedTracking(shopID: input.shopId)
+        let unchangedShop = try await service.shopperShop(shopID: beforeShop.shopId)
+        XCTAssertEqual(unchanged, page); XCTAssertEqual(unchangedShop, beforeShop)
+        let pendingBefore = try await outbox.operations(); XCTAssertTrue(pendingBefore.isEmpty)
+        if input.phase.hasSuffix("-cancel") { return }
+        let operation = try await service.prepareSharedTrackingApply(accepted)
+        try saveTrackingWire(operation, savedURL)
+        if input.phase.hasSuffix("-lost") {
+            do { _ = try await service.sendSharedTracking(operation, outbox: outbox); XCTFail("Actual successful command reply should be dropped") }
+            catch { XCTAssertEqual(error as? ClientError, .transport) }
+            let pending = try await outbox.operations(); XCTAssertEqual(pending, [operation]); XCTAssertEqual(pending.first?.bytes, operation.bytes)
+        } else {
+            let receipt = try await service.sendSharedTracking(operation, outbox: outbox)
+            XCTAssertEqual(receipt.shopRevision, page.shopRevision + 1)
+        }
+        let after = try await service.sharedTracking(shopID: input.shopId)
+        XCTAssertEqual(after.state, candidate.candidate.after)
+        XCTAssertEqual(after.coverage?.allocatableUnboundFactIds, [])
+        if let survivor = input.survivor { XCTAssertEqual(after.graph.contributions.first { $0.id == survivor.id }, survivor) }
+        if input.phase.hasPrefix("partial-store-") {
+            let updatedShop = try await service.shopperShop(shopID: beforeShop.shopId)
+            XCTAssertEqual(updatedShop.storeReviewRequired, false)
+            XCTAssertEqual(updatedShop.storeBasisRevision, beforeShop.storeBasisRevision)
+        }
     }
 }

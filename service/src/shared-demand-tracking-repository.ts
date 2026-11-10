@@ -1,3 +1,4 @@
+import {previewTrackingMealProtection,reviewedTrackingMealProtection,reviewedTrackingMealUndoProtection,type TrackingMealProtection} from './shared-demand-tracking-meal-protection.js';
 import {deriveTrackingMealUndo,loadTrackingMealHistory,captureTrackingMealBefore} from './shared-demand-tracking-meal-undo.js';
 import {transferredChangesSchema,applyTransferredMealChanges,partitionMealActionSources,retainMealFactIdentity} from './shared-demand-tracking-meal-actions.js';
 import {checkout} from './checkout.js';
@@ -138,7 +139,7 @@ export async function readTrackingMealActionSources(repo:HouseholdRepository,ctx
  enabled(repo);repo.requireShopper(ctx,shop);repo.requireDraft(shop);const input=trackingActionSourcesInputSchema.parse(raw);repo.checkBase(shop,input.base);
  const current=await stateNow(repo,ctx,shop),state=current.state;check(state&&!current.projection&&!shop.demand_review_required&&state.graph.revision>0,'tracking_enabled_action_required');
  check(input.base.graphRevision===state.graph.revision&&input.base.stateDigest===digest(state),'tracking_stale_state');
- check(input.action.kind==='shop.patch','tracking_meal_action_required');const facts=await actionFacts(repo,ctx,shop,input);check(facts.body.mealEdit,'tracking_meal_action_required');
+ check(input.action.kind==='shop.patch','tracking_meal_action_required');const facts=await actionFacts(repo,ctx,shop,input,previewTrackingMealProtection(state));check(facts.body.mealEdit,'tracking_meal_action_required');
  const descriptors=await trackingSourceDescriptors(repo,ctx,shop,facts,catalogGraph(state));
  const normalizedAction={kind:'shop.patch' as const,body:bodySchemas['shop.patch'].parse(facts.body)};
  return bounded({schemaVersion:2 as const,shopId:shop.shop_id,base:input.base,normalizedAction,actionDigest:storeDigest(normalizedAction),mealChange:await reviewedMealChange(repo,ctx,shop,facts),
@@ -192,6 +193,7 @@ async function finishAdoptionPlan(ctx:Context,shop:Shop,operationId:string,plan:
 async function evaluate(repo:HouseholdRepository,ctx:Context,shop:Shop,input:Intent,operationId:string,at:string){
  repo.requireShopper(ctx,shop);repo.requireDraft(shop);repo.checkBase(shop,input.base);const current=await stateNow(repo,ctx,shop),before=current.state;
  check(input.base.graphRevision===current.graph.revision&&input.base.stateDigest===digest(current.projection??before),'tracking_stale_state');
+ let inverseProtection:TrackingMealProtection|undefined;
  let graphReceipt:unknown=null;let transferredChanges:ReturnType<typeof applyTransferredMealChanges>['changes']=[];
  let state:TrackingState,commandAction: z.infer<typeof action>,disclosure:unknown=null,adoption:AdoptionRecord|null=null;let adoptionPlan:AdoptionPlan|null=null;
  if(input.mode==='recover'){
@@ -201,7 +203,7 @@ async function evaluate(repo:HouseholdRepository,ctx:Context,shop:Shop,input:Int
  }else{
   check(before&&!shop.demand_review_required,'tracking_recovery_required');check((input.mode==='adopt')===(before.graph.revision===0),'tracking_adoption_required');
   if(input.mode==='mealOperationUndo'){
-   const inverse=await deriveTrackingMealUndo(repo,ctx,shop,before,input.targetOperationId,operationId,at,input.packs);state=inverse.state;commandAction=inverse.action;graphReceipt=inverse.receipt;disclosure=inverse.disclosure;
+   const inverse=await deriveTrackingMealUndo(repo,ctx,shop,before,input.targetOperationId,operationId,at,input.packs);state=inverse.state;commandAction=inverse.action;graphReceipt=inverse.receipt;disclosure=inverse.disclosure;inverseProtection=inverse.protectMeal;
   }else if(input.mode==='firstAdoptionUndo'){
    const old=await lineage(ctx,shop,input.targetOperationId);
    if(old.evidence.version===2){
@@ -225,7 +227,7 @@ async function evaluate(repo:HouseholdRepository,ctx:Context,shop:Shop,input:Int
   }else if(input.mode==='rebind'){
    const result=previewTransferredRebind(before,{operationId,at,bindings:input.bindings},basis(ctx,shop,before));state=result.state;disclosure=result.disclosure;commandAction=unchangedAction(state,shop);
   }else{
-   commandAction={kind:input.action.kind,body:bodySchemas[input.action.kind].parse(input.action.body)};const facts=await actionFacts(repo,ctx,shop,{action:commandAction});
+   commandAction={kind:input.action.kind,body:bodySchemas[input.action.kind].parse(input.action.body)};const facts=await actionFacts(repo,ctx,shop,{action:commandAction},input.mode==='change'&&commandAction.kind==='shop.patch'&&commandAction.body.mealEdit?previewTrackingMealProtection(before):undefined);
    check(input.mode!=='adopt'||before.graph.revision===0,'tracking_first_adoption_scope');
    const transferredIds=new Set(before.unbound.flatMap(u=>u.transferred?[u.transferred.id]:[]));
    const quantifying=input.mode==='change'?(input.change.quantifyReservationIds??[]).filter(id=>transferredIds.has(id)):[];
@@ -255,7 +257,7 @@ async function evaluate(repo:HouseholdRepository,ctx:Context,shop:Shop,input:Int
   }
  }
  state={...state,basket:[...state.basket].sort((a,b)=>a.id.localeCompare(b.id))};
- const facts=await actionFacts(repo,ctx,shop,{action:commandAction});const catalog=await trackingCatalog(repo,ctx,shop,facts,catalogGraph(state),input.mode==='mealOperationUndo'?state.catalog:undefined);validateState(state,catalog);
+ const facts=await actionFacts(repo,ctx,shop,{action:commandAction},input.mode==='change'&&before&&commandAction.kind==='shop.patch'&&commandAction.body.mealEdit?reviewedTrackingMealProtection(before,state):inverseProtection);const catalog=await trackingCatalog(repo,ctx,shop,facts,catalogGraph(state),input.mode==='mealOperationUndo'?state.catalog:undefined);validateState(state,catalog);
  check(same(basket(facts.lines),state.basket)&&storeDigest(facts.quote)===state.quoteDigest,'tracking_action_changed');
  verifyPacks(state.graph,{...facts,lines:facts.lines.filter(l=>!state.legacyLineIds.includes(l.lineId))},state.packReviews);
  if((input.mode==='change'||input.mode==='adopt')&&facts.body.mealEdit)disclosure={kind:'mealActionChange',mealChange:await reviewedMealChange(repo,ctx,shop,facts),transferredChanges};
@@ -349,6 +351,13 @@ export async function applyTracking(repo:HouseholdRepository,ctx:Context,shop:Sh
  if(intent.mode==='change'&&value.action.body.mealEdit&&value.before){const trackingMealBefore=await captureTrackingMealBefore(ctx,shop,operationId,value.before,value.state);if(trackingMealBefore)storedReview={...p.review,trackingMealBefore};}
  if(!staged.has(ctx))staged.set(ctx,new Map());staged.get(ctx)!.set(shop.shop_id,{state:value.state,adoption:finalizedAdoption,review:storedReview,storeBasis:value.storeBasis,reverses:intent.mode==='firstAdoptionUndo'||intent.mode==='mealOperationUndo'?intent.targetOperationId:null});
  await ctx.db.query('DELETE FROM ritc.shared_tracking_preview WHERE household_id=$1 AND preview_id=$2',[ctx.householdId,p.preview_id]);
+ // The callback is process-local authority from this exact recomputed preview,
+ // never a field supplied in an HTTP request or persisted review.
+ if(intent.mode==='change'&&value.before&&value.action.kind==='shop.patch'&&value.action.body.mealEdit)return{protectMeal:reviewedTrackingMealProtection(value.before,value.state)};
+ if(intent.mode==='mealOperationUndo'&&value.before){
+  const history=await loadTrackingMealHistory(ctx,shop,intent.targetOperationId);
+  return{protectMeal:reviewedTrackingMealUndoProtection(value.before,value.state,history.before,history.after)};
+ }
 }
 /** A completed v1 write can advance an already-proved complete envelope. It never
  * manufactures first-adoption evidence for an old graph. */

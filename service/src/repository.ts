@@ -474,14 +474,16 @@ export class HouseholdRepository {
     if(c.kind==='request.apply')return this.apply(ctx,shop,c,operationId);
     if(c.kind==='shop.patch') {
       this.requireDraft(shop);const b=bodySchemas['shop.patch'].parse(c.body);this.validateQuote(b.quote,ctx.now);checkout(b.lines,b.quote);
-      if(b.demandReview)await applyDemand(this,ctx,shop,c,operationId);
+      let demandAcceptance:Awaited<ReturnType<typeof applyDemand>>=undefined;
+      if(b.demandReview)demandAcceptance=await applyDemand(this,ctx,shop,c,operationId);
       else if(shop.demand_revision){if(!internalPriceOnly)throw new ServiceError(409,'demand_review_required','Review shared source quantities before changing this shop.');await assertPriceOnly(this,ctx,shop,c);}
       if(b.mealEdit) {
         const {occurrenceId,meal}=b.mealEdit;
         const current=await this.meals(ctx,shop.shop_id);
         const original=current.find(entry=>entry.occurrenceId===occurrenceId);
         const exists=Boolean(original);
-        preserveProtectedMeal(original ? sharedMealSchema.parse(original.meal) : undefined, meal);
+        if(demandAcceptance?.protectMeal)demandAcceptance.protectMeal(original ? sharedMealSchema.parse(original.meal) : undefined,meal,occurrenceId);
+        else preserveProtectedMeal(original ? sharedMealSchema.parse(original.meal) : undefined, meal);
         if((original?.revision ?? null)!==b.mealEdit.baseMealRevision)
           throw new ServiceError(409,'stale_meal','Review this occurrence again before applying a change.');
         if(b.mealEdit.changeProposalId) await consumeSharedMealChange(ctx,shop,b.mealEdit.changeProposalId,occurrenceId,b.mealEdit.baseMealRevision,meal);

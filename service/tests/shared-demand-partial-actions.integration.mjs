@@ -11,10 +11,10 @@ async function prepared(f,input,flags){const c=ok(await candidate(f,input)),p=ok
 async function commit(f,input,flags){const r=await prepared(f,input,flags);return{...r,receipt:ok(await call(f.owner,f.base+'/commands','POST',r.command))};}
 const meal=(title,ingredient,quantity,protectedValue=false)=>({title,day:null,kind:protectedValue?'lunch':'dinner',portions:2,protected:protectedValue,planning:{groups:[],ingredients:[{id:ingredient,name:protectedValue?'Lunch wraps':'Dinner wraps',quantity,groupIds:[],exclusions:[]}]}});
 const amount=n=>n===null?null:{amount:{numerator:n,denominator:1},unit:'count',originalLiteral:n+' exact dinner wraps'};
-async function setup(){const f=await fixture();f.occurrenceId=randomUUID();f.ingredientId=randomUUID();f.lunchId=randomUUID();f.lunchIngredientId=randomUUID();f.meal=meal('Dinner',f.ingredientId,amount(6));f.lunch=meal('Protected lunch',f.lunchIngredientId,null,true);
+async function setup({knownProtected=false,protectedBasis=null}={}){const f=await fixture();f.occurrenceId=randomUUID();f.ingredientId=randomUUID();f.lunchId=randomUUID();f.lunchIngredientId=randomUUID();f.meal=meal('Dinner',f.ingredientId,amount(6));f.lunch=meal('Protected lunch',f.lunchIngredientId,knownProtected?amount(2):null,true);
  ok(await send(f,'shop.patch',{quote:f.quote,lines:[f.basket],mealEdit:{occurrenceId:f.occurrenceId,baseMealRevision:null,meal:f.meal}},1));
  ok(await send(f,'shop.patch',{quote:f.quote,lines:[f.basket],mealEdit:{occurrenceId:f.lunchId,baseMealRevision:null,meal:f.lunch}},2));
- const before=await page(f),input={...draft(f),base:base(before)};input.action.body.lines=[{...f.basket,packs:3}];input.change.contributions.push(...before.state.catalog.map(fact=>({id:fact.id,lineId:f.basket.lineId,source:fact.source,productKey:'wraps',productName:fact.originalText,originalText:fact.originalText,quantity:fact.quantity,sourceExclusions:fact.sourceExclusions,exclusions:[],contains:[],removedAt:null})));input.packs=[{lineId:f.basket.lineId,usablePerPack:q(12),acceptUnresolved:true}];
+ const before=await page(f),input={...draft(f),base:base(before)};input.action.body.lines=[{...f.basket,packs:3}];input.change.contributions.push(...before.state.catalog.map(fact=>({id:fact.id,lineId:f.basket.lineId,source:fact.source,productKey:'wraps',productName:fact.originalText,originalText:fact.originalText,quantity:fact.quantity&&protectedBasis&&fact.source.kind==='reservation'?{...fact.quantity,confirmedConversion:structuredClone(protectedBasis)}:fact.quantity,sourceExclusions:fact.sourceExclusions,exclusions:[],contains:[],removedAt:null})));input.packs=[{lineId:f.basket.lineId,usablePerPack:q(12),acceptUnresolved:true}];
  const adoption=await commit(f,input),p=await page(f);await commit(f,{mode:'firstAdoptionUndo',base:base(p),targetOperationId:adoption.receipt.operationId,packs:[]});f.adoption=adoption;return f;}
 async function addStaple(f,name='Later apples'){const p=await page(f),s=await head(f),extra={lineId:randomUUID(),originalItem:name,packs:1,unitPriceMinor:75,feeEligible:true},c={...source({...f,basket:extra},q(1)),productKey:'apples',productName:name,originalText:name};const r=await commit(f,{mode:'change',base:base(p),action:{kind:'shop.patch',body:{quote:s.quote,lines:[...s.lines,extra]}},change:{...empty(),lines:[{id:extra.lineId,name,unit:'count',originalOrder:25,trashedAt:null}],contributions:[c]},unboundFactIds:p.state.unbound.map(x=>x.factId),packs:[...p.state.packReviews,{lineId:extra.lineId,usablePerPack:q(1),acceptUnresolved:false}]});return{extra,c,r};}
 async function editInput(f,n=5,{omitTransfer=false,name}={}){const p=await page(f),s=await head(f),current=s.meals.find(x=>x.occurrenceId===f.occurrenceId),next=structuredClone(current.meal);next.planning.ingredients[0].quantity=amount(n);if(name!==undefined)next.planning.ingredients[0].name=name;const action={kind:'shop.patch',body:{quote:s.quote,lines:s.lines,mealEdit:{occurrenceId:f.occurrenceId,baseMealRevision:current.revision,meal:next}}},input={base:base(p),action};const catalog=ok(await call(f.owner,f.path+'/demand/tracking/meal-action-sources','POST',input));const updates=catalog.sources.filter(x=>x.location==='transferred'&&x.transition!=='retain').map(x=>({factId:x.factId,after:{...x.before,quantity:x.proposed.quantity,productName:x.proposed.productName,source:x.proposed.source,sourceExclusions:x.proposed.sourceExclusions}}));return{p,s,catalog,input:{mode:'change',...input,change:empty(),packs:p.state.packReviews,unboundFactIds:catalog.proposedCatalog.filter(x=>!p.state.bindings.some(b=>b.factId===x.id)).map(x=>x.id),...omitTransfer?{}:{transferredChanges:updates}}};}
@@ -47,4 +47,96 @@ test('new partial meal effect on a genuinely old V1 shop captures exact before f
  const oldOwner=f.owner,other=await invited(f),current=await head(f);ok(await send(f,'shop.transferAuthority',{newShopperId:other.id},current.shopRevision,current.authorityEpoch));f.owner=other;
  ok(await call(oldOwner,'/v1/privacy/deletions','POST',{clientKey:randomUUID(),statusToken:randomBytes(32).toString('base64url'),confirm:true,households:[{householdId:f.h,organizer:'transfer',organizerMemberId:other.id,shops:[],eraseChildProfiles:[]}]}),202);assert.equal((await maintenance.run({batchSize:1})).completed,1);
  const historical=(await admin.query('SELECT review FROM ritc.shared_tracking_revision WHERE household_id=$1 AND shop_id=$2',[f.h,f.shopId])).rows;assert.ok(historical.length>0);assert.ok(historical.every(x=>x.review===null),'authorized erasure removes private before captures as well as current reviews');
+});
+
+async function protectedUnitInput(f){
+ const p=await page(f),s=await head(f),old=s.meals.find(x=>x.occurrenceId===f.lunchId),next=structuredClone(old.meal);
+ next.planning.ingredients[0].quantity={amount:{numerator:60,denominator:1},unit:'gram',originalLiteral:'60 measured grams'};
+ const action={kind:'shop.patch',body:{quote:s.quote,lines:s.lines,mealEdit:{occurrenceId:f.lunchId,baseMealRevision:old.revision,meal:next}}};
+ const catalog=ok(await call(f.owner,f.path+'/demand/tracking/meal-action-sources','POST',{base:base(p),action})),row=catalog.sources.find(x=>x.proposed.source.kind==='reservation');
+ assert.equal(row.transition,'update');assert.equal(row.proposed.quantity.confirmedConversion,null);
+ const after={...row.before,quantity:{...row.proposed.quantity,confirmedConversion:{sourceUnit:'gram',targetUnit:'count',targetAmountPerSourceUnit:{numerator:'1',denominator:'30'},sourceNote:'One protected wrap weighs 30 grams',confirmedAt:new Date().toISOString()}}};
+ const tracked=row.location==='tracked';
+ return{p,s,catalog,row,input:{mode:'change',base:base(p),action,change:{...empty(),contributions:tracked?[after]:[]},packs:p.state.packReviews,unboundFactIds:catalog.proposedCatalog.filter(x=>!p.state.bindings.some(b=>b.factId===x.id)).map(x=>x.id),...tracked?{}:{transferredChanges:[{factId:row.factId,after}]}}};
+}
+for(const location of ['transferred','tracked'])test('protected '+location+' cross-unit review preserves exact observation and conservation through Cancel Apply retry',async()=>{
+ const f=await setup({knownProtected:true});
+ if(location==='tracked'){
+  const p=await page(f),u=p.state.unbound.find(x=>x.transferred?.source.kind==='reservation'),line={...p.state.graph.lines.find(x=>x.id===u.transferred.lineId),trashedAt:null},basket=p.state.basket.find(x=>x.id===line.id);
+  await commit(f,{mode:'rebind',base:base(p),bindings:[{factId:u.factId,line,basket,packReview:{lineId:line.id,usablePerPack:q(12),acceptUnresolved:false}}]});
+ }
+ const v=await protectedUnitInput(f),n=await counts(f),held=await prepared(f,v.input);assert.deepEqual(await counts(f),n);assert.deepEqual(await page(f),v.p);
+ assert.deepEqual(held.c.disclosure.changes.mealChange.before.meal,f.lunch);assert.equal(held.c.disclosure.changes.mealChange.after.meal.planning.ingredients[0].quantity.unit,'gram');
+ const receipt=ok(await call(f.owner,f.base+'/commands','POST',held.command)),after=await page(f),stored=(await head(f)).meals.find(x=>x.occurrenceId===f.lunchId).meal;
+ assert.deepEqual(stored,v.input.action.body.mealEdit.meal);assert.equal(stored.planning.ingredients[0].quantity.amount.numerator,60);assert.equal(stored.planning.ingredients[0].quantity.originalLiteral,'60 measured grams');
+ const changed=location==='tracked'?after.state.graph.contributions.find(x=>x.id===v.row.before.id):after.state.unbound.find(x=>x.factId===v.row.factId).transferred;
+ assert.equal(changed.id,v.row.before.id);assert.deepEqual(changed.source,v.row.before.source);assert.equal(changed.quantity.confirmedConversion.targetAmountPerSourceUnit.denominator,'30');
+ if(location==='transferred'){assert.deepEqual(after.state.graph.contributions,v.p.state.graph.contributions);assert.deepEqual(after.coverage.allocatableUnboundFactIds,[]);}
+ const committedCounts=await counts(f);assert.deepEqual(ok(await call(f.owner,f.base+'/commands','POST',held.command)),receipt);assert.deepEqual(await counts(f),committedCounts);assert.deepEqual(await page(f),after);
+ // Whole Undo derives the exact old observation from immutable server history.
+ // Its recorded after basis proves equivalence; no reverse measurement is added.
+ const later=await addStaple(f),beforeUndo=await page(f),inverse=await prepared(f,await inverseInput(f,receipt.operationId)),undoCounts=await counts(f);
+ assert.deepEqual(await page(f),beforeUndo,'Cancel keeps current protected quantities');
+ const inverseReceipt=ok(await call(f.owner,f.base+'/commands','POST',inverse.command)),restored=await page(f);
+ const originalRow=location==='tracked'?v.p.state.graph.contributions.find(x=>x.id===v.row.before.id):v.p.state.unbound.find(x=>x.factId===v.row.factId).transferred;
+ const restoredRow=location==='tracked'?restored.state.graph.contributions.find(x=>x.id===v.row.before.id):restored.state.unbound.find(x=>x.factId===v.row.factId).transferred;
+ assert.deepEqual(restoredRow,originalRow);assert.equal(restoredRow.quantity.confirmedConversion,null);assert.deepEqual((await head(f)).meals.find(x=>x.occurrenceId===f.lunchId).meal,f.lunch);
+ assert.deepEqual(restored.state.graph.contributions.find(x=>x.id===later.c.id),later.c);assert.equal((await counts(f))[0],undoCounts[0]+1);
+ const inverseCounts=await counts(f);assert.deepEqual(ok(await call(f.owner,f.base+'/commands','POST',inverse.command)),inverseReceipt);assert.deepEqual(await counts(f),inverseCounts);assert.deepEqual(await page(f),restored);
+});
+for(const bad of ['missing','reducing','wrongSource','wrongAmount','omitted','retirement'])test('protected cross-unit candidate rejects '+bad+' conversion/source proof without mutation',async()=>{
+ const f=await setup({knownProtected:true}),v=await protectedUnitInput(f),input=structuredClone(v.input),row=input.transferredChanges[0].after,n=await counts(f);
+ if(bad==='missing')row.quantity.confirmedConversion=null;if(bad==='reducing')row.quantity.confirmedConversion.targetAmountPerSourceUnit.denominator='60';if(bad==='wrongSource')row.source.ingredientId=randomUUID();if(bad==='wrongAmount')row.quantity.amount.numerator='120';if(bad==='omitted')delete input.transferredChanges;if(bad==='retirement')input.transferredChanges[0].after=null;
+ const denied=await candidate(f,input);assert.ok([409,422].includes(denied.status));if(bad==='missing'||bad==='reducing')assert.equal(denied.data.error.code,'protected_quantity_reduced');
+ assert.deepEqual(await counts(f),n);assert.deepEqual(await page(f),v.p);assert.deepEqual(await head(f),v.s);
+});
+for(const bad of ['portions','kind','ingredient','protection'])test('protected cross-unit catalog cannot defer '+bad+' changes',async()=>{
+ const f=await setup({knownProtected:true}),v=await protectedUnitInput(f),action=structuredClone(v.input.action),meal=action.body.mealEdit.meal,n=await counts(f);
+ if(bad==='portions')meal.portions=1;if(bad==='kind')meal.kind='dinner';if(bad==='ingredient')meal.planning.ingredients[0].name='Different food';if(bad==='protection')meal.protected=false;
+ const denied=await call(f.owner,f.path+'/demand/tracking/meal-action-sources','POST',{base:base(v.p),action});assert.equal(denied.status,409);assert.equal(denied.data.error.code,'protected_meal');assert.deepEqual(await counts(f),n);assert.deepEqual(await page(f),v.p);
+});
+for(const kind of ['stale','privacy'])test('protected cross-unit held command rechecks '+kind+' state before accepting conversion',async()=>{
+ const f=await setup({knownProtected:true}),v=await protectedUnitInput(f),held=await prepared(f,v.input);
+ if(kind==='stale')await addStaple(f);else await admin.query('UPDATE ritc.shop SET demand_review_required=true,tracking_privacy_revision=tracking_privacy_revision+1 WHERE household_id=$1 AND shop_id=$2',[f.h,f.shopId]);
+ const before=await counts(f),denied=await call(f.owner,f.base+'/commands','POST',held.command);assert.equal(denied.status,409);assert.deepEqual(await counts(f),before);assert.equal((await head(f)).meals.find(x=>x.occurrenceId===f.lunchId).meal.planning.ingredients[0].quantity.unit,'count');
+});
+test('protected conversion cannot bypass reviewed command body or default direct meal protection',async()=>{
+ const f=await setup({knownProtected:true}),v=await protectedUnitInput(f),held=await prepared(f,v.input),tampered=structuredClone(held.command),n=await counts(f);
+ tampered.body.mealEdit.meal.planning.ingredients[0].quantity.amount.numerator=30;assert.equal((await call(f.owner,f.base+'/commands','POST',tampered)).status,409);assert.deepEqual(await counts(f),n);
+ const direct=structuredClone(held.command);delete direct.body.demandReview;assert.equal((await call(f.owner,f.base+'/commands','POST',direct)).status,409);assert.deepEqual(await counts(f),n);
+ const legacy=await fixture(),occurrenceId=randomUUID(),original=meal('Protected direct lunch',randomUUID(),amount(2),true);ok(await send(legacy,'shop.patch',{quote:legacy.quote,lines:[legacy.basket],mealEdit:{occurrenceId,baseMealRevision:null,meal:original}},1));
+ const next=structuredClone(original);next.planning.ingredients[0].quantity={amount:{numerator:60,denominator:1},unit:'gram',originalLiteral:'60 measured grams'};
+ const denied=await send(legacy,'shop.patch',{quote:legacy.quote,lines:[legacy.basket],mealEdit:{occurrenceId,baseMealRevision:2,meal:next}},2);assert.equal(denied.status,409);assert.equal(denied.data.error.code,'protected_meal');
+});
+for(const bad of ['increasedProtectedAmount','laterTouchedSource'])test('protected whole cross-unit Undo rejects '+bad+' with no partial mutation',async()=>{
+ const f=await setup({knownProtected:true}),v=await protectedUnitInput(f);
+ if(bad==='increasedProtectedAmount'){v.input.action.body.mealEdit.meal.planning.ingredients[0].quantity.amount.numerator=90;v.input.transferredChanges[0].after.quantity.amount.numerator='90';}
+ const acceptedChange=await commit(f,v.input),heldUndo=bad==='laterTouchedSource'?await prepared(f,await inverseInput(f,acceptedChange.receipt.operationId)):null;
+ if(bad==='laterTouchedSource'){
+  const p=await page(f),s=await head(f),current=s.meals.find(x=>x.occurrenceId===f.lunchId),next=structuredClone(current.meal);next.planning.ingredients[0].quantity.amount.numerator=90;
+  const action={kind:'shop.patch',body:{quote:s.quote,lines:s.lines,mealEdit:{occurrenceId:f.lunchId,baseMealRevision:current.revision,meal:next}}},catalog=ok(await call(f.owner,f.path+'/demand/tracking/meal-action-sources','POST',{base:base(p),action})),u=p.state.unbound.find(x=>x.factId===v.row.factId),after={...u.transferred,quantity:{...u.transferred.quantity,amount:{numerator:'90',denominator:'1'}}};
+  await commit(f,{mode:'change',base:base(p),action,change:empty(),packs:p.state.packReviews,unboundFactIds:catalog.proposedCatalog.map(x=>x.id),transferredChanges:[{factId:u.factId,after}]});
+ }
+ const before=await page(f),s=await head(f),n=await counts(f);if(heldUndo)assert.equal((await call(f.owner,f.base+'/commands','POST',heldUndo.command)).status,409);
+ const denied=await candidate(f,await inverseInput(f,acceptedChange.receipt.operationId));assert.ok([409,422].includes(denied.status));
+ assert.deepEqual(await counts(f),n);assert.deepEqual(await page(f),before);assert.deepEqual(await head(f),s);
+});
+for(const location of ['tracked','transferred'])for(const scenario of [{oldGrams:45,acceptedGrams:90,allowed:false},{oldGrams:15,acceptedGrams:60,allowed:true}])test('protected '+location+' API inverse uses immutable accepted basis over original '+scenario.oldGrams+' grams per count',async()=>{
+ const originalBasis={sourceUnit:'count',targetUnit:'gram',targetAmountPerSourceUnit:{numerator:String(scenario.oldGrams),denominator:'1'},sourceNote:'Earlier explicitly reviewed density',confirmedAt:new Date().toISOString()},f=await setup({knownProtected:true,protectedBasis:originalBasis});
+ if(location==='tracked'){
+  const p=await page(f),u=p.state.unbound.find(x=>x.transferred?.source.kind==='reservation'),line={...p.state.graph.lines.find(x=>x.id===u.transferred.lineId),trashedAt:null},basket=p.state.basket.find(x=>x.id===line.id);
+  await commit(f,{mode:'rebind',base:base(p),bindings:[{factId:u.factId,line,basket,packReview:{lineId:line.id,usablePerPack:q(12),acceptUnresolved:false}}]});
+ }
+ const v=await protectedUnitInput(f),originalRow=structuredClone(v.row.before),row=location==='tracked'?v.input.change.contributions[0]:v.input.transferredChanges[0].after;
+ assert.deepEqual(originalRow.quantity.confirmedConversion,originalBasis);assert.equal(v.p.state.catalog.find(x=>x.id===v.row.factId).quantity.confirmedConversion,null);
+ v.input.action.body.mealEdit.meal.planning.ingredients[0].quantity={amount:{numerator:scenario.acceptedGrams,denominator:1},unit:'gram',originalLiteral:scenario.acceptedGrams+' measured grams'};
+ row.quantity={...row.quantity,amount:{numerator:String(scenario.acceptedGrams),denominator:'1'},originalLiteral:scenario.acceptedGrams+' measured grams'};
+ const applied=await commit(f,v.input),beforeUndo=await page(f),shopBefore=await head(f),n=await counts(f),input=await inverseInput(f,applied.receipt.operationId);
+ if(!scenario.allowed){const denied=await candidate(f,input);assert.equal(denied.status,422);assert.equal(denied.data.error.code,'protected_quantity_reduced');assert.deepEqual(await page(f),beforeUndo);assert.deepEqual(await head(f),shopBefore);assert.deepEqual(await counts(f),n);}
+ else{
+  const held=await prepared(f,input);assert.deepEqual(await page(f),beforeUndo);assert.deepEqual(await counts(f),n);
+  const receipt=ok(await call(f.owner,f.base+'/commands','POST',held.command)),restored=await page(f),restoredRow=location==='tracked'?restored.state.graph.contributions.find(x=>x.id===originalRow.id):restored.state.unbound.find(x=>x.factId===v.row.factId).transferred;
+  assert.deepEqual(restoredRow,originalRow);assert.deepEqual(restoredRow.quantity.confirmedConversion,originalBasis);assert.deepEqual((await head(f)).meals.find(x=>x.occurrenceId===f.lunchId).meal,f.lunch);
+  const afterCounts=await counts(f);assert.deepEqual(ok(await call(f.owner,f.base+'/commands','POST',held.command)),receipt);assert.deepEqual(await page(f),restored);assert.deepEqual(await counts(f),afterCounts);
+ }
 });

@@ -1,0 +1,62 @@
+{
+  "status": "passed",
+  "commit": "46a3e6bf0c4f90ed3f36d7baff25936c7867bdf1",
+  "sourceFiles": 793,
+  "observerPins": 50,
+  "profiles": {
+    "ordinary": {
+      "tests": 658,
+      "suiteCounts": [
+        19,
+        17,
+        10,
+        12,
+        10,
+        9,
+        64,
+        174,
+        36,
+        12,
+        295
+      ],
+      "logSHA256": "8e8a22040a914919016f3ded98eb2b9b003d9a7b038de931903d59e9b0c657b0"
+    },
+    "diagnostic": {
+      "tests": 658,
+      "suiteCounts": [
+        19,
+        17,
+        10,
+        12,
+        10,
+        9,
+        64,
+        174,
+        36,
+        12,
+        295
+      ],
+      "logSHA256": "781af62690c8edca8f65ff00bbfe7cb8b9be8007749752daf2a06f2189702cf3"
+    },
+    "helper": {
+      "tests": 658,
+      "suiteCounts": [
+        19,
+        17,
+        10,
+        12,
+        10,
+        9,
+        64,
+        174,
+        36,
+        12,
+        295
+      ],
+      "logSHA256": "70f3dbd2315839e33ae4b57c9e772824cb375b0fe15f4c06ad4ee602c2e6e7ec"
+    }
+  },
+  "receiptSHA256": "4d5fc14e788a75a0ebf3a7f675119e6299fbd2b18ced01eea01a5ebd080a6774",
+  "uncommittedProductWorkExcluded": true,
+  "releaseAcceptance": false
+}

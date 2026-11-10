@@ -1,3 +1,4 @@
+import type {TrackingMealProtection} from './shared-demand-tracking-meal-protection.js';
 import {assertTrackingV1,assertTrackingPriceReset,applyTracking,trackingOperation,assertTrackingReplay,stageV1Tracking} from './shared-demand-tracking-repository.js';
 import {deriveSharedFoodUndo,assertSharedFoodUndoReplay,foodUndoFailure,type FoodUndoEvidence,type FoodUndoStoreBasis} from './shared-food-operation-undo.js';
 import {recordMealUndoEffect,loadMealUndoEvidence} from './shared-food-meal-undo.js';
@@ -68,11 +69,11 @@ function quantityMatches(actual:DemandContribution['quantity'],expected:any){
  if(expected===null)return actual===null;if(!actual)return false;
  return actual.unit===expected.unit&&BigInt(actual.amount.numerator)*BigInt(expected.amount.denominator)===BigInt(expected.amount.numerator)*BigInt(actual.amount.denominator);
 }
-export async function actionFacts(repo:HouseholdRepository,ctx:Context,shop:Shop,input:Pick<Input,'action'>){
+export async function actionFacts(repo:HouseholdRepository,ctx:Context,shop:Shop,input:Pick<Input,'action'>,protectMeal?:TrackingMealProtection){
  const meals=await repo.meals(ctx,shop.shop_id);let request:any=null;let body:any,lines:any[],quote=shop.quote;
  if(input.action.kind==='shop.patch'){
   assert(!('demandReview' in input.action.body),'nested_demand_review');body=bodySchemas['shop.patch'].parse(input.action.body);lines=body.lines;quote=body.quote;
-  if(body.mealEdit){const e=body.mealEdit,old=meals.find(m=>m.occurrenceId===e.occurrenceId);assert((old?.revision??null)===e.baseMealRevision,'stale_meal');preserveProtectedMeal(old?sharedMealSchema.parse(old.meal):undefined,e.meal);
+  if(body.mealEdit){const e=body.mealEdit,old=meals.find(m=>m.occurrenceId===e.occurrenceId);assert((old?.revision??null)===e.baseMealRevision,'stale_meal');if(protectMeal)protectMeal(old?sharedMealSchema.parse(old.meal):undefined,e.meal,e.occurrenceId);else preserveProtectedMeal(old?sharedMealSchema.parse(old.meal):undefined,e.meal);
    assert(old||e.meal,'stale_meal');assert(old||meals.length<100,'meal_limit');
    if(e.changeProposalId)await requireSharedMealChange(ctx,shop,e.changeProposalId,e.occurrenceId,e.baseMealRevision,e.meal);
    if(e.proposalId)await requireMealMove(ctx,shop,e.proposalId,e.occurrenceId,old?sharedMealSchema.parse(old.meal):undefined,e.meal);
