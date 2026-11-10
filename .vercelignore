@@ -9,6 +9,7 @@ scripts/
 .build/
 .git/
 .github/
+supabase/.temp/
 **/node_modules/
 **/dist/
 **/public-build/
