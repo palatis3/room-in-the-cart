@@ -1,5 +1,5 @@
 name: iOS Release performance
-run-name: iOS performance${{ inputs.observe_app_scroll_signposts && ' · app observation (diagnostic only)' || '' }} · ${{ inputs.case || 'all' }}${{ inputs.capture_preflight_only && ' · capability-only' || '' }}${{ inputs.capture_scroll_signposts && ' · signpost capture (diagnostic only)' || '' }}${{ inputs.fresh_performance_simulator && ' · fresh simulator (diagnostic only)' || '' }}${{ inputs.enable_performance_diagnostics && ' · performance trace (diagnostic only)' || '' }}
+run-name: iOS performance${{ inputs.simulator_signpost_control && ' · standalone helper (diagnostic only)' || '' }}${{ inputs.observe_app_scroll_signposts && ' · app observation (diagnostic only)' || '' }} · ${{ inputs.case || 'all' }}${{ inputs.capture_preflight_only && ' · capability-only' || '' }}${{ inputs.capture_scroll_signposts && ' · signpost capture (diagnostic only)' || '' }}${{ inputs.fresh_performance_simulator && ' · fresh simulator (diagnostic only)' || '' }}${{ inputs.enable_performance_diagnostics && ' · performance trace (diagnostic only)' || '' }}
 
 on:
   pull_request:
@@ -30,6 +30,10 @@ on:
         type: choice
         options: [all, launch, rendered, scroll]
         default: all
+      simulator_signpost_control:
+        description: Standalone helper Logging prerequisite only; no app build, XCTest, or baseline
+        type: boolean
+        default: false
       observe_app_scroll_signposts:
         description: One owned app Instruments observation on the separate scroll consumer (diagnostic only)
         type: boolean
@@ -65,7 +69,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: ios-performance-${{ github.workflow }}-${{ github.ref }}${{ inputs.capture_scroll_signposts && '-scroll-capture' || '' }}${{ inputs.capture_preflight_only && '-capabilities-only' || '' }}${{ inputs.fresh_performance_simulator && '-fresh-simulator' || '' }}${{ inputs.enable_performance_diagnostics && '-performance-diagnostics' || '' }}${{ inputs.observe_app_scroll_signposts && '-app-observation' || '' }}
+  group: ios-performance-${{ github.workflow }}-${{ github.ref }}${{ inputs.simulator_signpost_control && '-simulator-helper' || '' }}${{ inputs.capture_scroll_signposts && '-scroll-capture' || '' }}${{ inputs.capture_preflight_only && '-capabilities-only' || '' }}${{ inputs.fresh_performance_simulator && '-fresh-simulator' || '' }}${{ inputs.enable_performance_diagnostics && '-performance-diagnostics' || '' }}${{ inputs.observe_app_scroll_signposts && '-app-observation' || '' }}
   cancel-in-progress: true
 
 env:
@@ -78,6 +82,7 @@ env:
   CAPTURE_SCROLL_SIGNPOSTS: ${{ inputs.capture_scroll_signposts || false }}
   CAPTURE_PREFLIGHT_ONLY: ${{ inputs.capture_preflight_only || false }}
   OBSERVE_APP_SCROLL_SIGNPOSTS: ${{ inputs.observe_app_scroll_signposts || false }}
+  SIMULATOR_SIGNPOST_CONTROL: ${{ inputs.simulator_signpost_control || false }}
   FRESH_PERFORMANCE_SIMULATOR: ${{ inputs.fresh_performance_simulator || false }}
 
 jobs:
@@ -97,6 +102,8 @@ jobs:
           python3 scripts/test_capture_scroll_signposts.py
           python3 scripts/test_app_scroll_observation.py
           python3 scripts/test_app_scroll_preflight_retention.py
+          python3 scripts/test_simulator_signpost_control.py
+          python3 scripts/run_simulator_signpost_control.py validate-request
           python3 scripts/plan_ios_performance_tests.py --validate-request
           if [[ "${{ inputs.capture_scroll_signposts }}" == true ]]; then
             test "${{ github.event_name }}" = workflow_dispatch
@@ -117,6 +124,7 @@ jobs:
         run: python3 scripts/check_ios_performance_environment.py configured --architecture arm64
 
   performance-build:
+    if: ${{ !inputs.simulator_signpost_control }}
     needs: performance-plan
     concurrency:
       group: ritc-macos-slot-2
@@ -237,7 +245,7 @@ jobs:
           if-no-files-found: ignore
 
   performance-tests:
-    if: ${{ !inputs.capture_preflight_only }}
+    if: ${{ !inputs.capture_preflight_only && !inputs.simulator_signpost_control }}
     concurrency:
       group: ritc-macos-slot-${{ matrix.macos_slot }}
       queue: max
@@ -472,3 +480,37 @@ jobs:
           include-hidden-files: true
           retention-days: 7
           if-no-files-found: ignore
+
+  simulator-signpost-control:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.simulator_signpost_control }}
+    needs: performance-plan
+    runs-on: xcode-27
+    timeout-minutes: 12
+    concurrency:
+      group: ritc-macos-slot-2
+      queue: max
+      cancel-in-progress: false
+    env:
+      TEST_SHARD: simulator-helper
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Run one standalone helper control
+        run: python3 scripts/run_simulator_signpost_control.py run --output .build/simulator-helper
+      - name: Preserve helper evidence bytes and modes
+        id: helper-archive
+        if: always()
+        run: python3 scripts/run_simulator_signpost_control.py archive --output .build/simulator-helper --archive .build/simulator-helper-archive
+      - name: Delete only the verified owned helper device after preservation
+        if: ${{ always() && steps.helper-archive.outcome == 'success' }}
+        run: python3 scripts/run_simulator_signpost_control.py cleanup --output .build/simulator-helper --archive .build/simulator-helper-archive --cleanup .build/simulator-helper-cleanup
+      - name: Upload bounded standalone helper evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: simulator-helper-${{ github.run_id }}-${{ github.run_attempt }}
+          include-hidden-files: true
+          path: |
+            ${{ steps.helper-archive.outputs.artifact_path || '.build/simulator-helper-archive/report' }}
+            .build/simulator-helper-cleanup
+          if-no-files-found: error
+          retention-days: 7

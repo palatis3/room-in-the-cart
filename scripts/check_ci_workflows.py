@@ -28,6 +28,7 @@ POLICY = {
     ('ios-fixtures.yml', 'contributor-tests'): ('${{ fromJSON(needs.fixture-plan.outputs.contributor_matrix) }}', ('profile', 'shard')),
     ('ios-fixtures.yml', 'dinner-tests'): ('${{ fromJSON(needs.fixture-plan.outputs.dinner_matrix) }}', ('profile', 'shard')),
     ('ios-performance.yml', 'performance-build'): 2,
+    ('ios-performance.yml', 'simulator-signpost-control'): 2,
     ('ios-performance.yml', 'performance-tests'): ('${{ fromJSON(needs.performance-build.outputs.test_matrix) }}', ('case',)),
     ('ios-deep.yml', 'sanitizers'): ([('thread', 0), ('address', 1)], 'sanitizer'),
     ('ios-deep.yml', 'storekit-build'): 2,

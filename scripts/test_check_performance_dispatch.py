@@ -36,6 +36,23 @@ class DispatchProfileTests(unittest.TestCase):
         _, env, _ = profile(self.workflow, 'pull_request', 'all', self.off)
         self.assertEqual(env['ENFORCE_BASELINES'], 'true')
 
+    def test_helper_profile_expands_exact_manual_all_case_without_other_modes(self):
+        script, env, inputs = profile(self.workflow, 'workflow_dispatch', 'all',
+                                      dict(self.off, simulator_signpost_control=True))
+        self.assertEqual(env['SIMULATOR_SIGNPOST_CONTROL'], 'true')
+        self.assertEqual(env['GITHUB_EVENT_NAME'], 'workflow_dispatch')
+        self.assertEqual(env['REQUESTED_PERFORMANCE_CASE'], '')
+        for name in FLAGS:
+            if name != 'simulator_signpost_control':
+                self.assertFalse(inputs[name])
+        self.assertIn('python3 scripts/run_simulator_signpost_control.py validate-request', script)
+
+    def test_new_boolean_cannot_silently_use_its_workflow_default(self):
+        trigger = self.workflow.get('on', self.workflow.get(True))
+        trigger['workflow_dispatch']['inputs']['unreviewed_mode'] = {'type': 'boolean', 'default': True}
+        with self.assertRaisesRegex(ValueError, 'boolean roster changed'):
+            profile(self.workflow, 'workflow_dispatch', 'all', self.off)
+
     def test_unknown_expression_is_review_required(self):
         self.workflow['env']['NEW_SETTING'] = '${{ secrets.UNREVIEWED }}'
         with self.assertRaisesRegex(ValueError, 'Unreviewed'):

@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "status": "reviewed and locally integrated; exact final-commit profiles and hosted execution pending",
+  "reviewedPackages": {
+    ".build/HostedAppObservationNov09/hosted-helper-control-r1/manifest.json": "f052cb900d8eac355032be4646192fae2906e65309ec5f83517a59d993efc203",
+    ".build/HostedAppObservationNov09/hosted-helper-control-r1.1/manifest.json": "c75d5cf6645cad40e7285e06faddb519aec77f07868e16d9974d47d1ef8b0675"
+  },
+  "fileOnlyHelperControls": 38,
+  "dispatchProfileControls": 8,
+  "sourcePins": 44,
+  "manualInput": "simulator_signpost_control",
+  "default": false,
+  "mode": "standalone helper only, case=all, every other boolean false",
+  "readinessSeconds": 15,
+  "recordingSeconds": 5,
+  "appBuildOrXCTest": false,
+  "nativeExecuted": false,
+  "baselineAcceptance": false,
+  "integrationReceipt": ".build/HostedAppObservationNov09/root-helper-integration-r1/installed.json",
+  "integrationReceiptSHA256": "17c94fd060d3ff6c2ab232a1ecc5f770e0860dd03c21ef44dfa300cc333bbe13",
+  "patchAssemblyIssue": "Original new JSON fixture lacked final newline; malformed generated patch preserved. Exact17payload bytes/modes installed after verifying all old path hashes, then reviewed correction applied.",
+  "postReviewFormatting": {
+    "path": "scripts/simulator_signpost_control/validate.py",
+    "change": "remove redundant blank line at EOF; no executable code change",
+    "beforeSHA256": "6d58927b18aaa1071f09db3911739dc0d91b95b2ef5ee1731a27dc353f9effe1",
+    "afterSHA256": "bee6047a6d2ae75310748c998a7649666c17610abdcc4bb42ab6ea7bc17ff06e"
+  }
+}

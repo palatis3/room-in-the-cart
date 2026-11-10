@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+
+<trace-toc>
+    <run number="1">
+        <info>
+            <target>
+                <device platform="iOS Simulator" model="Simulated iPhone 17" memory-size="25769803776" name="RITC Local Performance Capture Nov09" os-version="27.0 (24A434)" uuid="A50C91FC-4966-47FF-A8CB-7640FBD513EB"/>
+                <host-device platform="macOS" model="MacBook Air" name="Terrance’s MacBook Air" os-version="27.2 (26B123)" uuid="F55D29E2-92B0-5FE2-98A2-58BD7D476D47"/>
+                <process type="attached" return-exit-status="0" name="SignpostControl" pid="60002" termination-reason="exit(0)"/>
+            </target>
+            <summary>
+                <start-date>2026-11-09T12:49:01.980-05:00</start-date>
+                <end-date>2026-11-09T12:49:07.544-05:00</end-date>
+                <duration>5.564248</duration>
+                <end-reason>Time limit reached</end-reason>
+                <instruments-version>27.1 (27A9275)</instruments-version>
+                <template-name>Logging</template-name>
+                <recording-mode>Deferred</recording-mode>
+                <time-limit>5 seconds</time-limit>
+                <intruments-recording-settings>
+                    <instrument name="os_signpost">
+                        <options>
+                            <option key="Dynamic Subsystems" value=""/>
+                        </options>
+                    </instrument>
+                </intruments-recording-settings>
+            </summary>
+        </info>
+        <processes>
+            <process name="kernel" pid="0" path="/System/Library/Kernels/kernel.release.t8132"/>
+            <process name="SignpostControl" pid="60002" path="/Users/palatis/Room in the Cart/.build/SimulatorSignpostControlNov09/r1/SignpostControl"/>
+        </processes>
+        <data>
+            <table schema="os-log" target-pid="SINGLE" documentation="Holds a message from the OS's Unified Logging and Tracing component."/>
+            <table schema="os-signpost-arg" target-pid="SINGLE" documentation="Holds a signpost metadata argument from the OS's Unified Logging and Tracing component."/>
+            <table swift-table="&quot;OSSignpostIntervals(layoutScope: InstrumentsPlugIn.OSSignpostLayoutScope.name, categories: Set([]), mustTargetAllProcesses: false)&quot;" schema="OSSignpostIntervals"/>
+            <table schema="thread-info" documentation="Associates threads with their owning process."/>
+            <table schema="os-signpost" target-pid="SINGLE" documentation="Holds a signpost event from the OS's Unified Logging and Tracing component."/>
+            <table schema="process-info" documentation="Associates processes with their process names."/>
+            <table schema="os-log-arg" target-pid="SINGLE" documentation="Holds a metadata argument from the OS's Unified Logging and Tracing component."/>
+        </data>
+        <tracks/>
+    </run>
+</trace-toc>

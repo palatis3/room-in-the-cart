@@ -16,7 +16,8 @@ ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / '.github/workflows/ios-performance.yml'
 STEP = 'Validate performance selection before allocating macOS'
 FLAGS = ('enforce_baselines', 'fresh_performance_simulator', 'observe_app_scroll_signposts',
-         'capture_scroll_signposts', 'capture_preflight_only', 'enable_performance_diagnostics')
+         'capture_scroll_signposts', 'capture_preflight_only', 'enable_performance_diagnostics',
+         'simulator_signpost_control')
 
 
 def input_manifest():
@@ -44,6 +45,8 @@ def literal(value):
 def profile(document, event, case, options):
     trigger = document.get('on', document.get(True))  # PyYAML's YAML 1.1 spelling.
     declared = trigger['workflow_dispatch']['inputs']
+    if {name for name, row in declared.items() if row.get('type') == 'boolean'} != set(FLAGS):
+        raise ValueError('Workflow boolean roster changed; review required')
     if set(options) != set(FLAGS) or not all(type(value) is bool for value in options.values()):
         raise ValueError('Explicit boolean profile required')
     if event not in ('workflow_dispatch', 'pull_request') or case not in declared['case']['options']:
