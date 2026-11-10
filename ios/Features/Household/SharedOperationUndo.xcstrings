@@ -449,18 +449,18 @@
         }
       }
     },
-    "New meals, starting shared food tracking, request decisions and store changes cannot be undone here.": {
+    "Each saved change shows whether it can be undone.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "New meals, starting shared food tracking, request decisions and store changes cannot be undone here."
+            "value": "Each saved change shows whether it can be undone."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aquí no se pueden deshacer las comidas nuevas, el inicio del registro compartido de comida, las decisiones sobre solicitudes ni los cambios de tienda."
+            "value": "Cada cambio guardado indica si se puede deshacer."
           }
         }
       }

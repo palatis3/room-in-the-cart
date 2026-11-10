@@ -30,7 +30,7 @@ struct SharedOperationUndoView: View {
                 Section {
                     Text(u("Review a saved item, quote or meal change before undoing it. Later changes that still fit will remain."))
                         .accessibilityIdentifier(model.currentShop == nil ? "sharedUndo.intro" : "sharedUndo.loaded")
-                    Text(u("New meals, starting shared food tracking, request decisions and store changes cannot be undone here."))
+                    Text(u("Each saved change shows whether it can be undone."))
                 }
                 ForEach(model.history, id: \.operationId) { item in
                     Section {
