@@ -8,12 +8,26 @@ offline tests (1 expected database-only skip), and 285 PostgreSQL tests (3 optio
 browser skips). These are scoped passes, not a complete combined release run.
 The next quote/item editor slice now compiles and passes all 59 strict native model
 checks plus one real PostgreSQL expired-quote/privacy-recovery case. Independent review found two legacy fixture routes needing explicit demand status;
-they are corrected locally and their original UI checks are running. Graph-editor
-UI journeys remain open. Request Add/Link and changed-meal
-editors still need graph-aware saves; mixed-device acceptance remains open.
+they are corrected and both original S17/S26 UI journeys pass with strict checks
+and zero recorded runtime warnings. The stable-ID binding fix closes the retained
+Cancel crash: combined-r6 passed148 strict model checks and both original graph-editor
+journeys, including quote preservation and one-write exact retry after relaunch.
+Native request Add/Link and meal/proposal review are installed. The successor r7
+also builds and passes153 strict model checks; its English journey passes and
+r8 corrects only the old Spanish title expected by the test after the copy was shortened
+and passes the complete Spanish journey. Production app/model products are byte-identical
+to r7; the English method is unchanged. It adds contract-exact meal text normalization,
+explicit conversion reconfirmation and bounded test search direction hints.
+The full typed-client lane passes10 Node integration cases and27 exact Swift
+scenarios over HTTPS/PostgreSQL with zero failures/skips; mixed-device acceptance
+remains open. [Wire proof](evidence/service/shared-demand-action-sources-20261109/native-wire-verification.json).
 [Editor proof](evidence/native/shared-food-editor-20261109/README.md).
 [Native proof](evidence/native/shared-food-manual-flow-20261109/README.md),
 [backend proof](evidence/service/shared-demand-adoption-20261109/README.md).
+The new proposed meal-action source catalog is installed and independently reviewed.
+Its conversion/quantification corrections pass116 offline controls,91 r2 PostgreSQL
+cases and one affected r3 PostgreSQL scenario, scoped separately.
+[Catalog proof and limits](evidence/service/shared-demand-action-sources-20261109/README.md).
 
 The latest workflow update passes 457 offline source checks, including the existing
 queue contracts. Native shards report test-suite time separately from post-test
@@ -94,7 +108,12 @@ No selected-case verdict or measurements were established. The narrow initial
 lookup correction at ca3cf777 passes 279 complete early controls in both profiles;
 focused successor 42711707477 passed Release build but exhausted its original
 120-second startup deadline before selected-case execution. The earlier five-second
-query cutoff did not recur. A phase-budget correction is in review. The separate
+query cutoff did not recur. The phased correction passed both298-check profiles and hosted42717128576
+passed its producer, but a separate two-second process-image binding gate rejected
+the tenth query before any phase deadline. The query had no verified terminal
+status or live identity; ENOENT alone is insufficient. The same-process acquisition
+correction is now installed and passes147 observer controls and both complete
+324-check profiles without weakening custody. No successor hosted run yet. The separate
 producer/consumer and original required metrics remain; native observation,
 performance baseline and combined acceptance are still unproven.
 [Prepared workflow](evidence/ci/hosted-scroll-observation-20261109/README.md).

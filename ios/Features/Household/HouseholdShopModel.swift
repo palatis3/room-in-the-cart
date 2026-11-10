@@ -100,7 +100,12 @@ struct SharedShopTransfer: Equatable {
     @Published private(set) var delivery: ShopperDelivery = .none
     @Published private(set) var reviewedCurrentFacts = false
     @Published private(set) var notice: String?
-    @Published var draft = SharedShopDraft() { didSet { review = nil; acknowledged = false; foodEditor = nil; editorLookup = UUID() } }
+    @Published var draft = SharedShopDraft() {
+        didSet {
+            guard draft != oldValue else { return }
+            review = nil; acknowledged = false; foodEditor = nil; editorLookup = UUID()
+        }
+    }
     @Published var acknowledged = false
     let householdID: String; let memberID: String
     private let service: HouseholdService
@@ -772,10 +777,18 @@ struct SharedShopTransfer: Equatable {
                     notice = SharedDemandCopy.text("Review the surviving food facts first. You can update prices and packs, but keep every item and its name unchanged for this review."); return
                 }
             }
-            guard entered.mealEdit == nil else {
-                notice = SharedDemandCopy.text("Your meal edit is still here. Saving meal edits with shared food tracking is not available yet; nothing was sent."); return
+            var mealContext: SharedMealFoodContext?
+            if let edit = entered.mealEdit {
+                let meal = SharedDemandMealEdit(occurrenceId: .init(edit.occurrenceID), baseMealRevision: edit.baseMealRevision,
+                    meal: edit.meal, proposalId: edit.proposalID.map(SharedDemandID.init), changeProposalId: edit.changeProposalID.map(SharedDemandID.init))
+                let request = try SharedDemandActionSourceRequest(page: page, patch: .init(quote: candidate.quote, lines: candidate.lines,
+                    mealEdit: meal, reviewedStoreBasisRevision: candidate.reviewedStoreBasisRevision))
+                let catalog = try await service.sharedDemandActionSources(shopID: id, page: page, request: request)
+                guard start == generation, lookup == editorLookup, actor == scope, self.shop == baseline,
+                      editing, pending == nil, review == nil, canManage else { throw ClientError.cancelled }
+                mealContext = try .init(page: page, request: request, catalog: catalog)
             }
-            foodEditor = .init(shop: baseline, page: page, candidate: candidate)
+            foodEditor = .init(shop: baseline, page: page, candidate: candidate, meal: mealContext)
         } catch {
             guard start == generation, lookup == editorLookup else { return }
             review = nil; acknowledged = false; foodEditor = nil

@@ -66,7 +66,7 @@ private struct SharedShopContent: View {
                             if shop.phase == "draft", model.canManage {
                                 NavigationLink(SharedDemandCopy.text("Food quantities and sources")) { SharedDemandFlowView(shopModel: model) }
                                     .accessibilityIdentifier("sharedShop.foodQuantities")
-                                Button(ht("Edit shared items and quote")) { model.beginEditing() }
+                                Button(ht("Edit shared items and quote")) { model.beginEditing() }.accessibilityIdentifier("sharedShop.edit")
                                 Button(ht("Review freezing this shop")) { model.reviewPhaseChange("shop.freeze") }
                             } else if shop.phase == "frozen", model.canManage {
                                 Text(ht("Requests received after freezing are saved for next shop. Reopening does not move them into this shop automatically."))
@@ -136,7 +136,7 @@ private struct SharedShopContent: View {
         case .waiting:
             Section(ht("Shared shop action waiting")) {
                 Text(ht("The result is not confirmed. Retry the same saved action to avoid creating another shop or repeating a change."))
-                Button(ht("Retry the same shared shop action")) { Task { await model.retry() } }
+                Button(ht("Retry the same shared shop action")) { Task { await model.retry() } }.accessibilityIdentifier("sharedShop.retry")
                 if model.reviewedCurrentFacts { Button(ht("Clear after reviewing current shop")) { clearingRetry = true } }
             }
         case .needsReview:
@@ -164,7 +164,7 @@ private struct SharedShopEditor: View {
                 VStack(alignment: .leading) {
                     TextField(ht("Pack or item name"), text: $line.item)
                     Stepper(value: $line.packs, in: 1...10_000) { LabeledContent(ht("Whole packs"), value: line.packs.formatted()) }
-                    TextField(ht("Price per pack in USD, blank if unknown"), text: $line.price).keyboardType(.decimalPad)
+                    TextField(ht("Price per pack in USD, blank if unknown"), text: $line.price).keyboardType(.decimalPad).accessibilityIdentifier("sharedShop.line." + line.id.uuidString.lowercased() + ".price")
                     Toggle(ht("Counts toward the retailer fee threshold"), isOn: $line.feeEligible)
                     Button(ht("Remove this shared line"), role: .destructive) { model.draft.lines.removeAll { $0.id == line.id } }
                 }
@@ -189,16 +189,16 @@ private struct SharedShopEditor: View {
             costField("Deposits in USD, blank if unknown", $model.draft.deposits)
             costField("Discounts in USD, blank if unknown", $model.draft.discounts)
             DatePicker(ht("Quote recorded"), selection: $model.draft.observedAt)
-            DatePicker(ht("Quote expires"), selection: $model.draft.expiresAt)
+            DatePicker(ht("Quote expires"), selection: $model.draft.expiresAt).accessibilityIdentifier("sharedShop.quote.expires")
             Text(ht("Only enter zero when confirmed. Unknown or incomplete costs remain unresolved in request previews."))
-            Button(ht("Review entered shared shop")) { Task { await model.reviewEditor() } }
+            Button(ht("Review entered shared shop")) { Task { await model.reviewEditor() } }.accessibilityIdentifier("sharedShop.reviewEditor")
             Button(ht("Cancel shared shop edit")) { model.cancelEditing() }
         }
     }
     @ViewBuilder private var scopeOptions: some View {
         Text(ht("Whole checkout")).tag("wholeCheckout"); Text(ht("Item only")).tag("item"); Text(ht("Dinner only")).tag("dinner")
     }
-    private func costField(_ key: String, _ binding: Binding<String>) -> some View { TextField(ht(key), text: binding).keyboardType(.decimalPad) }
+    private func costField(_ key: String, _ binding: Binding<String>) -> some View { TextField(ht(key), text: binding).keyboardType(.decimalPad).accessibilityIdentifier("sharedShop.cost." + key) }
 }
 struct SharedShopFields: View {
     let quote: ShopperQuote; let lines: [ShopperBasketLine]

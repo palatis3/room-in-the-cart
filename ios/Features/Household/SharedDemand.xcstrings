@@ -1,6 +1,5 @@
 {
   "sourceLanguage": "en",
-  "version": "1.0",
   "strings": {
     "Add basket item": {
       "localizations": {
@@ -178,6 +177,22 @@
         }
       }
     },
+    "Choose a decision": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a decision"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige una opción"
+          }
+        }
+      }
+    },
     "Choose a source": {
       "localizations": {
         "en": {
@@ -222,6 +237,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Confirma que cada nombre modificado de la cesta sigue haciendo referencia a las mismas fuentes de alimentos."
+          }
+        }
+      }
+    },
+    "Confirm the existing food identities in Food quantities, then return and review this request again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm the existing food identities in Food quantities, then return and review this request again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirma las identidades de los alimentos existentes en Cantidades de alimentos y luego vuelve a revisar esta solicitud."
           }
         }
       }
@@ -450,6 +481,22 @@
         }
       }
     },
+    "Existing source relationship": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Existing source relationship"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Relación existente entre fuentes"
+          }
+        }
+      }
+    },
     "Family request": {
       "localizations": {
         "en": {
@@ -525,7 +572,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cantidades y orígenes de la comida"
+            "value": "Cantidades y orígenes"
           }
         }
       }
@@ -594,6 +641,22 @@
         }
       }
     },
+    "I confirm this known protected quantity; it cannot be undone": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I confirm this known protected quantity; it cannot be undone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmo esta cantidad protegida conocida; no se puede deshacer"
+          }
+        }
+      }
+    },
     "I confirm this source matches the selected food": {
       "localizations": {
         "en": {
@@ -606,6 +669,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Confirmo que este origen corresponde al alimento seleccionado"
+          }
+        }
+      }
+    },
+    "I reviewed the changed meal and all retained food commitments": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I reviewed the changed meal and all retained food commitments"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisé la comida modificada y todas las necesidades de comida que se conservan"
           }
         }
       }
@@ -642,6 +721,22 @@
         }
       }
     },
+    "If the covered amount changes, remove the old relationship and enter a new reviewed amount below.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If the covered amount changes, remove the old relationship and enter a new reviewed amount below."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si cambia la cantidad cubierta, elimina la relación anterior e ingresa abajo una nueva cantidad revisada."
+          }
+        }
+      }
+    },
     "Imported food": {
       "localizations": {
         "en": {
@@ -670,6 +765,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Artículo marcado para eliminar"
+          }
+        }
+      }
+    },
+    "Keep the request wording and reviewed packs. Enter food quantities explicitly; linking a basket item does not itself allocate existing food.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep the request wording and reviewed packs. Enter food quantities explicitly; linking a basket item does not itself allocate existing food."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conserva el texto de la solicitud y los paquetes revisados. Introduce las cantidades de alimentos de forma explícita; vincular un artículo de la cesta no asigna por sí solo alimentos existentes."
+          }
+        }
+      }
+    },
+    "Keep this exact relationship": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep this exact relationship"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conservar esta relación exacta"
           }
         }
       }
@@ -734,6 +861,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Necesidad de una comida"
+          }
+        }
+      }
+    },
+    "Meal source being removed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meal source being removed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fuente de comida que se eliminará"
           }
         }
       }
@@ -866,6 +1009,22 @@
         }
       }
     },
+    "Other meals, requests and protected food stay separate. Review every affected source and whole pack.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other meals, requests and protected food stay separate. Review every affected source and whole pack."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las otras comidas, solicitudes y porciones protegidas permanecen separadas. Revisa cada fuente afectada y cada paquete completo."
+          }
+        }
+      }
+    },
     "Previous basket label": {
       "localizations": {
         "en": {
@@ -878,6 +1037,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nombre anterior en la cesta"
+          }
+        }
+      }
+    },
+    "Previous source quantity": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous source quantity"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad anterior de la fuente"
           }
         }
       }
@@ -946,6 +1121,22 @@
         }
       }
     },
+    "Remove only this meal source": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove only this meal source"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar solo esta fuente de comida"
+          }
+        }
+      }
+    },
     "Remove this item and its listed manual or imported food sources": {
       "localizations": {
         "en": {
@@ -958,6 +1149,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "Eliminar este artículo y las fuentes de alimentos manuales o importadas que se muestran"
+          }
+        }
+      }
+    },
+    "Remove this item and the explicitly listed sources": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove this item and the explicitly listed sources"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar este artículo y las fuentes indicadas explícitamente"
+          }
+        }
+      }
+    },
+    "Remove this meal from this shop": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove this meal from this shop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar esta comida de esta compra"
+          }
+        }
+      }
+    },
+    "Remove this relationship": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove this relationship"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar esta relación"
           }
         }
       }
@@ -1022,6 +1261,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cambiar el nombre de un artículo no sustituye sus fuentes de alimentos. Añade un artículo nuevo para un alimento diferente."
+          }
+        }
+      }
+    },
+    "Request preview expires": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Request preview expires"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Caducidad de la vista previa de la solicitud"
           }
         }
       }
@@ -1122,6 +1377,38 @@
         }
       }
     },
+    "Review the meal sources, removals and existing relationships before continuing.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the meal sources, removals and existing relationships before continuing."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa las fuentes de comida, las eliminaciones y las relaciones existentes antes de continuar."
+          }
+        }
+      }
+    },
+    "Review the protected food identity separately in Food quantities, then return to this meal change.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the protected food identity separately in Food quantities, then return to this meal change."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa por separado la identidad de la comida protegida en Cantidades de comida y vuelve a este cambio de comida."
+          }
+        }
+      }
+    },
     "Review the surviving food facts first. Apply this unchanged review before adding or linking sources.": {
       "localizations": {
         "en": {
@@ -1154,6 +1441,22 @@
         }
       }
     },
+    "Review the surviving food facts in Food quantities first, then reopen this request.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the surviving food facts in Food quantities first, then reopen this request."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa primero los datos de alimentos que quedan en Cantidades de alimentos y luego vuelve a abrir esta solicitud."
+          }
+        }
+      }
+    },
     "Review the surviving food facts with your updated prices and packs. Food sources and relationships stay unchanged.": {
       "localizations": {
         "en": {
@@ -1170,6 +1473,38 @@
         }
       }
     },
+    "Review this relationship": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review this relationship"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar esta relación"
+          }
+        }
+      }
+    },
+    "Reviewed meal change": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed meal change"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambio de comida revisado"
+          }
+        }
+      }
+    },
     "Reviewed pack coverage": {
       "localizations": {
         "en": {
@@ -1182,6 +1517,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cobertura de paquetes revisada"
+          }
+        }
+      }
+    },
+    "Reviewed request decision": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed request decision"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Decisión de la solicitud revisada"
           }
         }
       }
@@ -1314,6 +1665,22 @@
         }
       }
     },
+    "These amounts come from your reviewed pack choice. Cancel and return to the pack review to change them.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These amounts come from your reviewed pack choice. Cancel and return to the pack review to change them."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estas cantidades proceden de la opción de paquetes que has revisado. Cancela y vuelve a la revisión de paquetes para cambiarlas."
+          }
+        }
+      }
+    },
     "These are your entered item and quote changes. Review their food sources before applying.": {
       "localizations": {
         "en": {
@@ -1358,6 +1725,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Este nombre sigue haciendo referencia a las mismas fuentes de alimentos"
+          }
+        }
+      }
+    },
+    "To change the request outcome, packs, price or budget acknowledgments, cancel this food review and review the request again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To change the request outcome, packs, price or budget acknowledgments, cancel this food review and review the request again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para cambiar el resultado de la solicitud, los paquetes, el precio o las confirmaciones del presupuesto, cancela esta revisión de alimentos y vuelve a revisar la solicitud."
           }
         }
       }
@@ -1454,6 +1837,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Usar una conversión confirmada entre distintos tipos de unidades"
+          }
+        }
+      }
+    },
+    "Use existing food for this request": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use existing food for this request"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar alimentos ya incluidos para esta solicitud"
           }
         }
       }
@@ -1698,5 +2097,6 @@
         }
       }
     }
-  }
+  },
+  "version": "1.0"
 }

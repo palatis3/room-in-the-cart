@@ -16,12 +16,19 @@ export function observeNativeWireCommand(request,received){
  request.on('end',()=>received(Buffer.concat(chunks)));request.pause();
 }
 
+// Test-only synchronization before the original API receives a catalog request.
+// Keep body bytes paused while the authorized fixture action completes.
+export async function observeNativeWireCatalogRequest(request,received,beforeDispatch){
+ observeNativeWireCommand(request,received);
+ if(beforeDispatch)await beforeDispatch();
+}
+
 // Only the identity provider and dropped delivery are fixtures. Every household
 // read/preview/command is dispatched to the original authenticated API/PG path.
-export async function exerciseSharedDemandClient({service,owner,householdId,shopId,phase,requests=[],before,privateState,dropFirstReply=false}){
+export async function exerciseSharedDemandClient({service,owner,householdId,shopId,phase,requests=[],before,privateState,dropFirstReply=false,beforeCatalogRequest=null}){
  const dir=await mkdtemp(join(tmpdir(),'ritc-demand-wire-tls-'));await chmod(dir,0o700);
  const key=join(dir,'tls.key'),cert=join(dir,'tls.pem'),der=join(dir,'tls.der'),config=join(dir,'openssl.cnf'),input=join(privateState,'phase-'+phase+'-'+randomUUID()+'.json'),code=randomUUID();
- let tls,attempts=0,dropped=0;const unsuccessful=[],commands=[];
+ let tls,attempts=0,dropped=0;const unsuccessful=[],commands=[],catalogRequests=[];let catalogAttempts=0,previewAttempts=0,synchronizationFailed=false;
  try{
   await writeFile(config,'[req]\ndistinguished_name=dn\nx509_extensions=ext\nprompt=no\n[dn]\nCN=localhost\n[ext]\nsubjectAltName=IP:127.0.0.1\nextendedKeyUsage=serverAuth\nkeyUsage=digitalSignature,keyEncipherment\n',{mode:0o600});
   await run('openssl',['req','-x509','-newkey','rsa:2048','-sha256','-nodes','-days','1','-config',config,'-keyout',key,'-out',cert],{timeout:15000,maxBuffer:65536});await chmod(key,0o600);
@@ -30,6 +37,13 @@ export async function exerciseSharedDemandClient({service,owner,householdId,shop
   const user={id:owner.subject,email:'wire@example.invalid',email_confirmed_at:new Date().toISOString()};
   tls=createServer({key:await readFile(key),cert:await readFile(cert)},async(req,res)=>{
    if(!req.url.startsWith('/auth/v1/')){
+    if(req.method==='POST'&&req.url.endsWith('/demand/action-sources')){
+     catalogAttempts++;
+     try{await observeNativeWireCatalogRequest(req,bytes=>catalogRequests.push(bytes),beforeCatalogRequest?()=>beforeCatalogRequest(catalogAttempts):null);}
+     catch{synchronizationFailed=true;res.writeHead(500,{'Content-Type':'application/json'});res.end(JSON.stringify({error:{code:'fixture_synchronization_failed'}}));return;}
+    }
+    if(req.method==='POST'&&req.url.endsWith('/demand/previews'))previewAttempts++;
+
     if(req.method==='POST'&&req.url.endsWith('/commands')){
      attempts++;observeNativeWireCommand(req,bytes=>commands.push(bytes));
      if(dropFirstReply&&attempts===1){const end=res.end.bind(res);res.end=(...args)=>{if(res.statusCode===200){dropped++;res.destroy();return res;}return end(...args);};}
@@ -49,6 +63,7 @@ export async function exerciseSharedDemandClient({service,owner,householdId,shop
   await runNativeWireTest({suite:'SharedMealNativeWireTests',method:'testSharedMealClientAgainstPostgres',scenario:'demand-'+phase,unsuccessful,
    env:{RITC_WIRE_DEMAND_PHASE:phase,RITC_WIRE_DEMAND_FIXTURE:input,RITC_WIRE_DEMAND_STATE:privateState,RITC_WIRE_DEMAND_VAULT:owner.subject,
     RITC_WIRE_PORT:String(tls.address().port),RITC_WIRE_CERT:der,RITC_WIRE_CODE:code}});
-  return{attempts,dropped,commands};
+  if(synchronizationFailed)throw new Error('Native wire synchronization failed');
+  return{attempts,dropped,commands,catalogAttempts,catalogRequests,previewAttempts};
  }finally{if(tls?.listening)await new Promise(resolve=>tls.close(resolve));await rm(dir,{recursive:true,force:true});}
 }

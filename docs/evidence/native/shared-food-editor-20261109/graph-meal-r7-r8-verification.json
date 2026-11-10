@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "scope": "Native request/meal food review: r7 package/build/153models/English and r8 Spanish-only expected-title correction",
+  "result": "passed within listed scope",
+  "originals": ".build/SharedDemandNativeRequestsNov09",
+  "files": {
+    "combined-r7/source-manifest.json": "60d778312ef8e88c7a43a8581cddab91fefbdede9d3b85b85f18082e5cbd7e5e",
+    "combined-r7/products.json": "f6d6ce4c5211049f8419a5b0923fcd8a0f99cdca47631dd255c4b9d62c3ac6be",
+    "combined-r7/selectors.json": "8c2c84cc9432c8a34c7b1c1084536c22f42f8b56c5e00cf64a1ac8ef9b1895fa",
+    "combined-r7/client-package-receipt.json": "8e2826061803bf5e754a3c8cf6768ffeb91572747b6b4325a0533e2ba59548f8",
+    "combined-r7/build-receipt.json": "39a71d6527be042b1a25fc35694d7b86087b30742f9bb936e79b3bbc7e378da7",
+    "combined-r7/models-receipt.json": "e526e7b03b6054202be635de78ade4a2c3f7ab922150abf58b59c1a523e9547b",
+    "combined-r7/models-strict-receipt.json": "0e12a1ed6ac5b51c4f4cf5aaa0ce5445c2a09ae267033cc789c88e2c4a4a2470",
+    "combined-r7/models-summary.json": "910c384164c023d0a9b258f9e91c92a6d54b53b056ac9c1b37c2e776a9615016",
+    "combined-r7/models-tests.json": "c4197902196e37c8e1ea05d1ffd88a008860344b057092c2ba6a63e691b51f5b",
+    "combined-r7/ui-en-receipt.json": "14b810d0098c4facfa8a201af1bbe01c8c2b1d876dca065508805c906d7c3aa3",
+    "combined-r7/ui-en-strict-receipt.json": "3ca2b11fe3f91ecfba971d43c61f6f7dc6a13bd14314213a721cd68fe13f8a6a",
+    "combined-r7/ui-en-summary.json": "b9f7cf5620993b98a73bac0eb65d8b2c1dd93cedbcd8079e79896627c1ebee61",
+    "combined-r7/ui-en-tests.json": "86e94487ab8317b97105dcadf1285e80f576c25f87ba421c03aade1008203f70",
+    "combined-r7/first-fault.json": "9bbfb0385656ac208a5062a2f7433149b7d5f3c1d2bff6bdb7b1170796a39950",
+    "combined-r8/source-manifest.json": "72c299a17844cabb844e96784370071afcb673621b3345d1e07f7035a7110144",
+    "combined-r8/products.json": "ff8995351d865a48e5fd8be9ae26872ce890afed19374e7c1d7aedd673b5d6a5",
+    "combined-r8/scope.json": "31f4776ae555650de56563c786b62f7666de420b50e9e49769507f7b725b852e",
+    "combined-r8/build-receipt.json": "a9b3248e00ad62a9ee020a4dfd7a8a0baf71f94e8f14dbf04c2700bee06af6f6",
+    "combined-r8/ui-es-receipt.json": "532f8ab8aebc2d5eced584b1302c086d058dea38924c16df97a34c9484b628bc",
+    "combined-r8/ui-es-strict-receipt.json": "37742f10131f22d13a188511e6e883dfd8eb55a9e4fb35a3cf60fb9527d12391",
+    "combined-r8/ui-es-summary.json": "81caff23c51fe2ca3055cd02fea0dc7baaafc39248e9dd564a1a0d95042d117e",
+    "combined-r8/ui-es-tests.json": "cb8cda60cf2e68a99d777dfbfb93f079886a5f1b81c630548c2130a6c6589aeb",
+    "combined-r8/final.json": "aa2d96811f7dfaf6b7525a0958749e1edea84fcef688a7fa368c32c2db2aa200"
+  },
+  "sourceDifference": [
+    "ios/UITests/SharedFoodEditorUITests.swift"
+  ],
+  "productDifference": [
+    "Debug-iphonesimulator/RoomInTheCartUITests-Runner.app/RoomInTheCartUITests-Runner",
+    "Debug-iphonesimulator/RoomInTheCartUITests-Runner.app/_CodeSignature/CodeResources",
+    "Debug-iphonesimulator/RoomInTheCartUITests-Runner.app/PlugIns/RoomInTheCartUITests.xctest/RoomInTheCartUITests",
+    "Debug-iphonesimulator/RoomInTheCartUITests.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo"
+  ],
+  "productionAppAndModelProductsIdentical": true,
+  "modelTests": 153,
+  "clientPackage": {
+    "passed": 122,
+    "expectedWireSkips": 3
+  },
+  "UIJourneys": {
+    "English": "combined-r7",
+    "Spanish": "combined-r8"
+  },
+  "testProcessSeconds": {
+    "EnglishBefore": 316.768,
+    "EnglishAfter": 252.304,
+    "SpanishBefore": 300.567,
+    "SpanishAfter": 246.467
+  },
+  "timingCaveat": "Observed functional test process times across changed candidates, not application performance baselines. Original assertions preserved.",
+  "fullFinalCommitRegression": false,
+  "realDatabaseWireQualification": "recorded separately",
+  "AppStoreAcceptance": false,
+  "visualReview": {
+    "spanishTitle": "Full shortened title visible without truncation",
+    "review": "Localized expiry, disabled Apply before acknowledgment, food/pack facts visible",
+    "retry": "Fixture counters read Previews2, POSTs2, Writes1, ExactRetries1; original sources remain visible",
+    "scope": "Screenshot inspection, not human Spanish/accessibility acceptance",
+    "screenshots": {
+      "3AB32B9C-7A2D-47C9-B464-A9C9B7D80F66.png": "6dcd15b138a4e216cec51a27857556935e9abe6a81de38820d778c3f5a8c1a7e",
+      "9D8746B7-7BD8-48F5-B2D1-7C5E4ADBABE2.png": "e7270c7df934cd723e21b726b97fea3849bbe05a0c1574ba5f0073a5ffab9227"
+    }
+  }
+}

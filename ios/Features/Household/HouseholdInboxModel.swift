@@ -14,7 +14,7 @@ enum ShopperDelivery: Equatable {
     case none, waiting, needsReview, confirmed(ShopperReceipt)
 }
 
-/// Owns only one authorized shopper's transient projection. No prices are saved in the outbox.
+/// Owns one authorized shopper's transient projection. A saved operation contains only its reviewed command, never a cached inbox projection.
 @MainActor final class HouseholdInboxModel: ObservableObject {
     @Published private(set) var authorized = true
     @Published private(set) var busy = false
@@ -26,6 +26,9 @@ enum ShopperDelivery: Equatable {
     @Published private(set) var nextCursor: String?
     @Published private(set) var selected: OwnRequest?
     @Published private(set) var preview: ShopperPreview?
+    @Published private(set) var requestFood: SharedRequestFoodContext?
+    private var reviewedDecision: SharedRequestDecisionReview?
+    private var reviewedFood: SharedDemandReview?
     @Published private(set) var delivery: ShopperDelivery = .none
     @Published private(set) var notice: String?
     @Published private(set) var pending: PendingOperation?
@@ -41,8 +44,8 @@ enum ShopperDelivery: Equatable {
     @Published var linkedLineID = "" { didSet { if oldValue != linkedLineID { invalidatePreview() } } }
     @Published var promote = false { didSet { if oldValue != promote { invalidatePreview(preservePackSelection: true) } } }
     @Published var clarification = ""
-    @Published var acceptOverage = false
-    @Published var acceptUnknown = false
+    @Published var acceptOverage = false { didSet { if oldValue != acceptOverage { cancelRequestFood() } } }
+    @Published var acceptUnknown = false { didSet { if oldValue != acceptUnknown { cancelRequestFood() } } }
     let householdID: String
     let memberID: String
     let shopID: String
@@ -129,7 +132,7 @@ enum ShopperDelivery: Equatable {
         return shop.phase == "draft" ? ShopperChoice.allCases : [.deferRequest, .dismiss, .handled]
     }
     var canApply: Bool {
-        guard authorized, !busy, pending == nil, let preview, let expiry = serviceDate(preview.expiresAt), expiry > Date() else { return false }
+        guard authorized, !busy, pending == nil, requestFood == nil, let preview, let expiry = serviceDate(preview.expiresAt), expiry > Date() else { return false }
         return (!preview.requiresOverageAcceptance || acceptOverage) && (!preview.requiresUnknownAcceptance || acceptUnknown)
     }
     /// A receipt alone is insufficient: the original inbox row must have refreshed
@@ -230,12 +233,13 @@ enum ShopperDelivery: Equatable {
         invalidatePreview()
     }
     func invalidatePreview(preservePackSelection: Bool = false) {
-        draftGeneration = UUID(); preview = nil; acceptOverage = false; acceptUnknown = false
+        draftGeneration = UUID(); preview = nil; reviewedDecision = nil; cancelRequestFood(); acceptOverage = false; acceptUnknown = false
         if !preservePackSelection { packSelection = nil }
     }
     func cancelReview() { guard pending == nil else { return }; invalidatePreview(); selected = nil; clarification = "" }
     func review() async {
         guard authorized, !busy, pending == nil, let selected, let shop, availableChoices.contains(choice) else { return }
+        invalidatePreview(preservePackSelection: true)
         busy = true; notice = nil; defer { busy = false }; let start = generation; let draft = draftGeneration
         do {
             let decision = try makeDecision()
@@ -244,6 +248,7 @@ enum ShopperDelivery: Equatable {
             guard start == generation, draft == draftGeneration else { return }
             guard value.choice == decision.choice, value.shopRevision == shop.shopRevision,
                   value.authorityEpoch == shop.authorityEpoch, value.requestRevision == selected.revision else { throw ClientError.invalidResponse }
+            reviewedDecision = .init(request: selected, shop: shop, decision: decision, preview: value)
             preview = value
         } catch { await handle(error, start: start) }
     }
@@ -294,6 +299,43 @@ enum ShopperDelivery: Equatable {
     }
     func apply() async {
         guard canApply, let selected, let preview else { notice = ht("Review a current preview and the required acknowledgments before applying."); return }
+        if preview.choice == "add" || preview.choice == "link" {
+            guard let reviewedDecision, reviewedDecision.request == selected, reviewedDecision.preview == preview,
+                  reviewedDecision.shop == shop else { invalidatePreview(); return }
+            let start = generation, draft = draftGeneration, overage = acceptOverage, unknown = acceptUnknown
+            busy = true
+            do {
+                guard let id = UUID(uuidString: shopID) else { throw ClientError.configuration }
+                let page = try await service.sharedDemand(shopID: id)
+                guard start == generation, draft == draftGeneration, authorized, pending == nil,
+                      self.reviewedDecision == reviewedDecision, self.preview == preview,
+                      self.selected == selected, self.shop == reviewedDecision.shop,
+                      acceptOverage == overage, acceptUnknown == unknown,
+                      page.shopRevision == preview.shopRevision, page.authorityEpoch == preview.authorityEpoch,
+                      (serviceDate(preview.expiresAt) ?? .distantPast) > Date() else { throw ClientError.cancelled }
+                if page.status == .reviewRequired {
+                    invalidatePreview(preservePackSelection: true)
+                    notice = SharedDemandCopy.text("Review the surviving food facts in Food quantities first, then reopen this request.")
+                    busy = false; return
+                }
+                if page.status == .enabled {
+                    requestFood = try .init(reviewed: reviewedDecision, page: page, acceptOverage: overage, acceptUnknown: unknown)
+                    busy = false; return
+                }
+                // Only an explicit validated legacy status takes the existing
+                // decision path. Missing/failed demand reads never become legacy.
+                guard page.status == .legacy else { throw ClientError.invalidResponse }
+                busy = false
+            } catch {
+                busy = false
+                guard start == generation else { return }
+                if draft == draftGeneration {
+                    invalidatePreview(preservePackSelection: true); await handle(error, start: start)
+                    if authorized, (error as? ClientError) == .cancelled { notice = SharedDemandCopy.text("The shop changed. Refresh and review again.") }
+                }
+                return
+            }
+        }
         await enqueue(kind: "request.apply", base: preview.base,
                       body: ["requestId": .string(selected.id), "previewId": .string(preview.previewId),
                              "acceptOverage": .bool(acceptOverage), "acceptUnknown": .bool(acceptUnknown)], previewID: preview.previewId)
@@ -332,7 +374,9 @@ enum ShopperDelivery: Equatable {
     private func deliver(_ operation: PendingOperation, start: UUID) async {
         attempts += 1
         do {
-            let receipt = try await service.executeShopper(operation)
+            let receipt: ShopperReceipt
+            if operation.sharedDemandBinding != nil { receipt = try await service.executeSharedDemand(operation) }
+            else { receipt = try await service.executeShopper(operation) }
             guard start == generation else { return }
             guard receipt.shopId == shopID else { throw ClientError.invalidResponse }
             // The valid receipt supersedes a prior delivery error. Cleanup and
@@ -392,6 +436,59 @@ enum ShopperDelivery: Equatable {
         }
     }
 }
+extension HouseholdInboxModel: SharedDemandFlowAccess {
+    var foodShop: ShopperShop? { shop }
+    var foodEditorID: UUID? { requestFood?.id }
+    var foodPending: Bool { pending != nil }
+    var canReadFood: Bool {
+        authorized && bootstrap.role == "shopper" && bootstrap.grantId == nil &&
+        bootstrap.capabilities.contains("shopper_commands") && shop?.shopId == shopID && shop?.phase == "draft"
+    }
+    func cancelRequestFood() { requestFood = nil; reviewedFood = nil }
+    private func currentFood(_ context: SharedRequestFoodContext) -> Bool {
+        canReadFood && requestFood == context && reviewedDecision == context.reviewed &&
+        selected == context.reviewed.request && shop == context.reviewed.shop && preview == context.reviewed.preview &&
+        acceptOverage == context.action.acceptOverage && acceptUnknown == context.action.acceptUnknown &&
+        (serviceDate(context.reviewed.preview.expiresAt) ?? .distantPast) > Date() &&
+        (serviceDate(context.reviewed.shop.quote.expiresAt) ?? .distantPast) > Date()
+    }
+    func readFood() async throws -> SharedDemandPage {
+        guard !busy, pending == nil, let context = requestFood, currentFood(context), let id = UUID(uuidString: shopID) else { throw ClientError.cancelled }
+        let start = generation; busy = true; defer { busy = false }
+        do {
+            let currentShop = try await service.shopperShop(shopID: shopID)
+            let page = try await service.sharedDemand(shopID: id)
+            guard start == generation, currentFood(context), currentShop == context.reviewed.shop, page == context.page else { throw ClientError.cancelled }
+            reviewedFood = nil; return page
+        } catch { await handle(error, start: start); throw error }
+    }
+    func previewFood(_ request: SharedDemandPreviewRequest) async throws -> SharedDemandReview {
+        guard !busy, pending == nil, let context = requestFood, currentFood(context),
+              request.action == .request(context.action), request.mode == .change,
+              request.base == .init(shopRevision: context.page.shopRevision, authorityEpoch: context.page.authorityEpoch, graphRevision: context.page.graph?.revision ?? 0),
+              let id = UUID(uuidString: shopID) else { throw ClientError.cancelled }
+        let start = generation; busy = true; defer { busy = false }; reviewedFood = nil
+        do {
+            let result = try await service.previewSharedDemand(shopID: id, request: request)
+            guard start == generation, currentFood(context), pending == nil else { throw ClientError.cancelled }
+            reviewedFood = result; return result
+        } catch { await handle(error, start: start); throw error }
+    }
+    func applyFood(_ review: SharedDemandReview) async throws {
+        guard !busy, pending == nil, let context = requestFood, currentFood(context), reviewedFood == review,
+              review.request.action == .request(context.action) else { throw ClientError.cancelled }
+        let start = generation; busy = true; defer { busy = false }
+        do {
+            let operation = try await service.prepareSharedDemandApply(review)
+            guard start == generation, currentFood(context), reviewedFood == review, pending == nil else { throw ClientError.cancelled }
+            try await outbox.append(operation)
+            guard start == generation else { throw ClientError.cancelled }
+            pending = operation; attempts = 0; reviewedCurrentFacts = false; delivery = .waiting; reviewedFood = nil
+            await deliver(operation, start: start)
+        } catch { await handle(error, start: start); throw error }
+    }
+}
+
 private enum ShopperInputError: Error {
     case price, line, link, promotion, preview
     var message: String {

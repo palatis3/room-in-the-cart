@@ -1,4 +1,5 @@
 import XCTest
+import SwiftUI
 import HouseholdClient
 @testable import RoomInTheCart
 
@@ -324,6 +325,79 @@ import HouseholdClient
             XCTAssertEqual(action.lines, shop.lines); XCTAssertEqual(action.quote, changedQuote)
         }
     }
+    func testRetainedRowBindingsFollowIDsAfterReorderAndDiscardRemovedRows() async throws {
+        let access = FoodAccessStub(shop: try shop(), page: try page()), model = SharedDemandFlowModel(access: access)
+        await model.load()
+        var first = manual(), second = manual(); first.originalText = "First private source"; second.originalText = "Second private source"
+        model.draft.sources = [first, second]
+        let firstBinding = model.sourceBinding(first.id), secondBinding = model.sourceBinding(second.id)
+        model.draft.sources.reverse()
+        firstBinding.productName.wrappedValue = "Changed first food"
+        XCTAssertEqual(model.draft.sources[0], second)
+        XCTAssertEqual(model.draft.sources[1].productName, "Changed first food")
+        model.draft.sources.removeAll { $0.id == first.id }
+        let survivor = model.draft.sources
+        firstBinding.originalText.wrappedValue = "Late disappearing field event"
+        XCTAssertEqual(model.draft.sources, survivor)
+        XCTAssertEqual(firstBinding.wrappedValue.id, first.id); XCTAssertEqual(firstBinding.wrappedValue.originalText, "")
+        secondBinding.originalText.wrappedValue = "Still current"
+        XCTAssertEqual(model.draft.sources[0].originalText, "Still current")
+        var forged = secondBinding.wrappedValue; forged.id = first.id; secondBinding.wrappedValue = forged
+        XCTAssertEqual(model.draft.sources[0].id, second.id)
+    }
+    func testCancelImmediatelyRedactsAllRetainedRowBindingsAndLateSettersCannotRepopulateDraft() async throws {
+        let access = FoodAccessStub(shop: try shop(), page: try page()), model = SharedDemandFlowModel(access: access)
+        await model.load(); let line = try XCTUnwrap(model.draft.lines.first)
+        let source = manual(); model.draft.sources = [source]
+        var link = SharedFoodLinkDraft(); link.evidence = "Private relationship"; link.demandID = source.id; model.draft.links = [link]
+        model.draft.removedLines = [.init(line: line, sources: [])]
+        let lb = model.lineBinding(line.id), sb = model.sourceBinding(source.id), eb = model.linkBinding(link.id), rb = model.removedLineBinding(line.id)
+        let oldLine = lb.wrappedValue, oldSource = sb.wrappedValue, oldLink = eb.wrappedValue, oldRemoved = rb.wrappedValue
+        model.cancel()
+        XCTAssertNil(model.page); XCTAssertNil(model.shop); XCTAssertNil(model.review); XCTAssertEqual(model.draft, SharedFoodDraft())
+        XCTAssertEqual(lb.wrappedValue.id, line.id); XCTAssertEqual(lb.wrappedValue.name, ""); XCTAssertNil(lb.wrappedValue.priceMinor)
+        XCTAssertEqual(sb.wrappedValue.id, source.id); XCTAssertEqual(sb.wrappedValue.originalText, ""); XCTAssertNil(sb.wrappedValue.lineID)
+        XCTAssertEqual(eb.wrappedValue.id, link.id); XCTAssertEqual(eb.wrappedValue.evidence, ""); XCTAssertNil(eb.wrappedValue.demandID)
+        XCTAssertEqual(rb.wrappedValue.id, line.id); XCTAssertEqual(rb.wrappedValue.line.name, ""); XCTAssertTrue(rb.wrappedValue.sources.isEmpty)
+        lb.wrappedValue = oldLine; sb.wrappedValue = oldSource; eb.wrappedValue = oldLink; rb.wrappedValue = oldRemoved
+        lb.usable.literal.wrappedValue = "9"; sb.amount.literal.wrappedValue = "9"; eb.confirmed.wrappedValue = true; rb.confirmed.wrappedValue = true
+        XCTAssertEqual(model.draft, SharedFoodDraft()); XCTAssertEqual(access.previews, 0); XCTAssertEqual(access.applies, 0)
+    }
+    func testPriorGenerationBindingsCannotWriteIntoReloadedSameIDsAndRevocationRedactsImmediately() async throws {
+        let access = FoodAccessStub(shop: try shop(), page: try page()), model = SharedDemandFlowModel(access: access)
+        await model.load(); let old = model.lineBinding(lineID)
+        old.name.wrappedValue = "Private old label"
+        model.cancel(); await model.load()
+        old.name.wrappedValue = "Late old edit"
+        XCTAssertEqual(model.draft.lines[0].name, "Wraps"); XCTAssertEqual(old.wrappedValue.name, "")
+        let current = model.lineBinding(lineID); current.acceptUnresolved.wrappedValue = true
+        XCTAssertTrue(model.draft.lines[0].acceptUnresolved)
+        access.canReadFood = false
+        XCTAssertEqual(current.wrappedValue.name, "")
+        current.name.wrappedValue = "Denied late edit"
+        XCTAssertEqual(model.draft.lines[0].name, "Wraps")
+        model.cancel(); XCTAssertNil(model.page); XCTAssertNil(model.shop); XCTAssertEqual(model.draft, SharedFoodDraft())
+    }
+    func testRestrictionBindingsFollowExactScopeAndSafelyDiscardRemovedOrCancelledTags() async throws {
+        let access = FoodAccessStub(shop: try shop(), page: try page()), model = SharedDemandFlowModel(access: access)
+        await model.load(); var source = manual()
+        let first = SharedDemandSourceExclusion(occurrenceId: .init(), ingredientId: .init(), label: "Private restriction", resolution: .unresolved)
+        let second = SharedDemandSourceExclusion(occurrenceId: first.occurrenceId, ingredientId: .init(), label: first.label, resolution: .unresolved)
+        source.restrictions = [first, second]; source.restrictionTags = ["first", "second"]; model.draft.sources = [source]
+        let binding = model.restrictionBinding(sourceID: source.id, restriction: first)
+        model.draft.sources[0].restrictions.reverse(); model.draft.sources[0].restrictionTags.reverse()
+        binding.wrappedValue = "reviewed"
+        XCTAssertEqual(model.draft.sources[0].restrictionTags, ["second", "reviewed"])
+        model.draft.sources[0].restrictions.removeLast(); model.draft.sources[0].restrictionTags.removeLast()
+        XCTAssertEqual(binding.wrappedValue, ""); binding.wrappedValue = "discarded"
+        XCTAssertEqual(model.draft.sources[0].restrictionTags, ["second"])
+        let surviving = model.restrictionBinding(sourceID: source.id, restriction: second)
+        model.draft.sources[0].restrictionTags = []
+        XCTAssertEqual(surviving.wrappedValue, ""); surviving.wrappedValue = "no missing-index write"
+        XCTAssertTrue(model.draft.sources[0].restrictionTags.isEmpty)
+        model.cancel(); XCTAssertEqual(binding.wrappedValue, ""); surviving.wrappedValue = "no resurrection"
+        XCTAssertEqual(model.draft, SharedFoodDraft())
+    }
     func testCancelWhileReadIsHeldDiscardsReturnedPrivateGraphAndMakesNoPreviewOrApply() async throws {
         let access = FoodAccessStub(shop: try shop(), page: try page()); access.holdRead = true
         let model = SharedDemandFlowModel(access: access)
@@ -483,6 +557,23 @@ import HouseholdClient
             let queued = try await context.outbox.operations(); XCTAssertTrue(queued.isEmpty)
         }
     }
+    func testUnchangedControlBindingKeepsExactFoodReviewWhileRealEditInvalidatesIt() async throws {
+        let context = try await setup(); defer { context.close() }
+        let entered = context.parent.draft
+        context.fixture.holdDemandReads = true
+        let lookup = Task { await context.parent.reviewEditor() }
+        try await awaitHeld(context.fixture)
+        context.parent.draft = entered
+        context.fixture.releaseDemandReads(); await lookup.value
+        let editor = try XCTUnwrap(context.parent.foodEditor)
+        context.parent.draft = entered
+        XCTAssertEqual(context.parent.foodEditor, editor)
+        context.parent.draft.cap = "31.00"
+        XCTAssertNil(context.parent.foodEditor)
+        XCTAssertNil(context.parent.review)
+        XCTAssertFalse(context.parent.acknowledged)
+        XCTAssertTrue(context.fixture.commandBytes.isEmpty)
+    }
     func testHeldLookupImmediatelyInvalidatesApprovalAndChangedCandidateCannotInheritIt() async throws {
         let context = try await setup(); defer { context.close() }
         context.parent.reviewDraft(); context.parent.acknowledged = true
@@ -521,6 +612,22 @@ import HouseholdClient
         XCTAssertEqual(context.parent.draft.cap, "26.00")
         XCTAssertNil(context.parent.review); XCTAssertNil(context.parent.foodEditor)
         XCTAssertNotNil(context.parent.notice); XCTAssertTrue(context.fixture.commandBytes.isEmpty)
+    }
+    func testActiveStableLineBindingSurvivesPreviewAndEditAgainWithoutLosingValidEdits() async throws {
+        let context = try await setup(); defer { context.close() }
+        await context.parent.reviewEditor(); let editor = try XCTUnwrap(context.parent.foodEditor)
+        let flow = SharedDemandFlowModel(access: context.parent, editor: editor); await flow.load()
+        let line = flow.lineBinding(context.fixture.line)
+        line.acceptUnresolved.wrappedValue = true
+        XCTAssertTrue(flow.draft.lines[0].acceptUnresolved)
+        await flow.preview(); XCTAssertNotNil(flow.review)
+        flow.editAgain(); XCTAssertNil(flow.review)
+        line.acceptUnresolved.wrappedValue = false
+        XCTAssertFalse(flow.draft.lines[0].acceptUnresolved)
+        line.acceptUnresolved.wrappedValue = true
+        await flow.preview(); XCTAssertNotNil(flow.review)
+        XCTAssertTrue(context.fixture.commandBytes.isEmpty)
+        let queued = try await context.outbox.operations(); XCTAssertTrue(queued.isEmpty)
     }
     func testPrivacyRecoveryWithExpiredQuoteOpensMonetaryOnlyReviewWithoutFoodChanges() async throws {
         let context = try await setup(expiredQuote: true); defer { context.close() }

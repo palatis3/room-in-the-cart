@@ -1,0 +1,35 @@
+{
+  "commit": "7a55a376349340d803e99668b54acf05b1dc5057",
+  "scope": "Existing legacy S17 planner/shopper change and S26 fractional idea/proposal/shopper original UI journeys",
+  "nativeTestsPassed": 2,
+  "skipped": 0,
+  "strictPassed": true,
+  "recordedRuntimeWarnings": 0,
+  "buildSeconds": 226.128,
+  "journeySeconds": [
+    181.447,
+    256.591
+  ],
+  "sourceUnchanged": true,
+  "productsUnchanged": true,
+  "newGraphEditorUIAcceptance": false,
+  "releaseAcceptance": false,
+  "evidence": {
+    ".build/SharedDemandNativeEditorNov09/legacy-ui-r1/source-manifest.json": "9356735d13cd7e8de35239a29db191d5d0d3d7cb0c371e5d5108bb4f99077a88",
+    ".build/SharedDemandNativeEditorNov09/legacy-ui-r1/products.json": "60cb053d298933fc437d53c6555db6c1bacd816751fb5f12196869a507535dc1",
+    ".build/SharedDemandNativeEditorNov09/legacy-ui-r1/build-receipt.json": "626b32431e12b9bc3e7c6da5456d6fb85348ffc0806f2fed9c2ce6b14476c077",
+    ".build/SharedDemandNativeEditorNov09/legacy-ui-r1/ui-1-receipt.json": "9775b63dc7ad223f242dd6c942031b153a15710952e26d1d82f3af1ebe866edf",
+    ".build/SharedDemandNativeEditorNov09/legacy-ui-r1/ui-1-strict-receipt.json": "b9b7ce24b842f77f20386dc00d761cbd51ccb5910bad1640a3eb81b7fd2853ae",
+    ".build/SharedDemandNativeEditorNov09/legacy-ui-r1/ui-1-summary.json": "dd2f2d42c40b5e3cf9861ac0fe10fd5f45bb710db684661a1f078640be80b909",
+    ".build/SharedDemandNativeEditorNov09/legacy-ui-r1/ui-1-tests.json": "88bfd33daf497fa4bdc86f6b69d22ea216197cf14f3ab4618c58f542d1a84bab",
+    ".build/SharedDemandNativeEditorNov09/legacy-ui-r1/ui-2-receipt.json": "fbb301b778fc1ec15cd5847c8f3884823bd3018a4bbc6fd3ebf6ad02ce5d7c0f",
+    ".build/SharedDemandNativeEditorNov09/legacy-ui-r1/ui-2-strict-receipt.json": "267a934d08d55f23cab29807114a56fc7db3883dd80fbfc239b3fccb4081a2a2",
+    ".build/SharedDemandNativeEditorNov09/legacy-ui-r1/ui-2-summary.json": "32c0f33e021727705a137d1bdd13a45ad234c8fa1e86344c86525e129ce682ee",
+    ".build/SharedDemandNativeEditorNov09/legacy-ui-r1/ui-2-tests.json": "8baec796c1ae0073ab7904dbea42d90dbf2c4c39b1b900db2b9f7e476ad39b66",
+    ".build/SharedDemandNativeEditorNov09/legacy-ui-r1/final.json": "7b15de1647ec46b88f3714c007cdb1f80c0433b071da92efd6228e1dd5669a2c",
+    ".build/SharedDemandNativeEditorNov09/legacy-ui-r1/attachments-1/manifest.json": "e861e1df0e9b67b8f42e9d488784d7fe2480b1e3c02867a782b858b7093208f0",
+    ".build/SharedDemandNativeEditorNov09/legacy-ui-r1/attachments-2/manifest.json": "c833b47871c86a2182653a03a46010a4b1af0e6631faed2462874a3aadd32b09",
+    ".build/SharedDemandNativeEditorNov09/legacy-ui-r1/attachments-1/76B4B17B-9BE8-49BA-81B6-698AED6F6FE8.png": "358eb297277449a9b4a8ba4d735ab0599e9002b8088cc9ceb02560eb257d8b04",
+    ".build/SharedDemandNativeEditorNov09/legacy-ui-r1/attachments-2/BDE2FCE1-3A9C-4534-ABAD-6BFF10CCE618.png": "3632adabf37aebd9d7628bacf2d56f0574bdd16fa7420db1d2ac3f352e7cc434"
+  }
+}

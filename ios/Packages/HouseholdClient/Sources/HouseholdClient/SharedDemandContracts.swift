@@ -307,6 +307,8 @@ public struct SharedDemandReceipt: Codable, Equatable, Sendable {
     public let edges: [SharedDemandDelta<SharedDemandEdge>]
 }
 public struct SharedDemandPage: Codable, Equatable, Sendable {
+    /// Absent on older servers. Meal-action review requires this exact server digest.
+    public var graphDigest: String? = nil
     /// Absent on an older server. Missing is not an empty adoption catalog.
     public var legacySources: SharedDemandLegacySources? = nil
     public enum Status: String, Codable, Sendable { case legacy, enabled, reviewRequired }

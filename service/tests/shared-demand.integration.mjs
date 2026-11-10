@@ -4,6 +4,7 @@ import {randomUUID,randomBytes} from 'node:crypto';
 import pg from 'pg';
 import {generateKeyPair,exportJWK,createLocalJWKSet,SignJWT} from 'jose';
 import {HouseholdRepository} from '../dist/repository.js';
+import {bodySchemas} from '../dist/contracts.js';
 import {JWTIdentityVerifier,SupabaseSessionVerifier} from '../dist/auth.js';
 import {PrivacyService,PrivacyMaintenance} from '../dist/privacy.js';
 import {openPrivacyJournalFixture} from './privacy-journal-fixture.mjs';
@@ -475,4 +476,72 @@ test('action source catalog: same-identity protected unknown requires explicit q
  const applied=await apply(f,update,reviewed),receipt=ok(applied.response);assert.deepEqual(ok(await call(f.owner,f.base+'/commands','POST',applied.command)),receipt);
  const saved=ok(await call(f.owner,f.path+'/demand'));assert.equal(saved.graph.revision,2);assert.deepEqual(saved.graph.contributions,[quantified]);assert.equal(await count(f,'shared_demand_revision'),2);
  assert.equal((await catalog(f,input)).status,409);
+});
+
+if(process.env.RITC_TEST_NATIVE_WIRE==='1')test('actual Swift meal action catalog preserves Cancel, protected quantification, conversion reconfirmation and revoked proposal authority over HTTPS and PostgreSQL',async()=>{
+ const {exerciseSharedDemandClient}=await import('./shared-demand-native-wire.mjs');
+ const {mkdtemp,chmod}=await import('node:fs/promises');const {join}=await import('node:path');const {tmpdir}=await import('node:os');
+ const state=async()=>{const p=await mkdtemp(join(process.env.RITC_NATIVE_WIRE_STATE??tmpdir(),'meal-action-client-'));await chmod(p,0o700);return p;};
+ const wire=async(f,phase,request,extra={})=>exerciseSharedDemandClient({service:server,owner:f.owner,householdId:f.h,shopId:f.shopId,phase,requests:[request],before:ok(await call(f.owner,f.path+'/demand')),privateState:await state(),...extra});
+ const counters=async f=>({operations:await count(f,'operation'),graphs:await count(f,'shared_demand_revision'),previews:await count(f,'shared_demand_preview')});
+ // Actual typed catalog acquisition and Cancel. Preserve arbitrary persisted IDs and existing edge.
+ const cancelled=await fixture(),cm=await mealGraph(cancelled);ok((await apply(cancelled,cm.input,ok(await preview(cancelled,cm.input)))).response);
+ const cancelBefore=ok(await call(cancelled.owner,cancelled.path)),cancelDemand=ok(await call(cancelled.owner,cancelled.path+'/demand')),cancelCounts=await counters(cancelled);
+ const paddedMeal=structuredClone(cm.meal);paddedMeal.title='  Proposed title only  ';paddedMeal.planning.groups[0].name='  Dinner group  ';paddedMeal.planning.ingredients[0].name='  Wraps  ';
+ const cancelRequest={...cm.input,mode:'review',base:{shopRevision:3,authorityEpoch:1,graphRevision:1},change:empty(),action:{kind:'shop.patch',body:{quote:cancelled.quote,lines:[cancelled.basket],mealEdit:{occurrenceId:cm.occurrenceId,baseMealRevision:2,meal:paddedMeal}}}};
+ const cancel=await wire(cancelled,'meal-catalog-cancel',cancelRequest);
+ assert.equal(cancel.catalogAttempts,1);assert.equal(cancel.previewAttempts,0);assert.equal(cancel.attempts,0);
+ const sent=JSON.parse(cancel.catalogRequests[0]);assert.deepEqual(sent.base,{...cancelRequest.base,graphDigest:cancelDemand.graphDigest});assert.equal(sent.action.kind,cancelRequest.action.kind);assert.deepEqual(bodySchemas['shop.patch'].parse(sent.action.body),bodySchemas['shop.patch'].parse(cancelRequest.action.body));
+ assert.deepEqual(ok(await call(cancelled.owner,cancelled.path)),cancelBefore);assert.deepEqual(ok(await call(cancelled.owner,cancelled.path+'/demand')),cancelDemand);assert.deepEqual(await counters(cancelled),cancelCounts);
+ // Explicit protected unknown -> known. JS supplies only the meal action, not a graph delta.
+ const protectedCase=await fixture(),occurrenceId=randomUUID(),ingredientId=randomUUID();
+ const meal={title:'Protected lunch',day:null,kind:'lunch',portions:2,protected:true,planning:{groups:[],ingredients:[{id:ingredientId,name:'Wraps',quantity:null,groupIds:[],exclusions:[]}]}};
+ ok(await send(protectedCase,'shop.patch',{quote:protectedCase.quote,lines:[protectedCase.basket],mealEdit:{occurrenceId,baseMealRevision:null,meal}},1));
+ const reserve={...source(protectedCase,null),originalText:'Original protected lunch',contains:['wheat'],exclusions:['sesame'],source:{kind:'reservation',reservationId:randomUUID(),purpose:'Protected lunch',originOccurrenceId:occurrenceId,ingredientId,groupId:null,bindingId:null}};
+ const adoption=draft(protectedCase);adoption.base.shopRevision=2;adoption.change.contributions.push(reserve);adoption.packs[0].acceptUnresolved=true;
+ ok((await apply(protectedCase,adoption,ok(await preview(protectedCase,adoption)))).response);
+ const protectedBefore=ok(await call(protectedCase.owner,protectedCase.path+'/demand')),protectedCounts=await counters(protectedCase);
+ const changed=structuredClone(meal);changed.planning.ingredients[0].quantity={amount:{numerator:6,denominator:1},unit:'count',originalLiteral:'6 wraps'};
+ const protectedRequest={...adoption,mode:'change',base:{shopRevision:3,authorityEpoch:1,graphRevision:1},change:empty(),action:{kind:'shop.patch',body:{quote:protectedCase.quote,lines:[{...protectedCase.basket,packs:3}],mealEdit:{occurrenceId,baseMealRevision:2,meal:changed}}}};
+ const applied=await wire(protectedCase,'meal-protected-apply',protectedRequest,{dropFirstReply:true});
+ assert.equal(applied.attempts,2);assert.equal(applied.dropped,1);assert.deepEqual(applied.commands[0],applied.commands[1]);assert.equal(applied.catalogAttempts,2);assert.equal(applied.previewAttempts,2);
+ const protectedAfter=ok(await call(protectedCase.owner,protectedCase.path+'/demand')),accepted=protectedAfter.graph.contributions.find(c=>c.id===reserve.id);
+ assert.deepEqual(accepted,{...reserve,quantity:q(6)});assert.deepEqual(protectedAfter.graph.contributions.find(c=>c.id!==reserve.id),protectedBefore.graph.contributions.find(c=>c.id!==reserve.id));assert.deepEqual(protectedAfter.graph.edges,protectedBefore.graph.edges);
+ assert.equal(protectedAfter.graph.revision,2);assert.equal(protectedAfter.shopRevision,4);assert.deepEqual(protectedAfter.totals[0].quantity,{numerator:'18',denominator:'1'});
+ assert.equal(await count(protectedCase,'operation'),protectedCounts.operations+1);assert.equal(await count(protectedCase,'shared_demand_revision'),protectedCounts.graphs+1);assert.equal(await count(protectedCase,'shared_demand_preview'),protectedCounts.previews);
+ // A real authorized grant revocation occurs after typed preview/preparation and before the second catalog dispatch.
+ const revoked=await fixture(),rm=await mealGraph(revoked),planner=await invited(revoked);ok((await apply(revoked,rm.input,ok(await preview(revoked,rm.input)))).response);
+ ok(await call(revoked.owner,revoked.path+'/meal-plan/planner','PUT',{authorityEpoch:1,grantRevision:0,plannerId:planner.id}));
+ const proposalId=randomUUID(),proposed={...rm.meal,title:'Planner proposed title'};
+ // Deterministic setup only: reuse the existing proposal fixture without adding billing/network fixtures.
+ await admin.query('INSERT INTO ritc.shared_meal_change(household_id,shop_id,proposal_id,actor_id,authority_epoch,grant_revision,shop_revision,occurrence_id,base_meal_revision,body,original_meal,fingerprint) VALUES($1,$2,$3,$4,1,1,3,$5,2,$6,$7,$8)',[revoked.h,revoked.shopId,proposalId,planner.id,rm.occurrenceId,{meal:proposed},rm.meal,'e'.repeat(64)]);
+ const revokedBefore=ok(await call(revoked.owner,revoked.path)),revokedDemand=ok(await call(revoked.owner,revoked.path+'/demand')),revokedCounts=await counters(revoked);let revocations=0;
+ const revokedRequest={...rm.input,mode:'review',base:{shopRevision:3,authorityEpoch:1,graphRevision:1},change:empty(),action:{kind:'shop.patch',body:{quote:revoked.quote,lines:[revoked.basket],mealEdit:{occurrenceId:rm.occurrenceId,baseMealRevision:2,changeProposalId:proposalId,meal:proposed}}}};
+ const rejection=await wire(revoked,'meal-proposal-revoked',revokedRequest,{beforeCatalogRequest:async attempt=>{if(attempt===2){ok(await call(revoked.owner,revoked.path+'/meal-plan/planner','PUT',{authorityEpoch:1,grantRevision:1,plannerId:null}));revocations++;}}});
+ assert.equal(revocations,1);assert.equal(rejection.catalogAttempts,2);assert.equal(rejection.previewAttempts,2);assert.equal(rejection.attempts,1);assert.deepEqual(rejection.catalogRequests[0],rejection.catalogRequests[1]);
+ assert.deepEqual(ok(await call(revoked.owner,revoked.path)),revokedBefore);assert.deepEqual(ok(await call(revoked.owner,revoked.path+'/demand')),revokedDemand);
+ assert.equal(await count(revoked,'operation'),revokedCounts.operations);assert.equal(await count(revoked,'shared_demand_revision'),revokedCounts.graphs);
+ const proposal=(await admin.query('SELECT state FROM ritc.shared_meal_change WHERE household_id=$1 AND proposal_id=$2',[revoked.h,proposalId])).rows[0];assert.equal(proposal.state,'pending');
+ const grant=(await admin.query('SELECT planner_id,revision FROM ritc.meal_planner WHERE household_id=$1 AND shop_id=$2',[revoked.h,revoked.shopId])).rows[0];assert.equal(grant.planner_id,null);assert.equal(Number(grant.revision),2);
+ // Fixed authoritative cups stay cups; only an explicit new endpoint basis may retain the gram allocation.
+ const converted=await fixture();converted.basket={...converted.basket,originalItem:'Flour'};
+ const convertOccurrence=randomUUID(),convertIngredient=randomUUID(),basis={sourceUnit:'cup',targetUnit:'gram',targetAmountPerSourceUnit:{numerator:'120',denominator:'1'},sourceNote:'Original reviewed flour label',confirmedAt:'2026-11-01T12:00:00Z'};
+ const grams={amount:{numerator:'120',denominator:'1'},unit:'gram',originalLiteral:'120 g',confirmedConversion:null};
+ const cup={amount:{numerator:'1',denominator:'1'},unit:'cup',originalLiteral:'1 measured cup',confirmedConversion:basis};
+ const convertMeal={title:'Measured flour',day:null,kind:'dinner',portions:1,protected:false,planning:{groups:[],ingredients:[{id:convertIngredient,name:'Flour',quantity:{amount:{numerator:1,denominator:1},unit:'cup',originalLiteral:'1 measured cup'},groupIds:[],exclusions:[]}]}};
+ ok(await send(converted,'shop.patch',{quote:converted.quote,lines:[converted.basket],mealEdit:{occurrenceId:convertOccurrence,baseMealRevision:null,meal:convertMeal}},1));
+ const manual={...source(converted,grams),productKey:'flour',productName:'Flour',originalText:'Original manual flour'};
+ const cupSource={...source(converted,cup),productKey:'flour',productName:'Flour',originalText:'Original meal flour',source:{kind:'meal',occurrenceId:convertOccurrence,ingredientId:convertIngredient,groupId:null,bindingId:null}};
+ const allocation={id:randomUUID(),kind:'withinExisting',demandId:cupSource.id,supplyId:manual.id,quantity:{...grams,confirmedConversion:basis},confirmation:{productMatchConfirmed:true,confirmedAt:'2026-11-01T12:00:00Z',evidence:'Explicit same flour allocation'}};
+ const convertAdoption=draft(converted,manual);convertAdoption.base.shopRevision=2;convertAdoption.change.lines[0].name='Flour';convertAdoption.change.lines[0].unit='gram';convertAdoption.change.contributions.push(cupSource);convertAdoption.change.edges.push(allocation);convertAdoption.packs[0].usablePerPack=grams;
+ ok((await apply(converted,convertAdoption,ok(await preview(converted,convertAdoption)))).response);
+ const convertBefore=ok(await call(converted.owner,converted.path+'/demand')),convertCounts=await counters(converted);assert.deepEqual(convertBefore.totals[0].quantity,{numerator:'120',denominator:'1'});
+ const changedCup=structuredClone(convertMeal);changedCup.planning.ingredients[0].quantity.amount.numerator=2;changedCup.planning.ingredients[0].quantity.originalLiteral='2 measured cups';
+ const convertRequest={...convertAdoption,mode:'change',base:{shopRevision:3,authorityEpoch:1,graphRevision:1},change:empty(),action:{kind:'shop.patch',body:{quote:converted.quote,lines:[converted.basket],mealEdit:{occurrenceId:convertOccurrence,baseMealRevision:2,meal:changedCup}}}};
+ const conversion=await wire(converted,'meal-conversion-apply',convertRequest);assert.equal(conversion.attempts,1);assert.equal(conversion.dropped,0);assert.equal(conversion.previewAttempts,3);assert.equal(conversion.catalogAttempts,2);
+ const convertAfter=ok(await call(converted.owner,converted.path+'/demand')),result=convertAfter.graph.contributions.find(c=>c.id===cupSource.id),newBasis=result.quantity.confirmedConversion;
+ assert.deepEqual({...result,quantity:cupSource.quantity},cupSource);assert.equal(result.quantity.unit,'cup');assert.deepEqual(result.quantity.amount,{numerator:'2',denominator:'1'});assert.equal(result.quantity.originalLiteral,'2 measured cups');
+ assert.deepEqual({...newBasis,sourceNote:basis.sourceNote,confirmedAt:basis.confirmedAt},basis);assert.equal(newBasis.sourceNote,'Explicit reconfirmation for changed meal');assert.notEqual(newBasis.confirmedAt,basis.confirmedAt);
+ assert.deepEqual(convertAfter.graph.edges,[allocation]);assert.deepEqual(convertAfter.graph.contributions.find(c=>c.id===manual.id),manual);assert.deepEqual(convertAfter.totals[0].quantity,{numerator:'240',denominator:'1'});
+ assert.equal(convertAfter.graph.revision,2);assert.equal(convertAfter.shopRevision,4);assert.equal(await count(converted,'operation'),convertCounts.operations+1);assert.equal(await count(converted,'shared_demand_revision'),convertCounts.graphs+1);assert.equal(await count(converted,'shared_demand_preview'),convertCounts.previews);
 });

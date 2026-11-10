@@ -64,6 +64,9 @@ final class S23DuplicateFixtureServer: @unchecked Sendable {
             return try json(["shopId":Self.shopID, "shopRevision":revision, "authorityEpoch":1, "phase":"draft", "quote":try JSONSerialization.jsonObject(with:JSONEncoder().encode(quote)),
                 "lines":[["lineId":Self.lineID, "originalItem":"Cereal already in the basket", "packs":1, "unitPriceMinor":349, "feeEligible":true]]])
         }
+        if request.httpMethod == "GET", path.hasSuffix("/shops/" + Self.shopID + "/demand") {
+            return try json(["schemaVersion":1,"shopId":Self.shopID,"shopRevision":revision,"authorityEpoch":1,"status":"legacy","graph":NSNull(),"totals":[]])
+        }
         if path.hasSuffix("/previews"), let requestID = input["requestId"] as? String,
            let decision = input["decision"] as? [String: Any], let choice = decision["choice"] as? String {
             guard requestRows().contains(where: { $0["requestId"] as? String == requestID }) else { throw URLError(.badServerResponse) }

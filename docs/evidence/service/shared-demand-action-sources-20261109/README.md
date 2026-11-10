@@ -26,3 +26,20 @@ Earlier fixture/preparation failures are retained under the raw candidate paths.
 results remain under `.build/SharedDemandGraphNov09/action-source-catalog-*`.
 Native meal-editor integration, broader combined qualification and deployment remain
 separate acceptance work.
+
+
+The combined typed-client lane now passes all10 Node integration cases and27 exact
+Swift XCTest scenarios over pinned loopback HTTPS and fresh PostgreSQL, with zero
+failures/skips. The added scenarios verify normalized catalog labels and Cancel
+without writes, protected unknown-to-known quantity confirmation plus exact retry
+after a deliberately lost successful response, revoked proposal authority at
+catalog/preview/prepared Apply, and explicit conversion reconfirmation preserving
+existing source/edge identity. The database stopped and successful private fixture
+state was removed. [Exact source, result and cleanup hashes](native-wire-verification.json).
+
+The first candidate passed9/10 Node cases and24 Swift phases before a new test
+expected409 for a domain-validation rejection. The established HTTP mapping is422;
+all three related domain assertions were corrected together, while stale-state409
+checks and every exact error-code/rejection assertion remain. No service change
+was needed. The corrected Swift target was freshly built before the complete
+10/27 lane; the first failure remains preserved separately.

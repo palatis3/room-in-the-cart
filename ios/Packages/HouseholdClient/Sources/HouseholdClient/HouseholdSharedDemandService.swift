@@ -10,6 +10,17 @@ extension HouseholdService {
         try page.validate(householdID: context.householdID, shopID: shopID)
         return page
     }
+    public func sharedDemandActionSources(shopID: UUID, page: SharedDemandPage, request: SharedDemandActionSourceRequest) async throws -> SharedDemandActionSources {
+        try request.validate()
+        let start = generation, context = try sharedDemandContext(shopID: shopID)
+        try page.validate(householdID: context.householdID, shopID: shopID)
+        try await authorizeShopper(shopID: shopID.uuidString.lowercased())
+        guard generation == start, try sharedDemandContext(shopID: shopID) == context else { throw ClientError.cancelled }
+        let bytes = try encoded(request); guard bytes.count <= 65_536 else { throw ClientError.configuration }
+        let result: SharedDemandActionSources = try await perform("shops/\(shopID.uuidString.lowercased())/demand/action-sources", method: "POST", body: bytes)
+        guard generation == start, try sharedDemandContext(shopID: shopID) == context else { throw ClientError.cancelled }
+        try result.validate(page: page, request: request); return result
+    }
     public func previewSharedDemand(shopID: UUID, request: SharedDemandPreviewRequest) async throws -> SharedDemandReview {
         try request.validate()
         let start = generation, context = try sharedDemandContext(shopID: shopID)

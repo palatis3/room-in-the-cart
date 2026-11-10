@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "scope": "Complete existing native wire lane with four added meal scenarios",
+  "status": "passed",
+  "nodeIntegrationCases": 10,
+  "exactSwiftScenarios": 27,
+  "failures": 0,
+  "skips": 0,
+  "sourceFiles": 314,
+  "sourcesAndDependenciesUnchanged": true,
+  "swiftBuild": {
+    "mode": "normal-wrapper-build",
+    "reason": "Reviewed three-status Swift test correction; one fresh existing-wrapper build required.",
+    "wrapperUnchanged": true
+  },
+  "cleanup": {
+    "schemaVersion": 1,
+    "attempt": "attempt.gSJ0DU",
+    "exitCode": 0,
+    "postgresStopped": true,
+    "privateStateRetained": false,
+    "retention": "Private state is local only; ephemeral CI runner teardown removes it. No private state is uploaded."
+  },
+  "originals": ".build/SharedDemandGraphNov09/root-wire-r5",
+  "files": {
+    "receipt.json": "180b97f5f77b35952f2a9a523aea9f25a5e8375a27437348f628eab8a4793a9e",
+    "source-manifest.json": "0303648a5c06f9a0f4bf85a105835d4954b5804ce35f50b6254fa83bbc1df97b",
+    "compiled-service-manifest.json": "b2df6bf451f3de8b4bca8901d8a5a5f43a858d67f6f04338e788b03233711203",
+    "wire-result-manifest.json": "dacfe23d35990bb6571101d36a3c6d9b4b5cc2eb0befcdc185fc949af1cd2a04",
+    "typescript.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "combined-wire.log": "1396c2f6f491465f407eb085cdc62ba285ba80a5dae2d14edf54522bece5fd99"
+  },
+  "retainedFirstFailure": {
+    "path": ".build/SharedDemandGraphNov09/root-wire-r4",
+    "receiptSHA256": "504c03cf868b80407696704dd25de4d0fde7a659fd5ebfa05bb617e09824fdaa",
+    "firstFaultSHA256": "6cf7a71b0a832b9aaa951f8cd75c604bc7e88b246c9bc9751dfd37116f0b6549",
+    "correction": "Three new domain-rejection HTTP expectations corrected from409 to established422; exact error codes/rejection assertions preserved."
+  },
+  "productionServiceChangedForCorrection": false,
+  "UIAndMixedDeviceAcceptance": false,
+  "migrationOrDeployment": false,
+  "newCases": [
+    "catalog Cancel and exact normalized labels",
+    "protected unknown quantity with explicit confirmation and one-write lost-reply retry",
+    "planner proposal revocation blocks catalog/preview/prepared Apply",
+    "changed cup quantity needs explicit compatible new conversion while retaining saved gram allocation"
+  ]
+}

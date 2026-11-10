@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {PassThrough} from 'node:stream';
 import {setImmediate} from 'node:timers/promises';
-import {observeNativeWireCommand} from './shared-demand-native-wire.mjs';
+import {observeNativeWireCommand,observeNativeWireCatalogRequest} from './shared-demand-native-wire.mjs';
 
 // The real API awaits authentication before reading its IncomingMessage. This
 // models that boundary without a database, Swift, a listener or artificial load.
@@ -24,4 +24,19 @@ test('paused wire observation preserves exact command bytes for delayed original
  const result=await delayedAPIReader(observeNativeWireCommand);
  assert.deepEqual(result.consumed,result.expected);assert.deepEqual(result.observed,result.expected);
  assert.deepEqual(JSON.parse(result.consumed.toString()),{v:1,body:{accepted:true}});
+});
+
+test('catalog synchronization keeps exact body for original authorized API and awaits mutation',async()=>{
+ const request=new PassThrough(),bytes=Buffer.from('{"base":{"graphRevision":1},"action":{"kind":"shop.patch"}}');let observed,release,completed=false;
+ const barrier=new Promise(resolve=>{release=resolve;});
+ const pending=observeNativeWireCatalogRequest(request,value=>{observed=value;},async()=>{await barrier;completed=true;});
+ request.write(bytes.subarray(0,7));request.end(bytes.subarray(7));await setImmediate();assert.equal(completed,false);assert.equal(observed,undefined);
+ release();await pending;assert.equal(completed,true);
+ const chunks=[];for await(const chunk of request)chunks.push(chunk);
+ assert.deepEqual(Buffer.concat(chunks),bytes);assert.deepEqual(observed,bytes);
+});
+test('failed catalog synchronization rejects before dispatch without consuming body',async()=>{
+ const request=new PassThrough();const pending=observeNativeWireCatalogRequest(request,()=>{},async()=>{throw Error('fixture denied');});
+ request.end('exact body');await assert.rejects(pending,/fixture denied/);
+ const chunks=[];for await(const chunk of request)chunks.push(chunk);assert.equal(Buffer.concat(chunks).toString(),'exact body');
 });

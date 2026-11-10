@@ -288,6 +288,9 @@ struct HouseholdRequestDecisionView: View {
         }
         .scrollDismissesKeyboard(.immediately)
         .disabled(model.busy)
+        .sheet(item: Binding(get: { model.requestFood }, set: { if $0 == nil { model.cancelRequestFood() } })) { context in
+            NavigationStack { SharedRequestFoodView(inbox: model, context: context) }
+        }
         .navigationTitle(ht("Review request"))
         .toolbarBackground(Theme.canvas, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
@@ -359,7 +362,7 @@ struct ShopperDeliverySection: View {
         }
     }
 }
-private struct ShopperBudgetView: View {
+struct ShopperBudgetView: View {
     let title: String
     let value: ShopperBudget
     var body: some View {

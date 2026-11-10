@@ -106,6 +106,10 @@ final class S24FixtureServer: @unchecked Sendable {
             if includeMealFacts { shop["meals"] = Self.protectedLunches }
             return try json(shop)
         }
+        if request.httpMethod == "GET", path.hasSuffix("/shops/" + Self.shop + "/demand") {
+            if accessRevoked { return (403, Data()) }
+            return try json(["schemaVersion":1,"shopId":Self.shop,"shopRevision":revision + (recordedLines.isEmpty ? 0 : 1),"authorityEpoch":1,"status":"legacy","graph":NSNull(),"totals":[]])
+        }
         if path.hasSuffix("/previews") {
             previews += 1
             recordedPreview = input

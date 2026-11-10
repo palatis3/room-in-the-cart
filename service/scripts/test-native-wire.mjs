@@ -29,6 +29,7 @@ const cases = [
   'actual Swift source removal preserves other meals and manual lines across authorized clients',
   'real Swift adult proposal and separate shopper adoption use pinned loopback HTTPS and PostgreSQL',
   'actual Swift shared demand preserves typed sources and exact durable operations over HTTPS and PostgreSQL',
+  'actual Swift meal action catalog preserves Cancel, protected quantification, conversion reconfirmation and revoked proposal authority over HTTPS and PostgreSQL',
 ];
 const swiftRuns = [
   'deferred-request HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres',
@@ -54,6 +55,10 @@ const swiftRuns = [
   'demand-request HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
   'demand-denied HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
   'demand-privacy HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'demand-meal-catalog-cancel HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'demand-meal-protected-apply HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'demand-meal-proposal-revoked HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'demand-meal-conversion-apply HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
 
 ];
 const files = ['history', 'shared-meal-changes', 'shared-store-quotes', 'service', 'shared-demand']

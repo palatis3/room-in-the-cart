@@ -616,6 +616,9 @@ private final class SharedFlowService {
                 "asOf":Date().ISO8601Format(),"original":["lines":lines,"quote":quote,"snapshotCreatedAt":"2026-01-01T00:00:00Z"],
                 "current":["lines":lines,"amendmentId":NSNull()],"amendments":[]])
         }
+        if request.httpMethod == "GET", let shopID, path.hasSuffix("/shops/" + shopID + "/demand") {
+            return try ok(["schemaVersion":1,"shopId":shopID,"shopRevision":revision,"authorityEpoch":1,"status":"legacy","graph":NSNull(),"totals":[]])
+        }
         if path.contains("/shops/"), request.httpMethod == "GET" { return try ok(["shopId":shopID!,"shopRevision":revision,"authorityEpoch":1,"phase":phase,"quote":quote,"lines":lines,"meals":meals,"storeBasisRevision":storeBasisRevision as Any? ?? NSNull(),"frozenRevision":phase == "frozen" ? revision : NSNull(),"placedRevision":placedRevision as Any? ?? NSNull()]) }
         if path.hasSuffix("/previews") {
             let id = UUID().uuidString.lowercased(); previews[id] = json

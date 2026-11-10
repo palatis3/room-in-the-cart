@@ -33,6 +33,7 @@ PROFILES = {
             "SharedMealCivilDateUITests",
             "SharedMealIdeaUITests",
             "SharedStoreQuoteUITests",
+            "SharedFoodEditorUITests",
             "StapleRecallUITests",
         ),
         "STOCK_REVIEW_UI_FIXTURE": ("StockReviewUITests",),
@@ -42,7 +43,7 @@ PROFILES = {
 }
 # These long shared-editor journeys each get a fresh hosted runner/simulator.
 # Keep whole journeys intact: no retry or assertion is removed by isolation.
-ISOLATED_SUITES = {"SharedMealIdeaUITests", "SharedStoreQuoteUITests"}
+ISOLATED_SUITES = {"SharedMealIdeaUITests", "SharedStoreQuoteUITests", "SharedFoodEditorUITests"}
 # Case groups and their measured basis are recorded in docs/CI-VALIDATION.md.
 DELIVERY_SHARDS = {
     "SharedDeliveryUITests-stock-and-purchase": (

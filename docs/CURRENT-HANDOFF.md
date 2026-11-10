@@ -18,22 +18,67 @@ This file contains current execution state. The previous 482-line history is
   The ambient `spanish-done-diagnostic` worktree is stale.
 - No Dot/Lumpy. Astra High helpers and Sol6.1 Extra High monitoring are authorized.
   Root owns integration/dispatch and the sole local native execution slot.
-- The first shared-food native slice is committed at `176a8480`, its backend at
-  `4f188b26`, and the latest observer correction at `ca3cf777`.
-- The quote/item editor
-  build and 59 strict model tests passed; one real PostgreSQL privacy/expired-quote
-  case passed. Astra `astra_release_gap` owns the next request integration in scratch;
-  `astra_editor_review` prepares graph-editor UI coverage in scratch. Its independent
-  review found two legacy UI fixture routes missing explicit demand status; root
-  corrected them and owns the sole contributor build/original S17/S26 UI attempt
-  at `.build/SharedDemandNativeEditorNov09/legacy-ui-r1`. The phased-startup observer
-  correction is reviewed and passes both complete 298-check profiles.
+- Backend/CI query-acquisition checkpoint: `d6d5b5bb`; the native successor below
+  is qualified locally. The remote was last verified at `7a55a376349340d803e99668b54acf05b1dc5057`
+  before publishing this successor. Current dispatch state is recorded in
+  `.build/HostedAppObservationNov09/active-handoff.json`.
+  Quote/item editor build and59 strict model tests passed; the real PostgreSQL
+  privacy/expired-quote case and original S17/S26 UI journeys passed.
+- Reviewed request integration, meal review and graph-editor UI are installed locally.
+  Combined-r6 passed122 client-package tests (3 expected database-only skips),
+  build,148 strict model tests, and both original English/Spanish editor journeys.
+  Cancel no longer crashes; quote/source preservation and relaunch exact retry
+  pass with one saved write. First failures and exact r6 products/results remain
+  under `.build/SharedDemandNativeRequestsNov09/combined-r6`.
+- Reviewed `native-meal-action-r3` adds server-exact edge trimming and explicit new
+  conversion evidence after changed authoritative meal amounts. Review caught and
+  corrected a missing `try` in a new test before execution. Installed
+  `native-meal-action-wire-r2` adds four actual Swift HTTPS/PostgreSQL scenarios
+  for catalog Cancel, protected quantification with lost-reply retry, revoked
+  proposal authority, and conversion reconfirmation. No migrations/deployment.
+- Combined-r7 passed client package, build,153 strict models and English UI.
+  R8 corrected only the Spanish expected title and passed the full Spanish journey;
+  app and model-test product bytes are identical. Original failures are retained.
+  Known-direction UI searches reduced observed test-process times from316.8/300.6s
+  to252.3/246.5s (EN/ES), without removing assertions or changing time limits.
+  [Exact scope/hashes](evidence/native/shared-food-editor-20261109/graph-meal-r7-r8-verification.json).
+- Full typed-client HTTP/PostgreSQL wire qualification r5 passes all10 Node cases
+  and27 exact Swift scenarios, zero failures/skips. One fresh test build exercised
+  the corrected assertions; service code was unchanged. Original r4 first failure
+  remains retained. The successful database stopped and private fixture state was
+  removed. [Exact proof](evidence/service/shared-demand-action-sources-20261109/native-wire-verification.json).
+- Publication requires both complete performance preflight profiles in a clean
+  checkout of the exact committed successor and verified remote parity before one
+  changed scroll observation. Native qualification is complete within the scopes
+  above; full regression, minimum-iOS and performance acceptance remain open.
+- Backend `action-source-catalog-r3` is installed locally: strict compile116 offline
+  controls pass. R2 passed91 actual HTTP/PostgreSQL cases; R3's affected protected
+  quantification scenario passes separately. Both isolated databases stopped.
+  Conversion retention and protected quantification findings are fixed without
+  relaxing reducer or authorization gates. No migrations/deployment occurred.
+- Same-process startup query acquisition correction is installed locally and passes
+  147 observer controls plus both complete324-check preflight profiles. It retains
+  fixed phase deadlines/custody and adds bounded identity diagnostics. No changed
+  hosted run has been dispatched. Sol monitors the native qualification; an Astra helper prepares
+  the separate typed native-wire execution above.
 - Preserve existing untracked historical evidence. Stage named files, not all
   working-tree changes. Keep 8 GiB free; the last observation was about 167 GiB.
 
 ## Current hosted question
 
-Focused observer run [42711707477](https://github.com/palatis3/room-in-the-cart/actions/runs/42711707477)
+Focused observer [42717128576](https://github.com/palatis3/room-in-the-cart/actions/runs/42717128576)
+finished with failure at exact `7a55a376349340d803e99668b54acf05b1dc5057`.
+The298-check preflight, helper typecheck and Release producer passed. The tenth
+container query emitted ENOENT but had neither verified process identity nor
+terminal exit at the supervisor's independent two-second image-binding cutoff.
+Failure occurred43.588s after native dispatch, before any180/120/120/420 phase
+budget expired. Custody correctly withheld signals from that unverified process.
+No selected-case verdict, trace or required duration was established. Root verified
+23 retained files, both ZIPs and all54 TAR members. Evidence:
+`.build/HostedAppObservationNov09/hosted-42717128576/root-verification.json`.
+The diagnostic is inconclusive; no unchanged retry or baseline approval.
+
+Previous observer run [42711707477](https://github.com/palatis3/room-in-the-cart/actions/runs/42711707477)
 targets exact commit `ca3cf777c93196300bf5045b9d60a8e41315eabe`. It passed the
 279-check Ubuntu planner, observer preparation and Release producer. The consumer
 failed the original 120-second app-data startup deadline before selected-case
@@ -76,16 +121,16 @@ project generation pass. These are scoped results, not final combined acceptance
 The first native flow supports authoritative legacy-source adoption, exact manual
 needs, explicit product/relationship review, server totals and durable retry.
 Protected null-product clarification changes only that identity, preserving the
-same source and all other facts. The screen has not passed an original UI journey.
+same source and all other facts. The original graph-editor UI journey now passes in both languages (r6 scope).
 
 The existing quote/item editor now preserves the exact reviewed candidate,
 including expired-quote replacement after privacy recovery. Added lines require
 explicit sources; rename/removal require review. Meal/request/protected commitments
 require explicit restoration. Build and all 59 focused model checks pass, plus the
 real privacy/expired-quote recovery case. Independent review found the two legacy
-fixture gaps above; original-route UI acceptance remains. [Editor proof](evidence/native/shared-food-editor-20261109/README.md).
+fixture gaps above; both original legacy routes pass; r6 also qualifies the graph-editor fixture journeys. [Editor proof](evidence/native/shared-food-editor-20261109/README.md).
 
-Then integrate request Add/Link and meal/proposal editing. Request review must retain
+Request Add/Link and meal/proposal editing are installed; their combined qualification is underway. Request review must retain
 its exact `ShopperDecision`, including the generated add-line UUID; recreating that
 decision changes identity. Changed meal bindings need authoritative proposed-action
 sources from the server; do not duplicate protected-group enumeration in Swift.
