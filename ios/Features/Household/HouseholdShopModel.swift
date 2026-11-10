@@ -95,6 +95,7 @@ struct SharedShopTransfer: Equatable {
     @Published private(set) var creatingAnother = false
     @Published private(set) var requiresRefresh = false
     @Published private(set) var review: SharedShopReview?
+    @Published private(set) var trackingEditor: TrackingShopEditorContext?
     @Published private(set) var foodEditor: SharedFoodEditorContext?
     @Published private(set) var pending: PendingOperation?
     @Published private(set) var delivery: ShopperDelivery = .none
@@ -103,7 +104,7 @@ struct SharedShopTransfer: Equatable {
     @Published var draft = SharedShopDraft() {
         didSet {
             guard draft != oldValue else { return }
-            review = nil; acknowledged = false; foodEditor = nil; editorLookup = UUID()
+            review = nil; acknowledged = false; foodEditor = nil; trackingEditor = nil; editorLookup = UUID()
         }
     }
     @Published var acknowledged = false
@@ -153,10 +154,10 @@ struct SharedShopTransfer: Equatable {
     func updateScope(_ value: HouseholdBootstrap) {
         guard value.household.id == householdID, value.memberId == memberID, value.grantId == nil else { clear(); return }
         if scope.shopId != value.shopId || scope.role != value.role || Set(scope.capabilities) != Set(value.capabilities) {
-            cancelOperationUndoReview(); reviewedFood = nil; reviewedFoodEditorID = nil; foodEditor = nil; editorLookup = UUID(); graphShopID = nil
+            cancelOperationUndoReview(); reviewedFood = nil; reviewedFoodEditorID = nil; foodEditor = nil; trackingEditor = nil; editorLookup = UUID(); graphShopID = nil
             financialRecord = nil; financialRetry = nil; deliveryRecord = nil; review = nil; acknowledged = false
             reviewedCookRecipient = nil; pendingMarkOccurrence = nil; reviewedCookOperation = nil; reviewedAmendmentOperation = nil
-            if scope.shopId != value.shopId, pendingCookCopy || pendingPantry || pendingMealRecovery || pendingAmendment || pendingDelivery || pending?.sharedDemandBinding != nil { pending = nil; delivery = .none; reviewedCurrentFacts = false }
+            if scope.shopId != value.shopId, pendingCookCopy || pendingPantry || pendingMealRecovery || pendingAmendment || pendingDelivery || (pending?.sharedDemandBinding != nil || pending?.sharedTrackingBinding != nil || pending?.sharedRequestUndoBinding != nil) { pending = nil; delivery = .none; reviewedCurrentFacts = false }
             draft = .init()
             editing = false; creatingAnother = false
             shop = nil
@@ -170,15 +171,27 @@ struct SharedShopTransfer: Equatable {
         do {
             try await refreshFacts(start: start)
             if pending == nil {
-                let saved = try await outbox.operations(); guard start == generation else { return }
-                if let operation = saved.first(where: { $0.householdID == householdID && $0.memberID == memberID && $0.targetsShop(scope.shopId, includeCreation: scope.capabilities.contains("household_admin")) }) {
+                let restoredScope = scope
+                let saved = try await outbox.operations(); guard start == generation, scope == restoredScope, pending == nil else { return }
+                if let operation = saved.first(where: { $0.householdID == householdID && $0.memberID == memberID && ($0.sharedTrackingBinding.map { $0.shopID.string == scope.shopId } ?? true) && ($0.sharedRequestUndoBinding.map { $0.shopID.string == scope.shopId } ?? true) && $0.targetsShop(scope.shopId, includeCreation: scope.capabilities.contains("household_admin")) }) {
                     pending = operation
                     let matches = await service.matches(operation, memberID: memberID)
-                    guard start == generation else { return }
+                    guard start == generation, scope == restoredScope, pending == operation else { return }
                     delivery = matches ? .waiting : .needsReview
                 }
             }
-            if pending?.sharedDemandBinding != nil {
+            if let operation = pending, operation.sharedTrackingBinding != nil || operation.sharedRequestUndoBinding != nil {
+                let actor = scope
+                let matches = await service.matches(operation, memberID: memberID)
+                guard start == generation, scope == actor, pending == operation else { return }
+                // Fresh current authority permits another explicit exact retry;
+                // it cannot authorize Clear, rebasing, or a replacement command.
+                reviewedCurrentFacts = false
+                if matches, canManage, (operation.sharedTrackingBinding?.shopID ?? operation.sharedRequestUndoBinding?.shopID)?.string == scope.shopId {
+                    attempts = 0; retryAfter = .distantPast; delivery = .waiting
+                    notice = st("Current access is confirmed. Retry the exact saved action to learn its result.")
+                } else { delivery = .needsReview }
+            } else if pending?.sharedDemandBinding != nil {
                 if !canManage { delivery = .needsReview }
                 reviewedCurrentFacts = true
             } else if pendingAmendment {
@@ -201,7 +214,8 @@ struct SharedShopTransfer: Equatable {
         } catch { await handle(error, start: start) }
     }
     private func refreshFacts(start: UUID) async throws {
-        let fresh = try await service.bootstrap(); guard start == generation else { throw ClientError.cancelled }
+        let refreshScope = scope
+        let fresh = try await service.bootstrap(); guard start == generation, scope == refreshScope else { throw ClientError.cancelled }
         guard fresh.household.id == householdID, fresh.memberId == memberID, fresh.grantId == nil,
               fresh.capabilities.contains("household_admin") || fresh.role == "shopper" else { throw ClientError.accessEnded }
         updateScope(fresh)
@@ -209,7 +223,7 @@ struct SharedShopTransfer: Equatable {
             let value = try await service.shopperShop(shopID: id)
             guard start == generation, scope == fresh else { throw ClientError.cancelled }
             if shop != value {
-                cancelOperationUndoReview(); reviewedFood = nil; reviewedFoodEditorID = nil; foodEditor = nil; editorLookup = UUID()
+                cancelOperationUndoReview(); reviewedFood = nil; reviewedFoodEditorID = nil; foodEditor = nil; trackingEditor = nil; editorLookup = UUID()
                 financialRecord = nil; financialRetry = nil
                 deliveryRecord = nil
                 review = nil; acknowledged = false
@@ -764,9 +778,25 @@ struct SharedShopTransfer: Equatable {
         guard entered.kind == "shop.patch", let candidate = entered.candidate,
               let baseline = shop, let id = UUID(uuidString: entered.shopID) else { return }
         let start = generation, actor = scope, lookup = UUID()
-        editorLookup = lookup; review = nil; acknowledged = false; foodEditor = nil; cancelOperationUndoReview(); reviewedFood = nil; reviewedFoodEditorID = nil
+        editorLookup = lookup; review = nil; acknowledged = false; foodEditor = nil; trackingEditor = nil; cancelOperationUndoReview(); reviewedFood = nil; reviewedFoodEditorID = nil
         busy = true; defer { busy = false }
         do {
+            do {
+                let tracking = try await service.sharedTracking(shopID: id)
+                guard start == generation, lookup == editorLookup, actor == scope, self.shop == baseline,
+                      editing, pending == nil, review == nil, canManage,
+                      tracking.shopRevision == entered.base.shopRevision, tracking.authorityEpoch == entered.base.authorityEpoch else { throw ClientError.cancelled }
+                if tracking.status == .enabled, entered.mealEdit == nil, tracking.state?.unbound.isEmpty == false || tracking.state?.legacyLineIds.isEmpty == false { trackingEditor = .init(shop: baseline, candidate: candidate); return }
+                if tracking.status == .legacy, let edit = entered.mealEdit {
+                    let meal = SharedDemandMealEdit(occurrenceId: .init(edit.occurrenceID), baseMealRevision: edit.baseMealRevision, meal: edit.meal,
+                        proposalId: edit.proposalID.map(SharedDemandID.init), changeProposalId: edit.changeProposalID.map(SharedDemandID.init))
+                    trackingEditor = .init(shop: baseline, candidate: candidate, mealEdit: meal); return
+                }
+                if tracking.status == .reviewRequired {
+                    notice = st("Review the surviving food facts from Shop before reopening this item edit."); return
+                }
+                if tracking.status == .legacy { review = entered; return }
+            }
             let page = try await service.sharedDemand(shopID: id)
             guard start == generation, lookup == editorLookup, actor == scope, self.shop == baseline,
                   editing, pending == nil, review == nil, canManage,
@@ -801,7 +831,7 @@ struct SharedShopTransfer: Equatable {
         }
     }
     func cancelFoodEditor() {
-        editorLookup = UUID(); foodEditor = nil; cancelOperationUndoReview(); reviewedFood = nil; reviewedFoodEditorID = nil
+        editorLookup = UUID(); foodEditor = nil; trackingEditor = nil; cancelOperationUndoReview(); reviewedFood = nil; reviewedFoodEditorID = nil
     }
     func reviewTransfer(_ assignment: ShopperAssignment, to adultID: UUID) {
         guard authorized, !busy, !editing, pending == nil, !requiresRefresh, scope.grantId == nil,
@@ -855,11 +885,19 @@ struct SharedShopTransfer: Equatable {
         if pendingMealRecovery && (!canReadMealRecovery || pendingEnvelope?.shopId != scope.shopId) { return }
         if pendingCookCopy && (!canRetryCookCopy || pendingEnvelope?.shopId != scope.shopId) { return }
         if pendingPantry && (!canReadPantry || pendingEnvelope?.shopId != scope.shopId) { return }
+        if pending.sharedRequestUndoBinding != nil && (!canManage || pending.sharedRequestUndoBinding?.shopID.string != scope.shopId) { return }
+        if pending.sharedTrackingBinding != nil && (!canManage || pending.sharedTrackingBinding?.shopID.string != scope.shopId) { return }
         if pending.sharedDemandBinding != nil && (!canManage || pendingEnvelope?.shopId != scope.shopId) { return }
         guard Date() >= retryAfter, attempts < 5 else { notice = ht("Wait before retrying, or review this action after several failed attempts."); return }
         busy = true; defer { busy = false }; await deliver(pending, start: generation)
     }
     private func deliver(_ operation: PendingOperation, start: UUID) async {
+        if operation.sharedRequestUndoBinding != nil {
+            do { try await sendRequestUndo(operation) } catch { /* Exact retry state is owned by sendRequestUndo. */ }; return
+        }
+        if operation.sharedTrackingBinding != nil {
+            do { try await sendTracking(operation, selectionID: nil) } catch { /* Exact retry state is owned by sendTracking. */ }; return
+        }
         attempts += 1
         do {
             let envelope = try JSONDecoder().decode(CommandEnvelope.self, from: operation.bytes)
@@ -924,7 +962,8 @@ struct SharedShopTransfer: Equatable {
         }
     }
     func clearPendingAfterReview() async {
-        guard authorized, !busy, reviewedCurrentFacts, let pending else { return }
+        guard authorized, !busy, reviewedCurrentFacts, let pending, pending.sharedTrackingBinding == nil, pending.sharedRequestUndoBinding == nil else { return }
+        if let target = pending.sharedTrackingBinding?.shopID ?? pending.sharedRequestUndoBinding?.shopID, target.string != scope.shopId { return }
         if pendingDelivery, pendingEnvelope?.shopId != scope.shopId { return }
         busy = true; defer { busy = false }; let start = generation
         do {
@@ -934,7 +973,7 @@ struct SharedShopTransfer: Equatable {
         } catch { await handle(error, start: start) }
     }
     func clear() {
-        cancelOperationUndoReview(); reviewedFood = nil; reviewedFoodEditorID = nil; foodEditor = nil; editorLookup = UUID(); graphShopID = nil
+        cancelOperationUndoReview(); reviewedFood = nil; reviewedFoodEditorID = nil; foodEditor = nil; trackingEditor = nil; editorLookup = UUID(); graphShopID = nil
         reviewedAmendmentOperation = nil; reviewedCurrentFacts = false
         reviewedCookRecipient = nil; pendingMarkOccurrence = nil; reviewedCookOperation = nil
         recoveryRecord = nil; reviewedRecovery = nil; reviewedRecoveryOperation = nil
@@ -1069,5 +1108,88 @@ extension HouseholdShopModel: SharedOperationUndoAccess {
             cancelOperationUndoReview()
             await deliver(operation, start: start)
         } catch { await handle(error, start: start); throw error }
+    }
+}
+
+
+extension HouseholdShopModel: SharedTrackingServiceOwner {
+    var trackingService: HouseholdService { service }
+    var trackingShop: ShopperShop? { shop }
+    var trackingAllowed: Bool { canReadFood && canManage }
+    var trackingLease: UUID { generation }
+    var trackingPending: Bool { pending != nil }
+    var trackingSelectionID: UUID? { trackingEditor?.id }
+    func sendTracking(_ operation: PendingOperation, selectionID: UUID?) async throws {
+        guard pending == operation || trackingSelectionID == selectionID else { throw ClientError.cancelled }
+        guard let binding = operation.sharedTrackingBinding, authorized, scope.grantId == nil,
+              scope.role == "shopper", scope.capabilities.contains("shopper_commands"),
+              scope.shopId == binding.shopID.string, pending == nil || pending == operation else { throw ClientError.cancelled }
+        let token = generation, actor = scope
+        pending = operation; delivery = .waiting; attempts += 1; reviewedCurrentFacts = false
+        do {
+            let receipt = try await service.sendSharedTracking(operation, outbox: outbox)
+            guard generation == token, scope == actor, pending == operation else { throw ClientError.cancelled }
+            pending = nil; delivery = .confirmed(receipt); review = nil; acknowledged = false; editing = false
+            cancelFoodEditor(); requiresRefresh = true
+            do { try await refreshFacts(start: token); await onConfirmed() }
+            catch { if token == generation { notice = st("Confirmed. Refresh the shop to see its current revision.") } }
+        } catch {
+            guard token == generation, scope == actor else { throw ClientError.cancelled }
+            let saved = try? await outbox.operations()
+            guard token == generation, scope == actor else { throw ClientError.cancelled }
+            if let saved, !saved.contains(operation) { pending = nil }
+            switch error as? ClientError {
+            case .accessEnded, .sessionNeeded: clear(); await onAccessEnded()
+            case .cancelled:
+                delivery = .needsReview; notice = st("The review was cancelled because its scope changed. Refresh before continuing.")
+            default:
+                if let client = error as? ClientError, let delay = RetryPolicy().delay(attempt: attempts, error: client), pending != nil {
+                    retryAfter = Date().addingTimeInterval(delay); delivery = .waiting
+                    notice = st("Not confirmed. Return to the shop and retry the exact saved action.")
+                } else {
+                    delivery = .needsReview
+                    notice = st("Needs a fresh review. Return to the shop, refresh current facts, and resolve any saved retry before starting again.")
+                }
+            }
+            throw error
+        }
+    }
+}
+
+
+extension HouseholdShopModel: SharedRequestUndoFlowAccess {
+    func sendRequestUndo(_ operation: PendingOperation) async throws {
+        guard let binding = operation.sharedRequestUndoBinding, authorized, scope.grantId == nil,
+              scope.role == "shopper", scope.capabilities.contains("shopper_commands"),
+              scope.shopId == binding.shopID.string, pending == nil || pending == operation else { throw ClientError.cancelled }
+        let token = generation, actor = scope
+        pending = operation; delivery = .waiting; attempts += 1; reviewedCurrentFacts = false
+        do {
+            let receipt = try await service.sendRequestAcceptanceUndo(operation, outbox: outbox)
+            guard generation == token, scope == actor, pending == operation else { throw ClientError.cancelled }
+            pending = nil; delivery = .confirmed(receipt); review = nil; acknowledged = false; editing = false
+            cancelFoodEditor(); requiresRefresh = true
+            do { try await refreshFacts(start: token); await onConfirmed() }
+            catch { if token == generation { notice = st("Confirmed. Refresh the shop to see its current revision.") } }
+        } catch {
+            guard token == generation, scope == actor else { throw ClientError.cancelled }
+            let saved = try? await outbox.operations()
+            guard token == generation, scope == actor else { throw ClientError.cancelled }
+            if let saved, !saved.contains(operation) { pending = nil }
+            switch error as? ClientError {
+            case .accessEnded, .sessionNeeded: clear(); await onAccessEnded()
+            case .cancelled:
+                delivery = .needsReview; notice = st("The review was cancelled because its scope changed. Refresh before continuing.")
+            default:
+                if let client = error as? ClientError, let delay = RetryPolicy().delay(attempt: attempts, error: client), pending != nil {
+                    retryAfter = Date().addingTimeInterval(delay); delivery = .waiting
+                    notice = st("Not confirmed. Return to the shop and retry the exact saved action.")
+                } else {
+                    delivery = .needsReview
+                    notice = st("Needs a fresh review. Return to the shop, refresh current facts, and resolve any saved retry before starting again.")
+                }
+            }
+            throw error
+        }
     }
 }

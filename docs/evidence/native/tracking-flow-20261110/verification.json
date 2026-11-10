@@ -1,0 +1,32 @@
+{
+  "status": "passed",
+  "sourceFiles": 660,
+  "modelTests": 62,
+  "suites": 5,
+  "runtimeWarnings": 0,
+  "uiJourneysExecuted": 0,
+  "sourceUnchanged": true,
+  "productsUnchanged": true,
+  "buildSeconds": 11.109,
+  "scope": "Compiled app/model/UI targets and exact focused simulator model roster; not a complete visual walkthrough or release qualification.",
+  "fixes": [
+    "Retained manual bindings redact and reject writes after cancel/access loss",
+    "Explicit refresh restores exact saved retry without replacing bytes",
+    "Initial adoption supports separately authored multiple basket rows",
+    "Ordinary untracked request acceptance stays available; enabled tracking still requires review; unavailable read never becomes legacy"
+  ],
+  "priorFailures": {
+    "r3": "Pre-execution wrong selector class; no runtime",
+    "r4": "60/61; old household fixture and mandatory legacy adoption routing",
+    "r5": "61/62; new negative test contributor enrollment setup"
+  },
+  "hashes": {
+    "final.json": "902c390a962f9b0368b25361d8072cf334933bb747fdccef002886ffd7f82f0d",
+    "source-manifest.json": "ffce5485b3a8f6d98ac9bf4db8a3e6f1d68934e05af0077730c1b7da54a27a34",
+    "build-receipt.json": "801bd52eb1b3256ca1e7e1a2cef184aefc4ba1088c67365dda1f00d64b84f6c6",
+    "models-receipt.json": "4de96368223ee2e663bd6ed00c2dd4189f2fdf159e69cec73146f38414cc3fcc",
+    "models-strict.log": "c6e50c5d968e0d5be3fa3cb649a662ae8f6762cc0395d32dfa8894e29c904af6",
+    "models-verification.json": "d03935d499dff2f94bf408b69d1fe7dd3a89e3f03c9b0f1a54e6aa25719d5399",
+    "custody-final.json": "1c6d4381631746a770f867df147c4de65536b9a7a82191cda40ae8aa8321ede3"
+  }
+}

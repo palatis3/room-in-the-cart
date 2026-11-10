@@ -1,5 +1,5 @@
 import XCTest
-import HouseholdClient
+@testable import HouseholdClient
 @testable import RoomInTheCart
 
 @MainActor final class SharedShopFlowTests: XCTestCase {
@@ -53,6 +53,118 @@ import HouseholdClient
         XCTAssertFalse(shared.reviewedCurrentFacts)
         return (fixture, adult, shared, outbox, operation)
     }
+    func testTrackingShopConflictRefreshEnablesSameBytesRetryWithoutClear() async throws { try await trackingRecovery(inbox: false, undo: false) }
+    func testRequestUndoShopConflictRefreshEnablesSameBytesRetryWithoutClear() async throws { try await trackingRecovery(inbox: false, undo: true) }
+    func testTrackingInboxConflictRefreshEnablesSameBytesRetryWithoutClear() async throws { try await trackingRecovery(inbox: true, undo: false) }
+    func testRequestUndoInboxConflictRefreshEnablesSameBytesRetryWithoutClear() async throws { try await trackingRecovery(inbox: true, undo: true) }
+    func testTrackingShopHeldRefreshCannotRestoreRetryAcrossShopSelection() async throws { try await trackingRecovery(inbox: false, undo: false, invalidateHeld: true) }
+    func testRequestUndoInboxHeldRefreshCannotRestoreRetryAfterScopeClear() async throws { try await trackingRecovery(inbox: true, undo: true, invalidateHeld: true) }
+    private func trackingRecovery(inbox useInbox: Bool, undo: Bool, invalidateHeld: Bool = false) async throws {
+        let fixture = SharedFlowService()
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory); SharedFlowURLProtocol.heldRead = nil }
+        let queue = directory.appendingPathComponent("tracking-recovery.json"), adult = try await createdHousehold(fixture, queue: queue)
+        let shared = try XCTUnwrap(adult.sharedShop); enterShop(shared); await shared.applyReviewed()
+        let shop = try XCTUnwrap(shared.shop), service = shared.trackingService
+        let context = try await service.sharedDemandContext(shopID: UUID(uuidString: shop.shopId)!)
+        let operation: PendingOperation
+        if undo {
+            let target = SharedDemandID(), request = SharedDemandID(), reserved = SharedDemandID()
+            let actionJSON: [String: Any] = ["kind": "request.undoAcceptance", "body": ["targetOperationId": target.string, "requestId": request.string,
+                "baseRequestRevision": 4, "lines": try JSONSerialization.jsonObject(with: JSONEncoder().encode(shop.lines)), "quote": try JSONSerialization.jsonObject(with: JSONEncoder().encode(shop.quote))]]
+            let action = try JSONDecoder().decode(SharedRequestUndoAction.self, from: fixture.data(actionJSON))
+            let digest = try JSONDecoder().decode(SharedRequestUndoDigest.self, from: JSONEncoder().encode(String(repeating: "a", count: 64)))
+            let binding = SharedRequestUndoOperationBinding(context: context, shopID: .init(UUID(uuidString: shop.shopId)!), targetOperationID: target,
+                reservedOperationID: reserved, previewID: .init(), previewDigest: digest,
+                base: .init(shopRevision: shop.shopRevision, authorityEpoch: shop.authorityEpoch, requestRevision: 4), action: action)
+            operation = try .init(envelope: .init(replayWindow: UUID().uuidString.lowercased(), shopId: shop.shopId, kind: "request.undoAcceptance", base: binding.base, body: binding.body()),
+                householdID: context.householdID, memberID: context.memberID, deviceID: context.deviceID, sharedRequestUndoBinding: binding)
+        } else {
+            let action = try SharedTrackingAction(.patch(.init(quote: shop.quote, lines: shop.lines)))
+            let binding = SharedTrackingOperationBinding(kind: .apply, mode: "review", context: context, shopID: .init(UUID(uuidString: shop.shopId)!),
+                base: .init(shopRevision: shop.shopRevision, authorityEpoch: shop.authorityEpoch), graphRevision: 2, privacyRevision: 0,
+                stateDigest: String(repeating: "a", count: 64), previewID: .init(), previewDigest: String(repeating: "b", count: 64), action: action, targetOperationID: nil)
+            operation = try .init(envelope: .init(replayWindow: UUID().uuidString.lowercased(), shopId: shop.shopId, kind: "shop.patch", base: binding.base, body: binding.body()),
+                householdID: context.householdID, memberID: context.memberID, deviceID: context.deviceID, sharedTrackingBinding: binding)
+        }
+        let outbox = OperationOutbox(url: useInbox ? directory.appendingPathComponent("inbox-pending.json") : queue.deletingPathExtension().appendingPathExtension("shared-shop.json"))
+        let inbox = HouseholdInboxModel(bootstrap: shared.scope, service: service, outbox: outbox, onAccessEnded: {})
+        var posted: [Data] = []
+        SharedFlowURLProtocol.handler = { request in
+            if request.url!.path.hasSuffix("/commands") {
+                let bytes = try fixture.body(request), envelope = try JSONDecoder().decode(CommandEnvelope.self, from: bytes)
+                if envelope.clientKey == operation.clientKey {
+                    posted.append(bytes)
+                    return (409, try fixture.data(["error": ["code": "refresh_required"]]))
+                }
+            }
+            return try fixture.respond(request)
+        }
+        func load() async { if useInbox { await inbox.load() } else { await shared.load() } }
+        func retry() async { if useInbox { await inbox.retry() } else { await shared.retry() } }
+        func clear() async { if useInbox { await inbox.clearPendingAfterReview() } else { await shared.clearPendingAfterReview() } }
+        func pending() -> PendingOperation? { useInbox ? inbox.pending : shared.pending }
+        func delivery() -> ShopperDelivery { useInbox ? inbox.delivery : shared.delivery }
+        try await outbox.append(operation); await load(); XCTAssertEqual(delivery(), .waiting)
+        await retry(); XCTAssertEqual(delivery(), .needsReview); XCTAssertEqual(pending(), operation)
+        XCTAssertEqual(posted, [operation.bytes])
+        if invalidateHeld {
+            let arrived = expectation(description: "held parent current-shop refresh")
+            let held = SharedFlowHeldRead(pathSuffix: "/shops/" + shop.shopId, arrived: { arrived.fulfill() })
+            SharedFlowURLProtocol.heldRead = held
+            let loading = Task { await load() }; await fulfillment(of: [arrived], timeout: 2)
+            if useInbox { inbox.clear() }
+            else {
+                var raw = try JSONSerialization.jsonObject(with: JSONEncoder().encode(shared.scope)) as! [String: Any]
+                raw["shopId"] = UUID().uuidString.lowercased()
+                shared.updateScope(try JSONDecoder().decode(HouseholdBootstrap.self, from: fixture.data(raw)))
+            }
+            held.release(); await loading.value
+            XCTAssertNil(pending()); await retry(); XCTAssertEqual(posted, [operation.bytes])
+        } else {
+            await load(); XCTAssertEqual(delivery(), .waiting); XCTAssertEqual(pending(), operation)
+            await clear(); XCTAssertEqual(pending(), operation)
+            let beforeRetry = try await outbox.operations(); XCTAssertEqual(beforeRetry, [operation])
+            await retry(); XCTAssertEqual(posted, [operation.bytes, operation.bytes]); XCTAssertEqual(delivery(), .needsReview)
+            XCTAssertEqual(pending(), operation)
+        }
+        let persisted = try await outbox.operations(); XCTAssertEqual(persisted, [operation]); XCTAssertEqual(persisted[0].bytes, operation.bytes)
+    }
+    func testTrackingPendingShopSwitchCannotDiscardOtherShopAndRestoresExactBytes() async throws {
+        let fixture = SharedFlowService()
+        let queue = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathComponent("tracking.json")
+        let adult = try await createdHousehold(fixture, queue: queue)
+        let shared = try XCTUnwrap(adult.sharedShop); enterShop(shared); await shared.applyReviewed()
+        let originalShop = try XCTUnwrap(shared.shop), originalScope = shared.scope
+        let action = try SharedTrackingAction(.patch(.init(quote: originalShop.quote, lines: originalShop.lines)))
+        let binding = SharedTrackingOperationBinding(kind: .apply, mode: "review",
+            context: .init(subject: "mia", householdID: fixture.household, memberID: fixture.miaID, deviceID: "mia-device"),
+            shopID: .init(UUID(uuidString: originalShop.shopId)!), base: .init(shopRevision: originalShop.shopRevision, authorityEpoch: originalShop.authorityEpoch),
+            graphRevision: 2, privacyRevision: 0, stateDigest: String(repeating: "a", count: 64), previewID: .init(),
+            previewDigest: String(repeating: "b", count: 64), action: action, targetOperationID: nil)
+        let operation = try PendingOperation(envelope: .init(replayWindow: UUID().uuidString.lowercased(), shopId: originalShop.shopId,
+            kind: "shop.patch", base: binding.base, body: binding.body()), householdID: fixture.household,
+            memberID: fixture.miaID, deviceID: "mia-device", sharedTrackingBinding: binding)
+        let outboxURL = queue.deletingPathExtension().appendingPathExtension("shared-shop.json")
+        let outbox = OperationOutbox(url: outboxURL); try await outbox.append(operation); await shared.load()
+        XCTAssertEqual(shared.pending, operation)
+        var raw = try JSONSerialization.jsonObject(with: JSONEncoder().encode(originalScope)) as! [String: Any]
+        let other = UUID().uuidString.lowercased(); raw["shopId"] = other
+        let otherScope = try JSONDecoder().decode(HouseholdBootstrap.self, from: JSONSerialization.data(withJSONObject: raw))
+        fixture.shopID = other; shared.updateScope(otherScope); XCTAssertNil(shared.pending)
+        await shared.load(); XCTAssertNil(shared.pending)
+        let sent = fixture.kinds.count; await shared.retry(); await shared.clearPendingAfterReview()
+        XCTAssertEqual(fixture.kinds.count, sent)
+        let reopened = OperationOutbox(url: outboxURL), persisted = try await reopened.operations()
+        XCTAssertEqual(persisted, [operation]); XCTAssertEqual(persisted[0].bytes, operation.bytes)
+        fixture.shopID = originalShop.shopId; shared.updateScope(originalScope); await shared.load()
+        XCTAssertEqual(shared.pending, operation); XCTAssertEqual(shared.pending?.bytes, operation.bytes)
+        XCTAssertFalse(shared.reviewedCurrentFacts)
+        await shared.clearPendingAfterReview()
+        XCTAssertEqual(shared.pending, operation)
+        let stillSaved = try await reopened.operations(); XCTAssertEqual(stillSaved, [operation])
+    }
+
     func testErasedAmendmentEvidenceAllowsExplicitLocalRetryClearWithoutResubmitting() async throws {
         let (fixture, _, shared, outbox, operation) = try await waitingAmendment()
         fixture.confirmedOrderFailure = (409, "order_evidence_removed")
@@ -300,6 +412,8 @@ import HouseholdClient
         XCTAssertEqual(inbox.preview?.after.totalMinor, 4069); XCTAssertEqual(inbox.preview?.after.overCapMinor, 269)
         XCTAssertFalse(inbox.canApply); inbox.acceptOverage = true; await inbox.apply()
         XCTAssertEqual(inbox.shop?.lines.count, 2)
+        XCTAssertNil(inbox.trackingRequest, "An ordinary pickup must not require adoption of food tracking.")
+        XCTAssertEqual(fixture.kinds.filter { $0 == "request.apply" }.count, 1)
         await shared.load(); shared.reviewPhaseChange("shop.freeze"); shared.acknowledged = true; await shared.applyReviewed()
         XCTAssertEqual(shared.shop?.phase, "frozen")
         sam.item = "Milk"; sam.quantity = "one carton"; await sam.sendRequest()
@@ -315,6 +429,24 @@ import HouseholdClient
         XCTAssertEqual(fixture.kinds.filter { $0 == "shop.freeze" }.count, 1)
         XCTAssertEqual(fixture.kinds.filter { $0 == "shop.reopen" }.count, 1)
         XCTAssertEqual(fixture.privateReads, 0)
+    }
+    func testUnavailableTrackingReadNeverFallsBackToAnOrdinaryRequestApply() async throws {
+        let fixture = SharedFlowService(); let mia = try await createdHousehold(fixture)
+        let shared = try XCTUnwrap(mia.sharedShop); enterShop(shared); await shared.applyReviewed()
+        let people = try XCTUnwrap(mia.lifecycle); await people.createAdultInvitation()
+        let invitation = try XCTUnwrap(people.issued)
+        let sam = try await model("sam", fixture: fixture); let join = try XCTUnwrap(sam.lifecycle)
+        join.alias = "Sam"; join.invitationCode = invitation.token; join.adultAttestation = true; join.keepLocalPrivate = true
+        await join.redeemInvitation()
+        sam.item = "Cereal"; sam.quantity = "one box"; await sam.sendRequest()
+        let inbox = try XCTUnwrap(mia.shopperInbox); await inbox.load()
+        inbox.select(try XCTUnwrap(inbox.requests.first)); inbox.choice = .add; inbox.price = "3.49"
+        await inbox.review(); inbox.acceptOverage = true
+        fixture.trackingReadUnavailable = true; await inbox.apply()
+        XCTAssertEqual(inbox.shop?.lines.count, 1)
+        XCTAssertFalse(fixture.kinds.contains("request.apply"))
+        XCTAssertNil(inbox.trackingRequest); XCTAssertNil(inbox.pending)
+        XCTAssertNil(inbox.preview); XCTAssertNotNil(inbox.notice)
     }
     func testNewSharedShopStartsWithoutThePreviousStoresReviewOrPrices() async throws {
         let fixture = SharedFlowService()
@@ -536,6 +668,7 @@ private final class SharedFlowService {
     var quote: [String: Any] = [:], lines: [[String: Any]] = [], requests: [[String: Any]] = []
     var kinds: [String] = [], commandBodies: [(kind: String, bytes: Data)] = []
     var receipts: [String: [String: Any]] = [:], previews: [String: [String: Any]] = [:]
+    var trackingReadUnavailable = false
     var loseCreateResponse = false
     var shopperTransferred = false
     var fallbackBillingUnavailable = false
@@ -616,6 +749,27 @@ private final class SharedFlowService {
                 "asOf":Date().ISO8601Format(),"original":["lines":lines,"quote":quote,"snapshotCreatedAt":"2026-01-01T00:00:00Z"],
                 "current":["lines":lines,"amendmentId":NSNull()],"amendments":[]])
         }
+        if request.httpMethod == "GET", let shopID, path.hasSuffix("/shops/" + shopID + "/demand/tracking") {
+            if trackingReadUnavailable { return try ok(["error":["code":"service_unavailable"]],503) }
+            let ids = lines.map { $0["lineId"] as! String }
+            let basket = lines.map { ["id": $0["lineId"]!, "name": $0["originalItem"]!, "packs": $0["packs"]!,
+                "priceMinor": $0["unitPriceMinor"] ?? NSNull(), "feeEligible": $0["feeEligible"]!] }
+            let total = lines.reduce(0) { $0 + ($1["packs"] as! Int) * ($1["unitPriceMinor"] as? Int ?? 0) }
+            let budget: [String: Any] = ["currency":"USD","totalMinor":total,"overCapMinor":max(0,total-3800),
+                "headroomMinor":3800-total,"status":total>3800 ? "overCap":"withinCap","scope":"wholeCheckout",
+                "missing":[],"lowerBoundMinor":total,"upperBoundMinor":total,"wholeCheckoutWithinCap":total<=3800]
+            let graph: [String: Any] = ["schemaVersion":1,"conversionTableVersion":"us-customary-metric-v1",
+                "householdId":household,"shopId":shopID,"revision":0,"lines":[],"contributions":[],"edges":[],"usedIds":[]]
+            let state: [String: Any] = ["schemaVersion":2,"authorityEpoch":1,"privacyRevision":0,
+                "quoteDigest":String(repeating:"a",count:64),"graph":graph,"basket":basket,"catalog":[],
+                "bindings":[],"unbound":[],"legacyLineIds":ids,"packReviews":[]]
+            let coverage: [String: Any] = ["status":ids.isEmpty ? "tracked":"partial","trackedSubtotals":[],
+                "completeFoodCoverage":false,"unboundFactIds":[],"untrackedBasketIds":ids,
+                "protectedUnboundFactIds":[],"allocatableUnboundFactIds":[]]
+            return try ok(["schemaVersion":2,"shopId":shopID,"shopRevision":revision,"authorityEpoch":1,"status":"legacy",
+                "state":state,"projection":NSNull(),"basisDigest":String(repeating:"b",count:64),
+                "checkout":budget,"coverage":coverage,"freezeReview":NSNull()])
+        }
         if request.httpMethod == "GET", let shopID, path.hasSuffix("/shops/" + shopID + "/demand") {
             return try ok(["schemaVersion":1,"shopId":shopID,"shopRevision":revision,"authorityEpoch":1,"status":"legacy","graph":NSNull(),"totals":[]])
         }
@@ -694,11 +848,30 @@ private final class SharedFlowVault: RefreshTokenVault, @unchecked Sendable {
     func write(_ value: String) throws { self.value = value }
     func clear() throws { value = nil }
 }
+private final class SharedFlowHeldRead: @unchecked Sendable {
+    private let lock = NSLock()
+    private let pathSuffix: String
+    private let arrived: () -> Void
+    private var held = false
+    private var resume: (() -> Void)?
+    init(pathSuffix: String, arrived: @escaping () -> Void) { self.pathSuffix = pathSuffix; self.arrived = arrived }
+    func capture(_ request: URLRequest, resume: @escaping () -> Void) -> Bool {
+        lock.lock()
+        guard !held, request.url?.path.hasSuffix(pathSuffix) == true else { lock.unlock(); return false }
+        held = true; self.resume = resume; lock.unlock(); arrived(); return true
+    }
+    func release() { lock.lock(); let callback = resume; resume = nil; lock.unlock(); callback?() }
+}
 private final class SharedFlowURLProtocol: URLProtocol {
     static var handler: ((URLRequest) throws -> (Int,Data))!
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+    static var heldRead: SharedFlowHeldRead?
     override func startLoading() {
+        if Self.heldRead?.capture(request, resume: { [weak self] in self?.deliver() }) == true { return }
+        deliver()
+    }
+    private func deliver() {
         do { let (code,data) = try Self.handler(request); client?.urlProtocol(self, didReceive: HTTPURLResponse(url: request.url!, statusCode: code, httpVersion: nil, headerFields: nil)!, cacheStoragePolicy: .notAllowed); client?.urlProtocol(self,didLoad:data); client?.urlProtocolDidFinishLoading(self) }
         catch { client?.urlProtocol(self,didFailWithError:error) }
     }

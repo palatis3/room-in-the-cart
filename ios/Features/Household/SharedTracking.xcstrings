@@ -1,0 +1,2595 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "A restored new basket row starts with unknown price. Review its price separately afterward.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A restored new basket row starts with unknown price. Review its price separately afterward."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un nuevo renglón restaurado empieza con precio desconocido. Revise su precio por separado después."
+          }
+        }
+      }
+    },
+    "Accepted request revision": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accepted request revision"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisión aceptada de la solicitud"
+          }
+        }
+      }
+    },
+    "Add a manual need": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a manual need"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agregar una necesidad manual"
+          }
+        }
+      }
+    },
+    "After": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "After"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Después"
+          }
+        }
+      }
+    },
+    "All authoritative commitments": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All authoritative commitments"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todos los compromisos registrados en sus fuentes"
+          }
+        }
+      }
+    },
+    "Amount denominator": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amount denominator"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denominador de la cantidad"
+          }
+        }
+      }
+    },
+    "Amount numerator": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amount numerator"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Numerador de la cantidad"
+          }
+        }
+      }
+    },
+    "Apply reviewed change once": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apply reviewed change once"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aplicar una vez el cambio revisado"
+          }
+        }
+      }
+    },
+    "Authored manual food": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Authored manual food"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimentos escritos manualmente"
+          }
+        }
+      }
+    },
+    "Basket item": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Basket item"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artículo de la canasta"
+          }
+        }
+      }
+    },
+    "Before": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Before"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Antes"
+          }
+        }
+      }
+    },
+    "Bind each existing commitment": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bind each existing commitment"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vincular cada compromiso existente"
+          }
+        }
+      }
+    },
+    "Binding identity": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Binding identity"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identidad del vínculo"
+          }
+        }
+      }
+    },
+    "Bound to tracked food": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bound to tracked food"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vinculado a alimentos registrados"
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelar"
+          }
+        }
+      }
+    },
+    "Changed basket labels still describe the same tracked food": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changed basket labels still describe the same tracked food"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los nombres modificados siguen describiendo los mismos alimentos registrados"
+          }
+        }
+      }
+    },
+    "Check the entered facts and try reviewing again. Unknown amounts may stay unknown.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the entered facts and try reviewing again. Unknown amounts may stay unknown."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verifique los datos y vuelva a revisarlos. Las cantidades desconocidas pueden seguir siendo desconocidas."
+          }
+        }
+      }
+    },
+    "Checking shared pickup…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking shared pickup…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comprobando la compra compartida…"
+          }
+        }
+      }
+    },
+    "Choose a source": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a source"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir una fuente"
+          }
+        }
+      }
+    },
+    "Choose an item": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose an item"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir un artículo"
+          }
+        }
+      }
+    },
+    "Complete pickup review": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Complete pickup review"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisión de toda la compra"
+          }
+        }
+      }
+    },
+    "Confirmed conversion": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmed conversion"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conversión confirmada"
+          }
+        }
+      }
+    },
+    "Confirmed. Refresh the shop to see its current revision.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmed. Refresh the shop to see its current revision."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmado. Actualice la compra para ver su revisión actual."
+          }
+        }
+      }
+    },
+    "Confirmed. Return to the shared shop for the updated revision.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmed. Return to the shared shop for the updated revision."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmado. Vuelva a la compra compartida para ver la revisión actualizada."
+          }
+        }
+      }
+    },
+    "Contains": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contains"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contiene"
+          }
+        }
+      }
+    },
+    "Contains tags, separated by commas": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contains tags, separated by commas"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Etiquetas de contenido, separadas por comas"
+          }
+        }
+      }
+    },
+    "Counts toward the fee threshold": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Counts toward the fee threshold"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuenta para el mínimo que determina el cargo"
+          }
+        }
+      }
+    },
+    "Current pickup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current pickup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compra actual"
+          }
+        }
+      }
+    },
+    "Current tracked sources and relationships": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current tracked sources and relationships"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fuentes y relaciones registradas actualmente"
+          }
+        }
+      }
+    },
+    "Does not count toward the fee threshold": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Does not count toward the fee threshold"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No cuenta para el mínimo que determina el cargo"
+          }
+        }
+      }
+    },
+    "Edit again": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit again"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a editar"
+          }
+        }
+      }
+    },
+    "Edit food relationships and conversions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit food relationships and conversions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar relaciones y conversiones de alimentos"
+          }
+        }
+      }
+    },
+    "Entered basket and quote": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entered basket and quote"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Canasta y cotización ingresadas"
+          }
+        }
+      }
+    },
+    "Erased facts and old previews cannot be restored.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erased facts and old previews cannot be restored."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pueden restaurar datos eliminados ni vistas previas antiguas."
+          }
+        }
+      }
+    },
+    "Exact request decision": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exact request decision"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Decisión exacta sobre la solicitud"
+          }
+        }
+      }
+    },
+    "Exact restored identities": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exact restored identities"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identidades exactas restauradas"
+          }
+        }
+      }
+    },
+    "Exact target operation": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exact target operation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Operación exacta que se va a revertir"
+          }
+        }
+      }
+    },
+    "Exclusion tags, separated by commas": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exclusion tags, separated by commas"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Etiquetas de exclusión, separadas por comas"
+          }
+        }
+      }
+    },
+    "Exclusions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exclusions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exclusiones"
+          }
+        }
+      }
+    },
+    "Explicit duplicate": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Explicit duplicate"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duplicado confirmado explícitamente"
+          }
+        }
+      }
+    },
+    "Food amount": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Food amount"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad de alimento"
+          }
+        }
+      }
+    },
+    "Food identity remains unresolved": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Food identity remains unresolved"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La identidad del alimento sigue sin resolverse"
+          }
+        }
+      }
+    },
+    "Food name": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Food name"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre del alimento"
+          }
+        }
+      }
+    },
+    "Food quantities and sources": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Food quantities and sources"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidades y fuentes de alimentos"
+          }
+        }
+      }
+    },
+    "Food quantities remain unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Food quantities remain unknown"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las cantidades de alimentos siguen siendo desconocidas"
+          }
+        }
+      }
+    },
+    "Food total unit": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Food total unit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unidad del total de alimento"
+          }
+        }
+      }
+    },
+    "Freeze reviewed pickup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Freeze reviewed pickup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fijar la compra revisada"
+          }
+        }
+      }
+    },
+    "Freeze this exact pickup revision": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Freeze this exact pickup revision"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fijar esta revisión exacta de la compra"
+          }
+        }
+      }
+    },
+    "Freezing saves a dated snapshot. Sharing, retailer checkout, reporting placement and actual arrival remain separate actions.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Freezing saves a dated snapshot. Sharing, retailer checkout, reporting placement and actual arrival remain separate actions."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fijar guarda una copia fechada. Compartir, pagar en la tienda, informar que se hizo el pedido y registrar lo recibido siguen siendo acciones separadas."
+          }
+        }
+      }
+    },
+    "Group identity": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Group identity"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identidad del grupo"
+          }
+        }
+      }
+    },
+    "I accept unresolved quantities or restrictions for this item": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I accept unresolved quantities or restrictions for this item"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acepto las cantidades o restricciones sin resolver de este artículo"
+          }
+        }
+      }
+    },
+    "I confirm this request is the same food as the selected basket item": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I confirm this request is the same food as the selected basket item"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmo que esta solicitud es del mismo alimento que el artículo seleccionado"
+          }
+        }
+      }
+    },
+    "I confirm this source matches the selected food": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I confirm this source matches the selected food"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmo que esta fuente corresponde al alimento seleccionado"
+          }
+        }
+      }
+    },
+    "I reviewed every change, retained identity and protected commitment": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I reviewed every change, retained identity and protected commitment"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisé cada cambio, identidad conservada y compromiso protegido"
+          }
+        }
+      }
+    },
+    "I reviewed the exact retained identity and its basket item": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I reviewed the exact retained identity and its basket item"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisé la identidad exacta conservada y su artículo de la canasta"
+          }
+        }
+      }
+    },
+    "I reviewed the whole pickup, unbound commitments, unknowns, prices and whole packs": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I reviewed the whole pickup, unbound commitments, unknowns, prices and whole packs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisé toda la compra, los compromisos sin vincular, los datos desconocidos, los precios y los paquetes enteros"
+          }
+        }
+      }
+    },
+    "Ingredient identity": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingredient identity"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identidad del ingrediente"
+          }
+        }
+      }
+    },
+    "Keep every authoritative source, amount, original wording and restriction. Choose its basket item explicitly.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep every authoritative source, amount, original wording and restriction. Choose its basket item explicitly."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conserve cada fuente registrada, cantidad, texto original y restricción. Elija explícitamente su artículo de la canasta."
+          }
+        }
+      }
+    },
+    "Keep tracked items with existing commitments. Their removal needs a separate source review.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep tracked items with existing commitments. Their removal needs a separate source review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conserve los artículos registrados que tienen compromisos. Para quitarlos, debe revisar sus fuentes por separado."
+          }
+        }
+      }
+    },
+    "Leave unknown usable food unresolved. Only tracked items receive pack reviews; the full basket remains visible in pickup review.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave unknown usable food unresolved. Only tracked items receive pack reviews; the full basket remains visible in pickup review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deje sin resolver la cantidad utilizable desconocida. Solo los artículos registrados reciben revisiones de paquetes; toda la canasta permanece visible al revisar la compra."
+          }
+        }
+      }
+    },
+    "Meal occurrence": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meal occurrence"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ocasión de comida"
+          }
+        }
+      }
+    },
+    "Needs a fresh review. Return to the shop, refresh current facts, and resolve any saved retry before starting again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needs a fresh review. Return to the shop, refresh current facts, and resolve any saved retry before starting again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Necesita una nueva revisión. Vuelva a la compra, actualice los datos y resuelva cualquier reintento guardado antes de empezar de nuevo."
+          }
+        }
+      }
+    },
+    "No earlier allocations are restored.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No earlier allocations are restored."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se restaura ninguna asignación anterior."
+          }
+        }
+      }
+    },
+    "Not confirmed. Return to the shop and retry the exact saved action.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not confirmed. Return to the shop and retry the exact saved action."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin confirmar. Vuelva a la compra y reintente exactamente la acción guardada."
+          }
+        }
+      }
+    },
+    "Nothing is saved until Apply. Review the complete before and after facts, then the whole pickup.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing is saved until Apply. Review the complete before and after facts, then the whole pickup."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se guarda nada hasta tocar Aplicar. Revise todos los datos anteriores y posteriores, y luego toda la compra."
+          }
+        }
+      }
+    },
+    "Only retained source identities can be restored here. No earlier allocations are restored.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only retained source identities can be restored here. No earlier allocations are restored."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aquí solo se pueden restaurar identidades de fuentes conservadas. No se restaura ninguna asignación anterior."
+          }
+        }
+      }
+    },
+    "Original quantity wording": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original quantity wording"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto original de la cantidad"
+          }
+        }
+      }
+    },
+    "Original wording": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original wording"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto original"
+          }
+        }
+      }
+    },
+    "Partial food tracking": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partial food tracking"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registro parcial de alimentos"
+          }
+        }
+      }
+    },
+    "Privacy changed this record. Only the surviving facts below can be reviewed; old previews and copied text cannot be restored.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privacy changed this record. Only the surviving facts below can be reviewed; old previews and copied text cannot be restored."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La privacidad cambió este registro. Solo se pueden revisar los datos conservados que aparecen abajo; no se pueden restaurar vistas previas antiguas ni texto copiado."
+          }
+        }
+      }
+    },
+    "Protected commitment · hiding it does not remove it": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protected commitment · hiding it does not remove it"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compromiso protegido · ocultarlo no lo elimina"
+          }
+        }
+      }
+    },
+    "Protected unbound commitments": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protected unbound commitments"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compromisos protegidos sin vincular"
+          }
+        }
+      }
+    },
+    "Quantity unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quantity unknown"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad desconocida"
+          }
+        }
+      }
+    },
+    "Read saved changes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read saved changes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consultar los cambios guardados"
+          }
+        }
+      }
+    },
+    "Refresh current facts": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh current facts"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar los datos actuales"
+          }
+        }
+      }
+    },
+    "Removed source assertion": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removed source assertion"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registro de fuente eliminado"
+          }
+        }
+      }
+    },
+    "Request food amount": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Request food amount"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad de alimento solicitada"
+          }
+        }
+      }
+    },
+    "Request identity": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Request identity"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identidad de la solicitud"
+          }
+        }
+      }
+    },
+    "Request revision": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Request revision"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisión de la solicitud"
+          }
+        }
+      }
+    },
+    "Reservation identity": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reservation identity"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identidad de la reserva"
+          }
+        }
+      }
+    },
+    "Restore a retained binding": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore a retained binding"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restaurar un vínculo conservado"
+          }
+        }
+      }
+    },
+    "Restored basket name": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restored basket name"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre del artículo restaurado"
+          }
+        }
+      }
+    },
+    "Restriction mapping unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restriction mapping unknown"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Correspondencia de la restricción desconocida"
+          }
+        }
+      }
+    },
+    "Restriction source": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restriction source"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fuente de la restricción"
+          }
+        }
+      }
+    },
+    "Retained source": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retained source"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fuente conservada"
+          }
+        }
+      }
+    },
+    "Retained source identity": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retained source identity"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identidad de la fuente conservada"
+          }
+        }
+      }
+    },
+    "Review all changes and pickup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review all changes and pickup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar todos los cambios y la compra"
+          }
+        }
+      }
+    },
+    "Review and save the current food facts before freezing this pickup.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review and save the current food facts before freezing this pickup."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revise y guarde los datos actuales de alimentos antes de fijar esta compra."
+          }
+        }
+      }
+    },
+    "Review exact changes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review exact changes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar los cambios exactos"
+          }
+        }
+      }
+    },
+    "Review expires": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review expires"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La revisión vence"
+          }
+        }
+      }
+    },
+    "Review frozen pickup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review frozen pickup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar la compra que se fijará"
+          }
+        }
+      }
+    },
+    "Review restored binding": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review restored binding"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar el vínculo restaurado"
+          }
+        }
+      }
+    },
+    "Review the surviving food facts from Shop before reopening this item edit.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the surviving food facts from Shop before reopening this item edit."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revise los datos de alimentos conservados desde Compra antes de volver a editar este artículo."
+          }
+        }
+      }
+    },
+    "Review the surviving food facts from Shop before reopening this request.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the surviving food facts from Shop before reopening this request."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revise los datos de alimentos conservados desde Compra antes de volver a abrir esta solicitud."
+          }
+        }
+      }
+    },
+    "Review usable food and whole packs separately": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review usable food and whole packs separately"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar por separado el alimento utilizable y los paquetes enteros"
+          }
+        }
+      }
+    },
+    "Review whole first-adoption Undo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review whole first-adoption Undo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar la reversión completa del registro inicial"
+          }
+        }
+      }
+    },
+    "Reviewed usable food per pack": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed usable food per pack"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimento utilizable revisado por paquete"
+          }
+        }
+      }
+    },
+    "Saved tracking changes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved tracking changes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambios guardados del registro de alimentos"
+          }
+        }
+      }
+    },
+    "Select the tracked pack reviews that remain after Undo. The service checks this selection; it is not a local inverse.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select the tracked pack reviews that remain after Undo. The service checks this selection; it is not a local inverse."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seleccione las revisiones de paquetes que permanecerán después de Deshacer. El servicio comprueba esta selección; no es una reversión calculada en el teléfono."
+          }
+        }
+      }
+    },
+    "Shared access ended. Return to the household.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared access ended. Return to the household."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El acceso compartido terminó. Vuelva al hogar."
+          }
+        }
+      }
+    },
+    "Shop revision": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shop revision"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisión de la compra"
+          }
+        }
+      }
+    },
+    "Surviving facts only": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Surviving facts only"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo los datos conservados"
+          }
+        }
+      }
+    },
+    "The review was cancelled because its scope changed. Refresh before continuing.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The review was cancelled because its scope changed. Refresh before continuing."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La revisión se canceló porque cambió su contexto. Actualice antes de continuar."
+          }
+        }
+      }
+    },
+    "These source, line, relationship and pack assertions are reversed together.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These source, line, relationship and pack assertions are reversed together."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estos registros de fuentes, artículos, relaciones y paquetes se revierten juntos."
+          }
+        }
+      }
+    },
+    "This request acceptance needs its dedicated whole-operation Undo review.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This request acceptance needs its dedicated whole-operation Undo review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta aceptación de solicitud necesita su revisión específica para deshacer toda la operación."
+          }
+        }
+      }
+    },
+    "This saved change is unavailable for review.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This saved change is unavailable for review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este cambio guardado no está disponible para revisión."
+          }
+        }
+      }
+    },
+    "Tracked food subtotals": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tracked food subtotals"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subtotales de alimentos registrados"
+          }
+        }
+      }
+    },
+    "Tracked subtotals are not complete household coverage. Unbound food is never available supply.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tracked subtotals are not complete household coverage. Unbound food is never available supply."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los subtotales registrados no representan todas las necesidades del hogar. Los alimentos sin vincular nunca cuentan como suministro disponible."
+          }
+        }
+      }
+    },
+    "Transferred facts remain unbound and protected; later contribution identities are retained.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transferred facts remain unbound and protected; later contribution identities are retained."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los datos transferidos quedan sin vincular y protegidos; se conservan las identidades de aportes posteriores."
+          }
+        }
+      }
+    },
+    "Trashed line assertion": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trashed line assertion"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registro de artículo enviado a la papelera"
+          }
+        }
+      }
+    },
+    "Unbound commitments": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unbound commitments"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compromisos sin vincular"
+          }
+        }
+      }
+    },
+    "Unbound · not available supply": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unbound · not available supply"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin vincular · no es suministro disponible"
+          }
+        }
+      }
+    },
+    "Undo reviews the entire first-adoption change, including all reversed assertions. Later facts are retained by the service.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo reviews the entire first-adoption change, including all reversed assertions. Later facts are retained by the service."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deshacer revisa todo el cambio del registro inicial, incluidos todos los registros revertidos. El servicio conserva los datos posteriores."
+          }
+        }
+      }
+    },
+    "Unit": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unidad"
+          }
+        }
+      }
+    },
+    "Unit price": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unit price"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precio unitario"
+          }
+        }
+      }
+    },
+    "Unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desconocido"
+          }
+        }
+      }
+    },
+    "Unpriced basket items": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unpriced basket items"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artículos de la canasta sin precio"
+          }
+        }
+      }
+    },
+    "Unresolved facts explicitly accepted": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unresolved facts explicitly accepted"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datos sin resolver aceptados explícitamente"
+          }
+        }
+      }
+    },
+    "Unresolved facts not accepted": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unresolved facts not accepted"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datos sin resolver no aceptados"
+          }
+        }
+      }
+    },
+    "Unresolved tracked pack items": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unresolved tracked pack items"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paquetes registrados con datos sin resolver"
+          }
+        }
+      }
+    },
+    "Untracked basket items": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Untracked basket items"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artículos de la canasta sin registro de alimentos"
+          }
+        }
+      }
+    },
+    "Usable food in one pack": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usable food in one pack"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimento utilizable en un paquete"
+          }
+        }
+      }
+    },
+    "Whole first-adoption inverse": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whole first-adoption inverse"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reversión completa del registro inicial"
+          }
+        }
+      }
+    },
+    "Whole packs": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whole packs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paquetes enteros"
+          }
+        }
+      }
+    },
+    "Within existing food": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Within existing food"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dentro del alimento existente"
+          }
+        }
+      }
+    },
+    "Basket membership": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Basket membership"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elementos de la cesta"
+          }
+        }
+      }
+    },
+    "Before basket and quote": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Before basket and quote"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cesta y presupuesto anteriores"
+          }
+        }
+      }
+    },
+    "Checkout change": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checkout change"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambio en el total de compra"
+          }
+        }
+      }
+    },
+    "Conversion evidence": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conversion evidence"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Justificación de la conversión"
+          }
+        }
+      }
+    },
+    "Conversion target unit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conversion target unit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unidad de destino de la conversión"
+          }
+        }
+      }
+    },
+    "Current whole pickup cost": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current whole pickup cost"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Costo actual de toda la recogida"
+          }
+        }
+      }
+    },
+    "Fee threshold eligibility": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fee threshold eligibility"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aplicación al umbral del cargo"
+          }
+        }
+      }
+    },
+    "I accept this pickup over the cap": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I accept this pickup over the cap"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acepto esta recogida por encima del límite"
+          }
+        }
+      }
+    },
+    "I accept this unknown or partial checkout cost": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I accept this unknown or partial checkout cost"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acepto este costo de compra desconocido o parcial"
+          }
+        }
+      }
+    },
+    "I confirm the existing sources on this item are the same food": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I confirm the existing sources on this item are the same food"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmo que las fuentes existentes de este artículo corresponden al mismo alimento"
+          }
+        }
+      }
+    },
+    "Import batch identity": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import batch identity"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identificador del lote importado"
+          }
+        }
+      }
+    },
+    "Import entry identity": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import entry identity"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identificador de la entrada importada"
+          }
+        }
+      }
+    },
+    "Item name": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item name"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre del artículo"
+          }
+        }
+      }
+    },
+    "Matched food name": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Matched food name"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre del alimento correspondiente"
+          }
+        }
+      }
+    },
+    "Meal before and after": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meal before and after"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comida antes y después"
+          }
+        }
+      }
+    },
+    "Meal removed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meal removed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comida eliminada"
+          }
+        }
+      }
+    },
+    "No current meal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No current meal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay una comida actual"
+          }
+        }
+      }
+    },
+    "Previous pack evidence": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous pack evidence"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Información anterior de los paquetes"
+          }
+        }
+      }
+    },
+    "Price per pack": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Price per pack"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precio por paquete"
+          }
+        }
+      }
+    },
+    "Request checkout comparison": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Request checkout comparison"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparación del total de compra de la solicitud"
+          }
+        }
+      }
+    },
+    "Target amount denominator per source unit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Target amount denominator per source unit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denominador de la cantidad de destino por unidad de origen"
+          }
+        }
+      }
+    },
+    "Target amount numerator per source unit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Target amount numerator per source unit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Numerador de la cantidad de destino por unidad de origen"
+          }
+        }
+      }
+    },
+    "Use a confirmed conversion for this fixed source amount": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use a confirmed conversion for this fixed source amount"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar una conversión confirmada para esta cantidad fija de origen"
+          }
+        }
+      }
+    },
+    "Whole pickup cost before and after": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whole pickup cost before and after"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Costo de toda la recogida antes y después"
+          }
+        }
+      }
+    },
+    "Current access is confirmed. Retry the exact saved action to learn its result.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current access is confirmed. Retry the exact saved action to learn its result."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se ha confirmado el acceso actual. Reintenta la acción guardada exacta para conocer su resultado."
+          }
+        }
+      }
+    },
+    "The saved action is unresolved. Refresh current access, then retry the same saved action. A refresh does not undo or discard it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The saved action is unresolved. Refresh current access, then retry the same saved action. A refresh does not undo or discard it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La acción guardada sigue sin resolverse. Actualiza el acceso y vuelve a enviar exactamente la misma acción. Actualizar no la deshace ni la descarta."
+          }
+        }
+      }
+    },
+    "Refresh access for exact retry": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh access for exact retry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar el acceso para reintentar la misma acción"
+          }
+        }
+      }
+    },
+    "This review can no longer be applied. Refresh current facts and review a new action explicitly.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This review can no longer be applied. Refresh current facts and review a new action explicitly."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta revisión ya no se puede aplicar. Actualiza los datos y revisa una nueva acción de forma explícita."
+          }
+        }
+      }
+    },
+    "Represent every basket item with an explicit source. Enter unrelated groceries separately; pack counts do not establish food amounts.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Represent every basket item with an explicit source. Enter unrelated groceries separately; pack counts do not establish food amounts."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Representa cada artículo de la cesta con una fuente explícita. Introduce los alimentos no relacionados por separado; el número de paquetes no determina la cantidad de alimento."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

@@ -26,6 +26,7 @@ enum ShopperDelivery: Equatable {
     @Published private(set) var nextCursor: String?
     @Published private(set) var selected: OwnRequest?
     @Published private(set) var preview: ShopperPreview?
+    @Published private(set) var trackingRequest: TrackingRequestContext?
     @Published private(set) var requestFood: SharedRequestFoodContext?
     private var reviewedDecision: SharedRequestDecisionReview?
     private var reviewedFood: SharedDemandReview?
@@ -132,7 +133,7 @@ enum ShopperDelivery: Equatable {
         return shop.phase == "draft" ? ShopperChoice.allCases : [.deferRequest, .dismiss, .handled]
     }
     var canApply: Bool {
-        guard authorized, !busy, pending == nil, requestFood == nil, let preview, let expiry = serviceDate(preview.expiresAt), expiry > Date() else { return false }
+        guard authorized, !busy, pending == nil, requestFood == nil, trackingRequest == nil, let preview, let expiry = serviceDate(preview.expiresAt), expiry > Date() else { return false }
         return (!preview.requiresOverageAcceptance || acceptOverage) && (!preview.requiresUnknownAcceptance || acceptUnknown)
     }
     /// A receipt alone is insufficient: the original inbox row must have refreshed
@@ -169,19 +170,28 @@ enum ShopperDelivery: Equatable {
                 guard start == generation else { return }
                 if pending == nil {
                     let saved = try await outbox.operations()
-                    guard start == generation else { return }
+                    guard start == generation, pending == nil else { return }
                     if let operation = saved.first(where: { $0.householdID == householdID && $0.memberID == memberID && $0.targetsShop(shopID) }) {
                         let envelope = try JSONDecoder().decode(CommandEnvelope.self, from: operation.bytes)
                         pending = operation
                         let matches = await service.matches(operation, memberID: memberID)
-                        guard start == generation else { return }
+                        guard start == generation, pending == operation else { return }
                         let permitted = (envelope.kind != "request.confirmPurchase" || supportsPurchaseConfirmation) &&
                             (envelope.kind != "request.carry" || supportsDeferredRequests)
                         delivery = matches && permitted && envelope.shopId == shopID ? .waiting : .needsReview
                         notice = ht("An earlier decision is waiting for confirmation. Review the current requests before retrying or clearing it.")
                     }
                 }
-                reviewedCurrentFacts = pending != nil
+                if let operation = pending, operation.sharedTrackingBinding != nil || operation.sharedRequestUndoBinding != nil {
+                    let matches = await service.matches(operation, memberID: memberID)
+                    guard start == generation, pending == operation else { return }
+                    reviewedCurrentFacts = false
+                    if matches, authorized, bootstrap.grantId == nil, bootstrap.role == "shopper", bootstrap.capabilities.contains("shopper_commands"),
+                       (operation.sharedTrackingBinding?.shopID ?? operation.sharedRequestUndoBinding?.shopID)?.string == shopID {
+                        attempts = 0; retryAfter = .distantPast; delivery = .waiting
+                        notice = st("Current access is confirmed. Retry the exact saved action to learn its result.")
+                    } else { delivery = .needsReview }
+                } else { reviewedCurrentFacts = pending != nil }
             }
         } catch {
             if case .confirmed(let receipt) = delivery, receipt.kind == "request.apply" {
@@ -306,6 +316,24 @@ enum ShopperDelivery: Equatable {
             busy = true
             do {
                 guard let id = UUID(uuidString: shopID) else { throw ClientError.configuration }
+                let tracking = try await service.sharedTracking(shopID: id)
+                guard start == generation, draft == draftGeneration, authorized, pending == nil,
+                      self.reviewedDecision == reviewedDecision, self.preview == preview,
+                      self.selected == selected, self.shop == reviewedDecision.shop,
+                      acceptOverage == overage, acceptUnknown == unknown,
+                      tracking.shopRevision == preview.shopRevision, tracking.authorityEpoch == preview.authorityEpoch else { throw ClientError.cancelled }
+                if tracking.status == .reviewRequired {
+                    invalidatePreview(preservePackSelection: true)
+                    notice = st("Review the surviving food facts from Shop before reopening this request."); busy = false; return
+                }
+                // Ordinary pickups may remain untracked. Entering the tracking editor
+                // is mandatory only after food tracking has actually been adopted.
+                // A failed/erased read never supplies permission to bypass review.
+                if tracking.status == .enabled {
+                    let context = TrackingRequestContext(reviewed: reviewedDecision, acceptOverage: overage, acceptUnknown: unknown)
+                    try context.validate(shop: reviewedDecision.shop)
+                    trackingRequest = context; busy = false; return
+                }
                 let page = try await service.sharedDemand(shopID: id)
                 guard start == generation, draft == draftGeneration, authorized, pending == nil,
                       self.reviewedDecision == reviewedDecision, self.preview == preview,
@@ -372,6 +400,12 @@ enum ShopperDelivery: Equatable {
         busy = true; defer { busy = false }; await deliver(pending, start: generation)
     }
     private func deliver(_ operation: PendingOperation, start: UUID) async {
+        if operation.sharedRequestUndoBinding != nil {
+            do { try await sendRequestUndo(operation) } catch { /* Exact retry state is owned by sendRequestUndo. */ }; return
+        }
+        if operation.sharedTrackingBinding != nil {
+            do { try await sendTracking(operation, selectionID: nil) } catch { /* Exact retry state is owned by sendTracking. */ }; return
+        }
         attempts += 1
         do {
             let receipt: ShopperReceipt
@@ -400,7 +434,7 @@ enum ShopperDelivery: Equatable {
         }
     }
     func clearPendingAfterReview() async {
-        guard authorized, !busy, reviewedCurrentFacts, let pending else { return }
+        guard authorized, !busy, reviewedCurrentFacts, let pending, pending.sharedTrackingBinding == nil, pending.sharedRequestUndoBinding == nil else { return }
         busy = true; defer { busy = false }; let start = generation
         do {
             try await outbox.remove(pending.id)
@@ -444,7 +478,7 @@ extension HouseholdInboxModel: SharedDemandFlowAccess {
         authorized && bootstrap.role == "shopper" && bootstrap.grantId == nil &&
         bootstrap.capabilities.contains("shopper_commands") && shop?.shopId == shopID && shop?.phase == "draft"
     }
-    func cancelRequestFood() { requestFood = nil; reviewedFood = nil }
+    func cancelRequestFood() { trackingRequest = nil; requestFood = nil; reviewedFood = nil }
     private func currentFood(_ context: SharedRequestFoodContext) -> Bool {
         canReadFood && requestFood == context && reviewedDecision == context.reviewed &&
         selected == context.reviewed.request && shop == context.reviewed.shop && preview == context.reviewed.preview &&
@@ -504,4 +538,85 @@ private enum ShopperInputError: Error {
 func serviceDate(_ value: String) -> Date? {
     let formatter = ISO8601DateFormatter(); formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
     return formatter.date(from: value) ?? ISO8601DateFormatter().date(from: value)
+}
+
+
+extension HouseholdInboxModel: SharedTrackingServiceOwner {
+    var trackingService: HouseholdService { service }
+    var trackingShop: ShopperShop? { shop }
+    var trackingAllowed: Bool { canReadFood }
+    var trackingLease: UUID { generation }
+    var trackingPending: Bool { pending != nil }
+    var trackingSelectionID: UUID? { trackingRequest?.id }
+    func sendTracking(_ operation: PendingOperation, selectionID: UUID?) async throws {
+        guard pending == operation || trackingSelectionID == selectionID else { throw ClientError.cancelled }
+        guard authorized, bootstrap.grantId == nil, bootstrap.role == "shopper",
+              operation.sharedTrackingBinding?.shopID.string == shopID,
+              pending == nil || pending == operation else { throw ClientError.cancelled }
+        let token = generation
+        pending = operation; delivery = .waiting; reviewedCurrentFacts = false; attempts += 1
+        do {
+            let receipt = try await service.sendSharedTracking(operation, outbox: outbox)
+            guard token == generation, pending == operation else { throw ClientError.cancelled }
+            pending = nil; delivery = .confirmed(receipt); selected = nil; clarification = ""; invalidatePreview()
+            do { try await refreshFacts(start: token) }
+            catch { if token == generation { notice = st("Confirmed. Refresh the shop to see its current revision.") } }
+        } catch {
+            guard token == generation else { throw ClientError.cancelled }
+            let saved = try? await outbox.operations()
+            guard token == generation else { throw ClientError.cancelled }
+            if let saved, !saved.contains(operation) { pending = nil }
+            switch error as? ClientError {
+            case .accessEnded, .sessionNeeded: clear(); await onAccessEnded()
+            case .cancelled:
+                delivery = .needsReview; notice = st("The review was cancelled because its scope changed. Refresh before continuing.")
+            default:
+                if let client = error as? ClientError, let delay = RetryPolicy().delay(attempt: attempts, error: client), pending != nil {
+                    retryAfter = Date().addingTimeInterval(delay); delivery = .waiting
+                    notice = st("Not confirmed. Return to the shop and retry the exact saved action.")
+                } else {
+                    delivery = .needsReview
+                    notice = st("Needs a fresh review. Return to the shop, refresh current facts, and resolve any saved retry before starting again.")
+                }
+            }
+            throw error
+        }
+    }
+}
+
+
+extension HouseholdInboxModel: SharedRequestUndoFlowAccess {
+    func sendRequestUndo(_ operation: PendingOperation) async throws {
+        guard authorized, bootstrap.grantId == nil, bootstrap.role == "shopper",
+              operation.sharedRequestUndoBinding?.shopID.string == shopID,
+              pending == nil || pending == operation else { throw ClientError.cancelled }
+        let token = generation
+        pending = operation; delivery = .waiting; reviewedCurrentFacts = false; attempts += 1
+        do {
+            let receipt = try await service.sendRequestAcceptanceUndo(operation, outbox: outbox)
+            guard token == generation, pending == operation else { throw ClientError.cancelled }
+            pending = nil; delivery = .confirmed(receipt); selected = nil; clarification = ""; invalidatePreview()
+            do { try await refreshFacts(start: token) }
+            catch { if token == generation { notice = st("Confirmed. Refresh the shop to see its current revision.") } }
+        } catch {
+            guard token == generation else { throw ClientError.cancelled }
+            let saved = try? await outbox.operations()
+            guard token == generation else { throw ClientError.cancelled }
+            if let saved, !saved.contains(operation) { pending = nil }
+            switch error as? ClientError {
+            case .accessEnded, .sessionNeeded: clear(); await onAccessEnded()
+            case .cancelled:
+                delivery = .needsReview; notice = st("The review was cancelled because its scope changed. Refresh before continuing.")
+            default:
+                if let client = error as? ClientError, let delay = RetryPolicy().delay(attempt: attempts, error: client), pending != nil {
+                    retryAfter = Date().addingTimeInterval(delay); delivery = .waiting
+                    notice = st("Not confirmed. Return to the shop and retry the exact saved action.")
+                } else {
+                    delivery = .needsReview
+                    notice = st("Needs a fresh review. Return to the shop, refresh current facts, and resolve any saved retry before starting again.")
+                }
+            }
+            throw error
+        }
+    }
 }

@@ -20,6 +20,10 @@ struct SharedOperationUndoView: View {
     }
     var body: some View {
         WorkingForm {
+            if shopModel.trackingAllowed, !model.pending {
+                NavigationLink(ru("Accepted request changes")) { SharedRequestUndoShopView(owner: shopModel) }
+                    .accessibilityIdentifier("sharedUndo.requestAcceptances")
+            }
             if !shopModel.canReadFood && !model.busy {
                 Text(u("Access to this shop ended."))
             } else if model.pending {

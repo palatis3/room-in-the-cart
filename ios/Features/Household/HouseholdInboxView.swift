@@ -23,6 +23,10 @@ struct ShopperInboxContent: View {
             List {
                 if model.authorized {
                     ShopperDeliverySection(model: model)
+                    if model.trackingAllowed, model.pending == nil {
+                        NavigationLink(ru("Accepted request changes")) { SharedRequestUndoInboxView(owner: model) }
+                            .accessibilityIdentifier("household.requests.acceptedChanges")
+                    }
                     if model.canReviewDeferred, model.pending == nil {
                         NavigationLink(ht("Saved from earlier pickups")) { DeferredRequestsView(model: model) }
                             .accessibilityIdentifier("household.deferred.open")
@@ -291,6 +295,9 @@ struct HouseholdRequestDecisionView: View {
         .sheet(item: Binding(get: { model.requestFood }, set: { if $0 == nil { model.cancelRequestFood() } })) { context in
             NavigationStack { SharedRequestFoodView(inbox: model, context: context) }
         }
+        .sheet(item: Binding(get: { model.trackingRequest }, set: { if $0 == nil { model.cancelRequestFood() } })) { context in
+            NavigationStack { SharedTrackingRequestView(owner: model, context: context) }
+        }
         .navigationTitle(ht("Review request"))
         .toolbarBackground(Theme.canvas, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
@@ -346,8 +353,14 @@ struct ShopperDeliverySection: View {
                         }
                 }
                 Button(ht("Refresh current requests")) { Task { await model.load() } }.disabled(model.busy)
-                Button(ht("I reviewed the current requests; clear this retry")) { Task { await model.clearPendingAfterReview() } }
-                    .disabled(model.busy || !model.reviewedCurrentFacts)
+                if model.pending?.sharedTrackingBinding != nil || model.pending?.sharedRequestUndoBinding != nil {
+                    Text(st("The saved action is unresolved. Refresh current access, then retry the same saved action. A refresh does not undo or discard it."))
+                } else if model.pending == nil {
+                    Text(st("This review can no longer be applied. Refresh current facts and review a new action explicitly."))
+                } else {
+                    Button(ht("I reviewed the current requests; clear this retry")) { Task { await model.clearPendingAfterReview() } }
+                        .disabled(model.busy || !model.reviewedCurrentFacts)
+                }
             }
         case .confirmed(let receipt):
             Section {

@@ -1,0 +1,96 @@
+{
+  "status": "failed",
+  "runID": 42794015602,
+  "commit": "7f0312f2e973e2c437dc7e291ca966aa5bb4e4d7",
+  "linuxChecks": 635,
+  "appJobs": "skipped",
+  "stage": "boot",
+  "firstError": "ValueError: helper_lifecycle_identity_changed",
+  "samplerAttempted": false,
+  "bootstatus": {
+    "label": "bootstatus",
+    "startedEpoch": 1794304271.2393322,
+    "startedMonotonic": 468.953055958,
+    "commandSeconds": 240,
+    "deadlineMonotonic": 708.9524725,
+    "phaseDeadlineMonotonic": 752.391286208,
+    "outcome": "failed",
+    "acquiredMonotonic": 469.182432125,
+    "pid": 6786,
+    "progressSamples": 53,
+    "lastProgress": {
+      "monotonic": 546.284323625,
+      "epoch": 1794304348.5706291,
+      "identity": null,
+      "stdoutBytes": 6675,
+      "stderrBytes": 0
+    },
+    "firstProgress": [
+      {
+        "monotonic": 469.182949583,
+        "epoch": 1794304271.469292,
+        "identity": {
+          "pid": 6786,
+          "parentPID": 5935,
+          "uid": 501,
+          "startTimeMicros": 1794304271242272,
+          "executable": "/Library/Developer/PrivateFrameworks/CoreSimulator.framework/Versions/A/Resources/bin/simctl"
+        },
+        "stdoutBytes": 0,
+        "stderrBytes": 0
+      },
+      {
+        "monotonic": 470.364403333,
+        "epoch": 1794304272.65082,
+        "identity": {
+          "pid": 6786,
+          "parentPID": 5935,
+          "uid": 501,
+          "startTimeMicros": 1794304271242272,
+          "executable": "/Library/Developer/PrivateFrameworks/CoreSimulator.framework/Versions/A/Resources/bin/simctl"
+        },
+        "stdoutBytes": 0,
+        "stderrBytes": 0
+      },
+      {
+        "monotonic": 471.476045708,
+        "epoch": 1794304273.762806,
+        "identity": {
+          "pid": 6786,
+          "parentPID": 5935,
+          "uid": 501,
+          "startTimeMicros": 1794304271242272,
+          "executable": "/Library/Developer/PrivateFrameworks/CoreSimulator.framework/Versions/A/Resources/bin/simctl"
+        },
+        "stdoutBytes": 266,
+        "stderrBytes": 0
+      },
+      {
+        "monotonic": 472.62352175,
+        "epoch": 1794304274.909921,
+        "identity": {
+          "pid": 6786,
+          "parentPID": 5935,
+          "uid": 501,
+          "startTimeMicros": 1794304271242272,
+          "executable": "/Library/Developer/PrivateFrameworks/CoreSimulator.framework/Versions/A/Resources/bin/simctl"
+        },
+        "stdoutBytes": 266,
+        "stderrBytes": 0
+      }
+    ],
+    "error": "ValueError: helper_lifecycle_identity_changed",
+    "finishedMonotonic": 546.36587625,
+    "finishedEpoch": 1794304348.652152
+  },
+  "cleanup": {
+    "status": "passed",
+    "ownedDeviceDeleted": true,
+    "allKnownChildrenTerminal": true
+  },
+  "zipSHA256": "1e581e04c702d472e162717781616f16712a3020e885868ffefd6e21a87b62d3",
+  "tarSHA256": "d88e9a7f5e1b446a4a89ddfcab737c92f6d9cbcea045b20e8f79c26f25e320c0",
+  "verifiedSourcePins": 50,
+  "releaseAcceptance": false,
+  "interpretation": "Bootstatus identity read returned null while immediate poll still reported live; later recorded exit0 without signals. Current guard correctly rejected missing proof. Post-boot inventory and deferred-source change were not exercised. Diagnose terminal-transition observation before another changed run; do not reinterpret this as a pass."
+}

@@ -64,12 +64,13 @@ private struct SharedShopContent: View {
                             }
                             if household.canReviewHouseholdRequests { NavigationLink(ht("Review family requests")) { HouseholdInboxView(model: household) } }
                             if shop.phase == "draft", model.canManage {
-                                NavigationLink(SharedDemandCopy.text("Food quantities and sources")) { SharedDemandFlowView(shopModel: model) }
+                                NavigationLink(SharedDemandCopy.text("Food quantities and sources")) { SharedTrackingShopView(owner: model) }
                                     .accessibilityIdentifier("sharedShop.foodQuantities")
                                 NavigationLink(SharedOperationUndoCopy.text("Saved changes")) { SharedOperationUndoView(shopModel: model) }
                                     .accessibilityIdentifier("sharedShop.savedChanges")
                                 Button(ht("Edit shared items and quote")) { model.beginEditing() }.accessibilityIdentifier("sharedShop.edit")
-                                Button(ht("Review freezing this shop")) { model.reviewPhaseChange("shop.freeze") }
+                                NavigationLink(ht("Review freezing this shop")) { SharedTrackingShopView(owner: model, freezing: true) }
+                                    .accessibilityIdentifier("sharedShop.reviewTrackingFreeze")
                             } else if shop.phase == "frozen", model.canManage {
                                 Text(ht("Requests received after freezing are saved for next shop. Reopening does not move them into this shop automatically."))
                                 Button(ht("Review reopening this shop")) { model.reviewPhaseChange("shop.reopen") }
@@ -127,6 +128,8 @@ private struct SharedShopContent: View {
             SharedMealDaySheet(model: model, selection: selected)
         }.sheet(item: Binding(get: { model.foodEditor }, set: { if $0 == nil { model.cancelFoodEditor() } })) { context in
             NavigationStack { SharedDemandFlowView(shopModel: model, editor: context) }
+        }.sheet(item: Binding(get: { model.trackingEditor }, set: { if $0 == nil { model.cancelFoodEditor() } })) { context in
+            NavigationStack { SharedTrackingShopView(owner: model, editor: context) }
         }.disabled(model.busy).task { await model.load() }
         .confirmationDialog(ht("Clear this local shared-shop retry?"), isPresented: $clearingRetry, titleVisibility: .visible) {
             Button(ht("I reviewed the current shop; clear retry"), role: .destructive) { Task { await model.clearPendingAfterReview() } }
@@ -143,8 +146,17 @@ private struct SharedShopContent: View {
             }
         case .needsReview:
             Section {
-                Text(ht("Refresh the current shared shop before clearing this retry and reviewing a fresh action."))
-                if model.reviewedCurrentFacts { Button(ht("Clear after reviewing current shop")) { clearingRetry = true } }
+                if model.pending?.sharedTrackingBinding != nil || model.pending?.sharedRequestUndoBinding != nil {
+                    Text(st("The saved action is unresolved. Refresh current access, then retry the same saved action. A refresh does not undo or discard it."))
+                    Button(st("Refresh access for exact retry")) { Task { await model.load() } }
+                        .accessibilityIdentifier("sharedTracking.refreshRetry")
+                } else if model.pending == nil {
+                    Text(st("This review can no longer be applied. Refresh current facts and review a new action explicitly."))
+                    Button(st("Refresh current facts")) { Task { await model.load() } }
+                } else {
+                    Text(ht("Refresh the current shared shop before clearing this retry and reviewing a fresh action."))
+                    if model.reviewedCurrentFacts { Button(ht("Clear after reviewing current shop")) { clearingRetry = true } }
+                }
             }
         case .confirmed(let receipt):
             Section { Label(ht("Shared shop change confirmed"), systemImage: "checkmark.circle"); LabeledContent(ht("Revision"), value: receipt.shopRevision.formatted()) }
