@@ -1,0 +1,54 @@
+{
+  "status": "passed",
+  "offline": {
+    "tests": 1032,
+    "pass": 1031,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 1,
+    "todo": 0,
+    "skippedNames": [
+      "PostgreSQL durable billing / RLS / named seats contract"
+    ],
+    "logSHA256": "45cd745053b735cea82e8c4963c466c089a4fd2d7723188d52bd8480d2c77611"
+  },
+  "database": {
+    "tests": 444,
+    "pass": 441,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 3,
+    "todo": 0,
+    "skippedNames": [
+      "real browser WebApp and API recover a dropped helper reply with exact original bytes after a newer projection",
+      "real full browser recreation recovers a lost received suggestion with read-only retries and fences identity, expiry and revocation",
+      "two contributor web sessions see only their own purchase receipt through shopper corrections"
+    ],
+    "logSHA256": "f108fb875f3449a13b410d72cfb6b56009d54ee575c6f1c4ff6a132d3b189978"
+  },
+  "recordsHTTPPassed": [
+    "Records v2 HTTP partial export preserves exact protected unknown transfers, request wording, basket money and immutable PostgreSQL head",
+    "Records v2 HTTP repeat reads neither mint previews nor mutate current or historical domain rows",
+    "Records v2 HTTP denies contributor, explicitly granted planner and foreign adult before content reads",
+    "Records v2 HTTP denies a redeemed limited-view helper before content reads",
+    "Records v2 HTTP refuses revoked request provenance for the still assigned shopper without changing retained facts",
+    "Records v2 HTTP refuses revoked meal provenance for the still assigned shopper without changing retained facts",
+    "Records v2 HTTP authorized erasure exports only surviving partial facts and never recreates pack acknowledgments or private request copies",
+    "Records v2 HTTP follows current shopper assignment and denies the previous organizer shopper without leaking replay authority"
+  ],
+  "sourceInputs": 309,
+  "sourceManifestSHA256": "1e1e7de5e5464c395738cb9ff7990c7918827d10dae5ef096ad2e09ed44af182",
+  "receiptSHA256": "44db0cdb17ccd26a113f11e02185a51ee9817c6bbbcbe7299e9990ed597e574a",
+  "compiledManifestSHA256": "d7f149498bd3d0c1f144f998b01fa001765e6d2ee9aecb546662571da989737e",
+  "compiledProductsIdenticalToQualifiedR1": true,
+  "requestAcceptanceRestoreProof": {
+    "signatureVerified": true,
+    "applied": true,
+    "runtimeStillQuarantined": true,
+    "privateReceiptSHA256": "8621345c378b24752521abd4e29c738372c5ec60b1f6608203b83ba4a8e24344"
+  },
+  "currentArchivedSourcesAndPhaseLogsVerified": true,
+  "postgresStopped": true,
+  "stagingDeployed": false,
+  "nativeRecordsWire": false
+}

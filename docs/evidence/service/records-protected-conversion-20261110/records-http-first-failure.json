@@ -1,0 +1,24 @@
+{
+  "status": "failed",
+  "database": {
+    "tests": 444,
+    "pass": 439,
+    "fail": 2,
+    "skipped": 3,
+    "cancelled": 0,
+    "todo": 0
+  },
+  "failures": [
+    "Records v2 HTTP refuses revoked meal provenance for the still assigned shopper without changing retained facts",
+    "Records v2 HTTP follows current shopper assignment and denies the previous organizer shopper without leaking replay authority"
+  ],
+  "scope": "Eight additive Records-v2 actual-route tests; six new cases pass and two new fixture expectations fail. All preceding433 database scenarios pass.",
+  "diagnosis": "Authority transfer requires an organizer and increments authority epoch without changing shop revision; new fixtures incorrectly assumed current shopper could transfer back and shop revision increments.",
+  "productionChanged": false,
+  "postgresStopped": true,
+  "privateFailureFixtureRetained": true,
+  "sourceInputs": 309,
+  "sourceDependenciesToolsProductsUnchanged": true,
+  "receiptSHA256": "97a4ef38f58e6e3803a1cf071d4c6eca1effbd607e74aa3dfb270ee042a4cbb2",
+  "logSHA256": "984d2f1a79e6cf8fcd9f13f03393c1855f758f0cd67eb99096607cdb74c8ad9e"
+}

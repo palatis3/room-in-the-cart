@@ -2,6 +2,8 @@
 
 ## Current checkpoint — November 10, component integration
 
+Records-v2 actual-route successor now passes all **eight new HTTP cases** and full **441 PostgreSQL tests**, with three declared browser skips; offline remains **1,031 passes** plus one database-only skip. Role denial, revoked source provenance, erasure, immutable reads and shopper reassignment are verified. Compiled production is byte-identical to the qualified24/80transport revision. Records EN/ES UI r12 is active after an export-error visibility fix and test-navigation correction. [HTTP proof](evidence/service/records-protected-conversion-20261110/records-http-verification.json).
+
 Protected conversion successor now passes fresh combined backend **1,031 offline / 433 PostgreSQL** with declared skips and actual signed restore/erasure. Expanded native transport passes **24 Node / 80 Swift** with zero failures/skips; both first-run failures are resolved. Records EN/ES UI qualification is active, additional route privacy coverage pending. [Combined component proof](evidence/service/records-protected-conversion-20261110/README.md).
 
 Latest Records integration builds and passes **135 focused simulator models**, zero runtime warnings; client **230 passes plus three separate wire skips**, archive **33 passes**. Current shared snapshot export/import and unknown-date presentation are installed; actual-service/UI qualification, full history, remote erasure reconciliation and guardian recovery remain open. Protected conversion successor is held for a confirmed inverse-basis review defect. These scoped results supersede older counts below without establishing final combined acceptance. [Records proof](evidence/native/shared-records-20261110/verification.json).

@@ -1,0 +1,232 @@
+{
+  "runID": 42892918759,
+  "commit": "46a3e6bf0c4f90ed3f36d7baff25936c7867bdf1",
+  "status": "failed",
+  "artifactID": 13799262297,
+  "zipSHA256": "1954e858dd7fde640fb3ba01ae5ae66e9f562604a2d9be0b3eb75e40cd451270",
+  "zipBytes": 72130,
+  "zipMembers": 19,
+  "tarMembers": 20,
+  "sourcePins": 50,
+  "boot": {
+    "outcome": "normal_exit",
+    "seconds": 55.214457749999994,
+    "exitCode": 0
+  },
+  "inventory": {
+    "error": "ValueError: helper_lifecycle_deadline",
+    "seconds": 31.695473082999996,
+    "startupPhases": [
+      {
+        "event": "command_save_before",
+        "monotonic": 153.890746666
+      },
+      {
+        "event": "command_save_after",
+        "monotonic": 153.891258458
+      },
+      {
+        "event": "command_budget_before",
+        "monotonic": 153.891259791
+      },
+      {
+        "event": "command_budget_after",
+        "monotonic": 153.891854541
+      },
+      {
+        "event": "spawn_entry",
+        "monotonic": 153.891855458
+      },
+      {
+        "event": "spawn_budget_before",
+        "monotonic": 153.891859791
+      },
+      {
+        "event": "spawn_budget_after",
+        "monotonic": 153.892324708
+      },
+      {
+        "event": "spawn_launcher_validation_before",
+        "monotonic": 153.892332333
+      },
+      {
+        "event": "spawn_launcher_validation_after",
+        "monotonic": 154.21717575
+      },
+      {
+        "event": "spawn_budget_before",
+        "monotonic": 154.217177625
+      },
+      {
+        "event": "spawn_budget_after",
+        "monotonic": 154.21792875
+      },
+      {
+        "event": "streams_environment_before",
+        "monotonic": 154.217937166
+      },
+      {
+        "event": "streams_environment_after",
+        "monotonic": 154.302786083
+      },
+      {
+        "event": "popen_before",
+        "monotonic": 154.302803875
+      },
+      {
+        "event": "popen_after",
+        "monotonic": 154.468303291
+      },
+      {
+        "event": "registration_before",
+        "monotonic": 154.46835075
+      },
+      {
+        "event": "registration_after",
+        "monotonic": 154.468356583
+      },
+      {
+        "event": "registration_save_before",
+        "monotonic": 154.468363708
+      },
+      {
+        "event": "registration_save_after",
+        "monotonic": 155.134673791
+      },
+      {
+        "event": "acquisition_entry",
+        "monotonic": 155.134689791
+      },
+      {
+        "event": "acquisition_budget_before",
+        "monotonic": 155.13473025
+      },
+      {
+        "event": "acquisition_budget_after",
+        "monotonic": 155.13620475
+      },
+      {
+        "event": "acquisition_launcher_validation_before",
+        "monotonic": 155.136657666
+      },
+      {
+        "event": "acquisition_launcher_validation_after",
+        "monotonic": 155.215491291
+      },
+      {
+        "event": "acquisition_interpreter_path_before",
+        "monotonic": 155.215499083
+      },
+      {
+        "event": "acquisition_interpreter_path_after",
+        "monotonic": 155.21553675
+      },
+      {
+        "event": "acquisition_save_before",
+        "monotonic": 155.215542875
+      },
+      {
+        "event": "acquisition_save_after",
+        "monotonic": 155.29868975
+      },
+      {
+        "event": "acquisition_observation_begin",
+        "monotonic": 155.298692166
+      },
+      {
+        "event": "acquisition_complete",
+        "monotonic": 168.131185291
+      },
+      {
+        "event": "acquired_budget_before",
+        "monotonic": 168.131204458
+      },
+      {
+        "event": "acquired_budget_after",
+        "monotonic": 168.378287208
+      }
+    ],
+    "lifecycleAcquisition": {
+      "startMonotonic": 155.215540625,
+      "deadlineMonotonic": 183.890162125,
+      "samples": 22,
+      "first": [
+        {
+          "monotonic": 155.382038083,
+          "kind": "interpreter",
+          "identity": {
+            "pid": 2318,
+            "parentPID": 1377,
+            "uid": 501,
+            "startTimeMicros": 1794341645605489,
+            "executable": "/bin/bash"
+          }
+        },
+        {
+          "monotonic": 157.360870041,
+          "kind": "interpreter",
+          "identity": {
+            "pid": 2318,
+            "parentPID": 1377,
+            "uid": 501,
+            "startTimeMicros": 1794341645605489,
+            "executable": "/bin/bash"
+          }
+        },
+        {
+          "monotonic": 160.072880166,
+          "kind": "interpreter",
+          "identity": {
+            "pid": 2318,
+            "parentPID": 1377,
+            "uid": 501,
+            "startTimeMicros": 1794341645605489,
+            "executable": "/bin/bash"
+          }
+        },
+        {
+          "monotonic": 160.676325208,
+          "kind": "interpreter",
+          "identity": {
+            "pid": 2318,
+            "parentPID": 1377,
+            "uid": 501,
+            "startTimeMicros": 1794341645605489,
+            "executable": "/bin/bash"
+          }
+        }
+      ],
+      "last": {
+        "monotonic": 167.794836125,
+        "kind": "expected",
+        "identity": {
+          "pid": 2318,
+          "parentPID": 1377,
+          "uid": 501,
+          "startTimeMicros": 1794341645605489,
+          "executable": "/Library/Developer/PrivateFrameworks/CoreSimulator.framework/Versions/A/Resources/bin/simctl"
+        }
+      },
+      "scope": "same_owned_allowed_lifecycle",
+      "interpreter": 21,
+      "expected": 1,
+      "outcome": "bound"
+    },
+    "terminalVerified": true,
+    "exitCode": -2,
+    "signals": [
+      "SIGINT"
+    ],
+    "stdoutBytes": 0,
+    "stderrBytes": 0
+  },
+  "cleanup": {
+    "status": "passed",
+    "ownedDeviceDeleted": true
+  },
+  "allKnownChildrenTerminal": true,
+  "interpretation": "Startup timings show fast initial validation and Popen. Acquisition observed launcher/bash residency for about13.5seconds, followed by about15.7seconds of zero-output bound simctl before the original deadline. Scoped cleanup queries later succeeded and deletion was verified. Their later start confounds query scope with host settling. No app/performance acceptance.",
+  "nextPossibleExperiment": "Supported unsampled runtime and exact-device queries under one unchanged30second verification deadline; not dispatched and not established as a fix.",
+  "releaseAcceptance": false,
+  "repeatDispatched": false
+}
