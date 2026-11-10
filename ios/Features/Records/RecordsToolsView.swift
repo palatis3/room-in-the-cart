@@ -152,7 +152,11 @@ struct RecordsToolsView: View {
                         })) { Text(recordsTitle(record)) }
                             .accessibilityIdentifier("records.source." + record.id)
                         Text(recordKindLabel(record.kind)).font(.caption).foregroundStyle(.secondary)
-                        if record.kind == .sharedShop {
+                        if record.kind == .sharedHistory {
+                            Text(recordsText("Includes basket and meal revisions, saved cook notes, deliveries, decisions and financial records. Stock-lot history and live household access are not restored."))
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                        if record.kind == .sharedShop || record.kind == .sharedHistory {
                             Text(RecordsDatePresentation.sourceSavedAt(record.savedAtMilliseconds)).font(.caption).accessibilityIdentifier("records.sourceDate." + record.id)
                         }
                         if model.canDeleteSource(record) {
@@ -289,7 +293,7 @@ struct RecordsToolsView: View {
                         if expanded { recoveredExpandedIDs.insert(saved.id) } else { recoveredExpandedIDs.remove(saved.id) }
                     })) {
                     Text(saved.record.origin).font(.caption).textSelection(.enabled)
-                    if saved.record.kind == .sharedShop {
+                    if saved.record.kind == .sharedShop || saved.record.kind == .sharedHistory {
                         Text(RecordsDatePresentation.sourceSavedAt(saved.record.savedAtMilliseconds)).font(.caption).accessibilityIdentifier("records.recoveredSourceDate." + saved.record.id)
                         Text(RecordsDatePresentation.recoveredAt(saved.recoveredAtMilliseconds)).font(.caption).accessibilityIdentifier("records.recoveryDate." + saved.record.id)
                     }
@@ -344,6 +348,7 @@ struct RecordsToolsView: View {
         case .pickup: return recordsText("Pickup history")
         case .recipe: return recordsText("Recipe")
         case .sharedShop: return recordsText("Shared pickup record")
+        case .sharedHistory: return recordsText("Shared pickup history")
         }
     }
     private func recipe(_ record: ArchiveRecord) -> ImportedRecipe? {

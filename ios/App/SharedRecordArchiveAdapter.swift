@@ -108,3 +108,151 @@ extension SharedRecordArchiveAdapter {
         return lines.joined(separator: "\n")
     }
 }
+
+
+/// A personal historical copy is never a command, grant or live household cache.
+enum SharedHistoryArchiveAdapter {
+    static func make(_ snapshot: SharedRecordHistorySnapshot) throws -> ArchiveRecord {
+        let value = snapshot.record, bytes = try value.independentData()
+        return ArchiveRecord(id: value.origin.shopId.string + "/history", origin: origin(value),
+            revision: ArchiveCodec.digest(bytes), kind: .sharedHistory, title: "Shared pickup history",
+            savedAtMilliseconds: 0, nativePayload: bytes)
+    }
+    static func validate(_ record: ArchiveRecord) throws -> SharedRecordHistory {
+        guard record.kind == .sharedHistory, let bytes = record.nativePayload,
+              record.media == nil, record.helperLines.isEmpty, record.parentRevision == nil,
+              record.savedAtMilliseconds == 0 else { throw ArchiveError.unsupportedRecord }
+        let value: SharedRecordHistory
+        do { value = try SharedRecordHistoryWire.independentRecord(from: bytes) }
+        catch { throw ArchiveError.unsupportedRecord }
+        guard record.id == value.origin.shopId.string + "/history", record.origin == origin(value),
+              record.revision == ArchiveCodec.digest(bytes), try value.independentData() == bytes
+        else { throw ArchiveError.invalidIdentity }
+        return value
+    }
+    private static func origin(_ value: SharedRecordHistory) -> String {
+        "shared-history/" + value.origin.householdId.string + "/" + value.projection
+    }
+}
+
+extension SharedHistoryArchiveAdapter {
+    static func readable(_ record: ArchiveRecord, locale: Locale = .current) throws -> String {
+        let value = try validate(record), es = locale.language.languageCode?.identifier == "es"
+        func w(_ en: String, _ esText: String) -> String { es ? esText : en }
+        let unknown = w("Unknown", "Sin determinar")
+        func id(_ value: UUID) -> String { value.uuidString.lowercased() }
+        func money(_ amount: Int?) -> String { amount.map { "USD \($0 / 100)." + String(format: "%02d", $0 % 100) } ?? unknown }
+        func quantity(_ q: SharedMealQuantity?) -> String {
+            guard let q else { return unknown }
+            return "\(q.originalLiteral) (\(q.amount.numerator)/\(q.amount.denominator) \(q.unit))"
+        }
+        var lines = [w("Shared pickup history", "Historial de compra compartida"),
+            w("Read-only copy. Household access and checkout authority are not restored.", "Copia de solo lectura. No restablece acceso al hogar ni permisos de compra."),
+            w("Includes basket and meal revisions, saved cook notes, deliveries, decisions and financial records. Stock-lot history and live household access are not restored.", "Incluye revisiones de cestas y comidas, notas de cocina guardadas, entregas, decisiones y registros financieros. No restablece el historial de lotes ni el acceso al hogar."),
+            w("Source household: ", "Hogar de origen: ") + value.origin.householdId.string,
+            w("Source shop: ", "Compra de origen: ") + value.origin.shopId.string]
+        func section(_ en: String, _ esText: String, _ count: Int) {
+            lines.append("\n" + w(en, esText) + " (\(count))")
+            if count == 0 { lines.append(w("No saved entries.", "No hay registros guardados.")) }
+        }
+        section("Basket revisions", "Revisiones de la cesta", value.basketRevisions.count)
+        for basket in value.basketRevisions {
+            lines.append("#\(basket.revision) · \(basket.recordedAt) · \(basket.phase) · \(basket.purpose)")
+            for item in basket.basketLines {
+                lines.append(item.originalItem + " · \(item.packs) " + w("packs", "paquetes") + " · " + money(item.unitPriceMinor))
+            }
+            let q = basket.quote
+            lines.append(w("Entered quote; not posted spending", "Cotización ingresada; no gasto contabilizado"))
+            lines.append(w("Scope / cap: ", "Alcance / límite: ") + q.scope + " / " + money(q.capMinor) + " · " + q.capScope)
+            lines.append(w("Observed / expires: ", "Observada / vence: ") + q.observedAt + " / " + q.expiresAt)
+            if !q.complete { lines.append(w("Quote incomplete.", "Cotización incompleta.")) }
+            if q.fee.kind == "fixed" { lines.append(w("Fee: ", "Cargo: ") + money(q.fee.amountMinor)) }
+            else { lines.append(w("Fee threshold / below / above: ", "Umbral del cargo / inferior / superior: ") + [q.fee.thresholdMinor, q.fee.belowMinor, q.fee.aboveMinor].map(money).joined(separator: " / ")) }
+            lines.append(w("Taxes / deposits / discounts: ", "Impuestos / depósitos / descuentos: ") + [q.taxesMinor, q.depositsMinor, q.discountsMinor].map(money).joined(separator: " / "))
+        }
+        section("Meal revisions", "Revisiones de comidas", value.mealRevisions.count)
+        for entry in value.mealRevisions {
+            guard let meal = entry.meal else {
+                lines.append(w("Removed meal", "Comida eliminada") + " · #\(entry.revision) · " + entry.occurrenceId.string)
+                continue
+            }
+            lines.append(meal.title + " · #\(entry.revision) · " + entry.occurrenceId.string)
+            lines.append((meal.day ?? w("Unscheduled", "Sin fecha")) + " · \(meal.portions) " + w("portions", "porciones") + (meal.protected ? " · " + w("protected", "reservadas") : ""))
+            if let planning = meal.planning {
+                lines += planning.exclusions ?? []
+                if let deadline = planning.deadline { lines.append(w("Deadline: ", "Hora límite: ") + deadline.at + " · " + deadline.zone) }
+                lines.append(w("Preparation minutes: ", "Minutos de preparación: ") + (planning.leadTimeMinutes.map(String.init) ?? unknown))
+                for group in planning.groups {
+                    lines.append(group.name + " · \(group.servings.numerator)/\(group.servings.denominator) " + w("servings", "porciones") + (group.protected ? " · " + w("protected", "reservadas") : ""))
+                }
+                for ingredient in planning.ingredients {
+                    let groups = ingredient.groupIds.compactMap { key in planning.groups.first { $0.id == key }?.name }
+                    lines.append(ingredient.name + " · " + quantity(ingredient.quantity) + (groups.isEmpty ? "" : " · " + groups.joined(separator: ", ")))
+                    lines += ingredient.exclusions
+                }
+                for binding in planning.bindings ?? [] {
+                    let ingredient = planning.ingredients.first { $0.id == binding.ingredientId }?.name ?? id(binding.ingredientId)
+                    let group = planning.groups.first { $0.id == binding.groupId }?.name ?? id(binding.groupId)
+                    lines.append(ingredient + " → " + group + " · " + quantity(binding.quantity))
+                }
+                lines += planning.completedSteps ?? []
+            }
+        }
+        section("Saved cook instructions", "Instrucciones de cocina guardadas", value.cookCopies.count)
+        for copy in value.cookCopies {
+            lines.append("\(copy.createdAt) · \(copy.language) · #\(copy.version) · " + id(copy.copyId))
+            lines.append(copy.text)
+            for send in value.cookSends where send.copyId == copy.copyId {
+                lines.append(w("Marked sent to: ", "Marcada como enviada a: ") + send.recipient + " · " + send.sentAt)
+            }
+        }
+        section("Delivery sources", "Fuentes de entrega", value.deliveries.sources.count)
+        for source in value.deliveries.sources {
+            lines.append(source.foodName + " · " + id(source.sourceId) + " · " + id(source.segmentKey))
+            lines += source.exclusionTags
+        }
+        section("Arrival and usable-food observations", "Observaciones de llegada y alimentos utilizables", value.deliveries.observations.count)
+        for observation in value.deliveries.observations {
+            lines.append(observation.recordedAt)
+            switch observation.body {
+            case let .arrival(body): lines.append(w("Arrival: ", "Llegada: ") + id(body.sourceId) + " · " + (body.arrivedAt ?? unknown) + " · " + quantity(body.received))
+            case let .usable(body): lines.append(w("Usable: ", "Utilizable: ") + id(body.sourceId) + " · " + body.confirmedAt + " · " + quantity(body.usable))
+            }
+        }
+        section("Food matches", "Vínculos de alimentos", value.deliveries.matches.count)
+        for match in value.deliveries.matches {
+            lines.append(id(match.sourceId) + " → " + id(match.occurrenceId) + " / " + id(match.ingredientId) + " · #\(match.supplyRevision) · " + (match.matched ? w("matched", "vinculado") : w("unlinked", "sin vincular")))
+        }
+        section("Reserved food", "Alimentos reservados", value.deliveries.reservations.count)
+        for reservation in value.deliveries.reservations {
+            lines.append(id(reservation.sourceId) + " → " + id(reservation.occurrenceId) + " / " + id(reservation.ingredientId) + " / " + id(reservation.groupId) + " · #\(reservation.supplyRevision) · " + quantity(reservation.quantity))
+        }
+        section("Decisions and outcomes", "Decisiones y resultados", value.decisions.count)
+        for decision in value.decisions {
+            lines.append(decision.recordedAt + " · " + [decision.dish, decision.product, decision.occasion].compactMap { $0 }.joined(separator: " · "))
+            lines.append(decision.decision)
+            lines.append(w("Outcome: ", "Resultado: ") + (decision.outcome ?? unknown))
+            if let observed = decision.observedAt { lines.append(w("Observed: ", "Observado: ") + observed) }
+            if let promoted = decision.promotedAt { lines.append(w("Saved as a lasting preference: ", "Guardada como preferencia permanente: ") + promoted) }
+        }
+        section("Financial evidence", "Comprobantes financieros", value.financialEntries.count)
+        let financialLabels: [ShopperFinancialEntry.Kind: String] = [.postedCharge: w("Posted charge", "Cargo contabilizado"), .postedTopUp: w("Posted top-up", "Compra adicional contabilizada"), .pendingCredit: w("Pending credit", "Crédito pendiente"), .postedCredit: w("Posted credit", "Crédito contabilizado"), .includedCredit: w("Included credit", "Crédito incluido"), .paymentHold: w("Payment hold", "Retención de pago"), .holdRelease: w("Hold release", "Liberación de retención")]
+        for entry in value.financialEntries {
+            lines.append(entry.occurredAt + " · " + (financialLabels[entry.kind] ?? entry.kind.rawValue) + " · " + money(entry.amountMinor))
+            lines.append(entry.sourceText)
+        }
+        section("Saved price observations", "Observaciones de precios guardadas", value.priceObservations.count)
+        for price in value.priceObservations {
+            lines.append(price.itemName + " · " + price.packLabel + " · " + price.observedAt)
+            switch price.price {
+            case let .exact(minor): lines.append(money(minor))
+            case let .bounded(low, high, reason): lines.append(money(low) + " – " + money(high) + " · " + reason)
+            case let .unknown(reason): lines.append(unknown + " · " + reason)
+            }
+            lines.append([price.store, price.branch, price.channel.rawValue, price.mode.rawValue, price.eligibility].joined(separator: " · "))
+            if let pack = price.usablePack { lines.append(pack.originalLiteral + " · \(pack.amount.numerator)/\(pack.amount.denominator) \(pack.unit.rawValue)") }
+            lines.append(price.sourceText + " · " + price.sourceLocale)
+        }
+        return lines.joined(separator: "\n")
+    }
+}

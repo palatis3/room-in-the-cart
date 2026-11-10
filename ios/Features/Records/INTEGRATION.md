@@ -46,3 +46,32 @@ explicit follow-up work.
 Validation: app build passed (`.build/SharedRecordsNov10/history-navigation/build.log`),
 changed Swift syntax passed, and localization checks passed30catalogs/4,745entries.
 No new end-to-end walkthrough or broad regression was run for this navigation edit.
+
+
+## Selected shared historical backup (November 10)
+
+Data and recovery now lists a separate **Shared pickup history** for the selected
+assigned-shopper scope. It reads `/records/history/v1` afresh and includes saved
+basket/meal revisions, dated cook text and marked sends, deliveries and food
+reservations, family decisions, financial evidence and saved price observations.
+Normal removed-meal revisions retain an explicit null marker. A historical file
+is an independent encrypted/readable record; it never supplies household access,
+consent, commands, replay receipts or live financial authority. Helper export of
+this private history is denied. Reimport reopens the same content once; known local
+erasure markers still prevent recovery.
+
+The existing server transaction rechecks current shopper scope and contributing
+members/consent before reading payloads. Retired shops, erased/missing referenced
+sources, cross-shop cook stock, or a size/count overflow make this history export
+explicitly unavailable; the separate current snapshot remains available. This
+bounded first history representation does not yet include stock-lot chronology or
+all historic food-graph allocations. Those requirements are still open; do not
+claim a complete historical backup from this component alone.
+
+Focused server projection checks pass8/8 and Swift decoder/client checks pass6/6.
+The actual PostgreSQL suite passes442 with three separately assigned browser skips,
+including the new history route and strengthened revoked-source/erasure cases.
+Database logs are in `.build/SharedRecordsNov10/history-database`; its disposable
+cluster stopped successfully. Native app build and7focused archive tests pass with0skips and0reported runtime
+warnings in `.build/SharedRecordsNov10/history-native`. The new history screen
+has not received a separate human/device walkthrough.

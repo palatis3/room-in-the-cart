@@ -9,6 +9,40 @@ final class SharedRecordArchiveTests: XCTestCase {
         let bytes = try Data(contentsOf: root.appendingPathComponent("shared/fixtures/shared-records/partial-v2.json"))
         return try SharedRecordArchiveAdapter.make(SharedRecordWire.snapshot(from: bytes))
     }
+    @MainActor func testHistoricalArchiveIsEncryptedIndependentDeduplicatedAndNeverHelperData() async throws {
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        let bytes = try Data(contentsOf: root.appendingPathComponent("shared/fixtures/shared-records/history-v1.json"))
+        let source = try SharedRecordHistoryWire.snapshot(from: bytes)
+        let record = try SharedHistoryArchiveAdapter.make(source)
+        try RecordsNativeCodec.validate(record)
+        XCTAssertTrue(record.id.hasSuffix("/history"))
+        XCTAssertEqual(record.revision, ArchiveCodec.digest(try source.record.independentData()))
+        XCTAssertThrowsError(try ArchiveCodec.make(records: [record], kind: .helperShop, origin: "history", revision: "1"))
+        let envelope = try ArchiveCodec.make(records: [record], kind: .personalRecovery, origin: "history", revision: record.revision)
+        let key = EncryptedArchive.generateKey()
+        let encrypted = try EncryptedArchive.seal(envelope, key: key)
+        let reopened = try EncryptedArchive.open(encrypted, key: key)
+        let registry = try registry()
+        let firstReview = try await registry.review(reopened)
+        let first = try await registry.apply(firstReview)
+        let repeated = try await registry.review(reopened)
+        let second = try await registry.apply(repeated)
+        XCTAssertEqual(first.insertedCount, 1); XCTAssertEqual(second.insertedCount, 0)
+        XCTAssertEqual(first.records.first?.id, second.records.first?.id)
+        XCTAssertEqual(try SharedHistoryArchiveAdapter.validate(record), source.record)
+        for locale in ["en_US", "es_US"] {
+            let text = try SharedHistoryArchiveAdapter.readable(record, locale: Locale(identifier: locale))
+            XCTAssertTrue(text.contains(source.record.cookCopies[0].text))
+            XCTAssertTrue(text.contains(source.record.decisions[0].decision))
+            XCTAssertFalse(text.contains("authorityEpoch")); XCTAssertFalse(text.contains("replayWindow"))
+        }
+        var forged = record; forged.revision = "different"
+        XCTAssertThrowsError(try RecordsNativeCodec.validate(forged))
+        try await registry.registerErasedSources([.init(origin: record.origin, recordID: record.id)])
+        let erased = try await registry.review(reopened)
+        XCTAssertFalse(erased.canApply)
+        let remaining = try await registry.refreshList(); XCTAssertTrue(remaining.isEmpty)
+    }
     private func registry() throws -> RecoveryRegistry {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)

@@ -2846,6 +2846,40 @@
           }
         }
       }
+    },
+    "Shared pickup history": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared pickup history"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Historial de compra compartida"
+          }
+        }
+      }
+    },
+    "Includes basket and meal revisions, saved cook notes, deliveries, decisions and financial records. Stock-lot history and live household access are not restored.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Includes basket and meal revisions, saved cook notes, deliveries, decisions and financial records. Stock-lot history and live household access are not restored."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incluye revisiones de cestas y comidas, notas de cocina guardadas, entregas, decisiones y registros financieros. No restablece el historial de lotes ni el acceso al hogar."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -3,6 +3,7 @@ import {PartitionError} from './shared-demand-tracking.js';
 import {readTracking,createTrackingCandidate,acceptTrackingCandidate,readTrackingRecord,readTrackingHistory,readTrackingActionSources,readTrackingMealActionSources} from './shared-demand-tracking-repository.js';
 import {readSharedRecordSnapshot} from './shared-records.js';
 import {readTrackingRecordSnapshot} from './shared-records-tracking.js';
+import {readSharedRecordHistory} from './shared-records-history.js';
 import {SharedDemandError} from './shared-demand-domain.js';
 import {previewDemand,readDemand,readActionDemandSources,readFoodOperationHistory,previewFoodOperationUndo,readFoodOperationUndoCandidate} from './shared-demand-repository.js';
 import { readConfirmedOrder } from './order-amendments.js';
@@ -398,6 +399,7 @@ export function createHTTPServer(options:HTTPOptions) {
           if(tail==='/meal-plan/planner'&&method==='PUT')return mealMoves.grant(ctx,shopId,grantChange.parse(payload));
           if(tail==='/meal-plan/dismissals'&&method==='POST')return mealMoves.dismiss(ctx,shopId,dismissMove.parse(payload));
           if(tail==='/meal-plan/proposals'&&method==='POST')return mealMoves.propose(ctx,shopId,moveRequest.parse(payload));
+          if(tail==='/records/history/v1'&&method==='GET')return readSharedRecordHistory(repository,ctx,await repository.shop(ctx,shopId));
           if((tail==='/records/snapshot'||tail==='/records/snapshot/v1'||tail==='/records/snapshot/v2')&&method==='GET'){
             const recordShop=await repository.shop(ctx,shopId);
             return tail==='/records/snapshot/v2'||(tail==='/records/snapshot'&&repository.options.trackingV2)

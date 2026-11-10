@@ -116,6 +116,7 @@ import RecordArchive
                 _ = try ArchiveCodec.encode(bounded)
                 let text = try records.map { record in
                     if record.kind == .sharedShop { return try SharedRecordArchiveAdapter.readable(record) }
+                    if record.kind == .sharedHistory { return try SharedHistoryArchiveAdapter.readable(record) }
                     return ReadableArchive.text([record], owner: choice == .ownerText)
                 }.joined(separator: "\n\n")
                 preparedDocument = RecordsFileDocument(data: Data(text.utf8), kind: .text)
@@ -339,5 +340,6 @@ extension RecipeImportReport {
 /// Localize app-generated headings without changing archive identity or user wording.
 func recordsTitle(_ record: ArchiveRecord) -> String {
     if record.kind == .sharedShop && record.title == "Shared pickup" { return recordsText("Shared pickup record") }
+    if record.kind == .sharedHistory && record.title == "Shared pickup history" { return recordsText("Shared pickup history") }
     return record.title.isEmpty ? recordsText("Untitled record") : record.title
 }

@@ -74,6 +74,30 @@ async function denied(f,a,status=404){
  assert.deepEqual(await domainRows(f),before);
 }
 
+test('Records history HTTP exports retained revisions and removed-meal markers on Free, without writes, and rejects retired history',async()=>{
+ const f=await fixture(),occurrenceId=randomUUID(),meal={title:'Earlier dinner',day:null,kind:'dinner',portions:2,protected:false};
+ let s=await head(f);
+ ok(await send(f,'shop.patch',{quote:s.quote,lines:s.lines,mealEdit:{occurrenceId,baseMealRevision:null,meal}},s.shopRevision,s.authorityEpoch));
+ s=await head(f);const mealRevision=s.meals.find(m=>m.occurrenceId===occurrenceId).revision;
+ ok(await send(f,'shop.patch',{quote:s.quote,lines:s.lines,mealEdit:{occurrenceId,baseMealRevision:mealRevision,meal:null}},s.shopRevision,s.authorityEpoch));
+ const decision=ok(await call(f.owner,f.path+'/decisions','POST',{clientKey:randomUUID(),kind:'approval',product:'Wraps',dish:'Earlier dinner',occasion:null,decision:'Keep the typed fallback',outcome:null}));
+ let financial=ok(await call(f.owner,f.path+'/financial-evidence'));
+ const entry={id:randomUUID(),evidenceKey:randomUUID(),kind:'postedCharge',amountMinor:400,currency:'USD',occurredAt:new Date().toISOString(),creditId:null,chargeEvidenceKey:null,holdEvidenceKey:null,sourceText:'Fictional reported receipt'};
+ ok(await call(f.owner,f.path+'/financial-evidence','POST',{clientKey:randomUUID(),sourceVersion:financial.sourceVersion,entry}));
+ const before=await domainRows(f),result=ok(await call(f.owner,f.path+'/records/history/v1'));
+ assert.equal(result.record.projection,'assigned-shopper-history-v1');assert.equal(result.recordDigest,digest(result.record));
+ assert.equal(result.record.basketRevisions.length,3);
+ assert.deepEqual(result.record.mealRevisions.map(m=>m.meal),[meal,null]);
+ assert.deepEqual(result.record.decisions,[decision]);assert.deepEqual(result.record.financialEntries,[entry]);
+ assert.deepEqual(await domainRows(f),before);
+ const encoded=JSON.stringify(result);for(const key of ['authorityEpoch','operationId','replayWindow','actor_id','member_id','clientKey'])assert.ok(!encoded.includes('"'+key+'"'));
+ const other=await invited(f);assert.equal((await call(other,f.path+'/records/history/v1')).status,404);
+ financial=ok(await call(f.owner,f.path+'/financial-evidence'));
+ ok(await call(f.owner,f.path+'/history-retire','POST',{clientKey:randomUUID(),sourceVersion:financial.sourceVersion,confirm:true}));
+ assert.equal((await call(f.owner,f.path+'/records/history/v1')).status,404);
+ assert.equal((await call(f.owner,f.path+'/records/snapshot/v2')).status,200);
+});
+
 test('Records v2 HTTP partial export preserves exact protected unknown transfers, request wording, basket money and immutable PostgreSQL head',async()=>{
  const f=await partial(),p=await page(f),s=await head(f),before=await domainRows(f),r=await readPair(f);
  assert.equal(r.schemaVersion,2);assert.equal(r.record.projection,'assigned-shopper-independent-record-v2');assert.equal(r.record.food.status,'enabled');
@@ -109,6 +133,7 @@ for(const origin of ['request','meal'])test('Records v2 HTTP refuses revoked '+o
  const f=await partial({mealContributor:origin==='meal',withRequest:origin==='request'});await readPair(f);
  ok(await call(f.owner,f.base+'/revocations','POST',{kind:'member',targetId:f.author.id}));const before=await domainRows(f);
  for(const route of routes){const r=await call(f.owner,f.path+route);assert.equal(r.status,409);assert.equal(r.data.error.code,'tracking_source_unavailable');const text=JSON.stringify(r.data);for(const value of [f.wording,f.literal,'Protected lunch original','recordDigest'].filter(Boolean))assert.ok(!text.includes(value));}
+ const history=await call(f.owner,f.path+'/records/history/v1');assert.equal(history.status,409);assert.equal(history.data.error.code,'shared_history_unavailable');
  assert.deepEqual(await domainRows(f),before);
 });
 
@@ -122,6 +147,7 @@ test('Records v2 HTTP authorized erasure exports only surviving partial facts an
  assert.deepEqual(r.record.food.graph.contributions.find(x=>x.id===f.stapleSource.id),f.stapleSource);assert.deepEqual(r.record.food.basket.find(x=>x.id===f.staple.lineId),before.record.food.basket.find(x=>x.id===f.staple.lineId));
  const text=JSON.stringify(r);assert.ok(!text.includes(f.wording));assert.ok(!text.includes(f.literal));assert.ok(!text.includes(p.projection.invalidatedStateDigest));assert.ok(!r.record.food.catalog.some(x=>x.source.kind==='request'));assert.deepEqual(await domainRows(f),persisted);
  const removed=await call(f.author,f.path+routes[1]);assert.equal(removed.status,401);assert.equal(removed.data.error.code,'session_needed');
+ assert.equal((await call(f.owner,f.path+'/records/history/v1')).status,409);
 });
 
 

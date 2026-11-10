@@ -27,3 +27,22 @@ backup. The generated shared-record title was subsequently localized at display
 using the existing Records catalog, without changing stored archive bytes or
 user-authored wording; localized-build.log records that follow-up build.
 CI planner registration plus existing planner/slot checks pass20/20.
+
+
+## Historical export component
+
+`sharedHistory` adds independently validated historical records without changing
+current `sharedShop` v2 archives. TypeScript/8projection tests,6Swift DTO/client
+tests and the full442-pass PostgreSQL suite (3declared browser skips) pass. Actual
+HTTP covers Free export, normal removed-meal markers, zero export mutations,
+contributor denial, retired history, and revoked/erased sources.
+
+The integrated app builds; all7SharedRecordArchiveTests pass, including the new
+historical encrypted roundtrip, identical reimport, helper denial, readable
+EN/ES content, forged revision rejection and known-erasure refusal. xcresult
+reports0failures/0skips/0runtime warnings. Results remain at
+`.build/SharedRecordsNov10/history-native/Archive.xcresult`; build/test logs sit
+beside it. Database logs are in `.build/SharedRecordsNov10/history-database`.
+No hosted CI, additional UI journey or new custom verification infrastructure
+was used. See the Records integration note for supported families and remaining
+stock-lot/food-history scope.
