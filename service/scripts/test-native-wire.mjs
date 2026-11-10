@@ -36,6 +36,9 @@ const cases = [
   'actual Swift skipped meal Undo restores exact meals with lost reply restart retry and privacy authority over HTTPS and PostgreSQL',
   'actual Swift same-store Undo binds selected quote authority through Cancel lost reply retry revocation and erasure',
   'actual Swift created meal Undo removes only the new occurrence across Cancel lost reply retry and privacy authority',
+  'actual Swift tracking adoption and first Undo preserve protected unknown facts through Cancel lost reply restart and same-ID rebind',
+  'actual Swift tracking request uses explicit current preview revision and distinct frozen review before exact placement',
+  'actual Swift tracking erasure preserves independent sources through recovery and refuses revoked shopper replay',
 ];
 const swiftRuns = [
   'deferred-request HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres',
@@ -89,10 +92,21 @@ const swiftRuns = [
   'operation-undo-meal-create-privacy HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
   'operation-undo-meal-create-revoked HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
 
+  'tracking-adopt-cancel HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'tracking-adopt-lost HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'tracking-adopt-retry HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'tracking-first-undo HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'tracking-rebind HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'tracking-request HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'tracking-freeze-place HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'tracking-privacy-adopt HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'tracking-recover HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'tracking-revoked HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
 ];
 const files = ['history', 'shared-meal-changes', 'shared-store-quotes', 'service', 'shared-demand']
   .map(name => fileURLToPath(new URL(`../tests/${name}.integration.mjs`, import.meta.url)));
 files.push(fileURLToPath(new URL('../tests/shared-operation-undo.wire.mjs', import.meta.url)));
+files.push(fileURLToPath(new URL('../tests/shared-tracking.wire.mjs', import.meta.url)));
 const admin = new pg.Client({ connectionString: adminURL });
 await admin.connect();
 try {

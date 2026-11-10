@@ -125,6 +125,33 @@ test('source privacy erases transferred/historical/candidate copies, denies repl
  const survivorPacks=[{lineId:later.extra.lineId,usablePerPack:q(3),acceptUnresolved:false}];await applyIntent(f,{mode:'recover',base:baseOf(opened),packs:survivorPacks});
  const recovered=await page(f);assert.equal(recovered.status,'enabled');assert.deepEqual(recovered.state.graph.contributions.find(c=>c.id===later.c.id),later.c);assert.ok(recovered.freezeReview);
 });
+test('tracking operation history reads empty and retained lineage without leaking food facts or other shops',async()=>{
+ const f=await fixture(),path=f.path+'/demand/tracking/operations';
+ assert.deepEqual(ok(await call(f.owner,path)),{schemaVersion:2,shopId:f.shopId,shopRevision:1,items:[]});
+ const initial=await first(f),target=ok(initial.response).operationId,current=await page(f);
+ const other=await fixture();await first(other);
+ const history=ok(await call(f.owner,path));
+ assert.equal(history.shopRevision,current.shopRevision);assert.equal(history.items.length,1);
+ const item=history.items[0];
+ assert.deepEqual(Object.keys(item).sort(),['committedAt','operationId','shopRevision','status']);
+ assert.equal(item.operationId,target);assert.equal(item.shopRevision,current.shopRevision);
+ assert.equal(item.status,'current_preview_required');assert.ok(Number.isFinite(Date.parse(item.committedAt)));
+ const sameHouseholdShop={...f,shopId:randomUUID()};
+ ok(await send(sameHouseholdShop,'shop.create',{quote:f.quote,lines:[]},0,0));
+ const emptyHistory=ok(await call(f.owner,f.base+'/shops/'+sameHouseholdShop.shopId+'/demand/tracking/operations'));
+ assert.deepEqual(emptyHistory.items,[]);
+ await inverse(f,target);
+ const undone=ok(await call(f.owner,path));assert.equal(undone.items.length,1);
+ assert.deepEqual(undone.items[0],{...item,status:'unavailable'});
+});
+test('tracking operation history denies nonshopper and foreign access before returning lineage',async()=>{
+ const f=await fixture();await first(f);const other=await invited(f),foreign=await fixture();
+ for(const actor of [other,foreign.owner]){
+  const denied=await call(actor,f.path+'/demand/tracking/operations');
+  assert.equal(denied.status,404);assert.equal(denied.data.error.code,'unavailable');
+  assert.equal(denied.data.items,undefined);
+ }
+});
 test('nonshopper and cross-household tracking access deny before any content; feature default stays off',async()=>{
  const f=await fixture(),other=await invited(f),foreign=await fixture();assert.equal((await call(other,f.path+'/demand/tracking')).status,404);assert.equal((await call(foreign.owner,f.path+'/demand/tracking')).status,404);
  const disabled=new HouseholdRepository(runtime,{allowChildNetwork:false,noticeVersion:'fixture',sessionStatus:new SupabaseSessionVerifier(issuer)}),s=createHTTPServer({repository:disabled,verifier,maxRequestsPerMinute:20000});await new Promise(r=>s.listen(0,'127.0.0.1',r));

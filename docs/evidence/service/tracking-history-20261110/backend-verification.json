@@ -1,0 +1,65 @@
+{
+  "status": "passed",
+  "scope": "Tracking history SQL correction; full backend regression, no native/UI acceptance",
+  "sourceFiles": 267,
+  "compilerInputs": 81,
+  "compiledEntries": 151,
+  "offline": {
+    "tests": 754,
+    "pass": 753,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 1,
+    "todo": 0,
+    "skippedNames": [
+      "PostgreSQL durable billing / RLS / named seats contract"
+    ],
+    "logSHA256": "53f961e15075210f7a1f37287e0421a84b4b63c74633587fa2aa071c662fda68"
+  },
+  "database": {
+    "tests": 355,
+    "pass": 352,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 3,
+    "todo": 0,
+    "skippedNames": [
+      "real browser WebApp and API recover a dropped helper reply with exact original bytes after a newer projection",
+      "real full browser recreation recovers a lost received suggestion with read-only retries and fences identity, expiry and revocation",
+      "two contributor web sessions see only their own purchase receipt through shopper corrections"
+    ],
+    "logSHA256": "735db581921d52e7b94d6b55e53983f41de15192cf443380c278c82977dda554"
+  },
+  "trackingHTTPPassed": [
+    "tracking v2 atomic first-adoption Cancel, exact acknowledgment, reserved UUID and persisted retry",
+    "complete first adoption Undo transfers protected unknown identity, preserves later staple and untouched price, then same-ID rebind",
+    "partial state rejects v1 reads, previews, raw Undo, legacy writes and unreviewed freeze without changing state",
+    "explicitly reviewed partial pickup freezes full unknown protection, direct placement retains exact frozen basis",
+    "stale preview and touched pack edit deny first-adoption inverse",
+    "source privacy erases transferred/historical/candidate copies, denies replay and both placement paths, permits selective fresh recovery",
+    "tracking operation history reads empty and retained lineage without leaking food facts or other shops",
+    "tracking operation history denies nonshopper and foreign access before returning lineage",
+    "nonshopper and cross-household tracking access deny before any content; feature default stays off",
+    "first-adoption compensation preserves unchanged selected-store permission at first Apply and retained receipt replay",
+    "preview-only author erasure invalidates another shopper copied intent before any tracking provenance exists",
+    "partial tracking accepts an explicitly reviewed request link without hiding unbound protected meal facts",
+    "compound first adoption plus request acceptance retains original v1 route but receives no invented full-operation lineage",
+    "selective erasure retains another author transferred protected identities through review recovery",
+    "link-only author erasure removes exactly that relationship and preserves unrelated sources, edges, used IDs and tombstones through recovery",
+    "legacy copied labels are erased while independently authored matching manual text and a later independent rename survive",
+    "exact label digest has a distinct UTF-8 domain and never coerces null, missing, normalization or whitespace",
+    "046 erasure keeps 047 content-free first-use proof but cannot revive erased created-meal history or replay",
+    "privacy extension delegates only unrelated legacy no-op work and still clears legacy-only hashes under a real worker lease"
+  ],
+  "trackingRestorePassed": [
+    "signed quarantined restore removes tracking transfers, lineage, sealed copies and pending review while preserving unrelated IDs"
+  ],
+  "freshStrictBuild": true,
+  "postgresStopped": true,
+  "sourcesDependenciesToolsProductsUnchanged": true,
+  "retainedEvidence": "/Users/palatis/Room in the Cart/.build/SharedDemandGraphNov09/root-tracking-history-r1",
+  "receiptSHA256": "a5bcd9e289a7a786258ec34c5ff16c28aae14f5ad9dfd58cd7c829104520553c",
+  "sourceManifestSHA256": "773098271b539f690acab16d5ddded6e3e69ce337fd28f18e028ea4a100a0bfc",
+  "compiledManifestSHA256": "6d5cc37d64d27b3feb398022356248abd6164b834f3412710d365924ac33e692",
+  "compileLogSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

@@ -238,8 +238,10 @@ export async function readTrackingHistory(repo:HouseholdRepository,ctx:Context,s
  enabled(repo);repo.requireShopper(ctx,shop);repo.requireDraft(shop);
  const rows=(await ctx.db.query(`SELECT a.operation_id,o.committed_at,t.shop_revision,a.evidence IS NOT NULL AS retained,
  EXISTS(SELECT 1 FROM ritc.shared_tracking_revision u WHERE u.household_id=a.household_id AND u.reverses_operation_id=a.operation_id) AS reversed
- FROM ritc.shared_tracking_adoption a JOIN ritc.operation o USING(household_id,operation_id)
- JOIN ritc.shared_tracking_revision t USING(household_id,shop_id,operation_id)
+ FROM ritc.shared_tracking_adoption a JOIN ritc.operation o
+ ON o.household_id=a.household_id AND o.shop_id=a.shop_id AND o.operation_id=a.operation_id
+ JOIN ritc.shared_tracking_revision t
+ ON t.household_id=a.household_id AND t.shop_id=a.shop_id AND t.operation_id=a.operation_id
  WHERE a.household_id=$1 AND a.shop_id=$2 ORDER BY t.shop_revision DESC LIMIT 100`,[ctx.householdId,shop.shop_id])).rows;
  return{schemaVersion:2,shopId:shop.shop_id,shopRevision:shop.revision,items:rows.map(r=>({operationId:r.operation_id,shopRevision:r.shop_revision,committedAt:r.committed_at.toISOString(),status:r.retained&&!r.reversed?'current_preview_required':'unavailable'}))};
 }

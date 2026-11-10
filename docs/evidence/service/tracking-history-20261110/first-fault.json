@@ -1,0 +1,48 @@
+{
+  "status": "failed",
+  "node": {
+    "tests": 19,
+    "pass": 18,
+    "fail": 1,
+    "skipped": 0
+  },
+  "swift": {
+    "expected": 60,
+    "executed": 59,
+    "passed": 58,
+    "failed": 1,
+    "unexecuted": [
+      {
+        "scenario": "tracking-rebind",
+        "selector": "HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres"
+      }
+    ]
+  },
+  "firstFault": {
+    "nodeCase": 17,
+    "swiftScenario": "tracking-first-undo",
+    "swiftSelector": "HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres",
+    "httpStatus": 503,
+    "httpCode": "storage_unavailable",
+    "correlationID": "09293a40-aef2-4882-a3fc-deb118d3b6f4",
+    "endpoint": "GET /v1/households/{householdId}/shops/{shopId}/demand/tracking/operations",
+    "postgresError": "common column name \"shop_id\" appears more than once in left table",
+    "postgresErrorLine": 5,
+    "path": "service/src/shared-demand-tracking-repository.ts",
+    "function": "readTrackingHistory",
+    "scenarioReceipt": "scenario-tracking-first-undo-bVsSWa/receipt.json",
+    "scenarioReceiptSHA256": "c4794f261ae77475d772ad01af5d9f1caefd6665b33f7d7fe0488268d046eaa7"
+  },
+  "cleanup": {
+    "postgresStopped": true,
+    "privateStateRetained": true,
+    "privateMode": "0o700"
+  },
+  "publicEvidenceSHA256": {
+    "receipt.json": "78c1d57122540d1d7aa261db2e1c4a19715834792c8ea72c905b12a1da606f51",
+    "source-manifest.json": "31c1ed9a5ec1c045566655bb07cfd388725234c567efc75e509b59becbaaed65",
+    "compiled-service-manifest.json": "3640447d10fbddb93e9d687ede50e9bd8457c7408d21302f09cd6c844d302e2e",
+    "wire-result-manifest.json": "413aea59aac9526b2fba984614fd7873b45947bc757345ee3c32c90ba6391e53",
+    "combined-wire.log": "508d420c57a77d0e6c2df396a38271bd023ff359a02be2f0edfde517fafd9229"
+  }
+}
