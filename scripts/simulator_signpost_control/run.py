@@ -88,7 +88,7 @@ def compile_args(tool, source, binary):
 
 def sampler_summary(receipt):
     attempts=[d['stackSample'] for d in receipt.get('lifecycleCommands',[]) if 'stackSample' in d]
-    rows=[{k:s[k] for k in ('status','reason','error','cleanupError','incompleteProofError','terminalVerified','originalCommandVerified') if k in s} for s in attempts]
+    rows=[{k:s[k] for k in ('status','reason','error','cleanupError','incompleteProofError','terminalVerified','originalCommandVerified','terminationClassification') if k in s} for s in attempts]
     return {'samplerDiagnosticsComplete':all(s.get('status') in ('passed','not_needed') for s in attempts),
             'samplerDiagnostics':{'attempted':bool(attempts),'attempts':rows}}
 
@@ -292,6 +292,8 @@ def terminal_summary(phase, path, failure=None):
         summary['samplerDiagnosticsComplete']=value['samplerDiagnosticsComplete'] is True
         attempts=value.get('samplerDiagnostics',{}).get('attempts',[])
         summary['samplerStatuses']=[s.get('status') for s in attempts][:1]
+        summary['samplerTerminations']=[s.get('terminationClassification') for s in attempts if s.get('terminationClassification') in
+                                        ('normal_exit','signal_exit','handled_sigint_exit1')][:1]
         summary['samplerReasons']=[s.get('reason') for s in attempts if s.get('reason') in
                                    ('observation_timeout','post_startup_reserve_exhausted')][:1]
     print(json.dumps(summary,sort_keys=True));return summary

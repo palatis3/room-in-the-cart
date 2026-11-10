@@ -1468,4 +1468,126 @@ class SamplerLifecycleTests(unittest.TestCase):
             self.assertTrue(value['helperTransportQualified']);self.assertFalse(value['samplerDiagnosticsComplete'])
             self.assertEqual(value['samplerStatuses'],['incomplete']);self.assertEqual(value['samplerReasons'],['observation_timeout'])
 
+
+class HandledSIGINTTests(unittest.TestCase):
+    setUp=RuntimeSampleTests.setUp
+    sleep=RuntimeSampleTests.sleep
+    poll=RuntimeSampleTests.poll
+    identity=RuntimeSampleTests.identity
+    acquire=RuntimeSampleTests.acquire
+    prepare=RuntimeSampleTests.prepare
+    sampler=RuntimeSampleTests.sampler
+    def attempt(self,tmp,*,stderr=None,stdout=b'',report=False,exitcode=1,digest=None,after_cleanup=None,signal_error=False,delay=0):
+        self.prepare(tmp);self.sample_stat.st_size=272528
+        proc,spawn=self.sampler(1000);d={};original_cleanup=self.r.cleanup_sample
+        def start(*a,**kw):
+            self.clock+=delay;result=spawn(*a,**kw);Path(a[0][-1]).unlink();return result
+        def interrupt(sig):
+            if signal_error and sig==runner.signal.SIGINT:raise OSError('mock SIGINT delivery failed')
+            (self.r.out/'runtime-stack-sample-stderr.log').write_bytes(runner.HANDLED_SIGINT_STDERR if stderr is None else stderr)
+            (self.r.out/'runtime-stack-sample-stdout.log').write_bytes(stdout)
+            if report:(self.r.out/'booted-runtimes-stack.txt').write_bytes(b'partial')
+        proc.send_signal=mock.Mock(side_effect=interrupt)
+        def wait(timeout):proc.returncode=exitcode;return proc.returncode
+        proc.wait=wait  # Model the observed handler finishing after send_signal returns.
+        def cleanup(child):
+            original_cleanup(child)
+            if after_cleanup:after_cleanup(child)
+        self.r.cleanup_sample=cleanup
+        def hash_tool(path):return (digest or runner.HANDLED_SIGINT_SAMPLE_SHA256) if str(path)=='/usr/bin/sample' else 'digest'
+        with mock.patch.object(runner,'sha',side_effect=hash_tool),mock.patch.object(runner.subprocess,'Popen',side_effect=start) as popen:
+            self.r.sample_runtime(self.item,30,d)
+        popen.assert_called_once();return d['stackSample'],proc
+    def test_exact_handled_sigint_timeout_is_incomplete_only_after_all_proofs(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            r,proc=self.attempt(tmp)
+            self.assertEqual(r['status'],'incomplete');self.assertEqual(r['reason'],'observation_timeout')
+            self.assertEqual(r['terminationClassification'],'handled_sigint_exit1')
+            self.assertIn('SampleObservationTimeout',r['error']);self.assertTrue(r['incompleteSafetyVerified'])
+            self.assertTrue(r['terminalVerified']);self.assertTrue(r['sourceUnchanged']);self.assertTrue(r['toolUnchanged'])
+            self.assertEqual(self.r.sample_child['record']['signals'],['SIGINT']);self.assertEqual(proc.returncode,1)
+            self.r.sample_source_check.assert_called_once();self.assertNotIn('reportSHA256',r)
+            self.assertEqual(r['observationDeadlineMonotonic'],3);self.assertEqual(r['originalDeadlineMonotonic'],30)
+    def test_retained_hosted_handler_replay_is_classification_not_historical_qualification(self):
+        record={'label': 'bootstatus-stack-sample', 'argv': ['/usr/bin/sample', '12520', '1', '-file', '/Users/runner/work/room-in-the-cart/room-in-the-cart/.build/simulator-helper/prepare/bootstatus-stack.txt'], 'executableSHA256': '0527abd95ea1c5a2885489e0d6a76e06c69b66b8a69c7eab4f9276688815791b', 'spawnEpoch': 1794292321.565779, 'signals': ['SIGINT'], 'pid': 13015, 'binding': {'pid': 13015, 'parentPID': 11864, 'uid': 501, 'startTimeMicros': 1794292321656313, 'executable': '/usr/bin/sample'}, 'cleanupAuthority': 'retained_direct_Popen_default_SIGCHLD_exclusive_reaper', 'signalAttempts': [{'signal': 'SIGINT', 'waitSeconds': 2, 'delivery': 'returned_while_unreaped', 'waitOutcome': 'terminal'}], 'cleanupLadderComplete': True, 'exitCode': 1, 'terminalVerified': True}
+        original=copy.deepcopy(record)
+        with tempfile.TemporaryDirectory() as tmp:
+            self.r.out=Path(tmp)
+            (self.r.out/'bootstatus-stack-sample-stdout.log').write_bytes(b'')
+            (self.r.out/'bootstatus-stack-sample-stderr.log').write_bytes(b' [Interrupted]\nNot currently sampling -- exiting immediately.\n')
+            child={'process':SimpleNamespace(pid=13015),'record':copy.deepcopy(record),'binding':record['binding'],
+                   'expected':'/usr/bin/sample','digest':record['executableSHA256']}
+            report={'status':'failed','reason':'observation_timeout','toolUnchanged':True,
+                    'tool':{'sha256':record['executableSHA256'],'bytes':272528,'mode':493,'uid':0}}
+            with mock.patch.object(runner.os,'getpid',return_value=11864),mock.patch.object(runner.os,'getuid',return_value=501):
+                classification=self.r.sample_termination_classification(child,self.r.out/'bootstatus-stack.txt',report)
+            self.assertEqual(classification,'handled_sigint_exit1');self.assertEqual(report['status'],'failed')
+            self.assertNotIn('incompleteSafetyVerified',report);self.assertEqual(record,original)
+            self.assertEqual(report['handledSIGINTStderrSHA256'],runner.hashlib.sha256(runner.HANDLED_SIGINT_STDERR).hexdigest())
+    def test_exact_stderr_whitespace_newlines_and_no_extra_message_required(self):
+        for raw in (b'',runner.HANDLED_SIGINT_STDERR.lstrip(),runner.HANDLED_SIGINT_STDERR.rstrip(),
+                    runner.HANDLED_SIGINT_STDERR.replace(b'\n',b'\r\n'),runner.HANDLED_SIGINT_STDERR+b'other error\n',b'generic failure\n'):
+            with self.subTest(raw=raw),tempfile.TemporaryDirectory() as tmp:
+                r,_=self.attempt(tmp,stderr=raw);self.assertEqual(r['status'],'failed')
+                self.assertIn('sample_handled_sigint_stream',r['incompleteProofError'])
+    def test_nonempty_stdout_and_any_report_prevent_handler_admission(self):
+        for options in ({'stdout':b'output'},{'report':True}):
+            with self.subTest(options=options),tempfile.TemporaryDirectory() as tmp:
+                r,_=self.attempt(tmp,**options);self.assertEqual(r['status'],'failed')
+                self.assertNotIn('incompleteSafetyVerified',r)
+    def test_exit_one_without_owned_sigint_proof_remains_fatal(self):
+        for change in ('no_signal','no_attempt','terminal_before_delivery','extra_signal'):
+            def mutate(child):
+                record=child['record']
+                if change=='no_signal':record['signals']=[]
+                elif change=='no_attempt':record['signalAttempts']=[]
+                elif change=='terminal_before_delivery':record['signalAttempts'][0]['delivery']='terminal_observed_after_send'
+                else:record['signals'].append('SIGTERM')
+            with self.subTest(change=change),tempfile.TemporaryDirectory() as tmp:
+                r,_=self.attempt(tmp,after_cleanup=mutate);self.assertEqual(r['status'],'failed')
+                self.assertIn('unexpected_exit',r['incompleteProofError'])
+    def test_sigterm_after_failed_sigint_cannot_match_handled_sigint(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            r,proc=self.attempt(tmp,signal_error=True)
+            self.assertEqual(r['status'],'failed');self.assertEqual(self.r.sample_child['record']['signals'],['SIGTERM'])
+            self.assertIn('unexpected_exit',r['incompleteProofError'])
+    def test_other_nonzero_and_unreviewed_tool_hash_remain_fatal(self):
+        for options in ({'exitcode':2},{'exitcode':130},{'digest':'unreviewed-but-stable'}):
+            with self.subTest(options=options),tempfile.TemporaryDirectory() as tmp:
+                r,_=self.attempt(tmp,**options);self.assertEqual(r['status'],'failed')
+                self.assertIn('unexpected_exit',r['incompleteProofError'])
+    def test_unbound_reserve_exit_one_cannot_use_handler_case(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            r,_=self.attempt(tmp,delay=20)
+            self.assertEqual(r['reason'],'post_startup_reserve_exhausted');self.assertIsNone(self.r.sample_child['binding'])
+            self.assertEqual(r['status'],'failed');self.assertIn('unexpected_exit',r['incompleteProofError'])
+    def test_missing_binding_tool_drift_and_late_cleanup_still_fail(self):
+        for change in ('binding','tool','late'):
+            def mutate(child):
+                if change=='binding':child['binding']=None;child['record']['binding']=None
+                elif change=='tool':self.sample_stat.st_ino+=1
+                else:self.clock=30
+            with self.subTest(change=change),tempfile.TemporaryDirectory() as tmp:
+                r,_=self.attempt(tmp,after_cleanup=mutate);self.assertEqual(r['status'],'failed')
+                self.assertNotIn('incompleteSafetyVerified',r)
+    def test_source_check_failure_after_handler_classification_is_fatal(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            def mutate(child):self.r.sample_source_check=mock.Mock(side_effect=ValueError('source_changed'))
+            r,_=self.attempt(tmp,after_cleanup=mutate)
+            self.assertEqual(r['terminationClassification'],'handled_sigint_exit1');self.assertEqual(r['status'],'failed')
+            self.assertIn('source_changed',r['incompleteProofError'])
+    def test_normal_and_unhandled_signal_exit_classifications_remain_distinct(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            child={'record':{'exitCode':0}};self.assertEqual(self.r.sample_termination_classification(child,Path(tmp)/'none',{}),'normal_exit')
+            child={'record':{'exitCode':-2,'signalAttempts':[{'signal':'SIGINT','delivery':'returned_while_unreaped'}]}}
+            self.assertEqual(self.r.sample_termination_classification(child,Path(tmp)/'none',{}),'signal_exit')
+    def test_summary_preserves_handled_classification_without_transport_claim(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            r,_=self.attempt(tmp);summary=run.sampler_summary({'lifecycleCommands':[{'stackSample':r}]})
+            self.assertFalse(summary['samplerDiagnosticsComplete'])
+            self.assertEqual(summary['samplerDiagnostics']['attempts'][0]['terminationClassification'],'handled_sigint_exit1')
+            p=self.r.out/'receipt.json';p.write_text(json.dumps({'helperTransportQualified':False,**summary}))
+            with mock.patch('builtins.print'):printed=run.terminal_summary('run',p)
+            self.assertFalse(printed['helperTransportQualified']);self.assertEqual(printed['samplerTerminations'],['handled_sigint_exit1'])
+
 if __name__=='__main__':unittest.main()

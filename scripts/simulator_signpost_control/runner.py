@@ -1,5 +1,6 @@
 """Helper-only compiler SDK adapter and exact bounded lifecycle commands."""
 import os
+import hashlib
 import stat
 import signal
 import threading
@@ -8,6 +9,10 @@ import subprocess
 import time
 from app_scroll_observation.runner import Runner
 from app_scroll_observation.support import require, sha, launcher_identity
+
+# Exact observed hosted sample bytes/handler, scoped only to optional timeout cleanup.
+HANDLED_SIGINT_SAMPLE_SHA256='0527abd95ea1c5a2885489e0d6a76e06c69b66b8a69c7eab4f9276688815791b'
+HANDLED_SIGINT_STDERR=b' [Interrupted]\nNot currently sampling -- exiting immediately.\n'
 
 class SampleObservationTimeout(Exception):pass
 class SampleStartupReserveExhausted(Exception):pass
@@ -303,6 +308,39 @@ class HelperRunner(Runner):
         self.lifecycle_check(deadline)  # Original/phase expiry can never become optional.
         if time.monotonic()>=stop:raise SampleObservationTimeout('sample_observation_deadline')
 
+    def sample_termination_classification(self, child, output, report):
+        record=child['record'];code=record.get('exitCode')
+        delivered=[attempt['signal'] for attempt in record.get('signalAttempts',[])
+                   if attempt.get('delivery') in ('returned_while_unreaped','terminal_observed_after_send')]
+        if code==0:return 'normal_exit'
+        if any(code==-int(getattr(signal,name)) for name in delivered):return 'signal_exit'
+        # An exact observed SIGINT handler exits1; this is not generic nonzero admission.
+        binding=child.get('binding') or {};tool=report.get('tool',{})
+        require(code==1 and report.get('reason')=='observation_timeout'
+                and child.get('expected')=='/usr/bin/sample' and binding.get('executable')=='/usr/bin/sample'
+                and record.get('binding')==binding and binding.get('pid')==child['process'].pid
+                and binding.get('parentPID')==os.getpid() and binding.get('uid')==os.getuid()
+                and binding.get('startTimeMicros',0)>=int(record['spawnEpoch']*1_000_000)
+                and child.get('digest')==record.get('executableSHA256')==tool.get('sha256')==HANDLED_SIGINT_SAMPLE_SHA256
+                and tool.get('bytes')==272528 and tool.get('mode')==0o755 and tool.get('uid')==0
+                and report.get('toolUnchanged') is True and record.get('terminalVerified') is True
+                and record.get('cleanupLadderComplete') is True and record.get('signals')==['SIGINT']
+                and record.get('signalAttempts')==[{'signal':'SIGINT','waitSeconds':2,
+                    'delivery':'returned_while_unreaped','waitOutcome':'terminal'}],
+                'sample_incomplete_unexpected_exit')
+        require(record['label'] in ('bootstatus-stack-sample','runtime-stack-sample')
+                and not output.exists() and not output.is_symlink() and 'reportSHA256' not in report,
+                'sample_handled_sigint_report_or_scope')
+        for suffix,expected in (('stdout',b''),('stderr',HANDLED_SIGINT_STDERR)):
+            path=self.out/(record['label']+'-'+suffix+'.log');before=path.lstat()
+            require(stat.S_ISREG(before.st_mode) and before.st_size==len(expected),'sample_handled_sigint_stream_shape')
+            with path.open('rb') as stream:raw=stream.read(len(expected)+1)
+            after=path.lstat()
+            require(raw==expected and (before.st_dev,before.st_ino,before.st_mode,before.st_size,before.st_mtime_ns)==
+                    (after.st_dev,after.st_ino,after.st_mode,after.st_size,after.st_mtime_ns),'sample_handled_sigint_stream_bytes')
+        report['handledSIGINTStderrSHA256']=hashlib.sha256(HANDLED_SIGINT_STDERR).hexdigest()
+        return 'handled_sigint_exit1'
+
     def verify_incomplete_sample(self, target, child, output, deadline, report):
         custody=getattr(self,'sample_custody',None)
         require(child is not None and custody is not None and custody[0] is child
@@ -317,11 +355,7 @@ class HelperRunner(Runner):
         require(report.get('terminalVerified') is True and not report.get('cleanupError')
                 and report.get('toolUnchanged') is True and not report.get('toolAfterError'),
                 'sample_incomplete_custody_or_tool')
-        code=child['record'].get('exitCode')
-        delivered=[attempt['signal'] for attempt in child['record'].get('signalAttempts',[])
-                   if attempt.get('delivery') in ('returned_while_unreaped','terminal_observed_after_send')]
-        require(code==0 or any(code==-int(getattr(signal,name)) for name in delivered),
-                'sample_incomplete_unexpected_exit')
+        report['terminationClassification']=self.sample_termination_classification(child,output,report)
         self.lifecycle_check(deadline)
         if output.exists() or output.is_symlink():
             require(output.is_file() and not output.is_symlink() and output.stat().st_size<=2*1024**2,'sample_output_cap')
