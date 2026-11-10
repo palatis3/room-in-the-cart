@@ -109,7 +109,34 @@ test('Records v2 HTTP partial export preserves exact protected unknown transfers
  const requestFact=r.record.food.catalog.find(x=>x.source.kind==='request');assert.equal(requestFact.originalText,f.wording);assert.equal(requestFact.originalQuantityText,f.literal);assert.equal(requestFact.quantity,null);
  assert.equal(r.record.food.basket.find(x=>x.id===f.staple.lineId).priceMinor,null);assert.equal(r.record.food.basket.find(x=>x.id===f.basket.lineId).packs,2);
  const persisted=(await admin.query('SELECT graph FROM ritc.shared_demand_revision WHERE household_id=$1 AND shop_id=$2 AND revision=$3',[f.h,f.shopId,p.state.graph.revision])).rows[0];assert.deepEqual(r.record.food.graph,persisted.graph);
+ const history=ok(await call(f.owner,f.path+'/records/history/v1'));
+ const storedGraphs=(await admin.query('SELECT graph,pack_review FROM ritc.shared_demand_revision WHERE household_id=$1 AND shop_id=$2 ORDER BY revision',[f.h,f.shopId])).rows;
+ assert.deepEqual(history.record.foodHistory.demandRevisions.map(r=>r.graph),storedGraphs.map(r=>r.graph));
+ assert.deepEqual(history.record.foodHistory.demandRevisions.map(r=>r.packReviews),storedGraphs.map(r=>r.pack_review));
+ const storedStates=(await admin.query('SELECT state FROM ritc.shared_tracking_revision WHERE household_id=$1 AND shop_id=$2 ORDER BY shop_revision',[f.h,f.shopId])).rows;
+ assert.deepEqual(history.record.foodHistory.trackingRevisions.map(r=>r.food),storedStates.map(({state:{graph,basket,catalog,bindings,unbound,legacyLineIds,packReviews}})=>({graph,basket,catalog,bindings,unbound,legacyLineIds,packReviews})));
  assert.deepEqual(await domainRows(f),before);assert.equal((await call(f.owner,f.path+'/records/snapshot/v1')).status,409);
+});
+
+test('Records history HTTP preserves selected-shop manual stock observations including unknown and confirmed zero',async()=>{
+ const f=await fixture();let s=await head(f);
+ ok(await send(f,'shop.freeze',{},s.shopRevision,s.authorityEpoch));s=await head(f);
+ ok(await send(f,'shop.reportPlaced',{occurredAt:new Date().toISOString()},s.shopRevision,s.authorityEpoch));
+ const desk=async()=>ok(await call(f.owner,f.path+'/pantry-lots'));
+ const write=async(kind,body)=>{const current=await head(f);return ok(await send(f,kind,body,current.shopRevision,current.authorityEpoch));};
+ let p=await desk();const lot=await write('pantry.create',{pantryRevision:p.pantryRevision,supplyRevision:p.supplyRevision,location:'freezer',storedAt:null,useFirstAt:null,foodName:'Saved wraps',exclusionTags:[]});
+ for(const amount of [4,null,0]){
+  p=await desk();const current=p.lots.find(l=>l.lotId===lot.lotId);
+  const observation={pantryRevision:p.pantryRevision,supplyRevision:p.supplyRevision,lotId:lot.lotId,predecessorId:current.observation?.observationId??null,confirmedAt:new Date().toISOString(),quantity:amount===null?null:{amount:{numerator:amount,denominator:1},unit:'count',originalLiteral:amount+' saved wraps'}};
+  const preview=ok(await call(f.owner,f.path+'/pantry-lots/observation-preview','POST',observation));
+  await write('pantry.observe',{...observation,previewDigest:preview.previewDigest});
+ }
+ const before=(await admin.query('SELECT * FROM ritc.pantry_event WHERE household_id=$1 ORDER BY pantry_revision',[f.h])).rows;
+ const exported=ok(await call(f.owner,f.path+'/records/history/v1'));
+ assert.equal(exported.record.stockHistory.lots.length,1);assert.equal(exported.record.stockHistory.lots[0].lotId,lot.lotId);
+ assert.deepEqual(exported.record.stockHistory.events.map(e=>e.quantity?.amount.numerator??null),[4,null,0]);
+ assert.deepEqual(exported.record.stockHistory.events.map(e=>e.pantryRevision),before.map(e=>e.pantry_revision));
+ assert.deepEqual((await admin.query('SELECT * FROM ritc.pantry_event WHERE household_id=$1 ORDER BY pantry_revision',[f.h])).rows,before);
 });
 
 test('Records v2 HTTP repeat reads neither mint previews nor mutate current or historical domain rows',async()=>{

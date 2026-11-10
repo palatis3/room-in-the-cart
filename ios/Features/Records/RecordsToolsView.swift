@@ -153,8 +153,9 @@ struct RecordsToolsView: View {
                             .accessibilityIdentifier("records.source." + record.id)
                         Text(recordKindLabel(record.kind)).font(.caption).foregroundStyle(.secondary)
                         if record.kind == .sharedHistory {
-                            Text(recordsText("Includes basket and meal revisions, saved cook notes, deliveries, decisions and financial records. Stock-lot history and live household access are not restored."))
-                                .font(.caption).foregroundStyle(.secondary)
+                            ForEach(SharedHistoryArchiveAdapter.coverageKeys(record), id: \.self) { key in
+                                Text(recordsText(key)).font(.caption).foregroundStyle(.secondary)
+                            }
                         }
                         if record.kind == .sharedShop || record.kind == .sharedHistory {
                             Text(RecordsDatePresentation.sourceSavedAt(record.savedAtMilliseconds)).font(.caption).accessibilityIdentifier("records.sourceDate." + record.id)

@@ -3,8 +3,10 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {projectSharedHistory,readSharedRecordHistory} from '../dist/shared-records-history.js';
 import {digest} from '../dist/database.js';
+import {digest as trackingDigest} from '../dist/shared-demand-tracking.js';
 import {ServiceError} from '../dist/errors.js';
 const golden=JSON.parse(await readFile(new URL('../../shared/fixtures/shared-records/history-v1.json',import.meta.url),'utf8'));
+const foodGolden=JSON.parse(await readFile(new URL('../../shared/fixtures/shared-records/history-food-v1.json',import.meta.url),'utf8'));
 const copy=()=>structuredClone(golden.record),asOf=new Date(golden.asOf);
 const denied=e=>e instanceof ServiceError&&e.code==='shared_history_unavailable';
 
@@ -37,13 +39,15 @@ test('history never silently truncates rows, duplicates identities or oversized 
 });
 
 function reader(options={}){
- const record=copy(),calls=[],actor='00000000-0000-4000-8000-000000000900';
+ const record=structuredClone(options.enriched?foodGolden.record:golden.record),calls=[],actor='00000000-0000-4000-8000-000000000900';
  const ctx={householdId:record.origin.householdId,member:{member_id:actor,kind:'adult',state:'active'},now:asOf,
   db:{query:async(sql,values)=>{
    calls.push({sql,values});assert.match(sql,/^SELECT /);assert.equal(values[0],record.origin.householdId);
    let rows;
    if(sql.startsWith('SELECT 1 FROM ritc.shop '))rows=options.retired?[]:[{}];
    else if(sql.startsWith('SELECT 1 FROM ritc.cook_copy_pantry_scope'))rows=options.joint?[{}]:[];
+   else if(sql.startsWith('SELECT l.lot_id,l.origin_shop_id'))rows=(record.stockHistory?.lots??[]).map(l=>({lot_id:l.lotId,origin_shop_id:options.foreignDelivery&&l.deliverySourceId?record.origin.householdId:record.origin.shopId,delivery_source_id:l.deliverySourceId,actor_id:actor,history_retired_at:null}));
+   else if(sql.startsWith('SELECT DISTINCT e.actor_id'))rows=record.stockHistory?[{actor_id:actor,history_retired_at:options.retiredStock?asOf:null}]:[];
    else if(sql.startsWith('SELECT DISTINCT member_id'))rows=[{member_id:actor}];
    else if(sql.startsWith('SELECT * FROM ritc.member'))rows=[{member_id:actor,kind:'adult',state:options.revoked?'revoked':'active'}];
    else if(sql.includes('FROM ritc.shop_snapshot'))rows=record.basketRevisions.map(r=>{
@@ -60,6 +64,13 @@ function reader(options={}){
    else if(sql.includes('FROM ritc.family_decision'))rows=record.decisions;
    else if(sql.includes('FROM ritc.financial_entry'))rows=record.financialEntries;
    else if(sql.includes('FROM ritc.price_observation')){assert.match(sql,/retired_at IS NULL/);rows=record.priceObservations.map(record=>({record}));}
+   else if(sql.includes('FROM ritc.shared_demand_revision'))rows=(record.foodHistory?.demandRevisions??[]).map(r=>({shop_revision:r.shopRevision,predecessor:r.predecessorRevision,created_at:r.recordedAt,graph:r.graph,graph_digest:options.erasedFood?null:digest(r.graph),pack_review:r.packReviews}));
+   else if(sql.includes('FROM ritc.shared_tracking_revision'))rows=(record.foodHistory?.trackingRevisions??[]).map(r=>{
+    const state={schemaVersion:2,authorityEpoch:2,privacyRevision:0,quoteDigest:digest(record.basketRevisions.find(b=>b.revision===r.shopRevision).quote),...r.food};
+    return{shop_revision:r.shopRevision,state,state_digest:trackingDigest(state),projection:null,committed_at:r.recordedAt};
+   });
+   else if(sql.includes('FROM ritc.pantry_lot'))rows=record.stockHistory?.lots??[];
+   else if(sql.includes('FROM ritc.pantry_event'))rows=(record.stockHistory?.events??[]).map(e=>({lot_id:e.lotId,pantry_revision:e.pantryRevision,kind:e.kind,occurrence_id:e.occurrenceId??null,meal_revision:e.mealRevision??null,ingredient_id:e.ingredientId??null,group_id:e.groupId??null,enabled:e.selected??e.matched??null,confirmed_at:e.confirmedAt??null,quantity:e.quantity??null,committed_at:e.recordedAt}));
    else assert.fail(sql);
    return{rows:structuredClone(rows),rowCount:rows.length};
   }} };
@@ -69,7 +80,7 @@ function reader(options={}){
 }
 
 test('authorized Free history uses bounded read-only scope and strips snapshot-only receipts',async()=>{
- const f=reader();assert.deepEqual(await f.run(),golden);
+ const f=reader(),result=await f.run();assert.deepEqual(result.record,{...golden.record,foodHistory:{demandRevisions:[],trackingRevisions:[]},stockHistory:{lots:[],events:[]}});
  assert.ok(f.calls.filter(r=>r.sql.includes('LIMIT 2001')).length>=12);
  for(const call of f.calls.filter(r=>!r.sql.startsWith('SELECT * FROM ritc.member')))assert.equal(call.values[1],golden.record.origin.shopId);
 });
@@ -93,4 +104,26 @@ test('erased historical snapshot cannot be reconstructed from retained lines',as
 
 test('missing historical meal source fails rather than exporting a silently incomplete basket history',async()=>{
  const f=reader({missingMeal:true});await assert.rejects(f.run(),denied);
+});
+
+test('historical food and stock retain exact partition, protected release and known/unknown/zero chronology',async()=>{
+ assert.deepEqual(projectSharedHistory(foodGolden.record,asOf),foodGolden);
+ assert.deepEqual(await reader({enriched:true}).run(),foodGolden);
+ const {foodHistory,stockHistory}=foodGolden.record;
+ assert.equal(foodHistory.demandRevisions[0].graph.edges[0].kind,'withinExisting');
+ assert.deepEqual(foodHistory.trackingRevisions[1].food.unbound[0].transferred,foodHistory.demandRevisions[0].graph.contributions[1]);
+ assert.deepEqual(stockHistory.events.filter(e=>e.kind==='observe').map(e=>e.quantity?.amount.numerator??null),[4,2,null,0]);
+ assert.deepEqual(stockHistory.events.filter(e=>e.kind==='reserve').map(e=>e.quantity?.amount.numerator??null),[2,null]);
+ assert.equal(golden.record.foodHistory,undefined);assert.equal(golden.record.stockHistory,undefined);
+});
+
+test('historical scopes reject wrong graph ancestry, injected authority, invalid stock references and unavailable retained sources',async()=>{
+ const mutations=[r=>{r.foodHistory.demandRevisions[1].predecessorRevision=null;},
+  r=>{r.foodHistory.trackingRevisions[0].food.authorityEpoch=1;},
+  r=>{r.foodHistory.trackingRevisions[0].food.catalog[0].revision=999;},
+  r=>{r.stockHistory.events[0].lotId=r.origin.householdId;},
+  r=>{r.stockHistory.events[0].pantryRevision=2;},
+  r=>{r.foodHistory.demandRevisions[0].packReviews=[];}];
+ for(const mutate of mutations){const r=structuredClone(foodGolden.record);mutate(r);assert.throws(()=>projectSharedHistory(r,asOf),denied);}
+ for(const options of [{foreignDelivery:true},{retiredStock:true},{erasedFood:true}])await assert.rejects(reader({enriched:true,...options}).run(),denied);
 });

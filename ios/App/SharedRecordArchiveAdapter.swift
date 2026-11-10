@@ -136,6 +136,15 @@ enum SharedHistoryArchiveAdapter {
 }
 
 extension SharedHistoryArchiveAdapter {
+    static func coverageKeys(_ record: ArchiveRecord) -> [String] {
+        guard let value = try? validate(record) else { return [] }
+        return [
+            "Includes saved basket and meal revisions, cook notes, deliveries, decisions and financial records. Live household access is not restored.",
+            value.foodHistory == nil ? "Food allocation history was not captured in this copy." : "Food allocation history is included.",
+            value.stockHistory == nil ? "Stock-lot history was not captured in this copy." : "Stock-lot history is included."
+        ]
+    }
+
     static func readable(_ record: ArchiveRecord, locale: Locale = .current) throws -> String {
         let value = try validate(record), es = locale.language.languageCode?.identifier == "es"
         func w(_ en: String, _ esText: String) -> String { es ? esText : en }
@@ -148,7 +157,7 @@ extension SharedHistoryArchiveAdapter {
         }
         var lines = [w("Shared pickup history", "Historial de compra compartida"),
             w("Read-only copy. Household access and checkout authority are not restored.", "Copia de solo lectura. No restablece acceso al hogar ni permisos de compra."),
-            w("Includes basket and meal revisions, saved cook notes, deliveries, decisions and financial records. Stock-lot history and live household access are not restored.", "Incluye revisiones de cestas y comidas, notas de cocina guardadas, entregas, decisiones y registros financieros. No restablece el historial de lotes ni el acceso al hogar."),
+            w("Includes saved basket and meal revisions, cook notes, deliveries, decisions and financial records. Live household access is not restored.", "Incluye revisiones guardadas de cestas y comidas, notas de cocina, entregas, decisiones y registros financieros. No restablece el acceso al hogar."),
             w("Source household: ", "Hogar de origen: ") + value.origin.householdId.string,
             w("Source shop: ", "Compra de origen: ") + value.origin.shopId.string]
         func section(_ en: String, _ esText: String, _ count: Int) {
@@ -225,8 +234,85 @@ extension SharedHistoryArchiveAdapter {
         }
         section("Reserved food", "Alimentos reservados", value.deliveries.reservations.count)
         for reservation in value.deliveries.reservations {
-            lines.append(id(reservation.sourceId) + " → " + id(reservation.occurrenceId) + " / " + id(reservation.ingredientId) + " / " + id(reservation.groupId) + " · #\(reservation.supplyRevision) · " + quantity(reservation.quantity))
+            lines.append(id(reservation.sourceId) + " → " + id(reservation.occurrenceId) + " / " + id(reservation.ingredientId) + " / " + id(reservation.groupId) + " · #\(reservation.supplyRevision) · " + (reservation.quantity.map { quantity($0) } ?? w("Reservation released", "Reserva liberada")))
         }
+        func demandQuantity(_ q: SharedDemandQuantity?) -> String {
+            guard let q else { return unknown }
+            var result = "\(q.originalLiteral) (\(q.amount.numerator)/\(q.amount.denominator) \(q.unit.rawValue))"
+            if let conversion = q.confirmedConversion {
+                result += " · \(conversion.sourceNote) · \(conversion.targetAmountPerSourceUnit.numerator)/\(conversion.targetAmountPerSourceUnit.denominator) \(conversion.targetUnit.rawValue)/\(conversion.sourceUnit.rawValue) · \(conversion.confirmedAt)"
+            }
+            return result
+        }
+        func graphLines(_ graph: SharedDemandGraph, packs: [SharedDemandPackReview]) -> [String] {
+            var result = [w("Food revision: ", "Revisión de alimentos: ") + String(graph.revision)]
+            for contribution in graph.contributions {
+                result.append(contribution.originalText + " · " + demandQuantity(contribution.quantity))
+                if case .reservation = contribution.source { result.append(w("Protected reservation", "Reserva protegida")) }
+                if let removed = contribution.removedAt { result.append(w("Removed: ", "Eliminado: ") + removed) }
+                result += contribution.exclusions
+                for restriction in contribution.sourceExclusions ?? [] { result.append(restriction.label) }
+            }
+            for edge in graph.edges {
+                let demand = graph.contributions.first { $0.id == edge.demandId }?.originalText ?? edge.demandId.string
+                let supply = graph.contributions.first { $0.id == edge.supplyId }?.originalText ?? edge.supplyId.string
+                let kind = edge.kind == .withinExisting ? w("within existing quantity", "dentro de la cantidad existente") : w("duplicate", "duplicado")
+                result.append(demand + " → " + supply + " · " + kind + " · " + demandQuantity(edge.quantity))
+                result.append(edge.confirmation.evidence + " · " + edge.confirmation.confirmedAt)
+            }
+            for pack in packs {
+                let name = graph.lines.first { $0.id == pack.lineId }?.name ?? pack.lineId.string
+                result.append(name + " · " + w("usable per pack: ", "cantidad utilizable por paquete: ") + demandQuantity(pack.usablePerPack))
+                if pack.acceptUnresolved { result.append(w("Unresolved yield explicitly accepted", "Rendimiento sin determinar aceptado expresamente")) }
+            }
+            return result
+        }
+        if let history = value.foodHistory {
+            section("Food allocation history", "Historial de asignación de alimentos", history.demandRevisions.count + history.trackingRevisions.count)
+            for revision in history.demandRevisions {
+                lines.append(revision.recordedAt + " · " + w("Basket revision: ", "Revisión de la cesta: ") + String(revision.shopRevision))
+                if let predecessor = revision.predecessorRevision { lines.append(w("Previous food revision: ", "Revisión anterior de alimentos: ") + String(predecessor)) }
+                lines += graphLines(revision.graph, packs: revision.packReviews)
+            }
+            for revision in history.trackingRevisions {
+                let food = revision.food
+                lines.append(revision.recordedAt + " · " + w("Basket revision: ", "Revisión de la cesta: ") + String(revision.shopRevision))
+                lines += graphLines(food.graph, packs: food.packReviews)
+                for row in food.basket { lines.append(row.name + " · \(row.packs) " + w("packs", "paquetes") + " · " + money(row.priceMinor)) }
+                for fact in food.catalog {
+                    lines.append(fact.sourceLabel + " · " + fact.originalText + " · " + demandQuantity(fact.quantity))
+                    if let original = fact.originalQuantityText { lines.append(original) }
+                    lines += fact.sourceExclusions.map(\.label)
+                }
+                for unbound in food.unbound {
+                    let name = food.catalog.first { $0.id == unbound.factId }?.originalText ?? unbound.factId.string
+                    lines.append(name + " · " + w("Unbound; not available as free supply", "Sin vincular; no disponible como existencias libres"))
+                    if let retained = unbound.transferred { lines.append(w("Retained reviewed quantity: ", "Cantidad revisada conservada: ") + demandQuantity(retained.quantity)) }
+                }
+            }
+        } else { lines.append(w("Food allocation history was not captured in this copy.", "Esta copia no incluye el historial de asignación de alimentos.")) }
+        if let history = value.stockHistory {
+            section("Stock-lot history", "Historial de lotes", history.lots.count)
+            for lot in history.lots {
+                lines.append(lot.foodName + " · " + id(lot.lotId) + " · " + (lot.location == "freezer" ? w("Freezer", "Congelador") : w("Pantry", "Despensa")))
+                lines += lot.exclusionTags
+                lines.append(w("Stored: ", "Guardado: ") + (lot.storedAt ?? unknown) + " · " + w("Use first: ", "Usar primero: ") + (lot.useFirstAt ?? unknown))
+                if let delivery = lot.deliverySourceId { lines.append(w("Delivery source: ", "Fuente de entrega: ") + id(delivery)) }
+                for event in history.events where event.lotId == lot.lotId {
+                    lines.append(event.recordedAt + " · #\(event.pantryRevision)")
+                    switch event.details {
+                    case let .observe(confirmedAt, amount):
+                        lines.append(w("Confirmed usable quantity: ", "Cantidad utilizable confirmada: ") + quantity(amount) + " · " + confirmedAt)
+                    case let .select(selected):
+                        lines.append(selected ? w("Selected for this pickup", "Seleccionado para esta compra") : w("No longer selected for this pickup", "Ya no está seleccionado para esta compra"))
+                    case let .match(occurrence, revision, ingredient, matched):
+                        lines.append(id(occurrence) + " / " + id(ingredient) + " · #\(revision) · " + (matched ? w("matched", "vinculado") : w("unlinked", "sin vincular")))
+                    case let .reserve(occurrence, revision, ingredient, group, amount):
+                        lines.append(id(occurrence) + " / " + id(ingredient) + " / " + id(group) + " · #\(revision) · " + (amount.map { w("Reserved: ", "Reservado: ") + quantity($0) } ?? w("Reservation released", "Reserva liberada")))
+                    }
+                }
+            }
+        } else { lines.append(w("Stock-lot history was not captured in this copy.", "Esta copia no incluye el historial de lotes.")) }
         section("Decisions and outcomes", "Decisiones y resultados", value.decisions.count)
         for decision in value.decisions {
             lines.append(decision.recordedAt + " · " + [decision.dish, decision.product, decision.occasion].compactMap { $0 }.joined(separator: " · "))

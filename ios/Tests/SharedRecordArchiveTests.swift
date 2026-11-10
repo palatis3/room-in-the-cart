@@ -11,11 +11,19 @@ final class SharedRecordArchiveTests: XCTestCase {
     }
     @MainActor func testHistoricalArchiveIsEncryptedIndependentDeduplicatedAndNeverHelperData() async throws {
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
-        let bytes = try Data(contentsOf: root.appendingPathComponent("shared/fixtures/shared-records/history-v1.json"))
+        let legacyBytes = try Data(contentsOf: root.appendingPathComponent("shared/fixtures/shared-records/history-v1.json"))
+        let legacy = try SharedHistoryArchiveAdapter.make(SharedRecordHistoryWire.snapshot(from: legacyBytes))
+        XCTAssertTrue(SharedHistoryArchiveAdapter.coverageKeys(legacy).contains("Stock-lot history was not captured in this copy."))
+        XCTAssertTrue(SharedHistoryArchiveAdapter.coverageKeys(legacy).contains("Food allocation history was not captured in this copy."))
+        let bytes = try Data(contentsOf: root.appendingPathComponent("shared/fixtures/shared-records/history-food-v1.json"))
         let source = try SharedRecordHistoryWire.snapshot(from: bytes)
         let record = try SharedHistoryArchiveAdapter.make(source)
         try RecordsNativeCodec.validate(record)
         XCTAssertTrue(record.id.hasSuffix("/history"))
+        XCTAssertTrue(SharedHistoryArchiveAdapter.coverageKeys(record).contains("Stock-lot history is included."))
+        XCTAssertTrue(SharedHistoryArchiveAdapter.coverageKeys(record).contains("Food allocation history is included."))
+        let stock = try XCTUnwrap(source.record.stockHistory), food = try XCTUnwrap(source.record.foodHistory)
+        XCTAssertFalse(stock.events.isEmpty); XCTAssertFalse(food.demandRevisions.isEmpty)
         XCTAssertEqual(record.revision, ArchiveCodec.digest(try source.record.independentData()))
         XCTAssertThrowsError(try ArchiveCodec.make(records: [record], kind: .helperShop, origin: "history", revision: "1"))
         let envelope = try ArchiveCodec.make(records: [record], kind: .personalRecovery, origin: "history", revision: record.revision)
@@ -34,6 +42,14 @@ final class SharedRecordArchiveTests: XCTestCase {
             let text = try SharedHistoryArchiveAdapter.readable(record, locale: Locale(identifier: locale))
             XCTAssertTrue(text.contains(source.record.cookCopies[0].text))
             XCTAssertTrue(text.contains(source.record.decisions[0].decision))
+            for lot in stock.lots { XCTAssertTrue(text.contains(lot.foodName)) }
+            for revision in food.demandRevisions {
+                for contribution in revision.graph.contributions { XCTAssertTrue(text.contains(contribution.originalText)) }
+                for edge in revision.graph.edges { XCTAssertTrue(text.contains(edge.confirmation.evidence)) }
+            }
+            for event in stock.events { XCTAssertTrue(text.contains(event.recordedAt)) }
+            XCTAssertTrue(text.contains(locale == "es_US" ? "Reserva liberada" : "Reservation released"))
+            XCTAssertTrue(text.contains("confirmed no usable wraps"))
             XCTAssertFalse(text.contains("authorityEpoch")); XCTAssertFalse(text.contains("replayWindow"))
         }
         var forged = record; forged.revision = "different"

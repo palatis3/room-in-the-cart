@@ -2864,19 +2864,87 @@
         }
       }
     },
-    "Includes basket and meal revisions, saved cook notes, deliveries, decisions and financial records. Stock-lot history and live household access are not restored.": {
+    "Includes saved basket and meal revisions, cook notes, deliveries, decisions and financial records. Live household access is not restored.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Includes basket and meal revisions, saved cook notes, deliveries, decisions and financial records. Stock-lot history and live household access are not restored."
+            "value": "Includes saved basket and meal revisions, cook notes, deliveries, decisions and financial records. Live household access is not restored."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Incluye revisiones de cestas y comidas, notas de cocina guardadas, entregas, decisiones y registros financieros. No restablece el historial de lotes ni el acceso al hogar."
+            "value": "Incluye revisiones guardadas de cestas y comidas, notas de cocina, entregas, decisiones y registros financieros. No restablece el acceso al hogar."
+          }
+        }
+      }
+    },
+    "Food allocation history was not captured in this copy.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Food allocation history was not captured in this copy."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta copia no incluye el historial de asignación de alimentos."
+          }
+        }
+      }
+    },
+    "Food allocation history is included.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Food allocation history is included."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incluye el historial de asignación de alimentos."
+          }
+        }
+      }
+    },
+    "Stock-lot history was not captured in this copy.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stock-lot history was not captured in this copy."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta copia no incluye el historial de lotes."
+          }
+        }
+      }
+    },
+    "Stock-lot history is included.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stock-lot history is included."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incluye el historial de lotes."
           }
         }
       }

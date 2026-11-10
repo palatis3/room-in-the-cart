@@ -117,6 +117,155 @@ public struct SharedRecordHistory: Decodable, Equatable, Sendable {
         public let matches: [Match]
         public let reservations: [Reservation]
     }
+    /// Missing sections identify older archives, not an empty history.
+    public enum CaptureCoverage: String, Equatable, Sendable { case notCaptured, captured }
+    public struct FoodHistory: Decodable, Equatable, Sendable {
+        public struct DemandRevision: Decodable, Equatable, Sendable {
+            public let shopRevision: Int
+            public let predecessorRevision: Int?
+            public let recordedAt: String
+            public let graph: SharedDemandGraph
+            public let packReviews: [SharedDemandPackReview]
+            private enum K: String, CodingKey { case shopRevision, predecessorRevision, recordedAt, graph, packReviews }
+            public init(from decoder: Decoder) throws {
+                try demandExactKeys(decoder, ["shopRevision", "predecessorRevision", "recordedAt", "graph", "packReviews"])
+                let c = try decoder.container(keyedBy: K.self)
+                shopRevision = try c.decode(Int.self, forKey: .shopRevision)
+                predecessorRevision = try c.decode(Int?.self, forKey: .predecessorRevision)
+                recordedAt = try c.decode(String.self, forKey: .recordedAt)
+                graph = try trackingDecode(SharedDemandGraph.self, from: c.superDecoder(forKey: .graph), shape: .graph)
+                packReviews = try trackingDecode([SharedDemandPackReview].self, from: c.superDecoder(forKey: .packReviews), shape: .array(.pack))
+                try graph.validate(); try historyPacks(packReviews, graph: graph)
+                try demandRequire(demandRevision(shopRevision) && demandTime(recordedAt) != nil && graph.revision > 0)
+                try demandRequire(predecessorRevision == (graph.revision == 1 ? nil : graph.revision - 1))
+            }
+        }
+        public struct FoodPartition: Decodable, Equatable, Sendable {
+            public let graph: SharedDemandGraph
+            public let basket: [SharedTrackingBasketLine]
+            public let catalog: [SharedTrackingFact]
+            public let bindings: [SharedTrackingBinding]
+            public let unbound: [SharedTrackingUnboundFact]
+            public let legacyLineIds: [SharedDemandID]
+            public let packReviews: [SharedDemandPackReview]
+            private enum K: String, CodingKey { case graph, basket, catalog, bindings, unbound, legacyLineIds, packReviews }
+            public init(from decoder: Decoder) throws {
+                try demandExactKeys(decoder, ["graph", "basket", "catalog", "bindings", "unbound", "legacyLineIds", "packReviews"])
+                let c = try decoder.container(keyedBy: K.self)
+                graph = try trackingDecode(SharedDemandGraph.self, from: c.superDecoder(forKey: .graph), shape: .graph)
+                basket = try c.decode([SharedTrackingBasketLine].self, forKey: .basket)
+                catalog = try c.decode([SharedTrackingFact].self, forKey: .catalog)
+                bindings = try c.decode([SharedTrackingBinding].self, forKey: .bindings)
+                unbound = try c.decode([SharedTrackingUnboundFact].self, forKey: .unbound)
+                legacyLineIds = try c.decode([SharedDemandID].self, forKey: .legacyLineIds)
+                packReviews = try trackingDecode([SharedDemandPackReview].self, from: c.superDecoder(forKey: .packReviews), shape: .array(.pack))
+                try trackingValidateCore(HistoryFoodPartition(food: self)); try historyPacks(packReviews, graph: graph)
+            }
+        }
+        public struct TrackingRevision: Decodable, Equatable, Sendable {
+            public let shopRevision: Int
+            public let recordedAt: String
+            public let food: FoodPartition
+            private enum K: String, CodingKey { case shopRevision, recordedAt, food }
+            public init(from decoder: Decoder) throws {
+                try demandExactKeys(decoder, ["shopRevision", "recordedAt", "food"])
+                let c = try decoder.container(keyedBy: K.self)
+                shopRevision = try c.decode(Int.self, forKey: .shopRevision)
+                recordedAt = try c.decode(String.self, forKey: .recordedAt)
+                food = try c.decode(FoodPartition.self, forKey: .food)
+                try demandRequire(demandRevision(shopRevision) && demandTime(recordedAt) != nil)
+            }
+        }
+        public let demandRevisions: [DemandRevision]
+        public let trackingRevisions: [TrackingRevision]
+        private enum K: String, CodingKey { case demandRevisions, trackingRevisions }
+        public init(from decoder: Decoder) throws {
+            try demandExactKeys(decoder, ["demandRevisions", "trackingRevisions"])
+            let c = try decoder.container(keyedBy: K.self)
+            demandRevisions = try c.decode([DemandRevision].self, forKey: .demandRevisions)
+            trackingRevisions = try c.decode([TrackingRevision].self, forKey: .trackingRevisions)
+            try demandRequire(demandRevisions.count <= 2000 && trackingRevisions.count <= 2000)
+            try demandRequire(demandUnique(demandRevisions.map(\.shopRevision)) && demandUnique(demandRevisions.map { $0.graph.revision }))
+            try demandRequire(demandUnique(trackingRevisions.map(\.shopRevision)))
+        }
+    }
+    public struct StockHistory: Decodable, Equatable, Sendable {
+        public struct Lot: Decodable, Equatable, Sendable {
+            public let lotId: UUID
+            public let deliverySourceId: UUID?
+            public let location: String
+            public let storedAt, useFirstAt: String?
+            public let foodName: String
+            public let exclusionTags: [String]
+        }
+        public struct Event: Decodable, Equatable, Sendable {
+            public enum Details: Equatable, Sendable {
+                case observe(confirmedAt: String, quantity: SharedMealQuantity?)
+                case select(selected: Bool)
+                case match(occurrenceId: UUID, mealRevision: Int, ingredientId: UUID, matched: Bool)
+                case reserve(occurrenceId: UUID, mealRevision: Int, ingredientId: UUID, groupId: UUID, quantity: SharedMealQuantity?)
+            }
+            public let lotId: UUID
+            public let pantryRevision: Int
+            public let recordedAt: String
+            public let details: Details
+            public var kind: String {
+                switch details { case .observe: "observe"; case .select: "select"; case .match: "match"; case .reserve: "reserve" }
+            }
+            private enum K: String, CodingKey { case kind, lotId, pantryRevision, recordedAt, confirmedAt, quantity, selected, occurrenceId, mealRevision, ingredientId, matched, groupId }
+            public init(from decoder: Decoder) throws {
+                let c = try decoder.container(keyedBy: K.self)
+                let kind = try c.decode(String.self, forKey: .kind)
+                let common: Set<String> = ["kind", "lotId", "pantryRevision", "recordedAt"]
+                switch kind {
+                case "observe":
+                    try demandExactKeys(decoder, common.union(["confirmedAt", "quantity"]))
+                    let confirmedAt = try c.decode(String.self, forKey: .confirmedAt)
+                    let quantity = try trackingDecode(SharedMealQuantity?.self, from: c.superDecoder(forKey: .quantity), shape: .nullable(historyQuantity))
+                    try demandRequire(demandTime(confirmedAt) != nil); try historyQuantityValue(quantity, zero: true)
+                    details = .observe(confirmedAt: confirmedAt, quantity: quantity)
+                case "select":
+                    try demandExactKeys(decoder, common.union(["selected"]))
+                    details = .select(selected: try c.decode(Bool.self, forKey: .selected))
+                case "match", "reserve":
+                    let target: Set<String> = ["occurrenceId", "mealRevision", "ingredientId"]
+                    try demandExactKeys(decoder, common.union(target).union(kind == "match" ? ["matched"] : ["groupId", "quantity"]))
+                    let occurrence = try c.decode(UUID.self, forKey: .occurrenceId), revision = try c.decode(Int.self, forKey: .mealRevision)
+                    let ingredient = try c.decode(UUID.self, forKey: .ingredientId)
+                    try demandRequire(demandRevision(revision))
+                    if kind == "match" {
+                        details = .match(occurrenceId: occurrence, mealRevision: revision, ingredientId: ingredient, matched: try c.decode(Bool.self, forKey: .matched))
+                    } else {
+                        let quantity = try trackingDecode(SharedMealQuantity?.self, from: c.superDecoder(forKey: .quantity), shape: .nullable(historyQuantity))
+                        try historyQuantityValue(quantity)
+                        details = .reserve(occurrenceId: occurrence, mealRevision: revision, ingredientId: ingredient,
+                            groupId: try c.decode(UUID.self, forKey: .groupId), quantity: quantity)
+                    }
+                default: throw ClientError.invalidResponse
+                }
+                lotId = try c.decode(UUID.self, forKey: .lotId); pantryRevision = try c.decode(Int.self, forKey: .pantryRevision)
+                recordedAt = try c.decode(String.self, forKey: .recordedAt)
+                try demandRequire(demandRevision(pantryRevision) && demandTime(recordedAt) != nil)
+            }
+        }
+        public let lots: [Lot]
+        public let events: [Event]
+        private enum K: String, CodingKey { case lots, events }
+        public init(from decoder: Decoder) throws {
+            try demandExactKeys(decoder, ["lots", "events"])
+            let c = try decoder.container(keyedBy: K.self)
+            lots = try trackingDecode([Lot].self, from: c.superDecoder(forKey: .lots), shape: .array(historyObject(["lotId", "deliverySourceId", "location", "storedAt", "useFirstAt", "foodName", "exclusionTags"])))
+            events = try c.decode([Event].self, forKey: .events)
+            try demandRequire(lots.count <= 2000 && events.count <= 2000 && demandUnique(lots.map(\.lotId)) && demandUnique(events.map(\.pantryRevision)))
+            let identifiers = Set(lots.map(\.lotId))
+            for lot in lots {
+                try demandRequire(["pantry", "freezer"].contains(lot.location) && historyText(lot.foodName, 240))
+                try demandRequire((lot.storedAt.map { demandTime($0) != nil } ?? true) && (lot.useFirstAt.map { demandTime($0) != nil } ?? true))
+                try demandRequire(lot.exclusionTags.count <= 20 && lot.exclusionTags.allSatisfy { historyText($0, 240) })
+            }
+            try demandRequire(events.allSatisfy { identifiers.contains($0.lotId) })
+        }
+    }
     public let schemaVersion: Int
     public let projection: String
     public let origin: SharedIndependentRecord.Origin
@@ -130,13 +279,23 @@ public struct SharedRecordHistory: Decodable, Equatable, Sendable {
     public let decisions: [FamilyDecisionRecord]
     public let financialEntries: [ShopperFinancialEntry]
     public let priceObservations: [HistoryPriceObservation]
+    public let foodHistory: FoodHistory?
+    public let stockHistory: StockHistory?
+    public var foodHistoryCoverage: CaptureCoverage { foodHistory == nil ? .notCaptured : .captured }
+    public var stockHistoryCoverage: CaptureCoverage { stockHistory == nil ? .notCaptured : .captured }
     private let wire: JSONValue
     private enum K: String, CodingKey {
-        case schemaVersion, projection, origin, shopRevision, phase, basketRevisions, mealRevisions, cookCopies, cookSends, deliveries, decisions, financialEntries, priceObservations
+        case schemaVersion, projection, origin, shopRevision, phase, basketRevisions, mealRevisions, cookCopies, cookSends, deliveries, decisions, financialEntries, priceObservations, foodHistory, stockHistory
     }
     public init(from decoder: Decoder) throws {
-        try demandExactKeys(decoder, ["schemaVersion", "projection", "origin", "shopRevision", "phase", "basketRevisions", "mealRevisions", "cookCopies", "cookSends", "deliveries", "decisions", "financialEntries", "priceObservations"])
         let c = try decoder.container(keyedBy: K.self)
+        var keys: Set<String> = ["schemaVersion", "projection", "origin", "shopRevision", "phase", "basketRevisions", "mealRevisions", "cookCopies", "cookSends", "deliveries", "decisions", "financialEntries", "priceObservations"]
+        if c.contains(.foodHistory) { keys.insert("foodHistory") }
+        if c.contains(.stockHistory) { keys.insert("stockHistory") }
+        try demandExactKeys(decoder, keys)
+        // Only absence identifies a legacy archive. Present null fails closed.
+        foodHistory = c.contains(.foodHistory) ? try c.decode(FoodHistory.self, forKey: .foodHistory) : nil
+        stockHistory = c.contains(.stockHistory) ? try c.decode(StockHistory.self, forKey: .stockHistory) : nil
         schemaVersion = try c.decode(Int.self, forKey: .schemaVersion); projection = try c.decode(String.self, forKey: .projection)
         origin = try c.decode(SharedIndependentRecord.Origin.self, forKey: .origin)
         shopRevision = try c.decode(Int.self, forKey: .shopRevision); phase = try c.decode(String.self, forKey: .phase)
@@ -208,6 +367,55 @@ public struct SharedRecordHistory: Decodable, Equatable, Sendable {
             try demandRequire(HistoryValidation.cents(entry.amountMinor) && entry.currency == "USD" && demandTime(entry.occurredAt) != nil && HistoryValidation.text(entry.sourceText, 8192))
         }
         try demandRequire(priceObservations.allSatisfy { UUID(uuidString: $0.shopId) == origin.shopId.uuid })
+        let historicalOccurrences = Set(mealRevisions.filter { $0.meal != nil }.map(\.occurrenceId))
+        func sourceExists(_ source: SharedDemandSource) -> Bool {
+            source.origin.0.map { historicalOccurrences.contains($0) } ?? true
+        }
+        if let history = foodHistory {
+            let graphs = Dictionary(uniqueKeysWithValues: history.demandRevisions.map { ($0.graph.revision, $0) })
+            for revision in history.demandRevisions {
+                try demandRequire(revision.shopRevision <= shopRevision && baskets[revision.shopRevision] != nil)
+                try demandRequire(revision.graph.householdId == origin.householdId && revision.graph.shopId == origin.shopId)
+                try demandRequire(revision.predecessorRevision.map { graphs[$0] != nil } ?? true)
+                try demandRequire(revision.graph.contributions.allSatisfy { sourceExists($0.source) })
+            }
+            for revision in history.trackingRevisions {
+                let food = revision.food
+                try demandRequire(revision.shopRevision <= shopRevision && baskets[revision.shopRevision] != nil)
+                guard let demand = graphs[food.graph.revision], let basket = baskets[revision.shopRevision] else { throw ClientError.invalidResponse }
+                try demandRequire(demand.graph == food.graph && demand.shopRevision <= revision.shopRevision)
+                try demandRequire(food.basket.count == basket.basketLines.count)
+                for line in food.basket {
+                    guard let original = basket.basketLines.first(where: { UUID(uuidString: $0.lineId) == line.id.uuid }) else { throw ClientError.invalidResponse }
+                    try demandRequire(line.name == original.originalItem && line.packs == original.packs && line.priceMinor == original.unitPriceMinor && line.feeEligible == original.feeEligible)
+                }
+                try demandRequire(food.unbound.compactMap(\.transferred).allSatisfy { sourceExists($0.source) })
+                for fact in food.catalog {
+                    if let occurrence = fact.source.origin.0 {
+                        try demandRequire(meals.contains(mealKey(occurrence.uuid, fact.revision)))
+                    }
+                }
+            }
+        }
+        if let history = stockHistory {
+            for lot in history.lots {
+                if let delivery = lot.deliverySourceId { try demandRequire(delivery == lot.lotId && sources.contains(delivery)) }
+            }
+            for event in history.events {
+                switch event.details {
+                case .observe:
+                    try demandRequire(history.lots.first { $0.lotId == event.lotId }?.deliverySourceId == nil)
+                case .select: break
+                case .match(let occurrence, let revision, let ingredient, _):
+                    let meal = mealRevisions.first { $0.occurrenceId.uuid == occurrence && $0.revision == revision }?.meal
+                    try demandRequire(meal?.planning?.ingredients.contains { $0.id == ingredient } == true)
+                case .reserve(let occurrence, let revision, let ingredient, let group, _):
+                    let meal = mealRevisions.first { $0.occurrenceId.uuid == occurrence && $0.revision == revision }?.meal
+                    let item = meal?.planning?.ingredients.first { $0.id == ingredient }
+                    try demandRequire(item?.groupIds.contains(group) == true && meal?.planning?.groups.contains { $0.id == group } == true)
+                }
+            }
+        }
     }
     /// Preserve required nulls and original literals after every nested allowlist passed.
     public func independentData() throws -> Data {
@@ -216,6 +424,20 @@ public struct SharedRecordHistory: Decodable, Equatable, Sendable {
         try demandRequire(bytes.count <= SharedRecordHistoryWire.maximumResponseBytes)
         return bytes
     }
+}
+
+// Structural adapter only; these constants are never exported or usable as a live read binding.
+private struct HistoryFoodPartition: TrackingStateFields {
+    let food: SharedRecordHistory.FoodHistory.FoodPartition
+    var schemaVersion: Int { 2 }; var authorityEpoch: Int { 0 }; var privacyRevision: Int { 0 }
+    var graph: SharedDemandGraph { food.graph }; var basket: [SharedTrackingBasketLine] { food.basket }
+    var catalog: [SharedTrackingFact] { food.catalog }; var bindings: [SharedTrackingBinding] { food.bindings }
+    var unbound: [SharedTrackingUnboundFact] { food.unbound }; var legacyLineIds: [SharedDemandID] { food.legacyLineIds }
+}
+private func historyPacks(_ packs: [SharedDemandPackReview], graph: SharedDemandGraph) throws {
+    try demandRequire(packs.count <= 200 && demandUnique(packs.map(\.lineId)))
+    try demandRequire(Set(packs.map(\.lineId)) == Set(graph.lines.filter { $0.trashedAt == nil }.map(\.id)))
+    for pack in packs { try pack.usablePerPack?.validate() }
 }
 
 private func historyObject(_ scalarKeys: [String], _ nested: [String: TrackingWireShape] = [:]) -> TrackingWireShape {

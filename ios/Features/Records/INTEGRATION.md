@@ -54,6 +54,11 @@ Data and recovery now lists a separate **Shared pickup history** for the selecte
 assigned-shopper scope. It reads `/records/history/v1` afresh and includes saved
 basket/meal revisions, dated cook text and marked sends, deliveries and food
 reservations, family decisions, financial evidence and saved price observations.
+Optional `foodHistory` and `stockHistory` now retain exact demand graph ancestry,
+pack reviews, tracked/unbound quantities, selected-shop stock lots and observation,
+selection, match and reservation chronology. A released reservation is labeled as
+released; unknown stock remains distinct from confirmed zero. Older archives keep
+their original bytes and explicitly disclose sections that were not captured.
 Normal removed-meal revisions retain an explicit null marker. A historical file
 is an independent encrypted/readable record; it never supplies household access,
 consent, commands, replay receipts or live financial authority. Helper export of
@@ -62,16 +67,16 @@ erasure markers still prevent recovery.
 
 The existing server transaction rechecks current shopper scope and contributing
 members/consent before reading payloads. Retired shops, erased/missing referenced
-sources, cross-shop cook stock, or a size/count overflow make this history export
-explicitly unavailable; the separate current snapshot remains available. This
-bounded first history representation does not yet include stock-lot chronology or
-all historic food-graph allocations. Those requirements are still open; do not
-claim a complete historical backup from this component alone.
+sources, foreign-shop delivery lots/cook stock, or a size/count overflow make this
+history export explicitly unavailable; the separate current snapshot remains
+available. Cross-shop dependencies and controlled restore reconciliation remain
+open. This component does not establish complete historical backup acceptance.
 
-Focused server projection checks pass8/8 and Swift decoder/client checks pass6/6.
-The actual PostgreSQL suite passes442 with three separately assigned browser skips,
-including the new history route and strengthened revoked-source/erasure cases.
-Database logs are in `.build/SharedRecordsNov10/history-database`; its disposable
-cluster stopped successfully. Native app build and7focused archive tests pass with0skips and0reported runtime
-warnings in `.build/SharedRecordsNov10/history-native`. The new history screen
-has not received a separate human/device walkthrough.
+Focused server projection checks pass10/10 and Swift decoder/client checks pass9/9.
+The actual PostgreSQL suite passes443 with three separately assigned browser skips,
+including actual history export against stored tracking graphs and manual stock
+known/unknown/zero corrections. Database logs are in
+`.build/SharedRecordsNov10/history-food-database`; its disposable cluster stopped
+and was removed. Native app build and7focused archive tests pass with0skips and
+0reported runtime warnings in `.build/SharedRecordsNov10/history-food-native`.
+The extended readable history has not received a separate human/device walkthrough.

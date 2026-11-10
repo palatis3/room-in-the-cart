@@ -5,6 +5,9 @@ final class SharedRecordHistoryTests: XCTestCase {
     func testHistoricalFamiliesPreserveIndependentEvidenceAndRequiredNulls() throws {
         let snapshot = try SharedRecordHistoryWire.snapshot(from: sharedRecordFixture("history-v1"))
         let record = snapshot.record
+        XCTAssertEqual(record.foodHistoryCoverage, .notCaptured)
+        XCTAssertEqual(record.stockHistoryCoverage, .notCaptured)
+        XCTAssertNil(record.foodHistory); XCTAssertNil(record.stockHistory)
         XCTAssertEqual(record.basketRevisions.map(\.purpose), ["create", "freeze", "placed"])
         XCTAssertEqual(record.mealRevisions.first?.meal?.planning?.groups.first?.protected, true)
         XCTAssertEqual(record.mealRevisions.last?.revision, 3)
@@ -28,8 +31,84 @@ final class SharedRecordHistoryTests: XCTestCase {
         }
     }
 
+    func testCapturedAllocationAndStockCorrectionsRemainHistoricalEvidence() throws {
+        let record = try SharedRecordHistoryWire.snapshot(from: sharedRecordFixture("history-food-v1")).record
+        XCTAssertEqual(record.foodHistoryCoverage, .captured); XCTAssertEqual(record.stockHistoryCoverage, .captured)
+        let food = try XCTUnwrap(record.foodHistory), stock = try XCTUnwrap(record.stockHistory)
+        XCTAssertEqual(food.demandRevisions.map { $0.graph.revision }, [1, 2])
+        XCTAssertNil(food.demandRevisions[0].predecessorRevision)
+        XCTAssertEqual(food.demandRevisions[1].predecessorRevision, 1)
+        let allocation = try XCTUnwrap(food.demandRevisions[0].graph.edges.first)
+        XCTAssertEqual(allocation.kind, .withinExisting)
+        XCTAssertEqual(allocation.quantity.amount.numerator, 2)
+        XCTAssertEqual(allocation.quantity.originalLiteral, "2 original wraps")
+        let transferred = try XCTUnwrap(food.trackingRevisions[1].food.unbound.first?.transferred)
+        XCTAssertEqual(transferred.quantity?.originalLiteral, "2 original wraps")
+        XCTAssertTrue(food.trackingRevisions[1].food.graph.edges.isEmpty)
+        XCTAssertTrue(food.trackingRevisions[1].food.bindings.isEmpty)
+        XCTAssertEqual(stock.lots.map(\.location), ["freezer", "pantry"])
+        XCTAssertEqual(stock.events.map(\.pantryRevision), Array(1...8))
+        let observations = stock.events.filter { $0.kind == "observe" }
+        let quantities: [SharedMealQuantity?] = observations.map { event in
+            guard case .observe(_, let quantity) = event.details else { return nil }; return quantity
+        }
+        XCTAssertEqual(quantities.map { $0?.amount.numerator }, [4, 2, nil, 0])
+        XCTAssertEqual(quantities[1]?.originalLiteral, "two usable freezer wraps after correction")
+        guard case .reserve(_, _, _, _, let promised) = stock.events[3].details,
+              case .reserve(_, _, _, _, let released) = stock.events[4].details else { return XCTFail("Missing reservation chronology") }
+        XCTAssertEqual(promised?.amount.numerator, 2); XCTAssertNil(released)
+        let bytes = try record.independentData()
+        XCTAssertEqual(try SharedRecordHistoryWire.independentRecord(from: bytes), record)
+        let original = try XCTUnwrap(JSONSerialization.jsonObject(with: sharedRecordFixture("history-food-v1")) as? [String: Any])
+        XCTAssertEqual(try JSONSerialization.jsonObject(with: bytes) as? NSDictionary, original["record"] as? NSDictionary)
+        for key in ["authorityEpoch", "privacyRevision", "replayWindow", "operationId", "clientKey", "quoteDigest"] {
+            XCTAssertFalse(String(decoding: bytes, as: UTF8.self).contains(key), key)
+        }
+    }
+
+    func testCapturedHistoryRejectsMissingProvenanceAndAmbiguousCorrections() throws {
+        let original = try XCTUnwrap(JSONSerialization.jsonObject(with: sharedRecordFixture("history-food-v1")) as? [String: Any])
+        for variant in 0..<11 {
+            var object = original, record = object["record"] as! [String: Any]
+            var food = record["foodHistory"] as! [String: Any], demand = food["demandRevisions"] as! [[String: Any]]
+            var tracking = food["trackingRevisions"] as! [[String: Any]]
+            var stock = record["stockHistory"] as! [String: Any], events = stock["events"] as! [[String: Any]], lots = stock["lots"] as! [[String: Any]]
+            switch variant {
+            case 0: demand.removeFirst() // The second graph cannot lose its predecessor.
+            case 1: demand[0].removeValue(forKey: "predecessorRevision")
+            case 2: demand[0]["packReviews"] = []
+            case 3:
+                var partition = tracking[0]["food"] as! [String: Any], basket = partition["basket"] as! [[String: Any]]
+                basket[0]["packs"] = 3; partition["basket"] = basket; tracking[0]["food"] = partition
+            case 4: events[7]["pantryRevision"] = events[6]["pantryRevision"]
+            case 5: events[6].removeValue(forKey: "quantity") // Unknown must remain explicit null.
+            case 6: events[3]["groupId"] = UUID().uuidString
+            case 7: lots[1]["deliverySourceId"] = UUID().uuidString
+            case 8: events[0]["lotId"] = lots[1]["lotId"] // Delivery observations use the delivery evidence family.
+            default: break
+            }
+            food["demandRevisions"] = demand; food["trackingRevisions"] = tracking
+            stock["events"] = events; stock["lots"] = lots
+            record["foodHistory"] = variant == 9 ? NSNull() : food
+            record["stockHistory"] = variant == 10 ? NSNull() : stock
+            object["record"] = record
+            XCTAssertThrowsError(try SharedRecordHistoryWire.snapshot(from: JSONSerialization.data(withJSONObject: object)), "variant \(variant)")
+        }
+    }
+
+    func testCapturedEmptySectionsDifferFromLegacyAbsence() throws {
+        var object = try XCTUnwrap(JSONSerialization.jsonObject(with: sharedRecordFixture("history-v1")) as? [String: Any])
+        var record = object["record"] as! [String: Any]
+        record["foodHistory"] = ["demandRevisions": [], "trackingRevisions": []]
+        record["stockHistory"] = ["lots": [], "events": []]
+        object["record"] = record
+        let captured = try SharedRecordHistoryWire.snapshot(from: JSONSerialization.data(withJSONObject: object)).record
+        XCTAssertEqual(captured.foodHistoryCoverage, .captured); XCTAssertEqual(captured.stockHistoryCoverage, .captured)
+        XCTAssertTrue(try XCTUnwrap(captured.foodHistory).demandRevisions.isEmpty)
+        XCTAssertTrue(try XCTUnwrap(captured.stockHistory).events.isEmpty)
+    }
+
     func testInjectedAuthorityRejectsAtEveryObjectBoundary() throws {
-        let original = try JSONSerialization.jsonObject(with: sharedRecordFixture("history-v1"))
         // Walk every object, including quantity fractions, fee variants, meal
         // planning and price evidence, so reused permissive DTOs cannot leak keys.
         func variants(_ value: Any) -> [Any] {
@@ -48,10 +127,13 @@ final class SharedRecordHistoryTests: XCTestCase {
             }
             return []
         }
-        let injected = variants(original)
-        XCTAssertGreaterThan(injected.count, 40)
-        for variant in injected {
-            XCTAssertThrowsError(try SharedRecordHistoryWire.snapshot(from: JSONSerialization.data(withJSONObject: variant)))
+        for name in ["history-v1", "history-food-v1"] {
+            let original = try JSONSerialization.jsonObject(with: sharedRecordFixture(name))
+            let injected = variants(original)
+            XCTAssertGreaterThan(injected.count, 40)
+            for variant in injected {
+                XCTAssertThrowsError(try SharedRecordHistoryWire.snapshot(from: JSONSerialization.data(withJSONObject: variant)))
+            }
         }
     }
 

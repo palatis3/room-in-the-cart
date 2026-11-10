@@ -46,3 +46,22 @@ beside it. Database logs are in `.build/SharedRecordsNov10/history-database`.
 No hosted CI, additional UI journey or new custom verification infrastructure
 was used. See the Records integration note for supported families and remaining
 stock-lot/food-history scope.
+
+
+## Stock and allocation history extension
+
+The successor retains selected-shop stock chronology and historical food graphs,
+pack reviews and tracking partitions. Existing v1 files keep their original bytes;
+missing sections are disclosed rather than shown as empty. Readable EN/ES recovery
+preserves original quantities and labels reservation release separately from an
+unknown observation. The stored tracking state uses its original digest algorithm.
+
+Verification: TypeScript build and10focused service tests;9focused Swift history
+tests; app build and7archive tests,0failures/0skips/0runtime warnings. The existing
+PostgreSQL harness passes443with3declared browser skips (127seconds). Its real-route
+checks compare exported graphs/partitions with stored values and exercise stock
+corrections4→unknown→0 without export writes. Original result bundles/logs remain
+in `.build/SharedRecordsNov10/history-food-native` and `history-food-database`.
+No new wrapper, source archive, hosted run or unchanged UI suite was added.
+Foreign-shop delivery-stock/cook dependencies, controlled restore reconciliation,
+deployment and human/device acceptance remain open.
