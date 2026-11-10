@@ -266,17 +266,22 @@ compatibility gate; review the difference before another expensive run.
 
 Use this order for the combined candidate going forward:
 
-1. Resolve missing launch/scroll measurements before approving the Xcode 27.1
-   performance baseline. A passing XCTest with absent metrics remains incomplete.
-2. Resolve the original minimum-iOS journey failure. A passing reduced reproducer
-   does not qualify the full app. Keep framework faults distinct from app assertions.
-3. Install reviewed fixes, record one immutable candidate SHA, and freeze it for
-   the full regression batch. Record each run's tested checkout and scope with
-   `check_qualification_receipt.py`; do not assemble a green result from different
-   revisions. Any subsequent source change invalidates that candidate's acceptance.
+1. Finish promised product behavior and repair observed defects. Use affected
+   existing checks; optional measurement and simulator experiments do not hold
+   up unrelated app work.
+2. Batch the verified fixes, record one immutable candidate SHA, and run the
+   combined regression once. Inspect a still-running batch before dispatching
+   another. Keep the existing run URL and result bundles; ordinary development
+   does not require a new qualification receipt or source archive.
+3. Keep the missing launch/scroll measurements and original minimum-iOS failure
+   visible for their applicable qualification gates. A reduced reproducer or
+   passing XCTest without required metrics does not close them. Do not approve
+   an unmeasured performance baseline or relabel an unresolved check as passed.
 4. Review required merge gates on that candidate. Track physical-device, human
    accessibility/localization, provider and signed-distribution work separately in
    `RELEASE-EXECUTION.md`; green merge checks alone do not authorize App Store release.
+   A later edit requires the checks it can affect; the final aggregate must still
+   identify one qualified revision, rather than combining different revisions.
 
 Keep one coordinator for dispatch and one owner per failure cause. Before an
 expensive run, record the diagnostic question, changed input, expected distinction

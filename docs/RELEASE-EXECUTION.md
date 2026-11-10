@@ -20,9 +20,11 @@ result bundles; do not create additional source archives or receipt machinery.
 Follow the current lean-development priority in CI-VALIDATION.md. Do not
 combine separate passing revisions into a claim that one candidate passed.
 
-For every execution below, retain: exact candidate identity, case/requirement IDs,
+For final release acceptance below, retain: exact candidate identity, case/requirement IDs,
 executor, environment, date, expected result, actual result, evidence location and
 hash, and next action. Use `not run`, `passed`, `failed`, or `owner deferred`.
+For routine development, a short command/result note and the existing log or
+result bundle are enough; do not produce this full record for every edit.
 Missing or indirect proof is not a pass. Keep sensitive backup/provider originals
 in their approved private location; commit only redacted receipts and hashes.
 
