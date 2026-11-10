@@ -1,3 +1,4 @@
+import {captureTrackingSnapshot,prepareTrackingFreeze,takeTrackingSeal,assertTrackingPlacement} from './shared-demand-tracking-repository.js';
 import {applyDemand,demandOperation,demandSnapshotRef,assertDemandReplay,assertPriceOnly,assertDemandPlacement} from './shared-demand-repository.js';
 import { recordOrderAmendment } from './order-amendments.js';
 import { carryRequest, deferredRequests, reauthorizeCarry } from './deferred-requests.js';
@@ -30,7 +31,7 @@ export function ownRequest(r:RequestRow):OwnRequest {
     ownActionAllowed:editable(r),clarification:r.clarification,followupTo:r.followup_to};
 }
 export class HouseholdRepository {
-  constructor(readonly pool:Database,readonly options:{allowChildNetwork:boolean;noticeVersion:string;sessionStatus?:SessionStatusVerifier}) {}
+  constructor(readonly pool:Database,readonly options:{allowChildNetwork:boolean;noticeVersion:string;sessionStatus?:SessionStatusVerifier;trackingV2?:boolean}) {}
   async assertIdentityAllowed(db:Transaction,issuer:string,subject:string){
     const lock=(await db.query("SELECT pg_try_advisory_xact_lock_shared(hashtextextended($1,0)) AS acquired",[tokenHash(issuer+'\n'+subject)])).rows[0]?.acquired;
     if(!lock)throw new ServiceError(409,'account_action_pending','Wait for the pending account action to finish.');
@@ -256,10 +257,11 @@ export class HouseholdRepository {
   private async snapshot(ctx:Context,shopId:string,operationId:string,purpose:string,storeBasisKnown=true) {
     const shop=await this.shop(ctx,shopId),lines=await this.lines(ctx,shopId);
     const mealRefs=(await this.meals(ctx,shopId)).map(({occurrenceId,revision})=>({occurrenceId,revision}));
+    const tracking=await captureTrackingSnapshot(this,ctx,shop,operationId),trackingSeal=takeTrackingSeal(ctx,shopId);
     const demand=await demandSnapshotRef(ctx,shop,purpose==='reopen');
     // The internal store-adoption write precedes its basis update. Omit unknown
     // basis there rather than attest the previous selection as its final state.
-    const snapshot={shopId,...(storeBasisKnown?{storeBasis:{revision:shop.store_basis_revision??null,reviewRequired:shop.store_review_required??false}}:{}),...(demand?{demand}:{}),...(mealRefs.length ? {mealRefs} : {}),revision:shop.revision,phase:shop.phase,quote:shop.quote,lines,budget:checkout(lines,shop.quote)};
+    const snapshot={shopId,...(tracking?{tracking}:{}),...(trackingSeal?{trackingSeal}:{}),...(storeBasisKnown?{storeBasis:{revision:shop.store_basis_revision??null,reviewRequired:shop.store_review_required??false}}:{}),...(demand?{demand}:{}),...(mealRefs.length ? {mealRefs} : {}),revision:shop.revision,phase:shop.phase,quote:shop.quote,lines,budget:checkout(lines,shop.quote)};
     await ctx.db.query('INSERT INTO ritc.shop_snapshot(household_id,shop_id,revision,purpose,snapshot,digest,operation_id) VALUES($1,$2,$3,$4,$5,$6,$7)',[ctx.householdId,shopId,shop.revision,purpose,snapshot,digest(snapshot),operationId]);
   }
   private validateQuote(quote:QuoteBasis,now:Date) {
@@ -321,7 +323,7 @@ export class HouseholdRepository {
       // Reauthorize the original scope before returning anything about a prior result.
       if(prior.response_scope==='shopper'){
         const shop=await this.shop(ctx,prior.shop_id);this.requireShopper(ctx,shop);
-        await assertDemandReplay(ctx,shop,prior.operation_id);
+        await assertDemandReplay(this,ctx,shop,prior.operation_id);
         if(prior.kind==='amendment.recordResponse' && (prior.response?.authorityEpoch!==shop.authority_epoch || shop.confirmed_order_erased || !(await ctx.db.query(
           'SELECT 1 FROM ritc.order_amendment WHERE household_id=$1 AND shop_id=$2 AND operation_id=$3',[ctx.householdId,shop.shop_id,prior.operation_id])).rowCount)) throw refresh();
         if(prior.kind==='request.carry')await reauthorizeCarry(ctx,shop,this.carryNotice,prior.operation_id);
@@ -498,7 +500,7 @@ export class HouseholdRepository {
       await this.snapshot(ctx,shop.shop_id,operationId,'patch',!internalPriceOnly);return this.receipt(ctx,c,operationId,'patched');
     }
     if(c.kind==='shop.freeze') {
-      this.requireDraft(shop);
+      this.requireDraft(shop);await prepareTrackingFreeze(this,ctx,shop,bodySchemas['shop.freeze'].parse(c.body).trackingReview);
       if(shop.demand_review_required)throw new ServiceError(409,'demand_review_required','Review shared source quantities before freezing this shop.');
       if (shop.store_review_required) {
         throw new ServiceError(409,'store_review_required','Review current item prices and charges after changing stores.');
@@ -516,7 +518,7 @@ export class HouseholdRepository {
       const r=(await ctx.db.query('SELECT * FROM ritc.placement_report WHERE household_id=$1 AND report_id=$2 AND shop_id=$3',[ctx.householdId,b.reportId,shop.shop_id])).rows[0];
       if(!r)throw unavailable();if(r.state!=='pending_reconciliation')throw new ServiceError(409,'already_handled','Review the recorded report.');
       if(b.choice==='apply') {
-        await assertDemandPlacement(ctx,shop,r.reported_revision);
+        await assertTrackingPlacement(this,ctx,shop,r.reported_revision);await assertDemandPlacement(ctx,shop,r.reported_revision);
         if(shop.phase!=='frozen'||shop.frozen_revision!==r.reported_revision)throw new ServiceError(409,'reconciliation_required','The report differs from the frozen basket. Preserve both records for review.');
         await this.place(ctx,shop,operationId,r.reported_revision);
       }
@@ -576,7 +578,7 @@ export class HouseholdRepository {
     return this.receipt(ctx,c,operationId,status,{requestId:r.request_id,requestRevision:r.revision+1});
   }
   private async place(ctx:Context,shop:Shop,operationId:string,snapshotRevision:number) {
-    await assertDemandPlacement(ctx,shop,snapshotRevision);
+    await assertTrackingPlacement(this,ctx,shop,snapshotRevision);await assertDemandPlacement(ctx,shop,snapshotRevision);
     await ctx.db.query("UPDATE ritc.shop SET phase='placed',placed_revision=$3,revision=revision+1 WHERE household_id=$1 AND shop_id=$2",[ctx.householdId,shop.shop_id,snapshotRevision]);
     await ctx.db.query("UPDATE ritc.request SET route='next',revision=revision+1 WHERE household_id=$1 AND shop_id=$2 AND status IN('pending','clarified') AND route='current'",[ctx.householdId,shop.shop_id]);
     await this.snapshot(ctx,shop.shop_id,operationId,'placed');

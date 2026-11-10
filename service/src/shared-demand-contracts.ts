@@ -50,4 +50,4 @@ export function sharedDemandJSONSchema(){return {$schema:'https://json-schema.or
  $defs:{graph:z.toJSONSchema(sharedDemandGraphSchema),change:z.toJSONSchema(sharedDemandChangeSchema),receipt:z.toJSONSchema(sharedDemandReceiptSchema)},
  'x-semantic-validation':'shared-demand-domain.validateDemandGraph/applyDemandChange; reduced Int64 rationals, identity/reference/cycle, product/exclusion, capacity and protected conservation checks remain mandatory.'};}
 
-export const demandReviewSchema=z.object({previewId:id,previewDigest:z.string().regex(/^[0-9a-f]{64}$/)}).strict();
+export const demandReviewSchema=z.object({previewId:id,previewDigest:z.string().regex(/^[0-9a-f]{64}$/),trackingVersion:z.literal(2).optional()}).strict();

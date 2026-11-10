@@ -16,6 +16,7 @@ export type FoodUndoStoreBasis=z.infer<typeof foodUndoStoreBasisSchema>;
 const snapshotSchema=z.object({shopId:id,revision:z.number().int().positive(),phase:z.literal('draft'),
  demand:z.object({schemaVersion:z.literal(1),revision:z.number().int().positive(),digest:z.string().regex(/^[a-f0-9]{64}$/)}).strict(),
  storeBasis:storedBasis.optional(),
+ tracking:z.object({schemaVersion:z.literal(2),shopRevision:z.number().int().positive(),digest:z.string().regex(/^[a-f0-9]{64}$/),status:z.literal('recorded')}).strict().optional(),
  mealRefs:z.array(z.object({occurrenceId:id,revision:z.number().int().positive()}).strict()).optional(),
  quote:quoteSchema,lines:z.array(lineSchema).max(200),budget:z.unknown()}).strict();
 export type FoodEffect={operation_id:string;shop_id:string;household_id:string;base_shop_revision:number;result_shop_revision:number;
@@ -30,6 +31,9 @@ function snapshot(row:FoodUndoEvidence['before']){
  insist(row&&row.digest!=='0'.repeat(64)&&row.digest===digest(row.snapshot),'history_unavailable');
  const parsed=snapshotSchema.safeParse(row.snapshot);insist(parsed.success,'history_unavailable');
  insist(new Set(parsed.data.lines.map(l=>l.lineId)).size===parsed.data.lines.length,'history_unavailable');
+ // Additive internal tracking metadata is accepted only for this exact snapshot.
+ // V1 admission separately rejects partial/redacted tracking before deriving Undo.
+ insist(!parsed.data.tracking||parsed.data.tracking.shopRevision===parsed.data.revision,'history_unavailable');
  insist(eq(parsed.data.budget,checkout(parsed.data.lines,parsed.data.quote)),'history_unavailable');return parsed.data;
 }
 // Missing old metadata is compatible only with the original no-store path.

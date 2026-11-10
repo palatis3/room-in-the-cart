@@ -1,3 +1,5 @@
+import {PartitionError} from './shared-demand-tracking.js';
+import {readTracking,createTrackingCandidate,acceptTrackingCandidate,readTrackingRecord,readTrackingHistory} from './shared-demand-tracking-repository.js';
 import {readSharedRecordSnapshot} from './shared-records.js';
 import {SharedDemandError} from './shared-demand-domain.js';
 import {previewDemand,readDemand,readActionDemandSources,readFoodOperationHistory,previewFoodOperationUndo,readFoodOperationUndoCandidate} from './shared-demand-repository.js';
@@ -45,6 +47,7 @@ async function body(req:IncomingMessage,maxBytes=65_536):Promise<unknown>{try{re
 // A disclosed recipe may be larger than an ordinary command. Keep the
 // command's byte limit for every other kind, including JSON whitespace.
 async function householdBody(req:IncomingMessage,path:string) {
+  if(path.endsWith('/demand/tracking/candidates')||path.endsWith('/demand/tracking/previews'))return body(req,1_800_000);
   if(path.endsWith('/demand/previews')) return body(req,1_800_000);
   if(path.endsWith('/accepted-fallbacks')) return body(req,540_000);
   if(path.endsWith('/meal-recovery/options') || path.endsWith('/meal-recovery/preview')) return body(req,1_800_000);
@@ -394,6 +397,11 @@ export function createHTTPServer(options:HTTPOptions) {
           if(tail==='/meal-plan/dismissals'&&method==='POST')return mealMoves.dismiss(ctx,shopId,dismissMove.parse(payload));
           if(tail==='/meal-plan/proposals'&&method==='POST')return mealMoves.propose(ctx,shopId,moveRequest.parse(payload));
           if(tail==='/records/snapshot'&&method==='GET')return readSharedRecordSnapshot(repository,ctx,await repository.shop(ctx,shopId));
+          if(tail==='/demand/tracking/operations'&&method==='GET')return readTrackingHistory(repository,ctx,await repository.shop(ctx,shopId));
+          if(tail==='/demand/tracking'&&method==='GET')return readTracking(repository,ctx,await repository.shop(ctx,shopId));
+          if(tail==='/demand/tracking/candidates'&&method==='POST')return createTrackingCandidate(repository,ctx,await repository.shop(ctx,shopId),payload);
+          if(tail==='/demand/tracking/previews'&&method==='POST')return acceptTrackingCandidate(repository,ctx,await repository.shop(ctx,shopId),payload);
+          if(tail==='/records/tracking-snapshot'&&method==='GET')return readTrackingRecord(repository,ctx,await repository.shop(ctx,shopId));
           if(tail==='/demand'&&method==='GET')return readDemand(repository,ctx,await repository.shop(ctx,shopId));
           if(tail==='/demand/action-sources'&&method==='POST')return readActionDemandSources(repository,ctx,await repository.shop(ctx,shopId),payload);
           if(tail==='/demand/operations'&&method==='GET')return readFoodOperationHistory(repository,ctx,await repository.shop(ctx,shopId),url.searchParams.get('beforeRevision'));
@@ -412,6 +420,7 @@ export function createHTTPServer(options:HTTPOptions) {
       let safe:ServiceError;
       if(error instanceof ServiceError)safe=error;
       else if(error instanceof z.ZodError)safe=invalid();
+      else if(error instanceof PartitionError)safe=new ServiceError(409,error.code,'Review the current tracking facts and sources.');
       else if(error instanceof SharedDemandError)safe=new ServiceError(422,error.code,'Review the shared source quantities and allocation choices.');
       else if(error&&typeof error==='object'&&'code'in error&&error.code==='23505')safe=new ServiceError(409,'identity_conflict','Refresh current records before retrying.');
       else if(error&&typeof error==='object'&&'code'in error&&['23503','23514'].includes(String(error.code)))safe=new ServiceError(422,'invalid_candidate','Review linked records and required values.');

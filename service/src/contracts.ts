@@ -91,7 +91,7 @@ export const bodySchemas = {
   'delivery.reserve': deliveryReservationBody, 'delivery.match': deliveryMatchBody, 'delivery.register': deliverySourceBody, 'delivery.arrival': deliveryArrivalBody, 'delivery.usable': deliveryUsableBody,
   'shop.create': z.object({ quote: quoteSchema, lines: z.array(lineSchema).max(200) }).strict(),
   'shop.patch': z.object({ quote: quoteSchema, lines: z.array(lineSchema).max(200), mealEdit: mealEdit.optional(), demandReview:demandReviewSchema.optional(), reviewedStoreBasisRevision: z.number().int().positive().optional() }).strict(),
-  'shop.freeze': empty, 'shop.reopen': empty,
+  'shop.freeze': z.object({trackingReview:demandReviewSchema.optional()}).strict(), 'shop.reopen': empty,
   'shop.reportPlaced': z.object({ occurredAt: timestamp }).strict(),
   'shop.reconcileReport': z.object({ reportId: uuid, choice: z.enum(['apply','reject']) }).strict(),
   'shop.transferAuthority': z.object({ newShopperId: uuid }).strict(),

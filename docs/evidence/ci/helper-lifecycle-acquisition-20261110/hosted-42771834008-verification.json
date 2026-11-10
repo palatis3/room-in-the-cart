@@ -1,0 +1,33 @@
+{
+  "status": "failed",
+  "runID": 42771834008,
+  "sourceCommit": "36374e94f8511ce4a0edd03e0ebe17434d1c0ec0",
+  "rootIndependentReadback": true,
+  "zipSHA256": "bc6c0f5d46305f93321abafc1c5bb90acc1f43c6e7a677d7dad5028efb427b95",
+  "zipMembers": 5,
+  "tarSHA256": "85ad27b1ce2ac05593ffcf0fc73fdd85560fd5a465169459e3c2a9b75a22c779",
+  "tarMembers": 22,
+  "sourcePins": 50,
+  "firstCause": "ValueError: helper_lifecycle_deadline",
+  "stage": "boot",
+  "bootBudgetSeconds": 180,
+  "bootElapsedSeconds": 181.53653295900006,
+  "sampler": {
+    "status": "incomplete",
+    "terminationClassification": "handled_sigint_exit1",
+    "safetyVerified": true,
+    "timeRemainingOnBootDeadlineAfterSampleSeconds": 10.818663625
+  },
+  "helperTransportQualified": false,
+  "allKnownChildrenTerminal": true,
+  "cleanup": {
+    "error": "ValueError: helper_lifecycle_deadline",
+    "failedCommand": "simctl list -j",
+    "budgetSeconds": 30,
+    "elapsedSeconds": 31.98880350000013,
+    "ownedDeviceDeleted": false,
+    "shutdownOrDeleteStarted": false
+  },
+  "artifactPath": "/Users/palatis/Room in the Cart/.build/HostedAppObservationNov09/hosted-helper-42771834008/artifact.zip",
+  "scope": "Helper boot and cleanup failed before signpost capture. Sampler outcome is independently proved incomplete, never performance acceptance."
+}

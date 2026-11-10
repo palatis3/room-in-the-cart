@@ -86,7 +86,7 @@ test('new authoritative sources are deterministic and carry no inferred product 
 });
 function endpointFixture(){
  const f=fixture(),shop={shop_id:f.shopId,revision:3,authority_epoch:1,demand_revision:1,demand_review_required:false,phase:'draft'},calls=[];
- const ctx={householdId:f.householdId,member:{member_id:randomUUID(),kind:'adult'},deviceId:randomUUID(),now:new Date('2026-11-09T00:00:00Z'),db:{query:async(sql,args)=>{calls.push({sql,args});assert.match(sql,/^SELECT /);return{rows:[{graph:f.graph,graph_digest:digest(f.graph),receipt:{}}]};}}};
+ const ctx={householdId:f.householdId,member:{member_id:randomUUID(),kind:'adult'},deviceId:randomUUID(),now:new Date('2026-11-09T00:00:00Z'),db:{query:async(sql,args)=>{calls.push({sql,args});assert.match(sql,/^SELECT /);if(sql.includes('FROM ritc.shared_tracking_revision'))return{rows:[]};return{rows:[{graph:f.graph,graph_digest:digest(f.graph),receipt:{}}]};}}};
  const repo={requireShopper(){},requireDraft(s){assert.equal(s.phase,'draft');},checkBase(s,b){assert.equal(b.shopRevision,s.revision);assert.equal(b.authorityEpoch,s.authority_epoch);},meals:async()=>structuredClone(f.occurrences)};
  const quote={currency:'USD',scope:'wholeCheckout',complete:true,capMinor:10000,capScope:'wholeCheckout',fee:{kind:'fixed',amountMinor:0},taxesMinor:0,depositsMinor:0,discountsMinor:0,observedAt:'2026-11-08T23:00:00Z',expiresAt:'2026-11-10T00:00:00Z'};
  const input={base:{shopRevision:3,authorityEpoch:1,graphRevision:1,graphDigest:digest(f.graph)},action:{kind:'shop.patch',body:{quote,lines:[{lineId:f.lineId,originalItem:'Wraps',packs:2,unitPriceMinor:100,feeEligible:true}],mealEdit:{occurrenceId:f.occurrenceId,baseMealRevision:2,meal:structuredClone(f.meal)}}}};

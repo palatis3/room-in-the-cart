@@ -1,0 +1,28 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {randomUUID} from 'node:crypto';
+import {trackingBasket,trackingIntentSchema,readTracking,trackingCatalog,assertTrackingV1,trackingOperation} from '../dist/shared-demand-tracking-repository.js';
+import {demandReviewSchema} from '../dist/shared-demand-contracts.js';
+import {digest as trackingDigest} from '../dist/shared-demand-tracking.js';
+import {digest as storeDigest} from '../dist/database.js';
+import {bodySchemas} from '../dist/contracts.js';
+const id=()=>randomUUID(),hash='a'.repeat(64),base={shopRevision:1,graphRevision:0,authorityEpoch:1,stateDigest:hash};
+const ctx={householdId:id(),member:{member_id:id()},deviceId:id(),now:new Date()};
+const shop={shop_id:id(),revision:1};
+const never={query:()=>{throw new Error('unexpected content read');}};
+test('tracking is default-off before any database/content read',async()=>{await assert.rejects(readTracking({options:{},requireShopper:()=>{}},{...ctx,db:never},shop),e=>e.status===404||e.statusCode===404||e.code==='not_available');});
+test('tracking rejects nonshopper before content read even when enabled',async()=>{const denied=new Error('scope');await assert.rejects(readTracking({options:{trackingV2:true},requireShopper:()=>{throw denied;}},{...ctx,db:never},shop),e=>e===denied);});
+test('version marker is explicit, v1 token shape unchanged, unknown versions rejected',()=>{const old={previewId:id(),previewDigest:hash};assert.deepEqual(demandReviewSchema.parse(old),old);assert.equal(demandReviewSchema.parse({...old,trackingVersion:2}).trackingVersion,2);assert.equal(demandReviewSchema.safeParse({...old,trackingVersion:1}).success,false);assert.equal(demandReviewSchema.safeParse({...old,trackingVersion:3}).success,false);});
+test('freeze retains empty legacy command and requires typed tracking token',()=>{assert.deepEqual(bodySchemas['shop.freeze'].parse({}),{});assert.equal(bodySchemas['shop.freeze'].safeParse({trackingReview:{previewId:id(),previewDigest:hash,trackingVersion:2}}).success,true);assert.equal(bodySchemas['shop.freeze'].safeParse({trackingReview:true}).success,false);});
+test('strict v2 intents do not accept client authority, catalog or historical evidence',()=>{const intent={mode:'firstAdoptionUndo',base,targetOperationId:id(),packs:[]};assert.equal(trackingIntentSchema.safeParse(intent).success,true);for(const key of ['authorized','catalog','evidence','privacyRevision','storeBasis'])assert.equal(trackingIntentSchema.safeParse({...intent,[key]:true}).success,false,key);});
+test('recovery accepts fresh pack review only, never arbitrary replacement state',()=>{const value={mode:'recover',base,packs:[]};assert.equal(trackingIntentSchema.safeParse(value).success,true);assert.equal(trackingIntentSchema.safeParse({...value,state:{}}).success,false);assert.equal(trackingIntentSchema.safeParse({...value,change:{}}).success,false);});
+test('rebind does not accept supplied contribution or quantity authority',()=>{assert.equal(trackingIntentSchema.safeParse({mode:'rebind',base,bindings:[{factId:id(),contribution:{id:id()}}]}).success,false);});
+test('candidate token alone cannot reserve an Apply operation',async()=>{const preview={operation_id:id(),accepted_digest:null,review:null};await assert.rejects(trackingOperation({...ctx,db:{query:async()=>({rows:[preview]})}},shop.shop_id,{previewId:id(),previewDigest:hash,trackingVersion:2}),e=>e.code==='tracking_preview_not_reviewed');});
+test('legacy shops without a tracking row retain v1 admission',async()=>{await assertTrackingV1({}, {...ctx,db:{query:async()=>({rows:[]})}},shop);});
+test('redacted state cannot be admitted to v1 by losing its digest',async()=>{await assert.rejects(assertTrackingV1({}, {...ctx,db:{query:async()=>({rows:[{state:null,state_digest:null,projection:{}}]})}},shop),e=>e.code==='tracking_v2_required');});
+test('catalog author consent is checked even for unbound accepted request',async()=>{const author=id(),request=id(),line=id();let consent=0;const db={query:async sql=>({rows:sql.includes('JOIN ritc.request')?[{request_id:request,line_id:line,reviewed_revision:3,original_item:'Exact request',own_quantity:'two bags?',author_id:author}]:[{member_id:author,state:'active'}]})};const catalog=await trackingCatalog({meals:async()=>[],consent:async()=>{consent++;}},{...ctx,db},shop);assert.equal(consent,1);assert.equal(catalog.length,1);assert.equal(catalog[0].quantity,null);assert.equal(catalog[0].originalQuantityText,'two bags?');assert.equal(catalog[0].revision,3);assert.equal(catalog[0].requiredLineId,line);});
+test('catalog absent/revoked source author rejects instead of silently dropping source',async()=>{const author=id();const db={query:async sql=>({rows:sql.includes('JOIN ritc.request')?[{author_id:author,request_id:id()}]:[]})};await assert.rejects(trackingCatalog({meals:async()=>[],consent:async()=>{}},{...ctx,db},shop),e=>e.code==='tracking_source_unavailable');});
+
+test('tracking proof hashes keep code-point canonicalization distinct from legacy storage hashing',()=>{const value={a:1,B:2};assert.notEqual(trackingDigest(value),storeDigest(value));assert.equal(trackingDigest({B:2,a:1}),trackingDigest(value));});
+
+test('tracking basket matches the original repository UUID ordering without changing monetary facts',()=>{const a={lineId:'00000000-0000-4000-8000-000000000001',originalItem:'A',packs:2,unitPriceMinor:120,feeEligible:false},b={...a,lineId:'00000000-0000-4000-8000-000000000002',originalItem:'B',packs:3,unitPriceMinor:null};assert.deepEqual(trackingBasket([b,a]),[{id:a.lineId,name:'A',packs:2,priceMinor:120,feeEligible:false},{id:b.lineId,name:'B',packs:3,priceMinor:null,feeEligible:false}]);});

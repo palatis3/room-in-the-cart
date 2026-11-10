@@ -90,9 +90,10 @@ test('bound reader uses scoped SELECTs only and returns accepted pack review rat
  const f=fixture(),queries=[];const repo={requireShopper(){},lines:async()=>f.lines,meals:async()=>f.meals};
  const ctx={householdId:f.shop.household_id,now:new Date(at),db:{async query(sql,args){queries.push({sql,args});
   assert.match(sql.trim(),/^SELECT/);assert.equal(args[0],f.shop.household_id);assert.equal(args[1],f.shop.shop_id);
+  if(sql.includes('FROM ritc.shared_tracking_revision'))return {rows:[]};
   if(sql.includes('SELECT graph,graph_digest,receipt'))return {rows:[{graph:f.page.graph,graph_digest:f.page.graphDigest,receipt:{}}]};
   if(sql.includes('FROM ritc.request_link'))return {rows:[]};
   if(sql.includes('SELECT d.revision'))return {rows:[f.graphRow]};
   if(sql.includes('FROM ritc.shop_snapshot'))return {rows:[f.snapshotRow]};throw new Error('unexpected query');}}};
- const r=await readSharedRecordSnapshot(repo,ctx,f.shop);assert.equal(queries.length,4);assert.deepEqual(r.record.food.packReview.values,f.graphRow.pack_review);
+ const r=await readSharedRecordSnapshot(repo,ctx,f.shop);assert.equal(queries.length,5);assert.deepEqual(r.record.food.packReview.values,f.graphRow.pack_review);
 });
