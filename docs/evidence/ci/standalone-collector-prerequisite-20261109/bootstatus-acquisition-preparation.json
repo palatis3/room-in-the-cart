@@ -1,0 +1,38 @@
+{
+  "baseCommit": "882bcfef6aab85534314e3160dec4f3c85bf0852",
+  "changedFiles": {
+    "scripts/app_scroll_observation/contract.json": {
+      "sha256": "6ce4dce46985c925b020961366af41cf6e680b29d4454e7ba9a798774404b5d5",
+      "bytes": 8036,
+      "mode": 420
+    },
+    "scripts/simulator_signpost_control/runner.py": {
+      "sha256": "7d9887740070ebde1b96b665c88ef5ad594e3ee1cd0b09dad601671a3f80c499",
+      "bytes": 13095,
+      "mode": 420
+    },
+    "scripts/test_simulator_signpost_control.py": {
+      "sha256": "fad1ae52b3b0e8315f53d7eafb9cdce37c9801a063c4ea9d6bacb263cc53dd8d",
+      "bytes": 49075,
+      "mode": 420
+    }
+  },
+  "focusedControls": 88,
+  "exitCode": 0,
+  "controlLogSHA256": "d1706bb71c3ee4a6838bee026bc1acc24a9bd23ce99d51b1a20acc8a132265c8",
+  "evidenceReportSHA256": "be4b917f6f2d17faf071e65e58d62e6bea157cdafefab773e253d9dd64a69494",
+  "patchSHA256": "8c6d746acaa7b2e3055cf8086b5fa09dfc8779ea0bd05b5d13c0eb9dcd57c037",
+  "sourceManifestSHA256": "60dd494d47590e23d46b1b572ec4bbcec67ea9c991032944b5598ff912d288aa",
+  "originalEvidenceUnchanged": true,
+  "toolHashesUnchanged": true,
+  "workflowUnchanged": true,
+  "orchestrationArchiveCleanupUnchanged": true,
+  "collectorLimitsUnchanged": true,
+  "commandAndPhaseBudgetsUnchanged": true,
+  "nativeExecuted": false,
+  "hostedDispatched": false,
+  "candidateQualified": false,
+  "releaseAcceptance": false,
+  "scope": "Same current owned bootstatus Popen acquisition after exact normal same-device boot only.",
+  "completeCommittedPreflight": "Root pending; helper suite grew75 to88; existing11-suite total expected438+13=451."
+}

@@ -517,4 +517,114 @@ class ScopedPostBootTests(unittest.TestCase):
         cleanup=inspect.getsource(run.cleanup)
         for label in ('before','shutdown-verified','deleted'):self.assertIn("runner.lifecycle('"+label+"',['list','-j'])",cleanup)
 
+class BootstatusAcquisitionTests(unittest.TestCase):
+    sleep=AcquisitionTests.sleep
+    poll=AcquisitionTests.poll
+    identity=AcquisitionTests.identity
+    acquire=AcquisitionTests.acquire
+    def setUp(self):
+        AcquisitionTests.setUp(self)
+        self.item['record'].update(label='bootstatus',argv=['/launcher','bootstatus',DEVICE['createdUDID'],'-b'])
+        self.previous={'process':SimpleNamespace(pid=41,poll=lambda:0),'record':{'label':'boot','pid':41,
+            'argv':['/launcher','boot',DEVICE['createdUDID']],'exitCode':0,'terminalVerified':True,'signals':[],
+            'executableSHA256':'digest','spawnEpoch':99.,'binding':{**self.value,'pid':41,'startTimeMicros':99_000_001}}}
+        self.r.processes=[self.previous,self.item]
+        self.r.receipt={'lifecycleCommands':[{'label':'boot','pid':41,'outcome':'normal_exit'}]}
+    def test_exact_existing_bootstatus_can_bind_after_initial_two_seconds(self):
+        self.read_value=lambda:{**self.value,'executable':str(Path('/bin/bash').resolve())} if self.clock<3 else self.value
+        self.assertIs(self.acquire(180),self.item);self.assertGreaterEqual(self.clock,3)
+        self.assertEqual(self.item['binding'],self.value);self.assertEqual(self.item['record']['signals'],[])
+        diagnostic=self.item['record']['bootstatusAcquisition']
+        self.assertEqual(diagnostic['scope'],'same_owned_bootstatus_after_normal_boot');self.assertEqual(diagnostic['outcome'],'bound')
+    def test_only_exact_owned_command_is_allowed(self):
+        original=list(self.item['record']['argv'])
+        for tail in (['bootstatus',DEVICE['sourceUDID'],'-b'],['bootstatus',DEVICE['createdUDID']],['bootstatus','booted','-b'],
+                     ['boot',DEVICE['createdUDID']],['delete',DEVICE['createdUDID']],['shutdown',DEVICE['createdUDID']],
+                     ['spawn',DEVICE['createdUDID'],'helper'],['create','arbitrary'],['bootstatus',DEVICE['createdUDID'],'-b','extra']):
+            self.item['record']['argv']=['/launcher',*tail]
+            with self.subTest(tail=tail),self.assertRaisesRegex(ValueError,'acquisition_scope'):self.acquire(180)
+        self.item['record']['argv']=original;self.item['record']['label']='other'
+        with self.assertRaisesRegex(ValueError,'acquisition_scope'):self.acquire(180)
+    def test_missing_duplicate_or_different_boot_proof_rejected(self):
+        record=copy.deepcopy(self.previous['record']);phase=copy.deepcopy(self.r.receipt['lifecycleCommands'])
+        mutations=(lambda:self.r.processes.remove(self.previous),lambda:self.r.processes.insert(0,self.previous),
+                   lambda:self.previous['record'].update(argv=['/launcher','boot',DEVICE['sourceUDID']]),
+                   lambda:self.r.receipt.update(lifecycleCommands=[]),
+                   lambda:self.r.receipt['lifecycleCommands'][0].update(outcome='failed'))
+        for mutate in mutations:
+            self.r.processes=[self.previous,self.item];self.previous['record']=copy.deepcopy(record);self.r.receipt['lifecycleCommands']=copy.deepcopy(phase)
+            mutate()
+            with self.assertRaisesRegex(ValueError,'acquisition_scope'):self.acquire(180)
+    def test_failed_signaled_nonterminal_or_hash_changed_prior_boot_rejected(self):
+        original=copy.deepcopy(self.previous['record'])
+        for fields in ({'exitCode':1},{'terminalVerified':False},{'signals':['SIGINT']},{'executableSHA256':'other'},{'pid':999}):
+            self.previous['record']=copy.deepcopy(original);self.previous['record'].update(fields)
+            with self.subTest(fields=fields),self.assertRaisesRegex(ValueError,'acquisition_scope'):self.acquire(180)
+        self.previous['record']=original;self.previous['process'].poll=lambda:None
+        with self.assertRaisesRegex(ValueError,'acquisition_scope'):self.acquire(180)
+    def test_prior_binding_identity_must_remain_exact(self):
+        original=copy.deepcopy(self.previous['record']['binding'])
+        for fields in ({'uid':os.getuid()+1},{'parentPID':os.getpid()+1},{'pid':999},{'executable':'/other'},{'startTimeMicros':1}):
+            self.previous['record']['binding']={**original,**fields}
+            with self.subTest(fields=fields),self.assertRaisesRegex(ValueError,'acquisition_scope'):self.acquire(180)
+    def test_original_owned_early_terminal_boot_proof_is_preserved(self):
+        self.previous['record'].pop('binding')
+        with self.assertRaisesRegex(ValueError,'acquisition_scope'):self.acquire(180)
+        self.previous['record']['terminalOwnedCommandBeforeBinding']=True
+        self.assertIs(self.acquire(180),self.item);self.assertEqual(self.item['binding'],self.value)
+    def test_unowned_or_duplicate_pending_bootstatus_is_not_accepted(self):
+        self.r.processes=[self.previous]
+        with self.assertRaisesRegex(ValueError,'acquisition_scope'):self.acquire(180)
+        self.r.processes=[self.previous,copy.copy(self.item),self.item]
+        with self.assertRaisesRegex(ValueError,'acquisition_scope'):self.acquire(180)
+    def test_missing_identity_or_late_binding_cannot_outlive_original180(self):
+        self.read_value=lambda:None
+        with self.assertRaisesRegex(ValueError,'lifecycle_deadline'):self.acquire(180)
+        self.assertAlmostEqual(self.clock,180);self.assertIsNone(self.item['binding']);self.assertEqual(self.item['record']['signals'],[])
+        self.clock=180;self.read_value=lambda:self.value
+        with self.assertRaisesRegex(ValueError,'lifecycle_deadline'):self.acquire(180)
+    def test_bootstatus_identity_hash_budget_and_unknown_executable_fail_closed(self):
+        with mock.patch.object(runner,'sha',return_value='changed'),self.assertRaisesRegex(ValueError,'binary_identity'):self.acquire(180)
+        self.read_value=lambda:{**self.value,'executable':'/other'}
+        with self.assertRaisesRegex(ValueError,'inventory_executable'):self.acquire(180)
+        self.read_value=lambda:{**self.value,'parentPID':os.getpid()+1}
+        with self.assertRaisesRegex(ValueError,'inventory_identity'):self.acquire(180)
+        self.r.budget.side_effect=ValueError('phase_log_cap')
+        with self.assertRaisesRegex(ValueError,'phase_log_cap'):self.acquire(180)
+        self.assertIsNone(self.item['binding']);self.assertEqual(self.item['record']['signals'],[])
+    def test_full_lifecycle_uses_same_popen_existing_deadline_no_respawn(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.r.out=Path(tmp);self.r.started=0;self.r.seconds=300;self.r.processes=[self.previous]
+            for name in ('bootstatus-stdout.log','bootstatus-stderr.log'):(self.r.out/name).write_bytes(b'')
+            self.clock=20
+            def spawn(*args):self.r.processes.append(self.item);self.clock=22.8;raise RuntimeError('bootstatus_unbound_or_early_exit')
+            self.r.spawn=mock.Mock(side_effect=spawn);self.r.cleanup=mock.Mock()
+            self.read_value=lambda:{**self.value,'executable':str(Path('/bin/bash').resolve())} if self.clock<23.5 else self.value
+            self.terminal=24
+            self.assertEqual(self.r.lifecycle('bootstatus',['bootstatus',DEVICE['createdUDID'],'-b'],180),self.r.out/'bootstatus-stdout.log')
+            self.r.spawn.assert_called_once();self.r.cleanup.assert_called_once()
+            self.assertEqual(self.r.receipt['lifecycleCommands'][-1]['deadlineMonotonic'],200)
+            self.assertEqual(self.item['record']['bootstatusAcquisition']['deadlineMonotonic'],200)
+            self.assertEqual(self.item['record']['signals'],[])
+    def test_nonzero_owned_terminal_bootstatus_is_not_success(self):
+        self.r.out=Path('/owned');self.r.started=0;self.r.seconds=300;self.r.processes=[self.previous]
+        def spawn(*args):self.r.processes.append(self.item);raise RuntimeError('bootstatus_unbound_or_early_exit')
+        self.r.spawn=mock.Mock(side_effect=spawn);self.r.cleanup=mock.Mock();self.process.returncode=70
+        with self.assertRaisesRegex(ValueError,'normal_exit'):self.r.lifecycle('bootstatus',['bootstatus',DEVICE['createdUDID'],'-b'],180)
+        self.r.spawn.assert_called_once();self.assertIsNone(self.item['binding'])
+
+    def test_bootstatus_continuation_cannot_extend_prepare300(self):
+        self.r.out=Path('/owned');self.r.started=0;self.r.seconds=300;self.r.processes=[self.previous];self.clock=299
+        def spawn(*args):self.r.processes.append(self.item);self.clock=299.2;raise RuntimeError('bootstatus_unbound_or_early_exit')
+        self.r.spawn=mock.Mock(side_effect=spawn);self.read_value=lambda:None
+        with self.assertRaisesRegex(ValueError,'lifecycle_deadline'):self.r.lifecycle('bootstatus',['bootstatus',DEVICE['createdUDID'],'-b'],180)
+        self.r.spawn.assert_called_once();self.assertEqual(self.r.receipt['lifecycleCommands'][-1]['deadlineMonotonic'],300)
+        self.assertAlmostEqual(self.clock,300);self.assertIsNone(self.item['binding']);self.assertEqual(self.item['record']['signals'],[])
+    def test_bootstatus_owned_exit_racing_identity_never_becomes_signal_target(self):
+        def race():self.process.returncode=0;return None
+        self.read_value=race
+        self.assertIs(self.acquire(180),self.item);self.assertIsNone(self.item['binding'])
+        self.assertTrue(self.item['record']['terminalOwnedCommandBeforeBinding']);self.assertEqual(self.item['record']['signals'],[])
+        self.assertEqual(self.item['record']['bootstatusAcquisition']['outcome'],'terminal_before_binding')
+
 if __name__=='__main__':unittest.main()

@@ -99,7 +99,7 @@ import XCTest
     }
     private func openFoodReview(spanish: Bool) {
         tap(element("sharedShop.reviewEditor"))
-        XCTAssertTrue(app.navigationBars[spanish ? "Cantidades y orígenes" : "Food quantities and sources"].waitForExistence(timeout: 15), app.debugDescription)
+        XCTAssertTrue(app.navigationBars[spanish ? "Cantidades y orígenes" : "Amounts and sources"].waitForExistence(timeout: 15), app.debugDescription)
         assertText("Twelve wraps — no salt")
         assertText("Extra wraps — amount unknown")
     }

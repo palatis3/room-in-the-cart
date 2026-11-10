@@ -1,0 +1,13 @@
+{
+  "runID": 42747559562,
+  "sourceCommit": "882bcfef6aab85534314e3160dec4f3c85bf0852",
+  "zipSHA256": "3d1b2cad41a4e72b80f58c743c059c2de255cf52f91aa2e8c77a204ce2cc33df",
+  "tarSHA256": "7cc0bb6e88e1659f599d6de81b81c7c1c4edcbc3a68d815b0cd536780e3e9712",
+  "tarMembersVerified": 20,
+  "sourcePinsVerified": 50,
+  "stage": "boot",
+  "firstFailure": "ValueError: helper_unbound_live_no_signal",
+  "cleanupError": "ValueError: helper_archive_input_changed",
+  "ownedDeviceDeleted": false,
+  "releaseAcceptance": false
+}

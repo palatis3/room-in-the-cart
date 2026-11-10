@@ -7,6 +7,7 @@ public struct SharedOperationUndoEligibility: Codable, Equatable, Sendable {
         case explicit_current_preview_required
         case food_undo_history_unavailable, food_undo_request_acceptance_unsupported, food_undo_first_adoption_unsupported
         case food_undo_meal_action_unsupported, food_undo_store_action_unsupported, food_undo_missing_snapshot_unsupported
+        case food_undo_meal_history_unavailable, food_undo_meal_conflict, food_undo_meal_protected, food_undo_meal_creation_unsupported
         case food_undo_operation_unsupported, food_undo_already_reversed, food_undo_inverse_operation_unsupported
         case food_undo_line_conflict, food_undo_quote_conflict, food_undo_graph_conflict, food_undo_expired_quote, food_undo_no_effect
     }
@@ -135,10 +136,17 @@ public struct SharedOperationUndoPatch: Codable, Equatable, Sendable {
     private enum FeeKey: String, CodingKey { case kind }
     public let lines: [ShopperBasketLine]
     public let quote: ShopperQuote
-    private enum K: String, CodingKey { case lines, quote }
+    public let mealEdit: SharedDemandMealEdit?
+    private enum K: String, CodingKey { case lines, quote, mealEdit }
     public init(from decoder: Decoder) throws {
-        try demandExactKeys(decoder, ["lines", "quote"])
         let c = try decoder.container(keyedBy: K.self)
+        try demandExactKeys(decoder, c.contains(.mealEdit) ? ["lines", "quote", "mealEdit"] : ["lines", "quote"])
+        if c.contains(.mealEdit) {
+            let edit = try c.superDecoder(forKey: .mealEdit)
+            try demandExactKeys(edit, ["occurrenceId", "baseMealRevision", "meal"])
+            mealEdit = try c.decode(SharedDemandMealEdit.self, forKey: .mealEdit)
+            try undoMealShapeInEdit(edit)
+        } else { mealEdit = nil }
         var rows = try c.nestedUnkeyedContainer(forKey: .lines)
         while !rows.isAtEnd { try demandExactKeys(rows.superDecoder(), ["lineId", "originalItem", "packs", "unitPriceMinor", "feeEligible"]) }
         let quoteDecoder = try c.superDecoder(forKey: .quote)
@@ -154,11 +162,17 @@ public struct SharedOperationUndoPatch: Codable, Equatable, Sendable {
         var c = encoder.container(keyedBy: K.self)
         try c.encode(lines, forKey: .lines)
         try c.encode(quote, forKey: .quote)
+        if let mealEdit {
+            guard let meal = mealEdit.meal else { throw ClientError.invalidResponse }
+            var body = try JSONDecoder().decode([String: JSONValue].self, from: encoded(mealEdit))
+            body["meal"] = try undoEncodedMeal(meal)
+            try c.encode(body, forKey: .mealEdit)
+        }
     }
 }
 public struct SharedOperationUndoAction: Codable, Equatable, Sendable {
     public enum Kind: String, Codable, Sendable { case patch = "shop.patch" }
-    var commandAction: SharedDemandAction { .patch(.init(quote: body.quote, lines: body.lines)) }
+    var commandAction: SharedDemandAction { .patch(.init(quote: body.quote, lines: body.lines, mealEdit: body.mealEdit)) }
     public let kind: Kind
     public let body: SharedOperationUndoPatch
     private enum K: String, CodingKey { case kind, body }
@@ -208,10 +222,14 @@ public struct SharedOperationUndoCandidate: Codable, Equatable, Sendable {
     public let beforeCheckout: ShopperBudget
     public let afterCheckout: ShopperBudget
     public let packReviewLineIds: [SharedDemandID]
-    private enum K: String, CodingKey { case schemaVersion, shopId, base, targetOperationId, effectDigest, scope, action, before, after, beforeTotals, afterTotals, beforeCheckout, afterCheckout, packReviewLineIds }
+    public let mealUndo: SharedOperationUndoMeal?
+    private enum K: String, CodingKey { case schemaVersion, shopId, base, targetOperationId, effectDigest, scope, action, before, after, beforeTotals, afterTotals, beforeCheckout, afterCheckout, packReviewLineIds, mealUndo }
     public init(from decoder: Decoder) throws {
-        try demandExactKeys(decoder, ["schemaVersion", "shopId", "base", "targetOperationId", "effectDigest", "scope", "action", "before", "after", "beforeTotals", "afterTotals", "beforeCheckout", "afterCheckout", "packReviewLineIds"])
         let c = try decoder.container(keyedBy: K.self)
+        let mealScope = try c.decode(SharedOperationUndoScope.self, forKey: .scope).mealsChanged
+        let keys: Set<String> = ["schemaVersion", "shopId", "base", "targetOperationId", "effectDigest", "scope", "action", "before", "after", "beforeTotals", "afterTotals", "beforeCheckout", "afterCheckout", "packReviewLineIds"]
+        try demandExactKeys(decoder, mealScope ? keys.union(["mealUndo"]) : keys)
+        mealUndo = mealScope ? try c.decode(SharedOperationUndoMeal.self, forKey: .mealUndo) : nil
         schemaVersion = try c.decode(Int.self, forKey: .schemaVersion)
         shopId = try c.decode(SharedDemandID.self, forKey: .shopId)
         try demandExactKeys(c.superDecoder(forKey: .base), ["shopRevision", "authorityEpoch", "graphRevision", "graphDigest"])
@@ -220,6 +238,7 @@ public struct SharedOperationUndoCandidate: Codable, Equatable, Sendable {
         effectDigest = try c.decode(String.self, forKey: .effectDigest)
         scope = try c.decode(SharedOperationUndoScope.self, forKey: .scope)
         action = try c.decode(SharedOperationUndoAction.self, forKey: .action)
+        try demandRequire(mealScope == (action.body.mealEdit != nil))
         before = try c.decode(SharedDemandGraph.self, forKey: .before)
         after = try c.decode(SharedDemandGraph.self, forKey: .after)
         beforeTotals = try c.decode([SharedDemandLineTotal].self, forKey: .beforeTotals)
@@ -244,6 +263,7 @@ public struct SharedOperationUndoCandidate: Codable, Equatable, Sendable {
         try c.encode(beforeCheckout, forKey: .beforeCheckout)
         try c.encode(afterCheckout, forKey: .afterCheckout)
         try c.encode(packReviewLineIds, forKey: .packReviewLineIds)
+        try c.encodeIfPresent(mealUndo, forKey: .mealUndo)
     }
 }
 
@@ -278,13 +298,17 @@ public struct SharedOperationUndoPreview: Decodable, Equatable, Sendable {
     public let operationUndo: SharedOperationUndoMetadata
     public let action: SharedOperationUndoAction
     public let beforeCheckout, afterCheckout: ShopperBudget
-    private enum K: String, CodingKey { case operationUndo, action, beforeCheckout, afterCheckout }
+    public let mealUndo: SharedOperationUndoMeal?
+    private enum K: String, CodingKey { case operationUndo, action, beforeCheckout, afterCheckout, mealUndo }
     public init(from decoder: Decoder) throws {
-        try demandExactKeys(decoder, ["previewId", "previewDigest", "expiresAt", "before", "after", "receipt", "packs", "beforeTotals", "afterTotals", "shopRevision", "authorityEpoch", "operationUndo", "action", "beforeCheckout", "afterCheckout"])
-        preview = try SharedDemandPreview(from: decoder)
         let c = try decoder.container(keyedBy: K.self)
         operationUndo = try c.decode(SharedOperationUndoMetadata.self, forKey: .operationUndo)
+        let keys: Set<String> = ["previewId", "previewDigest", "expiresAt", "before", "after", "receipt", "packs", "beforeTotals", "afterTotals", "shopRevision", "authorityEpoch", "operationUndo", "action", "beforeCheckout", "afterCheckout"]
+        try demandExactKeys(decoder, operationUndo.scope.mealsChanged ? keys.union(["mealUndo"]) : keys)
+        mealUndo = operationUndo.scope.mealsChanged ? try c.decode(SharedOperationUndoMeal.self, forKey: .mealUndo) : nil
+        preview = try SharedDemandPreview(from: decoder)
         action = try c.decode(SharedOperationUndoAction.self, forKey: .action)
+        try demandRequire(operationUndo.scope.mealsChanged == (action.body.mealEdit != nil))
         beforeCheckout = try c.decode(ShopperBudget.self, forKey: .beforeCheckout)
         afterCheckout = try c.decode(ShopperBudget.self, forKey: .afterCheckout)
     }

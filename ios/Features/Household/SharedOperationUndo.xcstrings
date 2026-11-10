@@ -385,6 +385,38 @@
         }
       }
     },
+    "Meal after": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meal after"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comida después"
+          }
+        }
+      }
+    },
+    "Meal before": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meal before"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comida antes"
+          }
+        }
+      }
+    },
     "Meal changes cannot be undone here. Review the current meal plan.": {
       "localizations": {
         "en": {
@@ -417,6 +449,22 @@
         }
       }
     },
+    "New meals, starting shared food tracking, request decisions and store changes cannot be undone here.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New meals, starting shared food tracking, request decisions and store changes cannot be undone here."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aquí no se pueden deshacer las comidas nuevas, el inicio del registro compartido de comida, las decisiones sobre solicitudes ni los cambios de tienda."
+          }
+        }
+      }
+    },
     "No saved changes to review.": {
       "localizations": {
         "en": {
@@ -429,6 +477,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "No hay cambios guardados para revisar."
+          }
+        }
+      }
+    },
+    "Other current meal details stay unchanged. Protected food remains reserved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other current meal details stay unchanged. Protected food remains reserved."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los demás detalles actuales de la comida no cambian. La comida protegida sigue reservada."
           }
         }
       }
@@ -529,6 +593,118 @@
         }
       }
     },
+    "Restore protected portions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore protected portions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recuperar las porciones protegidas"
+          }
+        }
+      }
+    },
+    "Restore the ingredients, groups and preparation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore the ingredients, groups and preparation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recuperar los ingredientes, grupos y preparación"
+          }
+        }
+      }
+    },
+    "Restore the meal title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore the meal title"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recuperar el nombre de la comida"
+          }
+        }
+      }
+    },
+    "Restore the meal type": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore the meal type"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recuperar el tipo de comida"
+          }
+        }
+      }
+    },
+    "Restore the planned night": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore the planned night"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recuperar la noche prevista"
+          }
+        }
+      }
+    },
+    "Restore the portions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore the portions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recuperar las porciones"
+          }
+        }
+      }
+    },
+    "Restore the skipped meal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore the skipped meal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recuperar la comida omitida"
+          }
+        }
+      }
+    },
     "Restriction still needs review": {
       "localizations": {
         "en": {
@@ -573,6 +749,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Revisa un cambio guardado de artículos o de cotización antes de deshacerlo. Se conservarán los cambios posteriores que sigan siendo compatibles."
+          }
+        }
+      }
+    },
+    "Review a saved item, quote or meal change before undoing it. Later changes that still fit will remain.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review a saved item, quote or meal change before undoing it. Later changes that still fit will remain."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa un cambio guardado de artículos, precios o comidas antes de deshacerlo. Los cambios posteriores que sigan siendo compatibles se conservarán."
           }
         }
       }
@@ -717,6 +909,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cambios guardados"
+          }
+        }
+      }
+    },
+    "Shop change": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shop change"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambio de la compra"
           }
         }
       }
@@ -877,6 +1085,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Este cambio ya se deshizo."
+          }
+        }
+      }
+    },
+    "This meal change cannot be undone here. Review the current meal plan.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This meal change cannot be undone here. Review the current meal plan."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este cambio de comida no se puede deshacer aquí. Revisa el plan de comidas actual."
+          }
+        }
+      }
+    },
+    "This meal is currently skipped.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This meal is currently skipped."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta comida está omitida actualmente."
           }
         }
       }

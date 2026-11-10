@@ -385,7 +385,7 @@ private struct SharedDemandFlowContent: View {
     @ViewBuilder private func totals(_ values: [SharedDemandLineTotal], graph: SharedDemandGraph) -> some View {
         if values.isEmpty { Text(sd("No recorded food total")) }
         ForEach(values, id: \.lineId) { total in
-            LabeledContent(graph.lines.first { $0.id == total.lineId }?.name ?? sd("Food"), value: SharedDemandCopy.amount(total.quantity) + " " + SharedDemandCopy.unit(total.unit))
+            LabeledContent(graph.lines.first { $0.id == total.lineId }?.name ?? sd("Food"), value: SharedDemandCopy.amount(total.quantity, unit: total.unit))
         }
     }
     @ViewBuilder private func sourceFacts(_ source: SharedDemandContribution, lines: [SharedDemandLine]) -> some View {

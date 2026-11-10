@@ -51,6 +51,16 @@
     "sharedOptionalNightAddition": {
       "added": 3,
       "basis": "All 111 compiled HouseholdClient cases executed locally:108 passes and the same3 approved HTTPS/database skips. Explicit null HTTP proposal/read/scheduling and malformed day/deadline controls. Retained .build/SharedUndatedNov09/package-r1 inventory and log."
+    },
+    "existingMealOperationUndoAddition": {
+      "compiledAdditions": 8,
+      "compiledInventoryPath": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r1/execution/package-inventory.log",
+      "compiledInventorySHA256": "2a636269c34db8e3d2a1a603d13b9588c7649b5057142171cecdb667a0e743ba",
+      "basis": "Root r1 compiled inventory and full package result: 141 passed, 3 existing wire skips.",
+      "reviewedPendingCompilation": [
+        "HouseholdClientTests.SharedOperationUndoMealTests/testMixedLetterMealUndoCodableRoundtripPreservesWordsAndExistingOutboxBytes"
+      ],
+      "pendingBasis": "One mixed-letter UUID response Codable/file-outbox regression prepared with the narrow strict Undo encoder correction; execution still required."
     }
   },
   "packages": {
@@ -419,7 +429,16 @@
       "HouseholdClientTests.SharedOperationUndoTests/testOnlyNewTombstoneTimestampsMayDifferBetweenCandidateAndFinalPreview",
       "HouseholdClientTests.SharedOperationUndoTests/testPreviewBindsExactEffectActionCheckoutReceiptAndCurrentGraph",
       "HouseholdClientTests.SharedOperationUndoTests/testProtectedKnownQuantityCannotBecomeUnknownUnderUndo",
-      "HouseholdClientTests.StoreQuoteNativeWireTests/testStoreQuoteClientAgainstPostgres"
+      "HouseholdClientTests.StoreQuoteNativeWireTests/testStoreQuoteClientAgainstPostgres",
+      "HouseholdClientTests.HouseholdClientTests/testMealOperationUndoHTTPIncludesCompleteMealEditThroughFileOutboxLostReplyAndRevocation",
+      "HouseholdClientTests.SharedOperationUndoMealTests/testChangedTouchedFieldsOrUntouchedTitleAndAtomicPlanningAreRejected",
+      "HouseholdClientTests.SharedOperationUndoMealTests/testLaterRemovalTombstoneAndMissingActiveMealListCannotMasqueradeAsOriginalSkip",
+      "HouseholdClientTests.SharedOperationUndoMealTests/testMealEvidenceRequiredNullsAndNonmealOmissionAreStrict",
+      "HouseholdClientTests.SharedOperationUndoMealTests/testMealOnlyDayUndoKeepsLaterTitleAndUsesLatestActiveRevision",
+      "HouseholdClientTests.SharedOperationUndoMealTests/testMealShapePreservesWordsAndRejectsUnknownFieldsMissingQuantityAndForgedProposalAction",
+      "HouseholdClientTests.SharedOperationUndoMealTests/testMealUndoCannotReduceProtectedPortions",
+      "HouseholdClientTests.SharedOperationUndoMealTests/testSkippedDinnerRestoresExactIdentityAndPreservesLunchAndLaterStaple",
+      "HouseholdClientTests.SharedOperationUndoMealTests/testMixedLetterMealUndoCodableRoundtripPreservesWordsAndExistingOutboxBytes"
     ],
     "LocalStore": [
       "LocalStoreTests.ComparisonStoreTests/testBoundedPayloadAndInvalidDateDoNotMutate",

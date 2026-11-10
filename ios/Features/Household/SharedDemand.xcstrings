@@ -566,7 +566,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Food quantities and sources"
+            "value": "Amounts and sources"
           }
         },
         "es": {
@@ -1773,6 +1773,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Desconocido"
+          }
+        }
+      }
+    },
+    "Unknown amount (%@)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown amount (%@)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad desconocida (%@)"
           }
         }
       }

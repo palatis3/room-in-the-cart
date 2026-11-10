@@ -20,6 +20,12 @@ enum SharedDemandCopy {
         guard let value else { return text("Unknown") }
         return value.denominator == 1 ? String(value.numerator) : "\(value.numerator)/\(value.denominator)"
     }
+    static func amount(_ value: SharedDemandAmount?, unit: SharedDemandUnit) -> String {
+        guard let value else {
+            return String(format: text("Unknown amount (%@)"), Self.unit(unit))
+        }
+        return "\(amount(value)) \(Self.unit(unit))"
+    }
     static func quantity(_ value: SharedDemandQuantity?) -> String {
         guard let value else { return text("Unknown") }
         return "\(amount(value.amount)) \(unit(value.unit))"

@@ -12,17 +12,74 @@ import XCTest
         continueAfterFailure = false; app = XCUIApplication(bundleIdentifier: "dev.roominthecart.app.debug")
         app.launchEnvironment["RITC_OPERATION_UNDO_WORKSPACE"] = UUID().uuidString
         app.launchEnvironment["RITC_OPERATION_UNDO_RESET"] = "1"
+        app.launchEnvironment["RITC_OPERATION_UNDO_MEAL"] = "0"
     }
     override func tearDownWithError() throws { if testRun?.failureCount ?? 0 > 0 { capture("Operation-Undo-failure") }; app.terminate() }
     func testSavedChangeCancelApplyRelaunchExactRetryAndLaterFoodSurvives() { journey(spanish: false) }
     func testSpanishSavedChangeCancelApplyRelaunchExactRetryAndLaterFoodSurvives() { journey(spanish: true) }
+    func testSkippedDinnerUndoCancelRelaunchRetryKeepsProtectedLunchAndLaterStaple() { mealJourney(spanish: false) }
+    func testSpanishSkippedDinnerUndoCancelRelaunchRetryKeepsProtectedLunchAndLaterStaple() { mealJourney(spanish: true) }
+    private func mealJourney(spanish: Bool) {
+        let language = spanish ? "es" : "en"
+        app.launchEnvironment["RITC_OPERATION_UNDO_MEAL"] = "1"
+        app.launchArguments = ["--ui-testing", "--shared-operation-undo-fixture", "-AppleLanguages", "(\(language))", "-AppleLocale", spanish ? "es_US" : "en_US", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
+        app.launch(); waitForShop(spanish: spanish); counts(previews: 0, posts: 0, writes: 0, retries: 0)
+        assertText("Protected lunch"); assertText("Later apples")
+        openHistory(); openCandidate(spanish: spanish)
+        assertText(spanish ? "Esta comida está omitida actualmente." : "This meal is currently skipped.")
+        assertText("Original taco dinner"); enterPacks(amount: "8")
+        tap(element("sharedUndo.preview")); assertMealReview(spanish: spanish)
+        capture("Meal-Undo-\(language)-before-Cancel")
+        tap(element("sharedUndo.cancel")); waitForShop(spanish: spanish)
+        counts(previews: 1, posts: 0, writes: 0, retries: 0)
+        openHistory(); openCandidate(spanish: spanish)
+        assertText(spanish ? "Esta comida está omitida actualmente." : "This meal is currently skipped.")
+        enterPacks(amount: "8"); tap(element("sharedUndo.preview")); assertMealReview(spanish: spanish)
+        setSwitch("sharedUndo.acknowledged", on: true); tap(element("sharedUndo.apply"))
+        counts(previews: 2, posts: 1, writes: 1, retries: 0)
+        tap(element("sharedUndo.return")); reveal(element("sharedShop.retry"))
+        capture("Meal-Undo-\(language)-lost-reply")
+        app.terminate(); app.launchEnvironment["RITC_OPERATION_UNDO_RESET"] = "0"; app.launch(); waitForShop(spanish: spanish)
+        counts(previews: 2, posts: 1, writes: 1, retries: 0)
+        tap(element("sharedShop.retry")); counts(previews: 2, posts: 2, writes: 1, retries: 1)
+        XCTAssertTrue(element("sharedShop.retry").waitForNonExistence(timeout: 12))
+        assertText(spanish ? "Cambio de compra compartida confirmado" : "Shared shop change confirmed")
+        assertText("Original taco dinner", initialSearchDirection: .towardStart)
+        assertText("Protected lunch", initialSearchDirection: .towardStart); assertText("Later apples")
+        openHistory()
+        let already = element("sharedUndo.unavailable." + target)
+        reveal(already); XCTAssertEqual(already.label, spanish ? "Este cambio ya se deshizo." : "This change was already undone.")
+        tap(element("sharedUndo.cancel")); tap(element("sharedShop.foodQuantities"), initialSearchDirection: .towardStart)
+        assertUnknownTotal(spanish: spanish)
+        assertText("Six original taco wraps"); assertText("Two wraps held for lunch", initialSearchDirection: .towardStart)
+        assertText("Later apples — amount unknown")
+        counts(previews: 2, posts: 2, writes: 1, retries: 1)
+        capture("Meal-Undo-\(language)-restored-dinner-and-survivors")
+    }
+    private func assertMealReview(spanish: Bool) {
+        let apply = element("sharedUndo.apply"); reveal(apply); XCTAssertFalse(apply.isEnabled)
+        let lunch = element("sharedUndo.after.source.00000000-0000-4000-8000-000000000022")
+        reveal(lunch, initialSearchDirection: .towardStart)
+        XCTAssertTrue(lunch.staticTexts.matching(identifier: "Two lunch wraps").firstMatch.exists)
+        let meal = element("sharedUndo.after.source.00000000-0000-4000-8000-000000000021")
+        reveal(meal); XCTAssertTrue(meal.staticTexts.matching(identifier: "Six original taco wraps").firstMatch.exists)
+        let survivor = element("sharedUndo.after.source.00000000-0000-4000-8000-000000000012")
+        reveal(survivor); XCTAssertTrue(survivor.exists && survivor.isHittable)
+        for (amount, direction) in [("$5.00", SearchDirection.towardStart), ("$7.00", .towardEnd)] {
+            let money = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", amount)).firstMatch
+            reveal(money, initialSearchDirection: direction); XCTAssertTrue(money.isHittable, amount)
+        }
+        assertText(spanish ? "Esta comida está omitida actualmente." : "This meal is currently skipped.", initialSearchDirection: .towardStart)
+        assertText("Original taco dinner")
+        assertText(spanish ? "Recuperar la comida omitida" : "Restore the skipped meal")
+    }
     private func journey(spanish: Bool) {
         let language = spanish ? "es" : "en"
         app.launchArguments = ["--ui-testing", "--shared-operation-undo-fixture", "-AppleLanguages", "(\(language))", "-AppleLocale", spanish ? "es_US" : "en_US", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launch(); waitForShop(spanish: spanish); counts(previews: 0, posts: 0, writes: 0, retries: 0)
         openHistory()
         let unsupported = element("sharedUndo.unavailable.00000000-0000-4000-8000-000000000030")
-        reveal(unsupported); XCTAssertTrue(unsupported.label.contains(spanish ? "comidas" : "Meal changes"), unsupported.label)
+        reveal(unsupported); XCTAssertTrue(unsupported.label.contains(spanish ? "Este cambio de comida" : "This meal change"), unsupported.label)
         openCandidate(spanish: spanish); enterPacks()
         tap(element("sharedUndo.preview")); assertReview(spanish: spanish)
         capture("Operation-Undo-\(language)-before-Cancel")
@@ -44,9 +101,19 @@ import XCTest
         let already = element("sharedUndo.unavailable." + target)
         reveal(already); XCTAssertEqual(already.label, spanish ? "Este cambio ya se deshizo." : "This change was already undone.")
         tap(element("sharedUndo.cancel")); tap(element("sharedShop.foodQuantities"), initialSearchDirection: .towardStart)
+        assertUnknownTotal(spanish: spanish)
         assertText("Original source wording"); assertText("Later apples — amount unknown")
         counts(previews: 2, posts: 2, writes: 1, retries: 1)
         capture("Operation-Undo-\(language)-exact-retry-and-survivors")
+    }
+    private func assertUnknownTotal(spanish: Bool) {
+        let expected = spanish ? "Cantidad desconocida (unidades)" : "Unknown amount (count)"
+        let total = app.staticTexts.matching(identifier: expected).firstMatch
+        reveal(total, initialSearchDirection: .towardStart)
+        XCTAssertEqual(total.label, expected)
+        XCTAssertTrue(app.frame.contains(total.frame), "Complete unknown-total value must fit the app")
+        XCTAssertGreaterThan(total.frame.height, 0)
+        capture("Operation-Undo-\(spanish ? "es" : "en")-unknown-total-copy")
     }
     private func waitForShop(spanish: Bool) {
         XCTAssertTrue(app.navigationBars[spanish ? "Compra compartida del hogar" : "Shared household shop"].waitForExistence(timeout: 25), app.debugDescription)
@@ -59,9 +126,9 @@ import XCTest
         tap(element("sharedUndo.history." + target))
         XCTAssertTrue(app.navigationBars[spanish ? "Revisar lo que se deshará" : "Review undo"].waitForExistence(timeout: 20), app.debugDescription)
     }
-    private func enterPacks() {
+    private func enterPacks(amount: String = "4") {
         setSwitch("sharedUndo.pack." + wraps + ".unknown", on: false)
-        fill("4", id: "sharedUndo.pack." + wraps + ".amount")
+        fill(amount, id: "sharedUndo.pack." + wraps + ".amount")
         tap(element("sharedUndo.done")); XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
         setSwitch("sharedUndo.pack." + apples + ".acceptUnknown", on: true)
     }

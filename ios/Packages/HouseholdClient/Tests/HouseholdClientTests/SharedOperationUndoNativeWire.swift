@@ -36,6 +36,7 @@ private struct OperationUndoWireInput: Decodable {
     let targetOperationId: SharedDemandID
     let packs: [SharedDemandPackReview]
     let before: SharedDemandPage?
+    let expectedMeal: SharedOperationUndoMeal?
 }
 /// Written from the actual typed server preview, not a fixture-computed inverse.
 private struct OperationUndoWireExpectation: Codable {
@@ -102,6 +103,13 @@ extension SharedMealNativeWireTests {
             let after = try await service.sharedDemand(shopID: input.shopId); XCTAssertEqual(after, page)
             let shop = try await service.shopperShop(shopID: input.shopId.uuidString.lowercased())
             XCTAssertEqual(shop.lines.sorted { $0.lineId < $1.lineId }, expected.action.body.lines.sorted { $0.lineId < $1.lineId }); XCTAssertEqual(shop.quote, expected.action.body.quote)
+            if let edit = expected.action.body.mealEdit {
+                let restored = try XCTUnwrap(shop.meals?.first { $0.id == edit.occurrenceId.uuid })
+                XCTAssertEqual(restored.meal, edit.meal)
+                XCTAssertEqual(restored.revision, page.shopRevision)
+                XCTAssertEqual(expected.action.body.mealEdit?.meal, input.expectedMeal?.restoredMeal)
+                XCTAssertEqual(operation.sharedDemandBinding?.action, expected.action.commandAction)
+            }
             try saveUndoWire(operation, to: confirmedURL)
             try await outbox.remove(operation.id)
             let remaining = try await OperationOutbox(url: pendingURL).operations(); XCTAssertTrue(remaining.isEmpty)
@@ -113,11 +121,19 @@ extension SharedMealNativeWireTests {
         XCTAssertEqual(target.eligibility.status, .reviewable)
         let candidate = try await service.sharedOperationUndoCandidate(page: page, shop: shop, target: target)
         XCTAssertEqual(candidate.targetOperationId, input.targetOperationId)
+        if let meal = input.expectedMeal {
+            XCTAssertEqual(candidate.mealUndo, meal)
+            XCTAssertEqual(candidate.action.body.mealEdit?.occurrenceId, meal.occurrenceId)
+            XCTAssertEqual(candidate.action.body.mealEdit?.meal, meal.restoredMeal)
+            XCTAssertNil(candidate.action.body.mealEdit?.proposalId)
+            XCTAssertNil(candidate.action.body.mealEdit?.changeProposalId)
+        }
         XCTAssertEqual(candidate.before, page.graph); XCTAssertEqual(candidate.beforeTotals, page.totals)
         XCTAssertEqual(Set(candidate.packReviewLineIds), Set(input.packs.map(\.lineId)))
         let readOnly = try await service.sharedDemand(shopID: input.shopId); XCTAssertEqual(readOnly, page)
         let review = try await service.previewSharedOperationUndo(page: page, shop: shop, target: target, candidate: candidate, packs: input.packs)
         XCTAssertEqual(review.response.action, candidate.action)
+        XCTAssertEqual(review.response.mealUndo, input.expectedMeal)
         XCTAssertEqual(review.response.preview.packs, input.packs)
         let cancelled = try await service.sharedDemand(shopID: input.shopId); XCTAssertEqual(cancelled, page)
         if input.phase == "cancel" {
@@ -130,6 +146,30 @@ extension SharedMealNativeWireTests {
         expectedBody["demandReview"] = .object(["previewId": .string(review.response.preview.previewId.string), "previewDigest": .string(review.response.preview.previewDigest)])
         XCTAssertEqual(envelope.body, expectedBody); XCTAssertEqual(envelope.kind, "shop.patch")
         XCTAssertEqual(envelope.base, .init(shopRevision: page.shopRevision, authorityEpoch: page.authorityEpoch))
+        if let meal = input.expectedMeal {
+            guard case .object(let edit)? = envelope.body["mealEdit"] else { XCTFail("Complete mealEdit omitted"); return }
+            XCTAssertEqual(Set(edit.keys), ["occurrenceId", "baseMealRevision", "meal"])
+            XCTAssertEqual(try JSONDecoder().decode(SharedMeal.self, from: encoded(try XCTUnwrap(edit["meal"]))), meal.restoredMeal)
+            XCTAssertEqual(operation.sharedDemandBinding?.action, review.response.action.commandAction)
+        }
+        if input.phase == "meal-apply" {
+            XCTAssertNotNil(input.expectedMeal)
+            let first = try await service.executeSharedDemand(operation)
+            let replay = try await service.executeSharedDemand(operation)
+            XCTAssertEqual(first, replay)
+            XCTAssertEqual(first.operationId, review.response.preview.receipt.operationId.string)
+            let after = try await service.sharedDemand(shopID: input.shopId)
+            XCTAssertEqual(after.graph, review.response.preview.after)
+            XCTAssertEqual(after.totals, review.response.preview.afterTotals)
+            let savedShop = try await service.shopperShop(shopID: input.shopId.uuidString.lowercased())
+            let edit = try XCTUnwrap(review.response.action.body.mealEdit)
+            let savedMeal = try XCTUnwrap(savedShop.meals?.first { $0.id == edit.occurrenceId.uuid })
+            XCTAssertEqual(savedMeal.meal, edit.meal)
+            XCTAssertEqual(savedMeal.revision, page.shopRevision + 1)
+            XCTAssertEqual(savedShop.lines, review.response.action.body.lines)
+            XCTAssertEqual(savedShop.quote, review.response.action.body.quote)
+            return
+        }
         if input.phase == "stale" {
             // Fixture commits a genuine newer touched-field edit before dispatching this command.
             do { _ = try await service.executeSharedDemand(operation); XCTFail("Stale Undo applied after changed target") }

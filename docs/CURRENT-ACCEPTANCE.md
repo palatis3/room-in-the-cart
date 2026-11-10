@@ -1,21 +1,14 @@
 # Current implementation and acceptance map
 
-## Current checkpoint — November 9, workflow and combined-candidate qualification
+## Current checkpoint — November 9, combined-candidate qualification
 
-The meal Undo backend successor passes 650 offline and 315 PostgreSQL tests, including eleven new pure and nine new meal HTTP cases alongside all original Undo/Records cases. The same one database-only offline skip and three optional browser skips remain explicit. Migration 045 ran only in isolated fixtures; staging remains through 041. Native meal changes are installed but unqualified: package 141+3 passes, while review found a mixed-letter UUID roundtrip edge being corrected before further native tests. [Meal/backend proof](evidence/service/shared-food-meal-undo-20261109/README.md).
+The existing-meal Undo backend passes **650 offline and 315 PostgreSQL tests**, with one database-only offline skip and three optional browser skips. The expanded actual Swift/HTTPS/PostgreSQL lane passes **14 integration cases and 40 Swift scenarios**, zero failures/skips. This includes accepted meal proposals, grouped protected needs, skipped-dinner restoration, lost-reply retry and privacy/authority fences. [Backend and wire proof](evidence/service/shared-food-meal-undo-20261109/README.md).
 
-Hosted diagnostic 42732878538 at 0cdfaa51 passed 332 early checks, the Release
-producer and all initial container lookups. It failed collector readiness before
-GO; ABORT caused the subsequent native failure. Required performance measurements
-remain unqualified. Saved sources/products verify exactly; separate postprocessing
-limit fixes are installed and pass all 174 offline observer controls. See CURRENT-HANDOFF for current ownership
-and the proposed separate tiny-helper collector prerequisite test.
+The corresponding full client package passes **142 tests**, with three expected wire-only skips and 145 exact compiled selectors, including the mixed-letter UUID encoding regression. Fresh app build, 172 models and six complete English/Spanish UI journeys are in progress; previous native results do not substitute for them. [Native checkpoint](evidence/native/shared-food-meal-undo-20261109/README.md).
 
-Native Undo now passes 133 package tests with three expected wire skips, exact inventory 136; the app builds and 167 selected native model tests pass strict checks. Both original English and Spanish Undo journeys pass after a test-only scrolling correction, with all 121 app/model product files unchanged. The complete expanded real HTTP/PostgreSQL lane passes 11 Node cases and 33 exact Swift scenarios, zero failures/skips, with successful private-state cleanup. [Native proof](evidence/native/shared-food-operation-undo-20261109/README.md), [wire proof](evidence/service/shared-food-operation-undo-20261109/native-wire-verification.json). Meal/date/proposal and other documented inverse families remain unfinished.
+Latest hosted helper 42747559562 passed 438 early controls but failed before post-boot inventory because the already-started bootstatus process could not continue identity acquisition. Evidence preservation/upload passed; device cleanup remains unverified. The reviewed correction passes 88 focused controls and retains existing command/phase deadlines, exact identities and signal/archive guards. Its exact-commit preflights and hosted effect remain pending. Performance measurements/baselines and the minimum-iOS XCTest failure remain open. [Hosted evidence](evidence/ci/standalone-collector-prerequisite-20261109/README.md).
 
-Shared Records r2 passes all six HTTP cases; its combined backend passes 639 offline and 306 PostgreSQL tests with the existing one-plus-three skips. [Proof](evidence/service/shared-records-snapshot-20261109/README.md).
-
-The latest helper diagnostic 42744325450 at 759ee5ab passed 426 early checks and completed bootstatus, then failed its 30-second full post-boot inventory query. Artifact preservation and exact owned-device deletion passed; all 22 members and 50 source pins verify. A narrower fresh runtime/owned-device query shares the same 30-second deadline; all 75 controls pass, hosted effect pending. [Hosted proof](evidence/ci/standalone-collector-prerequisite-20261109/hosted-42744325450-verification.json).
+These are scoped component results. One final frozen full regression/merge is still required. Same-store ordinary Undo, first adoption, new-meal creation, request acceptance, actual store-switch inverse and portable shared Records remain unfinished. Staging is approved through 041; local 042–045 are not deployed. Owner-deferred providers/signing and physical/human/operational acceptance remain in [RELEASE-EXECUTION](RELEASE-EXECUTION.md). Follow [CURRENT-HANDOFF](CURRENT-HANDOFF.md) for active owners and executable next steps.
 
 ## Historical component checkpoints
 

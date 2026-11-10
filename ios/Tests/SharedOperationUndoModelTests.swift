@@ -17,9 +17,13 @@ import HouseholdClient
         let fixture: SharedOperationUndoReview
         var previewCalls = 0, applies = 0, retries = 0, candidates = 0
         var retained: SharedOperationUndoReview?
+        var appliedReview: SharedOperationUndoReview?
         var holdPreview = false, holdCandidate = false
         var continuation: CheckedContinuation<Void, Never>?
-        init() throws { fixture = try OperationUndoFixture.review(); foodShop = fixture.shop }
+        init(_ facts: [String: Any]? = nil) throws {
+            fixture = try OperationUndoFixture.review(facts); foodShop = fixture.shop
+            if let facts { historyValue = try OperationUndoFixture.decode(facts["history"]!) }
+        }
         func load() async { foodShop = fixture.shop; canReadFood = hasAuthority; onLoadPublication?() }
         func retry() async { retries += 1 }
         func readFood() async throws -> SharedDemandPage { fixture.page }
@@ -37,7 +41,7 @@ import HouseholdClient
             if holdPreview { await withCheckedContinuation { continuation = $0 } }
             retained = fixture; return fixture
         }
-        func applyOperationUndo(_ review: SharedOperationUndoReview) async throws { applies += 1; foodPending = true; retained = nil }
+        func applyOperationUndo(_ review: SharedOperationUndoReview) async throws { applies += 1; appliedReview = review; foodPending = true; retained = nil }
         func cancelOperationUndoReview() { retained = nil }
         func release() { continuation?.resume(); continuation = nil }
     }
@@ -139,5 +143,47 @@ import HouseholdClient
         let model = SharedOperationUndoModel(access: access); await model.load(); await model.retry()
         XCTAssertTrue(model.pending); XCTAssertEqual(access.retries, 1)
         XCTAssertEqual(access.candidates, 0); XCTAssertEqual(access.previewCalls, 0); XCTAssertTrue(model.history.isEmpty)
+    }
+    func testSkippedMealCancelClearsHistoricalMealAndPreservesReadOnlyCounters() async throws {
+        let access = try Access(OperationUndoFixture.mealObject()), model = await selected(access)
+        XCTAssertNil(model.candidate?.mealUndo?.current.meal)
+        XCTAssertEqual(model.candidate?.mealUndo?.restoredMeal.title, "Original taco dinner")
+        model.cancel()
+        XCTAssertNil(model.candidate); XCTAssertNil(model.review); XCTAssertNil(model.currentShop)
+        XCTAssertTrue(model.history.isEmpty); XCTAssertTrue(model.packs.isEmpty)
+        XCTAssertEqual(access.applies, 0); XCTAssertEqual(access.previewCalls, 0)
+    }
+    func testSkippedMealApplyRequiresAllPacksAndPreservesCompleteRestorationAction() async throws {
+        let access = try Access(OperationUndoFixture.mealObject()), model = await selected(access)
+        for pack in access.fixture.request.packs { try model.acknowledgePack(pack) }
+        await model.preview(); XCTAssertNotNil(model.review); await model.apply(); XCTAssertEqual(access.applies, 0)
+        model.monetaryAcknowledged = true; await model.apply()
+        XCTAssertEqual(access.applies, 1)
+        XCTAssertEqual(access.appliedReview?.response.action.body.mealEdit, access.fixture.candidate.action.body.mealEdit)
+        XCTAssertEqual(access.appliedReview?.response.preview.after.contributions.last, access.fixture.page.graph?.contributions.last)
+        XCTAssertTrue(model.pending); XCTAssertNil(model.candidate); XCTAssertNil(model.review)
+    }
+    func testRevokedHeldMealCandidateCannotPublishHistoricalMealOrReservations() async throws {
+        let access = try Access(OperationUndoFixture.mealObject()), model = SharedOperationUndoModel(access: access)
+        await model.load(); access.holdCandidate = true
+        let task = Task { await model.select(access.fixture.target) }; try await held(access)
+        access.hasAuthority = false; access.canReadFood = false; model.accessChanged(); access.release(); await task.value
+        XCTAssertNil(model.candidate); XCTAssertNil(model.review); XCTAssertNil(model.currentShop)
+        XCTAssertTrue(model.history.isEmpty); XCTAssertTrue(model.packs.isEmpty); XCTAssertEqual(access.applies, 0)
+    }
+    func testRedactedHeldMealPreviewClearsEveryPrivateFactAndCannotApply() async throws {
+        let access = try Access(OperationUndoFixture.mealObject()), model = await selected(access)
+        for pack in access.fixture.request.packs { try model.acknowledgePack(pack) }
+        access.holdPreview = true; let task = Task { await model.preview() }; try await held(access)
+        access.foodShop = nil; access.canReadFood = false; model.accessChanged(); access.release(); await task.value
+        model.monetaryAcknowledged = true; await model.apply()
+        XCTAssertNil(model.candidate); XCTAssertNil(model.review); XCTAssertNil(model.currentShop)
+        XCTAssertTrue(model.history.isEmpty); XCTAssertTrue(model.packs.isEmpty); XCTAssertEqual(access.applies, 0)
+    }
+    func testPendingMealRestorationRelaunchUsesOnlyExistingParentRetry() async throws {
+        let access = try Access(OperationUndoFixture.mealObject()); access.foodPending = true
+        let model = SharedOperationUndoModel(access: access); await model.load(); await model.retry()
+        XCTAssertEqual(access.retries, 1); XCTAssertEqual(access.candidates, 0); XCTAssertEqual(access.previewCalls, 0)
+        XCTAssertNil(model.candidate); XCTAssertNil(model.review); XCTAssertTrue(model.history.isEmpty)
     }
 }

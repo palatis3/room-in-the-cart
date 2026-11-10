@@ -28,13 +28,13 @@ struct SharedOperationUndoView: View {
                 candidateContent(candidate, shop: shop)
             } else {
                 Section {
-                    Text(u("Review a saved item or quote change before undoing it. Later changes that still fit will remain."))
+                    Text(u("Review a saved item, quote or meal change before undoing it. Later changes that still fit will remain."))
                         .accessibilityIdentifier(model.currentShop == nil ? "sharedUndo.intro" : "sharedUndo.loaded")
-                    Text(u("Meal plans, request decisions and store changes cannot be undone here."))
+                    Text(u("New meals, starting shared food tracking, request decisions and store changes cannot be undone here."))
                 }
                 ForEach(model.history, id: \.operationId) { item in
                     Section {
-                        Text(u(item.kind == .patch ? "Item and quote change" : "Request decision")).font(.headline)
+                        Text(u(item.kind == .patch ? "Shop change" : "Request decision")).font(.headline)
                         Text(householdTime(item.committedAt))
                         if item.eligibility.status == .reviewable {
                             Button(u("Review undo")) { Task { await model.select(item) } }
@@ -89,6 +89,17 @@ struct SharedOperationUndoView: View {
         Section {
             Text(u("Review the complete result below. Cancel leaves the shop unchanged."))
             if candidate.scope.quoteChanged { Text(u("The earlier quote will be restored.")) }
+        }
+        if let meal = candidate.mealUndo {
+            Section(u("Meal before")) {
+                if let current = meal.current.meal { SharedMealFacts(meal: current, deadlineIdentifier: "sharedUndo.meal.before.deadline") }
+                else { Text(u("This meal is currently skipped.")).accessibilityIdentifier("sharedUndo.meal.before.absent") }
+            }
+            Section(u("Meal after")) {
+                SharedMealFacts(meal: meal.restoredMeal, deadlineIdentifier: "sharedUndo.meal.after.deadline")
+                ForEach(meal.touchedFields, id: \.self) { Text(SharedOperationUndoCopy.mealField($0)) }
+                Text(u("Other current meal details stay unchanged. Protected food remains reserved."))
+            }
         }
         Section(u("Items and quote before")) { SharedShopFields(quote: shop.quote, lines: shop.lines) }
         Section(u("Items and quote after")) { SharedShopFields(quote: candidate.action.body.quote, lines: candidate.action.body.lines) }
@@ -161,7 +172,7 @@ struct SharedOperationUndoView: View {
     }
     @ViewBuilder private func food(_ graph: SharedDemandGraph, totals: [SharedDemandLineTotal], prefix: String) -> some View {
         ForEach(totals, id: \.lineId) { total in
-            LabeledContent(graph.lines.first { $0.id == total.lineId }?.name ?? u("Item"), value: "\(SharedDemandCopy.amount(total.quantity)) \(SharedDemandCopy.unit(total.unit))")
+            LabeledContent(graph.lines.first { $0.id == total.lineId }?.name ?? u("Item"), value: SharedDemandCopy.amount(total.quantity, unit: total.unit))
         }
         ForEach(graph.contributions, id: \.id) { source in
             VStack(alignment: .leading, spacing: 4) {

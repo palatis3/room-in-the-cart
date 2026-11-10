@@ -53,16 +53,40 @@ class HelperRunner(Runner):
         self.budget()
         require(time.monotonic() < deadline, 'helper_lifecycle_deadline')
 
+    def acquisition_allowed(self, item):
+        """Continue only existing inventory calls or this owned bootstatus after normal boot."""
+        tool=self.tools['simctl'];record=item['record'];argv=record.get('argv',[])
+        if not argv or argv[0]!=tool['path']:return False
+        if inventory_allowed(argv[1:],self.device):return True
+        identifier=self.device.get('createdUDID')
+        if not identifier or record.get('label')!='bootstatus' or argv!=[tool['path'],'bootstatus',identifier,'-b']:return False
+        if not self.processes or self.processes[-1] is not item or sum(p['record'].get('label')=='bootstatus' for p in self.processes)!=1:return False
+        boots=[p for p in self.processes if p['record'].get('label')=='boot']
+        phases=[p for p in self.receipt.get('lifecycleCommands',[]) if p.get('label')=='boot']
+        if len(boots)!=1 or len(phases)!=1:return False
+        previous=boots[0];proof=previous['record'];binding=proof.get('binding')
+        normal=(previous['process'].poll()==0 and proof.get('exitCode')==0 and proof.get('terminalVerified') is True
+                and proof.get('signals')==[] and proof.get('argv')==[tool['path'],'boot',identifier]
+                and proof.get('executableSHA256')==tool['executableSHA256']
+                and proof.get('pid')==previous['process'].pid==phases[0].get('pid') and phases[0].get('outcome')=='normal_exit')
+        if not normal:return False
+        if binding is None:return proof.get('terminalOwnedCommandBeforeBinding') is True
+        return (binding.get('pid')==proof['pid'] and binding.get('parentPID')==os.getpid()
+                and binding.get('uid')==os.getuid() and binding.get('executable')==tool['executable']
+                and binding.get('startTimeMicros',0)>=int(proof['spawnEpoch']*1_000_000))
+
     def acquire_inventory(self, item, deadline):
-        """Only exact read-only inventory shapes: acquire the same owned Popen inside its budget."""
+        """Acquire the same allowed Popen; the original command/phase deadline never resets."""
         tool=self.tools['simctl'];process=item['process'];record=item['record'];label=record['label']
-        require(record['argv'][0]==tool['path'] and inventory_allowed(record['argv'][1:],self.device),'helper_inventory_acquisition_scope')
+        require(self.acquisition_allowed(item),'helper_inventory_acquisition_scope')
         self.lifecycle_check(deadline)
         launcher_identity(tool['path'],tool['sha256'],item['expected'],item['digest'])
         interpreter=str(Path('/bin/bash').resolve())
         diagnostic={'startMonotonic':time.monotonic(),'deadlineMonotonic':deadline,
                     'initialLiveBindingWindowSeconds':2,'samples':0,'first':[],'last':None}
-        record['inventoryAcquisition']=diagnostic;self.save();origin=None
+        bootstatus=record['label']=='bootstatus'
+        diagnostic['scope']='same_owned_bootstatus_after_normal_boot' if bootstatus else 'same_owned_readonly_inventory'
+        record['bootstatusAcquisition' if bootstatus else 'inventoryAcquisition']=diagnostic;self.save();origin=None
         while True:
             self.lifecycle_check(deadline)
             if process.poll() is not None:
@@ -134,7 +158,7 @@ class HelperRunner(Runner):
                 require(self.processes and self.processes[-1]['record']['label']==label,'helper_spawn_inventory')
                 item=self.processes[-1]
                 if item['process'].poll() is None:
-                    require(inventory_allowed(tail,self.device),'helper_unbound_live_no_signal')
+                    require(self.acquisition_allowed(item),'helper_unbound_live_no_signal')
                     item=self.acquire_inventory(item,deadline)
                 else:item['record']['terminalOwnedCommandBeforeBinding']=True
             self.lifecycle_check(deadline)

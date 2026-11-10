@@ -583,6 +583,79 @@ enum OperationUndoFixture {
   }
 }
 """#
+    /// Fixed response facts for a skipped dinner, distinct protected lunch and a
+    /// later staple. This never computes a server inverse from arbitrary input.
+    static func mealObject() throws -> [String: Any] {
+        var f = try object()
+        let occurrence = "00000000-0000-4000-8000-000000000041", ingredient = "00000000-0000-4000-8000-000000000042"
+        let lunch = "00000000-0000-4000-8000-000000000051", lunchIngredient = "00000000-0000-4000-8000-000000000052"
+        let mealSource = "00000000-0000-4000-8000-000000000021", protectedSource = "00000000-0000-4000-8000-000000000022"
+        let wraps = "00000000-0000-4000-8000-000000000003", apples = "00000000-0000-4000-8000-000000000011", appleSource = "00000000-0000-4000-8000-000000000012"
+        func amount(_ value: String) -> [String: Any] { ["numerator": value, "denominator": "1"] }
+        func quantity(_ value: String, _ literal: String) -> [String: Any] {
+            ["amount": amount(value), "unit": "count", "originalLiteral": literal, "confirmedConversion": NSNull()]
+        }
+        let meal: [String: Any] = ["title": "Original taco dinner", "day": "2026-11-10", "kind": "dinner", "portions": 3, "protected": false,
+            "planning": ["groups": [], "ingredients": [["id": ingredient, "name": "Taco wraps",
+                "quantity": ["amount": ["numerator": 6, "denominator": 1], "unit": "count", "originalLiteral": "Six original taco wraps"], "groupIds": [], "exclusions": []]]]]
+        let lunchMeal: [String: Any] = ["title": "Protected lunch", "day": NSNull(), "kind": "lunch", "portions": 2, "protected": true,
+            "planning": ["groups": [], "ingredients": [["id": lunchIngredient, "name": "Lunch wraps",
+                "quantity": ["amount": ["numerator": 2, "denominator": 1], "unit": "count", "originalLiteral": "Two lunch wraps"], "groupIds": [], "exclusions": []]]]]
+        var page = f["page"] as! [String: Any], shop = f["shop"] as! [String: Any]
+        var before = page["graph"] as! [String: Any]
+        let firstLine = (before["lines"] as! [[String: Any]])[0]
+        let appleLine: [String: Any] = ["id": apples, "name": "Later apples", "unit": "count", "originalOrder": 1, "trashedAt": NSNull()]
+        var manual = (before["contributions"] as! [[String: Any]])[0]
+        manual["quantity"] = quantity("2", "Two wraps for breakfast"); manual["originalText"] = "Two manual wraps"
+        var protected = manual; protected["id"] = protectedSource; protected["originalText"] = "Two wraps held for lunch"
+        protected["quantity"] = quantity("2", "Two lunch wraps")
+        protected["source"] = ["kind": "reservation", "reservationId": "00000000-0000-4000-8000-000000000053", "purpose": "Protected lunch",
+            "originOccurrenceId": lunch, "ingredientId": lunchIngredient, "groupId": NSNull(), "bindingId": NSNull()] as [String: Any]
+        var skipped = manual; skipped["id"] = mealSource; skipped["originalText"] = "Six original taco wraps"
+        skipped["quantity"] = quantity("6", "Six original taco wraps"); skipped["removedAt"] = "2026-11-09T12:05:00Z"
+        skipped["source"] = ["kind": "meal", "occurrenceId": occurrence, "ingredientId": ingredient, "groupId": NSNull(), "bindingId": NSNull()] as [String: Any]
+        var restored = skipped; restored["removedAt"] = NSNull()
+        var later = manual; later["id"] = appleSource; later["lineId"] = apples; later["productKey"] = "apples"
+        later["productName"] = "Later apples"; later["originalText"] = "Later apples — amount unknown"; later["quantity"] = NSNull()
+        before["lines"] = [firstLine, appleLine]; before["contributions"] = [manual, protected, skipped, later]
+        before["usedIds"] = [wraps, manual["id"]!, protectedSource, mealSource, apples, appleSource]
+        var after = before; after["revision"] = 4; after["contributions"] = [manual, protected, restored, later]
+        func totals(_ value: String, _ ids: [Any]) -> [[String: Any]] {
+            [["lineId": wraps, "unit": "count", "quantity": amount(value), "activeContributionIds": ids],
+             ["lineId": apples, "unit": "count", "quantity": NSNull(), "activeContributionIds": [appleSource]]]
+        }
+        let beforeTotals = totals("4", [manual["id"]!, protectedSource]), afterTotals = totals("10", [manual["id"]!, protectedSource, mealSource])
+        page["graph"] = before; page["totals"] = beforeTotals; f["page"] = page
+        let initial: [[String: Any]] = [["lineId": wraps, "originalItem": "Wraps", "packs": 1, "unitPriceMinor": 200, "feeEligible": true],
+            ["lineId": apples, "originalItem": "Later apples", "packs": 1, "unitPriceMinor": 300, "feeEligible": true]]
+        var final = initial; final[0]["packs"] = 2
+        shop["lines"] = initial; shop["meals"] = [["occurrenceId": lunch, "revision": 4, "meal": lunchMeal]]; f["shop"] = shop
+        let evidence: [String: Any] = ["occurrenceId": occurrence, "targetBefore": ["revision": 4, "meal": meal],
+            "targetAfter": ["revision": 5, "meal": NSNull()], "current": ["revision": 5, "meal": NSNull()],
+            "restoredMeal": meal, "touchedFields": ["membership"], "proposal": NSNull()]
+        let action: [String: Any] = ["kind": "shop.patch", "body": ["quote": shop["quote"]!, "lines": final,
+            "mealEdit": ["occurrenceId": occurrence, "baseMealRevision": NSNull(), "meal": meal]]]
+        var candidate = f["candidate"] as! [String: Any], response = f["response"] as! [String: Any]
+        var scope = candidate["scope"] as! [String: Any]; scope["mealsChanged"] = true; scope["graphRows"] = 1
+        scope["touchedLines"] = [["lineId": wraps, "fields": ["packs"]]]
+        var beforeBudget = candidate["beforeCheckout"] as! [String: Any], afterBudget = beforeBudget
+        for key in ["totalMinor", "lowerBoundMinor", "upperBoundMinor"] { beforeBudget[key] = 500; afterBudget[key] = 700 }
+        beforeBudget["headroomMinor"] = 500; afterBudget["headroomMinor"] = 300
+        candidate["scope"] = scope; candidate["mealUndo"] = evidence; candidate["packReviewLineIds"] = [wraps, apples]
+        let values: [String: Any] = ["action": action, "before": before, "after": after, "beforeTotals": beforeTotals, "afterTotals": afterTotals,
+            "beforeCheckout": beforeBudget, "afterCheckout": afterBudget]
+        for (key, value) in values { candidate[key] = value; response[key] = value }
+        let packs: [[String: Any]] = [["lineId": wraps, "usablePerPack": quantity("8", "8"), "acceptUnresolved": false],
+            ["lineId": apples, "usablePerPack": NSNull(), "acceptUnresolved": true]]
+        response["mealUndo"] = evidence; response["packs"] = packs
+        var metadata = response["operationUndo"] as! [String: Any]; metadata["scope"] = scope; response["operationUndo"] = metadata
+        var receipt = response["receipt"] as! [String: Any]
+        receipt["lines"] = []; receipt["edges"] = []; receipt["contributions"] = [["id": mealSource, "before": skipped, "after": restored]]
+        response["receipt"] = receipt; f["candidate"] = candidate; f["response"] = response; f["packs"] = packs
+        var history = f["history"] as! [String: Any]; history["items"] = [f["target"]!]; f["history"] = history
+        return f
+    }
+
     static func object() throws -> [String: Any] { try JSONSerialization.jsonObject(with: Data(json.utf8)) as! [String: Any] }
     static func decode<T: Decodable>(_ value: Any, as type: T.Type = T.self) throws -> T {
         try JSONDecoder().decode(T.self, from: JSONSerialization.data(withJSONObject: value))

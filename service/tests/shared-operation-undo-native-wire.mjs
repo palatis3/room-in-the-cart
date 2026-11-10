@@ -13,7 +13,7 @@ import {observeNativeWireCommand} from './shared-demand-native-wire.mjs';
 // Identity provider and delivery interruption are fixtures. Optional beforeCommand
 // commits a separate authorized real API action before dispatch, never a fake inverse.
 // Every household read/preview/command reaches the original authenticated API/PG path.
-export async function exerciseOperationUndoClient({service,owner,householdId,shopId,phase,targetOperationId,packs,before,privateState,dropFirstReply=false,beforeCommand=null}){
+export async function exerciseOperationUndoClient({service,owner,householdId,shopId,phase,targetOperationId,packs,before,privateState,dropFirstReply=false,beforeCommand=null,scenario=null,expectedMeal=null}){
  const dir=await mkdtemp(join(tmpdir(),'ritc-undo-wire-tls-'));await chmod(dir,0o700);
  const key=join(dir,'tls.key'),cert=join(dir,'tls.pem'),der=join(dir,'tls.der'),config=join(dir,'openssl.cnf'),input=join(privateState,'phase-'+phase+'-'+randomUUID()+'.json'),code=randomUUID();
  let tls,attempts=0,dropped=0;const unsuccessful=[],commands=[],candidateRequests=[],previewRequests=[];let candidateAttempts=0,previewAttempts=0,synchronizationFailed=false;
@@ -21,7 +21,7 @@ export async function exerciseOperationUndoClient({service,owner,householdId,sho
   await writeFile(config,'[req]\ndistinguished_name=dn\nx509_extensions=ext\nprompt=no\n[dn]\nCN=localhost\n[ext]\nsubjectAltName=IP:127.0.0.1\nextendedKeyUsage=serverAuth\nkeyUsage=digitalSignature,keyEncipherment\n',{mode:0o600});
   await run('openssl',['req','-x509','-newkey','rsa:2048','-sha256','-nodes','-days','1','-config',config,'-keyout',key,'-out',cert],{timeout:15000,maxBuffer:65536});await chmod(key,0o600);
   await run('openssl',['x509','-in',cert,'-outform','DER','-out',der],{timeout:15000,maxBuffer:65536});
-  await writeFile(input,JSON.stringify({phase,householdId,shopId,targetOperationId,packs,before}),{mode:0o600});
+  await writeFile(input,JSON.stringify({phase,householdId,shopId,targetOperationId,packs,before,expectedMeal}),{mode:0o600});
   const user={id:owner.subject,email:'wire@example.invalid',email_confirmed_at:new Date().toISOString()};
   tls=createServer({key:await readFile(key),cert:await readFile(cert)},async(req,res)=>{
    if(!req.url.startsWith('/auth/v1/')){
@@ -49,7 +49,7 @@ export async function exerciseOperationUndoClient({service,owner,householdId,sho
    res.writeHead(401);res.end('{}');
   });
   await new Promise((resolve,reject)=>tls.once('error',reject).listen(0,'127.0.0.1',resolve));
-  await runNativeWireTest({suite:'SharedMealNativeWireTests',method:'testSharedMealClientAgainstPostgres',scenario:'operation-undo-'+phase,unsuccessful,
+  await runNativeWireTest({suite:'SharedMealNativeWireTests',method:'testSharedMealClientAgainstPostgres',scenario:scenario??('operation-undo-'+phase),unsuccessful,
    env:{RITC_WIRE_OPERATION_UNDO_PHASE:phase,RITC_WIRE_OPERATION_UNDO_FIXTURE:input,RITC_WIRE_OPERATION_UNDO_STATE:privateState,RITC_WIRE_OPERATION_UNDO_VAULT:owner.subject,
     RITC_WIRE_PORT:String(tls.address().port),RITC_WIRE_CERT:der,RITC_WIRE_CODE:code}});
   if(synchronizationFailed)throw new Error('Native wire synchronization failed');
