@@ -72,7 +72,12 @@
   ],
   "visualReview": {
     "samplesViewed": 6,
-    "finding": "Spanish surviving-meal ingredient quantity label touches its value; layout correction remains required. Functional assertions passed; full visual acceptance not claimed."
+    "finding": "Spanish surviving-meal ingredient quantity label touches its value; layout correction remains required. Functional assertions passed; full visual acceptance not claimed.",
+    "correction": {
+      "finding": "Original-resolution independent and root reinspection shows clear label/value separation. Initial resized-preview interpretation was incorrect; no confirmed layout defect or patch.",
+      "imageSHA256": "bb4bcdb18bc073b4126b87b6c12f3d27b31abb73ee19ca1b3eccbb4247109e28",
+      "originalRootReceiptPreserved": true
+    }
   },
   "limits": [
     "Not authenticated real-service UI or mixed-device acceptance",
