@@ -66,6 +66,8 @@ private struct SharedShopContent: View {
                             if shop.phase == "draft", model.canManage {
                                 NavigationLink(SharedDemandCopy.text("Food quantities and sources")) { SharedDemandFlowView(shopModel: model) }
                                     .accessibilityIdentifier("sharedShop.foodQuantities")
+                                NavigationLink(SharedOperationUndoCopy.text("Saved changes")) { SharedOperationUndoView(shopModel: model) }
+                                    .accessibilityIdentifier("sharedShop.savedChanges")
                                 Button(ht("Edit shared items and quote")) { model.beginEditing() }.accessibilityIdentifier("sharedShop.edit")
                                 Button(ht("Review freezing this shop")) { model.reviewPhaseChange("shop.freeze") }
                             } else if shop.phase == "frozen", model.canManage {

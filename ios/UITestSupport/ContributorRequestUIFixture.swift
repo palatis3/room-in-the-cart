@@ -39,6 +39,7 @@ import HouseholdClient
             #endif
         }
         else if ProcessInfo.processInfo.arguments.contains("--shared-delivery-fixture") { SharedDeliveryFixtureRoot() }
+        else if ProcessInfo.processInfo.arguments.contains("--shared-operation-undo-fixture") { SharedOperationUndoFixtureRoot() }
         else if ProcessInfo.processInfo.arguments.contains("--shared-food-editor-fixture") { SharedFoodEditorFixtureRoot() }
         else if ProcessInfo.processInfo.arguments.contains("--shared-meal-fixture") { S17SharedMealFixtureRoot() }
         else if ProcessInfo.processInfo.arguments.contains("--shared-store-quotes-fixture") { S27StoreQuotesFixtureRoot() }
