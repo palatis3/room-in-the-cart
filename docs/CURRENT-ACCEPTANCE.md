@@ -1,8 +1,26 @@
 # Current implementation and acceptance map
 
-## Current checkpoint — November 10, component integration
+## Current checkpoint — November 10, focused product completion
 
-Records-v2 actual-route successor now passes all **eight new HTTP cases** and full **441 PostgreSQL tests**, with three declared browser skips; offline remains **1,031 passes** plus one database-only skip. Role denial, revoked source provenance, erasure, immutable reads and shopper reassignment are verified. Compiled production is byte-identical to the qualified24/80transport revision. Records EN/ES UI r12 is active after an export-error visibility fix and test-navigation correction. [HTTP proof](evidence/service/records-protected-conversion-20261110/records-http-verification.json).
+The app builds with the Records import-review navigation correction. Both English/Spanish
+Records export/recovery journeys pass (2/2, no skips or reported runtime warnings) in `.build/SharedRecordsNov10/review-focus`. Final results belong in
+[CURRENT-HANDOFF](CURRENT-HANDOFF.md), which controls active execution state.
+
+Backend Records-v2 passes all eight new HTTP cases and the full441 PostgreSQL
+suite with three separately assigned browser skips; offline is1,031passes plus
+one database-only skip. The qualified actual transport remains24Node/80Swift.
+No backend behavior changed in this UI correction. [HTTP proof](evidence/service/records-protected-conversion-20261110/records-http-verification.json).
+
+Development now uses affected checks and batches broad qualification at
+integration/release; optional hosted diagnostics are deferred. The requirement
+scope clarification in CURRENT-HANDOFF removes unnecessary remote-file recall and
+a separate guardian recovery subsystem, without removing required historical
+Records, controlled-data erasure, guardian permissions or release checks.
+
+## Earlier component checkpoints (historical)
+
+The entries below describe their recorded revisions and may mention work that
+was subsequently completed. They do not supersede CURRENT-HANDOFF.
 
 Protected conversion successor now passes fresh combined backend **1,031 offline / 433 PostgreSQL** with declared skips and actual signed restore/erasure. Expanded native transport passes **24 Node / 80 Swift** with zero failures/skips; both first-run failures are resolved. Records EN/ES UI qualification is active, additional route privacy coverage pending. [Combined component proof](evidence/service/records-protected-conversion-20261110/README.md).
 

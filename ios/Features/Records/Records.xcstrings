@@ -1666,6 +1666,23 @@
         }
       }
     },
+    "Shared pickup record": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared pickup record"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registro de compra compartida"
+          }
+        }
+      }
+    },
     "Shopping list and dinners": {
       "extractionState": "manual",
       "localizations": {

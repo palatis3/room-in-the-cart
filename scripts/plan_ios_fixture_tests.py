@@ -35,6 +35,7 @@ PROFILES = {
             "SharedStoreQuoteUITests",
             "SharedFoodEditorUITests",
             "SharedOperationUndoUITests",
+            "SharedRecordsUITests",
             "SharedCreatedMealUndoUITests",
             "StapleRecallUITests",
         ),

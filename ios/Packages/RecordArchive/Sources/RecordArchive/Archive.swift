@@ -8,7 +8,7 @@ public enum ArchiveError: Error, Equatable, Sendable {
 }
 
 public enum ArchiveKind: String, Codable, Sendable { case personalRecovery, helperShop }
-public enum ArchiveRecordKind: String, Codable, Sendable { case comparison, ledger, pickup, recipe }
+public enum ArchiveRecordKind: String, Codable, Sendable { case comparison, ledger, pickup, recipe, sharedShop }
 
 /// The helper representation is an allowlist, not a filtered native model.
 public struct HelperLine: Codable, Equatable, Sendable {
@@ -111,6 +111,7 @@ public enum ArchiveCodec {
     }
     public static func make(records: [ArchiveRecord], kind: ArchiveKind, origin: String, revision: String, parent: String? = nil, shopID: String? = nil, producerBuild: String = "1", exportedAt: Date = Date()) throws -> ArchiveEnvelope {
         guard records.count <= maximumRecords else { throw ArchiveError.tooLarge }
+        guard kind != .helperShop || !records.contains(where: { $0.kind == .sharedShop }) else { throw ArchiveError.unsupportedProjection }
         let projected = records.map { record -> ArchiveRecord in
             var copy = record
             if kind == .helperShop { copy.nativePayload = nil; copy.media = nil }
@@ -201,6 +202,9 @@ public enum ArchiveCodec {
             guard record.title.utf8.count <= 4096, !record.title.contains("\0"), record.helperLines.count <= 2000,
                   (record.nativePayload?.count ?? 0) <= maximumNativeBytes else { throw ArchiveError.tooLarge }
             guard identities.insert(identity(record, projection: value.projectionID)).inserted else { throw ArchiveError.invalidIdentity }
+            if record.kind == .sharedShop {
+                guard value.documentKind == .personalRecovery, record.nativePayload != nil, record.media == nil, record.helperLines.isEmpty else { throw ArchiveError.unsupportedProjection }
+            }
             if value.documentKind == .helperShop, record.nativePayload != nil || record.media != nil { throw ArchiveError.unsupportedProjection }
             for line in record.helperLines {
                 guard [line.label, line.originalAmount, line.originalUnit, line.originalLanguage ?? "", line.purpose ?? "", line.action ?? "", line.foodStatus ?? ""].allSatisfy({ $0.utf8.count <= 8192 && !$0.contains("\0") }) else { throw ArchiveError.tooLarge }

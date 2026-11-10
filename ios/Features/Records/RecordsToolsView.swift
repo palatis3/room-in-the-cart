@@ -13,6 +13,7 @@ struct RecordsToolsView: View {
     @State private var acknowledgedMedia = false
     @State private var deletion: Deletion?
     @AccessibilityFocusState private var actionResultFocused: Bool
+    @AccessibilityFocusState private var importReviewFocused: Bool
     @State private var recoveryExpanded = false
     @State private var recoveredExpandedIDs: Set<String> = []
     #if DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE
@@ -84,6 +85,16 @@ struct RecordsToolsView: View {
                     .font(.footnote).foregroundStyle(.secondary)
             }
         }
+        .task(id: model.review != nil) {
+            guard model.review != nil else { return }
+            importReviewFocused = false
+            await Task.yield()
+            guard !Task.isCancelled, model.review != nil else { return }
+            proxy.scrollTo("records.importReview", anchor: .top)
+            await Task.yield()
+            guard !Task.isCancelled, model.review != nil else { return }
+            importReviewFocused = true
+        }
         .task(id: model.actionOutcomeID) {
             guard let outcomeID = model.actionOutcomeID else { return }
             actionResultFocused = false
@@ -138,12 +149,15 @@ struct RecordsToolsView: View {
                         Toggle(isOn: Binding(get: { model.selectedIDs.contains(RecordsToolsModel.selectionID(record)) }, set: { selected in
                             let key = RecordsToolsModel.selectionID(record)
                             if selected { model.selectedIDs.insert(key) } else { model.selectedIDs.remove(key) }
-                        })) { Text(record.title.isEmpty ? recordsText("Untitled record") : record.title) }
+                        })) { Text(recordsTitle(record)) }
                             .accessibilityIdentifier("records.source." + record.id)
                         Text(recordKindLabel(record.kind)).font(.caption).foregroundStyle(.secondary)
+                        if record.kind == .sharedShop {
+                            Text(RecordsDatePresentation.sourceSavedAt(record.savedAtMilliseconds)).font(.caption).accessibilityIdentifier("records.sourceDate." + record.id)
+                        }
                         if model.canDeleteSource(record) {
                             Button(recordsText("Delete this source"), role: .destructive) {
-                                deletion = Deletion(title: record.title, source: record, recovered: nil)
+                                deletion = Deletion(title: recordsTitle(record), source: record, recovered: nil)
                             }.font(.footnote)
                         }
                     }
@@ -156,12 +170,12 @@ struct RecordsToolsView: View {
         Section(recordsText("Export selected records")) {
             Text(recordsText("Cook and helper copies include selected food labels, amounts, purposes and actions. They leave out native financial and private record data."))
                 .font(.footnote)
-            Button(recordsText("Prepare readable cook copy")) { Task { await model.prepareExport(.helperText) } }.disabled(model.selectedCount != 1)
-            Button(recordsText("Prepare structured helper copy")) { Task { await model.prepareExport(.helperJSON) } }.disabled(model.selectedCount != 1)
+            Button(recordsText("Prepare readable cook copy")) { Task { await model.prepareExport(.helperText) } }.disabled(model.selectedCount != 1).accessibilityIdentifier("records.prepareHelperText")
+            Button(recordsText("Prepare structured helper copy")) { Task { await model.prepareExport(.helperJSON) } }.disabled(model.selectedCount != 1).accessibilityIdentifier("records.prepareHelperJSON")
             Text(recordsText("Choose one source for each cook or helper copy.")).font(.footnote)
             Text(recordsText("A shop backup includes its linked dinner evidence and quote history. Reusable dinners, rotations and saved ideas are a separate library selection. Imported planning never restores paid access or permissions.")).font(.footnote)
-            Toggle(recordsText("I understand a readable owner export includes private record data."), isOn: $acknowledgedPrivate)
-            Button(recordsText("Prepare readable owner export")) { Task { await model.prepareExport(.ownerText) } }.disabled(model.selectedCount == 0 || !acknowledgedPrivate)
+            Toggle(recordsText("I understand a readable owner export includes private record data."), isOn: $acknowledgedPrivate).accessibilityIdentifier("records.ownerDisclosure")
+            Button(recordsText("Prepare readable owner export")) { Task { await model.prepareExport(.ownerText) } }.disabled(model.selectedCount == 0 || !acknowledgedPrivate).accessibilityIdentifier("records.prepareOwnerText")
             DisclosureGroup(recordsText("Encrypted personal recovery"), isExpanded: $recoveryExpanded) {
                 Text(recordsText("A recovery file restores selected private records, saved history and the source references you choose below as separate copies. It excludes raw voice, credentials, membership, consent and live permissions."))
                 selectedMedia
@@ -185,10 +199,10 @@ struct RecordsToolsView: View {
                     ShareLink(item: RecordsShareFile(data: document.data, kind: document.kind), preview: SharePreview(model.preparedName)) { Label(recordsText("Share prepared file…"), systemImage: "square.and.arrow.up") }
                 } else if let text = String(data: document.data, encoding: .utf8) {
                     ShareLink(item: text) { Label(recordsText("Share prepared text…"), systemImage: "square.and.arrow.up") }
-                    DisclosureGroup(recordsText("Preview readable copy")) { Text(text).textSelection(.enabled) }
+                    DisclosureGroup(recordsText("Preview readable copy")) { Text(text).textSelection(.enabled).accessibilityIdentifier("records.readableText") }
                         .disclosureGroupStyle(LabeledFormDisclosureStyle(label: recordsText("Preview readable copy"), identifier: "records.readablePreview"))
                 }
-                Button(recordsText("Discard prepared file")) { model.dismissPreparedFile() }
+                Button(recordsText("Discard prepared file")) { model.dismissPreparedFile() }.accessibilityIdentifier("records.discardFile")
             }
         }
     }
@@ -199,7 +213,7 @@ struct RecordsToolsView: View {
             Text(recordsText("Only saved reduced references are available. Full-size originals and missing photos cannot be recovered.")).font(.footnote)
             ForEach(model.currentRecords.filter { model.selectedIDs.contains(RecordsToolsModel.selectionID($0)) }, id: \.selfSelectionID) { record in
                 if let media = record.media, !media.isEmpty {
-                    Text(record.title).font(.subheadline.bold())
+                    Text(recordsTitle(record)).font(.subheadline.bold())
                     ForEach(media) { attachment in
                         Group {
                             Toggle(isOn: Binding(get: { model.selectedMediaIDs.contains(RecordsToolsModel.mediaSelectionID(attachment, record: record)) }, set: { selected in
@@ -234,20 +248,18 @@ struct RecordsToolsView: View {
         }
     }
     private func reviewSection(_ review: RecoveryReview) -> some View {
-        Section(recordsText("Review before importing")) {
+        Section {
             Text(review.envelope.originNamespace).font(.caption).textSelection(.enabled)
-            if review.envelope.lastSavedAtMilliseconds == 0 {
-                Text(recordsText("The recipe file does not supply a saved date."))
-            } else {
-                Text(recordsText("Saved at") + " " + Date(timeIntervalSince1970: Double(review.envelope.lastSavedAtMilliseconds) / 1000).formatted(date: .abbreviated, time: .shortened))
-            }
+            // File export is a separate event from each record's source save.
+            Text(RecordsDatePresentation.exportedAt(review.envelope.exportedAtMilliseconds)).accessibilityIdentifier("records.importExportDate")
             if let report = model.recipeReport {
                 Text(report.localizedSummary)
                 if let fields = report.localizedUnsupportedFields { Text(fields).font(.caption) }
             }
             ForEach(review.rows) { row in
                 Group {
-                    Text(row.record.title).font(.headline)
+                    Text(recordsTitle(row.record)).font(.headline)
+                    Text(RecordsDatePresentation.sourceSavedAt(row.record.savedAtMilliseconds)).font(.caption).accessibilityIdentifier("records.importSourceDate." + row.record.id)
                     Text(dispositionLabel(row.disposition)).accessibilityIdentifier("records.importDisposition." + row.record.id)
                     Text(recordsText("Revision: ") + row.record.revision).font(.caption).textSelection(.enabled)
                     if let parent = row.record.parentRevision { Text(recordsText("Parent: ") + parent).font(.caption).textSelection(.enabled) }
@@ -262,17 +274,25 @@ struct RecordsToolsView: View {
                 .font(.footnote)
             Button(recordsText("Import reviewed copies")) { Task { await model.applyReviewedImport() } }.disabled(!review.canApply).accessibilityIdentifier("records.applyImport")
             Button(recordsText("Cancel import"), role: .cancel) { model.cancelReview() }.accessibilityIdentifier("records.cancelImport")
+        } header: {
+            Text(recordsText("Review before importing"))
+                .id("records.importReview")
+                .accessibilityFocused($importReviewFocused)
         }
     }
     private var recoveredSection: some View {
         Section(recordsText("Recovered copies and saved recipes")) {
             if model.recoveredRecords.isEmpty { Text(recordsText("No recovered copies yet.")) }
             ForEach(model.recoveredRecords) { saved in
-                DisclosureGroup(saved.record.title.isEmpty ? recordsText("Untitled record") : saved.record.title,
+                DisclosureGroup(recordsTitle(saved.record),
                     isExpanded: Binding(get: { recoveredExpandedIDs.contains(saved.id) }, set: { expanded in
                         if expanded { recoveredExpandedIDs.insert(saved.id) } else { recoveredExpandedIDs.remove(saved.id) }
                     })) {
                     Text(saved.record.origin).font(.caption).textSelection(.enabled)
+                    if saved.record.kind == .sharedShop {
+                        Text(RecordsDatePresentation.sourceSavedAt(saved.record.savedAtMilliseconds)).font(.caption).accessibilityIdentifier("records.recoveredSourceDate." + saved.record.id)
+                        Text(RecordsDatePresentation.recoveredAt(saved.recoveredAtMilliseconds)).font(.caption).accessibilityIdentifier("records.recoveryDate." + saved.record.id)
+                    }
                     Text(recordsText("Revision: ") + saved.record.revision).font(.caption).textSelection(.enabled)
                     if let recipe = recipe(saved.record) {
                         Text(recipe.yieldText)
@@ -282,17 +302,17 @@ struct RecordsToolsView: View {
                         if let source = recipe.sourceURL { Text(source).textSelection(.enabled).font(.caption) }
                         Button(recordsText("Open saved recipe")) { Task { await model.openRecovered(saved) } }
                     } else if saved.record.nativePayload != nil {
-                        Button(recordsText("Open separate recovered copy")) { Task { await model.openRecovered(saved) } }
+                        Button(recordsText("Open separate recovered copy")) { Task { await model.openRecovered(saved) } }.accessibilityIdentifier("records.openRecovered." + saved.record.id)
                     } else {
                         Text(ReadableArchive.text([saved.record], owner: false)).textSelection(.enabled)
                         Text(recordsText("This helper projection has no private payload and cannot replace an owner record.")).font(.footnote)
                     }
                     ForEach(saved.record.media ?? []) { RecordsMediaPreview(attachment: $0) }
-                    Button(recordsText("Delete this recovered copy"), role: .destructive) { deletion = Deletion(title: saved.record.title, source: nil, recovered: .copy(saved.id)) }
+                    Button(recordsText("Delete this recovered copy"), role: .destructive) { deletion = Deletion(title: recordsTitle(saved.record), source: nil, recovered: .copy(saved.id)) }
                     Button(recordsText("Delete recovered copies from this source"), role: .destructive) { deletion = Deletion(title: saved.record.origin, source: nil, recovered: .origin(saved.record.origin)) }
                 }
                 .disclosureGroupStyle(LabeledFormDisclosureStyle(
-                    label: recordsText("Recovered copy") + ": " + (saved.record.title.isEmpty ? recordsText("Untitled record") : saved.record.title),
+                    label: recordsText("Recovered copy") + ": " + (recordsTitle(saved.record)),
                     identifier: "records.recovered." + saved.record.title))
             }
             if model.deleteUndo != nil { Button(recordsText("Undo recovered-copy deletion")) { Task { await model.undoRecoveredDeletion() } } }
@@ -323,6 +343,7 @@ struct RecordsToolsView: View {
         case .ledger: return recordsText("Shopping list and dinners")
         case .pickup: return recordsText("Pickup history")
         case .recipe: return recordsText("Recipe")
+        case .sharedShop: return recordsText("Shared pickup record")
         }
     }
     private func recipe(_ record: ArchiveRecord) -> ImportedRecipe? {

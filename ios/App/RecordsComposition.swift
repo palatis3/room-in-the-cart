@@ -3,6 +3,7 @@ import Foundation
 import CoreDomain
 import LocalStore
 import RecordArchive
+import HouseholdClient
 
 /// The records boundary owns explicit domain projections. Databases, credentials,
 /// consent, membership and grants are never archive payloads.
@@ -208,6 +209,8 @@ private struct RecordsPlanningProjection: Codable {
             let value = try pickup(bytes)
             guard value.id.uuidString == record.id else { throw ArchiveError.invalidIdentity }
             normalized = try canonicalPickupForImport(value, original: bytes)
+        case .sharedShop:
+            normalized = try SharedRecordArchiveAdapter.validate(record).independentData()
         case .recipe:
             let recipe = try JSONDecoder().decode(ImportedRecipe.self, from: bytes).validated()
             normalized = try ArchiveCodec.canonical(recipe)
@@ -286,6 +289,9 @@ struct RecordsToolsEntryView: View {
                         }.navigationTitle(recordsText("Recovered workspace")).environmentObject(model)
                     case let .pickup(model): PickupHomeView(model: model).environment(\.pickupLedger, nil)
                     case let .recipe(recipe): RecordsRecipeAdoptionView(recipe: recipe, ledger: composition.ledger)
+                    case let .sharedRecord(record, text):
+                        ScrollView { Text(text).textSelection(.enabled).accessibilityIdentifier("records.sharedRecoveredText").frame(maxWidth: .infinity, alignment: .leading).padding() }
+                            .navigationTitle(recordsTitle(record))
                     case let .ledgerDeletion(review):
                         RecordsLedgerDeletionView(ledger: composition.ledger, review: review) {
                             try await composition.deleteWholeLedger(review)
@@ -325,7 +331,7 @@ private struct RecordsRecoveredDinnersView: View {
 
 @MainActor private final class RecordsComposition: ObservableObject {
     struct Destination: Identifiable {
-        enum Content { case comparison(AppModel, ComparisonDraft, Date), ledger(LedgerModel), pickup(PickupModel), recipe(ImportedRecipe), ledgerDeletion(WholeLedgerDeletionReview) }
+        enum Content { case comparison(AppModel, ComparisonDraft, Date), ledger(LedgerModel), pickup(PickupModel), recipe(ImportedRecipe), sharedRecord(ArchiveRecord, String), ledgerDeletion(WholeLedgerDeletionReview) }
         let id: String
         let content: Content
     }
@@ -476,6 +482,20 @@ private struct RecordsRecoveredDinnersView: View {
         guard let store = app.store else { throw ArchiveError.unavailable }
         var result: [ArchiveRecord] = []
         unavailableRecords = []
+        // Refresh current permissions and privacy before every listing/export.
+        // No previous shared snapshot is used as an offline authorization fallback.
+        if let household, let scope = household.projection, scope.capabilities.contains("shopper_commands"),
+           let shop = scope.shopId, let shopID = UUID(uuidString: shop), let service = household.service {
+            do {
+                let shared = try await service.sharedRecordSnapshot(shopID: shopID)
+                guard authorize() else { throw ArchiveError.unavailable }
+                result.append(try SharedRecordArchiveAdapter.make(shared))
+            } catch {
+                guard authorize() else { throw ArchiveError.unavailable }
+                unavailableRecords.append(RecordsUnavailableRecord(origin: "shared-shop/" + scope.household.id,
+                    recordID: shopID.uuidString.lowercased(), title: nil, reason: .unreadableStorage))
+            }
+        }
         let comparisonOrigin = "comparisons/" + store.workspaceID.uuidString
         let comparisonBatch = RecordsSnapshotProjection.project(try await store.listing(), origin: comparisonOrigin) { saved in
             let payload = try RecordsNativeCodec.comparison(saved.payload)
@@ -592,7 +612,7 @@ private struct RecordsRecoveredDinnersView: View {
         case .comparison: filename = "comparison.sqlite"
         case .ledger: filename = "ledger.sqlite"
         case .pickup: filename = "pickup.sqlite"
-        case .recipe:
+        case .recipe, .sharedShop:
             do { try RecordsNativeCodec.validate(saved.record); return saved.record.nativePayload == nil ? [] : [saved.record] }
             catch { return omitRecovered(saved, reason: .invalidNative) }
         }
@@ -750,6 +770,11 @@ private struct RecordsRecoveredDinnersView: View {
             guard authorize(), isolated.ready else { throw ArchiveError.unavailable }
             isolated.selectedID = value.id
             destination = Destination(id: saved.id, content: .pickup(isolated))
+        case .sharedShop:
+            _ = try SharedRecordArchiveAdapter.validate(saved.record)
+            try await recoveryLifetime.revalidate(lease, copy: saved, registry: registry)
+            guard authorize() else { throw ArchiveError.unavailable }
+            destination = Destination(id: saved.id, content: .sharedRecord(saved.record, try SharedRecordArchiveAdapter.readable(saved.record)))
         case .recipe: break
         }
     }

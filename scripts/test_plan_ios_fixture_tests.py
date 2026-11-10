@@ -40,7 +40,7 @@ class PlanIOSFixtureTests(unittest.TestCase):
         isolated = {f"{suite}-{method.rsplit('/', 1)[1]}"
                     for suite in ISOLATED_SUITES for method in self.inventory[suite]}
         self.assertCountEqual(actual, grouped | isolated | set(DELIVERY_SHARDS))
-        self.assertEqual(len(actual), 25)
+        self.assertEqual(len(actual), 26)
         self.assertEqual(self.inventory["SharedCreatedMealUndoUITests"], {
             f"{UI_TARGET}/SharedCreatedMealUndoUITests/testCreatedDinnerUndoCancelRelaunchExactRetryKeepsLunchLaterMealAndStaple",
             f"{UI_TARGET}/SharedCreatedMealUndoUITests/testSpanishCreatedDinnerUndoCancelRelaunchExactRetryKeepsLunchLaterMealAndStaple",
@@ -93,7 +93,7 @@ class PlanIOSFixtureTests(unittest.TestCase):
         self.assertEqual(set(plans["dinner"]["shards"]), {"DinnerDecisionSheetUITests"})
         self.assertEqual(plans["dinner"]["shards"]["DinnerDecisionSheetUITests"]["suite"], "DinnerDecisionSheetUITests")
         self.assertEqual(sum(len(shard["test_identifiers"]) for plan in plans.values()
-                             for shard in plan["shards"].values()), 87)
+                             for shard in plan["shards"].values()), 89)
         later_page = f"{UI_TARGET}/RequestDuplicateComparisonUITests/testConfirmedLaterPageDecisionReturnsToSameLeeOutcomeWithoutScrolling"
         return_shard = plans["contributor"]["shards"]["contributor-balanced-01"]["test_identifiers"]
         self.assertEqual([value.removesuffix("()") for value in return_shard].count(later_page), 1)

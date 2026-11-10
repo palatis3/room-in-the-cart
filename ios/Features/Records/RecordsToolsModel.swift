@@ -114,13 +114,17 @@ import RecordArchive
                 let bounded = try ArchiveCodec.make(records: records, kind: choice == .ownerText ? .personalRecovery : .helperShop,
                     origin: "selected-local-records", revision: "readable-preview")
                 _ = try ArchiveCodec.encode(bounded)
-                preparedDocument = RecordsFileDocument(data: Data(ReadableArchive.text(records, owner: choice == .ownerText).utf8), kind: .text)
+                let text = try records.map { record in
+                    if record.kind == .sharedShop { return try SharedRecordArchiveAdapter.readable(record) }
+                    return ReadableArchive.text([record], owner: choice == .ownerText)
+                }.joined(separator: "\n\n")
+                preparedDocument = RecordsFileDocument(data: Data(text.utf8), kind: .text)
                 preparedName = choice == .ownerText ? "Private-readable-records" : "Cook-copy"
                 preparedIsPrivate = choice == .ownerText
             }
             try requireAuthorization(authorize)
             status = recordsText("Your file is ready to review and save.")
-        } catch { fail(error) }
+        } catch { fail(error, reveal: true) }
     }
     func importFile(_ url: URL, recipes: Bool) async {
         guard !busy else { return }
@@ -330,4 +334,10 @@ extension RecipeImportReport {
         guard !unsupportedFields.isEmpty else { return nil }
         return recordsText("Unsupported fields: ") + unsupportedFields.joined(separator: ", ")
     }
+}
+
+/// Localize app-generated headings without changing archive identity or user wording.
+func recordsTitle(_ record: ArchiveRecord) -> String {
+    if record.kind == .sharedShop && record.title == "Shared pickup" { return recordsText("Shared pickup record") }
+    return record.title.isEmpty ? recordsText("Untitled record") : record.title
 }

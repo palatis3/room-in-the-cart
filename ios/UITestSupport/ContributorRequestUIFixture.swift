@@ -43,6 +43,7 @@ import HouseholdClient
         else if ProcessInfo.processInfo.arguments.contains("--shared-food-editor-fixture") { SharedFoodEditorFixtureRoot() }
         else if ProcessInfo.processInfo.arguments.contains("--shared-meal-fixture") { S17SharedMealFixtureRoot() }
         else if ProcessInfo.processInfo.arguments.contains("--shared-store-quotes-fixture") { S27StoreQuotesFixtureRoot() }
+        else if ProcessInfo.processInfo.arguments.contains("--shared-records-fixture") { SharedRecordsUIFixtureRoot() }
         else if ProcessInfo.processInfo.arguments.contains("--records-media-fixture") { RecordsMediaUIFixtureRoot() }
         else if ProcessInfo.processInfo.arguments.contains("--measurement-fixture") { MeasurementUIFixtureRoot() }
         else if ProcessInfo.processInfo.arguments.contains("--recipe-library-fixture") { RecipeLibraryUIFixtureRoot() }

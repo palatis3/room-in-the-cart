@@ -78,7 +78,7 @@ import RecordArchive
                   target.kind == .receiptEvidence, record.id == target.containerID.uuidString,
                   target.objectID == target.containerID else { return false }
             return try RecordsNativeCodec.pickup(bytes).id == target.containerID
-        case .comparison, .recipe: return false
+        case .comparison, .recipe, .sharedShop: return false
         }
     }
     private static func kind(_ value: CaptureTarget.Kind) -> ArchiveMediaKind {
