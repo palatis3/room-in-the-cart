@@ -493,6 +493,7 @@ jobs:
       cancel-in-progress: false
     env:
       TEST_SHARD: simulator-helper
+      SIMULATOR_HELPER_DIRECT_INVENTORY: 'true'
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Run one standalone helper control

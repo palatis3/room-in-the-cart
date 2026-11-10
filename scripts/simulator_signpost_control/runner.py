@@ -2,6 +2,7 @@
 import os
 import hashlib
 import stat
+import plistlib
 import signal
 import threading
 from pathlib import Path
@@ -31,7 +32,59 @@ def sample_continuable(sample):
             and sample.get('terminalVerified') is True and sample.get('toolUnchanged') is True
             and not any(sample.get(k) for k in ('cleanupError','toolAfterError','incompleteProofError')))
 
+DIRECT_INVENTORY_LAUNCHER_SHA256='c8e73954e91dc5b6e9d7a84a185f3503368b586558c2b464dbe913e9bf0ab336'
+CORE_SIMULATOR_EXECUTABLE='/Library/Developer/PrivateFrameworks/CoreSimulator.framework/Versions/A/Resources/bin/simctl'
+CORE_SIMULATOR_INFO=Path('/Library/Developer/PrivateFrameworks/CoreSimulator.framework/Versions/A/Resources/Info.plist')
+
+def framework_metadata():
+    before=CORE_SIMULATOR_INFO.lstat()
+    require(stat.S_ISREG(before.st_mode) and before.st_uid==0 and before.st_size<=65536,
+            'direct_inventory_framework_shape')
+    raw=CORE_SIMULATOR_INFO.read_bytes();value=plistlib.loads(raw)
+    after=CORE_SIMULATOR_INFO.lstat()
+    fingerprint=lambda st:(st.st_dev,st.st_ino,st.st_size,st.st_mode,st.st_uid,st.st_mtime_ns,st.st_ctime_ns)
+    require(fingerprint(before)==fingerprint(after) and len(raw)==before.st_size,'direct_inventory_framework_changed')
+    require(value.get('CFBundleIdentifier')=='com.apple.CoreSimulator'
+            and value.get('CFBundleVersion')=='1174.21','direct_inventory_framework_compatibility')
+    return {'path':str(CORE_SIMULATOR_INFO),'sha256':hashlib.sha256(raw).hexdigest(),
+            'bytes':len(raw),'version':value['CFBundleVersion']}
+
 class HelperRunner(Runner):
+    def enable_direct_inventory(self, inventory):
+        """Preparation only, after an admitted ordinary launcher inventory completed."""
+        self.budget();tool=self.tools['simctl']
+        require(inventory.get('complete') is True,'direct_inventory_incomplete_inventory')
+        require(tool['sha256']==DIRECT_INVENTORY_LAUNCHER_SHA256
+                and tool['executable']==CORE_SIMULATOR_EXECUTABLE,'direct_inventory_launcher_profile')
+        prior=[p for p in self.receipt['processes'] if p.get('label')=='inventory']
+        require(len(prior)==1 and prior[0].get('argv')==[tool['path'],'list','-j']
+                and prior[0].get('exitCode')==0 and prior[0].get('terminalVerified') is True
+                and not prior[0].get('signals') and not prior[0].get('cleanupError'),
+                'direct_inventory_normal_launcher_prerequisite')
+        launcher_identity(tool['path'],tool['sha256'],tool['executable'],tool['executableSHA256'])
+        observed=inventory['entries']['coresimulator-version']['observed']
+        expected={'path':observed['resolvedPath'],'sha256':observed['sha256'],
+                  'bytes':observed['bytes'],'version':observed['fields']['CFBundleVersion']}
+        require(framework_metadata()==expected,'direct_inventory_framework_stale')
+        self.direct_inventory={'framework':expected,'launcherSHA256':tool['sha256'],
+                               'executableSHA256':tool['executableSHA256'],
+                               'reviewedLauncherMinimumVersion':'1174.9.2',
+                               'scope':'preparation_scoped_read_only_inventory'}
+        self.budget();self.receipt['directInventory']=self.direct_inventory;self.save()
+
+    def direct_inventory_selected(self, tail):
+        identifier=self.device.get('createdUDID')
+        return (getattr(self,'direct_inventory',None) is not None and bool(identifier)
+                and tail in (['list','-j','runtimes'],['list','-j','devices',identifier]))
+
+    def verify_direct_inventory(self):
+        proof=self.direct_inventory;tool=self.tools['simctl']
+        require(proof['launcherSHA256']==tool['sha256']==DIRECT_INVENTORY_LAUNCHER_SHA256
+                and tool['executable']==CORE_SIMULATOR_EXECUTABLE
+                and proof['executableSHA256']==tool['executableSHA256'],'direct_inventory_tool_changed')
+        launcher_identity(tool['path'],tool['sha256'],tool['executable'],tool['executableSHA256'])
+        require(framework_metadata()==proof['framework'],'direct_inventory_framework_stale')
+
     def note(self, event, **details):
         timing=getattr(self,'_sample_timing',None)
         if timing is None:return
@@ -119,8 +172,11 @@ class HelperRunner(Runner):
         tool=self.tools['simctl'];expected=Path(tool['executable']);digest=tool['executableSHA256']
         launcher_identity(tool['path'],tool['sha256'],str(expected),digest)
         self.lifecycle_check(deadline)
-        record={'label':label,'argv':[tool['path'],*tail],'executableSHA256':digest,
+        direct=self.direct_inventory_selected(tail)
+        if direct:self.verify_direct_inventory();self.lifecycle_check(deadline)
+        record={'label':label,'argv':[str(expected) if direct else tool['path'],*tail],'executableSHA256':digest,
                 'spawnEpoch':time.time(),'signals':[]}
+        if direct:record.update(dispatch='verified_direct_inventory',launcherPath=tool['path'],framework=self.direct_inventory['framework'])
         stdout=(self.out/(label+'-stdout.log')).open('xb')
         stderr=(self.out/(label+'-stderr.log')).open('xb')
         env={k:os.environ[k] for k in ('HOME','TMPDIR','USER','LOGNAME') if k in os.environ}
@@ -139,7 +195,10 @@ class HelperRunner(Runner):
     def acquisition_allowed(self, item):
         """Waiting is authorized by the exact dispatched command, never by a label exemption."""
         tool=self.tools['simctl'];record=item['record'];argv=record.get('argv',[])
-        return (bool(argv) and argv[0]==tool['path'] and lifecycle_allowed(argv[1:],self.device)
+        direct=record.get('dispatch')=='verified_direct_inventory'
+        dispatch=(bool(argv) and argv[0]==tool['executable'] and self.direct_inventory_selected(argv[1:])
+                  and record.get('launcherPath')==tool['path'] and record.get('framework')==self.direct_inventory['framework']) if direct else (bool(argv) and argv[0]==tool['path'])
+        return (dispatch and lifecycle_allowed(argv[1:],self.device)
                 and bool(self.processes) and self.processes[-1] is item
                 and sum(p is item for p in self.processes)==1
                 and all(p['process'].poll() is not None for p in self.processes[:-1])
@@ -153,6 +212,7 @@ class HelperRunner(Runner):
         require(self.acquisition_allowed(item),'helper_lifecycle_acquisition_scope')
         self.lifecycle_check(deadline)
         launcher_identity(tool['path'],tool['sha256'],item['expected'],item['digest'])
+        if record.get('dispatch')=='verified_direct_inventory':self.verify_direct_inventory()
         interpreter=str(Path('/bin/bash').resolve())
         diagnostic={'startMonotonic':time.monotonic(),'deadlineMonotonic':deadline,
                     'samples':0,'first':[],'last':None}
@@ -177,7 +237,7 @@ class HelperRunner(Runner):
                         and value['startTimeMicros']>=int(record['spawnEpoch']*1_000_000),label+'_inventory_identity')
                 current={k:value[k] for k in ('pid','parentPID','uid','startTimeMicros')}
                 require(origin is None or current==origin,label+'_inventory_identity_changed');origin=current
-                require(kind in ('expected','interpreter'),label+'_inventory_executable')
+                require(kind in (('expected',) if record.get('dispatch')=='verified_direct_inventory' else ('expected','interpreter')),label+'_inventory_executable')
                 if kind=='expected':
                     require(sha(item['expected'])==item['digest'],label+'_binary_identity')
                     self.lifecycle_check(deadline)
@@ -249,7 +309,8 @@ class HelperRunner(Runner):
         tool=self.tools['simctl'];record=target['record'];argv=record.get('argv',[])
         if (sum(p is target for p in self.processes)!=1 or record.get('pid')!=target['process'].pid
                 or target.get('expected')!=tool['executable'] or target.get('digest')!=tool['executableSHA256']):return None
-        if record.get('label')=='booted-runtimes' and argv==[tool['path'],'list','-j','runtimes']:
+        runtime_argv=[tool['executable'] if record.get('dispatch')=='verified_direct_inventory' else tool['path'],'list','-j','runtimes']
+        if record.get('label')=='booted-runtimes' and argv==runtime_argv and (record.get('dispatch')!='verified_direct_inventory' or self.direct_inventory_selected(argv[1:])):
             return (10,'booted-runtimes')
         identifier=self.device.get('createdUDID')
         if not identifier or record.get('label')!='bootstatus' or argv!=[tool['path'],'bootstatus',identifier,'-b']:
@@ -543,6 +604,7 @@ class HelperRunner(Runner):
             diagnostic.update(acquiredMonotonic=time.monotonic(),pid=item['process'].pid,outcome='waiting')
             try:code=self.lifecycle_wait(item,deadline,diagnostic)
             finally:self.cleanup(item)
+            if item['record'].get('dispatch')=='verified_direct_inventory':self.verify_direct_inventory()
             self.lifecycle_check(deadline)  # No late terminal/output success or fresh timeout after acquisition.
             require(code==0 and not item['record']['signals'],label+'_normal_exit')
             diagnostic['outcome']='normal_exit';diagnostic['commandOutcome']='normal_exit'

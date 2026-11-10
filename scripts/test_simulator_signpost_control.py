@@ -1794,4 +1794,151 @@ class FailedReadinessObservationTests(unittest.TestCase):
         self.assertIsInstance(failed.body[-1],ast.Raise)
         self.assertIn('tracing_readiness_missing',ast.unparse(failed.body[-1]))
 
+class DirectInventoryTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp=tempfile.TemporaryDirectory();self.addCleanup(self.tmp.cleanup)
+        self.r=object.__new__(runner.HelperRunner);self.r.device=copy.deepcopy(DEVICE)
+        self.r.tools={'simctl':{'path':'/Xcode/Contents/Developer/usr/bin/simctl','sha256':runner.DIRECT_INVENTORY_LAUNCHER_SHA256,
+            'executable':runner.CORE_SIMULATOR_EXECUTABLE,'executableSHA256':'binary-digest'}}
+        self.r.out=Path(self.tmp.name);self.r.args=SimpleNamespace(xctrace=Path('/Xcode/Contents/Developer/usr/bin/xctrace'))
+        self.r.processes=[];self.r.save=mock.Mock();self.r.budget=mock.Mock()
+        self.prior={'label':'inventory','argv':[self.r.tools['simctl']['path'],'list','-j'],
+                    'exitCode':0,'terminalVerified':True,'signals':[]}
+        self.r.receipt={'processes':[self.prior]}
+        self.metadata={'path':str(runner.CORE_SIMULATOR_INFO),'sha256':'framework-sha','bytes':1480,'version':'1174.21'}
+        self.inventory={'complete':True,'entries':{'coresimulator-version':{'observed':{
+            'resolvedPath':self.metadata['path'],'sha256':self.metadata['sha256'],'bytes':1480,
+            'fields':{'CFBundleVersion':'1174.21'}}}}}
+        self.launcher=mock.patch.object(runner,'launcher_identity');self.launcher_mock=self.launcher.start();self.addCleanup(self.launcher.stop)
+        self.meta_patch=mock.patch.object(runner,'framework_metadata',return_value=self.metadata.copy())
+        self.meta=self.meta_patch.start();self.addCleanup(self.meta_patch.stop)
+    def enable(self):self.r.enable_direct_inventory(self.inventory)
+    def spawn(self,tail=None,label='query'):
+        proc=SimpleNamespace(pid=42,poll=lambda:None)
+        with mock.patch.object(runner.subprocess,'Popen',return_value=proc) as popen:
+            item=self.r.spawn_lifecycle(label,tail or ['list','-j','runtimes'],runner.time.monotonic()+30)
+        for stream in item['streams']:self.addCleanup(stream.close)
+        return item,popen
+    def test_admitted_normal_launcher_and_fresh_framework_enable(self):
+        self.enable();self.assertEqual(self.r.receipt['directInventory']['framework'],self.metadata)
+        self.assertEqual(self.r.direct_inventory['reviewedLauncherMinimumVersion'],'1174.9.2')
+    def test_missing_failed_signaled_or_unverified_initial_launcher_rejected(self):
+        for key,value in [('exitCode',1),('terminalVerified',False),('signals',['SIGINT']),('argv',['/other','list','-j'])]:
+            old=self.prior[key];self.prior[key]=value
+            with self.subTest(key=key),self.assertRaisesRegex(ValueError,'normal_launcher_prerequisite'):self.enable()
+            self.prior[key]=old
+        self.r.receipt['processes']=[]
+        with self.assertRaisesRegex(ValueError,'normal_launcher_prerequisite'):self.enable()
+    def test_incomplete_or_stale_observed_framework_rejected(self):
+        self.inventory['complete']=False
+        with self.assertRaisesRegex(ValueError,'incomplete_inventory'):self.enable()
+        self.inventory['complete']=True;self.meta.return_value={**self.metadata,'sha256':'new'}
+        with self.assertRaisesRegex(ValueError,'framework_stale'):self.enable()
+    def test_unreviewed_launcher_or_executable_rejected(self):
+        for key,value in [('sha256','unknown'),('executable','/foreign')]:
+            old=self.r.tools['simctl'][key];self.r.tools['simctl'][key]=value
+            with self.subTest(key=key),self.assertRaisesRegex(ValueError,'launcher_profile'):self.enable()
+            self.r.tools['simctl'][key]=old
+    def test_binary_or_launcher_hash_failure_rejected_before_spawn(self):
+        self.enable();self.launcher_mock.side_effect=ValueError('tool_file_identity')
+        with mock.patch.object(runner.subprocess,'Popen') as popen,self.assertRaisesRegex(ValueError,'tool_file_identity'):
+            self.r.spawn_lifecycle('query',['list','-j','runtimes'],runner.time.monotonic()+30)
+        popen.assert_not_called()
+    def test_fresh_metadata_drift_before_spawn_has_no_fallback(self):
+        self.enable();self.meta.return_value={**self.metadata,'sha256':'changed'}
+        with mock.patch.object(runner.subprocess,'Popen') as popen,self.assertRaisesRegex(ValueError,'framework_stale'):
+            self.r.spawn_lifecycle('query',['list','-j','runtimes'],runner.time.monotonic()+30)
+        popen.assert_not_called()
+    def test_exact_scoped_queries_only(self):
+        self.enable()
+        for tail in (['list','-j','runtimes'],['list','-j','devices',DEVICE['createdUDID']]):self.assertTrue(self.r.direct_inventory_selected(tail))
+        for tail in (['list','-j'],['list','-j','devices',DEVICE['sourceUDID']],['delete',DEVICE['createdUDID']],['bootstatus',DEVICE['createdUDID'],'-b']):self.assertFalse(self.r.direct_inventory_selected(tail))
+    def test_direct_spawn_preserves_developer_environment_and_exact_child(self):
+        self.enable()
+        with mock.patch.dict(os.environ,{'SECRET':'not-copied','HOME':self.tmp.name},clear=True):item,popen=self.spawn()
+        self.assertEqual(popen.call_args.args[0],[runner.CORE_SIMULATOR_EXECUTABLE,'list','-j','runtimes'])
+        self.assertEqual(popen.call_args.kwargs['env']['DEVELOPER_DIR'],'/Xcode/Contents/Developer')
+        self.assertNotIn('SECRET',popen.call_args.kwargs['env']);self.assertTrue(self.r.acquisition_allowed(item))
+        self.assertEqual(item['record']['dispatch'],'verified_direct_inventory');popen.assert_called_once()
+    def test_mutations_and_broad_inventory_keep_original_launcher(self):
+        self.enable()
+        for i,tail in enumerate((['boot',DEVICE['createdUDID']],['bootstatus',DEVICE['createdUDID'],'-b'],['shutdown',DEVICE['createdUDID']],['delete',DEVICE['createdUDID']],['list','-j'],['create',DEVICE['createdName'],DEVICE['deviceTypeIdentifier'],run.RUNTIME])):
+            self.r.processes=[];item,popen=self.spawn(tail,'ordinary'+str(i))
+            self.assertEqual(popen.call_args.args[0],[self.r.tools['simctl']['path'],*tail]);self.assertNotIn('dispatch',item['record'])
+    def test_without_preflight_cleanup_uses_original_launcher(self):
+        item,popen=self.spawn();self.assertEqual(popen.call_args.args[0][0],self.r.tools['simctl']['path'])
+    def test_direct_child_exact_binding_and_sampler_scope(self):
+        self.enable();item,popen=self.spawn(label='booted-runtimes')
+        value={'pid':42,'parentPID':os.getpid(),'uid':os.getuid(),'startTimeMicros':2*10**18,'executable':runner.CORE_SIMULATOR_EXECUTABLE}
+        self.r.identity=SimpleNamespace(read=lambda pid:value)
+        with mock.patch.object(runner,'sha',return_value='binary-digest'):self.r.acquire_lifecycle(item,runner.time.monotonic()+30)
+        self.assertEqual(item['binding'],value);self.assertEqual(self.r.sample_policy(item),(10,'booted-runtimes'))
+    def test_direct_unexpected_interpreter_is_not_admitted(self):
+        self.enable();item,_=self.spawn()
+        self.r.identity=SimpleNamespace(read=lambda pid:{'pid':42,'parentPID':os.getpid(),'uid':os.getuid(),'startTimeMicros':2*10**18,'executable':str(Path('/bin/bash').resolve())})
+        with self.assertRaisesRegex(ValueError,'inventory_executable'):self.r.acquire_lifecycle(item,runner.time.monotonic()+30)
+        self.assertIsNone(item['binding']);self.assertEqual(item['record']['signals'],[])
+    def test_deadline_expiration_before_dispatch_still_forbids_launch(self):
+        self.enable()
+        with mock.patch.object(runner.subprocess,'Popen') as popen,self.assertRaisesRegex(ValueError,'lifecycle_deadline'):
+            self.r.spawn_lifecycle('query',['list','-j','runtimes'],0)
+        popen.assert_not_called()
+    def test_mismatched_registered_dispatch_is_rejected(self):
+        self.enable();item,_=self.spawn();item['record']['argv']=['/foreign','list','-j','runtimes']
+        self.assertFalse(self.r.acquisition_allowed(item))
+    def test_terminal_framework_drift_fails_normal_query_without_retry(self):
+        self.enable();item,_=self.spawn();self.r.processes=[]
+        self.r.started=runner.time.monotonic();self.r.seconds=300
+        self.r.spawn_lifecycle=mock.Mock(return_value=item);self.r.acquire_lifecycle=mock.Mock()
+        self.r.lifecycle_wait=mock.Mock(return_value=0);self.r.cleanup=mock.Mock()
+        self.meta.return_value={**self.metadata,'sha256':'changed-after-normal-exit'}
+        with self.assertRaisesRegex(ValueError,'framework_stale'):
+            self.r.lifecycle('query',['list','-j','runtimes'])
+        self.r.spawn_lifecycle.assert_called_once();self.r.cleanup.assert_called_once_with(item)
+        self.assertEqual(self.r.receipt['lifecycleCommands'][-1]['outcome'],'failed')
+    def test_terminal_verification_cost_cannot_create_late_success(self):
+        self.enable();item,_=self.spawn();self.r.processes=[];self.r.started=0;self.r.seconds=300
+        self.r.spawn_lifecycle=mock.Mock(return_value=item);self.r.acquire_lifecycle=mock.Mock()
+        self.r.lifecycle_wait=mock.Mock(return_value=0);self.r.cleanup=mock.Mock();clock=[1.]
+        def slow_metadata():clock[0]=31.;return self.metadata.copy()
+        self.meta.side_effect=slow_metadata
+        with mock.patch.object(runner.time,'monotonic',side_effect=lambda:clock[0]),self.assertRaisesRegex(ValueError,'lifecycle_deadline'):
+            self.r.lifecycle('query',['list','-j','runtimes'])
+        self.r.spawn_lifecycle.assert_called_once();self.r.cleanup.assert_called_once()
+        self.assertEqual(self.r.receipt['lifecycleCommands'][-1]['deadlineMonotonic'],31.)
+
+class DirectFrameworkMetadataTests(unittest.TestCase):
+    def metadata(self,version='1174.21',identity='com.apple.CoreSimulator',mode=0o100644,uid=0,drift=False):
+        raw=runner.plistlib.dumps({'CFBundleIdentifier':identity,'CFBundleVersion':version})
+        a=SimpleNamespace(st_mode=mode,st_uid=uid,st_size=len(raw),st_dev=1,st_ino=2,st_mtime_ns=3,st_ctime_ns=4)
+        b=copy.copy(a)
+        if drift:b.st_mtime_ns=99
+        fake=mock.Mock();fake.lstat.side_effect=[a,b];fake.read_bytes.return_value=raw
+        with mock.patch.object(runner,'CORE_SIMULATOR_INFO',fake):return runner.framework_metadata()
+    def test_exact_known_compatible_framework(self):self.assertEqual(self.metadata()['version'],'1174.21')
+    def test_older_unknown_or_wrong_bundle_rejected(self):
+        for version,identity in [('1174.9.1','com.apple.CoreSimulator'),('1174.22','com.apple.CoreSimulator'),('1174.21','other')]:
+            with self.subTest(version=version,identity=identity),self.assertRaisesRegex(ValueError,'framework_compatibility'):self.metadata(version,identity)
+    def test_symlink_nonroot_and_read_drift_rejected(self):
+        for kw in ({'mode':0o120777},{'uid':501},{'drift':True}):
+            with self.subTest(kw=kw),self.assertRaises(ValueError):self.metadata(**kw)
+
+class DirectInventorySelectionTests(unittest.TestCase):
+    def test_absent_or_false_on_local_framework_keeps_original_dispatch(self):
+        for env in (ENV,{**ENV,'SIMULATOR_HELPER_DIRECT_INVENTORY':'false'}):
+            with self.subTest(env=env),mock.patch.object(runner,'framework_metadata',side_effect=AssertionError('local framework must not be read')):
+                self.assertFalse(run.direct_inventory_requested(env));self.assertTrue(run.validate_request(env))
+                r=object.__new__(runner.HelperRunner);r.device=DEVICE
+                self.assertFalse(r.direct_inventory_selected(['list','-j','runtimes']))
+    def test_selected_hosted_manual_helper_profile(self):
+        env={**ENV,'SIMULATOR_HELPER_DIRECT_INVENTORY':'true','GITHUB_ACTIONS':'true','RUNNER_OS':'macOS'}
+        self.assertTrue(run.direct_inventory_requested(env));self.assertTrue(run.validate_request(env))
+    def test_selected_mode_wrong_context_rejected_not_fallback(self):
+        env={**ENV,'SIMULATOR_HELPER_DIRECT_INVENTORY':'true','GITHUB_ACTIONS':'true','RUNNER_OS':'macOS'}
+        for k,v in [('GITHUB_ACTIONS','false'),('RUNNER_OS','Linux'),('GITHUB_EVENT_NAME','pull_request'),('SIMULATOR_SIGNPOST_CONTROL','false')]:
+            with self.subTest(key=k),self.assertRaisesRegex(ValueError,'hosted_only'):run.validate_request({**env,k:v})
+    def test_invalid_mode_is_not_false(self):
+        for value in ('1','True','yes',''):
+            with self.subTest(value=value),self.assertRaisesRegex(ValueError,'direct_inventory_boolean'):run.validate_request({**ENV,'SIMULATOR_HELPER_DIRECT_INVENTORY':value})
+
 if __name__=='__main__':unittest.main()

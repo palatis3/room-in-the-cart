@@ -26,7 +26,18 @@ POST_BOOT_VERIFICATION_RESERVE_SECONDS=30
 MIXED=('ENFORCE_BASELINES','OBSERVE_APP_SCROLL_SIGNPOSTS','CAPTURE_SCROLL_SIGNPOSTS',
        'CAPTURE_PREFLIGHT_ONLY','ENABLE_PERFORMANCE_DIAGNOSTICS','FRESH_PERFORMANCE_SIMULATOR')
 
+def direct_inventory_requested(env):
+    flag=env.get('SIMULATOR_HELPER_DIRECT_INVENTORY','false')
+    require(flag in ('true','false'),'helper_direct_inventory_boolean')
+    if flag=='false':return False
+    require(env.get('SIMULATOR_SIGNPOST_CONTROL')=='true'
+            and env.get('GITHUB_EVENT_NAME')=='workflow_dispatch'
+            and env.get('GITHUB_ACTIONS')=='true' and env.get('RUNNER_OS')=='macOS',
+            'helper_direct_inventory_hosted_only')
+    return True
+
 def validate_request(env):
+    direct_inventory_requested(env)  # Plan-time opt-in; never a failure fallback.
     flag=env.get('SIMULATOR_SIGNPOST_CONTROL','false')
     require(flag in ('true','false'),'helper_boolean')
     if flag=='false':return False
@@ -135,6 +146,7 @@ def run(output, developer):
         template=runner.command('templates','xctrace',['list','templates'],10,terminal_query=True)
         result['template']=verify_logging_template(template.read_bytes())
         listing=read(runner.command('inventory','simctl',['list','-j'],30,terminal_query=True))
+        if direct_inventory_requested(os.environ):runner.enable_direct_inventory(inventory)
         rt=runtime(listing);_,source_device=select_iphone(listing['devices'],RUNTIME,'iPhone 17')
         require(source_device.get('deviceTypeIdentifier')=='com.apple.CoreSimulator.SimDeviceType.iPhone-17','helper_exact_device_type')
         owner=owner_identity();nonce=str(uuid.uuid4())
