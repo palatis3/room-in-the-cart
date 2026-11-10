@@ -2,17 +2,17 @@
 
 ## Current checkpoint — November 10, focused product completion
 
-Selected shared historical backup is implemented locally: a Free authorized
-history endpoint, strict Swift client, separate encrypted/readable archive and
-independent recovery, now including selected-shop stock chronology and historical
-food allocations. Old archives remain readable with explicit not-captured labels.
-TypeScript plus10focused server checks pass;9Swift client checks pass; actual
-database regression passes443with3separate browser skips. The app builds and
-7focused archive tests pass with0reported runtime warnings. Logs/results:
-`.build/SharedRecordsNov10/history-food-database` and
-`.build/SharedRecordsNov10/history-food-native`. Foreign-shop delivery-stock/cook
-dependencies and controlled restore reconciliation remain open; this is not
-complete B11 or live deployment proof.
+Selected shared historical backup is implemented locally, including food allocation
+ancestry, stock chronology and carried delivery corrections between pickups.
+Carried physical evidence omits source budgets and other meals; opaque joint cook
+text requires current shopper scope on all recorded sources. Old files remain
+readable with explicit capture coverage. TypeScript plus12focused server checks
+pass;11Swift client checks pass; database regression passes444with3separate browser
+skips. The app builds and11archive/erasure checks pass with0reported runtime warnings.
+Logs/results: `.build/SharedRecordsNov10/carried-history-database` and
+`.build/SharedRecordsNov10/carried-history-native`. Existing local deletion-marker,
+cleanup retry and recovery-lifetime mechanisms passed focused checks; authenticated
+household lifecycle/deployment and full combined regression remain unqualified.
 
 
 The app builds with the Records import-review navigation correction. Both English/Spanish

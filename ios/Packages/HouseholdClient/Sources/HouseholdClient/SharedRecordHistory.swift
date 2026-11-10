@@ -190,6 +190,40 @@ public struct SharedRecordHistory: Decodable, Equatable, Sendable {
         }
     }
     public struct StockHistory: Decodable, Equatable, Sendable {
+        /// Source evidence for a carried lot; no other shop's basket or meals.
+        public struct CarriedDelivery: Decodable, Equatable, Sendable {
+            public let originShopId: UUID
+            public let source: Deliveries.Source
+            public let observations: [Deliveries.Observation]
+            private enum K: String, CodingKey { case originShopId, source, observations }
+            public init(from decoder: Decoder) throws {
+                try demandExactKeys(decoder, ["originShopId", "source", "observations"])
+                let c = try decoder.container(keyedBy: K.self)
+                originShopId = try c.decode(UUID.self, forKey: .originShopId)
+                source = try trackingDecode(Deliveries.Source.self, from: c.superDecoder(forKey: .source),
+                    shape: historyObject(["sourceId", "placedRevision", "lineId", "segmentKey", "foodName", "exclusionTags"]))
+                observations = try c.decode([Deliveries.Observation].self, forKey: .observations)
+                try demandRequire(demandRevision(source.placedRevision) && historyText(source.foodName, 240) && source.exclusionTags.count <= 20)
+                try demandRequire(observations.count <= 2000 && demandUnique(observations.map { $0.body.observationId }))
+                var arrivalHead: UUID?, usableHead: UUID?, previousRevision = -1
+                for observation in observations {
+                    try demandRequire(observation.body.sourceId == source.sourceId)
+                    let revision: Int
+                    switch observation.body {
+                    case .arrival(let body):
+                        revision = body.supplyRevision
+                        try demandRequire(body.predecessorId == arrivalHead)
+                        arrivalHead = body.observationId
+                    case .usable(let body):
+                        revision = body.supplyRevision
+                        try demandRequire(body.predecessorId == usableHead && arrivalHead == body.arrivalObservationId)
+                        usableHead = body.observationId
+                    }
+                    try demandRequire(revision > previousRevision)
+                    previousRevision = revision
+                }
+            }
+        }
         public struct Lot: Decodable, Equatable, Sendable {
             public let lotId: UUID
             public let deliverySourceId: UUID?
@@ -250,10 +284,16 @@ public struct SharedRecordHistory: Decodable, Equatable, Sendable {
         }
         public let lots: [Lot]
         public let events: [Event]
-        private enum K: String, CodingKey { case lots, events }
+        public let carriedDeliveries: [CarriedDelivery]?
+        public var carriedDeliveriesCoverage: CaptureCoverage { carriedDeliveries == nil ? .notCaptured : .captured }
+        private enum K: String, CodingKey { case lots, events, carriedDeliveries }
         public init(from decoder: Decoder) throws {
-            try demandExactKeys(decoder, ["lots", "events"])
             let c = try decoder.container(keyedBy: K.self)
+            try demandExactKeys(decoder, c.contains(.carriedDeliveries) ? ["lots", "events", "carriedDeliveries"] : ["lots", "events"])
+            carriedDeliveries = c.contains(.carriedDeliveries) ? try c.decode([CarriedDelivery].self, forKey: .carriedDeliveries) : nil
+            let carried = carriedDeliveries ?? []
+            try demandRequire(carried.count <= 2000 && carried.reduce(0) { $0 + $1.observations.count } <= 2000)
+            try demandRequire(demandUnique(carried.map { $0.source.sourceId }))
             lots = try trackingDecode([Lot].self, from: c.superDecoder(forKey: .lots), shape: .array(historyObject(["lotId", "deliverySourceId", "location", "storedAt", "useFirstAt", "foodName", "exclusionTags"])))
             events = try c.decode([Event].self, forKey: .events)
             try demandRequire(lots.count <= 2000 && events.count <= 2000 && demandUnique(lots.map(\.lotId)) && demandUnique(events.map(\.pantryRevision)))
@@ -398,8 +438,17 @@ public struct SharedRecordHistory: Decodable, Equatable, Sendable {
             }
         }
         if let history = stockHistory {
+            let carried = history.carriedDeliveries ?? []
+            let carriedSources = Set(carried.map { $0.source.sourceId })
+            try demandRequire(sources.isDisjoint(with: carriedSources))
+            try unique(deliveries.observations.map { $0.body.observationId } + carried.flatMap { $0.observations.map { $0.body.observationId } })
+            for delivery in carried {
+                try demandRequire(delivery.originShopId != origin.shopId.uuid)
+                guard let lot = history.lots.first(where: { $0.lotId == delivery.source.sourceId }) else { throw ClientError.invalidResponse }
+                try demandRequire(lot.deliverySourceId == delivery.source.sourceId && lot.foodName == delivery.source.foodName && lot.exclusionTags == delivery.source.exclusionTags)
+            }
             for lot in history.lots {
-                if let delivery = lot.deliverySourceId { try demandRequire(delivery == lot.lotId && sources.contains(delivery)) }
+                if let delivery = lot.deliverySourceId { try demandRequire(delivery == lot.lotId && sources.union(carriedSources).contains(delivery)) }
             }
             for event in history.events {
                 switch event.details {

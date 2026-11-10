@@ -65,3 +65,21 @@ in `.build/SharedRecordsNov10/history-food-native` and `history-food-database`.
 No new wrapper, source archive, hosted run or unchanged UI suite was added.
 Foreign-shop delivery-stock/cook dependencies, controlled restore reconciliation,
 deployment and human/device acceptance remain open.
+
+
+## Carried delivery history and existing restore protections
+
+Carried delivery ancestry is now included without foreign budgets or meal lists.
+Joint cook copies require current full shopper scope on every recorded source.
+TypeScript/12focused service checks and11Swift history checks pass. Actual API/PG
+passes444with3declared browser skips (86seconds), covering stock-only export after
+source authority transfer, joint-text denial and source retirement. The owned
+fixture stopped and was removed. Logs: `.build/SharedRecordsNov10/carried-history-database`.
+
+App build and11focused simulator tests pass with0failures/0skips/0runtime warnings:
+7archive tests plus existing cleanup-restart, stale-open, late-folder prevention
+and erased-media recovery checks. Results/logs:
+`.build/SharedRecordsNov10/carried-history-native/Archive.xcresult`. This verifies
+existing local restore protections rather than adding another subsystem. Deployed
+household reauthorization/deletion, real device/language review and final combined
+regression remain separate. Next step is one combined full core CI batch.

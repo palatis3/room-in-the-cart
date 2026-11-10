@@ -312,6 +312,29 @@ extension SharedHistoryArchiveAdapter {
                     }
                 }
             }
+            if let carried = history.carriedDeliveries {
+                section("Delivery history from earlier pickups", "Historial de entregas de compras anteriores", carried.count)
+                for delivery in carried {
+                    let source = delivery.source
+                    lines.append(source.foodName + " · " + id(source.sourceId))
+                    lines.append(w("Source pickup: ", "Compra de origen: ") + id(delivery.originShopId) + " · #\(source.placedRevision)")
+                    lines.append(w("Original line / delivery segment: ", "Línea original / parte de la entrega: ") + id(source.lineId) + " / " + id(source.segmentKey))
+                    lines += source.exclusionTags
+                    for observation in delivery.observations {
+                        lines.append(observation.recordedAt)
+                        switch observation.body {
+                        case let .arrival(body):
+                            lines.append(w("Arrival: ", "Llegada: ") + (body.arrivedAt ?? unknown) + " · " + quantity(body.received))
+                            if let prior = body.predecessorId { lines.append(w("Corrects observation: ", "Corrige la observación: ") + id(prior)) }
+                        case let .usable(body):
+                            lines.append(w("Usable: ", "Utilizable: ") + body.confirmedAt + " · " + quantity(body.usable))
+                            if let prior = body.predecessorId { lines.append(w("Corrects observation: ", "Corrige la observación: ") + id(prior)) }
+                        }
+                    }
+                }
+            } else {
+                lines.append(w("Delivery history from earlier pickups was not captured in this copy.", "Esta copia no incluye el historial de entregas de compras anteriores."))
+            }
         } else { lines.append(w("Stock-lot history was not captured in this copy.", "Esta copia no incluye el historial de lotes.")) }
         section("Decisions and outcomes", "Decisiones y resultados", value.decisions.count)
         for decision in value.decisions {

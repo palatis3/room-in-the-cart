@@ -66,17 +66,21 @@ this private history is denied. Reimport reopens the same content once; known lo
 erasure markers still prevent recovery.
 
 The existing server transaction rechecks current shopper scope and contributing
-members/consent before reading payloads. Retired shops, erased/missing referenced
-sources, foreign-shop delivery lots/cook stock, or a size/count overflow make this
-history export explicitly unavailable; the separate current snapshot remains
-available. Cross-shop dependencies and controlled restore reconciliation remain
-open. This component does not establish complete historical backup acceptance.
+members/consent before reading payloads. `stockHistory.carriedDeliveries` adds
+selected physical source ancestry from other pickups and its complete arrival/
+usable correction chain, with no foreign budget, basket or meal list. Older stock
+archives without the field retain their bytes and explicit missing-capture status.
+Physical-stock scope survives source-shop authority transfer. Opaque edited cook
+text instead requires current assigned-shopper scope on every recorded source
+shop. Retired/erased/missing sources or bounds make the affected history export
+unavailable; current snapshots remain a separate option.
 
-Focused server projection checks pass10/10 and Swift decoder/client checks pass9/9.
-The actual PostgreSQL suite passes443 with three separately assigned browser skips,
-including actual history export against stored tracking graphs and manual stock
-known/unknown/zero corrections. Database logs are in
-`.build/SharedRecordsNov10/history-food-database`; its disposable cluster stopped
-and was removed. Native app build and7focused archive tests pass with0skips and
-0reported runtime warnings in `.build/SharedRecordsNov10/history-food-native`.
-The extended readable history has not received a separate human/device walkthrough.
+Focused server checks pass12/12 and Swift decoder/client checks pass11/11. The
+actual PostgreSQL suite passes444 with3separate browser skips, including carryover,
+known/unknown/zero corrections, source authority loss and retirement. Logs:
+`.build/SharedRecordsNov10/carried-history-database`; disposable cluster stopped
+and removed. App build and11archive/erasure checks pass with0skips/0runtime warnings
+in `.build/SharedRecordsNov10/carried-history-native`. Those include four existing
+local cleanup/restore checks, not a new recovery subsystem. Known local erasure
+markers continue to prevent import; household reattachment never derives access
+from files. Actual authenticated lifecycle and human/device walkthroughs remain.

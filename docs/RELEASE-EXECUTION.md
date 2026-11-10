@@ -6,6 +6,12 @@ is [the build contract](product/foundation-gen2.1/08-build.md) and the requireme
 and route maps in [current acceptance](CURRENT-ACCEPTANCE.md). A successful merge
 is one checkpoint, not release authorization. Updated November 10, 2026.
 
+The November 10 Records component now includes permitted historical stock and
+food allocations, carried delivery ancestry, independent encrypted recovery and
+verified existing local erasure cleanup. Its remaining release work is actual
+authenticated/deployed lifecycle and final combined qualification; do not treat
+those as a request to build another backup or deletion framework.
+
 ## Candidate identity and evidence
 
 Before the final full CI batch, record the immutable source commit, configuration,

@@ -7,6 +7,7 @@ import {digest as trackingDigest} from '../dist/shared-demand-tracking.js';
 import {ServiceError} from '../dist/errors.js';
 const golden=JSON.parse(await readFile(new URL('../../shared/fixtures/shared-records/history-v1.json',import.meta.url),'utf8'));
 const foodGolden=JSON.parse(await readFile(new URL('../../shared/fixtures/shared-records/history-food-v1.json',import.meta.url),'utf8'));
+const carriedGolden=JSON.parse(await readFile(new URL('../../shared/fixtures/shared-records/history-carried-v1.json',import.meta.url),'utf8'));
 const copy=()=>structuredClone(golden.record),asOf=new Date(golden.asOf);
 const denied=e=>e instanceof ServiceError&&e.code==='shared_history_unavailable';
 
@@ -39,17 +40,21 @@ test('history never silently truncates rows, duplicates identities or oversized 
 });
 
 function reader(options={}){
- const record=structuredClone(options.enriched?foodGolden.record:golden.record),calls=[],actor='00000000-0000-4000-8000-000000000900';
+ const record=structuredClone(options.carried?carriedGolden.record:options.enriched?foodGolden.record:golden.record),calls=[],actor='00000000-0000-4000-8000-000000000900',sourceActor='00000000-0000-4000-8000-000000000901';
+ const carried=record.stockHistory?.carriedDeliveries??[];
+ const carriedSnapshot=c=>({shopId:c.originShopId,revision:c.source.placedRevision,lines:[{lineId:c.source.lineId,originalItem:'Private source basket wording',packs:1,unitPriceMinor:12345,feeEligible:true}],quote:record.basketRevisions[0].quote});
  const ctx={householdId:record.origin.householdId,member:{member_id:actor,kind:'adult',state:'active'},now:asOf,
   db:{query:async(sql,values)=>{
    calls.push({sql,values});assert.match(sql,/^SELECT /);assert.equal(values[0],record.origin.householdId);
    let rows;
    if(sql.startsWith('SELECT 1 FROM ritc.shop '))rows=options.retired?[]:[{}];
-   else if(sql.startsWith('SELECT 1 FROM ritc.cook_copy_pantry_scope'))rows=options.joint?[{}]:[];
-   else if(sql.startsWith('SELECT l.lot_id,l.origin_shop_id'))rows=(record.stockHistory?.lots??[]).map(l=>({lot_id:l.lotId,origin_shop_id:options.foreignDelivery&&l.deliverySourceId?record.origin.householdId:record.origin.shopId,delivery_source_id:l.deliverySourceId,actor_id:actor,history_retired_at:null}));
+   else if(sql.startsWith('SELECT DISTINCT p.shop_id'))rows=options.joint||options.jointAllowed?[{shop_id:record.origin.householdId,shopper_id:options.joint?'different-shopper':actor,history_retired_at:null}]:[];
+   else if(sql.startsWith('SELECT l.lot_id,l.origin_shop_id'))rows=(record.stockHistory?.lots??[]).map(l=>({lot_id:l.lotId,origin_shop_id:carried.find(c=>c.source.sourceId===l.lotId)?.originShopId??(options.foreignDelivery&&l.deliverySourceId?record.origin.householdId:record.origin.shopId),delivery_source_id:l.deliverySourceId,actor_id:actor,history_retired_at:null}));
+   else if(sql.startsWith('SELECT d.source_id,d.shop_id'))rows=carried.map(c=>({source_id:c.source.sourceId,shop_id:c.originShopId,actor_id:sourceActor,snapshot_digest:options.erasedCarried?'0'.repeat(64):digest(carriedSnapshot(c))}));
    else if(sql.startsWith('SELECT DISTINCT e.actor_id'))rows=record.stockHistory?[{actor_id:actor,history_retired_at:options.retiredStock?asOf:null}]:[];
+   else if(sql.includes(') retained_sources'))rows=carried.length?[{member_id:sourceActor}]:[];
    else if(sql.startsWith('SELECT DISTINCT member_id'))rows=[{member_id:actor}];
-   else if(sql.startsWith('SELECT * FROM ritc.member'))rows=[{member_id:actor,kind:'adult',state:options.revoked?'revoked':'active'}];
+   else if(sql.startsWith('SELECT * FROM ritc.member'))rows=values[1].map(member_id=>({member_id,kind:'adult',state:options.revoked||options.revokedCarried&&member_id===sourceActor?'revoked':'active'}));
    else if(sql.includes('FROM ritc.shop_snapshot'))rows=record.basketRevisions.map(r=>{
     const snapshot={shopId:record.origin.shopId,revision:r.revision,phase:r.phase,quote:r.quote,lines:r.basketLines,mealRefs:[{occurrenceId:record.mealRevisions[0].occurrenceId,revision:options.missingMeal?999:1}],authorityEpoch:123,trackingSeal:{secret:'not portable'}};
     return{revision:r.revision,purpose:r.purpose,created_at:r.recordedAt,snapshot,digest:options.erased?'0'.repeat(64):digest(snapshot)};
@@ -57,6 +62,8 @@ function reader(options={}){
    else if(sql.includes('FROM ritc.shared_meal_revision'))rows=record.mealRevisions;
    else if(sql.includes('FROM ritc.dated_cook_copy'))rows=record.cookCopies;
    else if(sql.includes('FROM ritc.cook_copy_send'))rows=record.cookSends;
+   else if(sql.startsWith('SELECT d.shop_id AS "originShopId"'))rows=carried.map(c=>({originShopId:c.originShopId,...c.source,retained_snapshot:carriedSnapshot(c),retained_digest:digest(carriedSnapshot(c))}));
+   else if(sql.startsWith('SELECT source_id,kind,recorded_at,body'))rows=carried.flatMap(c=>c.observations.map(o=>({source_id:c.source.sourceId,kind:o.kind,recorded_at:o.recordedAt,body:o.body})));
    else if(sql.includes('FROM ritc.delivery_source'))rows=record.deliveries.sources;
    else if(sql.includes('FROM ritc.delivery_observation'))rows=record.deliveries.observations;
    else if(sql.includes('FROM ritc.delivery_ingredient_review'))rows=record.deliveries.matches;
@@ -80,9 +87,9 @@ function reader(options={}){
 }
 
 test('authorized Free history uses bounded read-only scope and strips snapshot-only receipts',async()=>{
- const f=reader(),result=await f.run();assert.deepEqual(result.record,{...golden.record,foodHistory:{demandRevisions:[],trackingRevisions:[]},stockHistory:{lots:[],events:[]}});
+ const f=reader(),result=await f.run();assert.deepEqual(result.record,{...golden.record,foodHistory:{demandRevisions:[],trackingRevisions:[]},stockHistory:{lots:[],events:[],carriedDeliveries:[]}});
  assert.ok(f.calls.filter(r=>r.sql.includes('LIMIT 2001')).length>=12);
- for(const call of f.calls.filter(r=>!r.sql.startsWith('SELECT * FROM ritc.member')))assert.equal(call.values[1],golden.record.origin.shopId);
+ for(const call of f.calls.filter(r=>!Array.isArray(r.values[1])))assert.equal(call.values[1],golden.record.origin.shopId);
 });
 
 test('shopper denial and retired history stop before historical payload reads',async()=>{
@@ -108,7 +115,7 @@ test('missing historical meal source fails rather than exporting a silently inco
 
 test('historical food and stock retain exact partition, protected release and known/unknown/zero chronology',async()=>{
  assert.deepEqual(projectSharedHistory(foodGolden.record,asOf),foodGolden);
- assert.deepEqual(await reader({enriched:true}).run(),foodGolden);
+ assert.deepEqual((await reader({enriched:true}).run()).record,{...foodGolden.record,stockHistory:{...foodGolden.record.stockHistory,carriedDeliveries:[]}});
  const {foodHistory,stockHistory}=foodGolden.record;
  assert.equal(foodHistory.demandRevisions[0].graph.edges[0].kind,'withinExisting');
  assert.deepEqual(foodHistory.trackingRevisions[1].food.unbound[0].transferred,foodHistory.demandRevisions[0].graph.contributions[1]);
@@ -126,4 +133,25 @@ test('historical scopes reject wrong graph ancestry, injected authority, invalid
   r=>{r.foodHistory.demandRevisions[0].packReviews=[];}];
  for(const mutate of mutations){const r=structuredClone(foodGolden.record);mutate(r);assert.throws(()=>projectSharedHistory(r,asOf),denied);}
  for(const options of [{foreignDelivery:true},{retiredStock:true},{erasedFood:true}])await assert.rejects(reader({enriched:true,...options}).run(),denied);
+});
+
+test('carried delivery chronology and authorized cross-shop cook copies export no source budget or live authority',async()=>{
+ const result=await reader({carried:true,jointAllowed:true}).run();assert.deepEqual(result,carriedGolden);
+ const c=result.record.stockHistory.carriedDeliveries[0];assert.equal(c.originShopId,carriedGolden.record.stockHistory.carriedDeliveries[0].originShopId);
+ assert.deepEqual(c.observations.filter(o=>o.kind==='usable').map(o=>o.body.usable?.amount.numerator??null),[8,null,0]);
+ assert.ok(!JSON.stringify(result).includes('Private source basket wording'));
+ assert.equal(foodGolden.record.stockHistory.carriedDeliveries,undefined);
+ for(const options of [{joint:true},{revokedCarried:true},{erasedCarried:true}])await assert.rejects(reader({carried:true,...options}).run(),denied);
+});
+
+test('carried sources cannot borrow another observation chain, selected-shop identity, or mismatched lot metadata',()=>{
+ const changes=[r=>{r.stockHistory.carriedDeliveries[0].originShopId=r.origin.shopId;},
+  r=>{r.stockHistory.carriedDeliveries[0].observations[2].body.predecessorId=null;},
+  r=>{r.stockHistory.carriedDeliveries[0].observations[1].body.arrivalObservationId=r.deliveries.observations[0].body.observationId;},
+  r=>{r.stockHistory.carriedDeliveries[0].observations.reverse();},
+  r=>{r.stockHistory.carriedDeliveries[0].source.foodName='Different food';},
+  r=>{r.stockHistory.carriedDeliveries[0].source.authorityEpoch=1;}];
+ for(const change of changes){const r=structuredClone(carriedGolden.record);change(r);assert.throws(()=>projectSharedHistory(r,asOf),denied);}
+ const noObservations=structuredClone(carriedGolden.record);noObservations.stockHistory.carriedDeliveries[0].observations=[];
+ assert.doesNotThrow(()=>projectSharedHistory(noObservations,asOf));
 });

@@ -139,6 +139,50 @@ test('Records history HTTP preserves selected-shop manual stock observations inc
  assert.deepEqual((await admin.query('SELECT * FROM ritc.pantry_event WHERE household_id=$1 ORDER BY pantry_revision',[f.h])).rows,before);
 });
 
+test('Records history HTTP carries only selected physical delivery ancestry and gates joint cook text on current source scope',async()=>{
+ const origin=await fixture(),owner=origin.owner,other=await invited(origin);
+ const write=async(f,kind,body)=>{const s=await head(f);return ok(await send(f,kind,body,s.shopRevision,s.authorityEpoch));};
+ const place=async f=>{await write(f,'shop.freeze',{});await write(f,'shop.reportPlaced',{occurredAt:new Date().toISOString()});};
+ await place(origin);let s=await head(origin);const initialDelivery=ok(await call(owner,origin.path+'/delivery-evidence'));
+ const registered=await write(origin,'delivery.register',{supplyRevision:initialDelivery.supplyRevision,placedRevision:s.placedRevision,lineId:origin.basket.lineId,segmentKey:randomUUID(),foodName:'Carried wraps',exclusionTags:[]});
+ const sourceId=registered.sourceId,arrivalId=randomUUID(),now=new Date(Date.now()-1000).toISOString();
+ const quantity=n=>({amount:{numerator:n,denominator:1},unit:'count',originalLiteral:n+' carried wraps'});
+ // adultShop intentionally has no supply counter: the existing delivery reader
+ // supplies the exact evidence revision for each public command.
+ const delivery=async()=>ok(await call(origin.owner,origin.path+'/delivery-evidence'));
+ let d=await delivery();
+ await write(origin,'delivery.arrival',{sourceId,observationId:arrivalId,predecessorId:null,arrivedAt:now,received:quantity(10),supplyRevision:d.supplyRevision});
+ d=await delivery();let previous=randomUUID();
+ await write(origin,'delivery.usable',{sourceId,observationId:previous,predecessorId:null,arrivalObservationId:arrivalId,confirmedAt:now,usable:quantity(8),supplyRevision:d.supplyRevision});
+ let desk=ok(await call(owner,origin.path+'/pantry-lots'));
+ await write(origin,'pantry.storeDelivery',{sourceId,location:'freezer',storedAt:now,useFirstAt:null,pantryRevision:desk.pantryRevision,supplyRevision:desk.supplyRevision});
+ for(const amount of [null,0]){d=await delivery();const observationId=randomUUID();await write(origin,'delivery.usable',{sourceId,observationId,predecessorId:previous,arrivalObservationId:arrivalId,confirmedAt:now,usable:amount===null?null:quantity(amount),supplyRevision:d.supplyRevision});previous=observationId;}
+ const createConsumer=async withMeal=>{
+  const shopId=randomUUID(),f={...origin,owner,shopId,path:origin.base+'/shops/'+shopId,basket:{lineId:randomUUID(),originalItem:'Receiver apples',packs:1,unitPriceMinor:100,feeEligible:true}};
+  ok(await send(f,'shop.create',{quote:f.quote,lines:[f.basket]},0,0));
+  if(withMeal){f.occurrenceId=randomUUID();await write(f,'shop.patch',{quote:f.quote,lines:[f.basket],mealEdit:{occurrenceId:f.occurrenceId,baseMealRevision:null,meal:{title:'Receiver dinner',day:null,kind:'dinner',portions:2,protected:false}}});}
+  await place(f);const p=ok(await call(owner,f.path+'/pantry-lots'));
+  await write(f,'pantry.select',{lotId:sourceId,selected:true,pantryRevision:p.pantryRevision,supplyRevision:p.supplyRevision});return f;
+ };
+ const consumer=await createConsumer(true),plain=await createConsumer(false);
+ const stockOnly=ok(await call(owner,plain.path+'/records/history/v1')),carried=stockOnly.record.stockHistory.carriedDeliveries;
+ assert.equal(carried.length,1);assert.equal(carried[0].originShopId,origin.shopId);assert.equal(carried[0].source.sourceId,sourceId);
+ assert.deepEqual(carried[0].observations.filter(o=>o.kind==='usable').map(o=>o.body.usable?.amount.numerator??null),[8,null,0]);
+ assert.deepEqual(Object.keys(carried[0]).sort(),['observations','originShopId','source']);
+ assert.ok(!stockOnly.record.basketRevisions.some(b=>b.basketLines.some(l=>l.lineId===origin.basket.lineId)));
+ desk=ok(await call(owner,consumer.path+'/pantry-lots'));s=await head(consumer);
+ const text='Use the reviewed carryover from the earlier pickup.';
+ await write(consumer,'cookCopy.save',{placedRevision:s.placedRevision,supplyRevision:desk.supplyRevision,pantryRevision:desk.pantryRevision,occurrenceId:consumer.occurrenceId,mealRevision:s.meals[0].revision,language:'en',text});
+ const joint=ok(await call(owner,consumer.path+'/records/history/v1'));assert.equal(joint.record.cookCopies[0].text,text);assert.deepEqual(joint.record.stockHistory.carriedDeliveries,carried);
+ await transfer(origin,other);
+ assert.equal((await call(owner,origin.path+'/financial-evidence')).status,404);
+ assert.deepEqual(ok(await call(owner,plain.path+'/records/history/v1')).record.stockHistory.carriedDeliveries,carried);
+ const deniedJoint=await call(owner,consumer.path+'/records/history/v1');assert.equal(deniedJoint.status,409);assert.equal(deniedJoint.data.error.code,'shared_history_unavailable');assert.ok(!JSON.stringify(deniedJoint).includes(text));
+ const financial=ok(await call(other,origin.path+'/financial-evidence'));
+ ok(await call(other,origin.path+'/history-retire','POST',{clientKey:randomUUID(),sourceVersion:financial.sourceVersion,confirm:true}));
+ const retiredSource=await call(owner,plain.path+'/records/history/v1');assert.equal(retiredSource.status,409);assert.equal(retiredSource.data.error.code,'shared_history_unavailable');
+});
+
 test('Records v2 HTTP repeat reads neither mint previews nor mutate current or historical domain rows',async()=>{
  const f=await partial(),before=await domainRows(f),a=await readPair(f),b=await readPair(f);assert.deepEqual(a.record,b.record);assert.equal(a.recordDigest,b.recordDigest);assert.ok(Date.parse(b.asOf)>=Date.parse(a.asOf));assert.deepEqual(await domainRows(f),before);
 });

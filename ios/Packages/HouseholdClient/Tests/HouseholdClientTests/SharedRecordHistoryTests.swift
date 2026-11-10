@@ -35,6 +35,8 @@ final class SharedRecordHistoryTests: XCTestCase {
         let record = try SharedRecordHistoryWire.snapshot(from: sharedRecordFixture("history-food-v1")).record
         XCTAssertEqual(record.foodHistoryCoverage, .captured); XCTAssertEqual(record.stockHistoryCoverage, .captured)
         let food = try XCTUnwrap(record.foodHistory), stock = try XCTUnwrap(record.stockHistory)
+        XCTAssertEqual(stock.carriedDeliveriesCoverage, .notCaptured)
+        XCTAssertNil(stock.carriedDeliveries)
         XCTAssertEqual(food.demandRevisions.map { $0.graph.revision }, [1, 2])
         XCTAssertNil(food.demandRevisions[0].predecessorRevision)
         XCTAssertEqual(food.demandRevisions[1].predecessorRevision, 1)
@@ -100,12 +102,104 @@ final class SharedRecordHistoryTests: XCTestCase {
         var object = try XCTUnwrap(JSONSerialization.jsonObject(with: sharedRecordFixture("history-v1")) as? [String: Any])
         var record = object["record"] as! [String: Any]
         record["foodHistory"] = ["demandRevisions": [], "trackingRevisions": []]
-        record["stockHistory"] = ["lots": [], "events": []]
+        record["stockHistory"] = ["lots": [], "events": [], "carriedDeliveries": []]
         object["record"] = record
         let captured = try SharedRecordHistoryWire.snapshot(from: JSONSerialization.data(withJSONObject: object)).record
         XCTAssertEqual(captured.foodHistoryCoverage, .captured); XCTAssertEqual(captured.stockHistoryCoverage, .captured)
         XCTAssertTrue(try XCTUnwrap(captured.foodHistory).demandRevisions.isEmpty)
         XCTAssertTrue(try XCTUnwrap(captured.stockHistory).events.isEmpty)
+        XCTAssertEqual(captured.stockHistory?.carriedDeliveriesCoverage, .captured)
+        XCTAssertEqual(captured.stockHistory?.carriedDeliveries, [])
+    }
+
+    func testCarriedDeliveryPreservesOnlyBoundSourceAndCorrectionEvidence() throws {
+        let bytes = try sharedRecordFixture("history-carried-v1")
+        let record = try SharedRecordHistoryWire.snapshot(from: bytes).record
+        let stock = try XCTUnwrap(record.stockHistory), carried = try XCTUnwrap(stock.carriedDeliveries?.first)
+        XCTAssertEqual(stock.carriedDeliveriesCoverage, .captured)
+        XCTAssertNotEqual(carried.originShopId, record.origin.shopId.uuid)
+        let lot = try XCTUnwrap(stock.lots.first { $0.lotId == carried.source.sourceId })
+        XCTAssertEqual(lot.deliverySourceId, carried.source.sourceId)
+        XCTAssertEqual(lot.foodName, carried.source.foodName)
+        XCTAssertEqual(lot.exclusionTags, carried.source.exclusionTags)
+        XCTAssertFalse(record.deliveries.sources.contains { $0.sourceId == carried.source.sourceId })
+        XCTAssertEqual(carried.observations.map(\.kind), ["arrival", "usable", "usable", "usable"])
+        let usable = carried.observations.compactMap { observation -> SharedRecordHistory.Deliveries.UsableBody? in
+            if case .usable(let body) = observation.body { return body }; return nil
+        }
+        XCTAssertEqual(usable.map { $0.usable?.amount.numerator }, [8, nil, 0])
+        XCTAssertNil(usable.first?.predecessorId)
+        XCTAssertEqual(usable[1].predecessorId, usable[0].observationId)
+        XCTAssertEqual(usable[2].predecessorId, usable[1].observationId)
+        let independent = try record.independentData()
+        XCTAssertEqual(try SharedRecordHistoryWire.independentRecord(from: independent), record)
+        let original = try XCTUnwrap(JSONSerialization.jsonObject(with: bytes) as? [String: Any])
+        XCTAssertEqual(try JSONSerialization.jsonObject(with: independent) as? NSDictionary, original["record"] as? NSDictionary)
+        let object = try XCTUnwrap(original["record"] as? [String: Any])
+        let rawStock = try XCTUnwrap(object["stockHistory"] as? [String: Any])
+        let rawCarried = try XCTUnwrap((rawStock["carriedDeliveries"] as? [[String: Any]])?.first)
+        XCTAssertEqual(Set(rawCarried.keys), ["originShopId", "source", "observations"])
+    }
+
+    func testCarriedDeliveryRejectsUnboundSourcesAndBrokenCorrectionAncestry() throws {
+        let original = try XCTUnwrap(JSONSerialization.jsonObject(with: sharedRecordFixture("history-carried-v1")) as? [String: Any])
+        for variant in 0..<13 {
+            var object = original, record = object["record"] as! [String: Any]
+            var stock = record["stockHistory"] as! [String: Any], carried = stock["carriedDeliveries"] as! [[String: Any]]
+            var entry = carried[0], observations = entry["observations"] as! [[String: Any]]
+            var lots = stock["lots"] as! [[String: Any]]
+            let source = entry["source"] as! [String: Any], origin = record["origin"] as! [String: Any]
+            let selected = record["deliveries"] as! [String: Any]
+            let localObservations = selected["observations"] as! [[String: Any]]
+            let localArrival = localObservations[0]["body"] as! [String: Any]
+            switch variant {
+            case 2: entry["originShopId"] = origin["shopId"]
+            case 3:
+                let index = lots.firstIndex { $0["lotId"] as? String == source["sourceId"] as? String }!
+                lots[index]["foodName"] = "Different food"
+            case 4: observations.removeFirst()
+            case 5:
+                var body = observations[2]["body"] as! [String: Any]
+                body["predecessorId"] = NSNull(); observations[2]["body"] = body
+            case 6:
+                var body = observations[2]["body"] as! [String: Any]
+                body["predecessorId"] = localArrival["observationId"]; observations[2]["body"] = body
+            case 7:
+                var body = observations[1]["body"] as! [String: Any]
+                body["arrivalObservationId"] = localArrival["observationId"]; observations[1]["body"] = body
+            case 8:
+                var body = observations[0]["body"] as! [String: Any]
+                body["sourceId"] = localArrival["sourceId"]; observations[0]["body"] = body
+            case 9:
+                var body = observations[1]["body"] as! [String: Any]
+                body["supplyRevision"] = (observations[0]["body"] as! [String: Any])["supplyRevision"]
+                observations[1]["body"] = body
+            case 10:
+                var arrival = observations[0], body = arrival["body"] as! [String: Any]
+                body["predecessorId"] = body["observationId"]; body["observationId"] = UUID().uuidString
+                arrival["body"] = body; observations.insert(arrival, at: 1)
+                for index in observations.indices {
+                    var value = observations[index]["body"] as! [String: Any]
+                    value["supplyRevision"] = index + 1; observations[index]["body"] = value
+                } // Usable evidence still cites the superseded arrival.
+            case 11:
+                var body = observations[0]["body"] as! [String: Any]
+                body["observationId"] = localArrival["observationId"]; observations[0]["body"] = body
+                for index in observations.indices.dropFirst() {
+                    var value = observations[index]["body"] as! [String: Any]
+                    value["arrivalObservationId"] = localArrival["observationId"]; observations[index]["body"] = value
+                }
+            case 12:
+                lots.removeAll { $0["lotId"] as? String == source["sourceId"] as? String }
+            default: break
+            }
+            entry["observations"] = observations; carried[0] = entry
+            stock["lots"] = lots; stock["carriedDeliveries"] = carried
+            if variant == 0 { stock["carriedDeliveries"] = NSNull() }
+            if variant == 1 { stock.removeValue(forKey: "carriedDeliveries") }
+            record["stockHistory"] = stock; object["record"] = record
+            XCTAssertThrowsError(try SharedRecordHistoryWire.snapshot(from: JSONSerialization.data(withJSONObject: object)), "variant \(variant)")
+        }
     }
 
     func testInjectedAuthorityRejectsAtEveryObjectBoundary() throws {
@@ -127,7 +221,7 @@ final class SharedRecordHistoryTests: XCTestCase {
             }
             return []
         }
-        for name in ["history-v1", "history-food-v1"] {
+        for name in ["history-v1", "history-food-v1", "history-carried-v1"] {
             let original = try JSONSerialization.jsonObject(with: sharedRecordFixture(name))
             let injected = variants(original)
             XCTAssertGreaterThan(injected.count, 40)

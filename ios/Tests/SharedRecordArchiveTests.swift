@@ -15,7 +15,10 @@ final class SharedRecordArchiveTests: XCTestCase {
         let legacy = try SharedHistoryArchiveAdapter.make(SharedRecordHistoryWire.snapshot(from: legacyBytes))
         XCTAssertTrue(SharedHistoryArchiveAdapter.coverageKeys(legacy).contains("Stock-lot history was not captured in this copy."))
         XCTAssertTrue(SharedHistoryArchiveAdapter.coverageKeys(legacy).contains("Food allocation history was not captured in this copy."))
-        let bytes = try Data(contentsOf: root.appendingPathComponent("shared/fixtures/shared-records/history-food-v1.json"))
+        let earlierStockBytes = try Data(contentsOf: root.appendingPathComponent("shared/fixtures/shared-records/history-food-v1.json"))
+        let earlierStock = try SharedHistoryArchiveAdapter.make(SharedRecordHistoryWire.snapshot(from: earlierStockBytes))
+        XCTAssertTrue(try SharedHistoryArchiveAdapter.readable(earlierStock, locale: Locale(identifier: "en_US")).contains("Delivery history from earlier pickups was not captured in this copy."))
+        let bytes = try Data(contentsOf: root.appendingPathComponent("shared/fixtures/shared-records/history-carried-v1.json"))
         let source = try SharedRecordHistoryWire.snapshot(from: bytes)
         let record = try SharedHistoryArchiveAdapter.make(source)
         try RecordsNativeCodec.validate(record)
@@ -43,6 +46,13 @@ final class SharedRecordArchiveTests: XCTestCase {
             XCTAssertTrue(text.contains(source.record.cookCopies[0].text))
             XCTAssertTrue(text.contains(source.record.decisions[0].decision))
             for lot in stock.lots { XCTAssertTrue(text.contains(lot.foodName)) }
+            let carried = try XCTUnwrap(stock.carriedDeliveries)
+            XCTAssertFalse(carried.isEmpty)
+            for delivery in carried {
+                XCTAssertTrue(text.contains(delivery.originShopId.uuidString.lowercased()))
+                XCTAssertTrue(text.contains(delivery.source.foodName))
+                for observation in delivery.observations { XCTAssertTrue(text.contains(observation.recordedAt)) }
+            }
             for revision in food.demandRevisions {
                 for contribution in revision.graph.contributions { XCTAssertTrue(text.contains(contribution.originalText)) }
                 for edge in revision.graph.edges { XCTAssertTrue(text.contains(edge.confirmation.evidence)) }
