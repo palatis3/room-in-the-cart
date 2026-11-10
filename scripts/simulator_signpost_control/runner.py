@@ -305,33 +305,14 @@ class HelperRunner(Runner):
         return super().finish(error)
 
     def sample_policy(self, target):
-        """Closed target/threshold table; bootstatus additionally requires normal owned boot."""
+        """Only the post-boot runtime query is eligible; cold boot is not sampled."""
         tool=self.tools['simctl'];record=target['record'];argv=record.get('argv',[])
         if (sum(p is target for p in self.processes)!=1 or record.get('pid')!=target['process'].pid
                 or target.get('expected')!=tool['executable'] or target.get('digest')!=tool['executableSHA256']):return None
         runtime_argv=[tool['executable'] if record.get('dispatch')=='verified_direct_inventory' else tool['path'],'list','-j','runtimes']
         if record.get('label')=='booted-runtimes' and argv==runtime_argv and (record.get('dispatch')!='verified_direct_inventory' or self.direct_inventory_selected(argv[1:])):
             return (10,'booted-runtimes')
-        identifier=self.device.get('createdUDID')
-        if not identifier or record.get('label')!='bootstatus' or argv!=[tool['path'],'bootstatus',identifier,'-b']:
-            return None
-        boots=[p for p in self.processes if p['record'].get('label')=='boot']
-        phases=[p for p in self.receipt.get('lifecycleCommands',[]) if p.get('label')=='boot']
-        if len(boots)!=1 or len(phases)!=1:return None
-        previous=boots[0];proof=previous['record'];binding=proof.get('binding')
-        normal=(previous['process'].poll()==0 and proof.get('exitCode')==0 and proof.get('terminalVerified') is True
-                and proof.get('signals')==[] and proof.get('argv')==[tool['path'],'boot',identifier]
-                and proof.get('executableSHA256')==tool['executableSHA256']
-                and proof.get('pid')==previous['process'].pid==phases[0].get('pid')
-                and phases[0].get('outcome')=='normal_exit')
-        if not normal:return None
-        if binding is None:
-            if proof.get('terminalOwnedCommandBeforeBinding') is not True:return None
-        elif not (binding.get('pid')==proof['pid'] and binding.get('parentPID')==os.getpid()
-                  and binding.get('uid')==os.getuid() and binding.get('executable')==tool['executable']
-                  and binding.get('startTimeMicros',0)>=int(proof['spawnEpoch']*1_000_000)):
-            return None
-        return (150,'bootstatus')
+        return None
 
     def sample_target_live(self, target):
         """Only a contemporaneous owned exit0 makes an unstarted sample unnecessary."""

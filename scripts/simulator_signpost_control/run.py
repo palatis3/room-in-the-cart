@@ -86,7 +86,9 @@ def verify_scoped_device(runner, device, label, state=None, absent=False):
 def verify_post_boot_device(runner, device):
     return verify_scoped_device(runner,device,'booted','Booted')
 
-def wait_for_boot(runner, device):
+def wait_for_boot(runner, device, shutdown_inventory):
+    # Boot and monitor once, only after the immediately preceding owned-device proof.
+    current_device(shutdown_inventory,device,'Shutdown')
     # Keep the original total prepare budget; boot cannot consume the final
     # verification reserve. This is infrastructure calibration, not a transport gate.
     deadline=min(time.monotonic()+BOOT_PREPARATION_SECONDS,
@@ -168,11 +170,13 @@ def run(output, developer):
         created=runner.lifecycle('create',['create',device['createdName'],device['deviceTypeIdentifier'],RUNTIME]).read_text().strip()
         require(str(uuid.UUID(created)).upper()==created.upper() and created not in device['initialUDIDs'],'helper_new_uuid')
         device.update(createdUDID=created,creation='created');atomic_json(output/'device.json',device)
-        current_device(read(runner.lifecycle('created',['list','-j'])),device,'Shutdown')
-        result['stage']='boot';runner.lifecycle('boot',['boot',created])
+        shutdown_inventory=read(runner.lifecycle('created',['list','-j']))
+        result['stage']='boot'
+        result['bootMode']='single_owned_bootstatus'
+        result['bootstatusSampling']='disabled_before_dispatch'
         result['bootPreparationSeconds']=BOOT_PREPARATION_SECONDS
         result['postBootVerificationReserveSeconds']=POST_BOOT_VERIFICATION_RESERVE_SECONDS
-        status=wait_for_boot(runner,device)
+        status=wait_for_boot(runner,device,shutdown_inventory)
         verify_boot_output(status.read_bytes(),(runner.out/'bootstatus-stderr.log').read_bytes())
         runner.budget()
         verify_post_boot_device(runner,device)

@@ -28,6 +28,9 @@ def inventory():
             'devices':{run.RUNTIME:[{'udid':DEVICE['createdUDID'],'name':DEVICE['createdName'],
                        'deviceTypeIdentifier':DEVICE['deviceTypeIdentifier'],'isAvailable':True,'state':'Booted'}]}}
 
+def shutdown_inventory():
+    value=inventory();value['devices'][run.RUNTIME][0]['state']='Shutdown';return value
+
 def receipt():return json.loads((FIXTURES/'receipt.json').read_text())
 def validate_receipt(value):
     return validate.validate_run(value,json.loads((FIXTURES/'helper-status.json').read_text()),
@@ -416,7 +419,7 @@ class BootAndSummaryTests(unittest.TestCase):
         self.assertEqual(run.BOOT_PREPARATION_SECONDS,240)
         self.assertEqual((host_control.STARTUP_SECONDS,control.FINALIZE_SECONDS,host_control.EXPORT_SECONDS),(15,30,10))
         s=inspect.getsource(run.run);self.assertIn("HelperRunner(output/'prepare',tool,300",s)
-        self.assertIn('wait_for_boot(runner,device)',s)
+        self.assertIn('wait_for_boot(runner,device,shutdown_inventory)',s)
         self.assertEqual(run.POST_BOOT_VERIFICATION_RESERVE_SECONDS,30)
         self.assertIn('HelperRunner(destination,tool,90)',inspect.getsource(run.cleanup))
     def test_zero_exit_migration_failure_output_rejected_on_either_stream(self):
@@ -1060,13 +1063,13 @@ class BootstatusSampleTests(unittest.TestCase):
             'executableSHA256':'digest','spawnEpoch':99.,'binding':{**self.value,'pid':41,'startTimeMicros':99_000_001}}}
         self.r.processes=[self.boot,self.item]
         self.r.receipt['lifecycleCommands']=[{'label':'boot','pid':41,'outcome':'normal_exit'}]
-    def test_exact_owned_bootstatus_threshold_and_no_early_sample(self):
+    def test_exact_owned_bootstatus_never_samples_after_old_threshold(self):
         with tempfile.TemporaryDirectory() as tmp:
             self.prepare(tmp);self.clock=149.9;self.terminal=150.1;d={'startedMonotonic':0}
             def sample(*a):self.assertGreaterEqual(self.clock,150);a[2]['stackSample']={'status':'passed'}
             self.r.sample_runtime=mock.Mock(side_effect=sample)
-            self.assertEqual(self.r.sample_policy(self.item),(150,'bootstatus'))
-            self.assertEqual(self.r.lifecycle_wait(self.item,180,d),0);self.r.sample_runtime.assert_called_once()
+            self.assertIsNone(self.r.sample_policy(self.item))
+            self.assertEqual(self.r.lifecycle_wait(self.item,180,d),0);self.r.sample_runtime.assert_not_called()
     def test_prior_normal_115_second_bootstatus_does_not_sample(self):
         with tempfile.TemporaryDirectory() as tmp:
             self.prepare(tmp);self.clock=114.9;self.terminal=115;self.r.sample_runtime=mock.Mock()
@@ -1080,7 +1083,7 @@ class BootstatusSampleTests(unittest.TestCase):
                 self.item['record']['argv']=['/launcher',*tail];self.assertIsNone(self.r.sample_policy(self.item))
             self.item['record']['argv']=['/launcher','bootstatus',DEVICE['createdUDID'],'-b'];self.item['record']['label']='other'
             self.assertIsNone(self.r.sample_policy(self.item))
-    def test_normal_boot_evidence_is_mandatory_and_exact(self):
+    def test_legacy_boot_evidence_cannot_reenable_sampling(self):
         with tempfile.TemporaryDirectory() as tmp:
             self.prepare(tmp);original=copy.deepcopy(self.boot['record'])
             for change in ({'exitCode':1},{'terminalVerified':False},{'signals':['SIGINT']},{'executableSHA256':'changed'},
@@ -1088,7 +1091,7 @@ class BootstatusSampleTests(unittest.TestCase):
                 self.boot['record']={**original,**change};self.assertIsNone(self.r.sample_policy(self.item))
             self.boot['record']=original;self.r.receipt['lifecycleCommands'][0]['outcome']='failed'
             self.assertIsNone(self.r.sample_policy(self.item))
-    def test_missing_duplicate_live_or_wrong_bound_boot_rejected(self):
+    def test_legacy_boot_presence_or_identity_cannot_reenable_sampling(self):
         with tempfile.TemporaryDirectory() as tmp:
             self.prepare(tmp)
             for items in ([self.item],[self.boot,self.boot,self.item]):
@@ -1100,7 +1103,7 @@ class BootstatusSampleTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             self.prepare(tmp);self.assertIsNone(self.r.sample_policy(dict(self.item)))
             self.item['digest']='changed';self.assertIsNone(self.r.sample_policy(self.item))
-    def test_only_one_total_attempt_even_when_first_sample_fails(self):
+    def test_boot_does_not_consume_runtime_attempt_and_runtime_is_once(self):
         with tempfile.TemporaryDirectory() as tmp:
             self.prepare(tmp);self.clock=150;self.terminal=150.1
             self.r.sample_runtime=mock.Mock(side_effect=lambda *a:a[2].update(stackSample={'status':'failed','error':'diagnostic_failure'}))
@@ -1109,33 +1112,35 @@ class BootstatusSampleTests(unittest.TestCase):
             self.item['record'].update(label='booted-runtimes',argv=['/launcher','list','-j','runtimes'])
             self.assertEqual(self.r.lifecycle_wait(self.item,180,{'startedMonotonic':150}),0)
             self.r.sample_runtime.assert_called_once()
+            self.process.returncode=None;self.clock=170;self.terminal=170.1
+            self.assertEqual(self.r.lifecycle_wait(self.item,180,{'startedMonotonic':150}),0)
+            self.r.sample_runtime.assert_called_once()
     def test_nonempty_bootstatus_output_prevents_sample(self):
         with tempfile.TemporaryDirectory() as tmp:
             self.prepare(tmp);self.clock=150;self.terminal=150.1;(self.r.out/'bootstatus-stdout.log').write_text('progress')
             self.r.sample_runtime=mock.Mock();self.assertEqual(self.r.lifecycle_wait(self.item,180,{'startedMonotonic':0}),0)
             self.r.sample_runtime.assert_not_called()
-    def test_bootstatus_sampler_uses_fixed_report_path_and_retained_custody(self):
+    def test_bootstatus_direct_sample_entry_rejected_before_spawn(self):
         with tempfile.TemporaryDirectory() as tmp:
-            self.prepare(tmp);self.clock=150;proc,spawn=self.sampler(150.2);d={}
-            with mock.patch.object(runner.subprocess,'Popen',side_effect=spawn) as popen:self.r.sample_runtime(self.item,180,d)
-            self.assertEqual(d['stackSample']['status'],'passed');self.assertEqual(d['stackSample']['triggerAfterSeconds'],150)
-            self.assertEqual(popen.call_args.args[0][-1],str(self.r.out/'bootstatus-stack.txt'))
-            self.assertTrue(d['stackSample']['terminalVerified']);self.assertEqual(self.r.sample_child['record']['label'],'bootstatus-stack-sample')
+            self.prepare(tmp);self.clock=150;d={}
+            with mock.patch.object(runner.subprocess,'Popen') as popen:self.r.sample_runtime(self.item,240,d)
+            popen.assert_not_called();self.assertEqual(d['stackSample']['status'],'failed')
+            self.assertIn('sample_target_scope',d['stackSample']['error'])
     def test_late_budget_cannot_spawn_or_extend_original_deadline(self):
         with tempfile.TemporaryDirectory() as tmp:
             self.prepare(tmp);self.clock=170;d={}
             with mock.patch.object(runner.subprocess,'Popen') as popen:self.r.sample_runtime(self.item,180,d)
-            popen.assert_not_called();self.assertIn('remaining_budget',d['stackSample']['error']);self.assertEqual(self.clock,170)
+            popen.assert_not_called();self.assertIn('sample_target_scope',d['stackSample']['error']);self.assertEqual(self.clock,170)
     def test_terminal_at_threshold_never_samples(self):
         with tempfile.TemporaryDirectory() as tmp:
             self.prepare(tmp);self.clock=150;self.terminal=150;self.r.sample_runtime=mock.Mock()
             self.assertEqual(self.r.lifecycle_wait(self.item,180,{'startedMonotonic':0}),0);self.r.sample_runtime.assert_not_called()
-    def test_bootstatus_original_deadline_still_fatal_after_sample(self):
+    def test_bootstatus_original_deadline_still_fatal_without_sample(self):
         with tempfile.TemporaryDirectory() as tmp:
             self.prepare(tmp);self.clock=150
             self.r.sample_runtime=mock.Mock(side_effect=lambda *a:a[2].update(stackSample={'status':'passed'}))
             with self.assertRaisesRegex(ValueError,'lifecycle_deadline'):self.r.lifecycle_wait(self.item,180,{'startedMonotonic':0})
-            self.assertAlmostEqual(self.clock,180);self.r.sample_runtime.assert_called_once()
+            self.assertAlmostEqual(self.clock,180);self.r.sample_runtime.assert_not_called()
 
 class SamplePreSpawnExitTests(unittest.TestCase):
     setUp=RuntimeSampleTests.setUp
@@ -1221,28 +1226,28 @@ class SamplePreSpawnExitTests(unittest.TestCase):
             with mock.patch.object(runner.subprocess,'Popen',side_effect=start) as popen:self.r.sample_runtime(self.item,30,d)
             popen.assert_called_once();self.assertTrue(d['stackSample']['samplerSpawned'])
             self.assertEqual(d['stackSample']['status'],'failed');self.assertIn('after_identity',d['stackSample']['error'])
-    def boot_lifecycle(self,tmp,late=False):
-        BootstatusSampleTests.prepare(self,tmp);self.r.processes=[self.boot];self.r.started=0;self.r.seconds=300
-        def spawn(*args):self.r.processes.append(self.item);self.clock=150;return self.item
+    def runtime_lifecycle(self,tmp,late=False):
+        RuntimeSampleTests.prepare(self,tmp);self.r.processes=[];self.r.started=0;self.r.seconds=300
+        def spawn(*args):self.r.processes.append(self.item);self.clock=10;return self.item
         self.r.spawn_lifecycle=mock.Mock(side_effect=spawn);self.r.acquire_lifecycle=mock.Mock(return_value=self.item);self.r.cleanup=mock.Mock()
         def hash_tool(path):
             if str(path)=='/usr/bin/sample':
                 self.process.returncode=0
-                if late:self.clock=180
+                if late:self.clock=30
             return 'digest'
         return mock.patch.object(runner,'sha',side_effect=hash_tool)
     def test_full_lifecycle_accepts_only_unstarted_not_needed_sample(self):
         with tempfile.TemporaryDirectory() as tmp:
-            with self.boot_lifecycle(tmp),mock.patch.object(runner.subprocess,'Popen') as popen:
-                self.assertEqual(self.r.lifecycle('bootstatus',['bootstatus',DEVICE['createdUDID'],'-b'],180),self.r.out/'bootstatus-stdout.log')
+            with self.runtime_lifecycle(tmp),mock.patch.object(runner.subprocess,'Popen') as popen:
+                self.assertEqual(self.r.lifecycle('booted-runtimes',['list','-j','runtimes'],30),self.r.out/'booted-runtimes-stdout.log')
             popen.assert_not_called();d=self.r.receipt['lifecycleCommands'][-1]
             self.assertEqual(d['outcome'],'normal_exit');self.assert_not_needed(d['stackSample'])
             self.assertTrue(self.r.sample_attempted);self.r.spawn_lifecycle.assert_called_once()
     def test_normal_exit_race_does_not_allow_late_success(self):
         with tempfile.TemporaryDirectory() as tmp:
-            with self.boot_lifecycle(tmp,late=True),mock.patch.object(runner.subprocess,'Popen') as popen:
-                with self.assertRaisesRegex(ValueError,'lifecycle_deadline'):self.r.lifecycle('bootstatus',['bootstatus',DEVICE['createdUDID'],'-b'],180)
-            popen.assert_not_called();self.assertEqual(self.r.receipt['lifecycleCommands'][-1]['deadlineMonotonic'],180)
+            with self.runtime_lifecycle(tmp,late=True),mock.patch.object(runner.subprocess,'Popen') as popen:
+                with self.assertRaisesRegex(ValueError,'lifecycle_deadline'):self.r.lifecycle('booted-runtimes',['list','-j','runtimes'],30)
+            popen.assert_not_called();self.assertEqual(self.r.receipt['lifecycleCommands'][-1]['deadlineMonotonic'],30)
 
 
 class SamplerTimingTests(unittest.TestCase):
@@ -1652,31 +1657,85 @@ class ColdBootBudgetTests(unittest.TestCase):
         return SimpleNamespace(started=0,seconds=300,lifecycle_check=self.check,lifecycle=mock.Mock(return_value='boot-log'))
     def test_exact_240_second_command_allowance(self):
         r=self.setup_runner()
-        with mock.patch.object(run.time,'monotonic',return_value=self.now):self.assertEqual(run.wait_for_boot(r,DEVICE),'boot-log')
+        with mock.patch.object(run.time,'monotonic',return_value=self.now):self.assertEqual(run.wait_for_boot(r,DEVICE,shutdown_inventory()),'boot-log')
         r.lifecycle.assert_called_once_with('bootstatus',['bootstatus',DEVICE['createdUDID'],'-b'],240,absolute_deadline=260)
     def test_phase_minus_30_reserve_caps_later_start(self):
         r=self.setup_runner(100)
-        with mock.patch.object(run.time,'monotonic',return_value=self.now):run.wait_for_boot(r,DEVICE)
+        with mock.patch.object(run.time,'monotonic',return_value=self.now):run.wait_for_boot(r,DEVICE,shutdown_inventory())
         self.assertEqual(r.lifecycle.call_args.kwargs['absolute_deadline'],270)
     def test_exact_reserve_boundary_and_past_fail_before_launch(self):
         for now in (270,300,301):
             r=self.setup_runner(now)
-            with mock.patch.object(run.time,'monotonic',return_value=now),self.assertRaisesRegex(ValueError,'lifecycle_deadline'):run.wait_for_boot(r,DEVICE)
+            with mock.patch.object(run.time,'monotonic',return_value=now),self.assertRaisesRegex(ValueError,'lifecycle_deadline'):run.wait_for_boot(r,DEVICE,shutdown_inventory())
             r.lifecycle.assert_not_called()
     def test_prior_177895_normal_and_latest_180_are_within_prospective_window(self):
         r=self.setup_runner(21.282)
-        with mock.patch.object(run.time,'monotonic',return_value=self.now):run.wait_for_boot(r,DEVICE)
+        with mock.patch.object(run.time,'monotonic',return_value=self.now):run.wait_for_boot(r,DEVICE,shutdown_inventory())
         self.assertAlmostEqual(r.lifecycle.call_args.kwargs['absolute_deadline'],261.282)
         self.assertGreater(300-261.282,30)
     def test_lifecycle_failure_not_retried_or_reclassified(self):
         r=self.setup_runner();r.lifecycle.side_effect=ValueError('helper_lifecycle_deadline')
-        with mock.patch.object(run.time,'monotonic',return_value=self.now),self.assertRaisesRegex(ValueError,'lifecycle_deadline'):run.wait_for_boot(r,DEVICE)
+        with mock.patch.object(run.time,'monotonic',return_value=self.now),self.assertRaisesRegex(ValueError,'lifecycle_deadline'):run.wait_for_boot(r,DEVICE,shutdown_inventory())
         r.lifecycle.assert_called_once()
     def test_full_post_boot_and_transport_validation_remain_mandatory(self):
         source=inspect.getsource(run.run)
-        names=['status=wait_for_boot(runner,device)','verify_boot_output(', 'verify_post_boot_device(runner,device)', 'controller.run()', 'validate_run(', 'validate_events(', 'helperTransportQualified=True']
+        names=['status=wait_for_boot(runner,device,shutdown_inventory)','verify_boot_output(', 'verify_post_boot_device(runner,device)', 'controller.run()', 'validate_run(', 'validate_events(', 'helperTransportQualified=True']
         positions=[source.index(x) for x in names];self.assertEqual(positions,sorted(positions))
         self.assertIn("HelperRunner(output/'prepare',tool,300",source)
+
+class SingleBootControllerTests(unittest.TestCase):
+    check=ColdBootBudgetTests.check
+    setup_runner=ColdBootBudgetTests.setup_runner
+    def test_wrong_or_non_shutdown_proof_never_launches(self):
+        changes=({'state':'Booted'},{'state':'Booting'},{'udid':DEVICE['sourceUDID']},
+                 {'name':'other'},{'deviceTypeIdentifier':'other'},{'isAvailable':False})
+        for change in changes:
+            r=self.setup_runner();proof=shutdown_inventory();proof['devices'][run.RUNTIME][0].update(change)
+            with mock.patch.object(run.time,'monotonic',return_value=self.now),self.assertRaises(ValueError):
+                run.wait_for_boot(r,DEVICE,proof)
+            r.lifecycle.assert_not_called()
+    def test_wrong_runtime_proof_never_launches(self):
+        r=self.setup_runner();proof=shutdown_inventory();proof['runtimes'][0]['buildversion']='other'
+        with self.assertRaisesRegex(ValueError,'exact_runtime'):run.wait_for_boot(r,DEVICE,proof)
+        r.lifecycle.assert_not_called()
+    def test_single_startup_command_after_fresh_query(self):
+        source=inspect.getsource(run.run)
+        self.assertNotIn("runner.lifecycle('boot',",source)
+        self.assertEqual(source.count('status=wait_for_boot('),1)
+        self.assertLess(source.index("shutdown_inventory=read(runner.lifecycle('created',['list','-j']))"),
+                        source.index('status=wait_for_boot(runner,device,shutdown_inventory)'))
+
+
+class SingleBootTerminalTests(unittest.TestCase):
+    setUp=AcquisitionTests.setUp
+    sleep=AcquisitionTests.sleep
+    poll=AcquisitionTests.poll
+    identity=AcquisitionTests.identity
+    def setup_boot(self,signals=(),late=False):
+        self.r.device=DEVICE;self.r.started=0;self.r.seconds=300;self.r.receipt={};self.r.processes=[];self.r.out=Path('/owned')
+        self.item['record'].update(label='bootstatus',argv=['/launcher','bootstatus',DEVICE['createdUDID'],'-b'],signals=list(signals))
+        def spawn(*args):self.r.processes.append(self.item);return self.item
+        self.r.spawn_lifecycle=mock.Mock(side_effect=spawn)
+        self.r.acquire_lifecycle=mock.Mock(return_value=self.item)
+        self.process.returncode=0
+        def cleanup(item):
+            if late:self.clock=240
+        self.r.cleanup=mock.Mock(side_effect=cleanup)
+    def test_single_owned_unsignaled_zero_is_accepted(self):
+        self.setup_boot()
+        self.assertEqual(run.wait_for_boot(self.r,DEVICE,shutdown_inventory()),Path('/owned/bootstatus-stdout.log'))
+        self.r.spawn_lifecycle.assert_called_once_with('bootstatus',['bootstatus',DEVICE['createdUDID'],'-b'],240)
+        self.r.cleanup.assert_called_once_with(self.item)
+    def test_signaled_zero_terminal_still_fails(self):
+        for sig in ('SIGINT','SIGTERM'):
+            self.setup_boot(signals=[sig])
+            with self.assertRaisesRegex(ValueError,'bootstatus_normal_exit'):run.wait_for_boot(self.r,DEVICE,shutdown_inventory())
+            self.r.spawn_lifecycle.assert_called_once();self.r.cleanup.assert_called_once()
+    def test_exact_boundary_zero_after_cleanup_still_fails(self):
+        self.setup_boot(late=True)
+        with self.assertRaisesRegex(ValueError,'lifecycle_deadline'):run.wait_for_boot(self.r,DEVICE,shutdown_inventory())
+        self.r.spawn_lifecycle.assert_called_once();self.r.cleanup.assert_called_once()
+
 
 class FailedReadinessObservationTests(unittest.TestCase):
     def setUp(self):
