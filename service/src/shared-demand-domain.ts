@@ -1,6 +1,6 @@
 import {createHash} from 'node:crypto';
 import {amount as unitAmount,dimension as unitDimension,inUnit,add,sub,cmp,zero,type Rat} from './physical-quantity.js';
-import {sharedDemandGraphSchema,sharedDemandChangeSchema,sharedDemandReceiptSchema,demandQuantitySchema,
+import {sharedDemandGraphSchema,sharedDemandChangeSchema,sharedDemandReceiptSchema,demandQuantitySchema,demandContributionSchema,
  type DemandGraph,type DemandChange,type DemandReceipt,type DemandQuantity,type DemandContribution,type DemandEdge} from './shared-demand-contracts.js';
 export class SharedDemandError extends Error {constructor(readonly code:string){super(code);}}
 function requireThat(value:unknown,code:string):asserts value {if(!value)throw new SharedDemandError(code);}
@@ -51,12 +51,9 @@ function cycleCheck(edges:DemandEdge[]){
    requireThat(!visiting.has(id),'allocation_cycle');visiting.add(id);stack.push([id,true]);for(const child of links.get(id)??[])stack.push([child,false]);}
  }
 }
-export function validateDemandGraph(input:unknown):DemandGraph {
- const g=sharedDemandGraphSchema.parse(input);unique(g.usedIds);unique(g.lines.map(l=>l.originalOrder),'duplicate_order');
- const ids=[...g.lines,...g.contributions,...g.edges].map(x=>x.id);unique(ids);requireThat(ids.every(id=>g.usedIds.includes(id)),'unregistered_identity');
- const lines=new Map(g.lines.map(l=>[l.id,l])),sources=new Map(g.contributions.map(c=>[c.id,c]));
- const provenance:string[]=[],activeRequests:string[]=[];
- for(const c of g.contributions){requireThat(lines.has(c.lineId),'unknown_line');if(active(c))requireThat(lines.get(c.lineId)!.trashedAt===null,'trashed_source_line');
+/** Shared row policy also applies to detached transferred source evidence. */
+export function validateDemandContribution(input:unknown):DemandContribution {
+ const c=demandContributionSchema.parse(input);
   unique(c.exclusions,'duplicate_exclusion');unique(c.contains,'duplicate_product_fact');requireThat(!c.exclusions.some(x=>c.contains.includes(x)),'excluded_product');
   if(c.quantity)checkQuantity(c.quantity);
   unique((c.sourceExclusions??[]).map(e=>JSON.stringify([e.occurrenceId,e.ingredientId,e.label])),'duplicate_source_exclusion');
@@ -65,6 +62,27 @@ export function validateDemandGraph(input:unknown):DemandGraph {
    requireThat(occurrence!==null&&e.occurrenceId===occurrence&&(c.source.kind==='meal'||c.source.kind==='reservation')&&(e.ingredientId===null||e.ingredientId===c.source.ingredientId),'invalid_exclusion_origin');
    if(e.resolution.kind==='mapped'){unique(e.resolution.tags,'duplicate_exclusion');requireThat(e.resolution.tags.every(tag=>c.exclusions.includes(tag)),'missing_mapped_exclusion');}
   }
+ if(c.source.kind==='meal')requireThat((c.source.groupId===null)===(c.source.bindingId===null),'invalid_group_binding');
+ if(c.source.kind==='reservation')requireThat(c.source.bindingId===null||c.source.groupId!==null,'invalid_group_binding');
+ return c;
+}
+/** No graph/line/allocation is manufactured. Only already-proved detached rows
+ * may change, with the same immutable/protected policy used by the graph reducer. */
+export function validateDetachedDemandChanges(before:DemandContribution[],after:DemandContribution[],quantifying:string[]=[],clarifying:string[]=[]){
+ unique(before.map(x=>x.id));unique(after.map(x=>x.id));unique(quantifying);unique(clarifying);
+ requireThat(eq(before.map(x=>x.id).sort(),after.map(x=>x.id).sort()),'transfer_identity_changed');
+ for(const row of [...before,...after])validateDemandContribution(row);
+ for(const id of quantifying){const old=before.find(x=>x.id===id),next=after.find(x=>x.id===id);requireThat(old&&active(old)&&old.source.kind==='reservation'&&old.quantity===null&&next&&active(next)&&next.quantity!==null,'invalid_reservation_quantification');}
+ for(const id of clarifying){const old=before.find(x=>x.id===id),next=after.find(x=>x.id===id);requireThat(old&&active(old)&&old.source.kind==='reservation'&&old.productKey===null&&next&&active(next)&&next.productKey!==null&&eq({...next,productKey:null},old),'invalid_reservation_product_clarification');}
+ conserve({contributions:before},{contributions:after},new Set(),new Set(quantifying),new Set(clarifying));
+}
+export function validateDemandGraph(input:unknown):DemandGraph {
+ const g=sharedDemandGraphSchema.parse(input);unique(g.usedIds);unique(g.lines.map(l=>l.originalOrder),'duplicate_order');
+ const ids=[...g.lines,...g.contributions,...g.edges].map(x=>x.id);unique(ids);requireThat(ids.every(id=>g.usedIds.includes(id)),'unregistered_identity');
+ const lines=new Map(g.lines.map(l=>[l.id,l])),sources=new Map(g.contributions.map(c=>[c.id,c]));
+ const provenance:string[]=[],activeRequests:string[]=[];
+ for(const c of g.contributions){requireThat(lines.has(c.lineId),'unknown_line');if(active(c))requireThat(lines.get(c.lineId)!.trashedAt===null,'trashed_source_line');
+  validateDemandContribution(c);
   // A retired acceptance keeps its immutable revision provenance. A new
   // acceptance may use a new revision, but only one generation may be active.
   if(c.source.kind==='request'){provenance.push('request/'+c.source.requestId+'/'+c.source.appliedRequestRevision);if(active(c))activeRequests.push(c.source.requestId);}
@@ -134,7 +152,7 @@ export function demandLineTotals(graph:unknown){
   return [{lineId:line.id,unit:line.unit,quantity:lineTotal(g,line.id)?.amount??null,activeContributionIds}];
  });
 }
-function conserve(before:DemandGraph,after:DemandGraph,restoring:ReadonlySet<string>=new Set(),quantifying:ReadonlySet<string>=new Set(),clarifying:ReadonlySet<string>=new Set()){
+function conserve(before:Pick<DemandGraph,'contributions'>,after:Pick<DemandGraph,'contributions'>,restoring:ReadonlySet<string>=new Set(),quantifying:ReadonlySet<string>=new Set(),clarifying:ReadonlySet<string>=new Set()){
  for(const old of before.contributions){const next=after.contributions.find(c=>c.id===old.id);requireThat(next,'source_hard_delete');
   const bindingResolved=quantifying.has(old.id)&&old.source.kind==='reservation'&&next.source.kind==='reservation'&&old.source.bindingId===null&&next.source.bindingId!==null&&eq({...next.source,bindingId:null},old.source);
   requireThat(eq(next.source,old.source)||bindingResolved,'source_identity_changed');

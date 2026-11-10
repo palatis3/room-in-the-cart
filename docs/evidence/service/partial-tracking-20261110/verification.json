@@ -1,0 +1,77 @@
+{
+  "scope": "Partial-state store review, meal editing, transferred facts and whole-meal Undo; backend only",
+  "sourceCommitBeforeChanges": "f2129acb",
+  "execution": ".build/SharedDemandGraphNov09/root-partial-backend-r2",
+  "receiptSHA256": "9c1bb4d48a92e13ad4182dd404c5a6cb289f97f68817c68f01c13acaf25ae00d",
+  "sourceManifestSHA256": "c29ea46a1d6f56040607364bfe1a6b91f51dfcda51e48271a4c947eb948723c7",
+  "sourceCount": 300,
+  "compiledManifestSHA256": "b7903f4ad975ecaa5f1f33cd5286f16c1ed8d1fc6fab9da2231b96a810b01c83",
+  "verifiedCurrentAndExecutedInputs": true,
+  "verifiedAllPhaseLogHashes": true,
+  "offline": {
+    "tests": 980,
+    "pass": 979,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 1,
+    "todo": 0,
+    "skippedNames": [
+      "PostgreSQL durable billing / RLS / named seats contract"
+    ],
+    "logSHA256": "c7867b95ce988767cb713eeb244860e47f23286faf86bc039c95a9790ebd09f7"
+  },
+  "database": {
+    "tests": 415,
+    "pass": 412,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 3,
+    "todo": 0,
+    "skippedNames": [
+      "real browser WebApp and API recover a dropped helper reply with exact original bytes after a newer projection",
+      "real full browser recreation recovers a lost received suggestion with read-only retries and fences identity, expiry and revocation",
+      "two contributor web sessions see only their own purchase receipt through shopper corrections"
+    ],
+    "logSHA256": "6883151a74519826985447471bdc35efb31a74724599be538d80bd0251b6144d"
+  },
+  "newHTTPScenarios": [
+    "partial store re-review Cancel and Apply keep unknown protected transfers while binding exact money and retry",
+    "enabled partial catalog and explicit meal patch are one reviewed operation with whole inverse and independent later staple",
+    "later touched transferred meal change conflicts with whole inverse instead of overwriting it",
+    "new store review does not make a cross-store meal inverse eligible",
+    "partial source author erasure clears held catalog/preview authority and original/inverse replay without resurrecting transfers",
+    "held partial store review loses live contributor permission before first Apply",
+    "partial plain-unbound meal can change unknown quantity and Undo in one review without rebind or fabricated allocation",
+    "partial enabled source catalog rejects foreign, nonshopper, stale base and forged meal revision before any mutation",
+    "initial compound meal adoption also binds full prior/proposed cooking facts into the final acknowledgment",
+    "removing an unprotected transferred ingredient requires explicit retirement and Undo restores its same original identity",
+    "new partial meal effect on a genuinely old V1 shop captures exact before facts and supports whole Undo without retroactive snapshot mutation",
+    "held partial store review cannot Apply after selection changes",
+    "held partial store review cannot Apply after authority changes",
+    "held partial store review cannot Apply after privacy changes",
+    "partial transferred edit omitted uses authoritative prospective meal facts",
+    "partial transferred edit forgedQuantity uses authoritative prospective meal facts",
+    "partial transferred edit forgedOrigin uses authoritative prospective meal facts",
+    "partial transferred edit unknown uses authoritative prospective meal facts"
+  ],
+  "originalFailuresNowPass": [
+    "partial store re-review Cancel and Apply keep unknown protected transfers while binding exact money and retry",
+    "held partial store review cannot Apply after selection changes",
+    "held partial store review cannot Apply after authority changes",
+    "held partial store review cannot Apply after privacy changes",
+    "partial transferred edit forgedOrigin uses authoritative prospective meal facts",
+    "new store review does not make a cross-store meal inverse eligible",
+    "held partial store review loses live contributor permission before first Apply"
+  ],
+  "requestAcceptanceRestoreProof": {
+    "signatureVerified": true,
+    "applied": true,
+    "runtimeStillQuarantined": true,
+    "privateReceiptSHA256": "2b255281f63cf05a634bb1f4294b581903176662613f73d257eb31f3859fb44b"
+  },
+  "postgresStopped": true,
+  "liveDeployment": false,
+  "nativeOrBrowserQualification": false,
+  "priorFailureReceiptSHA256": "4e1e94ffd3804854fb6bca1754502c39de495a94ed03142a71bea407f4e9148d",
+  "priorFailureDatabaseLogSHA256": "55488ba4c728d19c01d0719d63b473f1adc0c3eae6e151a0fdd1b1dcb12fc6bd"
+}

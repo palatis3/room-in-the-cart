@@ -1,4 +1,4 @@
-import {assertTrackingV1,applyTracking,trackingOperation,assertTrackingReplay,stageV1Tracking} from './shared-demand-tracking-repository.js';
+import {assertTrackingV1,assertTrackingPriceReset,applyTracking,trackingOperation,assertTrackingReplay,stageV1Tracking} from './shared-demand-tracking-repository.js';
 import {deriveSharedFoodUndo,assertSharedFoodUndoReplay,foodUndoFailure,type FoodUndoEvidence,type FoodUndoStoreBasis} from './shared-food-operation-undo.js';
 import {recordMealUndoEffect,loadMealUndoEvidence} from './shared-food-meal-undo.js';
 import {randomUUID} from 'node:crypto';
@@ -223,7 +223,7 @@ export async function applyDemand(repo:HouseholdRepository,ctx:Context,shop:Shop
  await ctx.db.query('DELETE FROM ritc.shared_demand_preview WHERE household_id=$1 AND preview_id=$2',[ctx.householdId,p.preview_id]);
 }
 export async function assertPriceOnly(repo:HouseholdRepository,ctx:Context,shop:Shop,c:Envelope){
- await assertTrackingV1(repo,ctx,shop);const body=bodySchemas['shop.patch'].parse(c.body);assert(!body.mealEdit&&!body.demandReview&&!shop.demand_review_required,'demand_review_required');
+ await assertTrackingPriceReset(repo,ctx,shop);const body=bodySchemas['shop.patch'].parse(c.body);assert(!body.mealEdit&&!body.demandReview&&!shop.demand_review_required,'demand_review_required');
  const identity=(lines:any[])=>lines.map(({lineId,originalItem,packs})=>({lineId,originalItem,packs}));assert(digest(identity(body.lines))===digest(identity(await repo.lines(ctx,shop.shop_id))),'demand_price_only_changed');
 }
 
@@ -256,7 +256,7 @@ export async function liveFoodUndoStoreBasis(ctx:Context,shop:Shop,revision:unkn
  [ctx.householdId,shop.shop_id,revision,shop.authority_epoch])).rows[0];
  return row?.selected?{revision:row.revision,pairId:row.pair_id,choice:row.choice,selectionDigest:digest(row.selected)}:null;
 }
-async function foodUndoEvidence(ctx:Context,shop:Shop,operationId:string):Promise<FoodUndoEvidence>{
+export async function foodUndoEvidence(ctx:Context,shop:Shop,operationId:string):Promise<FoodUndoEvidence>{
  const o=(await ctx.db.query('SELECT operation_id,household_id,shop_id,kind,payload_digest FROM ritc.operation WHERE household_id=$1 AND shop_id=$2 AND operation_id=$3',[ctx.householdId,shop.shop_id,operationId])).rows[0];
  if(!o)throw foodUndoFailure('history_unavailable');
  const effect=(await ctx.db.query('SELECT * FROM ritc.shared_food_operation_effect WHERE household_id=$1 AND shop_id=$2 AND operation_id=$3',[ctx.householdId,shop.shop_id,operationId])).rows[0]??null;

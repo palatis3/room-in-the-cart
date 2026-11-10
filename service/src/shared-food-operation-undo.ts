@@ -53,7 +53,7 @@ function persistedGraph(row:FoodUndoEvidence['beforeGraph']){
 }
 function delta<T extends {id:string}>(before:T[],after:T[]){return [...new Set([...before,...after].map(r=>r.id))].flatMap(id=>{
  const b=before.find(r=>r.id===id)??null,a=after.find(r=>r.id===id)??null;return eq(b,a)?[]:[{id,before:b,after:a}];});}
-export function deriveSharedFoodUndo(e:FoodUndoEvidence,current:{graph:DemandGraph;lines:z.infer<typeof lineSchema>[];quote:z.infer<typeof quoteSchema>;shopRevision?:number;storeBasis?:{revision:number|null;reviewRequired:boolean}},
+export function deriveSharedFoodUndoCore(e:FoodUndoEvidence,current:{graph:DemandGraph;lines:z.infer<typeof lineSchema>[];quote:z.infer<typeof quoteSchema>;shopRevision?:number;storeBasis?:{revision:number|null;reviewRequired:boolean}},
  command:{operationId:string;householdId:string;shopId:string;baseRevision:number;at:string},now:Date){
  const {operation:o,effect:f}=e;
  insist(o.household_id===command.householdId&&o.shop_id===command.shopId,'history_unavailable');
@@ -90,8 +90,6 @@ export function deriveSharedFoodUndo(e:FoodUndoEvidence,current:{graph:DemandGra
   graph:validateDemandGraph({...current.graph,revision:current.graph.revision+1}),
   receipt:sharedDemandReceiptSchema.parse({schemaVersion:1,operationId:command.operationId,householdId:command.householdId,shopId:command.shopId,
    baseRevision:current.graph.revision,resultRevision:current.graph.revision+1,lines:[],contributions:[],edges:[]})};
- const totals=demandLineTotals(result.graph);
- insist(totals.length===lines.length&&lines.every(l=>totals.some(t=>t.lineId===l.lineId)&&result.graph.lines.some(g=>g.id===l.lineId&&g.name===l.originalItem)),'graph_conflict');
  insist(changes>0||touched.length>0||quoteChanged||mealUndo,'no_effect');
  const scope={targetOperationId:o.operation_id,baseShopRevision:before.revision,resultShopRevision:after.revision,
   touchedLines:touched,quoteChanged,graphRows:changes,mealsChanged:mealUndo!==undefined,requestsChanged:false};
@@ -100,6 +98,11 @@ export function deriveSharedFoodUndo(e:FoodUndoEvidence,current:{graph:DemandGra
  return {action,result,scope,effectDigest:digest({scope,before:e.before!.digest,after:e.after!.digest,receipt,
   currentGraph:digest(current.graph),action,...(mealUndo?{mealUndo}:{}),...(storeBasis?{storeBasis}:{})}),beforeCheckout:checkout(current.lines,current.quote),afterCheckout:checkout(lines,quote),
   ...(mealUndo?{mealUndo}:{}),...(storeBasis?{storeBasis}:{})};
+}
+/** Existing V1 callers retain their exact complete-coverage guard. */
+export function deriveSharedFoodUndo(...args:Parameters<typeof deriveSharedFoodUndoCore>){
+ const value=deriveSharedFoodUndoCore(...args),totals=demandLineTotals(value.result.graph),lines=value.action.body.lines;
+ insist(totals.length===lines.length&&lines.every(l=>totals.some(t=>t.lineId===l.lineId)&&value.result.graph.lines.some(g=>g.id===l.lineId&&g.name===l.originalItem)),'graph_conflict');return value;
 }
 /** Retry returns its original response, never derives/applies a second inverse.
  * It still cannot outlive erasure of the target's trusted historical basis. */

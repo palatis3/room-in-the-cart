@@ -3,7 +3,7 @@
 import {createHash} from 'node:crypto';
 import {z} from 'zod';
 import {sharedDemandGraphSchema,demandContributionSchema,demandQuantitySchema,sourceExclusionSchema} from './shared-demand-contracts.js';
-import {validateDemandGraph,demandLineTotals,convertDemandQuantity} from './shared-demand-domain.js';
+import {validateDemandGraph,demandLineTotals,convertDemandQuantity,validateDemandContribution} from './shared-demand-domain.js';
 const id=z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
 const hash=z.string().regex(/^[a-f0-9]{64}$/), text=z.string().min(1).max(2048);
 const rev=z.number().int().min(0).max(2147483647);
@@ -58,7 +58,7 @@ export function validateState(input:unknown,currentCatalog:readonly Fact[]):Trac
  for(const b of s.bindings){const row=live.find(r=>r.id===b.contributionId),fact=s.catalog.find(f=>f.id===b.factId);check(row&&fact,'binding_missing');matchesFact(row,fact);}
  for(const r of live)if(r.source.kind!=='manual'&&r.source.kind!=='import')check(bound.has(r.id),'unproven_source');
  const detached=s.unbound.flatMap(u=>u.transferred?[u.transferred]:[]);unique(detached.map(r=>r.id),'duplicate_transfer');
- for(const u of s.unbound)if(u.transferred){const fact=s.catalog.find(f=>f.id===u.factId)!;
+ for(const u of s.unbound)if(u.transferred){const fact=s.catalog.find(f=>f.id===u.factId)!;validateDemandContribution(u.transferred);
   check(active(u.transferred)&&!s.graph.contributions.some(r=>r.id===u.transferred!.id),'transfer_not_retirement');
   check(s.graph.usedIds.includes(u.transferred.id),'transfer_identity_lost');matchesFact(u.transferred,fact);
   check(!s.graph.edges.some(e=>e.demandId===u.transferred!.id||e.supplyId===u.transferred!.id),'transfer_allocation');

@@ -1,6 +1,6 @@
 import {readRequestAcceptanceHistory,readRequestUndoCandidate,previewRequestUndo} from './shared-request-acceptance-repository.js';
 import {PartitionError} from './shared-demand-tracking.js';
-import {readTracking,createTrackingCandidate,acceptTrackingCandidate,readTrackingRecord,readTrackingHistory,readTrackingActionSources} from './shared-demand-tracking-repository.js';
+import {readTracking,createTrackingCandidate,acceptTrackingCandidate,readTrackingRecord,readTrackingHistory,readTrackingActionSources,readTrackingMealActionSources} from './shared-demand-tracking-repository.js';
 import {readSharedRecordSnapshot} from './shared-records.js';
 import {SharedDemandError} from './shared-demand-domain.js';
 import {previewDemand,readDemand,readActionDemandSources,readFoodOperationHistory,previewFoodOperationUndo,readFoodOperationUndoCandidate} from './shared-demand-repository.js';
@@ -401,6 +401,7 @@ export function createHTTPServer(options:HTTPOptions) {
           if(tail==='/demand/tracking/operations'&&method==='GET')return readTrackingHistory(repository,ctx,await repository.shop(ctx,shopId));
           if(tail==='/demand/tracking'&&method==='GET')return readTracking(repository,ctx,await repository.shop(ctx,shopId));
           if(tail==='/demand/tracking/action-sources'&&method==='POST')return readTrackingActionSources(repository,ctx,await repository.shop(ctx,shopId),payload);
+          if(tail==='/demand/tracking/meal-action-sources'&&method==='POST')return readTrackingMealActionSources(repository,ctx,await repository.shop(ctx,shopId),payload);
           if(tail==='/demand/tracking/candidates'&&method==='POST')return createTrackingCandidate(repository,ctx,await repository.shop(ctx,shopId),payload);
           if(tail==='/demand/tracking/previews'&&method==='POST')return acceptTrackingCandidate(repository,ctx,await repository.shop(ctx,shopId),payload);
           if(tail==='/records/tracking-snapshot'&&method==='GET')return readTrackingRecord(repository,ctx,await repository.shop(ctx,shopId));
