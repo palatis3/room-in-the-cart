@@ -4,7 +4,7 @@ from pathlib import Path
 import subprocess
 import time
 from app_scroll_observation.runner import Runner
-from app_scroll_observation.support import require, sha
+from app_scroll_observation.support import require, sha, launcher_identity
 
 class HelperRunner(Runner):
     def spawn(self, label, argv, expected, digest, stdin=False):
@@ -49,24 +49,107 @@ class HelperRunner(Runner):
             require(len(entries)<=8192 and all(not p.is_symlink() for p in entries),'helper_aggregate_shape')
             require(sum(p.stat().st_size for p in entries if p.is_file())<=512*1024**2,'helper_aggregate_bytes')
 
-    def lifecycle(self, label, tail, seconds=30):
-        # A terminal owned Popen proves this command completed; it is never a signal target.
-        require(lifecycle_allowed(tail, self.device), 'helper_lifecycle_scope')
-        require(all(p['process'].poll() is not None for p in self.processes), 'previous_tool_not_terminal')
-        tool=self.tools['simctl']; started=time.monotonic()
-        try:
-            item=self.spawn(label,[tool['path'],*tail],Path(tool['executable']),tool['executableSHA256'])
-        except RuntimeError as exc:
-            require(str(exc)==label+'_unbound_or_early_exit','helper_spawn_identity_failure')
-            require(self.processes and self.processes[-1]['record']['label']==label,'helper_spawn_inventory')
-            item=self.processes[-1]
-            require(item['process'].poll() is not None,'helper_unbound_live_no_signal')
-            item['record']['terminalOwnedCommandBeforeBinding']=True
-        try:code=self.wait(item,max(.001,seconds-(time.monotonic()-started)))
-        finally:self.cleanup(item)
+    def lifecycle_check(self, deadline):
         self.budget()
-        require(code==0 and not item['record']['signals'],label+'_normal_exit')
-        return self.out/(label+'-stdout.log')
+        require(time.monotonic() < deadline, 'helper_lifecycle_deadline')
+
+    def acquire_inventory(self, item, deadline):
+        """Only list -j: finish acquiring the same owned Popen inside its existing budget."""
+        tool=self.tools['simctl'];process=item['process'];record=item['record'];label=record['label']
+        require(record['argv']==[tool['path'],'list','-j'],'helper_inventory_acquisition_scope')
+        self.lifecycle_check(deadline)
+        launcher_identity(tool['path'],tool['sha256'],item['expected'],item['digest'])
+        interpreter=str(Path('/bin/bash').resolve())
+        diagnostic={'startMonotonic':time.monotonic(),'deadlineMonotonic':deadline,
+                    'initialLiveBindingWindowSeconds':2,'samples':0,'first':[],'last':None}
+        record['inventoryAcquisition']=diagnostic;self.save();origin=None
+        while True:
+            self.lifecycle_check(deadline)
+            if process.poll() is not None:
+                record.update(terminalOwnedCommandBeforeBinding=True,exitCode=process.returncode)
+                diagnostic['outcome']='terminal_before_binding';self.save();return item
+            value=self.identity.read(process.pid)
+            kind='missing' if value is None else 'expected' if value['executable']==item['expected'] else 'interpreter' if value['executable']==interpreter else 'other'
+            sample={'monotonic':time.monotonic(),'kind':kind,'identity':value}
+            diagnostic['samples']+=1;diagnostic['last']=sample
+            diagnostic[kind]=diagnostic.get(kind,0)+1
+            if len(diagnostic['first'])<4:diagnostic['first'].append(sample)
+            if diagnostic['samples']<=4 or diagnostic['samples']%20==0 or kind=='other':self.save()
+            self.lifecycle_check(deadline)
+            if process.poll() is not None:continue  # An owned normal exit may race libproc.
+            if value is not None:
+                require(value['pid']==process.pid and value['parentPID']==os.getpid() and value['uid']==os.getuid()
+                        and value['startTimeMicros']>=int(record['spawnEpoch']*1_000_000),label+'_inventory_identity')
+                current={k:value[k] for k in ('pid','parentPID','uid','startTimeMicros')}
+                require(origin is None or current==origin,label+'_inventory_identity_changed');origin=current
+                require(kind in ('expected','interpreter'),label+'_inventory_executable')
+                if kind=='expected':
+                    require(sha(item['expected'])==item['digest'],label+'_binary_identity')
+                    self.lifecycle_check(deadline)
+                    if process.poll() is not None:continue
+                    latest=self.identity.read(process.pid)
+                    if latest!=value:
+                        require(process.poll() is not None,label+'_inventory_identity_changed');continue
+                    self.lifecycle_check(deadline)
+                    item['binding']=value;record['binding']=value
+                    diagnostic['outcome']='bound';self.save();return item
+            time.sleep(min(.05,max(0,deadline-time.monotonic())))
+
+    def lifecycle_wait(self, item, deadline, diagnostic):
+        process=item['process'];next_sample=0
+        while True:
+            self.lifecycle_check(deadline)
+            code=process.poll()
+            if code is not None:
+                item['record']['exitCode']=code;self.save();return code
+            now=time.monotonic()
+            if now>=next_sample:
+                value=self.identity.read(process.pid)
+                sample={'monotonic':now,'epoch':time.time(),'identity':value,
+                        'stdoutBytes':(self.out/(item['record']['label']+'-stdout.log')).stat().st_size,
+                        'stderrBytes':(self.out/(item['record']['label']+'-stderr.log')).stat().st_size}
+                diagnostic['progressSamples']=diagnostic.get('progressSamples',0)+1
+                diagnostic['lastProgress']=sample
+                first=diagnostic.setdefault('firstProgress',[])
+                if len(first)<4:first.append(sample)
+                self.save();self.lifecycle_check(deadline)
+                if process.poll() is None:require(item['binding'] is not None and value==item['binding'],'helper_lifecycle_identity_changed')
+                next_sample=now+1  # No repeated whole-binary hashing during wait.
+            time.sleep(min(.05,max(0,deadline-time.monotonic())))
+
+    def lifecycle(self, label, tail, seconds=30):
+        require(lifecycle_allowed(tail,self.device),'helper_lifecycle_scope')
+        require(all(p['process'].poll() is not None for p in self.processes),'previous_tool_not_terminal')
+        tool=self.tools['simctl'];started=time.monotonic();deadline=min(started+seconds,self.started+self.seconds)
+        diagnostic={'label':label,'startedEpoch':time.time(),'startedMonotonic':started,
+                    'commandSeconds':seconds,'deadlineMonotonic':deadline,'phaseDeadlineMonotonic':self.started+self.seconds,
+                    'outcome':'spawning'}
+        self.receipt.setdefault('lifecycleCommands',[]).append(diagnostic);self.save();item=None
+        try:
+            self.lifecycle_check(deadline)
+            try:item=self.spawn(label,[tool['path'],*tail],Path(tool['executable']),tool['executableSHA256'])
+            except RuntimeError as exc:
+                require(str(exc)==label+'_unbound_or_early_exit','helper_spawn_identity_failure')
+                require(self.processes and self.processes[-1]['record']['label']==label,'helper_spawn_inventory')
+                item=self.processes[-1]
+                if item['process'].poll() is None:
+                    require(tail==['list','-j'],'helper_unbound_live_no_signal')
+                    item=self.acquire_inventory(item,deadline)
+                else:item['record']['terminalOwnedCommandBeforeBinding']=True
+            self.lifecycle_check(deadline)
+            diagnostic.update(acquiredMonotonic=time.monotonic(),pid=item['process'].pid,outcome='waiting')
+            try:code=self.lifecycle_wait(item,deadline,diagnostic)
+            finally:self.cleanup(item)
+            self.lifecycle_check(deadline)  # No late terminal/output success or fresh timeout after acquisition.
+            require(code==0 and not item['record']['signals'],label+'_normal_exit')
+            diagnostic['outcome']='normal_exit'
+            return self.out/(label+'-stdout.log')
+        except BaseException as exc:
+            diagnostic.update(outcome='failed',error=type(exc).__name__+': '+str(exc)[:1024]);raise
+        finally:
+            diagnostic.update(finishedMonotonic=time.monotonic(),finishedEpoch=time.time())
+            if item is not None:diagnostic['pid']=item['process'].pid
+            self.save()
 
 def lifecycle_allowed(tail, device):
     if tail==['list','-j']:return True

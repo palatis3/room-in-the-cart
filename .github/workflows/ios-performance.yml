@@ -102,6 +102,7 @@ jobs:
           python3 scripts/test_capture_scroll_signposts.py
           python3 scripts/test_app_scroll_observation.py
           python3 scripts/test_app_scroll_preflight_retention.py
+          python3 scripts/test_boot_ios_simulator.py
           python3 scripts/test_simulator_signpost_control.py
           python3 scripts/run_simulator_signpost_control.py validate-request
           python3 scripts/plan_ios_performance_tests.py --validate-request

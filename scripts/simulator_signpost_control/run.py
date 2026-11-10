@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import platform
+import re
 import signal
 import time
 from types import SimpleNamespace
@@ -13,12 +14,14 @@ from app_scroll_observation.contract import (ROOT, frozen, read, tools, tool_inv
                                             selected_snapshot, snapshot, copy_snapshot, HOSTED_TOOL_PROFILE)
 from app_scroll_observation.producer import verify_logging_template
 from app_scroll_observation.support import require, sha, atomic_json
+from boot_ios_simulator import MIGRATION_FAILED
 from select_ci_iphone import owner_identity, owned_name, select_iphone
 from .runner import HelperRunner
 from .control import SimulatorSupervisor
 from .validate import validate_run, validate_events, SELECTOR
 
 RUNTIME='com.apple.CoreSimulator.SimRuntime.iOS-27-0'
+BOOT_PREPARATION_SECONDS=180  # Existing Boot diagnostic simulator step: timeout-minutes: 3.
 MIXED=('ENFORCE_BASELINES','OBSERVE_APP_SCROLL_SIGNPOSTS','CAPTURE_SCROLL_SIGNPOSTS',
        'CAPTURE_PREFLIGHT_ONLY','ENABLE_PERFORMANCE_DIAGNOSTICS','FRESH_PERFORMANCE_SIMULATOR')
 
@@ -48,6 +51,13 @@ def current_device(inventory, device, state=None, absent=False):
             and d.get('deviceTypeIdentifier')==device['deviceTypeIdentifier'],'helper_device_identity')
     if state:require(d.get('state')==state,'helper_device_state')
     return d
+
+def verify_boot_output(stdout, stderr):
+    # Same public boot guard as boot_ios_simulator.py; raw streams remain separate and unchanged.
+    require(len(stdout)<=1024**2 and len(stderr)<=1024**2,'helper_boot_log_cap')
+    for raw in (stdout,stderr):
+        for line in raw.decode('utf-8',errors='replace').splitlines():
+            require(line.strip()!='Data Migration Failed' and not MIGRATION_FAILED.match(line),'helper_boot_migration_failed')
 
 def terminal_capture(receipt):
     require(receipt.get('allOwnedProcessesTerminal') is True and not receipt.get('unboundHelperRisk'),'helper_capture_not_terminal')
@@ -104,7 +114,11 @@ def run(output, developer):
         require(str(uuid.UUID(created)).upper()==created.upper() and created not in device['initialUDIDs'],'helper_new_uuid')
         device.update(createdUDID=created,creation='created');atomic_json(output/'device.json',device)
         current_device(read(runner.lifecycle('created',['list','-j'])),device,'Shutdown')
-        result['stage']='boot';runner.lifecycle('boot',['boot',created]);runner.lifecycle('bootstatus',['bootstatus',created,'-b'],90)
+        result['stage']='boot';runner.lifecycle('boot',['boot',created])
+        result['bootPreparationSeconds']=BOOT_PREPARATION_SECONDS
+        status=runner.lifecycle('bootstatus',['bootstatus',created,'-b'],BOOT_PREPARATION_SECONDS)
+        verify_boot_output(status.read_bytes(),(runner.out/'bootstatus-stderr.log').read_bytes())
+        runner.budget()
         current_device(read(runner.lifecycle('booted',['list','-j'])),device,'Booted')
         runner.finish();require(runner.receipt['allKnownChildrenTerminal'],'helper_prepare_not_terminal')
         verify_tools(tool);require(selected_snapshot(ROOT,sources['files'])==sources,'helper_source_changed_before_capture')
@@ -219,6 +233,27 @@ def cleanup(output, archived, destination):
             atomic_json(destination/'receipt.json',{'diagnosticOnly':True,'releaseAcceptance':False,'status':'failed','error':error,'ownedDeviceDeleted':False})
     return 1 if error else 0
 
+def terminal_summary(phase, path, failure=None):
+    """Print only fixed fields/codes, never raw payloads, paths, arguments or environment."""
+    value={}
+    try:
+        value=read(path);require(isinstance(value,dict),'summary_receipt_shape')
+    except (ValueError,OSError,TypeError):
+        value={'error':'RuntimeError: summary_receipt_unavailable'}
+    error=failure or value.get('error','')
+    match=re.fullmatch(r'([A-Za-z]+Error|KeyboardInterrupt): ([A-Za-z0-9_-]+).*',str(error),re.DOTALL)
+    cause=(match[1]+':'+match[2])[:120] if match else 'unclassified_failure' if error else None
+    qualified=value.get('helperTransportQualified') is True and failure is None
+    passed=qualified if phase=='run' else value.get('archivePreserved') is True if phase=='archive' else value.get('status')=='passed' and value.get('ownedDeviceDeleted') is True
+    if failure:passed=False
+    stage=value.get('stage')
+    if stage not in ('request','source-contract','tool-inventory','exact-tool-admission','prerequisites',
+                     'compile','create','boot','capture','export','validated'):stage=phase
+    summary={'phase':phase,'stage':stage,'status':'passed' if passed else 'failed',
+             'firstCause':cause,'helperTransportQualified':qualified,'releaseAcceptance':False,
+             'cleanup':'deleted' if value.get('ownedDeviceDeleted') is True else 'not_verified' if phase=='cleanup' else 'not_applicable'}
+    print(json.dumps(summary,sort_keys=True));return summary
+
 def main():
     def interrupted(signum, frame):raise KeyboardInterrupt('helper_supervisor_signal_'+str(signum))
     signal.signal(signal.SIGTERM,interrupted)
@@ -227,8 +262,16 @@ def main():
     a=p.parse_args()
     if a.phase=='validate-request':print(json.dumps({'helperMode':validate_request(os.environ),'diagnosticOnly':True}));return 0
     require(a.output is not None,'helper_output_required')
-    if a.phase=='run':return run(a.output,os.environ['DEVELOPER_DIR'])
-    require(a.archive is not None,'helper_archive_required')
-    if a.phase=='archive':return archive_evidence(a.output,a.archive)
-    require(a.cleanup is not None,'helper_cleanup_output_required')
-    return cleanup(a.output,a.archive,a.cleanup)
+    if a.phase=='run':path=a.output/'receipt.json'
+    elif a.phase=='archive':
+        require(a.archive is not None,'helper_archive_required');path=a.archive/'report/receipt.json'
+    else:
+        require(a.archive is not None and a.cleanup is not None,'helper_cleanup_output_required');path=a.cleanup/'receipt.json'
+    failure=None
+    try:
+        if a.phase=='run':return run(a.output,os.environ['DEVELOPER_DIR'])
+        if a.phase=='archive':return archive_evidence(a.output,a.archive)
+        return cleanup(a.output,a.archive,a.cleanup)
+    except BaseException as exc:
+        failure=type(exc).__name__+': '+str(exc);raise
+    finally:terminal_summary(a.phase,path,failure)
