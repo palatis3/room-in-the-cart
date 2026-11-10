@@ -66,7 +66,7 @@ import XCTest
         tap(element("sharedShop.retry")); counts(previews: 2, posts: 2, writes: 1, retries: 1)
         XCTAssertTrue(element("sharedShop.retry").waitForNonExistence(timeout: 12))
         assertText(spanish ? "Cambio de compra compartida confirmado" : "Shared shop change confirmed")
-        assertText("Original taco dinner", initialSearchDirection: .towardStart)
+        assertText("Original taco dinner", initialSearchDirection: .towardEnd)
         assertText("Protected lunch", initialSearchDirection: .towardStart); assertText("Later apples", initialSearchDirection: .towardStart)
         openHistory()
         let already = element("sharedUndo.unavailable." + target)

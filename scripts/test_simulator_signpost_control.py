@@ -1,6 +1,7 @@
 """File-only helper/workflow controls. Never instantiate native Identity or launch tools."""
 import copy
 import ast
+import builtins
 import inspect
 import contextlib
 import io
@@ -664,6 +665,49 @@ class RuntimeSampleTests(unittest.TestCase):
     def setUp(self):
         AcquisitionTests.setUp(self)
         p=mock.patch.object(owned,'sha',return_value='digest');p.start();self.addCleanup(p.stop)
+        self.sample_stat=SimpleNamespace(st_mode=runner.stat.S_IFREG|0o755,st_uid=0,st_gid=0,
+            st_size=4096,st_dev=7,st_ino=11,st_mtime_ns=123456789,st_nlink=1)
+        self.sample_resolved=Path('/usr/bin/sample');self.sample_fs_error=None
+        self.real_tool_reads=[]
+        self.addCleanup(lambda:self.assertEqual(self.real_tool_reads,[],
+            'sampler test bypassed synthetic filesystem fixture'))
+        # Guard below pathlib so even a production change that bypasses the fixture
+        # fails on macOS, where the real binary happens to exist, as well as Linux.
+        def target(path):
+            if isinstance(path,int):return False
+            return os.path.normpath(os.fsdecode(path))=='/usr/bin/sample'
+        def guarded(original):
+            def call(path,*args,**kwargs):
+                if target(path):
+                    self.real_tool_reads.append(original.__name__)
+                    raise AssertionError('real_sampler_filesystem_access_forbidden')
+                return original(path,*args,**kwargs)
+            return call
+        self.unmocked_sample_lstat=Path.lstat
+        self.unmocked_sample_resolve=Path.resolve
+        for module,name in ((os,'stat'),(os,'lstat'),(os,'open'),(os,'readlink'),(builtins,'open'),(io,'open')):
+            patch=mock.patch.object(module,name,side_effect=guarded(getattr(module,name)))
+            patch.start();self.addCleanup(patch.stop)
+        # Python 3.9 pathlib caches OS entrypoints in an accessor; newer Python
+        # uses os directly. Guard both without depending on either implementation.
+        accessor=getattr(Path(),'_accessor',None)
+        if accessor is not None:
+            for name in ('stat','lstat','open','readlink'):
+                patch=mock.patch.object(accessor,name,side_effect=guarded(getattr(accessor,name)))
+                patch.start();self.addCleanup(patch.stop)
+        original_lstat=Path.lstat;original_resolve=Path.resolve
+        def lstat(path,*args,**kwargs):
+            if target(path):
+                if self.sample_fs_error:raise self.sample_fs_error
+                return self.sample_stat
+            return original_lstat(path,*args,**kwargs)
+        def resolve(path,*args,**kwargs):
+            if target(path):
+                if self.sample_fs_error:raise self.sample_fs_error
+                return self.sample_resolved
+            return original_resolve(path,*args,**kwargs)
+        for name,method in (('lstat',lstat),('resolve',resolve)):
+            patch=mock.patch.object(Path,name,method);patch.start();self.addCleanup(patch.stop)
     sleep=AcquisitionTests.sleep
     poll=AcquisitionTests.poll
     identity=AcquisitionTests.identity
@@ -768,12 +812,8 @@ class RuntimeSampleTests(unittest.TestCase):
             self.assertEqual(d['stackSample']['status'],'failed');self.assertFalse(d['stackSample']['toolUnchanged'])
     def test_system_tool_nonroot_owner_rejected_before_spawn(self):
         with tempfile.TemporaryDirectory() as tmp:
-            self.prepare(tmp);d={};original=Path.lstat
-            def lstat(path,*args,**kwargs):
-                v=original(path,*args,**kwargs)
-                if str(path)=='/usr/bin/sample':return SimpleNamespace(st_mode=v.st_mode,st_uid=501)
-                return v
-            with mock.patch.object(Path,'lstat',lstat),mock.patch.object(runner.subprocess,'Popen') as popen:self.r.sample_runtime(self.item,30,d)
+            self.prepare(tmp);self.sample_stat.st_uid=501;d={}
+            with mock.patch.object(runner.subprocess,'Popen') as popen:self.r.sample_runtime(self.item,30,d)
             popen.assert_not_called();self.assertIn('sample_system_tool_shape',d['stackSample']['error'])
     def test_finish_cannot_reap_target_until_sampler_terminal(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -891,14 +931,10 @@ class RuntimeSampleTests(unittest.TestCase):
 
     def test_setuid_or_setgid_system_sampler_rejected_before_spawn(self):
         with tempfile.TemporaryDirectory() as tmp:
-            self.prepare(tmp);original=Path.lstat
+            self.prepare(tmp)
             for bit in (0o4000,0o2000):
-                def lstat(path,*args,**kwargs):
-                    v=original(path,*args,**kwargs)
-                    if str(path)=='/usr/bin/sample':return SimpleNamespace(st_mode=v.st_mode|bit,st_uid=0)
-                    return v
-                d={}
-                with mock.patch.object(Path,'lstat',lstat),mock.patch.object(runner.subprocess,'Popen') as popen:self.r.sample_runtime(self.item,30,d)
+                self.sample_stat.st_mode=runner.stat.S_IFREG|0o755|bit;d={}
+                with mock.patch.object(runner.subprocess,'Popen') as popen:self.r.sample_runtime(self.item,30,d)
                 popen.assert_not_called();self.assertIn('sample_system_tool_shape',d['stackSample']['error'])
     def test_successful_sigkill_with_wait_timeout_is_not_terminal_proof(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -921,5 +957,39 @@ class RuntimeSampleTests(unittest.TestCase):
             self.assertEqual([a['signal'] for a in record['signalAttempts']],['SIGINT','SIGTERM','SIGKILL'])
             self.assertTrue(all('PermissionError' in a['deliveryError'] for a in record['signalAttempts']))
             proc.wait.assert_not_called()
+
+    def test_missing_system_sampler_rejected_before_spawn(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);self.sample_fs_error=FileNotFoundError('synthetic sampler absent');d={}
+            with mock.patch.object(runner.subprocess,'Popen') as popen:self.r.sample_runtime(self.item,30,d)
+            popen.assert_not_called();self.assertEqual(d['stackSample']['status'],'failed')
+            self.assertIn('FileNotFoundError',d['stackSample']['error'])
+    def test_symlink_system_sampler_rejected_before_spawn(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);self.sample_stat.st_mode=runner.stat.S_IFLNK|0o755;d={}
+            with mock.patch.object(runner.subprocess,'Popen') as popen:self.r.sample_runtime(self.item,30,d)
+            popen.assert_not_called();self.assertIn('sample_system_tool_shape',d['stackSample']['error'])
+    def test_aliased_resolved_sampler_rejected_before_spawn(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);self.sample_resolved=Path('/unexpected/sample');d={}
+            with mock.patch.object(runner.subprocess,'Popen') as popen:self.r.sample_runtime(self.item,30,d)
+            popen.assert_not_called();self.assertIn('sample_system_tool_shape',d['stackSample']['error'])
+    def test_guard_rejects_every_direct_sampler_filesystem_entrypoint(self):
+        probes=(lambda:os.stat('/usr/bin/sample'),lambda:os.lstat('/usr/bin/sample'),
+                lambda:os.open('/usr/bin/sample',os.O_RDONLY),lambda:os.readlink('/usr/bin/sample'),
+                lambda:builtins.open('/usr/bin/sample','rb'),lambda:io.open('/usr/bin/sample','rb'),
+                lambda:self.unmocked_sample_lstat(Path('/usr/bin/sample')),
+                lambda:self.unmocked_sample_resolve(Path('/usr/bin/sample')))
+        for probe in probes:
+            with self.assertRaisesRegex(AssertionError,'real_sampler_filesystem_access_forbidden'):probe()
+        self.assertEqual(len(self.real_tool_reads),len(probes))
+        self.real_tool_reads.clear()  # Only these deliberate guard probes are expected.
+    def test_synthetic_sampler_metadata_is_retained_without_host_reads(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);proc,spawn=self.sampler();d={}
+            with mock.patch.object(runner.subprocess,'Popen',side_effect=spawn):self.r.sample_runtime(self.item,30,d)
+            self.assertEqual(d['stackSample']['status'],'passed');self.assertEqual(self.real_tool_reads,[])
+            self.assertEqual(d['stackSample']['tool'],{'path':'/usr/bin/sample','sha256':'digest',
+                'bytes':4096,'mode':0o755,'uid':0,'device':7,'inode':11,'mtimeNS':123456789})
 
 if __name__=='__main__':unittest.main()

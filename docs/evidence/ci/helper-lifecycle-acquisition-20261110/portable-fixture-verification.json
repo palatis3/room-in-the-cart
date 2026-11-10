@@ -1,0 +1,33 @@
+{
+  "status": "local_controls_passed_hosted_pending",
+  "rootControls": {
+    "exitCode": 0,
+    "seconds": 1.003,
+    "logSHA256": "da00d5cbe2cbc3b55227fa4165bcc1b5421c686f3c7fb934af7838beddc5b914",
+    "expectedChecks": 128
+  },
+  "manifestSHA256": "c9f22fb5ba76efa1b429c47d1621987ef2f1eb4e3762631b7d32a23c693bfcc9",
+  "patchSHA256": "a9679f651ebc2a0c12ffccf9b635b69a7b2db6056e3be38de437cde1e8c02fa3",
+  "sourceRunnerUnchangedSHA256": "f3e68aeb18387c9678dfd20c19bd9f49bc8aa9bb46adc737cc3bceffee319985",
+  "priorHostedFailure": {
+    "status": "completed_failure",
+    "runID": 42756959473,
+    "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42756959473",
+    "commit": "f5e79d7d9bfa71df8e4a78b5214614a33a74b75e",
+    "scope": "Standalone helper only; no macOS allocation or app execution",
+    "owner": "root",
+    "monitor": "hosted_app_observation_monitor",
+    "firstFailure": "Ubuntu fixture reads nonexistent /usr/bin/sample; 13 failures and 7 errors among 123 helper controls",
+    "stage": "performance-plan",
+    "artifactUploaded": false,
+    "noUnchangedRetry": true,
+    "plannerLogSHA256": "754f3a8f4e443e0e8b381460ee18b2e68044c6480ee4916defcd2de07a13d572",
+    "localProfilesPassed": {
+      "checksPerProfile": 486,
+      "profiles": 3
+    },
+    "evidence": "/Users/palatis/Room in the Cart/.build/HostedAppObservationNov09/hosted-helper-42756959473",
+    "releaseAcceptance": false
+  },
+  "scope": "Only synthetic fixture and its one contract pin. No production, timeout or acceptance changes."
+}
