@@ -8,6 +8,7 @@ import {ServiceError} from './errors.js';
 import {checkout} from './checkout.js';
 import {sharedDemandReceiptSchema,type DemandGraph} from './shared-demand-contracts.js';
 import {validateDemandGraph,undoDemandChange,demandLineTotals} from './shared-demand-domain.js';
+import {deriveMealUndo,validateMealUndoHistory,type MealUndoEvidence} from './shared-food-meal-undo.js';
 const id=z.string().uuid();
 const snapshotSchema=z.object({shopId:id,revision:z.number().int().positive(),phase:z.literal('draft'),
  demand:z.object({schemaVersion:z.literal(1),revision:z.number().int().positive(),digest:z.string().regex(/^[a-f0-9]{64}$/)}).strict(),
@@ -17,7 +18,7 @@ export type FoodEffect={operation_id:string;shop_id:string;household_id:string;b
  base_graph_revision:number;result_graph_revision:number;classification:string;reverses_operation_id:string|null};
 export type FoodUndoEvidence={operation:{operation_id:string;household_id:string;shop_id:string;kind:string;payload_digest:string};
  effect:FoodEffect|null;before:{snapshot:unknown;digest:string}|null;after:{snapshot:unknown;digest:string}|null;
- beforeGraph:{graph:unknown;graph_digest:string|null}|null;afterGraph:{graph:unknown;graph_digest:string|null;receipt:unknown}|null;alreadyReversed:boolean};
+ beforeGraph:{graph:unknown;graph_digest:string|null}|null;afterGraph:{graph:unknown;graph_digest:string|null;receipt:unknown}|null;alreadyReversed:boolean;meal?:MealUndoEvidence|null};
 export const foodUndoFailure=(reason:string)=>new ServiceError(409,'food_undo_'+reason,'This complete change cannot be undone. Review a supported correction.');
 function insist(value:unknown,reason:string):asserts value{if(!value)throw foodUndoFailure(reason);}
 const eq=(a:unknown,b:unknown)=>digest(a)===digest(b);
@@ -37,14 +38,14 @@ const lineFields=['originalItem','packs','unitPriceMinor','feeEligible'] as cons
 function pricingBasis(quote:z.infer<typeof quoteSchema>){const {capMinor,capScope,...basis}=quote;return basis;}
 function pricingFacts(lines:readonly z.infer<typeof lineSchema>[]){return lines.map(({lineId,originalItem,unitPriceMinor,feeEligible})=>
  ({lineId,originalItem,unitPriceMinor,feeEligible})).sort((a,b)=>a.lineId.localeCompare(b.lineId));}
-export function deriveSharedFoodUndo(e:FoodUndoEvidence,current:{graph:DemandGraph;lines:z.infer<typeof lineSchema>[];quote:z.infer<typeof quoteSchema>},
+export function deriveSharedFoodUndo(e:FoodUndoEvidence,current:{graph:DemandGraph;lines:z.infer<typeof lineSchema>[];quote:z.infer<typeof quoteSchema>;shopRevision?:number},
  command:{operationId:string;householdId:string;shopId:string;baseRevision:number;at:string},now:Date){
  const {operation:o,effect:f}=e;
  insist(o.household_id===command.householdId&&o.shop_id===command.shopId,'history_unavailable');
  insist(o.payload_digest!=='0'.repeat(64)&&/^[a-f0-9]{64}$/.test(o.payload_digest),'history_unavailable');
  insist(o.kind==='shop.patch',o.kind==='request.apply'?'request_acceptance_unsupported':'operation_unsupported');
- insist(f,'history_unavailable');insist(f.classification==='eligible',f.classification+'_unsupported');
- insist(!e.alreadyReversed,'already_reversed');insist(f.reverses_operation_id===null,'inverse_operation_unsupported');
+ insist(f,'history_unavailable');insist(!e.alreadyReversed,'already_reversed');insist(f.reverses_operation_id===null,'inverse_operation_unsupported');
+ insist(f.classification==='eligible'||(f.classification==='meal_action'&&e.meal),f.classification+'_unsupported');
  insist(f.household_id===o.household_id&&f.shop_id===o.shop_id&&f.operation_id===o.operation_id,'history_unavailable');
  insist(f.base_graph_revision>0&&f.result_graph_revision===f.base_graph_revision+1&&f.result_shop_revision===f.base_shop_revision+1,'history_unavailable');
  const before=snapshot(e.before),after=snapshot(e.after),bg=persistedGraph(e.beforeGraph),ag=persistedGraph(e.afterGraph);
@@ -52,7 +53,11 @@ export function deriveSharedFoodUndo(e:FoodUndoEvidence,current:{graph:DemandGra
  insist(bg.householdId===o.household_id&&ag.householdId===o.household_id&&bg.shopId===o.shop_id&&ag.shopId===o.shop_id,'history_unavailable');
  insist(bg.revision===f.base_graph_revision&&ag.revision===f.result_graph_revision&&before.demand.revision===bg.revision&&after.demand.revision===ag.revision
    &&before.demand.digest===e.beforeGraph!.graph_digest&&after.demand.digest===e.afterGraph!.graph_digest,'history_unavailable');
- insist(eq(before.mealRefs??[],after.mealRefs??[]),'meal_action_unsupported');
+ const mealScope={householdId:o.household_id,shopId:o.shop_id,operationId:o.operation_id,
+  baseShopRevision:f.base_shop_revision,resultShopRevision:f.result_shop_revision};
+ const mealUndo=f.classification==='meal_action'&&e.meal
+  ?deriveMealUndo(e.meal,mealScope,before.mealRefs??[],after.mealRefs??[],current.shopRevision??0):undefined;
+ if(!mealUndo)insist(eq(before.mealRefs??[],after.mealRefs??[]),'meal_action_unsupported');
  const receipt=sharedDemandReceiptSchema.parse(e.afterGraph!.receipt);
  insist(receipt.operationId===o.operation_id&&receipt.householdId===o.household_id&&receipt.shopId===o.shop_id
    &&receipt.baseRevision===bg.revision&&receipt.resultRevision===ag.revision,'history_unavailable');
@@ -94,18 +99,25 @@ export function deriveSharedFoodUndo(e:FoodUndoEvidence,current:{graph:DemandGra
    baseRevision:current.graph.revision,resultRevision:current.graph.revision+1,lines:[],contributions:[],edges:[]})};
  const totals=demandLineTotals(result.graph);
  insist(totals.length===lines.length&&lines.every(l=>totals.some(t=>t.lineId===l.lineId)&&result.graph.lines.some(g=>g.id===l.lineId&&g.name===l.originalItem)),'graph_conflict');
- insist(changes>0||touched.length>0||quoteChanged,'no_effect');
+ insist(changes>0||touched.length>0||quoteChanged||mealUndo,'no_effect');
  const scope={targetOperationId:o.operation_id,baseShopRevision:before.revision,resultShopRevision:after.revision,
-  touchedLines:touched,quoteChanged,graphRows:changes,mealsChanged:false,requestsChanged:false};
- const action={kind:'shop.patch' as const,body:{lines,quote}};
+  touchedLines:touched,quoteChanged,graphRows:changes,mealsChanged:mealUndo!==undefined,requestsChanged:false};
+ const action={kind:'shop.patch' as const,body:{lines,quote,...(mealUndo?{mealEdit:{occurrenceId:mealUndo.occurrenceId,
+  baseMealRevision:mealUndo.current.meal===null?null:mealUndo.current.revision,meal:mealUndo.restoredMeal}}:{})}};
  return {action,result,scope,effectDigest:digest({scope,before:e.before!.digest,after:e.after!.digest,receipt,
-  currentGraph:digest(current.graph),action}),beforeCheckout:checkout(current.lines,current.quote),afterCheckout:checkout(lines,quote)};
+  currentGraph:digest(current.graph),action,...(mealUndo?{mealUndo}:{})}),beforeCheckout:checkout(current.lines,current.quote),afterCheckout:checkout(lines,quote),
+  ...(mealUndo?{mealUndo}:{})};
 }
 /** Retry returns its original response, never derives/applies a second inverse.
  * It still cannot outlive erasure of the target's trusted historical basis. */
 export function assertSharedFoodUndoReplay(e:FoodUndoEvidence){
- insist(e.effect?.classification==='eligible'&&e.operation.payload_digest!=='0'.repeat(64),'history_unavailable');
- snapshot(e.before);snapshot(e.after);persistedGraph(e.beforeGraph);persistedGraph(e.afterGraph);
+ insist(e.effect&&(e.effect.classification==='eligible'||(e.effect.classification==='meal_action'&&e.meal))
+  &&e.operation.payload_digest!=='0'.repeat(64),'history_unavailable');
+ const before=snapshot(e.before),after=snapshot(e.after);persistedGraph(e.beforeGraph);persistedGraph(e.afterGraph);
+ if(e.effect.classification==='meal_action'&&e.meal)validateMealUndoHistory(e.meal,{
+  householdId:e.operation.household_id,shopId:e.operation.shop_id,operationId:e.operation.operation_id,
+  baseShopRevision:e.effect.base_shop_revision,resultShopRevision:e.effect.result_shop_revision},before.mealRefs??[],after.mealRefs??[]);
+ else insist(eq(before.mealRefs??[],after.mealRefs??[]),'meal_action_unsupported');
  insist(e.afterGraph?.receipt,'history_unavailable');
  const r=sharedDemandReceiptSchema.parse(e.afterGraph.receipt);
  insist(r.operationId===e.operation.operation_id&&r.householdId===e.operation.household_id&&r.shopId===e.operation.shop_id,'history_unavailable');

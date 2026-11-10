@@ -109,3 +109,93 @@ test('quote basis inversion preserves a later untouched pack count with unchange
  f.current.quote=structuredClone(f.evidence.after.snapshot.quote);f.current.lines[0].packs=4;
  const result=f.run();assert.equal(result.action.body.lines[0].packs,4);assert.deepEqual(result.action.body.quote,f.evidence.before.snapshot.quote);assert.deepEqual(result.scope.touchedLines,[]);
 });
+
+function mealSetup({removed=false}={}){
+ const f=setup({graphChange:false,quoteChange:false}),occurrence=id(820),actor=id(821);
+ // A genuine date-only complete operation changes no food graph, basket or quote.
+ f.evidence.after.snapshot.lines=structuredClone(f.evidence.before.snapshot.lines);
+ f.evidence.after.snapshot.budget=checkout(f.evidence.after.snapshot.lines,f.quote);
+ f.current.lines=structuredClone(f.evidence.before.snapshot.lines);f.current.shopRevision=3;
+ const meal={title:'Tacos',day:'2026-11-08',kind:'dinner',portions:6,protected:false};
+ const row=(revision,value)=>({householdId:f.command.householdId,shopId:f.command.shopId,occurrenceId:occurrence,revision,actorId:actor,meal:value});
+ const before=row(2,meal),after=row(3,removed?null:{...meal,day:'2026-11-09'});
+ f.evidence.effect.classification='meal_action';
+ f.evidence.meal={lineage:{householdId:f.command.householdId,shopId:f.command.shopId,operationId:id(300),occurrenceId:occurrence,
+  beforeRevision:2,afterRevision:3,beforeDigest:digest(before),afterDigest:digest(after),proposalKind:null,proposalId:null,proposalDigest:null},
+  before,after,latest:structuredClone(after),proposal:null,authorsLive:true};
+ f.evidence.before.snapshot.mealRefs=[{occurrenceId:occurrence,revision:2}];
+ if(!removed)f.evidence.after.snapshot.mealRefs=[{occurrenceId:occurrence,revision:3}];
+ f.rehash=()=>{for(const key of ['before','after']){f.evidence[key].digest=digest(f.evidence[key].snapshot);f.evidence.meal.lineage[key+'Digest']=digest(f.evidence.meal[key]);}};
+ f.rehash();return f;
+}
+test('existing meal date-only Undo exposes exact complete facts and no fictitious graph changes',()=>{
+ const f=mealSetup(),before=structuredClone(f.evidence),x=f.run(),m=f.evidence.meal;
+ assert.equal(x.scope.mealsChanged,true);assert.equal(x.scope.requestsChanged,false);
+ assert.equal(x.scope.graphRows,0);assert.deepEqual(x.scope.touchedLines,[]);assert.equal(x.scope.quoteChanged,false);
+ assert.deepEqual(x.mealUndo.touchedFields,['day']);assert.deepEqual(x.mealUndo.current,{revision:3,meal:m.after.meal});
+ assert.deepEqual(x.action.body.mealEdit,{occurrenceId:m.lineage.occurrenceId,baseMealRevision:3,meal:m.before.meal});
+ assert.equal(x.result.graph.revision,3);assert.deepEqual(x.result.receipt.contributions,[]);
+ assert.deepEqual(f.evidence,before,'candidate derivation mutates neither historical nor current facts');
+ const plain=setup().run();assert.equal('mealUndo' in plain,false);assert.equal('mealEdit' in plain.action.body,false);
+});
+test('meal inverse retains later untouched title while using the exact latest revision',()=>{
+ const f=mealSetup();f.current.shopRevision=4;f.evidence.meal.latest.revision=4;f.evidence.meal.latest.meal.title='Later title';
+ const x=f.run();assert.equal(x.action.body.mealEdit.baseMealRevision,4);
+ assert.deepEqual(x.action.body.mealEdit.meal,{...f.evidence.meal.before.meal,title:'Later title'});
+});
+test('touched meal field conflict rejects the entire inverse without changing later facts',()=>{
+ const f=mealSetup();f.current.shopRevision=4;f.evidence.meal.latest.revision=4;f.evidence.meal.latest.meal.day='2026-11-10';
+ const old=structuredClone(f.evidence.meal);fails(f,'food_undo_meal_conflict');assert.deepEqual(f.evidence.meal,old);
+});
+test('date and civil deadline restore together; a later planning change is not overwritten',()=>{
+ const f=mealSetup(),m=f.evidence.meal;
+ m.before.meal.planning={groups:[],ingredients:[],deadline:{at:'2026-11-08T18:00:00-05:00',zone:'America/New_York'}};
+ m.after.meal.planning={groups:[],ingredients:[]};m.latest=structuredClone(m.after);f.rehash();
+ assert.deepEqual(f.run().action.body.mealEdit.meal,m.before.meal);
+ m.latest.meal.planning.leadTimeMinutes=90;m.latest.revision=4;f.current.shopRevision=4;
+ fails(f,'food_undo_meal_conflict');
+});
+test('skip Undo requires the exact accepted null tombstone, not merely active-list absence',()=>{
+ const f=mealSetup({removed:true}),x=f.run();
+ assert.equal(x.mealUndo.targetAfter.meal,null);assert.equal(x.mealUndo.current.meal,null);
+ assert.deepEqual(x.mealUndo.touchedFields,['membership']);assert.equal(x.action.body.mealEdit.baseMealRevision,null);
+ assert.deepEqual(x.action.body.mealEdit.meal,f.evidence.meal.before.meal);
+ f.evidence.meal.latest.revision=5;f.current.shopRevision=5;fails(f,'food_undo_meal_conflict');
+ f.evidence.meal.latest.meal=structuredClone(f.evidence.meal.before.meal);fails(f,'food_undo_meal_conflict');
+});
+test('meal preview digest binds latest revision even when currently displayed meal facts match',()=>{
+ const f=mealSetup(),first=f.run().effectDigest;f.command.operationId=id(901);assert.equal(f.run().effectDigest,first);
+ f.evidence.meal.latest.revision=4;f.current.shopRevision=4;assert.notEqual(f.run().effectDigest,first);
+});
+test('existing protected meal portions cannot be reduced by an inverse',()=>{
+ const f=mealSetup(),m=f.evidence.meal;
+ m.before.meal.protected=true;m.after.meal={...m.before.meal,portions:8};m.latest=structuredClone(m.after);f.rehash();
+ fails(f,'food_undo_meal_protected');
+});
+test('missing, changed or revoked historical meal facts reject both candidate and exact replay',()=>{
+ for(const mutate of [
+  m=>{m.before=null;},m=>{m.after=null;},m=>{m.before.meal.title='Changed historical text';},
+  m=>{m.after.meal=null;},m=>{m.authorsLive=false;},m=>{m.lineage.occurrenceId=id(999);}
+ ]){
+  const f=mealSetup();mutate(f.evidence.meal);assert.throws(()=>f.run());assert.throws(()=>replay(f.evidence));
+ }
+});
+test('proposal-backed meal compensation retains provenance and never resends consumed proposal IDs',()=>{
+ const f=mealSetup(),m=f.evidence.meal;
+ m.lineage.proposalKind='change';m.lineage.proposalId=id(830);m.lineage.proposalDigest='b'.repeat(64);
+ m.proposal={kind:'change',proposalId:id(830),digest:'b'.repeat(64),applied:true,actorId:id(831)};
+ const x=f.run();assert.deepEqual(x.mealUndo.proposal,{kind:'change',proposalId:id(830)});
+ assert.equal('proposalId' in x.action.body.mealEdit,false);assert.equal('changeProposalId' in x.action.body.mealEdit,false);
+ m.latest={...m.latest,revision:4,meal:structuredClone(m.before.meal)};assert.doesNotThrow(()=>replay(f.evidence));
+ for(const proof of [null,{...m.proposal,applied:false},{...m.proposal,digest:'c'.repeat(64)}]){
+  m.proposal=proof;assert.throws(()=>replay(f.evidence));
+ }
+});
+test('a changed unrelated historical meal reference cannot be silently omitted from complete compensation',()=>{
+ const f=mealSetup();f.evidence.before.snapshot.mealRefs.push({occurrenceId:id(840),revision:1});
+ f.evidence.after.snapshot.mealRefs.push({occurrenceId:id(840),revision:3});f.rehash();
+ fails(f,'food_undo_meal_history_unavailable');
+});
+test('new-meal creation and unrecorded old meal effects remain explicitly unsupported',()=>{
+ const f=mealSetup();delete f.evidence.meal;fails(f,'food_undo_meal_action_unsupported');
+});

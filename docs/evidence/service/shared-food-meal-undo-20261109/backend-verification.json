@@ -1,0 +1,79 @@
+{
+  "status": "passed",
+  "scope": "Existing-meal Undo backend; no native UI, real Swift wire, staging or release acceptance",
+  "execution": "root-meal-undo-r3",
+  "inputFiles": 251,
+  "inputManifestSHA256": "513f41eee04250b7cdc415c751045c7f23b7163b5d7fd02074fea232f10d452e",
+  "receiptSHA256": "a3bca360f142138648ffc67d95b8dad2fc8a9cdfff27f7b73755040e39fe56be",
+  "compiledProductsSHA256": "45f0d4c977f4ff22496add475008a26a9957982d4422b5b3b9a9ed3eb9c8564a",
+  "strictCompilerLogSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "buildMode": "verified-r1-dist-copy-no-recompile",
+  "offline": {
+    "tests": 651,
+    "pass": 650,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 1,
+    "todo": 0,
+    "skippedNames": [
+      "PostgreSQL durable billing / RLS / named seats contract"
+    ],
+    "logSHA256": "cef8ff9945e0255c657c3dae190a049d8ea136cf9816e73f0e920b7ab93dc8e4"
+  },
+  "database": {
+    "tests": 318,
+    "pass": 315,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 3,
+    "todo": 0,
+    "skippedNames": [
+      "real browser WebApp and API recover a dropped helper reply with exact original bytes after a newer projection",
+      "real full browser recreation recovers a lost received suggestion with read-only retries and fences identity, expiry and revocation",
+      "two contributor web sessions see only their own purchase receipt through shopper corrections"
+    ],
+    "logSHA256": "21f32e77e3acf26179254e62ad0bc0eb8225aac33b33b94bc1af489d05f2674e"
+  },
+  "mealUndoPurePassed": [
+    "existing meal date-only Undo exposes exact complete facts and no fictitious graph changes",
+    "meal inverse retains later untouched title while using the exact latest revision",
+    "touched meal field conflict rejects the entire inverse without changing later facts",
+    "date and civil deadline restore together; a later planning change is not overwritten",
+    "skip Undo requires the exact accepted null tombstone, not merely active-list absence",
+    "meal preview digest binds latest revision even when currently displayed meal facts match",
+    "existing protected meal portions cannot be reduced by an inverse",
+    "missing, changed or revoked historical meal facts reject both candidate and exact replay",
+    "proposal-backed meal compensation retains provenance and never resends consumed proposal IDs",
+    "a changed unrelated historical meal reference cannot be silently omitted from complete compensation",
+    "new-meal creation and unrecorded old meal effects remain explicitly unsupported"
+  ],
+  "mealUndoHTTPPassed": [
+    "meal complete Undo restores a skipped dinner, original source and packs while later meal, staple and protected lunch survive",
+    "meal date Undo retains a later untouched title and conflicts with a later touched date",
+    "meal skip Undo rejects remove-recreate-remove even when active meals and original food tombstones match",
+    "meal Undo rejects a revoked accepted proposal author before disclosure and Apply",
+    "meal Undo rejects protected portion reduction without issuing a partial candidate",
+    "meal Undo preview rejects wrong device, expiry, changed action and current authority loss",
+    "meal Undo cannot return private history or exact replay after accepted meal author erasure",
+    "meal Undo keeps accepted change proposal applied without regranting or reconsuming it",
+    "meal Undo keeps accepted move proposal applied without regranting or reconsuming it"
+  ],
+  "retainedOriginalUndoHTTP": 8,
+  "retainedRecordsHTTP": 6,
+  "postgresStopped": true,
+  "sourcesDependenciesToolsProductsUnchanged": true,
+  "migration": "045_shared_food_meal_undo.sql",
+  "stagingMigration": 41,
+  "preservedAttempts": [
+    {
+      "execution": "root-meal-undo-r1",
+      "receiptSHA256": "192355cef19c02a13ec717b674ed8f85bf515f305307dd3be786e89a3f3474ca",
+      "cause": "Seven meal-only fixtures used change instead of review mode; production validation unchanged."
+    },
+    {
+      "execution": "root-meal-undo-r2",
+      "receiptSHA256": "f936260d378d9a90c45a0abadefc6af1de7805989886d1fce849328acdc6289f",
+      "cause": "One expiry fixture moved expiry before creation; both timestamps now shift together with the existing database constraint unchanged."
+    }
+  ]
+}

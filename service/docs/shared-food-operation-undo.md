@@ -1,6 +1,6 @@
 # Shared-food operation Undo v1 — bounded candidate contract
 
-Scratch implementation, migration 044 unapplied. This is a complete inverse only for newly recorded eligible shop.patch operations: graph rows, basket line membership/fields, packs and quote. Meal/proposal/date edits, request Add/Link acceptance, first adoption, store-review actions and historical operations without new effect lineage are explicitly unsupported. An inverse operation cannot itself be undone in v1. This is not complete D02/D08 product coverage.
+This is a complete inverse for newly recorded eligible shop.patch operations: graph rows, basket line membership/fields, packs and quote. The additive existing-meal slice requires migration 045 and acceptance-time meal lineage; see [meal Undo contract](shared-food-meal-undo.md). Older meal effects, new-occurrence creation, request Add/Link acceptance, first adoption, store-review actions and historical operations without trusted effect lineage remain explicitly unsupported. An inverse operation cannot itself be undone. This is not complete D02/D08 product coverage.
 
 All routes use existing authenticated household/device context and assigned-shopper authorization; draft shop only, no paid gate. Responses must not survive access revocation or erase invalidation in a client cache.
 

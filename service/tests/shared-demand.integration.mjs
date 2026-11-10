@@ -630,19 +630,20 @@ test('complete Undo does not relabel historical line prices with a later fresh q
  ok((await apply(f,later,ok(await preview(f,later)))).response);page=ok(await call(f.owner,f.path+'/demand'));
  const before=await count(f,'operation');assert.equal((await foodCandidate(f,target.operationId,page)).data.error.code,'food_undo_quote_conflict');assert.equal(await count(f,'operation'),before);
 });
-test('complete Undo marks date-only meal changes and accepted request Link explicitly unsupported',async()=>{
+test('complete Undo admits a recorded date-only meal change but keeps request Link explicitly unsupported',async()=>{
  const f=await fixture(),m=await mealGraph(f);ok((await apply(f,m.input,ok(await preview(f,m.input)))).response);
  let page=ok(await call(f.owner,f.path+'/demand'));
  const date={mode:'review',base:{shopRevision:page.shopRevision,authorityEpoch:1,graphRevision:page.graph.revision},change:empty(),action:{kind:'shop.patch',body:{quote:f.quote,lines:[f.basket],mealEdit:{occurrenceId:m.occurrenceId,baseMealRevision:2,meal:{...m.meal,day:'2026-11-10'}}}},packs:m.input.packs};
  const dated=ok((await apply(f,date,ok(await preview(f,date)))).response);page=ok(await call(f.owner,f.path+'/demand'));
- assert.equal((await foodCandidate(f,dated.operationId,page)).data.error.code,'food_undo_meal_action_unsupported');
+ const dateCandidate=ok(await foodCandidate(f,dated.operationId,page));assert.equal(dateCandidate.scope.mealsChanged,true);
+ assert.equal(dateCandidate.action.body.mealEdit.meal.day,null);assert.deepEqual(dateCandidate.mealUndo.touchedFields,['day']);
  const author=await invited(f),sent=ok(await send(f,'request.send',{clientRequestId:randomUUID(),originalItem:'Guest wraps',ownQuantity:null,authoredAt:new Date().toISOString()},page.shopRevision,1,author));
  const requestId=sent.request.requestId,rp=ok(await call(f.owner,f.path+'/previews','POST',{requestId,base:{shopRevision:page.shopRevision,authorityEpoch:1,requestRevision:1},decision:{choice:'link',lineId:f.basket.lineId,promote:false}}));
  const requestSource={...source(f,null),originalText:'Guest wraps',source:{kind:'request',requestId,appliedRequestRevision:1}};
  const accepted={mode:'change',base:{shopRevision:page.shopRevision,authorityEpoch:1,graphRevision:page.graph.revision},change:{...empty(),contributions:[requestSource]},action:{kind:'request.apply',body:{requestId,previewId:rp.previewId,acceptOverage:false,acceptUnknown:true}},packs:[{lineId:f.basket.lineId,usablePerPack:q(6),acceptUnresolved:true}]};
  const linked=ok((await apply(f,accepted,ok(await preview(f,accepted)))).response);page=ok(await call(f.owner,f.path+'/demand'));
  assert.equal((await foodCandidate(f,linked.operationId,page)).data.error.code,'food_undo_request_acceptance_unsupported');
- const history=await foodHistory(f);assert.equal(history.items.find(x=>x.operationId===dated.operationId).eligibility.reason,'food_undo_meal_action_unsupported');assert.equal(history.items.find(x=>x.operationId===linked.operationId).eligibility.reason,'food_undo_request_acceptance_unsupported');
+ const history=await foodHistory(f);assert.equal(history.items.find(x=>x.operationId===dated.operationId).eligibility.status,'reviewable');assert.equal(history.items.find(x=>x.operationId===linked.operationId).eligibility.reason,'food_undo_request_acceptance_unsupported');
 });
 for(const later of ['price','priced staple'])test('complete Undo refuses an older quote observation over later '+later,async()=>{
  const f=await fixture();await adopt(f);let page=ok(await call(f.owner,f.path+'/demand'));
@@ -661,4 +662,140 @@ for(const later of ['price','priced staple'])test('complete Undo refuses an olde
  assert.equal((await foodCandidate(f,target.operationId,page)).data.error.code,'food_undo_quote_conflict');
  assert.equal((await foodHistory(f)).items.find(x=>x.operationId===target.operationId).eligibility.reason,'food_undo_quote_conflict');
  assert.deepEqual(ok(await call(f.owner,f.path)),current);assert.equal(await count(f,'operation'),countBefore);
+});
+
+// Existing-occurrence complete Undo: real HTTP, no client-provided preimages.
+async function mealUndoFixture(){
+ const f=await fixture(),m=await mealGraph(f);ok((await apply(f,m.input,ok(await preview(f,m.input)))).response);return {f,m};
+}
+async function mealUndoPatch(f,occurrenceId,meal,{change=empty(),lines,quote,proposal={}}={}){
+ const shop=ok(await call(f.owner,f.path)),page=ok(await call(f.owner,f.path+'/demand'));
+ const current=shop.meals.find(m=>m.occurrenceId===occurrenceId);
+ const input={mode:Object.values(change).some(values=>values.length>0)?'change':'review',base:{shopRevision:page.shopRevision,authorityEpoch:page.authorityEpoch,graphRevision:page.graph.revision},change,
+  action:{kind:'shop.patch',body:{quote:quote??shop.quote,lines:lines??shop.lines,mealEdit:{occurrenceId,baseMealRevision:current?.revision??null,meal,...proposal}}},
+  packs:(lines??shop.lines).map(l=>({lineId:l.lineId,usablePerPack:q(6),acceptUnresolved:false}))};
+ const p=ok(await preview(f,input)),accepted=await apply(f,input,p);return {...accepted,receipt:ok(accepted.response),input};
+}
+test('meal complete Undo restores a skipped dinner, original source and packs while later meal, staple and protected lunch survive',async()=>{
+ const f=await fixture(),m=await mealGraph(f),lunchId=randomUUID(),ingredientId=randomUUID();
+ const lunch={title:'Protected lunch',day:'2026-11-11',kind:'lunch',portions:2,protected:true,
+  planning:{groups:[],ingredients:[{id:ingredientId,name:'Wraps',quantity:{amount:{numerator:2,denominator:1},unit:'count',originalLiteral:'two lunch wraps'},groupIds:[],exclusions:[]}]}};
+ ok(await send(f,'shop.patch',{quote:f.quote,lines:[f.basket],mealEdit:{occurrenceId:lunchId,baseMealRevision:null,meal:lunch}},2));
+ const legacy=ok(await call(f.owner,f.path+'/demand')),entry=legacy.legacySources.sources.find(s=>s.source.kind==='reservation'&&s.source.originOccurrenceId===lunchId);
+ assert.ok(entry);const reservation={id:entry.id,lineId:f.basket.lineId,source:entry.source,productKey:'wraps',productName:entry.productName,originalText:entry.originalText,quantity:entry.quantity,sourceExclusions:entry.sourceExclusions,exclusions:[],contains:[],removedAt:null};
+ m.input.base.shopRevision=3;m.input.change.edges=[];m.input.change.contributions[0].quantity=q(4);m.input.change.contributions.push(reservation);
+ ok((await apply(f,m.input,ok(await preview(f,m.input)))).response);
+ const original=ok(await call(f.owner,f.path)),originalGraph=ok(await call(f.owner,f.path+'/demand'));
+ const target=await mealUndoPatch(f,m.occurrenceId,null,{change:{...empty(),removeSourceIds:[m.c.id]},lines:[{...f.basket,packs:1}],quote:{...f.quote,capMinor:11000}});
+ const tombstone=(await admin.query('SELECT revision,meal FROM ritc.shared_meal_revision WHERE household_id=$1 AND shop_id=$2 AND occurrence_id=$3 ORDER BY revision DESC LIMIT 1',[f.h,f.shopId,m.occurrenceId])).rows[0];
+ assert.equal(tombstone.meal,null);assert.equal(tombstone.revision,target.receipt.shopRevision);
+ const laterId=randomUUID(),laterMeal={title:'Later soup',day:null,kind:'dinner',portions:2,protected:false};
+ const staple={lineId:randomUUID(),originalItem:'Later apples',packs:1,unitPriceMinor:200,feeEligible:false};
+ const apples={...source(f,q(1)),lineId:staple.lineId,productKey:'apples',productName:'Apples',originalText:'Later apples'};
+ await mealUndoPatch(f,laterId,laterMeal,{change:{...empty(),lines:[{id:staple.lineId,name:staple.originalItem,unit:'count',originalOrder:9,trashedAt:null}],contributions:[apples]},lines:[{...f.basket,packs:1},staple]});
+ const second=await actor(f.owner.subject);await enroll(second,f.h);f.owner=second;
+ const page=ok(await call(f.owner,f.path+'/demand')),shop=ok(await call(f.owner,f.path));
+ const counts={operations:await count(f,'operation'),snapshots:await count(f,'shop_snapshot'),meals:await count(f,'shared_meal_revision'),previews:await count(f,'shared_demand_preview')};
+ const candidate=ok(await foodCandidate(f,target.receipt.operationId,page));assert.equal(await count(f,'shared_demand_preview'),counts.previews);
+ assert.equal(candidate.mealUndo.current.meal,null);assert.equal(candidate.mealUndo.current.revision,tombstone.revision);
+ assert.deepEqual(candidate.mealUndo.touchedFields,['membership']);assert.equal(candidate.action.body.mealEdit.baseMealRevision,null);
+ assert.deepEqual(candidate.action.body.mealEdit.meal,m.meal);assert.equal(candidate.action.body.lines.find(l=>l.lineId===f.basket.lineId).packs,2);
+ assert.deepEqual(candidate.action.body.quote,original.quote);assert.deepEqual(candidate.after.contributions.find(c=>c.id===reservation.id),reservation);
+ const packs=candidate.packReviewLineIds.map(lineId=>({lineId,usablePerPack:q(6),acceptUnresolved:false}));
+ ok(await foodPreview(f,candidate,packs));assert.deepEqual(ok(await call(f.owner,f.path)),shop,'Cancel writes no meal or basket');
+ assert.equal(await count(f,'shared_meal_revision'),counts.meals);assert.equal(await count(f,'operation'),counts.operations);
+ const p=ok(await foodPreview(f,candidate,packs));assert.deepEqual(p.mealUndo,candidate.mealUndo);
+ const applied=await apply(f,{action:p.action,base:candidate.base},p),receipt=ok(applied.response);
+ assert.deepEqual(ok(await call(f.owner,f.base+'/commands','POST',applied.command)),receipt,'lost response retries original command once');
+ const after=ok(await call(f.owner,f.path)),afterPage=ok(await call(f.owner,f.path+'/demand'));
+ assert.equal(await count(f,'operation'),counts.operations+1);assert.equal(await count(f,'shop_snapshot'),counts.snapshots+1);assert.equal(await count(f,'shared_meal_revision'),counts.meals+1);
+ assert.deepEqual(after.meals.find(x=>x.occurrenceId===m.occurrenceId),{occurrenceId:m.occurrenceId,revision:receipt.shopRevision,meal:m.meal});
+ for(const occurrenceId of [lunchId,laterId])assert.deepEqual(after.meals.find(x=>x.occurrenceId===occurrenceId),shop.meals.find(x=>x.occurrenceId===occurrenceId));
+ for(const source of [reservation,apples])assert.deepEqual(afterPage.graph.contributions.find(x=>x.id===source.id),source);
+ assert.deepEqual(afterPage.graph.contributions.find(x=>x.id===m.c.id),originalGraph.graph.contributions.find(x=>x.id===m.c.id));
+ assert.deepEqual(after.lines.find(x=>x.lineId===staple.lineId),staple);assert.deepEqual(after.quote,original.quote);
+ assert.equal((await foodCandidate(f,target.receipt.operationId,afterPage)).data.error.code,'food_undo_already_reversed');
+ assert.equal((await foodCandidate(f,receipt.operationId,afterPage)).data.error.code,'food_undo_inverse_operation_unsupported');
+});
+test('meal date Undo retains a later untouched title and conflicts with a later touched date',async()=>{
+ const {f,m}=await mealUndoFixture();const target=await mealUndoPatch(f,m.occurrenceId,{...m.meal,day:'2026-11-10'});
+ await mealUndoPatch(f,m.occurrenceId,{...m.meal,day:'2026-11-10',title:'Later title'});
+ let page=ok(await call(f.owner,f.path+'/demand')),candidate=ok(await foodCandidate(f,target.receipt.operationId,page));
+ assert.deepEqual(candidate.mealUndo.touchedFields,['day']);assert.equal(candidate.mealUndo.current.revision,5);
+ assert.equal(candidate.action.body.mealEdit.baseMealRevision,5);assert.deepEqual(candidate.action.body.mealEdit.meal,{...m.meal,title:'Later title'});
+ const p=ok(await foodPreview(f,candidate,m.input.packs));
+ await mealUndoPatch(f,m.occurrenceId,{...m.meal,day:'2026-11-12',title:'Later title'});
+ page=ok(await call(f.owner,f.path+'/demand'));const current=ok(await call(f.owner,f.path));
+ assert.equal((await foodCandidate(f,target.receipt.operationId,page)).data.error.code,'food_undo_meal_conflict');
+ assert.equal((await apply(f,{action:p.action,base:candidate.base},p)).response.status,409);assert.deepEqual(ok(await call(f.owner,f.path)),current);
+});
+test('meal skip Undo rejects remove-recreate-remove even when active meals and original food tombstones match',async()=>{
+ const {f,m}=await mealUndoFixture();const target=await mealUndoPatch(f,m.occurrenceId,null,{change:{...empty(),removeSourceIds:[m.c.id],removeEdgeIds:[m.edge.id]}});
+ await mealUndoPatch(f,m.occurrenceId,{...m.meal,planning:{groups:[],ingredients:[]}});
+ await mealUndoPatch(f,m.occurrenceId,null);
+ const page=ok(await call(f.owner,f.path+'/demand')),before=await count(f,'operation');
+ assert.equal((await foodCandidate(f,target.receipt.operationId,page)).data.error.code,'food_undo_meal_conflict');assert.equal(await count(f,'operation'),before);
+});
+for(const kind of ['change','move'])test('meal Undo keeps accepted '+kind+' proposal applied without regranting or reconsuming it',async()=>{
+ const {f,m}=await mealUndoFixture(),planner=await invited(f),proposalId=randomUUID(),day='2026-11-12';
+ await admin.query('INSERT INTO ritc.meal_planner(household_id,shop_id,authority_epoch,revision,planner_id) VALUES($1,$2,1,1,$3)',[f.h,f.shopId,planner.id]);
+ const amount={amount:{numerator:5,denominator:1},unit:'count',originalLiteral:'5 wraps'};
+ const changed=kind==='move'?{...m.meal,day}:{...m.meal,title:'Planner title',planning:{...m.meal.planning,
+  ingredients:m.meal.planning.ingredients.map(i=>({...i,quantity:amount})),bindings:m.meal.planning.bindings.map(b=>({...b,quantity:amount}))}};
+ if(kind==='change')await admin.query('INSERT INTO ritc.shared_meal_change(household_id,shop_id,proposal_id,actor_id,authority_epoch,grant_revision,shop_revision,occurrence_id,base_meal_revision,body,original_meal,fingerprint) VALUES($1,$2,$3,$4,1,1,3,$5,2,$6,$7,$8)',[f.h,f.shopId,proposalId,planner.id,m.occurrenceId,{meal:changed},m.meal,'e'.repeat(64)]);
+ else await admin.query('INSERT INTO ritc.meal_move(household_id,shop_id,proposal_id,actor_id,authority_epoch,grant_revision,shop_revision,occurrence_id,proposed_day) VALUES($1,$2,$3,$4,1,1,3,$5,$6)',[f.h,f.shopId,proposalId,planner.id,m.occurrenceId,day]);
+ const target=await mealUndoPatch(f,m.occurrenceId,changed,{proposal:kind==='change'?{changeProposalId:proposalId}:{proposalId},
+  change:kind==='change'?{...empty(),contributions:[{...m.c,quantity:q(5)}],edges:[{...m.edge,quantity:q(5)}]}:empty()});
+ ok(await call(f.owner,f.path+'/meal-plan/planner','PUT',{authorityEpoch:1,grantRevision:1,plannerId:null}));
+ const table=kind==='change'?'shared_meal_change':'meal_move',state=async()=>(await admin.query('SELECT state FROM ritc.'+table+' WHERE household_id=$1 AND shop_id=$2 AND proposal_id=$3',[f.h,f.shopId,proposalId])).rows[0].state;
+ const page=ok(await call(f.owner,f.path+'/demand')),candidate=ok(await foodCandidate(f,target.receipt.operationId,page));
+ assert.deepEqual(candidate.mealUndo.proposal,{kind,proposalId});assert.equal(await state(),'applied');
+ assert.equal('proposalId' in candidate.action.body.mealEdit,false);assert.equal('changeProposalId' in candidate.action.body.mealEdit,false);
+ const p=ok(await foodPreview(f,candidate,m.input.packs));assert.equal(await state(),'applied');
+ const applied=await apply(f,{action:p.action,base:candidate.base},p);ok(applied.response);ok(await call(f.owner,f.base+'/commands','POST',applied.command));
+ assert.equal(await state(),'applied');assert.deepEqual(ok(await call(f.owner,f.path)).meals.find(x=>x.occurrenceId===m.occurrenceId).meal,m.meal);
+ const graph=ok(await call(f.owner,f.path+'/demand')).graph;assert.deepEqual(graph.contributions.find(x=>x.id===m.c.id),m.c);assert.deepEqual(graph.edges.find(x=>x.id===m.edge.id),m.edge);
+ const grant=(await admin.query('SELECT planner_id,revision FROM ritc.meal_planner WHERE household_id=$1 AND shop_id=$2',[f.h,f.shopId])).rows[0];assert.equal(grant.planner_id,null);assert.equal(grant.revision,2);
+});
+test('meal Undo rejects a revoked accepted proposal author before disclosure and Apply',async()=>{
+ const {f,m}=await mealUndoFixture(),planner=await invited(f),proposalId=randomUUID(),changed={...m.meal,title:'Private planner wording'};
+ await admin.query('INSERT INTO ritc.meal_planner(household_id,shop_id,authority_epoch,revision,planner_id) VALUES($1,$2,1,1,$3)',[f.h,f.shopId,planner.id]);
+ await admin.query('INSERT INTO ritc.shared_meal_change(household_id,shop_id,proposal_id,actor_id,authority_epoch,grant_revision,shop_revision,occurrence_id,base_meal_revision,body,original_meal,fingerprint) VALUES($1,$2,$3,$4,1,1,3,$5,2,$6,$7,$8)',[f.h,f.shopId,proposalId,planner.id,m.occurrenceId,{meal:changed},m.meal,'e'.repeat(64)]);
+ const target=await mealUndoPatch(f,m.occurrenceId,changed,{proposal:{changeProposalId:proposalId}});
+ const page=ok(await call(f.owner,f.path+'/demand')),candidate=ok(await foodCandidate(f,target.receipt.operationId,page)),p=ok(await foodPreview(f,candidate,m.input.packs)),before=await count(f,'operation');
+ await admin.query("UPDATE ritc.member SET state='revoked' WHERE household_id=$1 AND member_id=$2",[f.h,planner.id]);
+ const rejected=await foodCandidate(f,target.receipt.operationId,page);assert.equal(rejected.data.error.code,'food_undo_meal_history_unavailable');
+ assert.equal(JSON.stringify(rejected.data).includes('Private planner wording'),false);
+ assert.equal((await apply(f,{action:p.action,base:candidate.base},p)).response.status,409);assert.equal(await count(f,'operation'),before);
+});
+test('meal Undo rejects protected portion reduction without issuing a partial candidate',async()=>{
+ const f=await fixture(),occurrenceId=randomUUID(),meal={title:'Protected lunch',day:null,kind:'lunch',portions:2,protected:true};
+ ok(await send(f,'shop.patch',{quote:f.quote,lines:[f.basket],mealEdit:{occurrenceId,baseMealRevision:null,meal}},1));
+ const input=draft(f);input.base.shopRevision=2;ok((await apply(f,input,ok(await preview(f,input)))).response);
+ const target=await mealUndoPatch(f,occurrenceId,{...meal,portions:3}),page=ok(await call(f.owner,f.path+'/demand')),before=await count(f,'operation');
+ assert.equal((await foodCandidate(f,target.receipt.operationId,page)).data.error.code,'food_undo_meal_protected');assert.equal(await count(f,'operation'),before);
+ assert.equal((await foodHistory(f)).items.find(x=>x.operationId===target.receipt.operationId).eligibility.reason,'food_undo_meal_protected');
+});
+test('meal Undo preview rejects wrong device, expiry, changed action and current authority loss',async()=>{
+ const {f,m}=await mealUndoFixture(),target=await mealUndoPatch(f,m.occurrenceId,{...m.meal,day:'2026-11-10'});
+ const page=ok(await call(f.owner,f.path+'/demand')),candidate=ok(await foodCandidate(f,target.receipt.operationId,page)),p=ok(await foodPreview(f,candidate,m.input.packs));
+ const before=await count(f,'operation'),other=await actor(f.owner.subject);await enroll(other,f.h);
+ assert.equal((await apply(f,{action:p.action,base:candidate.base},p,other)).response.status,409);
+ const changed=structuredClone(p.action);changed.body.mealEdit.meal.title='Not reviewed';assert.equal((await apply(f,{action:changed,base:candidate.base},p)).response.status,409);
+ await admin.query("UPDATE ritc.shared_demand_preview SET created_at=created_at-interval '11 minutes',expires_at=expires_at-interval '11 minutes' WHERE household_id=$1 AND preview_id=$2",[f.h,p.previewId]);
+ assert.equal((await apply(f,{action:p.action,base:candidate.base},p)).response.status,409);assert.equal(await count(f,'operation'),before);
+ const fresh=ok(await foodPreview(f,candidate,m.input.packs)),shopper=await invited(f);ok(await send(f,'shop.transferAuthority',{newShopperId:shopper.id},page.shopRevision));
+ assert.equal((await apply(f,{action:fresh.action,base:candidate.base},fresh)).response.status,404);
+});
+test('meal Undo cannot return private history or exact replay after accepted meal author erasure',async()=>{
+ const {f,m}=await mealUndoFixture(),author=f.owner,target=await mealUndoPatch(f,m.occurrenceId,{...m.meal,title:'Private meal title'}),shopper=await invited(f);
+ ok(await send(f,'shop.transferAuthority',{newShopperId:shopper.id},target.receipt.shopRevision));f.owner=shopper;
+ const page=ok(await call(f.owner,f.path+'/demand')),candidate=ok(await foodCandidate(f,target.receipt.operationId,page)),p=ok(await foodPreview(f,candidate,m.input.packs));
+ const accepted=await apply(f,{action:p.action,base:candidate.base},p);ok(accepted.response);ok(await call(f.owner,f.base+'/commands','POST',accepted.command));
+ ok(await call(author,'/v1/privacy/deletions','POST',{clientKey:randomUUID(),statusToken:randomBytes(32).toString('base64url'),confirm:true,households:[{householdId:f.h,organizer:'transfer',organizerMemberId:shopper.id,shops:[],eraseChildProfiles:[]}]}),202);
+ assert.equal((await maintenance.run({batchSize:1})).completed,1);
+ assert.equal((await call(f.owner,f.base+'/commands','POST',accepted.command)).status,409);
+ const history=await foodHistory(f);assert.ok(history.items.every(x=>x.eligibility.status==='unavailable'));assert.equal(JSON.stringify(history).includes('Private meal title'),false);
+ assert.equal((await admin.query('SELECT count(*)::int n FROM ritc.shared_meal_revision WHERE household_id=$1 AND shop_id=$2 AND occurrence_id=$3',[f.h,f.shopId,m.occurrenceId])).rows[0].n,0);
+ assert.equal((await admin.query('SELECT count(*)::int n FROM ritc.shared_food_meal_effect WHERE household_id=$1 AND operation_id=$2',[f.h,target.receipt.operationId])).rows[0].n,1,'content-free lineage cannot resurrect erased meal facts');
 });

@@ -1,4 +1,5 @@
 import {deriveSharedFoodUndo,assertSharedFoodUndoReplay,foodUndoFailure,type FoodUndoEvidence} from './shared-food-operation-undo.js';
+import {recordMealUndoEffect,loadMealUndoEvidence} from './shared-food-meal-undo.js';
 import {randomUUID} from 'node:crypto';
 import {actionDemandSources} from './shared-demand-action-sources.js';
 import {requireSharedMealChange} from './shared-meal-changes.js';
@@ -232,6 +233,8 @@ async function recordFoodOperationEffect(ctx:Context,shop:Shop,input:Input,opera
  await ctx.db.query(`INSERT INTO ritc.shared_food_operation_effect(household_id,shop_id,operation_id,base_shop_revision,result_shop_revision,
  base_graph_revision,result_graph_revision,classification,reverses_operation_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
  [ctx.householdId,shop.shop_id,operationId,shop.revision,shop.revision+1,beforeGraph,afterGraph,classification,input.mode==='operationUndo'?input.undoOperationId:null]);
+ if(classification==='meal_action'&&input.mode!=='operationUndo')
+  await recordMealUndoEffect(ctx,shop,operationId,bodySchemas['shop.patch'].parse(body).mealEdit);
 }
 async function foodUndoEvidence(ctx:Context,shop:Shop,operationId:string):Promise<FoodUndoEvidence>{
  const o=(await ctx.db.query('SELECT operation_id,household_id,shop_id,kind,payload_digest FROM ritc.operation WHERE household_id=$1 AND shop_id=$2 AND operation_id=$3',[ctx.householdId,shop.shop_id,operationId])).rows[0];
@@ -247,12 +250,13 @@ async function foodUndoEvidence(ctx:Context,shop:Shop,operationId:string):Promis
   afterGraph=graphs.find(r=>r.revision===effect.result_graph_revision&&r.operation_id===operationId)??null;
  }
  const alreadyReversed=(await ctx.db.query('SELECT 1 FROM ritc.shared_food_operation_effect WHERE household_id=$1 AND shop_id=$2 AND reverses_operation_id=$3',[ctx.householdId,shop.shop_id,operationId])).rowCount!==0;
- return {operation:o,effect,before,after,beforeGraph,afterGraph,alreadyReversed};
+ const meal=effect?.classification==='meal_action'?await loadMealUndoEvidence(ctx,shop,operationId):null;
+ return {operation:o,effect,before,after,beforeGraph,afterGraph,alreadyReversed,meal};
 }
 async function operationInverse(repo:HouseholdRepository,ctx:Context,shop:Shop,target:string,graph:DemandGraph,operationId:string,at:string,lines?:Awaited<ReturnType<HouseholdRepository['lines']>>){
  assert(!shop.demand_review_required,'demand_review_required');
  if(shop.store_basis_revision!=null||shop.store_review_required)throw foodUndoFailure('store_action_unsupported');
- return deriveSharedFoodUndo(await foodUndoEvidence(ctx,shop,target),{graph,lines:lines??await repo.lines(ctx,shop.shop_id),quote:shop.quote},
+ return deriveSharedFoodUndo(await foodUndoEvidence(ctx,shop,target),{graph,lines:lines??await repo.lines(ctx,shop.shop_id),quote:shop.quote,shopRevision:shop.revision},
   {operationId,householdId:ctx.householdId,shopId:shop.shop_id,baseRevision:graph.revision,at},ctx.now);
 }
 export const foodUndoCandidateSchema=z.object({targetOperationId:id,base:baseSchema.extend({graphRevision:z.number().int().positive(),graphDigest:z.string().regex(/^[0-9a-f]{64}$/)})}).strict();
@@ -266,7 +270,8 @@ export async function readFoodOperationUndoCandidate(repo:HouseholdRepository,ct
  return {schemaVersion:1,shopId:shop.shop_id,base:input.base,targetOperationId:input.targetOperationId,effectDigest:inverse.effectDigest,
   scope:inverse.scope,action:inverse.action,before:current.graph,after:inverse.result.graph,
   beforeTotals:demandLineTotals(current.graph),afterTotals:demandLineTotals(inverse.result.graph),
-  beforeCheckout:inverse.beforeCheckout,afterCheckout:inverse.afterCheckout,packReviewLineIds:inverse.action.body.lines.map(l=>l.lineId)};
+  beforeCheckout:inverse.beforeCheckout,afterCheckout:inverse.afterCheckout,packReviewLineIds:inverse.action.body.lines.map(l=>l.lineId),
+  ...(inverse.mealUndo?{mealUndo:inverse.mealUndo}:{})};
 }
 export async function previewFoodOperationUndo(repo:HouseholdRepository,ctx:Context,shop:Shop,raw:unknown){
  repo.requireShopper(ctx,shop);repo.requireDraft(shop);const input=foodUndoInputSchema.parse(raw);repo.checkBase(shop,input.base);
@@ -278,7 +283,8 @@ export async function previewFoodOperationUndo(repo:HouseholdRepository,ctx:Cont
   change:{lines:[],contributions:[],edges:[],removeSourceIds:[],removeEdgeIds:[]},action:inverse.action,packs:input.packs};
  const preview=await previewDemandInput(repo,ctx,shop,intent);
  return {...preview,operationUndo:{targetOperationId:input.targetOperationId,scope:inverse.scope,effectDigest:inverse.effectDigest},
-  action:inverse.action,beforeCheckout:inverse.beforeCheckout,afterCheckout:inverse.afterCheckout};
+  action:inverse.action,beforeCheckout:inverse.beforeCheckout,afterCheckout:inverse.afterCheckout,
+  ...(inverse.mealUndo?{mealUndo:inverse.mealUndo}:{})};
 }
 /** Informational only: reviewable never means accepted or guaranteed applicable.
  * No source wording, request IDs or copied meal content is exposed by history. */
