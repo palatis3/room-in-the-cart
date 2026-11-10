@@ -10,6 +10,11 @@ struct HouseholdShopSelector: View {
     @State private var busy = false
     @State private var failed = false
     @State private var loadID = UUID()
+
+    init(household: HouseholdModel, includingClosed: Bool = false) {
+        self.household = household
+        _owned = State(initialValue: includingClosed)
+    }
     var body: some View {
         Form {
             if !household.locked, let scope = household.projection, scope.grantId == nil {

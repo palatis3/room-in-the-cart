@@ -358,6 +358,22 @@ struct RecordsView: View {
         List {
             ManagedViewsContextLink()
             PickupPlacedOrdersLink(model: pickup)
+            Section(ht("Shared pickup records")) {
+                if !household.locked, household.identity != nil,
+                   let scope = household.projection, scope.enrolled, scope.grantId == nil {
+                    NavigationLink(ht("Find a past shared pickup")) {
+                        HouseholdShopSelector(household: household, includingClosed: true)
+                    }.accessibilityIdentifier("records.chooseSharedPickup")
+                    NavigationLink(ht("Open selected shared pickup")) {
+                        HouseholdShopView(model: household)
+                    }.accessibilityIdentifier("records.sharedPickup")
+                    Text(ht("Choose a pickup to reopen its orders, deliveries and saved cook instructions."))
+                        .font(.footnote).foregroundStyle(Theme.secondary)
+                }
+                NavigationLink(PlacementCopy.text("Shared placement reports")) {
+                    PlacementRecordsEntryView(household: household)
+                }.accessibilityIdentifier("records.sharedPlacementReports")
+            }
             NavigationLink(HistoryCopy.text("Family decision history")) { FamilyDecisionsEntry() }
             RecordsRecoveryLink()
             NavigationLink(HistoryCopy.text("Prices and period budgets")) {

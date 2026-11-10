@@ -24,3 +24,25 @@ The protected `capture-scope-v1.json` journal binds the recovery-copy ID, kind a
 ## Dedicated native screen acceptance
 
 `RecordsMediaUITests` uses the actual Records entry and screens with isolated native stores and a real normalized JPEG. `RecordsMediaUIFixture` is compiled only under `DEBUG && CONTRIBUTOR_CAPTURE_UI_FIXTURE` and requires both `--ui-testing` and `--records-media-fixture`. It seeds a private local source and a newer independent related copy. Its guarded file adapter replaces only the system save destination and selected-file URL; production encryption, scope validation, staged review, cancellation and import remain in place. It checks default-off selection, size/private-content disclosure, preparation gates, ciphertext output, cancelled sibling review with unchanged source/registry, confirmed recovery and readable recovered-photo presentation. The final combined model/screen bundle passed **50/50** in `.build/F07-Recovered-UIFinal.xcresult`; the screen journey took 205.989 seconds. All seven manually attached screenshots were visually inspected. The prepared-file image/AX remains only in ignored local build evidence because it contains an ephemeral fixture recovery key. Passive review rows are scrolled into view before inspection; automatic completed-action status checks do not scroll.
+
+
+## Shared historical entry points (November 10)
+
+Records now includes **Shared pickup records**: find a past shared pickup, open
+its existing household-shop screen, or open placement reports directly. The
+history picker defaults to **Shops assigned to me**, whose existing service query
+includes closed pickups. Other callers retain the active-shop default. Selection
+uses the existing household selection/authorization path. The selected shop's
+existing routes expose confirmed orders, deliveries, saved cook copies and
+financial evidence subject to their current permissions; no new data store or
+permission was introduced. Original saved placement evidence retains its existing
+unlock path when household access has ended.
+
+The separate Records entries for family decisions and price/period history remain
+in place. Browsing these records does not establish that all their historical
+content is included in the current shared snapshot backup; that export gap remains
+explicit follow-up work.
+
+Validation: app build passed (`.build/SharedRecordsNov10/history-navigation/build.log`),
+changed Swift syntax passed, and localization checks passed30catalogs/4,745entries.
+No new end-to-end walkthrough or broad regression was run for this navigation edit.

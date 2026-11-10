@@ -15199,6 +15199,74 @@
           }
         }
       }
+    },
+    "Shared pickup records": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared pickup records"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registros de compras compartidas"
+          }
+        }
+      }
+    },
+    "Find a past shared pickup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find a past shared pickup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscar una compra compartida anterior"
+          }
+        }
+      }
+    },
+    "Open selected shared pickup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open selected shared pickup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir la compra compartida seleccionada"
+          }
+        }
+      }
+    },
+    "Choose a pickup to reopen its orders, deliveries and saved cook instructions.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a pickup to reopen its orders, deliveries and saved cook instructions."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige una compra para volver a abrir sus pedidos, entregas e instrucciones de cocina guardadas."
+          }
+        }
+      }
     }
   },
   "version": "1.0"
