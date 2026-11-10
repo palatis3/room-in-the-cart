@@ -1,0 +1,18 @@
+{
+  "exitCode": 0,
+  "seconds": 6.041342,
+  "logSHA256": "6ac355e5019e8d80b85f5d1f20c549603425e75815e7117ca6c6dfbc56cb2b5e",
+  "testFiles": 43,
+  "scope": "offline service; no database or HTTP activation",
+  "passed": 713,
+  "expectedSkips": 1,
+  "focusedPassed": 60,
+  "prototypeManifestSHA256": "3c9ae7bb1f50d2a672f45d928bc646af4dca78e03bea69bc0d21240010967da3",
+  "focusedLogSHA256": "7195df87024740ddba6a9e51f0a66aae80a57dd4575cde219456e5dba1229a47",
+  "sourceSHA256": {
+    "service/src/shared-demand-tracking.ts": "3b5d2812e91ffb4df7a7f4e401fcee98831393382d2a292706182fb5f1f25b1e",
+    "service/src/shared-demand-tracking-transitions.ts": "2777dafa66385b319e5a6287531c939d69198e1c7460c873774408a710a90c80",
+    "service/tests/shared-demand-tracking.test.mjs": "230e15a9f649acdae32261a0d17ffe771cd3e90e2c7ec9fedccaa9c8d4aacc5f"
+  },
+  "releaseAcceptance": false
+}

@@ -1,3 +1,4 @@
+import {previewTransferredRebind,previewRedactedRecovery,trackingReviewDisclosure,recordTrackingReview,sealReviewedTracking,verifyTrackingPlacement} from '../dist/shared-demand-tracking-transitions.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {recordFirstAdoption,inverseFirstAdoption,validateState,coverage,admitV1,digest,PartitionError} from '../dist/shared-demand-tracking.js';
@@ -10,12 +11,13 @@ const basket=(n,name,packs=1)=>({id:id(n),name,packs,priceMinor:100,feeEligible:
 const manual=(n,l,name,q)=>({id:id(n),lineId:id(l),source:{kind:'manual'},productKey:name.toLowerCase(),productName:name,originalText:name,quantity:q,sourceExclusions:[],exclusions:[],contains:[],removedAt:null});
 const empty=()=>({schemaVersion:1,conversionTableVersion:'us-customary-metric-v1',householdId:H,shopId:S,revision:0,lines:[],contributions:[],edges:[],usedIds:[]});
 const command=(g,n,rows={})=>({schemaVersion:1,operationId:id(n),householdId:H,shopId:S,baseRevision:g.revision,at,lines:[],contributions:[],edges:[],removeSourceIds:[],removeEdgeIds:[],...rows});
-function fixture({unknown=false,conversion=false,partialAllocation=false}={}){
+function fixture({unknown=false,conversion=false,partialAllocation=false,privateTaco=false}={}){
  const meal={...manual(21,10,'Wraps',qty(6)),source:{kind:'meal',occurrenceId:id(40),ingredientId:id(41),groupId:null,bindingId:null}};
  const lunch={...manual(22,10,'Wraps',unknown?null:qty(2)),source:{kind:'reservation',reservationId:id(42),purpose:'Protected lunch',originOccurrenceId:id(40),ingredientId:id(43),groupId:id(44),bindingId:null}};
  const restriction={occurrenceId:id(40),ingredientId:id(43),label:'Exact family wording',resolution:{kind:'unresolved'}};
  lunch.sourceExclusions=[restriction];
  const quesadilla={...manual(26,10,'Wraps',qty(4)),source:{kind:'meal',occurrenceId:id(45),ingredientId:id(46),groupId:null,bindingId:null}};
+ if(privateTaco)meal.originalText='Erased taco source marker';
  const catalog=[meal,lunch,quesadilla].map(r=>({id:r.id,revision:7,source:structuredClone(r.source),sourceLabel:r.source.kind==='reservation'?'Protected lunch':'Dinner',originalText:r.originalText,originalQuantityText:r.quantity?.originalLiteral??null,quantity:structuredClone(r.quantity),sourceExclusions:structuredClone(r.sourceExclusions),requiredLineId:null}));
  // The mapping is a reviewed assertion, not overwritten source wording.
  lunch.sourceExclusions=[{...restriction,resolution:{kind:'mapped',tags:['family.reviewed'],confirmedAt:at}}];
@@ -181,4 +183,141 @@ test('later touched pack count still conflicts even with an independent price ed
 test('added-row membership inverse requires the whole added row unchanged',()=>{
  const f=fixture();f.current.basket.find(l=>l.id===id(11)).priceMinor=120;
  validateState(f.current,f.context.currentCatalog);rejects(f,'basket_conflict');
+});
+
+
+// R3 pure candidates: these helpers construct synthetic server-owned bases,
+// not client authorization tokens or repository/HTTP proof.
+const basis=s=>({householdId:H,shopId:S,graphRevision:s.graph.revision,authorityEpoch:s.authorityEpoch,privacyRevision:s.privacyRevision,basisDigest:digest(s),currentCatalog:structuredClone(s.catalog)});
+function partial(options={}){const f=fixture(options);return {...f,state:run(f).state};}
+function rebindIntent(f,ids=[id(21),id(22),id(26)]){
+ return {operationId:id(80),at,bindings:ids.map(factId=>({factId,line:{...f.state.graph.lines.find(l=>l.id===id(10)),trashedAt:null},basket:structuredClone(f.state.basket.find(l=>l.id===id(10))),packReview:structuredClone(f.after.packReviews[0])}))};
+}
+function reviewed(s){const ctx={...basis(s),reviewId:id(90),actorId:id(91),deviceId:id(92),shopRevision:10,now:at,expiresAt:'2026-11-10T12:05:00Z'};
+ const disclosure=trackingReviewDisclosure(s,s.catalog);const recorded=recordTrackingReview(s,disclosure,ctx);return {ctx,disclosure,...recorded};}
+function sealed(s){const r=reviewed(s),ctx={...basis(s),actorId:id(91),deviceId:id(92),baseShopRevision:10,frozenRevision:11,reviewDigest:r.reviewDigest,now:'2026-11-10T12:01:00Z'};
+ return {...r,...sealReviewedTracking(s,r.review,ctx)};}
+function placement(s,seal){return verifyTrackingPlacement(seal.snapshot,s,{...basis(s),frozenRevision:11,storedSnapshotDigest:seal.snapshotDigest});}
+function projectionFixture(){const f=partial({privateTaco:true}),old=structuredClone(f.state);const state=structuredClone(old);delete state.packReviews;state.privacyRevision++;
+ state.catalog=state.catalog.filter(x=>x.id!==id(21));state.unbound=state.unbound.filter(x=>x.factId!==id(21));
+ const projection={schemaVersion:1,status:'reviewRequired',invalidatedStateDigest:digest(old),previousPrivacyRevision:old.privacyRevision,state};
+ const ctx={...basis({...state,packReviews:f.state.packReviews}),basisDigest:digest(projection)};
+ const intent={operationId:id(81),at,packReviews:structuredClone(f.state.packReviews)};return {f,old,projection,ctx,intent};}
+
+test('same-ID rebind restores proved sources only, preserves later staple and creates no old allocation',()=>{
+ const f=partial(),before=digest(f.state),result=previewTransferredRebind(f.state,rebindIntent(f),basis(f.state));
+ assert.equal(digest(f.state),before);assert.equal(result.state.graph.revision,f.state.graph.revision+1);
+ assert.deepEqual(result.state.graph.usedIds,f.state.graph.usedIds);assert.deepEqual(result.state.unbound,[]);
+ for(const u of f.state.unbound)assert.deepEqual(result.state.graph.contributions.find(x=>x.id===u.transferred.id),u.transferred);
+ assert.deepEqual(result.state.graph.edges,[]);assert.deepEqual(result.disclosure.allocationsRestored,[]);
+ assert.deepEqual(result.state.graph.contributions.find(x=>x.id===id(24)),f.state.graph.contributions.find(x=>x.id===id(24)));
+ assert.deepEqual(demandLineTotals(result.state.graph).find(x=>x.lineId===id(10)).quantity,{numerator:'12',denominator:'1'});
+});
+test('unknown protected food remains unknown after explicit rebind and reviewed pickup',()=>{
+ const f=partial({unknown:true}),r=previewTransferredRebind(f.state,rebindIntent(f,[id(22)]),basis(f.state));
+ assert.equal(r.state.graph.contributions.find(x=>x.id===id(22)).quantity,null);
+ assert.equal(r.disclosure.after.status,'partial');const seal=sealed(r.state),placed=placement(r.state,seal);
+ assert.equal(placed.trackingScope,'partial');assert.equal(placed.coverage.completeFoodCoverage,false);
+ assert.deepEqual(placed.coverage.allocatableUnboundFactIds,[]);
+});
+test('rebind may explicitly create an unpriced mapping line without deleting the old legacy basket',()=>{
+ const f=partial(),intent=rebindIntent(f,[id(22)]);intent.bindings[0]={...intent.bindings[0],line:line(71,'Lunch wraps'),basket:{...basket(71,'Lunch wraps'),priceMinor:null},packReview:{...intent.bindings[0].packReview,lineId:id(71)}};
+ const r=previewTransferredRebind(f.state,intent,basis(f.state));assert.ok(r.state.graph.usedIds.includes(id(71)));
+ assert.deepEqual(r.state.basket.find(x=>x.id===id(10)),f.state.basket.find(x=>x.id===id(10)));
+ assert.ok(r.state.legacyLineIds.includes(id(10)));assert.equal(r.state.graph.contributions.find(x=>x.id===id(22)).lineId,id(71));
+});
+test('a never-tracked fact is not a proof to reuse a contribution ID',()=>{
+ const f=partial();assert.throws(()=>previewTransferredRebind(f.before,rebindIntent(f),basis(f.before)),e=>e.code==='transfer_proof_required');
+});
+test('rebind rejects invented contribution facts and arbitrary reserved IDs',()=>{
+ const f=partial(),intent=rebindIntent(f,[id(22)]);intent.bindings[0].contribution={...f.state.unbound[1].transferred,quantity:qty(1)};
+ assert.throws(()=>previewTransferredRebind(f.state,intent,basis(f.state)));
+ delete intent.bindings[0].contribution;intent.bindings[0].line=line(23,'Wrong reused ID');intent.bindings[0].basket={...basket(23,'Wrong reused ID'),priceMinor:null};intent.bindings[0].packReview.lineId=id(23);
+ assert.throws(()=>previewTransferredRebind(f.state,intent,basis(f.state)),e=>e.code==='identity_reused');
+});
+test('rebind requires exact historical line, current basket and fresh scope',()=>{
+ for(const mutate of [x=>x.bindings[0].line.name='Rename without review',x=>x.bindings[0].basket.packs=99,x=>x.bindings.push(x.bindings[0])]){
+  const f=partial(),intent=rebindIntent(f);mutate(intent);assert.throws(()=>previewTransferredRebind(f.state,intent,basis(f.state)));
+ }
+ const f=partial();assert.throws(()=>previewTransferredRebind(f.state,rebindIntent(f),{...basis(f.state),privacyRevision:99}),e=>e.code==='source_revision_or_privacy');
+});
+test('redacted recovery preserves surviving transferred IDs and cannot resurrect erased text',()=>{
+ const f=projectionFixture(),before=digest(f.projection),r=previewRedactedRecovery(f.projection,f.intent,f.ctx);
+ assert.equal(digest(f.projection),before);assert.deepEqual(r.state.graph.usedIds,f.old.graph.usedIds);
+ assert.deepEqual(r.state.unbound,f.projection.state.unbound);assert.ok(!JSON.stringify(r).includes('Erased taco source marker'));
+ assert.ok(r.state.graph.usedIds.includes(id(21)));assert.ok(!r.state.catalog.some(x=>x.id===id(21)));
+ assert.equal(r.state.privacyRevision,6);assert.equal(r.state.graph.revision,4);
+ const seal=sealed(r.state);assert.equal(placement(r.state,seal).trackingScope,'partial');
+ const g={...f.f,state:r.state};assert.throws(()=>previewTransferredRebind(r.state,rebindIntent(g,[id(21)]),basis(r.state)),e=>e.code==='transfer_proof_required');
+ // The remaining protected row can still be rebound with its original identity.
+ const rebound=previewTransferredRebind(r.state,rebindIntent(g,[id(22)]),basis(r.state));assert.ok(rebound.state.graph.contributions.some(x=>x.id===id(22)));
+});
+test('recovery needs a new privacy basis and complete explicit pack review',()=>{
+ const f=projectionFixture();const bad=structuredClone(f.projection);bad.previousPrivacyRevision=6;
+ assert.throws(()=>previewRedactedRecovery(bad,f.intent,{...f.ctx,basisDigest:digest(bad)}),e=>e.code==='privacy_not_advanced');
+ assert.throws(()=>previewRedactedRecovery(f.projection,{...f.intent,packReviews:[]},f.ctx),e=>e.code==='pack_review_partition');
+ assert.throws(()=>previewRedactedRecovery(f.projection,{...f.intent,state:f.old},f.ctx));
+});
+test('tampered redacted projection or changed current source revision is rejected',()=>{
+ const f=projectionFixture(),bad=structuredClone(f.projection);bad.state.unbound[0].transferred.quantity=qty(1);
+ assert.throws(()=>previewRedactedRecovery(bad,f.intent,f.ctx),e=>e.code==='projection_integrity');
+ const changed=structuredClone(f.ctx);changed.currentCatalog[0].revision++;
+ assert.throws(()=>previewRedactedRecovery(f.projection,f.intent,changed),e=>e.code==='source_revision_or_privacy');
+});
+test('reviewed partial manual pickup freezes and reports without full mapping or quantified protection',()=>{
+ const f=partial({unknown:true}),seal=sealed(f.state),r=placement(f.state,seal);
+ assert.equal(r.trackingScope,'partial');assert.equal(r.placementDoesNotConfirmFill,true);
+ assert.equal(seal.review.disclosure.unbound.find(x=>x.fact.id===id(22)).fact.quantity,null);
+ assert.deepEqual(seal.review.disclosure.unbound.map(x=>x.fact),f.state.catalog);
+ assert.equal(seal.review.disclosure.coverageStatement,'tracked_subtotals_only_no_complete_coverage_or_free_unbound_supply');
+ assert.equal(r.coverage.completeFoodCoverage,false);assert.deepEqual(r.coverage.protectedUnboundFactIds,[id(22)]);
+ assert.throws(()=>admitV1(f.state,f.state.catalog),e=>e.code==='client_requires_partition_support');
+});
+test('an unreviewed partial or raw reviewRequired projection cannot be sealed',()=>{
+ const f=partial();assert.throws(()=>sealReviewedTracking(f.state,{}, {...basis(f.state),actorId:id(91),deviceId:id(92),baseShopRevision:10,frozenRevision:11,reviewDigest:'0'.repeat(64),now:at}));
+ const p=projectionFixture();assert.throws(()=>recordTrackingReview(p.projection,{},reviewed(f.state).ctx));
+});
+test('omitting unknown/protected facts or asserting complete coverage cannot count as review',()=>{
+ const f=partial({unknown:true}),r=reviewed(f.state);
+ for(const mutate of [a=>a.unbound.pop(),a=>a.coverage.completeFoodCoverage=true,a=>a.coverage.protectedUnboundFactIds=[],a=>a.unbound[1].fact.revision++]){
+  const ack=structuredClone(r.disclosure);mutate(ack);assert.throws(()=>recordTrackingReview(f.state,ack,r.ctx),e=>e.code==='review_scope_changed');
+ }
+});
+test('unknown tracked pack/food review remains explicit and is not a protection waiver',()=>{
+ const f=partial({unknown:true}),r=previewTransferredRebind(f.state,rebindIntent(f,[id(22)]),basis(f.state));
+ const bad=structuredClone(r.state);bad.packReviews.find(x=>x.lineId===id(10)).acceptUnresolved=false;
+ assert.throws(()=>reviewed(bad),e=>e.code==='unresolved_pack_review_required');
+ const good=reviewed(r.state);assert.ok(good.review.disclosure.unresolvedPackIds.includes(id(10)));
+});
+for(const [name,mutate] of [
+ ['price',s=>s.basket[0].priceMinor=120],['quote',s=>s.quoteDigest='b'.repeat(64)],
+ ['authority',s=>s.authorityEpoch++],['privacy',s=>s.privacyRevision++],
+ ['catalog revision',s=>s.catalog[0].revision++]
+])test('later '+name+' invalidates an earlier frozen tracking review',()=>{
+ const f=partial(),seal=sealed(f.state),changed=structuredClone(f.state);mutate(changed);
+ assert.throws(()=>placement(changed,seal));
+});
+test('review expires for a new freeze, while reporting a valid frozen copy remains distinct',()=>{
+ const f=partial(),r=reviewed(f.state);
+ assert.throws(()=>sealReviewedTracking(f.state,r.review,{...basis(f.state),actorId:id(91),deviceId:id(92),baseShopRevision:10,frozenRevision:11,reviewDigest:r.reviewDigest,now:'2026-11-10T12:06:00Z'}),e=>e.code==='review_expired');
+ const seal=sealed(f.state);assert.equal(placement(f.state,seal).trackingScope,'partial');
+});
+test('snapshot tampering, stale revision and cross-device seal fail exact binding',()=>{
+ const f=partial(),seal=sealed(f.state),bad=structuredClone(seal.snapshot);bad.review.disclosure.unbound=[];
+ assert.throws(()=>verifyTrackingPlacement(bad,f.state,{...basis(f.state),frozenRevision:11,storedSnapshotDigest:seal.snapshotDigest}),e=>e.code==='snapshot_integrity');
+ assert.throws(()=>verifyTrackingPlacement(seal.snapshot,f.state,{...basis(f.state),frozenRevision:12,storedSnapshotDigest:seal.snapshotDigest}),e=>e.code==='snapshot_identity');
+ assert.throws(()=>sealReviewedTracking(f.state,seal.review,{...basis(f.state),actorId:id(91),deviceId:id(93),baseShopRevision:10,frozenRevision:11,reviewDigest:seal.reviewDigest,now:at}),e=>e.code==='review_identity');
+});
+test('no caller trust flag or unsupported snapshot version admits placement',()=>{
+ const f=partial(),seal=sealed(f.state);
+ assert.throws(()=>verifyTrackingPlacement(seal.snapshot,f.state,{...basis(f.state),frozenRevision:11,storedSnapshotDigest:seal.snapshotDigest,authorized:true}));
+ assert.throws(()=>verifyTrackingPlacement({...seal.snapshot,schemaVersion:1},f.state,{...basis(f.state),frozenRevision:11,storedSnapshotDigest:seal.snapshotDigest}));
+});
+
+test('erased source or changed protection cannot be validated under an old frozen review',()=>{
+ const f=partial({unknown:true}),seal=sealed(f.state),ctx={...basis(f.state),frozenRevision:11,storedSnapshotDigest:seal.snapshotDigest};
+ ctx.currentCatalog=ctx.currentCatalog.filter(x=>x.id!==id(22));
+ assert.throws(()=>verifyTrackingPlacement(seal.snapshot,f.state,ctx),e=>e.code==='source_revision_or_privacy');
+ const changed=structuredClone(f.state);changed.catalog[1].source.purpose='Different protected purpose';
+ assert.throws(()=>placement(changed,seal));
 });
