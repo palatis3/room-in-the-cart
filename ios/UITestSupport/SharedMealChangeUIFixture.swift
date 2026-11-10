@@ -9,6 +9,21 @@ private final class S17FixtureVault: RefreshTokenVault, @unchecked Sendable {
     func write(_ value: String) throws { self.value = value }
     func clear() throws { value = nil }
 }
+private enum S17GroupAmountFixture {
+    static var planning: SharedMealPlanning {
+        let dinner = UUID(uuidString: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa")!
+        let lunch = UUID(uuidString: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb")!
+        let ingredient = UUID(uuidString: "cccccccc-cccc-4ccc-8ccc-cccccccccccc")!
+        func amount(_ value: Int, _ literal: String) -> SharedMealQuantity {
+            .init(amount: .init(numerator: value), unit: "count", originalLiteral: literal)
+        }
+        return .init(groups: [.init(id: dinner, name: "Dinner", servings: .init(numerator: 6), protected: false),
+                              .init(id: lunch, name: "Lunch", servings: .init(numerator: 2), protected: true)],
+            ingredients: [.init(id: ingredient, name: "Wraps", quantity: amount(8, "8 wraps"), groupIds: [dinner, lunch], exclusions: [])],
+            bindings: [.init(id: UUID(uuidString: "dddddddd-dddd-4ddd-8ddd-dddddddddddd")!, groupId: dinner, ingredientId: ingredient, quantity: amount(6, "6 dinner wraps")),
+                       .init(id: UUID(uuidString: "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee")!, groupId: lunch, ingredientId: ingredient, quantity: amount(2, "2 lunch wraps"))])
+    }
+}
 private final class S17FixtureServer: @unchecked Sendable {
     static let household = "11111111-1111-4111-8111-111111111111"
     static let shopper = "22222222-2222-4222-8222-222222222222"
@@ -30,6 +45,11 @@ private final class S17FixtureServer: @unchecked Sendable {
     private var posts = 0
     var changed: (@Sendable (Int,Int) -> Void)?
     init() {
+        if ProcessInfo.processInfo.arguments.contains("--shared-meal-group-amount-fixture"),
+           let bytes = try? JSONEncoder().encode(S17GroupAmountFixture.planning),
+           let planning = try? JSONSerialization.jsonObject(with: bytes) {
+            meal["planning"] = planning
+        }
         if ProcessInfo.processInfo.arguments.contains("--shared-meal-undated-fixture") {
             meal["day"] = NSNull()
             let ingredient: [String: Any] = [
@@ -291,7 +311,10 @@ struct S17SharedMealFixtureRoot: View {
     @State private var directSeed = ProcessInfo.processInfo.arguments.contains("--shopper-meal-seed")
     @State private var directShopReview = ProcessInfo.processInfo.arguments.contains("--shared-meal-deadline-fixture")
     private var focusedDaySheet: Bool { ProcessInfo.processInfo.arguments.contains("--shared-meal-day-sheet-fixture") }
-    private var seed: SharedMealChangeSeed { .init(localOccurrenceID: UUID(uuidString:"88888888-8888-4888-8888-888888888888")!, title:"Fixture guest soup",portions:6,planning:.init(groups:[],ingredients:[])) }
+    private var seed: SharedMealChangeSeed {
+        .init(localOccurrenceID: UUID(uuidString:"88888888-8888-4888-8888-888888888888")!, title:"Fixture guest soup",portions:6,
+              planning: ProcessInfo.processInfo.arguments.contains("--shared-meal-group-amount-fixture") ? S17GroupAmountFixture.planning : .init(groups:[],ingredients:[]))
+    }
     @ViewBuilder var body: some View {
         if ProcessInfo.processInfo.arguments.contains("--shared-meal-civil-date-fixture") {
             SharedMealCivilDateFixtureRoot()

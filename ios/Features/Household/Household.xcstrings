@@ -1,6 +1,38 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Amount for serving group": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amount for serving group"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cantidad para el grupo de comensales"
+          }
+        }
+      }
+    },
+    "Group amounts must add up to the ingredient total in the same unit. Review each amount; quantities are not scaled automatically.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Group amounts must add up to the ingredient total in the same unit. Review each amount; quantities are not scaled automatically."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las cantidades de los grupos deben sumar el total del ingrediente en la misma unidad. Revisa cada cantidad; no se ajustan automáticamente."
+          }
+        }
+      }
+    },
     "Turn off and clear unsent offline requests": {
       "extractionState": "manual",
       "localizations": {

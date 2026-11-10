@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify SwiftPM XCTest outcomes against compiled and reviewed inventories."""
+"""Verify every compiled SwiftPM test runs, retaining the reviewed minimum set."""
 
 import argparse
 import json
@@ -72,7 +72,11 @@ def test_outcomes(log):
 def verify_package(package, reviewed, compiled, log):
     expected = selectors(reviewed, "Reviewed inventory")
     discovered = selectors(compiled, "Compiled inventory")
-    require_exact(discovered, expected, "Compiled tests differ from the reviewed inventory")
+    # New regression tests join the run automatically. Removing a required test
+    # still needs review; every discovered test must have a terminal outcome below.
+    missing = expected - discovered
+    if missing:
+        raise ValueError(f"Compiled tests are missing reviewed cases: {sorted(missing)}")
     outcomes = test_outcomes(log)
     require_exact(set(outcomes), discovered, "XCTest execution differs from the compiled inventory")
     failures = {name for name, status in outcomes.items() if status == "failed"}

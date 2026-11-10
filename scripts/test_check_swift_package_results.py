@@ -31,10 +31,19 @@ class SwiftPackageResultTests(unittest.TestCase):
         log = completed(regular) + "".join(completed(name, "skipped") for name in wire)
         self.assertEqual(verify_package("HouseholdClient", reviewed, list(reversed(reviewed)), log), (1, 3))
 
-    def test_removed_or_added_compiled_case_requires_inventory_review(self):
-        for reviewed, compiled in (([TEST, OTHER], [TEST]), ([TEST], [TEST, OTHER])):
-            with self.subTest(compiled=compiled), self.assertRaisesRegex(ValueError, "Compiled tests differ"):
-                verify_package("CoreDomain", reviewed, compiled, completed(TEST))
+    def test_removed_required_case_still_requires_inventory_review(self):
+        with self.assertRaisesRegex(ValueError, "missing reviewed cases"):
+            verify_package("CoreDomain", [TEST, OTHER], [TEST], completed(TEST))
+
+    def test_added_case_must_execute_and_pass_without_manual_inventory_update(self):
+        self.assertEqual(verify_package("CoreDomain", [TEST], [TEST, OTHER],
+                                       completed(TEST) + completed(OTHER)), (2, 0))
+        for extra, error in (("", "execution differs"),
+                             (event(OTHER, "started"), "terminal outcomes differ"),
+                             (completed(OTHER, "failed"), "Failed XCTest cases"),
+                             (completed(OTHER, "skipped"), "skips differ")):
+            with self.subTest(error=error), self.assertRaisesRegex(ValueError, error):
+                verify_package("CoreDomain", [TEST], [TEST, OTHER], completed(TEST) + extra)
 
     def test_discovered_case_missing_from_run_or_without_terminal_fails(self):
         for log, error in ((completed(TEST), "execution differs"),

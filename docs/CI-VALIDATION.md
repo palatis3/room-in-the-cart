@@ -12,6 +12,14 @@ release requirements and known failures remain visible.
 - Keep cheap service/model checks. Avoid repeating native UI, database, wire and
   hosted suites for unrelated or test-only edits. Test a corrected fixture with
   its affected suite before scheduling a broader batch.
+- Swift package checks retain the reviewed inventory as a required minimum.
+  Newly discovered tests join automatically and must execute and pass; missing
+  required tests, missing outcomes and unapproved skips still fail the job.
+- For focused local form/selector checks, use `-collect-test-diagnostics never`
+  and retain the test log, screenshots and result bundle. Use `on-failure` when
+  investigating a crash, hang or simulator fault. Routine assertion failures
+  should not trigger a ten-minute simulator diagnostic collection. Hosted CI
+  keeps its existing failure diagnostics.
 - Batch related fixes before one integration run. Run broad regression on the
   combined merge candidate and applicable release checks before distribution;
   do not require that full batch for every intermediate commit.

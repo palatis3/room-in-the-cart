@@ -44,6 +44,55 @@ private actor MealChangeFixture: SharedMealChangesServing {
             "meals":[["occurrenceId":"11111111-1111-4111-8111-111111111111","revision":2,"meal":meal]],"proposals":proposals]))
     }
     private func storeURL() -> URL { FileManager.default.temporaryDirectory.appendingPathComponent("meal-change-tests-" + UUID().uuidString).appendingPathComponent("pending.json") }
+    func testGroupAmountEditNineWrapsPreservesLunchAndCancelRejectsMismatchedTotals() async throws {
+        let scope = scope(), initialPage = try page(scope)
+        let dinnerID = UUID(), lunchID = UUID(), ingredientID = UUID(), dinnerBindingID = UUID(), lunchBindingID = UUID()
+        func quantity(_ n: Int, _ literal: String) -> SharedMealQuantity {
+            .init(amount: .init(numerator: n), unit: "count", originalLiteral: literal)
+        }
+        let original = SharedMeal(title: "Wrap dinner", day: "2026-11-05", kind: "dinner", portions: 8, protected: false,
+            planning: .init(groups: [.init(id: dinnerID, name: "Dinner", servings: .init(numerator: 6), protected: false),
+                                     .init(id: lunchID, name: "Lunch", servings: .init(numerator: 2), protected: true)],
+                ingredients: [.init(id: ingredientID, name: "Wraps", quantity: quantity(8, "Eight original wraps"), groupIds: [dinnerID, lunchID], exclusions: ["No sesame"]),
+                              .init(name: "Optional garnish", quantity: nil, groupIds: [], exclusions: [])],
+                bindings: [.init(id: dinnerBindingID, groupId: dinnerID, ingredientId: ingredientID, quantity: quantity(6, "Six dinner wraps")),
+                           .init(id: lunchBindingID, groupId: lunchID, ingredientId: ingredientID, quantity: quantity(2, "Two reserved lunch wraps"))]))
+        var raw = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(initialPage)) as? [String: Any])
+        raw["meals"] = [["occurrenceId": initialPage.meals[0].id.uuidString, "revision": 2,
+                          "meal": try JSONSerialization.jsonObject(with: JSONEncoder().encode(original))]]
+        let current = try JSONDecoder().decode(SharedMealChangePage.self, from: JSONSerialization.data(withJSONObject: raw))
+        let service = MealChangeFixture(scope: scope, page: current), store = HistoryPendingStore(url: storeURL())
+        let model = SharedMealChangeModel(scope: scope, service: service, store: store, runtime: { scope })
+        await model.load()
+        var edited = original
+        edited.portions = 9; edited.planning?.groups[0].servings.numerator = 7
+        edited.planning?.ingredients[0].quantity = quantity(9, "Nine wraps for dinner and lunch")
+        await model.prepare(occurrenceID: current.meals[0].id, meal: edited, reason: "One guest")
+        XCTAssertNil(model.review); XCTAssertNotNil(model.notice)
+        edited.planning?.bindings?[0].quantity = quantity(7, "Seven dinner wraps")
+        await model.prepare(occurrenceID: current.meals[0].id, meal: edited, reason: "One guest")
+        let reviewed = try XCTUnwrap(model.review)
+        XCTAssertEqual(reviewed.request.meal, edited)
+        XCTAssertEqual(reviewed.request.meal.planning?.bindings?.map(\.id), [dinnerBindingID, lunchBindingID])
+        XCTAssertEqual(reviewed.request.meal.planning?.bindings?[1], original.planning?.bindings?[1])
+        XCTAssertEqual(reviewed.request.meal.planning?.groups[1], original.planning?.groups[1])
+        XCTAssertEqual(reviewed.request.meal.planning?.ingredients[0].exclusions, ["No sesame"])
+        XCTAssertNil(reviewed.request.meal.planning?.ingredients[1].quantity)
+        model.cancelReview(); XCTAssertNil(model.review); XCTAssertEqual(model.page?.meals[0].meal, original)
+        let cancelled = try await store.read(), beforeSend = await service.sends()
+        XCTAssertTrue((cancelled.sharedMealChanges ?? []).isEmpty); XCTAssertTrue(beforeSend.isEmpty)
+        var wrongUnit = edited; wrongUnit.planning?.bindings?[0].quantity.unit = "gram"
+        XCTAssertThrowsError(try SharedMealGroupAmounts.validate(wrongUnit))
+        var unknownTotal = edited; unknownTotal.planning?.ingredients[0].quantity = nil
+        XCTAssertThrowsError(try SharedMealGroupAmounts.validate(unknownTotal))
+        var exactFraction = edited; exactFraction.planning?.bindings?[0].quantity.amount = .init(numerator: 14, denominator: 2)
+        try SharedMealGroupAmounts.validate(exactFraction)
+        XCTAssertEqual(exactFraction.planning?.bindings?[0].quantity.amount, .init(numerator: 14, denominator: 2))
+        await model.prepare(occurrenceID: current.meals[0].id, meal: edited, reason: "One guest")
+        await model.sendReviewed()
+        let sent = await service.sends(); XCTAssertEqual(sent.count, 1); XCTAssertEqual(sent[0].request.meal, edited)
+        XCTAssertEqual(model.page?.meals[0].meal, original, "Sending a proposal never applies the shared meal")
+    }
     func testOldMealEncodingRemainsCompatibleAndUnknownQuantityIsExplicitNull() throws {
         let meal = SharedMeal(title: "Soup", day: "2026-11-05", kind: "dinner", portions: 4, protected: false)
         let raw = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(meal)) as? [String:Any])

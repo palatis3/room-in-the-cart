@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import CoreDomain
 import HouseholdClient
 
 struct SharedMealChangeScope: Hashable {
@@ -70,6 +71,7 @@ extension HouseholdService: SharedMealChangesServing {}
         let start = generation; busy = true; review = nil; notice = nil
         defer { if current(start) { busy = false } }
         do {
+            try SharedMealGroupAmounts.validate(meal)
             let intent = try await service.prepareSharedMealChange(page: page, occurrenceID: occurrenceID, meal: meal, reason: reason)
             guard current(start), scope.matches(intent) else { return }; review = intent
         } catch { fail(error, start: start) }
@@ -145,7 +147,7 @@ extension HouseholdService: SharedMealChangesServing {}
         let start = generation; busy = true; notice = nil
         defer { if current(start) { busy = false } }
         do {
-            try meal.validatePlanning()
+            try SharedMealGroupAmounts.validate(meal)
             let latest = try await service.sharedMealChanges(shopID: scope.shopID)
             guard current(start), latest.shopper, latest.phase == "draft", latest.shopRevision == page.shopRevision,
                   latest.authorityEpoch == page.authorityEpoch, latest.meals.contains(original) else { throw ClientError.configuration }
@@ -172,11 +174,38 @@ extension HouseholdService: SharedMealChangesServing {}
             notice = ht("The household confirmed this proposal. Saving the local receipt failed; retry cleanup with the same proposal.")
             return
         }
+        if error is SharedMealGroupAmounts.Mismatch {
+            notice = ht("Group amounts must add up to the ingredient total in the same unit. Review each amount; quantities are not scaled automatically.")
+            return
+        }
         switch error as? ClientError {
         case .accessEnded, .sessionNeeded, .service(status: 404, code: _, correlationID: _, retryAfter: _), .service(status: 403, code: _, correlationID: _, retryAfter: _):
             page = nil; pending = nil; notice = ht("Shared meal access changed. Refresh the household before continuing.")
         default:
             notice = ht("The proposal result is not confirmed. Refresh shared status or retry the exact saved proposal.")
+        }
+    }
+}
+
+/// Match the server's explicit-allocation total before a proposal is retained.
+/// This checks entered facts; it does not infer shares or normalize their units.
+enum SharedMealGroupAmounts {
+    struct Mismatch: Error {}
+    static func validate(_ meal: SharedMeal) throws {
+        try meal.validatePlanning()
+        guard let planning = meal.planning else { return }
+        let bindings = planning.bindings ?? []
+        guard Set(bindings.map { [$0.groupId, $0.ingredientId] }).count == bindings.count else { throw Mismatch() }
+        for ingredient in planning.ingredients {
+            let amounts = bindings.filter { $0.ingredientId == ingredient.id }
+            guard !amounts.isEmpty else { continue }
+            guard let quantity = ingredient.quantity, amounts.allSatisfy({ $0.quantity.unit == quantity.unit }) else { throw Mismatch() }
+            var sum = Rational.zero
+            for allocation in amounts {
+                guard !allocation.quantity.originalLiteral.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw Mismatch() }
+                sum = try sum.adding(Rational(Int64(allocation.quantity.amount.numerator), Int64(allocation.quantity.amount.denominator)))
+            }
+            guard sum == (try Rational(Int64(quantity.amount.numerator), Int64(quantity.amount.denominator))) else { throw Mismatch() }
         }
     }
 }
