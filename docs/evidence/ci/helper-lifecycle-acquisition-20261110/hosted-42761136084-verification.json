@@ -1,0 +1,25 @@
+{
+  "status": "verified",
+  "commit": "eeb0a12260cc63821b47addf4f1dcbb571b62472",
+  "ZIP": {
+    "sha256": "8716724b5837339a8a6f9dcda0c861d369b8bd3573bfd599df2afc38794ee49f",
+    "bytes": 80989,
+    "members": 13
+  },
+  "TAR": {
+    "sha256": "b52581db3d1b17a0acdffad6ab5e499a91a51910819c343cb5df2d55d9124409",
+    "bytes": 481280,
+    "membersVerified": 22
+  },
+  "sourcePinsVerified": 50,
+  "firstFault": "Owned bootstatus exhausted180s; its exact-bound diagnostic sampler exhausted3s wall with no output/report.",
+  "samplerSpawned": true,
+  "stackReportAvailable": false,
+  "prepareChildrenTerminal": true,
+  "cleanup": {
+    "status": "passed",
+    "ownedDeviceDeleted": true,
+    "allKnownChildrenTerminal": true
+  },
+  "releaseAcceptance": false
+}
