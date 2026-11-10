@@ -35,13 +35,33 @@ import HouseholdClient
         await inbox.review(); XCTAssertNotNil(inbox.preview)
         inbox.acceptOverage = true; inbox.acceptUnknown = true; await inbox.apply()
         XCTAssertNil(inbox.pending); XCTAssertTrue(context.fixture.commands.isEmpty)
-        return try XCTUnwrap(inbox.requestFood)
+        let current = try XCTUnwrap(inbox.trackingRequest)
+        XCTAssertNil(inbox.requestFood, "Enabled shops use the current v2 entry")
+        XCTAssertEqual(current.reviewed.preview, inbox.preview)
+        // Retained v1 draft validation is still tested directly, without claiming
+        // that the Inbox routes a current tracking state into the old editor.
+        return try SharedRequestFoodContext(reviewed: current.reviewed,
+            page: await context.service.sharedDemand(shopID: context.fixture.shop.uuid),
+            acceptOverage: current.acceptOverage, acceptUnknown: current.acceptUnknown)
     }
     private func draft(_ context: SharedRequestFoodContext, unknown: Bool = false) throws -> SharedFoodDraft {
         var draft = try context.draft(); draft.sources[0].productConfirmed = true
         draft.sources[0].amount = .init(literal: "2", unknown: unknown)
         for index in draft.lines.indices { draft.lines[index].acceptUnresolved = true }
         return draft
+    }
+    private func trackingFlow(_ c: Context) async throws -> SharedTrackingFlowModel {
+        let request = try XCTUnwrap(c.inbox.trackingRequest)
+        let flow = SharedTrackingFlowModel(access: c.inbox, request: request)
+        await flow.load(); XCTAssertNotNil(flow.page)
+        flow.draft.requestMatched = true
+        flow.draft.requestAmount.unknown = false; flow.draft.requestAmount.numerator = "2"
+        for i in flow.draft.packs.indices { flow.draft.packs[i].acceptUnresolved = true }
+        return flow
+    }
+    private func acknowledge(_ flow: SharedTrackingFlowModel) {
+        flow.gate.changes = true; flow.gate.pickup = true
+        flow.acceptOverage = true; flow.acceptUnknown = true
     }
     private func waitHeld(_ fixture: RequestFoodHTTPFixture) async throws {
         for _ in 0..<200 { if fixture.heldCount == 1 { return }; try await Task.sleep(nanoseconds: 10_000_000) }
@@ -133,25 +153,25 @@ import HouseholdClient
         let c = try await setup(); defer { c.close() }; c.fixture.readFailure = "expired"
         c.inbox.choice = .add; c.inbox.price = "1.25"; await c.inbox.review(); c.inbox.acceptOverage = true; c.inbox.acceptUnknown = true
         XCTAssertFalse(c.inbox.canApply); await c.inbox.apply()
-        XCTAssertNil(c.inbox.requestFood); XCTAssertTrue(c.fixture.commands.isEmpty)
+        XCTAssertNil(c.inbox.requestFood); XCTAssertNil(c.inbox.trackingRequest); XCTAssertTrue(c.fixture.commands.isEmpty)
     }
     func testBothMonetaryAcknowledgmentsPrecedeFoodReviewAndCannotChangeItsAction() async throws {
         let c = try await setup(); defer { c.close() }
         c.inbox.choice = .add; c.inbox.price = "1.25"; await c.inbox.review()
-        XCTAssertFalse(c.inbox.canApply); await c.inbox.apply(); XCTAssertNil(c.inbox.requestFood)
+        XCTAssertFalse(c.inbox.canApply); await c.inbox.apply(); XCTAssertNil(c.inbox.requestFood); XCTAssertNil(c.inbox.trackingRequest)
         c.inbox.acceptOverage = true; XCTAssertFalse(c.inbox.canApply)
-        c.inbox.acceptUnknown = true; await c.inbox.apply(); XCTAssertNotNil(c.inbox.requestFood)
-        c.inbox.acceptUnknown = false; XCTAssertNil(c.inbox.requestFood)
+        c.inbox.acceptUnknown = true; await c.inbox.apply(); XCTAssertNotNil(c.inbox.trackingRequest)
+        c.inbox.acceptUnknown = false; XCTAssertNil(c.inbox.requestFood); XCTAssertNil(c.inbox.trackingRequest)
         XCTAssertTrue(c.fixture.commands.isEmpty)
     }
     func testHeldDemandReadCannotAttachToChangedRequestDraftOrRevokedInbox() async throws {
         for revoke in [false, true] {
             let c = try await setup(); defer { c.close() }
             c.inbox.choice = .add; c.inbox.price = "1.25"; await c.inbox.review(); c.inbox.acceptOverage = true; c.inbox.acceptUnknown = true
-            c.fixture.holdPath = "/demand"; let task = Task { await c.inbox.apply() }; try await waitHeld(c.fixture)
+            c.fixture.holdPath = "/demand/tracking"; let task = Task { await c.inbox.apply() }; try await waitHeld(c.fixture)
             if revoke { c.inbox.clear() } else { c.inbox.lineItem = "A different candidate" }
             c.fixture.release(); await task.value
-            XCTAssertNil(c.inbox.requestFood); XCTAssertNil(c.inbox.preview); XCTAssertTrue(c.fixture.commands.isEmpty)
+            XCTAssertNil(c.inbox.requestFood); XCTAssertNil(c.inbox.trackingRequest); XCTAssertNil(c.inbox.preview); XCTAssertTrue(c.fixture.commands.isEmpty)
         }
     }
     func testUnavailableStaleAndPrivacyReadsNeverSendLegacyApply() async throws {
@@ -160,7 +180,7 @@ import HouseholdClient
             c.inbox.choice = .link; c.inbox.linkedLineID = c.fixture.line.string; await c.inbox.review(); c.inbox.acceptOverage = true; c.inbox.acceptUnknown = true
             c.fixture.readFailure = mode
             await c.inbox.apply()
-            XCTAssertNil(c.inbox.requestFood); XCTAssertTrue(c.fixture.commands.isEmpty)
+            XCTAssertNil(c.inbox.requestFood); XCTAssertNil(c.inbox.trackingRequest); XCTAssertTrue(c.fixture.commands.isEmpty)
             let pending = try await c.outbox.operations(); XCTAssertTrue(pending.isEmpty)
             if mode == "revoked" { XCTAssertFalse(c.inbox.authorized) }
         }
@@ -176,44 +196,49 @@ import HouseholdClient
         XCTAssertEqual(c.fixture.commands, [pending.bytes])
     }
     func testCancelFoodPreviewWritesNothingAndHeldPreviewCannotApproveChangedFoodAmount() async throws {
-        let c = try await setup(); defer { c.close() }; let context = try await open(c, link: true)
-        let flow = SharedDemandFlowModel(access: c.inbox, request: context); await flow.load(); flow.draft = try draft(context)
-        c.fixture.holdPath = "/demand/previews"; let task = Task { await flow.preview() }; try await waitHeld(c.fixture)
-        flow.draft.sources[0].amount.literal = "3"
+        let c = try await setup(); defer { c.close() }; _ = try await open(c, link: true)
+        let flow = try await trackingFlow(c)
+        c.fixture.holdPath = "/demand/tracking/candidates"; let task = Task { await flow.preview() }; try await waitHeld(c.fixture)
+        flow.draft.requestAmount.numerator = "3"
         c.fixture.release(); await task.value
-        XCTAssertNil(flow.review); XCTAssertFalse(flow.acknowledged)
-        flow.cancel(); c.inbox.cancelRequestFood()
+        XCTAssertNil(flow.candidate); XCTAssertFalse(flow.gate.canApply)
+        flow.clear(); c.inbox.cancelRequestFood()
         XCTAssertTrue(c.fixture.commands.isEmpty); let saved = try await c.outbox.operations(); XCTAssertTrue(saved.isEmpty)
     }
-    func testAddLostResponseRelaunchRetriesExactDemandAndRequestPreviewsAndReservedReceipt() async throws {
+    func testAddLostResponseRelaunchRetriesExactTrackingAndRequestPreviews() async throws {
         let c = try await setup(); defer { c.close() }; let context = try await open(c)
-        let flow = SharedDemandFlowModel(access: c.inbox, request: context); await flow.load(); flow.draft = try draft(context)
-        await flow.preview(); let review = try XCTUnwrap(flow.review)
-        flow.acknowledged = false; await flow.apply(); XCTAssertTrue(c.fixture.commands.isEmpty)
-        flow.acknowledged = true; await flow.apply()
+        let flow = try await trackingFlow(c)
+        await flow.preview(); let review = try XCTUnwrap(flow.candidate, flow.notice ?? "Expected a current tracking candidate")
+        await flow.apply(); XCTAssertTrue(c.fixture.commands.isEmpty)
+        acknowledge(flow); await flow.apply()
         let pending = try XCTUnwrap(c.inbox.pending)
-        XCTAssertEqual(pending.sharedDemandBinding?.reservedOperationID, review.preview.receipt.operationId)
+        let binding = try XCTUnwrap(pending.sharedTrackingBinding)
+        XCTAssertEqual(binding.action?.command, .request(context.action)); XCTAssertNil(pending.sharedDemandBinding)
         let envelope = try JSONDecoder().decode(CommandEnvelope.self, from: pending.bytes)
         XCTAssertEqual(envelope.base.requestRevision, 5)
         XCTAssertEqual(envelope.body["previewId"], .string(context.action.previewId.string))
-        XCTAssertEqual(envelope.body["demandReview"], .object(["previewId":.string(review.preview.previewId.string),"previewDigest":.string(review.preview.previewDigest)]))
+        XCTAssertEqual(envelope.body["demandReview"], .object(["previewId": .string(binding.previewID.string), "previewDigest": .string(binding.previewDigest), "trackingVersion": .integer(2)]))
+        XCTAssertEqual(binding.graphRevision, review.candidate.after.graph.revision)
+        XCTAssertEqual(review.candidate.after.graph.contributions.first, review.page.state?.graph.contributions.first)
+        XCTAssertEqual(review.candidate.after.catalog.first?.originalQuantityText, "two bags maybe?")
+        XCTAssertEqual(review.candidate.after.graph.contributions.last?.quantity?.amount.numerator, 2)
         let saved = try await c.outbox.operations(); XCTAssertEqual(saved, [pending])
         let fresh = HouseholdInboxModel(bootstrap: c.scope, service: c.service, outbox: OperationOutbox(url: c.queue), onAccessEnded: {})
         await fresh.load(); XCTAssertEqual(fresh.pending, pending); await fresh.retry()
-        XCTAssertNil(fresh.pending); XCTAssertEqual(c.fixture.commands, [pending.bytes, pending.bytes])
-        guard case .confirmed(let receipt) = fresh.delivery else { return XCTFail("Reserved request receipt did not confirm") }
-        XCTAssertEqual(receipt.operationId, review.preview.receipt.operationId.string); XCTAssertEqual(receipt.requestRevision, 6); XCTAssertEqual(receipt.disposition, "added")
+        XCTAssertNil(fresh.pending); XCTAssertEqual(c.fixture.commands, [pending.bytes, pending.bytes]); XCTAssertEqual(c.fixture.applicationCount, 1)
+        guard case .confirmed(let receipt) = fresh.delivery else { return XCTFail("Exact tracking request did not confirm") }
+        XCTAssertEqual(receipt.requestRevision, 6); XCTAssertEqual(receipt.disposition, "added")
         XCTAssertEqual(fresh.confirmedDecisionRequestID, c.fixture.requestID.string)
         XCTAssertEqual(fresh.shop?.lines.last?.lineId, context.targetLineID.string)
         let remaining = try await c.outbox.operations(); XCTAssertTrue(remaining.isEmpty)
     }
-    func testWrongReservedRequestReceiptCannotClearDurablePendingOperation() async throws {
-        let c = try await setup(); defer { c.close() }; let context = try await open(c)
-        let flow = SharedDemandFlowModel(access: c.inbox, request: context); await flow.load(); flow.draft = try draft(context); await flow.preview()
-        XCTAssertNotNil(flow.review); flow.acknowledged = true; await flow.apply()
+    func testWrongRequestReceiptCannotClearDurableTrackingOperation() async throws {
+        let c = try await setup(); defer { c.close() }; _ = try await open(c)
+        let flow = try await trackingFlow(c); await flow.preview()
+        XCTAssertNotNil(flow.candidate, flow.notice ?? "Expected a current tracking candidate"); acknowledge(flow); await flow.apply()
         let pending = try XCTUnwrap(c.inbox.pending)
-        flow.cancel(); c.inbox.cancelRequestFood()
-        XCTAssertEqual(c.inbox.pending, pending, "Dismissing food review is not cancellation of a queued operation")
+        flow.clear(); c.inbox.cancelRequestFood()
+        XCTAssertEqual(c.inbox.pending, pending, "Dismissing review is not cancellation of a queued operation")
         c.fixture.readFailure = "wrongReceipt"
         let fresh = HouseholdInboxModel(bootstrap: c.scope, service: c.service, outbox: OperationOutbox(url: c.queue), onAccessEnded: {})
         await fresh.load(); await fresh.retry()
@@ -223,13 +248,15 @@ import HouseholdClient
     }
     func testLinkWithinExistingUsesCanonicalUnchangedTotalAndOriginalManualID() async throws {
         let c = try await setup(); defer { c.close() }; let context = try await open(c, link: true)
-        let flow = SharedDemandFlowModel(access: c.inbox, request: context); await flow.load(); flow.draft = try draft(context)
+        var entered = try draft(context)
         var link = SharedFoodLinkDraft(); link.demandID = context.sourceID; link.supplyID = c.fixture.manualID; link.amount = .init(literal: "2", unknown: false); link.confirmed = true; link.evidence = "Two from the twelve"
-        flow.draft.links = [link]; await flow.preview(); let review = try XCTUnwrap(flow.review)
+        entered.links = [link]
+        let request = try entered.request(page: context.page, shop: context.reviewed.shop, at: "2026-11-09T12:00:00Z", requestContext: context)
+        let review = try await c.service.previewSharedDemand(shopID: c.fixture.shop.uuid, request: request)
         XCTAssertEqual(review.preview.beforeTotals[0].quantity, review.preview.afterTotals[0].quantity)
         XCTAssertEqual(review.preview.afterTotals[0].activeContributionIds, [c.fixture.manualID, context.sourceID])
         XCTAssertEqual(review.preview.after.contributions[0], review.preview.before.contributions[0])
-        flow.cancel(); c.inbox.cancelRequestFood(); XCTAssertTrue(c.fixture.commands.isEmpty)
+        c.inbox.cancelRequestFood(); XCTAssertTrue(c.fixture.commands.isEmpty)
     }
 }
 
@@ -246,10 +273,13 @@ private final class RequestFoodHTTPFixture: @unchecked Sendable {
     let household = SharedDemandID(), member = SharedDemandID(), shop = SharedDemandID(), line = SharedDemandID(), manualID = SharedDemandID(), requestID = SharedDemandID()
     private let enabled: Bool
     private let lock = NSLock()
+    private var applications = 0
     private var bodies: [Data] = [], decision: [String: Any]?, previewID = SharedDemandID(), operationID = SharedDemandID()
+    private var trackingCandidate: [String: Any]?
     private var result: SharedDemandGraph?, held: [RequestFoodProtocol] = [], heldPath: String?, failure = ""
     init(enabled: Bool) { self.enabled = enabled }
     var commands: [Data] { lock.lock(); defer { lock.unlock() }; return bodies }
+    var applicationCount: Int { lock.lock(); defer { lock.unlock() }; return applications }
     var reviewedAddID: String? { lock.lock(); defer { lock.unlock() }; return (decision?["line"] as? [String: Any])?["lineId"] as? String }
     var holdPath: String? { get { lock.lock(); defer { lock.unlock() }; return heldPath } set { lock.lock(); defer { lock.unlock() }; heldPath = newValue } }
     var readFailure: String { get { lock.lock(); defer { lock.unlock() }; return failure } set { lock.lock(); defer { lock.unlock() }; failure = newValue } }
@@ -300,6 +330,56 @@ private final class RequestFoodHTTPFixture: @unchecked Sendable {
             if !bodies.isEmpty, let added = decision?["line"] { lines.append(added) }
             return try json(["shopId":shop.string,"shopRevision":bodies.isEmpty ? 3:4,"authorityEpoch":1,"phase":"draft","meals":[],"quote":try object(quote),"lines":lines])
         }
+        if path.hasSuffix("/demand/tracking") {
+            if failure == "unavailable" || failure == "revoked" { return try json(["error": ["code": "access_ended"]], failure == "revoked" ? 403 : 500) }
+            return try json(ModelTrackingReadFixture.page(household: household.string, shop: shop.string,
+                revision: failure == "stale" ? 4 : 3, basket: [try object(basket) as! [String: Any]],
+                graph: enabled ? try initial() : nil, totals: enabled ? totals(initial()) : [],
+                checkout: ModelTrackingReadFixture.budget(200, cap: 100), recovery: failure == "privacy"))
+        }
+        if path.hasSuffix("/demand/tracking/candidates") {
+            let input = try JSONSerialization.jsonObject(with: body(request)) as! [String: Any]
+            let change = try JSONDecoder().decode(SharedDemandChange.self, from: JSONSerialization.data(withJSONObject: input["change"]!))
+            let action = try JSONDecoder().decode(SharedDemandAction.self, from: JSONSerialization.data(withJSONObject: input["action"]!))
+            guard input["mode"] as? String == "change", case .request(let requestAction) = action,
+                  requestAction.requestId == requestID, requestAction.previewId == previewID,
+                  requestAction.acceptOverage, requestAction.acceptUnknown,
+                  change.contributions.count == 1, let row = change.contributions.first,
+                  row.source == .request(requestId: requestID, appliedRequestRevision: 5),
+                  row.originalText == "Wraps for guests", row.quantity?.amount == (try SharedDemandAmount(numerator: 2)),
+                  change.edges.isEmpty, change.removeSourceIds.isEmpty, change.removeEdgeIds.isEmpty,
+                  input["unboundFactIds"] as? [String] == [] else { throw ClientError.invalidResponse }
+            let added = decision?["line"] as? [String: Any]
+            guard row.lineId.string == (added?["lineId"] as? String ?? line.string),
+                  change.lines.count == (added == nil ? 0 : 1) else { throw ClientError.invalidResponse }
+            var after = try initial(); after.revision = 2
+            after.lines += change.lines; after.contributions += change.contributions
+            after.usedIds += change.lines.map(\.id) + [row.id]
+            result = after
+            let fact: [String: Any] = ["id": requestID.string, "revision": 5, "source": try object(row.source), "sourceLabel": "Request", "originalText": "Wraps for guests", "originalQuantityText": "two bags maybe?", "quantity": NSNull(), "sourceExclusions": [], "requiredLineId": row.lineId.string]
+            let rows = [try object(basket) as! [String: Any]] + (added.map { [$0] } ?? [])
+            let afterPage = try ModelTrackingReadFixture.page(household: household.string, shop: shop.string, revision: 3, basket: rows,
+                graph: after, totals: totals(after), checkout: ModelTrackingReadFixture.budget(200, cap: 100), catalog: [fact], bindings: [["factId": requestID.string, "contributionId": row.id.string]])
+            var state = afterPage["state"] as! [String: Any]; state["packReviews"] = input["packs"]!
+            let packs = input["packs"] as! [[String: Any]]
+            let pickup: [String: Any] = ["stateDigest": String(repeating: "c", count: 64), "catalogDigest": String(repeating: "d", count: 64), "priceBasisDigest": String(repeating: "e", count: 64),
+                "coverageStatement": "tracked_subtotals_only_no_complete_coverage_or_free_unbound_supply", "coverage": afterPage["coverage"]!, "unbound": [], "unpricedBasketIds": [],
+                "unresolvedPackIds": packs.filter { $0["usablePerPack"] is NSNull }.map { $0["lineId"]! }, "basket": state["basket"]!, "packReviews": packs]
+            let disclosure: [String: Any] = ["changes": NSNull(), "pickup": pickup, "money": ["before": ModelTrackingReadFixture.budget(200, cap: 100), "after": ModelTrackingReadFixture.budget(added == nil ? 200 : 325, cap: 100)]]
+            // V2 candidates are short-lived (at most ten minutes), unlike the
+            // independent request preview and replay-window fixture tokens.
+            let expiresAt = ISO8601DateFormatter().string(from: Date().addingTimeInterval(300))
+            let candidate: [String: Any] = ["schemaVersion": 2, "candidateId": operationID.string, "candidateDigest": String(repeating: "f", count: 64), "expiresAt": expiresAt, "action": input["action"]!, "after": state, "disclosure": disclosure]
+            trackingCandidate = candidate; return try json(candidate)
+        }
+        if path.hasSuffix("/demand/tracking/previews") {
+            let input = try JSONSerialization.jsonObject(with: body(request)) as! [String: Any]
+            guard let candidate = trackingCandidate, input["candidateId"] as? String == candidate["candidateId"] as? String,
+                  input["candidateDigest"] as? String == candidate["candidateDigest"] as? String,
+                  NSDictionary(dictionary: input["acknowledgedDisclosure"] as! [String: Any]).isEqual(to: candidate["disclosure"] as! [String: Any]) else { throw ClientError.invalidResponse }
+            return try json(["schemaVersion": 2, "previewId": operationID.string, "previewDigest": String(repeating: "a", count: 64), "trackingVersion": 2,
+                "expiresAt": candidate["expiresAt"]!, "action": candidate["action"]!, "disclosure": candidate["disclosure"]!, "moneyAcknowledgments": ["acceptOverage": input["acceptOverage"]!, "acceptUnknown": input["acceptUnknown"]!]])
+        }
         if path.hasSuffix("/demand") {
             if failure == "unavailable" || failure == "revoked" { return try json(["error":["code":"access_ended"]], failure == "revoked" ? 403:500) }
             let graph = try (!bodies.isEmpty ? result : nil) ?? initial()
@@ -333,7 +413,19 @@ private final class RequestFoodHTTPFixture: @unchecked Sendable {
             return try json(["previewId":previewID.string,"expiresAt":failure == "expired" ? "2020-01-01T00:00:00Z":"2099-01-01T00:00:00Z","shopRevision":3,"authorityEpoch":1,"requestRevision":5,"choice":decision!["choice"]!,"before":budget,"after":budget,"changeMinor":NSNull(),"requiresOverageAcceptance":true,"requiresUnknownAcceptance":true])
         }
         if path.hasSuffix("/commands") {
-            let data = try body(request); bodies.append(data)
+            let data = try body(request)
+            let command = try JSONDecoder().decode(CommandEnvelope.self, from: data)
+            guard command.kind == "request.apply", command.shopId == shop.string,
+                  command.base == .init(shopRevision: 3, authorityEpoch: 1, requestRevision: 5),
+                  command.body["requestId"] == .string(requestID.string), command.body["previewId"] == .string(previewID.string),
+                  command.body["acceptOverage"] == .bool(true), command.body["acceptUnknown"] == .bool(true) else { throw ClientError.invalidResponse }
+            if enabled {
+                guard trackingCandidate != nil,
+                      command.body["demandReview"] == .object(["previewId": .string(operationID.string), "previewDigest": .string(String(repeating: "a", count: 64)), "trackingVersion": .integer(2)]) else { throw ClientError.invalidResponse }
+            } else { guard command.body["demandReview"] == nil else { throw ClientError.invalidResponse } }
+            if let first = bodies.first { guard first == data else { throw ClientError.invalidResponse } }
+            else { applications += 1 }
+            bodies.append(data)
             if bodies.count == 1 { throw URLError(.networkConnectionLost) }
             return try json(["operationId":operationID.string,"kind":"request.apply","shopId":shop.string,"shopRevision":4,"authorityEpoch":1,"disposition":"added","requestId":requestID.string,"requestRevision":failure == "wrongReceipt" ? 7:6])
         }

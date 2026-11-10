@@ -2,6 +2,42 @@
 import Foundation
 import HouseholdClient
 
+/// Read-only v2 projection for these fixed HTTP fixtures. Totals and catalog
+/// facts are supplied by each scenario; this helper does not implement a reducer.
+/// Digest strings are opaque fixture tokens, never production digest calculations.
+enum ModelTrackingReadFixture {
+    static func page(household: String, shop: String, revision: Int, basket: [[String: Any]],
+                     graph: SharedDemandGraph? = nil, totals: [[String: Any]] = [],
+                     checkout: [String: Any], recovery: Bool = false,
+                     catalog: [[String: Any]] = [], bindings: [[String: Any]] = []) throws -> [String: Any] {
+        let empty = SharedDemandGraph(householdId: .init(UUID(uuidString: household)!), shopId: .init(UUID(uuidString: shop)!), revision: 0, lines: [], contributions: [], edges: [], usedIds: [])
+        let current = graph ?? empty
+        let rows: [[String: Any]] = basket.map { ["id": $0["lineId"]!, "name": $0["originalItem"]!, "packs": $0["packs"]!, "priceMinor": $0["unitPriceMinor"] ?? NSNull(), "feeEligible": $0["feeEligible"]!] }
+        let legacy = graph == nil ? rows.map { $0["id"] as! String } : []
+        let bound = Set(bindings.compactMap { $0["factId"] as? String })
+        let unbound = catalog.filter { !bound.contains($0["id"] as! String) }.map { ["factId": $0["id"]!, "transferred": NSNull()] }
+        let packs: [[String: Any]] = current.lines.filter { $0.trashedAt == nil }.map { ["lineId": $0.id.string, "usablePerPack": NSNull(), "acceptUnresolved": true] }
+        var state: [String: Any] = ["schemaVersion": 2, "authorityEpoch": 1, "privacyRevision": recovery ? 1 : 0, "quoteDigest": String(repeating: "a", count: 64),
+            "graph": try JSONSerialization.jsonObject(with: JSONEncoder().encode(current)), "basket": rows, "catalog": catalog, "bindings": bindings, "unbound": unbound, "legacyLineIds": legacy, "packReviews": packs]
+        let protected = catalog.filter { ($0["source"] as? [String: Any])?["kind"] as? String == "reservation" && !bound.contains($0["id"] as! String) }.map { $0["id"]! }
+        let coverage: [String: Any] = ["status": !legacy.isEmpty || !unbound.isEmpty ? "partial" : totals.contains { $0["quantity"] is NSNull } ? "unknown" : "tracked", "trackedSubtotals": totals,
+            "completeFoodCoverage": false, "unboundFactIds": unbound.map { $0["factId"]! }, "untrackedBasketIds": legacy, "protectedUnboundFactIds": protected, "allocatableUnboundFactIds": []]
+        var projection: Any = NSNull()
+        if recovery {
+            state.removeValue(forKey: "packReviews")
+            projection = ["schemaVersion": 1, "status": "reviewRequired", "invalidatedStateDigest": String(repeating: "d", count: 64), "previousPrivacyRevision": 0, "state": state]
+        }
+        return ["schemaVersion": 2, "shopId": shop, "shopRevision": revision, "authorityEpoch": 1, "status": recovery ? "reviewRequired" : graph == nil ? "legacy" : "enabled",
+            "state": recovery ? NSNull() : state as Any, "projection": projection, "basisDigest": String(repeating: "b", count: 64), "coverage": recovery ? NSNull() : coverage as Any,
+            "checkout": checkout, "freezeReview": NSNull()]
+    }
+    static func budget(_ amount: Int?, cap: Int) -> [String: Any] {
+        ["currency": "USD", "totalMinor": amount as Any? ?? NSNull(), "overCapMinor": amount.map { max(0, $0-cap) } as Any? ?? NSNull(), "headroomMinor": amount.map { max(0, cap-$0) } as Any? ?? NSNull(),
+         "status": amount.map { $0 > cap ? "overCap" : "withinCap" } ?? "unresolved", "scope": "wholeCheckout", "missing": amount == nil ? ["line_price"] : [],
+         "lowerBoundMinor": amount ?? 0, "upperBoundMinor": amount as Any? ?? NSNull(), "wholeCheckoutWithinCap": amount.map { $0 <= cap } ?? false]
+    }
+}
+
 /// Fictional, isolated transport shared by S23 model tests and its opt-in UI fixture.
 /// Never accepts a real host or sends network traffic.
 final class S23DuplicateFixtureServer: @unchecked Sendable {
@@ -63,6 +99,14 @@ final class S23DuplicateFixtureServer: @unchecked Sendable {
                 observedAt:Date(timeIntervalSince1970:1_793_718_000), expiresAt:Date(timeIntervalSince1970:4_070_908_800))
             return try json(["shopId":Self.shopID, "shopRevision":revision, "authorityEpoch":1, "phase":"draft", "quote":try JSONSerialization.jsonObject(with:JSONEncoder().encode(quote)),
                 "lines":[["lineId":Self.lineID, "originalItem":"Cereal already in the basket", "packs":1, "unitPriceMinor":349, "feeEligible":true]]])
+        }
+        if request.httpMethod == "GET", path.hasSuffix("/shops/" + Self.shopID + "/demand/tracking") {
+            let basket: [[String: Any]] = [["lineId": Self.lineID, "originalItem": "Cereal already in the basket", "packs": 1, "unitPriceMinor": 349, "feeEligible": true]]
+            let catalog: [[String: Any]] = requestRows().filter { statuses[$0["requestId"] as! String] == "added" }.map { row in
+                let id = row["requestId"] as! String
+                return ["id": id, "revision": (revisions[id] ?? 2)-1, "source": ["kind": "request", "requestId": id, "appliedRequestRevision": (revisions[id] ?? 2)-1], "sourceLabel": "Request", "originalText": row["originalItem"]!, "originalQuantityText": row["ownQuantity"]!, "quantity": NSNull(), "sourceExclusions": [], "requiredLineId": Self.lineID]
+            }
+            return try json(ModelTrackingReadFixture.page(household: Self.householdID, shop: Self.shopID, revision: revision, basket: basket, checkout: budget(349), catalog: catalog))
         }
         if request.httpMethod == "GET", path.hasSuffix("/shops/" + Self.shopID + "/demand") {
             return try json(["schemaVersion":1,"shopId":Self.shopID,"shopRevision":revision,"authorityEpoch":1,"status":"legacy","graph":NSNull(),"totals":[]])

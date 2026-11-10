@@ -629,27 +629,18 @@ import HouseholdClient
         XCTAssertTrue(context.fixture.commandBytes.isEmpty)
         let queued = try await context.outbox.operations(); XCTAssertTrue(queued.isEmpty)
     }
-    func testPrivacyRecoveryWithExpiredQuoteOpensMonetaryOnlyReviewWithoutFoodChanges() async throws {
+    func testPrivacyRecoveryRequiresTrackingRecoveryAndPreservesEnteredQuoteWithoutApproval() async throws {
         let context = try await setup(expiredQuote: true); defer { context.close() }
         context.fixture.recoveryRequired = true
         context.parent.draft.observedAt = Date(); context.parent.draft.expiresAt = Date().addingTimeInterval(3600)
         context.parent.draft.cap = "35.00"; context.parent.draft.lines[0].price = "2.15"; context.parent.draft.lines[0].packs = 3
         let candidate = try context.parent.draft.candidate()
         await context.parent.reviewEditor()
-        let editor = try XCTUnwrap(context.parent.foodEditor)
-        XCTAssertEqual(editor.page.status, .reviewRequired)
-        let flow = SharedDemandFlowModel(access: context.parent, editor: editor); await flow.load()
-        flow.draft.lines[0].acceptUnresolved = true; await flow.preview()
-        let review = try XCTUnwrap(flow.review)
-        XCTAssertEqual(review.request.mode, .review); XCTAssertTrue(review.request.change.isEmpty)
-        guard case .patch(let action) = review.request.action else { return XCTFail() }
-        XCTAssertEqual(action.quote, candidate.quote); XCTAssertEqual(action.lines, candidate.lines)
-        XCTAssertEqual(review.preview.before.contributions, review.preview.after.contributions)
-        flow.cancel(); context.parent.cancelFoodEditor()
-        context.parent.draft.lines[0].item = "Different food"
-        await context.parent.reviewEditor()
-        XCTAssertNil(context.parent.foodEditor); XCTAssertNil(context.parent.review)
+        XCTAssertNil(context.parent.foodEditor); XCTAssertNil(context.parent.trackingEditor); XCTAssertNil(context.parent.review)
+        XCTAssertFalse(context.parent.acknowledged); XCTAssertNotNil(context.parent.notice)
+        XCTAssertEqual(try context.parent.draft.candidate(), candidate)
         XCTAssertTrue(context.fixture.commandBytes.isEmpty)
+        let queued = try await context.outbox.operations(); XCTAssertTrue(queued.isEmpty)
     }
     func testGraphMealEditIdentityIsRetainedWithoutLegacyWriteFallback() async throws {
         let context = try await setup(); defer { context.close() }
@@ -768,6 +759,16 @@ private final class FoodHTTPFixture: @unchecked Sendable {
         if path.hasSuffix("/replay-windows") { return try data(["id": UUID().uuidString.lowercased(), "expiresAt": "2099-01-01T00:00:00Z"]) }
         let quote = try ShopperQuote(scope: "wholeCheckout", complete: true, capMinor: 2000, capScope: "wholeCheckout", fee: .fixed(0), taxesMinor: 0, depositsMinor: 0, discountsMinor: 0, observedAt: Date(timeIntervalSince1970: 1_000_000), expiresAt: Date(timeIntervalSince1970: expiredQuote ? 2_000_000 : 4_000_000_000))
         let basket = ShopperBasketLine(lineId: line.uuid, originalItem: "Wraps", packs: 2, unitPriceMinor: 100, feeEligible: true)
+        if path.hasSuffix("/demand/tracking") {
+            if readStatus != 200 { return try data(["error": ["code": "access_ended"]]) }
+            let graph = commands.isEmpty ? (initiallyEnabled ? try initialGraph() : nil) : after
+            let totals: [[String: Any]] = graph.map { value in [["lineId": line.string, "unit": "count", "quantity": ["numerator": "12", "denominator": "1"], "activeContributionIds": value.contributions.map { $0.id.string }]] } ?? []
+            let basketRows = try object(committedPatch?.lines ?? [basket]) as! [[String: Any]]
+            let total = basketRows.contains { $0["unitPriceMinor"] is NSNull } ? nil : basketRows.reduce(0) { $0 + ($1["unitPriceMinor"] as? Int ?? 0) * ($1["packs"] as? Int ?? 1) }
+            return try data(ModelTrackingReadFixture.page(household: household.string, shop: shop.string,
+                revision: commands.isEmpty ? 1 + pageDelta : 2, basket: basketRows, graph: graph, totals: totals,
+                checkout: ModelTrackingReadFixture.budget(total, cap: committedPatch?.quote.capMinor ?? 2000), recovery: recovery))
+        }
         if path.hasSuffix("/demand/previews") {
             let input = try JSONDecoder().decode(SharedDemandPreviewRequest.self, from: body(request))
             let twelve = try SharedDemandAmount(numerator: 12)
@@ -839,7 +840,7 @@ private final class FoodHTTPProtocol: URLProtocol {
     func complete(using fixture: FoodHTTPFixture) {
         do {
             let bytes = try fixture.respond(request)
-            let status = request.url?.path.hasSuffix("/demand") == true ? fixture.demandStatus : 200
+            let status = (request.url?.path.hasSuffix("/demand") == true || request.url?.path.hasSuffix("/demand/tracking") == true) ? fixture.demandStatus : 200
             client?.urlProtocol(self, didReceive: HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: ["Content-Type": "application/json"])!, cacheStoragePolicy: .notAllowed)
             client?.urlProtocol(self, didLoad: bytes); client?.urlProtocolDidFinishLoading(self)
         } catch { client?.urlProtocol(self, didFailWithError: error) }

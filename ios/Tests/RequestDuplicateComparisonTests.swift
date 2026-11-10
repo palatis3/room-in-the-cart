@@ -57,10 +57,21 @@ final class RequestDuplicateComparisonTests: XCTestCase {
         XCTAssertEqual(after[0].requests.map(\.revision),[2,1])
     }
     #if DEBUG
-    func testFixtureInterceptsUnexpectedNetworkDestinations() {
+    func testFixtureInterceptsUnexpectedNetworkDestinations() throws {
         let unexpected = URLRequest(url:URL(string:"https://example.com/inbox")!)
         XCTAssertTrue(S23DuplicateFixtureProtocol.canInit(with:unexpected))
         XCTAssertThrowsError(try S23DuplicateFixtureServer().respond(unexpected))
+        let server = S23DuplicateFixtureServer()
+        var tracking = URLRequest(url: URL(string: "https://s23-household.invalid/v1/households/" + S23DuplicateFixtureServer.householdID + "/shops/" + S23DuplicateFixtureServer.shopID + "/demand/tracking")!)
+        tracking.httpMethod = "GET"
+        let (status, bytes) = try server.respond(tracking)
+        XCTAssertEqual(status, 200)
+        let page = try SharedTrackingWire.page(from: bytes)
+        XCTAssertEqual(page.status, .legacy); XCTAssertEqual(page.state?.graph.revision, 0)
+        XCTAssertEqual(page.state?.legacyLineIds.map(\.string), [S23DuplicateFixtureServer.lineID])
+        XCTAssertEqual(page.state?.basket.first?.name, "Cereal already in the basket")
+        XCTAssertEqual(page.checkout.totalMinor, 349); XCTAssertEqual(server.commandCount, 0)
+
     }
     @MainActor func testDuplicateAcrossPageBoundaryCanBeReadWithoutChangingSelectedRequestOrWriting() async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)

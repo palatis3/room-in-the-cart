@@ -16,6 +16,13 @@ final class HouseholdRequestPackReviewTests: XCTestCase {
         let server = S24FixtureServer()
         defer { server.close() }
         let session = server.makeSession()
+        let trackingURL = server.baseURL.appendingPathComponent("v1/households/" + S24FixtureServer.household + "/shops/" + S24FixtureServer.shop + "/demand/tracking")
+        let (trackingBytes, _) = try await session.data(from: trackingURL)
+        let page = try SharedTrackingWire.page(from: trackingBytes)
+        XCTAssertEqual(page.status, .legacy); XCTAssertEqual(page.shopRevision, 1)
+        XCTAssertEqual(page.state?.graph.revision, 0); XCTAssertTrue(page.state?.catalog.isEmpty == true)
+        XCTAssertEqual(server.commandCount, 0); XCTAssertEqual(server.previewCount, 0)
+
         let unregistered = URLRequest(url: URL(string: "https://unregistered-s24.invalid/unexpected")!)
         do {
             _ = try await session.data(for: unregistered)

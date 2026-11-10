@@ -431,10 +431,12 @@ import HouseholdClient
             XCTAssertNil(c.parent.foodEditor); XCTAssertNil(c.parent.review); XCTAssertTrue(c.fixture.commandBytes.isEmpty)
         }
     }
-    func testLegacyMealApprovalUsesOriginalPathAndPrivacyRecoveryDoesNotFetchCatalog() async throws {
+    func testLegacyMealUsesTrackingAdoptionAndPrivacyRecoveryDoesNotFetchCatalog() async throws {
         let legacy = try await setup(enabled: false); defer { legacy.close() }
         await legacy.parent.reviewEditor()
-        XCTAssertEqual(legacy.parent.review?.mealEdit, legacy.parent.draft.mealEdit)
+        XCTAssertNil(legacy.parent.review)
+        XCTAssertEqual(legacy.parent.trackingEditor?.mealEdit?.occurrenceId.uuid, legacy.parent.draft.mealEdit?.occurrenceID)
+        XCTAssertEqual(legacy.parent.trackingEditor?.mealEdit?.meal, legacy.parent.draft.mealEdit?.meal)
         XCTAssertNil(legacy.parent.foodEditor); XCTAssertTrue(legacy.fixture.catalogRequests.isEmpty)
         let recovery = try await setup(); defer { recovery.close() }
         recovery.fixture.recoveryRequired = true; await recovery.parent.reviewEditor()
@@ -564,6 +566,16 @@ private final class MealFoodHTTPFixture: @unchecked Sendable {
             return try data(["schemaVersion": 1, "shopId": shop.string, "base": object(input.base), "graphDigest": String(repeating: "a", count: 64),
                 "actionDigest": String(repeating: "b", count: 64), "normalizedAction": normalizedAction(input.action), "sources": [], "retirementCandidates": [], "retainedContributionIds": [manualID.string]])
         }
+        if path.hasSuffix("/demand/tracking") {
+            if readStatus != 200 { return try data(["error": ["code": "access_ended"]]) }
+            let graph = commands.isEmpty ? (initiallyEnabled ? try initialGraph() : nil) : after
+            let totals: [[String: Any]] = graph.map { value in [["lineId": line.string, "unit": "count", "quantity": ["numerator": "12", "denominator": "1"], "activeContributionIds": value.contributions.map { $0.id.string }]] } ?? []
+            let basketRows = try object(committedPatch?.lines ?? [basket]) as! [[String: Any]]
+            let total = basketRows.contains { $0["unitPriceMinor"] is NSNull } ? nil : basketRows.reduce(0) { $0 + ($1["unitPriceMinor"] as? Int ?? 0) * ($1["packs"] as? Int ?? 1) }
+            return try data(ModelTrackingReadFixture.page(household: household.string, shop: shop.string,
+                revision: commands.isEmpty ? 1 + pageDelta : 2, basket: basketRows, graph: graph, totals: totals,
+                checkout: ModelTrackingReadFixture.budget(total, cap: committedPatch?.quote.capMinor ?? 2000), recovery: recovery))
+        }
         if path.hasSuffix("/demand/previews") {
             let input = try JSONDecoder().decode(SharedDemandPreviewRequest.self, from: body(request))
             let twelve = try SharedDemandAmount(numerator: 12)
@@ -635,7 +647,7 @@ private final class MealFoodHTTPProtocol: URLProtocol {
     func complete(using fixture: MealFoodHTTPFixture) {
         do {
             let bytes = try fixture.respond(request)
-            let status = request.url?.path.hasSuffix("/demand/action-sources") == true ? fixture.catalogStatus : (request.url?.path.hasSuffix("/demand") == true ? fixture.demandStatus : 200)
+            let status = request.url?.path.hasSuffix("/demand/action-sources") == true ? fixture.catalogStatus : ((request.url?.path.hasSuffix("/demand") == true || request.url?.path.hasSuffix("/demand/tracking") == true) ? fixture.demandStatus : 200)
             client?.urlProtocol(self, didReceive: HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: ["Content-Type": "application/json"])!, cacheStoragePolicy: .notAllowed)
             client?.urlProtocol(self, didLoad: bytes); client?.urlProtocolDidFinishLoading(self)
         } catch { client?.urlProtocol(self, didFailWithError: error) }
