@@ -2,11 +2,7 @@
 
 ## Current checkpoint — November 9, workflow and combined-candidate qualification
 
-The newest local backend successor adds a bounded complete-operation Undo path
-and passes 625 offline plus 300 PostgreSQL tests, including eight new HTTP cases.
-One database-only offline skip and three optional browser skips remain explicit.
-Migration 044 ran only in an isolated fixture; staging and native/UI acceptance
-are unchanged. Meal/request/adoption/store inverse scopes remain open.
+The current combined backend passes 639 offline and 306 PostgreSQL tests, including eight bounded operation Undo and six shared Records HTTP cases. One database-only offline skip and three optional browser skips remain explicit. Migration 044 ran only in isolated fixtures; staging remains through 041. Native Undo and real-client results are listed below; meal/request/adoption/store inverse scopes remain open.
 [Undo scope and proof](evidence/service/shared-food-operation-undo-20261109/README.md).
 
 Hosted diagnostic 42732878538 at 0cdfaa51 passed 332 early checks, the Release
@@ -16,11 +12,11 @@ remain unqualified. Saved sources/products verify exactly; separate postprocessi
 limit fixes are installed and pass all 174 offline observer controls. See CURRENT-HANDOFF for current ownership
 and the proposed separate tiny-helper collector prerequisite test.
 
-Native Undo r1/r1.1 client integration passes 133 package tests with three expected
-wire skips, verified against 136 compiled selectors. App/UI and real Undo wire
-acceptance are still pending. Shared Records r2 is installed and passes all six HTTP cases. Its combined backend
-passes 639 offline and 306 PostgreSQL tests with the existing one-plus-three skips.
-[Proof](evidence/service/shared-records-snapshot-20261109/README.md).
+Native Undo now passes 133 package tests with three expected wire skips, exact inventory 136; the app builds and 167 selected native model tests pass strict checks. Both original English and Spanish Undo journeys pass after a test-only scrolling correction, with all 121 app/model product files unchanged. The complete expanded real HTTP/PostgreSQL lane passes 11 Node cases and 33 exact Swift scenarios, zero failures/skips, with successful private-state cleanup. [Native proof](evidence/native/shared-food-operation-undo-20261109/README.md), [wire proof](evidence/service/shared-food-operation-undo-20261109/native-wire-verification.json). Meal/date/proposal and other documented inverse families remain unfinished.
+
+Shared Records r2 passes all six HTTP cases; its combined backend passes 639 offline and 306 PostgreSQL tests with the existing one-plus-three skips. [Proof](evidence/service/shared-records-snapshot-20261109/README.md).
+
+The standalone hosted helper at 608b3de4 passed 389 early checks and correctly skipped the app build jobs, but failed its 90-second bootstatus allowance before any collector ran. Preservation/upload passed; owned-device cleanup was not verified. All 20 archive members and 44 saved source pins verify. Its changed successor is in preparation; no performance measurement or helper transport is qualified. [Hosted proof](evidence/ci/standalone-collector-prerequisite-20261109/hosted-verification.json).
 
 The latest shared-food slice compiles under Xcode 27.1. Its current scoped runs
 pass153 native model regressions,122 client-package tests (3 expected integration

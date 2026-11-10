@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "exactCommit": "608b3de46ffa42790a887654b3fe555ff15bcf19",
+  "run": 42741213081,
+  "url": "https://github.com/palatis3/room-in-the-cart/actions/runs/42741213081",
+  "scope": "Standalone hosted collector prerequisite; ordinary app build/test jobs skipped",
+  "localPreflightProfiles": {
+    "ordinary": 389,
+    "appObservation": 389,
+    "helper": 389
+  },
+  "localPreflightReceiptSHA256": "dd5822cfd93b9689d49a68588f7eb73c4bdb988493954db1d9933d9003e8cb61",
+  "hostedPreflightChecks": 389,
+  "outcome": "failed before collector startup",
+  "firstFault": "bootstatus_deadline",
+  "cleanupFault": "helper_unbound_live_no_signal",
+  "helperCompiled": true,
+  "verifiedArchiveMembers": 20,
+  "verifiedPayloadBytes": 440365,
+  "savedSourcePinsVerifiedAgainstCommit": 44,
+  "originals": ".build/HostedAppObservationNov09/hosted-helper-42741213081",
+  "files": {
+    "monitoring-receipt.json": "e91105bd44ab68ec71291697589d7cd0295a5f9337d2e5bd2add13f92ff3bf8f",
+    "artifact-readback.json": "3956e21da6be7cc3a566c3b6a5350c2a66979a7eb4abd55049bbf8a92d656091",
+    "download-verification.json": "685d1b0e186dfcb950c7f875a1c7063f5c5d8e081461cf3adf65c39214246e55",
+    "root-verification.json": "cf834d2892aa47d58324c242266d54843d70c1de0c5e47c87edfd735204ebeec",
+    "simulator-helper-42741213081-1.zip": "01f063f42353e459f1a66391cc256c294be8f52a25b297234100fe99311ee834"
+  },
+  "helperTransportQualified": false,
+  "performanceAcceptance": false,
+  "noUnchangedRetry": true
+}
