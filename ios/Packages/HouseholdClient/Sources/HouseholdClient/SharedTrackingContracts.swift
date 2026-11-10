@@ -222,9 +222,10 @@ public struct SharedTrackingPage: Decodable, Equatable, Sendable {
     public let basisDigest: SharedTrackingDigest
     public let coverage: SharedTrackingCoverage?
     public let freezeReview: SharedTrackingFreezeReviewToken?
-    private enum K: String, CodingKey { case schemaVersion, shopId, shopRevision, authorityEpoch, status, state, projection, basisDigest, coverage, freezeReview }
+    public let checkout: ShopperBudget
+    private enum K: String, CodingKey { case schemaVersion, shopId, shopRevision, authorityEpoch, status, state, projection, basisDigest, coverage, freezeReview, checkout }
     public init(from decoder: Decoder) throws {
-        try demandExactKeys(decoder, ["schemaVersion", "shopId", "shopRevision", "authorityEpoch", "status", "state", "projection", "basisDigest", "coverage", "freezeReview"])
+        try demandExactKeys(decoder, ["schemaVersion", "shopId", "shopRevision", "authorityEpoch", "status", "state", "projection", "basisDigest", "coverage", "freezeReview", "checkout"])
         let c = try decoder.container(keyedBy: K.self)
         schemaVersion = try c.decode(Int.self, forKey: .schemaVersion)
         shopId = try c.decode(SharedDemandID.self, forKey: .shopId)
@@ -236,20 +237,29 @@ public struct SharedTrackingPage: Decodable, Equatable, Sendable {
         basisDigest = try c.decode(SharedTrackingDigest.self, forKey: .basisDigest)
         coverage = try c.decode(SharedTrackingCoverage?.self, forKey: .coverage)
         freezeReview = try c.decode(SharedTrackingFreezeReviewToken?.self, forKey: .freezeReview)
+        checkout = try trackingDecode(ShopperBudget.self, from: c.superDecoder(forKey: .checkout), shape: requestUndoBudgetShape)
+        try requestUndoBudget(checkout)
         try validateStructure()
     }
 }
 
 public struct SharedTrackingHistoryItem: Decodable, Equatable, Sendable {
     public enum Status: String, Decodable, Sendable { case current_preview_required, unavailable }
+    public enum ReviewRoute: String, Decodable, Sendable { case tracking, requestAcceptance }
+    /// Routing only; the destination still obtains a current authorized preview.
+    public let reviewRoute: ReviewRoute
     public let operationId: SharedDemandID
     public let shopRevision: Int
     public let committedAt: String
     public let status: Status
-    private enum K: String, CodingKey { case operationId, shopRevision, committedAt, status }
+    private enum K: String, CodingKey { case operationId, shopRevision, committedAt, status, reviewRoute }
     public init(from decoder: Decoder) throws {
-        try demandExactKeys(decoder, ["operationId", "shopRevision", "committedAt", "status"])
         let c = try decoder.container(keyedBy: K.self)
+        let keys: Set<String> = ["operationId", "shopRevision", "committedAt", "status"]
+        try demandExactKeys(decoder, c.contains(.reviewRoute) ? keys.union(["reviewRoute"]) : keys)
+        // Only absence on the proven old contract uses its original route.
+        // Null and unknown future routes fail closed rather than becoming food Undo.
+        reviewRoute = c.contains(.reviewRoute) ? try c.decode(ReviewRoute.self, forKey: .reviewRoute) : .tracking
         operationId = try c.decode(SharedDemandID.self, forKey: .operationId)
         shopRevision = try c.decode(Int.self, forKey: .shopRevision)
         committedAt = try c.decode(String.self, forKey: .committedAt)

@@ -4,6 +4,7 @@ import XCTest
 
 enum TrackingWriteFixture {
     static let null = NSNull()
+    static let checkout: [String: Any] = ["currency": "USD", "totalMinor": NSNull(), "overCapMinor": NSNull(), "headroomMinor": NSNull(), "status": "unresolved", "scope": "wholeCheckout", "missing": ["remaining_original_items", "line_price", "fee", "tax", "deposit", "discount"], "lowerBoundMinor": 0, "upperBoundMinor": NSNull(), "wholeCheckoutWithinCap": false]
     static func id(_ n: Int) -> String { String(format: "00000000-0000-4000-8000-%012d", n) }
     static func quantity(_ n: Int) -> [String: Any] {
         ["amount": ["numerator": String(n), "denominator": "1"], "unit": "count", "originalLiteral": "\(n) wraps", "confirmedConversion": null]
@@ -28,7 +29,7 @@ enum TrackingWriteFixture {
         let coverage: [String: Any] = ["status": "partial", "trackedSubtotals": [["lineId": id(10), "unit": "count", "quantity": ["numerator": "4", "denominator": "1"], "activeContributionIds": [id(20)]]],
             "completeFoodCoverage": false, "unboundFactIds": [id(22)], "untrackedBasketIds": [id(11)], "protectedUnboundFactIds": [id(22)], "allocatableUnboundFactIds": []]
         return ["schemaVersion": 2, "shopId": id(2), "shopRevision": 8, "authorityEpoch": 3, "status": "enabled", "state": state, "projection": null,
-            "basisDigest": String(repeating: "b", count: 64), "coverage": coverage, "freezeReview": ["previewId": id(60), "previewDigest": String(repeating: "c", count: 64), "trackingVersion": 2]]
+            "basisDigest": String(repeating: "b", count: 64), "checkout": checkout, "coverage": coverage, "freezeReview": ["previewId": id(60), "previewDigest": String(repeating: "c", count: 64), "trackingVersion": 2]]
     }
     static func bytes(_ object: Any) throws -> Data { try JSONSerialization.data(withJSONObject: object, options: [.sortedKeys]) }
     static func page(_ object: Any) throws -> SharedTrackingPage { try SharedTrackingWire.page(from: bytes(object)) }
@@ -162,9 +163,9 @@ extension TrackingWriteFixture {
         after = edit(after, "state.graph.revision", graphRevision + 1)
         let afterPage = after as! [String: Any], afterState = afterPage["state"] as! [String: Any]
         let command: [String: Any] = mode == "request" ? ["kind": "request.apply", "body": ["requestId": id(90), "previewId": id(91), "acceptOverage": false, "acceptUnknown": true]] : action(afterState)
-        let disclosure: [String: Any] = ["changes": changes, "pickup": pickup(afterPage)]
+        let disclosure: [String: Any] = ["changes": changes, "pickup": pickup(afterPage), "money": ["before": before["checkout"]!, "after": checkout]]
         let candidate: [String: Any] = ["schemaVersion": 2, "candidateId": id(61), "candidateDigest": String(repeating: "a", count: 64), "expiresAt": expiry, "action": command, "after": afterState, "disclosure": disclosure]
-        let preview: [String: Any] = ["schemaVersion": 2, "previewId": id(61), "previewDigest": String(repeating: "c", count: 64), "trackingVersion": 2, "expiresAt": candidate["expiresAt"]!, "action": command, "disclosure": disclosure]
+        let preview: [String: Any] = ["schemaVersion": 2, "previewId": id(61), "previewDigest": String(repeating: "c", count: 64), "trackingVersion": 2, "expiresAt": candidate["expiresAt"]!, "action": command, "disclosure": disclosure, "moneyAcknowledgments": ["acceptOverage": false, "acceptUnknown": true]]
         return ["page": before, "candidate": candidate, "preview": preview, "requestPreview": requestPreview, "mode": mode]
     }
     static func intent(_ f: [String: Any], context: SharedDemandContext = context) throws -> SharedTrackingIntent {

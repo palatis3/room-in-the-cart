@@ -28,7 +28,7 @@ final class SharedTrackingContractTests: XCTestCase {
         let coverage: [String: Any] = ["status": "partial", "trackedSubtotals": [["lineId": id(10), "unit": "count", "quantity": ["numerator": "4", "denominator": "1"], "activeContributionIds": [id(20)]]],
             "completeFoodCoverage": false, "unboundFactIds": [id(22)], "untrackedBasketIds": [id(11)], "protectedUnboundFactIds": [id(22)], "allocatableUnboundFactIds": []]
         return ["schemaVersion": 2, "shopId": id(2), "shopRevision": 8, "authorityEpoch": 3, "status": "enabled", "state": state, "projection": null,
-            "basisDigest": String(repeating: "b", count: 64), "coverage": coverage, "freezeReview": ["previewId": id(60), "previewDigest": String(repeating: "c", count: 64), "trackingVersion": 2]]
+            "basisDigest": String(repeating: "b", count: 64), "checkout": TrackingWriteFixture.checkout, "coverage": coverage, "freezeReview": ["previewId": id(60), "previewDigest": String(repeating: "c", count: 64), "trackingVersion": 2]]
     }
     private func bytes(_ object: Any) throws -> Data { try JSONSerialization.data(withJSONObject: object, options: [.sortedKeys]) }
     private func page(_ object: Any) throws -> SharedTrackingPage { try SharedTrackingWire.page(from: bytes(object)) }

@@ -32,7 +32,7 @@ extension HouseholdClientTests {
                 if path.hasSuffix("/demand/tracking/previews") {
                     previews += 1
                     let sent = try JSONSerialization.jsonObject(with: trackingBody(request)) as! [String: Any]
-                    XCTAssertEqual(Set(sent.keys), ["candidateId", "candidateDigest", "acknowledgedDisclosure"])
+                    XCTAssertEqual(Set(sent.keys), ["candidateId", "candidateDigest", "acknowledgedDisclosure", "acceptOverage", "acceptUnknown"])
                     XCTAssertEqual(try F.decode(sent["acknowledgedDisclosure"]!, as: JSONValue.self), try F.decode((f["candidate"] as! [String: Any])["disclosure"]!, as: JSONValue.self))
                     return (200, try F.bytes(f["preview"]!))
                 }
@@ -50,7 +50,7 @@ extension HouseholdClientTests {
             let candidate = try await service.sharedTrackingCandidate(page: page, kind: intent.kind, requestPreview: intent.requestPreview)
             XCTAssertEqual(windows, 0); XCTAssertEqual(previews, 0); XCTAssertTrue(commands.isEmpty)
             // Dropping this candidate is Cancel: no command/outbox/window is created.
-            let accepted = try await service.acceptSharedTrackingCandidate(candidate)
+            let accepted = try await service.acceptSharedTrackingCandidate(candidate, acceptUnknown: true)
             XCTAssertTrue(commands.isEmpty); XCTAssertEqual(windows, 0)
             let operation = try await service.prepareSharedTrackingApply(accepted)
             let envelope = try JSONDecoder().decode(CommandEnvelope.self, from: operation.bytes)
@@ -123,7 +123,7 @@ extension HouseholdClientTests {
         }
         _ = try await auth.verifyEmailCode(email: "adult@example.test", code: "123456"); _ = try await service.enroll(householdID: household)
         let candidate = try await service.sharedTrackingCandidate(page: page, kind: intent.kind)
-        let accepted = try await service.acceptSharedTrackingCandidate(candidate)
+        let accepted = try await service.acceptSharedTrackingCandidate(candidate, acceptUnknown: true)
         currentPage = F.edit(currentPage, "state.privacyRevision", 6)
         do { _ = try await service.prepareSharedTrackingApply(accepted); XCTFail("Stale privacy read prepared") } catch {}
         XCTAssertEqual(windows, 0); XCTAssertEqual(commands, 0)

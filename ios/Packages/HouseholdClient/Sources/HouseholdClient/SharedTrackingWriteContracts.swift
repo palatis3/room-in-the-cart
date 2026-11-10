@@ -6,14 +6,15 @@ public struct SharedTrackingAction: Codable, Equatable, Sendable {
     public let command: SharedDemandAction
     public let wire: JSONValue
     public init(_ command: SharedDemandAction) throws {
-        self = try JSONDecoder().decode(Self.self, from: encoded(command))
+        self = try JSONDecoder().decode(Self.self, from: encoded(trackingActionComparisonWire(JSONDecoder().decode(JSONValue.self, from: encoded(command)))))
     }
     public init(from decoder: Decoder) throws {
         try demandExactKeys(decoder, ["kind", "body"])
         command = try SharedDemandAction(from: decoder)
         wire = try JSONValue(from: decoder)
         let normalized = try JSONDecoder().decode(JSONValue.self, from: encoded(command))
-        try demandRequire(wire == normalized)
+        let received = try trackingActionComparisonWire(wire), typed = try trackingActionComparisonWire(normalized)
+        try demandRequire(received == typed)
         switch command {
         case .patch(let body):
             _ = try ShopperShopCandidate(quote: body.quote, lines: body.lines, reviewedStoreBasisRevision: body.reviewedStoreBasisRevision)
@@ -31,6 +32,16 @@ public struct SharedTrackingAction: Codable, Equatable, Sendable {
         }
     }
     public func encode(to encoder: Encoder) throws { try wire.encode(to: encoder) }
+}
+
+// Compare only the existing UUID-typed meal identity fields canonically. Keep
+// received action bytes verbatim for exact retry, including old pending actions.
+// Every other value/key, required null, literal and restriction remains exact.
+private func trackingActionComparisonWire(_ value: JSONValue) throws -> JSONValue {
+    guard case .object(var root) = value, case .object(var body) = root["body"],
+          case .object(var edit) = body["mealEdit"], let meal = edit["meal"], meal != .null else { return value }
+    edit["meal"] = try undoMealIdentities(meal, wire: false)
+    body["mealEdit"] = .object(edit); root["body"] = .object(body); return .object(root)
 }
 
 public struct SharedTrackingRebind: Encodable, Equatable, Sendable {
@@ -83,8 +94,9 @@ public struct SharedTrackingIntent: Encodable, Equatable, Sendable {
     public let kind: SharedTrackingIntentKind
     public let base: SharedTrackingReadBinding
     public let requestPreview: ShopperPreview?
-    public init(page: SharedTrackingPage, context: SharedDemandContext, kind: SharedTrackingIntentKind, requestPreview: ShopperPreview? = nil) throws {
-        self.kind = kind; base = try .init(page: page, context: context); self.requestPreview = requestPreview
+    public let actionSources: SharedTrackingActionSources?
+    public init(page: SharedTrackingPage, context: SharedDemandContext, kind: SharedTrackingIntentKind, requestPreview: ShopperPreview? = nil, actionSources: SharedTrackingActionSources? = nil) throws {
+        self.kind = kind; base = try .init(page: page, context: context); self.requestPreview = requestPreview; self.actionSources = actionSources
         try validate(page: page)
     }
     private enum K: String, CodingKey { case mode, base, action, change, packs, unboundFactIds, targetOperationId, bindings }
@@ -253,12 +265,13 @@ public struct SharedTrackingRecoveryDisclosure: Decodable, Equatable, Sendable {
 }
 
 public enum SharedTrackingChanges: Decodable, Equatable, Sendable {
-    case none, firstAdoptionUndo(SharedTrackingUndoDisclosure), rebind(SharedTrackingRebindDisclosure), recover(SharedTrackingRecoveryDisclosure)
-    private enum K: String, CodingKey { case targetOperationId, restored, invalidatedStateDigest }
+    case none, firstAdoptionUndo(SharedTrackingUndoDisclosure), compoundAdoptionUndo(SharedTrackingCompoundUndoDisclosure), rebind(SharedTrackingRebindDisclosure), recover(SharedTrackingRecoveryDisclosure)
+    private enum K: String, CodingKey { case targetOperationId, component, restored, invalidatedStateDigest }
     public init(from decoder: Decoder) throws {
         if try decoder.singleValueContainer().decodeNil() { self = .none; return }
         let c = try decoder.container(keyedBy: K.self)
         if c.contains(.targetOperationId) { self = .firstAdoptionUndo(try .init(from: decoder)) }
+        else if c.contains(.component) { self = .compoundAdoptionUndo(try .init(from: decoder)) }
         else if c.contains(.restored) { self = .rebind(try .init(from: decoder)) }
         else if c.contains(.invalidatedStateDigest) { self = .recover(try .init(from: decoder)) }
         else { throw ClientError.invalidResponse }
@@ -267,13 +280,15 @@ public enum SharedTrackingChanges: Decodable, Equatable, Sendable {
 public struct SharedTrackingDisclosure: Codable, Equatable, Sendable {
     public let changes: SharedTrackingChanges
     public let pickup: SharedTrackingPickupDisclosure
+    public let money: SharedTrackingMoneyDisclosure
     public let wire: JSONValue
-    private enum K: String, CodingKey { case changes, pickup }
+    private enum K: String, CodingKey { case changes, pickup, money }
     public init(from decoder: Decoder) throws {
-        try demandExactKeys(decoder, ["changes", "pickup"])
+        try demandExactKeys(decoder, ["changes", "pickup", "money"])
         let c = try decoder.container(keyedBy: K.self)
         changes = try c.decode(SharedTrackingChanges.self, forKey: .changes)
         pickup = try c.decode(SharedTrackingPickupDisclosure.self, forKey: .pickup)
+        money = try c.decode(SharedTrackingMoneyDisclosure.self, forKey: .money)
         wire = try JSONValue(from: decoder)
     }
     public func encode(to encoder: Encoder) throws { try wire.encode(to: encoder) }
@@ -311,9 +326,10 @@ public struct SharedTrackingPreview: Decodable, Equatable, Sendable {
     public let expiresAt: String
     public let action: SharedTrackingAction
     public let disclosure: SharedTrackingDisclosure
-    private enum K: String, CodingKey { case schemaVersion, previewId, previewDigest, trackingVersion, expiresAt, action, disclosure }
+    public let moneyAcknowledgments: SharedTrackingMoneyAcknowledgments
+    private enum K: String, CodingKey { case schemaVersion, previewId, previewDigest, trackingVersion, expiresAt, action, disclosure, moneyAcknowledgments }
     public init(from decoder: Decoder) throws {
-        try demandExactKeys(decoder, ["schemaVersion", "previewId", "previewDigest", "trackingVersion", "expiresAt", "action", "disclosure"])
+        try demandExactKeys(decoder, ["schemaVersion", "previewId", "previewDigest", "trackingVersion", "expiresAt", "action", "disclosure", "moneyAcknowledgments"])
         let c = try decoder.container(keyedBy: K.self)
         schemaVersion = try c.decode(Int.self, forKey: .schemaVersion)
         previewId = try c.decode(SharedDemandID.self, forKey: .previewId)
@@ -322,6 +338,8 @@ public struct SharedTrackingPreview: Decodable, Equatable, Sendable {
         expiresAt = try c.decode(String.self, forKey: .expiresAt)
         action = try c.decode(SharedTrackingAction.self, forKey: .action)
         disclosure = try c.decode(SharedTrackingDisclosure.self, forKey: .disclosure)
+        moneyAcknowledgments = try c.decode(SharedTrackingMoneyAcknowledgments.self, forKey: .moneyAcknowledgments)
+        try moneyAcknowledgments.validate(money: disclosure.money.after)
         try demandRequire(schemaVersion == 2 && trackingVersion == 2 && demandTime(expiresAt) != nil)
     }
 }

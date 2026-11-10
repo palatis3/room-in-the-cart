@@ -105,7 +105,17 @@ extension SharedDemandGraph {
             let line = lines.first { $0.id == contribution.lineId }
             try demandRequire(line != nil && (contribution.removedAt != nil || line?.trashedAt == nil))
         }
-        try demandRequire(demandUnique(contributions.compactMap { $0.source.identityKey }))
+        // Retired request generations remain unique by reviewed revision; the
+        // current catalog still permits only one active source per request.
+        let provenance = contributions.compactMap { row -> String? in
+            if case .request(let request, let revision) = row.source { return "request/\(request.string)/\(revision)" }
+            return row.source.identityKey
+        }
+        let activeRequests = contributions.compactMap { row -> SharedDemandID? in
+            guard row.removedAt == nil, case .request(let request, _) = row.source else { return nil }
+            return request
+        }
+        try demandRequire(demandUnique(provenance) && demandUnique(activeRequests))
         for edge in edges {
             try edge.validate()
             guard let demand = contributions.first(where: { $0.id == edge.demandId }), let supply = contributions.first(where: { $0.id == edge.supplyId }) else { throw ClientError.invalidResponse }
@@ -221,6 +231,7 @@ extension SharedDemandReview {
 }
 extension SharedDemandOperationBinding {
     func validate(_ operation: PendingOperation) throws -> CommandEnvelope {
+        try demandRequire(operation.sharedRequestUndoBinding == nil && operation.sharedTrackingBinding == nil)
         try demandIDs([shopID, reservedOperationID, previewID])
         let envelope = try JSONDecoder().decode(CommandEnvelope.self, from: operation.bytes)
         try demandRequire(operation.householdID == context.householdID && operation.memberID == context.memberID && operation.deviceID == context.deviceID && operation.clientKey == envelope.clientKey)

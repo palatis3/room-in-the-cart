@@ -9,6 +9,7 @@ extension SharedTrackingIntent {
             try demandRequire(page.state != nil && page.projection == nil)
             try demandRequire((kind.mode == "adopt") == (base.graphRevision == 0))
         }
+        if actionSources != nil { try demandRequire(kind.mode == "adopt") }
         if let packs = kind.packs {
             try demandRequire(packs.count <= 200 && demandUnique(packs.map(\.lineId)))
             for pack in packs { try demandIDs([pack.lineId]); try pack.usablePerPack?.validate() }
@@ -16,7 +17,8 @@ extension SharedTrackingIntent {
         if let action = kind.action { _ = try SharedTrackingAction(action) }
         switch kind {
         case .adopt(let action, let change, _):
-            guard case .patch(let body) = action, body.mealEdit == nil else { throw ClientError.configuration }
+            if let actionSources { try actionSources.validate(page: page, action: action, requestPreview: requestPreview) }
+            else { guard case .patch(let body) = action, body.mealEdit == nil else { throw ClientError.configuration } }
             try change.validate()
         case .change(_, let change, _, let ids):
             try change.validate(); try demandIDs(ids.map(Optional.some)); try demandRequire(ids.count <= 2000 && demandUnique(ids))
@@ -66,8 +68,13 @@ extension SharedTrackingCandidateReview {
         try demandRequire(after.graph.householdId == before.householdId && after.graph.shopId == before.shopId && after.graph.revision == before.revision + 1)
         try demandRequire(after.authorityEpoch == page.authorityEpoch && after.privacyRevision == page.privacyRevision)
         try demandRequire(Set(before.usedIds).isSubset(of: Set(after.graph.usedIds)))
-        if let expected = intent.kind.action { try demandRequire(candidate.action.command == expected) }
-        else { guard case .patch(let body) = candidate.action.command, body.mealEdit == nil else { throw ClientError.invalidResponse } }
+        if let catalog = intent.actionSources {
+            try demandRequire(candidate.action == catalog.normalizedAction && after.catalog == catalog.sources.map(\.fact))
+        } else if let expected = intent.kind.action { try demandRequire(candidate.action.command == expected) }
+        else {
+            guard case .patch(let body) = candidate.action.command else { throw ClientError.invalidResponse }
+            if body.mealEdit != nil { guard case .compoundAdoptionUndo = candidate.disclosure.changes else { throw ClientError.invalidResponse } }
+        }
         if let packs = intent.kind.packs { try demandRequire(after.packReviews == packs) }
         if case .patch(let body) = candidate.action.command {
             let rows = body.lines.map { line in (line.lineId, line) }
@@ -84,6 +91,7 @@ extension SharedTrackingCandidateReview {
             // Explicit original preview, not an arbitrary historic source, is the base.
             try demandRequire(acceptedRevision == preview.requestRevision && facts[0].revision == preview.requestRevision)
         }
+        try demandRequire(candidate.disclosure.money.before == page.checkout)
         let pickup = candidate.disclosure.pickup
         try pickup.validate(state: after)
         switch (intent.kind, candidate.disclosure.changes) {
@@ -91,6 +99,8 @@ extension SharedTrackingCandidateReview {
         case (.review, .none):
             var expected = before; expected.revision += 1
             try demandRequire(after.graph == expected && after.catalog == page.state?.catalog && after.bindings == page.state?.bindings && after.unbound == page.state?.unbound)
+        case (.firstAdoptionUndo, .compoundAdoptionUndo(let disclosure)):
+            try disclosure.validate(page: page, candidate: candidate)
         case (.firstAdoptionUndo(let target, _), .firstAdoptionUndo(let disclosure)):
             try demandRequire(disclosure.targetOperationId == target && disclosure.beforeCoverage == page.coverage && disclosure.afterCoverage == pickup.coverage)
             try demandRequire(after.catalog == page.state?.catalog)
@@ -131,6 +141,7 @@ extension SharedTrackingCandidateReview {
 extension SharedTrackingAcceptedReview {
     func validate() throws {
         try candidateReview.validate()
+        try preview.moneyAcknowledgments.validate(money: preview.disclosure.money.after)
         let candidate = candidateReview.candidate
         try demandRequire(preview.previewId == candidate.candidateId && preview.expiresAt == candidate.expiresAt && preview.action == candidate.action && preview.disclosure == candidate.disclosure)
         for id in preview.disclosure.pickup.unresolvedPackIds {

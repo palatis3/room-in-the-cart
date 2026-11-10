@@ -1,0 +1,23 @@
+{
+  "status": "passed",
+  "tests": 216,
+  "passed": 213,
+  "skipped": [
+    "-[HouseholdClientTests.NativeServiceWireTests testNativeClientAgainstPostgres]",
+    "-[HouseholdClientTests.SharedMealNativeWireTests testSharedMealClientAgainstPostgres]",
+    "-[HouseholdClientTests.StoreQuoteNativeWireTests testStoreQuoteClientAgainstPostgres]"
+  ],
+  "failures": 0,
+  "sourceFiles": 113,
+  "sourceManifestSHA256": "d80c335d707e2feaf4737b93b556dc85bd0049d193149399429d35a2ed8ddd3a",
+  "sourceUnchanged": true,
+  "log": "/Users/palatis/Room in the Cart/.build/TrackingClientSuccessorNov10/r1/swift-test.log",
+  "logSHA256": "9975a7cac1569c5e0927aa13b6e14eb41f353ce73db421feabb856447134818e",
+  "receiptSHA256": "b4c573ac6ae68589ac2184d461f60068b2d3c71ebf374b60a7aedbfeaaa746b0",
+  "clientPacketManifestSHA256": "d7559f800cf7e00b319bae89bf5565bc0272fec7d7133d027c8f09a9c0ffdb1f",
+  "wireConsentPacketManifestSHA256": "261c55c7df1842aed1ef14f47d6f0b9424179af622c6e68e178f83dffd9493be",
+  "fullPackageFreshBuild": true,
+  "realServiceWireQualified": false,
+  "nativeUIQualified": false,
+  "productionEnabled": false
+}

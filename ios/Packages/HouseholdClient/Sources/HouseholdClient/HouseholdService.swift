@@ -585,11 +585,12 @@ public actor HouseholdService {
         return try await perform("shops/\(shopID)/previews", method: "POST", body: encoded(Input(requestId: requestID, base: base, decision: decision)))
     }
     public func executeShopper(_ operation: PendingOperation) async throws -> ShopperReceipt {
+        if operation.sharedRequestUndoBinding != nil { return try await executeRequestAcceptanceUndo(operation) }
         if operation.sharedTrackingBinding != nil { return try await executeSharedTracking(operation) }
         let start = generation
         guard let enrollment, operation.householdID == householdID, operation.deviceID == enrollment.deviceId else { throw ClientError.accessEnded }
         let envelope = try JSONDecoder().decode(CommandEnvelope.self, from: operation.bytes)
-        guard envelope.body["trackingReview"] == nil else { throw ClientError.configuration }
+        guard envelope.body["trackingReview"] == nil && envelope.body["operationUndoReview"] == nil && envelope.kind != "request.undoAcceptance" else { throw ClientError.configuration }
         if envelope.body["demandReview"] != nil {
             guard let binding = operation.sharedDemandBinding, let shopID = UUID(uuidString: envelope.shopId),
                   try sharedDemandContext(shopID: shopID) == binding.context else { throw ClientError.accessEnded }
@@ -633,12 +634,13 @@ public actor HouseholdService {
     /// Shop creation is organizer-only; updates remain restricted to the currently assigned shopper.
     /// A retry retains its original shop ID, replay window, base and exact command bytes.
     public func executeSharedShop(_ operation: PendingOperation) async throws -> ShopperReceipt {
+        if operation.sharedRequestUndoBinding != nil { return try await executeRequestAcceptanceUndo(operation) }
         if operation.sharedTrackingBinding != nil { return try await executeSharedTracking(operation) }
         let start = generation
         guard selectedGrantID == nil, let enrollment, operation.householdID == householdID,
               operation.deviceID == enrollment.deviceId else { throw ClientError.accessEnded }
         let envelope = try JSONDecoder().decode(CommandEnvelope.self, from: operation.bytes)
-        guard envelope.body["trackingReview"] == nil else { throw ClientError.configuration }
+        guard envelope.body["trackingReview"] == nil && envelope.body["operationUndoReview"] == nil && envelope.kind != "request.undoAcceptance" else { throw ClientError.configuration }
         if envelope.body["demandReview"] != nil {
             guard let binding = operation.sharedDemandBinding, let shopID = UUID(uuidString: envelope.shopId),
                   try sharedDemandContext(shopID: shopID) == binding.context else { throw ClientError.accessEnded }

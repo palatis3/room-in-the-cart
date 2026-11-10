@@ -160,8 +160,11 @@ extension SharedMealNativeWireTests {
         }
         let candidate = try await service.sharedTrackingCandidate(page: page, kind: kind, requestPreview: requestPreview)
         XCTAssertEqual(candidate.page, page)
-        // Complete typed disclosure is acknowledged by the production method.
-        let accepted = try await service.acceptSharedTrackingCandidate(candidate)
+        // These wire fixtures deliberately review unknown pickup cost/coverage.
+        // Explicit unknown consent is separate from echoing the full disclosure;
+        // no over-cap consent is granted by this fixture.
+        let accepted = try await service.acceptSharedTrackingCandidate(candidate, acceptUnknown: true)
+        XCTAssertEqual(accepted.preview.moneyAcknowledgments, .init(acceptOverage: false, acceptUnknown: true))
         XCTAssertEqual(accepted.preview.disclosure, candidate.candidate.disclosure)
         XCTAssertEqual(accepted.preview.action, candidate.candidate.action)
         let cancelled = try await service.sharedTracking(shopID: input.shopId); XCTAssertEqual(cancelled, page)

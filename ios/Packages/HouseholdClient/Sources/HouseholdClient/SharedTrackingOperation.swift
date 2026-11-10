@@ -21,13 +21,14 @@ public struct SharedTrackingOperationBinding: Codable, Equatable, Sendable {
         switch kind {
         case .apply:
             guard let action else { throw ClientError.invalidResponse }
-            var body = try action.command.bodyValues(); body["demandReview"] = token; return body
+            guard case .object(let value) = action.wire, case .object(var body) = value["body"] else { throw ClientError.invalidResponse }
+            body["demandReview"] = token; return body
         case .freeze: return ["trackingReview": token]
         }
     }
     var commandKind: String { kind == .freeze ? "shop.freeze" : action?.command.kind ?? "" }
     @discardableResult func validate(_ operation: PendingOperation) throws -> CommandEnvelope {
-        try demandRequire(operation.sharedDemandBinding == nil && operation.sharedTrackingBinding == self && operation.requestQueueGrant == nil)
+        try demandRequire(operation.sharedRequestUndoBinding == nil && operation.sharedDemandBinding == nil && operation.sharedTrackingBinding == self && operation.requestQueueGrant == nil)
         try demandRequire(operation.householdID == context.householdID && operation.memberID == context.memberID && operation.deviceID == context.deviceID)
         try demandRequire(demandRevision(base.shopRevision) && base.shopRevision < Int(Int32.max) && demandRevision(base.authorityEpoch) && demandRevision(graphRevision, zero: true) && demandRevision(privacyRevision, zero: true))
         try demandRequire([previewDigest, stateDigest].allSatisfy { $0.range(of: "^[0-9a-f]{64}$", options: .regularExpression) != nil })
@@ -35,7 +36,7 @@ public struct SharedTrackingOperationBinding: Codable, Equatable, Sendable {
             try demandRequire(["adopt", "change", "review", "firstAdoptionUndo", "rebind", "recover"].contains(mode) && action != nil && graphRevision > 0)
             try demandRequire((mode == "firstAdoptionUndo") == (targetOperationID != nil))
         } else { try demandRequire(mode == "freeze" && action == nil && targetOperationID == nil && base.requestRevision == nil) }
-        if case .request = action?.command { try demandRequire(base.requestRevision.map { demandRevision($0) && $0 < Int(Int32.max) } == true && mode == "change") }
+        if case .request = action?.command { try demandRequire(base.requestRevision.map { demandRevision($0) && $0 < Int(Int32.max) } == true && ["change", "adopt"].contains(mode)) }
         else { try demandRequire(base.requestRevision == nil) }
         let envelope = try JSONDecoder().decode(CommandEnvelope.self, from: operation.bytes)
         let expectedBytes = try encoded(envelope)

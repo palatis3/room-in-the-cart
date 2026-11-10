@@ -78,6 +78,30 @@ extension HouseholdClientTests {
         graph.schemaVersion = 2; XCTAssertThrowsError(try graph.validate()); graph.schemaVersion = 1
         graph.contributions[1].lineId = .init(); XCTAssertThrowsError(try graph.validate())
     }
+    func testSharedDemandRequestGenerationsRetainHistoryWithoutDuplicatingActiveOrHistoricalSources() throws {
+        let line = SharedDemandLine(name: "Wraps", unit: .count, originalOrder: 0), request = SharedDemandID()
+        let old = SharedDemandContribution(lineId: line.id, source: .request(requestId: request, appliedRequestRevision: 4), productKey: "wraps", productName: "Wraps", originalText: "Original request wording", quantity: nil, removedAt: "2026-11-09T13:00:00Z")
+        let current = SharedDemandContribution(lineId: line.id, source: .request(requestId: request, appliedRequestRevision: 7), productKey: "wraps", productName: "Wraps", originalText: "Later author wording", quantity: nil)
+        let graph = SharedDemandGraph(householdId: .init(), shopId: .init(), revision: 3, lines: [line], contributions: [old, current], edges: [], usedIds: [line.id, old.id, current.id])
+        try graph.validate()
+        XCTAssertEqual(try JSONDecoder().decode(SharedDemandGraph.self, from: encoded(graph)), graph)
+        XCTAssertEqual(graph.contributions[0], old)
+        var bothActive = graph; bothActive.contributions[0].removedAt = nil
+        XCTAssertThrowsError(try bothActive.validate())
+        for removedAt in [nil, old.removedAt] {
+            var sameGeneration = graph; sameGeneration.contributions[1].source = old.source; sameGeneration.contributions[1].removedAt = removedAt
+            XCTAssertThrowsError(try sameGeneration.validate())
+        }
+        var missingID = graph; missingID.usedIds.removeLast(); XCTAssertThrowsError(try missingID.validate())
+        var reusedID = graph; reusedID.contributions[1].id = old.id; XCTAssertThrowsError(try reusedID.validate())
+        let otherSources: [SharedDemandSource] = [.imported(batchId: .init(), entryId: .init()), .meal(occurrenceId: .init(), ingredientId: .init(), groupId: nil, bindingId: nil), .reservation(reservationId: .init(), purpose: "Protected lunch", originOccurrenceId: nil, ingredientId: .init(), groupId: nil, bindingId: nil)]
+        for source in otherSources {
+            var duplicate = graph; duplicate.contributions[0].source = source; duplicate.contributions[1].source = source
+            XCTAssertThrowsError(try duplicate.validate())
+        }
+        // Current source catalogs still key request identity without revision.
+        XCTAssertEqual(old.source.identityKey, current.source.identityKey)
+    }
     func testSharedDemandCanonicalTotalsBindExactActiveRowsAndRequiredUnknownNull() throws {
         let household = SharedDemandID(), shop = SharedDemandID(), line = SharedDemandLine(name:"Unknown wraps",unit:.count,originalOrder:0)
         let source = SharedDemandContribution(lineId:line.id,source:.manual,productKey:nil,productName:"Unknown wraps",originalText:"Original unquantified wraps",quantity:nil)

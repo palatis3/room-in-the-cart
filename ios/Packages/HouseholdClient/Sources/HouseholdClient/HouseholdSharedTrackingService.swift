@@ -22,9 +22,9 @@ extension HouseholdService {
         try trackingContext(context, shopID: shopID, generation: start)
         try history.validate(page: page); return history
     }
-    public func sharedTrackingCandidate(page: SharedTrackingPage, kind: SharedTrackingIntentKind, requestPreview: ShopperPreview? = nil) async throws -> SharedTrackingCandidateReview {
+    public func sharedTrackingCandidate(page: SharedTrackingPage, kind: SharedTrackingIntentKind, requestPreview: ShopperPreview? = nil, actionSources: SharedTrackingActionSources? = nil) async throws -> SharedTrackingCandidateReview {
         let shopID = page.shopId.uuid, start = generation, context = try sharedDemandContext(shopID: page.shopId.uuid)
-        let intent = try SharedTrackingIntent(page: page, context: context, kind: kind, requestPreview: requestPreview)
+        let intent = try SharedTrackingIntent(page: page, context: context, kind: kind, requestPreview: requestPreview, actionSources: actionSources)
         try intent.requireFreshRequest()
         try await authorizeShopper(shopID: page.shopId.string)
         try trackingContext(context, shopID: shopID, generation: start)
@@ -36,17 +36,20 @@ extension HouseholdService {
     }
     /// Invoke only after displaying and explicitly acknowledging the complete
     /// changes AND pickup disclosure. Dropping the candidate sends no command.
-    public func acceptSharedTrackingCandidate(_ review: SharedTrackingCandidateReview) async throws -> SharedTrackingAcceptedReview {
+    public func acceptSharedTrackingCandidate(_ review: SharedTrackingCandidateReview, acceptOverage: Bool = false, acceptUnknown: Bool = false) async throws -> SharedTrackingAcceptedReview {
         try review.validate(); try review.requireFresh()
+        let acknowledgments = SharedTrackingMoneyAcknowledgments(acceptOverage: acceptOverage, acceptUnknown: acceptUnknown)
+        try acknowledgments.validate(money: review.candidate.disclosure.money.after)
         let binding = review.intent.base, shopID = binding.shopId.uuid, start = generation
         guard try sharedDemandContext(shopID: shopID) == binding.context else { throw ClientError.accessEnded }
         try await authorizeShopper(shopID: binding.shopId.string)
         try trackingContext(binding.context, shopID: shopID, generation: start)
-        struct Input: Encodable { let candidateId: SharedDemandID; let candidateDigest: String; let acknowledgedDisclosure: SharedTrackingDisclosure }
-        let bytes = try encoded(Input(candidateId: review.candidate.candidateId, candidateDigest: review.candidate.candidateDigest.value, acknowledgedDisclosure: review.candidate.disclosure))
+        struct Input: Encodable { let candidateId: SharedDemandID; let candidateDigest: String; let acknowledgedDisclosure: SharedTrackingDisclosure; let acceptOverage: Bool; let acceptUnknown: Bool }
+        let bytes = try encoded(Input(candidateId: review.candidate.candidateId, candidateDigest: review.candidate.candidateDigest.value, acknowledgedDisclosure: review.candidate.disclosure, acceptOverage: acceptOverage, acceptUnknown: acceptUnknown))
         try demandRequire(bytes.count <= SharedTrackingWire.maximumResponseBytes)
         let preview: SharedTrackingPreview = try await perform("shops/\(binding.shopId.string)/demand/tracking/previews", method: "POST", body: bytes, maximumResponseBytes: SharedTrackingWire.maximumResponseBytes)
         try trackingContext(binding.context, shopID: shopID, generation: start)
+        try demandRequire(preview.moneyAcknowledgments == acknowledgments)
         let accepted = try SharedTrackingAcceptedReview(candidateReview: review, preview: preview)
         try review.requireFresh(); return accepted
     }
@@ -183,15 +186,18 @@ extension HouseholdService {
         // An unrelated clear/re-enroll has no invalidation proof and cannot
         // initiate cleanup. Explicit sign-out still owns its full lifecycle purge.
         try trackingContext(binding.context, shopID: binding.shopID.uuid, generation: start)
-        let originalShop = originalMember.filter { $0.sharedTrackingBinding?.shopID == binding.shopID }
+        let originalShop = originalMember.filter { $0.sharedTrackingBinding?.shopID == binding.shopID || $0.sharedRequestUndoBinding?.shopID == binding.shopID }
         let targets: [PendingOperation]
         switch error {
         case ClientError.accessEnded: targets = originalShop
         case ClientError.sessionNeeded: targets = originalMember
         case ClientError.service(let status, let code, _, _):
-            if status == 409 && code == "tracking_preview_expired" {
-                // Erasure and natural expiry both permanently invalidate an
-                // uncommitted token. Committed retry bypasses preview lookup.
+            if status == 409 && ["tracking_preview_expired", "tracking_candidate_changed"].contains(code) {
+                // The commands endpoint first resolves an existing exact operation
+                // and returns its receipt. Only an uncommitted command reaches
+                // preview expiry / candidate recomputation. Remove only this row;
+                // generic refresh_required, stale conflicts and network ambiguity
+                // never establish this noncommit boundary.
                 targets = [operation]
             } else if ["tracking_replay_unavailable", "tracking_source_unavailable", "tracking_history_unavailable", "tracking_store_permission"].contains(code) {
                 targets = originalMember

@@ -111,6 +111,34 @@ public struct SharedOperationUndoMeal: Codable, Equatable, Sendable {
         try before.validatePlanning(); try targetAfter.meal?.validatePlanning()
         try current.meal?.validatePlanning(); try restoredMeal.validatePlanning()
     }
+    // Same field-preservation checks for compound tracking disclosure. The
+    // service supplies current facts; this does not manufacture an inverse or
+    // infer historical authority from the current shop revision.
+    func validateCompound(edit: SharedDemandMealEdit, shopRevision: Int) throws {
+        guard let currentRevision = current.revision, let afterRevision = targetAfter.revision else { throw ClientError.invalidResponse }
+        try demandRequire(currentRevision <= shopRevision && currentRevision >= afterRevision)
+        try demandRequire(edit.occurrenceId == occurrenceId && edit.meal == restoredMeal && edit.proposalId == nil && edit.changeProposalId == nil)
+        if targetBefore.revision == nil {
+            guard let now = current.meal else { throw ClientError.invalidResponse }
+            try demandRequire(restoredMeal == nil && current == targetAfter && touchedFields == [.membership] && edit.baseMealRevision == currentRevision)
+            try undoPreservesProtectedMeal(now, nil)
+        } else {
+            guard let before = targetBefore.meal, let restoredMeal, let beforeRevision = targetBefore.revision else { throw ClientError.invalidResponse }
+            try demandRequire(beforeRevision < afterRevision)
+            if let after = targetAfter.meal {
+                guard let now = current.meal else { throw ClientError.invalidResponse }
+                let ordered: [Field] = [.title, .day, .kind, .portions, .protected, .planning]
+                let changed = ordered.filter { !equal($0, before, after) }
+                try demandRequire(!changed.isEmpty && touchedFields == changed && edit.baseMealRevision == currentRevision)
+                for field in ordered {
+                    if changed.contains(field) { try demandRequire(equal(field, now, after) && equal(field, restoredMeal, before)) }
+                    else { try demandRequire(equal(field, restoredMeal, now)) }
+                }
+                try undoPreservesProtectedMeal(now, restoredMeal)
+            } else { try demandRequire(current.meal == nil && current == targetAfter && restoredMeal == before && touchedFields == [.membership] && edit.baseMealRevision == nil) }
+        }
+        try targetBefore.meal?.validatePlanning(); try targetAfter.meal?.validatePlanning(); try current.meal?.validatePlanning(); try restoredMeal?.validatePlanning()
+    }
     private func equal(_ field: Field, _ a: SharedMeal, _ b: SharedMeal) -> Bool {
         switch field {
         case .title: a.title == b.title
@@ -163,7 +191,7 @@ func undoEncodedMeal(_ meal: SharedMeal) throws -> JSONValue {
     let value = try JSONDecoder().decode(JSONValue.self, from: encoded(meal))
     return try undoMealIdentities(value, wire: false)
 }
-private func undoMealIdentities(_ value: JSONValue, key: String? = nil, wire: Bool) throws -> JSONValue {
+func undoMealIdentities(_ value: JSONValue, key: String? = nil, wire: Bool) throws -> JSONValue {
     switch value {
     case .object(let fields): return .object(try fields.mapValuesWithKey { try undoMealIdentities($1, key: $0, wire: wire) })
     case .array(let values): return .array(try values.map { try undoMealIdentities($0, key: key == "groupIds" ? "id" : nil, wire: wire) })
