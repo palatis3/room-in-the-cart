@@ -1,5 +1,6 @@
+import {readRequestAcceptanceHistory,readRequestUndoCandidate,previewRequestUndo} from './shared-request-acceptance-repository.js';
 import {PartitionError} from './shared-demand-tracking.js';
-import {readTracking,createTrackingCandidate,acceptTrackingCandidate,readTrackingRecord,readTrackingHistory} from './shared-demand-tracking-repository.js';
+import {readTracking,createTrackingCandidate,acceptTrackingCandidate,readTrackingRecord,readTrackingHistory,readTrackingActionSources} from './shared-demand-tracking-repository.js';
 import {readSharedRecordSnapshot} from './shared-records.js';
 import {SharedDemandError} from './shared-demand-domain.js';
 import {previewDemand,readDemand,readActionDemandSources,readFoodOperationHistory,previewFoodOperationUndo,readFoodOperationUndoCandidate} from './shared-demand-repository.js';
@@ -399,11 +400,15 @@ export function createHTTPServer(options:HTTPOptions) {
           if(tail==='/records/snapshot'&&method==='GET')return readSharedRecordSnapshot(repository,ctx,await repository.shop(ctx,shopId));
           if(tail==='/demand/tracking/operations'&&method==='GET')return readTrackingHistory(repository,ctx,await repository.shop(ctx,shopId));
           if(tail==='/demand/tracking'&&method==='GET')return readTracking(repository,ctx,await repository.shop(ctx,shopId));
+          if(tail==='/demand/tracking/action-sources'&&method==='POST')return readTrackingActionSources(repository,ctx,await repository.shop(ctx,shopId),payload);
           if(tail==='/demand/tracking/candidates'&&method==='POST')return createTrackingCandidate(repository,ctx,await repository.shop(ctx,shopId),payload);
           if(tail==='/demand/tracking/previews'&&method==='POST')return acceptTrackingCandidate(repository,ctx,await repository.shop(ctx,shopId),payload);
           if(tail==='/records/tracking-snapshot'&&method==='GET')return readTrackingRecord(repository,ctx,await repository.shop(ctx,shopId));
           if(tail==='/demand'&&method==='GET')return readDemand(repository,ctx,await repository.shop(ctx,shopId));
           if(tail==='/demand/action-sources'&&method==='POST')return readActionDemandSources(repository,ctx,await repository.shop(ctx,shopId),payload);
+          if(tail==='/requests/operations'&&method==='GET')return readRequestAcceptanceHistory(repository,ctx,await repository.shop(ctx,shopId),url.searchParams.get('beforeRevision'));
+          if(tail==='/requests/operation-undo-candidates'&&method==='POST')return readRequestUndoCandidate(repository,ctx,await repository.shop(ctx,shopId),payload);
+          if(tail==='/requests/operation-undo-previews'&&method==='POST')return previewRequestUndo(repository,ctx,await repository.shop(ctx,shopId),payload);
           if(tail==='/demand/operations'&&method==='GET')return readFoodOperationHistory(repository,ctx,await repository.shop(ctx,shopId),url.searchParams.get('beforeRevision'));
           if(tail==='/demand/operation-undo-candidates'&&method==='POST')return readFoodOperationUndoCandidate(repository,ctx,await repository.shop(ctx,shopId),payload);
           if(tail==='/demand/operation-undo-previews'&&method==='POST')return previewFoodOperationUndo(repository,ctx,await repository.shop(ctx,shopId),payload);

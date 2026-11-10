@@ -1,0 +1,38 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {assertTrackingReplay} from '../dist/shared-demand-tracking-repository.js';
+import {deriveCompoundMealAction} from '../dist/shared-demand-tracking-meal.js';
+import {recordCompoundAdoption} from '../dist/shared-demand-compound-adoption.js';
+import {applyDemandChange} from '../dist/shared-demand-domain.js';
+import {digest as stored} from '../dist/database.js';
+import {digest} from '../dist/shared-demand-tracking.js';
+const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
+function fixture(kind,inverse=false){
+ const H=id(1),S=id(2),OP=id(3),owner=id(4),planner=id(5),occurrence=id(6),proposalId=id(7),lineId=id(8),at='2026-11-10T12:00:00Z';
+ const quote={currency:'USD',scope:'wholeCheckout',complete:true,capMinor:10000,capScope:'wholeCheckout',fee:{kind:'fixed',amountMinor:0},taxesMinor:0,depositsMinor:0,discountsMinor:0,observedAt:at,expiresAt:'2026-11-11T12:00:00Z'};
+ const meal={title:'Ingredient-free dinner',day:null,kind:'dinner',portions:2,protected:false,planning:{groups:[],ingredients:[]}},row=(revision,meal)=>({householdId:H,shopId:S,occurrenceId:occurrence,revision,actorId:owner,meal});
+ const beforeMeal=row(2,meal),afterMeal=row(3,{...meal,day:'2026-11-12'}),latest=row(9,{...meal,day:'2026-11-20',title:'Later title'});
+ const proposal={proposal_id:proposalId,actor_id:planner,state:'applied',occurrence_id:occurrence,...kind==='move'?{proposed_day:'2026-11-12'}:{body:{meal:afterMeal.meal}}};const {state:_,...pf}=proposal;
+ const lineage={householdId:H,shopId:S,operationId:OP,occurrenceId:occurrence,beforeRevision:2,afterRevision:3,beforeDigest:stored(beforeMeal),afterDigest:stored(afterMeal),proposalKind:kind,proposalId,proposalDigest:stored(pf)};
+ const graph={schemaVersion:1,conversionTableVersion:'us-customary-metric-v1',householdId:H,shopId:S,revision:0,lines:[],contributions:[],edges:[],usedIds:[]};
+ const adopted=applyDemandChange(graph,{schemaVersion:1,operationId:OP,householdId:H,shopId:S,baseRevision:0,at,lines:[{id:lineId,name:'Wraps',unit:'count',originalOrder:0,trashedAt:null}],contributions:[{id:id(9),lineId,source:{kind:'manual'},productKey:null,productName:'Independent wraps',originalText:'Twelve authored wraps',quantity:{amount:{numerator:'12',denominator:'1'},unit:'count',originalLiteral:'12 wraps',confirmedConversion:null},sourceExclusions:[],exclusions:[],contains:[],removedAt:null}],edges:[],removeSourceIds:[],removeEdgeIds:[]});
+ const before={schemaVersion:2,authorityEpoch:1,privacyRevision:0,quoteDigest:stored(quote),graph,basket:[{id:lineId,name:'Wraps',packs:2,priceMinor:100,feeEligible:true}],catalog:[],bindings:[],unbound:[],legacyLineIds:[lineId],packReviews:[]};
+ const after={...before,graph:adopted.graph,legacyLineIds:[],packReviews:[{lineId,usablePerPack:null,acceptUnresolved:true}]};const record=recordCompoundAdoption(OP,before,after,quote,quote,{kind:'meal',occurrenceId:occurrence,componentDigest:stored(lineage)});
+ const lines=[{lineId,originalItem:'Wraps',packs:2,unitPriceMinor:100,feeEligible:true}],snapshots=[{revision:2,snapshot:{quote,lines,mealRefs:[{occurrenceId:occurrence,revision:2}]}},{revision:3,operation_id:OP,snapshot:{quote,lines,mealRefs:[{occurrenceId:occurrence,revision:3}],demand:{schemaVersion:1,revision:1,digest:stored(after.graph)},tracking:{schemaVersion:2,shopRevision:3,digest:digest(after),status:'recorded'}}}].map(x=>({...x,digest:stored(x.snapshot)}));
+ let revoked=false,tampered=false;const calls=[];const ctx={householdId:H,db:{async query(sql,args){calls.push(sql);
+  if(sql.startsWith('SELECT * FROM ritc.shared_tracking_revision'))return{rows:[{state:after,state_digest:digest(after),authority_epoch:1,privacy_revision:0,reverses_operation_id:inverse?OP:null}]};
+  if(sql.startsWith('SELECT tracking_privacy_revision'))return{rows:[{tracking_privacy_revision:0}]};
+  if(sql.startsWith('SELECT DISTINCT member_id')||sql.startsWith('SELECT * FROM ritc.member'))return{rows:[]};
+  if(sql.startsWith('SELECT evidence,evidence_digest'))return{rows:[{evidence:record.evidence,evidence_digest:record.evidenceDigest,store_basis:null}]};
+  if(sql.startsWith('SELECT * FROM ritc.shared_food_operation_effect'))return{rows:[{classification:'first_adoption',base_graph_revision:0,result_graph_revision:1,base_shop_revision:2,result_shop_revision:3}]};
+  if(sql.startsWith('SELECT revision,snapshot'))return{rows:snapshots};
+  if(sql.startsWith('SELECT * FROM ritc.shared_food_meal_effect'))return{rows:[{household_id:H,shop_id:S,operation_id:OP,occurrence_id:occurrence,before_meal_revision:2,result_meal_revision:3,before_meal_digest:lineage.beforeDigest,result_meal_digest:lineage.afterDigest,proposal_kind:kind,proposal_id:proposalId,proposal_digest:lineage.proposalDigest}]};
+  if(sql.startsWith('SELECT * FROM ritc.shared_meal_revision'))return{rows:[beforeMeal,afterMeal,latest].map(x=>({household_id:x.householdId,shop_id:x.shopId,occurrence_id:x.occurrenceId,revision:x.revision,actor_id:x.actorId,meal:x.meal}))};
+  if(sql.startsWith('SELECT actor_id'))return{rows:[{actor_id:owner}]};
+  if(sql.includes('FROM ritc.shared_meal_change WHERE')||sql.includes('FROM ritc.meal_move WHERE'))return{rows:[tampered?{...proposal,actor_id:id(99)}:proposal]};
+  if(sql.startsWith('SELECT member_id FROM ritc.member'))return{rows:args[1].filter(x=>!revoked||x!==planner).map(member_id=>({member_id}))};throw Error('Unexpected query '+sql);
+ }}};
+ return{ctx,shop:{shop_id:S,revision:9,authority_epoch:1},repo:{async consent(){}},record,calls,operationId:inverse?id(10):OP,revoke(){revoked=true;},tamper(){tampered=true;},snapshots};
+}
+for(const kind of ['change','move'])for(const inverse of [false,true])test(`${kind} ingredient-free ${inverse?'inverse':'original'} replay validates proposal author after later edits`,async()=>{const f=fixture(kind,inverse);await assertTrackingReplay(f.repo,f.ctx,f.shop,f.operationId);assert.ok(f.calls.some(x=>x.includes("state='active'")));await assert.rejects(()=>deriveCompoundMealAction(f.ctx,f.shop,f.record.evidence));f.revoke();await assert.rejects(()=>assertTrackingReplay(f.repo,f.ctx,f.shop,f.operationId));});
+test('compound replay rejects changed proposal facts and snapshot digest',async()=>{const f=fixture('move');f.tamper();await assert.rejects(()=>assertTrackingReplay(f.repo,f.ctx,f.shop,f.operationId));const g=fixture('change',true);g.snapshots[0].snapshot.lines[0].packs=99;await assert.rejects(()=>assertTrackingReplay(g.repo,g.ctx,g.shop,g.operationId));});

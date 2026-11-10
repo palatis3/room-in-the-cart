@@ -28,7 +28,7 @@ export const decisionSchema = z.discriminatedUnion('choice', [
 export const previewSchema = z.object({ requestId: uuid, base: z.object({ shopRevision: z.number().int().positive(), authorityEpoch: z.number().int().positive(), requestRevision: z.number().int().positive() }).strict(), decision: decisionSchema }).strict();
 export const envelopeSchema = z.object({
   v: z.literal(1), replayWindow: uuid, clientKey: uuid, shopId: uuid,
-  kind: z.enum(['amendment.recordResponse','mealRecovery.apply','pantry.create','pantry.storeDelivery','pantry.observe','pantry.select','pantry.match','pantry.reserve','cookCopy.save','cookCopy.markSent','delivery.reserve','delivery.match','delivery.register','delivery.arrival','delivery.usable','shop.create','shop.patch','shop.freeze','shop.reopen','shop.reportPlaced','shop.reconcileReport','shop.transferAuthority','request.send','request.edit','request.withdraw','request.clarify','request.apply','request.confirmPurchase','request.carry']),
+  kind: z.enum(['amendment.recordResponse','mealRecovery.apply','pantry.create','pantry.storeDelivery','pantry.observe','pantry.select','pantry.match','pantry.reserve','cookCopy.save','cookCopy.markSent','delivery.reserve','delivery.match','delivery.register','delivery.arrival','delivery.usable','shop.create','shop.patch','shop.freeze','shop.reopen','shop.reportPlaced','shop.reconcileReport','shop.transferAuthority','request.send','request.edit','request.withdraw','request.clarify','request.apply','request.undoAcceptance','request.confirmPurchase','request.carry']),
   base: z.object({ shopRevision: z.number().int().min(0), authorityEpoch: z.number().int().min(0), requestRevision: z.number().int().positive().optional() }).strict(),
   body: z.record(z.string(),z.unknown()),
 }).strict();
@@ -102,6 +102,7 @@ export const bodySchemas = {
   'request.confirmPurchase': z.object({requestId:uuid.toLowerCase(),lineId:uuid.toLowerCase(),placedRevision:copyRevision,
     outcome:z.enum(['bought','notBought','unknown'])}).strict(),
   'request.clarify': z.object({ requestId: uuid, question: z.string().trim().min(1).max(300) }).strict(),
+  'request.undoAcceptance':z.object({targetOperationId:uuid.toLowerCase(),requestId:uuid.toLowerCase(),baseRequestRevision:copyRevision,lines:z.array(lineSchema.extend({originalItem:z.string().min(1).max(240).refine(x=>x===x.trim()),feeEligible:z.boolean()})).max(200),quote:quoteSchema,operationUndoReview:z.object({previewId:uuid.toLowerCase(),previewDigest:z.string().regex(/^[a-f0-9]{64}$/)}).strict()}).strict(),
   'request.apply': z.object({ requestId: uuid, previewId: uuid, acceptOverage: z.boolean(), acceptUnknown: z.boolean(), demandReview:demandReviewSchema.optional() }).strict(),
 };
 export type Envelope = z.infer<typeof envelopeSchema>;

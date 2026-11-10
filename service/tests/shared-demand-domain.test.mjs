@@ -325,3 +325,40 @@ test('ordinary manual product edit and unrelated Undo remain available',()=>{
  assert.deepEqual(undone.graph.contributions.find(c=>c.id===protectedSource.id),clarified.graph.contributions[0]);
  assert.equal(undone.graph.contributions.find(c=>c.id===manual.id).removedAt,at);
 });
+
+
+test('retired request acceptance permits a new reviewed generation without changing old source or protected rows',()=>{
+ const g=graph();g.contributions[1].source={kind:'request',requestId:id(900),appliedRequestRevision:4};
+ const retired=apply(g,change(g,{removeSourceIds:[id(12)]})).graph,before=structuredClone(retired);
+ const next={...structuredClone(g.contributions[1]),id:id(901),source:{kind:'request',requestId:id(900),appliedRequestRevision:7},originalText:'Later author wording'};
+ const accepted=apply(retired,change(retired,{contributions:[next]},301));
+ assert.deepEqual(retired,before);assert.deepEqual(accepted.graph.contributions.filter(c=>c.id!==next.id),retired.contributions);
+ assert.deepEqual(accepted.graph.usedIds,[...retired.usedIds,next.id]);assert.deepEqual(accepted.receipt.contributions,[{id:next.id,before:null,after:next}]);
+ const tombstone=accepted.graph.contributions.find(c=>c.id===id(12));assert.deepEqual(tombstone,retired.contributions.find(c=>c.id===id(12)));
+ const again=apply(accepted.graph,change(accepted.graph,{removeSourceIds:[next.id]},302)).graph;
+ const third={...next,id:id(902),source:{...next.source,appliedRequestRevision:9}};
+ assert.doesNotThrow(()=>apply(again,change(again,{contributions:[third]},303)));
+});
+test('request generations cannot duplicate a retained revision or leave two active generations',()=>{
+ const g=graph();g.edges=[];g.contributions[1].source={kind:'request',requestId:id(900),appliedRequestRevision:4};
+ for(const [oldRemoved,newRemoved,revision] of [[null,null,5],[at,null,4],[at,at,4],[null,at,4]]){
+  const x=structuredClone(g);x.contributions[1].removedAt=oldRemoved;
+  const extra={...structuredClone(x.contributions[1]),id:id(901),removedAt:newRemoved,source:{kind:'request',requestId:id(900),appliedRequestRevision:revision}};
+  x.contributions.push(extra);x.usedIds.push(extra.id);fails(()=>validate(x),'duplicate_source');
+ }
+});
+test('request generation change never permits ID reuse or rewriting a retained source identity',()=>{
+ const g=graph();g.contributions[1].source={kind:'request',requestId:id(900),appliedRequestRevision:4};
+ const retired=apply(g,change(g,{removeSourceIds:[id(12)]})).graph;
+ const next={...g.contributions[1],source:{kind:'request',requestId:id(900),appliedRequestRevision:7}};
+ fails(()=>apply(retired,change(retired,{contributions:[next]},301)),'source_identity_changed');
+ retired.usedIds.push(id(901));fails(()=>apply(retired,change(retired,{contributions:[{...next,id:id(901)}]},301)),'identity_reused');
+});
+test('request generation exception does not permit repeated historical import meal or reservation identities',()=>{
+ const sources=[{kind:'import',batchId:id(910),entryId:id(911)},graph().contributions[1].source,graph().contributions[3].source];
+ for(const source of sources){
+  const g=single(quantity(2));g.contributions[0].source=source;g.contributions[0].removedAt=at;
+  const copy={...structuredClone(g.contributions[0]),id:id(901)};g.contributions.push(copy);g.usedIds.push(copy.id);
+  fails(()=>validate(g),'duplicate_source');
+ }
+});

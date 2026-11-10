@@ -88,7 +88,7 @@ export async function actionFacts(repo:HouseholdRepository,ctx:Context,shop:Shop
  }
  checkout(lines,quote);return {body,lines,quote,meals,request};
 }
-async function verifySources(repo:HouseholdRepository,ctx:Context,shop:Shop,graph:DemandGraph,facts:Awaited<ReturnType<typeof actionFacts>>){
+export async function verifySources(repo:HouseholdRepository,ctx:Context,shop:Shop,graph:DemandGraph,facts:Awaited<ReturnType<typeof actionFacts>>,retiring?:{requestId:string;operationId:string;lineId:string;reviewedRevision:number}){
  const active=graph.contributions.filter(c=>c.removedAt===null),expected=new Set<string>();
  const wholeProtected=new Set(active.flatMap(c=>c.source.kind==='reservation'&&c.source.originOccurrenceId&&c.source.groupId===null&&c.source.bindingId===null?[c.source.originOccurrenceId+'/'+c.source.ingredientId]:[]));
  // The same authoritative enumeration supplies adoption and validates committed sources.
@@ -101,7 +101,8 @@ async function verifySources(repo:HouseholdRepository,ctx:Context,shop:Shop,grap
  }
  const requestIds=active.flatMap(c=>c.source.kind==='request'?[c.source.requestId]:[]);
  const requests=new Map((await ctx.db.query('SELECT * FROM ritc.request WHERE household_id=$1 AND shop_id=$2 AND request_id=ANY($3::uuid[])',[ctx.householdId,shop.shop_id,requestIds])).rows.map(r=>[r.request_id,r]));
- const links=(await ctx.db.query('SELECT request_id,line_id,reviewed_revision FROM ritc.request_link WHERE household_id=$1 AND shop_id=$2',[ctx.householdId,shop.shop_id])).rows;
+ let links=(await ctx.db.query('SELECT request_id,line_id,reviewed_revision,operation_id FROM ritc.request_link WHERE household_id=$1 AND shop_id=$2',[ctx.householdId,shop.shop_id])).rows;
+ if(retiring){const exact=links.find(x=>x.request_id===retiring.requestId);assert(exact&&exact.operation_id===retiring.operationId&&exact.line_id===retiring.lineId&&exact.reviewed_revision===retiring.reviewedRevision,'demand_request_mismatch');links=links.filter(x=>x.request_id!==retiring.requestId);}
  const acceptedRequests=new Map(links.map(r=>[r.request_id,r]));
  const authors=(await ctx.db.query<Member>('SELECT * FROM ritc.member WHERE household_id=$1 AND member_id=ANY($2::uuid[])',[ctx.householdId,[...new Set([...requests.values()].map(r=>r.author_id))]])).rows;
  const liveAuthors=new Set<string>();for(const author of authors){assert(author.state==='active','demand_source_unavailable');await repo.consent(ctx.db,ctx.householdId,author);liveAuthors.add(author.member_id);}
@@ -213,8 +214,8 @@ export async function applyDemand(repo:HouseholdRepository,ctx:Context,shop:Shop
  const {demandReview,...body}=c.body;assert(input.action.kind===c.kind&&digest(input.action.body)===digest(body),'demand_action_changed');
  const reviewed=await evaluate(repo,ctx,shop,input,operationId,p.created_at.toISOString());assert(reviewed.baseDigest===p.graph_digest&&reviewed.acceptedDigest===p.accepted_digest,'stale_demand');
  const {graph,receipt}=reviewed.result;
- await stageV1Tracking(repo,ctx,shop,input,reviewed,operationId);
  await recordFoodOperationEffect(ctx,shop,input,operationId,reviewed.before.revision,graph.revision);
+ await stageV1Tracking(repo,ctx,shop,input,reviewed,operationId);
  await ctx.db.query(`INSERT INTO ritc.shared_demand_revision(household_id,shop_id,revision,predecessor,shop_revision,authority_epoch,operation_id,actor_id,device_id,created_at,graph,graph_digest,receipt,pack_review)
  VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,[ctx.householdId,shop.shop_id,graph.revision,graph.revision===1?null:graph.revision-1,shop.revision+1,shop.authority_epoch,operationId,ctx.member.member_id,ctx.deviceId,ctx.now,graph,digest(graph),receipt,JSON.stringify(input.packs)]);
  await rememberSources(ctx,shop,reviewed.before,graph,reviewed.facts.body.mealEdit?.changeProposalId??null);
@@ -237,7 +238,7 @@ export async function recordFoodOperationEffect(ctx:Context,shop:Shop,input:Inpu
  await ctx.db.query(`INSERT INTO ritc.shared_food_operation_effect(household_id,shop_id,operation_id,base_shop_revision,result_shop_revision,
  base_graph_revision,result_graph_revision,classification,reverses_operation_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
  [ctx.householdId,shop.shop_id,operationId,shop.revision,shop.revision+1,beforeGraph,afterGraph,classification,input.mode==='operationUndo'?input.undoOperationId:null]);
- if(classification==='meal_action'&&input.mode!=='operationUndo')
+ if((classification==='meal_action'||classification==='first_adoption'&&body.mealEdit)&&input.mode!=='operationUndo')
   await recordMealUndoEffect(ctx,shop,operationId,bodySchemas['shop.patch'].parse(body).mealEdit);
 }
 /** Selection identity is immutable, but access to its author/permission is live.

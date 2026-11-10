@@ -1,3 +1,4 @@
+import {deriveFoodUndoBasket} from './shared-food-undo-basket.js';
 /** Whole-operation inverse for the explicitly recorded, eligible shop.patch subset.
  * Never accepts client-supplied historical facts. All evidence is loaded under current
  * shopper authority; unsupported effects are unavailable, never silently omitted. */
@@ -52,11 +53,6 @@ function persistedGraph(row:FoodUndoEvidence['beforeGraph']){
 }
 function delta<T extends {id:string}>(before:T[],after:T[]){return [...new Set([...before,...after].map(r=>r.id))].flatMap(id=>{
  const b=before.find(r=>r.id===id)??null,a=after.find(r=>r.id===id)??null;return eq(b,a)?[]:[{id,before:b,after:a}];});}
-const lineFields=['originalItem','packs','unitPriceMinor','feeEligible'] as const;
-// Caps describe the shopper's budget, not the observation/coverage/charge basis.
-function pricingBasis(quote:z.infer<typeof quoteSchema>){const {capMinor,capScope,...basis}=quote;return basis;}
-function pricingFacts(lines:readonly z.infer<typeof lineSchema>[]){return lines.map(({lineId,originalItem,unitPriceMinor,feeEligible})=>
- ({lineId,originalItem,unitPriceMinor,feeEligible})).sort((a,b)=>a.lineId.localeCompare(b.lineId));}
 export function deriveSharedFoodUndo(e:FoodUndoEvidence,current:{graph:DemandGraph;lines:z.infer<typeof lineSchema>[];quote:z.infer<typeof quoteSchema>;shopRevision?:number;storeBasis?:{revision:number|null;reviewRequired:boolean}},
  command:{operationId:string;householdId:string;shopId:string;baseRevision:number;at:string},now:Date){
  const {operation:o,effect:f}=e;
@@ -87,30 +83,7 @@ export function deriveSharedFoodUndo(e:FoodUndoEvidence,current:{graph:DemandGra
  }
  insist(current.graph.householdId===o.household_id&&current.graph.shopId===o.shop_id&&current.graph.revision>=ag.revision
    &&command.baseRevision===current.graph.revision,'history_unavailable');
- const lines=current.lines.map(l=>lineSchema.parse(l));insist(new Set(lines.map(l=>l.lineId)).size===lines.length,'history_unavailable');
- const touched:{lineId:string;fields:string[]}[]=[];let pricesRestored=false;
- for(const lineId of new Set([...before.lines,...after.lines].map(l=>l.lineId))){
-  const b=before.lines.find(l=>l.lineId===lineId),a=after.lines.find(l=>l.lineId===lineId),index=lines.findIndex(l=>l.lineId===lineId),c=lines[index];
-  if(eq(b??null,a??null))continue;
-  if(!b||!a){
-   insist(eq(c??null,a??null),'line_conflict');
-   if(index>=0)lines.splice(index,1);if(b)lines.push(structuredClone(b));
-   touched.push({lineId,fields:['membership']});pricesRestored=pricesRestored||!!b;continue;
-  }
-  insist(c,'line_conflict');const fields=lineFields.filter(key=>!eq(b[key],a[key]));
-  for(const key of fields){insist(eq(c[key],a[key]),'line_conflict');Object.assign(c,{[key]:b[key]});}
-  if(fields.includes('unitPriceMinor'))pricesRestored=true;touched.push({lineId,fields});
- }
- const quoteChanged=!eq(before.quote,after.quote);
- if(quoteChanged)insist(eq(current.quote,after.quote),'quote_conflict');
- // Moving back to an older pricing basis must not relabel later prices or new
- // lines as observed under that basis. Budget-only Undo does not do this.
- if(!eq(pricingBasis(before.quote),pricingBasis(after.quote)))
-  insist(eq(pricingFacts(current.lines),pricingFacts(after.lines)),'quote_conflict');
- // A historical price cannot borrow a later quote's observation/expiry provenance.
- if(pricesRestored&&!quoteChanged)insist(eq(current.quote,before.quote),'quote_conflict');
- const quote=quoteSchema.parse(quoteChanged?before.quote:current.quote);
- if(quoteChanged||pricesRestored)insist(Date.parse(quote.expiresAt)>now.getTime(),'expired_quote');
+ const {lines,quote,touched,quoteChanged}=deriveFoodUndoBasket(before,after,current,now);
  const changes=receipt.lines.length+receipt.contributions.length+receipt.edges.length;
  const c={...command,schemaVersion:1,lines:[],contributions:[],edges:[],removeSourceIds:[],removeEdgeIds:[]};
  const result=changes?undoDemandChange(current.graph,receipt,c):{

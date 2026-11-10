@@ -1,0 +1,24 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readTracking,readTrackingActionSources,trackingActionSourcesInputSchema} from '../dist/shared-demand-tracking-repository.js';
+import {digest} from '../dist/database.js';
+const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
+function fixture(){
+ const quote={currency:'USD',scope:'wholeCheckout',complete:true,capMinor:10000,capScope:'wholeCheckout',fee:{kind:'fixed',amountMinor:0},taxesMinor:0,depositsMinor:0,discountsMinor:0,observedAt:'2026-11-10T11:00:00Z',expiresAt:'2026-11-10T13:00:00Z'},shop={shop_id:id(2),revision:1,authority_epoch:1,quote,demand_revision:null,demand_review_required:false};
+ const counts={writes:0,consent:0},repo={options:{trackingV2:true},requireShopper(){},requireDraft(){},checkBase(s,b){assert.equal(b.shopRevision,s.revision);assert.equal(b.authorityEpoch,s.authority_epoch);},async meals(){return[];},async lines(){return[];},async consent(){counts.consent++;}};
+ const ctx={householdId:id(1),member:{member_id:id(3)},now:new Date('2026-11-10T12:00:00Z'),db:{async query(sql){assert.ok(sql.startsWith('SELECT'),'catalog must never write');if(sql.includes('tracking_privacy_revision'))return{rows:[{tracking_privacy_revision:0}]};return{rows:[]};}}};
+ const meal={title:'Reviewed dinner',day:null,kind:'dinner',portions:2,protected:false,planning:{groups:[],ingredients:[{id:id(6),name:'Original wraps',quantity:null,groupIds:[],exclusions:['Exact restriction']}]}},action={kind:'shop.patch',body:{quote,lines:[],mealEdit:{occurrenceId:id(5),baseMealRevision:null,meal}}};
+ return{repo,ctx,shop,action,counts};
+}
+const base=p=>({shopRevision:p.shopRevision,authorityEpoch:p.authorityEpoch,graphRevision:0,stateDigest:p.basisDigest});
+test('legacy action catalog is read-only exact canonical action and unknown source disclosure',async()=>{
+ const f=fixture(),p=await readTracking(f.repo,f.ctx,f.shop),input={base:base(p),action:f.action},a=await readTrackingActionSources(f.repo,f.ctx,f.shop,input);
+ assert.deepEqual(a.base,input.base);assert.deepEqual(a.normalizedAction,f.action);assert.equal(a.actionDigest,digest(f.action));assert.equal(a.sources.length,1);assert.equal(a.sources[0].quantity,null);assert.equal(a.sources[0].revision,2);assert.equal(a.sources[0].originalText,'Original wraps');assert.equal(a.sources[0].sourceExclusions[0].resolution.kind,'unresolved');assert.equal(a.sources[0].requiredLineId,null);assert.deepEqual(await readTracking(f.repo,f.ctx,f.shop),p);assert.ok(!('previewId' in a));
+});
+test('legacy catalog rejects stale state digest before proposed-source disclosure',async()=>{const f=fixture(),p=await readTracking(f.repo,f.ctx,f.shop);await assert.rejects(()=>readTrackingActionSources(f.repo,f.ctx,f.shop,{base:{...base(p),stateDigest:'0'.repeat(64)},action:f.action}),e=>e.code==='tracking_stale_state');});
+test('legacy catalog refuses nonrelated patch instead of manufacturing source review authority',async()=>{const f=fixture(),p=await readTracking(f.repo,f.ctx,f.shop),action={kind:'shop.patch',body:{quote:f.shop.quote,lines:[]}};await assert.rejects(()=>readTrackingActionSources(f.repo,f.ctx,f.shop,{base:base(p),action}),e=>e.code==='tracking_related_action_required');});
+test('legacy catalog respects feature admission and shopper check before reads',async()=>{const f=fixture();let reads=0;f.ctx.db.query=async()=>{reads++;throw new Error('unexpected read');};f.repo.options.trackingV2=false;await assert.rejects(()=>readTrackingActionSources(f.repo,f.ctx,f.shop,{}),e=>e.code==='not_available');f.repo.options.trackingV2=true;f.repo.requireShopper=()=>{throw new Error('not current shopper');};await assert.rejects(()=>readTrackingActionSources(f.repo,f.ctx,f.shop,{}),/not current shopper/);assert.equal(reads,0);});
+test('legacy catalog strict request preserves required fields and rejects future action kinds',async()=>{const f=fixture(),p=await readTracking(f.repo,f.ctx,f.shop),input={base:base(p),action:f.action};assert.equal(trackingActionSourcesInputSchema.safeParse(input).success,true);for(const bad of [{action:f.action},{...input,base:null},{...input,extra:true},{...input,action:{...input.action,kind:'request.undoAcceptance'}}])assert.equal(trackingActionSourcesInputSchema.safeParse(bad).success,false);});
+test('legacy catalog rejects revoked persisted meal author before returning copied ingredient text',async()=>{
+ const f=fixture();f.repo.meals=async()=>[{occurrenceId:id(5),revision:1,meal:f.action.body.mealEdit.meal}];f.ctx.db.query=async sql=>({rows:sql.includes('SELECT DISTINCT m.*')?[{member_id:id(7),state:'revoked'}]:sql.includes('tracking_privacy_revision')?[{tracking_privacy_revision:0}]:[]});await assert.rejects(()=>readTrackingActionSources(f.repo,f.ctx,f.shop,{base:{shopRevision:1,authorityEpoch:1,graphRevision:0,stateDigest:'0'.repeat(64)},action:f.action}),e=>e.code==='tracking_source_unavailable');
+});

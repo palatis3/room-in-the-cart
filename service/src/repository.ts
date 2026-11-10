@@ -1,3 +1,5 @@
+import {captureAcceptanceBefore,finishAcceptanceCapture} from './shared-request-acceptance-lineage.js';
+import {requestUndoOperation,applyRequestUndo,assertRequestAcceptanceReplay} from './shared-request-acceptance-repository.js';
 import {captureTrackingSnapshot,prepareTrackingFreeze,takeTrackingSeal,assertTrackingPlacement} from './shared-demand-tracking-repository.js';
 import {applyDemand,demandOperation,demandSnapshotRef,assertDemandReplay,assertPriceOnly,assertDemandPlacement} from './shared-demand-repository.js';
 import { recordOrderAmendment } from './order-amendments.js';
@@ -324,6 +326,7 @@ export class HouseholdRepository {
       if(prior.response_scope==='shopper'){
         const shop=await this.shop(ctx,prior.shop_id);this.requireShopper(ctx,shop);
         await assertDemandReplay(this,ctx,shop,prior.operation_id);
+        await assertRequestAcceptanceReplay(this,ctx,shop,prior,command);
         if(prior.kind==='amendment.recordResponse' && (prior.response?.authorityEpoch!==shop.authority_epoch || shop.confirmed_order_erased || !(await ctx.db.query(
           'SELECT 1 FROM ritc.order_amendment WHERE household_id=$1 AND shop_id=$2 AND operation_id=$3',[ctx.householdId,shop.shop_id,prior.operation_id])).rowCount)) throw refresh();
         if(prior.kind==='request.carry')await reauthorizeCarry(ctx,shop,this.carryNotice,prior.operation_id);
@@ -362,7 +365,7 @@ export class HouseholdRepository {
     if(queueGrant && queueAuthority?.requestQueueGrant!==queueGrant) {
       throw queueEnded();
     }
-    const operationId=await demandOperation(ctx,command);
+    const operationId=command.kind==='request.undoAcceptance'?await requestUndoOperation(ctx,command):await demandOperation(ctx,command);
     let scope:'own'|'shopper'|'organizer'|'reporter'='shopper';
     let response:unknown;
     if(command.kind==='shop.create') {
@@ -459,6 +462,15 @@ export class HouseholdRepository {
       return this.receipt(ctx,c,operationId,'clarified',{requestId:r.request_id,requestRevision:r.revision+1});
     }
     if(c.kind==='request.confirmPurchase')return this.confirmPurchase(ctx,shop,c,operationId);
+    if(c.kind==='request.undoAcceptance'){
+      const inverse=await applyRequestUndo(this,ctx,shop,c,operationId);
+      await this.setLines(ctx,shop.shop_id,inverse.body.lines);
+      await ctx.db.query('UPDATE ritc.shop SET quote=$3,revision=revision+1 WHERE household_id=$1 AND shop_id=$2',[ctx.householdId,shop.shop_id,inverse.body.quote]);
+      const t=inverse.transition;
+      const updated=await ctx.db.query('UPDATE ritc.request SET status=$3,route=$4,revision=revision+1 WHERE household_id=$1 AND request_id=$2 AND revision=$5 AND status=$6 AND route=$7',[ctx.householdId,t.requestId,t.restored.status,t.restored.route,t.expected.revision,t.expected.status,t.expected.route]);
+      if(updated.rowCount!==1)throw refresh();
+      await this.snapshot(ctx,shop.shop_id,operationId,'decision');return inverse.receipt;
+    }
     if(c.kind==='request.apply')return this.apply(ctx,shop,c,operationId);
     if(c.kind==='shop.patch') {
       this.requireDraft(shop);const b=bodySchemas['shop.patch'].parse(c.body);this.validateQuote(b.quote,ctx.now);checkout(b.lines,b.quote);
@@ -558,6 +570,7 @@ export class HouseholdRepository {
     const facts=this.previewFacts(shop,r,lines,decision);
     if(facts.requiresOverageAcceptance&&!b.acceptOverage)throw new ServiceError(409,'overage_acceptance_required','Explicitly accept the recomputed whole-checkout overage or defer.');
     if(facts.requiresUnknownAcceptance&&!b.acceptUnknown)throw new ServiceError(409,'unknown_acceptance_required','Review the missing costs or defer.');
+    const acceptanceBefore=await captureAcceptanceBefore(this,ctx,shop,c,operationId,decision);
     if(decision.choice==='add'||decision.choice==='link') {
       this.requireDraft(shop);
       if(b.demandReview)await applyDemand(this,ctx,shop,c,operationId);
@@ -575,6 +588,7 @@ export class HouseholdRepository {
     }
     const status=decision.choice==='add'||decision.choice==='link'?'added':decision.choice==='defer'?'deferred':decision.choice==='dismiss'?'dismissed':'handled';
     await ctx.db.query('UPDATE ritc.request SET status=$3,route=$4,revision=revision+1 WHERE household_id=$1 AND request_id=$2',[ctx.householdId,r.request_id,status,decision.choice==='defer'?'next':status==='added'?'current':r.route]);
+    await finishAcceptanceCapture(this,ctx,shop,acceptanceBefore);
     return this.receipt(ctx,c,operationId,status,{requestId:r.request_id,requestRevision:r.revision+1});
   }
   private async place(ctx:Context,shop:Shop,operationId:string,snapshotRevision:number) {

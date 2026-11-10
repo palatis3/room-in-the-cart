@@ -133,8 +133,8 @@ test('tracking operation history reads empty and retained lineage without leakin
  const history=ok(await call(f.owner,path));
  assert.equal(history.shopRevision,current.shopRevision);assert.equal(history.items.length,1);
  const item=history.items[0];
- assert.deepEqual(Object.keys(item).sort(),['committedAt','operationId','shopRevision','status']);
- assert.equal(item.operationId,target);assert.equal(item.shopRevision,current.shopRevision);
+ assert.deepEqual(Object.keys(item).sort(),['committedAt','operationId','reviewRoute','shopRevision','status']);
+ assert.equal(item.reviewRoute,'tracking');assert.equal(item.operationId,target);assert.equal(item.shopRevision,current.shopRevision);
  assert.equal(item.status,'current_preview_required');assert.ok(Number.isFinite(Date.parse(item.committedAt)));
  const sameHouseholdShop={...f,shopId:randomUUID()};
  ok(await send(sameHouseholdShop,'shop.create',{quote:f.quote,lines:[]},0,0));
@@ -198,15 +198,15 @@ test('partial tracking accepts an explicitly reviewed request link without hidin
  const saved=after.state.catalog.find(c=>c.source.kind==='request');assert.equal(saved.originalQuantityText,'maybe two?');assert.equal(saved.quantity,null);assert.equal(saved.requiredLineId,f.basket.lineId);assert.equal(saved.source.appliedRequestRevision,1);
  assert.deepEqual(ok(await call(f.owner,f.base+'/commands','POST',result.command)),ok(result.response));assert.equal(after.coverage.status,'partial');
 });
-test('compound first adoption plus request acceptance retains original v1 route but receives no invented full-operation lineage',async()=>{
+test('compound first adoption through original v1 Apply records full lineage and routes Undo to the request family',async()=>{
  const f=await fixture(),author=await invited(f),p=await page(f),request=ok(await send(f,'request.send',{clientRequestId:randomUUID(),originalItem:'Request at first tracking',ownQuantity:'some wraps',authoredAt:new Date().toISOString()},1,1,author));
  const money=ok(await call(f.owner,f.path+'/previews','POST',{requestId:request.request.requestId,base:{shopRevision:1,authorityEpoch:1,requestRevision:1},decision:{choice:'link',lineId:f.basket.lineId,promote:false}}));
  const requested={...source(f,null),source:{kind:'request',requestId:request.request.requestId,appliedRequestRevision:1},originalText:'Request at first tracking'};
  const input={...draft(f),base:baseOf(p),action:{kind:'request.apply',body:{requestId:request.request.requestId,previewId:money.previewId,acceptUnknown:false,acceptOverage:false}}};input.change.contributions.push(requested);input.packs[0].acceptUnresolved=true;
- const rejected=await candidate(f,input);assert.equal(rejected.status,409);assert.equal(rejected.data.error.code,'tracking_first_adoption_scope');assert.equal(await count(f,'shared_tracking_adoption'),0);
+ const prepared=ok(await candidate(f,input));assert.equal(prepared.after.catalog.find(x=>x.source.kind==='request').source.requestId,request.request.requestId);assert.equal(await count(f,'shared_tracking_adoption'),0);
  const legacy={...input,base:{shopRevision:1,authorityEpoch:1,graphRevision:0}};const accepted=await apply(f,legacy,ok(await preview(f,legacy)));ok(accepted.response);
- assert.equal(await count(f,'shared_tracking_adoption'),0);assert.equal(await count(f,'shared_tracking_revision'),0);
- const now=await page(f);const denied=await candidate(f,{mode:'firstAdoptionUndo',base:baseOf(now),targetOperationId:ok(accepted.response).operationId,packs:[]});assert.equal(denied.status,409);assert.equal(denied.data.error.code,'tracking_history_unavailable');
+ assert.equal(await count(f,'shared_tracking_adoption'),1);assert.equal(await count(f,'shared_tracking_revision'),1);assert.equal(await count(f,'request_acceptance_effect'),1);
+ const now=await page(f);const denied=await candidate(f,{mode:'firstAdoptionUndo',base:baseOf(now),targetOperationId:ok(accepted.response).operationId,packs:[]});assert.equal(denied.status,409);assert.equal(denied.data.error.code,'tracking_request_undo_route');
 });
 test('selective erasure retains another author transferred protected identities through review recovery',async()=>{
  const f=await fixture(),owner=f.owner,other=await invited(f),occurrences=[];let revision=1,epoch=1;

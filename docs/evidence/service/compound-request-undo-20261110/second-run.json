@@ -1,0 +1,55 @@
+{
+  "status": "failed",
+  "qualified": false,
+  "run": "/Users/palatis/Room in the Cart/.build/SharedDemandGraphNov09/root-compound-backend-r2",
+  "strictTypeScriptExit": 0,
+  "offline": {
+    "tests": 926,
+    "pass": 925,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 1,
+    "todo": 0,
+    "skippedNames": [
+      "PostgreSQL durable billing / RLS / named seats contract"
+    ],
+    "logSHA256": "0bc8f78fd74433544d7fa887d0eb59be6f9f797b5b5f60ec0c83fe0faa7c9e06"
+  },
+  "database": {
+    "tests": 397,
+    "pass": 393,
+    "fail": 1,
+    "cancelled": 0,
+    "skipped": 3,
+    "todo": 0
+  },
+  "failedTests": [
+    "a later store selection cannot be treated as the original compound request store basis"
+  ],
+  "originalFailuresNowPassing": [
+    "ordinary request inverse after later mapping follows the current shopper and invalidates an old held preview",
+    "v1 changed-quote first adoption records the reviewed quote and whole Undo preserves a later staple",
+    "signed quarantined restore erases 048 accepted and retired-link lineage without deleting independent same-label facts",
+    "tracked Undo lost reply and original Add replay after later reacceptance never reapply effects",
+    "a held first Apply cannot remove a later reacceptance after another Undo committed"
+  ],
+  "restore048": {
+    "signatureVerified": true,
+    "applied": true,
+    "runtimeStillQuarantined": true,
+    "privateReceiptSHA256": "0426b0bf344ff02c1031d3aa3f4a671e05aaebc7aec3c5dfbede896838d8ff58"
+  },
+  "sourceFiles": 292,
+  "sourceDependenciesToolsProductsUnchanged": true,
+  "postgresStopped": true,
+  "privateFailedFixtureRetained": true,
+  "hashes": {
+    "receipt.json": "bca19073042b711791eff03487730188f1d2763d761bb5458d9bfe304d9d1b1e",
+    "source-manifest.json": "0c3acf04fbabb338c4dd4967fb10db92393d31144578fddcf6b22eab36f021a1",
+    "compiled-service-manifest.json": "59d63a95e99ad5a91944ab2376c745f928fcd7be7120cde83d2b2ec4f2e12a30",
+    "typescript.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "offline.log": "0bc8f78fd74433544d7fa887d0eb59be6f9f797b5b5f60ec0c83fe0faa7c9e06",
+    "database.log": "27c879c40e9ccfb9c5e52852f7f8f45dd915842a1e225d41adaa15d6e076163a"
+  },
+  "next": "Correct the store scenario to use the existing fully tracked store-review route; separately track missing partial-state store review. No combined release qualification."
+}

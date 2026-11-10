@@ -55,7 +55,7 @@ export function validateDemandGraph(input:unknown):DemandGraph {
  const g=sharedDemandGraphSchema.parse(input);unique(g.usedIds);unique(g.lines.map(l=>l.originalOrder),'duplicate_order');
  const ids=[...g.lines,...g.contributions,...g.edges].map(x=>x.id);unique(ids);requireThat(ids.every(id=>g.usedIds.includes(id)),'unregistered_identity');
  const lines=new Map(g.lines.map(l=>[l.id,l])),sources=new Map(g.contributions.map(c=>[c.id,c]));
- const provenance:string[]=[];
+ const provenance:string[]=[],activeRequests:string[]=[];
  for(const c of g.contributions){requireThat(lines.has(c.lineId),'unknown_line');if(active(c))requireThat(lines.get(c.lineId)!.trashedAt===null,'trashed_source_line');
   unique(c.exclusions,'duplicate_exclusion');unique(c.contains,'duplicate_product_fact');requireThat(!c.exclusions.some(x=>c.contains.includes(x)),'excluded_product');
   if(c.quantity)checkQuantity(c.quantity);
@@ -65,12 +65,14 @@ export function validateDemandGraph(input:unknown):DemandGraph {
    requireThat(occurrence!==null&&e.occurrenceId===occurrence&&(c.source.kind==='meal'||c.source.kind==='reservation')&&(e.ingredientId===null||e.ingredientId===c.source.ingredientId),'invalid_exclusion_origin');
    if(e.resolution.kind==='mapped'){unique(e.resolution.tags,'duplicate_exclusion');requireThat(e.resolution.tags.every(tag=>c.exclusions.includes(tag)),'missing_mapped_exclusion');}
   }
-  if(c.source.kind==='request')provenance.push('request/'+c.source.requestId);
+  // A retired acceptance keeps its immutable revision provenance. A new
+  // acceptance may use a new revision, but only one generation may be active.
+  if(c.source.kind==='request'){provenance.push('request/'+c.source.requestId+'/'+c.source.appliedRequestRevision);if(active(c))activeRequests.push(c.source.requestId);}
   if(c.source.kind==='import')provenance.push('import/'+c.source.batchId+'/'+c.source.entryId);
   if(c.source.kind==='meal') {requireThat((c.source.groupId===null)===(c.source.bindingId===null),'invalid_group_binding');provenance.push('meal/'+c.source.occurrenceId+'/'+c.source.ingredientId+'/'+c.source.groupId);}
   if(c.source.kind==='reservation'){requireThat(c.source.bindingId===null||c.source.groupId!==null,'invalid_group_binding');provenance.push('reservation/'+c.source.reservationId);}
  }
- unique(provenance,'duplicate_source');unique(g.edges.filter(e=>e.kind==='duplicate').map(e=>e.demandId+'/'+e.supplyId),'duplicate_edge');
+ unique(provenance,'duplicate_source');unique(activeRequests,'duplicate_source');unique(g.edges.filter(e=>e.kind==='duplicate').map(e=>e.demandId+'/'+e.supplyId),'duplicate_edge');
  for(const e of g.edges){const d=sources.get(e.demandId),s=sources.get(e.supplyId);
   requireThat(d&&s&&d.id!==s.id&&active(d)&&active(s)&&d.lineId===s.lineId,'invalid_edge_reference');sameProduct(d,s);
   requireThat(![d,s].some(c=>c.sourceExclusions?.some(e=>e.resolution.kind==='unresolved')),'unresolved_exclusion');

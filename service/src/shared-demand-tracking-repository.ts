@@ -1,3 +1,8 @@
+import {checkout} from './checkout.js';
+import {recordCompoundAdoption,inverseCompoundAdoptionPartition,validateCompoundAdoptionEvidence} from './shared-demand-compound-adoption.js';
+import {deriveFoodUndoBasket} from './shared-food-undo-basket.js';
+import {acceptanceComponentForTracking} from './shared-request-acceptance-lineage.js';
+import {mealComponentForTracking,deriveCompoundMealAction,validateCompoundMealHistory} from './shared-demand-tracking-meal.js';
 /** V2 tracking persistence. Called only in the existing authorized household lock.
  * Feature admission is opt-in; existing persisted partitions are fenced even when
  * the feature is disabled. No client-supplied catalog/history is ever authority. */
@@ -29,21 +34,28 @@ export const trackingIntentSchema=z.discriminatedUnion('mode',[
 ]);
 type Intent=z.infer<typeof trackingIntentSchema>;
 const token=z.object({previewId:id,previewDigest:hash,trackingVersion:z.literal(2)}).strict();
-const acceptSchema=z.object({candidateId:id,candidateDigest:hash,acknowledgedDisclosure:z.unknown()}).strict();
+const moneyAcknowledgmentsSchema=z.object({acceptOverage:z.boolean(),acceptUnknown:z.boolean()}).strict();
+const acceptSchema=z.object({candidateId:id,candidateDigest:hash,acknowledgedDisclosure:z.unknown(),acceptOverage:z.boolean().default(false),acceptUnknown:z.boolean().default(false)}).strict();
+function moneyAccepted(value:ReturnType<typeof checkout>,raw:unknown){
+ const parsed=moneyAcknowledgmentsSchema.safeParse(raw??{acceptOverage:false,acceptUnknown:false});if(!parsed.success)return false;
+ return (value.status!=='overCap'||parsed.data.acceptOverage)&&
+  ((value.status!=='unresolved'&&value.status!=='scopeMismatch'&&value.scope==='wholeCheckout')||parsed.data.acceptUnknown);
+}
+function requireMoney(value:ReturnType<typeof checkout>,raw:unknown){check(moneyAccepted(value,raw),'tracking_money_acknowledgment_required');}
 function check(v:unknown,code='tracking_review_required'):asserts v{if(!v)throw new ServiceError(409,code,'Review the current food sources and pickup scope.');}
 function enabled(repo:HouseholdRepository){if(!repo.options.trackingV2)throw new ServiceError(404,'not_available','This operation is not available.');}
 const bounded=<T>(v:T):T=>{check(Buffer.byteLength(JSON.stringify(v))<=1_800_000,'tracking_size');return v;};
 const blank=(ctx:Context,shop:Shop)=>({schemaVersion:1 as const,conversionTableVersion:'us-customary-metric-v1' as const,householdId:ctx.householdId,shopId:shop.shop_id,revision:0,lines:[],contributions:[],edges:[],usedIds:[]});
 export const trackingBasket=(lines:Awaited<ReturnType<HouseholdRepository['lines']>>)=>lines.map(l=>({id:l.lineId,name:l.originalItem,packs:l.packs,priceMinor:l.unitPriceMinor,feeEligible:l.feeEligible})).sort((a,b)=>a.id.localeCompare(b.id));
 const basket=trackingBasket;
-const lines=(state:TrackingState)=>state.basket.map(l=>({lineId:l.id,originalItem:l.name,packs:l.packs,unitPriceMinor:l.priceMinor,feeEligible:l.feeEligible}));
+const lines=(state:Pick<TrackingState,'basket'>)=>state.basket.map(l=>({lineId:l.id,originalItem:l.name,packs:l.packs,unitPriceMinor:l.priceMinor,feeEligible:l.feeEligible}));
 const same=(a:unknown,b:unknown)=>digest(a)===digest(b);
 const catalogGraph=(s:Pick<TrackingState,'graph'|'unbound'>)=>({...s.graph,contributions:[...s.graph.contributions,...s.unbound.flatMap(u=>u.transferred?[u.transferred]:[])]});
 async function privacyRevision(ctx:Context,shop:Shop){return Number((await ctx.db.query('SELECT tracking_privacy_revision FROM ritc.shop WHERE household_id=$1 AND shop_id=$2',[ctx.householdId,shop.shop_id])).rows[0]?.tracking_privacy_revision??0);}
 export async function trackingRow(ctx:Context,shop:Shop){return (await ctx.db.query('SELECT * FROM ritc.shared_tracking_revision WHERE household_id=$1 AND shop_id=$2 AND shop_revision<=$3 ORDER BY shop_revision DESC LIMIT 1',[ctx.householdId,shop.shop_id,shop.revision])).rows[0]??null;}
 /** Same source enumeration as v1, with the persisted source revision attached.
  * Consent is checked for every accepted request even if currently unbound. */
-export async function trackingCatalog(repo:HouseholdRepository,ctx:Context,shop:Shop,facts?:Awaited<ReturnType<typeof actionFacts>>,graph?:TrackingState['graph']):Promise<Fact[]>{
+async function trackingSourceDescriptors(repo:HouseholdRepository,ctx:Context,shop:Shop,facts?:Awaited<ReturnType<typeof actionFacts>>,graph?:TrackingState['graph']){
  const meals=facts?.meals??await repo.meals(ctx,shop.shop_id);
  const linked=(await ctx.db.query(`SELECT l.request_id,l.line_id,l.reviewed_revision,r.original_item,r.own_quantity,r.author_id
  FROM ritc.request_link l JOIN ritc.request r ON (r.household_id,r.shop_id,r.request_id)=(l.household_id,l.shop_id,l.request_id)
@@ -62,7 +74,10 @@ export async function trackingCatalog(repo:HouseholdRepository,ctx:Context,shop:
   for(const author of origins){check(author.state==='active','tracking_source_unavailable');await repo.consent(ctx.db,ctx.householdId,author);}
  }
  const descriptors=[...mealDemandSources(shop.shop_id,meals,whole),...linked.map(r=>requestDemandSource(shop.shop_id,r))];
- return descriptors.map(({productName:_,...d})=>({ ...d,revision:d.source.kind==='request'?d.source.appliedRequestRevision:meals.find(m=>m.occurrenceId===(d.source.kind==='meal'?d.source.occurrenceId:d.source.kind==='reservation'?d.source.originOccurrenceId:null))!.revision})).sort((a,b)=>a.id.localeCompare(b.id));
+ return descriptors.map(d=>({ ...d,revision:d.source.kind==='request'?d.source.appliedRequestRevision:meals.find(m=>m.occurrenceId===(d.source.kind==='meal'?d.source.occurrenceId:d.source.kind==='reservation'?d.source.originOccurrenceId:null))!.revision})).sort((a,b)=>a.id.localeCompare(b.id));
+}
+export async function trackingCatalog(repo:HouseholdRepository,ctx:Context,shop:Shop,facts?:Awaited<ReturnType<typeof actionFacts>>,graph?:TrackingState['graph']):Promise<Fact[]>{
+ return (await trackingSourceDescriptors(repo,ctx,shop,facts,graph)).map(({productName:_,...fact})=>fact);
 }
 function partition(graph:TrackingState['graph'],catalog:Fact[],before:TrackingState|null,allowedUnbound:string[]){
  check(new Set(allowedUnbound).size===allowedUnbound.length&&allowedUnbound.every(i=>catalog.some(f=>f.id===i)),'tracking_unbound_identity');
@@ -78,7 +93,8 @@ async function stateNow(repo:HouseholdRepository,ctx:Context,shop:Shop){
  const retained=row?.state??row?.projection?.state;const catalog=await trackingCatalog(repo,ctx,shop,undefined,retained?catalogGraph({...retained,graph}):graph);
  const currentBasket=basket(await repo.lines(ctx,shop.shop_id)),privacy=await privacyRevision(ctx,shop);
  if(row){
-  if(row.projection!==null){const p=redactedProjectionSchema.parse({...row.projection,state:{...row.projection.state,authorityEpoch:shop.authority_epoch}});check(row.state===null&&row.state_digest===null&&p.state.privacyRevision===privacy,'tracking_projection_integrity');return{row,state:null,projection:p,catalog,graph};}
+  if(row.projection!==null){const p=redactedProjectionSchema.parse({...row.projection,state:{...row.projection.state,authorityEpoch:shop.authority_epoch}});check(row.state===null&&row.state_digest===null&&p.state.privacyRevision===privacy,'tracking_projection_integrity');
+   check(same(p.state.basket,currentBasket)&&p.state.quoteDigest===storeDigest(shop.quote),'tracking_projection_money_changed');return{row,state:null,projection:p,catalog,graph};}
   check(row.state&&row.state_digest===digest(row.state),'tracking_integrity');const state=validateState({...row.state,authorityEpoch:shop.authority_epoch},catalog);
   check(same(state.graph,graph)&&same(state.basket,currentBasket)&&state.quoteDigest===storeDigest(shop.quote)&&state.privacyRevision===privacy&&state.authorityEpoch===shop.authority_epoch,'tracking_stale_state');
   return{row,state,projection:null,catalog,graph};
@@ -91,7 +107,23 @@ async function stateNow(repo:HouseholdRepository,ctx:Context,shop:Shop){
  return{row:null,state,projection:null,catalog,graph};
 }
 export async function readTracking(repo:HouseholdRepository,ctx:Context,shop:Shop){enabled(repo);repo.requireShopper(ctx,shop);const c=await stateNow(repo,ctx,shop);
- const state=c.state,projection=c.projection;return bounded({schemaVersion:2,shopId:shop.shop_id,shopRevision:shop.revision,authorityEpoch:shop.authority_epoch,status:projection?'reviewRequired':shop.demand_revision?'enabled':'legacy',state,projection,basisDigest:digest(projection??state),coverage:state?coverage(state,c.catalog):null,freezeReview:c.row?.review&&state&&same(c.row.review.review.disclosure,trackingReviewDisclosure(state,c.catalog))?{previewId:c.row.review.review.reviewId,previewDigest:c.row.review.reviewDigest,trackingVersion:2}:null});}
+ const state=c.state,projection=c.projection;return bounded({schemaVersion:2,shopId:shop.shop_id,shopRevision:shop.revision,authorityEpoch:shop.authority_epoch,status:projection?'reviewRequired':shop.demand_revision?'enabled':'legacy',state,projection,basisDigest:digest(projection??state),checkout:checkout(lines(state??projection!.state),shop.quote),coverage:state?coverage(state,c.catalog):null,freezeReview:c.row?.review&&state&&moneyAccepted(checkout(lines(state),shop.quote),c.row.review.moneyAcknowledgments)&&same(c.row.review.review.disclosure,trackingReviewDisclosure(state,c.catalog))?{previewId:c.row.review.review.reviewId,previewDigest:c.row.review.reviewDigest,trackingVersion:2}:null});}
+/** Informational proposed legacy sources. The exact action/base are bound, but
+ * this response is never an Apply token or a substitute for explicit review. */
+export const trackingActionSourcesInputSchema=z.object({base,action}).strict();
+export async function readTrackingActionSources(repo:HouseholdRepository,ctx:Context,shop:Shop,raw:unknown){
+ enabled(repo);repo.requireShopper(ctx,shop);repo.requireDraft(shop);
+ const input=trackingActionSourcesInputSchema.parse(raw);repo.checkBase(shop,input.base);
+ const current=await stateNow(repo,ctx,shop),state=current.state;
+ check(state&&!current.projection&&!shop.demand_review_required&&state.graph.revision===0&&!shop.demand_revision,'tracking_legacy_action_required');
+ check(input.base.graphRevision===0&&input.base.stateDigest===digest(state),'tracking_stale_state');
+ const facts=await actionFacts(repo,ctx,shop,input);
+ check(input.action.kind==='request.apply'||facts.body.mealEdit,'tracking_related_action_required');
+ const sources=await trackingSourceDescriptors(repo,ctx,shop,facts,state.graph);
+ const normalizedAction={kind:input.action.kind,body:bodySchemas[input.action.kind].parse(facts.body)};
+ return bounded({schemaVersion:2 as const,shopId:shop.shop_id,base:input.base,normalizedAction,
+  actionDigest:storeDigest(normalizedAction),sources});
+}
 /** V1 never receives a partial graph as a complete record, even if activation is off. */
 export async function assertTrackingV1(repo:HouseholdRepository,ctx:Context,shop:Shop){const r=await trackingRow(ctx,shop);if(!r)return;check(r.state&&r.state_digest===digest(r.state)&&!r.projection,'tracking_v2_required');try{admitV1(r.state,r.state.catalog);const current=await stateNow(repo,ctx,shop);check(current.state&&!current.projection,'tracking_v2_required');admitV1(current.state,current.catalog);}catch(e){if(e instanceof PartitionError)throw new ServiceError(409,'tracking_v2_required','Review all tracked and unbound food sources.');throw e;}}
 const basis=(ctx:Context,shop:Shop,state:TrackingState,basisDigest=digest(state))=>({householdId:ctx.householdId,shopId:shop.shop_id,graphRevision:state.graph.revision,authorityEpoch:shop.authority_epoch,privacyRevision:state.privacyRevision,basisDigest,currentCatalog:state.catalog});
@@ -103,11 +135,25 @@ async function storeProof(ctx:Context,shop:Shop,expected?:unknown){
 async function lineage(ctx:Context,shop:Shop,target:string){const row=(await ctx.db.query('SELECT * FROM ritc.shared_tracking_adoption WHERE household_id=$1 AND shop_id=$2 AND operation_id=$3',[ctx.householdId,shop.shop_id,target])).rows[0];
  check(row?.evidence&&row.evidence_digest===digest(row.evidence)&&row.authority_epoch===shop.authority_epoch,'tracking_history_unavailable');
  check(!(await ctx.db.query('SELECT 1 FROM ritc.shared_tracking_revision WHERE household_id=$1 AND shop_id=$2 AND reverses_operation_id=$3',[ctx.householdId,shop.shop_id,target])).rowCount,'tracking_already_reversed');await storeProof(ctx,shop,row.store_basis);return row;}
+type AdoptionRecord=ReturnType<typeof recordFirstAdoption>|ReturnType<typeof recordCompoundAdoption>;
+type AdoptionPlan={before:TrackingState;after:TrackingState;beforeQuote:unknown;afterQuote:unknown;
+ component:{kind:'none'}|{kind:'requestAcceptance';requestId:string}|{kind:'meal';occurrenceId:string}};
+async function finishAdoptionPlan(ctx:Context,shop:Shop,operationId:string,plan:AdoptionPlan):Promise<AdoptionRecord|null>{
+ const component=plan.component.kind==='requestAcceptance'?acceptanceComponentForTracking(ctx,shop.shop_id,operationId):
+  plan.component.kind==='meal'?await mealComponentForTracking(ctx,shop,operationId):{kind:'none' as const};
+ // Missing pre-existing private history must not roll back an otherwise valid
+ // ordinary Apply; it also cannot gain fabricated complete Undo authority.
+ if(!component)return null;
+ check(component.kind===plan.component.kind&&
+  (component.kind!=='requestAcceptance'||plan.component.kind==='requestAcceptance'&&component.requestId===plan.component.requestId)&&
+  (component.kind!=='meal'||plan.component.kind==='meal'&&component.occurrenceId===plan.component.occurrenceId),'tracking_component_changed');
+ return recordCompoundAdoption(operationId,plan.before,plan.after,plan.beforeQuote,plan.afterQuote,component);
+}
 async function evaluate(repo:HouseholdRepository,ctx:Context,shop:Shop,input:Intent,operationId:string,at:string){
  repo.requireShopper(ctx,shop);repo.requireDraft(shop);repo.checkBase(shop,input.base);const current=await stateNow(repo,ctx,shop),before=current.state;
  check(input.base.graphRevision===current.graph.revision&&input.base.stateDigest===digest(current.projection??before),'tracking_stale_state');
  let graphReceipt:unknown=null;
- let state:TrackingState,commandAction: z.infer<typeof action>,disclosure:unknown=null,adoption:ReturnType<typeof recordFirstAdoption>|null=null;
+ let state:TrackingState,commandAction: z.infer<typeof action>,disclosure:unknown=null,adoption:AdoptionRecord|null=null;let adoptionPlan:AdoptionPlan|null=null;
  if(input.mode==='recover'){
   check(current.projection,'tracking_recovery_required');const p=current.projection;
   const b={householdId:ctx.householdId,shopId:shop.shop_id,graphRevision:p.state.graph.revision,authorityEpoch:shop.authority_epoch,privacyRevision:p.state.privacyRevision,basisDigest:digest(p),currentCatalog:current.catalog};
@@ -115,20 +161,40 @@ async function evaluate(repo:HouseholdRepository,ctx:Context,shop:Shop,input:Int
  }else{
   check(before&&!shop.demand_review_required,'tracking_recovery_required');check((input.mode==='adopt')===(before.graph.revision===0),'tracking_adoption_required');
   if(input.mode==='firstAdoptionUndo'){
-   const old=await lineage(ctx,shop,input.targetOperationId);const result=inverseFirstAdoption(old.evidence,before,{operationId,targetOperationId:input.targetOperationId,evidenceDigest:old.evidence_digest,householdId:ctx.householdId,shopId:shop.shop_id,baseRevision:before.graph.revision,authorityEpoch:shop.authority_epoch,privacyRevision:before.privacyRevision,at,currentCatalog:current.catalog});
-   state={...result.state,packReviews:input.packs};validateState(state,current.catalog);
-   const restoresPrice=old.evidence.before.basket.some((b:TrackingState['basket'][number])=>old.evidence.after.basket.some((a:TrackingState['basket'][number])=>a.id===b.id&&a.priceMinor!==b.priceMinor));check(!restoresPrice||Date.parse(shop.quote.expiresAt)>ctx.now.getTime(),'expired_quote');disclosure=result.disclosure;commandAction=unchangedAction(state,shop);
+   const old=await lineage(ctx,shop,input.targetOperationId);
+   if(old.evidence.version===2){
+    const evidence=validateCompoundAdoptionEvidence(old.evidence);
+    check(evidence.component.kind!=='requestAcceptance','tracking_request_undo_route');
+    const monetary=deriveFoodUndoBasket({lines:lines(evidence.before),quote:evidence.beforeQuote},{lines:lines(evidence.after),quote:evidence.afterQuote},
+     {lines:lines(before),quote:shop.quote},ctx.now);
+    const meal=evidence.component.kind==='meal'?await deriveCompoundMealAction(ctx,shop,evidence):null;
+    commandAction={kind:'shop.patch',body:{lines:monetary.lines,quote:monetary.quote,...(meal?{mealEdit:meal.mealEdit}:{})}};
+    const restoredFacts=await actionFacts(repo,ctx,shop,{action:commandAction});
+    const restoredCatalog=await trackingCatalog(repo,ctx,shop,restoredFacts,catalogGraph(before));
+    const result=inverseCompoundAdoptionPartition(evidence,before,{operationId,targetOperationId:input.targetOperationId,evidenceDigest:old.evidence_digest,
+     householdId:ctx.householdId,shopId:shop.shop_id,baseRevision:before.graph.revision,authorityEpoch:shop.authority_epoch,privacyRevision:before.privacyRevision,at},shop.quote,restoredCatalog,ctx.now);
+    state={...result.state,packReviews:input.packs};validateState(state,restoredCatalog);
+    graphReceipt=result.receipt;disclosure={...result.disclosure,mealUndo:meal?.inverse??null};
+   }else{
+    const result=inverseFirstAdoption(old.evidence,before,{operationId,targetOperationId:input.targetOperationId,evidenceDigest:old.evidence_digest,householdId:ctx.householdId,shopId:shop.shop_id,baseRevision:before.graph.revision,authorityEpoch:shop.authority_epoch,privacyRevision:before.privacyRevision,at,currentCatalog:current.catalog});
+    state={...result.state,packReviews:input.packs};validateState(state,current.catalog);
+    const restoresPrice=old.evidence.before.basket.some((b:TrackingState['basket'][number])=>old.evidence.after.basket.some((a:TrackingState['basket'][number])=>a.id===b.id&&a.priceMinor!==b.priceMinor));check(!restoresPrice||Date.parse(shop.quote.expiresAt)>ctx.now.getTime(),'expired_quote');disclosure=result.disclosure;commandAction=unchangedAction(state,shop);
+   }
   }else if(input.mode==='rebind'){
    const result=previewTransferredRebind(before,{operationId,at,bindings:input.bindings},basis(ctx,shop,before));state=result.state;disclosure=result.disclosure;commandAction=unchangedAction(state,shop);
   }else{
    commandAction={kind:input.action.kind,body:bodySchemas[input.action.kind].parse(input.action.body)};const facts=await actionFacts(repo,ctx,shop,{action:commandAction});
-   check(input.mode!=='adopt'||(before.graph.revision===0&&!facts.body.mealEdit&&commandAction.kind==='shop.patch'&&same(facts.quote,shop.quote)),'tracking_first_adoption_scope');
+   check(input.mode!=='adopt'||before.graph.revision===0,'tracking_first_adoption_scope');
    const result=input.mode==='review'?{graph:validateDemandGraph({...before.graph,revision:before.graph.revision+1})}:applyDemandChange(before.graph,{...input.change,schemaVersion:1,operationId,householdId:ctx.householdId,shopId:shop.shop_id,baseRevision:before.graph.revision,at});
    graphReceipt='receipt' in result?result.receipt:{schemaVersion:1,operationId,householdId:ctx.householdId,shopId:shop.shop_id,baseRevision:before.graph.revision,resultRevision:result.graph.revision,lines:[],contributions:[],edges:[]};
    if(input.mode==='review')check(!facts.body.mealEdit&&commandAction.kind==='shop.patch'&&same(basket(facts.lines).map(l=>({id:l.id,name:before.legacyLineIds.includes(l.id)?null:l.name})),before.basket.map(l=>({id:l.id,name:before.legacyLineIds.includes(l.id)?null:l.name}))),'tracking_review_food_changed');
    const catalog=await trackingCatalog(repo,ctx,shop,facts,result.graph),actualBasket=basket(facts.lines),unboundIds=input.mode==='change'?input.unboundFactIds:input.mode==='review'?before.unbound.map(u=>u.factId):[];
    state=validateState({...before,graph:result.graph,basket:actualBasket,quoteDigest:storeDigest(facts.quote),catalog,...partition(result.graph,catalog,before,unboundIds),legacyLineIds:actualBasket.filter(l=>!result.graph.lines.some(g=>g.id===l.id&&g.trashedAt===null)).map(l=>l.id),packReviews:input.packs},catalog);
-   if(input.mode==='adopt')adoption=recordFirstAdoption(operationId,before,state);
+   if(input.mode==='adopt'){
+    if(commandAction.kind==='shop.patch'&&!facts.body.mealEdit&&same(facts.quote,shop.quote))adoption=recordFirstAdoption(operationId,before,state);
+    else adoptionPlan={before,after:state,beforeQuote:shop.quote,afterQuote:facts.quote,component:commandAction.kind==='request.apply'?
+     {kind:'requestAcceptance',requestId:facts.request.request_id}:facts.body.mealEdit?{kind:'meal',occurrenceId:facts.body.mealEdit.occurrenceId}:{kind:'none'}};
+   }
   }
  }
  state={...state,basket:[...state.basket].sort((a,b)=>a.id.localeCompare(b.id))};
@@ -136,7 +202,7 @@ async function evaluate(repo:HouseholdRepository,ctx:Context,shop:Shop,input:Int
  check(same(basket(facts.lines),state.basket)&&storeDigest(facts.quote)===state.quoteDigest,'tracking_action_changed');
  verifyPacks(state.graph,{...facts,lines:facts.lines.filter(l=>!state.legacyLineIds.includes(l.lineId))},state.packReviews);
  const afterDisclosure=trackingReviewDisclosure(state,catalog),storeBasis=await storeProof(ctx,shop);
- return{before,projection:current.projection,state,graphReceipt,action:commandAction,disclosure:{changes:disclosure,pickup:afterDisclosure},adoption,storeBasis};
+ return{before,projection:current.projection,state,graphReceipt,action:commandAction,disclosure:{changes:disclosure,pickup:afterDisclosure,money:{before:checkout(lines(before??current.projection!.state),shop.quote),after:checkout(lines(state),facts.quote)}},adoption,adoptionPlan,storeBasis};
 }
 export async function createTrackingCandidate(repo:HouseholdRepository,ctx:Context,shop:Shop,raw:unknown){enabled(repo);repo.requireShopper(ctx,shop);const intent=trackingIntentSchema.parse(raw),operationId=randomUUID(),created=ctx.now,expires=new Date(created.getTime()+600000);
  const value=await evaluate(repo,ctx,shop,intent,operationId,created.toISOString()),candidateId=randomUUID(),candidateDigest=digest({intent,operationId,createdAt:created.toISOString(),value});bounded(value);
@@ -150,31 +216,77 @@ async function previewRow(ctx:Context,shopId:string,previewId:string){const p=(a
 async function recompute(repo:HouseholdRepository,ctx:Context,shop:Shop,p:any){check(p.shop_revision===shop.revision&&p.authority_epoch===shop.authority_epoch,'tracking_stale_state');const intent=trackingIntentSchema.parse(p.intent),value=await evaluate(repo,ctx,shop,intent,p.operation_id,p.created_at.toISOString());check(digest({intent,operationId:p.operation_id,createdAt:p.created_at.toISOString(),value})===p.candidate_digest,'tracking_candidate_changed');return{intent,value};}
 export async function acceptTrackingCandidate(repo:HouseholdRepository,ctx:Context,shop:Shop,raw:unknown){enabled(repo);repo.requireShopper(ctx,shop);const input=acceptSchema.parse(raw),p=await previewRow(ctx,shop.shop_id,input.candidateId);check(p.candidate_digest===input.candidateDigest&&!p.accepted_digest,'tracking_candidate_changed');const {value}=await recompute(repo,ctx,shop,p);
  check(same(input.acknowledgedDisclosure,value.disclosure),'tracking_disclosure_changed');
- const review=recordTrackingReview(value.state,value.disclosure.pickup,{...basis(ctx,shop,value.state),reviewId:randomUUID(),actorId:ctx.member.member_id,deviceId:ctx.deviceId,shopRevision:shop.revision+1,now:ctx.now.toISOString(),expiresAt:p.expires_at.toISOString()});
+ const moneyAcknowledgments={acceptOverage:input.acceptOverage,acceptUnknown:input.acceptUnknown};requireMoney(value.disclosure.money.after,moneyAcknowledgments);
+ const foodReview=recordTrackingReview(value.state,value.disclosure.pickup,{...basis(ctx,shop,value.state),reviewId:randomUUID(),actorId:ctx.member.member_id,deviceId:ctx.deviceId,shopRevision:shop.revision+1,now:ctx.now.toISOString(),expiresAt:p.expires_at.toISOString()});
+ const review={...foodReview,moneyAcknowledgments};
  const acceptedDigest=digest({candidateDigest:p.candidate_digest,review});
  await ctx.db.query('UPDATE ritc.shared_tracking_preview SET accepted_digest=$3,review=$4 WHERE household_id=$1 AND preview_id=$2 AND accepted_digest IS NULL',[ctx.householdId,p.preview_id,acceptedDigest,review]);
- return{schemaVersion:2,previewId:p.preview_id,previewDigest:acceptedDigest,trackingVersion:2,expiresAt:p.expires_at.toISOString(),action:value.action,disclosure:value.disclosure};
+ return{schemaVersion:2,previewId:p.preview_id,previewDigest:acceptedDigest,trackingVersion:2,expiresAt:p.expires_at.toISOString(),action:value.action,disclosure:value.disclosure,moneyAcknowledgments};
 }
 export async function trackingOperation(ctx:Context,shopId:string,raw:unknown){const t=token.parse(raw),p=await previewRow(ctx,shopId,t.previewId);check(p.accepted_digest===t.previewDigest&&p.review,'tracking_preview_not_reviewed');return p.operation_id as string;}
 export async function stageV1Tracking(repo:HouseholdRepository,ctx:Context,shop:Shop,input:{mode:string;action:{kind:string;body:Record<string,unknown>};packs:TrackingState['packReviews']},reviewed:{result:{graph:TrackingState['graph']};facts:Awaited<ReturnType<typeof actionFacts>>},operationId:string){
- if(!repo.options.trackingV2||shop.store_review_required||input.action.body.reviewedStoreBasisRevision!==undefined||shop.demand_revision||input.mode!=='adopt'||input.action.kind!=='shop.patch'||input.action.body.mealEdit||!same(reviewed.facts.quote,shop.quote))return;
+ if(!repo.options.trackingV2||shop.store_review_required||input.action.body.reviewedStoreBasisRevision!==undefined||shop.demand_revision||input.mode!=='adopt')return;
  const before=(await stateNow(repo,ctx,shop)).state!;const graph=reviewed.result.graph,catalog=await trackingCatalog(repo,ctx,shop,reviewed.facts,graph);
- const state=validateState({...before,graph,basket:basket(reviewed.facts.lines),catalog,...partition(graph,catalog,null,[]),legacyLineIds:[],packReviews:input.packs},catalog);
- const adoption=recordFirstAdoption(operationId,before,state),storeBasis=await storeProof(ctx,shop);
+ const state=validateState({...before,quoteDigest:storeDigest(reviewed.facts.quote),graph,basket:basket(reviewed.facts.lines),catalog,...partition(graph,catalog,null,[]),legacyLineIds:[],packReviews:input.packs},catalog);
+ const simple=input.action.kind==='shop.patch'&&!reviewed.facts.body.mealEdit&&same(reviewed.facts.quote,shop.quote);
+ const adoption=simple?recordFirstAdoption(operationId,before,state):await finishAdoptionPlan(ctx,shop,operationId,
+  {before,after:state,beforeQuote:shop.quote,afterQuote:reviewed.facts.quote,component:input.action.kind==='request.apply'?
+   {kind:'requestAcceptance',requestId:reviewed.facts.request.request_id}:reviewed.facts.body.mealEdit?
+   {kind:'meal',occurrenceId:reviewed.facts.body.mealEdit.occurrenceId}:{kind:'none'}});
+ const storeBasis=await storeProof(ctx,shop);
  if(!staged.has(ctx))staged.set(ctx,new Map());staged.get(ctx)!.set(shop.shop_id,{state,adoption,review:null,storeBasis,reverses:null});
 }
-type Stage={state:TrackingState;adoption:ReturnType<typeof recordFirstAdoption>|null;review:any;storeBasis:unknown;reverses:string|null};
+type Stage={state:TrackingState;adoption:AdoptionRecord|null;review:any;storeBasis:unknown;reverses:string|null};
 const staged=new WeakMap<Context,Map<string,Stage>>();
+/** Internal request-family adapter. A stored partition is never silently
+ * projected through the v1 complete-coverage adapter. */
+export async function readRequestUndoTracking(repo:HouseholdRepository,ctx:Context,shop:Shop){
+ repo.requireShopper(ctx,shop);repo.requireDraft(shop);
+ if(!await trackingRow(ctx,shop))return null;
+ const current=await stateNow(repo,ctx,shop);
+ check(current.state&&!current.projection&&!shop.demand_review_required,'tracking_recovery_required');
+ return current.state;
+}
+/** Read the first actually recorded partition after acceptance. Do not skip a
+ * redacted/missing first row and promote a later reconstruction into history. */
+export async function loadRequestUndoTrackingMapping(ctx:Context,shop:Shop,resultShopRevision:number){
+ check(Number.isSafeInteger(resultShopRevision)&&resultShopRevision>0&&resultShopRevision<=shop.revision,'tracking_history_unavailable');
+ const row=(await ctx.db.query(`SELECT t.operation_id,t.shop_revision,t.authority_epoch,t.state,t.state_digest,
+  s.operation_id AS snapshot_operation_id,s.snapshot,s.digest AS snapshot_digest
+  FROM ritc.shared_tracking_revision t LEFT JOIN ritc.shop_snapshot s
+   ON (s.household_id,s.shop_id,s.revision)=(t.household_id,t.shop_id,t.shop_revision)
+  WHERE t.household_id=$1 AND t.shop_id=$2 AND t.shop_revision>=$3
+  ORDER BY t.shop_revision ASC LIMIT 1`,[ctx.householdId,shop.shop_id,resultShopRevision])).rows[0];
+ check(row?.state&&row.state_digest&&row.snapshot&&row.snapshot_digest,'tracking_history_unavailable');
+ return{operationId:row.operation_id,shopRevision:row.shop_revision,authorityEpoch:row.authority_epoch,state:row.state,stateDigest:row.state_digest,
+  snapshotOperationId:row.snapshot_operation_id,snapshot:row.snapshot,snapshotDigest:row.snapshot_digest};
+}
+/** The request-family commit owns its graph/receipt insert. This stages the
+ * same validated partition for the later atomic snapshot AFTER request/link
+ * mutation. captureTrackingSnapshot rechecks it against authoritative sources. */
+export async function stageRequestUndoTracking(repo:HouseholdRepository,ctx:Context,shop:Shop,input:TrackingState,
+ reviewedPacks:TrackingState['packReviews'],targetAdoptionOperationId:string|null=null){
+ repo.requireShopper(ctx,shop);repo.requireDraft(shop);
+ check(input.graph.householdId===ctx.householdId&&input.graph.shopId===shop.shop_id&&
+  input.authorityEpoch===shop.authority_epoch&&input.privacyRevision===await privacyRevision(ctx,shop),'tracking_stale_state');
+ const state=validateState({...input,packReviews:reviewedPacks.filter(p=>!input.legacyLineIds.includes(p.lineId))},input.catalog);
+ const storeBasis=await storeProof(ctx,shop);
+ if(!staged.has(ctx))staged.set(ctx,new Map());
+ check(!staged.get(ctx)!.has(shop.shop_id),'tracking_duplicate_stage');
+ if(targetAdoptionOperationId!==null)await lineage(ctx,shop,targetAdoptionOperationId);
+ staged.get(ctx)!.set(shop.shop_id,{state,adoption:null,review:null,storeBasis,reverses:targetAdoptionOperationId});
+}
 export async function applyTracking(repo:HouseholdRepository,ctx:Context,shop:Shop,c:Envelope,operationId:string){enabled(repo);const t=token.parse(c.body.demandReview),p=await previewRow(ctx,shop.shop_id,t.previewId);check(p.operation_id===operationId&&p.accepted_digest===t.previewDigest&&p.review&&p.accepted_digest===digest({candidateDigest:p.candidate_digest,review:p.review}),'tracking_preview_not_reviewed');
  const {intent,value}=await recompute(repo,ctx,shop,p),{demandReview,...body}=c.body;check(c.kind===value.action.kind&&same(body,value.action.body),'tracking_action_changed');
- check(same(p.review.review.disclosure,value.disclosure.pickup),'tracking_disclosure_changed');const graph=value.state.graph;
+ check(same(p.review.review.disclosure,value.disclosure.pickup),'tracking_disclosure_changed');requireMoney(value.disclosure.money.after,p.review.moneyAcknowledgments);const graph=value.state.graph;
  const receipt=value.graphReceipt??{schemaVersion:2,operationId,baseRevision:graph.revision-1,resultRevision:graph.revision,tracking:true};
  if(value.graphReceipt&&(intent.mode==='adopt'||intent.mode==='change'||intent.mode==='review'))await recordFoodOperationEffect(ctx,shop,{mode:intent.mode,base:{shopRevision:shop.revision,authorityEpoch:shop.authority_epoch,graphRevision:graph.revision-1},action:value.action,change:intent.mode==='review'?{lines:[],contributions:[],edges:[],removeSourceIds:[],removeEdgeIds:[]}:intent.change,packs:value.state.packReviews},operationId,graph.revision-1,graph.revision);
+ const finalizedAdoption=value.adoptionPlan?await finishAdoptionPlan(ctx,shop,operationId,value.adoptionPlan):value.adoption;
  await ctx.db.query(`INSERT INTO ritc.shared_demand_revision(household_id,shop_id,revision,predecessor,shop_revision,authority_epoch,operation_id,actor_id,device_id,created_at,graph,graph_digest,receipt,pack_review)
  VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,[ctx.householdId,shop.shop_id,graph.revision,graph.revision===1?null:graph.revision-1,shop.revision+1,shop.authority_epoch,operationId,ctx.member.member_id,ctx.deviceId,ctx.now,graph,storeDigest(graph),receipt,JSON.stringify(value.state.packReviews)]);
  await rememberSources(ctx,shop,value.before?.graph??value.projection!.state.graph,graph,(value.action.body.mealEdit as any)?.changeProposalId??null);
  await ctx.db.query('UPDATE ritc.shop SET demand_revision=$3,demand_review_required=false WHERE household_id=$1 AND shop_id=$2',[ctx.householdId,shop.shop_id,graph.revision]);
- if(!staged.has(ctx))staged.set(ctx,new Map());staged.get(ctx)!.set(shop.shop_id,{state:value.state,adoption:value.adoption,review:p.review,storeBasis:value.storeBasis,reverses:intent.mode==='firstAdoptionUndo'?intent.targetOperationId:null});
+ if(!staged.has(ctx))staged.set(ctx,new Map());staged.get(ctx)!.set(shop.shop_id,{state:value.state,adoption:finalizedAdoption,review:p.review,storeBasis:value.storeBasis,reverses:intent.mode==='firstAdoptionUndo'?intent.targetOperationId:null});
  await ctx.db.query('DELETE FROM ritc.shared_tracking_preview WHERE household_id=$1 AND preview_id=$2',[ctx.householdId,p.preview_id]);
 }
 /** A completed v1 write can advance an already-proved complete envelope. It never
@@ -211,7 +323,10 @@ export async function assertTrackingReplay(repo:HouseholdRepository,ctx:Context,
  const memberIDs=(await ctx.db.query(`SELECT DISTINCT member_id FROM ritc.shared_tracking_source_member WHERE household_id=$1 AND shop_id=$2 AND fact_id=ANY($3::uuid[])
  UNION SELECT DISTINCT member_id FROM ritc.shared_demand_source_member WHERE household_id=$1 AND shop_id=$2 AND entity_id=ANY($4::uuid[])`,[ctx.householdId,shop.shop_id,r.state.catalog.map((f:Fact)=>f.id),r.state.graph.contributions.map((c:{id:string})=>c.id)])).rows.map(x=>x.member_id);
  const authors=(await ctx.db.query<Member>('SELECT * FROM ritc.member WHERE household_id=$1 AND member_id=ANY($2::uuid[])',[ctx.householdId,memberIDs])).rows;check(authors.length===memberIDs.length&&authors.every(m=>m.state==='active'),'tracking_source_unavailable');for(const m of authors)await repo.consent(ctx.db,ctx.householdId,m);
- if(r.reverses_operation_id){const old=(await ctx.db.query('SELECT evidence,evidence_digest,store_basis FROM ritc.shared_tracking_adoption WHERE household_id=$1 AND shop_id=$2 AND operation_id=$3',[ctx.householdId,shop.shop_id,r.reverses_operation_id])).rows[0];check(old?.evidence&&old.evidence_digest===digest(old.evidence),'tracking_history_unavailable');
+ const old=(await ctx.db.query('SELECT evidence,evidence_digest,store_basis FROM ritc.shared_tracking_adoption WHERE household_id=$1 AND shop_id=$2 AND operation_id=$3',[ctx.householdId,shop.shop_id,r.reverses_operation_id??operationId])).rows[0];
+ if(r.reverses_operation_id)check(old?.evidence,'tracking_history_unavailable');
+ if(old){check(old.evidence&&old.evidence_digest===digest(old.evidence),'tracking_history_unavailable');
+ if(old.evidence.version===2){const evidence=validateCompoundAdoptionEvidence(old.evidence);if(evidence.component.kind==='meal')await validateCompoundMealHistory(ctx,shop,evidence);}
  // Exact retry returns the original receipt after later store changes, but still
  // requires the original store permission. It does not reapply the inverse.
  if(old.store_basis){const live=await liveFoodUndoStoreBasis(ctx,shop,old.store_basis.revision);check(same(live,old.store_basis),'tracking_store_permission');}}
@@ -221,6 +336,7 @@ export async function prepareTrackingFreeze(repo:HouseholdRepository,ctx:Context
  // Fully tracked legacy callers retain the original freeze policy.
  if(raw===undefined&&current.state.unbound.length===0&&current.state.legacyLineIds.length===0&&row.authority_epoch===shop.authority_epoch&&row.state_digest===digest(current.state))return;
  enabled(repo);check(raw!==undefined,'tracking_review_required');const t=token.parse(raw);check(row.review&&row.review.review.reviewId===t.previewId&&row.review.reviewDigest===t.previewDigest,'tracking_review_required');
+ requireMoney(checkout(lines(current.state),shop.quote),row.review.moneyAcknowledgments);
  const sealed=sealReviewedTracking(current.state,row.review.review,{...basis(ctx,shop,current.state),actorId:ctx.member.member_id,deviceId:ctx.deviceId,baseShopRevision:shop.revision,frozenRevision:shop.revision+1,reviewDigest:t.previewDigest,now:ctx.now.toISOString()});
  if(!frozenTracking.has(ctx))frozenTracking.set(ctx,new Map());frozenTracking.get(ctx)!.set(shop.shop_id,sealed);
 }
@@ -236,12 +352,11 @@ export async function readTrackingRecord(repo:HouseholdRepository,ctx:Context,sh
 /** Content-free lineage listing; candidate creation rechecks every live fact. */
 export async function readTrackingHistory(repo:HouseholdRepository,ctx:Context,shop:Shop){
  enabled(repo);repo.requireShopper(ctx,shop);repo.requireDraft(shop);
- const rows=(await ctx.db.query(`SELECT a.operation_id,o.committed_at,t.shop_revision,a.evidence IS NOT NULL AS retained,
+ const rows=(await ctx.db.query(`SELECT a.operation_id,o.kind,o.committed_at,t.shop_revision,a.evidence IS NOT NULL AS retained,
  EXISTS(SELECT 1 FROM ritc.shared_tracking_revision u WHERE u.household_id=a.household_id AND u.reverses_operation_id=a.operation_id) AS reversed
- FROM ritc.shared_tracking_adoption a JOIN ritc.operation o
- ON o.household_id=a.household_id AND o.shop_id=a.shop_id AND o.operation_id=a.operation_id
- JOIN ritc.shared_tracking_revision t
- ON t.household_id=a.household_id AND t.shop_id=a.shop_id AND t.operation_id=a.operation_id
+ FROM ritc.shared_tracking_adoption a JOIN ritc.operation o ON o.household_id=a.household_id AND o.shop_id=a.shop_id AND o.operation_id=a.operation_id
+ JOIN ritc.shared_tracking_revision t ON t.household_id=a.household_id AND t.shop_id=a.shop_id AND t.operation_id=a.operation_id
  WHERE a.household_id=$1 AND a.shop_id=$2 ORDER BY t.shop_revision DESC LIMIT 100`,[ctx.householdId,shop.shop_id])).rows;
- return{schemaVersion:2,shopId:shop.shop_id,shopRevision:shop.revision,items:rows.map(r=>({operationId:r.operation_id,shopRevision:r.shop_revision,committedAt:r.committed_at.toISOString(),status:r.retained&&!r.reversed?'current_preview_required':'unavailable'}))};
+ check(rows.every(r=>r.kind==='shop.patch'||r.kind==='request.apply'),'tracking_history_route_unavailable');
+ return{schemaVersion:2,shopId:shop.shop_id,shopRevision:shop.revision,items:rows.map(r=>({operationId:r.operation_id,shopRevision:r.shop_revision,committedAt:r.committed_at.toISOString(),reviewRoute:r.kind==='request.apply'?'requestAcceptance':'tracking',status:r.retained&&!r.reversed?'current_preview_required':'unavailable'}))};
 }
