@@ -1,0 +1,8 @@
+{
+  "status": "passed",
+  "controls": 150,
+  "manifestSHA256": "3ad262fdc64dc1e277f8e585733ead9c2c944ca056e8cfebb66ba092de735afc",
+  "logSHA256": "a4d280430d5fe0c0f6ddf6ee48f83fba4201a017fd5f8c5fa3e25394f157a2b7",
+  "scope": "pre-spawn normal terminal race only; no hosted qualification",
+  "releaseAcceptance": false
+}

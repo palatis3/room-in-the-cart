@@ -1085,4 +1085,111 @@ class BootstatusSampleTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,'lifecycle_deadline'):self.r.lifecycle_wait(self.item,180,{'startedMonotonic':0})
             self.assertAlmostEqual(self.clock,180);self.r.sample_runtime.assert_called_once()
 
+class SamplePreSpawnExitTests(unittest.TestCase):
+    setUp=RuntimeSampleTests.setUp
+    sleep=AcquisitionTests.sleep
+    poll=AcquisitionTests.poll
+    identity=AcquisitionTests.identity
+    acquire=AcquisitionTests.acquire
+    prepare=RuntimeSampleTests.prepare
+    sampler=RuntimeSampleTests.sampler
+    def assert_not_needed(self,report):
+        self.assertEqual(report['status'],'not_needed')
+        self.assertEqual(report['reason'],'owned_normal_exit_before_sampler')
+        self.assertEqual(report['targetExitCode'],0);self.assertFalse(report['samplerSpawned'])
+    def test_normal_terminal_at_first_checkpoint_needs_no_sampler(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);self.process.returncode=0;d={}
+            with mock.patch.object(runner.subprocess,'Popen') as popen:self.r.sample_runtime(self.item,30,d)
+            popen.assert_not_called();self.assert_not_needed(d['stackSample'])
+            self.assertNotIn('tool',d['stackSample'])
+    def test_exit_racing_first_identity_read_is_rechecked(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);d={}
+            def race():self.process.returncode=0;return None
+            self.read_value=race
+            with mock.patch.object(runner.subprocess,'Popen') as popen:self.r.sample_runtime(self.item,30,d)
+            popen.assert_not_called();self.assert_not_needed(d['stackSample'])
+    def test_normal_terminal_at_second_checkpoint_needs_no_sampler(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);d={}
+            def hash_tool(path):
+                if str(path)=='/usr/bin/sample':self.process.returncode=0
+                return 'digest'
+            with mock.patch.object(runner,'sha',side_effect=hash_tool),mock.patch.object(runner.subprocess,'Popen') as popen:self.r.sample_runtime(self.item,30,d)
+            popen.assert_not_called();self.assert_not_needed(d['stackSample']);self.assertTrue(d['stackSample']['toolUnchanged'])
+    def test_exit_racing_second_identity_read_is_rechecked(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);d={}
+            def race():
+                if self.reads==2:self.process.returncode=0;return None
+                return self.value
+            self.read_value=race
+            with mock.patch.object(runner.subprocess,'Popen') as popen:self.r.sample_runtime(self.item,30,d)
+            popen.assert_not_called();self.assert_not_needed(d['stackSample'])
+    def test_nonzero_terminal_at_either_checkpoint_remains_failure(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp)
+            for checkpoint in (1,2):
+                for code in (1,-2):
+                    self.process.returncode=None;d={};calls=0;original=self.r.sample_target_live
+                    def check(target):
+                        nonlocal calls
+                        calls+=1
+                        if calls==checkpoint:self.process.returncode=code
+                        return original(target)
+                    with mock.patch.object(self.r,'sample_target_live',side_effect=check),mock.patch.object(runner.subprocess,'Popen') as popen:self.r.sample_runtime(self.item,30,d)
+                    popen.assert_not_called();self.assertEqual(d['stackSample']['status'],'failed');self.assertIn('sample_target_exit',d['stackSample']['error'])
+    def test_unknown_or_changed_live_identity_at_either_checkpoint_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp)
+            for checkpoint in (1,2):
+                for observed in (None,{**self.value,'startTimeMicros':100_000_002}):
+                    self.reads=0;self.process.returncode=None;d={}
+                    self.read_value=lambda:self.value if self.reads<checkpoint else observed
+                    with mock.patch.object(runner.subprocess,'Popen') as popen:self.r.sample_runtime(self.item,30,d)
+                    popen.assert_not_called();self.assertEqual(d['stackSample']['status'],'failed');self.assertIn('sample_target_identity',d['stackSample']['error'])
+    def test_tool_drift_after_normal_terminal_still_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);d={};calls=0;original=self.r.sample_target_live
+            def check(target):
+                nonlocal calls
+                calls+=1
+                if calls==2:self.process.returncode=0;self.sample_stat.st_ino+=1
+                return original(target)
+            with mock.patch.object(self.r,'sample_target_live',side_effect=check),mock.patch.object(runner.subprocess,'Popen') as popen:self.r.sample_runtime(self.item,30,d)
+            popen.assert_not_called();self.assertEqual(d['stackSample']['status'],'failed');self.assertFalse(d['stackSample']['toolUnchanged'])
+    def test_target_exit_after_sampler_spawn_is_not_reclassified(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);proc,spawn=self.sampler();d={};started=False
+            def start(*args,**kwargs):
+                nonlocal started
+                started=True;return spawn(*args,**kwargs)
+            self.process.poll=lambda:0 if started and proc.poll() is not None else None
+            with mock.patch.object(runner.subprocess,'Popen',side_effect=start) as popen:self.r.sample_runtime(self.item,30,d)
+            popen.assert_called_once();self.assertTrue(d['stackSample']['samplerSpawned'])
+            self.assertEqual(d['stackSample']['status'],'failed');self.assertIn('after_identity',d['stackSample']['error'])
+    def boot_lifecycle(self,tmp,late=False):
+        BootstatusSampleTests.prepare(self,tmp);self.r.processes=[self.boot];self.r.started=0;self.r.seconds=300
+        def spawn(*args):self.r.processes.append(self.item);self.clock=150;return self.item
+        self.r.spawn_lifecycle=mock.Mock(side_effect=spawn);self.r.acquire_lifecycle=mock.Mock(return_value=self.item);self.r.cleanup=mock.Mock()
+        def hash_tool(path):
+            if str(path)=='/usr/bin/sample':
+                self.process.returncode=0
+                if late:self.clock=180
+            return 'digest'
+        return mock.patch.object(runner,'sha',side_effect=hash_tool)
+    def test_full_lifecycle_accepts_only_unstarted_not_needed_sample(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.boot_lifecycle(tmp),mock.patch.object(runner.subprocess,'Popen') as popen:
+                self.assertEqual(self.r.lifecycle('bootstatus',['bootstatus',DEVICE['createdUDID'],'-b'],180),self.r.out/'bootstatus-stdout.log')
+            popen.assert_not_called();d=self.r.receipt['lifecycleCommands'][-1]
+            self.assertEqual(d['outcome'],'normal_exit');self.assert_not_needed(d['stackSample'])
+            self.assertTrue(self.r.sample_attempted);self.r.spawn_lifecycle.assert_called_once()
+    def test_normal_exit_race_does_not_allow_late_success(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.boot_lifecycle(tmp,late=True),mock.patch.object(runner.subprocess,'Popen') as popen:
+                with self.assertRaisesRegex(ValueError,'lifecycle_deadline'):self.r.lifecycle('bootstatus',['bootstatus',DEVICE['createdUDID'],'-b'],180)
+            popen.assert_not_called();self.assertEqual(self.r.receipt['lifecycleCommands'][-1]['deadlineMonotonic'],180)
+
 if __name__=='__main__':unittest.main()

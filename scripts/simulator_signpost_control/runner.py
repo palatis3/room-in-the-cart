@@ -213,18 +213,31 @@ class HelperRunner(Runner):
             return None
         return (150,'bootstatus')
 
+    def sample_target_live(self, target):
+        """Only a contemporaneous owned exit0 makes an unstarted sample unnecessary."""
+        process=target['process'];code=process.poll()
+        if code is not None:
+            require(code==0,'sample_target_exit');return False
+        value=self.identity.read(process.pid)
+        if target['binding'] is None or value!=target['binding']:
+            code=process.poll()  # An owned exit may race the libproc read.
+            if code is not None:
+                require(code==0,'sample_target_exit');return False
+            raise ValueError('sample_target_identity')
+        return True
+
     def sample_runtime(self, target, deadline, diagnostic):
         """One diagnostic sample of an exact admitted lifecycle target; no timing reset."""
         report={'status':'starting','startedMonotonic':time.monotonic(),
                 'targetPID':target['process'].pid,'durationSeconds':1,'samplerWallSeconds':3,
-                'reportBytesLimit':2*1024**2,'identityPolicy':'observed_root_owned_system_tool_before_after'}
+                'reportBytesLimit':2*1024**2,'samplerSpawned':False,'identityPolicy':'observed_root_owned_system_tool_before_after'}
         diagnostic['stackSample']=report;self.save();child=None;tool=Path('/usr/bin/sample')
         try:
             require(signal.getsignal(signal.SIGCHLD)==signal.SIG_DFL and threading.active_count()==1,'sample_exclusive_reaper_required')
             policy=self.sample_policy(target);require(policy is not None,'sample_target_scope')
             stem=policy[1];report.update(targetLabel=stem,triggerAfterSeconds=policy[0])
-            require(target['process'].poll() is None and target['binding'] is not None
-                    and self.identity.read(target['process'].pid)==target['binding'],'sample_target_identity')
+            if not self.sample_target_live(target):
+                report.update(status='not_needed',reason='owned_normal_exit_before_sampler',targetExitCode=0);return
             require(sha(target['expected'])==target['digest'],'sample_target_binary')
             self.lifecycle_check(deadline)
             info=tool.lstat()
@@ -237,7 +250,8 @@ class HelperRunner(Runner):
             output=self.out/(stem+'-stack.txt');require(not output.exists(),'sample_output_exists')
             # Reserve original budget for the existing bounded terminal cleanup ladder.
             require(deadline-time.monotonic()>10,'sample_remaining_budget')
-            require(target['process'].poll() is None and self.identity.read(target['process'].pid)==target['binding'],'sample_target_identity')
+            if not self.sample_target_live(target):
+                report.update(status='not_needed',reason='owned_normal_exit_before_sampler',targetExitCode=0);return
             stop=min(time.monotonic()+3,deadline)
             sample_label='runtime-stack-sample' if stem=='booted-runtimes' else 'bootstatus-stack-sample'
             record={'label':sample_label,'argv':[str(tool),str(target['process'].pid),'1','-file',str(output)],
@@ -253,6 +267,7 @@ class HelperRunner(Runner):
             except BaseException:stdout.close();stderr.close();raise
             child={'process':process,'record':record,'expected':str(tool),'digest':observed['sha256'],
                    'streams':[stdout,stderr],'binding':None}
+            report['samplerSpawned']=True
             self.sample_child=child;self.sample_target=target
             self.sample_custody=(child,process,os.getpid())
             self.processes.append(child);self.receipt['processes'].append(record)
@@ -353,7 +368,10 @@ class HelperRunner(Runner):
             self.lifecycle_check(deadline)  # No late terminal/output success or fresh timeout after acquisition.
             require(code==0 and not item['record']['signals'],label+'_normal_exit')
             diagnostic['outcome']='normal_exit';diagnostic['commandOutcome']='normal_exit'
-            require(diagnostic.get('stackSample',{}).get('status','passed')=='passed','runtime_stack_sample_failed')
+            sample=diagnostic.get('stackSample',{})
+            not_needed=(sample.get('status')=='not_needed' and sample.get('reason')=='owned_normal_exit_before_sampler'
+                        and sample.get('targetExitCode')==0 and sample.get('samplerSpawned') is False)
+            require(sample.get('status','passed')=='passed' or not_needed,'runtime_stack_sample_failed')
             return self.out/(label+'-stdout.log')
         except BaseException as exc:
             diagnostic.update(outcome='failed',error=type(exc).__name__+': '+str(exc)[:1024]);raise
