@@ -111,6 +111,41 @@ enum SharedTrackingFacts {
     @ViewBuilder static func changes(_ changes: SharedTrackingChanges) -> some View {
         switch changes {
         case .none: EmptyView()
+        case .mealActionChange(let change):
+            Section(st("Meal change")) {
+                if let before = change.mealChange.before?.meal {
+                    Text(st("Before")); SharedMealFacts(meal: before, deadlineIdentifier: "sharedTracking.change.before.deadline")
+                } else { Text(st("No current meal")) }
+                if let after = change.mealChange.after.meal {
+                    Text(st("After")); SharedMealFacts(meal: after, deadlineIdentifier: "sharedTracking.change.after.deadline")
+                } else { Text(st("Meal removed")) }
+            }
+            if !change.transferredChanges.isEmpty {
+                Section(st("Retained commitments")) {
+                    Text(st("Unbound food remains unavailable supply."))
+                    ForEach(change.transferredChanges, id: \.factId) { delta in
+                        Text(st("Before")); contribution(delta.before)
+                        if let after = delta.after { Text(st("After")); contribution(after) }
+                        else { Text(st("Commitment removed")) }
+                    }
+                }
+            }
+        case .mealOperationUndo(let undo):
+            Section(st("Whole-meal Undo")) {
+                if let before = undo.mealUndo.current.meal {
+                    Text(st("Before")); SharedMealFacts(meal: before, deadlineIdentifier: "sharedTracking.mealUndo.before.deadline")
+                } else { Text(st("No current meal")) }
+                if let after = undo.mealUndo.restoredMeal {
+                    Text(st("After")); SharedMealFacts(meal: after, deadlineIdentifier: "sharedTracking.mealUndo.after.deadline")
+                } else { Text(st("Meal removed")) }
+                Text(st("These source, line, relationship and pack assertions are reversed together."))
+                ForEach(undo.transferredChanges, id: \.factId) { delta in
+                    if let before = delta.before?.transferred { Text(st("Before")); contribution(before) }
+                    if let after = delta.after?.transferred { Text(st("After")); contribution(after) }
+                    if delta.after == nil { Text(st("Commitment removed")) }
+                }
+                Text(st("Unbound food remains unavailable supply."))
+            }
         case .firstAdoptionUndo(let undo):
             Section(st("Whole first-adoption inverse")) {
                 LabeledContent(st("Exact target operation"), value: undo.targetOperationId.string)

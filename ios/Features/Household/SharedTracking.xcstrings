@@ -2589,6 +2589,397 @@
           }
         }
       }
+    },
+    "Commitment removed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Commitment removed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Necesidad eliminada"
+          }
+        }
+      }
+    },
+    "Food relationships affected by this change": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Food relationships affected by this change"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Relaciones entre alimentos afectadas por este cambio"
+          }
+        }
+      }
+    },
+    "I confirm the previously unknown protected quantity": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I confirm the previously unknown protected quantity"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmo la cantidad protegida que antes era desconocida"
+          }
+        }
+      }
+    },
+    "I reviewed all meal commitments": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I reviewed all meal commitments"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisé todas las necesidades de las comidas"
+          }
+        }
+      }
+    },
+    "I reviewed this relationship removal": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I reviewed this relationship removal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisé la eliminación de esta relación"
+          }
+        }
+      }
+    },
+    "I reviewed this removal": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I reviewed this removal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisé esta eliminación"
+          }
+        }
+      }
+    },
+    "I reviewed this source change": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I reviewed this source change"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisé este cambio de origen"
+          }
+        }
+      }
+    },
+    "Keep this commitment unbound": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep this commitment unbound"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mantener esta necesidad sin vincular"
+          }
+        }
+      }
+    },
+    "Meal change": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meal change"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambio de comida"
+          }
+        }
+      }
+    },
+    "Meal commitments": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meal commitments"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Necesidades de las comidas"
+          }
+        }
+      }
+    },
+    "New or unbound food": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New or unbound food"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimentos nuevos o sin vincular"
+          }
+        }
+      }
+    },
+    "Remove this meal commitment": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove this meal commitment"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar esta necesidad de la comida"
+          }
+        }
+      }
+    },
+    "Remove this relationship": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove this relationship"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar esta relación"
+          }
+        }
+      }
+    },
+    "Retained commitments": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retained commitments"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Necesidades conservadas"
+          }
+        }
+      }
+    },
+    "Retained unbound food": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retained unbound food"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimentos conservados sin vincular"
+          }
+        }
+      }
+    },
+    "Review the meal change and every affected food commitment. Unbound food remains unavailable supply.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review the meal change and every affected food commitment. Unbound food remains unavailable supply."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revise el cambio de comida y cada necesidad de alimentos afectada. Los alimentos sin vincular no cuentan como provisiones disponibles."
+          }
+        }
+      }
+    },
+    "Review whole-meal Undo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review whole-meal Undo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisar cómo deshacer el cambio completo de la comida"
+          }
+        }
+      }
+    },
+    "Tracked food": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tracked food"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimentos con seguimiento"
+          }
+        }
+      }
+    },
+    "Unbound food remains unavailable supply.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unbound food remains unavailable supply."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los alimentos sin vincular no cuentan como provisiones disponibles."
+          }
+        }
+      }
+    },
+    "Undo reviews the entire saved change. Later unrelated facts are retained; conflicts require a fresh review.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo reviews the entire saved change. Later unrelated facts are retained; conflicts require a fresh review."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deshacer revisa todo el cambio guardado. Se conservan los datos posteriores no relacionados; los conflictos requieren una nueva revisión."
+          }
+        }
+      }
+    },
+    "Whole-meal Undo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whole-meal Undo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deshacer el cambio completo de la comida"
+          }
+        }
+      }
+    },
+    "Previous food commitments": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous food commitments"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Necesidades de alimentos anteriores"
+          }
+        }
+      }
+    },
+    "Earlier basket items are included only if this Undo restores them. Review their pack evidence explicitly.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Earlier basket items are included only if this Undo restores them. Review their pack evidence explicitly."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los artículos anteriores de la cesta se incluyen solo si este cambio se deshace y los restaura. Revise expresamente los datos de sus paquetes."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

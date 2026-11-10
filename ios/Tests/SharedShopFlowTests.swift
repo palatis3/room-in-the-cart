@@ -515,6 +515,28 @@ import XCTest
         shared.beginEditing(); shared.draft.tax = "1.25"; shared.reviewDraft(); shared.acknowledged = true; await shared.applyReviewed()
         XCTAssertEqual(shared.shop?.quote.taxesMinor, 125); XCTAssertEqual(shared.shop?.shopRevision, 2)
     }
+    func testPartialTrackedMealEditUsesTrackingReviewInsteadOfLegacyGraphOrDirectApply() async throws {
+        let fixture = SharedFlowService(), mia = try await createdHousehold(fixture)
+        let shared = try XCTUnwrap(mia.sharedShop); enterShop(shared); await shared.applyReviewed()
+        let (page, template, _, edit, _) = try TrackingPartialMealFixture.setup(TrackingPartialMealFixture.fixture())
+        fixture.revision = page.shopRevision
+        fixture.lines = try JSONSerialization.jsonObject(with: JSONEncoder().encode(template.lines)) as! [[String: Any]]
+        var raw: Any = try TrackingPartialMealFixture.fixture()["page"]!
+        for (path, value): (String, Any) in [("shopId", fixture.shopID!), ("authorityEpoch", 1), ("state.authorityEpoch", 1),
+            ("state.graph.shopId", fixture.shopID!), ("state.graph.householdId", fixture.household)] {
+            raw = TrackingFlowFixture.edit(raw, path, value)
+        }
+        fixture.trackingPageOverride = raw as? [String: Any]
+        await shared.load(); shared.beginEditing()
+        shared.draft.mealEdit = SharedMealEdit(occurrenceID: edit.occurrenceId.uuid, meal: edit.meal)
+        let commands = fixture.kinds.count
+        await shared.reviewEditor()
+        XCTAssertNil(shared.review); XCTAssertNil(shared.foodEditor)
+        let editor = try XCTUnwrap(shared.trackingEditor)
+        XCTAssertEqual(editor.mealEdit?.occurrenceId, edit.occurrenceId)
+        XCTAssertEqual(editor.mealEdit?.meal, edit.meal)
+        XCTAssertEqual(fixture.kinds.count, commands); XCTAssertNil(shared.pending)
+    }
     func testSharedMealReviewBindsPacksDateAndRevisionAndRejectsAStaleEditor() async throws {
         let fixture = SharedFlowService()
         let mia = try await createdHousehold(fixture)
@@ -669,6 +691,7 @@ private final class SharedFlowService {
     var kinds: [String] = [], commandBodies: [(kind: String, bytes: Data)] = []
     var receipts: [String: [String: Any]] = [:], previews: [String: [String: Any]] = [:]
     var trackingReadUnavailable = false
+    var trackingPageOverride: [String: Any]?
     var loseCreateResponse = false
     var shopperTransferred = false
     var fallbackBillingUnavailable = false
@@ -751,6 +774,7 @@ private final class SharedFlowService {
         }
         if request.httpMethod == "GET", let shopID, path.hasSuffix("/shops/" + shopID + "/demand/tracking") {
             if trackingReadUnavailable { return try ok(["error":["code":"service_unavailable"]],503) }
+            if let trackingPageOverride { return try ok(trackingPageOverride) }
             let ids = lines.map { $0["lineId"] as! String }
             let basket = lines.map { ["id": $0["lineId"]!, "name": $0["originalItem"]!, "packs": $0["packs"]!,
                 "priceMinor": $0["unitPriceMinor"] ?? NSNull(), "feeEligible": $0["feeEligible"]!] }

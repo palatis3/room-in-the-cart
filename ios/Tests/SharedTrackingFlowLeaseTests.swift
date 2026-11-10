@@ -18,6 +18,10 @@ import SwiftUI
         var continuation: CheckedContinuation<Void, Never>?
         var arrived: (() -> Void)?
         var prepares = 0, sends = 0
+        var pageOverride: SharedTrackingPage?
+        var mealCatalog: SharedTrackingMealSources?
+        var savedHistory: SharedTrackingHistory?
+        var capturedKind: SharedTrackingIntentKind?
         init(selectionID: UUID? = nil) throws {
             typealias F = TrackingFlowReviewFixture
             let fixture = try F.scenario()
@@ -40,16 +44,69 @@ import SwiftUI
             await withCheckedContinuation { continuation = $0; arrived?() }
         }
         func release() { continuation?.resume(); continuation = nil }
-        func readTracking(shopID: UUID) async throws -> SharedTrackingPage { await suspend("read"); return review.page }
-        func candidateTracking(page: SharedTrackingPage, kind: SharedTrackingIntentKind, requestPreview: ShopperPreview?, actionSources: SharedTrackingActionSources?) async throws -> SharedTrackingCandidateReview { await suspend("candidate"); return review }
+        func readTracking(shopID: UUID) async throws -> SharedTrackingPage { await suspend("read"); return pageOverride ?? review.page }
+        func candidateTracking(page: SharedTrackingPage, kind: SharedTrackingIntentKind, requestPreview: ShopperPreview?, actionSources: SharedTrackingActionSources?, mealSources: SharedTrackingMealSources?, transferredChanges: [SharedTrackingTransferredChange]?) async throws -> SharedTrackingCandidateReview { capturedKind = kind; await suspend("candidate"); return review }
+        func trackingMealSources(page: SharedTrackingPage, action: SharedDemandAction) async throws -> SharedTrackingMealSources {
+            await suspend("mealSources"); return try XCTUnwrap(mealCatalog)
+        }
         func trackingSources(page: SharedTrackingPage, action: SharedDemandAction, requestPreview: ShopperPreview?) async throws -> SharedTrackingActionSources { throw ClientError.configuration }
-        func historyTracking(page: SharedTrackingPage) async throws -> SharedTrackingHistory { throw ClientError.configuration }
+        func historyTracking(page: SharedTrackingPage) async throws -> SharedTrackingHistory { try XCTUnwrap(savedHistory) }
         func acceptTracking(_ candidate: SharedTrackingCandidateReview, acceptOverage: Bool, acceptUnknown: Bool) async throws -> SharedTrackingAcceptedReview { await suspend("accept"); return accepted }
         func prepareTracking(_ accepted: SharedTrackingAcceptedReview) async throws -> PendingOperation { prepares += 1; await suspend("prepare"); return operation }
         func freezeTracking(page: SharedTrackingPage) async throws -> PendingOperation { throw ClientError.configuration }
         func sendTracking(_ operation: PendingOperation, selectionID: UUID?) async throws {
             guard trackingSelectionID == selectionID else { throw ClientError.cancelled }; sends += 1
         }
+    }
+    func testMealHistorySelectsWholeMealUndoAndNeverRoutesRequestHistoryAsFoodUndo() async throws {
+        typealias F = TrackingFlowReviewFixture
+        let access = try Access(), flow = SharedTrackingFlowModel(access: access)
+        await flow.load()
+        let item: [String: Any] = ["operationId": F.id(90), "shopRevision": 7, "committedAt": "2026-11-10T12:00:00Z", "status": "current_preview_required", "reviewRoute": "trackingMeal"]
+        access.savedHistory = try F.decode(["schemaVersion": 2, "shopId": F.id(2), "shopRevision": 8, "items": [item]])
+        await flow.loadHistory(); await flow.undo(try XCTUnwrap(flow.history?.items.first))
+        guard case .mealOperationUndo(let target, let packs) = access.capturedKind else { return XCTFail("Wrong operation family") }
+        XCTAssertEqual(target.string, F.id(90)); XCTAssertFalse(packs.isEmpty); XCTAssertEqual(access.sends, 0)
+        access.capturedKind = nil
+        let other = F.edit(item, "reviewRoute", "requestAcceptance")
+        access.savedHistory = try F.decode(["schemaVersion": 2, "shopId": F.id(2), "shopRevision": 8, "items": [other]])
+        await flow.loadHistory(); await flow.undo(try XCTUnwrap(flow.history?.items.first))
+        XCTAssertNil(access.capturedKind); XCTAssertEqual(access.sends, 0)
+        access.savedHistory = try F.decode(["schemaVersion": 2, "shopId": F.id(2), "shopRevision": 8, "items": [F.edit(item, "status", "unavailable")]])
+        await flow.loadHistory(); await flow.undo(try XCTUnwrap(flow.history?.items.first))
+        XCTAssertNil(access.capturedKind); XCTAssertEqual(access.sends, 0)
+    }
+    func testHeldMealCatalogCannotPublishAfterCancelOrShopperLeaseChange() async throws {
+        for cancel in [false, true] {
+            let (page, shop, catalog, edit, _) = try TrackingPartialMealFixture.setup(TrackingPartialMealFixture.fixture())
+            let access = try Access(); access.pageOverride = page; access.trackingShop = shop; access.mealCatalog = catalog
+            let flow = SharedTrackingFlowModel(access: access, mealEdit: edit)
+            let arrived = expectation(description: "held meal catalog")
+            access.hold = "mealSources"; access.arrived = { arrived.fulfill() }
+            let task = Task { await flow.load() }; await fulfillment(of: [arrived], timeout: 2)
+            if cancel { flow.clear() } else { access.trackingLease = UUID() }
+            access.release(); await task.value
+            XCTAssertNil(flow.page); XCTAssertNil(flow.mealSources); XCTAssertNil(flow.draft.mealChanges)
+            XCTAssertNil(flow.candidate); XCTAssertEqual(access.sends, 0)
+        }
+    }
+    func testMealBindingChangeRequiresNewMatchAndRetainedControlsCannotSurviveCancel() async throws {
+        let (page, shop, catalog, edit, _) = try TrackingPartialMealFixture.setup(TrackingPartialMealFixture.fixture())
+        let access = try Access(); access.pageOverride = page; access.trackingShop = shop; access.mealCatalog = catalog
+        let flow = SharedTrackingFlowModel(access: access, mealEdit: edit)
+        await flow.load(); XCTAssertNotNil(flow.draft.mealChanges)
+        let id = try XCTUnwrap(flow.draft.mealChanges?.rows.first { $0.canBind }?.id)
+        let line = flow.mealLineEntry(id: id), confirmed = flow.mealRowEntry(\.rows, id: id, path: \.productConfirmed, empty: false)
+        let reviewed = flow.mealEntry(\.reviewed, empty: false)
+        line.wrappedValue = page.state?.basket.first?.id; confirmed.wrappedValue = true; reviewed.wrappedValue = true
+        XCTAssertTrue(confirmed.wrappedValue); XCTAssertTrue(reviewed.wrappedValue)
+        line.wrappedValue = nil
+        XCTAssertFalse(confirmed.wrappedValue); XCTAssertFalse(reviewed.wrappedValue)
+        line.wrappedValue = page.state?.basket.first?.id; confirmed.wrappedValue = true; reviewed.wrappedValue = true
+        flow.clear()
+        XCTAssertNil(line.wrappedValue); XCTAssertFalse(confirmed.wrappedValue); XCTAssertFalse(reviewed.wrappedValue)
+        line.wrappedValue = page.state?.basket.first?.id; confirmed.wrappedValue = true; reviewed.wrappedValue = true
+        XCTAssertNil(flow.draft.mealChanges); XCTAssertNil(flow.candidate); XCTAssertEqual(access.sends, 0)
     }
     func testHeldLoadCannotPublishAfterEditorSelectionWasInvalidated() async throws {
         let selection = UUID(), access = try Access(selectionID: selection)

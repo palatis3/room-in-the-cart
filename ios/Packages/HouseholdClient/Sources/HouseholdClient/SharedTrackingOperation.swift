@@ -33,9 +33,12 @@ public struct SharedTrackingOperationBinding: Codable, Equatable, Sendable {
         try demandRequire(demandRevision(base.shopRevision) && base.shopRevision < Int(Int32.max) && demandRevision(base.authorityEpoch) && demandRevision(graphRevision, zero: true) && demandRevision(privacyRevision, zero: true))
         try demandRequire([previewDigest, stateDigest].allSatisfy { $0.range(of: "^[0-9a-f]{64}$", options: .regularExpression) != nil })
         if kind == .apply {
-            try demandRequire(["adopt", "change", "review", "firstAdoptionUndo", "rebind", "recover"].contains(mode) && action != nil && graphRevision > 0)
-            try demandRequire((mode == "firstAdoptionUndo") == (targetOperationID != nil))
+            try demandRequire(["adopt", "change", "review", "firstAdoptionUndo", "mealOperationUndo", "rebind", "recover"].contains(mode) && action != nil && graphRevision > 0)
+            try demandRequire(["firstAdoptionUndo", "mealOperationUndo"].contains(mode) == (targetOperationID != nil))
         } else { try demandRequire(mode == "freeze" && action == nil && targetOperationID == nil && base.requestRevision == nil) }
+        if mode == "mealOperationUndo" {
+            guard case .patch(let body) = action?.command, body.mealEdit != nil else { throw ClientError.invalidResponse }
+        }
         if case .request = action?.command { try demandRequire(base.requestRevision.map { demandRevision($0) && $0 < Int(Int32.max) } == true && ["change", "adopt"].contains(mode)) }
         else { try demandRequire(base.requestRevision == nil) }
         let envelope = try JSONDecoder().decode(CommandEnvelope.self, from: operation.bytes)

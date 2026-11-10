@@ -135,6 +135,10 @@ struct TrackingRequestContext: Identifiable, Equatable {
 
 struct TrackingFlowDraft: Equatable {
     var packs: [TrackingPackEntry] = []
+    // Tombstoned graph lines may return in a whole-operation inverse even
+    // when they no longer occur in today's basket. These entries are never
+    // offered as ordinary manual/binding input or sent by an ordinary review.
+    var historicalUndoPacks: [TrackingPackEntry] = []
     var manuals = [TrackingManualEntry()]
     // Preserve the first-entry editing surface for existing callers.
     var manual: TrackingManualEntry {
@@ -142,6 +146,7 @@ struct TrackingFlowDraft: Equatable {
         set { manuals[0] = newValue }
     }
     var facts: [TrackingFactEntry] = []
+    var mealChanges: TrackingPartialMealDraft?
     var requestAmount = TrackingAmountEntry()
     var requestMatched = false
     var confirmBasketLabels = false
@@ -157,10 +162,14 @@ struct TrackingFlowDraft: Equatable {
     var rebindConfirmed = false
 
     init() {}
-    init(page: SharedTrackingPage, shop: ShopperShop, request: TrackingRequestContext? = nil, edited: ShopperShopCandidate? = nil, actionSources: SharedTrackingActionSources? = nil) throws {
+    init(page: SharedTrackingPage, shop: ShopperShop, request: TrackingRequestContext? = nil, edited: ShopperShopCandidate? = nil, actionSources: SharedTrackingActionSources? = nil, mealSources: SharedTrackingMealSources? = nil) throws {
         guard page.shopId.string == shop.shopId, page.shopRevision == shop.shopRevision,
               page.authorityEpoch == shop.authorityEpoch else { throw ClientError.cancelled }
         try request?.validate(shop: shop)
+        if let mealSources {
+            guard request == nil, actionSources == nil else { throw ClientError.configuration }
+            mealChanges = try .init(page: page, catalog: mealSources)
+        }
         let basket = request?.basket ?? edited?.lines ?? shop.lines
         packs = try basket.map { row in
             guard let id = UUID(uuidString: row.lineId) else { throw ClientError.invalidResponse }
@@ -168,6 +177,16 @@ struct TrackingFlowDraft: Equatable {
             entry.lineUnit = (page.state?.graph ?? page.projection?.state.graph)?.lines.first { $0.id.uuid == id }?.unit ?? .count
             if let previous = page.state?.packReviews.first(where: { $0.lineId.uuid == id }) { entry.usable = .init(previous.usablePerPack) }
             entry.includeForUndo = (page.state?.graph ?? page.projection?.state.graph)?.lines.contains { $0.id.uuid == id && $0.trashedAt == nil } == true
+            return entry
+        }
+        let currentBasketIDs = Set(packs.map(\.id))
+        let graph = page.state?.graph ?? page.projection?.state.graph
+        historicalUndoPacks = (graph?.lines ?? []).filter { !currentBasketIDs.contains($0.id) }.map { line in
+            var entry = TrackingPackEntry(id: line.id, name: line.name)
+            entry.lineUnit = line.unit; entry.includeForUndo = false
+            if let previous = page.state?.packReviews.first(where: { $0.lineId == line.id }) {
+                entry.usable = .init(previous.usablePerPack)
+            }
             return entry
         }
         if let request, case .add(let line, _, let evidence) = request.reviewed.decision, let evidence,
@@ -186,13 +205,31 @@ struct TrackingFlowDraft: Equatable {
     }
     func reviewLineIDs(page: SharedTrackingPage, request: TrackingRequestContext?) -> Set<SharedDemandID> {
         let graph = page.state?.graph ?? page.projection?.state.graph
-        var tracked = Set(graph?.lines.filter { $0.trashedAt == nil }.map(\.id) ?? [])
+        let retiring = Set(mealChanges?.catalog.retirementCandidates ?? [])
+        var tracked = Set(graph?.lines.filter { line in
+            line.trashedAt == nil && (retiring.isEmpty || graph?.contributions.contains {
+                $0.lineId == line.id && $0.removedAt == nil && !retiring.contains($0.id)
+            } == true)
+        }.map(\.id) ?? [])
         for manual in manuals where manual.enabled { if let id = manual.lineID { tracked.insert(id) } }
         for fact in facts { if let id = fact.lineID { tracked.insert(id) } }
+        for row in mealChanges?.rows ?? [] where row.canBind { if let id = row.lineID { tracked.insert(id) } }
         if let id = request?.target.flatMap({ UUID(uuidString: $0.lineId) }) { tracked.insert(.init(id)) }
         return tracked
     }
     func packReviews() throws -> [SharedDemandPackReview] { try packs.map { try $0.review() } }
+    /// The service derives which lines an inverse restores. The user supplies
+    /// explicit pack evidence for that resulting set, without reviving a line
+    /// locally or treating its old food commitments as available supply.
+    func undoPackReviews() throws -> [SharedDemandPackReview] {
+        let selected = (packs + historicalUndoPacks).filter(\.includeForUndo)
+        guard Set(selected.map(\.id)).count == selected.count else { throw ClientError.configuration }
+        return try selected.map { entry in
+            let review = try entry.review()
+            guard review.usablePerPack != nil || review.acceptUnresolved else { throw ClientError.configuration }
+            return review
+        }
+    }
     func intent(page: SharedTrackingPage, shop: ShopperShop, request: TrackingRequestContext? = nil,
                 edited: ShopperShopCandidate? = nil, mealEdit: SharedDemandMealEdit? = nil, actionSources: SharedTrackingActionSources? = nil) throws -> SharedTrackingIntentKind {
         guard page.shopId.string == shop.shopId, page.shopRevision == shop.shopRevision,
@@ -206,6 +243,7 @@ struct TrackingFlowDraft: Equatable {
         guard let state = page.state else { throw ClientError.invalidResponse }
         let basket = request?.basket ?? edited?.lines ?? shop.lines
         var additions: [SharedDemandContribution] = []
+        let retiring = Set(mealChanges?.catalog.retirementCandidates ?? [])
         for manual in manuals where manual.enabled {
             guard manual.productConfirmed, let id = manual.lineID,
                   basket.contains(where: { $0.lineId == id.string }),
@@ -213,7 +251,7 @@ struct TrackingFlowDraft: Equatable {
                   !manual.original.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw ClientError.configuration }
             // An explicit identity confirmation may use an existing product key;
             // never create a shared identity just because two labels are equal.
-            let active = state.graph.contributions.filter { $0.lineId == id && $0.removedAt == nil }
+            let active = state.graph.contributions.filter { $0.lineId == id && $0.removedAt == nil && !retiring.contains($0.id) }
             guard active.allSatisfy({ $0.productKey != nil }) || self.packs.first(where: { $0.id == id })?.confirmExistingSources == true else { throw ClientError.configuration }
             additions.append(.init(id: manual.id, lineId: id, source: .manual,
                 productKey: active.compactMap(\.productKey).first ?? "food.\(id.string)",
@@ -222,7 +260,7 @@ struct TrackingFlowDraft: Equatable {
         }
         var clarifyingProtected: [SharedDemandID] = []
         for pack in self.packs where pack.confirmExistingSources {
-            let active = state.graph.contributions.filter { $0.lineId == pack.id && $0.removedAt == nil }
+            let active = state.graph.contributions.filter { $0.lineId == pack.id && $0.removedAt == nil && !retiring.contains($0.id) }
             let key = active.compactMap(\.productKey).first ?? "food.\(pack.id.string)"
             for var source in active where source.productKey == nil {
                 source.productKey = key; additions.append(source)
@@ -254,7 +292,7 @@ struct TrackingFlowDraft: Equatable {
             guard requestMatched, let target = request.target,
                   let lineID = UUID(uuidString: target.lineId) else { throw ClientError.configuration }
             let id = SharedDemandID(lineID)
-            let active = state.graph.contributions.filter { $0.lineId == id && $0.removedAt == nil }
+            let active = state.graph.contributions.filter { $0.lineId == id && $0.removedAt == nil && !retiring.contains($0.id) }
             guard active.allSatisfy({ $0.productKey != nil }) || self.packs.first(where: { $0.id == id })?.confirmExistingSources == true else { throw ClientError.configuration }
             var quantity = try requestAmount.value()
             if case .add(_, _, let evidence) = request.reviewed.decision, let evidence {
@@ -271,11 +309,29 @@ struct TrackingFlowDraft: Equatable {
             action = actionSources?.normalizedAction.command ?? .patch(.init(quote: edited?.quote ?? shop.quote, lines: basket,
                 mealEdit: mealEdit, reviewedStoreBasisRevision: edited?.reviewedStoreBasisRevision))
         }
+        if page.status == .enabled, mealEdit != nil { guard mealChanges != nil else { throw ClientError.configuration } }
+        if mealChanges != nil { guard request == nil, actionSources == nil else { throw ClientError.configuration } }
+        let mealDelta = try mealChanges?.delta(page: page, action: action, packs: self.packs, basket: basket)
+        for source in mealDelta?.change.contributions ?? [] {
+            if let index = additions.firstIndex(where: { $0.id == source.id }) {
+                // A simultaneous explicit identity clarification may accompany
+                // a meal update, but must not replace any meal facts.
+                guard let old = state.graph.contributions.first(where: { $0.id == source.id }), old.productKey == nil,
+                      additions[index].productKey != nil else { throw ClientError.configuration }
+                var clarified = old; clarified.productKey = additions[index].productKey
+                guard clarified == additions[index] else { throw ClientError.configuration }
+                var merged = source; merged.productKey = clarified.productKey; additions[index] = merged
+            } else { additions.append(source) }
+        }
         let old = state.graph.lines
         guard old.filter({ $0.trashedAt == nil }).allSatisfy({ line in basket.contains { $0.lineId == line.id.string } }) else { throw ClientError.configuration }
         let newLines = try Set(additions.map(\.lineId)).sorted { $0.string < $1.string }.compactMap { id -> SharedDemandLine? in
             if old.contains(where: { $0.id == id && $0.trashedAt == nil }) { return nil }
-            guard !old.contains(where: { $0.id == id }), let line = basket.first(where: { $0.lineId == id.string }) else { throw ClientError.configuration }
+            guard let line = basket.first(where: { $0.lineId == id.string }) else { throw ClientError.configuration }
+            if var historical = old.first(where: { $0.id == id }) {
+                guard mealChanges?.rows.contains(where: { $0.canBind && $0.lineID == id && $0.productConfirmed }) == true else { throw ClientError.configuration }
+                historical.trashedAt = nil; historical.name = line.originalItem; return historical
+            }
             return .init(id: id, name: line.originalItem,
                 unit: request?.target?.lineId == id.string ? requestLineUnit : (self.packs.first { $0.id == id }?.lineUnit ?? .count),
                 originalOrder: (old.map(\.originalOrder).max() ?? -1) + basket.firstIndex(where: { $0.lineId == id.string })! + 1)
@@ -285,7 +341,11 @@ struct TrackingFlowDraft: Equatable {
             guard confirmBasketLabels else { throw ClientError.configuration }
             var value = line; value.name = basket.originalItem; return value
         }
-        let change = SharedDemandChange(lines: newLines + renamed, contributions: additions, edges: [], removeSourceIds: [], removeEdgeIds: [], clarifyReservationProductIds: clarifyingProtected.isEmpty ? nil : clarifyingProtected)
+        let change = SharedDemandChange(lines: newLines + renamed, contributions: additions, edges: [],
+            removeSourceIds: mealDelta?.change.removeSourceIds ?? [], removeEdgeIds: mealDelta?.change.removeEdgeIds ?? [],
+            quantifyReservationIds: mealDelta?.change.quantifyReservationIds,
+            clarifyReservationProductIds: clarifyingProtected.isEmpty ? nil : clarifyingProtected)
+        guard Set(clarifyingProtected).isDisjoint(with: change.quantifyReservationIds ?? []) else { throw ClientError.configuration }
         if state.graph.revision == 0 {
             // First adoption must cover the whole basket. No source or food
             // amount is inferred for unrelated grocery rows from their packs.
@@ -293,8 +353,8 @@ struct TrackingFlowDraft: Equatable {
                   Set(packs.map(\.lineId)) == Set(newLines.map(\.id)) else { throw ClientError.configuration }
             return .adopt(action: action, change: change, packs: packs)
         }
-        if change.isEmpty && request == nil { return .review(action: action, packs: packs) }
-        return .change(action: action, change: change, packs: packs, unboundFactIds: state.unbound.map(\.factId))
+        if change.isEmpty && request == nil && mealChanges == nil { return .review(action: action, packs: packs) }
+        return .change(action: action, change: change, packs: packs, unboundFactIds: mealDelta?.unboundFactIDs ?? state.unbound.map(\.factId))
     }
     func rebind(page: SharedTrackingPage) throws -> SharedTrackingIntentKind {
         guard let state = page.state, let factID = rebindFactID, rebindConfirmed,

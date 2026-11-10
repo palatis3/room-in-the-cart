@@ -22,9 +22,10 @@ extension HouseholdService {
         try trackingContext(context, shopID: shopID, generation: start)
         try history.validate(page: page); return history
     }
-    public func sharedTrackingCandidate(page: SharedTrackingPage, kind: SharedTrackingIntentKind, requestPreview: ShopperPreview? = nil, actionSources: SharedTrackingActionSources? = nil) async throws -> SharedTrackingCandidateReview {
+    public func sharedTrackingCandidate(page: SharedTrackingPage, kind: SharedTrackingIntentKind, requestPreview: ShopperPreview? = nil, actionSources: SharedTrackingActionSources? = nil,
+                                        mealSources: SharedTrackingMealSources? = nil, transferredChanges: [SharedTrackingTransferredChange]? = nil) async throws -> SharedTrackingCandidateReview {
         let shopID = page.shopId.uuid, start = generation, context = try sharedDemandContext(shopID: page.shopId.uuid)
-        let intent = try SharedTrackingIntent(page: page, context: context, kind: kind, requestPreview: requestPreview, actionSources: actionSources)
+        let intent = try SharedTrackingIntent(page: page, context: context, kind: kind, requestPreview: requestPreview, actionSources: actionSources, mealSources: mealSources, transferredChanges: transferredChanges)
         try intent.requireFreshRequest()
         try await authorizeShopper(shopID: page.shopId.string)
         try trackingContext(context, shopID: shopID, generation: start)
@@ -65,7 +66,10 @@ extension HouseholdService {
         try candidate.requireFresh()
         try demandRequire(UUID(uuidString: window.id) != nil && demandTime(window.expiresAt).map { $0 > Date() } == true)
         let target: SharedDemandID?
-        if case .firstAdoptionUndo(let id, _) = candidate.intent.kind { target = id } else { target = nil }
+        switch candidate.intent.kind {
+        case .firstAdoptionUndo(let id, _), .mealOperationUndo(let id, _): target = id
+        default: target = nil
+        }
         let binding = SharedTrackingOperationBinding(kind: .apply, mode: candidate.intent.kind.mode, context: read.context, shopID: read.shopId,
             base: .init(shopRevision: read.shopRevision, authorityEpoch: read.authorityEpoch, requestRevision: candidate.intent.requestPreview?.requestRevision),
             graphRevision: candidate.candidate.after.graph.revision, privacyRevision: read.privacyRevision,

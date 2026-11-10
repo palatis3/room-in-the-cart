@@ -75,17 +75,18 @@ public enum SharedTrackingIntentKind: Equatable, Sendable {
     case change(action: SharedDemandAction, change: SharedDemandChange, packs: [SharedDemandPackReview], unboundFactIds: [SharedDemandID])
     case review(action: SharedDemandAction, packs: [SharedDemandPackReview])
     case firstAdoptionUndo(targetOperationId: SharedDemandID, packs: [SharedDemandPackReview])
+    case mealOperationUndo(targetOperationId: SharedDemandID, packs: [SharedDemandPackReview])
     case rebind(bindings: [SharedTrackingRebind])
     case recover(packs: [SharedDemandPackReview])
     public var mode: String {
         switch self { case .adopt: "adopt"; case .change: "change"; case .review: "review"
-        case .firstAdoptionUndo: "firstAdoptionUndo"; case .rebind: "rebind"; case .recover: "recover" }
+        case .firstAdoptionUndo: "firstAdoptionUndo"; case .mealOperationUndo: "mealOperationUndo"; case .rebind: "rebind"; case .recover: "recover" }
     }
     var action: SharedDemandAction? {
         switch self { case .adopt(let a, _, _), .change(let a, _, _, _), .review(let a, _): a; default: nil }
     }
     var packs: [SharedDemandPackReview]? {
-        switch self { case .adopt(_, _, let p), .change(_, _, let p, _), .review(_, let p), .firstAdoptionUndo(_, let p), .recover(let p): p; case .rebind: nil }
+        switch self { case .adopt(_, _, let p), .change(_, _, let p, _), .review(_, let p), .firstAdoptionUndo(_, let p), .mealOperationUndo(_, let p), .recover(let p): p; case .rebind: nil }
     }
 }
 /// The original request preview supplies the mutable request revision explicitly.
@@ -95,21 +96,26 @@ public struct SharedTrackingIntent: Encodable, Equatable, Sendable {
     public let base: SharedTrackingReadBinding
     public let requestPreview: ShopperPreview?
     public let actionSources: SharedTrackingActionSources?
-    public init(page: SharedTrackingPage, context: SharedDemandContext, kind: SharedTrackingIntentKind, requestPreview: ShopperPreview? = nil, actionSources: SharedTrackingActionSources? = nil) throws {
+    public let mealSources: SharedTrackingMealSources?
+    public let transferredChanges: [SharedTrackingTransferredChange]?
+    public init(page: SharedTrackingPage, context: SharedDemandContext, kind: SharedTrackingIntentKind, requestPreview: ShopperPreview? = nil, actionSources: SharedTrackingActionSources? = nil,
+                mealSources: SharedTrackingMealSources? = nil, transferredChanges: [SharedTrackingTransferredChange]? = nil) throws {
         self.kind = kind; base = try .init(page: page, context: context); self.requestPreview = requestPreview; self.actionSources = actionSources
+        self.mealSources = mealSources; self.transferredChanges = transferredChanges
         try validate(page: page)
     }
-    private enum K: String, CodingKey { case mode, base, action, change, packs, unboundFactIds, targetOperationId, bindings }
+    private enum K: String, CodingKey { case mode, base, action, change, packs, unboundFactIds, targetOperationId, bindings, transferredChanges }
     private struct Base: Encodable { let shopRevision, authorityEpoch, graphRevision: Int; let stateDigest: String }
     public func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: K.self)
         try c.encode(kind.mode, forKey: .mode)
         try c.encode(Base(shopRevision: base.shopRevision, authorityEpoch: base.authorityEpoch, graphRevision: base.graphRevision, stateDigest: base.basisDigest.value), forKey: .base)
+        if let transferredChanges { try c.encode(transferredChanges, forKey: .transferredChanges) }
         switch kind {
         case .adopt(let action, let change, let packs): try c.encode(action, forKey: .action); try c.encode(change, forKey: .change); try c.encode(packs, forKey: .packs)
         case .change(let action, let change, let packs, let ids): try c.encode(action, forKey: .action); try c.encode(change, forKey: .change); try c.encode(packs, forKey: .packs); try c.encode(ids, forKey: .unboundFactIds)
         case .review(let action, let packs): try c.encode(action, forKey: .action); try c.encode(packs, forKey: .packs)
-        case .firstAdoptionUndo(let target, let packs): try c.encode(target, forKey: .targetOperationId); try c.encode(packs, forKey: .packs)
+        case .firstAdoptionUndo(let target, let packs), .mealOperationUndo(let target, let packs): try c.encode(target, forKey: .targetOperationId); try c.encode(packs, forKey: .packs)
         case .rebind(let bindings): try c.encode(bindings, forKey: .bindings)
         case .recover(let packs): try c.encode(packs, forKey: .packs)
         }
@@ -265,12 +271,19 @@ public struct SharedTrackingRecoveryDisclosure: Decodable, Equatable, Sendable {
 }
 
 public enum SharedTrackingChanges: Decodable, Equatable, Sendable {
+    case mealActionChange(SharedTrackingMealActionDisclosure), mealOperationUndo(SharedTrackingMealUndoDisclosure)
     case none, firstAdoptionUndo(SharedTrackingUndoDisclosure), compoundAdoptionUndo(SharedTrackingCompoundUndoDisclosure), rebind(SharedTrackingRebindDisclosure), recover(SharedTrackingRecoveryDisclosure)
-    private enum K: String, CodingKey { case targetOperationId, component, restored, invalidatedStateDigest }
+    private enum K: String, CodingKey { case kind, targetOperationId, component, restored, invalidatedStateDigest }
     public init(from decoder: Decoder) throws {
         if try decoder.singleValueContainer().decodeNil() { self = .none; return }
         let c = try decoder.container(keyedBy: K.self)
-        if c.contains(.targetOperationId) { self = .firstAdoptionUndo(try .init(from: decoder)) }
+        if c.contains(.kind) {
+            switch try c.decode(String.self, forKey: .kind) {
+            case "mealActionChange": self = .mealActionChange(try .init(from: decoder))
+            case "mealOperationUndo": self = .mealOperationUndo(try .init(from: decoder))
+            default: throw ClientError.invalidResponse
+            }
+        } else if c.contains(.targetOperationId) { self = .firstAdoptionUndo(try .init(from: decoder)) }
         else if c.contains(.component) { self = .compoundAdoptionUndo(try .init(from: decoder)) }
         else if c.contains(.restored) { self = .rebind(try .init(from: decoder)) }
         else if c.contains(.invalidatedStateDigest) { self = .recover(try .init(from: decoder)) }

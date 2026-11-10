@@ -245,7 +245,7 @@ public struct SharedTrackingPage: Decodable, Equatable, Sendable {
 
 public struct SharedTrackingHistoryItem: Decodable, Equatable, Sendable {
     public enum Status: String, Decodable, Sendable { case current_preview_required, unavailable }
-    public enum ReviewRoute: String, Decodable, Sendable { case tracking, requestAcceptance }
+    public enum ReviewRoute: String, Decodable, Sendable { case tracking, requestAcceptance, trackingMeal }
     /// Routing only; the destination still obtains a current authorized preview.
     public let reviewRoute: ReviewRoute
     public let operationId: SharedDemandID

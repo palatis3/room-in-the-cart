@@ -41,8 +41,9 @@ import SwiftUI
         func requestUndoPrepare(_ review: SharedRequestUndoReview) async throws -> PendingOperation { await suspend("prepare"); return operation }
         func sendRequestUndo(_ operation: PendingOperation) async throws { XCTAssertEqual(operation, self.operation); sends += 1 }
         func readTracking(shopID: UUID) async throws -> SharedTrackingPage { throw ClientError.configuration }
+        func trackingMealSources(page: SharedTrackingPage, action: SharedDemandAction) async throws -> SharedTrackingMealSources { throw ClientError.configuration }
         func trackingSources(page: SharedTrackingPage, action: SharedDemandAction, requestPreview: ShopperPreview?) async throws -> SharedTrackingActionSources { throw ClientError.configuration }
-        func candidateTracking(page: SharedTrackingPage, kind: SharedTrackingIntentKind, requestPreview: ShopperPreview?, actionSources: SharedTrackingActionSources?) async throws -> SharedTrackingCandidateReview { throw ClientError.configuration }
+        func candidateTracking(page: SharedTrackingPage, kind: SharedTrackingIntentKind, requestPreview: ShopperPreview?, actionSources: SharedTrackingActionSources?, mealSources: SharedTrackingMealSources?, transferredChanges: [SharedTrackingTransferredChange]?) async throws -> SharedTrackingCandidateReview { throw ClientError.configuration }
         func historyTracking(page: SharedTrackingPage) async throws -> SharedTrackingHistory { throw ClientError.configuration }
         func acceptTracking(_ candidate: SharedTrackingCandidateReview, acceptOverage: Bool, acceptUnknown: Bool) async throws -> SharedTrackingAcceptedReview { throw ClientError.configuration }
         func prepareTracking(_ accepted: SharedTrackingAcceptedReview) async throws -> PendingOperation { throw ClientError.configuration }

@@ -9,7 +9,8 @@ extension SharedTrackingIntent {
             try demandRequire(page.state != nil && page.projection == nil)
             try demandRequire((kind.mode == "adopt") == (base.graphRevision == 0))
         }
-        if actionSources != nil { try demandRequire(kind.mode == "adopt") }
+        if actionSources != nil { try demandRequire(kind.mode == "adopt" && mealSources == nil) }
+        if mealSources != nil || transferredChanges != nil { try demandRequire(kind.mode == "change") }
         if let packs = kind.packs {
             try demandRequire(packs.count <= 200 && demandUnique(packs.map(\.lineId)))
             for pack in packs { try demandIDs([pack.lineId]); try pack.usablePerPack?.validate() }
@@ -20,11 +21,12 @@ extension SharedTrackingIntent {
             if let actionSources { try actionSources.validate(page: page, action: action, requestPreview: requestPreview) }
             else { guard case .patch(let body) = action, body.mealEdit == nil else { throw ClientError.configuration } }
             try change.validate()
-        case .change(_, let change, _, let ids):
-            try change.validate(); try demandIDs(ids.map(Optional.some)); try demandRequire(ids.count <= 2000 && demandUnique(ids))
+        case .change(let action, let change, _, let ids):
+            try validateMealChange(page: page, action: action, change: change)
+            try demandIDs(ids.map(Optional.some)); try demandRequire(ids.count <= 2000 && demandUnique(ids))
         case .review(let action, _):
             guard case .patch(let body) = action, body.mealEdit == nil else { throw ClientError.configuration }
-        case .firstAdoptionUndo(let id, _): try demandIDs([id])
+        case .firstAdoptionUndo(let id, _), .mealOperationUndo(let id, _): try demandIDs([id])
         case .rebind(let bindings):
             try demandRequire(!bindings.isEmpty && bindings.count <= 2000 && demandUnique(bindings.map(\.factId)))
             for binding in bindings {
@@ -70,10 +72,14 @@ extension SharedTrackingCandidateReview {
         try demandRequire(Set(before.usedIds).isSubset(of: Set(after.graph.usedIds)))
         if let catalog = intent.actionSources {
             try demandRequire(candidate.action == catalog.normalizedAction && after.catalog == catalog.sources.map(\.fact))
+        } else if let catalog = intent.mealSources {
+            try demandRequire(candidate.action == catalog.normalizedAction && after.catalog == catalog.proposedCatalog)
         } else if let expected = intent.kind.action { try demandRequire(candidate.action.command == expected) }
         else {
             guard case .patch(let body) = candidate.action.command else { throw ClientError.invalidResponse }
-            if body.mealEdit != nil { guard case .compoundAdoptionUndo = candidate.disclosure.changes else { throw ClientError.invalidResponse } }
+            if body.mealEdit != nil {
+                switch candidate.disclosure.changes { case .compoundAdoptionUndo, .mealOperationUndo: break; default: throw ClientError.invalidResponse }
+            }
         }
         if let packs = intent.kind.packs { try demandRequire(after.packReviews == packs) }
         if case .patch(let body) = candidate.action.command {
@@ -91,11 +97,23 @@ extension SharedTrackingCandidateReview {
             // Explicit original preview, not an arbitrary historic source, is the base.
             try demandRequire(acceptedRevision == preview.requestRevision && facts[0].revision == preview.requestRevision)
         }
+        if intent.kind.mode == "change", let state = page.state {
+            let explicit = Set((intent.transferredChanges ?? []).map(\.factId))
+            for entry in state.unbound where entry.transferred != nil && !explicit.contains(entry.factId) {
+                try demandRequire(after.unbound.contains(entry))
+            }
+        }
         try demandRequire(candidate.disclosure.money.before == page.checkout)
         let pickup = candidate.disclosure.pickup
         try pickup.validate(state: after)
         switch (intent.kind, candidate.disclosure.changes) {
-        case (.adopt, .none), (.change, .none): break
+        case (.adopt, .none), (.change, .none):
+            if case .patch(let body) = candidate.action.command { try demandRequire(body.mealEdit == nil) }
+            try demandRequire(intent.transferredChanges?.isEmpty ?? true)
+        case (.adopt, .mealActionChange(let disclosure)), (.change, .mealActionChange(let disclosure)):
+            try disclosure.validate(intent: intent, page: page, candidate: candidate)
+        case (.mealOperationUndo(let target, _), .mealOperationUndo(let disclosure)):
+            try disclosure.validate(target: target, page: page, candidate: candidate)
         case (.review, .none):
             var expected = before; expected.revision += 1
             try demandRequire(after.graph == expected && after.catalog == page.state?.catalog && after.bindings == page.state?.bindings && after.unbound == page.state?.unbound)

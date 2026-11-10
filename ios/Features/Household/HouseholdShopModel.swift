@@ -786,7 +786,13 @@ struct SharedShopTransfer: Equatable {
                 guard start == generation, lookup == editorLookup, actor == scope, self.shop == baseline,
                       editing, pending == nil, review == nil, canManage,
                       tracking.shopRevision == entered.base.shopRevision, tracking.authorityEpoch == entered.base.authorityEpoch else { throw ClientError.cancelled }
-                if tracking.status == .enabled, entered.mealEdit == nil, tracking.state?.unbound.isEmpty == false || tracking.state?.legacyLineIds.isEmpty == false { trackingEditor = .init(shop: baseline, candidate: candidate); return }
+                if tracking.status == .enabled, tracking.state?.unbound.isEmpty == false || tracking.state?.legacyLineIds.isEmpty == false {
+                    let meal = entered.mealEdit.map { edit in
+                        SharedDemandMealEdit(occurrenceId: .init(edit.occurrenceID), baseMealRevision: edit.baseMealRevision, meal: edit.meal,
+                            proposalId: edit.proposalID.map(SharedDemandID.init), changeProposalId: edit.changeProposalID.map(SharedDemandID.init))
+                    }
+                    trackingEditor = .init(shop: baseline, candidate: candidate, mealEdit: meal); return
+                }
                 if tracking.status == .legacy, let edit = entered.mealEdit {
                     let meal = SharedDemandMealEdit(occurrenceId: .init(edit.occurrenceID), baseMealRevision: edit.baseMealRevision, meal: edit.meal,
                         proposalId: edit.proposalID.map(SharedDemandID.init), changeProposalId: edit.changeProposalID.map(SharedDemandID.init))

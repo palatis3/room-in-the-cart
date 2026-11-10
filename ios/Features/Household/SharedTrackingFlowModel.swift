@@ -11,7 +11,8 @@ import HouseholdClient
     func sendTracking(_ operation: PendingOperation, selectionID: UUID?) async throws
     func readTracking(shopID: UUID) async throws -> SharedTrackingPage
     func trackingSources(page: SharedTrackingPage, action: SharedDemandAction, requestPreview: ShopperPreview?) async throws -> SharedTrackingActionSources
-    func candidateTracking(page: SharedTrackingPage, kind: SharedTrackingIntentKind, requestPreview: ShopperPreview?, actionSources: SharedTrackingActionSources?) async throws -> SharedTrackingCandidateReview
+    func candidateTracking(page: SharedTrackingPage, kind: SharedTrackingIntentKind, requestPreview: ShopperPreview?, actionSources: SharedTrackingActionSources?, mealSources: SharedTrackingMealSources?, transferredChanges: [SharedTrackingTransferredChange]?) async throws -> SharedTrackingCandidateReview
+    func trackingMealSources(page: SharedTrackingPage, action: SharedDemandAction) async throws -> SharedTrackingMealSources
     func historyTracking(page: SharedTrackingPage) async throws -> SharedTrackingHistory
     func acceptTracking(_ candidate: SharedTrackingCandidateReview, acceptOverage: Bool, acceptUnknown: Bool) async throws -> SharedTrackingAcceptedReview
     func prepareTracking(_ accepted: SharedTrackingAcceptedReview) async throws -> PendingOperation
@@ -20,10 +21,11 @@ import HouseholdClient
 @MainActor protocol SharedTrackingServiceOwner: SharedTrackingFlowAccess { var trackingService: HouseholdService { get } }
 extension SharedTrackingServiceOwner {
     func readTracking(shopID: UUID) async throws -> SharedTrackingPage { try await trackingService.sharedTracking(shopID: shopID) }
-    func candidateTracking(page: SharedTrackingPage, kind: SharedTrackingIntentKind, requestPreview: ShopperPreview?, actionSources: SharedTrackingActionSources?) async throws -> SharedTrackingCandidateReview {
-        try await trackingService.sharedTrackingCandidate(page: page, kind: kind, requestPreview: requestPreview, actionSources: actionSources)
+    func candidateTracking(page: SharedTrackingPage, kind: SharedTrackingIntentKind, requestPreview: ShopperPreview?, actionSources: SharedTrackingActionSources?, mealSources: SharedTrackingMealSources?, transferredChanges: [SharedTrackingTransferredChange]?) async throws -> SharedTrackingCandidateReview {
+        try await trackingService.sharedTrackingCandidate(page: page, kind: kind, requestPreview: requestPreview, actionSources: actionSources, mealSources: mealSources, transferredChanges: transferredChanges)
     }
     func trackingSources(page: SharedTrackingPage, action: SharedDemandAction, requestPreview: ShopperPreview?) async throws -> SharedTrackingActionSources { try await trackingService.sharedTrackingActionSources(page: page, action: action, requestPreview: requestPreview) }
+    func trackingMealSources(page: SharedTrackingPage, action: SharedDemandAction) async throws -> SharedTrackingMealSources { try await trackingService.sharedTrackingMealActionSources(page: page, action: action) }
     func historyTracking(page: SharedTrackingPage) async throws -> SharedTrackingHistory { try await trackingService.sharedTrackingHistory(page: page) }
     func acceptTracking(_ candidate: SharedTrackingCandidateReview, acceptOverage: Bool, acceptUnknown: Bool) async throws -> SharedTrackingAcceptedReview { try await trackingService.acceptSharedTrackingCandidate(candidate, acceptOverage: acceptOverage, acceptUnknown: acceptUnknown) }
     func prepareTracking(_ accepted: SharedTrackingAcceptedReview) async throws -> PendingOperation { try await trackingService.prepareSharedTrackingApply(accepted) }
@@ -36,6 +38,7 @@ extension SharedTrackingServiceOwner {
     @Published private(set) var candidate: SharedTrackingCandidateReview?
     @Published private(set) var history: SharedTrackingHistory?
     @Published private(set) var actionSources: SharedTrackingActionSources?
+    @Published private(set) var mealSources: SharedTrackingMealSources?
     @Published var acceptOverage = false
     @Published var acceptUnknown = false
     @Published private(set) var busy = false
@@ -86,9 +89,36 @@ extension SharedTrackingServiceOwner {
             entries[index] = value; rows.wrappedValue = entries
         })
     }
+    func mealEntry<Value>(_ path: WritableKeyPath<TrackingPartialMealDraft, Value>, empty: Value) -> Binding<Value> {
+        let value = entry(\.mealChanges, empty: nil)
+        return Binding(get: { value.wrappedValue?[keyPath: path] ?? empty }, set: { newValue in
+            guard var current = value.wrappedValue else { return }
+            current[keyPath: path] = newValue; value.wrappedValue = current
+        })
+    }
+    func mealRowEntry<Row: Identifiable, Value>(_ rows: WritableKeyPath<TrackingPartialMealDraft, [Row]>, id: Row.ID,
+                                               path: WritableKeyPath<Row, Value>, empty: Value) -> Binding<Value> {
+        let value = entry(\.mealChanges, empty: nil)
+        return Binding(get: { value.wrappedValue?[keyPath: rows].first { $0.id == id }?[keyPath: path] ?? empty }, set: { newValue in
+            guard var meal = value.wrappedValue else { return }
+            var current = meal[keyPath: rows]
+            guard let index = current.firstIndex(where: { $0.id == id }) else { return }
+            current[index][keyPath: path] = newValue; meal[keyPath: rows] = current
+            meal.reviewed = false; value.wrappedValue = meal
+        })
+    }
+    func mealLineEntry(id: SharedDemandID) -> Binding<SharedDemandID?> {
+        let value = entry(\.mealChanges, empty: nil)
+        return Binding(get: { value.wrappedValue?.rows.first { $0.id == id }?.lineID }, set: { newValue in
+            guard var meal = value.wrappedValue, let index = meal.rows.firstIndex(where: { $0.id == id }),
+                  meal.rows[index].lineID != newValue else { return }
+            meal.rows[index].lineID = newValue; meal.rows[index].productConfirmed = false
+            meal.rows[index].conversion = .init(); meal.reviewed = false; value.wrappedValue = meal
+        })
+    }
     func clear() {
         generation = UUID(); lease = nil; page = nil; shop = nil; candidate = nil; history = nil
-        draft = .init(); gate.reset(); actionSources = nil; acceptOverage = false; acceptUnknown = false; busy = false; submitted = false; notice = nil
+        draft = .init(); gate.reset(); actionSources = nil; mealSources = nil; acceptOverage = false; acceptUnknown = false; busy = false; submitted = false; notice = nil
     }
     func load() async {
         guard !busy else { return }; clear()
@@ -108,8 +138,16 @@ extension SharedTrackingServiceOwner {
                 guard generation == token, owner == access.trackingLease, access.trackingSelectionID == selectionID,
                       access.trackingAllowed, access.trackingShop == current else { return }
             }
-            let entered = try TrackingFlowDraft(page: value, shop: current, request: request, edited: edited, actionSources: catalog)
-            shop = current; page = value; lease = owner; actionSources = catalog; draft = entered
+            var mealCatalog: SharedTrackingMealSources?
+            if value.status == .enabled, let mealEdit {
+                let action = SharedDemandAction.patch(.init(quote: edited?.quote ?? current.quote, lines: edited?.lines ?? current.lines,
+                    mealEdit: mealEdit, reviewedStoreBasisRevision: edited?.reviewedStoreBasisRevision))
+                mealCatalog = try await access.trackingMealSources(page: value, action: action)
+                guard generation == token, owner == access.trackingLease, access.trackingSelectionID == selectionID,
+                      access.trackingAllowed, access.trackingShop == current else { return }
+            }
+            let entered = try TrackingFlowDraft(page: value, shop: current, request: request, edited: edited, actionSources: catalog, mealSources: mealCatalog)
+            shop = current; page = value; lease = owner; actionSources = catalog; mealSources = mealCatalog; draft = entered
         } catch { fail(error, token: token) }
     }
     func preview(_ kind: SharedTrackingIntentKind? = nil) async {
@@ -118,7 +156,9 @@ extension SharedTrackingServiceOwner {
         busy = true; defer { if token == generation { busy = false } }
         do {
             let intent = try kind ?? entered.intent(page: page, shop: shop, request: request, edited: edited, mealEdit: mealEdit, actionSources: actionSources)
-            let value = try await access.candidateTracking(page: page, kind: intent, requestPreview: request?.reviewed.preview, actionSources: actionSources)
+            let value = try await access.candidateTracking(page: page, kind: intent, requestPreview: request?.reviewed.preview, actionSources: actionSources,
+                mealSources: kind == nil ? entered.mealChanges?.catalog : nil,
+                transferredChanges: kind == nil ? try entered.mealChanges?.transferredChanges(page: page) : nil)
             guard generation == token, permitted, entered == draft else { return }
             candidate = value; gate.reset(); acceptOverage = false; acceptUnknown = false; notice = nil
         } catch { fail(error, token: token) }
@@ -132,10 +172,15 @@ extension SharedTrackingServiceOwner {
         } catch { fail(error, token: token) }
     }
     func undo(_ item: SharedTrackingHistoryItem) async {
-        guard history?.items.contains(item) == true, item.status == .current_preview_required, item.reviewRoute == .tracking else { return }
-        do { await preview(.firstAdoptionUndo(targetOperationId: item.operationId,
-            packs: try draft.packs.filter(\.includeForUndo).map { try $0.review() })) }
-        catch { fail(error, token: generation) }
+        guard history?.items.contains(item) == true, item.status == .current_preview_required else { return }
+        do {
+            let packs = try draft.undoPackReviews()
+            switch item.reviewRoute {
+            case .tracking: await preview(.firstAdoptionUndo(targetOperationId: item.operationId, packs: packs))
+            case .trackingMeal: await preview(.mealOperationUndo(targetOperationId: item.operationId, packs: packs))
+            case .requestAcceptance: return
+            }
+        } catch { fail(error, token: generation) }
     }
     func rebind() async {
         guard let page else { return }
