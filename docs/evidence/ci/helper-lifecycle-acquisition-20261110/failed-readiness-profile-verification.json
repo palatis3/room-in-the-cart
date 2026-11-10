@@ -1,0 +1,66 @@
+{
+  "status": "passed",
+  "commit": "da8c893c3f092f9f90204c1443cf98d93c6bd417",
+  "profiles": {
+    "ordinary": {
+      "tests": 585,
+      "suiteCounts": [
+        19,
+        17,
+        10,
+        12,
+        10,
+        9,
+        64,
+        174,
+        36,
+        12,
+        222
+      ],
+      "logSHA256": "12ae674d1fb5c18e5fd4a14f53838a58b2d35c0d266b97587eaf933f1b73abab",
+      "receiptSHA256": "d4c9b86b00763161f0fbd29c95b417007b7a0cd172fbf319085754cd68672d5d"
+    },
+    "diagnostic": {
+      "tests": 585,
+      "suiteCounts": [
+        19,
+        17,
+        10,
+        12,
+        10,
+        9,
+        64,
+        174,
+        36,
+        12,
+        222
+      ],
+      "logSHA256": "1a5f2033e52c8823614b80d9d08b8de3510bd8a6e6fb5d93ffc04720f077123f",
+      "receiptSHA256": "b7c8c683c8e236548662a1c5d2ec0034711e6261e0f57f40a5e89ef337f7da4f"
+    },
+    "helper": {
+      "tests": 585,
+      "suiteCounts": [
+        19,
+        17,
+        10,
+        12,
+        10,
+        9,
+        64,
+        174,
+        36,
+        12,
+        222
+      ],
+      "logSHA256": "c9c00021011dd839e6444af0d081633b65e7be6b228f337415b91b91d270ae3a",
+      "receiptSHA256": "d6308d39c23432a0af4944804450fc8147158fa278db74e360ce67e850b3ab6d"
+    }
+  },
+  "sourceFiles": 758,
+  "sourceManifestSHA256": "a9ec4fc577c80deced4b66f1a47fb36a0780de7ffeaaa35bd4745bb9dc3072a5",
+  "receipt": "/Users/palatis/Room in the Cart/.build/PerformanceFinalCommitParityNov09/readiness-da8c893c-qualification/receipt.json",
+  "receiptSHA256": "ed19c4f260e8725918ef3a6616bb1d77ad9e2a4b6a3c81e6cd45597c472054eb",
+  "nativeOrHostedExecuted": false,
+  "releaseAcceptance": false
+}
