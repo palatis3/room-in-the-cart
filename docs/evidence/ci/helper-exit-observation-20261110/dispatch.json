@@ -1,0 +1,18 @@
+{
+  "runID": 42887056453,
+  "commit": "4df31882112cb59a29e900607cbc59add01077ba",
+  "branch": "codex/combined-candidate-20261109",
+  "workflow": "ios-performance.yml",
+  "inputs": {
+    "case": "all",
+    "simulator_signpost_control": "true",
+    "observe_app_scroll_signposts": "false",
+    "capture_scroll_signposts": "false",
+    "capture_preflight_only": "false",
+    "fresh_performance_simulator": "false",
+    "enable_performance_diagnostics": "false",
+    "enforce_baselines": "false"
+  },
+  "lastObserved": "performance-plan passed; simulator-signpost-control in_progress; app jobs skipped",
+  "releaseAcceptance": false
+}

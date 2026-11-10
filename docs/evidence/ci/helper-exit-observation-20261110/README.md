@@ -6,4 +6,4 @@ Missing identity never permits sampling, signaling, respawning or a new timeout.
 
 All281portable helper controls pass, including9new regression cases. The first check passed280behavior controls and failed the frozen-source guard because reviewed code changed before its two source pins were updated; that result is retained. The final pin update changes only the runner and its test hashes. [Verification](verification.json).
 
-Actual three-profile workflow validation and a changed hosted run remain required. This does not resolve the independent postboot inventory stall or establish app performance measurements.
+All three actual workflow profiles now pass644checks each against exact commit4df31882112cb59a29e900607cbc59add01077ba, with793unchanged source inputs and50source pins. [Profile verification](profiles.json). Hosted successor42887056453 was dispatched for standalone helper control and is not yet terminal. This does not resolve the independent postboot inventory stall or establish app performance measurements.
