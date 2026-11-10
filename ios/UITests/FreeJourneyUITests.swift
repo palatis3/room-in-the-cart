@@ -477,7 +477,8 @@ import XCTest
     func testFreeDinnerProtectedLunchShortFillRepairSettlementAndNextShop() throws {
         avoidIOS17SnapshotLoggingCrash()
         func verifyChosenDinnerInWeek(expectedShopTitle: String? = nil) {
-            dinnerRoot()
+            // Return to the destination we are opening, without first revealing the library.
+            returnToVisibleAnchor(app.buttons["dinnerWeekEntry"], rootTitles: ["Dinners", "Cenas"])
             openMealWeek()
             if let expectedShopTitle {
                 // The shop heading precedes the week and unscheduled dinners.
@@ -536,17 +537,17 @@ import XCTest
             XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
         }
         launch(reset: true)
-        tap(element("settings"))
+        tap(app.buttons["settings"])
         let consent = app.switches["Offer optional feedback after a pickup"]
         reveal(consent)
         XCTAssertEqual(consent.value as? String, "0")
         enableSwitch("Offer optional feedback after a pickup")
         tap(app.buttons["Done"])
         openShoppingList()
-        XCTAssertTrue(element("ledgerImport").waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["ledgerImport"].waitForExistence(timeout: 10))
         tap(app.tabBars.buttons["Dinners"])
-        tap(element("dinnerLibrary"))
-        tap(element("ledgerNewTemplate"))
+        tap(app.buttons["dinnerLibrary"])
+        tap(app.buttons["ledgerNewTemplate"])
         fillAdjacentFields([
             ("ledgerDinnerTitle", "Wrap dinner"), ("ledgerDinnerServings", "6"),
             ("Ingredient name", "Wraps"), ("Amount, optional", "6"),
@@ -555,12 +556,12 @@ import XCTest
         tap(app.buttons["Add serving group"])
         fillAdjacentFields([("Group name", "Lunch"), ("Group servings", "2")])
         enableSwitch("Protected group")
-        tap(element("ledgerReviewDinner"))
+        tap(app.buttons["ledgerReviewDinner"])
         assertText("Lunch")
-        tap(element("ledgerSaveDinner"))
+        tap(app.buttons["ledgerSaveDinner"])
         tap(app.buttons["Done"])
-        tap(element("ledgerChooseTemplate"))
-        tap(element("dinnerApply"))
+        tap(app.buttons["ledgerChooseTemplate"])
+        tap(app.buttons["dinnerApply"])
         verifyChosenDinnerInWeek()
         assertText("Unscheduled")
         capture("Free-dinner-and-protected-lunch")
@@ -571,20 +572,20 @@ import XCTest
 
         openShoppingList()
         tap(app.buttons["Inspect Wraps"])
-        tap(element("ledgerPackChoice"))
+        tap(app.buttons["ledgerPackChoice"])
         fillAdjacentFields([
             ("First pack label", "Four wraps"), ("First pack usable amount", "4"),
             ("First pack price, USD", "2"), ("Second pack label", "Three wraps"),
             ("Second pack usable amount", "3"), ("Second pack price, USD", "1.50"),
             ("Where you checked these packs and prices", "Retailer shelf checked today"),
         ])
-        tap(element("ledgerReviewPacks"))
+        tap(app.buttons["ledgerReviewPacks"])
         assertText("Item-only comparison")
         assertText("3.00")
-        tap(element("ledgerChoosePack-b"))
+        tap(app.buttons["ledgerChoosePack-b"])
         assertText("Pack choice saved for checkout review.")
         capture("Free-whole-packs-saved-for-checkout-review")
-        tap(element("ledgerPackDone"))
+        tap(app.buttons["ledgerPackDone"])
         shopRoot()
         tap(app.buttons["Review checkout"])
         tap(app.buttons["Continue to checkout review"])
@@ -729,14 +730,14 @@ import XCTest
         capture("Free-settlement-keeps-food-separate")
         tap(app.buttons["Review next shop"])
         tap(app.buttons["Create fresh next-shop draft"])
-        tap(element("pickupOpenCreatedNextList"))
+        tap(app.buttons["pickupOpenCreatedNextList"])
         assertText("Store not set")
         assertText("Date not set")
         tap(app.tabBars.buttons["Dinners"])
         dinnerRoot()
-        tap(element("dinnerLibrary"))
-        tap(element("ledgerChooseTemplate"))
-        tap(element("dinnerApply"))
+        tap(app.buttons["dinnerLibrary"])
+        tap(app.buttons["ledgerChooseTemplate"])
+        tap(app.buttons["dinnerApply"])
         verifyChosenDinnerInWeek()
         capture("Free-one-dinner-reused-for-next-shop")
         restart()
@@ -1588,7 +1589,7 @@ import XCTest
     }
 
     private func openMealWeek(title: String = "This week") {
-        tapVisibleFormRow(element("dinnerWeekEntry"))
+        tapVisibleFormRow(app.buttons["dinnerWeekEntry"])
         XCTAssertTrue(app.navigationBars[title].waitForExistence(timeout: 8))
         XCTAssertTrue(app.navigationBars[title].buttons.firstMatch.isHittable, "The pushed week must have a native Back control")
     }
@@ -2253,17 +2254,17 @@ import XCTest
         tap(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", label)).firstMatch)
         tap(app.buttons[value])
     }
-    private func dinnerRoot() { returnToVisibleAnchor(element("dinnerLibrary"), rootTitles: ["Dinners", "Cenas"]) }
+    private func dinnerRoot() { returnToVisibleAnchor(app.buttons["dinnerLibrary"], rootTitles: ["Dinners", "Cenas"]) }
     private func shopRoot() {
         let tab = app.tabBars.buttons.matching(NSPredicate(format: "label IN %@", ["Shop", "Compras"])).firstMatch
         tap(tab)
-        returnToVisibleAnchor(element("newComparison"), rootTitles: ["Shop", "Compras"])
+        returnToVisibleAnchor(app.buttons["newComparison"], rootTitles: ["Shop", "Compras"])
     }
     private func openShoppingList() {
         // The caller requests this source through Shop. A restart may already
         // have restored a detail, so use the native Back controls to the root.
         shopRoot()
-        tap(element("openPickupList"))
+        tap(app.buttons["openPickupList"])
     }
     private func startAnotherPickupFromList() {
         let picker = app.buttons["ledgerShopPicker"]
