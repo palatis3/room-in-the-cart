@@ -54,9 +54,9 @@ class HelperRunner(Runner):
         require(time.monotonic() < deadline, 'helper_lifecycle_deadline')
 
     def acquire_inventory(self, item, deadline):
-        """Only list -j: finish acquiring the same owned Popen inside its existing budget."""
+        """Only exact read-only inventory shapes: acquire the same owned Popen inside its budget."""
         tool=self.tools['simctl'];process=item['process'];record=item['record'];label=record['label']
-        require(record['argv']==[tool['path'],'list','-j'],'helper_inventory_acquisition_scope')
+        require(record['argv'][0]==tool['path'] and inventory_allowed(record['argv'][1:],self.device),'helper_inventory_acquisition_scope')
         self.lifecycle_check(deadline)
         launcher_identity(tool['path'],tool['sha256'],item['expected'],item['digest'])
         interpreter=str(Path('/bin/bash').resolve())
@@ -117,10 +117,11 @@ class HelperRunner(Runner):
                 next_sample=now+1  # No repeated whole-binary hashing during wait.
             time.sleep(min(.05,max(0,deadline-time.monotonic())))
 
-    def lifecycle(self, label, tail, seconds=30):
+    def lifecycle(self, label, tail, seconds=30, *, absolute_deadline=None):
         require(lifecycle_allowed(tail,self.device),'helper_lifecycle_scope')
         require(all(p['process'].poll() is not None for p in self.processes),'previous_tool_not_terminal')
         tool=self.tools['simctl'];started=time.monotonic();deadline=min(started+seconds,self.started+self.seconds)
+        if absolute_deadline is not None:deadline=min(deadline,absolute_deadline)
         diagnostic={'label':label,'startedEpoch':time.time(),'startedMonotonic':started,
                     'commandSeconds':seconds,'deadlineMonotonic':deadline,'phaseDeadlineMonotonic':self.started+self.seconds,
                     'outcome':'spawning'}
@@ -133,7 +134,7 @@ class HelperRunner(Runner):
                 require(self.processes and self.processes[-1]['record']['label']==label,'helper_spawn_inventory')
                 item=self.processes[-1]
                 if item['process'].poll() is None:
-                    require(tail==['list','-j'],'helper_unbound_live_no_signal')
+                    require(inventory_allowed(tail,self.device),'helper_unbound_live_no_signal')
                     item=self.acquire_inventory(item,deadline)
                 else:item['record']['terminalOwnedCommandBeforeBinding']=True
             self.lifecycle_check(deadline)
@@ -151,8 +152,13 @@ class HelperRunner(Runner):
             if item is not None:diagnostic['pid']=item['process'].pid
             self.save()
 
+def inventory_allowed(tail, device):
+    if tail in (['list','-j'],['list','-j','runtimes']):return True
+    identifier=device.get('createdUDID')
+    return bool(identifier) and tail==['list','-j','devices',identifier]
+
 def lifecycle_allowed(tail, device):
-    if tail==['list','-j']:return True
+    if inventory_allowed(tail,device):return True
     if tail==['create',device['createdName'],device['deviceTypeIdentifier'],device['runtime']['identifier']]:return True
     identifier=device.get('createdUDID')
     return identifier is not None and tail in (["boot",identifier],["bootstatus",identifier,"-b"],

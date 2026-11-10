@@ -1,0 +1,14 @@
+{
+  "runId": 42744325450,
+  "sourceCommit": "759ee5ab80099b0ff02e259c614acfae882a4ee4",
+  "sourcePinsVerified": 50,
+  "zipBytes": 79777,
+  "zipSHA256": "c22e4fb9b2d9abe46b19390d32af5fd38dfcfc29349be30d604d66a0bd5037a9",
+  "tarSHA256": "b1864ec088e9ac7ee3f03db2d4f7959b44dc6975cdef773a78034632a5de9bb7",
+  "tarMembersVerified": 22,
+  "bootStatusExit": 0,
+  "bootStatusSeconds": 117.611758583,
+  "firstFailure": "post-boot simctl list -j exceeded 30-second command deadline",
+  "ownedDeviceDeleted": true,
+  "releaseAcceptance": false
+}

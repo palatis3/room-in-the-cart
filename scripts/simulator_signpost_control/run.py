@@ -52,6 +52,24 @@ def current_device(inventory, device, state=None, absent=False):
     if state:require(d.get('state')==state,'helper_device_state')
     return d
 
+def verify_post_boot_device(runner, device):
+    """Fresh runtime + exact UUID listing; both commands share the original 30 seconds."""
+    deadline=min(time.monotonic()+30,runner.started+runner.seconds)
+    runner.lifecycle_check(deadline)
+    runtimes=read(runner.lifecycle('booted-runtimes',['list','-j','runtimes'],absolute_deadline=deadline))
+    require(set(runtimes)=={'runtimes'},'helper_runtime_inventory_shape')
+    require(runtime(runtimes)==device['runtime'],'helper_runtime_changed')
+    runner.lifecycle_check(deadline)
+    devices=read(runner.lifecycle('booted-device',['list','-j','devices',device['createdUDID']],absolute_deadline=deadline))
+    require(set(devices)=={'devices'},'helper_device_inventory_shape')
+    rows=[d for group in devices['devices'].values() for d in group]
+    require(len(rows)==1 and rows[0].get('udid')==device['createdUDID'],'helper_scoped_device_ambiguity')
+    # The public filter is substring matching, not authorization. Reuse exact equality,
+    # uniqueness, name/type/runtime/state and availability gates on fresh returned rows.
+    value=current_device({**runtimes,**devices},device,'Booted')
+    runner.lifecycle_check(deadline)
+    return value
+
 def verify_boot_output(stdout, stderr):
     # Same public boot guard as boot_ios_simulator.py; raw streams remain separate and unchanged.
     require(len(stdout)<=1024**2 and len(stderr)<=1024**2,'helper_boot_log_cap')
@@ -119,7 +137,7 @@ def run(output, developer):
         status=runner.lifecycle('bootstatus',['bootstatus',created,'-b'],BOOT_PREPARATION_SECONDS)
         verify_boot_output(status.read_bytes(),(runner.out/'bootstatus-stderr.log').read_bytes())
         runner.budget()
-        current_device(read(runner.lifecycle('booted',['list','-j'])),device,'Booted')
+        verify_post_boot_device(runner,device)
         runner.finish();require(runner.receipt['allKnownChildrenTerminal'],'helper_prepare_not_terminal')
         verify_tools(tool);require(selected_snapshot(ROOT,sources['files'])==sources,'helper_source_changed_before_capture')
         result['stage']='capture';atomic_json(output/'receipt.json',result)

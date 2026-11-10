@@ -266,7 +266,7 @@ class WorkflowTests(unittest.TestCase):
 class AcquisitionTests(unittest.TestCase):
     def setUp(self):
         self.clock=0.;self.terminal=None;self.reads=0
-        self.r=object.__new__(runner.HelperRunner);self.r.budget=mock.Mock();self.r.save=mock.Mock()
+        self.r=object.__new__(runner.HelperRunner);self.r.budget=mock.Mock();self.r.save=mock.Mock();self.r.device=DEVICE
         self.r.tools={'simctl':{'path':'/launcher','sha256':'launcher-sha','executable':'/actual','executableSHA256':'digest'}}
         self.process=SimpleNamespace(pid=42,poll=self.poll,returncode=None)
         self.item={'process':self.process,'record':{'label':'before','argv':['/launcher','list','-j'],'spawnEpoch':100.,'signals':[]},
@@ -387,6 +387,20 @@ class AcquisitionTests(unittest.TestCase):
         self.clock=29;self.r.budget.side_effect=ValueError('phase_log_cap')
         with self.assertRaisesRegex(ValueError,'phase_log_cap'):self.r.lifecycle_wait(self.item,30,{})
 
+    def test_actual_lifecycle_honors_shared_absolute_deadline(self):
+        self.r.device=DEVICE;self.r.started=0;self.r.seconds=90;self.r.receipt={};self.r.processes=[];self.r.out=Path('/owned')
+        def spawn(*a):self.r.processes.append(self.item);raise RuntimeError('before_unbound_or_early_exit')
+        self.r.spawn=mock.Mock(side_effect=spawn);self.read_value=lambda:None
+        with self.assertRaisesRegex(ValueError,'lifecycle_deadline'):
+            self.r.lifecycle('before',['list','-j'],30,absolute_deadline=5)
+        self.assertEqual(self.r.receipt['lifecycleCommands'][0]['deadlineMonotonic'],5)
+        self.assertAlmostEqual(self.clock,5);self.r.spawn.assert_called_once()
+    def test_new_scoped_queries_retain_same_child_binding(self):
+        for tail in (['list','-j','runtimes'],['list','-j','devices',DEVICE['createdUDID']]):
+            self.item['record']['argv']=['/launcher',*tail];self.item['binding']=None
+            self.assertIs(self.acquire(),self.item);self.assertEqual(self.item['binding'],self.value)
+            self.assertEqual(self.item['record']['signals'],[])
+
 class BootAndSummaryTests(unittest.TestCase):
     def test_existing_boot_allowance_and_collector_limits(self):
         self.assertEqual(run.BOOT_PREPARATION_SECONDS,180)
@@ -427,5 +441,80 @@ class BootAndSummaryTests(unittest.TestCase):
             p.write_text(json.dumps({'helperTransportQualified':True,'stage':'validated'}))
             with contextlib.redirect_stdout(io.StringIO()):v=run.terminal_summary('run',p,'RuntimeError: final_failure')
             self.assertEqual(v['status'],'failed');self.assertFalse(v['helperTransportQualified'])
+
+class ScopedPostBootTests(unittest.TestCase):
+    def setUp(self):
+        self.clock=0;self.commands=[];self.response=inventory();self.costs=[1,1];self.read_cost=0
+        self.r=SimpleNamespace(started=0,seconds=300,lifecycle=self.command,lifecycle_check=self.check)
+        for patch in (mock.patch.object(run.time,'monotonic',side_effect=lambda:self.clock),
+                      mock.patch.object(run,'read',side_effect=self.read)):
+            patch.start();self.addCleanup(patch.stop)
+    def check(self,deadline):
+        if self.clock>=deadline:raise ValueError('helper_lifecycle_deadline')
+    def command(self,label,tail,**kwargs):
+        self.commands.append((label,tail,kwargs['absolute_deadline']))
+        self.clock+=self.costs[len(self.commands)-1];self.check(kwargs['absolute_deadline'])
+        return tail[2]
+    def read(self,key):self.clock+=self.read_cost;return {key:self.response[key]}
+    def test_two_fresh_scoped_commands_same_original_budget(self):
+        self.assertEqual(run.verify_post_boot_device(self.r,DEVICE)['udid'],DEVICE['createdUDID'])
+        self.assertEqual(self.commands,[('booted-runtimes',['list','-j','runtimes'],30),
+                                        ('booted-device',['list','-j','devices',DEVICE['createdUDID']],30)])
+    def test_missing_duplicate_and_changed_runtime_fail_before_device_query(self):
+        for mutate in ('missing','duplicate','build','bundle','availability'):
+            self.commands=[];self.clock=0;self.response=inventory()
+            if mutate=='missing':self.response['runtimes']=[]
+            elif mutate=='duplicate':self.response['runtimes']*=2
+            elif mutate=='build':self.response['runtimes'][0]['buildversion']='other'
+            elif mutate=='bundle':self.response['runtimes'][0]['bundlePath']='/other'
+            else:self.response['runtimes'][0]['isAvailable']=False
+            with self.subTest(mutate=mutate),self.assertRaises(ValueError):run.verify_post_boot_device(self.r,DEVICE)
+            self.assertEqual(len(self.commands),1)
+    def test_missing_duplicate_wrong_uuid_name_type_state_runtime_availability(self):
+        for mutate in ('missing','duplicate','extra','uuid','name','type','state','runtime','availability'):
+            self.commands=[];self.clock=0;self.response=inventory();rows=self.response['devices'][run.RUNTIME]
+            if mutate=='missing':rows.clear()
+            elif mutate=='duplicate':rows*=2
+            elif mutate=='extra':rows.append({**rows[0],'udid':DEVICE['sourceUDID']})
+            elif mutate=='uuid':rows[0]['udid']=DEVICE['createdUDID']+'-substring'
+            elif mutate=='name':rows[0]['name']='other-owner'
+            elif mutate=='type':rows[0]['deviceTypeIdentifier']='other'
+            elif mutate=='state':rows[0]['state']='Shutdown'
+            elif mutate=='availability':rows[0]['isAvailable']=False
+            else:self.response['devices']={'other-runtime':rows}
+            with self.subTest(mutate=mutate),self.assertRaises(ValueError):run.verify_post_boot_device(self.r,DEVICE)
+            self.assertEqual(len(self.commands),2)
+    def test_fresh_both_commands_required_no_cached_result(self):
+        self.response['devices'][run.RUNTIME][0]['name']='new-name'
+        with self.assertRaisesRegex(ValueError,'device_identity'):run.verify_post_boot_device(self.r,DEVICE)
+        self.assertEqual(len(self.commands),2)
+    def test_combined_budget_exhaustion_does_not_retry_or_reset(self):
+        self.costs=[20,11]
+        with self.assertRaisesRegex(ValueError,'lifecycle_deadline'):run.verify_post_boot_device(self.r,DEVICE)
+        self.assertEqual([x[2] for x in self.commands],[30,30]);self.assertEqual(len(self.commands),2)
+    def test_runtime_parse_consumes_shared_budget_before_second_spawn(self):
+        self.costs=[29,1];self.read_cost=1
+        with self.assertRaisesRegex(ValueError,'lifecycle_deadline'):run.verify_post_boot_device(self.r,DEVICE)
+        self.assertEqual(len(self.commands),1)
+    def test_device_parse_cannot_succeed_after_deadline(self):
+        self.costs=[1,27];self.read_cost=1
+        with self.assertRaisesRegex(ValueError,'lifecycle_deadline'):run.verify_post_boot_device(self.r,DEVICE)
+        self.assertEqual(len(self.commands),2)
+    def test_remaining_outer_phase_budget_wins(self):
+        self.clock=295
+        run.verify_post_boot_device(self.r,DEVICE)
+        self.assertEqual([x[2] for x in self.commands],[300,300])
+    def test_new_inventory_whitelist_is_exact(self):
+        for tail in (['list','-j','runtimes'],['list','-j','devices',DEVICE['createdUDID']]):
+            self.assertTrue(runner.inventory_allowed(tail,DEVICE));self.assertTrue(runner.lifecycle_allowed(tail,DEVICE))
+        for tail in (['list','-j','devices','available'],['list','-j','devices',DEVICE['sourceUDID']],['list','-j','devices'],['list','-j','runtimes','available'],['list','-j','pairs']):
+            self.assertFalse(runner.inventory_allowed(tail,DEVICE));self.assertFalse(runner.lifecycle_allowed(tail,DEVICE))
+        self.assertFalse(runner.inventory_allowed(['list','-j','devices',DEVICE['createdUDID']],{}))
+    def test_original_creation_and_cleanup_inventory_paths_unchanged(self):
+        source=inspect.getsource(run.run)
+        self.assertIn("runner.command('inventory','simctl',['list','-j']",source)
+        self.assertIn("runner.lifecycle('created',['list','-j'])",source)
+        cleanup=inspect.getsource(run.cleanup)
+        for label in ('before','shutdown-verified','deleted'):self.assertIn("runner.lifecycle('"+label+"',['list','-j'])",cleanup)
 
 if __name__=='__main__':unittest.main()

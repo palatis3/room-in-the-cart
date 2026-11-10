@@ -2,8 +2,7 @@
 
 ## Current checkpoint — November 9, workflow and combined-candidate qualification
 
-The current combined backend passes 639 offline and 306 PostgreSQL tests, including eight bounded operation Undo and six shared Records HTTP cases. One database-only offline skip and three optional browser skips remain explicit. Migration 044 ran only in isolated fixtures; staging remains through 041. Native Undo and real-client results are listed below; meal/request/adoption/store inverse scopes remain open.
-[Undo scope and proof](evidence/service/shared-food-operation-undo-20261109/README.md).
+The meal Undo backend successor passes 650 offline and 315 PostgreSQL tests, including eleven new pure and nine new meal HTTP cases alongside all original Undo/Records cases. The same one database-only offline skip and three optional browser skips remain explicit. Migration 045 ran only in isolated fixtures; staging remains through 041. Native meal changes are installed but unqualified: package 141+3 passes, while review found a mixed-letter UUID roundtrip edge being corrected before further native tests. [Meal/backend proof](evidence/service/shared-food-meal-undo-20261109/README.md).
 
 Hosted diagnostic 42732878538 at 0cdfaa51 passed 332 early checks, the Release
 producer and all initial container lookups. It failed collector readiness before
@@ -16,7 +15,11 @@ Native Undo now passes 133 package tests with three expected wire skips, exact i
 
 Shared Records r2 passes all six HTTP cases; its combined backend passes 639 offline and 306 PostgreSQL tests with the existing one-plus-three skips. [Proof](evidence/service/shared-records-snapshot-20261109/README.md).
 
-The standalone hosted helper at 608b3de4 passed 389 early checks and correctly skipped the app build jobs, but failed its 90-second bootstatus allowance before any collector ran. Preservation/upload passed; owned-device cleanup was not verified. All 20 archive members and 44 saved source pins verify. Its changed successor is in preparation; no performance measurement or helper transport is qualified. [Hosted proof](evidence/ci/standalone-collector-prerequisite-20261109/hosted-verification.json).
+The latest helper diagnostic 42744325450 at 759ee5ab passed 426 early checks and completed bootstatus, then failed its 30-second full post-boot inventory query. Artifact preservation and exact owned-device deletion passed; all 22 members and 50 source pins verify. A narrower fresh runtime/owned-device query shares the same 30-second deadline; all 75 controls pass, hosted effect pending. [Hosted proof](evidence/ci/standalone-collector-prerequisite-20261109/hosted-42744325450-verification.json).
+
+## Historical component checkpoints
+
+The following scoped records remain historical evidence; they do not supersede the current checkpoint or establish one combined release candidate.
 
 The latest shared-food slice compiles under Xcode 27.1. Its current scoped runs
 pass153 native model regressions,122 client-package tests (3 expected integration
