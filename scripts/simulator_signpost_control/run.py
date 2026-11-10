@@ -86,12 +86,18 @@ def compile_args(tool, source, binary):
     require(swiftc.resolve()==Path(tool['swift-frontend']['path']) and sha(swiftc)==tool['swift-frontend']['sha256'],'helper_swiftc_driver_binding')
     return [str(swiftc),'-sdk',tool['SDKROOT'],'-target','arm64-apple-ios17.0-simulator',str(source),'-o',str(binary)]
 
+def sampler_summary(receipt):
+    attempts=[d['stackSample'] for d in receipt.get('lifecycleCommands',[]) if 'stackSample' in d]
+    rows=[{k:s[k] for k in ('status','reason','error','cleanupError','incompleteProofError','terminalVerified','originalCommandVerified') if k in s} for s in attempts]
+    return {'samplerDiagnosticsComplete':all(s.get('status') in ('passed','not_needed') for s in attempts),
+            'samplerDiagnostics':{'attempted':bool(attempts),'attempts':rows}}
+
 def run(output, developer):
     output=Path(output).resolve();output.mkdir(parents=True,exist_ok=False)
     result={'diagnosticOnly':True,'releaseAcceptance':False,'helperTransportQualified':False,
             'scope':'Standalone simulator helper only; no app observation, XCTest, baseline, or implicit warm-up.',
             'startedEpoch':time.time(),'stage':'request','processesStarted':False}
-    runner=None;error=None
+    runner=None;preparation_runner=None;error=None
     try:
         require(validate_request(os.environ),'helper_opt_in_required')
         require(platform.machine()=='arm64','helper_arm64_host')
@@ -106,6 +112,11 @@ def run(output, developer):
         require(tool['toolProfile']==HOSTED_TOOL_PROFILE,'helper_reviewed_hosted_profile_required')
         result['tools']=tool;result['stage']='prerequisites'
         runner=HelperRunner(output/'prepare',tool,300,1024**2);runner.device={}
+        preparation_runner=runner
+        def check_sample_sources():
+            require(selected_snapshot(ROOT,sources['files'])==sources,'helper_sampler_sources_changed')
+            require(sha(ROOT/'scripts/app_scroll_observation/contract.json')==result['contractSHA256'],'helper_sampler_contract_changed')
+        runner.sample_source_check=check_sample_sources
         result['processesStarted']=True
         template=runner.command('templates','xctrace',['list','templates'],10,terminal_query=True)
         result['template']=verify_logging_template(template.read_bytes())
@@ -139,6 +150,7 @@ def run(output, developer):
         runner.budget()
         verify_post_boot_device(runner,device)
         runner.finish();require(runner.receipt['allKnownChildrenTerminal'],'helper_prepare_not_terminal')
+        result.update(sampler_summary(runner.receipt))
         verify_tools(tool);require(selected_snapshot(ROOT,sources['files'])==sources,'helper_source_changed_before_capture')
         result['stage']='capture';atomic_json(output/'receipt.json',result)
         args=SimpleNamespace(output=output/'capture',helper=binary,helper_sha256=sha(binary),simulator=created,
@@ -180,7 +192,13 @@ def run(output, developer):
     except BaseException as exc:
         error=type(exc).__name__+': '+str(exc)[:2048];result['error']=error
     finally:
-        if runner is not None:runner.finish(error)
+        if runner is not None:
+            try:runner.finish(error)
+            except BaseException as exc:
+                result['finalizationError']=type(exc).__name__+': '+str(exc)[:2048]
+                error=error or result['finalizationError'];result['error']=error
+                result['helperTransportQualified']=False
+        if preparation_runner is not None:result.update(sampler_summary(preparation_runner.receipt))
         result['finishedEpoch']=time.time();atomic_json(output/'receipt.json',result)
     return 1 if error else 0
 
@@ -270,6 +288,12 @@ def terminal_summary(phase, path, failure=None):
     summary={'phase':phase,'stage':stage,'status':'passed' if passed else 'failed',
              'firstCause':cause,'helperTransportQualified':qualified,'releaseAcceptance':False,
              'cleanup':'deleted' if value.get('ownedDeviceDeleted') is True else 'not_verified' if phase=='cleanup' else 'not_applicable'}
+    if phase=='run' and 'samplerDiagnosticsComplete' in value:
+        summary['samplerDiagnosticsComplete']=value['samplerDiagnosticsComplete'] is True
+        attempts=value.get('samplerDiagnostics',{}).get('attempts',[])
+        summary['samplerStatuses']=[s.get('status') for s in attempts][:1]
+        summary['samplerReasons']=[s.get('reason') for s in attempts if s.get('reason') in
+                                   ('observation_timeout','post_startup_reserve_exhausted')][:1]
     print(json.dumps(summary,sort_keys=True));return summary
 
 def main():

@@ -713,7 +713,7 @@ class RuntimeSampleTests(unittest.TestCase):
     identity=AcquisitionTests.identity
     acquire=AcquisitionTests.acquire
     def prepare(self,tmp):
-        self.r.out=Path(tmp);self.r.receipt={'processes':[]}
+        self.r.out=Path(tmp);self.r.receipt={'processes':[]};self.r.sample_source_check=mock.Mock()
         self.item['record'].update(label='booted-runtimes',argv=['/launcher','list','-j','runtimes'])
         self.item['binding']=self.value
         for name in ('booted-runtimes-stdout.log','booted-runtimes-stderr.log'):(self.r.out/name).write_bytes(b'')
@@ -741,7 +741,7 @@ class RuntimeSampleTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             self.prepare(tmp);proc,spawn=self.sampler(100);d={}
             with mock.patch.object(runner.subprocess,'Popen',side_effect=spawn):self.r.sample_runtime(self.item,30,d)
-            self.assertEqual(d['stackSample']['status'],'failed');self.assertIn('lifecycle_deadline',d['stackSample']['error'])
+            self.assertEqual(d['stackSample']['status'],'incomplete');self.assertEqual(d['stackSample']['reason'],'observation_timeout');self.assertIn('sample_observation_deadline',d['stackSample']['error'])
             self.assertTrue(d['stackSample']['terminalVerified']);proc.send_signal.assert_called_once()
             self.assertIsNone(self.item['process'].poll());self.assertEqual(self.item['record']['signals'],[])
     def test_wrong_or_missing_target_identity_prevents_sampler(self):
@@ -1207,18 +1207,18 @@ class SamplerTimingTests(unittest.TestCase):
             with mock.patch.object(runner.subprocess,'Popen',side_effect=spawn) as popen:self.r.sample_runtime(self.item,30,d)
             report=d['stackSample'];events={row['event']:row for row in report['timing']['events']}
             self.assertEqual(report['status'],'passed');self.assertEqual(report['durationSeconds'],1)
-            self.assertEqual(report['samplerWallSeconds'],3);popen.assert_called_once()
+            self.assertEqual(report['samplerObservationSeconds'],3);popen.assert_called_once()
             self.assertAlmostEqual(events['sampler_deadline_set']['deadline']-events['sampler_deadline_set']['monotonic'],3)
             for event in ('sample_started','sampler_popen_before','sampler_popen_after','sampler_first_binding','sampler_terminal_observed','sampler_after_verification'):self.assertIn(event,events)
             self.assertIn('booted-runtimes-stack.txt',report['timing']['firstNonempty'])
             self.assertGreater(report['timing']['operations']['identity.read']['calls'],0)
             self.assertIsNone(self.r._sample_timing)
-    def test_delayed_spawn_consumes_original_wall_allowance(self):
+    def test_delayed_spawn_is_separate_from_three_second_observation(self):
         with tempfile.TemporaryDirectory() as tmp:
             self.prepare(tmp);proc,spawn=self.sampler(finish=100);d={}
             def slow(*args,**kw):self.clock+=3;return spawn(*args,**kw)
             with mock.patch.object(runner.subprocess,'Popen',side_effect=slow) as popen:self.r.sample_runtime(self.item,30,d)
-            report=d['stackSample'];self.assertEqual(report['status'],'failed');self.assertIn('lifecycle_deadline',report['error'])
+            report=d['stackSample'];self.assertEqual(report['status'],'incomplete');self.assertEqual(report['reason'],'observation_timeout')
             self.assertTrue(report['terminalVerified']);popen.assert_called_once()
             events={row['event']:row for row in report['timing']['events']}
             self.assertEqual(events['sampler_popen_after']['monotonic']-events['sampler_popen_before']['monotonic'],3)
@@ -1259,5 +1259,213 @@ class SamplerTimingTests(unittest.TestCase):
             self.assertEqual(runner.HelperRunner.budget(self.r),'checked');budget.assert_called_once_with()
         self.assertEqual(self.r._sample_timing['operations']['receipt.save']['calls'],1)
         self.assertEqual(self.r._sample_timing['operations']['budget']['calls'],1)
+
+
+class SamplerLifecycleTests(unittest.TestCase):
+    setUp=RuntimeSampleTests.setUp
+    sleep=RuntimeSampleTests.sleep
+    poll=RuntimeSampleTests.poll
+    identity=RuntimeSampleTests.identity
+    acquire=RuntimeSampleTests.acquire
+    prepare=RuntimeSampleTests.prepare
+    sampler=RuntimeSampleTests.sampler
+    def attempt(self,tmp,*,start=0,delay=0,finish=1000,deadline=30,exitcode=0):
+        self.prepare(tmp);self.clock=start;proc,spawn=self.sampler(finish,exitcode);d={}
+        self.r.identity.read=mock.Mock(wraps=self.r.identity.read)
+        def slow(*args,**kwargs):self.clock+=delay;return spawn(*args,**kwargs)
+        with mock.patch.object(runner.subprocess,'Popen',side_effect=slow) as popen:self.r.sample_runtime(self.item,deadline,d)
+        popen.assert_called_once();return d['stackSample'],proc
+    def test_replay_4480960_second_popen_gets_separate_observation_within_original_180(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            start=150.93815625;delay=4.480960416
+            report,proc=self.attempt(tmp,start=start,delay=delay,finish=start+delay+1,deadline=180)
+            self.assertEqual(report['status'],'passed');proc.send_signal.assert_not_called()
+            self.assertGreater(report['registeredMonotonic'],start+3)
+            self.assertAlmostEqual(report['observationDeadlineMonotonic'],start+delay+3)
+            self.assertEqual(report['originalDeadlineMonotonic'],180);self.assertLess(self.clock,180)
+            self.assertNotIn('samplerWallSeconds',report)
+    def test_reserve_exhaustion_before_binding_is_explicit_incomplete_only(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            report,proc=self.attempt(tmp,start=150,delay=20,deadline=180)
+            self.assertEqual(report['status'],'incomplete');self.assertEqual(report['reason'],'post_startup_reserve_exhausted')
+            self.assertEqual(report['samplerBindingStatus'],'not_observed_reserve_exhausted')
+            self.assertIsNone(self.r.sample_child['binding']);self.assertNotIn('observationDeadlineMonotonic',report)
+            self.assertFalse(any(call.args[0]==43 for call in self.r.identity.read.call_args_list))
+            self.assertTrue(report['incompleteSafetyVerified']);self.assertTrue(report['sourceUnchanged'])
+            self.assertTrue(report['terminalVerified']);self.assertEqual(proc.send_signal.call_count,1)
+            self.r.sample_source_check.assert_called_once()
+    def test_registration_save_cost_exhausts_reserve_without_observation(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);proc,spawn=self.sampler(1000);d={};delayed=False
+            def save():
+                nonlocal delayed
+                if getattr(self.r,'sample_child',None) is not None and not delayed:self.clock+=20;delayed=True
+            self.r.save=save
+            with mock.patch.object(runner.subprocess,'Popen',side_effect=spawn):self.r.sample_runtime(self.item,30,d)
+            self.assertEqual(d['stackSample']['reason'],'post_startup_reserve_exhausted')
+            self.assertEqual(d['stackSample']['status'],'incomplete');self.assertNotIn('observationDeadlineMonotonic',d['stackSample'])
+    def test_exact_three_second_terminal_is_not_late_report_success(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            report,proc=self.attempt(tmp,finish=3)
+            self.assertEqual(report['status'],'incomplete');self.assertEqual(report['reason'],'observation_timeout')
+            self.assertEqual(report['observationDeadlineMonotonic'],3);self.assertNotIn('reportSHA256',report)
+    def test_original_absolute_deadline_expired_during_spawn_stays_fatal(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            report,proc=self.attempt(tmp,start=150,delay=30,deadline=180)
+            self.assertEqual(report['status'],'failed');self.assertIn('lifecycle_deadline',report['error'])
+            self.assertNotIn('incompleteSafetyVerified',report);self.assertTrue(report['terminalVerified'])
+    def test_outer_phase_expiry_is_not_observation_timeout(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);proc,spawn=self.sampler(1000);d={}
+            self.r.budget=lambda:run.require(self.clock<2,'phase_wall_cap')
+            with mock.patch.object(runner.subprocess,'Popen',side_effect=spawn):self.r.sample_runtime(self.item,30,d)
+            self.assertEqual(d['stackSample']['status'],'failed');self.assertIn('phase_wall_cap',d['stackSample']['error'])
+    def test_target_normal_exit_during_popen_is_fatal_not_optional_race(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);proc,spawn=self.sampler(1000);d={};started=False
+            def start(*args,**kwargs):
+                nonlocal started
+                started=True;return spawn(*args,**kwargs)
+            self.read_value=lambda:None if started else self.value
+            def target_poll():
+                if started and proc.poll() is None:raise AssertionError('target reaped while sampler alive')
+                return 0 if started else None
+            self.process.poll=target_poll
+            with mock.patch.object(runner.subprocess,'Popen',side_effect=start):self.r.sample_runtime(self.item,30,d)
+            self.assertEqual(d['stackSample']['status'],'failed');self.assertIn('sample_target_identity',d['stackSample']['error'])
+            self.assertTrue(d['stackSample']['terminalVerified'])
+    def test_live_missing_sampler_identity_remains_fatal(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);proc,spawn=self.sampler(1000);d={};self.r.identity.read=lambda pid:self.value if pid==42 else None
+            with mock.patch.object(runner.subprocess,'Popen',side_effect=spawn):self.r.sample_runtime(self.item,30,d)
+            self.assertEqual(d['stackSample']['status'],'failed');self.assertIn('sample_child_identity_missing',d['stackSample']['error'])
+            self.assertFalse(runner.sample_continuable(d['stackSample']))
+    def test_unknown_child_exit_even_on_reserve_path_is_fatal(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            report,proc=self.attempt(tmp,start=150,delay=20,deadline=180,finish=160,exitcode=1)
+            self.assertEqual(report['status'],'failed');self.assertIn('unexpected_exit',report['incompleteProofError'])
+    def test_source_drift_after_timeout_is_fatal_and_first_error_retained(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);proc,spawn=self.sampler(1000);d={}
+            self.r.sample_source_check=mock.Mock(side_effect=ValueError('source_changed'))
+            with mock.patch.object(runner.subprocess,'Popen',side_effect=spawn):self.r.sample_runtime(self.item,30,d)
+            report=d['stackSample'];self.assertEqual(report['status'],'failed')
+            self.assertIn('sample_observation_deadline',report['error']);self.assertIn('source_changed',report['incompleteProofError'])
+    def test_late_source_verification_cannot_create_optional_success(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);proc,spawn=self.sampler(1000);d={}
+            self.r.sample_source_check=lambda:setattr(self,'clock',30)
+            with mock.patch.object(runner.subprocess,'Popen',side_effect=spawn):self.r.sample_runtime(self.item,30,d)
+            report=d['stackSample'];self.assertEqual(report['status'],'failed');self.assertIn('lifecycle_deadline',report['incompleteProofError'])
+    def test_incomplete_tool_drift_stays_fatal(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);proc,spawn=self.sampler(1000);d={};original=self.r.cleanup_sample
+            def cleanup(item):original(item);self.sample_stat.st_ino+=1
+            self.r.cleanup_sample=cleanup
+            with mock.patch.object(runner.subprocess,'Popen',side_effect=spawn):self.r.sample_runtime(self.item,30,d)
+            self.assertEqual(d['stackSample']['status'],'failed');self.assertFalse(d['stackSample']['toolUnchanged'])
+    def test_cleanup_failure_stays_fatal_and_target_unreaped(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);proc,spawn=self.sampler(1000);d={};started=False
+            def start(*a,**kw):
+                nonlocal started
+                started=True;return spawn(*a,**kw)
+            def target_poll():
+                if started and proc.poll() is None:raise AssertionError('target reaped')
+                return None
+            self.process.poll=target_poll;self.r.cleanup_sample=mock.Mock(side_effect=ValueError('cleanup_failed'))
+            with mock.patch.object(runner.subprocess,'Popen',side_effect=start):self.r.sample_runtime(self.item,30,d)
+            self.assertEqual(d['stackSample']['status'],'failed');self.assertIn('cleanup_failed',d['stackSample']['cleanupError'])
+            self.assertFalse(d['stackSample']['terminalVerified']);self.assertFalse(runner.sample_continuable(d['stackSample']))
+            for stream in self.r.sample_child['streams']:stream.close()  # Fake failed cleanup owns no real child.
+    def lifecycle(self,tmp,*,code=0,signals=(),late=False):
+        self.prepare(tmp);self.r.processes=[];self.r.started=0;self.r.seconds=300;self.terminal=14
+        proc,spawn=self.sampler(1000)
+        def dispatch(*a):self.r.processes.append(self.item);return self.item
+        self.r.spawn_lifecycle=mock.Mock(side_effect=dispatch);self.r.acquire_lifecycle=mock.Mock(return_value=self.item)
+        original=self.r.cleanup
+        def cleanup(item):
+            if item is self.item:
+                self.assertIsNotNone(proc.poll());item['record'].update(terminalVerified=True,signals=list(signals));self.process.returncode=code
+                if late:self.clock=30
+            else:original(item)
+        self.r.cleanup=cleanup
+        original_poll=self.process.poll
+        def poll():
+            value=original_poll()
+            if value is not None:self.process.returncode=code;return code
+            return None
+        self.process.poll=poll
+        return proc,spawn
+    def test_optional_timeout_continues_only_exact_normal_command(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            proc,spawn=self.lifecycle(tmp)
+            with mock.patch.object(runner.subprocess,'Popen',side_effect=spawn):self.r.lifecycle('booted-runtimes',['list','-j','runtimes'])
+            d=self.r.receipt['lifecycleCommands'][-1];self.assertEqual(d['commandOutcome'],'normal_exit')
+            self.assertEqual(d['stackSample']['status'],'incomplete');self.assertTrue(d['stackSample']['originalCommandVerified'])
+            self.r.spawn_lifecycle.assert_called_once()
+    def test_nonzero_or_signaled_original_command_cannot_continue(self):
+        for code,signals in ((1,()),(0,('SIGINT',))):
+            with self.subTest(code=code,signals=signals),tempfile.TemporaryDirectory() as tmp:
+                self.clock=0;self.process.returncode=None;self.r.sample_attempted=False
+                proc,spawn=self.lifecycle(tmp,code=code,signals=signals)
+                with mock.patch.object(runner.subprocess,'Popen',side_effect=spawn),self.assertRaisesRegex(ValueError,'normal_exit'):
+                    self.r.lifecycle('booted-runtimes',['list','-j','runtimes'])
+    def test_late_original_command_cleanup_cannot_continue(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            proc,spawn=self.lifecycle(tmp,late=True)
+            with mock.patch.object(runner.subprocess,'Popen',side_effect=spawn),self.assertRaisesRegex(ValueError,'lifecycle_deadline'):
+                self.r.lifecycle('booted-runtimes',['list','-j','runtimes'])
+    def test_closed_reasons_proofs_and_summary_do_not_manufacture_transport(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            report,_=self.attempt(tmp)
+            self.assertTrue(runner.sample_continuable(report))
+            for key,value in (('reason','unknown'),('incompleteSafetyVerified',False),('sourceUnchanged',False),('terminalVerified',False),('toolUnchanged',False),('cleanupError','failure')):
+                self.assertFalse(runner.sample_continuable({**report,key:value}))
+            summary=run.sampler_summary({'lifecycleCommands':[{'stackSample':report}]})
+            self.assertFalse(summary['samplerDiagnosticsComplete']);self.assertEqual(summary['samplerDiagnostics']['attempts'][0]['error'],report['error'])
+            result={'helperTransportQualified':False,**summary};self.assertFalse(result['helperTransportQualified'])
+            with self.assertRaises(ValueError):run.terminal_capture({'allOwnedProcessesTerminal':False})
+            # The unchanged actual transport proof is still required independently.
+            validate_receipt(receipt())
+            invalid=receipt();invalid['readinessObserved']=False
+            with self.assertRaises(ValueError):validate_receipt(invalid)
+    def test_late_oversized_output_cannot_become_incomplete(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);proc,spawn=self.sampler(1000);d={};original=self.r.cleanup_sample
+            def cleanup(item):
+                original(item);(self.r.out/'booted-runtimes-stack.txt').write_bytes(b'x'*(2*1024**2+1))
+            self.r.cleanup_sample=cleanup
+            with mock.patch.object(runner.subprocess,'Popen',side_effect=spawn):self.r.sample_runtime(self.item,30,d)
+            self.assertEqual(d['stackSample']['status'],'failed');self.assertIn('sample_output_cap',d['stackSample']['incompleteProofError'])
+    def test_reconstructed_custody_is_not_optional(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);proc,spawn=self.sampler(1000);d={};original=self.r.cleanup_sample
+            def cleanup(item):
+                original(item);self.r.sample_custody=(dict(item),item['process'],os.getpid())
+            self.r.cleanup_sample=cleanup
+            with mock.patch.object(runner.subprocess,'Popen',side_effect=spawn):self.r.sample_runtime(self.item,30,d)
+            self.assertEqual(d['stackSample']['status'],'failed');self.assertIn('sample_incomplete_custody',d['stackSample']['incompleteProofError'])
+    def test_top_level_keeps_first_fault_and_diagnostic_when_finalization_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            output=Path(tmp)/'out'
+            fake=SimpleNamespace(receipt={'lifecycleCommands':[{'stackSample':{'status':'incomplete','reason':'observation_timeout','error':'SampleObservationTimeout: sample_observation_deadline'}}]},
+                command=mock.Mock(side_effect=ValueError('original_fault')),finish=mock.Mock(side_effect=ValueError('cleanup_fault')))
+            with mock.patch.dict(os.environ,ENV,clear=True),mock.patch.object(run.platform,'machine',return_value='arm64'), \
+                 mock.patch.object(run,'frozen',return_value={'files':{}}),mock.patch.object(run,'selected_snapshot',return_value={'files':{}}), \
+                 mock.patch.object(run,'tool_inventory',return_value={'complete':True}),mock.patch.object(run,'tools',return_value={'toolProfile':run.HOSTED_TOOL_PROFILE}), \
+                 mock.patch.object(run,'sha',return_value='digest'),mock.patch.object(run,'HelperRunner',return_value=fake):
+                self.assertEqual(run.run(output,'/mock'),1)
+            actual=json.loads((output/'receipt.json').read_text())
+            self.assertEqual(actual['error'],'ValueError: original_fault');self.assertEqual(actual['finalizationError'],'ValueError: cleanup_fault')
+            self.assertFalse(actual['helperTransportQualified']);self.assertFalse(actual['samplerDiagnosticsComplete'])
+            self.assertEqual(actual['samplerDiagnostics']['attempts'][0]['error'],'SampleObservationTimeout: sample_observation_deadline')
+    def test_terminal_summary_prominently_retains_incomplete_diagnostic(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p=Path(tmp)/'receipt.json';p.write_text(json.dumps({'stage':'validated','helperTransportQualified':True,
+                'samplerDiagnosticsComplete':False,'samplerDiagnostics':{'attempts':[{'status':'incomplete','reason':'observation_timeout'}]}}))
+            with mock.patch('builtins.print'):value=run.terminal_summary('run',p)
+            self.assertTrue(value['helperTransportQualified']);self.assertFalse(value['samplerDiagnosticsComplete'])
+            self.assertEqual(value['samplerStatuses'],['incomplete']);self.assertEqual(value['samplerReasons'],['observation_timeout'])
 
 if __name__=='__main__':unittest.main()

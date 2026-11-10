@@ -9,6 +9,23 @@ import time
 from app_scroll_observation.runner import Runner
 from app_scroll_observation.support import require, sha, launcher_identity
 
+class SampleObservationTimeout(Exception):pass
+class SampleStartupReserveExhausted(Exception):pass
+
+INCOMPLETE_REASONS={SampleObservationTimeout:'observation_timeout',
+                    SampleStartupReserveExhausted:'post_startup_reserve_exhausted'}
+
+def sample_continuable(sample):
+    if not sample:return True
+    if sample.get('status')=='passed':return not sample.get('cleanupError')
+    if sample.get('status')=='not_needed':
+        return (sample.get('reason')=='owned_normal_exit_before_sampler'
+                and sample.get('targetExitCode')==0 and sample.get('samplerSpawned') is False)
+    return (sample.get('status')=='incomplete' and sample.get('reason') in INCOMPLETE_REASONS.values()
+            and sample.get('incompleteSafetyVerified') is True and sample.get('sourceUnchanged') is True
+            and sample.get('terminalVerified') is True and sample.get('toolUnchanged') is True
+            and not any(sample.get(k) for k in ('cleanupError','toolAfterError','incompleteProofError')))
+
 class HelperRunner(Runner):
     def note(self, event, **details):
         timing=getattr(self,'_sample_timing',None)
@@ -263,15 +280,70 @@ class HelperRunner(Runner):
             raise ValueError('sample_target_identity')
         return True
 
+    def sample_live_identity(self, target, child, observe_child=True):
+        # Never poll/reap the target while a sampler may still act on its numeric PID.
+        require(target['binding'] is not None and
+                self.sample_measure('identity.read',self.identity.read,target['process'].pid)==target['binding'],
+                'sample_target_identity')
+        if not observe_child:return
+        process=child['process'];record=child['record']
+        if process.poll() is not None:return
+        value=self.sample_measure('identity.read',self.identity.read,process.pid)
+        if process.poll() is not None:return
+        require(value is not None,'sample_child_identity_missing')
+        if value is not None:
+            require(value['pid']==process.pid and value['parentPID']==os.getpid() and value['uid']==os.getuid()
+                    and value['startTimeMicros']>=int(record['spawnEpoch']*1_000_000)
+                    and value['executable']==child['expected'],'sample_child_identity')
+            require(child['binding'] is None or value==child['binding'],'sample_child_identity_changed')
+            if child['binding'] is None:self.note('sampler_first_binding',pid=process.pid)
+            child['binding']=value;record['binding']=value
+
+    def sample_observation_check(self, deadline, stop):
+        self.lifecycle_check(deadline)  # Original/phase expiry can never become optional.
+        if time.monotonic()>=stop:raise SampleObservationTimeout('sample_observation_deadline')
+
+    def verify_incomplete_sample(self, target, child, output, deadline, report):
+        custody=getattr(self,'sample_custody',None)
+        require(child is not None and custody is not None and custody[0] is child
+                and custody[1] is child['process'] and custody[2]==os.getpid()
+                and child is self.sample_child and sum(p is child for p in self.processes)==1,
+                'sample_incomplete_custody')
+        unobserved_reserve=(report.get('reason')=='post_startup_reserve_exhausted'
+                           and report.get('samplerBindingStatus')=='not_observed_reserve_exhausted'
+                           and child['binding'] is None)
+        require(unobserved_reserve or (child['binding'] is not None
+                and child['record'].get('binding')==child['binding']),'sample_incomplete_missing_binding')
+        require(report.get('terminalVerified') is True and not report.get('cleanupError')
+                and report.get('toolUnchanged') is True and not report.get('toolAfterError'),
+                'sample_incomplete_custody_or_tool')
+        code=child['record'].get('exitCode')
+        delivered=[attempt['signal'] for attempt in child['record'].get('signalAttempts',[])
+                   if attempt.get('delivery') in ('returned_while_unreaped','terminal_observed_after_send')]
+        require(code==0 or any(code==-int(getattr(signal,name)) for name in delivered),
+                'sample_incomplete_unexpected_exit')
+        self.lifecycle_check(deadline)
+        if output.exists() or output.is_symlink():
+            require(output.is_file() and not output.is_symlink() and output.stat().st_size<=2*1024**2,'sample_output_cap')
+        require(sha(target['expected'])==target['digest'],'sample_target_binary')
+        require(target['binding'] is not None and self.sample_measure('identity.read',self.identity.read,target['process'].pid)==target['binding'],
+                'sample_target_identity')
+        checker=getattr(self,'sample_source_check',None)
+        require(callable(checker),'sample_incomplete_source_check_required');checker()
+        report['sourceUnchanged']=True
+        self.lifecycle_check(deadline)
+        report['incompleteSafetyVerified']=True
+
     def sample_runtime(self, target, deadline, diagnostic):
         """One diagnostic sample of an exact admitted lifecycle target; no timing reset."""
         report={'status':'starting','startedMonotonic':time.monotonic(),
-                'targetPID':target['process'].pid,'durationSeconds':1,'samplerWallSeconds':3,
+                'targetPID':target['process'].pid,'durationSeconds':1,'samplerObservationSeconds':3,'cleanupReserveSeconds':7,
+                'originalDeadlineMonotonic':deadline,
                 'reportBytesLimit':2*1024**2,'samplerSpawned':False,'identityPolicy':'observed_root_owned_system_tool_before_after'}
         timing={'events':[],'operations':{},'firstNonempty':{},'droppedEvents':0}
         report['timing']=timing;self._sample_timing=timing
         self.note('sample_started')
-        diagnostic['stackSample']=report;self.save();child=None;tool=Path('/usr/bin/sample')
+        diagnostic['stackSample']=report;self.save();child=None;incomplete_reason=None;tool=Path('/usr/bin/sample')
         try:
             require(signal.getsignal(signal.SIGCHLD)==signal.SIG_DFL and threading.active_count()==1,'sample_exclusive_reaper_required')
             policy=self.sample_policy(target);require(policy is not None,'sample_target_scope')
@@ -296,8 +368,6 @@ class HelperRunner(Runner):
             require(deadline-time.monotonic()>10,'sample_remaining_budget')
             if not self.sample_target_live(target):
                 report.update(status='not_needed',reason='owned_normal_exit_before_sampler',targetExitCode=0);return
-            stop=min(time.monotonic()+3,deadline)
-            self.note('sampler_deadline_set',deadline=stop)
             sample_label='runtime-stack-sample' if stem=='booted-runtimes' else 'bootstatus-stack-sample'
             record={'label':sample_label,'argv':[str(tool),str(target['process'].pid),'1','-file',str(output)],
                     'executableSHA256':observed['sha256'],'spawnEpoch':time.time(),'signals':[]}
@@ -322,26 +392,26 @@ class HelperRunner(Runner):
             self.sample_custody=(child,process,os.getpid())
             self.processes.append(child);self.receipt['processes'].append(record)
             record['pid']=process.pid;self.save()
+            report['registeredMonotonic']=time.monotonic();self.note('sampler_registered')
+            self.lifecycle_check(deadline)
+            self.sample_live_identity(target,child,observe_child=False)
+            self.lifecycle_check(deadline)
+            if deadline-time.monotonic()<=10:
+                report['samplerBindingStatus']='not_observed_reserve_exhausted'
+                raise SampleStartupReserveExhausted('sample_post_startup_reserve_exhausted')
+            stop=time.monotonic()+3
+            report['observationDeadlineMonotonic']=stop
+            require(stop<deadline-7,'sample_cleanup_reserve')
+            self.note('sampler_deadline_set',deadline=stop)
             while process.poll() is None:
-                self.lifecycle_check(stop)
+                self.sample_observation_check(deadline,stop)
                 self.sample_observe_outputs(observed_outputs)
                 if output.exists():require(output.is_file() and not output.is_symlink() and output.stat().st_size<=2*1024**2,'sample_output_cap')
-                # A naturally exiting target ends this diagnostic; never wait by process name.
-                # Do not reap the target while sampling: an unreaped child PID cannot be reused.
-                require(self.sample_measure('identity.read',self.identity.read,target['process'].pid)==target['binding'],'sample_target_identity')
-                value=self.sample_measure('identity.read',self.identity.read,process.pid)
-                if process.poll() is not None:break
-                if value is not None:
-                    require(value['pid']==process.pid and value['parentPID']==os.getpid() and value['uid']==os.getuid()
-                            and value['startTimeMicros']>=int(record['spawnEpoch']*1_000_000)
-                            and value['executable']==str(tool),'sample_child_identity')
-                    require(child['binding'] is None or value==child['binding'],'sample_child_identity_changed')
-                    if child['binding'] is None:self.note('sampler_first_binding',pid=process.pid)
-                    child['binding']=value;record['binding']=value
+                self.sample_live_identity(target,child)
                 time.sleep(min(.05,max(0,stop-time.monotonic())))
             self.note('sampler_terminal_observed',exitCode=process.returncode)
             self.sample_observe_outputs(observed_outputs)
-            self.lifecycle_check(stop)
+            self.sample_observation_check(deadline,stop)
             require(process.returncode==0,'sample_exit')
             require(output.is_file() and not output.is_symlink() and 0<output.stat().st_size<=2*1024**2,'sample_output_cap')
             after=tool.lstat()
@@ -351,6 +421,15 @@ class HelperRunner(Runner):
                     and sha(target['expected'])==target['digest'],'sample_target_after_identity')
             self.lifecycle_check(deadline)
             report.update(status='passed',reportSHA256=sha(output),reportBytes=output.stat().st_size)
+        except (SampleObservationTimeout,SampleStartupReserveExhausted) as exc:
+            reason=INCOMPLETE_REASONS[type(exc)]
+            self.note('sample_failure',error=type(exc).__name__+': '+str(exc)[:256])
+            report.update(status='failed',error=type(exc).__name__+': '+str(exc)[:256],reason=reason)
+            try:
+                self.sample_live_identity(target,child,observe_child=reason!='post_startup_reserve_exhausted')
+                incomplete_reason=reason
+            except BaseException as proof_error:
+                report['incompleteProofError']=type(proof_error).__name__+': '+str(proof_error)[:256]
         except BaseException as exc:
             self.note('sample_failure',error=type(exc).__name__+': '+str(exc)[:256])
             report.update(status='failed',error=type(exc).__name__+': '+str(exc)[:256])
@@ -372,6 +451,13 @@ class HelperRunner(Runner):
                     require(report['toolUnchanged'],'sample_tool_changed')
                 except BaseException as exc:
                     report['toolAfterError']=type(exc).__name__+': '+str(exc)[:256];report['status']='failed'
+            if incomplete_reason is not None:
+                try:
+                    self.verify_incomplete_sample(target,child,output,deadline,report)
+                    report['status']='incomplete'
+                except BaseException as exc:
+                    report['incompleteProofError']=type(exc).__name__+': '+str(exc)[:256]
+                    report['status']='failed'
             self.note('sampler_after_verification')
             report['finishedMonotonic']=time.monotonic();self.save()
             self._sample_timing=None
@@ -427,9 +513,12 @@ class HelperRunner(Runner):
             require(code==0 and not item['record']['signals'],label+'_normal_exit')
             diagnostic['outcome']='normal_exit';diagnostic['commandOutcome']='normal_exit'
             sample=diagnostic.get('stackSample',{})
-            not_needed=(sample.get('status')=='not_needed' and sample.get('reason')=='owned_normal_exit_before_sampler'
-                        and sample.get('targetExitCode')==0 and sample.get('samplerSpawned') is False)
-            require(sample.get('status','passed')=='passed' or not_needed,'runtime_stack_sample_failed')
+            require(sample_continuable(sample),'runtime_stack_sample_failed')
+            if sample.get('status')=='incomplete':
+                require(item.get('binding') is not None and item['record'].get('terminalVerified') is True
+                        and not item['record'].get('cleanupError'),'sample_original_command_custody')
+                self.lifecycle_check(deadline)
+                sample['originalCommandVerified']=True
             return self.out/(label+'-stdout.log')
         except BaseException as exc:
             diagnostic.update(outcome='failed',error=type(exc).__name__+': '+str(exc)[:1024]);raise

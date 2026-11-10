@@ -1,0 +1,38 @@
+{
+  "status": "root-reviewed-and-portable-controls-passed",
+  "scope": "Sampler lifecycle only; no hosted qualification or performance baseline",
+  "proposalManifestSHA256": "64376be56b80197da4fe0edb5cb7211306b21f3af73b5f5a5a443ac8a7545ad4",
+  "patchSHA256": "20a67d67fcadd91ce75a4db43f5d1e1637a5b837082e627bda375d51d2bb5b25",
+  "changes": {
+    "scripts/simulator_signpost_control/runner.py": {
+      "beforeSHA256": "da811da292601c5fe7f1811e77a6061fb882d0fde03e109ab33a53f70d05279f",
+      "afterSHA256": "ff06a53d6e57b0c0b43f3c3d4d1dcdbc12bd7d240a04a521311b1945544c92c8",
+      "beforeLines": 451,
+      "afterLines": 540
+    },
+    "scripts/simulator_signpost_control/run.py": {
+      "beforeSHA256": "922ba68a34b621e20034b6b64ef326874213ddfedf12ed09ca6cf6c381481960",
+      "afterSHA256": "04ecb66a767a3cf013b9c7672699ea39d47cf32b5f2d95ac2c5d0e57034c09e8",
+      "beforeLines": 295,
+      "afterLines": 319
+    },
+    "scripts/test_simulator_signpost_control.py": {
+      "beforeSHA256": "ad43d200ae796004b3febe7a1fc85c4dcc6a8f19cb45f88110bf1f9d035d2141",
+      "afterSHA256": "83260f249c7b2104881444d91dc0fcb19e8e57be12087dd1126afc38003a56d3",
+      "beforeLines": 1263,
+      "afterLines": 1471
+    },
+    "scripts/app_scroll_observation/contract.json": {
+      "beforeSHA256": "451ffc69eef31c42b8abb1d6d7685fa841af2c3df938230f2d6c3942ff5d797d",
+      "afterSHA256": "084d25c768ab4c568ec5e4eabe42d6b913a09b889a6e1b52a8d6b72c9556c22b",
+      "beforeLines": 87,
+      "afterLines": 87
+    }
+  },
+  "portableControls": 178,
+  "rootLog": ".build/HostedAppObservationNov09/sampler-lifecycle-r1-root-controls.log",
+  "rootLogSHA256": "4f739ada8b7b0e85b3ed5497582748fc7e45501cc7221bb9ae6268833c1ba3eb",
+  "observerPinsVerified": 50,
+  "semantics": "Three-second observation starts after retained-child registration; original command and preparation deadlines unchanged. Only proven observation timeout or post-startup reserve exhaustion may remain incomplete, independently of mandatory transport qualification.",
+  "next": "Commit exact candidate; run all three actual workflow preflight profiles before one changed hosted helper execution."
+}
