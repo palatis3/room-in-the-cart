@@ -725,7 +725,7 @@ class RuntimeSampleTests(unittest.TestCase):
         proc.poll=poll
         proc.send_signal=mock.Mock(side_effect=lambda sig:setattr(proc,'returncode',-int(sig)))
         proc.wait=lambda timeout:proc.returncode
-        def spawn(*a,**kw):(self.r.out/'booted-runtimes-stack.txt').write_text('stack IPC wait');return proc
+        def spawn(*a,**kw):Path(a[0][-1]).write_text('stack IPC wait');return proc
         identity=self.r.identity.read
         self.r.identity.read=lambda pid:({'pid':43,'parentPID':os.getpid(),'uid':os.getuid(),'startTimeMicros':2*10**18,'executable':'/usr/bin/sample'} if pid==43 else identity(pid))
         return proc,spawn
@@ -991,5 +991,98 @@ class RuntimeSampleTests(unittest.TestCase):
             self.assertEqual(d['stackSample']['status'],'passed');self.assertEqual(self.real_tool_reads,[])
             self.assertEqual(d['stackSample']['tool'],{'path':'/usr/bin/sample','sha256':'digest',
                 'bytes':4096,'mode':0o755,'uid':0,'device':7,'inode':11,'mtimeNS':123456789})
+
+class BootstatusSampleTests(unittest.TestCase):
+    setUp=RuntimeSampleTests.setUp
+    sleep=AcquisitionTests.sleep
+    poll=AcquisitionTests.poll
+    identity=AcquisitionTests.identity
+    acquire=AcquisitionTests.acquire
+    sampler=RuntimeSampleTests.sampler
+    def prepare(self,tmp):
+        RuntimeSampleTests.prepare(self,tmp)
+        self.item['record'].update(label='bootstatus',argv=['/launcher','bootstatus',DEVICE['createdUDID'],'-b'])
+        for name in ('bootstatus-stdout.log','bootstatus-stderr.log'):(self.r.out/name).write_bytes(b'')
+        self.boot={'process':SimpleNamespace(pid=41,poll=lambda:0),'record':{'label':'boot','pid':41,
+            'argv':['/launcher','boot',DEVICE['createdUDID']],'exitCode':0,'terminalVerified':True,'signals':[],
+            'executableSHA256':'digest','spawnEpoch':99.,'binding':{**self.value,'pid':41,'startTimeMicros':99_000_001}}}
+        self.r.processes=[self.boot,self.item]
+        self.r.receipt['lifecycleCommands']=[{'label':'boot','pid':41,'outcome':'normal_exit'}]
+    def test_exact_owned_bootstatus_threshold_and_no_early_sample(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);self.clock=149.9;self.terminal=150.1;d={'startedMonotonic':0}
+            def sample(*a):self.assertGreaterEqual(self.clock,150);a[2]['stackSample']={'status':'passed'}
+            self.r.sample_runtime=mock.Mock(side_effect=sample)
+            self.assertEqual(self.r.sample_policy(self.item),(150,'bootstatus'))
+            self.assertEqual(self.r.lifecycle_wait(self.item,180,d),0);self.r.sample_runtime.assert_called_once()
+    def test_prior_normal_115_second_bootstatus_does_not_sample(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);self.clock=114.9;self.terminal=115;self.r.sample_runtime=mock.Mock()
+            self.assertEqual(self.r.lifecycle_wait(self.item,180,{'startedMonotonic':0}),0)
+            self.r.sample_runtime.assert_not_called()
+    def test_only_exact_owned_uuid_flags_and_label_allowed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp)
+            for tail in (['bootstatus',DEVICE['sourceUDID'],'-b'],['bootstatus','booted','-b'],['bootstatus',DEVICE['createdUDID']],
+                         ['bootstatus',DEVICE['createdUDID'],'-b','extra'],['boot',DEVICE['createdUDID']]):
+                self.item['record']['argv']=['/launcher',*tail];self.assertIsNone(self.r.sample_policy(self.item))
+            self.item['record']['argv']=['/launcher','bootstatus',DEVICE['createdUDID'],'-b'];self.item['record']['label']='other'
+            self.assertIsNone(self.r.sample_policy(self.item))
+    def test_normal_boot_evidence_is_mandatory_and_exact(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);original=copy.deepcopy(self.boot['record'])
+            for change in ({'exitCode':1},{'terminalVerified':False},{'signals':['SIGINT']},{'executableSHA256':'changed'},
+                           {'pid':99},{'argv':['/launcher','boot',DEVICE['sourceUDID']]}):
+                self.boot['record']={**original,**change};self.assertIsNone(self.r.sample_policy(self.item))
+            self.boot['record']=original;self.r.receipt['lifecycleCommands'][0]['outcome']='failed'
+            self.assertIsNone(self.r.sample_policy(self.item))
+    def test_missing_duplicate_live_or_wrong_bound_boot_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp)
+            for items in ([self.item],[self.boot,self.boot,self.item]):
+                self.r.processes=items;self.assertIsNone(self.r.sample_policy(self.item))
+            self.r.processes=[self.boot,self.item];self.boot['process'].poll=lambda:None
+            self.assertIsNone(self.r.sample_policy(self.item));self.boot['process'].poll=lambda:0
+            self.boot['record']['binding']['parentPID']=os.getpid()+1;self.assertIsNone(self.r.sample_policy(self.item))
+    def test_unregistered_or_tool_mismatched_target_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);self.assertIsNone(self.r.sample_policy(dict(self.item)))
+            self.item['digest']='changed';self.assertIsNone(self.r.sample_policy(self.item))
+    def test_only_one_total_attempt_even_when_first_sample_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);self.clock=150;self.terminal=150.1
+            self.r.sample_runtime=mock.Mock(side_effect=lambda *a:a[2].update(stackSample={'status':'failed','error':'diagnostic_failure'}))
+            self.assertEqual(self.r.lifecycle_wait(self.item,180,{'startedMonotonic':0}),0)
+            self.process.returncode=None;self.clock=160;self.terminal=160.1
+            self.item['record'].update(label='booted-runtimes',argv=['/launcher','list','-j','runtimes'])
+            self.assertEqual(self.r.lifecycle_wait(self.item,180,{'startedMonotonic':150}),0)
+            self.r.sample_runtime.assert_called_once()
+    def test_nonempty_bootstatus_output_prevents_sample(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);self.clock=150;self.terminal=150.1;(self.r.out/'bootstatus-stdout.log').write_text('progress')
+            self.r.sample_runtime=mock.Mock();self.assertEqual(self.r.lifecycle_wait(self.item,180,{'startedMonotonic':0}),0)
+            self.r.sample_runtime.assert_not_called()
+    def test_bootstatus_sampler_uses_fixed_report_path_and_retained_custody(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);self.clock=150;proc,spawn=self.sampler(150.2);d={}
+            with mock.patch.object(runner.subprocess,'Popen',side_effect=spawn) as popen:self.r.sample_runtime(self.item,180,d)
+            self.assertEqual(d['stackSample']['status'],'passed');self.assertEqual(d['stackSample']['triggerAfterSeconds'],150)
+            self.assertEqual(popen.call_args.args[0][-1],str(self.r.out/'bootstatus-stack.txt'))
+            self.assertTrue(d['stackSample']['terminalVerified']);self.assertEqual(self.r.sample_child['record']['label'],'bootstatus-stack-sample')
+    def test_late_budget_cannot_spawn_or_extend_original_deadline(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);self.clock=170;d={}
+            with mock.patch.object(runner.subprocess,'Popen') as popen:self.r.sample_runtime(self.item,180,d)
+            popen.assert_not_called();self.assertIn('remaining_budget',d['stackSample']['error']);self.assertEqual(self.clock,170)
+    def test_terminal_at_threshold_never_samples(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);self.clock=150;self.terminal=150;self.r.sample_runtime=mock.Mock()
+            self.assertEqual(self.r.lifecycle_wait(self.item,180,{'startedMonotonic':0}),0);self.r.sample_runtime.assert_not_called()
+    def test_bootstatus_original_deadline_still_fatal_after_sample(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);self.clock=150
+            self.r.sample_runtime=mock.Mock(side_effect=lambda *a:a[2].update(stackSample={'status':'passed'}))
+            with self.assertRaisesRegex(ValueError,'lifecycle_deadline'):self.r.lifecycle_wait(self.item,180,{'startedMonotonic':0})
+            self.assertAlmostEqual(self.clock,180);self.r.sample_runtime.assert_called_once()
 
 if __name__=='__main__':unittest.main()

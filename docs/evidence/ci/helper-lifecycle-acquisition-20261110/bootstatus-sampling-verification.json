@@ -1,0 +1,42 @@
+{
+  "status": "passed",
+  "manifestSHA256": "2bbf3749007f737d803b8742309c797096733e1e7f272bb01d542c7d13c94bf4",
+  "changedFiles": [
+    "scripts/simulator_signpost_control/runner.py",
+    "scripts/test_simulator_signpost_control.py",
+    "scripts/app_scroll_observation/contract.json"
+  ],
+  "controlsLogSHA256": "efacf12d58bfe76c63befd31b5dbfa4087513c8c34153e2d120de373b2280e4e",
+  "controls": 140,
+  "releaseAcceptance": false,
+  "latestHostedRun": 42757994898,
+  "hostedVerification": {
+    "status": "verified",
+    "commit": "96793e7a168ebd0d56b8a0a9756397aaff613a83",
+    "ZIP": {
+      "sha256": "9f6634d0346460aa680554b98ac2134c46d837fd5544b007c8a64574185aced0",
+      "bytes": 80417,
+      "members": 13
+    },
+    "TAR": {
+      "sha256": "51e1c68d19eed182fa1521033a7ecef1ff14be12aeec262f0eb407efffe9b894",
+      "bytes": 471040,
+      "membersVerified": 20
+    },
+    "sourcePinsVerified": 50,
+    "firstFault": "Exact-bound bootstatus exhausted original180-second deadline with no output; verified SIGINT exit -2.",
+    "prepareChildrenTerminal": true,
+    "runtimeQueryStarted": false,
+    "stackSampleStarted": false,
+    "cleanup": {
+      "status": "passed",
+      "ownedDeviceDeleted": true,
+      "allKnownChildrenTerminal": true,
+      "commands": 5
+    },
+    "codeFromArtifactExecuted": false,
+    "reviewer": "root",
+    "releaseAcceptance": false
+  },
+  "proposalManifest": ".build/HostedAppObservationNov09/helper-bootstatus-sample-r1/manifest.json"
+}

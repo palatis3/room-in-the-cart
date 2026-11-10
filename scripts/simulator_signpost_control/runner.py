@@ -185,16 +185,44 @@ class HelperRunner(Runner):
         if sample is not None:self.cleanup_sample(sample)
         return super().finish(error)
 
+    def sample_policy(self, target):
+        """Closed target/threshold table; bootstatus additionally requires normal owned boot."""
+        tool=self.tools['simctl'];record=target['record'];argv=record.get('argv',[])
+        if (sum(p is target for p in self.processes)!=1 or record.get('pid')!=target['process'].pid
+                or target.get('expected')!=tool['executable'] or target.get('digest')!=tool['executableSHA256']):return None
+        if record.get('label')=='booted-runtimes' and argv==[tool['path'],'list','-j','runtimes']:
+            return (10,'booted-runtimes')
+        identifier=self.device.get('createdUDID')
+        if not identifier or record.get('label')!='bootstatus' or argv!=[tool['path'],'bootstatus',identifier,'-b']:
+            return None
+        boots=[p for p in self.processes if p['record'].get('label')=='boot']
+        phases=[p for p in self.receipt.get('lifecycleCommands',[]) if p.get('label')=='boot']
+        if len(boots)!=1 or len(phases)!=1:return None
+        previous=boots[0];proof=previous['record'];binding=proof.get('binding')
+        normal=(previous['process'].poll()==0 and proof.get('exitCode')==0 and proof.get('terminalVerified') is True
+                and proof.get('signals')==[] and proof.get('argv')==[tool['path'],'boot',identifier]
+                and proof.get('executableSHA256')==tool['executableSHA256']
+                and proof.get('pid')==previous['process'].pid==phases[0].get('pid')
+                and phases[0].get('outcome')=='normal_exit')
+        if not normal:return None
+        if binding is None:
+            if proof.get('terminalOwnedCommandBeforeBinding') is not True:return None
+        elif not (binding.get('pid')==proof['pid'] and binding.get('parentPID')==os.getpid()
+                  and binding.get('uid')==os.getuid() and binding.get('executable')==tool['executable']
+                  and binding.get('startTimeMicros',0)>=int(proof['spawnEpoch']*1_000_000)):
+            return None
+        return (150,'bootstatus')
+
     def sample_runtime(self, target, deadline, diagnostic):
-        """One diagnostic sample of this exact bound runtime query; no timing reset."""
+        """One diagnostic sample of an exact admitted lifecycle target; no timing reset."""
         report={'status':'starting','startedMonotonic':time.monotonic(),
                 'targetPID':target['process'].pid,'durationSeconds':1,'samplerWallSeconds':3,
                 'reportBytesLimit':2*1024**2,'identityPolicy':'observed_root_owned_system_tool_before_after'}
         diagnostic['stackSample']=report;self.save();child=None;tool=Path('/usr/bin/sample')
         try:
             require(signal.getsignal(signal.SIGCHLD)==signal.SIG_DFL and threading.active_count()==1,'sample_exclusive_reaper_required')
-            require(target['record']['argv']==[self.tools['simctl']['path'],'list','-j','runtimes']
-                    and target['record']['label']=='booted-runtimes','sample_target_scope')
+            policy=self.sample_policy(target);require(policy is not None,'sample_target_scope')
+            stem=policy[1];report.update(targetLabel=stem,triggerAfterSeconds=policy[0])
             require(target['process'].poll() is None and target['binding'] is not None
                     and self.identity.read(target['process'].pid)==target['binding'],'sample_target_identity')
             require(sha(target['expected'])==target['digest'],'sample_target_binary')
@@ -206,15 +234,16 @@ class HelperRunner(Runner):
                       'uid':info.st_uid,'device':info.st_dev,'inode':info.st_ino,'mtimeNS':info.st_mtime_ns}
             report['tool']={'path':str(tool),**observed}
             self.lifecycle_check(deadline)
-            output=self.out/'booted-runtimes-stack.txt';require(not output.exists(),'sample_output_exists')
+            output=self.out/(stem+'-stack.txt');require(not output.exists(),'sample_output_exists')
             # Reserve original budget for the existing bounded terminal cleanup ladder.
             require(deadline-time.monotonic()>10,'sample_remaining_budget')
             require(target['process'].poll() is None and self.identity.read(target['process'].pid)==target['binding'],'sample_target_identity')
             stop=min(time.monotonic()+3,deadline)
-            record={'label':'runtime-stack-sample','argv':[str(tool),str(target['process'].pid),'1','-file',str(output)],
+            sample_label='runtime-stack-sample' if stem=='booted-runtimes' else 'bootstatus-stack-sample'
+            record={'label':sample_label,'argv':[str(tool),str(target['process'].pid),'1','-file',str(output)],
                     'executableSHA256':observed['sha256'],'spawnEpoch':time.time(),'signals':[]}
-            stdout=(self.out/'runtime-stack-sample-stdout.log').open('xb')
-            stderr=(self.out/'runtime-stack-sample-stderr.log').open('xb')
+            stdout=(self.out/(sample_label+'-stdout.log')).open('xb')
+            stderr=(self.out/(sample_label+'-stderr.log')).open('xb')
             env={k:os.environ[k] for k in ('HOME','TMPDIR','USER','LOGNAME') if k in os.environ}
             env.update(PATH='/usr/bin:/bin',LANG='en_US.UTF-8')
             require(signal.getsignal(signal.SIGCHLD)==signal.SIG_DFL and threading.active_count()==1,'sample_exclusive_reaper_required')
@@ -282,10 +311,11 @@ class HelperRunner(Runner):
             if code is not None:
                 item['record']['exitCode']=code;self.save();return code
             now=time.monotonic()
-            if (item['record']['label']=='booted-runtimes' and 'stackSample' not in diagnostic
-                    and now-diagnostic['startedMonotonic']>=10
-                    and (self.out/'booted-runtimes-stdout.log').stat().st_size==0
-                    and (self.out/'booted-runtimes-stderr.log').stat().st_size==0):
+            policy=self.sample_policy(item) if not getattr(self,'sample_attempted',False) else None
+            if (policy is not None and now-diagnostic['startedMonotonic']>=policy[0]
+                    and (self.out/(policy[1]+'-stdout.log')).stat().st_size==0
+                    and (self.out/(policy[1]+'-stderr.log')).stat().st_size==0):
+                self.sample_attempted=True  # One total attempt, even if sampling itself fails.
                 self.sample_runtime(item,deadline,diagnostic)
                 require(getattr(self,'sample_child',None) is None or self.sample_child['process'].poll() is not None,'sample_not_terminal')
                 self.lifecycle_check(deadline)
