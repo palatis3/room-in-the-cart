@@ -1,0 +1,19 @@
+{
+  "exitCode": 0,
+  "durationSeconds": 2.4959402920000002,
+  "sources": {
+    "scripts/simulator_signpost_control/control.py": "e752b834e2e6cb0ad1ac61fd93927911773367131dc6a924380d54fb1b76f5ec",
+    "scripts/test_simulator_signpost_control.py": "68ce6a30c97e6224dd6158f5ab594ffae513c740ca35673bf2f234ae83685e55",
+    "scripts/app_scroll_observation/contract.json": "27ea412dcfa3710462b6f76abe5a80fd7120575f85a6859f161531080eb507f5"
+  },
+  "logSHA256": "2658dbbce572c8ff538b87d9f9f0bf53dccadde89744643bfec04587b16b9865",
+  "originalReadinessGateSeconds": 15,
+  "diagnosticMaximumSeconds": 15,
+  "qualifiedOnLateToken": false,
+  "priorFailure": "../failed-readiness-observation-root-r1/verification.json",
+  "correction": "New interrupted-observer test fixture lacked helper nonce; supplied real required field.",
+  "status": "passed",
+  "controls": 222,
+  "log": "/Users/palatis/Room in the Cart/.build/HostedAppObservationNov09/failed-readiness-observation-root-r2/controls.log",
+  "hostedQualified": false
+}

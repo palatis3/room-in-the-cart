@@ -99,15 +99,16 @@ public actor HouseholdService {
         guard generation == start else { throw ClientError.cancelled }
         return result
     }
-    public func bootstrap() async throws -> HouseholdBootstrap {
+    public func bootstrap() async throws -> HouseholdBootstrap { try await bootstrap(trackingLease: nil) }
+    func bootstrap(trackingLease: SharedTrackingTransportLease?) async throws -> HouseholdBootstrap {
         let start = generation
-        var value: HouseholdBootstrap = try await perform("bootstrap", method: "GET")
+        var value: HouseholdBootstrap = try await perform("bootstrap", method: "GET", trackingLease: trackingLease)
         guard generation == start else { throw ClientError.cancelled }
         guard value.household.id == householdID, value.enrolled else { throw ClientError.accessEnded }
         if selectedShopID == nil, selectedGrantID == nil, ["helper", "editor"].contains(value.role) {
             guard let grant = value.grantId, UUID(uuidString: grant) != nil else { throw ClientError.accessEnded }
             selectedGrantID = grant
-            value = try await perform("bootstrap", method: "GET")
+            value = try await perform("bootstrap", method: "GET", trackingLease: trackingLease)
             guard generation == start else { throw ClientError.cancelled }
         }
         if let selectedGrantID {
@@ -140,9 +141,9 @@ public actor HouseholdService {
         guard page.requests.allSatisfy({ $0.linkedLineId == nil }) else { throw ClientError.invalidResponse }
         return page
     }
-    @discardableResult func authorizeShopper(shopID: String, capability: String? = nil) async throws -> HouseholdBootstrap {
+    @discardableResult func authorizeShopper(shopID: String, capability: String? = nil, trackingLease: SharedTrackingTransportLease? = nil) async throws -> HouseholdBootstrap {
         guard UUID(uuidString: shopID) != nil else { throw ClientError.configuration }
-        let projection = try await bootstrap()
+        let projection = try await bootstrap(trackingLease: trackingLease)
         guard projection.role == "shopper", projection.grantId == nil, projection.shopId == shopID,
               capability.map(projection.capabilities.contains) ?? true,
               ["shopper_inbox", "request_preview", "shopper_commands"].allSatisfy(projection.capabilities.contains) else {
@@ -584,9 +585,11 @@ public actor HouseholdService {
         return try await perform("shops/\(shopID)/previews", method: "POST", body: encoded(Input(requestId: requestID, base: base, decision: decision)))
     }
     public func executeShopper(_ operation: PendingOperation) async throws -> ShopperReceipt {
+        if operation.sharedTrackingBinding != nil { return try await executeSharedTracking(operation) }
         let start = generation
         guard let enrollment, operation.householdID == householdID, operation.deviceID == enrollment.deviceId else { throw ClientError.accessEnded }
         let envelope = try JSONDecoder().decode(CommandEnvelope.self, from: operation.bytes)
+        guard envelope.body["trackingReview"] == nil else { throw ClientError.configuration }
         if envelope.body["demandReview"] != nil {
             guard let binding = operation.sharedDemandBinding, let shopID = UUID(uuidString: envelope.shopId),
                   try sharedDemandContext(shopID: shopID) == binding.context else { throw ClientError.accessEnded }
@@ -630,10 +633,12 @@ public actor HouseholdService {
     /// Shop creation is organizer-only; updates remain restricted to the currently assigned shopper.
     /// A retry retains its original shop ID, replay window, base and exact command bytes.
     public func executeSharedShop(_ operation: PendingOperation) async throws -> ShopperReceipt {
+        if operation.sharedTrackingBinding != nil { return try await executeSharedTracking(operation) }
         let start = generation
         guard selectedGrantID == nil, let enrollment, operation.householdID == householdID,
               operation.deviceID == enrollment.deviceId else { throw ClientError.accessEnded }
         let envelope = try JSONDecoder().decode(CommandEnvelope.self, from: operation.bytes)
+        guard envelope.body["trackingReview"] == nil else { throw ClientError.configuration }
         if envelope.body["demandReview"] != nil {
             guard let binding = operation.sharedDemandBinding, let shopID = UUID(uuidString: envelope.shopId),
                   try sharedDemandContext(shopID: shopID) == binding.context else { throw ClientError.accessEnded }
@@ -1125,12 +1130,16 @@ public actor HouseholdService {
         try receipt.validate(intent); return receipt
     }
 
-    public func clearScope() async {
+    public func clearScope() async { _ = clearLocalScope() }
+    /// Synchronous within the actor so a server denial can prove which new
+    /// cleared generation it created before any re-enrollment can interleave.
+    private func clearLocalScope() -> UUID {
         generation = UUID(); enrollment = nil; householdID = nil; subject = nil; memberID = nil; selectedGrantID = nil; selectedShopID = nil; childAdoptionBinding = nil
         try? deviceVault.clear()
+        return generation
     }
     func perform<T: Decodable & Sendable>(_ path: String, method: String, body: Data? = nil,
-                                                 query: [URLQueryItem] = [], absolutePath: Bool = false, creatingShop: Bool = false, reportingShopID: String? = nil, requestQueueGrant: UUID? = nil) async throws -> T {
+                                                 query: [URLQueryItem] = [], absolutePath: Bool = false, creatingShop: Bool = false, reportingShopID: String? = nil, requestQueueGrant: UUID? = nil, maximumResponseBytes: Int? = nil, trackingLease: SharedTrackingTransportLease? = nil) async throws -> T {
         let start = generation
         guard let householdID, let enrollment else { throw ClientError.sessionNeeded }
         if let selectedGrantID, path != "bootstrap",
@@ -1152,12 +1161,18 @@ public actor HouseholdService {
             components.queryItems = query; req.url = components.url
         }
         do {
-            let result: T = try await transport.json(req)
+            let result: T = try await transport.json(req, maximumResponseBytes: maximumResponseBytes)
             guard generation == start else { throw ClientError.cancelled }
             return result
         } catch {
             guard generation == start else { throw ClientError.cancelled }
-            if let error = error as? ClientError, error == .accessEnded || error == .sessionNeeded { await clearScope() }
+            if let error = error as? ClientError, error == .accessEnded || error == .sessionNeeded {
+                let lease = trackingLease.flatMap { lease in
+                    lease.generation == start && (try? sharedDemandContext(shopID: lease.shopID)) == lease.context ? lease : nil
+                }
+                let cleared = clearLocalScope()
+                if let lease { throw SharedTrackingAccessInvalidated(lease: lease, clearedGeneration: cleared, underlying: error) }
+            }
             throw error
         }
     }
@@ -1182,6 +1197,12 @@ public actor OperationOutbox {
     public func remove(_ id: String) throws { try save(operations().filter { $0.id != id }) }
     public func purge(householdID: String, memberID: String) throws {
         try save(operations().filter { $0.householdID != householdID || $0.memberID != memberID })
+    }
+    /// Atomically remove only the exact rows observed by the caller. New keys
+    /// and changed content survive a delayed cleanup from an older session.
+    public func removeIfUnchanged(_ expected: [PendingOperation]) throws {
+        let matches = Dictionary(grouping: expected, by: \.id)
+        try save(operations().filter { operation in !(matches[operation.id]?.contains(operation) ?? false) })
     }
     public func purge() throws { try save([]) }
     private func save(_ all: [PendingOperation]) throws {

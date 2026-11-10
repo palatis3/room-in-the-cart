@@ -1678,4 +1678,120 @@ class ColdBootBudgetTests(unittest.TestCase):
         positions=[source.index(x) for x in names];self.assertEqual(positions,sorted(positions))
         self.assertIn("HelperRunner(output/'prepare',tool,300",source)
 
+class FailedReadinessObservationTests(unittest.TestCase):
+    def setUp(self):
+        self.folder=tempfile.TemporaryDirectory();self.addCleanup(self.folder.cleanup)
+        self.clock=15.0;self.saved=[];self.waits=[]
+        self.supervisor=object.__new__(control.SimulatorSupervisor)
+        s=self.supervisor;s.out=Path(self.folder.name);s.helper_launch_started=0
+        s.receipt={'readinessObserved':False,'outcome':'unqualified','error':'RuntimeError: tracing_readiness_missing'}
+        for name in ('tracer-stdout.log','tracer-stderr.log'):(s.out/name).write_bytes(b'')
+        s.budget=mock.Mock();s.target_valid=mock.Mock(return_value=True);s.valid=mock.Mock(return_value=True)
+        s.command=mock.Mock();s.spawn=mock.Mock()
+        s.save=mock.Mock(side_effect=lambda:self.saved.append(copy.deepcopy(s.receipt)))
+        self.process=mock.Mock();self.process.poll.return_value=None
+        self.tracer={'process':self.process};self.ready=mock.Mock()
+        def receive(timeout):
+            self.waits.append(timeout);self.clock+=timeout;return False
+        self.ready.received.side_effect=receive
+        for patch in (mock.patch.object(control.time,'monotonic',side_effect=lambda:self.clock),
+                      mock.patch.object(control.time,'time',side_effect=lambda:1000+self.clock)):
+            patch.start();self.addCleanup(patch.stop)
+    def observe(self,failed_deadline=15):
+        self.supervisor.observe_failed_readiness(self.tracer,self.ready,failed_deadline)
+        self.supervisor.command.assert_not_called();self.supervisor.spawn.assert_not_called()
+        self.assertFalse(self.supervisor.receipt['readinessObserved'])
+        self.assertEqual(self.supervisor.receipt['error'],'RuntimeError: tracing_readiness_missing')
+        self.assertEqual(self.supervisor.receipt['outcome'],'unqualified')
+        return self.supervisor.receipt['failedReadinessObservation']
+    def test_late_token_is_diagnostic_and_cannot_open_emission_or_qualification(self):
+        def receive(timeout):self.clock+=timeout;return self.clock>=16
+        self.ready.received.side_effect=receive
+        result=self.observe()
+        self.assertEqual(result['outcome'],'late_notification');self.assertEqual(result['notificationMonotonic'],16)
+        self.assertEqual(self.saved[0]['error'],'RuntimeError: tracing_readiness_missing')
+        self.assertNotIn('emissionReleasedEpoch',self.supervisor.receipt)
+    def test_live_tracer_without_token_is_only_bounded_observation(self):
+        result=self.observe()
+        self.assertEqual(result['outcome'],'observation_deadline');self.assertEqual(self.clock,30)
+        self.assertLessEqual(len(result['samples']),16);self.assertTrue(all(0<x<=.25 for x in self.waits))
+        self.assertNotIn('notificationMonotonic',result)
+    def test_original_failure_to_observer_delay_cannot_extend_deadline(self):
+        self.clock=22;result=self.observe()
+        self.assertEqual(result['elapsedSeconds'],8);self.assertEqual(result['deadlineMonotonic'],30)
+    def test_helper_lifetime_reserves_fifteen_seconds_for_cleanup(self):
+        self.clock=44;result=self.observe(44)
+        self.assertEqual(result['elapsedSeconds'],1);self.assertEqual(result['deadlineMonotonic'],45)
+    def test_exhausted_window_does_not_poll_or_wait(self):
+        self.clock=46;result=self.observe(45)
+        self.assertEqual(result['outcome'],'observation_deadline');self.process.poll.assert_not_called();self.ready.received.assert_not_called()
+    def test_tracer_exit_observation_is_distinct_from_missing_token_cutoff(self):
+        self.process.poll.return_value=17;result=self.observe()
+        self.assertEqual(result['outcome'],'tracer_exited_before_notification_check');self.assertEqual(result['exitCode'],17)
+        self.assertEqual(result['notificationOrdering'],'unobserved')
+        self.assertEqual(result['exitObservedMonotonic'],15);self.ready.received.assert_not_called()
+    def test_slow_budget_check_does_not_start_a_poll_after_cutoff(self):
+        def slow_budget():self.clock=31
+        self.supervisor.budget.side_effect=slow_budget;result=self.observe()
+        self.assertEqual(result['outcome'],'observation_deadline');self.process.poll.assert_not_called();self.ready.received.assert_not_called()
+    def test_slow_sample_save_does_not_read_notification_after_cutoff(self):
+        calls=0
+        def slow_save():
+            nonlocal calls
+            calls+=1
+            if calls==2:self.clock=31
+        self.supervisor.save.side_effect=slow_save;result=self.observe()
+        self.assertEqual(result['outcome'],'observation_deadline');self.ready.received.assert_not_called()
+    def test_tracer_exit_with_queued_token_does_not_claim_no_notification(self):
+        self.process.poll.return_value=0;self.ready.received.return_value=True;result=self.observe()
+        self.assertEqual(result['notificationOrdering'],'unobserved');self.assertNotIn('notificationMonotonic',result)
+    def test_helper_identity_loss_stops_observation_without_signals(self):
+        self.supervisor.target_valid.return_value=False;result=self.observe()
+        self.assertEqual(result['outcome'],'identity_unverified');self.ready.received.assert_not_called()
+    def test_tracer_identity_loss_stops_observation(self):
+        self.supervisor.valid.return_value=False;result=self.observe()
+        self.assertEqual(result['outcome'],'identity_unverified');self.ready.received.assert_not_called()
+    def test_identity_validation_cost_cannot_extend_observation(self):
+        def slow_identity(_):self.clock=31;return True
+        self.supervisor.valid.side_effect=slow_identity;result=self.observe()
+        self.assertEqual(result['outcome'],'observation_deadline');self.ready.received.assert_not_called()
+    def test_budget_fault_retains_original_failure(self):
+        self.supervisor.budget.side_effect=RuntimeError('artifact_byte_cap');result=self.observe()
+        self.assertEqual(result['outcome'],'diagnostic_error');self.assertIn('artifact_byte_cap',result['error'])
+    def test_receipt_fault_retains_original_failure(self):
+        self.supervisor.save.side_effect=OSError('disk failure');result=self.observe()
+        self.assertEqual(result['outcome'],'diagnostic_error');self.assertIn('disk failure',result['receiptError'])
+    def test_token_return_after_cutoff_is_not_in_window_readiness(self):
+        def slow_receive(timeout):self.clock=31;return True
+        self.ready.received.side_effect=slow_receive;result=self.observe()
+        self.assertEqual(result['outcome'],'notification_after_observation_deadline')
+    def test_interruption_escaping_observer_preserves_first_failure_and_cleanup(self):
+        s=self.supervisor;helper=s.out/'helper';helper.write_bytes(b'helper')
+        s.args=SimpleNamespace(helper=helper,helper_sha256='hash',simctl=helper,simulator='simulator',
+                               simctl_executable=helper,simctl_executable_sha256='hash',xctrace=helper,xctrace_sha256='hash')
+        s.notifications=[];s.processes=[];s.target={'pid':123};s.target_attempted=False;s.nonce='0'*32
+        s.bind_target=mock.Mock();s.cleanup_target=mock.Mock();s.target_terminal=mock.Mock(return_value=True)
+        s.spawn.return_value=self.tracer
+        s.observe_failed_readiness=mock.Mock(side_effect=KeyboardInterrupt('diagnostic interruption'))
+        def tick():self.clock+=1;return self.clock
+        with mock.patch.object(control,'reviewed_simctl_identity',return_value={}),mock.patch.object(control,'sha',return_value='hash'),mock.patch.object(control,'Notification') as notification,mock.patch.object(control.signal,'signal'),mock.patch.object(control.time,'monotonic',side_effect=tick):
+            notify_control=mock.Mock();notify_control.lib.notify_post.return_value=0;notify_control.received.return_value=True
+            ready=mock.Mock();ready.received.return_value=False
+            notification.side_effect=[notify_control,ready]
+            self.assertEqual(s.run(),1)
+        self.assertEqual(s.receipt['error'],'RuntimeError: tracing_readiness_missing')
+        self.assertEqual(s.receipt['subsequentError'],'KeyboardInterrupt: diagnostic interruption')
+        self.assertFalse(s.receipt['readinessObserved']);self.assertNotIn('emissionReleasedEpoch',s.receipt)
+        s.command.assert_not_called();s.cleanup_target.assert_called_once();self.assertTrue(s.receipt['allOwnedProcessesTerminal'])
+    def test_original_gate_and_cleanup_remain_unchanged(self):
+        self.assertEqual((host_control.STARTUP_SECONDS,control.FINALIZE_SECONDS,host_control.EXPORT_SECONDS),(15,30,10))
+        tree=ast.parse(inspect.getsource(control.SimulatorSupervisor))
+        run_method=next(x for x in tree.body[0].body if isinstance(x,ast.FunctionDef) and x.name=='run')
+        calls=[x for x in ast.walk(run_method) if isinstance(x,ast.Call) and isinstance(x.func,ast.Attribute) and x.func.attr=='observe_failed_readiness']
+        self.assertEqual(len(calls),1)
+        failed=next(x for x in ast.walk(run_method) if isinstance(x,ast.If) and any(isinstance(y,ast.Call) and isinstance(y.func,ast.Attribute) and y.func.attr=='observe_failed_readiness' for stmt in x.body for y in ast.walk(stmt)))
+        self.assertEqual(ast.unparse(failed.test),"not self.receipt['readinessObserved']")
+        self.assertIsInstance(failed.body[-1],ast.Raise)
+        self.assertIn('tracing_readiness_missing',ast.unparse(failed.body[-1]))
+
 if __name__=='__main__':unittest.main()

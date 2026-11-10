@@ -52,8 +52,9 @@ public struct HTTPTransport: @unchecked Sendable {
         guard data.count <= 2_000_000 else { throw ClientError.invalidResponse }
         return data
     }
-    func json<Response: Decodable & Sendable>(_ request: URLRequest, as: Response.Type = Response.self) async throws -> Response {
+    func json<Response: Decodable & Sendable>(_ request: URLRequest, as: Response.Type = Response.self, maximumResponseBytes: Int? = nil) async throws -> Response {
         let data = try await send(request)
+        if let maximumResponseBytes, data.count > maximumResponseBytes { throw ClientError.invalidResponse }
         do { return try JSONDecoder().decode(Response.self, from: data) }
         catch { throw ClientError.invalidResponse }
     }

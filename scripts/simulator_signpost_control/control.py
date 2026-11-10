@@ -13,6 +13,7 @@ from .host_control import Supervisor, Notification, sha, STARTUP_SECONDS, EXPORT
 # Simulator r2 entered finalization before its original deadline but required cleanup.
 # One bounded diagnostic allows thirty seconds; hosted/app budgets are unchanged.
 FINALIZE_SECONDS = 30
+FAILED_READINESS_OBSERVATION_SECONDS = 15
 
 
 def reviewed_simctl_identity(args):
@@ -126,6 +127,71 @@ class SimulatorSupervisor(Supervisor):
             while not self.target_terminal() and time.monotonic() < deadline: time.sleep(0.05)
         record['terminalVerified'] = self.target_terminal(); self.save()
 
+    def observe_failed_readiness(self, tracer, ready, failed_deadline):
+        """Observe an already failed gate; never release emission or qualify it.
+
+        No new process is started. Reserve fifteen seconds of the helper's
+        original sixty-second lifetime for the unchanged cleanup path.
+        """
+        started = time.monotonic()
+        deadline = min(failed_deadline + FAILED_READINESS_OBSERVATION_SECONDS,
+                       self.helper_launch_started + 45)
+        observation = {'diagnosticOnly': True, 'originalGateFailed': True,
+                       'startedEpoch': time.time(), 'maximumSeconds': FAILED_READINESS_OBSERVATION_SECONDS,
+                       'originalDeadlineMonotonic': failed_deadline,
+                       'startedMonotonic': started, 'deadlineMonotonic': deadline,
+                       'outcome': 'observing', 'samples': []}
+        self.receipt['failedReadinessObservation'] = observation
+        try:
+            self.save()
+            next_sample = started
+            while time.monotonic() < deadline:
+                self.budget()
+                if time.monotonic() >= deadline:
+                    observation['outcome'] = 'observation_deadline'
+                    break
+                code = tracer['process'].poll()
+                if code is not None:
+                    # The same FD may have a queued token. Do not claim absence
+                    # or ordering from observing process termination first.
+                    observation.update(outcome='tracer_exited_before_notification_check', exitCode=code,
+                                       notificationOrdering='unobserved', exitObservedMonotonic=time.monotonic())
+                    break
+                if not self.target_valid() or not self.valid(tracer):
+                    observation['outcome'] = 'identity_unverified'
+                    break
+                now = time.monotonic()
+                if now >= deadline:
+                    observation['outcome'] = 'observation_deadline'
+                    break
+                if now >= next_sample:
+                    observation['samples'].append({'elapsedSeconds': round(now-started, 6),
+                        'stdoutBytes': (self.out/'tracer-stdout.log').stat().st_size,
+                        'stderrBytes': (self.out/'tracer-stderr.log').stat().st_size})
+                    next_sample = now + 1
+                    self.save()
+                remaining = deadline-time.monotonic()
+                if remaining <= 0:
+                    observation['outcome'] = 'observation_deadline'
+                    break
+                if ready.received(min(.25, remaining)):
+                    observed = time.monotonic()
+                    observation.update(outcome='late_notification' if observed <= deadline else 'notification_after_observation_deadline',
+                                       notificationEpoch=time.time(), notificationMonotonic=observed)
+                    break
+            else:
+                observation['outcome'] = 'observation_deadline'
+        except BaseException as error:
+            observation.update(outcome='diagnostic_error', error=type(error).__name__ + ': ' + str(error)[:1024])
+        finally:
+            observation['finishedEpoch'] = time.time()
+            observation['finishedMonotonic'] = time.monotonic()
+            observation['elapsedSeconds'] = round(time.monotonic()-started, 6)
+            # A receipt failure must not replace the original readiness failure.
+            try: self.save()
+            except BaseException as error:
+                observation['receiptError'] = type(error).__name__ + ': ' + str(error)[:1024]
+
     def run(self):
         try:
             self.receipt['simctlLaunchIdentity'] = reviewed_simctl_identity(self.args)
@@ -143,6 +209,7 @@ class SimulatorSupervisor(Supervisor):
             self.receipt.update(subsystem=subsystem, notification=ready.name,
                 expected={'category': 'OwnedControl', 'events': ['ControlBefore', 'ControlAfter'],
                           'intervals': ['ControlInterval1', 'ControlInterval2', 'ControlInterval3']})
+            self.helper_launch_started = time.monotonic()
             self.target_attempted = True
             wrapper = self.spawn('simctl-spawn', [str(self.args.simctl.resolve()), 'spawn', self.args.simulator,
                 str(self.args.helper.resolve()), str(self.out), self.nonce, self.args.simulator, subsystem],
@@ -158,7 +225,12 @@ class SimulatorSupervisor(Supervisor):
                 self.budget()
                 if ready.received(0.05):
                     self.receipt.update(readinessObserved=True, readinessEpoch=time.time()); self.save(); break
-            if not self.receipt['readinessObserved']: raise RuntimeError('tracing_readiness_missing')
+            if not self.receipt['readinessObserved']:
+                self.receipt['readinessFailureEpoch'] = time.time()
+                self.receipt.update(outcome='unqualified', error='RuntimeError: tracing_readiness_missing',
+                                    readinessFailureMonotonic=time.monotonic(), readinessDeadlineMonotonic=deadline)
+                self.observe_failed_readiness(tracer, ready, deadline)
+                raise RuntimeError('tracing_readiness_missing')
             if not self.target_valid() or not self.valid(tracer):
                 raise RuntimeError('identity_changed_before_emission')
             self.command('G'); self.receipt['emissionReleasedEpoch'] = time.time(); self.save()
@@ -176,7 +248,11 @@ class SimulatorSupervisor(Supervisor):
             if self.wait(exporter, EXPORT_SECONDS) != 0: raise RuntimeError('toc_export_failed')
             self.receipt['outcome'] = 'exported_pending_event_schema_review'
         except BaseException as error:
-            self.receipt.update(outcome='unqualified', error=type(error).__name__ + ': ' + str(error))
+            self.receipt['outcome'] = 'unqualified'
+            value = type(error).__name__ + ': ' + str(error)
+            if 'error' in self.receipt:
+                if self.receipt['error'] != value: self.receipt['subsequentError'] = value
+            else: self.receipt['error'] = value
         finally:
             signal.signal(signal.SIGINT, signal.SIG_IGN)
             signal.signal(signal.SIGTERM, signal.SIG_IGN)

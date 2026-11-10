@@ -82,6 +82,7 @@ public struct PendingOperation: Codable, Equatable, Identifiable, Sendable {
     public let clientKey: String; public let householdID: String; public let memberID: String
     public let requestQueueGrant: UUID?
     public let sharedDemandBinding: SharedDemandOperationBinding?
+    public let sharedTrackingBinding: SharedTrackingOperationBinding?
     public let deviceID: String; public let bytes: Data
     public func targetsShop(_ shopID: String?, includeCreation: Bool = false) -> Bool {
         guard let envelope = try? JSONDecoder().decode(CommandEnvelope.self, from: bytes) else { return false }
@@ -89,8 +90,9 @@ public struct PendingOperation: Codable, Equatable, Identifiable, Sendable {
         guard let shopID else { return envelope.kind != "request.carry" && envelope.kind != "request.confirmPurchase" && !envelope.kind.hasPrefix("cookCopy.") && !envelope.kind.hasPrefix("pantry.") && envelope.kind != "mealRecovery.apply" }
         return envelope.shopId.caseInsensitiveCompare(shopID) == .orderedSame
     }
-    public init(envelope: CommandEnvelope, householdID: String, memberID: String, deviceID: String, requestQueueGrant: UUID? = nil, sharedDemandBinding: SharedDemandOperationBinding? = nil) throws {
+    public init(envelope: CommandEnvelope, householdID: String, memberID: String, deviceID: String, requestQueueGrant: UUID? = nil, sharedDemandBinding: SharedDemandOperationBinding? = nil, sharedTrackingBinding: SharedTrackingOperationBinding? = nil) throws {
         self.sharedDemandBinding = sharedDemandBinding
+        self.sharedTrackingBinding = sharedTrackingBinding
         self.requestQueueGrant = requestQueueGrant
         clientKey = envelope.clientKey; self.householdID = householdID; self.memberID = memberID
         self.deviceID = deviceID; bytes = try encoded(envelope)
