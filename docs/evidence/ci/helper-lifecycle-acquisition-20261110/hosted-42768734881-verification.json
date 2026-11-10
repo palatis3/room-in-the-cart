@@ -1,0 +1,57 @@
+{
+  "status": "failure-evidence-independently-verified",
+  "runID": 42768734881,
+  "commit": "ea6d29666cb5d24af5c3582d73be1830db08fd65",
+  "zipSHA256": "c51a42d08963cccc92e0e7d5b8b7f406144246e5efa4b9523055b48596541f4f",
+  "zipBytes": 81973,
+  "zipMembers": 13,
+  "tarSHA256": "ee3317a5c7ed013c5d32e54d2d9bdf19085bc7d07543bb8e5dfeac2e957abb4f",
+  "tarBytes": 481280,
+  "tarMembers": 22,
+  "sourcePins": 50,
+  "firstFailure": "Sampler observation timeout; incomplete qualification rejected handled SIGINT normal exit1 as unexpected nonzero",
+  "sampler": {
+    "reason": "observation_timeout",
+    "proofError": "ValueError: sample_incomplete_unexpected_exit",
+    "exactBinding": {
+      "pid": 13015,
+      "parentPID": 11864,
+      "uid": 501,
+      "startTimeMicros": 1794292321656313,
+      "executable": "/usr/bin/sample"
+    },
+    "exitCode": 1,
+    "signalAttempts": [
+      {
+        "signal": "SIGINT",
+        "waitSeconds": 2,
+        "delivery": "returned_while_unreaped",
+        "waitOutcome": "terminal"
+      }
+    ],
+    "stderrSHA256": "f643e18562bc2a6dbb60f7e384f76ca627f59171079580d201be1a301d9ae4a0",
+    "stderrBytes": 62,
+    "stderrUTF8": " [Interrupted]\nNot currently sampling -- exiting immediately.\n",
+    "toolUnchanged": true,
+    "terminalVerified": true
+  },
+  "bootstatus": {
+    "exitCode": 0,
+    "signals": [],
+    "seconds": 177.89540862499996,
+    "deadlineSeconds": 180
+  },
+  "allKnownChildrenTerminal": true,
+  "ownedDeviceDeleted": true,
+  "helperTransportQualified": false,
+  "appOrPerformanceAcceptance": false,
+  "inspection": "bounded in-memory originalZIP/TAR; no extracted code execution",
+  "cleanupProof": {
+    "ownedUDID": "071CCDF8-8E0B-48CF-BBC5-4A9A536BD4AD",
+    "notInInitialInventory": true,
+    "fiveExactBoundNormalExits": true,
+    "shutdownStateObserved": true,
+    "deletedInventoryAbsenceObserved": true,
+    "deviceReceiptSHA256": "335b2a2e23646f9ff63202786cdee771bf7c1962b7684b4621fc749dc5de3df7"
+  }
+}
