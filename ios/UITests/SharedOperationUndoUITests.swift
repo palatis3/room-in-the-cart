@@ -80,11 +80,15 @@ import XCTest
     }
     private func assertMealReview(spanish: Bool) {
         let apply = element("sharedUndo.apply"); reveal(apply); XCTAssertFalse(apply.isEnabled)
-        let lunch = element("sharedUndo.after.source.00000000-0000-4000-8000-000000000022")
+        // SwiftUI propagates the source VStack identifier to its Text rows.
+        // Select the exact wording on that source, not children of its first Text.
+        let lunch = app.staticTexts.matching(identifier: "sharedUndo.after.source.00000000-0000-4000-8000-000000000022")
+            .matching(NSPredicate(format: "label == %@", "Two lunch wraps")).firstMatch
         reveal(lunch, initialSearchDirection: .towardStart)
-        XCTAssertTrue(lunch.staticTexts.matching(identifier: "Two lunch wraps").firstMatch.exists)
-        let meal = element("sharedUndo.after.source.00000000-0000-4000-8000-000000000021")
-        reveal(meal); XCTAssertTrue(meal.staticTexts.matching(identifier: "Six original taco wraps").firstMatch.exists)
+        XCTAssertEqual(lunch.label, "Two lunch wraps")
+        let meal = app.staticTexts.matching(identifier: "sharedUndo.after.source.00000000-0000-4000-8000-000000000021")
+            .matching(NSPredicate(format: "label == %@", "Six original taco wraps")).firstMatch
+        reveal(meal); XCTAssertEqual(meal.label, "Six original taco wraps")
         let survivor = element("sharedUndo.after.source.00000000-0000-4000-8000-000000000012")
         reveal(survivor); XCTAssertTrue(survivor.exists && survivor.isHittable)
         for (amount, direction) in [("$5.00", SearchDirection.towardStart), ("$7.00", .towardEnd)] {

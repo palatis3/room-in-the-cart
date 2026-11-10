@@ -1,5 +1,8 @@
 """Helper-only compiler SDK adapter and exact bounded lifecycle commands."""
 import os
+import stat
+import signal
+import threading
 from pathlib import Path
 import subprocess
 import time
@@ -53,40 +56,53 @@ class HelperRunner(Runner):
         self.budget()
         require(time.monotonic() < deadline, 'helper_lifecycle_deadline')
 
-    def acquisition_allowed(self, item):
-        """Continue only existing inventory calls or this owned bootstatus after normal boot."""
-        tool=self.tools['simctl'];record=item['record'];argv=record.get('argv',[])
-        if not argv or argv[0]!=tool['path']:return False
-        if inventory_allowed(argv[1:],self.device):return True
-        identifier=self.device.get('createdUDID')
-        if not identifier or record.get('label')!='bootstatus' or argv!=[tool['path'],'bootstatus',identifier,'-b']:return False
-        if not self.processes or self.processes[-1] is not item or sum(p['record'].get('label')=='bootstatus' for p in self.processes)!=1:return False
-        boots=[p for p in self.processes if p['record'].get('label')=='boot']
-        phases=[p for p in self.receipt.get('lifecycleCommands',[]) if p.get('label')=='boot']
-        if len(boots)!=1 or len(phases)!=1:return False
-        previous=boots[0];proof=previous['record'];binding=proof.get('binding')
-        normal=(previous['process'].poll()==0 and proof.get('exitCode')==0 and proof.get('terminalVerified') is True
-                and proof.get('signals')==[] and proof.get('argv')==[tool['path'],'boot',identifier]
-                and proof.get('executableSHA256')==tool['executableSHA256']
-                and proof.get('pid')==previous['process'].pid==phases[0].get('pid') and phases[0].get('outcome')=='normal_exit')
-        if not normal:return False
-        if binding is None:return proof.get('terminalOwnedCommandBeforeBinding') is True
-        return (binding.get('pid')==proof['pid'] and binding.get('parentPID')==os.getpid()
-                and binding.get('uid')==os.getuid() and binding.get('executable')==tool['executable']
-                and binding.get('startTimeMicros',0)>=int(proof['spawnEpoch']*1_000_000))
+    def spawn_lifecycle(self, label, tail, deadline):
+        """Create one authorized child; acquisition uses the same absolute command budget."""
+        require(lifecycle_allowed(tail,self.device),'helper_lifecycle_scope')
+        require(all(p['process'].poll() is not None for p in self.processes),'previous_tool_not_terminal')
+        self.lifecycle_check(deadline)
+        tool=self.tools['simctl'];expected=Path(tool['executable']);digest=tool['executableSHA256']
+        launcher_identity(tool['path'],tool['sha256'],str(expected),digest)
+        self.lifecycle_check(deadline)
+        record={'label':label,'argv':[tool['path'],*tail],'executableSHA256':digest,
+                'spawnEpoch':time.time(),'signals':[]}
+        stdout=(self.out/(label+'-stdout.log')).open('xb')
+        stderr=(self.out/(label+'-stderr.log')).open('xb')
+        env={k:os.environ[k] for k in ('HOME','TMPDIR','USER','LOGNAME') if k in os.environ}
+        env.update(PATH='/usr/bin:/bin',LANG='en_US.UTF-8',DEVELOPER_DIR=str(self.args.xctrace.resolve().parents[2]))
+        try:
+            process=subprocess.Popen(record['argv'],stdin=subprocess.DEVNULL,stdout=stdout,stderr=stderr,
+                                     env=env,cwd=self.out,start_new_session=True)
+        except BaseException:
+            stdout.close();stderr.close();raise
+        item={'process':process,'record':record,'expected':str(expected),'digest':digest,
+              'streams':[stdout,stderr],'binding':None}
+        self.processes.append(item);self.receipt['processes'].append(record)
+        record['pid']=process.pid;self.save()
+        return item
 
-    def acquire_inventory(self, item, deadline):
+    def acquisition_allowed(self, item):
+        """Waiting is authorized by the exact dispatched command, never by a label exemption."""
+        tool=self.tools['simctl'];record=item['record'];argv=record.get('argv',[])
+        return (bool(argv) and argv[0]==tool['path'] and lifecycle_allowed(argv[1:],self.device)
+                and bool(self.processes) and self.processes[-1] is item
+                and sum(p is item for p in self.processes)==1
+                and all(p['process'].poll() is not None for p in self.processes[:-1])
+                and record.get('pid')==item['process'].pid
+                and item['expected']==tool['executable'] and item['digest']==tool['executableSHA256']
+                and record.get('executableSHA256')==item['digest'])
+
+    def acquire_lifecycle(self, item, deadline):
         """Acquire the same allowed Popen; the original command/phase deadline never resets."""
         tool=self.tools['simctl'];process=item['process'];record=item['record'];label=record['label']
-        require(self.acquisition_allowed(item),'helper_inventory_acquisition_scope')
+        require(self.acquisition_allowed(item),'helper_lifecycle_acquisition_scope')
         self.lifecycle_check(deadline)
         launcher_identity(tool['path'],tool['sha256'],item['expected'],item['digest'])
         interpreter=str(Path('/bin/bash').resolve())
         diagnostic={'startMonotonic':time.monotonic(),'deadlineMonotonic':deadline,
-                    'initialLiveBindingWindowSeconds':2,'samples':0,'first':[],'last':None}
-        bootstatus=record['label']=='bootstatus'
-        diagnostic['scope']='same_owned_bootstatus_after_normal_boot' if bootstatus else 'same_owned_readonly_inventory'
-        record['bootstatusAcquisition' if bootstatus else 'inventoryAcquisition']=diagnostic;self.save();origin=None
+                    'samples':0,'first':[],'last':None}
+        diagnostic['scope']='same_owned_allowed_lifecycle'
+        record['lifecycleAcquisition']=diagnostic;self.save();origin=None
         while True:
             self.lifecycle_check(deadline)
             if process.poll() is not None:
@@ -119,6 +135,145 @@ class HelperRunner(Runner):
                     diagnostic['outcome']='bound';self.save();return item
             time.sleep(min(.05,max(0,deadline-time.monotonic())))
 
+    def cleanup_sample(self, item):
+        """Sampler-only direct-child custody; executable acceptance never authorizes cleanup."""
+        custody=getattr(self,'sample_custody',None)
+        require(custody is not None and custody[0] is item and custody[1] is item['process']
+                and custody[2]==os.getpid() and item is self.sample_child
+                and sum(p is item for p in self.processes)==1,'sample_cleanup_custody')
+        process,record=item['process'],item['record']
+        if record.get('cleanupLadderComplete'):
+            require(process.poll() is not None,'sample_custody_cleanup_not_terminal');return
+        record['cleanupAuthority']='retained_direct_Popen_default_SIGCHLD_exclusive_reaper'
+        # Only this retained object may reap/signal this child. No PID/group reconstruction,
+        # libproc dependency, or tool-hash condition can strand our own sampler.
+        for sig,seconds in ((signal.SIGINT,2),(signal.SIGTERM,3),(signal.SIGKILL,2)):
+            if process.poll() is not None:break
+            attempt={'signal':sig.name,'waitSeconds':seconds}
+            record.setdefault('signalAttempts',[]).append(attempt)
+            try:
+                process.send_signal(sig);record['signals'].append(sig.name)
+                # Popen may skip os.kill if it discovers an already-reaped child.
+                live=process.poll() is None
+                attempt['delivery']='returned_while_unreaped' if live else 'terminal_observed_after_send'
+                if sig==signal.SIGKILL:
+                    record['fatalSignalRequestReturned']=True
+                    record['fatalSignalDelivered']=live
+            except BaseException as exc:
+                attempt['deliveryError']=type(exc).__name__+': '+str(exc)[:256]
+                self.save();continue
+            self.save()
+            try:process.wait(timeout=seconds);attempt['waitOutcome']='terminal'
+            except subprocess.TimeoutExpired:attempt['waitOutcome']='timeout'
+            except BaseException as exc:attempt['waitError']=type(exc).__name__+': '+str(exc)[:256]
+            self.save()
+        record['cleanupLadderComplete']=True
+        record['exitCode']=process.poll();record['terminalVerified']=process.poll() is not None
+        for stream in item['streams']:stream.close()
+        self.save();require(record['terminalVerified'],'sample_custody_cleanup_not_terminal')
+
+    def cleanup(self, item):
+        if item is getattr(self,'sample_child',None):return self.cleanup_sample(item)
+        # Do not reap/signal the target until our sampler is terminal.
+        sample=getattr(self,'sample_child',None)
+        if item is getattr(self,'sample_target',None) and sample is not None:
+            self.cleanup_sample(sample)
+        return super().cleanup(item)
+
+    def finish(self, error=None):
+        sample=getattr(self,'sample_child',None)
+        if sample is not None:self.cleanup_sample(sample)
+        return super().finish(error)
+
+    def sample_runtime(self, target, deadline, diagnostic):
+        """One diagnostic sample of this exact bound runtime query; no timing reset."""
+        report={'status':'starting','startedMonotonic':time.monotonic(),
+                'targetPID':target['process'].pid,'durationSeconds':1,'samplerWallSeconds':3,
+                'reportBytesLimit':2*1024**2,'identityPolicy':'observed_root_owned_system_tool_before_after'}
+        diagnostic['stackSample']=report;self.save();child=None;tool=Path('/usr/bin/sample')
+        try:
+            require(signal.getsignal(signal.SIGCHLD)==signal.SIG_DFL and threading.active_count()==1,'sample_exclusive_reaper_required')
+            require(target['record']['argv']==[self.tools['simctl']['path'],'list','-j','runtimes']
+                    and target['record']['label']=='booted-runtimes','sample_target_scope')
+            require(target['process'].poll() is None and target['binding'] is not None
+                    and self.identity.read(target['process'].pid)==target['binding'],'sample_target_identity')
+            require(sha(target['expected'])==target['digest'],'sample_target_binary')
+            self.lifecycle_check(deadline)
+            info=tool.lstat()
+            require(stat.S_ISREG(info.st_mode) and info.st_uid==0 and not info.st_mode&0o6022
+                    and tool.resolve()==tool and 0<info.st_size<=16*1024**2,'sample_system_tool_shape')
+            observed={'sha256':sha(tool),'bytes':info.st_size,'mode':stat.S_IMODE(info.st_mode),
+                      'uid':info.st_uid,'device':info.st_dev,'inode':info.st_ino,'mtimeNS':info.st_mtime_ns}
+            report['tool']={'path':str(tool),**observed}
+            self.lifecycle_check(deadline)
+            output=self.out/'booted-runtimes-stack.txt';require(not output.exists(),'sample_output_exists')
+            # Reserve original budget for the existing bounded terminal cleanup ladder.
+            require(deadline-time.monotonic()>10,'sample_remaining_budget')
+            require(target['process'].poll() is None and self.identity.read(target['process'].pid)==target['binding'],'sample_target_identity')
+            stop=min(time.monotonic()+3,deadline)
+            record={'label':'runtime-stack-sample','argv':[str(tool),str(target['process'].pid),'1','-file',str(output)],
+                    'executableSHA256':observed['sha256'],'spawnEpoch':time.time(),'signals':[]}
+            stdout=(self.out/'runtime-stack-sample-stdout.log').open('xb')
+            stderr=(self.out/'runtime-stack-sample-stderr.log').open('xb')
+            env={k:os.environ[k] for k in ('HOME','TMPDIR','USER','LOGNAME') if k in os.environ}
+            env.update(PATH='/usr/bin:/bin',LANG='en_US.UTF-8')
+            require(signal.getsignal(signal.SIGCHLD)==signal.SIG_DFL and threading.active_count()==1,'sample_exclusive_reaper_required')
+            report['reaperPolicy']='default_SIGCHLD_single_thread_no_external_waiter'
+            try:process=subprocess.Popen(record['argv'],stdin=subprocess.DEVNULL,stdout=stdout,stderr=stderr,
+                                         env=env,cwd=self.out,start_new_session=True)
+            except BaseException:stdout.close();stderr.close();raise
+            child={'process':process,'record':record,'expected':str(tool),'digest':observed['sha256'],
+                   'streams':[stdout,stderr],'binding':None}
+            self.sample_child=child;self.sample_target=target
+            self.sample_custody=(child,process,os.getpid())
+            self.processes.append(child);self.receipt['processes'].append(record)
+            record['pid']=process.pid;self.save()
+            while process.poll() is None:
+                self.lifecycle_check(stop)
+                if output.exists():require(output.is_file() and not output.is_symlink() and output.stat().st_size<=2*1024**2,'sample_output_cap')
+                # A naturally exiting target ends this diagnostic; never wait by process name.
+                # Do not reap the target while sampling: an unreaped child PID cannot be reused.
+                require(self.identity.read(target['process'].pid)==target['binding'],'sample_target_identity')
+                value=self.identity.read(process.pid)
+                if process.poll() is not None:break
+                if value is not None:
+                    require(value['pid']==process.pid and value['parentPID']==os.getpid() and value['uid']==os.getuid()
+                            and value['startTimeMicros']>=int(record['spawnEpoch']*1_000_000)
+                            and value['executable']==str(tool),'sample_child_identity')
+                    require(child['binding'] is None or value==child['binding'],'sample_child_identity_changed')
+                    child['binding']=value;record['binding']=value
+                time.sleep(min(.05,max(0,stop-time.monotonic())))
+            self.lifecycle_check(stop)
+            require(process.returncode==0,'sample_exit')
+            require(output.is_file() and not output.is_symlink() and 0<output.stat().st_size<=2*1024**2,'sample_output_cap')
+            after=tool.lstat()
+            require(observed=={'sha256':sha(tool),'bytes':after.st_size,'mode':stat.S_IMODE(after.st_mode),
+                    'uid':after.st_uid,'device':after.st_dev,'inode':after.st_ino,'mtimeNS':after.st_mtime_ns},'sample_tool_changed')
+            require(target['process'].poll() is None and self.identity.read(target['process'].pid)==target['binding']
+                    and sha(target['expected'])==target['digest'],'sample_target_after_identity')
+            self.lifecycle_check(deadline)
+            report.update(status='passed',reportSHA256=sha(output),reportBytes=output.stat().st_size)
+        except BaseException as exc:
+            report.update(status='failed',error=type(exc).__name__+': '+str(exc)[:256])
+        finally:
+            if child is not None:
+                try:self.cleanup(child)
+                except BaseException as exc:report['cleanupError']=type(exc).__name__+': '+str(exc)[:256]
+                report['terminalVerified']=child['process'].poll() is not None
+            if 'tool' in report:
+                try:
+                    after=tool.lstat()
+                    require(stat.S_ISREG(after.st_mode) and after.st_uid==0 and not after.st_mode&0o6022
+                            and tool.resolve()==tool and 0<after.st_size<=16*1024**2,'sample_system_tool_shape')
+                    report['toolAfterSHA256']=sha(tool)
+                    report['toolUnchanged']=(observed=={'sha256':report['toolAfterSHA256'],'bytes':after.st_size,
+                        'mode':stat.S_IMODE(after.st_mode),'uid':after.st_uid,'device':after.st_dev,
+                        'inode':after.st_ino,'mtimeNS':after.st_mtime_ns})
+                    require(report['toolUnchanged'],'sample_tool_changed')
+                except BaseException as exc:
+                    report['toolAfterError']=type(exc).__name__+': '+str(exc)[:256];report['status']='failed'
+            report['finishedMonotonic']=time.monotonic();self.save()
+
     def lifecycle_wait(self, item, deadline, diagnostic):
         process=item['process'];next_sample=0
         while True:
@@ -127,6 +282,13 @@ class HelperRunner(Runner):
             if code is not None:
                 item['record']['exitCode']=code;self.save();return code
             now=time.monotonic()
+            if (item['record']['label']=='booted-runtimes' and 'stackSample' not in diagnostic
+                    and now-diagnostic['startedMonotonic']>=10
+                    and (self.out/'booted-runtimes-stdout.log').stat().st_size==0
+                    and (self.out/'booted-runtimes-stderr.log').stat().st_size==0):
+                self.sample_runtime(item,deadline,diagnostic)
+                require(getattr(self,'sample_child',None) is None or self.sample_child['process'].poll() is not None,'sample_not_terminal')
+                self.lifecycle_check(deadline)
             if now>=next_sample:
                 value=self.identity.read(process.pid)
                 sample={'monotonic':now,'epoch':time.time(),'identity':value,
@@ -152,22 +314,16 @@ class HelperRunner(Runner):
         self.receipt.setdefault('lifecycleCommands',[]).append(diagnostic);self.save();item=None
         try:
             self.lifecycle_check(deadline)
-            try:item=self.spawn(label,[tool['path'],*tail],Path(tool['executable']),tool['executableSHA256'])
-            except RuntimeError as exc:
-                require(str(exc)==label+'_unbound_or_early_exit','helper_spawn_identity_failure')
-                require(self.processes and self.processes[-1]['record']['label']==label,'helper_spawn_inventory')
-                item=self.processes[-1]
-                if item['process'].poll() is None:
-                    require(self.acquisition_allowed(item),'helper_unbound_live_no_signal')
-                    item=self.acquire_inventory(item,deadline)
-                else:item['record']['terminalOwnedCommandBeforeBinding']=True
+            item=self.spawn_lifecycle(label,tail,deadline)
+            self.acquire_lifecycle(item,deadline)
             self.lifecycle_check(deadline)
             diagnostic.update(acquiredMonotonic=time.monotonic(),pid=item['process'].pid,outcome='waiting')
             try:code=self.lifecycle_wait(item,deadline,diagnostic)
             finally:self.cleanup(item)
             self.lifecycle_check(deadline)  # No late terminal/output success or fresh timeout after acquisition.
             require(code==0 and not item['record']['signals'],label+'_normal_exit')
-            diagnostic['outcome']='normal_exit'
+            diagnostic['outcome']='normal_exit';diagnostic['commandOutcome']='normal_exit'
+            require(diagnostic.get('stackSample',{}).get('status','passed')=='passed','runtime_stack_sample_failed')
             return self.out/(label+'-stdout.log')
         except BaseException as exc:
             diagnostic.update(outcome='failed',error=type(exc).__name__+': '+str(exc)[:1024]);raise

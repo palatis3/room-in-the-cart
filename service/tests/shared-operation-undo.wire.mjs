@@ -288,7 +288,7 @@ test('actual Swift same-store Undo binds selected quote authority through Cancel
  assert.deepEqual(afterShop.quote,f.quote);assert.deepEqual(afterShop.lines.find(l=>l.lineId===f.basket.lineId),f.basket);assert.deepEqual(afterShop.lines.find(l=>l.lineId===f.laterLine.lineId),f.laterLine);
  assert.deepEqual(after.graph.contributions.find(c=>c.id===f.laterSource.id),f.laterSource);assert.ok(after.graph.contributions.find(c=>c.id===f.extra.id).removedAt);
  assert.deepEqual(committedCounts,{...counts,operation:counts.operation+1,shop_snapshot:counts.shop_snapshot+1,shared_demand_revision:counts.shared_demand_revision+1,shared_food_operation_effect:counts.shared_food_operation_effect+1,shared_demand_preview:counts.shared_demand_preview+1});
- const retry=await wire(f,'retry',state);assert.equal(retry.attempts,1);assert.equal(retry.candidateAttempts,0);assert.equal(retry.previewAttempts,0);assert.equal(retry.commands[0],first.commands[0]);
+ const retry=await wire(f,'retry',state);assert.equal(retry.attempts,1);assert.equal(retry.candidateAttempts,0);assert.equal(retry.previewAttempts,0);assert.deepEqual(retry.commands[0],first.commands[0]);
  assert.deepEqual(await mealWireCounts(f),committedCounts);assert.deepEqual(await mealWireShop(f),afterShop);
  const persisted=(await admin.query('SELECT operation_id,receipt FROM ritc.shared_demand_revision WHERE household_id=$1 AND operation_id=$2',[f.h,expected.reservedOperationID])).rows;
  assert.equal(persisted.length,1);assert.equal(persisted[0].receipt.operationId,expected.reservedOperationID);
@@ -296,11 +296,11 @@ test('actual Swift same-store Undo binds selected quote authority through Cancel
  ok(await call(f.author,'/v1/privacy/deletions','POST',{clientKey:randomUUID(),statusToken:randomBytes(32).toString('base64url'),confirm:true,households:[{householdId:f.h,organizer:'none',shops:[],eraseChildProfiles:[]}]}),202);assert.equal((await maintenance.run({batchSize:1})).completed,1);
  assert.equal((await admin.query('SELECT count(*)::int n FROM ritc.store_quote_pair WHERE household_id=$1',[f.h])).rows[0].n,0);
  assert.deepEqual((await mealWirePage(f)).graph,after.graph);const erasedCounts=await mealWireCounts(f);
- const erased=await wire(f,'erased',state);assert.equal(erased.attempts,1);assert.equal(erased.commands[0],first.commands[0]);assert.deepEqual(await mealWireCounts(f),erasedCounts);
+ const erased=await wire(f,'erased',state);assert.equal(erased.attempts,1);assert.deepEqual(erased.commands[0],first.commands[0]);assert.deepEqual(await mealWireCounts(f),erasedCounts);
  // Independent selection: revoke its live grant after Swift preview, before first Apply.
  const g=await setupSameStoreUndoWire(),heldState=await mealWireState(),gBefore=await mealWirePage(g),gShop=await mealWireShop(g),gCounts=await mealWireCounts(g);let revocations=0;
  const denied=await wire(g,'revoked-apply',heldState,{beforeCommand:async attempt=>{if(attempt!==1)return;revocations++;
   ok(await call(g.owner,g.path+'/store-quotes/grants','POST',{operationId:randomUUID(),shopRevision:gShop.shopRevision,authorityEpoch:gShop.authorityEpoch,grantRevision:0,adultId:g.author.id,enabled:false,targetRevision:1}));}});
- assert.equal(revocations,1);assert.equal(denied.attempts,2);assert.equal(denied.candidateAttempts,1);assert.equal(denied.previewAttempts,1);assert.equal(denied.commands[0],denied.commands[1]);
+ assert.equal(revocations,1);assert.equal(denied.attempts,2);assert.equal(denied.candidateAttempts,1);assert.equal(denied.previewAttempts,1);assert.deepEqual(denied.commands[0],denied.commands[1]);
  assert.deepEqual(await mealWirePage(g),gBefore);assert.deepEqual(await mealWireShop(g),gShop);assert.deepEqual(await mealWireCounts(g),{...gCounts,shared_demand_preview:gCounts.shared_demand_preview+1});
 });

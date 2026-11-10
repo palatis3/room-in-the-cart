@@ -1,5 +1,6 @@
 """File-only helper/workflow controls. Never instantiate native Identity or launch tools."""
 import copy
+import ast
 import inspect
 import contextlib
 import io
@@ -13,7 +14,7 @@ import unittest
 from unittest import mock
 import xml.etree.ElementTree as ET
 from simulator_signpost_control import run, runner, control, host_control, validate
-from app_scroll_observation import contract
+from app_scroll_observation import contract, owned
 
 FIXTURES=Path(__file__).with_name('simulator_signpost_control')/'fixtures'
 ENV={'SIMULATOR_SIGNPOST_CONTROL':'true','GITHUB_EVENT_NAME':'workflow_dispatch',
@@ -125,29 +126,36 @@ class ProofTests(unittest.TestCase):
         self.assertNotIn('xcodebuild',s)
 
 class RunnerTests(unittest.TestCase):
-    def fixture(self, code):
-        r=object.__new__(runner.HelperRunner);r.device=DEVICE;r.processes=[];r.out=Path('/owned')
-        r.tools={'simctl':{'path':'/launcher','executable':'/actual','executableSHA256':'digest'}}
-        r.started=runner.time.monotonic();r.seconds=90;r.receipt={};r.save=mock.Mock()
-        proc=SimpleNamespace(pid=42,returncode=code,poll=lambda:code)
-        item={'process':proc,'record':{'label':'query','signals':[]}}
-        def spawn(*args):r.processes.append(item);raise RuntimeError('query_unbound_or_early_exit')
-        r.spawn=spawn;r.wait=mock.Mock(return_value=code);r.cleanup=mock.Mock();r.budget=mock.Mock()
-        return r,item
-    def test_owned_early_terminal_normal_query(self):
-        r,item=self.fixture(0);self.assertEqual(r.lifecycle('query',['list','-j']),Path('/owned/query-stdout.log'))
-        self.assertTrue(item['record']['terminalOwnedCommandBeforeBinding']);r.cleanup.assert_called_once()
-    def test_unverified_live_mutation_never_signaled(self):
-        r,item=self.fixture(None)
-        with self.assertRaisesRegex(ValueError,'unbound_live_no_signal'):r.lifecycle('query',['boot',DEVICE['createdUDID']])
-        r.wait.assert_not_called();r.cleanup.assert_not_called()
-    def test_terminal_error_not_accepted(self):
-        r,item=self.fixture(2)
-        with self.assertRaisesRegex(ValueError,'normal_exit'):r.lifecycle('query',['list','-j'])
-    def test_identity_failure_not_early_terminal_exception(self):
-        r,item=self.fixture(0);r.spawn=mock.Mock(side_effect=RuntimeError('query_binary_identity'))
-        with self.assertRaisesRegex(ValueError,'spawn_identity_failure'):r.lifecycle('query',['list','-j'])
-        r.wait.assert_not_called()
+    def test_lifecycle_spawn_exact_single_child_and_minimal_environment(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            r=object.__new__(runner.HelperRunner);r.device=DEVICE;r.processes=[];r.out=Path(tmp)
+            r.tools={'simctl':{'path':'/launcher','sha256':'launcher','executable':'/actual','executableSHA256':'digest'}}
+            r.args=SimpleNamespace(xctrace=Path('/Xcode/Contents/Developer/usr/bin/xctrace'))
+            r.receipt={'processes':[]};r.save=mock.Mock();r.budget=mock.Mock()
+            proc=SimpleNamespace(pid=42,poll=lambda:None)
+            with mock.patch.object(runner,'launcher_identity'),mock.patch.object(runner.subprocess,'Popen',return_value=proc) as popen,mock.patch.dict(os.environ,{'HOME':tmp,'SDKROOT':'wrong','SECRET':'no'},clear=True):
+                item=r.spawn_lifecycle('delete',['delete',DEVICE['createdUDID']],runner.time.monotonic()+30)
+                popen.assert_called_once();self.assertEqual(popen.call_args.args[0],['/launcher','delete',DEVICE['createdUDID']])
+                self.assertNotIn('SECRET',popen.call_args.kwargs['env']);self.assertNotIn('SDKROOT',popen.call_args.kwargs['env'])
+                self.assertTrue(popen.call_args.kwargs['start_new_session']);self.assertIsNone(item['binding'])
+                self.assertIs(r.processes[0],item);self.assertEqual(item['record']['pid'],42)
+            for stream in item['streams']:stream.close()
+    def test_lifecycle_spawn_rejects_other_device_before_popen(self):
+        r=object.__new__(runner.HelperRunner);r.device=DEVICE
+        with mock.patch.object(runner.subprocess,'Popen') as popen,self.assertRaisesRegex(ValueError,'lifecycle_scope'):
+            r.spawn_lifecycle('delete',['delete',DEVICE['sourceUDID']],30)
+        popen.assert_not_called()
+    def test_lifecycle_spawn_deadline_before_creation(self):
+        r=object.__new__(runner.HelperRunner);r.device=DEVICE;r.processes=[];r.budget=mock.Mock()
+        with mock.patch.object(runner.subprocess,'Popen') as popen,self.assertRaisesRegex(ValueError,'lifecycle_deadline'):
+            r.spawn_lifecycle('delete',['delete',DEVICE['createdUDID']],0)
+        popen.assert_not_called()
+    def test_lifecycle_spawn_tool_drift_does_not_create_child(self):
+        r=object.__new__(runner.HelperRunner);r.device=DEVICE;r.processes=[];r.budget=mock.Mock()
+        r.tools={'simctl':{'path':'/launcher','sha256':'launcher','executable':'/actual','executableSHA256':'digest'}}
+        with mock.patch.object(runner,'launcher_identity',side_effect=ValueError('tool_file_identity')),mock.patch.object(runner.subprocess,'Popen') as popen,self.assertRaisesRegex(ValueError,'tool_file_identity'):
+            r.spawn_lifecycle('delete',['delete',DEVICE['createdUDID']],runner.time.monotonic()+30)
+        popen.assert_not_called()
     def test_compiler_sdk_env_only(self):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp).resolve();binary=root/'swift-frontend';binary.write_bytes(b'compiler');driver=root/'swiftc';driver.symlink_to(binary)
@@ -269,8 +277,9 @@ class AcquisitionTests(unittest.TestCase):
         self.r=object.__new__(runner.HelperRunner);self.r.budget=mock.Mock();self.r.save=mock.Mock();self.r.device=DEVICE
         self.r.tools={'simctl':{'path':'/launcher','sha256':'launcher-sha','executable':'/actual','executableSHA256':'digest'}}
         self.process=SimpleNamespace(pid=42,poll=self.poll,returncode=None)
-        self.item={'process':self.process,'record':{'label':'before','argv':['/launcher','list','-j'],'spawnEpoch':100.,'signals':[]},
+        self.item={'process':self.process,'record':{'label':'before','argv':['/launcher','list','-j'],'spawnEpoch':100.,'signals':[],'pid':42,'executableSHA256':'digest'},
                    'expected':'/actual','digest':'digest','binding':None}
+        self.r.processes=[self.item]
         self.r.identity=SimpleNamespace(read=self.identity)
         self.value={'pid':42,'parentPID':os.getpid(),'uid':os.getuid(),'startTimeMicros':100_000_001,'executable':'/actual'}
         self.read_value=lambda:self.value
@@ -283,12 +292,12 @@ class AcquisitionTests(unittest.TestCase):
         if self.terminal is not None and self.clock>=self.terminal:self.process.returncode=0
         return self.process.returncode
     def identity(self,pid):self.reads+=1;return self.read_value()
-    def acquire(self,deadline=30):return self.r.acquire_inventory(self.item,deadline)
+    def acquire(self,deadline=30):return self.r.acquire_lifecycle(self.item,deadline)
     def test_same_child_interpreter_then_exact_binding_after_two_seconds(self):
         self.read_value=lambda:{**self.value,'executable':str(Path('/bin/bash').resolve())} if self.clock<3 else self.value
         self.assertIs(self.acquire(),self.item);self.assertGreaterEqual(self.clock,3)
         self.assertEqual(self.item['binding'],self.value);self.assertEqual(self.item['record']['signals'],[])
-        d=self.item['record']['inventoryAcquisition'];self.assertGreater(d['interpreter'],0);self.assertEqual(d['outcome'],'bound')
+        d=self.item['record']['lifecycleAcquisition'];self.assertGreater(d['interpreter'],0);self.assertEqual(d['outcome'],'bound')
     def test_missing_identity_then_owned_terminal_exit(self):
         self.read_value=lambda:None;self.terminal=.2
         self.assertIs(self.acquire(),self.item);self.assertIsNone(self.item['binding'])
@@ -341,28 +350,28 @@ class AcquisitionTests(unittest.TestCase):
         with mock.patch.object(runner,'launcher_identity',side_effect=ValueError('tool_file_identity')),self.assertRaisesRegex(ValueError,'tool_file_identity'):self.acquire()
         with mock.patch.object(runner,'sha',return_value='changed'),self.assertRaisesRegex(ValueError,'binary_identity'):self.acquire()
     def test_scope_rejects_mutation_capture_and_other_query(self):
-        for tail in (['boot',DEVICE['createdUDID']],['spawn',DEVICE['createdUDID'],'helper'],['list','devices','-j']):
+        for tail in (['boot',DEVICE['sourceUDID']],['spawn',DEVICE['createdUDID'],'helper'],['list','devices','-j']):
             self.item['record']['argv']=['/launcher',*tail]
             with self.assertRaisesRegex(ValueError,'acquisition_scope'):self.acquire()
     def test_lifecycle_does_not_respawn_or_reset_timeout(self):
         self.r.device=DEVICE;self.r.started=0;self.r.seconds=90;self.r.receipt={};self.r.processes=[];self.r.out=Path('/owned')
         def spawn(*a):
             self.r.processes.append(self.item);self.clock=2.1
-            raise RuntimeError('before_unbound_or_early_exit')
-        self.r.spawn=mock.Mock(side_effect=spawn);self.r.cleanup=mock.Mock()
+            return self.item
+        self.r.spawn_lifecycle=mock.Mock(side_effect=spawn);self.r.cleanup=mock.Mock()
         self.read_value=lambda:None;self.terminal=3
         self.assertEqual(self.r.lifecycle('before',['list','-j'],30),Path('/owned/before-stdout.log'))
-        self.r.spawn.assert_called_once();self.r.cleanup.assert_called_once()
-        self.assertEqual(self.item['record']['inventoryAcquisition']['deadlineMonotonic'],30)
+        self.r.spawn_lifecycle.assert_called_once();self.r.cleanup.assert_called_once()
+        self.assertEqual(self.item['record']['lifecycleAcquisition']['deadlineMonotonic'],30)
         self.assertEqual(self.r.receipt['lifecycleCommands'][0]['outcome'],'normal_exit')
     def test_phase_budget_is_not_reset_by_command(self):
         self.r.device=DEVICE;self.r.started=0;self.r.seconds=10;self.r.receipt={};self.r.processes=[];self.r.out=Path('/owned')
         self.clock=9
-        def spawn(*a):self.r.processes.append(self.item);raise RuntimeError('before_unbound_or_early_exit')
-        self.r.spawn=mock.Mock(side_effect=spawn);self.read_value=lambda:None
+        def spawn(*a):self.r.processes.append(self.item);return self.item
+        self.r.spawn_lifecycle=mock.Mock(side_effect=spawn);self.read_value=lambda:None
         with self.assertRaisesRegex(ValueError,'lifecycle_deadline'):self.r.lifecycle('before',['list','-j'],30)
         self.assertEqual(self.r.receipt['lifecycleCommands'][0]['deadlineMonotonic'],10)
-        self.assertAlmostEqual(self.clock,10);self.r.spawn.assert_called_once()
+        self.assertAlmostEqual(self.clock,10);self.r.spawn_lifecycle.assert_called_once()
 
     def test_wait_progress_is_bounded_and_does_not_rehash_binary(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -389,12 +398,12 @@ class AcquisitionTests(unittest.TestCase):
 
     def test_actual_lifecycle_honors_shared_absolute_deadline(self):
         self.r.device=DEVICE;self.r.started=0;self.r.seconds=90;self.r.receipt={};self.r.processes=[];self.r.out=Path('/owned')
-        def spawn(*a):self.r.processes.append(self.item);raise RuntimeError('before_unbound_or_early_exit')
-        self.r.spawn=mock.Mock(side_effect=spawn);self.read_value=lambda:None
+        def spawn(*a):self.r.processes.append(self.item);return self.item
+        self.r.spawn_lifecycle=mock.Mock(side_effect=spawn);self.read_value=lambda:None
         with self.assertRaisesRegex(ValueError,'lifecycle_deadline'):
             self.r.lifecycle('before',['list','-j'],30,absolute_deadline=5)
         self.assertEqual(self.r.receipt['lifecycleCommands'][0]['deadlineMonotonic'],5)
-        self.assertAlmostEqual(self.clock,5);self.r.spawn.assert_called_once()
+        self.assertAlmostEqual(self.clock,5);self.r.spawn_lifecycle.assert_called_once()
     def test_new_scoped_queries_retain_same_child_binding(self):
         for tail in (['list','-j','runtimes'],['list','-j','devices',DEVICE['createdUDID']]):
             self.item['record']['argv']=['/launcher',*tail];self.item['binding']=None
@@ -534,49 +543,50 @@ class BootstatusAcquisitionTests(unittest.TestCase):
         self.read_value=lambda:{**self.value,'executable':str(Path('/bin/bash').resolve())} if self.clock<3 else self.value
         self.assertIs(self.acquire(180),self.item);self.assertGreaterEqual(self.clock,3)
         self.assertEqual(self.item['binding'],self.value);self.assertEqual(self.item['record']['signals'],[])
-        diagnostic=self.item['record']['bootstatusAcquisition']
-        self.assertEqual(diagnostic['scope'],'same_owned_bootstatus_after_normal_boot');self.assertEqual(diagnostic['outcome'],'bound')
-    def test_only_exact_owned_command_is_allowed(self):
-        original=list(self.item['record']['argv'])
+        diagnostic=self.item['record']['lifecycleAcquisition']
+        self.assertEqual(diagnostic['scope'],'same_owned_allowed_lifecycle');self.assertEqual(diagnostic['outcome'],'bound')
+    def test_every_exact_owned_lifecycle_can_acquire(self):
+        for tail in (['create',DEVICE['createdName'],DEVICE['deviceTypeIdentifier'],run.RUNTIME],['boot',DEVICE['createdUDID']],
+                     ['bootstatus',DEVICE['createdUDID'],'-b'],['shutdown',DEVICE['createdUDID']],['delete',DEVICE['createdUDID']],
+                     ['list','-j'],['list','-j','runtimes'],['list','-j','devices',DEVICE['createdUDID']]):
+            self.item['record']['argv']=['/launcher',*tail];self.item['binding']=None
+            with self.subTest(tail=tail):self.assertIs(self.acquire(30),self.item)
+    def test_other_devices_unknown_commands_and_argument_drift_rejected(self):
         for tail in (['bootstatus',DEVICE['sourceUDID'],'-b'],['bootstatus',DEVICE['createdUDID']],['bootstatus','booted','-b'],
-                     ['boot',DEVICE['createdUDID']],['delete',DEVICE['createdUDID']],['shutdown',DEVICE['createdUDID']],
-                     ['spawn',DEVICE['createdUDID'],'helper'],['create','arbitrary'],['bootstatus',DEVICE['createdUDID'],'-b','extra']):
+                     ['delete','all'],['shutdown',DEVICE['sourceUDID']],['create','arbitrary'],['erase',DEVICE['createdUDID']],
+                     ['spawn',DEVICE['createdUDID'],'helper'],['bootstatus',DEVICE['createdUDID'],'-b','extra']):
             self.item['record']['argv']=['/launcher',*tail]
-            with self.subTest(tail=tail),self.assertRaisesRegex(ValueError,'acquisition_scope'):self.acquire(180)
-        self.item['record']['argv']=original;self.item['record']['label']='other'
-        with self.assertRaisesRegex(ValueError,'acquisition_scope'):self.acquire(180)
-    def test_missing_duplicate_or_different_boot_proof_rejected(self):
-        record=copy.deepcopy(self.previous['record']);phase=copy.deepcopy(self.r.receipt['lifecycleCommands'])
-        mutations=(lambda:self.r.processes.remove(self.previous),lambda:self.r.processes.insert(0,self.previous),
-                   lambda:self.previous['record'].update(argv=['/launcher','boot',DEVICE['sourceUDID']]),
-                   lambda:self.r.receipt.update(lifecycleCommands=[]),
-                   lambda:self.r.receipt['lifecycleCommands'][0].update(outcome='failed'))
-        for mutate in mutations:
-            self.r.processes=[self.previous,self.item];self.previous['record']=copy.deepcopy(record);self.r.receipt['lifecycleCommands']=copy.deepcopy(phase)
-            mutate()
-            with self.assertRaisesRegex(ValueError,'acquisition_scope'):self.acquire(180)
-    def test_failed_signaled_nonterminal_or_hash_changed_prior_boot_rejected(self):
-        original=copy.deepcopy(self.previous['record'])
-        for fields in ({'exitCode':1},{'terminalVerified':False},{'signals':['SIGINT']},{'executableSHA256':'other'},{'pid':999}):
-            self.previous['record']=copy.deepcopy(original);self.previous['record'].update(fields)
-            with self.subTest(fields=fields),self.assertRaisesRegex(ValueError,'acquisition_scope'):self.acquire(180)
-        self.previous['record']=original;self.previous['process'].poll=lambda:None
-        with self.assertRaisesRegex(ValueError,'acquisition_scope'):self.acquire(180)
-    def test_prior_binding_identity_must_remain_exact(self):
-        original=copy.deepcopy(self.previous['record']['binding'])
-        for fields in ({'uid':os.getuid()+1},{'parentPID':os.getpid()+1},{'pid':999},{'executable':'/other'},{'startTimeMicros':1}):
-            self.previous['record']['binding']={**original,**fields}
-            with self.subTest(fields=fields),self.assertRaisesRegex(ValueError,'acquisition_scope'):self.acquire(180)
-    def test_original_owned_early_terminal_boot_proof_is_preserved(self):
-        self.previous['record'].pop('binding')
-        with self.assertRaisesRegex(ValueError,'acquisition_scope'):self.acquire(180)
-        self.previous['record']['terminalOwnedCommandBeforeBinding']=True
-        self.assertIs(self.acquire(180),self.item);self.assertEqual(self.item['binding'],self.value)
-    def test_unowned_or_duplicate_pending_bootstatus_is_not_accepted(self):
-        self.r.processes=[self.previous]
-        with self.assertRaisesRegex(ValueError,'acquisition_scope'):self.acquire(180)
-        self.r.processes=[self.previous,copy.copy(self.item),self.item]
-        with self.assertRaisesRegex(ValueError,'acquisition_scope'):self.acquire(180)
+            with self.subTest(tail=tail),self.assertRaisesRegex(ValueError,'acquisition_scope'):self.acquire(30)
+    def test_missing_duplicate_or_nonlast_item_rejected(self):
+        for items in ([self.previous],[self.item,self.item],[self.item,self.previous]):
+            self.r.processes=items
+            with self.subTest(items=len(items)),self.assertRaisesRegex(ValueError,'acquisition_scope'):self.acquire(30)
+    def test_prior_live_child_blocks_acquisition(self):
+        self.previous['process'].poll=lambda:None
+        with self.assertRaisesRegex(ValueError,'acquisition_scope'):self.acquire(30)
+    def test_item_tool_and_pid_receipts_must_be_exact(self):
+        for field,value in (('pid',999),('executableSHA256','changed')):
+            old=self.item['record'][field];self.item['record'][field]=value
+            with self.subTest(field=field),self.assertRaisesRegex(ValueError,'acquisition_scope'):self.acquire(30)
+            self.item['record'][field]=old
+        for field in ('expected','digest'):
+            old=self.item[field];self.item[field]='changed'
+            with self.subTest(field=field),self.assertRaisesRegex(ValueError,'acquisition_scope'):self.acquire(30)
+            self.item[field]=old
+    def test_delete_can_bind_late_without_respawn_or_signal(self):
+        self.item['record'].update(label='delete',argv=['/launcher','delete',DEVICE['createdUDID']])
+        self.read_value=lambda:None if self.clock<2.8 else self.value
+        self.assertIs(self.acquire(30),self.item);self.assertGreaterEqual(self.clock,2.8)
+        self.assertEqual(self.item['record']['signals'],[]);self.assertGreater(self.item['record']['lifecycleAcquisition']['missing'],0)
+    def test_initial_interpreter_missing_expected_samples_retained(self):
+        self.read_value=lambda:None if self.reads==1 else {**self.value,'executable':str(Path('/bin/bash').resolve())} if self.reads==2 else self.value
+        self.acquire(30);d=self.item['record']['lifecycleAcquisition']
+        self.assertEqual([v['kind'] for v in d['first']],['missing','interpreter','expected'])
+        self.assertNotIn('initialLiveBindingWindowSeconds',d)
+    def test_unknown_executable_sample_retained_before_failure(self):
+        self.read_value=lambda:{**self.value,'executable':'/other'}
+        with self.assertRaisesRegex(ValueError,'inventory_executable'):self.acquire(30)
+        self.assertEqual(self.item['record']['lifecycleAcquisition']['last']['kind'],'other')
     def test_missing_identity_or_late_binding_cannot_outlive_original180(self):
         self.read_value=lambda:None
         with self.assertRaisesRegex(ValueError,'lifecycle_deadline'):self.acquire(180)
@@ -597,34 +607,319 @@ class BootstatusAcquisitionTests(unittest.TestCase):
             self.r.out=Path(tmp);self.r.started=0;self.r.seconds=300;self.r.processes=[self.previous]
             for name in ('bootstatus-stdout.log','bootstatus-stderr.log'):(self.r.out/name).write_bytes(b'')
             self.clock=20
-            def spawn(*args):self.r.processes.append(self.item);self.clock=22.8;raise RuntimeError('bootstatus_unbound_or_early_exit')
-            self.r.spawn=mock.Mock(side_effect=spawn);self.r.cleanup=mock.Mock()
+            def spawn(*args):self.r.processes.append(self.item);self.clock=22.8;return self.item
+            self.r.spawn_lifecycle=mock.Mock(side_effect=spawn);self.r.cleanup=mock.Mock()
             self.read_value=lambda:{**self.value,'executable':str(Path('/bin/bash').resolve())} if self.clock<23.5 else self.value
             self.terminal=24
             self.assertEqual(self.r.lifecycle('bootstatus',['bootstatus',DEVICE['createdUDID'],'-b'],180),self.r.out/'bootstatus-stdout.log')
-            self.r.spawn.assert_called_once();self.r.cleanup.assert_called_once()
+            self.r.spawn_lifecycle.assert_called_once();self.r.cleanup.assert_called_once()
             self.assertEqual(self.r.receipt['lifecycleCommands'][-1]['deadlineMonotonic'],200)
-            self.assertEqual(self.item['record']['bootstatusAcquisition']['deadlineMonotonic'],200)
+            self.assertEqual(self.item['record']['lifecycleAcquisition']['deadlineMonotonic'],200)
             self.assertEqual(self.item['record']['signals'],[])
     def test_nonzero_owned_terminal_bootstatus_is_not_success(self):
         self.r.out=Path('/owned');self.r.started=0;self.r.seconds=300;self.r.processes=[self.previous]
-        def spawn(*args):self.r.processes.append(self.item);raise RuntimeError('bootstatus_unbound_or_early_exit')
-        self.r.spawn=mock.Mock(side_effect=spawn);self.r.cleanup=mock.Mock();self.process.returncode=70
+        def spawn(*args):self.r.processes.append(self.item);return self.item
+        self.r.spawn_lifecycle=mock.Mock(side_effect=spawn);self.r.cleanup=mock.Mock();self.process.returncode=70
         with self.assertRaisesRegex(ValueError,'normal_exit'):self.r.lifecycle('bootstatus',['bootstatus',DEVICE['createdUDID'],'-b'],180)
-        self.r.spawn.assert_called_once();self.assertIsNone(self.item['binding'])
+        self.r.spawn_lifecycle.assert_called_once();self.assertIsNone(self.item['binding'])
 
     def test_bootstatus_continuation_cannot_extend_prepare300(self):
         self.r.out=Path('/owned');self.r.started=0;self.r.seconds=300;self.r.processes=[self.previous];self.clock=299
-        def spawn(*args):self.r.processes.append(self.item);self.clock=299.2;raise RuntimeError('bootstatus_unbound_or_early_exit')
-        self.r.spawn=mock.Mock(side_effect=spawn);self.read_value=lambda:None
+        def spawn(*args):self.r.processes.append(self.item);self.clock=299.2;return self.item
+        self.r.spawn_lifecycle=mock.Mock(side_effect=spawn);self.read_value=lambda:None
         with self.assertRaisesRegex(ValueError,'lifecycle_deadline'):self.r.lifecycle('bootstatus',['bootstatus',DEVICE['createdUDID'],'-b'],180)
-        self.r.spawn.assert_called_once();self.assertEqual(self.r.receipt['lifecycleCommands'][-1]['deadlineMonotonic'],300)
+        self.r.spawn_lifecycle.assert_called_once();self.assertEqual(self.r.receipt['lifecycleCommands'][-1]['deadlineMonotonic'],300)
         self.assertAlmostEqual(self.clock,300);self.assertIsNone(self.item['binding']);self.assertEqual(self.item['record']['signals'],[])
     def test_bootstatus_owned_exit_racing_identity_never_becomes_signal_target(self):
         def race():self.process.returncode=0;return None
         self.read_value=race
         self.assertIs(self.acquire(180),self.item);self.assertIsNone(self.item['binding'])
         self.assertTrue(self.item['record']['terminalOwnedCommandBeforeBinding']);self.assertEqual(self.item['record']['signals'],[])
-        self.assertEqual(self.item['record']['bootstatusAcquisition']['outcome'],'terminal_before_binding')
+        self.assertEqual(self.item['record']['lifecycleAcquisition']['outcome'],'terminal_before_binding')
+
+class LifecycleCleanupTests(unittest.TestCase):
+    setUp=AcquisitionTests.setUp
+    sleep=AcquisitionTests.sleep
+    poll=AcquisitionTests.poll
+    identity=AcquisitionTests.identity
+    acquire=AcquisitionTests.acquire
+    def test_unbound_owned_child_is_never_signaled_by_original_cleanup(self):
+        self.process.stdin=None;self.process.send_signal=mock.Mock();self.item['streams']=[]
+        self.r.cleanup(self.item)
+        self.process.send_signal.assert_not_called()
+        self.assertEqual(self.item['record']['cleanupError'],'identity_unverified_no_signal')
+        self.assertFalse(self.item['record']['terminalVerified'])
+    def test_bound_identity_drift_is_never_signaled_by_original_cleanup(self):
+        self.item['binding']=self.value;self.read_value=lambda:{**self.value,'startTimeMicros':100_000_002}
+        self.process.stdin=None;self.process.send_signal=mock.Mock();self.item['streams']=[]
+        self.r.cleanup(self.item);self.process.send_signal.assert_not_called()
+        self.assertFalse(self.item['record']['terminalVerified'])
+    def test_acquisition_keeps_all_three_phase_bounds(self):
+        for deadline in (30,90,180):
+            self.clock=deadline;self.read_value=lambda:self.value
+            with self.subTest(deadline=deadline),self.assertRaisesRegex(ValueError,'lifecycle_deadline'):self.acquire(deadline)
+        self.assertIsNone(self.item['binding'])
+
+class RuntimeSampleTests(unittest.TestCase):
+    def setUp(self):
+        AcquisitionTests.setUp(self)
+        p=mock.patch.object(owned,'sha',return_value='digest');p.start();self.addCleanup(p.stop)
+    sleep=AcquisitionTests.sleep
+    poll=AcquisitionTests.poll
+    identity=AcquisitionTests.identity
+    acquire=AcquisitionTests.acquire
+    def prepare(self,tmp):
+        self.r.out=Path(tmp);self.r.receipt={'processes':[]}
+        self.item['record'].update(label='booted-runtimes',argv=['/launcher','list','-j','runtimes'])
+        self.item['binding']=self.value
+        for name in ('booted-runtimes-stdout.log','booted-runtimes-stderr.log'):(self.r.out/name).write_bytes(b'')
+    def sampler(self,finish=.2,exitcode=0):
+        proc=SimpleNamespace(pid=43,returncode=None,stdin=None)
+        def poll():
+            if self.clock>=finish and proc.returncode is None:proc.returncode=exitcode
+            return proc.returncode
+        proc.poll=poll
+        proc.send_signal=mock.Mock(side_effect=lambda sig:setattr(proc,'returncode',-int(sig)))
+        proc.wait=lambda timeout:proc.returncode
+        def spawn(*a,**kw):(self.r.out/'booted-runtimes-stack.txt').write_text('stack IPC wait');return proc
+        identity=self.r.identity.read
+        self.r.identity.read=lambda pid:({'pid':43,'parentPID':os.getpid(),'uid':os.getuid(),'startTimeMicros':2*10**18,'executable':'/usr/bin/sample'} if pid==43 else identity(pid))
+        return proc,spawn
+    def test_exact_fixed_sampler_one_second_and_terminal_before_return(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);proc,spawn=self.sampler();d={}
+            with mock.patch.object(runner.subprocess,'Popen',side_effect=spawn) as popen:self.r.sample_runtime(self.item,30,d)
+            self.assertEqual(d['stackSample']['status'],'passed');self.assertTrue(d['stackSample']['terminalVerified'])
+            self.assertEqual(popen.call_args.args[0],['/usr/bin/sample','42','1','-file',str(self.r.out/'booted-runtimes-stack.txt')])
+            popen.assert_called_once();proc.send_signal.assert_not_called();self.assertEqual(self.item['record']['signals'],[])
+            self.assertEqual(d['stackSample']['tool']['sha256'],'digest')
+    def test_sampler_timeout_is_separate_and_owned_child_reaped(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);proc,spawn=self.sampler(100);d={}
+            with mock.patch.object(runner.subprocess,'Popen',side_effect=spawn):self.r.sample_runtime(self.item,30,d)
+            self.assertEqual(d['stackSample']['status'],'failed');self.assertIn('lifecycle_deadline',d['stackSample']['error'])
+            self.assertTrue(d['stackSample']['terminalVerified']);proc.send_signal.assert_called_once()
+            self.assertIsNone(self.item['process'].poll());self.assertEqual(self.item['record']['signals'],[])
+    def test_wrong_or_missing_target_identity_prevents_sampler(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp)
+            for v in (None,{**self.value,'startTimeMicros':100_000_002}):
+                self.read_value=lambda:v;d={}
+                with mock.patch.object(runner.subprocess,'Popen') as popen:self.r.sample_runtime(self.item,30,d)
+                popen.assert_not_called();self.assertIn('sample_target_identity',d['stackSample']['error'])
+    def test_sampler_cannot_target_other_command(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);self.item['record']['argv']=['/launcher','list','-j'];d={}
+            with mock.patch.object(runner.subprocess,'Popen') as popen:self.r.sample_runtime(self.item,30,d)
+            popen.assert_not_called();self.assertIn('sample_target_scope',d['stackSample']['error'])
+    def test_insufficient_original_budget_never_spawns(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);self.clock=20;d={}
+            with mock.patch.object(runner.subprocess,'Popen') as popen:self.r.sample_runtime(self.item,30,d)
+            popen.assert_not_called();self.assertIn('sample_remaining_budget',d['stackSample']['error'])
+    def test_oversized_report_is_failure_and_child_terminal(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);proc,spawn=self.sampler();d={}
+            def oversized(*a,**kw):
+                result=spawn(*a,**kw);(self.r.out/'booted-runtimes-stack.txt').write_bytes(b'x'*(2*1024**2+1));return result
+            with mock.patch.object(runner.subprocess,'Popen',side_effect=oversized):self.r.sample_runtime(self.item,30,d)
+            self.assertIn('sample_output_cap',d['stackSample']['error'])
+            # No libproc binding is needed to terminate this exact retained direct child.
+            proc.send_signal.assert_called_once();self.assertTrue(d['stackSample']['terminalVerified'])
+    def test_live_unbound_sampler_is_reaped_before_target_teardown(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);proc,spawn=self.sampler(100);self.r.identity.read=lambda pid:self.value if pid==42 else None;d={}
+            with mock.patch.object(runner.subprocess,'Popen',side_effect=spawn):self.r.sample_runtime(self.item,30,d)
+            proc.send_signal.assert_called_once();self.assertTrue(d['stackSample']['terminalVerified'])
+            self.assertIsNone(self.r.sample_child['binding'])
+    def test_sampler_nonzero_exit_does_not_claim_success(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);proc,spawn=self.sampler(.2,1);d={}
+            with mock.patch.object(runner.subprocess,'Popen',side_effect=spawn):self.r.sample_runtime(self.item,30,d)
+            self.assertIn('sample_exit',d['stackSample']['error']);self.assertTrue(d['stackSample']['terminalVerified'])
+    def test_trigger_once_only_after_ten_seconds_and_zero_output(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);self.terminal=12;d={'startedMonotonic':0}
+            def sample(*args):self.assertGreaterEqual(self.clock,10);args[2]['stackSample']={'status':'passed'}
+            self.r.sample_runtime=mock.Mock(side_effect=sample)
+            self.assertEqual(self.r.lifecycle_wait(self.item,30,d),0);self.r.sample_runtime.assert_called_once()
+    def test_existing_output_prevents_sample(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);self.terminal=12;(self.r.out/'booted-runtimes-stderr.log').write_text('progress')
+            self.r.sample_runtime=mock.Mock()
+            self.assertEqual(self.r.lifecycle_wait(self.item,30,{'startedMonotonic':0}),0);self.r.sample_runtime.assert_not_called()
+    def test_original_query_deadline_survives_sampler_failure(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);d={'startedMonotonic':0}
+            self.r.sample_runtime=mock.Mock(side_effect=lambda *a:a[2].update(stackSample={'status':'failed','error':'sample_exit'}))
+            with self.assertRaisesRegex(ValueError,'lifecycle_deadline'):self.r.lifecycle_wait(self.item,30,d)
+            self.assertAlmostEqual(self.clock,30);self.assertEqual(d['stackSample']['error'],'sample_exit')
+            self.r.sample_runtime.assert_called_once()
+
+    def test_system_tool_hash_drift_is_recorded_not_accepted(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);proc,spawn=self.sampler();d={};calls=0
+            def digest(path):
+                nonlocal calls
+                if str(path)=='/usr/bin/sample':
+                    calls+=1;return 'digest' if calls==1 else 'changed'
+                return 'digest'
+            with mock.patch.object(runner,'sha',side_effect=digest),mock.patch.object(runner.subprocess,'Popen',side_effect=spawn):self.r.sample_runtime(self.item,30,d)
+            self.assertEqual(d['stackSample']['status'],'failed');self.assertFalse(d['stackSample']['toolUnchanged'])
+    def test_system_tool_nonroot_owner_rejected_before_spawn(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);d={};original=Path.lstat
+            def lstat(path,*args,**kwargs):
+                v=original(path,*args,**kwargs)
+                if str(path)=='/usr/bin/sample':return SimpleNamespace(st_mode=v.st_mode,st_uid=501)
+                return v
+            with mock.patch.object(Path,'lstat',lstat),mock.patch.object(runner.subprocess,'Popen') as popen:self.r.sample_runtime(self.item,30,d)
+            popen.assert_not_called();self.assertIn('sample_system_tool_shape',d['stackSample']['error'])
+    def test_finish_cannot_reap_target_until_sampler_terminal(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);proc,spawn=self.sampler(100);self.r.identity.read=lambda pid:self.value if pid==42 else None;d={}
+            with mock.patch.object(runner.subprocess,'Popen',side_effect=spawn):self.r.sample_runtime(self.item,30,d)
+            self.assertTrue(d['stackSample']['terminalVerified'])
+            def target_poll():
+                self.assertIsNotNone(proc.poll());return 0
+            self.item['process'].poll=target_poll;self.item['process'].stdin=None;self.item['streams']=[]
+            self.r.finish('retained_sample_failure')
+            self.assertTrue(self.r.receipt['allKnownChildrenTerminal']);proc.send_signal.assert_called_once()
+    def test_live_sampling_does_not_poll_or_reap_target(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);proc,spawn=self.sampler();d={};started=False
+            def sample_spawn(*args,**kwargs):
+                nonlocal started
+                started=True;return spawn(*args,**kwargs)
+            def target_poll():
+                if started and proc.poll() is None:raise AssertionError('target must remain unreaped while sampler active')
+                return None
+            self.item['process'].poll=target_poll
+            with mock.patch.object(runner.subprocess,'Popen',side_effect=sample_spawn):self.r.sample_runtime(self.item,30,d)
+            self.assertEqual(d['stackSample']['status'],'passed')
+    def test_target_drift_during_sample_stops_owned_sampler(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);proc,spawn=self.sampler(100);d={};self.read_value=lambda:self.value if self.clock<.1 else None
+            with mock.patch.object(runner.subprocess,'Popen',side_effect=spawn):self.r.sample_runtime(self.item,30,d)
+            self.assertIn('sample_target_identity',d['stackSample']['error']);self.assertTrue(d['stackSample']['terminalVerified'])
+            self.assertEqual(self.item['record']['signals'],[])
+    def test_non_runtime_lifecycle_is_never_sampled(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);self.item['record']['label']='before'
+            for name in ('before-stdout.log','before-stderr.log'):(self.r.out/name).write_bytes(b'')
+            self.terminal=12;self.r.sample_runtime=mock.Mock()
+            self.assertEqual(self.r.lifecycle_wait(self.item,30,{'startedMonotonic':0}),0);self.r.sample_runtime.assert_not_called()
+
+    def test_nondefault_sigchld_prevents_sampler(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp)
+            for disposition in (runner.signal.SIG_IGN,lambda *a:None):
+                d={}
+                with mock.patch.object(runner.signal,'getsignal',return_value=disposition),mock.patch.object(runner.subprocess,'Popen') as popen:self.r.sample_runtime(self.item,30,d)
+                popen.assert_not_called();self.assertIn('exclusive_reaper',d['stackSample']['error'])
+    def test_other_threads_prevent_sampler(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);d={}
+            with mock.patch.object(runner.threading,'active_count',return_value=2),mock.patch.object(runner.subprocess,'Popen') as popen:self.r.sample_runtime(self.item,30,d)
+            popen.assert_not_called();self.assertIn('exclusive_reaper',d['stackSample']['error'])
+    def test_unexpected_sampler_executable_fails_but_direct_child_is_reaped(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);proc,spawn=self.sampler(100);identity=self.r.identity.read;d={}
+            self.r.identity.read=lambda pid:({**identity(pid),'executable':'/unexpected'} if pid==43 else identity(pid))
+            with mock.patch.object(runner.subprocess,'Popen',side_effect=spawn):self.r.sample_runtime(self.item,30,d)
+            self.assertIn('sample_child_identity',d['stackSample']['error']);self.assertTrue(d['stackSample']['terminalVerified'])
+            proc.send_signal.assert_called_once();self.assertIsNone(self.r.sample_child['binding'])
+    def test_changed_binary_cannot_disable_direct_child_cleanup(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);proc,spawn=self.sampler(100);d={}
+            with mock.patch.object(runner.subprocess,'Popen',side_effect=spawn),mock.patch.object(owned,'sha',return_value='changed'):self.r.sample_runtime(self.item,30,d)
+            self.assertTrue(d['stackSample']['terminalVerified']);proc.send_signal.assert_called_once()
+    def test_foreign_reconstructed_and_wrong_owner_items_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);proc,spawn=self.sampler();d={}
+            with mock.patch.object(runner.subprocess,'Popen',side_effect=spawn):self.r.sample_runtime(self.item,30,d)
+            with self.assertRaisesRegex(ValueError,'cleanup_custody'):self.r.cleanup_sample(dict(self.r.sample_child))
+            custody=self.r.sample_custody;self.r.sample_custody=(*custody[:2],os.getpid()+1)
+            with self.assertRaisesRegex(ValueError,'cleanup_custody'):self.r.cleanup_sample(self.r.sample_child)
+            proc.send_signal.assert_not_called()
+    def test_already_reaped_child_not_signaled_again(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);proc,spawn=self.sampler();d={}
+            with mock.patch.object(runner.subprocess,'Popen',side_effect=spawn):self.r.sample_runtime(self.item,30,d)
+            self.r.cleanup_sample(self.r.sample_child);proc.send_signal.assert_not_called()
+            self.assertTrue(self.r.sample_child['record']['terminalVerified'])
+    def test_real_popen_send_signal_skips_already_reaped_object(self):
+        # Invoke only the standard library method on an inert object; no process is created.
+        p=object.__new__(runner.subprocess.Popen);p.returncode=0;p._child_created=False
+        p.poll=mock.Mock(return_value=0)
+        with mock.patch.object(os,'kill') as kill:runner.subprocess.Popen.send_signal(p,runner.signal.SIGINT)
+        kill.assert_not_called()
+    def test_sampler_cleanup_uses_original_bounded_signal_wait_ladder(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);proc,spawn=self.sampler(100);d={};waits=[]
+            proc.send_signal=mock.Mock()
+            def wait(timeout):
+                waits.append(timeout)
+                if len(waits)<3:raise runner.subprocess.TimeoutExpired('sample',timeout)
+                proc.returncode=-9;return -9
+            proc.wait=wait
+            with mock.patch.object(runner.subprocess,'Popen',side_effect=spawn):self.r.sample_runtime(self.item,30,d)
+            self.assertEqual(waits,[2,3,2]);self.assertTrue(d['stackSample']['terminalVerified'])
+            self.assertEqual(self.r.sample_child['record']['signals'],['SIGINT','SIGTERM','SIGKILL'])
+
+    def test_frozen_sampler_path_has_no_external_reaper_or_thread_start(self):
+        from app_scroll_observation import runner as base_runner
+        forbidden={'waitpid','waitid','wait3','wait4','fork','forkpty','Thread','set_wakeup_fd'}
+        for module in (runner,run,owned,base_runner,control,host_control):
+            tree=ast.parse(inspect.getsource(module))
+            for call in (n for n in ast.walk(tree) if isinstance(n,ast.Call)):
+                name=call.func.attr if isinstance(call.func,ast.Attribute) else call.func.id if isinstance(call.func,ast.Name) else ''
+                self.assertNotIn(name,forbidden,module.__name__)
+                if name=='signal' and call.args:
+                    self.assertNotEqual(ast.unparse(call.args[0]),'signal.SIGCHLD')
+    def test_completed_cleanup_ladder_is_not_retried(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);proc,spawn=self.sampler(100);d={}
+            proc.send_signal=mock.Mock()
+            proc.wait=mock.Mock(side_effect=runner.subprocess.TimeoutExpired('sample',2))
+            with mock.patch.object(runner.subprocess,'Popen',side_effect=spawn):self.r.sample_runtime(self.item,30,d)
+            self.assertEqual(proc.send_signal.call_count,3);self.assertFalse(d['stackSample']['terminalVerified'])
+            with self.assertRaisesRegex(ValueError,'cleanup_not_terminal'):self.r.cleanup_sample(self.r.sample_child)
+            self.assertEqual(proc.send_signal.call_count,3)
+            with self.assertRaisesRegex(ValueError,'cleanup_not_terminal'):self.r.cleanup(self.item)
+            self.assertEqual(self.item['record']['signals'],[])
+
+    def test_setuid_or_setgid_system_sampler_rejected_before_spawn(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);original=Path.lstat
+            for bit in (0o4000,0o2000):
+                def lstat(path,*args,**kwargs):
+                    v=original(path,*args,**kwargs)
+                    if str(path)=='/usr/bin/sample':return SimpleNamespace(st_mode=v.st_mode|bit,st_uid=0)
+                    return v
+                d={}
+                with mock.patch.object(Path,'lstat',lstat),mock.patch.object(runner.subprocess,'Popen') as popen:self.r.sample_runtime(self.item,30,d)
+                popen.assert_not_called();self.assertIn('sample_system_tool_shape',d['stackSample']['error'])
+    def test_successful_sigkill_with_wait_timeout_is_not_terminal_proof(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);proc,spawn=self.sampler(100);d={}
+            proc.send_signal=mock.Mock();proc.wait=mock.Mock(side_effect=runner.subprocess.TimeoutExpired('sample',2))
+            with mock.patch.object(runner.subprocess,'Popen',side_effect=spawn):self.r.sample_runtime(self.item,30,d)
+            record=self.r.sample_child['record'];self.assertTrue(record['fatalSignalDelivered'])
+            self.assertFalse(record['terminalVerified']);self.assertFalse(d['stackSample']['terminalVerified'])
+            self.assertEqual([a['waitOutcome'] for a in record['signalAttempts']],['timeout']*3)
+            self.assertIn('cleanup_not_terminal',d['stackSample']['cleanupError'])
+            with self.assertRaisesRegex(ValueError,'cleanup_not_terminal'):self.r.finish('sample_failed')
+            self.assertEqual(proc.send_signal.call_count,3)
+    def test_delivery_errors_retained_and_never_claim_fatal_signal(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);proc,spawn=self.sampler(100);d={}
+            proc.send_signal=mock.Mock(side_effect=PermissionError('denied'));proc.wait=mock.Mock()
+            with mock.patch.object(runner.subprocess,'Popen',side_effect=spawn):self.r.sample_runtime(self.item,30,d)
+            record=self.r.sample_child['record'];self.assertFalse(record.get('fatalSignalDelivered',False))
+            self.assertFalse(record['terminalVerified']);self.assertEqual(record['signals'],[])
+            self.assertEqual([a['signal'] for a in record['signalAttempts']],['SIGINT','SIGTERM','SIGKILL'])
+            self.assertTrue(all('PermissionError' in a['deliveryError'] for a in record['signalAttempts']))
+            proc.wait.assert_not_called()
 
 if __name__=='__main__':unittest.main()
