@@ -1,0 +1,26 @@
+{
+  "status": "verified",
+  "commit": "e867e47a179a14ce350d3f5ff12549c7365592a4",
+  "ZIP": {
+    "sha256": "815103a3b3aa4530e23b4a162d825635dc182b0830c6ac3759956096c0601516",
+    "bytes": 80825,
+    "members": 13
+  },
+  "TAR": {
+    "sha256": "ee80108e96db2e33ceb1564f6d1cfaa80706c4b508f6c727f04e8608b8555125",
+    "bytes": 471040,
+    "membersVerified": 20
+  },
+  "sourcePinsVerified": 50,
+  "firstFault": "Pre-spawn diagnostic identity check rejected; owned bootstatus subsequently recorded normal exit0 with no signals. Exact poll-versus-identity timing is unrecorded.",
+  "bootstatusExitCode": 0,
+  "bootstatusTerminalVerified": true,
+  "sampleError": "ValueError: sample_target_identity",
+  "samplerSpawned": false,
+  "cleanup": {
+    "status": "passed",
+    "ownedDeviceDeleted": true,
+    "allKnownChildrenTerminal": true
+  },
+  "releaseAcceptance": false
+}
