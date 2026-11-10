@@ -48,6 +48,31 @@ final class SharedRequestUndoTests: XCTestCase {
         let unknown: SharedRequestUndoCandidate = try F.decode(raw)
         XCTAssertThrowsError(try SharedRequestUndoPreviewInput(candidate: unknown, packs: F.packs(), acceptOverage: true, acceptUnknown: false))
         _ = try SharedRequestUndoPreviewInput(candidate: unknown, packs: F.packs(), acceptOverage: false, acceptUnknown: true)
+
+        // Real wire regression: persisted packs are insertion-ordered while the
+        // fresh Link Undo candidate retains both basket rows in server order.
+        var link: Any = F.candidate()
+        for (path, value): (String, Any) in [
+            ("requestUndo.choice", "link"), ("action.body.lines", F.lines()),
+            ("packReviewLineIds", [F.id(10), F.id(11)]),
+            ("scope.touchedLines", [[String: Any]]()), ("afterCheckout", F.budget(400))] {
+            link = TrackingWriteFixture.edit(link, path, value)
+        }
+        let linked: SharedRequestUndoCandidate = try F.decode(link)
+        try linked.validate(shop: F.shop(), householdID: F.id(1), targetOperationID: linked.targetOperationId)
+        let known: SharedDemandQuantity = try F.decode(TrackingWriteFixture.quantity(4))
+        let first = SharedDemandPackReview(lineId: .init(UUID(uuidString: F.id(10))!), usablePerPack: known, acceptUnresolved: true)
+        let second = SharedDemandPackReview(lineId: .init(UUID(uuidString: F.id(11))!), usablePerPack: nil, acceptUnresolved: true)
+        let insertionOrdered = [second, first]
+        XCTAssertThrowsError(try SharedRequestUndoPreviewInput(candidate: linked, packs: insertionOrdered, acceptOverage: false, acceptUnknown: false))
+        let ordered = try requestUndoWirePacks(candidate: linked, existing: insertionOrdered)
+        XCTAssertEqual(ordered, [first, second])
+        XCTAssertEqual(insertionOrdered, [second, first])
+        _ = try SharedRequestUndoPreviewInput(candidate: linked, packs: ordered, acceptOverage: false, acceptUnknown: false)
+        XCTAssertThrowsError(try requestUndoWirePacks(candidate: linked, existing: [first]))
+        XCTAssertThrowsError(try requestUndoWirePacks(candidate: linked, existing: [first, first]))
+        let foreign = SharedDemandPackReview(lineId: .init(UUID(uuidString: F.id(99))!), usablePerPack: known, acceptUnresolved: true)
+        XCTAssertThrowsError(try requestUndoWirePacks(candidate: linked, existing: [first, foreign]))
     }
     func testTargetLinkAndMutableRequestRevisionCannotBeSubstituted() throws {
         for (path, value): (String, Any) in [("requestUndo.beforeLink.operationId", F.id(91)), ("action.body.baseRequestRevision", 3),

@@ -39,6 +39,8 @@ const cases = [
   'actual Swift tracking adoption and first Undo preserve protected unknown facts through Cancel lost reply restart and same-ID rebind',
   'actual Swift tracking request uses explicit current preview revision and distinct frozen review before exact placement',
   'actual Swift tracking erasure preserves independent sources through recovery and refuses revoked shopper replay',
+  'actual Swift request acceptance Undo preserves author quantity wording and exact replay across later acceptance generations',
+  'actual Swift compound meal adoption Undo binds complete inverse and explicit overage consent through lost reply restart',
 ];
 const swiftRuns = [
   'deferred-request HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres',
@@ -102,6 +104,16 @@ const swiftRuns = [
   'tracking-privacy-adopt HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
   'tracking-recover HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
   'tracking-revoked HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'tracking-request-undo-accept HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'tracking-request-undo-cancel HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'tracking-request-undo-lost HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'tracking-request-undo-retry HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'tracking-request-undo-reaccept HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'tracking-request-undo-replay-after-reaccept HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'tracking-compound-adopt HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'tracking-compound-undo-cancel HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'tracking-compound-undo-lost HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'tracking-compound-undo-retry HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
 ];
 const files = ['history', 'shared-meal-changes', 'shared-store-quotes', 'service', 'shared-demand']
   .map(name => fileURLToPath(new URL(`../tests/${name}.integration.mjs`, import.meta.url)));

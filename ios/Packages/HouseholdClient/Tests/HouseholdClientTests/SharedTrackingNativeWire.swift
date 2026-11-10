@@ -42,6 +42,8 @@ private struct TrackingWireInput: Decodable {
     let requestRevision: Int?
     let line: SharedDemandLine?
     let survivor: SharedDemandContribution?
+    let originalQuantityText: String?
+    let acceptOverage: Bool?
 }
 private struct TrackingApplyToken: Encodable { let previewId, previewDigest: String; let trackingVersion = 2 }
 private func saveTrackingWire<T: Encodable>(_ value: T, _ url: URL) throws {
@@ -88,6 +90,21 @@ extension SharedMealNativeWireTests {
         if let survivor = input.survivor {
             XCTAssertEqual(page.graph.contributions.first { $0.id == survivor.id }, input.phase == "privacy-adopt" ? nil : survivor)
         }
+        if input.phase.hasPrefix("request-undo-") && !["request-undo-accept", "request-undo-reaccept"].contains(input.phase) {
+            try await exerciseRequestUndoWire(input, service: service, page: page, stateURL: stateURL)
+            return
+        }
+        if input.phase == "compound-undo-retry" {
+            let rows = try await outbox.operations(), operation = try XCTUnwrap(rows.first)
+            XCTAssertEqual(rows.count, 1)
+            let saved = try JSONDecoder().decode(PendingOperation.self, from: Data(contentsOf: confirmedURL))
+            XCTAssertEqual(operation, saved); XCTAssertEqual(operation.bytes, saved.bytes)
+            let receipt = try await service.sendSharedTracking(operation, outbox: outbox)
+            XCTAssertEqual(receipt.shopRevision, operation.sharedTrackingBinding!.base.shopRevision + 1)
+            let unchanged = try await service.sharedTracking(shopID: input.shopId); XCTAssertEqual(unchanged, page)
+            let remaining = try await outbox.operations(); XCTAssertTrue(remaining.isEmpty)
+            return
+        }
         if input.phase == "adopt-retry" {
             let operations = try await outbox.operations(); XCTAssertEqual(operations.count, 1)
             let operation = try XCTUnwrap(operations.first)
@@ -132,11 +149,14 @@ extension SharedMealNativeWireTests {
         }
         let kind: SharedTrackingIntentKind
         var requestPreview: ShopperPreview?
+        var actionSources: SharedTrackingActionSources?
         switch input.phase {
-        case "adopt-cancel", "adopt-lost", "privacy-adopt":
+        case "adopt-cancel", "adopt-lost", "privacy-adopt", "compound-adopt":
             XCTAssertEqual(page.status, .legacy)
-            kind = .adopt(action: try XCTUnwrap(input.action), change: try XCTUnwrap(input.change), packs: input.packs)
-        case "first-undo":
+            let action = try XCTUnwrap(input.action)
+            if input.phase == "compound-adopt" { actionSources = try await service.sharedTrackingActionSources(page: page, action: action) }
+            kind = .adopt(action: action, change: try XCTUnwrap(input.change), packs: input.packs)
+        case "first-undo", "compound-undo-cancel", "compound-undo-lost":
             let history = try await service.sharedTrackingHistory(page: page)
             XCTAssertTrue(history.items.contains { $0.operationId == input.targetOperationId && $0.status == .current_preview_required })
             kind = .firstAdoptionUndo(targetOperationId: try XCTUnwrap(input.targetOperationId), packs: input.packs)
@@ -148,33 +168,41 @@ extension SharedMealNativeWireTests {
             let pack = SharedDemandPackReview(lineId: line.id, usablePerPack: .init(amount: try .init(numerator: 6), unit: .count, originalLiteral: "6 wraps"), acceptUnresolved: true)
             kind = .rebind(bindings: current.unbound.map { .init(factId: $0.factId, line: line, basket: basket, packReview: pack) })
         case "recover": kind = .recover(packs: input.packs)
-        case "request":
+        case "request", "request-undo-accept", "request-undo-reaccept":
             let requestId = try XCTUnwrap(input.requestId), revision = try XCTUnwrap(input.requestRevision), line = try XCTUnwrap(input.line)
             let preview = try await service.shopperPreview(shopID: input.shopId.uuidString.lowercased(), requestID: requestId.uuidString.lowercased(),
                 base: .init(shopRevision: page.shopRevision, authorityEpoch: page.authorityEpoch, requestRevision: revision), decision: .link(lineID: line.id.string, promote: false))
-            XCTAssertEqual(preview.requestRevision, 2); XCTAssertEqual(preview.requestRevision, revision)
+            if input.phase == "request" { XCTAssertEqual(preview.requestRevision, 2) }; XCTAssertEqual(preview.requestRevision, revision)
             requestPreview = preview
             kind = .change(action: .request(.init(requestId: .init(requestId), previewId: .init(try XCTUnwrap(UUID(uuidString: preview.previewId))), acceptOverage: false, acceptUnknown: false)),
                 change: try XCTUnwrap(input.change), packs: input.packs, unboundFactIds: try XCTUnwrap(page.state).unbound.map(\.factId))
         default: return XCTFail("Unexpected tracking wire selector")
         }
-        let candidate = try await service.sharedTrackingCandidate(page: page, kind: kind, requestPreview: requestPreview)
+        let candidate = try await service.sharedTrackingCandidate(page: page, kind: kind, requestPreview: requestPreview, actionSources: actionSources)
         XCTAssertEqual(candidate.page, page)
         // These wire fixtures deliberately review unknown pickup cost/coverage.
         // Explicit unknown consent is separate from echoing the full disclosure;
         // no over-cap consent is granted by this fixture.
-        let accepted = try await service.acceptSharedTrackingCandidate(candidate, acceptUnknown: true)
-        XCTAssertEqual(accepted.preview.moneyAcknowledgments, .init(acceptOverage: false, acceptUnknown: true))
+        let overage = input.acceptOverage ?? false
+        if input.phase.hasPrefix("compound-undo-") {
+            XCTAssertEqual(candidate.candidate.disclosure.money.after.status, "overCap")
+            guard case .compoundAdoptionUndo(let disclosure) = candidate.candidate.disclosure.changes else { return XCTFail("Compound inverse disclosure missing") }
+            XCTAssertNotNil(disclosure.mealUndo)
+            do { _ = try await service.acceptSharedTrackingCandidate(candidate, acceptUnknown: true); XCTFail("Over-cap inverse accepted without explicit choice") }
+            catch { XCTAssertEqual(error as? ClientError, .invalidResponse) }
+        }
+        let accepted = try await service.acceptSharedTrackingCandidate(candidate, acceptOverage: overage, acceptUnknown: true)
+        XCTAssertEqual(accepted.preview.moneyAcknowledgments, .init(acceptOverage: overage, acceptUnknown: true))
         XCTAssertEqual(accepted.preview.disclosure, candidate.candidate.disclosure)
         XCTAssertEqual(accepted.preview.action, candidate.candidate.action)
         let cancelled = try await service.sharedTracking(shopID: input.shopId); XCTAssertEqual(cancelled, page)
-        if input.phase == "adopt-cancel" { return }
+        if ["adopt-cancel", "compound-undo-cancel"].contains(input.phase) { return }
         let operation = try await service.prepareSharedTrackingApply(accepted)
         XCTAssertEqual(operation.sharedTrackingBinding?.base.requestRevision, requestPreview?.requestRevision)
         try saveTrackingWire(operation, confirmedURL)
         try saveTrackingWire(candidate.candidate.after.graph, expectedGraphURL)
         try saveTrackingWire(TrackingApplyToken(previewId: accepted.preview.previewId.string, previewDigest: accepted.preview.previewDigest.value), acceptedTokenURL)
-        if input.phase == "adopt-lost" {
+        if ["adopt-lost", "compound-undo-lost"].contains(input.phase) {
             var failed = false
             do { _ = try await service.sendSharedTracking(operation, outbox: outbox) } catch { failed = true }
             XCTAssertTrue(failed, "Real successful command reply was deliberately dropped")
@@ -199,5 +227,68 @@ extension SharedMealNativeWireTests {
             }
         }
         if input.phase == "request" { XCTAssertEqual(after.state?.unbound, page.state?.unbound) }
+    }
+}
+
+
+extension SharedMealNativeWireTests {
+    private func exerciseRequestUndoWire(_ input: TrackingWireInput, service: HouseholdService, page: SharedTrackingPage, stateURL: URL) async throws {
+        let outbox = OperationOutbox(url: stateURL.appendingPathComponent("request-undo-pending.json"))
+        let savedURL = stateURL.appendingPathComponent("request-undo-confirmed.json")
+        let shop = try await service.shopperShop(shopID: input.shopId.uuidString.lowercased())
+        if ["request-undo-retry", "request-undo-replay-after-reaccept"].contains(input.phase) {
+            let saved = try JSONDecoder().decode(PendingOperation.self, from: Data(contentsOf: savedURL))
+            let rows = try await outbox.operations()
+            if input.phase == "request-undo-retry" { XCTAssertEqual(rows, [saved]) }
+            else { XCTAssertTrue(rows.isEmpty) }
+            let receipt = try await service.sendRequestAcceptanceUndo(saved, outbox: outbox)
+            XCTAssertEqual(receipt.operationId, saved.sharedRequestUndoBinding?.reservedOperationID.string)
+            XCTAssertEqual(receipt.shopRevision, saved.sharedRequestUndoBinding!.base.shopRevision + 1)
+            let afterPage = try await service.sharedTracking(shopID: input.shopId)
+            let afterShop = try await service.shopperShop(shopID: shop.shopId)
+            XCTAssertEqual(afterPage, page); XCTAssertEqual(afterShop, shop)
+            let remaining = try await outbox.operations(); XCTAssertTrue(remaining.isEmpty)
+            return
+        }
+        let target = try XCTUnwrap(input.targetOperationId)
+        print("Request Undo wire: reading history")
+        let history = try await service.requestAcceptanceHistory(shop: shop)
+        XCTAssertTrue(history.items.contains { $0.operationId == target && $0.eligibility.status == .reviewable })
+        print("Request Undo wire: reading candidate")
+        let candidate = try await service.requestAcceptanceUndoCandidate(shop: shop, targetOperationID: target)
+        XCTAssertEqual(candidate.requestUndo.originalQuantityText, input.originalQuantityText)
+        XCTAssertEqual(candidate.requestUndo.targetBefore.revision, input.requestRevision)
+        XCTAssertEqual(candidate.requestUndo.beforeLink.reviewedRevision, input.requestRevision)
+        XCTAssertEqual(candidate.foodBefore.graph, page.graph)
+        XCTAssertFalse(candidate.scope.quoteChanged)
+        print("Request Undo wire: preparing exact pack order")
+        let packs = try requestUndoWirePacks(candidate: candidate, existing: input.packs)
+        print("Request Undo wire: requesting preview")
+        let review = try await service.previewRequestAcceptanceUndo(shop: shop, candidate: candidate, packs: packs, acceptOverage: false, acceptUnknown: true)
+        print("Request Undo wire: preview validated")
+        XCTAssertEqual(review.candidate, candidate)
+        let unchanged = try await service.sharedTracking(shopID: input.shopId)
+        let unchangedShop = try await service.shopperShop(shopID: shop.shopId)
+        XCTAssertEqual(unchanged, page); XCTAssertEqual(unchangedShop, shop)
+        let empty = try await outbox.operations(); XCTAssertTrue(empty.isEmpty)
+        if input.phase == "request-undo-cancel" { return }
+        XCTAssertEqual(input.phase, "request-undo-lost")
+        let operation = try await service.prepareRequestAcceptanceUndo(review)
+        XCTAssertEqual(operation.sharedRequestUndoBinding?.reservedOperationID, review.response.operationId)
+        try saveTrackingWire(operation, savedURL)
+        do { _ = try await service.sendRequestAcceptanceUndo(operation, outbox: outbox); XCTFail("Lost real receipt unexpectedly delivered") }
+        catch { XCTAssertEqual(error as? ClientError, .transport) }
+        let retained = try await outbox.operations(); XCTAssertEqual(retained, [operation]); XCTAssertEqual(retained.first?.bytes, operation.bytes)
+    }
+}
+
+// Existing tracking evidence retains insertion order; the dedicated Undo input
+// binds its array to the fresh candidate's basket order. Reorder only by exact
+// identity: no omitted/duplicate/foreign row or reconstructed quantity is allowed.
+func requestUndoWirePacks(candidate: SharedRequestUndoCandidate, existing: [SharedDemandPackReview]) throws -> [SharedDemandPackReview] {
+    try demandRequire(demandUnique(existing.map(\.lineId)) &&
+        Set(existing.map(\.lineId)) == Set(candidate.packReviewLineIds))
+    return try candidate.packReviewLineIds.map { id in
+        try XCTUnwrap(existing.first { $0.lineId == id })
     }
 }

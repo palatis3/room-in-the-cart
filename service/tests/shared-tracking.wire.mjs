@@ -37,7 +37,7 @@ const count=async(f,t)=>(await admin.query(`SELECT count(*)::int n FROM ritc.${t
 async function page(f,a=f.owner){return ok(await call(a,f.path+'/demand/tracking'));}
 const baseOf=p=>({shopRevision:p.shopRevision,authorityEpoch:p.authorityEpoch,graphRevision:(p.state??p.projection.state).graph.revision,stateDigest:p.basisDigest});
 async function candidate(f,intent,a=f.owner){return call(a,f.path+'/demand/tracking/candidates','POST',intent);}
-async function accept(f,c,a=f.owner,disclosure=c.disclosure){return call(a,f.path+'/demand/tracking/previews','POST',{candidateId:c.candidateId,candidateDigest:c.candidateDigest,acknowledgedDisclosure:disclosure});}
+async function accept(f,c,a=f.owner,disclosure=c.disclosure){return call(a,f.path+'/demand/tracking/previews','POST',{candidateId:c.candidateId,candidateDigest:c.candidateDigest,acknowledgedDisclosure:disclosure,acceptOverage:false,acceptUnknown:true});}
 async function commitTracking(f,c,p,base,a=f.owner){const command={v:1,replayWindow:a.window,clientKey:randomUUID(),shopId:f.shopId,kind:p.action.kind,base:{shopRevision:base.shopRevision,authorityEpoch:base.authorityEpoch,...(p.action.kind==='request.apply'?{requestRevision:c.after.catalog.find(f=>f.source.kind==='request'&&f.source.requestId===p.action.body.requestId).source.appliedRequestRevision}:{})},body:{...p.action.body,demandReview:{previewId:p.previewId,previewDigest:p.previewDigest,trackingVersion:2}}};return{command,response:await call(a,f.base+'/commands','POST',command)};}
 async function applyIntent(f,intent){const c=ok(await candidate(f,intent)),p=ok(await accept(f,c)),a=await commitTracking(f,c,p,intent.base);ok(a.response);return{c,p,...a};}
 async function first(f,{withMeal=true}={}){
@@ -61,16 +61,16 @@ import {exerciseTrackingClient} from './shared-tracking-native-wire.mjs';
 const state=async()=>{assert.ok(process.env.RITC_NATIVE_WIRE_STATE);const p=await mkdtemp(join(process.env.RITC_NATIVE_WIRE_STATE,'tracking-client-'));await chmod(p,0o700);return p;};
 const wire=async(f,phase,privateState,extra={})=>exerciseTrackingClient({service:server,owner:f.owner,householdId:f.h,shopId:f.shopId,phase,privateState,
  before:phase==='revoked'?null:await page(f),packs:[],...extra});
-function exactReview(observed){
+function exactReview(observed,{acceptOverage=false,acceptUnknown=true}={}){
  assert.equal(observed.candidateAttempts,1);assert.equal(observed.previewAttempts,1);
  assert.equal(observed.candidateResponses.length,1);assert.equal(observed.previewResponses.length,1);
  const c=observed.candidateResponses[0],p=observed.previewResponses[0],ack=JSON.parse(observed.previewRequests[0]);
- assert.deepEqual(ack,{candidateId:c.candidateId,candidateDigest:c.candidateDigest,acknowledgedDisclosure:c.disclosure});
- assert.deepEqual(p.disclosure,c.disclosure);assert.deepEqual(p.action,c.action);
+ assert.deepEqual(ack,{candidateId:c.candidateId,candidateDigest:c.candidateDigest,acknowledgedDisclosure:c.disclosure,acceptOverage,acceptUnknown});
+ assert.deepEqual(p.disclosure,c.disclosure);assert.deepEqual(p.action,c.action);assert.deepEqual(p.moneyAcknowledgments,{acceptOverage,acceptUnknown});
  return c;
 }
-function exactApply(observed){
- const c=exactReview(observed),p=observed.previewResponses[0];assert.equal(observed.attempts,1);
+function exactApply(observed,consent){
+ const c=exactReview(observed,consent),p=observed.previewResponses[0];assert.equal(observed.attempts,1);
  const command=JSON.parse(observed.commands[0]);assert.equal(command.kind,p.action.kind);
  assert.deepEqual(command.body,{...p.action.body,demandReview:{previewId:p.previewId,previewDigest:p.previewDigest,trackingVersion:2}});
  return {c,command};
@@ -141,4 +141,93 @@ test('actual Swift tracking erasure preserves independent sources through recove
  const newShopper=await invited(f);ok(await send(f,'shop.transferAuthority',{newShopperId:newShopper.id},after.shopRevision,after.authorityEpoch));const beforeCounts=await counts(f),revoked=await wire(f,'revoked',privateState);
  assert.equal(revoked.attempts,1,'Only raw adversarial replay reaches command route');assert.deepEqual(revoked.commands,[recovered.commands[1]]);assert.deepEqual(await counts(f),beforeCounts);
  assert.equal((await call(f.owner,f.path+'/demand/tracking')).status,404);assert.equal(ok(await call(newShopper,f.path+'/demand/tracking')).state.graph.contributions.find(x=>x.id===survivor.id).originalText,survivor.originalText);
+});
+
+
+function exactRequestUndoReview(observed){
+ assert.equal(observed.historyAttempts,1);assert.equal(observed.historyResponses.length,1);
+ assert.equal(observed.candidateAttempts,1);assert.equal(observed.previewAttempts,1);
+ const c=observed.candidateResponses[0],p=observed.previewResponses[0],input=JSON.parse(observed.previewRequests[0]);
+ assert.equal(c.kind,'requestAcceptanceUndo');assert.equal(p.kind,'requestAcceptanceUndoPreview');
+ assert.deepEqual(input,{targetOperationId:c.targetOperationId,base:c.base,effectDigest:c.effectDigest,packs:p.packs,acceptOverage:false,acceptUnknown:true});
+ assert.deepEqual(p.candidate.action,c.action);assert.deepEqual(p.candidate.requestUndo,c.requestUndo);
+ assert.deepEqual(p.candidate.beforeCheckout,c.beforeCheckout);assert.deepEqual(p.candidate.afterCheckout,c.afterCheckout);
+ assert.equal(c.requestUndo.originalQuantityText,'one large box, amount unknown');
+ return {c,p};
+}
+async function acceptanceCounts(f){return{base:await counts(f),effects:await count(f,'request_acceptance_effect'),inverses:await count(f,'request_acceptance_inverse'),links:await count(f,'request_link')};}
+async function ownRequest(f,author,requestId){return ok(await call(author,f.base+'/requests/mine')).requests.find(r=>r.requestId===requestId);}
+async function requestPhase(f,privateState,author,requestId,phase){
+ const current=await page(f),request=await ownRequest(f,author,requestId),oldLine=current.state.graph.lines.find(x=>x.id===f.basket.lineId);
+ const contribution={...source(f,null),source:{kind:'request',requestId,appliedRequestRevision:request.revision},originalText:request.originalItem};
+ const observed=await wire(f,phase,privateState,{requestId,requestRevision:request.revision,line:oldLine,
+  change:{...empty(),lines:[{...oldLine,trashedAt:null}],contributions:[contribution]},packs:current.state.packReviews});
+ const {command}=exactApply(observed);assert.equal(command.base.requestRevision,request.revision);
+ const after=await page(f);assert.deepEqual(after.state.graph.contributions.find(c=>c.id===contribution.id),contribution);
+ return{observed,contribution,request};
+}
+
+test('actual Swift request acceptance Undo preserves author quantity wording and exact replay across later acceptance generations',async()=>{
+ const f=await fixture();await first(f);const author=await invited(f),privateState=await state(),initial=await page(f);
+ const request=ok(await send(f,'request.send',{clientRequestId:randomUUID(),originalItem:'Guest wraps',ownQuantity:'initial wording',authoredAt:new Date().toISOString()},initial.shopRevision,initial.authorityEpoch,author)).request;
+ ok(await send(f,'request.edit',{requestId:request.requestId,originalItem:'Guest wraps revised',ownQuantity:'one large box, amount unknown'},initial.shopRevision,initial.authorityEpoch,author,{base:{shopRevision:initial.shopRevision,authorityEpoch:initial.authorityEpoch,requestRevision:request.revision}}));
+ const accepted=await requestPhase(f,privateState,author,request.requestId,'request-undo-accept');
+ const target=(await admin.query('SELECT operation_id FROM ritc.request_acceptance_effect WHERE household_id=$1 AND shop_id=$2',[f.h,f.shopId])).rows;assert.equal(target.length,1);
+ const later=await addLater(f),before=await page(f),beforeCounts=await acceptanceCounts(f),beforeShop=ok(await call(f.owner,f.path)),beforeOwn=await ownRequest(f,author,request.requestId);
+ const details={targetOperationId:target[0].operation_id,requestRevision:accepted.request.revision,originalQuantityText:'one large box, amount unknown',packs:before.state.packReviews,survivor:later.c};
+ const cancel=await wire(f,'request-undo-cancel',privateState,details);exactRequestUndoReview(cancel);assert.equal(cancel.attempts,0);
+ assert.deepEqual(await page(f),before);assert.deepEqual(ok(await call(f.owner,f.path)),beforeShop);assert.deepEqual(await acceptanceCounts(f),beforeCounts);assert.deepEqual(await ownRequest(f,author,request.requestId),beforeOwn);
+ const lost=await wire(f,'request-undo-lost',privateState,{...details,dropFirstReply:true}),{p}=exactRequestUndoReview(lost);
+ assert.equal(lost.attempts,1);assert.equal(lost.dropped,1);const command=JSON.parse(lost.commands[0]);
+ assert.equal(command.kind,'request.undoAcceptance');assert.deepEqual(command.body,{...p.candidate.action.body,operationUndoReview:{previewId:p.previewId,previewDigest:p.previewDigest}});
+ const undone=await page(f),undoneCounts=await acceptanceCounts(f),undoneOwn=await ownRequest(f,author,request.requestId);
+ assert.equal(undoneOwn.status,'pending');assert.equal(undoneOwn.revision,beforeOwn.revision+1);assert.equal(undoneOwn.ownQuantity,'one large box, amount unknown');
+ assert.deepEqual(undone.state.graph,p.candidate.foodAfter.state.graph);assert.equal(undoneCounts.inverses,beforeCounts.inverses+1);
+ const oldRow=undone.state.graph.contributions.find(c=>c.id===accepted.contribution.id);assert.ok(oldRow.removedAt);assert.deepEqual(oldRow.source,accepted.contribution.source);
+ assert.deepEqual(undone.state.graph.contributions.filter(c=>c.source.kind==='reservation'),before.state.graph.contributions.filter(c=>c.source.kind==='reservation'));
+ assert.deepEqual(undone.state.graph.contributions.find(c=>c.id===later.c.id),later.c);assert.deepEqual(ok(await call(f.owner,f.path)).meals,beforeShop.meals);
+ const retry=await wire(f,'request-undo-retry',privateState,{survivor:later.c});assert.deepEqual(retry.commands,lost.commands);assert.equal(retry.candidateAttempts,0);assert.equal(retry.previewAttempts,0);assert.equal(retry.historyAttempts,0);
+ assert.deepEqual(await page(f),undone);assert.deepEqual(await acceptanceCounts(f),undoneCounts);
+ const reaccepted=await requestPhase(f,privateState,author,request.requestId,'request-undo-reaccept'),current=await page(f),currentCounts=await acceptanceCounts(f),currentOwn=await ownRequest(f,author,request.requestId);
+ assert.notEqual(reaccepted.contribution.id,accepted.contribution.id);assert.ok(reaccepted.request.revision>accepted.request.revision);
+ const generations=current.state.graph.contributions.filter(c=>c.source.kind==='request'&&c.source.requestId===request.requestId);assert.equal(generations.length,2);assert.equal(generations.filter(c=>c.removedAt===null).length,1);
+ assert.deepEqual(generations.find(c=>c.id===oldRow.id),oldRow);assert.ok(undone.state.graph.usedIds.every(id=>current.state.graph.usedIds.includes(id)));
+ const replay=await wire(f,'request-undo-replay-after-reaccept',privateState,{survivor:later.c});assert.deepEqual(replay.commands,lost.commands);assert.equal(replay.candidateAttempts,0);assert.equal(replay.previewAttempts,0);
+ assert.deepEqual(await page(f),current);assert.deepEqual(await acceptanceCounts(f),currentCounts);assert.deepEqual(await ownRequest(f,author,request.requestId),currentOwn);assert.equal(currentOwn.status,'added');
+});
+
+test('actual Swift compound meal adoption Undo binds complete inverse and explicit overage consent through lost reply restart',async()=>{
+ const {f,manual}=await catalogFixture(),privateState=await state();
+ // This existing protected lunch belongs to the original shop. The new dinner
+ // is created atomically with tracking and a larger budget, then fully undone.
+ f.quote={...f.quote,capMinor:100};let current=ok(await call(f.owner,f.path));ok(await send(f,'shop.patch',{quote:f.quote,lines:current.lines},current.shopRevision,current.authorityEpoch));
+ const original=ok(await call(f.owner,f.path)),before=await page(f),occurrenceId=randomUUID(),ingredientId=randomUUID();
+ const meal={title:'New dinner',day:null,kind:'dinner',portions:2,protected:false,planning:{groups:[],ingredients:[{id:ingredientId,name:'Wraps',quantity:{amount:{numerator:6,denominator:1},unit:'count',originalLiteral:'six dinner wraps'},groupIds:[],exclusions:[]}]}};
+ const adoptedQuote={...f.quote,capMinor:10000},action={kind:'shop.patch',body:{quote:adoptedQuote,lines:original.lines,mealEdit:{occurrenceId,baseMealRevision:null,meal}}};
+ const catalog=ok(await call(f.owner,f.path+'/demand/tracking/action-sources','POST',{base:baseOf(before),action}));
+ const change={...empty(),lines:[{id:f.basket.lineId,name:f.basket.originalItem,unit:'count',originalOrder:0,trashedAt:null}],contributions:[manual,...catalog.sources.map(fact=>({id:fact.id,lineId:f.basket.lineId,source:fact.source,productKey:'wraps',productName:fact.productName,originalText:fact.originalText,quantity:fact.quantity,sourceExclusions:fact.sourceExclusions,exclusions:[],contains:[],removedAt:null}))]};
+ const adopted=await wire(f,'compound-adopt',privateState,{action,change,packs:[{lineId:f.basket.lineId,usablePerPack:q(6),acceptUnresolved:true}]});const applied=exactApply(adopted);
+ assert.equal(adopted.catalogAttempts,1);assert.deepEqual(adopted.catalogResponses[0],catalog);
+ assert.deepEqual(applied.c.action.body.mealEdit,action.body.mealEdit);f.quote=adoptedQuote;
+ const target=(await admin.query('SELECT operation_id FROM ritc.shared_tracking_adoption WHERE household_id=$1 AND shop_id=$2',[f.h,f.shopId])).rows;assert.equal(target.length,1);
+ const later=await addLater(f),beforeUndo=await page(f),beforeCounts=await counts(f),beforeShop=ok(await call(f.owner,f.path));
+ const payload={targetOperationId:target[0].operation_id,packs:[{lineId:later.extra.lineId,usablePerPack:q(3),acceptUnresolved:false}],acceptOverage:true,survivor:later.c};
+ const cancel=await wire(f,'compound-undo-cancel',privateState,payload);const cancelled=exactReview(cancel,{acceptOverage:true});assert.equal(cancel.attempts,0);
+ assert.equal(cancelled.disclosure.money.after.status,'overCap');assert.equal(cancelled.disclosure.changes.mealUndo.occurrenceId,occurrenceId);assert.equal(cancelled.disclosure.changes.mealUndo.restoredMeal,null);
+ assert.deepEqual(await page(f),beforeUndo);assert.deepEqual(await counts(f),beforeCounts);assert.deepEqual(ok(await call(f.owner,f.path)),beforeShop);
+ // The server independently enforces the same explicit monetary acceptance.
+ const unaccepted=ok(await candidate(f,{mode:'firstAdoptionUndo',base:baseOf(beforeUndo),targetOperationId:target[0].operation_id,packs:payload.packs}));
+ const missing=await call(f.owner,f.path+'/demand/tracking/previews','POST',{candidateId:unaccepted.candidateId,candidateDigest:unaccepted.candidateDigest,acknowledgedDisclosure:unaccepted.disclosure,acceptOverage:false,acceptUnknown:true});
+ assert.equal(missing.status,409);assert.equal(missing.data.error.code,'tracking_money_acknowledgment_required');assert.deepEqual(await counts(f),beforeCounts);assert.deepEqual(await page(f),beforeUndo);
+ const lost=await wire(f,'compound-undo-lost',privateState,{...payload,dropFirstReply:true});const inverse=exactApply(lost,{acceptOverage:true});assert.equal(lost.dropped,1);
+ assert.deepEqual(inverse.command.body.mealEdit,{occurrenceId,baseMealRevision:beforeShop.meals.find(m=>m.occurrenceId===occurrenceId).revision,meal:null});
+ const after=await page(f),afterShop=ok(await call(f.owner,f.path)),afterCounts=await counts(f);
+ assert.equal(afterShop.meals.some(m=>m.occurrenceId===occurrenceId),false);
+ assert.deepEqual(afterShop.meals.filter(m=>m.occurrenceId!==occurrenceId),original.meals);
+ assert.equal(afterShop.quote.capMinor,100);assert.equal(after.state.basket.find(l=>l.id===f.basket.lineId).priceMinor,120);
+ assert.deepEqual(after.state.graph.contributions.find(c=>c.id===later.c.id),later.c);
+ const protectedFact=after.state.catalog.find(fact=>fact.source.kind==='reservation');assert.ok(protectedFact);const transfer=after.state.unbound.find(u=>u.factId===protectedFact.id);assert.ok(transfer?.transferred);assert.equal(transfer.transferred.quantity,null);
+ assert.deepEqual(after.state.graph.usedIds,beforeUndo.state.graph.usedIds);
+ const retry=await wire(f,'compound-undo-retry',privateState,{survivor:later.c});assert.deepEqual(retry.commands,lost.commands);assert.equal(retry.candidateAttempts,0);assert.equal(retry.previewAttempts,0);
+ assert.deepEqual(await page(f),after);assert.deepEqual(ok(await call(f.owner,f.path)),afterShop);assert.deepEqual(await counts(f),afterCounts);
 });
