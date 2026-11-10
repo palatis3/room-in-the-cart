@@ -78,8 +78,7 @@ class HelperRunner(Runner):
     def direct_inventory_selected(self, tail, label=None):
         identifier=self.device.get('createdUDID')
         return (getattr(self,'direct_inventory',None) is not None and bool(identifier)
-                and (tail in (['list','-j','runtimes'],['list','-j','devices',identifier])
-                     or (label=='booted-inventory' and tail==['list','-j'])))
+                and tail in (['list','-j','runtimes'],['list','-j','devices',identifier]))
 
     def verify_direct_inventory(self):
         proof=self.direct_inventory;tool=self.tools['simctl']
@@ -168,32 +167,48 @@ class HelperRunner(Runner):
         self.budget()
         require(time.monotonic() < deadline, 'helper_lifecycle_deadline')
 
+    def startup_mark(self, event):
+        # Memory only: persisted by existing saves/finalization, never periodic I/O.
+        timing=getattr(self,'_lifecycle_startup',None)
+        if timing is not None and len(timing)<64:
+            timing.append({'event':event,'monotonic':time.monotonic()})
+
+    def startup_call(self, event, function, *args, **kwargs):
+        self.startup_mark(event+'_before')
+        try:return function(*args,**kwargs)
+        finally:self.startup_mark(event+'_after')
+
     def spawn_lifecycle(self, label, tail, deadline):
         """Create one authorized child; acquisition uses the same absolute command budget."""
+        self.startup_mark('spawn_entry')
         require(lifecycle_allowed(tail,self.device),'helper_lifecycle_scope')
         require(all(p['process'].poll() is not None for p in self.processes),'previous_tool_not_terminal')
-        self.lifecycle_check(deadline)
+        self.startup_call('spawn_budget',self.lifecycle_check,deadline)
         tool=self.tools['simctl'];expected=Path(tool['executable']);digest=tool['executableSHA256']
-        launcher_identity(tool['path'],tool['sha256'],str(expected),digest)
-        self.lifecycle_check(deadline)
+        self.startup_call('spawn_launcher_validation',launcher_identity,tool['path'],tool['sha256'],str(expected),digest)
+        self.startup_call('spawn_budget',self.lifecycle_check,deadline)
         direct=self.direct_inventory_selected(tail,label)
-        if direct:self.verify_direct_inventory();self.lifecycle_check(deadline)
+        if direct:self.startup_call('spawn_direct_validation',self.verify_direct_inventory);self.startup_call('spawn_budget',self.lifecycle_check,deadline)
         record={'label':label,'argv':[str(expected) if direct else tool['path'],*tail],'executableSHA256':digest,
                 'spawnEpoch':time.time(),'signals':[]}
         if direct:record.update(dispatch='verified_direct_inventory',launcherPath=tool['path'],framework=self.direct_inventory['framework'])
+        self.startup_mark('streams_environment_before')
         stdout=(self.out/(label+'-stdout.log')).open('xb')
         stderr=(self.out/(label+'-stderr.log')).open('xb')
         env={k:os.environ[k] for k in ('HOME','TMPDIR','USER','LOGNAME') if k in os.environ}
         env.update(PATH='/usr/bin:/bin',LANG='en_US.UTF-8',DEVELOPER_DIR=str(self.args.xctrace.resolve().parents[2]))
+        self.startup_mark('streams_environment_after')
         try:
-            process=subprocess.Popen(record['argv'],stdin=subprocess.DEVNULL,stdout=stdout,stderr=stderr,
+            process=self.startup_call('popen',subprocess.Popen,record['argv'],stdin=subprocess.DEVNULL,stdout=stdout,stderr=stderr,
                                      env=env,cwd=self.out,start_new_session=True)
         except BaseException:
             stdout.close();stderr.close();raise
         item={'process':process,'record':record,'expected':str(expected),'digest':digest,
               'streams':[stdout,stderr],'binding':None}
+        self.startup_mark('registration_before')
         self.processes.append(item);self.receipt['processes'].append(record)
-        record['pid']=process.pid;self.save()
+        record['pid']=process.pid;self.startup_mark('registration_after')
+        self.startup_call('registration_save',self.save)
         return item
 
     def acquisition_allowed(self, item):
@@ -212,16 +227,18 @@ class HelperRunner(Runner):
 
     def acquire_lifecycle(self, item, deadline):
         """Acquire the same allowed Popen; the original command/phase deadline never resets."""
+        self.startup_mark('acquisition_entry')
         tool=self.tools['simctl'];process=item['process'];record=item['record'];label=record['label']
         require(self.acquisition_allowed(item),'helper_lifecycle_acquisition_scope')
-        self.lifecycle_check(deadline)
-        launcher_identity(tool['path'],tool['sha256'],item['expected'],item['digest'])
-        if record.get('dispatch')=='verified_direct_inventory':self.verify_direct_inventory()
-        interpreter=str(Path('/bin/bash').resolve())
+        self.startup_call('acquisition_budget',self.lifecycle_check,deadline)
+        self.startup_call('acquisition_launcher_validation',launcher_identity,tool['path'],tool['sha256'],item['expected'],item['digest'])
+        if record.get('dispatch')=='verified_direct_inventory':self.startup_call('acquisition_direct_validation',self.verify_direct_inventory)
+        interpreter=str(self.startup_call('acquisition_interpreter_path',Path('/bin/bash').resolve))
         diagnostic={'startMonotonic':time.monotonic(),'deadlineMonotonic':deadline,
                     'samples':0,'first':[],'last':None}
         diagnostic['scope']='same_owned_allowed_lifecycle'
-        record['lifecycleAcquisition']=diagnostic;self.save();origin=None
+        record['lifecycleAcquisition']=diagnostic;self.startup_call('acquisition_save',self.save);origin=None
+        self.startup_mark('acquisition_observation_begin')
         while True:
             self.lifecycle_check(deadline)
             if process.poll() is not None:
@@ -618,12 +635,14 @@ class HelperRunner(Runner):
         diagnostic={'label':label,'startedEpoch':time.time(),'startedMonotonic':started,
                     'commandSeconds':seconds,'deadlineMonotonic':deadline,'phaseDeadlineMonotonic':self.started+self.seconds,
                     'outcome':'spawning'}
-        self.receipt.setdefault('lifecycleCommands',[]).append(diagnostic);self.save();item=None
+        diagnostic['startupPhases']=[];self._lifecycle_startup=diagnostic['startupPhases']
+        self.receipt.setdefault('lifecycleCommands',[]).append(diagnostic);self.startup_call('command_save',self.save);item=None
         try:
-            self.lifecycle_check(deadline)
+            self.startup_call('command_budget',self.lifecycle_check,deadline)
             item=self.spawn_lifecycle(label,tail,deadline)
             self.acquire_lifecycle(item,deadline)
-            self.lifecycle_check(deadline)
+            self.startup_mark('acquisition_complete')
+            self.startup_call('acquired_budget',self.lifecycle_check,deadline)
             diagnostic.update(acquiredMonotonic=time.monotonic(),pid=item['process'].pid,outcome='waiting')
             try:code=self.lifecycle_wait(item,deadline,diagnostic)
             finally:self.cleanup(item)
@@ -645,6 +664,7 @@ class HelperRunner(Runner):
         finally:
             diagnostic.update(finishedMonotonic=time.monotonic(),finishedEpoch=time.time())
             if item is not None:diagnostic['pid']=item['process'].pid
+            self._lifecycle_startup=None
             self.save()
 
 def inventory_allowed(tail, device):

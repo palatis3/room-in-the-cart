@@ -1,0 +1,7 @@
+# Supported launcher startup diagnostic
+
+The previous unsampled hosted run completed boot normally, then failed the postboot inventory deadline before process identity was verified. Its receipt records 18.622 seconds before the pre-Popen timestamp; child termination and device deletion were not verified. Original artifacts remain preserved and verified in the preceding unsampled diagnostic evidence.
+
+This successor uses the supported simctl launcher for the combined postboot inventory. Optional sampling remains disabled. Compact, capped in-memory phase timestamps distinguish validation, budget checks, Popen, registration and acquisition costs; they use existing receipt saves rather than adding disk writes. Existing deadlines, source/tool identity, process ownership and required transport proofs remain enforced. It does not establish performance acceptance or justify changing baselines.
+
+Root applied the exact reviewed four-file packet and passed 295 portable controls with 50 source pins verified. The initial root receipt parser incorrectly expected OK to be the final output line; the test fixture prints its expected failure JSON afterward. That parser failure and original log are retained locally, and corrected parsing plus a fresh test execution passed. See [verification.json](verification.json). Exact committed workflow profiles and hosted execution remain separate next gates.

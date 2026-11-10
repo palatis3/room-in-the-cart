@@ -2126,18 +2126,18 @@ class CombinedDirectInventoryTests(unittest.TestCase):
     spawn=DirectInventoryTests.spawn
     def test_only_exact_postboot_label_admits_combined_direct(self):
         self.enable()
-        self.assertTrue(self.r.direct_inventory_selected(['list','-j'],'booted-inventory'))
+        self.assertFalse(self.r.direct_inventory_selected(['list','-j'],'booted-inventory'))
         for label in ('created','inventory','before','deleted',None):self.assertFalse(self.r.direct_inventory_selected(['list','-j'],label))
         self.assertFalse(self.r.direct_inventory_selected(['list','-j','pairs'],'booted-inventory'))
-    def test_combined_direct_retains_exact_binding_and_sampler_policy(self):
+    def test_combined_launcher_retains_exact_binding_and_unsampled_policy(self):
         self.enable();item,popen=self.spawn(['list','-j'],'booted-inventory')
-        self.assertEqual(popen.call_args.args[0],[runner.CORE_SIMULATOR_EXECUTABLE,'list','-j'])
+        self.assertEqual(popen.call_args.args[0],[self.r.tools['simctl']['path'],'list','-j'])
         self.assertTrue(self.r.acquisition_allowed(item))
         value={'pid':42,'parentPID':os.getpid(),'uid':os.getuid(),'startTimeMicros':2*10**18,'executable':runner.CORE_SIMULATOR_EXECUTABLE}
         self.r.identity=SimpleNamespace(read=lambda pid:value)
         with mock.patch.object(runner,'sha',return_value='binary-digest'):self.r.acquire_lifecycle(item,runner.time.monotonic()+30)
         self.assertEqual(item['binding'],value);self.assertIsNone(self.r.sample_policy(item))
-        item['record']['label']='created';self.assertFalse(self.r.acquisition_allowed(item));self.assertIsNone(self.r.sample_policy(item))
+        item['record']['label']='created';self.assertTrue(self.r.acquisition_allowed(item));self.assertIsNone(self.r.sample_policy(item))
     def test_default_combined_still_uses_launcher(self):
         item,popen=self.spawn(['list','-j'],'booted-inventory')
         self.assertEqual(popen.call_args.args[0],[self.r.tools['simctl']['path'],'list','-j'])
@@ -2289,5 +2289,71 @@ class UnsampledInventoryControlTests(unittest.TestCase):
         pos=[source.index(n) for n in names];self.assertEqual(pos,sorted(pos))
         self.assertIn("selected_snapshot(ROOT,sources['files'])==sources",source)
         self.assertIn('verify_tools(tool)',source)
+
+class LauncherStartupTimingTests(unittest.TestCase):
+    def setUp(self):
+        DirectInventoryTests.setUp(self);self.clock=0.;self.r._lifecycle_startup=[]
+        p=mock.patch.object(runner.time,'monotonic',side_effect=lambda:self.clock);p.start();self.addCleanup(p.stop)
+    enable=DirectInventoryTests.enable
+    spawn=DirectInventoryTests.spawn
+    def advance(self,seconds):self.clock+=seconds
+    def events(self):return {x['event']:x['monotonic'] for x in self.r._lifecycle_startup}
+    def test_launcher_route_even_with_direct_profile_and_no_sample(self):
+        self.enable();item,popen=self.spawn(['list','-j'],'booted-inventory')
+        self.assertEqual(popen.call_args.args[0],[self.r.tools['simctl']['path'],'list','-j'])
+        self.assertNotIn('dispatch',item['record']);self.assertIsNone(self.r.sample_policy(item))
+        self.assertEqual(popen.call_args.kwargs['env']['DEVELOPER_DIR'],'/Xcode/Contents/Developer')
+    def test_spawn_costs_attributed_without_extra_saves(self):
+        self.enable();self.r._lifecycle_startup=[];self.r.save.reset_mock()
+        self.r.budget.side_effect=lambda:self.advance(1)
+        self.launcher_mock.side_effect=lambda *a:self.advance(2)
+        self.r.save.side_effect=lambda:self.advance(3)
+        def popen(*a,**kw):self.advance(4);return SimpleNamespace(pid=42,poll=lambda:None)
+        with mock.patch.object(runner.subprocess,'Popen',side_effect=popen) as start:
+            item=self.r.spawn_lifecycle('booted-inventory',['list','-j'],30)
+        for stream in item['streams']:stream.close()
+        e=self.events();self.assertEqual(e['spawn_launcher_validation_after']-e['spawn_launcher_validation_before'],2)
+        self.assertEqual(e['popen_after']-e['popen_before'],4)
+        self.assertEqual(e['registration_save_after']-e['registration_save_before'],3)
+        self.assertEqual(self.r.save.call_count,1);start.assert_called_once()
+        self.assertNotIn('spawn_direct_validation_before',e)
+    def test_pre_spawn_validation_overrun_keeps_deadline_and_no_child(self):
+        self.enable();self.r._lifecycle_startup=[];self.launcher_mock.side_effect=lambda *a:self.advance(31)
+        with mock.patch.object(runner.subprocess,'Popen') as start,self.assertRaisesRegex(ValueError,'lifecycle_deadline'):
+            self.r.spawn_lifecycle('booted-inventory',['list','-j'],30)
+        start.assert_not_called();self.assertEqual(self.events()['spawn_launcher_validation_after'],31)
+        self.assertNotIn('popen_before',self.events())
+    def test_acquisition_preflight_cost_is_visible_before_old_diagnostic_gap(self):
+        self.enable();item,_=self.spawn(['list','-j'],'booted-inventory');self.r._lifecycle_startup=[]
+        self.launcher_mock.side_effect=lambda *a:self.advance(31)
+        with self.assertRaisesRegex(ValueError,'lifecycle_deadline'):self.r.acquire_lifecycle(item,30)
+        self.assertEqual(self.events()['acquisition_launcher_validation_after'],31)
+        self.assertIn('acquisition_observation_begin',self.events())
+        self.assertIsNone(item['binding']);self.assertEqual(item['record']['signals'],[])
+    def test_failed_validation_records_after_marker_without_waiver(self):
+        self.launcher_mock.side_effect=ValueError('tool_file_identity')
+        with mock.patch.object(runner.subprocess,'Popen') as start,self.assertRaisesRegex(ValueError,'tool_file_identity'):
+            self.r.spawn_lifecycle('booted-inventory',['list','-j'],30)
+        start.assert_not_called();self.assertIn('spawn_launcher_validation_after',self.events())
+    def test_markers_are_capped_memory_only(self):
+        self.r.save.reset_mock()
+        for _ in range(100):self.r.startup_mark('fixed_test_event')
+        self.assertEqual(len(self.r._lifecycle_startup),64);self.r.save.assert_not_called()
+    def test_lifecycle_records_early_failure_timing_in_existing_final_save(self):
+        self.r.started=0;self.r.seconds=300;self.r.budget.side_effect=ValueError('phase_log_cap')
+        with self.assertRaisesRegex(ValueError,'phase_log_cap'):self.r.lifecycle('booted-inventory',['list','-j'])
+        d=self.r.receipt['lifecycleCommands'][-1]
+        self.assertEqual(d['outcome'],'failed');self.assertEqual(d['deadlineMonotonic'],30)
+        self.assertEqual([x['event'] for x in d['startupPhases']],['command_save_before','command_save_after','command_budget_before','command_budget_after'])
+        self.assertIsNone(self.r._lifecycle_startup);self.assertEqual(self.r.save.call_count,2)
+    def test_explicit_route_metadata_and_unchanged_checks(self):
+        source=inspect.getsource(run.run)
+        self.assertIn("result['postBootInventoryRoute']='supported_launcher_unsampled_diagnostic'",source)
+        self.assertIn("runner.receipt['postBootInventoryRoute']='supported_launcher_unsampled_diagnostic'",source)
+        spawn=inspect.getsource(runner.HelperRunner.spawn_lifecycle)
+        acquire=inspect.getsource(runner.HelperRunner.acquire_lifecycle)
+        self.assertIn("'spawn_launcher_validation',launcher_identity",spawn)
+        self.assertIn("'acquisition_launcher_validation',launcher_identity",acquire)
+        self.assertIn("sha(item['expected'])==item['digest']",acquire)
 
 if __name__=='__main__':unittest.main()
