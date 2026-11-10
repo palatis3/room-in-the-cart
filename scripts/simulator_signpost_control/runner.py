@@ -27,8 +27,11 @@ def sample_continuable(sample):
     if sample.get('status')=='not_needed':
         return (sample.get('reason')=='owned_normal_exit_before_sampler'
                 and sample.get('targetExitCode')==0 and sample.get('samplerSpawned') is False)
+    return sample_incomplete_custody(sample) and sample.get('sourceUnchanged') is True and not sample.get('sourceVerificationPending')
+
+def sample_incomplete_custody(sample):
     return (sample.get('status')=='incomplete' and sample.get('reason') in INCOMPLETE_REASONS.values()
-            and sample.get('incompleteSafetyVerified') is True and sample.get('sourceUnchanged') is True
+            and sample.get('incompleteSafetyVerified') is True
             and sample.get('terminalVerified') is True and sample.get('toolUnchanged') is True
             and not any(sample.get(k) for k in ('cleanupError','toolAfterError','incompleteProofError')))
 
@@ -303,7 +306,31 @@ class HelperRunner(Runner):
     def finish(self, error=None):
         sample=getattr(self,'sample_child',None)
         if sample is not None:self.cleanup_sample(sample)
-        return super().finish(error)
+        super().finish(error)  # Reap targets before any optional whole-source I/O.
+        try:self.verify_deferred_sample_sources()
+        except BaseException as exc:
+            detail=type(exc).__name__+': '+str(exc)[:1024]
+            self.receipt.update(status='failed',error=error or detail,deferredSourceError=detail)
+            self.save()
+            if error is None:raise
+
+    def verify_deferred_sample_sources(self):
+        for report in getattr(self,'deferred_sample_sources',[]):
+            if not report.get('sourceVerificationPending'):continue
+            try:
+                require(all(p['process'].poll() is not None for p in self.processes),'sample_source_target_not_terminal')
+                self.budget()  # Original preparation phase, never a new allowance.
+                report['sourceVerificationStartedMonotonic']=time.monotonic()
+                checker=getattr(self,'sample_source_check',None)
+                require(callable(checker),'sample_incomplete_source_check_required');checker()
+                self.budget()
+                report['sourceUnchanged']=True
+                report['sourceVerificationPending']=False
+                report['sourceVerificationFinishedMonotonic']=time.monotonic()
+            except BaseException as exc:
+                report.update(status='failed',sourceVerificationError=type(exc).__name__+': '+str(exc)[:1024])
+                raise
+            finally:self.save()
 
     def sample_policy(self, target):
         """Only post-boot inventory is eligible; cold boot is not sampled."""
@@ -407,11 +434,11 @@ class HelperRunner(Runner):
         require(sha(target['expected'])==target['digest'],'sample_target_binary')
         require(target['binding'] is not None and self.sample_measure('identity.read',self.identity.read,target['process'].pid)==target['binding'],
                 'sample_target_identity')
-        checker=getattr(self,'sample_source_check',None)
-        require(callable(checker),'sample_incomplete_source_check_required');checker()
-        report['sourceUnchanged']=True
         self.lifecycle_check(deadline)
         report['incompleteSafetyVerified']=True
+        report['sourceVerificationPending']=True
+        if not hasattr(self,'deferred_sample_sources'):self.deferred_sample_sources=[]
+        self.deferred_sample_sources.append(report)
 
     def sample_runtime(self, target, deadline, diagnostic):
         """One diagnostic sample of an exact admitted lifecycle target; no timing reset."""
@@ -447,7 +474,8 @@ class HelperRunner(Runner):
             require(deadline-time.monotonic()>10,'sample_remaining_budget')
             if not self.sample_target_live(target):
                 report.update(status='not_needed',reason='owned_normal_exit_before_sampler',targetExitCode=0);return
-            sample_label='runtime-stack-sample' if stem=='booted-runtimes' else 'bootstatus-stack-sample'
+            require(stem in ('booted-runtimes','booted-inventory'),'sample_target_scope')
+            sample_label='runtime-stack-sample'
             record={'label':sample_label,'argv':[str(tool),str(target['process'].pid),'1','-file',str(output)],
                     'executableSHA256':observed['sha256'],'spawnEpoch':time.time(),'signals':[]}
             self.note('sampler_output_open_before')
@@ -593,7 +621,8 @@ class HelperRunner(Runner):
             require(code==0 and not item['record']['signals'],label+'_normal_exit')
             diagnostic['outcome']='normal_exit';diagnostic['commandOutcome']='normal_exit'
             sample=diagnostic.get('stackSample',{})
-            require(sample_continuable(sample),'runtime_stack_sample_failed')
+            require(sample_continuable(sample) or (sample_incomplete_custody(sample) and sample.get('sourceVerificationPending') is True
+                    and any(report is sample for report in getattr(self,'deferred_sample_sources',[]))), 'runtime_stack_sample_failed')
             if sample.get('status')=='incomplete':
                 require(item.get('binding') is not None and item['record'].get('terminalVerified') is True
                         and not item['record'].get('cleanupError'),'sample_original_command_custody')

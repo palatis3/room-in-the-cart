@@ -149,8 +149,15 @@ def run(output, developer):
         runner=HelperRunner(output/'prepare',tool,300,1024**2);runner.device={}
         preparation_runner=runner
         def check_sample_sources():
-            require(selected_snapshot(ROOT,sources['files'])==sources,'helper_sampler_sources_changed')
+            # Exact bytes/modes, but only after target teardown. Check the existing
+            # preparation bound between files rather than one uninterrupted 50-file pass.
+            for name,digest in sources['files'].items():
+                preparation_runner.budget()
+                require(selected_snapshot(ROOT,[name])=={'files':{name:digest},'modes':{name:sources['modes'][name]}},
+                        'helper_sampler_sources_changed')
+                preparation_runner.budget()
             require(sha(ROOT/'scripts/app_scroll_observation/contract.json')==result['contractSHA256'],'helper_sampler_contract_changed')
+            preparation_runner.budget()
         runner.sample_source_check=check_sample_sources
         result['processesStarted']=True
         template=runner.command('templates','xctrace',['list','templates'],10,terminal_query=True)

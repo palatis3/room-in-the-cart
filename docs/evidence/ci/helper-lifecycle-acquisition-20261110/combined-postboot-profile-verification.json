@@ -1,0 +1,70 @@
+{
+  "status": "passed",
+  "commit": "ac68b9d3e71f92d4accae1928e77a320d3743d7c",
+  "profiles": {
+    "ordinary": {
+      "suites": 11,
+      "tests": 627,
+      "counts": [
+        19,
+        17,
+        10,
+        12,
+        10,
+        9,
+        64,
+        174,
+        36,
+        12,
+        264
+      ],
+      "logSHA256": "cf1a9d4a53811527c0d44df2e6a360a7ee1fe19d3f496844db2f6899acd368e7"
+    },
+    "diagnostic": {
+      "suites": 11,
+      "tests": 627,
+      "counts": [
+        19,
+        17,
+        10,
+        12,
+        10,
+        9,
+        64,
+        174,
+        36,
+        12,
+        264
+      ],
+      "logSHA256": "5905cd86ef48983bce90bdfaabddba432dd81c676da2c936e96d4afb578a6c37"
+    },
+    "helper": {
+      "suites": 11,
+      "tests": 627,
+      "counts": [
+        19,
+        17,
+        10,
+        12,
+        10,
+        9,
+        64,
+        174,
+        36,
+        12,
+        264
+      ],
+      "logSHA256": "79554ca76b8f051b3734caab4212cfde1d2884fbcc417b517cab4a83df3ad2e6"
+    }
+  },
+  "sourceFiles": 772,
+  "observerPins": 50,
+  "manifestHashes": {
+    "diagnostic": "cd9565da9e5349fd637a790b496d1d214f46f74a52b3113934486bc9ef29580c",
+    "helper": "cd9565da9e5349fd637a790b496d1d214f46f74a52b3113934486bc9ef29580c",
+    "ordinary": "cd9565da9e5349fd637a790b496d1d214f46f74a52b3113934486bc9ef29580c"
+  },
+  "receiptSHA256": "600a95e6016c3d99cd03d76c94ffac9b12877029a80f6e7bd93b2c735b53653b",
+  "hostedExecuted": false,
+  "releaseAcceptance": false
+}

@@ -1348,7 +1348,9 @@ class SamplerLifecycleTests(unittest.TestCase):
             self.assertEqual(report['samplerBindingStatus'],'not_observed_reserve_exhausted')
             self.assertIsNone(self.r.sample_child['binding']);self.assertNotIn('observationDeadlineMonotonic',report)
             self.assertFalse(any(call.args[0]==43 for call in self.r.identity.read.call_args_list))
-            self.assertTrue(report['incompleteSafetyVerified']);self.assertTrue(report['sourceUnchanged'])
+            self.assertTrue(report['incompleteSafetyVerified']);self.assertFalse(runner.sample_continuable(report))
+            self.process.returncode=0;self.r.verify_deferred_sample_sources()
+            self.assertTrue(report['sourceUnchanged'])
             self.assertTrue(report['terminalVerified']);self.assertEqual(proc.send_signal.call_count,1)
             self.r.sample_source_check.assert_called_once()
     def test_registration_save_cost_exhausts_reserve_without_observation(self):
@@ -1406,14 +1408,19 @@ class SamplerLifecycleTests(unittest.TestCase):
             self.prepare(tmp);proc,spawn=self.sampler(1000);d={}
             self.r.sample_source_check=mock.Mock(side_effect=ValueError('source_changed'))
             with mock.patch.object(runner.subprocess,'Popen',side_effect=spawn):self.r.sample_runtime(self.item,30,d)
-            report=d['stackSample'];self.assertEqual(report['status'],'failed')
-            self.assertIn('sample_observation_deadline',report['error']);self.assertIn('source_changed',report['incompleteProofError'])
+            report=d['stackSample'];self.process.returncode=0
+            with self.assertRaisesRegex(ValueError,'source_changed'):self.r.verify_deferred_sample_sources()
+            self.assertEqual(report['status'],'failed')
+            self.assertIn('sample_observation_deadline',report['error']);self.assertIn('source_changed',report['sourceVerificationError'])
     def test_late_source_verification_cannot_create_optional_success(self):
         with tempfile.TemporaryDirectory() as tmp:
             self.prepare(tmp);proc,spawn=self.sampler(1000);d={}
-            self.r.sample_source_check=lambda:setattr(self,'clock',30)
+            self.r.sample_source_check=lambda:setattr(self,'clock',300)
+            self.r.budget=lambda:run.require(self.clock<300,'phase_wall_cap')
             with mock.patch.object(runner.subprocess,'Popen',side_effect=spawn):self.r.sample_runtime(self.item,30,d)
-            report=d['stackSample'];self.assertEqual(report['status'],'failed');self.assertIn('lifecycle_deadline',report['incompleteProofError'])
+            report=d['stackSample'];self.process.returncode=0
+            with self.assertRaisesRegex(ValueError,'phase_wall_cap'):self.r.verify_deferred_sample_sources()
+            self.assertEqual(report['status'],'failed');self.assertIn('phase_wall_cap',report['sourceVerificationError'])
     def test_incomplete_tool_drift_stays_fatal(self):
         with tempfile.TemporaryDirectory() as tmp:
             self.prepare(tmp);proc,spawn=self.sampler(1000);d={};original=self.r.cleanup_sample
@@ -1476,6 +1483,7 @@ class SamplerLifecycleTests(unittest.TestCase):
     def test_closed_reasons_proofs_and_summary_do_not_manufacture_transport(self):
         with tempfile.TemporaryDirectory() as tmp:
             report,_=self.attempt(tmp)
+            self.assertFalse(runner.sample_continuable(report));self.process.returncode=0;self.r.verify_deferred_sample_sources()
             self.assertTrue(runner.sample_continuable(report))
             for key,value in (('reason','unknown'),('incompleteSafetyVerified',False),('sourceUnchanged',False),('terminalVerified',False),('toolUnchanged',False),('cleanupError','failure')):
                 self.assertFalse(runner.sample_continuable({**report,key:value}))
@@ -1561,7 +1569,9 @@ class HandledSIGINTTests(unittest.TestCase):
             self.assertEqual(r['status'],'incomplete');self.assertEqual(r['reason'],'observation_timeout')
             self.assertEqual(r['terminationClassification'],'handled_sigint_exit1')
             self.assertIn('SampleObservationTimeout',r['error']);self.assertTrue(r['incompleteSafetyVerified'])
-            self.assertTrue(r['terminalVerified']);self.assertTrue(r['sourceUnchanged']);self.assertTrue(r['toolUnchanged'])
+            self.assertTrue(r['terminalVerified']);self.assertFalse(runner.sample_continuable(r))
+            self.process.returncode=0;self.r.verify_deferred_sample_sources()
+            self.assertTrue(r['sourceUnchanged']);self.assertTrue(r['toolUnchanged'])
             self.assertEqual(self.r.sample_child['record']['signals'],['SIGINT']);self.assertEqual(proc.returncode,1)
             self.r.sample_source_check.assert_called_once();self.assertNotIn('reportSHA256',r)
             self.assertEqual(r['observationDeadlineMonotonic'],3);self.assertEqual(r['originalDeadlineMonotonic'],30)
@@ -1631,8 +1641,10 @@ class HandledSIGINTTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             def mutate(child):self.r.sample_source_check=mock.Mock(side_effect=ValueError('source_changed'))
             r,_=self.attempt(tmp,after_cleanup=mutate)
+            self.process.returncode=0
+            with self.assertRaisesRegex(ValueError,'source_changed'):self.r.verify_deferred_sample_sources()
             self.assertEqual(r['terminationClassification'],'handled_sigint_exit1');self.assertEqual(r['status'],'failed')
-            self.assertIn('source_changed',r['incompleteProofError'])
+            self.assertIn('source_changed',r['sourceVerificationError'])
     def test_normal_and_unhandled_signal_exit_classifications_remain_distinct(self):
         with tempfile.TemporaryDirectory() as tmp:
             child={'record':{'exitCode':0}};self.assertEqual(self.r.sample_termination_classification(child,Path(tmp)/'none',{}),'normal_exit')
@@ -2097,5 +2109,89 @@ class CombinedInventorySampleTests(unittest.TestCase):
             with mock.patch.object(runner.subprocess,'Popen') as popen:self.r.sample_runtime(self.item,30,d)
             popen.assert_not_called();self.assertIn('sample_remaining_budget',d['stackSample']['error'])
             self.assertEqual(d['stackSample']['status'],'failed')
+
+class DeferredSamplerSourceTests(unittest.TestCase):
+    setUp=RuntimeSampleTests.setUp
+    sleep=AcquisitionTests.sleep
+    poll=AcquisitionTests.poll
+    identity=AcquisitionTests.identity
+    prepare=RuntimeSampleTests.prepare
+    sampler=RuntimeSampleTests.sampler
+    lifecycle=SamplerLifecycleTests.lifecycle
+    def slow_sources(self):
+        self.assertIsNotNone(self.process.poll())
+        for _ in range(50):
+            self.r.budget();self.clock+=.3;self.r.budget()
+        self.source_calls+=1
+    def configure(self,tmp,terminal):
+        proc,spawn=self.lifecycle(tmp);self.terminal=terminal;self.source_calls=0
+        self.r.sample_source_check=self.slow_sources
+        self.r.budget=lambda:run.require(self.clock<300,'phase_wall_cap')
+        self.cleanup_times=[];cleanup=self.r.cleanup
+        def clean(item):
+            self.cleanup_times.append((item['record']['label'],self.clock));cleanup(item)
+        self.r.cleanup=clean
+        return proc,spawn
+    def test_slow_50_file_check_only_after_target_deadline_cleanup(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            proc,spawn=self.configure(tmp,None)
+            with mock.patch.object(runner.subprocess,'Popen',side_effect=spawn),self.assertRaisesRegex(ValueError,'lifecycle_deadline'):
+                self.r.lifecycle('booted-runtimes',['list','-j','runtimes'])
+            self.assertAlmostEqual(self.clock,30);self.assertEqual(self.source_calls,0)
+            self.assertEqual(self.cleanup_times[-1],('booted-runtimes',30))
+            self.r.finish('original_inventory_deadline')
+            self.assertEqual(self.source_calls,1);self.assertAlmostEqual(self.clock,45)
+            self.assertEqual(self.r.receipt['error'],'original_inventory_deadline');self.assertEqual(self.r.receipt['status'],'failed')
+    def test_normal_command_pending_is_not_qualified_until_terminal_source_check(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            proc,spawn=self.configure(tmp,20)
+            with mock.patch.object(runner.subprocess,'Popen',side_effect=spawn):self.r.lifecycle('booted-runtimes',['list','-j','runtimes'])
+            report=self.r.receipt['lifecycleCommands'][-1]['stackSample']
+            self.assertFalse(runner.sample_continuable(report));self.assertEqual(self.source_calls,0)
+            self.assertLess(self.clock,30);self.r.finish()
+            self.assertGreater(self.clock,30);self.assertTrue(runner.sample_continuable(report));self.assertEqual(self.source_calls,1)
+            self.r.finish();self.assertEqual(self.source_calls,1)
+    def test_live_target_blocks_verification_and_never_calls_checker(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);proc,spawn=self.sampler(1000);d={}
+            with mock.patch.object(runner.subprocess,'Popen',side_effect=spawn):self.r.sample_runtime(self.item,30,d)
+            with self.assertRaisesRegex(ValueError,'target_not_terminal'):self.r.verify_deferred_sample_sources()
+            self.r.sample_source_check.assert_not_called();self.assertFalse(runner.sample_continuable(d['stackSample']))
+    def test_finish_source_drift_rejects_normal_command_after_cleanup(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            proc,spawn=self.configure(tmp,20)
+            with mock.patch.object(runner.subprocess,'Popen',side_effect=spawn):self.r.lifecycle('booted-runtimes',['list','-j','runtimes'])
+            def drift():self.assertIsNotNone(self.process.poll());raise ValueError('source_changed')
+            self.r.sample_source_check=drift
+            with self.assertRaisesRegex(ValueError,'source_changed'):self.r.finish()
+            self.assertEqual(self.r.receipt['status'],'failed');self.assertIn('source_changed',self.r.receipt['deferredSourceError'])
+    def test_original_failure_retained_separately_from_source_drift(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            proc,spawn=self.configure(tmp,20)
+            with mock.patch.object(runner.subprocess,'Popen',side_effect=spawn):self.r.lifecycle('booted-runtimes',['list','-j','runtimes'])
+            self.r.sample_source_check=mock.Mock(side_effect=ValueError('source_changed'));self.r.finish('original_failure')
+            self.assertEqual(self.r.receipt['error'],'original_failure');self.assertIn('source_changed',self.r.receipt['deferredSourceError'])
+    def test_phase_exhaustion_stops_deferred_verification(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            proc,spawn=self.configure(tmp,20)
+            with mock.patch.object(runner.subprocess,'Popen',side_effect=spawn):self.r.lifecycle('booted-runtimes',['list','-j','runtimes'])
+            self.clock=299
+            with self.assertRaisesRegex(ValueError,'phase_wall_cap'):self.r.finish()
+            self.assertLess(self.clock,301);self.assertEqual(self.r.receipt['status'],'failed')
+    def test_combined_inventory_sample_has_runtime_label_and_correct_target(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);self.item['record'].update(label='booted-inventory',argv=['/launcher','list','-j'])
+            proc,spawn=self.sampler();d={}
+            with mock.patch.object(runner.subprocess,'Popen',side_effect=spawn) as popen:self.r.sample_runtime(self.item,30,d)
+            self.assertEqual(self.r.sample_child['record']['label'],'runtime-stack-sample')
+            self.assertEqual(popen.call_args.args[0][1],str(self.process.pid))
+            self.assertTrue(popen.call_args.args[0][-1].endswith('booted-inventory-stack.txt'))
+    def test_production_exact_check_is_after_proof_before_capture_and_checks_each_file(self):
+        code=inspect.getsource(run.run)
+        self.assertLess(code.index('verify_post_boot_device(runner,device)'),code.index('runner.finish();require('))
+        self.assertLess(code.index('runner.finish();require('),code.index("result['stage']='capture'"))
+        self.assertIn("for name,digest in sources['files'].items():",code)
+        self.assertIn('selected_snapshot(ROOT,[name])',code);self.assertIn("sources['modes'][name]",code)
+        self.assertGreaterEqual(code.count('preparation_runner.budget()'),3)
 
 if __name__=='__main__':unittest.main()
