@@ -701,23 +701,30 @@ class HostedAdmissionControls(unittest.TestCase):
 
 
 class HostedSourceControls(unittest.TestCase):
-    def test_frozen_contract(self):contract.frozen()
-    def test_gated_only_projection_restores_original_sources(self):
-        pins=contract.read(contract.HERE/'contract.json')['ungatedSourceSHA256']
-        for name,digest in pins.items():
-            lines=(ROOT/name).read_text().splitlines(True);kept=[];depth=0
-            for line in lines:
-                if line.strip()==CONDITION:
-                    self.assertEqual(depth,0);depth=1;continue
-                if depth:
-                    if line.strip().startswith('#if '):depth+=1
-                    if line.strip()=='#endif':depth-=1
-                    continue
-                kept.append(line)
-            self.assertEqual(depth,0)
-            # Appended helper's single separating newline is not part of the original file.
-            projected=''.join(kept)
-            self.assertEqual(hashlib.sha256(projected.rstrip('\n').encode()+b'\n').hexdigest(),digest,name)
+    def test_frozen_contract_accepts_fixture_and_rejects_changed_source(self):
+        # The historical experiment pins are not approval of the evolving product.
+        # Exercise admission itself using isolated source bytes and an immutable pin.
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);source=root/'App.swift';source.write_bytes(b'approved fixture\n')
+            pins={'files':{'App.swift':sha(source)}}
+            (root/'contract.json').write_text(json.dumps(pins))
+            with mock.patch.object(contract,'ROOT',root),mock.patch.object(contract,'HERE',root):
+                self.assertEqual(contract.frozen(),pins)
+                source.write_bytes(b'changed fixture\n')
+                with self.assertRaisesRegex(ValueError,'frozen_source_changed:App.swift'):
+                    contract.frozen()
+    def test_helper_projection_extracts_only_gated_suffixes(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);suffixes=[]
+            for index,name in enumerate(('ios/App/RoomInTheCartApp.swift','ios/UITests/ReleasePerformanceUITests.swift')):
+                path=root/name;path.parent.mkdir(parents=True,exist_ok=True)
+                suffix='\n'+CONDITION+'\n#if DEBUG\nlet nested'+str(index)+' = true\n#endif\n#endif\n'
+                path.write_text('let unrelatedProductCode = true\n'+suffix);suffixes.append(suffix)
+            with mock.patch.object(producer,'ROOT',root):
+                self.assertEqual(producer.helper_source(),'import Foundation\nimport XCTest\n'+''.join(suffixes))
+                path.write_text('let noCaptureHelper = true\n')
+                with self.assertRaisesRegex(ValueError,'complete_helper_suffix:'):
+                    producer.helper_source()
     def test_exact_measurement_calls_and_source_contract(self):
         text=(ROOT/'ios/UITests/ReleasePerformanceUITests.swift').read_text()
         self.assertIn('            startMeasuring()\n            list.swipeUp(velocity: .fast)\n            stopMeasuring()',text)
@@ -827,11 +834,18 @@ class PortableCustodyControls(unittest.TestCase):
 
 class IndependenceControls(unittest.TestCase):
     def test_source_snapshot_includes_untracked_frozen_modules(self):
-        fake=mock.Mock(stdout=b'ios/App/RoomInTheCartApp.swift\0')
-        with mock.patch.object(contract.subprocess,'run',return_value=fake):
-            value=contract.source_snapshot()
-        self.assertIn('scripts/app_scroll_observation/native_environment.py',value['files'])
-        self.assertIn('scripts/app_scroll_observation/contract.json',value['files'])
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d).resolve();here=root/'scripts/app_scroll_observation';here.mkdir(parents=True)
+            tracked=root/'App.swift';tracked.write_bytes(b'tracked fixture\n')
+            untracked=here/'native_environment.py';untracked.write_bytes(b'untracked fixture\n')
+            name=str(untracked.relative_to(root));pins={'files':{name:sha(untracked)}}
+            (here/'contract.json').write_text(json.dumps(pins))
+            fake=mock.Mock(stdout=b'App.swift\0')
+            with mock.patch.object(contract,'ROOT',root),mock.patch.object(contract,'HERE',here),\
+                    mock.patch.object(contract.subprocess,'run',return_value=fake):
+                value=contract.source_snapshot()
+            self.assertEqual(value['files'],{'App.swift':sha(tracked),name:sha(untracked),
+                'scripts/app_scroll_observation/contract.json':sha(here/'contract.json')})
     def test_failed_seal_retains_result_inspection_and_cannot_qualify(self, attachment_failure=False):
         from types import SimpleNamespace
         with tempfile.TemporaryDirectory() as d:
@@ -863,9 +877,13 @@ class IndependenceControls(unittest.TestCase):
                 called.append('performance');(output/'evidence-validation.json').write_text('{"measurements":{"status":"passed"},"persistedPickup":{"status":"passed"}}')
             strict=SimpleNamespace(main=strict_main,test_cases=lambda _:[])
             performance=SimpleNamespace(main=performance_main)
-            with mock.patch.object(results,'Runner',FakeRunner),mock.patch.object(results,'verify_seal',side_effect=ValueError('seal_failed')),\
+            # Source admission is tested separately; these controls isolate result
+            # inspection after admission, including failure to qualify a broken seal.
+            with mock.patch.object(results,'frozen',return_value={'files':{}}) as admission,\
+                    mock.patch.object(results,'Runner',FakeRunner),mock.patch.object(results,'verify_seal',side_effect=ValueError('seal_failed')),\
                     mock.patch.object(results,'module',side_effect=[strict,performance]):
                 code=results.run(evidence,output,{'xcode':'Xcode 27.1\nBuild version 27A9275'})
+            admission.assert_called_once()
             report=json.loads((output/'inspection.json').read_text())
             self.assertEqual(called,['strict','performance']);self.assertEqual(code,1)
             self.assertEqual(report['custody']['status'],'failed');self.assertFalse(report['resultChecksQualified'])

@@ -296,7 +296,7 @@ class OwnedSimulatorWorkflowTests(unittest.TestCase):
                         self.assertEqual(set(paths), {'.build/records-test-report.md', '.build/test-plan/',
                                                     '.build/test-simulator-ownership.json'})
                     elif performance:
-                        self.assertEqual(paths, ['.build/performance/'])
+                        self.assertEqual(paths, ["${{ inputs.observe_app_scroll_signposts && (steps.observation_archive.outputs.artifact_path || '.build/app-observation-portable/report/') || '.build/performance/' }}"])
                     else:
                         self.assertIn('.build/test-*.json', paths)
         self.assertEqual(observed, expected)

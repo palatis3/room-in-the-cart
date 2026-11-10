@@ -177,7 +177,18 @@ class RunnerTests(unittest.TestCase):
             output=Path(tmp)/'evidence';self.assertEqual(run.run(output,Path('/developer')),1)
             data=json.loads((output/'receipt.json').read_text());self.assertEqual(data['stage'],'tool-inventory');self.assertFalse(data['helperTransportQualified'])
             self.assertTrue((output/'identity-inventory.json').exists());constructor.assert_not_called()
-    def test_full_source_contract(self):self.assertTrue(contract.frozen()['files'])
+    def test_source_contract_failure_blocks_native_execution(self):
+        # A stale historical experiment must fail admission, not pin today's app.
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.dict(os.environ,ENV,clear=True),\
+                mock.patch.object(run.platform,'machine',return_value='arm64'),\
+                mock.patch.object(run,'frozen',side_effect=ValueError('frozen_source_changed:App.swift')) as admission,\
+                mock.patch.object(run,'tool_inventory') as inventory, mock.patch.object(run,'HelperRunner') as constructor:
+            output=Path(tmp)/'evidence';self.assertEqual(run.run(output,Path('/developer')),1)
+            data=json.loads((output/'receipt.json').read_text())
+            self.assertEqual(data['stage'],'source-contract')
+            self.assertIn('frozen_source_changed:App.swift',data['error'])
+            self.assertFalse(data['helperTransportQualified']);self.assertFalse(data['processesStarted'])
+            admission.assert_called_once();inventory.assert_not_called();constructor.assert_not_called()
 
 class ArchiveCustodyTests(unittest.TestCase):
     def preserve(self, evidence, destination):

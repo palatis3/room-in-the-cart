@@ -45,7 +45,7 @@ class Xcode27MigrationTests(unittest.TestCase):
                     self.assertEqual(guard, [checkout + 1], key)
                     self.assertNotIn('continue-on-error', job)
         self.assertEqual(seen, set(POLICY))
-        self.assertEqual(len(seen), 17)
+        self.assertEqual(len(seen), 18)
         self.assertFalse((ROOT / '.github/workflows/ios-xcode27.yml').exists())
 
     def test_actual_toolchain_guard_rejects_drift_without_running_native_tools(self):

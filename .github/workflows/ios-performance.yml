@@ -496,6 +496,8 @@ jobs:
       SIMULATOR_HELPER_DIRECT_INVENTORY: 'true'
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Require the reviewed Xcode 27.1 toolchain
+        run: bash scripts/check_ci_xcode27.sh
       - name: Run one standalone helper control
         run: python3 scripts/run_simulator_signpost_control.py run --output .build/simulator-helper
       - name: Preserve helper evidence bytes and modes
