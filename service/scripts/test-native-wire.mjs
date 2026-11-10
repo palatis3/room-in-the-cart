@@ -30,6 +30,7 @@ const cases = [
   'real Swift adult proposal and separate shopper adoption use pinned loopback HTTPS and PostgreSQL',
   'actual Swift shared demand preserves typed sources and exact durable operations over HTTPS and PostgreSQL',
   'actual Swift meal action catalog preserves Cancel, protected quantification, conversion reconfirmation and revoked proposal authority over HTTPS and PostgreSQL',
+  'actual Swift complete operation Undo preserves durable replay, later facts and privacy authority over HTTPS and PostgreSQL',
 ];
 const swiftRuns = [
   'deferred-request HouseholdClientTests.NativeServiceWireTests/testNativeClientAgainstPostgres',
@@ -59,10 +60,17 @@ const swiftRuns = [
   'demand-meal-protected-apply HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
   'demand-meal-proposal-revoked HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
   'demand-meal-conversion-apply HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'operation-undo-cancel HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'operation-undo-apply-lost HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'operation-undo-retry HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'operation-undo-stale HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'operation-undo-privacy HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
+  'operation-undo-revoked HouseholdClientTests.SharedMealNativeWireTests/testSharedMealClientAgainstPostgres',
 
 ];
 const files = ['history', 'shared-meal-changes', 'shared-store-quotes', 'service', 'shared-demand']
   .map(name => fileURLToPath(new URL(`../tests/${name}.integration.mjs`, import.meta.url)));
+files.push(fileURLToPath(new URL('../tests/shared-operation-undo.wire.mjs', import.meta.url)));
 const admin = new pg.Client({ connectionString: adminURL });
 await admin.connect();
 try {

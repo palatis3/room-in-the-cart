@@ -29,3 +29,7 @@ per-target evidence queries that need batching before UI release.
 
 [Exact scope, cases and hashes](verification.json). Original candidate and first
 failures remain under `.build/SharedDemandGraphNov09/operation-undo-r1` and `r2`.
+
+## Real typed-client qualification
+
+The complete original native wire lane plus six Undo scenarios passes **11 Node cases and 33 Swift invocations**, zero failures or skips. The run reused 141 verified backend product entries from 76 unchanged build inputs and built Swift tests once. It proves Cancel, dropped committed reply, separate-process exact retry, later untouched facts, stale touched-field rejection, erased history and revoked authority over real HTTPS/PostgreSQL. The database stopped and successful private fixture state was removed. [Exact proof](native-wire-verification.json). Broader inverse families and mixed-device/release acceptance remain separate.
