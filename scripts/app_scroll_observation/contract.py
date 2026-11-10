@@ -45,7 +45,8 @@ def snapshot(folder, cap=256*1024**2, files=4096):
     return {'files': manifest(folder), 'modes': modes(folder)}
 
 
-def selected_snapshot(root, names):
+def selected_snapshot(root, names, *, cap=128*1024**2):
+    require(type(cap) is int and 0 < cap <= 512*1024**2, 'selected_snapshot_cap')
     root = Path(root).resolve(); result = {'files':{}, 'modes':{}}
     require(len(names) <= 8192, 'source_count')
     total = 0
@@ -53,7 +54,7 @@ def selected_snapshot(root, names):
         path = root/name
         require(not Path(name).is_absolute() and '..' not in Path(name).parts and path.is_file()
                 and path.resolve() == path and path.is_relative_to(root), 'source_path')
-        total += path.stat().st_size; require(total <= 128*1024**2, 'source_bytes')
+        total += path.stat().st_size; require(total <= cap, 'source_bytes')
         result['files'][name] = sha(path); result['modes'][name] = path.stat().st_mode & 0o777
     return result
 
@@ -297,7 +298,7 @@ def verify_config(c):
     require(all(attempt[k]==v for k,v in binding(evidence,owner).items()),'attempt_binding')
 
 
-def copy_snapshot(source, destination, value, budget):
+def copy_snapshot(source, destination, value, budget, *, cap=128*1024**2):
     source=Path(source);destination=Path(destination);destination.mkdir(parents=True,exist_ok=False)
     for name in value['files']:
         src=source/name;dst=destination/name;dst.parent.mkdir(parents=True,exist_ok=True)
@@ -307,4 +308,4 @@ def copy_snapshot(source, destination, value, budget):
                 if not chunk:break
                 outgoing.write(chunk);budget()
         shutil.copystat(src,dst)
-    require(selected_snapshot(source,value['files'])==value==selected_snapshot(destination,value['files']),'copy_custody')
+    require(selected_snapshot(source,value['files'],cap=cap)==value==selected_snapshot(destination,value['files'],cap=cap),'copy_custody')

@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "status": "offline verified; hosted collector failure remains unresolved",
+  "sourceSHA256": {
+    "scripts/app_scroll_observation/consumer.py": "e158e219edeac07ab4fb75644e348ec038b5ee47972588dfbc9c7e4aaa0e89c0",
+    "scripts/app_scroll_observation/contract.py": "9b3c880d015b059dea93bca2346b81742ddb17195f46cb5fe57a6bfd4138aaeb",
+    "scripts/app_scroll_observation/results.py": "e8d56041a02d3ab4b4ec1634ec8401e05b823d3ac82f0b0b561f13dc62748e58",
+    "scripts/app_scroll_observation/runner.py": "3e1239a464df4021136be607f90f554a56d6e5e815672310e253b9c30419cde6",
+    "scripts/app_scroll_observation/contract.json": "50cfe62bbcc27339dbeb00579cc477e4a65471c79def8bdc04f278514ab5f7a7",
+    "scripts/test_app_scroll_observation.py": "6b5660ebcb0cf565e19f340695d3220854fb3e02ac9af1759884ddf6b6f83c9f"
+  },
+  "reviewedPackages": {
+    ".build/HostedAppObservationNov09/postprocessing-r1/manifest.json": "a04e6d002505a90c623f887025218aff60c3b870eb430c484b8cdb93afffd4b9",
+    ".build/HostedAppObservationNov09/postprocessing-r1.1/manifest.json": "e4b6fcefffba6c7150d157aff3307b090e9a42697290137b76935e5c027776fb"
+  },
+  "offlineTests": 174,
+  "rootCommand": [
+    ".build/ci-yaml/bin/python",
+    "scripts/test_app_scroll_observation.py"
+  ],
+  "rootExitCode": 0,
+  "retainedTestLog": ".build/HostedAppObservationNov09/postprocessing-r1.1/observer-controls.log",
+  "retainedTestLogSHA256": "7f97c38888dbe8220330c592aaaafc5b12c98fe010412580e72c686f4a2177b2",
+  "hostedRun": "42732878538",
+  "firstFault": "collector_readiness_deadline",
+  "qualifiesTraceOrRequiredMetrics": false,
+  "replayedNativeOrChangedDeadlines": false
+}

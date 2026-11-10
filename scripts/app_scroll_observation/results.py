@@ -99,7 +99,7 @@ def run(evidence, output, tools):
             report['inspectionOnlyDueToCustodyFailure']=str(exc)
         receipt=read(capture/'receipt.json');report['captureReceiptSHA256']=sha(capture/'receipt.json')
         result=capture/'Performance.xcresult';original=snapshot(result,512*1024**2)
-        copy_snapshot(result,output/'Inspection.xcresult',original,runner.budget);copy=output/'Inspection.xcresult'
+        copy_snapshot(result,output/'Inspection.xcresult',original,runner.budget,cap=512*1024**2);copy=output/'Inspection.xcresult'
         report['exportErrors']={}
         for kind,name in [('summary','test-summary.json'),('tests','test-details.json'),('metrics','metrics.json')]:
             try:

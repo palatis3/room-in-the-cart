@@ -78,7 +78,7 @@ def seal(evidence):
                              'files':item['installedBundleManifest'],'modes':item['installedModes'],
                              'binding':value,'executableSHA256':item['executableSHA256'],'arm64UUID':item['arm64UUID']}
         copy_snapshot(ROOT,output/'source',c['sourceSnapshot'],budget)
-        copy_snapshot(c['productsRoot'],output/'products',c['productsSnapshot'],budget)
+        copy_snapshot(c['productsRoot'],output/'products',c['productsSnapshot'],budget,cap=512*1024**2)
         proof.update(installed=installed,sourceSnapshot=c['sourceSnapshot'],productsSnapshot=c['productsSnapshot'],
                      sourceManifestSHA256=sha(evidence/'observation-config.json'),portableScope='Installed bytes/modes observed before deletion; product bytes and sources retained. No claim of later live installation.')
         for name in ('setup.json','plan-provenance.json','plan-provenance-after-setup.json','test-simulator-ownership.json','native-attempt.json'):
@@ -103,8 +103,8 @@ def verify_seal(evidence, require_collection=False):
     receipt=read(evidence/'observation-capture/receipt.json');c=receipt['config']
     require(sha(evidence/'observation-capture/receipt.json')==proof['captureReceiptSHA256'],'capture_receipt_custody')
     require(snapshot(evidence/'observation-capture',768*1024**2,8192)==proof['captureSnapshot'],'capture_custody')
-    for role in ('source','products'):
-        require(snapshot(output/role,512*1024**2,16384)==proof[role+'Snapshot'],'portable_'+role+'_custody')
+    for role,cap in [('source',128*1024**2),('products',512*1024**2)]:
+        require(snapshot(output/role,cap,16384)==proof[role+'Snapshot'],'portable_'+role+'_custody')
     for name,digest in c['inputReceipts'].items():require(sha(evidence/name)==digest,'sealed_input_receipt_changed:'+name)
     for role,item in proof['installed'].items():
         bundle=output/'products'/item['productRelativePath']

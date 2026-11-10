@@ -57,17 +57,26 @@ class Runner(SimulatorSDKRootSpawn, Supervisor):
     def budget(self):
         require(time.monotonic()-self.started<=self.seconds,'phase_wall_cap')
         require(shutil.disk_usage(self.out).free>=8*1024**3,'disk_reserve')
+        evidence_containers=('Inspection.xcresult','inspection.trace','attachments')
+        for name in evidence_containers:
+            container=self.out/name
+            if container.exists() or container.is_symlink():
+                require(container.is_dir() and not container.is_symlink(),'phase_evidence_container')
         total=copy=count=trace=attachments=0
         for p in self.out.rglob('*'):
             require(not p.is_symlink(),'phase_symlink')
             if p.is_dir():continue
             require(p.is_file(),'phase_nonregular');count+=1;size=p.stat().st_size
-            if 'Inspection.xcresult' in p.parts:copy+=size
+            relative=p.relative_to(self.out)
+            if relative.parts[0]=='Inspection.xcresult':copy+=size
             else:total+=size
             require(count<=4096 and total<=256*1024**2 and copy<=512*1024**2,'phase_artifact_cap')
-            if 'inspection.trace' in p.relative_to(self.out).parts:trace+=size
-            if 'attachments' in p.relative_to(self.out).parts:attachments+=size
+            if relative.parts[0]=='inspection.trace':trace+=size
+            if relative.parts[0]=='attachments':attachments+=size
             require(trace<=128*1024**2 and attachments<=64*1024**2,'phase_trace_or_attachment_cap')
+            # Only exact owned evidence directories contain non-command diagnostics.
+            # Ordinary nested logs retain the original per-file bounds.
+            if len(relative.parts)>1 and relative.parts[0] in evidence_containers:continue
             if p.name=='signposts-stdout.log':require(size<=self.xml_limit,'xml_cap')
             elif p.suffix=='.log':
                 cap=16*1024**2 if p.name in ('build-stdout.log','build-stderr.log','Performance.log') else 8*1024**2 if p.name in ('summary-stdout.log','tests-stdout.log','metrics-stdout.log','case-details-stdout.log','case-activities-stdout.log') else 1024**2

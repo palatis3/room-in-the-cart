@@ -1157,5 +1157,122 @@ class AcquisitionControls(unittest.TestCase):
         self.assertGreater(diag['samples'],300);self.assertEqual(len(diag['first']),4)
 
 
+class PostprocessingArtifactScopeTests(unittest.TestCase):
+    """Synthetic stat sizes exercise cap arithmetic; tiny real bytes/modes exercise custody."""
+    def sized(self, sizes):
+        sizes={**sizes,**{p.resolve():value for p,value in sizes.items()}}
+        original=Path.stat
+        def stat_for(path,*args,**kwargs):
+            value=original(path,*args,**kwargs)
+            if path in sizes:
+                fields=list(value);fields[6]=sizes[path];return os.stat_result(fields)
+            return value
+        return mock.patch.object(Path,'stat',stat_for)
+    def budget_runner(self,root):
+        value=runner.Runner.__new__(runner.Runner);value.out=root;value.started=time.monotonic();value.seconds=30;value.xml_limit=64*1024**2
+        return value
+    def test_product_copy_retains_admitted_206MB_cap_bytes_and_modes(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);src=root/'products';src.mkdir();f=src/'tool';f.write_bytes(b'product');f.chmod(0o555);destination=root/'copy'
+            with self.sized({f:206233371,destination/'tool':206233371}):
+                admitted=contract.snapshot(src,512*1024**2,8192)
+                contract.copy_snapshot(src,destination,admitted,lambda:None,cap=512*1024**2)
+                self.assertEqual(contract.snapshot(destination,512*1024**2,8192),admitted)
+            self.assertEqual((destination/'tool').read_bytes(),b'product');self.assertEqual((destination/'tool').stat().st_mode&0o777,0o555)
+    def test_source_default_remains_128MiB_including_copy(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);src=root/'source';src.mkdir();f=src/'file';f.write_bytes(b'source')
+            with self.sized({f:128*1024**2}):value=contract.selected_snapshot(src,['file'])
+            with self.sized({f:128*1024**2+1}):
+                with self.assertRaisesRegex(ValueError,'source_bytes'):contract.selected_snapshot(src,['file'])
+                with self.assertRaisesRegex(ValueError,'source_bytes'):contract.copy_snapshot(src,root/'copy',value,lambda:None)
+    def test_selected_product_copy_rejects_over_512MiB(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);src=root/'products';src.mkdir();f=src/'file';f.write_bytes(b'product');value=contract.snapshot(src)
+            with self.sized({f:512*1024**2+1}):
+                with self.assertRaisesRegex(ValueError,'source_bytes'):contract.copy_snapshot(src,root/'copy',value,lambda:None,cap=512*1024**2)
+    def test_result_copy_uses_admitted_result_cap(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);src=root/'Performance.xcresult';src.mkdir();f=src/'result';f.write_bytes(b'result');dst=root/'Inspection.xcresult'
+            with self.sized({f:200*1024**2,dst/'result':200*1024**2}):
+                value=contract.snapshot(src,512*1024**2);contract.copy_snapshot(src,dst,value,lambda:None,cap=512*1024**2)
+                self.assertEqual(contract.snapshot(dst,512*1024**2),value)
+    def test_copy_still_rejects_changed_bytes_or_modes(self):
+        for mode in (False,True):
+            with tempfile.TemporaryDirectory() as d:
+                root=Path(d);src=root/'source';src.mkdir();f=src/'file';f.write_bytes(b'original');f.chmod(0o644);value=contract.snapshot(src)
+                def mutate():
+                    if mode:f.chmod(0o600)
+                    else:f.write_bytes(b'mutated')
+                with self.assertRaisesRegex(ValueError,'copy_custody'):contract.copy_snapshot(src,root/'copy',value,mutate,cap=512*1024**2)
+    def test_preserved_result_logs_are_not_phase_stdout(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);p=root/'Inspection.xcresult/Staging/Diagnostics/launchd_state.log';p.parent.mkdir(parents=True);p.write_bytes(b'original diagnostics')
+            with self.sized({p:19145763}),mock.patch.object(runner.shutil,'disk_usage',return_value=mock.Mock(free=16*1024**3)):
+                self.budget_runner(root).budget()
+    def test_actual_phase_stdout_keeps_one_MiB_cap(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);p=root/'tool-stdout.log';p.write_bytes(b'phase stdout')
+            with self.sized({p:1024**2+1}),mock.patch.object(runner.shutil,'disk_usage',return_value=mock.Mock(free=16*1024**3)):
+                with self.assertRaisesRegex(ValueError,'phase_log_cap'):self.budget_runner(root).budget()
+    def test_real_xml_phase_limit_is_not_exempted(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);p=root/'signposts-stdout.log';p.write_bytes(b'xml')
+            with self.sized({p:64*1024**2+1}),mock.patch.object(runner.shutil,'disk_usage',return_value=mock.Mock(free=16*1024**3)):
+                with self.assertRaisesRegex(ValueError,'xml_cap'):self.budget_runner(root).budget()
+    def test_result_aggregate_cap_still_applies_to_copied_logs(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);p=root/'Inspection.xcresult/Staging/large.log';p.parent.mkdir(parents=True);p.write_bytes(b'copy')
+            with self.sized({p:512*1024**2+1}),mock.patch.object(runner.shutil,'disk_usage',return_value=mock.Mock(free=16*1024**3)):
+                with self.assertRaisesRegex(ValueError,'phase_artifact_cap'):self.budget_runner(root).budget()
+    def test_nested_result_name_cannot_claim_result_copy_budget(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);p=root/'other/Inspection.xcresult/bytes';p.parent.mkdir(parents=True);p.write_bytes(b'other')
+            with self.sized({p:256*1024**2+1}),mock.patch.object(runner.shutil,'disk_usage',return_value=mock.Mock(free=16*1024**3)):
+                with self.assertRaisesRegex(ValueError,'phase_artifact_cap'):self.budget_runner(root).budget()
+    def test_trace_and_attachment_aggregates_remain_bounded(self):
+        for name,limit in [('inspection.trace',128*1024**2),('attachments',64*1024**2)]:
+            with tempfile.TemporaryDirectory() as d:
+                root=Path(d);p=root/name/'nested.log';p.parent.mkdir(parents=True);p.write_bytes(b'evidence')
+                with self.sized({p:limit+1}),mock.patch.object(runner.shutil,'disk_usage',return_value=mock.Mock(free=16*1024**3)):
+                    with self.assertRaisesRegex(ValueError,'phase_trace_or_attachment_cap'):self.budget_runner(root).budget()
+    def test_ordinary_nested_log_retains_one_MiB_cap(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);p=root/'other/tool-stdout.log';p.parent.mkdir();p.write_bytes(b'ordinary')
+            with self.sized({p:1024**2+1}),mock.patch.object(runner.shutil,'disk_usage',return_value=mock.Mock(free=16*1024**3)):
+                with self.assertRaisesRegex(ValueError,'phase_log_cap'):self.budget_runner(root).budget()
+    def test_ordinary_nested_xml_retains_xml_cap(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);p=root/'other/signposts-stdout.log';p.parent.mkdir();p.write_bytes(b'ordinary xml')
+            with self.sized({p:64*1024**2+1}),mock.patch.object(runner.shutil,'disk_usage',return_value=mock.Mock(free=16*1024**3)):
+                with self.assertRaisesRegex(ValueError,'xml_cap'):self.budget_runner(root).budget()
+    def test_reserved_evidence_roots_reject_regular_files_instead_of_container_allowances(self):
+        for name in ('Inspection.xcresult','inspection.trace','attachments'):
+            with tempfile.TemporaryDirectory() as d:
+                root=Path(d);p=root/name;p.write_bytes(b'not a directory')
+                with self.sized({p:256*1024**2+1}),mock.patch.object(runner.shutil,'disk_usage',return_value=mock.Mock(free=16*1024**3)):
+                    with self.assertRaisesRegex(ValueError,'phase_evidence_container'):self.budget_runner(root).budget()
+    def test_reserved_evidence_roots_reject_directory_symlinks(self):
+        for name in ('Inspection.xcresult','inspection.trace','attachments'):
+            with tempfile.TemporaryDirectory() as d:
+                root=Path(d);target=root/'actual';target.mkdir();(root/name).symlink_to(target,target_is_directory=True)
+                with mock.patch.object(runner.shutil,'disk_usage',return_value=mock.Mock(free=16*1024**3)):
+                    with self.assertRaisesRegex(ValueError,'phase_evidence_container'):self.budget_runner(root).budget()
+    def test_output_parent_container_name_does_not_exempt_ordinary_nested_logs(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)/'Inspection.xcresult';root.mkdir();p=root/'ordinary/tool-stdout.log';p.parent.mkdir();p.write_bytes(b'ordinary')
+            with self.sized({p:1024**2+1}),mock.patch.object(runner.shutil,'disk_usage',return_value=mock.Mock(free=16*1024**3)):
+                with self.assertRaisesRegex(ValueError,'phase_log_cap'):self.budget_runner(root).budget()
+    def test_selected_copy_cap_cannot_be_unbounded(self):
+        with tempfile.TemporaryDirectory() as d:
+            for cap in (0,-1,512*1024**2+1,True):
+                with self.assertRaisesRegex(ValueError,'selected_snapshot_cap'):contract.selected_snapshot(Path(d),[],cap=cap)
+    def test_portable_verification_keeps_source_and_product_caps_distinct(self):
+        self.assertIn("[('source',128*1024**2),('products',512*1024**2)]",inspect.getsource(consumer.verify_seal))
+    def test_product_and_result_callers_set_specific_caps_only(self):
+        self.assertIn("c['productsSnapshot'],budget,cap=512*1024**2)",inspect.getsource(consumer.seal))
+        self.assertIn("c['sourceSnapshot'],budget)",inspect.getsource(consumer.seal))
+        self.assertIn("original,runner.budget,cap=512*1024**2)",inspect.getsource(results.run))
+
 if __name__=='__main__':unittest.main()
 
