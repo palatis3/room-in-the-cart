@@ -72,10 +72,11 @@ class HelperRunner(Runner):
                                'scope':'preparation_scoped_read_only_inventory'}
         self.budget();self.receipt['directInventory']=self.direct_inventory;self.save()
 
-    def direct_inventory_selected(self, tail):
+    def direct_inventory_selected(self, tail, label=None):
         identifier=self.device.get('createdUDID')
         return (getattr(self,'direct_inventory',None) is not None and bool(identifier)
-                and tail in (['list','-j','runtimes'],['list','-j','devices',identifier]))
+                and (tail in (['list','-j','runtimes'],['list','-j','devices',identifier])
+                     or (label=='booted-inventory' and tail==['list','-j'])))
 
     def verify_direct_inventory(self):
         proof=self.direct_inventory;tool=self.tools['simctl']
@@ -172,7 +173,7 @@ class HelperRunner(Runner):
         tool=self.tools['simctl'];expected=Path(tool['executable']);digest=tool['executableSHA256']
         launcher_identity(tool['path'],tool['sha256'],str(expected),digest)
         self.lifecycle_check(deadline)
-        direct=self.direct_inventory_selected(tail)
+        direct=self.direct_inventory_selected(tail,label)
         if direct:self.verify_direct_inventory();self.lifecycle_check(deadline)
         record={'label':label,'argv':[str(expected) if direct else tool['path'],*tail],'executableSHA256':digest,
                 'spawnEpoch':time.time(),'signals':[]}
@@ -196,7 +197,7 @@ class HelperRunner(Runner):
         """Waiting is authorized by the exact dispatched command, never by a label exemption."""
         tool=self.tools['simctl'];record=item['record'];argv=record.get('argv',[])
         direct=record.get('dispatch')=='verified_direct_inventory'
-        dispatch=(bool(argv) and argv[0]==tool['executable'] and self.direct_inventory_selected(argv[1:])
+        dispatch=(bool(argv) and argv[0]==tool['executable'] and self.direct_inventory_selected(argv[1:],record.get('label'))
                   and record.get('launcherPath')==tool['path'] and record.get('framework')==self.direct_inventory['framework']) if direct else (bool(argv) and argv[0]==tool['path'])
         return (dispatch and lifecycle_allowed(argv[1:],self.device)
                 and bool(self.processes) and self.processes[-1] is item
@@ -305,13 +306,15 @@ class HelperRunner(Runner):
         return super().finish(error)
 
     def sample_policy(self, target):
-        """Only the post-boot runtime query is eligible; cold boot is not sampled."""
+        """Only post-boot inventory is eligible; cold boot is not sampled."""
         tool=self.tools['simctl'];record=target['record'];argv=record.get('argv',[])
         if (sum(p is target for p in self.processes)!=1 or record.get('pid')!=target['process'].pid
                 or target.get('expected')!=tool['executable'] or target.get('digest')!=tool['executableSHA256']):return None
-        runtime_argv=[tool['executable'] if record.get('dispatch')=='verified_direct_inventory' else tool['path'],'list','-j','runtimes']
-        if record.get('label')=='booted-runtimes' and argv==runtime_argv and (record.get('dispatch')!='verified_direct_inventory' or self.direct_inventory_selected(argv[1:])):
-            return (10,'booted-runtimes')
+        stem=record.get('label')
+        tail={'booted-runtimes':['list','-j','runtimes'],'booted-inventory':['list','-j']}.get(stem)
+        executable=tool['executable'] if record.get('dispatch')=='verified_direct_inventory' else tool['path']
+        if tail is not None and argv==[executable,*tail] and (record.get('dispatch')!='verified_direct_inventory' or self.direct_inventory_selected(tail,stem)):
+            return (10,stem)
         return None
 
     def sample_target_live(self, target):

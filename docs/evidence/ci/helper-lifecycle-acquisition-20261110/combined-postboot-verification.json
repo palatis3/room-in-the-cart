@@ -1,0 +1,19 @@
+{
+  "status": "passed",
+  "portableControls": 264,
+  "exitCode": 0,
+  "logSHA256": "19b934e09774306696bb94f4359d7e3b815175906177a96631a724c293ad5a3b",
+  "packetManifestSHA256": "8a05b50867ca4e8e91acdc3d0caf45d73ce461839d1ececaa8eca04cac30417e",
+  "sourceFiles": {
+    "scripts/simulator_signpost_control/run.py": "ddd96c92f84960c84920b8d221c54a240808892c398ada3041e40151ac9231f3",
+    "scripts/simulator_signpost_control/runner.py": "105cb1d912969ac5a31237dc7097b8ddf40d51bba7d142f12cf9546ef3b9320d",
+    "scripts/test_simulator_signpost_control.py": "c319fca957cf09ad5963db1b9dca5101cb1ab203c29cd193b0421a4826e567b3",
+    "scripts/app_scroll_observation/contract.json": "cdd0ba0b87878ed288b7a881ade9568dd94d81af7bc9456bb9421aeced75e1cc"
+  },
+  "sourcePinsVerified": 50,
+  "purpose": "One fresh combined post-boot inventory replaces two process startups; exact runtime and owned Booted checks remain. No first-query stall root cause or cure claimed.",
+  "nativeExecuted": false,
+  "hostedExecuted": false,
+  "fullWorkflowProfiles": "pending",
+  "releaseAcceptance": false
+}

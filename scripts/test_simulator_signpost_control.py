@@ -471,7 +471,7 @@ class ScopedPostBootTests(unittest.TestCase):
         return tail[2]
     def read(self,key):self.clock+=self.read_cost;return {key:self.response[key]}
     def test_two_fresh_scoped_commands_same_original_budget(self):
-        self.assertEqual(run.verify_post_boot_device(self.r,DEVICE)['udid'],DEVICE['createdUDID'])
+        self.assertEqual(run.verify_scoped_device(self.r,DEVICE,'booted','Booted')['udid'],DEVICE['createdUDID'])
         self.assertEqual(self.commands,[('booted-runtimes',['list','-j','runtimes'],30),
                                         ('booted-device',['list','-j','devices',DEVICE['createdUDID']],30)])
     def test_missing_duplicate_and_changed_runtime_fail_before_device_query(self):
@@ -482,7 +482,7 @@ class ScopedPostBootTests(unittest.TestCase):
             elif mutate=='build':self.response['runtimes'][0]['buildversion']='other'
             elif mutate=='bundle':self.response['runtimes'][0]['bundlePath']='/other'
             else:self.response['runtimes'][0]['isAvailable']=False
-            with self.subTest(mutate=mutate),self.assertRaises(ValueError):run.verify_post_boot_device(self.r,DEVICE)
+            with self.subTest(mutate=mutate),self.assertRaises(ValueError):run.verify_scoped_device(self.r,DEVICE,'booted','Booted')
             self.assertEqual(len(self.commands),1)
     def test_missing_duplicate_wrong_uuid_name_type_state_runtime_availability(self):
         for mutate in ('missing','duplicate','extra','uuid','name','type','state','runtime','availability'):
@@ -496,27 +496,27 @@ class ScopedPostBootTests(unittest.TestCase):
             elif mutate=='state':rows[0]['state']='Shutdown'
             elif mutate=='availability':rows[0]['isAvailable']=False
             else:self.response['devices']={'other-runtime':rows}
-            with self.subTest(mutate=mutate),self.assertRaises(ValueError):run.verify_post_boot_device(self.r,DEVICE)
+            with self.subTest(mutate=mutate),self.assertRaises(ValueError):run.verify_scoped_device(self.r,DEVICE,'booted','Booted')
             self.assertEqual(len(self.commands),2)
     def test_fresh_both_commands_required_no_cached_result(self):
         self.response['devices'][run.RUNTIME][0]['name']='new-name'
-        with self.assertRaisesRegex(ValueError,'device_identity'):run.verify_post_boot_device(self.r,DEVICE)
+        with self.assertRaisesRegex(ValueError,'device_identity'):run.verify_scoped_device(self.r,DEVICE,'booted','Booted')
         self.assertEqual(len(self.commands),2)
     def test_combined_budget_exhaustion_does_not_retry_or_reset(self):
         self.costs=[20,11]
-        with self.assertRaisesRegex(ValueError,'lifecycle_deadline'):run.verify_post_boot_device(self.r,DEVICE)
+        with self.assertRaisesRegex(ValueError,'lifecycle_deadline'):run.verify_scoped_device(self.r,DEVICE,'booted','Booted')
         self.assertEqual([x[2] for x in self.commands],[30,30]);self.assertEqual(len(self.commands),2)
     def test_runtime_parse_consumes_shared_budget_before_second_spawn(self):
         self.costs=[29,1];self.read_cost=1
-        with self.assertRaisesRegex(ValueError,'lifecycle_deadline'):run.verify_post_boot_device(self.r,DEVICE)
+        with self.assertRaisesRegex(ValueError,'lifecycle_deadline'):run.verify_scoped_device(self.r,DEVICE,'booted','Booted')
         self.assertEqual(len(self.commands),1)
     def test_device_parse_cannot_succeed_after_deadline(self):
         self.costs=[1,27];self.read_cost=1
-        with self.assertRaisesRegex(ValueError,'lifecycle_deadline'):run.verify_post_boot_device(self.r,DEVICE)
+        with self.assertRaisesRegex(ValueError,'lifecycle_deadline'):run.verify_scoped_device(self.r,DEVICE,'booted','Booted')
         self.assertEqual(len(self.commands),2)
     def test_remaining_outer_phase_budget_wins(self):
         self.clock=295
-        run.verify_post_boot_device(self.r,DEVICE)
+        run.verify_scoped_device(self.r,DEVICE,'booted','Booted')
         self.assertEqual([x[2] for x in self.commands],[300,300])
     def test_cleanup_before_accepts_booted_and_shutdown_as_observed(self):
         for state in ('Booted','Shutdown'):
@@ -1999,5 +1999,103 @@ class DirectInventorySelectionTests(unittest.TestCase):
     def test_invalid_mode_is_not_false(self):
         for value in ('1','True','yes',''):
             with self.subTest(value=value),self.assertRaisesRegex(ValueError,'direct_inventory_boolean'):run.validate_request({**ENV,'SIMULATOR_HELPER_DIRECT_INVENTORY':value})
+
+class CombinedPostBootTests(unittest.TestCase):
+    setUp=ScopedPostBootTests.setUp
+    check=ScopedPostBootTests.check
+    def command(self,label,tail,**kwargs):
+        self.commands.append((label,tail,kwargs['absolute_deadline']))
+        self.clock+=self.costs[0];self.check(kwargs['absolute_deadline']);return 'combined'
+    def read(self,key):
+        self.clock+=self.read_cost
+        return {'devicetypes':[],'pairs':{},**self.response}
+    def test_one_fresh_combined_query_same_30_second_budget(self):
+        self.assertEqual(run.verify_post_boot_device(self.r,DEVICE)['udid'],DEVICE['createdUDID'])
+        self.assertEqual(self.commands,[('booted-inventory',['list','-j'],30)])
+    def test_unrelated_devices_are_not_owned_authority(self):
+        self.response['devices'][run.RUNTIME].append({**self.response['devices'][run.RUNTIME][0],'udid':DEVICE['sourceUDID'],'name':'unrelated'})
+        self.assertEqual(run.verify_post_boot_device(self.r,DEVICE)['udid'],DEVICE['createdUDID'])
+    def test_missing_duplicate_mismatched_runtime_rejected(self):
+        for key in ('missing','duplicate','build','bundle','availability'):
+            self.response=inventory();self.commands=[];self.clock=0
+            if key=='missing':self.response['runtimes']=[]
+            elif key=='duplicate':self.response['runtimes']*=2
+            elif key=='build':self.response['runtimes'][0]['buildversion']='other'
+            elif key=='bundle':self.response['runtimes'][0]['bundlePath']='/other'
+            else:self.response['runtimes'][0]['isAvailable']=False
+            with self.subTest(key=key),self.assertRaises(ValueError):run.verify_post_boot_device(self.r,DEVICE)
+            self.assertEqual(len(self.commands),1)
+    def test_missing_duplicate_wrong_device_fields_rejected(self):
+        for key in ('missing','duplicate','uuid','name','type','state','availability','runtime'):
+            self.response=inventory();self.commands=[];self.clock=0;rows=self.response['devices'][run.RUNTIME]
+            if key=='missing':rows.clear()
+            elif key=='duplicate':rows*=2
+            elif key=='runtime':self.response['devices']={'wrong':rows}
+            else:rows[0][{'uuid':'udid','name':'name','type':'deviceTypeIdentifier','state':'state','availability':'isAvailable'}[key]]='wrong'
+            with self.subTest(key=key),self.assertRaises(ValueError):run.verify_post_boot_device(self.r,DEVICE)
+    def test_full_shape_required_not_cached_pair_or_missing_facts(self):
+        with mock.patch.object(run,'read',return_value=inventory()),self.assertRaisesRegex(ValueError,'combined_inventory_shape'):
+            run.verify_post_boot_device(self.r,DEVICE)
+    def test_original_deadline_no_retry(self):
+        self.costs=[30]
+        with self.assertRaisesRegex(ValueError,'lifecycle_deadline'):run.verify_post_boot_device(self.r,DEVICE)
+        self.assertEqual(self.commands,[('booted-inventory',['list','-j'],30)])
+    def test_parse_at_boundary_cannot_succeed(self):
+        self.costs=[29];self.read_cost=1
+        with self.assertRaisesRegex(ValueError,'lifecycle_deadline'):run.verify_post_boot_device(self.r,DEVICE)
+        self.assertEqual(len(self.commands),1)
+    def test_remaining_prepare_budget_wins(self):
+        self.clock=299;self.costs=[1]
+        with self.assertRaisesRegex(ValueError,'lifecycle_deadline'):run.verify_post_boot_device(self.r,DEVICE)
+        self.assertEqual(self.commands[0][2],300)
+
+class CombinedDirectInventoryTests(unittest.TestCase):
+    setUp=DirectInventoryTests.setUp
+    enable=DirectInventoryTests.enable
+    spawn=DirectInventoryTests.spawn
+    def test_only_exact_postboot_label_admits_combined_direct(self):
+        self.enable()
+        self.assertTrue(self.r.direct_inventory_selected(['list','-j'],'booted-inventory'))
+        for label in ('created','inventory','before','deleted',None):self.assertFalse(self.r.direct_inventory_selected(['list','-j'],label))
+        self.assertFalse(self.r.direct_inventory_selected(['list','-j','pairs'],'booted-inventory'))
+    def test_combined_direct_retains_exact_binding_and_sampler_policy(self):
+        self.enable();item,popen=self.spawn(['list','-j'],'booted-inventory')
+        self.assertEqual(popen.call_args.args[0],[runner.CORE_SIMULATOR_EXECUTABLE,'list','-j'])
+        self.assertTrue(self.r.acquisition_allowed(item))
+        value={'pid':42,'parentPID':os.getpid(),'uid':os.getuid(),'startTimeMicros':2*10**18,'executable':runner.CORE_SIMULATOR_EXECUTABLE}
+        self.r.identity=SimpleNamespace(read=lambda pid:value)
+        with mock.patch.object(runner,'sha',return_value='binary-digest'):self.r.acquire_lifecycle(item,runner.time.monotonic()+30)
+        self.assertEqual(item['binding'],value);self.assertEqual(self.r.sample_policy(item),(10,'booted-inventory'))
+        item['record']['label']='created';self.assertFalse(self.r.acquisition_allowed(item));self.assertIsNone(self.r.sample_policy(item))
+    def test_default_combined_still_uses_launcher(self):
+        item,popen=self.spawn(['list','-j'],'booted-inventory')
+        self.assertEqual(popen.call_args.args[0],[self.r.tools['simctl']['path'],'list','-j'])
+        self.assertNotIn('dispatch',item['record']);self.assertEqual(self.r.sample_policy(item),(10,'booted-inventory'))
+
+class CombinedInventorySampleTests(unittest.TestCase):
+    setUp=RuntimeSampleTests.setUp
+    sleep=AcquisitionTests.sleep
+    poll=AcquisitionTests.poll
+    identity=AcquisitionTests.identity
+    def prepare(self,tmp):
+        RuntimeSampleTests.prepare(self,tmp)
+        self.item['record'].update(label='booted-inventory',argv=['/launcher','list','-j'])
+        for suffix in ('stdout','stderr'):(self.r.out/('booted-inventory-'+suffix+'.log')).write_bytes(b'')
+    def test_same_ten_second_trigger_no_early_or_second_sample(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);self.clock=9.9;self.terminal=10.1
+            def sample(*args):self.assertGreaterEqual(self.clock,10);args[2]['stackSample']={'status':'passed'}
+            self.r.sample_runtime=mock.Mock(side_effect=sample)
+            self.assertEqual(self.r.lifecycle_wait(self.item,30,{'startedMonotonic':0}),0)
+            self.r.sample_runtime.assert_called_once()
+            self.process.returncode=None;self.clock=11;self.terminal=11.1
+            self.assertEqual(self.r.lifecycle_wait(self.item,30,{'startedMonotonic':0}),0)
+            self.r.sample_runtime.assert_called_once()
+    def test_same_remaining_budget_guard_never_spawns(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);self.clock=20;d={}
+            with mock.patch.object(runner.subprocess,'Popen') as popen:self.r.sample_runtime(self.item,30,d)
+            popen.assert_not_called();self.assertIn('sample_remaining_budget',d['stackSample']['error'])
+            self.assertEqual(d['stackSample']['status'],'failed')
 
 if __name__=='__main__':unittest.main()

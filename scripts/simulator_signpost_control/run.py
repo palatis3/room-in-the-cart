@@ -84,7 +84,15 @@ def verify_scoped_device(runner, device, label, state=None, absent=False):
     return value
 
 def verify_post_boot_device(runner, device):
-    return verify_scoped_device(runner,device,'booted','Booted')
+    # One fresh response proves both runtime and owned device after normal boot.
+    # Keep cleanup scoped; this avoids a second post-boot process startup only.
+    deadline=min(time.monotonic()+30,runner.started+runner.seconds)
+    runner.lifecycle_check(deadline)
+    listing=read(runner.lifecycle('booted-inventory',['list','-j'],absolute_deadline=deadline))
+    require(set(listing)=={'devicetypes','runtimes','devices','pairs'},'helper_combined_inventory_shape')
+    value=current_device(listing,device,'Booted')
+    runner.lifecycle_check(deadline)
+    return value
 
 def wait_for_boot(runner, device, shutdown_inventory):
     # Boot and monitor once, only after the immediately preceding owned-device proof.
