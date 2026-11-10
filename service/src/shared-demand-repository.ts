@@ -1,3 +1,4 @@
+import {deriveSharedFoodUndo,assertSharedFoodUndoReplay,foodUndoFailure,type FoodUndoEvidence} from './shared-food-operation-undo.js';
 import {randomUUID} from 'node:crypto';
 import {actionDemandSources} from './shared-demand-action-sources.js';
 import {requireSharedMealChange} from './shared-meal-changes.js';
@@ -9,7 +10,7 @@ import {digest} from './database.js';
 import {ServiceError,refresh,unavailable} from './errors.js';
 import {checkout} from './checkout.js';
 import {sharedDemandChangeSchema,demandQuantitySchema,demandReviewSchema,type DemandGraph,type DemandContribution} from './shared-demand-contracts.js';
-import {applyDemandChange,undoDemandChange,validateDemandGraph,demandLineTotals,convertDemandQuantity} from './shared-demand-domain.js';
+import {SharedDemandError,applyDemandChange,undoDemandChange,validateDemandGraph,demandLineTotals,convertDemandQuantity} from './shared-demand-domain.js';
 import {sharedMealSchema,preserveProtectedMeal} from './shared-meal-planning.js';
 import {mealDemandSources,mealSourceKey,exactSourceExclusions,requestDemandSource} from './shared-demand-sources.js';
 const id=z.string().uuid().transform(s=>s.toLowerCase());
@@ -18,8 +19,8 @@ const pack=z.object({lineId:id,usablePerPack:demandQuantitySchema.nullable(),acc
 const baseSchema=z.object({shopRevision:z.number().int().positive(),authorityEpoch:z.number().int().positive(),graphRevision:z.number().int().min(0)}).strict();
 export const demandActionSourcesInputSchema=z.object({base:baseSchema.extend({graphRevision:z.number().int().positive(),graphDigest:z.string().regex(/^[0-9a-f]{64}$/)}),action:z.object({kind:z.literal('shop.patch'),body:bodySchemas['shop.patch']}).strict()}).strict()
  .refine(v=>v.action.body.mealEdit!==undefined&&v.action.body.demandReview===undefined,'Review one meal edit without a nested demand review.');
-const inputSchema=z.object({mode:z.enum(['adopt','change','undo','review']),base:baseSchema,
- change:delta,undoOperationId:id.optional(),action:z.object({kind:z.enum(['shop.patch','request.apply']),body:z.record(z.string(),z.unknown())}).strict(),packs:z.array(pack).max(200)}).strict();
+const inputSchema=z.object({mode:z.enum(['adopt','change','undo','review','operationUndo']),base:baseSchema,
+ change:delta,undoOperationId:id.optional(),operationUndoDigest:z.string().regex(/^[0-9a-f]{64}$/).optional(),action:z.object({kind:z.enum(['shop.patch','request.apply']),body:z.record(z.string(),z.unknown())}).strict(),packs:z.array(pack).max(200)}).strict();
 type Input=z.infer<typeof inputSchema>;
 const fail=(code='demand_review_required')=>new ServiceError(409,code,'Review the current shared quantities and exact source changes.');
 function assert(value:unknown,code?:string):asserts value{if(!value)throw fail(code);}
@@ -129,7 +130,12 @@ async function evaluate(repo:HouseholdRepository,ctx:Context,shop:Shop,input:Inp
  const before=current?.graph??{schemaVersion:1 as const,conversionTableVersion:'us-customary-metric-v1' as const,householdId:ctx.householdId,shopId:shop.shop_id,revision:0,lines:[],contributions:[],edges:[],usedIds:[]};
  const command={...input.change,schemaVersion:1,operationId,householdId:ctx.householdId,shopId:shop.shop_id,baseRevision:before.revision,at};
  let result;
- if(input.mode==='undo'){
+ if(input.mode==='operationUndo'){
+  assert(input.undoOperationId&&noChanges(input.change),'invalid_operation_undo');
+  const inverse=await operationInverse(repo,ctx,shop,input.undoOperationId,before,operationId,at);
+  assert(input.action.kind==='shop.patch'&&digest(input.action)===digest(inverse.action)&&input.operationUndoDigest===inverse.effectDigest,'demand_action_changed');
+  result=inverse.result;
+ }else if(input.mode==='undo'){
   assert(input.undoOperationId&&noChanges(input.change),'invalid_demand_undo');const old=(await ctx.db.query('SELECT receipt FROM ritc.shared_demand_revision WHERE household_id=$1 AND shop_id=$2 AND operation_id=$3',[ctx.householdId,shop.shop_id,input.undoOperationId])).rows[0];assert(old?.receipt,'demand_undo_unavailable');result=undoDemandChange(before,old.receipt,command);
  }else if(input.mode==='review'){
   assert(noChanges(input.change)&&!input.undoOperationId,'invalid_demand_review');result={graph:validateDemandGraph({...before,revision:before.revision+1}),receipt:{schemaVersion:1,operationId,householdId:ctx.householdId,shopId:shop.shop_id,baseRevision:before.revision,resultRevision:before.revision+1,lines:[],contributions:[],edges:[]}};
@@ -153,7 +159,10 @@ export async function readActionDemandSources(repo:HouseholdRepository,ctx:Conte
 }
 export type DemandActionSourcesResponse=Awaited<ReturnType<typeof readActionDemandSources>>;
 export async function previewDemand(repo:HouseholdRepository,ctx:Context,shop:Shop,raw:unknown){
- const input=inputSchema.parse(raw);input.action.body=bodySchemas[input.action.kind].parse(input.action.body);
+ const input=inputSchema.parse(raw);assert(input.mode!=='operationUndo'&&input.operationUndoDigest===undefined,'operation_undo_endpoint_required');
+ return previewDemandInput(repo,ctx,shop,input);
+}
+async function previewDemandInput(repo:HouseholdRepository,ctx:Context,shop:Shop,input:Input){input.action.body=bodySchemas[input.action.kind].parse(input.action.body);
  const operationId=randomUUID(),at=ctx.now.toISOString(),reviewed=await evaluate(repo,ctx,shop,input,operationId,at),previewId=randomUUID(),expiresAt=new Date(ctx.now.getTime()+600000);
  await ctx.db.query('DELETE FROM ritc.shared_demand_preview WHERE household_id=$1 AND expires_at<=$2',[ctx.householdId,ctx.now]);
  const count=(await ctx.db.query('SELECT count(*)::integer AS n FROM ritc.shared_demand_preview WHERE household_id=$1 AND actor_id=$2',[ctx.householdId,ctx.member.member_id])).rows[0].n;assert(count<100,'demand_preview_limit');
@@ -167,6 +176,8 @@ async function boundPreview(ctx:Context,shopId:string,review:unknown){
 export async function demandOperation(ctx:Context,c:Envelope){return c.body.demandReview?(await boundPreview(ctx,c.shopId,c.body.demandReview)).operation_id as string:randomUUID();}
 export async function assertDemandReplay(ctx:Context,shop:Shop,operationId:string){
  const row=(await ctx.db.query('SELECT authority_epoch,receipt FROM ritc.shared_demand_revision WHERE household_id=$1 AND operation_id=$2',[ctx.householdId,operationId])).rows[0];if(row&&(!row.receipt||row.authority_epoch!==shop.authority_epoch))throw refresh();
+ const inverse=(await ctx.db.query('SELECT reverses_operation_id FROM ritc.shared_food_operation_effect WHERE household_id=$1 AND shop_id=$2 AND operation_id=$3',[ctx.householdId,shop.shop_id,operationId])).rows[0];
+ if(inverse?.reverses_operation_id)assertSharedFoodUndoReplay(await foodUndoEvidence(ctx,shop,inverse.reverses_operation_id));
 }
 async function rememberSources(ctx:Context,shop:Shop,before:DemandGraph,after:DemandGraph,acceptedProposalId:string|null){
  const changed:{kind:string;row:{id:string}}[]=[];
@@ -197,7 +208,9 @@ export async function applyDemand(repo:HouseholdRepository,ctx:Context,shop:Shop
  const p=await boundPreview(ctx,shop.shop_id,c.body.demandReview),input=inputSchema.parse(p.intent);assert(p.operation_id===operationId&&p.authority_epoch===shop.authority_epoch&&p.shop_revision===shop.revision,'stale_demand');
  const {demandReview,...body}=c.body;assert(input.action.kind===c.kind&&digest(input.action.body)===digest(body),'demand_action_changed');
  const reviewed=await evaluate(repo,ctx,shop,input,operationId,p.created_at.toISOString());assert(reviewed.baseDigest===p.graph_digest&&reviewed.acceptedDigest===p.accepted_digest,'stale_demand');
- const {graph,receipt}=reviewed.result;await ctx.db.query(`INSERT INTO ritc.shared_demand_revision(household_id,shop_id,revision,predecessor,shop_revision,authority_epoch,operation_id,actor_id,device_id,created_at,graph,graph_digest,receipt,pack_review)
+ const {graph,receipt}=reviewed.result;
+ await recordFoodOperationEffect(ctx,shop,input,operationId,reviewed.before.revision,graph.revision);
+ await ctx.db.query(`INSERT INTO ritc.shared_demand_revision(household_id,shop_id,revision,predecessor,shop_revision,authority_epoch,operation_id,actor_id,device_id,created_at,graph,graph_digest,receipt,pack_review)
  VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,[ctx.householdId,shop.shop_id,graph.revision,graph.revision===1?null:graph.revision-1,shop.revision+1,shop.authority_epoch,operationId,ctx.member.member_id,ctx.deviceId,ctx.now,graph,digest(graph),receipt,JSON.stringify(input.packs)]);
  await rememberSources(ctx,shop,reviewed.before,graph,reviewed.facts.body.mealEdit?.changeProposalId??null);
  await ctx.db.query('UPDATE ritc.shop SET demand_revision=$3,demand_review_required=false WHERE household_id=$1 AND shop_id=$2',[ctx.householdId,shop.shop_id,graph.revision]);
@@ -206,4 +219,91 @@ export async function applyDemand(repo:HouseholdRepository,ctx:Context,shop:Shop
 export async function assertPriceOnly(repo:HouseholdRepository,ctx:Context,shop:Shop,c:Envelope){
  const body=bodySchemas['shop.patch'].parse(c.body);assert(!body.mealEdit&&!body.demandReview&&!shop.demand_review_required,'demand_review_required');
  const identity=(lines:any[])=>lines.map(({lineId,originalItem,packs})=>({lineId,originalItem,packs}));assert(digest(identity(body.lines))===digest(identity(await repo.lines(ctx,shop.shop_id))),'demand_price_only_changed');
+}
+
+/** New effect references authenticate a bounded whole-operation scope; old receipts
+ * are deliberately not backfilled or promoted to complete Undo authority. */
+async function recordFoodOperationEffect(ctx:Context,shop:Shop,input:Input,operationId:string,beforeGraph:number,afterGraph:number){
+ const body=input.action.body;
+ let classification=input.action.kind==='request.apply'?'request_acceptance':beforeGraph===0?'first_adoption':
+  body.mealEdit?'meal_action':body.reviewedStoreBasisRevision!==undefined||shop.store_basis_revision!=null||shop.store_review_required?'store_action':'eligible';
+ const previous=(await ctx.db.query('SELECT snapshot,digest FROM ritc.shop_snapshot WHERE household_id=$1 AND shop_id=$2 AND revision=$3',[ctx.householdId,shop.shop_id,shop.revision])).rows[0];
+ if(classification==='eligible'&&(!previous||previous.digest!==digest(previous.snapshot)))classification='missing_snapshot';
+ await ctx.db.query(`INSERT INTO ritc.shared_food_operation_effect(household_id,shop_id,operation_id,base_shop_revision,result_shop_revision,
+ base_graph_revision,result_graph_revision,classification,reverses_operation_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+ [ctx.householdId,shop.shop_id,operationId,shop.revision,shop.revision+1,beforeGraph,afterGraph,classification,input.mode==='operationUndo'?input.undoOperationId:null]);
+}
+async function foodUndoEvidence(ctx:Context,shop:Shop,operationId:string):Promise<FoodUndoEvidence>{
+ const o=(await ctx.db.query('SELECT operation_id,household_id,shop_id,kind,payload_digest FROM ritc.operation WHERE household_id=$1 AND shop_id=$2 AND operation_id=$3',[ctx.householdId,shop.shop_id,operationId])).rows[0];
+ if(!o)throw foodUndoFailure('history_unavailable');
+ const effect=(await ctx.db.query('SELECT * FROM ritc.shared_food_operation_effect WHERE household_id=$1 AND shop_id=$2 AND operation_id=$3',[ctx.householdId,shop.shop_id,operationId])).rows[0]??null;
+ let before=null,after=null,beforeGraph=null,afterGraph=null;
+ if(effect){
+  const snapshots=(await ctx.db.query('SELECT revision,snapshot,digest,operation_id FROM ritc.shop_snapshot WHERE household_id=$1 AND shop_id=$2 AND revision=ANY($3::integer[])',[ctx.householdId,shop.shop_id,[effect.base_shop_revision,effect.result_shop_revision]])).rows;
+  before=snapshots.find(r=>r.revision===effect.base_shop_revision)??null;
+  after=snapshots.find(r=>r.revision===effect.result_shop_revision&&r.operation_id===operationId)??null;
+  const graphs=(await ctx.db.query('SELECT revision,graph,graph_digest,receipt,operation_id FROM ritc.shared_demand_revision WHERE household_id=$1 AND shop_id=$2 AND revision=ANY($3::integer[])',[ctx.householdId,shop.shop_id,[effect.base_graph_revision,effect.result_graph_revision]])).rows;
+  beforeGraph=graphs.find(r=>r.revision===effect.base_graph_revision)??null;
+  afterGraph=graphs.find(r=>r.revision===effect.result_graph_revision&&r.operation_id===operationId)??null;
+ }
+ const alreadyReversed=(await ctx.db.query('SELECT 1 FROM ritc.shared_food_operation_effect WHERE household_id=$1 AND shop_id=$2 AND reverses_operation_id=$3',[ctx.householdId,shop.shop_id,operationId])).rowCount!==0;
+ return {operation:o,effect,before,after,beforeGraph,afterGraph,alreadyReversed};
+}
+async function operationInverse(repo:HouseholdRepository,ctx:Context,shop:Shop,target:string,graph:DemandGraph,operationId:string,at:string,lines?:Awaited<ReturnType<HouseholdRepository['lines']>>){
+ assert(!shop.demand_review_required,'demand_review_required');
+ if(shop.store_basis_revision!=null||shop.store_review_required)throw foodUndoFailure('store_action_unsupported');
+ return deriveSharedFoodUndo(await foodUndoEvidence(ctx,shop,target),{graph,lines:lines??await repo.lines(ctx,shop.shop_id),quote:shop.quote},
+  {operationId,householdId:ctx.householdId,shopId:shop.shop_id,baseRevision:graph.revision,at},ctx.now);
+}
+export const foodUndoCandidateSchema=z.object({targetOperationId:id,base:baseSchema.extend({graphRevision:z.number().int().positive(),graphDigest:z.string().regex(/^[0-9a-f]{64}$/)})}).strict();
+export const foodUndoInputSchema=foodUndoCandidateSchema.extend({effectDigest:z.string().regex(/^[0-9a-f]{64}$/),packs:z.array(pack).max(200)}).strict();
+export async function readFoodOperationUndoCandidate(repo:HouseholdRepository,ctx:Context,shop:Shop,raw:unknown){
+ repo.requireShopper(ctx,shop);repo.requireDraft(shop);const input=foodUndoCandidateSchema.parse(raw);repo.checkBase(shop,input.base);
+ const current=await loadDemand(ctx,shop);assert(current&&!shop.demand_review_required,'demand_enabled_required');
+ assert(current.graph.revision===input.base.graphRevision&&current.fingerprint===input.base.graphDigest,'stale_demand');
+ const inverse=await operationInverse(repo,ctx,shop,input.targetOperationId,current.graph,randomUUID(),ctx.now.toISOString());
+ const facts=await actionFacts(repo,ctx,shop,{action:inverse.action});await verifySources(repo,ctx,shop,inverse.result.graph,facts);
+ return {schemaVersion:1,shopId:shop.shop_id,base:input.base,targetOperationId:input.targetOperationId,effectDigest:inverse.effectDigest,
+  scope:inverse.scope,action:inverse.action,before:current.graph,after:inverse.result.graph,
+  beforeTotals:demandLineTotals(current.graph),afterTotals:demandLineTotals(inverse.result.graph),
+  beforeCheckout:inverse.beforeCheckout,afterCheckout:inverse.afterCheckout,packReviewLineIds:inverse.action.body.lines.map(l=>l.lineId)};
+}
+export async function previewFoodOperationUndo(repo:HouseholdRepository,ctx:Context,shop:Shop,raw:unknown){
+ repo.requireShopper(ctx,shop);repo.requireDraft(shop);const input=foodUndoInputSchema.parse(raw);repo.checkBase(shop,input.base);
+ const current=await loadDemand(ctx,shop);assert(current&&!shop.demand_review_required,'demand_enabled_required');
+ assert(current.graph.revision===input.base.graphRevision&&current.fingerprint===input.base.graphDigest,'stale_demand');
+ const inverse=await operationInverse(repo,ctx,shop,input.targetOperationId,current.graph,randomUUID(),ctx.now.toISOString());
+ assert(input.effectDigest===inverse.effectDigest,'demand_action_changed');
+ const intent:Input={mode:'operationUndo',base:{shopRevision:input.base.shopRevision,authorityEpoch:input.base.authorityEpoch,graphRevision:input.base.graphRevision},undoOperationId:input.targetOperationId,operationUndoDigest:inverse.effectDigest,
+  change:{lines:[],contributions:[],edges:[],removeSourceIds:[],removeEdgeIds:[]},action:inverse.action,packs:input.packs};
+ const preview=await previewDemandInput(repo,ctx,shop,intent);
+ return {...preview,operationUndo:{targetOperationId:input.targetOperationId,scope:inverse.scope,effectDigest:inverse.effectDigest},
+  action:inverse.action,beforeCheckout:inverse.beforeCheckout,afterCheckout:inverse.afterCheckout};
+}
+/** Informational only: reviewable never means accepted or guaranteed applicable.
+ * No source wording, request IDs or copied meal content is exposed by history. */
+export async function readFoodOperationHistory(repo:HouseholdRepository,ctx:Context,shop:Shop,beforeRevision:string|null){
+ repo.requireShopper(ctx,shop);repo.requireDraft(shop);
+ const cursor=beforeRevision===null?2147483647:z.coerce.number().int().positive().max(2147483647).parse(beforeRevision);
+ const rows=(await ctx.db.query(`SELECT s.revision,o.operation_id,o.kind,o.committed_at FROM ritc.shop_snapshot s
+ JOIN ritc.operation o ON (o.household_id,o.operation_id)=(s.household_id,s.operation_id)
+ WHERE s.household_id=$1 AND s.shop_id=$2 AND s.revision<$3 AND o.kind IN ('shop.patch','request.apply')
+ ORDER BY s.revision DESC LIMIT 21`,[ctx.householdId,shop.shop_id,cursor])).rows;
+ const current=await loadDemand(ctx,shop),currentLines=await repo.lines(ctx,shop.shop_id);const items=[];
+ for(const row of rows.slice(0,20)){
+  let eligibility:{status:'reviewable'|'unavailable';reason:string};
+  try{
+   if(!current||shop.demand_review_required)throw foodUndoFailure('history_unavailable');
+   await operationInverse(repo,ctx,shop,row.operation_id,current.graph,randomUUID(),ctx.now.toISOString(),currentLines);
+   eligibility={status:'reviewable',reason:'explicit_current_preview_required'};
+  }catch(error){
+   if(error instanceof ServiceError)eligibility={status:'unavailable',reason:error.code};
+   else if(error instanceof z.ZodError)eligibility={status:'unavailable',reason:'food_undo_history_unavailable'};
+   else if(error instanceof SharedDemandError)eligibility={status:'unavailable',reason:'food_undo_graph_conflict'};
+   else throw error;
+  }
+  items.push({operationId:row.operation_id,kind:row.kind,shopRevision:row.revision,committedAt:row.committed_at.toISOString(),eligibility});
+ }
+ return {schemaVersion:1,shopId:shop.shop_id,shopRevision:shop.revision,authorityEpoch:shop.authority_epoch,
+  items,nextBeforeRevision:rows.length>20?String(rows[19]!.revision):null};
 }

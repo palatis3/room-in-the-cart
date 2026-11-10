@@ -545,3 +545,120 @@ if(process.env.RITC_TEST_NATIVE_WIRE==='1')test('actual Swift meal action catalo
  assert.deepEqual(convertAfter.graph.edges,[allocation]);assert.deepEqual(convertAfter.graph.contributions.find(c=>c.id===manual.id),manual);assert.deepEqual(convertAfter.totals[0].quantity,{numerator:'240',denominator:'1'});
  assert.equal(convertAfter.graph.revision,2);assert.equal(convertAfter.shopRevision,4);assert.equal(await count(converted,'operation'),convertCounts.operations+1);assert.equal(await count(converted,'shared_demand_revision'),convertCounts.graphs+1);assert.equal(await count(converted,'shared_demand_preview'),convertCounts.previews);
 });
+
+// Complete operation Undo: the original graph-only tests above remain unchanged.
+const undoBase=page=>({shopRevision:page.shopRevision,authorityEpoch:page.authorityEpoch,graphRevision:page.graph.revision,graphDigest:page.graphDigest});
+const foodHistory=async f=>ok(await call(f.owner,f.path+'/demand/operations'));
+const foodCandidate=async(f,targetOperationId,page)=>call(f.owner,f.path+'/demand/operation-undo-candidates','POST',{targetOperationId,base:undoBase(page)});
+const foodPreview=async(f,candidate,packs)=>call(f.owner,f.path+'/demand/operation-undo-previews','POST',{targetOperationId:candidate.targetOperationId,base:candidate.base,effectDigest:candidate.effectDigest,packs});
+async function addedFoodOperation(f){
+ const page=ok(await call(f.owner,f.path+'/demand')),extra=source(f,q(4)),basket={...f.basket,packs:3},quote={...f.quote,capMinor:f.quote.capMinor+100};
+ const input={mode:'change',base:{shopRevision:page.shopRevision,authorityEpoch:page.authorityEpoch,graphRevision:page.graph.revision},change:{...empty(),contributions:[extra]},action:{kind:'shop.patch',body:{quote,lines:[basket]}},packs:[{lineId:basket.lineId,usablePerPack:q(6),acceptUnresolved:false}]};
+ const p=ok(await preview(f,input)),accepted=await apply(f,input,p);return{input,extra,receipt:ok(accepted.response),command:accepted.command};
+}
+test('complete food operation Undo: relaunch, Cancel, later staple, exact graph/packs/quote and one Apply/retry',async()=>{
+ const f=await fixture(),adoption=await adopt(f),target=await addedFoodOperation(f),page=ok(await call(f.owner,f.path+'/demand'));
+ const basket={lineId:randomUUID(),originalItem:'Later staple',packs:1,unitPriceMinor:250,feeEligible:false};
+ const extra={...source(f,q(1)),lineId:basket.lineId,productKey:'staple',productName:'Staple',originalText:'Later staple'};
+ const input={mode:'change',base:{shopRevision:page.shopRevision,authorityEpoch:1,graphRevision:page.graph.revision},change:{...empty(),lines:[{id:basket.lineId,name:basket.originalItem,unit:'count',originalOrder:9,trashedAt:null}],contributions:[extra]},action:{kind:'shop.patch',body:{quote:target.input.action.body.quote,lines:[{...target.input.action.body.lines[0],unitPriceMinor:150},basket]}},packs:[...target.input.packs,{lineId:basket.lineId,usablePerPack:q(1),acceptUnresolved:false}]};
+ ok((await apply(f,input,ok(await preview(f,input)))).response);
+ const second=await actor(f.owner.subject);await enroll(second,f.h);f.owner=second;
+ const current=ok(await call(f.owner,f.path+'/demand')),history=await foodHistory(f);
+ assert.equal(history.items.find(x=>x.operationId===target.receipt.operationId).eligibility.status,'reviewable');
+ assert.equal(history.items.find(x=>x.operationId===ok(adoption.response).operationId).eligibility.reason,'food_undo_first_adoption_unsupported');
+ const operations=await count(f,'operation'),snapshots=await count(f,'shop_snapshot'),previews=await count(f,'shared_demand_preview');
+ const candidate=ok(await foodCandidate(f,target.receipt.operationId,current));
+ assert.equal(await count(f,'shared_demand_preview'),previews,'candidate creates no preview');assert.equal(await count(f,'operation'),operations);
+ assert.deepEqual([...candidate.packReviewLineIds].sort(),[f.basket.lineId,basket.lineId].sort());assert.equal(candidate.action.body.lines.find(l=>l.lineId===f.basket.lineId).packs,2);assert.equal(candidate.action.body.lines.find(l=>l.lineId===f.basket.lineId).unitPriceMinor,150);
+ assert.deepEqual(candidate.action.body.quote,f.quote);assert.deepEqual(candidate.after.contributions.find(c=>c.id===extra.id),extra);
+ const packs=[{lineId:f.basket.lineId,usablePerPack:q(6),acceptUnresolved:false},{lineId:basket.lineId,usablePerPack:q(1),acceptUnresolved:false}];
+ const cancelled=ok(await foodPreview(f,candidate,packs));assert.equal(await count(f,'operation'),operations);assert.equal(await count(f,'shop_snapshot'),snapshots);assert.deepEqual(ok(await call(f.owner,f.path+'/demand')),current);
+ const p=ok(await foodPreview(f,candidate,packs));assert.notEqual(cancelled.previewId,p.previewId);
+ const applied=await apply(f,{action:p.action,base:candidate.base},p),receipt=ok(applied.response);
+ assert.deepEqual(ok(await call(f.owner,f.base+'/commands','POST',applied.command)),receipt);
+ assert.equal(await count(f,'operation'),operations+1);assert.equal(await count(f,'shared_food_operation_effect'),3+1);
+ const after=ok(await call(f.owner,f.path)),graph=ok(await call(f.owner,f.path+'/demand'));
+ assert.equal(after.lines.find(l=>l.lineId===f.basket.lineId).packs,2);assert.equal(after.lines.find(l=>l.lineId===f.basket.lineId).unitPriceMinor,150);assert.deepEqual(after.lines.find(l=>l.lineId===basket.lineId),basket);assert.deepEqual(after.quote,f.quote);
+ assert.deepEqual(graph.graph.contributions.find(c=>c.id===extra.id),extra);assert.ok(graph.graph.contributions.find(c=>c.id===target.extra.id).removedAt);
+ assert.equal((await foodCandidate(f,target.receipt.operationId,graph)).data.error.code,'food_undo_already_reversed');
+ assert.equal((await call(f.owner,f.base+'/commands','POST',{...applied.command,clientKey:randomUUID()})).status,409);
+ const bound=(await admin.query('SELECT reverses_operation_id FROM ritc.shared_food_operation_effect WHERE household_id=$1 AND operation_id=$2',[f.h,receipt.operationId])).rows[0];assert.equal(bound.reverses_operation_id,target.receipt.operationId);
+});
+test('complete Undo supports pack-only empty graph reviews and rejects a later touched pack conflict',async()=>{
+ const f=await fixture();await adopt(f);let page=ok(await call(f.owner,f.path+'/demand'));
+ const input={mode:'review',base:{shopRevision:page.shopRevision,authorityEpoch:1,graphRevision:page.graph.revision},change:empty(),action:{kind:'shop.patch',body:{quote:f.quote,lines:[{...f.basket,packs:3}]}},packs:[{lineId:f.basket.lineId,usablePerPack:q(6),acceptUnresolved:false}]};
+ const target=ok((await apply(f,input,ok(await preview(f,input)))).response);page=ok(await call(f.owner,f.path+'/demand'));
+ const candidate=ok(await foodCandidate(f,target.operationId,page));assert.equal(candidate.scope.graphRows,0);
+ const p=ok(await foodPreview(f,candidate,input.packs));assert.deepEqual(p.receipt.contributions,[]);assert.equal(p.action.body.lines[0].packs,2);
+ const later={...input,base:{shopRevision:page.shopRevision,authorityEpoch:1,graphRevision:page.graph.revision},action:{kind:'shop.patch',body:{quote:f.quote,lines:[{...f.basket,packs:4}]}}};
+ ok((await apply(f,later,ok(await preview(f,later)))).response);page=ok(await call(f.owner,f.path+'/demand'));
+ assert.equal((await foodCandidate(f,target.operationId,page)).data.error.code,'food_undo_line_conflict');
+ assert.equal((await apply(f,{action:p.action,base:candidate.base},p)).response.status,409);
+ assert.equal((await foodHistory(f)).items.find(x=>x.operationId===target.operationId).eligibility.reason,'food_undo_line_conflict');
+});
+test('complete Undo rejects an expired restored quote and does not weaken current base or authorization',async()=>{
+ const f=await fixture();await adopt(f);
+ // Current draft explicitly records an already-expired historical price basis; this is valid draft evidence, not fresh prices.
+ const old=ok(await call(f.owner,f.path+'/demand')),expired={...f.quote,observedAt:new Date(Date.now()-120000).toISOString(),expiresAt:new Date(Date.now()-60000).toISOString()};
+ const initial={mode:'review',base:{shopRevision:old.shopRevision,authorityEpoch:1,graphRevision:old.graph.revision},change:empty(),action:{kind:'shop.patch',body:{quote:expired,lines:[f.basket]}},packs:[{lineId:f.basket.lineId,usablePerPack:q(6),acceptUnresolved:false}]};
+ ok((await apply(f,initial,ok(await preview(f,initial)))).response);
+ const page=ok(await call(f.owner,f.path+'/demand')),fresh={...initial,base:{shopRevision:page.shopRevision,authorityEpoch:1,graphRevision:page.graph.revision},action:{kind:'shop.patch',body:{quote:f.quote,lines:[f.basket]}}};
+ const target=ok((await apply(f,fresh,ok(await preview(f,fresh)))).response),current=ok(await call(f.owner,f.path+'/demand'));
+ assert.equal((await foodCandidate(f,target.operationId,current)).data.error.code,'food_undo_expired_quote');
+ assert.equal((await foodCandidate(f,target.operationId,page)).status,409);
+ const other=await invited(f);assert.equal((await call(other,f.path+'/demand/operations')).status,404);
+ assert.equal((await call(other,f.path+'/demand/operation-undo-candidates','POST',{targetOperationId:target.operationId,base:undoBase(current)})).status,404);
+ assert.equal((await foodHistory(f)).items.find(x=>x.operationId===target.operationId).eligibility.reason,'food_undo_expired_quote');
+});
+test('complete Undo exact replay cannot resurrect target history after authorized privacy erasure',async()=>{
+ const f=await fixture(),author=f.owner;await adopt(f);const target=await addedFoodOperation(f),shopper=await invited(f);
+ ok(await send(f,'shop.transferAuthority',{newShopperId:shopper.id},3));f.owner=shopper;
+ const page=ok(await call(f.owner,f.path+'/demand')),candidate=ok(await foodCandidate(f,target.receipt.operationId,page));
+ const p=ok(await foodPreview(f,candidate,[{lineId:f.basket.lineId,usablePerPack:q(6),acceptUnresolved:false}]));
+ const applied=await apply(f,{action:p.action,base:candidate.base},p),receipt=ok(applied.response);assert.deepEqual(ok(await call(f.owner,f.base+'/commands','POST',applied.command)),receipt);
+ ok(await call(author,'/v1/privacy/deletions','POST',{clientKey:randomUUID(),statusToken:randomBytes(32).toString('base64url'),confirm:true,households:[{householdId:f.h,organizer:'transfer',organizerMemberId:shopper.id,shops:[],eraseChildProfiles:[]}]}),202);
+ assert.equal((await maintenance.run({batchSize:1})).completed,1);
+ assert.equal((await call(f.owner,f.base+'/commands','POST',applied.command)).status,409);
+ const history=await foodHistory(f);assert.ok(history.items.every(x=>x.eligibility.status==='unavailable'));assert.ok(!JSON.stringify(history).includes('12 wraps'));
+});
+test('complete Undo does not relabel historical line prices with a later fresh quote',async()=>{
+ const f=await fixture();await adopt(f);let page=ok(await call(f.owner,f.path+'/demand'));
+ const input={mode:'review',base:{shopRevision:page.shopRevision,authorityEpoch:1,graphRevision:page.graph.revision},change:empty(),action:{kind:'shop.patch',body:{quote:f.quote,lines:[{...f.basket,unitPriceMinor:150}]}},packs:[{lineId:f.basket.lineId,usablePerPack:q(6),acceptUnresolved:false}]};
+ const target=ok((await apply(f,input,ok(await preview(f,input)))).response);page=ok(await call(f.owner,f.path+'/demand'));
+ const newQuote={...f.quote,observedAt:new Date().toISOString(),expiresAt:new Date(Date.now()+7200000).toISOString()};
+ const later={...input,base:{shopRevision:page.shopRevision,authorityEpoch:1,graphRevision:page.graph.revision},action:{kind:'shop.patch',body:{quote:newQuote,lines:input.action.body.lines}}};
+ ok((await apply(f,later,ok(await preview(f,later)))).response);page=ok(await call(f.owner,f.path+'/demand'));
+ const before=await count(f,'operation');assert.equal((await foodCandidate(f,target.operationId,page)).data.error.code,'food_undo_quote_conflict');assert.equal(await count(f,'operation'),before);
+});
+test('complete Undo marks date-only meal changes and accepted request Link explicitly unsupported',async()=>{
+ const f=await fixture(),m=await mealGraph(f);ok((await apply(f,m.input,ok(await preview(f,m.input)))).response);
+ let page=ok(await call(f.owner,f.path+'/demand'));
+ const date={mode:'review',base:{shopRevision:page.shopRevision,authorityEpoch:1,graphRevision:page.graph.revision},change:empty(),action:{kind:'shop.patch',body:{quote:f.quote,lines:[f.basket],mealEdit:{occurrenceId:m.occurrenceId,baseMealRevision:2,meal:{...m.meal,day:'2026-11-10'}}}},packs:m.input.packs};
+ const dated=ok((await apply(f,date,ok(await preview(f,date)))).response);page=ok(await call(f.owner,f.path+'/demand'));
+ assert.equal((await foodCandidate(f,dated.operationId,page)).data.error.code,'food_undo_meal_action_unsupported');
+ const author=await invited(f),sent=ok(await send(f,'request.send',{clientRequestId:randomUUID(),originalItem:'Guest wraps',ownQuantity:null,authoredAt:new Date().toISOString()},page.shopRevision,1,author));
+ const requestId=sent.request.requestId,rp=ok(await call(f.owner,f.path+'/previews','POST',{requestId,base:{shopRevision:page.shopRevision,authorityEpoch:1,requestRevision:1},decision:{choice:'link',lineId:f.basket.lineId,promote:false}}));
+ const requestSource={...source(f,null),originalText:'Guest wraps',source:{kind:'request',requestId,appliedRequestRevision:1}};
+ const accepted={mode:'change',base:{shopRevision:page.shopRevision,authorityEpoch:1,graphRevision:page.graph.revision},change:{...empty(),contributions:[requestSource]},action:{kind:'request.apply',body:{requestId,previewId:rp.previewId,acceptOverage:false,acceptUnknown:true}},packs:[{lineId:f.basket.lineId,usablePerPack:q(6),acceptUnresolved:true}]};
+ const linked=ok((await apply(f,accepted,ok(await preview(f,accepted)))).response);page=ok(await call(f.owner,f.path+'/demand'));
+ assert.equal((await foodCandidate(f,linked.operationId,page)).data.error.code,'food_undo_request_acceptance_unsupported');
+ const history=await foodHistory(f);assert.equal(history.items.find(x=>x.operationId===dated.operationId).eligibility.reason,'food_undo_meal_action_unsupported');assert.equal(history.items.find(x=>x.operationId===linked.operationId).eligibility.reason,'food_undo_request_acceptance_unsupported');
+});
+for(const later of ['price','priced staple'])test('complete Undo refuses an older quote observation over later '+later,async()=>{
+ const f=await fixture();await adopt(f);let page=ok(await call(f.owner,f.path+'/demand'));
+ const refreshed={...f.quote,observedAt:new Date().toISOString(),expiresAt:new Date(Date.now()+7200000).toISOString()};
+ const targetInput={mode:'review',base:{shopRevision:page.shopRevision,authorityEpoch:1,graphRevision:page.graph.revision},change:empty(),action:{kind:'shop.patch',body:{quote:refreshed,lines:[f.basket]}},packs:[{lineId:f.basket.lineId,usablePerPack:q(6),acceptUnresolved:false}]};
+ const target=ok((await apply(f,targetInput,ok(await preview(f,targetInput)))).response);page=ok(await call(f.owner,f.path+'/demand'));
+ const input={...targetInput,base:{shopRevision:page.shopRevision,authorityEpoch:1,graphRevision:page.graph.revision},change:empty(),action:{kind:'shop.patch',body:{quote:refreshed,lines:[{...f.basket,unitPriceMinor:150}]}}};
+ if(later==='priced staple'){
+  const basket={lineId:randomUUID(),originalItem:'New priced staple',packs:1,unitPriceMinor:250,feeEligible:false};
+  const c={...source(f,q(1)),lineId:basket.lineId,productKey:'staple',productName:'Staple',originalText:'New priced staple'};
+  input.mode='change';input.change={...empty(),lines:[{id:basket.lineId,name:basket.originalItem,unit:'count',originalOrder:10,trashedAt:null}],contributions:[c]};
+  input.action.body.lines=[f.basket,basket];input.packs=[...targetInput.packs,{lineId:basket.lineId,usablePerPack:q(1),acceptUnresolved:false}];
+ }
+ ok((await apply(f,input,ok(await preview(f,input)))).response);page=ok(await call(f.owner,f.path+'/demand'));
+ const current=ok(await call(f.owner,f.path)),countBefore=await count(f,'operation');
+ assert.equal((await foodCandidate(f,target.operationId,page)).data.error.code,'food_undo_quote_conflict');
+ assert.equal((await foodHistory(f)).items.find(x=>x.operationId===target.operationId).eligibility.reason,'food_undo_quote_conflict');
+ assert.deepEqual(ok(await call(f.owner,f.path)),current);assert.equal(await count(f,'operation'),countBefore);
+});

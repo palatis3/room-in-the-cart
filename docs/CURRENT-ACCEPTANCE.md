@@ -2,6 +2,20 @@
 
 ## Current checkpoint — November 9, workflow and combined-candidate qualification
 
+The newest local backend successor adds a bounded complete-operation Undo path
+and passes 625 offline plus 300 PostgreSQL tests, including eight new HTTP cases.
+One database-only offline skip and three optional browser skips remain explicit.
+Migration 044 ran only in an isolated fixture; staging and native/UI acceptance
+are unchanged. Meal/request/adoption/store inverse scopes remain open.
+[Undo scope and proof](evidence/service/shared-food-operation-undo-20261109/README.md).
+
+Hosted diagnostic 42732878538 at 0cdfaa51 passed 332 early checks, the Release
+producer and all initial container lookups. It failed collector readiness before
+GO; ABORT caused the subsequent native failure. Required performance measurements
+remain unqualified. Saved sources/products verify exactly; separate postprocessing
+limit fixes are prepared, not installed. See CURRENT-HANDOFF for current ownership
+and the proposed separate tiny-helper collector prerequisite test.
+
 The latest shared-food slice compiles under Xcode 27.1. Its current scoped runs
 pass153 native model regressions,122 client-package tests (3 expected integration
 skips),595 backend offline tests (1 expected database-only skip), and292 PostgreSQL

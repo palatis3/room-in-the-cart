@@ -70,8 +70,51 @@ This file contains current execution state. The previous 482-line history is
 - Preserve existing untracked historical evidence. Stage named files, not all
   working-tree changes. Keep 8 GiB free; the last observation was about 167 GiB.
 
+## Current local successor
+
+Reviewed backend `operation-undo-r2` is installed. The complete run passes 625
+offline and 300 PostgreSQL tests, including all eight new HTTP cases, with the
+same one-plus-three expected skips. All 243 sources and verified compiled products
+remained unchanged. The journal harness fenced and the owned database stopped;
+private fixture state remains local with 0700 permissions. Migration 044 ran only
+in that fixture, never staging. [Exact proof](evidence/service/shared-food-operation-undo-20261109/README.md).
+
+The bounded inverse covers newly recorded eligible graph/basket/pack/quote patches;
+meal/request/adoption/store and other documented scopes remain unfinished. Both
+directions of historical-price/quote mismatch were found and corrected in review.
+Native r1 is prepared but not installed; independent review is correcting a
+URLProtocol conformance and removal-versus-restoration expiry check before its
+first build. A separate UI successor addresses initialization/access-change races.
+Shared-record snapshot r2 is prepared with six unexecuted HTTP tests; portable
+export/guardian authorization and managed recovery remain separate implementation.
+
+Root owns integration and all native execution. No local native or database job
+is currently active. Astra helpers prepare native Undo UI, independent native
+review, and a separate tiny-helper hosted collector control. Sol's previous
+monitoring and backend-runner preparation are complete.
+
 ## Current hosted question
 
+Latest [42732878538](https://github.com/palatis3/room-in-the-cart/actions/runs/42732878538)
+at `0cdfaa51b437af9f2e7c0aa42aae34f231384bad` is terminal failure after all 332
+preflight checks and the Release producer passed. All three initial lookups
+succeeded; app/runner binding completed at +66.741s and ARM at +118.702s. The
+Logging collector failed to notify readiness within 15 seconds. No GO was sent;
+ABORT caused the subsequent XCTest failure. No required metric or recording was
+qualified. The partial result has no Info.plist and cannot be recovered as a pass.
+
+Root verified 22 retained files, both diagnostic ZIPs and all 1,400 TAR members.
+Both saved source and product copies match their declared bytes/modes. Separate
+postprocessing failures applied the 128 MiB source cap to 206 MB products and
+treated copied original diagnostic logs as phase stdout. Corrections are prepared
+in `.build/HostedAppObservationNov09/postprocessing-r1` with 169 observer controls;
+they are not installed. No unchanged full-app retry. The proposed next discriminator
+is the separately labeled tiny-helper Logging/notification control on the exact
+hosted environment, retaining its 15-second readiness bound and avoiding a full
+Release app rebuild. Preparation is in `hosted-helper-control-r1`. Active dispatch
+state remains in `.build/HostedAppObservationNov09/active-handoff.json`.
+
+Earlier diagnostic:
 Focused observer [42728845944](https://github.com/palatis3/room-in-the-cart/actions/runs/42728845944)
 failed at exact `4f5efb100a1b901d2e8e09f1f0dbe30f5a058f75` after all324 early
 checks, helper typecheck and Release producer passed. The original scroll XCTest

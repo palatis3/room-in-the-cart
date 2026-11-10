@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "status": "passed",
+  "scope": "Bounded complete-operation Undo for eligible new shop.patch operations; migration044 local fixture only",
+  "baseCommit": "0cdfaa51b437af9f2e7c0aa42aae34f231384bad",
+  "candidateManifest": ".build/SharedDemandGraphNov09/operation-undo-r2/manifest.json",
+  "candidateManifestSHA256": "4e63ec3bcbe51b744b63daed0686290ec39936be4a847dc1ee5c1acfe746236e",
+  "sourceFiles": 243,
+  "offline": {
+    "tests": 626,
+    "pass": 625,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 1,
+    "todo": 0,
+    "skippedNames": [
+      "PostgreSQL durable billing / RLS / named seats contract"
+    ],
+    "logSHA256": "8de5caa1cb94d76c16009f21a2238f912374c27a1b570066042703b22577f97a"
+  },
+  "database": {
+    "tests": 303,
+    "pass": 300,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 3,
+    "todo": 0,
+    "skippedNames": [
+      "real browser WebApp and API recover a dropped helper reply with exact original bytes after a newer projection",
+      "real full browser recreation recovers a lost received suggestion with read-only retries and fences identity, expiry and revocation",
+      "two contributor web sessions see only their own purchase receipt through shopper corrections"
+    ],
+    "logSHA256": "fbf233f62fe8c33dd2d65d7a3999ef846de22c4f52c5c7befebc62b4d40fc023"
+  },
+  "operationUndoHTTPPassed": [
+    "complete food operation Undo: relaunch, Cancel, later staple, exact graph/packs/quote and one Apply/retry",
+    "complete Undo supports pack-only empty graph reviews and rejects a later touched pack conflict",
+    "complete Undo rejects an expired restored quote and does not weaken current base or authorization",
+    "complete Undo exact replay cannot resurrect target history after authorized privacy erasure",
+    "complete Undo does not relabel historical line prices with a later fresh quote",
+    "complete Undo marks date-only meal changes and accepted request Link explicitly unsupported",
+    "complete Undo refuses an older quote observation over later price",
+    "complete Undo refuses an older quote observation over later priced staple"
+  ],
+  "compileProof": {
+    "exitCode": 0,
+    "logSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "nodeSHA256": "2cc28a1880d0774616959f2210ee739bffa6ac695c887e8988a496a21271f6c0",
+    "tscSHA256": "8d5fa5bd883fec0979fc2004f1fe1d99aef40570155d550eadc0b03b55513bf0",
+    "compiledManifestSHA256": "9130b75db2348d065c6975e0375c6b365485b7e5ae64d10d55dcf10acf0ef0aa",
+    "frozenManifestSHA256": "4e63ec3bcbe51b744b63daed0686290ec39936be4a847dc1ee5c1acfe746236e",
+    "validationSHA256": "c5fb96ee2baa246b707825ed66168c4e61d386af0c99c4fbe45b8e6e196c60b9",
+    "sourceManifestSHA256": "052d89c777927bfce35c3a6234177ca88fdb25fcd89c90d0899053f2d437a241",
+    "dependencyManifestSHA256": "d8efbc1a72a659707a501241bcc9bb690ef43a7f81ca48386e9c42f00e5b0c50"
+  },
+  "sourcesDependenciesToolsProductsUnchanged": true,
+  "journalFencedByOriginalHarness": true,
+  "postgresStopped": true,
+  "privateFixtureRetainedLocally": true,
+  "privateDirectoryMode": "0700",
+  "nativeOrBrowserWire": false,
+  "deployment": false,
+  "fullProductUndoComplete": false,
+  "originals": ".build/SharedDemandGraphNov09/root-operation-undo-r1",
+  "files": {
+    "receipt.json": "b2b04f51f89abe14aa5f6bf6bbc51b3b1b846c4ce72a23df0005f06ae4a3ef3b",
+    "source-manifest.json": "052d89c777927bfce35c3a6234177ca88fdb25fcd89c90d0899053f2d437a241",
+    "compiled-service-manifest.json": "487e591132ab93de446670c21ca3679f419dda281c1993fb425e7fe17cd6e334",
+    "offline.log": "8de5caa1cb94d76c16009f21a2238f912374c27a1b570066042703b22577f97a",
+    "database.log": "fbf233f62fe8c33dd2d65d7a3999ef846de22c4f52c5c7befebc62b4d40fc023",
+    "stop.log": "ca19178a35ab4153b75b494963b66ce8243e1b94c173107c87b44d09db23652d"
+  }
+}
