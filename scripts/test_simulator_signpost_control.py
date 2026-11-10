@@ -1192,4 +1192,72 @@ class SamplePreSpawnExitTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError,'lifecycle_deadline'):self.r.lifecycle('bootstatus',['bootstatus',DEVICE['createdUDID'],'-b'],180)
             popen.assert_not_called();self.assertEqual(self.r.receipt['lifecycleCommands'][-1]['deadlineMonotonic'],180)
 
+
+class SamplerTimingTests(unittest.TestCase):
+    setUp=RuntimeSampleTests.setUp
+    sleep=RuntimeSampleTests.sleep
+    poll=RuntimeSampleTests.poll
+    identity=RuntimeSampleTests.identity
+    acquire=RuntimeSampleTests.acquire
+    prepare=RuntimeSampleTests.prepare
+    sampler=RuntimeSampleTests.sampler
+    def test_timing_preserves_success_command_and_original_three_second_budget(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);proc,spawn=self.sampler();d={}
+            with mock.patch.object(runner.subprocess,'Popen',side_effect=spawn) as popen:self.r.sample_runtime(self.item,30,d)
+            report=d['stackSample'];events={row['event']:row for row in report['timing']['events']}
+            self.assertEqual(report['status'],'passed');self.assertEqual(report['durationSeconds'],1)
+            self.assertEqual(report['samplerWallSeconds'],3);popen.assert_called_once()
+            self.assertAlmostEqual(events['sampler_deadline_set']['deadline']-events['sampler_deadline_set']['monotonic'],3)
+            for event in ('sample_started','sampler_popen_before','sampler_popen_after','sampler_first_binding','sampler_terminal_observed','sampler_after_verification'):self.assertIn(event,events)
+            self.assertIn('booted-runtimes-stack.txt',report['timing']['firstNonempty'])
+            self.assertGreater(report['timing']['operations']['identity.read']['calls'],0)
+            self.assertIsNone(self.r._sample_timing)
+    def test_delayed_spawn_consumes_original_wall_allowance(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.prepare(tmp);proc,spawn=self.sampler(finish=100);d={}
+            def slow(*args,**kw):self.clock+=3;return spawn(*args,**kw)
+            with mock.patch.object(runner.subprocess,'Popen',side_effect=slow) as popen:self.r.sample_runtime(self.item,30,d)
+            report=d['stackSample'];self.assertEqual(report['status'],'failed');self.assertIn('lifecycle_deadline',report['error'])
+            self.assertTrue(report['terminalVerified']);popen.assert_called_once()
+            events={row['event']:row for row in report['timing']['events']}
+            self.assertEqual(events['sampler_popen_after']['monotonic']-events['sampler_popen_before']['monotonic'],3)
+            self.assertIn('sampler_signal_before',events);self.assertIsNone(self.r._sample_timing)
+    def test_measure_records_duration_and_preserves_return_and_exception(self):
+        self.r._sample_timing={'events':[],'operations':{},'firstNonempty':{},'droppedEvents':0}
+        def slow():self.clock+=.25;return 'original'
+        self.assertEqual(self.r.sample_measure('budget',slow),'original')
+        def failed():self.clock+=.5;raise ValueError('original_failure')
+        with self.assertRaisesRegex(ValueError,'original_failure'):self.r.sample_measure('budget',failed)
+        row=self.r._sample_timing['operations']['budget']
+        self.assertEqual(row['calls'],2);self.assertEqual(row['seconds'],.75);self.assertEqual(row['maxSeconds'],.5)
+    def test_no_sampling_no_telemetry_or_changed_budget_body(self):
+        self.r._sample_timing=None;self.r.note('ignored')
+        with mock.patch.object(self.r,'sample_budget_body',return_value='original') as original:
+            self.assertEqual(runner.HelperRunner.budget(self.r),'original');original.assert_called_once_with()
+        self.assertIsNone(self.r._sample_timing)
+    def test_events_and_first_output_observations_are_bounded(self):
+        self.r._sample_timing={'events':[],'operations':{},'firstNonempty':{},'droppedEvents':0}
+        with tempfile.TemporaryDirectory() as tmp:
+            path=Path(tmp)/'owned.log';path.write_bytes(b'first')
+            self.r.sample_observe_outputs((path,));first=self.r._sample_timing['firstNonempty'][path.name]
+            self.clock+=1;path.write_bytes(b'second');self.r.sample_observe_outputs((path,))
+            self.assertEqual(self.r._sample_timing['firstNonempty'][path.name],first)
+        for _ in range(200):self.r.note('bounded')
+        self.assertEqual(len(self.r._sample_timing['events']),128);self.assertEqual(self.r._sample_timing['droppedEvents'],73)
+    def test_optional_output_observation_failure_retains_error_without_masking_outcome(self):
+        self.r._sample_timing={'events':[],'operations':{},'firstNonempty':{},'droppedEvents':0}
+        with mock.patch.object(Path,'lstat',side_effect=PermissionError('mock')):
+            self.r.sample_observe_outputs((Path('owned.log'),))
+        self.assertEqual(self.r._sample_timing['events'][0]['event'],'output_observation_error')
+        self.assertEqual(self.r._sample_timing['firstNonempty'],{})
+    def test_real_budget_and_save_wrappers_measure_unchanged_parent_operations(self):
+        self.r._sample_timing={'events':[],'operations':{},'firstNonempty':{},'droppedEvents':0}
+        with mock.patch.object(runner.Runner,'save',return_value='saved') as save:
+            self.assertEqual(runner.HelperRunner.save(self.r),'saved');save.assert_called_once_with()
+        with mock.patch.object(self.r,'sample_budget_body',return_value='checked') as budget:
+            self.assertEqual(runner.HelperRunner.budget(self.r),'checked');budget.assert_called_once_with()
+        self.assertEqual(self.r._sample_timing['operations']['receipt.save']['calls'],1)
+        self.assertEqual(self.r._sample_timing['operations']['budget']['calls'],1)
+
 if __name__=='__main__':unittest.main()

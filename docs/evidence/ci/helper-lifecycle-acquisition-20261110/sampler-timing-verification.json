@@ -1,0 +1,15 @@
+{
+  "scope": "Installed timing-only sampler instrumentation; no changed deadlines or new sampler commands",
+  "controlsPassed": 157,
+  "sourcePinsVerified": 50,
+  "proposalManifestSHA256": "886bb84665d8260226ced2da26462204880841e638b2a73de07e5c006db759e0",
+  "sourceSHA256": {
+    "scripts/simulator_signpost_control/runner.py": "da811da292601c5fe7f1811e77a6061fb882d0fde03e109ab33a53f70d05279f",
+    "scripts/test_simulator_signpost_control.py": "ad43d200ae796004b3febe7a1fc85c4dcc6a8f19cb45f88110bf1f9d035d2141",
+    "scripts/app_scroll_observation/contract.json": "451ffc69eef31c42b8abb1d6d7685fa841af2c3df938230f2d6c3942ff5d797d"
+  },
+  "log": ".build/HostedAppObservationNov09/helper-sampler-timing-r1-root-controls.log",
+  "logSHA256": "e9633df8af026f443f411b1941852d127f3a7e859ea429203804e1087c784c24",
+  "hostedQualification": false,
+  "releaseAcceptance": false
+}

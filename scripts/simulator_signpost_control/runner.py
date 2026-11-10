@@ -10,6 +10,39 @@ from app_scroll_observation.runner import Runner
 from app_scroll_observation.support import require, sha, launcher_identity
 
 class HelperRunner(Runner):
+    def note(self, event, **details):
+        timing=getattr(self,'_sample_timing',None)
+        if timing is None:return
+        if len(timing['events'])<128:
+            timing['events'].append({'event':event,'monotonic':time.monotonic(),**details})
+        else:timing['droppedEvents']+=1
+
+    def sample_measure(self, name, function, *args):
+        timing=getattr(self,'_sample_timing',None)
+        if timing is None:return function(*args)
+        started=time.monotonic()
+        try:return function(*args)
+        finally:
+            finished=time.monotonic()
+            row=timing['operations'].setdefault(name,{'calls':0,'seconds':0.,'maxSeconds':0.,'firstStart':started})
+            row.update(calls=row['calls']+1,seconds=row['seconds']+finished-started,
+                       maxSeconds=max(row['maxSeconds'],finished-started),lastEnd=finished)
+
+    def save(self):return self.sample_measure('receipt.save',super().save)
+    def budget(self):return self.sample_measure('budget',self.sample_budget_body)
+
+    def sample_observe_outputs(self, paths):
+        timing=self._sample_timing
+        for path in paths:
+            if path.name in timing['firstNonempty']:continue
+            try:
+                info=path.lstat()
+                if stat.S_ISREG(info.st_mode) and info.st_size>0:
+                    timing['firstNonempty'][path.name]=time.monotonic()
+                    self.note('first_nonempty',file=path.name,bytes=info.st_size)
+            except FileNotFoundError:pass
+            except OSError as exc:self.note('output_observation_error',file=path.name,error=type(exc).__name__)
+
     def spawn(self, label, argv, expected, digest, stdin=False):
         if label != 'helper-compile':
             return super().spawn(label, argv, expected, digest, stdin)
@@ -44,7 +77,7 @@ class HelperRunner(Runner):
         record['exitCode'] = process.poll(); self.save()
         raise RuntimeError(label + '_unbound_or_early_exit')
 
-    def budget(self):
+    def sample_budget_body(self):
         super().budget()
         # Prepare/export live under this control's evidence root; cleanup has no captured payload.
         if self.out.name in ('prepare','export'):
@@ -152,8 +185,10 @@ class HelperRunner(Runner):
             attempt={'signal':sig.name,'waitSeconds':seconds}
             record.setdefault('signalAttempts',[]).append(attempt)
             try:
+                self.note('sampler_signal_before',signal=sig.name)
                 process.send_signal(sig);record['signals'].append(sig.name)
                 # Popen may skip os.kill if it discovers an already-reaped child.
+                self.note('sampler_signal_returned',signal=sig.name)
                 live=process.poll() is None
                 attempt['delivery']='returned_while_unreaped' if live else 'terminal_observed_after_send'
                 if sig==signal.SIGKILL:
@@ -163,9 +198,11 @@ class HelperRunner(Runner):
                 attempt['deliveryError']=type(exc).__name__+': '+str(exc)[:256]
                 self.save();continue
             self.save()
+            self.note('sampler_wait_before',seconds=seconds)
             try:process.wait(timeout=seconds);attempt['waitOutcome']='terminal'
             except subprocess.TimeoutExpired:attempt['waitOutcome']='timeout'
             except BaseException as exc:attempt['waitError']=type(exc).__name__+': '+str(exc)[:256]
+            self.note('sampler_wait_after',outcome=attempt.get('waitOutcome'),error=attempt.get('waitError'))
             self.save()
         record['cleanupLadderComplete']=True
         record['exitCode']=process.poll();record['terminalVerified']=process.poll() is not None
@@ -218,7 +255,7 @@ class HelperRunner(Runner):
         process=target['process'];code=process.poll()
         if code is not None:
             require(code==0,'sample_target_exit');return False
-        value=self.identity.read(process.pid)
+        value=self.sample_measure('identity.read',self.identity.read,process.pid)
         if target['binding'] is None or value!=target['binding']:
             code=process.poll()  # An owned exit may race the libproc read.
             if code is not None:
@@ -231,6 +268,9 @@ class HelperRunner(Runner):
         report={'status':'starting','startedMonotonic':time.monotonic(),
                 'targetPID':target['process'].pid,'durationSeconds':1,'samplerWallSeconds':3,
                 'reportBytesLimit':2*1024**2,'samplerSpawned':False,'identityPolicy':'observed_root_owned_system_tool_before_after'}
+        timing={'events':[],'operations':{},'firstNonempty':{},'droppedEvents':0}
+        report['timing']=timing;self._sample_timing=timing
+        self.note('sample_started')
         diagnostic['stackSample']=report;self.save();child=None;tool=Path('/usr/bin/sample')
         try:
             require(signal.getsignal(signal.SIGCHLD)==signal.SIG_DFL and threading.active_count()==1,'sample_exclusive_reaper_required')
@@ -238,14 +278,18 @@ class HelperRunner(Runner):
             stem=policy[1];report.update(targetLabel=stem,triggerAfterSeconds=policy[0])
             if not self.sample_target_live(target):
                 report.update(status='not_needed',reason='owned_normal_exit_before_sampler',targetExitCode=0);return
+            self.note('target_hash_before')
             require(sha(target['expected'])==target['digest'],'sample_target_binary')
+            self.note('target_hash_after')
             self.lifecycle_check(deadline)
+            self.note('sampler_tool_observation_before')
             info=tool.lstat()
             require(stat.S_ISREG(info.st_mode) and info.st_uid==0 and not info.st_mode&0o6022
                     and tool.resolve()==tool and 0<info.st_size<=16*1024**2,'sample_system_tool_shape')
             observed={'sha256':sha(tool),'bytes':info.st_size,'mode':stat.S_IMODE(info.st_mode),
                       'uid':info.st_uid,'device':info.st_dev,'inode':info.st_ino,'mtimeNS':info.st_mtime_ns}
             report['tool']={'path':str(tool),**observed}
+            self.note('sampler_tool_observation_after')
             self.lifecycle_check(deadline)
             output=self.out/(stem+'-stack.txt');require(not output.exists(),'sample_output_exists')
             # Reserve original budget for the existing bounded terminal cleanup ladder.
@@ -253,18 +297,24 @@ class HelperRunner(Runner):
             if not self.sample_target_live(target):
                 report.update(status='not_needed',reason='owned_normal_exit_before_sampler',targetExitCode=0);return
             stop=min(time.monotonic()+3,deadline)
+            self.note('sampler_deadline_set',deadline=stop)
             sample_label='runtime-stack-sample' if stem=='booted-runtimes' else 'bootstatus-stack-sample'
             record={'label':sample_label,'argv':[str(tool),str(target['process'].pid),'1','-file',str(output)],
                     'executableSHA256':observed['sha256'],'spawnEpoch':time.time(),'signals':[]}
+            self.note('sampler_output_open_before')
             stdout=(self.out/(sample_label+'-stdout.log')).open('xb')
             stderr=(self.out/(sample_label+'-stderr.log')).open('xb')
+            self.note('sampler_output_open_after')
+            observed_outputs=(Path(stdout.name),Path(stderr.name),output)
             env={k:os.environ[k] for k in ('HOME','TMPDIR','USER','LOGNAME') if k in os.environ}
             env.update(PATH='/usr/bin:/bin',LANG='en_US.UTF-8')
             require(signal.getsignal(signal.SIGCHLD)==signal.SIG_DFL and threading.active_count()==1,'sample_exclusive_reaper_required')
             report['reaperPolicy']='default_SIGCHLD_single_thread_no_external_waiter'
+            self.note('sampler_popen_before')
             try:process=subprocess.Popen(record['argv'],stdin=subprocess.DEVNULL,stdout=stdout,stderr=stderr,
                                          env=env,cwd=self.out,start_new_session=True)
             except BaseException:stdout.close();stderr.close();raise
+            self.note('sampler_popen_after',pid=process.pid)
             child={'process':process,'record':record,'expected':str(tool),'digest':observed['sha256'],
                    'streams':[stdout,stderr],'binding':None}
             report['samplerSpawned']=True
@@ -274,36 +324,42 @@ class HelperRunner(Runner):
             record['pid']=process.pid;self.save()
             while process.poll() is None:
                 self.lifecycle_check(stop)
+                self.sample_observe_outputs(observed_outputs)
                 if output.exists():require(output.is_file() and not output.is_symlink() and output.stat().st_size<=2*1024**2,'sample_output_cap')
                 # A naturally exiting target ends this diagnostic; never wait by process name.
                 # Do not reap the target while sampling: an unreaped child PID cannot be reused.
-                require(self.identity.read(target['process'].pid)==target['binding'],'sample_target_identity')
-                value=self.identity.read(process.pid)
+                require(self.sample_measure('identity.read',self.identity.read,target['process'].pid)==target['binding'],'sample_target_identity')
+                value=self.sample_measure('identity.read',self.identity.read,process.pid)
                 if process.poll() is not None:break
                 if value is not None:
                     require(value['pid']==process.pid and value['parentPID']==os.getpid() and value['uid']==os.getuid()
                             and value['startTimeMicros']>=int(record['spawnEpoch']*1_000_000)
                             and value['executable']==str(tool),'sample_child_identity')
                     require(child['binding'] is None or value==child['binding'],'sample_child_identity_changed')
+                    if child['binding'] is None:self.note('sampler_first_binding',pid=process.pid)
                     child['binding']=value;record['binding']=value
                 time.sleep(min(.05,max(0,stop-time.monotonic())))
+            self.note('sampler_terminal_observed',exitCode=process.returncode)
+            self.sample_observe_outputs(observed_outputs)
             self.lifecycle_check(stop)
             require(process.returncode==0,'sample_exit')
             require(output.is_file() and not output.is_symlink() and 0<output.stat().st_size<=2*1024**2,'sample_output_cap')
             after=tool.lstat()
             require(observed=={'sha256':sha(tool),'bytes':after.st_size,'mode':stat.S_IMODE(after.st_mode),
                     'uid':after.st_uid,'device':after.st_dev,'inode':after.st_ino,'mtimeNS':after.st_mtime_ns},'sample_tool_changed')
-            require(target['process'].poll() is None and self.identity.read(target['process'].pid)==target['binding']
+            require(target['process'].poll() is None and self.sample_measure('identity.read',self.identity.read,target['process'].pid)==target['binding']
                     and sha(target['expected'])==target['digest'],'sample_target_after_identity')
             self.lifecycle_check(deadline)
             report.update(status='passed',reportSHA256=sha(output),reportBytes=output.stat().st_size)
         except BaseException as exc:
+            self.note('sample_failure',error=type(exc).__name__+': '+str(exc)[:256])
             report.update(status='failed',error=type(exc).__name__+': '+str(exc)[:256])
         finally:
             if child is not None:
                 try:self.cleanup(child)
                 except BaseException as exc:report['cleanupError']=type(exc).__name__+': '+str(exc)[:256]
                 report['terminalVerified']=child['process'].poll() is not None
+                self.sample_observe_outputs(observed_outputs)
             if 'tool' in report:
                 try:
                     after=tool.lstat()
@@ -316,7 +372,9 @@ class HelperRunner(Runner):
                     require(report['toolUnchanged'],'sample_tool_changed')
                 except BaseException as exc:
                     report['toolAfterError']=type(exc).__name__+': '+str(exc)[:256];report['status']='failed'
+            self.note('sampler_after_verification')
             report['finishedMonotonic']=time.monotonic();self.save()
+            self._sample_timing=None
 
     def lifecycle_wait(self, item, deadline, diagnostic):
         process=item['process'];next_sample=0

@@ -1,0 +1,24 @@
+{
+  "scope": "One local owned sleep process; no simulator, app, XCTest or hosted qualification",
+  "preparedManifestSHA256": "3f73453e0d5c4ae9226c6f20ca5c1bc29c8c913982f4374784883dde690d019e",
+  "mockControlsPassed": 23,
+  "samplerPrerequisiteQualified": true,
+  "allKnownChildrenTerminal": true,
+  "samplerExitCode": 0,
+  "samplerSignals": [],
+  "targetCleanupSignals": [
+    "SIGINT"
+  ],
+  "durationSeconds": 1,
+  "wallLimitSeconds": 3,
+  "secondsFromDeadlineSetToTerminal": 2.4583811659999997,
+  "samplerPopenSeconds": 0.012731207999999994,
+  "budgetCheckTotalSeconds": 0.24285570600000073,
+  "reportSHA256": "42fbd4942facae5e950b6a847797cc19ab3090671a89f6b1ed19ae4f2ced9eec",
+  "receipt": ".build/HostedAppObservationNov09/controlled-sampler-execution-r1/prepare/receipt.json",
+  "receiptSHA256": "acb7fd20af9e1ac29b1d0e78a0e8c0046b07f6d1a8ddf9d25ea0c7e191b34351",
+  "timing": ".build/HostedAppObservationNov09/controlled-sampler-execution-r1/timing.json",
+  "timingSHA256": "e4ae48fc027dfcb17a0f7f2591016e914ed62ccddec16b86c2381e499780cfe0",
+  "releaseAcceptance": false,
+  "interpretation": "Local trivial target completed with about 0.54 seconds remaining. Hosted system tool differs; collect hosted phase timings before attributing delay or altering deadlines."
+}
