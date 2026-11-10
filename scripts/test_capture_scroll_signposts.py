@@ -592,7 +592,9 @@ class WorkflowTests(unittest.TestCase):
                      'Verify and package Release test products'):
             self.assertIn('      - name: ' + name + '\n        if: ${{ !inputs.capture_preflight_only }}', build)
         self.assertIn('id: upload\n        if: ${{ !inputs.capture_preflight_only }}', build)
-        self.assertIn('  performance-tests:\n    if: ${{ !inputs.capture_preflight_only }}', text)
+        consumer = text[text.index('  performance-tests:'):text.index('  simulator-signpost-control:')]
+        self.assertIn('  performance-tests:\n    if: ${{ !inputs.capture_preflight_only && !inputs.simulator_signpost_control }}',
+                      consumer)
         gate = build[build.index('      - name: Boot diagnostic simulator'):build.index('      - name: Build the Release')]
         self.assertIn('--capabilities-only', gate)
         self.assertIn('if: inputs.capture_scroll_signposts', gate)
@@ -627,7 +629,12 @@ class WorkflowTests(unittest.TestCase):
     def test_diagnostic_has_distinct_name_and_cancellation_domain(self):
         text = (Path(__file__).resolve().parents[1] / '.github/workflows/ios-performance.yml').read_text()
         suffix = "${{ inputs.capture_scroll_signposts && '-scroll-capture' || '' }}"
-        self.assertIn('group: ios-performance-${{ github.workflow }}-${{ github.ref }}' + suffix, text)
+        concurrency = re.search(r'^concurrency:\n  group: ([^\n]+)$', text, re.M)
+        self.assertIsNotNone(concurrency)
+        group = concurrency.group(1)
+        self.assertTrue(group.startswith('ios-performance-${{ github.workflow }}-${{ github.ref }}'))
+        self.assertEqual(group.count(suffix), 1)
+        self.assertIn("${{ inputs.simulator_signpost_control && '-simulator-helper' || '' }}", group)
         self.assertIn("${{ inputs.capture_scroll_signposts && ' · signpost capture (diagnostic only)' || '' }}", text)
         plan = text[text.index('  performance-plan:'):text.index('  performance-build:')]
         self.assertIn('python3 scripts/test_capture_scroll_signposts.py', plan)
