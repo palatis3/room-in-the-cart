@@ -1,0 +1,60 @@
+{
+  "status": "passed",
+  "commit": "0ef747ffa4bb9cd977ea10eb6e3c2ffd6e0273dc",
+  "sourceFiles": 759,
+  "observerPins": 50,
+  "profiles": {
+    "diagnostic": {
+      "passed": 608,
+      "suiteCounts": [
+        19,
+        17,
+        10,
+        12,
+        10,
+        9,
+        64,
+        174,
+        36,
+        12,
+        245
+      ]
+    },
+    "helper": {
+      "passed": 608,
+      "suiteCounts": [
+        19,
+        17,
+        10,
+        12,
+        10,
+        9,
+        64,
+        174,
+        36,
+        12,
+        245
+      ]
+    },
+    "ordinary": {
+      "passed": 608,
+      "suiteCounts": [
+        19,
+        17,
+        10,
+        12,
+        10,
+        9,
+        64,
+        174,
+        36,
+        12,
+        245
+      ]
+    }
+  },
+  "receiptSHA256": "e5f294507185724d02ac1b443b557d2a48da5432b3add190b13f2c2c0a6eb7ff",
+  "retainedEvidence": "/Users/palatis/Room in the Cart/.build/PerformanceFinalCommitParityNov09/direct-0ef747ff-qualification",
+  "nativeExecuted": false,
+  "appOrPerformanceAcceptance": false
+}

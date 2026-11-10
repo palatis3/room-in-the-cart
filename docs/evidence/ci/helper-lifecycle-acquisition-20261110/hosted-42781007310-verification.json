@@ -1,0 +1,23 @@
+{
+  "runID": 42781007310,
+  "sourceCommit": "0ef747ffa4bb9cd977ea10eb6e3c2ffd6e0273dc",
+  "result": "failure",
+  "firstCause": "bootstatus exceeded 240-second deadline; signaled exit 0 is not success",
+  "rootVerified": true,
+  "zipSHA256": "077d9359f71543541530c69a5fb69965f4d1fb6e00c430cd08e5d61545d8cc15",
+  "zipBytes": 68627,
+  "zipMembers": 19,
+  "tarSHA256": "971b186e4acfddf78836ac9006731ae6f1ff03d21fea48393b73c84bd662b684",
+  "tarBytes": 481280,
+  "tarMembers": 22,
+  "sourcePins": 50,
+  "cleanupCommandsPassed": 8,
+  "ownedDeviceAbsentAfterCleanup": true,
+  "directInventoryAdmitted": true,
+  "directInventoryCommandsExecuted": 0,
+  "captureAndReadinessStarted": false,
+  "appOrPerformanceAcceptance": false,
+  "monitoringReceiptSHA256": "46f2232e5d756cf8ed6eb7a18ed43f3fdc7afdab74b12c03a060b21db8886270",
+  "readbackSHA256": "77a591cba9aada1d6e5484fbc14b7bb83534f8628f6008ec39a048dfa390d87b",
+  "extractedCodeExecuted": false
+}
