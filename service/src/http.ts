@@ -1,3 +1,4 @@
+import {readSharedRecordSnapshot} from './shared-records.js';
 import {SharedDemandError} from './shared-demand-domain.js';
 import {previewDemand,readDemand,readActionDemandSources,readFoodOperationHistory,previewFoodOperationUndo,readFoodOperationUndoCandidate} from './shared-demand-repository.js';
 import { readConfirmedOrder } from './order-amendments.js';
@@ -392,6 +393,7 @@ export function createHTTPServer(options:HTTPOptions) {
           if(tail==='/meal-plan/planner'&&method==='PUT')return mealMoves.grant(ctx,shopId,grantChange.parse(payload));
           if(tail==='/meal-plan/dismissals'&&method==='POST')return mealMoves.dismiss(ctx,shopId,dismissMove.parse(payload));
           if(tail==='/meal-plan/proposals'&&method==='POST')return mealMoves.propose(ctx,shopId,moveRequest.parse(payload));
+          if(tail==='/records/snapshot'&&method==='GET')return readSharedRecordSnapshot(repository,ctx,await repository.shop(ctx,shopId));
           if(tail==='/demand'&&method==='GET')return readDemand(repository,ctx,await repository.shop(ctx,shopId));
           if(tail==='/demand/action-sources'&&method==='POST')return readActionDemandSources(repository,ctx,await repository.shop(ctx,shopId),payload);
           if(tail==='/demand/operations'&&method==='GET')return readFoodOperationHistory(repository,ctx,await repository.shop(ctx,shopId),url.searchParams.get('beforeRevision'));

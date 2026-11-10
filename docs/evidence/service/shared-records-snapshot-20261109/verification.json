@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "scope": "Assigned-shopper current Records snapshot plus installed eligible Undo backend",
+  "status": "passed",
+  "offlinePassed": 639,
+  "databasePassed": 306,
+  "expectedSkips": {
+    "offline": 1,
+    "database": 3
+  },
+  "newRecordsHTTP": [
+    "authorized HTTP record preserves exact PostgreSQL graph, packs, basket, meal sources and request literal",
+    "repeated authorized record reads retain exact immutable identity and make no domain writes",
+    "nonshopper and foreign-household reads deny before loading record contents",
+    "snapshot stays atomic while a concurrently reviewed HTTP price update waits on its household lock",
+    "existing server-only price refresh keeps the older accepted head pack basis with the newer basket",
+    "worker-authorized erasure yields review-required current facts without historical request wording or old pack acknowledgment"
+  ],
+  "existingUndoHTTP": [
+    "complete food operation Undo: relaunch, Cancel, later staple, exact graph/packs/quote and one Apply/retry",
+    "complete Undo supports pack-only empty graph reviews and rejects a later touched pack conflict",
+    "complete Undo rejects an expired restored quote and does not weaken current base or authorization",
+    "complete Undo exact replay cannot resurrect target history after authorized privacy erasure",
+    "complete Undo does not relabel historical line prices with a later fresh quote",
+    "complete Undo marks date-only meal changes and accepted request Link explicitly unsupported",
+    "complete Undo refuses an older quote observation over later price",
+    "complete Undo refuses an older quote observation over later priced staple"
+  ],
+  "originals": ".build/SharedDemandGraphNov09/root-records-r2",
+  "files": {
+    "receipt.json": "1b60d83c6523a141429b0bc7efdcb555d125ba223280b93be6a5f33818b2ded1",
+    "source-manifest.json": "09d64c4df9846b4d6aa256796a6cce9b3cf5ffd44579a860c25051de78460d54",
+    "compiled-service-manifest.json": "0f22794caa5e1a8b9158cb9cfee57544d84597f57f361ef537e70973c315bf08",
+    "offline.log": "d0b4e9781e4b769ce5a4f75baf23dd01add88bceb0a279ebadf346569905256a",
+    "database.log": "4099fff31b003cb5e0cf1bdaf355bff1d1f84c79370ef13d0a19feb9dd480ddc",
+    "stop.log": "ca19178a35ab4153b75b494963b66ce8243e1b94c173107c87b44d09db23652d"
+  },
+  "sourceFiles": 246,
+  "sourceDependenciesToolsProductsUnchanged": true,
+  "postgresStopped": true,
+  "privateStateRetained0700": true,
+  "productionCompilation": "Verified root-records-r1 build reused; only test imports/fixture path changed",
+  "firstFailure": ".build/SharedDemandGraphNov09/root-records-r1/receipt.json",
+  "firstFailureSHA256": "4732fdd10b441588cf5496007aba0ae9ddad1dd7e1707f4bf96b4deb2bfb7633",
+  "deployed": false,
+  "portableExportOrRecoveryAcceptance": false
+}

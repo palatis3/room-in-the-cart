@@ -13,8 +13,14 @@ Hosted diagnostic 42732878538 at 0cdfaa51 passed 332 early checks, the Release
 producer and all initial container lookups. It failed collector readiness before
 GO; ABORT caused the subsequent native failure. Required performance measurements
 remain unqualified. Saved sources/products verify exactly; separate postprocessing
-limit fixes are prepared, not installed. See CURRENT-HANDOFF for current ownership
+limit fixes are installed and pass all 174 offline observer controls. See CURRENT-HANDOFF for current ownership
 and the proposed separate tiny-helper collector prerequisite test.
+
+Native Undo r1/r1.1 client integration passes 133 package tests with three expected
+wire skips, verified against 136 compiled selectors. App/UI and real Undo wire
+acceptance are still pending. Shared Records r2 is installed and passes all six HTTP cases. Its combined backend
+passes 639 offline and 306 PostgreSQL tests with the existing one-plus-three skips.
+[Proof](evidence/service/shared-records-snapshot-20261109/README.md).
 
 The latest shared-food slice compiles under Xcode 27.1. Its current scoped runs
 pass153 native model regressions,122 client-package tests (3 expected integration

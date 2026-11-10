@@ -82,16 +82,22 @@ in that fixture, never staging. [Exact proof](evidence/service/shared-food-opera
 The bounded inverse covers newly recorded eligible graph/basket/pack/quote patches;
 meal/request/adoption/store and other documented scopes remain unfinished. Both
 directions of historical-price/quote mismatch were found and corrected in review.
-Native r1 is prepared but not installed; independent review is correcting a
-URLProtocol conformance and removal-versus-restoration expiry check before its
-first build. A separate UI successor addresses initialization/access-change races.
-Shared-record snapshot r2 is prepared with six unexecuted HTTP tests; portable
+Native r1 plus reviewed r1.1 is installed. All 133 package tests pass with three
+expected database-wire skips; exact compiled inventory is 136. The required CI
+inventory now includes eleven new Undo tests and fourteen previously omitted
+shared-demand tests. Native app/UI and real Undo wire acceptance remain pending.
+A separate UI successor addresses initialization/access-change races.
+Shared-record snapshot r2 plus its ordinary test-import correction is installed.
+The full combined backend passes 639 offline and 306 PostgreSQL tests, including
+all six Records and eight Undo HTTP cases, with the same expected skips. The
+verified production build was reused; the database stopped and journal fenced.
+[Proof](evidence/service/shared-records-snapshot-20261109/README.md). Portable
 export/guardian authorization and managed recovery remain separate implementation.
 
-Root owns integration and all native execution. No local native or database job
-is currently active. Astra helpers prepare native Undo UI, independent native
-review, and a separate tiny-helper hosted collector control. Sol's previous
-monitoring and backend-runner preparation are complete.
+Root owns integration and all native execution. Astra helpers prepare native
+Undo UI, real Undo HTTPS/PostgreSQL wire coverage, and a separate tiny-helper
+hosted collector control. Sol prepares the combined Records backend executor.
+Current execution receipts are authoritative for active process state.
 
 ## Current hosted question
 
@@ -106,9 +112,11 @@ qualified. The partial result has no Info.plist and cannot be recovered as a pas
 Root verified 22 retained files, both diagnostic ZIPs and all 1,400 TAR members.
 Both saved source and product copies match their declared bytes/modes. Separate
 postprocessing failures applied the 128 MiB source cap to 206 MB products and
-treated copied original diagnostic logs as phase stdout. Corrections are prepared
-in `.build/HostedAppObservationNov09/postprocessing-r1` with 169 observer controls;
-they are not installed. No unchanged full-app retry. The proposed next discriminator
+treated copied original diagnostic logs as phase stdout. Reviewed corrections
+are installed and committed at `53555cc0`; all 174 observer controls pass. An
+independent review narrowed exemptions to exact real evidence directories and
+preserved ordinary nested-log limits. [Proof](evidence/ci/hosted-observation-postprocessing-20261109/README.md).
+No unchanged full-app retry. The proposed next discriminator
 is the separately labeled tiny-helper Logging/notification control on the exact
 hosted environment, retaining its 15-second readiness bound and avoiding a full
 Release app rebuild. Preparation is in `hosted-helper-control-r1`. Active dispatch
