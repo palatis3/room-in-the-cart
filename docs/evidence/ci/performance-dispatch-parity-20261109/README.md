@@ -145,3 +145,24 @@ Root verified the frozen payload hashes and unchanged protected inputs.
 [Phase verification](phased-startup-verification.json) binds the originals in
 `phased-startup-budget-r1/` and `phased-candidate-r1/`. A hosted successor has not
 yet been dispatched; the missing-metric question remains open.
+
+
+## Initial installed-bundle discovery
+
+Run [42728845944](https://github.com/palatis3/room-in-the-cart/actions/runs/42728845944)
+at4f5efb100a1b901d2e8e09f1f0dbe30f5a058f75 passed324 early checks, helper typecheck
+and Release producer. The original scroll XCTest started and app-data discovery
+succeeded. Initial installed-app lookup then hit its independent five-second limit
+with92.434 seconds remaining in the existing binding budget. No selected verdict,
+required metric or trace was established. Root verified21 retained files, both
+diagnostic ZIPs and all77 archive members; the first fault is preserved.
+
+The successor extends the existing startup-query path to both initial installed
+bundle lookups. They share the original180-second binding deadline with app-data
+discovery, including same-owned-process acquisition. A lookup cannot reset that
+deadline. Post-binding queries remain limited to five seconds. Identity, phase,
+absolute-wall, signal-rejection and original measurement gates are unchanged.
+All155 observer controls pass, including eight new regressions and expected
+failures against the prior implementation. Complete ordinary/observer preflight
+profiles must pass against the final committed successor before one changed
+hosted diagnostic. [Compact verification](initial-bundle-verification.json).

@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "status": "passed",
+  "scope": "Full local service offline and PostgreSQL regressions at 4f5efb100a1b901d2e8e09f1f0dbe30f5a058f75",
+  "offline": {
+    "tests": 596,
+    "pass": 595,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 1,
+    "todo": 0,
+    "skippedNames": [
+      "PostgreSQL durable billing / RLS / named seats contract"
+    ],
+    "logSHA256": "9b7ccb0f570a5f4abf1d5c9c68f46b0a33658cf4c8c0d7cc570c675cae1a9f63"
+  },
+  "database": {
+    "tests": 295,
+    "pass": 292,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 3,
+    "todo": 0,
+    "skippedNames": [
+      "real browser WebApp and API recover a dropped helper reply with exact original bytes after a newer projection",
+      "real full browser recreation recovers a lost received suggestion with read-only retries and fences identity, expiry and revocation",
+      "two contributor web sessions see only their own purchase receipt through shopper corrections"
+    ],
+    "logSHA256": "b1d418377c0badbb796ccacc2b7da1eb6b8c37973b96fed7f06ae195c0ea7f34"
+  },
+  "offlineTestFiles": 40,
+  "databaseTestFiles": 17,
+  "sourceFilesVerified": 239,
+  "compiledServiceEntriesVerified": 137,
+  "buildMode": "verified-r5-dist-copy-no-recompile",
+  "compileProof": {
+    "receipt.json": "180b97f5f77b35952f2a9a523aea9f25a5e8375a27437348f628eab8a4793a9e",
+    "source-manifest.json": "0303648a5c06f9a0f4bf85a105835d4954b5804ce35f50b6254fa83bbc1df97b",
+    "compiled-service-manifest.json": "b2df6bf451f3de8b4bca8901d8a5a5f43a858d67f6f04338e788b03233711203",
+    "typescript.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "journalFencedByOriginalHarness": true,
+  "postgresStopped": true,
+  "privateFixtureRetainedLocally": true,
+  "privateDirectoryMode": "0700",
+  "sourcesDependenciesToolsProductsUnchanged": true,
+  "nativeOrBrowserWire": false,
+  "mixedDeviceOrReleaseAcceptance": false,
+  "migrationOrDeployment": false,
+  "originals": ".build/SharedDemandGraphNov09/root-backend-regression-r4",
+  "files": {
+    "receipt.json": "199ca1c54a8adff02de9b7a56dea1cd8d3666aecba8478d43c754090868a3b39",
+    "source-manifest.json": "d8d77f1847c44edf5d70a2a40e3f69826ecdfb1d909310801cc26a0731ed3c3e",
+    "compiled-service-manifest.json": "b2df6bf451f3de8b4bca8901d8a5a5f43a858d67f6f04338e788b03233711203",
+    "offline.log": "9b7ccb0f570a5f4abf1d5c9c68f46b0a33658cf4c8c0d7cc570c675cae1a9f63",
+    "database.log": "b1d418377c0badbb796ccacc2b7da1eb6b8c37973b96fed7f06ae195c0ea7f34",
+    "stop.log": "ca19178a35ab4153b75b494963b66ce8243e1b94c173107c87b44d09db23652d"
+  }
+}

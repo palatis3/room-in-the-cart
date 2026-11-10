@@ -2,10 +2,13 @@
 
 ## Current checkpoint — November 9, workflow and combined-candidate qualification
 
-The latest shared-food slice compiles under Xcode 27.1 and passes 45 native model
-regressions,122 client-package tests (3 expected integration skips),569 backend
-offline tests (1 expected database-only skip), and 285 PostgreSQL tests (3 optional
-browser skips). These are scoped passes, not a complete combined release run.
+The latest shared-food slice compiles under Xcode 27.1. Its current scoped runs
+pass153 native model regressions,122 client-package tests (3 expected integration
+skips),595 backend offline tests (1 expected database-only skip), and292 PostgreSQL
+tests (3 optional browser skips). These are not a complete combined release run.
+The full backend run reused137 verified compiled entries with239 unchanged source
+files; the original journal harness fenced correctly, and PostgreSQL stopped.
+[Current backend proof](evidence/service/shared-demand-action-sources-20261109/backend-regression-verification.json).
 The next quote/item editor slice now compiles and passes all 59 strict native model
 checks plus one real PostgreSQL expired-quote/privacy-recovery case. Independent review found two legacy fixture routes needing explicit demand status;
 they are corrected and both original S17/S26 UI journeys pass with strict checks
@@ -113,7 +116,14 @@ passed its producer, but a separate two-second process-image binding gate reject
 the tenth query before any phase deadline. The query had no verified terminal
 status or live identity; ENOENT alone is insufficient. The same-process acquisition
 correction is now installed and passes147 observer controls and both complete
-324-check profiles without weakening custody. No successor hosted run yet. The separate
+324-check profiles without weakening custody. Successor42728845944 passed those
+checks and Release producer; the selected XCTest started and initial data discovery
+succeeded. Initial installed-app discovery then hit a separate five-second cutoff,
+with92.434 seconds remaining in binding. The reviewed fix covers initial app/runner
+lookups with the same original deadline and passes155 observer controls. Later
+lookups remain five seconds; no selected verdict, metric or trace was established.
+[First-fault and correction proof](evidence/ci/performance-dispatch-parity-20261109/initial-bundle-verification.json).
+The separate
 producer/consumer and original required metrics remain; native observation,
 performance baseline and combined acceptance are still unproven.
 [Prepared workflow](evidence/ci/hosted-scroll-observation-20261109/README.md).

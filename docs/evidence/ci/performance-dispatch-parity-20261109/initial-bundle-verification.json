@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "scope": "Initial installed-app and test-runner lookup use original binding deadline",
+  "status": "offline-controls-passed-hosted-successor-pending",
+  "baselineCommit": "4f5efb100a1b901d2e8e09f1f0dbe30f5a058f75",
+  "retainedFirstFault": {
+    "runId": 42728845944,
+    "commit": "4f5efb100a1b901d2e8e09f1f0dbe30f5a058f75",
+    "monitoringReceiptSHA256": "528efddf2b07f5a13798fcee2626ed548c1ad36ad9d32642d9c48daf64ad2256",
+    "retainedFilesVerified": 21,
+    "diagnosticZIPsVerified": 2,
+    "tarMembersVerified": 77,
+    "extractedSubsetVerified": 74,
+    "tarSHA256": "2324be837d18d69678a583d5e897ce6d2d98602970e935d0452fd59d50c5d05d",
+    "firstFault": "container-app_deadline: fixed5second initial installed-app lookup during original bindingphase",
+    "phaseBudgetStillRemainingSeconds": 92.433738,
+    "initialDataDiscoverySucceeded": true,
+    "selectedXCTestStarted": true,
+    "XCTestVerdictEstablished": false,
+    "requiredMetricsEstablished": false,
+    "traceEstablished": false,
+    "releaseAcceptance": false
+  },
+  "fixedPhaseSeconds": {
+    "binding": 180,
+    "arm": 120,
+    "completion": 120,
+    "absolute": 420
+  },
+  "postBindingQueryLimitSeconds": 5,
+  "controls": 155,
+  "newControls": 8,
+  "baselineNegativeControls": "expected failures confirmed",
+  "compiledSwiftChanged": false,
+  "requiredMetricsChanged": false,
+  "originalXCTestChanged": false,
+  "producerConsumerProvenanceChanged": false,
+  "wholeProfileFinalCommitValidation": "required before dispatch; receipt remains outside committed source",
+  "changeFiles": [
+    {
+      "path": "scripts/app_scroll_observation/capture.py",
+      "baseSHA256": "eeb354a427949f131989df1f3410bbe8e91614f305e8fc7a121ed4cb2667c997",
+      "candidateSHA256": "6c337a7fc326fd343075181a948e242472ec78e4125200382e6ab42d717eca99"
+    },
+    {
+      "path": "scripts/test_app_scroll_observation.py",
+      "baseSHA256": "6098b34c65c17c4d79d708f0d84f8d2d93260c960b242e84228ae7008c424d2c",
+      "candidateSHA256": "acc221a0b0d710ad02f347daeae87a1c5b78797899dfe43826eca727a239bae3"
+    },
+    {
+      "path": "scripts/app_scroll_observation/contract.json",
+      "baseSHA256": "bda97b1acfcb6ed799fd5a51c0473f04af3424fe17b2a3cc91bf4ddb4edbd071",
+      "candidateSHA256": "e7ae878ad5cc4c13530e65020126feefc6a3ca11abc140c1f6ee1093df04fdc8"
+    }
+  ],
+  "originals": ".build/HostedAppObservationNov09/initial-bundle-binding-r1",
+  "files": {
+    "manifest.json": "0a84725fc6a37846e89e35d1805c5c39dd64588f69b5947da8212d1362d443b6",
+    "review.patch": "64c09b63eea927723ce25c47703ec559b0a5152b7b7fe34d01377e31562f5abe",
+    "offline-controls.log": "3603159f0876b7b3b8b481c92443dc311e57233020de77bbb69ae5a32c1fdf0b",
+    "baseline-regression.log": "c1e2b5e498324ac2e92c83f9ead9aa384f77607c2b6e24fd6348244c0dbdc55d"
+  },
+  "hostedOriginals": ".build/HostedAppObservationNov09/hosted-42728845944",
+  "hostedFiles": {
+    "root-verification.json": "f1a8aff7fbc6c76b21cef8b2684d270e68be7fec983b23a1a79998de2897d929",
+    "monitoring-receipt.json": "528efddf2b07f5a13798fcee2626ed548c1ad36ad9d32642d9c48daf64ad2256"
+  }
+}

@@ -43,3 +43,13 @@ all three related domain assertions were corrected together, while stale-state40
 checks and every exact error-code/rejection assertion remain. No service change
 was needed. The corrected Swift target was freshly built before the complete
 10/27 lane; the first failure remains preserved separately.
+
+The complete current service regression subsequently passed595 offline tests and
+292 PostgreSQL tests across40 and17 test files. One database-only offline case and
+three optional browser journeys were explicitly skipped. This reused the verified
+137-entry service build from the successful wire run; all239 source files, compiled
+bytes/modes, tools and dependencies remained unchanged. The original privacy-journal
+harness fenced successfully, and the private PostgreSQL instance stopped. Its
+fixture state remains local with0700 directory permissions. No browser, native,
+mixed-device or deployment acceptance is implied.
+[Full backend verification](backend-regression-verification.json).

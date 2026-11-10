@@ -191,7 +191,10 @@ class Capture(NativeEnvironmentSpawn, Supervisor):
         started = time.monotonic()
         startup = startup_native is not None
         if startup:
-            require(bundle == 'dev.roominthecart.app' and kind == 'data' and not self.bound
+            # Initial data and installed bundle discovery share the original binding clock.
+            require((bundle, kind) in (('dev.roominthecart.app', 'data'),
+                    ('dev.roominthecart.app', 'app'),
+                    ('dev.roominthecart.RoomInTheCartUITests.xctrunner', 'app')) and not self.bound
                     and self.native_started is not None and self.phase == 'binding'
                     and startup_native['record']['label'] == 'native',
                     'startup_container_scope')
@@ -336,9 +339,9 @@ class Capture(NativeEnvironmentSpawn, Supervisor):
             value = self.status()
             if value is None: time.sleep(0.05)
         self.check_waiting_native(native)
-        installed = self.query_container('dev.roominthecart.app','app','container-app')
+        installed = self.query_container('dev.roominthecart.app','app','container-app',startup_native=native)
         self.check_waiting_native(native)
-        runner = self.query_container('dev.roominthecart.RoomInTheCartUITests.xctrunner','app','container-runner')
+        runner = self.query_container('dev.roominthecart.RoomInTheCartUITests.xctrunner','app','container-runner',startup_native=native)
         self.check_waiting_native(native)
         require(installed is not None and runner is not None, 'installed_containers')
         product = Path(self.config['productsRoot'])/'Release-iphonesimulator'

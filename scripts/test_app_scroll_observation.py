@@ -392,6 +392,7 @@ class ContainerLookupControls(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError,'container_query_failed'):self.lookup()
                 self.assertFalse(self.spawned[0]['record']['expectedContainerAbsent'])
     def test_post_arm_lookup_still_has_five_second_limit(self):
+        self.control.phase='completion';self.control.phase_deadline=120
         for bundle in ('dev.roominthecart.app','dev.roominthecart.RoomInTheCartUITests.xctrunner'):
             with self.subTest(bundle=bundle):
                 self.now=0;self.spawned=[]
@@ -402,6 +403,57 @@ class ContainerLookupControls(unittest.TestCase):
         self.control.bound={'app':{}}
         with self.assertRaisesRegex(ValueError,'startup_container_scope'):self.lookup()
         self.assertEqual(self.spawned,[])
+    def test_initial_installed_bundles_use_remaining_binding_time(self):
+        for bundle,label in (('dev.roominthecart.app','container-app'),
+                             ('dev.roominthecart.RoomInTheCartUITests.xctrunner','container-runner')):
+            with self.subTest(bundle=bundle):
+                self.now=82.497;self.query_end=90;self.spawned=[]
+                self.assertEqual(self.lookup(bundle=bundle,kind='app',label=label),self.path)
+                item=self.spawned[0]['record']
+                self.assertGreaterEqual(self.now,90);self.assertLess(self.now,90.05)
+                self.assertEqual(item['containerLookupPhase'],'startup')
+                self.assertAlmostEqual(item['containerLookupBudgetSeconds'],97.503)
+                self.assertEqual(item['signals'],[]);self.assertTrue(item['terminalVerified'])
+                self.assertEqual(self.control.phase_deadline,180)
+    def test_initial_installed_hang_cannot_reset_binding_clock(self):
+        for bundle in ('dev.roominthecart.app','dev.roominthecart.RoomInTheCartUITests.xctrunner'):
+            with self.subTest(bundle=bundle):
+                self.now=173;self.query_end=float('inf');self.spawned=[]
+                self.control.budget=self.control.check_deadlines
+                with self.assertRaisesRegex(ValueError,'binding_deadline'):
+                    self.lookup(bundle=bundle,kind='app')
+                self.assertEqual(self.now,180);self.assertEqual(len(self.spawned),1)
+                self.assertEqual(self.spawned[0]['record']['containerLookupBudgetSeconds'],7)
+    def test_initial_installed_scope_rejects_bound_or_later_phase(self):
+        for bundle in ('dev.roominthecart.app','dev.roominthecart.RoomInTheCartUITests.xctrunner'):
+            for phase,bound in [('binding',{'app':{}}),('arm',{}),('completion',{})]:
+                with self.subTest(bundle=bundle,phase=phase,bound=bound):
+                    self.control.phase=phase;self.control.bound=bound
+                    with self.assertRaisesRegex(ValueError,'startup_container_scope'):
+                        self.lookup(bundle=bundle,kind='app')
+                    self.assertEqual(self.spawned,[])
+    def test_initial_installed_scope_rejects_unreviewed_pairs(self):
+        for bundle,kind in [('dev.roominthecart.app','groups'),
+                            ('dev.roominthecart.RoomInTheCartUITests.xctrunner','data'),
+                            ('unrelated.bundle','app')]:
+            with self.subTest(bundle=bundle,kind=kind):
+                with self.assertRaisesRegex(ValueError,'startup_container_scope'):
+                    self.lookup(bundle=bundle,kind=kind)
+                self.assertEqual(self.spawned,[])
+    def test_initial_installed_checks_native_and_query_identity(self):
+        for bundle in ('dev.roominthecart.app','dev.roominthecart.RoomInTheCartUITests.xctrunner'):
+            for pid,error in [(101,'native_identity_before_app'),(102,'installed_identity_changed')]:
+                with self.subTest(bundle=bundle,pid=pid):
+                    self.now=82;self.query_end=100;self.spawned=[];self.drift=(pid,88)
+                    with self.assertRaisesRegex(ValueError,error):
+                        self.lookup(bundle=bundle,kind='app',label='installed')
+                    self.assertEqual(self.now,88);self.assertEqual(len(self.spawned),1)
+    def test_initial_installed_preserves_absolute_wall_deadline(self):
+        self.now=417;self.query_end=float('inf');self.control.phase_deadline=999
+        self.control.budget=self.control.check_deadlines
+        with mock.patch.object(capture,'BIND_SECONDS',500),self.assertRaisesRegex(ValueError,'native_wall_deadline'):
+            self.lookup(kind='app',label='container-app')
+        self.assertEqual(self.now,420);self.assertEqual(len(self.spawned),1)
     def test_signal_rejection_still_covers_discovery_queries(self):
         receipt=good_receipt();receipt['processes'].append(dict(label='container-data-1',signals=['SIGINT'],terminalVerified=True,exitCode=-2,expectedContainerAbsent=True))
         with self.assertRaisesRegex(ValueError,'process_cleanup'):validate_receipt(receipt)
@@ -423,6 +475,7 @@ class PhaseBudgetControls(unittest.TestCase):
         self.native['process'].poll.side_effect=lambda:0 if self.now>=self.native_end else None
         c.identity=mock.Mock();c.identity.read.side_effect=lambda pid:None if self.drift else self.binding
         def query(bundle,kind,label,startup_native=None):
+            self.assertIs(startup_native,self.native)
             self.calls.append(label);self.now+=self.query_seconds
             if kind=='data' and self.absent:
                 self.absent-=1;return None
@@ -962,6 +1015,23 @@ class AcquisitionControls(unittest.TestCase):
             patcher.start();self.addCleanup(patcher.stop)
     def absent(self):self.query_code=2;self.query_stdout='';self.query_stderr=ContainerLookupControls.ABSENT
     def reset(self):self.now=0;self.spawned=[];self.control.processes=[]
+    def test_initial_installed_acquisition_keeps_same_owned_query(self):
+        for bundle in ('dev.roominthecart.app','dev.roominthecart.RoomInTheCartUITests.xctrunner'):
+            with self.subTest(bundle=bundle):
+                self.reset();self.now=82;self.bind_at=89;self.query_end=90
+                self.assertEqual(self.lookup(bundle=bundle,kind='app',label='installed'),self.path)
+                self.assertEqual(len(self.spawned),1);item=self.spawned[0]
+                self.assertEqual(item['record']['startupAcquisition']['outcome'],'bound')
+                self.assertEqual(item['binding'],self.query_binding)
+                self.assertEqual(item['record']['signals'],[])
+                self.assertEqual(item['record']['containerLookupBudgetSeconds'],98)
+    def test_initial_installed_acquisition_rejects_unrelated_executable(self):
+        for bundle in ('dev.roominthecart.app','dev.roominthecart.RoomInTheCartUITests.xctrunner'):
+            with self.subTest(bundle=bundle):
+                self.reset();self.bad_sample=dict(self.query_binding,executable='/unrelated')
+                with self.assertRaisesRegex(ValueError,'startup_executable'):
+                    self.lookup(bundle=bundle,kind='app',label='installed')
+                self.assertEqual(len(self.spawned),1);self.assertEqual(self.spawned[0]['record']['signals'],[])
     def test_delayed_interpreter_then_expected_binding_same_process(self):
         self.assertEqual(self.lookup(),self.path);item=self.spawned[0]
         self.assertEqual(item['binding'],self.query_binding);self.assertEqual(item['record']['signals'],[])

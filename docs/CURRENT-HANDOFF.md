@@ -18,9 +18,8 @@ This file contains current execution state. The previous 482-line history is
   The ambient `spanish-done-diagnostic` worktree is stale.
 - No Dot/Lumpy. Astra High helpers and Sol6.1 Extra High monitoring are authorized.
   Root owns integration/dispatch and the sole local native execution slot.
-- Backend/CI query-acquisition checkpoint: `d6d5b5bb`; the native successor below
-  is qualified locally. The remote was last verified at `7a55a376349340d803e99668b54acf05b1dc5057`
-  before publishing this successor. Current dispatch state is recorded in
+- Backend/native checkpoint: `4f5efb100a1b901d2e8e09f1f0dbe30f5a058f75`,
+  published to the candidate branch. Current dispatch state is recorded in
   `.build/HostedAppObservationNov09/active-handoff.json`.
   Quote/item editor build and59 strict model tests passed; the real PostgreSQL
   privacy/expired-quote case and original S17/S26 UI journeys passed.
@@ -56,16 +55,37 @@ This file contains current execution state. The previous 482-line history is
   quantification scenario passes separately. Both isolated databases stopped.
   Conversion retention and protected quantification findings are fixed without
   relaxing reducer or authorization gates. No migrations/deployment occurred.
-- Same-process startup query acquisition correction is installed locally and passes
-  147 observer controls plus both complete324-check preflight profiles. It retains
-  fixed phase deadlines/custody and adds bounded identity diagnostics. No changed
-  hosted run has been dispatched. Sol monitors the native qualification; an Astra helper prepares
-  the separate typed native-wire execution above.
+- The complete current backend regression passes595 offline and292 PostgreSQL
+  tests, with one database-only offline skip and three optional browser skips.
+  All239 sources and137 compiled entries were verified; the original privacy
+  journal harness fenced correctly and the database stopped. Private fixture
+  state remains local in its0700 directory. No deployment occurred.
+  [Exact proof](evidence/service/shared-demand-action-sources-20261109/backend-regression-verification.json).
+- Hosted42728845944 passed324 early checks and Release producer, then exposed a
+  five-second cutoff on initial installed-app lookup. The reviewed successor
+  covers initial app and runner lookups with the original binding deadline;
+  all155 observer controls pass. Complete final-commit profiles and a changed
+  hosted run remain required. Sol monitors hosted work; Astra helpers prepare
+  separately reviewed producer-reuse and complete-operation Undo slices.
 - Preserve existing untracked historical evidence. Stage named files, not all
   working-tree changes. Keep 8 GiB free; the last observation was about 167 GiB.
 
 ## Current hosted question
 
+Focused observer [42728845944](https://github.com/palatis3/room-in-the-cart/actions/runs/42728845944)
+failed at exact `4f5efb100a1b901d2e8e09f1f0dbe30f5a058f75` after all324 early
+checks, helper typecheck and Release producer passed. The original scroll XCTest
+started and initial data discovery succeeded. The initial installed-app query
+then hit its separate five-second cutoff with92.434 seconds left in the original
+binding budget. No XCTest verdict, required metric or trace was established.
+The previous same-process acquisition fault did not recur. Root verified21 files,
+both ZIP digests and all77 archive members. The reviewed correction covers all
+three initial container lookups within the existing180-second binding deadline;
+later queries keep five seconds. No deadline, identity or metric gate is relaxed.
+[First-fault and correction proof](evidence/ci/performance-dispatch-parity-20261109/initial-bundle-verification.json).
+The active-handoff file records any subsequent dispatch; do not repeat unchanged4f.
+
+Earlier diagnostic:
 Focused observer [42717128576](https://github.com/palatis3/room-in-the-cart/actions/runs/42717128576)
 finished with failure at exact `7a55a376349340d803e99668b54acf05b1dc5057`.
 The298-check preflight, helper typecheck and Release producer passed. The tenth
@@ -111,10 +131,11 @@ intervals reach hosted collection. It is diagnostic only, not a metric substitut
 ## App work and verified boundary
 
 At the committed checkpoints above, the app builds under Xcode 27.1 and passes
-45 strict native model tests plus 122 client-package tests (3 expected integration
-skips). The combined backend passes 569 offline tests (1 expected DB-only skip)
-and 285 PostgreSQL tests (3 optional browser skips). Localization structure and
-project generation pass. These are scoped results, not final combined acceptance.
+153 focused strict native model tests plus122 client-package tests (3 expected
+integration skips). The current backend passes595 offline tests (1 expected
+DB-only skip) and292 PostgreSQL tests (3 optional browser skips). Localization
+structure and project generation pass. These are scoped results, not final
+combined acceptance.
 [Native proof](evidence/native/shared-food-manual-flow-20261109/README.md),
 [backend proof](evidence/service/shared-demand-adoption-20261109/README.md).
 
@@ -130,7 +151,8 @@ require explicit restoration. Build and all 59 focused model checks pass, plus t
 real privacy/expired-quote recovery case. Independent review found the two legacy
 fixture gaps above; both original legacy routes pass; r6 also qualifies the graph-editor fixture journeys. [Editor proof](evidence/native/shared-food-editor-20261109/README.md).
 
-Request Add/Link and meal/proposal editing are installed; their combined qualification is underway. Request review must retain
+Request Add/Link and meal/proposal editing are installed and pass the scoped native
+and complete typed-wire qualification above. Request review must retain
 its exact `ShopperDecision`, including the generated add-line UUID; recreating that
 decision changes identity. Changed meal bindings need authoritative proposed-action
 sources from the server; do not duplicate protected-group enumeration in Swift.
