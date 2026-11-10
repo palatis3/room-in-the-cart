@@ -1,5 +1,30 @@
 # Local CI validation
 
+## Current development priority — November 10
+
+The user has asked to stop overengineering and prioritize completing the app.
+This policy takes precedence over routine repetition described below; existing
+release requirements and known failures remain visible.
+
+- During implementation, build the affected target and run the smallest relevant
+  existing tests. Add regression coverage for a real defect or critical new
+  behavior, not every reversible edit or hypothetical edge case.
+- Keep cheap service/model checks. Avoid repeating native UI, database, wire and
+  hosted suites for unrelated or test-only edits. Test a corrected fixture with
+  its affected suite before scheduling a broader batch.
+- Batch related fixes before one integration run. Run broad regression on the
+  combined merge candidate and applicable release checks before distribution;
+  do not require that full batch for every intermediate commit.
+- Stop optional performance-observer and simulator-infrastructure experiments
+  during feature completion. Revisit a diagnostic only when it blocks the next
+  agreed milestone and has a concrete new hypothesis. Deferred checks are not
+  passing checks.
+- Reuse existing test commands, logs and result bundles. Do not create another
+  bespoke qualification wrapper, receipt schema, source-copy pipeline or evidence
+  document for an ordinary edit. A concise revision, command, result and known
+  limitation are sufficient. Preserve existing failure artifacts and keep
+  credentials and private fixtures out of committed evidence.
+
 ## Default feedback loop
 
 1. Read the existing run's compact report before scheduling more work:
