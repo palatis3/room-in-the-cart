@@ -1,0 +1,901 @@
+{
+  "schemaVersion": 1,
+  "status": "passed",
+  "scope": "local native fixture qualification",
+  "runs": {
+    "r5": {
+      "final": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/final.json",
+      "finalStatus": "failed",
+      "preparationManifest": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/manifest.json",
+      "references": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/references.json",
+      "sourceManifest": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/source-manifest.json",
+      "sourceEntriesVerified": 623,
+      "productManifest": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/products.json",
+      "productEntries": 280,
+      "build": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/build-receipt.json",
+      "buildSeconds": 271.872,
+      "selectorRoster": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/selectors.json",
+      "compiledUIInventory": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/RoomInTheCartUITests-compiled-inventory.json"
+    },
+    "r6": {
+      "final": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/execution/final.json",
+      "finalStatus": "failed",
+      "preparationManifest": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/manifest.json",
+      "references": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/references.json",
+      "sourceManifest": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/source-manifest.json",
+      "sourceEntriesVerified": 623,
+      "productManifest": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/execution/products.json",
+      "productEntries": 280,
+      "build": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/execution/build-receipt.json",
+      "buildSeconds": 12.729,
+      "selectorRoster": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/selectors.json",
+      "preservation": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/execution/r5-product-preservation.json",
+      "reuse": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/execution/reuse-verification.json",
+      "custody": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/execution/custody-final.json",
+      "compiledUIInventory": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/execution/UI-compiled-inventory.json"
+    },
+    "r7": {
+      "final": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/final.json",
+      "finalStatus": "passed",
+      "preparationManifest": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/manifest.json",
+      "references": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/references.json",
+      "sourceManifest": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/source-manifest.json",
+      "sourceEntriesVerified": 623,
+      "productManifest": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/products.json",
+      "productEntries": 280,
+      "build": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/build-receipt.json",
+      "buildSeconds": 11.611,
+      "selectorRoster": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/selectors.json",
+      "preservation": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/r6-product-preservation.json",
+      "reuse": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/reuse-verification.json",
+      "custody": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/custody-final.json",
+      "compiledUIInventory": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/UI-compiled-inventory.json"
+    }
+  },
+  "proof": {
+    "currentSourceMatchesR7": true,
+    "sourceArchivesVerified": 3,
+    "sourceEntriesPerArchive": 623,
+    "onlyChangedSource": "ios/UITests/SharedOperationUndoUITests.swift",
+    "sourceChangeScope": "Meal UI assertions and navigation",
+    "ordinaryUndoCodeIdentical": true,
+    "nonUIProductEntriesByteAndModeIdentical": 259,
+    "uiBinarySHA256ByRevision": {
+      "r5": "820cfa32c76c27e45a925e3e754c55136208642f1f15ffd1de1ae61332298677",
+      "r6": "ba4e4aed7c475c9052ec7e0ac60e66cbc151f6ad34a082f46c414820587d6b84",
+      "r7": "affef0760df996b3afae20b37ef60771f17ab37a51b90ad14e70f027d059d932"
+    },
+    "currentProductsMatchR7AtVerification": true,
+    "priorEvidenceInventory": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/prior-evidence-before.json",
+    "priorEvidenceTopLevelEntriesReverified": 144,
+    "originalXcresultsReverified": 9
+  },
+  "reusedPackage": {
+    "revision": 5,
+    "passed": 145,
+    "expectedSkips": [
+      "HouseholdClientTests.NativeServiceWireTests.testNativeClientAgainstPostgres",
+      "HouseholdClientTests.SharedMealNativeWireTests.testSharedMealClientAgainstPostgres",
+      "HouseholdClientTests.StoreQuoteNativeWireTests.testStoreQuoteClientAgainstPostgres"
+    ],
+    "verifiedReceipt": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/package-verified.json"
+  },
+  "reusedModels": {
+    "phase": "models",
+    "revision": 5,
+    "result": "passed",
+    "nativeSeconds": 26.424,
+    "nativeReceipt": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/models-receipt.json",
+    "strictReceipt": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/models-strict-receipt.json",
+    "verification": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/models-verification.json",
+    "inspectionCustody": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/models-inspection-custody.json",
+    "originalResultInventory": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/models-original-before.json",
+    "selectorCount": 174,
+    "compiledInventory": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/RoomInTheCartTests-compiled-inventory.json"
+  },
+  "journeys": [
+    {
+      "phase": "undo-en",
+      "revision": 5,
+      "result": "passed",
+      "nativeSeconds": 213.19,
+      "nativeReceipt": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/undo-en-receipt.json",
+      "strictReceipt": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/undo-en-strict-receipt.json",
+      "verification": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/undo-en-verification.json",
+      "inspectionCustody": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/undo-en-inspection-custody.json",
+      "originalResultInventory": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/undo-en-original-before.json",
+      "xctestSeconds": 201.887,
+      "selector": "RoomInTheCartUITests/SharedOperationUndoUITests/testSavedChangeCancelApplyRelaunchExactRetryAndLaterFoodSurvives"
+    },
+    {
+      "phase": "undo-es",
+      "revision": 5,
+      "result": "passed",
+      "nativeSeconds": 217.866,
+      "nativeReceipt": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/undo-es-receipt.json",
+      "strictReceipt": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/undo-es-strict-receipt.json",
+      "verification": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/undo-es-verification.json",
+      "inspectionCustody": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/undo-es-inspection-custody.json",
+      "originalResultInventory": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/undo-es-original-before.json",
+      "xctestSeconds": 207.799,
+      "selector": "RoomInTheCartUITests/SharedOperationUndoUITests/testSpanishSavedChangeCancelApplyRelaunchExactRetryAndLaterFoodSurvives"
+    },
+    {
+      "phase": "meal-en",
+      "revision": 7,
+      "result": "passed",
+      "nativeSeconds": 251.592,
+      "nativeReceipt": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/meal-en-receipt.json",
+      "strictReceipt": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/meal-en-strict-receipt.json",
+      "verification": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/meal-en-verification.json",
+      "inspectionCustody": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/meal-en-inspection-custody.json",
+      "originalResultInventory": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/meal-en-original-before.json",
+      "xctestSeconds": 238.71,
+      "selector": "RoomInTheCartUITests/SharedOperationUndoUITests/testSkippedDinnerUndoCancelRelaunchRetryKeepsProtectedLunchAndLaterStaple"
+    },
+    {
+      "phase": "meal-es",
+      "revision": 7,
+      "result": "passed",
+      "nativeSeconds": 248.806,
+      "nativeReceipt": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/meal-es-receipt.json",
+      "strictReceipt": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/meal-es-strict-receipt.json",
+      "verification": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/meal-es-verification.json",
+      "inspectionCustody": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/meal-es-inspection-custody.json",
+      "originalResultInventory": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/meal-es-original-before.json",
+      "xctestSeconds": 238.335,
+      "selector": "RoomInTheCartUITests/SharedOperationUndoUITests/testSpanishSkippedDinnerUndoCancelRelaunchRetryKeepsProtectedLunchAndLaterStaple"
+    },
+    {
+      "phase": "quote-en",
+      "revision": 7,
+      "result": "passed",
+      "nativeSeconds": 251.571,
+      "nativeReceipt": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-en-receipt.json",
+      "strictReceipt": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-en-strict-receipt.json",
+      "verification": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-en-verification.json",
+      "inspectionCustody": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-en-inspection-custody.json",
+      "originalResultInventory": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-en-original-before.json",
+      "xctestSeconds": 242.017,
+      "selector": "RoomInTheCartUITests/SharedFoodEditorUITests/testExpiredQuoteCancelApplyAndRelaunchRetryPreserveExactFoodAndMoney"
+    },
+    {
+      "phase": "quote-es",
+      "revision": 7,
+      "result": "passed",
+      "nativeSeconds": 251.96,
+      "nativeReceipt": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-es-receipt.json",
+      "strictReceipt": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-es-strict-receipt.json",
+      "verification": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-es-verification.json",
+      "inspectionCustody": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-es-inspection-custody.json",
+      "originalResultInventory": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-es-original-before.json",
+      "xctestSeconds": 242.191,
+      "selector": "RoomInTheCartUITests/SharedFoodEditorUITests/testSpanishExpiredQuoteCancelApplyAndRelaunchRetryPreserveExactFoodAndMoney"
+    }
+  ],
+  "retainedFailures": [
+    {
+      "phase": "meal-en",
+      "revision": 5,
+      "result": "failed",
+      "nativeSeconds": 77.008,
+      "nativeReceipt": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/meal-en-receipt.json",
+      "strictReceipt": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/meal-en-strict-receipt.json",
+      "verification": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/meal-en-verification.json",
+      "inspectionCustody": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/meal-en-inspection-custody.json",
+      "originalResultInventory": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/meal-en-original-before.json",
+      "xctestSeconds": 67.7,
+      "selector": "RoomInTheCartUITests/SharedOperationUndoUITests/testSkippedDinnerUndoCancelRelaunchRetryKeepsProtectedLunchAndLaterStaple",
+      "firstFailure": "Protected lunch source row revealed. Its nested query for Two lunch wraps failed.",
+      "firstFailureLog": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/meal-en.log",
+      "firstFailureLogLine": 434,
+      "laterJourneysStarted": false
+    },
+    {
+      "phase": "meal-en",
+      "revision": 6,
+      "result": "failed",
+      "nativeSeconds": 288.235,
+      "nativeReceipt": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/execution/meal-en-receipt.json",
+      "strictReceipt": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/execution/meal-en-strict-receipt.json",
+      "verification": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/execution/meal-en-verification.json",
+      "inspectionCustody": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/execution/meal-en-inspection-custody.json",
+      "originalResultInventory": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/execution/meal-en-original-before.json",
+      "xctestSeconds": 270.0,
+      "selector": "RoomInTheCartUITests/SharedOperationUndoUITests/testSkippedDinnerUndoCancelRelaunchRetryKeepsProtectedLunchAndLaterStaple",
+      "firstFailure": "After Apply, relaunch, retry and confirmation, the post-retry search could not find Original taco dinner.",
+      "firstFailureLog": ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/execution/meal-en.log",
+      "firstFailureLogLine": 1779,
+      "laterJourneysStarted": false
+    }
+  ],
+  "limits": {
+    "diagnostics": "never (local setting)",
+    "releaseAcceptance": false,
+    "realServiceUIAcceptance": false,
+    "screenshotReviewPerformed": false,
+    "nativeCommandsExecutedForThisProof": false
+  },
+  "verifiedFiles": {
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/RoomInTheCartTests-compiled-inventory.json": {
+      "sha256": "4356250e59d84d31d802e81ae5cc504267c00c9ddaae0059d139ea9104f63e15",
+      "bytes": 118847
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/RoomInTheCartUITests-compiled-inventory.json": {
+      "sha256": "5709765dc937265eb4ed77f2910711ae727668eb91748da89906c8119e749bb1",
+      "bytes": 18323
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/build-receipt.json": {
+      "sha256": "59d60cd5a667dc78a13d7509d488763c021615a5aae560c3be11c2e14c3f9886",
+      "bytes": 1133
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/build.log": {
+      "sha256": "42bf67458c5be5ca593c89234d0cd6135df78764e0d3c30e32ffaa71f6292761",
+      "bytes": 1008223
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/final.json": {
+      "sha256": "6b5a8d1252d64bfed3a898fe8f2b9e2e441280576f03ee8dab1fb1e3d13734dd",
+      "bytes": 170
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/meal-en-clone-receipt.json": {
+      "sha256": "59ce1a4dfc2622153c801712a0bf06d846ff15dfe3b4d81ee700c13951abf1e2",
+      "bytes": 625
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/meal-en-clone.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/meal-en-inspection-custody.json": {
+      "sha256": "9b044a8edecd23378b294a77cd4297fe68271e9367e338dc2bbb864bb0fb9476",
+      "bytes": 271
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/meal-en-original-before.json": {
+      "sha256": "9b117e24a4b18ea9040b134fcf4e01773129f3c6180ed3d9ab27d7689cf2ae82",
+      "bytes": 14986
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/meal-en-receipt.json": {
+      "sha256": "86692f59cbaa605be29d34df4f55dcea158a33a8350a1b3315dcd8986334ace0",
+      "bytes": 1208
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/meal-en-strict-receipt.json": {
+      "sha256": "962cc23993613e06a554da1e96b3f0339563d330814e16b015d1820e84d752e5",
+      "bytes": 1225
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/meal-en-strict.log": {
+      "sha256": "e9274497b75e2eb22aab9681c0226560a041782b09058e944335bedae733556c",
+      "bytes": 1258
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/meal-en-summary-receipt.json": {
+      "sha256": "e29567666905f823a73531f7a5c84ee4328c54912235919aa3caa4734765d109",
+      "bytes": 579
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/meal-en-summary.log": {
+      "sha256": "fb2465e27de9ddcff6456d1241d4342ec4a9b3398384297f05ffb5b9c64d0b83",
+      "bytes": 1244
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/meal-en-tests-receipt.json": {
+      "sha256": "a4214c627299071d6865ec39392755f0e9a36faa980819770f6ef6b5d3828b28",
+      "bytes": 577
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/meal-en-tests.log": {
+      "sha256": "3be283f957cd214aba771e1741be4e1c421499a9ff05c14fa01ee17db931bd28",
+      "bytes": 1479
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/meal-en-verification.json": {
+      "sha256": "2267fb3a3a7b826a38b286247e34fb8698377186891e3454c5ed3286d3ba6800",
+      "bytes": 177
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/meal-en.log": {
+      "sha256": "a22a329530d0f96ef0ba794e79484195101a08eeee18400dce238917ac2fcefd",
+      "bytes": 42363
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/models-clone-receipt.json": {
+      "sha256": "0d17e601864590a3296ca9ad0268eda3bfa7779a68a302acb8f5a909c34937be",
+      "bytes": 623
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/models-clone.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/models-inspection-custody.json": {
+      "sha256": "f15897b413b82f5a3a46120c4288a185d5d5ed79b3bc2f128cd848b66e7169cb",
+      "bytes": 270
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/models-original-before.json": {
+      "sha256": "13d9bb73dc6b9db9995d9399db30fbadc349c18a57ff456891f0ee2540d08c7e",
+      "bytes": 86596
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/models-receipt.json": {
+      "sha256": "f98afc1162c63e9c06e75c31daf10bcf527c35ccf606d714e4af0d836cc27695",
+      "bytes": 24505
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/models-strict-receipt.json": {
+      "sha256": "a0114b53af1e71ca94ab9abdb94f7a90a246140b7ceb4fa1116ffdb508a0eff8",
+      "bytes": 1223
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/models-strict.log": {
+      "sha256": "9ed7a5a4e29ca791ea3733b289b1c1064c384d7ef993ae92f74ec2480a3597ed",
+      "bytes": 23830
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/models-summary-receipt.json": {
+      "sha256": "ff45e8c519e1999799a247ee5c4a392596bd17d92bd77a82af89db4d9c9c85ea",
+      "bytes": 578
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/models-summary.log": {
+      "sha256": "77413c108556b7e6228c5e103881c4cf8f1dc42965cc8bdb8a08184320a5818d",
+      "bytes": 914
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/models-tests-receipt.json": {
+      "sha256": "6c19a1dd60d0ff778959276f6d12b44562f8925c78cc50a8060f0c01c6f714f2",
+      "bytes": 575
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/models-tests.log": {
+      "sha256": "7a68e57abfac447ea52f8437c3cc72403911fc0abf3256d93138d5ca4330719f",
+      "bytes": 85477
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/models-verification.json": {
+      "sha256": "e846c0c23739226db1a1917cbc45bba1793d968e16a4d35469365beb52131617",
+      "bytes": 176
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/models.log": {
+      "sha256": "845c10690178d17047df3c6dd55f86e1f75abecd17e4dfdb52e24f2a854582bd",
+      "bytes": 84713
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/package-inventory-receipt.json": {
+      "sha256": "31b996ad61e3e35836ed2a181ea2aa830d9f75f03cff6015008e2359f9431b7d",
+      "bytes": 734
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/package-inventory.log": {
+      "sha256": "c2b33c1254ebc5958cdaafae4a54a6c8b9a16cb4a12c167817246659ae84d755",
+      "bytes": 16389
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/package-receipt.json": {
+      "sha256": "249cc9efb9f235e897251b27560905f831e1041aa386a299bd855acb827e43af",
+      "bytes": 617
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/package-verified.json": {
+      "sha256": "b459f8eaaec68817cd67ed181a2f38f7abc72599e00b5415d0a4d35a867a66fa",
+      "bytes": 236
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/package.log": {
+      "sha256": "28073f5e722137ba2a262684951332396f44a611ea0fa48b58133fb459e8fbab",
+      "bytes": 46894
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/products.json": {
+      "sha256": "5fc2a4de0d1bd117c5a391176983bb84247367c17f7845710336605aaefb8f3a",
+      "bytes": 54970
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/sdk-path.log": {
+      "sha256": "fc0e1f390e49274ccc3b9484c8af9047f9e78868439ada0261b8fcda80a25990",
+      "bytes": 117
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/sdk-version.log": {
+      "sha256": "27d73d70ecb0bcfc37d60b534a2298ae2c6e9ee26ed5154f558f11640d11d0b9",
+      "bytes": 5
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/swift-version.log": {
+      "sha256": "df9a79afbb2eb356f8381fbc0edb8c69c7500b8f5b18ae594be7ced187275e13",
+      "bytes": 128
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/undo-en-clone-receipt.json": {
+      "sha256": "2593a0720677b6404593a319bcbc9a78ff9a91302f29dfce208f1d99d2d36c5e",
+      "bytes": 625
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/undo-en-clone.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/undo-en-inspection-custody.json": {
+      "sha256": "3f3ebab04176c6460948a71239cf21d67e52915be20036bcb4696e1586e34d42",
+      "bytes": 271
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/undo-en-original-before.json": {
+      "sha256": "eafd89ae01b16dfa1a6facd1f7b63a313f0ddd8708327296f90d8511bb3c7545",
+      "bytes": 8980
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/undo-en-receipt.json": {
+      "sha256": "bb5ecf735efe6d3eebec9146fea9bf938cce2e89333e6bddc438f177714a3678",
+      "bytes": 1198
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/undo-en-strict-receipt.json": {
+      "sha256": "201f24233cba00df12a44012cbb1859f556b37e6076f3239431884b568bd4580",
+      "bytes": 1225
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/undo-en-strict.log": {
+      "sha256": "231466adc0385499c9d63d43191010f0d7502bc82e0dcbb779fd5773cc3ed655",
+      "bytes": 690
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/undo-en-summary-receipt.json": {
+      "sha256": "32d366624bd07bbdc1d262a230b4322fb05782bfec179e7a099fbfa58c08eba8",
+      "bytes": 579
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/undo-en-summary.log": {
+      "sha256": "29117ec4ebd45ce1866d9a4b56d0f0ee96614c84694ab2e58f5205c87c329a6f",
+      "bytes": 754
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/undo-en-tests-receipt.json": {
+      "sha256": "bad5308834f4cf4f165aa5c24a4d85b5715678bace15de20f74415e0aaab61c1",
+      "bytes": 577
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/undo-en-tests.log": {
+      "sha256": "8650fa533b2b9244b676cc7d6a9bbc5869caade4f777b240295e798fc1da512d",
+      "bytes": 1255
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/undo-en-verification.json": {
+      "sha256": "9e346bb79f3904035317627cb2205dbca98102ea8b91a50475a0eecf4309f5c7",
+      "bytes": 176
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/undo-en.log": {
+      "sha256": "08db2f88dd966901796b656b780506840e5590ffc7eebb26f514b4e5d257e5c8",
+      "bytes": 104878
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/undo-es-clone-receipt.json": {
+      "sha256": "937e74129054b8b38102dd33a12b589799f9b6c9dd7fa029284989abce4e0dd0",
+      "bytes": 625
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/undo-es-clone.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/undo-es-inspection-custody.json": {
+      "sha256": "edbc6d4514eb04032f8ed2b6279466b3212ffa710510c976688ec7ffe389e8e7",
+      "bytes": 271
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/undo-es-original-before.json": {
+      "sha256": "c6fe2197754d590bef507c2d67303808a75c9bb73b34bec05f95306eaf0eb76c",
+      "bytes": 8980
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/undo-es-receipt.json": {
+      "sha256": "456768c64417a3139befd19e3a96e9ae8b13ee093c73e12ecb6879a0a2cf632b",
+      "bytes": 1206
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/undo-es-strict-receipt.json": {
+      "sha256": "68b8fdb46b7e7ae790a8fb6bedf88ae32981bf1b53bb951834b7f8e493346522",
+      "bytes": 1225
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/undo-es-strict.log": {
+      "sha256": "4625a1ff15513d4491a66200f3acd98c565c35a74a8d49bb579764b6f2fd3aec",
+      "bytes": 697
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/undo-es-summary-receipt.json": {
+      "sha256": "fdb7f79aa924e58131c62e402400b46ff04a8890a77318b725cf2f5f1a7ac78c",
+      "bytes": 578
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/undo-es-summary.log": {
+      "sha256": "09a5ae8fe5eba5909a77c3b3037fa09a574a855c3a7b9c07787fceb43dd98c3f",
+      "bytes": 754
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/undo-es-tests-receipt.json": {
+      "sha256": "a7145f939390ed0e792b6d736b2addfc74b3c71ccb027818a2ca19e8eca9be67",
+      "bytes": 577
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/undo-es-tests.log": {
+      "sha256": "0aca38f50abb628bc48f33e7abce4cb2641d20e4054a9866a00eb15341ffa52d",
+      "bytes": 1276
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/undo-es-verification.json": {
+      "sha256": "4ec93244d62a922fb615b3351fc101740cf9f0356a7479cffd03208e7a35c10f",
+      "bytes": 176
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/undo-es.log": {
+      "sha256": "b32a0c1d1f95fe6137fe0f387b78a6ee472d70f32c4e9aa571d9c8305d1d082d",
+      "bytes": 113935
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/execution/xcode-version.log": {
+      "sha256": "ee3fe26035862d2b9653c1a570be3eca4ee5be2815f0ce99ff2d8ffa3399e4c8",
+      "bytes": 33
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/manifest.json": {
+      "sha256": "3b44ba8d4f3d4a5656100447eed4d14532768a4a431891c1f091a30e43ede4d8",
+      "bytes": 1598
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/package-reviewed.json": {
+      "sha256": "34cbba73e5ac73cab2ecc547eec3daecde6b1903c63405bf73b58f6574ed0252",
+      "bytes": 17132
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/references.json": {
+      "sha256": "30ca6a566c42defa640b28e82112b416393f90bf592dd7b69520922394bfe0db",
+      "bytes": 1638
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/selectors.json": {
+      "sha256": "8dc68d0314f57eaf53e671383850ee2932041bc859d35e454a6c5f4d23d50177",
+      "bytes": 21802
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r5/source-manifest.json": {
+      "sha256": "b618b852ec9da7308d8fbb7b8fcca25d0cb31ab5227dd9bba11183d04b7b42ae",
+      "bytes": 101318
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/execution/UI-compiled-inventory.json": {
+      "sha256": "20b0f7c33940647f15fbd078a380a0b59a55b70820d7a1d7fa354b0a52426dd7",
+      "bytes": 15193
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/execution/build-receipt.json": {
+      "sha256": "5ca088376f84933346d7a7597abb1139732acd31899c10a67702a5bf8c8ee67f",
+      "bytes": 1174
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/execution/build.log": {
+      "sha256": "809060d373e77104d0c56e2f3949cd7f4ad1df257f47cc7374c4c48da5d65594",
+      "bytes": 115075
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/execution/custody-final.json": {
+      "sha256": "86fdcc15b786ece4dfdfc3a7ca3427c5a5c27a04d95aaa9e273cb882ef026d65",
+      "bytes": 124
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/execution/final.json": {
+      "sha256": "9d67cd5b51e5b72d9b4e63fcc6d0c3681a812b3d256e3ae4f3f26782dacf3217",
+      "bytes": 170
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/execution/meal-en-clone-receipt.json": {
+      "sha256": "52160e7cd0073d36217a2e8d0ec4e4cc083f49f771240e4c1c790e094b808641",
+      "bytes": 625
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/execution/meal-en-clone.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/execution/meal-en-inspection-custody.json": {
+      "sha256": "ddf1969aa80b2c0bfc9b8e479fe826c2a794792d019114b0ae8a08ebcd79a981",
+      "bytes": 271
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/execution/meal-en-original-before.json": {
+      "sha256": "ccba68cd62bd0fec9c327fcc97dd8895d5e845f5eba4f1abe1d1f33ecccd3529",
+      "bytes": 32542
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/execution/meal-en-receipt.json": {
+      "sha256": "955c6b50d76f641f9221422843f290187e2dcc3362665d49af26a30d2084682b",
+      "bytes": 1209
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/execution/meal-en-strict-receipt.json": {
+      "sha256": "973c16917fab7ee47d33bb99056e59d86f660e112b89553491f6630a6e413fcd",
+      "bytes": 1225
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/execution/meal-en-strict.log": {
+      "sha256": "b2cc1eafce57b76c5ec5049a77cf6fcd1f607627ce45d744e2adc83cda04e793",
+      "bytes": 1261
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/execution/meal-en-summary-receipt.json": {
+      "sha256": "9c6ab252ba35d5370508172c05d82e85e4c59b2ab315cfa9477c09de7cd651de",
+      "bytes": 579
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/execution/meal-en-summary.log": {
+      "sha256": "8691395709e7aa7f61819095d3ecec76ac31bf098da728b9c2303a635260f4ac",
+      "bytes": 1737
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/execution/meal-en-tests-receipt.json": {
+      "sha256": "5dd6706d56eab019a9fed6674a27a2242411164937fc15d8acb231fedf142454",
+      "bytes": 577
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/execution/meal-en-tests.log": {
+      "sha256": "95cf422f28706ef22989a0b7e6b66008a09b6c5eee38d1d268a973d00d715d73",
+      "bytes": 1973
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/execution/meal-en-verification.json": {
+      "sha256": "40447fa459fb823fbfcc63023688f693d8a2035e44a6be35b3c288047e85a20d",
+      "bytes": 177
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/execution/meal-en.log": {
+      "sha256": "930bc9569f89904d9c03523ec5d7da49548336e6d942b71f259e98eea947d782",
+      "bytes": 161237
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/execution/products.json": {
+      "sha256": "bec782cbee17a651d495d15138c525566869aaca683fef210532831f830ae286",
+      "bytes": 54970
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/execution/r5-product-preservation.json": {
+      "sha256": "4ed11341f2aa42996f7b69a925e0ce744aa495a251d47289ffda5366b08f2f82",
+      "bytes": 269
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/execution/reuse-verification.json": {
+      "sha256": "97ea38a4f26d131ac8dd171973511a8cd688b9ccd2b725a4cdf0917d390a9c6a",
+      "bytes": 237
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/execution/sdk-path.log": {
+      "sha256": "fc0e1f390e49274ccc3b9484c8af9047f9e78868439ada0261b8fcda80a25990",
+      "bytes": 117
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/execution/sdk-version.log": {
+      "sha256": "27d73d70ecb0bcfc37d60b534a2298ae2c6e9ee26ed5154f558f11640d11d0b9",
+      "bytes": 5
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/execution/swift-version.log": {
+      "sha256": "df9a79afbb2eb356f8381fbc0edb8c69c7500b8f5b18ae594be7ced187275e13",
+      "bytes": 128
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/execution/xcode-version.log": {
+      "sha256": "ee3fe26035862d2b9653c1a570be3eca4ee5be2815f0ce99ff2d8ffa3399e4c8",
+      "bytes": 33
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/manifest.json": {
+      "sha256": "e173fb4278171e0e1d8c59562991a6953f60508647f5befcaed9b2607f99e9ac",
+      "bytes": 1424
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/references.json": {
+      "sha256": "16b66689cf35c1be820ea97687ab7155117165a601f7153d30774ed0a024a541",
+      "bytes": 5574
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/selectors.json": {
+      "sha256": "8dc68d0314f57eaf53e671383850ee2932041bc859d35e454a6c5f4d23d50177",
+      "bytes": 21802
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r6/source-manifest.json": {
+      "sha256": "ac83c7e05c0c655bafefd87f545c2cc0165504c9cf7cdce5e513b40fe6411dad",
+      "bytes": 101318
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/UI-compiled-inventory.json": {
+      "sha256": "20b496f10861b36c09d4b790714657aac12d9152dce78fef75524bcd061b7865",
+      "bytes": 15193
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/build-receipt.json": {
+      "sha256": "5b2d69181a640fc969046a950de5c94dcd66fab5bb161ec5e3b0601a2746ab9a",
+      "bytes": 1174
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/build.log": {
+      "sha256": "3a786680856faf5a8e592743cc7b3ef4e5c601b41ac4dac72226f37e94943122",
+      "bytes": 81627
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/custody-final.json": {
+      "sha256": "42a9ba6c4cd6777f557ec5cac9185f856b7cabc0a7ba9ff398dff0babd4dd748",
+      "bytes": 129
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/final.json": {
+      "sha256": "1a7341a2bfd6eb042f3ff06c553be8f7c215b2c8a5cf9510154f2325780c9161",
+      "bytes": 342
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/meal-en-clone-receipt.json": {
+      "sha256": "cd80f864d8112899e4e7682b8b1fb4a1846b2e5bb6e2dcaa8532d60b1bbfeaf6",
+      "bytes": 625
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/meal-en-clone.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/meal-en-inspection-custody.json": {
+      "sha256": "d201cc0591129a7faa85babf23171e5d5f3474e4bfa3dc15d761c6ccea662a6e",
+      "bytes": 271
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/meal-en-original-before.json": {
+      "sha256": "dc9e3898555ba3f16612638c6b2bfc9418e568ecbec0adf46a8eb425cf3106f1",
+      "bytes": 8980
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/meal-en-receipt.json": {
+      "sha256": "44b8d073aa3fd976fbbd153b0625f09dbca55ce6443a5741b44688c6492fe05b",
+      "bytes": 1208
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/meal-en-strict-receipt.json": {
+      "sha256": "34f49d198b9f8cb3f41f8ffd326f9f53035a2cd7d7d37d7a89f9f182e7fa05cc",
+      "bytes": 1225
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/meal-en-strict.log": {
+      "sha256": "4d169b3fbbb422fe4f6f087674d64a7c112baed33c9d225cc0722e945ae03120",
+      "bytes": 699
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/meal-en-summary-receipt.json": {
+      "sha256": "3504a3bed982f1a4871e0c3ea95951653b1ac1076dc138f84e56a296b4f7e000",
+      "bytes": 579
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/meal-en-summary.log": {
+      "sha256": "6722421729dbc166a7b05559fc8cf3e194f2a0d5fac32fc88691feed03e0749b",
+      "bytes": 754
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/meal-en-tests-receipt.json": {
+      "sha256": "1d88de37e633356107f3296e67353c6cf0872f18abb985711a51109bbe98c00e",
+      "bytes": 577
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/meal-en-tests.log": {
+      "sha256": "a22b29b30ed7f17b3c876c3140642d48c33e6345b1328c050222f45bcafb12f2",
+      "bytes": 1281
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/meal-en-verification.json": {
+      "sha256": "e197971361b0904b7d44bbd05fa8f33f2042248f5b571b2975d8d5b146f713e6",
+      "bytes": 176
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/meal-en.log": {
+      "sha256": "50b8a9556ea976fa4313c3e875e3a57b22e4569bf715427de21bf73241c62160",
+      "bytes": 141352
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/meal-es-clone-receipt.json": {
+      "sha256": "56a872357ce6bd43387d0d1ecc3d9fb659727070a5e19e3874a68c374115b30a",
+      "bytes": 625
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/meal-es-clone.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/meal-es-inspection-custody.json": {
+      "sha256": "a6336e2806940475177358a31dc06f9a936087547199caac2bdeee1661d83d12",
+      "bytes": 271
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/meal-es-original-before.json": {
+      "sha256": "619029d219f5cb89f76c0a9b502a1fe532e5bfb945db93198b4e9d250106c930",
+      "bytes": 8980
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/meal-es-receipt.json": {
+      "sha256": "1ec537809f34ce8c4c82cfde881ef4247751c30395b80abd8d80e0789a6e9d69",
+      "bytes": 1215
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/meal-es-strict-receipt.json": {
+      "sha256": "368a490cb1e11307f79fa128074dd7ccaa476fbdd009d0807355d8a77450c99f",
+      "bytes": 1225
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/meal-es-strict.log": {
+      "sha256": "5990cccaa958dc9c4a84dc7ef5a8270728c2f8e8d7bd5acacf336d0e899588a7",
+      "bytes": 706
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/meal-es-summary-receipt.json": {
+      "sha256": "0cc427417bafc576e5c440293ad9f1d4be8e252d4f0e33fda55504a0477a1388",
+      "bytes": 579
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/meal-es-summary.log": {
+      "sha256": "16bdbe79d622264914471f097a3dc919e75fbf12da706d3dd9e80f83844c68ea",
+      "bytes": 754
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/meal-es-tests-receipt.json": {
+      "sha256": "5f99a3fbb2e94cf28a3264bd60f270b75cc64e57c8a050349829ed8403008c6e",
+      "bytes": 577
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/meal-es-tests.log": {
+      "sha256": "c1730e4405ed9d18afa2143f06055be92b2c9df1f1366e79e6891ac6de3e4992",
+      "bytes": 1303
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/meal-es-verification.json": {
+      "sha256": "86b5ffaa13d9aedef81d9387acf9df3ad74cf0aafd1a3b115d9f42448919613f",
+      "bytes": 176
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/meal-es.log": {
+      "sha256": "026c2dfefcb93518eab4c515ccfa02ff5d0a85ffbbb0dc04fe8fbd0fc8475cbc",
+      "bytes": 145317
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/prior-evidence-before.json": {
+      "sha256": "37d5d1d004c9afee97a7cea7b6fa1e35645e742c214573a6b1ba04ae7843b9b2",
+      "bytes": 1321813
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/products.json": {
+      "sha256": "f6b9e01979e44db3d994355184d52eddf6f2d1613c18430a659e0952b7ada783",
+      "bytes": 54970
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-en-clone-receipt.json": {
+      "sha256": "1b9c38cab312f3920ce777bdcd8f5c19cd2ff0573f80560fb2219c301fe279db",
+      "bytes": 627
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-en-clone.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-en-inspection-custody.json": {
+      "sha256": "da475899937f698ab2a9b0ef489c90f298596ee5cc009dda997e5b4f4d62d154",
+      "bytes": 272
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-en-original-before.json": {
+      "sha256": "830074533d3fe13a18659af298b0cc4c6ab4ebc16b26d185977eb6dd2c4f9754",
+      "bytes": 9442
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-en-receipt.json": {
+      "sha256": "a39445ea19f684fa0ccd54237a9d2145425ce1eb53e00be2652047d8b08e21b1",
+      "bytes": 1201
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-en-strict-receipt.json": {
+      "sha256": "cdf647d16391e3515d1ef8ba7a52e291a41d2138dd37e370280ca7a3badd043f",
+      "bytes": 1230
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-en-strict.log": {
+      "sha256": "6344c45fb6bc48f2ea93109861dc2c58279101308ffc997ad88691c9f6aba86b",
+      "bytes": 691
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-en-summary-receipt.json": {
+      "sha256": "a5cd504c5c52f85945ca9567719da3c292e14b5c2cfaf6561a3decc6734a7b4d",
+      "bytes": 580
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-en-summary.log": {
+      "sha256": "325d83bff80fee187e05d77f5b2bc598769b11e0f1024b4cfde5f929fd8ac5c5",
+      "bytes": 753
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-en-tests-receipt.json": {
+      "sha256": "24f7510542b8ce74a90614f2b349879d4597ca978ddf8cbc0a51c5bede36d901",
+      "bytes": 578
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-en-tests.log": {
+      "sha256": "18eefa03d514d0c7382b1e93734c2f477fa1e59ec0bd6549be608ba12aabd0b6",
+      "bytes": 1253
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-en-verification.json": {
+      "sha256": "bbde0526bd0db1c21df75b11617d30e29a04f5756536b4c703611fbeacc56958",
+      "bytes": 176
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-en.log": {
+      "sha256": "26acf0751b852145eb8bed8263d05b3c04d22eb1e104d7d3f3d85053958aba41",
+      "bytes": 111894
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-es-clone-receipt.json": {
+      "sha256": "460b5e32564247eae2287dc9c0d7353dcd62be8bf99dd47fd90047eda6231055",
+      "bytes": 627
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-es-clone.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-es-inspection-custody.json": {
+      "sha256": "202c2111f86aa25c6c81b35d88991b0b511b32b018fa889327f4f07e4e9e87ad",
+      "bytes": 272
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-es-original-before.json": {
+      "sha256": "c9e157565bbf52b494914663b66b4dc585503b6de47f1c437ea36b0eb4d339b6",
+      "bytes": 9442
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-es-receipt.json": {
+      "sha256": "746a39a4de7b3ea188206edd465f426ce40b08a22669d8a7bb3bf1289b24e94a",
+      "bytes": 1207
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-es-strict-receipt.json": {
+      "sha256": "9e17c9ec7c47888d3740017ee15c7afdc67f280a1102c6a70e4e50abf5ea0377",
+      "bytes": 1230
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-es-strict.log": {
+      "sha256": "427679236cf9d716d052ec001f9faccef3b89b12cb612cca4813582a66b62e4c",
+      "bytes": 698
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-es-summary-receipt.json": {
+      "sha256": "d3c13107cc5d062b2d71091f254d2afddc572af1b5a493b1c747c48c357aa1b9",
+      "bytes": 579
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-es-summary.log": {
+      "sha256": "d54644c654f19f971b00303d357ee581826216197404338c4254428ad537b560",
+      "bytes": 754
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-es-tests-receipt.json": {
+      "sha256": "5317c6529676df595608c4255ff70bc59f6896f99a3f4ae76c193a2c5d78cd7f",
+      "bytes": 578
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-es-tests.log": {
+      "sha256": "095727b4c10b2b5a58e00e0d7af32605484861b2dcb0b4f29ed319b39cbad24f",
+      "bytes": 1274
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-es-verification.json": {
+      "sha256": "7958a59c51b83df8fdd0bc25168ceb3e76a764596bf1a4a2bd7dea4a120a643c",
+      "bytes": 176
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/quote-es.log": {
+      "sha256": "3243900436252293285702b35f5ef0535c6b3f31d23461ebe4414e5edd67598e",
+      "bytes": 113990
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/r6-product-preservation.json": {
+      "sha256": "1341627ddcf98f71fdf3cc8fb16285c85df51e53fc52891c24754bd154f19548",
+      "bytes": 269
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/reuse-verification.json": {
+      "sha256": "97ea38a4f26d131ac8dd171973511a8cd688b9ccd2b725a4cdf0917d390a9c6a",
+      "bytes": 237
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/sdk-path.log": {
+      "sha256": "fc0e1f390e49274ccc3b9484c8af9047f9e78868439ada0261b8fcda80a25990",
+      "bytes": 117
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/sdk-version.log": {
+      "sha256": "27d73d70ecb0bcfc37d60b534a2298ae2c6e9ee26ed5154f558f11640d11d0b9",
+      "bytes": 5
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/swift-version.log": {
+      "sha256": "df9a79afbb2eb356f8381fbc0edb8c69c7500b8f5b18ae594be7ced187275e13",
+      "bytes": 128
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/execution/xcode-version.log": {
+      "sha256": "ee3fe26035862d2b9653c1a570be3eca4ee5be2815f0ce99ff2d8ffa3399e4c8",
+      "bytes": 33
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/manifest.json": {
+      "sha256": "7ce359be06c12d5fe1e90699d1225e8e9e9d8143b967cb2d64347379a1bf46ca",
+      "bytes": 1254
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/references.json": {
+      "sha256": "a9e97ca846ce3a819f5e2f7179a2afa28ea5ca99b443b159719265ac374a1ad5",
+      "bytes": 9683
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/selectors.json": {
+      "sha256": "8dc68d0314f57eaf53e671383850ee2932041bc859d35e454a6c5f4d23d50177",
+      "bytes": 21802
+    },
+    ".build/SharedDemandGraphNov09/native-meal-undo-qualification-r7/source-manifest.json": {
+      "sha256": "6ceb5f8412b7fc2cb9159797a05a4e1599b9ed4f3be81575d7e288da7f205b16",
+      "bytes": 101318
+    }
+  }
+}

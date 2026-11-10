@@ -38,8 +38,9 @@ The previous full-app observation [42732878538](https://github.com/palatis3/room
 ## Active preparation and next root actions
 
 - Root owns exact-commit three-profile qualification and one changed hosted helper dispatch. Native r7 and hosted 42757994898 are terminal; do not restart either unchanged.
-- Sol monitor is preparing a compact verified r5/r7 native receipt. Root still needs Quote screenshot review; existing Meal screenshots were reviewed.
-- Astra editor independently reviews the scratch first-adoption inverse in `.build/SharedDemandGraphNov09/mixed-adoption-domain-r1`. Its strict isolated compile and 35 pure tests pass; no canonical feature, migration, endpoint or native integration exists yet. Full protected transfer, privacy and later-edit preservation must survive review and real integration.
+- Sol monitor is preparing a compact verified r5/r7 native receipt. Root still needs the named Quote review/restoration screenshot review; existing Meal screenshots were reviewed. [Verified six-journey receipt](evidence/native/shared-food-six-journeys-20261110/README.md).
+- The corrected first-adoption pure contract is installed as `service/src/shared-demand-tracking.ts`, with 38 focused regressions and a full strict build/691-pass offline service suite (one expected database-only skip). Independent review caught and fixed preservation of later untouched basket fields. Astra release helper is preparing the persistence/admission/privacy integration plan; no endpoint or migration activates the contract yet. [Proof](evidence/service/shared-demand-tracking-20261110/README.md).
+- Changed helper run [42759985552](https://github.com/palatis3/room-in-the-cart/actions/runs/42759985552) is active at exact `e867e47a179a14ce350d3f5ff12549c7365592a4`. All three local profiles passed 503 controls, hosted preflight passed, and Mac helper execution began. Follow active-handoff for terminal updates; do not dispatch another while it is active.
 - Finish the complete first-adoption contract, then persistence/client integration and the other unfinished operation families. Full final regression and merge require their own frozen candidate gates.
 
 ## Other release gates and authorization boundaries
