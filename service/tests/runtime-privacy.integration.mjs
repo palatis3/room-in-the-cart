@@ -47,6 +47,29 @@ async function household(person, label) {
   return ok(await call(person, '/v1/households', 'POST', {clientKey: randomUUID(), label, alias: 'Fictional adult', adultAttestation: true}), 201);
 }
 
+test('production runtime exposes current tracking without adopting food or weakening session access', async () => {
+  const person = await actor(), created = await household(person, 'Runtime tracking household');
+  const base = `/v1/households/${created.householdId}`, shopId = randomUUID();
+  const device = ok(await call(person, base + '/devices', 'POST', {}), 201);
+  const headers = {'X-Device-Token': device.deviceToken};
+  const replay = ok(await call(person, base + '/replay-windows', 'POST', {}, headers));
+  const quote = {currency: 'USD', scope: 'wholeCheckout', complete: true, capMinor: 10000,
+    capScope: 'wholeCheckout', fee: {kind: 'fixed', amountMinor: 0}, taxesMinor: 0,
+    depositsMinor: 0, discountsMinor: 0, observedAt: new Date(Date.now() - 60000).toISOString(),
+    expiresAt: new Date(Date.now() + 3600000).toISOString()};
+  ok(await call(person, base + '/commands', 'POST', {v: 1, replayWindow: replay.id,
+    clientKey: randomUUID(), shopId, kind: 'shop.create', base: {shopRevision: 0, authorityEpoch: 0},
+    body: {quote, lines: []}}, headers));
+  const path = base + `/shops/${shopId}/demand/tracking`;
+  const tracking = ok(await call(person, path, 'GET', undefined, headers));
+  assert.equal(tracking.schemaVersion, 2); assert.equal(tracking.shopId, shopId);
+  assert.equal(tracking.status, 'legacy'); assert.equal(tracking.shopRevision, 1);
+  assert.equal((await admin.query('SELECT count(*)::int AS n FROM ritc.shared_tracking_revision WHERE household_id=$1 AND shop_id=$2', [created.householdId, shopId])).rows[0].n, 0);
+  assert.equal((await call(null, path, 'GET', undefined, headers)).status, 401);
+  await admin.query('DELETE FROM auth.sessions WHERE id=$1', [person.session]);
+  assert.equal((await call(person, path, 'GET', undefined, headers)).status, 401);
+});
+
 test('production runtime exposes authenticated responsibility preview while new provider deletion remains disabled', async () => {
   const person = await actor(), created = await household(person, 'Runtime preview household');
   const preview = ok(await call(person, '/v1/privacy/deletion-preview'));

@@ -32,6 +32,24 @@ Do not erase known failures or represent deferred checks as passed.
 
 ## Qualified product work
 
+November 10 runtime/rollout check: the existing Supabase CLI can access Room in
+the Cart Staging even though the connector currently cannot. Live registry has
+41 entries, all matching current source; the alias still resolves to ready
+deployment `dpl_F2S6YE9JQ7rhoYWr67wbZHDJo9v2`. All six existing public API/auth
+smoke checks pass. Read-only results are in `.build/Staging048Nov10`; no hosted
+mutation was performed. Pending migrations remain042–048.
+
+The rollout review caught missing production activation of shared-food tracking:
+fixtures enabled `trackingV2`, but `createRuntime` did not. The new actual-runtime
+regression reproduced404, then passed after enabling the existing feature in the
+production composition. Build and21focused runtime/privacy/tracking checks pass
+in `.build/RuntimeTrackingNov10`; the local PostgreSQL cluster is stopped. The
+read does not adopt food, and anonymous/revoked sessions remain denied. Existing
+guardian/provider activation is unchanged. Current service must follow migrations;
+after new-state writes, the041 service is not a safe rollback. Prepare compatible
+maintenance/forward recovery and verify046 label-provenance and047 meal-identity
+backfills during the actual restore rehearsal before requesting rollout approval.
+
 Fresh combined backend r1 passes **1,031 offline / 433 PostgreSQL** with one/three declared skips. Includes 40 protected-conversion tests, 21 actual API cases, 12 Records projection tests and signed restore/erasure. Root independently verified 308 current/archived source inputs, phase hashes and compiled products; PostgreSQL stopped. Actual Swift client transport passes **24 Node cases / 80 Swift scenario invocations**, zero failures/skips, retaining the original21/70. Root verified428inputs; successful private wire fixture removed after shutdown. [Backend and wire proof](evidence/service/records-protected-conversion-20261110/README.md).
 
 Protected tracked/transferred cross-unit meal edits now use current exact source proof through review and command recomputation. Whole Undo restores original bytes while comparing with the immutable accepted-forward conversion, including explicit missing evidence. An independent review caught the older-basis precedence defect before installation. Historical line-order collision in the wire fixture is fixed. Proposal-backed protected conversion, plain-unbound cross-unit edits and whole protected aggregates remain unsupported specialized cases. They are not automatically release blockers: qualify the promised edit/proposal using supported original-unit entry before adding machinery.

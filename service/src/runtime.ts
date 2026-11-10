@@ -64,6 +64,9 @@ export async function createRuntime(environment: NodeJS.ProcessEnv = process.env
     const configured = Boolean(issuer && audience && jwksUrl);
     const verifier = configured ? new JWTIdentityVerifier({ issuer: issuer!, audience: audience!, jwksUrl: jwksUrl! }) : new DenyIdentityVerifier();
     const repository = new HouseholdRepository(pool, {
+      // Current clients review shared food through v2; apply migrations before
+      // deploying this runtime. Repository authorization still governs access.
+      trackingV2: true,
       // Enable only when provider-backed guardian verification and revocation are
       // integrated. An environment flag cannot substitute for that authority.
       allowChildNetwork: false,
