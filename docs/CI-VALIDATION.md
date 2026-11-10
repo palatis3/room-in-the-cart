@@ -9,6 +9,9 @@ release requirements and known failures remain visible.
 - During implementation, build the affected target and run the smallest relevant
   existing tests. Add regression coverage for a real defect or critical new
   behavior, not every reversible edit or hypothetical edge case.
+- Select the app entry point before a native build: ordinary Shop journeys use
+  the normal Debug app; dedicated household fixtures replace `@main`. Group tests
+  by compatible build profile and reuse each completed build within that group.
 - Keep cheap service/model checks. Avoid repeating native UI, database, wire and
   hosted suites for unrelated or test-only edits. Test a corrected fixture with
   its affected suite before scheduling a broader batch.

@@ -43,6 +43,28 @@ private final class S17FixtureServer: @unchecked Sendable {
     private var proposals: [[String:Any]] = []
     private var receipts: [String:[String:Any]] = [:]
     private var posts = 0
+    // S17 proposal/shopper acceptance starts with an explicitly tracked manual
+    // basket item. One purchased pack says nothing about its usable food amount.
+    // This scenario does not stand in for initial legacy adoption coverage.
+    private var trackedMealReview: Bool { deliveries == nil && fallbacks == nil && financial == nil && confirmedOrder == nil }
+    private let manualID = SharedDemandID(UUID(uuidString: "abababab-abab-4bab-8bab-abababababab")!)
+    private var foodPreview: SharedDemandPreviewRequest?
+    private var foodPreviewID = SharedDemandID(), foodOperationID = SharedDemandID()
+    private var foodExpiry = ""
+    private let foodDigest = String(repeating: "c", count: 64)
+    private func foodGraph() -> SharedDemandGraph {
+        let line = SharedDemandID(UUID(uuidString: "66666666-6666-4666-8666-666666666666")!)
+        return .init(householdId: .init(UUID(uuidString: Self.household)!), shopId: .init(UUID(uuidString: Self.shop)!), revision: posts + 1,
+            lines: [.init(id: line, name: "Entered soup packs", unit: .count, originalOrder: 0)],
+            contributions: [.init(id: manualID, lineId: line, source: .manual, productKey: "soup", productName: "Entered soup packs", originalText: "Entered soup packs", quantity: nil)], edges: [], usedIds: [line, manualID])
+    }
+    private func foodTotals() -> [[String: Any]] {
+        [["lineId": "66666666-6666-4666-8666-666666666666", "unit": "count", "quantity": NSNull(), "activeContributionIds": [manualID.string]]]
+    }
+    private func foodBasket() -> [[String: Any]] {
+        [["lineId": "66666666-6666-4666-8666-666666666666", "originalItem": "Entered soup packs", "packs": 1, "unitPriceMinor": 500, "feeEligible": true]]
+    }
+    private func wire<T: Encodable>(_ value: T) throws -> Any { try JSONSerialization.jsonObject(with: JSONEncoder().encode(value)) }
     var changed: (@Sendable (Int,Int) -> Void)?
     init() {
         if ProcessInfo.processInfo.arguments.contains("--shared-meal-group-amount-fixture"),
@@ -113,9 +135,46 @@ private final class S17FixtureServer: @unchecked Sendable {
         }
         let scoped = "/v1/households/" + Self.household
         let deliveryPath = scoped + "/shops/" + Self.shop
+        if path == deliveryPath + "/demand/tracking", request.httpMethod == "GET" {
+            guard shopper, request.value(forHTTPHeaderField: "X-Device-Token") == "shopper-token" else { return try denied() }
+            return try json(ModelTrackingReadFixture.page(household: Self.household, shop: Self.shop, revision: revision, basket: foodBasket(),
+                graph: trackedMealReview ? foodGraph() : nil, totals: trackedMealReview ? foodTotals() : [], checkout: ModelTrackingReadFixture.budget(500, cap: 1000)))
+        }
+        if trackedMealReview, path == deliveryPath + "/demand/action-sources", request.httpMethod == "POST" {
+            guard shopper, request.value(forHTTPHeaderField: "X-Device-Token") == "shopper-token" else { return try denied() }
+            let request = try JSONDecoder().decode(SharedDemandActionSourceRequest.self, from: bytes)
+            guard request.base.shopRevision == revision, request.base.authorityEpoch == 1, request.base.graphRevision == posts + 1,
+                  case .patch(let patch) = request.action, let edit = patch.mealEdit, edit.occurrenceId.string == Self.occurrence,
+                  edit.meal?.planning?.ingredients.isEmpty != false else { return try denied() }
+            return try json(["schemaVersion": 1, "shopId": Self.shop, "base": wire(request.base), "graphDigest": String(repeating: "a", count: 64),
+                "actionDigest": String(repeating: "b", count: 64), "normalizedAction": wire(request.action), "sources": [], "retirementCandidates": [], "retainedContributionIds": [manualID.string]])
+        }
+        if trackedMealReview, path == deliveryPath + "/demand/previews", request.httpMethod == "POST" {
+            guard shopper, request.value(forHTTPHeaderField: "X-Device-Token") == "shopper-token" else { return try denied() }
+            let request = try JSONDecoder().decode(SharedDemandPreviewRequest.self, from: bytes)
+            guard request.mode == .review, request.change.isEmpty, request.base.shopRevision == revision,
+                  request.base.authorityEpoch == 1, request.base.graphRevision == posts + 1,
+                  case .patch(let patch) = request.action, let edit = patch.mealEdit, edit.occurrenceId.string == Self.occurrence,
+                  edit.meal?.planning?.ingredients.isEmpty != false, request.packs.count == 1,
+                  request.packs[0].lineId.string == "66666666-6666-4666-8666-666666666666",
+                  request.packs[0].usablePerPack == nil, request.packs[0].acceptUnresolved,
+                  NSDictionary(dictionary: ["rows": try wire(patch.lines)]).isEqual(to: ["rows": foodBasket()]) else { return try denied() }
+            foodPreview = request; foodPreviewID = .init(); foodOperationID = .init()
+            foodExpiry = ISO8601DateFormatter().string(from: Date().addingTimeInterval(300))
+            let before = foodGraph(); var after = before; after.revision += 1
+            return try json(["previewId": foodPreviewID.string, "previewDigest": foodDigest, "expiresAt": foodExpiry,
+                "before": wire(before), "after": wire(after), "packs": wire(request.packs), "beforeTotals": foodTotals(), "afterTotals": foodTotals(),
+                "shopRevision": revision, "authorityEpoch": 1,
+                "receipt": ["schemaVersion": 1, "operationId": foodOperationID.string, "householdId": Self.household, "shopId": Self.shop,
+                    "baseRevision": before.revision, "resultRevision": after.revision, "lines": [], "contributions": [], "edges": []]])
+        }
         if path == deliveryPath + "/demand", request.httpMethod == "GET" {
             guard request.value(forHTTPHeaderField: "Authorization") == "Bearer fixture-shopper",
                   request.value(forHTTPHeaderField: "X-Device-Token") == "shopper-token" else { return try denied() }
+            if trackedMealReview {
+                return try json(["schemaVersion": 1, "shopId": Self.shop, "shopRevision": revision, "authorityEpoch": 1,
+                    "status": "enabled", "graph": wire(foodGraph()), "graphDigest": String(repeating: "a", count: 64), "totals": foodTotals(), "legacySources": NSNull()])
+            }
             // This compatibility fixture has no demand graph or adoption catalog.
             return try json(["schemaVersion": 1, "shopId": Self.shop, "shopRevision": revision,
                              "authorityEpoch": 1, "status": "legacy", "graph": NSNull(), "totals": []])
@@ -233,12 +292,20 @@ private final class S17FixtureServer: @unchecked Sendable {
             if let receipt = receipts[key] { return try json(receipt) }
             guard input["kind"] as? String == "shop.patch", let body = input["body"] as? [String:Any], let edit = body["mealEdit"] as? [String:Any],
                   let next = edit["meal"] as? [String:Any], (input["base"] as? [String:Any])?["shopRevision"] as? Int == revision else { return try denied() }
+            if trackedMealReview {
+                guard let preview = foodPreview, case .patch(let patch) = preview.action,
+                      let expiry = ISO8601DateFormatter().date(from: foodExpiry), expiry > Date(),
+                      (input["base"] as? [String: Any])?["authorityEpoch"] as? Int == 1 else { return try denied() }
+                var reviewed = try wire(patch) as! [String: Any]
+                reviewed["demandReview"] = ["previewId": foodPreviewID.string, "previewDigest": foodDigest]
+                guard NSDictionary(dictionary: body).isEqual(to: reviewed) else { return try denied() }
+            }
             if let id = edit["changeProposalId"] as? String {
                 guard let index = proposals.firstIndex(where: { ($0["proposalId"] as? String)?.lowercased() == id.lowercased() }) else { return try denied() }
                 proposals[index]["state"] = "applied"
             }
             meal = next; revision += 1; posts += 1
-            let receipt: [String:Any] = ["operationId":UUID().uuidString,"kind":"shop.patch","shopId":Self.shop,"shopRevision":revision,"authorityEpoch":1,"disposition":"patched"]
+            let receipt: [String:Any] = ["operationId":trackedMealReview ? foodOperationID.string : UUID().uuidString.lowercased(),"kind":"shop.patch","shopId":Self.shop,"shopRevision":revision,"authorityEpoch":1,"disposition":"patched"]
             receipts[key] = receipt; changed?(proposals.count,posts); return try json(receipt)
         }
         return try denied()

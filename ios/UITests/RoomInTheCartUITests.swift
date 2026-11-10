@@ -500,8 +500,10 @@ final class RoomInTheCartUITests: XCTestCase {
     }
 
     private func compare() {
-        tap(element("compare"))
-        XCTAssertTrue(element("editComparison").waitForExistence(timeout: 5))
+        // The shipping action is a button. A broad Any query traverses text-field
+        // placeholder snapshots while this large-text Form is scrolling.
+        tap(app.buttons["compare"])
+        XCTAssertTrue(app.buttons["editComparison"].waitForExistence(timeout: 5))
     }
 
     private func assertKnownTotals() {
@@ -566,13 +568,16 @@ final class RoomInTheCartUITests: XCTestCase {
     }
 
     private func type(_ text: String, into id: String) {
-        let field = element(id)
+        let field = app.textFields[id]
         tap(field)
-        // The keyboard can scroll a large-type Form row out of the snapshot.
-        // Type into the focused field rather than requerying a recycled row.
-        app.typeText(text)
         let done = app.buttons.matching(NSPredicate(format: "label IN %@", ["Done", "Listo", "Hecho"])).firstMatch
-        XCTAssertTrue(done.waitForExistence(timeout: 3), "Decimal input must have a keyboard dismissal control")
+        // Form scrolling can recycle the row after the first tap. Reacquire it
+        // once before entering any text, and require the focus-driven Done control.
+        if !done.waitForExistence(timeout: 3) { tap(field) }
+        XCTAssertTrue(done.waitForExistence(timeout: 3), "Input must expose its keyboard dismissal control before typing")
+        // Once focus is ready, typing through the app avoids querying a row
+        // that the keyboard may have scrolled out of the current snapshot.
+        app.typeText(text)
         done.tap()
         reveal(field)
         XCTAssertEqual(field.value as? String, text, "Typed input must reach its intended field")

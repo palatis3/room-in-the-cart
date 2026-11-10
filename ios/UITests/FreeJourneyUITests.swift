@@ -392,21 +392,22 @@ import XCTest
         captureSystemScreen("Retailer-share-sheet-ready-to-cancel")
         func waitForShareDismissal(timeout: TimeInterval) -> Bool {
             let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-                (!close.exists || !close.isHittable)
-                    && snapshot.exists && snapshot.isHittable && snapshot.label == frozenText
+                !close.exists || !close.isHittable
             }, object: nil)
             return XCTWaiter.wait(for: [dismissed], timeout: timeout) == .completed
         }
         close.tap()
         // Remote accessibility elements can remain after the sheet moves offscreen.
-        // Require the exact underlying snapshot to be actionable again.
+        // Dismissal and the underlying snapshot becoming queryable are separate waits;
+        // a slow snapshot query must not require an already-dismissed Close button.
         if !waitForShareDismissal(timeout: 4) {
-            _ = try XCTUnwrap(close.exists && close.isHittable ? close : nil,
-                              "The share sheet did not return to the frozen snapshot. \(app.debugDescription)")
-            close.tap()
-            _ = try XCTUnwrap(waitForShareDismissal(timeout: 8) ? snapshot : nil,
-                              "The share sheet did not return to the frozen snapshot after Close.")
+            if close.exists && close.isHittable { close.tap() }
+            XCTAssertTrue(waitForShareDismissal(timeout: 8),
+                          "The share sheet did not dismiss after Close.")
         }
+        XCTAssertTrue(snapshot.waitForExistence(timeout: 8), "Return to the frozen snapshot after Close")
+        XCTAssertTrue(snapshot.isHittable, "Show the frozen snapshot after Close")
+        XCTAssertEqual(snapshot.label, frozenText, "Cancellation must preserve the exact frozen snapshot")
         let cancelled = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Share cancelled")).firstMatch
         reveal(cancelled)
         _ = try XCTUnwrap(cancelled.exists && cancelled.isHittable && (!close.exists || !close.isHittable) ? cancelled : nil,
