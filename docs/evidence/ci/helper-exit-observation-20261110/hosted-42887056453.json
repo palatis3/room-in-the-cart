@@ -1,0 +1,46 @@
+{
+  "status": "failed",
+  "runID": 42887056453,
+  "commit": "4df31882112cb59a29e900607cbc59add01077ba",
+  "linuxChecks": 644,
+  "appJobs": "skipped",
+  "bootstatus": {
+    "normalExit": true,
+    "seconds": 75.894,
+    "missingIdentityObservations": 0
+  },
+  "failedCommand": "booted-inventory",
+  "error": "ValueError: helper_lifecycle_deadline",
+  "inventoryLastProgress": {
+    "monotonic": 602.392773958,
+    "epoch": 1794339588.609287,
+    "identity": {
+      "pid": 8497,
+      "parentPID": 7543,
+      "uid": 501,
+      "startTimeMicros": 1794339560472293,
+      "executable": "/Library/Developer/PrivateFrameworks/CoreSimulator.framework/Versions/A/Resources/bin/simctl"
+    },
+    "stdoutBytes": 0,
+    "stderrBytes": 0
+  },
+  "sampler": {
+    "status": "incomplete",
+    "reason": "post_startup_reserve_exhausted",
+    "terminalVerified": true,
+    "sourceUnchanged": true,
+    "sourceVerificationPending": false
+  },
+  "cleanup": {
+    "status": "failed",
+    "shutdownNormalExit": true,
+    "failedCommand": "shutdown-verified-device",
+    "deletionDispatched": false,
+    "allKnownChildrenTerminal": true
+  },
+  "zipSHA256": "896209f5dc26087798c2da7fed3939e6854ec4a7bed02667f10d77b4490f246a",
+  "tarSHA256": "ce0204d29cdadd2567d23fe9bf5017dab2539d99e24451f97f8eeda5909df544",
+  "verifiedSourcePins": 50,
+  "releaseAcceptance": false,
+  "interpretation": "Boot succeeded without exercising the missing-identity path. Independent postboot inventory produced no output and exhausted its original deadline; optional sampling was incomplete. Cleanup verification also exhausted its shared deadline. No missing-identity regression or performance qualification inferred. Next diagnostic may omit optional inventory sampling only, with all deadlines/identity checks unchanged."
+}
