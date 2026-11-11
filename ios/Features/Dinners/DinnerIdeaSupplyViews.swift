@@ -78,6 +78,7 @@ private struct IdeaSupplyEditor: View {
     let foods: [IdeaSupplyFood]
     let budget: Bool
     let save: (DinnerIdeaFoodEvidence?) -> Void
+    private let originalPackQuantity: Quantity?
     @Environment(\.dismiss) private var dismiss
     @State private var foodID: UUID?
     @State private var packYield: String
@@ -94,6 +95,7 @@ private struct IdeaSupplyEditor: View {
         self.ingredient = ingredient; self.shop = shop; self.workspaceID = workspaceID
         self.foods = foods; self.budget = budget; self.save = save
         let current = previous.flatMap { $0.basisRevision == shop.basisRevision ? $0 : nil }
+        originalPackQuantity = current?.pack?.usableQuantity
         _foodID = State(initialValue: previous?.foodID.flatMap { id in foods.contains { $0.id == id } ? id : nil })
         _packYield = State(initialValue: current?.pack?.usableQuantity?.amount.description ?? "")
         _unit = State(initialValue: current?.pack?.usableQuantity?.unit ?? ingredient.quantity?.unit ?? .count)
@@ -174,7 +176,7 @@ private struct IdeaSupplyEditor: View {
 
     private func apply() {
         do {
-            let quantity = try DinnerEntry.quantity(packYield, unit: unit)
+            let quantity = try DinnerEntry.quantity(packYield, unit: unit, preserving: originalPackQuantity)
             let cost = budget ? try DinnerEntry.money(price) : nil
             guard cost.map({ $0 >= .zero }) ?? true else { throw DomainError.invalidNumber }
             let hasPack = quantity != nil || cost != nil

@@ -73,6 +73,39 @@ import CoreDomain
         XCTAssertEqual(box.value[0].unit, .count)
     }
 
+    func testTemplateReviewPreservesUntouchedEvidenceAndReplacesOnlyEditedQuantity() throws {
+        let conversion = UnitBasis(sourceUnit: .cup, targetUnit: .gram,
+            targetAmountPerSourceUnit: try Rational(120), sourceNote: "Confirmed ingredient measure")
+        let quantity = Quantity(amount: try Rational(1, 2), unit: .cup,
+            originalLiteral: "0.50", confirmedConversion: conversion)
+        let original = MealTemplate(title: "Rice dinner", servings: try Rational(2),
+            ingredients: [.init(name: "Rice", quantity: quantity), .init(name: "Herbs", quantity: nil)], revision: 3)
+        var draft = DinnerTemplateDraft(original)
+        XCTAssertEqual(try draft.template(), original, "An unchanged review must not invent a new version")
+
+        draft.title = "Renamed rice dinner"
+        let renamed = try draft.template()
+        XCTAssertEqual(renamed.title, draft.title)
+        XCTAssertEqual(renamed.revision, original.revision + 1)
+        XCTAssertEqual(renamed.ingredients, original.ingredients, "A title edit must retain exact ingredient evidence and unknown amounts")
+
+        draft.ingredients[0].amount = "0.75"
+        let amountEdited = try draft.template()
+        XCTAssertEqual(amountEdited.ingredients[0].id, original.ingredients[0].id)
+        XCTAssertEqual(amountEdited.ingredients[0].quantity,
+            Quantity(amount: try Rational(3, 4), unit: .cup, originalLiteral: "0.75"))
+        XCTAssertEqual(amountEdited.ingredients[1], original.ingredients[1])
+
+        var unitEdited = DinnerTemplateDraft(original)
+        unitEdited.ingredients[0].unit = .gram
+        XCTAssertEqual(try unitEdited.template().ingredients[0].quantity,
+            Quantity(amount: try Rational(1, 2), unit: .gram, originalLiteral: "1/2"),
+            "An explicit unit change must not reuse the earlier conversion")
+        unitEdited.ingredients[0].amount = ""
+        XCTAssertNil(try unitEdited.template().ingredients[0].quantity)
+        XCTAssertEqual(original.ingredients[0].quantity, quantity, "Draft review must leave the accepted version unchanged")
+    }
+
     func testManualAllocationDraftPreservesProtectedObservationAndReviewsMutableResultWithoutSaving() throws {
         let lunch = ServingGroup(name: "Lunch", servings: .one, isProtected: true)
         let dinner = ServingGroup(name: "Dinner", servings: try Rational(3))

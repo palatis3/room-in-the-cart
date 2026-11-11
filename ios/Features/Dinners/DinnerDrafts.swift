@@ -15,7 +15,8 @@ enum DinnerEntry {
         // mixed separators are rejected, never guessed.
         return try Rational(decimal: value.replacingOccurrences(of: ",", with: "."))
     }
-    static func quantity(_ text: String, unit: UnitOfMeasure) throws -> Quantity? {
+    static func quantity(_ text: String, unit: UnitOfMeasure, preserving original: Quantity? = nil) throws -> Quantity? {
+        if let original, text == original.amount.description, unit == original.unit { return original }
         guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
         return Quantity(amount: try rational(text), unit: unit, originalLiteral: text)
     }
@@ -48,11 +49,10 @@ struct DinnerIngredientDraft: Identifiable {
         originalQuantity = value?.quantity
     }
     func reviewedQuantity() throws -> Quantity? {
-        if let originalQuantity, amount == originalQuantity.amount.description, unit == originalQuantity.unit { return originalQuantity }
-        return try DinnerEntry.quantity(amount, unit: unit)
+        try DinnerEntry.quantity(amount, unit: unit, preserving: originalQuantity)
     }
     func ingredient() throws -> MealIngredient {
-        MealIngredient(id: id, name: name, quantity: try DinnerEntry.quantity(amount, unit: unit), notes: notes, exclusions: DinnerEntry.list(exclusions))
+        MealIngredient(id: id, name: name, quantity: try reviewedQuantity(), notes: notes, exclusions: DinnerEntry.list(exclusions))
     }
 }
 struct DinnerGroupDraft: Identifiable {
