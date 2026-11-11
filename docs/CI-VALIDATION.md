@@ -89,6 +89,16 @@ and stop repeating it. Resume only for new evidence or a required release decisi
 No timeout, assertion, required core check or release requirement is relaxed by
 this scheduling policy.
 
+The November 11 candidate's UI05 and SharedFallback jobs both crashed in XCTest
+bootstrap before any selected case started. The next candidate gives just these
+two jobs the existing job-owned simulator setup used by UI01 and
+contributor-balanced-01. Both pilots completed their selected cases and deleted
+only their owned device. The change tests whether fresh device state avoids the
+startup failure; it does not establish its cause or resolution. Runtime, device
+type, selectors, deadlines and failure gates remain unchanged. No automatic retry
+or fallback to the image device is added. Judge the result on the next hosted
+execution, not on a local product-test pass.
+
 ## Default feedback loop
 
 1. Read the existing run's compact report before scheduling more work:

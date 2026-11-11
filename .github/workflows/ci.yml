@@ -534,10 +534,10 @@ jobs:
           mkdir -p .build/DerivedData/Build
           tar -xzf .build/download/iphone-test-products.tar.gz -C .build/DerivedData/Build
           mv .build/DerivedData/Build/test-plan .build/test-plan
-      - name: Select iPhone simulator with owned-device pilot for ui-01
+      - name: Select isolated iPhone simulator for ui-01 and ui-05
         timeout-minutes: 8
         run: |
-          if [[ "$TEST_SHARD" == ui-01 ]]; then
+          if [[ "$TEST_SHARD" == ui-01 || "$TEST_SHARD" == ui-05 ]]; then
             xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py \
               --create-owned .build/test-simulator-ownership.json
           else

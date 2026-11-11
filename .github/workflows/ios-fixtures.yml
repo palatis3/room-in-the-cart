@@ -204,10 +204,10 @@ jobs:
               raise SystemExit("The fixture selector list is empty.")
           print(f"EXPECTED_TEST_COUNT={expected}")
           PY
-      - name: Select iPhone simulator with owned-device pilot for contributor-balanced-01
+      - name: Select isolated iPhone simulator for the pilot and fallback suite
         timeout-minutes: 8
         run: |
-          if [[ "$TEST_SHARD" == contributor-balanced-01 ]]; then
+          if [[ "$TEST_SHARD" == contributor-balanced-01 || "$TEST_SHARD" == SharedFallbackUITests ]]; then
             xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py \
               --create-owned .build/test-simulator-ownership.json
           else

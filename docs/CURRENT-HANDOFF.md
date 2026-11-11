@@ -17,6 +17,23 @@ then move to the next unresolved cause. Workflow scheduling and fixture balancin
 changes are committed locally but are not yet active on GitHub; publish them with
 the next grouped candidate after the current useful batch finishes.
 
+- **New bootstrap failure classified:** SharedFallback job130340123821 finished
+  with no selected test started, the same `XCTWaiter(StallHandling)` startup fault
+  as UI05. Its original archive13831339171 is retained in
+  `.build/SharedFallbackNov11/hosted`, SHA256
+  f83aeeab36fd3500ca1fd03994eb35815d8c1d01452fdaf6b0abee0f3c89728f.
+  The current reporter reprocesses it as two unverified cases without KeyError;
+  `checker-followup.txt` remains failed. This is not a fallback app assertion failure.
+  The next candidate extends the existing owned-simulator selection only to UI05
+  and SharedFallback. Existing 14 selection/ownership checks, the fixture workflow
+  check and pinned workflow lint pass. UI01 (6/6) and balanced01 (4/4) hosted logs
+  confirm successful owned-device creation, complete execution and owned cleanup.
+  Fresh setup is a hypothesis to qualify in the next hosted batch, not a proven
+  fix; no retry, selector, runtime or deadline changed.
+- **New hosted pass:** Spanish food-editor job130346397067 executed its original
+  expired-quote/Cancel/Apply/relaunch journey successfully in369.644s, strict1/1.
+  Core UI09 remains in progress (job130328328776, test step started05:31:27Z).
+  No replacement run was dispatched and no native test was repeated locally.
 - **Qualified local changes:** workflow scheduling 6a7a43ca/0813bedb,
   comparison/pickup corrections ebbf4356/ac3493da, numeric dinner input 4cf0ffcc,
   and runner-failure reporting b13a5999. The reporter's 48 tests passed; reprocessing
