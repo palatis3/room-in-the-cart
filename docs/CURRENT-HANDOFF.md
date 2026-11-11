@@ -81,6 +81,32 @@ changes are now published. PR1 remains draft and unmerged.
   an obsolete49b live-run summary. It retains integration/release completion
   criteria. No new workflow, tool, suite or status-only push was added. No local
   native process remains active at this checkpoint; useful84 jobs are still live.
+- **Normal capture walkthrough:** installed the completed normal Debug build on
+  ownedA50C91FC and launched without fixture/reset arguments (PID93549). Installed
+  and cached executable SHA256 both match
+  50ee88cd1a29392bb94272faee82d0ce9e60a6a9ec044884662a13dd9fa4669a;
+  CaptureReviewView still matches the qualified source066d9d0e6fdedc0d3dbbff8a274ded4c9e9887aa070375b90344046debc5c06c.
+  Through Shop → Shopping list → Type or paste a list → Capture and review fields,
+  typed `12 wraps` and `2 cans beans`. The visible Done control dismissed the
+  keyboard with both lines intact. Cancel returned to the empty outer draft;
+  cancelling that returned to the unchanged empty shopping list and prior save
+  timestamp. No list additions, permission changes or network sign-in occurred.
+  Device Hub screenshots establish this scoped visual result; its AX bridge did
+  not expose the app tree, so this is not spoken accessibility acceptance. Two
+  pointer scroll attempts did not reveal the lower review control; review-button
+  reachability is not established by this walkthrough. CUA completion recorded.
+- **Additional84 hosted pass:** DinnerDecisionSheet job130386648785 completes all5
+  original cases with zero recorded runtime warnings, idle messages or restarts.
+  UI01–03 and balanced03 remain in their test steps; RecordsMedia has started
+  restoring products. Do not download private RecordsMedia raw artifacts.
+- **Bounded billing documentation check:** Apple's current
+  [Ask to Buy instructions](https://developer.apple.com/documentation/storekit/testing-ask-to-buy-in-xcode)
+  still say a declined request does not deliver a transaction. The inspected
+  [Xcode27 StoreKit notes](https://developer.apple.com/documentation/xcode-release-notes/xcode-27-release-notes)
+  and [27.1 notes](https://developer.apple.com/documentation/xcode-release-notes/xcode-27_1-release-notes)
+  did not identify a fix/workaround for this observed decline-entitlement result.
+  This limited documentation review does not prove an SDK root cause. No new
+  billing experiment, toolchain change, skipped assertion or replacement CI run.
 
 - **Source-check repair now passes hosted:** aa176fed core42976888365 source
   job130377944571 failed two stale Python expectations, so its native build/test
