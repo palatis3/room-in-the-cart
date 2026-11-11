@@ -151,6 +151,28 @@ changes are now published. PR1 remains draft and unmerged.
   exact compiled-plan hashes match. This test-only correction needs combined
   hosted qualification, not another normal app rebuild. No local native process
   remains active. Keep this fix local while the useful84 batch continues.
+- **Created-meal Undo passes hosted84 in both languages:** English130402388859
+  passes532.87s and Spanish130402753890 passes485.73s; both strict1/1 with zero
+  runtime warnings, idle messages or restarts. No repeat is needed.
+- **Largest-text request follow-up qualified locally:** balanced03 job130383822866 logged
+  all9 cases (8passed/1failed) in2223.194s, then hit its40-minute step deadline
+  before export/validation completed. The failed case is the largest-text
+  protected-lunch journey:368.068s, timed out resolving `Protected portions`
+  beneath a broad Any parent. Original artifact13840727565 is hash-verified at
+  `.build/RequestPackLargestTextNov11/hosted/original.zip`, SHA256
+  2b6b342332da4b697d2c55c1f820deb74751a41711cbdd6b99e5f0063be0d786.
+  Tests.xcresult lacks Info.plist; retain it and the complete Tests.log without
+  inventing a validated hosted result. The local largest-text case now selects
+  its combined meal rows as StaticText, matching the existing other-meals test.
+  No production change, assertion removal, retry or deadline increase. Build30752
+  and exact selector enumeration51179 ended0. Session62285 ended0: the one
+  original case passes74.834s at `.build/RequestPackLargestTextNov11/focused/Tests.xcresult`.
+  Sequential exports and strict1/1 validation confirm all existing visibility,
+  date, portion, contrast, disabled-Apply and no-write assertions, zero recorded
+  runtime warnings, idle messages or restarts. Source and compiled-plan hashes
+  match focused/source-and-plan.txt. No local native process remains active.
+  No normal app rebuild is needed for this test-only correction. Keep it local
+  for the next combined candidate; hosted timing improvement is not yet proven.
 
 - **Source-check repair now passes hosted:** aa176fed core42976888365 source
   job130377944571 failed two stale Python expectations, so its native build/test

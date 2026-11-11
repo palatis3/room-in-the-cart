@@ -547,7 +547,10 @@ import XCTest
         try assertCompleteDecisionText(app.staticTexts["Protected meal commitments"], style: .headline,
                                        category: .accessibilityExtraExtraExtraLarge, name: "S24-AX5-protected-heading")
         for ((id, name), date) in zip(meals, dates) {
-            let row = element("household.decision.meal." + id)
+            // Combined meal facts are StaticText, as in the other-meals check.
+            // Scope the parent before querying its portion label and value;
+            // the broad Any parent timed out while resolving those children.
+            let row = app.staticTexts.matching(identifier: "household.decision.meal." + id).firstMatch
             centerForReading(row)
             XCTAssertTrue(row.label.contains(name) && row.label.contains(date) && row.label.contains("Protected portions, 1"))
             for (label, style) in [(name, UIFont.TextStyle.subheadline), (date, .caption1)] {
