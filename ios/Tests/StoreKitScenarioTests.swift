@@ -227,7 +227,9 @@ import StoreKitTest
         let purchase = beginPurchase(model)
         defer { purchase.task?.cancel(); model.stop() }
         do {
-            try await eventually("A real Ask to Buy request reaches pending approval") {
+            // A fresh hosted StoreKit session took 15s to return its pending result.
+            // Keep the complete pending boundary while allowing that first response.
+            try await eventually("A real Ask to Buy request reaches pending approval", timeout: .seconds(30)) {
                 purchase.finished && model.purchaseReport == .pending
                     && self.session.allTransactions().contains { $0.pendingAskToBuyConfirmation }
             }
@@ -688,8 +690,8 @@ import StoreKitTest
     private func id(_ outcome: MembershipPurchaseOutcome) -> String? {
         if case .verified(let transaction) = outcome { return transaction.transactionID }; return nil
     }
-    private func eventually(_ description: String, condition: () async throws -> Bool) async throws {
-        let deadline = ContinuousClock.now.advanced(by: .seconds(10))
+    private func eventually(_ description: String, timeout: Duration = .seconds(10), condition: () async throws -> Bool) async throws {
+        let deadline = ContinuousClock.now.advanced(by: timeout)
         repeat {
             if try await condition() { return }
             try await Task.sleep(for: .milliseconds(100))
