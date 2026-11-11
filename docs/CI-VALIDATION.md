@@ -106,9 +106,19 @@ tests. A cold cache is expected on the first build; measure subsequent useful
 builds rather than rerunning unchanged tests merely to populate it.
 
 The owner activated trials on November11. Build Hub displayed an end date of
-November25; the owner reported a30-day Build Cache trial. These are separate
-subscriptions. Review continued capacity before expiry. Toolchain/runtime guards
+November25; the completed Build Cache wizard confirms November11–December11.
+These are separate subscriptions. Review continued capacity before expiry. Toolchain/runtime guards
 remain pinned; a different provider image must not silently upgrade them.
+
+The isolated November11 pilot on beb02a1e built the same contributor profile in
+144.5seconds cold and23.7seconds warm according to Bitrise invocation timing.
+The cold build uploaded504.5MB; the warm build downloaded504.5MB and reported
+Healthy reuse. Both builds, compiled discovery and product uploads passed. This
+is one measured pair for compilation, not an84% whole-CI speedup. The Bitrise
+consumer and full focused gate43064729384 pass: original Spanish quote journey
+strict1/1 in81.713s, zero runtime warnings/idle messages/restarts. The GitHub
+consumer in43065528907 is queued; cross-provider execution and the next combined
+candidate remain separate qualification.
 
 Keep ordinary edits local while running their affected checks. Publish grouped
 changes to the candidate PR when ready for combined integration; its core and
