@@ -806,7 +806,7 @@ import XCTest
         XCTAssertEqual(control.value as? String, "1", "The reviewed switch must be on: \(label)")
     }
     private func fill(_ text: String, into id: String, replacing: Bool = false) {
-        let field = app.textFields.matching(NSPredicate(format: "identifier == %@", id)).firstMatch
+        let field = app.textFields[id]
         // A partially clipped field can report hittable on the smaller iOS 17 screen.
         reveal(field, fullyVisible: true); tap(field)
         if replacing, let old = field.value as? String, old != field.placeholderValue { app.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: old.count)) }
@@ -868,12 +868,23 @@ import XCTest
     private func revealTogether(_ targets: [XCUIElement]) {
         guard let first = targets.first, let last = targets.last else { return }
         reveal(last)
-        for _ in 0..<16 {
-            if targets.allSatisfy({ $0.exists && $0.isHittable }) { return }
+        for attempt in 0...16 {
+            // Use the same complete viewport as the following quantity checks.
+            // A partly visible lunch row can already report hittable.
+            let area = scrollableArea(bottomInset: 16)
+            let viewport = CGRect(x: app.frame.minX, y: area.minY, width: app.frame.width, height: area.height)
+            if targets.allSatisfy({ $0.exists && $0.isHittable && viewport.contains($0.frame) }) { return }
+            guard attempt < 16 else { break }
             // Fine positioning avoids a whole-cell scroll hiding the first
             // amount after the second lunch becomes visible.
-            scrollContent(upward: first.exists && first.isHittable, amount: 0.12)
+            let above = targets.contains { target in
+                guard target.exists else { return false }
+                let frame = target.frame
+                return !frame.isEmpty && frame.minY < viewport.minY
+            }
+            scrollContent(upward: !above && first.exists && first.isHittable, amount: 0.12)
         }
+        XCTFail("Checkout and both protected lunches must fit wholly in the same viewport")
     }
     private func scrollableArea(bottomInset: CGFloat = 100) -> CGRect {
         let bounds = app.frame
