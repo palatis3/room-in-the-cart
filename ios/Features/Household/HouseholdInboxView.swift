@@ -148,6 +148,7 @@ private struct DeferredRequestsView: View {
 struct HouseholdRequestDecisionView: View {
     @ObservedObject var model: HouseholdInboxModel
     let request: OwnRequest
+    @FocusState private var inputFocus: String?
     @Environment(\.dismiss) private var dismiss
     var body: some View {
         WorkingForm {
@@ -173,11 +174,13 @@ struct HouseholdRequestDecisionView: View {
                                     HouseholdRequestPackReviewView(model: model)
                                     if let selection = model.packSelection { HouseholdChosenPackSummary(selection: selection) }
                                     TextField(ht("Pack or item name"), text: $model.lineItem).accessibilityIdentifier("household.decision.item")
+                                        .focused($inputFocus, equals: "item")
                                     Stepper(value: $model.packs, in: 1...10_000) {
                                         LabeledContent(ht("Whole packs"), value: model.packs.formatted())
                                     }
                                     workingTextField(ht("Price per pack in USD, blank if unknown"), text: $model.price).keyboardType(.decimalPad)
                                         .accessibilityIdentifier("household.decision.price")
+                                        .focused($inputFocus, equals: "price")
                                     Toggle(ht("Counts toward the retailer fee threshold"), isOn: $model.feeEligible)
                                 }
                                 if model.choice == .link {
@@ -275,6 +278,7 @@ struct HouseholdRequestDecisionView: View {
                                     .foregroundStyle(Theme.secondary)
                                 workingTextField(ht("Question"), text: $model.clarification, axis: .vertical).lineLimit(2...5)
                                     .accessibilityIdentifier("household.decision.question")
+                                    .focused($inputFocus, equals: "question")
                                 Button(ht("Send clarification")) { Task { await model.sendClarification() } }
                                     .disabled(model.clarification.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                             }
@@ -291,6 +295,9 @@ struct HouseholdRequestDecisionView: View {
             } else { Text(ht("Shopper access has ended. Return to household settings.")) }
         }
         .scrollDismissesKeyboard(.immediately)
+        .keyboardDoneAction(visible: inputFocus != nil, title: ht("Done"), identifier: "household.decision.done") {
+            inputFocus = nil
+        }
         .disabled(model.busy)
         .sheet(item: Binding(get: { model.requestFood }, set: { if $0 == nil { model.cancelRequestFood() } })) { context in
             NavigationStack { SharedRequestFoodView(inbox: model, context: context) }

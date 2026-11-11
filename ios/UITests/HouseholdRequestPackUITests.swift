@@ -567,7 +567,12 @@ import XCTest
         let expiryDate = expiry.staticTexts.allElementsBoundByIndex.filter { $0.label != "Preview expires" }
         XCTAssertEqual(expiryDate.count, 1)
         let date = try XCTUnwrap(expiryDate.first)
-        XCTAssertTrue(date.label.contains("2098"))
+        // The fixture expires at midnight UTC, which is still the prior year
+        // in New York. Check the exact device-local date, not one host's year.
+        let expectedExpiry = try XCTUnwrap(ISO8601DateFormatter().date(from: "2099-01-01T00:00:00Z"))
+        let expiryStyle = Date.FormatStyle(date: .abbreviated, time: .shortened,
+                                          locale: Locale(identifier: "en_US"), timeZone: .current)
+        XCTAssertEqual(date.label, expectedExpiry.formatted(expiryStyle))
         try assertCompleteDecisionText(expiry.staticTexts["Preview expires"], style: .body,
                                        category: .accessibilityExtraExtraExtraLarge, name: "S24-AX5-expiry-title")
         try assertCompleteDecisionText(date, style: .body,
@@ -809,15 +814,21 @@ import XCTest
     private func dismissKeyboardIfPresent() {
         let keyboard = app.keyboards.firstMatch
         guard keyboard.exists else { return }
-        let bounds = app.frame, area = scrollableArea()
-        let origin = app.coordinate(withNormalizedOffset: .zero)
-        // Start inside the Form and keep the gesture above the keyboard. A drag
-        // along the outer sheet margin may move the sheet without scrolling it.
-        let start = origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: area.minY + area.height * 0.25 - bounds.minY))
-        let end = origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: area.maxY - 8 - bounds.minY))
-        start.press(forDuration: 0.05, thenDragTo: end)
-        let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: keyboard)
-        XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed)
+        let done = app.buttons["household.decision.done"]
+        if done.exists {
+            XCTAssertTrue(done.isHittable, "The request editor must expose its Done control")
+            done.tap()
+        } else {
+            let bounds = app.frame, area = scrollableArea()
+            let origin = app.coordinate(withNormalizedOffset: .zero)
+            // Start inside the Form and keep the gesture above the keyboard. A drag
+            // along the outer sheet margin may move the sheet without scrolling it.
+            let start = origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: area.minY + area.height * 0.25 - bounds.minY))
+            let end = origin.withOffset(CGVector(dx: area.midX - bounds.minX, dy: area.maxY - 8 - bounds.minY))
+            start.press(forDuration: 0.05, thenDragTo: end)
+        }
+        XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "household.decision.done"),
+                      "The review must be unobscured after dismissing the keyboard")
     }
     private func reveal(_ target: XCUIElement, fullyVisible: Bool = false) {
         for attempt in 0..<24 {
