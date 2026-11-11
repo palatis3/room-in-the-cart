@@ -40,9 +40,13 @@ public struct SharedMealIdeaAmount: Codable, Equatable, Sendable, ExpressibleByI
 
 /// Household-entered evidence only. Never populated from a device-private food or decision store.
 public struct SharedMealIdeaDraft: Codable, Equatable, Sendable {
-    public struct Reservation: Codable, Equatable, Sendable {
+    public struct Reservation: Codable, Equatable, Identifiable, Sendable {
+        /// Editor identity only; saved evidence and comparisons remain name/amount based.
+        public let id = UUID()
         public var name: String; public var amount: SharedMealIdeaAmount
+        private enum CodingKeys: String, CodingKey { case name, amount }
         public init(name: String, amount: SharedMealIdeaAmount) { self.name = name; self.amount = amount }
+        public static func == (lhs: Self, rhs: Self) -> Bool { lhs.name == rhs.name && lhs.amount == rhs.amount }
     }
     public struct Ingredient: Codable, Equatable, Identifiable, Sendable {
         public var id: UUID; public var name: String; public var required: SharedMealIdeaAmount?; public var unit: String

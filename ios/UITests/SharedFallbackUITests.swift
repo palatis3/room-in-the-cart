@@ -8,6 +8,18 @@ final class SharedFallbackUITests: XCTestCase {
     private var candidates: [[String: Any]] { capture["options"] as! [[String: Any]] }
     private func candidateID(_ index: Int) -> String { (candidates[index]["candidateId"] as! String).uppercased() }
 
+    private func sourceToggle(for index: Int) throws -> XCUIElement {
+        let library = capture["library"] as! [String: Any]
+        let recipes = library["candidates"] as! [[String: Any]]
+        let candidate = try XCTUnwrap(recipes.first { ($0["candidateId"] as? String)?.uppercased() == candidateID(index) })
+        let ingredients = (candidate["recipe"] as! [String: Any])["ingredients"] as! [[String: Any]]
+        let sources = (capture["desk"] as! [String: Any])["sourceOptions"] as! [[String: Any]]
+        XCTAssertEqual(ingredients.count, 1); XCTAssertEqual(sources.count, 1)
+        let ingredientID = try XCTUnwrap(ingredients.first?["id"] as? String).uppercased()
+        let sourceID = try XCTUnwrap(sources.first?["sourceId"] as? String).uppercased()
+        return app.switches["fallback.source." + ingredientID + "." + sourceID]
+    }
+
     override func setUpWithError() throws {
         continueAfterFailure = false
         let file = try XCTUnwrap(Bundle(for: Self.self).url(forResource: "SharedFallbackShop", withExtension: "json"))
@@ -105,14 +117,13 @@ final class SharedFallbackUITests: XCTestCase {
         verifyRetainedAccessAfterExpiry()
     }
 
-    func testFiveUsableWrapsProtectLunchAndCompareUsualDinnerWithTwoPackTrip() {
+    func testFiveUsableWrapsProtectLunchAndCompareUsualDinnerWithTwoPackTrip() throws {
         launch()
         tap(app.buttons["fallback.target." + target])
         let usual = candidateID(0), larger = candidateID(1)
         toggle(app.switches["fallback.select." + larger])
         tap(app.buttons["fallback.food." + larger])
-        let stock = app.switches.matching(NSPredicate(format:"label CONTAINS %@ AND label CONTAINS %@","Wraps","5")).firstMatch
-        toggle(stock)
+        toggle(try sourceToggle(for: 1))
         back("Review ingredients, food and time")
         tap(app.buttons["fallback.compare"])
         reveal(has("No reviewed recipe meets all requirements"))
@@ -131,7 +142,7 @@ final class SharedFallbackUITests: XCTestCase {
         enter("2","Packs available",done:"fallback.food.done")
         back("Review ingredients, food and time")
         toggle(app.switches["fallback.select." + usual])
-        tap(app.buttons["fallback.food." + usual]); toggle(stock); back("Review ingredients, food and time")
+        tap(app.buttons["fallback.food." + usual]); toggle(try sourceToggle(for: 0)); back("Review ingredients, food and time")
         tap(app.buttons["fallback.compare"])
         reveal(has("Usual accepted option (minutes)","10"))
         reveal(has("Minutes longer than usual","6"))

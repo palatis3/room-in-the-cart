@@ -1,6 +1,7 @@
 import XCTest
 import SwiftUI
 import CoreDomain
+import HouseholdClient
 @testable import RoomInTheCart
 
 @MainActor final class DinnerDraftBindingTests: XCTestCase {
@@ -71,6 +72,38 @@ import CoreDomain
         row.amount.wrappedValue = "99"; row.unit.wrappedValue = .kilogram
         XCTAssertEqual(box.value[0].name, "Rice"); XCTAssertEqual(box.value[0].amount, "")
         XCTAssertEqual(box.value[0].unit, .count)
+    }
+
+    func testNestedReservationBindingsFollowIdentityAndIgnoreWritesAfterRowOrParentRemoval() {
+        let first = SharedMealIdeaDraft.Reservation(name: "Lunch", amount: 1)
+        let second = SharedMealIdeaDraft.Reservation(name: "Lunch", amount: 1)
+        let last = SharedMealIdeaDraft.Reservation(name: "Dinner", amount: 3)
+        let ingredient = SharedMealIdeaDraft.Ingredient(name: "Rice", reservations: [first, second, last])
+        let other = SharedMealIdeaDraft.Ingredient(name: "Beans", reservations: [.init(name: "Other", amount: 4)])
+        let box = Box([ingredient, other])
+        let parent = dinnerDraftBinding(ingredient, in: box.binding)
+        let removed = dinnerDraftBinding(first, in: parent.reservations)
+        let retained = dinnerDraftBinding(second, in: parent.reservations)
+
+        parent.wrappedValue.reservations.removeAll { $0.id == first.id }
+        retained.name.wrappedValue = "Protected lunch"
+        retained.amount.wrappedValue = 2
+        removed.name.wrappedValue = "Late rename"
+        removed.amount.wrappedValue = 99
+        XCTAssertEqual(box.value[0].reservations.map(\.id), [second.id, last.id])
+        XCTAssertEqual(box.value[0].reservations[0].name, "Protected lunch")
+        XCTAssertEqual(box.value[0].reservations[0].amount, 2)
+        XCTAssertEqual(box.value[0].reservations[1], last)
+        XCTAssertEqual(removed.name.wrappedValue, "Lunch")
+        XCTAssertEqual(box.value[1], other)
+
+        box.value.removeAll { $0.id == ingredient.id }
+        XCTAssertEqual(retained.wrappedValue.id, second.id)
+        retained.name.wrappedValue = "Outgoing text edit"
+        retained.amount.wrappedValue = 100
+        parent.wrappedValue.reservations.append(.init(name: "Outgoing add", amount: 1))
+        XCTAssertEqual(box.value.map(\.id), [other.id])
+        XCTAssertEqual(box.value[0], other, "Late nested writes cannot recreate a parent or edit its replacement")
     }
 
     func testTemplateReviewPreservesUntouchedEvidenceAndReplacesOnlyEditedQuantity() throws {

@@ -90,39 +90,43 @@ private struct SharedMealIdeaEditor: View {
                     .focused($inputFocus, equals: "exclusions")
                 Text(ht("Review exclusions with the household. This does not read private decision history."))
             }.disabled(!own || model.pending != nil)
-            ForEach($draft.ingredients) { $ingredient in
-                let prefix = "ingredient.\(ingredient.id)."
+            ForEach(draft.ingredients) { snapshot in
+                let ingredient = dinnerDraftBinding(snapshot, in: $draft.ingredients)
+                let id = snapshot.id
+                let prefix = "ingredient.\(id)."
                 Section {
-                    TextField(ht("Ingredient name"), text: $ingredient.name).focused($inputFocus, equals: prefix + "name")
-                    Picker(ht("Ingredient unit"), selection: $ingredient.unit) {
+                    TextField(ht("Ingredient name"), text: ingredient.name).focused($inputFocus, equals: prefix + "name")
+                    Picker(ht("Ingredient unit"), selection: ingredient.unit) {
                         Text(ht("Count")).tag("count"); Text(ht("Grams")).tag("gram"); Text(ht("Kilograms")).tag("kilogram")
                         Text(ht("Ounces")).tag("ounce"); Text(ht("Pounds")).tag("pound")
                         Text(ht("Milliliters")).tag("milliliter"); Text(ht("Liters")).tag("liter")
                         Text(ht("Fluid ounces")).tag("fluidOunce"); Text(ht("Cups")).tag("cup")
                     }
-                    SharedIdeaAmountField(title: ht("Required quantity"), value: $ingredient.required, focus: $inputFocus, fieldID: prefix + "required")
-                    SharedIdeaAmountField(title: ht("Household stock in this unit"), value: $ingredient.stock, focus: $inputFocus, fieldID: prefix + "stock")
-                    ForEach(ingredient.reservations.indices, id: \.self) { index in
-                        let reservation = prefix + "reservation.\(index)."
-                        TextField(ht("Named reservation"), text: $ingredient.reservations[index].name)
-                            .focused($inputFocus, equals: reservation + "name")
-                        SharedIdeaAmountField(title: ht("Reserved quantity"), value: Binding(get: { ingredient.reservations[index].amount }, set: { ingredient.reservations[index].amount = $0 ?? 0 }),
-                                             focus: $inputFocus, fieldID: reservation + "amount")
+                    SharedIdeaAmountField(title: ht("Required quantity"), value: ingredient.required, focus: $inputFocus, fieldID: prefix + "required")
+                    SharedIdeaAmountField(title: ht("Household stock in this unit"), value: ingredient.stock, focus: $inputFocus, fieldID: prefix + "stock")
+                    ForEach(ingredient.wrappedValue.reservations) { snapshot in
+                        let reservation = dinnerDraftBinding(snapshot, in: ingredient.reservations)
+                        let reservationID = snapshot.id
+                        let field = prefix + "reservation.\(reservationID)."
+                        TextField(ht("Named reservation"), text: reservation.name)
+                            .focused($inputFocus, equals: field + "name")
+                        SharedIdeaAmountField(title: ht("Reserved quantity"), value: Binding(get: { reservation.wrappedValue.amount }, set: { reservation.wrappedValue.amount = $0 ?? 0 }),
+                                             focus: $inputFocus, fieldID: field + "amount")
                         Button(ht("Remove reservation"), role: .destructive) {
                             inputFocus = nil
-                            ingredient.reservations.remove(at: index)
+                            ingredient.wrappedValue.reservations.removeAll { $0.id == reservationID }
                         }
                     }
-                    Button(ht("Add named reservation")) { ingredient.reservations.append(.init(name: "", amount: 1)) }.disabled(ingredient.reservations.count >= 20)
-                    SharedIdeaAmountField(title: ht("Whole package quantity"), value: $ingredient.pack, focus: $inputFocus, fieldID: prefix + "pack")
-                    number(ht("Usable yield numerator"), value: $ingredient.usableNumerator).focused($inputFocus, equals: prefix + "numerator")
-                    number(ht("Usable yield denominator"), value: $ingredient.usableDenominator).focused($inputFocus, equals: prefix + "denominator")
+                    Button(ht("Add named reservation")) { ingredient.wrappedValue.reservations.append(.init(name: "", amount: 1)) }.disabled(ingredient.wrappedValue.reservations.count >= 20)
+                    SharedIdeaAmountField(title: ht("Whole package quantity"), value: ingredient.pack, focus: $inputFocus, fieldID: prefix + "pack")
+                    number(ht("Usable yield numerator"), value: ingredient.usableNumerator).focused($inputFocus, equals: prefix + "numerator")
+                    number(ht("Usable yield denominator"), value: ingredient.usableDenominator).focused($inputFocus, equals: prefix + "denominator")
                     Text(ht("Use the same unit throughout. Enter 1 / 1 only when the whole pack is usable. Blank evidence remains unknown."))
-                    TextField(ht("Household stock and package evidence"), text: $ingredient.evidence, axis: .vertical)
+                    TextField(ht("Household stock and package evidence"), text: ingredient.evidence, axis: .vertical)
                         .focused($inputFocus, equals: prefix + "evidence")
                         .accessibilityLabel(ht("Household stock and package evidence"))
                         .accessibilityIdentifier("household-idea-evidence")
-                    Button(ht("Remove ingredient"), role: .destructive) { draft.ingredients.removeAll { $0.id == ingredient.id } }.disabled(draft.ingredients.count == 1)
+                    Button(ht("Remove ingredient"), role: .destructive) { draft.ingredients.removeAll { $0.id == id } }.disabled(draft.ingredients.count == 1)
                 }.disabled(!own || model.pending != nil)
             }
             if own {

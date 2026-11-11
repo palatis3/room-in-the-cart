@@ -2,6 +2,41 @@ import XCTest
 @testable import HouseholdClient
 
 extension HouseholdClientTests {
+    func testMealIdeaReservationIdentityDoesNotChangeWireEvidenceOrDraftEquality() throws {
+        let first = SharedMealIdeaDraft.Reservation(name: "Lunch", amount: .init(1, 2))
+        let sameEvidence = SharedMealIdeaDraft.Reservation(name: "Lunch", amount: .init(1, 2))
+        XCTAssertNotEqual(first.id, sameEvidence.id)
+        XCTAssertEqual(first, sameEvidence)
+        let draft = SharedMealIdeaDraft(title: "Rice", ingredients: [.init(name: "Rice", reservations: [first, sameEvidence], evidence: "Household checked")])
+        try draft.validate()
+        let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
+        let bytes = try encoder.encode(draft)
+        let body = try XCTUnwrap(JSONSerialization.jsonObject(with: bytes) as? [String: Any])
+        let ingredient = try XCTUnwrap((body["ingredients"] as? [[String: Any]])?.first)
+        let reservations = try XCTUnwrap(ingredient["reservations"] as? [[String: Any]])
+        XCTAssertEqual(reservations.count, 2)
+        for reservation in reservations {
+            XCTAssertEqual(Set(reservation.keys), Set(["name", "amount"]))
+            XCTAssertEqual(reservation["name"] as? String, "Lunch")
+            XCTAssertEqual(reservation["amount"] as? [String: Int], ["numerator": 1, "denominator": 2])
+        }
+        let decoded = try JSONDecoder().decode(SharedMealIdeaDraft.self, from: bytes)
+        XCTAssertEqual(decoded, draft, "Server reads must still match drafts for approval and lost-reply reconciliation")
+        XCTAssertEqual(try encoder.encode(decoded), bytes)
+        XCTAssertNotEqual(decoded.ingredients[0].reservations[0].id, first.id)
+        XCTAssertNotEqual(decoded.ingredients[0].reservations[0].id, decoded.ingredients[0].reservations[1].id)
+        XCTAssertEqual(draft.normalizedForSave().ingredients[0].reservations.map(\.id), [first.id, sameEvidence.id])
+        var edited = decoded
+        edited.ingredients[0].reservations[0].name = "Dinner"
+        XCTAssertNotEqual(edited, draft)
+        edited = decoded; edited.ingredients[0].reservations[0].amount = 1
+        XCTAssertNotEqual(edited, draft)
+        let legacy = try JSONDecoder().decode(SharedMealIdeaDraft.Reservation.self, from: Data(#"{"name":"Lunch","amount":2}"#.utf8))
+        let legacyBody = try XCTUnwrap(JSONSerialization.jsonObject(with: encoder.encode(legacy)) as? [String: Any])
+        XCTAssertEqual(Set(legacyBody.keys), Set(["name", "amount"]))
+        XCTAssertEqual(legacyBody["amount"] as? Int, 2, "Existing integer amounts retain their wire representation")
+    }
+
     func testUndatedSharedMealHTTPReadProposalAndLaterScheduleKeepNeedIdentity() async throws {
         let shop = UUID(), occurrence = UUID(), group = UUID(), ingredient = UUID(), allocation = UUID()
         let quantity: [String: Any] = ["amount": ["numerator": 2, "denominator": 1], "unit": "count", "originalLiteral": "2 wraps"]

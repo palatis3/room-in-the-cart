@@ -70,19 +70,20 @@ struct SharedFallbackRecipeEditor: View {
                 TextField(fallbackText("Meal exclusions, one per line"), text: $draft.exclusions, axis: .vertical)
                     .focused($input, equals: .restrictions)
             }
-            ForEach($draft.ingredients) { $row in
-                let id = row.id
+            ForEach(draft.ingredients) { snapshot in
+                let row = dinnerDraftBinding(snapshot, in: $draft.ingredients)
+                let id = snapshot.id
                 Section(ht("Ingredient")) {
-                    TextField(ht("Ingredient"), text: $row.name)
+                    TextField(ht("Ingredient"), text: row.name)
                         .focused($input, equals: .ingredient(id)).accessibilityIdentifier("fallback.recipe.ingredient")
-                    TextField(ht("Ingredient quantity"), text: $row.amount)
+                    TextField(ht("Ingredient quantity"), text: row.amount)
                         .focused($input, equals: .quantity(id)).accessibilityIdentifier("fallback.recipe.quantity")
-                    Picker(sharedRecoveryText("Unit"), selection: $row.unit) {
+                    Picker(sharedRecoveryText("Unit"), selection: row.unit) {
                         ForEach(UnitOfMeasure.allCases, id: \.self) { unit in Text(dinnerUnit(unit)).tag(unit) }
                     }
-                    TextField(fallbackText("Ingredient exclusions, one per line"), text: $row.exclusions, axis: .vertical)
+                    TextField(fallbackText("Ingredient exclusions, one per line"), text: row.exclusions, axis: .vertical)
                         .focused($input, equals: .exclusions(id))
-                    TextField(sharedRecoveryText("Preparation notes"), text: $row.notes, axis: .vertical)
+                    TextField(sharedRecoveryText("Preparation notes"), text: row.notes, axis: .vertical)
                         .focused($input, equals: .preparation(id))
                     if draft.ingredients.count > 1 {
                         Button(pTr("Remove"), role: .destructive) { draft.ingredients.removeAll { $0.id == id } }

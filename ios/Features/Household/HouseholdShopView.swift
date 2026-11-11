@@ -174,14 +174,16 @@ private struct SharedShopEditor: View {
     var body: some View {
         Section(ht("Entered shared items")) {
             Text(ht("Enter each actual pack separately from its price. A blank price remains unknown."))
-            ForEach($model.draft.lines) { $line in
+            ForEach(model.draft.lines) { snapshot in
+                let line = dinnerDraftBinding(snapshot, in: $model.draft.lines)
+                let id = snapshot.id
                 VStack(alignment: .leading) {
-                    TextField(ht("Pack or item name"), text: $line.item)
-                        .accessibilityIdentifier("sharedShop.line." + line.id.uuidString.lowercased() + ".item")
-                    Stepper(value: $line.packs, in: 1...10_000) { LabeledContent(ht("Whole packs"), value: line.packs.formatted()) }
-                    TextField(ht("Price per pack in USD, blank if unknown"), text: $line.price).keyboardType(.decimalPad).accessibilityIdentifier("sharedShop.line." + line.id.uuidString.lowercased() + ".price")
-                    Toggle(ht("Counts toward the retailer fee threshold"), isOn: $line.feeEligible)
-                    Button(ht("Remove this shared line"), role: .destructive) { model.draft.lines.removeAll { $0.id == line.id } }
+                    TextField(ht("Pack or item name"), text: line.item)
+                        .accessibilityIdentifier("sharedShop.line." + id.uuidString.lowercased() + ".item")
+                    Stepper(value: line.packs, in: 1...10_000) { LabeledContent(ht("Whole packs"), value: line.wrappedValue.packs.formatted()) }
+                    TextField(ht("Price per pack in USD, blank if unknown"), text: line.price).keyboardType(.decimalPad).accessibilityIdentifier("sharedShop.line." + id.uuidString.lowercased() + ".price")
+                    Toggle(ht("Counts toward the retailer fee threshold"), isOn: line.feeEligible)
+                    Button(ht("Remove this shared line"), role: .destructive) { model.draft.lines.removeAll { $0.id == id } }
                 }
             }
             Button(ht("Add shared line")) { model.draft.lines.append(.init()) }.disabled(model.draft.lines.count >= 200)
