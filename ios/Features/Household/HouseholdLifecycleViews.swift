@@ -129,12 +129,13 @@ struct HouseholdHelperComposer: View {
                     Text(ht("Suggestions wait for shopper review. They do not change the basket or instructions automatically."))
                     expiryPicker(model)
                 }
-                ForEach($items) { $item in
+                ForEach(items) { item in
+                    let fields = dinnerDraftBinding(item, in: $items)
                     Section(ht("Instruction")) {
-                        TextField(ht("Item"), text: $item.label)
-                        TextField(ht("Amount, optional"), text: $item.amount)
-                        TextField(ht("Unit, optional"), text: $item.unit)
-                        TextField(ht("What the cook should do"), text: $item.action, axis: .vertical).lineLimit(2...5)
+                        TextField(ht("Item"), text: fields.label)
+                        TextField(ht("Amount, optional"), text: fields.amount)
+                        TextField(ht("Unit, optional"), text: fields.unit)
+                        TextField(ht("What the cook should do"), text: fields.action, axis: .vertical).lineLimit(2...5)
                         Button(ht("Remove instruction"), role: .destructive) { items.removeAll { $0.id == item.id } }
                     }
                 }
