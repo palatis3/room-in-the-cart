@@ -9,7 +9,8 @@ Published candidate is **84b903d0cfbfe0e57d286654c72988cac0591121** on both
 `codex/parallel-ios-ci` and `codex/combined-candidate-20261109`. PR1 identifies that
 head. Keep this candidate unchanged while its useful native batch runs. This
 handoff-only checkpoint is local and must not cause a status-only push.
-The newest qualified production correction is the shared-tracking keyboard change.
+The newest qualified production correction adds an explicit Done control to the
+capture source editor. It is local until the next grouped candidate push.
 The owner approved the lean workflow going forward. Follow CI-VALIDATION's daily
 triage table: affected checks, one investigation per cause, reuse original evidence,
 one grouped candidate push, and full combined/release qualification at its proper gate.
@@ -19,6 +20,35 @@ defers optional polish, speculative coverage and new tooling while the first
 release has unresolved requirements. Finish and qualify the current correction,
 then move to the next unresolved cause. Workflow scheduling and fixture balancing
 changes are now published. PR1 remains draft and unmerged.
+
+- **Capture source Done qualified locally:** published84 fixture job130383822595
+  completed all13 cases, with12 passes and one failed keyboard-dismissal assertion
+  in the original typed/structured request journey (315.238s). The screenshot
+  taken after failure shows the keyboard gone; delayed accessibility state versus
+  animation timing is not conclusively distinguished. The source TextEditor had
+  no explicit Done control. CaptureReviewView now binds its focus to the existing
+  keyboard Done action; the original test taps that control and still requires
+  keyboard disappearance, unchanged draft text, Cancel with no write and exactly
+  one explicit own-request send. `.build/ContributorRequestNov11/focused/Tests.xcresult`
+  passes strict2/2: original English177.560s and Spanish largest-text60.639s,
+  one execution each and zero recorded runtime warnings, idle messages or restarts.
+  Build65106, enumeration77918 and test44490 ended0. Source and exact compiled-plan
+  hashes match `focused/source-and-plan.txt`. Normal Debug build61375 also ended0
+  at `.build/ContributorRequestNov11/Normal-Build.xcresult`. No local native process
+  remains active. Original hosted archive13838746581 is retained at
+  `.build/ContributorRequestNov11/hosted/original.zip`, SHA256
+  e19b82d1649c0607d2b2a6376429aac9e285645e3cefe6e0c2b972601220e6d4.
+- **Latest published84 checkpoint:** all916model tests and Swift CodeQL pass;
+  balanced04 passes all13 selected cases. Balanced01 completes3/4, failing the
+  duplicate-request journey's sheet-dismissal wait at RequestDuplicateComparisonUITests:146
+  (job130383822777). Balanced05 completes13/14, failing the correction-privacy
+  opt-out confirmation's existence assertion at LibraryPrivacyUITests:240
+  (job130383822827); all3 shared-meal-change cases pass. These two new failures
+  need screenshot/result diagnosis before changing the app or harness. Do not
+  infer a shared cause solely because both involve UI transitions. Core UI01–03,
+  balanced03 and DinnerDecisionSheet are active or queued with later fixtures.
+  Keep the published batch running and the qualified Capture fix local; do not
+  push a checkpoint or dispatch duplicate tests. Billing remains unresolved below.
 
 - **Source-check repair now passes hosted:** aa176fed core42976888365 source
   job130377944571 failed two stale Python expectations, so its native build/test

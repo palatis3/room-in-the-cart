@@ -208,13 +208,12 @@ import XCTest
     private func dismissCaptureKeyboard() {
         let keyboard = app.keyboards.firstMatch
         guard keyboard.exists else { return }
-        // The source TextEditor has no Done action. Use the Form's existing
-        // interactive dismissal, starting in its margin outside the editor.
-        let bounds = app.frame, area = scrollableArea()
-        let origin = app.coordinate(withNormalizedOffset: .zero)
-        let start = origin.withOffset(CGVector(dx: 8, dy: area.minY + area.height * 0.25 - bounds.minY))
-        let end = origin.withOffset(CGVector(dx: 8, dy: bounds.height - 30))
-        start.press(forDuration: 0.05, thenDragTo: end)
+        // End editing through the same explicit control available to a person;
+        // a Form swipe can leave keyboard dismissal dependent on its scroll state.
+        let done = app.buttons["capture.sourceDone"]
+        XCTAssertTrue(done.waitForExistence(timeout: 5), "The source editor must offer Done")
+        XCTAssertTrue(done.isHittable)
+        done.tap()
         let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: keyboard)
         XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed)
     }

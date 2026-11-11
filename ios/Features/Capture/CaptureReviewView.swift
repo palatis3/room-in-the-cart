@@ -25,6 +25,7 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
     @State private var photoTask: Task<Void, Never>?
     @AccessibilityFocusState private var reviewFocused: Bool
     @AccessibilityFocusState private var capturedTextFocused: Bool
+    @FocusState private var sourceTextFocused: Bool
     @FocusState private var structuredFieldFocus: StructuredCaptureField?
 
     init(initialText: String = "", initialSource: CaptureSource = .typed, localeIdentifier: String = Locale.current.identifier,
@@ -98,6 +99,7 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
             Section(captureText(requestMode ? "Your editable request" : "Your editable list")) {
                 Text(captureText(requestMode ? "Review one request at a time. Check the item, amount, packs, purpose and exclusions; skip any other captured lines." : "One item per line. Check item names, amounts, units and any exclusions."))
                 TextEditor(text: $model.text).frame(minHeight: 180)
+                    .focused($sourceTextFocused)
                     .accessibilityLabel(captureText(requestMode ? "Request text to review" : "List text to review"))
                     .accessibilityIdentifier("capture.editor")
                     .accessibilityFocused($reviewFocused)
@@ -152,7 +154,9 @@ func captureText(_ key: String) -> String { String(localized: String.Localizatio
         }
         .navigationTitle(captureText(requestMode ? "Capture a request" : "Capture a list"))
         .scrollDismissesKeyboard(.interactively)
-        .keyboardDoneAction(visible: structuredFieldFocus != nil, title: captureText("Done"), identifier: "capture.itemNameDone") {
+        .keyboardDoneAction(visible: sourceTextFocused || structuredFieldFocus != nil, title: captureText("Done"),
+                            identifier: sourceTextFocused ? "capture.sourceDone" : "capture.itemNameDone") {
+            sourceTextFocused = false
             structuredFieldFocus = nil
         }
         .toolbar { ToolbarItem(placement: .cancellationAction) {
