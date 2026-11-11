@@ -29,8 +29,8 @@ dispatching. Update this table in place rather than adding another status recap.
 
 | Work | Current decision | Next action |
 | --- | --- | --- |
-| Published core42977513683 and fixtures42977513804 | Keep useful jobs running. Core UI04–07 and stock/purchase are active; later groups are pending. UI02/03, models and both created-meal Undo journeys have passed. | Collect new terminal results; preserve failures before diagnosing them. No duplicate dispatch or status-only push. |
-| Four qualified local corrections | Capture Done (`f33f0c4d`), duplicate Cancel query (`749b5521`), Dinner amount query (`95d6c609`) and largest-text meal query (`aa84e60b`) await combined qualification. | Retain their existing focused passes. Run cheap source checks once on the finished grouped changes, then publish one successor when the current batch has yielded useful results. |
+| Published core42977513683 and fixtures42977513804 | Keep useful jobs running. Core UI04/06/07, stock/purchase and SharedFallback are active; later groups are pending. UI05 finished6/7 with the new lookup failure qualified locally below. UI02/03, models and both created-meal Undo journeys have passed. | Collect new terminal results; preserve failures before diagnosing them. No duplicate dispatch or status-only push. |
+| Five qualified local corrections | Capture Done (`f33f0c4d`), duplicate Cancel query (`749b5521`), Dinner amount query (`95d6c609`), largest-text meal query (`aa84e60b`) and PickupOffer Shop Button lookup await combined qualification. | Retain their existing focused passes. Run cheap source checks once on the finished grouped changes, then publish one successor when the current batch has yielded useful results. |
 | Correction privacy and RecordsMedia | Hosted failures remain unexplained; unchanged originals passed locally. | Revisit only with new evidence or a concrete hypothesis. Preserve RecordsMedia privacy; do not repeat unchanged local runs. |
 | StoreKit | Declined-request evidence and the separate private Apple draft are retained; submission approval remains pending. | No blind reruns or submission without the requested approval. Other purchase failures remain separate unresolved observations. |
 | Merge and release | Full combined qualification remains incomplete; owner-deferred setup and human/device checks remain separate. | Follow RELEASE-EXECUTION without treating focused passes as release approval. |
@@ -45,6 +45,23 @@ workflow; no new suite, monitor, wrapper or approval step is needed.
 These notes preserve observations at the time of each check. Historical active
 job descriptions are not the current queue.
 
+- **PickupOffer launch lookup qualified locally:** UI05 job130404370119 executed
+  all7 cases (6passed/1failed), with zero recorded runtime warnings, idle messages
+  or runner restarts. Its earlier bootstrap crash did not recur in this execution.
+  The saved-offer case timed out268.807s querying `newComparison` through Any;
+  the retained screenshot shows Compare packs visible on Shop. Original archive
+  13842266019 is retained at `.build/PickupOfferNov11/hosted/original.zip`, verified
+  SHA25616c2200e4b736fb2b6e6a0b6fa781568356e7b2e7c9155297e6b60a33cef58d4.
+  The launch and Shop-return queries now target Buttons, matching the production
+  NavigationLink and the passing neighboring shortcut case. No app behavior,
+  assertion, retry or timeout changed. Build38486 and enumeration1428 ended0;
+  original test20185 ended0 and strict1/1 validation passes201.79s, zero recorded
+  warnings/idle messages/restarts, at `.build/PickupOfferNov11/focused/Tests.xcresult`.
+  Source and exact compiled-plan hashes match. Syntax/automation/diff checks pass.
+  This includes saved forecasts, restart/reopen, response updates and Cancel;
+  hosted resolution remains unproven. Keep the correction for the grouped push.
+  Prior grouped source checks passed975 before this edit; the final cheap pre-push
+  checks must include this new source. No further normal app rebuild is needed.
 - **Capture source Done qualified locally:** published84 fixture job130383822595
   completed all13 cases, with12 passes and one failed keyboard-dismissal assertion
   in the original typed/structured request journey (315.238s). The screenshot

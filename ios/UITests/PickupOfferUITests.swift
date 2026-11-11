@@ -263,7 +263,7 @@ import XCTest
         app.launchArguments = ["--ui-testing", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         if reset { app.launchArguments.append("--reset-test-workspace") }
         app.launch()
-        XCTAssertTrue(element("newComparison").waitForExistence(timeout: 15))
+        XCTAssertTrue(app.buttons["newComparison"].waitForExistence(timeout: 15))
     }
     private func restart() { app.terminate(); launch(reset: false) }
     private func element(_ id: String) -> XCUIElement { app.descendants(matching: .any).matching(identifier: id).firstMatch }
@@ -346,7 +346,7 @@ import XCTest
     private func dinnerRoot() { returnToVisibleAnchor(element("dinnerLibrary")) }
     private func shopRoot() {
         tap(app.tabBars.buttons["Shop"])
-        returnToVisibleAnchor(element("newComparison"))
+        returnToVisibleAnchor(app.buttons["newComparison"])
     }
     private func back(to label: String) {
         returnToVisibleAnchor(app.buttons.matching(identifier: label).firstMatch)
