@@ -85,13 +85,45 @@ import XCTest
         capture("S26-shopper-visible-approved-fractional-proposal")
         tap(element("meal-change-shopper-review"))
         assertText("Entered soup packs")
+        // The approved idea does not silently turn unrelated soup packs into
+        // chickpeas. Add its own actual pack, leaving its unquoted price unknown.
+        tap(app.buttons["Add shared line"])
+        let item = app.textFields.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND identifier ENDSWITH %@ AND identifier != %@", "sharedShop.line.", ".item", "sharedShop.line.66666666-6666-4666-8666-666666666666.item")).firstMatch
+        // The new row is inserted above Add; keep its identity stable after typing.
+        reveal(item, fullyVisible: true, searchTowardEndFirst: false); item.tap(); item.typeText("Chickpeas\n")
+        XCTAssertEqual(item.value as? String, "Chickpeas")
+        let prices = app.textFields.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND identifier ENDSWITH %@", "sharedShop.line.", ".price"))
+        let chickpeaPrice = prices.allElementsBoundByIndex.first { $0.identifier != "sharedShop.line.66666666-6666-4666-8666-666666666666.price" }
+        XCTAssertNotNil(chickpeaPrice)
+        guard let chickpeaPrice else { return }
+        let chickpeaID = String(chickpeaPrice.identifier.dropFirst("sharedShop.line.".count).dropLast(".price".count))
+        XCTAssertNotNil(UUID(uuidString: chickpeaID))
+        XCTAssertTrue((chickpeaPrice.value as? String ?? "").isEmpty || chickpeaPrice.value as? String == chickpeaPrice.placeholderValue)
         tap(app.buttons["Review entered shared shop"])
+        XCTAssertTrue(app.navigationBars["Food quantities and sources"].waitForExistence(timeout: 12))
+        assertText("Represent every basket item with an explicit source")
+        waitCounter("basket", "Fixture basket writes: 0")
+        tap(app.buttons["sharedTracking.cancel"])
+        waitCounter("basket", "Fixture basket writes: 0")
+        waitCounter("ideas", "Fixture idea writes: 2"); waitCounter("proposals", "Fixture meal proposals: 1")
+        capture("S26-first-adoption-Cancel-preserves-approved-proposal-and-basket")
+        tap(app.buttons["Review entered shared shop"])
+        XCTAssertTrue(app.navigationBars["Food quantities and sources"].waitForExistence(timeout: 12))
+        enterFirstAdoption(chickpeaID: chickpeaID)
+        tap(app.buttons["sharedTracking.preview"])
         assertText("Fractional chickpea supper")
-        let publish = app.buttons["Publish reviewed items and quote"]
+        assertText("1/2 cups")
+        assertText("Peanuts"); assertText("Milk")
+        assertText("Unpriced basket items")
+        let publish = app.buttons["sharedTracking.apply"]
         reveal(publish); XCTAssertFalse(publish.isEnabled)
         waitCounter("basket", "Fixture basket writes: 0")
         capture("S26-separate-shopper-review-requires-explicit-approval")
-        enableSwitch("I reviewed these exact shared fields and this action")
+        enableSwitch("sharedTracking.ackChanges")
+        enableSwitch("sharedTracking.ackPickup")
+        reveal(publish); XCTAssertFalse(publish.isEnabled, "The new pack's unknown price still requires explicit review")
+        enableSwitch("sharedTracking.acceptUnknown")
+        reveal(publish); XCTAssertTrue(publish.isEnabled)
         tap(publish)
         waitCounter("basket", "Fixture basket writes: 1")
         assertText("Shared shop change confirmed")
@@ -147,6 +179,55 @@ import XCTest
         waitCounter("ideas", "Fixture idea writes: 2")
         waitCounter("proposals", "Fixture meal proposals: 0"); waitCounter("basket", "Fixture basket writes: 0")
         capture("S26-approved-proposal-reopens-after-authorized-parent-refresh")
+    }
+    private func enterFirstAdoption(chickpeaID: String) {
+        let soup = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", "sharedTracking.manual."))
+            .containing(.staticText, identifier: "Entered soup packs").firstMatch
+        let add = soup.switches["Add a manual need"]
+        reveal(add, fullyVisible: true)
+        let manualID = soup.identifier
+        if add.value as? String == "0" { add.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap() }
+        XCTAssertEqual(add.value as? String, "1")
+        enterTrackingText("Entered soup packs", field: app.textFields[manualID + ".name"])
+        enterTrackingText("Entered soup packs", field: app.textFields[manualID + ".original"])
+        let unknown = soup.switches["Quantity unknown"]
+        reveal(unknown, fullyVisible: true); XCTAssertEqual(unknown.value as? String, "1", "Whole packs do not establish a food amount")
+        let matched = soup.switches["I confirm this source matches the selected food"]
+        reveal(matched, fullyVisible: true)
+        if matched.value as? String == "0" { matched.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap() }
+        XCTAssertEqual(matched.value as? String, "1")
+        // The authoritative half-cup meal source has its own explicit basket
+        // selection; it must not be matched to the unrelated soup pack.
+        let basket = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@ AND label CONTAINS %@", "Basket item", "Choose an item")).firstMatch
+        tap(basket); tap(app.buttons["Chickpeas"])
+        let confirm = app.switches.matching(NSPredicate(format: "label == %@ AND value == %@", "I confirm this source matches the selected food", "0")).firstMatch
+        reveal(confirm, fullyVisible: true); confirm.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+        // Resolve the identifier after changing its value, rather than keeping a
+        // query that deliberately stops matching once the switch is on.
+        assertText("1/2 cups")
+        enableSwitch("sharedTracking.pack.66666666-6666-4666-8666-666666666666")
+        let unit = app.buttons["sharedTracking.pack." + chickpeaID + ".unit"]
+        tap(unit); tap(app.buttons["cups"])
+        enableSwitch("sharedTracking.pack." + chickpeaID)
+        capture("S26-first-adoption-explicit-soup-unknown-and-half-cup-meal-source")
+    }
+    private func enterTrackingText(_ text: String, field: XCUIElement) {
+        reveal(field, fullyVisible: true); field.tap(); field.typeText(text)
+        XCTAssertEqual(field.value as? String, text)
+        let keyboard = app.keyboards.firstMatch
+        if keyboard.exists && keyboard.frame.intersects(app.frame) {
+            // Use the production tracking Form's interactive keyboard dismissal.
+            let area = scrollableArea(), origin = app.coordinate(withNormalizedOffset: .zero)
+            let start = origin.withOffset(CGVector(dx: area.midX - app.frame.minX, dy: area.minY + area.height * 0.25 - app.frame.minY))
+            let end = origin.withOffset(CGVector(dx: area.midX - app.frame.minX, dy: area.maxY - 8 - app.frame.minY))
+            start.press(forDuration: 0.05, thenDragTo: end)
+            // UIKit can retain a keyboard preview below the screen after dismissal.
+            // Require an unobscured app, not removal of that offscreen AX element.
+            let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+                !keyboard.exists || !keyboard.frame.intersects(self.app.frame)
+            }, object: nil)
+            XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed)
+        }
     }
     private func assertProposalReady() {
         let prepare = element("household-idea-prepare-proposal")

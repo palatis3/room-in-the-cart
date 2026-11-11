@@ -177,6 +177,7 @@ private struct SharedShopEditor: View {
             ForEach($model.draft.lines) { $line in
                 VStack(alignment: .leading) {
                     TextField(ht("Pack or item name"), text: $line.item)
+                        .accessibilityIdentifier("sharedShop.line." + line.id.uuidString.lowercased() + ".item")
                     Stepper(value: $line.packs, in: 1...10_000) { LabeledContent(ht("Whole packs"), value: line.packs.formatted()) }
                     TextField(ht("Price per pack in USD, blank if unknown"), text: $line.price).keyboardType(.decimalPad).accessibilityIdentifier("sharedShop.line." + line.id.uuidString.lowercased() + ".price")
                     Toggle(ht("Counts toward the retailer fee threshold"), isOn: $line.feeEligible)

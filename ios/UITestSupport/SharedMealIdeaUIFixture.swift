@@ -28,6 +28,14 @@ private final class S26FixtureServer: @unchecked Sendable {
     private var ideas: [[String:Any]] = []
     private var proposalPosts = 0
     private var ideaWrites = 0
+    private static let soupLine = "66666666-6666-4666-8666-666666666666"
+    private static let chickpeaFact = "88888888-8888-4888-8888-888888888888"
+    private var basket: [[String: Any]] = [["lineId": S26FixtureServer.soupLine, "originalItem": "Entered soup packs", "packs": 1, "unitPriceMinor": 500, "feeEligible": true]]
+    private var trackedPage: [String: Any]?
+    private var actionSources: [String: Any]?
+    private var trackingCandidate: [String: Any]?
+    private var acceptedPreview: [String: Any]?
+    private var commandBytes: [String: Data] = [:]
     var ideaChanged: (@Sendable (Int) -> Void)?
     var changed: (@Sendable (Int,Int) -> Void)?
     func respond(_ request: URLRequest) throws -> (Int,Data) {
@@ -51,9 +59,24 @@ private final class S26FixtureServer: @unchecked Sendable {
         if path == "/v1/me/workspaces" { return try json(["workspaces":[["householdId":Self.household,"label":"Isolated household ideas","role":"contributor"]]]) }
         if path.hasSuffix("/devices") { return try json(["deviceId":shopper ? "shopper-device":"planner-device","deviceToken":shopper ? "shopper-token":"planner-token"],status:201) }
         if path.hasSuffix("/bootstrap") { return try json(["household":["id":Self.household,"label":"Isolated household ideas"],"memberId":shopper ? Self.shopper:Self.planner,"role":shopper ? "shopper":"contributor","shopId":Self.shop,"enrolled":true,"queueConsent":false,"capabilities":shopper ? ["shopper_commands","shopper_inbox","request_preview"]:["meal_proposals"]]) }
+        let trackingPath = "/v1/households/\(Self.household)/shops/\(Self.shop)/demand/tracking"
+        if path == trackingPath || path.hasPrefix(trackingPath + "/") {
+            guard request.value(forHTTPHeaderField: "Authorization") == "Bearer fixture-shopper",
+                  request.value(forHTTPHeaderField: "X-Device-Token") == "shopper-token" else { return try denied() }
+            if path == trackingPath, request.httpMethod == "GET" { return try json(trackingPage()) }
+            if path == trackingPath + "/action-sources", request.httpMethod == "POST" { return try json(sources(input)) }
+            if path == trackingPath + "/candidates", request.httpMethod == "POST" { return try json(candidate(input)) }
+            if path == trackingPath + "/previews", request.httpMethod == "POST" { return try json(accept(input)) }
+            return try denied()
+        }
         if path == "/v1/households/\(Self.household)/shops/\(Self.shop)/demand", request.httpMethod == "GET" {
             guard request.value(forHTTPHeaderField: "Authorization") == "Bearer fixture-shopper",
                   request.value(forHTTPHeaderField: "X-Device-Token") == "shopper-token" else { return try denied() }
+            if let trackedPage, let state = trackedPage["state"] as? [String: Any], let coverage = trackedPage["coverage"] as? [String: Any] {
+                return try json(["schemaVersion": 1, "shopId": Self.shop, "shopRevision": revision, "authorityEpoch": 1,
+                    "status": "enabled", "graph": state["graph"]!, "graphDigest": trackedPage["basisDigest"]!,
+                    "totals": coverage["trackedSubtotals"]!, "legacySources": NSNull()])
+            }
             // Omitted catalog means unavailable, not an assertion of no meal sources.
             return try json(["schemaVersion": 1, "shopId": Self.shop, "shopRevision": revision,
                              "authorityEpoch": 1, "status": "legacy", "graph": NSNull(), "totals": []])
@@ -80,29 +103,160 @@ private final class S26FixtureServer: @unchecked Sendable {
         if path.hasSuffix("/shops/"+Self.shop) {
             guard shopper else { return try denied() }
             let quote = try ShopperQuote(scope:"wholeCheckout",complete:true,capMinor:1000,capScope:"wholeCheckout",fee:.fixed(0),taxesMinor:0,depositsMinor:0,discountsMinor:0,observedAt:quoteObservedAt,expiresAt:quoteExpiresAt)
-            return try json(["shopId":Self.shop,"shopRevision":revision,"authorityEpoch":1,"phase":"draft","meals":projectedMeals,"quote":try JSONSerialization.jsonObject(with:JSONEncoder().encode(quote)),"lines":[["lineId":"66666666-6666-4666-8666-666666666666","originalItem":"Entered soup packs","packs":1,"unitPriceMinor":500,"feeEligible":true]]])
+            return try json(["shopId":Self.shop,"shopRevision":revision,"authorityEpoch":1,"phase":"draft","meals":projectedMeals,"quote":try JSONSerialization.jsonObject(with:JSONEncoder().encode(quote)),"lines":basket])
         }
         if path.hasSuffix("/replay-windows") { return try json(["id":"77777777-7777-4777-8777-777777777777","expiresAt":"2099-01-01T00:00:00Z"]) }
         if path.hasSuffix("/commands"), let key = input["clientKey"] as? String {
-            guard shopper else { return try denied() }
-            if let receipt = receipts[key] { return try json(receipt) }
-            guard input["kind"] as? String == "shop.patch", let body = input["body"] as? [String:Any], let edit = body["mealEdit"] as? [String:Any],
-                  let next = edit["meal"] as? [String:Any], let occurrenceID = edit["occurrenceId"] as? String,
-                  (input["base"] as? [String:Any])?["shopRevision"] as? Int == revision,
-                  let id = edit["changeProposalId"] as? String,
-                  let index = proposals.firstIndex(where: { ($0["proposalId"] as? String)?.lowercased() == id.lowercased() }),
-                  let proposed = proposals[index]["request"] as? [String:Any], proposed["baseMealRevision"] is NSNull,
-                  (proposed["occurrenceId"] as? String)?.lowercased() == occurrenceID.lowercased(),
-                  let proposedMeal = proposed["meal"] as? [String:Any], NSDictionary(dictionary: proposedMeal).isEqual(to: next),
-                  !createdMeals.contains(where: { ($0["occurrenceId"] as? String)?.lowercased() == occurrenceID.lowercased() }) else { return try denied() }
+            guard shopper, request.value(forHTTPHeaderField: "X-Device-Token") == "shopper-token" else { return try denied() }
+            if let receipt = receipts[key] {
+                guard commandBytes[key] == bytes else { return try denied() }
+                return try json(receipt)
+            }
+            guard let acceptedPreview, let trackingCandidate,
+                  let action = trackingCandidate["action"] as? [String: Any], var expected = action["body"] as? [String: Any],
+                  let body = input["body"] as? [String: Any], input["kind"] as? String == "shop.patch",
+                  input["shopId"] as? String == Self.shop,
+                  input["base"] as? [String: Int] == ["shopRevision": revision, "authorityEpoch": 1],
+                  let expires = acceptedPreview["expiresAt"] as? String,
+                  ISO8601DateFormatter().date(from: expires).map({ $0 > Date() }) == true else { return try denied() }
+            expected["demandReview"] = ["previewId": acceptedPreview["previewId"]!, "previewDigest": acceptedPreview["previewDigest"]!, "trackingVersion": 2]
+            guard NSDictionary(dictionary: expected).isEqual(to: body) else { return try denied() }
+            let typed = try decode(SharedTrackingAction.self, action), index = try proposalIndex(typed)
+            guard case .patch(let patch) = typed.command, let edit = patch.mealEdit, let next = edit.meal,
+                  let after = trackingCandidate["after"] as? [String: Any],
+                  let disclosure = trackingCandidate["disclosure"] as? [String: Any],
+                  let pickup = disclosure["pickup"] as? [String: Any], let money = disclosure["money"] as? [String: Any] else { return try denied() }
             proposals[index]["state"] = "applied"
-            createdMeals.append(["occurrenceId":occurrenceID,"revision":1,"meal":next])
             revision += 1; posts += 1
-            let receipt: [String:Any] = ["operationId":UUID().uuidString,"kind":"shop.patch","shopId":Self.shop,"shopRevision":revision,"authorityEpoch":1,"disposition":"patched"]
-            receipts[key] = receipt; changed?(proposalPosts,posts); return try json(receipt)
+            createdMeals.append(["occurrenceId": edit.occurrenceId.string, "revision": revision, "meal": try wire(next)])
+            basket = try patch.lines.map { try wire($0) as! [String: Any] }
+            trackedPage = ["schemaVersion": 2, "shopId": Self.shop, "shopRevision": revision, "authorityEpoch": 1,
+                "status": "enabled", "state": after, "projection": NSNull(), "basisDigest": pickup["stateDigest"]!,
+                "coverage": pickup["coverage"]!, "checkout": money["after"]!, "freezeReview": NSNull()]
+            _ = try decode(SharedTrackingPage.self, trackedPage!)
+            let receipt: [String: Any] = ["operationId": UUID().uuidString.lowercased(), "kind": "shop.patch", "shopId": Self.shop,
+                "shopRevision": revision, "authorityEpoch": 1, "disposition": "patched"]
+            receipts[key] = receipt; commandBytes[key] = bytes; changed?(proposalPosts, posts); return try json(receipt)
         }
         return try denied()
     }
+    // One fixed first-adoption scenario, not a replacement service reducer. The
+    // original soup basket stays legacy until the shopper accepts a real v2 review.
+    private func wire<T: Encodable>(_ value: T) throws -> Any { try JSONSerialization.jsonObject(with: JSONEncoder().encode(value)) }
+    private func decode<T: Decodable>(_ type: T.Type, _ value: Any) throws -> T {
+        try JSONDecoder().decode(type, from: JSONSerialization.data(withJSONObject: value, options: [.sortedKeys]))
+    }
+    private func trackingPage() throws -> [String: Any] {
+        if let trackedPage { return trackedPage }
+        return try ModelTrackingReadFixture.page(household: Self.household, shop: Self.shop, revision: revision,
+            basket: basket, checkout: ModelTrackingReadFixture.budget(500, cap: 1000))
+    }
+    private func proposalIndex(_ action: SharedTrackingAction) throws -> Int {
+        guard case .patch(let patch) = action.command, let edit = patch.mealEdit, let id = edit.changeProposalId,
+              edit.baseMealRevision == nil, edit.proposalId == nil,
+              let index = proposals.firstIndex(where: { ($0["proposalId"] as? String)?.lowercased() == id.string }),
+              proposals[index]["state"] as? String == "pending",
+              !createdMeals.contains(where: { ($0["occurrenceId"] as? String)?.lowercased() == edit.occurrenceId.string }) else { throw ClientError.invalidResponse }
+        let proposed = try decode(SharedMealChangeRequest.self, proposals[index]["request"]!)
+        guard proposed.baseMealRevision == nil, proposed.occurrenceId == edit.occurrenceId.uuid, proposed.meal == edit.meal,
+              patch.lines.count == 2, patch.lines[0].lineId == Self.soupLine,
+              patch.lines[0].originalItem == "Entered soup packs", patch.lines[0].packs == 1, patch.lines[0].unitPriceMinor == 500,
+              patch.lines[1].originalItem == "Chickpeas", patch.lines[1].packs == 1, patch.lines[1].unitPriceMinor == nil else { throw ClientError.invalidResponse }
+        return index
+    }
+    private struct SourceInput: Decodable { let base: SharedTrackingActionSourceBase; let action: SharedTrackingAction }
+    private func sources(_ input: [String: Any]) throws -> [String: Any] {
+        let request = try decode(SourceInput.self, input), page = try decode(SharedTrackingPage.self, trackingPage())
+        guard Set(input.keys) == ["base", "action"], trackedPage == nil,
+              request.base == (try SharedTrackingActionSourceBase(page: page)) else { throw ClientError.invalidResponse }
+        _ = try proposalIndex(request.action)
+        guard case .patch(let patch) = request.action.command, let edit = patch.mealEdit, let meal = edit.meal,
+              let planning = meal.planning, planning.ingredients.count == 1, planning.groups.isEmpty, planning.bindings?.isEmpty != false,
+              let ingredient = planning.ingredients.first, ingredient.name == "Chickpeas", let amount = ingredient.quantity,
+              amount.amount.numerator == 1, amount.amount.denominator == 2, amount.unit == "cup", !meal.protected else { throw ClientError.invalidResponse }
+        let source = SharedDemandSource.meal(occurrenceId: edit.occurrenceId, ingredientId: .init(ingredient.id), groupId: nil, bindingId: nil)
+        let restrictions: [[String: Any]] = (planning.exclusions ?? []).map {
+            ["occurrenceId": edit.occurrenceId.string, "ingredientId": NSNull(), "label": $0, "resolution": ["kind": "unresolved"]]
+        } + ingredient.exclusions.map {
+            ["occurrenceId": edit.occurrenceId.string, "ingredientId": ingredient.id.uuidString.lowercased(), "label": $0, "resolution": ["kind": "unresolved"]]
+        }
+        let quantity: [String: Any] = ["amount": ["numerator": "1", "denominator": "2"], "unit": "cup",
+            "originalLiteral": amount.originalLiteral, "confirmedConversion": NSNull()]
+        let fact: [String: Any] = ["id": Self.chickpeaFact, "revision": revision + 1, "source": try wire(source), "sourceLabel": meal.title,
+            "productName": ingredient.name, "originalText": ingredient.name, "originalQuantityText": amount.originalLiteral,
+            "quantity": quantity, "sourceExclusions": restrictions, "requiredLineId": NSNull()]
+        let response: [String: Any] = ["schemaVersion": 2, "shopId": Self.shop, "base": try wire(request.base),
+            "normalizedAction": try wire(request.action), "actionDigest": String(repeating: "c", count: 64), "sources": [fact]]
+        let catalog = try decode(SharedTrackingActionSources.self, response)
+        try catalog.validate(page: page, action: request.action.command)
+        actionSources = response; trackingCandidate = nil; acceptedPreview = nil
+        return response
+    }
+    private struct AdoptionInput: Decodable {
+        let mode: String; let base: SharedTrackingActionSourceBase; let action: SharedTrackingAction
+        let change: SharedDemandChange; let packs: [SharedDemandPackReview]
+    }
+    private func candidate(_ input: [String: Any]) throws -> [String: Any] {
+        guard Set(input.keys) == ["mode", "base", "action", "change", "packs"], let actionSources, trackedPage == nil else { throw ClientError.invalidResponse }
+        let intent = try decode(AdoptionInput.self, input), catalog = try decode(SharedTrackingActionSources.self, actionSources)
+        guard intent.mode == "adopt", intent.base == catalog.base, (try SharedTrackingAction(intent.action.command)) == catalog.normalizedAction,
+              case .patch(let patch) = intent.action.command, let edit = patch.mealEdit, edit.meal != nil,
+              intent.change.lines.count == 2, intent.change.contributions.count == 2, intent.change.edges.isEmpty,
+              intent.change.removeSourceIds.isEmpty, intent.change.removeEdgeIds.isEmpty,
+              intent.change.quantifyReservationIds?.isEmpty != false, intent.change.clarifyReservationProductIds?.isEmpty != false,
+              intent.packs.count == 2, intent.packs.allSatisfy({ $0.usablePerPack == nil && $0.acceptUnresolved }),
+              let source = catalog.sources.first,
+              let chickpea = intent.change.contributions.first(where: { $0.id.string == Self.chickpeaFact }),
+              let soup = intent.change.contributions.first(where: { $0.lineId.string == Self.soupLine }),
+              case .manual = soup.source, soup.quantity == nil, soup.productName == "Entered soup packs", soup.originalText == "Entered soup packs",
+              chickpea.lineId.string == patch.lines[1].lineId, chickpea.source == source.fact.source, chickpea.quantity == source.fact.quantity,
+              chickpea.originalText == source.fact.originalText, chickpea.sourceExclusions == source.fact.sourceExclusions,
+              intent.change.lines.first(where: { $0.id == chickpea.lineId })?.unit == .cup,
+              intent.change.lines.first(where: { $0.id == soup.lineId })?.unit == .count else { throw ClientError.invalidResponse }
+        _ = try proposalIndex(intent.action)
+        let graph = SharedDemandGraph(householdId: .init(UUID(uuidString: Self.household)!), shopId: .init(UUID(uuidString: Self.shop)!), revision: 1,
+            lines: intent.change.lines, contributions: intent.change.contributions, edges: [],
+            usedIds: intent.change.lines.map(\.id) + intent.change.contributions.map(\.id))
+        let totals: [[String: Any]] = graph.lines.map { line in
+            let row = graph.contributions.first { $0.lineId == line.id }!
+            return ["lineId": line.id.string, "unit": line.unit.rawValue,
+                "quantity": row.quantity == nil ? NSNull() : ["numerator": "1", "denominator": "2"] as Any, "activeContributionIds": [row.id.string]]
+        }
+        var fact = (actionSources["sources"] as! [[String: Any]])[0]; fact.removeValue(forKey: "productName")
+        var afterMoney = ModelTrackingReadFixture.budget(nil, cap: 1000); afterMoney["lowerBoundMinor"] = 500
+        let afterPage = try ModelTrackingReadFixture.page(household: Self.household, shop: Self.shop, revision: revision,
+            basket: patch.lines.map { try wire($0) as! [String: Any] }, graph: graph, totals: totals, checkout: afterMoney,
+            catalog: [fact], bindings: [["factId": Self.chickpeaFact, "contributionId": Self.chickpeaFact]])
+        var state = afterPage["state"] as! [String: Any]
+        state["packReviews"] = try wire(intent.packs)
+        let pickup: [String: Any] = ["stateDigest": String(repeating: "d", count: 64), "catalogDigest": String(repeating: "e", count: 64),
+            "priceBasisDigest": String(repeating: "f", count: 64), "coverageStatement": "tracked_subtotals_only_no_complete_coverage_or_free_unbound_supply",
+            "coverage": afterPage["coverage"]!, "unbound": [], "unpricedBasketIds": [patch.lines[1].lineId],
+            "unresolvedPackIds": intent.packs.map { $0.lineId.string }, "basket": state["basket"]!, "packReviews": try wire(intent.packs)]
+        let action = try wire(catalog.normalizedAction) as! [String: Any]
+        let actionBody = action["body"] as! [String: Any], actionEdit = actionBody["mealEdit"] as! [String: Any]
+        let disclosure: [String: Any] = ["changes": ["kind": "mealActionChange", "mealChange": ["occurrenceId": edit.occurrenceId.string,
+            "before": NSNull(), "after": ["revision": revision + 1, "meal": actionEdit["meal"]!]], "transferredChanges": []],
+            "pickup": pickup, "money": ["before": ModelTrackingReadFixture.budget(500, cap: 1000), "after": afterMoney]]
+        let result: [String: Any] = ["schemaVersion": 2, "candidateId": UUID().uuidString.lowercased(), "candidateDigest": String(repeating: "a", count: 64),
+            "expiresAt": ISO8601DateFormatter().string(from: Date().addingTimeInterval(300)), "action": action, "after": state, "disclosure": disclosure]
+        _ = try decode(SharedTrackingCandidate.self, result)
+        trackingCandidate = result; acceptedPreview = nil
+        return result
+    }
+    private func accept(_ input: [String: Any]) throws -> [String: Any] {
+        guard let trackingCandidate, input["candidateId"] as? String == trackingCandidate["candidateId"] as? String,
+              input["candidateDigest"] as? String == trackingCandidate["candidateDigest"] as? String,
+              let acknowledged = input["acknowledgedDisclosure"] as? [String: Any],
+              let disclosure = trackingCandidate["disclosure"] as? [String: Any], NSDictionary(dictionary: acknowledged).isEqual(to: disclosure),
+              input["acceptUnknown"] as? Bool == true, input["acceptOverage"] as? Bool == false else { throw ClientError.invalidResponse }
+        let preview: [String: Any] = ["schemaVersion": 2, "previewId": trackingCandidate["candidateId"]!, "previewDigest": String(repeating: "b", count: 64),
+            "trackingVersion": 2, "expiresAt": trackingCandidate["expiresAt"]!, "action": trackingCandidate["action"]!, "disclosure": disclosure,
+            "moneyAcknowledgments": ["acceptOverage": false, "acceptUnknown": true]]
+        _ = try decode(SharedTrackingPreview.self, preview); acceptedPreview = preview
+        return preview
+    }
+
     // Minimal intercepted fixture response. The real API's arithmetic has separate integration evidence.
     private func ideaResponse(_ input: [String:Any], method: String?, shopper: Bool) throws -> (Int,Data) {
         func json(_ value: Any) throws -> (Int,Data) { (200, try JSONSerialization.data(withJSONObject: value, options: [.sortedKeys])) }

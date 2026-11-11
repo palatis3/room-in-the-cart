@@ -133,7 +133,9 @@ struct SharedTrackingFlowView: View {
                     Toggle(st("Add a manual need"), isOn: binding.enabled)
                     if entry.enabled {
                         TextField(st("Food name"), text: binding.name, axis: .vertical)
+                            .accessibilityIdentifier("sharedTracking.manual." + entry.id.string + ".name")
                         TextField(st("Original wording"), text: binding.original, axis: .vertical)
+                            .accessibilityIdentifier("sharedTracking.manual." + entry.id.string + ".original")
                         linePicker(binding.lineID, title: st("Basket item"))
                         amount(binding.amount, title: st("Food amount"))
                         TextField(st("Exclusion tags, separated by commas"), text: binding.exclusions)
@@ -236,7 +238,10 @@ struct SharedTrackingFlowView: View {
             ForEach(model.draft.packs.filter { entry in model.page.map { model.draft.reviewLineIDs(page: $0, request: model.request).contains(entry.id) } == true }) { entry in
                 let binding = model.row(\.packs, id: entry.id, empty: TrackingPackEntry(id: entry.id, name: ""))
                 Text(entry.name).font(.headline)
-                if model.page?.status == .legacy || model.page?.state?.graph.lines.contains(where: { $0.id == entry.id && $0.trashedAt == nil }) == false { unit(binding.lineUnit, title: st("Food total unit")) }
+                if model.page?.status == .legacy || model.page?.state?.graph.lines.contains(where: { $0.id == entry.id && $0.trashedAt == nil }) == false {
+                    unit(binding.lineUnit, title: st("Food total unit"))
+                        .accessibilityIdentifier("sharedTracking.pack." + entry.id.string + ".unit")
+                }
                 if model.page?.state?.graph.contributions.contains(where: { $0.lineId == entry.id && $0.removedAt == nil && $0.productKey == nil }) == true {
                     Toggle(st("I confirm the existing sources on this item are the same food"), isOn: binding.confirmExistingSources)
                 }
