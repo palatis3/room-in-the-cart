@@ -78,6 +78,12 @@ import XCTest
         expectsDecisionSheet = false
         let outcome = element("household.request.outcome.a4444444-4444-4444-8444-444444444443")
         // No reveal, tap or scrolling after Apply may make these assertions pass.
+        // Sheet disappearance can precede the inbox's onDismiss scroll/layout.
+        let returnedOutcome = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            lee.exists && lee.isHittable && outcome.exists && outcome.isHittable
+                && outcome.label == "Saved for next shop"
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [returnedOutcome], timeout: 10), .completed)
         XCTAssertTrue(lee.exists && lee.isHittable)
         XCTAssertTrue(lee.label.contains("Lee") && lee.label.contains("2 boxes for the school snack drive"))
         XCTAssertTrue(outcome.exists && outcome.isHittable)

@@ -76,22 +76,22 @@ import XCTest
     private func enableSwitch(_ label: String) {
         let control = app.switches[label]
         reveal(control)
+        // The retained AX tree exposes the real UISwitch beneath the SwiftUI
+        // row, whose frame also contains the multiline label.
+        XCTAssertEqual(control.switches.count, 1, "Expected one native switch inside the reviewed row")
+        let nativeSwitch = control.switches.firstMatch
         for _ in 0..<20 {
-            let area = scrollableArea(), frame = control.frame
-            let switchCenter = CGPoint(x: frame.minX + frame.width * 0.92, y: frame.midY)
-            if control.isHittable && area.insetBy(dx: 0, dy: 8).contains(switchCenter) { break }
-            scrollContent(upward: switchCenter.y > area.maxY)
+            let area = scrollableArea(), frame = nativeSwitch.frame
+            if nativeSwitch.isHittable && area.insetBy(dx: 0, dy: 8).contains(frame) { break }
+            scrollContent(upward: frame.midY > area.maxY)
         }
-        let area = scrollableArea(), frame = control.frame
-        let switchCenter = CGPoint(x: frame.minX + frame.width * 0.92, y: frame.midY)
-        // Toggle's accessibility frame includes its multiline label. Its trailing
-        // control must be clear of the keyboard; the whole label need not fit.
-        XCTAssertTrue(control.isHittable && area.insetBy(dx: 0, dy: 8).contains(switchCenter),
-                      "The switch tap point must be clear of the keyboard and toolbar")
-        if control.value as? String == "0" {
-            // The accessibility frame includes the Form label. Tap the trailing switch itself.
-            control.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
-        }
+        XCTAssertTrue(nativeSwitch.isHittable && scrollableArea().insetBy(dx: 0, dy: 8).contains(nativeSwitch.frame),
+                      "The native switch must be clear of the keyboard and toolbar")
+        if nativeSwitch.value as? String == "0" { nativeSwitch.tap() }
+        let enabled = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            nativeSwitch.value as? String == "1" && control.value as? String == "1"
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [enabled], timeout: 5), .completed)
         XCTAssertEqual(control.value as? String, "1", "The reviewed switch must be on: \(label)")
     }
     private func fill(_ text: String, into id: String, replacing: Bool = false) {
