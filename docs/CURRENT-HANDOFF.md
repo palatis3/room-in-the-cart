@@ -136,6 +136,19 @@ job descriptions are not the current queue.
   not expose the app tree, so this is not spoken accessibility acceptance. Two
   pointer scroll attempts did not reveal the lower review control; review-button
   reachability is not established by this walkthrough. CUA completion recorded.
+- **Capture reachability follow-up:** launched the installed normal Debug app
+  without fixture/reset arguments (PID99104). Installed/cache executable SHA256
+  both match d3bb40340053b9a6d8b062fd78ae1adb77d1cab2d02bd88627dffc95c78ad363;
+  CaptureReviewView still matches the qualified066d9d0e source above. A touch
+  drag outside the text editor revealed the wording acknowledgement and disabled
+  Review captured fields action. Acknowledging enabled it; tapping opened the
+  parsed review with the actual destination and the12-wrap line. Cancel returned
+  to the blank outer draft; its Cancel returned to the unchanged empty list and
+  original November10 11:42PM save time. This closes the earlier reachability gap.
+  Coordinate timing during keyboard animation altered the second temporary line
+  to `2 or`; this is not an exact text-entry qualification. Nothing was applied.
+  Device Hub exposed screenshots but no app AX nodes; spoken accessibility and
+  physical-device acceptance remain open. CUA completion recorded.
 - **Additional84 hosted pass:** DinnerDecisionSheet job130386648785 completes all5
   original cases with zero recorded runtime warnings, idle messages or restarts.
   UI01–03 and balanced03 remain in their test steps; RecordsMedia has started
