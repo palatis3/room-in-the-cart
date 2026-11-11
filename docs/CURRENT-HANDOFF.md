@@ -5,7 +5,8 @@ Updated November 11, 2026. Active goal: finish the complete Foundation 2.1 first
 ## Current checkpoint — November 11
 
 This checkpoint supersedes historical running-process and latest-commit statements below.
-Latest qualified implementation commit is **5f1eec54**; remote candidate remains **49bde552**.
+Latest workflow implementation commit is **2e7fa53b**; latest product fix is
+**5f1eec54**. Remote candidate remains **49bde552**.
 The owner approved the lean workflow going forward. Follow CI-VALIDATION's daily
 triage table: affected checks, one investigation per cause, reuse original evidence,
 one grouped candidate push, and full combined/release qualification at its proper gate.
@@ -32,8 +33,7 @@ the next grouped candidate after the current useful batch finishes.
   fix; no retry, selector, runtime or deadline changed.
 - **New hosted pass:** Spanish food-editor job130346397067 executed its original
   expired-quote/Cancel/Apply/relaunch journey successfully in369.644s, strict1/1.
-  Core UI09 remains in progress (job130328328776, test step started05:31:27Z).
-  No replacement run was dispatched and no native test was repeated locally.
+  No replacement run was dispatched for this pass.
 - **Interrupted civil-date coverage qualified locally:** all eight original
   SharedMealCivilDate tests pass against the completed contributor build, without
   a rebuild or Swift changes, in `.build/SharedMealCivilNov11/Tests.xcresult`.
@@ -104,14 +104,22 @@ the next grouped candidate after the current useful batch finishes.
   readable prompt in light. Original System appearance was restored. No meal was
   created or applied. Screenshots are retained in the conversation; CUA completion
   was recorded for both parts. This is scoped visual proof, not full accessibility.
-- **Current hosted batch:** core 42953140531 and fixtures 42953140722 remain active.
-  UI06/07/08/10 now pass (UI06: 7/7, UI08: 7/7, UI10: 8/8), with zero runtime warnings,
-  idle messages and restarts in the examined logs. Only core UI09 remains live.
-  Fixture balanced01/02/04, DinnerDecisionSheet, RecordsMedia, Spanish created-meal
-  Undo and delivery stock/purchase pass. Delivery is 6/6 with zero runtime warnings
-  and restarts, two idle messages. Balanced03/05 remain recorded failures with the
-  local corrections above. English created-meal Undo, SharedFallback and Spanish
-  food-edit review are running; other fixtures remain queued. No duplicate dispatched.
+- **Core batch is terminal:** run42953140531 finished with15 successful jobs and
+  five failed jobs, including the final aggregation gate. UI01 and UI06–10 pass;
+  the final UI09 job130328328776 confirms8/8, zero runtime warnings/idle messages/
+  restarts. It includes contextual reminders, cancelled share/import, large text,
+  automated accessibility and owner export/deletion safeguards. All916 model
+  tests, non-UI checks and builds pass. The remaining red jobs are the previously
+  diagnosed UI02/03/04 assertions (all five have local passing corrections) and
+  UI05's seven unexecuted cases after bootstrap failure. No new core failure emerged.
+  Original job: https://github.com/palatis3/room-in-the-cart/actions/runs/42953140531/job/130328328776.
+- **Fixture batch remains active:** run42953140722 has passing balanced01/02/04,
+  DinnerDecisionSheet, RecordsMedia, both created-meal Undo journeys, Spanish
+  food-edit review and delivery stock/purchase. Delivery is6/6 with zero runtime
+  warnings/restarts and two idle messages. Balanced03/05 and SharedFallback retain
+  the failures classified above. English food-edit, fractional meal idea and saved
+  operation Undo are running; other fixtures remain queued. Do not replace this
+  useful run just because core has finished. No duplicate dispatched.
 - **Next publication:** inspect new terminal failures once, then group verified
   changes after this useful batch. UI02/03/04 and the observed balanced03/05
   assertions have passing local affected checks. UI05 bootstrap failure has clearer
