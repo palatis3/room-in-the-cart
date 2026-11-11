@@ -1338,18 +1338,18 @@ import XCTest
         tap(app.tabBars.buttons["Dinners"]); tap(element("dinnerStartPickup"))
         fill("Original reservation pickup", into: "ledgerShopName"); tap(element("ledgerCreateShop"))
         openMealWeek(); tapVisibleFormRow(app.buttons["Protect a lunch or side"])
-        fill("Fictional original lunch", into: "Food name", requireDone: true)
-        fill("2", into: "Protected amount", requireDone: true)
-        fill("Original pickup only", into: "Purpose, such as lunch", requireDone: true)
+        fill("Fictional original lunch", into: "Food name", requireDone: true, control: app.textFields["Food name"])
+        fill("2", into: "Protected amount", requireDone: true, control: app.textFields["Protected amount"])
+        fill("Original pickup only", into: "Purpose, such as lunch", requireDone: true, control: app.textFields["Purpose, such as lunch"])
         openShoppingList(); startAnotherPickupFromList()
         fill("Different reservation pickup", into: "ledgerShopName"); tap(element("ledgerCreateShop"))
         tap(app.tabBars.buttons["Dinners"])
         capture("S25-open-reservation-after-pickup-switch")
         XCTAssertTrue(app.staticTexts["Pickup selection changed"].waitForExistence(timeout: 8), app.debugDescription)
         XCTAssertFalse(app.buttons["Review protected need"].exists)
-        XCTAssertFalse(element("Food name").exists)
+        XCTAssertFalse(app.textFields["Food name"].exists)
         dinnerRoot(); openMealWeek(); tapVisibleFormRow(app.buttons["Protect a lunch or side"])
-        let name = element("Food name")
+        let name = app.textFields["Food name"]
         XCTAssertTrue(name.waitForExistence(timeout: 8))
         XCTAssertNotEqual(name.value as? String, "Fictional original lunch")
         capture("S25-fresh-reservation-for-new-pickup")
@@ -2127,10 +2127,11 @@ import XCTest
     }
 
     private func fill(_ text: String, into id: String, replacing: Bool = false, requireDone: Bool = false, useVisibleCenter: Bool = false, initiallyUpward: Bool = true, expectedPriorValue: String? = nil,
-                      focusedDoneEvidence: (title: String, label: String, name: String, back: String, sample: FocusedDoneSample)? = nil) {
+                      focusedDoneEvidence: (title: String, label: String, name: String, back: String, sample: FocusedDoneSample)? = nil,
+                      control: XCUIElement? = nil) {
         // Persistent labels can share the field's accessible name. Match only
-        // editable controls, including lazily materialized Form rows.
-        let field = editableElement(id)
+        // editable controls, using the caller's known native type when supplied.
+        let field = control ?? editableElement(id)
         if useVisibleCenter {
             if focusedDoneEvidence != nil {
                 // This scoped dinner editor can retain a deep review offset.
