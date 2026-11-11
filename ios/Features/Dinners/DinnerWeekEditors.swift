@@ -138,6 +138,7 @@ struct DinnerManualAdjustmentView: View {
                 VStack(alignment: .leading, spacing: 5) {
                     Text(dinnerText("Total servings")).font(.caption).foregroundStyle(Theme.secondary)
                     TextField(dinnerText("Total servings"), text: $servings)
+                        .keyboardType(.numbersAndPunctuation).textInputAutocapitalization(.never).autocorrectionDisabled()
                         .frame(minHeight: 44)
                 }
             }
@@ -151,6 +152,7 @@ struct DinnerManualAdjustmentView: View {
                         VStack(alignment: .leading, spacing: 5) {
                             Text(dinnerText("Group servings")).font(.caption).foregroundStyle(Theme.secondary)
                             TextField(dinnerText("Group servings"), text: $group.servings)
+                                .keyboardType(.numbersAndPunctuation).textInputAutocapitalization(.never).autocorrectionDisabled()
                                 .frame(minHeight: 44)
                         }
                     }
@@ -173,6 +175,7 @@ struct DinnerManualAdjustmentView: View {
                         Text(amount.name).font(.headline)
                         Text(dinnerText("Amount, optional")).font(.caption).foregroundStyle(Theme.secondary)
                         TextField(dinnerText("Amount, optional"), text: $amount.amount)
+                            .keyboardType(.numbersAndPunctuation).textInputAutocapitalization(.never).autocorrectionDisabled()
                             .frame(minHeight: 44)
                         DinnerUnitPicker(unit: $amount.unit)
                     }
@@ -192,6 +195,7 @@ struct DinnerManualAdjustmentView: View {
                             } else {
                                 Text(dinnerText("Resulting amount for this group")).font(.caption).foregroundStyle(Theme.secondary)
                                 TextField(dinnerText("Resulting amount for this group"), text: row.amount)
+                                    .keyboardType(.numbersAndPunctuation).textInputAutocapitalization(.never).autocorrectionDisabled()
                                     .frame(minHeight: 44)
                                     .accessibilityIdentifier("dinnerManualBinding.\(snapshot.contributionID).\(snapshot.groupID)")
                                 DinnerUnitPicker(unit: row.unit)
@@ -288,6 +292,7 @@ struct DinnerGuestsView: View {
                             Text(binding.product).font(.headline)
                             Text(dinnerFormat("%@ · %@ servings", binding.group.name, binding.group.servings.description))
                             TextField(dinnerText("Current amount for this group"), text: $binding.amount)
+                                .keyboardType(.numbersAndPunctuation).textInputAutocapitalization(.never).autocorrectionDisabled()
                             DinnerUnitPicker(unit: $binding.unit)
                             if binding.group.isProtected { Text(dinnerText("Protected group")) }
                         }.padding(.vertical, 5)
@@ -316,7 +321,7 @@ struct DinnerGuestsView: View {
                         Text(group.name).font(.headline)
                         if group.isProtected {
                             Text(dinnerFormat("Protected servings: %@", group.servings))
-                        } else { TextField(dinnerText("New total servings for this group"), text: $group.servings).focused($enteringServings).accessibilityIdentifier("dinnerGuestServings") }
+                        } else { TextField(dinnerText("New total servings for this group"), text: $group.servings).keyboardType(.numbersAndPunctuation).textInputAutocapitalization(.never).autocorrectionDisabled().focused($enteringServings).accessibilityIdentifier("dinnerGuestServings") }
                     }
                     Text(dinnerText("The assisted preview uses saved ingredient bindings. Protected groups remain unchanged."))
                     Button(model.paid ? dinnerText("Preview guest changes") : dinnerText("Explore guest changes without applying")) {
@@ -404,6 +409,7 @@ struct DinnerReservationView: View {
             Section {
                 TextField(dinnerText("Food name"), text: $name).focused($field, equals: .food)
                 TextField(dinnerText("Protected amount"), text: $amount).focused($field, equals: .amount)
+                    .keyboardType(.numbersAndPunctuation).textInputAutocapitalization(.never).autocorrectionDisabled()
                 DinnerUnitPicker(unit: $unit)
                 TextField(dinnerText("Purpose, such as lunch"), text: $purpose).focused($field, equals: .purpose)
                 Toggle(dinnerText("Assign a date"), isOn: $scheduled)

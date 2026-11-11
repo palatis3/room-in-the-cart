@@ -213,6 +213,7 @@ struct DinnerTemplateFields: View {
             workingTextField(dinnerText("Dinner name"), text: $draft.title).focused(focus, equals: "title").accessibilityIdentifier("ledgerDinnerTitle")
                 .accessibilityLabel(dinnerText("Dinner name"))
             workingTextField(dinnerText("Total servings"), text: $draft.servings).focused(focus, equals: "servings").accessibilityIdentifier("ledgerDinnerServings")
+                .keyboardType(.numbersAndPunctuation).textInputAutocapitalization(.never).autocorrectionDisabled()
                 .accessibilityLabel(dinnerText("Total servings"))
             workingTextField(dinnerText("Notes"), text: $draft.notes, axis: .vertical).focused(focus, equals: "notes")
                 .accessibilityLabel(dinnerText("Notes"))
@@ -221,6 +222,7 @@ struct DinnerTemplateFields: View {
             workingTextField(dinnerText("Hard exclusions, one per line"), text: $draft.exclusions, axis: .vertical).focused(focus, equals: "exclusions")
                 .accessibilityLabel(dinnerText("Hard exclusions, one per line"))
             workingTextField(dinnerText("Remaining lead time in minutes, optional"), text: $draft.lead).focused(focus, equals: "leadTime")
+                .keyboardType(.numberPad).textInputAutocapitalization(.never).autocorrectionDisabled()
                 .accessibilityLabel(dinnerText("Remaining lead time in minutes, optional"))
             workingTextField(dinnerText("Completed steps, one per line"), text: $draft.completed, axis: .vertical).focused(focus, equals: "completed")
                 .accessibilityLabel(dinnerText("Completed steps, one per line"))
@@ -233,6 +235,7 @@ struct DinnerTemplateFields: View {
                 VStack(alignment: .leading, spacing: 8) {
                     ingredientField(dinnerText("Ingredient name"), value: row.name, key: prefix + "name")
                     ingredientField(dinnerText("Amount, optional"), value: row.amount, key: prefix + "amount", axis: .horizontal)
+                        .keyboardType(.numbersAndPunctuation).textInputAutocapitalization(.never).autocorrectionDisabled()
                     DinnerUnitPicker(unit: row.unit)
                     ingredientField(dinnerText("Ingredient notes"), value: row.notes, key: prefix + "notes")
                     ingredientField(dinnerText("Ingredient exclusions, one per line"), value: row.exclusions, key: prefix + "exclusions")
@@ -256,6 +259,7 @@ struct DinnerTemplateFields: View {
                     workingTextField(dinnerText("Group name"), text: row.name).focused(focus, equals: "group.\(group.id).name")
                         .accessibilityLabel(dinnerText("Group name"))
                     workingTextField(dinnerText("Group servings"), text: row.servings).focused(focus, equals: "group.\(group.id).servings")
+                        .keyboardType(.numbersAndPunctuation).textInputAutocapitalization(.never).autocorrectionDisabled()
                         .accessibilityLabel(dinnerText("Group servings"))
                     Toggle(dinnerText("Protected group"), isOn: row.isProtected)
                     Button(dinnerText("Remove group"), role: .destructive) { draft.groups.removeAll { $0.id == group.id } }
