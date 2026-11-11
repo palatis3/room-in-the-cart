@@ -107,6 +107,16 @@ changes are now published. PR1 remains draft and unmerged.
   did not identify a fix/workaround for this observed decline-entitlement result.
   This limited documentation review does not prove an SDK root cause. No new
   billing experiment, toolchain change, skipped assertion or replacement CI run.
+- **Separate StoreKit Apple report prepared, not submitted:** two local text files
+  are ready in `.build/StoreKitTriageNov11/apple-report-draft/`. REPORT.txt SHA256
+  6168c00d9c0d3e663c7768f641cc1c699a8e3500266b1fb832204cb406fc6760;
+  EVIDENCE.txt SHA25634b6699e307205095bb9e5a823ccfbeae63fb69db43fc73bf41be096d03d30ef.
+  The reviewed draft reuses the original, no-post-decline-sync and after-pending
+  results; no tests were repeated. It states the app-hosted scope and unproven
+  SDK cause, and includes only structural counts/matches and original hashes.
+  An async question requests approval for these two files only. Earlier approval
+  covered the different XCTest crash report and is not reused here. Await an
+  explicit reply before sending anything to Apple; keep the live84 batch running.
 
 - **Source-check repair now passes hosted:** aa176fed core42976888365 source
   job130377944571 failed two stale Python expectations, so its native build/test
