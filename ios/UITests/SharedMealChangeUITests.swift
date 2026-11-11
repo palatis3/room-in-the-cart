@@ -17,11 +17,11 @@ import XCTest
     private func launch(shopperSeed: Bool = false, deadline: Bool = false) {
         app.launchArguments = ["--ui-testing", "--shared-meal-fixture", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"] + (shopperSeed ? ["--shopper-meal-seed"] : []) + (deadline ? ["--shared-meal-deadline-fixture"] : [])
         app.launch()
-        let ready = deadline ? app.navigationBars["Shared household shop"] : element("meal-change-occurrence")
+        let ready = deadline ? app.navigationBars["Shared household shop"] : app.buttons["meal-change-occurrence"]
         XCTAssertTrue(ready.waitForExistence(timeout: 25))
     }
     private func chooseOccurrence() {
-        tap(element("meal-change-occurrence"))
+        tap(app.buttons["meal-change-occurrence"])
         tap(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Fixture shared soup")).firstMatch)
     }
     private func proposalFromShopper() {
