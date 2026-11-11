@@ -65,6 +65,9 @@ Swift packages and their build/test inputs. Unrelated UI-test or diagnostic-scri
 edits no longer start StoreKit and both sanitizers. Use its existing manual action
 when a change outside those paths warrants investigation. The full release
 workflow always invokes deep checks regardless of changed paths.
+GitHub compares the whole PR diff, so a large PR that already changes billing or
+packages will still select deep checks on later pushes. These filters primarily
+save work on subsequent, smaller PRs; do not restart a useful batch for them.
 
 Performance runs through the existing manual action or full release workflow,
 not on every PR update. Manual calibration is not release acceptance. The release

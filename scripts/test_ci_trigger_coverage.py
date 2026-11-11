@@ -39,8 +39,8 @@ def selects(name, changed_paths):
 
 
 class CITriggerCoverageTests(unittest.TestCase):
-    def test_app_source_and_package_changes_select_all_native_regressions(self):
-        for workflow in APP_WORKFLOWS:
+    def test_app_source_and_package_changes_keep_full_fixture_regressions(self):
+        for workflow in ("ios-fixtures.yml",):
             for path in ("ios/App/FutureComposition.swift", "ios/Features/Dinners/FutureEditor.swift",
                          "ios/Packages/LocalStore/Sources/LocalStore/FutureStore.swift",
                          "ios/Tests/FutureModelTests.swift", "ios/UITests/FutureJourneyUITests.swift",
@@ -49,7 +49,7 @@ class CITriggerCoverageTests(unittest.TestCase):
                     self.assertTrue(selects(workflow, [path]))
 
     def test_shared_generation_and_configuration_inputs_select_native_regressions(self):
-        for workflow in APP_WORKFLOWS:
+        for workflow in ("ios-fixtures.yml",):
             for path in ("shared/contracts/theme.json", "shared/fixtures/checkout.json",
                          "config/public-contact.json", "scripts/generate_xcode_project.py",
                          "scripts/app_configuration.py", "scripts/select_ci_iphone.py",
@@ -57,6 +57,32 @@ class CITriggerCoverageTests(unittest.TestCase):
                 with self.subTest(workflow=workflow, path=path):
                     self.assertTrue((ROOT / path).is_file(), path)
                     self.assertTrue(selects(workflow, [path]))
+
+    def test_deep_checks_follow_billing_packages_and_shared_build_inputs(self):
+        for path in ("ios/Features/Membership/MembershipStoreKit.swift",
+                     "ios/Features/Household/HouseholdModel.swift",
+                     "ios/App/MembershipCoordinator.swift", "ios/App/MembershipEntryView.swift",
+                     "ios/App/RoomInTheCartApp.swift", "ios/Tests/MembershipTests.swift",
+                     "ios/Tests/StoreKitScenarioTests.swift", "ios/Tests/LocalStoreKit.xctestplan",
+                     "ios/Packages/LocalStore/Package.swift", "scripts/generate_xcode_project.py",
+                     "scripts/app_configuration.py", "scripts/check_ci_xcode27.sh"):
+            with self.subTest(path=path):
+                self.assertTrue((ROOT / path).is_file(), path)
+                self.assertTrue(selects("ios-deep.yml", [path]))
+        for path in ("ios/Features/Dinners/FutureEditor.swift", "ios/UITests/FutureJourneyUITests.swift",
+                     "scripts/test_app_scroll_observation.py", "docs/CURRENT-HANDOFF.md"):
+            with self.subTest(path=path):
+                self.assertFalse(selects("ios-deep.yml", [path]))
+        self.assertTrue(selects("ios-deep.yml", ["docs/CURRENT-HANDOFF.md",
+                                               "ios/Features/Membership/MembershipStoreKit.swift"]))
+
+    def test_performance_is_explicit_and_still_mandatory_in_release(self):
+        performance = (WORKFLOWS / "ios-performance.yml").read_text()
+        self.assertNotIn("\n  pull_request:", performance)
+        self.assertIn("\n  workflow_dispatch:\n", performance)
+        self.assertIn("\n  workflow_call:\n", performance)
+        release = (WORKFLOWS / "release-checks.yml").read_text()
+        self.assertIn("    uses: ./.github/workflows/ios-performance.yml\n    with:\n      enforce_baselines: true", release)
 
     def test_wire_contract_changes_select_native_integration(self):
         for path in ("shared/contracts/service-v1.d.ts", "service/src/repository.ts",
@@ -67,13 +93,13 @@ class CITriggerCoverageTests(unittest.TestCase):
                 self.assertTrue(selects("ios-native-wire.yml", [path]))
 
     def test_check_changes_select_their_own_workflow(self):
-        for workflow in (*APP_WORKFLOWS, "ios-native-wire.yml"):
+        for workflow in ("ios-deep.yml", "ios-fixtures.yml", "ios-native-wire.yml"):
             with self.subTest(workflow=workflow):
                 self.assertTrue(selects(workflow, [f".github/workflows/{workflow}"]))
 
     def test_docs_only_and_mixed_changes_remain_distinct(self):
         docs = ["README.md", "docs/CURRENT-HANDOFF.md", "docs/evidence/native/new-result.json"]
-        for workflow in APP_WORKFLOWS:
+        for workflow in ("ios-fixtures.yml",):
             with self.subTest(workflow=workflow):
                 self.assertFalse(selects(workflow, docs))
                 self.assertTrue(selects(workflow, docs + ["ios/App/FutureComposition.swift"]))
