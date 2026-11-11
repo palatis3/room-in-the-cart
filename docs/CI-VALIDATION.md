@@ -81,6 +81,10 @@ workflow validation alone. GitHub documents the separate
 [matrix limit](https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations#defining-the-maximum-number-of-concurrent-jobs)
 and [concurrency queues](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency).
 
+The14b75714 batch subsequently admitted all11core and25contributor rows to those
+queues, with five native jobs executing. Admission behavior is now verified;
+an elapsed-time or overall-utilization improvement has not yet been measured.
+
 The deep workflow automatically runs for billing/household integration, shared
 Swift packages and their build/test inputs. Unrelated UI-test or diagnostic-script
 edits no longer start StoreKit and both sanitizers. Use its existing manual action
