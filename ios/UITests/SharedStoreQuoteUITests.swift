@@ -237,7 +237,9 @@ import XCTest
                     XCTAssertEqual(target.value as? String,"1",id)
                     return
                 }
-                scrollContent(upward:point.y > area.midY,area:area)
+                let upward = point.y > area.midY
+                let overflow = upward ? match.frame.maxY - area.maxY : area.minY - match.frame.minY
+                scrollContent(upward:upward,area:area,distance:overflow > 0 ? max(24,overflow+16) : nil)
             } else {
                 scrollContent(upward:(attempt / 6) % 2 == 0,area:area)
             }
@@ -345,7 +347,11 @@ import XCTest
             let up: Bool
             if exists && !frame.isEmpty { up = frame.midY > area.midY }
             else { up = (attempt / 6) % 2 == 0 }
-            scrollContent(upward:up,area:area)
+            // A large drag can dismiss the keyboard and carry a nearby field
+            // out of the lazy Form, triggering a long search in both directions.
+            let overflow = up ? frame.maxY - area.maxY : area.minY - frame.minY
+            let distance = exists && !frame.isEmpty && overflow > 0 ? max(24,overflow+16) : nil
+            scrollContent(upward:up,area:area,distance:distance)
         }
         let exists = target.exists
         let hittable = exists && target.isHittable
@@ -381,11 +387,12 @@ import XCTest
         let top = max(bounds.minY+95,min(barBottom+12,inputTop-140)), bottom = min(bounds.maxY-70,inputTop-16)
         return CGRect(x:bounds.minX+24,y:top,width:bounds.width-48,height:max(80,bottom-top))
     }
-    private func scrollContent(upward: Bool, area: CGRect) {
+    private func scrollContent(upward: Bool, area: CGRect, distance: CGFloat? = nil) {
         let bounds = app.frame, high = area.minY+area.height*0.18, low = area.minY+area.height*0.82
+        let travel = min(low-high,distance ?? (low-high))
         let origin = app.coordinate(withNormalizedOffset:.zero)
         let start = origin.withOffset(CGVector(dx:area.minX-bounds.minX,dy:(upward ? low:high)-bounds.minY))
-        let end = origin.withOffset(CGVector(dx:area.minX-bounds.minX,dy:(upward ? high:low)-bounds.minY))
+        let end = origin.withOffset(CGVector(dx:area.minX-bounds.minX,dy:(upward ? low-travel:high+travel)-bounds.minY))
         start.press(forDuration:0.05,thenDragTo:end)
     }
     private func capture(_ name: String) { let attachment = XCTAttachment(screenshot:app.screenshot()); attachment.name = name; attachment.lifetime = .keepAlways; add(attachment) }

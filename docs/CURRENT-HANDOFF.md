@@ -31,15 +31,30 @@ the next grouped candidate after the current useful batch finishes.
   The original archive13834852047 remains in `.build/SharedRecordsNov11/hosted`,
   SHA256 ade2ca0e927e4e4f7248a66b30b209d50149bc7753aed0add72d14b2a8aa43cf.
   No local native process remains active. Private recovery screenshots stay local.
-- **Next independent investigation — store quote timeout:** hosted job130363718894
+- **Store quote timeout correction qualified locally:** hosted job130363718894
   reached its720s deadline in the known-trip/private-proposal/shopper-adoption
-  journey. The log shows repeated reveal scrolling, but the cause is not yet
-  established. Inspect the retained original artifact13834588872 (GitHub SHA256
-  e6526416c03c642c63be917c0fdde0d13eadd12695d446beb9e73f75d0c5753f) before
-  changing source or rerunning the affected original case. Do not raise its limit
-  or repeat unrelated successful cases. Quote lost-reply/relaunch job130364984253
-  passes570.119s, strict1/1, zero runtime warnings/idle messages/restarts. The stale
-  quote job is the last producing fixture job still active at this checkpoint.
+  journey. The original log shows large reveal drags carrying nearby fields out
+  of the lazy Form, followed by repeated searches in both directions. The helper
+  now bounds near-edge drags to the observed overflow, preserving full visibility,
+  switch state checks, all30attempt bounds and the original720s deadline.
+  `.build/SharedStoreQuoteNov11/focused/Tests.xcresult` passes strict2/2: the full
+  original journey311.942s and Spanish largest-text54.859s, one execution each,
+  zero runtime warnings/idle messages/restarts. Build98925, enumeration73821 and
+  test84886 finished0; source and exact compiled-plan hashes still match. Swift
+  syntax and the existing automation contract pass. No production change.
+  Original artifact13834588872 is hash-verified at `.build/SharedStoreQuoteNov11/hosted`,
+  SHA256 e6526416c03c642c63be917c0fdde0d13eadd12695d446beb9e73f75d0c5753f.
+  This local pass does not prove hosted runtime improvement. Quote lost-reply/
+  relaunch130364984253 passes570.119s and stale-quote130366824736 passes520.034s
+  hosted, each strict1/1 with zero runtime warnings/idle messages/restarts.
+- **The49b candidate batch is terminal:** all6workflows have finished. Fixtures
+  42953140722 has23successful jobs and7failed jobs (6producing jobs plus its gate).
+  Core42953140531 has15successful and5failed jobs (4producing jobs plus its gate).
+  The final quote job passed; there are no additional unknown failures from the
+  completed batch. Known assertion/gesture corrections have affected local passes;
+  fixture rebalance and UI05/SharedFallback owned setup require hosted verification.
+  Next: publish one grouped successor after final diff/ref review, then verify its
+  automatic runs identify that exact commit. No duplicate manual dispatch.
 - **UI05's seven original app cases now pass locally:** completed normal products
   were reused after compiled enumeration confirmed the exact hosted selectors.
   `.build/CoreUI05Nov11/local/Tests.xcresult` passes strict7/7 in529.650s, one
