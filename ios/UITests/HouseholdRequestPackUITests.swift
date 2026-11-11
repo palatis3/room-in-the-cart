@@ -769,7 +769,7 @@ import XCTest
         capture("S24-reviewed-available-pack-result")
         let use = element("household.pack.use.a"); reveal(use); XCTAssertTrue(use.isEnabled); tap(use)
         tap(element("household.decision.review"))
-        let apply = element("household.decision.apply"); reveal(apply); XCTAssertFalse(apply.isEnabled)
+        let apply = app.buttons["household.decision.apply"]; reveal(apply); XCTAssertFalse(apply.isEnabled)
         try assertDisabledApplyRejectsActivation(apply, name: "S24-overage-disabled-apply")
         assertText("Reviewed shelf a")
         assertText("After this decision")
