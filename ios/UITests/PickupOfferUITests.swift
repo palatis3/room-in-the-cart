@@ -31,8 +31,9 @@ import XCTest
         let checkout = app.buttons["Review whole checkout"]
         XCTAssertTrue(checkout.waitForExistence(timeout: 8), "Applying the reviewed copy should open the pickup")
         tap(checkout)
-        for (name, value) in [("Store", "Family market"), ("Branch", "Main branch"),
-                              ("Pickup or delivery slot", "Tuesday 5 PM"), ("Source of these prices", "Retailer preview")] {
+        let checkoutFacts = [("Store", "Family market"), ("Branch", "Main branch"),
+                             ("Pickup or delivery slot", "Tuesday 5 PM"), ("Source of these prices", "Retailer preview")]
+        for (name, value) in checkoutFacts {
             let field = app.textFields[name]
             tap(field)
             XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
@@ -41,15 +42,19 @@ import XCTest
                 field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: current.count))
             }
             field.typeText(value)
-            // The original failed read returned "Ma", while its later failure
-            // screenshot showed the complete "Main branch" without more input.
-            // Observe completion of this one input event; never retype to repair it.
+        }
+        tap(app.buttons["Done"])
+        // End editing before checking the committed fields. XCTest previously
+        // read an incomplete value while the failure screenshot showed the full
+        // input. Each field is still entered once and checked exactly; no retyping.
+        for (name, value) in checkoutFacts {
+            let field = app.textFields[name]
+            reveal(field)
             let entered = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", value), object: field)
             XCTAssertEqual(XCTWaiter.wait(for: [entered], timeout: 5), .completed,
                            "The single typed value should finish appearing in \(name)")
             XCTAssertEqual(field.value as? String, value, name)
         }
-        tap(app.buttons["Done"])
         enableSwitch("Retailer total already includes all charges")
         fill("3.00", into: "Inclusive total")
         tap(app.buttons["Save and evaluate checkout"])
