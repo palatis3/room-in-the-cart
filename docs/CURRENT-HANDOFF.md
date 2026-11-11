@@ -1,6 +1,39 @@
 # Room in the Cart — current handoff
 
-Updated November 10, 2026. Active goal: finish the complete Foundation 2.1 first release: 52 requirements, 27 screen contracts and B11. Not complete or paused. Read [APP-BASELINE](product/APP-BASELINE.md), [Foundation](product/foundation-gen2.1/README.md), [MASTER-GENERATION](product/MASTER-GENERATION.md), [CURRENT-ACCEPTANCE](CURRENT-ACCEPTANCE.md) and [RELEASE-EXECUTION](RELEASE-EXECUTION.md). Scoped passing components do not establish one qualified release candidate.
+Updated November 11, 2026. Active goal: finish the complete Foundation 2.1 first release: 52 requirements, 27 screen contracts and B11. Not complete or paused. Read [APP-BASELINE](product/APP-BASELINE.md), [Foundation](product/foundation-gen2.1/README.md), [MASTER-GENERATION](product/MASTER-GENERATION.md), [CURRENT-ACCEPTANCE](CURRENT-ACCEPTANCE.md) and [RELEASE-EXECUTION](RELEASE-EXECUTION.md). Scoped passing components do not establish one qualified release candidate.
+
+## Current checkpoint — November 11
+
+This checkpoint supersedes historical running-process and latest-commit statements below.
+Local implementation HEAD is **b13a5999**; remote candidate remains **49bde552**.
+The owner approved the lean workflow going forward. Follow CI-VALIDATION's daily
+triage table: affected checks, one investigation per cause, reuse original evidence,
+one grouped candidate push, and full combined/release qualification at its proper gate.
+No additional wrapper, test suite, or unattended monitor has been introduced.
+
+- **Qualified local changes:** workflow scheduling 6a7a43ca/0813bedb,
+  comparison/pickup corrections ebbf4356/ac3493da, numeric dinner input 4cf0ffcc,
+  and runner-failure reporting b13a5999. The reporter's 48 tests passed; reprocessing
+  the original UI05 bundle still fails clearly for 7 unverified selections instead
+  of raising KeyError. It does not convert the runner crash into a pass.
+- **Pending UI04:** the cap journey passes locally in 56.839s. The original long Free
+  journey now passes its keyboard boundary and scoped retailer-handoff lookup,
+  but `.build/CoreUI04Nov11/focused-r2/Tests.xcresult` fails after 398.790s after applying
+  the reusable dinner to the next shop: no visible Back control was found while
+  returning to dinnerWeekEntry. Its failure screenshot shows Dinner library and
+  “Dinner changes saved.” A transition/query race is a hypothesis, not proven.
+  Inspect the navigation helper and apply dismissal before changing it or rerunning.
+  Three UI-test files remain uncommitted; do not publish them as qualified.
+- **Current hosted batch:** core 42953140531 and fixtures 42953140722 remain active.
+  Core UI07 has now succeeded; UI06/UI08/UI10 are running and UI09 is pending at
+  this snapshot. Fixture balanced01/02/04, DinnerDecisionSheet and RecordsMedia
+  succeeded. Balanced05 is newly terminal failure and needs log triage;
+  balanced03 and Spanish created-meal Undo are running. These are job states,
+  not distinct bug counts or final acceptance. No replacement run was dispatched.
+- **Next publication:** finish the pending affected qualification, inspect new
+  terminal failures once, then group verified changes after the current useful
+  batch. Preserve all original failures. Do not repeat passing checks merely for
+  this documentation update. No local native test is active at this checkpoint.
 
 ## Workspace and ownership
 
@@ -63,6 +96,8 @@ The follow-up label-only change keeps captions visible for filled serving and qu
 
 ## Current focused follow-ups
 
+Meal input improvement is committed in **4cf0ffcc**. Ordinary manual dinner entry exposed text-autocorrection behavior in a quantity field. Numeric dinner-template and week-edit inputs now disable autocorrection/capitalization and use numbers-and-punctuation (fractions remain enterable); integer lead time uses numberPad. No parser, quantities, reservation policy or save behavior changed. Swift syntax checks pass in Release/Debug profiles; normal Debug build14610 ended0 in `.build/DinnerNumericInputNov11/Build.xcresult`. The installed app (PID71920, ownedA50 iOS27.0) directly displayed the punctuation keyboard, retained `2 1/2` after Done, displayed the minutes keypad, and retained `30` after Done. Returned to Dinners without reviewing/applying the meal. Only a fictional local pickup named `meal walkthrough` was created. Screenshots are in the conversation; this is a scoped manual input check, not full meal/locale/accessibility acceptance. Both CUA parts were completed. The normal Debug cache now supersedes the temporary StoreKit diagnostic products; original StoreKit source remains restored. Group this source change into the next candidate update and let combined coverage exercise affected dinner routes.
+
 The observed Dinner palette mismatch is corrected using existing `WorkingForm`, `workingSurface` and theme roles on the root, chosen-meal list, occurrence, manual editor and preview. Normal Debug compilation passes in `.build/ManualDinnerWalkthroughNov10/Theme-Build.xcresult`. Direct simulator review confirmed the light root/list/detail/manual screens and dark root; the app appearance preference was restored to System. This is scoped visual review, not full human accessibility acceptance.
 
 Core UI06 passed six of seven cases but the store-quote journey stalled on an Any-type lookup for the Cancel preview button. Its original log is `.build/CombinedCoreNov10/successor-ui-06.log`. The two affected Cancel/Apply queries now use their actual Button type; assertions and limits are unchanged. The original journey now passes locally in414.29seconds, including Cancel, Apply, restart and preserved earlier comparison. Strict validation confirms1executed/1passed,0runtime warnings and no runner restart (`.build/QuoteCancelLookupNov10/Build.xcresult`, `Tests.xcresult`). No assertion or timeout was relaxed. Hosted Spanish created-dinner Undo failed because its fixture lacked the current `/demand/tracking` read. Balanced03 hit its40-minute step timeout after four request-pack failures; two Apply failures likewise reflect a missing tracking fixture response, while the keyboard and largest-text menu failures need focused gesture requalification. Its raw result bundle is incomplete without Info.plist; original log and raw PNG payloads are retained in `.build/RequestPackFollowupNov10/hosted`. Fixture endpoint, menu and gesture corrections are prepared; no native pass is claimed yet. Keep the existing hosted batch running and batch verified corrections once.
@@ -88,6 +123,11 @@ A fresh rebuild of the unchanged original then ran all four previously failing E
 A bounded post-decline restore diagnostic is also complete: `.build/StoreKitTriageNov10/decline-without-restore` built and ran only the two original English decline cases after removing the single post-decline `AppStore.sync()` call. Both still failed with the same failed1/pending0/purchased0 versus verified current-entitlement contradiction; no skips or runtime warnings. This rules out that extra restore as necessary for the local failure. Original assertions and time limits were unchanged. Session51686 ended65 with a complete result bundle. The test source was restored byte-for-byte to HEAD; nothing was committed or pushed. Those temporary products were subsequently replaced by the original-source observer build described below. Do not repeat this rejected hypothesis.
 
 The49b deep batch is terminal failure: English11/15 and Spanish10/15, both sanitizers and shared build passed. Spanish job130304057801 added `testRealTransactionObserverAttemptsDeliveryWithoutUnlock` missing the expected unfinished transaction after the preceding purchase timeout/runner restart. Source review confirms `.notConfigured` cannot reach finish; the failed assertion does not distinguish raw SDK absence from unverified data. One unchanged Spanish case alone was rebuilt from original source and passed0.234seconds (1/1,0skips,0runtime warnings) in `.build/StoreKitTriageNov10/observer-spanish`. Build49805 ended0; test70615 ended0. This is a scoped local pass, not proof of hosted root cause or full billing qualification. Do not add a speculative production patch or repeat the unchanged case. Original source SHA remainsf5efe4f674f5708dc784cd5cacf8e67e854f92302b0d83cb0aa80ad522d12c88. No local native process is active.
+
+A single new decline-order diagnostic is complete in `.build/StoreKitTriageNov10/decline-after-pending`. Apple's [Ask to Buy test sequence](https://developer.apple.com/documentation/storekit/testing-ask-to-buy-in-xcode) observes Product.purchase returning pending before decline. The temporary helper waited for purchase completion and asserted the pending report before resolving the request. Both new checks passed, but the original English decline still failed10.698s with the same raw verified/unexpired/unrevoked declined transaction and failed1/purchased0/pending0 test-session state. This rules out early decline before the pending result as necessary for this local failure. App access stayed Free; zero tests skipped. Build55020 ended0; test43369 ended65. Original source was restored byte-for-byte to HEAD (SHAf5efe4f674f5708dc784cd5cacf8e67e854f92302b0d83cb0aa80ad522d12c88). Retain the patch, log and complete result; do not repeat this rejected hypothesis. The cached LocalStoreKit test products contain the temporary diagnostic and require a matching rebuild before further execution.
+
+Current49b contributor-balanced-02 job130307937749 passes all11original cases, strict11/11 and0runtime warnings,0runner restarts; one animation-idle diagnostic was observed. It covers current cook instructions/refresh, Spanish request privacy/large text, typed/structured cancel-send, import recovery, optional measurement consent and stock-review Cancel/confirm/restart. Core UI05 has started; remaining jobs were still live at this checkpoint. No new hosted run was dispatched.
+
 
 A direct Device Hub check opened the ordinary Debug app and inspected its three empty home screens (Shop, Dinners, Records) with live AX and screenshots. Each displayed its expected primary actions and tab navigation without observed clipping. Running PID66199 on ownedA50matched debug executableSHA36fd0ef978c1be4579bb16cf8821dfa5860d977703a8840e063edfebc0086b81, identical to `.build/NativeNormal/dd/Build/Products/Debug-iphonesimulator/RoomInTheCart.app/RoomInTheCart`. No records were created/deleted and no permissions changed. This is three-root visual proof only, not all27routes, full accessibility or a physical-device pass. CUA completion was recorded.
 

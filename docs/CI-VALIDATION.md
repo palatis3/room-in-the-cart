@@ -1,6 +1,6 @@
 # Local CI validation
 
-## Current development priority — November 10
+## Current development priority — November 11
 
 The user has asked to stop overengineering and prioritize completing the app.
 This policy takes precedence over routine repetition described below; existing
@@ -92,6 +92,35 @@ this scheduling policy.
    investigate source or use a smaller reproducer before repeating a long journey.
 4. Combine verified fixes into one PR regression batch. Full release checks must
    pass at the final combined revision; focused passes are supporting evidence.
+
+### Daily triage and next-batch decision
+
+Use CURRENT-HANDOFF's current checkpoint as the single work queue. Group failures
+by demonstrated cause, not by the number of red jobs. Record the original run or
+bundle, classification, next action and affected check in that existing checkpoint.
+An unexplained failure stays unclassified until its evidence supports a cause.
+
+| Observed failure | Next action before another expensive run |
+| --- | --- |
+| App behavior or data differs from its contract | Fix the behavior and run the affected original test; add a focused regression only if existing coverage misses the defect. |
+| Selector, fixture or transition synchronization is wrong | Inspect the screenshot, result and current UI/API contract; correct the harness while retaining the outcome assertions. |
+| Runner fails before selected tests execute | Report the cases as unexecuted. Inspect runner/setup evidence; do not infer app defects or rerun the entire workflow. A targeted retry needs a concrete setup correction or evidence of a transient failure. |
+| Export, parser or artifact processing fails after execution | Reprocess the retained output first. Missing or incomplete evidence remains a failed qualification. |
+| Known SDK or environment limitation | Retain the smallest reproducer and park repeated experiments until new evidence or the applicable release decision requires them. |
+
+Keep one active investigation per cause and one local native execution at a time.
+Parallel helpers, when requested, should own independent source changes or reviews;
+the coordinator alone integrates and dispatches. Do not add workers or test shards
+without an independent task or measured capacity benefit.
+
+Before publishing the next grouped candidate, review the pending diff, finish the
+affected checks and confirm the current hosted batch has yielded its useful results.
+Push once for combined integration; do not follow it with status-only pushes or a
+duplicate manual run. If an urgent correctness/security fix supersedes that batch,
+record why and preserve its available evidence before replacement. During the next
+batch, prepare diagnosed fixes locally; successful unchanged focused checks need
+no repetition. Keep merge qualification, deferred owner setup and App Store release
+acceptance separate. These rules add no new test suite, wrapper or approval step.
 
 Wait for every producing build to finish before starting checks that consume its
 output. This also applies to TypeScript service tests: do not start database/HTTP
