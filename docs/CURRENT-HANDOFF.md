@@ -29,7 +29,7 @@ dispatching. Update this table in place rather than adding another status recap.
 
 | Work | Current decision | Next action |
 | --- | --- | --- |
-| Published core42977513683 and fixtures42977513804 | Keep useful jobs running. Core UI09 and the remaining meal/proposal/Undo/Records/quote fixture queue are unfinished; recheck live job state before acting. UI10 finished7/8 with its keyboard-query correction qualified locally below. UI05 and UI07 each finished6/7 with their failures qualified locally below. SharedFallback finished1/2 with its switch correction qualified locally below. UI02/03/04/06/08, models, both SharedDelivery groups, both shared-food editing languages, both created-meal Undo journeys, both saved-change Undo languages and English skipped-dinner Undo have passed. | Collect new terminal results; preserve failures before diagnosing them. No duplicate dispatch or status-only push. |
+| Published core42977513683 and fixtures42977513804 | Core is terminal: UI09 passes8/8; its gate fails only because the ios-tests matrix includes the four retained UI01/05/07/10 failures, each with a local correction below. Keep the remaining meal/proposal/Undo/Records/quote fixture jobs running. SharedFallback finished1/2 with its switch correction qualified locally below. UI02/03/04/06/08/09, models, both SharedDelivery groups, both shared-food editing languages, both created-meal Undo journeys, both saved-change Undo languages, English skipped-dinner Undo and filled quote financial-label/adult-grant checks have passed. | Collect remaining fixture results; preserve failures before diagnosing them. No duplicate dispatch or status-only push. |
 | Nine qualified local corrections | Capture Done (`f33f0c4d`), duplicate Cancel query (`749b5521`), Dinner amount query (`95d6c609`), largest-text meal query (`aa84e60b`), PickupOffer Shop Button lookup (`25fa9e74`), pairing Apply-dismissal wait (`7348989d`), SharedFallback switch-thumb targeting (`080bfd80`), RecordsMedia native off-thumb targeting (`9947d9f6`) and store-price keyboard enumeration (`6129bb99`) await combined qualification. | Retain their existing focused passes and the975cheap source checks at6129bb99 while inputs are unchanged. Publish one successor when the current batch has yielded useful results. |
 | Matrix scheduling correction | Removed the redundant five-row admission limit from the large core/contributor matrices. The five global native slot queues remain the execution cap. Current hosted evidence showed pending rows occupying the admission window while slots1/2 had no admitted work. | Include with the grouped successor; confirm utilization there. All975source checks and workflow validation pass; no separate native rerun or dispatch is needed. |
 | Correction privacy and RecordsMedia | Correction privacy remains unexplained. RecordsMedia has a new locally qualified targeting correction based on the related SharedFallback evidence; hosted resolution remains unproven. | Preserve RecordsMedia privacy. The correction-privacy event already landed near its native on-thumb, so copying off-thumb targeting there is not supported. No unchanged local repeats. |
@@ -46,6 +46,17 @@ workflow; no new suite, monitor, wrapper or approval step is needed.
 These notes preserve observations at the time of each check. Historical active
 job descriptions are not the current queue.
 
+- **Core84 is terminal; UI09 passes8/8:** job130425452320 completes with zero
+  recorded runtime warnings/idle messages/restarts. First-run evidence, long paste,
+  explicit reminder scheduling/cancellation, preserved filtered-list context,
+  Reduce Motion share cancellation, bilingual account-deletion explanation,
+  sampled accessibility audit and export/cancelled deletion/restart all pass.
+  Gate130452403128 fails only `ios-tests`; UI01/05/07/10 retain the four original
+  failures already qualified locally. No other core job failed. No new correction
+  or repeat is justified by this terminal result.
+- **Shared quote financial labels pass hosted84:** job130448069082 completes
+  strict1/1 in222.107s, zero recorded runtime warnings/idle messages/restarts.
+  The original filled-field meaning and named-adult grant action checks pass.
 - **Matrix admission correction qualified locally:** the published fixture queue
   held three pending rows on slots3/4 and two executing rows on slots0/3, with
   core UI09 on slot4; later quote jobs for available slots1/2 were not admitted.
