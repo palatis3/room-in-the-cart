@@ -296,8 +296,9 @@ import XCTest
         XCTContext.runActivity(named: "Dismiss the identified bilingual keyboard onboarding card") { _ in
             capture("Bilingual-keyboard-card-before-dismissal")
             next.tap()
-            let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: title)
-            XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed)
+            // Use the native disappearance wait for this keyboard transition.
+            // Keep the exact title-absence requirement and its original deadline.
+            XCTAssertTrue(title.waitForNonExistence(timeout: 5), "The identified keyboard onboarding card must dismiss")
             capture("Bilingual-keyboard-card-dismissed")
         }
     }
