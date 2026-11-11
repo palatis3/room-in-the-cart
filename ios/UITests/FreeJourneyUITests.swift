@@ -506,9 +506,16 @@ import XCTest
             // Reuse the ordinary entry helper and dismiss between fields. Keeping
             // a prior field focused can make UIKit restore its scroll position.
             for (name, value) in fields {
-                fill(value, into: name, requireDone: true, useVisibleCenter: true)
+                let original = editableElement(name)
+                reveal(original)
+                let identifier = original.identifier
+                // Ingredient labels repeat across lazy rows. Keep the concrete
+                // identity and native type from entry for the post-Done readback.
+                let field = identifier.hasPrefix("ingredient.")
+                    ? app.descendants(matching: original.elementType).matching(identifier: identifier).firstMatch
+                    : original
+                fill(value, into: name, requireDone: true, useVisibleCenter: true, control: field)
                 XCTAssertTrue(app.waitForKeyboardDismissal(doneIdentifier: "Done"))
-                let field = editableElement(name)
                 let entered = XCTNSPredicateExpectation(
                     predicate: NSPredicate(format: "value == %@", value), object: field)
                 XCTAssertEqual(XCTWaiter.wait(for: [entered], timeout: 5), .completed,
