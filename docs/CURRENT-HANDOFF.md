@@ -29,7 +29,7 @@ dispatching. Update this table in place rather than adding another status recap.
 
 | Work | Current decision | Next action |
 | --- | --- | --- |
-| Published core42977513683 and fixtures42977513804 | Keep useful jobs running. Core UI04/06/07, stock/purchase and SharedFallback are active; later groups are pending. UI05 finished6/7 with the new lookup failure qualified locally below. UI02/03, models and both created-meal Undo journeys have passed. | Collect new terminal results; preserve failures before diagnosing them. No duplicate dispatch or status-only push. |
+| Published core42977513683 and fixtures42977513804 | Keep useful jobs running. Core UI06/07/08 and SharedFallback are active; later groups are pending. UI05 finished6/7 with the new lookup failure qualified locally below. UI02/03/04, models, stock/purchase and both created-meal Undo journeys have passed. | Collect new terminal results; preserve failures before diagnosing them. No duplicate dispatch or status-only push. |
 | Five qualified local corrections | Capture Done (`f33f0c4d`), duplicate Cancel query (`749b5521`), Dinner amount query (`95d6c609`), largest-text meal query (`aa84e60b`) and PickupOffer Shop Button lookup await combined qualification. | Retain their existing focused passes. Run cheap source checks once on the finished grouped changes, then publish one successor when the current batch has yielded useful results. |
 | Correction privacy and RecordsMedia | Hosted failures remain unexplained; unchanged originals passed locally. | Revisit only with new evidence or a concrete hypothesis. Preserve RecordsMedia privacy; do not repeat unchanged local runs. |
 | StoreKit | Declined-request evidence and the separate private Apple draft are retained; submission approval remains pending. | No blind reruns or submission without the requested approval. Other purchase failures remain separate unresolved observations. |
@@ -45,6 +45,15 @@ workflow; no new suite, monitor, wrapper or approval step is needed.
 These notes preserve observations at the time of each check. Historical active
 job descriptions are not the current queue.
 
+- **UI04 and stock/purchase now pass hosted84:** UI04 job130384868050 completes
+  strict7/7, zero recorded runtime warnings/idle messages/restarts. It includes
+  the dinner cap/Cancel journey130.762s and the complete protected-lunch,
+  short-fill repair, settlement and next-shop journey549.362s, qualifying the
+  earlier UI04 corrections on the published candidate. SharedDelivery stock/purchase
+  job130403237746 completes strict6/6, zero runtime warnings/restarts and one
+  diagnostic animation-idle message. Its confirmed-order retry, purchase correction,
+  delivery correction, freezer coverage and two Spanish cases all pass.
+  No unchanged repeat is needed for either group.
 - **PickupOffer launch lookup qualified locally:** UI05 job130404370119 executed
   all7 cases (6passed/1failed), with zero recorded runtime warnings, idle messages
   or runner restarts. Its earlier bootstrap crash did not recur in this execution.
