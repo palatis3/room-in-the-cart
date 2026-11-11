@@ -5,7 +5,7 @@ Updated November 11, 2026. Active goal: finish the complete Foundation 2.1 first
 ## Current checkpoint — November 11
 
 This checkpoint supersedes historical running-process and latest-commit statements below.
-Latest qualified implementation commit is **5b4fb46f**; remote candidate remains **49bde552**.
+Latest qualified implementation commit is **5f1eec54**; remote candidate remains **49bde552**.
 The owner approved the lean workflow going forward. Follow CI-VALIDATION's daily
 triage table: affected checks, one investigation per cause, reuse original evidence,
 one grouped candidate push, and full combined/release qualification at its proper gate.
@@ -39,22 +39,48 @@ No additional wrapper, test suite, or unattended monitor has been introduced.
   SHA256 e27dafca2a1f261d63fbce4d54718c4d1b110f7d90d0960a536702c9164fb0ab.
   Swift syntax and the existing automation contract pass. No new native suite
   was added and no production behavior changed for this selector correction.
+- **Request editor keyboard and expiry qualified:** commit 5f1eec54 adds the
+  existing explicit Done control to item, price and clarification fields. The
+  first local run proved the keyboard actually remained visible after the test's
+  swipe; a visible-keyboard assertion alone did not fix it. The original Cancel
+  preview journey now passes in 102.797s and largest-text lunch/date journey in
+  76.540s, strict 2/2 with zero warnings/idle messages/restarts, in
+  `.build/RequestPackNov11/focused-r2`. The expiry assertion now checks the full
+  device-local representation of the fixture's 2099-01-01T00:00:00Z instant, rather
+  than hard-coding 2098. A Foundation probe confirmed 2099 in UTC and 2098 in New York.
+  The ordinary Debug app also builds (`.build/RequestPackNov11/Normal-Build.xcresult`).
+  Original hosted artifact 13831526605 is hash-verified and retained in
+  `.build/RequestPackNov11/hosted`; its Info.plist is missing after the 40-minute
+  deadline, so no complete hosted result or unexecuted civil-date pass is claimed.
+  The failed initial local bundle and screenshots remain in `focused`.
+- **Measured fixture rebalance:** commit 725f72cb moves the two device-management
+  tests from balanced03 to balanced02 and eight civil-date tests from balanced03 to balanced04. It preserves
+  five groups, 26 fixture jobs, 89 tests, five macOS slots and all limits/assertions.
+  Existing 16 planner and 1 workflow checks pass (workflow check uses `.build/ci-yaml/bin/python`).
+  The overloaded original03 finished 11 of 19 cases before timeout; current balanced02/04 had
+  shorter 24.3/23.4-minute job windows. Successor wall time needs hosted verification.
+- **Dinner visual polish:** commit a73c3016 applies existing canvas/surface/text
+  colors to Dinner library and Dinner ideas and uses the existing readable
+  exclusions prompt. Builds pass in `.build/DinnerLibraryPaletteNov11`.
+  Direct Device Hub review verified both screens in light/dark, then the final
+  readable prompt in light. Original System appearance was restored. No meal was
+  created or applied. Screenshots are retained in the conversation; CUA completion
+  was recorded for both parts. This is scoped visual proof, not full accessibility.
 - **Current hosted batch:** core 42953140531 and fixtures 42953140722 remain active.
-  Core UI07 and UI08 have succeeded; UI06/UI10 are running and UI09 is pending at
-  this snapshot. Fixture balanced01/02/04, DinnerDecisionSheet and RecordsMedia
-  succeeded. Balanced05 is 13/14 with the local correction above. Balanced03 and
-  shared-delivery stock/purchase are running. Spanish created-meal Undo now passes
-  1/1 (386.315s), zero runtime warnings/restarts/idle messages; UI08 passes all seven
-  including Spanish dinner review, checkout restoration and largest text, with the
-  same zero diagnostic counts. These are job states,
-  not distinct bug counts or final acceptance. No replacement run was dispatched.
+  UI06/07/08/10 now pass (UI06: 7/7, UI08: 7/7, UI10: 8/8), with zero runtime warnings,
+  idle messages and restarts in the examined logs. Only core UI09 remains live.
+  Fixture balanced01/02/04, DinnerDecisionSheet, RecordsMedia, Spanish created-meal
+  Undo and delivery stock/purchase pass. Delivery is 6/6 with zero runtime warnings
+  and restarts, two idle messages. Balanced03/05 remain recorded failures with the
+  local corrections above. English created-meal Undo, SharedFallback and Spanish
+  food-edit review are running; other fixtures remain queued. No duplicate dispatched.
 - **Next publication:** inspect new terminal failures once, then group verified
-  changes after the current useful batch. UI02, UI03, UI04 and balanced05's observed
-  failures now have passing affected local checks. UI05's runner bootstrap failure
-  has clearer reporting, not proven runtime resolution. Preserve all originals;
-  do not repeat these passing checks unchanged. No local native process is active.
-  Normal and contributor fixture caches both contain completed matching builds;
-  retain the profile-specific paths in CI-VALIDATION.
+  changes after this useful batch. UI02/03/04 and the observed balanced03/05
+  assertions have passing local affected checks. UI05 bootstrap failure has clearer
+  reporting, not proven runtime resolution; interrupted civil-date coverage still
+  needs execution. No local native process is active. Normal and contributor caches
+  both contain completed current builds. Preserve original failures and do not
+  repeat unchanged passing checks. Provider/signing owner deferrals remain unchanged.
 
 ## Workspace and ownership
 
