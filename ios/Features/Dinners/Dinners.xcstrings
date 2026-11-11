@@ -1,6 +1,23 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Protected servings: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protected servings: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porciones protegidas: %@"
+          }
+        }
+      }
+    },
     "Resulting ingredient portions": {
       "extractionState": "manual",
       "localizations": {

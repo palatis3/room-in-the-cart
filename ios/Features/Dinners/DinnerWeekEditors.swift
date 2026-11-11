@@ -135,16 +135,24 @@ struct DinnerManualAdjustmentView: View {
         Form {
             Section {
                 Text(dinnerText("Enter each resulting amount explicitly. This Free editor does not scale ingredients automatically."))
-                TextField(dinnerText("Total servings"), text: $servings)
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(dinnerText("Total servings")).font(.caption).foregroundStyle(.secondary)
+                    TextField(dinnerText("Total servings"), text: $servings)
+                        .frame(minHeight: 44)
+                }
             }
             Section(dinnerText("Serving groups")) {
                 ForEach($groups) { $group in
                     if group.isProtected {
                         Text(group.name)
-                        Text(dinnerFormat("Protected: %@ servings", group.servings))
+                        Text(dinnerFormat("Protected servings: %@", group.servings))
                     } else {
                         TextField(dinnerText("Group name"), text: $group.name)
-                        TextField(dinnerText("Group servings"), text: $group.servings)
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text(dinnerText("Group servings")).font(.caption).foregroundStyle(.secondary)
+                            TextField(dinnerText("Group servings"), text: $group.servings)
+                                .frame(minHeight: 44)
+                        }
                     }
                 }
                 Button(dinnerText("Add serving group")) {
@@ -163,7 +171,9 @@ struct DinnerManualAdjustmentView: View {
                 ForEach($amounts) { $amount in
                     VStack(alignment: .leading) {
                         Text(amount.name).font(.headline)
+                        Text(dinnerText("Amount, optional")).font(.caption).foregroundStyle(.secondary)
                         TextField(dinnerText("Amount, optional"), text: $amount.amount)
+                            .frame(minHeight: 44)
                         DinnerUnitPicker(unit: $amount.unit)
                     }
                 }
@@ -180,7 +190,9 @@ struct DinnerManualAdjustmentView: View {
                                 Text(dinnerText("Protected group"))
                                 Text(dinnerQuantity(snapshot.protectedQuantity))
                             } else {
+                                Text(dinnerText("Resulting amount for this group")).font(.caption).foregroundStyle(.secondary)
                                 TextField(dinnerText("Resulting amount for this group"), text: row.amount)
+                                    .frame(minHeight: 44)
                                     .accessibilityIdentifier("dinnerManualBinding.\(snapshot.contributionID).\(snapshot.groupID)")
                                 DinnerUnitPicker(unit: row.unit)
                             }
@@ -303,7 +315,7 @@ struct DinnerGuestsView: View {
                     ForEach($groups) { $group in
                         Text(group.name).font(.headline)
                         if group.isProtected {
-                            Text(dinnerFormat("Protected: %@ servings", group.servings))
+                            Text(dinnerFormat("Protected servings: %@", group.servings))
                         } else { TextField(dinnerText("New total servings for this group"), text: $group.servings).focused($enteringServings).accessibilityIdentifier("dinnerGuestServings") }
                     }
                     Text(dinnerText("The assisted preview uses saved ingredient bindings. Protected groups remain unchanged."))
