@@ -36,7 +36,17 @@ on:
       - 'ios/Features/Membership/**'
       - 'ios/RoomInTheCart.xcodeproj/xcshareddata/xcschemes/RoomInTheCart-LocalStoreKit.xcscheme'
   workflow_dispatch:
+    inputs:
+      require_current_storekit:
+        description: Require current iOS StoreKit coverage (false uses the qualified compatibility runtime)
+        type: boolean
+        default: true
   workflow_call:
+    inputs:
+      require_current_storekit:
+        description: Require current iOS StoreKit coverage for release
+        type: boolean
+        default: true
 permissions:
   contents: read
 concurrency:
@@ -166,11 +176,16 @@ jobs:
                   assert target["EnvironmentVariables"][entry["key"]] == entry["value"]
           resource = products / "Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/HouseholdLocalTesting.storekit"
           assert resource.is_file(), "Local StoreKit resource must travel inside the test bundle"
+          # The build destination remains iOS 27.0; these SDK 27.1 products also run on 26.2.
+          info = plistlib.loads((products / "Debug-iphonesimulator/RoomInTheCart.app/Info.plist").read_bytes())
+          assert info["DTSDKName"] == "iphonesimulator27.1" and info["DTXcodeBuild"] == "27A9275"
+          assert info["MinimumOSVersion"] == "17.0"
           selectors = Path("scripts/ios_storekit_test_selectors.txt")
           names = selectors.read_text().splitlines()
           assert len(names) == len(set(names)) == 15
           inventory = {"commit": os.environ["GITHUB_SHA"], "configurations": sorted(expected),
-                       "xctestrun": runs[0].name, "expectedCountPerLocale": 15}
+                       "xctestrun": runs[0].name, "expectedCountPerLocale": 15,
+                       "buildSDK": info["DTSDKName"], "xcodeBuild": info["DTXcodeBuild"]}
           Path(".build/storekit-product-inventory.json").write_text(json.dumps(inventory, indent=2) + "\n")
           PYCODE
           tar -czf "$RUNNER_TEMP/storekit-test-products.tar.gz" \
@@ -217,8 +232,8 @@ jobs:
             configuration: US Spanish app · Spanish (Mexico) offer · USA storefront
     env:
       DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
-      CI_IPHONE_RUNTIME: com.apple.CoreSimulator.SimRuntime.iOS-27-0
       CI_IPHONE_NAME: iPhone 17
+      REQUIRE_CURRENT_STOREKIT: ${{ inputs.require_current_storekit }}
       STOREKIT_CONFIGURATION: ${{ matrix.configuration }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -244,11 +259,57 @@ jobs:
           assert inventory["commit"] == os.environ["GITHUB_SHA"]
           assert os.environ["STOREKIT_CONFIGURATION"] in inventory["configurations"]
           assert inventory["expectedCountPerLocale"] == 15
+          assert inventory["buildSDK"] == "iphonesimulator27.1" and inventory["xcodeBuild"] == "27A9275"
           runs = list(products.glob("*.xctestrun"))
           assert len(runs) == 1 and runs[0].name == inventory["xctestrun"]
           PYCODE
-      - name: Select iPhone
-        run: xcrun simctl list devices available -j | python3 scripts/select_ci_iphone.py
+      - name: Prepare and verify the selected StoreKit runtime
+        id: storekit-runtime
+        timeout-minutes: 15
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p .build
+          python3 - <<'PYCODE' 2>&1 | tee .build/StoreKitRuntime.log
+          import json, os, subprocess
+          from pathlib import Path
+          from uuid import UUID
+          request = os.environ["REQUIRE_CURRENT_STOREKIT"]
+          assert request in ("", "true", "false"), "Expected a boolean StoreKit policy"
+          # Reusable inputs take priority over the caller's event, including a PR caller.
+          current = request == "true" or (request == "" and os.environ["GITHUB_EVENT_NAME"] != "pull_request")
+          version, build = ("27.0", "24A434") if current else ("26.2", "23C54")
+          runtime = "com.apple.CoreSimulator.SimRuntime.iOS-" + version.replace(".", "-")
+          print(f"Shared SDK 27.1 products; StoreKit execution requires iOS {version}/{build}", flush=True)
+          def simctl(*args):
+              # Hosted listing can exceed three minutes; the setup step owns this bound.
+              return subprocess.check_output(["xcrun", "simctl", *args], text=True)
+          def installed():
+              return [r for r in json.loads(simctl("list", "runtimes", "-j"))["runtimes"]
+                      if r["identifier"] == runtime]
+          matches = installed()
+          if not matches and not current:
+              subprocess.run(["xcodebuild", "-downloadPlatform", "iOS", "-buildVersion", build,
+                              "-architectureVariant", "arm64"], check=True, timeout=600)
+              matches = installed()
+          assert len(matches) == 1, "Required StoreKit runtime is missing or ambiguous; no fallback"
+          actual = matches[0]
+          assert actual.get("isAvailable") is True and actual["version"] == version and actual["buildversion"] == build, actual
+          device_type = "com.apple.CoreSimulator.SimDeviceType.iPhone-17"
+          devices = json.loads(simctl("list", "devices", "available", "-j"))["devices"].get(runtime, [])
+          devices = [d for d in devices if d.get("isAvailable") is True
+                     and d["name"] == os.environ["CI_IPHONE_NAME"] and d["deviceTypeIdentifier"] == device_type]
+          if devices:
+              simulator = devices[0]["udid"]
+          else:
+              assert not current, "Required current-OS image device is missing"
+              # This ephemeral consumer owns only the device returned by this create call.
+              simulator = simctl("create", "RITC-StoreKit-compatibility", device_type, runtime).strip()
+          simulator = str(UUID(simulator)).upper()
+          print(f"Selected iPhone 17 {simulator}; installed iOS {actual['version']}/{actual['buildversion']}")
+          with Path(os.environ["GITHUB_ENV"]).open("a") as output:
+              output.write(f"CI_IPHONE_RUNTIME={runtime}\nSTOREKIT_OS_VERSION={version}\nSTOREKIT_OS_BUILD={build}\nSIMULATOR_ID={simulator}\n")
+          PYCODE
       - name: Run purchase, restore, renewal and revocation scenarios
         timeout-minutes: 35
         shell: bash
@@ -278,7 +339,19 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          python3 -c 'import json, os; from pathlib import Path; s=json.loads(Path(".build/storekit-summary.json").read_text()); assert {c["testPlanConfiguration"]["configurationName"] for c in s["devicesAndConfigurations"]} == {os.environ["STOREKIT_CONFIGURATION"]}, s'
+          python3 - <<'PYCODE'
+          import json, os
+          from pathlib import Path
+          summary = json.loads(Path(".build/storekit-summary.json").read_text())
+          configurations = summary["devicesAndConfigurations"]
+          assert len(configurations) == 1
+          configuration = configurations[0]
+          assert configuration["testPlanConfiguration"]["configurationName"] == os.environ["STOREKIT_CONFIGURATION"]
+          device = configuration["device"]
+          assert device["osVersion"] == os.environ["STOREKIT_OS_VERSION"] and device["osBuildNumber"] == os.environ["STOREKIT_OS_BUILD"], device
+          assert device["architecture"] == "arm64" and device["modelName"] == "iPhone 17" and device["platform"] == "iOS Simulator", device
+          assert device["deviceId"].upper() == os.environ["SIMULATOR_ID"], device
+          PYCODE
           python3 scripts/check_ios_test_results.py --selectors scripts/ios_storekit_test_selectors.txt --expected-count 15 \
             --summary .build/storekit-summary.json --tests .build/storekit-tests.json \
             --result-bundle .build/StoreKit.xcresult --test-log .build/StoreKit.log 2>&1 | tee .build/storekit-verification.txt
@@ -290,6 +363,7 @@ jobs:
           path: |
             .build/StoreKit.xcresult
             .build/StoreKit.log
+            .build/StoreKitRuntime.log
             .build/storekit-summary.json
             .build/storekit-tests.json
             .build/storekit-verification.txt

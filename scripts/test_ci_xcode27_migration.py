@@ -36,7 +36,14 @@ class Xcode27MigrationTests(unittest.TestCase):
                 else:
                     self.assertEqual(job['runs-on'], 'xcode-27', key)
                     self.assertEqual(env['DEVELOPER_DIR'], DEVELOPER, key)
-                    self.assertEqual(env['CI_IPHONE_RUNTIME'], RUNTIME, key)
+                    if key == ('ios-deep.yml', 'storekit'):
+                        # Only execution uses the qualified PR compatibility runtime;
+                        # the shared producer and every other native job retain 27.0.
+                        self.assertNotIn('CI_IPHONE_RUNTIME', env)
+                        self.assertEqual(env['REQUIRE_CURRENT_STOREKIT'], '${{ inputs.require_current_storekit }}')
+                        self.assertEqual(sum(step.get('id') == 'storekit-runtime' for step in job['steps']), 1)
+                    else:
+                        self.assertEqual(env['CI_IPHONE_RUNTIME'], RUNTIME, key)
                     self.assertEqual(env['CI_IPHONE_NAME'], 'iPhone 17', key)
                     checkout = next(i for i, step in enumerate(job['steps'])
                                     if step.get('uses', '').startswith('actions/checkout@'))

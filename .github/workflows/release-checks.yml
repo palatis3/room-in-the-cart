@@ -84,6 +84,8 @@ jobs:
     needs: source-preflight
     name: Sanitizers and local billing
     uses: ./.github/workflows/ios-deep.yml
+    with:
+      require_current_storekit: true
   fixtures:
     needs: source-preflight
     name: Household and dinner regressions

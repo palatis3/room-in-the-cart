@@ -94,6 +94,33 @@ GitHub compares the whole PR diff, so a large PR that already changes billing or
 packages will still select deep checks on later pushes. These filters primarily
 save work on subsequent, smaller PRs; do not restart a useful batch for them.
 
+PR StoreKit regression uses the qualified iPhone17/iOS26.2 build23C54 compatibility
+environment with Xcode27.1 build27A9275. Both original15-case locale suites passed
+strict local verification with unchanged source, products and deadlines in
+`.build/StoreKitFullCompatibilityNov11/{en-booted,es}`. The initial English attempt
+executed zero tests because simulator app-preflight was busy; it remains retained
+under `en`. The existing explicit boot helper completed before the passing run.
+This is an explicit merge-stage compatibility baseline, not current-OS billing
+qualification or proof of an SDK root cause. Hosted qualification remains pending.
+
+The shared StoreKit producer still builds once against the27.0 destination with
+SDK27.1 and the iOS17 deployment target; its inventory records SDK/toolchain identity.
+Each compatibility consumer installs exactly23C54 using Apple's bounded
+`xcodebuild -downloadPlatform iOS -buildVersion 23C54 -architectureVariant arm64`
+command when missing, then validates installed runtime/build and the actual result
+device/runtime/build. It creates only its job-local iPhone17 if needed. Missing,
+unavailable or mismatched runtimes fail setup without fallback. The command resolves
+locally; fresh installation and timing on the hosted image are not yet established.
+
+Manual and reusable deep-workflow calls default `require_current_storekit` to true;
+release-checks explicitly passes true and requires both full locale suites on
+iOS27.0 build24A434. That input wins even when a reusable caller originates from a
+PR. All15selectors per locale, strict result checks,120-second execution allowances
+and aggregate gates remain required. Main app/UI jobs remain on27.0. The retained
+current-OS failures still block release, alongside signed-device/sandbox acceptance;
+PR compatibility success cannot clear them. Do not submit the owner-held Apple
+report or repeat unchanged runtime diagnostics as part of this policy.
+
 Performance runs through the existing manual action or full release workflow,
 not on every PR update. Manual calibration is not release acceptance. The release
 workflow still requires approved baselines, complete measurements and the same

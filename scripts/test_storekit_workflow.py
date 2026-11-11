@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import plistlib
+import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -30,7 +31,7 @@ class StoreKitWorkflowTests(unittest.TestCase):
                     or (identifier is not None and step.get('id') == identifier))
 
     def python_block(self, step):
-        return step['run'].split("python3 - <<'PYCODE'\n", 1)[1].split('\nPYCODE', 1)[0]
+        return step['run'].split("python3 - <<'PYCODE'", 1)[1].split('\n', 1)[1].split('\nPYCODE', 1)[0]
 
     def execute(self, code, root, **environment):
         previous = Path.cwd()
@@ -52,6 +53,9 @@ class StoreKitWorkflowTests(unittest.TestCase):
         resource = products / 'Debug-iphonesimulator/RoomInTheCart.app/PlugIns/RoomInTheCartTests.xctest/HouseholdLocalTesting.storekit'
         resource.parent.mkdir(parents=True)
         resource.write_text('{}')
+        (products / 'Debug-iphonesimulator/RoomInTheCart.app/Info.plist').write_bytes(plistlib.dumps({
+            'DTSDKName': 'iphonesimulator27.1', 'DTXcodeBuild': '27A9275', 'MinimumOSVersion': '17.0',
+        }))
         configurations = []
         for entry in self.plan['configurations']:
             options = entry['options']
@@ -127,6 +131,123 @@ class StoreKitWorkflowTests(unittest.TestCase):
         self.assertIn('--require-hashes --only-binary=:all: -r scripts/ci_yaml_requirements.txt', command)
         self.assertIn('.build/storekit-workflow-venv/bin/python scripts/test_storekit_workflow.py', command)
 
+    def test_release_requires_current_os_and_defaults_do_not_inherit_pr_policy(self):
+        for event in ('workflow_call', 'workflow_dispatch'):
+            option = self.workflow['on'][event]['inputs']['require_current_storekit']
+            self.assertEqual(option['type'], 'boolean')
+            self.assertIs(option['default'], True)
+        release = parse_workflow(ROOT / '.github/workflows/release-checks.yml')[0]
+        self.assertEqual(release['jobs']['diagnostics']['uses'], './.github/workflows/ios-deep.yml')
+        self.assertIs(release['jobs']['diagnostics']['with']['require_current_storekit'], True)
+        self.assertIn('diagnostics', release['jobs']['release-checks']['needs'])
+        self.assertNotIn('if', release['jobs']['diagnostics'])
+        self.assertNotIn('continue-on-error', release['jobs']['diagnostics'])
+        self.assertEqual(self.jobs['storekit']['env']['REQUIRE_CURRENT_STOREKIT'],
+                         '${{ inputs.require_current_storekit }}')
+        self.assertEqual(self.jobs['storekit-build']['env']['CI_IPHONE_RUNTIME'],
+                         'com.apple.CoreSimulator.SimRuntime.iOS-27-0')
+        self.assertNotIn('-downloadPlatform', '\n'.join(s.get('run', '') for s in self.jobs['storekit-build']['steps']))
+        self.assertLessEqual(self.step('storekit', identifier='storekit-runtime')['timeout-minutes'], 15)
+
+    def runtime_fixture(self, version, build):
+        return {'identifier': 'com.apple.CoreSimulator.SimRuntime.iOS-' + version.replace('.', '-'),
+                'version': version, 'buildversion': build, 'isAvailable': True}
+
+    def prepare_runtime(self, request, event, runtimes, *, after_download=None, existing_device=True, download_error=None):
+        """Execute the actual workflow block with only native subprocesses replaced."""
+        code = self.python_block(self.step('storekit', identifier='storekit-runtime'))
+        simulator = '11111111-2222-4333-8444-555555555555'
+        reads = [runtimes] + ([after_download] if after_download is not None else [])
+        device = {'udid': simulator, 'name': 'iPhone 17', 'isAvailable': True,
+                  'deviceTypeIdentifier': 'com.apple.CoreSimulator.SimDeviceType.iPhone-17'}
+        def fake_simctl(command, *, text):
+            self.assertTrue(text)
+            self.assertEqual(command[:2], ['xcrun', 'simctl'])
+            if command[2:] == ['list', 'runtimes', '-j']:
+                return json.dumps({'runtimes': reads.pop(0)})
+            if command[2:] == ['list', 'devices', 'available', '-j']:
+                all_runtimes = after_download if after_download is not None else runtimes
+                return json.dumps({'devices': {r['identifier']: [device] if existing_device else [] for r in all_runtimes}})
+            if command[2:3] == ['create']:
+                self.assertEqual(command[3:5], ['RITC-StoreKit-compatibility', device['deviceTypeIdentifier']])
+                self.assertEqual(command[5], 'com.apple.CoreSimulator.SimRuntime.iOS-26-2')
+                return simulator + '\n'
+            self.fail(f'Unexpected native command: {command}')
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            environment = root / 'environment'
+            with patch('subprocess.check_output', side_effect=fake_simctl) as native, \
+                    patch('subprocess.run', side_effect=download_error) as download:
+                self.execute(code, root, REQUIRE_CURRENT_STOREKIT=request, GITHUB_EVENT_NAME=event,
+                             CI_IPHONE_NAME='iPhone 17', GITHUB_ENV=str(environment))
+            return dict(line.split('=', 1) for line in environment.read_text().splitlines()), native, download
+
+    def test_actual_runtime_policy_handles_pr_manual_and_pr_originated_reuse(self):
+        cases = [('', 'pull_request', '26.2', '23C54'),
+                 ('true', 'pull_request', '27.0', '24A434'),  # Explicit release input wins.
+                 ('true', 'workflow_dispatch', '27.0', '24A434'),
+                 ('false', 'workflow_dispatch', '26.2', '23C54'),
+                 ('', 'workflow_dispatch', '27.0', '24A434')]
+        for request, event, version, build in cases:
+            with self.subTest(request=request, event=event):
+                runtime = self.runtime_fixture(version, build)
+                environment, _, download = self.prepare_runtime(request, event, [runtime])
+                self.assertEqual(environment['CI_IPHONE_RUNTIME'], runtime['identifier'])
+                self.assertEqual(environment['STOREKIT_OS_VERSION'], version)
+                self.assertEqual(environment['STOREKIT_OS_BUILD'], build)
+                download.assert_not_called()
+
+    def test_missing_compatibility_runtime_downloads_exact_build_and_creates_only_its_device(self):
+        runtime = self.runtime_fixture('26.2', '23C54')
+        environment, native, download = self.prepare_runtime('', 'pull_request', [],
+                                                             after_download=[runtime], existing_device=False)
+        download.assert_called_once_with(['xcodebuild', '-downloadPlatform', 'iOS', '-buildVersion', '23C54',
+                                          '-architectureVariant', 'arm64'], check=True, timeout=600)
+        self.assertEqual(sum(call.args[0][2:3] == ['create'] for call in native.call_args_list), 1)
+        self.assertEqual(environment['SIMULATOR_ID'], '11111111-2222-4333-8444-555555555555')
+
+    def test_runtime_setup_rejects_wrong_build_version_unavailable_or_missing_current_without_fallback(self):
+        good = self.runtime_fixture('26.2', '23C54')
+        for bad in ({**good, 'buildversion': '23C52'}, {**good, 'version': '26.3'},
+                    {**good, 'isAvailable': False}):
+            with self.subTest(runtime=bad), self.assertRaises(AssertionError):
+                self.prepare_runtime('', 'pull_request', [bad])
+            with self.subTest(downloaded=bad), self.assertRaises(AssertionError):
+                self.prepare_runtime('', 'pull_request', [], after_download=[bad])
+        for request, runtimes in [('true', []), ('true', [self.runtime_fixture('26.2', '23C54')]),
+                                  ('false', [good, good]), ('invalid', [good])]:
+            with self.subTest(request=request, runtimes=runtimes), self.assertRaises(AssertionError):
+                self.prepare_runtime(request, 'pull_request', runtimes)
+        with self.assertRaises(AssertionError):
+            self.prepare_runtime('true', 'pull_request', [self.runtime_fixture('27.0', '24A434')], existing_device=False)
+        for error in (subprocess.TimeoutExpired('download', 600), subprocess.CalledProcessError(1, 'download')):
+            with self.subTest(error=type(error).__name__), self.assertRaises(type(error)):
+                self.prepare_runtime('', 'pull_request', [], after_download=[good], download_error=error)
+
+    def test_result_checks_exact_runtime_build_device_and_locale_for_both_policies(self):
+        code = self.python_block(self.step('storekit', name='Verify exact StoreKit configuration and all scenario results'))
+        for version, build in [('26.2', '23C54'), ('27.0', '24A434')]:
+            for locale in EXPECTED:
+                with tempfile.TemporaryDirectory() as directory:
+                    root = Path(directory); (root / '.build').mkdir()
+                    device = {'osVersion': version, 'osBuildNumber': build, 'architecture': 'arm64',
+                              'modelName': 'iPhone 17', 'platform': 'iOS Simulator', 'deviceId': 'selected-device'}
+                    configuration = {'testPlanConfiguration': {'configurationName': locale}, 'device': device}
+                    summary = root / '.build/storekit-summary.json'
+                    def validate(value):
+                        summary.write_text(json.dumps({'devicesAndConfigurations': value}))
+                        self.execute(code, root, STOREKIT_CONFIGURATION=locale, STOREKIT_OS_VERSION=version,
+                                     STOREKIT_OS_BUILD=build, SIMULATOR_ID='SELECTED-DEVICE')
+                    validate([configuration])
+                    for key in device:
+                        wrong = copy.deepcopy(configuration); wrong['device'][key] = 'wrong'
+                        with self.subTest(version=version, locale=locale, field=key), self.assertRaises(AssertionError):
+                            validate([wrong])
+                    wrong_locale = copy.deepcopy(configuration)
+                    wrong_locale['testPlanConfiguration']['configurationName'] = 'wrong'
+                    for values in ([], [configuration, configuration], [wrong_locale]):
+                        with self.assertRaises(AssertionError): validate(values)
+
     def test_real_inventory_and_restore_code_accept_both_configs(self):
         inventory = self.python_block(self.step('storekit-build', identifier='storekit-inventory'))
         restore = self.python_block(self.step('storekit', identifier='storekit-restore'))
@@ -141,6 +262,29 @@ class StoreKitWorkflowTests(unittest.TestCase):
                 self.execute(restore, root, GITHUB_SHA='different-commit', STOREKIT_CONFIGURATION=next(iter(EXPECTED)))
             with self.assertRaises(AssertionError):
                 self.execute(restore, root, GITHUB_SHA='checked-commit', STOREKIT_CONFIGURATION='unbuilt-locale')
+
+    def test_shared_products_reject_wrong_sdk_toolchain_or_deployment_target(self):
+        inventory = self.python_block(self.step('storekit-build', identifier='storekit-inventory'))
+        restore = self.python_block(self.step('storekit', identifier='storekit-restore'))
+        for field, wrong in [('DTSDKName', 'iphonesimulator26.2'), ('DTXcodeBuild', 'other'), ('MinimumOSVersion', '27.0')]:
+            with self.subTest(field=field), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                run, fixture, _ = self.compiled_fixture(root)
+                run.write_bytes(plistlib.dumps(fixture))
+                info_path = run.parent / 'Debug-iphonesimulator/RoomInTheCart.app/Info.plist'
+                info = plistlib.loads(info_path.read_bytes()); info[field] = wrong
+                info_path.write_bytes(plistlib.dumps(info))
+                with self.assertRaises(AssertionError): self.execute(inventory, root, GITHUB_SHA='checked-commit')
+        for field in ('buildSDK', 'xcodeBuild'):
+            with self.subTest(field=field), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                run, fixture, _ = self.compiled_fixture(root)
+                run.write_bytes(plistlib.dumps(fixture))
+                self.execute(inventory, root, GITHUB_SHA='checked-commit')
+                path = root / '.build/storekit-product-inventory.json'
+                value = json.loads(path.read_text()); value[field] = 'wrong'; path.write_text(json.dumps(value))
+                with self.assertRaises(AssertionError):
+                    self.execute(restore, root, GITHUB_SHA='checked-commit', STOREKIT_CONFIGURATION=next(iter(EXPECTED)))
 
     def test_real_inventory_rejects_missing_disabled_or_narrowed_configuration(self):
         code = self.python_block(self.step('storekit-build', identifier='storekit-inventory'))
